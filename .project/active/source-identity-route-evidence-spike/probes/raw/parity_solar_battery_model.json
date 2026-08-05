@@ -1,0 +1,758 @@
+{
+ "fixture": "solar_battery_model",
+ "verdict": "PARITY",
+ "topology": {
+  "live": {
+   "SolarBatteryDesign__solar_battery_plant__discount_rate": [
+    "EntryPointType.DESIGN_ATTRIBUTE",
+    0.05
+   ],
+   "SolarBatteryDesign__solar_battery_plant__fuel_consumption": [
+    "EntryPointType.DESIGN_ATTRIBUTE",
+    0.0
+   ],
+   "SolarBatteryDesign__solar_battery_plant__fuel_unit_cost": [
+    "EntryPointType.DESIGN_ATTRIBUTE",
+    0.0
+   ],
+   "SolarBatteryDesign__solar_battery_plant__n_mod": [
+    "EntryPointType.DESIGN_ATTRIBUTE",
+    1.0
+   ],
+   "SolarBatteryDesign__solar_battery_plant__om_rate_per_kw_year": [
+    "EntryPointType.DESIGN_ATTRIBUTE",
+    20.0
+   ],
+   "SolarBatteryDesign__solar_battery_plant__p_net_mw": [
+    "EntryPointType.DESIGN_ATTRIBUTE",
+    0.008
+   ],
+   "SolarBatteryDesign__solar_battery_plant__plant_availability": [
+    "EntryPointType.DESIGN_ATTRIBUTE",
+    0.159
+   ],
+   "SolarBatteryDesign__solar_battery_plant__plant_lifetime": [
+    "EntryPointType.DESIGN_ATTRIBUTE",
+    25.0
+   ],
+   "SolarBatteryDesign__solar_battery_plant__yearly_inflation": [
+    "EntryPointType.DESIGN_ATTRIBUTE",
+    0.0245
+   ],
+   "SolarBatteryDesign__solar_battery_plant__battery_system__battery_bos__cost_model__cost_per_pack_bos": [
+    "EntryPointType.LIBRARY_DEFAULT",
+    71.5
+   ],
+   "SolarBatteryDesign__solar_battery_plant__battery_system__battery_bos__cost_model__fab_factor": [
+    "EntryPointType.LIBRARY_DEFAULT",
+    0.45
+   ],
+   "SolarBatteryDesign__solar_battery_plant__battery_system__battery_bos__cost_model__install_factor": [
+    "EntryPointType.LIBRARY_DEFAULT",
+    0.3
+   ],
+   "SolarBatteryDesign__solar_battery_plant__battery_system__battery_pack__cost_model__cost_per_kwh": [
+    "EntryPointType.LIBRARY_DEFAULT",
+    171.5
+   ],
+   "SolarBatteryDesign__solar_battery_plant__battery_system__battery_pack__cost_model__fab_factor": [
+    "EntryPointType.LIBRARY_DEFAULT",
+    0.45
+   ],
+   "SolarBatteryDesign__solar_battery_plant__battery_system__battery_pack__cost_model__install_factor": [
+    "EntryPointType.LIBRARY_DEFAULT",
+    0.3
+   ],
+   "SolarBatteryDesign__solar_battery_plant__battery_system__hybrid_inverter__cost_model__cost_per_watt": [
+    "EntryPointType.LIBRARY_DEFAULT",
+    0.1714
+   ],
+   "SolarBatteryDesign__solar_battery_plant__battery_system__hybrid_inverter__cost_model__fab_factor": [
+    "EntryPointType.LIBRARY_DEFAULT",
+    0.45
+   ],
+   "SolarBatteryDesign__solar_battery_plant__battery_system__hybrid_inverter__cost_model__install_factor": [
+    "EntryPointType.LIBRARY_DEFAULT",
+    0.3
+   ],
+   "SolarBatteryDesign__solar_battery_plant__site_infra__electrical_panel__cost_model__base_cost": [
+    "EntryPointType.LIBRARY_DEFAULT",
+    150.0
+   ],
+   "SolarBatteryDesign__solar_battery_plant__site_infra__electrical_panel__cost_model__cost_per_circuit": [
+    "EntryPointType.LIBRARY_DEFAULT",
+    34.0
+   ],
+   "SolarBatteryDesign__solar_battery_plant__site_infra__electrical_panel__cost_model__fab_factor": [
+    "EntryPointType.LIBRARY_DEFAULT",
+    0.45
+   ],
+   "SolarBatteryDesign__solar_battery_plant__site_infra__electrical_panel__cost_model__install_factor": [
+    "EntryPointType.LIBRARY_DEFAULT",
+    0.3
+   ],
+   "SolarBatteryDesign__solar_battery_plant__site_infra__permitting__cost_model__cost_per_kw": [
+    "EntryPointType.LIBRARY_DEFAULT",
+    187.5
+   ],
+   "SolarBatteryDesign__solar_battery_plant__site_infra__racking__cost_model__cost_per_panel_rack": [
+    "EntryPointType.LIBRARY_DEFAULT",
+    57.0
+   ],
+   "SolarBatteryDesign__solar_battery_plant__site_infra__racking__cost_model__fab_factor": [
+    "EntryPointType.LIBRARY_DEFAULT",
+    0.45
+   ],
+   "SolarBatteryDesign__solar_battery_plant__site_infra__racking__cost_model__install_factor": [
+    "EntryPointType.LIBRARY_DEFAULT",
+    0.3
+   ],
+   "SolarBatteryDesign__solar_battery_plant__solar_array__allocation_model__child_count": [
+    "EntryPointType.USAGE_LITERAL",
+    25.0
+   ],
+   "SolarBatteryDesign__solar_battery_plant__solar_array__allocation_model__fastener_cost_per_child": [
+    "EntryPointType.LIBRARY_DEFAULT",
+    0.5
+   ],
+   "SolarBatteryDesign__solar_battery_plant__solar_array__allocation_model__seal_cost_per_child": [
+    "EntryPointType.LIBRARY_DEFAULT",
+    0.3
+   ],
+   "SolarBatteryDesign__solar_battery_plant__solar_array__allocation_model__total_child_mass": [
+    "EntryPointType.USAGE_LITERAL",
+    50.0
+   ],
+   "SolarBatteryDesign__solar_battery_plant__solar_array__allocation_model__wiring_cost_per_kg": [
+    "EntryPointType.LIBRARY_DEFAULT",
+    2.0
+   ],
+   "SolarBatteryDesign__solar_battery_plant__solar_array__array_bos__cost_model__cost_per_panel_bos": [
+    "EntryPointType.LIBRARY_DEFAULT",
+    30.0
+   ],
+   "SolarBatteryDesign__solar_battery_plant__solar_array__array_bos__cost_model__cost_per_string": [
+    "EntryPointType.LIBRARY_DEFAULT",
+    150.0
+   ],
+   "SolarBatteryDesign__solar_battery_plant__solar_array__array_bos__cost_model__fab_factor": [
+    "EntryPointType.LIBRARY_DEFAULT",
+    0.45
+   ],
+   "SolarBatteryDesign__solar_battery_plant__solar_array__array_bos__cost_model__install_factor": [
+    "EntryPointType.LIBRARY_DEFAULT",
+    0.3
+   ],
+   "SolarBatteryDesign__solar_battery_plant__solar_array__inverter__cost_model__cost_per_watt": [
+    "EntryPointType.LIBRARY_DEFAULT",
+    0.286
+   ],
+   "SolarBatteryDesign__solar_battery_plant__solar_array__inverter__cost_model__fab_factor": [
+    "EntryPointType.LIBRARY_DEFAULT",
+    0.45
+   ],
+   "SolarBatteryDesign__solar_battery_plant__solar_array__inverter__cost_model__install_factor": [
+    "EntryPointType.LIBRARY_DEFAULT",
+    0.3
+   ],
+   "SolarBatteryDesign__solar_battery_plant__solar_array__pv_module__cost_model__cost_per_watt": [
+    "EntryPointType.LIBRARY_DEFAULT",
+    1.07
+   ],
+   "SolarBatteryDesign__solar_battery_plant__solar_array__pv_module__cost_model__fab_factor": [
+    "EntryPointType.LIBRARY_DEFAULT",
+    0.45
+   ],
+   "SolarBatteryDesign__solar_battery_plant__solar_array__pv_module__cost_model__install_factor": [
+    "EntryPointType.LIBRARY_DEFAULT",
+    0.3
+   ],
+   "SolarBatteryDesign__solar_battery_plant__battery_system__battery_bos__cost_model__pack_count": [
+    "EntryPointType.USAGE_LITERAL",
+    8.0
+   ],
+   "SolarBatteryDesign__solar_battery_plant__battery_system__battery_pack__cost_model__capacity_kwh": [
+    "EntryPointType.USAGE_LITERAL",
+    5.0
+   ],
+   "SolarBatteryDesign__solar_battery_plant__battery_system__battery_pack__cost_model__chemistry_factor": [
+    "EntryPointType.USAGE_LITERAL",
+    1.0
+   ],
+   "SolarBatteryDesign__solar_battery_plant__battery_system__hybrid_inverter__cost_model__power_rating": [
+    "EntryPointType.USAGE_LITERAL",
+    10000.0
+   ],
+   "SolarBatteryDesign__solar_battery_plant__battery_system__pack_count": [
+    "EntryPointType.DESIGN_ATTRIBUTE",
+    8.0
+   ],
+   "SolarBatteryDesign__solar_battery_plant__site_infra__electrical_panel__cost_model__circuit_count": [
+    "EntryPointType.USAGE_LITERAL",
+    4.0
+   ],
+   "SolarBatteryDesign__solar_battery_plant__site_infra__fabrication_cost__permitting_fabrication_cost": [
+    "EntryPointType.DESIGN_ATTRIBUTE",
+    0.0
+   ],
+   "SolarBatteryDesign__solar_battery_plant__site_infra__installation_cost__permitting_installation_cost": [
+    "EntryPointType.DESIGN_ATTRIBUTE",
+    0.0
+   ],
+   "SolarBatteryDesign__solar_battery_plant__site_infra__permitting__cost_model__system_capacity_kw": [
+    "EntryPointType.USAGE_LITERAL",
+    8.0
+   ],
+   "SolarBatteryDesign__solar_battery_plant__site_infra__racking__cost_model__panel_count": [
+    "EntryPointType.USAGE_LITERAL",
+    20.0
+   ],
+   "SolarBatteryDesign__solar_battery_plant__site_infra__racking__cost_model__tilt_angle": [
+    "EntryPointType.USAGE_LITERAL",
+    30.0
+   ],
+   "SolarBatteryDesign__solar_battery_plant__site_infra__raw_material_cost__permitting_raw_material_cost": [
+    "EntryPointType.DESIGN_ATTRIBUTE",
+    0.0
+   ],
+   "SolarBatteryDesign__solar_battery_plant__solar_array__array_bos__cost_model__panel_count": [
+    "EntryPointType.USAGE_LITERAL",
+    20.0
+   ],
+   "SolarBatteryDesign__solar_battery_plant__solar_array__array_bos__cost_model__string_count": [
+    "EntryPointType.USAGE_LITERAL",
+    4.0
+   ],
+   "SolarBatteryDesign__solar_battery_plant__solar_array__inverter__cost_model__power_rating": [
+    "EntryPointType.USAGE_LITERAL",
+    2000.0
+   ],
+   "SolarBatteryDesign__solar_battery_plant__solar_array__inverter_count": [
+    "EntryPointType.DESIGN_ATTRIBUTE",
+    4.0
+   ],
+   "SolarBatteryDesign__solar_battery_plant__solar_array__module_count": [
+    "EntryPointType.DESIGN_ATTRIBUTE",
+    20.0
+   ],
+   "SolarBatteryDesign__solar_battery_plant__solar_array__pv_module__cost_model__efficiency": [
+    "EntryPointType.USAGE_LITERAL",
+    0.21
+   ],
+   "SolarBatteryDesign__solar_battery_plant__solar_array__pv_module__cost_model__wattage": [
+    "EntryPointType.USAGE_LITERAL",
+    400.0
+   ]
+  },
+  "snapshot": {
+   "SolarBatteryDesign__solar_battery_plant__discount_rate": [
+    "EntryPointType.DESIGN_ATTRIBUTE",
+    0.05
+   ],
+   "SolarBatteryDesign__solar_battery_plant__fuel_consumption": [
+    "EntryPointType.DESIGN_ATTRIBUTE",
+    0.0
+   ],
+   "SolarBatteryDesign__solar_battery_plant__fuel_unit_cost": [
+    "EntryPointType.DESIGN_ATTRIBUTE",
+    0.0
+   ],
+   "SolarBatteryDesign__solar_battery_plant__n_mod": [
+    "EntryPointType.DESIGN_ATTRIBUTE",
+    1.0
+   ],
+   "SolarBatteryDesign__solar_battery_plant__om_rate_per_kw_year": [
+    "EntryPointType.DESIGN_ATTRIBUTE",
+    20.0
+   ],
+   "SolarBatteryDesign__solar_battery_plant__p_net_mw": [
+    "EntryPointType.DESIGN_ATTRIBUTE",
+    0.008
+   ],
+   "SolarBatteryDesign__solar_battery_plant__plant_availability": [
+    "EntryPointType.DESIGN_ATTRIBUTE",
+    0.159
+   ],
+   "SolarBatteryDesign__solar_battery_plant__plant_lifetime": [
+    "EntryPointType.DESIGN_ATTRIBUTE",
+    25.0
+   ],
+   "SolarBatteryDesign__solar_battery_plant__yearly_inflation": [
+    "EntryPointType.DESIGN_ATTRIBUTE",
+    0.0245
+   ],
+   "SolarBatteryDesign__solar_battery_plant__battery_system__battery_bos__cost_model__cost_per_pack_bos": [
+    "EntryPointType.LIBRARY_DEFAULT",
+    71.5
+   ],
+   "SolarBatteryDesign__solar_battery_plant__battery_system__battery_bos__cost_model__fab_factor": [
+    "EntryPointType.LIBRARY_DEFAULT",
+    0.45
+   ],
+   "SolarBatteryDesign__solar_battery_plant__battery_system__battery_bos__cost_model__install_factor": [
+    "EntryPointType.LIBRARY_DEFAULT",
+    0.3
+   ],
+   "SolarBatteryDesign__solar_battery_plant__battery_system__battery_pack__cost_model__cost_per_kwh": [
+    "EntryPointType.LIBRARY_DEFAULT",
+    171.5
+   ],
+   "SolarBatteryDesign__solar_battery_plant__battery_system__battery_pack__cost_model__fab_factor": [
+    "EntryPointType.LIBRARY_DEFAULT",
+    0.45
+   ],
+   "SolarBatteryDesign__solar_battery_plant__battery_system__battery_pack__cost_model__install_factor": [
+    "EntryPointType.LIBRARY_DEFAULT",
+    0.3
+   ],
+   "SolarBatteryDesign__solar_battery_plant__battery_system__hybrid_inverter__cost_model__cost_per_watt": [
+    "EntryPointType.LIBRARY_DEFAULT",
+    0.1714
+   ],
+   "SolarBatteryDesign__solar_battery_plant__battery_system__hybrid_inverter__cost_model__fab_factor": [
+    "EntryPointType.LIBRARY_DEFAULT",
+    0.45
+   ],
+   "SolarBatteryDesign__solar_battery_plant__battery_system__hybrid_inverter__cost_model__install_factor": [
+    "EntryPointType.LIBRARY_DEFAULT",
+    0.3
+   ],
+   "SolarBatteryDesign__solar_battery_plant__site_infra__electrical_panel__cost_model__base_cost": [
+    "EntryPointType.LIBRARY_DEFAULT",
+    150.0
+   ],
+   "SolarBatteryDesign__solar_battery_plant__site_infra__electrical_panel__cost_model__cost_per_circuit": [
+    "EntryPointType.LIBRARY_DEFAULT",
+    34.0
+   ],
+   "SolarBatteryDesign__solar_battery_plant__site_infra__electrical_panel__cost_model__fab_factor": [
+    "EntryPointType.LIBRARY_DEFAULT",
+    0.45
+   ],
+   "SolarBatteryDesign__solar_battery_plant__site_infra__electrical_panel__cost_model__install_factor": [
+    "EntryPointType.LIBRARY_DEFAULT",
+    0.3
+   ],
+   "SolarBatteryDesign__solar_battery_plant__site_infra__permitting__cost_model__cost_per_kw": [
+    "EntryPointType.LIBRARY_DEFAULT",
+    187.5
+   ],
+   "SolarBatteryDesign__solar_battery_plant__site_infra__racking__cost_model__cost_per_panel_rack": [
+    "EntryPointType.LIBRARY_DEFAULT",
+    57.0
+   ],
+   "SolarBatteryDesign__solar_battery_plant__site_infra__racking__cost_model__fab_factor": [
+    "EntryPointType.LIBRARY_DEFAULT",
+    0.45
+   ],
+   "SolarBatteryDesign__solar_battery_plant__site_infra__racking__cost_model__install_factor": [
+    "EntryPointType.LIBRARY_DEFAULT",
+    0.3
+   ],
+   "SolarBatteryDesign__solar_battery_plant__solar_array__allocation_model__child_count": [
+    "EntryPointType.USAGE_LITERAL",
+    25.0
+   ],
+   "SolarBatteryDesign__solar_battery_plant__solar_array__allocation_model__fastener_cost_per_child": [
+    "EntryPointType.LIBRARY_DEFAULT",
+    0.5
+   ],
+   "SolarBatteryDesign__solar_battery_plant__solar_array__allocation_model__seal_cost_per_child": [
+    "EntryPointType.LIBRARY_DEFAULT",
+    0.3
+   ],
+   "SolarBatteryDesign__solar_battery_plant__solar_array__allocation_model__total_child_mass": [
+    "EntryPointType.USAGE_LITERAL",
+    50.0
+   ],
+   "SolarBatteryDesign__solar_battery_plant__solar_array__allocation_model__wiring_cost_per_kg": [
+    "EntryPointType.LIBRARY_DEFAULT",
+    2.0
+   ],
+   "SolarBatteryDesign__solar_battery_plant__solar_array__array_bos__cost_model__cost_per_panel_bos": [
+    "EntryPointType.LIBRARY_DEFAULT",
+    30.0
+   ],
+   "SolarBatteryDesign__solar_battery_plant__solar_array__array_bos__cost_model__cost_per_string": [
+    "EntryPointType.LIBRARY_DEFAULT",
+    150.0
+   ],
+   "SolarBatteryDesign__solar_battery_plant__solar_array__array_bos__cost_model__fab_factor": [
+    "EntryPointType.LIBRARY_DEFAULT",
+    0.45
+   ],
+   "SolarBatteryDesign__solar_battery_plant__solar_array__array_bos__cost_model__install_factor": [
+    "EntryPointType.LIBRARY_DEFAULT",
+    0.3
+   ],
+   "SolarBatteryDesign__solar_battery_plant__solar_array__inverter__cost_model__cost_per_watt": [
+    "EntryPointType.LIBRARY_DEFAULT",
+    0.286
+   ],
+   "SolarBatteryDesign__solar_battery_plant__solar_array__inverter__cost_model__fab_factor": [
+    "EntryPointType.LIBRARY_DEFAULT",
+    0.45
+   ],
+   "SolarBatteryDesign__solar_battery_plant__solar_array__inverter__cost_model__install_factor": [
+    "EntryPointType.LIBRARY_DEFAULT",
+    0.3
+   ],
+   "SolarBatteryDesign__solar_battery_plant__solar_array__pv_module__cost_model__cost_per_watt": [
+    "EntryPointType.LIBRARY_DEFAULT",
+    1.07
+   ],
+   "SolarBatteryDesign__solar_battery_plant__solar_array__pv_module__cost_model__fab_factor": [
+    "EntryPointType.LIBRARY_DEFAULT",
+    0.45
+   ],
+   "SolarBatteryDesign__solar_battery_plant__solar_array__pv_module__cost_model__install_factor": [
+    "EntryPointType.LIBRARY_DEFAULT",
+    0.3
+   ],
+   "SolarBatteryDesign__solar_battery_plant__battery_system__battery_bos__cost_model__pack_count": [
+    "EntryPointType.USAGE_LITERAL",
+    8.0
+   ],
+   "SolarBatteryDesign__solar_battery_plant__battery_system__battery_pack__cost_model__capacity_kwh": [
+    "EntryPointType.USAGE_LITERAL",
+    5.0
+   ],
+   "SolarBatteryDesign__solar_battery_plant__battery_system__battery_pack__cost_model__chemistry_factor": [
+    "EntryPointType.USAGE_LITERAL",
+    1.0
+   ],
+   "SolarBatteryDesign__solar_battery_plant__battery_system__hybrid_inverter__cost_model__power_rating": [
+    "EntryPointType.USAGE_LITERAL",
+    10000.0
+   ],
+   "SolarBatteryDesign__solar_battery_plant__battery_system__pack_count": [
+    "EntryPointType.DESIGN_ATTRIBUTE",
+    8.0
+   ],
+   "SolarBatteryDesign__solar_battery_plant__site_infra__electrical_panel__cost_model__circuit_count": [
+    "EntryPointType.USAGE_LITERAL",
+    4.0
+   ],
+   "SolarBatteryDesign__solar_battery_plant__site_infra__fabrication_cost__permitting_fabrication_cost": [
+    "EntryPointType.DESIGN_ATTRIBUTE",
+    0.0
+   ],
+   "SolarBatteryDesign__solar_battery_plant__site_infra__installation_cost__permitting_installation_cost": [
+    "EntryPointType.DESIGN_ATTRIBUTE",
+    0.0
+   ],
+   "SolarBatteryDesign__solar_battery_plant__site_infra__permitting__cost_model__system_capacity_kw": [
+    "EntryPointType.USAGE_LITERAL",
+    8.0
+   ],
+   "SolarBatteryDesign__solar_battery_plant__site_infra__racking__cost_model__panel_count": [
+    "EntryPointType.USAGE_LITERAL",
+    20.0
+   ],
+   "SolarBatteryDesign__solar_battery_plant__site_infra__racking__cost_model__tilt_angle": [
+    "EntryPointType.USAGE_LITERAL",
+    30.0
+   ],
+   "SolarBatteryDesign__solar_battery_plant__site_infra__raw_material_cost__permitting_raw_material_cost": [
+    "EntryPointType.DESIGN_ATTRIBUTE",
+    0.0
+   ],
+   "SolarBatteryDesign__solar_battery_plant__solar_array__array_bos__cost_model__panel_count": [
+    "EntryPointType.USAGE_LITERAL",
+    20.0
+   ],
+   "SolarBatteryDesign__solar_battery_plant__solar_array__array_bos__cost_model__string_count": [
+    "EntryPointType.USAGE_LITERAL",
+    4.0
+   ],
+   "SolarBatteryDesign__solar_battery_plant__solar_array__inverter__cost_model__power_rating": [
+    "EntryPointType.USAGE_LITERAL",
+    2000.0
+   ],
+   "SolarBatteryDesign__solar_battery_plant__solar_array__inverter_count": [
+    "EntryPointType.DESIGN_ATTRIBUTE",
+    4.0
+   ],
+   "SolarBatteryDesign__solar_battery_plant__solar_array__module_count": [
+    "EntryPointType.DESIGN_ATTRIBUTE",
+    20.0
+   ],
+   "SolarBatteryDesign__solar_battery_plant__solar_array__pv_module__cost_model__efficiency": [
+    "EntryPointType.USAGE_LITERAL",
+    0.21
+   ],
+   "SolarBatteryDesign__solar_battery_plant__solar_array__pv_module__cost_model__wattage": [
+    "EntryPointType.USAGE_LITERAL",
+    400.0
+   ]
+  },
+  "relocated": {
+   "SolarBatteryDesign__solar_battery_plant__discount_rate": [
+    "EntryPointType.DESIGN_ATTRIBUTE",
+    0.05
+   ],
+   "SolarBatteryDesign__solar_battery_plant__fuel_consumption": [
+    "EntryPointType.DESIGN_ATTRIBUTE",
+    0.0
+   ],
+   "SolarBatteryDesign__solar_battery_plant__fuel_unit_cost": [
+    "EntryPointType.DESIGN_ATTRIBUTE",
+    0.0
+   ],
+   "SolarBatteryDesign__solar_battery_plant__n_mod": [
+    "EntryPointType.DESIGN_ATTRIBUTE",
+    1.0
+   ],
+   "SolarBatteryDesign__solar_battery_plant__om_rate_per_kw_year": [
+    "EntryPointType.DESIGN_ATTRIBUTE",
+    20.0
+   ],
+   "SolarBatteryDesign__solar_battery_plant__p_net_mw": [
+    "EntryPointType.DESIGN_ATTRIBUTE",
+    0.008
+   ],
+   "SolarBatteryDesign__solar_battery_plant__plant_availability": [
+    "EntryPointType.DESIGN_ATTRIBUTE",
+    0.159
+   ],
+   "SolarBatteryDesign__solar_battery_plant__plant_lifetime": [
+    "EntryPointType.DESIGN_ATTRIBUTE",
+    25.0
+   ],
+   "SolarBatteryDesign__solar_battery_plant__yearly_inflation": [
+    "EntryPointType.DESIGN_ATTRIBUTE",
+    0.0245
+   ],
+   "SolarBatteryDesign__solar_battery_plant__battery_system__battery_bos__cost_model__cost_per_pack_bos": [
+    "EntryPointType.LIBRARY_DEFAULT",
+    71.5
+   ],
+   "SolarBatteryDesign__solar_battery_plant__battery_system__battery_bos__cost_model__fab_factor": [
+    "EntryPointType.LIBRARY_DEFAULT",
+    0.45
+   ],
+   "SolarBatteryDesign__solar_battery_plant__battery_system__battery_bos__cost_model__install_factor": [
+    "EntryPointType.LIBRARY_DEFAULT",
+    0.3
+   ],
+   "SolarBatteryDesign__solar_battery_plant__battery_system__battery_pack__cost_model__cost_per_kwh": [
+    "EntryPointType.LIBRARY_DEFAULT",
+    171.5
+   ],
+   "SolarBatteryDesign__solar_battery_plant__battery_system__battery_pack__cost_model__fab_factor": [
+    "EntryPointType.LIBRARY_DEFAULT",
+    0.45
+   ],
+   "SolarBatteryDesign__solar_battery_plant__battery_system__battery_pack__cost_model__install_factor": [
+    "EntryPointType.LIBRARY_DEFAULT",
+    0.3
+   ],
+   "SolarBatteryDesign__solar_battery_plant__battery_system__hybrid_inverter__cost_model__cost_per_watt": [
+    "EntryPointType.LIBRARY_DEFAULT",
+    0.1714
+   ],
+   "SolarBatteryDesign__solar_battery_plant__battery_system__hybrid_inverter__cost_model__fab_factor": [
+    "EntryPointType.LIBRARY_DEFAULT",
+    0.45
+   ],
+   "SolarBatteryDesign__solar_battery_plant__battery_system__hybrid_inverter__cost_model__install_factor": [
+    "EntryPointType.LIBRARY_DEFAULT",
+    0.3
+   ],
+   "SolarBatteryDesign__solar_battery_plant__site_infra__electrical_panel__cost_model__base_cost": [
+    "EntryPointType.LIBRARY_DEFAULT",
+    150.0
+   ],
+   "SolarBatteryDesign__solar_battery_plant__site_infra__electrical_panel__cost_model__cost_per_circuit": [
+    "EntryPointType.LIBRARY_DEFAULT",
+    34.0
+   ],
+   "SolarBatteryDesign__solar_battery_plant__site_infra__electrical_panel__cost_model__fab_factor": [
+    "EntryPointType.LIBRARY_DEFAULT",
+    0.45
+   ],
+   "SolarBatteryDesign__solar_battery_plant__site_infra__electrical_panel__cost_model__install_factor": [
+    "EntryPointType.LIBRARY_DEFAULT",
+    0.3
+   ],
+   "SolarBatteryDesign__solar_battery_plant__site_infra__permitting__cost_model__cost_per_kw": [
+    "EntryPointType.LIBRARY_DEFAULT",
+    187.5
+   ],
+   "SolarBatteryDesign__solar_battery_plant__site_infra__racking__cost_model__cost_per_panel_rack": [
+    "EntryPointType.LIBRARY_DEFAULT",
+    57.0
+   ],
+   "SolarBatteryDesign__solar_battery_plant__site_infra__racking__cost_model__fab_factor": [
+    "EntryPointType.LIBRARY_DEFAULT",
+    0.45
+   ],
+   "SolarBatteryDesign__solar_battery_plant__site_infra__racking__cost_model__install_factor": [
+    "EntryPointType.LIBRARY_DEFAULT",
+    0.3
+   ],
+   "SolarBatteryDesign__solar_battery_plant__solar_array__allocation_model__child_count": [
+    "EntryPointType.USAGE_LITERAL",
+    25.0
+   ],
+   "SolarBatteryDesign__solar_battery_plant__solar_array__allocation_model__fastener_cost_per_child": [
+    "EntryPointType.LIBRARY_DEFAULT",
+    0.5
+   ],
+   "SolarBatteryDesign__solar_battery_plant__solar_array__allocation_model__seal_cost_per_child": [
+    "EntryPointType.LIBRARY_DEFAULT",
+    0.3
+   ],
+   "SolarBatteryDesign__solar_battery_plant__solar_array__allocation_model__total_child_mass": [
+    "EntryPointType.USAGE_LITERAL",
+    50.0
+   ],
+   "SolarBatteryDesign__solar_battery_plant__solar_array__allocation_model__wiring_cost_per_kg": [
+    "EntryPointType.LIBRARY_DEFAULT",
+    2.0
+   ],
+   "SolarBatteryDesign__solar_battery_plant__solar_array__array_bos__cost_model__cost_per_panel_bos": [
+    "EntryPointType.LIBRARY_DEFAULT",
+    30.0
+   ],
+   "SolarBatteryDesign__solar_battery_plant__solar_array__array_bos__cost_model__cost_per_string": [
+    "EntryPointType.LIBRARY_DEFAULT",
+    150.0
+   ],
+   "SolarBatteryDesign__solar_battery_plant__solar_array__array_bos__cost_model__fab_factor": [
+    "EntryPointType.LIBRARY_DEFAULT",
+    0.45
+   ],
+   "SolarBatteryDesign__solar_battery_plant__solar_array__array_bos__cost_model__install_factor": [
+    "EntryPointType.LIBRARY_DEFAULT",
+    0.3
+   ],
+   "SolarBatteryDesign__solar_battery_plant__solar_array__inverter__cost_model__cost_per_watt": [
+    "EntryPointType.LIBRARY_DEFAULT",
+    0.286
+   ],
+   "SolarBatteryDesign__solar_battery_plant__solar_array__inverter__cost_model__fab_factor": [
+    "EntryPointType.LIBRARY_DEFAULT",
+    0.45
+   ],
+   "SolarBatteryDesign__solar_battery_plant__solar_array__inverter__cost_model__install_factor": [
+    "EntryPointType.LIBRARY_DEFAULT",
+    0.3
+   ],
+   "SolarBatteryDesign__solar_battery_plant__solar_array__pv_module__cost_model__cost_per_watt": [
+    "EntryPointType.LIBRARY_DEFAULT",
+    1.07
+   ],
+   "SolarBatteryDesign__solar_battery_plant__solar_array__pv_module__cost_model__fab_factor": [
+    "EntryPointType.LIBRARY_DEFAULT",
+    0.45
+   ],
+   "SolarBatteryDesign__solar_battery_plant__solar_array__pv_module__cost_model__install_factor": [
+    "EntryPointType.LIBRARY_DEFAULT",
+    0.3
+   ],
+   "SolarBatteryDesign__solar_battery_plant__battery_system__battery_bos__cost_model__pack_count": [
+    "EntryPointType.USAGE_LITERAL",
+    8.0
+   ],
+   "SolarBatteryDesign__solar_battery_plant__battery_system__battery_pack__cost_model__capacity_kwh": [
+    "EntryPointType.USAGE_LITERAL",
+    5.0
+   ],
+   "SolarBatteryDesign__solar_battery_plant__battery_system__battery_pack__cost_model__chemistry_factor": [
+    "EntryPointType.USAGE_LITERAL",
+    1.0
+   ],
+   "SolarBatteryDesign__solar_battery_plant__battery_system__hybrid_inverter__cost_model__power_rating": [
+    "EntryPointType.USAGE_LITERAL",
+    10000.0
+   ],
+   "SolarBatteryDesign__solar_battery_plant__battery_system__pack_count": [
+    "EntryPointType.DESIGN_ATTRIBUTE",
+    8.0
+   ],
+   "SolarBatteryDesign__solar_battery_plant__site_infra__electrical_panel__cost_model__circuit_count": [
+    "EntryPointType.USAGE_LITERAL",
+    4.0
+   ],
+   "SolarBatteryDesign__solar_battery_plant__site_infra__fabrication_cost__permitting_fabrication_cost": [
+    "EntryPointType.DESIGN_ATTRIBUTE",
+    0.0
+   ],
+   "SolarBatteryDesign__solar_battery_plant__site_infra__installation_cost__permitting_installation_cost": [
+    "EntryPointType.DESIGN_ATTRIBUTE",
+    0.0
+   ],
+   "SolarBatteryDesign__solar_battery_plant__site_infra__permitting__cost_model__system_capacity_kw": [
+    "EntryPointType.USAGE_LITERAL",
+    8.0
+   ],
+   "SolarBatteryDesign__solar_battery_plant__site_infra__racking__cost_model__panel_count": [
+    "EntryPointType.USAGE_LITERAL",
+    20.0
+   ],
+   "SolarBatteryDesign__solar_battery_plant__site_infra__racking__cost_model__tilt_angle": [
+    "EntryPointType.USAGE_LITERAL",
+    30.0
+   ],
+   "SolarBatteryDesign__solar_battery_plant__site_infra__raw_material_cost__permitting_raw_material_cost": [
+    "EntryPointType.DESIGN_ATTRIBUTE",
+    0.0
+   ],
+   "SolarBatteryDesign__solar_battery_plant__solar_array__array_bos__cost_model__panel_count": [
+    "EntryPointType.USAGE_LITERAL",
+    20.0
+   ],
+   "SolarBatteryDesign__solar_battery_plant__solar_array__array_bos__cost_model__string_count": [
+    "EntryPointType.USAGE_LITERAL",
+    4.0
+   ],
+   "SolarBatteryDesign__solar_battery_plant__solar_array__inverter__cost_model__power_rating": [
+    "EntryPointType.USAGE_LITERAL",
+    2000.0
+   ],
+   "SolarBatteryDesign__solar_battery_plant__solar_array__inverter_count": [
+    "EntryPointType.DESIGN_ATTRIBUTE",
+    4.0
+   ],
+   "SolarBatteryDesign__solar_battery_plant__solar_array__module_count": [
+    "EntryPointType.DESIGN_ATTRIBUTE",
+    20.0
+   ],
+   "SolarBatteryDesign__solar_battery_plant__solar_array__pv_module__cost_model__efficiency": [
+    "EntryPointType.USAGE_LITERAL",
+    0.21
+   ],
+   "SolarBatteryDesign__solar_battery_plant__solar_array__pv_module__cost_model__wattage": [
+    "EntryPointType.USAGE_LITERAL",
+    400.0
+   ]
+  }
+ },
+ "bindings": {
+  "live": {
+   "SolarBatteryDesign__solar_battery_plant__battery_system__battery_bos__cost_model|pack_count": {
+    "binding_type": "BindingType.LITERAL",
+    "source_path": null,
+    "literal_value": 8.0,
+    "written_reference": "pack_count"
+   }
+  },
+  "snapshot": {
+   "SolarBatteryDesign__solar_battery_plant__battery_system__battery_bos__cost_model|pack_count": {
+    "binding_type": "BindingType.LITERAL",
+    "source_path": null,
+    "literal_value": 8.0,
+    "written_reference": "pack_count"
+   }
+  },
+  "relocated": {
+   "SolarBatteryDesign__solar_battery_plant__battery_system__battery_bos__cost_model|pack_count": {
+    "binding_type": "BindingType.LITERAL",
+    "source_path": null,
+    "literal_value": 8.0,
+    "written_reference": "pack_count"
+   }
+  }
+ }
+}

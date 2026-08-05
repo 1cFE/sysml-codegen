@@ -1,0 +1,112 @@
+Element: ReferenceUsage name='R'
+
+Full public surface (160 attrs):
+['STD', 'alias_ids', 'basic_feature', 'cast', 'chaining_features', 'children', 'comments', 'conforms', 'cross_feature', 'cst_node', 'declared_multiplicity', 'declared_multiplicity_member', 'declared_name', 'declared_short_name', 'definitions', 'differencing_types', 'directed_features', 'directed_usages', 'direction', 'direction_of', 'disjoining_types', 'document', 'documentation', 'element_id', 'end_features', 'end_owning_type', 'explicit_direction', 'feature_memberships', 'feature_target', 'feature_value', 'feature_value_expression', 'feature_value_member', 'features', 'featuring_types', 'find_owned_cross_feature', 'first_chaining_feature', 'get_member', 'get_membership', 'heritage', 'imported_memberships', 'inherited_features', 'inherited_memberships', 'inputs', 'intersecting_types', 'is_abstract', 'is_abstract_explicitly', 'is_composite', 'is_composite_explicitly', 'is_conjugated', 'is_constant', 'is_constant_explicitly', 'is_derived', 'is_end', 'is_end_explicitly', 'is_implied_included', 'is_library_element', 'is_nonunique', 'is_ordered', 'is_portion', 'is_read_only', 'is_reference', 'is_reference_explicitly', 'is_sufficient', 'is_sufficient_explicitly', 'is_unique', 'is_variable', 'is_variable_explicitly', 'is_variation', 'isinstance', 'last_chaining_feature', 'matches_qualified_name', 'may_time_vary', 'members', 'memberships', 'metadata', 'multiplicity', 'name', 'nested_actions', 'nested_allocations', 'nested_analysis_cases', 'nested_attributes', 'nested_calculations', 'nested_cases', 'nested_concerns', 'nested_connections', 'nested_constraints', 'nested_enumerations', 'nested_flows', 'nested_interfaces', 'nested_items', 'nested_metadata', 'nested_occurrences', 'nested_parts', 'nested_ports', 'nested_references', 'nested_renderings', 'nested_requirements', 'nested_states', 'nested_transitions', 'nested_usages', 'nested_use_cases', 'nested_verification_cases', 'nested_viewpoints', 'nested_views', 'outputs', 'owned_annotations', 'owned_conjugator', 'owned_cross_feature', 'owned_cross_feature_member', 'owned_cross_subsetting', 'owned_differencings', 'owned_directed_features', 'owned_disjoinings', 'owned_elements', 'owned_end_features', 'owned_feature_chainings', 'owned_feature_invertings', 'owned_feature_memberships', 'owned_features', 'owned_imports', 'owned_inputs', 'owned_intersectings', 'owned_members', 'owned_memberships', 'owned_outputs', 'owned_redefinitions', 'owned_reference_subsetting', 'owned_relationships', 'owned_specializations', 'owned_subsettings', 'owned_type_featurings', 'owned_typings', 'owned_unionings', 'owner', 'owning_definition', 'owning_feature_membership', 'owning_membership', 'owning_namespace', 'owning_relationship', 'owning_type', 'owning_usage', 'parent', 'path', 'prefixes', 'qualified_name', 'referenced_feature', 'referenced_feature_target', 'scoped_owner', 'sema_state', 'short_name', 'specializes', 'textual_representations', 'try_cast', 'try_set_is_variable', 'type_relationships', 'types', 'unioning_types', 'usages', 'variant_memberships', 'variants']
+
+Candidate relationship accessors: ['basic_feature', 'chaining_features', 'cross_feature', 'directed_features', 'end_features', 'feature_memberships', 'feature_target', 'feature_value', 'feature_value_expression', 'feature_value_member', 'features', 'find_owned_cross_feature', 'first_chaining_feature', 'inherited_features', 'inherited_memberships', 'last_chaining_feature', 'owned_cross_feature', 'owned_cross_feature_member', 'owned_cross_subsetting', 'owned_directed_features', 'owned_end_features', 'owned_feature_chainings', 'owned_feature_invertings', 'owned_feature_memberships', 'owned_features', 'owned_redefinitions', 'owned_reference_subsetting', 'owned_relationships', 'owned_specializations', 'owned_subsettings', 'owning_feature_membership', 'owning_relationship', 'referenced_feature', 'referenced_feature_target', 'specializes', 'type_relationships']
+
+basic_feature: type=ReferenceUsage
+  -> ReferenceUsage name='R' qn=syside.core.QualifiedName(['FormChain', 'Design Ctx', 'plant', 'R'])
+
+chaining_features: type=LazyIterator
+
+cross_feature: type=NoneType
+  -> NoneType name=None qn=None
+
+directed_features: type=LazyIterator
+
+end_features: type=LazyIterator
+
+feature_memberships: type=LazyIterator
+  -> FeatureMembership name=None qn=None
+  -> FeatureMembership name=None qn=None
+
+feature_target: type=ReferenceUsage
+  -> ReferenceUsage name='R' qn=syside.core.QualifiedName(['FormChain', 'Design Ctx', 'plant', 'R'])
+
+feature_value: type=FeatureValue
+  -> FeatureValue name=None qn=None
+
+feature_value_expression: type=LiteralRational
+  -> LiteralRational name=None qn=None
+
+feature_value_member: type=FeatureValueAccessor
+  -> FeatureValueAccessor name=None qn=None
+
+features: type=LazyIterator
+  -> Feature name='self' qn=syside.core.QualifiedName(['Base', 'DataValue', 'self'])
+  -> Feature name='that' qn=syside.core.QualifiedName(['Base', 'things', 'that'])
+
+find_owned_cross_feature: <method>
+
+first_chaining_feature: type=NoneType
+  -> NoneType name=None qn=None
+
+inherited_features: type=LazyIterator
+  -> Feature name='self' qn=syside.core.QualifiedName(['Base', 'DataValue', 'self'])
+  -> Feature name='that' qn=syside.core.QualifiedName(['Base', 'things', 'that'])
+
+inherited_memberships: type=LazyIterator
+  -> FeatureValue name=None qn=None
+  -> OwningMembership name=None qn=None
+  -> FeatureMembership name=None qn=None
+  -> OwningMembership name=None qn=None
+  -> OwningMembership name=None qn=None
+
+last_chaining_feature: type=NoneType
+  -> NoneType name=None qn=None
+
+owned_cross_feature: type=NoneType
+  -> NoneType name=None qn=None
+
+owned_cross_feature_member: type=OwnedFeatureAccessor
+  -> OwnedFeatureAccessor name=None qn=None
+
+owned_cross_subsetting: type=NoneType
+  -> NoneType name=None qn=None
+
+owned_directed_features: type=LazyIterator
+
+owned_end_features: type=LazyIterator
+
+owned_feature_chainings: type=LazyIterator
+
+owned_feature_invertings: type=LazyIterator
+
+owned_feature_memberships: type=LazyIterator
+
+owned_features: type=LazyIterator
+
+owned_redefinitions: type=LazyIterator
+  -> Redefinition name=None qn=None
+     .redefined_feature = AttributeUsage qn=syside.core.QualifiedName(['FormChain', 'Probe Plant', 'R'])
+     .redefining_feature = ReferenceUsage qn=syside.core.QualifiedName(['FormChain', 'Design Ctx', 'plant', 'R'])
+     .general = AttributeUsage qn=syside.core.QualifiedName(['FormChain', 'Probe Plant', 'R'])
+     .specific = ReferenceUsage qn=syside.core.QualifiedName(['FormChain', 'Design Ctx', 'plant', 'R'])
+
+owned_reference_subsetting: type=NoneType
+  -> NoneType name=None qn=None
+
+owned_relationships: type=LazyIterator
+  -> Redefinition name=None qn=None
+     .redefined_feature = AttributeUsage qn=syside.core.QualifiedName(['FormChain', 'Probe Plant', 'R'])
+     .redefining_feature = ReferenceUsage qn=syside.core.QualifiedName(['FormChain', 'Design Ctx', 'plant', 'R'])
+     .general = AttributeUsage qn=syside.core.QualifiedName(['FormChain', 'Probe Plant', 'R'])
+     .specific = ReferenceUsage qn=syside.core.QualifiedName(['FormChain', 'Design Ctx', 'plant', 'R'])
+  -> FeatureValue name=None qn=None
+
+owned_specializations: type=LazyIterator
+  -> Redefinition name=None qn=None
+     .redefined_feature = AttributeUsage qn=syside.core.QualifiedName(['FormChain', 'Probe Plant', 'R'])
+     .redefining_feature = ReferenceUsage qn=syside.core.QualifiedName(['FormChain', 'Design Ctx', 'plant', 'R'])
+     .general = AttributeUsage qn=syside.core.QualifiedName(['FormChain', 'Probe Plant', 'R'])
+     .specific = ReferenceUsage qn=syside.core.QualifiedName(['FormChain', 'Design Ctx', 'plant', 'R'])
+
+owned_subsettings: type=LazyIterator
+  -> Redefinition name=None qn=None
+     .redefined_feature = AttributeUsage qn=syside.core.QualifiedName(['FormChain', 'Probe Plant', 'R'])
+     .redefining_feature = ReferenceUsage qn=syside.core.QualifiedName(['FormChain', 'Design Ctx', 'plant', 'R'])
+     .general = AttributeUsage qn=syside.core.QualifiedName(['FormChain', 'Probe Plant', 'R'])
+     .specific = ReferenceUsage qn=syside.core.QualifiedName(['FormChain', 'Design Ctx', 'plant', 'R'])
+
+owning_feature_membership: type=FeatureMembership

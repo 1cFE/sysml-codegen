@@ -1,0 +1,249 @@
+{
+  "model_file": "/home/reid/1cfe/sysml-codegen/.project/active/source-identity-binding-semantics-spike/probes/models/form_chain.sysml",
+  "diagnostics": [],
+  "contains_errors": false,
+  "calc_usages": [
+    {
+      "calc_usage": {
+        "type": "CalculationUsage",
+        "name": "c1",
+        "qualified_name": "FormChain::Design Ctx::c1",
+        "owner_type": "PartDefinition",
+        "owner_name": "Design Ctx",
+        "owner_qualified_name": "FormChain::Design Ctx"
+      },
+      "params": [
+        {
+          "param": {
+            "type": "ReferenceUsage",
+            "name": "R",
+            "qualified_name": "FormChain::Design Ctx::c1::R",
+            "owner_type": "CalculationUsage",
+            "owner_name": "c1",
+            "owner_qualified_name": "FormChain::Design Ctx::c1"
+          },
+          "direction": "FeatureDirectionKind.In",
+          "binding_expression": {
+            "node_type": "FeatureChainExpression",
+            "written": "plant.R",
+            "target_feature": {
+              "type": "ReferenceUsage",
+              "name": "R",
+              "qualified_name": "FormChain::Design Ctx::plant::R",
+              "owner_type": "PartUsage",
+              "owner_name": "plant",
+              "owner_qualified_name": "FormChain::Design Ctx::plant"
+            },
+            "operands": [
+              {
+                "node_type": "FeatureReferenceExpression",
+                "written": "plant",
+                "referent": {
+                  "type": "PartUsage",
+                  "name": "plant",
+                  "qualified_name": "FormChain::Design Ctx::plant",
+                  "owner_type": "PartDefinition",
+                  "owner_name": "Design Ctx",
+                  "owner_qualified_name": "FormChain::Design Ctx"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "calc_usage": {
+        "type": "CalculationUsage",
+        "name": "c2",
+        "qualified_name": "FormChain::Design Ctx::c2",
+        "owner_type": "PartDefinition",
+        "owner_name": "Design Ctx",
+        "owner_qualified_name": "FormChain::Design Ctx"
+      },
+      "params": [
+        {
+          "param": {
+            "type": "ReferenceUsage",
+            "name": "R",
+            "qualified_name": "FormChain::Design Ctx::c2::R",
+            "owner_type": "CalculationUsage",
+            "owner_name": "c2",
+            "owner_qualified_name": "FormChain::Design Ctx::c2"
+          },
+          "direction": "FeatureDirectionKind.In",
+          "binding_expression": {
+            "node_type": "FeatureChainExpression",
+            "written": "plant.R",
+            "target_feature": {
+              "type": "ReferenceUsage",
+              "name": "R",
+              "qualified_name": "FormChain::Design Ctx::plant::R",
+              "owner_type": "PartUsage",
+              "owner_name": "plant",
+              "owner_qualified_name": "FormChain::Design Ctx::plant"
+            },
+            "operands": [
+              {
+                "node_type": "FeatureReferenceExpression",
+                "written": "plant",
+                "referent": {
+                  "type": "PartUsage",
+                  "name": "plant",
+                  "qualified_name": "FormChain::Design Ctx::plant",
+                  "owner_type": "PartDefinition",
+                  "owner_name": "Design Ctx",
+                  "owner_qualified_name": "FormChain::Design Ctx"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "value_features": [
+    {
+      "feature": {
+        "type": "AttributeUsage",
+        "name": "R",
+        "qualified_name": "FormChain::TwiceCalc::R",
+        "owner_type": "CalculationDefinition",
+        "owner_name": "TwiceCalc",
+        "owner_qualified_name": "FormChain::TwiceCalc"
+      },
+      "owner_is_calc": true,
+      "value_written": null,
+      "value_node_type": null,
+      "redefines": []
+    },
+    {
+      "feature": {
+        "type": "AttributeUsage",
+        "name": "y",
+        "qualified_name": "FormChain::TwiceCalc::y",
+        "owner_type": "CalculationDefinition",
+        "owner_name": "TwiceCalc",
+        "owner_qualified_name": "FormChain::TwiceCalc"
+      },
+      "owner_is_calc": true,
+      "value_written": "R * 2.0",
+      "value_node_type": "OperatorExpression",
+      "redefines": []
+    },
+    {
+      "feature": {
+        "type": "AttributeUsage",
+        "name": "R",
+        "qualified_name": "FormChain::ThriceCalc::R",
+        "owner_type": "CalculationDefinition",
+        "owner_name": "ThriceCalc",
+        "owner_qualified_name": "FormChain::ThriceCalc"
+      },
+      "owner_is_calc": true,
+      "value_written": null,
+      "value_node_type": null,
+      "redefines": []
+    },
+    {
+      "feature": {
+        "type": "AttributeUsage",
+        "name": "z",
+        "qualified_name": "FormChain::ThriceCalc::z",
+        "owner_type": "CalculationDefinition",
+        "owner_name": "ThriceCalc",
+        "owner_qualified_name": "FormChain::ThriceCalc"
+      },
+      "owner_is_calc": true,
+      "value_written": "R * 3.0",
+      "value_node_type": "OperatorExpression",
+      "redefines": []
+    },
+    {
+      "feature": {
+        "type": "AttributeUsage",
+        "name": "R",
+        "qualified_name": "FormChain::Probe Plant::R",
+        "owner_type": "PartDefinition",
+        "owner_name": "Probe Plant",
+        "owner_qualified_name": "FormChain::Probe Plant"
+      },
+      "owner_is_calc": false,
+      "value_written": "3.0",
+      "value_node_type": "LiteralRational",
+      "redefines": []
+    },
+    {
+      "feature": {
+        "type": "ReferenceUsage",
+        "name": "R",
+        "qualified_name": "FormChain::Design Ctx::plant::R",
+        "owner_type": "PartUsage",
+        "owner_name": "plant",
+        "owner_qualified_name": "FormChain::Design Ctx::plant"
+      },
+      "owner_is_calc": false,
+      "value_written": "12.7",
+      "value_node_type": "LiteralRational",
+      "redefines": []
+    },
+    {
+      "feature": {
+        "type": "ReferenceUsage",
+        "name": "R",
+        "qualified_name": "FormChain::Design Ctx::c1::R",
+        "owner_type": "CalculationUsage",
+        "owner_name": "c1",
+        "owner_qualified_name": "FormChain::Design Ctx::c1"
+      },
+      "owner_is_calc": true,
+      "value_written": "plant.R",
+      "value_node_type": "FeatureChainExpression",
+      "redefines": []
+    },
+    {
+      "feature": {
+        "type": "ReferenceUsage",
+        "name": "R",
+        "qualified_name": "FormChain::Design Ctx::c2::R",
+        "owner_type": "CalculationUsage",
+        "owner_name": "c2",
+        "owner_qualified_name": "FormChain::Design Ctx::c2"
+      },
+      "owner_is_calc": true,
+      "value_written": "plant.R",
+      "value_node_type": "FeatureChainExpression",
+      "redefines": []
+    }
+  ],
+  "IMPL_VIEW_sysml_codegen_extractor": [
+    {
+      "usage_qn": "FormChain__design_ctx__c1",
+      "bindings": [
+        {
+          "param": "R",
+          "binding_type": "BindingType.CHAIN",
+          "source_path": "plant.R",
+          "raw_expression": "FeatureChainExpression -> plant.R",
+          "written_qualifier": null,
+          "literal_value": null
+        }
+      ],
+      "unbound_params": []
+    },
+    {
+      "usage_qn": "FormChain__design_ctx__c2",
+      "bindings": [
+        {
+          "param": "R",
+          "binding_type": "BindingType.CHAIN",
+          "source_path": "plant.R",
+          "raw_expression": "FeatureChainExpression -> plant.R",
+          "written_qualifier": null,
+          "literal_value": null
+        }
+      ],
+      "unbound_params": []
+    }
+  ]
+}

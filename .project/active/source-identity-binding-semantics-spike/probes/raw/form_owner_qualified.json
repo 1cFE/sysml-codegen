@@ -1,0 +1,221 @@
+{
+  "model_file": "/home/reid/1cfe/sysml-codegen/.project/active/source-identity-binding-semantics-spike/probes/models/form_owner_qualified.sysml",
+  "diagnostics": [],
+  "contains_errors": false,
+  "calc_usages": [
+    {
+      "calc_usage": {
+        "type": "CalculationUsage",
+        "name": "c1",
+        "qualified_name": "FormOwnerQualified::Probe Plant::c1",
+        "owner_type": "PartDefinition",
+        "owner_name": "Probe Plant",
+        "owner_qualified_name": "FormOwnerQualified::Probe Plant"
+      },
+      "params": [
+        {
+          "param": {
+            "type": "ReferenceUsage",
+            "name": "R",
+            "qualified_name": "FormOwnerQualified::Probe Plant::c1::R",
+            "owner_type": "CalculationUsage",
+            "owner_name": "c1",
+            "owner_qualified_name": "FormOwnerQualified::Probe Plant::c1"
+          },
+          "direction": "FeatureDirectionKind.In",
+          "binding_expression": {
+            "node_type": "FeatureReferenceExpression",
+            "written": "'Probe Plant'::R",
+            "referent": {
+              "type": "AttributeUsage",
+              "name": "R",
+              "qualified_name": "FormOwnerQualified::Probe Plant::R",
+              "owner_type": "PartDefinition",
+              "owner_name": "Probe Plant",
+              "owner_qualified_name": "FormOwnerQualified::Probe Plant"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "calc_usage": {
+        "type": "CalculationUsage",
+        "name": "c2",
+        "qualified_name": "FormOwnerQualified::Probe Plant::c2",
+        "owner_type": "PartDefinition",
+        "owner_name": "Probe Plant",
+        "owner_qualified_name": "FormOwnerQualified::Probe Plant"
+      },
+      "params": [
+        {
+          "param": {
+            "type": "ReferenceUsage",
+            "name": "R",
+            "qualified_name": "FormOwnerQualified::Probe Plant::c2::R",
+            "owner_type": "CalculationUsage",
+            "owner_name": "c2",
+            "owner_qualified_name": "FormOwnerQualified::Probe Plant::c2"
+          },
+          "direction": "FeatureDirectionKind.In",
+          "binding_expression": {
+            "node_type": "FeatureReferenceExpression",
+            "written": "'Probe Plant'::R",
+            "referent": {
+              "type": "AttributeUsage",
+              "name": "R",
+              "qualified_name": "FormOwnerQualified::Probe Plant::R",
+              "owner_type": "PartDefinition",
+              "owner_name": "Probe Plant",
+              "owner_qualified_name": "FormOwnerQualified::Probe Plant"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "value_features": [
+    {
+      "feature": {
+        "type": "AttributeUsage",
+        "name": "R",
+        "qualified_name": "FormOwnerQualified::TwiceCalc::R",
+        "owner_type": "CalculationDefinition",
+        "owner_name": "TwiceCalc",
+        "owner_qualified_name": "FormOwnerQualified::TwiceCalc"
+      },
+      "owner_is_calc": true,
+      "value_written": null,
+      "value_node_type": null,
+      "redefines": []
+    },
+    {
+      "feature": {
+        "type": "AttributeUsage",
+        "name": "y",
+        "qualified_name": "FormOwnerQualified::TwiceCalc::y",
+        "owner_type": "CalculationDefinition",
+        "owner_name": "TwiceCalc",
+        "owner_qualified_name": "FormOwnerQualified::TwiceCalc"
+      },
+      "owner_is_calc": true,
+      "value_written": "R * 2.0",
+      "value_node_type": "OperatorExpression",
+      "redefines": []
+    },
+    {
+      "feature": {
+        "type": "AttributeUsage",
+        "name": "R",
+        "qualified_name": "FormOwnerQualified::ThriceCalc::R",
+        "owner_type": "CalculationDefinition",
+        "owner_name": "ThriceCalc",
+        "owner_qualified_name": "FormOwnerQualified::ThriceCalc"
+      },
+      "owner_is_calc": true,
+      "value_written": null,
+      "value_node_type": null,
+      "redefines": []
+    },
+    {
+      "feature": {
+        "type": "AttributeUsage",
+        "name": "z",
+        "qualified_name": "FormOwnerQualified::ThriceCalc::z",
+        "owner_type": "CalculationDefinition",
+        "owner_name": "ThriceCalc",
+        "owner_qualified_name": "FormOwnerQualified::ThriceCalc"
+      },
+      "owner_is_calc": true,
+      "value_written": "R * 3.0",
+      "value_node_type": "OperatorExpression",
+      "redefines": []
+    },
+    {
+      "feature": {
+        "type": "AttributeUsage",
+        "name": "R",
+        "qualified_name": "FormOwnerQualified::Probe Plant::R",
+        "owner_type": "PartDefinition",
+        "owner_name": "Probe Plant",
+        "owner_qualified_name": "FormOwnerQualified::Probe Plant"
+      },
+      "owner_is_calc": false,
+      "value_written": "3.0",
+      "value_node_type": "LiteralRational",
+      "redefines": []
+    },
+    {
+      "feature": {
+        "type": "ReferenceUsage",
+        "name": "R",
+        "qualified_name": "FormOwnerQualified::Probe Plant::c1::R",
+        "owner_type": "CalculationUsage",
+        "owner_name": "c1",
+        "owner_qualified_name": "FormOwnerQualified::Probe Plant::c1"
+      },
+      "owner_is_calc": true,
+      "value_written": "'Probe Plant'::R",
+      "value_node_type": "FeatureReferenceExpression",
+      "redefines": []
+    },
+    {
+      "feature": {
+        "type": "ReferenceUsage",
+        "name": "R",
+        "qualified_name": "FormOwnerQualified::Probe Plant::c2::R",
+        "owner_type": "CalculationUsage",
+        "owner_name": "c2",
+        "owner_qualified_name": "FormOwnerQualified::Probe Plant::c2"
+      },
+      "owner_is_calc": true,
+      "value_written": "'Probe Plant'::R",
+      "value_node_type": "FeatureReferenceExpression",
+      "redefines": []
+    },
+    {
+      "feature": {
+        "type": "ReferenceUsage",
+        "name": "R",
+        "qualified_name": "FormOwnerQualified::design_ctx::plant::R",
+        "owner_type": "PartUsage",
+        "owner_name": "plant",
+        "owner_qualified_name": "FormOwnerQualified::design_ctx::plant"
+      },
+      "owner_is_calc": false,
+      "value_written": "12.7",
+      "value_node_type": "LiteralRational",
+      "redefines": []
+    }
+  ],
+  "IMPL_VIEW_sysml_codegen_extractor": [
+    {
+      "usage_qn": "FormOwnerQualified__design_ctx__plant__c1",
+      "bindings": [
+        {
+          "param": "R",
+          "binding_type": "BindingType.REFERENCE",
+          "source_path": "FormOwnerQualified::'Probe Plant'::R",
+          "raw_expression": "FeatureReferenceExpression -> FormOwnerQualified::'Probe Plant'::R",
+          "written_qualifier": "'Probe Plant'",
+          "literal_value": null
+        }
+      ],
+      "unbound_params": []
+    },
+    {
+      "usage_qn": "FormOwnerQualified__design_ctx__plant__c2",
+      "bindings": [
+        {
+          "param": "R",
+          "binding_type": "BindingType.REFERENCE",
+          "source_path": "FormOwnerQualified::'Probe Plant'::R",
+          "raw_expression": "FeatureReferenceExpression -> FormOwnerQualified::'Probe Plant'::R",
+          "written_qualifier": "'Probe Plant'",
+          "literal_value": null
+        }
+      ],
+      "unbound_params": []
+    }
+  ]
+}

@@ -1,0 +1,428 @@
+{
+ "fixture": "fusion_tea",
+ "verdict": "PARITY",
+ "topology": {
+  "live": {
+   "hif_driver__HIF_Driver__efficiency": [
+    "EntryPointType.DESIGN_ATTRIBUTE",
+    0.35
+   ],
+   "hif_plant_pkg__hif_plant__gain": [
+    "EntryPointType.DESIGN_ATTRIBUTE",
+    80.0
+   ],
+   "hif_plant_pkg__hif_plant__meier_capital_calc__target_factory_cost": [
+    "EntryPointType.USAGE_LITERAL",
+    0.1
+   ],
+   "hif_plant_pkg__hif_plant__meier_reactor_cost_calc__num_units": [
+    "EntryPointType.USAGE_LITERAL",
+    1.0
+   ],
+   "hif_plant_pkg__hif_plant__net_electric_power_gw": [
+    "EntryPointType.DESIGN_ATTRIBUTE",
+    1.0
+   ],
+   "hif_plant_pkg__hif_plant__thermal_power_gw": [
+    "EntryPointType.DESIGN_ATTRIBUTE",
+    2.054
+   ],
+   "hif_plant_pkg__hif_plant__chamber__blanket_energy_multiple": [
+    "EntryPointType.DESIGN_ATTRIBUTE",
+    1.15
+   ],
+   "hif_plant_pkg__hif_plant__chamber__yield_cost_constant": [
+    "EntryPointType.DESIGN_ATTRIBUTE",
+    5000000.0
+   ],
+   "hif_plant_pkg__hif_plant__driver__efficiency": [
+    "EntryPointType.DESIGN_ATTRIBUTE",
+    0.35
+   ],
+   "hif_plant_pkg__hif_plant__driver__energy": [
+    "EntryPointType.DESIGN_ATTRIBUTE",
+    14286000.0
+   ],
+   "hif_plant_pkg__hif_plant__driver__lifetime_shots": [
+    "EntryPointType.DESIGN_ATTRIBUTE",
+    6000000000.0
+   ],
+   "hif_plant_pkg__hif_plant__lcoe_calc__construction_years": [
+    "EntryPointType.LIBRARY_DEFAULT",
+    5.0
+   ],
+   "hif_plant_pkg__hif_plant__lcoe_calc__operational_years": [
+    "EntryPointType.LIBRARY_DEFAULT",
+    40.0
+   ],
+   "hif_plant_pkg__hif_plant__target_factory__cost_per_target": [
+    "EntryPointType.DESIGN_ATTRIBUTE",
+    10.0
+   ],
+   "hif_driver__hif_driver_instance__meier_cost__beam_energy_mj": [
+    "EntryPointType.USAGE_LITERAL",
+    5.0
+   ],
+   "hif_driver__hif_driver_instance__meier_cost__num_chambers": [
+    "EntryPointType.USAGE_LITERAL",
+    1.0
+   ],
+   "hif_driver__hif_driver_instance__meier_cost__rep_rate": [
+    "EntryPointType.USAGE_LITERAL",
+    3.5
+   ],
+   "hif_plant_pkg__hif_plant__driver__meier_cost__beam_energy_mj": [
+    "EntryPointType.USAGE_LITERAL",
+    5.0
+   ],
+   "hif_plant_pkg__hif_plant__driver__meier_cost__num_chambers": [
+    "EntryPointType.USAGE_LITERAL",
+    1.0
+   ],
+   "hif_plant_pkg__hif_plant__driver__meier_cost__rep_rate": [
+    "EntryPointType.USAGE_LITERAL",
+    3.5
+   ],
+   "hif_plant_pkg__hif_plant__lcoe_calc__availability": [
+    "EntryPointType.USAGE_LITERAL",
+    0.9
+   ],
+   "hif_plant_pkg__hif_plant__lcoe_calc__discount_rate": [
+    "EntryPointType.USAGE_LITERAL",
+    0.08
+   ],
+   "hif_plant_pkg__hif_plant__lcoe_calc__frequency": [
+    "EntryPointType.USAGE_LITERAL",
+    3.5
+   ],
+   "hif_plant_pkg__hif_plant__lcoe_calc__gain": [
+    "EntryPointType.USAGE_LITERAL",
+    80.0
+   ],
+   "hif_plant_pkg__hif_plant__lcoe_calc__om_cost_constant": [
+    "EntryPointType.USAGE_LITERAL",
+    65.0
+   ],
+   "hif_plant_pkg__hif_plant__lcoe_calc__plant_cost_constant": [
+    "EntryPointType.USAGE_LITERAL",
+    2000.0
+   ],
+   "hif_plant_pkg__hif_plant__lcoe_calc__thermal_efficiency": [
+    "EntryPointType.USAGE_LITERAL",
+    0.43
+   ],
+   "hif_plant_pkg__hif_plant__meier_coe_calc__availability": [
+    "EntryPointType.USAGE_LITERAL",
+    0.9
+   ],
+   "hif_plant_pkg__hif_plant__recirc_calc__gain": [
+    "EntryPointType.USAGE_LITERAL",
+    80.0
+   ],
+   "hif_plant_pkg__hif_plant__recirc_calc__thermal_efficiency": [
+    "EntryPointType.USAGE_LITERAL",
+    0.43
+   ],
+   "hif_plant_pkg__hif_plant__viability__81ddf10fb1d1749b__threshold": [
+    "EntryPointType.LIBRARY_DEFAULT",
+    10.0
+   ]
+  },
+  "snapshot": {
+   "hif_driver__HIF_Driver__efficiency": [
+    "EntryPointType.DESIGN_ATTRIBUTE",
+    0.35
+   ],
+   "hif_plant_pkg__hif_plant__gain": [
+    "EntryPointType.DESIGN_ATTRIBUTE",
+    80.0
+   ],
+   "hif_plant_pkg__hif_plant__meier_capital_calc__target_factory_cost": [
+    "EntryPointType.USAGE_LITERAL",
+    0.1
+   ],
+   "hif_plant_pkg__hif_plant__meier_reactor_cost_calc__num_units": [
+    "EntryPointType.USAGE_LITERAL",
+    1.0
+   ],
+   "hif_plant_pkg__hif_plant__net_electric_power_gw": [
+    "EntryPointType.DESIGN_ATTRIBUTE",
+    1.0
+   ],
+   "hif_plant_pkg__hif_plant__thermal_power_gw": [
+    "EntryPointType.DESIGN_ATTRIBUTE",
+    2.054
+   ],
+   "hif_plant_pkg__hif_plant__chamber__blanket_energy_multiple": [
+    "EntryPointType.DESIGN_ATTRIBUTE",
+    1.15
+   ],
+   "hif_plant_pkg__hif_plant__chamber__yield_cost_constant": [
+    "EntryPointType.DESIGN_ATTRIBUTE",
+    5000000.0
+   ],
+   "hif_plant_pkg__hif_plant__driver__efficiency": [
+    "EntryPointType.DESIGN_ATTRIBUTE",
+    0.35
+   ],
+   "hif_plant_pkg__hif_plant__driver__energy": [
+    "EntryPointType.DESIGN_ATTRIBUTE",
+    14286000.0
+   ],
+   "hif_plant_pkg__hif_plant__driver__lifetime_shots": [
+    "EntryPointType.DESIGN_ATTRIBUTE",
+    6000000000.0
+   ],
+   "hif_plant_pkg__hif_plant__lcoe_calc__construction_years": [
+    "EntryPointType.LIBRARY_DEFAULT",
+    5.0
+   ],
+   "hif_plant_pkg__hif_plant__lcoe_calc__operational_years": [
+    "EntryPointType.LIBRARY_DEFAULT",
+    40.0
+   ],
+   "hif_plant_pkg__hif_plant__target_factory__cost_per_target": [
+    "EntryPointType.DESIGN_ATTRIBUTE",
+    10.0
+   ],
+   "hif_driver__hif_driver_instance__meier_cost__beam_energy_mj": [
+    "EntryPointType.USAGE_LITERAL",
+    5.0
+   ],
+   "hif_driver__hif_driver_instance__meier_cost__num_chambers": [
+    "EntryPointType.USAGE_LITERAL",
+    1.0
+   ],
+   "hif_driver__hif_driver_instance__meier_cost__rep_rate": [
+    "EntryPointType.USAGE_LITERAL",
+    3.5
+   ],
+   "hif_plant_pkg__hif_plant__driver__meier_cost__beam_energy_mj": [
+    "EntryPointType.USAGE_LITERAL",
+    5.0
+   ],
+   "hif_plant_pkg__hif_plant__driver__meier_cost__num_chambers": [
+    "EntryPointType.USAGE_LITERAL",
+    1.0
+   ],
+   "hif_plant_pkg__hif_plant__driver__meier_cost__rep_rate": [
+    "EntryPointType.USAGE_LITERAL",
+    3.5
+   ],
+   "hif_plant_pkg__hif_plant__lcoe_calc__availability": [
+    "EntryPointType.USAGE_LITERAL",
+    0.9
+   ],
+   "hif_plant_pkg__hif_plant__lcoe_calc__discount_rate": [
+    "EntryPointType.USAGE_LITERAL",
+    0.08
+   ],
+   "hif_plant_pkg__hif_plant__lcoe_calc__frequency": [
+    "EntryPointType.USAGE_LITERAL",
+    3.5
+   ],
+   "hif_plant_pkg__hif_plant__lcoe_calc__gain": [
+    "EntryPointType.USAGE_LITERAL",
+    80.0
+   ],
+   "hif_plant_pkg__hif_plant__lcoe_calc__om_cost_constant": [
+    "EntryPointType.USAGE_LITERAL",
+    65.0
+   ],
+   "hif_plant_pkg__hif_plant__lcoe_calc__plant_cost_constant": [
+    "EntryPointType.USAGE_LITERAL",
+    2000.0
+   ],
+   "hif_plant_pkg__hif_plant__lcoe_calc__thermal_efficiency": [
+    "EntryPointType.USAGE_LITERAL",
+    0.43
+   ],
+   "hif_plant_pkg__hif_plant__meier_coe_calc__availability": [
+    "EntryPointType.USAGE_LITERAL",
+    0.9
+   ],
+   "hif_plant_pkg__hif_plant__recirc_calc__gain": [
+    "EntryPointType.USAGE_LITERAL",
+    80.0
+   ],
+   "hif_plant_pkg__hif_plant__recirc_calc__thermal_efficiency": [
+    "EntryPointType.USAGE_LITERAL",
+    0.43
+   ],
+   "hif_plant_pkg__hif_plant__viability__81ddf10fb1d1749b__threshold": [
+    "EntryPointType.LIBRARY_DEFAULT",
+    10.0
+   ]
+  },
+  "relocated": {
+   "hif_driver__HIF_Driver__efficiency": [
+    "EntryPointType.DESIGN_ATTRIBUTE",
+    0.35
+   ],
+   "hif_plant_pkg__hif_plant__gain": [
+    "EntryPointType.DESIGN_ATTRIBUTE",
+    80.0
+   ],
+   "hif_plant_pkg__hif_plant__meier_capital_calc__target_factory_cost": [
+    "EntryPointType.USAGE_LITERAL",
+    0.1
+   ],
+   "hif_plant_pkg__hif_plant__meier_reactor_cost_calc__num_units": [
+    "EntryPointType.USAGE_LITERAL",
+    1.0
+   ],
+   "hif_plant_pkg__hif_plant__net_electric_power_gw": [
+    "EntryPointType.DESIGN_ATTRIBUTE",
+    1.0
+   ],
+   "hif_plant_pkg__hif_plant__thermal_power_gw": [
+    "EntryPointType.DESIGN_ATTRIBUTE",
+    2.054
+   ],
+   "hif_plant_pkg__hif_plant__chamber__blanket_energy_multiple": [
+    "EntryPointType.DESIGN_ATTRIBUTE",
+    1.15
+   ],
+   "hif_plant_pkg__hif_plant__chamber__yield_cost_constant": [
+    "EntryPointType.DESIGN_ATTRIBUTE",
+    5000000.0
+   ],
+   "hif_plant_pkg__hif_plant__driver__efficiency": [
+    "EntryPointType.DESIGN_ATTRIBUTE",
+    0.35
+   ],
+   "hif_plant_pkg__hif_plant__driver__energy": [
+    "EntryPointType.DESIGN_ATTRIBUTE",
+    14286000.0
+   ],
+   "hif_plant_pkg__hif_plant__driver__lifetime_shots": [
+    "EntryPointType.DESIGN_ATTRIBUTE",
+    6000000000.0
+   ],
+   "hif_plant_pkg__hif_plant__lcoe_calc__construction_years": [
+    "EntryPointType.LIBRARY_DEFAULT",
+    5.0
+   ],
+   "hif_plant_pkg__hif_plant__lcoe_calc__operational_years": [
+    "EntryPointType.LIBRARY_DEFAULT",
+    40.0
+   ],
+   "hif_plant_pkg__hif_plant__target_factory__cost_per_target": [
+    "EntryPointType.DESIGN_ATTRIBUTE",
+    10.0
+   ],
+   "hif_driver__hif_driver_instance__meier_cost__beam_energy_mj": [
+    "EntryPointType.USAGE_LITERAL",
+    5.0
+   ],
+   "hif_driver__hif_driver_instance__meier_cost__num_chambers": [
+    "EntryPointType.USAGE_LITERAL",
+    1.0
+   ],
+   "hif_driver__hif_driver_instance__meier_cost__rep_rate": [
+    "EntryPointType.USAGE_LITERAL",
+    3.5
+   ],
+   "hif_plant_pkg__hif_plant__driver__meier_cost__beam_energy_mj": [
+    "EntryPointType.USAGE_LITERAL",
+    5.0
+   ],
+   "hif_plant_pkg__hif_plant__driver__meier_cost__num_chambers": [
+    "EntryPointType.USAGE_LITERAL",
+    1.0
+   ],
+   "hif_plant_pkg__hif_plant__driver__meier_cost__rep_rate": [
+    "EntryPointType.USAGE_LITERAL",
+    3.5
+   ],
+   "hif_plant_pkg__hif_plant__lcoe_calc__availability": [
+    "EntryPointType.USAGE_LITERAL",
+    0.9
+   ],
+   "hif_plant_pkg__hif_plant__lcoe_calc__discount_rate": [
+    "EntryPointType.USAGE_LITERAL",
+    0.08
+   ],
+   "hif_plant_pkg__hif_plant__lcoe_calc__frequency": [
+    "EntryPointType.USAGE_LITERAL",
+    3.5
+   ],
+   "hif_plant_pkg__hif_plant__lcoe_calc__gain": [
+    "EntryPointType.USAGE_LITERAL",
+    80.0
+   ],
+   "hif_plant_pkg__hif_plant__lcoe_calc__om_cost_constant": [
+    "EntryPointType.USAGE_LITERAL",
+    65.0
+   ],
+   "hif_plant_pkg__hif_plant__lcoe_calc__plant_cost_constant": [
+    "EntryPointType.USAGE_LITERAL",
+    2000.0
+   ],
+   "hif_plant_pkg__hif_plant__lcoe_calc__thermal_efficiency": [
+    "EntryPointType.USAGE_LITERAL",
+    0.43
+   ],
+   "hif_plant_pkg__hif_plant__meier_coe_calc__availability": [
+    "EntryPointType.USAGE_LITERAL",
+    0.9
+   ],
+   "hif_plant_pkg__hif_plant__recirc_calc__gain": [
+    "EntryPointType.USAGE_LITERAL",
+    80.0
+   ],
+   "hif_plant_pkg__hif_plant__recirc_calc__thermal_efficiency": [
+    "EntryPointType.USAGE_LITERAL",
+    0.43
+   ],
+   "hif_plant_pkg__hif_plant__viability__81ddf10fb1d1749b__threshold": [
+    "EntryPointType.LIBRARY_DEFAULT",
+    10.0
+   ]
+  }
+ },
+ "bindings": {
+  "live": {
+   "hif_plant_pkg__hif_plant__lcoe_calc|gain": {
+    "binding_type": "BindingType.LITERAL",
+    "source_path": null,
+    "literal_value": 80.0,
+    "written_reference": "gain"
+   },
+   "hif_plant_pkg__hif_plant__recirc_calc|gain": {
+    "binding_type": "BindingType.LITERAL",
+    "source_path": null,
+    "literal_value": 80.0,
+    "written_reference": "gain"
+   }
+  },
+  "snapshot": {
+   "hif_plant_pkg__hif_plant__lcoe_calc|gain": {
+    "binding_type": "BindingType.LITERAL",
+    "source_path": null,
+    "literal_value": 80.0,
+    "written_reference": "gain"
+   },
+   "hif_plant_pkg__hif_plant__recirc_calc|gain": {
+    "binding_type": "BindingType.LITERAL",
+    "source_path": null,
+    "literal_value": 80.0,
+    "written_reference": "gain"
+   }
+  },
+  "relocated": {
+   "hif_plant_pkg__hif_plant__lcoe_calc|gain": {
+    "binding_type": "BindingType.LITERAL",
+    "source_path": null,
+    "literal_value": 80.0,
+    "written_reference": "gain"
+   },
+   "hif_plant_pkg__hif_plant__recirc_calc|gain": {
+    "binding_type": "BindingType.LITERAL",
+    "source_path": null,
+    "literal_value": 80.0,
+    "written_reference": "gain"
+   }
+  }
+ }
+}

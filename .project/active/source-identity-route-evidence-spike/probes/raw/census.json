@@ -1,0 +1,1247 @@
+{
+ "agg_literal_probe": {
+  "status": "ok",
+  "eps": 0,
+  "authored_literal": [],
+  "path_a": [],
+  "path_b": [],
+  "converged_attr": [],
+  "library_default": [],
+  "unattributed": [],
+  "fanout_groups": [],
+  "recon": {
+   "exact_occurrence": 0,
+   "def_default": 0,
+   "unresolved": [],
+   "ambiguous": []
+  }
+ },
+ "agg_localterm_probe": {
+  "status": "ok",
+  "eps": 2,
+  "authored_literal": [],
+  "path_a": [],
+  "path_b": [
+   "AggLocalTermProbe__the_bank__cell__cost_model__area"
+  ],
+  "converged_attr": [
+   "AggLocalTermProbe__the_bank__capital_cost__markup"
+  ],
+  "library_default": [],
+  "unattributed": [],
+  "fanout_groups": [],
+  "recon": {
+   "exact_occurrence": 0,
+   "def_default": 1,
+   "unresolved": [],
+   "ambiguous": []
+  }
+ },
+ "alias_agg_probe": {
+  "status": "ok",
+  "eps": 3,
+  "authored_literal": [
+   "AliasAggProbeDesign__plant__assembly__margin_calc__margin_rate"
+  ],
+  "path_a": [
+   "AliasAggProbeDesign__plant__assembly__widget__cost_model__base_cost"
+  ],
+  "path_b": [],
+  "converged_attr": [],
+  "library_default": [
+   "AliasAggProbeDesign__plant__assembly__widget__cost_model__markup"
+  ],
+  "unattributed": [],
+  "fanout_groups": [],
+  "recon": {
+   "exact_occurrence": 0,
+   "def_default": 0,
+   "unresolved": [
+    [
+     "AliasAggProbeDesign__plant__assembly__widget__cost_model__base_cost",
+     "AliasAggProbeDesign__plant__assembly__widget__base_cost",
+     "AliasAggProbeLibrary__Widget__base_cost"
+    ]
+   ],
+   "ambiguous": []
+  }
+ },
+ "attr_expr_probe": {
+  "status": "ok",
+  "eps": 16,
+  "authored_literal": [],
+  "path_a": [],
+  "path_b": [],
+  "converged_attr": [
+   "AttrExprProbeDesign__probe_design__eta_direct",
+   "AttrExprProbeDesign__probe_design__eta_pump",
+   "AttrExprProbeDesign__probe_design__eta_thermal",
+   "AttrExprProbeDesign__probe_design__f_pump",
+   "AttrExprProbeDesign__probe_design__f_subsystem",
+   "AttrExprProbeDesign__probe_design__height",
+   "AttrExprProbeDesign__probe_design__length",
+   "AttrExprProbeDesign__probe_design__m_neutron",
+   "AttrExprProbeDesign__probe_design__markup",
+   "AttrExprProbeDesign__probe_design__p_fusion",
+   "AttrExprProbeDesign__probe_design__p_input",
+   "AttrExprProbeDesign__probe_design__r_inner",
+   "AttrExprProbeDesign__probe_design__r_major",
+   "AttrExprProbeDesign__probe_design__r_outer",
+   "AttrExprProbeDesign__probe_design__rate",
+   "AttrExprProbeDesign__probe_design__width"
+  ],
+  "library_default": [],
+  "unattributed": [],
+  "fanout_groups": [],
+  "recon": {
+   "exact_occurrence": 0,
+   "def_default": 0,
+   "unresolved": [],
+   "ambiguous": []
+  }
+ },
+ "catf_mfe_model": {
+  "status": "ok",
+  "eps": 60,
+  "authored_literal": [
+   "CATFMFEMagnets__catf_tf_system__cryo_load__p_neutron",
+   "CATFMFEBlanket__catf_blanket__pump_load__p_thermal_electric",
+   "CATF_MFE__catf_mfe_plant__auxiliary_load__gross_electric"
+  ],
+  "path_a": [],
+  "path_b": [],
+  "converged_attr": [
+   "CATFMFEHeating__catf_heating__delivered_power",
+   "CATFMFEMagnets__catf_tf_system__field_at_coil",
+   "CATFMFEMagnets__catf_tf_system__temperature_operating",
+   "CATFMFEPhysics__catf_physics__eta_direct",
+   "CATFMFEPhysics__catf_physics__eta_pump",
+   "CATFMFEPhysics__catf_physics__eta_thermal",
+   "CATFMFEPhysics__catf_physics__f_pump",
+   "CATFMFEPhysics__catf_physics__f_subsystem",
+   "CATFMFEPhysics__catf_physics__m_neutron",
+   "CATFMFEPhysics__catf_physics__p_fusion",
+   "CATFMFEPhysics__catf_physics__p_input",
+   "CATFMFERadialBuild__catf_radial_build__bioshield__inner_radius",
+   "CATFMFERadialBuild__catf_radial_build__bioshield__outer_radius",
+   "CATFMFERadialBuild__catf_radial_build__blanket__inner_radius",
+   "CATFMFERadialBuild__catf_radial_build__blanket__outer_radius",
+   "CATFMFERadialBuild__catf_radial_build__elongation",
+   "CATFMFERadialBuild__catf_radial_build__first_wall__inner_radius",
+   "CATFMFERadialBuild__catf_radial_build__first_wall__outer_radius",
+   "CATFMFERadialBuild__catf_radial_build__gap1__inner_radius",
+   "CATFMFERadialBuild__catf_radial_build__gap1__outer_radius",
+   "CATFMFERadialBuild__catf_radial_build__gap2__inner_radius",
+   "CATFMFERadialBuild__catf_radial_build__gap2__outer_radius",
+   "CATFMFERadialBuild__catf_radial_build__ht_shield__inner_radius",
+   "CATFMFERadialBuild__catf_radial_build__ht_shield__outer_radius",
+   "CATFMFERadialBuild__catf_radial_build__lt_shield__inner_radius",
+   "CATFMFERadialBuild__catf_radial_build__lt_shield__outer_radius",
+   "CATFMFERadialBuild__catf_radial_build__major_radius",
+   "CATFMFERadialBuild__catf_radial_build__plasma_region__inner_radius",
+   "CATFMFERadialBuild__catf_radial_build__plasma_region__outer_radius",
+   "CATFMFERadialBuild__catf_radial_build__reflector__inner_radius",
+   "CATFMFERadialBuild__catf_radial_build__reflector__outer_radius",
+   "CATFMFERadialBuild__catf_radial_build__structure__inner_radius",
+   "CATFMFERadialBuild__catf_radial_build__structure__outer_radius",
+   "CATFMFERadialBuild__catf_radial_build__tf_coil__inner_radius",
+   "CATFMFERadialBuild__catf_radial_build__tf_coil__outer_radius",
+   "CATFMFERadialBuild__catf_radial_build__tf_coil__thickness",
+   "CATFMFERadialBuild__catf_radial_build__vacuum_gap__inner_radius",
+   "CATFMFERadialBuild__catf_radial_build__vacuum_gap__outer_radius",
+   "CATFMFERadialBuild__catf_radial_build__vessel__inner_radius",
+   "CATFMFERadialBuild__catf_radial_build__vessel__outer_radius",
+   "CATFMFETritium__catf_tritium__fusion_power",
+   "CATFMFEVacuum__catf_vacuum_pumping__base_pressure_achievable",
+   "CATFMFEVacuum__catf_vacuum_pumping__cryo_pumps__n_pumps",
+   "CATFMFEVacuum__catf_vacuum_pumping__cryo_pumps__pumping_speed",
+   "CATFMFEVacuum__catf_vacuum_pumping__n_pumps",
+   "CATFMFEVacuum__catf_vacuum_pumping__pumping_speed_total"
+  ],
+  "library_default": [
+   "CATFMFEBlanket__catf_blanket__pump_load__f_pcppf",
+   "CATFMFEBlanket__catf_blanket__pump_load__pump_efficiency",
+   "CATFMFEHeating__catf_heating__wall_plug__heating_efficiency",
+   "CATFMFEMagnets__catf_tf_system__cryo_load__carnot_efficiency",
+   "CATFMFERadialBuild__catf_radial_build__magnet_surface_calc__f_exposed",
+   "CATF_MFE__catf_mfe_plant__auxiliary_load__auxiliary_fraction",
+   "CATFMFETritium__catf_tritium__processing_load__processing_factor",
+   "CATFMFEVacuum__catf_vacuum_pumping__cryo_load__carnot_efficiency",
+   "CATFMFEVacuum__catf_vacuum_pumping__cryo_load__load_factor",
+   "CATFMFEVacuum__catf_vacuum_pumping__cryo_load__operating_temp",
+   "CATFMFEVacuum__catf_vacuum_pumping__pump_load__pump_efficiency"
+  ],
+  "unattributed": [],
+  "fanout_groups": [],
+  "recon": {
+   "exact_occurrence": 0,
+   "def_default": 0,
+   "unresolved": [],
+   "ambiguous": []
+  }
+ },
+ "chain_override_probe": {
+  "status": "ok",
+  "eps": 3,
+  "authored_literal": [
+   "ChainOverrideDesign__instrument_design__calibration__raw_factor"
+  ],
+  "path_a": [
+   "ChainOverrideDesign__instrument_design__sensor__cost_model__base_cost"
+  ],
+  "path_b": [
+   "ChainOverrideDesign__instrument_design__sensor__cost_model__sensitivity"
+  ],
+  "converged_attr": [],
+  "library_default": [],
+  "unattributed": [],
+  "fanout_groups": [],
+  "recon": {
+   "exact_occurrence": 0,
+   "def_default": 0,
+   "unresolved": [
+    [
+     "ChainOverrideDesign__instrument_design__sensor__cost_model__sensitivity",
+     "ChainOverrideDesign__instrument_design__sensor__sensitivity",
+     "ChainOverrideLibrary__Sensor__sensitivity"
+    ],
+    [
+     "ChainOverrideDesign__instrument_design__sensor__cost_model__base_cost",
+     "ChainOverrideDesign__instrument_design__sensor__base_cost",
+     "ChainOverrideLibrary__Sensor__base_cost"
+    ]
+   ],
+   "ambiguous": []
+  }
+ },
+ "chain_spike_model": {
+  "status": "ok",
+  "eps": 3,
+  "authored_literal": [],
+  "path_a": [],
+  "path_b": [],
+  "converged_attr": [
+   "ChainSpikeDesign__spike_design__length",
+   "ChainSpikeDesign__spike_design__rate",
+   "ChainSpikeDesign__spike_design__width"
+  ],
+  "library_default": [],
+  "unattributed": [],
+  "fanout_groups": [],
+  "recon": {
+   "exact_occurrence": 0,
+   "def_default": 0,
+   "unresolved": [],
+   "ambiguous": []
+  }
+ },
+ "constraint_inline": {
+  "status": "ok",
+  "eps": 1,
+  "authored_literal": [],
+  "path_a": [],
+  "path_b": [],
+  "converged_attr": [
+   "constraint_inline__InlineHost__value"
+  ],
+  "library_default": [],
+  "unattributed": [],
+  "fanout_groups": [],
+  "recon": {
+   "exact_occurrence": 0,
+   "def_default": 0,
+   "unresolved": [],
+   "ambiguous": []
+  }
+ },
+ "constraint_multi_instance": {
+  "status": "ok",
+  "eps": 1,
+  "authored_literal": [],
+  "path_a": [],
+  "path_b": [],
+  "converged_attr": [
+   "constraint_multi_instance__Cell__cell_rating"
+  ],
+  "library_default": [],
+  "unattributed": [],
+  "fanout_groups": [],
+  "recon": {
+   "exact_occurrence": 0,
+   "def_default": 0,
+   "unresolved": [],
+   "ambiguous": []
+  }
+ },
+ "constraint_non_numerical": {
+  "status": "ok",
+  "eps": 1,
+  "authored_literal": [],
+  "path_a": [],
+  "path_b": [],
+  "converged_attr": [
+   "constraint_non_numerical__MixedPurposeHost__value"
+  ],
+  "library_default": [],
+  "unattributed": [],
+  "fanout_groups": [],
+  "recon": {
+   "exact_occurrence": 0,
+   "def_default": 0,
+   "unresolved": [],
+   "ambiguous": []
+  }
+ },
+ "crosspart_rollup_twolevel": {
+  "status": "ok",
+  "eps": 2,
+  "authored_literal": [],
+  "path_a": [],
+  "path_b": [
+   "CrossPartRollupDesign__rollup_plant__a__cost_calc__base",
+   "CrossPartRollupDesign__rollup_plant__b__cost_calc__base"
+  ],
+  "converged_attr": [],
+  "library_default": [],
+  "unattributed": [],
+  "fanout_groups": [],
+  "recon": {
+   "exact_occurrence": 0,
+   "def_default": 0,
+   "unresolved": [
+    [
+     "CrossPartRollupDesign__rollup_plant__a__cost_calc__base",
+     "CrossPartRollupDesign__rollup_plant__a__base",
+     "CrossPartRollupLib__Subsystem__base"
+    ],
+    [
+     "CrossPartRollupDesign__rollup_plant__b__cost_calc__base",
+     "CrossPartRollupDesign__rollup_plant__b__base",
+     "CrossPartRollupLib__Subsystem__base"
+    ]
+   ],
+   "ambiguous": []
+  }
+ },
+ "d38_caret": {
+  "status": "ok",
+  "eps": 1,
+  "authored_literal": [
+   "D38Design__plant__noop__x"
+  ],
+  "path_a": [],
+  "path_b": [],
+  "converged_attr": [],
+  "library_default": [],
+  "unattributed": [],
+  "fanout_groups": [],
+  "recon": {
+   "exact_occurrence": 0,
+   "def_default": 0,
+   "unresolved": [],
+   "ambiguous": []
+  }
+ },
+ "deep_cross_scope_probe": {
+  "status": "ok",
+  "eps": 7,
+  "authored_literal": [],
+  "path_a": [
+   "DeepCrossScopeDesign__measurement_system__analyzer__chain_analysis__baseline",
+   "DeepCrossScopeDesign__measurement_system__analyzer__ref_analysis__baseline",
+   "DeepCrossScopeDesign__measurement_system__analyzer__self_ref_analysis__data_point",
+   "DeepCrossScopeDesign__measurement_system__station__array__sensor__core__input_val"
+  ],
+  "path_b": [],
+  "converged_attr": [
+   "DeepCrossScopeProducer__Core_Metric__metric_value"
+  ],
+  "library_default": [
+   "DeepCrossScopeDesign__measurement_system__analyzer__self_ref_analysis__baseline",
+   "DeepCrossScopeDesign__measurement_system__station__array__derived_calc__factor"
+  ],
+  "unattributed": [],
+  "fanout_groups": [
+   {
+    "owner": "DeepCrossScopeDesign__measurement_system__analyzer",
+    "leaf": "baseline_value",
+    "members": [
+     "DeepCrossScopeDesign__measurement_system__analyzer__chain_analysis__baseline",
+     "DeepCrossScopeDesign__measurement_system__analyzer__ref_analysis__baseline",
+     "DeepCrossScopeDesign__measurement_system__analyzer__self_ref_analysis__data_point"
+    ],
+    "kinds": [
+     "path_a"
+    ],
+    "converged_sibling": false
+   }
+  ],
+  "recon": {
+   "exact_occurrence": 0,
+   "def_default": 0,
+   "unresolved": [
+    [
+     "DeepCrossScopeDesign__measurement_system__analyzer__chain_analysis__baseline",
+     "DeepCrossScopeDesign__measurement_system__analyzer__baseline_value",
+     null
+    ],
+    [
+     "DeepCrossScopeDesign__measurement_system__analyzer__ref_analysis__baseline",
+     "DeepCrossScopeDesign__measurement_system__analyzer__baseline_value",
+     null
+    ],
+    [
+     "DeepCrossScopeDesign__measurement_system__analyzer__self_ref_analysis__data_point",
+     "DeepCrossScopeDesign__measurement_system__analyzer__baseline_value",
+     null
+    ],
+    [
+     "DeepCrossScopeDesign__measurement_system__station__array__sensor__core__input_val",
+     "DeepCrossScopeDesign__measurement_system__station__array__sensor__reading",
+     "DeepCrossScopeProducer__Sensor__reading"
+    ]
+   ],
+   "ambiguous": []
+  }
+ },
+ "expression_binding_probe": {
+  "status": "ok",
+  "eps": 7,
+  "authored_literal": [],
+  "path_a": [],
+  "path_b": [],
+  "converged_attr": [
+   "ExpressionBindingDesign__expr_probe__tax_rate"
+  ],
+  "library_default": [],
+  "unattributed": [
+   "ExpressionBindingDesign__expr_probe__cost_calc__combined_input",
+   "ExpressionBindingDesign__expr_probe__adjusted_calc__combined_input",
+   "ExpressionBindingDesign__expr_probe__full_cost_calc__combined_input",
+   "ExpressionBindingDesign__expr_probe__delta_calc__value_a",
+   "ExpressionBindingDesign__expr_probe__delta_calc__value_b",
+   "ExpressionBindingDesign__expr_probe__net_calc__x"
+  ],
+  "fanout_groups": [],
+  "recon": {
+   "exact_occurrence": 0,
+   "def_default": 0,
+   "unresolved": [],
+   "ambiguous": []
+  }
+ },
+ "fusion_tea": {
+  "status": "ok",
+  "eps": 31,
+  "authored_literal": [
+   "hif_plant_pkg__hif_plant__meier_reactor_cost_calc__num_units",
+   "hif_plant_pkg__hif_plant__meier_capital_calc__target_factory_cost"
+  ],
+  "path_a": [
+   "hif_plant_pkg__hif_plant__meier_coe_calc__availability",
+   "hif_driver__hif_driver_instance__meier_cost__beam_energy_mj",
+   "hif_driver__hif_driver_instance__meier_cost__num_chambers",
+   "hif_driver__hif_driver_instance__meier_cost__rep_rate",
+   "hif_plant_pkg__hif_plant__driver__meier_cost__beam_energy_mj",
+   "hif_plant_pkg__hif_plant__driver__meier_cost__num_chambers",
+   "hif_plant_pkg__hif_plant__driver__meier_cost__rep_rate",
+   "hif_plant_pkg__hif_plant__lcoe_calc__availability",
+   "hif_plant_pkg__hif_plant__lcoe_calc__discount_rate",
+   "hif_plant_pkg__hif_plant__lcoe_calc__frequency",
+   "hif_plant_pkg__hif_plant__lcoe_calc__gain",
+   "hif_plant_pkg__hif_plant__lcoe_calc__om_cost_constant",
+   "hif_plant_pkg__hif_plant__lcoe_calc__plant_cost_constant",
+   "hif_plant_pkg__hif_plant__lcoe_calc__thermal_efficiency",
+   "hif_plant_pkg__hif_plant__recirc_calc__gain",
+   "hif_plant_pkg__hif_plant__recirc_calc__thermal_efficiency"
+  ],
+  "path_b": [],
+  "converged_attr": [
+   "hif_driver__HIF_Driver__efficiency",
+   "hif_plant_pkg__hif_plant__gain",
+   "hif_plant_pkg__hif_plant__net_electric_power_gw",
+   "hif_plant_pkg__hif_plant__thermal_power_gw",
+   "hif_plant_pkg__hif_plant__chamber__blanket_energy_multiple",
+   "hif_plant_pkg__hif_plant__chamber__yield_cost_constant",
+   "hif_plant_pkg__hif_plant__driver__efficiency",
+   "hif_plant_pkg__hif_plant__driver__energy",
+   "hif_plant_pkg__hif_plant__driver__lifetime_shots",
+   "hif_plant_pkg__hif_plant__target_factory__cost_per_target"
+  ],
+  "library_default": [
+   "hif_plant_pkg__hif_plant__lcoe_calc__construction_years",
+   "hif_plant_pkg__hif_plant__lcoe_calc__operational_years",
+   "hif_plant_pkg__hif_plant__viability__81ddf10fb1d1749b__threshold"
+  ],
+  "unattributed": [],
+  "fanout_groups": [
+   {
+    "owner": "hif_plant_pkg__hif_plant",
+    "leaf": "availability",
+    "members": [
+     "hif_plant_pkg__hif_plant__meier_coe_calc__availability",
+     "hif_plant_pkg__hif_plant__lcoe_calc__availability"
+    ],
+    "kinds": [
+     "path_a"
+    ],
+    "converged_sibling": false
+   },
+   {
+    "owner": "hif_plant_pkg__hif_plant",
+    "leaf": "gain",
+    "members": [
+     "hif_plant_pkg__hif_plant__lcoe_calc__gain",
+     "hif_plant_pkg__hif_plant__recirc_calc__gain"
+    ],
+    "kinds": [
+     "path_a"
+    ],
+    "converged_sibling": true
+   },
+   {
+    "owner": "hif_plant_pkg__hif_plant",
+    "leaf": "thermal_efficiency",
+    "members": [
+     "hif_plant_pkg__hif_plant__lcoe_calc__thermal_efficiency",
+     "hif_plant_pkg__hif_plant__recirc_calc__thermal_efficiency"
+    ],
+    "kinds": [
+     "path_a"
+    ],
+    "converged_sibling": false
+   }
+  ],
+  "recon": {
+   "exact_occurrence": 2,
+   "def_default": 0,
+   "unresolved": [
+    [
+     "hif_plant_pkg__hif_plant__meier_coe_calc__availability",
+     "hif_plant_pkg__hif_plant__availability",
+     null
+    ],
+    [
+     "hif_driver__hif_driver_instance__meier_cost__beam_energy_mj",
+     "hif_driver__hif_driver_instance__beam_energy_mj",
+     "hif_driver__HIF_Driver__beam_energy_mj"
+    ],
+    [
+     "hif_driver__hif_driver_instance__meier_cost__num_chambers",
+     "hif_driver__hif_driver_instance__num_chambers",
+     "hif_driver__HIF_Driver__num_chambers"
+    ],
+    [
+     "hif_driver__hif_driver_instance__meier_cost__rep_rate",
+     "hif_driver__hif_driver_instance__pulse_rate_ref",
+     "hif_driver__HIF_Driver__pulse_rate_ref"
+    ],
+    [
+     "hif_plant_pkg__hif_plant__driver__meier_cost__beam_energy_mj",
+     "hif_plant_pkg__hif_plant__driver__beam_energy_mj",
+     "hif_driver__HIF_Driver__beam_energy_mj"
+    ],
+    [
+     "hif_plant_pkg__hif_plant__driver__meier_cost__num_chambers",
+     "hif_plant_pkg__hif_plant__driver__num_chambers",
+     "hif_driver__HIF_Driver__num_chambers"
+    ],
+    [
+     "hif_plant_pkg__hif_plant__driver__meier_cost__rep_rate",
+     "hif_plant_pkg__hif_plant__driver__pulse_rate_ref",
+     "hif_driver__HIF_Driver__pulse_rate_ref"
+    ],
+    [
+     "hif_plant_pkg__hif_plant__lcoe_calc__availability",
+     "hif_plant_pkg__hif_plant__availability",
+     "ife_plant__IFE_Power_Plant__availability"
+    ],
+    [
+     "hif_plant_pkg__hif_plant__lcoe_calc__discount_rate",
+     "hif_plant_pkg__hif_plant__discount_rate",
+     "ife_plant__IFE_Power_Plant__discount_rate"
+    ],
+    [
+     "hif_plant_pkg__hif_plant__lcoe_calc__frequency",
+     "hif_plant_pkg__hif_plant__frequency",
+     "ife_plant__IFE_Power_Plant__frequency"
+    ],
+    [
+     "hif_plant_pkg__hif_plant__lcoe_calc__om_cost_constant",
+     "hif_plant_pkg__hif_plant__om_cost_constant",
+     "ife_plant__IFE_Power_Plant__om_cost_constant"
+    ],
+    [
+     "hif_plant_pkg__hif_plant__lcoe_calc__plant_cost_constant",
+     "hif_plant_pkg__hif_plant__plant_cost_constant",
+     "ife_plant__IFE_Power_Plant__plant_cost_constant"
+    ],
+    [
+     "hif_plant_pkg__hif_plant__lcoe_calc__thermal_efficiency",
+     "hif_plant_pkg__hif_plant__thermal_efficiency",
+     "ife_plant__IFE_Power_Plant__thermal_efficiency"
+    ],
+    [
+     "hif_plant_pkg__hif_plant__recirc_calc__thermal_efficiency",
+     "hif_plant_pkg__hif_plant__thermal_efficiency",
+     "ife_plant__IFE_Power_Plant__thermal_efficiency"
+    ]
+   ],
+   "ambiguous": []
+  }
+ },
+ "gate_a": {
+  "status": "ok",
+  "eps": 3,
+  "authored_literal": [],
+  "path_a": [],
+  "path_b": [
+   "GateA__the_other__doubler__seed"
+  ],
+  "converged_attr": [
+   "GateA__the_host__gain"
+  ],
+  "library_default": [
+   "GateA__the_host__viability__2d5fd1e4dacbeb03__threshold"
+  ],
+  "unattributed": [],
+  "fanout_groups": [],
+  "recon": {
+   "exact_occurrence": 0,
+   "def_default": 1,
+   "unresolved": [],
+   "ambiguous": []
+  }
+ },
+ "gate_a_package_owner": {
+  "status": "ok",
+  "eps": 3,
+  "authored_literal": [],
+  "path_a": [],
+  "path_b": [
+   "GateAPackageOwner__the_other__doubler__seed"
+  ],
+  "converged_attr": [
+   "GateAPackageOwner__limit"
+  ],
+  "library_default": [
+   "GateAPackageOwner__pkg_check__pkg_check__7c41a06edb25a8ee__floor"
+  ],
+  "unattributed": [],
+  "fanout_groups": [],
+  "recon": {
+   "exact_occurrence": 0,
+   "def_default": 1,
+   "unresolved": [],
+   "ambiguous": []
+  }
+ },
+ "ife_plant": {
+  "status": "ok",
+  "eps": 25,
+  "authored_literal": [],
+  "path_a": [],
+  "path_b": [
+   "IfePlantSubsystems__radial_build__tf_coil__volume_calc__radius",
+   "IfePlantDesign__hif_plant__driver__base_power_calc__efficiency",
+   "IfePlantDesign__hif_plant__driver__base_power_calc__bank_energy",
+   "IfePlantDesign__baseline_plant__driver__base_power_calc__efficiency",
+   "IfePlantDesign__baseline_plant__driver__base_power_calc__bank_energy",
+   "IfePlantDesign__hif_plant__driver__hif_cost_calc__cost_per_joule",
+   "IfePlantDesign__hif_plant__driver__hif_cost_calc__bank_energy",
+   "IfePlantDesign__baseline_plant__chamber_a__yield_calc__blanket_multiple",
+   "IfePlantDesign__baseline_plant__chamber_a__yield_calc__yield_constant",
+   "IfePlantDesign__baseline_plant__chamber_b__yield_calc__blanket_multiple",
+   "IfePlantDesign__baseline_plant__chamber_b__yield_calc__yield_constant",
+   "IfePlantDesign__baseline_plant__lcoe_calc__availability",
+   "IfePlantDesign__baseline_plant__lcoe_calc__frequency",
+   "IfePlantDesign__baseline_plant__lcoe_calc__gain",
+   "IfePlantDesign__baseline_plant__lcoe_calc__thermal_efficiency",
+   "IfePlantDesign__baseline_plant__lcoe_calc__discount_rate",
+   "IfePlantDesign__baseline_plant__lcoe_calc__plant_cost_constant",
+   "IfePlantDesign__baseline_plant__lcoe_calc__om_cost_constant",
+   "IfePlantDesign__baseline_plant__lcoe_calc__blanket_energy_multiple",
+   "IfePlantDesign__baseline_plant__lcoe_calc__driver_cost_constant",
+   "IfePlantDesign__baseline_plant__lcoe_calc__driver_efficiency",
+   "IfePlantDesign__baseline_plant__lcoe_calc__driver_energy",
+   "IfePlantDesign__baseline_plant__lcoe_calc__driver_lifetime_shots",
+   "IfePlantDesign__baseline_plant__lcoe_calc__target_cost_constant",
+   "IfePlantDesign__baseline_plant__lcoe_calc__yield_cost_constant"
+  ],
+  "converged_attr": [],
+  "library_default": [],
+  "unattributed": [],
+  "fanout_groups": [
+   {
+    "owner": "IfePlantDesign__hif_plant__driver",
+    "leaf": "bank_energy",
+    "members": [
+     "IfePlantDesign__hif_plant__driver__base_power_calc__bank_energy",
+     "IfePlantDesign__hif_plant__driver__hif_cost_calc__bank_energy"
+    ],
+    "kinds": [
+     "path_b"
+    ],
+    "converged_sibling": false
+   }
+  ],
+  "recon": {
+   "exact_occurrence": 0,
+   "def_default": 24,
+   "unresolved": [
+    [
+     "IfePlantDesign__hif_plant__driver__hif_cost_calc__bank_energy",
+     "IfePlantDesign__hif_plant__driver__bank_energy",
+     "IfePlantLib__Hif_Driver__bank_energy"
+    ]
+   ],
+   "ambiguous": []
+  }
+ },
+ "invocation_binding_probe": {
+  "status": "ok",
+  "eps": 1,
+  "authored_literal": [],
+  "path_a": [],
+  "path_b": [],
+  "converged_attr": [],
+  "library_default": [
+   "InvocationBindingDesign__probe__c__x"
+  ],
+  "unattributed": [],
+  "fanout_groups": [],
+  "recon": {
+   "exact_occurrence": 0,
+   "def_default": 0,
+   "unresolved": [],
+   "ambiguous": []
+  }
+ },
+ "issue22_model": {
+  "status": "ok",
+  "eps": 3,
+  "authored_literal": [
+   "Issue22Design__plant__assembly__margin_calc__margin_rate"
+  ],
+  "path_a": [
+   "Issue22Design__plant__assembly__widget__cost_model__base_cost"
+  ],
+  "path_b": [],
+  "converged_attr": [],
+  "library_default": [
+   "Issue22Design__plant__assembly__widget__cost_model__markup_factor"
+  ],
+  "unattributed": [],
+  "fanout_groups": [],
+  "recon": {
+   "exact_occurrence": 0,
+   "def_default": 0,
+   "unresolved": [
+    [
+     "Issue22Design__plant__assembly__widget__cost_model__base_cost",
+     "Issue22Design__plant__assembly__widget__base_cost",
+     "Issue22Library__Widget__base_cost"
+    ]
+   ],
+   "ambiguous": []
+  }
+ },
+ "modeled_default_fidelity": {
+  "status": "ok",
+  "eps": 6,
+  "authored_literal": [],
+  "path_a": [],
+  "path_b": [],
+  "converged_attr": [
+   "ModeledDefaultFidelity__the_rig__delivered_power",
+   "ModeledDefaultFidelity__the_rig__observed_value",
+   "ModeledDefaultFidelity__the_rig__sensor_reading"
+  ],
+  "library_default": [
+   "ModeledDefaultFidelity__the_rig__derived_check__186393105a6cce01__limit",
+   "ModeledDefaultFidelity__the_rig__drift_check__5ea1f33127b27b5f__drift",
+   "ModeledDefaultFidelity__the_rig__power_check__e3f163449d2f76a2__rated_power"
+  ],
+  "unattributed": [],
+  "fanout_groups": [],
+  "recon": {
+   "exact_occurrence": 0,
+   "def_default": 0,
+   "unresolved": [],
+   "ambiguous": []
+  }
+ },
+ "plant_value_shapes": {
+  "status": "ok",
+  "eps": 7,
+  "authored_literal": [
+   "PlantValueShapesDesign__shapes_design__net_cost_calc__revenue",
+   "PlantValueShapesDesign__shapes_design__mixed_style__base",
+   "PlantValueShapesDesign__shapes_design__quoted_return__amount"
+  ],
+  "path_a": [],
+  "path_b": [
+   "PlantValueShapesDesign__shapes_design__chamber_unit__select__wall",
+   "PlantValueShapesDesign__shapes_design__chamber_unit__select__footprint"
+  ],
+  "converged_attr": [
+   "PlantValueShapesLib__Flow_Sub__throughput"
+  ],
+  "library_default": [],
+  "unattributed": [
+   "PlantValueShapesDesign__shapes_design__rated_cost__rate"
+  ],
+  "fanout_groups": [],
+  "recon": {
+   "exact_occurrence": 0,
+   "def_default": 1,
+   "unresolved": [
+    [
+     "PlantValueShapesDesign__shapes_design__chamber_unit__select__wall",
+     "PlantValueShapesDesign__shapes_design__chamber_unit__wall",
+     "PlantValueShapesLib__Chamber_Unit__wall"
+    ]
+   ],
+   "ambiguous": []
+  }
+ },
+ "plant_values": {
+  "status": "ok",
+  "eps": 5,
+  "authored_literal": [],
+  "path_a": [],
+  "path_b": [],
+  "converged_attr": [
+   "PlantValuesDesign__plant__chamber__cost_per_unit",
+   "PlantValuesDesign__plant__driver__efficiency",
+   "PlantValuesDesign__plant__target_factory__cost_per_target",
+   "PlantValuesLib__Power_Plant__gain"
+  ],
+  "library_default": [
+   "PlantValuesDesign__plant__viability__37ab90c19d41088f__threshold"
+  ],
+  "unattributed": [],
+  "fanout_groups": [],
+  "recon": {
+   "exact_occurrence": 0,
+   "def_default": 0,
+   "unresolved": [],
+   "ambiguous": []
+  }
+ },
+ "quoted_owner_formula": {
+  "status": "ok",
+  "eps": 2,
+  "authored_literal": [],
+  "path_a": [],
+  "path_b": [],
+  "converged_attr": [
+   "QuotedOwnerFormulaDesign__Margin_Part__cost",
+   "QuotedOwnerFormulaDesign__Margin_Part__revenue"
+  ],
+  "library_default": [],
+  "unattributed": [],
+  "fanout_groups": [],
+  "recon": {
+   "exact_occurrence": 0,
+   "def_default": 0,
+   "unresolved": [],
+   "ambiguous": []
+  }
+ },
+ "return_styles": {
+  "status": "ok",
+  "eps": 4,
+  "authored_literal": [],
+  "path_a": [],
+  "path_b": [],
+  "converged_attr": [
+   "ReturnStylesDesign__rs_design__a",
+   "ReturnStylesDesign__rs_design__b",
+   "ReturnStylesDesign__rs_design__c",
+   "ReturnStylesDesign__rs_design__d"
+  ],
+  "library_default": [],
+  "unattributed": [],
+  "fanout_groups": [],
+  "recon": {
+   "exact_occurrence": 0,
+   "def_default": 0,
+   "unresolved": [],
+   "ambiguous": []
+  }
+ },
+ "retype_model": {
+  "status": "ok",
+  "eps": 4,
+  "authored_literal": [],
+  "path_a": [],
+  "path_b": [],
+  "converged_attr": [
+   "RetypeLibrary__HIF_Driver__torque",
+   "RetypeLibrary__IFE_Driver__power"
+  ],
+  "library_default": [
+   "RetypeDesign__retype_design__plain_hif__shared_calc__s",
+   "RetypeDesign__retype_design__the_variant__driver__shared_calc__s"
+  ],
+  "unattributed": [],
+  "fanout_groups": [],
+  "recon": {
+   "exact_occurrence": 0,
+   "def_default": 0,
+   "unresolved": [],
+   "ambiguous": []
+  }
+ },
+ "sample_model": {
+  "status": "ok",
+  "eps": 0,
+  "authored_literal": [],
+  "path_a": [],
+  "path_b": [],
+  "converged_attr": [],
+  "library_default": [],
+  "unattributed": [],
+  "fanout_groups": [],
+  "recon": {
+   "exact_occurrence": 0,
+   "def_default": 0,
+   "unresolved": [],
+   "ambiguous": []
+  }
+ },
+ "self_named_binding_trap": {
+  "status": "ok",
+  "eps": 1,
+  "authored_literal": [],
+  "path_a": [],
+  "path_b": [
+   "TrapDesign__trap_plant__avail_calc__availability"
+  ],
+  "converged_attr": [],
+  "library_default": [],
+  "unattributed": [],
+  "fanout_groups": [],
+  "recon": {
+   "exact_occurrence": 0,
+   "def_default": 1,
+   "unresolved": [],
+   "ambiguous": []
+  }
+ },
+ "self_named_rescue": {
+  "status": "ok",
+  "eps": 1,
+  "authored_literal": [],
+  "path_a": [],
+  "path_b": [],
+  "converged_attr": [
+   "RescueLib__Rescue_Plant__raw_flow"
+  ],
+  "library_default": [],
+  "unattributed": [],
+  "fanout_groups": [],
+  "recon": {
+   "exact_occurrence": 0,
+   "def_default": 0,
+   "unresolved": [],
+   "ambiguous": []
+  }
+ },
+ "shadowed_reference": {
+  "status": "ok",
+  "eps": 1,
+  "authored_literal": [],
+  "path_a": [],
+  "path_b": [],
+  "converged_attr": [
+   "ShadowedReference__the_outer__scale"
+  ],
+  "library_default": [],
+  "unattributed": [],
+  "fanout_groups": [],
+  "recon": {
+   "exact_occurrence": 0,
+   "def_default": 0,
+   "unresolved": [],
+   "ambiguous": []
+  }
+ },
+ "shared_producer": {
+  "status": "ok",
+  "eps": 2,
+  "authored_literal": [],
+  "path_a": [],
+  "path_b": [],
+  "converged_attr": [
+   "SharedProducer__the_rig__gain"
+  ],
+  "library_default": [
+   "SharedProducer__the_rig__floor_check__366af8bfb6fac435__floor"
+  ],
+  "unattributed": [],
+  "fanout_groups": [],
+  "recon": {
+   "exact_occurrence": 0,
+   "def_default": 0,
+   "unresolved": [],
+   "ambiguous": []
+  }
+ },
+ "sibling_channel_ambiguity": {
+  "status": "ok",
+  "eps": 2,
+  "authored_literal": [],
+  "path_a": [],
+  "path_b": [
+   "SiblingDesign__twin_plant__chamber_a__power_calc__fuel",
+   "SiblingDesign__twin_plant__chamber_b__power_calc__fuel"
+  ],
+  "converged_attr": [],
+  "library_default": [],
+  "unattributed": [],
+  "fanout_groups": [],
+  "recon": {
+   "exact_occurrence": 0,
+   "def_default": 2,
+   "unresolved": [],
+   "ambiguous": []
+  }
+ },
+ "solar_battery_model": {
+  "status": "ok",
+  "eps": 60,
+  "authored_literal": [
+   "SolarBatteryDesign__solar_battery_plant__solar_array__allocation_model__child_count",
+   "SolarBatteryDesign__solar_battery_plant__solar_array__allocation_model__total_child_mass"
+  ],
+  "path_a": [
+   "SolarBatteryDesign__solar_battery_plant__solar_array__pv_module__cost_model__wattage",
+   "SolarBatteryDesign__solar_battery_plant__solar_array__pv_module__cost_model__efficiency",
+   "SolarBatteryDesign__solar_battery_plant__solar_array__inverter__cost_model__power_rating",
+   "SolarBatteryDesign__solar_battery_plant__solar_array__array_bos__cost_model__string_count",
+   "SolarBatteryDesign__solar_battery_plant__solar_array__array_bos__cost_model__panel_count",
+   "SolarBatteryDesign__solar_battery_plant__battery_system__battery_pack__cost_model__capacity_kwh",
+   "SolarBatteryDesign__solar_battery_plant__battery_system__battery_pack__cost_model__chemistry_factor",
+   "SolarBatteryDesign__solar_battery_plant__battery_system__hybrid_inverter__cost_model__power_rating",
+   "SolarBatteryDesign__solar_battery_plant__battery_system__battery_bos__cost_model__pack_count",
+   "SolarBatteryDesign__solar_battery_plant__site_infra__racking__cost_model__panel_count",
+   "SolarBatteryDesign__solar_battery_plant__site_infra__racking__cost_model__tilt_angle",
+   "SolarBatteryDesign__solar_battery_plant__site_infra__electrical_panel__cost_model__circuit_count",
+   "SolarBatteryDesign__solar_battery_plant__site_infra__permitting__cost_model__system_capacity_kw"
+  ],
+  "path_b": [],
+  "converged_attr": [
+   "SolarBatteryDesign__solar_battery_plant__discount_rate",
+   "SolarBatteryDesign__solar_battery_plant__fuel_consumption",
+   "SolarBatteryDesign__solar_battery_plant__fuel_unit_cost",
+   "SolarBatteryDesign__solar_battery_plant__n_mod",
+   "SolarBatteryDesign__solar_battery_plant__om_rate_per_kw_year",
+   "SolarBatteryDesign__solar_battery_plant__p_net_mw",
+   "SolarBatteryDesign__solar_battery_plant__plant_availability",
+   "SolarBatteryDesign__solar_battery_plant__plant_lifetime",
+   "SolarBatteryDesign__solar_battery_plant__yearly_inflation",
+   "SolarBatteryDesign__solar_battery_plant__battery_system__pack_count",
+   "SolarBatteryDesign__solar_battery_plant__site_infra__fabrication_cost__permitting_fabrication_cost",
+   "SolarBatteryDesign__solar_battery_plant__site_infra__installation_cost__permitting_installation_cost",
+   "SolarBatteryDesign__solar_battery_plant__site_infra__raw_material_cost__permitting_raw_material_cost",
+   "SolarBatteryDesign__solar_battery_plant__solar_array__inverter_count",
+   "SolarBatteryDesign__solar_battery_plant__solar_array__module_count"
+  ],
+  "library_default": [
+   "SolarBatteryDesign__solar_battery_plant__battery_system__battery_bos__cost_model__cost_per_pack_bos",
+   "SolarBatteryDesign__solar_battery_plant__battery_system__battery_bos__cost_model__fab_factor",
+   "SolarBatteryDesign__solar_battery_plant__battery_system__battery_bos__cost_model__install_factor",
+   "SolarBatteryDesign__solar_battery_plant__battery_system__battery_pack__cost_model__cost_per_kwh",
+   "SolarBatteryDesign__solar_battery_plant__battery_system__battery_pack__cost_model__fab_factor",
+   "SolarBatteryDesign__solar_battery_plant__battery_system__battery_pack__cost_model__install_factor",
+   "SolarBatteryDesign__solar_battery_plant__battery_system__hybrid_inverter__cost_model__cost_per_watt",
+   "SolarBatteryDesign__solar_battery_plant__battery_system__hybrid_inverter__cost_model__fab_factor",
+   "SolarBatteryDesign__solar_battery_plant__battery_system__hybrid_inverter__cost_model__install_factor",
+   "SolarBatteryDesign__solar_battery_plant__site_infra__electrical_panel__cost_model__base_cost",
+   "SolarBatteryDesign__solar_battery_plant__site_infra__electrical_panel__cost_model__cost_per_circuit",
+   "SolarBatteryDesign__solar_battery_plant__site_infra__electrical_panel__cost_model__fab_factor",
+   "SolarBatteryDesign__solar_battery_plant__site_infra__electrical_panel__cost_model__install_factor",
+   "SolarBatteryDesign__solar_battery_plant__site_infra__permitting__cost_model__cost_per_kw",
+   "SolarBatteryDesign__solar_battery_plant__site_infra__racking__cost_model__cost_per_panel_rack",
+   "SolarBatteryDesign__solar_battery_plant__site_infra__racking__cost_model__fab_factor",
+   "SolarBatteryDesign__solar_battery_plant__site_infra__racking__cost_model__install_factor",
+   "SolarBatteryDesign__solar_battery_plant__solar_array__allocation_model__fastener_cost_per_child",
+   "SolarBatteryDesign__solar_battery_plant__solar_array__allocation_model__seal_cost_per_child",
+   "SolarBatteryDesign__solar_battery_plant__solar_array__allocation_model__wiring_cost_per_kg",
+   "SolarBatteryDesign__solar_battery_plant__solar_array__array_bos__cost_model__cost_per_panel_bos",
+   "SolarBatteryDesign__solar_battery_plant__solar_array__array_bos__cost_model__cost_per_string",
+   "SolarBatteryDesign__solar_battery_plant__solar_array__array_bos__cost_model__fab_factor",
+   "SolarBatteryDesign__solar_battery_plant__solar_array__array_bos__cost_model__install_factor",
+   "SolarBatteryDesign__solar_battery_plant__solar_array__inverter__cost_model__cost_per_watt",
+   "SolarBatteryDesign__solar_battery_plant__solar_array__inverter__cost_model__fab_factor",
+   "SolarBatteryDesign__solar_battery_plant__solar_array__inverter__cost_model__install_factor",
+   "SolarBatteryDesign__solar_battery_plant__solar_array__pv_module__cost_model__cost_per_watt",
+   "SolarBatteryDesign__solar_battery_plant__solar_array__pv_module__cost_model__fab_factor",
+   "SolarBatteryDesign__solar_battery_plant__solar_array__pv_module__cost_model__install_factor"
+  ],
+  "unattributed": [],
+  "fanout_groups": [],
+  "recon": {
+   "exact_occurrence": 0,
+   "def_default": 0,
+   "unresolved": [
+    [
+     "SolarBatteryDesign__solar_battery_plant__solar_array__pv_module__cost_model__wattage",
+     "SolarBatteryDesign__solar_battery_plant__solar_array__pv_module__wattage",
+     "SolarBatteryLibrary__PV_Module__wattage"
+    ],
+    [
+     "SolarBatteryDesign__solar_battery_plant__solar_array__pv_module__cost_model__efficiency",
+     "SolarBatteryDesign__solar_battery_plant__solar_array__pv_module__efficiency",
+     "SolarBatteryLibrary__PV_Module__efficiency"
+    ],
+    [
+     "SolarBatteryDesign__solar_battery_plant__solar_array__inverter__cost_model__power_rating",
+     "SolarBatteryDesign__solar_battery_plant__solar_array__inverter__power_rating",
+     "SolarBatteryLibrary__String_Inverter__power_rating"
+    ],
+    [
+     "SolarBatteryDesign__solar_battery_plant__solar_array__array_bos__cost_model__string_count",
+     "SolarBatteryDesign__solar_battery_plant__solar_array__array_bos__string_count",
+     "SolarBatteryLibrary__Array_BOS__string_count"
+    ],
+    [
+     "SolarBatteryDesign__solar_battery_plant__solar_array__array_bos__cost_model__panel_count",
+     "SolarBatteryDesign__solar_battery_plant__solar_array__array_bos__panel_count",
+     "SolarBatteryLibrary__Array_BOS__panel_count"
+    ],
+    [
+     "SolarBatteryDesign__solar_battery_plant__battery_system__battery_pack__cost_model__capacity_kwh",
+     "SolarBatteryDesign__solar_battery_plant__battery_system__battery_pack__capacity_kwh",
+     "SolarBatteryLibrary__Battery_Pack__capacity_kwh"
+    ],
+    [
+     "SolarBatteryDesign__solar_battery_plant__battery_system__battery_pack__cost_model__chemistry_factor",
+     "SolarBatteryDesign__solar_battery_plant__battery_system__battery_pack__chemistry_factor",
+     "SolarBatteryLibrary__Battery_Pack__chemistry_factor"
+    ],
+    [
+     "SolarBatteryDesign__solar_battery_plant__battery_system__hybrid_inverter__cost_model__power_rating",
+     "SolarBatteryDesign__solar_battery_plant__battery_system__hybrid_inverter__power_rating",
+     "SolarBatteryLibrary__Hybrid_Inverter__power_rating"
+    ],
+    [
+     "SolarBatteryDesign__solar_battery_plant__battery_system__battery_bos__cost_model__pack_count",
+     "SolarBatteryDesign__solar_battery_plant__battery_system__battery_bos__pack_count",
+     "SolarBatteryLibrary__Battery_BOS__pack_count"
+    ],
+    [
+     "SolarBatteryDesign__solar_battery_plant__site_infra__racking__cost_model__panel_count",
+     "SolarBatteryDesign__solar_battery_plant__site_infra__racking__panel_count",
+     "SolarBatteryLibrary__Racking_Mounting__panel_count"
+    ],
+    [
+     "SolarBatteryDesign__solar_battery_plant__site_infra__racking__cost_model__tilt_angle",
+     "SolarBatteryDesign__solar_battery_plant__site_infra__racking__tilt_angle",
+     "SolarBatteryLibrary__Racking_Mounting__tilt_angle"
+    ],
+    [
+     "SolarBatteryDesign__solar_battery_plant__site_infra__electrical_panel__cost_model__circuit_count",
+     "SolarBatteryDesign__solar_battery_plant__site_infra__electrical_panel__circuit_count",
+     "SolarBatteryLibrary__Electrical_Panel__circuit_count"
+    ],
+    [
+     "SolarBatteryDesign__solar_battery_plant__site_infra__permitting__cost_model__system_capacity_kw",
+     "SolarBatteryDesign__solar_battery_plant__site_infra__permitting__system_capacity_kw",
+     "SolarBatteryLibrary__Permitting_Interconnect__system_capacity_kw"
+    ]
+   ],
+   "ambiguous": []
+  }
+ },
+ "spec_chain_channel": {
+  "status": "ok",
+  "eps": 1,
+  "authored_literal": [],
+  "path_a": [],
+  "path_b": [
+   "SpecChainDesign__spec_chain_plant__driver__meier_cost__drive_power"
+  ],
+  "converged_attr": [],
+  "library_default": [],
+  "unattributed": [],
+  "fanout_groups": [],
+  "recon": {
+   "exact_occurrence": 0,
+   "def_default": 1,
+   "unresolved": [],
+   "ambiguous": []
+  }
+ },
+ "spec_chain_twolevel": {
+  "status": "ok",
+  "eps": 3,
+  "authored_literal": [],
+  "path_a": [],
+  "path_b": [
+   "TwoLevelDesign__hif_plant__driver__meier_cost__drive_power"
+  ],
+  "converged_attr": [
+   "TwoLevelLib__IFE_Driver__maintenance_rate",
+   "TwoLevelLib__IFE_Power_Plant__scale"
+  ],
+  "library_default": [],
+  "unattributed": [],
+  "fanout_groups": [],
+  "recon": {
+   "exact_occurrence": 0,
+   "def_default": 1,
+   "unresolved": [],
+   "ambiguous": []
+  }
+ },
+ "unresolvable_attr_probe": {
+  "status": "ok",
+  "eps": 1,
+  "authored_literal": [],
+  "path_a": [
+   "UnresolvableAttrProbeDesign__design_derived_instance__my_calc__x"
+  ],
+  "path_b": [],
+  "converged_attr": [],
+  "library_default": [],
+  "unattributed": [],
+  "fanout_groups": [],
+  "recon": {
+   "exact_occurrence": 0,
+   "def_default": 0,
+   "unresolved": [
+    [
+     "UnresolvableAttrProbeDesign__design_derived_instance__my_calc__x",
+     "UnresolvableAttrProbeDesign__design_derived_instance__local_val",
+     "UnresolvableAttrProbeDesign__Design_Derived__local_val"
+    ]
+   ],
+   "ambiguous": []
+  }
+ },
+ "wi014_toy": {
+  "status": "ok",
+  "eps": 4,
+  "authored_literal": [],
+  "path_a": [],
+  "path_b": [],
+  "converged_attr": [
+   "toy_plant__Toy_Plant__plant_budget",
+   "toy_plant__Toy_Plant__plant_length",
+   "toy_plant__Toy_Plant__plant_unit_cost",
+   "toy_plant__Toy_Plant__plant_width"
+  ],
+  "library_default": [],
+  "unattributed": [],
+  "fanout_groups": [],
+  "recon": {
+   "exact_occurrence": 0,
+   "def_default": 0,
+   "unresolved": [],
+   "ambiguous": []
+  }
+ }
+}

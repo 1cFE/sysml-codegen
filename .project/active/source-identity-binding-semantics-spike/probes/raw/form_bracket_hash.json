@@ -1,0 +1,259 @@
+{
+  "model_file": "/home/reid/1cfe/sysml-codegen/.project/active/source-identity-binding-semantics-spike/probes/models/form_bracket_hash.sysml",
+  "diagnostics": [],
+  "contains_errors": false,
+  "calc_usages": [
+    {
+      "calc_usage": {
+        "type": "CalculationUsage",
+        "name": "c1",
+        "qualified_name": "FormBracketHash::Design Ctx::c1",
+        "owner_type": "PartDefinition",
+        "owner_name": "Design Ctx",
+        "owner_qualified_name": "FormBracketHash::Design Ctx"
+      },
+      "params": [
+        {
+          "param": {
+            "type": "ReferenceUsage",
+            "name": "R",
+            "qualified_name": "FormBracketHash::Design Ctx::c1::R",
+            "owner_type": "CalculationUsage",
+            "owner_name": "c1",
+            "owner_qualified_name": "FormBracketHash::Design Ctx::c1"
+          },
+          "direction": "FeatureDirectionKind.In",
+          "binding_expression": {
+            "node_type": "FeatureChainExpression",
+            "written": "plants#(1).R",
+            "target_feature": {
+              "type": "AttributeUsage",
+              "name": "R",
+              "qualified_name": "FormBracketHash::Probe Plant::R",
+              "owner_type": "PartDefinition",
+              "owner_name": "Probe Plant",
+              "owner_qualified_name": "FormBracketHash::Probe Plant"
+            },
+            "operands": [
+              {
+                "node_type": "IndexExpression",
+                "written": "plants#(1)",
+                "operator": "#",
+                "operands": [
+                  {
+                    "node_type": "FeatureReferenceExpression",
+                    "written": "plants",
+                    "referent": {
+                      "type": "PartUsage",
+                      "name": "plants",
+                      "qualified_name": "FormBracketHash::Design Ctx::plants",
+                      "owner_type": "PartDefinition",
+                      "owner_name": "Design Ctx",
+                      "owner_qualified_name": "FormBracketHash::Design Ctx"
+                    }
+                  },
+                  {
+                    "node_type": "LiteralInteger",
+                    "written": "1",
+                    "literal_value": 1
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "calc_usage": {
+        "type": "CalculationUsage",
+        "name": "c2",
+        "qualified_name": "FormBracketHash::Design Ctx::c2",
+        "owner_type": "PartDefinition",
+        "owner_name": "Design Ctx",
+        "owner_qualified_name": "FormBracketHash::Design Ctx"
+      },
+      "params": [
+        {
+          "param": {
+            "type": "ReferenceUsage",
+            "name": "R",
+            "qualified_name": "FormBracketHash::Design Ctx::c2::R",
+            "owner_type": "CalculationUsage",
+            "owner_name": "c2",
+            "owner_qualified_name": "FormBracketHash::Design Ctx::c2"
+          },
+          "direction": "FeatureDirectionKind.In",
+          "binding_expression": {
+            "node_type": "FeatureChainExpression",
+            "written": "plants#(2).R",
+            "target_feature": {
+              "type": "AttributeUsage",
+              "name": "R",
+              "qualified_name": "FormBracketHash::Probe Plant::R",
+              "owner_type": "PartDefinition",
+              "owner_name": "Probe Plant",
+              "owner_qualified_name": "FormBracketHash::Probe Plant"
+            },
+            "operands": [
+              {
+                "node_type": "IndexExpression",
+                "written": "plants#(2)",
+                "operator": "#",
+                "operands": [
+                  {
+                    "node_type": "FeatureReferenceExpression",
+                    "written": "plants",
+                    "referent": {
+                      "type": "PartUsage",
+                      "name": "plants",
+                      "qualified_name": "FormBracketHash::Design Ctx::plants",
+                      "owner_type": "PartDefinition",
+                      "owner_name": "Design Ctx",
+                      "owner_qualified_name": "FormBracketHash::Design Ctx"
+                    }
+                  },
+                  {
+                    "node_type": "LiteralInteger",
+                    "written": "2",
+                    "literal_value": 2
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "value_features": [
+    {
+      "feature": {
+        "type": "AttributeUsage",
+        "name": "R",
+        "qualified_name": "FormBracketHash::TwiceCalc::R",
+        "owner_type": "CalculationDefinition",
+        "owner_name": "TwiceCalc",
+        "owner_qualified_name": "FormBracketHash::TwiceCalc"
+      },
+      "owner_is_calc": true,
+      "value_written": null,
+      "value_node_type": null,
+      "redefines": []
+    },
+    {
+      "feature": {
+        "type": "AttributeUsage",
+        "name": "y",
+        "qualified_name": "FormBracketHash::TwiceCalc::y",
+        "owner_type": "CalculationDefinition",
+        "owner_name": "TwiceCalc",
+        "owner_qualified_name": "FormBracketHash::TwiceCalc"
+      },
+      "owner_is_calc": true,
+      "value_written": "R * 2.0",
+      "value_node_type": "OperatorExpression",
+      "redefines": []
+    },
+    {
+      "feature": {
+        "type": "AttributeUsage",
+        "name": "R",
+        "qualified_name": "FormBracketHash::ThriceCalc::R",
+        "owner_type": "CalculationDefinition",
+        "owner_name": "ThriceCalc",
+        "owner_qualified_name": "FormBracketHash::ThriceCalc"
+      },
+      "owner_is_calc": true,
+      "value_written": null,
+      "value_node_type": null,
+      "redefines": []
+    },
+    {
+      "feature": {
+        "type": "AttributeUsage",
+        "name": "z",
+        "qualified_name": "FormBracketHash::ThriceCalc::z",
+        "owner_type": "CalculationDefinition",
+        "owner_name": "ThriceCalc",
+        "owner_qualified_name": "FormBracketHash::ThriceCalc"
+      },
+      "owner_is_calc": true,
+      "value_written": "R * 3.0",
+      "value_node_type": "OperatorExpression",
+      "redefines": []
+    },
+    {
+      "feature": {
+        "type": "AttributeUsage",
+        "name": "R",
+        "qualified_name": "FormBracketHash::Probe Plant::R",
+        "owner_type": "PartDefinition",
+        "owner_name": "Probe Plant",
+        "owner_qualified_name": "FormBracketHash::Probe Plant"
+      },
+      "owner_is_calc": false,
+      "value_written": "3.0",
+      "value_node_type": "LiteralRational",
+      "redefines": []
+    },
+    {
+      "feature": {
+        "type": "ReferenceUsage",
+        "name": "R",
+        "qualified_name": "FormBracketHash::Design Ctx::c1::R",
+        "owner_type": "CalculationUsage",
+        "owner_name": "c1",
+        "owner_qualified_name": "FormBracketHash::Design Ctx::c1"
+      },
+      "owner_is_calc": true,
+      "value_written": "plants#(1).R",
+      "value_node_type": "FeatureChainExpression",
+      "redefines": []
+    },
+    {
+      "feature": {
+        "type": "ReferenceUsage",
+        "name": "R",
+        "qualified_name": "FormBracketHash::Design Ctx::c2::R",
+        "owner_type": "CalculationUsage",
+        "owner_name": "c2",
+        "owner_qualified_name": "FormBracketHash::Design Ctx::c2"
+      },
+      "owner_is_calc": true,
+      "value_written": "plants#(2).R",
+      "value_node_type": "FeatureChainExpression",
+      "redefines": []
+    }
+  ],
+  "IMPL_VIEW_sysml_codegen_extractor": [
+    {
+      "usage_qn": "FormBracketHash__design_ctx__c1",
+      "bindings": [
+        {
+          "param": "R",
+          "binding_type": "BindingType.CHAIN",
+          "source_path": "R",
+          "raw_expression": "FeatureChainExpression -> R",
+          "written_qualifier": null,
+          "literal_value": null
+        }
+      ],
+      "unbound_params": []
+    },
+    {
+      "usage_qn": "FormBracketHash__design_ctx__c2",
+      "bindings": [
+        {
+          "param": "R",
+          "binding_type": "BindingType.CHAIN",
+          "source_path": "R",
+          "raw_expression": "FeatureChainExpression -> R",
+          "written_qualifier": null,
+          "literal_value": null
+        }
+      ],
+      "unbound_params": []
+    }
+  ]
+}

@@ -2,7 +2,7 @@
 
 Prioritized list of epics and features.
 
-**Last Updated**: 2026-07-19
+**Last Updated**: 2026-08-05
 
 ---
 
@@ -29,9 +29,21 @@ Prioritized list of epics and features.
 
 | Epic | Status | Notes |
 |------|--------|-------|
+| [SOURCE-IDENTITY] One Modeled Value, One Runtime Source | Ready — P0 for study releases; Items 1–2 start in parallel | Restore the library's governing contract: every consumed modeled value resolves to one declaration-plus-occurrence runtime source, never a consumer-local study variable. Eight spike-first items cover language/route evidence, authoritative owner dispositions, identity and resolution repair, corpus/downstream migration, and composed certification. Estimate: 16–26 engineering days. Absorbs `[NESTED-OCCURRENCE-OVERRIDE]`; sequences against `[CONSTRAINT-ARCH-UNIFY]` sub-scope 2. See `epic_semantic_source_identity.md`. |
 | [GAP-CLOSE] Constraint-Expression Gap Closure | Local scope certified; external F1 leg now verified closed (2026-07-20) | The blocking `[GAP-CLOSE-F1-TEAX-NORMALIZATION]` leg is closed in merged teax main (see the closed entry below). Remaining before full certification: Item 5 closeout state and the independent audit's open full-suite wave-gate leg — a certification pass, not new code. See `epic_gap_close.md`. |
 | ~~[CONSTRAINT-LIFECYCLE-REMEDIATION] Constraint Execution Lifecycle Remediation~~ ✅ | Complete (2026-07-20). Archived to: `.project/completed/20260720_epic_constraint_execution_lifecycle_remediation.md` | All 14 items done; composed public proof 41/41 at the pinned set. Merged 2026-07-20: agentic-mbse #11 → sysml-codegen #9 → teax #3. Release record + 41/41 register in `completed/20260720_constraint-lifecycle-composed-proof/`. |
 | ~~[CONSTRAINT-WAVE-REMEDIATION] Constraint PR-Wave Remediation~~ | Superseded — partially completed (2026-07-19). Archived to: `.project/completed/20260720_epic_constraint_pr_wave_remediation.md` | Items 1/2 complete and Items 4/6 certified; all unfinished work was mapped into CONSTRAINT-LIFECYCLE-REMEDIATION (now complete). Retained as history. |
+
+SOURCE-IDENTITY items:
+- [x] Item 1 — Binding semantics and authoring-form spike (complete 2026-08-05)
+- [ ] Item 2 — Source-identity routes and evidence-sufficiency spike (technical evidence, synthesis,
+      and licensed parity complete; owner aggregation-family disposition remains)
+- [ ] Item 3 — Authoritative source-identity contract
+- [ ] Item 4 — Semantic identity and occurrence foundation (`[NESTED-OCCURRENCE-OVERRIDE]` absorbed)
+- [ ] Item 5 — Unified materialization and backtracking cutover
+- [ ] Item 6 — Semantic corpus migration and public acceptance
+- [ ] Item 7 — Downstream study and consumer remediation
+- [ ] Item 8 — Certification repair and composed source-identity proof
 
 CONSTRAINT-LIFECYCLE-REMEDIATION items (all complete 2026-07-20):
 - [x] Item 0 — Compatible candidate landing and pin (register row 0)
@@ -165,7 +177,11 @@ Compounding factors the fix must address, not just the query:
 
 ## P2 - Medium Priority
 
-### [NESTED-OCCURRENCE-OVERRIDE] `:>>` override on a usage nested in an instantiated part def is lost (calc + constraint)
+### [NESTED-OCCURRENCE-OVERRIDE] `:>>` override on a usage nested in an instantiated part def is lost (calc + constraint) — ABSORBED into SOURCE-IDENTITY Item 4 (2026-08-04)
+
+**Scheduling status:** the remaining fix is no longer scheduled independently. SOURCE-IDENTITY
+Item 2 must revalidate its evidence and overlap; Item 4 owns the one implementation, reusing the
+tripwire and fixture and sequencing against `[CONSTRAINT-ARCH-UNIFY]` sub-scope 2.
 
 **Owner: the Item-10 occurrence-materialization family** (CONSTRAINT-LIFECYCLE-REMEDIATION
 Item 10 / producer-completeness + occurrence rollup). **Filed 2026-07-20** by Item 13 composed
@@ -918,6 +934,10 @@ constraint architecture.
      `deserialize_part_occurrences:463`) out of `part_instance_index.py`. Before collapsing,
      add differential singleton parity and edge characterizations for cycles, diamonds,
      zero/multiple blocked definitions, multi-digit occurrence indices.
+     **SOURCE-IDENTITY sequencing (2026-08-04):** Items 2 and 4 own the source-identity
+     characterization and any occurrence-index work required by the absorbed nested-override fix.
+     Do not implement this sub-scope independently across that seam or introduce a second
+     occurrence→definition authority; the remainder beyond source identity stays filed here.
   3. *Shared live/offline phases.* `snapshot/graph_rebuild.py:65-68` still imports
      `pipeline_builder` private helpers (`_register_partdef_expose_scoped_aliases`,
      `_rescue_self_named_bindings`); the demand→lower→extend→catalog sequence is mirrored by

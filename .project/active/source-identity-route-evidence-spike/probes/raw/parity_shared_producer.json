@@ -1,0 +1,62 @@
+{
+ "fixture": "shared_producer",
+ "verdict": "PARITY",
+ "topology": {
+  "live": {
+   "SharedProducer__the_rig__gain": [
+    "EntryPointType.DESIGN_ATTRIBUTE",
+    40.0
+   ],
+   "SharedProducer__the_rig__floor_check__366af8bfb6fac435__floor": [
+    "EntryPointType.LIBRARY_DEFAULT",
+    10.0
+   ]
+  },
+  "snapshot": {
+   "SharedProducer__the_rig__gain": [
+    "EntryPointType.DESIGN_ATTRIBUTE",
+    40.0
+   ],
+   "SharedProducer__the_rig__floor_check__366af8bfb6fac435__floor": [
+    "EntryPointType.LIBRARY_DEFAULT",
+    10.0
+   ]
+  },
+  "relocated": {
+   "SharedProducer__the_rig__gain": [
+    "EntryPointType.DESIGN_ATTRIBUTE",
+    40.0
+   ],
+   "SharedProducer__the_rig__floor_check__366af8bfb6fac435__floor": [
+    "EntryPointType.LIBRARY_DEFAULT",
+    10.0
+   ]
+  }
+ },
+ "bindings": {
+  "live": {
+   "SharedProducer__the_rig__scaler|gain": {
+    "binding_type": "BindingType.REFERENCE",
+    "source_path": "SharedProducer::the_rig::scaler::gain",
+    "literal_value": null,
+    "written_reference": "gain"
+   }
+  },
+  "snapshot": {
+   "SharedProducer__the_rig__scaler|gain": {
+    "binding_type": "BindingType.REFERENCE",
+    "source_path": "SharedProducer::the_rig::scaler::gain",
+    "literal_value": null,
+    "written_reference": "gain"
+   }
+  },
+  "relocated": {
+   "SharedProducer__the_rig__scaler|gain": {
+    "binding_type": "BindingType.REFERENCE",
+    "source_path": "SharedProducer::the_rig::scaler::gain",
+    "literal_value": null,
+    "written_reference": "gain"
+   }
+  }
+ }
+}

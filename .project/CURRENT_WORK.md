@@ -1,10 +1,71 @@
 # Current Work
 
-**Last Updated**: 2026-07-24 (docs-lifecycle-sync + nested-override-tripwire closed; branches await merge)
+**Last Updated**: 2026-08-05 (SOURCE-IDENTITY Items 1 + 2 evidence legs complete)
 
 ---
 
 ## Active Work
+
+### 2026-08-05: SOURCE-IDENTITY Item 2 — technical evidence COMPLETE; one owner gate remains
+
+Dedicated branch `source-identity-epic` was created from `nested-override-tripwire` at `fa9e0d0`
+after the Item-1/Item-2 evidence legs. Source-identity work continues there.
+
+Executed via `/_my_learning_test` (kept tests + findings; item's spec/design/plan skipped —
+noted in findings). Kept tests: `tests/conformance/test_source_identity_routes.py`
+(11 passing, license-free) — pin both fan-out paths, the authored-vs-reference-derived
+literal discriminator (`written_reference is None` ⇔ authored), and the cross-owner cell
+(solar `pack_count`) where owner-local reconstruction fails. Findings + identity trace +
+initial census + evidence-sufficiency verdict + adjacent-work register:
+`.project/research/20260805-054752_source-identity-route-evidence.md` (back-referenced in
+the epic's Item 2 Current State; Item-1 results cross-referenced).
+
+New load-bearing facts beyond the forensics: snapshot capture persists the post-VBR stamp
+(`snapshot/capture.py` runs the full pipeline; `graph_rebuild.py` has no VBR step — any
+evidence repair ⇒ recapture + rebuild change); written-form fields survive the stamp; a
+fourth value authority (group-deriver backfill, `graph_builder.py:620-630`) masks Path-B
+identity loss. Census: 277 corpus entry points, 75 model-derived per-consumer mints
+(37 Path A / 38 Path B). Joint synthesis with Item 1 makes the evidence-sufficiency verdict
+final: extraction must publish a semantic source ID from referent/redefinition evidence;
+owner-local reconstruction cannot cover 40/75 cross-owner/tail cases, and the surviving
+self-reference `source_path` is normatively the wrong element. Licensed live, snapshot, and
+relocated routes are identical on four representative fixtures; retained matrix/trace/parity
+artifacts live in `.project/active/source-identity-route-evidence-spike/`. Remaining for Item 2
+close: owner disposition on absorbing the queued aggregation-scoping finding (evidence supports
+absorption into the same terminal-mint family).
+
+### 2026-08-05: SOURCE-IDENTITY epic Item 1 — binding-semantics spike COMPLETE
+
+Executed via `/_my_spike` (probes + findings + table; item's spec/design/plan
+deliverables consciously skipped — noted in findings). Home:
+`.project/active/source-identity-binding-semantics-spike/`. Headlines: bare
+`in R = R` self-binding is normatively required (clause-cited KerML/SysML rulings
+retained in `standards/`); qualified vs chain forms denote def-level vs
+occurrence-level features and the spec doesn't pick one (Item-3 decision); `#(i)`
+parses value-only and the extractor silently drops the index segment (NEW
+identity-loss site → Item 2 route matrix); `[i]` fails to load; both indexed forms
+have zero corpus prevalence; bare self-named is ~47% of external usage bindings.
+Decision input for Item 3: `authoring-form-table.md`. Item 2 (route/evidence spike)
+is the epic's other pre-disposition leg, still open.
+
+### 2026-08-03: Entry-surface fan-out forensics — COMPLETE, filing + rulings pending
+
+A customer (fusion-tea demo) found that calc-usage self-named rebindings (`in R = R` on a
+shared plant attribute) fan out into per-usage entry fields; sweeping one copy leaves the
+others frozen. Forensic report:
+`.project/research/20260803-203011_entry-surface-fanout-forensics.md`.
+
+- **Verdict: NEVER-BUILT and never specified** (per-usage minting is REQ-IR-06, present
+  since the initial commit; the two big refactor PRs were byte-identity preservation and
+  pinned the fan-out into baselines). Not a regression.
+- Mechanism: SysIDE resolves the bare RHS to the calc's own param (spec-conformant — the
+  idiom is degenerate per KerML scoping); Path A (instance `:>>` override literal-stamped
+  per-usage by name coincidence, `pipeline_builder.py:363-369`) is fully silent; Path B
+  (def-default, lenient-miss) warns. Constraints converge — hence the asymmetry.
+- **Pending owner rulings:** (1) semantics for the idiom — reject loudly vs converge
+  uniformly (fix hangs on this); (2) filing this + the three queued fusion-tea upstream
+  findings; (3) fix-first vs workaround for demo Item 5; (4) whether anything consumed
+  LCOE off the July IFE study rows (unowned check).
 
 ### Post-merge state — CONSTRAINT-LIFECYCLE epic MERGED and CLOSED (2026-07-20)
 
