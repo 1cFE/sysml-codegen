@@ -1,0 +1,2488 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>sysml-codegen: the pipeline, explained</title>
+<style>
+/* ════════════════════════════════════════════════════════════════
+   Tokens — light is the base; dark redefines tokens only.
+   Palette: dataviz reference instance (validated slots 1-8).
+   ════════════════════════════════════════════════════════════════ */
+:root {
+  color-scheme: light;
+  --page: #f9f9f7;
+  --surface: #fcfcfb;
+  --surface-2: #f0efec;
+  --ink: #0b0b0b;
+  --ink-2: #52514e;
+  --ink-muted: #898781;
+  --hairline: #e1e0d9;
+  --border: rgba(11,11,11,0.10);
+  --accent: #2a78d6;
+  --accent-ink: #1c5cab;
+  --accent-wash: #cde2fb;
+
+  /* module_kind families — categorical slots 1-5, fixed order */
+  --kind-calc: #2a78d6;      /* CALCULATION  — blue   */
+  --kind-formula: #008300;   /* FORMULA      — green  */
+  --kind-agg: #e87ba4;       /* AGGREGATION  — magenta*/
+  --kind-constraint: #eda100;/* CONSTRAINT   — yellow */
+  --kind-report: #1baf7a;    /* REPORT_AGGREGATOR — aqua */
+
+  /* entry-point types — categorical slots 6-8 */
+  --ep-design: #eb6834;      /* DESIGN_ATTRIBUTE — orange */
+  --ep-library: #4a3aa7;     /* LIBRARY_DEFAULT  — violet */
+  --ep-literal: #e34948;     /* USAGE_LITERAL    — red    */
+
+  /* status — reserved, never a series */
+  --st-good: #0ca30c;
+  --st-warning: #fab219;
+  --st-serious: #ec835a;
+  --st-critical: #d03b3b;
+  --good-text: #006300;
+
+  --code-bg: #f4f3f0;
+  --code-kw: #1c5cab;     /* keywords */
+  --code-str: #9d3353;    /* strings/literals */
+  --code-com: #898781;    /* comments */
+  --code-ty: #0f766e;     /* types */
+  --shadow: 0 1px 3px rgba(11,11,11,0.07);
+  --sidebar-w: 252px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:where(:not([data-theme="light"])) {
+    color-scheme: dark;
+    --page: #0d0d0d;
+    --surface: #1a1a19;
+    --surface-2: #242422;
+    --ink: #f2f1ec;
+    --ink-2: #c3c2b7;
+    --ink-muted: #898781;
+    --hairline: #2c2c2a;
+    --border: rgba(255,255,255,0.10);
+    --accent: #3987e5;
+    --accent-ink: #86b6ef;
+    --accent-wash: #12233a;
+    --kind-calc: #3987e5;
+    --kind-formula: #2da12d;
+    --kind-agg: #d55181;
+    --kind-constraint: #c98500;
+    --kind-report: #199e70;
+    --ep-design: #d95926;
+    --ep-library: #9085e9;
+    --ep-literal: #e66767;
+    --good-text: #0ca30c;
+    --code-bg: #161615;
+    --code-kw: #86b6ef;
+    --code-str: #e08fb0;
+    --code-com: #898781;
+    --code-ty: #4fd1c5;
+    --shadow: none;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --page: #0d0d0d;
+  --surface: #1a1a19;
+  --surface-2: #242422;
+  --ink: #f2f1ec;
+  --ink-2: #c3c2b7;
+  --ink-muted: #898781;
+  --hairline: #2c2c2a;
+  --border: rgba(255,255,255,0.10);
+  --accent: #3987e5;
+  --accent-ink: #86b6ef;
+  --accent-wash: #12233a;
+  --kind-calc: #3987e5;
+  --kind-formula: #2da12d;
+  --kind-agg: #d55181;
+  --kind-constraint: #c98500;
+  --kind-report: #199e70;
+  --ep-design: #d95926;
+  --ep-library: #9085e9;
+  --ep-literal: #e66767;
+  --good-text: #0ca30c;
+  --code-bg: #161615;
+  --code-kw: #86b6ef;
+  --code-str: #e08fb0;
+  --code-com: #898781;
+  --code-ty: #4fd1c5;
+  --shadow: none;
+}
+:root[data-theme="light"] {
+  color-scheme: light;
+  --page: #f9f9f7;
+  --surface: #fcfcfb;
+  --surface-2: #f0efec;
+  --ink: #0b0b0b;
+  --ink-2: #52514e;
+  --ink-muted: #898781;
+  --hairline: #e1e0d9;
+  --border: rgba(11,11,11,0.10);
+  --accent: #2a78d6;
+  --accent-ink: #1c5cab;
+  --accent-wash: #cde2fb;
+  --kind-calc: #2a78d6;
+  --kind-formula: #008300;
+  --kind-agg: #e87ba4;
+  --kind-constraint: #eda100;
+  --kind-report: #1baf7a;
+  --ep-design: #eb6834;
+  --ep-library: #4a3aa7;
+  --ep-literal: #e34948;
+  --good-text: #006300;
+  --code-bg: #f4f3f0;
+  --code-kw: #1c5cab;
+  --code-str: #9d3353;
+  --code-com: #898781;
+  --code-ty: #0f766e;
+  --shadow: 0 1px 3px rgba(11,11,11,0.07);
+}
+
+/* ── Base ── */
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
+body {
+  margin: 0;
+  background: var(--page);
+  color: var(--ink);
+  font: 16px/1.6 system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+code, pre, .mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+}
+h1, h2, h3, h4 { line-height: 1.25; text-wrap: balance; font-weight: 650; }
+h1 { font-size: 1.9rem; letter-spacing: -0.015em; }
+h2 { font-size: 1.42rem; margin: 0 0 0.6rem; letter-spacing: -0.01em; }
+h3 { font-size: 1.12rem; margin: 1.6rem 0 0.5rem; }
+h4 { font-size: 0.98rem; margin: 1.2rem 0 0.4rem; }
+p { margin: 0.65rem 0; max-width: 70ch; }
+li { max-width: 66ch; }
+a { color: var(--accent-ink); text-decoration-color: color-mix(in oklab, var(--accent-ink) 40%, transparent); text-underline-offset: 2px; }
+a:hover { text-decoration-color: var(--accent-ink); }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 2px; }
+strong { font-weight: 640; }
+
+.eyebrow {
+  font-size: 0.72rem; font-weight: 700; letter-spacing: 0.09em;
+  text-transform: uppercase; color: var(--ink-muted); margin: 0 0 0.35rem;
+}
+.depth-tag {
+  display: inline-block; font-size: 0.68rem; font-weight: 700; letter-spacing: 0.07em;
+  padding: 0.1rem 0.45rem; border-radius: 999px; vertical-align: 2px;
+  background: var(--surface-2); color: var(--ink-2); border: 1px solid var(--hairline);
+}
+
+/* ── Layout ── */
+#sidebar {
+  position: fixed; inset: 0 auto 0 0; width: var(--sidebar-w);
+  background: var(--surface); border-right: 1px solid var(--hairline);
+  padding: 1.1rem 0.9rem 2rem; overflow-y: auto; z-index: 40;
+  font-size: 0.85rem;
+}
+#sidebar .nav-title { font-weight: 700; font-size: 0.92rem; margin-bottom: 0.2rem; }
+#sidebar .nav-pin { font-size: 0.72rem; color: var(--ink-muted); margin-bottom: 0.9rem; }
+#sidebar a {
+  display: block; padding: 0.22rem 0.55rem; border-radius: 6px;
+  color: var(--ink-2); text-decoration: none; margin: 1px 0;
+}
+#sidebar a:hover { background: var(--surface-2); color: var(--ink); }
+#sidebar a.active { background: var(--accent-wash); color: var(--accent-ink); font-weight: 620; }
+#sidebar .nav-depth {
+  margin: 0.85rem 0 0.25rem; font-size: 0.68rem; font-weight: 700;
+  letter-spacing: 0.09em; text-transform: uppercase; color: var(--ink-muted);
+  padding-left: 0.55rem;
+}
+#sidebar a.nav-sub { padding-left: 1.35rem; font-size: 0.8rem; }
+main {
+  margin-left: var(--sidebar-w);
+  padding: 2.2rem clamp(1.2rem, 4vw, 3.4rem) 6rem;
+  max-width: 1080px;
+}
+section { margin-bottom: 3.2rem; scroll-margin-top: 1rem; }
+.section-rule { border: 0; border-top: 1px solid var(--hairline); margin: 2.6rem 0; }
+@media (max-width: 900px) {
+  #sidebar { display: none; }
+  main { margin-left: 0; }
+}
+
+/* ── Cards, callouts, tables ── */
+.card {
+  background: var(--surface); border: 1px solid var(--hairline);
+  border-radius: 10px; padding: 1rem 1.2rem; box-shadow: var(--shadow);
+}
+.callout {
+  border-left: 3px solid var(--accent); border-radius: 0 8px 8px 0;
+  background: var(--surface); padding: 0.7rem 1rem; margin: 1rem 0;
+  font-size: 0.93rem;
+}
+.callout.warn { border-left-color: var(--st-serious); }
+.callout.trap { border-left-color: var(--st-critical); }
+.callout .co-label {
+  font-size: 0.7rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--ink-muted); display: block; margin-bottom: 0.15rem;
+}
+.tablewrap { overflow-x: auto; margin: 1rem 0; border: 1px solid var(--hairline); border-radius: 10px; }
+table { border-collapse: collapse; width: 100%; font-size: 0.88rem; background: var(--surface); }
+th, td { text-align: left; padding: 0.5rem 0.75rem; border-bottom: 1px solid var(--hairline); vertical-align: top; }
+th { font-size: 0.75rem; letter-spacing: 0.05em; text-transform: uppercase; color: var(--ink-2); background: var(--surface-2); }
+tr:last-child td { border-bottom: none; }
+td code { font-size: 0.82em; background: var(--code-bg); padding: 0.05em 0.3em; border-radius: 4px; white-space: nowrap; }
+tbody tr:hover { background: color-mix(in oklab, var(--surface-2) 55%, var(--surface)); }
+
+/* ── Code blocks ── */
+pre {
+  background: var(--code-bg); border: 1px solid var(--hairline); border-radius: 10px;
+  padding: 0.85rem 1rem; overflow-x: auto; font-size: 0.82rem; line-height: 1.55;
+  margin: 0.8rem 0;
+}
+pre .k { color: var(--code-kw); font-weight: 600; }   /* keyword */
+pre .s { color: var(--code-str); }                     /* string/literal */
+pre .c { color: var(--code-com); font-style: italic; } /* comment */
+pre .t { color: var(--code-ty); }                      /* type */
+pre .hl { background: color-mix(in oklab, var(--accent-wash) 65%, transparent); border-radius: 3px; }
+pre .bad { background: color-mix(in oklab, var(--st-critical) 14%, transparent); border-radius: 3px; }
+.snippet { position: relative; margin: 1rem 0; }
+.snippet pre { margin: 0; }
+.snippet .src {
+  display: flex; justify-content: space-between; gap: 1rem;
+  font-size: 0.72rem; color: var(--ink-muted); padding: 0.25rem 0.4rem 0.3rem;
+}
+.snippet .src code { background: none; padding: 0; }
+p code, li code {
+  background: var(--code-bg); border-radius: 4px; padding: 0.08em 0.32em; font-size: 0.85em;
+}
+
+/* ── Progressive disclosure ── */
+details.fold {
+  border: 1px solid var(--hairline); border-radius: 10px; background: var(--surface);
+  margin: 0.9rem 0; overflow: hidden;
+}
+details.fold > summary {
+  cursor: pointer; padding: 0.7rem 1rem; font-weight: 620; font-size: 0.95rem;
+  list-style: none; display: flex; align-items: center; gap: 0.6rem; user-select: none;
+}
+details.fold > summary::-webkit-details-marker { display: none; }
+details.fold > summary::before {
+  content: ""; width: 0.5em; height: 0.5em; flex: none;
+  border-right: 2px solid var(--ink-muted); border-bottom: 2px solid var(--ink-muted);
+  transform: rotate(-45deg); transition: transform 0.15s;
+}
+details.fold[open] > summary::before { transform: rotate(45deg); }
+details.fold > summary:hover { background: var(--surface-2); }
+details.fold > .fold-body { padding: 0.2rem 1rem 1rem; border-top: 1px solid var(--hairline); }
+details.fold details.fold { background: color-mix(in oklab, var(--surface-2) 40%, var(--surface)); }
+
+/* ── Tabs ── */
+.tabs { margin: 1rem 0; border: 1px solid var(--hairline); border-radius: 10px; background: var(--surface); overflow: hidden; }
+.tabbar { display: flex; flex-wrap: wrap; gap: 0; border-bottom: 1px solid var(--hairline); background: var(--surface-2); }
+.tabbar button {
+  appearance: none; background: none; border: none; border-right: 1px solid var(--hairline);
+  padding: 0.5rem 0.95rem; font: 620 0.84rem/1.3 inherit; color: var(--ink-2); cursor: pointer;
+}
+.tabbar button[aria-selected="true"] { background: var(--surface); color: var(--accent-ink); box-shadow: inset 0 -2px 0 var(--accent); }
+.tabbar button:hover { color: var(--ink); }
+.tabpanel { padding: 0.8rem 1.1rem 1rem; }
+.tabpanel[hidden] { display: none; }
+
+/* ── Kind + EP chips ── */
+.chip {
+  display: inline-flex; align-items: center; gap: 0.38em;
+  font-size: 0.76rem; font-weight: 650; padding: 0.12rem 0.55rem;
+  border-radius: 999px; border: 1px solid var(--hairline); background: var(--surface);
+  white-space: nowrap;
+}
+.chip .dot { width: 0.62em; height: 0.62em; border-radius: 999px; flex: none; }
+.legend-row { display: flex; flex-wrap: wrap; gap: 0.45rem; margin: 0.7rem 0; }
+
+/* ── Diagram containers ── */
+.diagram {
+  border: 1px solid var(--hairline); border-radius: 12px; background: var(--surface);
+  margin: 1.1rem 0; overflow: hidden;
+}
+.diagram .dg-toolbar {
+  display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap;
+  padding: 0.45rem 0.7rem; border-bottom: 1px solid var(--hairline);
+  background: var(--surface-2); font-size: 0.78rem; color: var(--ink-2);
+}
+.diagram .dg-toolbar button {
+  appearance: none; border: 1px solid var(--hairline); background: var(--surface);
+  color: var(--ink-2); border-radius: 6px; padding: 0.18rem 0.6rem;
+  font: 600 0.78rem/1.4 inherit; cursor: pointer;
+}
+.diagram .dg-toolbar button:hover { color: var(--ink); border-color: var(--ink-muted); }
+.diagram svg { display: block; width: 100%; height: auto; }
+.diagram .dg-hint { margin-left: auto; font-size: 0.72rem; color: var(--ink-muted); }
+svg text { font-family: system-ui, -apple-system, "Segoe UI", sans-serif; }
+svg .mono-t { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+
+.anim-dim { opacity: 0.16; transition: opacity 0.25s; }
+.anim-highlight { transition: opacity 0.25s; }
+
+/* ── Flow strip (L1 stages) ── */
+.stage-node { cursor: pointer; }
+.stage-node rect { transition: filter 0.15s; }
+.stage-node:hover rect { filter: brightness(0.96); }
+:root[data-theme="dark"] .stage-node:hover rect { filter: brightness(1.25); }
+
+/* ── Forward-link affordance ── */
+a.fwd { white-space: nowrap; }
+a.fwd::before { content: "→ "; color: var(--ink-muted); }
+
+/* ── Hero ── */
+#hero { padding: 0.4rem 0 0.6rem; }
+#hero .pinline { font-size: 0.8rem; color: var(--ink-muted); margin-top: 0.5rem; }
+#hero .pinline code { font-size: 0.78rem; }
+.hero-grid { display: grid; grid-template-columns: 1fr; gap: 0.4rem; margin-top: 0.8rem; }
+
+/* ── Glossary overlay ── */
+#glossary-overlay {
+  position: fixed; inset: 0 0 0 auto; width: min(430px, 92vw); z-index: 60;
+  background: var(--surface); border-left: 1px solid var(--hairline);
+  box-shadow: -8px 0 28px rgba(0,0,0,0.14);
+  transform: translateX(102%); transition: transform 0.22s ease;
+  overflow-y: auto; padding: 1.1rem 1.3rem 2rem;
+}
+#glossary-overlay.visible { transform: translateX(0); }
+#glossary-overlay h3 { margin-top: 0; }
+.gloss-entry { border-top: 1px solid var(--hairline); padding: 0.7rem 0; }
+.gloss-entry dt { font-weight: 650; font-size: 0.92rem; }
+.gloss-entry dd { margin: 0.25rem 0 0; font-size: 0.87rem; color: var(--ink-2); }
+.glossary-link { border-bottom: 1px dotted var(--ink-muted); cursor: help; text-decoration: none; color: inherit; }
+#glossary-btn {
+  margin-top: 1rem; width: 100%; appearance: none; border: 1px solid var(--hairline);
+  background: var(--surface-2); color: var(--ink-2); border-radius: 8px;
+  padding: 0.4rem 0.6rem; font: 620 0.8rem/1.4 inherit; cursor: pointer;
+}
+#glossary-btn:hover { color: var(--ink); }
+#glossary-close {
+  appearance: none; border: none; background: none; font-size: 1.3rem; cursor: pointer;
+  color: var(--ink-muted); float: right; line-height: 1; padding: 0.2rem;
+}
+
+/* ── Verdict pills (Kleene / seal) ── */
+.pill { display: inline-block; font: 700 0.72rem/1.5 inherit; letter-spacing: 0.04em; padding: 0.05rem 0.5rem; border-radius: 999px; }
+.pill.ok { background: color-mix(in oklab, var(--st-good) 16%, var(--surface)); color: var(--good-text); }
+.pill.bad { background: color-mix(in oklab, var(--st-critical) 14%, var(--surface)); color: var(--st-critical); }
+.pill.unk { background: var(--surface-2); color: var(--ink-2); border: 1px dashed var(--ink-muted); }
+</style>
+</head>
+<body>
+<nav id="sidebar" aria-label="Contents">
+  <div class="nav-title">sysml-codegen: the pipeline, explained</div>
+  <div class="nav-pin">Gen-2 · merged main <code>936315c</code> · 2026-07</div>
+
+  <div class="nav-depth">Start here</div>
+  <a href="#l0">Why this exists</a>
+  <a href="#l1">The pipeline shape</a>
+
+  <div class="nav-depth">One level down</div>
+  <a href="#l2">Who owns what</a>
+  <a href="#diagnostics">Diagnostics as contract</a>
+  <a href="#worked-example">A value, end to end</a>
+
+  <div class="nav-depth">Mechanisms</div>
+  <a href="#l3">The algorithms</a>
+  <a href="#l3-registry" class="nav-sub">Output registry</a>
+  <a href="#l3-backtracker" class="nav-sub">Backtracker dispatch</a>
+  <a href="#l3-producer" class="nav-sub">resolve_producer</a>
+  <a href="#l3-v11" class="nav-sub">The V11 gate</a>
+  <a href="#cross-part">The cross-part story</a>
+  <a href="#scoped-aliases" class="nav-sub">Channel wiring</a>
+  <a href="#svm" class="nav-sub">Supplied values</a>
+  <a href="#constraints">Constraints execute</a>
+  <a href="#kleene" class="nav-sub">Kleene predicates</a>
+  <a href="#sealing">Contracts &amp; sealing</a>
+
+  <div class="nav-depth">The language layer</div>
+  <a href="#l4">SysML v2 &amp; the AST</a>
+
+  <div class="nav-depth">Around the pipeline</div>
+  <a href="#operations">Operating it</a>
+  <a href="#agentic-mbse">agentic-mbse</a>
+  <a href="#teax">The teax study layer</a>
+  <a href="#caveats">Honest caveats</a>
+
+  <button id="glossary-btn" type="button">SysML glossary</button>
+</nav>
+<main>
+
+<!-- ═══════════════ HERO ═══════════════ -->
+<section id="hero">
+  <p class="eyebrow">sysml-codegen · interactive explainer · generation 2</p>
+  <h1>From a SysML v2 model to a running simulation pipeline</h1>
+  <p style="font-size:1.06rem; color:var(--ink-2); max-width:62ch;">
+    A modeler describes a plant — its parts, its numbers, its calculations — in SysML v2.
+    <strong>sysml-codegen</strong> turns that model into an executable Python pipeline:
+    modules, schemas, input files, wiring. This page explains what the pipeline is for,
+    how it works algorithmically, and how it is operated.
+  </p>
+  <p class="pinline">
+    Current as of merged main (<code>936315c</code>, 2026-07-20) — after the
+    PIPELINE-TRUTH, CONSTRAINT-EXEC, and CONSTRAINT-LIFECYCLE epics.
+    Read the first two sections for the two-minute story; every deeper layer is a click, never required.
+  </p>
+</section>
+
+<hr class="section-rule">
+
+<!-- ═══════════════ L0 — WHY THIS EXISTS ═══════════════ -->
+<section id="l0">
+  <p class="eyebrow">Layer 0 · two-minute read</p>
+  <h2>Why this exists</h2>
+
+  <p>
+    Techno-economic simulation frameworks (TEAx-style) run a plant model as a set of Python
+    modules wired together: each module computes something, its outputs feed other modules'
+    inputs, and a pipeline definition says who runs when. Building that by hand means writing
+    the modules, the input schemas, the JSON parameter files, and the wiring — and keeping all
+    four consistent with the engineering model they came from.
+  </p>
+  <p>
+    sysml-codegen removes the hand-plumbing. The engineering model — written in
+    <span class="glossary-link" data-gloss="sysml">SysML v2</span>, the systems-engineering
+    modeling language — becomes the single source. A modeler writes two kinds of things:
+  </p>
+  <ul>
+    <li><strong>Algorithms</strong> — calculation definitions (<span class="glossary-link" data-gloss="calcdef"><code>calc def</code></span>) in a <em>library</em>: what can be computed, from which inputs.</li>
+    <li><strong>Configuration</strong> — part hierarchies with attribute values and bindings in a <em>design</em>: which parts exist, what their numbers are, and which calculation feeds which.</li>
+  </ul>
+  <p>
+    The pipeline parses that model, works out who-feeds-whom, and generates a complete package.
+    "Done" looks like: an importable Python package with one module per calculation, implementation
+    stencils for the parts that need handwritten math, JSON input files pre-filled with the model's
+    values, pipeline YAML that wires it all together — and, since the constraint-execution work,
+    the package is <em>sealed</em>: it carries a verifier that proves a consumer loaded exactly the
+    bytes that were generated (→ <a class="fwd" href="#sealing">Contracts &amp; sealing</a>).
+  </p>
+  <p>
+    The real consumer is <strong>fusion-tea</strong>, whose fusion-plant models run through this
+    pipeline. The proof point: the full fusion-tea plant YAML generates with zero unresolved
+    inputs, and its reference run reproduces the levelized cost of electricity
+    <strong>bit-exactly</strong> ($270.1211779380445/MWh) through the generated package alone —
+    no hand-written glue. Modeled assertions (like "outer radius must equal inner radius plus
+    thickness") don't just document intent anymore; they <em>execute</em> as part of the run
+    (→ <a class="fwd" href="#constraints">Constraints execute</a>).
+  </p>
+
+  <div class="callout">
+    <span class="co-label">The two-repo contract</span>
+    sysml-codegen executes a defined <em>subset</em> of SysML v2. Its sibling repo
+    <strong>agentic-mbse</strong> teaches that subset (modeling guides, pattern stencils) and
+    checks it (validation rules with negative fixtures) before generation ever runs.
+    One document — <code>docs/architecture/modeling-assumptions.md</code> — says what models
+    must look like; both repos hold to it (→ <a class="fwd" href="#agentic-mbse">agentic-mbse, the enforcement half</a>).
+  </div>
+</section>
+
+<hr class="section-rule">
+<!-- ═══════════════ L1 — THE PIPELINE SHAPE ═══════════════ -->
+<section id="l1">
+  <p class="eyebrow">Layer 1 · the spine</p>
+  <h2>The pipeline shape</h2>
+  <p>
+    The pipeline is seven steps: <strong>extract</strong> the model into typed data,
+    <strong>resolve</strong> who-feeds-whom into a single graph, <strong>generate</strong> code
+    from that graph. Everything deeper on this page hangs off this diagram — click a stage to
+    jump to its responsibility, and use the module-kind graph below it to see what the output
+    looks like.
+  </p>
+
+  <div class="diagram" id="stage-strip-diagram">
+    <div class="dg-toolbar">
+      <span>The 7-step pipeline + the snapshot front end</span>
+      <span class="dg-hint">click a stage to jump to its section</span>
+    </div>
+    <div id="stage-strip"></div>
+  </div>
+
+  <p>
+    Two facts carry most of the architecture:
+  </p>
+  <ul>
+    <li>
+      <strong>One graph is the boundary.</strong> Steps 1–6 produce a single
+      <code>ComputationGraph</code> (a Pydantic model, <code>resolution/models.py</code>);
+      Step 7 reads <em>only</em> that graph — no back-references to extraction data
+      (requirement REQ-PIPE-07). If generation needs a fact, the fact must live on the graph.
+    </li>
+    <li>
+      <strong>The snapshot path is a first-class front end, not a cache.</strong>
+      <code>sysml-codegen snapshot</code> captures extraction output as versioned JSON
+      (format <strong>v5</strong>), and <code>generate --from-snapshot</code> rebuilds the same
+      pipeline context from it with no parser toolchain — Steps 2–7 run unchanged, and the output is
+      byte-identical to a live run (→ <a class="fwd" href="#operations">Operating it</a>).
+    </li>
+  </ul>
+
+  <h3 id="l1-kinds">Five module families</h3>
+  <p>
+    Every module in the graph carries a <code>module_kind</code> (<code>resolution/models.py</code>,
+    doc 09). Three are the calc families every model produces; two exist only when the model
+    carries constraints:
+  </p>
+  <div class="legend-row" id="kind-legend">
+    <span class="chip"><span class="dot" style="background:var(--kind-calc)"></span>CALCULATION — a calc usage</span>
+    <span class="chip"><span class="dot" style="background:var(--kind-formula)"></span>FORMULA — a computed attribute</span>
+    <span class="chip"><span class="dot" style="background:var(--kind-agg)"></span>AGGREGATION — a sum-over-children roll-up</span>
+    <span class="chip"><span class="dot" style="background:var(--kind-constraint)"></span>CONSTRAINT — a lowered assertion</span>
+    <span class="chip"><span class="dot" style="background:var(--kind-report)"></span>REPORT_AGGREGATOR — the run-report roll-up</span>
+  </div>
+
+  <div class="diagram" id="minidag-diagram">
+    <div class="dg-toolbar">
+      <span>The LCOE path through the solar-battery fixture graph, coloured by <code>module_kind</code></span>
+      <button type="button" id="trace-lcoe-btn">Trace upstream of lcoe</button>
+      <button type="button" id="trace-clear-btn">Clear</button>
+      <span class="dg-hint">drag to pan · wheel to zoom · click a node for details</span>
+    </div>
+    <div id="minidag" tabindex="0" style="max-height:520px; overflow:hidden;"></div>
+    <div id="minidag-detail" style="border-top:1px solid var(--hairline); padding:0.6rem 1rem; font-size:0.82rem; color:var(--ink-2); display:none;"></div>
+  </div>
+  <p style="font-size:0.85rem; color:var(--ink-2);">
+    A 13-module excerpt of the committed <code>tests/fixtures/baseline_yaml/solar_battery.yaml</code>
+    baseline (real module names, shortened for display; the full graph has more leaf cost models —
+    the battery-system and site-infrastructure aggregations each roll up three elided
+    CALCULATION modules). The two constraint families don't appear here because the
+    solar-battery model carries no constraints; see the
+    <a class="fwd" href="#constraints">constraint path</a> for a graph that has them.
+  </p>
+
+  <details class="fold">
+    <summary>What flows between the stages (the data, stage by stage)</summary>
+    <div class="fold-body">
+      <div class="tablewrap"><table>
+        <thead><tr><th>Step</th><th>Produces</th><th>Consumed by</th></tr></thead>
+        <tbody>
+          <tr><td>1 · Extract</td><td><code>CalculationDefinitionData</code>, <code>CalcUsageData</code> (+ bindings), hierarchy data (redefinitions, overrides, multiplicities, aggregation expressions), computed-attribute classifications, neutral constraint facts</td><td>Everything downstream</td></tr>
+          <tr><td>2 · Build registry</td><td><code>OutputRegistry</code> — every output channel under typed keys (→ <a href="#l3-registry">registry</a>)</td><td>Backtracker, <code>resolve_producer</code>, constraint lowering</td></tr>
+          <tr><td>3 · Trace deps</td><td><code>BacktrackingResult</code> — every binding resolved to MODULE_OUTPUT or ENTRY_POINT (→ <a href="#l3-backtracker">dispatch</a>)</td><td>Module factories</td></tr>
+          <tr><td>4 · Classify entries</td><td>Entry points tagged LIBRARY_DEFAULT / DESIGN_ATTRIBUTE / USAGE_LITERAL, grouped per design file</td><td>JSON schemas + input templates</td></tr>
+          <tr><td>5 · Build modules</td><td><code>PipelineModule</code>s — the five kinds above; constraint lowering runs here ([P1 RESOLVE], → <a href="#constraints">constraints</a>)</td><td>Graph assembly</td></tr>
+          <tr><td>6 · Sort + validate</td><td><code>ComputationGraph</code> — topologically sorted (Kahn), channel-validated</td><td>Generation — the sole input</td></tr>
+          <tr><td>7 · Render</td><td><code>modules/</code>, <code>handwritten/</code>, <code>schemas/</code>, <code>inputs/</code>, <code>pipelines/</code>, <code>contracts/</code> — gated by V11 (→ <a href="#l3-v11">the V11 gate</a>), then sealed (→ <a href="#sealing">sealing</a>)</td><td>teax (→ <a href="#teax">study layer</a>)</td></tr>
+        </tbody>
+      </table></div>
+      <p>
+        The fine-grained ordering inside steps 1–6 (<code>build_pipeline_context</code>,
+        <code>orchestration/pipeline_builder.py</code>, doc 02) is load-bearing — e.g. virtual
+        bindings are rewritten (step 3.5) <em>before</em> entry points classify, or a design value
+        would read as an unbound library default. The
+        <a class="fwd" href="#l3-ordering">ordering argument</a> spells out each constraint.
+      </p>
+    </div>
+  </details>
+</section>
+
+<hr class="section-rule">
+<!-- ═══════════════ L2 — RESPONSIBILITY MAP ═══════════════ -->
+<section id="l2">
+  <p class="eyebrow">Layer 2 · who owns what</p>
+  <h2>Every mechanism, its responsibility, and the problem that forced it</h2>
+  <p>
+    Nothing in this pipeline exists for elegance. Each module earns its place by answering a
+    specific failure that real models produced. The table pairs each owner with its one-sentence
+    responsibility and that forcing challenge. Click any row's owner link where a deeper
+    treatment exists.
+  </p>
+
+  <div class="tablewrap">
+  <table>
+    <thead><tr><th>Owner</th><th>Tight responsibility</th><th>The challenge it answers</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><code>extraction/extractor.py</code></td>
+        <td>Pull calc defs and usages with typed inputs/outputs out of the parsed AST (→ <a href="#l4">the AST layer</a>).</td>
+        <td>SysML lets one output be spelled several ways (<code>out attribute</code>, <code>return x : Real =</code>, bare <code>in</code> parameters alongside); an <em>anonymous</em> <code>return</code> has no name to build a channel from — that is diagnostic V8.</td>
+      </tr>
+      <tr>
+        <td><code>extraction/usage_extractor.py</code></td>
+        <td>Turn template calcs (a calc inside a <code>part def</code>) into per-instance <em>virtual</em> calc usages (→ <a href="#l3-virtual">virtual instantiation</a>).</td>
+        <td>A calc inside a part definition is a stencil, not an instance. Retyping (<code>part :&gt;&gt; x : Subtype</code>) must index the usage under <em>every</em> user-model type it carries, or subtype/supertype templates go missing.</td>
+      </tr>
+      <tr>
+        <td><code>extraction/hierarchy_resolver.py</code></td>
+        <td>Capture the design hierarchy plus every <code>:&gt;&gt;</code> override, multiplicity, and aggregation expression.</td>
+        <td>Values live scattered across usage overrides, specialized defs, and base defs — someone has to collect them all before resolution can pick a winner.</td>
+      </tr>
+      <tr>
+        <td><code>extraction/computed_attribute_extractor.py</code></td>
+        <td>Classify each design-attribute expression: FORMULA, EXPOSE_PURE, chain-tentative, literal, rejected, or unresolvable (→ <a href="#l3-classify">classification tree</a>).</td>
+        <td>An attribute expression can be an algorithm, an alias for a calc output, or a config value — and each takes a completely different path through the pipeline.</td>
+      </tr>
+      <tr>
+        <td><code>core/output_registry.py</code> + <code>orchestration/output_registry_builder.py</code></td>
+        <td>One authoritative name→channel registry with typed keys and a phased build, including the Phase&nbsp;3b multi-hop confirm walk (→ <a href="#l3-registry">the registry</a>).</td>
+        <td>Ambiguous string keys caused silent mis-wires; and a multi-hop chain can't be classified at extraction because the leaf can't be checked without the registry that doesn't exist yet.</td>
+      </tr>
+      <tr>
+        <td><code>analysis/dependency_backtracker.py</code></td>
+        <td>Resolve every calc-usage binding to exactly one source via typed dispatch ladders (→ <a href="#l3-backtracker">dispatch</a>).</td>
+        <td>Quoted names, def-owned attributes, sibling instances of one type, and cross-part chains all spell the same value differently; a wrong guess wires the wrong producer.</td>
+      </tr>
+      <tr>
+        <td><code>resolution/producer_resolution.py</code> + <code>resolution/producer_completeness.py</code></td>
+        <td>One registry-owned ordered resolution table (<code>resolve_producer</code>, <code>KEY_FORMS</code>) serving calc, aggregation, and constraint consumers alike — strict vs lenient behavior forks only at the terminal miss (<code>TerminalPolicy</code>); a separate completeness check proves every model-derived consumed value has a real producer (→ <a href="#l3-producer">the unified ladder</a>).</td>
+        <td>Three drifted resolver ladders let the same meaning resolve three ways — a passing component test could still mis-resolve a supported combination. The lifecycle epic collapsed them into one authority and deleted <code>input_resolver.py</code> outright.</td>
+      </tr>
+      <tr>
+        <td><code>resolution/supplied_values.py</code></td>
+        <td>Pre-pass that materializes design attributes for cross-part and in-part supplied values, keyed by source qualified name, before the backtracker runs (→ <a href="#svm">supplied values</a>).</td>
+        <td>A literal sitting on a subsystem attribute must fill a plant-calc input, or generation aborts at V11 — the whole-plant idiom fusion-tea depends on. Fan-out collapses to one shared entry point per source.</td>
+      </tr>
+      <tr>
+        <td><code>orchestration/pipeline_builder.py</code></td>
+        <td>Ordered assembly: rewrite virtual bindings through the specialization chain (usage override &gt; specialized-def <code>:&gt;&gt;</code> &gt; base def), then backtrack, then derive groups.</td>
+        <td>Step order <em>is</em> the correctness argument — classify entry points before the binding rewrite and a design value reads as an unbound library default.</td>
+      </tr>
+      <tr>
+        <td><code>resolution/graph_builder.py</code></td>
+        <td>Emit the <code>ComputationGraph</code> — the sole input to generation — and gate it (V11 params-coverage, channel validation) (→ <a href="#l3-v11">the V11 gate</a>).</td>
+        <td>A generated pipeline that <code>KeyError</code>s at load is worse than a loud abort at generation time.</td>
+      </tr>
+      <tr>
+        <td><code>analysis/parameter_groups.py</code></td>
+        <td>Turn entry points into per-design-file JSON input groups.</td>
+        <td>Deciding which literals are user-facing knobs: LIBRARY_DEFAULT, DESIGN_ATTRIBUTE, or USAGE_LITERAL (ADR-001).</td>
+      </tr>
+      <tr>
+        <td><code>generation/</code></td>
+        <td>Render the graph into wrappers, stencils, schemas, and YAML; apply alias filename overrides; smart-regen preserves handwritten implementations.</td>
+        <td>Generated code that people edit must survive regeneration, and the modeler's chosen names must surface in the output files.</td>
+      </tr>
+      <tr>
+        <td><code>snapshot/</code></td>
+        <td>Versioned extraction capture (now <strong>v5</strong>); an old snapshot is a hard error, and regeneration from a current one is byte-identical to live (→ <a href="#operations">operations</a>).</td>
+        <td>Generation, debugging, and CI shouldn't require the live parser toolchain on every run.</td>
+      </tr>
+      <tr>
+        <td><code>analysis/constraint_lowering.py</code></td>
+        <td>Lower each eligible modeled assertion to a concrete constraint — strict formal resolution per owner instance; default-on (→ <a href="#constraints">constraints</a>).</td>
+        <td>A modeled <code>assert</code> used to be <em>dropped</em>. It now executes, so the value it checks must resolve exactly like any calc input.</td>
+      </tr>
+      <tr>
+        <td><code>resolution/models.py</code> (<code>ModuleKind</code>)</td>
+        <td>Tag every module with one of five families: <code>CALCULATION</code>, <code>FORMULA</code>, <code>AGGREGATION</code>, <code>CONSTRAINT</code>, <code>REPORT_AGGREGATOR</code>.</td>
+        <td>Two accreted boolean flags could not name the constraint and report-roll-up families; one enum, set once, dispatched on at every generation seam.</td>
+      </tr>
+      <tr>
+        <td><code>generation/constraint_catalog.py</code></td>
+        <td>Assemble one fingerprinted catalog (source records + concrete entries), embedded on the <code>ComputationGraph</code>, read only from the graph at generation.</td>
+        <td>Generation must read constraint data from the single-source-of-truth graph, never from mutable pipeline context.</td>
+      </tr>
+      <tr>
+        <td><code>generation/predicate_compiler.py</code></td>
+        <td>Compile each predicate's expression IR to Python under three-valued (Kleene) semantics; one shared predicates module, compiled once (→ <a href="#kleene">Kleene predicates</a>).</td>
+        <td>A non-finite leaf must make a predicate <em>unknown</em>, not silently <code>False</code> — a lying gate is worse than a loud one.</td>
+      </tr>
+      <tr>
+        <td><code>generation/errors.py</code> render seams</td>
+        <td>Render <code>CONSTRAINT</code> / <code>REPORT_AGGREGATOR</code> modules at their own seams; a seam with no rendering for a kind fails loud (<code>unrenderable_module_kind_error</code>).</td>
+        <td>Every module kind must render or refuse — never be silently mis-rendered as a calculation.</td>
+      </tr>
+      <tr>
+        <td><code>contracts/</code></td>
+        <td>Emit the semantic <code>ModelContract</code>, the physical <code>PackageContract</code> seal, a verbatim verifier, and a generation manifest; the <code>seal</code> CLI re-seals in place (→ <a href="#sealing">sealing</a>).</td>
+        <td>A consumer must confirm it loads exactly the bytes generated, know what it may vary without parsing YAML, and never execute a package that forged its own verifier.</td>
+      </tr>
+      <tr>
+        <td>teax <code>simkit/study/</code></td>
+        <td>The top-of-stack consumer: load a generated+sealed package, obtain typed entry models, drive many cases through an evaluator (→ <a href="#teax">the study layer</a>).</td>
+        <td>The generated pipeline is a means; a study sweeping designs over it is the end the whole stack serves.</td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<hr class="section-rule">
+<!-- ═══════════════ DIAGNOSTICS AS CONTRACT ═══════════════ -->
+<section id="diagnostics">
+  <p class="eyebrow">The user-facing surface</p>
+  <h2>Diagnostics as contract</h2>
+  <p>
+    Every internal invariant in this pipeline has a user-facing surface: the message a modeler
+    sees when an assumption breaks. Three surfaces exist, at three moments — model-shape rules
+    at extraction and generation (V1–V11), a severity contract deciding <em>which</em> extraction
+    diagnostics halt, and a load-time seal check on the generated package. Read them as one
+    system: the pipeline would rather stop loudly than generate something that lies.
+  </p>
+
+  <h3>V1–V11: what the modeler sees when an assumption breaks</h3>
+  <p>
+    V1–V10 fire at <strong>extraction time</strong>; V11 fires at the <strong>generation
+    boundary</strong>, where the computation graph and the derived parameter groups both exist
+    (<code>docs/architecture/modeling-assumptions.md</code>, "Validation Rules").
+  </p>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Rule</th><th>The broken assumption</th><th>Where it fires</th></tr></thead>
+    <tbody>
+      <tr><td><strong>V1</strong></td><td>A <code>calc def</code> in <code>designs/</code> — algorithms belong in <code>library/</code>.</td><td>Extraction</td></tr>
+      <tr><td><strong>V2</strong></td><td>An expression that can't be statically evaluated (an operand isn't a literal) — extract it to a calc def.</td><td>Extraction</td></tr>
+      <tr><td><strong>V3</strong></td><td>A circular reference between values.</td><td>Extraction</td></tr>
+      <tr><td><strong>V4</strong></td><td>An unsupported operator in a static expression.</td><td>Extraction</td></tr>
+      <tr><td><strong>V5</strong></td><td>An unbound calc input with no default — add a default or a binding.</td><td>Extraction</td></tr>
+      <tr><td><strong>V6</strong></td><td>A binding to an attribute that doesn't exist.</td><td>Extraction</td></tr>
+      <tr><td><strong>V7</strong></td><td>A calc def with <em>zero output attributes</em> — a pipeline module needs at least one output channel.</td><td>Extraction</td></tr>
+      <tr><td><strong>V8</strong></td><td>An <em>anonymous</em> <code>return</code> (a result with no name) — no channel name can be built from it.</td><td>Extraction</td></tr>
+      <tr><td><strong>V9</strong></td><td>Two template calcs from different owners (a retyped usage's super- and subtype) collide on one virtual name — the most-specific owner wins, and the warning names both.</td><td>Extraction</td></tr>
+      <tr><td><strong>V10</strong></td><td>A usage with multiple incomparable owned types — defaults resolve against the first in stable order, loudly.</td><td>Extraction</td></tr>
+      <tr><td><strong>V11</strong></td><td>A wired module input references a params key no JSON input file will provide — the generated pipeline would <code>KeyError</code> at load, so generation aborts instead, naming every offender (→ <a href="#l3-v11">the exact set logic</a>).</td><td><strong>Generation boundary</strong></td></tr>
+    </tbody>
+  </table></div>
+  <p>
+    There is deliberately no V12/V13: the cross-part mechanisms added later are
+    <em>positive resolution</em> — they wire channels that used to fall through — so a model that
+    still fails to wire surfaces through the existing V11, not through a new code.
+  </p>
+
+  <h3 id="severity">The severity contract: which diagnostics halt</h3>
+  <p>
+    Not every extraction diagnostic should stop the run. The severity contract
+    (doc 30, <code>analysis/diagnostic_screen.py</code>) is how the pipeline decides a broken
+    assumption is fatal rather than noise — and it is versioned, so a reader and writer can
+    never silently disagree:
+  </p>
+  <ul>
+    <li>
+      <strong>The writer sets severity at construction, from a closed table.</strong> Each
+      extraction diagnostic carries a <code>DiagnosticSeverity</code> — <code>BLOCKING</code> or
+      <code>ADVISORY</code> — filled in when the diagnostic is created, from the one
+      kind→severity table (<code>EXTRACTION_DIAGNOSTIC_SEVERITY</code>, in agentic-mbse's
+      <code>constraint_facts</code> module). No reader ever looks severity up on its own.
+    </li>
+    <li>
+      <strong>One sink screens them.</strong> <code>screen_extraction_diagnostics</code> runs on
+      both the live and the snapshot route, before constraint lowering. It renders every advisory
+      first (as warnings), then raises on any blocking diagnostic, naming all of them. The order
+      is enforced so a failure while rendering an advisory can never mask a block.
+    </li>
+    <li>
+      <strong>Skew fails closed, in both directions, behind three stacked guards:</strong>
+      an exact-equality schema-version gate (<code>constraint-facts/v2</code>, pinned in
+      <code>_upstream_pins.py</code>); a per-diagnostic cross-check that re-derives severity from
+      the reader's table and refuses a mismatch either way; and a refusal of any diagnostic kind
+      outside the closed set.
+    </li>
+  </ul>
+
+  <h3 id="profile-contract">The executable profile: which assertions may run</h3>
+  <p>
+    Modeled constraints get their own contract, evaluated in agentic-mbse
+    (<code>evaluate_profile</code>, <code>executable_profile.py</code>): every swept constraint
+    usage is classified exactly one way — <strong>ADMIT</strong> (it lowers and executes),
+    <strong>BLOCK</strong> (generation halts loudly before any lowering, naming every offending
+    usage and the construct to fix), or <strong>unassessed</strong> (requirement-side or
+    out-of-profile usages, cataloged defensively — never silently absent). A BLOCK is the one
+    hard-stop: an assertion the profile cannot execute <em>exactly</em> is refused, never
+    approximated. Full treatment in the
+    <a class="fwd" href="#constraints">constraint path</a>.
+  </p>
+
+  <h3 id="seal-contract">Sealing: the load-time contract</h3>
+  <p>
+    The third surface guards the far end: when a consumer loads the generated package, the
+    emitted <code>verify.py</code> re-hashes every covered file against the package's
+    <code>PackageContract</code> and reports <code>TAMPER</code>, <code>MISSING</code>,
+    <code>EXTRA</code>, or a name mismatch — always fatal — and a runtime-version mismatch,
+    advisory unless strict. A <code>ModelContract</code> fingerprint is the package's semantic
+    identity. This is how a consumer knows it loaded exactly what was generated
+    (→ <a class="fwd" href="#sealing">Contracts &amp; sealing</a>).
+  </p>
+</section>
+
+<hr class="section-rule">
+<!-- ═══════════════ WORKED EXAMPLE ═══════════════ -->
+<section id="worked-example">
+  <p class="eyebrow">One value, end to end</p>
+  <h2>A worked example: <code>annual_energy_mwh</code> from source to YAML</h2>
+  <p>
+    Everything abstract above becomes concrete on one value. In the committed solar-battery
+    fixture (<code>tests/fixtures/solar_battery_model/</code>, 36 pipeline modules), the
+    energy-production calc computes annual energy, and the LCOE calc consumes it. Here is that
+    single wiring edge at every stage, with real names throughout — nothing invented.
+  </p>
+
+  <h3>1 · The SysML source</h3>
+  <p>The library defines the algorithm; the design instantiates and wires it.</p>
+  <div class="snippet">
+<pre><span class="c">// The producer's algorithm</span>
+<span class="k">calc def</span> <span class="t">EnergyProductionCalc</span> {
+    <span class="k">in attribute</span> p_net_mw : <span class="t">Real</span>;
+    <span class="k">in attribute</span> n_mod : <span class="t">Real</span>;
+    <span class="k">in attribute</span> plant_availability : <span class="t">Real</span>;
+
+    <span class="k">out attribute</span> annual_energy_mwh : <span class="t">Real</span> = <span class="s">8760.0</span> * p_net_mw * n_mod * plant_availability;
+}</pre>
+    <div class="src"><span>SysML v2</span><code>tests/fixtures/solar_battery_model/library.sysml</code></div>
+  </div>
+  <div class="snippet">
+<pre><span class="c">// The design: instantiate producer and consumer, wire them</span>
+<span class="k">calc</span> energy_production : <span class="t">EnergyProductionCalc</span> {
+    <span class="k">in</span> p_net_mw = p_net_mw;
+    <span class="k">in</span> n_mod = n_mod;
+    <span class="k">in</span> plant_availability = plant_availability;
+}
+
+<span class="k">calc</span> lcoe : <span class="t">LCOECalc</span> {
+    <span class="k">in</span> annualized_capital_cost = annualized_financial.annualized_capital_cost;
+    <span class="k">in</span> annual_om_cost = annualized_om.annual_om_cost;
+    <span class="k">in</span> annual_fuel_cost = annualized_fuel.annual_fuel_cost;
+    <span class="k">in</span> yearly_inflation = yearly_inflation;
+    <span class="k">in</span> plant_lifetime = plant_lifetime;
+    <span class="hl"><span class="k">in</span> annual_energy_mwh = energy_production.annual_energy_mwh;</span>
+}</pre>
+    <div class="src"><span>SysML v2 — the highlighted line is the edge we trace</span><code>tests/fixtures/solar_battery_model/design.sysml</code></div>
+  </div>
+
+  <h3>2 · What the parser sees (the AST)</h3>
+  <p>
+    The extractor never works on text — it dispatches on the parsed node kinds
+    (→ <a class="fwd" href="#l4">the AST layer</a> for the full taxonomy):
+  </p>
+  <ul>
+    <li>The output declaration is an <strong>AttributeUsage</strong> (direction Out); its <code>: Real</code> is a <strong>FeatureTyping</strong> to <code>ScalarValues::Real</code>. Its right-hand side is an <strong>OperatorExpression</strong> (<code>*</code>) over three <strong>FeatureReferenceExpression</strong> nodes and one <strong>LiteralRational</strong> (<code>8760.0</code>) — stored raw for the expression compiler, which auto-implements the module body.</li>
+    <li>The binding's right-hand side <code>energy_production.annual_energy_mwh</code> is a <strong>FeatureChainExpression</strong> — a dotted path. The extractor classifies the binding <code>CHAIN</code>. The check for FeatureChainExpression runs <em>before</em> the OperatorExpression check, because FCE is a subtype of OE in the parser's type hierarchy (→ <a class="fwd" href="#fce-oe">the dispatch invariant</a>).</li>
+  </ul>
+
+  <h3>3 · Extracted names (ADR-003)</h3>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Identity</th><th>Value</th></tr></thead>
+    <tbody>
+      <tr><td>Calc def qualified name</td><td><code>SolarBatteryLibrary::EnergyProductionCalc</code></td></tr>
+      <tr><td>Producer module name (lowercase EQN)</td><td><code>solarbatterydesign__solar_battery_plant__energy_production</code></td></tr>
+      <tr><td>Module type (PascalCase from the calc def)</td><td><code>solarbatterylibrary.EnergyProductionCalcModule</code></td></tr>
+      <tr><td>Output channel (PQN: <code>usage_qn__output_name</code>)</td><td><code>SolarBatteryDesign__solar_battery_plant__energy_production__annual_energy_mwh</code></td></tr>
+      <tr><td>Consumer module name</td><td><code>solarbatterydesign__solar_battery_plant__lcoe</code></td></tr>
+    </tbody>
+  </table></div>
+  <p>
+    Identifiers are computed <em>once</em>, at extraction, and looked up thereafter — the
+    <code>__</code> separator is the hierarchy separator everywhere (ADR-003; doc 15).
+  </p>
+
+  <h3>4 · The registry entry and the resolved binding</h3>
+  <p>
+    Step 2 registers the producer's output under typed keys: the canonical channel above, plus a
+    hierarchy-scoped key (<code>solar_battery_plant.energy_production.annual_energy_mwh</code>)
+    that is unique by SysML ownership. When the backtracker meets the consumer's CHAIN binding,
+    it prepends the consumer's scope to the source path —
+    <code>solar_battery_plant</code> + <code>energy_production.annual_energy_mwh</code> — and the
+    scoped lookup lands on exactly that key. Result: a MODULE_OUTPUT resolution carrying the
+    canonical channel. No string guessing; ambiguity is impossible by construction because
+    unscoped names are never registered (→ <a class="fwd" href="#l3-registry">the registry</a>).
+  </p>
+
+  <h3>5 · The graph module and the YAML</h3>
+  <p>Both modules land in the pipeline YAML; the edge is the consumer input naming the producer's channel:</p>
+  <div class="snippet">
+<pre><span class="c"># solarbatterylibrary.EnergyProductionCalcModule</span>
+solarbatterydesign__solar_battery_plant__energy_production:
+  module_type: solarbatterylibrary.EnergyProductionCalcModule
+  inputs:
+    p_net_mw: float design_params.SolarBatteryDesign__solar_battery_plant__p_net_mw
+    n_mod: float design_params.SolarBatteryDesign__solar_battery_plant__n_mod
+    plant_availability: float design_params.SolarBatteryDesign__solar_battery_plant__plant_availability
+  outputs:
+    root: RootModel[float] SolarBatteryDesign__solar_battery_plant__energy_production__annual_energy_mwh
+
+<span class="c"># solarbatterylibrary.LCOECalcModule — the traced edge is highlighted</span>
+solarbatterydesign__solar_battery_plant__lcoe:
+  module_type: solarbatterylibrary.LCOECalcModule
+  inputs:
+    annualized_capital_cost: float SolarBatteryDesign__solar_battery_plant__annualized_financial__annualized_capital_cost
+    annual_om_cost: float SolarBatteryDesign__solar_battery_plant__annualized_om__annual_om_cost.root
+    annual_fuel_cost: float SolarBatteryDesign__solar_battery_plant__annualized_fuel__annual_fuel_cost.root
+    yearly_inflation: float design_params.SolarBatteryDesign__solar_battery_plant__yearly_inflation
+    plant_lifetime: float design_params.SolarBatteryDesign__solar_battery_plant__plant_lifetime
+    <span class="hl">annual_energy_mwh: float SolarBatteryDesign__solar_battery_plant__energy_production__annual_energy_mwh.root</span>
+  outputs:
+    root: RootModel[float] SolarBatteryDesign__solar_battery_plant__lcoe__lcoe_per_mwh</pre>
+    <div class="src"><span>Pipeline YAML (abridged to the two modules)</span><code>tests/fixtures/baseline_yaml/solar_battery.yaml</code></div>
+  </div>
+  <p>
+    The <code>.root</code> accessor appears because a single output is wrapped in
+    <code>RootModel[float]</code>. The channel also exits the pipeline — the exit point captures
+    it to a result file:
+  </p>
+  <div class="snippet">
+<pre>exit_point:
+  module_type: ExitPoint
+  outputs:
+    SolarBatteryDesign__solar_battery_plant__energy_production__annual_energy_mwh: RootModel[float] SolarBatteryDesign__solar_battery_plant__energy_production__annual_energy_mwh.json</pre>
+    <div class="src"><span>Pipeline YAML (exit point, first line)</span><code>tests/fixtures/baseline_yaml/solar_battery.yaml</code></div>
+  </div>
+
+  <h3>6 · And one entry point, for contrast</h3>
+  <p>
+    Not every input wires to a module. <code>p_net_mw</code> is a literal on the design part —
+    <code>attribute p_net_mw : Real = 0.008;</code> in <code>design.sysml</code> — so it
+    classifies as a <span class="chip"><span class="dot" style="background:var(--ep-design)"></span>DESIGN_ATTRIBUTE</span>
+    entry point and lands in <code>inputs/design_params.json</code> under the key
+    <code>SolarBatteryDesign__solar_battery_plant__p_net_mw</code>, pre-filled with
+    <code>0.008</code>. The other two classifications (ADR-001, verified against the committed
+    <code>tests/fixtures/baseline_outputs/solar_battery/computation_graph.json</code>):
+  </p>
+  <div class="tablewrap"><table>
+    <thead><tr><th>SysML literal</th><th>Classification</th><th>Lands in</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><code>attribute p_net_mw : Real = 0.008;</code> (design part)</td>
+        <td><span class="chip"><span class="dot" style="background:var(--ep-design)"></span>DESIGN_ATTRIBUTE</span></td>
+        <td><code>design_params</code> · key <code>...__p_net_mw</code> · 0.008</td>
+      </tr>
+      <tr>
+        <td><code>in attribute cost_per_watt : Real default := 1.07;</code> (calc def, unbound in the usage)</td>
+        <td><span class="chip"><span class="dot" style="background:var(--ep-library)"></span>LIBRARY_DEFAULT</span></td>
+        <td><code>library_params</code> · key <code>...__pv_module__cost_model__cost_per_watt</code> · 1.07</td>
+      </tr>
+      <tr>
+        <td><code>in child_count = 25.0;</code> (literal directly in a calc-usage binding)</td>
+        <td><span class="chip"><span class="dot" style="background:var(--ep-literal)"></span>USAGE_LITERAL</span></td>
+        <td><code>library_params</code> · key <code>...__allocation_model__child_count</code> · 25.0</td>
+      </tr>
+    </tbody>
+  </table></div>
+  <p style="font-size:0.88rem; color:var(--ink-2);">
+    One nuance the classification hides: a deep-path design override like
+    <code>:&gt;&gt; pv_module.wattage = 400.0;</code> also classifies USAGE_LITERAL but routes to
+    the <code>system_design</code> group — the group follows the value's origin file, not the
+    classification.
+  </p>
+</section>
+
+<hr class="section-rule">
+<!-- ═══════════════ L3 — MECHANISMS ═══════════════ -->
+<section id="l3">
+  <p class="eyebrow">Layer 3 · the algorithms</p>
+  <h2>The mechanisms</h2>
+  <p>
+    Six mechanisms do most of the pipeline's real work. Each subsection leads with what the
+    mechanism is for, then how it works; each links back to
+    <a href="#l1">where it sits in the pipeline</a>.
+  </p>
+
+  <!-- ── Virtual instantiation ── -->
+  <h3 id="l3-virtual">Virtual CalcUsage instantiation <span class="depth-tag">Step 1 → 3.5</span></h3>
+  <p>
+    A calc written inside a <code>part def</code> is a stencil for every instance of that part —
+    not an instance itself. Extraction detects these <em>templates</em> (their owner is a part
+    definition), and for each design part usage of that definition it spawns a
+    <strong>virtual calc usage</strong> whose qualified name is the full design path
+    (<code>usage_extractor.py</code>, docs 12/25). Ten solar-panel instances of one part def
+    become ten virtual calcs, each with its own copies of the template's bindings.
+  </p>
+  <p>
+    The virtual copy's generic bindings are then rewritten per instance
+    (<code>_rewrite_virtual_bindings</code>, <code>orchestration/pipeline_builder.py</code>):
+    an override index keyed by (parent path, leaf attribute) maps each design
+    <code>:&gt;&gt;</code> redefinition onto the matching binding — a LITERAL override makes the
+    binding a literal, a CHAIN override redirects its source path. Bindings are copied per
+    instance, so no two instances share mutable state. Retyping
+    (<code>part :&gt;&gt; driver : 'HIF Driver'</code>) indexes the usage under every user-model
+    type it carries, so subtype <em>and</em> supertype templates instantiate — a same-named
+    collision resolves to the most-specific owner with a V9 warning
+    (→ <a class="fwd" href="#l4-retype">the retyping snippet</a>).
+  </p>
+
+  <!-- ── Ordering ── -->
+  <h3 id="l3-ordering">The assembly ordering argument <span class="depth-tag">Steps 1–6</span></h3>
+  <p>
+    <code>build_pipeline_context()</code> (doc 02) is a fixed sequence, and the sequence is the
+    correctness argument — reordering produces wrong answers, not crashes:
+  </p>
+  <ul>
+    <li><strong>3.5 before 4:</strong> virtual bindings are rewritten (mutated in place) before design attributes are read — otherwise a design's <code>:&gt;&gt; wattage = 400.0</code> reads as an unbound template input and classifies LIBRARY_DEFAULT instead of DESIGN_ATTRIBUTE.</li>
+    <li><strong>4.5 before 5.7:</strong> FORMULA attributes are removed from design attributes before the parameter-group deriver runs — otherwise a computed attribute mints a false entry point.</li>
+    <li><strong>5.5 before 6:</strong> the registry (including its Phase 3b confirm walk) is final before the backtracker resolves anything, and re-running FORMULA removal at 5.6 covers the case where a Phase-3b revert re-introduced a FORMULA.</li>
+    <li><strong>5.65 before 6:</strong> the supplied-value materializer enriches design attributes before the backtracker, so cross-part literals are visible to resolution (→ <a class="fwd" href="#svm">supplied values</a>).</li>
+    <li><strong>[P1 RESOLVE] after 5.65:</strong> constraint lowering runs once the registry and materialized values are final — a constraint formal resolves against the same world calc inputs do (→ <a class="fwd" href="#constraints">constraints</a>).</li>
+  </ul>
+
+  <!-- ── Registry ── -->
+  <h3 id="l3-registry">The output registry: one name→channel authority <span class="depth-tag">Step 2 / 5.5</span></h3>
+  <p>
+    The problem: SysML spells the same output several ways depending on context. A dotted local
+    path (<code>cost_model.total_cost</code>), a hierarchy path from a redefinition, a
+    <code>::</code>-qualified name from a reference — different strings, one value. Early
+    versions used ad-hoc string keys and paid in silent mis-wires.
+  </p>
+  <p>
+    The registry (<code>core/output_registry.py</code>, doc 10) answers with <strong>typed
+    keys</strong>: four sub-registries, each keyed by a distinct <code>NewType</code>, all
+    mapping to one <code>CanonicalChannel</code>:
+  </p>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Key type</th><th>Shape</th><th>Answers</th></tr></thead>
+    <tbody>
+      <tr><td><code>ScopedKey</code></td><td><code>solar_battery_plant.energy_production.annual_energy_mwh</code></td><td>Dotted hierarchy paths — unique by SysML ownership, matchable from the consumer's scope</td></tr>
+      <tr><td><code>SysMLQN</code></td><td><code>SolarBatteryLibrary::EnergyProductionCalc::annual_energy_mwh</code></td><td><code>::</code>-qualified REFERENCE bindings</td></tr>
+      <tr><td><code>ScopedKey</code> (alias registry)</td><td><code>battery_pack.capital_cost</code> → canonical</td><td>CHAIN redefinitions, EXPOSE aliases, transitive design-attribute aliases</td></tr>
+      <tr><td><code>ScopedAliasKey</code></td><td><code>(instance_path, leaf_name)</code> — a tuple, not a string</td><td>Part-def EXPOSE names, expanded per instance; the tuple keeps <code>("a.b","c")</code> and <code>("a","b.c")</code> distinct by construction</td></tr>
+    </tbody>
+  </table></div>
+  <p>
+    The build is phased (<code>orchestration/output_registry_builder.py</code>): Phases 1a/1b/1c
+    register canonical channels (calc-usage outputs, aggregation outputs, FORMULA outputs); Phases
+    2/3/4 register aliases (CHAIN redefinitions, EXPOSE_PURE, transitive design attributes) — and
+    <code>register_alias</code> refuses a target channel that doesn't already exist, so
+    out-of-order registration is impossible. Unscoped bare names are never registered at all:
+    ambiguity is prevented by construction, not detected after the fact.
+  </p>
+  <details class="fold">
+    <summary>Phase 3b: the multi-hop confirm walk</summary>
+    <div class="fold-body">
+      <p>
+        A multi-hop chain like <code>tf_coil.volume_calc.volume</code> can't be classified at
+        extraction: whether the leaf is a calc output is unknowable without the registry, which
+        doesn't exist yet. So extraction tags it <code>EXPOSE_CHAIN_TENTATIVE</code> and the
+        registry build finishes the job in <strong>Phase 3b</strong>: walk the chain against the
+        now-populated registry; if it lands on a canonical channel, finalize to
+        <code>EXPOSE_PURE</code> and register the real transitive alias; if not, revert to
+        FORMULA treatment. An invariant (INV-F) raises if any tentative survives to a reader —
+        downstream code never sees the intermediate state. The walk is reconstructed on snapshot
+        load, so offline and live runs wire the identical channel.
+      </p>
+    </div>
+  </details>
+
+  <!-- ── Backtracker ── -->
+  <h3 id="l3-backtracker">The backtracker: resolution embedded in traversal <span class="depth-tag">Step 3</span></h3>
+  <p>
+    Starting from the root calc usages, the backtracker
+    (<code>analysis/dependency_backtracker.py</code>, docs 11/24) walks depth-first through
+    bindings. At each binding it must decide: does this input come from an upstream module
+    (recurse into the producer) or from outside (stop — it's an entry point)? Resolution can't be
+    separated from traversal, because the resolution result <em>is</em> the recurse-or-stop
+    decision.
+  </p>
+  <p>
+    Dispatch is type-directed on the binding's source path — the presence of <code>::</code>
+    splits two ladders:
+  </p>
+  <div class="tabs" id="ladder-tabs">
+    <div class="tabbar" role="tablist">
+      <button role="tab" aria-selected="true" data-tab="chain">CHAIN ladder (dotted path)</button>
+      <button role="tab" aria-selected="false" data-tab="reference">REFERENCE ladder (<code>::</code> name)</button>
+    </div>
+    <div class="tabpanel" data-panel="chain">
+      <p>For <code>energy_production.annual_energy_mwh</code>-style paths:</p>
+      <ol style="font-size:0.9rem;">
+        <li>Consumer-scope-prefixed <code>scoped_lookup</code> — prepend the consumer's scope, look up the scoped key.</li>
+        <li>Bare <code>scoped_lookup</code> — the FORMULA <code>owning_part.attr</code> shape.</li>
+        <li><code>scoped_alias_lookup</code> — the part-def EXPOSE namespace, consumer-scope-prefixed first then bare (sibling disambiguation, REQ-BT-11 → <a class="fwd" href="#scoped-aliases">scoped aliases</a>).</li>
+        <li><code>alias_lookup</code> — cross-package aliases.</li>
+        <li>Design-attribute match — the value is configuration, not a module output.</li>
+        <li>Fallback: mint an entry point, recorded as <em>fell-through</em> (feeds the V11 partition below).</li>
+      </ol>
+    </div>
+    <div class="tabpanel" data-panel="reference" hidden>
+      <p>For <code>Package::Calc::output</code>-style qualified names:</p>
+      <ol style="font-size:0.9rem;">
+        <li><code>sysml_qn_lookup</code> on the per-segment <em>sanitized</em> qualified name — so quoted owners like <code>'PV Module'</code> still match.</li>
+        <li>Leaf-plus-scope retry: the leaf name qualified by the consumer's parent part, then the full consumer scope, through scoped-then-alias lookups — this is how a design attribute owned by a part <em>def</em> (empty parent part) still resolves.</li>
+        <li>Design-attribute match.</li>
+        <li>Fallback entry point (fell-through).</li>
+      </ol>
+    </div>
+  </div>
+  <p>
+    Every hit passes a self-reference guard — a module is never wired to its own output — and
+    each resolved binding lands in <code>BacktrackingResult.binding_resolutions</code>, exactly
+    one source per binding (REQ-PIPE-02).
+  </p>
+
+  <!-- ── resolve_producer ── -->
+  <h3 id="l3-producer">One resolution authority: <code>resolve_producer</code> <span class="depth-tag">Step 5 · unified by CONSTRAINT-LIFECYCLE</span></h3>
+  <p>
+    The backtracker resolves calc-usage bindings during DFS — but FORMULA inputs, aggregation
+    inputs, and (since constraint execution) constraint formals also need resolving, outside any
+    traversal. For years those paths carried their own resolver ladders, and the three ladders
+    drifted: the same reference could resolve three different ways, and a passing component test
+    could still mis-resolve a supported combination. The lifecycle epic collapsed them.
+  </p>
+  <p>
+    <code>resolve_producer</code> (<code>resolution/producer_resolution.py</code>, doc 04) is now
+    the single registry-owned authority: <strong>one ordered table of 21 key forms</strong>
+    (<code>KEY_FORMS</code>), partitioned into two tiers, serving calc, aggregation, and
+    constraint consumers alike. The old <code>input_resolver.py</code> — with
+    <code>resolve_input</code> and its <code>AGG_STRATEGIES</code> — was <em>deleted</em>, not
+    wrapped.
+  </p>
+  <details class="fold">
+    <summary>The 21 key forms, in order</summary>
+    <div class="fold-body">
+      <p><strong>Tier 1 — find a channel</strong> (a real module output):</p>
+      <ol style="font-size:0.88rem; columns: 2; column-gap: 2rem;">
+        <li><code>scoped_prefixed</code></li>
+        <li><code>scoped_deindexed</code></li>
+        <li><code>scoped_bare</code></li>
+        <li><code>alias_prefixed</code></li>
+        <li><code>alias_deindexed</code></li>
+        <li><code>scoped_alias_prefixed</code></li>
+        <li><code>scoped_alias_deindexed</code></li>
+        <li><code>structured_alias_unscoped</code></li>
+        <li><code>structured_alias_deindexed</code></li>
+        <li><code>alias_bare</code></li>
+        <li><code>sysml_qn</code></li>
+        <li><code>direct_channel</code></li>
+        <li><code>chain_redefinition_follow</code> <em>(lenient-only)</em></li>
+        <li><code>leaf_parent_scoped</code> <em>(lenient-only)</em></li>
+        <li><code>leaf_consumer_scoped</code> <em>(lenient-only)</em></li>
+      </ol>
+      <p>…then a scope climb (collect-then-require-unique, gated to references of three or more
+      segments). <strong>Tier 2 — fall back to a design attribute</strong> (configuration):</p>
+      <ol start="16" style="font-size:0.88rem; columns: 2; column-gap: 2rem;">
+        <li><code>occurrence_materialized_qn</code></li>
+        <li><code>target_qn</code></li>
+        <li><code>owner_def_qn</code></li>
+        <li><code>dotted_pair</code> <em>(lenient-only)</em></li>
+        <li><code>leaf_unique</code> <em>(lenient-only)</em></li>
+        <li><code>bare_name_unique</code> <em>(lenient-only)</em></li>
+      </ol>
+      <p style="font-size:0.88rem;">
+        Rows marked <em>lenient-only</em> are name-based guesses; they refuse a tie rather than
+        pick one, and never run for a strict consumer. Every tier-1 hit passes the self-reference
+        guard (skip and continue, not fail).
+      </p>
+    </div>
+  </details>
+  <p>
+    Strict and lenient consumers walk the <em>same</em> table; behavior forks only at the
+    <strong>terminal miss</strong> (<code>TerminalPolicy</code>): a calc or aggregation input
+    (lenient) mints one entry point and moves on; a constraint formal (strict) raises a
+    contextual error rather than inventing a value — a constraint that can't find its operand
+    must not guess (INV-2).
+  </p>
+  <p>
+    Alongside sits a separate proof: <code>check_producer_completeness</code>
+    (<code>resolution/producer_completeness.py</code>) re-reads every resolution and flags
+    ambiguous producers (same-leaf ties) and leaf-name guesses (a qualified reference that
+    dropped its scope through a name-based row) — independent of V11, as a diagnostic rather
+    than a gate.
+  </p>
+
+  <!-- ── Classification ── -->
+  <h3 id="l3-classify">Computed-attribute classification <span class="depth-tag">Step 4.5</span></h3>
+  <p>
+    A design attribute with an expression can be three different things, and each takes a
+    different pipeline path: an <strong>algorithm</strong> (<code>area = length * width</code> →
+    a FORMULA module), an <strong>alias</strong> (<code>total = cost_calc.cost</code> → an EXPOSE
+    channel alias), or a <strong>config value</strong> (a literal → an entry point). The
+    classifier (<code>extraction/computed_attribute_extractor.py</code>, doc 16) decides by
+    examining the expression's references:
+  </p>
+  <ul style="font-size:0.93rem;">
+    <li>No references → <strong>literal</strong> (entry-point path).</li>
+    <li>Only sibling attributes (including inherited ones, via a transitive ancestor walk) → <strong>FORMULA</strong> — unless the expression is a single well-formed multi-hop chain, which becomes <strong>EXPOSE_CHAIN_TENTATIVE</strong> for Phase 3b to settle.</li>
+    <li>A single pure dotted reference to a calc output → <strong>EXPOSE_PURE</strong> (the alias).</li>
+    <li>A calc-output reference mixed with anything else (e.g. <code>scale_calc.result * 2.0</code>) → <strong>EXPOSE_COMPUTED</strong> — rejected; it produces no module and no alias, with a warning. Model it as a calc def instead.</li>
+    <li>An unresolvable reference → <strong>UNRESOLVABLE</strong> (diagnostic).</li>
+  </ul>
+
+  <!-- ── V11 ── -->
+  <h3 id="l3-v11">The V11 gate: no silent <code>KeyError</code>s <span class="depth-tag">Generation boundary</span></h3>
+  <p>
+    The last line of defense before rendering. <code>collect_uncovered_params</code>
+    (<code>resolution/graph_builder.py</code>) computes a three-way intersection — a module input
+    is an offender if and only if its entry point:
+  </p>
+  <p style="text-align:center; font-size:1.02rem;">
+    <strong>fell through</strong> resolution (Step-4 fallback) &nbsp;∩&nbsp;
+    <strong>carries no value</strong> (no default) &nbsp;∩&nbsp;
+    <strong>is still wired</strong> (a surviving module reads it)
+  </p>
+  <p>
+    Any offender aborts generation with every one named — because the generated JSON would never
+    mint that key, and the pipeline would <code>KeyError</code> at load. The other halves of the
+    partition stay legitimate: a fell-through entry point <em>with</em> a value is fine, and a
+    null-default entry point that did <em>not</em> fall through is the normal
+    "user fills this in" signature. The unwired half of fell-through-valueless is a warning
+    summary, not an abort. The supplied-value materializer is what took fusion-tea's V11 offender
+    count to zero (→ <a class="fwd" href="#svm">supplied values</a>).
+  </p>
+
+  <!-- ── Alias surfacing ── -->
+  <h3 id="l3-alias">Alias surfacing: the modeler's name reaches the output <span class="depth-tag">Steps 6–7</span></h3>
+  <p>
+    When a modeler exposes a calc output under a chosen name
+    (<code>attribute total_cost : Real = cost_calc.cost;</code>), that name used to vanish into
+    the canonical channel. Now it travels: <code>ComputationGraph.output_aliases</code> carries
+    one <code>OutputAlias</code> per surfaced name — the sanitized <code>alias_name</code>, the
+    <code>canonical_channel</code> it rides on, the qualifying <code>instance_path</code>, and
+    which EXPOSE shape produced it. In the pipeline YAML, the alias overrides the exit-point
+    <em>output filename</em>: <code>{instance_path}__{alias_name}.json</code> (instance-qualified
+    so two instances exposing the same name never collide). The exit <em>key</em> stays the
+    canonical channel.
+  </p>
+  <p>
+    A deliberate contrast in the data model: <code>output_aliases</code> is a serialized field —
+    it survives into snapshots and downstream consumers — while
+    <code>fallback_entry_points</code> (the V11 bookkeeping set) is marked in-memory only
+    (<code>exclude=True</code>). What a consumer needs persists; generation-boundary scaffolding
+    does not.
+  </p>
+</section>
+
+<hr class="section-rule">
+<!-- ═══════════════ CROSS-PART STORY ═══════════════ -->
+<section id="cross-part">
+  <p class="eyebrow">The whole-plant idiom · PIPELINE-TRUTH's centerpiece</p>
+  <h2>The cross-part story</h2>
+  <p>
+    A real plant model is not one flat part. fusion-tea's models are a hierarchy — driver,
+    chamber, target factory — where a plant-level calculation needs values and outputs that live
+    on subsystems it does not own. Supporting that took two complementary halves:
+    <strong>channel wiring</strong> (an output of one calc reaches another calc's input, across
+    part boundaries) and <strong>value resolution</strong> (a literal sitting on a subsystem
+    attribute fills a plant-calc input). Together they are why fusion-tea's full YAML now
+    generates with zero V11 offenders.
+  </p>
+
+  <h3 id="scoped-aliases">Half one: channel wiring</h3>
+  <p>Four shapes cover the wiring, each with its own mechanism:</p>
+
+  <h4>Multi-hop EXPOSE</h4>
+  <p>
+    An attribute reaches through a nested part to a calc output —
+    <code>attribute magnet_volume_total : Real = tf_coil.volume_calc.volume;</code>
+    (fixture <code>tests/fixtures/ife_plant/subsystems.sysml</code>). Extraction can't tell
+    whether the chain lands on a calc output, so it classifies tentatively
+    (<code>EXPOSE_CHAIN_TENTATIVE</code>) and the registry's
+    <a href="#l3-registry">Phase 3b confirm walk</a> settles it: resolve transitively → an EXPOSE
+    alias of the real channel; fail → revert to FORMULA. The walk is reconstructed on snapshot
+    load, so the offline path wires the identical channel.
+  </p>
+
+  <h4>Part-def EXPOSE, expanded per instance (shape A)</h4>
+  <p>
+    When the exposing attribute lives on a <code>part def</code> rather than a part usage, there
+    are no instances at extraction time — so the alias expands later, once per design instance,
+    into a structured namespace keyed by <code>ScopedAliasKey</code>: a
+    <em>(instance path, leaf name)</em> tuple, not a concatenated string
+    (<code>core/identifier_types.py</code>). Two sibling instances of the same type each get
+    their own key, so consumers of <code>sibling_a.total_cost</code> and
+    <code>sibling_b.total_cost</code> resolve to different channels — sibling disambiguation by
+    construction. The backtracker reads the namespace by splitting the consumer's source path at
+    the last dot, with the consumer's scope prepended first (REQ-BT-11).
+  </p>
+
+  <h4>Specialized-def <code>:&gt;&gt;</code> chains — the <code>gamma → lcoe</code> shape</h4>
+  <p>
+    A consumer calc declared on a <em>base</em> def can consume a channel supplied by a
+    <em>subtype</em>: the driver base def declares <code>cost_per_joule</code>; the retyped
+    subtype supplies it via <code>:&gt;&gt; cost_per_joule = meier_cost.gamma;</code>
+    (fixture <code>tests/fixtures/spec_chain_channel/library.sysml</code>); the plant's LCOE calc
+    reads <code>driver.cost_per_joule</code>. <code>_rewrite_specialized_chain</code>
+    (<code>orchestration/pipeline_builder.py</code>) rewrites the binding through the retyped
+    part's specialized-def chain — single- and two-level (an instance-aware type-select handles
+    a retype declared on a part usage rather than a def). Precedence is fixed:
+    <strong>usage override &gt; specialized-def <code>:&gt;&gt;</code> &gt; base def</strong>
+    (REQ-VBR-10/11).
+  </p>
+
+  <h4>Alias surfacing</h4>
+  <p>
+    The wiring story ends at the output directory: the modeler's exposed name becomes the
+    exit-point filename (<code>{instance_path}__{alias_name}.json</code>) via
+    <code>ComputationGraph.output_aliases</code> — serialized, unlike the in-memory
+    <code>fallback_entry_points</code> (→ <a class="fwd" href="#l3-alias">alias surfacing</a>).
+  </p>
+
+  <h3 id="svm">Half two: value resolution — the supplied-value materializer</h3>
+  <p>
+    Wiring moves computed values. But the commonest cross-part need is humbler: a plant calc
+    input should be filled by a <em>literal</em> that sits on a subsystem attribute. Before
+    PIPELINE-TRUTH, those references fell through resolution valueless and generation aborted at
+    V11 — ten offenders in fusion-tea's model. The fix is a pre-pass, not a resolver change:
+    the <strong>supplied-value materializer</strong> (<code>resolution/supplied_values.py</code>,
+    REQ-SVM-01..04) runs before the backtracker and synthesizes design attributes for supplied
+    values, keyed by the <strong>source attribute's qualified name</strong>, merged into the
+    design-attribute pool the resolvers already consult.
+  </p>
+  <p>Four value-provision shapes are covered:</p>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Shape</th><th>The model writes</th><th>What happens</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><strong>(a)</strong> subtype-def literal through a usage-level retype</td>
+        <td><code>part :&gt;&gt; driver : 'Hif Driver'</code> where the subtype def carries <code>efficiency = 0.35</code></td>
+        <td>The subtype's literal materializes for the plant calc reading <code>driver.efficiency</code></td>
+      </tr>
+      <tr>
+        <td><strong>(b)</strong> bare no-retype override block</td>
+        <td><code>part :&gt;&gt; target_factory { :&gt;&gt; cost_per_target = 10.0; }</code></td>
+        <td>The override literal materializes — <em>flat form only; see the caveat below</em></td>
+      </tr>
+      <tr>
+        <td><strong>(c)</strong> one-hop cross-part attribute with a dotted usage override</td>
+        <td><code>:&gt;&gt; chamber.cost_per_unit = 7.0</code></td>
+        <td>The dotted override's literal materializes under the source attribute's QN</td>
+      </tr>
+      <tr>
+        <td><strong>(d)</strong> in-part supplied value</td>
+        <td><code>in flow_rate = throughput</code> with <code>:&gt;&gt; throughput = 8.0</code> below it</td>
+        <td>The same-def redefinition fills the binding</td>
+      </tr>
+    </tbody>
+  </table></div>
+  <ul>
+    <li><strong>Precedence:</strong> usage override &gt; specialized-def <code>:&gt;&gt;</code> &gt; base def — the same rule the wiring half uses (REQ-VBR-10).</li>
+    <li><strong>Fan-out collapses by source:</strong> one subsystem attribute feeding three differently-named plant inputs becomes <em>one</em> shared entry point (keyed by the source QN), not three JSON keys.</li>
+    <li><strong>Only literals apply:</strong> a non-literal supplied value falls through to the V11 diagnostic with a warning — never silently. A real design attribute always beats a synthetic one.</li>
+  </ul>
+  <div class="callout warn">
+    <span class="co-label">The one honest exception — shape (b), nested</span>
+    When the <code>part :&gt;&gt;</code> override block sits on a usage nested inside an
+    <em>instantiated</em> part def, capture is definition-relative while demand is
+    occurrence-relative, and the literal is lost
+    (<code>[NESTED-OCCURRENCE-OVERRIDE]</code> — see <a href="#caveats">Honest caveats</a>).
+    The flat and array deep-path shapes capture correctly.
+  </div>
+  <p>
+    This is what retired the V11 ten-offender abort: fusion-tea's full YAML emits with zero
+    offenders, its upstream workarounds were deleted, and the reference run reproduces
+    bit-exactly (→ <a class="fwd" href="#teax">the study layer</a>).
+  </p>
+</section>
+
+<hr class="section-rule">
+<!-- ═══════════════ CONSTRAINT EXECUTION ═══════════════ -->
+<section id="constraints">
+  <p class="eyebrow">The CONSTRAINT-EXEC centerpiece</p>
+  <h2>Constraints execute</h2>
+  <p>
+    A modeler can attach assertions to the model — a physical-consistency check, a plausibility
+    bound. Before the constraint-execution epic those were <em>dropped</em>: reported loudly, but
+    never run. They now lower into real pipeline modules and execute with the rest of the graph.
+    This section traces one assertion from source to execution, using the committed
+    <code>wi014_toy</code> fixture throughout.
+  </p>
+
+  <h3>1 · The modeled assertion</h3>
+  <div class="snippet">
+<pre><span class="k">constraint def</span> <span class="t">'Cost Within Budget'</span> {
+    <span class="k">in attribute</span> cost : <span class="t">Real</span>;
+    <span class="k">in attribute</span> budget : <span class="t">Real</span>;
+
+    cost &lt;= budget
+}</pre>
+    <div class="src"><span>SysML v2 — the predicate definition</span><code>tests/fixtures/wi014_toy/toy_library.sysml</code></div>
+  </div>
+  <div class="snippet">
+<pre><span class="c">// Part-level asserted constraint fed by a calc output</span>
+<span class="k">assert constraint</span> affordable : <span class="t">'Cost Within Budget'</span> {
+    <span class="k">in</span> cost = cost_calc.cost;
+    <span class="k">in</span> budget = plant_budget;
+}</pre>
+    <div class="src"><span>SysML v2 — the asserting usage (an AssertConstraintUsage node)</span><code>tests/fixtures/wi014_toy/toy_plant.sysml</code></div>
+  </div>
+
+  <h3>2 · Admission: the executable profile</h3>
+  <p>
+    Before anything lowers, agentic-mbse's executable profile classifies the usage
+    (→ <a class="fwd" href="#profile-contract">the profile contract</a>): <strong>ADMIT</strong>
+    and it lowers; <strong>BLOCK</strong> and generation halts loudly, naming the construct to
+    fix (an invocation, an <code>xor</code>/<code>implies</code>, a real-valued <code>==</code>
+    with no tolerance band, a unit mismatch…); anything requirement-side or out-of-profile is
+    cataloged <strong>unassessed</strong> — recorded, never executed, never silently absent.
+    <code>affordable</code> is an inequality over two resolvable Reals: admitted.
+  </p>
+
+  <h3>3 · Lowering: formals resolve like calc inputs</h3>
+  <p>
+    Lowering ([P1 RESOLVE], <code>analysis/constraint_lowering.py</code>, doc 28) runs after the
+    registry and the supplied-value materializer are final, and resolves every formal
+    <em>per owner instance</em> through the same unified table calc inputs use —
+    <code>resolve_producer</code> with the <strong>strict</strong> terminal policy: an unresolved
+    formal fails contextually rather than inventing a value
+    (→ <a class="fwd" href="#l3-producer">the unified ladder</a>). Here <code>cost</code>
+    resolves to the <code>cost_calc</code> output channel and <code>budget</code> to the
+    <code>plant_budget</code> design attribute. The admitted usage becomes a
+    <strong>concrete constraint</strong> (<code>ConcreteConstraint</code>,
+    <code>resolution/models.py</code>): a deterministic <code>constraint_id</code>, the owner
+    instance path, the serialized predicate IR, polarity, and its own
+    <code>evaluation_channel</code> — the verdict is a real output channel like any other.
+  </p>
+
+  <h3>4 · The catalog: one fingerprinted authority</h3>
+  <p>
+    All concrete constraints, their source definitions, admitted-usage records, and explicit
+    exclusions assemble into one <code>ConstraintCatalog</code>
+    (<code>generation/constraint_catalog.py</code>), fingerprinted (SHA-256 over canonical JSON)
+    and embedded on the <code>ComputationGraph</code>. Generation reads constraint data
+    <em>only</em> from the graph — never from mutable pipeline context. The catalog is embedded
+    as the sole schema authority (catalog schema <strong>2.0.0</strong>,
+    <code>contracts/versions.py</code>): TEAx consumes the embedded catalog directly and fails
+    closed on a version it does not accept, before reading any field. A standalone
+    <code>constraint_catalog.json</code> export is out of scope by owner decision — the embedded
+    catalog is the authority, not a temporary state (→ <a href="#caveats">caveats</a>).
+  </p>
+
+  <h3 id="kleene">5 · Predicate compilation: three-valued, never a lying gate</h3>
+  <p>
+    Each predicate's expression IR compiles to Python
+    (<code>generation/predicate_compiler.py</code>) under <strong>Kleene three-valued
+    semantics</strong>: a verdict is <span class="pill ok">true</span>,
+    <span class="pill bad">false</span>, or <span class="pill unk">unknown</span>
+    (Python <code>None</code>). The hard part is the leaves: if an operand is NaN or infinite,
+    IEEE comparison would quietly answer <code>False</code> — and a gate that says "violated"
+    when it means "I couldn't evaluate" is a lying gate. So every leaf comparison is guarded:
+  </p>
+  <div class="snippet">
+<pre><span class="k">def</span> _fin(x):
+    <span class="k">return</span> isinstance(x, (int, float)) <span class="k">and</span> math.isfinite(x)
+
+<span class="k">def</span> _cmp(op, a, b):
+    <span class="s">"""Leaf comparison: unknown (None) if either operand is non-finite."""</span>
+    <span class="k">if not</span> _fin(a) <span class="k">or not</span> _fin(b):
+        <span class="k">return</span> <span class="t">None</span>
+    <span class="k">if</span> op == <span class="s">"&lt;="</span>: <span class="k">return</span> a &lt;= b
+    ...</pre>
+    <div class="src"><span>The emitted Kleene runtime (excerpt) — every predicates module embeds it once</span><code>src/sysml_codegen/generation/predicate_compiler.py</code></div>
+  </div>
+  <p>
+    The <code>affordable</code> predicate compiles to a body of
+    <code>_cmp('&lt;=', cost, budget)</code>, and its margin expression carries the same guard:
+    <code>(_norm0((budget - cost)) if (_fin(budget) and _fin(cost)) else None)</code>. Connectives
+    propagate <code>unknown</code> unless a definite value short-circuits
+    (<code>true or unknown → true</code>; <code>false and unknown → false</code>;
+    <code>not unknown → unknown</code>). This is a deliberate divergence from IEEE:
+    <code>inf &lt;= 1.0</code> is <code>False</code> in IEEE, <code>unknown</code> here. Equality
+    never reaches the compiler — the profile refuses real-valued <code>==</code> upstream
+    (model a tolerance band as two inequalities instead), and the compiler raises if one slips
+    through.
+  </p>
+
+  <h3>6 · Two new module families</h3>
+  <p>
+    The graph gains <span class="chip"><span class="dot" style="background:var(--kind-constraint)"></span>CONSTRAINT</span>
+    modules — one per concrete constraint, all sharing one compiled predicates module
+    (<code>modules/constraints/predicates.py</code>, compiled once from the catalog) — and one
+    <span class="chip"><span class="dot" style="background:var(--kind-report)"></span>REPORT_AGGREGATOR</span>
+    module, the run-report roll-up that gathers every constraint evaluation into a
+    <code>ConstraintReport</code> and embeds the catalog fingerprint. Both render at their own
+    generation seams; a seam with no rendering for a kind refuses loudly
+    (<code>unrenderable_module_kind_error</code>, <code>generation/errors.py</code>) rather than
+    mis-rendering it as a calculation. A constraint-free model produces neither family and a
+    byte-identical graph — which is why the constraint work landed without disturbing any
+    existing baseline.
+  </p>
+
+  <div class="diagram" id="constraint-dag-diagram">
+    <div class="dg-toolbar">
+      <span>wi014_toy with its constraint lowered (usage names; schematic)</span>
+    </div>
+    <div id="constraint-dag"></div>
+  </div>
+
+  <h3>7 · What stayed, and what to not misremember</h3>
+  <ul>
+    <li><strong>Lowering is default-on.</strong> <code>lower_constraints_enabled</code> is landed history: its GRANDFATHERED carve-out is now empty, and a <code>grandfathered_off</code> snapshot <em>fails closed</em> on the product path (<code>assert_snapshot_certifiable</code>) — it cannot silently drop constraints.</li>
+    <li><strong>The old collector survives.</strong> <code>collect_constraint_manifest</code> still sweeps every constraint usage — it is the totality anchor a kept conformance test reads, proving every swept usage has a catalog carrier (concrete entry, unassessed record, or named exclusion). Only its report/render/serialize surface was retired.</li>
+    <li><strong>Sealing carries the semantics.</strong> The generated package is sealed with the catalog inside its <code>ModelContract</code>, so the constraint semantics travel with a checkable fingerprint (→ <a class="fwd" href="#sealing">next section</a>).</li>
+  </ul>
+</section>
+
+<hr class="section-rule">
+
+<!-- ═══════════════ CONTRACTS & SEALING ═══════════════ -->
+<section id="sealing">
+  <p class="eyebrow">Package integrity</p>
+  <h2>Contracts &amp; sealing</h2>
+  <p>
+    A generated package leaves home. The contracts layer (<code>contracts/</code>, doc 29) is how
+    a consumer, months later, knows three things: <em>this is semantically the package I think it
+    is</em>, <em>these are exactly the bytes that were generated</em>, and <em>nothing I run to
+    check that is itself untrusted</em>.
+  </p>
+  <ul>
+    <li>
+      <strong>Semantic identity — <code>ModelContract</code>.</strong> Built purely from the
+      <code>ComputationGraph</code>: every parameter, every output, the embedded constraint
+      catalog (explicitly null when constraint-free), the evaluation-semantics tag
+      (<code>"kleene-three-valued"</code>), and a <code>semantic_fingerprint</code> over the
+      whole payload. A consumer learns what it may vary and observe without parsing YAML.
+    </li>
+    <li>
+      <strong>Physical identity — <code>PackageContract</code>.</strong> The seal: a SHA-256 per
+      covered file plus one executable fingerprint over the sorted hash list, with the coverage
+      policy recorded in the seal itself. Emitted as generation Step 9; the <code>seal</code> CLI
+      subcommand re-seals an edited-by-policy package in place, with no model or parser needed.
+    </li>
+    <li>
+      <strong>The verifier travels verbatim.</strong> Every package carries
+      <code>contracts/verify.py</code> — stdlib-only, byte-identical to the canonical copy in the
+      generator. It re-hashes the package and reports <code>TAMPER</code> / <code>MISSING</code> /
+      <code>EXTRA</code> / name mismatch (always fatal) and a runtime-version mismatch (advisory
+      unless strict).
+    </li>
+    <li>
+      <strong>Trust is runtime-owned.</strong> The runtime (teax) vendors one constant — the
+      SHA-256 of the canonical verifier (<code>TRUSTED_VERIFIER_SHA256</code>,
+      <code>contracts/versions.py</code>) — hashes the package's <code>verify.py</code> against
+      it, and only then imports it. No untrusted package code runs before the package is
+      verified; a package cannot forge its own verifier.
+    </li>
+    <li>
+      <strong>Provenance survives re-sealing.</strong> A generation manifest
+      (<code>contracts/manifest.py</code>) classifies every covered file as codegen-produced,
+      preserved-handwritten, or runtime; <code>check_reseal_provenance</code> authenticates the
+      manifest against the <em>prior</em> seal and refuses a re-seal that would launder a foreign
+      or edited generated file into codegen provenance.
+    </li>
+  </ul>
+</section>
+
+<hr class="section-rule">
+<!-- ═══════════════ L4 — SYSML PRIMITIVES & THE AST ═══════════════ -->
+<section id="l4">
+  <p class="eyebrow">Layer 4 · the language layer</p>
+  <h2>SysML v2 primitives and the parsed AST</h2>
+  <p>
+    Everything above dispatches on parsed node kinds, not text. This layer shows the SysML the
+    modeler writes next to the AST nodes the code sees — because the pipeline's sharpest edges
+    (and its one real trap) live exactly in that gap. All snippets are from committed fixtures,
+    labeled; one counter-example is a marked adaptation.
+  </p>
+
+  <h3>The node kinds the code dispatches on</h3>
+  <div class="tablewrap"><table>
+    <thead><tr><th>AST node</th><th>Surface syntax</th><th>What the pipeline does with it</th></tr></thead>
+    <tbody>
+      <tr><td><strong>FeatureChainExpression</strong> (FCE)</td><td><code>energy_production.annual_energy_mwh</code></td><td>A dotted path — a CHAIN binding, an EXPOSE reference, or an aggregation SingletonTerm</td></tr>
+      <tr><td><strong>OperatorExpression</strong> (OE)</td><td><code>8760.0 * p_net_mw * n_mod</code></td><td>Arithmetic — compiled for auto-implementation, or a FORMULA body</td></tr>
+      <tr><td><strong>FeatureReferenceExpression</strong> (FRE)</td><td><code>p_net_mw</code> (bare name)</td><td>A sibling/local reference — a LocalTerm, a FORMULA operand</td></tr>
+      <tr><td><strong>Literal nodes</strong> (<code>LiteralRational</code>, <code>LiteralInteger</code>, <code>LiteralString</code>, <code>LiteralBoolean</code>)</td><td><code>8760.0</code>, <code>"HTS_CICC"</code>, <code>true</code></td><td>Values — entry-point defaults, static evaluation</td></tr>
+      <tr><td><strong>FeatureTyping</strong></td><td><code>: Real</code>, <code>: EnergyProductionCalc</code></td><td>A usage's declared type — read from the <em>owned relationship</em>, never a type-list position</td></tr>
+      <tr><td><strong>AttributeUsage</strong> vs <strong>ReferenceUsage</strong></td><td><code>out attribute y</code> vs <code>return y</code> / bare <code>in x</code> / bare <code>:&gt;&gt; attr = value</code></td><td>Two member kinds that look alike in source — the split behind the trap below</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3 id="fce-oe">The dispatch ordering invariant: FCE before OE, no exceptions</h3>
+  <p>
+    In the parser's type hierarchy, <code>FeatureChainExpression</code> <em>is a subtype of</em>
+    <code>OperatorExpression</code> — an instance check for OE matches both. So every site that
+    handles both must check FCE first (doc 19, REQ-AST-01/02). Get it backwards and
+    <code>pv_module.capital_cost</code> enters the OE handler, recurses to the bare
+    <code>capital_cost</code>, and misclassifies as a local sibling term instead of a dotted
+    child reference — breaking aggregation wiring quietly. The canonical order:
+    FCE → OE → FRE → literals → the invocation catch-all <em>last</em> (every node carries a
+    derived <code>.function</code>, so a catch-all placed earlier swallows literals). A
+    conformance test inventories every dual-check site so a new one can't skip the rule.
+  </p>
+
+  <h3>Calc-def output styles — three ways to spell an output</h3>
+  <div class="tabs" id="output-style-tabs">
+    <div class="tabbar" role="tablist">
+      <button role="tab" aria-selected="true" data-tab="stylea">out attribute</button>
+      <button role="tab" aria-selected="false" data-tab="styleb">named return</button>
+      <button role="tab" aria-selected="false" data-tab="stylec">bare in</button>
+    </div>
+    <div class="tabpanel" data-panel="stylea">
+      <div class="snippet">
+<pre><span class="k">calc def</span> <span class="t">ControlA</span> {
+    <span class="k">in attribute</span> a : <span class="t">Real</span>;
+    <span class="k">out attribute</span> y : <span class="t">Real</span> = a * <span class="s">2</span>;
+}</pre>
+        <div class="src"><span>The canonical form — an AttributeUsage with direction Out</span><code>tests/fixtures/return_styles/library.sysml</code></div>
+      </div>
+      <p style="font-size:0.9rem;">The output is a typed attribute; the inline expression auto-implements the module body.</p>
+    </div>
+    <div class="tabpanel" data-panel="styleb" hidden>
+      <div class="snippet">
+<pre><span class="k">calc def</span> <span class="t">NamedReturnB</span> {
+    <span class="k">in attribute</span> b : <span class="t">Real</span>;
+    <span class="k">return</span> y : <span class="t">Real</span> = b * <span class="s">3</span>;
+}</pre>
+        <div class="src"><span>A named return — a ReferenceUsage with direction Out, not an AttributeUsage</span><code>tests/fixtures/return_styles/library.sysml</code></div>
+      </div>
+      <p style="font-size:0.9rem;">
+        Extraction must accept the ReferenceUsage member kind too (REQ-EXT-10). An
+        <em>anonymous</em> <code>return</code> — a result with no name — is unbuildable: no
+        channel name exists, and diagnostic V8 says so.
+      </p>
+    </div>
+    <div class="tabpanel" data-panel="stylec" hidden>
+      <div class="snippet">
+<pre><span class="k">calc def</span> <span class="t">BareInC</span> {
+    <span class="k">in</span> x : <span class="t">Real</span>;
+    <span class="k">out attribute</span> y : <span class="t">Real</span> = x * <span class="s">4</span>;
+}</pre>
+        <div class="src"><span>A bare in parameter — also a ReferenceUsage, still a real input</span><code>tests/fixtures/return_styles/library.sysml</code></div>
+      </div>
+      <p style="font-size:0.9rem;">No <code>attribute</code> keyword, but <code>x</code> must still land in the extracted inputs.</p>
+    </div>
+  </div>
+
+  <h3>Redefinition (<code>:&gt;&gt;</code>) — the load-bearing idiom</h3>
+  <p>
+    Almost every design decision flows through redefinition: values, wiring, retyping,
+    aggregation. Four forms, all from committed fixtures:
+  </p>
+  <div class="snippet">
+<pre><span class="c">// Delegation (CHAIN) and value override (LITERAL), side by side:</span>
+<span class="k">:&gt;&gt;</span> capital_cost = cost_model.total_cost;
+<span class="k">:&gt;&gt;</span> raw_material_cost = <span class="s">0.0</span>;</pre>
+    <div class="src"><span>CHAIN becomes a registry alias; LITERAL propagates a value</span><code>tests/fixtures/solar_battery_model/library.sysml</code></div>
+  </div>
+  <div class="snippet">
+<pre><span class="c">// Deep-path override — traversed through the hierarchy to the leaf:</span>
+<span class="k">:&gt;&gt;</span> pv_module.wattage = <span class="s">400.0</span>;
+<span class="k">:&gt;&gt;</span> pv_module.efficiency = <span class="s">0.21</span>;</pre>
+    <div class="src"><span>Captured with the dotted target path intact</span><code>tests/fixtures/solar_battery_model/design.sysml</code></div>
+  </div>
+  <div class="snippet">
+<pre><span class="c">// Aggregation redefinition — sum over children plus singletons and locals:</span>
+<span class="k">:&gt;&gt;</span> capital_cost =
+    <span class="t">sum</span>(pv_module.capital_cost) +
+    <span class="t">sum</span>(inverter.capital_cost) +
+    array_bos.capital_cost +
+    misc_hardware_cost;</pre>
+    <div class="src"><span>Decomposed into SumTerm / SingletonTerm / LocalTerm — the FCE-before-OE rule is what keeps <code>array_bos.capital_cost</code> a SingletonTerm</span><code>tests/fixtures/solar_battery_model/library.sysml</code></div>
+  </div>
+
+  <h3 id="l4-retype">Retyping — <code>part :&gt;&gt; name : Subtype</code></h3>
+  <div class="snippet">
+<pre><span class="k">part def</span> <span class="t">'HIF Driver'</span> <span class="k">:&gt;</span> <span class="t">'IFE Driver'</span> {
+    <span class="k">attribute</span> torque : <span class="t">Real</span> = <span class="s">20.0</span>;
+
+    <span class="k">calc</span> hif_calc : <span class="t">HifCalc</span> {
+        <span class="k">in</span> q = torque;
+    }
+
+    <span class="c">// Redefine the supertype's same-named template.</span>
+    <span class="k">calc :&gt;&gt;</span> shared_calc : <span class="t">SharedCalc</span>;
+}
+...
+<span class="k">part def</span> <span class="t">Variant</span> <span class="k">:&gt;</span> <span class="t">Facility</span> {
+    <span class="k">part :&gt;&gt;</span> driver : <span class="t">'HIF Driver'</span>;
+}</pre>
+    <div class="src"><span>A retyped usage carries both types; same-named templates collide → V9 picks the most-specific owner</span><code>tests/fixtures/retype_model/library.sysml</code></div>
+  </div>
+  <p>
+    The AST detail that matters: the declared type is read from the usage's <strong>owned
+    FeatureTyping relationship</strong> — never from a position in the flattened type list, which
+    is order-unstable and, for a retyped usage, lists the supertype first and the declared
+    subtype last. The retyped usage is then indexed under <em>every</em> user-model part
+    definition it carries, so supertype-owned and subtype-owned templates both instantiate.
+  </p>
+
+  <h3>The two EXPOSE shapes</h3>
+  <div class="tabs" id="expose-tabs">
+    <div class="tabbar" role="tablist">
+      <button role="tab" aria-selected="true" data-tab="shapea">Shape A — on a part def</button>
+      <button role="tab" aria-selected="false" data-tab="shapeb">Shape B — on a part usage</button>
+      <button role="tab" aria-selected="false" data-tab="multihop">Multi-hop chain</button>
+    </div>
+    <div class="tabpanel" data-panel="shapea">
+      <div class="snippet">
+<pre><span class="k">part def</span> <span class="t">'Toy Plant'</span> {
+    ...
+    <span class="k">calc</span> cost_calc : <span class="t">'Panel Cost'</span> {
+        <span class="k">in</span> area = area_calc.area;
+        <span class="k">in</span> unit_cost = plant_unit_cost;
+    }
+
+    <span class="c">// Derived attribute reading a calc result</span>
+    <span class="k">attribute</span> total_cost : <span class="t">Real</span> = cost_calc.cost;
+}</pre>
+        <div class="src"><span>EXPOSE on a definition — no instances exist yet, so it expands per design instance into the scoped-alias namespace</span><code>tests/fixtures/wi014_toy/toy_plant.sysml</code></div>
+      </div>
+      <p style="font-size:0.9rem;">Two sibling instances each get their own <code>(instance_path, total_cost)</code> key — never a shared or colliding name (→ <a href="#scoped-aliases">scoped aliases</a>).</p>
+    </div>
+    <div class="tabpanel" data-panel="shapeb" hidden>
+      <div class="snippet">
+<pre><span class="c">// D3: pure EXPOSE -- alias for CalcUsage output</span>
+<span class="k">attribute</span> scale_result : <span class="t">Real</span> = scale_calc.result;</pre>
+        <div class="src"><span>EXPOSE on a usage — becomes a channel alias directly (registry Phase 3)</span><code>tests/fixtures/attr_expr_probe/design.sysml</code></div>
+      </div>
+      <p style="font-size:0.9rem;">The distinction is real, not cosmetic: shape A needs per-instance expansion, shape B doesn't. Collapsing them into one story would erase the sibling-disambiguation problem shape A exists to solve.</p>
+    </div>
+    <div class="tabpanel" data-panel="multihop" hidden>
+      <div class="snippet">
+<pre><span class="k">part</span> radial_build {
+    <span class="k">part</span> tf_coil : <span class="t">'Coil'</span>;
+    <span class="k">attribute</span> magnet_volume_total : <span class="t">Real</span> = tf_coil.volume_calc.volume;
+}</pre>
+        <div class="src"><span>A three-segment chain through a nested part — tentative until Phase 3b confirms it</span><code>tests/fixtures/ife_plant/subsystems.sysml</code></div>
+      </div>
+      <p style="font-size:0.9rem;">Extraction alone can't know whether <code>volume</code> is a calc output → <code>EXPOSE_CHAIN_TENTATIVE</code>, settled at registry build (→ <a href="#l3-registry">Phase 3b</a>).</p>
+    </div>
+  </div>
+
+  <h3 id="l4-trap">The trap: <code>attribute :&gt;&gt;</code> with an expression is silently dropped</h3>
+  <p>
+    Two redefinitions that look almost identical parse as different member kinds — and only one
+    is captured:
+  </p>
+  <div class="snippet">
+<pre><span class="c">// CAPTURED — bare form, parses as a ReferenceUsage member:</span>
+<span class="k">:&gt;&gt;</span> cost_per_joule = meier_cost.gamma;
+
+<span class="c">// DROPPED at extraction, no diagnostic from codegen — the attribute</span>
+<span class="c">// keyword makes this an AttributeUsage redefinition, which the</span>
+<span class="c">// redefinition scan does not read:</span>
+<span class="bad"><span class="k">attribute :&gt;&gt;</span> cost_per_joule = meier_cost.gamma;</span></pre>
+    <div class="src"><span>⚠ Counter-example. The captured line is verbatim from <code>tests/fixtures/spec_chain_channel/library.sysml</code>; the dropped form is that same line minimally adapted (no committed fixture encodes it — deliberately)</span><code>adapted from tests/fixtures/spec_chain_channel/library.sysml</code></div>
+  </div>
+  <div class="callout trap">
+    <span class="co-label">Why, and what catches it</span>
+    Codegen's redefinition scan reads <strong>ReferenceUsage</strong> members; the
+    <code>attribute</code> keyword produces an <strong>AttributeUsage</strong>, which it does not
+    read — the value vanishes without a codegen diagnostic. This is a real, documented limit
+    (modeling-assumptions §5), not a style preference. agentic-mbse's Level-6 check
+    (<code>L6_ATTR_REDEF_EXPR_DROPPED</code>) WARNs on the expression form, so the model
+    validator catches what extraction would silently lose. Always write the bare form:
+    <code>:&gt;&gt; attr = value</code>.
+  </div>
+</section>
+
+<hr class="section-rule">
+<!-- ═══════════════ OPERATIONS ═══════════════ -->
+<section id="operations">
+  <p class="eyebrow">Operational reality</p>
+  <h2>Operating it</h2>
+  <p>Two front ends, one pipeline. You run it one of two ways:</p>
+  <div class="snippet">
+<pre><span class="c"># Live extraction — parses the .sysml sources directly</span>
+sysml-codegen generate --models path/to/models --output out/ --package-name my_package
+
+<span class="c"># Snapshot capture (the only step that needs the live parser toolchain),</span>
+<span class="c"># then generation from the captured JSON — mutually exclusive with --models</span>
+sysml-codegen snapshot --models path/to/models --output extraction_snapshot.json
+sysml-codegen generate --from-snapshot extraction_snapshot.json --output out/ --package-name my_package
+
+<span class="c"># Re-seal an already-generated package in place (e.g. after a policy-allowed edit)</span>
+sysml-codegen seal path/to/package --package-name my_package</pre>
+    <div class="src"><span>CLI surface (argparse; <code>--models</code> / <code>--from-snapshot</code> are a required mutually-exclusive pair)</span><code>src/sysml_codegen/cli/__init__.py</code></div>
+  </div>
+  <ul>
+    <li>
+      <strong>Snapshot format v5, hard-gated.</strong> A snapshot records
+      <code>snapshot_format_version</code>; any version other than the current 5 is a hard error —
+      no coexistence, no in-place migration; re-capture and move on. The version history is
+      short and honest: v3 added the constraint sections (<code>constraint_facts</code>,
+      <code>part_occurrences</code>, <code>constraint_lowering_mode</code>) so the offline path
+      re-lowers constraints; v4 added the diagnostic-severity field; v5 replaced the
+      snapshot-relative <code>source_file</code> with a portable <code>root-N/&lt;relpath&gt;</code>
+      referent, so a snapshot is byte-stable across checkout roots.
+    </li>
+    <li>
+      <strong>Offline equals live, to the byte.</strong> Generation from a current snapshot is
+      byte-identical to live generation (REQ-SNAP-19) — the confirm walk, the scoped-alias
+      expansion, and constraint lowering are all reconstructed on load.
+    </li>
+    <li>
+      <strong>Staleness warns, doesn't block.</strong> Each snapshot records a hash of its source
+      files; if the on-disk sources have drifted, generation warns per file plus a summary and
+      continues — you're told you're generating from yesterday's model, not stopped.
+    </li>
+    <li>
+      <strong>Baselines regenerate only through the capture scripts, with reviewed diffs.</strong>
+      <code>scripts/capture_extraction_snapshots.py</code> runs live extraction; the other two —
+      <code>capture_pipeline_baselines.py</code> and <code>capture_baseline_yaml.py</code> —
+      regenerate graph and YAML baselines <em>from the committed snapshots</em>, so both render
+      from the same graph and cannot disagree.
+    </li>
+  </ul>
+</section>
+
+<hr class="section-rule">
+
+<!-- ═══════════════ AGENTIC-MBSE ═══════════════ -->
+<section id="agentic-mbse">
+  <p class="eyebrow">The complement</p>
+  <h2>agentic-mbse: the enforcement half of the contract</h2>
+  <p>
+    sysml-codegen can assume the patterns it assumes because a second repo makes sure models
+    follow them <em>before</em> generation runs. The split:
+    <code>docs/architecture/modeling-assumptions.md</code> says what models must look like;
+    sysml-codegen executes that subset; agentic-mbse <strong>teaches</strong> it and
+    <strong>checks</strong> it.
+  </p>
+  <h3>Teaching</h3>
+  <p>
+    A MODELING_GUIDE anchors the conventions — definitions in <code>library/</code>
+    (<code>'Title Case'</code>), usages in <code>designs/</code> (<code>snake_case</code>), the
+    EXPOSE pattern, the calc-architecture rule (ADR-002: algorithms in the library, values and
+    wiring in designs). Pattern docs cover the plant idiom (the cross-part shapes this page's
+    <a href="#cross-part">centerpiece section</a> describes, each cross-referenced to a
+    sysml-codegen fixture), and the <code>sysml-conventions</code> skill ships copy-paste
+    stencils for the four core constructs so generated-by-agent models start canonical.
+  </p>
+  <h3>Checking</h3>
+  <p>
+    A six-level validation pyramid (syntax → structure → dataflow → constraints → traceability →
+    architecture/pipeline-readiness) runs against the model, with negative fixtures pinning each
+    check. Three examples that map straight onto codegen's failure modes:
+  </p>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Check</th><th>Verdict</th><th>The codegen failure it pre-empts</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>Self-named binding (<code>in x = x</code> with nothing named <code>x</code> in scope)</td>
+        <td><span class="pill bad">FAIL</span></td>
+        <td>A true dead-end binding; note the check is precise — <code>in x = x</code> covered by a same-named attribute is a <em>supported</em> shape, and the plant idiom uses it freely</td>
+      </tr>
+      <tr>
+        <td><code>attribute :&gt;&gt; attr = &lt;expression&gt;</code> (the AttributeUsage redefinition form)</td>
+        <td><span class="pill unk">WARN</span></td>
+        <td>Codegen silently drops it at extraction (→ <a href="#l4-trap">the trap</a>) — the validator is the only voice that names it</td>
+      </tr>
+      <tr>
+        <td>A calc-bearing part def that no usage instantiates (plainly or by retype)</td>
+        <td><span class="pill bad">FAIL</span></td>
+        <td>Its template calcs would silently vanish from the pipeline</td>
+      </tr>
+    </tbody>
+  </table></div>
+  <p>
+    The executable constraint profile also lives here
+    (<code>evaluate_profile</code>) — the ADMIT/BLOCK/unassessed decision the
+    <a href="#constraints">constraint path</a> consumes.
+  </p>
+  <h3>Staying in sync</h3>
+  <p>
+    Drift between the repos is caught by an instrument, not a habit: sysml-codegen pins the
+    upstream schema and profile versions (<code>_upstream_pins.py</code> — constraint-facts,
+    expression-IR, and profile semantic versions) and a conformance test compares each pin
+    against the value actually imported from the installed agentic-mbse, failing with an explicit
+    "review downstream, then update the pin" message. Every epic item that changed what codegen
+    accepts recorded a matching agentic-mbse teaching/checking update, so the contract's two
+    halves move together.
+  </p>
+</section>
+
+<hr class="section-rule">
+
+<!-- ═══════════════ TEAX STUDY LAYER ═══════════════ -->
+<section id="teax">
+  <p class="eyebrow">Top of the stack</p>
+  <h2>The teax study layer: what all of this is for</h2>
+  <p>
+    The generated, sealed package is not the end. It is what a <strong>study</strong> drives:
+    sweep many candidate designs through the same pipeline, keep the evidence, find the boundary.
+    teax's simkit (its <code>docs/evaluation-and-study.md</code>) closes the loop:
+  </p>
+  <ul>
+    <li>
+      <strong>Load, verifying the seal first.</strong> The loader authenticates the package's own
+      <code>contracts/verify.py</code> against the vendored trust anchor, runs it, and refuses a
+      package that fails integrity (→ <a href="#sealing">sealing</a>). No untrusted package code
+      executes before that.
+    </li>
+    <li>
+      <strong>Typed entries, from the package's own truth.</strong>
+      <code>PreparedEvaluator.entry_models</code> exposes a channel → typed-model map — one
+      Pydantic model class per entry channel, derived from the pipeline spec, never a hardcoded
+      generated class name. The stock multi-entry bridge (<code>CandidateBridge</code>, lifecycle
+      Item 9) builds one complete typed model per channel — a candidate's selected fields applied
+      over each channel's modeled defaults — for zero, one, or many entry channels, with no
+      per-consumer wrapper. An unknown field or a malformed value fails closed as an
+      entry-validation defect.
+    </li>
+    <li>
+      <strong>Evaluate, then study.</strong> A prepared evaluator runs one case in memory
+      (fresh execution context per case) and yields an immutable evidence record: outputs,
+      constraint verdicts (<code>satisfied</code> / <code>violated</code> /
+      <code>indeterminate</code> — the Kleene third value survives to the top of the stack),
+      and provenance (executable fingerprint, input digest). A study definition — a candidate
+      strategy, a validation step, an assessment policy — drives many cases through a
+      crash-safe store (SQLite WAL, staged-then-committed, single-runner lease).
+    </li>
+  </ul>
+  <p>
+    The acceptance anchors that certified this whole stack, recorded in the epic close-outs
+    (<code>.project/completed/</code>): fusion-tea's run-C LCOE reproduces
+    <strong>bit-exactly</strong> ($270.1211779380445/MWh) through the generated package alone;
+    the stellarator demo's five constraint verdicts land with six bit-exact anchors; and the IFE
+    model sweeps a 2,301-point (η×G) grid through the stock seams with unchanged numerics —
+    the composed 41/41 public proof at the pinned artifact set.
+  </p>
+  <p>
+    That is the frame to leave with: sysml-codegen is the <em>means</em> — the study sweeping
+    designs over a sealed, verified, constraint-checking pipeline is the <em>end</em> the
+    four-repo stack (agentic-mbse → sysml-codegen → generated package → teax) serves.
+  </p>
+</section>
+
+<hr class="section-rule">
+<!-- ═══════════════ HONEST CAVEATS ═══════════════ -->
+<section id="caveats">
+  <p class="eyebrow">Preserved, not strengthened</p>
+  <h2>Honest caveats</h2>
+  <p>
+    These are the limits that are still real at merged main. They are stated exactly as the docs
+    hedge them — not softer, not solved. (Several caveats that were true in earlier generations
+    of this explainer are <em>gone</em>: the ten-offender V11 abort, the "constraints are
+    dropped" era, the separate aggregation resolver, snapshot v1–v3. They are history, and this
+    page does not present them as open.)
+  </p>
+  <ul>
+    <li>
+      <strong><code>attribute :&gt;&gt; attr = &lt;expression&gt;</code> is silently dropped at
+      extraction.</strong> Use the bare <code>:&gt;&gt; attr = value</code> form. agentic-mbse
+      WARNs on the expression form, but codegen extraction still drops it. Genuinely unsupported
+      (→ <a href="#l4-trap">the trap</a>).
+    </li>
+    <li>
+      <strong>EXPOSE_COMPUTED is rejected</strong> — a calc-output reference mixed with
+      arithmetic produces no module and no alias, and the name does not surface. Model the
+      adjustment as a calc def instead.
+    </li>
+    <li>
+      <strong>A <code>:&gt;&gt;</code> override on a usage nested inside an <em>instantiated</em>
+      part def loses its literal</strong> (<code>[NESTED-OCCURRENCE-OVERRIDE]</code>, backlog P2;
+      probe <code>tests/fixtures/nested_occurrence_override_probe/</code>). Capture is
+      definition-relative while demand resolves occurrence-relative, so the supplied-value
+      materializer never matches. It drops on <em>both</em> paths — silently to a manual-required
+      entry point on the calc path, and as a halt under strict resolution on the constraint path.
+      Genuinely unsupported at merged main — surfaced by the lifecycle epic, filed, not fixed.
+      Use the flat and array deep-path shapes, which capture correctly.
+    </li>
+    <li>
+      <strong>The constraint catalog is embedded on the graph as the sole schema authority, not
+      emitted standalone.</strong> This is the ratified design (owner decision D-3), not a gap:
+      TEAx consumes the embedded catalog directly, a standalone
+      <code>constraint_catalog.json</code> export is explicitly out of scope, and any future
+      export must be mechanically identical to the embedded schema.
+    </li>
+  </ul>
+</section>
+
+<hr class="section-rule">
+
+<!-- ═══════════════ FOOTER ═══════════════ -->
+<section id="colophon" style="font-size:0.82rem; color:var(--ink-muted); margin-bottom:1rem;">
+  <p style="max-width:76ch;">
+    Sources: the scrubbed reference docs under <code>docs/architecture/</code> (docs 00–30,
+    re-projected onto merged main in the docs-lifecycle-sync sweep), the epic close-outs under
+    <code>.project/completed/</code>, and committed fixtures under <code>tests/fixtures/</code>.
+    Every code symbol named on this page was grep-verified against <code>src/</code> at
+    <code>936315c</code>. Coverage numbers cite the verification matrix
+    (<code>docs/architecture/verification-matrix.md</code>: 276 requirements = 275 PASS +
+    1 UNTESTED, across 32 families, recounted from the family index).
+    Supersedes the Gen-1 explainer (<code>new_pipeline_explainer.html</code>).
+  </p>
+</section>
+
+</main>
+
+<!-- ═══════════════ GLOSSARY OVERLAY ═══════════════ -->
+<aside id="glossary-overlay" aria-label="SysML glossary">
+  <button id="glossary-close" type="button" aria-label="Close glossary">×</button>
+  <h3>SysML v2 glossary</h3>
+  <dl>
+    <div class="gloss-entry" id="gloss-sysml"><dt>SysML v2</dt><dd>The systems-engineering modeling language. Models here are plain text (<code>.sysml</code>), parsed into an AST by the syside toolchain.</dd></div>
+    <div class="gloss-entry" id="gloss-partdef"><dt>part def / part</dt><dd><code>part def 'PV Module'</code> is a reusable definition (a blueprint); <code>part pv_module : 'PV Module' [20]</code> is a usage — an instance in a design, here with multiplicity 20.</dd></div>
+    <div class="gloss-entry" id="gloss-calcdef"><dt>calc def / calc</dt><dd><code>calc def EnergyProductionCalc</code> declares an algorithm with typed inputs and outputs; <code>calc energy_production : EnergyProductionCalc { ... }</code> instantiates it and binds its inputs.</dd></div>
+    <div class="gloss-entry" id="gloss-binding"><dt>binding</dt><dd><code>in annual_energy_mwh = energy_production.annual_energy_mwh;</code> — wires a calc input to a source: a dotted chain, a qualified name, a sibling attribute, or a literal.</dd></div>
+    <div class="gloss-entry" id="gloss-redef"><dt>:&gt;&gt; redefinition</dt><dd>The load-bearing idiom: override a value (<code>:&gt;&gt; wattage = 400.0</code>), delegate to a calc output (<code>:&gt;&gt; capital_cost = cost_model.total_cost</code>), reach through the hierarchy (<code>:&gt;&gt; pv_module.wattage = 400.0</code>), or retype (<code>part :&gt;&gt; driver : 'HIF Driver'</code>).</dd></div>
+    <div class="gloss-entry" id="gloss-expose"><dt>EXPOSE pattern</dt><dd>A design attribute that purely forwards a calc output (<code>attribute total_cost : Real = cost_calc.cost;</code>) — surfacing an internal value at the part boundary, with no computation.</dd></div>
+    <div class="gloss-entry" id="gloss-sum"><dt>sum() aggregation</dt><dd><code>:&gt;&gt; capital_cost = sum(pv_module.capital_cost) + ...</code> — a roll-up over arrayed children, compiled to count × per-instance value (uniform arrays assumed).</dd></div>
+    <div class="gloss-entry" id="gloss-assert"><dt>assert constraint</dt><dd><code>assert constraint affordable : 'Cost Within Budget' { ... }</code> — a modeled assertion; admitted ones lower to CONSTRAINT modules and execute (Kleene three-valued).</dd></div>
+    <div class="gloss-entry" id="gloss-eqn"><dt>EQN / PQN / channel</dt><dd>Identifiers derived once at extraction, <code>__</code>-separated (ADR-003): a module name is the lowercase execution qualified name; an output channel is <code>usage_qn__output_name</code>.</dd></div>
+  </dl>
+</aside>
+<script>
+'use strict';
+
+/* ═══════════════ DATA ═══════════════ */
+
+const STAGES = [
+  { id: 'extract',  num: '1', label: 'Extract',          sub: 'parse .sysml → typed data',    target: '#l2' },
+  { id: 'registry', num: '2', label: 'Build registry',   sub: 'name → channel authority',     target: '#l3-registry' },
+  { id: 'trace',    num: '3', label: 'Trace deps',       sub: 'DFS + binding resolution',     target: '#l3-backtracker' },
+  { id: 'classify', num: '4', label: 'Classify entries', sub: 'the user-facing knobs',        target: '#worked-example' },
+  { id: 'build',    num: '5', label: 'Build modules',    sub: 'five kinds · constraints lower', target: '#l3-producer' },
+  { id: 'sort',     num: '6', label: 'Sort + validate',  sub: 'topo order · V11 gate',        target: '#l3-v11' },
+  { id: 'render',   num: '7', label: 'Render + seal',    sub: 'code, YAML, JSON, contracts',  target: '#sealing' }
+];
+
+// 13-module excerpt of tests/fixtures/baseline_yaml/solar_battery.yaml (real names).
+const PREFIX = 'solarbatterydesign__solar_battery_plant__';
+const DAG_MODULES = [
+  { id: 'pv_cost',   short: 'pv_module cost_model',      kind: 'CALCULATION', tier: 0, eqn: PREFIX + 'solar_array__pv_module__cost_model' },
+  { id: 'inv_cost',  short: 'inverter cost_model',       kind: 'CALCULATION', tier: 0, eqn: PREFIX + 'solar_array__inverter__cost_model' },
+  { id: 'bos_cost',  short: 'array_bos cost_model',      kind: 'CALCULATION', tier: 0, eqn: PREFIX + 'solar_array__array_bos__cost_model' },
+  { id: 'p_net_kw',  short: 'p_net_kw',                  kind: 'FORMULA',     tier: 0, eqn: PREFIX + 'p_net_kw' },
+  { id: 'energy',    short: 'energy_production',         kind: 'CALCULATION', tier: 0, eqn: PREFIX + 'energy_production' },
+  { id: 'fuel',      short: 'annualized_fuel',           kind: 'CALCULATION', tier: 0, eqn: PREFIX + 'annualized_fuel' },
+  { id: 'sa_cc',     short: 'solar_array capital_cost',  kind: 'AGGREGATION', tier: 1, eqn: PREFIX + 'solar_array__capital_cost' },
+  { id: 'bs_cc',     short: 'battery_system capital_cost', kind: 'AGGREGATION', tier: 1, eqn: PREFIX + 'battery_system__capital_cost', elided: 3 },
+  { id: 'si_cc',     short: 'site_infra capital_cost',   kind: 'AGGREGATION', tier: 1, eqn: PREFIX + 'site_infra__capital_cost', elided: 3 },
+  { id: 'om',        short: 'annualized_om',             kind: 'CALCULATION', tier: 1, eqn: PREFIX + 'annualized_om' },
+  { id: 'plant_cc',  short: 'plant capital_cost',        kind: 'AGGREGATION', tier: 2, eqn: PREFIX + 'capital_cost' },
+  { id: 'fin',       short: 'annualized_financial',      kind: 'CALCULATION', tier: 3, eqn: PREFIX + 'annualized_financial' },
+  { id: 'lcoe',      short: 'lcoe',                      kind: 'CALCULATION', tier: 4, eqn: PREFIX + 'lcoe' }
+];
+const DAG_EDGES = [
+  { from: 'pv_cost',  to: 'sa_cc' },
+  { from: 'inv_cost', to: 'sa_cc' },
+  { from: 'bos_cost', to: 'sa_cc' },
+  { from: 'sa_cc',    to: 'plant_cc' },
+  { from: 'bs_cc',    to: 'plant_cc' },
+  { from: 'si_cc',    to: 'plant_cc' },
+  { from: 'plant_cc', to: 'fin' },
+  { from: 'p_net_kw', to: 'om' },
+  { from: 'om',       to: 'lcoe' },
+  { from: 'fuel',     to: 'lcoe' },
+  { from: 'fin',      to: 'lcoe' },
+  { from: 'energy',   to: 'lcoe' }
+];
+
+// Schematic: wi014_toy with its constraint lowered (usage names, not full EQNs).
+const CDAG_MODULES = [
+  { id: 'area_calc', short: 'area_calc',  kind: 'CALCULATION', tier: 0 },
+  { id: 'cost_calc', short: 'cost_calc',  kind: 'CALCULATION', tier: 1 },
+  { id: 'affordable', short: "constraint 'affordable'", kind: 'CONSTRAINT', tier: 2 },
+  { id: 'report',    short: 'constraint report', kind: 'REPORT_AGGREGATOR', tier: 3 }
+];
+const CDAG_EDGES = [
+  { from: 'area_calc', to: 'cost_calc' },
+  { from: 'cost_calc', to: 'affordable' },
+  { from: 'affordable', to: 'report' }
+];
+
+const KIND_VARS = {
+  CALCULATION: '--kind-calc',
+  FORMULA: '--kind-formula',
+  AGGREGATION: '--kind-agg',
+  CONSTRAINT: '--kind-constraint',
+  REPORT_AGGREGATOR: '--kind-report'
+};
+
+/* ═══════════════ UTILITIES ═══════════════ */
+
+function svgEl(tag, attrs) {
+  const el = document.createElementNS('http://www.w3.org/2000/svg', tag);
+  for (const [k, v] of Object.entries(attrs || {})) el.setAttribute(k, v);
+  return el;
+}
+
+function traceUpstream(startId, edges) {
+  const moduleIds = new Set([startId]);
+  const edgeIndices = new Set();
+  const queue = [startId];
+  while (queue.length > 0) {
+    const id = queue.shift();
+    edges.forEach((e, i) => {
+      if (e.to === id && !edgeIndices.has(i)) {
+        edgeIndices.add(i);
+        if (!moduleIds.has(e.from)) { moduleIds.add(e.from); queue.push(e.from); }
+      }
+    });
+  }
+  return { moduleIds, edgeIndices };
+}
+
+/* ═══════════════ ZoomPanController (lifted from Gen-1) ═══════════════ */
+
+class ZoomPanController {
+  constructor(containerEl, svgEl, options = {}) {
+    this.container = containerEl;
+    this.svg = svgEl;
+    this.minScale = options.minScale || 0.4;
+    this.maxScale = options.maxScale || 4;
+    this.zoomStep = options.zoomStep || 0.12;
+    const vb = this.svg.viewBox.baseVal;
+    this.baseW = vb.width;
+    this.baseH = vb.height;
+    this.scale = 1;
+    this.panX = 0;
+    this.panY = 0;
+    this._isPanning = false;
+    this._moved = false;
+    this._bindEvents();
+  }
+  _bindEvents() {
+    this.container.addEventListener('wheel', e => {
+      e.preventDefault();
+      const rect = this.svg.getBoundingClientRect();
+      this._zoomAt(e.clientX - rect.left, e.clientY - rect.top, e.deltaY > 0 ? -1 : 1);
+    }, { passive: false });
+    this.container.addEventListener('mousedown', e => {
+      if (e.button !== 0) return;
+      this._isPanning = true;
+      this._moved = false;
+      this._startX = e.clientX; this._startY = e.clientY;
+      this._startPanX = this.panX; this._startPanY = this.panY;
+    });
+    window.addEventListener('mousemove', e => {
+      if (!this._isPanning) return;
+      const dx = e.clientX - this._startX, dy = e.clientY - this._startY;
+      if (Math.abs(dx) + Math.abs(dy) > 3) this._moved = true;
+      const rect = this.svg.getBoundingClientRect();
+      this.panX = this._startPanX - dx * (this.baseW / this.scale) / rect.width;
+      this.panY = this._startPanY - dy * (this.baseH / this.scale) / rect.height;
+      this._updateViewBox();
+    });
+    window.addEventListener('mouseup', () => { this._isPanning = false; });
+    this.container.addEventListener('keydown', e => {
+      const PAN = 40 / this.scale;
+      switch (e.key) {
+        case '+': case '=': this._zoomCenter(1); e.preventDefault(); break;
+        case '-': this._zoomCenter(-1); e.preventDefault(); break;
+        case '0': this.reset(); e.preventDefault(); break;
+        case 'ArrowLeft': this.panX -= PAN; this._updateViewBox(); e.preventDefault(); break;
+        case 'ArrowRight': this.panX += PAN; this._updateViewBox(); e.preventDefault(); break;
+        case 'ArrowUp': this.panY -= PAN; this._updateViewBox(); e.preventDefault(); break;
+        case 'ArrowDown': this.panY += PAN; this._updateViewBox(); e.preventDefault(); break;
+      }
+    });
+  }
+  _zoomAt(sx, sy, dir) {
+    const oldScale = this.scale;
+    this.scale = Math.max(this.minScale, Math.min(this.maxScale, this.scale * (1 + this.zoomStep * dir)));
+    const rect = this.svg.getBoundingClientRect();
+    const cx = this.panX + (sx / rect.width) * (this.baseW / oldScale);
+    const cy = this.panY + (sy / rect.height) * (this.baseH / oldScale);
+    this.panX = cx - (sx / rect.width) * (this.baseW / this.scale);
+    this.panY = cy - (sy / rect.height) * (this.baseH / this.scale);
+    this._updateViewBox();
+  }
+  _zoomCenter(dir) {
+    const rect = this.svg.getBoundingClientRect();
+    this._zoomAt(rect.width / 2, rect.height / 2, dir);
+  }
+  reset() { this.scale = 1; this.panX = 0; this.panY = 0; this._updateViewBox(); }
+  _updateViewBox() {
+    this.svg.setAttribute('viewBox',
+      `${this.panX} ${this.panY} ${this.baseW / this.scale} ${this.baseH / this.scale}`);
+  }
+}
+
+/* ═══════════════ Stage strip (L1 spine) ═══════════════ */
+
+function renderStageStrip() {
+  const host = document.getElementById('stage-strip');
+  if (!host) return;
+  const NW = 128, NH = 58, GAP = 26, PAD = 16;
+  const W = PAD * 2 + STAGES.length * NW + (STAGES.length - 1) * GAP;
+  const H = 178;
+  const svg = svgEl('svg', { viewBox: `0 0 ${W} ${H}`, role: 'img',
+    'aria-label': 'The seven pipeline stages with the snapshot front end' });
+
+  const defs = svgEl('defs');
+  const mk = svgEl('marker', { id: 'strip-arrow', viewBox: '0 0 10 10', refX: 9, refY: 5,
+    markerWidth: 6, markerHeight: 6, orient: 'auto-start-reverse' });
+  const mkPath = svgEl('path', { d: 'M 0 0 L 10 5 L 0 10 z' });
+  mkPath.setAttribute('style', 'fill: var(--ink-muted)');
+  mk.appendChild(mkPath);
+  defs.appendChild(mk);
+  svg.appendChild(defs);
+
+  const y0 = 26;
+  STAGES.forEach((s, i) => {
+    const x = PAD + i * (NW + GAP);
+    const g = svgEl('g', { class: 'stage-node', tabindex: 0, role: 'link' });
+    g.setAttribute('aria-label', `Step ${s.num}: ${s.label}`);
+    const rect = svgEl('rect', { x, y: y0, width: NW, height: NH, rx: 9 });
+    rect.setAttribute('style', 'fill: var(--surface-2); stroke: var(--hairline)');
+    g.appendChild(rect);
+    const badge = svgEl('circle', { cx: x + 16, cy: y0 + 16, r: 9 });
+    badge.setAttribute('style', 'fill: var(--accent)');
+    g.appendChild(badge);
+    const num = svgEl('text', { x: x + 16, y: y0 + 19.5, 'text-anchor': 'middle', 'font-size': '10', 'font-weight': '700' });
+    num.setAttribute('style', 'fill: #fff');
+    num.textContent = s.num;
+    g.appendChild(num);
+    const lbl = svgEl('text', { x: x + 30, y: y0 + 20, 'font-size': '11.5', 'font-weight': '650' });
+    lbl.setAttribute('style', 'fill: var(--ink)');
+    lbl.textContent = s.label;
+    g.appendChild(lbl);
+    const sub = svgEl('text', { x: x + 10, y: y0 + 42, 'font-size': '9.5' });
+    sub.setAttribute('style', 'fill: var(--ink-2)');
+    sub.textContent = s.sub;
+    g.appendChild(sub);
+    const go = () => { const t = document.querySelector(s.target); if (t) t.scrollIntoView({ behavior: 'smooth', block: 'start' }); };
+    g.addEventListener('click', go);
+    g.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); } });
+    svg.appendChild(g);
+    if (i < STAGES.length - 1) {
+      const ln = svgEl('line', { x1: x + NW, y1: y0 + NH / 2, x2: x + NW + GAP - 2, y2: y0 + NH / 2, 'marker-end': 'url(#strip-arrow)' });
+      ln.setAttribute('style', 'stroke: var(--ink-muted); stroke-width: 1.5');
+      svg.appendChild(ln);
+    }
+  });
+
+  // Model files feeding step 1
+  const srcLbl = svgEl('text', { x: PAD + 4, y: 14, 'font-size': '9.5' });
+  srcLbl.setAttribute('style', 'fill: var(--ink-muted)');
+  srcLbl.textContent = '.sysml models (library/ + designs/)';
+  svg.appendChild(srcLbl);
+  const srcLn = svgEl('line', { x1: PAD + 60, y1: 17, x2: PAD + 62, y2: y0 - 2, 'marker-end': 'url(#strip-arrow)' });
+  srcLn.setAttribute('style', 'stroke: var(--ink-muted); stroke-width: 1.2');
+  svg.appendChild(srcLn);
+
+  // Snapshot alternate front end: a box below stage 1 feeding into stage 2
+  const sy = y0 + NH + 30;
+  const g2 = svgEl('g', { class: 'stage-node', tabindex: 0, role: 'link', 'aria-label': 'Snapshot front end' });
+  const r2 = svgEl('rect', { x: PAD, y: sy, width: NW + 52, height: 46, rx: 9, 'stroke-dasharray': '5 3' });
+  r2.setAttribute('style', 'fill: var(--surface); stroke: var(--accent)');
+  g2.appendChild(r2);
+  const t2 = svgEl('text', { x: PAD + 12, y: sy + 19, 'font-size': '11', 'font-weight': '650' });
+  t2.setAttribute('style', 'fill: var(--accent-ink)');
+  t2.textContent = 'snapshot front end (v5)';
+  g2.appendChild(t2);
+  const t3 = svgEl('text', { x: PAD + 12, y: sy + 35, 'font-size': '9.5' });
+  t3.setAttribute('style', 'fill: var(--ink-2)');
+  t3.textContent = 'generate --from-snapshot · no parser toolchain';
+  g2.appendChild(t3);
+  g2.addEventListener('click', () => { const t = document.querySelector('#operations'); if (t) t.scrollIntoView({ behavior: 'smooth' }); });
+  svg.appendChild(g2);
+  const elbow = svgEl('path', {
+    d: `M ${PAD + NW + 52} ${sy + 23} H ${PAD + NW + GAP + NW / 2} V ${y0 + NH + 4}`,
+    fill: 'none', 'marker-end': 'url(#strip-arrow)'
+  });
+  elbow.setAttribute('style', 'stroke: var(--accent); stroke-width: 1.5; stroke-dasharray: 5 3');
+  svg.appendChild(elbow);
+  const eLbl = svgEl('text', { x: PAD + NW + 64, y: sy + 12, 'font-size': '9.5' });
+  eLbl.setAttribute('style', 'fill: var(--ink-muted)');
+  eLbl.textContent = 'steps 2–7 run unchanged, byte-identical';
+  svg.appendChild(eLbl);
+
+  host.appendChild(svg);
+}
+
+/* ═══════════════ DAG renderer (tier-slot layout, lifted pattern) ═══════════════ */
+
+function renderDag(hostId, modules, edges, opts = {}) {
+  const host = document.getElementById(hostId);
+  if (!host) return null;
+  const TIER_W = opts.tierWidth || 250;
+  const SLOT_H = 60, NODE_W = 188, NODE_H = 42, PAD = 34;
+
+  const tiers = {};
+  modules.forEach(m => { (tiers[m.tier] = tiers[m.tier] || []).push(m); });
+  const maxTier = Math.max(...modules.map(m => m.tier));
+  const pos = {};
+  let maxRows = 0;
+  for (let t = 0; t <= maxTier; t++) {
+    const col = tiers[t] || [];
+    maxRows = Math.max(maxRows, col.length);
+    col.forEach((m, i) => { pos[m.id] = { x: PAD + t * TIER_W, y: PAD + i * SLOT_H }; });
+  }
+  // Center shorter columns vertically
+  const H = PAD * 2 + maxRows * SLOT_H - (SLOT_H - NODE_H);
+  for (let t = 0; t <= maxTier; t++) {
+    const col = tiers[t] || [];
+    const colH = col.length * SLOT_H - (SLOT_H - NODE_H);
+    const off = (H - PAD * 2 - colH) / 2;
+    col.forEach(m => { pos[m.id].y += off; });
+  }
+  const W = PAD * 2 + maxTier * TIER_W + NODE_W;
+
+  const svg = svgEl('svg', { viewBox: `0 0 ${W} ${H}`, role: 'img',
+    'aria-label': opts.ariaLabel || 'Module dependency graph' });
+
+  const defs = svgEl('defs');
+  ['dagArrow', 'dagArrowHl'].forEach((id, i) => {
+    const mk = svgEl('marker', { id, viewBox: '0 0 10 10', refX: 9, refY: 5,
+      markerWidth: 6.5, markerHeight: 6.5, orient: 'auto-start-reverse' });
+    const p = svgEl('path', { d: 'M 0 0 L 10 5 L 0 10 z' });
+    p.setAttribute('style', `fill: var(${i ? '--accent' : '--ink-muted'})`);
+    mk.appendChild(p);
+    defs.appendChild(mk);
+  });
+  svg.appendChild(defs);
+
+  const edgeEls = [];
+  edges.forEach((e, i) => {
+    const a = pos[e.from], b = pos[e.to];
+    const x1 = a.x + NODE_W, y1 = a.y + NODE_H / 2;
+    const x2 = b.x, y2 = b.y + NODE_H / 2;
+    const mx = (x1 + x2) / 2;
+    const path = svgEl('path', {
+      d: `M ${x1} ${y1} C ${mx} ${y1}, ${mx} ${y2}, ${x2 - 3} ${y2}`,
+      fill: 'none', 'marker-end': 'url(#dagArrow)', 'data-edge': i
+    });
+    path.setAttribute('style', 'stroke: var(--ink-muted); stroke-width: 1.4; opacity: 0.75');
+    svg.appendChild(path);
+    edgeEls.push(path);
+  });
+
+  modules.forEach(m => {
+    const p = pos[m.id];
+    const v = KIND_VARS[m.kind];
+    const g = svgEl('g', { 'data-module-id': m.id, tabindex: 0, class: 'dag-node' });
+    g.setAttribute('style', 'cursor: pointer');
+    const rect = svgEl('rect', { x: p.x, y: p.y, width: NODE_W, height: NODE_H, rx: 8 });
+    rect.setAttribute('style',
+      `fill: color-mix(in oklab, var(${v}) 15%, var(--surface)); stroke: var(${v}); stroke-width: 1.6`);
+    g.appendChild(rect);
+    const name = svgEl('text', { x: p.x + 10, y: p.y + 18, 'font-size': '11', 'font-weight': '640', class: 'mono-t' });
+    name.setAttribute('style', 'fill: var(--ink)');
+    name.textContent = m.short;
+    g.appendChild(name);
+    const kind = svgEl('text', { x: p.x + 10, y: p.y + 33, 'font-size': '8.5', 'letter-spacing': '0.06em' });
+    kind.setAttribute('style', `fill: var(${v}); font-weight: 700`);
+    kind.textContent = m.kind + (m.elided ? `  · +${m.elided} upstream elided` : '');
+    g.appendChild(kind);
+    if (opts.onSelect) {
+      const sel = () => opts.onSelect(m);
+      g.addEventListener('click', sel);
+      g.addEventListener('keydown', e => { if (e.key === 'Enter') sel(); });
+    }
+    svg.appendChild(g);
+  });
+
+  host.appendChild(svg);
+  return { svg, edgeEls, modules, edges };
+}
+
+/* ═══════════════ Controllers (lifted from Gen-1) ═══════════════ */
+
+class NavigationController {
+  constructor() {
+    this.links = document.querySelectorAll('#sidebar a[href^="#"]');
+    this.sections = [];
+    this.links.forEach(link => {
+      const el = document.getElementById(link.getAttribute('href').slice(1));
+      if (el) this.sections.push({ el, link });
+    });
+    if ('IntersectionObserver' in window) {
+      const obs = new IntersectionObserver(entries => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            this.links.forEach(l => l.classList.remove('active'));
+            const m = this.sections.find(s => s.el === entry.target);
+            if (m) m.link.classList.add('active');
+          }
+        });
+      }, { rootMargin: '-15% 0px -70% 0px' });
+      this.sections.forEach(s => obs.observe(s.el));
+    }
+  }
+}
+
+class GlossaryController {
+  constructor() {
+    this.overlay = document.getElementById('glossary-overlay');
+    const openBtn = document.getElementById('glossary-btn');
+    const closeBtn = document.getElementById('glossary-close');
+    if (openBtn) openBtn.addEventListener('click', e => { e.stopPropagation(); this.toggle(); });
+    if (closeBtn) closeBtn.addEventListener('click', () => this.close());
+    document.addEventListener('click', e => {
+      if (this.overlay && this.overlay.classList.contains('visible') &&
+          !this.overlay.contains(e.target) && e.target !== openBtn) this.close();
+    });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') this.close(); });
+    document.querySelectorAll('.glossary-link').forEach(link => {
+      link.addEventListener('click', e => {
+        e.preventDefault(); e.stopPropagation();
+        this.open();
+        const entry = document.getElementById('gloss-' + link.getAttribute('data-gloss'));
+        if (entry) setTimeout(() => entry.scrollIntoView({ behavior: 'smooth', block: 'center' }), 120);
+      });
+    });
+  }
+  open() { if (this.overlay) this.overlay.classList.add('visible'); }
+  close() { if (this.overlay) this.overlay.classList.remove('visible'); }
+  toggle() { this.overlay && this.overlay.classList.toggle('visible'); }
+}
+
+/* ═══════════════ Tabs ═══════════════ */
+
+function initTabs() {
+  document.querySelectorAll('.tabs').forEach(tabs => {
+    const buttons = tabs.querySelectorAll('.tabbar [role="tab"]');
+    const panels = tabs.querySelectorAll('.tabpanel');
+    buttons.forEach(btn => btn.addEventListener('click', () => {
+      buttons.forEach(b => b.setAttribute('aria-selected', b === btn ? 'true' : 'false'));
+      panels.forEach(p => { p.hidden = p.getAttribute('data-panel') !== btn.getAttribute('data-tab'); });
+    }));
+  });
+}
+
+/* ═══════════════ Theme toggle ═══════════════ */
+
+function initThemeToggle() {
+  const sidebar = document.getElementById('sidebar');
+  if (!sidebar) return;
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  btn.id = 'theme-btn';
+  btn.style.cssText = 'margin-top:0.5rem;width:100%;appearance:none;border:1px solid var(--hairline);background:var(--surface-2);color:var(--ink-2);border-radius:8px;padding:0.4rem 0.6rem;font:620 0.8rem/1.4 inherit;cursor:pointer;';
+  const states = ['auto', 'dark', 'light'];
+  let i = 0;
+  try { i = Math.max(0, states.indexOf(localStorage.getItem('explainer-theme') || 'auto')); } catch (e) {}
+  const apply = () => {
+    const s = states[i];
+    if (s === 'auto') document.documentElement.removeAttribute('data-theme');
+    else document.documentElement.setAttribute('data-theme', s);
+    btn.textContent = 'Theme: ' + s;
+    try { localStorage.setItem('explainer-theme', s); } catch (e) {}
+  };
+  btn.addEventListener('click', () => { i = (i + 1) % states.length; apply(); });
+  apply();
+  sidebar.appendChild(btn);
+}
+
+/* ═══════════════ init ═══════════════ */
+
+document.addEventListener('DOMContentLoaded', () => {
+  renderStageStrip();
+
+  // Main mini-DAG with zoom/pan, trace, and a detail panel
+  const detail = document.getElementById('minidag-detail');
+  const dag = renderDag('minidag', DAG_MODULES, DAG_EDGES, {
+    ariaLabel: 'LCOE path through the solar-battery module graph',
+    onSelect: m => {
+      if (!detail) return;
+      detail.style.display = 'block';
+      detail.innerHTML =
+        `<strong>${m.short}</strong> · <span style="letter-spacing:0.04em">${m.kind}</span>` +
+        (m.eqn ? ` · module <code>${m.eqn}</code>` : '') +
+        (m.elided ? ` · rolls up ${m.elided} elided CALCULATION modules` : '');
+    }
+  });
+  if (dag) {
+    const host = document.getElementById('minidag');
+    new ZoomPanController(host, dag.svg);
+    const doTrace = () => {
+      const { moduleIds, edgeIndices } = traceUpstream('lcoe', DAG_EDGES);
+      dag.svg.querySelectorAll('[data-module-id]').forEach(el => {
+        el.classList.toggle('anim-dim', !moduleIds.has(el.getAttribute('data-module-id')));
+      });
+      dag.edgeEls.forEach((el, i) => {
+        el.classList.toggle('anim-dim', !edgeIndices.has(i));
+        el.setAttribute('marker-end', edgeIndices.has(i) ? 'url(#dagArrowHl)' : 'url(#dagArrow)');
+        el.style.stroke = edgeIndices.has(i) ? 'var(--accent)' : 'var(--ink-muted)';
+        el.style.strokeWidth = edgeIndices.has(i) ? '2' : '1.4';
+      });
+    };
+    const clearTrace = () => {
+      dag.svg.querySelectorAll('.anim-dim').forEach(el => el.classList.remove('anim-dim'));
+      dag.edgeEls.forEach(el => {
+        el.setAttribute('marker-end', 'url(#dagArrow)');
+        el.style.stroke = 'var(--ink-muted)';
+        el.style.strokeWidth = '1.4';
+      });
+    };
+    const tBtn = document.getElementById('trace-lcoe-btn');
+    const cBtn = document.getElementById('trace-clear-btn');
+    if (tBtn) tBtn.addEventListener('click', doTrace);
+    if (cBtn) cBtn.addEventListener('click', clearTrace);
+  }
+
+  // Constraint schematic DAG (static, no zoom)
+  renderDag('constraint-dag', CDAG_MODULES, CDAG_EDGES, {
+    tierWidth: 236,
+    ariaLabel: 'wi014_toy graph with a lowered constraint and its report aggregator'
+  });
+
+  initTabs();
+  initThemeToggle();
+  new NavigationController();
+  new GlossaryController();
+});
+</script>
+</body>
+</html>
