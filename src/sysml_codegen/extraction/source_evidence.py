@@ -154,13 +154,16 @@ def screen_source_readiness(calc_usages: list) -> list[ReadinessFinding]:
 
     Pure classification over the immutable evidence — it reads no names, no
     current values, and no consumer-owner scopes, and it does not alter any
-    binding. Findings are deterministic: sorted by usage, parameter, then code.
-    Bindings without evidence (snapshot-loaded data has none) are skipped.
+    binding. It screens exactly the population it is given: whether template
+    declarations belong in that population is the caller's policy (the legacy
+    front end screens the expanded population, which has none; the elaborator
+    screens declarations, templates included, because every occurrence inherits
+    a declaration's form defect). Findings are deterministic: sorted by usage,
+    parameter, then code. Bindings without evidence (snapshot-loaded data has
+    none) are skipped.
     """
     findings: list[ReadinessFinding] = []
     for usage in calc_usages:
-        if getattr(usage, "is_template", False):
-            continue
         for binding in usage.bindings:
             evidence = getattr(binding, "reference_evidence", None)
             if evidence is None:

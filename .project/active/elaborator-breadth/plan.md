@@ -16,10 +16,10 @@ authoritative and untouched throughout.
 ## Phases
 
 ### Phase 1 — Package seed + spike parity
-- [ ] `elaboration/graph.py` + `elaborate.py` per design D1–D5 (AST-walked calc/constraint
+- [x] `elaboration/graph.py` + `elaborate.py` per design D1–D5 (AST-walked calc/constraint
       population per D2 — NOT the extractor's expanded population; factor the per-binding
       evidence builders out of `usage_extractor` so both front ends share them).
-- [ ] Port spike probes 1/2/4 as kept conformance tests (licensed) — spike parity is the
+- [x] Port spike probes 1/2/4 as kept conformance tests (licensed) — spike parity is the
       Phase-1 gate: C25/C8/C24/C19/self-binding/deep-path/Bank/node-ID checks all green.
 
 ### Phase 2 — Shape learning tests (each BEFORE its implementation; kept, licensed)
@@ -49,3 +49,70 @@ authoritative and untouched throughout.
 disposition silently.
 
 **Owner checkpoint:** the classified diff ledger, before Item 6 cutover.
+
+## Implementation Notes
+
+### Phase 1 Completion
+**Completed:** 2026-08-07
+
+**Changes made:**
+- Created `src/sysml_codegen/extraction/binding_evidence.py` — the five per-binding
+  evidence builders + CST written-form helpers moved out of `usage_extractor.py`
+  with public names (`chain_evidence`, `reference_evidence`, `literal_evidence`,
+  `expression_evidence`, `bound_formal_facts`, `written_qualifier`,
+  `written_reference_text`, `WRITTEN_UNKNOWN`); `usage_extractor` call sites updated
+  (no other importers existed).
+- `screen_source_readiness` (`source_evidence.py`) no longer skips templates: the
+  filter was caller policy and no caller passed templates. The elaborator screens
+  declarations templates-included — fusion_tea's `in gain = gain` lives in
+  `part def 'IFE Power Plant'`, so the template skip would have hidden it from the
+  unexpanded population D2 mandates.
+- Created `src/sysml_codegen/elaboration/{__init__,graph,elaborate}.py`.
+  `graph.py`: `InstanceGraph`, `AttrNode`, `CalcNode`, `ConstraintNode`, typed input
+  refs (`NodeRef`/`ProducerRef`/`LiteralInput`), `ValueSite`, `ElaborationCode` +
+  `Diagnostic`. `elaborate.py`: `elaborate(model, calc_defs)`, the one pass per
+  D2–D5 with the def-context remap rule shared by override anchoring and
+  calc/constraint placement.
+- Created `tests/conformance/test_elaboration_spike_parity.py` (16 licensed tests):
+  all probe-1/2/4 checks green — C25 collapse + 2-consumer count, C8, C24
+  ProducerRef, C12/C13/C15, stamp-vs-authored-literal, C11 calc+constraint
+  convergence, deep-path 43.0, C19 80.0 both paths, fusion_tea SI_SELF_BINDING,
+  Bank cells, node-ID/edge/value stability across independent loads.
+- Registered `_constraint_actuals` as an audited FCE+OE dispatch site in
+  `test_ast_dispatch_invariant.py` (dual-check 3→4, multi-type 5→6, elif-ordering +
+  invariant-comment checks now cover it).
+
+**Deviations from prototype (deliberate, production-shaped):**
+- Two-pass node build then binding resolution: the spike resolved while creating
+  nodes, so a chain into a producer (C24) only resolved because of AST iteration
+  order luck. All calc/constraint nodes now exist before any binding resolves.
+- Calc population per D2: `extract_calculation_usages(expand_templates=False)` +
+  the remap rule places templates AND def-nested-usage calcs (the spike consumed
+  the legacy expansion, rejected by D10). Node created only where the parent path
+  is a concrete occurrence; a declaration with no occurrence context logs a
+  warning (no corpus fixture has package-level calc usages — verified against all
+  37 snapshots).
+- Heritage walk for definition attributes follows `Subclassification` into USER
+  part defs only — following implicit specialization into the standard library
+  minted `Part::isSolid` nodes (43 attrs vs the spike's 20; caught by probe,
+  fixed, exact 20/12/5 parity restored).
+- `default`-keyword values extract via the default-membership surface
+  (`owned_memberships.is_default`), which `feature_value_expression` alone can
+  miss — same dual surface as `SysMLDataExtractor._extract_default_value`.
+  Probed live: `default 1.0/5.0/0.9` all captured.
+- Constraint actuals ride the SAME factored evidence builders and resolution
+  rules as calc bindings (D7); unsupported forms (self-binding/indexed/
+  expression) hard-fail with contract codes at resolution (spec R3), misses are
+  named diagnostics (`SI_OCCURRENCE_MISSING`/`SI_OCCURRENCE_AMBIGUOUS`), never
+  fallback inputs.
+
+**Known scope holds (phase-planned, not gaps):**
+- EXPRESSION-redefined attrs (station_total etc.) are value-less nodes — computed
+  nodes are D6, Phase 2.
+- Multi-level specialized-def `:>>` literal shadowing (innermost def wins within
+  tier 2) is not ordered yet — the Phase-2 spec-chain leg; no Phase-1 fixture
+  authors it.
+
+**Gates at completion:** full licensed suite 3172 passed / 47 skipped / 18
+deselected, zero `no live syside license` skip lines; ruff clean; mypy at the
+72-error baseline (zero new); no fixture/baseline/snapshot changes.

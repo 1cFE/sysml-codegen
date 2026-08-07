@@ -1,6 +1,6 @@
 # Current Work
 
-**Last Updated**: 2026-08-07 (ELABORATE-FIRST Items 1–2 complete; next: Item 3 elaborator spike)
+**Last Updated**: 2026-08-07 (ELABORATE-FIRST Items 1–4 complete + Item 5 Phase 1 done; next: Item 5 Phase 2 shape learning tests)
 
 ---
 
@@ -49,11 +49,18 @@ the ~3,450-line string-compensation machinery deleted at cutover, not wrapped).
   redefinitions, constraint lowering adapted to node edges, deletion ledger attached. The
   multi-occurrence-default question is answered by the contract's ratified 2026-08-05 rule
   (distinct occurrences = distinct sources) — cited, not re-asked.
-- **Next: ELABORATE-FIRST Item 5** — plan seeded at `.project/active/elaborator-breadth/plan.md`
-  (Phase 1: production `elaboration/` package + spike-parity conformance tests; Phase 2:
-  per-shape learning tests BEFORE implementation; Phase 3: dual-run diff over all 37 fixtures,
-  29-cell matrix as the checklist, owner checkpoint on the classified ledger before Item-6
-  cutover).
+- **ELABORATE-FIRST Item 5 Phase 1 DONE 2026-08-07** (`.project/active/elaborator-breadth/plan.md`
+  has full notes): production `src/sysml_codegen/elaboration/` landed (graph.py + elaborate.py,
+  D1–D5; AST-walked calc/constraint population with `expand_templates=False` + the def-context
+  remap rule — D10's rejected shortcut avoided); per-binding evidence builders factored to
+  `extraction/binding_evidence.py` (shared by both front ends); `screen_source_readiness`
+  template-skip moved to caller policy (elaborator screens declarations, templates included —
+  that's where fusion_tea's self-binding lives). Spike parity gate GREEN: 16 kept licensed tests
+  in `tests/conformance/test_elaboration_spike_parity.py` (C25/C8/C24/C12/C13/C15/stamp/C11/
+  deep-path/C19/self-binding/Bank/node-ID stability). `_constraint_actuals` registered in the
+  AST-dispatch guardrail (4 dual-check / 6 multi-type sites). Gates: 3172/47/18 licensed (zero
+  license-skip lines), ruff clean, mypy 72-baseline, no fixture churn. **Next: Phase 2 — shape
+  learning tests, each BEFORE its implementation** (first leg: cross-package / multi-hop EXPOSE).
 
 ### 2026-08-07: SOURCE-IDENTITY Item 4 — architecture recovery assessment
 
