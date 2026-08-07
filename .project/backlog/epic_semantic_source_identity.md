@@ -1,10 +1,25 @@
 # Epic: One Modeled Value, One Runtime Source
 
 **Epic ID**: SOURCE-IDENTITY
-**Status**: Ready
+**Status**: Superseded in part (2026-08-07) — Items 4–5 superseded by
+[ELABORATE-FIRST](epic_elaborate_first_architecture.md); Items 1–3 complete and inherited as the
+semantic authority; Items 6–8 intent absorbed into ELABORATE-FIRST Items 6–7
 **Priority**: Critical (P0 for study releases)
 **Created**: 2026-08-03
 **Estimated Effort**: 3–5 weeks (16–26 engineering days; re-estimate after spikes)
+
+---
+
+> **Supersession record (2026-08-07).** The Item-4/Item-5 architecture — a production identity
+> manifest running beside the legacy string resolver that ignored it by design — was stopped after
+> Item-4 phases 1–2. Diagnosis:
+> [recovery assessment](../research/20260807-143615_source-identity-recovery-assessment.md);
+> ratified replacement direction:
+> [elaborate-first architecture](../research/20260807-145336_elaborate-first-instance-graph-architecture.md).
+> Plan of record: [ELABORATE-FIRST epic](epic_elaborate_first_architecture.md). Items 1–3 (spike
+> evidence and the ratified source-identity contract, 29-cell matrix) remain the semantic authority,
+> inherited unchanged. The stopped work is preserved on branches `item4-phases12-forensic`
+> (sysml-codegen `69eef3b`, agentic-mbse `9724f1d`); salvage lands via ELABORATE-FIRST Item 2.
 
 ---
 
@@ -601,7 +616,11 @@ authority-chain audit, and owner-ratification checkpoint are complete.
 
 ---
 
-#### Item 4: Semantic Identity and Occurrence Foundation (3–4 days)
+#### Item 4: Semantic Identity and Occurrence Foundation (4–5 days) — ⛔ SUPERSEDED
+
+> Superseded 2026-08-07 — see the supersession record at the top of this epic. Phases 1–2 are
+> frozen on `item4-phases12-forensic`; extraction evidence, index queries, fixtures, and red tests
+> are salvaged via ELABORATE-FIRST Item 2.
 
 **Type**: Code / Integration
 
@@ -627,29 +646,42 @@ that survives live extraction and snapshot replay before consumer resolution beg
    - Reuse the existing occurrence index and landed Item-10 redefinition machinery.
    - Absorb `[NESTED-OCCURRENCE-OVERRIDE]` so definition-relative captures resolve against
      occurrence-relative demands for both calculations and constraints.
-   - Sequence with `[CONSTRAINT-ARCH-UNIFY]` sub-scope 2; consolidate only the portion required to
-     prevent a second bridge or walker authority.
+   - Share the existing occurrence-to-definition bridge and introduce no parallel bridge or
+     part-structure walker. General walker consolidation remains with `[CONSTRAINT-ARCH-UNIFY]`
+     sub-scope 2.
 3. **Live/snapshot transport**:
    - Carry the chosen identity and occurrence evidence identically through live and relocated
      snapshot routes.
-   - Bump the snapshot format/version with fail-closed old-version behavior and an explicit
-     migration/recapture plan; update graph rebuild for the new evidence and do not add a silent
-     compatibility shim.
+   - Bump the snapshot format/version with fail-closed old-version behavior; update capture and
+     graph rebuild for the new evidence and do not add a silent compatibility shim.
+   - Atomically recapture all 37 committed extraction snapshots with the format cutover so the
+     single-version loader and maintained snapshot gate remain green. Item 4 reviews the recapture
+     for schema/identity correctness, live/relocated parity, and unrelated capture drift. Item 6
+     later certifies final per-source public topology after the Item-5 cutover and reviews downstream
+     artifacts. **[AGENT] (ratified by owner, 2026-08-07):** this corrects the earlier Item-6
+     sequencing, which would have left Items 4 and 5 unable to pass the repository's
+     snapshot-version gate.
 4. **Foundation tests**:
    - Pin nested/flat siblings, multiple occurrences with different supplied values, specialization,
      per-child redefinitions, cycles/cardinality errors, and moved snapshot identity.
-   - Realize the exact blocked coordinates for C24's direct calculation output, C25's mixed
-     binding-owner contexts, and the C17/C26 aggregation producer-versus-public-input topology.
+   - Realize the exact blocked coordinates for C24's direct calculation output and C25's mixed
+     binding-owner contexts. Preserve C17 as the correct aggregation producer control. For C14 and
+     C26, prove the canonical pre-resolution identity and retain an explicit current-defect pin;
+     Item 5 reroutes synthesis and flips the public-topology expectation.
 5. **Authoring validation**:
    - Update `agentic-mbse` validation so a consumed source-self-bound calculation input fails even
      when a same-named outer feature exists; remove the current rescue-aware exemption and reverse
      its wrong-oracle tests.
    - Reject indexed value expressions at the codegen-readiness boundary when source feature identity
      is required, with a distinct diagnostic and no flattened-path fallback.
+   - This cross-repository validation leg may phase independently. Only the codegen snapshot
+     format/capture/rebuild/37-snapshot migration is one atomic unit; Item 4 is complete when both
+     legs are certified. **[AGENT] (ratified by owner, 2026-08-07).**
 
 **Out of Scope**:
 - VBR/materialization/backtracking cutover; Item 5 consumes this foundation.
-- Whole-corpus recapture and generated-package migration; Item 6 owns them.
+- Final post-cutover per-source public-topology certification and graph-baseline/generated-package
+  migration; Item 6 owns those reviewed downstream changes.
 - The remaining `[CONSTRAINT-ARCH-UNIFY]` sub-scopes unrelated to source occurrence identity.
 
 **Success Criteria**:
@@ -659,14 +691,16 @@ that survives live extraction and snapshot replay before consumer resolution beg
   goes silent, and its flat sibling retains the same semantics.
 - [ ] Two occurrences of one declaration remain distinct when the model supplies distinct values;
   consumers of one occurrence still converge.
-- [ ] No second occurrence→definition bridge, instance walker authority, or consumer-specific source
-  identity exists.
-- [ ] Snapshot versioning and recapture obligations match the Item-2 verdict and fail closed on
-  incompatible evidence.
-- [ ] Focused unit/conformance tests and maintained lint/type gates pass with no unreviewed output
-  changes.
+- [ ] The absorbed repair shares the existing occurrence→definition bridge and introduces no
+  parallel bridge, instance walker authority, or consumer-specific source identity.
+- [ ] Snapshot versioning and graph rebuild match the Item-2 verdict, all 37 extraction snapshots
+  are recaptured atomically, incompatible evidence fails closed, and the recapture is reviewed for
+  schema/identity correctness, route parity, and unrelated capture drift.
+- [ ] Focused unit/conformance tests and maintained lint/type gates pass. Graph baselines, parameter
+  schemas, and generated-package outputs remain unchanged unless an explicit foundation change is
+  separately reviewed.
 
-**Estimated Effort**: 3–4 days (spec 2h, design 4h, plan 2h, execute/validate 16–24h)
+**Estimated Effort**: 4–5 days (spec 2h, design 4h, plan 2h, execute/validate 20–30h)
 
 **Location**: `.project/active/source-identity-occurrence-foundation/`
 
@@ -684,11 +718,14 @@ that survives live extraction and snapshot replay before consumer resolution beg
 - `.project/active/source-identity-occurrence-foundation/plan.md`
 - `.project/active/source-identity-occurrence-foundation/evidence.md`
 - Production identity/occurrence implementation and focused tests.
-- Snapshot schema/version and migration artifacts required by Item 2's verdict.
+- Snapshot schema/version, capture/rebuild changes, and all 37 recaptured extraction snapshots
+  required by Item 2's verdict, with Item-4 migration-review evidence.
 
 ---
 
-#### Item 5: Unified Materialization and Backtracking Cutover (3–5 days)
+#### Item 5: Unified Materialization and Backtracking Cutover (3–5 days) — ⛔ SUPERSEDED
+
+> Superseded 2026-08-07 — see the supersession record at the top of this epic.
 
 **Type**: Code / Integration
 
@@ -729,7 +766,8 @@ semantic source identity and remove consumer-local fan-out behavior.
      multi-consumer mixed types, and off-default mutation.
 
 **Out of Scope**:
-- Bulk snapshot/baseline/package migration; Item 6 owns reviewed forced changes.
+- Final per-source public-topology certification of the Item-4 extraction-snapshot recapture and
+  migration of graph baselines or generated packages; Item 6 owns those reviewed forced changes.
 - Downstream study/store migration; Item 7 owns it.
 - A key-dedup pass that does not repair upstream provenance.
 
@@ -768,7 +806,10 @@ semantic source identity and remove consumer-local fan-out behavior.
 
 ---
 
-#### Item 6: Semantic Corpus Migration and Public Acceptance (2–4 days)
+#### Item 6: Semantic Corpus Migration and Public Acceptance (2–4 days) — absorbed
+
+> Absorbed 2026-08-07 into ELABORATE-FIRST Items 5–6 (the dual-run diff ledger there produces this
+> item's semantic-diff ledger).
 
 **Type**: Testing / Integration
 
@@ -792,8 +833,10 @@ artifact change under a source-identity review rather than byte-preservation ass
    - Derive expected source topology from fixtures/contract, never from generated key populations or
      the resolver under test.
 3. **Reviewed artifact migration**:
-   - Recapture snapshots, graph baselines, parameter schemas, contracts, and generated packages only
-     after producing a per-source semantic diff ledger.
+   - Audit Item 4's atomic 37-snapshot format recapture against a per-source semantic diff ledger;
+     reject unrelated capture drift rather than recapturing again.
+   - Migrate graph baselines, parameter schemas, contracts, and generated packages only after
+     producing the corresponding per-source semantic diff ledger.
    - Separate forced semantic changes from unrelated capture drift and stale-baseline debt.
 4. **Customer and regression acceptance**:
    - Keep the exact customer composition on live and relocated-snapshot routes with topology plus
@@ -847,7 +890,9 @@ artifact change under a source-identity review rather than byte-preservation ass
 
 ---
 
-#### Item 7: Downstream Study and Consumer Remediation (2–4 days)
+#### Item 7: Downstream Study and Consumer Remediation (2–4 days) — absorbed
+
+> Absorbed 2026-08-07 into ELABORATE-FIRST Item 7.
 
 **Type**: Integration / Research
 
@@ -925,7 +970,9 @@ without preserving fan-out through adapters or silently reusing incompatible lin
 
 ---
 
-#### Item 8: Certification Repair and Composed Source-Identity Proof (2–3 days)
+#### Item 8: Certification Repair and Composed Source-Identity Proof (2–3 days) — absorbed
+
+> Absorbed 2026-08-07 into ELABORATE-FIRST Item 7.
 
 **Type**: Testing / Documentation
 
@@ -1088,7 +1135,7 @@ remain dependent on Items 6 and 7.
 | 1. Binding Semantics and Authoring-Form Spike | 1–2 days | None |
 | 2. Source-Identity Routes and Evidence-Sufficiency Spike | 2–3 days | None to start; Item 1 to close |
 | 3. Authoritative Source-Identity Contract | 1 day | Items 1–2; owner checkpoint complete |
-| 4. Semantic Identity and Occurrence Foundation | 3–4 days | Item 3 |
+| 4. Semantic Identity and Occurrence Foundation | 4–5 days | Item 3 |
 | 5. Unified Materialization and Backtracking Cutover | 3–5 days | Item 4 |
 | 6. Semantic Corpus Migration and Public Acceptance | 2–4 days | Item 5 |
 | 7. Downstream Study and Consumer Remediation | 2–4 days | Item 6 |
@@ -1111,6 +1158,5 @@ remain dependent on Items 6 and 7.
 
 ---
 
-**Last Updated**: 2026-08-07
-**Next Action**: Item 3 is complete. Specify Item 4, then implement the semantic-identity and
-occurrence foundation against the ratified contract.
+**Last Updated**: 2026-08-07 (supersession record added)
+**Next Action**: None here — active work continues in `epic_elaborate_first_architecture.md`.
