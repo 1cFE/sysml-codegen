@@ -58,9 +58,16 @@ the ~3,450-line string-compensation machinery deleted at cutover, not wrapped).
   that's where fusion_tea's self-binding lives). Spike parity gate GREEN: 16 kept licensed tests
   in `tests/conformance/test_elaboration_spike_parity.py` (C25/C8/C24/C12/C13/C15/stamp/C11/
   deep-path/C19/self-binding/Bank/node-ID stability). `_constraint_actuals` registered in the
-  AST-dispatch guardrail (4 dual-check / 6 multi-type sites). Gates: 3172/47/18 licensed (zero
-  license-skip lines), ruff clean, mypy 72-baseline, no fixture churn. **Next: Phase 2 — shape
-  learning tests, each BEFORE its implementation** (first leg: cross-package / multi-hop EXPOSE).
+  AST-dispatch guardrail (4 dual-check / 6 multi-type sites). Committed `f8870a7`.
+- **Item 5 Phase 2 leg 1 (cross-package / multi-hop EXPOSE) DONE 2026-08-07**: learning test +
+  implementation in one leg. Discoveries: real plant models are untyped-part-based (all 42
+  catf_mfe calcs), EXPOSE = alias edge, and **catf_mfe authors a real SRC-01 self-binding**
+  (`vacuum.sysml:176`) — forced the D9 `strict` halt-vs-report switch early (lenient records
+  findings, skips only offending bindings; Phase 3's grind needs it). 15 kept tests
+  (`test_elaboration_expose_shapes.py`); findings
+  `.project/research/20260807-163643_elaborator-crosspackage-expose-shapes.md`. Gates:
+  3187/47/18 licensed (zero skip lines), ruff clean, mypy 72-baseline, no fixture churn.
+  **Next: Phase 2 leg 2 — sibling same-name channels (sibling_channel_ambiguity).**
 
 ### 2026-08-07: SOURCE-IDENTITY Item 4 — architecture recovery assessment
 

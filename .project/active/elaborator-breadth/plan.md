@@ -23,7 +23,14 @@ authoritative and untouched throughout.
       Phase-1 gate: C25/C8/C24/C19/self-binding/deep-path/Bank/node-ID checks all green.
 
 ### Phase 2 — Shape learning tests (each BEFORE its implementation; kept, licensed)
-- [ ] Cross-package / multi-hop EXPOSE (wi014_toy, catf_mfe shapes)
+- [x] Cross-package / multi-hop EXPOSE (wi014_toy, catf_mfe shapes) — DONE 2026-08-07.
+      Findings: `.project/research/20260807-163643_elaborator-crosspackage-expose-shapes.md`;
+      15 kept tests in `tests/conformance/test_elaboration_expose_shapes.py`. Landed:
+      untyped-part contexts, usage/package attr nodes, package-level calc placement,
+      sibling-calc + off-ancestor chain anchors, EXPOSE alias edges with transitive
+      follow-through, and the D9 `strict` halt-vs-report switch (forced early: catf_mfe
+      itself authors a real SRC-01 self-binding, `vacuum.sysml:176` — strict rejects it,
+      pinned; lenient records + skips only that binding, which Phase 3's grind requires).
 - [ ] Sibling same-name channels (sibling_channel_ambiguity)
 - [ ] Specialization + usage-level retypes, two-level (spec_chain_twolevel, fusion_tea driver)
 - [ ] FORMULA computed attributes incl. FORMULA→FORMULA (previously unsupported — expected to

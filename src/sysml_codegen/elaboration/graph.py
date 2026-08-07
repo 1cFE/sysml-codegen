@@ -17,6 +17,8 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from enum import Enum
 
+from sysml_codegen.extraction.source_evidence import ReadinessCode
+
 __all__ = [
     "AttrNode",
     "CalcNode",
@@ -63,9 +65,16 @@ class ElaborationCode(str, Enum):
 
 @dataclass(frozen=True)
 class Diagnostic:
-    """One named elaboration finding. Never a fallback input (design D5)."""
+    """One named elaboration finding. Never a fallback input (design D5).
 
-    code: ElaborationCode
+    ``code`` is an occurrence-level :class:`ElaborationCode`, or — in lenient
+    (report-not-halt) elaboration only — one of the contract's form codes
+    (:class:`ReadinessCode`) that strict mode raises as
+    :class:`~sysml_codegen.elaboration.elaborate.ElaborationError`. Strict vs
+    lenient changes halt-vs-report, never identity (design D9).
+    """
+
+    code: ElaborationCode | ReadinessCode
     consumer: str
     param_name: str | None
     detail: str
@@ -101,10 +110,16 @@ class AttrNode:
     """One attribute occurrence: ``{occurrence_path}__{attr_name}``.
 
     ``decl_qn`` is the declaring ``AttributeUsage``'s raw ``::`` qualified name
-    (the definition-level declaration, possibly inherited). ``value`` is the
-    effective literal after tiering; ``None`` with ``value_site == NONE`` means
-    no modeled value supplies this node (an entry-point candidate at
-    projection).
+    (definition-declared and possibly inherited, or declared on the part usage
+    itself). ``value`` is the effective literal after tiering; ``None`` with
+    ``value_site == NONE`` and no alias means no modeled value supplies this
+    node (an entry-point candidate at projection).
+
+    ``alias_target`` is the EXPOSE edge: an attribute whose declared value is a
+    pure feature chain (``attribute pump_power = pump_load.pump_power``) does
+    not hold a value — it aliases the chain's target, resolved per occurrence.
+    Consumers reading such a node follow the alias to the real source, so the
+    exposed attribute never mints an input of its own (spec R2).
     """
 
     node_id: str
@@ -113,6 +128,7 @@ class AttrNode:
     decl_qn: str
     value: float | int | str | bool | None = None
     value_site: ValueSite = ValueSite.NONE
+    alias_target: InputRef | None = None
 
 
 @dataclass
