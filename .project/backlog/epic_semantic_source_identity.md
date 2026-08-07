@@ -83,11 +83,13 @@ semantically invalid binding fails loudly before package generation.
   consumer-local parameter.
 - Evidence-producing spikes establish SysML/SysIDE referent behavior, supported authoring forms,
   current live/snapshot route behavior, and the full affected corpus before the repair is designed.
-  The owner then dispositions every authoring-form class in the resulting table, including bare,
-  qualified, chained, and occurrence-indexed forms. No agent silently expands or narrows support.
-- Those dispositions amend the ratified lifecycle contract, its companion requirements spec, and the
-  contract's correction register before fix design is approved. README, architecture, matrix, and
-  acceptance claims derive from that authority instead of becoming an independent semantics layer.
+  The decision checkpoint then dispositions every authoring-form class in the resulting table,
+  including bare, qualified, chained, and occurrence-indexed forms. Owner-originated rulings and
+  ratified agent recommendations retain their distinct provenance grades.
+- Those dispositions amend the ratified lifecycle contract, its durable companion requirements
+  copy, and the contract's correction register before fix design is approved. The archived
+  companion remains untouched. README, architecture, matrix, and acceptance claims derive from
+  that authority instead of becoming an independent semantics layer.
 - Calculation, constraint, aggregation, occurrence-override, live, and snapshot routes enforce the
   same source identity. Strictness may change the terminal error policy; it does not change which
   modeled value a binding means. Unsupported shapes fail with an actionable diagnostic.
@@ -117,15 +119,15 @@ semantically invalid binding fails loudly before package generation.
   count, live and relocated-snapshot routes, and off-default mutation result; (d) whether written
   reference plus occurrence-owner evidence is sufficient to recover exact source identity, or
   extraction must emit an explicit semantic source ID with the resulting snapshot-schema/version and
-  corpus-recapture impact; and (e) an owner disposition for every supported or rejected
+  corpus-recapture impact; and (e) a provenance-graded disposition for every supported or rejected
   authoring-form class found by the matrix.
-- [ ] **[AGENT] Authority-chain gate:** Before fix design is approved, the owner dispositions and
+- [ ] **[AGENT] Authority-chain gate:** Before fix design is approved, the checkpoint dispositions and
   resolved source-identity semantics are recorded in the
   [ratified lifecycle contract](../concepts/constraint-execution-authoritative-lifecycle-contract.md),
-  its [companion requirements spec](../completed/20260720_constraint-execution-lifecycle-contract/spec.md),
+  its [durable companion requirements](../concepts/constraint-execution-lifecycle-requirements.md),
   and the contract's correction register. Superseded readings of invariants 19, 20, 22, and 26 are
-  named explicitly; this epic, downstream docs, and implementation artifacts do not become competing
-  semantic authorities.
+  named explicitly; the archived companion remains untouched; this epic, downstream docs, and
+  implementation artifacts do not become competing semantic authorities.
 - [ ] **[AGENT] Seam-ownership gate:** This epic absorbs the remaining
   `[NESTED-OCCURRENCE-OVERRIDE]` fix as a required source-identity cell, reuses and audits the landed
   Lifecycle Item-10 per-child redefinition/producer-routing machinery, and explicitly sequences its
@@ -243,28 +245,36 @@ reveals a new source-identity authority or an unapproved authoring-form semantic
   `shared_producer`, and `solar_battery_model`. The defect is a pipeline semantic preserved across
   routes, not snapshot-only drift.
 
-### Current direction — not yet authoritative
+### Item-3 decisions and technical direction
 
-These are **[AGENT]** recommendations. Item 2's technical evidence, licensed parity, and joint
-synthesis now support them; the aggregation-family disposition remains owner-held before Item 2 can
-close. Item 3 must obtain the remaining semantic dispositions and record them in the ratified
-authority.
+Provenance remains exact below: owner-originated rulings are owner-grade; approved technical
+recommendations remain agent-grade with their ratification date. Item 3 records these decisions in
+the authoritative lifecycle contract and durable companion requirements copy.
 
-1. Adopt an extraction-owned semantic source ID built from SysIDE referent/redefinition evidence.
-   Written-reference reconstruction remains useful diagnostic provenance, not the identity authority.
-2. Treat the source-ID change as a snapshot schema/version migration: update capture and rebuild
-   together, fail closed on insufficient historical evidence, and recapture the 37-fixture corpus.
-3. Reject bare self-named bindings loudly as unsupported for executable generation rather than
-   assigning them a non-normative outer-reference meaning. For a concrete `:>>` value, prefer an
-   occurrence-qualified feature chain as the migration target; retain definition-qualified syntax
-   only with its distinct, explicitly supported semantics.
-4. Defer `#(i)` executable support until index identity is modeled end to end, and reject `[i]` with
-   the language/load diagnostic. Both have zero current migration cost.
-5. Absorb the queued producer-channel/aggregation-scoping finding into this semantic family unless
-   Item 2's live evidence disproves the shared terminal-mint mechanism.
-6. Put the parameter-group backfill on Item 5's deletion/consolidation register. One semantic source
-   authority must choose both identity and modeled default; a separate value repair may not make a
-   wrong identity appear correct.
+1. **[AGENT]** Adopt an extraction-owned semantic source ID built from SysIDE
+   referent/redefinition evidence. Written-reference reconstruction remains useful diagnostic
+   provenance, not the identity authority.
+2. **[AGENT]** Treat the source-ID change as a snapshot schema/version migration: update capture and
+   rebuild together, fail closed on insufficient historical evidence, and recapture the 37-fixture
+   corpus.
+3. **[OWNER-VERBATIM]** “Never reinterpret a self-binding as an outer reference.”
+   **[AGENT] (ratified by owner, 2026-08-05)** Honor the referent SysIDE/KerML supplies and support
+   both valid forms with their distinct semantics: owner-qualified references identify the
+   definition feature; occurrence-rooted chains identify the occurrence-level feature. Do not make
+   either form a universal textual rewrite for the other.
+4. **[AGENT] (ratified by owner, 2026-08-05)** Classify `#(i)` as unsupported for source-bearing
+   calculation bindings in this epic. It must fail with a named diagnostic rather than lose or
+   reinterpret the index. `[i]` retains the language/load diagnostic because it is not indexing.
+5. **[AGENT] (ratified by owner, 2026-08-05)** Absorb the queued
+   producer-channel/aggregation-scoping finding into this semantic family. Calculation, constraint,
+   and aggregation consumers share the same source-identity contract.
+6. **[AGENT]** Put the parameter-group backfill on Item 5's deletion/consolidation register. One
+   semantic source authority must choose both identity and modeled default; a separate value repair
+   may not make a wrong identity appear correct.
+7. **[OWNER-VERBATIM]** “we MUST document allowable patterns in our `agentic-mbse` docs as well.
+   This is a "how do you model correctly" quesiton, not a "what should sysml-codegen do"
+   question...” Item 3 defines the guidance contract; Item 8 publishes the cross-repository
+   modeling guidance.
 
 Primary evidence:
 
@@ -314,7 +324,7 @@ reports, without designing or implementing a repair.
 
 **Out of Scope**:
 - Production code, generated baseline, snapshot-schema, or model-corpus changes.
-- Owner dispositions; Item 3 owns the authoritative decision.
+- Decision-checkpoint dispositions; Item 3 owns the authoritative record.
 - A consumer-side workaround or a proposal to synchronize duplicate fields.
 
 **Success Criteria**:
@@ -323,7 +333,7 @@ reports, without designing or implementing a repair.
   concrete occurrence; no field is inferred from the implementation under test.
 - [x] Standards conclusions cite primary normative text and identify any remaining ambiguity plainly.
 - [x] Corpus prevalence and migration implications are recorded for each form.
-- [x] The findings contain no fix design and are sufficient for the Item-3 owner disposition.
+- [x] The findings contain no fix design and are sufficient for the Item-3 decision checkpoint.
 
 **Estimated Effort**: 1–2 days (spec 1h, design 1h, plan 1h, execute/findings 5–12h)
 
@@ -366,8 +376,7 @@ findings: `.project/active/source-identity-binding-semantics-spike/findings.md`.
 
 **Type**: Research / Learning Tests
 
-**Status**: In Progress — technical evidence, joint synthesis, and licensed parity complete; owner
-aggregation-family disposition remains
+**Status**: Complete — 2026-08-05
 
 **Objective**: Map where semantic identity survives or is lost, determine the minimum sufficient
 source evidence for a correct repair, and enumerate the affected corpus before design.
@@ -391,9 +400,11 @@ source evidence for a correct repair, and enumerate the affected corpus before d
   raw results live in `.project/active/source-identity-route-evidence-spike/`.
 - ⚠️ Existing tests certify contradictory route-specific outcomes, and the initial corpus findings
   are not a complete semantic-source census (cross-owner duplicates remain an unknown class).
-- ⚠️ The remaining close gate is the owner disposition of the queued Fusion Tea
-  producer-channel/aggregation-scoping finding. Evidence places its unresolved aggregation terms in
-  the same terminal-mint family and supports absorption.
+- ✅ The adjacent-work register assigns all seven overlapping mechanisms one owner and disposition
+  without proposing a second occurrence bridge or part-structure authority. The queued Fusion Tea
+  producer-channel/aggregation-scoping finding is classified as the same terminal-mint family;
+  owner ratification of the recommended absorption is assigned to the Item-3 checkpoint rather
+  than retained as an Item-2 close gate.
 
 **Scope**:
 1. **Full route matrix**:
@@ -433,7 +444,7 @@ source evidence for a correct repair, and enumerate the affected corpus before d
   states the schema/version blast radius.
 - [x] The corpus census accounts for all generated entry points in the selected fixture corpus and
   preserves an explicit unknown class.
-- [ ] The adjacent-work register assigns one owner/disposition per overlapping mechanism; no second
+- [x] The adjacent-work register assigns one owner/disposition per overlapping mechanism; no second
   occurrence bridge or part-structure authority is proposed.
 - [x] Kept learning tests or probes fail on at least the two known fan-out paths and distinguish
   genuinely independent literals from references sharing a source.
@@ -467,27 +478,62 @@ synthesis.
 
 ---
 
-#### Item 3: Authoritative Source-Identity Contract (1 day)
+#### Item 3: Authoritative Source-Identity Contract (1 day) — ✅ Complete
 
 **Type**: Specification / Decision
 
-**Objective**: Turn the spike evidence and owner dispositions into the one authoritative semantic
-contract that all implementation and certification work must follow.
+**Status**: Complete — contract amendments landed 2026-08-05; authority-chain audit certified and
+owner ratification recorded 2026-08-07; Items 1 and 2 complete
+
+**Objective**: Turn the spike evidence, owner-originated rulings, and provenance-graded checkpoint
+dispositions into the one authoritative semantic contract that all implementation and
+certification work must follow.
 
 **Current State**:
 - ✅ The ratified lifecycle contract already requires shared positive resolution, exact producer
   identity, and complete typed study inputs.
-- ⚠️ Its current invariants do not disposition the newly enumerated authoring forms, and existing
-  architecture/matrix rows support contradictory readings.
-- ❌ No authoritative source-identity acceptance matrix binds syntax, occurrence, consumer, and
-  public mutation behavior together.
+- ✅ Items 1 and 2 provide the complete authoring-form, route, evidence-sufficiency, corpus, parity,
+  and adjacent-work decision input. The technical evidence selects an extraction-owned semantic
+  source ID carrying declaration plus concrete occurrence; reconstruction from current fields is
+  insufficient in 40 of 75 measured model-derived mint cells.
+- ✅ The owner-originated ruling rejects self-binding reinterpretation and requires authoring
+  guidance in `agentic-mbse`. Ratified `[AGENT]` recommendations support the qualified and chain
+  forms under their actual language meanings, classify indexed source expressions as unsupported,
+  and absorb the aggregation family.
+- ✅ The 2026-08-05 owner checkpoint ratified all eight `[AGENT]` recommendations without upgrading
+  their provenance: C22 defers expression-source support and requires a fail-closed readiness
+  diagnostic; C23 assigns one independently overridable `LIBRARY_DEFAULT` per concrete calculation
+  usage; and bare-renamed-in-place is the customer migration form. The checkpoint fixed the matrix
+  at 26 cells and 32 evidence coordinates with no pending classes; the explicit D8 audit-correction
+  reopening (2026-08-07) added computed-source C24 and exact mixed-context customer cell C25 →
+  28 cells / 34 coordinates, then split aggregation's producer-backed C17 from literal-backed C26
+  → 29 cells / 35 coordinates.
+- ✅ The aggregation terminal-mint finding is filed into this epic. The lifecycle contract remains
+  the authority home, with a copy-and-freeze requirements companion and the archived spec untouched.
+- ✅ The contract amendments are landed (2026-08-05): source-identity definitions/referent table,
+  dispositions D-4..D-19 with the resolved checkpoint record, invariants 19/20/22/26 amended plus
+  54–60, six correction-register rows, Appendix C "Source-identity scenarios", the durable
+  requirements companion with the `LC-SI-*` projections (archive untouched), and the
+  verification-matrix row annotations (Status untouched).
+- ✅ The 2026-08-07 audit corrections are landed: computed-source cell C24 and exact mixed-context
+  customer cell C25, plus the exact aggregation C17/C26 topology split (D8 reopenings;
+  29 cells / 35 coordinates), the corrected customer pair
+  (C25 + C2; C4 retained only as usage-context referent evidence), exact SI-23
+  keys, four additional matrix annotations (11 total), reconciled authority state, and the fixed
+  `orchestration/pipeline_builder.py` citation (design.md A.8 records the full set).
+- ✅ The corrected authority-chain audit certified the 29-cell / 35-coordinate contract on
+  2026-08-07. The owner then declared the audited item finished, closing plan Phase 5 without
+  upgrading any agent-originated provenance grade.
 
 **Scope**:
 1. **Owner decision checkpoint**:
    - Present the complete authoring-form and route evidence without collapsing standards meaning,
      project convention, and migration cost.
-   - Record an owner disposition for every supported, rejected, or explicitly deferred class with
-     exact provenance.
+   - Record a disposition for every supported, rejected, or explicitly deferred class with exact
+     provenance; ratified agent recommendations remain agent-grade.
+   - Record the standards-forced instance semantics: an un-overridden definition default applies to
+     each concrete featuring instance, while an unbound calculation-definition default applies to
+     each concrete calculation usage. Record the owner-ratified aggregation absorption.
 2. **Normative contract amendment**:
    - Define semantic source occurrence, supplied external input, modeled default, producer channel,
      authored independent literal, and impermissible consumer-local fallback.
@@ -500,40 +546,58 @@ contract that all implementation and certification work must follow.
 4. **Acceptance authority**:
    - Publish the authoritative source-identity matrix and evidence coordinate that downstream item
      specs must inherit rather than restate.
+5. **Authoring validation and guidance contract**:
+   - Require `agentic-mbse` validation to reject source-self-bound calculation inputs regardless of
+     any same-named outer feature, reversing its current rescue-aware exemption.
+   - Require a distinct fail-closed diagnostic for indexed value expressions used where codegen
+     needs source feature identity, while describing the expression as valid-but-unsupported rather
+     than invalid SysML.
+   - Define the allowable-pattern guidance that Item 8 must publish in `agentic-mbse` documentation.
 
 **Out of Scope**:
 - Technical fix design, code changes, fixture migration, and downstream package regeneration.
-- Rewriting broad public documentation; Item 8 owns that projection.
+- Rewriting broad public documentation; Item 8 owns that projection, including the required
+  `agentic-mbse` modeling-pattern guidance.
 - Upgrading an agent recommendation to owner-originated provenance merely because it is approved.
 
 **Success Criteria**:
-- [ ] Every authoring-form class has an owner disposition or an explicitly owner-approved deferral.
-- [ ] The ratified lifecycle contract and companion spec contain the same source-identity semantics
-  and preserve the provenance grade of each decision.
-- [ ] The correction register identifies every superseded reading relevant to this defect.
-- [ ] The acceptance matrix defines topology, value provenance, diagnostic, and mutation outcomes at
-  the public boundary for every supported and rejected class.
-- [ ] Items 4 and 5 can derive their specs without inventing a semantics decision.
+- [x] Every authoring-form class has a provenance-graded disposition; ratified agent recommendations
+  remain agent-grade.
+- [x] The ratified lifecycle contract and durable companion requirements contain the same
+  source-identity semantics and preserve the provenance grade of each decision.
+- [x] The correction register identifies every superseded reading relevant to this defect.
+- [x] The acceptance matrix defines topology, value provenance, diagnostic, and mutation outcomes at
+  the public boundary for every supported, rejected, deferred, and language-rejected class.
+- [x] The contract assigns blocking `agentic-mbse` validation and modeling-guidance obligations for
+  self-bindings and unsupported indexed value expressions without misrepresenting valid SysML.
+- [x] Items 4 and 5 can derive their specs without inventing a semantics decision.
 
 **Estimated Effort**: 1 day (spec 2h, authority design 1.5h, plan 0.5h, owner checkpoint/amendments 4h)
 
 **Location**: `.project/active/source-identity-contract/`
 
-**Dependencies**: Items 1 and 2 complete; owner available for the disposition checkpoint.
+**Dependencies**: Complete — Items 1 and 2, the decision checkpoint, contract amendments,
+authority-chain audit, and owner-ratification checkpoint are complete.
 
 **Required Reading**:
 - Item 1 authoring-form table and findings.
 - Item 2 route matrix, evidence-sufficiency verdict, corpus census, and adjacent-work register.
 - Ratified lifecycle contract and `.project/completed/20260720_constraint-execution-lifecycle-contract/spec.md`.
 - Current verification-matrix rows REQ-IR-06/07, REQ-SVM-01/02/04, REQ-CL-05, and REQ-VBR-10.
+- Additional superseded-mechanism rows REQ-BT-13, REQ-IR-01, REQ-PGD-06, and REQ-VBR-03.
 
 **Deliverables**:
 - `.project/active/source-identity-contract/spec.md`
 - `.project/active/source-identity-contract/design.md`
 - `.project/active/source-identity-contract/plan.md`
-- `.project/active/source-identity-contract/decision-register.md`
-- `.project/active/source-identity-contract/acceptance-matrix.md`
-- Updated ratified lifecycle contract, companion spec, and correction register.
+- Updated `.project/concepts/constraint-execution-authoritative-lifecycle-contract.md` (decisions,
+  authoritative acceptance matrix, and correction register).
+- New `.project/concepts/constraint-execution-lifecycle-requirements.md` (copy-and-freeze durable
+  requirements companion).
+- Updated `docs/architecture/verification-matrix.md`.
+- Archived lifecycle spec remains untouched.
+- No standalone `decision-register.md` or `acceptance-matrix.md`: decisions and the acceptance
+  matrix live in the contract (checkpoint item 1).
 
 ---
 
@@ -555,8 +619,8 @@ that survives live extraction and snapshot replay before consumer resolution beg
 
 **Scope**:
 1. **Chosen semantic identity representation**:
-   - Implement the Item-2/3 decision: either exact reconstruction through a canonical constructor or
-     an extraction-owned explicit source ID.
+   - Implement Item 2's evidence-sufficiency verdict within the Item-3 semantic contract: an
+     extraction-owned explicit source ID carrying declaration plus concrete occurrence.
    - Keep referent identity, supplied value, value provenance, declaration, and concrete occurrence
      separate; do not encode them through binding-type mutation.
 2. **Occurrence authority**:
@@ -568,11 +632,20 @@ that survives live extraction and snapshot replay before consumer resolution beg
 3. **Live/snapshot transport**:
    - Carry the chosen identity and occurrence evidence identically through live and relocated
      snapshot routes.
-   - If forced by Item 2, bump the snapshot format/version with fail-closed old-version behavior and
-     an explicit migration/recapture plan; do not add a silent compatibility shim.
+   - Bump the snapshot format/version with fail-closed old-version behavior and an explicit
+     migration/recapture plan; update graph rebuild for the new evidence and do not add a silent
+     compatibility shim.
 4. **Foundation tests**:
    - Pin nested/flat siblings, multiple occurrences with different supplied values, specialization,
      per-child redefinitions, cycles/cardinality errors, and moved snapshot identity.
+   - Realize the exact blocked coordinates for C24's direct calculation output, C25's mixed
+     binding-owner contexts, and the C17/C26 aggregation producer-versus-public-input topology.
+5. **Authoring validation**:
+   - Update `agentic-mbse` validation so a consumed source-self-bound calculation input fails even
+     when a same-named outer feature exists; remove the current rescue-aware exemption and reverse
+     its wrong-oracle tests.
+   - Reject indexed value expressions at the codegen-readiness boundary when source feature identity
+     is required, with a distinct diagnostic and no flattened-path fallback.
 
 **Out of Scope**:
 - VBR/materialization/backtracking cutover; Item 5 consumes this foundation.
@@ -611,7 +684,7 @@ that survives live extraction and snapshot replay before consumer resolution beg
 - `.project/active/source-identity-occurrence-foundation/plan.md`
 - `.project/active/source-identity-occurrence-foundation/evidence.md`
 - Production identity/occurrence implementation and focused tests.
-- Snapshot schema/version and migration artifacts if required by Item 2.
+- Snapshot schema/version and migration artifacts required by Item 2's verdict.
 
 ---
 
@@ -645,12 +718,15 @@ semantic source identity and remove consumer-local fan-out behavior.
    - Reject unsupported, ambiguous, or invalid bound references with the Item-3 diagnostic; strict
      versus lenient policy may change failure handling, never semantic identity.
 4. **Superseded-route deletion**:
-   - Remove or reduce VBR source clearing, self-named rescue, per-consumer minting, and other parallel
-     behavior made obsolete by the authoritative path.
+   - Remove or reduce VBR source clearing, self-named rescue, per-consumer minting, the
+     parameter-group-deriver value backfill, and other parallel behavior made obsolete by the
+     authoritative path. SVM occurrence-attribute synthesis must derive from the Item-4 identity or
+     be deleted; it may not remain a parallel identity authority.
    - Replace wrong-oracle tests with independently anchored topology and mutation tests.
 5. **Adversarial semantic tests**:
    - Cover both known fan-out paths, distinct literals with equal values, same-leaf ambiguity,
-     aggregation asymmetry, multi-consumer mixed types, and off-default mutation.
+     aggregation asymmetry (C17 producer channel versus C26 source-feature public inputs),
+     multi-consumer mixed types, and off-default mutation.
 
 **Out of Scope**:
 - Bulk snapshot/baseline/package migration; Item 6 owns reviewed forced changes.
@@ -712,7 +788,7 @@ artifact change under a source-identity review rather than byte-preservation ass
    - Classify every former duplicate, legitimate independent source, rejected form, and unresolved
      gap; zero silent unknowns are allowed at certification.
 2. **Independent acceptance matrix**:
-   - Implement kept source-to-public-boundary tests for every supported/rejected Item-3 matrix cell.
+   - Implement kept source-to-public-boundary tests for every Item-3 matrix cell.
    - Derive expected source topology from fixtures/contract, never from generated key populations or
      the resolver under test.
 3. **Reviewed artifact migration**:
@@ -870,6 +946,9 @@ invariant through one composed model-to-study artifact thread.
      invents independent study variables for bound consumer parameters.
    - Document supported/rejected authoring forms, occurrence identity, external inputs, diagnostics,
      snapshot behavior, and migration policy from the ratified contract.
+   - Publish the allowable and rejected calculation-binding patterns in `agentic-mbse` authoring
+     guidance, including owner-qualified, occurrence-rooted chain, source-self-binding, and indexed
+     value-expression examples with their actual KerML/SysML meanings.
 2. **Certification correction**:
    - Correct or supersede the Fusion Tea one-copy perturbation, broad REQ-IR/REQ-SVM readings,
      verification-matrix status, Pipeline Truth conclusions, and other artifacts identified by the
@@ -932,8 +1011,8 @@ composed proof and certification verdict wait for all predecessors.
 
 **External**:
 
-- Owner dispositions, after the semantic spikes, for the complete authoring-form table, followed by
-  amendment of the ratified lifecycle contract and companion spec.
+- Decision-checkpoint dispositions after the semantic spikes are complete. The remaining work amends the ratified
+  lifecycle contract and creates its durable companion requirements copy.
 - Licensed live SysIDE access for referent probes and public live-generation acceptance.
 - Demo Item 5 remains gated on this epic's spikes and authority ruling. A consumer workaround cannot
   certify or substitute for the upstream fix.
@@ -994,7 +1073,7 @@ remain dependent on Items 6 and 7.
 | Existing byte baselines block required semantic changes | High | Classify every diff by modeled source and require explicit semantic review of forced changes. |
 | The known customer shape is only one member of a larger defect class | High | Audit a route matrix and the entire emitted corpus before claiming closure. |
 | Existing occurrence-identity work produces a second bridge or index | High | Absorb the nested-override fix, reuse Item-10 machinery, and sequence explicitly against CONSTRAINT-ARCH-UNIFY sub-scope 2. |
-| The owner ruling remains in an epic artifact instead of semantic authority | High | Amend the ratified contract, companion spec, and correction register before design approval. |
+| The owner ruling remains in an epic artifact instead of semantic authority | High | Amend the ratified contract, durable companion requirements, and correction register before Item 3 closes. |
 | Corrected input identities invalidate packages or studies silently | High | Bind migrations to contracts/fingerprints and start new study lineages when identity changes. |
 | Another large artifact set creates confidence without proving the mission | High | Anchor acceptance on independently derived source identity and off-default mutation through public paths. |
 
@@ -1008,7 +1087,7 @@ remain dependent on Items 6 and 7.
 |------|--------|--------------|
 | 1. Binding Semantics and Authoring-Form Spike | 1–2 days | None |
 | 2. Source-Identity Routes and Evidence-Sufficiency Spike | 2–3 days | None to start; Item 1 to close |
-| 3. Authoritative Source-Identity Contract | 1 day | Items 1–2 + owner checkpoint |
+| 3. Authoritative Source-Identity Contract | 1 day | Items 1–2; owner checkpoint complete |
 | 4. Semantic Identity and Occurrence Foundation | 3–4 days | Item 3 |
 | 5. Unified Materialization and Backtracking Cutover | 3–5 days | Item 4 |
 | 6. Semantic Corpus Migration and Public Acceptance | 2–4 days | Item 5 |
@@ -1032,6 +1111,6 @@ remain dependent on Items 6 and 7.
 
 ---
 
-**Last Updated**: 2026-08-05
-**Next Action**: Start Items 1 and 2 as parallel evidence work. No fix design begins before both close
-and Item 3 records the owner dispositions in the ratified authority.
+**Last Updated**: 2026-08-07
+**Next Action**: Item 3 is complete. Specify Item 4, then implement the semantic-identity and
+occurrence foundation against the ratified contract.

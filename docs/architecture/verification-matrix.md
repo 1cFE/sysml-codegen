@@ -17,6 +17,7 @@ Traceability matrix mapping every REQ-\* tag to its conformance test file and st
 - **PASS**: At least one conformance test references this requirement and passes
 - **UNTESTED**: No conformance test directly references this requirement
 - **DEFERRED**: Behavior implemented; real-fixture test deferred to a later item (none open — REQ-CA-09 discharged by Item 10)
+- **Contract disposition** (SOURCE-IDENTITY Item 3): a row-local `> **Contract disposition — REQ-…**` line under a family table records how the source-identity contract treats that row's reading — `SUPERSEDED`, `PARTIAL` (every clause labeled `stands` or `SUPERSEDED`), or `FAILED` — pointing to the owning contract Appendix B row or Appendix C cell (`.project/concepts/constraint-execution-authoritative-lifecycle-contract.md`; the contract's Current conclusion is the sole authority-state statement). Status stays test-state only: historical tests remain evidence of old behavior, not certification of the new contract.
 
 UNTESTED requirements are either cross-cutting architectural principles verified
 indirectly through component-level tests, or design-only requirements that constrain
@@ -133,6 +134,11 @@ the documentation rather than executable code.
 | REQ-BT-12 | For a 3+-segment CHAIN (`source_path.count(".") >= 2`), `_resolve_chain_dispatch` SHALL, after Step 2 misses, retry `scoped_lookup` over progressively shorter ancestor prefixes of the consumer scope (Step CLIMB, Item 2), collect every distinct non-self-reference hit, resolve iff exactly one, and refuse (return None → loud Step-4 fallback) on two or more — never silently pick (M-1 / INV-2b). Gated so 2-segment resolutions stay byte-identical (D4) | `test_dependency_backtracker.py`, `test_deep_cross_scope_probe.py` | PASS |
 | REQ-BT-13 | A 3+-segment CHAIN that reaches the Step-4 fallback SHALL emit a genuine `logger.warning` (WARNING level, distinct from the benign per-binding DEBUG line) naming the full untruncated chain, and surface as an entry point — never truncated to root, never silently wired (Item-5 loud-diagnostic contract, D3 home) | `test_dependency_backtracker.py` (fires-on-shape + silent-on-clean) | PASS |
 
+> **Contract disposition — REQ-BT-13: `PARTIAL`** (SOURCE-IDENTITY Item 3). The loud-warning /
+> never-truncated / never-silently-wired clause `stands`. The surface-as-entry-point outcome for
+> a bound model reference is `SUPERSEDED` (contract D-17; Appendix B row "A bound model reference
+> that fails resolution may lenient-mint a per-consumer entry point").
+
 ### CA
 
 **Computed Attributes** — Component C05 — [reference/16-computed-attributes.md](reference/16-computed-attributes.md)
@@ -170,6 +176,13 @@ re-derives from scratch and is named here as a known gap, not silently covered.
 | REQ-CL-03 | `assemble_constraint_catalog` SHALL build `source_records` from every `ConstraintDefinition` in the model's facts (visible even with zero eligible entries) and `concrete_entries` from eligible concrete constraints only, fingerprinted deterministically | `test_constraint_emission.py` | PASS |
 | REQ-CL-04 | The manifest->catalog mapping SHALL be total and silent-drop-free: every usage `collect_constraint_manifest` sweeps has a catalog carrier (eligible or unassessed) or is a named, justified requirement/satisfy exclusion | `test_constraint_migration_mapping.py` | PASS |
 | REQ-CL-05 | A constraint input resolved to a design attribute SHALL mint a deduped entry point (reused, not re-minted, if already present); a resolved module-output input SHALL wire the producer channel with no mint; a resolved modeled-default input SHALL mint a `LIBRARY_DEFAULT` entry point scoped to its constraint | `test_constraint_graph_extension.py` | PASS |
+
+> **Contract disposition — REQ-CL-05: `PARTIAL`** (SOURCE-IDENTITY Item 3). The dedup-mint
+> clause `stands`; the producer-wiring clause `stands` (cell C24 owns the computed-source
+> mixed-consumer target and C17 the aggregation-producer target); the `LIBRARY_DEFAULT` scoping clause `stands` under the per-usage ruling
+> (contract D-12, cell C23). All three stand as mechanics
+> under the single identity authority; the row's evidence does not yet certify the
+> source-identity contract.
 
 ### CON
 
@@ -335,6 +348,22 @@ indirectly via the emitted verifier.
 | REQ-IR-06 | A LENIENT terminal miss SHALL mint an entry point with QN `{consumer_eqn}__{param_name-or-flattened-reference}` (`entry_point_qualified_name`, D9). | `test_producer_qn_rule.py` | PASS |
 | REQ-IR-07 | The same reference SHALL resolve to the same channel across consumers (one shared table); two consumers of one design attribute converge on one producer. | `test_shared_producer_convergence.py`, `test_dual_resolution.py` | PASS |
 
+> **Contract disposition — REQ-IR-01: `PARTIAL`** (SOURCE-IDENTITY Item 3). The STRICT
+> terminal-miss raise clause `stands`. The LENIENT unconditional-mint clause is `SUPERSEDED` for
+> bound model references (contract D-17; Appendix B lenient-mint row); minting survives only
+> under the explicit external-input contract.
+
+> **Contract disposition — REQ-IR-06: `SUPERSEDED`** (SOURCE-IDENTITY Item 3). Minting an entry
+> point for a bound model reference is impermissible (contract D-17; Appendix B row "A bound
+> model reference that fails resolution may lenient-mint a per-consumer entry point"). The
+> QN-format clause survives only for the explicit external-input contract.
+
+> **Contract disposition — REQ-IR-07: `PARTIAL`** (SOURCE-IDENTITY Item 3). The
+> one-shared-table clause `stands`; the two-consumer convergence clause `stands`. The reading
+> that this route-specific evidence certifies convergence generally is `SUPERSEDED` (Appendix B
+> row "Route-specific convergence evidence certifies source convergence generally"; cells C2,
+> C4, C11–C15, C24, and C25 own the acceptance).
+
 ### LVP
 
 **Literal Value Propagation** — Component C16 — [reference/18-literal-value-propagation.md](reference/18-literal-value-propagation.md)
@@ -441,6 +470,12 @@ indirectly via the emitted verifier.
 | REQ-PGD-06 | The deriver SHALL resolve each entry point's numeric default inline from its owning index (attr / binding / unbound / literal) via `_parse_default_value` in `_derive_from_*` | — *(no dedicated test: the numeric default is a side-output of `_derive_from_*` grouping, which REQ-PGD-01/08 pin; it is not independently asserted, and the standalone accessor that once pinned it was deleted as dead by Item 8)* | UNTESTED |
 | REQ-PGD-07 | Group names SHALL follow `{snake_case_stem}_params` / `{PascalCaseStem}Params` convention | `test_parameter_group_deriver.py` | PASS |
 | REQ-PGD-08 | No deriver change is required for def-owned design-attribute matching (D1): once the backtracker (REQ-BT-10) returns the design-attr QN, the deriver's `_attr_index`-keyed classification and inline default resolution handle grouping and default automatically | `test_matcher_fixes_item7.py` (backtracker propagation), `test_parameter_group_deriver.py` | PASS |
+
+> **Contract disposition — REQ-PGD-06: `SUPERSEDED`** (SOURCE-IDENTITY Item 3). Inline default
+> resolution at group derivation is the parameter-group value backfill — a superseded fourth
+> value authority (contract D-18; Appendix B row "The parameter-group deriver's default backfill
+> is a benign value repair"); it derives from the single identity authority or is deleted
+> (Item 5). Status (UNTESTED) is unchanged.
 
 ### PIPE
 
@@ -559,7 +594,7 @@ indirectly via the emitted verifier.
 
 ### SVM
 
-**Supplied-Value Materializer** (PIPELINE-TRUTH Item 2) — `resolution/supplied_values.py` — [reference/25-hierarchy-resolver.md](reference/25-hierarchy-resolver.md#supplied-value-materializer-req-svm-01-04). Reuses doc 18's shared `_find_literal_redefinition` helper (Strategy 1); sibling of doc 12's per-consumer VBR-03 (this mechanism keys by source QN and collapses across consumers).
+**Supplied-Value Materializer** (PIPELINE-TRUTH Item 2) — `resolution/supplied_values.py` — [reference/25-hierarchy-resolver.md](reference/25-hierarchy-resolver.md#supplied-value-materializer-req-svm-0104). Reuses doc 18's shared `_find_literal_redefinition` helper (Strategy 1); sibling of doc 12's per-consumer VBR-03 (this mechanism keys by source QN and collapses across consumers).
 
 | REQ ID | Requirement | Test File | Status |
 |--------|-------------|-----------|--------|
@@ -567,6 +602,23 @@ indirectly via the emitted verifier.
 | REQ-SVM-02 | Key the synthetic attribute by source QN so differently-named consumers collapse to one entry point | `test_supplied_values.py`, `test_fusion_tea_snapshot.py` | PASS |
 | REQ-SVM-03 | A synthetic attribute SHALL never overwrite a real captured design attribute; on collision the real one wins and the materializer WARNs | `test_supplied_values.py` | PASS |
 | REQ-SVM-04 | Apply LITERAL only; emit a count-summary WARN naming non-literal (CHAIN/EXPRESSION) skips; a referenced non-literal-only binding falls through to Step-4 (V11), never a silent drop | `test_supplied_values.py` | PASS |
+
+> **Contract disposition — REQ-SVM-01: `PARTIAL`** (SOURCE-IDENTITY Item 3). The synthesis
+> clause — materialize the precedence-resolved LITERAL as a design attribute — `stands` as
+> value-adapter behavior once it derives from the single identity authority; as an independent
+> identity authority it is `SUPERSEDED` (Appendix B row "Supplied-value synthesis may decide
+> source identity on its own authority"). The reference→literal stamp is a different mechanism
+> (VBR tier 1) with its own Appendix B row, not an SVM clause.
+
+> **Contract disposition — REQ-SVM-02: `PARTIAL`** (SOURCE-IDENTITY Item 3). The source-QN
+> convergence direction `stands` (cell C14 owns the target topology); keying as an independent
+> identity decision is `SUPERSEDED` (Appendix B synthesis row).
+
+> **Contract disposition — REQ-SVM-04: `PARTIAL`** (SOURCE-IDENTITY Item 3). The LITERAL-only
+> application clause `stands`; the skip-summary WARN clause `stands`; the
+> no-silent-drop/V11-fall-through clause `stands` — all as value-adapter behavior. The row is
+> `SUPERSEDED` only insofar as tier matching by name/scope is read as an independent identity
+> decision (Appendix B synthesis row) — the same authority boundary as REQ-SVM-01.
 
 ### VBR
 
@@ -585,6 +637,20 @@ indirectly via the emitted verifier.
 | REQ-VBR-09 | `_rewrite_virtual_bindings` SHALL NOT raise on a bare-name `source_path`; it logs DEBUG and skips the override match | `test_virtual_binding_rewrite.py` | PASS |
 | REQ-VBR-10 | Mechanism-D home (Item 10 #3): `_rewrite_specialized_chain` SHALL rewrite a `part_usage.attr` CHAIN binding through the retyped usage's specialized-def `:>>` chain (three-tier merge: usage override > specialized-def `:>>` > base def); and `_rescue_self_named_bindings` SHALL rewrite a full-QN self-reference (`in x = x`) to its upstream channel when an outer same-named EXPOSE resolves, else leave it as-is (the `self_named_binding_trap` negative) | `test_spec_chain_channel.py`, `test_self_named_rescue.py`, `test_self_named_binding_trap.py::test_self_named_binding_resolves_to_own_param` (the "else leave it as-is" clause) | PASS |
 | REQ-VBR-11 | The `_rewrite_specialized_chain` type-select SHALL be instance-aware: it SHALL try the consumer INSTANCE's path key (`usage.qualified_name.rsplit("__",1)[0]`, `part_usage`) in `usage_type_map` before the declaring-def key, so a two-level specialization (usage-level `:>> driver : Subtype` on an inherited part usage) selects the specialized def where the declaring-def key sees only the base type | `test_spec_chain_twolevel.py` | PASS |
+
+> **Contract disposition — REQ-VBR-03: `SUPERSEDED`** (SOURCE-IDENTITY Item 3). Clearing
+> `source_path` while stamping a literal converts a reference-derived value into a
+> consumer-local literal — the reference→literal stamp, impermissible as an identity mechanism
+> (contract D-16; Appendix B row "Stamping an occurrence override literal onto same-named
+> consumer inputs preserves the modeled source"). Any surviving value-adapter behavior derives
+> from the single identity authority (Item 5).
+
+> **Contract disposition — REQ-VBR-10: `PARTIAL`** (SOURCE-IDENTITY Item 3). The
+> `_rewrite_specialized_chain` clause `stands` (kin of cell C21; test Status untouched). The
+> `_rescue_self_named_bindings` clause is `SUPERSEDED`: the self-binding is inert and is never
+> rewritten to an outer channel (contract D-4, family SRC-01; Appendix B row "A consumed input
+> whose value expression resolves to its own parameter is rescued by binding to a same-named
+> outer feature").
 
 ---
 

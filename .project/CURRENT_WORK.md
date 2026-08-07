@@ -1,12 +1,101 @@
 # Current Work
 
-**Last Updated**: 2026-08-05 (SOURCE-IDENTITY Items 1 + 2 evidence legs complete)
+**Last Updated**: 2026-08-07 (SOURCE-IDENTITY Item 3 COMPLETE; Item 4 specification next)
 
 ---
 
 ## Active Work
 
-### 2026-08-05: SOURCE-IDENTITY Item 2 — technical evidence COMPLETE; one owner gate remains
+### 2026-08-07: SOURCE-IDENTITY Item 3 — COMPLETE
+
+Audit: `.project/active/source-identity-contract/audit.md` (2026-08-07, **Certify**). The owner
+declared the audited item finished on 2026-08-07, closing the final ratification checkpoint without
+changing provenance grades. All findings and final recheck findings were corrected the same day;
+full record in `design.md` A.8 + plan Correction Pass:
+
+- **audit-F1 resolved by citation** (`product-lens.md` correction entry): computed-source cell
+  **C24** (1 calc + 1 constraint + 1 agg through one producer channel; no minted public input)
+  published under an explicit D8 reopening.
+- **Customer context corrected**: mixed, not all usage-authored — `meier_coe_calc` usage-authored
+  (`hif_plant.sysml:205,215`); `lcoe_calc`/`recirc_calc` def-authored
+  (`generic_ife/ife_plant.sysml:98,114,126,134,148`). 01b re-derived; exact supported-form cell
+  **C25** owns availability's one usage-authored + one definition-authored consumer, while C2 owns
+  thermal-efficiency's two definition-authored consumers. C4 remains DCS referent evidence.
+  The exact topology split below moves the reopened counts to **29 cells / 35 coordinates**;
+  `epic:147-150` citations fixed.
+- **Aggregation topology corrected**: C17 now owns producer-backed
+  `permitting.capital_cost` (one producer channel, zero public inputs); C26 owns the three
+  literal-valued modeled `permitting` cost features (one public input per source). The committed
+  graph proves C17's producer wiring, while current parity evidence contradicts C26's target.
+  C24 now names one direct calculation-output declaration and 22a one exact kept expression binding.
+- **SI-23 exactness**: C7/C8/C9/C10/C15/C16/01g/C11–C13 keys now carry exact occurrence counts,
+  value states, and consumer counts/types (checker rejects parametric key values).
+- **SC4**: REQ-BT-13/IR-01 `PARTIAL`, REQ-PGD-06/VBR-03 `SUPERSEDED` annotated (11 total);
+  Status projection still byte-identical.
+- **Authority state reconciled**: contract Current conclusion is the single authority-state
+  statement (source-identity material ratified; runtime certification remains assigned to Items
+  4–8); stale closed-epic handoff removed; matrix legend/spec/design/epic handoffs aligned. VBR stamp citation fixed to
+  `orchestration/pipeline_builder.py:363-369`.
+
+Gates after corrections: all four phase checkers GREEN (29/35, exact keys, 11 annotations,
+projection byte-identical), archive SHA unchanged, `git diff --check` clean, 11/11 route tests.
+**Next: Item 4 specification.**
+
+Plan: `.project/active/source-identity-contract/plan.md` (per-phase completion notes + the Item
+4/5 derivability dry-run live there). Landed in the lifecycle contract
+(`constraint-execution-authoritative-lifecycle-contract.md`): the "Source identity" subsection
+(definitions, form × context referent table, invariants 54–60, validation/guidance obligations
+with the exact owner payloads — SI-01 quote at D-4, SI-15/16 request, SI-18 quote with the
+preserved "quesiton" typo); dispositions D-4..D-19 with the resolved checkpoint record; invariants
+19/20/22/26 amended in place; six new Appendix B correction rows; Appendix C "Source-identity
+scenarios" — originally 26 cells / 32 evidence coordinates, reopened by the audit correction to
+29/35, no PENDING_CHECKPOINT, every BLOCKED cell with a published target key; status reconciled to
+the 41/41 + 2026-07-20 merged state. New durable
+companion `.project/concepts/constraint-execution-lifecycle-requirements.md` (copy-and-freeze;
+25 graded LC-SI projections; archive byte-identical, SHA pinned in the plan; contract
+Requirements pointer moved). Verification matrix: 7 row-local contract-disposition annotations +
+1 legend line; Status projection/Summary/Index byte-identical. Epic Item 3 + spec footer
+reconciled. All four phase checkers GREEN (scratchpad `phase{1..4}_check.py`); 11 route tests
+pass; no code/fixture/snapshot/completed changes. Those mechanical results do not clear the audit
+findings above.
+
+### 2026-08-05: SOURCE-IDENTITY Item 3 — authoritative contract spec DRAFT
+
+Spec: `.project/active/source-identity-contract/spec.md`. Owner ruling: never reinterpret a
+self-binding as an outer reference. The contract supports owner-qualified references and
+occurrence-rooted feature chains under their distinct SysIDE/KerML meanings, classifies indexed
+value expressions as unsupported for source-bearing calculation bindings, and absorbs aggregation
+consumers into the same identity family. Required downstream work includes correcting the existing
+`agentic-mbse` L2 self-binding validator, which currently suppresses its error when a same-named
+outer feature exists; adding a distinct indexed-expression readiness diagnostic; keeping codegen
+independently fail-closed; and publishing allowable modeling patterns in `agentic-mbse` docs.
+Post-review revision now explicitly supports the bare-renamed definition-reference form, requires
+matrix evidence coordinates, and records the ratified rule that equal inherited defaults on
+distinct concrete occurrences remain distinct sources unless the model explicitly shares them.
+
+Design is at rev 5 (`design.md`) after four Revise reviews; the authority architecture (amend the
+lifecycle contract, no new normative doc) and the three-field/boundary-outcome schema are confirmed
+sound. Rev 5 repaired the v4 findings with a key semantic discovery, verified against fixtures:
+**binding-owner context changes the referent of the same written form** — the AFT probes author
+calcs inside the PartDef (def-level referent) while deep_cross_scope and the customer bindings sit
+inside concrete usages (occurrence-level referent, snapshot-verified). Semantic referent is now key
+material (referent table A.2); supported families dissolved into per-form cells; RM13 reclassified
+as a broken positive resolution (solar's `permitting` features are modeled), so the terminal-miss
+cell is BLOCKED on a constructed fixture; blocked cells publish full target coordinates (D8) so
+Item 4 realizes fixtures, never chooses semantics. The owner then agreed to all eight checkpoint
+recommendations (`[OWNER-VERBATIM]` “ok agreed with each one”). Their substance remains `[AGENT]`
+(ratified by owner, 2026-08-05): keep the decisions and matrix in the lifecycle contract; create a
+copy-and-freeze companion requirements artifact while leaving the archived spec untouched; model
+one independently overridable `LIBRARY_DEFAULT` per concrete calculation usage; defer expression
+source support while failing closed with a readiness diagnostic; assign blocked fixtures to Item
+4; file the aggregation finding into this epic; reconcile stale project status; and migrate the
+customer binding bare-renamed-in-place. The then-current enumeration was 26 cells / 32 evidence
+coordinates with no pending checkpoint classes; the audit later corrected the exact customer home
+to C25/C2 and reopened the population to 28/34; the later C17/C26 exact-topology split produces
+29/35. Next: see the current Item-3 audit-correction entry
+above.
+
+### 2026-08-05: SOURCE-IDENTITY Item 2 — COMPLETE
 
 Dedicated branch `source-identity-epic` was created from `nested-override-tripwire` at `fa9e0d0`
 after the Item-1/Item-2 evidence legs. Source-identity work continues there.
@@ -30,9 +119,9 @@ final: extraction must publish a semantic source ID from referent/redefinition e
 owner-local reconstruction cannot cover 40/75 cross-owner/tail cases, and the surviving
 self-reference `source_path` is normatively the wrong element. Licensed live, snapshot, and
 relocated routes are identical on four representative fixtures; retained matrix/trace/parity
-artifacts live in `.project/active/source-identity-route-evidence-spike/`. Remaining for Item 2
-close: owner disposition on absorbing the queued aggregation-scoping finding (evidence supports
-absorption into the same terminal-mint family).
+artifacts live in `.project/active/source-identity-route-evidence-spike/`. All six Item-2 criteria
+are met. The queued aggregation-scoping finding is classified in the adjacent-work register and its
+absorption into the same terminal-mint family was ratified at the Item-3 checkpoint.
 
 ### 2026-08-05: SOURCE-IDENTITY epic Item 1 — binding-semantics spike COMPLETE
 
@@ -46,7 +135,7 @@ parses value-only and the extractor silently drops the index segment (NEW
 identity-loss site → Item 2 route matrix); `[i]` fails to load; both indexed forms
 have zero corpus prevalence; bare self-named is ~47% of external usage bindings.
 Decision input for Item 3: `authoring-form-table.md`. Item 2 (route/evidence spike)
-is the epic's other pre-disposition leg, still open.
+completed the other pre-disposition leg.
 
 ### 2026-08-03: Entry-surface fan-out forensics — COMPLETE, filing + rulings pending
 
@@ -60,12 +149,14 @@ others frozen. Forensic report:
   pinned the fan-out into baselines). Not a regression.
 - Mechanism: SysIDE resolves the bare RHS to the calc's own param (spec-conformant — the
   idiom is degenerate per KerML scoping); Path A (instance `:>>` override literal-stamped
-  per-usage by name coincidence, `pipeline_builder.py:363-369`) is fully silent; Path B
+  per-usage by name coincidence, `src/sysml_codegen/orchestration/pipeline_builder.py:363-369`)
+  is fully silent; Path B
   (def-default, lenient-miss) warns. Constraints converge — hence the asymmetry.
-- **Pending owner rulings:** (1) semantics for the idiom — reject loudly vs converge
-  uniformly (fix hangs on this); (2) filing this + the three queued fusion-tea upstream
-  findings; (3) fix-first vs workaround for demo Item 5; (4) whether anything consumed
-  LCOE off the July IFE study rows (unowned check).
+- **Resolved 2026-08-05:** never reinterpret the self-binding as an outer reference; honor
+  SysIDE/KerML referents, support qualified and chain forms under their actual meanings, and absorb
+  aggregation consumers into the same source-identity contract.
+- **Still pending:** filing this + the remaining queued Fusion Tea upstream findings; fix-first vs
+  workaround for demo Item 5; and whether anything consumed LCOE off the July IFE study rows.
 
 ### Post-merge state — CONSTRAINT-LIFECYCLE epic MERGED and CLOSED (2026-07-20)
 
