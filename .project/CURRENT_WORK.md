@@ -35,10 +35,15 @@ the ~3,450-line string-compensation machinery deleted at cutover, not wrapped).
   `analysis/source_identity.py` manifest/authority/recorder and its API tests. Gates: codegen
   3153/47/18 licensed (zero license-skip lines), ruff clean, mypy 72-baseline, baselines
   byte-identical; agentic-mbse 1811/1/33.
-- **Next: ELABORATE-FIRST Item 3 (elaborator spike, go/no-go)** — prototype
-  `elaborate(model) -> InstanceGraph` + thin projection on three fixtures (customer shape,
-  `nested_occurrence_override_probe` 80.0, aggregation), node-ID probe, kill criteria written
-  before work starts. Run via `/_my_spike`.
+- **Item 3 (elaborator spike) EXECUTED 2026-08-07 — assumption CONFIRMED, no kill criterion
+  triggered.** Findings: `.project/active/elaborator-spike/findings.md`. 381-line prototype:
+  C25 collapse to one input proven in real generated YAML; C8 twins distinct; C24 producer edge;
+  **C19 80.0 applied on both calc and constraint paths** (def-context remap rule); fusion_tea
+  `in gain = gain` → hard SI_SELF_BINDING; Bank sum terms on `cell[i]` nodes; stable node IDs;
+  generation layer accepted the projected graph unchanged. Discovery for Item-4 design: the
+  legacy extractor leaves def-nested-usage calcs definition-relative (`owner_def=None`).
+- **Next: owner go/no-go checkpoint on the spike, then ELABORATE-FIRST Item 4 (elaborator +
+  projection design).**
 
 ### 2026-08-07: SOURCE-IDENTITY Item 4 — architecture recovery assessment
 

@@ -198,7 +198,16 @@ commit. Nothing user-visible changes.
 
 ---
 
-#### Item 3: Elaborator Spike — Go/No-Go (2–3 days)
+#### Item 3: Elaborator Spike — Go/No-Go (2–3 days) — spike executed 2026-08-07; owner checkpoint PENDING
+
+**Spike result**: assumption CONFIRMED, no kill criterion triggered —
+[findings](../active/elaborator-spike/findings.md). A 381-line prototype passed all product
+checks: C25 customer collapse to one input (proven in real generated YAML), C8 twins distinct,
+C24 producer edge, **C19 80.0 applied on both calc and constraint paths** (the def-context remap
+rule is the fix), `in gain = gain` → hard `SI_SELF_BINDING`, Bank aggregation terms on
+`cell[i]` nodes, stable node IDs, and `generate_pipeline_yaml`/`generate_registry` accepting the
+projected graph unchanged. **[AGENT] recommendation: GO.** The go/no-go decision itself is the
+owner's.
 
 **Type**: **Spike** (via `/_my_spike`; findings doc, no production merge)
 
@@ -225,9 +234,9 @@ unchanged. A kill stops the epic for redesign — that outcome is a success of t
 the findings are the deliverable either way.
 
 **Success Criteria**:
-- [ ] All three fixtures pass their product-behavior checks from the projected graph, with
-  generation untouched.
-- [ ] Kept findings + kill-criteria verdicts; owner go/no-go checkpoint recorded.
+- [x] All three fixtures pass their product-behavior checks from the projected graph, with
+  generation untouched (2026-08-07; probes 1–4 in `.project/active/elaborator-spike/`).
+- [ ] Kept findings + kill-criteria verdicts done; **owner go/no-go checkpoint PENDING**.
 
 **Location**: `.project/active/elaborator-spike/`
 
