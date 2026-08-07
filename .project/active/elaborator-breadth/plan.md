@@ -31,7 +31,12 @@ authoritative and untouched throughout.
       follow-through, and the D9 `strict` halt-vs-report switch (forced early: catf_mfe
       itself authors a real SRC-01 self-binding, `vacuum.sysml:176` — strict rejects it,
       pinned; lenient records + skips only that binding, which Phase 3's grind requires).
-- [ ] Sibling same-name channels (sibling_channel_ambiguity)
+- [x] Sibling same-name channels (sibling_channel_ambiguity) — DONE 2026-08-07. Holds by
+      construction (occurrence-path identity: no flat namespace to collide in); zero
+      elaborator changes. 5 kept tests in `tests/conformance/test_elaboration_sibling_channels.py`;
+      findings `.project/research/20260807-165502_elaborator-sibling-channels.md`. The fixture
+      itself authors `in fuel = fuel` (SRC-01) — third member of the "fixture authors
+      SRC-01" class with catf_mfe and fusion_tea.
 - [ ] Specialization + usage-level retypes, two-level (spec_chain_twolevel, fusion_tea driver)
 - [ ] FORMULA computed attributes incl. FORMULA→FORMULA (previously unsupported — expected to
       lift, design D6)
