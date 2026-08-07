@@ -302,3 +302,165 @@ def test_multi_digit_occurrence_order_is_numeric() -> None:
     ]
     ordered = sorted(occurrences, key=_occurrence_sort_key)
     assert [occurrence.steps[0].occurrence_index for occurrence in ordered] == [2, 10]
+
+
+# ---------------------------------------------------------------------------
+# Exact reverse lookups for source identity (Item 4, Phase 2).
+#
+# License-free: drives PartInstanceIndex directly over mock part-usage indexes.
+# The atomicity cases pin the intended I11 boundary: a source-identity query
+# into cyclic or non-finite structure fails closed even in a constraint-free
+# model.
+# ---------------------------------------------------------------------------
+
+
+class _MockFeatureTyping:
+    """Class name 'FeatureTyping' drives the is_instance fallback."""
+
+
+def _typed_usage(
+    name: str,
+    raw_qn: str,
+    type_def,
+    *,
+    owning_def=None,
+    package=None,
+    multiplicity=None,
+) -> _MockPartUsage:
+    usage = (
+        _feature(name, owning_def, multiplicity=multiplicity)
+        if owning_def is not None
+        else _root(name, package or "Pkg", multiplicity=multiplicity)
+    )
+    usage.qualified_name = raw_qn
+    usage.heritage = [(_MockFeatureTyping(), type_def)]
+    usage.types = [type_def]
+    return usage
+
+
+def _two_sensor_index():
+    from sysml_codegen.analysis.part_instance_index import PartInstanceIndex
+
+    sensor_def = _MockPartDefinition("Sensor")
+    sensor_def.qualified_name = "Pkg::Sensor"
+    bay_def = _MockPartDefinition("Bay")
+    bay_def.qualified_name = "Pkg::Bay"
+
+    sensor_a = _typed_usage("sensor_a", "Pkg::Bay::sensor_a", sensor_def, owning_def="Bay")
+    sensor_b = _typed_usage("sensor_b", "Pkg::Bay::sensor_b", sensor_def, owning_def="Bay")
+    bay = _typed_usage("bay", "Pkg::bay", bay_def, package="Pkg")
+
+    index = PartInstanceIndex(
+        part_usage_index={"Sensor": [sensor_a, sensor_b], "Bay": [bay]},
+        qn_to_partdef={"Sensor": sensor_def, "Bay": bay_def},
+    )
+    return index, sensor_a
+
+
+def test_occurrences_of_part_usage_is_exact() -> None:
+    index, _sensor_a = _two_sensor_index()
+    occurrences = index.occurrences_of_part_usage("Pkg::Bay::sensor_a")
+    assert [occurrence.steps[-1].feature_name for occurrence in occurrences] == ["sensor_a"]
+    assert occurrences[0].part_def_qn == "Sensor"
+    # Exact key: an unknown raw QN has no occurrences — never a name fallback.
+    assert index.occurrences_of_part_usage("Pkg::Bay::sensor_c") == []
+
+
+def test_occurrences_of_definition_maps_raw_qn_exactly() -> None:
+    index, _sensor_a = _two_sensor_index()
+    occurrences = index.occurrences_of_definition("Pkg::Sensor")
+    assert [occurrence.steps[-1].feature_name for occurrence in occurrences] == [
+        "sensor_a",
+        "sensor_b",
+    ]
+    assert index.occurrences_of_definition("Pkg::Nowhere") == []
+
+
+def test_redefining_target_on_uses_exact_redefinition_edges() -> None:
+    index, sensor_a = _two_sensor_index()
+
+    class _Redefined:
+        qualified_name = "Pkg::Sensor::reading"
+
+    class _Redefinition:
+        redefined_feature = _Redefined()
+
+    class _Member:
+        name = "reading"
+        qualified_name = "Pkg::Bay::sensor_a::reading"
+        owned_redefinitions = [_Redefinition()]
+
+    sensor_a.owned_members = [_Member()]
+    (occurrence,) = index.occurrences_of_part_usage("Pkg::Bay::sensor_a")
+
+    fact = index.redefining_target_on(occurrence, "Pkg::Sensor::reading")
+    assert fact is not None
+    assert fact.qualified_name == "Pkg::Bay::sensor_a::reading"
+    # A different referent QN never matches by name coincidence.
+    assert index.redefining_target_on(occurrence, "Pkg::Other::reading") is None
+
+
+def test_redefining_target_on_is_query_order_independent() -> None:
+    """The producer memo is an optimization, not a protocol: asking about an
+    occurrence no prior query touched answers identically on a fresh index."""
+    warmed, sensor_a = _two_sensor_index()
+
+    class _Redefined:
+        qualified_name = "Pkg::Sensor::reading"
+
+    class _Redefinition:
+        redefined_feature = _Redefined()
+
+    class _Member:
+        name = "reading"
+        qualified_name = "Pkg::Bay::sensor_a::reading"
+        owned_redefinitions = [_Redefinition()]
+
+    sensor_a.owned_members = [_Member()]
+    (occurrence,) = warmed.occurrences_of_part_usage("Pkg::Bay::sensor_a")
+
+    fresh, fresh_sensor_a = _two_sensor_index()
+    fresh_sensor_a.owned_members = [_Member()]
+    # First call on the fresh index — no occurrences_of ran before it.
+    fact = fresh.redefining_target_on(occurrence, "Pkg::Sensor::reading")
+    assert fact is not None
+    assert fact.qualified_name == "Pkg::Bay::sensor_a::reading"
+
+
+def test_source_identity_query_fails_closed_on_recursion() -> None:
+    """The constraint-free boundary (I11): a reverse source-identity query into
+    recursive containment raises atomically — no constraint machinery involved."""
+    from sysml_codegen.analysis.part_instance_index import PartInstanceIndex
+
+    node_def = _MockPartDefinition("Node")
+    node_def.qualified_name = "Pkg::Node"
+    recursive = _typed_usage("child", "Pkg::Node::child", node_def, owning_def="Node")
+    index = PartInstanceIndex(
+        part_usage_index={"Node": [recursive]},
+        qn_to_partdef={"Node": node_def},
+    )
+    with pytest.raises(RecursiveContainmentError):
+        index.occurrences_of_part_usage("Pkg::Node::child")
+
+
+def test_source_identity_query_fails_closed_on_non_finite() -> None:
+    from sysml_codegen.analysis.part_instance_index import (
+        NonFiniteCardinalityError,
+        PartInstanceIndex,
+    )
+
+    sensor_def = _MockPartDefinition("Sensor")
+    sensor_def.qualified_name = "Pkg::Sensor"
+    unbounded = _typed_usage(
+        "cells",
+        "Pkg::cells",
+        sensor_def,
+        package="Pkg",
+        multiplicity=_MockMultiplicityRange(_MockLiteralInfinity()),
+    )
+    index = PartInstanceIndex(
+        part_usage_index={"Sensor": [unbounded]},
+        qn_to_partdef={"Sensor": sensor_def},
+    )
+    with pytest.raises(NonFiniteCardinalityError):
+        index.occurrences_of_part_usage("Pkg::cells")

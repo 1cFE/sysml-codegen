@@ -272,6 +272,9 @@ def _apply_sum_term(
                 attribute_name=attr_name,
                 multiplicity_attr=mult_data.count_attribute_name,
                 multiplicity_count=mult_data.count,
+                resolved_target=neutral_term.resolved_target,
+                chain_root=neutral_term.chain_root,
+                resolved_member_names=neutral_term.resolved_member_names,
             )
         )
         ctx.input_channels.append(chain_name)
@@ -289,6 +292,9 @@ def _apply_sum_term(
             attribute_name=attr_name,
             multiplicity_attr=None,
             multiplicity_count=None,
+            resolved_target=neutral_term.resolved_target,
+            chain_root=neutral_term.chain_root,
+            resolved_member_names=neutral_term.resolved_member_names,
         )
     )
     ctx.input_channels.append(chain_name)
@@ -306,12 +312,23 @@ def _render_neutral_aggregation_node(
         return ""
 
     if isinstance(node, shared_aggregation.FeatureChainNode):
-        ctx.singleton_terms.append(SingletonTerm(source_path=node.source_path))
+        ctx.singleton_terms.append(
+            SingletonTerm(
+                source_path=node.source_path,
+                resolved_target=node.resolved_target,
+                chain_root=node.chain_root,
+                resolved_member_names=node.resolved_member_names,
+            )
+        )
         ctx.input_channels.append(node.source_path)
         return node.source_path
 
     if isinstance(node, shared_aggregation.FeatureReferenceNode):
-        ctx.local_terms.append(LocalTerm(attribute_name=node.attribute_name))
+        ctx.local_terms.append(
+            LocalTerm(
+                attribute_name=node.attribute_name, resolved_target=node.resolved_target
+            )
+        )
         return node.attribute_name
 
     if isinstance(node, shared_aggregation.LiteralNode):

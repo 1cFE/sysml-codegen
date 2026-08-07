@@ -337,6 +337,10 @@ def test_req_dm_03_fields_binding_info():
         # only field that can tell an owner-relative reference from a scope-qualified
         # one. Row 16 keys on that distinction.
         "stored_source_written_qualifier",
+        # Immutable semantic evidence (SOURCE-IDENTITY Item 4): exact resolved
+        # referent + bound formal + authored form, snapshot_exclude until the
+        # v6 cut owns serialization.
+        "reference_evidence",
     }
     actual = _dataclass_field_names(BindingInfo)
     assert actual == expected
@@ -377,10 +381,13 @@ def test_req_dm_03_fields_redefinition_data():
         "is_deep_path",
         "source_file",
         "source_line",
+        # Exact value-site identity (SOURCE-IDENTITY Item 4), snapshot_exclude.
+        "member_qualified_name",
+        "redefined_target_qns",
     }
     actual = _dataclass_field_names(RedefinitionData)
     assert actual == expected
-    assert len(actual) == 11
+    assert len(actual) == 13
 
 
 @pytest.mark.req("REQ-DM-03")
@@ -424,6 +431,8 @@ def test_hierarchy_model_ordered_field_contracts():
         "is_deep_path",
         "source_file",
         "source_line",
+        "member_qualified_name",
+        "redefined_target_qns",
     ]
     assert [field.name for field in dataclasses.fields(MultiplicityData)] == [
         "part_usage_name",
@@ -453,9 +462,23 @@ def test_aggregation_term_ordered_field_contracts():
         "attribute_name",
         "multiplicity_attr",
         "multiplicity_count",
+        # Exact resolved-target/chain evidence (ELABORATE-FIRST Item 2), snapshot_exclude.
+        "resolved_target",
+        "chain_root",
+        "resolved_member_names",
     ]
-    assert [field.name for field in dataclasses.fields(SingletonTerm)] == ["source_path"]
-    assert [field.name for field in dataclasses.fields(LocalTerm)] == ["attribute_name"]
+    assert [field.name for field in dataclasses.fields(SingletonTerm)] == [
+        "source_path",
+        "resolved_target",
+        "chain_root",
+        "resolved_member_names",
+    ]
+    assert [field.name for field in dataclasses.fields(LocalTerm)] == [
+        "attribute_name",
+        "resolved_target",
+        "chain_root",
+        "resolved_member_names",
+    ]
 
 
 @pytest.mark.req("REQ-DM-03")

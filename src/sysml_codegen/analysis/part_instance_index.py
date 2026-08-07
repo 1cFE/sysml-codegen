@@ -330,6 +330,13 @@ class PartInstanceIndex:
         self._part_usage_index = part_usage_index
         self._qn_to_partdef = qn_to_partdef
         self._user_qn_set = set(qn_to_partdef)
+        # Exact reverse-lookup maps (SOURCE-IDENTITY Item 4, Phase 2), built
+        # lazily from elements the index already holds — no second model scan.
+        self._raw_def_keys: dict[str, str] | None = None
+        self._usages_by_raw_qn: dict[str, Any] | None = None
+        # Occurrence -> the PartUsage element that produced it, memoized by the
+        # queries below so redefinition lookup never re-walks the model.
+        self._occurrence_producers: dict[InstanceOccurrence, Any] = {}
 
     def _leaf_part_def_qn(self, usage: Any) -> str:
         """The usage's own most-specific user type, entry-independent (D5/C3)."""
@@ -367,8 +374,98 @@ class PartInstanceIndex:
             for path, usage in _structured_paths(
                 applicable_type, self._part_usage_index, part_def_qn
             ):
-                occurrences.add(InstanceOccurrence(self._leaf_part_def_qn(usage), path))
+                occurrence = InstanceOccurrence(self._leaf_part_def_qn(usage), path)
+                occurrences.add(occurrence)
+                self._occurrence_producers[occurrence] = usage
         return sorted(occurrences, key=_occurrence_sort_key)
+
+    def occurrences_of_definition(self, raw_def_qn: str) -> list[InstanceOccurrence]:
+        """Exact raw-QN sibling of :meth:`occurrences_of` (Item 4, Phase 2).
+
+        Maps the SysIDE raw qualified name to the index's definition key via
+        the definition elements themselves — never by string surgery. A raw QN
+        with no user definition has no occurrences.
+        """
+        if self._raw_def_keys is None:
+            self._raw_def_keys = {}
+            for key, part_def in self._qn_to_partdef.items():
+                raw = getattr(part_def, "qualified_name", None)
+                if raw is not None:
+                    self._raw_def_keys[str(raw)] = key
+        def_key = self._raw_def_keys.get(raw_def_qn)
+        if def_key is None:
+            return []
+        return self.occurrences_of(def_key)
+
+    def occurrences_of_part_usage(self, raw_usage_qn: str) -> list[InstanceOccurrence]:
+        """All concrete occurrences produced by one exact part usage (Item 4).
+
+        Query-driven reverse lookup keyed by the usage's raw qualified name:
+        the usage element comes from the part-usage index the walker already
+        holds, and its occurrences are the structured paths that usage itself
+        produced. Raises the same atomic cycle/non-finite failures as
+        :meth:`occurrences_of` — a source-identity query into such structure
+        fails closed even in a constraint-free model (design I11).
+        """
+        if self._usages_by_raw_qn is None:
+            self._usages_by_raw_qn = {}
+            for usages in self._part_usage_index.values():
+                for usage in usages:
+                    raw = getattr(usage, "qualified_name", None)
+                    if raw is not None:
+                        self._usages_by_raw_qn[str(raw)] = usage
+        usage = self._usages_by_raw_qn.get(raw_usage_qn)
+        if usage is None:
+            return []
+        leaf_def_qn = self._leaf_part_def_qn(usage)
+        occurrences: set[InstanceOccurrence] = set()
+        for path, producing_usage in _structured_paths(
+            leaf_def_qn, self._part_usage_index, leaf_def_qn
+        ):
+            if producing_usage is not usage:
+                continue
+            occurrence = InstanceOccurrence(leaf_def_qn, path)
+            occurrences.add(occurrence)
+            self._occurrence_producers[occurrence] = usage
+        return sorted(occurrences, key=_occurrence_sort_key)
+
+    def redefining_target_on(
+        self, occurrence: InstanceOccurrence, redefined_raw_qn: str
+    ) -> Any:
+        """The redefining feature that applies at an occurrence, if any.
+
+        Exact comparison of ``owned_redefinitions`` targets against the
+        referent's raw qualified name — never a name match. Checks the
+        occurrence's producing usage first (usage-level ``:>>`` override), then
+        the occurrence's own most-specific definition (a specialized-def
+        ``:>>``), mirroring the established usage > specialized-def > base
+        tiering. Returns the redefining member's :class:`ResolvedTargetFact`,
+        or ``None`` when no redefinition applies or the occurrence is unknown
+        to this index.
+        """
+        from agentic_mbse.sysml.expression import resolved_target_fact
+
+        owners: list[Any] = []
+        if occurrence not in self._occurrence_producers:
+            # Self-sufficient: the producer map is a memo of prior occurrence
+            # queries, so answer for a fresh occurrence by running the query
+            # that would have populated it. Query order must never change the
+            # answer.
+            self.occurrences_of(occurrence.part_def_qn)
+        usage = self._occurrence_producers.get(occurrence)
+        if usage is not None:
+            owners.append(usage)
+        part_def = self._qn_to_partdef.get(occurrence.part_def_qn)
+        if part_def is not None:
+            owners.append(part_def)
+        for owner in owners:
+            for member in getattr(owner, "owned_members", None) or []:
+                for redefinition in getattr(member, "owned_redefinitions", None) or []:
+                    redefined = getattr(redefinition, "redefined_feature", None)
+                    redefined_qn = getattr(redefined, "qualified_name", None)
+                    if redefined_qn is not None and str(redefined_qn) == redefined_raw_qn:
+                        return resolved_target_fact(member)
+        return None
 
     def all_occurrences(self) -> AllOccurrencesResult:
         """Every concrete occurrence in the model, plus every blocked definition.

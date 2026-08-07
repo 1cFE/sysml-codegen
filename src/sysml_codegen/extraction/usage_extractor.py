@@ -15,6 +15,10 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
+from agentic_mbse.sysml.expression import (
+    feature_chain_facts,
+    resolved_target_fact,
+)
 from agentic_mbse.sysml.helpers import (
     get_calc_def_name,
     get_document_url,
@@ -39,6 +43,10 @@ from sysml_codegen.extraction.expression_utils import (
 )
 from sysml_codegen.extraction.expression_utils import (
     is_literal_expression as _is_literal_expression,
+)
+from sysml_codegen.extraction.source_evidence import (
+    SourceForm,
+    SourceReferenceEvidence,
 )
 
 logger = logging.getLogger(__name__)
@@ -95,6 +103,16 @@ class BindingInfo:
     # CST byte span (audit F2). `None` for a bare leaf. This is the one thing
     # resolution destroys and no other field preserves.
     stored_source_written_qualifier: str | None = field(
+        default=None, metadata={"snapshot_exclude": True}
+    )
+    # Immutable semantic evidence (SOURCE-IDENTITY Item 4, Phase 1): the exact
+    # SysIDE-resolved referent, bound formal, and authored source form, captured
+    # before any rewrite runs. The frozen record is shared, never copied or
+    # replaced — VBR stamping and rescue reassign the legacy scalars above but
+    # cannot touch it (design I4). Excluded from the v5 wire format; the atomic
+    # v6 snapshot cut owns its serialization. None on snapshot-loaded v5 data
+    # and for the unhandled-expression arm.
+    reference_evidence: SourceReferenceEvidence | None = field(
         default=None, metadata={"snapshot_exclude": True}
     )
 
@@ -807,6 +825,7 @@ def _extract_single_binding(
         # source_instance_elem / source_attribute_elem / is_cross_file — the
         # backtracker consumes none of those for CHAIN resolution (only
         # source_path). Do NOT reach into _parse_chain_expression to populate them.
+        evidence = _chain_evidence(param_elem, expr)
         segments = extract_feature_chain_segments(expr)
         if len(segments) > 2:
             full_path = ".".join(segments)
@@ -815,6 +834,7 @@ def _extract_single_binding(
                 source_path=full_path,
                 binding_type=BindingType.CHAIN,
                 raw_expression=f"FeatureChainExpression -> {full_path}",
+                reference_evidence=evidence,
             )
         source_path, instance_elem, target_elem = _parse_chain_expression(expr)
         is_cross_file = _detect_cross_file_reference(usage_elem, instance_elem)
@@ -826,6 +846,7 @@ def _extract_single_binding(
             raw_expression=f"FeatureChainExpression -> {source_path}",
             source_instance_elem=instance_elem,
             source_attribute_elem=target_elem,
+            reference_evidence=evidence,
         )
 
     elif SysideAdapter.is_instance(expr, "FeatureReferenceExpression"):
@@ -839,6 +860,7 @@ def _extract_single_binding(
             raw_expression=f"FeatureReferenceExpression -> {source_path}",
             source_attribute_elem=referenced_elem,
             stored_source_written_qualifier=_written_qualifier(expr),
+            reference_evidence=_reference_evidence(param_elem, expr),
         )
 
     elif _is_literal_expression(expr):
@@ -850,6 +872,7 @@ def _extract_single_binding(
             is_cross_file=False,
             raw_expression=f"LiteralExpression -> {literal_value}",
             literal_value=literal_value,
+            reference_evidence=_literal_evidence(param_elem, literal_value),
         )
 
     elif SysideAdapter.is_instance(expr, "OperatorExpression"):
@@ -859,6 +882,7 @@ def _extract_single_binding(
             binding_type=BindingType.EXPRESSION,
             raw_expression=f"OperatorExpression: {type(expr).__name__}",
             expression_ast=expr,
+            reference_evidence=_expression_evidence(param_elem, expr),
         )
 
     # INV-1 terminal arm (D3-1): the RHS is a binding expression of a type this
@@ -993,6 +1017,115 @@ def _written_qualifier(expr: Any) -> str | None:
         return None
     qualifier = written.rsplit("::", 1)[0].strip()
     return qualifier or _WRITTEN_UNKNOWN
+
+
+def _bound_formal_facts(param_elem: Any) -> tuple[str, tuple[str, ...]]:
+    """The bound formal's own exact QN and the calc-def formals it redefines.
+
+    Both sides of a binding are evidence (SOURCE-IDENTITY Item 4): self-binding
+    is an exact comparison of the RHS referent against this formal identity,
+    never ``param_name == leaf``.
+    """
+    formal_qn = getattr(param_elem, "qualified_name", None)
+    redefines: list[str] = []
+    for redefinition in getattr(param_elem, "owned_redefinitions", None) or []:
+        redefined_feature = getattr(redefinition, "redefined_feature", None)
+        redefined_qn = getattr(redefined_feature, "qualified_name", None)
+        if redefined_qn is not None:
+            redefines.append(str(redefined_qn))
+    return (str(formal_qn) if formal_qn is not None else "", tuple(redefines))
+
+
+def _written_text_or_none(expr: Any) -> str | None:
+    """The authored text from the CST, or None when it cannot be recovered."""
+    written = _written_reference_text(expr)
+    return None if written is _WRITTEN_UNKNOWN else written
+
+
+def _chain_evidence(param_elem: Any, expr: Any) -> SourceReferenceEvidence:
+    """Immutable evidence for a FeatureChainExpression binding of any length.
+
+    An ``#(i)`` index operand classifies the whole binding INDEXED_SOURCE with
+    no referent — the contract's SRC-02 ruling: no occurrence feature identity
+    exists for the trailing segment to anchor to. The index is retained as
+    evidence, never flattened into a supported source. The legacy dispatch
+    fields are left exactly as before; only evidence is added.
+    """
+    formal_qn, formal_redefines = _bound_formal_facts(param_elem)
+    chain_root, leaf_fact, segment_qns, member_names, has_index = feature_chain_facts(expr)
+    authored_segments = tuple(extract_feature_chain_segments(expr))
+    return SourceReferenceEvidence(
+        bound_formal_qn=formal_qn,
+        source_form=SourceForm.INDEXED_SOURCE if has_index else SourceForm.FEATURE_CHAIN,
+        referent=None if has_index else leaf_fact,
+        chain_root=chain_root,
+        resolved_segment_qns=segment_qns,
+        resolved_member_names=member_names,
+        bound_formal_redefines=formal_redefines,
+        written_text=_written_text_or_none(expr),
+        authored_segments=authored_segments,
+    )
+
+
+def _reference_evidence(param_elem: Any, expr: Any) -> SourceReferenceEvidence:
+    """Immutable evidence for a FeatureReferenceExpression binding."""
+    formal_qn, formal_redefines = _bound_formal_facts(param_elem)
+    referent_fact = resolved_target_fact(getattr(expr, "referent", None))
+    qualifier = _written_qualifier(expr)
+    if qualifier is _WRITTEN_UNKNOWN:
+        source_form = SourceForm.REFERENCE_FORM_UNKNOWN
+        written_qualifier = None
+    elif qualifier is None:
+        source_form = SourceForm.BARE_REFERENCE
+        written_qualifier = None
+    else:
+        source_form = SourceForm.QUALIFIED_REFERENCE
+        written_qualifier = qualifier
+    return SourceReferenceEvidence(
+        bound_formal_qn=formal_qn,
+        source_form=source_form,
+        referent=referent_fact,
+        resolved_segment_qns=(referent_fact.qualified_name,) if referent_fact else (),
+        bound_formal_redefines=formal_redefines,
+        written_qualifier=written_qualifier,
+        written_text=_written_text_or_none(expr),
+    )
+
+
+def _literal_evidence(
+    param_elem: Any, literal_value: float | int | str | bool | None
+) -> SourceReferenceEvidence:
+    """Immutable evidence for an authored usage literal (value-site kind 3).
+
+    No referent exists: an authored literal is its own source. This is what
+    keeps authored literals distinguishable from reference-derived literals the
+    legacy VBR stamps — a stamped binding keeps its original reference-form
+    evidence, an authored one is AUTHORED_LITERAL from birth.
+    """
+    formal_qn, formal_redefines = _bound_formal_facts(param_elem)
+    return SourceReferenceEvidence(
+        bound_formal_qn=formal_qn,
+        source_form=SourceForm.AUTHORED_LITERAL,
+        bound_formal_redefines=formal_redefines,
+        written_text=str(literal_value) if literal_value is not None else None,
+    )
+
+
+def _expression_evidence(param_elem: Any, expr: Any) -> SourceReferenceEvidence:
+    """Immutable evidence for an expression-source binding.
+
+    A bare ``#(i)`` IndexExpression RHS is an OperatorExpression subtype and
+    lands here; it keeps its distinct INDEXED_SOURCE form. The adapter's closed
+    type map has no ``IndexExpression`` entry, so the check is by metatype name.
+    """
+    formal_qn, formal_redefines = _bound_formal_facts(param_elem)
+    is_indexed = type(expr).__name__ == "IndexExpression"
+    return SourceReferenceEvidence(
+        bound_formal_qn=formal_qn,
+        source_form=SourceForm.INDEXED_SOURCE if is_indexed else SourceForm.EXPRESSION_SOURCE,
+        bound_formal_redefines=formal_redefines,
+        written_text=_written_text_or_none(expr),
+    )
 
 
 def _parse_reference_expression(

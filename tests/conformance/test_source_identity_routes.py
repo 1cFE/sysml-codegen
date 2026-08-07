@@ -37,7 +37,7 @@ from sysml_codegen.orchestration.snapshot_context import (
 )
 from sysml_codegen.resolution.models import EntryPointType
 from sysml_codegen.snapshot import load_extraction_snapshot
-from tests.conftest import snapshot_fixture
+from tests.conftest import FIXTURES_DIR, requires_license, snapshot_fixture
 
 
 @pytest.fixture(scope="module")
@@ -168,6 +168,48 @@ def test_reference_derived_literal_distinguishable_from_authored_literal() -> No
     ]
     assert gain.binding_type == BindingType.LITERAL
     assert gain.written_reference is not None
+
+
+@requires_license
+def test_reference_derived_discriminator_on_immutable_evidence() -> None:
+    """Item 4 evidence: the authored-vs-reference-derived discriminator now
+    rests on immutable extraction evidence, not on surviving written-name
+    fields. Live extraction of the vendored fusion_tea models: the stamped
+    ``gain`` keeps its bare-reference evidence through the VBR literal stamp
+    (and is the exact self-binding the contract classifies SRC-01), while the
+    authored ``num_units`` literal is AUTHORED_LITERAL with no referent. The
+    snapshot-based pins above stay in force for the offline route."""
+    from sysml_codegen.extraction.source_evidence import SourceForm
+    from sysml_codegen.extraction.extractor import SysMLDataExtractor
+    from sysml_codegen.extraction.hierarchy_resolver import extract_hierarchy_data
+    from sysml_codegen.extraction.usage_extractor import extract_calculation_usages
+    from sysml_codegen.orchestration.pipeline_builder import _rewrite_virtual_bindings
+
+    extractor = SysMLDataExtractor([FIXTURES_DIR / "fusion_tea"])
+    assert extractor.load_models()
+    usages, _report = extract_calculation_usages(extractor.model)
+    hierarchy = extract_hierarchy_data(extractor.model)
+
+    by_qn = {u.qualified_name: u for u in usages if not u.is_template}
+    lcoe = by_qn["hif_plant_pkg__hif_plant__lcoe_calc"]
+    (gain,) = [b for b in lcoe.bindings if b.param_name == "gain"]
+    before = gain.reference_evidence
+    assert before is not None
+    assert before.source_form is SourceForm.BARE_REFERENCE
+    assert before.is_self_binding  # SRC-01: RHS resolves to the calc's own formal
+
+    _rewrite_virtual_bindings(usages, hierarchy)
+
+    assert gain.binding_type == BindingType.LITERAL  # Path-A stamp fired
+    assert gain.reference_evidence is before  # evidence never replaced
+    assert gain.reference_evidence.is_reference_derived
+
+    meier = by_qn["hif_plant_pkg__hif_plant__meier_reactor_cost_calc"]
+    (num_units,) = [b for b in meier.bindings if b.param_name == "num_units"]
+    assert num_units.reference_evidence is not None
+    assert num_units.reference_evidence.source_form is SourceForm.AUTHORED_LITERAL
+    assert num_units.reference_evidence.referent is None
+    assert not num_units.reference_evidence.is_reference_derived
 
 
 # ---------------------------------------------------------------------------

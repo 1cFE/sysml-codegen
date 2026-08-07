@@ -86,6 +86,11 @@ class DesignAttributeData:
     source_line: int
     parent_part: str
     qualified_name: str = ""
+    # Exact value-site identity (SOURCE-IDENTITY Item 4, D2): the attribute's
+    # raw SysIDE qualified name, unsanitized. ``qualified_name`` above is the
+    # rendered ``__`` form; identity joins use this field. Kept out of the v5
+    # wire format until the v6 snapshot cut owns serialization.
+    raw_qualified_name: str = field(default="", metadata={"snapshot_exclude": True})
 
 
 @dataclass
@@ -189,6 +194,7 @@ def _extract_single_attribute(elem: Any) -> DesignAttributeData | None:
     parent_part = get_parent_part_name(elem)
     qualified_name = build_element_qualified_name(elem)
 
+    raw_qn = getattr(elem, "qualified_name", None)
     return DesignAttributeData(
         name=name,
         sysml_type=sysml_type,
@@ -198,6 +204,7 @@ def _extract_single_attribute(elem: Any) -> DesignAttributeData | None:
         source_line=source_line,
         parent_part=parent_part,
         qualified_name=qualified_name,
+        raw_qualified_name=str(raw_qn) if raw_qn is not None else "",
     )
 
 

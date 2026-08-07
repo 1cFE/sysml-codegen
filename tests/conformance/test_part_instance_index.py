@@ -177,3 +177,26 @@ def test_blocking_names_owner_and_feature(
         index.occurrences_of(leaf_qn)
     assert owner in str(excinfo.value)
     assert feature in str(excinfo.value)
+
+
+@requires_license
+def test_exact_reverse_lookups_for_source_identity() -> None:
+    """Item 4, Phase 2: the raw-QN reverse queries the identity projection
+    needs, answered from the same index — no second walker (I5)."""
+    pkg = "source_identity_mixed_consumers"
+    extractor = SysMLDataExtractor([FIXTURES_DIR / pkg])
+    assert extractor.load_models()
+    index = build_part_instance_index(extractor.model)
+
+    (sensor_a,) = index.occurrences_of_part_usage(f"{pkg}::'Twin Bay'::sensor_a")
+    assert sensor_a.steps[-1].feature_name == "sensor_a"
+    assert index.occurrences_of_part_usage(f"{pkg}::'Twin Bay'::no_such") == []
+
+    both = index.occurrences_of_definition(f"{pkg}::'Twin Sensor'")
+    assert [occ.steps[-1].feature_name for occ in both] == ["sensor_a", "sensor_b"]
+    assert index.occurrences_of_definition(f"{pkg}::'No Such Def'") == []
+
+    fact = index.redefining_target_on(sensor_a, f"{pkg}::'Twin Sensor'::reading")
+    assert fact is not None
+    assert fact.qualified_name == f"{pkg}::'Twin Bay'::sensor_a::reading"
+    assert index.redefining_target_on(sensor_a, f"{pkg}::'Rig'::gain_setting") is None
