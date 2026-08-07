@@ -37,7 +37,15 @@ authoritative and untouched throughout.
       findings `.project/research/20260807-165502_elaborator-sibling-channels.md`. The fixture
       itself authors `in fuel = fuel` (SRC-01) — third member of the "fixture authors
       SRC-01" class with catf_mfe and fusion_tea.
-- [ ] Specialization + usage-level retypes, two-level (spec_chain_twolevel, fusion_tea driver)
+- [x] Specialization + usage-level retypes, two-level (spec_chain_twolevel, fusion_tea driver)
+      — DONE 2026-08-07. Retype holds by construction (occurrence carries most-specific type);
+      landed: redefinition-borne EXPOSE aliases (chain-valued `:>>` on defs/usages, tier-ordered)
+      + whole-path def-key fix in the remap rule (latent for literal def `:>>` too). The WI-015
+      lcoe→gamma edge wires in both fixtures (fusion_tea lenient: 15 SRC-01s). 7 kept tests in
+      `tests/conformance/test_elaboration_specialization_retypes.py`; findings
+      `.project/research/20260807-170356_elaborator-specialization-retypes.md`. spec_chain_twolevel
+      is the FOURTH fixture authoring `in R = R`. Open: multi-level def-tier literal shadowing
+      still unordered (no fixture authors it; author one in the shadowing leg).
 - [ ] FORMULA computed attributes incl. FORMULA→FORMULA (previously unsupported — expected to
       lift, design D6)
 - [ ] EXPRESSION-redefinition aggregations incl. cross-part rollups

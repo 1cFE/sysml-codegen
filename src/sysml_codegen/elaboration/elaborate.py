@@ -208,6 +208,7 @@ class _Elaborator:
         self._build_attr_nodes()
         self._build_usage_attr_nodes()
         self._build_package_attr_nodes()
+        self._collect_redefinition_aliases()
         self._apply_value_tiers()
         self._build_calc_nodes()
         self._build_constraint_nodes()
@@ -262,10 +263,12 @@ class _Elaborator:
 
         THE rule that fixes C19 (definition-relative capture vs occurrence-
         relative demand), also used to place def-declared calcs and
-        constraints — one rule, two jobs (D3).
+        constraints — one rule, two jobs (D3). The whole path may itself be a
+        definition key (a ``:>>`` owned directly by a specialized def maps to
+        that def's occurrences with an empty tail).
         """
         segments = sanitized_path.split("__")
-        for cut in range(len(segments) - 1, 0, -1):
+        for cut in range(len(segments), 0, -1):
             prefix = "__".join(segments[:cut])
             if prefix in self._occs_by_def:
                 tail = segments[cut:]
@@ -418,6 +421,66 @@ class _Elaborator:
             if not has_index:
                 return _DefAttribute(name, decl_qn, None, root, members)
         return _DefAttribute(name, decl_qn, None, None, ())
+
+    # ---- stage 2b: redefinition-borne EXPOSE aliases -----------------------
+
+    def _collect_redefinition_aliases(self) -> None:
+        """Alias facts from ``:>>`` redefinitions whose value is a pure chain.
+
+        ``part def 'HIF Driver' :> 'IFE Driver' { :>> cost_per_joule =
+        meier_cost.gamma; }`` re-sources an inherited attribute to a producer —
+        the redefined node must alias the chain target at every occurrence of
+        the owning definition (or usage), or every consumer of that attribute
+        degrades to a dead entry point (the fusion-tea WI-015 pin). Literal
+        ``:>>`` stays the value tiers' job; expression ``:>>`` is the
+        aggregation leg's (D6).
+
+        Enqueue order is the tier order — definition-borne first, usage-borne
+        second — so a later (inner) alias overwrites an earlier one at
+        resolution; an occurrence-literal override outranks both (checked in
+        ``_resolve_aliases``).
+        """
+        for part_def in self._qn_to_partdef.values():
+            anchors = None
+            for name, root, members in self._redefining_chain_members(part_def):
+                if anchors is None:
+                    def_key = build_element_qualified_name(part_def)
+                    anchors = self._expand_def_context(def_key)
+                for anchor in anchors:
+                    self._alias_pending.append(
+                        (f"{anchor}__{name}", name, root, members)
+                    )
+        for usage in SysideAdapter.elements_of_type(self._model, "PartUsage"):
+            anchors = None
+            for name, root, members in self._redefining_chain_members(usage):
+                if anchors is None:
+                    anchors = self._usage_attr_paths(usage)
+                for anchor in anchors:
+                    self._alias_pending.append(
+                        (f"{anchor}__{name}", name, root, members)
+                    )
+
+    @staticmethod
+    def _redefining_chain_members(
+        owner: Any,
+    ) -> list[tuple[str, ResolvedTargetFact | None, tuple[str, ...]]]:
+        """(redefined name, chain root, members) per ``:>>`` member whose value
+        expression is a pure (unindexed) feature chain."""
+        out: list[tuple[str, ResolvedTargetFact | None, tuple[str, ...]]] = []
+        for member in getattr(owner, "owned_members", None) or []:
+            if not getattr(member, "owned_redefinitions", None):
+                continue
+            if not getattr(member, "name", None):
+                continue
+            expr = getattr(member, "feature_value_expression", None)
+            if expr is None or not SysideAdapter.is_instance(
+                expr, "FeatureChainExpression"
+            ):
+                continue
+            root, _leaf, _qns, members, has_index = feature_chain_facts(expr)
+            if not has_index:
+                out.append((sanitize_name(member.name), root, members))
+        return out
 
     # ---- stage 3: value tiers, innermost-wins (D4) ------------------------
 
@@ -650,11 +713,32 @@ class _Elaborator:
 
         Alias targets are stored one hop deep (an expose of an expose stays a
         node reference); consumers follow chains transitively at resolution.
+        Pending entries are in tier order, so a later (inner) alias overwrites
+        an earlier one; an occurrence-literal override outranks every alias and
+        a resolved alias supersedes a definition-default value.
         """
         for node_id, attr_name, chain_root, chain_members in self._alias_pending:
+            node = self._graph.attrs.get(node_id)
+            if node is None:
+                self._graph.diagnostics.append(
+                    Diagnostic(
+                        code=ElaborationCode.OVERRIDE_TARGET_MISSING,
+                        consumer=node_id,
+                        param_name=None,
+                        detail=(
+                            f"chain redefinition of {attr_name!r} has no "
+                            "target attribute node"
+                        ),
+                    )
+                )
+                continue
+            if node.value_site is ValueSite.OCCURRENCE_OVERRIDE:
+                continue
             ref = self._resolve_chain(node_id, attr_name, chain_root, chain_members)
             if ref is not None:
-                self._graph.attrs[node_id].alias_target = ref
+                node.alias_target = ref
+                node.value = None
+                node.value_site = ValueSite.NONE
 
     def _follow_aliases(self, ref: InputRef) -> InputRef:
         """The real source behind a resolved reference: exposed attributes are
