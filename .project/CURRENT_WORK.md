@@ -42,8 +42,18 @@ the ~3,450-line string-compensation machinery deleted at cutover, not wrapped).
   `in gain = gain` → hard SI_SELF_BINDING; Bank sum terms on `cell[i]` nodes; stable node IDs;
   generation layer accepted the projected graph unchanged. Discovery for Item-4 design: the
   legacy extractor leaves def-nested-usage calcs definition-relative (`owner_def=None`).
-- **Next: owner go/no-go checkpoint on the spike, then ELABORATE-FIRST Item 4 (elaborator +
-  projection design).**
+- **Owner GO recorded 2026-08-07** ("hell yeah. clean this fucker up."). **Item 4 design pair
+  landed same day**: `.project/active/elaborator-design/{spec,design}.md` — AST-walked consumer
+  population (extractor-consuming shortcut rejected, D10), one def-context remap rule (C19 fix),
+  innermost-wins value tiers driving EP classification, computed nodes for EXPRESSION
+  redefinitions, constraint lowering adapted to node edges, deletion ledger attached. The
+  multi-occurrence-default question is answered by the contract's ratified 2026-08-05 rule
+  (distinct occurrences = distinct sources) — cited, not re-asked.
+- **Next: ELABORATE-FIRST Item 5** — plan seeded at `.project/active/elaborator-breadth/plan.md`
+  (Phase 1: production `elaboration/` package + spike-parity conformance tests; Phase 2:
+  per-shape learning tests BEFORE implementation; Phase 3: dual-run diff over all 37 fixtures,
+  29-cell matrix as the checklist, owner checkpoint on the classified ledger before Item-6
+  cutover).
 
 ### 2026-08-07: SOURCE-IDENTITY Item 4 — architecture recovery assessment
 

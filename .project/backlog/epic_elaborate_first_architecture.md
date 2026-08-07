@@ -236,7 +236,8 @@ the findings are the deliverable either way.
 **Success Criteria**:
 - [x] All three fixtures pass their product-behavior checks from the projected graph, with
   generation untouched (2026-08-07; probes 1–4 in `.project/active/elaborator-spike/`).
-- [ ] Kept findings + kill-criteria verdicts done; **owner go/no-go checkpoint PENDING**.
+- [x] Kept findings + kill-criteria verdicts done; **owner go/no-go: GO**
+  (**[OWNER-VERBATIM]** 2026-08-07: "hell yeah. clean this fucker up.").
 
 **Location**: `.project/active/elaborator-spike/`
 
@@ -244,7 +245,17 @@ the findings are the deliverable either way.
 
 ---
 
-#### Item 4: Elaborator + Projection Design (1–1.5 days)
+#### Item 4: Elaborator + Projection Design (1–1.5 days) — ✅ spec/design landed 2026-08-07
+
+**Landed**: `.project/active/elaborator-design/spec.md` + `design.md` (post-spike, mechanics
+proven). Key decisions: elaborator walks calc/constraint usages off the AST itself (the spike's
+extractor-consuming shortcut rejected — it would keep the legacy expansion alive); one
+def-context remap rule anchors overrides AND places def-declared consumers (the C19 fix); value
+tiers innermost-wins with value-site driving EP classification (backfill has no role);
+EXPRESSION redefinitions become computed nodes (folds the `attr_resolution_map` path);
+`constraint_lowering` adapted to read node edges; deletion ledger attached. The
+multi-occurrence-default ruling needed no new checkpoint — the contract's ratified 2026-08-05
+rule (distinct occurrences remain distinct sources; C23) is cited as the authority.
 
 **Type**: Specification / Design
 
@@ -269,10 +280,12 @@ written *after* the spike so it records proven mechanics, not speculation.
    resolved silently.
 
 **Success Criteria**:
-- [ ] Design names the exact types/functions it replaces and deletes; introduces no manifest,
+- [x] Design names the exact types/functions it replaces and deletes; introduces no manifest,
   transcript, or second authority.
-- [ ] The multi-occurrence default ruling is dispositioned by the owner and recorded in the
-  Item-3 contract's register (grade preserved).
+- [x] The multi-occurrence default ruling is dispositioned — already in the Item-3 contract
+  (**[AGENT] ratified by owner 2026-08-05**: equal inherited defaults on distinct concrete
+  occurrences remain distinct sources; one overridable default per concrete calc usage, C23).
+  Cited, not re-decided; no register change needed.
 
 **Dependencies**: Item 3 go.
 
