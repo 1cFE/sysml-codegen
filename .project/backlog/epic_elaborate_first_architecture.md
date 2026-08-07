@@ -163,7 +163,14 @@ active plan, with no competing authority left ambiguous.
 
 ---
 
-#### Item 2: Salvage Landing (0.5–1 day)
+#### Item 2: Salvage Landing (0.5–1 day) — ✅ Complete 2026-08-07
+
+**Landed**: codegen `66a61f3` (on `source-identity-epic`) + agentic-mbse `65a35d7` (on
+`elaborate-first-salvage`; merge decision with owner). Gates: codegen full licensed suite
+3153/47/18 with zero license-skip lines, ruff clean, mypy at the 72-error baseline, committed
+baselines byte-identical; agentic-mbse 1811/1/33. The forensic arity bug is fixed (both
+aggregation callers unpack the 5-tuple), chain root/member evidence is threaded to terms instead
+of dropped, and `redefining_target_on` is query-order independent (new unit pin).
 
 **Type**: Code (additive, behavior-neutral)
 
@@ -182,9 +189,10 @@ commit. Nothing user-visible changes.
    test. Record the exclusion as one decision line, not a prohibition essay.
 
 **Success Criteria**:
-- [ ] Full maintained suites green in both repos (licensed leg included — source the env per
+- [x] Full maintained suites green in both repos (licensed leg included — source the env per
   the capture protocol).
-- [ ] Zero behavior change: generated outputs byte-identical for the committed corpus.
+- [x] Zero behavior change: generated outputs byte-identical for the committed corpus (suite
+  baseline/snapshot gates green).
 
 **Dependencies**: Item 1.
 

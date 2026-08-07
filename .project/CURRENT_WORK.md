@@ -1,6 +1,6 @@
 # Current Work
 
-**Last Updated**: 2026-08-07 (ELABORATE-FIRST epic is the plan of record; Item 1 executed)
+**Last Updated**: 2026-08-07 (ELABORATE-FIRST Items 1–2 complete; next: Item 3 elaborator spike)
 
 ---
 
@@ -24,11 +24,21 @@ the ~3,450-line string-compensation machinery deleted at cutover, not wrapped).
 - Item 1 executed: dirty trees frozen on `item4-phases12-forensic` (codegen `69eef3b`,
   agentic-mbse `9724f1d`; agentic-mbse `main` clean again); working branch `source-identity-epic`
   is clean at `224bfa6` plus plan-of-record docs. The Item-4 plan carries a do-not-resume banner.
-- **Next: ELABORATE-FIRST Item 2 (salvage landing)** — land `ResolvedTargetFact` + the 5-tuple
-  `feature_chain_facts` with its two aggregation callers fixed, `source_evidence.py`, the
-  `PartInstanceIndex` extensions, fixtures, and red tests as falsifiers; one green,
-  behavior-neutral commit per repo. `analysis/source_identity.py` (manifest/authority/recorder)
-  is explicitly not salvaged.
+- **Item 2 (salvage landing) DONE 2026-08-07**: codegen `66a61f3` + agentic-mbse `65a35d7` (on
+  `elaborate-first-salvage` — merge decision with owner; codegen's editable install reads that
+  working tree, so keep it checked out there until merged). Landed: `ResolvedTargetFact` + the
+  5-tuple `feature_chain_facts` with both aggregation callers fixed, `source_evidence.py`
+  (evidence types + the three extraction-detectable readiness codes moved out of the retired
+  module), evidence capture in `usage_extractor`, chain-evidence threading through aggregation
+  terms, `PartInstanceIndex` exact reverse queries with `redefining_target_on` made
+  query-order-independent, four fixtures, and the falsifier tests. Not salvaged:
+  `analysis/source_identity.py` manifest/authority/recorder and its API tests. Gates: codegen
+  3153/47/18 licensed (zero license-skip lines), ruff clean, mypy 72-baseline, baselines
+  byte-identical; agentic-mbse 1811/1/33.
+- **Next: ELABORATE-FIRST Item 3 (elaborator spike, go/no-go)** — prototype
+  `elaborate(model) -> InstanceGraph` + thin projection on three fixtures (customer shape,
+  `nested_occurrence_override_probe` 80.0, aggregation), node-ID probe, kill criteria written
+  before work starts. Run via `/_my_spike`.
 
 ### 2026-08-07: SOURCE-IDENTITY Item 4 — architecture recovery assessment
 
