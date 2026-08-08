@@ -133,12 +133,20 @@ class AttrNode:
 
 @dataclass
 class CalcNode:
-    """One concrete calculation occurrence.
+    """One concrete calculation occurrence — a calc usage or a computed attribute.
 
     ``calc_def_qualified_name`` keeps the raw ``::`` form — projection derives
     module types and the registry template requires it (spike probe 3).
     ``unbound_params`` are declared inputs with no binding: entry-point
     candidates, carried so projection never re-walks the model.
+
+    A FORMULA attribute (``attribute area = length * width``) is a computed
+    node (design D6): ``is_computed`` is set, its single output is
+    ``calc_name`` (the attribute's own name), its ``inputs`` are the
+    expression's term edges keyed by term path, both def-name fields are empty
+    (no calc def exists), and ``expression_ast`` carries the live value
+    expression for projection to render. Consumers referencing the attribute
+    resolve to a producer edge on this node — never to an attribute node.
     """
 
     node_id: str
@@ -147,6 +155,8 @@ class CalcNode:
     calc_def_qualified_name: str
     inputs: dict[str, InputRef] = field(default_factory=dict)
     unbound_params: tuple[str, ...] = ()
+    is_computed: bool = False
+    expression_ast: object | None = None
 
 
 @dataclass

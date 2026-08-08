@@ -29,7 +29,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from agentic_mbse.sysml.data_models import ResolvedTargetFact
-from agentic_mbse.sysml.expression import feature_chain_facts
+from agentic_mbse.sysml.expression import feature_chain_facts, resolved_target_fact
 from agentic_mbse.sysml.helpers import get_calc_def_name
 from agentic_mbse.sysml.syside_adapter import SysideAdapter
 
@@ -103,11 +103,30 @@ class _DefAttribute:
 
     ``chain_root``/``chain_members`` are set only for a pure feature-chain
     value (an EXPOSE) — resolved into an alias edge per occurrence.
+    ``expression`` carries any other non-literal value expression; whether it
+    elaborates to a computed node (design D6) is decided by the term walk at
+    node creation.
     """
 
     name: str
     decl_qn: str
     default: float | int | str | bool | None
+    chain_root: ResolvedTargetFact | None
+    chain_members: tuple[str, ...]
+    expression: Any = None
+
+
+@dataclass(frozen=True)
+class _ExpressionTerm:
+    """One feature term inside a computed attribute's expression.
+
+    ``key`` is the term's stable input name (the sanitized reference path);
+    a chain term carries its root fact + member names, a plain reference term
+    carries its referent fact.
+    """
+
+    key: str
+    referent: ResolvedTargetFact | None
     chain_root: ResolvedTargetFact | None
     chain_members: tuple[str, ...]
 
@@ -202,6 +221,10 @@ class _Elaborator:
         self._alias_pending: list[
             tuple[str, str, ResolvedTargetFact | None, tuple[str, ...]]
         ] = []
+        # Computed-attribute expression terms awaiting resolution.
+        self._term_pending: list[
+            tuple[dict[str, InputRef], str, _ExpressionTerm]
+        ] = []
         self._def_attrs_cache: dict[str, list[_DefAttribute]] = {}
 
     def run(self) -> InstanceGraph:
@@ -213,6 +236,7 @@ class _Elaborator:
         self._build_calc_nodes()
         self._build_constraint_nodes()
         self._resolve_aliases()
+        self._resolve_terms()
         self._resolve_pending()
         return self._graph
 
@@ -339,8 +363,32 @@ class _Elaborator:
         self, path: str, attr: _DefAttribute, *, keep_existing: bool = False
     ) -> None:
         node_id = f"{path}__{attr.name}"
-        if keep_existing and node_id in self._graph.attrs:
+        if keep_existing and (
+            node_id in self._graph.attrs or node_id in self._graph.calcs
+        ):
             return
+        if attr.expression is not None:
+            terms = self._expression_terms(attr.expression)
+            if terms is not None:
+                # Computed attribute (design D6): the attribute occurrence IS a
+                # calc node; its single output is the attribute's own name.
+                node = CalcNode(
+                    node_id=node_id,
+                    calc_name=attr.name,
+                    calc_def_name="",
+                    calc_def_qualified_name="",
+                    is_computed=True,
+                    expression_ast=attr.expression,
+                )
+                self._graph.calcs[node_id] = node
+                for term in terms:
+                    self._term_pending.append((node.inputs, node_id, term))
+                return
+            logger.warning(
+                "Attribute %s has a value expression with unsupported terms; "
+                "elaborated as a value-less node.",
+                node_id,
+            )
         self._graph.attrs[node_id] = AttrNode(
             node_id=node_id,
             occurrence_path=path,
@@ -420,7 +468,73 @@ class _Elaborator:
             root, _leaf, _qns, members, has_index = feature_chain_facts(expr)
             if not has_index:
                 return _DefAttribute(name, decl_qn, None, root, members)
-        return _DefAttribute(name, decl_qn, None, None, ())
+        return _DefAttribute(name, decl_qn, None, None, (), expression=expr)
+
+    # ---- computed-attribute expression terms (D6) --------------------------
+
+    @classmethod
+    def _expression_terms(cls, expr: Any) -> list[_ExpressionTerm] | None:
+        """The feature terms of a computed attribute's expression, or ``None``
+        when the expression contains a node kind this leg does not support
+        (invocations — ``sum(...)`` aggregations are the aggregation leg's).
+
+        Literals contribute no term; duplicate references collapse onto one key.
+        """
+        terms: dict[str, _ExpressionTerm] = {}
+        if not cls._collect_expression_terms(expr, terms):
+            return None
+        return list(terms.values())
+
+    @classmethod
+    def _collect_expression_terms(
+        cls, node: Any, terms: dict[str, _ExpressionTerm]
+    ) -> bool:
+        """Recursive term walk; False means an unsupported node kind."""
+        if is_literal_expression(node):
+            return True
+        # FeatureChainExpression MUST be before OperatorExpression -- FCE is a
+        # subtype of OE in SysIDE's type system (doc 19 invariant).
+        if SysideAdapter.is_instance(node, "FeatureChainExpression"):
+            root, _leaf, _qns, members, has_index = feature_chain_facts(node)
+            if has_index or root is None:
+                return False
+            key = "__".join(
+                [
+                    sanitize_name(root.element_name or "root"),
+                    *(sanitize_name(member) for member in members),
+                ]
+            )
+            terms[key] = _ExpressionTerm(
+                key=key, referent=None, chain_root=root, chain_members=members
+            )
+            return True
+        if SysideAdapter.is_instance(node, "FeatureReferenceExpression"):
+            fact = resolved_target_fact(getattr(node, "referent", None))
+            if fact is None:
+                return False
+            key = sanitize_name(fact.element_name or "term")
+            terms[key] = _ExpressionTerm(
+                key=key, referent=fact, chain_root=None, chain_members=()
+            )
+            return True
+        if SysideAdapter.is_instance(node, "OperatorExpression"):
+            return all(
+                cls._collect_expression_terms(operand, terms)
+                for operand in getattr(node, "operands", None) or []
+            )
+        return False
+
+    def _resolve_terms(self) -> None:
+        for inputs, node_id, term in self._term_pending:
+            if term.chain_root is not None or term.chain_members:
+                ref = self._resolve_chain(
+                    node_id, term.key, term.chain_root, term.chain_members
+                )
+            else:
+                assert term.referent is not None  # walk sets exactly one side
+                ref = self._resolve_reference(node_id, term.key, term.referent)
+            if ref is not None:
+                inputs[term.key] = self._follow_aliases(ref)
 
     # ---- stage 2b: redefinition-borne EXPOSE aliases -----------------------
 
@@ -968,15 +1082,22 @@ class _Elaborator:
         path = base_path
         for i, raw_member in enumerate(members):
             member = sanitize_name(raw_member)
-            calc_candidate = f"{path}__{member}"
-            if calc_candidate in self._graph.calcs:
+            calc_candidate = self._graph.calcs.get(f"{path}__{member}")
+            if calc_candidate is not None:
                 rest = members[i + 1 :]
+                if calc_candidate.is_computed and not rest:
+                    # A chain ending AT a computed attribute reads its output.
+                    return ProducerRef(
+                        calc_candidate.node_id, calc_candidate.calc_name
+                    )
                 if len(rest) == 1:
-                    return ProducerRef(calc_candidate, sanitize_name(rest[0]))
+                    return ProducerRef(
+                        calc_candidate.node_id, sanitize_name(rest[0])
+                    )
                 self._miss(
                     consumer_path,
                     param_name,
-                    f"chain continues past producer {calc_candidate!r} "
+                    f"chain continues past producer {calc_candidate.node_id!r} "
                     f"with tail {rest!r}",
                 )
                 return None
@@ -1008,9 +1129,9 @@ class _Elaborator:
                     if occurrence is None:
                         continue  # an untyped context has no definition
                     if self._def_declares(occurrence.part_def_qn, owner_key):
-                        node = self._graph.attr_at(ancestor, leaf)
-                        if node is not None:
-                            return NodeRef(node.node_id)
+                        ref = self._attr_or_computed(ancestor, leaf)
+                        if ref is not None:
+                            return ref
             self._miss(
                 consumer_path,
                 param_name,
@@ -1021,11 +1142,12 @@ class _Elaborator:
         if not fact.owner_qualified_name:
             # Package-level referent: a package-owned attribute is a singleton
             # node at its own sanitized qualified name.
-            node = self._graph.attrs.get(
-                sanitize_qualified_name(str(fact.qualified_name))
-            )
-            if node is not None:
-                return NodeRef(node.node_id)
+            declared = sanitize_qualified_name(str(fact.qualified_name))
+            path, _, referent_leaf = declared.rpartition("__")
+            if path:
+                ref = self._attr_or_computed(path, referent_leaf)
+                if ref is not None:
+                    return ref
             self._miss(
                 consumer_path,
                 param_name,
@@ -1055,9 +1177,9 @@ class _Elaborator:
         ]
         picks = on_chain or candidates
         if len(picks) == 1:
-            node = self._graph.attr_at(picks[0], leaf)
-            if node is not None:
-                return NodeRef(node.node_id)
+            ref = self._attr_or_computed(picks[0], leaf)
+            if ref is not None:
+                return ref
             self._miss(
                 consumer_path,
                 param_name,
@@ -1084,6 +1206,17 @@ class _Elaborator:
                 ),
             )
         )
+        return None
+
+    def _attr_or_computed(self, path: str, leaf: str) -> InputRef | None:
+        """The reference target ``{path}__{leaf}`` — an attribute node, or a
+        computed attribute's output (a producer edge, design D6)."""
+        node = self._graph.attr_at(path, leaf)
+        if node is not None:
+            return NodeRef(node.node_id)
+        calc = self._graph.calcs.get(f"{path}__{leaf}")
+        if calc is not None and calc.is_computed:
+            return ProducerRef(calc.node_id, calc.calc_name)
         return None
 
     def _def_declares(self, part_def_qn: str, owner_key: str) -> bool:

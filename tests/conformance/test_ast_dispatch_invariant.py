@@ -83,6 +83,7 @@ DUAL_CHECK_SITES = [
     (USAGE_EXTRACTOR_PATH, "_extract_single_binding"),
     (PARAMETER_GROUPS_PATH, "_extract_default_value"),
     (ELABORATE_PATH, "_constraint_actuals"),
+    (ELABORATE_PATH, "_collect_expression_terms"),
 ]
 
 DUAL_CHECK_IDS = [
@@ -90,6 +91,7 @@ DUAL_CHECK_IDS = [
     "_extract_single_binding",
     "_extract_default_value",
     "_constraint_actuals",
+    "_collect_expression_terms",
 ]
 
 # Sites that use if/if/if chains (not elif) and must follow full canonical ordering
@@ -106,12 +108,14 @@ ELIF_SITES = [
     (USAGE_EXTRACTOR_PATH, "_extract_single_binding"),
     (PARAMETER_GROUPS_PATH, "_extract_default_value"),
     (ELABORATE_PATH, "_constraint_actuals"),
+    (ELABORATE_PATH, "_collect_expression_terms"),
 ]
 
 ELIF_IDS = [
     "_extract_single_binding",
     "_extract_default_value",
     "_constraint_actuals",
+    "_collect_expression_terms",
 ]
 
 
@@ -271,10 +275,11 @@ class TestReqAst04DispatchSiteGuardrail:
     """Guard against new unaudited dispatch sites appearing in the codebase."""
 
     def test_total_dual_check_site_count(self):
-        """Exactly 4 audited functions have both FCE and OE is_instance() checks.
+        """Exactly 5 audited functions have both FCE and OE is_instance() checks.
 
         Was 3 after Item 13 dropped build_expression_ast; ELABORATE-FIRST Item 5
-        adds the elaborator's constraint-actual dispatch (_constraint_actuals)."""
+        adds the elaborator's constraint-actual dispatch (_constraint_actuals)
+        and the computed-attribute term walk (_expression_terms)."""
         all_dispatch = find_all_dispatch_functions(SRC_ROOT, EXPRESSION_TYPE_NAMES)
         shared_aggregation_calls = find_is_instance_calls_in_function(
             AGENTIC_AGGREGATION_PATH,
@@ -295,16 +300,17 @@ class TestReqAst04DispatchSiteGuardrail:
             for key, types in all_dispatch.items()
             if "FeatureChainExpression" in types and "OperatorExpression" in types
         }
-        assert len(dual_check) == 4, (
-            f"Expected 4 dual-check sites (FCE+OE), found {len(dual_check)}: "
+        assert len(dual_check) == 5, (
+            f"Expected 5 dual-check sites (FCE+OE), found {len(dual_check)}: "
             f"{sorted(dual_check.keys())}"
         )
 
     def test_total_dispatch_function_count(self):
-        """Exactly 6 audited functions dispatch on 2+ expression types.
+        """Exactly 7 audited functions dispatch on 2+ expression types.
 
         Was 5 after Item 13 dropped build_expression_ast; ELABORATE-FIRST Item 5
-        adds the elaborator's constraint-actual dispatch (_constraint_actuals)."""
+        adds the elaborator's constraint-actual dispatch (_constraint_actuals)
+        and the computed-attribute term walk (_expression_terms)."""
         all_dispatch = find_all_dispatch_functions(SRC_ROOT, EXPRESSION_TYPE_NAMES)
         shared_classifier_calls = find_is_instance_calls_in_function(
             AGENTIC_HIERARCHY_PATH,
@@ -335,8 +341,8 @@ class TestReqAst04DispatchSiteGuardrail:
                 shared_aggregation_types
             )
         multi_type = {key: types for key, types in all_dispatch.items() if len(types) >= 2}
-        assert len(multi_type) == 6, (
-            f"Expected 6 audited multi-type dispatch functions, found {len(multi_type)}: "
+        assert len(multi_type) == 7, (
+            f"Expected 7 audited multi-type dispatch functions, found {len(multi_type)}: "
             f"{sorted(multi_type.keys())}"
         )
 

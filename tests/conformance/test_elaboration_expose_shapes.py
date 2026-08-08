@@ -291,9 +291,14 @@ def test_catf_lenient_records_the_finding_and_skips_only_that_binding(
 
 
 def test_catf_all_calc_usages_place_under_untyped_parts(graph_cache) -> None:
-    """catf: all 42 calc usages sit under untyped parts; every one elaborates."""
+    """catf: all 42 calc usages sit under untyped parts; every one elaborates.
+
+    Counted over non-computed nodes: the D6 leg additionally lifts catf's
+    computed attributes into computed calc nodes.
+    """
     graph = graph_cache(CATF, strict=False)
-    assert len(graph.calcs) == 42, sorted(graph.calcs)
+    usage_calcs = [c for c in graph.calcs.values() if not c.is_computed]
+    assert len(usage_calcs) == 42, sorted(c.node_id for c in usage_calcs)
 
 
 def test_catf_multi_hop_expose_reaches_the_producer_cross_package(

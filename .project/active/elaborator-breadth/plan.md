@@ -46,8 +46,16 @@ authoritative and untouched throughout.
       `.project/research/20260807-170356_elaborator-specialization-retypes.md`. spec_chain_twolevel
       is the FOURTH fixture authoring `in R = R`. Open: multi-level def-tier literal shadowing
       still unordered (no fixture authors it; author one in the shadowing leg).
-- [ ] FORMULA computed attributes incl. FORMULA→FORMULA (previously unsupported — expected to
-      lift, design D6)
+- [x] FORMULA computed attributes incl. FORMULA→FORMULA (previously unsupported — expected to
+      lift, design D6) — DONE 2026-08-07. Lifted: computed attribute = calc node at the attr's
+      occurrence path (single output = attr name; term edges via the shared referent rules;
+      one `_attr_or_computed` lookup serves every consumer arm). All attr_expr_probe patterns
+      A–D wire, incl. FORMULA→FORMULA and fan-in; pure-chain values stay EXPOSE aliases;
+      `sum(...)` terms fall back loud (next leg). catf lifts 144 computed attrs. 9 kept tests
+      in `tests/conformance/test_elaboration_computed_attrs.py`; findings
+      `.project/research/20260807-171548_elaborator-computed-attributes.md`. Open: `:>>`
+      literal override targeting a computed attr has no fixture — surface, never disposition
+      silently, if the grind finds one.
 - [ ] EXPRESSION-redefinition aggregations incl. cross-part rollups
       (crosspart_rollup_twolevel, d38_caret, agg_localterm_probe)
 - [ ] Constraint catalog through projection (design D7; nested_occurrence_override_probe strict
