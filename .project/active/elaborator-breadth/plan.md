@@ -56,8 +56,18 @@ authoritative and untouched throughout.
       `.project/research/20260807-171548_elaborator-computed-attributes.md`. Open: `:>>`
       literal override targeting a computed attr has no fixture — surface, never disposition
       silently, if the grind finds one.
-- [ ] EXPRESSION-redefinition aggregations incl. cross-part rollups
-      (crosspart_rollup_twolevel, d38_caret, agg_localterm_probe)
+- [x] EXPRESSION-redefinition aggregations incl. cross-part rollups
+      (crosspart_rollup_twolevel, d38_caret, agg_localterm_probe) — DONE 2026-08-07.
+      EXPRESSION `:>>` → computed nodes (post-tier conversion); term edges via the shared
+      neutral decomposition + the same referent rules; sum() expands per concrete instance
+      following per-child aliases — the Item-10 collapse family dies by construction (a/b
+      producers distinct). Added the def-referent off-ancestor fallback (qualified agg terms).
+      7 kept tests in `tests/conformance/test_elaboration_aggregations.py`; findings
+      `.project/research/20260807-173125_elaborator-aggregations.md`.
+      **SURFACED for the owner checkpoint:** d38_caret (parameterized multiplicity) blocks
+      loud per the ratified expand-finite-or-block-loud stance — legacy generates it via
+      parametric multiply; stay blocked or ratify a parametric-sum form? Fifth+sixth
+      fixtures authoring `in R = R` found (crosspart_rollup, agg_localterm).
 - [ ] Constraint catalog through projection (design D7; nested_occurrence_override_probe strict
       run must now generate)
 - [ ] Independent equal-valued literals stay distinct; shadowing/specialization referent

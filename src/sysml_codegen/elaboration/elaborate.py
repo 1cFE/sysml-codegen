@@ -28,6 +28,7 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import Any
 
+import agentic_mbse.sysml.aggregation as shared_aggregation
 from agentic_mbse.sysml.data_models import ResolvedTargetFact
 from agentic_mbse.sysml.expression import feature_chain_facts, resolved_target_fact
 from agentic_mbse.sysml.helpers import get_calc_def_name
@@ -225,18 +226,24 @@ class _Elaborator:
         self._term_pending: list[
             tuple[dict[str, InputRef], str, _ExpressionTerm]
         ] = []
+        # Expression-valued redefinitions: (node_id, attr name, expression).
+        self._expr_redefs: list[tuple[str, str, Any]] = []
+        # Aggregation expressions awaiting term-edge resolution.
+        self._agg_pending: list[tuple[dict[str, InputRef], str, Any]] = []
         self._def_attrs_cache: dict[str, list[_DefAttribute]] = {}
 
     def run(self) -> InstanceGraph:
         self._build_attr_nodes()
         self._build_usage_attr_nodes()
         self._build_package_attr_nodes()
-        self._collect_redefinition_aliases()
+        self._collect_redefinitions()
         self._apply_value_tiers()
+        self._apply_expression_redefinitions()
         self._build_calc_nodes()
         self._build_constraint_nodes()
         self._resolve_aliases()
         self._resolve_terms()
+        self._resolve_aggregations()
         self._resolve_pending()
         return self._graph
 
@@ -536,65 +543,88 @@ class _Elaborator:
             if ref is not None:
                 inputs[term.key] = self._follow_aliases(ref)
 
-    # ---- stage 2b: redefinition-borne EXPOSE aliases -----------------------
+    # ---- stage 2b: value-carrying redefinitions (aliases + expressions) ----
 
-    def _collect_redefinition_aliases(self) -> None:
-        """Alias facts from ``:>>`` redefinitions whose value is a pure chain.
+    def _collect_redefinitions(self) -> None:
+        """Facts from ``:>>`` redefinitions carrying a non-literal value.
 
-        ``part def 'HIF Driver' :> 'IFE Driver' { :>> cost_per_joule =
-        meier_cost.gamma; }`` re-sources an inherited attribute to a producer —
-        the redefined node must alias the chain target at every occurrence of
-        the owning definition (or usage), or every consumer of that attribute
-        degrades to a dead entry point (the fusion-tea WI-015 pin). Literal
-        ``:>>`` stays the value tiers' job; expression ``:>>`` is the
-        aggregation leg's (D6).
+        A pure-chain value (``:>> cost_per_joule = meier_cost.gamma``)
+        re-sources the inherited attribute — an EXPOSE alias at every
+        occurrence of the owning definition or usage (the fusion-tea WI-015
+        pin). An expression value (``:>> station_total = rig.gain_setting +
+        100.0``, ``sum(cell.cell_cost)``) is a computed attribute (D6),
+        recorded for conversion after the value tiers ran. Literal ``:>>``
+        stays the value tiers' job.
 
         Enqueue order is the tier order — definition-borne first, usage-borne
         second — so a later (inner) alias overwrites an earlier one at
-        resolution; an occurrence-literal override outranks both (checked in
-        ``_resolve_aliases``).
+        resolution; an occurrence-literal override outranks both.
         """
         for part_def in self._qn_to_partdef.values():
-            anchors = None
-            for name, root, members in self._redefining_chain_members(part_def):
-                if anchors is None:
-                    def_key = build_element_qualified_name(part_def)
-                    anchors = self._expand_def_context(def_key)
-                for anchor in anchors:
-                    self._alias_pending.append(
-                        (f"{anchor}__{name}", name, root, members)
-                    )
+            self._collect_owner_redefinitions(
+                part_def,
+                lambda pd=part_def: self._expand_def_context(
+                    build_element_qualified_name(pd)
+                ),
+            )
         for usage in SysideAdapter.elements_of_type(self._model, "PartUsage"):
-            anchors = None
-            for name, root, members in self._redefining_chain_members(usage):
-                if anchors is None:
-                    anchors = self._usage_attr_paths(usage)
-                for anchor in anchors:
-                    self._alias_pending.append(
-                        (f"{anchor}__{name}", name, root, members)
-                    )
+            self._collect_owner_redefinitions(
+                usage, lambda u=usage: self._usage_attr_paths(u)
+            )
 
-    @staticmethod
-    def _redefining_chain_members(
-        owner: Any,
-    ) -> list[tuple[str, ResolvedTargetFact | None, tuple[str, ...]]]:
-        """(redefined name, chain root, members) per ``:>>`` member whose value
-        expression is a pure (unindexed) feature chain."""
-        out: list[tuple[str, ResolvedTargetFact | None, tuple[str, ...]]] = []
+    def _collect_owner_redefinitions(self, owner: Any, anchor_paths: Any) -> None:
+        entries: list[tuple[str, Any]] = []
         for member in getattr(owner, "owned_members", None) or []:
             if not getattr(member, "owned_redefinitions", None):
                 continue
             if not getattr(member, "name", None):
                 continue
             expr = getattr(member, "feature_value_expression", None)
-            if expr is None or not SysideAdapter.is_instance(
-                expr, "FeatureChainExpression"
-            ):
+            if expr is None or is_literal_expression(expr):
                 continue
-            root, _leaf, _qns, members, has_index = feature_chain_facts(expr)
-            if not has_index:
-                out.append((sanitize_name(member.name), root, members))
-        return out
+            entries.append((sanitize_name(member.name), expr))
+        if not entries:
+            return
+        anchors = anchor_paths()
+        for name, expr in entries:
+            # FeatureChainExpression MUST be before OperatorExpression -- FCE
+            # is a subtype of OE in SysIDE's type system (doc 19 invariant).
+            if SysideAdapter.is_instance(expr, "FeatureChainExpression"):
+                root, _leaf, _qns, members, has_index = feature_chain_facts(expr)
+                if has_index:
+                    continue  # indexed source: screened form, never flattened
+                for anchor in anchors:
+                    self._alias_pending.append(
+                        (f"{anchor}__{name}", name, root, members)
+                    )
+            else:
+                for anchor in anchors:
+                    self._expr_redefs.append((f"{anchor}__{name}", name, expr))
+
+    def _apply_expression_redefinitions(self) -> None:
+        """Convert expression-redefined attributes into computed nodes (D6).
+
+        Runs after the value tiers: an occurrence-literal override outranks the
+        expression redefinition, so such a node keeps its value. Otherwise the
+        attribute node is replaced by a computed calc node whose term edges the
+        aggregation resolver fills.
+        """
+        for node_id, attr_name, expr in self._expr_redefs:
+            node = self._graph.attrs.get(node_id)
+            if node is not None and node.value_site is ValueSite.OCCURRENCE_OVERRIDE:
+                continue
+            if node is not None:
+                del self._graph.attrs[node_id]
+            calc = CalcNode(
+                node_id=node_id,
+                calc_name=attr_name,
+                calc_def_name="",
+                calc_def_qualified_name="",
+                is_computed=True,
+                expression_ast=expr,
+            )
+            self._graph.calcs[node_id] = calc
+            self._agg_pending.append((calc.inputs, node_id, expr))
 
     # ---- stage 3: value tiers, innermost-wins (D4) ------------------------
 
@@ -873,6 +903,107 @@ class _Elaborator:
             ref = node.alias_target
         return ref
 
+    def _resolve_aggregations(self) -> None:
+        """Term edges for expression-redefined computed nodes (D6).
+
+        The shared neutral decomposition supplies every term's Item-2 resolved
+        facts; each term resolves by the same referent rules as bindings. A
+        ``sum(part.attr)`` term expands to one edge per concrete instance of
+        the part under the node's anchor — occurrence enumeration, never QN
+        string surgery.
+        """
+        for inputs, node_id, expr in self._agg_pending:
+            decomposition = shared_aggregation.decompose_aggregation_expression(expr)
+            anchor = node_id.rpartition("__")[0]
+            self._collect_aggregation_edges(
+                decomposition.root, decomposition, inputs, node_id, anchor
+            )
+
+    def _collect_aggregation_edges(
+        self,
+        node: Any,
+        decomposition: Any,
+        inputs: dict[str, InputRef],
+        node_id: str,
+        anchor: str,
+    ) -> None:
+        agg = shared_aggregation
+        if isinstance(node, agg.SumNode):
+            term = decomposition.sum_terms[node.term_index]
+            part = sanitize_name(term.part_usage_name)
+            attr = sanitize_name(term.attribute_name)
+            base = f"{anchor}__{part}"
+            instances = sorted(
+                path
+                for path in self._context_paths
+                if path == base or path.startswith(f"{base}[")
+            )
+            if not instances:
+                self._miss(
+                    node_id,
+                    f"{part}.{attr}",
+                    f"sum term {part!r} has no concrete instances under "
+                    f"{anchor!r}",
+                )
+                return
+            for instance in instances:
+                key = f"{instance[len(anchor) + 2 :]}__{attr}"
+                ref = self._attr_or_computed(instance, attr)
+                if ref is None:
+                    self._miss(
+                        node_id, key, f"sum instance {instance}__{attr} is not a node"
+                    )
+                    continue
+                inputs[key] = self._follow_aliases(ref)
+            return
+        if isinstance(node, agg.FeatureChainNode):
+            if node.has_index_segment:
+                self._miss(
+                    node_id,
+                    node.source_path,
+                    "indexed chain term is outside the executable subset",
+                )
+                return
+            key = "__".join(
+                sanitize_name(segment) for segment in node.source_path.split(".")
+            )
+            ref = self._resolve_chain(
+                node_id, key, node.chain_root, tuple(node.resolved_member_names)
+            )
+            if ref is not None:
+                inputs[key] = self._follow_aliases(ref)
+            return
+        if isinstance(node, agg.FeatureReferenceNode):
+            key = sanitize_name(node.attribute_name)
+            if node.resolved_target is None:
+                self._miss(node_id, key, "reference term has no resolved target")
+                return
+            ref = self._resolve_reference(node_id, key, node.resolved_target)
+            if ref is not None:
+                inputs[key] = self._follow_aliases(ref)
+            return
+        if isinstance(node, (agg.LiteralNode, agg.NullNode)):
+            return
+        if isinstance(node, (agg.OperatorNode, agg.InvocationNode)):
+            if isinstance(node, agg.InvocationNode) and node.unsupported:
+                self._miss(
+                    node_id,
+                    node.function_name,
+                    f"unsupported invocation {node.function_name!r} in an "
+                    "aggregation expression",
+                )
+            for operand in node.operands:
+                self._collect_aggregation_edges(
+                    operand, decomposition, inputs, node_id, anchor
+                )
+            return
+        if isinstance(node, agg.UnsupportedNode):
+            self._miss(node_id, node.node_kind, node.diagnostic_message)
+            return
+        raise RuntimeError(
+            f"unrecognized neutral aggregation node {type(node).__name__}"
+        )
+
     def _resolve_pending(self) -> None:
         for pending in self._pending:
             ref = self._resolve_evidence(
@@ -1132,6 +1263,9 @@ class _Elaborator:
                         ref = self._attr_or_computed(ancestor, leaf)
                         if ref is not None:
                             return ref
+                return self._resolve_def_referent_off_ancestor(
+                    consumer_path, param_name, owner_key, leaf, fact
+                )
             self._miss(
                 consumer_path,
                 param_name,
@@ -1205,6 +1339,61 @@ class _Elaborator:
                     f"{sorted(picks)!r} and none encloses the consumer"
                 ),
             )
+        )
+        return None
+
+    def _resolve_def_referent_off_ancestor(
+        self,
+        consumer_path: str,
+        param_name: str,
+        owner_key: str,
+        leaf: str,
+        fact: ResolvedTargetFact,
+    ) -> InputRef | None:
+        """A def-level referent declared by NO enclosing occurrence: the owning
+        definition's own occurrence, preferring one under the consumer's
+        enclosing contexts, unique otherwise (mirrors the chain rule's
+        off-ancestor fallback). E.g. an aggregation term
+        ``'Qual Plant'::level`` authored on the plant that CONTAINS the
+        qual_plant occurrence. Owns every disposition — exactly one diagnostic
+        per miss."""
+        candidates = [
+            occ.instance_path for occ in self._index.occurrences_of(owner_key)
+        ]
+        ancestors = self._ancestors(consumer_path)
+        under_ancestor = [
+            path
+            for path in candidates
+            if any(path.startswith(f"{ancestor}__") for ancestor in ancestors)
+        ]
+        picks = under_ancestor or candidates
+        if len(picks) == 1:
+            ref = self._attr_or_computed(picks[0], leaf)
+            if ref is not None:
+                return ref
+            self._miss(
+                consumer_path,
+                param_name,
+                f"declaring occurrence {picks[0]!r} has no attribute {leaf!r}",
+            )
+            return None
+        if picks:
+            self._graph.diagnostics.append(
+                Diagnostic(
+                    code=ElaborationCode.SI_OCCURRENCE_AMBIGUOUS,
+                    consumer=consumer_path,
+                    param_name=param_name,
+                    detail=(
+                        f"{fact.qualified_name!r} is declared by occurrences "
+                        f"{sorted(picks)!r} and none encloses the consumer"
+                    ),
+                )
+            )
+            return None
+        self._miss(
+            consumer_path,
+            param_name,
+            f"no occurrence declares {fact.qualified_name!r}",
         )
         return None
 
