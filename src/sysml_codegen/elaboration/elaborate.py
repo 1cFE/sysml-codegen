@@ -630,18 +630,30 @@ class _Elaborator:
 
     def _apply_value_tiers(self) -> None:
         # Tier 2 first (specialized-def :>> literals), so tier 1 overwrites.
-        # Multi-level def-tier shadowing (a :>> on both a def and its subtype)
-        # is the Phase-2 spec-chain leg; no Phase-1 fixture authors it.
+        # A subtype's :>> and its supertype's :>> can both expand onto the same
+        # occurrence (subtype-closure enumeration); the more specific owning
+        # definition wins, never list order.
+        tier2_owner: dict[str, str] = {}
         for redefinition in self._hier.redefinitions:
             if redefinition.literal_value is None:
                 continue
             attr_name = sanitize_name(redefinition.attribute_name)
-            for path in self._expand_def_context(redefinition.owning_part_qn):
-                node = self._graph.attrs.get(f"{path}__{attr_name}")
+            owner_key = redefinition.owning_part_qn
+            for path in self._expand_def_context(owner_key):
+                node_id = f"{path}__{attr_name}"
+                node = self._graph.attrs.get(node_id)
                 if node is None:
+                    continue
+                previous = tier2_owner.get(node_id)
+                if previous is not None and not self._def_declares(
+                    owner_key, previous
+                ):
+                    # The previous writer's definition is not a supertype of
+                    # this one, so this one is not more specific — keep.
                     continue
                 node.value = redefinition.literal_value
                 node.value_site = ValueSite.SPECIALIZED_DEF
+                tier2_owner[node_id] = owner_key
 
         # Tier 1: occurrence :>> overrides; the deepest anchor wins.
         for override in self._hier.design_overrides:

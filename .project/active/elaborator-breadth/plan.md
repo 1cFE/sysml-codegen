@@ -70,8 +70,15 @@ authoritative and untouched throughout.
       fixtures authoring `in R = R` found (crosspart_rollup, agg_localterm).
 - [ ] Constraint catalog through projection (design D7; nested_occurrence_override_probe strict
       run must now generate)
-- [ ] Independent equal-valued literals stay distinct; shadowing/specialization referent
-      fixtures (the capability-survey evidence gap — author the missing fixtures)
+- [x] Independent equal-valued literals stay distinct; shadowing/specialization referent
+      fixtures (the capability-survey evidence gap — author the missing fixtures) — DONE
+      2026-08-07. Authored `tests/fixtures/elab_shadowing_probe/` (two-level def literal
+      shadowing + equal-valued occurrence literals; SysIDE authoring fact: overridable
+      chains need `default` at every level). Tier-2 now specificity-ordered (more-specific
+      owning def wins, closing the leg-3 ordering hole). shadowed_reference pinned:
+      qualified referent never selects the scope shadow. 4 kept tests in
+      `tests/conformance/test_elaboration_shadowing.py`; findings
+      `.project/research/20260807-174301_elaborator-shadowing-literals.md`.
 - [ ] Snapshot round-trip learning test: serialize instance graph → rebuild → project; parity
       with live projection (de-risks Item 6's format before anything is versioned)
 
