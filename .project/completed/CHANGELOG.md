@@ -4,6 +4,62 @@ Historical record of completed work.
 
 ---
 
+## [2026-08-09] - [ELABORATE-FIRST Item 5] Exact-Identity Elaborator Breadth
+
+**Type**: Item (five audit rounds: phases-1/2 partial certify, rendered-path Needs Work, v1/v2
+Needs Work, v3 certified after two remediation waves)
+**Duration**: plan 2026-08-08 → certified 2026-08-09 (exact-ID rewrite; supersedes the 2026-08-07
+rendered-path implementation)
+
+### Summary
+Built and proved the complete exact-identity elaboration front end (ELABORATE-FIRST Item 5) while
+the legacy string-resolution route stayed shipped and byte-frozen. SysIDE declaration UUIDs are
+wrapped once into typed declaration/slot/occurrence/node identities; a finite occurrence walker,
+one contextual resolver, and fail-closed diagnostics feed a typed instance graph that projects
+mechanically onto the existing `ComputationGraph` seam and round-trips through canonical
+`instance-graph/v1` JSON. Evidence: all 29 inherited contract cells execute at generated-public or
+named-diagnostic tier with off-default mutations on live and relocated routes; the 37-fixture
+dual-run ledger is machine-verified against a live corpus run (26 expected-collapse / 11
+expected-fix, zero unresolved). Audit rounds successively removed rendered-path edge selection
+(spec R9), fail-open qualifier fallback, source-text-as-evidence, and — the v3 finding — silent
+admission of an invalid same-name inherited/owned part re-declaration, which now blocks
+`SYSML_NAMESPACE_NOT_DISTINGUISHABLE` before occurrence expansion via SysIDE's own validation
+diagnostic (loader diagnostics are now a required elaborate() input). The deep-cross-scope witness
+fixture was repaired to valid explicit `:>>` form and its deep producer-output reference resolves
+to its one exact producer channel.
+
+### Deliverables
+- `20260809_elaborator-breadth/`: plan (5 phases + two remediation decision records, all
+  owner-ratified `[AGENT]`), `diff-ledger.md` (37 rows), `product-lens.md` (findings F1–F31 with
+  full resolution-by-citation history), audit rounds (`audit-20260808-phases12.md`,
+  `audit-20260808-rendered-path.md`, `audit.md`, `audit_v2.md`, `audit_v3.md` — certification in
+  the v3 addendum).
+- Code: `src/sysml_codegen/elaboration/` (identity, occurrence, elaborate, graph, project,
+  diagnostics, diff, display), `snapshot/instance_graph.py`, `orchestration/elaborated_pipeline.py`
+  (internal, no shipped flag), shared `extraction/{source_evidence,binding_evidence}.py`,
+  `scripts/run_elaboration_corpus.py`; coordinated agentic-mbse exact-UUID adapter surface.
+- Tests: 154 exact-elaboration tests (identity foundation, occurrence, fail-closed, collisions,
+  contract matrix, projection, round-trip, public mutation, corpus ledger, model validation,
+  import/AST boundaries) plus new fixtures incl. `elab_matrix_c2..c23`,
+  `elab_namespace_distinguishability_probe`, repaired `deep_cross_scope_probe`.
+- Contract: referent-table "Deep-cross-scope evidence boundary" amendment (corrected premise,
+  owner-ratified) in the authoritative lifecycle contract.
+- Carried forward: audit-F30 (guard scope) and audit-F31 (plural-fallback fixture) open
+  non-blocking; F19 customer-scale proof and F26 legacy-oracle replacement are Item-6
+  obligations.
+
+### Lessons Learned
+- A ruling is only as good as its premise: the F21 "parser limitation" classification survived
+  one audit round because nobody counted the modeled occurrences behind the ambiguity. Reproduce
+  the subject of a ruling, not just its record.
+- SysML has no name-based implicit redefinition; a same-named nested re-declaration is an invalid
+  model. Prefer promoting the parser's own validation diagnostic over reimplementing spec checks,
+  and make the diagnostics feed a required argument so no caller can skip it.
+- Kept falsifier-shaped assertions (`[x] = list-comp` destructuring on the expected-unique node)
+  turn a duplication bug into a loud test failure instead of a green suite.
+
+---
+
 ## [2026-07-24] - [DOCS-LIFECYCLE-SYNC] Post-Epic Documentation Reconciliation
 
 **Type**: Item (orchestrated: Opus implement stages + two independent audits; briefs committed)

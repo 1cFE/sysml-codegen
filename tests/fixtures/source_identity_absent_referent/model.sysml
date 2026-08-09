@@ -2,9 +2,8 @@ package source_identity_absent_referent {
     private import ScalarValues::*;
 
     // SOURCE-IDENTITY Item 4 genuine-miss fixture (see PROVENANCE.md).
-    // C18: an aggregation term whose reference resolves to no modeled feature.
-    // The term must produce an honest ABSENT_REFERENT input for policy — never
-    // a mint and never a same-named capture.
+    // C18: an aggregation term whose reference names no modeled feature.
+    // SysIDE rejects the missing name during language loading, before codegen.
 
     part def 'Ghost Widget' {
         attribute real_cost : Real = 5.0;

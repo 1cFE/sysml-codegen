@@ -1,46 +1,31 @@
-"""The one elaboration pass (ELABORATE-FIRST Item 4 design, D2–D5).
-
-``elaborate(model, calc_defs)`` walks the live SysIDE model once and produces
-an :class:`~sysml_codegen.elaboration.graph.InstanceGraph`:
-
-1. Occurrence expansion — ``PartInstanceIndex``, the one existing walker.
-2. Attribute nodes per occurrence, with the definition-default value tier.
-3. Value tiers, innermost-wins (D4): occurrence ``:>>`` (deepest anchor) >
-   specialized-def ``:>>`` > definition default.
-4. Calc/constraint nodes from AST *declarations* (D2): calc usages extracted
-   with ``expand_templates=False`` and ``ConstraintUsage`` swept with subtypes,
-   each expanded per occurrence by the def-context remap rule (D3) — never the
-   legacy virtual expansion, which half-misses def-nested-usage calcs.
-5. Binding resolution over the shared Item-2 evidence: one contextualization
-   rule per referent class (D5). Misses are named diagnostics, never fallback
-   inputs; unsupported source forms (contract D8) hard-fail.
-
-The def-context remap rule (D3) does two jobs with one mechanism: it anchors
-definition-relative occurrence overrides (the C19 fix) and it places
-def-declared calcs/constraints onto concrete occurrences. No other bridge
-between definition space and occurrence space exists.
-"""
+"""One exact-ID elaboration pass from the live SysIDE model to direct edges."""
 
 from __future__ import annotations
 
-import logging
+from collections import defaultdict
 from collections.abc import Sequence
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Any
+from uuid import UUID
 
-import agentic_mbse.sysml.aggregation as shared_aggregation
-from agentic_mbse.sysml.data_models import ResolvedTargetFact
-from agentic_mbse.sysml.expression import feature_chain_facts, resolved_target_fact
-from agentic_mbse.sysml.helpers import get_calc_def_name
+from agentic_mbse.sysml.constraint_extraction import (
+    extract_constraint_facts,
+    extract_expression_ir,
+)
+from agentic_mbse.sysml.data_models import ResolvedSemanticReferenceFact
+from agentic_mbse.sysml.executable_profile import Eligibility, evaluate_profile
+from agentic_mbse.sysml.expression import (
+    feature_chain_facts,
+    is_literal_node,
+    resolved_target_fact,
+)
+from agentic_mbse.sysml.expression_ir import serialize_expression
 from agentic_mbse.sysml.syside_adapter import SysideAdapter
 
-from sysml_codegen.analysis.part_instance_index import build_part_instance_index
-from sysml_codegen.core.qualified_names import (
-    build_element_qualified_name,
-    extract_simple_name,
-    sanitize_name,
-    sanitize_qualified_name,
-)
+from sysml_codegen.analysis.constraint_lowering import resolve_modeled_default
+from sysml_codegen.elaboration.diagnostics import ElaborationInvariantError
+from sysml_codegen.elaboration.display import display_name, display_qualified_name
 from sysml_codegen.elaboration.graph import (
     AttrNode,
     CalcNode,
@@ -51,130 +36,177 @@ from sysml_codegen.elaboration.graph import (
     InstanceGraph,
     LiteralInput,
     NodeRef,
+    PortMetadata,
     ProducerRef,
     ValueSite,
 )
+from sysml_codegen.elaboration.identity import (
+    ConsumerPortId,
+    DeclarationId,
+    ExpressionPortId,
+    FeatureSlotId,
+    IdentityBoundaryError,
+    NodeId,
+    NodeKind,
+    OccurrenceId,
+    OutputPortId,
+    PackageScopeId,
+    ResolvedSemanticReference,
+    ScopeId,
+    declaration_id_for,
+)
+from sysml_codegen.elaboration.occurrence import (
+    build_feature_slot_index,
+    build_occurrence_index,
+)
 from sysml_codegen.extraction import binding_evidence
 from sysml_codegen.extraction.data_models import CalculationDefinitionData
-from sysml_codegen.extraction.expression_utils import (
-    extract_literal_value,
-    is_literal_expression,
-)
-from sysml_codegen.extraction.hierarchy_resolver import extract_hierarchy_data
+from sysml_codegen.extraction.expression_compiler import Compilability, compile_calc_def
+from sysml_codegen.extraction.expression_utils import extract_literal_value
 from sysml_codegen.extraction.source_evidence import (
     ReadinessCode,
     ReadinessFinding,
     SourceForm,
     SourceReferenceEvidence,
-    screen_source_readiness,
-)
-from sysml_codegen.extraction.usage_extractor import (
-    _supertype_closure,
-    extract_calculation_usages,
-    owned_feature_typing_targets,
-    user_partdef_lookup,
-    user_partdef_types,
 )
 
-logger = logging.getLogger(__name__)
-
-__all__ = ["ElaborationError", "elaborate"]
+__all__ = ["ElaborationDiagnosticError", "ElaborationError", "elaborate"]
 
 
 class ElaborationError(Exception):
-    """Hard elaboration failure: unsupported source forms (contract D8, spec R3).
-
-    Carries every finding so the caller sees all offending bindings at once,
-    not the first one per rerun.
-    """
+    """A strict elaboration stopped on every collected blocking binding form."""
 
     def __init__(self, findings: Sequence[ReadinessFinding]) -> None:
         self.findings = tuple(findings)
         super().__init__(
             "; ".join(
-                f"{f.code.value}: {f.usage_qualified_name}.{f.param_name}"
-                for f in self.findings
+                f"{finding.code.value}: {finding.usage_qualified_name}.{finding.param_name}"
+                for finding in self.findings
             )
         )
 
 
+class ElaborationDiagnosticError(Exception):
+    """Strict elaboration stopped on named graph/identity diagnostics."""
+
+    def __init__(self, diagnostics: Sequence[Diagnostic]) -> None:
+        self.diagnostics = tuple(diagnostics)
+        super().__init__(
+            "; ".join(
+                f"{diagnostic.code.value}: {diagnostic.consumer_display}: {diagnostic.detail}"
+                for diagnostic in diagnostics
+            )
+        )
+
+
+class _ReferenceResolutionError(Exception):
+    def __init__(self, code: ElaborationCode, detail: str) -> None:
+        self.code = code
+        self.detail = detail
+        super().__init__(detail)
+
+
+class _UnsupportedExpressionError(Exception):
+    def __init__(self, detail: str) -> None:
+        self.detail = detail
+        super().__init__(detail)
+
+
+_SUM_FUNCTION_ID = DeclarationId(UUID("6d745ea3-e265-5ddd-aa6c-b3fe29dc4272"))
+_NAMESPACE_DISTINGUISHABILITY_CODE = "namespace-distinguishability"
+
+
 @dataclass(frozen=True)
-class _DefAttribute:
-    """One attribute declaration: name, identity, and its declared-value facts.
-
-    ``chain_root``/``chain_members`` are set only for a pure feature-chain
-    value (an EXPOSE) — resolved into an alias edge per occurrence.
-    ``expression`` carries any other non-literal value expression; whether it
-    elaborates to a computed node (design D6) is decided by the term walk at
-    node creation.
-    """
-
-    name: str
-    decl_qn: str
-    default: float | int | str | bool | None
-    chain_root: ResolvedTargetFact | None
-    chain_members: tuple[str, ...]
-    expression: Any = None
-
-
-@dataclass(frozen=True)
-class _ExpressionTerm:
-    """One feature term inside a computed attribute's expression.
-
-    ``key`` is the term's stable input name (the sanitized reference path);
-    a chain term carries its root fact + member names, a plain reference term
-    carries its referent fact.
-    """
-
-    key: str
-    referent: ResolvedTargetFact | None
-    chain_root: ResolvedTargetFact | None
-    chain_members: tuple[str, ...]
-
-
-@dataclass
-class _PendingInput:
-    """One binding awaiting resolution after every node exists (two-pass).
-
-    Resolution needs the complete calc-node population — a chain into a
-    producer output (C24) must find the producer's node regardless of the
-    order declarations came off the AST.
-    """
-
-    inputs: dict[str, InputRef]
-    consumer_path: str
-    param_name: str
-    evidence: SourceReferenceEvidence | None
+class _PendingBinding:
+    consumer: CalcNode | ConstraintNode
+    port: ConsumerPortId
+    evidence: SourceReferenceEvidence
     literal_value: float | int | str | bool | None
+
+
+@dataclass(frozen=True)
+class _PendingExpression:
+    consumer: CalcNode | ConstraintNode
+    expression: Any
+
+
+@dataclass(frozen=True)
+class _PendingAlias:
+    node: AttrNode
+    expression: Any
 
 
 def elaborate(
     model: Any,
     calc_defs: Sequence[CalculationDefinitionData],
     *,
+    validation_diagnostics: Sequence[Any],
     strict: bool = True,
 ) -> InstanceGraph:
-    """Elaborate a loaded SysIDE model into an :class:`InstanceGraph`.
+    """Resolve a live model into one typed instance graph.
 
-    ``calc_defs`` is the already-extracted calculation-definition list the
-    pipeline holds (``SysMLDataExtractor.extract_calculation_definitions``);
-    it supplies each calc node's definition qualified name.
-
-    ``strict`` selects halt-vs-report for the contract's unsupported source
-    forms (self-binding, indexed, expression — spec R3): strict raises
-    :class:`ElaborationError`; lenient records the same findings as graph
-    diagnostics and elaborates everything else, so the dual-run diff can
-    compare fixtures that carry known SRC-01 modeling defects. The switch
-    never changes identity (design D9) — an offending binding is skipped,
-    never reinterpreted.
-
-    Both modes propagate the index's non-finite / recursive-containment
-    failures (block-loud stands).
+    ``calc_defs`` remains the verified integration argument until projection
+    replaces the current call sites. Semantic construction reads exact live
+    declarations and does not use extraction names for identity.
     """
-    return _Elaborator(model, calc_defs, strict=strict).run()
+    model_diagnostics = _blocking_model_validation_diagnostics(model, validation_diagnostics)
+    if model_diagnostics:
+        if strict:
+            raise ElaborationDiagnosticError(model_diagnostics)
+        return InstanceGraph(diagnostics=list(model_diagnostics))
+
+    try:
+        return _ExactElaborator(model, calc_defs, strict=strict).run()
+    except ElaborationInvariantError as error:
+        raise ElaborationDiagnosticError(
+            (
+                Diagnostic(
+                    code=error.code,
+                    consumer=None,
+                    consumer_display="<model>",
+                    param_name=None,
+                    detail=error.detail,
+                ),
+            )
+        ) from error
 
 
-class _Elaborator:
+def _blocking_model_validation_diagnostics(
+    model: Any,
+    validation_diagnostics: Sequence[Any],
+) -> tuple[Diagnostic, ...]:
+    """Promote SysIDE's invalid inherited/owned part conflicts."""
+    part_locations = {
+        (str(Path(source_location[0]).resolve()), source_location[1])
+        for part in SysideAdapter.elements_of_type(model, "PartUsage")
+        if (source_location := SysideAdapter.get_source_location(part)) is not None
+    }
+    result: list[Diagnostic] = []
+    for upstream in validation_diagnostics:
+        if getattr(upstream, "code", None) != _NAMESPACE_DISTINGUISHABILITY_CODE:
+            continue
+        filename = getattr(upstream, "filename", None)
+        line = getattr(upstream, "line", 0)
+        if filename is None or (str(Path(filename).resolve()), line) not in part_locations:
+            continue
+        diagnostic_location = f"{filename}:{line}:{getattr(upstream, 'col', 0)}"
+        result.append(
+            Diagnostic(
+                code=ElaborationCode.SYSML_NAMESPACE_NOT_DISTINGUISHABLE,
+                consumer=None,
+                consumer_display="<model>",
+                param_name=None,
+                detail=(
+                    f"{diagnostic_location}: {getattr(upstream, 'message', '')}. "
+                    "Resolve the inherited/owned member conflict with an explicit `:>>` "
+                    "redefinition."
+                ),
+            )
+        )
+    return tuple(result)
+
+
+class _ExactElaborator:
     def __init__(
         self,
         model: Any,
@@ -183,911 +215,833 @@ class _Elaborator:
         strict: bool,
     ) -> None:
         self._model = model
-        self._calc_defs = calc_defs
         self._strict = strict
-        self._index = build_part_instance_index(model)
-        self._hier = extract_hierarchy_data(model)
-        self._qn_to_partdef = user_partdef_lookup(model)
-        self._def_raw_to_key = {
-            str(raw): key
-            for key, part_def in self._qn_to_partdef.items()
-            if (raw := getattr(part_def, "qualified_name", None)) is not None
+        self._calc_defs = {item.qualified_name: item for item in calc_defs}
+        self._compilation_results = {
+            item.qualified_name: compile_calc_def(
+                item,
+                item.output_expression_asts,
+                item.all_member_names,
+                item.member_expressions,
+            )
+            for item in calc_defs
         }
-        self._occs_by_def = {
-            key: self._index.occurrences_of(key) for key in self._qn_to_partdef
+        constraint_facts = extract_constraint_facts(model)
+        self._constraint_decisions = {
+            decision.identity.qualified_name: decision
+            for decision in evaluate_profile(constraint_facts).decisions
+            if decision.identity.qualified_name is not None
         }
-        self._occ_by_path = {
-            occ.instance_path: occ
-            for occs in self._occs_by_def.values()
-            for occ in occs
-        }
-        self._user_qn_set = set(self._qn_to_partdef)
-        # Untyped part usages (no user-definition typing) are invisible to the
-        # typed occurrence index, yet real plant models declare attributes and
-        # calcs on them (catf_mfe: every calc usage). They get elaboration-local
-        # occurrence contexts at their def-context-remapped qualified names —
-        # the legacy index is not touched.
-        self._untyped_by_path: dict[str, Any] = {}
-        for usage in SysideAdapter.elements_of_type(model, "PartUsage"):
-            if self._is_user_typed(usage):
-                continue
-            for path in self._untyped_usage_paths(usage):
-                self._untyped_by_path[path] = usage
-        self._context_paths = set(self._occ_by_path) | set(self._untyped_by_path)
+        self._slots = build_feature_slot_index(model)
+        self._occurrences = build_occurrence_index(model, self._slots)
         self._graph = InstanceGraph()
-        # Winning occurrence-override anchor depth per node (tier-1 bookkeeping).
-        self._anchor_depth: dict[str, int] = {}
-        self._pending: list[_PendingInput] = []
-        # EXPOSE edges awaiting resolution: (node_id, attr_name, chain root, members).
-        self._alias_pending: list[
-            tuple[str, str, ResolvedTargetFact | None, tuple[str, ...]]
-        ] = []
-        # Computed-attribute expression terms awaiting resolution.
-        self._term_pending: list[
-            tuple[dict[str, InputRef], str, _ExpressionTerm]
-        ] = []
-        # Expression-valued redefinitions: (node_id, attr name, expression).
-        self._expr_redefs: list[tuple[str, str, Any]] = []
-        # Aggregation expressions awaiting term-edge resolution.
-        self._agg_pending: list[tuple[dict[str, InputRef], str, Any]] = []
-        self._def_attrs_cache: dict[str, list[_DefAttribute]] = {}
+        self._elements = self._stable_elements()
+        self._scope_display: dict[ScopeId, str] = {
+            occurrence.occurrence_id: occurrence.display_path
+            for occurrence in self._occurrences.occurrences()
+        }
+        self._attrs: dict[tuple[ScopeId, FeatureSlotId], AttrNode] = {}
+        self._computed: dict[tuple[ScopeId, FeatureSlotId], CalcNode] = {}
+        self._calcs: dict[tuple[ScopeId, DeclarationId], CalcNode] = {}
+        self._pending_bindings: list[_PendingBinding] = []
+        self._pending_expressions: list[_PendingExpression] = []
+        self._pending_aliases: list[_PendingAlias] = []
+        self._readiness: list[ReadinessFinding] = []
+        self._readiness_keys: set[tuple[DeclarationId, ReadinessCode]] = set()
 
     def run(self) -> InstanceGraph:
-        self._build_attr_nodes()
-        self._build_usage_attr_nodes()
-        self._build_package_attr_nodes()
-        self._collect_redefinitions()
-        self._apply_value_tiers()
-        self._apply_expression_redefinitions()
-        self._build_calc_nodes()
+        self._build_value_nodes()
+        self._apply_deep_literal_redefinitions()
+        self._build_calculation_nodes()
         self._build_constraint_nodes()
         self._resolve_aliases()
-        self._resolve_terms()
-        self._resolve_aggregations()
-        self._resolve_pending()
+        self._resolve_computed_expressions()
+        self._resolve_bindings()
+        self._finish_readiness()
+        self._graph.validate()
+        if self._strict and self._graph.diagnostics:
+            raise ElaborationDiagnosticError(self._graph.diagnostics)
         return self._graph
 
-    # ---- occurrence contexts beyond the typed index ------------------------
-
-    def _is_user_typed(self, usage: Any) -> bool:
-        """True when the part usage carries a user-model definition typing."""
-        if user_partdef_types(usage, self._user_qn_set):
-            return True
-        return any(
-            build_element_qualified_name(target) in self._user_qn_set
-            for target in owned_feature_typing_targets(usage)
-        )
-
-    def _untyped_usage_paths(self, usage: Any) -> list[str]:
-        """Context paths for an untyped part usage.
-
-        Its sanitized qualified name, def-context-remapped so an untyped part
-        nested inside a definition lands one context per occurrence of that
-        definition. A definition-nested untyped part whose definition has no
-        occurrence yields no context (same disposition as an uninstantiated
-        template).
-        """
-        declared = build_element_qualified_name(usage)
-        if not declared:
-            return []
-        paths = self._expand_def_context(declared)
-        if paths == [declared] and self._is_definition_nested(usage):
-            return []
-        return paths
-
-    @staticmethod
-    def _is_definition_nested(usage: Any) -> bool:
-        """True when any owner on the chain is a part definition."""
-        current = getattr(usage, "owning_type", None)
-        while current is not None:
-            if SysideAdapter.is_instance(current, "PartDefinition"):
-                return True
-            current = getattr(current, "owning_type", None)
-        return False
-
-    # ---- the def-context remap rule (D3) ---------------------------------
-
-    def _expand_def_context(self, sanitized_path: str) -> list[str]:
-        """Longest def-key prefix of a definition-relative path -> one path per
-        occurrence of that definition; occurrence-rooted paths pass through
-        unchanged.
-
-        THE rule that fixes C19 (definition-relative capture vs occurrence-
-        relative demand), also used to place def-declared calcs and
-        constraints — one rule, two jobs (D3). The whole path may itself be a
-        definition key (a ``:>>`` owned directly by a specialized def maps to
-        that def's occurrences with an empty tail).
-        """
-        segments = sanitized_path.split("__")
-        for cut in range(len(segments), 0, -1):
-            prefix = "__".join(segments[:cut])
-            if prefix in self._occs_by_def:
-                tail = segments[cut:]
-                return [
-                    "__".join([occ.instance_path, *tail])
-                    for occ in self._occs_by_def[prefix]
-                ]
-        return [sanitized_path]
-
-    # ---- stage 2: attribute nodes ----------------------------------------
-
-    def _build_attr_nodes(self) -> None:
-        for occ in self._occ_by_path.values():
-            for attr in self._definition_attributes(occ.part_def_qn):
-                self._add_attr_node(occ.instance_path, attr)
-
-    def _build_usage_attr_nodes(self) -> None:
-        """Nodes for attributes declared on part usages themselves.
-
-        Both typed and untyped usages author inline attributes (catf_mfe's
-        exposed channels, d316's ``exposed``); the definition walk never sees
-        them. A definition-declared attribute of the same name keeps its node
-        (a same-name value override is a ``:>>`` ReferenceUsage, handled by the
-        value tiers — not an AttributeUsage, so no legitimate shape collides).
-        """
-        for usage in SysideAdapter.elements_of_type(self._model, "PartUsage"):
-            attrs = [
-                self._attribute_facts(member)
-                for member in getattr(usage, "owned_members", None) or []
-                if SysideAdapter.is_instance(member, "AttributeUsage")
-                and getattr(member, "name", None)
-            ]
-            if not attrs:
-                continue
-            for path in self._usage_attr_paths(usage):
-                for attr in attrs:
-                    self._add_attr_node(path, attr, keep_existing=True)
-
-    def _build_package_attr_nodes(self) -> None:
-        """Nodes for package-owned attributes (d316's ``seed_src``).
-
-        A package-level attribute is a singleton: its one node is its sanitized
-        qualified name. Detected by having no owning *type* — every def-, calc-,
-        and usage-owned AttributeUsage has one.
-        """
-        for member in SysideAdapter.elements_of_type(self._model, "AttributeUsage"):
-            if getattr(member, "owning_type", None) is not None:
-                continue
-            if not getattr(member, "name", None):
-                continue
-            declared = build_element_qualified_name(member)
-            if not declared or "__" not in declared:
-                continue
-            path, _, _leaf = declared.rpartition("__")
-            self._add_attr_node(path, self._attribute_facts(member), keep_existing=True)
-
-    def _usage_attr_paths(self, usage: Any) -> list[str]:
-        """The occurrence paths a usage's inline attributes materialize at."""
-        raw_qn = getattr(usage, "qualified_name", None)
-        if raw_qn is not None and self._is_user_typed(usage):
-            return [
-                occ.instance_path
-                for occ in self._index.occurrences_of_part_usage(str(raw_qn))
-            ]
-        return self._untyped_usage_paths(usage)
-
-    def _add_attr_node(
-        self, path: str, attr: _DefAttribute, *, keep_existing: bool = False
-    ) -> None:
-        node_id = f"{path}__{attr.name}"
-        if keep_existing and (
-            node_id in self._graph.attrs or node_id in self._graph.calcs
+    def _stable_elements(self) -> dict[DeclarationId, Any]:
+        result: dict[DeclarationId, Any] = {}
+        for element in SysideAdapter.elements_of_type(
+            self._model, "Feature", include_subtypes=True
         ):
-            return
-        if attr.expression is not None:
-            terms = self._expression_terms(attr.expression)
-            if terms is not None:
-                # Computed attribute (design D6): the attribute occurrence IS a
-                # calc node; its single output is the attribute's own name.
-                node = CalcNode(
-                    node_id=node_id,
-                    calc_name=attr.name,
-                    calc_def_name="",
-                    calc_def_qualified_name="",
-                    is_computed=True,
-                    expression_ast=attr.expression,
-                )
-                self._graph.calcs[node_id] = node
-                for term in terms:
-                    self._term_pending.append((node.inputs, node_id, term))
-                return
-            logger.warning(
-                "Attribute %s has a value expression with unsupported terms; "
-                "elaborated as a value-less node.",
-                node_id,
-            )
-        self._graph.attrs[node_id] = AttrNode(
-            node_id=node_id,
-            occurrence_path=path,
-            attr_name=attr.name,
-            decl_qn=attr.decl_qn,
-            value=attr.default,
-            value_site=(
-                ValueSite.DEFINITION_DEFAULT
-                if attr.default is not None
-                else ValueSite.NONE
-            ),
-        )
-        if attr.chain_members:
-            self._alias_pending.append(
-                (node_id, attr.name, attr.chain_root, attr.chain_members)
-            )
+            if getattr(element, "qualified_name", None) is None:
+                continue
+            result[declaration_id_for(element)] = element
+        for type_name in (
+            "PartDefinition",
+            "CalculationDefinition",
+            "ConstraintDefinition",
+            "Package",
+        ):
+            for element in SysideAdapter.elements_of_type(self._model, type_name):
+                if getattr(element, "qualified_name", None) is not None:
+                    result[declaration_id_for(element)] = element
+        return result
 
-    def _definition_attributes(self, def_key: str) -> list[_DefAttribute]:
-        """Owned + inherited attribute declarations, own shadowing inherited."""
-        cached = self._def_attrs_cache.get(def_key)
-        if cached is not None:
-            return cached
-        out: list[_DefAttribute] = []
-        seen: set[str] = set()
-        queue: list[Any] = [self._qn_to_partdef[def_key]]
-        while queue:
-            current = queue.pop(0)
-            for member in getattr(current, "owned_members", None) or []:
-                if not SysideAdapter.is_instance(member, "AttributeUsage"):
-                    continue
-                if not getattr(member, "name", None):
-                    continue
-                attr = self._attribute_facts(member)
-                if attr.name in seen:
-                    continue
-                seen.add(attr.name)
-                out.append(attr)
-            for relationship, target in getattr(current, "heritage", None) or []:
-                if (
-                    SysideAdapter.is_instance(relationship, "Subclassification")
-                    and target is not None
-                    # User definitions only: following implicit specialization
-                    # into the standard library would mint nodes for library
-                    # attributes (Part::isSolid etc.) no consumer can reach.
-                    and build_element_qualified_name(target) in self._qn_to_partdef
-                ):
-                    queue.append(target)
-        self._def_attrs_cache[def_key] = out
-        return out
+    # ---- exact scopes -----------------------------------------------------
 
     @staticmethod
-    def _attribute_facts(member: Any) -> _DefAttribute:
-        """One attribute declaration's name, identity, and value facts.
+    def _semantic_owner(element: Any) -> Any:
+        return getattr(element, "owning_type", None) or getattr(element, "owner", None)
 
-        The declared value has three relevant shapes: a literal (from ``= v``
-        or a ``default v`` membership — the same dual surface
-        ``SysMLDataExtractor._extract_default_value`` reads) becomes the
-        definition-default value tier; a pure feature chain is an EXPOSE and
-        yields the alias facts; anything else (a FORMULA expression) is not a
-        value here — computed attributes are calc nodes (D6, later leg).
-        """
-        name = sanitize_name(getattr(member, "name", ""))
-        decl_qn = str(getattr(member, "qualified_name", "") or "")
-        expr = getattr(member, "feature_value_expression", None)
-        if expr is None:
-            for membership in getattr(member, "owned_memberships", None) or []:
-                if getattr(membership, "is_default", False):
-                    value_expr = getattr(membership, "value", None)
-                    if value_expr is not None:
-                        expr = value_expr
-                        break
-        if expr is None:
-            return _DefAttribute(name, decl_qn, None, None, ())
-        if is_literal_expression(expr):
-            return _DefAttribute(name, decl_qn, extract_literal_value(expr), None, ())
-        if SysideAdapter.is_instance(expr, "FeatureChainExpression"):
-            root, _leaf, _qns, members, has_index = feature_chain_facts(expr)
-            if not has_index:
-                return _DefAttribute(name, decl_qn, None, root, members)
-        return _DefAttribute(name, decl_qn, None, None, (), expression=expr)
+    def _package_scope(self, package: Any) -> PackageScopeId:
+        package_id = declaration_id_for(package)
+        scope = PackageScopeId(package_id)
+        self._scope_display.setdefault(scope, display_qualified_name(str(package.qualified_name)))
+        return scope
 
-    # ---- computed-attribute expression terms (D6) --------------------------
+    def _scopes_for_owner(self, owner: Any) -> tuple[ScopeId, ...]:
+        if owner is None:
+            return ()
+        if SysideAdapter.is_instance(owner, "PartDefinition"):
+            owner_id = declaration_id_for(owner)
+            return tuple(
+                occurrence.occurrence_id
+                for occurrence in self._occurrences.occurrences_for_type(owner_id)
+            )
+        if SysideAdapter.is_instance(owner, "PartUsage"):
+            owner_id = declaration_id_for(owner)
+            return tuple(
+                occurrence.occurrence_id
+                for occurrence in self._occurrences.occurrences_for_declaration(owner_id)
+            )
+        if SysideAdapter.is_instance(owner, "Package"):
+            return (self._package_scope(owner),)
+        return ()
 
-    @classmethod
-    def _expression_terms(cls, expr: Any) -> list[_ExpressionTerm] | None:
-        """The feature terms of a computed attribute's expression, or ``None``
-        when the expression contains a node kind this leg does not support
-        (invocations — ``sum(...)`` aggregations are the aggregation leg's).
+    def _scope_lineage(self, scope: ScopeId) -> tuple[OccurrenceId, ...]:
+        if not isinstance(scope, OccurrenceId):
+            return ()
+        return (scope,) + tuple(
+            occurrence.occurrence_id for occurrence in self._occurrences.ancestors(scope)
+        )
 
-        Literals contribute no term; duplicate references collapse onto one key.
-        """
-        terms: dict[str, _ExpressionTerm] = {}
-        if not cls._collect_expression_terms(expr, terms):
-            return None
-        return list(terms.values())
+    def _display_path(self, scope: ScopeId, name: str) -> str:
+        return f"{self._scope_display[scope]}__{display_name(name)}"
 
-    @classmethod
-    def _collect_expression_terms(
-        cls, node: Any, terms: dict[str, _ExpressionTerm]
-    ) -> bool:
-        """Recursive term walk; False means an unsupported node kind."""
-        if is_literal_expression(node):
-            return True
-        # FeatureChainExpression MUST be before OperatorExpression -- FCE is a
-        # subtype of OE in SysIDE's type system (doc 19 invariant).
-        if SysideAdapter.is_instance(node, "FeatureChainExpression"):
-            root, _leaf, _qns, members, has_index = feature_chain_facts(node)
-            if has_index or root is None:
-                return False
-            key = "__".join(
-                [
-                    sanitize_name(root.element_name or "root"),
-                    *(sanitize_name(member) for member in members),
+    @staticmethod
+    def _source_location(element: Any) -> tuple[str, int]:
+        location = SysideAdapter.get_source_location(element)
+        return location if location is not None else ("unknown", 0)
+
+    # ---- value population and precedence --------------------------------
+
+    def _build_value_nodes(self) -> None:
+        features = [
+            feature
+            for feature in SysideAdapter.elements_of_type(
+                self._model, "Feature", include_subtypes=True
+            )
+            if getattr(feature, "qualified_name", None) is not None
+        ]
+        feature_scopes = {
+            declaration_id_for(feature): self._scopes_for_owner(self._semantic_owner(feature))
+            for feature in features
+        }
+        features_by_slot: dict[FeatureSlotId, list[Any]] = defaultdict(list)
+        for feature in features:
+            feature_id = declaration_id_for(feature)
+            if feature_id not in self._elements:
+                continue
+            try:
+                slot = self._slots.slot_of(feature_id)
+            except KeyError:
+                continue
+            features_by_slot[slot].append(feature)
+
+        base_by_slot: dict[FeatureSlotId, Any] = {}
+        for attribute in SysideAdapter.elements_of_type(self._model, "AttributeUsage"):
+            if getattr(attribute, "qualified_name", None) is None:
+                continue
+            scopes = self._scopes_for_owner(self._semantic_owner(attribute))
+            if not scopes:
+                continue
+            slot = self._slots.slot_of(declaration_id_for(attribute))
+            current = base_by_slot.get(slot)
+            if current is None or declaration_id_for(attribute) == slot.root_declaration:
+                base_by_slot[slot] = attribute
+
+        for slot, base in sorted(
+            base_by_slot.items(), key=lambda item: item[0].root_declaration.to_wire()
+        ):
+            base_scopes = self._scopes_for_owner(self._semantic_owner(base))
+            for scope in base_scopes:
+                candidates = [
+                    feature
+                    for feature in features_by_slot[slot]
+                    if scope in feature_scopes[declaration_id_for(feature)]
+                    and (
+                        declaration_id_for(feature) == declaration_id_for(base)
+                        or getattr(feature, "feature_value_expression", None) is not None
+                    )
                 ]
-            )
-            terms[key] = _ExpressionTerm(
-                key=key, referent=None, chain_root=root, chain_members=members
-            )
-            return True
-        if SysideAdapter.is_instance(node, "FeatureReferenceExpression"):
-            fact = resolved_target_fact(getattr(node, "referent", None))
-            if fact is None:
-                return False
-            key = sanitize_name(fact.element_name or "term")
-            terms[key] = _ExpressionTerm(
-                key=key, referent=fact, chain_root=None, chain_members=()
-            )
-            return True
-        if SysideAdapter.is_instance(node, "OperatorExpression"):
-            return all(
-                cls._collect_expression_terms(operand, terms)
-                for operand in getattr(node, "operands", None) or []
-            )
-        return False
+                writer = self._select_writer(base, candidates, scope)
+                self._create_value_node(scope, slot, base, writer)
 
-    def _resolve_terms(self) -> None:
-        for inputs, node_id, term in self._term_pending:
-            if term.chain_root is not None or term.chain_members:
-                ref = self._resolve_chain(
-                    node_id, term.key, term.chain_root, term.chain_members
+    def _select_writer(self, base: Any, candidates: list[Any], scope: ScopeId) -> Any:
+        if not candidates:
+            return base
+        occurrence = (
+            self._occurrences.occurrence(scope) if isinstance(scope, OccurrenceId) else None
+        )
+        usage_writers = [
+            candidate
+            for candidate in candidates
+            if SysideAdapter.is_instance(self._semantic_owner(candidate), "PartUsage")
+        ]
+        if occurrence is not None:
+            exact_usage_writers = [
+                candidate
+                for candidate in usage_writers
+                if declaration_id_for(self._semantic_owner(candidate))
+                == occurrence.effective_usage_id
+            ]
+            if exact_usage_writers:
+                return self._require_one_writer(exact_usage_writers, scope)
+        if usage_writers:
+            return self._require_one_writer(usage_writers, scope)
+
+        definition_writers = [
+            candidate
+            for candidate in candidates
+            if SysideAdapter.is_instance(self._semantic_owner(candidate), "PartDefinition")
+        ]
+        if definition_writers:
+            owner = self._occurrences.most_specific_definition(
+                {
+                    declaration_id_for(self._semantic_owner(candidate))
+                    for candidate in definition_writers
+                }
+            )
+            return self._require_one_writer(
+                [
+                    candidate
+                    for candidate in definition_writers
+                    if declaration_id_for(self._semantic_owner(candidate)) == owner
+                ],
+                scope,
+            )
+        return self._require_one_writer(candidates, scope)
+
+    @staticmethod
+    def _require_one_writer(candidates: list[Any], scope: ScopeId) -> Any:
+        if len(candidates) != 1:
+            ids = sorted(declaration_id_for(candidate).to_wire() for candidate in candidates)
+            raise ElaborationInvariantError(
+                ElaborationCode.SI_REDEFINITION_INVALID,
+                f"exact scope {scope!r} has incomparable value writers {ids}",
+            )
+        return candidates[0]
+
+    def _create_value_node(
+        self, scope: ScopeId, slot: FeatureSlotId, base: Any, writer: Any
+    ) -> None:
+        writer_id = declaration_id_for(writer)
+        name = str(getattr(base, "name", None) or getattr(writer, "name", None) or "value")
+        display_path = self._display_path(scope, name)
+        expression = getattr(writer, "feature_value_expression", None)
+        value_site = self._value_site(base, writer, scope)
+        literal = extract_literal_value(expression) if expression is not None else None
+        source_file, source_line = self._source_location(writer)
+
+        if expression is not None and not is_literal_node(expression):
+            if self._is_reference_expression(expression):
+                node_id = NodeId(NodeKind.ATTRIBUTE, scope, slot)
+                alias_node = AttrNode(
+                    node_id=node_id,
+                    scope=scope,
+                    declaration_id=writer_id,
+                    slot_id=slot,
+                    display_path=display_path,
+                    display_name=display_name(name),
+                    declaration_qn=str(getattr(base, "qualified_name", "")),
+                    value_site=value_site,
+                    is_alias=True,
+                    alias_shape=(
+                        "part_usage"
+                        if SysideAdapter.is_instance(self._semantic_owner(writer), "PartUsage")
+                        else "part_def"
+                    ),
+                    source_file=source_file,
+                    source_line=source_line,
                 )
-            else:
-                assert term.referent is not None  # walk sets exactly one side
-                ref = self._resolve_reference(node_id, term.key, term.referent)
-            if ref is not None:
-                inputs[term.key] = self._follow_aliases(ref)
+                self._register_attr(alias_node)
+                self._pending_aliases.append(_PendingAlias(alias_node, expression))
+                return
+            node_id = NodeId(NodeKind.CALCULATION, scope, slot)
+            output = OutputPortId(node_id, writer_id)
+            neutral_expression = extract_expression_ir(expression)
+            if neutral_expression is None:
+                raise ElaborationInvariantError(
+                    ElaborationCode.SI_REDEFINITION_INVALID,
+                    f"computed value {display_path!r} has no representable expression IR",
+                )
+            computed_node = CalcNode(
+                node_id=node_id,
+                scope=scope,
+                declaration_id=writer_id,
+                display_path=display_path,
+                display_name=display_name(name),
+                calc_def_name=name,
+                calc_def_qualified_name=str(
+                    getattr(self._semantic_owner(writer), "qualified_name", None) or ""
+                ),
+                outputs={writer_id: output},
+                output_names={writer_id: display_name(name)},
+                output_metadata={
+                    writer_id: PortMetadata(
+                        python_type="float",
+                        qualified_name=str(getattr(writer, "qualified_name", None) or ""),
+                    )
+                },
+                is_computed=True,
+                expression_ir=serialize_expression(neutral_expression),
+                source_file=source_file,
+                source_line=source_line,
+            )
+            self._graph.calcs[node_id] = computed_node
+            self._computed[(scope, slot)] = computed_node
+            self._pending_expressions.append(_PendingExpression(computed_node, expression))
+            return
 
-    # ---- stage 2b: value-carrying redefinitions (aliases + expressions) ----
+        node_id = NodeId(NodeKind.ATTRIBUTE, scope, slot)
+        attr_node = AttrNode(
+            node_id=node_id,
+            scope=scope,
+            declaration_id=writer_id,
+            slot_id=slot,
+            display_path=display_path,
+            display_name=display_name(name),
+            declaration_qn=str(getattr(base, "qualified_name", "")),
+            value=literal,
+            value_site=value_site if expression is not None else ValueSite.NONE,
+            source_file=source_file,
+            source_line=source_line,
+        )
+        self._register_attr(attr_node)
 
-    def _collect_redefinitions(self) -> None:
-        """Facts from ``:>>`` redefinitions carrying a non-literal value.
+    @staticmethod
+    def _is_reference_expression(expression: Any) -> bool:
+        return SysideAdapter.is_instance(
+            expression, "FeatureChainExpression"
+        ) or SysideAdapter.is_instance(expression, "FeatureReferenceExpression")
 
-        A pure-chain value (``:>> cost_per_joule = meier_cost.gamma``)
-        re-sources the inherited attribute — an EXPOSE alias at every
-        occurrence of the owning definition or usage (the fusion-tea WI-015
-        pin). An expression value (``:>> station_total = rig.gain_setting +
-        100.0``, ``sum(cell.cell_cost)``) is a computed attribute (D6),
-        recorded for conversion after the value tiers ran. Literal ``:>>``
-        stays the value tiers' job.
+    def _value_site(self, base: Any, writer: Any, scope: ScopeId) -> ValueSite:
+        owner = self._semantic_owner(writer)
+        if isinstance(scope, OccurrenceId) and SysideAdapter.is_instance(owner, "PartUsage"):
+            return ValueSite.OCCURRENCE_OVERRIDE
+        if declaration_id_for(writer) != declaration_id_for(base):
+            return ValueSite.SPECIALIZED_DEF
+        return ValueSite.DEFINITION_DEFAULT
 
-        Enqueue order is the tier order — definition-borne first, usage-borne
-        second — so a later (inner) alias overwrites an earlier one at
-        resolution; an occurrence-literal override outranks both.
-        """
-        for part_def in self._qn_to_partdef.values():
-            self._collect_owner_redefinitions(
-                part_def,
-                lambda pd=part_def: self._expand_def_context(
-                    build_element_qualified_name(pd)
+    def _register_attr(self, node: AttrNode) -> None:
+        key = (node.scope, node.slot_id)
+        existing = self._attrs.get(key)
+        if existing is not None and existing.node_id != node.node_id:
+            raise ValueError(f"duplicate exact attribute slot {key!r}")
+        self._attrs[key] = node
+        self._graph.attrs[node.node_id] = node
+
+    def _apply_deep_literal_redefinitions(self) -> None:
+        for feature in SysideAdapter.elements_of_type(
+            self._model, "Feature", include_subtypes=True
+        ):
+            if getattr(feature, "qualified_name", None) is not None:
+                continue
+            expression = getattr(feature, "feature_value_expression", None)
+            if expression is None or not is_literal_node(expression):
+                continue
+            literal = extract_literal_value(expression)
+            owner = self._semantic_owner(feature)
+            for relationship in getattr(feature, "owned_redefinitions", ()) or ():
+                redefined = getattr(relationship, "redefined_feature", None)
+                chain = list(getattr(redefined, "chaining_features", ()) or ())
+                if not chain:
+                    continue
+                chain_fact = self._reference_from_elements(chain)
+                for scope in self._scopes_for_owner(owner):
+                    try:
+                        edges = self._resolve_semantic_reference(chain_fact, scope, plural=True)
+                    except _ReferenceResolutionError as error:
+                        self._diagnose(
+                            ElaborationCode.OVERRIDE_TARGET_MISSING,
+                            None,
+                            self._scope_display[scope],
+                            None,
+                            error.detail,
+                        )
+                        continue
+                    if not all(isinstance(edge, NodeRef) for edge in edges):
+                        self._diagnose(
+                            ElaborationCode.OVERRIDE_TARGET_MISSING,
+                            None,
+                            self._scope_display[scope],
+                            None,
+                            "deep literal override does not target an attribute node",
+                        )
+                        continue
+                    for edge in edges:
+                        if not isinstance(edge, NodeRef):
+                            raise AssertionError(
+                                "deep literal target kind changed after validation"
+                            )
+                        node = self._graph.attrs.get(edge.target)
+                        if node is None:
+                            raise RuntimeError("literal override targets a computed value")
+                        node.value = literal
+                        node.value_site = ValueSite.OCCURRENCE_OVERRIDE
+
+    @staticmethod
+    def _reference_from_elements(elements: list[Any]) -> ResolvedSemanticReferenceFact:
+        facts = tuple(
+            fact for element in elements if (fact := resolved_target_fact(element)) is not None
+        )
+        if not facts:
+            raise IdentityBoundaryError("deep reference has no stable endpoint declarations")
+        return ResolvedSemanticReferenceFact(
+            root=facts[0],
+            segments=facts,
+            leaf=facts[-1],
+            resolved_member_names=tuple(fact.element_name for fact in facts[1:]),
+            has_index_segment=False,
+        )
+
+    # ---- calculation and constraint population ---------------------------
+
+    def _build_calculation_nodes(self) -> None:
+        usages = list(SysideAdapter.elements_of_type(self._model, "CalculationUsage"))
+        scopes_by_usage = {
+            declaration_id_for(usage): self._scopes_for_owner(self._semantic_owner(usage))
+            for usage in usages
+        }
+        usages_by_slot: dict[FeatureSlotId, list[Any]] = defaultdict(list)
+        for usage in usages:
+            usages_by_slot[self._slots.slot_of(declaration_id_for(usage))].append(usage)
+
+        selected: list[tuple[Any, ScopeId, list[Any]]] = []
+        for slot, alternatives in usages_by_slot.items():
+            base = next(
+                (
+                    usage
+                    for usage in alternatives
+                    if declaration_id_for(usage) == slot.root_declaration
+                ),
+                alternatives[0],
+            )
+            scopes = {
+                scope
+                for usage in alternatives
+                for scope in scopes_by_usage[declaration_id_for(usage)]
+            }
+            for scope in scopes:
+                applicable = [
+                    usage
+                    for usage in alternatives
+                    if scope in scopes_by_usage[declaration_id_for(usage)]
+                ]
+                selected.append((self._select_writer(base, applicable, scope), scope, applicable))
+
+        for usage, scope, applicable in sorted(
+            selected,
+            key=lambda item: (repr(item[1]), declaration_id_for(item[0]).to_wire()),
+        ):
+            usage_id = declaration_id_for(usage)
+            definition = self._typed_definition(usage, "CalculationDefinition")
+            node_id = NodeId(NodeKind.CALCULATION, scope, usage_id)
+            outputs, output_names, output_metadata = self._output_ports(node_id, definition)
+            name = str(getattr(usage, "name", None) or "calculation")
+            definition_qn = str(getattr(definition, "qualified_name", None) or "")
+            calc_data = self._calc_defs.get(definition_qn)
+            compilation = self._compilation_results.get(definition_qn)
+            node = CalcNode(
+                node_id=node_id,
+                scope=scope,
+                declaration_id=usage_id,
+                display_path=self._display_path(scope, name),
+                display_name=display_name(name),
+                calc_def_name=str(getattr(definition, "name", None) or ""),
+                calc_def_qualified_name=definition_qn,
+                outputs=outputs,
+                output_names=output_names,
+                output_metadata=output_metadata,
+                compilability=(
+                    compilation.overall_compilability
+                    if compilation is not None
+                    else Compilability.UNKNOWN
+                ),
+                auto_impl_context=(
+                    self._calculation_auto_impl_context(compilation)
+                    if compilation is not None
+                    else None
+                ),
+                doc_comment=calc_data.doc_comment if calc_data is not None else None,
+                calc_expressions=(
+                    tuple(calc_data.calc_expressions) if calc_data is not None else ()
+                ),
+                source_file=(
+                    str(calc_data.source_file)
+                    if calc_data is not None
+                    else self._source_location(definition)[0]
+                ),
+                source_line=(
+                    calc_data.source_line
+                    if calc_data is not None
+                    else self._source_location(definition)[1]
                 ),
             )
-        for usage in SysideAdapter.elements_of_type(self._model, "PartUsage"):
-            self._collect_owner_redefinitions(
-                usage, lambda u=usage: self._usage_attr_paths(u)
-            )
-
-    def _collect_owner_redefinitions(self, owner: Any, anchor_paths: Any) -> None:
-        entries: list[tuple[str, Any]] = []
-        for member in getattr(owner, "owned_members", None) or []:
-            if not getattr(member, "owned_redefinitions", None):
-                continue
-            if not getattr(member, "name", None):
-                continue
-            expr = getattr(member, "feature_value_expression", None)
-            if expr is None or is_literal_expression(expr):
-                continue
-            entries.append((sanitize_name(member.name), expr))
-        if not entries:
-            return
-        anchors = anchor_paths()
-        for name, expr in entries:
-            # FeatureChainExpression MUST be before OperatorExpression -- FCE
-            # is a subtype of OE in SysIDE's type system (doc 19 invariant).
-            if SysideAdapter.is_instance(expr, "FeatureChainExpression"):
-                root, _leaf, _qns, members, has_index = feature_chain_facts(expr)
-                if has_index:
-                    continue  # indexed source: screened form, never flattened
-                for anchor in anchors:
-                    self._alias_pending.append(
-                        (f"{anchor}__{name}", name, root, members)
-                    )
-            else:
-                for anchor in anchors:
-                    self._expr_redefs.append((f"{anchor}__{name}", name, expr))
-
-    def _apply_expression_redefinitions(self) -> None:
-        """Convert expression-redefined attributes into computed nodes (D6).
-
-        Runs after the value tiers: an occurrence-literal override outranks the
-        expression redefinition, so such a node keeps its value. Otherwise the
-        attribute node is replaced by a computed calc node whose term edges the
-        aggregation resolver fills.
-        """
-        for node_id, attr_name, expr in self._expr_redefs:
-            node = self._graph.attrs.get(node_id)
-            if node is not None and node.value_site is ValueSite.OCCURRENCE_OVERRIDE:
-                continue
-            if node is not None:
-                del self._graph.attrs[node_id]
-            calc = CalcNode(
-                node_id=node_id,
-                calc_name=attr_name,
-                calc_def_name="",
-                calc_def_qualified_name="",
-                is_computed=True,
-                expression_ast=expr,
-            )
-            self._graph.calcs[node_id] = calc
-            self._agg_pending.append((calc.inputs, node_id, expr))
-
-    # ---- stage 3: value tiers, innermost-wins (D4) ------------------------
-
-    def _apply_value_tiers(self) -> None:
-        # Tier 2 first (specialized-def :>> literals), so tier 1 overwrites.
-        # A subtype's :>> and its supertype's :>> can both expand onto the same
-        # occurrence (subtype-closure enumeration); the more specific owning
-        # definition wins, never list order.
-        tier2_owner: dict[str, str] = {}
-        for redefinition in self._hier.redefinitions:
-            if redefinition.literal_value is None:
-                continue
-            attr_name = sanitize_name(redefinition.attribute_name)
-            owner_key = redefinition.owning_part_qn
-            for path in self._expand_def_context(owner_key):
-                node_id = f"{path}__{attr_name}"
-                node = self._graph.attrs.get(node_id)
-                if node is None:
-                    continue
-                previous = tier2_owner.get(node_id)
-                if previous is not None and not self._def_declares(
-                    owner_key, previous
-                ):
-                    # The previous writer's definition is not a supertype of
-                    # this one, so this one is not more specific — keep.
-                    continue
-                node.value = redefinition.literal_value
-                node.value_site = ValueSite.SPECIALIZED_DEF
-                tier2_owner[node_id] = owner_key
-
-        # Tier 1: occurrence :>> overrides; the deepest anchor wins.
-        for override in self._hier.design_overrides:
-            if override.literal_value is None:
-                continue
-            if override.is_deep_path:
-                tail = [sanitize_name(seg) for seg in override.target_path[:-1]]
-                leaf = sanitize_name(override.target_path[-1])
-            else:
-                tail = []
-                leaf = sanitize_name(override.attribute_name)
-            for anchor in self._expand_def_context(override.owning_part_qn):
-                depth = anchor.count("__")
-                node_path = "__".join([anchor, *tail]) if tail else anchor
-                node_id = f"{node_path}__{leaf}"
-                node = self._graph.attrs.get(node_id)
-                if node is None:
-                    self._graph.diagnostics.append(
-                        Diagnostic(
-                            code=ElaborationCode.OVERRIDE_TARGET_MISSING,
-                            consumer=node_id,
-                            param_name=None,
-                            detail=(
-                                f"{override.owning_part_qn} :>> "
-                                f"{'.'.join([*tail, leaf])} = "
-                                f"{override.literal_value!r} has no target "
-                                "attribute node"
-                            ),
-                        )
-                    )
-                    continue
-                if (
-                    node.value_site is ValueSite.OCCURRENCE_OVERRIDE
-                    and self._anchor_depth[node_id] >= depth
-                ):
-                    continue
-                node.value = override.literal_value
-                node.value_site = ValueSite.OCCURRENCE_OVERRIDE
-                self._anchor_depth[node_id] = depth
-
-    # ---- stage 4: calc + constraint nodes (D2) -----------------------------
-
-    def _build_calc_nodes(self) -> None:
-        usages, _report = extract_calculation_usages(
-            self._model, calc_defs=list(self._calc_defs), expand_templates=False
-        )
-        findings = screen_source_readiness(usages)
-        blocked: set[tuple[str, str]] = set()
-        if findings:
-            if self._strict:
-                raise ElaborationError(findings)
-            for finding in findings:
-                blocked.add((finding.usage_qualified_name, finding.param_name))
-                self._graph.diagnostics.append(
-                    Diagnostic(
-                        code=finding.code,
-                        consumer=finding.usage_qualified_name,
-                        param_name=finding.param_name,
-                        detail=finding.detail,
-                    )
-                )
-
-        for usage in usages:
-            placed = False
-            for path in self._calc_placement_paths(usage):
-                parent, _, leaf = path.rpartition("__")
-                node = CalcNode(
-                    node_id=path,
-                    calc_name=leaf,
-                    calc_def_name=usage.calc_def_name,
-                    calc_def_qualified_name=usage.calc_def_qualified_name,
-                    unbound_params=tuple(usage.unbound_params),
-                )
-                self._graph.calcs[path] = node
-                placed = True
-                for binding in usage.bindings:
-                    if (usage.qualified_name, binding.param_name) in blocked:
-                        continue
-                    self._pending.append(
-                        _PendingInput(
-                            inputs=node.inputs,
-                            consumer_path=path,
-                            param_name=binding.param_name,
-                            evidence=binding.reference_evidence,
-                            literal_value=binding.literal_value,
-                        )
-                    )
-            if not placed:
-                logger.warning(
-                    "Calc usage '%s' has no concrete occurrence context; "
-                    "no node elaborated.",
-                    usage.qualified_name,
-                )
-
-    def _calc_placement_paths(self, usage: Any) -> list[str]:
-        """Where a calc declaration materializes.
-
-        One path per concrete occurrence context enclosing it, via the remap
-        rule — plus the package-rooted case (``calc gen`` directly in a
-        package: concrete, no parent part, no owning definition), which is its
-        own single node.
-        """
-        paths = [
-            path
-            for path in self._expand_def_context(usage.qualified_name)
-            if path.rpartition("__")[0] in self._context_paths
-        ]
-        if not paths and (
-            not usage.is_template
-            and not usage.parent_part_path
-            and usage.owning_part_def_qn is None
-        ):
-            return [usage.qualified_name]
-        return paths
+            self._graph.calcs[node_id] = node
+            for declaration in applicable:
+                self._calcs[(scope, declaration_id_for(declaration))] = node
+            self._collect_bound_members(usage, node)
+            self._collect_unbound_calculation_formals(definition, node)
 
     def _build_constraint_nodes(self) -> None:
-        for constraint in SysideAdapter.elements_of_type(
+        for usage in SysideAdapter.elements_of_type(
             self._model, "ConstraintUsage", include_subtypes=True
         ):
-            declared_path = build_element_qualified_name(constraint)
-            if not declared_path:
+            if getattr(usage, "qualified_name", None) is None:
                 continue
-            def_name = sanitize_name(get_calc_def_name(constraint) or "")
-            actuals = self._constraint_actuals(constraint)
-            placed = False
-            for path in self._expand_def_context(declared_path):
-                parent, _, _leaf = path.rpartition("__")
-                if parent not in self._context_paths:
-                    continue
-                node = ConstraintNode(node_id=path, constraint_def_name=def_name)
-                self._graph.constraints[path] = node
-                placed = True
-                for param_name, evidence, literal_value in actuals:
-                    self._pending.append(
-                        _PendingInput(
-                            inputs=node.inputs,
-                            consumer_path=path,
-                            param_name=param_name,
-                            evidence=evidence,
-                            literal_value=literal_value,
+            usage_id = declaration_id_for(usage)
+            definition = self._typed_definition(usage, "ConstraintDefinition", required=False)
+            for scope in self._scopes_for_owner(self._semantic_owner(usage)):
+                node_id = NodeId(NodeKind.CONSTRAINT, scope, usage_id)
+                name = str(getattr(usage, "name", None) or "constraint")
+                metadata = self._constraint_metadata(usage, definition)
+                node = ConstraintNode(
+                    node_id=node_id,
+                    scope=scope,
+                    declaration_id=usage_id,
+                    display_path=self._display_path(scope, name),
+                    display_name=display_name(name),
+                    constraint_def_name=str(getattr(definition, "name", None) or ""),
+                    **metadata,
+                )
+                self._graph.constraints[node_id] = node
+                self._collect_bound_members(usage, node)
+                if definition is not None:
+                    self._collect_unbound_constraint_formals(definition, node)
+                if node.source_form in ("inline", "requirement_constraint"):
+                    predicate_expression = getattr(usage, "result_expression", None)
+                    if predicate_expression is not None:
+                        self._pending_expressions.append(
+                            _PendingExpression(node, predicate_expression)
                         )
-                    )
-            if not placed:
-                logger.debug(
-                    "Constraint usage '%s' has no concrete occurrence context; "
-                    "no node elaborated.",
-                    declared_path,
-                )
 
     @staticmethod
-    def _constraint_actuals(
-        constraint: Any,
-    ) -> list[
-        tuple[str, SourceReferenceEvidence, float | int | str | bool | None]
-    ]:
-        """(param, evidence, literal) for each bound constraint parameter.
-
-        Built with the same shared evidence builders as calc bindings, so
-        constraint actuals ride the identical resolution rules (D7) — including
-        the hard failure for unsupported source forms. Parameters with no value
-        expression are unbound formals, not actuals.
-        """
-        actuals: list[
-            tuple[str, SourceReferenceEvidence, float | int | str | bool | None]
-        ] = []
-        for member in getattr(constraint, "owned_members", None) or []:
-            expr = getattr(member, "feature_value_expression", None)
-            if expr is None:
-                continue
-            raw_name = getattr(member, "name", None)
-            if not raw_name:
-                continue
-            param_name = sanitize_name(raw_name)
-            # FeatureChainExpression MUST be before OperatorExpression -- FCE
-            # is a subtype of OE in SysIDE's type system (doc 19 invariant).
-            if SysideAdapter.is_instance(expr, "FeatureChainExpression"):
-                actuals.append(
-                    (param_name, binding_evidence.chain_evidence(member, expr), None)
-                )
-            elif SysideAdapter.is_instance(expr, "FeatureReferenceExpression"):
-                actuals.append(
-                    (
-                        param_name,
-                        binding_evidence.reference_evidence(member, expr),
-                        None,
-                    )
-                )
-            elif is_literal_expression(expr):
-                literal = extract_literal_value(expr)
-                actuals.append(
-                    (
-                        param_name,
-                        binding_evidence.literal_evidence(member, literal),
-                        literal,
-                    )
-                )
-            elif SysideAdapter.is_instance(expr, "OperatorExpression"):
-                # Expression actual: unsupported source form — resolution
-                # hard-fails it with the contract code (spec R3).
-                actuals.append(
-                    (
-                        param_name,
-                        binding_evidence.expression_evidence(member, expr),
-                        None,
-                    )
-                )
-        return actuals
-
-    # ---- stage 5: alias + binding resolution (D5) --------------------------
-
-    def _resolve_aliases(self) -> None:
-        """Resolve every EXPOSE edge with the same chain rule consumers use.
-
-        Alias targets are stored one hop deep (an expose of an expose stays a
-        node reference); consumers follow chains transitively at resolution.
-        Pending entries are in tier order, so a later (inner) alias overwrites
-        an earlier one; an occurrence-literal override outranks every alias and
-        a resolved alias supersedes a definition-default value.
-        """
-        for node_id, attr_name, chain_root, chain_members in self._alias_pending:
-            node = self._graph.attrs.get(node_id)
-            if node is None:
-                self._graph.diagnostics.append(
-                    Diagnostic(
-                        code=ElaborationCode.OVERRIDE_TARGET_MISSING,
-                        consumer=node_id,
-                        param_name=None,
-                        detail=(
-                            f"chain redefinition of {attr_name!r} has no "
-                            "target attribute node"
-                        ),
-                    )
-                )
-                continue
-            if node.value_site is ValueSite.OCCURRENCE_OVERRIDE:
-                continue
-            ref = self._resolve_chain(node_id, attr_name, chain_root, chain_members)
-            if ref is not None:
-                node.alias_target = ref
-                node.value = None
-                node.value_site = ValueSite.NONE
-
-    def _follow_aliases(self, ref: InputRef) -> InputRef:
-        """The real source behind a resolved reference: exposed attributes are
-        aliases, never sources of their own (spec R2)."""
-        seen: set[str] = set()
-        while isinstance(ref, NodeRef):
-            node = self._graph.attrs.get(ref.node_id)
-            if node is None or node.alias_target is None:
-                return ref
-            if ref.node_id in seen:
-                logger.warning(
-                    "Alias cycle through %s; leaving the reference on the "
-                    "cycle node.",
-                    ref.node_id,
-                )
-                return ref
-            seen.add(ref.node_id)
-            ref = node.alias_target
-        return ref
-
-    def _resolve_aggregations(self) -> None:
-        """Term edges for expression-redefined computed nodes (D6).
-
-        The shared neutral decomposition supplies every term's Item-2 resolved
-        facts; each term resolves by the same referent rules as bindings. A
-        ``sum(part.attr)`` term expands to one edge per concrete instance of
-        the part under the node's anchor — occurrence enumeration, never QN
-        string surgery.
-        """
-        for inputs, node_id, expr in self._agg_pending:
-            decomposition = shared_aggregation.decompose_aggregation_expression(expr)
-            anchor = node_id.rpartition("__")[0]
-            self._collect_aggregation_edges(
-                decomposition.root, decomposition, inputs, node_id, anchor
+    def _typed_definition(usage: Any, type_name: str, *, required: bool = True) -> Any | None:
+        candidates = [
+            target
+            for relationship, target in (getattr(usage, "heritage", None) or ())
+            if SysideAdapter.is_instance(relationship, "FeatureTyping")
+            and SysideAdapter.is_instance(target, type_name)
+            and getattr(target, "qualified_name", None) is not None
+        ]
+        if len(candidates) > 1 or (required and not candidates):
+            raise ValueError(
+                f"{getattr(usage, 'qualified_name', None)!r} has "
+                f"{len(candidates)} exact {type_name} typings"
             )
+        return candidates[0] if candidates else None
 
-    def _collect_aggregation_edges(
-        self,
-        node: Any,
-        decomposition: Any,
-        inputs: dict[str, InputRef],
-        node_id: str,
-        anchor: str,
-    ) -> None:
-        agg = shared_aggregation
-        if isinstance(node, agg.SumNode):
-            term = decomposition.sum_terms[node.term_index]
-            part = sanitize_name(term.part_usage_name)
-            attr = sanitize_name(term.attribute_name)
-            base = f"{anchor}__{part}"
-            instances = sorted(
-                path
-                for path in self._context_paths
-                if path == base or path.startswith(f"{base}[")
-            )
-            if not instances:
-                self._miss(
-                    node_id,
-                    f"{part}.{attr}",
-                    f"sum term {part!r} has no concrete instances under "
-                    f"{anchor!r}",
-                )
-                return
-            for instance in instances:
-                key = f"{instance[len(anchor) + 2 :]}__{attr}"
-                ref = self._attr_or_computed(instance, attr)
-                if ref is None:
-                    self._miss(
-                        node_id, key, f"sum instance {instance}__{attr} is not a node"
-                    )
-                    continue
-                inputs[key] = self._follow_aliases(ref)
-            return
-        if isinstance(node, agg.FeatureChainNode):
-            if node.has_index_segment:
-                self._miss(
-                    node_id,
-                    node.source_path,
-                    "indexed chain term is outside the executable subset",
-                )
-                return
-            key = "__".join(
-                sanitize_name(segment) for segment in node.source_path.split(".")
-            )
-            ref = self._resolve_chain(
-                node_id, key, node.chain_root, tuple(node.resolved_member_names)
-            )
-            if ref is not None:
-                inputs[key] = self._follow_aliases(ref)
-            return
-        if isinstance(node, agg.FeatureReferenceNode):
-            key = sanitize_name(node.attribute_name)
-            if node.resolved_target is None:
-                self._miss(node_id, key, "reference term has no resolved target")
-                return
-            ref = self._resolve_reference(node_id, key, node.resolved_target)
-            if ref is not None:
-                inputs[key] = self._follow_aliases(ref)
-            return
-        if isinstance(node, (agg.LiteralNode, agg.NullNode)):
-            return
-        if isinstance(node, (agg.OperatorNode, agg.InvocationNode)):
-            if isinstance(node, agg.InvocationNode) and node.unsupported:
-                self._miss(
-                    node_id,
-                    node.function_name,
-                    f"unsupported invocation {node.function_name!r} in an "
-                    "aggregation expression",
-                )
-            for operand in node.operands:
-                self._collect_aggregation_edges(
-                    operand, decomposition, inputs, node_id, anchor
-                )
-            return
-        if isinstance(node, agg.UnsupportedNode):
-            self._miss(node_id, node.node_kind, node.diagnostic_message)
-            return
-        raise RuntimeError(
-            f"unrecognized neutral aggregation node {type(node).__name__}"
-        )
+    @staticmethod
+    def _direction(member: Any) -> str:
+        return str(getattr(member, "direction", "")).rsplit(".", 1)[-1].lower()
 
-    def _resolve_pending(self) -> None:
-        for pending in self._pending:
-            ref = self._resolve_evidence(
-                pending.consumer_path,
-                pending.param_name,
-                pending.evidence,
-                pending.literal_value,
-            )
-            if ref is not None:
-                pending.inputs[pending.param_name] = self._follow_aliases(ref)
-
-    def _resolve_evidence(
-        self,
-        consumer_path: str,
-        param_name: str,
-        evidence: SourceReferenceEvidence | None,
-        literal_value: float | int | str | bool | None,
-    ) -> InputRef | None:
-        if evidence is None:
-            raise RuntimeError(
-                f"binding {consumer_path}.{param_name} carries no source "
-                "evidence; live elaboration always captures evidence"
-            )
-        if evidence.source_form is SourceForm.AUTHORED_LITERAL:
-            if literal_value is None:
-                raise RuntimeError(
-                    f"authored literal {consumer_path}.{param_name} has no value"
-                )
-            return LiteralInput(literal_value)
-        unsupported = self._unsupported_form_code(evidence)
-        if unsupported is not None:
-            # Calc bindings are screened wholesale before node creation; this
-            # arm enforces the same contract codes for constraint actuals.
-            finding = ReadinessFinding(
-                code=unsupported,
-                usage_qualified_name=consumer_path,
-                param_name=param_name,
-                detail=(
-                    f"unsupported source form "
-                    f"{evidence.source_form.value} "
-                    f"({evidence.written_text or ''!r})"
-                ),
-            )
-            if self._strict:
-                raise ElaborationError([finding])
-            self._graph.diagnostics.append(
-                Diagnostic(
-                    code=finding.code,
-                    consumer=consumer_path,
-                    param_name=param_name,
-                    detail=finding.detail,
-                )
-            )
+    @staticmethod
+    def _calculation_auto_impl_context(compilation: Any) -> dict | None:
+        if compilation.overall_compilability is not Compilability.FULLY_COMPILABLE:
             return None
-        if evidence.source_form is SourceForm.FEATURE_CHAIN:
-            return self._resolve_chain(
-                consumer_path,
-                param_name,
-                evidence.chain_root,
-                evidence.resolved_member_names,
-            )
-        if evidence.referent is not None:
-            return self._resolve_reference(
-                consumer_path, param_name, evidence.referent
-            )
-        raise RuntimeError(
-            f"evidence for {consumer_path}.{param_name} has form "
-            f"{evidence.source_form.value} but no referent to resolve"
+        output_expressions = [
+            {"name": result.output_name, "expression": result.python_expression}
+            for result in compilation.output_results
+            if result.python_expression is not None
+        ]
+        return {
+            "execution_steps": [],
+            "output_expressions": output_expressions,
+            "output_count": len(output_expressions),
+            "single_output_expression": (
+                output_expressions[0]["expression"] if len(output_expressions) == 1 else None
+            ),
+        }
+
+    def _constraint_metadata(self, usage: Any, definition: Any | None) -> dict[str, Any]:
+        membership = getattr(usage, "owning_feature_membership", None)
+        if SysideAdapter.is_instance(membership, "RequirementConstraintMembership"):
+            source_form = "requirement_constraint"
+        elif SysideAdapter.is_instance(usage, "AssertConstraintUsage"):
+            asserted = getattr(usage, "asserted_constraint", None)
+            if asserted is not usage:
+                source_form = "named_usage_reference"
+            elif getattr(usage, "result_expression", None) is None:
+                source_form = "definition_typed"
+            else:
+                source_form = "inline"
+        else:
+            source_form = "plain_usage"
+
+        if source_form in ("inline", "requirement_constraint"):
+            predicate_source = usage
+        elif source_form == "definition_typed":
+            predicate_source = definition
+        elif source_form == "named_usage_reference":
+            asserted = getattr(usage, "asserted_constraint", None)
+            predicate_source = getattr(asserted, "constraint_definition", None)
+        else:
+            predicate_source = None
+        usage_qn = str(getattr(usage, "qualified_name", None) or "<anonymous>")
+        decision = self._constraint_decisions.get(usage_qn)
+        predicate_ir = (
+            serialize_expression(decision.effective_predicate)
+            if decision is not None and decision.effective_predicate is not None
+            else None
         )
+        if predicate_ir is None:
+            predicate_expression = getattr(predicate_source, "result_expression", None)
+            if predicate_expression is not None:
+                neutral_predicate = extract_expression_ir(predicate_expression)
+                if neutral_predicate is None:
+                    raise ElaborationInvariantError(
+                        ElaborationCode.SI_REDEFINITION_INVALID,
+                        f"constraint {usage_qn!r} has no representable predicate IR",
+                    )
+                predicate_ir = serialize_expression(neutral_predicate)
+        owner = self._semantic_owner(usage)
+        owner_kind = {
+            "PartDefinition": "part_def",
+            "CalculationDefinition": "calc_def",
+            "Package": "package",
+            "RequirementDefinition": "requirement_def",
+        }.get(type(owner).__name__, type(owner).__name__.lower())
+        source_file, source_line = self._source_location(usage)
+        exclusion_reasons = (
+            tuple(diagnostic.reason for diagnostic in decision.diagnostics)
+            if decision is not None and decision.eligibility is Eligibility.NON_NUMERICAL
+            else ()
+        )
+        membership_kind = None
+        if SysideAdapter.is_instance(membership, "RequirementConstraintMembership"):
+            raw_kind = getattr(membership, "kind", None)
+            membership_kind = str(getattr(raw_kind, "name", raw_kind)).lower()
+        definition_qn = (
+            str(getattr(definition, "qualified_name", None) or "")
+            if source_form == "definition_typed"
+            else None
+        )
+        predicate_qn = str(getattr(predicate_source, "qualified_name", None) or "")
+        source_key = (
+            f"definition:{predicate_qn}"
+            if source_form == "definition_typed" and predicate_qn
+            else f"inline:{predicate_qn}"
+            if source_form in ("inline", "requirement_constraint") and predicate_qn
+            else declaration_id_for(usage).to_wire()
+        )
+        return {
+            "predicate_ir": predicate_ir,
+            "source_form": source_form,
+            "owner_kind": owner_kind,
+            "owner_qualified_name": str(getattr(owner, "qualified_name", None) or ""),
+            "usage_qualified_name": usage_qn,
+            "membership_kind": membership_kind,
+            "predicate_source_key": source_key,
+            "is_negated": bool(getattr(usage, "is_negated", False)),
+            "definition_qualified_name": definition_qn,
+            "eligibility": (
+                decision.eligibility.value if decision is not None else Eligibility.ADMIT.value
+            ),
+            "exclusion_reasons": exclusion_reasons,
+            "exclusion_location": (f"{source_file}:{source_line}" if exclusion_reasons else None),
+            "source_file": source_file,
+            "source_line": source_line,
+        }
+
+    def _output_ports(
+        self, node_id: NodeId, definition: Any
+    ) -> tuple[
+        dict[DeclarationId, OutputPortId],
+        dict[DeclarationId, str],
+        dict[DeclarationId, PortMetadata],
+    ]:
+        outputs: dict[DeclarationId, OutputPortId] = {}
+        names: dict[DeclarationId, str] = {}
+        metadata: dict[DeclarationId, PortMetadata] = {}
+        calc_data = self._calc_defs.get(str(getattr(definition, "qualified_name", None) or ""))
+        output_data = (
+            {item.name: item for item in calc_data.output_attributes}
+            if calc_data is not None
+            else {}
+        )
+        for member in getattr(definition, "owned_members", None) or ():
+            if self._direction(member) not in ("out", "return"):
+                continue
+            output_id = declaration_id_for(member)
+            outputs[output_id] = OutputPortId(node_id, output_id)
+            raw_name = str(getattr(member, "name", None) or "result")
+            names[output_id] = display_name(raw_name)
+            extracted = output_data.get(names[output_id]) or output_data.get(raw_name)
+            metadata[output_id] = PortMetadata(
+                python_type=extracted.python_type if extracted is not None else "float",
+                description=extracted.description if extracted is not None else None,
+                default_value=extracted.default_value if extracted is not None else None,
+                unit=extracted.unit if extracted is not None else None,
+                qualified_name=str(getattr(member, "qualified_name", None) or ""),
+            )
+        return outputs, names, metadata
+
+    def _collect_bound_members(self, usage: Any, consumer: CalcNode | ConstraintNode) -> None:
+        unbound: list[DeclarationId] = []
+        for member in getattr(usage, "owned_members", None) or ():
+            if self._direction(member) != "in":
+                continue
+            formal_id = declaration_id_for(member)
+            port = ConsumerPortId(consumer.node_id, formal_id)
+            name = str(getattr(member, "name", None) or "input")
+            consumer.input_names[port] = display_name(name)
+            extracted = None
+            if isinstance(consumer, CalcNode):
+                calc_data = self._calc_defs.get(consumer.calc_def_qualified_name)
+                if calc_data is not None:
+                    extracted = next(
+                        (
+                            item
+                            for item in calc_data.input_attributes
+                            if item.name in (name, display_name(name))
+                        ),
+                        None,
+                    )
+            consumer.input_metadata[port] = PortMetadata(
+                python_type=(extracted.python_type if extracted is not None else "float"),
+                description=(extracted.description if extracted is not None else None),
+                default_value=(extracted.default_value if extracted is not None else None),
+                unit=extracted.unit if extracted is not None else None,
+                qualified_name=str(getattr(member, "qualified_name", None) or ""),
+            )
+            expression = getattr(member, "feature_value_expression", None)
+            if expression is None:
+                unbound.append(formal_id)
+                continue
+            evidence = self._binding_evidence(member, expression)
+            literal = extract_literal_value(expression)
+            unsupported = self._unsupported_code(evidence)
+            if unsupported is not None:
+                self._record_readiness(consumer, port, unsupported, evidence)
+                continue
+            self._pending_bindings.append(_PendingBinding(consumer, port, evidence, literal))
+        consumer.unbound_formals = tuple(unbound)
+
+    def _collect_unbound_constraint_formals(
+        self, definition: Any, consumer: ConstraintNode
+    ) -> None:
+        occupied_slots = {
+            self._slots.slot_of(port.formal)
+            for port in consumer.input_names
+            if isinstance(port, ConsumerPortId)
+        }
+        unbound = list(consumer.unbound_formals)
+        formals = [
+            formal
+            for formal in SysideAdapter.elements_of_type(
+                self._model, "AttributeUsage", include_subtypes=True
+            )
+            if getattr(formal, "owner", None) is definition and self._direction(formal) == "in"
+        ]
+        for formal in formals:
+            formal_id = declaration_id_for(formal)
+            slot = self._slots.slot_of(formal_id)
+            if slot in occupied_slots:
+                continue
+            port = ConsumerPortId(consumer.node_id, formal_id)
+            name = str(getattr(formal, "name", None) or "input")
+            expression = getattr(formal, "feature_value_expression", None)
+            serialized_default = None
+            if expression is not None:
+                default_ir = extract_expression_ir(expression)
+                if default_ir is not None:
+                    serialized_default = serialize_expression(default_ir)
+            resolved_default = resolve_modeled_default(serialized_default)
+            consumer.input_names[port] = display_name(name)
+            consumer.input_metadata[port] = PortMetadata(
+                python_type="float",
+                default_value=resolved_default.value,
+                unit=resolved_default.unit_text,
+                qualified_name=str(getattr(formal, "qualified_name", None) or ""),
+                unresolved_default_kind=resolved_default.unresolved_node_kind,
+            )
+            unbound.append(formal_id)
+            occupied_slots.add(slot)
+        consumer.unbound_formals = tuple(unbound)
+
+    def _collect_unbound_calculation_formals(self, definition: Any, consumer: CalcNode) -> None:
+        occupied_slots = {
+            self._slots.slot_of(port.formal)
+            for port in consumer.input_names
+            if isinstance(port, ConsumerPortId)
+        }
+        calc_data = self._calc_defs.get(consumer.calc_def_qualified_name)
+        extracted_inputs = (
+            {item.name: item for item in calc_data.input_attributes}
+            if calc_data is not None
+            else {}
+        )
+        unbound = list(consumer.unbound_formals)
+        formals = [
+            formal
+            for formal in SysideAdapter.elements_of_type(
+                self._model, "AttributeUsage", include_subtypes=True
+            )
+            if getattr(formal, "owner", None) is definition and self._direction(formal) == "in"
+        ]
+        for formal in formals:
+            formal_id = declaration_id_for(formal)
+            slot = self._slots.slot_of(formal_id)
+            if slot in occupied_slots:
+                continue
+            port = ConsumerPortId(consumer.node_id, formal_id)
+            name = str(getattr(formal, "name", None) or "input")
+            extracted = extracted_inputs.get(display_name(name)) or extracted_inputs.get(name)
+            expression = getattr(formal, "feature_value_expression", None)
+            serialized_default = None
+            if expression is not None:
+                default_ir = extract_expression_ir(expression)
+                if default_ir is not None:
+                    serialized_default = serialize_expression(default_ir)
+            resolved_default = resolve_modeled_default(serialized_default)
+            consumer.input_names[port] = display_name(name)
+            consumer.input_metadata[port] = PortMetadata(
+                python_type=extracted.python_type if extracted is not None else "float",
+                description=extracted.description if extracted is not None else None,
+                default_value=(
+                    resolved_default.value
+                    if expression is not None
+                    else extracted.default_value
+                    if extracted is not None
+                    else None
+                ),
+                unit=resolved_default.unit_text
+                or (extracted.unit if extracted is not None else None),
+                qualified_name=str(getattr(formal, "qualified_name", None) or ""),
+                unresolved_default_kind=resolved_default.unresolved_node_kind,
+            )
+            unbound.append(formal_id)
+            occupied_slots.add(slot)
+        consumer.unbound_formals = tuple(unbound)
 
     @staticmethod
-    def _unsupported_form_code(
+    def _binding_evidence(member: Any, expression: Any) -> SourceReferenceEvidence:
+        if SysideAdapter.is_instance(expression, "FeatureChainExpression"):
+            return binding_evidence.chain_evidence(member, expression)
+        if SysideAdapter.is_instance(expression, "FeatureReferenceExpression"):
+            return binding_evidence.reference_evidence(member, expression)
+        if is_literal_node(expression):
+            return binding_evidence.literal_evidence(member, extract_literal_value(expression))
+        return binding_evidence.expression_evidence(member, expression)
+
+    @staticmethod
+    def _unsupported_code(
         evidence: SourceReferenceEvidence,
     ) -> ReadinessCode | None:
         if evidence.is_self_binding:
@@ -1098,346 +1052,554 @@ class _Elaborator:
             return ReadinessCode.SI_EXPRESSION_SOURCE_UNSUPPORTED
         return None
 
-    def _ancestors(self, consumer_path: str) -> list[str]:
-        """The consumer's enclosing occurrence contexts, innermost first."""
-        segments = consumer_path.split("__")
-        ancestors: list[str] = []
-        for cut in range(len(segments) - 1, 0, -1):
-            candidate = "__".join(segments[:cut])
-            if candidate in self._context_paths:
-                ancestors.append(candidate)
-        return ancestors
-
-    def _resolve_chain(
+    def _record_readiness(
         self,
-        consumer_path: str,
-        param_name: str,
-        root_fact: ResolvedTargetFact | None,
-        members: tuple[str, ...],
-    ) -> InputRef | None:
-        """Chain rule (D5): anchor the root at the innermost enclosing
-        occurrence that contains it, then descend resolved member names.
-
-        The root may itself be a calc usage (sibling-calc chaining:
-        ``in area = area_calc.area``) — that anchor IS the producer. A root on
-        no enclosing context (cross-package: ``catf_blanket.pump_power``)
-        anchors at the root element's own occurrence when unique.
-        """
-        if root_fact is None:
-            self._miss(
-                consumer_path,
-                param_name,
-                f"feature chain has no resolved root (members {members!r})",
-            )
-            return None
-        root_feature = self._fact_leaf(root_fact)
-        member_list = list(members)
-        for ancestor in self._ancestors(consumer_path):
-            candidate = f"{ancestor}__{root_feature}"
-            if candidate in self._graph.calcs:
-                return self._producer_from_chain(
-                    consumer_path, param_name, candidate, member_list
-                )
-            if candidate in self._context_paths or any(
-                path.startswith(f"{candidate}[") for path in self._occ_by_path
-            ):
-                return self._descend(
-                    consumer_path, param_name, candidate, member_list
-                )
-        return self._resolve_chain_off_ancestor(
-            consumer_path, param_name, root_fact, member_list
-        )
-
-    def _resolve_chain_off_ancestor(
-        self,
-        consumer_path: str,
-        param_name: str,
-        root_fact: ResolvedTargetFact,
-        members: list[str],
-    ) -> InputRef | None:
-        """Anchor a chain whose root is on no enclosing context: the root
-        element's own occurrence, when it is unique."""
-        root_paths = self._element_context_paths(root_fact)
-        calc_anchors = [path for path in root_paths if path in self._graph.calcs]
-        part_anchors = [path for path in root_paths if path in self._context_paths]
-        anchors = calc_anchors + part_anchors
-        if len(anchors) == 1:
-            if calc_anchors:
-                return self._producer_from_chain(
-                    consumer_path, param_name, anchors[0], members
-                )
-            return self._descend(consumer_path, param_name, anchors[0], members)
-        if anchors:
-            self._graph.diagnostics.append(
-                Diagnostic(
-                    code=ElaborationCode.SI_OCCURRENCE_AMBIGUOUS,
-                    consumer=consumer_path,
-                    param_name=param_name,
-                    detail=(
-                        f"chain root {root_fact.qualified_name!r} occurs at "
-                        f"{sorted(anchors)!r} and none encloses the consumer"
-                    ),
-                )
-            )
-            return None
-        self._miss(
-            consumer_path,
-            param_name,
-            f"no enclosing occurrence contains chain root "
-            f"{root_fact.qualified_name!r} and it has no occurrence of its own",
-        )
-        return None
-
-    def _producer_from_chain(
-        self,
-        consumer_path: str,
-        param_name: str,
-        calc_node_id: str,
-        members: list[str],
-    ) -> InputRef | None:
-        """A chain anchored AT a calc node: exactly one member (the output)."""
-        if len(members) == 1:
-            return ProducerRef(calc_node_id, sanitize_name(members[0]))
-        self._miss(
-            consumer_path,
-            param_name,
-            f"chain continues past producer {calc_node_id!r} with tail "
-            f"{members!r}",
-        )
-        return None
-
-    def _element_context_paths(self, fact: ResolvedTargetFact) -> list[str]:
-        """The concrete paths where a referenced element itself materializes."""
-        raw_qn = str(fact.qualified_name)
-        if fact.element_kind == "PartUsage":
-            occurrences = self._index.occurrences_of_part_usage(raw_qn)
-            if occurrences:
-                return [occ.instance_path for occ in occurrences]
-        return self._expand_def_context(sanitize_qualified_name(raw_qn))
-
-    def _descend(
-        self,
-        consumer_path: str,
-        param_name: str,
-        base_path: str,
-        members: list[str],
-    ) -> InputRef | None:
-        path = base_path
-        for i, raw_member in enumerate(members):
-            member = sanitize_name(raw_member)
-            calc_candidate = self._graph.calcs.get(f"{path}__{member}")
-            if calc_candidate is not None:
-                rest = members[i + 1 :]
-                if calc_candidate.is_computed and not rest:
-                    # A chain ending AT a computed attribute reads its output.
-                    return ProducerRef(
-                        calc_candidate.node_id, calc_candidate.calc_name
-                    )
-                if len(rest) == 1:
-                    return ProducerRef(
-                        calc_candidate.node_id, sanitize_name(rest[0])
-                    )
-                self._miss(
-                    consumer_path,
-                    param_name,
-                    f"chain continues past producer {calc_candidate.node_id!r} "
-                    f"with tail {rest!r}",
-                )
-                return None
-            if i == len(members) - 1:
-                node = self._graph.attrs.get(f"{path}__{member}")
-                if node is not None:
-                    return NodeRef(node.node_id)
-                self._miss(
-                    consumer_path,
-                    param_name,
-                    f"chain member {path}__{member} is not an attribute node",
-                )
-                return None
-            path = f"{path}__{member}"
-        self._miss(consumer_path, param_name, f"empty chain at {base_path!r}")
-        return None
-
-    def _resolve_reference(
-        self, consumer_path: str, param_name: str, fact: ResolvedTargetFact
-    ) -> InputRef | None:
-        leaf = self._fact_leaf(fact)
-        if fact.owner_is_definition:
-            # Def-level referent (D5): innermost enclosing occurrence whose
-            # definition (incl. supertype closure) declares the referent.
-            owner_key = self._def_raw_to_key.get(fact.owner_qualified_name)
-            if owner_key is not None:
-                for ancestor in self._ancestors(consumer_path):
-                    occurrence = self._occ_by_path.get(ancestor)
-                    if occurrence is None:
-                        continue  # an untyped context has no definition
-                    if self._def_declares(occurrence.part_def_qn, owner_key):
-                        ref = self._attr_or_computed(ancestor, leaf)
-                        if ref is not None:
-                            return ref
-                return self._resolve_def_referent_off_ancestor(
-                    consumer_path, param_name, owner_key, leaf, fact
-                )
-            self._miss(
-                consumer_path,
-                param_name,
-                f"no enclosing occurrence's definition declares "
-                f"{fact.qualified_name!r}",
-            )
-            return None
-        if not fact.owner_qualified_name:
-            # Package-level referent: a package-owned attribute is a singleton
-            # node at its own sanitized qualified name.
-            declared = sanitize_qualified_name(str(fact.qualified_name))
-            path, _, referent_leaf = declared.rpartition("__")
-            if path:
-                ref = self._attr_or_computed(path, referent_leaf)
-                if ref is not None:
-                    return ref
-            self._miss(
-                consumer_path,
-                param_name,
-                f"package-level referent {fact.qualified_name!r} has no node",
-            )
-            return None
-        # Usage-level referent (D5): the owner usage's occurrence on the
-        # consumer's ancestor chain; unique otherwise; else ambiguous. An
-        # untyped owner has no entry in the typed index — its contexts come
-        # from the remapped qualified name.
-        occurrences = self._index.occurrences_of_part_usage(
-            fact.owner_qualified_name
-        )
-        candidates = [occ.instance_path for occ in occurrences]
-        if not candidates:
-            candidates = [
-                path
-                for path in self._expand_def_context(
-                    sanitize_qualified_name(fact.owner_qualified_name)
-                )
-                if path in self._context_paths
-            ]
-        on_chain = [
-            path
-            for path in candidates
-            if consumer_path == path or consumer_path.startswith(f"{path}__")
-        ]
-        picks = on_chain or candidates
-        if len(picks) == 1:
-            ref = self._attr_or_computed(picks[0], leaf)
-            if ref is not None:
-                return ref
-            self._miss(
-                consumer_path,
-                param_name,
-                f"referent owner occurrence {picks[0]!r} has no attribute "
-                f"{leaf!r}",
-            )
-            return None
-        if not picks:
-            self._miss(
-                consumer_path,
-                param_name,
-                f"referent owner {fact.owner_qualified_name!r} has no "
-                "concrete occurrence",
-            )
-            return None
-        self._graph.diagnostics.append(
-            Diagnostic(
-                code=ElaborationCode.SI_OCCURRENCE_AMBIGUOUS,
-                consumer=consumer_path,
+        consumer: CalcNode | ConstraintNode,
+        port: ConsumerPortId,
+        code: ReadinessCode,
+        evidence: SourceReferenceEvidence,
+    ) -> None:
+        key = (DeclarationId(evidence.bound_formal_id), code)
+        if key in self._readiness_keys:
+            return
+        self._readiness_keys.add(key)
+        param_name = consumer.input_names[port]
+        owner_qn, _separator, _formal_name = evidence.bound_formal_qn.rpartition("::")
+        usage_display = display_qualified_name(owner_qn)
+        self._readiness.append(
+            ReadinessFinding(
+                code=code,
+                usage_qualified_name=usage_display,
                 param_name=param_name,
                 detail=(
-                    f"{fact.qualified_name!r} owner occurs at "
-                    f"{sorted(picks)!r} and none encloses the consumer"
+                    f"unsupported exact source form {evidence.source_form.value} "
+                    f"({evidence.written_text or ''!r})"
                 ),
             )
         )
-        return None
-
-    def _resolve_def_referent_off_ancestor(
-        self,
-        consumer_path: str,
-        param_name: str,
-        owner_key: str,
-        leaf: str,
-        fact: ResolvedTargetFact,
-    ) -> InputRef | None:
-        """A def-level referent declared by NO enclosing occurrence: the owning
-        definition's own occurrence, preferring one under the consumer's
-        enclosing contexts, unique otherwise (mirrors the chain rule's
-        off-ancestor fallback). E.g. an aggregation term
-        ``'Qual Plant'::level`` authored on the plant that CONTAINS the
-        qual_plant occurrence. Owns every disposition — exactly one diagnostic
-        per miss."""
-        candidates = [
-            occ.instance_path for occ in self._index.occurrences_of(owner_key)
-        ]
-        ancestors = self._ancestors(consumer_path)
-        under_ancestor = [
-            path
-            for path in candidates
-            if any(path.startswith(f"{ancestor}__") for ancestor in ancestors)
-        ]
-        picks = under_ancestor or candidates
-        if len(picks) == 1:
-            ref = self._attr_or_computed(picks[0], leaf)
-            if ref is not None:
-                return ref
-            self._miss(
-                consumer_path,
-                param_name,
-                f"declaring occurrence {picks[0]!r} has no attribute {leaf!r}",
-            )
-            return None
-        if picks:
+        if not self._strict:
             self._graph.diagnostics.append(
                 Diagnostic(
-                    code=ElaborationCode.SI_OCCURRENCE_AMBIGUOUS,
-                    consumer=consumer_path,
+                    code=code,
+                    consumer=None,
+                    consumer_display=usage_display,
                     param_name=param_name,
-                    detail=(
-                        f"{fact.qualified_name!r} is declared by occurrences "
-                        f"{sorted(picks)!r} and none encloses the consumer"
-                    ),
+                    detail=self._readiness[-1].detail,
                 )
             )
-            return None
-        self._miss(
-            consumer_path,
-            param_name,
-            f"no occurrence declares {fact.qualified_name!r}",
-        )
-        return None
 
-    def _attr_or_computed(self, path: str, leaf: str) -> InputRef | None:
-        """The reference target ``{path}__{leaf}`` — an attribute node, or a
-        computed attribute's output (a producer edge, design D6)."""
-        node = self._graph.attr_at(path, leaf)
-        if node is not None:
-            return NodeRef(node.node_id)
-        calc = self._graph.calcs.get(f"{path}__{leaf}")
-        if calc is not None and calc.is_computed:
-            return ProducerRef(calc.node_id, calc.calc_name)
-        return None
-
-    def _def_declares(self, part_def_qn: str, owner_key: str) -> bool:
-        """True when ``part_def_qn`` is ``owner_key`` or specializes it."""
-        if part_def_qn == owner_key:
-            return True
-        return owner_key in _supertype_closure(part_def_qn, self._qn_to_partdef)
+    # ---- exact reference resolution --------------------------------------
 
     @staticmethod
-    def _fact_leaf(fact: ResolvedTargetFact) -> str:
-        return sanitize_name(
-            fact.element_name or extract_simple_name(fact.qualified_name)
+    def _exact_reference(
+        fact: ResolvedSemanticReferenceFact,
+    ) -> ResolvedSemanticReference:
+        if fact.root is None or fact.leaf is None:
+            raise IdentityBoundaryError("resolved reference is missing root or leaf identity")
+        return ResolvedSemanticReference(
+            root_id=DeclarationId(fact.root.element_id),
+            segment_ids=tuple(DeclarationId(value) for value in fact.segment_element_ids),
+            leaf_id=DeclarationId(fact.leaf.element_id),
         )
 
-    def _miss(self, consumer_path: str, param_name: str, detail: str) -> None:
-        self._graph.diagnostics.append(
-            Diagnostic(
-                code=ElaborationCode.SI_OCCURRENCE_MISSING,
-                consumer=consumer_path,
-                param_name=param_name,
-                detail=detail,
+    def _resolve_semantic_reference(
+        self,
+        fact: ResolvedSemanticReferenceFact,
+        consumer_scope: ScopeId,
+        *,
+        plural: bool,
+    ) -> list[NodeRef | ProducerRef]:
+        reference = self._exact_reference(fact)
+        if len(reference.segment_ids) == 1:
+            return [
+                self._resolve_leaf(
+                    reference.leaf_id,
+                    consumer_scope,
+                )
+            ]
+        states: list[OccurrenceId | CalcNode] = self._contextualize_root(
+            reference.root_id, consumer_scope, plural=plural
+        )
+        for segment_id in reference.segment_ids[1:]:
+            next_states: list[OccurrenceId | CalcNode | InputRef] = []
+            for state in states:
+                next_states.extend(self._transition(state, segment_id))
+            if not next_states:
+                raise _ReferenceResolutionError(
+                    ElaborationCode.SI_OCCURRENCE_MISSING,
+                    f"exact segment {segment_id.to_wire()} has no target",
+                )
+            if all(isinstance(state, NodeRef | ProducerRef) for state in next_states):
+                edges: list[NodeRef | ProducerRef] = [
+                    state for state in next_states if isinstance(state, NodeRef | ProducerRef)
+                ]
+                if not plural and len(edges) != 1:
+                    raise _ReferenceResolutionError(
+                        ElaborationCode.SI_OCCURRENCE_AMBIGUOUS,
+                        f"exact segment {segment_id.to_wire()} has {len(edges)} targets",
+                    )
+                return edges
+            unresolved_states = [
+                state for state in next_states if isinstance(state, OccurrenceId | CalcNode)
+            ]
+            if len(unresolved_states) != len(next_states):
+                raise _ReferenceResolutionError(
+                    ElaborationCode.SI_OCCURRENCE_AMBIGUOUS,
+                    "semantic path produced both intermediate states and value edges",
+                )
+            if not plural and len(unresolved_states) != 1:
+                raise _ReferenceResolutionError(
+                    ElaborationCode.SI_OCCURRENCE_AMBIGUOUS,
+                    f"exact segment {segment_id.to_wire()} has "
+                    f"{len(unresolved_states)} intermediate targets",
+                )
+            states = unresolved_states
+        raise _ReferenceResolutionError(
+            ElaborationCode.SI_OCCURRENCE_MISSING,
+            "semantic path ended before reaching a graph value",
+        )
+
+    def _contextualize_root(
+        self, root_id: DeclarationId, consumer_scope: ScopeId, *, plural: bool
+    ) -> list[OccurrenceId | CalcNode]:
+        element = self._elements.get(root_id)
+        if element is None:
+            raise _ReferenceResolutionError(
+                ElaborationCode.SI_OCCURRENCE_MISSING,
+                f"exact root {root_id.to_wire()} is not an executable declaration",
+            )
+        if SysideAdapter.is_instance(element, "PartUsage"):
+            occurrence_candidates = [
+                occurrence.occurrence_id
+                for occurrence in self._occurrences.occurrences_for_declaration(root_id)
+            ]
+            selected_occurrences: list[OccurrenceId | CalcNode] = [
+                *self._select_occurrences(occurrence_candidates, consumer_scope, plural=plural)
+            ]
+            return selected_occurrences
+        if SysideAdapter.is_instance(element, "CalculationUsage"):
+            calc_candidates = list(
+                {
+                    node.node_id: node
+                    for (scope, declaration), node in self._calcs.items()
+                    if declaration == root_id
+                }.values()
+            )
+            selected_calcs: list[OccurrenceId | CalcNode] = [
+                *self._select_calc_nodes(calc_candidates, consumer_scope)
+            ]
+            return selected_calcs
+        raise _ReferenceResolutionError(
+            ElaborationCode.SI_OCCURRENCE_MISSING,
+            f"exact root {root_id.to_wire()} cannot anchor a semantic path",
+        )
+
+    def _select_occurrences(
+        self,
+        candidates: list[OccurrenceId],
+        consumer_scope: ScopeId,
+        *,
+        plural: bool,
+    ) -> list[OccurrenceId]:
+        if not candidates:
+            raise _ReferenceResolutionError(
+                ElaborationCode.SI_OCCURRENCE_MISSING,
+                "exact containment declaration has no concrete occurrence",
+            )
+        if not isinstance(consumer_scope, OccurrenceId):
+            if plural:
+                return candidates
+            if len(candidates) != 1:
+                raise _ReferenceResolutionError(
+                    ElaborationCode.SI_OCCURRENCE_AMBIGUOUS,
+                    f"package context contains {len(candidates)} candidate occurrences",
+                )
+            return candidates
+        lineage = self._scope_lineage(consumer_scope)
+        for scope in lineage:
+            if scope in candidates:
+                return [scope]
+        for anchor in lineage:
+            under = [
+                candidate
+                for candidate in candidates
+                if self._occurrences.is_descendant(candidate, anchor)
+            ]
+            if under:
+                if plural or len(under) == 1:
+                    return under
+                raise _ReferenceResolutionError(
+                    ElaborationCode.SI_OCCURRENCE_AMBIGUOUS,
+                    f"consumer context contains {len(under)} candidate occurrences",
+                )
+        if plural:
+            return candidates
+        if len(candidates) != 1:
+            raise _ReferenceResolutionError(
+                ElaborationCode.SI_OCCURRENCE_AMBIGUOUS,
+                f"permitted scope contains {len(candidates)} candidate occurrences",
+            )
+        return candidates
+
+    def _select_calc_nodes(
+        self, candidates: list[CalcNode], consumer_scope: ScopeId
+    ) -> list[CalcNode]:
+        if not candidates:
+            raise _ReferenceResolutionError(
+                ElaborationCode.SI_OCCURRENCE_MISSING,
+                "exact calculation declaration has no concrete node",
+            )
+        by_scope = {node.scope: node for node in candidates}
+        if isinstance(consumer_scope, OccurrenceId):
+            for scope in self._scope_lineage(consumer_scope):
+                if scope in by_scope:
+                    return [by_scope[scope]]
+            for anchor in self._scope_lineage(consumer_scope):
+                under = [
+                    node
+                    for node in candidates
+                    if isinstance(node.scope, OccurrenceId)
+                    and self._occurrences.is_descendant(node.scope, anchor)
+                ]
+                if len(under) == 1:
+                    return under
+                if len(under) > 1:
+                    raise _ReferenceResolutionError(
+                        ElaborationCode.SI_OCCURRENCE_AMBIGUOUS,
+                        f"consumer context contains {len(under)} calculation nodes",
+                    )
+        if len(candidates) != 1:
+            raise _ReferenceResolutionError(
+                ElaborationCode.SI_OCCURRENCE_AMBIGUOUS,
+                f"permitted scope contains {len(candidates)} calculation nodes",
+            )
+        return candidates
+
+    def _transition(
+        self, state: OccurrenceId | CalcNode, segment_id: DeclarationId
+    ) -> list[OccurrenceId | CalcNode | NodeRef | ProducerRef]:
+        if isinstance(state, CalcNode):
+            output = state.outputs.get(segment_id)
+            return [ProducerRef(output)] if output is not None else []
+
+        element = self._elements.get(segment_id)
+        if element is not None and SysideAdapter.is_instance(element, "PartUsage"):
+            slot = self._slots.slot_of(segment_id)
+            return [
+                child.occurrence_id
+                for child in self._occurrences.children(state)
+                if child.occurrence_id.steps[-1].containment_slot == slot
+            ]
+        if element is not None and SysideAdapter.is_instance(element, "CalculationUsage"):
+            node = self._calcs.get((state, segment_id))
+            return [node] if node is not None else []
+        edge = self._target_at(state, segment_id)
+        return [edge] if edge is not None else []
+
+    def _resolve_leaf(
+        self,
+        declaration_id: DeclarationId,
+        consumer_scope: ScopeId,
+    ) -> NodeRef | ProducerRef:
+        producing_calcs = [
+            node for node in self._graph.calcs.values() if declaration_id in node.outputs
+        ]
+        if producing_calcs:
+            [producer] = self._select_calc_nodes(producing_calcs, consumer_scope)
+            return ProducerRef(producer.outputs[declaration_id])
+        try:
+            slot = self._slots.slot_of(declaration_id)
+        except KeyError:
+            raise _ReferenceResolutionError(
+                ElaborationCode.SI_OCCURRENCE_MISSING,
+                f"leaf declaration {declaration_id.to_wire()} has no feature slot",
+            ) from None
+        if isinstance(consumer_scope, OccurrenceId):
+            for scope in self._scope_lineage(consumer_scope):
+                edge = self._target_for_slot(scope, slot)
+                if edge is not None:
+                    return edge
+            for anchor in self._scope_lineage(consumer_scope):
+                descendants = [
+                    occurrence.occurrence_id
+                    for occurrence in self._occurrences.occurrences()
+                    if self._occurrences.is_descendant(occurrence.occurrence_id, anchor)
+                    and self._target_for_slot(occurrence.occurrence_id, slot) is not None
+                ]
+                if len(descendants) == 1:
+                    target = self._target_for_slot(descendants[0], slot)
+                    if target is not None:
+                        return target
+                if len(descendants) > 1:
+                    raise _ReferenceResolutionError(
+                        ElaborationCode.SI_OCCURRENCE_AMBIGUOUS,
+                        f"consumer context contains {len(descendants)} leaf occurrences",
+                    )
+        edge = self._target_for_slot(consumer_scope, slot)
+        if edge is not None:
+            return edge
+        raise _ReferenceResolutionError(
+            ElaborationCode.SI_OCCURRENCE_MISSING,
+            f"consumer context has no occurrence of leaf slot {slot!r}",
+        )
+
+    def _target_at(
+        self, scope: OccurrenceId, declaration_id: DeclarationId
+    ) -> NodeRef | ProducerRef | None:
+        try:
+            slot = self._slots.slot_of(declaration_id)
+        except KeyError:
+            return None
+        return self._target_for_slot(scope, slot)
+
+    def _target_for_slot(self, scope: ScopeId, slot: FeatureSlotId) -> NodeRef | ProducerRef | None:
+        attr = self._attrs.get((scope, slot))
+        if attr is not None:
+            return NodeRef(attr.node_id)
+        computed = self._computed.get((scope, slot))
+        if computed is not None:
+            return ProducerRef(computed.outputs[computed.declaration_id])
+        return None
+
+    # ---- bind aliases, expressions, and consumer ports -------------------
+
+    def _resolve_aliases(self) -> None:
+        for pending in self._pending_aliases:
+            facts = self._expression_references(pending.expression, plural=False)
+            if len(facts) != 1:
+                self._diagnose(
+                    ElaborationCode.SI_OCCURRENCE_MISSING,
+                    pending.node.node_id,
+                    pending.node.display_path,
+                    pending.node.display_name,
+                    "alias expression does not contain one exact reference",
+                )
+                continue
+            fact, plural = facts[0]
+            try:
+                edges = self._resolve_semantic_reference(fact, pending.node.scope, plural=plural)
+            except _ReferenceResolutionError as error:
+                self._diagnose(
+                    error.code,
+                    pending.node.node_id,
+                    pending.node.display_path,
+                    pending.node.display_name,
+                    error.detail,
+                )
+                continue
+            pending.node.alias_target = edges[0]
+
+        resolved_aliases: dict[NodeId, InputRef | None] = {}
+        for pending in self._pending_aliases:
+            if pending.node.alias_target is None:
+                continue
+            try:
+                resolved_aliases[pending.node.node_id] = self._follow_alias(
+                    pending.node.alias_target, {pending.node.node_id}
+                )
+            except _ReferenceResolutionError as error:
+                resolved_aliases[pending.node.node_id] = None
+                self._diagnose(
+                    error.code,
+                    pending.node.node_id,
+                    pending.node.display_path,
+                    pending.node.display_name,
+                    error.detail,
+                )
+        for pending in self._pending_aliases:
+            if pending.node.node_id in resolved_aliases:
+                pending.node.alias_target = resolved_aliases[pending.node.node_id]
+
+    def _follow_alias(self, edge: InputRef, active: set[NodeId]) -> InputRef:
+        if not isinstance(edge, NodeRef):
+            return edge
+        node = self._graph.attrs.get(edge.target)
+        if node is None or not node.is_alias:
+            return edge
+        if node.alias_target is None:
+            raise _ReferenceResolutionError(
+                ElaborationCode.SI_OCCURRENCE_MISSING,
+                f"typed alias {node.display_path!r} has no resolved target",
+            )
+        if node.node_id in active:
+            raise _ReferenceResolutionError(
+                ElaborationCode.SI_ALIAS_CYCLE,
+                f"typed alias cycle reaches {node.display_path!r}",
+            )
+        return self._follow_alias(node.alias_target, active | {node.node_id})
+
+    def _resolve_computed_expressions(self) -> None:
+        for pending in self._pending_expressions:
+            try:
+                facts = self._expression_references(pending.expression, plural=False)
+            except _UnsupportedExpressionError as error:
+                self._diagnose(
+                    ReadinessCode.SI_EXPRESSION_SOURCE_UNSUPPORTED,
+                    pending.consumer.node_id,
+                    pending.consumer.display_path,
+                    None,
+                    error.detail,
+                )
+                continue
+            aggregation_ordinals: list[int] = []
+            for reference_ordinal, (fact, plural) in enumerate(facts):
+                if plural:
+                    aggregation_ordinals.append(reference_ordinal)
+                try:
+                    edges = self._resolve_semantic_reference(
+                        fact, pending.consumer.scope, plural=plural
+                    )
+                except _ReferenceResolutionError as error:
+                    self._diagnose(
+                        error.code,
+                        pending.consumer.node_id,
+                        pending.consumer.display_path,
+                        None,
+                        error.detail,
+                    )
+                    continue
+                leaf_fact = fact.leaf
+                if leaf_fact is None:
+                    continue
+                leaf = DeclarationId(leaf_fact.element_id)
+                for edge_ordinal, edge in enumerate(edges):
+                    target_scope = (
+                        edge.target.scope
+                        if isinstance(edge, NodeRef) and isinstance(edge.target.scope, OccurrenceId)
+                        else None
+                    )
+                    port: ConsumerPortId | ExpressionPortId
+                    if isinstance(pending.consumer, ConstraintNode):
+                        port = ConsumerPortId(pending.consumer.node_id, leaf)
+                    else:
+                        port = ExpressionPortId(
+                            pending.consumer.node_id,
+                            reference_ordinal,
+                            edge_ordinal,
+                            leaf,
+                            target_scope,
+                        )
+                    input_name = (
+                        fact.resolved_member_names[-1]
+                        if fact.resolved_member_names
+                        else leaf_fact.element_name
+                    )
+                    pending.consumer.input_names[port] = input_name
+                    pending.consumer.input_metadata[port] = PortMetadata(
+                        python_type="float",
+                        qualified_name=leaf_fact.qualified_name,
+                    )
+                    try:
+                        pending.consumer.inputs[port] = self._follow_alias(edge, set())
+                    except _ReferenceResolutionError as error:
+                        self._diagnose(
+                            error.code,
+                            pending.consumer.node_id,
+                            pending.consumer.display_path,
+                            pending.consumer.input_names.get(port),
+                            error.detail,
+                        )
+                        continue
+            if isinstance(pending.consumer, CalcNode):
+                pending.consumer.aggregation_reference_ordinals = tuple(aggregation_ordinals)
+
+    def _expression_references(
+        self, expression: Any, *, plural: bool
+    ) -> list[tuple[ResolvedSemanticReferenceFact, bool]]:
+        # FeatureChainExpression MUST be before OperatorExpression: SysIDE
+        # models the former as an operator subtype.
+        if SysideAdapter.is_instance(expression, "FeatureChainExpression"):
+            return [(feature_chain_facts(expression), plural)]
+        if SysideAdapter.is_instance(expression, "FeatureReferenceExpression"):
+            target = resolved_target_fact(getattr(expression, "referent", None))
+            if target is None:
+                return []
+            return [
+                (
+                    ResolvedSemanticReferenceFact(
+                        root=target,
+                        segments=(target,),
+                        leaf=target,
+                        resolved_member_names=(),
+                        has_index_segment=False,
+                    ),
+                    plural,
+                )
+            ]
+        child_plural = plural
+        if SysideAdapter.is_instance(
+            expression, "InvocationExpression"
+        ) and not SysideAdapter.is_instance(expression, "OperatorExpression"):
+            function = getattr(expression, "function", None)
+            if function is None:
+                raise _UnsupportedExpressionError(
+                    "invocation expression has no resolved function declaration"
+                )
+            function_id = declaration_id_for(function)
+            if type(function).__name__ != "Function" or function_id != _SUM_FUNCTION_ID:
+                raise _UnsupportedExpressionError(
+                    f"unsupported invocation function {function_id.to_wire()}"
+                )
+            child_plural = True
+        result: list[tuple[ResolvedSemanticReferenceFact, bool]] = []
+        for operand in getattr(expression, "operands", None) or ():
+            result.extend(self._expression_references(operand, plural=child_plural))
+        return result
+
+    def _resolve_bindings(self) -> None:
+        for pending in self._pending_bindings:
+            evidence = pending.evidence
+            if evidence.source_form is SourceForm.AUTHORED_LITERAL:
+                if pending.literal_value is None:
+                    raise RuntimeError("authored literal binding has no literal value")
+                pending.consumer.inputs[pending.port] = LiteralInput(pending.literal_value)
+                continue
+            fact = evidence.semantic_reference
+            if fact is None:
+                raise RuntimeError("supported reference binding has no exact semantic path")
+            try:
+                edges = self._resolve_semantic_reference(
+                    fact,
+                    pending.consumer.scope,
+                    plural=False,
+                )
+                edge = self._follow_alias(edges[0], set())
+            except _ReferenceResolutionError as error:
+                self._diagnose(
+                    error.code,
+                    pending.consumer.node_id,
+                    pending.consumer.display_path,
+                    pending.consumer.input_names[pending.port],
+                    error.detail,
+                )
+                continue
+            pending.consumer.inputs[pending.port] = edge
+
+    def _finish_readiness(self) -> None:
+        self._readiness.sort(
+            key=lambda finding: (
+                finding.usage_qualified_name,
+                finding.param_name,
+                finding.code.value,
             )
         )
+        if self._strict and self._readiness:
+            raise ElaborationError(self._readiness)
+
+    def _diagnose(
+        self,
+        code: ElaborationCode | ReadinessCode,
+        consumer: NodeId | None,
+        consumer_display: str,
+        param_name: str | None,
+        detail: str,
+    ) -> None:
+        diagnostic = Diagnostic(
+            code=code,
+            consumer=consumer,
+            consumer_display=consumer_display,
+            param_name=param_name,
+            detail=detail,
+        )
+        if diagnostic not in self._graph.diagnostics:
+            self._graph.diagnostics.append(diagnostic)

@@ -18,12 +18,17 @@ import pytest
 
 from sysml_codegen.elaboration import (
     InstanceGraph,
-    NodeRef,
-    ProducerRef,
     elaborate,
 )
 from sysml_codegen.extraction.extractor import SysMLDataExtractor
 from tests.conftest import FIXTURES_DIR, requires_license
+from tests.helpers.elaboration_graph import (
+    attr,
+    calc,
+    inputs_by_name,
+    node_ref,
+    producer_ref,
+)
 
 pytestmark = requires_license
 
@@ -34,7 +39,11 @@ P = "AttrExprProbeDesign__probe_design"
 def graph() -> InstanceGraph:
     extractor = SysMLDataExtractor([FIXTURES_DIR / "attr_expr_probe"])
     assert extractor.load_models()
-    return elaborate(extractor.model, extractor.extract_calculation_definitions())
+    return elaborate(
+        extractor.model,
+        extractor.extract_calculation_definitions(),
+        validation_diagnostics=extractor.diagnostics.validation,
+    )
 
 
 def test_probe_elaborates_strict_and_clean(graph: InstanceGraph) -> None:
@@ -44,22 +53,23 @@ def test_probe_elaborates_strict_and_clean(graph: InstanceGraph) -> None:
 def test_simple_expression_becomes_a_computed_node(graph: InstanceGraph) -> None:
     """A1: ``area = length * width`` — a computed node whose terms are the two
     entry attribute nodes; no attribute node competes with it."""
-    node = graph.calcs[f"{P}__area"]
+    node = calc(graph, f"{P}__area")
     assert node.is_computed
-    assert node.calc_name == "area"
-    assert node.inputs == {
-        "length": NodeRef(f"{P}__length"),
-        "width": NodeRef(f"{P}__width"),
+    assert node.display_name == "area"
+    assert inputs_by_name(node) == {
+        "length": node_ref(graph, f"{P}__length"),
+        "width": node_ref(graph, f"{P}__width"),
     }
-    assert f"{P}__area" not in graph.attrs
+    with pytest.raises(KeyError):
+        attr(graph, f"{P}__area")
 
 
 def test_duplicate_terms_collapse_to_one_edge(graph: InstanceGraph) -> None:
     """B6: ``(m_neutron * p_fusion)`` appears twice in the blanket formula —
     one term edge per distinct feature, never one per mention."""
-    node = graph.calcs[f"{P}__p_blanket_thermal"]
+    node = calc(graph, f"{P}__p_blanket_thermal")
     assert node.is_computed
-    assert set(node.inputs) == {
+    assert set(node.input_names.values()) == {
         "m_neutron",
         "p_fusion",
         "p_input",
@@ -73,37 +83,35 @@ def test_duplicate_terms_collapse_to_one_edge(graph: InstanceGraph) -> None:
 def test_formula_to_formula_chain(graph: InstanceGraph) -> None:
     """C1/C2: ``cost = area * rate`` and ``marked_up_cost = cost * markup`` —
     computed-to-computed edges, the previously unsupported shape."""
-    cost = graph.calcs[f"{P}__cost"]
-    assert cost.inputs["area"] == ProducerRef(f"{P}__area", "area")
-    marked = graph.calcs[f"{P}__marked_up_cost"]
-    assert marked.inputs["cost"] == ProducerRef(f"{P}__cost", "cost")
+    cost = calc(graph, f"{P}__cost")
+    assert cost.input_by_name("area") == producer_ref(graph, f"{P}__area", "area")
+    marked = calc(graph, f"{P}__marked_up_cost")
+    assert marked.input_by_name("cost") == producer_ref(graph, f"{P}__cost", "cost")
 
 
 def test_formula_fan_in_from_two_computed(graph: InstanceGraph) -> None:
     """C3: ``cost_density = cost / volume`` reads two computed producers."""
-    node = graph.calcs[f"{P}__cost_density"]
-    assert node.inputs == {
-        "cost": ProducerRef(f"{P}__cost", "cost"),
-        "volume": ProducerRef(f"{P}__volume", "volume"),
+    node = calc(graph, f"{P}__cost_density")
+    assert inputs_by_name(node) == {
+        "cost": producer_ref(graph, f"{P}__cost", "cost"),
+        "volume": producer_ref(graph, f"{P}__volume", "volume"),
     }
 
 
 def test_computed_attribute_feeds_a_calc_usage(graph: InstanceGraph) -> None:
     """D1: ``scale_calc.value = area`` — a calc-usage binding whose referent is
     a computed attribute resolves to the computed producer."""
-    scale = graph.calcs[f"{P}__scale_calc"]
+    scale = calc(graph, f"{P}__scale_calc")
     assert not scale.is_computed
-    assert scale.inputs["value"] == ProducerRef(f"{P}__area", "area")
+    assert scale.input_by_name("value") == producer_ref(graph, f"{P}__area", "area")
 
 
 def test_calc_output_inside_an_expression(graph: InstanceGraph) -> None:
     """D2: ``scaled_area = scale_calc.result * 2.0`` — a chain term to a real
     calc usage's output inside a computed attribute's expression."""
-    node = graph.calcs[f"{P}__scaled_area"]
+    node = calc(graph, f"{P}__scaled_area")
     assert node.is_computed
-    assert node.inputs == {
-        "scale_calc__result": ProducerRef(f"{P}__scale_calc", "result")
-    }
+    assert inputs_by_name(node) == {"result": producer_ref(graph, f"{P}__scale_calc", "result")}
 
 
 def test_pure_expose_stays_an_alias_not_a_computed_node(
@@ -117,14 +125,15 @@ def test_pure_expose_stays_an_alias_not_a_computed_node(
         ("half_vol", ("split", "half")),
         ("quarter_vol", ("split", "quarter")),
     ):
-        assert f"{P}__{attr_name}" not in graph.calcs
-        node = graph.attrs[f"{P}__{attr_name}"]
-        assert node.alias_target == ProducerRef(f"{P}__{output[0]}", output[1])
+        with pytest.raises(KeyError):
+            calc(graph, f"{P}__{attr_name}")
+        node = attr(graph, f"{P}__{attr_name}")
+        assert node.alias_target == producer_ref(graph, f"{P}__{output[0]}", output[1])
 
 
 def test_all_fifteen_computed_attributes_lift(graph: InstanceGraph) -> None:
     computed = sorted(
-        calc.calc_name for calc in graph.calcs.values() if calc.is_computed
+        calculation.display_name for calculation in graph.calcs.values() if calculation.is_computed
     )
     assert computed == [
         "area",

@@ -25,13 +25,12 @@ import pytest
 from sysml_codegen.elaboration import (
     ElaborationError,
     InstanceGraph,
-    NodeRef,
-    ProducerRef,
     elaborate,
 )
 from sysml_codegen.extraction.extractor import SysMLDataExtractor
 from sysml_codegen.extraction.source_evidence import ReadinessCode
 from tests.conftest import FIXTURES_DIR, requires_license
+from tests.helpers.elaboration_graph import attr, calc, node_ref, producer_ref
 
 pytestmark = requires_license
 
@@ -48,7 +47,10 @@ def loaded() -> SysMLDataExtractor:
 @pytest.fixture(scope="module")
 def graph(loaded: SysMLDataExtractor) -> InstanceGraph:
     return elaborate(
-        loaded.model, loaded.extract_calculation_definitions(), strict=False
+        loaded.model,
+        loaded.extract_calculation_definitions(),
+        validation_diagnostics=loaded.diagnostics.validation,
+        strict=False,
     )
 
 
@@ -58,7 +60,11 @@ def test_strict_rejects_the_fixtures_own_self_binding(
     """Fourth corpus member of the SRC-01 class: ``meier_cost``'s
     ``in drive_power = drive_power`` on the base driver def."""
     with pytest.raises(ElaborationError) as excinfo:
-        elaborate(loaded.model, loaded.extract_calculation_definitions())
+        elaborate(
+            loaded.model,
+            loaded.extract_calculation_definitions(),
+            validation_diagnostics=loaded.diagnostics.validation,
+        )
     (finding,) = excinfo.value.findings
     assert finding.code is ReadinessCode.SI_SELF_BINDING
     assert finding.usage_qualified_name == "TwoLevelLib__IFE_Driver__meier_cost"
@@ -70,9 +76,8 @@ def test_retyped_usage_carries_the_specialized_definition(
     """``part :>> driver : 'HIF Driver'`` on the hif_plant USAGE: the driver
     occurrence exists once and its inherited base attributes materialize
     (base-def template calc included)."""
-    assert f"{PLANT}__driver__drive_power" in graph.attrs
-    assert graph.attrs[f"{PLANT}__driver__drive_power"].value == 50.0
-    assert f"{PLANT}__driver__meier_cost" in graph.calcs
+    assert attr(graph, f"{PLANT}__driver__drive_power").value == 50.0
+    calc(graph, f"{PLANT}__driver__meier_cost")
 
 
 def test_chain_redefinition_becomes_an_alias_at_the_occurrence(
@@ -80,8 +85,8 @@ def test_chain_redefinition_becomes_an_alias_at_the_occurrence(
 ) -> None:
     """``:>> cost_per_joule = meier_cost.gamma`` on the SPECIALIZED def aliases
     the inherited attribute to the producer at the retyped occurrence."""
-    node = graph.attrs[f"{PLANT}__driver__cost_per_joule"]
-    assert node.alias_target == ProducerRef(f"{PLANT}__driver__meier_cost", "gamma")
+    node = attr(graph, f"{PLANT}__driver__cost_per_joule")
+    assert node.alias_target == producer_ref(graph, f"{PLANT}__driver__meier_cost", "gamma")
 
 
 def test_inherited_consumer_reaches_the_specialized_producer(
@@ -90,9 +95,9 @@ def test_inherited_consumer_reaches_the_specialized_producer(
     """The WI-015 edge: lcoe_calc is declared on the BASE plant def and binds
     ``driver.cost_per_joule``; through the retype and the chain redefinition it
     wires to gamma — not to a dead library-default entry point."""
-    lcoe = graph.calcs[f"{PLANT}__lcoe_calc"]
-    assert lcoe.inputs["cost_per_joule"] == ProducerRef(
-        f"{PLANT}__driver__meier_cost", "gamma"
+    lcoe = calc(graph, f"{PLANT}__lcoe_calc")
+    assert lcoe.input_by_name("cost_per_joule") == producer_ref(
+        graph, f"{PLANT}__driver__meier_cost", "gamma"
     )
 
 
@@ -101,17 +106,17 @@ def test_plain_cross_part_attribute_stays_a_node_reference(
 ) -> None:
     """``maint_calc.rate = driver.maintenance_rate`` — no calc output in the
     chain, so the input is the attribute node itself (the P1 acceptance shape)."""
-    maint = graph.calcs[f"{PLANT}__maint_calc"]
-    assert maint.inputs["rate"] == NodeRef(f"{PLANT}__driver__maintenance_rate")
-    assert graph.attrs[f"{PLANT}__driver__maintenance_rate"].value == 3.0
+    maint = calc(graph, f"{PLANT}__maint_calc")
+    assert maint.input_by_name("rate") == node_ref(graph, f"{PLANT}__driver__maintenance_rate")
+    assert attr(graph, f"{PLANT}__driver__maintenance_rate").value == 3.0
 
 
 def test_fanout_collapses_to_one_shared_node(graph: InstanceGraph) -> None:
     """Two ScaleCalc instances read the one plant ``scale`` attribute — one
     node, two consumer edges (SC-2's collapse, by construction)."""
-    shared = NodeRef(f"{PLANT}__scale")
-    assert graph.calcs[f"{PLANT}__scale_a"].inputs["s"] == shared
-    assert graph.calcs[f"{PLANT}__scale_b"].inputs["s"] == shared
+    shared = node_ref(graph, f"{PLANT}__scale")
+    assert calc(graph, f"{PLANT}__scale_a").input_by_name("s") == shared
+    assert calc(graph, f"{PLANT}__scale_b").input_by_name("s") == shared
 
 
 def test_fusion_tea_driver_edge_wires_end_to_end() -> None:
@@ -121,12 +126,15 @@ def test_fusion_tea_driver_edge_wires_end_to_end() -> None:
     extractor = SysMLDataExtractor([FIXTURES_DIR / "fusion_tea"])
     assert extractor.load_models()
     graph = elaborate(
-        extractor.model, extractor.extract_calculation_definitions(), strict=False
+        extractor.model,
+        extractor.extract_calculation_definitions(),
+        validation_diagnostics=extractor.diagnostics.validation,
+        strict=False,
     )
     driver = "hif_plant_pkg__hif_plant__driver"
-    node = graph.attrs[f"{driver}__cost_per_joule"]
-    assert node.alias_target == ProducerRef(f"{driver}__meier_cost", "gamma")
-    lcoe = graph.calcs["hif_plant_pkg__hif_plant__lcoe_calc"]
-    assert lcoe.inputs["driver_cost_constant"] == ProducerRef(
-        f"{driver}__meier_cost", "gamma"
+    node = attr(graph, f"{driver}__cost_per_joule")
+    assert node.alias_target == producer_ref(graph, f"{driver}__meier_cost", "gamma")
+    lcoe = calc(graph, "hif_plant_pkg__hif_plant__lcoe_calc")
+    assert lcoe.input_by_name("driver_cost_constant") == producer_ref(
+        graph, f"{driver}__meier_cost", "gamma"
     )

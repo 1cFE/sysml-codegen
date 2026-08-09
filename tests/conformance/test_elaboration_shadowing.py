@@ -17,12 +17,12 @@ import pytest
 
 from sysml_codegen.elaboration import (
     InstanceGraph,
-    NodeRef,
     ValueSite,
     elaborate,
 )
 from sysml_codegen.extraction.extractor import SysMLDataExtractor
 from tests.conftest import FIXTURES_DIR, requires_license
+from tests.helpers.elaboration_graph import attr, calc, node_ref
 
 pytestmark = requires_license
 
@@ -38,7 +38,9 @@ def graph_cache():
             extractor = SysMLDataExtractor([FIXTURES_DIR / name])
             assert extractor.load_models(), f"fixture {name} failed to load"
             cache[name] = elaborate(
-                extractor.model, extractor.extract_calculation_definitions()
+                extractor.model,
+                extractor.extract_calculation_definitions(),
+                validation_diagnostics=extractor.diagnostics.validation,
             )
         return cache[name]
 
@@ -50,9 +52,9 @@ def test_innermost_definition_wins_per_occurrence(graph_cache) -> None:
     Mid's ``default 5.0`` at a Leaf occurrence, while a Mid occurrence keeps
     5.0 — specificity ordering, never redefinition list order."""
     graph = graph_cache("elab_shadowing_probe")
-    leaf = graph.attrs[f"{PKG}__the_leaf__rate"]
+    leaf = attr(graph, f"{PKG}__the_leaf__rate")
     assert (leaf.value, leaf.value_site) == (9.0, ValueSite.SPECIALIZED_DEF)
-    mid = graph.attrs[f"{PKG}__the_mid__rate"]
+    mid = attr(graph, f"{PKG}__the_mid__rate")
     assert (mid.value, mid.value_site) == (5.0, ValueSite.SPECIALIZED_DEF)
     assert graph.diagnostics == []
 
@@ -61,10 +63,10 @@ def test_base_authored_consumer_reads_the_occurrence_value(graph_cache) -> None:
     """The consumer declared on BASE reads each occurrence's own node — the
     Leaf occurrence's 9.0, the Mid occurrence's 5.0, one node each."""
     graph = graph_cache("elab_shadowing_probe")
-    leaf_calc = graph.calcs[f"{PKG}__the_leaf__base_calc"]
-    assert leaf_calc.inputs["v"] == NodeRef(f"{PKG}__the_leaf__rate")
-    mid_calc = graph.calcs[f"{PKG}__the_mid__base_calc"]
-    assert mid_calc.inputs["v"] == NodeRef(f"{PKG}__the_mid__rate")
+    leaf_calc = calc(graph, f"{PKG}__the_leaf__base_calc")
+    assert leaf_calc.input_by_name("v") == node_ref(graph, f"{PKG}__the_leaf__rate")
+    mid_calc = calc(graph, f"{PKG}__the_mid__base_calc")
+    assert mid_calc.input_by_name("v") == node_ref(graph, f"{PKG}__the_mid__rate")
 
 
 def test_equal_valued_independent_literals_stay_distinct(graph_cache) -> None:
@@ -72,14 +74,18 @@ def test_equal_valued_independent_literals_stay_distinct(graph_cache) -> None:
     even when the overridden values coincide (both 4.0) — two nodes, each
     consumer wired to its own."""
     graph = graph_cache("elab_shadowing_probe")
-    t1 = graph.attrs[f"{PKG}__t1__x"]
-    t2 = graph.attrs[f"{PKG}__t2__x"]
+    t1 = attr(graph, f"{PKG}__t1__x")
+    t2 = attr(graph, f"{PKG}__t2__x")
     assert t1.node_id != t2.node_id
     assert (t1.value, t2.value) == (4.0, 4.0)
     assert t1.value_site is ValueSite.OCCURRENCE_OVERRIDE
     assert t2.value_site is ValueSite.OCCURRENCE_OVERRIDE
-    assert graph.calcs[f"{PKG}__t1__thing_calc"].inputs["v"] == NodeRef(t1.node_id)
-    assert graph.calcs[f"{PKG}__t2__thing_calc"].inputs["v"] == NodeRef(t2.node_id)
+    assert calc(graph, f"{PKG}__t1__thing_calc").input_by_name("v") == node_ref(
+        graph, f"{PKG}__t1__x"
+    )
+    assert calc(graph, f"{PKG}__t2__thing_calc").input_by_name("v") == node_ref(
+        graph, f"{PKG}__t2__x"
+    )
 
 
 def test_qualified_reference_never_selects_the_scope_shadow(graph_cache) -> None:
@@ -87,8 +93,10 @@ def test_qualified_reference_never_selects_the_scope_shadow(graph_cache) -> None
     outer 2.0 attribute resolves to the OUTER node — the same-named 7.0 shadow
     on the consumer's own owner is never selected."""
     graph = graph_cache("shadowed_reference")
-    calc = graph.calcs["ShadowedReference__the_outer__inner__shadowed_calc"]
-    assert calc.inputs["factor"] == NodeRef("ShadowedReference__the_outer__scale")
-    assert graph.attrs["ShadowedReference__the_outer__scale"].value == 2.0
-    assert graph.attrs["ShadowedReference__the_outer__inner__scale"].value == 7.0
+    calculation = calc(graph, "ShadowedReference__the_outer__inner__shadowed_calc")
+    assert calculation.input_by_name("factor") == node_ref(
+        graph, "ShadowedReference__the_outer__scale"
+    )
+    assert attr(graph, "ShadowedReference__the_outer__scale").value == 2.0
+    assert attr(graph, "ShadowedReference__the_outer__inner__scale").value == 7.0
     assert graph.diagnostics == []

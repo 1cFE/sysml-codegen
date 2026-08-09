@@ -291,9 +291,21 @@ written *after* the spike so it records proven mechanics, not speculation.
 
 ---
 
-#### Item 5: Shape Learning Tests and Dual-Run Breadth (1–2 weeks)
+#### Item 5: Shape Learning Tests and Dual-Run Breadth (1–2 weeks) ✅
 
 **Type**: Code / **Learning tests** / Integration
+
+**Current:** CERTIFIED 2026-08-09 (`active/elaborator-breadth/audit_v3.md` addendum; targeted
+re-verification of the audit-v3 remediation, all gates live-reproduced). All 29 cells execute
+without xfails at their public or named-
+diagnostic boundary. All 37 fixtures have live-checked route outcomes, classified as 26
+`expected-collapse` and 11 `expected-fix` with zero unresolved rows. F20's rendered-path string
+selector is removed. The corrected owner-ratified F21 ruling keeps DCS:92 as C5 referent evidence
+and `elab_matrix_c5` as public acceptance, and supports DCS:82 on the repaired valid witness: one
+exact core producer projects to the consumer. The former plain same-name nested part shape now
+fails `SYSML_NAMESPACE_NOT_DISTINGUISHABLE` before occurrence expansion. The shipped legacy route
+and snapshot v5 remain unchanged. Item 5 criteria are checked per the audit; audit-F30/F31 remain
+open disposed (non-blocking); Item 6 has not started and needs the owner's go.
 
 **Objective**: Grow the elaborator across every supported shape, with each risky shape probed
 by a learning test *before* its implementation, and prove breadth mechanically via an
@@ -323,14 +335,14 @@ old-vs-new `ComputationGraph` diff over the whole corpus.
 contract does not answer → surface to owner; do not disposition silently.
 
 **Success Criteria**:
-- [ ] Every learning test kept, with findings; every matrix cell green-or-named-diagnostic on
+- [x] Every learning test kept, with findings; every matrix cell green-or-named-diagnostic on
   the new path.
-- [ ] Classified diff ledger over all 37 fixtures with zero unclassified rows — **owner
+- [x] Classified diff ledger over all 37 fixtures with zero unclassified rows — **owner
   checkpoint on the ledger before Item 6 starts.**
-- [ ] Old front end untouched and still authoritative for shipped behavior (both suites green
+- [x] Old front end untouched and still authoritative for shipped behavior (both suites green
   throughout).
 
-**Location**: `.project/active/elaborator-breadth/`
+**Location**: `.project/completed/20260809_elaborator-breadth/` (closed 2026-08-09)
 
 **Dependencies**: Item 4.
 

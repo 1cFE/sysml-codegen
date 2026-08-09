@@ -17,8 +17,12 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import Enum
+from uuid import UUID
 
-from agentic_mbse.sysml.data_models import ResolvedTargetFact
+from agentic_mbse.sysml.data_models import (
+    ResolvedSemanticReferenceFact,
+    ResolvedTargetFact,
+)
 
 __all__ = [
     "ReadinessCode",
@@ -84,16 +88,43 @@ class SourceReferenceEvidence:
     it was extracted with.
     """
 
+    bound_formal_id: UUID
     bound_formal_qn: str
     source_form: SourceForm
-    referent: ResolvedTargetFact | None = None
-    chain_root: ResolvedTargetFact | None = None
-    resolved_segment_qns: tuple[str, ...] = ()
-    resolved_member_names: tuple[str, ...] = ()
+    semantic_reference: ResolvedSemanticReferenceFact | None = None
+    bound_formal_redefinition_ids: tuple[UUID, ...] = ()
     bound_formal_redefines: tuple[str, ...] = ()
     written_qualifier: str | None = None
     written_text: str | None = None
     authored_segments: tuple[str, ...] = ()
+
+    @property
+    def referent(self) -> ResolvedTargetFact | None:
+        """Exact leaf fact, exposed for diagnostics and evidence inspection."""
+        if self.semantic_reference is None or self.source_form is SourceForm.INDEXED_SOURCE:
+            return None
+        return self.semantic_reference.leaf
+
+    @property
+    def chain_root(self) -> ResolvedTargetFact | None:
+        """Exact root fact, exposed for diagnostics and evidence inspection."""
+        if self.semantic_reference is None:
+            return None
+        return self.semantic_reference.root
+
+    @property
+    def resolved_segment_qns(self) -> tuple[str, ...]:
+        """Diagnostic-only names for the already-resolved exact path."""
+        if self.semantic_reference is None:
+            return ()
+        return self.semantic_reference.resolved_segment_qns
+
+    @property
+    def resolved_member_names(self) -> tuple[str, ...]:
+        """Diagnostic-only member names for the already-resolved exact path."""
+        if self.semantic_reference is None:
+            return ()
+        return self.semantic_reference.resolved_member_names
 
     @property
     def is_self_binding(self) -> bool:
@@ -104,10 +135,7 @@ class SourceReferenceEvidence:
         outer-scope search. A same-named outer feature never changes this
         answer, because the comparison never reads names.
         """
-        return (
-            self.referent is not None
-            and self.referent.qualified_name == self.bound_formal_qn
-        )
+        return self.referent is not None and self.referent.element_id == self.bound_formal_id
 
     @property
     def is_reference_derived(self) -> bool:

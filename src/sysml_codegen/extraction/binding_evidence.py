@@ -10,14 +10,18 @@ reference.
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
+from uuid import UUID
 
+from agentic_mbse.sysml.data_models import ResolvedSemanticReferenceFact
 from agentic_mbse.sysml.expression import (
     feature_chain_facts,
     resolved_target_fact,
 )
 from agentic_mbse.sysml.helpers import get_source_file
+from agentic_mbse.sysml.syside_adapter import SysideAdapter
 
 from sysml_codegen.extraction.expression_utils import (
     extract_feature_chain_segments,
@@ -123,7 +127,15 @@ def written_qualifier(expr: Any) -> str | None:
     return qualifier or WRITTEN_UNKNOWN
 
 
-def bound_formal_facts(param_elem: Any) -> tuple[str, tuple[str, ...]]:
+@dataclass(frozen=True)
+class _BoundFormalFacts:
+    element_id: UUID
+    qualified_name: str
+    redefined_element_ids: tuple[UUID, ...]
+    redefined_qualified_names: tuple[str, ...]
+
+
+def bound_formal_facts(param_elem: Any) -> _BoundFormalFacts:
     """The bound formal's own exact QN and the calc-def formals it redefines.
 
     Both sides of a binding are evidence (SOURCE-IDENTITY Item 4): self-binding
@@ -132,12 +144,20 @@ def bound_formal_facts(param_elem: Any) -> tuple[str, tuple[str, ...]]:
     """
     formal_qn = getattr(param_elem, "qualified_name", None)
     redefines: list[str] = []
+    redefine_ids: list[UUID] = []
     for redefinition in getattr(param_elem, "owned_redefinitions", None) or []:
         redefined_feature = getattr(redefinition, "redefined_feature", None)
         redefined_qn = getattr(redefined_feature, "qualified_name", None)
         if redefined_qn is not None:
             redefines.append(str(redefined_qn))
-    return (str(formal_qn) if formal_qn is not None else "", tuple(redefines))
+        if redefined_feature is not None:
+            redefine_ids.append(SysideAdapter.element_id(redefined_feature))
+    return _BoundFormalFacts(
+        element_id=SysideAdapter.element_id(param_elem),
+        qualified_name=str(formal_qn) if formal_qn is not None else "",
+        redefined_element_ids=tuple(redefine_ids),
+        redefined_qualified_names=tuple(redefines),
+    )
 
 
 def _written_text_or_none(expr: Any) -> str | None:
@@ -155,17 +175,18 @@ def chain_evidence(param_elem: Any, expr: Any) -> SourceReferenceEvidence:
     evidence, never flattened into a supported source. The legacy dispatch
     fields are left exactly as before; only evidence is added.
     """
-    formal_qn, formal_redefines = bound_formal_facts(param_elem)
-    chain_root, leaf_fact, segment_qns, member_names, has_index = feature_chain_facts(expr)
+    formal = bound_formal_facts(param_elem)
+    chain_fact = feature_chain_facts(expr)
     authored_segments = tuple(extract_feature_chain_segments(expr))
     return SourceReferenceEvidence(
-        bound_formal_qn=formal_qn,
-        source_form=SourceForm.INDEXED_SOURCE if has_index else SourceForm.FEATURE_CHAIN,
-        referent=None if has_index else leaf_fact,
-        chain_root=chain_root,
-        resolved_segment_qns=segment_qns,
-        resolved_member_names=member_names,
-        bound_formal_redefines=formal_redefines,
+        bound_formal_id=formal.element_id,
+        bound_formal_qn=formal.qualified_name,
+        source_form=(
+            SourceForm.INDEXED_SOURCE if chain_fact.has_index_segment else SourceForm.FEATURE_CHAIN
+        ),
+        semantic_reference=chain_fact,
+        bound_formal_redefinition_ids=formal.redefined_element_ids,
+        bound_formal_redefines=formal.redefined_qualified_names,
         written_text=_written_text_or_none(expr),
         authored_segments=authored_segments,
     )
@@ -173,7 +194,7 @@ def chain_evidence(param_elem: Any, expr: Any) -> SourceReferenceEvidence:
 
 def reference_evidence(param_elem: Any, expr: Any) -> SourceReferenceEvidence:
     """Immutable evidence for a FeatureReferenceExpression binding."""
-    formal_qn, formal_redefines = bound_formal_facts(param_elem)
+    formal = bound_formal_facts(param_elem)
     referent_fact = resolved_target_fact(getattr(expr, "referent", None))
     qualifier = written_qualifier(expr)
     if qualifier is WRITTEN_UNKNOWN:
@@ -185,12 +206,24 @@ def reference_evidence(param_elem: Any, expr: Any) -> SourceReferenceEvidence:
     else:
         source_form = SourceForm.QUALIFIED_REFERENCE
         evidence_qualifier = qualifier
+    semantic_reference = (
+        ResolvedSemanticReferenceFact(
+            root=referent_fact,
+            segments=(referent_fact,),
+            leaf=referent_fact,
+            resolved_member_names=(),
+            has_index_segment=False,
+        )
+        if referent_fact is not None
+        else None
+    )
     return SourceReferenceEvidence(
-        bound_formal_qn=formal_qn,
+        bound_formal_id=formal.element_id,
+        bound_formal_qn=formal.qualified_name,
         source_form=source_form,
-        referent=referent_fact,
-        resolved_segment_qns=(referent_fact.qualified_name,) if referent_fact else (),
-        bound_formal_redefines=formal_redefines,
+        semantic_reference=semantic_reference,
+        bound_formal_redefinition_ids=formal.redefined_element_ids,
+        bound_formal_redefines=formal.redefined_qualified_names,
         written_qualifier=evidence_qualifier,
         written_text=_written_text_or_none(expr),
     )
@@ -206,11 +239,13 @@ def literal_evidence(
     legacy VBR stamps — a stamped binding keeps its original reference-form
     evidence, an authored one is AUTHORED_LITERAL from birth.
     """
-    formal_qn, formal_redefines = bound_formal_facts(param_elem)
+    formal = bound_formal_facts(param_elem)
     return SourceReferenceEvidence(
-        bound_formal_qn=formal_qn,
+        bound_formal_id=formal.element_id,
+        bound_formal_qn=formal.qualified_name,
         source_form=SourceForm.AUTHORED_LITERAL,
-        bound_formal_redefines=formal_redefines,
+        bound_formal_redefinition_ids=formal.redefined_element_ids,
+        bound_formal_redefines=formal.redefined_qualified_names,
         written_text=str(literal_value) if literal_value is not None else None,
     )
 
@@ -222,11 +257,13 @@ def expression_evidence(param_elem: Any, expr: Any) -> SourceReferenceEvidence:
     lands here; it keeps its distinct INDEXED_SOURCE form. The adapter's closed
     type map has no ``IndexExpression`` entry, so the check is by metatype name.
     """
-    formal_qn, formal_redefines = bound_formal_facts(param_elem)
+    formal = bound_formal_facts(param_elem)
     is_indexed = type(expr).__name__ == "IndexExpression"
     return SourceReferenceEvidence(
-        bound_formal_qn=formal_qn,
+        bound_formal_id=formal.element_id,
+        bound_formal_qn=formal.qualified_name,
         source_form=SourceForm.INDEXED_SOURCE if is_indexed else SourceForm.EXPRESSION_SOURCE,
-        bound_formal_redefines=formal_redefines,
+        bound_formal_redefinition_ids=formal.redefined_element_ids,
+        bound_formal_redefines=formal.redefined_qualified_names,
         written_text=_written_text_or_none(expr),
     )

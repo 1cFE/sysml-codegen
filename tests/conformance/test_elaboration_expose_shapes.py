@@ -28,8 +28,6 @@ from sysml_codegen.analysis.part_instance_index import build_part_instance_index
 from sysml_codegen.elaboration import (
     ElaborationError,
     InstanceGraph,
-    NodeRef,
-    ProducerRef,
     ValueSite,
     elaborate,
 )
@@ -41,6 +39,13 @@ from sysml_codegen.extraction.usage_extractor import (
     user_partdef_lookup,
 )
 from tests.conftest import FIXTURES_DIR, requires_license
+from tests.helpers.elaboration_graph import (
+    attr,
+    calc,
+    constraint,
+    node_ref,
+    producer_ref,
+)
 
 pytestmark = requires_license
 
@@ -78,6 +83,7 @@ def graph_cache(loaded_cache):
             cache[key] = elaborate(
                 extractor.model,
                 extractor.extract_calculation_definitions(),
+                validation_diagnostics=extractor.diagnostics.validation,
                 strict=strict,
             )
         return cache[key]
@@ -187,12 +193,12 @@ def test_fact_expose_attribute_carries_complete_chain_facts(loaded_cache) -> Non
     ]
     expr = pump_power.feature_value_expression
     assert SysideAdapter.is_instance(expr, "FeatureChainExpression")
-    root, _leaf, _qns, members, has_index = feature_chain_facts(expr)
-    assert root is not None
-    assert root.element_kind == "CalculationUsage"
-    assert root.qualified_name == "CATFMFEBlanket::catf_blanket::pump_load"
-    assert members == ("pump_power",)
-    assert not has_index
+    facts = feature_chain_facts(expr)
+    assert facts.root is not None
+    assert facts.root.element_kind == "CalculationUsage"
+    assert facts.root.qualified_name == "CATFMFEBlanket::catf_blanket::pump_load"
+    assert facts.resolved_member_names == ("pump_power",)
+    assert not facts.has_index_segment
 
 
 # ---------------------------------------------------------------------------
@@ -207,36 +213,38 @@ CATF = "catf_mfe_model"
 def test_sibling_calc_chain_becomes_a_producer_edge(graph_cache) -> None:
     """wi014: ``in area = area_calc.area`` wires the calc-to-calc chain."""
     graph = graph_cache(WI)
-    node = graph.calcs["toy_plant__demo_plant__cost_calc"]
-    assert node.inputs["area"] == ProducerRef(
-        "toy_plant__demo_plant__area_calc", "area"
+    node = calc(graph, "toy_plant__demo_plant__cost_calc")
+    assert node.input_by_name("area") == producer_ref(
+        graph, "toy_plant__demo_plant__area_calc", "area"
     )
 
 
 def test_constraint_reads_producer_and_attr_nodes(graph_cache) -> None:
     """wi014: the asserted constraint reads the calc output and the budget attr."""
     graph = graph_cache(WI)
-    node = graph.constraints["toy_plant__demo_plant__affordable"]
-    assert node.inputs["cost"] == ProducerRef("toy_plant__demo_plant__cost_calc", "cost")
-    assert node.inputs["budget"] == NodeRef("toy_plant__demo_plant__plant_budget")
-    assert graph.attrs["toy_plant__demo_plant__plant_budget"].value == 5000.0
+    node = constraint(graph, "toy_plant__demo_plant__affordable")
+    assert node.input_by_name("cost") == producer_ref(
+        graph, "toy_plant__demo_plant__cost_calc", "cost"
+    )
+    assert node.input_by_name("budget") == node_ref(graph, "toy_plant__demo_plant__plant_budget")
+    assert attr(graph, "toy_plant__demo_plant__plant_budget").value == 5000.0
 
 
 def test_partdef_expose_attr_aliases_the_producer(graph_cache) -> None:
     """wi014: ``attribute total_cost = cost_calc.cost`` on the part def becomes an
     alias edge at the occurrence — not a minted input, not a dead node."""
     graph = graph_cache(WI)
-    node = graph.attrs["toy_plant__demo_plant__total_cost"]
-    assert node.alias_target == ProducerRef("toy_plant__demo_plant__cost_calc", "cost")
+    node = attr(graph, "toy_plant__demo_plant__total_cost")
+    assert node.alias_target == producer_ref(graph, "toy_plant__demo_plant__cost_calc", "cost")
     assert graph.diagnostics == []
 
 
 def test_package_level_calc_and_attribute_elaborate(graph_cache) -> None:
     """d316: the package-level calc places, reading the package-level attribute."""
     graph = graph_cache(D316)
-    gen = graph.calcs["D316Design__gen"]
-    assert gen.inputs["seed"] == NodeRef("D316Design__seed_src")
-    seed = graph.attrs["D316Design__seed_src"]
+    gen = calc(graph, "D316Design__gen")
+    assert gen.input_by_name("seed") == node_ref(graph, "D316Design__seed_src")
+    seed = attr(graph, "D316Design__seed_src")
     assert seed.value == 3.0
     assert seed.value_site is ValueSite.DEFINITION_DEFAULT
 
@@ -245,10 +253,10 @@ def test_untyped_part_expose_follows_through_to_the_producer(graph_cache) -> Non
     """d316: ``sink.inp = exposed`` where ``exposed = gen.gval`` — the consumer's
     identity is the PRODUCER channel, through the alias, across the part boundary."""
     graph = graph_cache(D316)
-    exposed = graph.attrs["D316Design__consumer__exposed"]
-    assert exposed.alias_target == ProducerRef("D316Design__gen", "gval")
-    sink = graph.calcs["D316Design__consumer__sink"]
-    assert sink.inputs["inp"] == ProducerRef("D316Design__gen", "gval")
+    exposed = attr(graph, "D316Design__consumer__exposed")
+    assert exposed.alias_target == producer_ref(graph, "D316Design__gen", "gval")
+    sink = calc(graph, "D316Design__consumer__sink")
+    assert sink.input_by_name("inp") == producer_ref(graph, "D316Design__gen", "gval")
     assert graph.diagnostics == []
 
 
@@ -261,13 +269,14 @@ def test_catf_strict_elaboration_rejects_its_real_self_binding(
     contract ruling fusion_tea pins."""
     extractor = loaded_cache(CATF)
     with pytest.raises(ElaborationError) as excinfo:
-        elaborate(extractor.model, extractor.extract_calculation_definitions())
+        elaborate(
+            extractor.model,
+            extractor.extract_calculation_definitions(),
+            validation_diagnostics=extractor.diagnostics.validation,
+        )
     codes = {finding.code for finding in excinfo.value.findings}
     assert codes == {ReadinessCode.SI_SELF_BINDING}
-    assert any(
-        finding.param_name == "pumping_speed_total"
-        for finding in excinfo.value.findings
-    )
+    assert any(finding.param_name == "pumping_speed_total" for finding in excinfo.value.findings)
 
 
 def test_catf_lenient_records_the_finding_and_skips_only_that_binding(
@@ -283,10 +292,13 @@ def test_catf_lenient_records_the_finding_and_skips_only_that_binding(
         if diagnostic.code is ReadinessCode.SI_SELF_BINDING
     ]
     assert len(self_bindings) == 1
-    pump_load = graph.calcs["CATFMFEVacuum__catf_vacuum_pumping__pump_load"]
-    assert "pumping_speed_total" not in pump_load.inputs
-    assert pump_load.inputs["base_pressure"] == NodeRef(
-        "CATFMFEVacuum__catf_vacuum_pumping__base_pressure_achievable"
+    pump_load = calc(graph, "CATFMFEVacuum__catf_vacuum_pumping__pump_load")
+    assert not any(
+        name == "pumping_speed_total" and port in pump_load.inputs
+        for port, name in pump_load.input_names.items()
+    )
+    assert pump_load.input_by_name("base_pressure") == node_ref(
+        graph, "CATFMFEVacuum__catf_vacuum_pumping__base_pressure_achievable"
     )
 
 
@@ -298,7 +310,7 @@ def test_catf_all_calc_usages_place_under_untyped_parts(graph_cache) -> None:
     """
     graph = graph_cache(CATF, strict=False)
     usage_calcs = [c for c in graph.calcs.values() if not c.is_computed]
-    assert len(usage_calcs) == 42, sorted(c.node_id for c in usage_calcs)
+    assert len(usage_calcs) == 42, sorted(c.display_path for c in usage_calcs)
 
 
 def test_catf_multi_hop_expose_reaches_the_producer_cross_package(
@@ -307,13 +319,13 @@ def test_catf_multi_hop_expose_reaches_the_producer_cross_package(
     """catf: ``net_electric.p_pumps = catf_blanket.pump_power`` — two hops (consumer
     -> exposed attr in another package -> producer) collapse to ONE producer edge."""
     graph = graph_cache(CATF, strict=False)
-    exposed = graph.attrs["CATFMFEBlanket__catf_blanket__pump_power"]
-    assert exposed.alias_target == ProducerRef(
-        "CATFMFEBlanket__catf_blanket__pump_load", "pump_power"
+    exposed = attr(graph, "CATFMFEBlanket__catf_blanket__pump_power")
+    assert exposed.alias_target == producer_ref(
+        graph, "CATFMFEBlanket__catf_blanket__pump_load", "pump_power"
     )
-    net = graph.calcs["CATFMFEPhysics__catf_physics__net_electric"]
-    assert net.inputs["p_pumps"] == ProducerRef(
-        "CATFMFEBlanket__catf_blanket__pump_load", "pump_power"
+    net = calc(graph, "CATFMFEPhysics__catf_physics__net_electric")
+    assert net.input_by_name("p_pumps") == producer_ref(
+        graph, "CATFMFEBlanket__catf_blanket__pump_load", "pump_power"
     )
 
 
@@ -321,7 +333,7 @@ def test_catf_sibling_concrete_calc_chain_wires(graph_cache) -> None:
     """catf: ``p_electric_gross = gross_electric.p_electric_gross`` — a concrete
     sibling calc under an untyped part."""
     graph = graph_cache(CATF, strict=False)
-    net = graph.calcs["CATFMFEPhysics__catf_physics__net_electric"]
-    assert net.inputs["p_electric_gross"] == ProducerRef(
-        "CATFMFEPhysics__catf_physics__gross_electric", "p_electric_gross"
+    net = calc(graph, "CATFMFEPhysics__catf_physics__net_electric")
+    assert net.input_by_name("p_electric_gross") == producer_ref(
+        graph, "CATFMFEPhysics__catf_physics__gross_electric", "p_electric_gross"
     )

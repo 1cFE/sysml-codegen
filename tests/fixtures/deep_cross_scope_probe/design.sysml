@@ -10,12 +10,9 @@
  *
  * Pattern B — Deep REFERENCE (6-segment QN with ::):
  *   `measurement_system::station::array::sensor::core::metric_value`
- *   Expected: BindingType.REFERENCE, source_path with 6 :: segments
- *   Tests: Step 1b normalization — only extracts last 2 segments ("core", "metric_value"),
- *   losing intermediate hierarchy context. Likely fails to resolve.
- *   NOTE: This syntax navigates parts via ::, not just packages.
- *   Supported by catf_mfe precedent (catf_physics::p_fusion), but at deeper nesting
- *   than any existing fixture. SysIDE may reject or parse differently.
+ *   Expected: BindingType.REFERENCE and an exact producer-output edge to the one concrete core.
+ *   Tests: Exact referent identity plus the consumer occurrence selects the producer without
+ *   reconstructing the authored qualifier text.
  *
  * Pattern C — Shallow REFERENCE (2-segment self-ref, control):
  *   `analyzer::baseline_value`
@@ -23,10 +20,9 @@
  *   Tests: Baseline — this pattern works in catf_mfe (catf_physics::p_fusion)
  *
  * EXPECTED OUTCOMES:
- * - Pattern A: May succeed (deep CHAIN similar to existing patterns) or fail
- *   if the OutputRegistry ScopedKey doesn't include full dotted path
- * - Pattern B: Likely fails — Step 1b normalization drops intermediate segments
- * - Pattern C: Should succeed — 2-segment REFERENCE is a known working pattern
+ * - Pattern A: Resolves to derived_calc.derived_value.
+ * - Pattern B: Resolves to sensor.core.metric_value.
+ * - Pattern C: Resolves to analyzer.baseline_value.
  *
  * Created: 2026-02-17
  * Gap: C6 — Deeply-Nested Cross-Scope REFERENCE (Deferred Issue #7)
@@ -51,8 +47,8 @@ package DeepCrossScopeDesign {
 
         // ===== Producer Side: 3-level deep hierarchy =====
         part station : 'Monitoring Station' {
-            part array : 'Sensor Array' {
-                part sensor : 'Sensor' {
+            part :>> array : 'Sensor Array' {
+                part :>> sensor : 'Sensor' {
                     :>> reading = 10.0;
                 }
             }
@@ -76,8 +72,7 @@ package DeepCrossScopeDesign {
             // Uses qualified name syntax (::) instead of feature chain (.)
             // Expected BindingType: REFERENCE
             // Expected source_path: "...::measurement_system::station::array::sensor::core::metric_value"
-            // NOTE: If SysIDE rejects this syntax, the model won't parse.
-            // Fallback: Pattern A already exercises deep cross-scope via CHAIN.
+            // Exact projection wires this input to the one concrete core output.
             calc ref_analysis : 'Analysis Calc' {
                 in data_point = measurement_system::station::array::sensor::core::metric_value;
                 in baseline = baseline_value;

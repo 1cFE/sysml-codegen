@@ -18,15 +18,13 @@ from __future__ import annotations
 
 import pytest
 
-from sysml_codegen.analysis.part_instance_index import NonFiniteCardinalityError
 from sysml_codegen.elaboration import (
     InstanceGraph,
-    NodeRef,
-    ProducerRef,
     elaborate,
 )
 from sysml_codegen.extraction.extractor import SysMLDataExtractor
 from tests.conftest import FIXTURES_DIR, requires_license
+from tests.helpers.elaboration_graph import attr, calc, node_ref, producer_ref
 
 pytestmark = requires_license
 
@@ -45,6 +43,7 @@ def graph_cache():
             cache[key] = elaborate(
                 extractor.model,
                 extractor.extract_calculation_definitions(),
+                validation_diagnostics=extractor.diagnostics.validation,
                 strict=strict,
             )
         return cache[key]
@@ -57,12 +56,11 @@ def test_expression_redefinition_becomes_a_computed_node(graph_cache) -> None:
     the occurrence, its chain term wired to the rig node; the attribute node is
     replaced, and elaboration stays strict-clean."""
     graph = graph_cache(MIXED)
-    node = graph.calcs[f"{MIXED}__station__station_total"]
+    node = calc(graph, f"{MIXED}__station__station_total")
     assert node.is_computed
-    assert node.inputs == {
-        "rig__gain_setting": NodeRef(f"{MIXED}__station__rig__gain_setting")
-    }
-    assert f"{MIXED}__station__station_total" not in graph.attrs
+    assert set(node.inputs.values()) == {node_ref(graph, f"{MIXED}__station__rig__gain_setting")}
+    with pytest.raises(KeyError):
+        attr(graph, f"{MIXED}__station__station_total")
     assert graph.diagnostics == []
 
 
@@ -70,10 +68,9 @@ def test_sum_expands_to_one_edge_per_instance(graph_cache) -> None:
     """``:>> bank_total = sum(cell.cell_cost)`` — three edges, one per
     ``cell[i]`` occurrence node (multiplicity by occurrence enumeration)."""
     graph = graph_cache(MIXED)
-    node = graph.calcs[f"{MIXED}__bank__bank_total"]
-    assert node.inputs == {
-        f"cell[{i}]__cell_cost": NodeRef(f"{MIXED}__bank__cell[{i}]__cell_cost")
-        for i in range(3)
+    node = calc(graph, f"{MIXED}__bank__bank_total")
+    assert set(node.inputs.values()) == {
+        node_ref(graph, f"{MIXED}__bank__cell[{i}]__cell_cost") for i in range(3)
     }
 
 
@@ -84,9 +81,9 @@ def test_qualified_aggregation_term_reaches_the_contained_occurrence(
     the def-level referent is declared by no enclosing occurrence — the
     off-ancestor fallback anchors at the unique contained occurrence."""
     graph = graph_cache(MIXED)
-    node = graph.calcs[f"{MIXED}__qual_station__qual_total"]
-    assert node.inputs == {
-        "level": NodeRef(f"{MIXED}__qual_station__qual_plant__level")
+    node = calc(graph, f"{MIXED}__qual_station__qual_total")
+    assert set(node.inputs.values()) == {
+        node_ref(graph, f"{MIXED}__qual_station__qual_plant__level")
     }
 
 
@@ -94,9 +91,10 @@ def test_aggregation_chain_to_producer_output(graph_cache) -> None:
     """``:>> computed_total = source_identity_computed.producer_calc.result + 1.0``
     — the aggregation term is a producer edge, no minted input (C24's agg leg)."""
     graph = graph_cache(MIXED)
-    node = graph.calcs[f"{MIXED}__computed_station__computed_total"]
-    assert node.inputs == {
-        "source_identity_computed": ProducerRef(
+    node = calc(graph, f"{MIXED}__computed_station__computed_total")
+    assert set(node.inputs.values()) == {
+        producer_ref(
+            graph,
             f"{MIXED}__computed_station__source_identity_computed__producer_calc",
             "result",
         )
@@ -109,14 +107,16 @@ def test_crosspart_rollup_keeps_per_child_channels_distinct(graph_cache) -> None
     distinct producers, a qualifier-drop collapse cannot occur."""
     graph = graph_cache("crosspart_rollup_twolevel", strict=False)
     plant = "CrossPartRollupDesign__rollup_plant"
-    node = graph.calcs[f"{plant}__grand_total"]
+    node = calc(graph, f"{plant}__grand_total")
     assert node.is_computed
-    assert node.inputs == {
-        "a__capital": ProducerRef(f"{plant}__a__cost_calc", "cost"),
-        "b__capital": ProducerRef(f"{plant}__b__cost_calc", "cost"),
+    assert set(node.inputs.values()) == {
+        producer_ref(graph, f"{plant}__a__cost_calc", "cost"),
+        producer_ref(graph, f"{plant}__b__cost_calc", "cost"),
     }
-    consumer = graph.calcs[f"{plant}__final"]
-    assert consumer.inputs["t"] == ProducerRef(f"{plant}__grand_total", "grand_total")
+    consumer = calc(graph, f"{plant}__final")
+    assert consumer.input_by_name("t") == producer_ref(
+        graph, f"{plant}__grand_total", "grand_total"
+    )
 
 
 def test_local_term_and_per_instance_producers_mix(graph_cache) -> None:
@@ -125,23 +125,29 @@ def test_local_term_and_per_instance_producers_mix(graph_cache) -> None:
     plus the plain local attribute node."""
     graph = graph_cache("agg_localterm_probe", strict=False)
     bank = "AggLocalTermProbe__the_bank"
-    node = graph.calcs[f"{bank}__capital_cost"]
-    expected: dict[str, object] = {
-        f"cell[{i}]__capital_cost": ProducerRef(
-            f"{bank}__cell[{i}]__cost_model", "cost"
-        )
-        for i in range(3)
-    }
-    expected["markup"] = NodeRef(f"{bank}__markup")
-    assert node.inputs == expected
+    node = calc(graph, f"{bank}__capital_cost")
+    expected = {producer_ref(graph, f"{bank}__cell[{i}]__cost_model", "cost") for i in range(3)}
+    expected.add(node_ref(graph, f"{bank}__markup"))
+    assert set(node.inputs.values()) == expected
 
 
-def test_non_finite_multiplicity_blocks_loud() -> None:
-    """d38_caret authors a parameterized multiplicity (``cell[n]``): the
-    ratified stance is expand-finite or block-loud, and the elaborator blocks —
-    the legacy parametric-multiply reading of ``sum`` over a non-finite part is
-    not carried forward. Phase-3 ledger row: blocked (non-finite), owner-visible."""
+def test_modeled_finite_multiplicity_expands_the_aggregation() -> None:
+    """``cell[count]`` has four occurrences when ``count`` is modeled as 4."""
     extractor = SysMLDataExtractor([FIXTURES_DIR / "d38_caret"])
     assert extractor.load_models()
-    with pytest.raises(NonFiniteCardinalityError):
-        elaborate(extractor.model, extractor.extract_calculation_definitions())
+    graph = elaborate(
+        extractor.model,
+        extractor.extract_calculation_definitions(),
+        validation_diagnostics=extractor.diagnostics.validation,
+    )
+
+    pack = "D38Design__plant__pack"
+    total = calc(graph, f"{pack}__total_cost")
+    assert {
+        occurrence.display_path
+        for occurrence in graph.attrs.values()
+        if occurrence.display_name == "base_cost"
+    } == {f"{pack}__cell[{index}]__base_cost" for index in range(4)}
+    assert set(total.inputs.values()) == {
+        node_ref(graph, f"{pack}__cell[{index}]__base_cost") for index in range(4)
+    } | {node_ref(graph, f"{pack}__exponent")}

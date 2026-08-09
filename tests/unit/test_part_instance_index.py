@@ -11,6 +11,7 @@ from __future__ import annotations
 import os
 import subprocess
 import sys
+from uuid import UUID
 
 import pytest
 
@@ -381,6 +382,7 @@ def test_redefining_target_on_uses_exact_redefinition_edges() -> None:
 
     class _Redefined:
         qualified_name = "Pkg::Sensor::reading"
+        element_id = UUID("00000000-0000-5000-8000-000000000001")
 
     class _Redefinition:
         redefined_feature = _Redefined()
@@ -388,6 +390,7 @@ def test_redefining_target_on_uses_exact_redefinition_edges() -> None:
     class _Member:
         name = "reading"
         qualified_name = "Pkg::Bay::sensor_a::reading"
+        element_id = UUID("00000000-0000-5000-8000-000000000002")
         owned_redefinitions = [_Redefinition()]
 
     sensor_a.owned_members = [_Member()]
@@ -407,6 +410,7 @@ def test_redefining_target_on_is_query_order_independent() -> None:
 
     class _Redefined:
         qualified_name = "Pkg::Sensor::reading"
+        element_id = UUID("00000000-0000-5000-8000-000000000001")
 
     class _Redefinition:
         redefined_feature = _Redefined()
@@ -414,6 +418,7 @@ def test_redefining_target_on_is_query_order_independent() -> None:
     class _Member:
         name = "reading"
         qualified_name = "Pkg::Bay::sensor_a::reading"
+        element_id = UUID("00000000-0000-5000-8000-000000000002")
         owned_redefinitions = [_Redefinition()]
 
     sensor_a.owned_members = [_Member()]

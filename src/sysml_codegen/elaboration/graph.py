@@ -1,22 +1,23 @@
-"""Instance graph: the elaborated model (ELABORATE-FIRST Item 4 design, D1).
-
-Node identity is the occurrence path: ``InstanceOccurrence.instance_path``
-extended with member leaves, ``__``-joined — the same rendering
-``PartInstanceIndex`` already produces. A modeled value is ONE attribute node
-however many calculation, constraint, or aggregation consumers read it; every
-consumer holds a typed reference to a node, never a string to re-resolve later
-(spec R1/R2).
-
-Indexed occurrences are positional (``cell[2]``): a model edit that reorders
-siblings renames those nodes — accepted and recorded (D1), matrix-visible at
-the Item-6 semantic review.
-"""
+"""Typed resolved instance graph for the exact-ID elaborator."""
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 from enum import Enum
+from typing import TypeVar
 
+from sysml_codegen.elaboration.diagnostics import ElaborationCode
+from sysml_codegen.elaboration.identity import (
+    ConsumerPortId,
+    DeclarationId,
+    ExpressionPortId,
+    FeatureSlotId,
+    NodeId,
+    OutputPortId,
+    ScopeId,
+)
+from sysml_codegen.extraction.expression_compiler import Compilability
 from sysml_codegen.extraction.source_evidence import ReadinessCode
 
 __all__ = [
@@ -25,158 +26,331 @@ __all__ = [
     "ConstraintNode",
     "Diagnostic",
     "ElaborationCode",
+    "GraphValidationError",
+    "InputPortId",
     "InputRef",
     "InstanceGraph",
     "LiteralInput",
+    "PortMetadata",
     "NodeRef",
     "ProducerRef",
     "ValueSite",
 ]
 
+_DisplayNode = TypeVar("_DisplayNode")
+
 
 class ValueSite(str, Enum):
-    """Which value tier supplied an attribute node's effective value (design D4).
-
-    Tiers are innermost-wins: occurrence ``:>>`` (deepest anchor) beats a
-    specialized-def ``:>>`` beats the definition default. The value site drives
-    entry-point classification directly at projection (D8) — no downstream
-    backfill re-derives it.
-    """
-
     NONE = "none"
     DEFINITION_DEFAULT = "definition_default"
     SPECIALIZED_DEF = "specialized_def"
     OCCURRENCE_OVERRIDE = "occurrence_override"
 
 
-class ElaborationCode(str, Enum):
-    """Elaboration-time diagnostic codes (design D9).
-
-    The three extraction-detectable form codes (``SI_SELF_BINDING``,
-    ``SI_INDEXED_SOURCE_UNSUPPORTED``, ``SI_EXPRESSION_SOURCE_UNSUPPORTED``)
-    live in :class:`~sysml_codegen.extraction.source_evidence.ReadinessCode`
-    and hard-fail elaboration; these are the occurrence-level outcomes.
-    """
-
-    SI_OCCURRENCE_MISSING = "SI_OCCURRENCE_MISSING"
-    SI_OCCURRENCE_AMBIGUOUS = "SI_OCCURRENCE_AMBIGUOUS"
-    OVERRIDE_TARGET_MISSING = "OVERRIDE_TARGET_MISSING"
-
-
 @dataclass(frozen=True)
 class Diagnostic:
-    """One named elaboration finding. Never a fallback input (design D5).
-
-    ``code`` is an occurrence-level :class:`ElaborationCode`, or — in lenient
-    (report-not-halt) elaboration only — one of the contract's form codes
-    (:class:`ReadinessCode`) that strict mode raises as
-    :class:`~sysml_codegen.elaboration.elaborate.ElaborationError`. Strict vs
-    lenient changes halt-vs-report, never identity (design D9).
-    """
-
     code: ElaborationCode | ReadinessCode
-    consumer: str
+    consumer: NodeId | None
+    consumer_display: str
     param_name: str | None
     detail: str
 
 
+class GraphValidationError(ValueError):
+    """The typed graph violates referential integrity."""
+
+    def __init__(self, diagnostics: list[Diagnostic]) -> None:
+        self.diagnostics = tuple(diagnostics)
+        super().__init__("; ".join(f"{item.code.value}: {item.detail}" for item in diagnostics))
+
+
 @dataclass(frozen=True)
 class NodeRef:
-    """Edge to an attribute node: the consumer reads that node's value."""
-
-    node_id: str
+    target: NodeId
 
 
 @dataclass(frozen=True)
 class ProducerRef:
-    """Edge to a calc node's output: the consumer reads a computed value."""
-
-    calc_node_id: str
-    output_name: str
+    target: OutputPortId
 
 
 @dataclass(frozen=True)
 class LiteralInput:
-    """An authored usage literal — its own source (contract value-site kind 3)."""
-
     value: float | int | str | bool
 
 
-InputRef = NodeRef | ProducerRef | LiteralInput
+type InputRef = NodeRef | ProducerRef | LiteralInput
+type InputPortId = ConsumerPortId | ExpressionPortId
+
+
+@dataclass(frozen=True)
+class PortMetadata:
+    python_type: str = "float"
+    description: str | None = None
+    default_value: float | int | str | bool | None = None
+    unit: str | None = None
+    qualified_name: str | None = None
+    unresolved_default_kind: str | None = None
 
 
 @dataclass
 class AttrNode:
-    """One attribute occurrence: ``{occurrence_path}__{attr_name}``.
-
-    ``decl_qn`` is the declaring ``AttributeUsage``'s raw ``::`` qualified name
-    (definition-declared and possibly inherited, or declared on the part usage
-    itself). ``value`` is the effective literal after tiering; ``None`` with
-    ``value_site == NONE`` and no alias means no modeled value supplies this
-    node (an entry-point candidate at projection).
-
-    ``alias_target`` is the EXPOSE edge: an attribute whose declared value is a
-    pure feature chain (``attribute pump_power = pump_load.pump_power``) does
-    not hold a value — it aliases the chain's target, resolved per occurrence.
-    Consumers reading such a node follow the alias to the real source, so the
-    exposed attribute never mints an input of its own (spec R2).
-    """
-
-    node_id: str
-    occurrence_path: str
-    attr_name: str
-    decl_qn: str
+    node_id: NodeId
+    scope: ScopeId
+    declaration_id: DeclarationId
+    slot_id: FeatureSlotId
+    display_path: str
+    display_name: str
+    declaration_qn: str
     value: float | int | str | bool | None = None
     value_site: ValueSite = ValueSite.NONE
     alias_target: InputRef | None = None
+    is_alias: bool = False
+    alias_shape: str | None = None
+    source_file: str = "unknown"
+    source_line: int = 0
 
 
 @dataclass
 class CalcNode:
-    """One concrete calculation occurrence — a calc usage or a computed attribute.
-
-    ``calc_def_qualified_name`` keeps the raw ``::`` form — projection derives
-    module types and the registry template requires it (spike probe 3).
-    ``unbound_params`` are declared inputs with no binding: entry-point
-    candidates, carried so projection never re-walks the model.
-
-    A FORMULA attribute (``attribute area = length * width``) is a computed
-    node (design D6): ``is_computed`` is set, its single output is
-    ``calc_name`` (the attribute's own name), its ``inputs`` are the
-    expression's term edges keyed by term path, both def-name fields are empty
-    (no calc def exists), and ``expression_ast`` carries the live value
-    expression for projection to render. Consumers referencing the attribute
-    resolve to a producer edge on this node — never to an attribute node.
-    """
-
-    node_id: str
-    calc_name: str
+    node_id: NodeId
+    scope: ScopeId
+    declaration_id: DeclarationId
+    display_path: str
+    display_name: str
     calc_def_name: str
     calc_def_qualified_name: str
-    inputs: dict[str, InputRef] = field(default_factory=dict)
-    unbound_params: tuple[str, ...] = ()
+    inputs: dict[InputPortId, InputRef] = field(default_factory=dict)
+    input_names: dict[InputPortId, str] = field(default_factory=dict)
+    input_metadata: dict[InputPortId, PortMetadata] = field(default_factory=dict)
+    outputs: dict[DeclarationId, OutputPortId] = field(default_factory=dict)
+    output_names: dict[DeclarationId, str] = field(default_factory=dict)
+    output_metadata: dict[DeclarationId, PortMetadata] = field(default_factory=dict)
+    unbound_formals: tuple[DeclarationId, ...] = ()
     is_computed: bool = False
-    expression_ast: object | None = None
+    expression_ir: str | None = None
+    aggregation_reference_ordinals: tuple[int, ...] = ()
+    compilability: Compilability = Compilability.UNKNOWN
+    auto_impl_context: dict | None = None
+    doc_comment: str | None = None
+    calc_expressions: tuple[str, ...] = ()
+    source_file: str = "unknown"
+    source_line: int = 0
+
+    def input_by_name(self, name: str) -> InputRef:
+        matches = [
+            self.inputs[port]
+            for port, display_name in self.input_names.items()
+            if display_name == name and port in self.inputs
+        ]
+        if len(matches) != 1:
+            raise KeyError(
+                f"calculation {self.display_path!r} has {len(matches)} inputs named {name!r}"
+            )
+        return matches[0]
 
 
 @dataclass
 class ConstraintNode:
-    """One concrete constraint occurrence riding the same graph (design D7)."""
-
-    node_id: str
+    node_id: NodeId
+    scope: ScopeId
+    declaration_id: DeclarationId
+    display_path: str
+    display_name: str
     constraint_def_name: str
-    inputs: dict[str, InputRef] = field(default_factory=dict)
+    inputs: dict[InputPortId, InputRef] = field(default_factory=dict)
+    input_names: dict[InputPortId, str] = field(default_factory=dict)
+    input_metadata: dict[InputPortId, PortMetadata] = field(default_factory=dict)
+    unbound_formals: tuple[DeclarationId, ...] = ()
+    predicate_ir: str | None = None
+    source_form: str = "plain_usage"
+    owner_kind: str = "package"
+    owner_qualified_name: str = ""
+    usage_qualified_name: str = ""
+    membership_kind: str | None = None
+    predicate_source_key: str = ""
+    is_negated: bool = False
+    definition_qualified_name: str | None = None
+    eligibility: str = "admit"
+    exclusion_reasons: tuple[str, ...] = ()
+    exclusion_location: str | None = None
+    source_file: str = "unknown"
+    source_line: int = 0
+
+    def input_by_name(self, name: str) -> InputRef:
+        matches = [
+            self.inputs[port]
+            for port, display_name in self.input_names.items()
+            if display_name == name and port in self.inputs
+        ]
+        if len(matches) != 1:
+            raise KeyError(
+                f"constraint {self.display_path!r} has {len(matches)} inputs named {name!r}"
+            )
+        return matches[0]
 
 
 @dataclass
 class InstanceGraph:
-    """The elaborated model: nodes keyed by occurrence-path node ID."""
-
-    attrs: dict[str, AttrNode] = field(default_factory=dict)
-    calcs: dict[str, CalcNode] = field(default_factory=dict)
-    constraints: dict[str, ConstraintNode] = field(default_factory=dict)
+    attrs: dict[NodeId, AttrNode] = field(default_factory=dict)
+    calcs: dict[NodeId, CalcNode] = field(default_factory=dict)
+    constraints: dict[NodeId, ConstraintNode] = field(default_factory=dict)
     diagnostics: list[Diagnostic] = field(default_factory=list)
 
-    def attr_at(self, occurrence_path: str, attr_name: str) -> AttrNode | None:
-        """The attribute node for ``attr_name`` at an occurrence, if it exists."""
-        return self.attrs.get(f"{occurrence_path}__{attr_name}")
+    @property
+    def is_projectable(self) -> bool:
+        return not self.diagnostics
+
+    def validate(self) -> None:
+        """Validate typed keys, ports, outputs, and direct edge targets."""
+        failures: list[Diagnostic] = []
+        for node_id, attr_node in self.attrs.items():
+            if node_id != attr_node.node_id:
+                failures.append(
+                    self._dangling(node_id, attr_node.display_path, "attribute key mismatch")
+                )
+            if attr_node.alias_target is not None:
+                self._validate_edge(
+                    attr_node.node_id,
+                    attr_node.display_path,
+                    None,
+                    attr_node.alias_target,
+                    failures,
+                )
+        for node_id, calc_node in self.calcs.items():
+            self._validate_consumer(node_id, calc_node, failures)
+        for node_id, constraint_node in self.constraints.items():
+            self._validate_consumer(node_id, constraint_node, failures)
+        for calc_node in self.calcs.values():
+            for declaration, port in calc_node.outputs.items():
+                if port.calculation != calc_node.node_id or port.output != declaration:
+                    failures.append(
+                        self._dangling(
+                            calc_node.node_id,
+                            calc_node.display_path,
+                            "output port does not match its calculation/declaration key",
+                        )
+                    )
+        if failures:
+            raise GraphValidationError(failures)
+
+    def _validate_consumer(
+        self,
+        node_id: NodeId,
+        node: CalcNode | ConstraintNode,
+        failures: list[Diagnostic],
+    ) -> None:
+        if node_id != node.node_id:
+            failures.append(self._dangling(node_id, node.display_path, "consumer key mismatch"))
+        for port, edge in node.inputs.items():
+            if port.consumer != node.node_id:
+                failures.append(
+                    self._dangling(
+                        node.node_id,
+                        node.display_path,
+                        "consumer port belongs to another node",
+                    )
+                )
+            self._validate_edge(
+                node.node_id,
+                node.display_path,
+                node.input_names.get(port),
+                edge,
+                failures,
+            )
+
+    def require_projectable(self) -> None:
+        """Reject partial lenient graphs before projection or generation."""
+        self.validate()
+        if self.diagnostics:
+            raise GraphValidationError(list(self.diagnostics))
+
+    def _validate_edge(
+        self,
+        consumer: NodeId,
+        consumer_display: str,
+        param_name: str | None,
+        edge: InputRef,
+        failures: list[Diagnostic],
+    ) -> None:
+        if isinstance(edge, NodeRef) and edge.target not in self.attrs:
+            failures.append(
+                self._dangling(
+                    consumer,
+                    consumer_display,
+                    "attribute target is absent",
+                    param_name,
+                )
+            )
+        if isinstance(edge, ProducerRef):
+            producer = self.calcs.get(edge.target.calculation)
+            if producer is None or edge.target.output not in producer.outputs:
+                failures.append(
+                    self._dangling(
+                        consumer,
+                        consumer_display,
+                        "producer output is absent",
+                        param_name,
+                    )
+                )
+
+    @staticmethod
+    def _dangling(
+        consumer: NodeId,
+        consumer_display: str,
+        detail: str,
+        param_name: str | None = None,
+    ) -> Diagnostic:
+        return Diagnostic(
+            code=ElaborationCode.SI_EDGE_DANGLING,
+            consumer=consumer,
+            consumer_display=consumer_display,
+            param_name=param_name,
+            detail=detail,
+        )
+
+    def attr_by_display_path(self, path: str) -> AttrNode:
+        return self._unique_display(self.attrs, path)
+
+    def calc_by_display_path(self, path: str) -> CalcNode:
+        return self._unique_display(self.calcs, path)
+
+    def constraint_by_display_path(self, path: str) -> ConstraintNode:
+        return self._unique_display(self.constraints, path)
+
+    @staticmethod
+    def _unique_display(nodes: Mapping[NodeId, _DisplayNode], path: str) -> _DisplayNode:
+        matches = [node for node in nodes.values() if getattr(node, "display_path") == path]
+        if len(matches) != 1:
+            raise KeyError(f"graph has {len(matches)} nodes displayed as {path!r}")
+        return matches[0]
+
+    def input_edge(self, consumer: NodeId, formal: DeclarationId) -> InputRef:
+        if consumer in self.calcs:
+            return self.calcs[consumer].inputs[ConsumerPortId(consumer, formal)]
+        if consumer in self.constraints:
+            return self.constraints[consumer].inputs[ConsumerPortId(consumer, formal)]
+        raise KeyError(consumer)
+
+    def semantic_edges(self) -> tuple[str, ...]:
+        return tuple(
+            sorted(
+                repr((node.node_id, port, edge))
+                for population in (self.calcs, self.constraints)
+                for node in population.values()
+                for port, edge in node.inputs.items()
+            )
+        )
+
+    def rendered_names_are_metadata_only(self) -> bool:
+        return (
+            all(isinstance(key, NodeId) for key in self.attrs)
+            and all(isinstance(key, NodeId) for key in self.calcs)
+            and all(isinstance(key, NodeId) for key in self.constraints)
+            and all(
+                isinstance(port, ConsumerPortId | ExpressionPortId)
+                for population in (self.calcs, self.constraints)
+                for node in population.values()
+                for port in node.inputs
+            )
+        )

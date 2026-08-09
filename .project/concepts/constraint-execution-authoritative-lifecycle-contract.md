@@ -174,11 +174,12 @@ non-executable/non-certifying.
     then a real design attribute — keyed by the consumed value's semantic source identity
     (invariants 54–56), never by name coincidence. An omitted constraint formal accepts a modeled
     default only when the model declares it.
-20. (amended 2026-08-05, SOURCE-IDENTITY Item 3) Strictness changes only the disposition of a
-    genuine terminal miss, for every consumer type. Resolution never invents a value, parses
-    display text, selects a same-named candidate, or mints a consumer-local input for a bound
-    model reference; a genuine miss is a named error or diagnostic under the cell's stated policy
-    (Appendix C, C18). Positive resolution may not fork into consumer-specific ladders.
+20. (amended 2026-08-09, ELABORATE-FIRST Item 5) Resolution never invents a value, parses display
+    text, selects a same-named candidate, or mints a consumer-local input for a bound model
+    reference. A genuinely nonexistent authored feature is rejected during language loading
+    (Appendix C, C18); codegen does not repeat language name resolution. A loaded supported
+    reference that cannot be projected fails with a named diagnostic. Positive resolution may not
+    fork into consumer-specific ladders.
 21. A direct literal-valued design attribute is a valid design-attribute actual. It must be available
     during graph construction and must reuse the same QN-keyed typed entry point as any calculation
     consumer. Requiring a passthrough calculation is a workaround, not conformance.
@@ -321,6 +322,16 @@ def-context binding (`tests/fixtures/fusion_tea/designs/hif_ife/hif_driver.sysml
 | owner-qualified | def-level feature — definition qualifier (AFT 2) | occurrence-level feature — usage qualifier (DCS:92) |
 | feature chain | occurrence-level: the redefining feature at the named occurrence (AFT 3) | same, rooted at the named nested occurrence (NOP:22,25) |
 | `#(i)` / `[i]` | value expression / unresolvable (context-invariant) | same |
+
+**[AGENT] (ratified by owner, 2026-08-09) Deep-cross-scope evidence boundary.** The DCS:71,83
+and DCS:92 citations prove the semantic referents of those individual supported bindings. Public
+runtime acceptance for C4 and C5 comes from their focused matrix fixtures. DCS:82 is also a
+supported producer-output reference: with explicit `:>>` redefinitions on `array` and `sensor`,
+the valid witness has one concrete `sensor.core` producer and exact projection wires the consumer
+to its `metric_value` output. The former plain same-name part declarations were an invalid SysML
+namespace shape, not three legitimate producer occurrences; the exact route rejects that shape as
+`SYSML_NAMESPACE_NOT_DISTINGUISHABLE` before occurrence expansion. No name or authored qualifier
+selects the supported edge.
 
 Abbreviations used by all source-identity material: AFT n = Item-1 authoring-form-table form n
 (`.project/active/source-identity-binding-semantics-spike/authoring-form-table.md`); RM n = Item-2
@@ -506,10 +517,11 @@ Each row states: ruling · provenance · evidence · migration consequence.
   multi-occurrence definition defaults — behavioral wording in invariant 56; acceptance in cells
   C7/C8. Evidence: RM 10; census multi-occurrence sharing note. Migration: catf_mfe's 13×
   `inner_radius` intent is resolved by the final census → Item 6.
-- **D-14 [AGENT] (ratified by owner, 2026-08-05):** aggregation term references belong to this
-  same identity contract — no separate terminal-mint or identity rule for aggregation consumers;
-  strict versus lenient policy changes only the disposition of a genuine terminal miss (cells
-  C17/C18/C26). Evidence: the committed solar graph directly shows C17's producer-backed target;
+- **D-14 [AGENT] (ratified by owner, 2026-08-05; amended and ratified 2026-08-09):** aggregation
+  term references belong to this same identity contract — no separate terminal-mint or identity
+  rule for aggregation consumers. Valid positive resolutions are covered by C17/C26. A genuinely
+  absent authored target is rejected during language loading under C18. Evidence: the committed
+  solar graph directly shows C17's producer-backed target;
   RM 13 and its parity evidence expose C26's broken literal-valued positive resolutions
   (`tests/fixtures/solar_battery_model/library.sysml:569-578,697-721`). RM 13's frozen
   `permitting.*` summary is overbroad and is not evidence for C17. See adjacent-work register row 4.
@@ -648,7 +660,7 @@ contract chain.
 | Aggregator always exists even with no usage | Original concept | No usages is inert; excluded-only usages retain `not_assessed` visibility. |
 | Snapshot replay is the live route after extraction | Conversational supersession (no documentary source); historical architecture prose | Replay uses route-specific `include_all`; grandfathered skip-lowering fails closed for certification. |
 | A consumed input whose value expression resolves to its own parameter is rescued by binding to a same-named outer feature | L2 rescue-aware exemption (`../agentic-mbse/src/agentic_mbse/validation/level2_structure.py:309-355`); `_rescue_self_named_bindings`; wrong-oracle acceptance tests | D-4 and family SRC-01: the self-binding is legal and inert; the outcome is a blocking diagnostic (invariant 59), and the rescue is an impermissible identity mechanism (D-16). |
-| A bound model reference that fails resolution may lenient-mint a per-consumer entry point | REQ-IR-06 reading; Path B behavior; 75 measured model-derived mints | D-17: never a mint for a bound reference; a genuine terminal miss follows invariant 20 and cell C18; external inputs enter only through the explicit external-input contract. |
+| A bound model reference that fails resolution may lenient-mint a per-consumer entry point | REQ-IR-06 reading; Path B behavior; 75 measured model-derived mints | D-17: never a mint for a bound reference; an absent authored target fails language loading under invariant 20 and C18; external inputs enter only through the explicit external-input contract. |
 | Stamping an occurrence override literal onto same-named consumer inputs preserves the modeled source | VBR tier 1 (`src/sysml_codegen/orchestration/pipeline_builder.py:363-369`); RM 1/2/9/12 stamped copies | D-16: the reference→literal stamp is impermissible as an identity mechanism; a reference-derived value never becomes `USAGE_LITERAL` (cell C16's discriminator stays authored-only). |
 | The parameter-group deriver's default backfill is a benign value repair | `graph_builder.py:620-630`; Item-2 findings | D-18: a superseded fourth value authority that masks Path-B identity loss; it derives from the single identity authority or is deleted (Item 5). |
 | Route-specific convergence evidence certifies source convergence generally | REQ-IR-07 / REQ-SVM route-specific evidence readings | Invariants 56/58: convergence is per semantic source occurrence with full route identity parity; route-specific evidence certifies only its own route. |
@@ -965,11 +977,12 @@ table above.
 - topology: one public input; both consumers wired to it
 - diagnostic: none
 - mutation: an off-default change reaches both consumers and nothing else (→ Item 6)
-- certification: CONTRADICTED_AT_HEAD — DCS:71,83 stamped per consumer (snapshot referent QNs
-  `extraction_snapshot.json:404,448`)
-- citations: RM 12; DCS:71,83 (the verified usage-context, two-calculation observation of this
-  key). This cell supplies referent evidence for C25 but is not itself the customer coordinate:
-  the customer has only one usage-authored availability consumer
+- certification: VERIFIED — DCS:71,83 supplies the parser-resolved referent evidence
+  (`extraction_snapshot.json:404,448`); `elab_matrix_c4` supplies generated public topology and
+  isolated off-default mutation evidence
+- citations: RM 12; DCS:71,83; `tests/conformance/test_elaboration_contract_matrix.py` C4. This
+  cell supplies referent evidence for C25 but is not itself the customer coordinate: the customer
+  has only one usage-authored availability consumer
 
 **C5 — owner-qualified (usage qualifier) × usage context × single-occurrence `:>>` override × 1 calculation**
 
@@ -983,8 +996,11 @@ table above.
 - topology: one public input at the named occurrence
 - diagnostic: none
 - mutation: an off-default change reaches the calculation (→ Item 6)
-- certification: CONTRADICTED_AT_HEAD — DCS:92 stamped (snapshot `:478`)
-- citations: RM 12; DCS:92
+- certification: VERIFIED — DCS:92 supplies the parser-resolved referent evidence (snapshot
+  `:478`); `elab_matrix_c5` supplies generated public topology and isolated off-default mutation
+  evidence. DCS:82 separately proves a supported deep producer-output reference on the repaired
+  valid DCS witness; it is not C5 acceptance evidence.
+- citations: RM 12; DCS:92; `tests/conformance/test_elaboration_contract_matrix.py` C5
 
 **C6 — feature chain (sibling context, occurrence-rooted) × single-occurrence `:>>` override × 2 calculations**
 
@@ -1282,19 +1298,19 @@ table above.
 
 **C18 — aggregation-term reference, target genuinely absent × aggregation consumer**
 
-- disposition: SUPPORTED (D-14; policy governs the genuine miss)
-- referent: none — the term reference resolves to no modeled feature
+- provenance: **[AGENT] (ratified by owner, 2026-08-09)** — corrected from an executable-policy
+  premise after the licensed fixture proved that SysIDE rejects the absent feature during loading
+- disposition: LANGUAGE_REJECTED (D-14)
+- referent: none — language name resolution cannot resolve the term reference
 - declaration: none — the target is genuinely absent from the model
 - occurrence: none
 - value_state: absent
-- consumers: 1 aggregation
-- outcome: POLICY_DIAGNOSTIC — strict: named pre-generation failure identifying the term;
-  lenient: named diagnostic, the term contributes no source, no minted input, no same-named
-  capture
-- topology: none — the term contributes no source under either policy
-- diagnostic: both per-policy outcomes exactly as stated; never a mint or a same-named candidate
-- certification: BLOCKED(constructed genuine-miss fixture realizing this key → Item 4)
-- citations: D-14; no observed evidence exists — RM 13 does not qualify
+- consumers: none — the syntactic aggregation never becomes a loaded model element
+- outcome: LOAD_ERROR — processing stops before extraction or code generation
+- topology: none
+- diagnostic: the language diagnostic preserves the missing feature name (`ghost_cost`)
+- certification: CERTIFIED — `source_identity_absent_referent` and the executable C18 matrix cell
+- citations: D-14; `tests/fixtures/source_identity_absent_referent/PROVENANCE.md`
 
 **Nested, shadowing, specialization (published target keys; Item 4 realizes fixtures)**
 

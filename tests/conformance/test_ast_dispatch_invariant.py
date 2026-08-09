@@ -35,13 +35,12 @@ from tests.helpers.static_analysis import (
 SRC_ROOT = Path(__file__).parent.parent.parent / "src" / "sysml_codegen"
 EXTRACTION_DIR = SRC_ROOT / "extraction"
 ANALYSIS_DIR = SRC_ROOT / "analysis"
-ELABORATION_DIR = SRC_ROOT / "elaboration"
 
 HIERARCHY_RESOLVER_PATH = EXTRACTION_DIR / "hierarchy_resolver.py"
 USAGE_EXTRACTOR_PATH = EXTRACTION_DIR / "usage_extractor.py"
 PARAMETER_GROUPS_PATH = ANALYSIS_DIR / "parameter_groups.py"
 EXTRACTOR_PATH = EXTRACTION_DIR / "extractor.py"
-ELABORATE_PATH = ELABORATION_DIR / "elaborate.py"
+ELABORATOR_PATH = SRC_ROOT / "elaboration" / "elaborate.py"
 AGENTIC_HIERARCHY_PATH = (
     Path(__file__).parent.parent.parent.parent
     / "agentic-mbse"
@@ -82,16 +81,14 @@ DUAL_CHECK_SITES = [
     (AGENTIC_AGGREGATION_PATH, "_decompose_node"),
     (USAGE_EXTRACTOR_PATH, "_extract_single_binding"),
     (PARAMETER_GROUPS_PATH, "_extract_default_value"),
-    (ELABORATE_PATH, "_constraint_actuals"),
-    (ELABORATE_PATH, "_collect_expression_terms"),
+    (ELABORATOR_PATH, "_expression_references"),
 ]
 
 DUAL_CHECK_IDS = [
     "agentic_aggregation._decompose_node",
     "_extract_single_binding",
     "_extract_default_value",
-    "_constraint_actuals",
-    "_collect_expression_terms",
+    "elaboration._expression_references",
 ]
 
 # Sites that use if/if/if chains (not elif) and must follow full canonical ordering
@@ -107,15 +104,11 @@ CANONICAL_IDS = [
 ELIF_SITES = [
     (USAGE_EXTRACTOR_PATH, "_extract_single_binding"),
     (PARAMETER_GROUPS_PATH, "_extract_default_value"),
-    (ELABORATE_PATH, "_constraint_actuals"),
-    (ELABORATE_PATH, "_collect_expression_terms"),
 ]
 
 ELIF_IDS = [
     "_extract_single_binding",
     "_extract_default_value",
-    "_constraint_actuals",
-    "_collect_expression_terms",
 ]
 
 
@@ -275,11 +268,11 @@ class TestReqAst04DispatchSiteGuardrail:
     """Guard against new unaudited dispatch sites appearing in the codebase."""
 
     def test_total_dual_check_site_count(self):
-        """Exactly 5 audited functions have both FCE and OE is_instance() checks.
+        """Exactly 4 audited functions have both FCE and OE is_instance() checks.
 
-        Was 3 after Item 13 dropped build_expression_ast; ELABORATE-FIRST Item 5
-        adds the elaborator's constraint-actual dispatch (_constraint_actuals)
-        and the computed-attribute term walk (_expression_terms)."""
+        The exact-ID reference collector checks OperatorExpression only to keep
+        operator syntax out of the explicit-invocation branch. It still belongs
+        in this critical FCE-before-OE inventory."""
         all_dispatch = find_all_dispatch_functions(SRC_ROOT, EXPRESSION_TYPE_NAMES)
         shared_aggregation_calls = find_is_instance_calls_in_function(
             AGENTIC_AGGREGATION_PATH,
@@ -300,17 +293,16 @@ class TestReqAst04DispatchSiteGuardrail:
             for key, types in all_dispatch.items()
             if "FeatureChainExpression" in types and "OperatorExpression" in types
         }
-        assert len(dual_check) == 5, (
-            f"Expected 5 dual-check sites (FCE+OE), found {len(dual_check)}: "
+        assert len(dual_check) == 4, (
+            f"Expected 4 dual-check sites (FCE+OE), found {len(dual_check)}: "
             f"{sorted(dual_check.keys())}"
         )
 
     def test_total_dispatch_function_count(self):
-        """Exactly 7 audited functions dispatch on 2+ expression types.
+        """Exactly 8 audited functions dispatch on 2+ expression types.
 
-        Was 5 after Item 13 dropped build_expression_ast; ELABORATE-FIRST Item 5
-        adds the elaborator's constraint-actual dispatch (_constraint_actuals)
-        and the computed-attribute term walk (_expression_terms)."""
+        The exact-ID elaborator contributes three FCE/FRE-only functions:
+        classification, binding evidence, and reference collection."""
         all_dispatch = find_all_dispatch_functions(SRC_ROOT, EXPRESSION_TYPE_NAMES)
         shared_classifier_calls = find_is_instance_calls_in_function(
             AGENTIC_HIERARCHY_PATH,
@@ -341,8 +333,8 @@ class TestReqAst04DispatchSiteGuardrail:
                 shared_aggregation_types
             )
         multi_type = {key: types for key, types in all_dispatch.items() if len(types) >= 2}
-        assert len(multi_type) == 7, (
-            f"Expected 7 audited multi-type dispatch functions, found {len(multi_type)}: "
+        assert len(multi_type) == 8, (
+            f"Expected 8 audited multi-type dispatch functions, found {len(multi_type)}: "
             f"{sorted(multi_type.keys())}"
         )
 
@@ -412,7 +404,8 @@ class TestReqAst05SingletonTermClassification:
 # build_expression_ast's FCE diagnostic directly. That dispatch responsibility moved
 # cross-repo to agentic-mbse's extract_expression_ir; the calc-compat renderer's own
 # feature-chain rejection is covered by
-# tests/unit/test_expression_compiler.py::TestRenderCalcExpression::test_feature_chain_raises_compilation_error.
+# tests/unit/test_expression_compiler.py, in
+# TestRenderCalcExpression.test_feature_chain_raises_compilation_error.
 # ---------------------------------------------------------------------------
 
 

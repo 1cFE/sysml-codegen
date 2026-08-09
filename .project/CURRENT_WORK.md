@@ -1,6 +1,6 @@
 # Current Work
 
-**Last Updated**: 2026-08-07 (ELABORATE-FIRST Item 5: Phase 1 + Phase 2 legs 1–5,7 done; next: leg 6 constraint-catalog-through-projection, then leg 8 snapshot round-trip)
+**Last Updated**: 2026-08-09 (ELABORATE-FIRST Item-5 CERTIFIED — audit_v3 addendum; product-lens ledger clear)
 
 ---
 
@@ -49,46 +49,17 @@ the ~3,450-line string-compensation machinery deleted at cutover, not wrapped).
   redefinitions, constraint lowering adapted to node edges, deletion ledger attached. The
   multi-occurrence-default question is answered by the contract's ratified 2026-08-05 rule
   (distinct occurrences = distinct sources) — cited, not re-asked.
-- **ELABORATE-FIRST Item 5 Phase 1 DONE 2026-08-07** (`.project/active/elaborator-breadth/plan.md`
-  has full notes): production `src/sysml_codegen/elaboration/` landed (graph.py + elaborate.py,
-  D1–D5; AST-walked calc/constraint population with `expand_templates=False` + the def-context
-  remap rule — D10's rejected shortcut avoided); per-binding evidence builders factored to
-  `extraction/binding_evidence.py` (shared by both front ends); `screen_source_readiness`
-  template-skip moved to caller policy (elaborator screens declarations, templates included —
-  that's where fusion_tea's self-binding lives). Spike parity gate GREEN: 16 kept licensed tests
-  in `tests/conformance/test_elaboration_spike_parity.py` (C25/C8/C24/C12/C13/C15/stamp/C11/
-  deep-path/C19/self-binding/Bank/node-ID stability). `_constraint_actuals` registered in the
-  AST-dispatch guardrail (4 dual-check / 6 multi-type sites). Committed `f8870a7`.
-- **Item 5 Phase 2 legs 1–5 and 7 DONE 2026-08-07** (six commits `550aaf1`..`8fe028f`, each
-  leg learning-test-first with kept licensed conformance tests + findings doc; plan.md carries
-  per-leg detail). The elaborator now covers: untyped-part contexts + usage/package attrs +
-  package-level calcs + EXPOSE alias edges with transitive follow-through (leg 1); sibling
-  same-name channels by construction (leg 2); usage-level retypes + chain-`:>>` redefinition
-  aliases + whole-path def-key remap fix — the WI-015 lcoe→gamma edge wires in real fusion_tea
-  (leg 3); FORMULA computed attributes incl. FORMULA→FORMULA as computed calc nodes (leg 4);
-  EXPRESSION-`:>>` aggregations via the shared neutral decomposition with per-instance sum
-  expansion — the Item-10 cross-part collapse dies by construction (leg 5); two-level def
-  literal shadowing (specificity-ordered tier 2) + equal-valued-distinct pins + authored
-  `elab_shadowing_probe` fixture (leg 7). D9 `strict` switch landed in leg 1 (lenient
-  records findings, skips only offending bindings). Suite at leg-7 close: 3222/47/18
-  licensed (zero skip lines), ruff clean, mypy 72-baseline, no existing-fixture churn.
-- **Corpus SRC-01 census (Phase-3 ledger class)**: SIX fixtures author the degenerate
-  `in R = R` idiom — fusion_tea, catf_mfe (`vacuum.sysml:176`), sibling_channel_ambiguity,
-  spec_chain_twolevel, crosspart_rollup_twolevel, agg_localterm_probe. All elaborate lenient.
-- **SURFACED, owner rulings wanted before/at the pre-Item-6 checkpoint**: (1) d38_caret's
-  parameterized multiplicity blocks loud per the ratified expand-finite-or-block-loud stance,
-  while legacy generates it via parametric multiply — stay blocked or ratify a parametric-sum
-  form? (2) leg-4 open: an occurrence `:>>` literal targeting a computed attribute has no
-  fixture and no ruling.
-- **Next: Phase 2 leg 6 — constraint catalog through projection (design D7)**: build
-  production `elaboration/project.py` (probe-3 skeleton proven: modules/EPs/toposort/real
-  YAML+registry rendering) and narrow `constraint_lowering`'s catalog assembly (1,661 lines;
-  design bet B2 says narrowing, not rewrite) to read ConstraintNode edges. Acceptance:
-  `nested_occurrence_override_probe` strict run generates (pin the legacy strict failure
-  first — it is not yet pinned anywhere). Then **leg 8 — snapshot round-trip** (serialize
-  instance graph → rebuild → project; parity with live projection; `expression_ast` needs a
-  wire form, likely the shared neutral ExpressionIR). Note: projection needs node source
-  files for parameter-group derivation (D8) — the graph does not carry them yet.
+- **Item 5 (exact-identity elaborator breadth) CERTIFIED and CLOSED 2026-08-09** — archived to
+  `.project/completed/20260809_elaborator-breadth/` (plan, diff-ledger, product-lens ledger, and
+  all audit rounds; certification is the `audit_v3.md` addendum; CHANGELOG carries the summary).
+  The exact-ID route covers all 29 contract cells with public/named-diagnostic evidence, the
+  37-fixture dual-run ledger is live-run-verified (26 collapse / 11 fix / zero unresolved), and
+  invalid inherited/owned part conflicts block `SYSML_NAMESPACE_NOT_DISTINGUISHABLE` before
+  occurrence expansion. Open non-blocking residues carried forward: audit-F30 (AST guard covers
+  only `_resolve_leaf`), audit-F31 (plural-fallback reachability fixture unauthored), the leg-4
+  computed-attr `:>>` literal question, and attribute-level namespace conflicts not promoted
+  (surface at projection collision instead). **Next: Item 6 cutover — needs owner go; F26 legacy
+  oracle and F19 customer-scale proof are Item-6 obligations.**
 
 ### 2026-08-07: SOURCE-IDENTITY Item 4 — architecture recovery assessment
 
@@ -431,6 +402,18 @@ surfaces as matrix-row candidates.
 ---
 
 ## Recently Completed
+
+### 2026-08-09: ELABORATE-FIRST Item 5 — Exact-Identity Elaborator Breadth (certified + closed)
+- Complete exact-ID front end proven beside the frozen legacy route: identity kill probes,
+  cross-repo exact-UUID evidence, occurrence walker, typed graph, one resolver, projection to
+  `ComputationGraph`, `instance-graph/v1` round-trip, 29-cell contract matrix at public/
+  named-diagnostic evidence, live-verified 37-fixture dual-run ledger, and off-default public
+  mutations on live and rebuilt routes.
+- Five audit rounds drove out rendered-path selectors, fail-open branches, source-text evidence,
+  and finally the invalid-namespace silent admission (now blocks
+  `SYSML_NAMESPACE_NOT_DISTINGUISHABLE` pre-expansion; DCS witness repaired with explicit `:>>`).
+- Archived to `.project/completed/20260809_elaborator-breadth/`; certification in `audit_v3.md`
+  addendum; residues audit-F30/F31 + Item-6 obligations (F19/F26) recorded there and in the epic.
 
 ### 2026-07-24: docs-lifecycle-sync + nested-override-tripwire (closed on-branch; merge pending)
 - Docs reconciled to merged main `936315c`: new `04-producer-resolution.md` +
