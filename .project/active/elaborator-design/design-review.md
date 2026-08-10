@@ -191,7 +191,7 @@ decision names its rejected alternatives. A tired engineer gets the model in one
   plus the v5 snapshot schema, and three sites parse the rendered path back into structure
   (`constraint_lowering.occurrence_scope`, constraint namespace derivation at
   `constraint_lowering.py:1364-1374`, `output_registry_builder.py:198`). The legacy front end
-  must stay authoritative and byte-identical until Item 6, so the refactor must keep the
+  must stay authoritative and byte-identical until Item 7, so the refactor must keep the
   rendered surface and snapshot bytes unchanged (or give the elaborator a typed view) — say
   which. D1's adapter accessor is new `agentic-mbse` surface on the unmerged salvage branch;
   name the coordinated-landing requirement. — Duplication/Patterns.

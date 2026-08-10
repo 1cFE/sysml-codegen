@@ -34,14 +34,14 @@ instance graph, then project the graph into the existing `ComputationGraph`.
   `output_aliases`, attached `constraint_catalog`. Generation code is not modified.
   `fallback_entry_points` is retired (nothing falls through); the V11 coverage check remains as
   an invariant assertion.
-- **[NEED] R6 — Dual-run capable.** Until the Item-6 cutover, the elaborator front end runs
+- **[NEED] R6 — Dual-run capable.** Until the Item-7 cutover, the elaborator front end runs
   behind an internal parallel entry point (never a shipped flag) so old-vs-new
   `ComputationGraph`s can be diffed per fixture. Item 5 owns the harness and breadth;
   this item must not preclude it.
 - **[HARD] R7 — Acceptance authority.** The Item-3 contract's 29-cell matrix is the behavior
   authority. This spec restates none of it.
 - **[NEED] R8 — Deletion is in scope of the design.** The design names the mechanisms this
-  front end supersedes (the deletion ledger); Item 6 executes it. New code that duplicates a
+  front end supersedes (the deletion ledger); Item 7 executes it. New code that duplicates a
   ledger row's responsibility without deleting it is out of contract.
 - **[INFERRED] (ratified by owner 2026-08-08) R9 — Exact parser identity is the semantic
   contract.** Between model load and the resolved instance graph, every supported semantic
@@ -60,9 +60,9 @@ instance graph, then project the graph into the existing `ComputationGraph`.
 
 ## Non-Goals
 
-- Snapshot format change and corpus recapture (Item 6, atomic with cutover).
-- Removing any legacy mechanism now (Item 6; old front end stays authoritative until then).
-- Cross-repo `agentic-mbse` validator changes and modeling guidance (Item 7).
+- Snapshot format change and corpus recapture (Item 7, atomic with cutover).
+- Removing any legacy mechanism now (Item 7; old front end stays authoritative until then).
+- Cross-repo `agentic-mbse` validator changes and modeling guidance (Item 8).
 - Non-finite multiplicity support (expand-finite or block-loud stands).
 
 ## Related Artifacts

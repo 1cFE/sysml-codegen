@@ -189,14 +189,21 @@ OccurrenceId   = tuple[OccurrenceStep, ...]
 ```
 
 The new walker lives under `elaboration/` and constructs a new typed occurrence index directly from
-live SysIDE declarations. It carries forward the required finite-cardinality, containment, subtype,
-and cycle behavior, proven by tests, but it does not wrap or import `PartInstanceIndex`, `PathStep`,
-`InstanceOccurrence`, or their rendered `instance_path`. A human-readable occurrence path is derived
-metadata after the typed index exists.
+live SysIDE declarations. It consumes `Usage.usages` as SysIDE's canonical effective child-
+declaration view, then filters supported composite `PartUsage`s and applies codegen's finite-
+cardinality policy. It does not reconstruct the inherited/redefined child set from names or global
+owner grouping. Codegen owns multiplicity fan-out, parent/index context, structured `OccurrenceId`,
+supported-containment filtering, and cycle detection. It does not wrap or import
+`PartInstanceIndex`, `PathStep`, `InstanceOccurrence`, or their rendered `instance_path`. A human-
+readable occurrence path is derived metadata after the typed index exists.
+
+The 2026-08-09 live boundary probe confirmed this split. SysIDE 0.8.4 returns effective semantic
+declarations, not contextual concrete occurrences; see
+`.project/active/spike-syside-occurrence-authority/findings.md`.
 
 The old walker remains frozen inside the old front end until cutover. It may run only as part of the
 legacy black-box route used for shipped behavior and dual-run comparison. New elaborator code never
-consumes an old occurrence, and no graph may contain occurrences or edges from both walkers. Item 6
+consumes an old occurrence, and no graph may contain occurrences or edges from both walkers. Item 7
 switches the complete front-end boundary, then deletes the old walker with its consumers.
 
 ### D4 — Node identity is structured and opaque
@@ -304,6 +311,9 @@ The exact-ID graph adds these blocking codes:
 - `SI_REDEFINITION_INVALID` — a slot family cycles, has unrelated roots, or has missing endpoints.
 - `SI_ALIAS_CYCLE` — a typed alias cycle prevents a unique target.
 - `SI_EDGE_DANGLING` — a stored edge refers to a missing port, node, or output.
+- `SI_CONSTRAINT_BLOCKED` — the exact profile classified a constraint as `BLOCK`; strict
+  elaboration and every projection halt while lenient inspection retains the typed node and named
+  diagnostic.
 - `SI_RENDERING_COLLISION` — distinct semantic identities render to one public identifier.
 - `SI_SNAPSHOT_INVALID` — schema, identity, fingerprint, or referential validation fails on load.
 
@@ -409,7 +419,7 @@ generation.
 
 ## Deletion Ledger
 
-Item 6 executes this ledger atomically with the complete-front-end cutover. Until then, these
+Item 7 executes this ledger atomically with the complete-front-end cutover. Until then, these
 mechanisms are frozen inside the legacy route; they are not reusable substrate for the new route.
 
 - The legacy `PartInstanceIndex`, `PathStep`, rendered `instance_path`, and every consumer that
@@ -497,7 +507,7 @@ ID rider does not make it authoritative by accident.
 
 Subsequent breadth work ports supported consumer forms inside the new route only, then completes
 projection and graph-snapshot round-trip. Semantic authority does not switch one consumer at a time.
-Item 6 switches the shipped front-end entry point atomically, changes the snapshot format, and
+Item 7 switches the shipped front-end entry point atomically, changes the snapshot format, and
 executes the deletion ledger, including the old walker and front end.
 
 ## Validation Approach
