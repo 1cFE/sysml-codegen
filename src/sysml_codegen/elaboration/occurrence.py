@@ -72,6 +72,47 @@ class FeatureSlotIndex:
             raise KeyError(f"unknown feature declaration {declaration.to_wire()}")
         return FeatureSlotId(self._root_of(declaration, ()))
 
+    def effective_declaration(
+        self, candidates: set[DeclarationId]
+    ) -> DeclarationId:
+        """Return the sole declaration that redefines every other candidate."""
+        if not candidates:
+            raise InvalidRedefinitionFamilyError(
+                "effective declaration selection has no candidates"
+            )
+        if len({self.slot_of(candidate) for candidate in candidates}) != 1:
+            raise InvalidRedefinitionFamilyError(
+                "effective declaration candidates belong to different slots"
+            )
+        winners = {
+            candidate
+            for candidate in candidates
+            if all(
+                other == candidate or self._redefines(candidate, other, ())
+                for other in candidates
+            )
+        }
+        if len(winners) != 1:
+            raise InvalidRedefinitionFamilyError(
+                "native usage view has no unique effective declaration for one slot"
+            )
+        (winner,) = winners
+        return winner
+
+    def _redefines(
+        self,
+        declaration: DeclarationId,
+        ancestor: DeclarationId,
+        active: tuple[DeclarationId, ...],
+    ) -> bool:
+        if declaration in active:
+            raise InvalidRedefinitionFamilyError("redefinition family contains a cycle")
+        parents = self._parents.get(declaration, frozenset())
+        return ancestor in parents or any(
+            self._redefines(parent, ancestor, active + (declaration,))
+            for parent in parents
+        )
+
     def _root_of(
         self, declaration: DeclarationId, active: tuple[DeclarationId, ...]
     ) -> DeclarationId:
@@ -153,6 +194,9 @@ class ExactOccurrence:
     effective_type_id: DeclarationId | None
     type_closure: frozenset[DeclarationId]
     parent_id: OccurrenceId | None
+    child_declaration_ids: tuple[DeclarationId, ...]
+    display_segment: str
+    package_display: str | None
     display_path: str
 
 
@@ -406,64 +450,57 @@ def build_occurrence_index(model: Any, slots: FeatureSlotIndex) -> OccurrenceInd
     }
     closures = _definition_supertypes(definitions)
     usages = list(SysideAdapter.elements_of_type(model, "PartUsage"))
+    usages_by_id = {declaration_id_for(usage): usage for usage in usages}
     attributes_by_slot: dict[FeatureSlotId, list[Any]] = defaultdict(list)
     for attribute in SysideAdapter.elements_of_type(model, "AttributeUsage"):
         if getattr(attribute, "qualified_name", None) is None:
             continue
         attributes_by_slot[slots.slot_of(declaration_id_for(attribute))].append(attribute)
 
-    owned_by_definition: dict[DeclarationId, list[Any]] = defaultdict(list)
-    owned_by_usage: dict[DeclarationId, list[Any]] = defaultdict(list)
     roots: list[Any] = []
     for usage in usages:
         owner = getattr(usage, "owning_type", None)
-        if owner is not None and SysideAdapter.is_instance(owner, "PartDefinition"):
-            owned_by_definition[declaration_id_for(owner)].append(usage)
-        elif owner is not None and SysideAdapter.is_instance(owner, "PartUsage"):
-            owned_by_usage[declaration_id_for(owner)].append(usage)
-        else:
+        if owner is None or not (
+            SysideAdapter.is_instance(owner, "PartDefinition")
+            or SysideAdapter.is_instance(owner, "PartUsage")
+        ):
             roots.append(usage)
 
     occurrences: dict[OccurrenceId, ExactOccurrence] = {}
 
-    def owned_declarations(usage: Any, type_id: DeclarationId | None) -> list[Any]:
-        usage_id = declaration_id_for(usage)
-        candidates = list(owned_by_usage.get(usage_id, ()))
-        if type_id is not None:
-            for definition_id in closures[type_id]:
-                candidates.extend(owned_by_definition.get(definition_id, ()))
-        grouped: dict[FeatureSlotId, list[Any]] = defaultdict(list)
-        for candidate in candidates:
-            grouped[slots.slot_of(declaration_id_for(candidate))].append(candidate)
-        selected: list[Any] = []
-        for slot, alternatives in grouped.items():
-            usage_owned = [
-                alternative
-                for alternative in alternatives
-                if declaration_id_for(alternative.owning_type) == usage_id
-            ]
-            if usage_owned:
-                if len(usage_owned) != 1:
-                    raise InvalidRedefinitionFamilyError(
-                        f"multiple usage-level writers for slot {slot!r}"
-                    )
-                selected.append(usage_owned[0])
+    def native_child_declarations(usage: Any) -> tuple[Any, ...]:
+        """Return SysIDE's effective local PartUsage declarations for ``usage``."""
+        native_children: dict[DeclarationId, Any] = {}
+        for candidate in getattr(usage, "usages", ()) or ():
+            if not SysideAdapter.is_instance(candidate, "PartUsage"):
                 continue
-            owner_id = _most_specific_definition(
-                {declaration_id_for(alternative.owning_type) for alternative in alternatives},
-                closures,
-            )
-            winners = [
-                alternative
-                for alternative in alternatives
-                if declaration_id_for(alternative.owning_type) == owner_id
-            ]
-            if len(winners) != 1:
+            if not bool(getattr(candidate, "is_composite", False)):
+                continue
+            if getattr(candidate, "qualified_name", None) is None:
+                continue
+            candidate_id = declaration_id_for(candidate)
+            if candidate_id not in usages_by_id:
+                # ``Usage.usages`` also exposes inherited standard-library
+                # features. Only declarations in the loaded user model belong
+                # to codegen's supported containment population.
+                continue
+            existing = native_children.get(candidate_id)
+            if existing is not None and existing is not candidate:
                 raise InvalidRedefinitionFamilyError(
-                    f"multiple containment writers for slot {slot!r} on one owner"
+                    f"native usage view repeats declaration {candidate_id.to_wire()}"
                 )
-            selected.append(winners[0])
-        return sorted(selected, key=lambda item: declaration_id_for(item).to_wire())
+            native_children[candidate_id] = candidate
+
+        by_slot: dict[FeatureSlotId, set[DeclarationId]] = defaultdict(set)
+        for candidate_id in native_children:
+            by_slot[slots.slot_of(candidate_id)].add(candidate_id)
+        selected_ids = {
+            slots.effective_declaration(candidates) for candidates in by_slot.values()
+        }
+        return tuple(
+            native_children[item]
+            for item in sorted(selected_ids, key=lambda item: item.to_wire())
+        )
 
     def add_usage(
         usage: Any,
@@ -475,6 +512,10 @@ def build_occurrence_index(model: Any, slots: FeatureSlotIndex) -> OccurrenceInd
         if type_id is not None and type_id in active_types:
             raise RecursiveContainmentError(f"containment re-enters definition {type_id.to_wire()}")
         type_closure = closures[type_id] if type_id is not None else frozenset()
+        child_declarations = native_child_declarations(usage)
+        child_declaration_ids = tuple(
+            declaration_id_for(child) for child in child_declarations
+        )
         slot = slots.slot_of(usage_id)
         raw_name = str(getattr(usage, "name", None) or "anonymous")
         for index in _multiplicity_indices(
@@ -487,19 +528,34 @@ def build_occurrence_index(model: Any, slots: FeatureSlotIndex) -> OccurrenceInd
             step = OccurrenceStep(slot, index)
             steps = (step,) if parent is None else parent.occurrence_id.steps + (step,)
             occurrence_id = OccurrenceId(steps)
-            if parent is None:
-                raw_qn = str(getattr(usage, "qualified_name", None) or raw_name)
-                rendered = display_qualified_name(raw_qn)
-            else:
-                rendered = f"{parent.display_path}__{display_name(raw_name)}"
+            display_segment = display_name(raw_name)
             if index is not None:
-                rendered += f"[{index}]"
+                display_segment += f"[{index}]"
+            package_display = None
+            if parent is None:
+                owner = getattr(usage, "owner", None)
+                if owner is not None and SysideAdapter.is_instance(owner, "Package"):
+                    package_display = display_qualified_name(
+                        str(getattr(owner, "qualified_name", None) or "")
+                    )
+                rendered = (
+                    f"{package_display}__{display_segment}"
+                    if package_display
+                    else display_qualified_name(
+                        str(getattr(usage, "qualified_name", None) or raw_name)
+                    )
+                )
+            else:
+                rendered = f"{parent.display_path}__{display_segment}"
             occurrence = ExactOccurrence(
                 occurrence_id=occurrence_id,
                 effective_usage_id=usage_id,
                 effective_type_id=type_id,
                 type_closure=type_closure,
                 parent_id=parent.occurrence_id if parent is not None else None,
+                child_declaration_ids=child_declaration_ids,
+                display_segment=display_segment,
+                package_display=package_display,
                 display_path=rendered,
             )
             existing = occurrences.get(occurrence_id)
@@ -507,7 +563,7 @@ def build_occurrence_index(model: Any, slots: FeatureSlotIndex) -> OccurrenceInd
                 raise InvalidRedefinitionFamilyError("duplicate exact occurrence identity")
             occurrences[occurrence_id] = occurrence
             next_active = active_types + ((type_id,) if type_id is not None else ())
-            for child in owned_declarations(usage, type_id):
+            for child in child_declarations:
                 add_usage(child, occurrence, next_active)
 
     for root in sorted(roots, key=lambda item: declaration_id_for(item).to_wire()):

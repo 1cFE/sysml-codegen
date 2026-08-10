@@ -10,6 +10,7 @@ import re
 from collections.abc import Iterable
 from pathlib import Path
 from typing import Any
+from uuid import UUID
 
 # CRITICAL: Import syside adapter from agentic-mbse, NOT direct syside import
 from agentic_mbse.sysml.syside_adapter import SysideAdapter
@@ -222,16 +223,26 @@ class SysMLDataExtractor:
         all_member_names: set[str] = set()
         output_expression_asts: dict[str, Any] = {}
         member_expressions: dict[str, Any] = {}
+        output_expression_asts_by_id: dict[UUID, Any] = {}
+        all_member_ids: set[UUID] = set()
+        member_expressions_by_id: dict[UUID, Any] = {}
+        member_names_by_id: dict[UUID, str] = {}
         calc_expressions: list[str] = []
+
+        calc_definition_id = self._stable_declaration_id(elem)
 
         for member in elem.owned_members:
             if not self._is_parameter_member(member):
                 continue
 
-            attr_info = self._extract_attribute(member)
+            attr_info = self._extract_attribute(member, capture_element_id=True)
             member_name = sanitize_name(member.name)
+            member_id = self._stable_declaration_id(member)
             if member_name:
                 all_member_names.add(member_name)
+                if member_id is not None:
+                    all_member_ids.add(member_id)
+                    member_names_by_id[member_id] = member_name
 
             is_input, is_output = self._get_direction(member)
 
@@ -250,6 +261,8 @@ class SysMLDataExtractor:
                 # Store raw AST for output attributes
                 if is_output and member_name:
                     output_expression_asts[member_name] = expr
+                    if member_id is not None:
+                        output_expression_asts_by_id[member_id] = expr
 
                 # Reconstruct expression text for calc_expressions
                 expr_text = reconstruct_expression(expr)
@@ -268,8 +281,11 @@ class SysMLDataExtractor:
             member_name = sanitize_name(member.name)
             if not member_name or member_name in input_names or member_name in output_names:
                 continue
+            member_id = self._stable_declaration_id(member)
             if hasattr(member, "feature_value_expression") and member.feature_value_expression:
                 member_expressions[member_name] = member.feature_value_expression
+                if member_id is not None:
+                    member_expressions_by_id[member_id] = member.feature_value_expression
 
         # Always append doc comment as additional context
         if doc_comment:
@@ -338,6 +354,11 @@ class SysMLDataExtractor:
             output_expression_asts=output_expression_asts,
             all_member_names=all_member_names,
             member_expressions=member_expressions,
+            element_id=calc_definition_id,
+            output_expression_asts_by_id=output_expression_asts_by_id,
+            all_member_ids=all_member_ids,
+            member_expressions_by_id=member_expressions_by_id,
+            member_names_by_id=member_names_by_id,
         )
 
     def _is_parameter_member(self, member: Any) -> bool:
@@ -467,7 +488,9 @@ class SysMLDataExtractor:
 
         return ".".join(parts) if parts else elem.name if hasattr(elem, 'name') else ""
 
-    def _extract_attribute(self, attr_elem) -> AttributeInfo | None:
+    def _extract_attribute(
+        self, attr_elem: Any, *, capture_element_id: bool = False
+    ) -> AttributeInfo | None:
         """Extract attribute information from attribute usage element."""
         name = sanitize_name(attr_elem.name)
         if not name:
@@ -489,6 +512,11 @@ class SysMLDataExtractor:
         default_value = self._extract_default_value(attr_elem)
         is_optional = default_value is not None
         unit = self._extract_unit(attr_elem, sysml_type, description)
+        element_id = (
+            self._stable_declaration_id(attr_elem)
+            if capture_element_id
+            else None
+        )
 
         return AttributeInfo(
             name=name,
@@ -499,7 +527,18 @@ class SysMLDataExtractor:
             is_optional=is_optional,
             source_line=0,
             unit=unit,
+            element_id=element_id,
         )
+
+    def _stable_declaration_id(self, element: Any) -> UUID | None:
+        """Capture a stable UUID sidecar without narrowing shared extraction."""
+        qualified_name = getattr(element, "qualified_name", None)
+        if qualified_name is None:
+            return None
+        element_id = self.adapter.element_id(element)
+        if element_id.version != 5:
+            return None
+        return element_id
 
     def _extract_default_value(self, feature) -> str | None:
         """Extract default value from AttributeUsage if present."""

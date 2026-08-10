@@ -1,6 +1,6 @@
 # Current Work
 
-**Last Updated**: 2026-08-09 (ELABORATE-FIRST Item-5 CERTIFIED — audit_v3 addendum; product-lens ledger clear)
+**Last Updated**: 2026-08-10 (Item 6 CERTIFIED by targeted re-audit; Item 7 cutover unblocked)
 
 ---
 
@@ -14,13 +14,13 @@ a format choice. Direction ratified: replace the front end with elaborate-then-p
 graph as the single IR and snapshot payload; projection onto the existing `ComputationGraph` seam;
 the ~3,450-line string-compensation machinery deleted at cutover, not wrapped).
 
-- Plan of record: `.project/backlog/epic_elaborate_first_architecture.md` (7 items,
+- Plan of record: `.project/backlog/epic_elaborate_first_architecture.md` (8 items,
   spike/learning-test-first so failures are cheap; Item-3 elaborator spike is the go/no-go).
 - Direction evidence: `.project/research/20260807-145336_elaborate-first-instance-graph-architecture.md`
   (diagnosis, deletion inventory, seam verification, 7-shape pressure test, SysIDE capability
   survey) alongside the recovery assessment below.
 - SOURCE-IDENTITY epic amended: Items 4–5 superseded, Items 1–3 inherited as semantic authority
-  (29-cell matrix unchanged), Items 6–8 absorbed into ELABORATE-FIRST Items 6–7.
+  (29-cell matrix unchanged), Items 6–8 absorbed into ELABORATE-FIRST Items 7–8.
 - Item 1 executed: dirty trees frozen on `item4-phases12-forensic` (codegen `69eef3b`,
   agentic-mbse `9724f1d`; agentic-mbse `main` clean again); working branch `source-identity-epic`
   is clean at `224bfa6` plus plan-of-record docs. The Item-4 plan carries a do-not-resume banner.
@@ -58,8 +58,26 @@ the ~3,450-line string-compensation machinery deleted at cutover, not wrapped).
   occurrence expansion. Open non-blocking residues carried forward: audit-F30 (AST guard covers
   only `_resolve_leaf`), audit-F31 (plural-fallback reachability fixture unauthored), the leg-4
   computed-attr `:>>` literal question, and attribute-level namespace conflicts not promoted
-  (surface at projection collision instead). **Next: Item 6 cutover — needs owner go; F26 legacy
-  oracle and F19 customer-scale proof are Item-6 obligations.**
+  (surface at projection collision instead). **Next: Item 6 exact-identity completion; F30/F31
+  move there. Atomic cutover is Item 7; F26 legacy-oracle deletion and F19 customer-scale proof
+  remain cutover obligations.**
+
+- **Item 6 (exact-identity completion) CERTIFIED and CLOSED 2026-08-10** — archived to
+  `.project/completed/20260810_elaborator-identity-completion/` (spec, design authority map, plan,
+  three audit rounds, product-lens ledger; certification is the `audit_v3.md` re-audit addendum;
+  CHANGELOG carries the summary). Calculation payload/compilation/formals/outputs and constraint
+  usage decisions attach by exact UUID; SysIDE's native `Usage.usages` feeds exact concrete
+  occurrences (F31 closed with a scoped witness); the graph carries structured occurrences, typed
+  IR, formal provenance, and closed eligibility/compilability; projection is one-way with semantic
+  collision guards; profile `BLOCK` halts by `SI_CONSTRAINT_BLOCKED` on strict, lenient, and
+  round-tripped routes; the F30 guard is deny-by-default over all six boundary files with five
+  named exercised exemptions. Nine audit findings (F1–F9) across three rounds all verified fixed.
+  Shipped legacy route, snapshot v5, neutral facts, and generated baselines stayed byte-frozen.
+  Open non-blocking residue: `_constraint_module_type` public-spelling collision guard (rendering
+  policy). Coordinated agentic-mbse half (identified constraint extraction/evaluator) lives on
+  `elaborate-first-salvage`. **Next: Item 7 atomic cutover (unblocked). Item 7's deletion ledger
+  now also names the four Item-6 transitional duals; F26 legacy-oracle deletion and F19
+  customer-scale proof remain cutover obligations.**
 
 ### 2026-08-07: SOURCE-IDENTITY Item 4 — architecture recovery assessment
 
@@ -402,6 +420,18 @@ surfaces as matrix-row candidates.
 ---
 
 ## Recently Completed
+
+### 2026-08-10: ELABORATE-FIRST Item 6 — Exact-Identity Completion (certified + closed)
+- Exact declaration identity now covers the whole internal route: calc payload/compilation/
+  formals/outputs and constraint decisions attach by UUID; native `Usage.usages` child authority;
+  structured occurrences + typed IR + formal provenance in a fingerprinted `instance-graph/v2`;
+  one-way projection ordered from typed producer edges; profile `BLOCK` halts by
+  `SI_CONSTRAINT_BLOCKED`; deny-by-default F30 guard across all six boundary files.
+- Three audit rounds (F1–F9) all remediated and independently verified; certification in
+  `completed/20260810_elaborator-identity-completion/audit_v3.md` (re-audit addendum, lens CLEAR).
+- Shipped legacy route, snapshot v5, neutral constraint facts, and generated baselines
+  byte-frozen throughout; Item 7 atomic cutover unblocked, its deletion ledger extended with the
+  four Item-6 transitional duals.
 
 ### 2026-08-09: ELABORATE-FIRST Item 5 — Exact-Identity Elaborator Breadth (certified + closed)
 - Complete exact-ID front end proven beside the frozen legacy route: identity kill probes,

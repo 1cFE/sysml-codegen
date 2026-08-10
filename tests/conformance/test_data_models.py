@@ -280,6 +280,11 @@ def test_req_dm_03_fields_calculation_definition_data():
         "output_expression_asts",
         "all_member_names",
         "member_expressions",
+        "element_id",
+        "output_expression_asts_by_id",
+        "all_member_ids",
+        "member_expressions_by_id",
+        "member_names_by_id",
     }
     actual = _dataclass_field_names(CalculationDefinitionData)
     assert actual == expected

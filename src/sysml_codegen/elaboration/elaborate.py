@@ -10,11 +10,15 @@ from typing import Any
 from uuid import UUID
 
 from agentic_mbse.sysml.constraint_extraction import (
-    extract_constraint_facts,
     extract_expression_ir,
+    extract_identified_constraint_facts,
 )
 from agentic_mbse.sysml.data_models import ResolvedSemanticReferenceFact
-from agentic_mbse.sysml.executable_profile import Eligibility, evaluate_profile
+from agentic_mbse.sysml.executable_profile import (
+    Eligibility,
+    UsageDecision,
+    evaluate_identified_profile,
+)
 from agentic_mbse.sysml.expression import (
     feature_chain_facts,
     is_literal_node,
@@ -32,10 +36,12 @@ from sysml_codegen.elaboration.graph import (
     ConstraintNode,
     Diagnostic,
     ElaborationCode,
+    FormalProvenance,
     InputRef,
     InstanceGraph,
     LiteralInput,
     NodeRef,
+    OccurrenceRecord,
     PortMetadata,
     ProducerRef,
     ValueSite,
@@ -61,7 +67,12 @@ from sysml_codegen.elaboration.occurrence import (
 )
 from sysml_codegen.extraction import binding_evidence
 from sysml_codegen.extraction.data_models import CalculationDefinitionData
-from sysml_codegen.extraction.expression_compiler import Compilability, compile_calc_def
+from sysml_codegen.extraction.expression_compiler import (
+    Compilability,
+    CompilationError,
+    ExactCalcDefCompilationResult,
+    compile_calc_def_exact,
+)
 from sysml_codegen.extraction.expression_utils import extract_literal_value
 from sysml_codegen.extraction.source_evidence import (
     ReadinessCode,
@@ -128,6 +139,13 @@ class _PendingBinding:
 class _PendingExpression:
     consumer: CalcNode | ConstraintNode
     expression: Any
+
+
+@dataclass(frozen=True)
+class _ConstraintAssociation:
+    usage_id: DeclarationId
+    effective_definition_id: DeclarationId | None
+    decision: UsageDecision
 
 
 @dataclass(frozen=True)
@@ -216,25 +234,32 @@ class _ExactElaborator:
     ) -> None:
         self._model = model
         self._strict = strict
-        self._calc_defs = {item.qualified_name: item for item in calc_defs}
-        self._compilation_results = {
-            item.qualified_name: compile_calc_def(
-                item,
-                item.output_expression_asts,
-                item.all_member_names,
-                item.member_expressions,
-            )
-            for item in calc_defs
-        }
-        constraint_facts = extract_constraint_facts(model)
-        self._constraint_decisions = {
-            decision.identity.qualified_name: decision
-            for decision in evaluate_profile(constraint_facts).decisions
-            if decision.identity.qualified_name is not None
-        }
+        self._calc_defs = self._index_calculation_payloads(calc_defs)
+        self._compilation_results = self._compile_calculation_payloads()
+        self._constraint_associations = self._index_constraint_associations(model)
         self._slots = build_feature_slot_index(model)
         self._occurrences = build_occurrence_index(model, self._slots)
-        self._graph = InstanceGraph()
+        self._graph = InstanceGraph(
+            occurrences={
+                occurrence.occurrence_id: OccurrenceRecord(
+                    occurrence_id=occurrence.occurrence_id,
+                    parent_id=occurrence.parent_id,
+                    containment_slot=(
+                        occurrence.occurrence_id.steps[-1].containment_slot
+                    ),
+                    occurrence_index=(
+                        occurrence.occurrence_id.steps[-1].occurrence_index
+                    ),
+                    effective_usage_id=occurrence.effective_usage_id,
+                    effective_type_ids=tuple(
+                        sorted(occurrence.type_closure, key=lambda item: item.to_wire())
+                    ),
+                    display_segment=occurrence.display_segment,
+                    package_display=occurrence.package_display,
+                )
+                for occurrence in self._occurrences.occurrences()
+            }
+        )
         self._elements = self._stable_elements()
         self._scope_display: dict[ScopeId, str] = {
             occurrence.occurrence_id: occurrence.display_path
@@ -248,6 +273,140 @@ class _ExactElaborator:
         self._pending_aliases: list[_PendingAlias] = []
         self._readiness: list[ReadinessFinding] = []
         self._readiness_keys: set[tuple[DeclarationId, ReadinessCode]] = set()
+
+    @staticmethod
+    def _index_constraint_associations(model: Any) -> dict[UUID, _ConstraintAssociation]:
+        stable_usage_ids: dict[UUID, DeclarationId] = {}
+        for usage in SysideAdapter.elements_of_type(
+            model, "ConstraintUsage", include_subtypes=True
+        ):
+            raw_id = SysideAdapter.element_id(usage)
+            if raw_id in stable_usage_ids:
+                raise ElaborationInvariantError(
+                    ElaborationCode.SI_EDGE_DANGLING,
+                    f"duplicate live constraint usage UUID {raw_id}",
+                )
+            stable_usage_ids[raw_id] = declaration_id_for(usage)
+
+        stable_definition_ids: dict[UUID, DeclarationId] = {}
+        for definition in SysideAdapter.elements_of_type(
+            model, "ConstraintDefinition", include_subtypes=True
+        ):
+            raw_id = SysideAdapter.element_id(definition)
+            if raw_id in stable_definition_ids:
+                raise ElaborationInvariantError(
+                    ElaborationCode.SI_EDGE_DANGLING,
+                    f"duplicate live constraint definition UUID {raw_id}",
+                )
+            stable_definition_ids[raw_id] = declaration_id_for(definition)
+
+        identified = extract_identified_constraint_facts(model)
+        profile = evaluate_identified_profile(identified)
+        try:
+            missing_profile_ids = profile.missing_usage_ids
+            decisions_by_id = profile.by_usage_id
+        except ValueError as error:
+            raise ElaborationInvariantError(
+                ElaborationCode.SI_EDGE_DANGLING,
+                f"constraint profile decision inventory is invalid: {error}",
+            ) from error
+        if missing_profile_ids:
+            missing_ids = ", ".join(
+                str(item) for item in sorted(missing_profile_ids, key=str)
+            )
+            raise ElaborationInvariantError(
+                ElaborationCode.SI_EDGE_DANGLING,
+                f"constraint profile omitted usage UUIDs: {missing_ids}",
+            )
+
+        unknown = set(decisions_by_id) - set(stable_usage_ids)
+        missing = set(stable_usage_ids) - set(decisions_by_id)
+        if unknown or missing:
+            raise ElaborationInvariantError(
+                ElaborationCode.SI_EDGE_DANGLING,
+                "constraint profile/live usage UUID inventory disagrees: "
+                f"unknown={sorted(str(item) for item in unknown)}, "
+                f"missing={sorted(str(item) for item in missing)}",
+            )
+
+        result: dict[UUID, _ConstraintAssociation] = {}
+        for raw_usage_id, item in decisions_by_id.items():
+            effective_definition_id = None
+            if item.effective_definition_id is not None:
+                effective_definition_id = stable_definition_ids.get(item.effective_definition_id)
+                if effective_definition_id is None:
+                    raise ElaborationInvariantError(
+                        ElaborationCode.SI_EDGE_DANGLING,
+                        "constraint profile selected an unrecognized definition UUID "
+                        f"{item.effective_definition_id}",
+                    )
+            result[raw_usage_id] = _ConstraintAssociation(
+                usage_id=stable_usage_ids[raw_usage_id],
+                effective_definition_id=effective_definition_id,
+                decision=item.decision,
+            )
+        return result
+
+    def _constraint_association(self, usage: Any) -> _ConstraintAssociation:
+        raw_id = SysideAdapter.element_id(usage)
+        association = self._constraint_associations.get(raw_id)
+        if association is None:
+            raise ElaborationInvariantError(
+                ElaborationCode.SI_EDGE_DANGLING,
+                f"constraint usage UUID {raw_id} has no exact profile decision",
+            )
+        return association
+
+    @staticmethod
+    def _index_calculation_payloads(
+        calc_defs: Sequence[CalculationDefinitionData],
+    ) -> dict[DeclarationId, CalculationDefinitionData]:
+        result: dict[DeclarationId, CalculationDefinitionData] = {}
+        for calc_def in calc_defs:
+            if not isinstance(calc_def.element_id, UUID):
+                raise ElaborationInvariantError(
+                    ElaborationCode.SI_ID_MISSING,
+                    f"calculation payload {calc_def.qualified_name!r} has no definition UUID",
+                )
+            definition_id = DeclarationId(calc_def.element_id)
+            if definition_id in result:
+                raise ElaborationInvariantError(
+                    ElaborationCode.SI_EDGE_DANGLING,
+                    f"duplicate calculation payload for definition {definition_id.to_wire()}",
+                )
+            for role, attributes in (
+                ("input", calc_def.input_attributes),
+                ("output", calc_def.output_attributes),
+            ):
+                for attribute in attributes:
+                    if not isinstance(attribute.element_id, UUID):
+                        raise ElaborationInvariantError(
+                            ElaborationCode.SI_ID_MISSING,
+                            f"calculation {definition_id.to_wire()} {role} "
+                            f"{attribute.name!r} has no declaration UUID",
+                        )
+            result[definition_id] = calc_def
+        return result
+
+    def _compile_calculation_payloads(
+        self,
+    ) -> dict[DeclarationId, ExactCalcDefCompilationResult]:
+        result: dict[DeclarationId, ExactCalcDefCompilationResult] = {}
+        for definition_id, calc_def in self._calc_defs.items():
+            try:
+                compilation = compile_calc_def_exact(calc_def)
+            except (CompilationError, ValueError) as error:
+                raise ElaborationInvariantError(
+                    ElaborationCode.SI_EDGE_DANGLING,
+                    f"calculation {definition_id.to_wire()} exact compilation failed: {error}",
+                ) from error
+            if DeclarationId(compilation.definition_id) != definition_id:
+                raise ElaborationInvariantError(
+                    ElaborationCode.SI_EDGE_DANGLING,
+                    f"calculation {definition_id.to_wire()} compilation identity disagrees",
+                )
+            result[definition_id] = compilation
+        return result
 
     def run(self) -> InstanceGraph:
         self._build_value_nodes()
@@ -353,23 +512,36 @@ class _ExactElaborator:
                 continue
             features_by_slot[slot].append(feature)
 
-        base_by_slot: dict[FeatureSlotId, Any] = {}
+        attributes_by_slot: dict[FeatureSlotId, list[Any]] = defaultdict(list)
         for attribute in SysideAdapter.elements_of_type(self._model, "AttributeUsage"):
             if getattr(attribute, "qualified_name", None) is None:
                 continue
-            scopes = self._scopes_for_owner(self._semantic_owner(attribute))
-            if not scopes:
+            attribute_id = declaration_id_for(attribute)
+            if not feature_scopes[attribute_id]:
                 continue
-            slot = self._slots.slot_of(declaration_id_for(attribute))
-            current = base_by_slot.get(slot)
-            if current is None or declaration_id_for(attribute) == slot.root_declaration:
-                base_by_slot[slot] = attribute
+            slot = self._slots.slot_of(attribute_id)
+            attributes_by_slot[slot].append(attribute)
 
-        for slot, base in sorted(
-            base_by_slot.items(), key=lambda item: item[0].root_declaration.to_wire()
+        for slot, attributes in sorted(
+            attributes_by_slot.items(), key=lambda item: item[0].root_declaration.to_wire()
         ):
-            base_scopes = self._scopes_for_owner(self._semantic_owner(base))
-            for scope in base_scopes:
+            roots = [
+                attribute
+                for attribute in attributes
+                if declaration_id_for(attribute) == slot.root_declaration
+            ]
+            if len(roots) != 1:
+                raise ElaborationInvariantError(
+                    ElaborationCode.SI_REDEFINITION_INVALID,
+                    f"attribute slot {slot!r} has {len(roots)} exact root declarations",
+                )
+            base = roots[0]
+            scopes = {
+                scope
+                for attribute in attributes
+                for scope in feature_scopes[declaration_id_for(attribute)]
+            }
+            for scope in sorted(scopes, key=repr):
                 candidates = [
                     feature
                     for feature in features_by_slot[slot]
@@ -468,6 +640,9 @@ class _ExactElaborator:
                     ),
                     source_file=source_file,
                     source_line=source_line,
+                    owner_qualified_name=str(
+                        getattr(self._semantic_owner(base), "qualified_name", None) or ""
+                    ),
                 )
                 self._register_attr(alias_node)
                 self._pending_aliases.append(_PendingAlias(alias_node, expression))
@@ -499,7 +674,8 @@ class _ExactElaborator:
                     )
                 },
                 is_computed=True,
-                expression_ir=serialize_expression(neutral_expression),
+                expression_ir=neutral_expression,
+                compilability=Compilability.FULLY_COMPILABLE,
                 source_file=source_file,
                 source_line=source_line,
             )
@@ -521,6 +697,9 @@ class _ExactElaborator:
             value_site=value_site if expression is not None else ValueSite.NONE,
             source_file=source_file,
             source_line=source_line,
+            owner_qualified_name=str(
+                getattr(self._semantic_owner(base), "qualified_name", None) or ""
+            ),
         )
         self._register_attr(attr_node)
 
@@ -624,14 +803,17 @@ class _ExactElaborator:
 
         selected: list[tuple[Any, ScopeId, list[Any]]] = []
         for slot, alternatives in usages_by_slot.items():
-            base = next(
-                (
-                    usage
-                    for usage in alternatives
-                    if declaration_id_for(usage) == slot.root_declaration
-                ),
-                alternatives[0],
-            )
+            roots = [
+                usage
+                for usage in alternatives
+                if declaration_id_for(usage) == slot.root_declaration
+            ]
+            if len(roots) != 1:
+                raise ElaborationInvariantError(
+                    ElaborationCode.SI_REDEFINITION_INVALID,
+                    f"calculation slot {slot!r} has {len(roots)} exact root declarations",
+                )
+            base = roots[0]
             scopes = {
                 scope
                 for usage in alternatives
@@ -651,12 +833,20 @@ class _ExactElaborator:
         ):
             usage_id = declaration_id_for(usage)
             definition = self._typed_definition(usage, "CalculationDefinition")
+            definition_id = declaration_id_for(definition)
             node_id = NodeId(NodeKind.CALCULATION, scope, usage_id)
-            outputs, output_names, output_metadata = self._output_ports(node_id, definition)
+            calc_data = self._calc_defs.get(definition_id)
+            compilation = self._compilation_results.get(definition_id)
+            if calc_data is None or compilation is None:
+                raise ElaborationInvariantError(
+                    ElaborationCode.SI_EDGE_DANGLING,
+                    f"calculation definition {definition_id.to_wire()} has no exact payload",
+                )
+            outputs, output_names, output_metadata = self._output_ports(
+                node_id, definition, calc_data
+            )
             name = str(getattr(usage, "name", None) or "calculation")
             definition_qn = str(getattr(definition, "qualified_name", None) or "")
-            calc_data = self._calc_defs.get(definition_qn)
-            compilation = self._compilation_results.get(definition_qn)
             node = CalcNode(
                 node_id=node_id,
                 scope=scope,
@@ -668,30 +858,17 @@ class _ExactElaborator:
                 outputs=outputs,
                 output_names=output_names,
                 output_metadata=output_metadata,
-                compilability=(
-                    compilation.overall_compilability
-                    if compilation is not None
-                    else Compilability.UNKNOWN
+                compilability=compilation.overall_compilability,
+                auto_impl_context=self._calculation_auto_impl_context(compilation),
+                doc_comment=calc_data.doc_comment,
+                calc_expressions=tuple(calc_data.calc_expressions),
+                calculation_definition_id=definition_id,
+                compilation_definition_id=DeclarationId(compilation.definition_id),
+                compiled_output_ids=tuple(
+                    DeclarationId(item) for item in compilation.declared_output_ids
                 ),
-                auto_impl_context=(
-                    self._calculation_auto_impl_context(compilation)
-                    if compilation is not None
-                    else None
-                ),
-                doc_comment=calc_data.doc_comment if calc_data is not None else None,
-                calc_expressions=(
-                    tuple(calc_data.calc_expressions) if calc_data is not None else ()
-                ),
-                source_file=(
-                    str(calc_data.source_file)
-                    if calc_data is not None
-                    else self._source_location(definition)[0]
-                ),
-                source_line=(
-                    calc_data.source_line
-                    if calc_data is not None
-                    else self._source_location(definition)[1]
-                ),
+                source_file=str(calc_data.source_file),
+                source_line=calc_data.source_line,
             )
             self._graph.calcs[node_id] = node
             for declaration in applicable:
@@ -703,14 +880,13 @@ class _ExactElaborator:
         for usage in SysideAdapter.elements_of_type(
             self._model, "ConstraintUsage", include_subtypes=True
         ):
-            if getattr(usage, "qualified_name", None) is None:
-                continue
-            usage_id = declaration_id_for(usage)
+            association = self._constraint_association(usage)
+            usage_id = association.usage_id
             definition = self._typed_definition(usage, "ConstraintDefinition", required=False)
             for scope in self._scopes_for_owner(self._semantic_owner(usage)):
                 node_id = NodeId(NodeKind.CONSTRAINT, scope, usage_id)
                 name = str(getattr(usage, "name", None) or "constraint")
-                metadata = self._constraint_metadata(usage, definition)
+                metadata = self._constraint_metadata(usage, definition, association)
                 node = ConstraintNode(
                     node_id=node_id,
                     scope=scope,
@@ -721,6 +897,18 @@ class _ExactElaborator:
                     **metadata,
                 )
                 self._graph.constraints[node_id] = node
+                if association.decision.eligibility is Eligibility.BLOCK:
+                    reasons = "; ".join(
+                        f"{diagnostic.reason}: {diagnostic.message}"
+                        for diagnostic in association.decision.diagnostics
+                    )
+                    self._diagnose(
+                        ElaborationCode.SI_CONSTRAINT_BLOCKED,
+                        node.node_id,
+                        node.display_path,
+                        None,
+                        f"constraint profile blocked execution: {reasons}",
+                    )
                 self._collect_bound_members(usage, node)
                 if definition is not None:
                     self._collect_unbound_constraint_formals(definition, node)
@@ -769,7 +957,12 @@ class _ExactElaborator:
             ),
         }
 
-    def _constraint_metadata(self, usage: Any, definition: Any | None) -> dict[str, Any]:
+    def _constraint_metadata(
+        self,
+        usage: Any,
+        definition: Any | None,
+        association: _ConstraintAssociation,
+    ) -> dict[str, Any]:
         membership = getattr(usage, "owning_feature_membership", None)
         if SysideAdapter.is_instance(membership, "RequirementConstraintMembership"):
             source_form = "requirement_constraint"
@@ -794,12 +987,23 @@ class _ExactElaborator:
         else:
             predicate_source = None
         usage_qn = str(getattr(usage, "qualified_name", None) or "<anonymous>")
-        decision = self._constraint_decisions.get(usage_qn)
-        predicate_ir = (
-            serialize_expression(decision.effective_predicate)
-            if decision is not None and decision.effective_predicate is not None
-            else None
-        )
+        if source_form == "definition_typed":
+            live_definition_id = (
+                SysideAdapter.element_id(definition) if definition is not None else None
+            )
+            selected_definition_id = (
+                association.effective_definition_id.value
+                if association.effective_definition_id is not None
+                else None
+            )
+            if live_definition_id != selected_definition_id:
+                raise ElaborationInvariantError(
+                    ElaborationCode.SI_EDGE_DANGLING,
+                    f"constraint {usage_qn!r} exact definition association disagrees: "
+                    f"live={live_definition_id}, profile={selected_definition_id}",
+                )
+        decision = association.decision
+        predicate_ir = decision.effective_predicate
         if predicate_ir is None:
             predicate_expression = getattr(predicate_source, "result_expression", None)
             if predicate_expression is not None:
@@ -809,7 +1013,7 @@ class _ExactElaborator:
                         ElaborationCode.SI_REDEFINITION_INVALID,
                         f"constraint {usage_qn!r} has no representable predicate IR",
                     )
-                predicate_ir = serialize_expression(neutral_predicate)
+                predicate_ir = neutral_predicate
         owner = self._semantic_owner(usage)
         owner_kind = {
             "PartDefinition": "part_def",
@@ -820,7 +1024,7 @@ class _ExactElaborator:
         source_file, source_line = self._source_location(usage)
         exclusion_reasons = (
             tuple(diagnostic.reason for diagnostic in decision.diagnostics)
-            if decision is not None and decision.eligibility is Eligibility.NON_NUMERICAL
+            if decision.eligibility is Eligibility.NON_NUMERICAL
             else ()
         )
         membership_kind = None
@@ -833,12 +1037,14 @@ class _ExactElaborator:
             else None
         )
         predicate_qn = str(getattr(predicate_source, "qualified_name", None) or "")
+        # Exact definition identity stays typed in the graph. Projection owns the
+        # model-derived public source key and renders it from definition metadata.
         source_key = (
-            f"definition:{predicate_qn}"
-            if source_form == "definition_typed" and predicate_qn
+            ""
+            if source_form == "definition_typed"
             else f"inline:{predicate_qn}"
             if source_form in ("inline", "requirement_constraint") and predicate_qn
-            else declaration_id_for(usage).to_wire()
+            else association.usage_id.to_wire()
         )
         return {
             "predicate_ir": predicate_ir,
@@ -850,9 +1056,8 @@ class _ExactElaborator:
             "predicate_source_key": source_key,
             "is_negated": bool(getattr(usage, "is_negated", False)),
             "definition_qualified_name": definition_qn,
-            "eligibility": (
-                decision.eligibility.value if decision is not None else Eligibility.ADMIT.value
-            ),
+            "eligibility": decision.eligibility,
+            "effective_definition_id": association.effective_definition_id,
             "exclusion_reasons": exclusion_reasons,
             "exclusion_location": (f"{source_file}:{source_line}" if exclusion_reasons else None),
             "source_file": source_file,
@@ -860,7 +1065,10 @@ class _ExactElaborator:
         }
 
     def _output_ports(
-        self, node_id: NodeId, definition: Any
+        self,
+        node_id: NodeId,
+        definition: Any,
+        calc_data: CalculationDefinitionData,
     ) -> tuple[
         dict[DeclarationId, OutputPortId],
         dict[DeclarationId, str],
@@ -869,12 +1077,11 @@ class _ExactElaborator:
         outputs: dict[DeclarationId, OutputPortId] = {}
         names: dict[DeclarationId, str] = {}
         metadata: dict[DeclarationId, PortMetadata] = {}
-        calc_data = self._calc_defs.get(str(getattr(definition, "qualified_name", None) or ""))
-        output_data = (
-            {item.name: item for item in calc_data.output_attributes}
-            if calc_data is not None
-            else {}
-        )
+        output_data = {
+            DeclarationId(item.element_id): item
+            for item in calc_data.output_attributes
+            if item.element_id is not None
+        }
         for member in getattr(definition, "owned_members", None) or ():
             if self._direction(member) not in ("out", "return"):
                 continue
@@ -882,13 +1089,23 @@ class _ExactElaborator:
             outputs[output_id] = OutputPortId(node_id, output_id)
             raw_name = str(getattr(member, "name", None) or "result")
             names[output_id] = display_name(raw_name)
-            extracted = output_data.get(names[output_id]) or output_data.get(raw_name)
+            extracted = output_data.get(output_id)
+            if extracted is None:
+                raise ElaborationInvariantError(
+                    ElaborationCode.SI_EDGE_DANGLING,
+                    f"calculation output {output_id.to_wire()} has no exact metadata",
+                )
             metadata[output_id] = PortMetadata(
-                python_type=extracted.python_type if extracted is not None else "float",
-                description=extracted.description if extracted is not None else None,
-                default_value=extracted.default_value if extracted is not None else None,
-                unit=extracted.unit if extracted is not None else None,
+                python_type=extracted.python_type,
+                description=extracted.description,
+                default_value=extracted.default_value,
+                unit=extracted.unit,
                 qualified_name=str(getattr(member, "qualified_name", None) or ""),
+            )
+        if set(output_data) != set(outputs):
+            raise ElaborationInvariantError(
+                ElaborationCode.SI_EDGE_DANGLING,
+                "extracted output metadata does not match the live output declarations",
             )
         return outputs, names, metadata
 
@@ -897,28 +1114,33 @@ class _ExactElaborator:
         for member in getattr(usage, "owned_members", None) or ():
             if self._direction(member) != "in":
                 continue
-            formal_id = declaration_id_for(member)
+            member_id = declaration_id_for(member)
+            formal_id = (
+                self._slots.slot_of(member_id).root_declaration
+                if isinstance(consumer, ConstraintNode)
+                else member_id
+            )
             port = ConsumerPortId(consumer.node_id, formal_id)
             name = str(getattr(member, "name", None) or "input")
             consumer.input_names[port] = display_name(name)
             extracted = None
             if isinstance(consumer, CalcNode):
-                calc_data = self._calc_defs.get(consumer.calc_def_qualified_name)
-                if calc_data is not None:
-                    extracted = next(
-                        (
-                            item
-                            for item in calc_data.input_attributes
-                            if item.name in (name, display_name(name))
-                        ),
-                        None,
-                    )
+                extracted = self._calculation_input_attribute(consumer, formal_id)
             consumer.input_metadata[port] = PortMetadata(
-                python_type=(extracted.python_type if extracted is not None else "float"),
+                python_type=(
+                    extracted.python_type
+                    if extracted is not None
+                    else self._feature_python_type(formal_id)
+                ),
                 description=(extracted.description if extracted is not None else None),
                 default_value=(extracted.default_value if extracted is not None else None),
                 unit=extracted.unit if extracted is not None else None,
                 qualified_name=str(getattr(member, "qualified_name", None) or ""),
+                formal_provenance=(
+                    self._formal_provenance(formal_id)
+                    if isinstance(consumer, ConstraintNode)
+                    else None
+                ),
             )
             expression = getattr(member, "feature_value_expression", None)
             if expression is None:
@@ -965,11 +1187,12 @@ class _ExactElaborator:
             resolved_default = resolve_modeled_default(serialized_default)
             consumer.input_names[port] = display_name(name)
             consumer.input_metadata[port] = PortMetadata(
-                python_type="float",
+                python_type=self._feature_python_type(formal_id),
                 default_value=resolved_default.value,
                 unit=resolved_default.unit_text,
                 qualified_name=str(getattr(formal, "qualified_name", None) or ""),
                 unresolved_default_kind=resolved_default.unresolved_node_kind,
+                formal_provenance=self._formal_provenance(formal_id),
             )
             unbound.append(formal_id)
             occupied_slots.add(slot)
@@ -981,12 +1204,6 @@ class _ExactElaborator:
             for port in consumer.input_names
             if isinstance(port, ConsumerPortId)
         }
-        calc_data = self._calc_defs.get(consumer.calc_def_qualified_name)
-        extracted_inputs = (
-            {item.name: item for item in calc_data.input_attributes}
-            if calc_data is not None
-            else {}
-        )
         unbound = list(consumer.unbound_formals)
         formals = [
             formal
@@ -1002,7 +1219,7 @@ class _ExactElaborator:
                 continue
             port = ConsumerPortId(consumer.node_id, formal_id)
             name = str(getattr(formal, "name", None) or "input")
-            extracted = extracted_inputs.get(display_name(name)) or extracted_inputs.get(name)
+            extracted = self._calculation_input_attribute(consumer, formal_id)
             expression = getattr(formal, "feature_value_expression", None)
             serialized_default = None
             if expression is not None:
@@ -1012,23 +1229,104 @@ class _ExactElaborator:
             resolved_default = resolve_modeled_default(serialized_default)
             consumer.input_names[port] = display_name(name)
             consumer.input_metadata[port] = PortMetadata(
-                python_type=extracted.python_type if extracted is not None else "float",
-                description=extracted.description if extracted is not None else None,
+                python_type=extracted.python_type,
+                description=extracted.description,
                 default_value=(
                     resolved_default.value
                     if expression is not None
                     else extracted.default_value
-                    if extracted is not None
-                    else None
                 ),
                 unit=resolved_default.unit_text
-                or (extracted.unit if extracted is not None else None),
+                or extracted.unit,
                 qualified_name=str(getattr(formal, "qualified_name", None) or ""),
                 unresolved_default_kind=resolved_default.unresolved_node_kind,
             )
             unbound.append(formal_id)
             occupied_slots.add(slot)
         consumer.unbound_formals = tuple(unbound)
+
+    def _calculation_input_attribute(
+        self,
+        consumer: CalcNode,
+        formal_id: DeclarationId,
+    ) -> Any:
+        definition_id = consumer.calculation_definition_id
+        if definition_id is None:
+            raise ElaborationInvariantError(
+                ElaborationCode.SI_EDGE_DANGLING,
+                f"calculation {consumer.display_path!r} has no definition identity",
+            )
+        calc_data = self._calc_defs.get(definition_id)
+        if calc_data is None:
+            raise ElaborationInvariantError(
+                ElaborationCode.SI_EDGE_DANGLING,
+                f"calculation definition {definition_id.to_wire()} has no exact payload",
+            )
+        root_formal = self._slots.slot_of(formal_id).root_declaration
+        matches = [
+            item
+            for item in calc_data.input_attributes
+            if item.element_id is not None and DeclarationId(item.element_id) == root_formal
+        ]
+        if len(matches) != 1:
+            raise ElaborationInvariantError(
+                ElaborationCode.SI_EDGE_DANGLING,
+                f"formal {formal_id.to_wire()} maps to {len(matches)} exact metadata records",
+            )
+        return matches[0]
+
+    def _feature_python_type(self, declaration_id: DeclarationId) -> str:
+        """Render a public scalar type from one exact feature-typing relationship."""
+        root_id = self._slots.slot_of(declaration_id).root_declaration
+        feature = self._elements.get(root_id)
+        if feature is None:
+            raise ElaborationInvariantError(
+                ElaborationCode.SI_EDGE_DANGLING,
+                f"feature {root_id.to_wire()} has no exact live declaration",
+            )
+        type_targets = [
+            target
+            for relationship, target in (getattr(feature, "heritage", None) or ())
+            if SysideAdapter.is_instance(relationship, "FeatureTyping")
+        ]
+        if len(type_targets) != 1:
+            raise ElaborationInvariantError(
+                ElaborationCode.SI_EDGE_DANGLING,
+                f"feature {root_id.to_wire()} has {len(type_targets)} exact typings",
+            )
+        type_name = str(getattr(type_targets[0], "qualified_name", None) or "")
+        python_type = {
+            "ScalarValues::Boolean": "bool",
+            "ScalarValues::Integer": "int",
+            "ScalarValues::Real": "float",
+            "ScalarValues::String": "str",
+        }.get(type_name)
+        if python_type is None:
+            raise ElaborationInvariantError(
+                ElaborationCode.SI_EDGE_DANGLING,
+                f"feature {root_id.to_wire()} has unsupported exact type {type_name!r}",
+            )
+        return python_type
+
+    def _formal_provenance(self, declaration_id: DeclarationId) -> FormalProvenance:
+        formal = self._elements.get(declaration_id)
+        if formal is None:
+            raise ElaborationInvariantError(
+                ElaborationCode.SI_EDGE_DANGLING,
+                f"constraint formal {declaration_id.to_wire()} has no exact live declaration",
+            )
+        raw_name = str(getattr(formal, "name", None) or "")
+        qualified_name = str(getattr(formal, "qualified_name", None) or "")
+        if not raw_name or not qualified_name:
+            raise ElaborationInvariantError(
+                ElaborationCode.SI_EDGE_DANGLING,
+                f"constraint formal {declaration_id.to_wire()} lacks display metadata",
+            )
+        return FormalProvenance(
+            declaration_id=declaration_id,
+            raw_name=raw_name,
+            qualified_name=qualified_name,
+        )
 
     @staticmethod
     def _binding_evidence(member: Any, expression: Any) -> SourceReferenceEvidence:
@@ -1186,7 +1484,11 @@ class _ExactElaborator:
                 }.values()
             )
             selected_calcs: list[OccurrenceId | CalcNode] = [
-                *self._select_calc_nodes(calc_candidates, consumer_scope)
+                *self._select_calc_nodes(
+                    calc_candidates,
+                    consumer_scope,
+                    plural=plural,
+                )
             ]
             return selected_calcs
         raise _ReferenceResolutionError(
@@ -1207,14 +1509,22 @@ class _ExactElaborator:
                 "exact containment declaration has no concrete occurrence",
             )
         if not isinstance(consumer_scope, OccurrenceId):
-            if plural:
-                return candidates
-            if len(candidates) != 1:
+            permitted = [
+                candidate
+                for candidate in candidates
+                if self._occurrences.occurrence(candidate).parent_id is None
+            ]
+            if not permitted:
+                raise _ReferenceResolutionError(
+                    ElaborationCode.SI_OCCURRENCE_MISSING,
+                    "package context has no top-level occurrence for the exact declaration",
+                )
+            if not plural and len(permitted) != 1:
                 raise _ReferenceResolutionError(
                     ElaborationCode.SI_OCCURRENCE_AMBIGUOUS,
-                    f"package context contains {len(candidates)} candidate occurrences",
+                    f"package context contains {len(permitted)} candidate occurrences",
                 )
-            return candidates
+            return permitted
         lineage = self._scope_lineage(consumer_scope)
         for scope in lineage:
             if scope in candidates:
@@ -1232,17 +1542,29 @@ class _ExactElaborator:
                     ElaborationCode.SI_OCCURRENCE_AMBIGUOUS,
                     f"consumer context contains {len(under)} candidate occurrences",
                 )
-        if plural:
-            return candidates
-        if len(candidates) != 1:
+        permitted = [
+            candidate
+            for candidate in candidates
+            if self._occurrences.occurrence(candidate).parent_id is None
+        ]
+        if not permitted:
+            raise _ReferenceResolutionError(
+                ElaborationCode.SI_OCCURRENCE_MISSING,
+                "consumer context has no permitted occurrence for the exact declaration",
+            )
+        if not plural and len(permitted) != 1:
             raise _ReferenceResolutionError(
                 ElaborationCode.SI_OCCURRENCE_AMBIGUOUS,
-                f"permitted scope contains {len(candidates)} candidate occurrences",
+                f"permitted scope contains {len(permitted)} candidate occurrences",
             )
-        return candidates
+        return permitted
 
     def _select_calc_nodes(
-        self, candidates: list[CalcNode], consumer_scope: ScopeId
+        self,
+        candidates: list[CalcNode],
+        consumer_scope: ScopeId,
+        *,
+        plural: bool,
     ) -> list[CalcNode]:
         if not candidates:
             raise _ReferenceResolutionError(
@@ -1250,6 +1572,9 @@ class _ExactElaborator:
                 "exact calculation declaration has no concrete node",
             )
         by_scope = {node.scope: node for node in candidates}
+        exact = by_scope.get(consumer_scope)
+        if exact is not None:
+            return [exact]
         if isinstance(consumer_scope, OccurrenceId):
             for scope in self._scope_lineage(consumer_scope):
                 if scope in by_scope:
@@ -1261,6 +1586,8 @@ class _ExactElaborator:
                     if isinstance(node.scope, OccurrenceId)
                     and self._occurrences.is_descendant(node.scope, anchor)
                 ]
+                if under and plural:
+                    return under
                 if len(under) == 1:
                     return under
                 if len(under) > 1:
@@ -1268,12 +1595,26 @@ class _ExactElaborator:
                         ElaborationCode.SI_OCCURRENCE_AMBIGUOUS,
                         f"consumer context contains {len(under)} calculation nodes",
                     )
-        if len(candidates) != 1:
+        permitted = [
+            node
+            for node in candidates
+            if isinstance(node.scope, PackageScopeId)
+            or (
+                isinstance(node.scope, OccurrenceId)
+                and self._occurrences.occurrence(node.scope).parent_id is None
+            )
+        ]
+        if not permitted:
+            raise _ReferenceResolutionError(
+                ElaborationCode.SI_OCCURRENCE_MISSING,
+                "consumer context has no permitted calculation node",
+            )
+        if not plural and len(permitted) != 1:
             raise _ReferenceResolutionError(
                 ElaborationCode.SI_OCCURRENCE_AMBIGUOUS,
-                f"permitted scope contains {len(candidates)} calculation nodes",
+                f"permitted scope contains {len(permitted)} calculation nodes",
             )
-        return candidates
+        return permitted
 
     def _transition(
         self, state: OccurrenceId | CalcNode, segment_id: DeclarationId
@@ -1305,7 +1646,11 @@ class _ExactElaborator:
             node for node in self._graph.calcs.values() if declaration_id in node.outputs
         ]
         if producing_calcs:
-            [producer] = self._select_calc_nodes(producing_calcs, consumer_scope)
+            [producer] = self._select_calc_nodes(
+                producing_calcs,
+                consumer_scope,
+                plural=False,
+            )
             return ProducerRef(producer.outputs[declaration_id])
         try:
             slot = self._slots.slot_of(declaration_id)
@@ -1486,8 +1831,13 @@ class _ExactElaborator:
                     )
                     pending.consumer.input_names[port] = input_name
                     pending.consumer.input_metadata[port] = PortMetadata(
-                        python_type="float",
+                        python_type=self._feature_python_type(leaf),
                         qualified_name=leaf_fact.qualified_name,
+                        formal_provenance=(
+                            self._formal_provenance(leaf)
+                            if isinstance(pending.consumer, ConstraintNode)
+                            else None
+                        ),
                     )
                     try:
                         pending.consumer.inputs[port] = self._follow_alias(edge, set())

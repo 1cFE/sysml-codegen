@@ -1,6 +1,6 @@
 """Canonical internal codec for the resolved exact-ID instance graph.
 
-This is Item-5 evidence for a future snapshot boundary.  It is intentionally
+This is Item-6 evidence for a future snapshot boundary.  It is intentionally
 not connected to the shipped extraction-snapshot loader or capture command.
 """
 
@@ -9,6 +9,13 @@ from __future__ import annotations
 import hashlib
 import json
 from typing import Any
+
+from agentic_mbse.sysml.executable_profile import Eligibility
+from agentic_mbse.sysml.expression_ir import (
+    ExpressionIR,
+    expression_ir_from_dict,
+    serialize_expression,
+)
 
 from sysml_codegen.elaboration.diagnostics import (
     ElaborationCode,
@@ -19,12 +26,14 @@ from sysml_codegen.elaboration.graph import (
     CalcNode,
     ConstraintNode,
     Diagnostic,
+    FormalProvenance,
     GraphValidationError,
     InputPortId,
     InputRef,
     InstanceGraph,
     LiteralInput,
     NodeRef,
+    OccurrenceRecord,
     PortMetadata,
     ProducerRef,
     ValueSite,
@@ -51,7 +60,7 @@ __all__ = [
     "encode_instance_graph",
 ]
 
-INSTANCE_GRAPH_SCHEMA_VERSION = "instance-graph/v1"
+INSTANCE_GRAPH_SCHEMA_VERSION = "instance-graph/v2"
 
 
 class InstanceGraphCodecError(ElaborationInvariantError):
@@ -186,6 +195,7 @@ def _edge_from_data(data: object) -> InputRef | None:
 
 
 def _metadata_to_data(metadata: PortMetadata) -> dict[str, object]:
+    formal_provenance = metadata.formal_provenance
     return {
         "python_type": metadata.python_type,
         "description": metadata.description,
@@ -193,6 +203,15 @@ def _metadata_to_data(metadata: PortMetadata) -> dict[str, object]:
         "unit": metadata.unit,
         "qualified_name": metadata.qualified_name,
         "unresolved_default_kind": metadata.unresolved_default_kind,
+        "formal_provenance": (
+            {
+                "declaration_id": formal_provenance.declaration_id.to_wire(),
+                "raw_name": formal_provenance.raw_name,
+                "qualified_name": formal_provenance.qualified_name,
+            }
+            if formal_provenance is not None
+            else None
+        ),
     }
 
 
@@ -201,6 +220,25 @@ def _metadata_from_data(data: object) -> PortMetadata:
     default = value.get("default_value")
     if default is not None and not isinstance(default, (float, int, str, bool)):
         raise ValueError(f"invalid port default {default!r}")
+    raw_provenance = value.get("formal_provenance")
+    formal_provenance = None
+    if raw_provenance is not None:
+        provenance = _mapping(raw_provenance, "metadata.formal_provenance")
+        formal_provenance = FormalProvenance(
+            declaration_id=DeclarationId.from_wire(
+                _string(
+                    provenance.get("declaration_id"),
+                    "metadata.formal_provenance.declaration_id",
+                )
+            ),
+            raw_name=_string(
+                provenance.get("raw_name"), "metadata.formal_provenance.raw_name"
+            ),
+            qualified_name=_string(
+                provenance.get("qualified_name"),
+                "metadata.formal_provenance.qualified_name",
+            ),
+        )
     return PortMetadata(
         python_type=_string(value.get("python_type"), "metadata.python_type"),
         description=_optional_string(value.get("description"), "metadata.description"),
@@ -210,17 +248,34 @@ def _metadata_from_data(data: object) -> PortMetadata:
         unresolved_default_kind=_optional_string(
             value.get("unresolved_default_kind"), "metadata.unresolved_default_kind"
         ),
+        formal_provenance=formal_provenance,
     )
+
+
+def _expression_to_data(expression: ExpressionIR | None) -> object | None:
+    if expression is None:
+        return None
+    value = json.loads(serialize_expression(expression))
+    if not isinstance(value, dict):
+        raise ValueError("expression IR must serialize as an object")
+    return value
+
+
+def _expression_from_data(data: object) -> ExpressionIR:
+    value = _mapping(data, "expression IR")
+    return expression_ir_from_dict(value)
 
 
 def _input_records(node: CalcNode | ConstraintNode) -> list[dict[str, object]]:
     ports = set(node.inputs) | set(node.input_names) | set(node.input_metadata)
+    if set(node.input_names) != ports or set(node.input_metadata) != ports:
+        raise ValueError("input names and metadata must be total before encoding")
     return [
         {
             "port": _input_port_to_data(port),
             "edge": _edge_to_data(node.inputs.get(port)),
-            "name": node.input_names.get(port),
-            "metadata": _metadata_to_data(node.input_metadata.get(port, PortMetadata())),
+            "name": node.input_names[port],
+            "metadata": _metadata_to_data(node.input_metadata[port]),
         }
         for port in sorted(ports, key=lambda item: _canonical(_input_port_to_data(item)))
     ]
@@ -246,11 +301,65 @@ def _decode_input_records(
         edge = _edge_from_data(record.get("edge"))
         if edge is not None:
             inputs[port] = edge
-        name = record.get("name")
-        if name is not None:
-            names[port] = _string(name, "input.name")
+        names[port] = _string(record.get("name"), "input.name")
         metadata[port] = _metadata_from_data(record.get("metadata"))
     return inputs, names, metadata
+
+
+def _occurrence_to_data(record: OccurrenceRecord) -> dict[str, object]:
+    return {
+        "occurrence_id": record.occurrence_id.to_wire(),
+        "parent_id": record.parent_id.to_wire() if record.parent_id is not None else None,
+        "containment_slot": record.containment_slot.root_declaration.to_wire(),
+        "occurrence_index": record.occurrence_index,
+        "effective_usage_id": record.effective_usage_id.to_wire(),
+        "effective_type_ids": [item.to_wire() for item in record.effective_type_ids],
+        "display_segment": record.display_segment,
+        "package_display": record.package_display,
+    }
+
+
+def _occurrence_from_data(data: object) -> OccurrenceRecord:
+    value = _mapping(data, "occurrence record")
+    occurrence_id = OccurrenceId.from_wire(
+        _string(value.get("occurrence_id"), "occurrence.occurrence_id")
+    )
+    raw_parent = value.get("parent_id")
+    raw_index = value.get("occurrence_index")
+    occurrence_index = (
+        _integer(raw_index, "occurrence.occurrence_index")
+        if raw_index is not None
+        else None
+    )
+    return OccurrenceRecord(
+        occurrence_id=occurrence_id,
+        parent_id=(
+            OccurrenceId.from_wire(_string(raw_parent, "occurrence.parent_id"))
+            if raw_parent is not None
+            else None
+        ),
+        containment_slot=FeatureSlotId(
+            DeclarationId.from_wire(
+                _string(value.get("containment_slot"), "occurrence.containment_slot")
+            )
+        ),
+        occurrence_index=occurrence_index,
+        effective_usage_id=DeclarationId.from_wire(
+            _string(value.get("effective_usage_id"), "occurrence.effective_usage_id")
+        ),
+        effective_type_ids=tuple(
+            DeclarationId.from_wire(_string(item, "occurrence.effective_type_id"))
+            for item in _list(
+                value.get("effective_type_ids"), "occurrence.effective_type_ids"
+            )
+        ),
+        display_segment=_string(
+            value.get("display_segment"), "occurrence.display_segment"
+        ),
+        package_display=_optional_string(
+            value.get("package_display"), "occurrence.package_display"
+        ),
+    )
 
 
 def _attr_to_data(node: AttrNode) -> dict[str, object]:
@@ -269,6 +378,7 @@ def _attr_to_data(node: AttrNode) -> dict[str, object]:
         "alias_shape": node.alias_shape,
         "source_file": node.source_file,
         "source_line": node.source_line,
+        "owner_qualified_name": node.owner_qualified_name,
     }
 
 
@@ -306,6 +416,9 @@ def _attr_from_data(data: object) -> AttrNode:
         alias_shape=_optional_string(value.get("alias_shape"), "attribute.alias_shape"),
         source_file=_string(value.get("source_file"), "attribute.source_file"),
         source_line=_integer(value.get("source_line"), "attribute.source_line"),
+        owner_qualified_name=_string(
+            value.get("owner_qualified_name"), "attribute.owner_qualified_name"
+        ),
     )
 
 
@@ -323,10 +436,8 @@ def _calc_to_data(node: CalcNode) -> dict[str, object]:
             {
                 "declaration": declaration.to_wire(),
                 "port": _output_port_to_data(port),
-                "name": node.output_names.get(declaration),
-                "metadata": _metadata_to_data(
-                    node.output_metadata.get(declaration, PortMetadata())
-                ),
+                "name": node.output_names[declaration],
+                "metadata": _metadata_to_data(node.output_metadata[declaration]),
             }
             for declaration, port in sorted(
                 node.outputs.items(), key=lambda item: item[0].to_wire()
@@ -334,12 +445,23 @@ def _calc_to_data(node: CalcNode) -> dict[str, object]:
         ],
         "unbound_formals": [item.to_wire() for item in node.unbound_formals],
         "is_computed": node.is_computed,
-        "expression_ir": node.expression_ir,
+        "expression_ir": _expression_to_data(node.expression_ir),
         "aggregation_reference_ordinals": list(node.aggregation_reference_ordinals),
         "compilability": node.compilability.value,
         "auto_impl_context": node.auto_impl_context,
         "doc_comment": node.doc_comment,
         "calc_expressions": list(node.calc_expressions),
+        "calculation_definition_id": (
+            node.calculation_definition_id.to_wire()
+            if node.calculation_definition_id is not None
+            else None
+        ),
+        "compilation_definition_id": (
+            node.compilation_definition_id.to_wire()
+            if node.compilation_definition_id is not None
+            else None
+        ),
+        "compiled_output_ids": [item.to_wire() for item in node.compiled_output_ids],
         "source_file": node.source_file,
         "source_line": node.source_line,
     }
@@ -380,6 +502,28 @@ def _calc_from_data(data: object) -> CalcNode:
     auto_impl_context = value.get("auto_impl_context")
     if auto_impl_context is not None and not isinstance(auto_impl_context, dict):
         raise ValueError("calculation auto_impl_context must be an object or null")
+    raw_calculation_definition_id = value.get("calculation_definition_id")
+    calculation_definition_id = (
+        DeclarationId.from_wire(
+            _string(
+                raw_calculation_definition_id,
+                "calculation.calculation_definition_id",
+            )
+        )
+        if raw_calculation_definition_id is not None
+        else None
+    )
+    raw_compilation_definition_id = value.get("compilation_definition_id")
+    compilation_definition_id = (
+        DeclarationId.from_wire(
+            _string(
+                raw_compilation_definition_id,
+                "calculation.compilation_definition_id",
+            )
+        )
+        if raw_compilation_definition_id is not None
+        else None
+    )
     return CalcNode(
         node_id=node_id,
         scope=scope,
@@ -402,7 +546,11 @@ def _calc_from_data(data: object) -> CalcNode:
             for item in _list(value.get("unbound_formals"), "calculation.unbound_formals")
         ),
         is_computed=is_computed,
-        expression_ir=_optional_string(value.get("expression_ir"), "calculation.expression_ir"),
+        expression_ir=(
+            _expression_from_data(value.get("expression_ir"))
+            if value.get("expression_ir") is not None
+            else None
+        ),
         aggregation_reference_ordinals=tuple(
             _integer(item, "aggregation ordinal")
             for item in _list(
@@ -419,6 +567,15 @@ def _calc_from_data(data: object) -> CalcNode:
             _string(item, "calculation expression")
             for item in _list(value.get("calc_expressions"), "calculation.calc_expressions")
         ),
+        calculation_definition_id=calculation_definition_id,
+        compilation_definition_id=compilation_definition_id,
+        compiled_output_ids=tuple(
+            DeclarationId.from_wire(_string(item, "compiled output identity"))
+            for item in _list(
+                value.get("compiled_output_ids"),
+                "calculation.compiled_output_ids",
+            )
+        ),
         source_file=_string(value.get("source_file"), "calculation.source_file"),
         source_line=_integer(value.get("source_line"), "calculation.source_line"),
     )
@@ -434,7 +591,7 @@ def _constraint_to_data(node: ConstraintNode) -> dict[str, object]:
         "constraint_def_name": node.constraint_def_name,
         "inputs": _input_records(node),
         "unbound_formals": [item.to_wire() for item in node.unbound_formals],
-        "predicate_ir": node.predicate_ir,
+        "predicate_ir": _expression_to_data(node.predicate_ir),
         "source_form": node.source_form,
         "owner_kind": node.owner_kind,
         "owner_qualified_name": node.owner_qualified_name,
@@ -443,7 +600,12 @@ def _constraint_to_data(node: ConstraintNode) -> dict[str, object]:
         "predicate_source_key": node.predicate_source_key,
         "is_negated": node.is_negated,
         "definition_qualified_name": node.definition_qualified_name,
-        "eligibility": node.eligibility,
+        "eligibility": node.eligibility.value,
+        "effective_definition_id": (
+            node.effective_definition_id.to_wire()
+            if node.effective_definition_id is not None
+            else None
+        ),
         "exclusion_reasons": list(node.exclusion_reasons),
         "exclusion_location": node.exclusion_location,
         "source_file": node.source_file,
@@ -474,6 +636,19 @@ def _constraint_from_data(data: object) -> ConstraintNode:
         constraint_def_name=_string(
             value.get("constraint_def_name"), "constraint.constraint_def_name"
         ),
+        eligibility=Eligibility(
+            _string(value.get("eligibility"), "constraint.eligibility")
+        ),
+        effective_definition_id=(
+            DeclarationId.from_wire(
+                _string(
+                    value.get("effective_definition_id"),
+                    "constraint.effective_definition_id",
+                )
+            )
+            if value.get("effective_definition_id") is not None
+            else None
+        ),
         inputs=inputs,
         input_names=names,
         input_metadata=input_metadata,
@@ -481,7 +656,11 @@ def _constraint_from_data(data: object) -> ConstraintNode:
             DeclarationId.from_wire(_string(item, "unbound formal"))
             for item in _list(value.get("unbound_formals"), "constraint.unbound_formals")
         ),
-        predicate_ir=_optional_string(value.get("predicate_ir"), "constraint.predicate_ir"),
+        predicate_ir=(
+            _expression_from_data(value.get("predicate_ir"))
+            if value.get("predicate_ir") is not None
+            else None
+        ),
         source_form=_string(value.get("source_form"), "constraint.source_form"),
         owner_kind=_string(value.get("owner_kind"), "constraint.owner_kind"),
         owner_qualified_name=_string(
@@ -501,7 +680,6 @@ def _constraint_from_data(data: object) -> ConstraintNode:
             value.get("definition_qualified_name"),
             "constraint.definition_qualified_name",
         ),
-        eligibility=_string(value.get("eligibility", "admit"), "constraint.eligibility"),
         exclusion_reasons=tuple(
             _string(item, "constraint.exclusion_reason")
             for item in _list(value.get("exclusion_reasons", []), "constraint.exclusion_reasons")
@@ -547,6 +725,13 @@ def _diagnostic_from_data(data: object) -> Diagnostic:
 
 def _graph_to_data(graph: InstanceGraph) -> dict[str, object]:
     return {
+        "occurrences": [
+            _occurrence_to_data(record)
+            for record in sorted(
+                graph.occurrences.values(),
+                key=lambda item: item.occurrence_id.to_wire(),
+            )
+        ],
         "attrs": [
             _attr_to_data(node)
             for node in sorted(graph.attrs.values(), key=lambda item: item.node_id.to_wire())
@@ -597,6 +782,12 @@ def decode_instance_graph(payload: bytes | str) -> InstanceGraph:
         if actual != expected:
             raise ValueError("resolved graph fingerprint mismatch")
 
+        occurrences: dict[OccurrenceId, OccurrenceRecord] = {}
+        for raw_record in _list(graph_data.get("occurrences"), "graph.occurrences"):
+            occurrence = _occurrence_from_data(raw_record)
+            if occurrence.occurrence_id in occurrences:
+                raise ValueError("duplicate occurrence identity")
+            occurrences[occurrence.occurrence_id] = occurrence
         attrs: dict[NodeId, AttrNode] = {}
         for raw_node in _list(graph_data.get("attrs"), "graph.attrs"):
             attr_node = _attr_from_data(raw_node)
@@ -616,6 +807,7 @@ def decode_instance_graph(payload: bytes | str) -> InstanceGraph:
                 raise ValueError("duplicate constraint node identity")
             constraints[constraint_node.node_id] = constraint_node
         graph = InstanceGraph(
+            occurrences=occurrences,
             attrs=attrs,
             calcs=calcs,
             constraints=constraints,

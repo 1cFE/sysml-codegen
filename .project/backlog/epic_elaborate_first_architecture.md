@@ -4,7 +4,7 @@
 **Status**: Ready (direction ratified by owner 2026-08-07; supersedes SOURCE-IDENTITY Items 4–5)
 **Priority**: Critical (P0 — same defect family as SOURCE-IDENTITY)
 **Created**: 2026-08-07
-**Estimated Effort**: 3–4 weeks (re-estimate after the Item-3 go/no-go spike)
+**Estimated Effort**: 4–5 weeks (re-estimated 2026-08-09 after inserting identity completion)
 
 ---
 
@@ -55,8 +55,8 @@ unsupported authored form fails loudly before generation.
   design built a parallel identity ledger the resolver ignored by design. Item 1 below records
   the supersession in that epic and preserves the dirty tree forensically.
 - Items 6–8 (corpus migration, downstream remediation, certification): intent absorbed into
-  Items 6–7 below; their deliverables are unchanged, and the dual-run diff ledger from Item 5
-  produces Item 6's semantic-diff ledger as a migration byproduct.
+  Items 7–8 below; their deliverables are unchanged, and the dual-run diff ledger from Item 5
+  produces Item 7's semantic-diff ledger as a migration byproduct.
 
 ## Owner-originated rulings carried forward
 
@@ -69,7 +69,7 @@ unsupported authored form fails loudly before generation.
 - **[OWNER]** (2026-08-07) Snapshots are a serialization-format choice; the format is whatever
   representation the pipeline actually needs — here, the instance graph.
 - **[OWNER-VERBATIM]** "we MUST document allowable patterns in our `agentic-mbse` docs as
-  well…" (2026-08-05.) Item 7 keeps this obligation.
+  well…" (2026-08-05.) Item 8 keeps this obligation.
 
 ---
 
@@ -115,7 +115,8 @@ unsupported authored form fails loudly before generation.
 **[AGENT] (ratified by owner, 2026-08-07)** unless marked otherwise.
 
 The order is: freeze → salvage → **spike (go/no-go)** → **learning tests + dual-run breadth** →
-one atomic cutover → downstream. Two structural choices carry the risk management:
+exact-identity completion → one atomic cutover → downstream. Two structural choices carry the
+risk management:
 
 1. **The `ComputationGraph` seam is the migration instrument.** Generation verifiably consumes
    only the populated graph, so old-vs-new front ends produce diffable objects. Breadth is
@@ -133,7 +134,7 @@ the product invariant):
 - Artifacts are sized to the decision they carry: one spec/design pair for the elaborator +
   projection, findings docs for spikes. The 29-cell matrix is inherited, never restated.
 - Owner checkpoints: after the Item-3 spike (go/no-go), on the Item-5 classified diff ledger
-  (pre-cutover), and on the Item-6 recapture review.
+  (pre-cutover), and on the Item-7 recapture review.
 
 ---
 
@@ -305,7 +306,7 @@ and `elab_matrix_c5` as public acceptance, and supports DCS:82 on the repaired v
 exact core producer projects to the consumer. The former plain same-name nested part shape now
 fails `SYSML_NAMESPACE_NOT_DISTINGUISHABLE` before occurrence expansion. The shipped legacy route
 and snapshot v5 remain unchanged. Item 5 criteria are checked per the audit; audit-F30/F31 remain
-open disposed (non-blocking); Item 6 has not started and needs the owner's go.
+open disposed (non-blocking); Item 6 implementation has not started and needs the owner's go.
 
 **Objective**: Grow the elaborator across every supported shape, with each risky shape probed
 by a learning test *before* its implementation, and prove breadth mechanically via an
@@ -321,7 +322,7 @@ old-vs-new `ComputationGraph` diff over the whole corpus.
    the shadowing/specialization referent fixtures the capability survey flagged as missing
    evidence.
 2. **Snapshot round-trip learning test**: serialize the instance graph → rebuild → project;
-   parity with the live projection on the same fixtures. This de-risks the Item-6 format
+   parity with the live projection on the same fixtures. This de-risks the Item-7 format
    before anything is versioned or recaptured.
 3. **Dual-run harness**: internal parallel entry point (never a shipped flag) + one diff tool
    comparing old-vs-new graphs per fixture (modules, channels, wiring, entry-point sets).
@@ -348,7 +349,82 @@ contract does not answer → surface to owner; do not disposition silently.
 
 ---
 
-#### Item 6: Atomic Cutover — Switch, Delete, Snapshot, Recapture (3–5 days)
+#### Item 6: Exact-Identity Completion — Payload, Occurrence, Projection (3–5 days) ✅
+
+**Type**: Code / Integration (new route only; shipped authority unchanged)
+
+**Authority**: **[OWNER]** Insert a separate work item before cutover (2026-08-09).
+The estimate, objective, scope, and gates below are **[AGENT] (ratified by owner 2026-08-09)**.
+
+**Current:** All five implementation phases completed 2026-08-09. Exact payload attachment,
+native effective-child selection, concrete occurrence identity, structured graph v2, one-way
+projection, the complete boundary guard, runtime-cell public mutation, and the 29-cell/37-fixture
+gates are implemented. The neutral constraint schema, shipped legacy route, snapshot v5, and
+generated baselines remain unchanged. **Independent full-item audit 2026-08-09
+(`completed/20260810_elaborator-identity-completion/audit_v3.md`): Needs Work (narrow).** audit-F1..F6 fixes
+verified; all recorded gates reproduced. Blocking: audit-F7 — the exact route generates an
+executable module for a `BLOCK`-eligibility constraint where the legacy route halts by name
+(reproduced live on `elab_payload_identity`). Dispositions owed: audit-F8 (the four transitional
+dual mechanisms must be named in Item 7's deletion ledger; identity-keyed fact pairing) and
+audit-F9 (F30 guard is allowlist-scoped, or narrow SC5's wording). **Implementation response
+2026-08-10:** audit-F7 now emits `SI_CONSTRAINT_BLOCKED`; strict elaboration and every projection
+halt while lenient inspection retains the typed node and named reason. audit-F8's live facts are
+paired by exact usage UUID, and the four transitional duals are in Item 7's deletion ledger.
+audit-F9's guard now scans every boundary function by default with five narrow, exercised
+wire/rendering exemptions; SC5 was not narrowed. **CERTIFIED 2026-08-10 by targeted independent
+re-audit** (`completed/20260810_elaborator-identity-completion/audit_v3.md` addendum): all three fixes
+verified live (F7 falsifier halts on strict/lenient/round-trip routes; F8 identity-keyed pairing +
+ledger entry confirmed; F9 deny-by-default guard with pinned unlisted-function falsifier), full
+gates reproduced (codegen 3,358/47/18, agentic 1,819/1/33, corpus 37/37, freeze intact),
+product-lens gate CLEAR. Item 7 is unblocked.
+
+**Objective**: Close the remaining exact-identity gaps before the new front end can become the
+shipped authority. Exact graph edges are already proven; this item makes executable payload
+attachment, occurrence child selection, graph structure, and projection obey the same invariant.
+
+**Required Reading**:
+- `.project/research/20260809-153245_item6-identity-completion-and-cutover-census.md`
+- `.project/active/spike-syside-occurrence-authority/findings.md`
+- `.project/active/elaborator-design/spec.md`
+- `.project/active/elaborator-design/design.md`
+
+**Scope**:
+1. Carry exact declaration identity through calculation-definition, input/output-port,
+   compilation, and constraint-profile payloads. Missing, duplicate, or mismatched executable
+   payload blocks by a named diagnostic; it never defaults by QN or member name.
+2. Consume SysIDE's effective `Usage.usages` declaration view, while codegen retains supported
+   containment filtering, finite multiplicity expansion, parent/index context, and cycle handling.
+   Remove traversal-order fallbacks and disposition the F31 plural branches with a kept witness.
+3. Make the instance graph carry the structured occurrences and neutral expression/predicate
+   information projection needs. Projection derives ownership, aliases, and execution order from
+   typed graph structure and never reconstructs them from rendered strings. Extend F30's guard over
+   the complete resolution/projection boundary.
+4. Re-run the 29-cell and 37-fixture exact-route gates. The legacy shipped route and v5 snapshot
+   remain frozen; this item does not switch authority, recapture the corpus, or execute the deletion
+   ledger.
+
+**Success Criteria**:
+- [x] QN, member-name, display-path, and iteration-order perturbations cannot change executable
+  payload attachment, constraint eligibility, occurrence selection, or projected dependencies.
+- [x] Every required calc/port/compilation/constraint payload has one exact declaration association;
+  missing, duplicate, invalid-vocabulary, and anonymous cases have explicit tested outcomes.
+- [x] SysIDE owns effective child declarations and codegen owns only concrete expansion/context,
+  proven on inheritance, retyping, multiplicity, and explicit/implied redefinition fixtures.
+- [x] Projection is one-way over a validated structured graph; F30 protects the whole boundary and
+  F31 has a kept valid-model disposition.
+- [x] All 29 cells and 37 corpus rows remain green-or-named-diagnostic with zero unclassified diffs;
+  shipped legacy output and v5 snapshot bytes remain unchanged.
+- [x] Every supported runtime-source cell proves off-default propagation to every and only its
+  bound consumers through the internal exact route's public projection; Item 7 retains the final
+  shipped live-and-relocated-snapshot proof.
+
+**Location**: `.project/completed/20260810_elaborator-identity-completion/` (closed 2026-08-10)
+
+**Dependencies**: Item 5 ledger checkpoint.
+
+---
+
+#### Item 7: Atomic Cutover — Switch, Delete, Snapshot, Recapture (3–5 days)
 
 **Type**: Code / Integration (one landing unit)
 
@@ -356,13 +432,21 @@ contract does not answer → surface to owner; do not disposition silently.
 atomic landing because old snapshots cannot feed the new front end.
 
 **Scope**:
-1. `build_pipeline_context` switches to elaborate-then-project.
+1. Define the complete instance-graph snapshot envelope, then switch `build_pipeline_context` to
+   elaborate-then-project. Capture, live load, relocated load, and projection share one graph
+   authority; old and unknown snapshot versions fail before projection.
 2. Execute the deletion ledger: VBR + specialized-chain rewrite + self-named rescue,
    virtual-usage expansion, aggregation scope re-derivation, the backtracker resolution
    ladder (DFS edge discovery re-sourced from the graph; toposort kept), the 21-key-form
    producer table, the supplied-value materializer, the OutputRegistry namespaces, the
    group-deriver value backfill — and their wrong-oracle tests, replaced by the Item-5
-   independently anchored tests.
+   independently anchored tests. **[AGENT] (audit_v3 disposition, 2026-08-10)** Converge the four
+   Item-6 transitional duals in the same landing: fold `extract_identified_constraint_facts` into
+   one live constraint-fact extraction pass; make exact-ID profile evaluation the sole codegen path
+   and remove the QN adapter when its non-codegen callers are disposed; promote
+   `compile_calc_def_exact` to the single compiler core and delete the parallel name-keyed walk;
+   remove the paired name-keyed calculation payload maps and live ID sidecars when snapshot v5 and
+   its legacy route are deleted.
 3. Snapshot payload = serialized instance graph; `snapshot_format_version` bump, fail-closed
    old versions; capture and `graph_rebuild` updated together; **one** recapture of all 37
    fixtures (timestamp-churn diff protocol so only real changes show), reviewed against the
@@ -374,16 +458,18 @@ atomic landing because old snapshots cannot feed the new front end.
   consumer, proven live **and** relocated-snapshot.
 - [ ] C19 fixture applies 80.0 on both consumer paths; tripwire deleted with its mechanism.
 - [ ] Deletion ledger fully executed; no superseded route remains behind a flag or adapter.
+- [ ] A recorded scale budget and one real TEAx generation/seal/execute smoke pass on the new
+  authority without private compatibility APIs.
 - [ ] Full maintained unit/conformance/generation/type/lint gates green with exact counts and
   license evidence recorded; every committed output change appears in the classified ledger.
 
 **Location**: `.project/active/elaborator-cutover/`
 
-**Dependencies**: Item 5 ledger checkpoint.
+**Dependencies**: Item 6.
 
 ---
 
-#### Item 7: Downstream Remediation and Certification (3–5 days)
+#### Item 8: Downstream Remediation and Certification (3–5 days)
 
 **Type**: Integration / Documentation (absorbed SOURCE-IDENTITY Items 6–8 intent)
 
@@ -412,7 +498,7 @@ corrected architecture.
 
 **Location**: `.project/active/elaborator-downstream/`
 
-**Dependencies**: Item 6.
+**Dependencies**: Item 7.
 
 ---
 
@@ -424,6 +510,6 @@ corrected architecture.
   zero-unclassified-diffs rule; a shape outside the matrix is an owner question, not silent
   scope growth.
 - **Coexistence temptation** → the harness is internal-only and its deletion is inside the
-  Item-6 landing's success criteria.
+  Item-7 landing's success criteria.
 - **Recapture churn** → single recapture, after the round-trip learning test, reviewed against
   the classified ledger; the timestamp-churn protocol isolates real changes.

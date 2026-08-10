@@ -14,6 +14,7 @@ from collections import defaultdict
 from pathlib import Path
 from typing import NoReturn
 
+from agentic_mbse.sysml.executable_profile import Eligibility
 from agentic_mbse.sysml.expression_ir import (
     FeatureReferenceNode,
     InvocationNode,
@@ -21,7 +22,7 @@ from agentic_mbse.sysml.expression_ir import (
     OperatorNode,
     UnitAnnotationNode,
     UnsupportedNode,
-    parse_expression,
+    serialize_expression,
 )
 
 from sysml_codegen.analysis.constraint_lowering import mint_constraint_id
@@ -44,12 +45,15 @@ from sysml_codegen.elaboration.graph import (
     NodeRef,
     PortMetadata,
     ProducerRef,
+    ValueSite,
 )
 from sysml_codegen.elaboration.identity import (
     ConsumerPortId,
     ExpressionPortId,
     NodeId,
+    OccurrenceId,
     OutputPortId,
+    PackageScopeId,
 )
 from sysml_codegen.extraction.expression_compiler import Compilability
 from sysml_codegen.resolution.models import (
@@ -130,7 +134,18 @@ def _port_key(port: InputPortId) -> tuple:
 
 
 def _metadata(node: CalcNode | ConstraintNode, port: InputPortId) -> PortMetadata:
-    return node.input_metadata.get(port, PortMetadata())
+    return node.input_metadata[port]
+
+
+def _predicate_source_key(node: ConstraintNode) -> str:
+    if node.source_form != "definition_typed":
+        return node.predicate_source_key
+    if not node.definition_qualified_name:
+        _fail(
+            ElaborationCode.SI_SNAPSHOT_INVALID,
+            f"definition-typed constraint {node.display_path!r} has no definition display name",
+        )
+    return f"definition:{node.definition_qualified_name}"
 
 
 def _float_default(value: object) -> float | None:
@@ -146,11 +161,11 @@ def _float_default(value: object) -> float | None:
     )
 
 
-def _group_identity(source_file: str, qualified_name: str) -> tuple[str, str, Path]:
+def _group_identity(source_file: str) -> tuple[str, str, Path]:
     path = Path(source_file)
     base = path.parent.name if path.stem.lower() == "model" else path.stem
     if not base or base == ".":
-        base = qualified_name.split("__", 1)[0] or "system_design"
+        base = "system_design"
     base_name = sanitize_name(base).lower()
     if base_name.endswith("_params"):
         base_name = base_name[: -len("_params")]
@@ -162,13 +177,14 @@ def _group_identity(source_file: str, qualified_name: str) -> tuple[str, str, Pa
 class _Projection:
     def __init__(self, graph: InstanceGraph) -> None:
         self.graph = graph
-        self.modules: list[PipelineModule] = []
+        self.modules_by_semantic: dict[NodeId | str, PipelineModule] = {}
         self.entry_points: dict[str, EntryPoint] = {}
         self.entry_sources: dict[str, tuple[str, str, Path]] = {}
         self.entry_semantics: dict[str, object] = {}
         self.output_channels: dict[OutputPortId, str] = {}
         self.public_module_names: dict[str, NodeId | str] = {}
         self.public_channels: dict[str, OutputPortId | str] = {}
+        self.semantic_module_order: tuple[NodeId | str, ...] = ()
 
     def run(self) -> ComputationGraph:
         try:
@@ -176,6 +192,7 @@ class _Projection:
         except GraphValidationError as error:
             raise ProjectionError(list(error.diagnostics)) from error
 
+        self.semantic_module_order = self._typed_module_order()
         self._index_output_channels()
         self._build_calculation_modules()
         self._build_constraint_modules()
@@ -201,6 +218,15 @@ class _Projection:
             )
         self.public_module_names[name] = semantic
 
+    def _record_module(self, semantic: NodeId | str, module: PipelineModule) -> None:
+        self._claim_module(module.name, semantic)
+        if semantic in self.modules_by_semantic:
+            _fail(
+                ElaborationCode.SI_EDGE_DANGLING,
+                f"semantic module {semantic!r} was projected more than once",
+            )
+        self.modules_by_semantic[semantic] = module
+
     def _claim_channel(self, channel: str, semantic: OutputPortId | str) -> None:
         prior = self.public_channels.get(channel)
         if prior is not None and prior != semantic:
@@ -217,7 +243,7 @@ class _Projection:
             ):
                 channel = get_channel_name(
                     node.display_path,
-                    node.output_names.get(declaration, "result"),
+                    node.output_names[declaration],
                 )
                 self._claim_channel(channel, port)
                 self.output_channels[port] = channel
@@ -234,7 +260,7 @@ class _Projection:
         source_file: str,
         semantic: object,
     ) -> InputSource:
-        group_name, class_name, group_path = _group_identity(source_file, qualified_name)
+        group_name, class_name, group_path = _group_identity(source_file)
         prior = self.entry_semantics.get(qualified_name)
         if prior is not None and prior != semantic:
             _fail(
@@ -312,10 +338,16 @@ class _Projection:
                     consumer_display=consumer.display_path,
                     param_name=param_name,
                 )
+            entry_type = {
+                ValueSite.NONE: EntryPointType.DESIGN_ATTRIBUTE,
+                ValueSite.DEFINITION_DEFAULT: EntryPointType.DESIGN_ATTRIBUTE,
+                ValueSite.SPECIALIZED_DEF: EntryPointType.DESIGN_ATTRIBUTE,
+                ValueSite.OCCURRENCE_OVERRIDE: EntryPointType.DESIGN_ATTRIBUTE,
+            }[attr.value_site]
             return self._entry_source(
                 qualified_name=attr.display_path,
                 simple_name=attr.display_name,
-                entry_type=EntryPointType.DESIGN_ATTRIBUTE,
+                entry_type=entry_type,
                 default_value=attr.value,
                 source_calc_usage=None,
                 metadata=metadata,
@@ -379,6 +411,9 @@ class _Projection:
                     param_name=param_name,
                 )
             metadata = _metadata(node, port)
+            formal_identity = None
+            if isinstance(node, ConstraintNode):
+                formal_identity = self._constraint_formal_identity(node, port)
             result.append(
                 ModuleInput(
                     param_name=param_name,
@@ -386,10 +421,31 @@ class _Projection:
                     source=source,
                     description=metadata.description,
                     default_value=metadata.default_value,
+                    formal_identity=formal_identity,
                 )
             )
         self._require_unique_params(node, result)
         return result
+
+    @staticmethod
+    def _constraint_formal_identity(
+        node: ConstraintNode, port: InputPortId
+    ) -> ConstraintFormalIdentity:
+        if not isinstance(port, ConsumerPortId):
+            _fail(
+                ElaborationCode.SI_SNAPSHOT_INVALID,
+                f"constraint input on {node.display_path!r} has a non-formal port",
+            )
+        provenance = node.input_metadata[port].formal_provenance
+        if provenance is None or provenance.declaration_id != port.formal:
+            _fail(
+                ElaborationCode.SI_SNAPSHOT_INVALID,
+                f"constraint input on {node.display_path!r} has no exact formal provenance",
+            )
+        return ConstraintFormalIdentity(
+            raw_name=provenance.raw_name,
+            qualified_name=provenance.qualified_name,
+        )
 
     @staticmethod
     def _require_unique_params(node: CalcNode | ConstraintNode, inputs: list[ModuleInput]) -> None:
@@ -474,7 +530,7 @@ class _Projection:
                 ElaborationCode.SI_SNAPSHOT_INVALID,
                 f"computed node {node.display_path!r} has no expression IR",
             )
-        ir = parse_expression(node.expression_ir)
+        ir = node.expression_ir
         by_reference: dict[int, list[ExpressionPortId]] = defaultdict(list)
         for port in param_by_port:
             by_reference[port.reference_ordinal].append(port)
@@ -550,7 +606,7 @@ class _Projection:
         result: list[ModuleOutput] = []
         single = len(node.outputs) == 1
         for declaration, port in sorted(node.outputs.items(), key=lambda item: item[0].to_wire()):
-            metadata = node.output_metadata.get(declaration, PortMetadata())
+            metadata = node.output_metadata[declaration]
             result.append(
                 ModuleOutput(
                     field_name="root" if single else node.output_names[declaration],
@@ -566,7 +622,6 @@ class _Projection:
     def _build_calculation_modules(self) -> None:
         for node in sorted(self.graph.calcs.values(), key=lambda item: item.node_id.to_wire()):
             name = node.display_path.lower()
-            self._claim_module(name, node.node_id)
             auto_impl_context: dict | None
             if node.is_computed:
                 inputs, param_by_port = self._computed_inputs(node)
@@ -582,7 +637,14 @@ class _Projection:
                     else node.calc_def_name
                 )
                 outputs = self._outputs(node)
-                output_name = next(iter(node.output_names.values()), node.display_name)
+                if len(node.output_names) != 1:
+                    _fail(
+                        ElaborationCode.SI_SNAPSHOT_INVALID,
+                        f"computed module {node.display_path!r} must have one named output",
+                        consumer=node.node_id,
+                        consumer_display=node.display_path,
+                    )
+                (output_name,) = node.output_names.values()
                 auto_impl_context = {
                     "execution_steps": [],
                     "output_expressions": [{"name": output_name, "expression": compiled}],
@@ -603,7 +665,8 @@ class _Projection:
                     ElaborationCode.SI_SNAPSHOT_INVALID,
                     f"module {node.display_path!r} has no definition qualified name",
                 )
-            self.modules.append(
+            self._record_module(
+                node.node_id,
                 PipelineModule(
                     name=name,
                     module_type=derive_module_type(module_qn),
@@ -620,50 +683,17 @@ class _Projection:
                     calc_expressions=list(node.calc_expressions) or None,
                     source_file=node.source_file,
                     source_line=node.source_line,
-                )
+                ),
             )
 
-    @staticmethod
-    def _predicate_identities(node: ConstraintNode) -> dict[str, ConstraintFormalIdentity]:
-        if node.predicate_ir is None:
-            return {}
-        identities: dict[str, ConstraintFormalIdentity] = {}
-
-        def visit(expression: object) -> None:
-            if isinstance(expression, FeatureReferenceNode):
-                name = expression.reference.source_name
-                if name:
-                    target = expression.reference.target
-                    identity = ConstraintFormalIdentity(
-                        raw_name=name,
-                        qualified_name=(target.qualified_name if target is not None else None),
-                    )
-                    prior = identities.get(name)
-                    if prior is not None and prior != identity:
-                        _fail(
-                            ElaborationCode.SI_RENDERING_COLLISION,
-                            f"constraint {node.display_path!r} has two predicate identities "
-                            f"rendered as {name!r}",
-                        )
-                    identities[name] = identity
-                return
-            if isinstance(expression, OperatorNode):
-                for operand in expression.operands:
-                    visit(operand)
-            elif isinstance(expression, UnitAnnotationNode):
-                visit(expression.value)
-            elif isinstance(expression, InvocationNode):
-                for argument in expression.arguments:
-                    visit(argument)
-
-        visit(parse_expression(node.predicate_ir))
-        return identities
-
-    @staticmethod
-    def _constraint_identity(node: ConstraintNode) -> tuple[str, str, str]:
-        owner_instance_path = node.display_path.rsplit("__", 1)[0]
-        if node.eligibility == "non_numerical":
-            owner_instance_path = sanitize_qualified_name(node.usage_qualified_name)
+    def _constraint_identity(self, node: ConstraintNode) -> tuple[str, str, str]:
+        if isinstance(node.scope, OccurrenceId):
+            owner_instance_path = self.graph.occurrence_display_path(node.scope)
+        elif isinstance(node.scope, PackageScopeId):
+            owner_instance_path = sanitize_qualified_name(node.owner_qualified_name)
+        else:
+            raise AssertionError(f"unknown constraint scope {node.scope!r}")
+        if node.eligibility is Eligibility.NON_NUMERICAL:
             constraint_id = mint_constraint_id(
                 instance_path=owner_instance_path,
                 source_local=node.display_name,
@@ -701,7 +731,7 @@ class _Projection:
         for node in sorted(
             self.graph.constraints.values(), key=lambda item: item.node_id.to_wire()
         ):
-            if node.eligibility == "non_numerical":
+            if node.eligibility is Eligibility.NON_NUMERICAL:
                 reasons = ", ".join(node.exclusion_reasons)
                 _CONSTRAINT_LOGGER.warning(
                     "Constraint %s at %s is not numerical and will not execute: %s",
@@ -709,6 +739,8 @@ class _Projection:
                     node.exclusion_location or "<unknown>",
                     reasons,
                 )
+                continue
+            if node.eligibility is Eligibility.UNASSESSED:
                 continue
             if node.predicate_ir is None:
                 _fail(
@@ -719,25 +751,10 @@ class _Projection:
                 )
             constraint_id, owner_path, channel = self._constraint_identity(node)
             name = constraint_id.lower()
-            self._claim_module(name, node.node_id)
             self._claim_channel(channel, f"constraint:{node.node_id.to_wire()}")
-            identities = self._predicate_identities(node)
             inputs = self._regular_inputs(node)
-            inputs = [
-                item.model_copy(
-                    update={
-                        "formal_identity": identities.get(
-                            item.param_name,
-                            ConstraintFormalIdentity(
-                                raw_name=item.param_name,
-                                qualified_name=None,
-                            ),
-                        )
-                    }
-                )
-                for item in inputs
-            ]
-            self.modules.append(
+            self._record_module(
+                node.node_id,
                 PipelineModule(
                     name=name,
                     module_type=self._constraint_module_type(
@@ -753,16 +770,16 @@ class _Projection:
                     ],
                     execution_order=0,
                     module_kind=ModuleKind.CONSTRAINT,
-                )
+                ),
             )
             constraint_outputs.append((constraint_id, channel))
 
         if not constraint_outputs:
             return
         aggregator_name = "constraint_report_aggregator"
-        self._claim_module(aggregator_name, "constraint-report-aggregator")
         self._claim_channel("constraint_report", "constraint-report")
-        self.modules.append(
+        self._record_module(
+            "constraint-report-aggregator",
             PipelineModule(
                 name=aggregator_name,
                 module_type="constraints.ConstraintReportAggregatorModule",
@@ -783,7 +800,7 @@ class _Projection:
                 ],
                 execution_order=0,
                 module_kind=ModuleKind.REPORT_AGGREGATOR,
-            )
+            ),
         )
 
     def _build_output_aliases(self) -> list[OutputAlias]:
@@ -800,7 +817,12 @@ class _Projection:
                     ElaborationCode.SI_EDGE_DANGLING,
                     f"output alias {node.display_path!r} targets an absent producer",
                 )
-            instance_path = node.display_path.rsplit("__", 1)[0].split("__", 1)[-1]
+            if isinstance(node.scope, OccurrenceId):
+                instance_path = self.graph.occurrence_instance_path(node.scope)
+            elif isinstance(node.scope, PackageScopeId):
+                instance_path = sanitize_qualified_name(node.owner_qualified_name)
+            else:
+                raise AssertionError(f"unknown alias scope {node.scope!r}")
             key = (instance_path, node.display_name)
             prior = rendered.get(key)
             if prior is not None and prior != node.alias_target.target:
@@ -843,38 +865,62 @@ class _Projection:
             for name, (class_name, source_file, parameters) in sorted(by_group.items())
         ]
 
-    def _topological_modules(self) -> list[PipelineModule]:
-        by_name = {module.name: module for module in self.modules}
-        producer = {
-            output.channel_name: module.name for module in self.modules for output in module.outputs
-        }
-        dependencies: dict[str, set[str]] = {name: set() for name in by_name}
-        successors: dict[str, set[str]] = {name: set() for name in by_name}
-        for module in self.modules:
-            for input_ in module.inputs:
-                if input_.source.source_type != "module_output":
-                    continue
-                channel = input_.source.producer_channel
-                dependency = producer.get(channel or "")
-                if dependency is None:
-                    _fail(
-                        ElaborationCode.SI_EDGE_DANGLING,
-                        f"module {module.name!r} references absent channel {channel!r}",
-                    )
-                if dependency == module.name:
-                    _fail(
-                        ElaborationCode.SI_EDGE_DANGLING,
-                        f"module {module.name!r} has a self dependency",
-                    )
-                dependencies[module.name].add(dependency)
-                successors[dependency].add(module.name)
+    @staticmethod
+    def _semantic_module_key(item: NodeId | str) -> tuple[str, str]:
+        if isinstance(item, NodeId):
+            return ("node", item.to_wire())
+        return ("synthetic", item)
 
-        ready = sorted(name for name, values in dependencies.items() if not values)
-        ordered: list[str] = []
+    def _typed_module_order(self) -> tuple[NodeId | str, ...]:
+        executable_constraints = {
+            node.node_id
+            for node in self.graph.constraints.values()
+            if node.eligibility in (Eligibility.ADMIT, Eligibility.BLOCK)
+        }
+        dependencies: dict[NodeId | str, set[NodeId | str]] = {
+            **{node_id: set() for node_id in self.graph.calcs},
+            **{node_id: set() for node_id in executable_constraints},
+        }
+        for node_id in (*self.graph.calcs, *executable_constraints):
+            node = self.graph.calcs.get(node_id) or self.graph.constraints[node_id]
+            for edge in node.inputs.values():
+                if isinstance(edge, ProducerRef):
+                    dependencies[node_id].add(edge.target.calculation)
+
+        aggregator = "constraint-report-aggregator"
+        if executable_constraints:
+            dependencies[aggregator] = set(executable_constraints)
+
+        for semantic_item, required in dependencies.items():
+            missing = required - set(dependencies)
+            if missing:
+                _fail(
+                    ElaborationCode.SI_EDGE_DANGLING,
+                    f"typed module {semantic_item!r} has absent producers {missing!r}",
+                )
+            if semantic_item in required:
+                _fail(
+                    ElaborationCode.SI_EDGE_DANGLING,
+                    f"typed module {semantic_item!r} has a self dependency",
+                )
+
+        successors: dict[NodeId | str, set[NodeId | str]] = {
+            item: set() for item in dependencies
+        }
+        for semantic_item, required in dependencies.items():
+            for dependency in required:
+                successors[dependency].add(semantic_item)
+        ready = sorted(
+            (item for item, required in dependencies.items() if not required),
+            key=self._semantic_module_key,
+        )
+        ordered: list[NodeId | str] = []
         while ready:
             current = ready.pop(0)
             ordered.append(current)
-            for successor in sorted(successors[current]):
+            for successor in sorted(
+                successors[current], key=self._semantic_module_key
+            ):
                 dependencies[successor].discard(current)
                 if (
                     not dependencies[successor]
@@ -882,17 +928,29 @@ class _Projection:
                     and successor not in ready
                 ):
                     ready.append(successor)
-                    ready.sort()
-        if len(ordered) != len(by_name):
-            cycle = sorted(set(by_name) - set(ordered))
+                    ready.sort(key=self._semantic_module_key)
+        if len(ordered) != len(dependencies):
+            cycle = sorted(
+                set(dependencies) - set(ordered), key=self._semantic_module_key
+            )
             _fail(
                 ElaborationCode.SI_EDGE_DANGLING,
-                f"projected module dependency cycle: {cycle}",
+                f"typed module dependency cycle: {cycle}",
             )
-        result = []
-        for execution_order, name in enumerate(ordered):
-            result.append(by_name[name].model_copy(update={"execution_order": execution_order}))
-        return result
+        return tuple(ordered)
+
+    def _topological_modules(self) -> list[PipelineModule]:
+        if set(self.modules_by_semantic) != set(self.semantic_module_order):
+            _fail(
+                ElaborationCode.SI_EDGE_DANGLING,
+                "typed module inventory disagrees with projected module inventory",
+            )
+        return [
+            self.modules_by_semantic[semantic].model_copy(
+                update={"execution_order": execution_order}
+            )
+            for execution_order, semantic in enumerate(self.semantic_module_order)
+        ]
 
     def _build_constraint_catalog(self) -> ConstraintCatalog | None:
         if not self.graph.constraints:
@@ -905,18 +963,26 @@ class _Projection:
             self.graph.constraints.values(), key=lambda item: item.node_id.to_wire()
         ):
             constraint_id, owner_path, channel = self._constraint_identity(node)
-            if node.eligibility == "non_numerical":
+            if node.eligibility in (Eligibility.NON_NUMERICAL, Eligibility.UNASSESSED):
+                if node.eligibility is Eligibility.NON_NUMERICAL:
+                    exclusion = ConstraintExclusion(
+                        kind="non_numerical",
+                        reasons=list(node.exclusion_reasons),
+                        location=node.exclusion_location or "<unknown>",
+                    )
+                else:
+                    exclusion = ConstraintExclusion(
+                        kind="unassessed_form",
+                        reasons=["eligibility_unassessed"],
+                        location=f"{node.source_file}:{node.source_line}",
+                    )
                 excluded_records.append(
                     ConstraintCatalogExcludedRecord(
                         constraint_id=constraint_id,
                         usage_qualified_name=node.usage_qualified_name,
                         source_form=node.source_form,
                         membership_kind=node.membership_kind,
-                        exclusion=ConstraintExclusion(
-                            kind="non_numerical",
-                            reasons=list(node.exclusion_reasons),
-                            location=node.exclusion_location or "<unknown>",
-                        ),
+                        exclusion=exclusion,
                     )
                 )
                 continue
@@ -927,7 +993,10 @@ class _Projection:
                 )
             definition_qn = node.definition_qualified_name or None
             if definition_qn is not None:
-                source_formals[definition_qn].update(self._predicate_identities(node))
+                source_formals[definition_qn].update(
+                    self._constraint_formal_identity(node, port).raw_name
+                    for port in node.input_metadata
+                )
             entry = ConstraintCatalogEntry(
                 constraint_id=constraint_id,
                 usage_qualified_name=node.usage_qualified_name,
@@ -937,10 +1006,10 @@ class _Projection:
                 definition_qualified_name=definition_qn,
                 owner_instance_path=owner_path,
                 membership_kind=node.membership_kind,
-                predicate_source_key=node.predicate_source_key,
+                predicate_source_key=_predicate_source_key(node),
                 is_negated=node.is_negated,
                 expected_value=not node.is_negated,
-                predicate_ir=node.predicate_ir,
+                predicate_ir=serialize_expression(node.predicate_ir),
                 evaluation_channel=channel,
             )
             entries.append(entry)

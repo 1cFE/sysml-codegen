@@ -2,8 +2,11 @@
 
 from __future__ import annotations
 
+from collections import Counter
+
 from sysml_codegen.elaboration import NodeRef, ProducerRef, elaborate, project
 from sysml_codegen.extraction.extractor import SysMLDataExtractor
+from sysml_codegen.extraction.source_evidence import ReadinessCode
 from sysml_codegen.orchestration.pipeline_builder import build_pipeline_context
 from sysml_codegen.resolution.models import EntryPointType, ModuleKind
 from tests.conftest import FIXTURES_DIR, requires_license
@@ -43,6 +46,14 @@ def _parameters(graph):
         parameter.qualified_name: parameter
         for group in graph.entry_point_groups
         for parameter in group.parameters
+    }
+
+
+def test_return_styles_reaches_the_three_authored_self_bindings() -> None:
+    graph = _internal("return_styles", strict=False)
+
+    assert Counter(item.code for item in graph.diagnostics) == {
+        ReadinessCode.SI_SELF_BINDING: 3
     }
 
 

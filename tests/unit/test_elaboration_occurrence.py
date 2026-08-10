@@ -134,6 +134,93 @@ def test_finite_constant_integer_expression_expands_occurrences() -> None:
     }
 
 
+def test_native_effective_children_feed_concrete_occurrences() -> None:
+    model = _load("elab_native_plural_scope")
+    slots = build_feature_slot_index(model)
+    occurrences = build_occurrence_index(model, slots)
+
+    plant_usage = _by_qn(model, "PartUsage", "ElabNativePluralScope::plant")
+    selected_usage = _by_qn(
+        model,
+        "PartUsage",
+        "ElabNativePluralScope::plant::selected",
+    )
+    shadow_usage = _by_qn(
+        model,
+        "PartUsage",
+        "ElabNativePluralScope::Plant::shadow",
+    )
+    specialized_leaf = _by_qn(
+        model,
+        "PartUsage",
+        "ElabNativePluralScope::SpecializedContainer::leaf",
+    )
+    base_leaf = _by_qn(
+        model,
+        "PartUsage",
+        "ElabNativePluralScope::BaseContainer::leaf",
+    )
+    model_part_usage_ids = {
+        DeclarationId(SysideAdapter.element_id(usage))
+        for usage in SysideAdapter.elements_of_type(model, "PartUsage")
+    }
+
+    def native_child_ids(usage: Any) -> set[DeclarationId]:
+        return {
+            child_id
+            for child in (getattr(usage, "usages", ()) or ())
+            if SysideAdapter.is_instance(child, "PartUsage")
+            and (child_id := DeclarationId(SysideAdapter.element_id(child)))
+            in model_part_usage_ids
+        }
+
+    plant = occurrences.occurrences_for_declaration(
+        DeclarationId(SysideAdapter.element_id(plant_usage))
+    )[0]
+    expected_children = {
+        DeclarationId(SysideAdapter.element_id(selected_usage)),
+        DeclarationId(SysideAdapter.element_id(shadow_usage)),
+    }
+    assert native_child_ids(plant_usage) == expected_children
+    assert set(plant.child_declaration_ids) == native_child_ids(plant_usage)
+
+    concrete_children = occurrences.children(plant.occurrence_id)
+    assert {child.effective_usage_id for child in concrete_children} == expected_children
+    selected = next(
+        child
+        for child in concrete_children
+        if child.effective_usage_id == DeclarationId(SysideAdapter.element_id(selected_usage))
+    )
+    shadow = next(
+        child
+        for child in concrete_children
+        if child.effective_usage_id == DeclarationId(SysideAdapter.element_id(shadow_usage))
+    )
+
+    selected_leaves = occurrences.children(selected.occurrence_id)
+    shadow_leaves = occurrences.children(shadow.occurrence_id)
+    assert native_child_ids(selected_usage) == {
+        DeclarationId(SysideAdapter.element_id(base_leaf)),
+        DeclarationId(SysideAdapter.element_id(specialized_leaf)),
+    }
+    assert set(selected.child_declaration_ids) == {
+        DeclarationId(SysideAdapter.element_id(specialized_leaf))
+    }
+    assert set(shadow.child_declaration_ids) == native_child_ids(shadow_usage)
+    assert {leaf.effective_usage_id for leaf in selected_leaves} == {
+        DeclarationId(SysideAdapter.element_id(specialized_leaf))
+    }
+    assert {leaf.effective_usage_id for leaf in shadow_leaves} == {
+        DeclarationId(SysideAdapter.element_id(base_leaf))
+    }
+    assert {
+        leaf.occurrence_id.steps[-1].occurrence_index for leaf in selected_leaves
+    } == {0, 1}
+    assert {
+        leaf.occurrence_id.steps[-1].occurrence_index for leaf in shadow_leaves
+    } == {0, 1}
+
+
 @pytest.mark.parametrize(
     ("fixture", "expected_code"),
     [

@@ -89,6 +89,14 @@ class TestReqExt10DirectionCarryingReferenceUsage:
         assert "y" in {a.name for a in cd.output_attributes}
         assert cd.output_expression_asts.get("y")
 
+    def test_every_supported_return_style_carries_exact_member_ids(self) -> None:
+        """AttributeUsage and direction-carrying ReferenceUsage share the UUID boundary."""
+        for calc_def in _live_calc_defs("return_styles").values():
+            assert calc_def.element_id is not None
+            members = calc_def.input_attributes + calc_def.output_attributes
+            assert all(member.element_id is not None for member in members)
+            assert {member.element_id for member in members} <= calc_def.all_member_ids
+
 
 @pytest.mark.req(id="REQ-EXT-12")
 class TestReqExt12NoDoubleIngestion:

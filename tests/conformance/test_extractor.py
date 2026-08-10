@@ -618,6 +618,26 @@ class TestReqExt07AstFields:
             f"all_member_names type is {field_type}, expected set[str]"
         )
 
+    def test_live_exact_identity_sidecar_fields_exist(self):
+        """Exact-route calc/member UUID fields are explicit live-only sidecars."""
+        from sysml_codegen.extraction.data_models import (
+            AttributeInfo,
+            CalculationDefinitionData,
+        )
+
+        calc_fields = {field.name: field for field in dataclasses.fields(CalculationDefinitionData)}
+        attr_fields = {field.name: field for field in dataclasses.fields(AttributeInfo)}
+        expected = {
+            "element_id",
+            "output_expression_asts_by_id",
+            "all_member_ids",
+            "member_expressions_by_id",
+            "member_names_by_id",
+        }
+        assert expected <= set(calc_fields)
+        assert all(calc_fields[name].metadata.get("snapshot_exclude") for name in expected)
+        assert attr_fields["element_id"].metadata.get("snapshot_exclude") is True
+
     def test_snapshot_ast_fields_nullified_in_raw_json(self):
         """Raw snapshot JSON has null AST fields (serialization boundary).
 
@@ -648,6 +668,11 @@ class TestReqExt07AstFields:
                 f"member_expressions should be null/empty, "
                 f"got {member_val!r}"
             )
+            assert "element_id" not in cd
+            assert "output_expression_asts_by_id" not in cd
+            assert "all_member_ids" not in cd
+            assert "member_expressions_by_id" not in cd
+            assert "member_names_by_id" not in cd
 
 
 # ---------------------------------------------------------------------------

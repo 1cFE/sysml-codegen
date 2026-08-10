@@ -21,6 +21,7 @@ from sysml_codegen.elaboration import (
     elaborate,
     project,
 )
+from sysml_codegen.elaboration.graph import LiteralInput, NodeRef, ProducerRef
 from sysml_codegen.extraction.extractor import SysMLDataExtractor
 from sysml_codegen.extraction.source_evidence import ReadinessCode
 from sysml_codegen.generation.entry_point import generate_all_derived_jsons
@@ -48,6 +49,13 @@ class ExpectedEdge:
 
 
 @dataclass(frozen=True)
+class ExpectedAlias:
+    alias_name: str
+    canonical_channel: str
+    instance_path: str
+
+
+@dataclass(frozen=True)
 class RuntimeEvidence:
     fixture: str
     defaults: tuple[tuple[str, float], ...]
@@ -55,6 +63,7 @@ class RuntimeEvidence:
     mutation: tuple[str, str] | None
     changed_defaults: tuple[str, ...]
     public_override: tuple[str, float] | None = None
+    aliases: tuple[ExpectedAlias, ...] = ()
 
 
 MIXED = "source_identity_mixed_consumers"
@@ -382,6 +391,13 @@ RUNTIME_CELLS = {
         ),
         ("attribute base_cost : Real = 2.0;", "attribute base_cost : Real = 2.5;"),
         (f"{AGGS}__permitting__base_cost",),
+        aliases=(
+            ExpectedAlias(
+                "capital_cost",
+                "ElabMatrixAggregations__host__permitting__cost_model__cost",
+                "host__permitting",
+            ),
+        ),
     ),
     "C19": RuntimeEvidence(
         "nested_occurrence_override_probe",
@@ -578,20 +594,77 @@ def _matching_module(graph, edge: ExpectedEdge):
     return matches[0]
 
 
-def _assert_public_topology(graph, evidence: RuntimeEvidence) -> None:
+def _assert_expected_defaults(graph, evidence: RuntimeEvidence) -> None:
     defaults = _defaults(graph)
     for qualified_name, expected in evidence.defaults:
         assert defaults[qualified_name] == expected
 
+
+def _public_source(input_) -> str:
+    if input_.source.source_type == "module_output":
+        return f"channel:{input_.source.producer_channel}"
+    return input_.source.qualified_name
+
+
+def _assert_complete_public_topology(graph, evidence: RuntimeEvidence) -> None:
+    tracked_sources = {edge.source for edge in evidence.edges}
+    actual = [
+        (module, input_, _public_source(input_))
+        for module in graph.modules
+        for input_ in module.inputs
+        if _public_source(input_) in tracked_sources
+    ]
+
     for edge in evidence.edges:
         module = _matching_module(graph, edge)
         [input_] = [item for item in module.inputs if item.param_name == edge.param_name]
-        if edge.source.startswith("channel:"):
-            assert input_.source.source_type == "module_output"
-            assert input_.source.producer_channel == edge.source.removeprefix("channel:")
-        else:
-            assert input_.source.source_type == "entry_point"
-            assert input_.source.qualified_name == edge.source
+        assert _public_source(input_) == edge.source
+
+    assert len(actual) == len(evidence.edges), [
+        (module.name, module.module_kind, input_.param_name, source)
+        for module, input_, source in actual
+    ]
+    for module, input_, source in actual:
+        matches = [
+            edge
+            for edge in evidence.edges
+            if module.module_kind is edge.module_kind
+            and (
+                module.name == edge.module_prefix
+                or module.name.startswith(f"{edge.module_prefix}__")
+            )
+            and input_.param_name == edge.param_name
+            and source == edge.source
+        ]
+        assert len(matches) == 1, (module.name, input_.param_name, source)
+
+    tracked_channels = {
+        source.removeprefix("channel:")
+        for source in tracked_sources
+        if source.startswith("channel:")
+    }
+    actual_aliases = {
+        ExpectedAlias(alias.alias_name, alias.canonical_channel, alias.instance_path)
+        for alias in graph.output_aliases
+        if alias.canonical_channel in tracked_channels
+    }
+    assert actual_aliases == set(evidence.aliases)
+
+
+def _typed_route_inventory(graph) -> set[tuple[object, object, str, object]]:
+    inventory = set()
+    for consumer in (*graph.calcs.values(), *graph.constraints.values()):
+        for port, edge in consumer.inputs.items():
+            if isinstance(edge, NodeRef):
+                kind, target = "node", edge.target
+            elif isinstance(edge, ProducerRef):
+                kind, target = "producer", edge.target
+            elif isinstance(edge, LiteralInput):
+                kind, target = "literal", (consumer.node_id, port)
+            else:
+                raise AssertionError(f"unknown typed edge {edge!r}")
+            inventory.add((consumer.node_id, port, kind, target))
+    return inventory
 
 
 def _generated_payload(graph, output_dir: Path) -> dict[str, object]:
@@ -633,7 +706,7 @@ def _assert_generated_pipeline(graph, evidence: RuntimeEvidence) -> None:
             assert rendered_source.endswith(f".{edge.source}")
 
 
-def _mutated_graph(evidence: RuntimeEvidence, output_dir: Path):
+def _mutated_model_path(evidence: RuntimeEvidence, output_dir: Path) -> Path:
     assert evidence.mutation is not None
     source_dir = FIXTURES_DIR / evidence.fixture
     changed_dir = output_dir / evidence.fixture
@@ -643,7 +716,7 @@ def _mutated_graph(evidence: RuntimeEvidence, output_dir: Path):
     source = model_path.read_text()
     assert source.count(before) == 1, (evidence.fixture, before)
     model_path.write_text(source.replace(before, after, 1))
-    return project(_load_internal(changed_dir))
+    return changed_dir
 
 
 def _assert_runtime_cell(evidence: RuntimeEvidence, tmp_path: Path) -> None:
@@ -655,8 +728,10 @@ def _assert_runtime_cell(evidence: RuntimeEvidence, tmp_path: Path) -> None:
     live = project(internal)
     rebuilt = project(decode_instance_graph(relocated.read_bytes()))
     assert rebuilt == live
-    _assert_public_topology(live, evidence)
-    _assert_public_topology(rebuilt, evidence)
+    _assert_expected_defaults(live, evidence)
+    _assert_expected_defaults(rebuilt, evidence)
+    _assert_complete_public_topology(live, evidence)
+    _assert_complete_public_topology(rebuilt, evidence)
 
     baseline_payload = _generated_payload(live, tmp_path / "baseline")
     _assert_generated_pipeline(live, evidence)
@@ -665,7 +740,12 @@ def _assert_runtime_cell(evidence: RuntimeEvidence, tmp_path: Path) -> None:
         qualified_name, value = evidence.public_override
         changed_payload = _override_generated_input(tmp_path / "baseline", qualified_name, value)
     else:
-        changed = _mutated_graph(evidence, tmp_path / "changed-model")
+        changed_internal = _load_internal(
+            _mutated_model_path(evidence, tmp_path / "changed-model")
+        )
+        assert _typed_route_inventory(changed_internal) == _typed_route_inventory(internal)
+        changed = project(changed_internal)
+        _assert_complete_public_topology(changed, evidence)
         _assert_generated_pipeline(changed, evidence)
         changed_payload = _generated_payload(changed, tmp_path / "changed")
 

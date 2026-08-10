@@ -5,6 +5,8 @@ from __future__ import annotations
 from uuid import UUID
 
 import pytest
+from agentic_mbse.sysml.expression_facts import FeatureReferenceFact
+from agentic_mbse.sysml.expression_ir import FeatureReferenceNode, OperatorNode
 
 from sysml_codegen.elaboration import (
     AttrNode,
@@ -22,7 +24,9 @@ from sysml_codegen.elaboration import (
     NodeRef,
     OutputPortId,
     PackageScopeId,
+    PortMetadata,
 )
+from sysml_codegen.extraction.expression_compiler import Compilability
 
 
 def _declaration(value: int) -> DeclarationId:
@@ -110,12 +114,32 @@ def test_output_and_expression_keys_do_not_collapse_on_rendered_name() -> None:
         calc_def_qualified_name="pkg::Collision",
         inputs={first_port: LiteralInput(1.0), second_port: LiteralInput(2.0)},
         input_names={first_port: "same_name", second_port: "same_name"},
+        input_metadata={first_port: PortMetadata(), second_port: PortMetadata()},
         outputs={
             first_output: OutputPortId(calculation_id, first_output),
             second_output: OutputPortId(calculation_id, second_output),
         },
         output_names={first_output: "same_name", second_output: "same_name"},
+        output_metadata={
+            first_output: PortMetadata(),
+            second_output: PortMetadata(),
+        },
         is_computed=True,
+        expression_ir=OperatorNode(
+            operator="+",
+            operands=[
+                FeatureReferenceNode(
+                    FeatureReferenceFact("same_name", None, [], []),
+                    None,
+                ),
+                FeatureReferenceNode(
+                    FeatureReferenceFact("same_name", None, [], []),
+                    None,
+                ),
+            ],
+            operand_type=None,
+        ),
+        compilability=Compilability.FULLY_COMPILABLE,
     )
     graph = InstanceGraph(calcs={calculation_id: calculation})
 

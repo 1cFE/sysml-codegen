@@ -1,6 +1,7 @@
 """Unit tests for the expression compiler module."""
 
 from types import SimpleNamespace
+from uuid import UUID
 
 import pytest
 
@@ -516,6 +517,71 @@ def _make_calc_def(name, input_names, output_names):
         source_file=Path("test.sysml"),
     )
 
+
+def test_exact_compiler_keeps_colliding_reference_ids_distinct(
+    mock_syside_adapter, monkeypatch
+):
+    """Rendered-name collisions cannot collapse exact compiler dependencies."""
+    from pathlib import Path
+    from types import SimpleNamespace
+
+    from sysml_codegen.extraction.data_models import AttributeInfo, CalculationDefinitionData
+    from sysml_codegen.extraction.expression_compiler import compile_calc_def_exact
+
+    definition_id = UUID("00000000-0000-5000-8000-000000000100")
+    first_id = UUID("00000000-0000-5000-8000-000000000101")
+    second_id = UUID("00000000-0000-5000-8000-000000000102")
+    output_id = UUID("00000000-0000-5000-8000-000000000103")
+    expression = MockOperatorExpression(
+        "+",
+        [
+            MockFeatureReferenceExpression("same_name"),
+            MockFeatureReferenceExpression("same_name"),
+        ],
+    )
+    references = [
+        SimpleNamespace(
+            name="same_name",
+            qualified_name="A::same_name",
+            element=SimpleNamespace(element_id=first_id),
+        ),
+        SimpleNamespace(
+            name="same_name",
+            qualified_name="B::same_name",
+            element=SimpleNamespace(element_id=second_id),
+        ),
+    ]
+    monkeypatch.setattr(
+        "sysml_codegen.extraction.expression_compiler.extract_feature_refs",
+        lambda _expression, ignore_std_lib=True: references,
+    )
+    calc_def = CalculationDefinitionData(
+        name="Collision",
+        qualified_name="Test::Collision",
+        doc_comment="",
+        calc_expressions=[],
+        input_attributes=[
+            AttributeInfo(name="same_name", element_id=first_id),
+            AttributeInfo(name="same_name", element_id=second_id),
+        ],
+        output_attributes=[AttributeInfo(name="result", element_id=output_id)],
+        references=[],
+        source_file=Path("test.sysml"),
+        element_id=definition_id,
+        output_expression_asts_by_id={output_id: expression},
+        all_member_ids={first_id, second_id, output_id},
+        member_names_by_id={
+            first_id: "same_name",
+            second_id: "same_name",
+            output_id: "result",
+        },
+    )
+
+    result = compile_calc_def_exact(calc_def)
+
+    output = result.output_results[0]
+    assert output.output_id == output_id
+    assert output.input_ids == (first_id, second_id)
 
 @pytest.fixture
 def mock_extract_feature_refs(monkeypatch):

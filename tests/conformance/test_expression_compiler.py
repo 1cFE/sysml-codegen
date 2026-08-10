@@ -27,7 +27,6 @@ from agentic_mbse.sysml import expression as shared_expression
 
 from sysml_codegen.extraction import expression_utils as expression_utils_shim
 from sysml_codegen.extraction.calc_compat_renderer import (
-    collect_calc_refs,
     render_calc_expression,
 )
 from sysml_codegen.extraction.expression_compiler import (
@@ -199,6 +198,16 @@ def _extract_name_sets(calc_def):
     return input_names, output_names
 
 
+def test_exact_compiler_surface_does_not_replace_the_legacy_adapter():
+    """The exact route has an explicit UUID API; legacy callers retain their adapter."""
+    from sysml_codegen.extraction.expression_compiler import (
+        compile_calc_def,
+        compile_calc_def_exact,
+    )
+
+    assert compile_calc_def_exact is not compile_calc_def
+
+
 # ---------------------------------------------------------------------------
 # REQ-EC-01 retired (CONSTRAINT-EXEC Item 13): its FCE-before-OE dispatch tests exercised
 # build_expression_ast directly. That raw-node dispatch responsibility moved cross-repo to
@@ -219,7 +228,9 @@ class TestReqEc02NaryLeftFold:
     def test_3_operand_left_fold_structure(self):
         """3 operands → ((a + b) + c)."""
         ir = _ir_nary("+", "a", "b", "c")
-        assert render_calc_expression(ir, {"a", "b", "c"}, set()) == "((inputs.a + inputs.b) + inputs.c)"
+        assert render_calc_expression(ir, {"a", "b", "c"}, set()) == (
+            "((inputs.a + inputs.b) + inputs.c)"
+        )
 
     def test_7_operand_left_fold_structure(self):
         """7 operands → 6 levels of nesting, all left-associated."""

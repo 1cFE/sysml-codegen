@@ -19,11 +19,13 @@ from sysml_codegen.elaboration import (
     NodeKind,
     NodeRef,
     PackageScopeId,
+    PortMetadata,
     ProjectionError,
     ValueSite,
     elaborate,
     project,
 )
+from sysml_codegen.extraction.expression_compiler import Compilability
 from sysml_codegen.extraction.extractor import SysMLDataExtractor
 from sysml_codegen.resolution.models import EntryPointType, ModuleKind
 from tests.conftest import FIXTURES_DIR, requires_license
@@ -137,6 +139,13 @@ def test_public_rendering_collision_blocks_without_merging_nodes() -> None:
                 calc_def_qualified_name="pkg::Consumer",
                 inputs={first_port: NodeRef(first_id), second_port: NodeRef(second_id)},
                 input_names={first_port: "a", second_port: "b"},
+                input_metadata={
+                    first_port: PortMetadata(),
+                    second_port: PortMetadata(),
+                },
+                calculation_definition_id=_declaration(5),
+                compilation_definition_id=_declaration(5),
+                compilability=Compilability.MANUAL_REQUIRED,
             )
         },
     )

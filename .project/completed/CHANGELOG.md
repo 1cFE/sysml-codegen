@@ -4,6 +4,61 @@ Historical record of completed work.
 
 ---
 
+## [2026-08-10] - [ELABORATE-FIRST Item 6] Exact-Identity Completion — Payload, Occurrence, Projection
+
+**Type**: Item (three audit rounds: phases-1/2 Needs Work, phases-3/4 Needs Work, full-item v3
+Needs Work → certified 2026-08-10 after targeted re-audit of F7–F9)
+**Duration**: spec 2026-08-09 → certified 2026-08-10
+
+### Summary
+Closed the remaining exact-identity gaps on the internal elaborate-then-project route before the
+Item-7 authority switch. Calculation definitions, formals, outputs, compilation results, port
+metadata, and constraint profile decisions now attach by exact SysIDE declaration UUID — display
+renames, normalized-name collisions, duplicate QNs, and enumeration reorders cannot move
+executable payload, and missing/duplicate/mismatched identity blocks with named `SI_*`
+diagnostics instead of defaulting to `UNKNOWN`/`float`/null-metadata/`ADMIT`. SysIDE's native
+`Usage.usages` view became the sole effective-child-declaration authority (codegen keeps only
+finite concrete expansion; audit-F31 closed with a scoped valid-model witness). The validated
+graph gained structured occurrence records, typed `ExpressionIR`, declaration-bound formal
+provenance, and closed eligibility/compilability inside a fingerprinted internal
+`instance-graph/v2`; projection became one-way (ownership/aliases from occurrence records,
+execution order from `ProducerRef` edges, entry classification from `ValueSite`) with semantic
+collision guards on every public spelling. Nine audit findings across three rounds were
+remediated and independently verified — headline fixes: the public constraint source key is
+rendered from model metadata, not a parser UUID (F1); formal provenance flows through typed ports
+instead of a rendered-name join with a fabricated fallback (F5); profile `BLOCK` halts with the
+new `SI_CONSTRAINT_BLOCKED` D10 diagnostic on strict, lenient, and snapshot round-trip routes
+where it previously generated an executable module (F7); and the F30 boundary guard is
+deny-by-default over every function in all six boundary files with five named, mechanically
+exercised exemptions (F9). Every runtime-source matrix cell proves off-default mutation reaching
+every and only its bound consumers at the generated public boundary. The shipped legacy route,
+snapshot v5 bytes, neutral constraint-fact schema, and generated baselines stayed frozen
+throughout; Item 7's deletion ledger now names the four Item-6 transitional dual mechanisms.
+
+### Deliverables
+- `20260810_elaborator-identity-completion/`: spec, design authority map, five-phase plan with
+  red-first evidence and three remediation records, audit rounds (`audit.md`, `audit_v2.md`,
+  `audit_v3.md` — certification in the v3 re-audit addendum), product-lens ledger (spec-F1 +
+  audit-F1..F9, full resolution-by-citation history, final gate CLEAR).
+- Code: exact-ID sidecars and maps in `extraction/{data_models,extractor,expression_compiler}.py`
+  (`compile_calc_def_exact`); UUID-keyed payload/constraint attachment, `SI_CONSTRAINT_BLOCKED`
+  enforcement, and native-child occurrence authority in `elaboration/{elaborate,occurrence}.py`;
+  occurrence records, typed IR, formal provenance, and closed state in `elaboration/graph.py` +
+  `snapshot/instance_graph.py` (internal v2 codec); one-way projection in
+  `elaboration/project.py`; deny-by-default guard in `tests/unit/test_elaboration_import_boundaries.py`;
+  new fixtures `elab_payload_identity`, `elab_constraint_formal_identity`,
+  `elab_native_plural_scope`; coordinated agentic-mbse identified constraint
+  extraction/evaluator (`extract_identified_constraint_facts`, `evaluate_identified_profile`) on
+  `elaborate-first-salvage`.
+- Gates at certification: codegen 3,358 passed / 47 skipped / 18 deselected (zero license-skip
+  lines); agentic 1,819 / 1 / 33; corpus 37/37 matching the archived Item-5 ledger; frozen
+  artifact hash unchanged (`25e45ad6…`).
+
+### Lessons Learned
+[TODO: Add lessons learned]
+
+---
+
 ## [2026-08-09] - [ELABORATE-FIRST Item 5] Exact-Identity Elaborator Breadth
 
 **Type**: Item (five audit rounds: phases-1/2 partial certify, rendered-path Needs Work, v1/v2

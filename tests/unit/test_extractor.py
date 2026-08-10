@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import ast
 from pathlib import Path
+from types import SimpleNamespace
 from uuid import UUID
 
 
@@ -98,6 +99,60 @@ def test_calculation_definition_data_structure():
     assert "qualified_name" in params
     assert "input_attributes" in params
     assert "output_attributes" in params
+    assert "element_id" in params
+    assert "output_expression_asts_by_id" in params
+    assert "all_member_ids" in params
+    assert "member_expressions_by_id" in params
+    assert "member_names_by_id" in params
+
+
+def test_live_identity_sidecars_are_snapshot_excluded():
+    """Live parser UUIDs cannot leak into the frozen snapshot-v5 envelope."""
+    import dataclasses
+
+    from sysml_codegen.extraction.data_models import (
+        AttributeInfo,
+        CalculationDefinitionData,
+    )
+
+    calc_fields = {field.name: field for field in dataclasses.fields(CalculationDefinitionData)}
+    attr_fields = {field.name: field for field in dataclasses.fields(AttributeInfo)}
+    for name in (
+        "element_id",
+        "output_expression_asts_by_id",
+        "all_member_ids",
+        "member_expressions_by_id",
+        "member_names_by_id",
+    ):
+        assert calc_fields[name].metadata["snapshot_exclude"] is True
+    assert attr_fields["element_id"].metadata["snapshot_exclude"] is True
+
+
+def test_shared_extractor_leaves_unstable_live_identity_sidecar_empty():
+    """Legacy extraction accepts members outside the exact route's UUID boundary."""
+    from sysml_codegen.extraction.extractor import SysMLDataExtractor
+
+    extractor = SysMLDataExtractor([])
+    cases = (
+        (None, UUID("00000000-0000-4000-8000-000000000001")),
+        ("Pkg::Calc::unstable", UUID("00000000-0000-4000-8000-000000000002")),
+    )
+    for qualified_name, element_id in cases:
+        member = SimpleNamespace(
+            name="unstable_member",
+            qualified_name=qualified_name,
+            element_id=element_id,
+            heritage=(),
+            documentation=(),
+            feature_value_expression=None,
+            owned_memberships=(),
+            cst_node=None,
+        )
+
+        extracted = extractor._extract_attribute(member, capture_element_id=True)
+
+        assert extracted is not None
+        assert extracted.element_id is None
 
 
 def test_extract_expression_text_deleted():

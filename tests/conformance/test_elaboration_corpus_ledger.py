@@ -10,7 +10,7 @@ from tests.conftest import requires_license
 
 ROOT = Path(__file__).parents[2]
 FIXTURES = ROOT / "tests/fixtures"
-LEDGER = ROOT / ".project/active/elaborator-breadth/diff-ledger.md"
+LEDGER = ROOT / ".project/completed/20260809_elaborator-breadth/diff-ledger.md"
 RUNNER = ROOT / "scripts/run_elaboration_corpus.py"
 
 pytestmark = requires_license
