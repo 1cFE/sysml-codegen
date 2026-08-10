@@ -79,106 +79,19 @@ the ~3,450-line string-compensation machinery deleted at cutover, not wrapped).
   now also names the four Item-6 transitional duals; F26 legacy-oracle deletion and F19
   customer-scale proof remain cutover obligations.**
 
-### 2026-08-07: SOURCE-IDENTITY Item 4 — architecture recovery assessment
+### 2026-08-07: SOURCE-IDENTITY Item 4 — SUPERSEDED (archived 2026-08-10)
 
-Recovery report:
-`.project/research/20260807-143615_source-identity-recovery-assessment.md`. It records an agent
-recommendation to stop before Phase 3 and reopen the Item-4/Item-5 boundary. The epic, spec review,
-design review, and plan explicitly required a production identity subsystem whose output the legacy
-runtime resolver would ignore until Item 5; the 742-line `analysis/source_identity.py` is therefore
-the designed result, not an isolated implementation embellishment. Across codegen and agentic-mbse,
-phases 1–2 add a net 1,413 production-Python lines, 1,497 test-Python lines, and about 451 fixture /
-provenance lines before snapshot v6 or resolver cutover. The report classifies exact extraction
-facts, occurrence queries, fixtures, and semantic oracles as salvage candidates; it classifies the
-manifest, coordinate ledgers, query recorder, wrapper authority, and attach-but-ignore integration
-as presumptive rewrite/removal candidates. It recommends one vertical replacement that carries a
-small exact source reference through the existing `ProducerRequest` into the actual runtime selector
-and deletes the superseded decision path in the same landing unit. No implementation files were
-deleted, reverted, committed, or reset at assessment time. **Disposed 2026-08-07:** the owner
-ratified the elaborate-first replacement (entry above), which goes further than this report's
-recommended vertical repair — the thread-a-ref-through-the-existing-resolver variant was rejected
-as retaining the ladder skeleton.
-
-The dirty tree is not currently green: a post-audit chain-fact API change returns five values while
-three callers still unpack four, aggregation term-contract tests are stale, and codegen still drops
-the new chain-root/member evidence. The audit's green counts describe the earlier audited state.
-
-### 2026-08-07: SOURCE-IDENTITY Item 4 — Phases 1–2 AUDIT: NEEDS WORK
-
-Audit: `.project/active/source-identity-occurrence-foundation/audit.md`. The owner-grade product
-lens is BLOCKED on C24: calculation projection identifies `producer_calc.result`, while the
-aggregation leg loses its chain root and raises `SI_OCCURRENCE_MISSING`. The audit also reproduced
-identity changing with diagnostic authored spelling, found invocation expressions bypassing
-readiness, and confirmed aggregation scoping still joins legacy rendered paths to structured
-occurrences. The contradicted plan items are reopened. No spec or epic criterion was certified.
-Phases 3–5 remain unstarted.
-
-Implementation evidence retained from the phase pass:
-
-- **Phase 1 (extraction evidence):** immutable `SourceReferenceEvidence` on handled bindings
-  (exact SysIDE referent + bound formal + authored form; `#(i)` retained as
-  INDEXED_SOURCE, never flattened), shared `ResolvedTargetFact` on aggregation terms and nodes,
-  value-site identity on `RedefinitionData`/`DesignAttributeData`, and emit-only D8 readiness
-  screening before registry construction. Invocation expressions are not handled, and aggregation
-  term transport drops the chain root. All new fields are snapshot-excluded; v5 wire bytes were
-  verified unchanged. Evidence types live in `extraction/source_evidence.py` (REQ-EXT-06),
-  re-exported by `analysis/source_identity.py`.
-- **Phase 2 (authority + projection):** `SemanticSourceIdentity` (declaration + structured
-  occurrence), typed coordinates, immutable manifest with duplicate/missing rejection,
-  per-phase `OccurrenceQueryRecorder` (finalize ≠ seal), contextual projection
-  (unique/missing/ambiguous, `SI_OCCURRENCE_*` codes), redefinition remap (usage override →
-  specialized def) that already converges C25's def/usage legs and recovers C21's specialized
-  declaration; `PartInstanceIndex` gained exact raw-QN reverse queries with the same atomic
-  cycle/non-finite failures (constraint-free fail-closed boundary tested). The audit found that
-  `member_path` still comes from diagnostic `authored_segments`, a no-context projection can use
-  global uniqueness, and aggregation eligibility still originates in the legacy path finder.
-- **Gates:** full licensed codegen suite 3189 passed / 52 skipped / 18 deselected (zero
-  license-skip lines), focused phase selection 191 passed / 5 skipped, ruff clean, mypy at the
-  72-error baseline, agentic-mbse 1811 passed / 1 skipped / 33 deselected, and `git diff --check`
-  clean. These green commands do not clear the structural audit findings.
-- **Surfaced for the owner / Phase 3:** (1) D8 fail-closed enforcement scoping — the pinned
-  fixtures (fusion_tea, ife_plant, solar) are full of SRC-01 self-bindings and must keep
-  generating through Item 4, so Phase 1 emits dispositions without halting; the exact
-  enforcement boundary needs the Phase-3 ruling. (2) C18's constructed-fixture premise fails at
-  the SysIDE boundary: a genuinely absent term target refuses to load (`reference-error`), so
-  the POLICY_DIAGNOSTIC outcome is unreachable live for that form — pinned in the fixture's
-  PROVENANCE, ABSENT_REFERENT proven unit-level, reconcile at Phase 5.
-
-### 2026-08-07: SOURCE-IDENTITY Item 4 — implementation plan (background)
-
-Spec: `.project/active/source-identity-occurrence-foundation/spec.md`. It inherits the ratified
-declaration-plus-occurrence contract, the one-bridge constraint, all Item-4-owned Appendix C
-coordinates, snapshot version/fail-closed obligations, and the owner-requested `agentic-mbse`
-diagnostics. An agent recommendation ratified by the owner on 2026-08-07 moves the atomic
-37-extraction-snapshot recapture into Item 4 with the format cutover; the single-version loader and
-snapshot gate make a later Item-6 recapture impossible without leaving Items 4–5 red or adding the
-forbidden compatibility shim. The spec-review findings are incorporated: Item 4 reviews that
-recapture for format/identity correctness, route parity, and unrelated drift; Item 5 owns the C14
-synthesis and C26 public-topology flips; Item 6 owns final post-cutover semantic certification and
-downstream migration. The absorbed repair introduces no parallel walker, the `agentic-mbse`
-wrong-oracle tests must be replaced rather than disabled, and that cross-repository validation leg
-may phase independently of the atomic codegen snapshot unit. Product-lens rev 3 is CLEAR with no
-findings or smells. The owner advanced the revised spec to design on 2026-08-07.
-
-Design: `.project/active/source-identity-occurrence-foundation/design.md`. It chooses one immutable
-source-identity manifest, one authority over the existing structured occurrence index, snapshot v6
-transport with a shared union query transcript, and an identity-derived C19 repair that leaves the
-Item-5 resolver cutover untouched. The design-review findings are incorporated: modeled value sites
-now have an exact definition and coordinate, transcript sealing is separate from manifest
-finalization, replay coverage is route-aware and testable, universal indexing's fail-closed boundary
-is explicit, and structured aggregation scoping must preserve the existing eligible output set. The
-handoff also states plainly that Item 4 does not fix the customer-visible fan-out defect; the legacy
-key table and C14/C26 current-defect pins remain until Item 5. The owner advanced the revised design
-to planning on 2026-08-07.
-
-Plan: `.project/active/source-identity-occurrence-foundation/plan.md`. The owner approved the
-five-phase strategy on 2026-08-07: preserve exact extraction evidence; build the identity authority
-and contextual occurrence projection; integrate the live route and repair C19; cut snapshots
-atomically to v6 with all 37 recaptures; then land the independent `agentic-mbse` diagnostics leg and
-run the full acceptance gates. Phases 1–4 are one atomic codegen landing unit. The plan explicitly
-reconciles extraction-only diagnostic snapshots with fail-before-registry generation, requires
-route-aware transcript coverage, and keeps the Item-5 fan-out defect pins. The written plan is
-awaiting implementation approval.
+The Item-4 shadow-layer architecture (identity manifest beside the legacy resolver that ignored
+it by design) was stopped after Phases 1–2. The audit's owner-grade product lens was BLOCKED on
+C24 and the phases were never certified; the recovery assessment
+(`.project/research/20260807-143615_source-identity-recovery-assessment.md`) led to the owner
+ratifying the elaborate-first replacement — the "major pivot" the ELABORATE-FIRST epic executes.
+Artifacts (spec, design, plan, audit, reviews, product-lens) are archived with superseded
+markers at `.project/completed/20260810_source-identity-occurrence-foundation/`; the epic is
+archived at `.project/completed/20260810_epic_semantic_source_identity.md` (supersession record
+inside). The stopped implementation is preserved on `item4-phases12-forensic` (codegen
+`69eef3b`, agentic-mbse `9724f1d`); the salvage subset landed via ELABORATE-FIRST Item 2.
+Items 1–3 remain the inherited semantic authority (entries below).
 
 ### 2026-08-07: SOURCE-IDENTITY Item 3 — COMPLETE
 

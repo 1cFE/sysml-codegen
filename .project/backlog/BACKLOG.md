@@ -29,21 +29,20 @@ Prioritized list of epics and features.
 
 | Epic | Status | Notes |
 |------|--------|-------|
-| [SOURCE-IDENTITY] One Modeled Value, One Runtime Source | Ready — P0 for study releases; Items 1–2 start in parallel | Restore the library's governing contract: every consumed modeled value resolves to one declaration-plus-occurrence runtime source, never a consumer-local study variable. Eight spike-first items cover language/route evidence, authoritative owner dispositions, identity and resolution repair, corpus/downstream migration, and composed certification. Estimate: 16–26 engineering days. Absorbs `[NESTED-OCCURRENCE-OVERRIDE]`; sequences against `[CONSTRAINT-ARCH-UNIFY]` sub-scope 2. See `epic_semantic_source_identity.md`. |
+| ~~[SOURCE-IDENTITY] One Modeled Value, One Runtime Source~~ | Superseded (2026-08-07; archived 2026-08-10). Archived to: `.project/completed/20260810_epic_semantic_source_identity.md` | Items 1–3 complete and inherited unchanged as the semantic authority (29-cell matrix, dispositions, invariants); the Item-4/5 shadow-layer architecture was stopped after Item-4 Phases 1–2 (recovery assessment) and replaced by [ELABORATE-FIRST](epic_elaborate_first_architecture.md); Items 6–8 intent absorbed into ELABORATE-FIRST Items 7–8. Item-4 artifacts archived to `completed/20260810_source-identity-occurrence-foundation/`; stopped implementation preserved on `item4-phases12-forensic`. |
 | [GAP-CLOSE] Constraint-Expression Gap Closure | Local scope certified; external F1 leg now verified closed (2026-07-20) | The blocking `[GAP-CLOSE-F1-TEAX-NORMALIZATION]` leg is closed in merged teax main (see the closed entry below). Remaining before full certification: Item 5 closeout state and the independent audit's open full-suite wave-gate leg — a certification pass, not new code. See `epic_gap_close.md`. |
 | ~~[CONSTRAINT-LIFECYCLE-REMEDIATION] Constraint Execution Lifecycle Remediation~~ ✅ | Complete (2026-07-20). Archived to: `.project/completed/20260720_epic_constraint_execution_lifecycle_remediation.md` | All 14 items done; composed public proof 41/41 at the pinned set. Merged 2026-07-20: agentic-mbse #11 → sysml-codegen #9 → teax #3. Release record + 41/41 register in `completed/20260720_constraint-lifecycle-composed-proof/`. |
 | ~~[CONSTRAINT-WAVE-REMEDIATION] Constraint PR-Wave Remediation~~ | Superseded — partially completed (2026-07-19). Archived to: `.project/completed/20260720_epic_constraint_pr_wave_remediation.md` | Items 1/2 complete and Items 4/6 certified; all unfinished work was mapped into CONSTRAINT-LIFECYCLE-REMEDIATION (now complete). Retained as history. |
 
-SOURCE-IDENTITY items:
+SOURCE-IDENTITY items (epic superseded 2026-08-07, archived 2026-08-10 — see epic row above):
 - [x] Item 1 — Binding semantics and authoring-form spike (complete 2026-08-05)
-- [ ] Item 2 — Source-identity routes and evidence-sufficiency spike (technical evidence, synthesis,
-      and licensed parity complete; owner aggregation-family disposition remains)
-- [ ] Item 3 — Authoritative source-identity contract
-- [ ] Item 4 — Semantic identity and occurrence foundation (`[NESTED-OCCURRENCE-OVERRIDE]` absorbed)
-- [ ] Item 5 — Unified materialization and backtracking cutover
-- [ ] Item 6 — Semantic corpus migration and public acceptance
-- [ ] Item 7 — Downstream study and consumer remediation
-- [ ] Item 8 — Certification repair and composed source-identity proof
+- [x] Item 2 — Source-identity routes and evidence-sufficiency spike (complete 2026-08-05;
+      aggregation-family disposition ratified at the Item-3 checkpoint)
+- [x] Item 3 — Authoritative source-identity contract (complete + certified 2026-08-07; remains
+      the inherited semantic authority)
+- Items 4–5 — superseded by ELABORATE-FIRST (Item-4 archive:
+  `completed/20260810_source-identity-occurrence-foundation/`)
+- Items 6–8 — intent absorbed into ELABORATE-FIRST Items 7–8
 
 CONSTRAINT-LIFECYCLE-REMEDIATION items (all complete 2026-07-20):
 - [x] Item 0 — Compatible candidate landing and pin (register row 0)

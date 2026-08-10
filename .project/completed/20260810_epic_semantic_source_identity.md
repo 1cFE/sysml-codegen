@@ -1,9 +1,10 @@
 # Epic: One Modeled Value, One Runtime Source
 
 **Epic ID**: SOURCE-IDENTITY
-**Status**: Superseded in part (2026-08-07) — Items 4–5 superseded by
+**Status**: Superseded (2026-08-07; archived 2026-08-10) — Items 4–5 superseded by
 [ELABORATE-FIRST](epic_elaborate_first_architecture.md); Items 1–3 complete and inherited as the
-semantic authority; Items 6–8 intent absorbed into ELABORATE-FIRST Items 6–7
+semantic authority; Items 6–8 intent absorbed into ELABORATE-FIRST Items 7–8. No work remains
+under this epic; every live obligation is tracked in ELABORATE-FIRST.
 **Priority**: Critical (P0 for study releases)
 **Created**: 2026-08-03
 **Estimated Effort**: 3–5 weeks (16–26 engineering days; re-estimate after spikes)

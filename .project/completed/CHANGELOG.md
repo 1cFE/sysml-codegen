@@ -4,6 +4,43 @@ Historical record of completed work.
 
 ---
 
+## [2026-08-10] - [SOURCE-IDENTITY] Epic + Item 4 archived as SUPERSEDED
+
+**Type**: Supersession archive (not a completion)
+**Duration**: epic 2026-08-03 → superseded 2026-08-07 → archived 2026-08-10
+
+### Summary
+Archived the SOURCE-IDENTITY epic (`20260810_epic_semantic_source_identity.md`) and its Item 4
+(`20260810_source-identity-occurrence-foundation/`) with superseded markers. The Item-4
+shadow-layer architecture — a production identity manifest running beside the legacy string
+resolver that ignored it by design — was stopped after Phases 1–2 (audit: Needs Work; product
+lens BLOCKED on C24). The recovery assessment led the owner to ratify the elaborate-first
+replacement on 2026-08-07: the major pivot the ELABORATE-FIRST epic executes, with the string-
+compensation machinery deleted at cutover rather than wrapped. Items 1–3 (binding-semantics
+spike, route-evidence spike, ratified source-identity contract with the 29-cell matrix) remain
+complete and inherited unchanged as the semantic authority; Items 6–8 intent is absorbed into
+ELABORATE-FIRST Items 7–8. The stopped Phase-1–2 implementation is preserved forensically on
+`item4-phases12-forensic` (codegen `69eef3b`, agentic-mbse `9724f1d`); the salvage subset
+landed via ELABORATE-FIRST Item 2.
+
+### Deliverables
+- `20260810_epic_semantic_source_identity.md` — epic with supersession record and final status.
+- `20260810_source-identity-occurrence-foundation/` — Item-4 spec, design, plan (do-not-resume
+  banner), audit (Needs Work), spec/design reviews, product-lens ledger; superseded markers on
+  spec/design/plan.
+- No code shipped from this item; salvaged evidence types/queries/fixtures are recorded in the
+  ELABORATE-FIRST Item 2 entry (codegen `66a61f3`, agentic-mbse `65a35d7`).
+
+### Lessons Learned
+Recorded in the recovery assessment
+(`.project/research/20260807-143615_source-identity-recovery-assessment.md`): the epic/spec/
+design chain explicitly required a parallel identity subsystem the runtime would ignore until a
+later item — artifact-to-artifact gates passed while no observable behavior changed. The
+ELABORATE-FIRST epic rules (product-behavior gates, one-authority gate, fail-fast spikes) are
+the direct answer.
+
+---
+
 ## [2026-08-10] - [ELABORATE-FIRST Item 6] Exact-Identity Completion — Payload, Occurrence, Projection
 
 **Type**: Item (three audit rounds: phases-1/2 Needs Work, phases-3/4 Needs Work, full-item v3

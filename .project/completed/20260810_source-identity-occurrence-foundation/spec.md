@@ -1,6 +1,10 @@
 # Spec: Semantic Identity and Occurrence Foundation
 
-**Status:** Draft
+**Status:** Superseded (2026-08-07; archived 2026-08-10) — the Item-4 architecture was
+stopped after Phases 1–2 and replaced by the elaborate-first front end
+(`.project/backlog/epic_elaborate_first_architecture.md`); salvage landed via
+ELABORATE-FIRST Item 2. See `plan.md` banner and the supersession record in the archived
+SOURCE-IDENTITY epic.
 **Owner:** Reid W
 **Created:** 2026-08-07
 **Complexity:** HIGH
