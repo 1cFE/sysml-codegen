@@ -31,7 +31,7 @@ from urllib.parse import quote, unquote, unquote_to_bytes, urlparse
 
 from agentic_mbse.sysml.syside_adapter import get_syside
 
-from sysml_codegen.orchestration.pipeline_context import SysMLParsingError
+from sysml_codegen.core.errors import SysMLParsingError
 
 __all__ = [
     "PINNED_STANDARD_LIBRARY_COUNT",

@@ -5,11 +5,8 @@ PipelineContext has been moved to sysml_codegen.orchestration.pipeline_context
 also re-exported from orchestration/.
 """
 
-from sysml_codegen.orchestration.pipeline_context import (
-    CodeGenerationError,
-    PipelineContext,
-    SysMLParsingError,
-)
+from sysml_codegen.core.errors import CodeGenerationError, SysMLParsingError
+from sysml_codegen.orchestration.pipeline_context import PipelineContext
 
 __all__ = [
     "CodeGenerationError",

@@ -463,35 +463,3 @@ class TestCodegenRuntimeGapFixes:
             assert "FusionParams" not in content, (
                 f"FusionParams found in {py_file.name} — static template was not removed"
             )
-
-    def test_design_path_filter_cli_flag(self):
-        """FR-4: CLI should expose --design-path-filter flag."""
-        import io
-        import sys
-        from contextlib import redirect_stdout
-        from unittest.mock import patch
-        from sysml_codegen.cli import main
-
-        help_text = ""
-        with patch.object(sys, "argv", ["sysml-codegen", "generate", "--help"]):
-            try:
-                with redirect_stdout(io.StringIO()) as f:
-                    main()
-            except SystemExit:
-                pass
-            help_text = f.getvalue()
-
-        assert "--design-path-filter" in help_text, (
-            "CLI should have --design-path-filter option"
-        )
-
-    def test_generation_config_has_design_path_filter(self):
-        """FR-4: GenerationConfig should have design_path_filter field."""
-        from sysml_codegen.cli import GenerationConfig
-
-        config = GenerationConfig(
-            models_path=Path("/tmp/models"),
-            output_path=Path("/tmp/output"),
-        )
-        assert hasattr(config, "design_path_filter")
-        assert config.design_path_filter == ""

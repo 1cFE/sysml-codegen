@@ -36,9 +36,9 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import NoReturn
 
+from sysml_codegen.core.errors import CodeGenerationError
 from sysml_codegen.elaboration.graph import GraphValidationError, InstanceGraph
 from sysml_codegen.elaboration.project import ProjectionError, project
-from sysml_codegen.orchestration.pipeline_context import CodeGenerationError
 from sysml_codegen.resolution.models import ComputationGraph
 from sysml_codegen.snapshot.instance_graph import (
     InstanceGraphCodecError,

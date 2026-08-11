@@ -1,10 +1,15 @@
-"""Pipeline context dataclass and exception classes.
+"""Legacy pipeline context dataclass.
 
 PipelineContext encapsulates all extracted data and components needed for
 code generation, ensuring consistent initialization across all codegen scripts.
 
 Moved from generation/initialization.py (Step 7.6) to enforce the boundary
 that generation/ consumes only ComputationGraph.
+
+``SysMLParsingError`` and ``CodeGenerationError`` were defined here until Gate
+4B-G0 moved them to ``core/errors.py``; the names are re-exported below so the
+legacy modules that still raise and catch them keep the same class objects until
+this module retires with its builder in G3.
 """
 
 from __future__ import annotations
@@ -22,6 +27,7 @@ from sysml_codegen.analysis.parameter_groups import (
     ParameterGroupDeriver,
 )
 from sysml_codegen.analysis.part_instance_index import InstanceOccurrence
+from sysml_codegen.core.errors import CodeGenerationError, SysMLParsingError
 from sysml_codegen.core.models import ChannelAlias
 from sysml_codegen.core.output_registry import OutputRegistry
 from sysml_codegen.extraction.data_models import (
@@ -37,38 +43,10 @@ from sysml_codegen.resolution.models import ComputationGraph, ConcreteConstraint
 if TYPE_CHECKING:
     from agentic_mbse.sysml.constraint_facts import ConstraintFacts
 
-    from sysml_codegen.generation.constraint_name_safety import ConstraintNameViolation
 
-
-class SysMLParsingError(Exception):
-    """Error during SysML model parsing.
-
-    Raised when:
-    - Model paths do not exist
-    - SysML syntax errors in model files
-    - Model loading fails for any reason
-    """
-
-    pass
-
-
-class CodeGenerationError(Exception):
-    """Error during code generation.
-
-    Raised when:
-    - No calculation definitions found in models
-    - Required model elements are missing
-    - Generation process fails
-    """
-
-    def __init__(
-        self,
-        message: str,
-        *,
-        name_safety_violation: ConstraintNameViolation | None = None,
-    ) -> None:
-        super().__init__(message)
-        self.name_safety_violation = name_safety_violation
+#: Re-exported from ``core/errors.py`` (Gate 4B-G0). Same class objects, so every
+#: existing ``raise``/``except`` against these names is unaffected.
+__all__ = ["CodeGenerationError", "PipelineContext", "SysMLParsingError"]
 
 
 @dataclass

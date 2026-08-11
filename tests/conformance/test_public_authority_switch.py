@@ -281,7 +281,6 @@ def test_generation_config_carries_no_route_selector() -> None:
         "overwrite",
         "preserve_handwritten",
         "smart_regen",
-        "design_path_filter",
     }
 
 
@@ -334,32 +333,44 @@ def test_the_snapshot_subcommand_emits_what_generate_accepts(tmp_path: Path) -> 
 
 
 # ---------------------------------------------------------------------------
-# --design-path-filter: refused rather than silently ignored
+# --design-path-filter: gone from the public surface (Gate 4B-G0, row L-025)
 # ---------------------------------------------------------------------------
 
 
-def test_design_path_filter_is_refused_rather_than_quietly_ignored(
-    tmp_path: Path, caplog: pytest.LogCaptureFixture
-) -> None:
-    """The filter is a legacy-deriver concept with no meaning on the exact route.
+def test_design_path_filter_is_gone_from_the_public_surface(tmp_path: Path) -> None:
+    """Slice 3E made the filter a typed refusal; Phase 4 removes the flag itself.
 
-    Accepting it and no-opping would be the silent-wrong-output class this
-    cutover exists to close, so it is a typed refusal that names why.
+    The filter selected which design files the *legacy* parameter-group deriver
+    read. The exact route derives groups from the instance graph, where it has no
+    meaning, so there is nothing left to honour or to refuse — the argument is
+    simply not one this CLI takes, and argparse says so before any model loads.
     """
-    output = tmp_path / "package"
-    with caplog.at_level(logging.ERROR):
-        assert (
-            _generate(FIXTURES_DIR / "d38_caret", output, design_path_filter="designs") is False
-        )
-    assert "--design-path-filter" in caplog.text
-    assert not output.exists()
+    import sys
 
-    # The same model without the filter succeeds, so the refusal is the filter's.
-    assert _generate(FIXTURES_DIR / "d38_caret", tmp_path / "clean") is True
+    assert not hasattr(GenerationConfig(output_path=tmp_path / "package"), "design_path_filter")
+
+    original = sys.argv
+    sys.argv = [
+        "sysml-codegen",
+        "generate",
+        "--models",
+        str(FIXTURES_DIR / "d38_caret"),
+        "--output",
+        str(tmp_path / "package"),
+        "--design-path-filter",
+        "designs",
+    ]
+    try:
+        with pytest.raises(SystemExit) as exit_code:
+            main()
+    finally:
+        sys.argv = original
+    assert exit_code.value.code == 2  # argparse: unrecognized arguments
+    assert not (tmp_path / "package").exists()
 
 
-def test_the_snapshot_subcommand_refuses_the_filter_too(tmp_path: Path) -> None:
-    """Both capture and generate refuse it; neither silently bakes it in."""
+def test_the_snapshot_subcommand_takes_no_filter_either(tmp_path: Path) -> None:
+    """Both subcommands lost it together; neither silently bakes one in."""
     import sys
 
     original = sys.argv
@@ -378,7 +389,7 @@ def test_the_snapshot_subcommand_refuses_the_filter_too(tmp_path: Path) -> None:
             main()
     finally:
         sys.argv = original
-    assert exit_code.value.code == 1
+    assert exit_code.value.code == 2
     assert not (tmp_path / "s.json").exists()
 
 
@@ -451,6 +462,33 @@ def test_a_refusal_after_the_context_but_before_the_writer_also_leaves_the_tree(
         overwrite=True,
     )
     assert run_codegen(config) is False
+    assert _tree(populated_output) == before
+
+
+def test_a_registry_class_name_collision_refuses_before_the_writer_runs(
+    populated_output: Path, caplog: pytest.LogCaptureFixture
+) -> None:
+    """The row-36 refusal, typed and ordered — the Slice 3E audit's F5, second half.
+
+    ``unresolvable_attr_probe`` projects two formulas whose registry class names
+    collide past the parent-segment alias. The guard that catches it lives at the
+    registry pass, which runs *after* the output tree is cleared, and it raised a
+    bare ``ValueError``: the operator saw "Unexpected error" with a traceback and
+    kept a 34-file package with no contracts and no seal. Both halves are the
+    subject here — the message is the package's own refusal, and the tree the run
+    was pointed at is exactly as it was.
+    """
+    before = _tree(populated_output)
+    config = GenerationConfig(
+        models_path=FIXTURES_DIR / "unresolvable_attr_probe",
+        output_path=populated_output,
+        package_name="switch_probe",
+        overwrite=True,
+    )
+    with caplog.at_level(logging.ERROR):
+        assert run_codegen(config) is False
+    assert "Code generation failed: Module class name collision survives aliasing" in caplog.text
+    assert "Unexpected error" not in caplog.text
     assert _tree(populated_output) == before
 
 

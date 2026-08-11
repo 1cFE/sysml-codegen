@@ -14,14 +14,11 @@ from __future__ import annotations
 from collections.abc import Sequence
 from pathlib import Path
 
+from sysml_codegen.core.errors import CodeGenerationError, SysMLParsingError
 from sysml_codegen.elaboration import elaborate, project
 from sysml_codegen.elaboration.graph import AttrNode, CalcNode, ConstraintNode, InstanceGraph
 from sysml_codegen.extraction.extractor import SysMLDataExtractor
 from sysml_codegen.extraction.source_manifest import SourceAdmission
-from sysml_codegen.orchestration.pipeline_context import (
-    CodeGenerationError,
-    SysMLParsingError,
-)
 from sysml_codegen.resolution.models import ComputationGraph
 
 __all__ = [

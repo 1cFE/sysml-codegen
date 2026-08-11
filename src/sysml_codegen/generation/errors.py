@@ -5,8 +5,8 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from sysml_codegen.core.errors import CodeGenerationError
     from sysml_codegen.generation.constraint_name_safety import ConstraintNameViolation
-    from sysml_codegen.orchestration.pipeline_context import CodeGenerationError
     from sysml_codegen.resolution.models import ComputationGraph, PipelineModule
 
 
@@ -31,6 +31,24 @@ def validate_constraint_graph_or_raise(graph: ComputationGraph) -> None:
     violation = select_graph_name_safety_violation(graph)
     if violation is not None:
         raise constraint_name_safety_error(violation)
+
+
+def residual_class_name_collision_error(
+    residual: dict[str, list[str]],
+) -> CodeGenerationError:
+    """The refusal for registry class names that survive parent-segment aliasing.
+
+    One message for the two places that can detect it — the generation boundary,
+    which runs before the output tree is touched, and ``generate_registry``
+    itself for callers that reach it directly.
+    """
+    from sysml_codegen.generation import CodeGenerationError
+
+    return CodeGenerationError(
+        "Module class name collision survives aliasing (grandparent collision): "
+        + "; ".join(f"{name!r} <- {sorted(mts)}" for name, mts in sorted(residual.items()))
+        + ". The parent-segment alias cannot disambiguate these; rename one scope."
+    )
 
 
 def unrenderable_module_kind_error(module: PipelineModule, seam_name: str) -> CodeGenerationError:

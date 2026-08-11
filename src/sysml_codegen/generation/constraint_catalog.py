@@ -28,7 +28,7 @@ from sysml_codegen.resolution.models import (
 if TYPE_CHECKING:
     from agentic_mbse.sysml.constraint_facts import ConstraintFacts
 
-    from sysml_codegen.orchestration.pipeline_context import CodeGenerationError
+    from sysml_codegen.core.errors import CodeGenerationError
     from sysml_codegen.resolution.models import ConcreteConstraint
 
 __all__ = [
@@ -39,7 +39,7 @@ __all__ = [
 
 
 def _generation_error(message: str) -> CodeGenerationError:
-    from sysml_codegen.orchestration.pipeline_context import CodeGenerationError
+    from sysml_codegen.core.errors import CodeGenerationError
 
     return CodeGenerationError(message)
 

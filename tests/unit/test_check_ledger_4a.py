@@ -199,3 +199,72 @@ def test_every_conflict_row_states_what_the_orchestrator_must_rule_on(ledger: di
     assert conflicts, "the ledger records at least the two derived conflicts"
     for row in conflicts:
         assert len(row["conflict"]) > 80, row["id"]
+
+
+# ---------------------------------------------------------------------------
+# Row state: Gate 4B marks a row executed, and the checker verifies the claim
+# ---------------------------------------------------------------------------
+
+
+def _row(ledger: dict, row_id: str) -> dict:
+    return next(row for row in ledger["rows"] if row["id"] == row_id)
+
+
+def test_a_row_with_no_state_is_proposed_and_passes(ledger: dict) -> None:
+    """Gate 4A's rows carry no state field; adding the check must not invalidate them."""
+    assert checker.check_states(ledger["rows"]) == []
+
+
+def test_an_executed_row_must_name_its_commit(ledger: dict) -> None:
+    row = _row(ledger, "L-025")
+    row["state"] = "executed"
+    problems = checker.check_states(ledger["rows"])
+    assert any("L-025: executed row names no commit" == problem for problem in problems)
+
+
+def test_a_proposed_row_may_not_claim_a_commit(ledger: dict) -> None:
+    row = _row(ledger, "L-025")
+    row["executed_commit"] = "0" * 40
+    problems = checker.check_states(ledger["rows"])
+    assert any("proposed row names an executed_commit" in problem for problem in problems)
+
+
+def test_an_executed_delete_whose_file_is_still_there_fails(ledger: dict) -> None:
+    """The claim is checked against Git, exactly as the candidate set is."""
+    row = _row(ledger, "L-001")  # constraint_lowering.py, still at HEAD
+    row["state"] = "executed"
+    row["executed_commit"] = "0" * 40
+    problems = checker.check_states(ledger["rows"])
+    assert any("still at HEAD" in problem for problem in problems)
+
+
+def test_an_executed_migrate_whose_file_vanished_fails(ledger: dict) -> None:
+    row = _row(ledger, "L-025")
+    row["path"] = "src/sysml_codegen/never_existed.py"
+    row["state"] = "executed"
+    row["executed_commit"] = "0" * 40
+    problems = checker.check_states(ledger["rows"])
+    assert any("is gone from HEAD" in problem for problem in problems)
+
+
+def test_an_unknown_state_fails(ledger: dict) -> None:
+    _row(ledger, "L-025")["state"] = "half-done"
+    problems = checker.check_states(ledger["rows"])
+    assert any("unknown state" in problem for problem in problems)
+
+
+def test_an_executed_carried_delete_is_not_reported_as_a_missing_carried_row(
+    ledger: dict,
+) -> None:
+    """The two halves must not contradict each other at G2/G3.
+
+    ``check_paths`` requires a carried row to exist at HEAD. A carried row whose
+    disposition is ``delete`` stops existing the moment its group runs, and that is the
+    ledger working, not a defect — so the existence rule yields to the state rule.
+    """
+    row = _row(ledger, "L-029")  # pipeline_builder.py: phase3-carried, delete
+    row["path"] = "src/sysml_codegen/orchestration/already_deleted.py"
+    row["state"] = "executed"
+    row["executed_commit"] = "0" * 40
+    problems = checker.check_paths(ledger)
+    assert not any("does not exist at HEAD" in problem for problem in problems)

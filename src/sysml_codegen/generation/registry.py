@@ -25,6 +25,7 @@ from sysml_codegen.core.identifier_types import (
 )
 
 if TYPE_CHECKING:
+    from sysml_codegen.resolution.models import ComputationGraph
     from sysml_codegen.resolution.models import ParameterGroup as ModelParameterGroup
 
 logger = logging.getLogger(__name__)
@@ -83,14 +84,7 @@ def _resolve_class_name_collisions(
     Returns:
         Updated (all_modules, imports) with aliased class names.
     """
-    # Group modules by class_name to find collisions
-    by_name: dict[str, list[int]] = defaultdict(list)
-    for i, module in enumerate(all_modules):
-        by_name[module["class_name"]].append(i)
-
-    # Find colliding names (more than one module with the same class_name)
-    collisions = {name: indices for name, indices in by_name.items() if len(indices) > 1}
-
+    collisions = _colliding_class_names(all_modules)
     if not collisions:
         return all_modules, imports
 
@@ -107,22 +101,11 @@ def _resolve_class_name_collisions(
         for idx in indices:
             module = all_modules[idx]
             module_type = module["module_type"]
-
-            # Extract parent segment: second-to-last segment of module_type
-            segments = module_type.split(".")
-            if len(segments) >= 2:
-                parent_segment = segments[-2]
-            else:
-                parent_segment = segments[0] if segments else "unknown"
-
-            # PascalCase the parent segment
-            pascal_parent = "".join(word.capitalize() for word in parent_segment.split("_"))
-
-            alias = f"{pascal_parent}_{class_name}"
+            alias = _parent_segment_alias(module_type, class_name)
             module["class_name"] = alias
 
             # Update the corresponding import statement
-            import_path_prefix = ".".join(segments[:-1]).replace(".", ".")
+            import_path_prefix = ".".join(module_type.split(".")[:-1])
             for j, imp in enumerate(imports):
                 if (
                     f"import {class_name}" in imp
@@ -132,24 +115,96 @@ def _resolve_class_name_collisions(
                     imports[j] = f"{imp} as {alias}"
                     break
 
-    # REQ-REG-08: post-alias uniqueness re-check. The alias keys on the parent
-    # segment only (above), so two modules with the same class name AND parent
-    # but different grandparents alias identically -- a residual SC-11 collision
-    # the aliasing cannot resolve. The Item-5 static scan proved no committed
-    # model hits this, so it lands as a hard fail-fast (a silent import
-    # overwrite is worse than a clear error).
+    return all_modules, imports
+
+
+def _colliding_class_names(all_modules: list[dict]) -> dict[str, list[int]]:
+    """Class names shared by more than one entry, mapped to their entry indices."""
+    by_name: dict[str, list[int]] = defaultdict(list)
+    for i, module in enumerate(all_modules):
+        by_name[module["class_name"]].append(i)
+    return {name: indices for name, indices in by_name.items() if len(indices) > 1}
+
+
+def _parent_segment_alias(module_type: str, class_name: str) -> str:
+    """The disambiguating name one colliding module gets: PascalParent_ClassName."""
+    segments = module_type.split(".")
+    if len(segments) >= 2:
+        parent_segment = segments[-2]
+    else:
+        parent_segment = segments[0] if segments else "unknown"
+    pascal_parent = "".join(word.capitalize() for word in parent_segment.split("_"))
+    return f"{pascal_parent}_{class_name}"
+
+
+def _residual_collisions(all_modules: list[dict]) -> dict[str, list[str]]:
+    """REQ-REG-08: class names still shared by two modules after aliasing.
+
+    The alias keys on the parent segment only, so two modules with the same class
+    name AND parent but different grandparents alias identically -- a residual
+    SC-11 collision the aliasing cannot resolve. Pure: reports, decides nothing.
+    """
     post_alias: dict[str, list[str]] = defaultdict(list)
     for module in all_modules:
         post_alias[module["class_name"]].append(module["module_type"])
-    residual = {name: mts for name, mts in post_alias.items() if len(mts) > 1}
-    if residual:
-        raise ValueError(
-            "Module class name collision survives aliasing (grandparent collision): "
-            + "; ".join(f"{name!r} <- {sorted(mts)}" for name, mts in sorted(residual.items()))
-            + ". The parent-segment alias cannot disambiguate these; rename one scope."
+    return {name: mts for name, mts in post_alias.items() if len(mts) > 1}
+
+
+def _registry_class_entries(graph: ComputationGraph) -> list[dict]:
+    """The ``{class_name, module_type}`` entry each module contributes, in registry order.
+
+    One derivation, two consumers: ``generate_registry`` renders these, and
+    ``residual_class_name_collisions`` checks them at the generation boundary
+    before anything is written. Order matches the four import passes below,
+    because the rendered registry is sorted from this list.
+    """
+    from sysml_codegen.resolution.models import ModuleKind
+
+    entries: list[dict] = []
+
+    # Keyed exactly as the import pass keys it, ``None`` included: a calculation
+    # module without a calc_def_name is one entry, not one per occurrence.
+    seen_names: set[str | None] = set()
+    for module in graph.modules:
+        if module.module_kind is not ModuleKind.CALCULATION:
+            continue
+        if module.calc_def_name in seen_names:
+            continue
+        seen_names.add(module.calc_def_name)
+        entries.append(
+            {"class_name": f"{module.calc_def_name}Module", "module_type": module.module_type}
         )
 
-    return all_modules, imports
+    for kind in (ModuleKind.FORMULA, ModuleKind.AGGREGATION):
+        entries.extend(
+            {"class_name": module.module_type.split(".")[-1], "module_type": module.module_type}
+            for module in graph.modules
+            if module.module_kind is kind
+        )
+
+    entries.extend(
+        {"class_name": module.module_type.split(".")[-1], "module_type": module.module_type}
+        for module in graph.modules
+        if module.module_kind in (ModuleKind.CONSTRAINT, ModuleKind.REPORT_AGGREGATOR)
+    )
+    return entries
+
+
+def residual_class_name_collisions(graph: ComputationGraph) -> dict[str, list[str]]:
+    """Registry class names that survive aliasing, by name -> colliding module types.
+
+    Pure (raises nothing, logs nothing), so the generation boundary can run it
+    *before* the output tree is cleared. The Item-5 static scan proved no
+    committed model hits this, but the exact route reaches module sets the legacy
+    route never built, and a silent import overwrite is worse than a refusal.
+    """
+    entries = _registry_class_entries(graph)
+    for class_name, indices in _colliding_class_names(entries).items():
+        for idx in indices:
+            entries[idx]["class_name"] = _parent_segment_alias(
+                entries[idx]["module_type"], class_name
+            )
+    return _residual_collisions(entries)
 
 
 def _generate_schema_imports_from_entry_points(
@@ -202,7 +257,10 @@ def generate_registry(
     Returns:
         Generated Python code
     """
-    from sysml_codegen.generation.errors import validate_constraint_graph_or_raise
+    from sysml_codegen.generation.errors import (
+        residual_class_name_collision_error,
+        validate_constraint_graph_or_raise,
+    )
 
     validate_constraint_graph_or_raise(graph)
 
@@ -211,7 +269,9 @@ def generate_registry(
     )
     group_names = [g.class_name for g in graph.entry_point_groups]
 
-    all_modules: list[dict] = []
+    # One derivation of what the registry names each module, shared with the
+    # boundary check the CLI runs before it touches the output tree.
+    all_modules: list[dict] = _registry_class_entries(graph)
     imports: list[str] = [
         "from simkit.core.registry_builder import create_registry",
         "from simkit.core.pipeline_registry import PipelineModuleRegistry",
@@ -236,12 +296,6 @@ def generate_registry(
     for module in calcusage_modules:
         if module.calc_def_name not in seen_names:
             class_name = f"{module.calc_def_name}Module"
-            all_modules.append(
-                {
-                    "class_name": class_name,
-                    "module_type": module.module_type,
-                }
-            )
             sqn = SysMLQualifiedName(module.calc_def_qualified_name)
             python_path = PythonModulePath.from_sysml(sqn)
             import_module = f"{package_name}.modules.{python_path.import_path}"
@@ -260,12 +314,6 @@ def generate_registry(
         module_type_full = module.module_type
         class_name = module_type_full.split(".")[-1]
 
-        all_modules.append(
-            {
-                "class_name": class_name,
-                "module_type": module_type_full,
-            }
-        )
         import_module = f"{package_name}.modules.{python_path.import_path}"
         formula_imports.append(f"from {import_module} import {class_name}")
     formula_imports.sort()
@@ -280,12 +328,6 @@ def generate_registry(
         module_type_full = module.module_type
         class_name = module_type_full.split(".")[-1]
 
-        all_modules.append(
-            {
-                "class_name": class_name,
-                "module_type": module_type_full,
-            }
-        )
         import_module = f"{package_name}.modules.{python_path.import_path}"
         aggregation_imports.append(f"from {import_module} import {class_name}")
     aggregation_imports.sort()
@@ -303,12 +345,6 @@ def generate_registry(
         filename = parts[-1].lower()
         import_path = f"{directory}.{filename}" if directory else filename
 
-        all_modules.append(
-            {
-                "class_name": class_name,
-                "module_type": module_type_full,
-            }
-        )
         import_module = f"{package_name}.modules.{import_path}"
         constraint_imports.append(f"from {import_module} import {class_name}")
     constraint_imports.sort()
@@ -325,6 +361,13 @@ def generate_registry(
 
     # Resolve class name collisions
     all_modules, imports = _resolve_class_name_collisions(all_modules, imports)
+
+    # REQ-REG-08: refuse rather than emit a registry whose imports overwrite each
+    # other. The public route already refused at the generation boundary, before
+    # clearing the output tree; this is the backstop for a direct caller.
+    residual = _residual_collisions(all_modules)
+    if residual:
+        raise residual_class_name_collision_error(residual)
 
     # Sort module entries by module_type for deterministic output
     all_modules.sort(key=lambda m: m["module_type"])
@@ -356,6 +399,7 @@ generate_registry_function = generate_registry
 __all__ = [
     "_collect_exit_point_primitive_types",
     "generate_registry",
+    "residual_class_name_collisions",
     "generate_registry_from_graph",
     "generate_registry_function",
 ]

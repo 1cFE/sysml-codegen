@@ -56,9 +56,11 @@ def generate_via_legacy_route(config: GenerationConfig) -> bool:
         elif config.models_path is not None:
             from sysml_codegen.orchestration.pipeline_builder import build_pipeline_context
 
-            context = build_pipeline_context(
-                [config.models_path], design_path_filter=config.design_path_filter
-            )
+            # The legacy deriver still takes a design-path filter and defaults it
+            # to accept-all. The public config lost that field with the flag
+            # (Gate 4B-G0) and no repointed specimen ever set it, so the default
+            # is what every specimen already measured.
+            context = build_pipeline_context([config.models_path])
         else:
             raise ValueError("generate_via_legacy_route needs either models_path or from_snapshot")
         graph = context.computation_graph
@@ -126,7 +128,6 @@ def _main(argv: list[str] | None = None) -> int:
         overwrite=args.overwrite,
         preserve_handwritten=args.preserve_handwritten,
         smart_regen=args.smart_regen,
-        design_path_filter=args.design_path_filter,
     )
     return 0 if generate_via_legacy_route(config) else 1
 

@@ -4,8 +4,8 @@ Covers the context builder and CLI wiring:
 - INV-4/B1: a snapshot PipelineContext has null extractor/backtracker and still generates.
 - INV-1: `generate --from-snapshot` completes with no license at runtime.
 - INV-6: no provenance/version text reaches a generated artifact.
-- INV-7/V6: the CLI accepts exactly one extraction input, and rejects
-  `--from-snapshot` + `--design-path-filter`.
+- INV-7/V6: the CLI accepts exactly one extraction input, and takes no
+  `--design-path-filter` at all.
 - Dead-template: the lone generation timestamp has zero render sites.
 
 Requirements: REQ-SNAP-13 through REQ-SNAP-18.
@@ -155,20 +155,21 @@ def test_generate_both_inputs_is_error(tmp_path):
 
 @pytest.mark.req("REQ-SNAP-16")
 def test_from_snapshot_rejects_design_path_filter(tmp_path):
-    """The responsibility survives the switch; the reason it gives changed.
+    """The responsibility survives every step; the refusal moved earlier each time.
 
     Before Slice 3E the combination was refused because the filter was baked
-    into the v5 snapshot at capture. Now the flag is refused for both inputs,
-    because the exact route derives parameter groups from the instance graph
-    and cannot honour a design-path substring at all. Still a hard error, still
-    never a silent no-op, which is what REQ-SNAP-16 is for.
+    into the v5 snapshot at capture. 3E made it a typed run-time refusal for both
+    inputs, because the exact route derives parameter groups from the instance
+    graph and cannot honour a design-path substring at all. Gate 4B-G0 removed
+    the flag, so argparse now refuses it before a snapshot is even opened. Still
+    a hard error, still never a silent no-op, which is what REQ-SNAP-16 is for.
     """
     result = _run_cli(
         "generate", "--from-snapshot", CHAIN_SNAPSHOT,
         "--output", str(tmp_path / "out"), "--design-path-filter", "designs/",
     )
-    assert result.returncode == 1
-    assert "--design-path-filter is not supported" in result.stderr
+    assert result.returncode == 2  # argparse: unrecognized arguments
+    assert "unrecognized arguments: --design-path-filter" in result.stderr
     assert not (tmp_path / "out").exists()
 
 

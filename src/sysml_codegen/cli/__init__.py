@@ -74,7 +74,6 @@ class GenerationConfig:
     overwrite: bool = False
     preserve_handwritten: bool = False
     smart_regen: bool = False
-    design_path_filter: str = ""
 
 
 def _clear_output_directory(config: GenerationConfig) -> None:
@@ -259,7 +258,7 @@ def _reconcile_params_coverage(graph: ComputationGraph) -> None:
     idiom (caught by ``run_codegen``, aborts the run).
     """
     from sysml_codegen.generation import CodeGenerationError
-    from sysml_codegen.resolution.graph_builder import (
+    from sysml_codegen.resolution.uncovered_params import (
         collect_uncovered_params,
         collect_unwired_fallthrough,
     )
@@ -288,6 +287,25 @@ def _reconcile_params_coverage(graph: ComputationGraph) -> None:
             f"reference not yet wired (Items 9-11) or a resolution bug. "
             f"Offenders: {details}"
         )
+
+
+def _preflight_registry_class_names(graph: ComputationGraph) -> None:
+    """Refuse a graph whose registry class names collide beyond aliasing (REQ-REG-08).
+
+    The check belonged to the registry pass alone, which runs after
+    ``_clear_output_directory``: a model that trips it left a half-written
+    package behind and reported "Unexpected error", because the raise was an
+    untyped ``ValueError``. Running the same pure detector here — beside
+    ``_check_duplicate_output_paths`` and ``_reconcile_params_coverage``, before
+    anything is written — is what makes it fail-before-mutate, and the error is
+    the package's own so the operator reads a refusal rather than a traceback.
+    """
+    from sysml_codegen.generation.errors import residual_class_name_collision_error
+    from sysml_codegen.generation.registry import residual_class_name_collisions
+
+    residual = residual_class_name_collisions(graph)
+    if residual:
+        raise residual_class_name_collision_error(residual)
 
 
 def _preflight_constraint_names(graph: ComputationGraph) -> None:
@@ -689,9 +707,6 @@ def cmd_generate(args: argparse.Namespace) -> int:
         logger.error("agentic-mbse is not installed. Please install it first.")
         return 1
 
-    # The filter is refused for both inputs now, in run_codegen, with the reason
-    # it cannot be honoured. The old from-snapshot-only message said the filter
-    # was "baked into the snapshot at capture", which the v6 capture does not do.
     config = GenerationConfig(
         models_path=args.models,
         from_snapshot=args.from_snapshot,
@@ -702,7 +717,6 @@ def cmd_generate(args: argparse.Namespace) -> int:
         overwrite=args.overwrite,
         preserve_handwritten=args.preserve_handwritten,
         smart_regen=args.smart_regen,
-        design_path_filter=args.design_path_filter,
     )
 
     success = run_codegen(config)
@@ -724,14 +738,6 @@ def cmd_snapshot(args: argparse.Namespace) -> int:
         import agentic_mbse  # noqa: F401
     except ImportError:
         logger.error("agentic-mbse is not installed. Please install it first.")
-        return 1
-
-    if args.design_path_filter:
-        logger.error(
-            "--design-path-filter is not supported: a v6 snapshot seals the elaborated "
-            "instance graph and the admitted source manifest, neither of which a design "
-            "path substring can select. Narrow the model paths you pass to --models instead."
-        )
         return 1
 
     from sysml_codegen.snapshot.capture import capture_instance_graph_snapshot
@@ -893,12 +899,6 @@ def main() -> None:
         "--smart-regen", action="store_true", help="Smart regeneration with signature comparison"
     )
     gen_parser.add_argument("--verbose", "-v", action="store_true", help="Enable verbose logging")
-    gen_parser.add_argument(
-        "--design-path-filter",
-        type=str,
-        default="",
-        help="Substring filter for design file paths (default: accept all files)",
-    )
     gen_parser.set_defaults(func=cmd_generate)
 
     # Snapshot subcommand — capture a versioned snapshot from live models (D5)
@@ -914,12 +914,6 @@ def main() -> None:
         type=Path,
         default=None,
         help="Snapshot output path (default: <models>/extraction_snapshot.json)",
-    )
-    snap_parser.add_argument(
-        "--design-path-filter",
-        type=str,
-        default="",
-        help="Substring filter for design file paths (baked into the snapshot)",
     )
     snap_parser.add_argument("--verbose", "-v", action="store_true", help="Enable verbose logging")
     snap_parser.set_defaults(func=cmd_snapshot)
@@ -988,19 +982,6 @@ def run_codegen(config: GenerationConfig) -> bool:
     )
     from sysml_codegen.snapshot.envelope import InstanceGraphSnapshotError
 
-    # ``--design-path-filter`` selects which design files the *legacy* parameter-
-    # group deriver reads. The exact route derives groups from the instance
-    # graph, where the filter has no meaning at all, so honouring the flag is
-    # impossible and ignoring it would silently ship a package the operator did
-    # not ask for. Refuse instead. The flag itself is retired in Phase 4.
-    if config.design_path_filter:
-        logger.error(
-            "--design-path-filter is not supported: parameter groups are derived from the "
-            "model's instance graph, not from design file paths, so the filter cannot change "
-            "what is generated. Narrow the model paths you pass to --models instead."
-        )
-        return False
-
     source = config.from_snapshot if config.from_snapshot is not None else config.models_path
     logger.info(f"Generating code from {source}")
     logger.info(f"Output to {config.output_path}")
@@ -1058,7 +1039,6 @@ def _generate_package_from_graph(graph: ComputationGraph, config: GenerationConf
         SysMLParsingError,
     )
     from sysml_codegen.generation.constraint_plan import build_constraint_generation_plan
-    from sysml_codegen.snapshot import GrandfatheredSnapshotError
 
     try:
         # Validate both generated constraint scopes before overwrite clearing or output creation.
@@ -1072,6 +1052,11 @@ def _generate_package_from_graph(graph: ComputationGraph, config: GenerationConf
         # strict — logs the unwired-remainder summary, then raises V11 on any
         # wired fell-through-valueless input. Before output clear, like 1.5.
         _reconcile_params_coverage(graph)
+
+        # Step 1.7: registry class-name collisions the aliasing cannot resolve.
+        # The check itself lives at the registry pass, which runs after the tree
+        # is cleared; running it here is what makes the refusal fail-before-mutate.
+        _preflight_registry_class_names(graph)
 
         try:
             ensure_package_tree_is_link_free(config.output_path)
@@ -1136,9 +1121,6 @@ def _generate_package_from_graph(graph: ComputationGraph, config: GenerationConf
         logger.info("Code generation complete")
         return True
 
-    except GrandfatheredSnapshotError as e:
-        logger.error(str(e))
-        return False
     except SysMLParsingError as e:
         logger.error(f"SysML parsing failed: {e}")
         return False

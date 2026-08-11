@@ -113,10 +113,15 @@ def check_paths(ledger: dict) -> list[str]:
                 f"{row['id']}: carried origin {origin!r} but the path is in the diff — "
                 "it must claim the diff instead"
             )
-        if row["repo"] == "sysml-codegen" and not path_at_head(row["path"]):
+        # A carried row must still be in the tree — unless its own deletion is the thing
+        # that already happened, which `check_states` verifies from the other side.
+        executed_delete = row.get("state") == "executed" and row["disposition"] == "delete"
+        if row["repo"] == "sysml-codegen" and not executed_delete and not path_at_head(row["path"]):
             problems.append(
                 f"{row['id']}: carried row {row['path']} does not exist at HEAD"
             )
+
+    problems.extend(check_states(rows))
 
     ids = {row["id"] for row in rows}
     for row in rows:
@@ -128,6 +133,45 @@ def check_paths(ledger: dict) -> list[str]:
         if not row.get("reason"):
             problems.append(f"{row['id']}: no reason recorded")
 
+    return problems
+
+
+#: A row is ``proposed`` until its Gate 4B group runs, then ``executed`` with the OID
+#: of the commit that spent it. Absent means ``proposed``, so Gate 4A's rows need no edit.
+ROW_STATES = frozenset({"proposed", "executed"})
+
+
+def check_states(rows: list[dict]) -> list[str]:
+    """An executed row must name its commit, and the tree must agree with what it says.
+
+    This is the same discipline the path check applies to the candidate: a state claim is
+    checked against Git, not believed. An executed ``delete`` row whose file is still at
+    ``HEAD`` did not happen; an executed ``migrate`` or ``retain`` row whose file is gone
+    deleted something the ledger never authorised.
+    """
+    problems: list[str] = []
+    for row in rows:
+        state = row.get("state", "proposed")
+        if state not in ROW_STATES:
+            problems.append(f"{row['id']}: unknown state {state!r}")
+            continue
+        if state == "proposed":
+            if row.get("executed_commit"):
+                problems.append(f"{row['id']}: proposed row names an executed_commit")
+            continue
+        if not row.get("executed_commit"):
+            problems.append(f"{row['id']}: executed row names no commit")
+        if row["repo"] != "sysml-codegen":
+            continue
+        present = path_at_head(row["path"])
+        if row["disposition"] == "delete" and present:
+            problems.append(
+                f"{row['id']}: executed delete but {row['path']} is still at HEAD"
+            )
+        if row["disposition"] in {"migrate", "retain"} and not present:
+            problems.append(
+                f"{row['id']}: executed {row['disposition']} but {row['path']} is gone from HEAD"
+            )
     return problems
 
 

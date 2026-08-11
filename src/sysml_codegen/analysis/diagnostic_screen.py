@@ -70,7 +70,7 @@ def screen_extraction_diagnostics(facts: ConstraintFacts) -> None:
     if not blocking:
         return
 
-    from sysml_codegen.orchestration.pipeline_context import CodeGenerationError
+    from sysml_codegen.core.errors import CodeGenerationError
 
     rendered = "\n".join(f"  - {_render(diagnostic)}" for diagnostic in blocking)
     raise CodeGenerationError(
