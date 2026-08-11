@@ -2490,6 +2490,33 @@ equal the declared set.
   agentic-mbse unchanged and not re-run: nothing in that repository was touched.
 - **Commit:** 804d8a2 (sysml-codegen only; agentic-mbse `N/A` — unchanged).
 
+#### Gate 4A approval — orchestrator record (2026-08-11, under the rule-11 delegation)
+
+The orchestrator read the ledger (structure, both CONFLICTs, all five 4B group tables, the
+retain/archive families, and the findings sections), independently verified the C1 history, and
+approves the ledger with the two conflicts ruled as follows:
+
+- **C1 ruled — delete, with the living owner named.** `analysis/signature_extractor.py` is a
+  dead duplicate, not a lost responsibility: the COST-PATTERN refactor (`d6c725f`) copied the
+  signature/preservation logic into `generation/preservation.py`, which is live production
+  (imported by `generation/__init__.py`, drives `should_regenerate_stencil`) and covered by
+  passing tests (`tests/conformance/test_gen_stencils.py` + `test_generation_boundary.py` +
+  `tests/unit/test_stencils.py`, 73 passed, measured 2026-08-11). Row L-006 gains those nodes as
+  its replacement proof; the module and `tests/unit/test_signature_extractor.py` retire together
+  in G1. The original run deleted the test without this derivation — that remains the recorded
+  difference between an evidenced retirement and an absence-driven one.
+- **C2 ruled — fix inside Phase 4, in G0.** The untyped clear-then-fail refusal (3E audit F5,
+  ledger row 36) is a product defect on the now-public exact route and contradicts the pinned
+  fail-before-mutate property. It gets a typed refusal ordered before the output-tree clear,
+  red→green with an `unresolvable_attr_probe`-shaped specimen, landing with the other L-025
+  items in G0. Carrying a known publicly-reachable defect into the Phase 5 candidate was
+  rejected as an option; the fix is a defect repair with a pinned specimen, within the
+  orchestrator's quality remit, and is flagged in the Phase 5 packet either way.
+
+Approved 4B order: G0 → G1 → (4C specimen authoring for the 14 pending rows + the 120-file
+blast-radius dispositions) → G2 → G3 → G4, with the full battery per group as tabled. The
+`replacement_is_green` gate is binding at every group boundary.
+
 ### Phase 5 Completion
 
 - **Completed:** Pending
