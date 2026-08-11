@@ -159,7 +159,10 @@ switching or deletion until this passes.
 - [x] Phase 2 — Create clean rebuild worktrees, correct the Item 7 plan, and measure Item 6
 - [x] Phase 3 — Rebuild and commit the cutover as functional vertical slices
 - [ ] Phase 4 — Retire production, tests/probes/snapshots, and docs under separate gates
+      — **RESEQUENCED**: retirement steps 1–4 move behind the Phase 5 owner stop; Phase 4 owns
+      G0+G1 (done) plus the full disposition preparation. See the ruling at the head of Phase 4.
 - [ ] Phase 5 — Assemble a repeatable candidate, audit it, and stop for owner acceptance
+      — now also presents the fully-prepared retirement as the headline decision
 
 ---
 
@@ -648,11 +651,45 @@ Record every slice. Do not combine them later.
 
 ## Phase 4 — Controlled Retirement and Documentation Repair
 
+> ### ⚠ RESEQUENCING RULING — retirement moves behind the owner stop (2026-08-11)
+>
+> **[ORCHESTRATOR]** ruling, recorded under the rule-11 delegation. Read this before any
+> retirement work; it changes what Phase 4 is for.
+>
+> **Phase 4's retirement steps 1–4 (the v5 family, G2′, G3′, G4′) do not execute in Phase 4.**
+> They are resequenced to the **immediate post-acceptance step after the Phase 5 owner stop**.
+>
+> **Why.** The 37 v5 fixture rows name `tests/conformance/test_v6_recapture_batch.py` as their
+> replacement proof. Gate 4C part 4 recorded that batch as **PROPOSED** and "authority for
+> nothing" — acceptance is the owner's, reserved for the Phase 5 stop by the owner's own
+> instruction (ping only at final). Gate 4C's rule is that the v5 snapshots stay until their
+> **accepted** v6 replacements are ready in the same candidate. Executing the retirement now
+> would spend an acceptance nobody has given. A stage brief that ordered steps 1–4 was refused
+> on exactly this ground and the refusal was ratified; the record is below.
+>
+> **Revised shape.**
+>
+> | Phase | What it now owns |
+> |---|---|
+> | **Phase 4** | G0 + G1 (executed) + the **full disposition preparation** — Gate 4C part 7 and Gate 4D. Deletes nothing further. |
+> | **Phase 5** | Assembles the candidate with the legacy stack **present-but-unreachable** (the 3E pins define that state and stay green), presents the PROPOSED batch **and the fully-prepared retirement** as the headline decision at the owner stop. |
+> | **Post-acceptance** | The retirement executes as the immediate next step, with every battery intact. |
+>
+> This satisfies both plan clauses at once: accepted-replacements-before-v5-deletion, and the
+> final candidate decision resting with the owner.
+>
+> **Standing consequence — option (a) is closed.** No node retires without per-file replacement
+> proof or a recorded per-node disposition. Wholesale `retire-with-owner` over an undispositioned
+> blast radius is **refused permanently** for the rest of this recovery.
+
 ### Goal
 
 Remove only the superseded production authorities proven unnecessary by Phase 3. Treat production
 code, test responsibilities, historical probes, committed snapshots, and documentation as separate
 decisions and separate commits.
+
+**Amended by the resequencing ruling above:** in Phase 4 that means *preparing* every retirement
+decision to the point where executing it is mechanical. The execution itself is post-acceptance.
 
 ### Assumption under test
 
@@ -724,12 +761,15 @@ def test_retirement_preserves_public_product(checkpoint, real_teax):
   blocking language live in Gate 4C below; they govern *this* gate.
   **[AGENT]** added after the Slice 3E audit (F6b), which found the constraint stated only in 4C —
   i.e. only after the deletions it governs.
-- [ ] Delete one coherent production owner group at a time, beginning with unreachable adapters and
-  ending with the central legacy resolver/registry/snapshot owners.
-- [ ] Before each group, add or identify kept public tests that fail if its responsibility is lost.
-- [ ] Run the complete public corpus and real TEAx after each group.
-- [ ] Commit each deletion group separately. Do not include tests, docs, snapshots, or probes except
-  an already-approved test migration necessary for that exact group.
+- [x] **G0 and G1 executed** (`db00482`, `6ba346e`). These are the whole of 4B's deletion in Phase 4.
+- [ ] **POST-ACCEPTANCE, not Phase 4** — per the resequencing ruling at the head of this phase.
+  Delete one coherent production owner group at a time, beginning with unreachable adapters and
+  ending with the central legacy resolver/registry/snapshot owners. Order: v5 family → G2′ → G3′ → G4′.
+- [ ] **POST-ACCEPTANCE.** Before each group, add or identify kept public tests that fail if its
+  responsibility is lost. Gate 4C part 7 is where those are authored, so this reduces to *identify*.
+- [ ] **POST-ACCEPTANCE.** Run the complete public corpus and real TEAx after each group.
+- [ ] **POST-ACCEPTANCE.** Commit each deletion group separately. Do not include tests, docs,
+  snapshots, or probes except an already-approved test migration necessary for that exact group.
 
 ### Gate 4C — Review tests, probes, and snapshots
 
@@ -846,6 +886,12 @@ def test_final_candidate_is_repeatable_and_executable(real_teax):
 
 ### Changes required
 
+- [ ] **The headline decision at the owner stop, per the Phase 4 resequencing ruling.** Present
+  together: the PROPOSED v6 recapture batch (15 captured / 22 typed refusals), and the
+  **fully-prepared retirement** — every one of the 4B groups with a per-file disposition and a
+  green replacement proof, so that acceptance makes the retirement mechanical. State plainly that
+  the candidate ships with the legacy stack **present-but-unreachable**, and name the 3E pins that
+  hold that property.
 - [ ] Build a fresh candidate record binding both repository OIDs, exact diffs, path inventories,
   test inventories, corpus outcomes, environment, real TEAx revision, performance, and evidence
   hashes.
@@ -3581,6 +3627,12 @@ real nodes, one per half: REQ-REG-02, which drives the public `run_codegen` from
 projected graph. `check_ledger_4a.py replacements --row L-289` reports **green**, taking the
 suite to **92 green / 0 pending / 204 not-required / 0 failures**.
 
+**CORRECTION (Gate 4B step-0 measurement, below).** The table above reads as three files needing
+work. Measured: **`test_uncovered_params.py` needs none**, and the `test_public_authority_switch.py`
+row understates the reason — both are legacy-arm-retires-with-owner, not repoint. Only
+`test_gen_pipeline_yaml.py`'s four baseline-bytes nodes are genuinely outstanding, and they wait on
+the acceptance gate. See "Gate 4B step 0 — the repoint that was already done" below.
+
 **One staleness spotted outside this chunk's path set, flagged not fixed.**
 `tests/conformance/test_gen_stencils.py:345` still reads
 `assert multi_output_count > 0 or model_name == "catf_mfe_model"`. `model_name` is now
@@ -3589,6 +3641,116 @@ passes on its own merits (catf_mfe_d5 does carry multi-output modules). Harmless
 to the first chunk's file and a one-word edit there is not this chunk's to make.
 
 **Commit:** ``15b8486` (`15b8486913179caf120f5debf335a16aaa1e0d73`)`. **Deletes nothing.**
+
+#### Gate 4B step 0 — the repoint that was already done, and the retirement brief that was refused
+
+**A stage brief ordered the retirement sequence (steps 0–4). Step 0 was measured as a no-op, steps
+1–4 were refused on the acceptance gate, and the orchestrator ratified both.** The resequencing
+ruling at the head of Phase 4 is the outcome. Recorded here because the *measurements* are reusable
+and the refusal is the kind of thing a later session must not quietly re-litigate.
+
+##### Step 0 was already done — L-249 is green on exact-route evidence
+
+The brief ordered `tests/unit/test_uncovered_params.py` (10 nodes) repointed onto v6 evidence.
+`check_ledger_4a.py replacements --row L-249` is **green**, and it is green on the *first two*
+nodes in its list, both exact-route: `test_warning_reconciliation_exact_route.py::test_the_projection_hard_codes_an_empty_fall_through_set`
+(1 passed) and `::test_the_exact_route_projects_no_fall_through_entry_points` (5 passed). The
+file's own 10 nodes are the third, supplementary entry.
+
+**And the 10 nodes cannot be repointed at all** — verified at source, not taken from the row:
+`elaboration/project.py:229` and `:264` both construct `ComputationGraph(fallback_entry_points=set())`,
+and `collect_uncovered_params` filters on membership in that set (`resolution/uncovered_params.py:68`).
+So on the exact route the collector is empty by construction, and:
+
+- **4 nodes have a structurally unreachable subject on v6** — the `chain_override_probe` one-gap
+  pin, `test_reconcile_raises_v11_on_wired_gap`, `test_seeded_strict_generation_aborts_on_v11_gap`,
+  and `test_fallback_entry_points_populated_in_memory_but_not_serialized` (which asserts the
+  fall-through set is **non-empty**). No v6 specimen exists or can be authored.
+- **5 fixture nodes assert an empty collector** on a legacy-built graph. Repointed, they would
+  assert what `test_the_exact_route_projects_no_fall_through_entry_points` already asserts across
+  every clean fixture — a duplicate pin bought by deleting the real subject, which is that the
+  *legacy* backtracker pre-fills those EPs (Item 9 / Item 10 behaviour).
+- **1 node** (`test_unwired_fallthrough_partition`) builds its own `ComputationGraph` and is
+  already route-neutral.
+
+This is what L-249's recorded disposition already said: `repoint`, note *"Survives its owner: it
+holds live coverage nothing replaces. When the owner group runs, the legacy arm is removed and the
+retained assertions stay."* That is retire-the-arm-with-the-owner, not repoint-onto-v6-now.
+**Executing the brief's step 0 would have been assertion thinning dressed as a migration.**
+
+**`replacements` at HEAD: 92 green / 204 not-required / 0 pending / 0 failures** — 296 of 298 rows,
+the two absent being the `agentic-mbse` rows L-036/L-037, which live in the paired repo. The brief's
+step-0 goal state was already true before the brief was written.
+
+**The one honest edit, taken.** `test_gen_stencils.py:345`'s `or model_name == "catf_mfe_model"`
+disjunct is dead — `PARAMETRIZED_MODELS` is `solar_battery_d5` / `catf_mfe_d5` — so the assertion
+has been stricter than authored since `6822685`. Deleted; the file holds its 32 nodes.
+**Commit:** ``146bf7c` (`146bf7c667c0c3bf17950cd3c694434a85e80dc0`)`.
+
+##### Steps 1–4 refused — the measurement behind the resequencing
+
+`groups` at HEAD: **4B-v5-family BLOCKED by 128**; G2′ by 71, G3′ by 3, G4′ by 3. Every blocker of
+every group is a `defer-to-v5-family` file, so the three later groups sit behind the family.
+
+Retiring the family breaks, measured across **both** surface axes:
+
+| | files | nodes |
+|---|---:|---:|
+| **no recorded per-file disposition** (`defer-to-v5-family` / `defer-to-part-6` / no row) | **140** | **1,419** |
+| — every fixture they name has a v6 graph or a D-5 variant | 61 | 488 |
+| — name no fixture at all | 44 | 527 |
+| — **need a fixture with no v6 route and no variant** | **35** | **404** |
+
+The brief's "every file executes its recorded row" has no referent: their recorded row is *defer*,
+and all 140 notes read *"No green replacement… Retires with the v5 family at Phase 5 owner
+acceptance."* Gate 4C part 5 had already parked the decision — *"Disposition of the remaining ~100
+files is parked on the owner ruling, per rule 10."*
+
+Underneath that sits the acceptance gate the resequencing ruling turns on, and it reaches step 4
+too: `tests/helpers/legacy_route.py` (L-276) is itself `defer-to-v5-family` with the same note, so
+G4′ is not independently freeable either.
+
+**The 19 fixtures with no v6 route**, ranked by how many blocked files need them — this is Gate 4C
+part 7's variant-authoring work-list, in priority order:
+
+`issue22_model` (8), `ife_plant` (8), `plant_values` (7), `expression_binding_probe` (7),
+`chain_override_probe` (6), `shared_producer` (5), `self_named_binding_trap` (5),
+`plant_value_shapes` (4), `alias_agg_probe` (3), `gate_a` (3), `invocation_binding_probe` (3),
+`gate_a_package_owner` (2), `crosspart_rollup_twolevel` (2), `return_styles` (2),
+`self_named_rescue` (1), `agg_localterm_probe` (1), `spec_chain_channel` (1),
+`spec_chain_twolevel` (1), `sibling_channel_ambiguity` (1).
+
+#### Gate 4C part 7 — per-file dispositions for the whole deferred blast radius (IN PROGRESS)
+
+**[ORCHESTRATOR]** ruling (2026-08-11): execute option **(b) with (c) targeted**. This is the
+disposition preparation Phase 4 now owns, and its end state is the precondition for the
+post-acceptance retirement being mechanical.
+
+**Standard: the Gate 4C part 3 bar, per file, no catch-alls.** The 140 files split three ways.
+
+| Class | Files | Nodes | What part 7 does |
+|---|---:|---:|---|
+| v6- or variant-repointable | 61 | 488 | **actually repoint**, green, committed |
+| names no fixture | 44 | 527 | disposition on the file's **real subject**, not on its fixture |
+| hard-blocked | 35 | 404 | rule individually; author D-5 variants **only** for the refused fixtures these files actually need |
+
+**Variant standard, unchanged from part 6.** Originals byte-untouched; a variant is a new fixture
+beside the original; proof is the strip check or an enumerated difference; the corpus ledger does
+not move (15/22). Variants join no corpus ledger.
+
+**Refusal-layer protocol.** Any needed fixture that refuses for something other than
+`SI_SELF_BINDING`: investigate-bound-stop. Do not invent a mechanism to make a capture succeed.
+
+**Done when** `groups` shows the v5 family and G2′–G4′ blocked **only** by the acceptance gate
+itself — zero undispositioned files — and the retirement brief is purely mechanical on acceptance.
+
+**Chunking.** Multi-session by design. Coherent chunks, full battery per commit, honest remainder
+reported at each stop.
+
+- [ ] Class 1 — the 61 repointable files
+- [ ] Class 2 — the 44 no-fixture files
+- [ ] Class 3 — the 35 hard-blocked files, with targeted variants in the ranked order above
+- [ ] Final: `groups` green but for the acceptance gate; ledger + checker consistent with Git truth
 
 ### Phase 5 Completion
 

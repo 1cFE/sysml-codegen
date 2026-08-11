@@ -5016,7 +5016,7 @@
    "responsibility": "Params-coverage collector + V11 strict boundary (Item 7 / REQ-GA-08, D4).",
    "breaks_on": "sysml_codegen.resolution.graph_builder (L-011, 4B-v5-family); sysml_codegen.snapshot:build_full_graph_from_snapshot (L-028, 4B-G2); tests.helpers.legacy_route (L-276, 4B-G4)",
    "breaks_a_free_group": true,
-   "disposition_4c_note": "Survives its owner: it holds live coverage nothing replaces. When the owner group runs, the legacy arm is removed and the retained assertions stay."
+   "disposition_4c_note": "Survives its owner: it holds live coverage nothing replaces. When the owner group runs, the legacy arm is removed and the retained assertions stay. Gate 4B step 0 (2026-08-11): the ordered repoint onto v6 evidence was measured as a NO-OP and not made. This row is green on its first two proof nodes, both exact-route; the file's 10 nodes are supplementary. Of those 10, four have a subject that is structurally unreachable on the exact route (elaboration/project.py:229,264 construct every graph with fallback_entry_points=set(), and collect_uncovered_params filters on membership in it), five would become duplicates of test_warning_reconciliation_exact_route.py::test_the_exact_route_projects_no_fall_through_entry_points at the cost of their real legacy-arm subject, and one is already route-neutral. The disposition stands exactly as written above: the legacy arm retires with the owner group, post-acceptance, and the retained assertions stay."
   },
   {
    "id": "L-250",
@@ -5684,7 +5684,7 @@
    "breaks_a_free_group": false,
    "reason": "Infrastructure, not coverage \u2014 ruled by the orchestrator 2026-08-11. snapshot_fixture() names tests/fixtures/<name>/extraction_snapshot.json, so it is a v5 dependence held by ~50 call sites. It migrates to a v6 equivalent rather than retiring, so both routes' tests keep working through the transition. No row before this one, because a data dependence is not an import and Gate 4C part 3 measured only imports.",
    "disposition_4c": "repoint",
-   "disposition_4c_note": "Gate 4C part 5: see reason. Gate 4C part 6 completion: PENDING-4C discharged. Both halves the placeholder named now exist — the v6 fixture helpers instance_graph_fixture() and exact_graph_from_fixture() in tests/conftest.py, and seven repointed conformance modules that read them. The two proof nodes cover one half each: REQ-REG-02 drives the public run_codegen from instance_graph_fixture's path and checks every registry import against a file on disk, REQ-REG-05 reads exact_graph_from_fixture's projected graph. snapshot_fixture() survives alongside them and retires with the v5 family."
+   "disposition_4c_note": "Gate 4C part 5: see reason. Gate 4C part 6 completion: PENDING-4C discharged. Both halves the placeholder named now exist \u2014 the v6 fixture helpers instance_graph_fixture() and exact_graph_from_fixture() in tests/conftest.py, and seven repointed conformance modules that read them. The two proof nodes cover one half each: REQ-REG-02 drives the public run_codegen from instance_graph_fixture's path and checks every registry import against a file on disk, REQ-REG-05 reads exact_graph_from_fixture's projected graph. snapshot_fixture() survives alongside them and retires with the v5 family."
   },
   {
    "id": "L-290",
