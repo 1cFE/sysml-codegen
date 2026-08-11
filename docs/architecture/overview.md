@@ -2,38 +2,57 @@
 
 sysml-codegen reads SysML v2 model files and produces a complete, runnable TEAx simulation pipeline: Python module wrappers, Pydantic schemas, JSON input templates, and pipeline YAML. The output is a working computation graph where each calculation defined in SysML becomes an executable module wired to its upstream dependencies and downstream consumers.
 
-The pipeline transforms declarative SysML models into imperative Python through a 7-step process: extract structured data from SysML ASTs, build a typed output registry, trace dependencies via DFS, classify entry points, construct pipeline modules, topologically sort them, and render code via Jinja2 templates.
+The pipeline transforms declarative SysML models into imperative Python in two halves. The front half **elaborates**: it turns the parsed model into an instance graph with one attribute node per modelled value occurrence, resolving every reference against typed node identity. The back half **projects and renders**: it renders that graph's public identifiers onto a `ComputationGraph` and feeds Jinja2 templates. Semantics are complete before rendering starts.
 
 ---
 
 ## Data Flow
 
 ```
-SysML files (.sysml)
-    |
-    v
-[Step 1] Extract         -- parse .sysml into data models           --> extraction/
-[Step 2] Build registry   -- catalog outputs for O(1) lookup          --> core/
-[Step 3] Trace deps       -- DFS + CalcUsage binding resolution       --> analysis/
-[Step 4] Classify entries -- tag entry point types                    --> resolution/
-[Step 5] Build modules    -- construct PipelineModules                --> resolution/
-[Step 6] Sort modules     -- topological sort + validation            --> resolution/
-[Step 7] Render code      -- Jinja2 templates produce output          --> generation/
-    |
-    v
+SysML files (.sysml)                v6 instance-graph snapshot (.json)
+    |                                        |
+    v                                        v
+[1] Parse             extraction/    [1'] Load + validate envelope    snapshot/envelope.py
+    |                                        |
+    +--------------------+-------------------+
+                         v
+[2] Elaborate    loaded model -> InstanceGraph                        elaboration/elaborate.py
+                 one attribute node per modelled value occurrence
+                         |
+                         v
+                 sealed into an ExactPipelineContext with a receipt    orchestration/
+                         |
+                         v
+[3] Project      InstanceGraph -> ComputationGraph                    elaboration/project.py
+                 render identifiers, classify resolved sources, order
+                         |
+                         v
+[4] Render code  Jinja2 templates produce output                      generation/
+                         |
+                         v
+[5] Seal         ModelContract + PackageContract over final bytes     contracts/
+                         |
+                         v
 Generated package
   modules/        -- TEAx module wrappers (one per calculation)
   handwritten/    -- Implementation stencils (user fills in logic)
   schemas/        -- Pydantic parameter group schemas
   inputs/         -- JSON input templates with default values
   pipelines/      -- Pipeline YAML wiring modules together
+  contracts/      -- Semantic model contract, physical seal, emitted verifier
 ```
 
-Orchestration (`orchestration/pipeline_builder.py`) coordinates these steps, threading intermediate data through a `PipelineContext`. See [02-orchestration](reference/02-orchestration.md) for the step-by-step sequence and ordering constraints.
+`run_codegen` (`cli/__init__.py`) is the single public entry point and constructs one way. `--models` and `--from-snapshot` are two *sources* for the same authority, not two implementations: both seal into an `ExactPipelineContext` whose receipt binds the sealed instance graph to what it projects to. No flag, environment variable, or config field selects an implementation. See [02-orchestration](reference/02-orchestration.md).
 
-Within Step 5, after the output registry is final, a **constraint-lowering phase** ([P1 RESOLVE], `analysis/constraint_lowering.py`) turns eligible modeled assertions into two further module kinds — `CONSTRAINT` (a lowered predicate) and `REPORT_AGGREGATOR` (the run-report roll-up) — and assembles the `ConstraintCatalog` embedded on the graph. A constraint-free model produces neither and a byte-identical graph. See [28-constraint-lowering-and-catalog](reference/28-constraint-lowering-and-catalog.md).
+Eligible modelled assertions become `CONSTRAINT` modules during projection, together with the `ConstraintCatalog` embedded on the graph. A `REPORT_AGGREGATOR` module is emitted only when there is at least one constraint output; a constraint-free model produces neither family. See [28-constraint-lowering-and-catalog](reference/28-constraint-lowering-and-catalog.md), whose lowering half describes `analysis/constraint_lowering.py` — a retiring component, not the public route.
 
-There is a second, license-free path into the same pipeline. `sysml-codegen snapshot` captures a versioned extraction snapshot from live models (`capture_snapshot` in `snapshot/capture.py` -- this capture step needs the live syside license). `generate --from-snapshot` (mutually exclusive with `--models`) then rebuilds the same `PipelineContext` from that JSON via `build_pipeline_context_from_snapshot` (`orchestration/snapshot_context.py`) -- Steps 2-7 run unchanged, with no license at runtime. The snapshot format carries a `snapshot_format_version` that hard-errors on mismatch. See [27-snapshot-generation](reference/27-snapshot-generation.md).
+The license-free path is the **v6 instance-graph snapshot**. `sysml-codegen snapshot` admits the sources, elaborates them once, and seals the resulting graph into an envelope (`capture_instance_graph_snapshot` in `snapshot/capture.py` — this capture step needs the live syside license). `generate --from-snapshot` loads that envelope with no license at runtime. A v5 extraction snapshot is refused at load, by name. See [27-snapshot-generation](reference/27-snapshot-generation.md).
+
+### Where the legacy route went
+
+The string-resolution stack — `orchestration/pipeline_builder.py`, `analysis/`, `resolution/graph_builder.py`, `core/output_registry.py`, and the v5 snapshot loader — is **present in the tree and importable, and unreachable from any public caller**. Its retirement is fully prepared and gated on owner acceptance. Two conformance nodes hold that state: `test_public_authority_switch.py::test_the_construction_path_reaches_no_legacy_authority_even_transitively` proves the construction closure is clean, and `::test_the_generation_half_still_reaches_v5_modules_and_that_residual_is_pinned` states the honest residual — the CLI's *import* closure still contains `pipeline_builder`, `snapshot.loader`, and `snapshot.graph_rebuild`, pinned by name so it cannot grow.
+
+Reference documents 03, 04, 05, 07, 10, 11, 12, 13, 17, 24, and 25 describe that stack and open with a banner saying so. They remain accurate about the components they document.
 
 ---
 
@@ -41,88 +60,84 @@ There is a second, license-free path into the same pipeline. `sysml-codegen snap
 
 ### ComputationGraph as Single Source of Truth
 
-The `ComputationGraph` (a Pydantic model in `resolution/models.py`) is the sole data structure that code generation consumes. It contains all pipeline modules, their inputs wired to upstream outputs or entry points, execution order, parameter group schemas, and surfaced output aliases (`output_aliases`, serialized with the graph). Generation templates receive only `ComputationGraph` fields -- no back-references to extraction models (REQ-PIPE-07). Generation is also gated by a params-coverage check (V11): `collect_uncovered_params` (`resolution/graph_builder.py`) runs at the generation boundary and aborts if a wired module input references a params key that no JSON input file will carry. See [09-data-models](reference/09-data-models.md).
+The `ComputationGraph` (a Pydantic model in `resolution/models.py`) is the sole data structure that code generation consumes. It contains all pipeline modules, their inputs wired to upstream outputs or entry points, execution order, parameter group schemas, and surfaced output aliases (`output_aliases`, serialized with the graph). Generation templates receive only `ComputationGraph` fields -- no back-references to extraction models (REQ-PIPE-07). Generation is also gated by a params-coverage check (V11): `collect_uncovered_params` (`resolution/uncovered_params.py`) runs at the generation boundary and aborts if a wired module input references a params key that no JSON input file will carry. See [09-data-models](reference/09-data-models.md).
 
-### Typed Registries
+### Identity, Not Strings
 
-SysML bindings reference the same output using different string formats depending on AST node type and context. The `OutputRegistry` resolves this ambiguity using four typed registries, each keyed by a `NewType` wrapper:
+The elaborator resolves every reference against typed node identity — occurrence enumeration and declared members — and never by reconstructing or matching a qualified-name string. An `InstanceGraph` consumer holds a typed reference to the node that supplies it, so "which thing produces this value?" is answered once, where the model says it, rather than by a lookup table asked with a key built from the consumer's scope.
 
-| Registry | Key Type | Resolves |
-|----------|----------|----------|
-| Scoped | `ScopedKey` (dotted hierarchy path) | CHAIN bindings via scope-prepend lookup |
-| SysML QN | `SysMLQN` (`Package::Element::attr`) | REFERENCE bindings (library-qualified) |
-| Alias | `ScopedKey` | `:>>` redefinition aliases and EXPOSE_PURE aliases |
-| Scoped alias | `ScopedAliasKey` (`(scope, leaf)` tuple) | Part-def EXPOSE aliases, expanded per design instance |
+Two consequences a reader should carry into the reference documents:
 
-All four map to `CanonicalChannel` (the unique PQN-format output name). Type-directed dispatch selects the correct registry based on binding type. Multi-hop EXPOSE aliases are registered tentatively and confirmed (or reverted to FORMULA) in a Phase 3b pass of registry build (`orchestration/output_registry_builder.py`). See [10-output-registry](reference/10-output-registry.md) and [15-naming-conventions](reference/15-naming-conventions.md).
+- **An arrayed child is enumerated, not multiplied.** Three occurrences produce three attribute nodes, three entry points, and three terms in an aggregation over them.
+- **An unresolvable reference is a typed refusal.** `ElaborationError` (readiness findings) and `ElaborationDiagnosticError` (validation diagnostics) stay distinct all the way to the CLI log, and projection refuses on a rendering collision rather than letting two distinct things render as one name.
 
-### Producer Resolution Architecture
-
-Positive input resolution -- answering "which real thing produces this value?" for every consumed input -- runs through one authority, `resolve_producer()` in `resolution/producer_resolution.py` (lifecycle Item 2). Three consumers build a request and read a result:
-
-| Consumer | Module type | Call site | Policy |
-|------|------------|----------|-----------|
-| Calculation binding | CalcUsage | `analysis/dependency_backtracker.py` (during DFS) | LENIENT |
-| Constraint actual | Constraint | `analysis/constraint_lowering.py` | STRICT |
-| Aggregation term | Aggregation | `resolution/graph_builder.py` | LENIENT |
-
-Each input resolves to `module_output` (wire to upstream channel), `design_attribute`/`entry_point` (user provides value via JSON), or -- under STRICT -- a raise. FORMULA modules are the one exception: they use a pre-computed attribute resolution map, not the resolver. See [04-producer-resolution](reference/04-producer-resolution.md), [03-resolution-overview](reference/03-resolution-overview.md), and [24-dual-resolution-architecture](reference/24-dual-resolution-architecture.md).
+The four-typed-registry design and the one-authority `resolve_producer()` ladder that this section used to describe belong to the retiring stack. They are documented, accurately, in [10-output-registry](reference/10-output-registry.md), [04-producer-resolution](reference/04-producer-resolution.md), [03-resolution-overview](reference/03-resolution-overview.md), and [24-dual-resolution-architecture](reference/24-dual-resolution-architecture.md), each of which now opens with a banner.
 
 ### Test-First with Real SysML Data
 
-Conformance tests use real SysML fixture models (extracted via SysIDE) and verify pipeline behavior against extraction snapshots. No mock adapters or synthetic data. This ensures tests exercise the same code paths as production. Every tracked requirement maps to its conformance tests in [verification-matrix.md](verification-matrix.md), which carries the authoritative counts.
+Conformance tests use real SysML fixture models (parsed via SysIDE) and verify pipeline behavior against committed snapshots and hand-derived expectations. No mock adapters or synthetic data. This ensures tests exercise the same code paths as production. Every tracked requirement maps to its conformance tests in [verification-matrix.md](verification-matrix.md), which carries the authoritative counts.
 
 ---
 
 ## Package Structure
 
+The public route, in the order it runs:
+
 ```
 sysml_codegen/
-  extraction/          Step 1 -- Parse .sysml into structured dataclasses
+  extraction/          [1] Parse
     extractor.py                 SysMLDataExtractor: load models, extract calc defs
-    usage_extractor.py           CalcUsages and their bindings
-    hierarchy_resolver.py        Redefinitions, aggregation expressions, design overrides
-    computed_attribute_extractor.py  FORMULA/EXPOSE classification
     expression_compiler.py       AST-to-Python compilation
+    source_manifest.py           admit_sources(): staged, verified source admission (capture)
     data_models.py               CalculationDefinitionData, RedefinitionData, etc.
 
-  orchestration/       Pipeline coordination
-    pipeline_builder.py          build_pipeline_context(): multi-step orchestration
-    output_registry_builder.py   build_output_registry(): 4-phase registration + Phase 3b multi-hop EXPOSE confirm
-    snapshot_context.py          build_pipeline_context_from_snapshot(): offline path
-    pipeline_context.py          PipelineContext dataclass
+  elaboration/         [2] Elaborate, [3] Project
+    elaborate.py                 elaborate(): loaded model -> InstanceGraph
+    graph.py                     InstanceGraph, AttrNode, CalcNode, ConstraintNode
+    identity.py                  typed node identities (NodeId, OccurrenceId, port ids)
+    occurrence.py                occurrence enumeration
+    project.py                   project(): InstanceGraph -> ComputationGraph
 
-  snapshot/            Extraction snapshot capture and offline rebuild
-    capture.py                   capture_snapshot(): versioned snapshot from live models
-    serializer.py / loader.py    Snapshot (de)serialization; format-version gate
-    graph_rebuild.py             build_full_graph_from_snapshot(): rebuild extraction data offline
+  orchestration/       Public construction
+    elaborated_pipeline.py       load + elaborate, live and from admitted sources
+    exact_pipeline_context.py    ExactPipelineContext: sealed graph + projection receipt
 
-  analysis/            Step 3 -- Dependency backtracking and parameter groups
-    dependency_backtracker.py    DependencyBacktracker: DFS + binding resolution
-    parameter_groups.py          ParameterGroupDeriver: entry point grouping
+  snapshot/            The v6 instance-graph snapshot
+    envelope.py                  build, seal, validate, load
+    instance_graph.py            the graph codec envelope and context share
+    capture.py                   capture_instance_graph_snapshot(): admit, elaborate, seal
+
+  resolution/
+    models.py                    ComputationGraph, PipelineModule, EntryPoint
+    uncovered_params.py          the V11 params-coverage collector
 
   core/                Shared types and utilities
-    output_registry.py           OutputRegistry: 3 typed registries
-    identifier_types.py          NewType wrappers (ScopedKey, CanonicalChannel, etc.)
+    identifier_types.py          NewType wrappers and module-type derivation
     qualified_names.py           Name construction helpers
-    models.py                    BindingResolution, ChannelAlias
 
-  resolution/          Steps 4-6 -- Classify entries, build modules, sort
-    graph_builder.py             build_computation_graph(), topological sort
-    producer_resolution.py       resolve_producer(): the one resolution authority
-    producer_completeness.py     check_producer_completeness(): one-intended-producer check
-    models.py                    ComputationGraph, PipelineModule, EntryPoint
-
-  generation/          Step 7 -- Render Python, YAML, JSON from the graph
+  generation/          [4] Render Python, YAML, JSON from the graph
     pipeline.py                  Pipeline YAML generator
     modules.py                   Module wrapper generator
     schemas.py                   Pydantic schema generator
     stencils.py                  Implementation stencil generator
     entry_point.py               JSON template + parameter schema generator
+    registry.py                  Module registry generator
     preservation.py              Smart regeneration (preserve user edits)
 
+  contracts/           [5] Seal: semantic ModelContract, physical PackageContract, verifier
+
   cli/                 Command-line interface
-    __init__.py                  generate (--models | --from-snapshot) and snapshot subcommands
+    __init__.py                  generate (--models | --from-snapshot), snapshot, seal
+```
+
+Present in the tree, publicly unreachable, retirement prepared and gated on owner acceptance:
+
+```
+  orchestration/pipeline_builder.py, orchestration/snapshot_context.py
+  analysis/            dependency_backtracker.py, parameter_groups.py, constraint_lowering.py
+  resolution/          graph_builder.py, producer_resolution.py, producer_completeness.py
+  core/output_registry.py
+  snapshot/            loader.py, serializer.py, graph_rebuild.py (the v5 format)
 ```
 
 ---
@@ -134,14 +149,18 @@ sysml_codegen/
 1. **Start here** -- this document for the high-level picture
 2. **Prerequisites** -- [modeling-assumptions.md](modeling-assumptions.md) for the SysML conventions the pipeline depends on
 3. **Pipeline walkthrough** (recommended order):
-   - [00-pipeline-overview](reference/00-pipeline-overview.md) -- the 7-step pipeline with a running example
+   - [00-pipeline-overview](reference/00-pipeline-overview.md) -- the route, with a running example
    - [01-extraction](reference/01-extraction.md) -- how SysML becomes structured data
-   - [11-analysis-backtracker](reference/11-analysis-backtracker.md) -- dependency tracing via DFS
-   - [03-resolution-overview](reference/03-resolution-overview.md) -- why input resolution is hard (270 combinations)
-   - [06-entry-point-classifier](reference/06-entry-point-classifier.md) -- three entry point types
-   - [05-module-factory](reference/05-module-factory.md) -- the three calc module kinds as pure data (constraint kinds in [28](reference/28-constraint-lowering-and-catalog.md))
-   - [07-graph-assembly](reference/07-graph-assembly.md) -- topological sort and validation
+   - [02-orchestration](reference/02-orchestration.md) -- the public surface: one entry point, two sources, one receipt
+   - [06-entry-point-classifier](reference/06-entry-point-classifier.md) -- the three entry point types and how the exact route keys them
+   - [27-snapshot-generation](reference/27-snapshot-generation.md) -- the v6 snapshot and what it can prove
    - [08-generation](reference/08-generation.md) -- Jinja2 rendering to Python, YAML, JSON
+   - [29-contracts-and-sealing](reference/29-contracts-and-sealing.md) -- what a sealed package promises
+
+   For the retiring string-resolution stack, read [03](reference/03-resolution-overview.md),
+   [11](reference/11-analysis-backtracker.md), [05](reference/05-module-factory.md), and
+   [07](reference/07-graph-assembly.md) — accurate about those components, not about the
+   public route.
 4. **Data models** -- [09-data-models](reference/09-data-models.md) as a reference companion to any of the above
 
 ### Deep dives by topic
@@ -163,6 +182,14 @@ sysml_codegen/
 ---
 
 ## Component Index
+
+**Read this index with the cutover in mind.** C05, C06, C08–C19, C27, and X02 name components
+of the retiring string-resolution stack (`extraction/computed_attribute_extractor.py`,
+`extraction/hierarchy_resolver.py`, `core/output_registry.py`, `analysis/`,
+`orchestration/pipeline_builder.py`, `resolution/graph_builder.py` and its resolver). Their
+documents are accurate about those components and are not descriptions of the public route.
+C02, C03, C04, C07, C20–C26, C28, C29, and X01 are live on the exact route; C01's models are
+mixed and doc 09 says which are which.
 
 | ID | Component | Doc | Package |
 |----|-----------|-----|---------|
@@ -202,7 +229,11 @@ sysml_codegen/
 
 ## Known Limitations
 
-The following open issues are documented in the codebase. None block current pipeline functionality for well-formed SysML models.
+The following open issues are documented in the codebase. Items 2, 3, and 6 are limitations of
+the **retiring** extraction/resolution classifier; the exact route reaches those shapes by a
+different mechanism and its behaviour on each has not been separately re-derived, so read them
+as history rather than as current public limits. Items 1, 4, 5, and 7 are modelling- or
+package-level and hold on either route.
 
 1. **EXPOSE_COMPUTED pattern not supported.** Design attributes that combine a calc output reference with arithmetic (e.g., `= calc.output * 1.15`) are not handled. Workaround: extract to a CalcDef in `library/` -- the pipeline auto-implements simple arithmetic. See [16-computed-attributes](reference/16-computed-attributes.md).
 
@@ -232,4 +263,4 @@ See [verification-matrix.md](verification-matrix.md) for the full REQ-to-test tr
 
 - [Modeling Assumptions](modeling-assumptions.md) -- SysML conventions the pipeline depends on
 - [Verification Matrix](verification-matrix.md) -- REQ-to-test traceability
-- [Reference Documentation](reference/) -- 28 detailed design documents (docs 00-27)
+- [Reference Documentation](reference/) -- 31 detailed design documents (docs 00-30)
