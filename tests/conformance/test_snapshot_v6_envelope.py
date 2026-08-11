@@ -6,11 +6,17 @@ against a *re-sealed* document wherever re-sealing is possible, because the
 integrity digest is unkeyed — anyone who edits the file can recompute it. A
 refusal that only survives while the digest is stale is not a refusal.
 
-The identity cell is the one the earlier candidate got wrong: it carried a
+The identity cells are the ones the earlier candidate got wrong. It carried a
 free-form ``capture.model_name`` and a ``capture.captured_at`` timestamp, so a
 document could be re-labelled as a different model, re-sealed, and loaded clean.
-This format carries no unanchored declaration at all, so that swap cannot even
-be expressed; reintroducing either field is refused by the exact-shape gate.
+Reintroducing either field is now refused by the exact-shape gate.
+
+But the manifest under ``sources`` is itself self-declared, and offline the loader
+can only check its form. So three re-labelling shapes still load: renaming a
+sealed referent consistently, appending a fabricated file row, and restating a
+real row's digest. Those cells assert the **accepting** behavior on purpose — the
+limit is pinned so the matrix states the truth — paired with cells proving that
+supplying ``source_roots`` refuses all three.
 """
 
 from __future__ import annotations
@@ -52,6 +58,14 @@ def _reseal_outer(document: dict) -> dict:
     signed["integrity"].pop("digest", None)
     document["integrity"]["digest"] = hashlib.sha256(v6.canonical_json(signed)).hexdigest()
     return document
+
+
+def _source_fingerprint(document: dict) -> str:
+    """Recompute the sources fingerprint over the edited manifest."""
+    sources = document["sources"]
+    return hashlib.sha256(
+        v6.canonical_json({"roots": sources["roots"], "files": sources["files"]})
+    ).hexdigest()
 
 
 def _reseal_graph(document: dict) -> dict:
@@ -390,6 +404,109 @@ def test_source_manifest_replacement_is_refused(tmp_path: Path, captured_payload
     _reseal_outer(document)
     with pytest.raises(v6.SnapshotIntegrityError, match="absent from sources.files"):
         v6.load_instance_graph_snapshot(_written(tmp_path, "swap-sources.json", document))
+
+
+# --------------------------------------------------------------------------
+# Source re-labelling: what a re-sealing forger can still do offline
+# --------------------------------------------------------------------------
+
+
+def _renamed_referent(document: dict, replacement: str) -> dict:
+    """Rename the sealed referent consistently, the way a careful forger would."""
+    original = document["sources"]["files"][0]["referent"]
+    document["sources"]["files"][0]["referent"] = replacement
+    for group in ("attrs", "calcs", "constraints"):
+        for row in document["instance_graph"]["graph"][group]:
+            if row["source_file"] == original:
+                row["source_file"] = replacement
+    document["sources"]["fingerprint"] = _source_fingerprint(document)
+    return _reseal_graph(document)
+
+
+def _appended_phantom_source(document: dict) -> dict:
+    """Append a fabricated file row that no graph row references."""
+    document["sources"]["files"].append(
+        {"referent": "root-0/zz_fabricated.sysml", "size_bytes": 1234, "sha256": "ab" * 32}
+    )
+    document["sources"]["files"].sort(key=lambda row: row["referent"])
+    document["sources"]["fingerprint"] = _source_fingerprint(document)
+    return _reseal_outer(document)
+
+
+def _restated_source_bytes(document: dict) -> dict:
+    """Restate a real row's sealed size and digest."""
+    document["sources"]["files"][0]["sha256"] = "cd" * 32
+    document["sources"]["files"][0]["size_bytes"] = 99999
+    document["sources"]["fingerprint"] = _source_fingerprint(document)
+    return _reseal_outer(document)
+
+
+RELABELLINGS = [
+    pytest.param(
+        lambda document: _renamed_referent(document, "root-0/customer_proprietary.sysml"),
+        id="renamed-referent",
+    ),
+    pytest.param(_appended_phantom_source, id="appended-phantom-source"),
+    pytest.param(_restated_source_bytes, id="restated-source-bytes"),
+]
+
+
+@pytest.mark.parametrize("relabel", RELABELLINGS)
+def test_a_resealed_relabelling_is_accepted_offline(
+    tmp_path: Path, captured_payload: bytes, relabel
+) -> None:
+    """An accepted, documented limit — not a guarantee, and not an oversight.
+
+    ``sources`` is a self-declared manifest. Offline the loader checks its form
+    and that every graph row names a sealed source; it cannot check the manifest
+    against files it is not allowed to read. A forger who re-seals correctly can
+    therefore re-label a snapshot, and does.
+
+    These cells exist so the matrix states that rather than implying closure. The
+    refusal lives in the freshness path below, and ``envelope.py``'s module
+    docstring says a caller that needs provenance must supply ``source_roots``.
+    """
+    document = relabel(_document(captured_payload))
+    graph = v6.load_instance_graph_snapshot(_written(tmp_path, "relabelled.json", document))
+    assert graph.calcs, "the forged snapshot loads as a full, usable graph"
+
+
+@pytest.mark.parametrize("relabel", RELABELLINGS)
+def test_source_roots_refuse_every_resealed_relabelling(tmp_path: Path, relabel) -> None:
+    """The freshness path is what actually closes the three shapes above."""
+    root = tmp_path / "model-tree"
+    shutil.copytree(FIXTURE, root)
+    captured = capture_instance_graph_snapshot([root], tmp_path / "captured.json")
+    assert v6.load_instance_graph_snapshot(captured, source_roots=[root])
+
+    document = relabel(_document(captured.read_bytes()))
+    forged = _written(tmp_path, "relabelled.json", document)
+    with pytest.raises(v6.SnapshotStaleSourceError, match="reproduce"):
+        v6.load_instance_graph_snapshot(forged, source_roots=[root])
+
+
+def test_a_sealed_source_need_not_be_referenced_by_any_graph_row(tmp_path: Path) -> None:
+    """Why the membership check is one-way, pinned against a real fixture.
+
+    The elaborator records a node's declaration site, so a file holding only
+    usages contributes no graph row at all. Requiring the converse — every sealed
+    source referenced by some row — would encode a false invariant and reject
+    legitimate snapshots. ``agg_literal_probe`` is one: its ``design.sysml`` is
+    sealed and referenced by nothing.
+    """
+    captured = capture_instance_graph_snapshot(
+        [FIXTURES_DIR / "agg_literal_probe"], tmp_path / "probe.json"
+    )
+    document = _document(captured.read_bytes())
+    sealed = {row["referent"] for row in document["sources"]["files"]}
+    referenced = {
+        row["source_file"]
+        for group in ("attrs", "calcs", "constraints")
+        for row in document["instance_graph"]["graph"][group]
+    }
+    assert sealed == {"root-0/design.sysml", "root-0/library.sysml"}
+    assert referenced == {"root-0/library.sysml"}
+    assert v6.load_instance_graph_snapshot(captured)
 
 
 # --------------------------------------------------------------------------

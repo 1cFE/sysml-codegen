@@ -14,7 +14,7 @@ points, `O` order, `A` aliases, and `C` constraint catalog.
 
 | # | Fixture | Legacy | Exact-ID | Diff | `[AGENT]` class | Basis |
 |---:|---|---|---|---|---|---|
-| 1 | `agg_literal_probe` | error: `CodeGenerationError` | error: `CodeGenerationError` | — | expected-collapse | Both routes stop at the pre-elaboration calc-def presence gate, so the elaborator never sees the fixture. Not a semantic control — see the B37-01 ruling below. |
+| 1 | `agg_literal_probe` | error: `CodeGenerationError` | graph 1/3/0/0 | — | expected-fix | The exact route's front-gate became a graph-level emptiness gate in recovery Slice 3A, so the elaborator now sees the fixture and its modeled aggregation produces a graph. This is the B37-01 ruling being satisfied — see the ruling below, which predicted this cell moving. Legacy still stops at the pre-elaboration calc-def presence gate. |
 | 2 | `agg_localterm_probe` | graph 2/2/0/0 | error: `SI_SELF_BINDING` | — | expected-collapse | SRC-01 replaces the legacy mint. |
 | 3 | `alias_agg_probe` | graph 4/3/0/0 | error: `SI_SELF_BINDING` | — | expected-collapse | SRC-01 replaces the legacy mint. |
 | 4 | `attr_expr_probe` | graph 16/16/0/3 | graph 17/16/0/3 | M/O | expected-fix | `scaled_area` is modeled runtime behavior that legacy dropped. |
@@ -55,11 +55,15 @@ points, `O` order, `A` aliases, and `C` constraint catalog.
 ## Totals
 
 - 37/37 rows have two complete route outcomes; zero rows are unclassified.
-- 26 `expected-collapse`; 11 `expected-fix`; zero `needs-review`; zero `new-bug`.
-- Exact-ID produced 13 public graphs and 24 typed errors. Legacy produced 36 public graphs and one
-  shared no-calculation-definition error.
-- Thirteen fixtures produced graphs on both routes. Two are byte-equal (`sample_model` and
+- 25 `expected-collapse`; 12 `expected-fix`; zero `needs-review`; zero `new-bug`.
+- Exact-ID produces 14 public graphs and 23 typed errors. Legacy produces 36 public graphs and one
+  no-calculation-definition error.
+- Thirteen fixtures produce graphs on both routes. Two are byte-equal (`sample_model` and
   `quoted_owner_formula`); eleven carry reviewed expected fixes.
+
+At the Item 6 observation (2026-08-09) the first three figures read 26/11, 13 graphs and 24 errors,
+and the two routes shared one no-calculation-definition error. Row 1 moved in recovery Slice 3A for
+the reason recorded against it.
 
 ## B37-01 ruling — `agg_literal_probe` is executable, not a control
 
@@ -93,6 +97,25 @@ an unexpected `B37-01` result.
   row 1 was incorrectly serving.
 - Do not resolve the `14/22/1` versus `15/22/0` count by preferring whichever is already written
   down; re-derive it from the restored test and control.
+
+**Discharge, recovery Slice 3A follow-up (2026-08-10).** The front-gate moved, exactly as predicted
+above. `require_executable_content` (`src/sysml_codegen/orchestration/elaborated_pipeline.py`) is now
+one graph-level emptiness gate — no calculation, no constraint, and no calculation definition —
+shared by the exact live route and v6 capture, replacing the pre-elaboration `calc def` precheck.
+Legacy `build_pipeline_context` is untouched and still front-gates, which is why row 1's two columns
+now differ.
+
+- Literal-bearing aggregation, asserted on the produced graph:
+  `tests/conformance/test_snapshot_v6_capture.py::test_a_model_whose_only_computation_is_an_aggregation_is_sealable`
+  observes the `5.0` operand in the sealed graph and that no calculation definition exists.
+- The no-calculation-definition responsibility now sits on an explicit empty model in
+  `tests/conformance/test_snapshot_v6_capture.py::test_capture_and_the_live_route_share_one_emptiness_gate`,
+  which asserts both routes refuse it. It is an inline model rather than a committed fixture
+  directory; if the corpus needs it as a 38th fixture, that is Phase 4 work.
+- Re-derived count, measured not preferred: the exact route now produces **14** public graphs and 23
+  typed errors across the 37-fixture corpus. That is the ledger axis. The `14/22/1` versus `15/22/0`
+  question belongs to the Phase-8 batch manifest, which has its own refusal semantics and has not
+  been re-run; it stays open.
 
 ## Owner checkpoint resolution
 

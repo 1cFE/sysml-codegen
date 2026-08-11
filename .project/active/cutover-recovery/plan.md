@@ -493,8 +493,13 @@ The forensic test audit is the starting shortlist, not a certification result.
 - [x] Pin the complete v6 envelope matrix: missing/current/future versions; missing, added, and
   wrong-typed outer fields; graph replacement; `model_name` and `captured_at` skew; ordinary inner
   tamper; and a valid inner graph inside a tampered outer envelope. The loader must reject a
-  re-sealed model-identity swap, which the failed candidate currently accepts. **Closed by making
-  the envelope carry no unanchored declaration at all — see the 3A notes.**
+  re-sealed model-identity swap, which the failed candidate currently accepts. **Partially met, and
+  the remainder is pinned rather than claimed.** `model_name`/`captured_at` re-labelling is refused.
+  Re-labelling through the `sources` manifest is *not* refusable offline; it is refused when the
+  caller supplies `source_roots`, and the three offline-accepted shapes are pinned as tests naming an
+  accepted, documented limit. See "F1" in the 3A follow-up notes. **[OWNER decision open]** whether
+  that residual limit is acceptable, or whether provenance-critical loads must be made to require
+  `source_roots`.
 - [x] Run original full suites, the named relocation/tamper matrix, and one generated package
   smoke.
 - [x] Commit only the declared 3A path set.
@@ -575,7 +580,7 @@ Record every slice. Do not combine them later.
 
 | Slice | sysml-codegen OID | agentic-mbse OID | Full suites | Real TEAx |
 |---|---|---|---|---|
-| 3A | fe0b855 | N/A | 3462 passed / 47 skipped / 18 deselected (+104, all new) | smoke PASS (fusion_tea, 48-file sealed package) |
+| 3A | fe0b855, audit follow-up FOLLOWUP_OID | N/A | 3473 passed / 47 skipped / 18 deselected (+115, all new) | smoke PASS (fusion_tea, 48-file sealed package) |
 | 3B | PENDING | N/A | PENDING | smoke PENDING |
 | 3C | PENDING | PENDING | PENDING | N/A |
 | 3D | PENDING | PENDING if changed | PENDING | PENDING |
@@ -977,26 +982,25 @@ computation graph. The snapshot is self-contained — deleting the model tree do
 loads — and capture is deterministic: the same model in the same environment produces byte-identical
 snapshot bytes. v5 is untouched and every Item 6 test still passes.
 
-**The identity hole, and how it is closed.** The forensic candidate sealed a free-form
+**The identity hole, and how far it is actually closed.** The forensic candidate sealed a free-form
 `capture.model_name` and a `capture.captured_at` timestamp under `integrity.digest`. That digest is
 an unkeyed SHA-256, so anyone who edits the file recomputes it: the candidate's loader accepted a
 re-labelled, re-sealed snapshot. No internal check can fix that, because every internal check is a
 function of the document the forger controls.
 
-The closure is to remove what the forger was re-pointing. Every field in the v6 envelope is now one
-of three things — a constant this build defines, an environment fact checked against the running
-process (SysIDE version, producer versions, the pinned 94-document standard-library digest), or
-content (the admitted source manifest and the graph). There is no unanchored declaration left, so a
-model-identity swap cannot be expressed: reintroducing `model_name` or `captured_at`, at the top
-level or smuggled into `authority`, is refused by the exact-shape gate. The only identity in the
-envelope is the source manifest, cross-checked against every graph row and, when the caller passes
-`source_roots`, recomputed from disk.
+Both fields are gone, and reintroducing either — at the top level or smuggled into `authority` — is
+refused by the exact-shape gate. Dropping `captured_at` also removes the byte-identity churn a
+re-capture used to cause.
+
+**That is less than this slice first claimed, and the correction is recorded below under F1.** The
+`sources` manifest is itself self-declared: a referent, size, and SHA-256 per file, checked for
+canonical form but never against the files. Offline, three re-labelling shapes still load, and the
+independent audit demonstrated all three against the real loader. They are refused when the caller
+supplies `source_roots`. What did change relative to the candidate is that no envelope field is now
+unverifiable *even with the sources in hand* — `model_name` was.
 
 This is a deliberate change to sealed-format semantics, which the slice brief sanctioned. It is not
-a rule-10 stop: the demanded refusal is achieved, and the loader's honest limit is documented in
-`snapshot/envelope.py` rather than papered over — that the sealed graph really is the elaboration of
-the sealed sources is not decidable offline, and `capture` is where that is established. Dropping
-`captured_at` also removes the byte-identity churn a re-capture used to cause.
+a rule-10 stop, but the residual limit is an owner decision, flagged against the 3A checkbox above.
 
 **Per-file dispositions.**
 
@@ -1049,6 +1053,112 @@ routes, 4 capture atomicity, 3 route equality.
 **Scope note for 3B.** The v6 route ends at the projected `ComputationGraph`. Generating a package
 from a v6 snapshot needs a full `PipelineContext`, which is Slice 3B's declared work, so the smoke
 above runs the live route.
+
+#### Slice 3A audit follow-up — F1, F2, F3
+
+- **Completed:** 2026-08-10
+- **Audit:** `evidence/audit-3a.md`, verdict FINDINGS. Commit: FOLLOWUP_OID.
+- **Declared path set:** `snapshot/envelope.py`, `orchestration/elaborated_pipeline.py`,
+  `tests/conformance/test_snapshot_v6_{envelope,routes,capture}.py`, this plan, the two audit
+  artifacts, and — declared mid-slice, see F3 — `.project/completed/20260809_elaborator-breadth/diff-ledger.md`.
+
+**Correction to the record.** `fe0b855`'s commit message is headed *"v6 instance-graph snapshots
+that cannot be re-labelled"* and its body claims a model-identity swap "can no longer be expressed".
+That overclaims: it is true of `capture.model_name` and `capture.captured_at`, and false of the
+`sources` manifest. History is not rewritten; this note is the correction, and the module docstring,
+the test-module docstring, and the 3A notes above now state the actual guarantee.
+
+**F1 — the identity closure was overclaimed.**
+
+*(a) What is genuinely offline-checkable.* The audit asked for a converse membership check — every
+`sources.files[]` row referenced by at least one graph row — which would structurally kill the
+appended-phantom-row shape. **Measured first, and not shipped: it would be a false invariant.** The
+elaborator records a node's *declaration* site, so a file holding only usages contributes no graph
+row at all. Across the 33 multi-file fixtures, 11 capture cleanly and **5 of those 11 have a sealed
+source that no graph row references**: `agg_literal_probe` and `retype_model` and `d38_caret`
+(`design.sysml` unreferenced), `quoted_owner_formula` (`library.sysml` unreferenced), and
+`sample_model` (an empty graph, which the F3 gate now refuses at capture). No narrower crisp form
+survives either: occurrence records carry no source location, and calculation definitions are not
+separate graph rows, so `attrs`/`calcs`/`constraints` is already the widest set of "recorded kinds"
+available. Per the owner's third branch, no fuzzy heuristic was shipped. The one-way check is now
+commented at `snapshot/envelope.py` with this measurement, and pinned by
+`test_a_sealed_source_need_not_be_referenced_by_any_graph_row` against `agg_literal_probe`.
+
+*(b) The residual limit is now pinned, not implied away.* Six new cells in the envelope matrix,
+parametrized over the audit's three probe shapes — referent renamed consistently, phantom row
+appended, real row's digest and size restated — each re-sealing the sources fingerprint, the inner
+fingerprint, and the outer digest the way a forger would:
+
+- `test_a_resealed_relabelling_is_accepted_offline` asserts each one **loads**, and that the forged
+  snapshot yields a full usable graph. The docstring states this is an accepted, documented limit.
+- `test_source_roots_refuse_every_resealed_relabelling` asserts each one raises
+  `SnapshotStaleSourceError` when `source_roots` is supplied. The freshness path catches all three.
+
+*(c) Overclaiming artifacts corrected.* `snapshot/envelope.py`'s module docstring now separates what
+is anchored from `sources`, which is not, names the three shapes, and states plainly that a caller
+needing provenance rather than structure must pass `source_roots`. The envelope test module's
+docstring, this plan's 3A checkbox, and the 3A identity paragraph are all corrected. The commit
+message correction is recorded above.
+
+**F2 — route equality's live arm was not independent.** It called the same two functions capture
+calls, so the audit's injected defect in `elaborate_admitted_sources` moved the graph while the
+assertion stayed green. The live arm is now `build_elaborated_pipeline`, the Item 6 public builder
+path, which reaches the elaborator without admission.
+
+Making the arms independent immediately exposed that a projected comparison alone is not enough:
+projection drops `display_name`, which is exactly what the audit corrupted, so the injection was
+*still* invisible. The test therefore carries two comparisons — the projected public surface via the
+public builder, and the encoded instance graph via an independent `elaborate()` call, with only
+`source_file` neutralised.
+
+*Injection re-run, the audit's own scenario:* corrupting every calc `display_name` inside
+`elaborate_admitted_sources` and running
+`test_live_in_place_and_relocated_routes_have_one_graph` — `UNPATCHED exit=0 (1 passed)`,
+`DEFECT INJECTED exit=1 (1 failed)`. The file was restored and byte-compared afterwards. The audit's
+result was `exit=0` both ways.
+
+**A real product defect this uncovered — 3B blocker.** With the arms independent, the two routes
+disagree on more than `source_file`. `_group_identity`
+(`src/sysml_codegen/elaboration/project.py:164`) names each entry-point group after the source path,
+so on the v6 route the group is named after the *staging referent*: a package generated from a v6
+snapshot would ship `inputs/root_0_params.json` and a `Root0Params` schema class instead of names
+taken from the model. The v6 side is otherwise the improvement the referent design exists for — the
+live route still emits absolute checkout paths, one carrying a leftover `//` URI prefix.
+`test_the_two_routes_diverge_only_on_source_derived_naming` pins both sides by value.
+**Slice 3B owns `elaboration/project.py` and must resolve this before the public authority switch.**
+
+**F3 — one shared emptiness gate, per the B37-01 ruling.** `require_executable_content`
+(`orchestration/elaborated_pipeline.py`) refuses only a graph with no calculation, no constraint,
+and no calculation definition. Both `build_elaborated_pipeline` and `elaborate_admitted_sources` call
+it, so capture can no longer seal a model the live route refuses. The legacy pre-elaboration
+`calc def` precheck was not copied — that is the front-gate the B37-01 ruling identified as measuring
+the wrong thing.
+
+*This moved a certified corpus outcome, exactly as the ruling predicted.* The ruling says: "when a
+cutover moves or removes that front-gate, this fixture correctly produces a graph. That outcome is
+the ruling being satisfied, not a regression." `test_dual_run_ledger_outcomes_match_a_live_corpus_run`
+duly went red: `agg_literal_probe` on the exact route moved from `error: CodeGenerationError` to
+`graph 1/3/0/0`. Row 1 of `.project/completed/20260809_elaborator-breadth/diff-ledger.md` is updated
+to the measured outcome, reclassified `expected-collapse` → `expected-fix` (the routes now differ),
+and the totals block is corrected with the Item 6 figures retained beside it. The ledger's three
+carried B37-01 obligations are discharged there, including the re-derived count — **the exact route
+now produces 14 public graphs and 23 typed errors** on the 37-fixture corpus, measured rather than
+chosen. The `14/22/1` versus `15/22/0` question is a different axis (the Phase-8 batch manifest) and
+stays open. **[OWNER visibility]** this edits a completed, certified record; Phase 2 explicitly
+carried the update to Phase 3/4, so it is a discharge rather than a rewrite.
+
+**Gates.**
+
+- Slice tests: **115 passed** (67 envelope, 31 unit admission, 6 admission routes, 6 capture,
+  5 routes) — +11 over the 104 at `fe0b855`.
+- Full licensed suite: **3473 passed / 47 skipped / 18 deselected**, zero failures, zero
+  `no live syside license` lines. Delta versus `fe0b855` is exactly +11 passed, the new tests;
+  skips and deselections unchanged, so nothing was silenced.
+- Execution lane: 18 passed, unchanged.
+- Generated-package smoke: 48-file sealed package, `hif_driver__HIF_Driver__efficiency = 0.35`,
+  unchanged.
+- `ruff check src`: findings byte-identical to the baseline set — zero new. `mypy src`: error set
+  identical — zero new, zero fixed. `git diff --check` clean. Changed paths equal the declared set.
 
 ### Phase 4 Completion
 

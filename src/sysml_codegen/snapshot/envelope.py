@@ -5,30 +5,50 @@ instance graph. Loading it must not need the model tree, a parser, or a licence,
 so everything the loader can check has to be inside the file or inside the
 running environment.
 
-**Every field is anchored.** A field here is one of three things: a constant this
-build defines (``format``, the profile markers), an environment fact checked
-against the process that is loading (SysIDE and producer versions, the pinned
-standard-library digest), or content (the admitted source manifest and the graph
-itself). There is deliberately no free-form declaration — no model label, no
-capture timestamp.
+**What the digest is worth.** ``integrity.digest`` is an unkeyed SHA-256. Anyone
+who edits the file recomputes it, so the digest proves the document is *coherent*
+— that nobody changed one part and left the rest stale — and never that it is
+*authentic*. Every refusal below is written with that in mind: it has to survive a
+forger who re-seals properly, or it is not a refusal.
 
-That absence is the point. ``integrity.digest`` is an unkeyed SHA-256: anyone who
-edits the file can recompute it, so the digest proves the document is coherent,
-never that it is authentic. A free-form identity field under an unkeyed digest is
-therefore a claim nobody can check — the earlier candidate carried a
-``capture.model_name`` and a re-sealed swap of it loaded clean. Removing the
-unanchored fields does not hide that limit, it removes what the limit could be
-used against: the only identity in the envelope is the source manifest, which is
-cross-checked against every graph row and, when the caller supplies
-``source_roots``, recomputed from disk.
+**What is anchored, and what is not.** Three kinds of field are anchored, meaning
+a forger cannot make them say something false and get past the loader:
+
+- constants this build defines (``format``, the profile markers), compared against
+  the constants;
+- environment facts (SysIDE and producer versions, the pinned standard-library
+  digest), compared against the process that is loading;
+- the graph, whose internal consistency the codec re-derives, and which must be
+  projectable and diagnostic-free.
+
+``sources`` is **not** anchored. It is a self-declared manifest: a referent, size,
+and SHA-256 per file, checked for canonical form but never against the files
+themselves. Offline, the loader only cross-checks that every graph row's
+``source_file`` appears in it. So a re-sealed snapshot can be re-labelled — the
+sealed referents renamed consistently across the manifest and every graph row, a
+fabricated row appended, or a real row's digest restated — and it will load. Those
+three shapes are pinned as accepted behavior in the conformance matrix so the
+limit is stated rather than implied away.
+
+Passing ``source_roots`` is what closes them. The admission is then recomputed
+from the model tree on disk and must reproduce the sealed manifest exactly, which
+catches all three. **A caller that needs provenance, rather than only structure,
+must supply ``source_roots``.**
+
+This is a narrower guarantee than the earlier Item 7 candidate claimed, and a
+narrower one than this module first claimed. What did change is that the envelope
+no longer carries an identity field with *no* verification path at all: the
+candidate's ``capture.model_name`` and ``capture.captured_at`` could not be
+checked even with the sources in hand, whereas ``sources`` can.
 
 A consequence worth relying on: capture is deterministic. The same model in the
 same environment produces byte-identical snapshot files.
 
-**What the loader still cannot prove.** That the sealed graph really is the
-elaboration of the sealed sources is not decidable offline — checking it means
-elaborating the sources again, which needs the parser and a licence. That proof
-belongs to ``capture``, which elaborates and seals in one step.
+**What no amount of checking can prove offline.** That the sealed graph really is
+the elaboration of the sealed sources means elaborating them again, which needs
+the parser and a licence. Even ``source_roots`` only proves the sources are the
+ones named. That proof belongs to ``capture``, which elaborates and seals in one
+step.
 """
 
 from __future__ import annotations
@@ -436,6 +456,13 @@ def _validate_sources(document: dict[str, Any], source_roots: Sequence[Path] | N
     if sources["fingerprint"] != expected:
         raise SnapshotIntegrityError("snapshot source fingerprint mismatch")
 
+    # One-way on purpose: every graph row must name a sealed source, but a sealed
+    # source need not be named by a graph row. The converse would be a false
+    # invariant — the elaborator records a node's *declaration* site, so a file
+    # holding only usages contributes no row at all. Measured on the fixture
+    # corpus: 5 of 11 cleanly captured multi-file models have a sealed source no
+    # graph row references, and occurrence records carry no source location to
+    # widen the check onto. See the Slice 3A notes in the recovery plan.
     referents = {row["referent"] for row in sources["files"]}
     graph = _object(
         _object(document["instance_graph"], "instance_graph")["graph"], "instance_graph.graph"

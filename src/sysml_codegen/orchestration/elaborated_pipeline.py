@@ -11,6 +11,7 @@ portable ``root-N/<relpath>`` source referents on every graph node.
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from pathlib import Path
 
 from sysml_codegen.elaboration import elaborate, project
@@ -23,7 +24,11 @@ from sysml_codegen.orchestration.pipeline_context import (
 )
 from sysml_codegen.resolution.models import ComputationGraph
 
-__all__ = ["build_elaborated_pipeline", "elaborate_admitted_sources"]
+__all__ = [
+    "build_elaborated_pipeline",
+    "elaborate_admitted_sources",
+    "require_executable_content",
+]
 
 
 def build_elaborated_pipeline(model_paths: list[Path]) -> ComputationGraph:
@@ -40,18 +45,32 @@ def build_elaborated_pipeline(model_paths: list[Path]) -> ComputationGraph:
         raise SysMLParsingError("SysML validation diagnostics are unavailable after model loading")
 
     calc_defs = extractor.extract_calculation_definitions()
-    if not calc_defs:
-        raise CodeGenerationError(
-            "No calculation definitions found in models. "
-            "Ensure library models contain calc definitions."
-        )
-    return project(
-        elaborate(
-            extractor.model,
-            calc_defs,
-            validation_diagnostics=extractor.diagnostics.validation,
-        )
+    graph = elaborate(
+        extractor.model,
+        calc_defs,
+        validation_diagnostics=extractor.diagnostics.validation,
     )
+    require_executable_content(graph, calc_defs)
+    return project(graph)
+
+
+def require_executable_content(graph: InstanceGraph, calc_definitions: Sequence[object]) -> None:
+    """Refuse a model that carries nothing this pipeline could ever execute.
+
+    The gate is graph-level emptiness — no calculation, no constraint, and no
+    calculation definition — not the presence of a ``calc def`` on its own. That
+    follows the B37-01 ruling (recovery plan, Phase 2): modeled aggregation is
+    executable, so a model whose only computation is an aggregation expression is
+    legitimate even though the legacy pre-elaboration ``calc def`` check refuses
+    it. Both routes in this module share this one gate so capture cannot seal
+    something the live route would reject.
+    """
+    if not graph.calcs and not graph.constraints and not calc_definitions:
+        raise CodeGenerationError(
+            "No calculation, constraint, or calculation definition found in models. "
+            "There is nothing to generate: check that the model paths include the "
+            "library and design files you meant to load."
+        )
 
 
 def elaborate_admitted_sources(admission: SourceAdmission) -> InstanceGraph:
@@ -75,12 +94,14 @@ def elaborate_admitted_sources(admission: SourceAdmission) -> InstanceGraph:
     if extractor.diagnostics is None:
         raise SysMLParsingError("SysML validation diagnostics are unavailable after model loading")
 
+    calc_definitions = extractor.extract_calculation_definitions()
     graph = elaborate(
         extractor.model,
-        extractor.extract_calculation_definitions(),
+        calc_definitions,
         validation_diagnostics=extractor.diagnostics.validation,
     )
     admission.verify_after_parse(extractor.model)
+    require_executable_content(graph, calc_definitions)
     _rewrite_sources_as_referents(graph, admission)
     return graph
 

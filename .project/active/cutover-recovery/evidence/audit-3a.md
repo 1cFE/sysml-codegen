@@ -1,0 +1,348 @@
+# Independent Audit — Slice 3A (v6 envelope and source admission)
+
+**Verdict:** FINDINGS
+**Audited:** 2026-08-10
+**Commits:** `fe0b855` (slice) and `687f748` (OID record), branch `item7-rebuild`
+**Auditor:** fresh session, not the implementer. Every claim below was re-derived by reading
+code and running commands. No implementer note or commit-message claim was taken on trust.
+**Contract:** `.project/active/cutover-recovery/plan.md` — Slice 3A, "Validation for every
+Phase 3 slice", Non-Negotiable Execution Rules; stage brief `briefs/phase3a.md`.
+
+---
+
+## The Point
+
+Item 7 replaces the legacy string-resolution front end with one exact instance-graph authority.
+Slice 3A is the first vertical increment: a model elaborated live, captured to a v6 snapshot, and
+loaded back — in place and relocated — must produce one instance graph and one projected
+computation graph, license-free, while v5 stays whole.
+
+The slice carries one extra burden. The earlier Item 7 candidate sealed a free-form
+`capture.model_name` and `capture.captured_at` under an unkeyed SHA-256, so a forger who edited the
+file recomputed the digest and a re-labelled snapshot loaded clean. The plan pins the closure as a
+hard requirement: *"The loader must reject a re-sealed model-identity swap, which the failed
+candidate currently accepts."*
+
+## Summary
+
+The engineering is strong and most of the slice is exactly what it claims. v5 is genuinely
+untouched, the suite delta is precisely the 104 new tests, every gate re-runs green, the
+dispositions are honest against the forensic parts bin, and the envelope matrix is a real,
+non-tautological refusal matrix with re-sealing done properly. This is not the failed candidate's
+pattern of self-certification.
+
+But the headline claim is overclaimed. `sources.files[].referent` is a free-form declaration under
+the same unkeyed digest the old `model_name` sat under, and it is checked only for *syntax*, never
+against anything anchored. An adversarial probe against the real loader re-labelled a sealed
+snapshot's source referent, re-sealed it the way a forger would, and **it loaded clean**. The
+pinned refusal is therefore not achieved, while the plan, the commit message, the module docstring,
+and the test-module docstring all state that it is.
+
+That is the one finding that blocks 3B. Two smaller findings follow.
+
+---
+
+## Findings
+
+### F1 — HIGH — A re-sealed model-identity swap is still accepted; the closure claim is false
+
+**Severity:** HIGH. Blocks 3B.
+
+**What is claimed.** Four places assert the hole is closed:
+
+- `plan.md:497` — *"Closed by making the envelope carry no unanchored declaration at all."*
+- `plan.md:996-999` — *"There is no unanchored declaration left, so a model-identity swap cannot
+  be expressed."*
+- `src/sysml_codegen/snapshot/envelope.py:8-13` — *"There is deliberately no free-form
+  declaration — no model label, no capture timestamp."*
+- `tests/conformance/test_snapshot_v6_envelope.py:12-13` — *"This format carries no unanchored
+  declaration at all, so that swap cannot even be expressed."*
+
+**What is true.** The envelope does carry a free-form declaration: `sources.files[].referent`.
+`_validate_source_manifest_shape` (`src/sysml_codegen/snapshot/envelope.py:345`) passes each
+referent to `validate_source_referent`, which is a purely *syntactic* canonical-form check
+(`src/sysml_codegen/extraction/source_manifest.py:484-504`) — it validates percent-encoding and
+suffix, never the value. `_validate_sources` (`envelope.py:439-448`) then checks only that every
+graph row's `source_file` is *present in* `sources.files`; it never checks the converse, and
+nothing anchors the referent to anything outside the document.
+
+**Executed evidence.** Probe `/tmp/claude-audit3a/forge.py` — 14 cases, each editing a genuinely
+captured snapshot and re-sealing inner fingerprint, source fingerprint, and outer digest in the
+correct order, then calling the public `load_instance_graph_snapshot`. No internals stubbed.
+
+```
+00-control-genuine              *** ACCEPTED ***          (expected)
+01-toplevel-model-name          REFUSED SnapshotShapeError: unknown keys ['model_name']
+02-authority-model-name         REFUSED SnapshotShapeError: unknown keys ['model_name']
+03-integrity-captured-at        REFUSED SnapshotShapeError: unknown keys ['captured_at']
+04-root-path-smuggle            REFUSED SnapshotShapeError: sources.roots[0] unknown keys ['path']
+05-file-origin-smuggle          REFUSED SnapshotShapeError: sources.files[0] unknown keys ['origin']
+06-graph-row-smuggle            REFUSED SnapshotShapeError: attribute node unknown keys [...]
+07-consistent-referent-rename   *** ACCEPTED ***          <-- the identity swap
+08-appended-phantom-source      *** ACCEPTED ***
+09-restated-source-bytes        *** ACCEPTED ***
+10-appended-phantom-with-roots  REFUSED SnapshotStaleSourceError
+11-wholesale-content-swap       *** ACCEPTED ***          (expected — a valid other-model snapshot)
+12-future-version               REFUSED SnapshotShapeError: unsupported version 7
+13-sources-removed              REFUSED SnapshotShapeError: missing keys ['sources']
+14-freshness-genuine            *** ACCEPTED ***          (expected)
+```
+
+Three unexpected acceptances, one root cause:
+
+- **Case 07 — the identity swap.** Rename the sealed referent from `root-0/model.sysml` to
+  `root-0/customer_proprietary.sysml` in the manifest and in every graph row's `source_file`,
+  re-seal, load. Accepted. This is the same *shape* of attack as the old `model_name` re-label:
+  edit a self-declared label, recompute the unkeyed digest, load clean.
+- **Case 08 — phantom provenance.** Append a fabricated file row (arbitrary referent, size, and
+  SHA-256) that no graph row references. Accepted.
+- **Case 09 — restated source bytes.** Change a real row's sealed `sha256` and `size_bytes`.
+  Accepted.
+
+**Blast radius — it is not confined to metadata.** Probe `/tmp/claude-audit3a/misc_probe.py`
+confirms the referent reaches the projected public surface:
+
+```
+instance-graph node source_file values: ['root-0/model.sysml']
+'root-0/model.sysml' appears in projected ComputationGraph: True
+```
+
+So a forged referent propagates false provenance into the `ComputationGraph` that Slice 3B builds
+its `PipelineContext` from. That is why this blocks 3B rather than waiting.
+
+**Why the matrix missed it.** The identity cells only test *added* fields
+(`test_added_outer_field_is_refused_even_when_resealed:198`,
+`test_identity_declaration_cannot_be_smuggled_into_a_nested_block:220`). The single referent test,
+`test_source_referent_shape_is_enforced:270`, uses `/absolute/model.sysml` — which fails the
+syntactic gate. No test mutates a *syntactically valid* referent to a different value. The matrix
+has a hole exactly where the plan pinned the requirement.
+
+**The honest constraint.** No offline check can fix case 07. Verifying that a file really was named
+`root-0/model.sysml` means reading that file, which is what `source_roots` does — and case 10 shows
+that path works correctly. `envelope.py:28-31` already documents the general limit ("that the
+sealed graph really is the elaboration of the sealed sources is not decidable offline"). The defect
+is not that a limit exists; it is that four artifacts assert a stronger guarantee than the code
+delivers, and the plan's pinned refusal is ticked as met.
+
+**What would resolve it** (owner ruling likely needed, since it amends a plan-pinned requirement):
+
+1. Correct the four overclaims to state the actual guarantee: the envelope admits no *new*
+   unanchored field, but `sources` remains a self-declared manifest that is only verifiable when
+   `source_roots` is supplied.
+2. Add the three missing matrix cells (07, 08, 09) as tests asserting the *documented* behavior,
+   so the limit is pinned rather than merely absent.
+3. Decide and record whether provenance-critical loads must pass `source_roots`, and whether
+   `_validate_sources` should additionally require every sealed source row to be referenced by at
+   least one graph row (which closes 08, though not 07 or 09).
+4. Re-open `plan.md:497` and the Slice 3A checkbox at line 495 until 1–3 land.
+
+---
+
+### F2 — MEDIUM — Route equality's "live" arm is not an independent route
+
+**Severity:** MEDIUM. Should be resolved before 3B builds on the route-equality guarantee.
+
+`test_live_in_place_and_relocated_routes_have_one_graph`
+(`tests/conformance/test_snapshot_v6_routes.py:48-65`) compares three arms. The "live" arm calls
+`admit_sources` + `elaborate_admitted_sources` (`:49-50`). `capture_instance_graph_snapshot` calls
+**the same two functions** (`src/sysml_codegen/snapshot/capture.py:98-99`). The arms are not
+independent, so the test proves seal → encode → decode round-trip fidelity, not that capture and
+the live route agree.
+
+**Executed evidence.** `/tmp/claude-audit3a/route_probe.py` injects a defect into
+`elaborate_admitted_sources` (corrupting every calc `display_name`) and re-runs the test's own
+comparison body:
+
+```
+UNPATCHED         three-way agreement: graph=True projection=True   fingerprint 35f023e5c65fdc62
+DEFECT INJECTED   three-way agreement: graph=True projection=True   fingerprint ef290b6731042794
+```
+
+The fingerprint moves — the graph is demonstrably wrong — and the equality assertion stays green.
+
+The projected-surface comparison itself is sound: `_computation_digest` (`:33-45`) hashes the full
+`model_dump`, not a summary, which is what the plan demanded. The self-containment test is also
+real — `test_relocated_snapshot_needs_no_source_tree` (`:81-89`) genuinely `shutil.rmtree`s the
+model tree, and capture determinism (`test_snapshot_v6_envelope.py:122-134`) compares two real
+captures byte for byte.
+
+**What would resolve it.** Give the live arm a genuinely independent path — compare against
+`build_elaborated_pipeline` (`src/sysml_codegen/orchestration/elaborated_pipeline.py:29`), which
+reaches the elaborator without going through admission, and reconcile the expected `source_file`
+difference explicitly. Alternatively, defer the claim to 3B and downgrade this module's docstring
+(`test_snapshot_v6_routes.py:1-7`), which currently states the stronger three-route claim.
+
+---
+
+### F3 — LOW — `elaborate_admitted_sources` drops the empty-calc-defs gate its sibling raises
+
+**Severity:** LOW. Fix in 3A or carry as a declared 3B item.
+
+`build_elaborated_pipeline` refuses a model with no calculation definitions
+(`src/sysml_codegen/orchestration/elaborated_pipeline.py:43-47`). `elaborate_admitted_sources`, in
+the same file (`:78-82`), has no equivalent check, and `require_projectable()` does not catch it.
+
+**Executed evidence** (`/tmp/claude-audit3a/misc_probe.py`, on a fixture with one part def and zero
+calc defs):
+
+```
+build_elaborated_pipeline        -> CodeGenerationError: No calculation definitions found in models.
+elaborate_admitted_sources       -> ACCEPTED (calcs=0)
+capture_instance_graph_snapshot  -> WROTE nocalc.json
+```
+
+So capture seals a snapshot for a model the live route refuses. This is the "three empty graphs
+agreeing with each other" hazard that `test_the_route_carries_real_modelled_content`
+(`test_snapshot_v6_routes.py:68-78`) guards against at load time but capture does not guard at seal
+time.
+
+**What would resolve it.** Raise the same `CodeGenerationError` in `elaborate_admitted_sources`, or
+have `build_envelope` refuse a graph with no calcs, with a test pinning it.
+
+---
+
+## Verified green
+
+Each of these was re-run or re-derived, not accepted from the notes.
+
+**Full licensed suite.** `3462 passed / 47 skipped / 18 deselected`, zero failures, **zero
+`no live syside license` lines** — matches the claim exactly. Delta vs the Item 6 baseline
+(3358/47/18) is `+104 passed`, with skips and deselections unchanged.
+
+**The +104 is exactly the new tests.** The five new modules run standalone: `104 passed`. Collected
+node count 3527 vs baseline 3423 = +104. Collected test-file inventory compared against
+`evidence/baseline.json`: **zero of the 218 Item 6 test files removed**, exactly 5 added. (The four
+`tests/execution/` files absent from the default run are the 18 deselected nodes; they collect and
+pass in the execution lane.) No Item 6 test was removed, silenced, or deselected — plan rule 6
+holds.
+
+**v5 untouched.** `git diff --name-status beee0f4 fe0b855` shows no deletion anywhere.
+`snapshot/{loader,serializer,graph_rebuild,__init__}.py` are absent from the changed set;
+`SNAPSHOT_FORMAT_VERSION = 5` stands; `capture_snapshot` is intact beside the new
+`capture_instance_graph_snapshot`. This matters: the forensic candidate *replaced* `capture_snapshot`
+with the v6 implementation (`07531e64:src/sysml_codegen/snapshot/capture.py:16`, a 50-line file whose
+only entry point is the v6 capture), so the "Reimplement as an addition" disposition and its stated
+reason are both factually correct.
+
+**Execution lane.** `pytest tests/execution -m execution` → 18 passed, unchanged.
+
+**Gates.** `ruff check src` → 16 findings, error set **byte-identical** to the parent commit
+(`diff` of concise output: no differences). `mypy src` → 71 errors in 17 files; error set
+**byte-identical** to the parent commit, the only difference being `checked 82` → `checked 84`
+source files, i.e. the two new modules contribute zero errors. Zero new, zero fixed, confirmed by
+set comparison rather than by count. (The brief's "72-error baseline" is stale by one; the
+parent-commit measurement is the authority and it is clean.) `git diff --check` → clean on both the
+working tree and the commit range.
+
+**Changed paths ⊆ declared set.** 12 paths: 2 under `.project/`, 5 under `src/`, 5 under `tests/`.
+All fall within the brief's declared scope plus the one relocation
+(`snapshot/source_manifest.py` → `extraction/source_manifest.py`) that the plan notes declare in
+advance with its reason. No docs, spikes, probes, snapshots, or unrelated tests changed.
+
+**Generated-package smoke, re-run independently.** `sysml-codegen generate --models
+tests/fixtures/fusion_tea` produced a sealed **48-file** package. Traced the claimed artifact by
+hand: `inputs/hif_driver_params.json` carries `hif_driver__HIF_Driver__efficiency: 0.35`, which is
+`:>> efficiency = 0.35;` at `tests/fixtures/fusion_tea/designs/hif_ife/hif_driver.sysml:81`. Both
+the file count and the traced value match the notes exactly.
+
+**Dispositions honest, spot-checked against the forensic parts bin** (`07531e64`, read-only):
+
+- `extraction/source_manifest.py` — claimed "Reuse, relocated + 3 edits". Verified: the diff
+  against `07531e64:src/sysml_codegen/snapshot/source_manifest.py` is exactly the expanded
+  docstring, the `PINNED_SYSIDE_VERSION` constant replacing two literals, `envelope_sources()`
+  losing its `capture_options` argument, and both `import syside` statements routed through
+  `get_syside()`. 26 added / 12 removed lines. Staging, collision policy, symlink policy, race
+  detection, and referent encoding are unchanged. The claim is accurate.
+- `snapshot/envelope.py` — claimed "Reimplement". Verified: forensic is 976 lines and carries
+  `capture.model_name` / `capture.captured_at` (`07531e64:.../envelope.py:108,110,131-132,285-291`),
+  confirming the identity-hole premise is real, not assumed. Delivered is 529 lines with no
+  `capture` block.
+- **Rejected material did not leak in.** The forensic commit deletes
+  `snapshot/{loader,serializer,graph_rebuild}.py` and `orchestration/elaborated_pipeline.py`, and
+  rewrites `snapshot/__init__.py` and `orchestration/pipeline_builder.py`. None of those changes
+  are present in `fe0b855`.
+- Forensic `tests/conformance/test_snapshot_v6_envelope.py` has 6 test functions; the delivered
+  module has 22. The "covered about half the cells" note understates the improvement, in the
+  conservative direction.
+
+**Envelope matrix — cells the plan pins, each with a real test on public loader behavior.**
+Missing/current/future version (`:142-154`, parametrized over `None, 5, 7, "6", 6.0, True`);
+missing outer field (`:179-187`); added outer field, re-sealed (`:198-210`); nested identity
+smuggle (`:220-227`); wrong-typed outer fields (`:230-256`, 11 cases); graph replacement at three
+re-seal depths (`:362-383`); ordinary inner tamper (`:303-310`, `:329-354`); valid inner graph
+inside a tampered outer envelope (`:283-300`); source-manifest replacement (`:386-392`);
+compatibility (`:400-452`, 10 cases); certifiability (`:460-475`); stale sources
+(`test_source_admission_routes.py:66,78`). `_reseal_outer` and `_reseal_graph` (`:47-65`) genuinely
+recompute the digests, so no refusal is masked by a stale digest — my independent probe reproduced
+the same refusals with my own re-sealing code.
+
+**Test quality — the failed candidate's signature defect is absent.** Expectations are
+independently derived, not read back from the code under test: exact percent-encodings
+(`test_source_admission.py:84-87`), the closed failure vocabulary spelled out literally (`:270-280`),
+exact referent accept/reject lists (`:289-318`). The three `monkeypatch` uses in the envelope module
+(`:298, :324, :450`) install a `forbidden_decode` tripwire that *asserts decode is never reached* —
+they prove layer ordering rather than disabling the code under test. I found no test asserting a
+copy against itself and no tautological assertion. The two Item 6 invariant tests the forensic
+candidate deleted (`test_no_direct_syside_imports`, the internal-route isolation test) are present
+and passing, and they did catch real violations in this slice — direct evidence for plan rule 6.
+
+---
+
+## What I ran
+
+| Command | Outcome |
+|---|---|
+| `pytest tests/ -q` (licensed) | 3462 passed / 47 skipped / 18 deselected, 0 failures, 0 license-skip lines |
+| `pytest` on the 5 new modules | 104 passed |
+| `pytest tests/execution -m execution -q` | 18 passed |
+| `pytest tests/ --collect-only` + inventory diff vs `baseline.json` | 0 Item 6 files removed, 5 added |
+| `ruff check src` at `fe0b855` and `beee0f4` | 16 findings each; concise output identical |
+| `mypy src` at `fe0b855` and `beee0f4` | 71 errors each; error set identical (82 → 84 files checked) |
+| `git diff --check`, `git diff beee0f4 fe0b855 --check` | clean |
+| `git diff --name-status beee0f4 fe0b855` | 12 paths, no deletions |
+| `sysml-codegen generate --models tests/fixtures/fusion_tea` | 48-file sealed package; `0.35` traced to `hif_driver.sysml:81` |
+| `/tmp/claude-audit3a/forge.py` | 14 forgery cases; 3 unexpected acceptances (F1) |
+| `/tmp/claude-audit3a/route_probe.py` | injected defect invisible to route equality (F2) |
+| `/tmp/claude-audit3a/misc_probe.py` | calc-def asymmetry (F3); referent reaches projected graph |
+| `git -C /home/reid/1cfe/sysml-codegen show 07531e64:<path>` | disposition spot-checks, read-only |
+
+Environment: venv `/home/reid/1cfe/item7-rebuild-venv`, license via
+`/home/reid/1cfe/agentic-mbse/.env`. A temporary detached worktree at `/tmp/claude-audit3a/base`
+was used to measure the parent commit's lint/type baselines and was removed with
+`git worktree remove --force`. The repository is clean at `687f748`; no tracked file was modified
+and no commit was made.
+
+## Not verified
+
+Stated plainly rather than implied green.
+
+- **Real TEAx execution.** Not attempted. Plan Slice 3D work; the v6 route ends at the projected
+  `ComputationGraph` and no generated package is produced from a v6 snapshot yet.
+- **Package generation from a v6 snapshot.** Does not exist yet — the smoke ran the live route, as
+  the notes' scope statement says. The v6 route's end-to-end product value is therefore still
+  unproven; 3A proves the snapshot layer only.
+- **The 37-path corpus.** Not re-run in this audit. Slice 3A changes no resolver path, but I did
+  not confirm that by measurement.
+- **agentic-mbse.** Untouched by this slice and not audited. Its rebuild worktree was not inspected.
+- **The strictness change to `snapshot/instance_graph.py`.** The exact-key gates are new behavior on
+  a module the Item 5/6 elaboration tests share. The full suite is green, which is meaningful
+  evidence, but I did not separately hunt for a valid-graph shape that the new exact-key checks now
+  reject. Any committed historical instance-graph payload would be worth a targeted check before
+  Phase 4.
+- **Concurrency and filesystem-race behavior** of `admit_sources` beyond the single-threaded cases
+  the unit tests exercise.
+- **Whether F1 is acceptable to the owner.** I graded it against the plan's written requirement,
+  which it does not meet. Whether the residual offline limit is acceptable once documented honestly
+  is an owner decision, not mine.
+
+## Disposition
+
+**FINDINGS.** F1 must be resolved before Slice 3B begins — it is the exact requirement this slice
+existed to satisfy, the artifacts assert a guarantee the code does not provide, and the forged
+value propagates into the `ComputationGraph` that 3B consumes. F2 should be resolved with it, since
+3B will otherwise build on a route-equality guarantee that a probe shows is not load-bearing. F3 is
+small and may be carried as a declared 3B item.
+
+Nothing here is a rule-10 premise conflict. The plan's approach is sound and the slice's other work
+stands; F1 is a gap between a claim and its code, plus a matrix hole — both fixable inside 3A,
+though correcting a plan-pinned requirement is an owner call.
