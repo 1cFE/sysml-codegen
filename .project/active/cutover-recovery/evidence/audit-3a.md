@@ -346,3 +346,183 @@ small and may be carried as a declared 3B item.
 Nothing here is a rule-10 premise conflict. The plan's approach is sound and the slice's other work
 stands; F1 is a gap between a claim and its code, plus a matrix hole — both fixable inside 3A,
 though correcting a plan-pinned requirement is an owner call.
+
+---
+
+# Confirmation Pass — 2026-08-10
+
+**Verdict:** **CERTIFY**, with one named accepted residual (below). Slice 3B may begin.
+**Confirmed at:** `6d144bd` (fix commit `4858911`, OID record `74224a6`, orchestrator rulings
+`6d144bd`), branch `item7-rebuild`, worktree clean.
+**Scope:** focused re-verification of F1/F2/F3 and the gates. Not a fresh audit — the areas listed
+under "Not verified" above remain unverified unless restated here.
+
+All three findings are resolved. Each was re-checked by running my own probes against the code at
+`4858911`, not by reading the fix commit's claims.
+
+## F1 — RESOLVED as a pinned limit, not a closure
+
+The implementer did the right thing with a finding that had no clean fix: measured whether the
+structural check I proposed was sound, found it was not, and shipped the truth instead.
+
+**Re-ran my three forgery probes** (`/tmp/claude-audit3a/confirm_f1.py`), each re-sealing the
+sources fingerprint, inner fingerprint, and outer digest in order, against the real loader:
+
+```
+07 referent re-label         offline: LOADS (documented limit)   source_roots: REFUSED SnapshotStaleSourceError
+08 appended fabricated row   offline: LOADS (documented limit)   source_roots: REFUSED SnapshotStaleSourceError
+09 restated sha/size         offline: LOADS (documented limit)   source_roots: REFUSED SnapshotStaleSourceError
+```
+
+Behavior is unchanged offline — as intended — and `source_roots` refuses all three. Both halves are
+now pinned by tests parametrized over the same three shapes:
+`test_a_resealed_relabelling_is_accepted_offline` (`test_snapshot_v6_envelope.py:459`) asserts each
+loads *and* yields a usable graph, with a docstring naming it an accepted documented limit;
+`test_source_roots_refuse_every_resealed_relabelling` (`:476`) asserts each raises
+`SnapshotStaleSourceError`. The matrix now states the truth in both directions rather than implying
+closure by omission.
+
+**Spot-checked the converse-check decision independently.** The claim is that requiring every sealed
+source to be referenced by some graph row would encode a false invariant, because the elaborator
+records a node's *declaration* site. I captured three of the five named fixtures myself
+(`/tmp/claude-audit3a/confirm_f3.py` and a direct probe):
+
+```
+agg_literal_probe      sealed=[design.sysml, library.sysml]  unreferenced=[design.sysml]
+retype_model           sealed=[design.sysml, library.sysml]  unreferenced=[design.sysml]
+quoted_owner_formula   sealed=[design.sysml, library.sysml]  unreferenced=[library.sysml]
+```
+
+All three carry a sealed source no graph row references, and the direction matches the note in each
+case, including `quoted_owner_formula`, where it is the *library* rather than the design. The check
+I asked for would reject these legitimate snapshots. Taking the documented-limit branch was correct,
+and the measurement is real rather than asserted. It is pinned by
+`test_a_sealed_source_need_not_be_referenced_by_any_graph_row` (`:509`), which asserts the exact
+sealed and referenced sets for `agg_literal_probe`, and carried as a comment at the one-way check
+(`snapshot/envelope.py:459-465`).
+
+**The overclaims are corrected everywhere I found them.** `envelope.py`'s module docstring now
+separates the three anchored field kinds from `sources`, names all three re-labelling shapes, and
+states that a caller needing provenance must pass `source_roots`. The test-module docstring, the
+Slice 3A checkbox (`plan.md`), and the 3A identity paragraph are corrected. `fe0b855`'s commit
+message still overclaims; history was not rewritten and the plan records the correction explicitly,
+which is the right call.
+
+### The accepted residual, named
+
+**A v6 snapshot loaded without `source_roots` proves structure, not provenance.** A forger who
+re-seals correctly can rename the sealed source referents, append a fabricated source row, or restate
+a real row's digest, and the snapshot loads as a full usable graph. The forged referent reaches the
+projected `ComputationGraph`.
+
+This is not closable offline — every check is a function of bytes the forger controls — and
+mandating `source_roots` would break the relocated-snapshot route the cutover exists to deliver.
+The orchestrator ruling (`plan.md`, Slice 3A checkbox, `[AGENT]` 2026-08-10) accepts it for the
+rebuild and flags it for the Phase 5 owner packet. I concur with the disposition and record it here
+so the Phase 5 auditor inherits it as a named residual rather than rediscovering it: **the plan's
+originally pinned "must reject a re-sealed model-identity swap" is met for `model_name`/`captured_at`
+and is *not* met for source-referent provenance.** That is a genuine narrowing of a plan-pinned
+requirement and belongs in front of the owner, which is where it now goes.
+
+## F2 — RESOLVED and verified by re-running the injection
+
+The live arm now runs through `build_elaborated_pipeline`, which does not touch admission. I re-ran
+my exact injection (corrupt every calc `display_name` inside `elaborate_admitted_sources`, via a
+pytest plugin patching the module attribute so capture's local import picks it up):
+
+```
+UNPATCHED          5 passed
+DEFECT INJECTED    1 failed, 4 passed
+  test_live_in_place_and_relocated_routes_have_one_graph
+  test_snapshot_v6_routes.py:160: AssertionError: the live elaborator and the sealed graph disagree
+  assert '3312f2f4...' == '8669424899...'
+```
+
+The test now fails, on exactly the comparison that was missing before.
+
+**The second comparison is real, not a summary.** `_graph_digest_ignoring_sources`
+(`test_snapshot_v6_routes.py:75-88`) decodes the *encoded instance graph*, masks only the
+`source_file` field on each row, and hashes the whole `graph` object. That is why it catches
+`display_name` — the field projection drops, which is precisely why the projected-surface comparison
+alone could not see my defect. The projected comparison `_masked` (`:110-129`) masks named sites
+structurally (module `source_file`, entry-point group `name`/`class_name`/`source_file`, and
+`param_group`) rather than blanket-masking by key name, so it stays blind to nothing else. Arm
+independence is itself asserted by `test_the_live_arm_does_not_share_the_capture_route` (`:203`).
+
+## F3 — RESOLVED; both routes share one gate
+
+Confirmed by running both entry points on a model with no calc defs (`confirm_f3.py`):
+
+```
+build_elaborated_pipeline        -> CodeGenerationError: No calculation, constraint, or calculation definition found
+capture_instance_graph_snapshot  -> CodeGenerationError: No calculation, constraint, or calculation definition found
+```
+
+Both now raise from the single `require_executable_content`
+(`orchestration/elaborated_pipeline.py:56`), and the legacy pre-elaboration `calc def` precheck was
+**not** copied across — the gate is graph-level emptiness (no calc, no constraint, no calc
+definition). I verified the consequence the B37-01 ruling predicted: `agg_literal_probe`, whose only
+computation is a modeled aggregation, now passes the exact route and produces
+`calcs=1 attrs=3 constraints=0 diagnostics=0`, which is the ledger's amended `graph 1/3/0/0` exactly.
+`tests/conformance/test_elaboration_corpus_ledger.py` → 3 passed.
+
+**The ledger edit is honest.** Row 1 is reclassified `expected-collapse` → `expected-fix` with the
+reason recorded; the totals move 26/11 → 25/12 and 13 graphs/24 errors → 14/23; a note preserves
+what the Item 6 observation read and why the row moved. Critically, it does *not* resolve the
+`14/22/1` versus `15/22/0` question by preference — it records that axis as belonging to the
+un-re-run Phase-8 batch manifest and leaves it open, which is what `plan.md:316` demanded. The
+orchestrator ruling confirming this edit sits inside the B37-01 owner pre-ruling scope
+(`6d144bd`) is consistent with the pre-ruling as written (`plan.md:313-316`), which directed
+amending the ledger row and left the count re-derivation open.
+
+## Gates at `6d144bd`
+
+| Gate | Result |
+|---|---|
+| Full licensed suite | **3473 passed / 47 skipped / 18 deselected**, 0 failures, **0** `no live syside license` lines |
+| Delta vs `fe0b855` (3462) | **+11**, skips and deselections unchanged |
+| Delta accounted for | envelope 60→67 (+7: 3 offline-accept, 3 `source_roots`-refuse, 1 converse), routes 3→5 (+2), capture 4→6 (+2) = **+11 exactly** |
+| Delta vs Item 6 baseline (3358) | +115, all new tests; no Item 6 test removed, silenced, or deselected |
+| `ruff check src` | 16 findings, concise output **byte-identical** to the parent-commit baseline |
+| `mypy src` | 71 errors in 17 files; error set **identical** to baseline (82 → 84 files checked; the new module adds zero) |
+| `git diff --check` | clean |
+| Changed paths of `4858911` | 9, all inside the follow-up's declared set in the plan, including the mid-slice declaration of the ledger path |
+| Worktree | clean at `6d144bd`; I modified no tracked file but this one and made no commit |
+
+## The 3B blocker the fix uncovered
+
+Making the route arms independent surfaced a real product defect, and the implementer pinned it
+rather than normalising it away. `_group_identity` (`src/sysml_codegen/elaboration/project.py:164`)
+names each entry-point group after the source path; on the v6 route that path is the staging
+referent, so `root-0/model.sysml` yields group name `root_0_params` and class `Root0Params`. I read
+the function and confirmed the derivation: `path.stem` is `model`, so it falls through to
+`path.parent.name` = `root-0` → `sanitize_name(...).lower()` = `root_0`. A package generated from a
+v6 snapshot would ship `inputs/root_0_params.json` and a `Root0Params` schema class instead of names
+taken from the model.
+
+`test_the_two_routes_diverge_only_on_source_derived_naming`
+(`tests/conformance/test_snapshot_v6_routes.py:172`) encodes this honestly: it asserts the v6 side
+by value (`{"root_0_params"}`, `{"Root0Params"}`) and the live side by value
+(`{"source_identity_mixed_consumers_params"}`, `{"SourceIdentityMixedConsumersParams"}`), so the
+test states current behavior and will fail the day it changes. It does not assert the v6 names are
+*correct* — the docstring says plainly that this is a defect Slice 3B must resolve before the public
+authority switch. That is the right shape for a pin: 3B can consume it, and it cannot be mistaken
+for a passing guarantee. Confirmed green (1 passed) and confirmed recorded in `plan.md` with 3B
+named as owner.
+
+## Still not verified
+
+The confirmation pass did not widen scope. Everything under "Not verified" above still stands —
+real TEAx, package generation from a v6 snapshot, the 37-path corpus end to end, agentic-mbse, the
+`instance_graph.py` strictness change against historical payloads, and concurrency behavior in
+`admit_sources`. Additionally not verified in this pass: the two unmeasured members of the
+five-fixture converse-check set (`d38_caret`, `sample_model`) — I spot-checked three of five and all
+three held.
+
+## Disposition
+
+**CERTIFY.** All three findings are resolved with executed evidence, the gates are green and the
+suite delta is fully accounted for, and the artifacts now state what the code actually does. The
+accepted residual — a v6 snapshot loaded without `source_roots` proves structure, not provenance —
+is named above and carried to the Phase 5 owner packet. Slice 3B may begin, and inherits the
+`_group_identity` staging-referent defect as pinned work.
