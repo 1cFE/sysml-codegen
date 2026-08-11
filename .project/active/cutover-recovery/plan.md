@@ -580,7 +580,7 @@ Record every slice. Do not combine them later.
 
 | Slice | sysml-codegen OID | agentic-mbse OID | Full suites | Real TEAx |
 |---|---|---|---|---|
-| 3A | fe0b855, audit follow-up FOLLOWUP_OID | N/A | 3473 passed / 47 skipped / 18 deselected (+115, all new) | smoke PASS (fusion_tea, 48-file sealed package) |
+| 3A | fe0b855, audit follow-up 4858911 | N/A | 3473 passed / 47 skipped / 18 deselected (+115, all new) | smoke PASS (fusion_tea, 48-file sealed package) |
 | 3B | PENDING | N/A | PENDING | smoke PENDING |
 | 3C | PENDING | PENDING | PENDING | N/A |
 | 3D | PENDING | PENDING if changed | PENDING | PENDING |
@@ -1057,7 +1057,7 @@ above runs the live route.
 #### Slice 3A audit follow-up — F1, F2, F3
 
 - **Completed:** 2026-08-10
-- **Audit:** `evidence/audit-3a.md`, verdict FINDINGS. Commit: FOLLOWUP_OID.
+- **Audit:** `evidence/audit-3a.md`, verdict FINDINGS. Commit: 4858911.
 - **Declared path set:** `snapshot/envelope.py`, `orchestration/elaborated_pipeline.py`,
   `tests/conformance/test_snapshot_v6_{envelope,routes,capture}.py`, this plan, the two audit
   artifacts, and — declared mid-slice, see F3 — `.project/completed/20260809_elaborator-breadth/diff-ledger.md`.
