@@ -486,17 +486,18 @@ The forensic test audit is the starting shortlist, not a certification result.
 
 ### Slice 3A — V6 envelope and source admission
 
-- [ ] Write kept live/v6/relocated public behavior tests first.
-- [ ] Review and selectively recover `snapshot/{envelope,source_manifest,instance_graph,capture}.py`
-  plus the minimum live/load integration.
-- [ ] Preserve v5 production and tests during this slice.
-- [ ] Pin the complete v6 envelope matrix: missing/current/future versions; missing, added, and
+- [x] Write kept live/v6/relocated public behavior tests first.
+- [x] Review and selectively recover `snapshot/{envelope,instance_graph,capture}.py` and
+  `extraction/source_manifest.py` plus the minimum live/load integration.
+- [x] Preserve v5 production and tests during this slice.
+- [x] Pin the complete v6 envelope matrix: missing/current/future versions; missing, added, and
   wrong-typed outer fields; graph replacement; `model_name` and `captured_at` skew; ordinary inner
   tamper; and a valid inner graph inside a tampered outer envelope. The loader must reject a
-  re-sealed model-identity swap, which the failed candidate currently accepts.
-- [ ] Run original full suites, the named relocation/tamper matrix, and one generated package
+  re-sealed model-identity swap, which the failed candidate currently accepts. **Closed by making
+  the envelope carry no unanchored declaration at all — see the 3A notes.**
+- [x] Run original full suites, the named relocation/tamper matrix, and one generated package
   smoke.
-- [ ] Commit only the declared 3A path set.
+- [x] Commit only the declared 3A path set.
 
 ### Slice 3B — Defensive context and exact public projection
 
@@ -574,7 +575,7 @@ Record every slice. Do not combine them later.
 
 | Slice | sysml-codegen OID | agentic-mbse OID | Full suites | Real TEAx |
 |---|---|---|---|---|
-| 3A | PENDING | N/A | PENDING | smoke PENDING |
+| 3A | SLICE_3A_OID | N/A | 3462 passed / 47 skipped / 18 deselected (+104, all new) | smoke PASS (fusion_tea, 48-file sealed package) |
 | 3B | PENDING | N/A | PENDING | smoke PENDING |
 | 3C | PENDING | PENDING | PENDING | N/A |
 | 3D | PENDING | PENDING if changed | PENDING | PENDING |
@@ -960,9 +961,94 @@ Fill these during execution. Amend incorrect content rather than appending contr
 
 ### Phase 3 Completion
 
-- **Completed:** Pending
-- **Slice commits and evidence:** Pending
-- **Issues/deviations:** Pending
+- **Completed:** In progress — 3A done, 3B–3E pending
+- **Slice commits and evidence:** see the per-slice notes below
+- **Issues/deviations:** see the per-slice notes below
+
+#### Slice 3A Completion — V6 envelope and source admission
+
+- **Completed:** 2026-08-10
+- **Commit:** SLICE_3A_OID (sysml-codegen only; agentic-mbse untouched and clean at
+  `5088b417c9e5453271291d46cd5fb23fc0579b1e`)
+
+**What the slice proves.** One model elaborated live, captured to a v6 snapshot, and loaded back
+both in place and from a different directory produces one instance graph and one projected
+computation graph. The snapshot is self-contained — deleting the model tree does not change what
+loads — and capture is deterministic: the same model in the same environment produces byte-identical
+snapshot bytes. v5 is untouched and every Item 6 test still passes.
+
+**The identity hole, and how it is closed.** The forensic candidate sealed a free-form
+`capture.model_name` and a `capture.captured_at` timestamp under `integrity.digest`. That digest is
+an unkeyed SHA-256, so anyone who edits the file recomputes it: the candidate's loader accepted a
+re-labelled, re-sealed snapshot. No internal check can fix that, because every internal check is a
+function of the document the forger controls.
+
+The closure is to remove what the forger was re-pointing. Every field in the v6 envelope is now one
+of three things — a constant this build defines, an environment fact checked against the running
+process (SysIDE version, producer versions, the pinned 94-document standard-library digest), or
+content (the admitted source manifest and the graph). There is no unanchored declaration left, so a
+model-identity swap cannot be expressed: reintroducing `model_name` or `captured_at`, at the top
+level or smuggled into `authority`, is refused by the exact-shape gate. The only identity in the
+envelope is the source manifest, cross-checked against every graph row and, when the caller passes
+`source_roots`, recomputed from disk.
+
+This is a deliberate change to sealed-format semantics, which the slice brief sanctioned. It is not
+a rule-10 stop: the demanded refusal is achieved, and the loader's honest limit is documented in
+`snapshot/envelope.py` rather than papered over — that the sealed graph really is the elaboration of
+the sealed sources is not decidable offline, and `capture` is where that is established. Dropping
+`captured_at` also removes the byte-identity churn a re-capture used to cause.
+
+**Per-file dispositions.**
+
+| Path | Disposition | Reason |
+|---|---|---|
+| `extraction/source_manifest.py` | **Reuse**, relocated + 3 edits | Staged admission, referent normalization, collision/symlink/race policy, and the closed failure vocabulary are sound and independently tested. Edits: `PINNED_SYSIDE_VERSION` constant instead of a literal in two places; `envelope_sources()` lost its `capture_options` argument with the capture-options block; both `import syside` statements routed through `agentic_mbse.sysml.syside_adapter.get_syside()`. |
+| `snapshot/envelope.py` | **Reimplement** | Structure, layered failure order, and distinct error types kept. Rewritten for the identity closure (no `capture` block); the ~200-line hand-copy of every graph node's field list dropped, because the codec already owns that contract and a second copy silently diverges; error names no longer collide with v5's `SnapshotFormatError`; the referent regex replaced by the one `validate_source_referent`. |
+| `snapshot/instance_graph.py` | **Reuse** (strictness hunks only) | Exact-key rejection per node kind plus duplicate-JSON-key rejection. The candidate's reformatting-only hunks were left out. |
+| `snapshot/capture.py` | **Reimplement** as an addition | The candidate *replaced* `capture_snapshot`, which would have taken v5 with it. `capture_instance_graph_snapshot` was added beside it with the atomic-write behavior kept and the never-applied `design_path_filter` dropped. |
+| `orchestration/pipeline_builder.py` | **Reject** | The candidate rewrote this 6-phase file down to 95 lines, deleting the legacy builder mid-slice. The minimum seam was reimplemented as `elaborated_pipeline.elaborate_admitted_sources` instead. |
+| `snapshot/{loader,serializer,graph_rebuild}.py` deletions, `snapshot/__init__.py` rewrite | **Reject** | v5 production; retirement is Phase 4 work. The v6 API is reached through `sysml_codegen.snapshot.envelope`, so the package `__init__` keeps `SNAPSHOT_FORMAT_VERSION = 5` and no name collides. |
+| `tests/unit/test_source_admission.py` | **Reuse** + 3 added cases | Real behavior with independently derived expectations. Added the `PINNED_SYSIDE_VERSION` environment check and referent round-trip/refusal cases. |
+| `tests/conformance/test_snapshot_v6_{envelope,capture,routes}.py`, `test_source_admission_routes.py` | **Reimplement** from the candidate as material | The candidate's envelope matrix covered about half the cells and asserted the identity behavior that was wrong. Rewritten to the full matrix, with every refusal exercised against a *re-sealed* document. |
+
+**Two Item 6 architectural invariants the candidate broke, caught here.** The first draft of this
+slice failed `tests/unit/test_extractor.py::test_no_direct_syside_imports` (only the agentic-mbse
+adapter may import syside) and
+`tests/conformance/test_elaboration_dual_run.py::test_internal_route_is_not_a_shipped_builder_flag_or_legacy_adapter`
+(the internal exact route must not reach into the snapshot machinery). Both were fixed properly:
+syside now comes from `get_syside()`, and `source_manifest.py` moved from `snapshot/` to
+`extraction/`, which is its real home — it is the extraction front door, used by the live route as
+well as capture. **The forensic candidate deleted both of those test files** (347 lines), which is
+why the same two violations went unnoticed there. This is direct evidence for plan rule 6.
+
+**Deviation from the brief's candidate path list.** The brief named
+`src/sysml_codegen/snapshot/source_manifest.py`. It landed at
+`src/sysml_codegen/extraction/source_manifest.py` for the isolation-invariant reason above. The
+declared path set was updated before editing; no other path moved.
+
+**Tests, red then green.** All five modules failed to collect at `beee0f4` (missing
+`capture_instance_graph_snapshot`, `elaborate_admitted_sources`, `envelope`, `source_manifest`).
+After the slice: 104 new tests pass — 31 unit source-admission, 60 envelope matrix, 6 admission
+routes, 4 capture atomicity, 3 route equality.
+
+**Gates.**
+
+- Full licensed suite: **3462 passed / 47 skipped / 18 deselected**, zero failures, zero
+  `no live syside license` skip lines. Delta versus the Item 6 baseline is exactly +104 passed and
+  nothing else — the 104 new tests. Skips and deselections are unchanged, so no Item 6 test was
+  removed, silenced, or deselected.
+- Execution lane (`pytest tests/execution -m execution`): 18 passed, unchanged.
+- Generated-package smoke: `sysml-codegen generate --models tests/fixtures/fusion_tea` produced and
+  sealed a 48-file package. Manual artifact check: `inputs/hif_driver_params.json` carries
+  `hif_driver__HIF_Driver__efficiency = 0.35`, which traces to `:>> efficiency = 0.35;` at
+  `tests/fixtures/fusion_tea/designs/hif_ife/hif_driver.sysml:81`.
+- `ruff check src`: 16 findings, byte-identical to the baseline set — zero new.
+- `mypy src`: error set compared line by line against the baseline — zero new, zero fixed.
+- `git diff --check`: clean. Changed paths equal the declared set.
+
+**Scope note for 3B.** The v6 route ends at the projected `ComputationGraph`. Generating a package
+from a v6 snapshot needs a full `PipelineContext`, which is Slice 3B's declared work, so the smoke
+above runs the live route.
 
 ### Phase 4 Completion
 

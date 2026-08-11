@@ -93,7 +93,7 @@ def _scope_to_data(scope: ScopeId) -> dict[str, str]:
 
 
 def _scope_from_data(data: object) -> ScopeId:
-    value = _mapping(data, "scope")
+    value = _mapping(data, "scope", {"kind", "wire"})
     kind = _string(value.get("kind"), "scope.kind")
     wire = _string(value.get("wire"), "scope.wire")
     if kind == "occurrence":
@@ -111,7 +111,7 @@ def _output_port_to_data(port: OutputPortId) -> dict[str, str]:
 
 
 def _output_port_from_data(data: object) -> OutputPortId:
-    value = _mapping(data, "output port")
+    value = _mapping(data, "output port", {"calculation", "output"})
     return OutputPortId(
         NodeId.from_wire(_string(value.get("calculation"), "output.calculation")),
         DeclarationId.from_wire(_string(value.get("output"), "output.output")),
@@ -140,6 +140,20 @@ def _input_port_to_data(port: InputPortId) -> dict[str, object]:
 def _input_port_from_data(data: object) -> InputPortId:
     value = _mapping(data, "input port")
     kind = _string(value.get("kind"), "input.kind")
+    _require_exact_keys(
+        value,
+        "input port",
+        {"kind", "consumer", "formal"}
+        if kind == "consumer"
+        else {
+            "kind",
+            "consumer",
+            "reference_ordinal",
+            "edge_ordinal",
+            "referenced_declaration",
+            "target_occurrence",
+        },
+    )
     consumer = NodeId.from_wire(_string(value.get("consumer"), "input.consumer"))
     if kind == "consumer":
         return ConsumerPortId(
@@ -183,10 +197,13 @@ def _edge_from_data(data: object) -> InputRef | None:
     value = _mapping(data, "edge")
     kind = _string(value.get("kind"), "edge.kind")
     if kind == "node":
+        _require_exact_keys(value, "node edge", {"kind", "target"})
         return NodeRef(NodeId.from_wire(_string(value.get("target"), "edge.target")))
     if kind == "producer":
+        _require_exact_keys(value, "producer edge", {"kind", "target"})
         return ProducerRef(_output_port_from_data(value.get("target")))
     if kind == "literal":
+        _require_exact_keys(value, "literal edge", {"kind", "value"})
         literal = value.get("value")
         if not isinstance(literal, (float, int, str, bool)):
             raise ValueError(f"invalid literal edge value {literal!r}")
@@ -216,14 +233,30 @@ def _metadata_to_data(metadata: PortMetadata) -> dict[str, object]:
 
 
 def _metadata_from_data(data: object) -> PortMetadata:
-    value = _mapping(data, "port metadata")
+    value = _mapping(
+        data,
+        "port metadata",
+        {
+            "python_type",
+            "description",
+            "default_value",
+            "unit",
+            "qualified_name",
+            "unresolved_default_kind",
+            "formal_provenance",
+        },
+    )
     default = value.get("default_value")
     if default is not None and not isinstance(default, (float, int, str, bool)):
         raise ValueError(f"invalid port default {default!r}")
     raw_provenance = value.get("formal_provenance")
     formal_provenance = None
     if raw_provenance is not None:
-        provenance = _mapping(raw_provenance, "metadata.formal_provenance")
+        provenance = _mapping(
+            raw_provenance,
+            "metadata.formal_provenance",
+            {"declaration_id", "raw_name", "qualified_name"},
+        )
         formal_provenance = FormalProvenance(
             declaration_id=DeclarationId.from_wire(
                 _string(
@@ -231,9 +264,7 @@ def _metadata_from_data(data: object) -> PortMetadata:
                     "metadata.formal_provenance.declaration_id",
                 )
             ),
-            raw_name=_string(
-                provenance.get("raw_name"), "metadata.formal_provenance.raw_name"
-            ),
+            raw_name=_string(provenance.get("raw_name"), "metadata.formal_provenance.raw_name"),
             qualified_name=_string(
                 provenance.get("qualified_name"),
                 "metadata.formal_provenance.qualified_name",
@@ -292,7 +323,7 @@ def _decode_input_records(
     names: dict[InputPortId, str] = {}
     metadata: dict[InputPortId, PortMetadata] = {}
     for item in _list(raw, "inputs"):
-        record = _mapping(item, "input record")
+        record = _mapping(item, "input record", {"port", "edge", "name", "metadata"})
         port = _input_port_from_data(record.get("port"))
         if port.consumer != node_id:
             raise ValueError("input port consumer does not match its node")
@@ -320,16 +351,27 @@ def _occurrence_to_data(record: OccurrenceRecord) -> dict[str, object]:
 
 
 def _occurrence_from_data(data: object) -> OccurrenceRecord:
-    value = _mapping(data, "occurrence record")
+    value = _mapping(
+        data,
+        "occurrence record",
+        {
+            "occurrence_id",
+            "parent_id",
+            "containment_slot",
+            "occurrence_index",
+            "effective_usage_id",
+            "effective_type_ids",
+            "display_segment",
+            "package_display",
+        },
+    )
     occurrence_id = OccurrenceId.from_wire(
         _string(value.get("occurrence_id"), "occurrence.occurrence_id")
     )
     raw_parent = value.get("parent_id")
     raw_index = value.get("occurrence_index")
     occurrence_index = (
-        _integer(raw_index, "occurrence.occurrence_index")
-        if raw_index is not None
-        else None
+        _integer(raw_index, "occurrence.occurrence_index") if raw_index is not None else None
     )
     return OccurrenceRecord(
         occurrence_id=occurrence_id,
@@ -349,13 +391,9 @@ def _occurrence_from_data(data: object) -> OccurrenceRecord:
         ),
         effective_type_ids=tuple(
             DeclarationId.from_wire(_string(item, "occurrence.effective_type_id"))
-            for item in _list(
-                value.get("effective_type_ids"), "occurrence.effective_type_ids"
-            )
+            for item in _list(value.get("effective_type_ids"), "occurrence.effective_type_ids")
         ),
-        display_segment=_string(
-            value.get("display_segment"), "occurrence.display_segment"
-        ),
+        display_segment=_string(value.get("display_segment"), "occurrence.display_segment"),
         package_display=_optional_string(
             value.get("package_display"), "occurrence.package_display"
         ),
@@ -383,7 +421,27 @@ def _attr_to_data(node: AttrNode) -> dict[str, object]:
 
 
 def _attr_from_data(data: object) -> AttrNode:
-    value = _mapping(data, "attribute node")
+    value = _mapping(
+        data,
+        "attribute node",
+        {
+            "node_id",
+            "scope",
+            "declaration_id",
+            "slot_id",
+            "display_path",
+            "display_name",
+            "declaration_qn",
+            "value",
+            "value_site",
+            "alias_target",
+            "is_alias",
+            "alias_shape",
+            "source_file",
+            "source_line",
+            "owner_qualified_name",
+        },
+    )
     node_id = NodeId.from_wire(_string(value.get("node_id"), "attribute.node_id"))
     scope = _scope_from_data(value.get("scope"))
     declaration = DeclarationId.from_wire(
@@ -468,7 +526,34 @@ def _calc_to_data(node: CalcNode) -> dict[str, object]:
 
 
 def _calc_from_data(data: object) -> CalcNode:
-    value = _mapping(data, "calculation node")
+    value = _mapping(
+        data,
+        "calculation node",
+        {
+            "node_id",
+            "scope",
+            "declaration_id",
+            "display_path",
+            "display_name",
+            "calc_def_name",
+            "calc_def_qualified_name",
+            "inputs",
+            "outputs",
+            "unbound_formals",
+            "is_computed",
+            "expression_ir",
+            "aggregation_reference_ordinals",
+            "compilability",
+            "auto_impl_context",
+            "doc_comment",
+            "calc_expressions",
+            "calculation_definition_id",
+            "compilation_definition_id",
+            "compiled_output_ids",
+            "source_file",
+            "source_line",
+        },
+    )
     node_id = NodeId.from_wire(_string(value.get("node_id"), "calculation.node_id"))
     scope = _scope_from_data(value.get("scope"))
     declaration = DeclarationId.from_wire(
@@ -487,7 +572,7 @@ def _calc_from_data(data: object) -> CalcNode:
     output_names: dict[DeclarationId, str] = {}
     output_metadata: dict[DeclarationId, PortMetadata] = {}
     for item in _list(value.get("outputs"), "calculation.outputs"):
-        record = _mapping(item, "output record")
+        record = _mapping(item, "output record", {"declaration", "port", "name", "metadata"})
         output_declaration = DeclarationId.from_wire(
             _string(record.get("declaration"), "output.declaration")
         )
@@ -614,7 +699,35 @@ def _constraint_to_data(node: ConstraintNode) -> dict[str, object]:
 
 
 def _constraint_from_data(data: object) -> ConstraintNode:
-    value = _mapping(data, "constraint node")
+    value = _mapping(
+        data,
+        "constraint node",
+        {
+            "node_id",
+            "scope",
+            "declaration_id",
+            "display_path",
+            "display_name",
+            "constraint_def_name",
+            "inputs",
+            "unbound_formals",
+            "predicate_ir",
+            "source_form",
+            "owner_kind",
+            "owner_qualified_name",
+            "usage_qualified_name",
+            "membership_kind",
+            "predicate_source_key",
+            "is_negated",
+            "definition_qualified_name",
+            "eligibility",
+            "effective_definition_id",
+            "exclusion_reasons",
+            "exclusion_location",
+            "source_file",
+            "source_line",
+        },
+    )
     node_id = NodeId.from_wire(_string(value.get("node_id"), "constraint.node_id"))
     scope = _scope_from_data(value.get("scope"))
     declaration = DeclarationId.from_wire(
@@ -636,9 +749,7 @@ def _constraint_from_data(data: object) -> ConstraintNode:
         constraint_def_name=_string(
             value.get("constraint_def_name"), "constraint.constraint_def_name"
         ),
-        eligibility=Eligibility(
-            _string(value.get("eligibility"), "constraint.eligibility")
-        ),
+        eligibility=Eligibility(_string(value.get("eligibility"), "constraint.eligibility")),
         effective_definition_id=(
             DeclarationId.from_wire(
                 _string(
@@ -703,7 +814,11 @@ def _diagnostic_to_data(item: Diagnostic) -> dict[str, object]:
 
 
 def _diagnostic_from_data(data: object) -> Diagnostic:
-    value = _mapping(data, "diagnostic")
+    value = _mapping(
+        data,
+        "diagnostic",
+        {"code", "consumer", "consumer_display", "param_name", "detail"},
+    )
     code_value = _string(value.get("code"), "diagnostic.code")
     try:
         code: ElaborationCode | ReadinessCode = ElaborationCode(code_value)
@@ -768,15 +883,23 @@ def encode_instance_graph(graph: InstanceGraph) -> bytes:
 def decode_instance_graph(payload: bytes | str) -> InstanceGraph:
     """Validate and reconstruct a resolved graph without loading a semantic model."""
     try:
-        raw = json.loads(payload)
-        document = _mapping(raw, "instance graph document")
+        raw = json.loads(payload, object_pairs_hook=_reject_duplicate_keys)
+        document = _mapping(
+            raw,
+            "instance graph document",
+            {"schema_version", "fingerprint", "graph"},
+        )
         schema_version = _string(document.get("schema_version"), "document.schema_version")
         if schema_version != INSTANCE_GRAPH_SCHEMA_VERSION:
             raise ValueError(
                 f"unsupported instance graph schema {schema_version!r}; "
                 f"expected {INSTANCE_GRAPH_SCHEMA_VERSION!r}"
             )
-        graph_data = _mapping(document.get("graph"), "document.graph")
+        graph_data = _mapping(
+            document.get("graph"),
+            "document.graph",
+            {"occurrences", "attrs", "calcs", "constraints", "diagnostics"},
+        )
         expected = _fingerprint(schema_version, graph_data)
         actual = _string(document.get("fingerprint"), "document.fingerprint")
         if actual != expected:
@@ -824,12 +947,36 @@ def decode_instance_graph(payload: bytes | str) -> InstanceGraph:
         raise InstanceGraphCodecError(f"invalid resolved graph payload: {error}") from error
 
 
-def _mapping(value: object, label: str) -> dict[str, Any]:
+def _mapping(
+    value: object,
+    label: str,
+    exact_keys: set[str] | None = None,
+) -> dict[str, Any]:
     if not isinstance(value, dict):
         raise ValueError(f"{label} must be an object")
     if not all(isinstance(key, str) for key in value):
         raise ValueError(f"{label} keys must be strings")
+    if exact_keys is not None:
+        _require_exact_keys(value, label, exact_keys)
     return value
+
+
+def _require_exact_keys(value: dict[str, Any], label: str, keys: set[str]) -> None:
+    actual = set(value)
+    if actual != keys:
+        raise ValueError(
+            f"{label} has missing keys {sorted(keys - actual)!r} "
+            f"and unknown keys {sorted(actual - keys)!r}"
+        )
+
+
+def _reject_duplicate_keys(pairs: list[tuple[str, object]]) -> dict[str, object]:
+    result: dict[str, object] = {}
+    for key, value in pairs:
+        if key in result:
+            raise ValueError(f"duplicate JSON object key {key!r}")
+        result[key] = value
+    return result
 
 
 def _list(value: object, label: str) -> list[Any]:
