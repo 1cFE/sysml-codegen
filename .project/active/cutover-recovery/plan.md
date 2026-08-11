@@ -605,7 +605,7 @@ Record every slice. Do not combine them later.
 | 3A | fe0b855, audit follow-up 4858911 | N/A | 3473 passed / 47 skipped / 18 deselected (+115, all new) | smoke PASS (fusion_tea, 48-file sealed package) |
 | 3B | d91431b, audit follow-up 2f28dde | N/A | 3520 passed / 47 skipped / 18 deselected (+47, all new) | smoke PASS (live + v6-snapshot packages, group names equal; legacy CLI package unchanged at 48 files) |
 | 3C | 7af5dc9, audit follow-up a6c41bc | 8b63393, audit follow-up cc6c7a7 | codegen 3538 passed / 47 skipped / 18 deselected (+18, all new); agentic 1825 passed / 1 skipped / 5 deselected (+6, all new) | N/A |
-| 3D | 848628b, audit follow-up PENDING_3D_FU | N/A (untouched, clean at `cc6c7a7`) | codegen 3539 passed / 47 skipped / 38 deselected (+1 passed, +20 deselected — all new); agentic 1825 passed / 1 skipped / 5 deselected (unchanged) | **PASS** — 20 real-TEAx tests, live + relocated-v6 sealed packages, 11 outputs each, LCOE `270.1211779380445` |
+| 3D | 848628b, audit follow-up fa4eea0 | N/A (untouched, clean at `cc6c7a7`) | codegen 3539 passed / 47 skipped / 38 deselected (+1 passed, +20 deselected — all new); agentic 1825 passed / 1 skipped / 5 deselected (unchanged) | **PASS** — 20 real-TEAx tests, live + relocated-v6 sealed packages, 11 outputs each, LCOE `270.1211779380445` |
 | 3E | PENDING | PENDING if changed | PENDING | PENDING |
 
 ---
@@ -1930,7 +1930,7 @@ model — correctly green on both sides, and a guard rather than a red. After th
 
 - **Completed:** 2026-08-11
 - **Audit:** `evidence/audit-3d.md`, verdict **CERTIFY** (nothing blocked 3E), 5 findings.
-  Recorded at `d78788f`. Commit: PENDING_3D_FU
+  Recorded at `d78788f`. Commit: fa4eea0
 - **Declared path set:** `src/sysml_codegen/elaboration/elaborate.py`,
   `tests/execution/test_fusion_tea_real_teax.py`, `tests/execution/fusion_tea_arithmetic.py`, and
   this plan. Actual changed paths equal that set.
