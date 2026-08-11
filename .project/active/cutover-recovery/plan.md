@@ -410,8 +410,12 @@ project plan can be reviewed independently of implementation.
 
 Commit the approved recovery and corrected Item 7 project artifacts before production work.
 
-- sysml-codegen planning OID: `PENDING`
-- agentic-mbse planning OID, if project metadata changes there: `PENDING` or `N/A`
+- sysml-codegen planning OID: `4e6a1167d10a36288cc4bcbc051b5448445c9516` on branch
+  `item7-rebuild`. 25 staged paths, every one under `.project/**`, verified with
+  `git diff --cached --name-only`. Commit hooks passed; no bypass was used or authorized.
+- agentic-mbse planning OID, if project metadata changes there: `N/A` — no project metadata
+  changed in that repository during Phase 2. Its rebuild worktree is clean at
+  `5088b417c9e5453271291d46cd5fb23fc0579b1e`.
 
 ---
 

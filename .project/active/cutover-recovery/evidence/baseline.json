@@ -1059,5 +1059,15 @@
       "detail": "Without the web extra, 18 tests fail on missing trafilatura/PIL. Without the venv bin on PATH, 10 more fail because they shell out to 'agentic-mbse' and 'python'. Both are environment shape, not regressions; with both fixed the suite is fully green.",
       "impact": "a naive rebuild reads as 28 failures"
     }
-  ]
+  ],
+  "planning_commit": {
+    "sysml-codegen": {
+      "oid": "4e6a1167d10a36288cc4bcbc051b5448445c9516",
+      "branch": "item7-rebuild",
+      "staged_paths": 25,
+      "path_gate": "PASS - all staged paths under .project/**",
+      "hooks": "passed; no --no-verify"
+    },
+    "agentic-mbse": "N/A - no project metadata changed in that repository during Phase 2"
+  }
 }
