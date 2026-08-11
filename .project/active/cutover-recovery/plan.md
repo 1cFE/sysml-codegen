@@ -3795,8 +3795,8 @@ reported at each stop.
 | 15 | `2168b36` | seven more genuine repoints, and the ledger's own gate catching one |
 | 16 | `6c7bc0b` | the five unmeasured duals re-checked — all five premises false, two of them unexecutable |
 | 17 | `6c7bc0b` | the snapshot-format family (9 files) — six subjects ending, three localised |
-| 18 | *(this commit)* | the legacy-graph-driven families (13 files) |
-| 19 | *(this commit)* | the last thirteen, and the compiler rows reframed — **blockers reach 0** |
+| 18 | `6488000` | the legacy-graph-driven families (13 files) |
+| 19 | `6488000` | the last thirteen, and the compiler rows reframed — **blockers reach 0** |
 
 **Blockers, two-axis union: 124 → 60 (chunk 10) → 35 (chunk 15) → 26 (17) → 13 (18) → 0 (19).**
 Every group READY. Row dispositions stand at **133 `retire-with-owner`, 34 `repoint`,
