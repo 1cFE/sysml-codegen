@@ -1,5 +1,25 @@
 # 03 - Resolution Overview
 
+> **Status: retiring.** This document describes the string-resolution layer
+> (`analysis/dependency_backtracker.py`, `resolution/graph_builder.py`,
+> `resolution/producer_resolution.py`, `core/output_registry.py`). That layer is present in
+> the tree and importable, and is **not reachable from any public caller** — since Slice 3E the
+> exact route is the only public authority. Its removal is prepared and gated on owner
+> acceptance at the Phase 5 stop; the runbook is the recovery plan's Gate 4B.
+>
+> Everything below is accurate about that layer. It is not a description of what the public
+> route does. For that, read [00-pipeline-overview](00-pipeline-overview.md) and
+> [02-orchestration](02-orchestration.md).
+>
+> **The public route answers the same question differently.** The elaborator resolves every
+> reference against typed node identity — occurrence enumeration, never a key built from a
+> scope-prefixed string — so the scope problem this document opens with does not arise: a
+> consumer holds a typed reference to the node that supplies it. An unresolvable reference is a
+> typed refusal rather than a fall-through to an entry point.
+>
+> This document also cites `resolution/input_resolver.py`, which was deleted before the
+> recovery began (at `936315c`).
+
 ## The One Question
 
 Resolution has a single job. For every input of every module in the pipeline,

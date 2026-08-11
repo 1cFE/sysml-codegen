@@ -1,5 +1,20 @@
 # 25 - Hierarchy Resolver
 
+> **Status: retiring.** This document describes `extraction/hierarchy_resolver.py`. It is
+> present in the tree and importable, and **not reachable from any public caller** — measured:
+> the exact route's construction closure reaches `extraction/extractor.py` and
+> `extraction/expression_compiler.py`, and not this module. Since Slice 3E the exact route is
+> the only public authority; removal is prepared and gated on owner acceptance at the Phase 5
+> stop (recovery plan, Gate 4B).
+>
+> **The structural patterns are still read — by the elaborator, from the model.** `:>>`
+> redefinitions become value sites on attribute nodes, multiplicity becomes enumerated
+> occurrences, and `sum()` becomes one term per member occurrence. What is gone is the typed
+> intermediate structures this module produced for a later resolution pass to match against.
+>
+> Everything below is accurate about the hierarchy resolver. For the public route, read
+> [00-pipeline-overview](00-pipeline-overview.md).
+
 ## What Problem It Solves
 
 SysML v2 models express structural patterns — `:>>` redefinitions, child

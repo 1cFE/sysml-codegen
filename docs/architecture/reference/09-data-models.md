@@ -1,5 +1,27 @@
 # 09 -- Data Models Reference
 
+> **Status: mixed — read the model, then check which half it is in.** Since Slice 3E the exact
+> route is the only public authority, and this document's model set straddles the line.
+>
+> **Live on the public route:** `ComputationGraph`, `PipelineModule`, `ModuleInput`,
+> `ModuleOutput`, `InputSource`, `EntryPoint`, `EntryPointType`, `ParameterGroup`,
+> `ModuleKind`, `OutputAlias`, and the constraint-catalog models — all in
+> `resolution/models.py`, which projection produces and generation consumes. The extraction
+> models `CalculationDefinitionData` and its enums are live too: the exact route loads and
+> extracts through `extraction/extractor.py`.
+>
+> **Retiring:** `BacktrackingResult`, `DesignAttributeData`, `DerivedParameterGroup`,
+> `ParameterSource`, `BindingResolution`, `ChannelAlias`, the `OutputRegistry` types, and the
+> hierarchy/aggregation extraction structures. Their owners (`analysis/`,
+> `resolution/graph_builder.py`, `core/output_registry.py`,
+> `extraction/hierarchy_resolver.py`) are present, importable, and unreachable from any public
+> caller.
+>
+> **Nothing is removed here.** Deleting the retiring rows is ledger row **L-120**, which the
+> recovery plan couples to an edit of `tests/conformance/test_data_models.py` in the same
+> commit; that pair ships with the retirement, not with this documentation gate. The banner
+> adds the distinction without changing what the document covers.
+
 ## Why This Document Exists
 14 documents in this set link here as the canonical field reference. When a doc
 says "see [09-data-models](09-data-models.md#resolution-models)," the reader

@@ -1,5 +1,23 @@
 # 07 -- Graph Assembly
 
+> **Status: retiring.** This document describes `build_computation_graph()` and its helpers in
+> `resolution/graph_builder.py`. That module is present in the tree and importable, and is
+> **not reachable from any public caller** — since Slice 3E the exact route is the only public
+> authority. Removal is prepared and gated on owner acceptance at the Phase 5 stop (recovery
+> plan, Gate 4B).
+>
+> **The subject survives; the owner does not.** The public route still topologically sorts the
+> modules, still refuses a producer reference with no output, and still packs one
+> `ComputationGraph` — projection does it (`elaboration/project.py`, `_topological_modules` and
+> `_claim_channel`). The V11 params-coverage check is unchanged and still runs at the generation
+> boundary, from `resolution/uncovered_params.py`.
+>
+> Everything below is accurate about the legacy assembly. For the public route, read
+> [00-pipeline-overview](00-pipeline-overview.md).
+>
+> This document also cites `core/graph_algorithms.py`, which has never existed in this tree.
+> Recorded rather than fixed: it predates the recovery and needs an owner.
+
 After [resolution](03-resolution-overview.md), [module construction](05-module-factory.md),
 and [entry point classification](06-entry-point-classifier.md), every piece of the
 pipeline exists as a separate data structure. Graph assembly is the final step: it

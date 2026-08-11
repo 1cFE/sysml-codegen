@@ -1,5 +1,20 @@
 # 05 -- Module Factory: Building the 3 Types of Pipeline Modules
 
+> **Status: retiring.** This document describes the three factory functions in
+> `resolution/graph_builder.py`. That module is present in the tree and importable, and is
+> **not reachable from any public caller** — since Slice 3E the exact route is the only public
+> authority. Removal is prepared and gated on owner acceptance at the Phase 5 stop (recovery
+> plan, Gate 4B).
+>
+> **The subject survives; the owner does not.** The public route still produces `CALCULATION`,
+> `FORMULA`, and `AGGREGATION` modules, and still returns them as pure data — projection builds
+> them from the instance graph (`elaboration/project.py`, `_build_calculation_modules` and the
+> computed-input path). What is gone is the resolution work these factories did while building:
+> projection classifies sources elaboration has already resolved.
+>
+> Everything below is accurate about the factories. For the public route, read
+> [00-pipeline-overview](00-pipeline-overview.md).
+
 Module construction is decoupled from ad-hoc inline resolution. CalcUsage
 factories receive pre-resolved data (from the
 [backtracker](11-analysis-backtracker.md)). FORMULA factories use the

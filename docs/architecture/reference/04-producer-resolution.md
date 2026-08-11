@@ -1,5 +1,18 @@
 # 04 -- Producer Resolution: The One Resolution Authority
 
+> **Status: retiring.** This document describes `resolution/producer_resolution.py`. That module
+> is present in the tree and importable, and is **not reachable from any public caller** — since
+> Slice 3E the exact route is the only public authority, and it resolves references in the
+> elaborator against typed node identity rather than through a key-form ladder. Removal is
+> prepared and gated on owner acceptance at the Phase 5 stop (recovery plan, Gate 4B).
+>
+> The title's claim was true of the route it was written for and is worth keeping in view: the
+> defect it cured was three ladders that each invented their own lookup order. The exact route
+> cures the same defect differently, by not looking anything up.
+>
+> Everything below is accurate about that module. For the public route, read
+> [00-pipeline-overview](00-pipeline-overview.md) and [02-orchestration](02-orchestration.md).
+
 Every consumer that asks *which real thing produces this consumed value?* answers
 it in exactly one place: `resolve_producer()` in
 `resolution/producer_resolution.py`. A calculation binding, a constraint actual,

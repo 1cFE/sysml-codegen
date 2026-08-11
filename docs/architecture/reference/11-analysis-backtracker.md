@@ -1,5 +1,19 @@
 # 11 - Analysis: DependencyBacktracker
 
+> **Status: retiring.** This document describes `analysis/dependency_backtracker.py`. That
+> module is present in the tree and importable, and **not reachable from any public caller** —
+> since Slice 3E the exact route is the only public authority. Removal is prepared and gated on
+> owner acceptance at the Phase 5 stop (recovery plan, Gate 4B).
+>
+> **There is no DFS on the public route.** The backtracker's search existed to discover which
+> usages are needed by resolving each binding as it went. The elaborator builds the whole
+> instance graph and then projects it, so reachability is a property of the graph rather than
+> the output of a traversal, and target selection (when a caller asks for one) is a closure
+> computed over that graph (`_selection_closure`, `elaboration/project.py`).
+>
+> Everything below is accurate about the backtracker. For the public route, read
+> [00-pipeline-overview](00-pipeline-overview.md).
+
 ## Purpose
 
 `DependencyBacktracker` performs depth-first search (DFS) from root calc usages through

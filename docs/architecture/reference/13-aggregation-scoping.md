@@ -1,5 +1,27 @@
 # 13 - Aggregation Scoping
 
+> **Status: retiring.** This document describes `find_instance_paths_for_partdef()`,
+> `_scope_aggregation_expressions()`, and `_build_chain_aliases()` in
+> `orchestration/pipeline_builder.py`. All three are present in the tree and importable, and
+> **not reachable from any public caller** — since Slice 3E the exact route is the only public
+> authority. Removal is prepared and gated on owner acceptance at the Phase 5 stop (recovery
+> plan, Gate 4B).
+>
+> **The public route scopes aggregation by enumeration, not by instance discovery.** A part
+> def's aggregation is elaborated once per occurrence of that def, and an aggregation over an
+> arrayed child expands into one term per member occurrence — no parametric multiply, no
+> instance-path matching against virtual usages.
+>
+> **If you came here to model an aggregation, read this instead.** The rule the exact route
+> imposes on a rollup is
+> [modeling-assumptions §4 — One named intermediate per child role](../modeling-assumptions.md#one-named-intermediate-per-child-role):
+> an assembly cannot write `sum(a.capital_cost) + sum(b.capital_cost)`, because both terms
+> render `capital_cost` and the model is refused with `SI_RENDERING_COLLISION`. Give each
+> child's contribution its own named attribute and add the names.
+>
+> Everything below is accurate about the legacy scoping. For the public route, read
+> [00-pipeline-overview](00-pipeline-overview.md).
+
 ## The Problem
 
 SysML PartDefinitions define aggregation expressions at the **type level**: a `Solar_Array` PartDef

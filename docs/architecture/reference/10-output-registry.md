@@ -1,5 +1,21 @@
 # 10 - Output Registry
 
+> **Status: retiring.** This document describes `core/output_registry.py` and the 4-phase
+> registration protocol in `orchestration/output_registry_builder.py`. Both are present in the
+> tree and importable, and **not reachable from any public caller** — since Slice 3E the exact
+> route is the only public authority. Removal is prepared and gated on owner acceptance at the
+> Phase 5 stop (recovery plan, Gate 4B).
+>
+> **The problem it solves does not arise on the public route.** The registry exists because
+> extraction produced `source_path` strings in several formats that might name the same output.
+> The elaborator resolves a reference against the node that declares it, so there is no string
+> to disambiguate; projection indexes output channels straight from the instance graph and
+> claims each channel name exactly once (`_index_output_channels`, `_claim_channel` in
+> `elaboration/project.py`).
+>
+> Everything below is accurate about the registry. For the public route, read
+> [00-pipeline-overview](00-pipeline-overview.md).
+
 ## What Problem It Solves
 
 SysML bindings reference upstream outputs using different string formats depending
