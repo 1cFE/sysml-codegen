@@ -40,7 +40,11 @@ _RUN_C_LCOE = 270.1211779380445
 # gain is emitted per-consumer (it is a plant DESIGN_ATTRIBUTE bound into each calc usage,
 # NOT a cross-part fan-out that collapses by source QN). So lcoe_calc reads its own key,
 # distinct from recirc_calc's. Perturbing only lcoe_calc's key moves lcoe alone.
-_GAIN_EP_KEY = "hif_plant_pkg__hif_plant__lcoe_calc__gain"
+#
+# The formal is `gain_in` because recovery Slice 3D migrated the fifteen Fusion Tea
+# self-named bindings in place to the D-5 form (`in gain_in = gain`). Only the emitted
+# field name moved; the value, the wiring, and the arithmetic below are unchanged.
+_GAIN_EP_KEY = "hif_plant_pkg__hif_plant__lcoe_calc__gain_in"
 _GAIN_PERTURBED = 100.0
 
 # Hand-computed from ife_lcoe.sysml:53-125 with gain=100 and the emitted inputs, and the
@@ -129,7 +133,7 @@ def test_meier_driver_cost_module(tmp_path):
     """Anchor A (module-level): the Meier driver-cost calc's own arithmetic."""
     cls = _module_class(_gen(tmp_path), "hif_economics.Meier_HIF_Driver_CostModule")
     data = cls().run(
-        beam_energy_mj=5.0, driver_efficiency=0.35, num_chambers=1.0, rep_rate=3.5
+        beam_energy_mj_in=5.0, driver_efficiency=0.35, num_chambers_in=1.0, rep_rate=3.5
     ).data
     assert data.gamma == pytest.approx(_ANCHOR_A_GAMMA, rel=1e-6)
     assert data.cost_billions == pytest.approx(_ANCHOR_A_COST_BILLIONS, rel=1e-6)
@@ -139,6 +143,6 @@ def test_recirc_fraction_module(tmp_path):
     """Anchor B (module-level): the recirculating-power-fraction calc's own arithmetic."""
     cls = _module_class(_gen(tmp_path), "fusion_cycle.Recirculating_Power_FractionModule")
     data = cls().run(
-        eta=0.35, gain=80.0, blanket_multiplier=1.15, thermal_efficiency=0.43
+        eta=0.35, gain_in=80.0, blanket_multiplier=1.15, thermal_efficiency_in=0.43
     ).data
     assert data.root == pytest.approx(_ANCHOR_B_F_RECIRC, rel=1e-6)

@@ -783,7 +783,11 @@ class _Projection:
                     compiled_expression=compiled,
                     module_kind=kind,
                     auto_impl_context=auto_impl_context,
-                    calc_def_name=node.calc_def_name,
+                    # Generation spells this straight into a class name and a schema
+                    # filename, so a SysML name like 'Recirculating Power Fraction'
+                    # has to arrive as an identifier. Unsanitized, the package ships
+                    # `class Recirculating Power FractionModule` and refuses to import.
+                    calc_def_name=sanitize_name(node.calc_def_name),
                     calc_def_qualified_name=node.calc_def_qualified_name,
                     doc_comment=node.doc_comment,
                     calc_expressions=list(node.calc_expressions) or None,

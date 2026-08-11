@@ -540,23 +540,28 @@ The forensic test audit is the starting shortlist, not a certification result.
 
 ### Slice 3D — Fusion Tea customer vertical and real TEAx
 
-- [ ] Write the real TEAx test first. It must load/extract, generate, verify, seal, discover, and
+- [x] Write the real TEAx test first. It must load/extract, generate, verify, seal, discover, and
   execute through public APIs.
-- [ ] Pin hand arithmetic and the owner-relevant behaviors: LCOE, C25 availability, C2 thermal
+- [x] Pin hand arithmetic and the owner-relevant behaviors: LCOE, C25 availability, C2 thermal
   efficiency, C19's 80.0 on both consumer paths, and every-and-only mutation sets.
-- [ ] Use the independent forensic baseline as a target to re-prove, not as accepted authority:
-  11 outputs, live/relocated equality, and LCOE `270.1211779380445`.
-- [ ] Review each proposed Fusion Tea model rename against the exact fifteen-item ledger. Preserve
-  equations, defaults, topology, and physics.
-- [ ] Run the full 37-path comparison while both implementations remain available.
-- [ ] Make every corpus driver handle both readiness `ElaborationError` (`.findings`) and
+- [x] Use the independent forensic baseline as a target to re-prove, not as accepted authority:
+  11 outputs, live/relocated equality, and LCOE `270.1211779380445`. All three re-proved
+  independently; every number is compared against a hand transcription of the SysML
+  (`tests/execution/fusion_tea_arithmetic.py`), never against the forensic record.
+- [x] Review each proposed Fusion Tea model rename against the exact fifteen-item ledger. Preserve
+  equations, defaults, topology, and physics. **All fifteen accepted; zero extra hunks** — see the
+  rename review below, including the mechanical revert check.
+- [x] Run the full 37-path comparison while both implementations remain available. **Measured
+  15 public graphs / 22 typed errors on the exact route**; exactly one row moved versus the amended
+  ledger, `fusion_tea`, which is the census obligation `B37-15`.
+- [x] Make every corpus driver handle both readiness `ElaborationError` (`.findings`) and
   validation `ElaborationDiagnosticError` (`.diagnostics`). Assert the exact diagnostic multiset;
   never collapse either class into `unexpected-error`.
-- [ ] Run real TEAx on live and relocated v6 packages. No monkeypatch or private runner counts.
-- [ ] Run those tests in the pinned shared acceptance environment so SimKit, Jinja2, codegen, and
+- [x] Run real TEAx on live and relocated v6 packages. No monkeypatch or private runner counts.
+- [x] Run those tests in the pinned shared acceptance environment so SimKit, Jinja2, codegen, and
   the rebuild agentic-mbse checkout are all present. Exercise the owner-approved mutation protocol;
   never edit bytes after sealing and then reseal them as proof.
-- [ ] Commit the exact 3D model, test, and required production paths.
+- [x] Commit the exact 3D model, test, and required production paths.
 
 ### Slice 3E — Public authority switch
 
@@ -600,7 +605,7 @@ Record every slice. Do not combine them later.
 | 3A | fe0b855, audit follow-up 4858911 | N/A | 3473 passed / 47 skipped / 18 deselected (+115, all new) | smoke PASS (fusion_tea, 48-file sealed package) |
 | 3B | d91431b, audit follow-up 2f28dde | N/A | 3520 passed / 47 skipped / 18 deselected (+47, all new) | smoke PASS (live + v6-snapshot packages, group names equal; legacy CLI package unchanged at 48 files) |
 | 3C | 7af5dc9, audit follow-up a6c41bc | 8b63393, audit follow-up cc6c7a7 | codegen 3538 passed / 47 skipped / 18 deselected (+18, all new); agentic 1825 passed / 1 skipped / 5 deselected (+6, all new) | N/A |
-| 3D | PENDING | PENDING if changed | PENDING | PENDING |
+| 3D | PENDING_3D | N/A (untouched, clean at `cc6c7a7`) | codegen 3539 passed / 47 skipped / 38 deselected (+1 passed, +20 deselected — all new); agentic 1825 passed / 1 skipped / 5 deselected (unchanged) | **PASS** — 20 real-TEAx tests, live + relocated-v6 sealed packages, 11 outputs each, LCOE `270.1211779380445` |
 | 3E | PENDING | PENDING if changed | PENDING | PENDING |
 
 ---
@@ -1631,6 +1636,295 @@ byte-identical to the baseline set and the changed test module lints clean; `myp
 identical (71 errors in 17 files). agentic `ruff check src` identical (1 pre-existing finding);
 `mypy src` 108 errors, unchanged. `git diff --check` clean in both. Changed paths equal the
 declared sets.
+
+#### Slice 3D Completion — Fusion Tea customer vertical and real TEAx
+
+- **Completed:** 2026-08-11
+- **Commit:** PENDING_3D (sysml-codegen only; agentic-mbse untouched and clean at
+  `cc6c7a7411f6338a4811a7cc58ca002c29ef177b`)
+- **Declared path set, sysml-codegen:** `elaboration/{elaborate,project}.py`; the six Fusion Tea
+  model files and `tests/fixtures/fusion_tea/extraction_snapshot.json`;
+  `tests/fixtures/golden/calc_{compat_parity,def_compilation}_golden.json`; four new modules under
+  `tests/execution/`; four updated test modules
+  (`tests/conformance/test_elaboration_{contract_matrix,fail_closed,spike_parity}.py`,
+  `tests/conformance/test_source_identity_routes.py`) plus
+  `tests/runtime/test_fusion_tea_acceptance.py`;
+  `.project/completed/20260809_elaborator-breadth/diff-ledger.md`; this plan and
+  `briefs/phase3d.md`. Actual changed paths equal that set.
+- **Declared path set, agentic-mbse:** `N/A` — nothing changed there. Its suite was still run from
+  the paired worktree and is unchanged at 1825 passed / 1 skipped / 5 deselected.
+
+**What the slice proves.** The customer model goes end to end on the exact route and executes in
+real TEAx. One model is loaded, elaborated, projected, generated, sealed, verified by TEAx's own
+loader, discovered through the public SimKit registry builder, and run by
+`simkit.core.pipeline.execute_pipeline` — eleven published channels, LCOE `270.1211779380445`.
+The same happens for a package generated from a v6 snapshot read out of a third directory with the
+model tree deleted; the two runs produce equal numeric outputs and an identical constraint report.
+Mutating one modelled value at runtime moves exactly its consumers and nothing else, on both the
+availability and thermal-efficiency axes, and editing a sealed input and re-sealing is refused in
+code. Every number is compared against a hand transcription of the SysML equations, never against
+the forensic record or a previous run.
+
+**The environment this evidence came from,** asserted by the tests rather than reported
+(`test_fusion_tea_real_teax.py`, the `environment` fixture):
+
+- Interpreter `/home/reid/1cfe/item7-rebuild-venv/bin/python` (CPython 3.12).
+- `simkit` → `/home/reid/1cfe/teax/packages/teax-simkit/simkit/__init__.py`, TEAx pinned at
+  `fa0e06a99b070346e68a3b3c29cfec546f3ac728`.
+- `sysml_codegen` → `/home/reid/1cfe/sysml-codegen-item7-rebuild/src/sysml_codegen/__init__.py`.
+- `agentic_mbse` → `/home/reid/1cfe/agentic-mbse-item7-rebuild/src/agentic_mbse/__init__.py`.
+
+A run that resolved any of those elsewhere fails the fixture, so the acceptance numbers cannot be
+produced from the wrong tree.
+
+**The real-TEAx evidence.** Command, exactly as run:
+
+```bash
+set -a; source /home/reid/1cfe/agentic-mbse/.env; set +a
+/home/reid/1cfe/item7-rebuild-venv/bin/python -m pytest tests/execution -m execution -q
+```
+
+**38 passed** — the 18 pre-existing execution nodes plus the 20 new ones. Measured:
+
+| Evidence | Live | Relocated v6 |
+|---|---|---|
+| Published channels | 11, set pinned by name | 11, same set |
+| `lcoe_calc__lcoe` | `270.1211779380445` | `270.1211779380445` |
+| `meier_coe_calc__coe_cents_kwh` | `4.735403549076959` | same |
+| `meier_capital_calc__total_capital_billions` | `3.303886865568384` | same |
+| `meier_reactor_cost_calc__reactor_cost_billions` | `0.7304442587805375` | same |
+| `recirc_calc__f_recirc` | `0.07222302470027446` | same |
+| `meier_cost__gamma` (both driver instances) | `68.247088` | same |
+| `meier_cost__cost_billions` (both) | `0.9749584000000001` | same |
+| Constraint report | `all_satisfied`, viability margin `18.0`, `observed` `{eta: 0.35, gain_in: 80.0, threshold: 10.0}` | identical `model_dump` |
+
+Every one of those is asserted against `tests/execution/fusion_tea_arithmetic.py`, a transcription
+of `hif_economics.sysml`, `fusion_cycle.sysml`, and `ife_lcoe.sysml` typed out from the model. The
+transcription is checked against the epic's headline constant as well, so a drift in the
+transcription fails against `270.1211779380445` rather than silently redefining the target.
+
+*Live vs relocated, stated precisely.* Numeric outputs and the constraint report are equal, and the
+two packages carry the same `model_contract.json` `semantic_fingerprint`. Their seal
+`executable_fingerprint`s **differ**, and that is correct: relocation changes each module's
+`SysML Source:` provenance comment, which is the residual Slice 3B named and carried to 3E. The
+test asserts the difference is confined to those comment lines, over the whole tree, with each
+package's own import name neutralised so the comparison is about the model rather than the name.
+
+*The lane is the real SimKit.* `test_the_lane_runs_the_real_simkit` asserts `simkit` resolves inside
+the pinned TEAx checkout and that `tests/runtime/pipeline_runner` — whose `_install_simkit_stub`
+installs a fake `simkit`, and whose `inputs=` argument has no counterpart in the real
+`execute_pipeline` — was never imported into the process.
+`test_the_generated_registry_is_the_public_simkit_builder` asserts the generated
+`create_<package>_registry` is backed by the *identical function object*
+`simkit.core.registry_builder.create_registry`, not a same-named local.
+
+**Mutation results — every-and-only, in two legs.** Runtime injection through
+`PreparedEvaluator.evaluate` / `CandidateBridge.build`, the Phase 2 protocol. Nothing is written to
+disk and the same seal-verifying loader backs the evaluator, so the seal stays an active check
+during the mutation.
+
+| Mutation | Consumer ports (structural) | Observables that moved (runtime) | Hand-computed values |
+|---|---|---|---|
+| `hif_plant__availability` 0.9 → 0.91 (C25) | exactly `lcoe_calc.availability_in`, `meier_coe_calc.availability_in` | exactly `lcoe_calc__lcoe`, `meier_coe_calc__coe_cents_kwh` | `269.5300723203276`, `4.6833661474387505` |
+| `hif_plant__thermal_efficiency` 0.43 → 0.44 (C2) | exactly `lcoe_calc.thermal_efficiency_in`, `recirc_calc.thermal_efficiency_in` | exactly `lcoe_calc__lcoe`, `recirc_calc__f_recirc` | `263.85170462810606`, `0.07058159232072277` |
+
+Both forensic diagnostic values re-proved to the last digit, and the "nothing else" side is
+enumerated rather than asserted. **Why two legs, stated plainly:** the evaluation seam projects
+scalar module outputs and constraint verdicts only
+(`simkit/evaluation/projection.py`), so its observable set is 5 numeric channels plus 2 constraint
+responses — it does not project the two multi-output driver-cost modules' fields. The structural
+leg closes that: every `(module, formal)` input port in the whole graph is partitioned into the
+ports the mutated entry point feeds and the rest, and the rest is checked to contain no port of
+that name. Neither leg alone would be an every-and-only claim.
+
+**C19 — the one modelled 80.0 on both consumer paths.** `:>> gain = 80.0` at
+`designs/hif_ife/hif_plant.sysml:87` reaches the calculation path as
+`inputs/hif_plant_params.json`'s `hif_plant_pkg__hif_plant__gain = 80.0` (and moving the emitted
+key is what `tests/runtime/test_fusion_tea_acceptance.py::test_gain_perturbation_is_consumed`
+proves changes lcoe), and the constraint path as the executed predicate's `observed["gain_in"]`
+`= 80.0`, with margin `0.35 * 80.0 - 10.0 = 18.0`. The graph-level C19 cell on
+`nested_occurrence_override_probe` is unchanged and still owned by
+`test_elaboration_spike_parity.py::test_c19_deep_path_override_reaches_both_consumers`.
+
+**The reseal refusal, proved rather than cited.**
+`test_editing_a_sealed_input_and_resealing_is_refused` copies the sealed package, edits
+`inputs/hif_plant_params.json` to the C25 value, and calls the real `check_reseal_provenance`:
+`ProvenanceError: codegen-produced file changed since the seal (only handwritten files may change
+across a re-seal): inputs/hif_plant_params.json`. That is the route the plan calls invalid, refused
+in code. `test_the_mutations_left_the_sealed_package_untouched` reloads the package after every
+mutation and gets the same `executable_fingerprint` back.
+
+**Rename review — the fifteen-item ledger, one row each.** The ledger is
+`.project/active/elaborator-cutover/design.md` (D11, "Fusion Tea Migration and Generated
+Consequences"); the file-level obligations are `FIX-01` in `cutover-census.md`. Every row is
+**Accept**: the diff for each is exactly the binding-name change the ledger authorizes, plus the
+matching formal declaration and expression references the same ledger rows require.
+
+| ID | Definition / occurrence | Old → final | Measured diff | Verdict |
+|---|---|---|---|---|
+| `FT-01` | `IFE LCOE` / `lcoe_calc` | `availability` → `availability_in` | binding + formal + 2 expression refs | Accept |
+| `FT-02` | same | `discount_rate` → `discount_rate_in` | binding + formal + 4 expression refs | Accept |
+| `FT-03` | same | `frequency` → `frequency_in` | binding + formal + 2 expression refs | Accept |
+| `FT-04` | same | `gain` → `gain_in` | binding + formal + 2 expression refs | Accept |
+| `FT-05` | same | `om_cost_constant` → `om_cost_constant_in` | binding + formal + 1 expression ref | Accept |
+| `FT-06` | same | `plant_cost_constant` → `plant_cost_constant_in` | binding + formal + 1 expression ref | Accept |
+| `FT-07` | same | `thermal_efficiency` → `thermal_efficiency_in` | binding + formal + 1 expression ref | Accept |
+| `FT-08` | `Recirculating Power Fraction` / `recirc_calc` | `gain` → `gain_in` | binding + formal + 1 expression ref | Accept |
+| `FT-09` | same | `thermal_efficiency` → `thermal_efficiency_in` | binding + formal + 1 expression ref | Accept |
+| `FT-10` | `Viability Threshold` / `viability` | `gain` → `gain_in` | binding + **constraint** formal + 1 predicate ref | Accept |
+| `FT-11` | `Meier Reactor Cost` / `meier_reactor_cost_calc` | `thermal_power_gw` → `thermal_power_gw_in` | binding + formal + 1 expression ref | Accept |
+| `FT-12` | `Meier COE` / `meier_coe_calc` | `availability` → `availability_in` | binding + formal + 1 expression ref | Accept |
+| `FT-13` | same | `net_electric_power_gw` → `net_electric_power_gw_in` | binding + formal + 1 expression ref | Accept |
+| `FT-14` | `Meier HIF Driver Cost` / `meier_cost` | `beam_energy_mj` → `beam_energy_mj_in` | binding + formal + 2 expression refs | Accept |
+| `FT-15` | same | `num_chambers` → `num_chambers_in` | binding + formal + 1 expression ref | Accept |
+
+The binding column counts declaration sites, not runtime usages: `meier_cost` is declared once on
+the `'HIF Driver'` part definition and reached by two usages (`hif_driver_instance` and
+`hif_plant.driver`), both of which show up as separate modules in the executed pipeline. Every
+count above is a measured occurrence count, not an estimate.
+
+*Zero extra hunks, checked mechanically rather than by eye.* Stripping the eleven authorized `_in`
+suffixes back out of each changed model file reproduces the Item 6 content **byte for byte** in all
+six files (10, 2, 3, 5, 10, and 17 changed lines respectively). No equation, default, multiplicity,
+containment, or documentation line moved. `FT-10`'s formal lives on a constraint definition rather
+than a calculation definition, which is what the census row means by "two calculation formals and
+one constraint formal" in `fusion_cycle.sysml`.
+
+*Why the renames are needed at all.* Recorded so the next reader does not relitigate it: `in gain =
+gain` resolves its right-hand side to the calc usage's own formal, which the exact route refuses
+as `SI_SELF_BINDING`. The v5 snapshot recapture makes that concrete — the viability constraint's
+`gain` binding moved from `ReferenceUsage ife_plant::'IFE Power Plant'::viability::gain` (the
+formal itself) to `AttributeUsage ife_plant::'IFE Power Plant'::gain` (the plant attribute the
+modeller meant). The rename does not change what the model computes; it changes what the model
+*says*, from a self-reference to the referent.
+
+**Production recovered, two hunks, both with tests behind them.**
+
+| Path | Disposition | Reason |
+|---|---|---|
+| `elaboration/elaborate.py` — `_enumeration_value` | **Reimplement** as `_enumeration_literal` | Slice 3C deferred this hunk as "candidate 3D material" because no fixture then exercised it. It is what the customer model needs: `:>> scope = 'CAS Scope'::shared;` is a `FeatureReferenceExpression` whose referent is an enumeration member, and the elaborator was sending it down the alias walk, producing 7 `SI_OCCURRENCE_MISSING` diagnostics that had nothing to do with the renames. Changed from the forensic version: its `SI_ID_MISSING` branch is unreachable (`declaration_id_for` already raises when `qualified_name` is `None`) and is dropped, and the surviving `declaration_id_for(referent)` call is commented as what it is — an identity gate, not a value read. The three-way literal choice is spelled as statements rather than a nested conditional expression. |
+| `elaboration/project.py` — `sanitize_name(node.calc_def_name)` | **Reuse** | Slice 3B **Rejected** this exact hunk as "a product-visible module-metadata change with no test behind it". It now has one, and it is not cosmetic: `'Recirculating Power Fraction'` reaches generation as a class name and a schema filename, so without it the exact route ships `class Recirculating Power FractionModule` and `schemas/meier hif driver cost_output.py` and the package does not import. It also brings the exact route onto the legacy route's spelling (`Recirculating_Power_Fraction`), which is what the census requires stay fixed. Caught by the real-TEAx test on its first run, which is the gate working. |
+
+**Corpus, 37 paths, measured.** `scripts/run_elaboration_corpus.py` over all 37 fixtures, both
+routes: legacy 36 graphs / 1 error; **exact 15 public graphs / 22 typed errors**, all 22 of them
+`ElaborationError` (readiness `.findings`). Versus the amended ledger's 14/23, exactly one row
+moved — `fusion_tea`, from `error: 15× SI_SELF_BINDING` to `graph 9/27/1/7`, which is census row
+`B37-15` ("V6 graph after exactly 15 in-place D-5 renames"). The other 36 rows are unchanged.
+`test_elaboration_corpus_ledger.py::test_dual_run_ledger_outcomes_match_a_live_corpus_run` compares
+the exact per-fixture strings, so this is a full-set comparison rather than a total.
+
+*Ledger amendment.* Row 15 of `.project/completed/20260809_elaborator-breadth/diff-ledger.md` is
+updated to the measured outcome, reclassified `expected-collapse` → `expected-fix`, and the totals
+block corrected (24/13; 15 graphs / 22 errors; fourteen fixtures produce graphs on both routes).
+The old cell contents and their basis are retained in the row so the certified record stays
+readable, the same treatment Slice 3A gave row 1. **This is not a rule-10 stop:** the census names
+this outcome as the migration's expected result, so the row moving is the obligation being
+discharged. Recorded here for owner visibility all the same.
+
+*Error-class separation.* The driver records `error_type` beside the code list and reads both
+`.findings` and `.diagnostics`, so `ElaborationError` and `ElaborationDiagnosticError` are never
+collapsed. This corpus still exercises only `ElaborationError`; the rule binds every later driver
+regardless. Worth recording: the renamed model *did* raise `ElaborationDiagnosticError` with 7
+`SI_OCCURRENCE_MISSING` before the enumeration hunk landed, so the two classes were genuinely
+distinguished mid-slice, not just in principle.
+
+**B37's two carried obligations are discharged, and here is who owns each.**
+
+- *Literal-bearing aggregation oracle* — already discharged by Slice 3B.
+  `tests/conformance/test_exact_projection_aggregation.py::test_the_modelled_aggregation_is_public_and_carries_its_literal`
+  owns it: `sum(module.cost) + 5.0` over three members at 10.0 each projects to a public
+  aggregation module carrying the `5.0` operand, with 3 × 10.0 + 5.0 = 35.0 read off the fixture by
+  hand. Two sibling tests pin per-member entry points and three-route identity.
+- *Genuinely empty control* — discharged by Slice 3A.
+  `tests/conformance/test_snapshot_v6_capture.py` builds a model with no calculation, no
+  constraint, and no calculation definition and asserts both `build_elaborated_pipeline` and the
+  capture route raise `CodeGenerationError` matching "nothing to generate".
+
+**Test dispositions — five modules changed, nothing deleted.** Every responsibility below survives;
+the specimen or the expected value moves, and the reason is recorded at the site.
+
+| Test | Disposition | Responsibility after |
+|---|---|---|
+| `test_elaboration_spike_parity.py::test_fusion_tea_self_binding_fails_loud` | **Re-homed and split** | Renamed `test_self_named_binding_fails_loud`, retargeted at `self_named_binding_trap` — a fixture authored to carry that one mechanism, which the census calls the "Direct SRC-01 negative". A second test, `test_the_customer_model_carries_no_self_named_binding_after_the_d5_migration`, asserts the other half by value: fusion_tea elaborates with an empty diagnostic set and its graph carries exactly the fifteen renamed formals, read off the calc and constraint nodes. |
+| `test_elaboration_contract_matrix.py::_src_01` | **Re-homed** | Same specimen change, same reason, commented at the site. The SRC-01 cell still refuses. |
+| `test_elaboration_fail_closed.py::test_customer_fixture_lenient_diagnostics_are_accounted_for` | **Expected value updated** | Was 15 `SI_SELF_BINDING` + 7 `SI_OCCURRENCE_MISSING`. Now an empty diagnostic set — and, because empty would go green on an empty graph, it also pins 7 calculations, 1 constraint, and the full seven-entry map of enumeration attributes to their resolved qualified names. The seven former diagnostics and the seven resolved attributes correspond one for one. |
+| `test_source_identity_routes.py` (5 tests) | **Field names updated; one assertion moved** | The Path-A silent-literal-stamp pins are unaffected in substance — the legacy route still stamps all fifteen bindings, still fans one modelled `gain` into three public fields, and still keeps the written referent — so only the formal names gained `_in`. The one substantive change is `test_reference_derived_discriminator_on_immutable_evidence`, which asserted `is_self_binding` on the live `gain` binding; that is now `not is_self_binding`, with the reason and the new SRC-01 home named in a comment. The stamp itself is unchanged: the legacy route stamps any bare reference it cannot resolve, self-named or not. |
+| `test_fusion_tea_acceptance.py` | **Migrated oracle, preserved** | The four generated call sites the census authorizes: `_GAIN_EP_KEY` gains `_in`, `beam_energy_mj`/`num_chambers` gain `_in`, `gain`/`thermal_efficiency` gain `_in`. All four tests stay green, including the independently hand-computed `216.55528392479388` at gain=100 — which is a second, unrelated confirmation that the renames preserved the arithmetic. |
+
+**Two committed artifacts regenerated, each checked against its authorized change list.**
+
+- `tests/fixtures/golden/calc_def_compilation_golden.json`: **15 records changed**, and they are
+  exactly the fifteen the design names — IFE LCOE's ten intermediates, `Meier_COE.coe_cents_kwh`,
+  `Meier_HIF_Driver_Cost.{bank_energy_joules,cost_billions}`,
+  `Meier_Reactor_Cost.reactor_cost_billions`, `Recirculating_Power_Fraction.fusion_cycle_gain`.
+- `tests/fixtures/golden/calc_compat_parity_golden.json`: **3 records changed**, exactly the three
+  the design names. `IFE_LCOE.lcoe`, `Meier_HIF_Driver_Cost.gamma`,
+  `Recirculating_Power_Fraction.f_recirc`, and `Meier_Total_Capital_Cost.total_capital_billions`
+  are unchanged and remain the independent arithmetic controls.
+- `tests/fixtures/fusion_tea/extraction_snapshot.json`: recaptured with
+  `scripts/capture_extraction_snapshots.py --fixtures fusion_tea`, so the v5 route stays live and
+  `test_live_vs_snapshot_byte_identical[fusion_tea]` stays a real gate. The v5 payload is **not**
+  deleted; `FIX-01`'s "delete v5" line is Phase 4 work under this plan. Only this fixture's
+  `captured_at` moved.
+
+**The customer-visible legacy package did not move in shape.** Generated from the pre-rename and
+post-rename model with the shipped CLI and compared tree to tree: 48 files both times, the same four
+input groups (`hif_driver_params`, `hif_plant_params`, `ife_plant_params`, `system_design`), the
+same values, the same module and schema names. The only differences are the fifteen `_in` field
+names, the constraint predicate IR that names one of them, and the hashes that follow. That is
+exactly what census row `PROD-24` predicts ("formal-derived generated inputs change; public source
+keys/module/schema names stay as design table").
+
+**Tests, red then green.** The two new execution modules were run against the parent commit
+`26e7d04` with the production and fixture changes stashed and the new test files left in place:
+**19 of 20 errored**, every one at fixture setup with
+`ElaborationError: SI_SELF_BINDING ×15` naming all fifteen pre-migration bindings. The one that
+passed is `test_the_lane_runs_the_real_simkit`, which asserts the import environment and touches no
+model — correctly green on both sides, and a guard rather than a red. After the slice: 20 passed.
+
+**Gates.**
+
+- Full licensed codegen suite: **3539 passed / 47 skipped / 38 deselected**, zero failures, zero
+  `no live syside license` lines. Delta versus `26e7d04` (3538/47/18) is **+1 passed and +20
+  deselected**. The +1 is `test_the_customer_model_carries_no_self_named_binding_after_the_d5_migration`;
+  the +20 are the new `execution`-marked nodes, which `addopts = -m "not execution"` deselects from
+  the default run and which the execution-lane command below runs explicitly. Skips are unchanged,
+  so no Item 6 test was removed or silenced, and no test module lost a node.
+- Execution lane: `pytest tests/execution -m execution` → **38 passed** (18 pre-existing + 20 new),
+  zero skipped. The new tests carry no `skipif`: a missing licence or a missing `simkit` fails them.
+- Full agentic-mbse suite from the paired rebuild worktree: **1825 passed / 1 skipped /
+  5 deselected**, unchanged.
+- 37-path corpus: 37/37 rows reproduce the amended ledger.
+- Shipped legacy CLI smoke: 48-file sealed package, four input groups, values unchanged; the only
+  moves are the fifteen authorized field names.
+- codegen `ruff check src`: **byte-identical** to the baseline set (16 findings) — zero new. The
+  four new test modules lint clean; the one pre-existing `tests/execution` finding
+  (`test_constraint_execution.py:67`, E501) is unchanged, as is the pre-existing `I001` in
+  `test_source_identity_routes.py`. `mypy src`: error set **identical** (71 errors in 17 files).
+- agentic-mbse `ruff check src` and `mypy src`: not re-run against a change — nothing in that
+  repository changed this slice.
+- `git diff --check` clean. Changed paths equal the declared set.
+
+**Issues and deviations.**
+
+- **The brief expected the renames alone to make the exact route accept the customer model; they do
+  not.** Measured first: the renamed model raised `ElaborationDiagnosticError` with 7
+  `SI_OCCURRENCE_MISSING` on `scope` and `wall_type`, which are enumeration-value redefinitions and
+  have nothing to do with self-bindings. Slice 3C had already deferred exactly that hunk to 3D as
+  candidate material, so this is the deferral landing rather than a surprise. Not a rule-10 stop.
+- **A second production hunk was needed that the brief did not name:** `sanitize_name` on
+  `calc_def_name`. Slice 3B rejected it for want of a test; the real-TEAx test is that test, and
+  the failure it produced was a package that would not import.
+- **`test_exact_route_generated_package.py` was not extended to fusion_tea.** It stays on
+  `source_identity_mixed_consumers`, and the fusion_tea live-vs-relocated comparison lives in the
+  new execution module instead, because it needs a sealed package and a real run. The two tests
+  make the same claim about the differing-file set on two fixtures.
+- **No public exact-route `generate` entry point was added.** `tests/execution/real_teax.py` runs
+  the same step sequence `cmd_generate` runs, ending at `_seal_package`, for the reason Slice 3B
+  recorded: a second public flag before the 3E authority switch is the dual authority this plan
+  bans. That is a real limit on how "public" this route's generation half is today, and it is 3E's
+  work to close, not 3D's.
+- No deletions in either repository. No Item 6 test was removed, silenced, or deselected.
 
 ### Phase 4 Completion
 

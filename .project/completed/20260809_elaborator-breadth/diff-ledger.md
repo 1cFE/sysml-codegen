@@ -28,7 +28,7 @@ points, `O` order, `A` aliases, and `C` constraint catalog.
 | 12 | `d38_caret` | graph 1/1/0/0 | graph 2/6/0/0 | M/E/O | expected-fix | Modeled finite `[count]`, where `count = 4`, expands four occurrences. |
 | 13 | `deep_cross_scope_probe` | graph 5/7/0/0 | graph 5/4/0/1 | M/E/O/A | expected-fix | Explicit `:>>` makes the nested witness valid. The exact route keeps one sensor/core occurrence, applies `reading = 10.0`, and wires DCS:82 to the core output; legacy still mints the producer output as a public input. |
 | 14 | `expression_binding_probe` | graph 5/7/0/0 | error: 6× `SI_EXPRESSION_SOURCE_UNSUPPORTED` + 3× `SI_SELF_BINDING` | — | expected-collapse | C22 and SRC-01 replace legacy invented inputs. |
-| 15 | `fusion_tea` | graph 9/31/1/5 | error: 15× `SI_SELF_BINDING` | — | expected-collapse | The contract requires the customer self-bindings to block. |
+| 15 | `fusion_tea` | graph 9/31/1/5 | graph 9/27/1/7 | M/E/O/A | expected-fix | Recovery Slice 3D migrated the customer model's fifteen self-named bindings in place to the D-5 `in <formal>_in = <formal>` form, which is the census obligation `B37-15` (`.project/active/elaborator-cutover/cutover-census.md`, `FIX-01`), and recovered the elaborator's enumeration-value reading. Both routes now produce a graph. At the Item 6 observation this row read `error: 15× SI_SELF_BINDING` / `—` / expected-collapse, basis "the contract requires the customer self-bindings to block" — true of the pre-migration model, which no longer exists. |
 | 16 | `gate_a` | graph 3/3/1/0 | error: 2× `SI_SELF_BINDING` | — | expected-collapse | SRC-01 blocks both rescued sources. |
 | 17 | `gate_a_package_owner` | graph 3/3/1/0 | error: 2× `SI_SELF_BINDING` | — | expected-collapse | SRC-01 blocks both rescued sources. |
 | 18 | `ife_plant` | graph 8/25/0/2 | error: 21× `SI_SELF_BINDING` | — | expected-collapse | SRC-01 replaces legacy per-consumer mints. |
@@ -55,15 +55,15 @@ points, `O` order, `A` aliases, and `C` constraint catalog.
 ## Totals
 
 - 37/37 rows have two complete route outcomes; zero rows are unclassified.
-- 25 `expected-collapse`; 12 `expected-fix`; zero `needs-review`; zero `new-bug`.
-- Exact-ID produces 14 public graphs and 23 typed errors. Legacy produces 36 public graphs and one
+- 24 `expected-collapse`; 13 `expected-fix`; zero `needs-review`; zero `new-bug`.
+- Exact-ID produces 15 public graphs and 22 typed errors. Legacy produces 36 public graphs and one
   no-calculation-definition error.
-- Thirteen fixtures produce graphs on both routes. Two are byte-equal (`sample_model` and
-  `quoted_owner_formula`); eleven carry reviewed expected fixes.
+- Fourteen fixtures produce graphs on both routes. Two are byte-equal (`sample_model` and
+  `quoted_owner_formula`); twelve carry reviewed expected fixes.
 
 At the Item 6 observation (2026-08-09) the first three figures read 26/11, 13 graphs and 24 errors,
-and the two routes shared one no-calculation-definition error. Row 1 moved in recovery Slice 3A for
-the reason recorded against it.
+and the two routes shared one no-calculation-definition error. Row 1 moved in recovery Slice 3A and
+row 15 in Slice 3D, each for the reason recorded against it.
 
 ## B37-01 ruling — `agg_literal_probe` is executable, not a control
 

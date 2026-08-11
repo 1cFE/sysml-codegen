@@ -617,10 +617,24 @@ class _ExactElaborator:
         display_path = self._display_path(scope, name)
         expression = getattr(writer, "feature_value_expression", None)
         value_site = self._value_site(base, writer, scope)
-        literal = extract_literal_value(expression) if expression is not None else None
+        # An enumeration value reference names a value, not another feature:
+        # `:>> scope = 'CAS Scope'::shared;` has no occurrence to resolve against.
+        # Reading it as a reference sends it down the alias walk, which then fails
+        # with SI_OCCURRENCE_MISSING against a leaf slot that is an enum member.
+        enumeration_literal = self._enumeration_literal(expression)
+        if enumeration_literal is not None:
+            literal = enumeration_literal
+        elif expression is not None:
+            literal = extract_literal_value(expression)
+        else:
+            literal = None
         source_file, source_line = self._source_location(writer)
 
-        if expression is not None and not is_literal_node(expression):
+        if (
+            expression is not None
+            and enumeration_literal is None
+            and not is_literal_node(expression)
+        ):
             if self._is_reference_expression(expression):
                 node_id = NodeId(NodeKind.ATTRIBUTE, scope, slot)
                 alias_node = AttrNode(
@@ -702,6 +716,24 @@ class _ExactElaborator:
             ),
         )
         self._register_attr(attr_node)
+
+    @staticmethod
+    def _enumeration_literal(expression: Any) -> str | None:
+        """The qualified name of the enumeration value a reference names, if it names one."""
+        if expression is None or not SysideAdapter.is_instance(
+            expression, "FeatureReferenceExpression"
+        ):
+            return None
+        referent = getattr(expression, "referent", None)
+        if referent is None or not SysideAdapter.is_instance(
+            getattr(referent, "owner", None), "EnumerationDefinition"
+        ):
+            return None
+        # Identity gate, not a value read: an enumeration member without a
+        # reload-stable declaration identity cannot enter the graph, and
+        # declaration_id_for raises rather than inventing one.
+        declaration_id_for(referent)
+        return str(referent.qualified_name)
 
     @staticmethod
     def _is_reference_expression(expression: Any) -> bool:

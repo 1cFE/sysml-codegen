@@ -1,7 +1,7 @@
 {
   "snapshot_format_version": 5,
   "model_name": "fusion_tea",
-  "captured_at": "2026-07-20T15:57:44.449678+00:00",
+  "captured_at": "2026-08-11T08:57:43.744745+00:00",
   "constraint_lowering_mode": "applied",
   "constraint_facts": {
     "contexts": [
@@ -440,8 +440,8 @@
           {
             "default": null,
             "has_default": false,
-            "name": "gain",
-            "qualified_name": "fusion_cycle::'Viability Threshold'::gain",
+            "name": "gain_in",
+            "qualified_name": "fusion_cycle::'Viability Threshold'::gain_in",
             "types": [
               "ScalarValues::Real",
               "Base::DataValue",
@@ -522,11 +522,11 @@
                   },
                   "reference": {
                     "chain_segments": [],
-                    "source_name": "gain",
+                    "source_name": "gain_in",
                     "target": {
                       "kind": "AttributeUsage",
-                      "name": "gain",
-                      "qualified_name": "fusion_cycle::'Viability Threshold'::gain"
+                      "name": "gain_in",
+                      "qualified_name": "fusion_cycle::'Viability Threshold'::gain_in"
                     },
                     "target_types": [
                       "ScalarValues::Real",
@@ -610,9 +610,9 @@
           {
             "direction": "in",
             "formal_targets": [
-              "fusion_cycle::'Viability Threshold'::gain"
+              "fusion_cycle::'Viability Threshold'::gain_in"
             ],
-            "name": "gain",
+            "name": "gain_in",
             "value": {
               "kind": "feature_ref",
               "operand_type": {
@@ -624,9 +624,9 @@
                 "chain_segments": [],
                 "source_name": "gain",
                 "target": {
-                  "kind": "ReferenceUsage",
+                  "kind": "AttributeUsage",
                   "name": "gain",
-                  "qualified_name": "ife_plant::'IFE Power Plant'::viability::gain"
+                  "qualified_name": "ife_plant::'IFE Power Plant'::gain"
                 },
                 "target_types": [
                   "ScalarValues::Real",
@@ -711,11 +711,11 @@
                   },
                   "reference": {
                     "chain_segments": [],
-                    "source_name": "gain",
+                    "source_name": "gain_in",
                     "target": {
                       "kind": "AttributeUsage",
-                      "name": "gain",
-                      "qualified_name": "fusion_cycle::'Viability Threshold'::gain"
+                      "name": "gain_in",
+                      "qualified_name": "fusion_cycle::'Viability Threshold'::gain_in"
                     },
                     "target_types": [
                       "ScalarValues::Real",
@@ -805,9 +805,9 @@
         {
           "output_name": "bank_energy_joules",
           "compilability": "fully_compilable",
-          "python_expression": "((inputs.beam_energy_mj * 1000000.0) / inputs.driver_efficiency)",
+          "python_expression": "((inputs.beam_energy_mj_in * 1000000.0) / inputs.driver_efficiency)",
           "input_refs": [
-            "beam_energy_mj",
+            "beam_energy_mj_in",
             "driver_efficiency"
           ],
           "intermediate_refs": [],
@@ -817,10 +817,10 @@
         {
           "output_name": "cost_billions",
           "compilability": "fully_compilable",
-          "python_expression": "(((0.32 + (0.088 * inputs.beam_energy_mj)) * (1.25 + (0.05 * inputs.num_chambers))) * (1.0 + (0.0088 * (inputs.rep_rate - 5.0))))",
+          "python_expression": "(((0.32 + (0.088 * inputs.beam_energy_mj_in)) * (1.25 + (0.05 * inputs.num_chambers_in))) * (1.0 + (0.0088 * (inputs.rep_rate - 5.0))))",
           "input_refs": [
-            "beam_energy_mj",
-            "num_chambers",
+            "beam_energy_mj_in",
+            "num_chambers_in",
             "rep_rate"
           ],
           "intermediate_refs": [],
@@ -853,9 +853,9 @@
         {
           "output_name": "reactor_cost_billions",
           "compilability": "fully_compilable",
-          "python_expression": "((0.66 * ((inputs.thermal_power_gw / 1.67) ** 0.49)) * ((0.72 * inputs.num_units) + 0.28))",
+          "python_expression": "((0.66 * ((inputs.thermal_power_gw_in / 1.67) ** 0.49)) * ((0.72 * inputs.num_units) + 0.28))",
           "input_refs": [
-            "thermal_power_gw",
+            "thermal_power_gw_in",
             "num_units"
           ],
           "intermediate_refs": [],
@@ -896,11 +896,11 @@
         {
           "output_name": "coe_cents_kwh",
           "compilability": "fully_compilable",
-          "python_expression": "((0.113 * inputs.total_capital_billions) / ((0.0876 * inputs.availability) * inputs.net_electric_power_gw))",
+          "python_expression": "((0.113 * inputs.total_capital_billions) / ((0.0876 * inputs.availability_in) * inputs.net_electric_power_gw_in))",
           "input_refs": [
             "total_capital_billions",
-            "availability",
-            "net_electric_power_gw"
+            "availability_in",
+            "net_electric_power_gw_in"
           ],
           "intermediate_refs": [],
           "unsupported_reason": null,
@@ -918,9 +918,9 @@
         {
           "output_name": "discount_factor_con",
           "compilability": "fully_compilable",
-          "python_expression": "((1.0 + inputs.discount_rate) ** inputs.construction_years)",
+          "python_expression": "((1.0 + inputs.discount_rate_in) ** inputs.construction_years)",
           "input_refs": [
-            "discount_rate",
+            "discount_rate_in",
             "construction_years"
           ],
           "intermediate_refs": [],
@@ -930,9 +930,9 @@
         {
           "output_name": "discount_factor_op",
           "compilability": "fully_compilable",
-          "python_expression": "((1.0 + inputs.discount_rate) ** inputs.operational_years)",
+          "python_expression": "((1.0 + inputs.discount_rate_in) ** inputs.operational_years)",
           "input_refs": [
-            "discount_rate",
+            "discount_rate_in",
             "operational_years"
           ],
           "intermediate_refs": [],
@@ -954,9 +954,9 @@
         {
           "output_name": "fusion_energy_per_shot",
           "compilability": "fully_compilable",
-          "python_expression": "(inputs.gain * energy_on_target)",
+          "python_expression": "(inputs.gain_in * energy_on_target)",
           "input_refs": [
-            "gain"
+            "gain_in"
           ],
           "intermediate_refs": [
             "energy_on_target"
@@ -967,13 +967,13 @@
         {
           "output_name": "net_electric_power",
           "compilability": "fully_compilable",
-          "python_expression": "((inputs.driver_energy * inputs.frequency) * ((((inputs.thermal_efficiency * inputs.blanket_energy_multiple) * inputs.gain) * inputs.driver_efficiency) - 2.0))",
+          "python_expression": "((inputs.driver_energy * inputs.frequency_in) * ((((inputs.thermal_efficiency_in * inputs.blanket_energy_multiple) * inputs.gain_in) * inputs.driver_efficiency) - 2.0))",
           "input_refs": [
             "driver_energy",
-            "frequency",
-            "thermal_efficiency",
+            "frequency_in",
+            "thermal_efficiency_in",
             "blanket_energy_multiple",
-            "gain",
+            "gain_in",
             "driver_efficiency"
           ],
           "intermediate_refs": [],
@@ -994,9 +994,9 @@
         {
           "output_name": "annual_capital_cost",
           "compilability": "fully_compilable",
-          "python_expression": "((((inputs.plant_cost_constant * net_electric_kw) + ((inputs.yield_cost_constant * fusion_energy_per_shot) / 1000000000.0)) + (inputs.driver_cost_constant * inputs.driver_energy)) / inputs.construction_years)",
+          "python_expression": "((((inputs.plant_cost_constant_in * net_electric_kw) + ((inputs.yield_cost_constant * fusion_energy_per_shot) / 1000000000.0)) + (inputs.driver_cost_constant * inputs.driver_energy)) / inputs.construction_years)",
           "input_refs": [
-            "plant_cost_constant",
+            "plant_cost_constant_in",
             "yield_cost_constant",
             "driver_cost_constant",
             "driver_energy",
@@ -1012,9 +1012,9 @@
         {
           "output_name": "annual_energy",
           "compilability": "fully_compilable",
-          "python_expression": "(((8760.0 * net_electric_kw) * inputs.availability) / 1000.0)",
+          "python_expression": "(((8760.0 * net_electric_kw) * inputs.availability_in) / 1000.0)",
           "input_refs": [
-            "availability"
+            "availability_in"
           ],
           "intermediate_refs": [
             "net_electric_kw"
@@ -1025,9 +1025,9 @@
         {
           "output_name": "pvf_construction",
           "compilability": "fully_compilable",
-          "python_expression": "((1.0 - (1.0 / discount_factor_con)) / inputs.discount_rate)",
+          "python_expression": "((1.0 - (1.0 / discount_factor_con)) / inputs.discount_rate_in)",
           "input_refs": [
-            "discount_rate"
+            "discount_rate_in"
           ],
           "intermediate_refs": [
             "discount_factor_con"
@@ -1038,9 +1038,9 @@
         {
           "output_name": "pvf_operation",
           "compilability": "fully_compilable",
-          "python_expression": "(((1.0 / discount_factor_con) * (1.0 - (1.0 / discount_factor_op))) / inputs.discount_rate)",
+          "python_expression": "(((1.0 / discount_factor_con) * (1.0 - (1.0 / discount_factor_op))) / inputs.discount_rate_in)",
           "input_refs": [
-            "discount_rate"
+            "discount_rate_in"
           ],
           "intermediate_refs": [
             "discount_factor_con",
@@ -1052,10 +1052,10 @@
         {
           "output_name": "shots_per_year",
           "compilability": "fully_compilable",
-          "python_expression": "((31557600.0 * inputs.frequency) * inputs.availability)",
+          "python_expression": "((31557600.0 * inputs.frequency_in) * inputs.availability_in)",
           "input_refs": [
-            "frequency",
-            "availability"
+            "frequency_in",
+            "availability_in"
           ],
           "intermediate_refs": [],
           "unsupported_reason": null,
@@ -1077,10 +1077,10 @@
         {
           "output_name": "annual_operating_cost",
           "compilability": "fully_compilable",
-          "python_expression": "(((inputs.target_cost_constant * shots_per_year) + (inputs.om_cost_constant * net_electric_kw)) + ((inputs.driver_cost_constant * inputs.driver_energy) / driver_lifetime_years))",
+          "python_expression": "(((inputs.target_cost_constant * shots_per_year) + (inputs.om_cost_constant_in * net_electric_kw)) + ((inputs.driver_cost_constant * inputs.driver_energy) / driver_lifetime_years))",
           "input_refs": [
             "target_cost_constant",
-            "om_cost_constant",
+            "om_cost_constant_in",
             "driver_cost_constant",
             "driver_energy"
           ],
@@ -1132,12 +1132,12 @@
         {
           "output_name": "fusion_cycle_gain",
           "compilability": "fully_compilable",
-          "python_expression": "(((inputs.eta * inputs.gain) * inputs.blanket_multiplier) * inputs.thermal_efficiency)",
+          "python_expression": "(((inputs.eta * inputs.gain_in) * inputs.blanket_multiplier) * inputs.thermal_efficiency_in)",
           "input_refs": [
             "eta",
-            "gain",
+            "gain_in",
             "blanket_multiplier",
-            "thermal_efficiency"
+            "thermal_efficiency_in"
           ],
           "intermediate_refs": [],
           "unsupported_reason": null,
@@ -1167,14 +1167,14 @@
       "qualified_name": "hif_economics::'Meier HIF Driver Cost'",
       "doc_comment": "Heavy-ion induction linac driver capital cost from Meier's\nparametric formula. Returns gamma ($/J of bank energy) as the\nprimary output for use in Hawker's LCOE model. Also exposes\ncost_billions as an intermediate for Meier's COE chain.\n\nInput E_d is beam energy on target (MJ), consistent with Meier's\nconvention. The calc converts to bank energy using driver efficiency\nto produce gamma in $/J of bank energy (Hawker's convention).\n\nConstants: 0.32, 0.088 = baseline + marginal accelerator cost\ncoefficients (fit to induction linac studies). Reference: 5 Hz,\nsingle chamber.\n\n*Source**: knowledge/sources/economic_studies_for_heavy_ion_fusion_electric_power_plants/output.md\n*Ref**: Eq. 5 (lines 173-192)\n*Basis**: Meier 1986 parametric driver cost formula for HIF\ninduction linacs. Year-dollars: 1988$.",
       "calc_expressions": [
-        "cost_billions = (0.32 + 0.088 * beam_energy_mj) * (1.25 + 0.05 * num_chambers) * (1.0 + 0.0088 * (rep_rate - 5.0))",
-        "bank_energy_joules = beam_energy_mj * 1000000.0 / driver_efficiency",
+        "cost_billions = (0.32 + 0.088 * beam_energy_mj_in) * (1.25 + 0.05 * num_chambers_in) * (1.0 + 0.0088 * (rep_rate - 5.0))",
+        "bank_energy_joules = beam_energy_mj_in * 1000000.0 / driver_efficiency",
         "gamma = cost_billions * 1000000000.0 / bank_energy_joules",
         "\nDocumentation:\nHeavy-ion induction linac driver capital cost from Meier's\nparametric formula. Returns gamma ($/J of bank energy) as the\nprimary output for use in Hawker's LCOE model. Also exposes\ncost_billions as an intermediate for Meier's COE chain.\n\nInput E_d is beam energy on target (MJ), consistent with Meier's\nconvention. The calc converts to bank energy using driver efficiency\nto produce gamma in $/J of bank energy (Hawker's convention).\n\nConstants: 0.32, 0.088 = baseline + marginal accelerator cost\ncoefficients (fit to induction linac studies). Reference: 5 Hz,\nsingle chamber.\n\n*Source**: knowledge/sources/economic_studies_for_heavy_ion_fusion_electric_power_plants/output.md\n*Ref**: Eq. 5 (lines 173-192)\n*Basis**: Meier 1986 parametric driver cost formula for HIF\ninduction linacs. Year-dollars: 1988$."
       ],
       "input_attributes": [
         {
-          "name": "beam_energy_mj",
+          "name": "beam_energy_mj_in",
           "sysml_type": "Real",
           "default_value": null,
           "binding_type": "unbound",
@@ -1200,7 +1200,7 @@
           "is_optional": false
         },
         {
-          "name": "num_chambers",
+          "name": "num_chambers_in",
           "sysml_type": "Real",
           "default_value": null,
           "binding_type": "unbound",
@@ -1257,15 +1257,15 @@
       "references": [],
       "source_file": "root-0/library/analyses/hif_economics.sysml",
       "source_line": 4,
-      "source_hash": "3d583828f4aa53a101f63c7c16e34cefbcac3d43664240e60dbd87498f49690e",
+      "source_hash": "02ddab0039c2225b48de569b55a27fa7af1de73830676ebf572730c6db716309",
       "output_expression_asts": null,
       "all_member_names": [
         "bank_energy_joules",
-        "beam_energy_mj",
+        "beam_energy_mj_in",
         "cost_billions",
         "driver_efficiency",
         "gamma",
-        "num_chambers",
+        "num_chambers_in",
         "rep_rate"
       ],
       "member_expressions": null
@@ -1275,12 +1275,12 @@
       "qualified_name": "hif_economics::'Meier Reactor Cost'",
       "doc_comment": "HIF reactor plant direct cost (excluding driver and target factory).\nScales from the HYLIFE/Cascade reference design using thermal power\nand accounts for multi-unit site savings.\n\nConstants: C_r = $0.66B (Cascade reference at 1.67 GWt),\nb = 0.49 (power scaling exponent).\n\n*Source**: knowledge/sources/economic_studies_for_heavy_ion_fusion_electric_power_plants/output.md\n*Ref**: Eq. 3 (lines 119-137)\n*Basis**: Meier 1986 reactor cost scaling. Year-dollars: 1988$.",
       "calc_expressions": [
-        "reactor_cost_billions = 0.66 * (thermal_power_gw / 1.67) ** 0.49 * (0.72 * num_units + 0.28)",
+        "reactor_cost_billions = 0.66 * (thermal_power_gw_in / 1.67) ** 0.49 * (0.72 * num_units + 0.28)",
         "\nDocumentation:\nHIF reactor plant direct cost (excluding driver and target factory).\nScales from the HYLIFE/Cascade reference design using thermal power\nand accounts for multi-unit site savings.\n\nConstants: C_r = $0.66B (Cascade reference at 1.67 GWt),\nb = 0.49 (power scaling exponent).\n\n*Source**: knowledge/sources/economic_studies_for_heavy_ion_fusion_electric_power_plants/output.md\n*Ref**: Eq. 3 (lines 119-137)\n*Basis**: Meier 1986 reactor cost scaling. Year-dollars: 1988$."
       ],
       "input_attributes": [
         {
-          "name": "thermal_power_gw",
+          "name": "thermal_power_gw_in",
           "sysml_type": "Real",
           "default_value": null,
           "binding_type": "unbound",
@@ -1324,12 +1324,12 @@
       "references": [],
       "source_file": "root-0/library/analyses/hif_economics.sysml",
       "source_line": 43,
-      "source_hash": "3d583828f4aa53a101f63c7c16e34cefbcac3d43664240e60dbd87498f49690e",
+      "source_hash": "02ddab0039c2225b48de569b55a27fa7af1de73830676ebf572730c6db716309",
       "output_expression_asts": null,
       "all_member_names": [
         "num_units",
         "reactor_cost_billions",
-        "thermal_power_gw"
+        "thermal_power_gw_in"
       ],
       "member_expressions": null
     },
@@ -1400,7 +1400,7 @@
       "references": [],
       "source_file": "root-0/library/analyses/hif_economics.sysml",
       "source_line": 65,
-      "source_hash": "3d583828f4aa53a101f63c7c16e34cefbcac3d43664240e60dbd87498f49690e",
+      "source_hash": "02ddab0039c2225b48de569b55a27fa7af1de73830676ebf572730c6db716309",
       "output_expression_asts": null,
       "all_member_names": [
         "driver_cost",
@@ -1415,7 +1415,7 @@
       "qualified_name": "hif_economics::'Meier COE'",
       "doc_comment": "Cost of Electricity from Meier's engineering-economic model.\nCombines fixed charge rate (8.3%) and O&M rate (3%) into a\nsingle capital charge rate (11.3%), then divides by annual\nenergy production.\n\nConstants: 0.113 = R + M (8.3% fixed charge + 3% O&M),\n0.0876 = GW-to-$/kWh conversion (8760 hr/yr * 1e6 kW/GW / 100 cents/$).\n\n*Source**: knowledge/sources/economic_studies_for_heavy_ion_fusion_electric_power_plants/output.md\n*Ref**: Eq. 1 (lines 76-102)\n*Basis**: Meier 1986 COE formula. Year-dollars: 1988$.",
       "calc_expressions": [
-        "coe_cents_kwh = 0.113 * total_capital_billions / (0.0876 * availability * net_electric_power_gw)",
+        "coe_cents_kwh = 0.113 * total_capital_billions / (0.0876 * availability_in * net_electric_power_gw_in)",
         "\nDocumentation:\nCost of Electricity from Meier's engineering-economic model.\nCombines fixed charge rate (8.3%) and O&M rate (3%) into a\nsingle capital charge rate (11.3%), then divides by annual\nenergy production.\n\nConstants: 0.113 = R + M (8.3% fixed charge + 3% O&M),\n0.0876 = GW-to-$/kWh conversion (8760 hr/yr * 1e6 kW/GW / 100 cents/$).\n\n*Source**: knowledge/sources/economic_studies_for_heavy_ion_fusion_electric_power_plants/output.md\n*Ref**: Eq. 1 (lines 76-102)\n*Basis**: Meier 1986 COE formula. Year-dollars: 1988$."
       ],
       "input_attributes": [
@@ -1433,7 +1433,7 @@
           "is_optional": false
         },
         {
-          "name": "availability",
+          "name": "availability_in",
           "sysml_type": "Real",
           "default_value": null,
           "binding_type": "unbound",
@@ -1446,7 +1446,7 @@
           "is_optional": false
         },
         {
-          "name": "net_electric_power_gw",
+          "name": "net_electric_power_gw_in",
           "sysml_type": "Real",
           "default_value": null,
           "binding_type": "unbound",
@@ -1477,12 +1477,12 @@
       "references": [],
       "source_file": "root-0/library/analyses/hif_economics.sysml",
       "source_line": 84,
-      "source_hash": "3d583828f4aa53a101f63c7c16e34cefbcac3d43664240e60dbd87498f49690e",
+      "source_hash": "02ddab0039c2225b48de569b55a27fa7af1de73830676ebf572730c6db716309",
       "output_expression_asts": null,
       "all_member_names": [
-        "availability",
+        "availability_in",
         "coe_cents_kwh",
-        "net_electric_power_gw",
+        "net_electric_power_gw_in",
         "total_capital_billions"
       ],
       "member_expressions": null
@@ -1495,24 +1495,24 @@
         "construction_years = 5.0",
         "operational_years = 40.0",
         "energy_on_target = driver_efficiency * driver_energy",
-        "fusion_energy_per_shot = gain * energy_on_target",
-        "net_electric_power = driver_energy * frequency * (thermal_efficiency * blanket_energy_multiple * gain * driver_efficiency - 2.0)",
+        "fusion_energy_per_shot = gain_in * energy_on_target",
+        "net_electric_power = driver_energy * frequency_in * (thermal_efficiency_in * blanket_energy_multiple * gain_in * driver_efficiency - 2.0)",
         "net_electric_kw = net_electric_power / 1000.0",
-        "shots_per_year = 31557600.0 * frequency * availability",
+        "shots_per_year = 31557600.0 * frequency_in * availability_in",
         "driver_lifetime_years = driver_lifetime_shots / shots_per_year",
-        "annual_capital_cost = (plant_cost_constant * net_electric_kw + yield_cost_constant * fusion_energy_per_shot / 1000000000.0 + driver_cost_constant * driver_energy) / construction_years",
-        "annual_operating_cost = target_cost_constant * shots_per_year + om_cost_constant * net_electric_kw + driver_cost_constant * driver_energy / driver_lifetime_years",
-        "annual_energy = 8760.0 * net_electric_kw * availability / 1000.0",
-        "discount_factor_con = (1.0 + discount_rate) ** construction_years",
-        "pvf_construction = (1.0 - 1.0 / discount_factor_con) / discount_rate",
-        "discount_factor_op = (1.0 + discount_rate) ** operational_years",
-        "pvf_operation = 1.0 / discount_factor_con * (1.0 - 1.0 / discount_factor_op) / discount_rate",
+        "annual_capital_cost = (plant_cost_constant_in * net_electric_kw + yield_cost_constant * fusion_energy_per_shot / 1000000000.0 + driver_cost_constant * driver_energy) / construction_years",
+        "annual_operating_cost = target_cost_constant * shots_per_year + om_cost_constant_in * net_electric_kw + driver_cost_constant * driver_energy / driver_lifetime_years",
+        "annual_energy = 8760.0 * net_electric_kw * availability_in / 1000.0",
+        "discount_factor_con = (1.0 + discount_rate_in) ** construction_years",
+        "pvf_construction = (1.0 - 1.0 / discount_factor_con) / discount_rate_in",
+        "discount_factor_op = (1.0 + discount_rate_in) ** operational_years",
+        "pvf_operation = 1.0 / discount_factor_con * (1.0 - 1.0 / discount_factor_op) / discount_rate_in",
         "lcoe = (annual_capital_cost * pvf_construction + annual_operating_cost * pvf_operation) / (annual_energy * pvf_operation)",
         "\nDocumentation:\nLevelized Cost of Electricity for an IFE power plant using\nHawker's 14-parameter discounted cash flow model.\n\nThe formula evaluates a full DCF over a construction period\n(Yc years) and operational lifetime (N_op years). Capital costs\nare spread evenly across construction; operating costs accrue\nduring operation. Both cost and energy streams are discounted\nto present value.\n\nClosed-form present value factors replace year-by-year iteration:\n  PVF_con = (1 - (1+d)^(-Yc)) / d\n  PVF_op  = (1+d)^(-Yc) * (1 - (1+d)^(-N_op)) / d\n\nNet electric power per Hawker Eq. 2.12-2.16:\n  P_e = E_d * f * (mu_th * E_b * G * mu_d - 2)\nwhere the factor of 2 approximates recirculating power as\n2x driver power (driver + cooling).\n\n*Source**: knowledge/sources/a_simplified_economic_model_for_inertial_fusion/output.md\n*Ref**: Equations 2.1-2.16 (complete LCOE model)\n*Basis**: Hawker 2020 DCF LCOE model with 14 technology-agnostic parameters;\nclosed-form PVF replaces year-by-year iteration per DD-3"
       ],
       "input_attributes": [
         {
-          "name": "availability",
+          "name": "availability_in",
           "sysml_type": "Real",
           "default_value": null,
           "binding_type": "unbound",
@@ -1538,7 +1538,7 @@
           "is_optional": false
         },
         {
-          "name": "discount_rate",
+          "name": "discount_rate_in",
           "sysml_type": "Real",
           "default_value": null,
           "binding_type": "unbound",
@@ -1603,7 +1603,7 @@
           "is_optional": false
         },
         {
-          "name": "frequency",
+          "name": "frequency_in",
           "sysml_type": "Real",
           "default_value": null,
           "binding_type": "unbound",
@@ -1616,7 +1616,7 @@
           "is_optional": false
         },
         {
-          "name": "gain",
+          "name": "gain_in",
           "sysml_type": "Real",
           "default_value": null,
           "binding_type": "unbound",
@@ -1629,7 +1629,7 @@
           "is_optional": false
         },
         {
-          "name": "om_cost_constant",
+          "name": "om_cost_constant_in",
           "sysml_type": "Real",
           "default_value": null,
           "binding_type": "unbound",
@@ -1642,7 +1642,7 @@
           "is_optional": false
         },
         {
-          "name": "plant_cost_constant",
+          "name": "plant_cost_constant_in",
           "sysml_type": "Real",
           "default_value": null,
           "binding_type": "unbound",
@@ -1668,7 +1668,7 @@
           "is_optional": false
         },
         {
-          "name": "thermal_efficiency",
+          "name": "thermal_efficiency_in",
           "sysml_type": "Real",
           "default_value": null,
           "binding_type": "unbound",
@@ -1738,38 +1738,38 @@
       "references": [],
       "source_file": "root-0/library/analyses/ife_lcoe.sysml",
       "source_line": 4,
-      "source_hash": "874463f56c6e87263e2619f6923155debb093fb780e3a05b0577af183aa4b26b",
+      "source_hash": "d7006898efb8a06913e5017f30793bbe1e34073e904396a1e487ce70af6f7537",
       "output_expression_asts": null,
       "all_member_names": [
         "annual_capital_cost",
         "annual_energy",
         "annual_operating_cost",
-        "availability",
+        "availability_in",
         "blanket_energy_multiple",
         "construction_years",
         "discount_factor_con",
         "discount_factor_op",
-        "discount_rate",
+        "discount_rate_in",
         "driver_cost_constant",
         "driver_efficiency",
         "driver_energy",
         "driver_lifetime_shots",
         "driver_lifetime_years",
         "energy_on_target",
-        "frequency",
+        "frequency_in",
         "fusion_energy_per_shot",
-        "gain",
+        "gain_in",
         "lcoe",
         "net_electric_kw",
         "net_electric_power",
-        "om_cost_constant",
+        "om_cost_constant_in",
         "operational_years",
-        "plant_cost_constant",
+        "plant_cost_constant_in",
         "pvf_construction",
         "pvf_operation",
         "shots_per_year",
         "target_cost_constant",
-        "thermal_efficiency",
+        "thermal_efficiency_in",
         "yield_cost_constant"
       ],
       "member_expressions": null
@@ -1779,7 +1779,7 @@
       "qualified_name": "fusion_cycle::'Recirculating Power Fraction'",
       "doc_comment": "Computes the recirculating power fraction for an IFE plant.\nf_recirc = 1 / (eta * G * M * epsilon)\n\nThe recirculating power fraction determines what fraction of\ngross electric output must be fed back to the driver. Values\nabove ~0.25 (fusion cycle gain below ~4) create a sharp knee\nin the cost curve.\n\n*Source**: knowledge/sources/energy_from_inertial_fusion/output.md\n*Ref**: Components section (fusion cycle gain discussion)\n*Basis**: DI-001 — eta*G must exceed ~10 for viability",
       "calc_expressions": [
-        "fusion_cycle_gain = eta * gain * blanket_multiplier * thermal_efficiency",
+        "fusion_cycle_gain = eta * gain_in * blanket_multiplier * thermal_efficiency_in",
         "f_recirc = 1.0 / fusion_cycle_gain",
         "\nDocumentation:\nComputes the recirculating power fraction for an IFE plant.\nf_recirc = 1 / (eta * G * M * epsilon)\n\nThe recirculating power fraction determines what fraction of\ngross electric output must be fed back to the driver. Values\nabove ~0.25 (fusion cycle gain below ~4) create a sharp knee\nin the cost curve.\n\n*Source**: knowledge/sources/energy_from_inertial_fusion/output.md\n*Ref**: Components section (fusion cycle gain discussion)\n*Basis**: DI-001 — eta*G must exceed ~10 for viability"
       ],
@@ -1798,7 +1798,7 @@
           "is_optional": false
         },
         {
-          "name": "gain",
+          "name": "gain_in",
           "sysml_type": "Real",
           "default_value": null,
           "binding_type": "unbound",
@@ -1824,7 +1824,7 @@
           "is_optional": false
         },
         {
-          "name": "thermal_efficiency",
+          "name": "thermal_efficiency_in",
           "sysml_type": "Real",
           "default_value": null,
           "binding_type": "unbound",
@@ -1855,15 +1855,15 @@
       "references": [],
       "source_file": "root-0/library/analyses/fusion_cycle.sysml",
       "source_line": 4,
-      "source_hash": "9a66d1261f2ba53543cff260ce79a794240e05e80073ebf2ee26df44934490af",
+      "source_hash": "b1f4f8018e11ea2370269042d876ce00fd5678ecb70e9b464eda65d8ff644e16",
       "output_expression_asts": null,
       "all_member_names": [
         "blanket_multiplier",
         "eta",
         "f_recirc",
         "fusion_cycle_gain",
-        "gain",
-        "thermal_efficiency"
+        "gain_in",
+        "thermal_efficiency_in"
       ],
       "member_expressions": null
     }
@@ -1876,11 +1876,11 @@
       "module_type": "hif_economics.Meier_Reactor_CostModule",
       "bindings": [
         {
-          "param_name": "thermal_power_gw",
-          "source_path": "hif_plant_pkg::hif_plant::meier_reactor_cost_calc::thermal_power_gw",
+          "param_name": "thermal_power_gw_in",
+          "source_path": "hif_plant_pkg::hif_plant::thermal_power_gw",
           "binding_type": "reference",
           "is_cross_file": false,
-          "raw_expression": "FeatureReferenceExpression -> hif_plant_pkg::hif_plant::meier_reactor_cost_calc::thermal_power_gw",
+          "raw_expression": "FeatureReferenceExpression -> hif_plant_pkg::hif_plant::thermal_power_gw",
           "source_instance_elem": null,
           "source_attribute_elem": null,
           "literal_value": null,
@@ -1992,11 +1992,11 @@
           "source_written_qualifier": null
         },
         {
-          "param_name": "availability",
+          "param_name": "availability_in",
           "source_path": null,
           "binding_type": "literal",
           "is_cross_file": false,
-          "raw_expression": "FeatureReferenceExpression -> hif_plant_pkg::hif_plant::meier_coe_calc::availability",
+          "raw_expression": "FeatureReferenceExpression -> hif_plant_pkg::hif_plant::availability",
           "source_instance_elem": null,
           "source_attribute_elem": null,
           "literal_value": 0.9,
@@ -2006,11 +2006,11 @@
           "source_written_qualifier": null
         },
         {
-          "param_name": "net_electric_power_gw",
-          "source_path": "hif_plant_pkg::hif_plant::meier_coe_calc::net_electric_power_gw",
+          "param_name": "net_electric_power_gw_in",
+          "source_path": "hif_plant_pkg::hif_plant::net_electric_power_gw",
           "binding_type": "reference",
           "is_cross_file": false,
-          "raw_expression": "FeatureReferenceExpression -> hif_plant_pkg::hif_plant::meier_coe_calc::net_electric_power_gw",
+          "raw_expression": "FeatureReferenceExpression -> hif_plant_pkg::hif_plant::net_electric_power_gw",
           "source_instance_elem": null,
           "source_attribute_elem": null,
           "literal_value": null,
@@ -2036,11 +2036,11 @@
       "module_type": "hif_economics.Meier_HIF_Driver_CostModule",
       "bindings": [
         {
-          "param_name": "beam_energy_mj",
+          "param_name": "beam_energy_mj_in",
           "source_path": null,
           "binding_type": "literal",
           "is_cross_file": false,
-          "raw_expression": "FeatureReferenceExpression -> hif_driver::'HIF Driver'::meier_cost::beam_energy_mj",
+          "raw_expression": "FeatureReferenceExpression -> hif_driver::'HIF Driver'::beam_energy_mj",
           "source_instance_elem": null,
           "source_attribute_elem": null,
           "literal_value": 5.0,
@@ -2064,11 +2064,11 @@
           "source_written_qualifier": null
         },
         {
-          "param_name": "num_chambers",
+          "param_name": "num_chambers_in",
           "source_path": null,
           "binding_type": "literal",
           "is_cross_file": false,
-          "raw_expression": "FeatureReferenceExpression -> hif_driver::'HIF Driver'::meier_cost::num_chambers",
+          "raw_expression": "FeatureReferenceExpression -> hif_driver::'HIF Driver'::num_chambers",
           "source_instance_elem": null,
           "source_attribute_elem": null,
           "literal_value": 1.0,
@@ -2108,11 +2108,11 @@
       "module_type": "hif_economics.Meier_HIF_Driver_CostModule",
       "bindings": [
         {
-          "param_name": "beam_energy_mj",
+          "param_name": "beam_energy_mj_in",
           "source_path": null,
           "binding_type": "literal",
           "is_cross_file": false,
-          "raw_expression": "FeatureReferenceExpression -> hif_driver::'HIF Driver'::meier_cost::beam_energy_mj",
+          "raw_expression": "FeatureReferenceExpression -> hif_driver::'HIF Driver'::beam_energy_mj",
           "source_instance_elem": null,
           "source_attribute_elem": null,
           "literal_value": 5.0,
@@ -2136,11 +2136,11 @@
           "source_written_qualifier": null
         },
         {
-          "param_name": "num_chambers",
+          "param_name": "num_chambers_in",
           "source_path": null,
           "binding_type": "literal",
           "is_cross_file": false,
-          "raw_expression": "FeatureReferenceExpression -> hif_driver::'HIF Driver'::meier_cost::num_chambers",
+          "raw_expression": "FeatureReferenceExpression -> hif_driver::'HIF Driver'::num_chambers",
           "source_instance_elem": null,
           "source_attribute_elem": null,
           "literal_value": 1.0,
@@ -2180,11 +2180,11 @@
       "module_type": "ife_lcoe.IFE_LCOEModule",
       "bindings": [
         {
-          "param_name": "availability",
+          "param_name": "availability_in",
           "source_path": null,
           "binding_type": "literal",
           "is_cross_file": false,
-          "raw_expression": "FeatureReferenceExpression -> ife_plant::'IFE Power Plant'::lcoe_calc::availability",
+          "raw_expression": "FeatureReferenceExpression -> ife_plant::'IFE Power Plant'::availability",
           "source_instance_elem": null,
           "source_attribute_elem": null,
           "literal_value": 0.9,
@@ -2208,11 +2208,11 @@
           "source_written_qualifier": null
         },
         {
-          "param_name": "discount_rate",
+          "param_name": "discount_rate_in",
           "source_path": null,
           "binding_type": "literal",
           "is_cross_file": false,
-          "raw_expression": "FeatureReferenceExpression -> ife_plant::'IFE Power Plant'::lcoe_calc::discount_rate",
+          "raw_expression": "FeatureReferenceExpression -> ife_plant::'IFE Power Plant'::discount_rate",
           "source_instance_elem": null,
           "source_attribute_elem": null,
           "literal_value": 0.08,
@@ -2278,11 +2278,11 @@
           "source_written_qualifier": null
         },
         {
-          "param_name": "frequency",
+          "param_name": "frequency_in",
           "source_path": null,
           "binding_type": "literal",
           "is_cross_file": false,
-          "raw_expression": "FeatureReferenceExpression -> ife_plant::'IFE Power Plant'::lcoe_calc::frequency",
+          "raw_expression": "FeatureReferenceExpression -> ife_plant::'IFE Power Plant'::frequency",
           "source_instance_elem": null,
           "source_attribute_elem": null,
           "literal_value": 3.5,
@@ -2292,11 +2292,11 @@
           "source_written_qualifier": null
         },
         {
-          "param_name": "gain",
+          "param_name": "gain_in",
           "source_path": null,
           "binding_type": "literal",
           "is_cross_file": false,
-          "raw_expression": "FeatureReferenceExpression -> ife_plant::'IFE Power Plant'::lcoe_calc::gain",
+          "raw_expression": "FeatureReferenceExpression -> ife_plant::'IFE Power Plant'::gain",
           "source_instance_elem": null,
           "source_attribute_elem": null,
           "literal_value": 80.0,
@@ -2306,11 +2306,11 @@
           "source_written_qualifier": null
         },
         {
-          "param_name": "om_cost_constant",
+          "param_name": "om_cost_constant_in",
           "source_path": null,
           "binding_type": "literal",
           "is_cross_file": false,
-          "raw_expression": "FeatureReferenceExpression -> ife_plant::'IFE Power Plant'::lcoe_calc::om_cost_constant",
+          "raw_expression": "FeatureReferenceExpression -> ife_plant::'IFE Power Plant'::om_cost_constant",
           "source_instance_elem": null,
           "source_attribute_elem": null,
           "literal_value": 65.0,
@@ -2320,11 +2320,11 @@
           "source_written_qualifier": null
         },
         {
-          "param_name": "plant_cost_constant",
+          "param_name": "plant_cost_constant_in",
           "source_path": null,
           "binding_type": "literal",
           "is_cross_file": false,
-          "raw_expression": "FeatureReferenceExpression -> ife_plant::'IFE Power Plant'::lcoe_calc::plant_cost_constant",
+          "raw_expression": "FeatureReferenceExpression -> ife_plant::'IFE Power Plant'::plant_cost_constant",
           "source_instance_elem": null,
           "source_attribute_elem": null,
           "literal_value": 2000.0,
@@ -2348,11 +2348,11 @@
           "source_written_qualifier": null
         },
         {
-          "param_name": "thermal_efficiency",
+          "param_name": "thermal_efficiency_in",
           "source_path": null,
           "binding_type": "literal",
           "is_cross_file": false,
-          "raw_expression": "FeatureReferenceExpression -> ife_plant::'IFE Power Plant'::lcoe_calc::thermal_efficiency",
+          "raw_expression": "FeatureReferenceExpression -> ife_plant::'IFE Power Plant'::thermal_efficiency",
           "source_instance_elem": null,
           "source_attribute_elem": null,
           "literal_value": 0.43,
@@ -2409,11 +2409,11 @@
           "source_written_qualifier": null
         },
         {
-          "param_name": "gain",
+          "param_name": "gain_in",
           "source_path": null,
           "binding_type": "literal",
           "is_cross_file": false,
-          "raw_expression": "FeatureReferenceExpression -> ife_plant::'IFE Power Plant'::recirc_calc::gain",
+          "raw_expression": "FeatureReferenceExpression -> ife_plant::'IFE Power Plant'::gain",
           "source_instance_elem": null,
           "source_attribute_elem": null,
           "literal_value": 80.0,
@@ -2437,11 +2437,11 @@
           "source_written_qualifier": null
         },
         {
-          "param_name": "thermal_efficiency",
+          "param_name": "thermal_efficiency_in",
           "source_path": null,
           "binding_type": "literal",
           "is_cross_file": false,
-          "raw_expression": "FeatureReferenceExpression -> ife_plant::'IFE Power Plant'::recirc_calc::thermal_efficiency",
+          "raw_expression": "FeatureReferenceExpression -> ife_plant::'IFE Power Plant'::thermal_efficiency",
           "source_instance_elem": null,
           "source_attribute_elem": null,
           "literal_value": 0.43,
@@ -2462,7 +2462,7 @@
     }
   ],
   "design_attributes": {
-    "/home/reid/1cfe/sysml-codegen/tests/fixtures/fusion_tea/library/analyses/hif_economics.sysml": [
+    "/home/reid/1cfe/sysml-codegen-item7-rebuild/tests/fixtures/fusion_tea/library/analyses/hif_economics.sysml": [
       {
         "name": "cost_billions",
         "sysml_type": "Real",
@@ -2524,7 +2524,7 @@
         "qualified_name": "hif_economics__Meier_COE__coe_cents_kwh"
       }
     ],
-    "/home/reid/1cfe/sysml-codegen/tests/fixtures/fusion_tea/library/analyses/ife_lcoe.sysml": [
+    "/home/reid/1cfe/sysml-codegen-item7-rebuild/tests/fixtures/fusion_tea/library/analyses/ife_lcoe.sysml": [
       {
         "name": "construction_years",
         "sysml_type": "Real",
@@ -2686,7 +2686,7 @@
         "qualified_name": "ife_lcoe__IFE_LCOE__lcoe"
       }
     ],
-    "/home/reid/1cfe/sysml-codegen/tests/fixtures/fusion_tea/library/analyses/fusion_cycle.sysml": [
+    "/home/reid/1cfe/sysml-codegen-item7-rebuild/tests/fixtures/fusion_tea/library/analyses/fusion_cycle.sysml": [
       {
         "name": "fusion_cycle_gain",
         "sysml_type": "Real",
@@ -2718,7 +2718,7 @@
         "qualified_name": "fusion_cycle__Viability_Threshold__threshold"
       }
     ],
-    "/home/reid/1cfe/sysml-codegen/tests/fixtures/fusion_tea/designs/hif_ife/hif_driver.sysml": [
+    "/home/reid/1cfe/sysml-codegen-item7-rebuild/tests/fixtures/fusion_tea/designs/hif_ife/hif_driver.sysml": [
       {
         "name": "driver_cost_billions",
         "sysml_type": "Real",
@@ -2730,7 +2730,7 @@
         "qualified_name": "hif_driver__HIF_Driver__driver_cost_billions"
       }
     ],
-    "/home/reid/1cfe/sysml-codegen/tests/fixtures/fusion_tea/designs/hif_ife/hif_plant.sysml": [
+    "/home/reid/1cfe/sysml-codegen-item7-rebuild/tests/fixtures/fusion_tea/designs/hif_ife/hif_plant.sysml": [
       {
         "name": "thermal_power_gw",
         "sysml_type": "Real",
@@ -2762,7 +2762,7 @@
         "qualified_name": "hif_plant_pkg__hif_plant__meier_coe"
       }
     ],
-    "/home/reid/1cfe/sysml-codegen/tests/fixtures/fusion_tea/designs/generic_ife/ife_plant.sysml": [
+    "/home/reid/1cfe/sysml-codegen-item7-rebuild/tests/fixtures/fusion_tea/designs/generic_ife/ife_plant.sysml": [
       {
         "name": "lcoe",
         "sysml_type": "Real",
@@ -3166,12 +3166,12 @@
         {
           "name": "cost_billions",
           "qualified_name": "hif_economics::'Meier HIF Driver Cost'::cost_billions",
-          "document_path": "file:///home/reid/1cfe/sysml-codegen/tests/fixtures/fusion_tea/library/analyses/hif_economics.sysml"
+          "document_path": "file:///home/reid/1cfe/sysml-codegen-item7-rebuild/tests/fixtures/fusion_tea/library/analyses/hif_economics.sysml"
         },
         {
           "name": "meier_cost",
           "qualified_name": "hif_driver::'HIF Driver'::meier_cost",
-          "document_path": "file:///home/reid/1cfe/sysml-codegen/tests/fixtures/fusion_tea/designs/hif_ife/hif_driver.sysml"
+          "document_path": "file:///home/reid/1cfe/sysml-codegen-item7-rebuild/tests/fixtures/fusion_tea/designs/hif_ife/hif_driver.sysml"
         }
       ],
       "classification": "expose_pure",
@@ -3196,12 +3196,12 @@
         {
           "name": "lcoe",
           "qualified_name": "ife_lcoe::'IFE LCOE'::lcoe",
-          "document_path": "file:///home/reid/1cfe/sysml-codegen/tests/fixtures/fusion_tea/library/analyses/ife_lcoe.sysml"
+          "document_path": "file:///home/reid/1cfe/sysml-codegen-item7-rebuild/tests/fixtures/fusion_tea/library/analyses/ife_lcoe.sysml"
         },
         {
           "name": "lcoe_calc",
           "qualified_name": "ife_plant::'IFE Power Plant'::lcoe_calc",
-          "document_path": "file:///home/reid/1cfe/sysml-codegen/tests/fixtures/fusion_tea/designs/generic_ife/ife_plant.sysml"
+          "document_path": "file:///home/reid/1cfe/sysml-codegen-item7-rebuild/tests/fixtures/fusion_tea/designs/generic_ife/ife_plant.sysml"
         }
       ],
       "classification": "expose_pure",
@@ -3226,12 +3226,12 @@
         {
           "name": "f_recirc",
           "qualified_name": "fusion_cycle::'Recirculating Power Fraction'::f_recirc",
-          "document_path": "file:///home/reid/1cfe/sysml-codegen/tests/fixtures/fusion_tea/library/analyses/fusion_cycle.sysml"
+          "document_path": "file:///home/reid/1cfe/sysml-codegen-item7-rebuild/tests/fixtures/fusion_tea/library/analyses/fusion_cycle.sysml"
         },
         {
           "name": "recirc_calc",
           "qualified_name": "ife_plant::'IFE Power Plant'::recirc_calc",
-          "document_path": "file:///home/reid/1cfe/sysml-codegen/tests/fixtures/fusion_tea/designs/generic_ife/ife_plant.sysml"
+          "document_path": "file:///home/reid/1cfe/sysml-codegen-item7-rebuild/tests/fixtures/fusion_tea/designs/generic_ife/ife_plant.sysml"
         }
       ],
       "classification": "expose_pure",
@@ -3256,12 +3256,12 @@
         {
           "name": "coe_cents_kwh",
           "qualified_name": "hif_economics::'Meier COE'::coe_cents_kwh",
-          "document_path": "file:///home/reid/1cfe/sysml-codegen/tests/fixtures/fusion_tea/library/analyses/hif_economics.sysml"
+          "document_path": "file:///home/reid/1cfe/sysml-codegen-item7-rebuild/tests/fixtures/fusion_tea/library/analyses/hif_economics.sysml"
         },
         {
           "name": "meier_coe_calc",
           "qualified_name": "hif_plant_pkg::hif_plant::meier_coe_calc",
-          "document_path": "file:///home/reid/1cfe/sysml-codegen/tests/fixtures/fusion_tea/designs/hif_ife/hif_plant.sysml"
+          "document_path": "file:///home/reid/1cfe/sysml-codegen-item7-rebuild/tests/fixtures/fusion_tea/designs/hif_ife/hif_plant.sysml"
         }
       ],
       "classification": "expose_pure",

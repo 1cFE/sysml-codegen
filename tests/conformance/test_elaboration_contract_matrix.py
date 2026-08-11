@@ -775,8 +775,12 @@ def test_mutation_evidence_rejects_a_phantom_public_input() -> None:
 
 
 def _src_01(_tmp_path: Path) -> None:
+    # Specimen moved off ``fusion_tea`` in Slice 3D: its fifteen self-named
+    # bindings were migrated in place to the D-5 ``<formal>_in`` form, so the
+    # customer model no longer exercises this cell. ``self_named_binding_trap``
+    # is the fixture authored to carry the mechanism on its own.
     with pytest.raises(ElaborationError) as excinfo:
-        _load_internal(FIXTURES_DIR / "fusion_tea")
+        _load_internal(FIXTURES_DIR / "self_named_binding_trap")
     assert any(finding.code is ReadinessCode.SI_SELF_BINDING for finding in excinfo.value.findings)
 
 

@@ -82,20 +82,20 @@ def test_path_a_one_modeled_gain_is_three_public_fields(ctx_cache) -> None:
     cutover must flip this to exactly one field."""
     eps = _entry_points(ctx_cache("fusion_tea"))
     assert "hif_plant_pkg__hif_plant__gain" in eps  # constraint route converges
-    assert "hif_plant_pkg__hif_plant__lcoe_calc__gain" in eps  # Path A copy
-    assert "hif_plant_pkg__hif_plant__recirc_calc__gain" in eps  # Path A copy
+    assert "hif_plant_pkg__hif_plant__lcoe_calc__gain_in" in eps  # Path A copy
+    assert "hif_plant_pkg__hif_plant__recirc_calc__gain_in" in eps  # Path A copy
     # All three carry the same captured value — the defect is invisible at the
     # design point and only manifests when one copy is mutated.
     assert (
         eps["hif_plant_pkg__hif_plant__gain"].default_value
-        == eps["hif_plant_pkg__hif_plant__lcoe_calc__gain"].default_value
-        == eps["hif_plant_pkg__hif_plant__recirc_calc__gain"].default_value
+        == eps["hif_plant_pkg__hif_plant__lcoe_calc__gain_in"].default_value
+        == eps["hif_plant_pkg__hif_plant__recirc_calc__gain_in"].default_value
         == 80.0
     )
     # The stamped copies are classified as if the modeler wrote literals here.
     for copy in (
-        "hif_plant_pkg__hif_plant__lcoe_calc__gain",
-        "hif_plant_pkg__hif_plant__recirc_calc__gain",
+        "hif_plant_pkg__hif_plant__lcoe_calc__gain_in",
+        "hif_plant_pkg__hif_plant__recirc_calc__gain_in",
     ):
         assert eps[copy].entry_type is EntryPointType.USAGE_LITERAL, copy
 
@@ -111,7 +111,7 @@ def test_path_a_stamp_is_persisted_into_the_snapshot() -> None:
         cu for cu in snap["calc_usages"]
         if cu.qualified_name == "hif_plant_pkg__hif_plant__lcoe_calc"
     ]
-    (gain,) = [b for b in lcoe.bindings if b.param_name == "gain"]
+    (gain,) = [b for b in lcoe.bindings if b.param_name == "gain_in"]
     assert gain.binding_type == BindingType.LITERAL
     assert gain.source_path is None
     assert gain.literal_value == 80.0
@@ -130,7 +130,7 @@ def test_path_a_written_evidence_survives_the_stamp() -> None:
         "hif_plant_pkg__hif_plant__lcoe_calc",
         "hif_plant_pkg__hif_plant__recirc_calc",
     ):
-        (gain,) = [b for b in by_qn[usage_qn].bindings if b.param_name == "gain"]
+        (gain,) = [b for b in by_qn[usage_qn].bindings if b.param_name == "gain_in"]
         assert gain.binding_type == BindingType.LITERAL
         assert gain.written_reference == "gain", usage_qn
 
@@ -164,7 +164,7 @@ def test_reference_derived_literal_distinguishable_from_authored_literal() -> No
     (gain,) = [
         b
         for b in by_qn["hif_plant_pkg__hif_plant__lcoe_calc"].bindings
-        if b.param_name == "gain"
+        if b.param_name == "gain_in"
     ]
     assert gain.binding_type == BindingType.LITERAL
     assert gain.written_reference is not None
@@ -192,11 +192,16 @@ def test_reference_derived_discriminator_on_immutable_evidence() -> None:
 
     by_qn = {u.qualified_name: u for u in usages if not u.is_template}
     lcoe = by_qn["hif_plant_pkg__hif_plant__lcoe_calc"]
-    (gain,) = [b for b in lcoe.bindings if b.param_name == "gain"]
+    (gain,) = [b for b in lcoe.bindings if b.param_name == "gain_in"]
     before = gain.reference_evidence
     assert before is not None
     assert before.source_form is SourceForm.BARE_REFERENCE
-    assert before.is_self_binding  # SRC-01: RHS resolves to the calc's own formal
+    # Not a self-binding any more: Slice 3D migrated `in gain = gain` to the
+    # D-5 `in gain_in = gain` form, so the RHS resolves to the plant attribute
+    # rather than the calc's own formal. SRC-01's specimen moved to
+    # `self_named_binding_trap`; the Path-A stamp below is unaffected, because
+    # the legacy route stamps any bare reference it cannot resolve.
+    assert not before.is_self_binding
 
     _rewrite_virtual_bindings(usages, hierarchy)
 

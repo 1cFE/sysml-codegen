@@ -496,21 +496,21 @@
     },
     "Meier_COE": {
       "coe_cents_kwh": {
-        "expr": "((0.113 * inputs.total_capital_billions) / ((0.0876 * inputs.availability) * inputs.net_electric_power_gw))",
+        "expr": "((0.113 * inputs.total_capital_billions) / ((0.0876 * inputs.availability_in) * inputs.net_electric_power_gw_in))",
         "input_refs": [
           "total_capital_billions",
-          "availability",
-          "net_electric_power_gw"
+          "availability_in",
+          "net_electric_power_gw_in"
         ],
         "intermediate_refs": []
       }
     },
     "Meier_HIF_Driver_Cost": {
       "cost_billions": {
-        "expr": "(((0.32 + (0.088 * inputs.beam_energy_mj)) * (1.25 + (0.05 * inputs.num_chambers))) * (1.0 + (0.0088 * (inputs.rep_rate - 5.0))))",
+        "expr": "(((0.32 + (0.088 * inputs.beam_energy_mj_in)) * (1.25 + (0.05 * inputs.num_chambers_in))) * (1.0 + (0.0088 * (inputs.rep_rate - 5.0))))",
         "input_refs": [
-          "beam_energy_mj",
-          "num_chambers",
+          "beam_energy_mj_in",
+          "num_chambers_in",
           "rep_rate"
         ],
         "intermediate_refs": []
@@ -526,9 +526,9 @@
     },
     "Meier_Reactor_Cost": {
       "reactor_cost_billions": {
-        "expr": "((0.66 * ((inputs.thermal_power_gw / 1.67) ** 0.49)) * ((0.72 * inputs.num_units) + 0.28))",
+        "expr": "((0.66 * ((inputs.thermal_power_gw_in / 1.67) ** 0.49)) * ((0.72 * inputs.num_units) + 0.28))",
         "input_refs": [
-          "thermal_power_gw",
+          "thermal_power_gw_in",
           "num_units"
         ],
         "intermediate_refs": []

@@ -226,21 +226,65 @@ def test_c19_deep_path_override_reaches_both_consumers(graph_cache) -> None:
     assert graph.diagnostics == []
 
 
-def test_fusion_tea_self_binding_fails_loud() -> None:
-    """``in gain = gain`` is a hard elaboration error carrying SI_SELF_BINDING
-    and every offending binding — never reinterpreted (contract D-3/SRC-01)."""
+def test_self_named_binding_fails_loud() -> None:
+    """``in availability = availability`` is a hard elaboration error carrying
+    SI_SELF_BINDING and every offending binding — never reinterpreted
+    (contract D-3/SRC-01).
+
+    The specimen is ``self_named_binding_trap``, a fixture authored to carry
+    that one mechanism and nothing else. It used to be ``fusion_tea``, whose
+    fifteen ``in <formal> = <formal>`` sites Slice 3D migrated in place to the
+    D-5 ``in <formal>_in = <formal>`` form; the customer model is no longer a
+    specimen for the refusal, which the next test asserts by value.
+    """
     with pytest.raises(ElaborationError) as excinfo:
-        _elaborate_fixture("fusion_tea")
+        _elaborate_fixture("self_named_binding_trap")
     message = str(excinfo.value)
     assert "SI_SELF_BINDING" in message
-    assert "gain" in message
+    assert "availability" in message
     self_bindings = [
         finding
         for finding in excinfo.value.findings
         if finding.code is ReadinessCode.SI_SELF_BINDING
     ]
     assert self_bindings, excinfo.value.findings
-    assert any("gain" == finding.param_name for finding in self_bindings)
+    assert any("availability" == finding.param_name for finding in self_bindings)
+
+
+def test_the_customer_model_carries_no_self_named_binding_after_the_d5_migration() -> None:
+    """The other half of the migration: fusion_tea elaborates instead of refusing.
+
+    Asserted by value, not by "no exception": the fifteen renamed formals are
+    read back off the graph's calculation inputs, so a fixture that stopped
+    carrying them would fail here rather than pass quietly.
+    """
+    graph = _elaborate_fixture("fusion_tea")
+    assert graph.diagnostics == []
+
+    renamed = {
+        (node.display_path.rsplit("__", 1)[-1], name)
+        for node in (*graph.calcs.values(), *graph.constraints.values())
+        for name in node.input_names.values()
+        if name.endswith("_in")
+    }
+    assert renamed == {
+        # FT-10, the one constraint formal in the ledger.
+        ("viability", "gain_in"),
+        ("lcoe_calc", "availability_in"),
+        ("lcoe_calc", "discount_rate_in"),
+        ("lcoe_calc", "frequency_in"),
+        ("lcoe_calc", "gain_in"),
+        ("lcoe_calc", "om_cost_constant_in"),
+        ("lcoe_calc", "plant_cost_constant_in"),
+        ("lcoe_calc", "thermal_efficiency_in"),
+        ("recirc_calc", "gain_in"),
+        ("recirc_calc", "thermal_efficiency_in"),
+        ("meier_reactor_cost_calc", "thermal_power_gw_in"),
+        ("meier_coe_calc", "availability_in"),
+        ("meier_coe_calc", "net_electric_power_gw_in"),
+        ("meier_cost", "beam_energy_mj_in"),
+        ("meier_cost", "num_chambers_in"),
+    }
 
 
 # ---------------------------------------------------------------------------

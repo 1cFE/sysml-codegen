@@ -93,23 +93,54 @@ def test_strict_mode_rejects_blocking_occurrence_diagnostics() -> None:
 
 
 def test_customer_fixture_lenient_diagnostics_are_accounted_for() -> None:
+    """The customer model now elaborates with an empty diagnostic set.
+
+    It used to carry 15 ``SI_SELF_BINDING`` plus 7 ``SI_OCCURRENCE_MISSING``
+    (``scope`` 6, ``wall_type`` 1). Slice 3D closed both: the fifteen bindings
+    were migrated in place to the D-5 ``<formal>_in`` form, and the seven were
+    enumeration-value redefinitions (``:>> scope = 'CAS Scope'::shared;``) that
+    the elaborator was sending down the alias walk instead of reading as
+    literals.
+
+    Empty on its own would go green on an empty graph, so the counts below pin
+    what the clean elaboration actually produced.
+    """
     graph = _elaborate_lenient("fusion_tea")
 
-    codes = Counter(diagnostic.code for diagnostic in graph.diagnostics)
-    assert codes == Counter(
-        {
-            ReadinessCode.SI_SELF_BINDING: 15,
-            ElaborationCode.SI_OCCURRENCE_MISSING: 7,
-        }
-    )
-    missing = [
-        diagnostic
-        for diagnostic in graph.diagnostics
-        if diagnostic.code is ElaborationCode.SI_OCCURRENCE_MISSING
-    ]
-    assert Counter(diagnostic.param_name for diagnostic in missing) == Counter(
-        {"scope": 6, "wall_type": 1}
-    )
+    assert Counter(diagnostic.code for diagnostic in graph.diagnostics) == Counter()
+    assert len(graph.calcs) == 7
+    assert len(graph.constraints) == 1
+    assert graph.attrs
+
+    # The seven attributes that used to be the seven diagnostics, one for one,
+    # now carry a resolved enumeration literal keyed by qualified name.
+    assert {
+        node.display_path: node.value
+        for node in graph.attrs.values()
+        if isinstance(node.value, str)
+    } == {
+        "hif_driver__hif_driver_instance__scope": (
+            "economic_parameter::'CAS Scope'::ife_divergent"
+        ),
+        "hif_plant_pkg__hif_plant__driver__scope": (
+            "economic_parameter::'CAS Scope'::ife_divergent"
+        ),
+        "hif_plant_pkg__hif_plant__target_factory__scope": (
+            "economic_parameter::'CAS Scope'::ife_divergent"
+        ),
+        "hif_plant_pkg__hif_plant__chamber__blanket__scope": (
+            "economic_parameter::'CAS Scope'::shared"
+        ),
+        "hif_plant_pkg__hif_plant__chamber__shield__scope": (
+            "economic_parameter::'CAS Scope'::shared"
+        ),
+        "hif_plant_pkg__hif_plant__chamber__structure__scope": (
+            "economic_parameter::'CAS Scope'::shared"
+        ),
+        "hif_plant_pkg__hif_plant__chamber__wall_type": (
+            "ife_subsystems::'Wall Type'::liquid_wall"
+        ),
+    }
 
 
 def test_alias_cycle_and_unsupported_formula_are_blocking_diagnostics() -> None:
