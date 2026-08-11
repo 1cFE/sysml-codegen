@@ -118,6 +118,10 @@ def path_at_head(path: str, repo: Path = REPO_ROOT) -> bool:
 
 #: Directories whose files must have a row before a deletion group may break them.
 SCANNED_TREES = ("tests", "scripts")
+#: Files the retirement preserves as records rather than as live code (plan rule 7). They keep
+#: their ledger row under their original path and carry ``archived_to``; scanning them for the
+#: removal surface would report the very legacy names they exist to remember.
+ARCHIVE_DIR = "scripts/archive"
 
 
 @dataclass(frozen=True)
@@ -245,6 +249,8 @@ def data_hits(repo: Path, surface: dict[str, Owner]) -> dict[str, dict[str, str]
     hits: dict[str, dict[str, str]] = {}
     for tree in SCANNED_TREES:
         for file in sorted((repo / tree).rglob("*.py")):
+            if str(file.relative_to(repo)).startswith(ARCHIVE_DIR):
+                continue
             try:
                 source = file.read_text()
             except UnicodeDecodeError:
@@ -312,6 +318,8 @@ def surface_hits(repo: Path, surface: Surface) -> dict[str, dict[str, str]]:
     hits: dict[str, dict[str, str]] = {}
     for tree in SCANNED_TREES:
         for file in sorted((repo / tree).rglob("*.py")):
+            if str(file.relative_to(repo)).startswith(ARCHIVE_DIR):
+                continue
             try:
                 parsed = ast.parse(file.read_text())
             except (SyntaxError, UnicodeDecodeError):
@@ -442,7 +450,7 @@ def check_paths(ledger: dict) -> list[str]:
         # probe is the worktree rather than HEAD so that a row added in the same commit as
         # the file it names is not a false failure; an unauthorised deletion still fails,
         # because the file is gone from the worktree too.
-        executed_delete = row.get("state") == "executed" and row["disposition"] == "delete"
+        executed_delete = row.get("state") == "executed" and _authorises_absence(row)
         present = (REPO_ROOT / row["path"]).exists()
         if row["repo"] == "sysml-codegen" and not executed_delete and not present:
             problems.append(
@@ -472,6 +480,18 @@ def check_paths(ledger: dict) -> list[str]:
 #: two error classes move now and the module they lived in retires in G3. Absent means
 #: ``proposed``, so Gate 4A's rows need no edit.
 ROW_STATES = frozenset({"proposed", "executed", "partially-executed"})
+
+#: Gate 4C dispositions that take a file out of the tree, alongside a plain ``delete``. A
+#: ``retire-with-owner`` row carries ``disposition: retain`` from Gate 4A — the Gate 4C
+#: disposition is what authorises its absence, and the state check has to read both or the
+#: whole test-side retirement reads as an unauthorised deletion.
+ABSENCE_DISPOSITIONS_4C = frozenset({"retire-with-owner", "archive-with-findings"})
+
+
+def _authorises_absence(row: dict) -> bool:
+    return (
+        row["disposition"] == "delete" or row.get("disposition_4c") in ABSENCE_DISPOSITIONS_4C
+    )
 
 
 def check_states(rows: list[dict]) -> list[str]:
@@ -516,11 +536,12 @@ def check_states(rows: list[dict]) -> list[str]:
                     f"{row['id']}: partially-executed but {row['path']} is gone from HEAD"
                 )
             continue
-        if row["disposition"] == "delete" and present:
+        if _authorises_absence(row) and present:
             problems.append(
                 f"{row['id']}: executed delete but {row['path']} is still at HEAD"
             )
-        if row["disposition"] in {"migrate", "retain"} and not present:
+        survives = not _authorises_absence(row) and row["disposition"] in {"migrate", "retain"}
+        if survives and not present:
             problems.append(
                 f"{row['id']}: executed {row['disposition']} but {row['path']} is gone from HEAD"
             )

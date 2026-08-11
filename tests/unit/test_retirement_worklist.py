@@ -35,12 +35,12 @@ def test_a_deletion_group_places_its_own_rows() -> None:
         {
             "id": "L-900",
             "path": "src/pkg/legacy.py",
-            "group": "4B-G2",
+            "group": "4B-G4",
             "disposition": "delete",
         }
     )
     assert item is not None
-    assert (item.step, item.action) == (2, "delete")
+    assert (item.step, item.action) == (4, "delete")
 
 
 def test_a_dispositioned_row_lands_on_the_earliest_step_that_breaks_it() -> None:
@@ -55,7 +55,7 @@ def test_a_dispositioned_row_lands_on_the_earliest_step_that_breaks_it() -> None
         }
     )
     assert item is not None
-    assert item.step == 1
+    assert item.step == 2  # the v5 family, not G4' — the earliest step that breaks it
 
 
 def test_an_archive_row_is_moved_not_deleted() -> None:
@@ -114,6 +114,6 @@ def test_a_dispositioned_row_that_cannot_be_placed_refuses_rather_than_defaults(
 
 
 def test_the_v5_family_step_names_the_thirty_seven_fixtures() -> None:
-    step1 = {item.path for item in worklist.load_items() if item.step == 1}
+    step1 = {item.path for item in worklist.load_items() if item.step == 2}
     fixtures = {p for p in step1 if p.endswith("/extraction_snapshot.json")}
     assert len(fixtures) == 37

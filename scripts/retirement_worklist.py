@@ -9,7 +9,10 @@ audit 4 found incomplete (F1).
 Two ledger columns carry the derivation:
 
 - `group` places the production, fixture and script rows that a deletion group removes.
-  `4B-v5-family` is step 1, `4B-G2` step 2, `4B-G3` step 3, `4B-G4` step 4.
+  `4B-G2` is step 1, `4B-v5-family` step 2, `4B-G3` step 3, `4B-G4` step 4. That order is
+  measured, not stated: the v5 read path imports the v5 family (`snapshot/graph_rebuild.py:15`
+  imports `analysis.constraint_lowering`), so deleting the family first leaves
+  `import sysml_codegen.snapshot` raising ModuleNotFoundError until the reader goes too.
 - `breaks_on` places every dispositioned test/probe/script row: it names the group whose
   deletion breaks the file, so the row belongs to the earliest step that names such a
   group.
@@ -27,22 +30,21 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import ast
 import json
 import re
 import sys
 from collections import Counter
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 
-LEDGER = (
-    Path(__file__).resolve().parent.parent
-    / ".project/active/cutover-recovery/ledger-4a.json"
-)
+REPO_ROOT = Path(__file__).resolve().parent.parent
+LEDGER = REPO_ROOT / ".project/active/cutover-recovery/ledger-4a.json"
 
-#: Deletion group -> step number in the runbook's sequence.
+#: Deletion group -> step number in the runbook's sequence. The reader before the read.
 GROUP_STEP = {
-    "4B-v5-family": 1,
-    "4B-G2": 2,
+    "4B-G2": 1,
+    "4B-v5-family": 2,
     "4B-G3": 3,
     "4B-G4": 4,
 }
@@ -51,28 +53,47 @@ GROUP_STEP = {
 #: drop (`agentic-mbse` validation levels 4 and 6 call the legacy members).
 OWNER_GATED = {"L-036", "L-037"}
 
-#: Dispositioned rows with no `breaks_on`, placed by hand with the reason recorded.
-#: Every one of them is a data-axis find from Gate 4C part 5 or part 7.
+#: Dispositioned rows with no `breaks_on`, placed by hand with the reason recorded. Every one
+#: of them is a data-axis find from Gate 4C part 5 or part 7, and every one lands on the v5
+#: family step because that is the step that deletes the fixtures and scripts they read.
 DATA_AXIS_STEP = {
-    "L-043": (1, "reads shared_producer's v5 extraction_snapshot.json by path"),
-    "L-127": (1, "its live dual-run half drives pipeline_builder (L-029)"),
-    "L-284": (1, "16 of its 52 nodes are bound to the L-033 legacy shape"),
-    "L-285": (1, "calls pipeline_builder (L-029) inside a function"),
-    "L-286": (1, "calls pipeline_builder (L-029) inside a function"),
-    "L-287": (1, "took its corpus enumeration from the v5 capture script (L-275)"),
-    "L-288": (1, "took its corpus enumeration from the v5 capture script (L-275)"),
-    "L-289": (1, "hosts snapshot_fixture(), which reads the retiring v5 fixtures"),
-    "L-290": (1, "both nodes scan the committed v5 snapshot corpus step 1 deletes"),
-    "L-291": (1, "reaches its fixture directory through snapshot_fixture() (L-289)"),
-    "L-292": (1, "subprocess-runs scripts/capture_extraction_snapshots.py (L-275)"),
-    "L-293": (1, "quotes the retiring surface tokens in its own documentation"),
-    "L-294": (1, "quotes the retiring surface tokens in its own documentation"),
-    "L-295": (1, "its docstring names the retiring v5 capture script"),
-    "L-296": (1, "names the surface tokens in synthetic fixtures, not in the real tree"),
-    "L-297": (1, "names the v5 snapshot filename to exclude it from a variant"),
-    "L-298": (1, "asserts the v5 snapshot file exists (test_d5_variants.py:116)"),
-    "L-299": (1, "quotes the retiring surface tokens in its own placement table"),
-    "L-300": (1, "quotes the retiring surface tokens in its own cases"),
+    "L-043": (2, "reads shared_producer's v5 extraction_snapshot.json by path"),
+    "L-127": (2, "its live dual-run half drives pipeline_builder (L-029)"),
+    "L-284": (2, "16 of its 52 nodes are bound to the L-033 legacy shape"),
+    "L-285": (2, "calls pipeline_builder (L-029) inside a function"),
+    "L-286": (2, "calls pipeline_builder (L-029) inside a function"),
+    "L-287": (2, "took its corpus enumeration from the v5 capture script (L-275)"),
+    "L-288": (2, "took its corpus enumeration from the v5 capture script (L-275)"),
+    "L-289": (2, "hosts snapshot_fixture(), which reads the retiring v5 fixtures"),
+    "L-290": (2, "both nodes scan the committed v5 snapshot corpus the v5-family step deletes"),
+    "L-291": (2, "reaches its fixture directory through snapshot_fixture() (L-289)"),
+    "L-292": (2, "subprocess-runs scripts/capture_extraction_snapshots.py (L-275)"),
+    "L-293": (2, "quotes the retiring surface tokens in its own documentation"),
+    "L-294": (2, "quotes the retiring surface tokens in its own documentation"),
+    "L-295": (2, "its docstring names the retiring v5 capture script"),
+    "L-296": (2, "names the surface tokens in synthetic fixtures, not in the real tree"),
+    "L-297": (2, "names the v5 snapshot filename to exclude it from a variant"),
+    "L-298": (2, "asserts the v5 snapshot file exists (test_d5_variants.py:116)"),
+    "L-299": (2, "quotes the retiring surface tokens in its own placement table"),
+    "L-300": (2, "quotes the retiring surface tokens in its own cases"),
+}
+
+#: Rows the per-step scratch-worktree simulation measured red EARLIER than the ledger's own
+#: columns place them. Every one is a function-local import or a fixture use, which is the
+#: class `check_ledger_4a.py`'s module-level AST scan cannot see (its ceiling 1). The reason
+#: is what the simulation measured, not what the row says.
+PULLED_FORWARD = {
+    "L-098": (1, "reaches the graph through build_full_graph_from_snapshot in a test body"),
+    "L-104": (1, "reaches the graph through build_full_graph_from_snapshot in a test body"),
+    "L-187": (1, "its fixture data comes from the conformance extraction_snapshots fixture"),
+    "L-140": (1, "loads a v5 snapshot inside the node that seals it"),
+    "L-169": (1, "loads a v5 snapshot inside the node that seals it"),
+    "L-207": (1, "drives the runner from a graph built by the v5 read path"),
+    "L-251": (1, "its legacy arm reconciles warnings off the v5 read path"),
+    "L-279": (1, "its 3E residual pin names snapshot.loader, which step 1 removes"),
+    "L-281": (1, "its SysIDE-dependent nodes read the conformance v5 fixtures"),
+    "L-135": (1, "its wired-path nodes read the conformance v5 fixtures"),
+    "L-292": (1, "subprocess-runs scripts/capture_pipeline_baselines.py, an L-040 deletion"),
 }
 
 #: How each disposition executes.
@@ -124,6 +145,18 @@ def place(row: dict) -> Item | None:
             row.get("node_count"),
         )
 
+    if rid in PULLED_FORWARD:
+        step, why = PULLED_FORWARD[rid]
+        return Item(
+            rid,
+            row["path"],
+            step,
+            ACTION[row.get("disposition_4c") or row["disposition"]],
+            row.get("disposition_4c") or row["disposition"],
+            f"simulation: {why}",
+            row.get("node_count"),
+        )
+
     group = row.get("group")
     if group in GROUP_STEP:
         return Item(
@@ -141,11 +174,11 @@ def place(row: dict) -> Item | None:
         return None
 
     steps = sorted(
-        GROUP_STEP[g] for g in _groups_named(row.get("breaks_on", "")) if g in GROUP_STEP
+        (GROUP_STEP[g], g) for g in _groups_named(row.get("breaks_on", "")) if g in GROUP_STEP
     )
     if steps:
-        placed_by = f"breaks_on {row['breaks_on'].split(';')[0].strip()}"
-        step = steps[0]
+        step, deciding_group = steps[0]
+        placed_by = f"breaks_on {deciding_group}"
     elif rid in DATA_AXIS_STEP:
         step, why = DATA_AXIS_STEP[rid]
         placed_by = f"data axis: {why}"
@@ -165,9 +198,61 @@ def place(row: dict) -> Item | None:
     )
 
 
+def _test_module_imports(path: Path) -> set[str]:
+    """Every `tests.*` module a test file imports at module level, as a repo-relative path.
+
+    The Gate 4A checker records import edges into *production*; it has no view of one test
+    module importing another. That blind spot is what made deleting
+    `tests/helpers/legacy_route.py` turn 16 modules into collection errors (audit 4, F1).
+    """
+    try:
+        tree = ast.parse(path.read_text())
+    except (OSError, SyntaxError):
+        return set()
+    modules: set[str] = set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.ImportFrom) and node.level == 0 and node.module:
+            modules.add(node.module)
+        elif isinstance(node, ast.Import):
+            modules.update(alias.name for alias in node.names)
+    return {
+        m.replace(".", "/") + ".py" for m in modules if m == "tests" or m.startswith("tests.")
+    }
+
+
+def tighten_by_test_imports(items: list[Item], repo: Path = REPO_ROOT) -> list[Item]:
+    """Pull each test module forward to the step that deletes a test module it imports.
+
+    A module that imports a deleted sibling stops collecting when the sibling goes, so it
+    cannot be scheduled later than the sibling. Applied to a fixpoint, because the edges
+    chain.
+    """
+    by_path = {item.path: item for item in items}
+    changed = True
+    while changed:
+        changed = False
+        for path, item in list(by_path.items()):
+            if item.step is None or item.action != "delete" or not path.startswith("tests/"):
+                continue
+            for imported in _test_module_imports(repo / path):
+                target = by_path.get(imported)
+                if target is None or target.step is None or target.action != "delete":
+                    continue
+                if target.step < item.step:
+                    by_path[path] = replace(
+                        item,
+                        step=target.step,
+                        placed_by=f"{item.placed_by}; pulled forward: imports {imported}",
+                    )
+                    item = by_path[path]
+                    changed = True
+    return [by_path.get(item.path, item) for item in items]
+
+
 def load_items(ledger: Path = LEDGER) -> list[Item]:
     rows = json.loads(ledger.read_text())["rows"]
-    return [item for item in (place(row) for row in rows) if item is not None]
+    placed = [item for item in (place(row) for row in rows) if item is not None]
+    return tighten_by_test_imports(placed)
 
 
 def check(items: list[Item], ledger: Path = LEDGER) -> int:
