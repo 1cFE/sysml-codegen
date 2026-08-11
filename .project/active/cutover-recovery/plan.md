@@ -3348,7 +3348,7 @@ real-TEAx nodes at the recorded anchors. `ruff` **870 → 870**, `mypy src/` **6
 unchanged**, `git diff --check` clean, `check_ledger_4a.py paths` **298 rows / 0 problems**,
 `surface` **0 on both axes**.
 
-**Commit:** `UNITS_OID`.
+**Commit:** ``bba3d92` (`bba3d92becd4b1e20c9b52dfc745aa326e144ddd`)`.
 
 ### Phase 5 Completion
 
