@@ -3164,7 +3164,7 @@ nodes at the recorded anchors. `ruff` **870 → 870**, `mypy src/` **69 in 16 fi
 `git diff --check` clean, `check_ledger_4a.py paths` **298 rows / 0 problems**, `surface`
 **0 unrowed breakages on either axis**.
 
-**Commit:** `PART6_OID`. **Deletes nothing, and repoints no test yet.**
+**Commit:** ``1935af3` (`1935af374e1d99c2f919801ddcdb6aa9db2a58d5`)`. **Deletes nothing, and repoints no test yet.**
 
 ### Phase 5 Completion
 
