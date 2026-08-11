@@ -3219,6 +3219,82 @@ lane **38 passed** including the 12 real-TEAx nodes at the recorded anchors. `ru
 
 **Commit:** ``57016f0` (`57016f0decfc36e367450dd5fbbbc00930a26968`)`. **Deletes nothing; no test repointed yet.**
 
+#### Gate 4C part 6, ruling 2 — the `catf_mfe` investigation: it is a bounded product gap
+
+**Report only. Nothing was fixed and no model was remodelled**, per the ruling.
+
+##### It is not 152 problems. It is six, and they are SI units.
+
+All 152 diagnostics resolve to **six distinct declaration ids**, and instrumenting
+`_resolve_semantic_reference` to print the referent identifies every one:
+
+| declaration id | referent | diagnostics |
+|---|---|---:|
+| `146016c8-c0f8-5b9b-882d-33c75906e6ee` | `SI::metre` | 113 |
+| `a2be67e5-1c89-5bc6-8784-b2828a99746d` | `SI::kelvin` | 17 |
+| `3cfd22ed-a3cb-567d-b426-2d83d58a3fc5` | `SI::ampere` | 10 |
+| `bb1d79c2-1306-5b35-a807-93e46fc3431c` | `SI::kilogram` | 8 |
+| `7868f4f7-fb26-549d-9984-bcf2b125cd1c` | `SI::tesla` | 3 |
+| `171004a3-cb1f-5874-9174-e2bade7c67b3` | `SI::weber` | 1 |
+
+They are the unit annotations on `catf_mfe`'s attribute values — `attribute thickness : Real =
+0.2 [m];` and its 147 siblings. Nothing to do with nested occurrences, which is what the
+message's wording suggested.
+
+##### The mechanism
+
+`elaborate.py:1727` (`_resolve_leaf`) asks `occurrence.py:70` (`FeatureSlotIndex.slot_of`) for
+the leaf's slot. `slot_of` raises `KeyError` for any declaration outside its index, and the
+index (`occurrence.py:152`, `build_feature_slot_index`) is built from
+`SysideAdapter.elements_of_type(model, "Feature", …)` — **the user model's features**. `SI::metre`
+lives in the standard library, so it is not there, and the `KeyError` becomes
+`SI_OCCURRENCE_MISSING`.
+
+##### Is it legal SysML the exact route should resolve? Yes — and it should not be resolving it at all
+
+SysIDE resolved the reference perfectly well: the fact arrives carrying
+`qualified_name = 'SI::metre'`, which is how the referent could be named in the table above. The
+failure is downstream, in codegen's own index.
+
+More to the point, **a unit annotation is not a data dependency**. `= 0.2 [m]` supplies one
+value and one unit; the unit is metadata on the literal, not a producer of anything. Sending it
+down the occurrence-resolution walk is a category error — and it is *the same category error
+Slice 3D already fixed once*, for enumeration members (`_enumeration_literal`, Phase 3D notes:
+"the elaborator was sending it down the alias walk, producing 7 `SI_OCCURRENCE_MISSING`
+diagnostics that had nothing to do with the renames"). 3D closed one sub-case of "a reference to
+a standard-library element that is not a data source". Unit references are the sibling sub-case,
+still open.
+
+##### Evidence that this is a gap and not an unsupported idiom
+
+- **The legacy route accepts every probe.** Same parser, same model.
+- **The exact route already supports units in the other spelling.**
+  `modeled_default_fidelity` is a ratified corpus fixture whose stated subject is "signed and
+  unit-annotated defaults survive (DD-A11, DD-A12)", it writes `in attribute rated_power : Real
+  default 40.0 [W];`, and it is one of the **15 the exact route accepts**. So the route handles
+  `default <value> [unit]` on a calc-def formal and fails on `= <value> [unit]` on an attribute.
+  That asymmetry is a defect, not a policy.
+- **One character isolates it.** `.project/active/cutover-recovery/evidence/catf-occurrence-probe/`
+  holds two eleven-line models differing only by ` [m]`: with it the exact route refuses with the
+  same `146016c8-…` declaration, without it the route accepts. Both are accepted by the legacy
+  route.
+
+##### Verdict: product gap, bounded, with a precedent fix shape
+
+Not must-remodel. Remodelling would mean deleting unit annotations from **148 sites** in a
+customer-derived model — destroying modelled information the legacy route preserves and that
+DD-A11 / DD-A12 exist to protect. The bound is small: six library elements, one code path, and a
+fix of the shape 3D already landed for enumerations.
+
+**Recorded as a finding, not fixed.** Whether it is fixed inside part 6, filed as a follow-on,
+or carried to the Phase 5 packet is the orchestrator's ruling. The reproducer is deliberately
+**not** under `tests/fixtures/` — a fixture that asserts known-broken behaviour needs its own
+disposition, and that is part of the same ruling.
+
+**Consequence for ruling 3.** `catf_mfe_d5` remains unaccepted, so catf-shaped depth is still
+unproven on the exact route. `solar_battery_d5` is accepted and carries the twelve-assembly
+costing hierarchy. The named temporary weakness on L-006 / L-241 stands.
+
 ### Phase 5 Completion
 
 - **Completed:** Pending
