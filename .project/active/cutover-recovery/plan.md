@@ -3069,6 +3069,34 @@ new findings introduced and fixed to hold parity), `mypy src/` **69 in 16 files 
 
 **Commit:** ``1d66705` (`1d66705a326df5b795ba2fffa9e1d01a04865094`)`. **Deletes nothing.** No retirement commit was made.
 
+#### Gate 4C part 5, Class C — the dispositions part 6 does not touch
+
+**Measured, not estimated.** 183 files are affected across both axes. **89 files (941 nodes) need
+a graph from a fixture the exact route refuses** and are parked on Gate 4C part 6. The remaining
+**94 files (879 nodes) are decidable now**, and 92 of them already carried a part-3 disposition.
+Two did not:
+
+- **L-127 `test_elaboration_corpus_ledger.py` → `repoint`, done here.** Its corpus enumeration
+  globbed the v5 snapshots, so the test that counts the corpus depended on the files it counts.
+  It now reads `tests/helpers/corpus.py`, which reads the v6 batch manifest. Its live dual-run
+  half still drives `pipeline_builder` and retires with the v5 family; the file survives.
+- **L-290 `test_literal_totality.py` → `defer-to-part-6`.** It names `expression_binding_probe`
+  by path — a refused fixture — and its subject is literal totality *across the corpus*, a claim
+  whose scope moves with which fixtures the route accepts. Not decidable until the variants exist.
+  (My earlier report put this file in Class C; the classifier missed a fixture named inside a
+  path string rather than on its own. Corrected here.)
+
+##### Named temporary weakness — L-006 / L-241
+
+`tests/conformance/test_gen_stencils.py` is the green replacement proof for **L-006** and
+**L-241**, both already executed at `6ba346e`, and it builds every graph from `catf_mfe_model`
+and `solar_battery_model` — two fixtures the exact route refuses. **Those two rows are therefore
+proved only on the legacy route today.** This is a live weakness, recorded here on the
+orchestrator's instruction and to be removed, not carried: when `test_gen_stencils` runs green on
+the Gate 4C part 6 variant graphs, `replacements` is re-run and the rows are recorded as
+re-backed. **Until that commit lands, treat L-006 and L-241 as proved on evidence that cannot
+survive the v5 retirement.**
+
 ### Phase 5 Completion
 
 - **Completed:** Pending

@@ -2552,7 +2552,9 @@
    "unreachability": null,
    "replacement_proof_node": null,
    "blocked_by": [],
-   "reason": "Mechanical completeness checks for the 37-fixture dual-run ledger. Passes at rebuild HEAD and imports no legacy owner, so no Phase 4 action reaches it. The forensic candidate's deletion had only a family-level census row."
+   "reason": "Mechanical completeness checks for the 37-fixture dual-run ledger. Passes at rebuild HEAD and imports no legacy owner, so no Phase 4 action reaches it. The forensic candidate's deletion had only a family-level census row.",
+   "disposition_4c": "repoint",
+   "disposition_4c_note": "Gate 4C part 5, Class C. Its corpus enumeration globbed the v5 snapshots; it now reads tests/helpers/corpus.py, so the completeness half no longer depends on the fixtures it counts. The live dual-run half still drives pipeline_builder and retires with the v5 family; the file survives."
   },
   {
    "id": "L-128",
@@ -5697,7 +5699,9 @@
    "node_count": 4,
    "breaks_on": "",
    "breaks_a_free_group": false,
-   "reason": "Globs tests/fixtures/*/extraction_snapshot.json and names two fixtures by path. Its subject is literal totality ACROSS the corpus, so it is exactly as portable as the corpus is: it can move to v6 for the 15 captured fixtures and cannot for the 22 refused ones. Disposition deferred to the refused-fixture ruling."
+   "reason": "Globs tests/fixtures/*/extraction_snapshot.json and names two fixtures by path. Its subject is literal totality ACROSS the corpus, so it is exactly as portable as the corpus is: it can move to v6 for the 15 captured fixtures and cannot for the 22 refused ones. Disposition deferred to the refused-fixture ruling.",
+   "disposition_4c": "defer-to-part-6",
+   "disposition_4c_note": "Parked on Gate 4C part 6, not Class C. It names expression_binding_probe by path, a fixture the exact route refuses, and its subject is literal totality ACROSS the corpus \u2014 a claim whose scope changes with which fixtures the route accepts. Decidable only once the migrated variants exist."
   },
   {
    "id": "L-291",

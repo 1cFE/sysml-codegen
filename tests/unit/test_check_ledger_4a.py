@@ -462,7 +462,8 @@ def test_every_affected_row_carries_its_own_gate_4c_part_3_disposition(
         row = rows.get(path)
         assert row is not None, f"{path} has no ledger row"
         assert row.get("disposition_4c") in {
-            "retire-with-owner", "rewrite", "repoint", "defer-to-v5-family"
+            "retire-with-owner", "rewrite", "repoint", "defer-to-v5-family",
+            "defer-to-part-6",
         }, f"{path} has no Gate 4C part 3 disposition"
         assert row.get("responsibility"), f"{path} states no responsibility"
         assert row.get("disposition_4c_note"), f"{path} gives no reason for its disposition"

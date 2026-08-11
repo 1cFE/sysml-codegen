@@ -7,9 +7,9 @@ import re
 from pathlib import Path
 
 from tests.conftest import requires_license
+from tests.helpers.corpus import corpus_fixture_names
 
 ROOT = Path(__file__).parents[2]
-FIXTURES = ROOT / "tests/fixtures"
 LEDGER = ROOT / ".project/completed/20260809_elaborator-breadth/diff-ledger.md"
 RUNNER = ROOT / "scripts/run_elaboration_corpus.py"
 
@@ -25,7 +25,7 @@ def _runner():
 
 
 def test_dual_run_ledger_classifies_all_snapshot_fixtures() -> None:
-    expected = {path.parent.name for path in FIXTURES.glob("*/extraction_snapshot.json")}
+    expected = set(corpus_fixture_names())
     text = LEDGER.read_text()
     rows = re.findall(
         r"^\|\s*\d+\s*\|\s*`([^`]+)`\s*\|.*\|\s*"
@@ -40,7 +40,7 @@ def test_dual_run_ledger_classifies_all_snapshot_fixtures() -> None:
 
 
 def test_corpus_runner_discovers_the_same_closed_fixture_set() -> None:
-    expected = sorted(path.parent.name for path in FIXTURES.glob("*/extraction_snapshot.json"))
+    expected = corpus_fixture_names()
     assert _runner().discover_fixture_names() == expected
 
 
