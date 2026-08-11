@@ -332,9 +332,17 @@ def check_surface_coverage(ledger: dict, repo: Path = REPO_ROOT) -> list[str]:
     return problems
 
 
-#: Gate 4C part 3 dispositions. ``retire-with-owner`` and ``repoint`` clear a group;
-#: ``defer-to-v5-family`` blocks it, because the file still holds live coverage.
-CLEARING_4C = frozenset({"retire-with-owner", "repoint"})
+#: Gate 4C part 3 dispositions. ``retire-with-owner``, ``repoint`` and
+#: ``archive-with-findings`` clear a group; ``defer-to-v5-family`` blocks it, because the
+#: file still holds live coverage.
+#:
+#: ``archive-with-findings`` is Gate 4C part 7's addition, for plan rule 7: a probe or spike
+#: carries no test node, so it loses no coverage when its owner goes, but erasing it to
+#: satisfy a residue scan is exactly what the rule forbids. The file is preserved and its
+#: finding is named on the row, so the disposition is neither a retirement nor a repoint and
+#: recording it as either would misstate what happens. It clears a group because a script
+#: that no longer runs blocks no deletion.
+CLEARING_4C = frozenset({"retire-with-owner", "repoint", "archive-with-findings"})
 
 
 @dataclass(frozen=True)
@@ -358,9 +366,14 @@ def group_readiness(ledger: dict, group: str, repo: Path = REPO_ROOT) -> GroupRe
     depends on would delete that coverage. The group is blocked until the disposition
     changes, and the blocker list says by what.
     """
-    surface = removal_surface(ledger, frozenset({group}))
+    only = frozenset({group})
     rows = {row["path"]: row for row in ledger["rows"]}
-    hits = surface_hits(repo, surface)
+    # Both axes, because a group is just as blocked by a file that reads a removed
+    # fixture's bytes as by one that imports a removed module. Readiness measured on
+    # imports alone is what let Part B step 1 walk into the second axis; the ``paths``
+    # check has measured both since Gate 4C part 5 and this now agrees with it.
+    hits = set(surface_hits(repo, removal_surface(ledger, only)))
+    hits |= set(data_hits(repo, data_surface(ledger, only)))
     blockers = tuple(
         f"{rows[path]['id'] if path in rows else 'NO ROW'} {path}"
         for path in sorted(hits)
@@ -450,6 +463,15 @@ def check_states(rows: list[dict]) -> list[str]:
     """
     problems: list[str] = []
     for row in rows:
+        # Gate 4C part 7: an archive disposition is only honest if the finding has a
+        # durable home outside the file being archived. Requiring the path here is what
+        # stops "archive-with-findings" degrading into a polite word for deletion.
+        if row.get("disposition_4c") == "archive-with-findings" and not row.get(
+            "findings_home"
+        ):
+            problems.append(
+                f"{row['id']}: archive-with-findings names no findings_home"
+            )
         state = row.get("state", "proposed")
         if state not in ROW_STATES:
             problems.append(f"{row['id']}: unknown state {state!r}")

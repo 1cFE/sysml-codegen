@@ -452,6 +452,55 @@ def test_a_group_is_ready_once_every_affected_file_retires_or_repoints(
     assert readiness.affected == 1
 
 
+def test_group_readiness_sees_the_data_axis_too(tmp_path: Path) -> None:
+    """A file that reads a removed fixture's bytes blocks as hard as one that imports it.
+
+    Readiness measured on imports alone is the gap Gate 4C part 5 found the hard way.
+    """
+    repo = _fake_repo(
+        tmp_path,
+        "tests/test_reads_bytes.py",
+        'PATH = "tests/fixtures/probe_x/extraction_snapshot.json"\n',
+    )
+    fixture_row = {"id": "L-908", "path": "tests/fixtures/probe_x/extraction_snapshot.json",
+                   "repo": "sysml-codegen", "class": "fixture", "disposition": "delete",
+                   "origin": "forensic-diff", "group": "4B-G9", "reason": "a v5 snapshot"}
+    reader = {"id": "L-909", "path": "tests/test_reads_bytes.py", "repo": "sysml-codegen",
+              "class": "test", "disposition": "retain", "origin": "derived-blast-radius",
+              "group": None, "reason": "still live", "disposition_4c": "defer-to-v5-family"}
+    readiness = checker.group_readiness({"rows": [fixture_row, reader]}, "4B-G9", repo)
+    assert not readiness.is_ready
+    assert readiness.blockers == ("L-909 tests/test_reads_bytes.py",)
+
+
+def test_an_archived_probe_clears_its_group(tmp_path: Path) -> None:
+    """Plan rule 7: a probe carries no coverage, so archiving it blocks no deletion."""
+    repo = _fake_repo(
+        tmp_path, "scripts/probe_x.py", "from sysml_codegen.legacy.reader import read\n"
+    )
+    archived = {"id": "L-906", "path": "scripts/probe_x.py", "repo": "sysml-codegen",
+                "class": "probe", "disposition": "archive", "origin": "forensic-diff",
+                "group": None, "reason": "historical probe",
+                "disposition_4c": "archive-with-findings",
+                "findings_home": ".project/research/whatever.md"}
+    readiness = checker.group_readiness({"rows": [DELETE_ROW, archived]}, "4B-G9", repo)
+    assert readiness.is_ready
+    assert readiness.affected == 1
+
+
+def test_an_archive_row_must_name_where_its_finding_survives() -> None:
+    """Without a findings home, ``archive-with-findings`` is deletion with a nicer word."""
+    archived = {"id": "L-907", "path": "scripts/probe_y.py", "repo": "sysml-codegen",
+                "class": "probe", "disposition": "archive", "origin": "forensic-diff",
+                "group": None, "reason": "historical probe",
+                "disposition_4c": "archive-with-findings"}
+    assert checker.check_states([archived]) == [
+        "L-907: archive-with-findings names no findings_home"
+    ]
+    sound = dict(archived, findings_home=".project/research/whatever.md")
+    assert checker.check_states([sound]) == []
+
+
 def test_every_affected_row_carries_its_own_gate_4c_part_3_disposition(
     ledger: dict,
 ) -> None:
@@ -462,8 +511,8 @@ def test_every_affected_row_carries_its_own_gate_4c_part_3_disposition(
         row = rows.get(path)
         assert row is not None, f"{path} has no ledger row"
         assert row.get("disposition_4c") in {
-            "retire-with-owner", "rewrite", "repoint", "defer-to-v5-family",
-            "defer-to-part-6",
+            "retire-with-owner", "rewrite", "repoint", "archive-with-findings",
+            "defer-to-v5-family", "defer-to-part-6",
         }, f"{path} has no Gate 4C part 3 disposition"
         assert row.get("responsibility"), f"{path} states no responsibility"
         assert row.get("disposition_4c_note"), f"{path} gives no reason for its disposition"

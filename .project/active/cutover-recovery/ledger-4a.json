@@ -1000,12 +1000,13 @@
    "replacement_proof_node": null,
    "blocked_by": [],
    "reason": "Quick Q5 debug: trace Key_F and FORMULA canonical channels. Imports legacy owners (output_registry_builder), so it stops running the moment 4B lands. Rule 7: archive with its findings rather than delete; per-path reason recorded, orchestrator approves the list.",
-   "disposition_4c": "defer-to-v5-family",
+   "disposition_4c": "archive-with-findings",
    "node_count": 0,
    "responsibility": "Quick Q5 debug: trace Key_F and FORMULA canonical channels.",
    "breaks_on": "sysml_codegen.orchestration.output_registry_builder (L-010, 4B-v5-family); sysml_codegen.snapshot:load_extraction_snapshot (L-028, 4B-G2)",
    "breaks_a_free_group": true,
-   "disposition_4c_note": "No green replacement, and every owner it depends on is now deferred: the v5 read path is retained by consequence of keeping the v5 writer and the 37 fixtures, so this file's coverage is still load-bearing. Retires with the v5 family at Phase 5 owner acceptance."
+   "disposition_4c_note": "Gate 4C part 7 (2026-08-11). Quick Q5 debug one-off: traces Key_F and FORMULA canonical channels on the legacy output registry. No findings document exists \u2014 the question and the expected shape are in the file's own docstring, which is why the file itself is the record and is preserved. At retirement: move to scripts/archive/ with a header naming the owner that retired it and the findings home below. The file is preserved, not deleted \u2014 plan rule 7. It carries zero test nodes, so no coverage moves with it.",
+   "findings_home": "none \u2014 the file is its own record (see note)"
   },
   {
    "id": "L-039",
@@ -1017,15 +1018,17 @@
    "group": "4C-scripts",
    "authority": "census SCR-02 via inventory INV-RES-CG-008 (disposition migrate) [EVIDENCE]; plan rule 7; kept-test evidence at HEAD",
    "unreachability": null,
-   "replacement_proof_node": "tests/conformance/test_gen_pipeline_yaml.py",
+   "replacement_proof_node": [
+    "tests/conformance/test_gen_registry.py::TestImportPathsMatchFilesystem::test_req_reg_02_import_paths_match_filesystem[solar_battery]"
+   ],
    "blocked_by": [],
    "reason": "Capture baseline pipeline YAML for the tracked models. SCR-02 MIGRATE to a v6 capture driver. No v6 capture driver exists, and two kept tests reference this one. Retain until the replacement lands.",
-   "disposition_4c": "defer-to-v5-family",
+   "disposition_4c": "retire-with-owner",
    "node_count": 0,
    "responsibility": "Capture baseline pipeline YAML for the tracked models.",
    "breaks_on": "sysml_codegen.snapshot:build_full_graph_from_snapshot (L-028, 4B-G2)",
    "breaks_a_free_group": true,
-   "disposition_4c_note": "Ruling 4 asked which way this goes, measured. It goes to the v5 family: its own referencing test, tests/conformance/test_gen_pipeline_yaml.py (L-147), has no green exact-route replacement and is itself deferred, and the script reads build_full_graph_from_snapshot, whose owner is deferred."
+   "disposition_4c_note": "Gate 4C part 7 (2026-08-11), superseding the part-5 defer. Captures tests/fixtures/baseline_yaml/*.yaml by driving build_full_graph_from_snapshot over v5 snapshots. Both halves of its input retire with the family, so the script cannot be repointed \u2014 a v6 capture driver would be a second capture path beside the public route, which is what ruling 1 declined. Replacement, per orchestrator ruling 1 (2026-08-11): the public-route regeneration path \u2014 sysml_codegen.cli.run_codegen driven from a committed v6 instance_graph_snapshot.json, taking the generated pipelines/*.yaml as the new byte baselines. That is the same public surface scripts/capture_v6_batch.py uses, so the baselines cannot drift from the shipped product, and it is exercised today by tests/conformance/test_gen_registry.py::TestImportPathsMatchFilesystem::test_req_reg_02_import_paths_match_filesystem[solar_battery]. No separate capture script replaces these two."
   },
   {
    "id": "L-040",
@@ -1037,15 +1040,17 @@
    "group": "4C-scripts",
    "authority": "census SCR-02 via inventory INV-RES-CG-010 (disposition migrate) [EVIDENCE]; plan rule 7; kept-test evidence at HEAD",
    "unreachability": null,
-   "replacement_proof_node": "tests/unit/test_capture_fixtures_filter.py",
+   "replacement_proof_node": [
+    "tests/conformance/test_gen_registry.py::TestImportPathsMatchFilesystem::test_req_reg_02_import_paths_match_filesystem[solar_battery]"
+   ],
    "blocked_by": [],
    "reason": "Capture pipeline baselines: ComputationGraph JSON and registry __init__.py. SCR-02 MIGRATE to a v6 capture driver. No replacement exists and a kept test references it. Retain.",
-   "disposition_4c": "defer-to-v5-family",
+   "disposition_4c": "retire-with-owner",
    "node_count": 0,
    "responsibility": "Capture pipeline baselines: ComputationGraph JSON and registry __init__.py.",
    "breaks_on": "sysml_codegen.snapshot:build_full_graph_from_snapshot (L-028, 4B-G2)",
    "breaks_a_free_group": true,
-   "disposition_4c_note": "Ruling 4 asked which way this goes, measured. It goes to the v5 family: it captures v5 pipeline baselines through build_full_graph_from_snapshot, whose owner (L-028 read-path block) is deferred, so the script cannot outlive the reader it drives."
+   "disposition_4c_note": "Gate 4C part 7 (2026-08-11), superseding the part-5 defer. Same class as L-039: a v5-snapshot-driven baseline capture whose inputs retire with the family. Replacement, per orchestrator ruling 1 (2026-08-11): the public-route regeneration path \u2014 sysml_codegen.cli.run_codegen driven from a committed v6 instance_graph_snapshot.json, taking the generated pipelines/*.yaml as the new byte baselines. That is the same public surface scripts/capture_v6_batch.py uses, so the baselines cannot drift from the shipped product, and it is exercised today by tests/conformance/test_gen_registry.py::TestImportPathsMatchFilesystem::test_req_reg_02_import_paths_match_filesystem[solar_battery]. No separate capture script replaces these two."
   },
   {
    "id": "L-041",
@@ -1060,12 +1065,13 @@
    "replacement_proof_node": null,
    "blocked_by": [],
    "reason": "Item 4 \u2014 dump every fixture's entry points as (qualified_name -> default_value). Imports legacy owners (snapshot_context), so it stops running the moment 4B lands. Rule 7: archive with its findings rather than delete; per-path reason recorded, orchestrator approves the list.",
-   "disposition_4c": "defer-to-v5-family",
+   "disposition_4c": "archive-with-findings",
    "node_count": 0,
    "responsibility": "Item 4 \u2014 dump every fixture's entry points as (qualified_name -> default_value).",
    "breaks_on": "sysml_codegen.orchestration.snapshot_context (L-026, 4B-G2)",
    "breaks_a_free_group": true,
-   "disposition_4c_note": "No green replacement, and every owner it depends on is now deferred: the v5 read path is retained by consequence of keeping the v5 writer and the 37 fixtures, so this file's coverage is still load-bearing. Retires with the v5 family at Phase 5 owner acceptance."
+   "disposition_4c_note": "Gate 4C part 7 (2026-08-11). Item 4 entry-point probe. No findings document beyond the census inventory \u2014 the file's docstring is the record, so it is preserved rather than deleted. At retirement: move to scripts/archive/ with a header naming the owner that retired it and the findings home below. The file is preserved, not deleted \u2014 plan rule 7. It carries zero test nodes, so no coverage moves with it.",
+   "findings_home": "none \u2014 the file is its own record (see note)"
   },
   {
    "id": "L-042",
@@ -1080,12 +1086,13 @@
    "replacement_proof_node": null,
    "blocked_by": [],
    "reason": "Item 4 Gate 3 \u2014 the per-binding resolution probe (design D6). Imports legacy owners (producer_resolution, snapshot_context), so it stops running the moment 4B lands. Rule 7: archive with its findings rather than delete; per-path reason recorded, orchestrator approves the list.",
-   "disposition_4c": "defer-to-v5-family",
+   "disposition_4c": "archive-with-findings",
    "node_count": 0,
    "responsibility": "Item 4 Gate 3 \u2014 the per-binding resolution probe (design D6).",
    "breaks_on": "sysml_codegen.resolution.producer_resolution (L-013, 4B-v5-family); sysml_codegen.orchestration.snapshot_context (L-026, 4B-G2)",
    "breaks_a_free_group": true,
-   "disposition_4c_note": "No green replacement, and every owner it depends on is now deferred: the v5 read path is retained by consequence of keeping the v5 writer and the 37 fixtures, so this file's coverage is still load-bearing. Retires with the v5 family at Phase 5 owner acceptance."
+   "disposition_4c_note": "Gate 4C part 7 (2026-08-11). Item 4 gate-3 probe. Same class as L-041: no separate findings document, the file is its own record. At retirement: move to scripts/archive/ with a header naming the owner that retired it and the findings home below. The file is preserved, not deleted \u2014 plan rule 7. It carries zero test nodes, so no coverage moves with it.",
+   "findings_home": "none \u2014 the file is its own record (see note)"
   },
   {
    "id": "L-043",
@@ -1099,7 +1106,11 @@
    "unreachability": null,
    "replacement_proof_node": null,
    "blocked_by": [],
-   "reason": "Item 4 Phase 0 probes \u2014 no production change, snapshot-only measurement. Imports no legacy owner, so 4B does not break it. Preserve by default; nothing in Phase 4 requires its removal."
+   "reason": "Item 4 Phase 0 probes \u2014 no production change, snapshot-only measurement. Imports no legacy owner, so 4B does not break it. Preserve by default; nothing in Phase 4 requires its removal.",
+   "disposition_4c": "archive-with-findings",
+   "findings_home": ".project/completed/20260720_constraint-lifecycle-diagnostics-defaults/design.md",
+   "responsibility": "Item 4 Phase 0 snapshot-only measurement probe.",
+   "disposition_4c_note": "Gate 4C part 7 (2026-08-11). This row's reason says 4B does not break it, which was true on the import axis and is wrong on the data axis measured at part 5: the probe reads shared_producer's v5 extraction_snapshot.json by path, and that fixture retires with the family with no v6 route. Correcting the row rather than leaving the stale claim. It carries zero test nodes and its measurement is carried in the constraint-lifecycle design. At retirement: move to scripts/archive/ with a header naming the owner that retired it and the findings home. The file is preserved, not deleted \u2014 plan rule 7."
   },
   {
    "id": "L-044",
@@ -1111,15 +1122,15 @@
    "group": "4C-scripts",
    "authority": "census SCR-01 via inventory INV-RES-CG-012 (disposition delete) [EVIDENCE]; plan rule 7; kept-test evidence at HEAD",
    "unreachability": null,
-   "replacement_proof_node": "tests/conformance/test_elaboration_corpus_ledger.py",
+   "replacement_proof_node": "tests/conformance/test_v6_recapture_batch.py",
    "blocked_by": [],
    "reason": "Run legacy and exact-ID construction independently over all 37 snapshots. SCR-01 says DELETE/MIGRATE into an accepted-batch manifest driver owned by CUT-CORP-01. That driver does not exist, and this script is the 37-path corpus driver the rebuild's own ledger test drives. Retain until its replacement lands; retire its legacy arm with elaboration/diff.py in 4B-G4.",
-   "disposition_4c": "defer-to-v5-family",
+   "disposition_4c": "retire-with-owner",
    "node_count": 0,
    "responsibility": "Run legacy and exact-ID construction independently over all 37 snapshots.",
    "breaks_on": "sysml_codegen.elaboration.diff (L-008, 4B-G4); sysml_codegen.orchestration.pipeline_builder (L-029, 4B-v5-family)",
    "breaks_a_free_group": true,
-   "disposition_4c_note": "The corpus driver runs both arms over all 37 snapshots. Its legacy arm depends on pipeline_builder and elaboration/diff; diff.py (L-008) is itself deferred because its other consumer, tests/conformance/test_elaboration_dual_run.py (L-128), has no green replacement and drives pipeline_builder. The legacy-arm migrate this row owes is Phase 5 work, with the family."
+   "disposition_4c_note": "Gate 4C part 7 (2026-08-11), superseding the part-5 defer. Not a repoint: the script's entire subject is the legacy-versus-exact dual run over the 37 snapshots, and that comparison ceases to exist when the legacy arm goes \u2014 the same shape ruling 3 applies to test_public_authority_switch.py. The surviving half, the exact route's per-fixture corpus outcome, is produced by scripts/capture_v6_batch.py --verify (15 captured / 22 refused / 0 deviations) and pinned by tests/conformance/test_v6_recapture_batch.py, which is already in every battery. Retire the script; the corpus measurement does not move."
   },
   {
    "id": "L-045",
@@ -1134,12 +1145,13 @@
    "replacement_proof_node": null,
    "blocked_by": [],
    "reason": "Aggregation Wiring Diagnostic Spikes (H1\u2013H4). Imports legacy owners (graph_builder, pipeline_builder), so it stops running the moment 4B lands. Rule 7: archive with its findings rather than delete; per-path reason recorded, orchestrator approves the list.",
-   "disposition_4c": "defer-to-v5-family",
+   "disposition_4c": "archive-with-findings",
    "node_count": 0,
    "responsibility": "Aggregation Wiring Diagnostic Spikes (H1\u2013H4).",
    "breaks_on": "sysml_codegen.resolution.graph_builder (L-011, 4B-v5-family); sysml_codegen.generation.initialization:PipelineContext (L-021, 4B-v5-family); sysml_codegen.orchestration.pipeline_builder (L-029, 4B-v5-family)",
    "breaks_a_free_group": false,
-   "disposition_4c_note": "No green replacement, and every owner it depends on is now deferred: the v5 read path is retained by consequence of keeping the v5 writer and the 37 fixtures, so this file's coverage is still load-bearing. Retires with the v5 family at Phase 5 owner acceptance."
+   "disposition_4c_note": "Gate 4C part 7 (2026-08-11). Aggregation-wiring hypotheses H1-H4. The spikes plan records what each hypothesis returned and the bugfix design records what was built on it. At retirement: move to scripts/archive/ with a header naming the owner that retired it and the findings home below. The file is preserved, not deleted \u2014 plan rule 7. It carries zero test nodes, so no coverage moves with it.",
+   "findings_home": ".project/completed/20260216_aggregation-wiring-spikes/plan.md; .project/completed/20260216_aggregation-wiring-bugfix/design.md"
   },
   {
    "id": "L-046",
@@ -1154,12 +1166,13 @@
    "replacement_proof_node": null,
    "blocked_by": [],
    "reason": "Aggregation Wiring Fix \u2014 Validation Spikes. Imports legacy owners (output_registry, pipeline_builder), so it stops running the moment 4B lands. Rule 7: archive with its findings rather than delete; per-path reason recorded, orchestrator approves the list.",
-   "disposition_4c": "defer-to-v5-family",
+   "disposition_4c": "archive-with-findings",
    "node_count": 0,
    "responsibility": "Aggregation Wiring Fix \u2014 Validation Spikes.",
    "breaks_on": "sysml_codegen.core.output_registry (L-007, 4B-v5-family); sysml_codegen.orchestration.pipeline_builder (L-029, 4B-v5-family)",
    "breaks_a_free_group": false,
-   "disposition_4c_note": "No green replacement, and every owner it depends on is now deferred: the v5 read path is retained by consequence of keeping the v5 writer and the 37 fixtures, so this file's coverage is still load-bearing. Retires with the v5 family at Phase 5 owner acceptance."
+   "disposition_4c_note": "Gate 4C part 7 (2026-08-11). Aggregation validation spike. Its measurement is the full-scope analysis' evidence base. At retirement: move to scripts/archive/ with a header naming the owner that retired it and the findings home below. The file is preserved, not deleted \u2014 plan rule 7. It carries zero test nodes, so no coverage moves with it.",
+   "findings_home": ".project/research/20260216-001500_aggregation-wiring-full-scope-analysis.md"
   },
   {
    "id": "L-047",
@@ -1174,12 +1187,13 @@
    "replacement_proof_node": null,
    "blocked_by": [],
    "reason": "Spike diagnostic: Analyze DependencyBacktracker resolution paths. Imports legacy owners (dependency_backtracker, output_registry, output_registry_builder), so it stops running the moment 4B lands. Rule 7: archive with its findings rather than delete; per-path reason recorded, orchestrator approves the list.",
-   "disposition_4c": "defer-to-v5-family",
+   "disposition_4c": "archive-with-findings",
    "node_count": 0,
    "responsibility": "Spike diagnostic: Analyze DependencyBacktracker resolution paths.",
    "breaks_on": "sysml_codegen.analysis.dependency_backtracker (L-002, 4B-v5-family); sysml_codegen.core.output_registry (L-007, 4B-v5-family); sysml_codegen.orchestration.output_registry_builder (L-010, 4B-v5-family); sysml_codegen.snapshot:load_extraction_snapshot (L-028, 4B-G2)",
    "breaks_a_free_group": true,
-   "disposition_4c_note": "No green replacement, and every owner it depends on is now deferred: the v5 read path is retained by consequence of keeping the v5 writer and the 37 fixtures, so this file's coverage is still load-bearing. Retires with the v5 family at Phase 5 owner acceptance."
+   "disposition_4c_note": "Gate 4C part 7 (2026-08-11). Backtracker resolution-path spike. Its finding is the conformance plan's premise. At retirement: move to scripts/archive/ with a header naming the owner that retired it and the findings home below. The file is preserved, not deleted \u2014 plan rule 7. It carries zero test nodes, so no coverage moves with it.",
+   "findings_home": ".project/completed/20260217_backtracker-conformance/plan.md"
   },
   {
    "id": "L-048",
@@ -1194,12 +1208,13 @@
    "replacement_proof_node": null,
    "blocked_by": [],
    "reason": "Spike diagnostic: C11b Typed Dispatch Migration Feasibility. Imports legacy owners (dependency_backtracker, output_registry, output_registry_builder), so it stops running the moment 4B lands. Rule 7: archive with its findings rather than delete; per-path reason recorded, orchestrator approves the list.",
-   "disposition_4c": "defer-to-v5-family",
+   "disposition_4c": "archive-with-findings",
    "node_count": 0,
    "responsibility": "Spike diagnostic: C11b Typed Dispatch Migration Feasibility.",
    "breaks_on": "sysml_codegen.analysis.dependency_backtracker (L-002, 4B-v5-family); sysml_codegen.core.output_registry (L-007, 4B-v5-family); sysml_codegen.orchestration.output_registry_builder (L-010, 4B-v5-family); sysml_codegen.snapshot:load_extraction_snapshot (L-028, 4B-G2)",
    "breaks_a_free_group": true,
-   "disposition_4c_note": "No green replacement, and every owner it depends on is now deferred: the v5 read path is retained by consequence of keeping the v5 writer and the 37 fixtures, so this file's coverage is still load-bearing. Retires with the v5 family at Phase 5 owner acceptance."
+   "disposition_4c_note": "Gate 4C part 7 (2026-08-11). C11b typed-dispatch spike. Its finding is the typed-dispatch plan's premise. At retirement: move to scripts/archive/ with a header naming the owner that retired it and the findings home below. The file is preserved, not deleted \u2014 plan rule 7. It carries zero test nodes, so no coverage moves with it.",
+   "findings_home": ".project/completed/20260217_backtracker-typed-dispatch/plan.md"
   },
   {
    "id": "L-049",
@@ -1214,12 +1229,13 @@
    "replacement_proof_node": null,
    "blocked_by": [],
    "reason": "Spike diagnostic: C12 Input Resolver. Imports legacy owners (dependency_backtracker, output_registry_builder), so it stops running the moment 4B lands. Rule 7: archive with its findings rather than delete; per-path reason recorded, orchestrator approves the list.",
-   "disposition_4c": "defer-to-v5-family",
+   "disposition_4c": "archive-with-findings",
    "node_count": 0,
    "responsibility": "Spike diagnostic: C12 Input Resolver.",
    "breaks_on": "sysml_codegen.analysis.dependency_backtracker (L-002, 4B-v5-family); sysml_codegen.orchestration.output_registry_builder (L-010, 4B-v5-family); sysml_codegen.snapshot:load_extraction_snapshot (L-028, 4B-G2)",
    "breaks_a_free_group": true,
-   "disposition_4c_note": "No green replacement, and every owner it depends on is now deferred: the v5 read path is retained by consequence of keeping the v5 writer and the 37 fixtures, so this file's coverage is still load-bearing. Retires with the v5 family at Phase 5 owner acceptance."
+   "disposition_4c_note": "Gate 4C part 7 (2026-08-11). C12 input-resolver spike. Its finding is the input-resolver plan's premise. At retirement: move to scripts/archive/ with a header naming the owner that retired it and the findings home below. The file is preserved, not deleted \u2014 plan rule 7. It carries zero test nodes, so no coverage moves with it.",
+   "findings_home": ".project/completed/20260217_input-resolver/plan.md"
   },
   {
    "id": "L-050",
@@ -1262,12 +1278,13 @@
    "replacement_proof_node": null,
    "blocked_by": [],
    "reason": "Spike 3: EXPOSE_PURE Transitive Resolution Chain. Imports legacy owners (parameter_groups, pipeline_builder), so it stops running the moment 4B lands. Rule 7: archive with its findings rather than delete; per-path reason recorded, orchestrator approves the list.",
-   "disposition_4c": "defer-to-v5-family",
+   "disposition_4c": "archive-with-findings",
    "node_count": 0,
    "responsibility": "Spike 3: EXPOSE_PURE Transitive Resolution Chain.",
    "breaks_on": "sysml_codegen.analysis.parameter_groups (L-003, 4B-v5-family); sysml_codegen.orchestration.pipeline_builder (L-029, 4B-v5-family)",
    "breaks_a_free_group": false,
-   "disposition_4c_note": "No green replacement, and every owner it depends on is now deferred: the v5 read path is retained by consequence of keeping the v5 writer and the 37 fixtures, so this file's coverage is still load-bearing. Retires with the v5 family at Phase 5 owner acceptance."
+   "disposition_4c_note": "Gate 4C part 7 (2026-08-11). Pure-chain EXPOSE spike. Result recorded in the SysIDE-assumptions spike results. At retirement: move to scripts/archive/ with a header naming the owner that retired it and the findings home below. The file is preserved, not deleted \u2014 plan rule 7. It carries zero test nodes, so no coverage moves with it.",
+   "findings_home": ".project/research/20260213_spike_results_syside_assumptions.md"
   },
   {
    "id": "L-053",
@@ -1282,12 +1299,13 @@
    "replacement_proof_node": null,
    "blocked_by": [],
    "reason": "Spike 9: Issue 22 Empirical Test -- Aggregation REFERENCE Resolution. Imports legacy owners (dependency_backtracker, parameter_groups, pipeline_builder), so it stops running the moment 4B lands. Rule 7: archive with its findings rather than delete; per-path reason recorded, orchestrator approves the list.",
-   "disposition_4c": "defer-to-v5-family",
+   "disposition_4c": "archive-with-findings",
    "node_count": 0,
    "responsibility": "Spike 9: Issue 22 Empirical Test -- Aggregation REFERENCE Resolution.",
    "breaks_on": "sysml_codegen.analysis.dependency_backtracker (L-002, 4B-v5-family); sysml_codegen.analysis.parameter_groups (L-003, 4B-v5-family); sysml_codegen.orchestration.pipeline_builder (L-029, 4B-v5-family)",
    "breaks_a_free_group": false,
-   "disposition_4c_note": "No green replacement, and every owner it depends on is now deferred: the v5 read path is retained by consequence of keeping the v5 writer and the 37 fixtures, so this file's coverage is still load-bearing. Retires with the v5 family at Phase 5 owner acceptance."
+   "disposition_4c_note": "Gate 4C part 7 (2026-08-11). Issue 22 aggregation-REFERENCE spike. Its answer is carried in the orchestration-extraction plan. At retirement: move to scripts/archive/ with a header naming the owner that retired it and the findings home below. The file is preserved, not deleted \u2014 plan rule 7. It carries zero test nodes, so no coverage moves with it.",
+   "findings_home": ".project/completed/20260220_orchestration-extraction/plan.md"
   },
   {
    "id": "L-054",
@@ -1302,12 +1320,13 @@
    "replacement_proof_node": null,
    "blocked_by": [],
    "reason": "Spike 8: OutputRegistry End-to-End Key Format Validation. Imports legacy owners (dependency_backtracker, parameter_groups, pipeline_builder), so it stops running the moment 4B lands. Rule 7: archive with its findings rather than delete; per-path reason recorded, orchestrator approves the list.",
-   "disposition_4c": "defer-to-v5-family",
+   "disposition_4c": "archive-with-findings",
    "node_count": 0,
    "responsibility": "Spike 8: OutputRegistry End-to-End Key Format Validation.",
    "breaks_on": "sysml_codegen.analysis.dependency_backtracker (L-002, 4B-v5-family); sysml_codegen.analysis.parameter_groups (L-003, 4B-v5-family); sysml_codegen.orchestration.pipeline_builder (L-029, 4B-v5-family)",
    "breaks_a_free_group": false,
-   "disposition_4c_note": "No green replacement, and every owner it depends on is now deferred: the v5 read path is retained by consequence of keeping the v5 writer and the 37 fixtures, so this file's coverage is still load-bearing. Retires with the v5 family at Phase 5 owner acceptance."
+   "disposition_4c_note": "Gate 4C part 7 (2026-08-11). Output-registry end-to-end spike. Its own dedicated results document. At retirement: move to scripts/archive/ with a header naming the owner that retired it and the findings home below. The file is preserved, not deleted \u2014 plan rule 7. It carries zero test nodes, so no coverage moves with it.",
+   "findings_home": ".project/research/20260213_spike_results_output_registry_e2e.md"
   },
   {
    "id": "L-055",
@@ -1322,12 +1341,13 @@
    "replacement_proof_node": null,
    "blocked_by": [],
    "reason": "Spike 5: REFERENCE Binding Resolution Outcomes. Imports legacy owners (dependency_backtracker, parameter_groups, pipeline_builder), so it stops running the moment 4B lands. Rule 7: archive with its findings rather than delete; per-path reason recorded, orchestrator approves the list.",
-   "disposition_4c": "defer-to-v5-family",
+   "disposition_4c": "archive-with-findings",
    "node_count": 0,
    "responsibility": "Spike 5: REFERENCE Binding Resolution Outcomes.",
    "breaks_on": "sysml_codegen.analysis.dependency_backtracker (L-002, 4B-v5-family); sysml_codegen.analysis.parameter_groups (L-003, 4B-v5-family); sysml_codegen.orchestration.pipeline_builder (L-029, 4B-v5-family)",
    "breaks_a_free_group": false,
-   "disposition_4c_note": "No green replacement, and every owner it depends on is now deferred: the v5 read path is retained by consequence of keeping the v5 writer and the 37 fixtures, so this file's coverage is still load-bearing. Retires with the v5 family at Phase 5 owner acceptance."
+   "disposition_4c_note": "Gate 4C part 7 (2026-08-11). Reference-resolution spike. Result recorded in the iteration-2 spike results. At retirement: move to scripts/archive/ with a header naming the owner that retired it and the findings home below. The file is preserved, not deleted \u2014 plan rule 7. It carries zero test nodes, so no coverage moves with it.",
+   "findings_home": ".project/research/20260213_spike_results_iteration2.md"
   },
   {
    "id": "L-056",
@@ -5396,12 +5416,12 @@
    "replacement_proof_node": "tests/conformance/test_v6_recapture_batch.py",
    "blocked_by": [],
    "reason": "The last v5 snapshot producer. Keeping it is what makes the 37 committed v5 fixtures regenerable while their v6 replacements do not exist. It retires with them, not before.",
-   "disposition_4c": "defer-to-v5-family",
+   "disposition_4c": "retire-with-owner",
    "node_count": 0,
    "responsibility": "Capture extraction snapshots for all fixture models.",
    "breaks_on": "sysml_codegen.analysis.parameter_groups (L-003, 4B-v5-family); sysml_codegen.snapshot:capture_snapshot (L-028, 4B-v5-family); sysml_codegen.snapshot:serialize_extraction_snapshot (L-028, 4B-v5-family); sysml_codegen.snapshot:snapshot_to_json (L-028, 4B-v5-family); sysml_codegen.orchestration.pipeline_builder (L-029, 4B-v5-family); agentic_mbse.sysml.constraint_extraction:extract_constraint_facts (L-036, 4B-v5-family)",
    "breaks_a_free_group": false,
-   "disposition_4c_note": "The v5 family's anchor, not a retirement. Gate 4A retained it because it is the last v5 producer and what keeps the 37 committed v5 fixtures regenerable; Gate 4C part 3 measured that its capture_snapshot call reaches build_pipeline_context (capture.py:55), which is what pulls the whole legacy analysis and resolution stack into the retained set. It retires with the fixtures at Phase 5 owner acceptance, and the eleven G3 modules retire with it."
+   "disposition_4c_note": "Gate 4C part 7 (2026-08-11). Row disposition was already delete in 4B-v5-family at part 5; this records its 4C half. It captures the 37 v5 extraction snapshots, every one of which retires with the family. Replacement is scripts/capture_v6_batch.py, which captures through the shipped public capture_instance_graph_snapshot and has no capture code of its own. Its corpus and this script's name the same 37 fixtures (checked at part 5), so no consumer's corpus changes."
   },
   {
    "id": "L-276",
@@ -5537,11 +5557,12 @@
    "blocked_by": [],
    "responsibility": "Phase 0 de-risk probe for UPSTREAM-FINDINGS Item 1 (throwaway).",
    "node_count": 0,
-   "disposition_4c": "defer-to-v5-family",
+   "disposition_4c": "archive-with-findings",
    "reason": "Found by the Gate 4C part 3 surface check. Imports pipeline_builder (L-029) at module level. Rule 7: archive with its finding rather than delete, when the v5 family retires.",
    "breaks_on": "sysml_codegen.orchestration.pipeline_builder (L-029, 4B-v5-family)",
    "breaks_a_free_group": false,
-   "disposition_4c_note": "No green replacement, and every owner it depends on is now deferred: the v5 read path is retained by consequence of keeping the v5 writer and the 37 fixtures, so this file's coverage is still load-bearing. Retires with the v5 family at Phase 5 owner acceptance."
+   "disposition_4c_note": "Gate 4C part 7 (2026-08-11). Item 1 phase-0 baseline probe. Its finding is the baseline-diagnostics plan's starting measurement. At retirement: move to scripts/archive/ with a header naming the owner that retired it and the findings home below. The file is preserved, not deleted \u2014 plan rule 7. It carries zero test nodes, so no coverage moves with it.",
+   "findings_home": ".project/active/baseline-diagnostics/plan.md"
   },
   {
    "id": "L-283",
@@ -5557,11 +5578,12 @@
    "blocked_by": [],
    "responsibility": "Spike 7: DesignAttributeData.default_value Format for Path-Like Defaults.",
    "node_count": 0,
-   "disposition_4c": "defer-to-v5-family",
+   "disposition_4c": "archive-with-findings",
    "reason": "Found by the Gate 4C part 3 surface check. Imports parameter_groups (L-003) at module level. Rule 7: archive with its finding rather than delete, when the v5 family retires.",
    "breaks_on": "sysml_codegen.analysis.parameter_groups (L-003, 4B-v5-family)",
    "breaks_a_free_group": false,
-   "disposition_4c_note": "No green replacement, and every owner it depends on is now deferred: the v5 read path is retained by consequence of keeping the v5 writer and the 37 fixtures, so this file's coverage is still load-bearing. Retires with the v5 family at Phase 5 owner acceptance."
+   "disposition_4c_note": "Gate 4C part 7 (2026-08-11). Design-attribute defaults spike. Result recorded in the iteration-2 spike results. At retirement: move to scripts/archive/ with a header naming the owner that retired it and the findings home below. The file is preserved, not deleted \u2014 plan rule 7. It carries zero test nodes, so no coverage moves with it.",
+   "findings_home": ".project/research/20260213_spike_results_iteration2.md"
   },
   {
    "id": "L-284",
@@ -5597,11 +5619,12 @@
    "blocked_by": [],
    "responsibility": "Probe 3: verify alias resolution for Solar Battery Plant redefinitions.",
    "node_count": 0,
-   "disposition_4c": "defer-to-v5-family",
+   "disposition_4c": "archive-with-findings",
    "breaks_on": "",
    "breaks_a_free_group": false,
-   "disposition_4c_note": "No green replacement and its owner is deferred; retires with the v5 family at Phase 5 owner acceptance.",
-   "reason": "Found by the Gate 4C part 3 surface measurement. Calls pipeline_builder (L-029) inside a function. Rule 7: archive with its finding when the v5 family retires."
+   "disposition_4c_note": "Gate 4C part 7 (2026-08-11). Probe 3, alias resolution for the Solar Battery Plant ':>> total_capex = capital_cost' redefinition. Its finding drove the alias wiring fix and survives in the synthesis report; README.md keeps the question. At retirement: move to scripts/archive/ with a header naming the owner that retired it and the findings home below. The file is preserved, not deleted \u2014 plan rule 7. It carries zero test nodes, so no coverage moves with it.",
+   "reason": "Found by the Gate 4C part 3 surface measurement. Calls pipeline_builder (L-029) inside a function. Rule 7: archive with its finding when the v5 family retires.",
+   "findings_home": ".project/reports/05_synthesis_and_fixes.md; scripts/probes/README.md"
   },
   {
    "id": "L-286",
@@ -5617,11 +5640,12 @@
    "blocked_by": [],
    "responsibility": "Probe 5: run the full pipeline and inspect backtracker resolution.",
    "node_count": 0,
-   "disposition_4c": "defer-to-v5-family",
+   "disposition_4c": "archive-with-findings",
    "breaks_on": "",
    "breaks_a_free_group": false,
-   "disposition_4c_note": "No green replacement and its owner is deferred; retires with the v5 family at Phase 5 owner acceptance.",
-   "reason": "Found by the Gate 4C part 3 surface measurement. Calls pipeline_builder (L-029) inside a function. Rule 7: archive with its finding when the v5 family retires."
+   "disposition_4c_note": "Gate 4C part 7 (2026-08-11). Backtracker resolution probe against the legacy resolver. Indexed in the investigation report; the README keeps its question. At retirement: move to scripts/archive/ with a header naming the owner that retired it and the findings home below. The file is preserved, not deleted \u2014 plan rule 7. It carries zero test nodes, so no coverage moves with it.",
+   "reason": "Found by the Gate 4C part 3 surface measurement. Calls pipeline_builder (L-029) inside a function. Rule 7: archive with its finding when the v5 family retires.",
+   "findings_home": ".project/reports/00_investigation_index.md; scripts/probes/README.md"
   },
   {
    "id": "L-287",
