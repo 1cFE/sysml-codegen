@@ -6454,6 +6454,23 @@
    "breaks_on": "sysml_codegen.analysis.constraint_lowering (L-001, 4B-v5-family)",
    "breaks_a_free_group": false,
    "disposition_4c_note": "Authored by the runbook completion (2026-08-11). Documentation-only, and precisely the F5 class: the citation is a dead pointer the day L-001 lands. Patch: runbook-patches/step2/src__sysml_codegen__core__identifier_types.patch."
+  },
+  {
+   "id": "L-304",
+   "path": "tests/unit/test_runbook_patches.py",
+   "repo": "sysml-codegen",
+   "class": "test",
+   "disposition": "delete",
+   "origin": "derived-blast-radius",
+   "group": "4B-G4",
+   "authority": "retirement runbook completion (2026-08-11); the file is the runbook's own scaffolding and its subject is a set of patches the retirement consumes",
+   "unreachability": null,
+   "replacement_proof_node": "tests/unit/test_retirement_worklist.py",
+   "blocked_by": [],
+   "responsibility": "Keep the runbook's prepared patches applying to the tree while acceptance is pending.",
+   "node_count": 4,
+   "reason": "Its whole subject is `runbook-patches/*.patch` applying to a tree that has not retired yet. Once the steps run, the patches are spent and the file asserts that spent patches still apply, which is false by construction \u2014 measured in the step-4 replay. It goes with the last step, and what survives is the derivation the runbook actually rests on: every actionable row named by exactly one step, checked by tests/unit/test_retirement_worklist.py.",
+   "state": "proposed"
   }
  ]
 }

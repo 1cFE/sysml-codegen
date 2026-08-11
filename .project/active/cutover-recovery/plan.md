@@ -4649,15 +4649,27 @@ and six files are edited by both steps. `tests/unit/test_runbook_patches.py` rep
 order into a scratch directory seeded from HEAD, so the suite goes red the day the tree moves
 under a prepared edit — which is the only thing that makes a pending patch reviewable.
 
-Apply order, per step:
+Apply order, per step — **the ledger and work-list patches go first, and that is not a style
+preference**:
 
 ```bash
+P=.project/active/cutover-recovery/runbook-patches
+git apply $P/stepN/ledger__*.patch                       # step 2 only
+git apply $P/stepN/scripts__retirement_worklist.patch    # step 2 only
 $PY scripts/retire_step.py apply N                       # git rm the deletions, git mv the archives
-git apply .project/active/cutover-recovery/runbook-patches/stepN/*.patch
+git apply $P/stepN/*.patch                               # the rest; the two above are already in
 #   ...commit...
 $PY scripts/retire_step.py close N <oid>                 # mark the step's rows executed
 #   ...commit the ledger, then run the battery...
 ```
+
+`retire_step.py` reads the ledger and the work-list to decide what to delete, so a patch that
+changes either has to land before it runs. The step-4 replay measured both failure modes with
+the naive order: `L-011`'s row still read `disposition: migrate`, so `apply 2` treated
+`resolution/graph_builder.py` as an edit and left the module on disk; and the three pulled-forward
+`*_e2e.py` rows were still placed at step 4 when `apply 2` ran and at step 2 when `apply 4` ran,
+so neither step deleted them. Both are silent — the tree simply keeps a file — and both surface
+only at the next battery.
 
 **The close is not optional.** `check_ledger_4a.py` verifies every state claim against Git, so
 a step whose files are gone while its rows still say `proposed` fails the checker. The
