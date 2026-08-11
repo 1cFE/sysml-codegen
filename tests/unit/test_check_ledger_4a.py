@@ -206,11 +206,27 @@ def test_every_conflict_row_states_what_the_orchestrator_must_rule_on(ledger: di
 
 
 def _row(ledger: dict, row_id: str) -> dict:
-    return next(row for row in ledger["rows"] if row["id"] == row_id)
+    """One row, reset to `proposed` so a test states the state it is exercising.
+
+    Gate 4B writes real states into the committed ledger, and a negative test that
+    inherited one would pass or fail for a reason it never named.
+    """
+    row = next(row for row in ledger["rows"] if row["id"] == row_id)
+    for field in ("state", "executed_commit", "remaining"):
+        row.pop(field, None)
+    return row
+
+
+def test_the_committed_row_states_agree_with_the_tree(ledger: dict) -> None:
+    """Every state claim in the committed ledger is checked against Git, not believed."""
+    assert checker.check_states(ledger["rows"]) == []
 
 
 def test_a_row_with_no_state_is_proposed_and_passes(ledger: dict) -> None:
     """Gate 4A's rows carry no state field; adding the check must not invalidate them."""
+    for row in ledger["rows"]:
+        for field in ("state", "executed_commit", "remaining"):
+            row.pop(field, None)
     assert checker.check_states(ledger["rows"]) == []
 
 
@@ -280,3 +296,29 @@ def test_a_multi_node_replacement_is_green_only_when_every_node_is(tmp_path: Pat
     missing = checker.replacement_is_green([*green, "tests/unit/test_does_not_exist.py"])
     assert missing.verdict is checker.Verdict.MISSING
     assert not checker.replacement_is_green([]).is_green
+
+
+def test_a_partially_executed_row_must_say_what_is_left(ledger: dict) -> None:
+    """Several G0 rows move one thing now and retire the rest in G3.
+
+    A row that says only "executed" would claim the whole disposition is spent, which is
+    how the original run lost track of what it had actually done.
+    """
+    row = _row(ledger, "L-018")
+    row["state"] = "partially-executed"
+    row["executed_commit"] = "0" * 40
+    problems = checker.check_states(ledger["rows"])
+    assert any("does not say what is left" in problem for problem in problems)
+
+    row["remaining"] = "the PipelineContext class itself retires with pipeline_builder in G3"
+    assert checker.check_states(ledger["rows"]) == []  # and the rest of the ledger stays clean
+
+
+def test_a_partially_executed_row_whose_file_is_gone_fails(ledger: dict) -> None:
+    row = _row(ledger, "L-018")
+    row["path"] = "src/sysml_codegen/orchestration/vanished.py"
+    row["state"] = "partially-executed"
+    row["executed_commit"] = "0" * 40
+    row["remaining"] = "G3"
+    problems = checker.check_states(ledger["rows"])
+    assert any("partially-executed but" in problem for problem in problems)

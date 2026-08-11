@@ -718,7 +718,7 @@ def test_retirement_preserves_public_product(checkpoint, real_teax):
 
 ### Gate 4B — Delete legacy production in small groups
 
-- [ ] **Read the Gate 4C responsibility rows before deleting anything.** Sixteen rows carried from
+- [x] **Read the Gate 4C responsibility rows before deleting anything.** Sixteen rows carried from
   Slice 3E block this gate: no legacy production owner may be deleted while a row it serves still
   lacks its exact-route replacement, and `replacement_is_green(row)` is the check. The rows and the
   blocking language live in Gate 4C below; they govern *this* gate.
@@ -2516,6 +2516,115 @@ approves the ledger with the two conflicts ruled as follows:
 Approved 4B order: G0 → G1 → (4C specimen authoring for the 14 pending rows + the 120-file
 blast-radius dispositions) → G2 → G3 → G4, with the full battery per group as tabled. The
 `replacement_is_green` gate is binding at every group boundary.
+
+#### Gate 4B-G0 Completion — the prerequisite migrations (deleted nothing)
+
+- **Completed:** 2026-08-11. **Commit:** `db00482` (sysml-codegen only; agentic-mbse `N/A` —
+  worktree clean, nothing touched, not re-run).
+- **Declared path set, and what actually changed:** two new production files
+  (`core/errors.py`, `resolution/uncovered_params.py`), ten repointed production files
+  (`orchestration/{pipeline_context,exact_pipeline_context,elaborated_pipeline}.py`,
+  `extraction/source_manifest.py`, `analysis/diagnostic_screen.py`,
+  `generation/{errors,initialization,constraint_catalog,registry}.py`,
+  `resolution/graph_builder.py`, `cli/__init__.py`), five test modules, and
+  `scripts/check_ledger_4a.py` + its test. Actual changed paths equal that set.
+- **The neutral home is `core/errors.py`, and the choice is recorded rather than assumed.**
+  `generation/errors.py` already exists, but it is a *generation-seam helper* that builds errors,
+  and `extraction/source_manifest.py` cannot import from `generation` without inverting the
+  layering `core/__init__.py` states. `core` is the one package every layer may import.
+  `orchestration/pipeline_context.py` re-exports both names — the same class objects, so every
+  existing `raise` and `except` is untouched — until the module retires in G3.
+- **A ledger correction the execution measured (rule 10, surfaced not silent).** Gate 4A derived
+  that *one* import edge (`exact_pipeline_context.py:41`) held the legacy analysis stack inside
+  the exact route's closure. There were two of the same kind:
+  `orchestration/elaborated_pipeline.py:21` — row L-009, **retained**, live on the exact route via
+  `exact_pipeline_context.py:245` — imported both classes from `pipeline_context` too. Repointing
+  only the six named rows left the closure unchanged, measured. With the seventh file repointed,
+  the exact route's construction closure reaches none of `pipeline_context`,
+  `dependency_backtracker`, `parameter_groups`, `part_instance_index`, `phantom_detector`,
+  `producer_resolution` or `core/output_registry` — which is what G0 exists to achieve. No
+  disposition changed: L-009 stays retained, and the correction is recorded on its row. The
+  `sysml_codegen.cli` closure still reaches them through the `snapshot/` and `orchestration/`
+  re-exports, which are G2 and G3 rows.
+- **The four `cli/__init__.py` items (L-025), all spent.** (1) The unreachable
+  `GrandfatheredSnapshotError` import and handler are gone. (2) `--design-path-filter` is gone
+  from both subcommands *and* from `GenerationConfig`: leaving the field would have re-created the
+  silent-ignore the 3E refusal existed to prevent, this time for API callers. (3) The two
+  collectors are repointed. (4) **C2 as ruled.**
+- **C2, measured before and after.** Before: public `generate` on `unresolvable_attr_probe`
+  cleared the output tree, wrote 34 files with no contracts and no seal, and reported "Unexpected
+  error" with a traceback from a bare `ValueError` at `generation/registry.py:146`. The raise sits
+  in the *registry* pass (Slice 3E's F5 said `_generate_modules`; the measured site is
+  `_generate_registry`). After: detection is split from the raise — `residual_class_name_collisions`
+  is pure, logs nothing and raises nothing — and `cli._preflight_registry_class_names` runs it as
+  step 1.7, beside the two existing pre-clear guards. The refusal is the package's own
+  `CodeGenerationError`; the target tree is byte-identical to what it was. `generate_registry`
+  keeps the same check as a typed backstop for direct callers.
+- **Test-node accounting, every changed node named.** +1 specimen
+  `test_a_registry_class_name_collision_refuses_before_the_writer_runs` (C2, red→green through
+  public `generate`). +7 checker tests for the new executed-row state model (requirement 3: extend
+  the checker rather than special-case it). −2 in `tests/integration/test_full_pipeline.py`
+  (`test_design_path_filter_cli_flag`, `test_generation_config_has_design_path_filter`) — the FR-4
+  flag-existence responsibility is what L-025 item (2) retires. Three nodes changed rather than
+  removed, same subjects: `test_design_path_filter_is_gone_from_the_public_surface` and
+  `test_the_snapshot_subcommand_takes_no_filter_either` (was: refused rather than ignored),
+  REQ-SNAP-16 now pinning argparse's refusal, and `test_sc11_recheck`'s grandparent-collision node
+  now pinning the typed error. L-025's `replacement_proof_node` is renamed with its test.
+- **Battery.** Full licensed suite **3577 passed / 47 skipped / 38 deselected**, zero failures,
+  zero `no live syside license` lines; delta versus `c21f86b` (3571) is exactly +1 +7 −2. 37-path
+  corpus **15 graphs / 22 errors** on the exact route, 36/1 legacy — zero rows moved, and
+  `test_elaboration_corpus_ledger.py` compares per-fixture strings, so that is a full-set match.
+  Execution lane (`pytest tests/execution -m execution`) **38 passed**. `ruff check src` **16
+  findings**, byte-identical to baseline. `mypy src` **71 errors in 17 files, measured**, equal to
+  baseline. `git diff --check` clean.
+
+#### Gate 4B-G1 Completion — the first deletion
+
+- **Completed:** 2026-08-11. **Commit:** `6ba346e` (sysml-codegen only; agentic-mbse `N/A`).
+- **Deleted:** `src/sysml_codegen/analysis/signature_extractor.py` (L-006),
+  `tests/unit/test_signature_extractor.py` (L-241), and the `analysis/__init__.py:26` re-export
+  that was the module's last reference in `src`.
+- **The C1 ruling, re-verified rather than taken on trust.** `generation/preservation.py` is live
+  production (`generation/__init__` → `cli/__init__.py:432`, `should_regenerate_stencil`), and the
+  three replacement modules were run explicitly and green **before** the deletion, through the
+  gate itself (`check_ledger_4a.py replacements --row L-006 --row L-241`):
+  `tests/conformance/test_gen_stencils.py` **32**, `tests/conformance/test_generation_boundary.py`
+  **20**, `tests/unit/test_stencils.py` **21** — **73 nodes**. That is the recorded difference
+  between this retirement and the original run's, which deleted the same test on absence alone.
+- **L-241 moved from retain to delete**, group 4C-blast-radius → 4B-G1, on the C1 ruling. That
+  move *is* the responsibility-level disposition rule 6 requires before a test may go; the
+  blast-radius family is 119 rows now, and the ledger says so by name.
+- **Battery.** Full licensed suite **3565 passed / 47 skipped / 38 deselected**, zero failures,
+  zero license lines. Delta versus G0 (3577) is **−12**: the deleted module's **13** nodes
+  (`test_matches_with_identical_fields`, `_added_field`, `_removed_field`, `_renamed_field`,
+  `_field_order_independent`, `_none_fallback_extracted`, `_none_fallback_both`,
+  `_type_change_still_detected`, `_return_type_change_still_detected`,
+  `test_extract_input_field_refs_from_impl`, `_empty_stub`, `_auto_impl`,
+  `test_extract_nonexistent_file`), less the **+1** multi-node replacement-proof test. 37-path
+  corpus 15/22, zero rows moved. Execution lane **38 passed**. `ruff` **16**; `mypy` **69 errors
+  in 16 files** — baseline less the deleted module's two. `git diff --check` clean.
+
+#### Gate 4B — ledger state after G0 and G1
+
+- **Row states are now checked, not asserted.** The JSON carries `state`
+  (`proposed` / `partially-executed` / `executed`), `executed_commit`, and `remaining`;
+  `check_ledger_4a.check_states` verifies every claim against Git — an executed `delete` whose
+  file is still at `HEAD` fails, an executed `migrate` whose file vanished fails, and a
+  `partially-executed` row that does not say what is left fails. Six G0 rows are fully spent;
+  L-011, L-018 and L-021 are `partially-executed` with their G3 remainder stated; L-006 and L-241
+  are executed deletions.
+- **Checker after both groups:** `paths` **276 rows, 0 problems** — an executed deletion is what
+  its row already claimed, because the candidate set is read from the diff. `replacements`
+  **40 green, 14 pending, 220 not-required, 0 failures** (38/14/222 at Gate 4A; L-006 and L-241
+  moved to green on the C1 proof modules).
+- **The record commit's own delta.** Marking the rows needed the `partially-executed` state, so
+  the suite moves **3565 → 3568**: `test_a_partially_executed_row_must_say_what_is_left`,
+  `test_a_partially_executed_row_whose_file_is_gone_fails`, and
+  `test_the_committed_row_states_agree_with_the_tree`, which runs the state check over the
+  committed ledger itself. `ruff` 16, `mypy` 69/16, corpus and execution lane unchanged.
+- **Still blocked, unchanged:** G2 (6 rows, 35 block `snapshot_context.py`), G3 (16 rows, 65 block
+  `pipeline_builder.py`) and G4 (5 rows). The 14 pending 4C responsibilities and the 119-row
+  blast radius are the work between here and G2.
 
 ### Phase 5 Completion
 

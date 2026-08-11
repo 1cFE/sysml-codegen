@@ -186,7 +186,9 @@
     "L-241"
    ],
    "reason": "A dead duplicate, not a lost responsibility: zero production callers, the sole consumer anywhere was tests/unit/test_signature_extractor.py, and the behaviour lives on in generation/preservation.py. Retired together with its unit test and the analysis/__init__.py:26 re-export under the C1 ruling.",
-   "conflict": "Rule-10 CONFLICT, RULED by the orchestrator 2026-08-11 (plan, Gate 4A approval): delete, with the living owner named. The COST-PATTERN refactor (d6c725f) copied the signature/preservation logic into generation/preservation.py, which is live production (generation/__init__ -> cli/__init__.py:432, should_regenerate_stencil) and covered by the three passing modules now named as this row's replacement proof (73 nodes, measured). Not an absence-driven deletion: the responsibility has a living owner."
+   "conflict": "Rule-10 CONFLICT, RULED by the orchestrator 2026-08-11 (plan, Gate 4A approval): delete, with the living owner named. The COST-PATTERN refactor (d6c725f) copied the signature/preservation logic into generation/preservation.py, which is live production (generation/__init__ -> cli/__init__.py:432, should_regenerate_stencil) and covered by the three passing modules now named as this row's replacement proof (73 nodes, measured). Not an absence-driven deletion: the responsibility has a living owner.",
+   "state": "executed",
+   "executed_commit": "6ba346e"
   },
   {
    "id": "L-007",
@@ -256,7 +258,7 @@
    "unreachability": "REACHED: exact_pipeline_context.py:245 imports elaborate_model_paths from it, and snapshot/capture.py imports it too",
    "replacement_proof_node": null,
    "blocked_by": [],
-   "reason": "The forensic candidate deleted this and the ledger rejects that proposal: it is live production on the exact route. Deleting it would break public generation. Recorded as a checked-and-rejected deletion, not silence."
+   "reason": "The forensic candidate deleted this and the ledger rejects that proposal: it is live production on the exact route. Deleting it would break public generation. Recorded as a checked-and-rejected deletion, not silence. Gate 4B-G0 (db00482) repointed its CodeGenerationError/SysMLParsingError import at core/errors.py: this file was the second \u2014 and, measured, the last \u2014 import edge holding pipeline_context inside the exact route's closure, which the ledger's derivation missed. The row's disposition is unchanged; the file stays."
   },
   {
    "id": "L-010",
@@ -303,7 +305,10 @@
    "unreachability": "reachable from cli/__init__.py:262 for exactly two functions; the legacy build_computation_graph is reached only from pipeline_builder.py:64",
    "replacement_proof_node": "tests/conformance/test_public_authority_switch.py::test_a_refusal_after_the_context_but_before_the_writer_also_leaves_the_tree",
    "blocked_by": [],
-   "reason": "Not a clean delete. collect_uncovered_params and collect_unwired_fallthrough are live public-route code inside an otherwise legacy module; they migrate in G0, the rest of the file is deleted in G3."
+   "reason": "Not a clean delete. collect_uncovered_params and collect_unwired_fallthrough are live public-route code inside an otherwise legacy module; they migrate in G0, the rest of the file is deleted in G3.",
+   "state": "partially-executed",
+   "executed_commit": "db00482",
+   "remaining": "collect_uncovered_params and collect_unwired_fallthrough moved to resolution/uncovered_params.py and are re-exported here; the rest of the module is deleted in G3."
   },
   {
    "id": "L-012",
@@ -474,7 +479,10 @@
    "unreachability": "IN the CLI import closure, and the only reason the whole legacy analysis stack is: exact_pipeline_context.py:41 imports CodeGenerationError from it, nothing else.",
    "replacement_proof_node": "tests/conformance/test_public_authority_switch.py::test_the_public_api_exports_no_second_construction_entry_point",
    "blocked_by": [],
-   "reason": "Hosts SysMLParsingError (:43), CodeGenerationError (:55) and the legacy PipelineContext (:75). Move the two exception classes to a route-neutral home; the class itself then follows pipeline_builder into G3. Census API-09 RETAINs the live error classes, so they must move, not die."
+   "reason": "Hosts SysMLParsingError (:43), CodeGenerationError (:55) and the legacy PipelineContext (:75). Move the two exception classes to a route-neutral home; the class itself then follows pipeline_builder into G3. Census API-09 RETAINs the live error classes, so they must move, not die.",
+   "state": "partially-executed",
+   "executed_commit": "db00482",
+   "remaining": "The two exception classes moved to core/errors.py and are re-exported here; the PipelineContext class and the module itself retire with pipeline_builder in G3."
   },
   {
    "id": "L-019",
@@ -488,7 +496,9 @@
    "unreachability": "live on the exact route",
    "replacement_proof_node": "tests/conformance/test_public_authority_switch.py::test_generate_refuses_a_model_the_exact_route_rejects",
    "blocked_by": [],
-   "reason": "Imports CodeGenerationError from pipeline_context (:9, TYPE_CHECKING). Repoint at the neutral error home."
+   "reason": "Imports CodeGenerationError from pipeline_context (:9, TYPE_CHECKING). Repoint at the neutral error home.",
+   "state": "executed",
+   "executed_commit": "db00482"
   },
   {
    "id": "L-020",
@@ -502,7 +512,9 @@
    "unreachability": "live on the exact route",
    "replacement_proof_node": "tests/conformance/test_exact_constraint_route.py::test_identified_facts_gate_and_projected_constraints_agree_by_usage_id",
    "blocked_by": [],
-   "reason": "Imports CodeGenerationError from pipeline_context (:31, :42). Repoint."
+   "reason": "Imports CodeGenerationError from pipeline_context (:31, :42). Repoint.",
+   "state": "executed",
+   "executed_commit": "db00482"
   },
   {
    "id": "L-021",
@@ -516,7 +528,10 @@
    "unreachability": "live on the exact route",
    "replacement_proof_node": "tests/conformance/test_public_authority_switch.py::test_the_public_api_exports_no_second_construction_entry_point",
    "blocked_by": [],
-   "reason": "A three-symbol alias shim (:8) re-exporting PipelineContext and both errors. Census API-12 RETAINs exactly those aliases, so the PipelineContext alias must be dropped when the class goes and the two error aliases repointed. Not a free deletion."
+   "reason": "A three-symbol alias shim (:8) re-exporting PipelineContext and both errors. Census API-12 RETAINs exactly those aliases, so the PipelineContext alias must be dropped when the class goes and the two error aliases repointed. Not a free deletion.",
+   "state": "partially-executed",
+   "executed_commit": "db00482",
+   "remaining": "The two error aliases now point at core/errors.py; the PipelineContext alias (census API-12) stays until the class goes in G3."
   },
   {
    "id": "L-022",
@@ -530,7 +545,9 @@
    "unreachability": "live on the exact route",
    "replacement_proof_node": "tests/conformance/test_public_authority_switch.py::test_generate_refuses_a_model_the_exact_route_rejects",
    "blocked_by": [],
-   "reason": "Imports SysMLParsingError from pipeline_context (:34). Repoint."
+   "reason": "Imports SysMLParsingError from pipeline_context (:34). Repoint.",
+   "state": "executed",
+   "executed_commit": "db00482"
   },
   {
    "id": "L-023",
@@ -544,7 +561,9 @@
    "unreachability": "live on the exact route",
    "replacement_proof_node": "tests/conformance/test_public_authority_switch.py::test_generate_refuses_a_model_the_exact_route_rejects",
    "blocked_by": [],
-   "reason": "Imports CodeGenerationError from pipeline_context (:73). Repoint."
+   "reason": "Imports CodeGenerationError from pipeline_context (:73). Repoint.",
+   "state": "executed",
+   "executed_commit": "db00482"
   },
   {
    "id": "L-024",
@@ -558,7 +577,9 @@
    "unreachability": "the exact authority itself",
    "replacement_proof_node": "tests/conformance/test_exact_pipeline_context.py::test_the_receipt_binds_the_instance_bytes_and_the_projection",
    "blocked_by": [],
-   "reason": "Imports CodeGenerationError from pipeline_context (:41). This single edge is what keeps dependency_backtracker, parameter_groups, part_instance_index, phantom_detector, producer_resolution and core/output_registry inside the exact route's import closure. Repointing it is the precondition for G3."
+   "reason": "Imports CodeGenerationError from pipeline_context (:41). This single edge is what keeps dependency_backtracker, parameter_groups, part_instance_index, phantom_detector, producer_resolution and core/output_registry inside the exact route's import closure. Repointing it is the precondition for G3.",
+   "state": "executed",
+   "executed_commit": "db00482"
   },
   {
    "id": "L-025",
@@ -570,10 +591,12 @@
    "group": "4B-G0",
    "authority": "census API-07/08 via inventory INV-RES-CG-017 (disposition migrate) [EVIDENCE]; Phase 3 completion notes / plan Gate 4A carried inputs",
    "unreachability": "the public entry point",
-   "replacement_proof_node": "tests/conformance/test_public_authority_switch.py::test_design_path_filter_is_refused_rather_than_quietly_ignored",
+   "replacement_proof_node": "tests/conformance/test_public_authority_switch.py::test_design_path_filter_is_gone_from_the_public_surface",
    "blocked_by": [],
-   "reason": "Four named items, each carried from Phase 3: (1) delete the GrandfatheredSnapshotError import (:1061) and its handler (:1139) \u2014 3E audit F5, unreachable on both paths; (2) remove the --design-path-filter flag itself, which 3E left as a typed refusal; (3) repoint the two graph_builder helpers imported at :262 (collect_uncovered_params, collect_unwired_fallthrough) at their new neutral home; (4) type the row-36 collision refusal so it stops reaching the bottom except Exception after the output tree was cleared \u2014 3E audit F5, second half. Item (4) is a CONFLICT row: it contradicts fail-before-mutate and is a product change, not a retirement.",
-   "conflict": "Item (4), the untyped clear-then-fail refusal, is a product behaviour change on a path 3E made publicly reachable. Retirement authority does not cover it. The orchestrator must rule whether Phase 4 fixes it or it goes to the Phase 5 owner packet."
+   "reason": "Four named items, each carried from Phase 3: (1) delete the GrandfatheredSnapshotError import (:1061) and its handler (:1139) \u2014 3E audit F5, unreachable on both paths; (2) remove the --design-path-filter flag itself, which 3E left as a typed refusal; (3) repoint the two graph_builder helpers imported at :262 (collect_uncovered_params, collect_unwired_fallthrough) at their new neutral home; (4) type the row-36 collision refusal so it stops reaching the bottom except Exception after the output tree was cleared \u2014 3E audit F5, second half. Item (4) is a CONFLICT row: it contradicts fail-before-mutate and is a product change, not a retirement. Spent in G0 (db00482): (1) import and handler deleted; (2) the flag removed from both subcommands and from GenerationConfig, so the 3E typed refusal becomes an argparse refusal (the row's replacement proof node is renamed with it, and the two FR-4 flag-existence nodes in tests/integration/test_full_pipeline.py retire under this item); (3) helpers repointed; (4) C2 as ruled \u2014 the registry class-name refusal is now a CodeGenerationError raised from a pure detector before _clear_output_directory, specimen test_a_registry_class_name_collision_refuses_before_the_writer_runs.",
+   "conflict": "Item (4), the untyped clear-then-fail refusal, is a product behaviour change on a path 3E made publicly reachable. Retirement authority does not cover it. The orchestrator must rule whether Phase 4 fixes it or it goes to the Phase 5 owner packet.",
+   "state": "executed",
+   "executed_commit": "db00482"
   },
   {
    "id": "L-026",
@@ -3782,7 +3805,9 @@
     "tests/unit/test_stencils.py"
    ],
    "blocked_by": [],
-   "reason": "Unit tests for signature extraction and field-level comparison, and the only consumer of analysis/signature_extractor.py anywhere. The C1 ruling retires module and test together, naming generation/preservation.py as the living owner and the three stencil/boundary modules as the replacement proof. Retaining the test alone is not possible: its subject is the module being deleted."
+   "reason": "Unit tests for signature extraction and field-level comparison, and the only consumer of analysis/signature_extractor.py anywhere. The C1 ruling retires module and test together, naming generation/preservation.py as the living owner and the three stencil/boundary modules as the replacement proof. Retaining the test alone is not possible: its subject is the module being deleted.",
+   "state": "executed",
+   "executed_commit": "6ba346e"
   },
   {
    "id": "L-242",

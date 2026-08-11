@@ -1,7 +1,9 @@
 # Gate 4A — Responsibility / Deletion Ledger
 
-**Status:** Derived and checked; awaiting orchestrator review. **No deletion may start until
-this ledger is reviewed** (plan rule 11, as amended).
+**Status:** Approved by the orchestrator 2026-08-11 with both CONFLICTs ruled (plan, Gate 4A
+approval). **Groups 4B-G0 (`db00482`) and 4B-G1 (`6ba346e`) are spent**; G2, G3 and G4 remain
+proposed and blocked. Row state lives in the JSON (`state`, `executed_commit`, `remaining`) and
+the checker verifies each claim against Git.
 **Gate:** Phase 4, Gate 4A of `.project/active/cutover-recovery/plan.md`.
 **Machine-readable twin:** `ledger-4a.json` (schema `ledger-4a/v1`) — the checker reads that
 file, this document renders it.
@@ -29,25 +31,46 @@ CONFLICT rows below are not proposals at all — they are questions.
 | Class | delete | migrate | retain | archive | Total |
 |---|---:|---:|---:|---:|---:|
 | production | 17 | 19 | 1 | 0 | **37** |
-| test | 1 | 0 | 158 | 0 | **159** |
+| test | 2 | 0 | 157 | 0 | **159** |
 | snapshot | 0 | 0 | 37 | 0 | **37** |
 | doc | 0 | 0 | 23 | 0 | **23** |
 | probe | 0 | 0 | 4 | 11 | **15** |
 | script | 0 | 0 | 4 | 1 | **5** |
-| **Total** | **18** | **19** | **227** | **12** | **276** |
+| **Total** | **19** | **19** | **226** | **12** | **276** |
 
 By origin: 245 rows claim the Git-derived candidate set (222 deletions + 22 architecture
 documents + `CLAUDE.md`), 22 are Phase-3 carried rows in this repository, 7 are derived
 blast-radius rows, 2 are cross-repository rows in agentic-mbse.
 
-**CONFLICT rows: 2.** Both are rule-10 surfacings, recorded rather than resolved.
+**CONFLICT rows: 2.** Both were rule-10 surfacings, recorded rather than resolved by this gate;
+both are now ruled by the orchestrator and both rulings are spent — C1 in G1, C2 in G0.
 
-**Checker results.** `check_ledger_4a.py paths`: 276 rows, **0 problems**.
+**One correction the execution measured** (Gate 4B-G0). The derivation below says one import edge
+holds the legacy analysis stack in the exact route's closure. There were two of the same kind:
+`orchestration/elaborated_pipeline.py:21` — row L-009, *retained*, live on the exact route via
+`exact_pipeline_context.py:245` — imported both error classes from `pipeline_context` as well.
+Repointing the six named rows left the closure unchanged; repointing that seventh file emptied it.
+Recorded on L-009, whose disposition is unaffected.
+
+**Checker results, at Gate 4A.** `check_ledger_4a.py paths`: 276 rows, **0 problems**.
 `check_ledger_4a.py replacements`: **38 green, 14 pending, 222 not-required, 0 failures** —
 where *pending* means the row names a Gate 4C owner and no node yet, which is the true state
 and can never read as green.
 
+**Checker results, after G0 and G1.** `paths`: 276 rows, **0 problems** — the checker reads the
+candidate diff, so an executed deletion is what its row already claimed, not a new problem.
+`replacements`: **40 green, 14 pending, 220 not-required, 0 failures**; the two rows that moved
+are L-006 and L-241, which gained the C1 ruling's three proof modules (73 nodes).
+
 ## The two CONFLICT rows
+
+**C1 — RULED: delete, with the living owner named. Spent in G1 (`6ba346e`).** The orchestrator
+verified that the COST-PATTERN refactor (`d6c725f`) copied this logic into
+`generation/preservation.py`, which is live production and covered by
+`tests/conformance/test_gen_stencils.py` + `test_generation_boundary.py` + `tests/unit/test_stencils.py`
+(73 nodes, run green before the deletion). The module and its unit test retired together, and
+row L-241 moved from *retain* to *delete* to carry that responsibility retirement. The original
+question, as this gate posed it, follows.
 
 **C1 — `src/sysml_codegen/analysis/signature_extractor.py` (row L-006): a responsibility with
 no possible replacement.** The module has zero production callers at `HEAD` and is not
@@ -58,6 +81,14 @@ replacement node to name and `replacement_is_green` cannot be satisfied for it. 
 behaviour was never needed and both files retire on a recorded ruling, or it was lost quietly
 before Item 7 and that is a finding. It must not be deleted on absence alone, which is the
 exact mistake this gate exists to correct.
+
+**C2 — RULED: fix inside Phase 4, in G0. Spent in G0 (`db00482`).** The refusal is now the
+package's own `CodeGenerationError`, raised from a pure detector
+(`generation/registry.residual_class_name_collisions`) at the generation boundary *before*
+`_clear_output_directory`. Measured on `unresolvable_attr_probe`: was "Unexpected error" plus a
+34-file half-written package, now a named refusal leaving the target tree byte-identical.
+Specimen: `test_a_registry_class_name_collision_refuses_before_the_writer_runs`. The original
+question, as this gate posed it, follows.
 
 **C2 — `src/sysml_codegen/cli/__init__.py` item (4) (row L-025): a product defect inside a
 retirement row.** Slice 3E's audit (F5) measured the `unresolvable_attr_probe` collision guard
@@ -121,8 +152,8 @@ CONFLICT row.
 
 | Group | Rows | What it is | Pre-deletion additions | Post-deletion battery |
 |---|---:|---|---|---|
-| **4B-G0** | 9 | Prerequisite migrations. Move `CodeGenerationError`/`SysMLParsingError` to a neutral home, move the two live `graph_builder` helpers, and spend the four carried `cli/__init__.py` items. **Deletes nothing.** | none — every touched file already has a green pin | full licensed suite, 37-path corpus, `ruff`/`mypy` parity |
-| **4B-G1** | 1 | `analysis/signature_extractor.py`, the one genuinely dead leaf. | an orchestrator ruling on C1 (there is no replacement to add) | full licensed suite |
+| **4B-G0** ✅ `db00482` | 9 | Prerequisite migrations. Move `CodeGenerationError`/`SysMLParsingError` to a neutral home, move the two live `graph_builder` helpers, and spend the four carried `cli/__init__.py` items. **Deletes nothing.** | none — every touched file already has a green pin | full licensed suite, 37-path corpus, `ruff`/`mypy` parity |
+| **4B-G1** ✅ `6ba346e` | 2 | `analysis/signature_extractor.py`, the one genuinely dead leaf. | an orchestrator ruling on C1 (there is no replacement to add) | full licensed suite |
 | **4B-G2** | 6 | The v5 snapshot read path: `snapshot/{loader,graph_rebuild,serializer}.py`, `orchestration/snapshot_context.py`, plus `capture_snapshot` inside `snapshot/capture.py` and the three `snapshot/__init__.py` re-exports. | exact-route specimens for every 4C row that reads a v5 snapshot | full suite, corpus, **real TEAx** |
 | **4B-G3** | 16 | The legacy builder and its resolution/analysis stack, plus the package `__init__` re-exports and the four codegen duals. | exact-route specimens for the remaining 4C rows | full suite, corpus, **real TEAx** |
 | **4B-G4** | 5 | The comparator and the adapter: `elaboration/diff.py`, `tests/helpers/legacy_route.py`, the `_CONSTRAINT_LOGGER` rename, and the two agentic-mbse duals. | none | full suite, corpus, real TEAx, both repositories |
@@ -196,7 +227,16 @@ CONFLICT rows carry a `conflict` field in the JSON and are the two documented ab
 
 ## Full row list
 
-### Group 4B-G0 — 9 rows
+### Group 4B-G0 — 9 rows (executed, `db00482`)
+
+Six rows are fully spent (L-019, L-020, L-022, L-023, L-024, L-025). Three are
+`partially-executed` in the JSON, because G0 takes part of the row and G3 takes the rest, and the
+checker makes each say which part: **L-018** moved the two exception classes to `core/errors.py`
+and re-exports them, keeping the `PipelineContext` class for G3; **L-021** repointed the two error
+aliases and keeps the `PipelineContext` alias (census API-12) for G3; **L-011** moved the two live
+collectors to `resolution/uncovered_params.py` and re-exports them, the rest of the module going
+in G3. Every re-export named here is the *same object* under the old name, so nothing that
+catches or calls these today changes behaviour.
 
 | Row | Path | Disp. | Origin | Authority | Unreachability at HEAD | Replacement proof node | Blocked by | Reason |
 |---|---|---|---|---|---|---|---|---|
@@ -210,11 +250,12 @@ CONFLICT rows carry a `conflict` field in the JSON and are the two documented ab
 | L-018 | `src/sysml_codegen/orchestration/pipeline_context.py` | migrate | phase3-carried | census API-02 via inventory INV-DISC-037 (disposition migrate) [EVIDENCE]; Phase 3 completion notes / plan Gate 4A carried inputs | IN the CLI import closure, and the only reason the whole legacy analysis stack is: exact_pipeline_context.py:41 imports CodeGenerationError from it, nothing else. | `tests/conformance/test_public_authority_switch.py::test_the_public_api_exports_no_second_construction_entry_point` | — | Hosts SysMLParsingError (:43), CodeGenerationError (:55) and the legacy PipelineContext (:75). Move the two exception classes to a route-neutral home; the class itself then follows pipeline_builder into G3. Census API-09 RETAINs the live error classes, so they must move, not die. |
 | L-011 | `src/sysml_codegen/resolution/graph_builder.py` | migrate | forensic-diff | census PROD-09/10 via inventory INV-DISC-038 (disposition delete) [EVIDENCE]; plan Gate 4B; fresh reachability derivation at HEAD | reachable from cli/__init__.py:262 for exactly two functions; the legacy build_computation_graph is reached only from pipeline_builder.py:64 | `tests/conformance/test_public_authority_switch.py::test_a_refusal_after_the_context_but_before_the_writer_also_leaves_the_tree` | — | Not a clean delete. collect_uncovered_params and collect_unwired_fallthrough are live public-route code inside an otherwise legacy module; they migrate in G0, the rest of the file is deleted in G3. |
 
-### Group 4B-G1 — 1 row
+### Group 4B-G1 — 2 rows (executed, `6ba346e`)
 
 | Row | Path | Disp. | Origin | Authority | Unreachability at HEAD | Replacement proof node | Blocked by | Reason |
 |---|---|---|---|---|---|---|---|---|
-| L-006 | `src/sysml_codegen/analysis/signature_extractor.py` | delete | forensic-diff | no census row for this path [EVIDENCE: forensic map Finding 2]; plan Gate 4B; fresh reachability derivation at HEAD | not reachable from sysml_codegen.cli at all; the only importer anywhere in src is the analysis package __init__ (:20 re-export), which no runtime caller goes through | — | 1 rows | Genuinely dead: zero production callers, and the sole consumer anywhere is tests/unit/test_signature_extractor.py. Nothing on the exact route performs this responsibility, so there is no replacement node to name. |
+| L-006 | `src/sysml_codegen/analysis/signature_extractor.py` | delete | forensic-diff | no census row for this path [EVIDENCE: forensic map Finding 2]; plan Gate 4B; fresh reachability derivation at HEAD; **C1 ruling, orchestrator 2026-08-11** | not reachable from sysml_codegen.cli at all; the only importer anywhere in src was the analysis package __init__ (:26 re-export), which no runtime caller went through | `tests/conformance/test_gen_stencils.py` + `tests/conformance/test_generation_boundary.py` + `tests/unit/test_stencils.py` (73 nodes, green before deletion) | — | A dead duplicate, not a lost responsibility: the COST-PATTERN refactor (d6c725f) copied this logic into `generation/preservation.py`, which is live production. **Executed `6ba346e`.** |
+| L-241 | `tests/unit/test_signature_extractor.py` | delete | forensic-diff | C1 ruling, orchestrator 2026-08-11 — the recorded responsibility retirement plan rule 6 requires before a test may be deleted | — | same three modules as L-006 | — | The module's only consumer anywhere. Retaining it alone is not possible: its subject is the module being deleted. **Executed `6ba346e`.** |
 
 ### Group 4B-G2 — 6 rows
 
@@ -287,7 +328,9 @@ These are the hard gate on 4B. A row is green only when its named node exists, c
 | L-188 | `tests/conformance/test_whole_tree_portability.py` | 1 | Whole-tree checkout-root portability | `PENDING-4C: Portability on the exact route` | default | 1 nodes repointed at the legacy route in Slice 3E because their specimen is what the cutover retires. Blocks 4B: no legacy owner it drives may be deleted until this row names an exact-route node that collects and passes. Legacy owners it drives: via tests/helpers/legacy_route.py. |
 | L-249 | `tests/unit/test_uncovered_params.py` | 1 | V11 seeded strict-generation abort | `PENDING-4C: V11 abort on the exact route` | default | 1 nodes repointed at the legacy route in Slice 3E because their specimen is what the cutover retires. Blocks 4B: no legacy owner it drives may be deleted until this row names an exact-route node that collects and passes. Legacy owners it drives: graph_builder. |
 
-### 4C — tests that reach a legacy owner directly (blast radius) — 120 rows
+### 4C — tests that reach a legacy owner directly (blast radius) — 119 rows
+
+*(120 at Gate 4A. L-241, `tests/unit/test_signature_extractor.py`, moved to 4B-G1 under the C1 ruling — a recorded responsibility retirement, which is what rule 6 requires before a test may be deleted.)*
 
 Every one of these imports a module 4B deletes. None can be deleted on that basis: rule 6 requires a public-behaviour rewrite or a recorded responsibility retirement first.
 
@@ -404,7 +447,6 @@ Every one of these imports a module 4B deletes. None can be deleted on that basi
 | L-238 | `tests/unit/test_producer_qn_rule.py` | retain | plan rule 6 — keep the Item 6 tests until after product proof; every removed or rewritten test needs a responsibility-level disposition first | — | D9 de-risk pins: one entry-point QN rule reproduces all three current formulas. Imports legacy owners (dependency_backtracker, output_registry, producer_resolution) directly, so 4B's deletion breaks it. Retain now; before the owning 4B group lands, this row needs either a public-behaviour rewrite or a recorded responsibility retirement. |
 | L-239 | `tests/unit/test_producer_resolution_table.py` | retain | plan rule 6 — keep the Item 6 tests until after product proof; every removed or rewritten test needs a responsibility-level disposition first | — | The key-form table read as data (Item 2, invariants I2/I3/I4/I6). Imports legacy owners (graph_builder, output_registry, parameter_groups, producer_resolution) directly, so 4B's deletion breaks it. Retain now; before the owning 4B group lands, this row needs either a public-behaviour rewrite or a recorded responsibility retirement. |
 | L-240 | `tests/unit/test_rewrite_virtual_bindings.py` | retain | plan rule 6 — keep the Item 6 tests until after product proof; every removed or rewritten test needs a responsibility-level disposition first | — | Unit tests for _rewrite_virtual_bindings() leaf extraction and CHAIN override support. Imports legacy owners (pipeline_builder) directly, so 4B's deletion breaks it. Retain now; before the owning 4B group lands, this row needs either a public-behaviour rewrite or a recorded responsibility retirement. |
-| L-241 | `tests/unit/test_signature_extractor.py` | retain | plan rule 6 — keep the Item 6 tests until after product proof; every removed or rewritten test needs a responsibility-level disposition first | — | Unit tests for signature extraction and field-level comparison. Imports legacy owners (signature_extractor) directly, so 4B's deletion breaks it. Retain now; before the owning 4B group lands, this row needs either a public-behaviour rewrite or a recorded responsibility retirement. |
 | L-242 | `tests/unit/test_silent_failure_family2.py` | retain | plan rule 6 — keep the Item 6 tests until after product proof; every removed or rewritten test needs a responsibility-level disposition first | — | Family 2 — Gated-report silences / zero-found sentinels (PIPELINE-TRUTH Item 5). Imports legacy owners (phantom_detector, pipeline_builder) directly, so 4B's deletion breaks it. Retain now; before the owning 4B group lands, this row needs either a public-behaviour rewrite or a recorded responsibility retirement. |
 | L-243 | `tests/unit/test_silent_failure_family2_family3_fires.py` | retain | plan rule 6 — keep the Item 6 tests until after product proof; every removed or rewritten test needs a responsibility-level disposition first | — | Fires-on-shape pins for D3-5, D3-6, D3-15 (audit cure 1, R1 [HARD]). Imports legacy owners (loader, output_registry_builder, pipeline_builder) directly, so 4B's deletion breaks it. Retain now; before the owning 4B group lands, this row needs either a public-behaviour rewrite or a recorded responsibility retirement. |
 | L-244 | `tests/unit/test_silent_failure_family3.py` | retain | plan rule 6 — keep the Item 6 tests until after product proof; every removed or rewritten test needs a responsibility-level disposition first | — | Family 3 — Name-keyed lookup uniqueness (PIPELINE-TRUTH Item 5). Imports legacy owners (dependency_backtracker, graph_builder, output_registry) directly, so 4B's deletion breaks it. Retain now; before the owning 4B group lands, this row needs either a public-behaviour rewrite or a recorded responsibility retirement. |

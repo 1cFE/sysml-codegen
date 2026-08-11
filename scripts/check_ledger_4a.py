@@ -136,18 +136,23 @@ def check_paths(ledger: dict) -> list[str]:
     return problems
 
 
-#: A row is ``proposed`` until its Gate 4B group runs, then ``executed`` with the OID
-#: of the commit that spent it. Absent means ``proposed``, so Gate 4A's rows need no edit.
-ROW_STATES = frozenset({"proposed", "executed"})
+#: A row is ``proposed`` until its Gate 4B group runs. It becomes ``executed`` with the OID
+#: of the commit that spent it, or ``partially-executed`` when its group takes only part of
+#: the row and a later group takes the rest — the shape several 4B-G0 rows have, where the
+#: two error classes move now and the module they lived in retires in G3. Absent means
+#: ``proposed``, so Gate 4A's rows need no edit.
+ROW_STATES = frozenset({"proposed", "executed", "partially-executed"})
 
 
 def check_states(rows: list[dict]) -> list[str]:
-    """An executed row must name its commit, and the tree must agree with what it says.
+    """A spent row must name its commit, and the tree must agree with what it says.
 
     This is the same discipline the path check applies to the candidate: a state claim is
     checked against Git, not believed. An executed ``delete`` row whose file is still at
     ``HEAD`` did not happen; an executed ``migrate`` or ``retain`` row whose file is gone
-    deleted something the ledger never authorised.
+    deleted something the ledger never authorised. A ``partially-executed`` row must say
+    what is left and which group owes it, and its path must still be there — an unstated
+    remainder is how the original run lost track of what it had actually done.
     """
     problems: list[str] = []
     for row in rows:
@@ -160,10 +165,18 @@ def check_states(rows: list[dict]) -> list[str]:
                 problems.append(f"{row['id']}: proposed row names an executed_commit")
             continue
         if not row.get("executed_commit"):
-            problems.append(f"{row['id']}: executed row names no commit")
+            problems.append(f"{row['id']}: {state} row names no commit")
+        if state == "partially-executed" and not row.get("remaining"):
+            problems.append(f"{row['id']}: partially-executed row does not say what is left")
         if row["repo"] != "sysml-codegen":
             continue
         present = path_at_head(row["path"])
+        if state == "partially-executed":
+            if not present:
+                problems.append(
+                    f"{row['id']}: partially-executed but {row['path']} is gone from HEAD"
+                )
+            continue
         if row["disposition"] == "delete" and present:
             problems.append(
                 f"{row['id']}: executed delete but {row['path']} is still at HEAD"
