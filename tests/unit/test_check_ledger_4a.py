@@ -322,3 +322,159 @@ def test_a_partially_executed_row_whose_file_is_gone_fails(ledger: dict) -> None
     row["remaining"] = "G3"
     problems = checker.check_states(ledger["rows"])
     assert any("partially-executed but" in problem for problem in problems)
+
+
+# --- Gate 4C part 3: surface coverage and group readiness --------------------
+#
+# The path check proves every path the candidate *touched* has a row. It cannot see a file
+# the candidate never touched that a future deletion group will break at import time, which
+# is how Gate 4B-G2 met two live conformance files with no row at all. These pin the check
+# that closes that class, and the readiness check that says whether a group may run.
+
+
+def _fake_repo(tmp_path: Path, relpath: str, source: str) -> Path:
+    target = tmp_path / relpath
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(source)
+    return tmp_path
+
+
+DELETE_ROW = {
+    "id": "L-900",
+    "path": "src/sysml_codegen/legacy/reader.py",
+    "repo": "sysml-codegen",
+    "class": "production",
+    "disposition": "delete",
+    "origin": "forensic-diff",
+    "group": "4B-G9",
+    "reason": "a legacy reader",
+}
+
+
+def test_the_committed_ledger_has_no_unrowed_module_level_breakage(ledger: dict) -> None:
+    assert checker.check_surface_coverage(ledger) == []
+
+
+def test_a_file_with_no_row_that_imports_a_delete_row_at_module_level_fails(
+    tmp_path: Path,
+) -> None:
+    repo = _fake_repo(
+        tmp_path,
+        "tests/test_unrowed.py",
+        "from sysml_codegen.legacy.reader import read\n",
+    )
+    problems = checker.check_surface_coverage({"rows": [DELETE_ROW]}, repo)
+    assert len(problems) == 1
+    assert "tests/test_unrowed.py" in problems[0]
+    assert "L-900" in problems[0] and "4B-G9" in problems[0]
+
+
+def test_a_file_that_has_a_row_is_not_reported_as_unrowed(tmp_path: Path) -> None:
+    repo = _fake_repo(
+        tmp_path,
+        "tests/test_rowed.py",
+        "from sysml_codegen.legacy.reader import read\n",
+    )
+    rowed = {"id": "L-901", "path": "tests/test_rowed.py", "repo": "sysml-codegen",
+             "class": "test", "disposition": "retain", "origin": "derived-blast-radius",
+             "group": None, "reason": "has a row"}
+    assert checker.check_surface_coverage({"rows": [DELETE_ROW, rowed]}, repo) == []
+
+
+def test_a_function_local_import_is_not_an_unrowed_breakage(tmp_path: Path) -> None:
+    """It breaks nodes, not collection, so the reviewer sees it as a test failure."""
+    repo = _fake_repo(
+        tmp_path,
+        "tests/test_local.py",
+        "def test_x():\n    from sysml_codegen.legacy.reader import read\n",
+    )
+    assert checker.check_surface_coverage({"rows": [DELETE_ROW]}, repo) == []
+
+
+def test_a_migrate_row_removing_a_re_export_is_surface_too(tmp_path: Path) -> None:
+    repo = _fake_repo(
+        tmp_path,
+        "tests/test_reexport.py",
+        "from sysml_codegen.snapshot import load_extraction_snapshot\n",
+    )
+    migrate = {"id": "L-902", "path": "src/sysml_codegen/snapshot/__init__.py",
+               "repo": "sysml-codegen", "class": "production", "disposition": "migrate",
+               "origin": "phase3-carried", "group": "4B-G9", "reason": "drops re-exports",
+               "removes": [{"group": "4B-G9", "symbols": ["load_extraction_snapshot"]}]}
+    problems = checker.check_surface_coverage({"rows": [migrate]}, repo)
+    assert len(problems) == 1
+    assert "L-902" in problems[0]
+
+
+def test_a_removes_block_is_scoped_to_the_group_that_spends_it() -> None:
+    """One row can split across groups: G9 drops the reader, the writer waits."""
+    migrate = {"id": "L-903", "path": "src/sysml_codegen/snapshot/__init__.py",
+               "repo": "sysml-codegen", "class": "production", "disposition": "migrate",
+               "origin": "phase3-carried", "group": "4B-G9", "reason": "split",
+               "removes": [{"group": "4B-G9", "symbols": ["read_it"]},
+                           {"group": "4B-later", "symbols": ["write_it"]}]}
+    now = checker.removal_surface({"rows": [migrate]}, frozenset({"4B-G9"}))
+    assert now.symbols["sysml_codegen.snapshot"] == frozenset({"read_it"})
+    later = checker.removal_surface({"rows": [migrate]}, frozenset({"4B-later"}))
+    assert later.symbols["sysml_codegen.snapshot"] == frozenset({"write_it"})
+
+
+def test_an_executed_row_no_longer_contributes_surface() -> None:
+    spent = dict(DELETE_ROW, state="executed", executed_commit="deadbee")
+    assert checker.removal_surface({"rows": [spent]}).modules == frozenset()
+
+
+def test_a_group_is_blocked_while_a_deferred_file_still_needs_its_surface(
+    tmp_path: Path,
+) -> None:
+    repo = _fake_repo(
+        tmp_path, "tests/test_defers.py", "from sysml_codegen.legacy.reader import read\n"
+    )
+    deferred = {"id": "L-904", "path": "tests/test_defers.py", "repo": "sysml-codegen",
+                "class": "test", "disposition": "retain", "origin": "derived-blast-radius",
+                "group": None, "reason": "still live", "disposition_4c": "defer-to-v5-family"}
+    readiness = checker.group_readiness({"rows": [DELETE_ROW, deferred]}, "4B-G9", repo)
+    assert not readiness.is_ready
+    assert readiness.blockers == ("L-904 tests/test_defers.py",)
+
+
+def test_a_group_is_ready_once_every_affected_file_retires_or_repoints(
+    tmp_path: Path,
+) -> None:
+    repo = _fake_repo(
+        tmp_path, "tests/test_retires.py", "from sysml_codegen.legacy.reader import read\n"
+    )
+    retiring = {"id": "L-905", "path": "tests/test_retires.py", "repo": "sysml-codegen",
+                "class": "test", "disposition": "retain", "origin": "derived-blast-radius",
+                "group": None, "reason": "green cover", "disposition_4c": "retire-with-owner"}
+    readiness = checker.group_readiness({"rows": [DELETE_ROW, retiring]}, "4B-G9", repo)
+    assert readiness.is_ready
+    assert readiness.affected == 1
+
+
+def test_every_affected_row_carries_its_own_gate_4c_part_3_disposition(
+    ledger: dict,
+) -> None:
+    """Rule 6, mechanically: no file is disposed of by a bulk rule with no statement."""
+    surface = checker.removal_surface(ledger)
+    rows = {row["path"]: row for row in ledger["rows"]}
+    for path in checker.surface_hits(checker.REPO_ROOT, surface):
+        row = rows.get(path)
+        assert row is not None, f"{path} has no ledger row"
+        assert row.get("disposition_4c") in {
+            "retire-with-owner", "rewrite", "repoint", "defer-to-v5-family"
+        }, f"{path} has no Gate 4C part 3 disposition"
+        assert row.get("responsibility"), f"{path} states no responsibility"
+        assert row.get("disposition_4c_note"), f"{path} gives no reason for its disposition"
+
+
+def test_a_retire_with_owner_row_names_the_green_replacement_that_covers_it(
+    ledger: dict,
+) -> None:
+    """The whole point of the disposition: a retirement must name what replaces it."""
+    for row in ledger["rows"]:
+        if row.get("disposition_4c") != "retire-with-owner":
+            continue
+        assert row.get("replacement_proof_node"), (
+            f"{row['id']} retires with its owner but names no replacement node"
+        )

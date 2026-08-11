@@ -14,15 +14,27 @@ actually happened: it collected and passed, it does not exist, it was deselected
 failed. A row whose replacement is absent cannot be green, which is the rule the original
 run inverted when it accepted absence as proof.
 
+**Surface coverage.** Gate 4C part 3. The path check above proves every path the candidate
+*touched* has a row. It says nothing about a file the candidate never touched that a future
+deletion group will break. Two such files were found by hand at Gate 4B-G2 —
+``test_generation_boundary.py`` and ``test_pipeline_e2e.py``, both importing a delete-row
+symbol at module level with no ledger row at all. ``check_surface_coverage`` closes that
+class: it derives the removal surface from the ledger's own delete and migrate rows, walks
+``tests/`` and ``scripts/`` by AST, and fails for any file that imports the surface at
+module level (so it stops collecting) without a row saying what becomes of it.
+
 Usage::
 
     python scripts/check_ledger_4a.py paths
     python scripts/check_ledger_4a.py replacements [--row L-001 ...]
+    python scripts/check_ledger_4a.py surface
+    python scripts/check_ledger_4a.py groups
 """
 
 from __future__ import annotations
 
 import argparse
+import ast
 import json
 import subprocess
 import sys
@@ -81,6 +93,202 @@ def path_at_head(path: str, repo: Path = REPO_ROOT) -> bool:
     )
 
 
+#: Directories whose files must have a row before a deletion group may break them.
+SCANNED_TREES = ("tests", "scripts")
+
+
+@dataclass(frozen=True)
+class Owner:
+    """The row that removes one piece of surface, and the group that spends it."""
+
+    row_id: str
+    group: str
+
+
+@dataclass(frozen=True)
+class Surface:
+    """What the remaining deletion groups take away, keyed for import matching.
+
+    ``modules`` are dotted module names that stop existing. ``symbols`` maps a surviving
+    module to the names it stops exporting. ``owners`` maps every key in either to the row
+    that removes it, so a hit can always name its authority.
+    """
+
+    modules: frozenset[str]
+    symbols: dict[str, frozenset[str]]
+    owners: dict[str, Owner]
+
+
+def _dotted(path: str) -> str:
+    stem = path[: -len(".py")]
+    if stem.startswith("src/"):
+        stem = stem[len("src/") :]
+    if stem.endswith("/__init__"):
+        stem = stem[: -len("/__init__")]
+    return stem.replace("/", ".")
+
+
+def removal_surface(
+    ledger: dict, only_groups: frozenset[str] | None = None
+) -> Surface:
+    """Derive what the unspent deletion groups remove, from the rows themselves.
+
+    A ``delete`` row removes its whole module. A ``migrate`` row removes only the names its
+    ``removes`` blocks list, each block naming the group that spends it — machine-readable
+    rather than prose, because the checker must not have to parse a reason paragraph to know
+    what goes away, and because one row can now split across groups: Gate 4C part 3 measured
+    that ``snapshot/__init__`` drops its three read-path re-exports in G2 while its three
+    write-path ones stay until the v5 family retires. Rows already spent are excluded — they
+    removed what they removed, and the tree agrees.
+
+    ``only_groups`` narrows the surface to the groups named, which is how a caller asks the
+    question "what breaks if *this* group runs" rather than "what breaks eventually".
+    """
+    modules: set[str] = set()
+    symbols: dict[str, set[str]] = {}
+    owners: dict[str, Owner] = {}
+
+    def record_module(module: str, owner: Owner) -> None:
+        modules.add(module)
+        owners[module] = owner
+
+    for row in ledger["rows"]:
+        if row.get("state") == "executed":
+            continue
+        if not row["path"].endswith(".py"):
+            continue
+        module = _dotted(row["path"])
+        group = row.get("group") or ""
+        if row["disposition"] == "delete" and group:
+            if only_groups is None or group in only_groups:
+                record_module(module, Owner(row["id"], group))
+        for block in row.get("removes", []):
+            block_group = block["group"]
+            if only_groups is not None and block_group not in only_groups:
+                continue
+            owner = Owner(row["id"], block_group)
+            if block["symbols"] == ["*"]:
+                record_module(module, owner)
+                continue
+            symbols.setdefault(module, set()).update(block["symbols"])
+            for name in block["symbols"]:
+                owners[f"{module}:{name}"] = owner
+
+    return Surface(
+        frozenset(modules),
+        {module: frozenset(names) for module, names in symbols.items()},
+        owners,
+    )
+
+
+def _import_keys(node: ast.stmt, surface: Surface) -> set[str]:
+    """Which surface keys one import statement depends on."""
+    keys: set[str] = set()
+    if isinstance(node, ast.ImportFrom):
+        module = node.module or ""
+        if module in surface.modules:
+            keys.add(module)
+        for alias in node.names:
+            if f"{module}.{alias.name}" in surface.modules:
+                keys.add(f"{module}.{alias.name}")
+            if alias.name in surface.symbols.get(module, ()):
+                keys.add(f"{module}:{alias.name}")
+    elif isinstance(node, ast.Import):
+        for alias in node.names:
+            if alias.name in surface.modules:
+                keys.add(alias.name)
+    return keys
+
+
+def surface_hits(repo: Path, surface: Surface) -> dict[str, dict[str, str]]:
+    """Map each affected file to its surface keys and the depth of the dependency.
+
+    ``module`` means the import sits at module level, so the whole file stops collecting.
+    ``func`` means it is inside a function, so only the nodes that run it fail.
+    """
+    hits: dict[str, dict[str, str]] = {}
+    for tree in SCANNED_TREES:
+        for file in sorted((repo / tree).rglob("*.py")):
+            try:
+                parsed = ast.parse(file.read_text())
+            except (SyntaxError, UnicodeDecodeError):
+                continue
+            found: dict[str, str] = {}
+            for node in ast.walk(parsed):
+                if not isinstance(node, (ast.Import, ast.ImportFrom)):
+                    continue
+                for key in _import_keys(node, surface):
+                    found.setdefault(key, "func")
+            for node in parsed.body:
+                for key in _import_keys(node, surface):
+                    found[key] = "module"
+            if found:
+                hits[str(file.relative_to(repo))] = found
+    return hits
+
+
+def check_surface_coverage(ledger: dict, repo: Path = REPO_ROOT) -> list[str]:
+    """Fail for any file a pending deletion group breaks at import time with no row.
+
+    Module-level only. A function-local import breaks nodes, not collection, and the
+    reviewer sees it as a test failure; a module-level one silently removes the whole
+    file's coverage from the run, which is the failure mode this check exists for.
+    """
+    surface = removal_surface(ledger)
+    rows = {row["path"] for row in ledger["rows"]}
+    problems: list[str] = []
+    for path, found in sorted(surface_hits(repo, surface).items()):
+        broken = sorted(key for key, depth in found.items() if depth == "module")
+        if not broken or path in rows:
+            continue
+        authorities = ", ".join(
+            f"{key} ({surface.owners[key].row_id}, {surface.owners[key].group})"
+            for key in broken
+        )
+        problems.append(
+            f"unrowed breakage: {path} imports removed surface at module level "
+            f"— {authorities}"
+        )
+    return problems
+
+
+#: Gate 4C part 3 dispositions. ``retire-with-owner`` and ``repoint`` clear a group;
+#: ``defer-to-v5-family`` blocks it, because the file still holds live coverage.
+CLEARING_4C = frozenset({"retire-with-owner", "repoint"})
+
+
+@dataclass(frozen=True)
+class GroupReadiness:
+    """Whether one deletion group may run, and exactly what is holding it if not."""
+
+    group: str
+    affected: int
+    blockers: tuple[str, ...]
+
+    @property
+    def is_ready(self) -> bool:
+        return not self.blockers
+
+
+def group_readiness(ledger: dict, group: str, repo: Path = REPO_ROOT) -> GroupReadiness:
+    """A group may run only when every file its surface breaks is disposed of.
+
+    This is plan rule 6 made mechanical: a file whose Gate 4C part 3 disposition is
+    ``defer-to-v5-family`` still holds coverage nothing replaces, so deleting the owner it
+    depends on would delete that coverage. The group is blocked until the disposition
+    changes, and the blocker list says by what.
+    """
+    surface = removal_surface(ledger, frozenset({group}))
+    rows = {row["path"]: row for row in ledger["rows"]}
+    hits = surface_hits(repo, surface)
+    blockers = tuple(
+        f"{rows[path]['id'] if path in rows else 'NO ROW'} {path}"
+        for path in sorted(hits)
+        if rows.get(path, {}).get("disposition_4c") not in CLEARING_4C
+    )
+    return GroupReadiness(group, len(hits), blockers)
+
+
 def check_paths(ledger: dict) -> list[str]:
     """Exact equality in both directions, plus row well-formedness."""
     source = ledger["git_derived_from"]
@@ -122,6 +330,7 @@ def check_paths(ledger: dict) -> list[str]:
             )
 
     problems.extend(check_states(rows))
+    problems.extend(check_surface_coverage(ledger))
 
     ids = {row["id"] for row in rows}
     for row in rows:
@@ -294,12 +503,31 @@ def check_replacements(ledger: dict, python: str, only: set[str] | None) -> list
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("mode", choices=["paths", "replacements"])
+    parser.add_argument("mode", choices=["paths", "replacements", "surface", "groups"])
     parser.add_argument("--python", default=sys.executable)
     parser.add_argument("--row", action="append", default=[])
     args = parser.parse_args(argv)
 
     ledger = load_ledger()
+
+    if args.mode == "groups":
+        groups = sorted(
+            {row["group"] for row in ledger["rows"] if (row.get("group") or "").startswith("4B-")}
+        )
+        for group in groups:
+            readiness = group_readiness(ledger, group)
+            state = "READY" if readiness.is_ready else f"BLOCKED by {len(readiness.blockers)}"
+            print(f"{group:16s} affected={readiness.affected:3d}  {state}")
+            for blocker in readiness.blockers:
+                print(f"                 blocked by {blocker}")
+        return 0
+
+    if args.mode == "surface":
+        problems = check_surface_coverage(ledger)
+        for problem in problems:
+            print(f"FAIL {problem}")
+        print(f"{len(problems)} unrowed breakages")
+        return 1 if problems else 0
 
     if args.mode == "paths":
         problems = check_paths(ledger)

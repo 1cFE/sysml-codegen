@@ -1,9 +1,11 @@
 # Gate 4A — Responsibility / Deletion Ledger
 
 **Status:** Approved by the orchestrator 2026-08-11 with both CONFLICTs ruled (plan, Gate 4A
-approval). **Groups 4B-G0 (`db00482`) and 4B-G1 (`6ba346e`) are spent**; G2, G3 and G4 remain
-proposed and blocked. Row state lives in the JSON (`state`, `executed_commit`, `remaining`) and
-the checker verifies each claim against Git.
+approval). **Groups 4B-G0 (`db00482`) and 4B-G1 (`6ba346e`) are spent.** Gate 4C part 3
+recomposed the rest: **G2′, G3′ and G4′ are all blocked, and 23 production rows moved into a new
+`4B-v5-family` group deferred to Phase 5 owner acceptance.** Row state lives in the JSON
+(`state`, `executed_commit`, `remaining`) and the checker verifies each claim against Git.
+**Awaiting the orchestrator's approval of the regrouping** before any deletion group runs.
 **Gate:** Phase 4, Gate 4A of `.project/active/cutover-recovery/plan.md`.
 **Machine-readable twin:** `ledger-4a.json` (schema `ledger-4a/v1`) — the checker reads that
 file, this document renders it.
@@ -31,16 +33,22 @@ CONFLICT rows below are not proposals at all — they are questions.
 | Class | delete | migrate | retain | archive | Total |
 |---|---:|---:|---:|---:|---:|
 | production | 17 | 19 | 1 | 0 | **37** |
-| test | 2 | 0 | 157 | 0 | **159** |
+| test | 2 | 0 | 163 | 0 | **165** |
 | snapshot | 0 | 0 | 37 | 0 | **37** |
 | doc | 0 | 0 | 23 | 0 | **23** |
-| probe | 0 | 0 | 4 | 11 | **15** |
+| probe | 0 | 0 | 4 | 15 | **19** |
 | script | 0 | 0 | 4 | 1 | **5** |
-| **Total** | **19** | **19** | **226** | **12** | **276** |
+| **Total** | **19** | **19** | **232** | **16** | **286** |
 
 By origin: 245 rows claim the Git-derived candidate set (222 deletions + 22 architecture
-documents + `CLAUDE.md`), 22 are Phase-3 carried rows in this repository, 7 are derived
+documents + `CLAUDE.md`), 22 are Phase-3 carried rows in this repository, 17 are derived
 blast-radius rows, 2 are cross-repository rows in agentic-mbse.
+
+**Ten rows were added at Gate 4C part 3** (L-277 … L-286), every one found by the new surface
+measurement rather than by the candidate diff. Seven break at module level and would have
+stopped collecting; three break inside test bodies. Two of them — `test_generation_boundary.py`
+and `test_pipeline_e2e.py` — are live conformance files with 30 nodes between them, and no gate
+before this one could see them, because the candidate never touched them.
 
 **CONFLICT rows: 2.** Both were rule-10 surfacings, recorded rather than resolved by this gate;
 both are now ruled by the orchestrator and both rulings are spent — C1 in G1, C2 in G0.
@@ -184,6 +192,101 @@ either one of the sixteen responsibility modules or a test that imports the owne
 The rule is the plan's: no legacy production owner may be deleted while a row it serves still
 lacks its exact-route replacement, and `replacement_is_green(row)` is the check.
 
+## Gate 4C part 3 — the regrouping, and why nothing else deletes in Phase 4
+
+Gate 4B-G2 stopped under rule 10 rather than execute: every one of its 45 declared dependents was
+`retain`, two live conformance files had no row at all, and the retained v5 capture script imported
+three of the symbols G2 proposed to delete. The orchestrator ruled the group blocked and ordered a
+per-row disposition pass over the whole remaining blast radius. This section is its result.
+
+### The measurement
+
+`check_ledger_4a.py surface` derives the removal surface from the rows themselves — every module a
+`delete` row removes, plus every symbol a `migrate` row's `removes` blocks stop exporting — and
+walks `tests/` and `scripts/` by AST. Measured: **18 modules and 36 symbols of surface, touching
+175 test and script files**, 154 of them at module level.
+
+### The finding that drove the regrouping
+
+Gate 4A retained `scripts/capture_extraction_snapshots.py` (L-275) because it is the last v5
+producer and what keeps the 37 committed v5 fixtures regenerable. Nobody had measured what that
+retention costs. It costs almost the whole deletion plan:
+
+`capture_snapshot` calls `build_pipeline_context` at `snapshot/capture.py:55`, and
+`pipeline_builder` imports `constraint_lowering`, `dependency_backtracker`, `parameter_groups`,
+`part_instance_index`, `output_registry`, `output_registry_builder`, `graph_builder`,
+`producer_resolution`, `supplied_values`, the legacy `expression_compiler` duals, and both
+agentic-mbse duals at its top.
+
+So **12 of the 18 removal-surface modules are inside the retained v5 writer's own import
+closure** — eleven of G3's twelve, plus `snapshot/serializer.py` from G2. They cannot be deleted
+while the family they serve is retained, and per the orchestrator's ruling that family's
+retirement is deferred to Phase 5 owner acceptance alongside the accepted v6 recapture batch.
+
+Six modules are outside that closure: `snapshot_context.py`, `graph_rebuild.py`, `loader.py`
+(the v5 *read* path), `producer_completeness.py`, `elaboration/diff.py`, and
+`tests/helpers/legacy_route.py`.
+
+### The recomposed groups
+
+| Group | Rows | Contents | State |
+|---|---:|---|---|
+| **4B-G2′** | 4 | The v5 read path: `snapshot_context.py`, `graph_rebuild.py`, `loader.py`, and the three read-path re-exports in `snapshot/__init__.py`. | **BLOCKED** — 82 files affected, 76 still deferred |
+| **4B-G3′** | 1 | `resolution/producer_completeness.py`. | **BLOCKED** — 3 affected, all 3 deferred |
+| **4B-G4′** | 2 | `elaboration/diff.py`, `tests/helpers/legacy_route.py`. | **BLOCKED** — 19 affected, 16 ready, 3 deferred |
+| **4B-v5-family** | 23 | The v5 writer and everything in its closure: `capture_snapshot`, `serializer.py`, `pipeline_builder.py`, the legacy analysis and resolution stack, the package `__init__` re-exports, the four codegen duals and the two agentic-mbse duals. | **DEFERRED to Phase 5** with the 37 fixtures and `capture_extraction_snapshots.py` |
+
+`snapshot/__init__.py` (L-028) is the one row that splits: its three read-path re-exports belong
+to G2′, its three write-path ones to the v5 family. The JSON records that as two `removes` blocks,
+and the 3E residual pin is **amended to the measured remainder rather than deleted** — it keeps
+asserting exactly the write-path residual that survives.
+
+### Why every group is still blocked
+
+`check_ledger_4a.py groups` answers this mechanically. A group may run only when every file its
+surface breaks is disposed of as `retire-with-owner` or `repoint`; a `defer-to-v5-family` file
+still holds coverage nothing replaces, so deleting its owner would delete that coverage — plan
+rule 6, made checkable.
+
+- **G2′** is blocked because the v5 read path is retained *by consequence*. Keeping the v5 writer
+  and the 37 fixtures without a reader is incoherent: 19 files read those fixtures through
+  `load_extraction_snapshot` and 20 through `build_full_graph_from_snapshot`, and the subjects
+  they test — `DependencyBacktracker`, `ParameterGroupDeriver`, `OutputRegistry`,
+  `producer_resolution` — are themselves retained until Phase 5.
+- **G3′** is blocked by its own three consumers, none of which has a green replacement.
+- **G4′** is the closest to ready: 14 of its 19 affected files retire against green Gate 4C
+  part-1 specimens and 2 repoint. Three block it — `test_constraint_profile_route_parity.py`
+  (L-116) and `test_elaboration_dual_run.py` (L-128), both driving `pipeline_builder`, and
+  `run_elaboration_corpus.py` (L-044), whose legacy arm is a Phase 5 migrate.
+
+### The dispositions
+
+Every one of the 175 affected files carries its own row with a `responsibility` statement taken
+from the file, the surface it breaks on with the owning row and group, and a
+`disposition_4c_note` saying why. No file was disposed of by a bulk rule.
+
+| Disposition | Files | Nodes | Meaning |
+|---|---:|---:|---|
+| `retire-with-owner` | 14 | 124 | A green Gate 4C specimen replaces the responsibility; the file retires in its owner's commit, both named on the row. |
+| `repoint` | 2 | 29 | The file holds live coverage nothing replaces. `test_public_authority_switch.py` is the named proof node for six G0 rows; `test_uncovered_params.py` is its own V11 coverage owner under the S2 ruling. Both survive with the legacy arm removed. |
+| `defer-to-v5-family` | 159 | — | No green replacement, and every owner it depends on is deferred. Retires with the v5 family at Phase 5. |
+
+**No row is dispositioned `rewrite`, and this is a measured result, not an omission.** A rewrite
+exists to replace coverage a deletion would orphan. No deletion group can run in Phase 4, so no
+coverage is orphaned in Phase 4, and every file that would need a rewrite needs it against an owner
+that now retires in Phase 5. Authoring those rewrites now would add a second lane of coverage
+against a route that is not retiring, and each would still need its own rule-6 review at Phase 5.
+Recorded here rather than done, for the orchestrator to rule on at the regrouping approval.
+
+### What the checker now enforces
+
+- `paths` — 286 rows, exact set equality both directions, plus **surface coverage**: a file with no
+  row that imports removed surface at module level is now a hard failure. This is the class that
+  produced `test_generation_boundary.py` and `test_pipeline_e2e.py`, and running it caught five
+  more the manual G2 sweep had missed.
+- `groups` — per-group readiness with the blocking rows named.
+- `replacements` — unchanged.
+
 ## What the 3E responsibility rows actually cost
 
 The Slice 3E reclassification named 16 modules carrying 100 nodes. Two are already discharged
@@ -277,7 +380,12 @@ catches or calls these today changes behaviour.
 | L-006 | `src/sysml_codegen/analysis/signature_extractor.py` | delete | forensic-diff | no census row for this path [EVIDENCE: forensic map Finding 2]; plan Gate 4B; fresh reachability derivation at HEAD; **C1 ruling, orchestrator 2026-08-11** | not reachable from sysml_codegen.cli at all; the only importer anywhere in src was the analysis package __init__ (:26 re-export), which no runtime caller went through | `tests/conformance/test_gen_stencils.py` + `tests/conformance/test_generation_boundary.py` + `tests/unit/test_stencils.py` (73 nodes, green before deletion) | — | A dead duplicate, not a lost responsibility: the COST-PATTERN refactor (d6c725f) copied this logic into `generation/preservation.py`, which is live production. **Executed `6ba346e`.** |
 | L-241 | `tests/unit/test_signature_extractor.py` | delete | forensic-diff | C1 ruling, orchestrator 2026-08-11 — the recorded responsibility retirement plan rule 6 requires before a test may be deleted | — | same three modules as L-006 | — | The module's only consumer anywhere. Retaining it alone is not possible: its subject is the module being deleted. **Executed `6ba346e`.** |
 
-### Group 4B-G2 — 6 rows
+### Group 4B-G2 — 6 rows *(recomposed at Gate 4C part 3)*
+
+**Superseded composition.** Of these six, L-015, L-016, L-026 and the read-path half of L-028 are
+now **G2′** (blocked); L-017 and L-027, plus the write-path half of L-028, moved to
+**4B-v5-family** (deferred to Phase 5). The rows below are unchanged in substance — only their
+group membership moved. See "Gate 4C part 3" above.
 
 | Row | Path | Disp. | Origin | Authority | Unreachability at HEAD | Replacement proof node | Blocked by | Reason |
 |---|---|---|---|---|---|---|---|---|
@@ -288,7 +396,10 @@ catches or calls these today changes behaviour.
 | L-016 | `src/sysml_codegen/snapshot/loader.py` | delete | forensic-diff | census PROD-12 via inventory INV-RES-CG-025 (disposition delete) [EVIDENCE]; plan Gate 4B; fresh reachability derivation at HEAD | in the CLI closure only through snapshot/__init__.py:85; no construction path reaches it (3E construction-closure pin) | `tests/conformance/test_snapshot_v6_routes.py::test_relocated_snapshot_needs_no_source_tree` | 22 rows | v5 extraction-snapshot reader. The exact route reads v6 instance-graph snapshots through snapshot/instance_graph.py. |
 | L-017 | `src/sysml_codegen/snapshot/serializer.py` | delete | forensic-diff | census PROD-12 via inventory INV-RES-CG-026 (disposition delete) [EVIDENCE]; plan Gate 4B; fresh reachability derivation at HEAD | in the CLI closure through snapshot/__init__.py:86 and snapshot/capture.py:23; the capture.py edge belongs to capture_snapshot (v5) only, lines 64 and 82 | `tests/conformance/test_snapshot_v6_capture.py::test_capture_returns_a_loadable_destination_and_leaves_no_temporary_file` | 4 rows | v5 snapshot writer. Deletes with capture_snapshot, not before it. |
 
-### Group 4B-G3 — 16 rows
+### Group 4B-G3 — 16 rows *(recomposed at Gate 4C part 3)*
+
+**Superseded composition.** Only L-012 remains in **G3′** (blocked). The other fifteen are inside
+the retained v5 writer's import closure and moved to **4B-v5-family**, deferred to Phase 5.
 
 | Row | Path | Disp. | Origin | Authority | Unreachability at HEAD | Replacement proof node | Blocked by | Reason |
 |---|---|---|---|---|---|---|---|---|
@@ -309,7 +420,13 @@ catches or calls these today changes behaviour.
 | L-013 | `src/sysml_codegen/resolution/producer_resolution.py` | delete | forensic-diff | census PROD-07 via inventory INV-DISC-039 (disposition delete) [EVIDENCE]; plan Gate 4B; fresh reachability derivation at HEAD | reachable only from dependency_backtracker.py:34 and two G3 peers | `tests/conformance/test_snapshot_v6_routes.py::test_live_in_place_and_relocated_routes_have_one_graph` | 16 rows | The legacy string producer resolver — the ladder Item 7 exists to replace. |
 | L-014 | `src/sysml_codegen/resolution/supplied_values.py` | delete | forensic-diff | no census row for this path [EVIDENCE: forensic map Finding 2]; plan Gate 4B; fresh reachability derivation at HEAD | in the CLI closure via pipeline_builder.py:66 and graph_rebuild.py; not in the construction closure | `tests/conformance/test_snapshot_v6_routes.py::test_the_route_carries_real_modelled_content` | 3 rows | Enriches the legacy graph with design-attribute values. The projected graph carries them. |
 
-### Group 4B-G4 — 5 rows
+### Group 4B-G4 — 5 rows *(recomposed at Gate 4C part 3)*
+
+**Superseded composition.** L-008 and L-276 remain in **G4′** (blocked by three files). L-035,
+L-036 and L-037 moved to **4B-v5-family**: `constraint_lowering.py:24` uses `evaluate_profile` and
+`pipeline_builder.py:14` uses `extract_constraint_facts`, so both cross-repository duals are load
+bearing for the retained v5 capture path, and the `_CONSTRAINT_LOGGER` rename follows the module it
+is named after.
 
 | Row | Path | Disp. | Origin | Authority | Unreachability at HEAD | Replacement proof node | Blocked by | Reason |
 |---|---|---|---|---|---|---|---|---|

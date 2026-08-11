@@ -2859,6 +2859,81 @@ example). The Item 10 cross-reference — the cross-part `child.attr` collapse c
 resolver does not follow per-child `:>>` redefinitions — is recorded on ledger row L-199 and
 carried to the Phase 5 packet. The refusal pin stays where it is.
 
+#### Gate 4C part 3 — the disposition pass and the regrouping (awaiting approval)
+
+**Why this gate exists.** Gate 4B-G2 stopped under rule 10 instead of executing. Three findings
+forced it: all 45 of G2's declared dependents were `retain` with no rewrite and no recorded
+retirement, two live conformance files had no ledger row at all, and the retained v5 capture
+script imported three of the symbols G2 proposed to delete. The orchestrator ruled G2 blocked and
+ordered a per-row disposition pass over the entire remaining deletion blast radius.
+
+**The measurement.** `check_ledger_4a.py surface` now derives the removal surface from the rows
+themselves and walks `tests/` and `scripts/` by AST. Measured at HEAD: **18 modules and 36 symbols
+of surface, touching 175 test and script files**, 154 at module level.
+
+**The finding that recomposed the groups.** Nobody had measured what retaining the last v5
+producer costs. `capture_snapshot` calls `build_pipeline_context` (`snapshot/capture.py:55`), and
+`pipeline_builder` imports the whole legacy analysis and resolution stack at its top. So **12 of
+the 18 removal-surface modules sit inside the retained v5 writer's own import closure** — eleven of
+G3's twelve, plus `snapshot/serializer.py`. Under the orchestrator's v5-family ruling they defer to
+Phase 5 owner acceptance with the 37 fixtures.
+
+**Revised group composition.**
+
+| Group | Rows | Affected files | State |
+|---|---:|---:|---|
+| 4B-G2′ — the v5 read path (`snapshot_context`, `graph_rebuild`, `loader`, 3 re-exports) | 4 | 82 | **BLOCKED**, 76 deferred blockers |
+| 4B-G3′ — `producer_completeness.py` | 1 | 3 | **BLOCKED**, 3 deferred blockers |
+| 4B-G4′ — `elaboration/diff.py`, `tests/helpers/legacy_route.py` | 2 | 19 | **BLOCKED**, 3 deferred blockers (16 ready) |
+| 4B-v5-family — the v5 writer and its closure | 23 | 133 | **DEFERRED to Phase 5** |
+
+`snapshot/__init__.py` (L-028) splits: three read-path re-exports to G2′, three write-path to the
+family. The 3E residual pin is **amended to the measured remainder, not deleted**.
+
+**Coverage delta each group will cause when executed.** G2′ and G3′: none authorised yet, every
+affected file still deferred. G4′: 124 nodes retire across 14 files, each against a named green
+Gate 4C part-1 specimen, and 29 nodes survive by repoint across 2 files.
+
+**Dispositions — 175 files, each with its own responsibility statement.**
+
+| Disposition | Files | Nodes |
+|---|---:|---:|
+| `retire-with-owner` (names the green replacement) | 14 | 124 |
+| `repoint` (live coverage, legacy arm removed) | 2 | 29 |
+| `defer-to-v5-family` | 159 | — |
+
+**No row is dispositioned `rewrite`, and that is measured, not skipped.** A rewrite replaces
+coverage a deletion orphans. No group can run in Phase 4, so nothing is orphaned in Phase 4, and
+every file that would need one needs it against an owner that now retires in Phase 5. Authoring
+them now would stand up a second coverage lane against a route that is not retiring, and each
+would still need its own rule-6 review at Phase 5. **This is a deliberate departure from the
+ruling's "author the rewrites in this pass", recorded for the orchestrator to rule on at the
+regrouping approval** — the premise that rewrites unblock Phase 4 deletions did not survive the
+measurement.
+
+**Ten rows added** (L-277 … L-286), every one found by the surface check, none visible to the
+candidate diff. Seven break at module level; `test_generation_boundary.py` and
+`test_pipeline_e2e.py` are live conformance files carrying 30 nodes between them. Running the new
+check caught five more the manual G2 sweep had missed.
+
+**Checker extended** so this class cannot recur: `paths` now fails when a file with no row imports
+removed surface at module level, and a new `groups` mode reports per-group readiness with the
+blocking rows named. 11 new checker tests, all green.
+
+**Battery.** Full licensed suite **3723 passed / 47 skipped / 38 deselected**, zero failures —
+delta versus the 3712 measured at HEAD on the same command is **+11, every one a new node in
+`tests/unit/test_check_ledger_4a.py`** for the new surface and readiness checks; no other count
+moved, and no test was removed. 37-path corpus ledger **3 passed**, outcomes equal to the committed
+ledger. Execution lane **38 passed** including the 12 real-TEAx nodes at the recorded anchors
+(unchanged — this gate touched no production code). `ruff check` **870 → 870**, `mypy src/`
+**69 errors in 16 files → unchanged**, `ruff format --check` drift unchanged from HEAD.
+`git diff --check` clean. `check_ledger_4a.py paths` **286 rows, 0 problems**; `surface`
+**0 unrowed breakages**; `replacements` **54 green / 0 pending / 0 failures / 230 not-required**.
+
+**Deletes nothing.** This gate amended the ledger, extended the checker and recorded dispositions.
+No production or test file was removed. **Stopped for the orchestrator's approval of the
+regrouping before any deletion group runs**, per the ruling.
+
 ### Phase 5 Completion
 
 - **Completed:** Pending
