@@ -7,7 +7,6 @@ from collections import Counter
 from sysml_codegen.elaboration import NodeRef, ProducerRef, elaborate, project
 from sysml_codegen.extraction.extractor import SysMLDataExtractor
 from sysml_codegen.extraction.source_evidence import ReadinessCode
-from sysml_codegen.orchestration.pipeline_builder import build_pipeline_context
 from sysml_codegen.resolution.models import EntryPointType, ModuleKind
 from tests.conftest import FIXTURES_DIR, requires_license
 
@@ -150,6 +149,13 @@ def test_valid_deep_cross_scope_redefinitions_resolve_every_reference() -> None:
 
 def test_public_compatibility_keeps_names_but_uses_occurrence_sources() -> None:
     graph = _exact("wi014_toy")
+    # Gate 4C part 7, per-node disposition (ledger L-130): this node's subject is
+    # the exact-versus-legacy public compatibility comparison, so it retires with
+    # the legacy route (ruling 3's shape). Local import so the other 10 nodes in
+    # this file — which several ledger rows name as their replacement proof — keep
+    # collecting after pipeline_builder goes.
+    from sysml_codegen.orchestration.pipeline_builder import build_pipeline_context
+
     legacy = build_pipeline_context(
         [FIXTURES_DIR / "wi014_toy"], lower_constraints_enabled=True
     ).computation_graph

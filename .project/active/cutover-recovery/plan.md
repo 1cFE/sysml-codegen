@@ -3752,7 +3752,7 @@ reported at each stop.
 - [ ] Class 3 — the 35 hard-blocked files, with targeted variants in the ranked order above *(6 done, 29 left)*
 - [ ] Final: `groups` green but for the acceptance gate; ledger + checker consistent with Git truth
 
-##### Progress — six chunks, 57 files dispositioned, nothing deleted
+##### Progress — ten chunks, 100 files dispositioned, nothing deleted
 
 | Chunk | Commit | What |
 |---|---|---|
@@ -3762,33 +3762,60 @@ reported at each stop.
 | 4 | `6f8e653` | the small legacy-internals files (8 files) |
 | 5 | `7ad8186` | the proof nodes that were themselves blocked (5 files) |
 | 6 | `7bae77f` | class 2 closed out (5 retired, 6 recorded) |
+| 7 | `c5e753b` | the legacy factories, deriver, classifier and registry (11 files) |
+| 8 | `5e02832` | twelve more legacy suites, and the class-3 correction |
+| 9 | `cd520a5` | G3′ and G4′ reach READY (8 files) |
+| 10 | *this commit* | the constraint conformance family (8 files) + the L-130 repoint |
 
-**Blockers, two-axis: 124 → 83.** G2′ 62, G3′ 2, G4′ 1. Row dispositions now stand at
-**48 `retire-with-owner`, 20 `repoint`, 17 `archive-with-findings`**.
+**Blockers, two-axis: 124 → 43.** G2′ 40, **G3′ 0, G4′ 0**. Row dispositions stand at
+**74 `retire-with-owner`, 23 `repoint`, 17 `archive-with-findings`**.
 
-**Remaining: 83 files, 979 nodes** — 48 class 1 (447 nodes), 6 class 2 (128, each with its
-blocking reason already on its row), 29 class 3 (404).
+**READY means dispositioned, not authorised.** G3′ and G4′ have no file whose fate is
+unrecorded; the resequencing ruling still puts their execution after the owner stop.
 
-**Three method notes the next session should not have to re-derive.**
+**Remaining: 43 files, 335 nodes.** The class-1/2/3 split no longer organises the work, because
+of the correction below. What is left is four named pieces:
+
+| Piece | Rows | Why it is still open |
+|---|---|---|
+| the execution lane | L-192, L-191, L-193, L-194, and L-113/L-114 behind them | real-simkit constraint verdict execution — a Gate 4C must-restore. `test_zero_assertion_aggregator_not_assessed` is the live subject of the ruling-2 mechanism and needs a per-node disposition. |
+| the expression compiler | L-284, L-281 (L-280 done) | cannot be finished before L-033 drops the `Exact` qualifier |
+| doc-coupled | L-120 `test_data_models.py` | its target list is whatever Gate 4D leaves in `09-data-models.md` |
+| the genuine repoints | L-135, L-181, L-182, L-154, L-163, L-164, L-124, L-168, L-180, and the silent-failure trio | each needs coverage re-derived, not an import moved |
+
+**`test_snapshot_v5_gate.py` (L-180) is flagged and ordered.** The retirement brief's own
+post-step-4 battery requires "the v5 typed refusal still typed", so this file must be
+**repointed, never retired** — and the repoint has to land **before G2′ runs**, because G2′
+removes the route it currently reaches the gate through.
+
+**Four method notes the next session should not have to re-derive.**
+
+0. **A class-3 label bounds a repoint, not a retirement.** "Needs a fixture the exact route
+   refuses" says nothing about a file that retires: a retiring file needs a green replacement,
+   not a v6 specimen of its own. Six files in chunk 8 and several since retired without a
+   variant. The D-5 variant work-list therefore covers only the files in the "genuine repoints"
+   row above — not the 29 the earlier estimate implied.
 
 1. **Localise, don't retire the file.** Repeatedly the legacy touch was one node in a file of
    fifteen or twenty. Moving that import inside the node it serves keeps the rest collecting and
    turns a file-level retirement into a per-node one: L-212 (23 of 26 saved), L-125 (2 of 3),
    L-129 (14 of 15), L-133 (3 of 6), L-132, L-277. The checker sees the scope change — a hit
    recorded as `func` rather than `module`.
-2. **Check the proof nodes against the blocker set.** Chunk 5 found five proof files that were
-   themselves `defer-to-v5-family`, backing fifteen rows including two already-executed
-   deletions. Re-run that cross-check after every chunk; it is a one-liner over
-   `replacement_proof_node` and `group_readiness`.
+2. **Check the proof nodes against the blocker set — every chunk, not once.** Chunk 5 found
+   five proof files that were themselves `defer-to-v5-family`, backing fifteen rows including two
+   already-executed deletions. Chunk 10 found a sixth the same way (L-130, named by L-157). It is
+   a one-liner over `replacement_proof_node` and `group_readiness`, and it has caught something
+   twice. **Currently clean: no row's replacement proof rests on a blocked file.**
 3. **A row that cannot be finished stays blocked.** Six rows carry their analysis in
    `disposition_4c_note` with no clearing disposition, deliberately, so the checker never reports
    a readiness that is not true. L-120 is coupled to Gate 4D's doc-09 rewrite; L-284 waits on
    L-033's rename; L-168 needs INV-1 re-derived against the v6 envelope; L-242/L-244/L-243 are
    one per-node pass over the silent-failure diagnostics.
 
-**Where the real remaining cost is.** Class 3's 29 files need D-5 variants for the 19 refused
-fixtures, ranked above. Gate 4C part 6 spent a full session on three variants, so this is several
-sessions, not one — and it is the honest floor for retiring the family without losing coverage.
+**Where the real remaining cost is.** Not the variant list — see method note 0. It is the
+execution lane and the genuine repoints in the table above: coverage that must be re-derived
+rather than re-pointed, including the one Gate 4C must-restore still outstanding (real constraint
+verdict execution). Budget those as their own chunks, and do L-180 before G2′.
 
 ##### Named mechanism — the zero-constraint report aggregator (orchestrator ruling 2)
 

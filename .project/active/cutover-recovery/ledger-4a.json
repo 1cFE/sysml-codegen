@@ -2095,15 +2095,18 @@
    "group": "4C-blast-radius",
    "authority": "plan rule 6 \u2014 keep the Item 6 tests until after product proof; every removed or rewritten test needs a responsibility-level disposition first",
    "unreachability": null,
-   "replacement_proof_node": null,
+   "replacement_proof_node": [
+    "tests/conformance/test_exact_route_constraint_portability.py::test_the_catalog_admits_the_numerical_constraint_and_excludes_the_string_one",
+    "tests/conformance/test_exact_route_constraint_portability.py::test_the_catalog_and_semantic_fingerprints_are_route_and_root_invariant"
+   ],
    "blocked_by": [],
    "reason": "Item 8: the entry\u2192definition FK and the admitted-usage tier, against real lowering. Imports legacy owners (pipeline_builder) directly, so 4B's deletion breaks it. Retain now; before the owning 4B group lands, this row needs either a public-behaviour rewrite or a recorded responsibility retirement.",
-   "disposition_4c": "defer-to-v5-family",
+   "disposition_4c": "retire-with-owner",
    "node_count": 3,
-   "responsibility": "Item 8: the entry\u2192definition FK and the admitted-usage tier, against real lowering.",
+   "responsibility": "Item 8: the entry-to-definition foreign key and the admitted-usage tier in the constraint catalog.",
    "breaks_on": "sysml_codegen.orchestration.pipeline_builder (L-029, 4B-v5-family)",
    "breaks_a_free_group": false,
-   "disposition_4c_note": "No green replacement, and every owner it depends on is now deferred: the v5 read path is retained by consequence of keeping the v5 writer and the 37 fixtures, so this file's coverage is still load-bearing. Retires with the v5 family at Phase 5 owner acceptance."
+   "disposition_4c_note": "Gate 4C part 7 (2026-08-11), superseding the part-5 defer. Driven through build_pipeline_context at module level. The catalog is now assembled by the exact route, and its admit/exclude decision \u2014 which is what the FK and the tier exist to express \u2014 is pinned there, together with the fingerprint invariance that proves the structure does not drift between routes or checkout roots."
   },
   {
    "id": "L-103",
@@ -2154,15 +2157,18 @@
    "group": "4C-blast-radius",
    "authority": "plan rule 6 \u2014 keep the Item 6 tests until after product proof; every removed or rewritten test needs a responsibility-level disposition first",
    "unreachability": null,
-   "replacement_proof_node": null,
+   "replacement_proof_node": [
+    "tests/conformance/test_exact_route_constraint_portability.py::test_the_catalog_and_semantic_fingerprints_are_route_and_root_invariant",
+    "tests/conformance/test_exact_route_constraint_portability.py::test_replaying_one_snapshot_twice_is_deterministic"
+   ],
    "blocked_by": [],
    "reason": "Item 8 handoff gate (INV-8): deterministic catalog fingerprint across repeated live loads. Imports legacy owners (pipeline_builder) directly, so 4B's deletion breaks it. Retain now; before the owning 4B group lands, this row needs either a public-behaviour rewrite or a recorded responsibility retirement.",
-   "disposition_4c": "defer-to-v5-family",
+   "disposition_4c": "retire-with-owner",
    "node_count": 2,
-   "responsibility": "Item 8 handoff gate (INV-8): deterministic catalog fingerprint across repeated live loads.",
+   "responsibility": "Item 8 handoff gate (INV-8): deterministic catalog fingerprints.",
    "breaks_on": "sysml_codegen.orchestration.pipeline_builder (L-029, 4B-v5-family)",
    "breaks_a_free_group": false,
-   "disposition_4c_note": "No green replacement, and every owner it depends on is now deferred: the v5 read path is retained by consequence of keeping the v5 writer and the 37 fixtures, so this file's coverage is still load-bearing. Retires with the v5 family at Phase 5 owner acceptance."
+   "disposition_4c_note": "Gate 4C part 7 (2026-08-11), superseding the part-5 defer. Same owner and the same replacement, stated more strongly than the original: the exact route's fingerprints are not merely deterministic within a run but invariant across routes AND checkout roots, and replaying one snapshot twice is byte-deterministic."
   },
   {
    "id": "L-106",
@@ -2188,15 +2194,18 @@
    "group": "4C-blast-radius",
    "authority": "plan rule 6 \u2014 keep the Item 6 tests until after product proof; every removed or rewritten test needs a responsibility-level disposition first",
    "unreachability": null,
-   "replacement_proof_node": null,
+   "replacement_proof_node": [
+    "tests/conformance/test_exact_route_constraint_portability.py::test_the_predicate_module_and_pipeline_are_identical_on_every_route",
+    "tests/conformance/test_exact_route_constraint_portability.py::test_the_whole_package_is_identical_on_every_route"
+   ],
    "blocked_by": [],
    "reason": "Live-license generation-level reproduction of the S4 slice + the compile-once fixture. Imports legacy owners (pipeline_builder) directly, so 4B's deletion breaks it. Retain now; before the owning 4B group lands, this row needs either a public-behaviour rewrite or a recorded responsibility retirement.",
-   "disposition_4c": "defer-to-v5-family",
+   "disposition_4c": "retire-with-owner",
    "node_count": 2,
-   "responsibility": "Live-license generation-level reproduction of the S4 slice + the compile-once fixture.",
+   "responsibility": "Live-license generation-level reproduction of the S4 slice through the legacy route.",
    "breaks_on": "sysml_codegen.orchestration.pipeline_builder (L-029, 4B-v5-family)",
    "breaks_a_free_group": false,
-   "disposition_4c_note": "No green replacement, and every owner it depends on is now deferred: the v5 read path is retained by consequence of keeping the v5 writer and the 37 fixtures, so this file's coverage is still load-bearing. Retires with the v5 family at Phase 5 owner acceptance."
+   "disposition_4c_note": "Gate 4C part 7 (2026-08-11), superseding the part-5 defer. Its subject is the S4 slice as the LEGACY route generates it, so it retires with that route. The generated artefact is what matters and it keeps a stronger owner: the predicate module and pipeline are identical on every route, and so is the whole package. (Deliberately not backed by the real-simkit execution lane, which is itself still blocked \u2014 a row may not be proven by a node scheduled to break.)"
   },
   {
    "id": "L-108",
@@ -2256,15 +2265,18 @@
    "group": "4C-blast-radius",
    "authority": "plan rule 6 \u2014 keep the Item 6 tests until after product proof; every removed or rewritten test needs a responsibility-level disposition first",
    "unreachability": null,
-   "replacement_proof_node": null,
+   "replacement_proof_node": [
+    "tests/conformance/test_exact_route_constraint_portability.py::test_the_catalog_admits_the_numerical_constraint_and_excludes_the_string_one",
+    "tests/conformance/test_exact_route_constraint_portability.py::test_the_excluded_location_is_the_portable_referent_on_every_route"
+   ],
    "blocked_by": [],
    "reason": "Item 14 Phase 2 (W2): the manifest -> catalog no-silent-drop mapping test (D1, INV-A). Imports legacy owners (pipeline_builder) directly, so 4B's deletion breaks it. Retain now; before the owning 4B group lands, this row needs either a public-behaviour rewrite or a recorded responsibility retirement.",
-   "disposition_4c": "defer-to-v5-family",
+   "disposition_4c": "retire-with-owner",
    "node_count": 3,
-   "responsibility": "Item 14 Phase 2 (W2): the manifest -> catalog no-silent-drop mapping test (D1, INV-A).",
+   "responsibility": "Item 14 Phase 2 (W2): the manifest-to-catalog no-silent-drop mapping.",
    "breaks_on": "sysml_codegen.orchestration.pipeline_builder (L-029, 4B-v5-family); agentic_mbse.sysml.executable_profile:evaluate_profile (L-037, 4B-v5-family)",
    "breaks_a_free_group": false,
-   "disposition_4c_note": "No green replacement, and every owner it depends on is now deferred: the v5 read path is retained by consequence of keeping the v5 writer and the 37 fixtures, so this file's coverage is still load-bearing. Retires with the v5 family at Phase 5 owner acceptance."
+   "disposition_4c_note": "Gate 4C part 7 (2026-08-11), superseding the part-5 defer. Retires in the PAIRED G4' commit with L-108 and L-116 \u2014 it imports the agentic dual evaluate_profile (L-037) at module level alongside pipeline_builder, so it cannot outlive either repo's half. No-silent-drop survives as the catalog's explicit admit/exclude decision plus the portable excluded-location referent: a dropped constraint is now a recorded exclusion with a location, not an absence."
   },
   {
    "id": "L-111",
@@ -2276,15 +2288,18 @@
    "group": "4C-blast-radius",
    "authority": "plan rule 6 \u2014 keep the Item 6 tests until after product proof; every removed or rewritten test needs a responsibility-level disposition first",
    "unreachability": null,
-   "replacement_proof_node": null,
+   "replacement_proof_node": [
+    "tests/conformance/test_exact_route_alias_aggregation.py::test_every_derived_identifier_is_quote_and_space_free",
+    "tests/conformance/test_exact_route_alias_aggregation.py::test_every_generated_file_parses"
+   ],
    "blocked_by": [],
    "reason": "License-free route and carrier checks for generated constraint name safety. Imports legacy owners (snapshot_context) directly, so 4B's deletion breaks it. Retain now; before the owning 4B group lands, this row needs either a public-behaviour rewrite or a recorded responsibility retirement.",
-   "disposition_4c": "defer-to-v5-family",
+   "disposition_4c": "retire-with-owner",
    "node_count": 1,
-   "responsibility": "License-free route and carrier checks for generated constraint name safety.",
+   "responsibility": "License-free route and carrier checks for generated constraint names.",
    "breaks_on": "sysml_codegen.orchestration.snapshot_context (L-026, 4B-G2)",
    "breaks_a_free_group": true,
-   "disposition_4c_note": "No green replacement, and every owner it depends on is now deferred: the v5 read path is retained by consequence of keeping the v5 writer and the 37 fixtures, so this file's coverage is still load-bearing. Retires with the v5 family at Phase 5 owner acceptance."
+   "disposition_4c_note": "Gate 4C part 7 (2026-08-11), superseding the part-5 defer. Reaches the generator through orchestration.snapshot_context (the v5 read path) and reads v5 snapshot bytes, so both its route and its specimen retire. Name safety keeps an owner that checks the stronger property on a harder model: every derived identifier in a generated package is quote- and space-free, on a fixture whose calc defs carry quoted names by design."
   },
   {
    "id": "L-112",
@@ -2296,15 +2311,18 @@
    "group": "4C-blast-radius",
    "authority": "plan rule 6 \u2014 keep the Item 6 tests until after product proof; every removed or rewritten test needs a responsibility-level disposition first",
    "unreachability": null,
-   "replacement_proof_node": null,
+   "replacement_proof_node": [
+    "tests/conformance/test_exact_route_constraint_portability.py::test_the_catalog_admits_the_numerical_constraint_and_excludes_the_string_one",
+    "tests/conformance/test_elaboration_fail_closed.py::test_alias_cycle_and_unsupported_formula_are_blocking_diagnostics"
+   ],
    "blocked_by": [],
    "reason": "End-to-end numerical-profile v3 warning, exclusion, and halt families. Imports legacy owners (pipeline_builder, snapshot_context) directly, so 4B's deletion breaks it. Retain now; before the owning 4B group lands, this row needs either a public-behaviour rewrite or a recorded responsibility retirement.",
-   "disposition_4c": "defer-to-v5-family",
+   "disposition_4c": "retire-with-owner",
    "node_count": 4,
-   "responsibility": "End-to-end numerical-profile v3 warning, exclusion, and halt families.",
+   "responsibility": "End-to-end numerical-profile v3 warning, exclusion and halt behaviour.",
    "breaks_on": "sysml_codegen.orchestration.snapshot_context (L-026, 4B-G2); sysml_codegen.orchestration.pipeline_builder (L-029, 4B-v5-family)",
    "breaks_a_free_group": true,
-   "disposition_4c_note": "No green replacement, and every owner it depends on is now deferred: the v5 read path is retained by consequence of keeping the v5 writer and the 37 fixtures, so this file's coverage is still load-bearing. Retires with the v5 family at Phase 5 owner acceptance."
+   "disposition_4c_note": "Gate 4C part 7 (2026-08-11), superseding the part-5 defer. Both its arms are v5 \u2014 pipeline_builder and snapshot_context \u2014 and it reads v5 snapshot bytes. The exclusion half is pinned directly on the exact route, and the halt half is the projection's fail-closed behaviour on a blocking diagnostic rather than a profile-specific code path."
   },
   {
    "id": "L-113",
@@ -2324,7 +2342,7 @@
    "responsibility": "Stable public RED/GREEN surface for lifecycle-remediation Item 1.",
    "breaks_on": "sysml_codegen.snapshot:build_full_graph_from_snapshot (L-028, 4B-G2); sysml_codegen.snapshot:capture_snapshot (L-028, 4B-v5-family); sysml_codegen.orchestration.pipeline_builder (L-029, 4B-v5-family)",
    "breaks_a_free_group": true,
-   "disposition_4c_note": "No green replacement, and every owner it depends on is now deferred: the v5 read path is retained by consequence of keeping the v5 writer and the 37 fixtures, so this file's coverage is still load-bearing. Retires with the v5 family at Phase 5 owner acceptance."
+   "disposition_4c_note": "Gate 4C part 7 (2026-08-11): ANALYSED, NOT YET DISPOSITIONED \u2014 deliberately left blocked so the checker does not report a readiness that is not true. Lifecycle-remediation Item 1's public RED/GREEN surface for occurrence demand. Its behaviour is owned end-to-end by tests/execution/test_constraint_occurrence_demand_execution.py, which is ITSELF still blocked, so dispositioning this now would back it with a node scheduled to break. Sequence it after the execution-lane repoint (L-191..L-194 with L-192), and disposition the pair together."
   },
   {
    "id": "L-114",
@@ -2344,7 +2362,7 @@
    "responsibility": "Supplementary public nodes for lifecycle-remediation Item 1.",
    "breaks_on": "sysml_codegen.orchestration.pipeline_builder (L-029, 4B-v5-family)",
    "breaks_a_free_group": false,
-   "disposition_4c_note": "No green replacement, and every owner it depends on is now deferred: the v5 read path is retained by consequence of keeping the v5 writer and the 37 fixtures, so this file's coverage is still load-bearing. Retires with the v5 family at Phase 5 owner acceptance."
+   "disposition_4c_note": "Gate 4C part 7 (2026-08-11): ANALYSED, NOT YET DISPOSITIONED \u2014 deliberately left blocked so the checker does not report a readiness that is not true. Lifecycle-remediation Item 1's public RED/GREEN surface for occurrence demand. Its behaviour is owned end-to-end by tests/execution/test_constraint_occurrence_demand_execution.py, which is ITSELF still blocked, so dispositioning this now would back it with a node scheduled to break. Sequence it after the execution-lane repoint (L-191..L-194 with L-192), and disposition the pair together."
   },
   {
    "id": "L-115",
@@ -2681,15 +2699,17 @@
    "group": "4C-blast-radius",
    "authority": "plan rule 6 \u2014 keep the Item 6 tests until after product proof; every removed or rewritten test needs a responsibility-level disposition first",
    "unreachability": null,
-   "replacement_proof_node": null,
+   "replacement_proof_node": [
+    "tests/conformance/test_elaboration_phase5_remediation.py"
+   ],
    "blocked_by": [],
    "reason": "Owner-ratified Phase 5 remediation at the public projection boundary. Imports legacy owners (pipeline_builder) directly, so 4B's deletion breaks it. Retain now; before the owning 4B group lands, this row needs either a public-behaviour rewrite or a recorded responsibility retirement.",
-   "disposition_4c": "defer-to-v5-family",
+   "disposition_4c": "repoint",
    "node_count": 11,
-   "responsibility": "Owner-ratified Phase 5 remediation at the public projection boundary.",
+   "responsibility": "Owner-ratified Phase 5 remediation at the public projection boundary: the authored self-binding shapes, signed and unit-carrying defaults, and deep cross-scope producer channels.",
    "breaks_on": "sysml_codegen.orchestration.pipeline_builder (L-029, 4B-v5-family)",
    "breaks_a_free_group": false,
-   "disposition_4c_note": "No green replacement, and every owner it depends on is now deferred: the v5 read path is retained by consequence of keeping the v5 writer and the 37 fixtures, so this file's coverage is still load-bearing. Retires with the v5 family at Phase 5 owner acceptance."
+   "disposition_4c_note": "Gate 4C part 7 (2026-08-11). REPOINTED IN THIS COMMIT, and found by the proof-integrity cross-check rather than by the work-list: L-157 named this file as its replacement while the file was itself blocked. Ten of its eleven nodes are pure exact-route. The eleventh, test_public_compatibility_keeps_names_but_uses_occurrence_sources, is an exact-versus-legacy comparison whose subject ends with the legacy route (ruling 3's shape); its build_pipeline_context import is now local to it. PER-NODE DISPOSITION: that node retires at the legacy route's retirement commit. Its class-3 label \u2014 it names return_styles, a refused fixture \u2014 bounded a hypothetical repoint of the whole file and does not apply: the return_styles node reads the fixture through the elaborator in lenient mode, not through a v5 snapshot."
   },
   {
    "id": "L-131",
@@ -3136,15 +3156,18 @@
    "group": "4C-blast-radius",
    "authority": "plan rule 6 \u2014 keep the Item 6 tests until after product proof; every removed or rewritten test needs a responsibility-level disposition first",
    "unreachability": null,
-   "replacement_proof_node": null,
+   "replacement_proof_node": [
+    "tests/conformance/test_exact_route_constraint_portability.py::test_a_snapshot_carrying_a_pre_fix_location_is_refused_at_load",
+    "tests/conformance/test_snapshot_v6_envelope.py"
+   ],
    "blocked_by": [],
    "reason": "Item 14 Phase 1: the plant_values/fusion_tea grandfather carve-out retires (INV-D). Imports legacy owners (pipeline_builder) directly, so 4B's deletion breaks it. Retain now; before the owning 4B group lands, this row needs either a public-behaviour rewrite or a recorded responsibility retirement.",
-   "disposition_4c": "defer-to-v5-family",
+   "disposition_4c": "retire-with-owner",
    "node_count": 2,
-   "responsibility": "Item 14 Phase 1: the plant_values/fusion_tea grandfather carve-out retires (INV-D).",
+   "responsibility": "Item 14 Phase 1: the plant_values / fusion_tea grandfather carve-out.",
    "breaks_on": "sysml_codegen.snapshot:build_full_graph_from_snapshot (L-028, 4B-G2); sysml_codegen.snapshot:capture_snapshot (L-028, 4B-v5-family); sysml_codegen.orchestration.pipeline_builder (L-029, 4B-v5-family)",
    "breaks_a_free_group": true,
-   "disposition_4c_note": "No green replacement, and every owner it depends on is now deferred: the v5 read path is retained by consequence of keeping the v5 writer and the 37 fixtures, so this file's coverage is still load-bearing. Retires with the v5 family at Phase 5 owner acceptance."
+   "disposition_4c_note": "Gate 4C part 7 (2026-08-11), superseding the part-5 defer. Grandfathering is a v5-envelope lifecycle concept \u2014 the carve-out exists because a retained pre-v5 snapshot needed a path \u2014 and it retires with the envelope and the capture/read pair it drives. Gate 4B-G0 already removed the last public trace, deleting the unreachable GrandfatheredSnapshotError import and its handler from cli/__init__.py. The shipped format has no carve-out: a snapshot with a stale referent is refused."
   },
   {
    "id": "L-152",
@@ -3684,15 +3707,18 @@
    "group": "4C-blast-radius",
    "authority": "plan rule 6 \u2014 keep the Item 6 tests until after product proof; every removed or rewritten test needs a responsibility-level disposition first",
    "unreachability": null,
-   "replacement_proof_node": null,
+   "replacement_proof_node": [
+    "tests/conformance/test_exact_route_constraint_portability.py::test_the_whole_package_is_identical_on_every_route",
+    "tests/conformance/test_exact_route_constraint_portability.py::test_the_predicate_module_and_pipeline_are_identical_on_every_route"
+   ],
    "blocked_by": [],
    "reason": "Item 8 Phase 3: end-to-end live/snapshot constraint parity (INV-3, INV-4). Imports legacy owners (pipeline_builder) directly, so 4B's deletion breaks it. Retain now; before the owning 4B group lands, this row needs either a public-behaviour rewrite or a recorded responsibility retirement.",
-   "disposition_4c": "defer-to-v5-family",
+   "disposition_4c": "retire-with-owner",
    "node_count": 3,
-   "responsibility": "Item 8 Phase 3: end-to-end live/snapshot constraint parity (INV-3, INV-4).",
+   "responsibility": "Item 8 Phase 3: end-to-end live-versus-snapshot constraint parity.",
    "breaks_on": "sysml_codegen.snapshot:build_full_graph_from_snapshot (L-028, 4B-G2); sysml_codegen.snapshot:capture_snapshot (L-028, 4B-v5-family); sysml_codegen.orchestration.pipeline_builder (L-029, 4B-v5-family)",
    "breaks_a_free_group": true,
-   "disposition_4c_note": "No green replacement, and every owner it depends on is now deferred: the v5 read path is retained by consequence of keeping the v5 writer and the 37 fixtures, so this file's coverage is still load-bearing. Retires with the v5 family at Phase 5 owner acceptance."
+   "disposition_4c_note": "Gate 4C part 7 (2026-08-11), superseding the part-5 defer. A parity harness, the third of its kind in this gate after L-205 and L-126, and it ends for the same reason its siblings do \u2014 its subject is the agreement of two routes and one of them retires. The exact route's own route-invariance is the standing claim, and it covers more: the whole package, the predicate module and pipeline, and the catalog and semantic fingerprints."
   },
   {
    "id": "L-178",
