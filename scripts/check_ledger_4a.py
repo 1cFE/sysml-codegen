@@ -485,7 +485,9 @@ ROW_STATES = frozenset({"proposed", "executed", "partially-executed"})
 #: ``retire-with-owner`` row carries ``disposition: retain`` from Gate 4A — the Gate 4C
 #: disposition is what authorises its absence, and the state check has to read both or the
 #: whole test-side retirement reads as an unauthorised deletion.
-ABSENCE_DISPOSITIONS_4C = frozenset({"retire-with-owner", "archive-with-findings"})
+ABSENCE_DISPOSITIONS_4C = frozenset(
+    {"retire-with-owner", "archive-with-findings", "defer-to-v5-family"}
+)
 
 
 def _authorises_absence(row: dict) -> bool:
