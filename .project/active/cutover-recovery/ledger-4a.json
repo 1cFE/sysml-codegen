@@ -620,7 +620,8 @@
    "reason": "Four named items, each carried from Phase 3: (1) delete the GrandfatheredSnapshotError import (:1061) and its handler (:1139) \u2014 3E audit F5, unreachable on both paths; (2) remove the --design-path-filter flag itself, which 3E left as a typed refusal; (3) repoint the two graph_builder helpers imported at :262 (collect_uncovered_params, collect_unwired_fallthrough) at their new neutral home; (4) type the row-36 collision refusal so it stops reaching the bottom except Exception after the output tree was cleared \u2014 3E audit F5, second half. Item (4) is a CONFLICT row: it contradicts fail-before-mutate and is a product change, not a retirement. Spent in G0 (db00482): (1) import and handler deleted; (2) the flag removed from both subcommands and from GenerationConfig, so the 3E typed refusal becomes an argparse refusal (the row's replacement proof node is renamed with it, and the two FR-4 flag-existence nodes in tests/integration/test_full_pipeline.py retire under this item); (3) helpers repointed; (4) C2 as ruled \u2014 the registry class-name refusal is now a CodeGenerationError raised from a pure detector before _clear_output_directory, specimen test_a_registry_class_name_collision_refuses_before_the_writer_runs.",
    "conflict": "Item (4), the untyped clear-then-fail refusal, is a product behaviour change on a path 3E made publicly reachable. Retirement authority does not cover it. The orchestrator must rule whether Phase 4 fixes it or it goes to the Phase 5 owner packet.",
    "state": "executed",
-   "executed_commit": "db00482"
+   "executed_commit": "db00482",
+   "remaining": "One documentation-only item, found by the retirement runbook step-2 simulation (2026-08-11) and not by any scan: cmd_snapshot's docstring says the v5 extraction snapshot (snapshot.capture_snapshot) is still in the tree for the recovery's retired specimens. L-027 deletes capture_snapshot, so the sentence retires with it. Patch: runbook-patches/step2/src__sysml_codegen__cli____init__.patch. No code changes \u2014 the CLI's construction path is untouched by the retirement, which is the 3E property this row must not obscure."
   },
   {
    "id": "L-026",
@@ -707,6 +708,20 @@
    "replacement_proof_node": "tests/conformance/test_public_authority_switch.py::test_the_generation_half_still_reaches_v5_modules_and_that_residual_is_pinned",
    "blocked_by": [],
    "reason": "Re-exports graph_rebuild (:81), loader (:85) and serializer (:86). This is the whole of the named v5 import residual carried from 3E; dropping these three lines is what empties that pin. Census API-13 says the same.",
+   "orphaned_after_step_2": {
+    "symbols": [
+     "SNAPSHOT_FORMAT_VERSION",
+     "CONSTRAINT_LOWERING_MODE_APPLIED",
+     "CONSTRAINT_LOWERING_MODE_GRANDFATHERED_OFF",
+     "VALID_CONSTRAINT_LOWERING_MODES",
+     "SnapshotFormatError",
+     "GrandfatheredSnapshotError",
+     "assert_snapshot_certifiable"
+    ],
+    "measured": "Zero readers in src/, scripts/ or tests/ at the step-2 post-state (grep, runbook completion 2026-08-11). They are the v5 extraction envelope's version constant, its lowering-mode vocabulary, its two error classes and its certifiability gate.",
+    "state": "owner-gated, fifth entry item 7 \u2014 not in any `removes` block and not scheduled",
+    "why_not_a_row_of_its_own": "check_paths refuses two rows for one path (check_ledger_4a.py:426), and this file already has L-028. The symbols are recorded here instead, which is where the file's other symbol losses are recorded."
+   },
    "removes": [
     {
      "group": "4B-G2",
@@ -1026,7 +1041,8 @@
    "authority": "census SCR-02 via inventory INV-RES-CG-008 (disposition migrate) [EVIDENCE]; plan rule 7; kept-test evidence at HEAD",
    "unreachability": null,
    "replacement_proof_node": [
-    "tests/conformance/test_gen_registry.py::TestImportPathsMatchFilesystem::test_req_reg_02_import_paths_match_filesystem[solar_battery]"
+    "tests/conformance/test_public_route_baselines.py::test_the_public_route_writes_the_pipeline_yaml_the_capture_script_used_to",
+    "tests/conformance/test_public_route_baselines.py::test_regenerating_from_the_same_v6_snapshot_is_byte_identical"
    ],
    "blocked_by": [],
    "reason": "Capture baseline pipeline YAML for the tracked models. SCR-02 MIGRATE to a v6 capture driver. No v6 capture driver exists, and two kept tests reference this one. Retain until the replacement lands.",
@@ -1048,7 +1064,8 @@
    "authority": "census SCR-02 via inventory INV-RES-CG-010 (disposition migrate) [EVIDENCE]; plan rule 7; kept-test evidence at HEAD",
    "unreachability": null,
    "replacement_proof_node": [
-    "tests/conformance/test_gen_registry.py::TestImportPathsMatchFilesystem::test_req_reg_02_import_paths_match_filesystem[solar_battery]"
+    "tests/conformance/test_public_route_baselines.py::test_the_public_route_writes_the_pipeline_yaml_the_capture_script_used_to",
+    "tests/conformance/test_public_route_baselines.py::test_regenerating_from_the_same_v6_snapshot_is_byte_identical"
    ],
    "blocked_by": [],
    "reason": "Capture pipeline baselines: ComputationGraph JSON and registry __init__.py. SCR-02 MIGRATE to a v6 capture driver. No replacement exists and a kept test references it. Retain.",
@@ -6164,8 +6181,8 @@
    "authority": "Gate 4C part 5 second-axis measurement (check_ledger_4a.py surface, data axis); orchestrator rulings 2026-08-11",
    "unreachability": null,
    "replacement_proof_node": [
-    "tests/conformance/test_gen_registry.py::TestImportPathsMatchFilesystem::test_req_reg_02_import_paths_match_filesystem[solar_battery]",
-    "tests/conformance/test_gen_registry.py::TestAllTypesUseSQNDerivation::test_req_reg_05_all_types_use_sqn_derivation[solar_battery]"
+    "tests/conformance/test_public_route_baselines.py::test_the_v6_fixture_helper_reads_what_the_product_reads",
+    "tests/conformance/test_public_route_baselines.py::test_the_registry_and_the_module_tree_agree_in_both_directions"
    ],
    "blocked_by": [],
    "responsibility": "Shared test infrastructure: fixture paths, the license marker, and the snapshot_fixture helper.",
@@ -6397,6 +6414,46 @@
    "reason": "Named by the second-axis scan because its constructed cases quote the surface tokens they place rows against. Self-referential, like L-296.",
    "disposition_4c": "repoint",
    "disposition_4c_note": "Phase 4 audit follow-up F1 (2026-08-11). Every surface token is inside a dict literal built in the test body, not a real import or a real fixture read. Nothing to change when the family retires; one case counts the 37 v5 fixtures step 1 deletes and is expected to keep passing because it counts ledger rows, not files on disk."
+  },
+  {
+   "id": "L-301",
+   "path": "src/sysml_codegen/generation/__init__.py",
+   "repo": "sysml-codegen",
+   "class": "production",
+   "disposition": "retain",
+   "origin": "derived-blast-radius",
+   "group": null,
+   "authority": "retirement runbook step-2 simulation (2026-08-11); plan rule 10 — a file the retirement edits with no row is an unexplained blast radius",
+   "unreachability": null,
+   "replacement_proof_node": null,
+   "blocked_by": [],
+   "responsibility": "The generation layer's public re-export surface.",
+   "node_count": 0,
+   "disposition_4c": "repoint",
+   "reason": "Re-exports PipelineContext from generation/initialization.py. L-021 removes the alias and L-018 removes the class, and NO `removes` block names this file — the step-2 simulation found it by import error, not by any scan. Edit only: drop the re-export and its __all__ entry; the file survives.",
+   "breaks_on": "sysml_codegen.orchestration.pipeline_context:PipelineContext (L-018, 4B-v5-family); sysml_codegen.generation.initialization:PipelineContext (L-021, 4B-v5-family)",
+   "breaks_a_free_group": false,
+   "disposition_4c_note": "Authored by the runbook completion (2026-08-11). Patch: runbook-patches/step2/src__sysml_codegen__generation____init__.patch."
+  },
+  {
+   "id": "L-302",
+   "path": "src/sysml_codegen/core/identifier_types.py",
+   "repo": "sysml-codegen",
+   "class": "production",
+   "disposition": "retain",
+   "origin": "derived-blast-radius",
+   "group": null,
+   "authority": "retirement runbook step-2 simulation (2026-08-11); plan rule 10; audit 4 F5 (stale production docstrings are a named finding class)",
+   "unreachability": null,
+   "replacement_proof_node": null,
+   "blocked_by": [],
+   "responsibility": "The shared identifier NewTypes and mint_constraint_id — live on the exact route.",
+   "node_count": 0,
+   "disposition_4c": "repoint",
+   "reason": "mint_constraint_id's docstring cites analysis/constraint_lowering.assert_unique_constraint_ids as the post-expansion duplicate check, and says the helper lives here so the legacy and exact routes mint one identity by one rule. Both halves stop being true when L-001 goes. Docstring edit only; no code changes.",
+   "breaks_on": "sysml_codegen.analysis.constraint_lowering (L-001, 4B-v5-family)",
+   "breaks_a_free_group": false,
+   "disposition_4c_note": "Authored by the runbook completion (2026-08-11). Documentation-only, and precisely the F5 class: the citation is a dead pointer the day L-001 lands. Patch: runbook-patches/step2/src__sysml_codegen__core__identifier_types.patch."
   }
  ]
 }
