@@ -234,8 +234,6 @@ def test_no_cli_flag_or_environment_variable_selects_a_route(
     implementation. The word list is deliberately broad so a flag named for the
     cutover cannot be added quietly.
     """
-    import os
-
     forbidden = ("legacy", "exact", "route", "authority", "builder", "v5", "v6", "elaborat")
     for command in ("generate", "snapshot", "seal", "install-commands"):
         main_returns([command, "--help"])
@@ -243,7 +241,15 @@ def test_no_cli_flag_or_environment_variable_selects_a_route(
         offenders = [word for word in forbidden if f"--{word}" in help_text]
         assert offenders == [], f"{command} exposes route-selecting flag(s) {offenders}"
 
-    assert [name for name in os.environ if "SYSML_CODEGEN" in name.upper()] == []
+    # Deliberately NOT `os.environ` — that would measure this pytest process, pass
+    # spuriously for an operator who exports something unrelated, and keep passing
+    # if run_codegen started reading SYSML_CODEGEN_ROUTE tomorrow. Pin the source.
+    readers = sorted(
+        name
+        for name in _reachable_sysml_codegen_modules("sysml_codegen.cli")
+        if _reads_the_environment(name)
+    )
+    assert readers == []
 
 
 def test_the_public_api_exports_no_second_construction_entry_point() -> None:
@@ -486,6 +492,20 @@ def test_the_generation_half_still_reaches_v5_modules_and_that_residual_is_pinne
         "sysml_codegen.snapshot.loader",
         "sysml_codegen.snapshot.graph_rebuild",
     }
+
+
+def _reads_the_environment(module_name: str) -> bool:
+    """True if the module's source references ``os.environ`` or ``os.getenv``."""
+    import importlib.util
+
+    try:
+        spec = importlib.util.find_spec(module_name)
+    except (ImportError, AttributeError, ValueError):
+        return False
+    if spec is None or spec.origin is None or not spec.origin.endswith(".py"):
+        return False
+    source = Path(spec.origin).read_text()
+    return "os.environ" in source or "os.getenv" in source or "getenv(" in source
 
 
 def _reachable_sysml_codegen_modules(root: str) -> set[str]:

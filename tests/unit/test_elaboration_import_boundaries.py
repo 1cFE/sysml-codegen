@@ -295,6 +295,7 @@ def test_the_shipped_cli_is_on_the_exact_route_and_the_legacy_owners_are_unreach
     """
     cli_source = (ROOT / "src/sysml_codegen/cli/__init__.py").read_text()
     capture_source = (ROOT / "src/sysml_codegen/snapshot/capture.py").read_text()
+    public_orchestration = (ROOT / "src/sysml_codegen/orchestration/__init__.py").read_text()
 
     assert "build_exact_pipeline_context" in cli_source
     assert "build_exact_pipeline_context_from_snapshot" in cli_source
@@ -304,6 +305,13 @@ def test_the_shipped_cli_is_on_the_exact_route_and_the_legacy_owners_are_unreach
     # v5 capture keeps its legacy owner, and the v6 capture the CLI calls does not.
     assert "build_pipeline_context" in capture_source
     assert "capture_instance_graph_snapshot" in capture_source
+
+    # Unchanged by the switch and kept deliberately (restored after the 3E audit,
+    # F4, which caught it being dropped without a disposition): the exact route's
+    # elaborator entry stays out of the public orchestration API. That package
+    # still re-exports the *legacy* builder, which is a named Gate 4A input; this
+    # pin is what stops the exact one joining it.
+    assert "build_elaborated_pipeline" not in public_orchestration
 
 
 def test_internal_exact_route_cannot_mix_in_the_legacy_builder_or_snapshot_rebuild() -> None:

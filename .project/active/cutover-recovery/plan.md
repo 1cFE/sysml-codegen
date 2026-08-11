@@ -157,7 +157,7 @@ switching or deletion until this passes.
 
 - [x] Phase 1 — Preserve the incident and create paired forensic snapshot commits
 - [x] Phase 2 — Create clean rebuild worktrees, correct the Item 7 plan, and measure Item 6
-- [ ] Phase 3 — Rebuild and commit the cutover as functional vertical slices
+- [x] Phase 3 — Rebuild and commit the cutover as functional vertical slices
 - [ ] Phase 4 — Retire production, tests/probes/snapshots, and docs under separate gates
 - [ ] Phase 5 — Assemble a repeatable candidate, audit it, and stop for owner acceptance
 
@@ -642,7 +642,7 @@ Record every slice. Do not combine them later.
 | 3B | d91431b, audit follow-up 2f28dde | N/A | 3520 passed / 47 skipped / 18 deselected (+47, all new) | smoke PASS (live + v6-snapshot packages, group names equal; legacy CLI package unchanged at 48 files) |
 | 3C | 7af5dc9, audit follow-up a6c41bc | 8b63393, audit follow-up cc6c7a7 | codegen 3538 passed / 47 skipped / 18 deselected (+18, all new); agentic 1825 passed / 1 skipped / 5 deselected (+6, all new) | N/A |
 | 3D | 848628b, audit follow-up fa4eea0 | N/A (untouched, clean at `cc6c7a7`) | codegen 3539 passed / 47 skipped / 38 deselected (+1 passed, +20 deselected — all new); agentic 1825 passed / 1 skipped / 5 deselected (unchanged) | **PASS** — 20 real-TEAx tests, live + relocated-v6 sealed packages, 11 outputs each, LCOE `270.1211779380445` |
-| 3E | 430e26a | N/A (untouched, clean at `cc6c7a7`) | codegen 3557 passed / 47 skipped / 38 deselected (+18, all new); agentic 1825 passed / 1 skipped / 5 deselected (unchanged) | **PASS** — 38 execution nodes through the SWITCHED public `run_codegen`, live + relocated-v6, 11 channels each, LCOE `270.1211779380445` |
+| 3E | 430e26a, audit follow-up PENDING_FOLLOWUP | N/A (untouched, clean at `cc6c7a7`) | codegen 3557 passed / 47 skipped / 38 deselected (+18, all new); agentic 1825 passed / 1 skipped / 5 deselected (unchanged) | **PASS** — 38 execution nodes through the SWITCHED public `run_codegen`, live + relocated-v6, 11 channels each, LCOE `270.1211779380445` |
 
 ---
 
@@ -691,6 +691,19 @@ def test_retirement_preserves_public_product(checkpoint, real_teax):
     (`b9c22c0`) and does not weaken the exact route's decoupling, but left alone it becomes a
     logger named after a module that no longer exists. Retire the name with the module.
     **[AGENT]** raised as F4 of the Slice 3C audit (`evidence/audit-3c.md`), informational.
+  - **Dead v5 residue inside the public writer**, both in `src/sysml_codegen/cli/__init__.py` and
+    both unreachable since the Slice 3E switch: the `GrandfatheredSnapshotError` import (`:1061`)
+    and the handler that catches it inside `_generate_package_from_graph` (`:1139`). Its only
+    raiser is `assert_snapshot_certifiable`, which the public route no longer calls and which the
+    legacy test adapter calls *before* that function. Retire both with the v5 route.
+    **[AGENT]** raised as F5 of the Slice 3E audit (`evidence/audit-3e.md`), low.
+  - **`sysml_codegen.orchestration.__init__`'s re-export of `build_pipeline_context`**, and the
+    v5 re-exports in `snapshot/__init__.py` that keep `pipeline_builder`, `snapshot.loader` and
+    `snapshot.graph_rebuild` inside `sysml_codegen.cli`'s transitive import closure. Nothing is
+    constructed through them — the construction closure is clean — but they are the whole of the
+    named import residual, pinned by
+    `test_the_generation_half_still_reaches_v5_modules_and_that_residual_is_pinned`. Phase 4
+    empties that pin.
 - [ ] For every proposed production deletion, name the public behavior and kept test that prove its
   replacement.
 - [ ] For every proposed test deletion or rewrite, state the behavior responsibility, replacement
@@ -705,6 +718,12 @@ def test_retirement_preserves_public_product(checkpoint, real_teax):
 
 ### Gate 4B — Delete legacy production in small groups
 
+- [ ] **Read the Gate 4C responsibility rows before deleting anything.** Sixteen rows carried from
+  Slice 3E block this gate: no legacy production owner may be deleted while a row it serves still
+  lacks its exact-route replacement, and `replacement_is_green(row)` is the check. The rows and the
+  blocking language live in Gate 4C below; they govern *this* gate.
+  **[AGENT]** added after the Slice 3E audit (F6b), which found the constraint stated only in 4C —
+  i.e. only after the deletions it governs.
 - [ ] Delete one coherent production owner group at a time, beginning with unreachable adapters and
   ending with the central legacy resolver/registry/snapshot owners.
 - [ ] Before each group, add or identify kept public tests that fail if its responsibility is lost.
@@ -1044,7 +1063,7 @@ Fill these during execution. Amend incorrect content rather than appending contr
 
 ### Phase 3 Completion
 
-- **Completed:** In progress — 3A done, 3B–3E pending
+- **Completed:** 2026-08-11 — all five slices done and independently audited (3A FINDINGS then closed; 3B, 3C, 3D, 3E CERTIFY). Phase 3 complete.
 - **Slice commits and evidence:** see the per-slice notes below
 - **Issues/deviations:** see the per-slice notes below
 
@@ -2080,7 +2099,11 @@ set.
   `tests/fixtures/fusion_tea/README.md`; the sixteen repointed test modules and the six
   helper-signature call-site modules named in the tables below;
   `.project/completed/20260809_elaborator-breadth/diff-ledger.md`; this plan,
-  `briefs/phase3e.md`, and `evidence/3e-package-comparison.md`. Actual changed paths equal that set.
+  `briefs/phase3e.md`, and `evidence/3e-package-comparison.md`. **Plus three modules named
+  explicitly after the Slice 3E audit (F6a), which found them changed but not nameable from any
+  table:** `tests/conformance/test_snapshot_v6_envelope.py` (a message-match update following the
+  `envelope.py` change) and `tests/execution/{test_fusion_tea_real_teax,test_fusion_tea_mutation_teax}.py`
+  (helper-rename call sites). 41 changed paths, all named.
 
 **What switched.** `run_codegen` is now the single public generation authority and constructs
 exactly one way: `--models` seals an `ExactPipelineContext` from live elaboration,
@@ -2183,11 +2206,15 @@ subprocess — licence-free generation, byte identity between two independent pr
 one, via `python -m tests.helpers.legacy_route`, rather than being quietly downgraded to an
 in-process call.
 
-*Six further modules changed only because the generation helpers now take a graph:*
+*Eight further modules changed only because the generation helpers now take a graph, or because a
+message they match moved:*
 `test_exact_route_generated_package.py`, `test_constraint_generation_live.py`,
 `test_constraint_generation_integration.py`, `test_module_kind_faildloud.py`,
 `test_gen_stencils.py` (a static-analysis pin on the parameter name), `tests/unit/test_stencils.py`,
-plus `tests/execution/{real_teax,test_constraint_execution}.py`. No responsibility moved.
+`tests/conformance/test_snapshot_v6_envelope.py`, and
+`tests/execution/{real_teax,test_constraint_execution,test_fusion_tea_real_teax,test_fusion_tea_mutation_teax}.py`.
+No responsibility moved. *(Count and membership corrected after the 3E audit, F6a: the sentence
+said "six" and named eight, and omitted three of the modules it should have listed.)*
 
 **Ruling 2 — the customer oracle is back on the shipped public route.**
 `tests/fixtures/fusion_tea/instance_graph_snapshot.json` is committed and
@@ -2241,11 +2268,14 @@ reasoning in `evidence/3e-package-comparison.md`. Headlines:
   3D `sanitize_name` hunk, seen from the other side.
 - **fusion_tea, the customer package.** Module and schema class names are equal between routes
   (census `PROD-24` holds), no group was renamed (ruling 1's "no customer-model group naming
-  changes" re-verified), and every hand-checked modelled value is unchanged. What changed is the
-  **per-consumer-mint collapse**: legacy published `gain = 80.0` as two keys, `thermal_efficiency`
-  as two, `availability` as two; the exact route publishes one key per modelled attribute and
-  wires every consumer to it. Two exact-only groups (`hif_economics_params`, `ife_lcoe_params`)
-  follow from declaration-site attribution. **This is the largest customer-visible change in the
+  changes" re-verified), and every hand-checked modelled value is unchanged. What changed is how
+  **every** entry-point key is named: legacy names one after the consuming calc-usage formal, the
+  exact route after the modelled attribute that supplies it. Legacy publishes 31 keys, exact 27,
+  sharing 13, and the evidence file enumerates all 32 deltas — three collapses, eleven one-to-one
+  renames, ten group moves. Two exact-only groups (`hif_economics_params`, `ife_lcoe_params`)
+  follow from declaration-site attribution. *(This bullet said "the per-consumer-mint collapse"
+  and listed three rows until the 3E audit, F1, found a shipped key rename it had omitted; the
+  fix was to enumerate every delta rather than add one row.)* **This is the largest customer-visible change in the
   recovery and is flagged to the Phase 5 owner packet** — an owner accepting this candidate should
   see the table, not a summary of it.
 - `constraint_inline` and `constraint_non_numerical` are refused **identically by both routes**
@@ -2306,6 +2336,113 @@ remains the ruling-2 residual for the Phase 5 packet.
 - **One new committed fixture artifact**, `tests/fixtures/fusion_tea/instance_graph_snapshot.json`,
   marked in the fixture README as a test fixture and explicitly not the accepted corpus recapture.
 - No deletions in either repository. No Item 6 test was removed, silenced, deselected, or xfailed.
+
+#### Slice 3E audit follow-up — F1 through F6
+
+- **Completed:** 2026-08-11
+- **Audit:** `evidence/audit-3e.md`, verdict **CERTIFY** (nothing blocked Phase 4), 6 findings —
+  1 Medium, 4 Low, 1 Informational. Recorded at `f2f2016`. Commit: PENDING
+- **Declared path set:** `tests/conformance/test_public_authority_switch.py`,
+  `tests/unit/test_elaboration_import_boundaries.py`,
+  `evidence/3e-package-comparison.md`,
+  `.project/completed/20260809_elaborator-breadth/diff-ledger.md`, and this plan.
+  Actual changed paths equal that set. **No production file changed** — all six findings are
+  evidence, record-keeping, or test-strength defects, which is what CERTIFY meant.
+
+All six are closed. Two changed tests, three changed records, one is a Gate 4A/4B ledger input.
+
+**F1 (Medium) — a shipped fusion_tea input key was renamed and the evidence file did not list it.
+Verified against the graph before classifying, and the obvious reading was wrong.**
+
+The key is `hif_plant_pkg__hif_plant__viability__81ddf10fb1d1749b__threshold` (legacy,
+`system_design`) → `hif_plant_pkg__hif_plant__viability__threshold` (exact, `ife_plant_params`),
+value `10.0` unchanged. The natural reading — a per-consumer hash-suffixed mint collapsing into
+the exact route's clean semantic key, i.e. the same ratified single-source family as
+`gain`/`availability` — **does not survive measurement.** Measured on both routes:
+
+- **One consumer on each side, and it is the same one**: module
+  `hif_plant_pkg__hif_plant__viability__81ddf10fb1d1749b`, formal `threshold`. Nothing collapsed;
+  a collapse needs several consumer keys folding into one, and there was never more than one.
+- The disambiguating id `81ddf10fb1d1749b` is **retained identically on both routes** in the
+  module id and in the evaluation channel `…viability__81ddf10fb1d1749b__evaluation`. It is
+  dropped only from the entry-point key.
+
+So it is the same *mechanism* as the collapse family — legacy keys an entry point by its consuming
+formal, the exact route by the modelled attribute's declaration path — but the one-to-one case of
+it, not the N-to-one case. The hash is incidental to the mechanism, not its subject. Recorded that
+way rather than filed under a family it does not belong to.
+
+*The fix is not one table row.* Adding a row would leave the same class of omission possible, so
+the fusion_tea section is rewritten to **enumerate every key delta**: 18 legacy-only, 14
+exact-only, 10 group moves, each with its consumer set, grouped into five sub-tables (collapse /
+one-to-one rename / the threshold / group move / definition→occurrence). Every legacy-only key is
+matched to an exact-only or shared key by identical consumer set, which is the proof that no entry
+point was lost or gained. **Re-checked for a second missed rename: there is none** — the
+enumeration is closed by construction, 18 + 14 + 10 = every delta.
+
+Diff-ledger row 15 now carries the shipped input-key cells for this family. One consequence is
+flagged to the Phase 5 owner packet on its own merits: dropping the disambiguator means two
+constraint usages with the same name under one owner would mint the same `…__threshold` key. No
+corpus model has that shape and no failure was measured, so it is a packet question, not a defect
+claim — but the exact route keeps the disambiguator everywhere except the surface an operator edits.
+
+**F2 (Low) — "five named mechanisms" was not true as written.** A sixth was always in the measured
+diffs and correctly classified per fixture against ledger rows 26 and 37: entry-point keys move
+from consumer-scoped and definition-scoped naming to the modelled attribute's declaration path
+(`toy_plant__Toy_Plant__plant_budget` → `toy_plant__demo_plant__plant_budget`). Named as mechanism
+6, and the rule-10 sentence is reworded to what the per-fixture tables actually show — "every
+difference maps to a ratified ledger row or a recorded slice mechanism" — rather than claiming six
+summary sentences cover every hunk.
+
+**F3 (Low) — the environment pin measured the test process, not the product.** It asserted that
+`os.environ` carries no `SYSML_CODEGEN*` name, which would fail spuriously for an operator who
+exports one and, worse, would still pass if `run_codegen` started reading `SYSML_CODEGEN_ROUTE`
+tomorrow. It now walks the construction closure and asserts no reachable module references
+`os.environ`/`os.getenv`, the same AST style as the neighbouring import pins. The product claim
+the plan makes is now the claim the test makes.
+
+**F4 (Low) — a dropped import-boundary assertion is restored.** Inverting
+`test_shipped_cli_and_capture_remain_on_the_legacy_black_box_route` also stopped it reading
+`orchestration/__init__.py`, quietly dropping
+`assert "build_elaborated_pipeline" not in public_orchestration` — the pin keeping the *exact*
+route's elaborator entry out of the public orchestration API. The property still held; nothing
+enforced it. Restored, with a comment saying why it survives the inversion: that package already
+re-exports the legacy builder as a named Gate 4A input, and this pin is what stops the exact one
+joining it.
+
+**F5 (Low) — two v5 residues inside the public writer, now named.** Both carried to the Gate 4A
+ledger inputs above rather than changed here, because both are deletion-shaped:
+
+- The `GrandfatheredSnapshotError` import and its handler in `_generate_package_from_graph` are
+  unreachable on both paths — the public route no longer calls `assert_snapshot_certifiable`, and
+  the legacy test adapter calls it before that function.
+- The `unresolvable_attr_probe` refusal (row 36) is **untyped**: the collision guard raises a bare
+  `ValueError`, so it reaches the bottom `except Exception` and the operator sees "Unexpected
+  error" with a traceback — the exact shape this slice eliminated for the v5 refusal. It also
+  fires inside `_generate_modules`, after the output tree was cleared, leaving a half-written
+  package (measured: 34 files, no contracts, no seal). Neither is a regression this slice
+  introduced, but the switch is what made the path reachable from public `generate`, so both are
+  now product behaviour. Added to ledger row 36 and to the Phase 5 owner packet.
+
+**F6 (Informational) — two record-keeping fixes.** (a) The declared path set is extended to the
+three modules that were changed but nameable from no table
+(`test_snapshot_v6_envelope.py`, `test_fusion_tea_real_teax.py`, `test_fusion_tea_mutation_teax.py`),
+and the sentence that said "six further modules" and then named eight now says eight and names
+eight. (b) Gate 4B's own bullet list now opens with a cross-reference to the Gate 4C
+responsibility rows, so a Phase 4 agent meets the constraint before the deletions it governs
+rather than after them.
+
+**Gates.** Affected lanes re-run and measured, not carried over. Slice module
+`test_public_authority_switch.py` **18 passed** and `test_elaboration_import_boundaries.py`
+**14 passed** (unchanged counts — F3 strengthened an assertion and F4 restored one, neither adding
+a node). Full licensed codegen suite **3557 passed / 47 skipped / 38 deselected**, zero failures,
+zero `no live syside license` lines — **delta versus `430e26a` is zero on every axis**, since no
+test node was added or removed. Execution lane **38 passed**. Full agentic-mbse suite from the
+paired worktree **1825 passed / 1 skipped / 5 deselected**, unchanged; nothing in that repository
+changed. `ruff check src` byte-identical to the baseline set (16 findings) and both changed test
+modules lint clean. `mypy src` **71 errors in 17 files, measured** — no production file changed
+this follow-up, and it was re-run rather than assumed. `git diff --check` clean. Changed paths
+equal the declared set.
 
 ### Phase 4 Completion
 
