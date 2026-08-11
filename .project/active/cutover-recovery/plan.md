@@ -3067,7 +3067,7 @@ new findings introduced and fixed to hold parity), `mypy src/` **69 in 16 files 
 `git diff --check` clean, `check_ledger_4a.py paths` **296 rows / 0 problems**, `surface`
 **0 unrowed breakages on either axis**.
 
-**Commit:** `PART5_OID`. **Deletes nothing.** No retirement commit was made.
+**Commit:** ``1d66705` (`1d66705a326df5b795ba2fffa9e1d01a04865094`)`. **Deletes nothing.** No retirement commit was made.
 
 ### Phase 5 Completion
 
