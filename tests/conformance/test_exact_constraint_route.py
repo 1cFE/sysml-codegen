@@ -12,6 +12,7 @@ from __future__ import annotations
 import ast
 from pathlib import Path
 
+import pytest
 from agentic_mbse.sysml.constraint_extraction import (
     IdentifiedConstraintFacts,
     extract_identified_constraint_facts,
@@ -32,10 +33,44 @@ from tests.conftest import FIXTURES_DIR, requires_license
 pytestmark = requires_license
 
 LEGACY_CONSTRAINT_MODULE = "sysml_codegen.analysis.constraint_lowering"
+EXACT_ROUTE_PACKAGE = "sysml_codegen.elaboration"
 EXACT_ROUTE_FILES = (
     Path(__file__).parents[2] / "src/sysml_codegen/elaboration/elaborate.py",
     Path(__file__).parents[2] / "src/sysml_codegen/elaboration/project.py",
 )
+
+
+def legacy_constraint_imports(source: str, package: str) -> set[str]:
+    """Every way `source` names the legacy lowering module, as absolute dotted strings.
+
+    Resolves relative imports against `package` and expands `from <parent> import <name>`,
+    because both spell the same dependency as a plain string comparison against
+    `ImportFrom.module` would miss. `from sysml_codegen.analysis import constraint_lowering`
+    is the ordinary way to import a module object and is used further down this file.
+    """
+    found: set[str] = set()
+
+    def record(dotted: str) -> None:
+        if dotted == LEGACY_CONSTRAINT_MODULE or dotted.startswith(
+            f"{LEGACY_CONSTRAINT_MODULE}."
+        ):
+            found.add(dotted)
+
+    for node in ast.walk(ast.parse(source)):
+        if isinstance(node, ast.Import):
+            for alias in node.names:
+                record(alias.name)
+        elif isinstance(node, ast.ImportFrom):
+            if node.level:
+                base = package.split(".")
+                trimmed = base[: len(base) - node.level + 1]
+                prefix = ".".join(trimmed + ([node.module] if node.module else []))
+            else:
+                prefix = node.module or ""
+            record(prefix)
+            for alias in node.names:
+                record(f"{prefix}.{alias.name}" if prefix else alias.name)
+    return found
 
 
 def test_identified_facts_gate_and_projected_constraints_agree_by_usage_id() -> None:
@@ -97,18 +132,43 @@ def test_the_exact_route_takes_no_constraint_authority_from_legacy_lowering() ->
     now live in modules the two routes share.
     """
     for path in EXACT_ROUTE_FILES:
-        module = ast.parse(path.read_text())
-        imported = {
-            node.module
-            for node in ast.walk(module)
-            if isinstance(node, ast.ImportFrom) and node.module is not None
-        } | {
-            alias.name
-            for node in ast.walk(module)
-            if isinstance(node, ast.Import)
-            for alias in node.names
-        }
-        assert LEGACY_CONSTRAINT_MODULE not in imported, path.name
+        found = legacy_constraint_imports(path.read_text(), EXACT_ROUTE_PACKAGE)
+        assert found == set(), f"{path.name}: {sorted(found)}"
+
+
+@pytest.mark.parametrize(
+    "statement",
+    [
+        "from sysml_codegen.analysis.constraint_lowering import mint_constraint_id",
+        "from sysml_codegen.analysis import constraint_lowering",
+        "from ..analysis.constraint_lowering import mint_constraint_id",
+        "from ..analysis import constraint_lowering",
+        "import sysml_codegen.analysis.constraint_lowering",
+        "import sysml_codegen.analysis.constraint_lowering as legacy",
+    ],
+)
+def test_the_legacy_import_check_catches_every_spelling(statement: str) -> None:
+    """The pin above is only worth its claim if it cannot be walked around.
+
+    Measured: a plain comparison against `ImportFrom.module` catches cases 1, 5 and 6 and
+    misses 2, 3 and 4 — including case 2, the idiomatic way to reach a module object.
+    """
+    assert legacy_constraint_imports(statement, EXACT_ROUTE_PACKAGE)
+
+
+@pytest.mark.parametrize(
+    "statement",
+    [
+        "from sysml_codegen.analysis.source_referent import map_live_source_referent",
+        "from sysml_codegen.analysis import source_referent",
+        "from ..analysis import parameter_groups",
+        "import sysml_codegen.core.identifier_types",
+    ],
+)
+def test_the_legacy_import_check_does_not_flag_other_analysis_modules(
+    statement: str,
+) -> None:
+    assert legacy_constraint_imports(statement, EXACT_ROUTE_PACKAGE) == set()
 
 
 def test_the_shared_constraint_identity_and_default_helpers_stay_callable_on_both_routes() -> None:

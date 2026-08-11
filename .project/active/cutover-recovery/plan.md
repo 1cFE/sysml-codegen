@@ -640,6 +640,16 @@ def test_retirement_preserves_public_product(checkpoint, real_teax):
   and no-row disposition from scratch.
 - [ ] Generate the candidate inventory from `git diff --name-status <item6-base>` plus untracked
   paths. Require exact equality between that Git-derived set and the reviewed disposition set.
+- [ ] **Carried ledger inputs from Phase 3.** These are named here so the module deletion sweeps
+  them rather than leaving them behind:
+  - The eight retained transitional duals recorded in the Slice 3C completion notes. Each is one
+    behavior under two names; deleting the legacy member and dropping the `Exact`/`identified`
+    qualifier from the survivor is the Phase 4 half of that slice.
+  - `_CONSTRAINT_LOGGER = logging.getLogger("sysml_codegen.analysis.constraint_lowering")`
+    (`src/sysml_codegen/elaboration/project.py:83`). A string, not an import — it predates Item 7
+    (`b9c22c0`) and does not weaken the exact route's decoupling, but left alone it becomes a
+    logger named after a module that no longer exists. Retire the name with the module.
+    **[AGENT]** raised as F4 of the Slice 3C audit (`evidence/audit-3c.md`), informational.
 - [ ] For every proposed production deletion, name the public behavior and kept test that prove its
   replacement.
 - [ ] For every proposed test deletion or rewrite, state the behavior responsibility, replacement
@@ -1564,6 +1574,64 @@ both, so every existing caller and monkeypatch target still resolves;
   the cleanups, adds the missing exact gate, and defers the renames. Recorded rather than dressed
   up as more.
 - No deletions in either repository. No Item 6 test was removed, silenced, or deselected.
+
+#### Slice 3C audit follow-up — F1 through F4
+
+- **Completed:** 2026-08-11
+- **Audit:** `evidence/audit-3c.md`, verdict **CERTIFY** (nothing blocked 3D), 4 findings.
+  Recorded at `aaa85e0`. Commits: agentic-mbse `cc6c7a7`, sysml-codegen
+  `PENDING_CODEGEN_OID`.
+- **Declared path set, agentic-mbse:** `validation/level6_architecture.py`,
+  `tests/test_sysml_quality_checks.py`, `tests/test_sysml/test_executable_profile.py`.
+- **Declared path set, sysml-codegen:** `tests/conformance/test_exact_constraint_route.py` and
+  this plan. Actual changed paths equal both sets.
+
+All four findings are closed. One changed production, two strengthened tests, one is a Phase 4
+ledger input.
+
+- **F1 (Medium) — the narrowed except let a real failure escape, and the slice introduced it.**
+  A `manifest.yaml` that is not valid UTF-8 raises `UnicodeDecodeError` from inside
+  `yaml.safe_load`. That is a `ValueError`, so neither `OSError` nor `yaml.YAMLError` caught it,
+  and `_check_manifests` (`level6_architecture.py:124`) loops over every design's manifest relying
+  on the `None` return to skip a bad one — one mis-encoded file aborted the whole Level 6 check.
+  It also contradicted the docstring the same hunk rewrote. `UnicodeDecodeError` is now in the
+  except tuple, with the reason commented at the site so it is not "tidied" back out. The guard
+  the notes had cited used `chmod(0o000)`, which raises `OSError` and therefore constrained
+  nothing about the narrowing; `test_manifest_that_is_not_utf8_is_reported_not_raised` writes
+  genuinely non-UTF-8 bytes instead. Reproduced red at `8b63393` with the auditor's exact error
+  (`'utf-8' codec can't decode byte 0xe9`), green after. The `chmod` test stays as the `OSError`
+  leg.
+- **F2 (Medium) — the AST pin is widened to every import spelling.** The check compared
+  `ImportFrom.module` against one dotted string. Measured against the six ways to name the
+  module: it **caught 3 and missed 3**, including `from sysml_codegen.analysis import
+  constraint_lowering`, the ordinary way to import a module object and one this same test file
+  uses. `legacy_constraint_imports()` now resolves relative imports against the package
+  (accounting for `node.level`) and expands `from <parent> import <name>`, returning every
+  offending dotted name. The detector is itself pinned: six positive cases and four negative ones
+  (other `analysis` modules, which must not be flagged), so a future weakening of the check fails
+  a test rather than passing silently. The decoupling itself was already real; this is the guard
+  catching up to the claim.
+- **F3 (Low) — the neutral gate's order dependence is now measured, not argued.** The test
+  asserted the neutral payload was structurally ambiguous and then exercised only the exact gate.
+  It now runs neutral `preflight` over the same twin pair in both definition-list orders and
+  asserts the verdicts differ (`{True, False}`) — the neutral gate silently flips whether the run
+  is blocked at all. The contrast is completed on the exact side too: reversing the same list
+  leaves `preflight_identified` blocking the same usage, because the usage names its definition
+  by UUID.
+- **F4 (Informational) — carried to the Phase 4 ledger.** The legacy-named
+  `_CONSTRAINT_LOGGER` at `elaboration/project.py:83` is now a named Gate 4A ledger input,
+  alongside the eight retained duals, so the module deletion sweeps the string with the module.
+  No code change: it predates Item 7 and creates no import.
+
+**Gates.** Full codegen suite **3538 passed / 47 skipped / 18 deselected** — delta versus
+`7af5dc9` is exactly **+10 passed**, the ten new parametrized detector cases, with skips and
+deselections unchanged. Full agentic-mbse suite **1825 passed / 1 skipped / 5 deselected** —
+delta versus `8b63393` is exactly **+1 passed**, the non-UTF-8 case; the F3 work strengthened an
+existing test rather than adding one. Execution lane 18 passed. codegen `ruff check src`
+byte-identical to the baseline set and the changed test module lints clean; `mypy src` error set
+identical (71 errors in 17 files). agentic `ruff check src` identical (1 pre-existing finding);
+`mypy src` 108 errors, unchanged. `git diff --check` clean in both. Changed paths equal the
+declared sets.
 
 ### Phase 4 Completion
 
