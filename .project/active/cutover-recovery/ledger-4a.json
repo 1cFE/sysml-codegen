@@ -2194,15 +2194,19 @@
    "group": "4C-blast-radius",
    "authority": "plan rule 6 \u2014 keep the Item 6 tests until after product proof; every removed or rewritten test needs a responsibility-level disposition first",
    "unreachability": null,
-   "replacement_proof_node": null,
+   "replacement_proof_node": [
+    "tests/conformance/test_exact_constraint_route.py::test_identified_facts_gate_and_projected_constraints_agree_by_usage_id",
+    "tests/conformance/test_exact_route_constraint_portability.py::test_the_catalog_admits_the_numerical_constraint_and_excludes_the_string_one",
+    "tests/conformance/test_exact_route_constraint_portability.py::test_the_catalog_and_semantic_fingerprints_are_route_and_root_invariant"
+   ],
    "blocked_by": [],
    "reason": "Phase 3: expansion \u2014 four-kind dispatch, blocked-owner error, multi-instance. Imports legacy owners (constraint_lowering, part_instance_index, pipeline_builder) directly, so 4B's deletion breaks it. Retain now; before the owning 4B group lands, this row needs either a public-behaviour rewrite or a recorded responsibility retirement.",
-   "disposition_4c": "defer-to-v5-family",
+   "disposition_4c": "retire-with-owner",
    "node_count": 26,
-   "responsibility": "Phase 3: expansion \u2014 four-kind dispatch, blocked-owner error, multi-instance.",
+   "responsibility": "Legacy constraint expansion: the four-kind owner dispatch, the blocked-owner error, and multi-instance expansion.",
    "breaks_on": "sysml_codegen.analysis.constraint_lowering (L-001, 4B-v5-family); sysml_codegen.analysis.part_instance_index (L-004, 4B-v5-family); sysml_codegen.orchestration.pipeline_builder (L-029, 4B-v5-family); agentic_mbse.sysml.constraint_extraction:extract_constraint_facts (L-036, 4B-v5-family); agentic_mbse.sysml.executable_profile:evaluate_profile (L-037, 4B-v5-family)",
    "breaks_a_free_group": false,
-   "disposition_4c_note": "No green replacement, and every owner it depends on is now deferred: the v5 read path is retained by consequence of keeping the v5 writer and the 37 fixtures, so this file's coverage is still load-bearing. Retires with the v5 family at Phase 5 owner acceptance."
+   "disposition_4c_note": "Gate 4C part 7 (2026-08-11), superseding the part-5 defer. Retires in the PAIRED G4' commit with L-116, and for the same reason \u2014 it imports the agentic duals extract_constraint_facts (L-036) and evaluate_profile (L-037) at module level alongside constraint_lowering, part_instance_index and pipeline_builder, so it cannot outlive either repo's half. The expansion behaviour itself has a full exact-route owner: multi-instance expansion is pinned at execution, and the catalog's admit/exclude decision and route-invariant fingerprints are pinned offline."
   },
   {
    "id": "L-109",
@@ -2539,7 +2543,7 @@
    "responsibility": "The codegen extraction-diagnostic sink, on both routes (DD-A03, DD-R08, DD-R09).",
    "breaks_on": "sysml_codegen.snapshot.graph_rebuild (L-015, 4B-G2); sysml_codegen.orchestration.snapshot_context (L-026, 4B-G2); sysml_codegen.orchestration.pipeline_builder (L-029, 4B-v5-family)",
    "breaks_a_free_group": true,
-   "disposition_4c_note": "No green replacement, and every owner it depends on is now deferred: the v5 read path is retained by consequence of keeping the v5 writer and the 37 fixtures, so this file's coverage is still load-bearing. Retires with the v5 family at Phase 5 owner acceptance."
+   "disposition_4c_note": "Gate 4C part 7 (2026-08-11): ANALYSED, NOT YET DISPOSITIONED \u2014 deliberately left blocked so the checker does not report a readiness that is not true. 8 nodes, and it is a genuine DUAL-ROUTE file \u2014 the extraction-diagnostic sink pinned on both routes, written in response to audit F1/F3 precisely because the sink had zero coverage on either. The exact arm survives; the legacy arm (pipeline_builder and snapshot_context at module level, graph_rebuild function-scoped) retires. Repoint = drop the legacy arm and keep the ordering assertion the F1 defect needed, which is real work rather than an import move because the ordering claim is stated against the legacy stage sequence."
   },
   {
    "id": "L-125",
@@ -2673,15 +2677,19 @@
    "group": "4C-blast-radius",
    "authority": "plan rule 6 \u2014 keep the Item 6 tests until after product proof; every removed or rewritten test needs a responsibility-level disposition first",
    "unreachability": null,
-   "replacement_proof_node": null,
+   "replacement_proof_node": [
+    "tests/conformance/test_exact_pipeline_context.py::test_the_live_and_v6_contexts_agree_on_the_public_entry_point_surface",
+    "tests/conformance/test_exact_projection_aggregation.py::test_every_member_occurrence_is_its_own_entry_point",
+    "tests/unit/test_zero_default_exact_route.py::test_a_zero_valued_design_attribute_projects_as_zero_not_null"
+   ],
    "blocked_by": [],
    "reason": "Conformance tests for Entry Point Classification (C17). Imports legacy owners (graph_builder) directly, so 4B's deletion breaks it. Retain now; before the owning 4B group lands, this row needs either a public-behaviour rewrite or a recorded responsibility retirement.",
-   "disposition_4c": "defer-to-v5-family",
+   "disposition_4c": "retire-with-owner",
    "node_count": 22,
-   "responsibility": "Conformance tests for Entry Point Classification (C17).",
+   "responsibility": "Entry point classification conformance (C17, REQ-EPC-01..08): every entry point classified as exactly one EntryPointType, with its default carried.",
    "breaks_on": "sysml_codegen.resolution.graph_builder (L-011, 4B-v5-family); sysml_codegen.snapshot:build_classifier_inputs_from_snapshot (L-028, 4B-G2); sysml_codegen.snapshot:build_full_graph_from_snapshot (L-028, 4B-G2)",
    "breaks_a_free_group": true,
-   "disposition_4c_note": "No green replacement, and every owner it depends on is now deferred: the v5 read path is retained by consequence of keeping the v5 writer and the 37 fixtures, so this file's coverage is still load-bearing. Retires with the v5 family at Phase 5 owner acceptance."
+   "disposition_4c_note": "Gate 4C part 7 (2026-08-11), superseding the part-5 defer. _classify_entry_points is a private function of the legacy graph builder (L-011), reached here through build_full_graph_from_snapshot and build_classifier_inputs_from_snapshot \u2014 the classifier intermediate the exact route does not expose, because it does not have one. Classification survives as the shape of the projected entry-point surface, and its sharpest sub-property, the 0.0 default, is re-pinned end-to-end this gate rather than left implied."
   },
   {
    "id": "L-132",
@@ -2799,15 +2807,19 @@
    "group": "4C-blast-radius",
    "authority": "plan rule 6 \u2014 keep the Item 6 tests until after product proof; every removed or rewritten test needs a responsibility-level disposition first",
    "unreachability": null,
-   "replacement_proof_node": null,
+   "replacement_proof_node": [
+    "tests/conformance/test_exact_route_alias_aggregation.py::test_every_generated_file_parses",
+    "tests/conformance/test_exact_route_alias_aggregation.py::test_the_quoted_calc_defs_compute_what_the_model_says",
+    "tests/conformance/test_elaboration_projection.py::test_projection_is_topological_and_every_input_is_covered"
+   ],
    "blocked_by": [],
    "reason": "Conformance tests for CalcUsage Module Factory (C14). Imports legacy owners (dependency_backtracker, graph_builder, output_registry_builder, parameter_groups) directly, so 4B's deletion breaks it. Retain now; before the owning 4B group lands, this row needs either a public-behaviour rewrite or a recorded responsibility retirement.",
-   "disposition_4c": "defer-to-v5-family",
+   "disposition_4c": "retire-with-owner",
    "node_count": 18,
-   "responsibility": "Conformance tests for CalcUsage Module Factory (C14).",
+   "responsibility": "CalcUsage module factory conformance (C14, REQ-MF-01/02/05/08): _build_pipeline_module as a pure data transformer.",
    "breaks_on": "sysml_codegen.analysis.dependency_backtracker (L-002, 4B-v5-family); sysml_codegen.analysis.parameter_groups (L-003, 4B-v5-family); sysml_codegen.orchestration.output_registry_builder (L-010, 4B-v5-family); sysml_codegen.resolution.graph_builder (L-011, 4B-v5-family); sysml_codegen.snapshot:load_extraction_snapshot (L-028, 4B-G2)",
    "breaks_a_free_group": true,
-   "disposition_4c_note": "No green replacement, and every owner it depends on is now deferred: the v5 read path is retained by consequence of keeping the v5 writer and the 37 fixtures, so this file's coverage is still load-bearing. Retires with the v5 family at Phase 5 owner acceptance."
+   "disposition_4c_note": "Gate 4C part 7 (2026-08-11), superseding the part-5 defer. Same owner and same class as L-138. The calc-usage module is now minted by the projection, and what the factory tests asserted about the resulting module is asserted about the generated package instead \u2014 every file parses, every derived identifier is safe, and the computation matches what the model says."
   },
   {
    "id": "L-138",
@@ -2819,15 +2831,19 @@
    "group": "4C-blast-radius",
    "authority": "plan rule 6 \u2014 keep the Item 6 tests until after product proof; every removed or rewritten test needs a responsibility-level disposition first",
    "unreachability": null,
-   "replacement_proof_node": null,
+   "replacement_proof_node": [
+    "tests/conformance/test_elaboration_computed_attrs.py::test_simple_expression_becomes_a_computed_node",
+    "tests/integration/test_computed_attributes_exact_route.py::test_every_formula_computed_attribute_becomes_an_auto_implemented_module",
+    "tests/integration/test_computed_attributes_exact_route.py::test_computed_attribute_arithmetic_matches_the_model"
+   ],
    "blocked_by": [],
    "reason": "Conformance tests for FORMULA Module Factory (C15). Imports legacy owners (dependency_backtracker, graph_builder, output_registry_builder, parameter_groups) directly, so 4B's deletion breaks it. Retain now; before the owning 4B group lands, this row needs either a public-behaviour rewrite or a recorded responsibility retirement.",
-   "disposition_4c": "defer-to-v5-family",
+   "disposition_4c": "retire-with-owner",
    "node_count": 19,
-   "responsibility": "Conformance tests for FORMULA Module Factory (C15).",
+   "responsibility": "FORMULA module factory conformance (C15, REQ-MF-01/03/05): _build_computed_attr_module's naming, flags and wiring.",
    "breaks_on": "sysml_codegen.analysis.dependency_backtracker (L-002, 4B-v5-family); sysml_codegen.analysis.parameter_groups (L-003, 4B-v5-family); sysml_codegen.orchestration.output_registry_builder (L-010, 4B-v5-family); sysml_codegen.resolution.graph_builder (L-011, 4B-v5-family); sysml_codegen.snapshot:load_extraction_snapshot (L-028, 4B-G2)",
    "breaks_a_free_group": true,
-   "disposition_4c_note": "No green replacement, and every owner it depends on is now deferred: the v5 read path is retained by consequence of keeping the v5 writer and the 37 fixtures, so this file's coverage is still load-bearing. Retires with the v5 family at Phase 5 owner acceptance."
+   "disposition_4c_note": "Gate 4C part 7 (2026-08-11), superseding the part-5 defer. A private factory of the legacy graph builder, retiring with it. Both halves of its subject keep an owner on the exact route, and at a higher level than a factory unit test: a formula attribute becomes a computed node with the right inputs, and end to end it becomes an auto-implemented module whose arithmetic matches the model."
   },
   {
    "id": "L-139",
@@ -2839,15 +2855,19 @@
    "group": "4C-blast-radius",
    "authority": "plan rule 6 \u2014 keep the Item 6 tests until after product proof; every removed or rewritten test needs a responsibility-level disposition first",
    "unreachability": null,
-   "replacement_proof_node": null,
+   "replacement_proof_node": [
+    "tests/conformance/test_exact_pipeline_context.py::test_every_read_returns_an_isolated_graph",
+    "tests/conformance/test_exact_pipeline_context.py::test_a_built_context_refuses_to_be_changed_or_duplicated",
+    "tests/conformance/test_elaboration_projection_one_way.py::test_graph_validation_rejects_missing_occurrence_and_typed_producer_cycle"
+   ],
    "blocked_by": [],
    "reason": "Conformance tests for Factory Purity Refactor (7.7 / REQ-MF-01). Imports legacy owners (dependency_backtracker, graph_builder, output_registry_builder, parameter_groups, producer_resolution) directly, so 4B's deletion breaks it. Retain now; before the owning 4B group lands, this row needs either a public-behaviour rewrite or a recorded responsibility retirement.",
-   "disposition_4c": "defer-to-v5-family",
+   "disposition_4c": "retire-with-owner",
    "node_count": 8,
-   "responsibility": "Conformance tests for Factory Purity Refactor (7.7 / REQ-MF-01).",
+   "responsibility": "Factory purity (7.7 / REQ-MF-01): all three factory functions are pure data transformers returning (PipelineModule, dict[str, EntryPoint]) with no mutation of shared state.",
    "breaks_on": "sysml_codegen.analysis.dependency_backtracker (L-002, 4B-v5-family); sysml_codegen.analysis.parameter_groups (L-003, 4B-v5-family); sysml_codegen.orchestration.output_registry_builder (L-010, 4B-v5-family); sysml_codegen.resolution.graph_builder (L-011, 4B-v5-family); sysml_codegen.resolution.producer_resolution (L-013, 4B-v5-family); sysml_codegen.snapshot:load_extraction_snapshot (L-028, 4B-G2)",
    "breaks_a_free_group": true,
-   "disposition_4c_note": "No green replacement, and every owner it depends on is now deferred: the v5 read path is retained by consequence of keeping the v5 writer and the 37 fixtures, so this file's coverage is still load-bearing. Retires with the v5 family at Phase 5 owner acceptance."
+   "disposition_4c_note": "Gate 4C part 7 (2026-08-11), superseding the part-5 defer. The three factories retire with the legacy graph builder, so the requirement loses its subjects. Purity is not lost \u2014 it is enforced structurally instead of asserted per function: the projection is one-way, every read of a context returns an isolated graph, and a built context refuses to be changed or duplicated. That is a stronger guarantee than three functions each declining to mutate."
   },
   {
    "id": "L-140",
@@ -3108,15 +3128,19 @@
    "group": "4C-blast-radius",
    "authority": "plan rule 6 \u2014 keep the Item 6 tests until after product proof; every removed or rewritten test needs a responsibility-level disposition first",
    "unreachability": null,
-   "replacement_proof_node": null,
+   "replacement_proof_node": [
+    "tests/conformance/test_elaboration_projection.py::test_projection_is_topological_and_every_input_is_covered",
+    "tests/conformance/test_elaboration_projection_one_way.py::test_graph_validation_rejects_missing_occurrence_and_typed_producer_cycle",
+    "tests/conformance/test_exact_target_selection.py::test_selection_renumbers_execution_order_without_gaps"
+   ],
    "blocked_by": [],
    "reason": "Conformance tests for Graph Assembly (C18). Imports legacy owners (dependency_backtracker, graph_builder) directly, so 4B's deletion breaks it. Retain now; before the owning 4B group lands, this row needs either a public-behaviour rewrite or a recorded responsibility retirement.",
-   "disposition_4c": "defer-to-v5-family",
+   "disposition_4c": "retire-with-owner",
    "node_count": 24,
-   "responsibility": "Conformance tests for Graph Assembly (C18).",
+   "responsibility": "Graph assembly (C18, REQ-GA-01..07): _unified_topological_sort, _validate_channel_references, and ComputationGraph assembly from real extraction data.",
    "breaks_on": "sysml_codegen.analysis.dependency_backtracker (L-002, 4B-v5-family); sysml_codegen.resolution.graph_builder (L-011, 4B-v5-family); sysml_codegen.snapshot:build_full_graph_from_snapshot (L-028, 4B-G2)",
    "breaks_a_free_group": true,
-   "disposition_4c_note": "No green replacement, and every owner it depends on is now deferred: the v5 read path is retained by consequence of keeping the v5 writer and the 37 fixtures, so this file's coverage is still load-bearing. Retires with the v5 family at Phase 5 owner acceptance."
+   "disposition_4c_note": "Gate 4C part 7 (2026-08-11), superseding the part-5 defer. Retires with resolution/graph_builder.py's legacy half (L-011) and dependency_backtracker (L-002), both imported at module level, and reads its data through build_full_graph_from_snapshot. Both named private functions are legacy assembly internals. The two requirements that matter survive as public properties of the projection: the result is topological with every input covered, and a graph referencing a missing occurrence or carrying a typed producer cycle is rejected rather than assembled."
   },
   {
    "id": "L-153",
@@ -3222,15 +3246,19 @@
    "group": "4C-blast-radius",
    "authority": "plan rule 6 \u2014 keep the Item 6 tests until after product proof; every removed or rewritten test needs a responsibility-level disposition first",
    "unreachability": null,
-   "replacement_proof_node": null,
+   "replacement_proof_node": [
+    "tests/conformance/test_exact_pipeline_context.py::test_the_receipt_binds_the_instance_bytes_and_the_projection",
+    "tests/conformance/test_exact_pipeline_context.py::test_a_receipt_whose_digest_moved_is_refused",
+    "tests/conformance/test_exact_pipeline_context.py::test_the_live_and_v6_contexts_agree_on_the_public_entry_point_surface"
+   ],
    "blocked_by": [],
    "reason": "Conformance tests for Orchestrator Step Ordering (C19). Imports legacy owners (graph_builder, output_registry_builder, parameter_groups, pipeline_builder) directly, so 4B's deletion breaks it. Retain now; before the owning 4B group lands, this row needs either a public-behaviour rewrite or a recorded responsibility retirement.",
-   "disposition_4c": "defer-to-v5-family",
+   "disposition_4c": "retire-with-owner",
    "node_count": 27,
-   "responsibility": "Conformance tests for Orchestrator Step Ordering (C19).",
+   "responsibility": "Orchestrator step ordering (C19, REQ-ORCH-01..07 / REQ-PIPE-01..07): that build_pipeline_context calls its stages in DAG order, with FORMULA removal before the ParameterGroupDeriver.",
    "breaks_on": "sysml_codegen.analysis.parameter_groups (L-003, 4B-v5-family); sysml_codegen.orchestration.output_registry_builder (L-010, 4B-v5-family); sysml_codegen.resolution.graph_builder (L-011, 4B-v5-family); sysml_codegen.snapshot:build_full_graph_from_snapshot (L-028, 4B-G2); sysml_codegen.snapshot:load_extraction_snapshot (L-028, 4B-G2); sysml_codegen.orchestration.pipeline_builder (L-029, 4B-v5-family)",
    "breaks_a_free_group": true,
-   "disposition_4c_note": "No green replacement, and every owner it depends on is now deferred: the v5 read path is retained by consequence of keeping the v5 writer and the 37 fixtures, so this file's coverage is still load-bearing. Retires with the v5 family at Phase 5 owner acceptance."
+   "disposition_4c_note": "Gate 4C part 7 (2026-08-11), superseding the part-5 defer. The subject is the ORDER OF THE LEGACY STAGES, and the exact route has none of them \u2014 no Step 4.5, no deriver pass to sequence, no registry build. build_pipeline_context (L-029) is imported at module level and is the thing under test. The exact route's context has its own conformance owner, and it pins something stronger than call ordering: the receipt binds the instance bytes to the projection, every read returns an isolated graph, and a receipt whose digest or selection moved is refused rather than reprojected."
   },
   {
    "id": "L-159",
@@ -3242,15 +3270,19 @@
    "group": "4C-blast-radius",
    "authority": "plan rule 6 \u2014 keep the Item 6 tests until after product proof; every removed or rewritten test needs a responsibility-level disposition first",
    "unreachability": null,
-   "replacement_proof_node": null,
+   "replacement_proof_node": [
+    "tests/conformance/test_elaboration_identity_collisions.py::test_output_and_expression_keys_do_not_collapse_on_rendered_name",
+    "tests/conformance/test_elaboration_aggregations.py::test_aggregation_chain_to_producer_output",
+    "tests/conformance/test_exact_route_registry.py"
+   ],
    "blocked_by": [],
    "reason": "Conformance tests for Output Registry (C08). Imports legacy owners (output_registry, output_registry_builder) directly, so 4B's deletion breaks it. Retain now; before the owning 4B group lands, this row needs either a public-behaviour rewrite or a recorded responsibility retirement.",
-   "disposition_4c": "defer-to-v5-family",
+   "disposition_4c": "retire-with-owner",
    "node_count": 26,
-   "responsibility": "Conformance tests for Output Registry (C08).",
+   "responsibility": "Output Registry conformance (C08, REQ-OR-01..08) against real extraction snapshot data.",
    "breaks_on": "sysml_codegen.core.output_registry (L-007, 4B-v5-family); sysml_codegen.orchestration.output_registry_builder (L-010, 4B-v5-family); sysml_codegen.snapshot:load_extraction_snapshot (L-028, 4B-G2)",
    "breaks_a_free_group": true,
-   "disposition_4c_note": "No green replacement, and every owner it depends on is now deferred: the v5 read path is retained by consequence of keeping the v5 writer and the 37 fixtures, so this file's coverage is still load-bearing. Retires with the v5 family at Phase 5 owner acceptance."
+   "disposition_4c_note": "Gate 4C part 7 (2026-08-11), superseding the part-5 defer. The conformance half of the same subject as L-232 and L-233, and it retires for the same reason: core/output_registry.py (L-007) and output_registry_builder (L-010) are its subject, both imported at module level, and it reads them through the v5 loader. The exact route builds no registry \u2014 a consumer edge names its producer in the instance graph \u2014 so the requirement family has no successor. Its guarantees survive as properties of the projection."
   },
   {
    "id": "L-160",
@@ -3262,15 +3294,19 @@
    "group": "4C-blast-radius",
    "authority": "plan rule 6 \u2014 keep the Item 6 tests until after product proof; every removed or rewritten test needs a responsibility-level disposition first",
    "unreachability": null,
-   "replacement_proof_node": null,
+   "replacement_proof_node": [
+    "tests/conformance/test_exact_group_identity.py::test_group_identity_comes_from_the_declaring_file_or_package",
+    "tests/conformance/test_exact_group_identity.py::test_one_package_spanning_two_files_still_gets_one_group_per_file",
+    "tests/conformance/test_exact_pipeline_context.py::test_the_live_and_v6_contexts_agree_on_the_public_entry_point_surface"
+   ],
    "blocked_by": [],
    "reason": "Conformance tests for ParameterGroupDeriver (C13). Imports legacy owners (dependency_backtracker, parameter_groups, phantom_detector) directly, so 4B's deletion breaks it. Retain now; before the owning 4B group lands, this row needs either a public-behaviour rewrite or a recorded responsibility retirement.",
-   "disposition_4c": "defer-to-v5-family",
+   "disposition_4c": "retire-with-owner",
    "node_count": 25,
-   "responsibility": "Conformance tests for ParameterGroupDeriver (C13).",
+   "responsibility": "ParameterGroupDeriver conformance (C13, REQ-PGD-01..07) against real extraction snapshot data.",
    "breaks_on": "sysml_codegen.analysis.dependency_backtracker (L-002, 4B-v5-family); sysml_codegen.analysis.parameter_groups (L-003, 4B-v5-family); sysml_codegen.analysis.phantom_detector (L-005, 4B-v5-family); sysml_codegen.snapshot:load_extraction_snapshot (L-028, 4B-G2)",
    "breaks_a_free_group": true,
-   "disposition_4c_note": "No green replacement, and every owner it depends on is now deferred: the v5 read path is retained by consequence of keeping the v5 writer and the 37 fixtures, so this file's coverage is still load-bearing. Retires with the v5 family at Phase 5 owner acceptance."
+   "disposition_4c_note": "Gate 4C part 7 (2026-08-11), superseding the part-5 defer. analysis/parameter_groups.py (L-003) is its subject and is imported at module level alongside the backtracker and phantom detector. Group derivation survives, but by a different rule that Slice 3E ratified and Gate 4C part 6 re-measured: a group is named after the file that DECLARES its parameters, not the file that uses them, and legacy's synthetic system_design hierarchy group has no exact-route counterpart at all. Pinning the legacy rule would pin the wrong answer, which is why this retires rather than repoints."
   },
   {
    "id": "L-161",
@@ -4814,15 +4850,19 @@
    "group": "4C-blast-radius",
    "authority": "plan rule 6 \u2014 keep the Item 6 tests until after product proof; every removed or rewritten test needs a responsibility-level disposition first",
    "unreachability": null,
-   "replacement_proof_node": null,
+   "replacement_proof_node": [
+    "tests/conformance/test_elaboration_aggregations.py::test_aggregation_chain_to_producer_output",
+    "tests/conformance/test_elaboration_identity_collisions.py::test_output_and_expression_keys_do_not_collapse_on_rendered_name",
+    "tests/conformance/test_elaboration_projection.py::test_projection_is_topological_and_every_input_is_covered"
+   ],
    "blocked_by": [],
    "reason": "Contract tests: build_output_registry() key format agreement. Imports legacy owners (dependency_backtracker, output_registry, output_registry_builder, parameter_groups, pipeline_builder, producer_resolution) directly, so 4B's deletion breaks it. Retain now; before the owning 4B group lands, this row needs either a public-behaviour rewrite or a recorded responsibility retirement.",
-   "disposition_4c": "defer-to-v5-family",
+   "disposition_4c": "retire-with-owner",
    "node_count": 47,
-   "responsibility": "Contract tests: build_output_registry() key format agreement.",
+   "responsibility": "The build_output_registry key-format contract: for every binding type, the key the builder writes is the key the backtracker queries.",
    "breaks_on": "sysml_codegen.analysis.dependency_backtracker (L-002, 4B-v5-family); sysml_codegen.analysis.parameter_groups (L-003, 4B-v5-family); sysml_codegen.core.output_registry (L-007, 4B-v5-family); sysml_codegen.orchestration.output_registry_builder (L-010, 4B-v5-family); sysml_codegen.resolution.producer_resolution (L-013, 4B-v5-family); sysml_codegen.orchestration.pipeline_builder (L-029, 4B-v5-family)",
    "breaks_a_free_group": false,
-   "disposition_4c_note": "No green replacement, and every owner it depends on is now deferred: the v5 read path is retained by consequence of keeping the v5 writer and the 37 fixtures, so this file's coverage is still load-bearing. Retires with the v5 family at Phase 5 owner acceptance."
+   "disposition_4c_note": "Gate 4C part 7 (2026-08-11), superseding the part-5 defer. A contract between two retiring parties. Both sides \u2014 core/output_registry.py (L-007) and analysis/dependency_backtracker.py (L-002) \u2014 are delete rows imported at module level, so the agreement has nobody left to hold. The exact route has no registry and no query step: a consumer edge names its producer directly in the instance graph, which is why the contract has no successor and needs none. What survives is the consequence the contract existed to guarantee \u2014 that a binding reaches the right producer and that same-named channels stay distinct."
   },
   {
    "id": "L-234",
@@ -5137,15 +5177,19 @@
    "group": "4C-blast-radius",
    "authority": "plan rule 6 \u2014 keep the Item 6 tests until after product proof; every removed or rewritten test needs a responsibility-level disposition first",
    "unreachability": null,
-   "replacement_proof_node": null,
+   "replacement_proof_node": [
+    "tests/unit/test_zero_default_exact_route.py::test_a_zero_valued_design_attribute_projects_as_zero_not_null",
+    "tests/unit/test_zero_default_exact_route.py::test_the_projection_tests_identity_not_truthiness",
+    "tests/conformance/test_elaboration_identity_collisions.py::test_semantic_graph_keeps_same_rendered_names_distinct"
+   ],
    "blocked_by": [],
    "reason": "Supplied-value materializer seams (REQ-SVM-01..04): precedence, 0.0-carry (F2), Imports legacy owners (parameter_groups, supplied_values) directly, so 4B's deletion breaks it. Retain now; before the owning 4B group lands, this row needs either a public-behaviour rewrite or a recorded responsibility retirement.",
-   "disposition_4c": "defer-to-v5-family",
+   "disposition_4c": "retire-with-owner",
    "node_count": 20,
-   "responsibility": "Supplied-value materializer seams (REQ-SVM-01..04): precedence, 0.0-carry (F2), collision guard (F3), non-literal loud skip (F5).",
+   "responsibility": "The supplied-value materializer seams (REQ-SVM-01..04): precedence, the 0.0 carry (F2), the collision guard (F3), and the loud skip on a non-literal (F5).",
    "breaks_on": "sysml_codegen.analysis.parameter_groups (L-003, 4B-v5-family); sysml_codegen.resolution.supplied_values (L-014, 4B-v5-family)",
    "breaks_a_free_group": false,
-   "disposition_4c_note": "No green replacement, and every owner it depends on is now deferred: the v5 read path is retained by consequence of keeping the v5 writer and the 37 fixtures, so this file's coverage is still load-bearing. Retires with the v5 family at Phase 5 owner acceptance."
+   "disposition_4c_note": "Gate 4C part 7 (2026-08-11), superseding the part-5 defer. Retires with resolution/supplied_values.py (L-014), same owner as L-228. Supplied values are a legacy-resolver concept \u2014 the exact route reads a value from the modelled source it is bound to, so nothing is synthesized and there is no precedence order to enforce. Its two sharpest properties keep dedicated owners rather than being folded into a general claim: the 0.0 carry is exactly INV-6, re-pinned end-to-end this gate on solar_battery_d5's two zero-valued design attributes, and the collision guard is the projection's typed SI_RENDERING_COLLISION refusal."
   },
   {
    "id": "L-249",
@@ -5683,7 +5727,7 @@
    "reason": "Found by the Gate 4C part 3 surface check. Imports the legacy compile_calc_def and CompilationResult duals (L-033) at module level. Defers with them in 4B-v5-family; the exact-route half is already pinned separately by test_compile_calc_def_golden.py.",
    "breaks_on": "sysml_codegen.extraction.expression_compiler:CompilationResult (L-033, 4B-v5-family); sysml_codegen.extraction.expression_compiler:compile_calc_def (L-033, 4B-v5-family)",
    "breaks_a_free_group": false,
-   "disposition_4c_note": "No green replacement, and every owner it depends on is now deferred: the v5 read path is retained by consequence of keeping the v5 writer and the 37 fixtures, so this file's coverage is still load-bearing. Retires with the v5 family at Phase 5 owner acceptance."
+   "disposition_4c_note": "Gate 4C part 7 (2026-08-11): ANALYSED, NOT YET DISPOSITIONED \u2014 deliberately left blocked so the checker does not report a readiness that is not true. 24 nodes. Same blocker as L-284: both hits are the symbols L-033 removes (CompilationResult, compile_calc_def), here at MODULE level. The repoint is to the survivors once L-033 drops the Exact qualifier, so it cannot be finished before that rename lands. Group it with L-284 and L-280 as one expression-compiler piece of work."
   },
   {
    "id": "L-282",
