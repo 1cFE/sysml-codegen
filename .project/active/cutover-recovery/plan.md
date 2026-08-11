@@ -599,7 +599,7 @@ Record every slice. Do not combine them later.
 |---|---|---|---|---|
 | 3A | fe0b855, audit follow-up 4858911 | N/A | 3473 passed / 47 skipped / 18 deselected (+115, all new) | smoke PASS (fusion_tea, 48-file sealed package) |
 | 3B | d91431b, audit follow-up 2f28dde | N/A | 3520 passed / 47 skipped / 18 deselected (+47, all new) | smoke PASS (live + v6-snapshot packages, group names equal; legacy CLI package unchanged at 48 files) |
-| 3C | PENDING_CODEGEN_OID | 8b63393 | codegen 3528 passed / 47 skipped / 18 deselected (+8, all new); agentic 1824 passed / 1 skipped / 5 deselected (+5, all new) | N/A |
+| 3C | 7af5dc9 | 8b63393 | codegen 3528 passed / 47 skipped / 18 deselected (+8, all new); agentic 1824 passed / 1 skipped / 5 deselected (+5, all new) | N/A |
 | 3D | PENDING | PENDING if changed | PENDING | PENDING |
 | 3E | PENDING | PENDING if changed | PENDING | PENDING |
 
@@ -1398,7 +1398,7 @@ clean. Changed paths equal the declared set.
 #### Slice 3C Completion — Coordinated compiler and constraint authority
 
 - **Completed:** 2026-08-11
-- **Commits:** agentic-mbse `8b63393` (committed first), sysml-codegen `PENDING_CODEGEN_OID`
+- **Commits:** agentic-mbse `8b63393` (committed first), sysml-codegen `7af5dc9`
   (names the agentic OID in its message). This is the first slice where both repositories move.
 - **Declared path set, sysml-codegen:** `core/identifier_types.py`,
   `extraction/modeled_defaults.py` (new), `analysis/constraint_lowering.py`,
