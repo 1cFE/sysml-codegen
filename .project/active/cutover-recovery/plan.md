@@ -3766,7 +3766,8 @@ reported at each stop.
 | 8 | `5e02832` | twelve more legacy suites, and the class-3 correction |
 | 9 | `cd520a5` | G3′ and G4′ reach READY (8 files) |
 | 10 | `b176674` | the constraint conformance family (8 files) + the L-130 repoint |
-| 11 | *this commit* | **the execution lane** — the last Gate 4C must-restore (6 files) |
+| 11 | `c674064` | **the execution lane** — the last Gate 4C must-restore (6 files) |
+| 12 | *this commit* | L-180 repointed and ordered; the expression-compiler premise measured false |
 
 **Blockers, two-axis: 124 → 43.** G2′ 40, **G3′ 0, G4′ 0**. Row dispositions stand at
 **74 `retire-with-owner`, 23 `repoint`, 17 `archive-with-findings`**.
@@ -3788,14 +3789,15 @@ of the correction below. What is left is four named pieces:
 | Piece | Rows | Why it is still open |
 |---|---|---|
 | ~~the execution lane~~ | ~~L-192, L-191, L-193, L-194, and L-113/L-114 behind them~~ | **CLOSED, chunk 11.** See the chunk-11 record below. |
-| the expression compiler | L-284, L-281 (L-280 done) | cannot be finished before L-033 drops the `Exact` qualifier |
+| the expression compiler | L-284, L-281 (L-280 done) | **still blocked, and for a different reason than recorded** — chunk 12 measured the "mechanical rename" premise false. See below. |
 | doc-coupled | L-120 `test_data_models.py` | its target list is whatever Gate 4D leaves in `09-data-models.md` |
-| the genuine repoints | L-135, L-181, L-182, L-154, L-163, L-164, L-124, L-168, L-180, and the silent-failure trio | each needs coverage re-derived, not an import moved |
+| the genuine repoints | ~~L-180~~ (done, chunk 12), L-135, L-181, L-182, L-154, L-163, L-164, L-124, L-168, the silent-failure trio, **and the ~40 files the count correction above surfaced** | each needs coverage re-derived, not an import moved |
 
 **`test_snapshot_v5_gate.py` (L-180) is flagged and ordered.** The retirement brief's own
 post-step-4 battery requires "the v5 typed refusal still typed", so this file must be
 **repointed, never retired** — and the repoint has to land **before G2′ runs**, because G2′
-removes the route it currently reaches the gate through.
+removes the route it currently reaches the gate through. **Done in chunk 12**; the
+precondition is satisfied and the runbook step below names the surviving subject.
 
 **Four method notes the next session should not have to re-derive.**
 
@@ -3954,6 +3956,86 @@ ledger test 12 passed. `ruff check src` **16**, whole tree **868** — both unch
 **69 errors in 16 files**, unchanged. `git diff --check` clean. Checker: `paths` 298 rows / 0
 problems, `surface` 0 unrowed breakages, `groups` as above, `replacements` green for all six
 rows under `required_suite: execution`.
+
+**Deletes nothing.**
+
+##### Gate 4C part 7 chunk 12 — L-180 ordered and satisfied, and a premise measured false
+
+**L-180 `test_snapshot_v5_gate.py` is repointed, and the ordering constraint is now discharged.**
+The retirement runbook's post-step-4 battery asks whether "the v5 typed refusal is still typed".
+Chunk 12 established that after G2′ **it could not have been**: G2′ deletes
+`snapshot/loader.py` (L-016), the only raiser of `SnapshotFormatError`, together with
+`orchestration/snapshot_context.py` (L-026). The check had no surviving subject.
+
+It has one now, and the subject was found rather than manufactured. `snapshot/envelope.py` is
+in no deletion group and **already** refuses a v5 extraction snapshot with a typed
+`SnapshotShapeError` that names what it was handed — `this is a v5 extraction snapshot, but the
+instance-graph route requires snapshot v6` — and gives the recapture instruction. Four new
+nodes pin it: both skew directions against the v6 reader, the v5 payload refused *by name*
+rather than as a null version, the gate running before any semantic read (corrupt the instance
+graph past every decoder **and** the version — the version error must win), and the public
+`run_codegen` route declining while writing no package.
+
+The six pre-existing v5 nodes are **kept and import-localised** (method note 1):
+`build_pipeline_context_from_snapshot` moved from module scope into the three bodies that need
+it, so the checker now records the hit as `func` rather than `module` and G2′ no longer breaks
+the file's collection. Those six retire with the v5 family, when the fixtures they read do —
+which is the row's remaining data-axis hit, correctly unresolved until that step.
+
+**Rule-10 surfacing: the expression-compiler duals are not one behaviour under two names.**
+
+The Gate 4A carried-input note describes each retained 3C dual that way and prescribes "delete
+the legacy member and drop the `Exact` qualifier from the survivor". L-284's and L-281's
+earlier notes inherited it: the repoint "cannot be finished before L-033's rename lands", and
+would then be a re-point at the survivors. **That premise is false**, and it was measured, not
+argued.
+
+`scripts/probes/probe_expression_compiler_qualifier_drop.py` rebinds the three legacy names to
+their survivors inside the module the tests import from — exactly what dropping the qualifier
+leaves behind — and runs both modules against it. **48 passed, 26 failed, 5 errors.** The node
+list is archived at
+`.project/active/cutover-recovery/evidence/expression-compiler-qualifier-drop-dryrun.txt`.
+
+The duals differ in key type, field names and mutability, not only in name:
+
+| legacy | survivor |
+|---|---|
+| `CompilationResult(output_name: str, input_refs: list[str], intermediate_refs: list[str])`, mutable | `ExactCompilationResult(output_id: UUID, input_ids: tuple[UUID, ...], dependency_ids: tuple[UUID, ...])`, frozen |
+| `CalcDefCompilationResult(calc_def_name: str, …: list)` | `ExactCalcDefCompilationResult(definition_id: UUID, …: tuple)` |
+| `compile_calc_def(calc_def, expression_asts, all_member_names, member_expressions)` | `compile_calc_def_exact(calc_def)` |
+
+The failure classes say the same thing in the tool's own words: 18 nodes on
+`compile_calc_def_exact() takes 1 positional argument but 2 were given` /
+`got an unexpected keyword argument 'all_member_names'`; 10 on
+`ExactCompilationResult.__init__() got an unexpected keyword argument 'input_refs'` /
+`missing 1 required positional argument: 'output_id'`; 3 on genuine assertion differences.
+
+**Consequence for the runbook, which is why this is a stop and not a footnote.** The
+post-acceptance step for these two rows is **not mechanical**. 31 of their 76 nodes are bound
+to the legacy *shape*, not the legacy *name*, and re-expressing them against a UUID-keyed
+survivor is authoring work with its own per-node dispositions. Scoped so the size is known
+rather than estimated: L-284 15 of 52 fail the dry run, L-281 16 of 24. One L-281 node is not
+repointable at all — `test_exact_compiler_surface_does_not_replace_the_legacy_adapter` asserts
+`compile_calc_def_exact is not compile_calc_def`, so its whole subject is that the two duals
+are *distinct*; read the other way, it is the pin that already recorded what this dry run
+measured.
+
+**Both rows stay blocked**, per method note 3. Dispositioning them would report a readiness
+that is not true, and pre-declaring the step mechanical would put unbudgeted authoring behind
+the owner stop — the exact failure the resequencing ruling exists to prevent. **This is the one
+open question chunk 12 returns to the orchestrator**: the L-033 dual retirement needs its own
+scope, and the Gate 4A "one behavior under two names" characterisation should be re-checked
+against the other five retained duals before any of them is scheduled as a rename.
+
+**Blockers after chunk 12: G2′ 38 → 37, v5-family 37 → 36, union 54 → 53.**
+
+**Battery.** Full licensed suite **3827 passed / 47 skipped / 53 deselected**, from 3822/47/53.
+Delta: **+5 passed**, all in `tests/conformance/test_snapshot_v5_gate.py` (7 nodes → 12: four
+new v6-envelope nodes, one of them parametrized over two skew directions). Deselected
+unchanged. `ruff check src` **16**, whole tree **868** — both unchanged. `mypy src` **69 errors
+in 16 files**, unchanged. `git diff --check` clean. Checker: `paths` 298 rows / 0 problems,
+`surface` 0 unrowed breakages, `replacements` green for L-180. Proof integrity **0 problems
+over 53 blocked files**.
 
 **Deletes nothing.**
 
