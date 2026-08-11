@@ -4641,7 +4641,7 @@ patch, one patch per file, under `.project/active/cutover-recovery/runbook-patch
 | | patches | covers |
 |---|---:|---|
 | `step1/` | 12 | the 12 files step 1 edits (`L-135` and `L-281` are owner-gated, so 12 of the 14 rows) |
-| `step2/` | 42 | 40 file edits plus two ledger patches — `ledger__L-011.patch` (one row's disposition) and `ledger__replacement-proof-nodes.patch` (six rows' proof nodes) |
+| `step2/` | 43 | 41 file edits plus two ledger patches — `ledger__L-011.patch` (one row's disposition) and `ledger__replacement-proof-nodes.patch` (six rows' proof nodes) |
 | `step3/`, `step4/` | 0 | those steps delete only; the simulation confirmed no surviving file needs an edit |
 
 The patches are **sequenced**: step 2's were derived against the tree with step 1's applied,
