@@ -2748,7 +2748,7 @@ proves the refusal leaves no half-written tree.
 
 #### Gate 4C Part 2 Completion — the four surfacings, ruled and discharged
 
-- **Completed:** 2026-08-11. **Commit:** `PENDING-OID2` (sysml-codegen only; agentic-mbse `N/A`).
+- **Completed:** 2026-08-11. **Commit:** `6d58ad2` (sysml-codegen only; agentic-mbse `N/A`).
 - **Checker:** `paths` **276 rows, 0 problems**. `replacements` **54 green, 0 pending,
   220 not-required, 0 failures** — every responsibility row in the ledger now names a proof
   node that collects and passes.
