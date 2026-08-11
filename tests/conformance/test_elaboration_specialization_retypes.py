@@ -138,3 +138,42 @@ def test_fusion_tea_driver_edge_wires_end_to_end() -> None:
     assert lcoe.input_by_name("driver_cost_constant") == producer_ref(
         graph, f"{driver}__meier_cost", "gamma"
     )
+
+
+# ---------------------------------------------------------------------------
+# The single-level shape — Gate 4C part 7 chunk 13, replacing row L-183
+# ---------------------------------------------------------------------------
+
+
+@pytest.fixture(scope="module")
+def single_level_graph() -> InstanceGraph:
+    """``spec_chain_channel``: consumer and retype on ONE def, elaborated lenient."""
+    extractor = SysMLDataExtractor([FIXTURES_DIR / "spec_chain_channel"])
+    assert extractor.load_models()
+    return elaborate(
+        extractor.model,
+        extractor.extract_calculation_definitions(),
+        validation_diagnostics=extractor.diagnostics.validation,
+        strict=False,
+    )
+
+
+def test_the_single_level_chain_reaches_gamma_too(single_level_graph: InstanceGraph) -> None:
+    """The same gamma edge where the retype and the consumer live on one def.
+
+    The two-level fixture above is the harder shape — the retype on a part usage, the
+    consumer inherited from the base def — and it is the one that mirrors fusion-tea. The
+    single-level shape is not merely its easy case: it takes a different path through the
+    resolver, because ``usage_type_map`` picks the specialized definition from the *def*
+    rather than from an inline usage-level retype. So it gets its own assertion rather than
+    an argument that it must follow.
+
+    The specialized plant def retypes ``driver`` to ``'HIF Driver'``, which redefines
+    ``cost_per_joule :>> meier_cost.gamma``, and ``lcoe_calc`` on that same def binds
+    ``cost_per_joule = driver.cost_per_joule``.
+    """
+    plant = "SpecChainDesign__spec_chain_plant"
+    lcoe = calc(single_level_graph, f"{plant}__lcoe_calc")
+    assert lcoe.input_by_name("cost_per_joule") == producer_ref(
+        single_level_graph, f"{plant}__driver__meier_cost", "gamma"
+    )

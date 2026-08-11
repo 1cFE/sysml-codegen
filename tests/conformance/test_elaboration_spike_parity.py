@@ -251,6 +251,40 @@ def test_self_named_binding_fails_loud() -> None:
     assert any("availability" == finding.param_name for finding in self_bindings)
 
 
+def test_a_self_named_binding_with_a_resolvable_upstream_is_refused_too() -> None:
+    """The exact route does not rescue a self-binding, even when it could.
+
+    ``self_named_rescue`` is the positive companion to the trap: the same
+    ``in throughput = throughput`` idiom, but with ``source_calc.throughput``
+    exposed on the part, so there is a real upstream channel to rewrite the
+    binding to. The legacy resolver did exactly that (mechanism D) — it looked
+    at an outer same-named expose and silently repointed the binding.
+
+    That rewrite is the incident's shape: a binding that supplies nothing gets
+    reinterpreted into one that supplies something, and nothing in the output
+    says so. The exact route refuses instead, and refuses *identically* to the
+    trap — which is the point of asserting it on this fixture rather than only
+    on the one with no upstream. A refusal that softened when a rescue was
+    available would be the old behaviour wearing a diagnostic.
+
+    Gate 4C part 7 chunk 13 authored this as the replacement for row L-171.
+    """
+    with pytest.raises(ElaborationError) as excinfo:
+        _elaborate_fixture("self_named_rescue")
+
+    self_bindings = [
+        finding
+        for finding in excinfo.value.findings
+        if finding.code is ReadinessCode.SI_SELF_BINDING
+    ]
+    assert self_bindings, excinfo.value.findings
+    assert any(finding.param_name == "throughput" for finding in self_bindings)
+
+    # And it did not quietly wire the rescue first: the refusal is the whole
+    # answer, so no graph came back to inspect.
+    assert "SI_SELF_BINDING" in str(excinfo.value)
+
+
 def test_the_customer_model_carries_no_self_named_binding_after_the_d5_migration() -> None:
     """The other half of the migration: fusion_tea elaborates instead of refusing.
 

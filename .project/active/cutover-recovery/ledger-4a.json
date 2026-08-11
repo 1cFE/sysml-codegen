@@ -3573,15 +3573,18 @@
    "group": "4C-retained",
    "authority": "plan rule 6",
    "unreachability": null,
-   "replacement_proof_node": null,
+   "replacement_proof_node": [
+    "tests/conformance/test_elaboration_spike_parity.py::test_self_named_binding_fails_loud",
+    "tests/conformance/test_elaboration_spike_parity.py::test_the_customer_model_carries_no_self_named_binding_after_the_d5_migration"
+   ],
    "blocked_by": [],
    "reason": "Conformance tests for the isolated self-named-binding trap (Item 8, UPSTREAM-FINDINGS). Passes at rebuild HEAD and imports no legacy owner, so no Phase 4 action reaches it. The forensic candidate's deletion had only a family-level census row.",
-   "disposition_4c": "defer-to-v5-family",
+   "disposition_4c": "retire-with-owner",
    "node_count": 3,
-   "responsibility": "Conformance tests for the isolated self-named-binding trap (Item 8, UPSTREAM-FINDINGS).",
+   "responsibility": "The self-named binding with NO resolvable upstream: the route refuses rather than dead-ending on the calc's own parameter.",
    "breaks_on": "sysml_codegen.snapshot:load_extraction_snapshot (L-028, 4B-G2)",
    "breaks_a_free_group": true,
-   "disposition_4c_note": "No green replacement, and every owner it depends on is now deferred: the v5 read path is retained by consequence of keeping the v5 writer and the 37 fixtures, so this file's coverage is still load-bearing. Retires with the v5 family at Phase 5 owner acceptance."
+   "disposition_4c_note": "Gate 4C part 7 chunk 13 (2026-08-11), superseding the part-5 defer. The companion of L-171, and already owned: test_self_named_binding_fails_loud runs self_named_binding_trap through the exact route and requires the hard ElaborationError, the SI_SELF_BINDING code, and the offending param_name by value. Contract D-3 / SRC-01. The second proof node is the other half of the same migration - fusion_tea elaborates instead of refusing, asserted by reading the fifteen renamed formals back off the graph rather than by the absence of an exception, so a fixture that stopped carrying them fails rather than passes quietly."
   },
   {
    "id": "L-171",
@@ -3593,15 +3596,17 @@
    "group": "4C-blast-radius",
    "authority": "plan rule 6 \u2014 keep the Item 6 tests until after product proof; every removed or rewritten test needs a responsibility-level disposition first",
    "unreachability": null,
-   "replacement_proof_node": null,
+   "replacement_proof_node": [
+    "tests/conformance/test_elaboration_spike_parity.py::test_a_self_named_binding_with_a_resolvable_upstream_is_refused_too"
+   ],
    "blocked_by": [],
    "reason": "Conformance test for the self_named_rescue companion fixture (Item 10 stage (b)). Imports legacy owners (snapshot_context) directly, so 4B's deletion breaks it. Retain now; before the owning 4B group lands, this row needs either a public-behaviour rewrite or a recorded responsibility retirement.",
-   "disposition_4c": "defer-to-v5-family",
+   "disposition_4c": "retire-with-owner",
    "node_count": 3,
-   "responsibility": "Conformance test for the self_named_rescue companion fixture (Item 10 stage (b)).",
+   "responsibility": "The self-named binding with a resolvable upstream: what the route does when it COULD rewrite the binding to a real channel.",
    "breaks_on": "sysml_codegen.orchestration.snapshot_context (L-026, 4B-G2)",
    "breaks_a_free_group": true,
-   "disposition_4c_note": "No green replacement, and every owner it depends on is now deferred: the v5 read path is retained by consequence of keeping the v5 writer and the 37 fixtures, so this file's coverage is still load-bearing. Retires with the v5 family at Phase 5 owner acceptance."
+   "disposition_4c_note": "Gate 4C part 7 chunk 13 (2026-08-11), superseding the part-5 defer. Its subject is the legacy mechanism-D RESCUE: seeing `in throughput = throughput` with an outer same-named expose in scope, the legacy resolver silently rewrote the binding to source_calc's channel. The exact route does not have that mechanism and is not getting one - it refuses with SI_SELF_BINDING, measured directly on this fixture (ElaborationError: SI_SELF_BINDING: RescueLib__Rescue_Plant__sink_calc.throughput). The rewrite is the incident's own shape: a binding that supplies nothing is reinterpreted into one that supplies something and nothing in the output says so. So the responsibility is not dropped, it is INVERTED, and the new node asserts the inversion on THIS fixture rather than only on the no-upstream companion - which is the whole point, because a refusal that softened when a rescue was available would be the old behaviour wearing a diagnostic. A D-5 variant is not applicable here and method note 0 is why: the self-named binding IS this fixture's subject, so renaming it away would delete the thing under test."
   },
   {
    "id": "L-172",
@@ -3633,15 +3638,19 @@
    "group": "4C-blast-radius",
    "authority": "plan rule 6 \u2014 keep the Item 6 tests until after product proof; every removed or rewritten test needs a responsibility-level disposition first",
    "unreachability": null,
-   "replacement_proof_node": null,
+   "replacement_proof_node": [
+    "tests/conformance/test_elaboration_sibling_channels.py::test_consumer_reaches_exactly_chamber_b",
+    "tests/conformance/test_elaboration_sibling_channels.py::test_sibling_producers_are_distinct_nodes",
+    "tests/conformance/test_elaboration_sibling_channels.py::test_sibling_exposes_alias_their_own_producer"
+   ],
    "blocked_by": [],
    "reason": "Conformance test for the sibling_channel_ambiguity companion fixture (Item 10 stage (b)). Imports legacy owners (snapshot_context) directly, so 4B's deletion breaks it. Retain now; before the owning 4B group lands, this row needs either a public-behaviour rewrite or a recorded responsibility retirement.",
-   "disposition_4c": "defer-to-v5-family",
+   "disposition_4c": "retire-with-owner",
    "node_count": 3,
-   "responsibility": "Conformance test for the sibling_channel_ambiguity companion fixture (Item 10 stage (b)).",
+   "responsibility": "SC-3 sibling channel disambiguation: a consumer binding reaches the correct instance-scoped channel and never first-wins across same-type siblings.",
    "breaks_on": "sysml_codegen.orchestration.snapshot_context (L-026, 4B-G2)",
    "breaks_a_free_group": true,
-   "disposition_4c_note": "No green replacement, and every owner it depends on is now deferred: the v5 read path is retained by consequence of keeping the v5 writer and the 37 fixtures, so this file's coverage is still load-bearing. Retires with the v5 family at Phase 5 owner acceptance."
+   "disposition_4c_note": "Gate 4C part 7 chunk 13 (2026-08-11), superseding the part-5 defer. Already owned end to end on the exact route, on the SAME fixture: tests/conformance/test_elaboration_sibling_channels.py runs sibling_channel_ambiguity through the elaborator and asserts the disambiguation directly. Stronger than the legacy node, and for a structural reason rather than by adding assertions - the legacy route needed instance-scoped channel machinery to keep chamber_a and chamber_b apart, so its test was checking that the machinery worked; in the instance graph every occurrence is its own node, so distinctness holds by construction and the replacement pins the three separable facts (both producers are distinct nodes, each sibling's expose aliases its OWN producer, the consumer reaches exactly chamber_b). The exact module also pins the fixture's own degenerate `in fuel = fuel` idiom refusing strict and reporting lenient, which the legacy node did not observe at all."
   },
   {
    "id": "L-174",
@@ -3847,15 +3856,17 @@
    "group": "4C-blast-radius",
    "authority": "plan rule 6 \u2014 keep the Item 6 tests until after product proof; every removed or rewritten test needs a responsibility-level disposition first",
    "unreachability": null,
-   "replacement_proof_node": null,
+   "replacement_proof_node": [
+    "tests/conformance/test_elaboration_specialization_retypes.py::test_the_single_level_chain_reaches_gamma_too"
+   ],
    "blocked_by": [],
    "reason": "Conformance test for the spec_chain_channel companion fixture (Item 10 stage (b)). Imports legacy owners (snapshot_context) directly, so 4B's deletion breaks it. Retain now; before the owning 4B group lands, this row needs either a public-behaviour rewrite or a recorded responsibility retirement.",
-   "disposition_4c": "defer-to-v5-family",
+   "disposition_4c": "retire-with-owner",
    "node_count": 3,
-   "responsibility": "Conformance test for the spec_chain_channel companion fixture (Item 10 stage (b)).",
+   "responsibility": "SC-2 single-level: a specialized def's :>> redefinition carries a nested calc output into a cross-part consumer on the same def.",
    "breaks_on": "sysml_codegen.orchestration.snapshot_context (L-026, 4B-G2)",
    "breaks_a_free_group": true,
-   "disposition_4c_note": "No green replacement, and every owner it depends on is now deferred: the v5 read path is retained by consequence of keeping the v5 writer and the 37 fixtures, so this file's coverage is still load-bearing. Retires with the v5 family at Phase 5 owner acceptance."
+   "disposition_4c_note": "Gate 4C part 7 chunk 13 (2026-08-11), superseding the part-5 defer. tests/conformance/test_elaboration_specialization_retypes.py owned the TWO-level shape only; the single-level shape got its own node rather than an argument that it must follow from the harder one, because it takes a different path through the resolver - usage_type_map picks the specialized definition from the DEF here, not from an inline usage-level retype. Same fixture, lenient elaboration, same gamma edge asserted by producer reference. The fixture's own SI_SELF_BINDING (SpecChainLib__IFE_Driver__meier_cost.drive_power) is why the strict route refuses it and why the replacement elaborates lenient, exactly as the two-level nodes beside it do."
   },
   {
    "id": "L-184",
@@ -3867,15 +3878,20 @@
    "group": "4C-blast-radius",
    "authority": "plan rule 6 \u2014 keep the Item 6 tests until after product proof; every removed or rewritten test needs a responsibility-level disposition first",
    "unreachability": null,
-   "replacement_proof_node": null,
+   "replacement_proof_node": [
+    "tests/conformance/test_elaboration_specialization_retypes.py::test_retyped_usage_carries_the_specialized_definition",
+    "tests/conformance/test_elaboration_specialization_retypes.py::test_chain_redefinition_becomes_an_alias_at_the_occurrence",
+    "tests/conformance/test_elaboration_specialization_retypes.py::test_inherited_consumer_reaches_the_specialized_producer",
+    "tests/conformance/test_elaboration_specialization_retypes.py::test_fusion_tea_driver_edge_wires_end_to_end"
+   ],
    "blocked_by": [],
    "reason": "Conformance test for the spec_chain_twolevel fixture (Item 10 Phase 8, C-then-B ruling). Imports legacy owners (snapshot_context) directly, so 4B's deletion breaks it. Retain now; before the owning 4B group lands, this row needs either a public-behaviour rewrite or a recorded responsibility retirement.",
-   "disposition_4c": "defer-to-v5-family",
+   "disposition_4c": "retire-with-owner",
    "node_count": 8,
-   "responsibility": "Conformance test for the spec_chain_twolevel fixture (Item 10 Phase 8, C-then-B ruling).",
+   "responsibility": "SC-2 two-level: a usage-level retype plus a base-def consumer, the WI-015 shape that mirrors fusion-tea's hif_plant.",
    "breaks_on": "sysml_codegen.orchestration.snapshot_context (L-026, 4B-G2)",
    "breaks_a_free_group": true,
-   "disposition_4c_note": "No green replacement, and every owner it depends on is now deferred: the v5 read path is retained by consequence of keeping the v5 writer and the 37 fixtures, so this file's coverage is still load-bearing. Retires with the v5 family at Phase 5 owner acceptance."
+   "disposition_4c_note": "Gate 4C part 7 chunk 13 (2026-08-11), superseding the part-5 defer. Already owned end to end on the exact route, on the SAME spec_chain_twolevel fixture, and decomposed further than the legacy node was: the retype carrying the specialized definition, the chain redefinition becoming an alias at the occurrence, and the inherited consumer reaching the specialized producer are three separable claims the legacy file asserted as one wiring check. The exact module additionally carries test_fusion_tea_driver_edge_wires_end_to_end, which runs the same edge on the customer model - the anchor the fixture was built to stand in for."
   },
   {
    "id": "L-185",

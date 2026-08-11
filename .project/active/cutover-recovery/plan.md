@@ -3767,7 +3767,8 @@ reported at each stop.
 | 9 | `cd520a5` | G3′ and G4′ reach READY (8 files) |
 | 10 | `b176674` | the constraint conformance family (8 files) + the L-130 repoint |
 | 11 | `c674064` | **the execution lane** — the last Gate 4C must-restore (6 files) |
-| 12 | *this commit* | L-180 repointed and ordered; the expression-compiler premise measured false |
+| 12 | `986b24a` | L-180 repointed and ordered; the expression-compiler premise measured false |
+| 13 | *this commit* | the Item-10 mechanism family (5 files) + the retirement runbook |
 
 **Blockers, two-axis: 124 → 43.** G2′ 40, **G3′ 0, G4′ 0**. Row dispositions stand at
 **74 `retire-with-owner`, 23 `repoint`, 17 `archive-with-findings`**.
@@ -4038,6 +4039,154 @@ in 16 files**, unchanged. `git diff --check` clean. Checker: `paths` 298 rows / 
 over 53 blocked files**.
 
 **Deletes nothing.**
+
+#### Gate 4C part 7 chunk 13 — the first five genuine repoints, and the mechanism families
+
+Five rows in the Item-10 stage-(b) mechanism family, dispositioned per file against the exact
+route's own owner of each mechanism rather than by moving an import.
+
+| Row | File | Disposition | Proven by |
+|---|---|---|---|
+| L-170 | `test_self_named_binding_trap.py` | retire | `test_elaboration_spike_parity.py::test_self_named_binding_fails_loud` (+ the D-5 migration half) |
+| L-171 | `test_self_named_rescue.py` | retire | **new node** `::test_a_self_named_binding_with_a_resolvable_upstream_is_refused_too` |
+| L-173 | `test_sibling_channel_ambiguity.py` | retire | `test_elaboration_sibling_channels.py`, three nodes |
+| L-183 | `test_spec_chain_channel.py` | retire | **new node** `test_elaboration_specialization_retypes.py::test_the_single_level_chain_reaches_gamma_too` |
+| L-184 | `test_spec_chain_twolevel.py` | retire | `test_elaboration_specialization_retypes.py`, four nodes incl. the fusion-tea anchor |
+
+**The one that mattered: L-171 is a responsibility *inverted*, not dropped.** Its subject is the
+legacy mechanism-D **rescue** — seeing `in throughput = throughput` with an outer same-named
+expose in scope, the resolver silently rewrote the binding to `source_calc`'s channel. That
+rewrite is the incident's own shape: a binding that supplies nothing gets reinterpreted into one
+that supplies something, and nothing in the output says so. The exact route has no such
+mechanism and is not getting one — measured directly, it refuses with
+`SI_SELF_BINDING: RescueLib__Rescue_Plant__sink_calc.throughput`.
+
+The new node asserts that refusal **on this fixture**, not only on the no-upstream companion,
+and that is the whole point: a refusal that softened when a rescue was available would be the
+old behaviour wearing a diagnostic. Method note 0 also settles why no D-5 variant applies — the
+self-named binding *is* the subject, so renaming it away would delete the thing under test.
+
+**L-183 got its own node rather than an argument.** `test_elaboration_specialization_retypes.py`
+owned the two-level shape only. The single-level shape is not its easy case: it takes a
+different path through the resolver, because `usage_type_map` picks the specialized definition
+from the *def* rather than from an inline usage-level retype.
+
+**Blockers after chunk 13: G2′ 37 → 32, v5-family 36 → 36, union 53 → 48.** Suite **3829**
+passed (from 3827; +2, the two new nodes), everything else in the battery unchanged. Deletes
+nothing.
+
+---
+
+### The retirement runbook — post-acceptance execution
+
+**Status: NOT YET MECHANICAL. 48 files still block, across G2′ and the v5 family.** This section
+is written to the state it is actually in, so a later session executes from it rather than
+re-deriving it. Steps 3 and 4 *are* ready; steps 1 and 2 are not, and the per-step blocker lists
+below say exactly what is missing.
+
+**Standing preconditions, all of them already met.**
+
+- **The resequencing ruling governs.** Nothing here runs before the Phase 5 owner stop. Option
+  (a) — wholesale `retire-with-owner` over an undispositioned blast radius — is refused
+  permanently.
+- **L-180's precondition is satisfied** (chunk 12). `test_snapshot_v5_gate.py` is repointed onto
+  `snapshot/envelope.py`, which is in no deletion group, so the post-step-2 "the typed refusal is
+  still typed" check has a subject that survives. **Its four v6-envelope nodes are that check.**
+- **Proof integrity is mechanical** (chunk 11). `scripts/check_proof_integrity.py` fails any row
+  whose replacement node lives in a file still blocking a deletion, transitively across all six
+  groups. Run it before **and after** every step.
+
+**The per-step battery, identical at every step.** Nothing here is step-specific; a step that
+needs a special case is a step that was not prepared.
+
+```bash
+set -a; source /home/reid/1cfe/agentic-mbse/.env; set +a
+PY=/home/reid/1cfe/item7-rebuild-venv/bin/python
+$PY -c "import sysml_codegen, agentic_mbse; print(sysml_codegen.__file__, agentic_mbse.__file__)"
+$PY -m pytest -q                                          # delta must be explained row by row
+$PY -m pytest tests/execution -m execution -q             # incl. the 12 real-TEAx anchors
+$PY scripts/capture_v6_batch.py --verify                  # 15 captured / 22 refused / 0 deviations
+$PY -m pytest -q -k corpus                                # the corpus ledger test
+$PY -m ruff check src; $PY -m ruff check src tests scripts
+$PY -m mypy src
+$PY scripts/check_ledger_4a.py paths
+$PY scripts/check_ledger_4a.py surface
+$PY scripts/check_ledger_4a.py groups
+$PY scripts/check_ledger_4a.py replacements
+$PY scripts/check_proof_integrity.py
+git diff --check
+```
+
+Recorded values to compare against, measured at chunk 13: suite **3829 passed / 47 skipped /
+53 deselected**; execution lane **53 passed**; `--verify` **15/22/0**; `ruff` **16** on `src` and
+**868** whole-tree; `mypy` **69 errors in 16 files**; `paths` **298 rows / 0 problems**;
+`surface` **0 unrowed breakages**; proof integrity **0 problems**.
+
+#### Step 1 — the v5 family (61 rows) — **BLOCKED by 36 files**
+
+Deletes the legacy analysis/resolution stack, the v5 serializer, `pipeline_builder`, the 37
+committed `extraction_snapshot.json` fixtures and `scripts/capture_extraction_snapshots.py`, and
+drops the `Exact`/`identified` qualifiers from the retained 3C duals.
+
+**Rows:** L-001 to L-005, L-007, L-010, L-011, L-013, L-014, L-017, L-018, L-021, L-027,
+L-029 to L-037 (L-036/L-037 in `agentic-mbse` — a coordinated pair, commit both), L-057 to L-093
+(the 37 fixtures), L-275.
+
+**Blockers, all 36 named:** L-115, L-120, L-122, L-123, L-124, L-135, L-141, L-142, L-143,
+L-154, L-156, L-163, L-164, L-166, L-168, L-172, L-174, L-175, L-176, L-178, L-181, L-182,
+L-189, L-190, L-196, L-200, L-236, L-238, L-242, L-243, L-244, L-246, L-250, L-281, L-284,
+L-290.
+
+**Two of those are a stop, not a queue.** L-281 and L-284 are the expression compiler, and chunk
+12 measured the recorded "mechanical rename" premise false — 31 of their 76 nodes are bound to
+the legacy *shape*, not the legacy *name*. **L-033's dual retirement is part of this step and
+cannot be scheduled until that authoring is scoped and done.** See the chunk-12 record.
+
+**Post-step check beyond the battery:** the v5 typed refusal is still typed —
+`pytest tests/conformance/test_snapshot_v5_gate.py -k "v6_envelope or v5_extraction or public_route"`,
+four nodes, all against `snapshot/envelope.py`. The six v5-envelope nodes in the same file retire
+*in* this step, with the fixtures they read; that is the expected suite delta, not a regression.
+
+#### Step 2 — G2′, the v5 read path (4 rows) — **BLOCKED by 32 files**
+
+**Rows:** L-015 `snapshot/graph_rebuild.py`, L-016 `snapshot/loader.py`, L-026
+`orchestration/snapshot_context.py`, L-028 `snapshot/__init__.py` (migrate — empties the v5
+re-exports that keep `pipeline_builder`, `snapshot.loader` and `snapshot.graph_rebuild` inside
+`cli`'s transitive import closure, which is what
+`test_the_generation_half_still_reaches_v5_modules_and_that_residual_is_pinned` pins).
+
+**Blockers, all 32 named:** L-094, L-097, L-115, L-122, L-123, L-124, L-134, L-141, L-142,
+L-147, L-154, L-156, L-162, L-163, L-164, L-166, L-167, L-168, L-172, L-178, L-182, L-185,
+L-186, L-189, L-190, L-218, L-219, L-227, L-238, L-243, L-246, L-278.
+
+**Ordering:** after step 1, because 24 of these 32 also block step 1 and the fixtures they read
+go first.
+
+#### Step 3 — G3′ (1 row) — **READY**
+
+**Row:** L-012 `src/sysml_codegen/resolution/producer_completeness.py`. No file blocks it.
+
+#### Step 4 — G4′ (2 rows) — **READY**
+
+**Rows:** L-008 `src/sysml_codegen/elaboration/diff.py`, L-276 `tests/helpers/legacy_route.py`.
+No file blocks it. `legacy_route.py` is a test helper, so this step is the last thing that can
+reach the legacy route at all — run the full battery, not a subset.
+
+#### Also in this phase, already prepared
+
+Three items are carried on their Gate 4A rows and execute with the group that owns them, not as
+their own steps: the `_CONSTRAINT_LOGGER` name in `elaboration/project.py:83` (retires with
+`constraint_lowering`, step 1); the dead `GrandfatheredSnapshotError` import and handler in
+`cli/__init__.py` (`:1061`, `:1139` — retire with the v5 route, step 1); and
+`orchestration.__init__`'s re-export of `build_pipeline_context` (step 1, with L-032).
+
+#### What has to be true before this section can say "mechanical"
+
+1. Every one of the 48 blocking files carries a clearing `disposition_4c`.
+2. `scripts/check_ledger_4a.py groups` shows all six groups READY.
+3. `scripts/check_ledger_4a.py replacements` is green for every row, and
+   `scripts/check_proof_integrity.py` reports 0 problems.
+4. The L-033 dual retirement has a scope, because step 1 contains it.
 
 ### Phase 5 Completion
 
