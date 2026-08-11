@@ -396,8 +396,10 @@ def test_recovery_baseline_is_measured_not_assumed():
 
 **Manual**
 
-- [ ] Review the corrected critical path, test-retirement rules, doc rules, and commit rules with
-  the owner.
+- [x] Review the corrected critical path, test-retirement rules, doc rules, and commit rules with
+  the owner. Satisfied at the 2026-08-10 execution-approval Align: the owner approved this plan
+  for execution with the recorded amendments (durable archive path, per-slice audits, B37-01
+  pre-ruling, C25/C2 delegation, Gate 4A delegation, forensic-commit hook pre-authorization).
 - [x] Review B37-01's baseline outcome and decide whether the ledger or implementation owns the
   correction.
 
