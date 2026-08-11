@@ -5822,6 +5822,46 @@
    "disposition_4c": "repoint",
    "disposition_4c_note": "Names the surface tokens in synthetic fixtures it builds in tmp_path, not in the real tree. Nothing to change when the family retires; the row exists so the scan needs no hard-coded exception for its own source.",
    "reason": "Named by the second-axis scan because its cases quote the surface tokens they test the detection of. Self-referential, like L-293."
+  },
+  {
+   "id": "L-297",
+   "path": "scripts/make_d5_variant.py",
+   "repo": "sysml-codegen",
+   "class": "script",
+   "disposition": "retain",
+   "origin": "derived-blast-radius",
+   "group": null,
+   "authority": "Gate 4C part 6, orchestrator ruling 2 (2026-08-11) \u2014 the variant pattern",
+   "unreachability": null,
+   "replacement_proof_node": null,
+   "blocked_by": [],
+   "responsibility": "The D-5 variant generator and its strip check.",
+   "node_count": 0,
+   "breaks_on": "",
+   "breaks_a_free_group": false,
+   "disposition_4c": "repoint",
+   "disposition_4c_note": "Names the v5 snapshot filename only to exclude it from a variant, so a variant can never come to look like a corpus fixture. Nothing to change when the family retires.",
+   "reason": "Authored by Gate 4C part 6. Named by the second-axis scan because it excludes extraction_snapshot.json by name when copying a fixture."
+  },
+  {
+   "id": "L-298",
+   "path": "tests/conformance/test_d5_variants.py",
+   "repo": "sysml-codegen",
+   "class": "test",
+   "disposition": "retain",
+   "origin": "derived-blast-radius",
+   "group": null,
+   "authority": "Gate 4C part 6, orchestrator ruling 2 (2026-08-11) \u2014 the variant pattern",
+   "unreachability": null,
+   "replacement_proof_node": null,
+   "blocked_by": [],
+   "responsibility": "A D-5 variant differs from its original by the rename and by nothing else.",
+   "node_count": 0,
+   "breaks_on": "",
+   "breaks_a_free_group": false,
+   "disposition_4c": "repoint",
+   "disposition_4c_note": "Names the v5 snapshot filename only to exclude it from a variant, so a variant can never come to look like a corpus fixture. Nothing to change when the family retires.",
+   "reason": "Authored by Gate 4C part 6. Named by the second-axis scan because it excludes extraction_snapshot.json by name when copying a fixture."
   }
  ]
 }

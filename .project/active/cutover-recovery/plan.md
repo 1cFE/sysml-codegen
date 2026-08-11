@@ -3097,6 +3097,75 @@ the Gate 4C part 6 variant graphs, `replacements` is re-run and the rows are rec
 re-backed. **Until that commit lands, treat L-006 and L-241 as proved on evidence that cannot
 survive the v5 retirement.**
 
+#### Gate 4C part 6 — the D-5 variants: rename stage done, second layer surfaced
+
+**The corpus is untouched, and that is checked.** `catf_mfe_model` and `solar_battery_model`
+still carry their refused shapes; `test_d5_variants.py::test_the_original_is_untouched_by_its_variant`
+asserts no `_in` formal appears in either original and that each still has its v5 snapshot. The
+ratified 15/22 corpus split is unchanged (`test_elaboration_corpus_ledger.py`, 3 passed) and the
+v6 batch is unchanged (58 passed).
+
+**Stage 1 — the D-5 rename — is complete and proved for both models.**
+
+| Variant | Formals renamed | Files | Strip check |
+|---|---:|---:|---|
+| `catf_mfe_d5` | 1 (`pumping_speed_total`) | 2 | **0 problems** |
+| `solar_battery_d5` | 21 | 2 | **0 problems** |
+
+The inventory the ruling asked for: **all 25 refused bindings across both models are
+`SI_SELF_BINDING`** — one code, no indexed forms, nothing outside the recipe. So the recipe
+applied, mechanically, by `scripts/make_d5_variant.py`.
+
+The proof is the 3D strip check, and it is stronger than a diff review: removing the `_in`
+suffix must reproduce the original **byte for byte, file for file**. That holds only if the
+rename was the sole edit, so a stray reformat or a nudged literal fails it. It runs
+license-free and is pinned by `tests/conformance/test_d5_variants.py` (9 nodes). The generator
+refuses to emit at all for a fixture carrying any code outside `SI_SELF_BINDING`.
+
+##### The stop — a second refusal layer the rename cannot reach
+
+With the self-bindings gone, both models still refuse, for reasons of a different kind that the
+first refusal was masking. Every refused *binding* mapped to the recipe; what did not map is
+what lay behind them.
+
+**`solar_battery_d5` — elaborates and seals, then projection refuses.** One
+`SI_RENDERING_COLLISION`, on `solar_array__raw_material_cost`. This is the S4-ratified
+behaviour and `costed_cart_d5` already shows the cure: one named term per aggregation, because
+the exact route names an expression parameter after the last member of a reference and drops
+the qualifier, so `sum(pv_module.raw_material_cost) + sum(inverter.raw_material_cost) + …`
+renders every term the same. **Measured scope: 16 colliding rollups over 50 terms**, across
+`capital_cost`, `raw_material_cost`, `fabrication_cost` and `installation_cost` in every
+assembly. The cure adds ~50 named intermediate attributes and rewrites all 16 rollups.
+
+That is a *shape* change, not a rename, and it is why this stops rather than proceeds: **the
+strip-check proof this gate is built on cannot cover it.** Stripping a suffix cannot recover an
+original from a model that has different attributes. Applying it on the rename gate's authority
+would ship the one class of edit the gate exists to make impossible.
+
+**`catf_mfe_d5` — elaboration refuses: 152 × `SI_OCCURRENCE_MISSING`**
+(`ElaborationDiagnosticError`), of the form `CATFMFERadialBuild__catf_radial_build__ht_shield__thickness:
+leaf declaration 146016c8-… has no feature slot`. These are nested-occurrence resolutions on
+deep part hierarchies, not bindings. No rename addresses them. Slice 3D met the same error
+*code* on the customer model at 7 diagnostics and closed it with a **product change**
+(`_enumeration_literal`); 152 diagnostics on nested part paths is not obviously that sub-case,
+and it may be the filed nested-occurrence class.
+
+**Consequence for the evidence gap.** The gap ruling 1 ordered closed — the exact route has
+never generated from a model of `catf_mfe`'s size — is **not closed by this gate**.
+`solar_battery_d5` is one ratified-but-large modelling change away; `catf_mfe_d5` is behind
+something that looks like product work. The generation-layer family repoint (L-006/L-241
+re-proof included) waits on both, so the **named temporary weakness recorded in the Class C
+notes stands unchanged**.
+
+**Battery.** Full licensed suite **3799 passed / 47 skipped / 38 deselected**, delta **+9**
+against 3790, every one a node in `test_d5_variants.py`. Corpus ledger **3 passed** (37 rows,
+15/22 unmoved). v6 batch **58 passed**. Execution lane **38 passed** including the 12 real-TEAx
+nodes at the recorded anchors. `ruff` **870 → 870**, `mypy src/` **69 in 16 files → unchanged**,
+`git diff --check` clean, `check_ledger_4a.py paths` **298 rows / 0 problems**, `surface`
+**0 unrowed breakages on either axis**.
+
+**Commit:** `PART6_OID`. **Deletes nothing, and repoints no test yet.**
+
 ### Phase 5 Completion
 
 - **Completed:** Pending
