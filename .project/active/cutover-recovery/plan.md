@@ -2930,6 +2930,8 @@ ledger. Execution lane **38 passed** including the 12 real-TEAx nodes at the rec
 `git diff --check` clean. `check_ledger_4a.py paths` **286 rows, 0 problems**; `surface`
 **0 unrowed breakages**; `replacements` **54 green / 0 pending / 0 failures / 230 not-required**.
 
+**Commit:** `8b5a2e3` (`8b5a2e32bf4ff5ebc98808e49c5c471fe4b046bb`).
+
 **Deletes nothing.** This gate amended the ledger, extended the checker and recorded dispositions.
 No production or test file was removed. **Stopped for the orchestrator's approval of the
 regrouping before any deletion group runs**, per the ruling.
