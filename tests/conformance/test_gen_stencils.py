@@ -341,10 +341,8 @@ class TestMultiOutputReturnType:
                     f"  {module.name}: expected {expected_return}, not found"
                 )
 
-        # At least solar_battery has multi-output modules
-        assert multi_output_count > 0 or model_name == "catf_mfe_model", (
-            f"No multi-output modules in {model_name}"
-        )
+        # Both parametrized models carry multi-output modules.
+        assert multi_output_count > 0, f"No multi-output modules in {model_name}"
         assert not failures, (
             f"Multi-output return type failures in {model_name}:\n"
             + "\n".join(failures)
