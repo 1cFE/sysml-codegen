@@ -41,14 +41,21 @@ ROOT = Path(__file__).resolve().parent.parent
 FIXTURES = ROOT / "tests" / "fixtures"
 BATCH_MANIFEST = FIXTURES / "v6_recapture_batch/batch.json"
 
-#: Files a variant does not inherit. The v5 snapshot belongs to the corpus fixture it was
-#: captured from; a variant is not a corpus fixture and must never look like one.
+#: Files a variant does not inherit: a snapshot belongs to the fixture it was captured from,
+#: and a variant's own graph differs from its original's by construction.
 NOT_INHERITED = {"extraction_snapshot.json", "instance_graph_snapshot.json"}
 
+#: The file whose presence would make a variant look like a corpus fixture. Corpus membership
+#: is the v5 snapshot: it is what the corpus was enumerated by, and what the 37 rows name. A
+#: variant may carry its own *v6* snapshot — that is what lets a repointed test read it
+#: without a licence — and doing so joins no ledger.
+CORPUS_MARKER = "extraction_snapshot.json"
+
 #: Files a variant carries that its original does not, and which the strip check therefore
-#: ignores. Only provenance: a variant must explain why it exists, and the explanation is not
-#: part of the model.
-VARIANT_ONLY = {"PROVENANCE.md"}
+#: ignores because neither is part of the model: the provenance record that says why the
+#: variant exists, and the variant's own sealed v6 graph, which exists precisely because the
+#: original has none — the exact route refuses it.
+VARIANT_ONLY = {"PROVENANCE.md", "instance_graph_snapshot.json"}
 
 
 def refused_formals(fixture: str) -> list[str]:

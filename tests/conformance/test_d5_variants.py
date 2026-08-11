@@ -92,10 +92,13 @@ def test_the_variant_renames_every_formal_the_route_refused(
 
 
 @pytest.mark.parametrize(("original", "variant"), VARIANTS)
-def test_a_variant_carries_no_snapshot_of_its_own(original: str, variant: str) -> None:
-    """A variant is not a corpus fixture and must not come to look like one."""
-    for name in d5.NOT_INHERITED:
-        assert not (d5.FIXTURES / variant / name).exists()
+def test_a_variant_carries_no_v5_snapshot(original: str, variant: str) -> None:
+    """A variant is not a corpus fixture. The v5 snapshot is what corpus membership means.
+
+    Its own v6 snapshot is fine and in fact wanted: that is what lets a repointed test read
+    the variant's graph without a licence. It joins no ledger either way.
+    """
+    assert not (d5.FIXTURES / variant / d5.CORPUS_MARKER).exists()
 
 
 @pytest.mark.parametrize(("original", "variant"), VARIANTS)

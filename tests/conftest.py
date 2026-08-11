@@ -52,6 +52,32 @@ def snapshot_fixture(model_name: str) -> Path:
     return FIXTURES_DIR / model_name / "extraction_snapshot.json"
 
 
+def instance_graph_fixture(model_name: str) -> Path:
+    """Return the committed v6 instance-graph snapshot path for a fixture model.
+
+    The v6 counterpart of ``snapshot_fixture``. Both spellings live here through the
+    transition so a test can be repointed one at a time: the v5 helper resolves the
+    extraction snapshot the legacy route reads, this one the sealed instance graph the
+    exact route reads. Reading a committed v6 snapshot needs no licence, which is what
+    keeps a repointed conformance test in the license-free lane it was already in.
+    """
+    return FIXTURES_DIR / model_name / "instance_graph_snapshot.json"
+
+
+def exact_graph_from_fixture(model_name: str):
+    """The projected ComputationGraph of a fixture, read from its sealed v6 snapshot.
+
+    The exact-route replacement for ``build_full_graph_from_snapshot(snapshot_fixture(...))``.
+    That call returned ``(graph, classifier_inputs)`` because the legacy rebuild exposed its
+    intermediate; the exact route has no such intermediate, so this returns the graph alone
+    and a caller that wanted the second element has to say what it actually needs.
+    """
+    from sysml_codegen.elaboration import project
+    from sysml_codegen.snapshot.envelope import load_instance_graph_snapshot
+
+    return project(load_instance_graph_snapshot(instance_graph_fixture(model_name)))
+
+
 @pytest.fixture
 def fixtures_path() -> Path:
     """Return path to test fixtures directory."""

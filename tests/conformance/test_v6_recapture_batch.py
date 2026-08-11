@@ -95,9 +95,18 @@ def test_the_batch_carries_no_absolute_path() -> None:
         assert str(ROOT) not in (ROOT / RECORDS[name]["snapshot"]).read_text()
 
 
-def test_no_captured_fixture_is_missing_its_snapshot_file() -> None:
+def test_every_corpus_fixture_with_a_snapshot_is_one_the_batch_claims() -> None:
+    """Restricted to the corpus: a v6 snapshot beside a corpus fixture must be in the batch.
+
+    Not every committed v6 snapshot belongs to the corpus. The Gate 4C part 6 D-5 variants
+    carry their own so a repointed test can read them without a licence, and they are
+    deliberately outside the batch — they are coverage fixtures, not corpus rows. Comparing
+    over the whole fixtures tree would make adding one of those look like batch drift.
+    """
     on_disk = {
         path.parent.name
         for path in (ROOT / "tests" / "fixtures").glob(f"*/{batch.SNAPSHOT_NAME}")
     }
-    assert set(CAPTURED) == on_disk, "the batch and the committed snapshots disagree"
+    assert set(CAPTURED) == on_disk & set(RECORDS), (
+        "the batch and the committed corpus snapshots disagree"
+    )
