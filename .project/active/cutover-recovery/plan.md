@@ -983,12 +983,14 @@ def test_final_candidate_is_repeatable_and_executable(real_teax):
 - [ ] **The headline decision at the owner stop, per the Phase 4 resequencing ruling.** Present
   together: the PROPOSED v6 recapture batch (15 captured / 22 typed refusals), and the
   **prepared retirement** — every one of the 4B groups with a per-file disposition and a green
-  replacement proof, and a runbook whose step 1 has been executed and measured green in a
-  scratch worktree. State plainly that the candidate ships with the legacy stack
+  replacement proof, and a runbook whose four steps have each been executed in order and
+  measured green in a scratch worktree, with their per-file edits shipped as reviewable
+  patches. State plainly that the candidate ships with the legacy stack
   **present-but-unreachable**, and name the 3E pins that hold that property. State just as
-  plainly what the runbook does **not** yet carry (audit 4, F1/F2 follow-up): steps 2–4 have a
-  derived row list and a scripted mechanical half, and their post-state is not yet proven, and
-  six items need an owner ruling before any step can end green.
+  plainly what the runbook does **not** carry: **seven items need an owner ruling** — they are
+  what the simulation held out as a named 113-node trim, so "green at every boundary" is green
+  *with those held out* — and one battery gate (`check_ledger_4a.py replacements`) was never
+  measured, at any step.
 - [ ] **Price the batch decision honestly.** Revising the PROPOSED v6 batch is Git-reversible
   but not free: measured, removing the 15 snapshots the batch added leaves **38 failed and 57
   errors** across the suite. Revising means re-running `capture_v6_batch.py` and re-greening
@@ -4544,6 +4546,15 @@ checker reads a `retire-with-owner` deletion as unauthorised, and six items that
 L-298's false note is corrected, `test_d5_variants.py:116` is named in the step-2 table, and the
 two v5-refusal pins in `test_public_authority_switch.py` are in step 1's post-step check and
 pass there.
+
+**F1 + F2, completed the same way (later the same day).** Steps 2, 3 and 4 were then executed in
+order in the same kind of scratch worktree, with their edits authored to the part-6 bar and the
+whole battery run at each boundary. All four are green with the owner-gated items held out. The
+runbook below is the result; it supersedes the "steps 2–4 are not proven" sentence above, which
+was true when it was written. What the completion changed: the owner-gated entry grew from six
+items to seven, each with a measurement; three `*_e2e.py` rows moved from step 4 to step 2; and
+`check_ledger_4a.py replacements` is recorded as the one battery gate the simulation never
+measured, at any step.
 
 **F3 (medium) — `CLAUDE.md`.** The import-residual sentence now says what was measured: a pinned
 four-module set of which three are reached, and a real closure of **10 of the 11** listed modules
