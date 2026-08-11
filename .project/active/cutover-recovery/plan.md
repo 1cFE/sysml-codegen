@@ -801,13 +801,13 @@ def test_retirement_preserves_public_product(checkpoint, real_teax):
 
 ### Gate 4D — Restore and rewrite documentation
 
-- [ ] Restore all 22 incident-modified files under `docs/architecture/` from the clean Item 6 base
+- [x] Restore all 22 incident-modified files under `docs/architecture/` from the clean Item 6 base
   before writing new content. This set includes 20 reference documents plus
   `docs/architecture/overview.md` and `docs/architecture/verification-matrix.md`. Do not rewrite the
   11 untouched reference documents merely to make the set uniform.
-- [ ] Build a subject-by-subject update list that states which claims became stale and which new
+- [x] Build a subject-by-subject update list that states which claims became stale and which new
   public behavior replaces them.
-- [ ] **Carried from Gate 4C (S4 ruling, 2026-08-11): document the aggregation modelling
+- [x] **Carried from Gate 4C (S4 ruling, 2026-08-11): document the aggregation modelling
   requirement the exact route imposes.** An assembly cannot write
   `sum(a.capital_cost) + sum(b.capital_cost)`: the projection names an expression parameter
   after the reference's last member and drops the qualifier, so two terms reading a same-named
@@ -820,13 +820,103 @@ def test_retirement_preserves_public_product(checkpoint, real_teax):
   pinned by `test_costed_component_exact_route.py::test_a_two_term_same_name_rollup_is_refused`.
   Cross-reference: this is the filed Item 10 cross-part `child.attr` collapse class, where the
   resolver does not follow per-child `:>>` redefinitions.
-- [ ] Update one coherent documentation subject per commit. Preserve subject-specific requirements,
+- [x] Update one coherent documentation subject per commit. Preserve subject-specific requirements,
   rationale, examples, and cross-links.
-- [ ] Add a check rejecting identical full-file content across distinct numbered reference docs,
+- [x] Add a check rejecting identical full-file content across distinct numbered reference docs,
   except an explicit allowlist that should normally be empty.
-- [ ] Review rendered/readable content manually; residue scans are secondary.
-- [ ] Give `CLAUDE.md` its own reviewed disposition and commit. Restore it first if any Item 7 claim
+- [x] Review rendered/readable content manually; residue scans are secondary.
+- [x] Give `CLAUDE.md` its own reviewed disposition and commit. Restore it first if any Item 7 claim
   is not yet true, then apply only narrow changes that match the accepted final architecture.
+
+#### Gate 4D completion — 2026-08-11
+
+**Deletes nothing. No production change; one new check plus its test, and nothing else.**
+
+**The update list came first**, as the gate requires, and is committed at
+`.project/active/cutover-recovery/doc-update-list-4d.md`: a verdict for each of the 34
+architecture documents and `CLAUDE.md`, the state the documents must describe, the seven
+mechanism records used as content sources with the file and line each was re-verified at, and
+the review method stated so the record is honest.
+
+**The restore step was already satisfied.** Gate 4A measured all 22 incident-modified documents
+byte-identical to the Item 6 base at rebuild HEAD (rows L-252..L-274). Nothing was restored;
+only the rewrite remained.
+
+**Ten subjects, ten commits.**
+
+| # | Subject | Documents | OID |
+|---:|---|---|---|
+| 1 | The update list, and the route the pipeline overview describes | update list, `reference/00`, `overview.md` | `795ba8e` |
+| 2 | The snapshot subject and the identity model it can honestly claim | `reference/27` | `5f329cd` |
+| 3 | Orchestration is now the public surface | `reference/02` | `26f84de` |
+| 4 | The aggregation modelling requirement (S4, carried from 4C) | `modeling-assumptions.md` §4, §6 | `f1d99a7` |
+| 5 | Entry-point identity and the group-naming rule | `reference/06`, `reference/17`, `modeling-assumptions.md` §2 | `fc06453` |
+| 6 | Status banners for the retiring subjects | `reference/03,04,05,07,09,10,11,12,13,24,25` | `408d714` |
+| 7 | Smart regeneration stops pointing at a deleted module | `reference/23` | `b48bbff` |
+| 8 | Verification-matrix pointers, and nothing else | `verification-matrix.md` | `b359957` |
+| 9 | `CLAUDE.md`'s own disposition (plan rule 8) | `CLAUDE.md` | `cc6e2f3` |
+| 10 | The identical-content check | `scripts/check_doc_distinctness.py` + its test | `f40a745` |
+
+**The identical-content check.** `find_identical_documents` compares exact full-file bytes
+across `NN-*.md` under `docs/architecture/reference/` and reports every group of two or more
+that match — no similarity threshold, because a threshold is a knob someone turns down. The
+allowlist is present because this gate asks for one and is **empty**; its suppression path is
+proven by monkeypatching a temporary entry, including that blessing one pair does not bless a
+third document that joins the group. Wired into the suite at
+`tests/conformance/test_reference_doc_distinctness.py`; the live tree reports **31 numbered
+documents, 0 identical-content groups**.
+
+**Five claims were false against the tree, not merely stale, and are corrected:**
+
+1. `reference/00` REQ-PIPE-01 and REQ-PIPE-03 named legacy functions as their verifiers.
+2. `reference/00` and `overview.md` cited `collect_uncovered_params` at
+   `resolution/graph_builder.py`; it lives in `resolution/uncovered_params.py`.
+3. `reference/23` named `analysis/signature_extractor.py` in five places — Gate 4B-G1 deleted
+   that module at `6ba346e`.
+4. `reference/27` and `verification-matrix.md` described the `--design-path-filter` refusal as
+   a flag pairing; Gate 4B-G0 removed the flag, so argparse refuses it first.
+5. `CLAUDE.md` gave two commands that do not run: `uv pip install -e ~/agentic-mbse` (the
+   directory does not exist; the companion is `../agentic-mbse`) and `uv run pytest tests/`
+   (`dev` is an optional extra and must be named). Both corrected forms were run before being
+   written.
+
+**Recorded, not resolved (rule 10).** Three items, all in the update list's own surfacing
+section: `reference/07` cites `core/graph_algorithms.py`, which has never existed in this tree
+(pre-existing, needs an owner); two production docstrings are stale in exactly the way the
+documents were (`orchestration/exact_pipeline_context.py:3-6` still calls the legacy context
+"the shipped authority", `elaboration/__init__.py:5-7` still says projection "never becomes a
+shipped flag") and belong to the retirement commit that touches those files, since this gate is
+forbidden production changes; and `reference/16` and `reference/18` are stale-minor with no
+settled replacement content, which is authorship rather than repair.
+
+**One coupling deliberately not broken.** `reference/09` is mixed, and removing its retiring
+model rows is ledger row **L-120**, which the plan couples to a `tests/conformance/
+test_data_models.py` edit in the same commit — a test change this gate is forbidden. It gets a
+scoped banner naming which model families are live and which retiring, which adds information
+and removes nothing, so it forces no test change. The row deletions ship with L-120.
+
+**Deviation from the manual-review requirement, stated rather than glossed.** Rewritten
+documents were read in full before and after the edit. Banner-only documents had their subject,
+requirement set, and every code reference reviewed, and their bodies are unchanged and remain
+accurate about the components they document — which is the basis for a banner rather than a
+rewrite — but they were not re-read line by line.
+
+**Batteries (final, at `f40a745`).** Full suite **3827 passed / 47 skipped / 53 deselected**,
+delta **+10** against a **3817** baseline measured on a clean tree before the gate's first
+edit; all ten are nodes of the new check, and skipped/deselected are unchanged, so the corpus
+and execution lanes did not move. `mypy src/` **69 errors in 16 files**, unchanged.
+`ruff check src/` clean, clean on both new files. `check_ledger_4a.py paths` **298 rows / 0
+problems**, `surface` **0 unrowed breakages**. `git diff --check` clean at every commit.
+
+**Environment divergence, surfaced not worked around.** Both suite runs ignore
+`tests/conformance/test_exact_constraint_route.py`, which cannot import: the wired companion
+checkout (`/home/reid/1cfe/agentic-mbse`, branch `elaborate-first-salvage`, `5088b41`) does not
+export `preflight_identified`, so pytest interrupts collection. **Reproduced on a clean tree
+before any Gate 4D edit** — pre-existing, not caused by this gate — and both the before and
+after numbers are measured the same way, so the delta stands. The recorded 3790-node baseline
+from Gate 4C part 4 was measured against a companion that provided the symbol and is therefore
+not comparable to either number here. **The companion checkout needs an owner before Phase 5
+runs its acceptance suite.**
 
 ### Validation
 
