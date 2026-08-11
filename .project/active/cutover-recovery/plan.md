@@ -3086,17 +3086,17 @@ Two did not:
   (My earlier report put this file in Class C; the classifier missed a fixture named inside a
   path string rather than on its own. Corrected here.)
 
-##### Named temporary weakness — L-006 / L-241, now narrowed
+##### Named temporary weakness — L-006 / L-241, CLOSED
 
-`tests/conformance/test_gen_stencils.py` **is repointed and v6-backed** as of Gate 4C part 6:
-32 nodes, built from `solar_battery_d5` and `catf_mfe_d5`, green, and `replacements` re-run
-reports **L-006 and L-241 green** against it.
+**Closed at Gate 4C part 6 completion.** All three proof modules the C1 ruling named are now
+repointed and v6-backed, and `check_ledger_4a.py replacements --row L-006 --row L-241` reports
+both rows **green against all three**: `test_gen_stencils.py` (32 passed),
+`test_generation_boundary.py` (20 passed), `test_gen_schemas.py` (21 passed) — 73 nodes, the
+full set. No module of legacy-only evidence remains behind either row.
 
-The weakness is **narrowed, not gone**. Those two rows name three proof modules (73 nodes, the
-C1 ruling), and one of them — `tests/conformance/test_generation_boundary.py`, 20 nodes — still
-reads `catf_mfe_model` and `solar_battery_model`, which the exact route refuses. So L-006 and
-L-241 are today backed by v6 evidence *and* by one module of legacy-only evidence. It closes
-when the rest of the generation-layer family is repointed.
+*(This section previously recorded the weakness as narrowed-not-gone, because
+`test_generation_boundary.py` still read `catf_mfe_model` and `solar_battery_model`. It now
+reads `catf_mfe_d5` and `solar_battery_d5`.)*
 
 #### Gate 4C part 6 — the D-5 variants: rename stage done, second layer surfaced
 
@@ -3388,6 +3388,12 @@ expectations properly is more than this session's remaining budget allows, and t
 explicit that assertions must not be thinned to fit. The tree stays green and the next session
 starts from a known state with the inventory above.
 
+> **Corrected by the completion chunk below.** The failure *counts* in this table held, but
+> "every one a genuine expectation re-derivation" did not: seven of the seventeen — the whole
+> `test_generation_boundary.py` row — were the `graph, _inputs = …` tuple unpack meeting a
+> graph-only fixture, and that file needed no expectation re-derived. Five real re-derivations
+> remained, and `test_gen_registry.py` retired no node at all. See the completion section.
+
 **Battery.** Full licensed suite **3810 passed / 47 skipped / 38 deselected**, unchanged — the
 repoint moved no node count. Variants, corpus ledger and v6 batch **75 passed**; corpus 15/22
 unmoved. Execution lane **38 passed** including the 12 real-TEAx nodes at the recorded anchors.
@@ -3395,6 +3401,189 @@ unmoved. Execution lane **38 passed** including the 12 real-TEAx nodes at the re
 `check_ledger_4a.py paths` **298 rows / 0 problems**, `surface` **0 on both axes**.
 
 **Commit:** ``6822685` (`6822685f47b8b2a5d3dd6726ddd682682849e3d5`)`.
+
+#### Gate 4C part 6 — the generation-layer repoint, COMPLETE but for four baseline-bytes nodes
+
+**All six remaining files are repointed and green: 138 nodes before, 138 after, nothing thinned
+and no node dropped.** With `test_gen_stencils.py` from the first chunk the family stands at
+**170 nodes, all v6-backed except a named four.**
+
+| File | nodes before → after | what was actually re-derived |
+|---|---|---|
+| `test_generation_boundary.py` | 20 → 20 | nothing: the seven "failures" were the tuple unpack, not expectations |
+| `test_gen_schemas.py` | 21 → 21 | nothing beyond the repoint |
+| `test_gen_module_wrappers.py` | 19 → 19 | nothing beyond the repoint |
+| `test_gen_json_templates.py` | 28 → 28 | group counts and names; schema field-vs-alias |
+| `test_gen_registry.py` | 22 → 22 | aggregation-import count; four legacy-intermediate subjects rebuilt |
+| `test_gen_pipeline_yaml.py` | 28 → 28 | group counts; **4 baseline-bytes nodes remain legacy-backed** |
+
+**The inventory the last chunk left was right about the count and wrong about the kind.** It
+recorded "17 failures, every one a genuine expectation re-derivation." Measured: seven of the
+seventeen — all of `test_generation_boundary.py` — were the `graph, _inputs = …` unpack meeting
+a graph-only fixture. That file needed no expectation re-derived at all. Five real re-derivations
+remained, listed below.
+
+##### The five re-derivations, each against a ratified mechanism
+
+1. **Solar entry-point groups, 3 → 2.** Legacy published `design_params`, `library_params` and
+   `system_design`; the exact route publishes the first two. `system_design` is legacy's synthetic
+   `hierarchy`-source group — **legacy-only by construction** (3E, "the legacy-only `system_design`
+   hierarchy group"), so there is nothing for the exact route to match.
+2. **Catf groups, 8 → 8, and two names move.** Legacy: `blanket_params` … `system_params`. Exact:
+   the same eight less those two, plus `geometry_params` and `thermal_loads_params`. **3E
+   declaration-site attribution** — a group is named after the file that *declares* its parameters,
+   read off the fixture tree by hand: `f_exposed` at `library/physics/geometry.sysml:181`, and the
+   `pump_load` formals in `library/analyses/thermal_loads.sysml`. Legacy named both after the
+   *using* design file. Because the count is unchanged, a count-only assertion would have accepted
+   a wholly renamed set, so **the names are now pinned alongside the counts**.
+3. **Schema field names vs JSON keys.** **Per-occurrence expansion** mints keys carrying an
+   occurrence index (`…__battery_pack[0]__capacity_kwh`), which no Python class body can declare.
+   `core/qualified_names.params_field_name` sanitizes the field and the template keeps the exact
+   key as the field's `alias`. The old assertion compared field names to raw QNs and could only
+   ever fail here. It now asserts **both halves** — sanitized field names *and* the alias set —
+   which is strictly stronger than what it replaced: the JSON-facing key can no longer drift.
+4. **Aggregation imports, 20 → 12 (REQ-REG-01).** Hand-counted from the model, not from output:
+   `solar_battery_d5/library.sysml` declares exactly twelve `attribute <n> : Real = sum(<child>.<a>);`
+   intermediates — four each for `pv_module` and `inverter` (lines 615-643) and four for
+   `battery_pack` (lines 672-696). Legacy counted 20 because it also synthesized an aggregation per
+   assembly `:>>` rollup; the D-5 cure makes those rollups plain sums over named terms, so they
+   render as FORMULA modules. **The load-bearing half is unchanged**: all twelve import paths are
+   design-scoped, because the registry's aggregation branch derives the path from the module's own
+   name — the design-scoped EQN (`generation/registry.py:325`, the Bug 8a rule) — and not from the
+   library part def that declares the attribute. *(Worth recording because the graph's
+   `module_type` for those modules **is** library-scoped; reading that field rather than the
+   rendered import line briefly looked like a REQ-REG-01 regression, and is not one.)*
+5. **Collision arithmetic, 20 aliased imports — unchanged.** Re-derived rather than carried:
+   five colliding element names (the `Costed Item` surface) × four assemblies that redefine them
+   (`solar_array`, `battery_system`, `site_infra`, `solar_battery_plant`) = 20. What changed is the
+   *kinds* — the exact route renders some of the twenty as computed-attribute modules — which the
+   assertion does not depend on.
+
+##### `test_gen_registry.py`: four legacy-intermediate subjects rebuilt, none dropped
+
+The brief expected retired nodes here. **There are none.** Every subject that read
+`inputs["snap"]` had a public-surface equivalent, so all 22 nodes survive with their subjects
+intact:
+
+- **REQ-REG-01** derived aggregation element names from `snap["aggregation_expressions"]` → now
+  from the graph's `AGGREGATION` modules (the element name is the last EQN segment).
+- **REQ-REG-04** derived assembly names from `agg.module_eqn` → now from the EQN of each module
+  that renders a colliding class name, which is a *narrower* and more exact set than before.
+- **REQ-REG-05** built expected import paths from `snap["calc_defs"]` / `["computed_attributes"]` /
+  `["aggregation_expressions"]` → now from each module's own definition QN, with the aggregation
+  branch using the design-scoped EQN per REQ-REG-01. The requirement's subject is "one SQN →
+  PythonModulePath pipeline, no ad-hoc string work," which survives intact.
+- **REQ-REG-07** read `snap` and never used it. Deleted, no subject touched.
+- **REQ-REG-02** drove `generate_via_legacy_route` from a v5 snapshot → now the public
+  `run_codegen` from the committed v6 instance-graph snapshot, still license-free. This node is
+  the strongest of the six files: it generates a real package to disk and checks every registry
+  import against a file that exists.
+
+##### The honest remainder — four YAML baseline-bytes nodes
+
+`TestYamlBaselineComparison` (3 parametrized + `wi014_toy`) compares **bytes** against
+`tests/fixtures/baseline_yaml/*.yaml`. Those four nodes stay on the legacy route, in one
+clearly-labelled fixture, and the file is green. The reason is not a re-derivation this chunk
+declined to do:
+
+- The baseline bytes are captured by `scripts/capture_baseline_yaml.py` — **ledger L-039, census
+  SCR-02 MIGRATE, retained precisely because "no v6 capture driver exists"**. Authoring that
+  driver is SCR-02's own migration, not this chunk's declared path set.
+- The files have a **second consumer outside this chunk**: `tests/integration/test_e2e_output_registry.py`
+  drives the *live legacy* route against the same bytes. Overwriting them breaks it; hand-editing
+  them is exactly what a byte baseline forbids.
+
+**What the new bytes would say, measured so the next chunk starts from fact rather than a guess.**
+All four differ from their committed baseline, each by a named mechanism: the D-5 formal rename
+moves chain_spike's input keys (`width` → `width_in`, `length` → `length_in`, `rate` → `rate_in`);
+the exact route keys `wi014_toy`'s entry points by the usage (`toy_plant__demo_plant__plant_length`)
+where legacy used the definition (`Toy_Plant`); `attr_expr_probe` gains `minor_radius` and loses
+three modules (17 vs 16); solar_battery grows 526 → 1343 lines on per-occurrence expansion. **No
+unexplained diff** — these are the new baselines, waiting on the capture driver.
+
+##### A measured finding, recorded not fixed — the empty-catalog report aggregator
+
+Legacy emits a `constraint_report_aggregator` module **whenever the constraint pathway runs at
+all, even with zero eligible constraints** — a deliberate D11 choice, so "a model that asserts
+nothing still produces the `not_assessed` report surface" (`analysis/constraint_lowering.py:1511`).
+The exact route returns early instead (`elaboration/project.py:887`, `if not constraint_outputs:
+return`). Measured on `catf_mfe`: legacy 43 modules including that aggregator, exact 42 without it.
+The exact route *does* emit one when there are entries (`constraint_inline`, `constraint_multi_instance`).
+
+**Consequence, which is why it is recorded here rather than left to be noticed later.** That
+aggregator was the only non-`FULLY_COMPILABLE` module across all four models
+`test_generation_boundary.py` parametrizes over, so its
+`test_auto_impl_context_none_for_manual` — 4 nodes — now quantifies over an empty set on every one. It was already vacuous for three of the four under legacy; catf_mfe was
+the one live subject and is now vacuous too. **No assertion was thinned: the universe shrank.**
+The node still fails loudly if a non-FC module ever appears carrying an auto-impl context, and
+`test_from_graph_stencil_stub_dispatch` synthesizes the non-FC case directly, so the *dispatch*
+behaviour keeps a live subject. Whether the empty-report surface is a behaviour the exact route
+should carry is a product question for the Phase 5 packet, not a test question.
+
+**Battery.** Full licensed suite **3810 passed / 47 skipped / 38 deselected** — **delta zero**,
+node for node, against the inherited count; the repoint moved 138 nodes onto v6 without moving a
+single count. Variants, corpus ledger and v6 batch **75 passed**. `capture_v6_batch.py --verify`
+**15 captured / 22 refused / 0 deviations**, corpus 15/22 unmoved and no tracked fixture modified.
+Execution lane **38 passed** (`-m execution tests/execution/`) including the 12 real-TEAx nodes at
+the recorded anchors. `ruff check src tests scripts` **870 → 868** — two *fewer*, both dead code
+this chunk removed (an unused `build_classifier_inputs_from_snapshot` import and the unused `snap`
+binding); no new finding. `mypy src/` **69 in 16 files → unchanged**. `git diff --check` clean.
+`check_ledger_4a.py paths` **298 rows / 0 problems**, `surface` **0 on both axes**, `replacements`
+**L-006 and L-241 green against all three proof modules** — the named temporary weakness is closed
+above.
+
+*Environment note for the next session, since it cost this one real time:* the wired pair is
+`/home/reid/1cfe/item7-rebuild-venv` + `/home/reid/1cfe/agentic-mbse-item7-rebuild`, **not**
+`/home/reid/1cfe/agentic-mbse`. Running against the latter fails `test_exact_constraint_route.py`
+at import (`preflight_identified` absent) and errors all 12 real-TEAx nodes on the lane's own
+checkout guard (`tests/execution/test_fusion_tea_real_teax.py:111`). Both are environment
+artifacts, not regressions.
+
+##### Readiness for the retirement steps — 5 files, not 10, and one is a paired-repo matter
+
+**Not started, as instructed.** Re-derived from the ledger rather than from the Part B list: of
+the **35 distinct files named as a `replacement_proof_node`**, **28 are clean** and **5 in this
+repo still build from a legacy specimen** (`snapshot_fixture`, `build_full_graph_from_snapshot`,
+`generate_via_legacy_route`, or a refused corpus fixture) in code rather than in prose. Parts 5
+and 6 accounted for the rest.
+
+| Proof-node file | rows it backs | what still holds it |
+|---|---|---|
+| `tests/conformance/test_public_authority_switch.py` | **11** — L-005, L-011, L-018, L-019, L-021, L-022, L-023, L-025, L-028, L-030, L-031 | drives `generate_via_legacy_route` **by design**: its subject is the authority switch itself. The largest single block, and the one that most needs a ruling rather than a repoint. |
+| `tests/unit/test_uncovered_params.py` | L-249 | full house: `snapshot_fixture`, `build_full_graph_from_snapshot`, `generate_via_legacy_route`, both refused models |
+| `tests/conformance/test_gen_pipeline_yaml.py` | L-039 | this chunk's named remainder — the 4 baseline-bytes nodes, waiting on the SCR-02 v6 capture driver |
+| `tests/conformance/test_elaboration_corpus_ledger.py` | L-044 | its live dual-run half, which retires with the v5 family |
+| `tests/unit/test_elaboration_import_boundaries.py` | L-032 | `build_full_graph_from_snapshot` |
+
+**Two more sit in the paired repo**, which is why a scan run here reports their files missing:
+L-036 (`test_constraint_extraction.py`) and L-037 (`test_executable_profile.py`) are
+`agentic-mbse` rows. They are that repo's chunk, not this one's.
+
+**`replacements` state: 91 green, 204 not-required, 1 pending, 0 failures — and measured
+identically at `ec41817`.** Worth stating plainly: **this chunk moved no row's aggregate state.**
+L-006 and L-241 already read green before it, on `test_gen_stencils.py` alone, because the checker
+reports a row green once *any* named proof node passes. What changed is underneath that counter —
+all three named modules are now v6-backed, which is exactly what the C1 ruling's weakness note was
+about and what the aggregate cannot see. The `--row L-006 --row L-241` output is the evidence, not
+the summary line.
+
+The one row that *did* change state is **L-289 `tests/conftest.py`**, the suite's only pending
+row, whose proof placeholder read "PENDING-4C: the v6 fixture helper, and a repointed test that
+uses it." Both halves now exist — `instance_graph_fixture()` and `exact_graph_from_fixture()` in
+`tests/conftest.py`, and seven repointed conformance modules reading them — so the row gets two
+real nodes, one per half: REQ-REG-02, which drives the public `run_codegen` from
+`instance_graph_fixture`'s path, and REQ-REG-05, which reads `exact_graph_from_fixture`'s
+projected graph. `check_ledger_4a.py replacements --row L-289` reports **green**, taking the
+suite to **92 green / 0 pending / 204 not-required / 0 failures**.
+
+**One staleness spotted outside this chunk's path set, flagged not fixed.**
+`tests/conformance/test_gen_stencils.py:345` still reads
+`assert multi_output_count > 0 or model_name == "catf_mfe_model"`. `model_name` is now
+`catf_mfe_d5`, so that escape hatch is dead code — the assertion is *stricter* than authored and
+passes on its own merits (catf_mfe_d5 does carry multi-output modules). Harmless, but it belongs
+to the first chunk's file and a one-word edit there is not this chunk's to make.
+
+**Commit:** ``2c1d9c6` (`PLACEHOLDER`)`. **Deletes nothing.**
 
 ### Phase 5 Completion
 

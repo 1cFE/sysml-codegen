@@ -35,12 +35,7 @@ from sysml_codegen.core.identifier_types import (
 )
 from sysml_codegen.resolution.models import ComputationGraph, ModuleKind
 
-from sysml_codegen.snapshot import (
-    build_classifier_inputs_from_snapshot,
-    build_full_graph_from_snapshot,
-)
-from tests.conftest import snapshot_fixture
-from tests.helpers.legacy_route import generate_via_legacy_route
+from tests.conftest import exact_graph_from_fixture, instance_graph_fixture
 
 
 # ---------------------------------------------------------------------------
@@ -50,35 +45,41 @@ from tests.helpers.legacy_route import generate_via_legacy_route
 TEMPLATE_DIR = Path(__file__).parent.parent.parent / "src" / "sysml_codegen" / "templates"
 SRC_DIR = Path(__file__).parent.parent.parent / "src" / "sysml_codegen"
 
+# The D-5 migrated variants, not the corpus originals: the exact route refuses solar, catf
+# and chain_spike as authored (SI_SELF_BINDING, and for solar a same-name rollup collision),
+# so a generation-layer test that reads them can only ever exercise the legacy route. The
+# variants carry the same models in the form the exact route accepts. `attr_expr_probe` is
+# accepted as authored. See each fixture's PROVENANCE.md and the Gate 4C part 6 notes.
+
 # Models with all 3 module types (CalcUsage + FORMULA + aggregation)
 ALL_TYPE_MODELS = [
-    "solar_battery_model",
+    "solar_battery_d5",
 ]
 
 # Models for parametrized tests
 PARAMETRIZED_MODELS = [
-    "solar_battery_model",
-    "catf_mfe_model",
-    "chain_spike_model",
+    "solar_battery_d5",
+    "catf_mfe_d5",
+    "chain_spike_d5",
     "attr_expr_probe",
 ]
 
 MODEL_IDS = {
-    "solar_battery_model": "solar_battery",
-    "catf_mfe_model": "catf_mfe",
-    "chain_spike_model": "chain_spike",
+    "solar_battery_d5": "solar_battery",
+    "catf_mfe_d5": "catf_mfe",
+    "chain_spike_d5": "chain_spike",
     "attr_expr_probe": "attr_expr_probe",
 }
 
 # Models with no expected collisions
 NO_COLLISION_MODELS = [
-    "catf_mfe_model",
-    "chain_spike_model",
+    "catf_mfe_d5",
+    "chain_spike_d5",
 ]
 
 NO_COLLISION_IDS = {
-    "catf_mfe_model": "catf_mfe",
-    "chain_spike_model": "chain_spike",
+    "catf_mfe_d5": "catf_mfe",
+    "chain_spike_d5": "chain_spike",
 }
 
 
@@ -97,20 +98,16 @@ def template_env():
 
 
 @pytest.fixture(scope="session")
-def all_graph_data() -> dict[str, tuple[ComputationGraph, dict]]:
-    """Build ComputationGraphs + inputs for all models (once per session)."""
-    data = {}
-    for model_name in PARAMETRIZED_MODELS:
-        graph, inputs = build_full_graph_from_snapshot(snapshot_fixture(model_name))
-        data[model_name] = (graph, inputs)
-    return data
+def all_graph_data() -> dict[str, ComputationGraph]:
+    """Project each model's sealed v6 graph, once per session."""
+    return {name: exact_graph_from_fixture(name) for name in PARAMETRIZED_MODELS}
 
 
 @pytest.fixture(scope="session")
 def all_registry_codes(all_graph_data, template_env) -> dict[str, str]:
     """Generate registry code for all models (once per session)."""
     codes = {}
-    for model_name, (graph, inputs) in all_graph_data.items():
+    for model_name, graph in all_graph_data.items():
         package_name = MODEL_IDS[model_name]
 
         exit_types = _collect_exit_point_primitive_types(graph.modules)
@@ -219,17 +216,33 @@ class TestAggregationPathsDesignScoped:
     ):
         """For solar_battery, all aggregation import paths start with
         'solarbatterydesign.solar_battery_plant.' (design scope), not
-        'solarbatterylibrary' (library scope). Verify 20 aggregation imports."""
-        code = all_registry_codes["solar_battery_model"]
-        graph, inputs = all_graph_data["solar_battery_model"]
-        snap = inputs["snap"]
+        'solarbatterylibrary' (library scope). Verify 12 aggregation imports.
 
-        # Identify aggregation class names from fixture data
+        Twelve, re-derived by hand from the model rather than carried over from the
+        legacy count of 20: ``solar_battery_d5/library.sysml`` declares exactly twelve
+        ``attribute <name> : Real = sum(<child>.<attr>);`` intermediates -- four each for
+        ``pv_module`` and ``inverter`` under Solar Array (lines 615-643) and four for
+        ``battery_pack`` under Battery System (lines 672-696). Legacy counted 20 because
+        it also synthesized an aggregation for each assembly's ``:>>`` rollup; the D-5
+        cure makes those rollups plain sums over named terms, so they render as FORMULA
+        modules and only the ``sum()`` terms remain aggregations.
+
+        The design-scoping itself is the load-bearing half and is unchanged: the
+        aggregation branch of the registry derives its import path from the module's
+        own name -- the design-scoped EQN (generation/registry.py:325, the Bug 8a rule)
+        -- not from the library part def that declares the attribute.
+        """
+        code = all_registry_codes["solar_battery_d5"]
+        graph = all_graph_data["solar_battery_d5"]
+
+        # Aggregation class names, read off the graph rather than the legacy classifier
+        # intermediate: the element name is the last segment of the module's EQN.
         agg_attr_names = {
-            agg.expression.attribute_name
-            for agg in snap["aggregation_expressions"]
+            module.name.split("__")[-1]
+            for module in graph.modules
+            if module.module_kind is ModuleKind.AGGREGATION
         }
-        assert len(agg_attr_names) > 0, "No aggregation expressions in solar_battery"
+        assert len(agg_attr_names) > 0, "No aggregation modules in solar_battery"
 
         # Find import lines whose imported class name matches an aggregation attr
         all_module_imports = _extract_module_import_lines(code, "solar_battery")
@@ -245,8 +258,8 @@ class TestAggregationPathsDesignScoped:
                 if base in agg_attr_names:
                     agg_imports.append(line)
 
-        assert len(agg_imports) == 20, (
-            f"Expected 20 aggregation imports, got {len(agg_imports)}:\n"
+        assert len(agg_imports) == 12, (
+            f"Expected 12 aggregation imports, got {len(agg_imports)}:\n"
             + "\n".join(agg_imports)
         )
 
@@ -263,8 +276,8 @@ class TestAggregationPathsDesignScoped:
             line for line in agg_imports
             if "solarbatterydesign.solar_battery_plant." in line
         ]
-        assert len(design_scoped) == 20, (
-            f"Expected all 20 aggregation imports to be design-scoped, "
+        assert len(design_scoped) == 12, (
+            f"Expected all 12 aggregation imports to be design-scoped, "
             f"got {len(design_scoped)}"
         )
 
@@ -278,7 +291,7 @@ class TestImportPathsMatchFilesystem:
     generated by CLI (i.e., match PythonModulePath.from_sysml())."""
 
     @pytest.mark.req("REQ-REG-02")
-    @pytest.mark.parametrize("model_name", ["solar_battery_model", "catf_mfe_model"],
+    @pytest.mark.parametrize("model_name", ["solar_battery_d5", "catf_mfe_d5"],
                              ids=["solar_battery", "catf_mfe"])
     def test_req_reg_02_import_paths_match_filesystem(self, model_name, tmp_path):
         """Every registry module import points at a file a real generation wrote to disk.
@@ -288,17 +301,18 @@ class TestImportPathsMatchFilesystem:
         its committed snapshot -- license-free -- and assert each
         ``from pkg.modules.A.B.C import Name`` has a matching ``output/modules/A/B/C.py``.
 
-        provenance: the on-disk files ARE the anchor -- produced by run_codegen from the
-        committed extraction snapshot (the from-snapshot generation harness, cf.
-        tests/integration/test_full_pipeline.py generation tests).
+        provenance: the on-disk files ARE the anchor -- produced by the public
+        ``run_codegen`` entry point from the committed v6 instance-graph snapshot, which
+        is license-free and is the exact route's own generation surface (cf.
+        tests/integration/test_full_pipeline_exact_route.py).
         """
-        from sysml_codegen.cli import GenerationConfig
+        from sysml_codegen.cli import GenerationConfig, run_codegen
 
         package_name = MODEL_IDS[model_name]
         output = tmp_path / "out"
-        generated = generate_via_legacy_route(GenerationConfig(
+        generated = run_codegen(GenerationConfig(
             output_path=output,
-            from_snapshot=snapshot_fixture(model_name),
+            from_snapshot=instance_graph_fixture(model_name),
             package_name=package_name,
             overwrite=True,
         ))
@@ -327,7 +341,7 @@ class TestImportPathsMatchFilesystem:
         )
 
     @pytest.mark.req("REQ-REG-02")
-    @pytest.mark.parametrize("model_name", ["solar_battery_model", "catf_mfe_model"],
+    @pytest.mark.parametrize("model_name", ["solar_battery_d5", "catf_mfe_d5"],
                              ids=["solar_battery", "catf_mfe"])
     def test_module_count_matches_inputs(
         self, model_name, all_registry_codes, all_graph_data,
@@ -336,7 +350,7 @@ class TestImportPathsMatchFilesystem:
         classes from graph modules: unique CalcUsage calc_defs + FORMULA + aggregations.
         (Registry registers classes, not pipeline instances.)"""
         code = all_registry_codes[model_name]
-        graph, _inputs = all_graph_data[model_name]
+        graph = all_graph_data[model_name]
 
         module_list = _extract_module_list_from_create_registry(code)
 
@@ -377,7 +391,7 @@ class TestGloballyUniqueClassNames:
     globally unique."""
 
     @pytest.mark.req("REQ-REG-03")
-    @pytest.mark.parametrize("model_name", ["solar_battery_model", "catf_mfe_model"],
+    @pytest.mark.parametrize("model_name", ["solar_battery_d5", "catf_mfe_d5"],
                              ids=["solar_battery", "catf_mfe"])
     def test_req_reg_03_globally_unique_class_names(
         self, model_name, all_registry_codes,
@@ -428,12 +442,11 @@ class TestAliasedImportsForCollisions:
     def test_req_reg_04_aliased_imports_for_collisions(
         self, all_registry_codes, all_graph_data,
     ):
-        """For solar_battery, verify aggregation modules with colliding element
-        names get aliased imports. Check that 'import X as Alias' appears for
-        each collision. Verify the alias includes the assembly name prefix."""
-        code = all_registry_codes["solar_battery_model"]
-        _, inputs = all_graph_data["solar_battery_model"]
-        snap = inputs["snap"]
+        """For solar_battery, verify modules with colliding element names get aliased
+        imports. Check that 'import X as Alias' appears for each collision. Verify the
+        alias includes the assembly name prefix."""
+        code = all_registry_codes["solar_battery_d5"]
+        graph = all_graph_data["solar_battery_d5"]
 
         aliased = _extract_aliased_imports(code)
         # Filter out schema re-exports (X as X)
@@ -442,19 +455,31 @@ class TestAliasedImportsForCollisions:
             if orig != alias
         ]
 
-        # 5 element names x 4 assemblies = 20 aggregation modules, all collide
-        # Each needs an alias since there are 4 modules per element name
+        # Re-derived on the exact route, not carried over: the five colliding element
+        # names (capital_cost, raw_material_cost, fabrication_cost, installation_cost,
+        # idiot_index -- the 'Costed Item' surface each assembly redefines) x the four
+        # assemblies that redefine them (solar_array, battery_system, site_infra,
+        # solar_battery_plant) = 20 modules, each needing an alias. Same arithmetic the
+        # legacy route produced; what changed is the kinds -- the exact route renders
+        # some of the twenty as computed-attribute modules where legacy synthesized
+        # aggregations -- which this test does not depend on.
         assert len(real_aliases) >= 20, (
             f"Expected at least 20 aliased imports for solar_battery aggregation "
             f"collisions, got {len(real_aliases)}: {real_aliases}"
         )
 
-        # Get actual assembly names from fixture data (parent segments of module_eqn)
+        # Assembly names, read off the graph's own modules rather than the legacy
+        # classifier intermediate: a module's name IS the design-scoped EQN (ADR-003),
+        # so the parent segment is the assembly. Scoped to the modules that actually
+        # render a colliding class name, which is exactly the set that needs an alias.
+        aliased_class_names = {orig for orig, _ in real_aliases}
         assembly_segments = set()
-        for agg in snap["aggregation_expressions"]:
-            # module_eqn: "SolarBatteryDesign__solar_battery_plant__solar_array__capital_cost"
+        for module in graph.modules:
+            if module.module_type.rsplit(".", 1)[-1] not in aliased_class_names:
+                continue
+            # name: "solarbatterydesign__solar_battery_plant__solar_array__pv_module_capital_cost"
             # parent segment is segments[-2] (the assembly name)
-            eqn_segments = agg.module_eqn.split("__")
+            eqn_segments = module.name.split("__")
             if len(eqn_segments) >= 2:
                 assembly_segments.add(eqn_segments[-2])
 
@@ -482,7 +507,7 @@ class TestAllTypesUseSQNDerivation:
     SHALL all derive paths from the same QN derivation pipeline."""
 
     @pytest.mark.req("REQ-REG-05")
-    @pytest.mark.parametrize("model_name", ["solar_battery_model", "attr_expr_probe"],
+    @pytest.mark.parametrize("model_name", ["solar_battery_d5", "attr_expr_probe"],
                              ids=["solar_battery", "attr_expr_probe"])
     def test_req_reg_05_all_types_use_sqn_derivation(
         self, model_name, all_registry_codes, all_graph_data,
@@ -492,39 +517,32 @@ class TestAllTypesUseSQNDerivation:
         path construction."""
         code = all_registry_codes[model_name]
         package_name = MODEL_IDS[model_name]
-        graph, inputs = all_graph_data[model_name]
-        snap = inputs["snap"]
+        graph = all_graph_data[model_name]
 
         module_imports = _extract_module_import_lines(code, package_name)
         assert len(module_imports) > 0, f"No module imports found in {model_name}"
 
-        # Build expected import paths for all three module types
+        # Build expected import paths for all three module types, from the graph's own
+        # definition qualified names rather than the legacy classifier intermediate.
+        # This is the requirement's subject: whatever QN a module carries, its import
+        # path must come out of the one SQN -> PythonModulePath pipeline and not out of
+        # ad-hoc string work in the registry. (*Which* QN an aggregation should carry is
+        # REQ-REG-01's subject, checked separately.)
         expected_paths = set()
-
-        # CalcUsage: derive from calc_def.qualified_name
-        for cd in snap["calc_defs"]:
-            sqn = SysMLQualifiedName(cd.qualified_name)
-            python_path = PythonModulePath.from_sysml(sqn)
-            expected_paths.add(python_path.import_path)
-
-        # FORMULA: derive from owning_part_qualified_name::name
-        from sysml_codegen.extraction.data_models import ComputedAttributeClassification
-        from sysml_codegen.extraction.expression_compiler import Compilability
-        for ca in snap["computed_attributes"]:
-            if (
-                ca.classification == ComputedAttributeClassification.FORMULA
-                and ca.compilability == Compilability.FULLY_COMPILABLE
-            ):
-                sysml_qn = f"{ca.owning_part_qualified_name}::{ca.name}"
-                sqn = SysMLQualifiedName(sysml_qn)
-                python_path = PythonModulePath.from_sysml(sqn)
-                expected_paths.add(python_path.import_path)
-
-        # Aggregation: derive from module_eqn (design-scoped)
-        for agg in snap["aggregation_expressions"]:
-            sysml_qn = agg.module_eqn.replace("__", "::")
-            sqn = SysMLQualifiedName(sysml_qn)
-            python_path = PythonModulePath.from_sysml(sqn)
+        for module in graph.modules:
+            if module.calc_def_qualified_name is None:
+                continue
+            if module.module_kind is ModuleKind.CALCULATION:
+                # CalcUsage: the calc def's own QN.
+                sysml_qn = module.calc_def_qualified_name
+            elif module.module_kind is ModuleKind.AGGREGATION:
+                # Aggregation: the design-scoped EQN, which is the module's own name
+                # (REQ-REG-01 / Bug 8a) -- not the declaring part def's QN.
+                sysml_qn = module.name.replace("__", "::")
+            else:
+                # FORMULA: the owning part def's QN plus the attribute name.
+                sysml_qn = f"{module.calc_def_qualified_name}::{module.calc_def_name}"
+            python_path = PythonModulePath.from_sysml(SysMLQualifiedName(sysml_qn))
             expected_paths.add(python_path.import_path)
 
         # Verify each import references a known path
@@ -557,7 +575,7 @@ class TestCustomSchemaTypesIncludesExitPrimitives:
     types used by any module."""
 
     @pytest.mark.req("REQ-REG-06")
-    @pytest.mark.parametrize("model_name", ["solar_battery_model", "catf_mfe_model"],
+    @pytest.mark.parametrize("model_name", ["solar_battery_d5", "catf_mfe_d5"],
                              ids=["solar_battery", "catf_mfe"])
     def test_req_reg_06_custom_schema_types_includes_exit_primitives(
         self, model_name, all_registry_codes, all_graph_data,
@@ -572,7 +590,7 @@ class TestCustomSchemaTypesIncludesExitPrimitives:
         function under test can never catch a bug in that function.
         """
         code = all_registry_codes[model_name]
-        graph, _ = all_graph_data[model_name]
+        graph = all_graph_data[model_name]
 
         # Independent derivation (does not call _collect_exit_point_primitive_types):
         # walk root-field single-output modules, map python_type -> wrapper name.
@@ -615,7 +633,7 @@ class TestCustomSchemaTypesIncludesExitPrimitives:
             )
 
     @pytest.mark.req("REQ-REG-06")
-    @pytest.mark.parametrize("model_name", ["solar_battery_model", "catf_mfe_model"],
+    @pytest.mark.parametrize("model_name", ["solar_battery_d5", "catf_mfe_d5"],
                              ids=["solar_battery", "catf_mfe"])
     def test_schema_imports_match_entry_point_groups(
         self, model_name, all_registry_codes, all_graph_data,
@@ -626,7 +644,7 @@ class TestCustomSchemaTypesIncludesExitPrimitives:
         are the report aggregator's own output types, not derived from any
         input entry-point group."""
         code = all_registry_codes[model_name]
-        graph, _ = all_graph_data[model_name]
+        graph = all_graph_data[model_name]
         package_name = MODEL_IDS[model_name]
 
         schema_imports = [
@@ -660,8 +678,7 @@ class TestCollisionDetectionBeforeRendering:
         """Call the registry generator for solar_battery, verify it detects
         the 5 colliding class names and reports them (via warning or return
         value) before template rendering."""
-        graph, inputs = all_graph_data["solar_battery_model"]
-        snap = inputs["snap"]
+        graph = all_graph_data["solar_battery_d5"]
 
         exit_types = _collect_exit_point_primitive_types(graph.modules)
 

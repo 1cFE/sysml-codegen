@@ -5673,7 +5673,10 @@
    "group": null,
    "authority": "Gate 4C part 5 second-axis measurement (check_ledger_4a.py surface, data axis); orchestrator rulings 2026-08-11",
    "unreachability": null,
-   "replacement_proof_node": "PENDING-4C: the v6 fixture helper, and a repointed test that uses it",
+   "replacement_proof_node": [
+    "tests/conformance/test_gen_registry.py::TestImportPathsMatchFilesystem::test_req_reg_02_import_paths_match_filesystem[solar_battery]",
+    "tests/conformance/test_gen_registry.py::TestAllTypesUseSQNDerivation::test_req_reg_05_all_types_use_sqn_derivation[solar_battery]"
+   ],
    "blocked_by": [],
    "responsibility": "Shared test infrastructure: fixture paths, the license marker, and the snapshot_fixture helper.",
    "node_count": 0,
@@ -5681,7 +5684,7 @@
    "breaks_a_free_group": false,
    "reason": "Infrastructure, not coverage \u2014 ruled by the orchestrator 2026-08-11. snapshot_fixture() names tests/fixtures/<name>/extraction_snapshot.json, so it is a v5 dependence held by ~50 call sites. It migrates to a v6 equivalent rather than retiring, so both routes' tests keep working through the transition. No row before this one, because a data dependence is not an import and Gate 4C part 3 measured only imports.",
    "disposition_4c": "repoint",
-   "disposition_4c_note": "Gate 4C part 5: see reason."
+   "disposition_4c_note": "Gate 4C part 5: see reason. Gate 4C part 6 completion: PENDING-4C discharged. Both halves the placeholder named now exist — the v6 fixture helpers instance_graph_fixture() and exact_graph_from_fixture() in tests/conftest.py, and seven repointed conformance modules that read them. The two proof nodes cover one half each: REQ-REG-02 drives the public run_codegen from instance_graph_fixture's path and checks every registry import against a file on disk, REQ-REG-05 reads exact_graph_from_fixture's projected graph. snapshot_fixture() survives alongside them and retires with the v5 family."
   },
   {
    "id": "L-290",

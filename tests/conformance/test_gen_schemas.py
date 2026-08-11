@@ -29,10 +29,7 @@ from sysml_codegen.generation.schemas import (
 from sysml_codegen.generation.type_mapping import map_sysml_type_to_python
 from sysml_codegen.resolution.models import ComputationGraph, ModuleKind
 
-from sysml_codegen.snapshot import (
-    build_full_graph_from_snapshot,
-)
-from tests.conftest import snapshot_fixture
+from tests.conftest import exact_graph_from_fixture
 
 
 # ---------------------------------------------------------------------------
@@ -42,14 +39,19 @@ from tests.conftest import snapshot_fixture
 TEMPLATE_DIR = Path(__file__).parent.parent.parent / "src" / "sysml_codegen" / "templates"
 SRC_DIR = Path(__file__).parent.parent.parent / "src" / "sysml_codegen"
 
+# The D-5 migrated variants, not the corpus originals: the exact route refuses both
+# originals (SI_SELF_BINDING, and for solar a same-name rollup collision), so a
+# generation-layer test that reads them can only ever exercise the legacy route. The
+# variants carry the same models in the form the exact route accepts. See each fixture's
+# PROVENANCE.md and the Gate 4C part 6 notes.
 PARAMETRIZED_MODELS = [
-    "solar_battery_model",
-    "catf_mfe_model",
+    "solar_battery_d5",
+    "catf_mfe_d5",
 ]
 
 MODEL_IDS = {
-    "solar_battery_model": "solar_battery",
-    "catf_mfe_model": "catf_mfe",
+    "solar_battery_d5": "solar_battery",
+    "catf_mfe_d5": "catf_mfe",
 }
 
 
@@ -68,13 +70,13 @@ def template_env():
 
 
 @pytest.fixture(scope="session")
-def all_graph_data() -> dict[str, tuple[ComputationGraph, dict]]:
-    """Build ComputationGraphs + inputs for all models (once per session)."""
-    data = {}
-    for model_name in PARAMETRIZED_MODELS:
-        graph, inputs = build_full_graph_from_snapshot(snapshot_fixture(model_name))
-        data[model_name] = (graph, inputs)
-    return data
+def all_graph_data() -> dict[str, ComputationGraph]:
+    """Project each model's sealed v6 graph, once per session.
+
+    The legacy call returned ``(graph, classifier_inputs)`` and every consumer here bound
+    the second element away, so the exact route's graph-only result loses nothing.
+    """
+    return {name: exact_graph_from_fixture(name) for name in PARAMETRIZED_MODELS}
 
 
 # ---------------------------------------------------------------------------
@@ -104,7 +106,7 @@ class TestSingleOutputUsesRootField:
     def test_single_output_uses_root_field(
         self, model_name, all_graph_data,
     ):
-        graph, _ = all_graph_data[model_name]
+        graph = all_graph_data[model_name]
 
         # CONSTRAINT ("evaluation") and REPORT_AGGREGATOR ("constraint_report")
         # modules have their own single-output field-naming convention (Item 8)
@@ -143,7 +145,7 @@ class TestMultiOutputGenerated:
     def test_multioutput_generated_for_multi_output_modules(
         self, model_name, all_graph_data, template_env,
     ):
-        graph, _ = all_graph_data[model_name]
+        graph = all_graph_data[model_name]
         multi_output_modules = _get_multi_output_modules(graph)
 
         if not multi_output_modules:
@@ -169,7 +171,7 @@ class TestMultiOutputGenerated:
         self, all_graph_data, template_env,
     ):
         """generate_multioutput_model() returns None for single-output modules."""
-        graph, _ = all_graph_data["solar_battery_model"]
+        graph = all_graph_data["solar_battery_d5"]
         single_output_modules = _get_single_output_modules(graph)
 
         assert len(single_output_modules) > 0, "No single-output modules found"
@@ -197,7 +199,7 @@ class TestGeneratedSchemaValidPython:
     def test_generated_schema_valid_python(
         self, model_name, all_graph_data, template_env,
     ):
-        graph, _ = all_graph_data[model_name]
+        graph = all_graph_data[model_name]
         multi_output_modules = _get_multi_output_modules(graph)
 
         assert len(multi_output_modules) > 0, (
@@ -232,7 +234,7 @@ class TestGeneratedSchemaInheritsMultiOutput:
     def test_generated_schema_class_inherits_multioutput(
         self, model_name, all_graph_data, template_env,
     ):
-        graph, _ = all_graph_data[model_name]
+        graph = all_graph_data[model_name]
         multi_output_modules = _get_multi_output_modules(graph)
 
         assert len(multi_output_modules) > 0, (
@@ -281,7 +283,7 @@ class TestMultiOutputDecisionMatchesGraph:
     def test_multioutput_decision_consistent_with_output_count(
         self, model_name, all_graph_data, template_env,
     ):
-        graph, _ = all_graph_data[model_name]
+        graph = all_graph_data[model_name]
 
         mismatches = []
         for module in graph.modules:
@@ -321,7 +323,7 @@ class TestFieldNamesMatchModuleOutputs:
         # only proves the template renders the graph's field names (not that the names are
         # correct). The field-name CONTENT (output PQNs) is pinned independently by the
         # output-registry PQN tests. Kept as a fidelity guard; sibling-pinned for content.
-        graph, _ = all_graph_data[model_name]
+        graph = all_graph_data[model_name]
         multi_output_modules = _get_multi_output_modules(graph)
 
         assert len(multi_output_modules) > 0, (
@@ -404,7 +406,7 @@ class TestOutputFieldsHaveNoDefaults:
     def test_output_fields_have_no_defaults(
         self, model_name, all_graph_data, template_env,
     ):
-        graph, _ = all_graph_data[model_name]
+        graph = all_graph_data[model_name]
         multi_output_modules = _get_multi_output_modules(graph)
 
         assert len(multi_output_modules) > 0, (
@@ -461,7 +463,7 @@ class TestAggregationAndFormulaAlwaysSingleOutput:
     def test_aggregation_always_single_output(
         self, model_name, all_graph_data,
     ):
-        graph, _ = all_graph_data[model_name]
+        graph = all_graph_data[model_name]
 
         agg_modules = [m for m in graph.modules if m.module_kind == ModuleKind.AGGREGATION]
         if not agg_modules:
@@ -490,7 +492,7 @@ class TestAggregationAndFormulaAlwaysSingleOutput:
     def test_formula_always_single_output(
         self, model_name, all_graph_data,
     ):
-        graph, _ = all_graph_data[model_name]
+        graph = all_graph_data[model_name]
 
         formula_modules = [m for m in graph.modules if m.module_kind == ModuleKind.FORMULA]
         if not formula_modules:
@@ -527,7 +529,7 @@ class TestOutputChannelsUsePQNFormat:
     def test_output_channels_use_pqn_format(
         self, model_name, all_graph_data,
     ):
-        graph, _ = all_graph_data[model_name]
+        graph = all_graph_data[model_name]
 
         # REPORT_AGGREGATOR is a graph-wide singleton (at most one per graph),
         # so its channel_name is deliberately the fixed literal

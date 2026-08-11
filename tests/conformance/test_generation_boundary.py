@@ -22,10 +22,7 @@ from sysml_codegen.resolution.models import (
     ModuleKind,
 )
 
-from sysml_codegen.snapshot import (
-    build_full_graph_from_snapshot,
-)
-from tests.conftest import snapshot_fixture
+from tests.conftest import exact_graph_from_fixture
 
 
 # ---------------------------------------------------------------------------
@@ -35,18 +32,24 @@ from tests.conftest import snapshot_fixture
 TEMPLATE_DIR = Path(__file__).parent.parent.parent / "src" / "sysml_codegen" / "templates"
 GEN_DIR = Path(__file__).parent.parent.parent / "src" / "sysml_codegen" / "generation"
 
+# The D-5 migrated variants, not the corpus originals: the exact route refuses all three
+# originals (SI_SELF_BINDING, plus a same-name rollup collision for solar), so a
+# generation-layer test that reads them can only ever exercise the legacy route. The
+# variants carry the same models in the form the exact route accepts. `attr_expr_probe`
+# is accepted as authored and needs no variant. See each fixture's PROVENANCE.md and the
+# Gate 4C part 6 notes.
 PARAMETRIZED_MODELS = [
-    "solar_battery_model",
-    "catf_mfe_model",
+    "solar_battery_d5",
+    "catf_mfe_d5",
     "attr_expr_probe",
-    "chain_spike_model",
+    "chain_spike_d5",
 ]
 
 MODEL_IDS = {
-    "solar_battery_model": "solar_battery",
-    "catf_mfe_model": "catf_mfe",
+    "solar_battery_d5": "solar_battery",
+    "catf_mfe_d5": "catf_mfe",
     "attr_expr_probe": "attr_expr_probe",
-    "chain_spike_model": "chain_spike",
+    "chain_spike_d5": "chain_spike",
 }
 
 
@@ -65,23 +68,23 @@ def template_env():
 
 
 @pytest.fixture(scope="session")
-def all_graph_data() -> dict[str, tuple[ComputationGraph, dict]]:
-    """Build ComputationGraphs + inputs for all 4 models (once per session)."""
-    data = {}
-    for model_name in PARAMETRIZED_MODELS:
-        graph, inputs = build_full_graph_from_snapshot(snapshot_fixture(model_name))
-        data[model_name] = (graph, inputs)
-    return data
+def all_graph_data() -> dict[str, ComputationGraph]:
+    """Project each model's sealed v6 graph, once per session.
+
+    The legacy call returned ``(graph, classifier_inputs)`` and every consumer here bound
+    the second element to ``_inputs``, so the exact route's graph-only result loses nothing.
+    """
+    return {name: exact_graph_from_fixture(name) for name in PARAMETRIZED_MODELS}
 
 
 @pytest.fixture(scope="session")
 def solar_battery_graph(all_graph_data):
-    return all_graph_data["solar_battery_model"]
+    return all_graph_data["solar_battery_d5"]
 
 
 @pytest.fixture(scope="session")
 def catf_mfe_graph(all_graph_data):
-    return all_graph_data["catf_mfe_model"]
+    return all_graph_data["catf_mfe_d5"]
 
 
 # ---------------------------------------------------------------------------
@@ -212,7 +215,7 @@ class TestAutoImplDispatch:
         """FULLY_COMPILABLE module produces auto-impl (not stub) via _from_graph()."""
         from sysml_codegen.generation.stencils import generate_implementation_from_graph
 
-        graph, _inputs = solar_battery_graph
+        graph = solar_battery_graph
 
         # Find a FULLY_COMPILABLE module (FORMULA or aggregation modules are always FC)
         fc_modules = [
@@ -246,7 +249,7 @@ class TestAutoImplDispatch:
         """Non-FULLY_COMPILABLE module produces stub with NotImplementedError."""
         from sysml_codegen.generation.stencils import generate_implementation_from_graph
 
-        graph, _inputs = solar_battery_graph
+        graph = solar_battery_graph
 
         # With compilation_results threaded from the snapshot (SC-10), solar_battery
         # CalcUsage modules are FULLY_COMPILABLE and auto-implement. Synthesize the
@@ -275,7 +278,7 @@ class TestAutoImplDispatch:
     @pytest.mark.parametrize("model_name", PARAMETRIZED_MODELS, ids=MODEL_IDS.values())
     def test_auto_impl_context_populated(self, model_name, all_graph_data):
         """Every FULLY_COMPILABLE module has auto_impl_context set."""
-        graph, _inputs = all_graph_data[model_name]
+        graph = all_graph_data[model_name]
 
         fc_modules = [
             m for m in graph.modules
@@ -292,7 +295,7 @@ class TestAutoImplDispatch:
     @pytest.mark.parametrize("model_name", PARAMETRIZED_MODELS, ids=MODEL_IDS.values())
     def test_auto_impl_context_none_for_manual(self, model_name, all_graph_data):
         """Every non-FULLY_COMPILABLE module has auto_impl_context=None."""
-        graph, _inputs = all_graph_data[model_name]
+        graph = all_graph_data[model_name]
 
         non_fc = [
             m for m in graph.modules
@@ -318,7 +321,7 @@ class TestGraphOnlyBacklog:
         """generate_backlog_report(graph) produces valid markdown with module rows."""
         from sysml_codegen.generation.stencils import generate_backlog_report
 
-        graph, _inputs = solar_battery_graph
+        graph = solar_battery_graph
 
         output = generate_backlog_report(
             graph=graph,
@@ -348,7 +351,7 @@ class TestGraphOnlyTestGen:
 
         from sysml_codegen.generation.test_gen import generate_test_implementations
 
-        graph, _inputs = solar_battery_graph
+        graph = solar_battery_graph
 
         output = generate_test_implementations(
             graph=graph,
@@ -375,7 +378,7 @@ class TestGraphOnlyPreservation:
         """should_regenerate_stencil(module, nonexistent) returns (True, reason)."""
         from sysml_codegen.generation.preservation import should_regenerate_stencil
 
-        graph, _inputs = solar_battery_graph
+        graph = solar_battery_graph
         module = graph.modules[0]
         fake_path = tmp_path / "nonexistent_impl.py"
 
@@ -388,7 +391,7 @@ class TestGraphOnlyPreservation:
         """should_regenerate_stencil(module, matching_file) returns (False, reason)."""
         from sysml_codegen.generation.preservation import should_regenerate_stencil
 
-        graph, _inputs = solar_battery_graph
+        graph = solar_battery_graph
         # Find a CalcUsage module with a single output
         module = next(
             m for m in graph.modules
@@ -421,7 +424,7 @@ class TestAllModuleTypesRender:
         """CalcUsage, FORMULA, and aggregation modules all render via _from_graph()."""
         from sysml_codegen.generation.modules import generate_teax_module_from_graph
 
-        graph, _inputs = solar_battery_graph
+        graph = solar_battery_graph
 
         calcusage_count = 0
         formula_count = 0

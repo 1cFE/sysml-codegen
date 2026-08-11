@@ -24,12 +24,20 @@ from sysml_codegen.generation.entry_point import (
     generate_all_derived_jsons_from_graph,
     generate_all_derived_schemas_from_graph,
 )
+from sysml_codegen.core.qualified_names import params_field_name
 from sysml_codegen.resolution.models import ComputationGraph
 
-from sysml_codegen.snapshot import (
-    build_full_graph_from_snapshot,
-)
-from tests.conftest import snapshot_fixture
+from tests.conftest import exact_graph_from_fixture
+
+
+def _field_alias(field: ast.AnnAssign) -> str | None:
+    """The ``alias=`` string on a generated ``x: T = Field(...)``, or None if undeclared."""
+    if not isinstance(field.value, ast.Call):
+        return None
+    for keyword in field.value.keywords:
+        if keyword.arg == "alias" and isinstance(keyword.value, ast.Constant):
+            return keyword.value.value
+    return None
 
 
 # ---------------------------------------------------------------------------
@@ -38,28 +46,60 @@ from tests.conftest import snapshot_fixture
 
 TEMPLATE_DIR = Path(__file__).parent.parent.parent / "src" / "sysml_codegen" / "templates"
 
+# The D-5 migrated variants, not the corpus originals: the exact route refuses both
+# originals (SI_SELF_BINDING, and for solar a same-name rollup collision), so a
+# generation-layer test that reads them can only ever exercise the legacy route. The
+# variants carry the same models in the form the exact route accepts. See each fixture's
+# PROVENANCE.md and the Gate 4C part 6 notes.
 PARAMETRIZED_MODELS = [
-    "solar_battery_model",
-    "catf_mfe_model",
+    "solar_battery_d5",
+    "catf_mfe_d5",
 ]
 
 MODEL_IDS = {
-    "solar_battery_model": "solar_battery",
-    "catf_mfe_model": "catf_mfe",
+    "solar_battery_d5": "solar_battery",
+    "catf_mfe_d5": "catf_mfe",
 }
 
-# Hand-transcribed entry-point-group counts per model. These replace the former
+# Entry-point-group counts per model, re-derived from the model on the exact route --
+# not transcribed from a legacy baseline. These replace the former
 # len(files) == len(graph.entry_point_groups) tautology (both sides were the same
 # count over a 1:1 producer loop, so the assertion could never fail).
-# provenance: tests/fixtures/baseline_outputs/solar_battery/computation_graph.json
-#   entry_point_groups = [design_params, library_params, system_design] -> 3
-# provenance: tests/fixtures/baseline_outputs/catf_mfe/computation_graph.json
-#   entry_point_groups = [blanket_params, heating_params, magnets_params,
-#   physics_params, radial_build_params, system_params, tritium_params,
-#   vacuum_params] -> 8
+#
+# A group is named after the source file that *declares* its parameters (Slice 3E
+# declaration-site attribution), so the expected set is read off the fixture's .sysml
+# tree rather than off a generated artifact:
+#
+# solar_battery -> 2. `design_params` (the design attributes in
+#   designs/solar_battery/*.sysml) and `library_params` (the calc-def `default`s in
+#   library/*.sysml). The legacy route published a third, `system_design`, which is its
+#   synthetic `hierarchy`-source group -- legacy-only by construction, so the exact route
+#   has no counterpart (3E "legacy-only system_design hierarchy group").
+# catf_mfe -> 8, and every parameter's group follows its declaring file:
+#   designs/catf_mfe/{heating,magnets,physics,radial_build,tritium,vacuum}.sysml plus
+#   library/physics/geometry.sysml (`f_exposed`, declared at geometry.sysml:181) and
+#   library/analyses/thermal_loads.sysml (the `pump_load` formals). Legacy named the last
+#   two after the *using* design file instead (`system_params`, `blanket_params`), which
+#   is the same declaration-site difference and why the count matches but two names move.
 EXPECTED_GROUP_COUNTS = {
-    "solar_battery_model": 3,
-    "catf_mfe_model": 8,
+    "solar_battery_d5": 2,
+    "catf_mfe_d5": 8,
+}
+
+# The group *names*, pinned alongside the counts: with two names moved by
+# declaration-site attribution, a count alone would silently accept a renamed set.
+EXPECTED_GROUP_NAMES = {
+    "solar_battery_d5": ["design_params", "library_params"],
+    "catf_mfe_d5": [
+        "geometry_params",
+        "heating_params",
+        "magnets_params",
+        "physics_params",
+        "radial_build_params",
+        "thermal_loads_params",
+        "tritium_params",
+        "vacuum_params",
+    ],
 }
 
 
@@ -79,12 +119,8 @@ def template_env():
 
 @pytest.fixture(scope="session")
 def all_graphs() -> dict[str, ComputationGraph]:
-    """Build ComputationGraphs for all parametrized models (once per session)."""
-    graphs = {}
-    for model_name in PARAMETRIZED_MODELS:
-        graph, _ = build_full_graph_from_snapshot(snapshot_fixture(model_name))
-        graphs[model_name] = graph
-    return graphs
+    """Project each model's sealed v6 graph, once per session."""
+    return {name: exact_graph_from_fixture(name) for name in PARAMETRIZED_MODELS}
 
 
 @pytest.fixture(scope="session")
@@ -381,26 +417,42 @@ class TestSchemaFieldsMatchEPs:
             source = schema_path.read_text()
             tree = ast.parse(source)
 
-            # Extract field names from the class
+            # Extract field names, and each field's alias, from the class
             generated_fields = set()
+            generated_aliases = set()
             for node in ast.walk(tree):
                 if isinstance(node, ast.ClassDef):
                     for item in node.body:
                         if isinstance(item, ast.AnnAssign) and isinstance(item.target, ast.Name):
                             generated_fields.add(item.target.id)
+                            # The template declares `alias=` only when it differs from
+                            # the field name, so an undeclared alias means the field name
+                            # *is* the JSON key.
+                            generated_aliases.add(_field_alias(item) or item.target.id)
                     break
 
-            expected_fields = {ep.qualified_name for ep in group.parameters}
+            # Two halves of one contract (`core/qualified_names.params_field_name`):
+            # per-occurrence expansion mints keys carrying an occurrence index
+            # (`…__battery_pack[0]__capacity_kwh`), which a Python class body cannot
+            # declare, so the *field* is the sanitized name and the *alias* is the exact
+            # key. Asserting only the field names would let the JSON-facing key drift.
+            expected_fields = {params_field_name(ep.qualified_name) for ep in group.parameters}
+            expected_aliases = {ep.qualified_name for ep in group.parameters}
 
-            if generated_fields != expected_fields:
-                missing = expected_fields - generated_fields
-                extra = generated_fields - expected_fields
+            for label, generated, expected in (
+                ("field", generated_fields, expected_fields),
+                ("alias", generated_aliases, expected_aliases),
+            ):
+                if generated == expected:
+                    continue
+                missing = expected - generated
+                extra = generated - expected
                 detail = []
                 if missing:
                     detail.append(f"missing={sorted(missing)}")
                 if extra:
                     detail.append(f"extra={sorted(extra)}")
-                mismatches.append(f"  {group.name}: {', '.join(detail)}")
+                mismatches.append(f"  {group.name} ({label}): {', '.join(detail)}")
 
         assert not mismatches, (
             f"Schema field mismatches in {model_name}:\n" + "\n".join(mismatches)
@@ -585,14 +637,22 @@ class TestGroupCounts:
 
     @pytest.mark.req("REQ-GEN-05")
     def test_group_count_solar_battery(self, all_graphs):
-        graph = all_graphs["solar_battery_model"]
-        assert len(graph.entry_point_groups) == 3, (
-            f"solar_battery: expected 3 groups, got {len(graph.entry_point_groups)}"
+        graph = all_graphs["solar_battery_d5"]
+        assert [g.name for g in graph.entry_point_groups] == EXPECTED_GROUP_NAMES[
+            "solar_battery_d5"
+        ], (
+            "solar_battery: expected "
+            f"{EXPECTED_GROUP_NAMES['solar_battery_d5']}, got "
+            f"{[g.name for g in graph.entry_point_groups]}"
         )
 
     @pytest.mark.req("REQ-GEN-05")
     def test_group_count_catf_mfe(self, all_graphs):
-        graph = all_graphs["catf_mfe_model"]
-        assert len(graph.entry_point_groups) == 8, (
-            f"catf_mfe: expected 8 groups, got {len(graph.entry_point_groups)}"
+        graph = all_graphs["catf_mfe_d5"]
+        assert [g.name for g in graph.entry_point_groups] == EXPECTED_GROUP_NAMES[
+            "catf_mfe_d5"
+        ], (
+            "catf_mfe: expected "
+            f"{EXPECTED_GROUP_NAMES['catf_mfe_d5']}, got "
+            f"{[g.name for g in graph.entry_point_groups]}"
         )

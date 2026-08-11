@@ -36,10 +36,7 @@ from sysml_codegen.generation.type_mapping import map_sysml_type_to_python
 from sysml_codegen.core.identifier_types import PythonModulePath, SysMLQualifiedName
 from sysml_codegen.resolution.models import ComputationGraph, ModuleKind
 
-from sysml_codegen.snapshot import (
-    build_full_graph_from_snapshot,
-)
-from tests.conftest import snapshot_fixture
+from tests.conftest import exact_graph_from_fixture
 
 
 # ---------------------------------------------------------------------------
@@ -49,14 +46,19 @@ from tests.conftest import snapshot_fixture
 TEMPLATE_DIR = Path(__file__).parent.parent.parent / "src" / "sysml_codegen" / "templates"
 SRC_DIR = Path(__file__).parent.parent.parent / "src" / "sysml_codegen"
 
+# The D-5 migrated variants, not the corpus originals: the exact route refuses both
+# originals (SI_SELF_BINDING, and for solar a same-name rollup collision), so a
+# generation-layer test that reads them can only ever exercise the legacy route. The
+# variants carry the same models in the form the exact route accepts. See each fixture's
+# PROVENANCE.md and the Gate 4C part 6 notes.
 PARAMETRIZED_MODELS = [
-    "solar_battery_model",
-    "catf_mfe_model",
+    "solar_battery_d5",
+    "catf_mfe_d5",
 ]
 
 MODEL_IDS = {
-    "solar_battery_model": "solar_battery",
-    "catf_mfe_model": "catf_mfe",
+    "solar_battery_d5": "solar_battery",
+    "catf_mfe_d5": "catf_mfe",
 }
 
 
@@ -75,13 +77,13 @@ def template_env():
 
 
 @pytest.fixture(scope="session")
-def all_graph_data() -> dict[str, tuple[ComputationGraph, dict]]:
-    """Build ComputationGraphs + inputs for all models (once per session)."""
-    data = {}
-    for model_name in PARAMETRIZED_MODELS:
-        graph, inputs = build_full_graph_from_snapshot(snapshot_fixture(model_name))
-        data[model_name] = (graph, inputs)
-    return data
+def all_graph_data() -> dict[str, ComputationGraph]:
+    """Project each model's sealed v6 graph, once per session.
+
+    The legacy call returned ``(graph, classifier_inputs)`` and every consumer here bound
+    the second element away, so the exact route's graph-only result loses nothing.
+    """
+    return {name: exact_graph_from_fixture(name) for name in PARAMETRIZED_MODELS}
 
 
 # ---------------------------------------------------------------------------
@@ -142,7 +144,7 @@ class TestOneWrapperPerCalcUsageModule:
     def test_one_wrapper_per_calcusage_module(
         self, model_name, all_graph_data, template_env,
     ):
-        graph, _inputs = all_graph_data[model_name]
+        graph = all_graph_data[model_name]
         calcusage_modules = _get_calcusage_modules(graph)
 
         assert len(calcusage_modules) > 0, f"No CalcUsage modules in {model_name}"
@@ -168,7 +170,7 @@ class TestGeneratedCodeValidPython:
     def test_generated_code_valid_python(
         self, model_name, all_graph_data, template_env,
     ):
-        graph, _inputs = all_graph_data[model_name]
+        graph = all_graph_data[model_name]
         calcusage_modules = _get_calcusage_modules(graph)
 
         failures = []
@@ -197,7 +199,7 @@ class TestClassNameMatchesModuleType:
     def test_class_name_matches_module_type(
         self, model_name, all_graph_data, template_env,
     ):
-        graph, _inputs = all_graph_data[model_name]
+        graph = all_graph_data[model_name]
         calcusage_modules = _get_calcusage_modules(graph)
 
         mismatches = []
@@ -231,7 +233,7 @@ class TestImplImportPathConsistency:
     def test_impl_import_path_consistency(
         self, model_name, all_graph_data, template_env,
     ):
-        graph, _inputs = all_graph_data[model_name]
+        graph = all_graph_data[model_name]
         calcusage_modules = _get_calcusage_modules(graph)
 
         mismatches = []
@@ -269,7 +271,7 @@ class TestInputNamesMatchModule:
     def test_input_names_match_module(
         self, model_name, all_graph_data, template_env,
     ):
-        graph, _inputs = all_graph_data[model_name]
+        graph = all_graph_data[model_name]
         calcusage_modules = _get_calcusage_modules(graph)
 
         mismatches = []
@@ -311,7 +313,7 @@ class TestInputTypesMatchModule:
         # so both sides derive from one source. Residual value: the Jinja template faithfully
         # renders the graph's types. The type-map CONTENT is pinned by the literal sibling
         # test_gen_schemas.py:359-381. Kept as a fidelity guard; sibling-pinned for content.
-        graph, _inputs = all_graph_data[model_name]
+        graph = all_graph_data[model_name]
         calcusage_modules = _get_calcusage_modules(graph)
 
         mismatches = []
@@ -358,7 +360,7 @@ class TestSingleOutputReturnsFloat:
     def test_single_output_returns_float(
         self, model_name, all_graph_data, template_env,
     ):
-        graph, _inputs = all_graph_data[model_name]
+        graph = all_graph_data[model_name]
         calcusage_modules = _get_calcusage_modules(graph)
 
         tested = 0
@@ -402,7 +404,7 @@ class TestMultiOutputReturnsNamedClass:
     def test_multi_output_returns_named_class(
         self, model_name, all_graph_data, template_env,
     ):
-        graph, _inputs = all_graph_data[model_name]
+        graph = all_graph_data[model_name]
         calcusage_modules = _get_calcusage_modules(graph)
 
         tested = 0
@@ -454,7 +456,7 @@ class TestInputTypeCrossReferenceWithGraph:
         # from one graph. This test is a near-duplicate of L5; a future cleanup could dedup
         # the two (not done here -- dedup is not Item 6's call). Content sibling-pinned by
         # the literal type-map test (test_gen_schemas.py:359-381).
-        graph, _inputs = all_graph_data[model_name]
+        graph = all_graph_data[model_name]
         calcusage_modules = _get_calcusage_modules(graph)
 
         mismatches = []
@@ -589,7 +591,7 @@ class TestWrapperCoverageByModuleType:
     def test_wrapper_coverage_by_module_type(
         self, model_name, all_graph_data,
     ):
-        graph, _ = all_graph_data[model_name]
+        graph = all_graph_data[model_name]
 
         calcusage_count = 0
         formula_count = 0

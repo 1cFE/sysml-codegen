@@ -33,11 +33,7 @@ from sysml_codegen.resolution.models import ComputationGraph, ModuleKind
 
 import jinja2
 
-# Reuse the graph builder from C17
-from sysml_codegen.snapshot import (
-    build_full_graph_from_snapshot,
-)
-from tests.conftest import snapshot_fixture
+from tests.conftest import exact_graph_from_fixture
 
 
 # ---------------------------------------------------------------------------
@@ -48,32 +44,47 @@ TEMPLATE_DIR = Path(__file__).parent.parent.parent / "src" / "sysml_codegen" / "
 BASELINE_DIR = Path(__file__).parent.parent / "fixtures" / "baseline_yaml"
 
 
-# Models that exercise all pipeline YAML features
+# Models that exercise all pipeline YAML features. The D-5 migrated variants, not the
+# corpus originals: the exact route refuses solar, catf and chain_spike as authored
+# (SI_SELF_BINDING, and for solar a same-name rollup collision), so a generation-layer
+# test that reads them can only ever exercise the legacy route. `attr_expr_probe` is
+# accepted as authored. See each fixture's PROVENANCE.md and the Gate 4C part 6 notes.
 PARAMETRIZED_MODELS = [
-    "solar_battery_model",
-    "catf_mfe_model",
-    "chain_spike_model",
+    "solar_battery_d5",
+    "catf_mfe_d5",
+    "chain_spike_d5",
     "attr_expr_probe",
 ]
 
 # Short IDs for parametrization
 MODEL_IDS = {
-    "solar_battery_model": "solar_battery",
-    "catf_mfe_model": "catf_mfe",
-    "chain_spike_model": "chain_spike",
+    "solar_battery_d5": "solar_battery",
+    "catf_mfe_d5": "catf_mfe",
+    "chain_spike_d5": "chain_spike",
     "attr_expr_probe": "attr_expr_probe",
 }
 
-# Hand-transcribed entry-point-group counts. Replaces the
+# Entry-point-group counts, re-derived from the model on the exact route -- not
+# transcribed from a legacy baseline. Replaces the
 # len(entry_fusion_inputs) == len(graph.entry_point_groups) tautology in
 # test_entry_fusion_json_count (both sides re-derive from the same graph).
-# provenance: tests/fixtures/baseline_outputs/solar_battery/computation_graph.json
-#   entry_point_groups = [design_params, library_params, system_design] -> 3
-# provenance: tests/fixtures/baseline_outputs/catf_mfe/computation_graph.json
-#   8 groups [blanket/heating/magnets/physics/radial_build/system/tritium/vacuum]_params
+#
+# A group is named after the source file that *declares* its parameters (Slice 3E
+# declaration-site attribution), so the expected count is read off the fixture's .sysml
+# tree:
+#
+# solar_battery -> 2. `design_params` (the design attributes in
+#   designs/solar_battery/*.sysml) and `library_params` (the calc-def `default`s in
+#   library/*.sysml). The legacy route published a third, `system_design`, its synthetic
+#   `hierarchy`-source group -- legacy-only by construction (3E).
+# catf_mfe -> 8: designs/catf_mfe/{heating,magnets,physics,radial_build,tritium,
+#   vacuum}.sysml plus library/physics/geometry.sysml and
+#   library/analyses/thermal_loads.sysml. Legacy also published 8, but named the last two
+#   after the *using* design file (`system_params`, `blanket_params`) -- the same
+#   declaration-site difference, which is why the count matches and two names move.
 EXPECTED_GROUP_COUNTS = {
-    "solar_battery_model": 3,
-    "catf_mfe_model": 8,
+    "solar_battery_d5": 2,
+    "catf_mfe_d5": 8,
 }
 
 
@@ -89,12 +100,8 @@ def template_env():
 
 @pytest.fixture(scope="session")
 def all_graphs() -> dict[str, ComputationGraph]:
-    """Build ComputationGraphs for all parametrized models (once per session)."""
-    graphs = {}
-    for model_name in PARAMETRIZED_MODELS:
-        graph, _ = build_full_graph_from_snapshot(snapshot_fixture(model_name))
-        graphs[model_name] = graph
-    return graphs
+    """Project each model's sealed v6 graph, once per session."""
+    return {name: exact_graph_from_fixture(name) for name in PARAMETRIZED_MODELS}
 
 
 @pytest.fixture(scope="session")
@@ -545,6 +552,38 @@ BASELINE_IDS = {
 }
 
 
+@pytest.fixture(scope="session")
+def baseline_yamls(template_env) -> dict[str, str]:
+    """Render each baseline model's YAML on the legacy route.
+
+    **The one part of this module still on the legacy route, deliberately.** Every other
+    node here is v6-backed (Gate 4C part 6). These four compare *bytes* against
+    ``tests/fixtures/baseline_yaml/*.yaml``, and those files are captured by
+    ``scripts/capture_baseline_yaml.py`` (ledger L-039, census SCR-02 MIGRATE), which is
+    still a legacy-route capture driver, and they are read by a second consumer --
+    ``tests/integration/test_e2e_output_registry.py``, which drives the live legacy
+    route. So the bytes cannot be repointed from inside this module: overwriting them
+    breaks that consumer, and hand-editing them is exactly what a byte baseline forbids.
+
+    The exact route's output differs from all four committed baselines, each by a named
+    mechanism (measured, Gate 4C part 6): the D-5 formal rename moves input keys
+    (``width`` -> ``width_in``) for chain_spike; the exact route keys wi014_toy's entry
+    points by the usage (``demo_plant``) where legacy used the definition
+    (``Toy_Plant``); attr_expr_probe gains a module and loses three. None is a defect --
+    they are the new baselines, and capturing them needs the v6 capture driver SCR-02 is
+    waiting on.
+    """
+    from sysml_codegen.snapshot import build_full_graph_from_snapshot
+    from tests.conftest import snapshot_fixture
+
+    yamls = {}
+    for model_name in [*BASELINE_MODELS, "wi014_toy"]:
+        graph, _ = build_full_graph_from_snapshot(snapshot_fixture(model_name))
+        package = BASELINE_IDS.get(model_name, model_name)
+        yamls[model_name] = generate_pipeline_yaml(graph, package, template_env)
+    return yamls
+
+
 class TestYamlBaselineComparison:
     """Generated YAML from snapshot matches updated baseline."""
 
@@ -552,14 +591,14 @@ class TestYamlBaselineComparison:
     @pytest.mark.parametrize("model_name", BASELINE_MODELS,
                              ids=[BASELINE_IDS[m] for m in BASELINE_MODELS])
     # REQ-BASE-05: generated YAML/graph/registry from snapshot matches the reviewed re-captured baseline (ordering-only recapture).
-    def test_yaml_baseline_comparison(self, model_name, all_yamls):
+    def test_yaml_baseline_comparison(self, model_name, baseline_yamls):
         """Generated YAML from snapshot matches baseline file."""
         short_name = BASELINE_IDS[model_name]
         baseline_path = BASELINE_DIR / f"{short_name}.yaml"
         assert baseline_path.exists(), f"Baseline file not found: {baseline_path}"
 
         baseline = baseline_path.read_text()
-        generated = all_yamls[model_name]
+        generated = baseline_yamls[model_name]
 
         assert generated == baseline, (
             f"YAML diff for {short_name}: generated output differs from baseline.\n"
@@ -568,7 +607,7 @@ class TestYamlBaselineComparison:
 
     @pytest.mark.baseline
     @pytest.mark.req("REQ-PY-08")
-    def test_yaml_baseline_comparison_wi014_toy(self, template_env) -> None:
+    def test_yaml_baseline_comparison_wi014_toy(self, baseline_yamls) -> None:
         """Item 11 shape A (REQ-PY-08): wi014_toy's committed YAML baseline matches
         the generated output, including the ``total_cost`` exit-point filename
         rename (``…cost_calc__cost`` line → ``demo_plant__total_cost.json``).
@@ -577,8 +616,7 @@ class TestYamlBaselineComparison:
         shape-A fixture with a committed YAML, kept off the broad feature-matrix
         tests that target the multi-feature models.
         """
-        graph, _ = build_full_graph_from_snapshot(snapshot_fixture("wi014_toy"))
-        generated = generate_pipeline_yaml(graph, "wi014_toy", template_env)
+        generated = baseline_yamls["wi014_toy"]
         baseline = (BASELINE_DIR / "wi014_toy.yaml").read_text()
         assert generated == baseline, (
             "YAML diff for wi014_toy: generated output differs from committed "
