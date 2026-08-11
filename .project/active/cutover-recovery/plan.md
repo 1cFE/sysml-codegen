@@ -3539,25 +3539,30 @@ at import (`preflight_identified` absent) and errors all 12 real-TEAx nodes on t
 checkout guard (`tests/execution/test_fusion_tea_real_teax.py:111`). Both are environment
 artifacts, not regressions.
 
-##### Readiness for the retirement steps — 5 files, not 10, and one is a paired-repo matter
+##### Readiness for the retirement steps — 3 files in this repo, and one needs a ruling
 
 **Not started, as instructed.** Re-derived from the ledger rather than from the Part B list: of
-the **35 distinct files named as a `replacement_proof_node`**, **28 are clean** and **5 in this
-repo still build from a legacy specimen** (`snapshot_fixture`, `build_full_graph_from_snapshot`,
-`generate_via_legacy_route`, or a refused corpus fixture) in code rather than in prose. Parts 5
-and 6 accounted for the rest.
+the **35 distinct files named as a `replacement_proof_node`**, **30 are clean** and **3 in this
+repo still build from a legacy specimen** in code. Parts 5 and 6 accounted for the rest.
 
 | Proof-node file | rows it backs | what still holds it |
 |---|---|---|
-| `tests/conformance/test_public_authority_switch.py` | **11** — L-005, L-011, L-018, L-019, L-021, L-022, L-023, L-025, L-028, L-030, L-031 | drives `generate_via_legacy_route` **by design**: its subject is the authority switch itself. The largest single block, and the one that most needs a ruling rather than a repoint. |
-| `tests/unit/test_uncovered_params.py` | L-249 | full house: `snapshot_fixture`, `build_full_graph_from_snapshot`, `generate_via_legacy_route`, both refused models |
+| `tests/conformance/test_public_authority_switch.py` | **11** — L-005, L-011, L-018, L-019, L-021, L-022, L-023, L-025, L-028, L-030, L-031 | drives `generate_via_legacy_route` **by design**: its subject *is* the authority switch, and `chain_spike_model`'s refusal is what two of its nodes assert. The largest single block, and the one that needs a ruling rather than a repoint — there is no v6 specimen for "the legacy route still accepts what the exact route refuses." |
+| `tests/unit/test_uncovered_params.py` | L-249 | genuine full house: `snapshot_fixture`, `build_full_graph_from_snapshot`, `generate_via_legacy_route`, and both refused models. A real repoint, comparable in size to one of this chunk's files. |
 | `tests/conformance/test_gen_pipeline_yaml.py` | L-039 | this chunk's named remainder — the 4 baseline-bytes nodes, waiting on the SCR-02 v6 capture driver |
-| `tests/conformance/test_elaboration_corpus_ledger.py` | L-044 | its live dual-run half, which retires with the v5 family |
-| `tests/unit/test_elaboration_import_boundaries.py` | L-032 | `build_full_graph_from_snapshot` |
 
 **Two more sit in the paired repo**, which is why a scan run here reports their files missing:
 L-036 (`test_constraint_extraction.py`) and L-037 (`test_executable_profile.py`) are
 `agentic-mbse` rows. They are that repo's chunk, not this one's.
+
+**A textual scan over-reports here, so this list is the checked one.** A first pass flagged
+`tests/unit/test_elaboration_import_boundaries.py` (L-032) and
+`tests/conformance/test_elaboration_corpus_ledger.py` (L-044) as well. Both are false positives
+and neither needs anything: L-032's `build_full_graph_from_snapshot` is a *forbidden token* in a
+boundary assertion — the test requires the elaborator source **not** to contain it
+(`test_elaboration_import_boundaries.py:324`) — and L-044's hit is the substring `snapshot_fixtures`
+inside a test *function name* (`test_dual_run_ledger_classifies_all_snapshot_fixtures`). Anyone
+re-deriving this list by grep should expect the same two and discard them.
 
 **`replacements` state: 91 green, 204 not-required, 1 pending, 0 failures — and measured
 identically at `ec41817`.** Worth stating plainly: **this chunk moved no row's aggregate state.**
