@@ -9,9 +9,10 @@ from __future__ import annotations
 
 import pytest
 
-from sysml_codegen.cli import GenerationConfig, run_codegen
+from sysml_codegen.cli import GenerationConfig
 from tests.conftest import snapshot_fixture
 from tests.runtime.pipeline_runner import run_pipeline
+from tests.helpers.legacy_route import generate_via_legacy_route
 
 # Hand-derived from spec_chain_twolevel's auto-impls and emitted inputs (drive_power=50):
 #   gamma = drive_power * 0.02 = 50.0 * 0.02 = 1.0   (meier_cost)
@@ -27,7 +28,7 @@ def _generate(tmp_path):
         package_name="pkg",
         overwrite=True,
     )
-    assert run_codegen(config) is True
+    assert generate_via_legacy_route(config) is True
     return tmp_path / "pkg"
 
 

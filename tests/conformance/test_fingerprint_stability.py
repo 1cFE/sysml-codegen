@@ -19,8 +19,9 @@ from pathlib import Path
 
 import pytest
 
-from sysml_codegen.cli import GenerationConfig, run_codegen
+from sysml_codegen.cli import GenerationConfig
 from tests.conftest import FIXTURES_DIR, requires_license
+from tests.helpers.legacy_route import generate_via_legacy_route
 
 CHAIN_SNAPSHOT = FIXTURES_DIR / "chain_spike_model" / "extraction_snapshot.json"
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -56,7 +57,7 @@ def test_fingerprints_stable_across_independent_generation(tmp_path):
             package_name="chain_spike",
             overwrite=True,
         )
-        assert run_codegen(config)
+        assert generate_via_legacy_route(config)
 
     assert _exec_fp(out_a) == _exec_fp(out_b)
     assert _sem_fp(out_a) == _sem_fp(out_b)
@@ -73,7 +74,8 @@ def _generate_with_source(source_root: Path, output: Path) -> None:
     script = """
 import sys
 from pathlib import Path
-from sysml_codegen.cli import GenerationConfig, run_codegen
+from sysml_codegen.cli import GenerationConfig
+from tests.helpers.legacy_route import generate_via_legacy_route
 
 output = Path(sys.argv[1])
 snapshot = Path(sys.argv[2])
@@ -83,7 +85,7 @@ config = GenerationConfig(
     package_name="chain_spike",
     overwrite=True,
 )
-if not run_codegen(config):
+if not generate_via_legacy_route(config):
     raise SystemExit(1)
 """
     environment = os.environ.copy()
@@ -91,7 +93,7 @@ if not run_codegen(config):
         {
             "PYTHONNOUSERSITE": "1",
             "PYTHONDONTWRITEBYTECODE": "1",
-            "PYTHONPATH": str(source_root / "src"),
+            "PYTHONPATH": os.pathsep.join([str(source_root / "src"), str(REPO_ROOT)]),
         }
     )
     subprocess.run(
@@ -185,7 +187,7 @@ def test_fingerprints_stable_live_vs_snapshot(fixture, tmp_path):
         package_name=fixture,
         overwrite=True,
     )
-    assert run_codegen(live_config)
+    assert generate_via_legacy_route(live_config)
 
     snap_config = GenerationConfig(
         output_path=snap_out,
@@ -193,7 +195,7 @@ def test_fingerprints_stable_live_vs_snapshot(fixture, tmp_path):
         package_name=fixture,
         overwrite=True,
     )
-    assert run_codegen(snap_config)
+    assert generate_via_legacy_route(snap_config)
 
     assert _exec_fp(live_out) == _exec_fp(snap_out)
     assert _sem_fp(live_out) == _sem_fp(snap_out)

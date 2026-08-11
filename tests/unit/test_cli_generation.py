@@ -25,6 +25,7 @@ from sysml_codegen.cli import (
     _generate_tests,
     _get_template_env,
     _seal_package,
+    _generate_package_from_graph,
     run_codegen,
 )
 from sysml_codegen.generation import CodeGenerationError
@@ -43,7 +44,7 @@ from sysml_codegen.resolution.models import (
 )
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-CHAIN_SNAPSHOT = REPO_ROOT / "tests/fixtures/chain_spike_model/extraction_snapshot.json"
+D38_MODEL = REPO_ROOT / "tests/fixtures/d38_caret"
 
 
 class TestEnsurePackageInitFiles:
@@ -169,7 +170,7 @@ def _colliding_context():
     graph = ComputationGraph(
         modules=[], entry_point_groups=[], execution_order=[], constraint_catalog=catalog
     )
-    return SimpleNamespace(calc_defs=[], computation_graph=graph)
+    return graph
 
 
 def _complete_tree_manifest(root: Path):
@@ -254,15 +255,11 @@ def _unsafe_name_context(name: str = "value"):
         execution_order=["c1"],
         constraint_catalog=catalog,
     )
-    return SimpleNamespace(calc_defs=[], computation_graph=graph)
+    return graph
 
 
 def _missing_catalog_context():
-    context = _unsafe_name_context("safe_name")
-    context.computation_graph = context.computation_graph.model_copy(
-        update={"constraint_catalog": None}
-    )
-    return context
+    return _unsafe_name_context("safe_name").model_copy(update={"constraint_catalog": None})
 
 
 GRAPH_AWARE_WRITERS = (
@@ -331,47 +328,18 @@ def test_missing_catalog_rejected_before_writer_io(writer, initial_tree, tmp_pat
     assert (output.exists(), _complete_tree_manifest(output)) == before
 
 
-def _patch_colliding_context(monkeypatch) -> None:
-    import sysml_codegen.orchestration.pipeline_builder as pipeline_builder
-
-    monkeypatch.setattr(
-        pipeline_builder, "build_pipeline_context", lambda *_args, **_kwargs: _colliding_context()
-    )
-
-
-def _patch_unsafe_name_context(monkeypatch, name: str) -> None:
-    import sysml_codegen.orchestration.pipeline_builder as pipeline_builder
-
-    monkeypatch.setattr(
-        pipeline_builder,
-        "build_pipeline_context",
-        lambda *_args, **_kwargs: _unsafe_name_context(name),
-    )
-
-
-def _patch_missing_catalog_context(monkeypatch) -> None:
-    import sysml_codegen.orchestration.pipeline_builder as pipeline_builder
-
-    monkeypatch.setattr(
-        pipeline_builder,
-        "build_pipeline_context",
-        lambda *_args, **_kwargs: _missing_catalog_context(),
-    )
-
-
 @pytest.mark.parametrize("name", ["value", "body", "verdict", "self"])
 @pytest.mark.parametrize("initial_tree", ["absent", "populated"])
 def test_run_codegen_name_collision_preserves_tree_and_logs_payload(
     name, initial_tree, tmp_path, monkeypatch, caplog
 ):
-    _patch_unsafe_name_context(monkeypatch, name)
     output = tmp_path / "output"
     if initial_tree == "populated":
         (output / "nested").mkdir(parents=True)
         (output / "nested" / "marker.bin").write_bytes(b"unchanged\x00")
     before = (output.exists(), _complete_tree_manifest(output))
     config = GenerationConfig(output_path=output, models_path=tmp_path, overwrite=True)
-    assert run_codegen(config) is False
+    assert _generate_package_from_graph(_unsafe_name_context(name), config) is False
     assert (output.exists(), _complete_tree_manifest(output)) == before
     records = [record for record in caplog.records if "name-safety violation" in record.message]
     assert len(records) == 1
@@ -383,14 +351,13 @@ def test_run_codegen_name_collision_preserves_tree_and_logs_payload(
 def test_run_codegen_missing_catalog_preserves_tree_and_logs_payload(
     initial_tree, tmp_path, monkeypatch, caplog
 ):
-    _patch_missing_catalog_context(monkeypatch)
     output = tmp_path / "output"
     if initial_tree == "populated":
         (output / "nested").mkdir(parents=True)
         (output / "nested" / "marker.bin").write_bytes(b"unchanged\x00")
     before = (output.exists(), _complete_tree_manifest(output))
     config = GenerationConfig(output_path=output, models_path=tmp_path, overwrite=True)
-    assert run_codegen(config) is False
+    assert _generate_package_from_graph(_missing_catalog_context(), config) is False
     assert (output.exists(), _complete_tree_manifest(output)) == before
     records = [record for record in caplog.records if "name-safety violation" in record.message]
     assert len(records) == 1
@@ -399,16 +366,14 @@ def test_run_codegen_missing_catalog_preserves_tree_and_logs_payload(
     assert violation.final_binding == "c1"
 
 
-def test_collision_rejection_preserves_absent_output(tmp_path, monkeypatch):
-    _patch_colliding_context(monkeypatch)
+def test_collision_rejection_preserves_absent_output(tmp_path):
     output = tmp_path / "absent"
     config = GenerationConfig(output_path=output, models_path=tmp_path, overwrite=True)
-    assert run_codegen(config) is False
+    assert _generate_package_from_graph(_colliding_context(), config) is False
     assert not output.exists()
 
 
-def test_collision_rejection_preserves_populated_tree(tmp_path, monkeypatch):
-    _patch_colliding_context(monkeypatch)
+def test_collision_rejection_preserves_populated_tree(tmp_path):
     output = tmp_path / "populated"
     (output / "nested").mkdir(parents=True)
     (output / "one.bin").write_bytes(b"one\x00")
@@ -419,7 +384,7 @@ def test_collision_rejection_preserves_populated_tree(tmp_path, monkeypatch):
         pass
     before = _complete_tree_manifest(output)
     config = GenerationConfig(output_path=output, models_path=tmp_path, overwrite=True)
-    assert run_codegen(config) is False
+    assert _generate_package_from_graph(_colliding_context(), config) is False
     assert _complete_tree_manifest(output) == before
 
 
@@ -439,8 +404,8 @@ def test_generation_rejects_symlink_root_before_output_mutation(tmp_path, monkey
     monkeypatch.setattr("sysml_codegen.cli._clear_output_directory", record_clear)
     config = GenerationConfig(
         output_path=output,
-        from_snapshot=CHAIN_SNAPSHOT,
-        package_name="chain_spike",
+        models_path=D38_MODEL,
+        package_name="d38_caret",
         overwrite=True,
     )
     assert run_codegen(config) is False

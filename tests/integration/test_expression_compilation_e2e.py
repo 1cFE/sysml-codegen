@@ -14,7 +14,7 @@ from pathlib import Path
 
 import pytest
 
-from sysml_codegen.cli import GenerationConfig, run_codegen
+from sysml_codegen.cli import GenerationConfig
 from tests.helpers.impl_execution import (
     assert_outputs_match,
     execute_impl_body,
@@ -22,6 +22,7 @@ from tests.helpers.impl_execution import (
     find_impl_files,
     is_auto_implemented,
 )
+from tests.helpers.legacy_route import generate_via_legacy_route
 
 FIXTURES_DIR = Path(__file__).parent.parent / "fixtures"
 
@@ -78,7 +79,7 @@ class TestChainSpikeAutoImpl:
             output_path=tmp_path / "output",
             package_name="chain_spike",
         )
-        success = run_codegen(config)
+        success = generate_via_legacy_route(config)
         assert success, "Chain spike codegen should succeed"
 
         impls = find_impl_files(tmp_path / "output")
@@ -101,7 +102,7 @@ class TestChainSpikeAutoImpl:
             output_path=tmp_path / "output",
             package_name="chain_spike",
         )
-        run_codegen(config)
+        generate_via_legacy_route(config)
 
         for impl in find_impl_files(tmp_path / "output"):
             content = impl.read_text()
@@ -115,7 +116,7 @@ class TestChainSpikeAutoImpl:
             output_path=tmp_path / "output",
             package_name="chain_spike",
         )
-        run_codegen(config)
+        generate_via_legacy_route(config)
 
         backlog = (tmp_path / "output" / "IMPLEMENTATION_BACKLOG.md").read_text()
         assert "0 functions to implement" in backlog
@@ -138,7 +139,7 @@ class TestSolarBatteryValidation:
             output_path=output_path,
             package_name="solar_battery",
         )
-        success = run_codegen(config)
+        success = generate_via_legacy_route(config)
         assert success, "Solar battery codegen should succeed"
         return output_path
 
@@ -224,7 +225,7 @@ class TestCATFMFEValidation:
             output_path=output_path,
             package_name="catf_mfe",
         )
-        success = run_codegen(config)
+        success = generate_via_legacy_route(config)
         assert success is True, (
             "catf_mfe generation must succeed — Item 10 wired the magnet_volume "
             "cross-part pin"

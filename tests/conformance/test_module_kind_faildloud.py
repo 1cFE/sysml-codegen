@@ -271,6 +271,6 @@ def test_generate_stencils_skips_constraint(tmp_path):
     class _Ctx:
         computation_graph = _graph_with_constraint()
 
-    _generate_stencils(_Ctx(), config, _get_template_env())
+    _generate_stencils(_Ctx().computation_graph, config, _get_template_env())
     written = list((tmp_path / "handwritten").rglob("*.py"))
     assert written == []

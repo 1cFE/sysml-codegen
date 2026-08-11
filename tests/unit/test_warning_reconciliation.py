@@ -18,8 +18,9 @@ import logging
 
 import pytest
 
-from sysml_codegen.cli import GenerationConfig, run_codegen
+from sysml_codegen.cli import GenerationConfig
 from tests.conftest import snapshot_fixture
+from tests.helpers.legacy_route import generate_via_legacy_route
 
 
 def _run(tmp_path, fixture: str) -> bool:
@@ -29,7 +30,7 @@ def _run(tmp_path, fixture: str) -> bool:
         package_name="wr",
         overwrite=True,
     )
-    return run_codegen(config)
+    return generate_via_legacy_route(config)
 
 
 def _warning_messages(caplog) -> list[str]:

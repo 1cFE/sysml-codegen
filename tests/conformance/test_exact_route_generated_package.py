@@ -49,12 +49,12 @@ def _generate(context, output_path: Path) -> Path:
     template_env = _get_template_env()
     plan = build_constraint_generation_plan(context.computation_graph, template_env, config.package_name)
     _setup_output_directories(config)
-    _generate_schemas(context, config, template_env)
-    _generate_modules(context, config, template_env, plan)
-    _generate_stencils(context, config, template_env)
-    _generate_pipeline(context, config, template_env)
-    _generate_registry(context, config, template_env)
-    _generate_entry_points(context, config, template_env)
+    _generate_schemas(context.computation_graph, config, template_env)
+    _generate_modules(context.computation_graph, config, template_env, plan)
+    _generate_stencils(context.computation_graph, config, template_env)
+    _generate_pipeline(context.computation_graph, config, template_env)
+    _generate_registry(context.computation_graph, config, template_env)
+    _generate_entry_points(context.computation_graph, config, template_env)
     return output_path
 
 

@@ -42,7 +42,8 @@ from tests.execution import fusion_tea_arithmetic as hand
 from tests.execution.real_teax import (
     FUSION_TEA,
     LCOE_CHANNEL,
-    generate_exact_package,
+    generate_package_from_models,
+    generate_package_from_snapshot,
     load_sealed_package,
 )
 
@@ -116,9 +117,7 @@ def live_package(tmp_path_factory, environment) -> dict[str, object]:
     """Generate, seal, load, and execute the live-route package."""
     root = tmp_path_factory.mktemp("ft-live")
     name = "fusion_tea_live"
-    package = generate_exact_package(
-        build_exact_pipeline_context([FUSION_TEA]), root / name, name
-    )
+    package = generate_package_from_models(FUSION_TEA, root / name, name)
     return _load_and_run(package, name, root)
 
 
@@ -142,9 +141,7 @@ def relocated_package(tmp_path_factory, environment) -> dict[str, object]:
     assert not model_copy.exists()
 
     name = "fusion_tea_relocated"
-    package = generate_exact_package(
-        build_exact_pipeline_context_from_snapshot(moved), root / name, name
-    )
+    package = generate_package_from_snapshot(moved, root / name, name)
     return _load_and_run(package, name, root)
 
 

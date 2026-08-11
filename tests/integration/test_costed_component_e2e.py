@@ -19,7 +19,7 @@ from pathlib import Path
 import pytest
 import yaml
 
-from sysml_codegen.cli import GenerationConfig, run_codegen
+from sysml_codegen.cli import GenerationConfig
 from tests.helpers.impl_execution import (
     assert_outputs_match,
     execute_impl_body,
@@ -27,6 +27,7 @@ from tests.helpers.impl_execution import (
     find_impl_files,
     is_auto_implemented,
 )
+from tests.helpers.legacy_route import generate_via_legacy_route
 
 FIXTURES_DIR = Path(__file__).parent.parent / "fixtures"
 
@@ -243,7 +244,7 @@ class TestSolarBatteryCostPatternE2E:
             output_path=output_path,
             package_name="solar_battery",
         )
-        success = run_codegen(config)
+        success = generate_via_legacy_route(config)
         assert success, "Solar battery codegen should succeed"
         return output_path
 

@@ -164,7 +164,7 @@ def test_missing_current_and_future_versions_refuse_before_payload_interpretatio
         document["version"] = version
     document["instance_graph"] = "must not be interpreted"
     _reseal_outer(document)
-    with pytest.raises(v6.SnapshotShapeError, match="recapture with snapshot v6"):
+    with pytest.raises(v6.SnapshotShapeError, match="requires snapshot v6"):
         v6.load_instance_graph_snapshot(_written(tmp_path, "version.json", document))
 
 

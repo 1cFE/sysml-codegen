@@ -45,13 +45,13 @@ def test_s4_slice_generation_level_reproduction(tmp_path):
     template_env = _get_template_env()
     fake_ctx = _Ctx(ctx)
 
-    _generate_schemas(fake_ctx, config, template_env)
+    _generate_schemas(fake_ctx.computation_graph, config, template_env)
     from sysml_codegen.generation.constraint_plan import build_constraint_generation_plan
 
     plan = build_constraint_generation_plan(fake_ctx.computation_graph, template_env, config.package_name)
-    _generate_modules(fake_ctx, config, template_env, plan)
-    _generate_pipeline(fake_ctx, config, template_env)
-    _generate_registry(fake_ctx, config, template_env)
+    _generate_modules(fake_ctx.computation_graph, config, template_env, plan)
+    _generate_pipeline(fake_ctx.computation_graph, config, template_env)
+    _generate_registry(fake_ctx.computation_graph, config, template_env)
 
     assert (tmp_path / "schemas" / "constraint_types.py").exists()
 
@@ -92,11 +92,11 @@ def test_two_instances_of_one_definition_generation_level_compile_once(tmp_path)
     template_env = _get_template_env()
     fake_ctx = _Ctx(ctx)
 
-    _generate_schemas(fake_ctx, config, template_env)
+    _generate_schemas(fake_ctx.computation_graph, config, template_env)
     from sysml_codegen.generation.constraint_plan import build_constraint_generation_plan
 
     plan = build_constraint_generation_plan(fake_ctx.computation_graph, template_env, config.package_name)
-    _generate_modules(fake_ctx, config, template_env, plan)
+    _generate_modules(fake_ctx.computation_graph, config, template_env, plan)
 
     predicates_src = (tmp_path / "modules" / "constraints" / "predicates.py").read_text()
     ast.parse(predicates_src)

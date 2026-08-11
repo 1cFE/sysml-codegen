@@ -21,7 +21,6 @@ from typing import TYPE_CHECKING
 import jinja2
 
 if TYPE_CHECKING:
-    from sysml_codegen.generation import PipelineContext
     from sysml_codegen.generation.constraint_plan import ConstraintGenerationPlan
     from sysml_codegen.resolution.models import ComputationGraph, PipelineModule
 
@@ -291,12 +290,12 @@ def _reconcile_params_coverage(graph: ComputationGraph) -> None:
         )
 
 
-def _preflight_constraint_names(ctx: PipelineContext) -> None:
+def _preflight_constraint_names(graph: ComputationGraph) -> None:
     """Validate both generated constraint scopes before a graph-aware boundary acts."""
     from sysml_codegen.generation.errors import validate_constraint_graph_or_raise
 
-    validate_constraint_graph_or_raise(ctx.computation_graph)
-    catalog = ctx.computation_graph.constraint_catalog
+    validate_constraint_graph_or_raise(graph)
+    catalog = graph.constraint_catalog
     if catalog is not None:
         from sysml_codegen.generation.modules import assert_unique_predicate_function_names
 
@@ -304,19 +303,19 @@ def _preflight_constraint_names(ctx: PipelineContext) -> None:
 
 
 def _generate_schemas(
-    ctx: PipelineContext,
+    graph: ComputationGraph,
     config: GenerationConfig,
     template_env: jinja2.Environment,
 ) -> None:
     """Generate Pydantic schemas for multi-output modules."""
-    _preflight_constraint_names(ctx)
+    _preflight_constraint_names(graph)
     from sysml_codegen.generation import generate_multioutput_model
     from sysml_codegen.resolution.models import ModuleKind
 
     schemas_dir = config.output_path / "schemas"
 
     multioutput_count = 0
-    for module in ctx.computation_graph.modules:
+    for module in graph.modules:
         if module.module_kind in (ModuleKind.CONSTRAINT, ModuleKind.REPORT_AGGREGATOR):
             continue
         if len(module.outputs) < 2:
@@ -337,7 +336,7 @@ def _generate_schemas(
 
     # Item 7 / D4: per-package evidence schemas, gated on a constraint catalog existing
     # on the graph. A constraint-free corpus writes nothing here (INV-7).
-    catalog = ctx.computation_graph.constraint_catalog
+    catalog = graph.constraint_catalog
     if catalog is not None:
         template = template_env.get_template("constraint_types.py.jinja2")
         code = template.render()
@@ -348,18 +347,18 @@ def _generate_schemas(
 
 
 def _generate_modules(
-    ctx: PipelineContext,
+    graph: ComputationGraph,
     config: GenerationConfig,
     template_env: jinja2.Environment,
     constraint_plan: ConstraintGenerationPlan,
 ) -> None:
     """Generate TEAx module wrappers for all module types (ADR-003 namespacing)."""
-    _preflight_constraint_names(ctx)
+    _preflight_constraint_names(graph)
     from sysml_codegen.generation import generate_teax_module
     from sysml_codegen.resolution.models import ModuleKind
 
     modules_dir = config.output_path / "modules"
-    catalog = ctx.computation_graph.constraint_catalog
+    catalog = graph.constraint_catalog
     staged: list[tuple[Path, str]] = []
 
     if constraint_plan.predicates_code is not None:
@@ -367,7 +366,7 @@ def _generate_modules(
             (modules_dir / "constraints" / "predicates.py", constraint_plan.predicates_code)
         )
 
-    for module in ctx.computation_graph.modules:
+    for module in graph.modules:
         python_path = _get_python_path(module)
         output_path = modules_dir / python_path.full_path
         if module.module_kind in (ModuleKind.CONSTRAINT, ModuleKind.REPORT_AGGREGATOR):
@@ -403,12 +402,12 @@ def _generate_modules(
 
 
 def _generate_stencils(
-    ctx: PipelineContext,
+    graph: ComputationGraph,
     config: GenerationConfig,
     template_env: jinja2.Environment,
 ) -> None:
     """Generate implementation stencils for all module types (ADR-003 namespacing)."""
-    _preflight_constraint_names(ctx)
+    _preflight_constraint_names(graph)
     from sysml_codegen.generation import (
         backup_implementation,
         generate_implementation,
@@ -421,7 +420,7 @@ def _generate_stencils(
 
     stats = {"new": 0, "preserved": 0, "regenerated": 0}
 
-    for module in ctx.computation_graph.modules:
+    for module in graph.modules:
         if module.module_kind in (ModuleKind.CONSTRAINT, ModuleKind.REPORT_AGGREGATOR):
             # D8: fully generated, no handwritten implementation to stencil.
             continue
@@ -500,19 +499,19 @@ def _generate_stencils(
 
 
 def _generate_pipeline(
-    ctx: PipelineContext,
+    graph: ComputationGraph,
     config: GenerationConfig,
     template_env: jinja2.Environment,
 ) -> None:
     """Generate pipeline YAML from computation graph."""
-    _preflight_constraint_names(ctx)
+    _preflight_constraint_names(graph)
     from sysml_codegen.generation import generate_pipeline_yaml
 
     pipelines_dir = config.output_path / "pipelines"
     output_path = pipelines_dir / f"{config.pipeline_name}.yaml"
 
     yaml_content = generate_pipeline_yaml(
-        graph=ctx.computation_graph,
+        graph=graph,
         package_name=config.package_name,
         template_env=template_env,
     )
@@ -524,21 +523,21 @@ def _generate_pipeline(
 
 
 def _generate_registry(
-    ctx: PipelineContext,
+    graph: ComputationGraph,
     config: GenerationConfig,
     template_env: jinja2.Environment,
 ) -> None:
     """Generate registry function in __init__.py."""
-    _preflight_constraint_names(ctx)
+    _preflight_constraint_names(graph)
     from sysml_codegen.generation import generate_registry
     from sysml_codegen.generation.registry import _collect_exit_point_primitive_types
 
     output_path = config.output_path / "__init__.py"
 
-    exit_point_types = _collect_exit_point_primitive_types(ctx.computation_graph.modules)
+    exit_point_types = _collect_exit_point_primitive_types(graph.modules)
 
     code = generate_registry(
-        graph=ctx.computation_graph,
+        graph=graph,
         package_name=config.package_name,
         template_env=template_env,
         output_path=output_path,
@@ -548,22 +547,22 @@ def _generate_registry(
         output_path.write_text(code)
         logger.debug(f"Generated registry: {output_path}")
 
-    logger.info(f"Generated module registry with {len(ctx.computation_graph.modules)} modules")
+    logger.info(f"Generated module registry with {len(graph.modules)} modules")
 
 
 def _generate_entry_points(
-    ctx: PipelineContext,
+    graph: ComputationGraph,
     config: GenerationConfig,
     template_env: jinja2.Environment,
 ) -> None:
     """Generate entry point parameter group schemas and JSON templates."""
-    _preflight_constraint_names(ctx)
+    _preflight_constraint_names(graph)
     from sysml_codegen.generation import (
         generate_all_derived_jsons_from_graph,
         generate_all_derived_schemas_from_graph,
     )
 
-    entry_point_groups = ctx.computation_graph.entry_point_groups
+    entry_point_groups = graph.entry_point_groups
 
     if entry_point_groups:
         schema_files = generate_all_derived_schemas_from_graph(
@@ -583,17 +582,17 @@ def _generate_entry_points(
 
 
 def _generate_backlog(
-    ctx: PipelineContext,
+    graph: ComputationGraph,
     config: GenerationConfig,
 ) -> None:
     """Generate implementation backlog report."""
-    _preflight_constraint_names(ctx)
+    _preflight_constraint_names(graph)
     from sysml_codegen.generation import generate_backlog_report
 
     output_path = config.output_path / "IMPLEMENTATION_BACKLOG.md"
 
     markdown = generate_backlog_report(
-        ctx.computation_graph,
+        graph,
         output_path,
         config.package_name,
     )
@@ -603,12 +602,12 @@ def _generate_backlog(
 
 
 def _generate_tests(
-    ctx: PipelineContext,
+    graph: ComputationGraph,
     config: GenerationConfig,
     template_env: jinja2.Environment,
 ) -> None:
     """Generate runnable test file for implementations."""
-    _preflight_constraint_names(ctx)
+    _preflight_constraint_names(graph)
     from sysml_codegen.generation import generate_test_implementations
 
     tests_dir = config.output_path / "tests"
@@ -617,7 +616,7 @@ def _generate_tests(
     output_path = tests_dir / "test_implementations_runnable.py"
 
     content = generate_test_implementations(
-        graph=ctx.computation_graph,
+        graph=graph,
         package_name=config.package_name,
         template_env=template_env,
         output_path=output_path,
@@ -627,7 +626,7 @@ def _generate_tests(
 
 
 def _seal_package(
-    ctx: PipelineContext,
+    graph: ComputationGraph,
     config: GenerationConfig,
 ) -> None:
     """Step 9: seal the generated package (D1).
@@ -636,7 +635,7 @@ def _seal_package(
     final on disk before ``seal_package`` runs, and ``package_contract.json`` is written
     last, never in its own coverage.
     """
-    _preflight_constraint_names(ctx)
+    _preflight_constraint_names(graph)
     from sysml_codegen.contracts import (
         DEFAULT_COVERAGE_POLICY,
         build_generation_manifest,
@@ -651,7 +650,7 @@ def _seal_package(
     contracts_dir.mkdir(parents=True, exist_ok=True)
 
     # (1) ModelContract — pure graph projection, written first.
-    model_contract = build_model_contract(ctx.computation_graph)
+    model_contract = build_model_contract(graph)
     write_contract_json(contracts_dir / "model_contract.json", model_contract)
 
     # (2) The canonical verifier, copied verbatim (INV-8 drift guard).
@@ -690,15 +689,9 @@ def cmd_generate(args: argparse.Namespace) -> int:
         logger.error("agentic-mbse is not installed. Please install it first.")
         return 1
 
-    # --design-path-filter is baked into the snapshot at capture, so re-applying
-    # it at generation is meaningless — reject rather than silently no-op (V6).
-    if args.from_snapshot is not None and args.design_path_filter:
-        logger.error(
-            "--design-path-filter cannot be combined with --from-snapshot "
-            "(the filter is baked into the snapshot at capture)."
-        )
-        return 1
-
+    # The filter is refused for both inputs now, in run_codegen, with the reason
+    # it cannot be honoured. The old from-snapshot-only message said the filter
+    # was "baked into the snapshot at capture", which the v6 capture does not do.
     config = GenerationConfig(
         models_path=args.models,
         from_snapshot=args.from_snapshot,
@@ -717,7 +710,13 @@ def cmd_generate(args: argparse.Namespace) -> int:
 
 
 def cmd_snapshot(args: argparse.Namespace) -> int:
-    """Capture a versioned extraction snapshot from live models."""
+    """Capture one v6 instance-graph snapshot from live models.
+
+    This subcommand emits what this CLI's ``generate --from-snapshot`` accepts.
+    The v5 extraction snapshot (``snapshot.capture_snapshot``) is still in the
+    tree for the recovery's retired specimens, but no public surface produces or
+    consumes it any more.
+    """
     level = logging.DEBUG if args.verbose else logging.INFO
     logging.basicConfig(level=level, format="%(levelname)s: %(message)s")
 
@@ -727,11 +726,19 @@ def cmd_snapshot(args: argparse.Namespace) -> int:
         logger.error("agentic-mbse is not installed. Please install it first.")
         return 1
 
-    from sysml_codegen.snapshot import capture_snapshot
+    if args.design_path_filter:
+        logger.error(
+            "--design-path-filter is not supported: a v6 snapshot seals the elaborated "
+            "instance graph and the admitted source manifest, neither of which a design "
+            "path substring can select. Narrow the model paths you pass to --models instead."
+        )
+        return 1
+
+    from sysml_codegen.snapshot.capture import capture_instance_graph_snapshot
 
     models_path: Path = args.models
-    output_path: Path = args.output or (models_path / "extraction_snapshot.json")
-    out = capture_snapshot([models_path], output_path, design_path_filter=args.design_path_filter)
+    output_path: Path = args.output or (models_path / "instance_graph_snapshot.json")
+    out = capture_instance_graph_snapshot([models_path], output_path)
     logger.info(f"Wrote snapshot to {out}")
     return 0
 
@@ -953,7 +960,16 @@ def main() -> None:
 
 
 def run_codegen(config: GenerationConfig) -> bool:
-    """Run the code generation pipeline.
+    """Generate one package from the exact instance-graph authority.
+
+    This is the single public generation entry point, and it constructs exactly
+    one way. ``--models`` and ``--from-snapshot`` are two *sources* for the same
+    authority, not two implementations: both seal into an ``ExactPipelineContext``
+    whose receipt binds the instance graph to what it projects to. There is no
+    flag, environment variable, or config field that selects an implementation.
+
+    The legacy builders remain in the tree and are still importable by name;
+    they are simply not reachable from here. Their removal is Phase 4 work.
 
     Args:
         config: Generation configuration with paths and options.
@@ -961,57 +977,101 @@ def run_codegen(config: GenerationConfig) -> bool:
     Returns:
         True if generation succeeded, False otherwise.
     """
-    from sysml_codegen.contracts import PackageSealError, ensure_package_tree_is_link_free
-    from sysml_codegen.generation import (
-        CodeGenerationError,
-        SysMLParsingError,
+    from sysml_codegen.elaboration.elaborate import (
+        ElaborationDiagnosticError,
+        ElaborationError,
     )
-    from sysml_codegen.generation.constraint_plan import build_constraint_generation_plan
-    from sysml_codegen.orchestration.pipeline_builder import build_pipeline_context
-    from sysml_codegen.snapshot import GrandfatheredSnapshotError
+    from sysml_codegen.generation import CodeGenerationError, SysMLParsingError
+    from sysml_codegen.orchestration.exact_pipeline_context import (
+        build_exact_pipeline_context,
+        build_exact_pipeline_context_from_snapshot,
+    )
+    from sysml_codegen.snapshot.envelope import InstanceGraphSnapshotError
+
+    # ``--design-path-filter`` selects which design files the *legacy* parameter-
+    # group deriver reads. The exact route derives groups from the instance
+    # graph, where the filter has no meaning at all, so honouring the flag is
+    # impossible and ignoring it would silently ship a package the operator did
+    # not ask for. Refuse instead. The flag itself is retired in Phase 4.
+    if config.design_path_filter:
+        logger.error(
+            "--design-path-filter is not supported: parameter groups are derived from the "
+            "model's instance graph, not from design file paths, so the filter cannot change "
+            "what is generated. Narrow the model paths you pass to --models instead."
+        )
+        return False
 
     source = config.from_snapshot if config.from_snapshot is not None else config.models_path
     logger.info(f"Generating code from {source}")
     logger.info(f"Output to {config.output_path}")
     logger.info(f"Package name: {config.package_name}")
 
+    logger.info("Building pipeline context...")
     try:
-        # Step 1: Build pipeline context — from a snapshot (license-free) or from
-        # live extraction (7-step initialization). Both converge on PipelineContext.
-        logger.info("Building pipeline context...")
         if config.from_snapshot is not None:
-            from sysml_codegen.orchestration.snapshot_context import (
-                build_pipeline_context_from_snapshot,
-            )
-            from sysml_codegen.snapshot import assert_snapshot_certifiable
-
-            ctx = build_pipeline_context_from_snapshot(config.from_snapshot)
-            # Fail closed on a grandfathered snapshot before any output is written
-            # or sealed (Item 12): a snapshot captured without lowering carries no
-            # lowered constraints, so a package sealed from it would silently omit
-            # them. Inspection loads above are unaffected — only certifying
-            # generation is refused. Reads the context's now-honest mode (D4).
-            assert_snapshot_certifiable(ctx.constraint_lowering_mode, config.from_snapshot)
+            context = build_exact_pipeline_context_from_snapshot(config.from_snapshot)
         else:
             assert config.models_path is not None  # guaranteed by the CLI group
-            ctx = build_pipeline_context(
-                [config.models_path],
-                design_path_filter=config.design_path_filter,
-            )
-        logger.info(f"Extracted {len(ctx.calc_defs)} calculation definitions")
-        logger.info(f"Built computation graph with {len(ctx.computation_graph.modules)} modules")
+            context = build_exact_pipeline_context([config.models_path])
+        # One read, one projection. Every later step works from this object, so a
+        # package is never assembled out of several separately derived graphs.
+        graph = context.computation_graph
+    except InstanceGraphSnapshotError as error:
+        logger.error(f"Snapshot refused: {error}")
+        return False
+    # The two elaboration refusal classes stay distinct in the log the way the
+    # corpus driver keeps them distinct: readiness findings and validation
+    # diagnostics are different answers, and collapsing them loses which gate
+    # refused. Neither is a CodeGenerationError, so neither is caught below.
+    except ElaborationError as error:
+        logger.error(f"Model is not ready for the exact route: {error}")
+        return False
+    except ElaborationDiagnosticError as error:
+        logger.error(f"Model failed exact-route validation: {error}")
+        return False
+    except SysMLParsingError as error:
+        logger.error(f"SysML parsing failed: {error}")
+        return False
+    except CodeGenerationError as error:
+        logger.error(
+            f"Code generation failed: {error}",
+            extra={"constraint_name_safety": error.name_safety_violation},
+        )
+        return False
 
+    logger.info(f"Built computation graph with {len(graph.modules)} modules")
+    return _generate_package_from_graph(graph, config)
+
+
+def _generate_package_from_graph(graph: ComputationGraph, config: GenerationConfig) -> bool:
+    """Write and seal one package from an already-constructed computation graph.
+
+    Authority-neutral by construction: it takes a graph and chooses nothing. The
+    caller has already decided which authority produced it, which is why
+    ``run_codegen`` is the only thing that decides. Private on purpose — the
+    recovery's legacy-specimen tests drive it directly while their fixtures are
+    retired, and Phase 4 removes those callers with the legacy owners.
+    """
+    from sysml_codegen.contracts import PackageSealError, ensure_package_tree_is_link_free
+    from sysml_codegen.generation import (
+        CodeGenerationError,
+        SysMLParsingError,
+    )
+    from sysml_codegen.generation.constraint_plan import build_constraint_generation_plan
+    from sysml_codegen.snapshot import GrandfatheredSnapshotError
+
+    try:
         # Validate both generated constraint scopes before overwrite clearing or output creation.
-        _preflight_constraint_names(ctx)
+        _preflight_constraint_names(graph)
 
         # Step 1.5: Fail fast on a sanitize-collision BEFORE clearing output, so a
         # duplicate path never wipes or silently overwrites existing files.
-        _check_duplicate_output_paths(ctx.computation_graph.modules)
+        _check_duplicate_output_paths(graph.modules)
 
         # Step 1.6: Params-coverage reconciliation (Item 7 / D4, M1). Always
         # strict — logs the unwired-remainder summary, then raises V11 on any
         # wired fell-through-valueless input. Before output clear, like 1.5.
-        _reconcile_params_coverage(ctx.computation_graph)
+        _reconcile_params_coverage(graph)
 
         try:
             ensure_package_tree_is_link_free(config.output_path)
@@ -1022,7 +1082,7 @@ def run_codegen(config: GenerationConfig) -> bool:
         # Build every constraint body and wrapper while the target tree is still untouched.
         template_env = _get_template_env()
         constraint_plan = build_constraint_generation_plan(
-            ctx.computation_graph, template_env, config.package_name
+            graph, template_env, config.package_name
         )
 
         # Step 2: Clear and setup output directories
@@ -1038,37 +1098,37 @@ def run_codegen(config: GenerationConfig) -> bool:
 
         # Step 5: Generate schemas
         logger.info("Generating schemas...")
-        _generate_schemas(ctx, config, template_env)
+        _generate_schemas(graph, config, template_env)
 
         # Step 6: Generate modules and stencils (all types unified via graph)
         logger.info("Generating TEAx module wrappers...")
-        _generate_modules(ctx, config, template_env, constraint_plan)
+        _generate_modules(graph, config, template_env, constraint_plan)
 
         logger.info("Generating implementation stencils...")
-        _generate_stencils(ctx, config, template_env)
+        _generate_stencils(graph, config, template_env)
 
         # Step 7: Generate pipeline and registry
         logger.info("Generating pipeline configuration...")
-        _generate_pipeline(ctx, config, template_env)
+        _generate_pipeline(graph, config, template_env)
 
         logger.info("Generating module registry...")
-        _generate_registry(ctx, config, template_env)
+        _generate_registry(graph, config, template_env)
 
         # Step 8: Generate entry points and extras
         logger.info("Generating entry point schemas and JSON templates...")
-        _generate_entry_points(ctx, config, template_env)
+        _generate_entry_points(graph, config, template_env)
 
         logger.info("Generating implementation backlog...")
-        _generate_backlog(ctx, config)
+        _generate_backlog(graph, config)
 
         logger.info("Generating runnable tests...")
-        _generate_tests(ctx, config, template_env)
+        _generate_tests(graph, config, template_env)
 
         # Step 9: Seal the package (D1) — over final on-disk state, both live and
         # from-snapshot paths alike (D8).
         logger.info("Sealing package...")
         try:
-            _seal_package(ctx, config)
+            _seal_package(graph, config)
         except (PackageSealError, OSError) as error:
             logger.error(f"Package sealing failed: {error}")
             return False

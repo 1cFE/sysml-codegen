@@ -17,10 +17,11 @@ from sysml_codegen.analysis.constraint_lowering import (
     lower_constraints,
     prepare_constraint_usages,
 )
-from sysml_codegen.cli import GenerationConfig, _get_template_env, run_codegen
+from sysml_codegen.cli import GenerationConfig, _get_template_env
 from sysml_codegen.generation.constraint_catalog import assemble_constraint_catalog
 from sysml_codegen.generation.constraint_plan import build_constraint_generation_plan
 from tests.conftest import requires_license
+from tests.helpers.legacy_route import generate_via_legacy_route
 
 _MODEL = """\
 package RouteContinuity {
@@ -183,7 +184,7 @@ def test_forged_source_identity_preserves_output_tree(
     before = (output.exists(), _tree_manifest(output))
 
     config = GenerationConfig(output_path=output, models_path=model_path, overwrite=True)
-    assert run_codegen(config) is False
+    assert generate_via_legacy_route(config) is False
     assert mutation_calls == {"clear": 0, "setup": 0}
     assert (output.exists(), _tree_manifest(output)) == before
     assert "effective predicate source identity violation" in caplog.text
@@ -264,7 +265,7 @@ def test_compound_profile_diagnostics_reach_level6_and_preserve_output_tree(
     before = _tree_manifest(output)
 
     config = GenerationConfig(output_path=output, models_path=model_path, overwrite=True)
-    assert run_codegen(config) is False
+    assert generate_via_legacy_route(config) is False
     assert mutation_calls == {"clear": 0, "setup": 0}
     assert _tree_manifest(output) == before
     assert caplog.text.index("boolean/boolean") < caplog.text.index("string/string")

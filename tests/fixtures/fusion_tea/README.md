@@ -50,3 +50,18 @@ This directory contains SysML v2 textual models for fusion power plant techno-ec
 ## Note
 
 Previous CATF-oriented models (foundation package, power balance, test patterns) have been archived to `archive/models/`. They can be revived when tokamak modeling begins under the new investigation-driven workflow.
+
+## Committed snapshots
+
+| File | Format | Who reads it |
+|------|--------|--------------|
+| `extraction_snapshot.json` | v5 extraction snapshot | Retired specimens only. No public surface produces or consumes v5 after recovery Slice 3E; its retirement is Phase 4 work against the deletion ledger. |
+| `instance_graph_snapshot.json` | v6 instance graph | `tests/runtime/test_fusion_tea_acceptance.py`, through the shipped `generate --from-snapshot`. |
+
+**The v6 file is a test fixture, not an accepted corpus recapture.** It exists so
+the migrated hand-arithmetic acceptance oracle keeps running on the shipped
+public route, which the recovery plan requires it to do throughout. Deciding
+which snapshots the candidate accepts, and recapturing the corpus as a batch,
+stays Phase 5 / owner territory — do not read this file as that decision having
+been made. Regenerate it with `sysml-codegen snapshot --models
+tests/fixtures/fusion_tea -o tests/fixtures/fusion_tea/instance_graph_snapshot.json`.

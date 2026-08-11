@@ -11,10 +11,11 @@ from pathlib import Path
 
 import pytest
 
-from sysml_codegen.cli import GenerationConfig, run_codegen
+from sysml_codegen.cli import GenerationConfig
 from sysml_codegen.generation.initialization import PipelineContext
 from sysml_codegen.orchestration.pipeline_builder import build_pipeline_context
 from sysml_codegen.resolution.models import ModuleKind
+from tests.helpers.legacy_route import generate_via_legacy_route
 
 FIXTURES_DIR = Path(__file__).parent.parent / "fixtures"
 
@@ -248,7 +249,7 @@ class TestHierarchyCodegenE2E:
             output_path=output_path,
             package_name="solar_battery",
         )
-        success = run_codegen(config)
+        success = generate_via_legacy_route(config)
         assert success, "Solar battery codegen should succeed"
         return output_path
 

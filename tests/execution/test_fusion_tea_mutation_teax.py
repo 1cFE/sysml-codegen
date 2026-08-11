@@ -46,7 +46,7 @@ from tests.execution.real_teax import (
     LCOE_CHANNEL,
     all_ports,
     consumer_ports,
-    generate_exact_package,
+    generate_package_from_models,
     package_loader,
 )
 
@@ -73,8 +73,7 @@ def sealed(tmp_path_factory) -> dict[str, object]:
 
     root = tmp_path_factory.mktemp("ft-mutation")
     name = "fusion_tea_mutation"
-    context = build_exact_pipeline_context([FUSION_TEA])
-    package = generate_exact_package(context, root / name, name)
+    package = generate_package_from_models(FUSION_TEA, root / name, name)
 
     loader = package_loader(package, name, root / "link")
     evaluator = PreparedEvaluator(loader, package / "pipelines" / "pipeline.yaml")
@@ -82,7 +81,7 @@ def sealed(tmp_path_factory) -> dict[str, object]:
         "root": root,
         "name": name,
         "package": package,
-        "graph": context.computation_graph,
+        "graph": build_exact_pipeline_context([FUSION_TEA]).computation_graph,
         "evaluator": evaluator,
         "bridge": CandidateBridge(evaluator.entry_models),
     }

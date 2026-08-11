@@ -52,6 +52,7 @@ from sysml_codegen.resolution.models import (
 )
 from sysml_codegen.snapshot import build_full_graph_from_snapshot
 from tests.conftest import snapshot_fixture
+from tests.helpers.legacy_route import generate_via_legacy_route
 
 
 def _graph(name: str) -> ComputationGraph:
@@ -169,7 +170,7 @@ def test_seeded_strict_generation_aborts_on_v11_gap(tmp_path, caplog):
     pass so the reconciliation step is exercised. The un-flipped grandfathered form failing
     at the gate is covered by ``test_legacy_snapshot_closure``.
     """
-    from sysml_codegen.cli import GenerationConfig, run_codegen
+    from sysml_codegen.cli import GenerationConfig
 
     payload = json.loads(snapshot_fixture("chain_override_probe").read_text())
     assert not payload["constraint_facts"]["usages"], "flip is only immaterial with zero usages"
@@ -184,7 +185,7 @@ def test_seeded_strict_generation_aborts_on_v11_gap(tmp_path, caplog):
         overwrite=True,
     )
     with caplog.at_level(logging.ERROR):
-        assert run_codegen(config) is False
+        assert generate_via_legacy_route(config) is False
     assert any("V11" in r.message for r in caplog.records), (
         "strict generation must log the V11 diagnostic on abort"
     )

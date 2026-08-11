@@ -27,7 +27,7 @@ import sys
 import pytest
 
 from sysml_codegen.cli import GenerationConfig, run_codegen
-from tests.conftest import snapshot_fixture
+from tests.conftest import FIXTURES_DIR
 from tests.runtime.pipeline_runner import (
     _install_simkit_stub,
     _module_import_path,
@@ -44,7 +44,12 @@ _RUN_C_LCOE = 270.1211779380445
 # The formal is `gain_in` because recovery Slice 3D migrated the fifteen Fusion Tea
 # self-named bindings in place to the D-5 form (`in gain_in = gain`). Only the emitted
 # field name moved; the value, the wiring, and the arithmetic below are unchanged.
-_GAIN_EP_KEY = "hif_plant_pkg__hif_plant__lcoe_calc__gain_in"
+# Slice 3E: the oracle now generates through the shipped public route from the
+# committed v6 snapshot, and the exact route keys this entry point on the
+# modelled attribute (`:>> gain = 80.0` on hif_plant) rather than on the
+# consuming calc-usage formal. One modelled value, one key, both consumers fed —
+# which is the per-consumer-mint collapse the cutover exists to produce.
+_GAIN_EP_KEY = "hif_plant_pkg__hif_plant__gain"
 _GAIN_PERTURBED = 100.0
 
 # Hand-computed from ife_lcoe.sysml:53-125 with gain=100 and the emitted inputs, and the
@@ -87,7 +92,7 @@ _ANCHOR_B_F_RECIRC = 0.07222302470027446
 
 
 def _gen(tmp_path):
-    """Generate the fusion-tea package from the committed v2 snapshot (license-free).
+    """Generate the fusion-tea package from the committed v6 snapshot (license-free).
 
     The package name is unique per test (derived from pytest's per-test tmp_path). The
     runner imports the package by its directory name; a shared name across tests would
@@ -96,7 +101,7 @@ def _gen(tmp_path):
     pkg_name = "ftacc_" + tmp_path.name.replace("-", "_").lower()
     cfg = GenerationConfig(
         output_path=tmp_path / pkg_name,
-        from_snapshot=snapshot_fixture("fusion_tea"),
+        from_snapshot=FIXTURES_DIR / "fusion_tea" / "instance_graph_snapshot.json",
         package_name=pkg_name,
         overwrite=True,
     )

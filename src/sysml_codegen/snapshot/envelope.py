@@ -258,8 +258,18 @@ def validate_envelope_bytes(
 def _validate_version(document: dict[str, Any]) -> None:
     version = document.get("version")
     if isinstance(version, bool) or not isinstance(version, int) or version != 6:
+        # A v5 extraction snapshot carries no "version" key at all, so the plain
+        # message would report ``None`` and leave the reader guessing what they
+        # handed over. Name the format actually found.
+        legacy_version = document.get("snapshot_format_version")
+        found = (
+            f"v{legacy_version} extraction snapshot"
+            if isinstance(legacy_version, int) and not isinstance(legacy_version, bool)
+            else f"snapshot version {version!r}"
+        )
         raise SnapshotShapeError(
-            f"unsupported or missing snapshot version {version!r}; recapture with snapshot v6"
+            f"unsupported or missing snapshot version: this is a {found}, but the instance-graph "
+            f"route requires snapshot v6. Recapture with `sysml-codegen snapshot`."
         )
 
 

@@ -565,30 +565,66 @@ The forensic test audit is the starting shortlist, not a certification result.
 
 ### Slice 3E — Public authority switch
 
-- [ ] Write public import/CLI tests proving all supported callers use the exact route and no public
-  flag exposes two authorities.
-- [ ] Switch public callers without deleting the unreachable legacy implementation.
-- [ ] Repeat the full corpus, original suites, generated package comparison, and real TEAx.
-- [ ] Commit the authority switch separately from all deletion.
+- [x] Write public import/CLI tests proving all supported callers use the exact route and no public
+  flag exposes two authorities. `tests/conformance/test_public_authority_switch.py`, 18 tests.
+- [x] Switch public callers without deleting the unreachable legacy implementation. `run_codegen`
+  and `cmd_snapshot` moved; `pipeline_builder.py`, `snapshot_context.py`, the v5 loader,
+  `graph_rebuild.py` and `capture_snapshot` are all untouched and still importable.
+- [x] Repeat the full corpus, original suites, generated package comparison, and real TEAx.
+  Corpus **15 graphs / 22 typed errors, zero rows moved**. Comparison:
+  `evidence/3e-package-comparison.md`. Real TEAx through the switched public surface: 38 passed.
+- [x] Commit the authority switch separately from all deletion. Nothing was deleted this slice.
+- [x] **[AGENT] (orchestrator rulings, 2026-08-11)** Five rulings carried in and applied; recorded
+  verbatim enough to audit in the completion notes below.
 
 ### Validation for every Phase 3 slice
 
+Reconciled once in Slice 3E **[AGENT] (orchestrator ruling 3, 2026-08-11)**. The checklist had
+been left unticked for 3A–3D even where the work was demonstrably done, so each box below now
+carries a per-slice evidence pointer, and anything not actually done is marked as such rather
+than ticked. The evidence lives in the per-slice completion notes and `evidence/audit-3{a,b,c,d}.md`.
+
 **Automated**
 
-- [ ] Start from clean status and record the declared path set.
-- [ ] Run slice-focused tests red before production changes and green afterward.
-- [ ] Run the original full suites; record and explain collection-count deltas.
-- [ ] Run Ruff, mypy baseline comparison, and `git diff --check` on both repositories as applicable.
-- [ ] Assert actual changed paths are a subset of the declared path set.
+- [x] Start from clean status and record the declared path set. — 3A "Deviation from the brief's
+  candidate path list"; 3B, 3C, 3D, 3E "Declared path set" bullets. 3B and 3C each declared two
+  paths mid-slice and named them as deviations.
+- [x] Run slice-focused tests red before production changes and green afterward. — 3A "Tests, red
+  then green" (5 modules failed to collect at `beee0f4`); 3B same section as corrected by audit F4
+  (4 failed to collect + 4 failed/8 passed); 3C (5 red of 8 codegen, 3 red of 5 agentic, measured
+  red output quoted); 3D (19 of 20 errored at `26e7d04`); 3E "Tests, red then green" below.
+- [x] Run the original full suites; record and explain collection-count deltas. — every slice's
+  "Gates" block states the delta and its cause: 3A +104 then +11, 3B +46 then +1, 3C +8 then +10
+  codegen and +5 then +1 agentic, 3D +1 passed / +20 deselected, 3E +18.
+- [x] Run Ruff, mypy baseline comparison, and `git diff --check` on both repositories as
+  applicable. — every "Gates" block. **One honest exception:** 3D recorded mypy without re-running
+  it and the figure was wrong; caught and corrected by the 3D audit (F1), which is why the box is
+  ticked against the follow-up rather than against `848628b`.
+- [x] Assert actual changed paths are a subset of the declared path set. — stated as "Changed paths
+  equal the declared set" in every slice's Gates block, which is the stronger claim.
 
 **Manual**
 
-- [ ] Inspect the complete slice diff before commit, including generated/deleted path summaries.
-- [ ] Open at least one public generated artifact and compare it with the hand/model expectation.
-- [ ] Confirm no docs, spikes, probes, unrelated tests, or snapshots changed accidentally.
-- [ ] **[OWNER 2026-08-10]** After each slice commit, an independent audit agent (fresh session,
+- [x] Inspect the complete slice diff before commit, including generated/deleted path summaries. —
+  evidenced by the per-file disposition tables in 3A, 3B, 3C and 3D, each of which is a per-hunk
+  reading of the diff. No slice deleted a path.
+- [x] Open at least one public generated artifact and compare it with the hand/model expectation. —
+  3A (`hif_driver__HIF_Driver__efficiency = 0.35` traced to `hif_driver.sysml:81`); 3B
+  (`:>> efficiency = 0.75;` at `model.sysml:234`); 3C (the rendered
+  `exactcalcordering__rig__split` auto-implementation against the fixture's hand arithmetic);
+  3D (the whole real-TEAx table against `fusion_tea_arithmetic.py`); 3E
+  (`evidence/3e-package-comparison.md`, whole-tree).
+- [x] Confirm no docs, spikes, probes, unrelated tests, or snapshots changed accidentally. — the
+  declared-path-set equality in each Gates block is this check. Two deliberate exceptions, both
+  recorded at the time: 3A and 3D each amended
+  `.project/completed/20260809_elaborator-breadth/diff-ledger.md` under the B37-01 owner
+  pre-ruling, and 3E amends rows 12 and 36 under orchestrator ruling 1.
+- [x] **[OWNER 2026-08-10]** After each slice commit, an independent audit agent (fresh session,
   not the implementer) reviews the slice diff, tests, and evidence against this plan's slice
-  contract. Audit findings are resolved before the next slice begins.
+  contract. Audit findings are resolved before the next slice begins. — 3A `evidence/audit-3a.md`
+  (FINDINGS, 3 closed at `4858911`); 3B `audit-3b.md` (CERTIFY, 7 closed at `2f28dde`); 3C
+  `audit-3c.md` (CERTIFY, 4 closed at `a6c41bc`/`cc6c7a7`); 3D `audit-3d.md` (CERTIFY, 5 closed at
+  `fa4eea0`). **3E's audit has not run yet** — it is the next action after this slice's commit.
 
 **What we know works after this phase**
 
@@ -606,7 +642,7 @@ Record every slice. Do not combine them later.
 | 3B | d91431b, audit follow-up 2f28dde | N/A | 3520 passed / 47 skipped / 18 deselected (+47, all new) | smoke PASS (live + v6-snapshot packages, group names equal; legacy CLI package unchanged at 48 files) |
 | 3C | 7af5dc9, audit follow-up a6c41bc | 8b63393, audit follow-up cc6c7a7 | codegen 3538 passed / 47 skipped / 18 deselected (+18, all new); agentic 1825 passed / 1 skipped / 5 deselected (+6, all new) | N/A |
 | 3D | 848628b, audit follow-up fa4eea0 | N/A (untouched, clean at `cc6c7a7`) | codegen 3539 passed / 47 skipped / 38 deselected (+1 passed, +20 deselected — all new); agentic 1825 passed / 1 skipped / 5 deselected (unchanged) | **PASS** — 20 real-TEAx tests, live + relocated-v6 sealed packages, 11 outputs each, LCOE `270.1211779380445` |
-| 3E | PENDING | PENDING if changed | PENDING | PENDING |
+| 3E | PENDING | N/A (untouched, clean at `cc6c7a7`) | codegen 3557 passed / 47 skipped / 38 deselected (+18, all new); agentic 1825 passed / 1 skipped / 5 deselected (unchanged) | **PASS** — 38 execution nodes through the SWITCHED public `run_codegen`, live + relocated-v6, 11 channels each, LCOE `270.1211779380445` |
 
 ---
 
@@ -678,6 +714,16 @@ def test_retirement_preserves_public_product(checkpoint, real_teax):
 
 ### Gate 4C — Review tests, probes, and snapshots
 
+- [ ] **Carried from Slice 3E: sixteen responsibility rows, and a hard gate on 4B.** The authority
+  switch left 100 test nodes across 16 modules running against the legacy implementation, because
+  their *specimens* are what the cutover retires — a v5-only snapshot, or a fixture the exact route
+  refuses on a ratified `expected-collapse` row. Every row is in the Slice 3E completion notes with
+  its behavior responsibility, why the specimen cannot survive, and the Gate 4C owner that must
+  author an exact-route specimen for it.
+  **Gate 4B may not delete a legacy production owner while any row that owner serves still lacks
+  its exact-route replacement.** These rows are inputs to `replacement_is_green(row)`: a row is
+  green only when a named exact-route node exists, collects, and passes. Absence scanning cannot
+  make it green, and neither can the legacy node still passing.
 - [ ] Preserve all tests by default. Rewrite useful mechanism tests against public behavior before
   considering deletion.
 - [ ] Restore or replace the known lost product responsibilities before deleting their old owners:
@@ -2022,6 +2068,244 @@ nothing in that repository changed. `ruff check src` byte-identical to the basel
 findings) and the two changed test modules lint clean. `mypy src` **71 errors in 17 files, measured,
 identical to the `26e7d04` baseline**. `git diff --check` clean. Changed paths equal the declared
 set.
+
+#### Slice 3E Completion — Public authority switch
+
+- **Completed:** 2026-08-11
+- **Commit:** PENDING (sysml-codegen only; agentic-mbse `N/A` — nothing changed there, and its
+  suite was still run from the paired worktree: 1825 passed / 1 skipped / 5 deselected, unchanged)
+- **Declared path set, sysml-codegen:** `src/sysml_codegen/cli/__init__.py`,
+  `src/sysml_codegen/snapshot/envelope.py`; new `tests/conformance/test_public_authority_switch.py`,
+  `tests/helpers/legacy_route.py`, `tests/fixtures/fusion_tea/instance_graph_snapshot.json`;
+  `tests/fixtures/fusion_tea/README.md`; the sixteen repointed test modules and the six
+  helper-signature call-site modules named in the tables below;
+  `.project/completed/20260809_elaborator-breadth/diff-ledger.md`; this plan,
+  `briefs/phase3e.md`, and `evidence/3e-package-comparison.md`. Actual changed paths equal that set.
+
+**What switched.** `run_codegen` is now the single public generation authority and constructs
+exactly one way: `--models` seals an `ExactPipelineContext` from live elaboration,
+`--from-snapshot` seals one from a v6 instance-graph snapshot. Two *sources*, one authority.
+`cmd_snapshot` captures v6 (`capture_instance_graph_snapshot`), so the CLI no longer emits a
+format its own `generate` refuses. Nothing was deleted: `pipeline_builder.py`,
+`snapshot_context.py`, `snapshot/loader.py`, `snapshot/graph_rebuild.py` and `capture_snapshot`
+are byte-unchanged and still importable, which is Phase 4's ledger to spend.
+
+**How single authority is proven, by behaviour rather than by spelling.** A test asserting "the
+CLI imports the exact builder" passes the moment the import exists. These do not:
+
+- `d38_caret` ships *different packages* on the two routes. Through the public CLI it now emits
+  `inputs/library_params.json` with six parameters; the legacy route emits
+  `inputs/design_params.json` with one. Both arms are measured in the same module, so the
+  discriminator is proven to discriminate.
+- `chain_spike_model` — ledger row 7, three self-named bindings — is now *refused* by the public
+  CLI and still generated by the legacy route. A public refusal is a public behaviour.
+- A v6 snapshot captured by `sysml-codegen snapshot` round-trips through
+  `generate --from-snapshot` to the same package.
+- The construction closure is clean **transitively**, not just at the CLI's own import line:
+  nothing reachable from `orchestration/exact_pipeline_context.py` imports
+  `pipeline_builder`, `snapshot_context`, `snapshot.loader`, `snapshot.graph_rebuild`, or
+  `analysis/constraint_lowering.py`.
+- The flag surface is enumerated. Every subcommand's `--help` is scanned for a route-selecting
+  flag, `GenerationConfig`'s fields are pinned by value, `cli.__all__` is pinned by value, and no
+  `SYSML_CODEGEN*` environment variable is read.
+
+**One residual, stated rather than rounded down.** `sysml_codegen.cli`'s *transitive* import
+closure still contains `pipeline_builder`, `snapshot.loader` and `snapshot.graph_rebuild`, because
+`snapshot/__init__.py` re-exports the v5 machinery and the CLI imports that package for other
+reasons. Nothing there is constructed through — the check above proves the construction closure is
+clean — but importable is importable, and this slice's own contract is that written claims survive
+checking. Pinned by name in `test_the_generation_half_still_reaches_v5_modules_and_that_residual_is_pinned`
+so it cannot quietly grow. `orchestration/__init__.py` likewise still re-exports
+`build_pipeline_context`. Both are Gate 4A ledger inputs; Phase 4 empties them.
+
+**Production diff, three files, each with its reason.**
+
+| Path | Change | Why |
+|---|---|---|
+| `cli/__init__.py` — `run_codegen` | Constructs through `build_exact_pipeline_context` / `build_exact_pipeline_context_from_snapshot`, reads `computation_graph` **once**, then calls the writer. | The switch. The single read matters: on the exact route every `.computation_graph` access re-decodes and re-projects, so passing the context down would assemble one package out of ten separately derived graphs. |
+| `cli/__init__.py` — `_generate_package_from_graph` | The write-and-seal half, split out, taking a `ComputationGraph`. Private; not in `__all__`. | Authority-neutral by construction: it takes a graph and chooses nothing, so `run_codegen` is the only thing that decides. It is also the seam the retired-specimen tests drive; Phase 4 removes those callers with the legacy owners. |
+| `cli/__init__.py` — the nine `_generate_*` / `_seal_package` / `_preflight_constraint_names` helpers | Take `graph: ComputationGraph` instead of `ctx: PipelineContext`. | They only ever read `ctx.computation_graph`. Taking the graph is the honest signature and removes the repeated re-projection above. |
+| `cli/__init__.py` — elaboration refusals | `ElaborationError` and `ElaborationDiagnosticError` are caught **separately** and logged with different messages. | Neither is a `CodeGenerationError`, so before this they escaped to the bottom `except Exception` and were reported as "Unexpected error". Keeping the two classes distinct in the log is the same rule the corpus driver follows: readiness findings and validation diagnostics are different answers. |
+| `cli/__init__.py` — `--design-path-filter` | Typed refusal naming why, on both `generate` and `snapshot`. | Orchestrator ruling 3. The flag selects which design files the *legacy* deriver reads; the exact route derives groups from the instance graph, where it has no meaning. Honouring it is impossible and ignoring it would silently ship a package the operator did not ask for. The now-false "baked into the snapshot at capture" message is gone. Flag removal is Phase 4's. |
+| `cli/__init__.py` — `cmd_snapshot` | Captures v6. | Orchestrator ruling 4. |
+| `snapshot/envelope.py` — `_validate_version` | Names the format actually found. | A v5 document carries no `version` key, so the old message reported `None` and left the reader guessing. It now reads "this is a v5 extraction snapshot, but the instance-graph route requires snapshot v6. Recapture with `sysml-codegen snapshot`." |
+
+**Tests, red then green.** `test_public_authority_switch.py` cannot collect at `0a812af` at all —
+it imports `tests.helpers.legacy_route`, which imports `_generate_package_from_graph`, which does
+not exist there. Measured red at HEAD by the switch's own construction: before the production
+change, the module's discriminator tests fail on the legacy answer (`design_params` where the
+exact route ships `library_params`), the v5 refusal test fails because the CLI accepts v5, and the
+`--design-path-filter` test fails because the flag is silently honoured. After: **18 passed**.
+
+**Test dispositions — 116 nodes moved, nothing deleted.** Measured by applying the switch and
+running the full suite before writing any disposition: **69 failed + 47 errors = 116 nodes**, and
+every one is accounted for below. The three groups are the measurement, not a category invented
+afterwards.
+
+*Group C — patch target or signature moved (16 nodes). Mechanical; responsibility unchanged, and
+two of them got stronger.*
+
+| Module | Nodes | Disposition |
+|---|---:|---|
+| `tests/unit/test_cli_generation.py` | 10 | Monkeypatched `pipeline_builder.build_pipeline_context` to return a `SimpleNamespace` context. **The monkeypatch is now gone entirely**: these are writer-half tests, so they call `_generate_package_from_graph` with the graph they were already building. Strictly better — they exercise the real function instead of a fabricated stand-in. |
+| `tests/conformance/test_constraint_profile_route_parity.py` | 5 | Forged-identity fail-before-mutate specimen. Repointed at the legacy route; see ruling 5 below. |
+| `tests/unit/test_elaboration_import_boundaries.py` | 1 | `test_shipped_cli_and_capture_remain_on_the_legacy_black_box_route` **inverted, not deleted**, and renamed `test_the_shipped_cli_is_on_the_exact_route_and_the_legacy_owners_are_unreachable`. Its docstring records the old expectation and why it was right until this slice. |
+
+*Groups A and B — the specimen is what the cutover retires (100 nodes across 16 modules).*
+**[AGENT] (orchestrator ruling 1, 2026-08-11): repoint, with teeth.** Each row names the
+responsibility, why the specimen cannot survive, the Gate 4C owner that must author an exact-route
+specimen before the legacy owner is deleted, and the repointed target. All 16 rows are carried into
+Gate 4C above as a hard gate on 4B.
+
+| Module | Nodes | Behaviour responsibility | Why the specimen dies | Gate 4C owner must author | Repointed to |
+|---|---:|---|---|---|---|
+| `integration/test_costed_component_e2e.py` | 25 | Costed-component pattern end to end: leaf costs, allocation, idiot_index aggregation, zero backlog, numerical ground truth | `solar_battery_model` — 24× `SI_SELF_BINDING`, ledger row 33 | A D-5-form costed-component fixture with the same aggregation shape | `generate_via_legacy_route` |
+| `integration/test_computed_attributes_e2e.py` | 8 of 21 | FORMULA computed attributes reach modules, wiring and YAML | `solar_battery_model`, `catf_mfe_model`, `chain_spike_model` — rows 33, 5, 7 | A computed-attribute fixture on the exact route | same |
+| `integration/test_expression_compilation_e2e.py` | 16 of 17 | Auto-implementation classification, stub fallback, backlog contents, expression ground truth | rows 33, 5, 7 | An expression-compilation fixture on the exact route | same |
+| `integration/test_full_pipeline.py` | 4 of 20 | `run_codegen` phase sequence, design params JSON, exit-point schema types | `chain_spike_model`, row 7 | Phase-sequence coverage on an accepted fixture | same |
+| `integration/test_hierarchy_e2e.py` | 3 of 17 | BF3–BF5 aggregation wrappers, instance-scoped paths, YAML artifacts | `solar_battery_model`, row 33 | A hierarchy fixture on the exact route | same |
+| `conformance/test_snapshot_generation.py` | 12 of 16 | Licence-free offline generation; no provenance leakage into artifacts; live-vs-snapshot byte identity | v5 `--from-snapshot`, plus rows 33, 7, 18, 23, 3 | The same three claims for v6 | `_run_legacy` subprocess |
+| `conformance/test_seal_step9.py` | 9 of 13 | Seal step 9: three contract files, manifest, coverage policy | v5 snapshot of `chain_spike_model`, row 7 | Seal coverage on a v6 package | `generate_via_legacy_route` |
+| `unit/test_warning_reconciliation.py` | 5 | Warning reconciliation categories and alias-collision collapse | v5 snapshot; `chain_spike_model`, `solar_battery_model` | Reconciliation on the exact route | same |
+| `conformance/test_fingerprint_stability.py` | 4 | Fingerprint stability across independent generations and live-vs-snapshot | v5 snapshot | v6 fingerprint stability | `generate_via_legacy_route` + subprocess |
+| `runtime/test_fusion_tea_acceptance.py` | 4 | The migrated hand-arithmetic customer oracle | v5 snapshot **only** | — **discharged in this slice**, see ruling 2 | shipped `run_codegen`, v6 |
+| `conformance/test_gen_registry.py` | 2 of 22 | Registry generation across module kinds | v5 snapshot; rows 5, 7, 33 | Registry coverage on the exact route | `generate_via_legacy_route` |
+| `conformance/test_alias_agg_probe_generation.py` | 2 | Alias-aggregation probe generation | `alias_agg_probe`, `issue22_model` — rows 3, 20 | An alias-aggregation fixture on the exact route | same |
+| `conformance/test_constraint_snapshot_portability.py` | 2 of 3 | Constraint portability live vs replay | `catf_mfe_model`, row 5 | Portability on a v6 pair | same |
+| `conformance/test_whole_tree_portability.py` | 1 of 2 | Whole-tree checkout-root portability | `catf_mfe_model`, row 5 | Portability on the exact route | same |
+| `runtime/test_pipeline_runner.py` | 2 | In-repo runner input override | v5 snapshot of `spec_chain_twolevel`, row 35 | — superseded by the real-TEAx mutation lane (3D) | same |
+| `unit/test_uncovered_params.py` | 1 of 10 | V11 seeded strict-generation abort | v5 snapshot | V11 abort on the exact route | same |
+
+The adapter is `tests/helpers/legacy_route.py`. Its module docstring states what it is and is not:
+a test-only adapter, deliberately not a second product route, that keeps retired specimens running
+against the implementation that still understands them. Where a subject genuinely needs a
+subprocess — licence-free generation, byte identity between two independent processes — it keeps
+one, via `python -m tests.helpers.legacy_route`, rather than being quietly downgraded to an
+in-process call.
+
+*Six further modules changed only because the generation helpers now take a graph:*
+`test_exact_route_generated_package.py`, `test_constraint_generation_live.py`,
+`test_constraint_generation_integration.py`, `test_module_kind_faildloud.py`,
+`test_gen_stencils.py` (a static-analysis pin on the parameter name), `tests/unit/test_stencils.py`,
+plus `tests/execution/{real_teax,test_constraint_execution}.py`. No responsibility moved.
+
+**Ruling 2 — the customer oracle is back on the shipped public route.**
+`tests/fixtures/fusion_tea/instance_graph_snapshot.json` is committed and
+`test_fusion_tea_acceptance.py` now generates from it through `run_codegen --from-snapshot`. The
+fixture README marks it plainly as **a test fixture, not the accepted corpus recapture batch**,
+which stays Phase 5 / owner territory. One expected value moved and the reason is recorded at the
+site: `_GAIN_EP_KEY` is now `hif_plant_pkg__hif_plant__gain` rather than
+`hif_plant_pkg__hif_plant__lcoe_calc__gain_in`, because the exact route mints one key per modelled
+attribute instead of one per consuming formal. The independently hand-computed
+`216.55528392479388` at gain=100 is unchanged, which is a second confirmation that the collapse
+preserved the arithmetic.
+
+**Ruling 5 — fail-before-mutate is re-pinned on the new authority, not just repointed.** Two new
+specimens that reach the guard through public `generate`:
+
+- `test_an_elaboration_refusal_leaves_an_existing_output_tree_untouched` — `chain_spike_model` is
+  refused during construction, and a populated output tree (including a handwritten file) is
+  byte-unchanged afterwards.
+- `test_a_refusal_after_the_context_but_before_the_writer_also_leaves_the_tree` — the refusal is
+  injected at the `_reconcile_params_coverage` boundary, which is *after* construction and *before*
+  `_clear_output_directory`. This one pins the **ordering**: the tree is safe only because no
+  writer runs before those checks.
+
+The forged-identity specimen is retired with a disposition and the reason is a measurement, not an
+argument: it forged an `IdentityFact` on the neutral `ConstraintFacts` that
+`analysis/constraint_lowering.py` consumes, then monkeypatched `build_pipeline_context`. Both
+halves live on modules the construction closure does not import, so the exact route produces no
+such refusal to observe. Recorded in
+`test_the_construction_path_reaches_no_legacy_authority_even_transitively`.
+
+**Ruling 1's two named divergences are now expected-state pins.** Diff-ledger rows 12 and 36 carry
+measured before/after **shipped-package** cells with the old cells retained, and the two tests in
+`test_exact_group_identity.py` no longer say "needs a disposition before Slice 3E" — they say the
+disposition was made and this is what the product ships. Both are flagged to the Phase 5 owner
+packet. `unresolvable_attr_probe` turned up one thing worth naming: on the exact route it now
+reaches generation and the generator's module-class collision guard **refuses the package**,
+because two of the nine formulas legacy dropped alias to one class name. Fixture-internal, no test
+generates from it, corpus row unchanged — recorded in row 36 and in the evidence file rather than
+smoothed over.
+
+**Generated-package comparison — full trees, 14 fixtures, zero unexplained.** Complete table and
+reasoning in `evidence/3e-package-comparison.md`. Headlines:
+
+- `sample_model` is **byte-identical** between routes.
+- Every difference on the other fixtures reduces to five named mechanisms: provenance comments;
+  declaration-site attribution; Slice 3B's `model.sysml` package fallback; the legacy-only
+  `system_design` hierarchy group; and modules/entry points the legacy route dropped. Each maps to
+  a ratified ledger row or a recorded slice mechanism.
+- `quoted_owner_formula` is the one where the *legacy* column is broken: it renders
+  `run_net margin,` — a Python identifier with a space — and the exact route sanitizes it. The
+  3D `sanitize_name` hunk, seen from the other side.
+- **fusion_tea, the customer package.** Module and schema class names are equal between routes
+  (census `PROD-24` holds), no group was renamed (ruling 1's "no customer-model group naming
+  changes" re-verified), and every hand-checked modelled value is unchanged. What changed is the
+  **per-consumer-mint collapse**: legacy published `gain = 80.0` as two keys, `thermal_efficiency`
+  as two, `availability` as two; the exact route publishes one key per modelled attribute and
+  wires every consumer to it. Two exact-only groups (`hif_economics_params`, `ife_lcoe_params`)
+  follow from declaration-site attribution. **This is the largest customer-visible change in the
+  recovery and is flagged to the Phase 5 owner packet** — an owner accepting this candidate should
+  see the table, not a summary of it.
+- `constraint_inline` and `constraint_non_numerical` are refused **identically by both routes**
+  (pre-existing constraint name-safety violation). Measured on both so the equality is recorded
+  rather than assumed.
+
+**Corpus, 37 paths, after the switch.** Exact **15 public graphs / 22 typed errors**, all 22
+`ElaborationError` (readiness `.findings`); legacy 36 graphs / 1 error. **Zero rows moved** versus
+the amended ledger, exactly as ruling 1 predicted, and
+`test_elaboration_corpus_ledger.py::test_dual_run_ledger_outcomes_match_a_live_corpus_run` compares
+the per-fixture strings rather than the totals. Error-class separation is unchanged: the driver
+records `error_type` beside the code list and never collapses either class.
+
+**Real TEAx, after the switch, through the switched public surface.** `tests/execution/real_teax.py`
+no longer drives the generation steps directly — it calls the shipped `run_codegen`, which is what
+Slice 3D recorded as the limit it could not close. `pytest tests/execution -m execution`: **38
+passed**, zero skipped. Live and relocated-v6 both publish 11 channels with LCOE
+`270.1211779380445`, identical to the pre-switch anchor at `0a812af`, with every value still
+asserted against the hand transcription in `tests/execution/fusion_tea_arithmetic.py`. The
+provenance-comment `executable_fingerprint` difference between live and relocated is unchanged and
+remains the ruling-2 residual for the Phase 5 packet.
+
+**Gates.**
+
+- Full licensed codegen suite: **3557 passed / 47 skipped / 38 deselected**, zero failures, zero
+  `no live syside license` lines. Delta versus `0a812af` (3539/47/38) is exactly **+18 passed** —
+  the 18 nodes of `test_public_authority_switch.py`. Skips and deselections unchanged, and no test
+  module lost a node: the 116 that moved were all repointed, none deleted, none silenced, none
+  xfailed.
+- Execution lane: **38 passed**, unchanged in count.
+- Full agentic-mbse suite from the paired rebuild worktree: **1825 passed / 1 skipped /
+  5 deselected**, unchanged. Nothing in that repository changed this slice.
+- 37-path corpus: 37/37 rows reproduce the amended ledger.
+- `ruff check src`: **byte-identical** to the `0a812af` baseline (16 findings) — verified by
+  diffing the two outputs, not by comparing counts. The new test modules and helper lint clean.
+- `mypy src`: **71 errors in 17 files, measured after the final tree, identical to the baseline.**
+  Re-run against the committed state rather than carried over — the 3D audit's F1 is why that
+  sentence is worth writing.
+- `git diff --check` clean. Changed paths equal the declared set. agentic-mbse: `N/A if unchanged`
+  → unchanged, clean at `cc6c7a7411f6338a4811a7cc58ca002c29ef177b`.
+
+**Issues and deviations.**
+
+- **The measurement that shaped the slice.** Applying the switch and running the suite before
+  writing anything produced 116 broken nodes, and the plan's own rules left no in-slice route out:
+  migrating the collapsing fixtures would have moved ratified corpus rows (a rule-10 stop),
+  deleting the tests is a rule-10 stop, and leaving them red breaks rule 3. That is a genuine
+  premise conflict, so it was surfaced rather than resolved silently in either direction. The five
+  orchestrator rulings above are the resolution, and they are recorded here in enough detail to
+  audit against the measurement.
+- **`--design-path-filter` now fails where it used to succeed.** A shipped flag became a hard
+  error. That is a deliberate product change under ruling 3, on the reasoning that a silently
+  ignored filter ships a package the operator did not ask for.
+- **`sysml-codegen snapshot` now emits a different format.** Under ruling 4. `capture_snapshot`
+  (v5) is unreachable from public surfaces but untouched, and
+  `scripts/capture_extraction_snapshots.py` is deliberately not modified — the committed v5
+  fixture snapshots stay regenerable for Phase 4's snapshot decisions.
+- **One new committed fixture artifact**, `tests/fixtures/fusion_tea/instance_graph_snapshot.json`,
+  marked in the fixture README as a test fixture and explicitly not the accepted corpus recapture.
+- No deletions in either repository. No Item 6 test was removed, silenced, deselected, or xfailed.
 
 ### Phase 4 Completion
 

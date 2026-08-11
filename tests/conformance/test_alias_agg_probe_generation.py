@@ -33,11 +33,12 @@ import ast
 import pytest
 
 from tests.conftest import snapshot_fixture
+from tests.helpers.legacy_route import generate_via_legacy_route
 
 
 def _generate(tmp_path, fixture: str, package_name: str):
     """Run full snapshot-driven generation; assert it completes (no V11 abort)."""
-    from sysml_codegen.cli import GenerationConfig, run_codegen
+    from sysml_codegen.cli import GenerationConfig
 
     out = tmp_path / "out"
     config = GenerationConfig(
@@ -46,7 +47,7 @@ def _generate(tmp_path, fixture: str, package_name: str):
         package_name=package_name,
         overwrite=True,
     )
-    assert run_codegen(config) is True, f"{fixture} must generate cleanly (no V11 abort)"
+    assert generate_via_legacy_route(config) is True, f"{fixture} must generate cleanly (no V11 abort)"
     return out
 
 

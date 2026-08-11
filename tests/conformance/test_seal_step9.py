@@ -14,8 +14,9 @@ import json
 import runpy
 from pathlib import Path
 
-from sysml_codegen.cli import GenerationConfig, cmd_seal, run_codegen
+from sysml_codegen.cli import GenerationConfig, cmd_seal
 from sysml_codegen.contracts.verify import verify_package
+from tests.helpers.legacy_route import generate_via_legacy_route
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 CHAIN_SNAPSHOT = REPO_ROOT / "tests/fixtures/chain_spike_model/extraction_snapshot.json"
@@ -37,7 +38,7 @@ def _seal_args(package_dir: Path, package_name: str) -> argparse.Namespace:
 
 def test_generate_emits_three_contract_files(tmp_path):
     output = tmp_path / "out"
-    assert run_codegen(_snapshot_config(output))
+    assert generate_via_legacy_route(_snapshot_config(output))
 
     contracts = output / "contracts"
     assert (contracts / "model_contract.json").exists()
@@ -49,7 +50,7 @@ def test_generate_emits_three_contract_files(tmp_path):
 def test_emitted_verifier_is_verbatim(tmp_path):
     """INV-8 drift guard: the emitted copy is byte-identical to the canonical source."""
     output = tmp_path / "out"
-    assert run_codegen(_snapshot_config(output))
+    assert generate_via_legacy_route(_snapshot_config(output))
 
     emitted = (output / "contracts" / "verify.py").read_bytes()
     canonical = SRC_VERIFY.read_bytes()
@@ -71,7 +72,7 @@ def test_trusted_verifier_hash_matches_canonical(tmp_path):
 
 def test_emitted_verifier_rejects_internal_directory_symlink(tmp_path):
     output = tmp_path / "out"
-    assert run_codegen(_snapshot_config(output))
+    assert generate_via_legacy_route(_snapshot_config(output))
     (output / "alias_modules").symlink_to(output / "modules", target_is_directory=True)
 
     emitted_namespace = runpy.run_path(str(output / "contracts" / "verify.py"))
@@ -86,7 +87,7 @@ def test_emitted_verifier_rejects_internal_directory_symlink(tmp_path):
 
 def test_emitted_verifier_rejects_dangling_file_symlink(tmp_path):
     output = tmp_path / "out"
-    assert run_codegen(_snapshot_config(output))
+    assert generate_via_legacy_route(_snapshot_config(output))
     (output / "dangling.py").symlink_to(tmp_path / "missing.py")
 
     emitted_namespace = runpy.run_path(str(output / "contracts" / "verify.py"))
@@ -106,7 +107,7 @@ def test_seal_ordering_excludes_itself_from_coverage(tmp_path):
     import json
 
     output = tmp_path / "out"
-    assert run_codegen(_snapshot_config(output))
+    assert generate_via_legacy_route(_snapshot_config(output))
 
     seal = json.loads((output / "contracts" / "package_contract.json").read_text())
     assert "contracts/package_contract.json" not in seal["artifact_hashes"]
@@ -117,7 +118,7 @@ def test_seal_ordering_excludes_itself_from_coverage(tmp_path):
 def test_reseal_after_stencil_edit(tmp_path):
     """D1/D2 re-seal workflow: seal -> edit -> invalid -> `seal` -> valid; MC unchanged."""
     output = tmp_path / "out"
-    assert run_codegen(_snapshot_config(output))
+    assert generate_via_legacy_route(_snapshot_config(output))
 
     mc_before = (output / "contracts" / "model_contract.json").read_bytes()
 
@@ -181,7 +182,7 @@ def test_step9_rejects_linked_contracts_without_writing_contract(tmp_path):
     )()
 
     try:
-        _seal_package(context, config)
+        _seal_package(context.computation_graph, config)
     except PackageSealError as error:
         assert error.path == "contracts"
     else:
@@ -201,7 +202,7 @@ def test_reseal_rejects_foreign_file_as_codegen_provenance(tmp_path):
     (``cli/__init__.py:762``) and returned 0.
     """
     output = tmp_path / "out"
-    assert run_codegen(_snapshot_config(output))
+    assert generate_via_legacy_route(_snapshot_config(output))
 
     foreign = output / "modules" / "evil.py"
     foreign.write_text("# injected\nPWNED = True\n")
@@ -218,7 +219,7 @@ def test_reseal_rejects_edit_to_codegen_produced_file(tmp_path):
     rather than recording the edited bytes. Only ``handwritten/**`` files may change.
     """
     output = tmp_path / "out"
-    assert run_codegen(_snapshot_config(output))
+    assert generate_via_legacy_route(_snapshot_config(output))
 
     modules = sorted((output / "modules").glob("*.py"))
     assert modules, "expected at least one generated module"
@@ -232,7 +233,7 @@ def test_generate_emits_generation_manifest(tmp_path):
     ``handwritten/**`` minus runtime globs); it carries no ``runtime_contract_version`` (the
     seal owns that)."""
     output = tmp_path / "out"
-    assert run_codegen(_snapshot_config(output))
+    assert generate_via_legacy_route(_snapshot_config(output))
 
     manifest_path = output / "contracts" / "generation_manifest.json"
     assert manifest_path.exists()

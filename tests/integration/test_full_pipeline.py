@@ -8,6 +8,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
+from tests.helpers.legacy_route import generate_via_legacy_route
 
 
 def test_full_codegen_pipeline(tmp_path: Path, sample_model_path: Path):
@@ -18,7 +19,7 @@ def test_full_codegen_pipeline(tmp_path: Path, sample_model_path: Path):
     - multi_output.sysml
     - dependencies.sysml
     """
-    from sysml_codegen.cli import run_codegen, GenerationConfig
+    from sysml_codegen.cli import GenerationConfig
 
     output_path = tmp_path / "generated"
 
@@ -32,7 +33,7 @@ def test_full_codegen_pipeline(tmp_path: Path, sample_model_path: Path):
     )
 
     # Run the pipeline (currently a stub, but tests the structure)
-    success = run_codegen(config)
+    success = generate_via_legacy_route(config)
     assert success, "Code generation should succeed"
 
 
@@ -139,7 +140,7 @@ def test_imports_work_across_layers():
     from sysml_codegen.generation.modules import generate_teax_module
 
     # CLI
-    from sysml_codegen.cli import main, run_codegen, GenerationConfig
+    from sysml_codegen.cli import main, GenerationConfig
 
     # All imports successful
     assert True
@@ -227,7 +228,7 @@ class TestRunCodegenPhases:
 
     def test_creates_output_directory_structure(self, tmp_path: Path, sample_model_path: Path):
         """Verify run_codegen creates expected directory structure (Phase 1)."""
-        from sysml_codegen.cli import run_codegen, GenerationConfig
+        from sysml_codegen.cli import GenerationConfig
 
         output = tmp_path / "generated"
         config = GenerationConfig(
@@ -237,7 +238,7 @@ class TestRunCodegenPhases:
         )
 
         # Should at least create directories even if generation partially fails
-        run_codegen(config)
+        generate_via_legacy_route(config)
 
         assert output.exists(), "Output directory should exist"
         assert (output / "schemas").exists(), "schemas/ directory should exist"
@@ -255,7 +256,7 @@ class TestRunCodegenPhases:
 
     def test_generates_schemas(self, tmp_path: Path, sample_model_path: Path):
         """Verify schema files are generated (Phase 2)."""
-        from sysml_codegen.cli import run_codegen, GenerationConfig
+        from sysml_codegen.cli import GenerationConfig
 
         output = tmp_path / "generated"
         config = GenerationConfig(
@@ -264,7 +265,7 @@ class TestRunCodegenPhases:
             package_name="test_pkg",
         )
 
-        run_codegen(config)
+        generate_via_legacy_route(config)
 
         # FR-10/AC-5: No static FusionParams schema should be generated
         ref_schema = output / "test_pkg_schemas.py"
@@ -283,7 +284,7 @@ class TestRunCodegenPhases:
         The sample_model fixture has CalcDefs but no usages, producing an empty
         graph — correct graph-only behavior per REQ-PIPE-07.
         """
-        from sysml_codegen.cli import run_codegen, GenerationConfig
+        from sysml_codegen.cli import GenerationConfig
 
         fixtures_dir = Path(__file__).parent.parent / "fixtures"
         output = tmp_path / "generated"
@@ -293,7 +294,7 @@ class TestRunCodegenPhases:
             package_name="test_pkg",
         )
 
-        run_codegen(config)
+        generate_via_legacy_route(config)
 
         modules_dir = output / "modules"
         handwritten_dir = output / "handwritten"
@@ -307,7 +308,7 @@ class TestRunCodegenPhases:
 
     def test_generates_pipeline_and_registry(self, tmp_path: Path, sample_model_path: Path):
         """Verify pipeline YAML and registry are generated (Phase 4)."""
-        from sysml_codegen.cli import run_codegen, GenerationConfig
+        from sysml_codegen.cli import GenerationConfig
 
         output = tmp_path / "generated"
         config = GenerationConfig(
@@ -317,7 +318,7 @@ class TestRunCodegenPhases:
             pipeline_name="test_pipeline",
         )
 
-        run_codegen(config)
+        generate_via_legacy_route(config)
 
         # Check pipeline
         pipelines_dir = output / "pipelines"
@@ -337,7 +338,7 @@ class TestRunCodegenPhases:
 
     def test_generates_entry_points_and_extras(self, tmp_path: Path, sample_model_path: Path):
         """Verify entry points, JSON templates, and extras are generated (Phase 5)."""
-        from sysml_codegen.cli import run_codegen, GenerationConfig
+        from sysml_codegen.cli import GenerationConfig
 
         output = tmp_path / "generated"
         config = GenerationConfig(
@@ -346,7 +347,7 @@ class TestRunCodegenPhases:
             package_name="test_pkg",
         )
 
-        run_codegen(config)
+        generate_via_legacy_route(config)
 
         # Check backlog
         backlog = output / "IMPLEMENTATION_BACKLOG.md"
@@ -368,7 +369,7 @@ class TestCodegenRuntimeGapFixes:
     def test_design_params_json_populated(self, tmp_path: Path, chain_spike_model_path: Path):
         """AC-1: design_params.json should contain correct default values."""
         import json
-        from sysml_codegen.cli import run_codegen, GenerationConfig
+        from sysml_codegen.cli import GenerationConfig
 
         output = tmp_path / "generated"
         config = GenerationConfig(
@@ -377,7 +378,7 @@ class TestCodegenRuntimeGapFixes:
             package_name="chain_spike",
         )
 
-        success = run_codegen(config)
+        success = generate_via_legacy_route(config)
         assert success, "Codegen should succeed on chain spike model"
 
         # Find JSON files in inputs/
@@ -413,7 +414,7 @@ class TestCodegenRuntimeGapFixes:
         self, tmp_path: Path, chain_spike_model_path: Path
     ):
         """AC-3: Generated __init__.py should include Float in CUSTOM_SCHEMA_TYPES."""
-        from sysml_codegen.cli import run_codegen, GenerationConfig
+        from sysml_codegen.cli import GenerationConfig
 
         output = tmp_path / "generated"
         config = GenerationConfig(
@@ -422,7 +423,7 @@ class TestCodegenRuntimeGapFixes:
             package_name="chain_spike",
         )
 
-        success = run_codegen(config)
+        success = generate_via_legacy_route(config)
         assert success, "Codegen should succeed on chain spike model"
 
         init_content = (output / "__init__.py").read_text()
@@ -438,7 +439,7 @@ class TestCodegenRuntimeGapFixes:
 
     def test_no_fusion_params_schema(self, tmp_path: Path, chain_spike_model_path: Path):
         """AC-5/AC-6: No FusionParams schema should exist in generated output."""
-        from sysml_codegen.cli import run_codegen, GenerationConfig
+        from sysml_codegen.cli import GenerationConfig
 
         output = tmp_path / "generated"
         config = GenerationConfig(
@@ -447,7 +448,7 @@ class TestCodegenRuntimeGapFixes:
             package_name="chain_spike",
         )
 
-        success = run_codegen(config)
+        success = generate_via_legacy_route(config)
         assert success, "Codegen should succeed"
 
         # No {package}_schemas.py file should exist

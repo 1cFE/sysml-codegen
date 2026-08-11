@@ -2,12 +2,11 @@
 
 Two jobs, both mechanical:
 
-- ``generate_exact_package`` runs the shipped generation steps over an
-  ``ExactPipelineContext`` and seals the result. It is the same step sequence
-  ``cmd_generate`` runs (``cli/__init__.py``), in the same order, ending at
-  ``_seal_package`` — the exact route has no public ``generate`` entry point of
-  its own until the Slice 3E authority switch, and adding a second public flag
-  before then is the dual authority the recovery plan bans.
+- ``generate_package_from_models`` and ``generate_package_from_snapshot`` call
+  the shipped public ``run_codegen`` — since the Slice 3E authority switch that
+  *is* the exact route, so this lane's evidence now comes from the surface a
+  user has. Slice 3D had to drive the generation steps directly because the
+  exact route had no public entry point yet; it does now.
 - ``load_sealed_package`` hands the sealed directory to TEAx's own
   ``ProvisionalPackageLoader``, which authenticates the package-local verifier
   against its trusted hash, runs the seal check, and imports the package. This
@@ -23,48 +22,39 @@ from __future__ import annotations
 from pathlib import Path
 from types import ModuleType
 
-from sysml_codegen.cli import (
-    GenerationConfig,
-    _generate_backlog,
-    _generate_entry_points,
-    _generate_modules,
-    _generate_pipeline,
-    _generate_primitives,
-    _generate_registry,
-    _generate_schemas,
-    _generate_stencils,
-    _generate_tests,
-    _get_template_env,
-    _seal_package,
-    _setup_output_directories,
-)
-from sysml_codegen.generation.constraint_plan import build_constraint_generation_plan
+from sysml_codegen.cli import GenerationConfig, run_codegen
 
 FUSION_TEA = Path(__file__).resolve().parents[1] / "fixtures" / "fusion_tea"
 LCOE_CHANNEL = "hif_plant_pkg__hif_plant__lcoe_calc__lcoe"
 
 
-def generate_exact_package(context, output_path: Path, package_name: str) -> Path:
-    """Generate and seal a package from a receipt-bound exact context."""
-    config = GenerationConfig(
-        output_path=output_path, package_name=package_name, overwrite=True
+def generate_package_from_models(models: Path, output_path: Path, package_name: str) -> Path:
+    """Generate and seal a package live, through the shipped public route."""
+    return _generate(
+        GenerationConfig(
+            models_path=models,
+            output_path=output_path,
+            package_name=package_name,
+            overwrite=True,
+        )
     )
-    template_env = _get_template_env()
-    plan = build_constraint_generation_plan(
-        context.computation_graph, template_env, package_name
+
+
+def generate_package_from_snapshot(snapshot: Path, output_path: Path, package_name: str) -> Path:
+    """Generate and seal a package from a v6 snapshot, through the same public route."""
+    return _generate(
+        GenerationConfig(
+            from_snapshot=snapshot,
+            output_path=output_path,
+            package_name=package_name,
+            overwrite=True,
+        )
     )
-    _setup_output_directories(config)
-    _generate_primitives(config)
-    _generate_schemas(context, config, template_env)
-    _generate_modules(context, config, template_env, plan)
-    _generate_stencils(context, config, template_env)
-    _generate_pipeline(context, config, template_env)
-    _generate_registry(context, config, template_env)
-    _generate_entry_points(context, config, template_env)
-    _generate_backlog(context, config)
-    _generate_tests(context, config, template_env)
-    _seal_package(context, config)
-    return output_path
+
+
+def _generate(config: GenerationConfig) -> Path:
+    assert run_codegen(config) is True, f"run_codegen refused {config}"
+    return config.output_path
 
 
 def load_sealed_package(

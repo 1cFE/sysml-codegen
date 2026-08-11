@@ -141,9 +141,12 @@ def test_the_known_exact_versus_legacy_divergence_on_d38_caret() -> None:
     The group name follows from the first; the second is why no naming rule can
     reconcile the two routes here.
 
-    Needs a disposition before the Slice 3E authority switch, where it would
-    change both a shipped input filename and what that file contains. Recorded in
-    ``evidence/3b-old-new-comparison.md``.
+    **Disposition made at Slice 3E: this is the expected state, not a defect.**
+    The orchestrator classified it expected-fix at the authority switch, on the
+    epic's ratified premise that string-era attribution is the defect home and
+    declaration-site semantics are the right answer. The exact column below is
+    now what the product ships. Diff-ledger row 12 carries the measured
+    before/after package cells; both are flagged to the Phase 5 owner packet.
     """
     path = FIXTURES_DIR / "d38_caret"
     exact = build_elaborated_pipeline([path])
@@ -177,6 +180,16 @@ def test_the_known_exact_versus_legacy_divergence_on_unresolvable_attr_probe() -
     still ship different files with different contents. Like ``d38_caret``, it
     predates Slice 3B — the fixture has no ``model.sysml``, so the changed
     fallback never runs on it — and it needs a disposition before Slice 3E.
+
+    **Disposition made at Slice 3E: this is the expected state, not a defect.**
+    Classified expected-fix at the authority switch — the exact route's
+    three-concrete-instances scoping is already pinned as correct by
+    ``test_elaboration_phase5_remediation.py``. Measured at the switch, the
+    exact route now reaches generation and the generator's module-class
+    collision guard refuses the package, because two of the nine newly resolved
+    formulas alias to one class name. Diff-ledger row 36 carries both cells; the
+    fixture is a graph-level probe no test generates a package from, and both
+    halves are flagged to the Phase 5 owner packet.
     """
     path = FIXTURES_DIR / "unresolvable_attr_probe"
     exact = build_elaborated_pipeline([path])

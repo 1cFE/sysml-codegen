@@ -17,9 +17,10 @@ import re
 import shutil
 from pathlib import Path
 
-from sysml_codegen.cli import GenerationConfig, run_codegen
+from sysml_codegen.cli import GenerationConfig
 from sysml_codegen.snapshot import build_full_graph_from_snapshot, capture_snapshot
 from tests.conftest import FIXTURES_DIR, requires_license
+from tests.helpers.legacy_route import generate_via_legacy_route
 
 # An absolute filesystem path ending in ``.sysml`` — i.e. a checkout-absolute source
 # leak. The leading ``/`` must not be preceded by a word char or dash, so the portable
@@ -29,7 +30,7 @@ _ABSOLUTE_SYSML = re.compile(rb"(?<![\w-])/(?:[\w.-]+/)+[\w.-]+\.sysml")
 
 
 def _generate_tree(snapshot: Path, output: Path, package: str) -> None:
-    assert run_codegen(
+    assert generate_via_legacy_route(
         GenerationConfig(
             output_path=output,
             from_snapshot=snapshot,

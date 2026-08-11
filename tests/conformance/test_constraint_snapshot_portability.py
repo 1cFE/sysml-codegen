@@ -24,12 +24,13 @@ from sysml_codegen.analysis.constraint_lowering import (
     associate_usage_decisions,
     is_excluded_usage,
 )
-from sysml_codegen.cli import GenerationConfig, run_codegen
+from sysml_codegen.cli import GenerationConfig
 from sysml_codegen.orchestration.pipeline_builder import build_pipeline_context
 from sysml_codegen.orchestration.snapshot_context import build_pipeline_context_from_snapshot
 from sysml_codegen.snapshot.capture import capture_snapshot
 from sysml_codegen.snapshot.serializer import snapshot_to_json
 from tests.conftest import FIXTURES_DIR, requires_license
+from tests.helpers.legacy_route import generate_via_legacy_route
 
 LOWERING_LOGGER = "sysml_codegen.analysis.constraint_lowering"
 PACKAGE_NAME = "snapshot_portability"
@@ -216,7 +217,7 @@ def _collect_live_manifest(
     with caplog.at_level(logging.WARNING, logger=LOWERING_LOGGER):
         context = build_pipeline_context([models_root], lower_constraints_enabled=True)
     warning_values = _warnings(caplog)
-    assert run_codegen(
+    assert generate_via_legacy_route(
         GenerationConfig(
             output_path=output,
             models_path=models_root,
@@ -234,7 +235,7 @@ def _collect_replay_manifest(snapshot: Path, output: Path, caplog) -> dict[str, 
     with caplog.at_level(logging.WARNING, logger=LOWERING_LOGGER):
         context = build_pipeline_context_from_snapshot(snapshot)
     warning_values = _warnings(caplog)
-    assert run_codegen(
+    assert generate_via_legacy_route(
         GenerationConfig(
             output_path=output,
             from_snapshot=snapshot,
@@ -354,7 +355,8 @@ def test_manifest_collectors_use_distinct_live_and_replay_routes(tmp_path, monke
         fake_replay_builder,
     )
     monkeypatch.setattr(
-        "tests.conformance.test_constraint_snapshot_portability.run_codegen", fake_codegen
+        "tests.conformance.test_constraint_snapshot_portability.generate_via_legacy_route",
+        fake_codegen,
     )
     monkeypatch.setattr(
         "tests.conformance.test_constraint_snapshot_portability._manifest_from_context_and_output",

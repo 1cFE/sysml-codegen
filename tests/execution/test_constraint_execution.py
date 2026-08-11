@@ -61,17 +61,17 @@ def _generate_full_package(ctx, output_path: Path, package_name: str) -> None:
     _generate_primitives(config)
     template_env = _get_template_env()
     fake_ctx = _Ctx(ctx)
-    _generate_schemas(fake_ctx, config, template_env)
+    _generate_schemas(fake_ctx.computation_graph, config, template_env)
     from sysml_codegen.generation.constraint_plan import build_constraint_generation_plan
 
     plan = build_constraint_generation_plan(fake_ctx.computation_graph, template_env, config.package_name)
-    _generate_modules(fake_ctx, config, template_env, plan)
-    _generate_stencils(fake_ctx, config, template_env)
-    _generate_pipeline(fake_ctx, config, template_env)
-    _generate_registry(fake_ctx, config, template_env)
-    _generate_entry_points(fake_ctx, config, template_env)
-    _generate_backlog(fake_ctx, config)
-    _generate_tests(fake_ctx, config, template_env)
+    _generate_modules(fake_ctx.computation_graph, config, template_env, plan)
+    _generate_stencils(fake_ctx.computation_graph, config, template_env)
+    _generate_pipeline(fake_ctx.computation_graph, config, template_env)
+    _generate_registry(fake_ctx.computation_graph, config, template_env)
+    _generate_entry_points(fake_ctx.computation_graph, config, template_env)
+    _generate_backlog(fake_ctx.computation_graph, config)
+    _generate_tests(fake_ctx.computation_graph, config, template_env)
 
 
 def _override_budget(pkg_dir: Path, budget: float) -> None:

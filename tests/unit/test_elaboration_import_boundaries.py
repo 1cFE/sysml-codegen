@@ -279,17 +279,31 @@ def test_display_rendering_is_an_explicit_metadata_only_boundary() -> None:
     assert "NodeId" not in source
 
 
-def test_shipped_cli_and_capture_remain_on_the_legacy_black_box_route() -> None:
+def test_the_shipped_cli_is_on_the_exact_route_and_the_legacy_owners_are_unreachable() -> None:
+    """Slice 3E switched this pin, and the old expectation is recorded here.
+
+    Until the authority switch this test read
+    ``test_shipped_cli_and_capture_remain_on_the_legacy_black_box_route`` and
+    required the CLI to name ``build_pipeline_context`` and
+    ``build_pipeline_context_from_snapshot``. That was the correct expectation
+    while the legacy builder was the shipped authority; it is the opposite of
+    the expectation now, so the assertions are inverted rather than deleted.
+
+    The v5 ``capture_snapshot`` is deliberately still on the legacy builder: it
+    is no longer reachable from any public surface (``cmd_snapshot`` captures
+    v6), and retiring it is Phase 4 work against the deletion ledger.
+    """
     cli_source = (ROOT / "src/sysml_codegen/cli/__init__.py").read_text()
     capture_source = (ROOT / "src/sysml_codegen/snapshot/capture.py").read_text()
-    public_orchestration = (ROOT / "src/sysml_codegen/orchestration/__init__.py").read_text()
 
-    assert "build_pipeline_context" in cli_source
-    assert "build_pipeline_context_from_snapshot" in cli_source
-    assert "build_elaborated_pipeline" not in cli_source
+    assert "build_exact_pipeline_context" in cli_source
+    assert "build_exact_pipeline_context_from_snapshot" in cli_source
+    assert "build_pipeline_context" not in cli_source
+    assert "build_pipeline_context_from_snapshot" not in cli_source
+
+    # v5 capture keeps its legacy owner, and the v6 capture the CLI calls does not.
     assert "build_pipeline_context" in capture_source
-    assert "build_elaborated_pipeline" not in capture_source
-    assert "build_elaborated_pipeline" not in public_orchestration
+    assert "capture_instance_graph_snapshot" in capture_source
 
 
 def test_internal_exact_route_cannot_mix_in_the_legacy_builder_or_snapshot_rebuild() -> None:

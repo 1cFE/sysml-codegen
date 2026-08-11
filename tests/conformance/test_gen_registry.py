@@ -40,6 +40,7 @@ from sysml_codegen.snapshot import (
     build_full_graph_from_snapshot,
 )
 from tests.conftest import snapshot_fixture
+from tests.helpers.legacy_route import generate_via_legacy_route
 
 
 # ---------------------------------------------------------------------------
@@ -291,11 +292,11 @@ class TestImportPathsMatchFilesystem:
         committed extraction snapshot (the from-snapshot generation harness, cf.
         tests/integration/test_full_pipeline.py generation tests).
         """
-        from sysml_codegen.cli import GenerationConfig, run_codegen
+        from sysml_codegen.cli import GenerationConfig
 
         package_name = MODEL_IDS[model_name]
         output = tmp_path / "out"
-        generated = run_codegen(GenerationConfig(
+        generated = generate_via_legacy_route(GenerationConfig(
             output_path=output,
             from_snapshot=snapshot_fixture(model_name),
             package_name=package_name,

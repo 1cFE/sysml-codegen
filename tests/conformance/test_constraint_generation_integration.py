@@ -152,17 +152,17 @@ def test_full_constraint_surface_generates_and_parses(tmp_path):
     template_env = _get_template_env()
     ctx = _Ctx(_graph())
 
-    _generate_schemas(ctx, config, template_env)
+    _generate_schemas(ctx.computation_graph, config, template_env)
     from sysml_codegen.generation.constraint_plan import build_constraint_generation_plan
 
     plan = build_constraint_generation_plan(ctx.computation_graph, template_env, config.package_name)
-    _generate_modules(ctx, config, template_env, plan)
-    _generate_stencils(ctx, config, template_env)
-    _generate_pipeline(ctx, config, template_env)
-    _generate_registry(ctx, config, template_env)
-    _generate_entry_points(ctx, config, template_env)
-    _generate_backlog(ctx, config)
-    _generate_tests(ctx, config, template_env)
+    _generate_modules(ctx.computation_graph, config, template_env, plan)
+    _generate_stencils(ctx.computation_graph, config, template_env)
+    _generate_pipeline(ctx.computation_graph, config, template_env)
+    _generate_registry(ctx.computation_graph, config, template_env)
+    _generate_entry_points(ctx.computation_graph, config, template_env)
+    _generate_backlog(ctx.computation_graph, config)
+    _generate_tests(ctx.computation_graph, config, template_env)
 
     # Constraint evidence schemas (D4).
     constraint_types = tmp_path / "schemas" / "constraint_types.py"

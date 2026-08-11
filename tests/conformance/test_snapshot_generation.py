@@ -22,6 +22,7 @@ from pathlib import Path
 import pytest
 
 from tests.conftest import requires_license, snapshot_fixture
+from tests.helpers.legacy_route import generate_via_legacy_route
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 CLI = str(Path(sys.executable).parent / "sysml-codegen")
@@ -44,6 +45,7 @@ def _tree_diff(a: Path, b: Path) -> list[str]:
 
 
 def _run_cli(*args: str, scrub_license: bool = False) -> subprocess.CompletedProcess:
+    """Run the shipped CLI. Only the flag-surface tests below still use it."""
     env = dict(os.environ)
     if scrub_license:
         for var in _LICENSE_VARS:
@@ -53,12 +55,32 @@ def _run_cli(*args: str, scrub_license: bool = False) -> subprocess.CompletedPro
     )
 
 
+def _run_legacy(*args: str, scrub_license: bool = False) -> subprocess.CompletedProcess:
+    """Run the LEGACY generate route in a subprocess.
+
+    Slice 3E: the shipped ``generate --from-snapshot`` is v6-only, and this
+    module's specimens are v5 snapshots plus fixtures the exact route refuses.
+    Their subjects — licence-free offline generation, no provenance leakage into
+    artifacts, and byte identity between two independent processes — need a real
+    subprocess, so they keep one, pointed at the retired implementation. See the
+    Slice 3E test dispositions for each row's Gate 4C owner.
+    """
+    env = dict(os.environ)
+    if scrub_license:
+        for var in _LICENSE_VARS:
+            env.pop(var, None)
+    return subprocess.run(
+        [sys.executable, "-m", "tests.helpers.legacy_route", *args],
+        cwd=REPO_ROOT, capture_output=True, text=True, env=env,
+    )
+
+
 # ===========================================================================
 # REQ-SNAP-13 (INV-4/B1): snapshot context has null extractor/backtracker and generates.
 # ===========================================================================
 @pytest.mark.req("REQ-SNAP-13")
 def test_snapshot_context_has_null_extractor_and_generates(tmp_path):
-    from sysml_codegen.cli import GenerationConfig, run_codegen
+    from sysml_codegen.cli import GenerationConfig
     from sysml_codegen.orchestration.snapshot_context import (
         build_pipeline_context_from_snapshot,
     )
@@ -74,7 +96,7 @@ def test_snapshot_context_has_null_extractor_and_generates(tmp_path):
         package_name="solar_battery",
         overwrite=True,
     )
-    assert run_codegen(config) is True
+    assert generate_via_legacy_route(config) is True
 
 
 # ===========================================================================
@@ -82,7 +104,7 @@ def test_snapshot_context_has_null_extractor_and_generates(tmp_path):
 # ===========================================================================
 @pytest.mark.req("REQ-SNAP-14")
 def test_generate_from_snapshot_no_license(tmp_path):
-    result = _run_cli(
+    result = _run_legacy(
         "generate", "--from-snapshot", CHAIN_SNAPSHOT,
         "--output", str(tmp_path / "out"), "--package-name", "chain_spike",
         "--overwrite",
@@ -98,7 +120,7 @@ def test_generate_from_snapshot_no_license(tmp_path):
 @pytest.mark.req("REQ-SNAP-15")
 def test_provenance_never_in_output(tmp_path):
     out = tmp_path / "out"
-    result = _run_cli(
+    result = _run_legacy(
         "generate", "--from-snapshot", CHAIN_SNAPSHOT,
         "--output", str(out), "--package-name", "chain_spike", "--overwrite",
     )
@@ -133,12 +155,21 @@ def test_generate_both_inputs_is_error(tmp_path):
 
 @pytest.mark.req("REQ-SNAP-16")
 def test_from_snapshot_rejects_design_path_filter(tmp_path):
+    """The responsibility survives the switch; the reason it gives changed.
+
+    Before Slice 3E the combination was refused because the filter was baked
+    into the v5 snapshot at capture. Now the flag is refused for both inputs,
+    because the exact route derives parameter groups from the instance graph
+    and cannot honour a design-path substring at all. Still a hard error, still
+    never a silent no-op, which is what REQ-SNAP-16 is for.
+    """
     result = _run_cli(
         "generate", "--from-snapshot", CHAIN_SNAPSHOT,
         "--output", str(tmp_path / "out"), "--design-path-filter", "designs/",
     )
-    assert result.returncode == 1  # cmd_generate hard error (V6)
-    assert "design-path-filter cannot be combined with --from-snapshot" in result.stderr
+    assert result.returncode == 1
+    assert "--design-path-filter is not supported" in result.stderr
+    assert not (tmp_path / "out").exists()
 
 
 # ===========================================================================
@@ -147,7 +178,7 @@ def test_from_snapshot_rejects_design_path_filter(tmp_path):
 @pytest.mark.req("REQ-SNAP-17")
 def test_chain_spike_autoimpl_from_snapshot(tmp_path):
     out = tmp_path / "out"
-    result = _run_cli(
+    result = _run_legacy(
         "generate", "--from-snapshot", CHAIN_SNAPSHOT,
         "--output", str(out), "--package-name", "chain_spike", "--overwrite",
     )
@@ -201,13 +232,13 @@ def test_live_vs_snapshot_byte_identical(fixture, tmp_path):
     abs_models = REPO_ROOT / "tests/fixtures" / fixture
     live_out, snap_out = tmp_path / "live", tmp_path / "snap"
 
-    live = _run_cli(
+    live = _run_legacy(
         "generate", "--models", str(abs_models),
         "--output", str(live_out), "--package-name", fixture, "--overwrite",
     )
     assert live.returncode == 0, live.stderr
 
-    snap = _run_cli(
+    snap = _run_legacy(
         "generate", "--from-snapshot", str(abs_models / "extraction_snapshot.json"),
         "--output", str(snap_out), "--package-name", fixture, "--overwrite",
     )
@@ -237,19 +268,19 @@ def test_live_vs_snapshot_byte_identical_symlinked(tmp_path):
     link.symlink_to(real)
 
     # Capture a snapshot through the symlink (writes into real via the link).
-    cap = _run_cli(
+    cap = _run_legacy(
         "snapshot", "--models", str(link),
         "--output", str(link / "extraction_snapshot.json"),
     )
     assert cap.returncode == 0, cap.stderr
 
     live_out, snap_out = tmp_path / "live", tmp_path / "snap"
-    live = _run_cli(
+    live = _run_legacy(
         "generate", "--models", str(link),
         "--output", str(live_out), "--package-name", "solar_battery", "--overwrite",
     )
     assert live.returncode == 0, live.stderr
-    snap = _run_cli(
+    snap = _run_legacy(
         "generate", "--from-snapshot", str(link / "extraction_snapshot.json"),
         "--output", str(snap_out), "--package-name", "solar_battery", "--overwrite",
     )

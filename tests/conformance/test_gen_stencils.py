@@ -807,7 +807,7 @@ class TestAggregationNoSmartRegen:
 
         source = inspect.getsource(_generate_stencils)
         # The unified function iterates over computation_graph.modules
-        assert "computation_graph.modules" in source
+        assert "graph.modules" in source
         # It uses generate_implementation (the graph-only function)
         assert "generate_implementation" in source
 
