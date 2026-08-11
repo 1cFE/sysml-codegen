@@ -1,0 +1,456 @@
+{
+ "captured": [
+  "agg_literal_probe",
+  "attr_expr_probe",
+  "constraint_inline",
+  "constraint_multi_instance",
+  "constraint_non_numerical",
+  "d38_caret",
+  "deep_cross_scope_probe",
+  "fusion_tea",
+  "modeled_default_fidelity",
+  "quoted_owner_formula",
+  "retype_model",
+  "sample_model",
+  "shadowed_reference",
+  "unresolvable_attr_probe",
+  "wi014_toy"
+ ],
+ "fixtures": [
+  "agg_literal_probe",
+  "agg_localterm_probe",
+  "alias_agg_probe",
+  "attr_expr_probe",
+  "catf_mfe_model",
+  "chain_override_probe",
+  "chain_spike_model",
+  "constraint_inline",
+  "constraint_multi_instance",
+  "constraint_non_numerical",
+  "crosspart_rollup_twolevel",
+  "d38_caret",
+  "deep_cross_scope_probe",
+  "expression_binding_probe",
+  "fusion_tea",
+  "gate_a",
+  "gate_a_package_owner",
+  "ife_plant",
+  "invocation_binding_probe",
+  "issue22_model",
+  "modeled_default_fidelity",
+  "plant_value_shapes",
+  "plant_values",
+  "quoted_owner_formula",
+  "return_styles",
+  "retype_model",
+  "sample_model",
+  "self_named_binding_trap",
+  "self_named_rescue",
+  "shadowed_reference",
+  "shared_producer",
+  "sibling_channel_ambiguity",
+  "solar_battery_model",
+  "spec_chain_channel",
+  "spec_chain_twolevel",
+  "unresolvable_attr_probe",
+  "wi014_toy"
+ ],
+ "records": {
+  "agg_literal_probe": {
+   "aliases": 0,
+   "constraints": 0,
+   "entry_points": 3,
+   "modules": 1,
+   "sha256": "5d5095ebedcb4e3665fbe1980f4859e5298612596c10fc277e700d4f4457dc5e",
+   "snapshot": "tests/fixtures/agg_literal_probe/instance_graph_snapshot.json",
+   "status": "graph"
+  },
+  "agg_localterm_probe": {
+   "codes": [
+    "SI_SELF_BINDING"
+   ],
+   "error_type": "ElaborationError",
+   "message": "SI_SELF_BINDING: AggLocalTermProbe__Cell__cost_model.area",
+   "status": "refused"
+  },
+  "alias_agg_probe": {
+   "codes": [
+    "SI_SELF_BINDING"
+   ],
+   "error_type": "ElaborationError",
+   "message": "SI_SELF_BINDING: AliasAggProbeLibrary__Widget__cost_model.base_cost",
+   "status": "refused"
+  },
+  "attr_expr_probe": {
+   "aliases": 3,
+   "constraints": 0,
+   "entry_points": 16,
+   "modules": 17,
+   "sha256": "7ebaceae9fd13e1ff19c9d2c5fcef9567d18c2022183ca68abf34fa6b431ccaa",
+   "snapshot": "tests/fixtures/attr_expr_probe/instance_graph_snapshot.json",
+   "status": "graph"
+  },
+  "catf_mfe_model": {
+   "codes": [
+    "SI_SELF_BINDING"
+   ],
+   "error_type": "ElaborationError",
+   "message": "SI_SELF_BINDING: CATFMFEVacuum__catf_vacuum_pumping__pump_load.pumping_speed_total",
+   "status": "refused"
+  },
+  "chain_override_probe": {
+   "codes": [
+    "SI_SELF_BINDING",
+    "SI_SELF_BINDING"
+   ],
+   "error_type": "ElaborationError",
+   "message": "SI_SELF_BINDING: ChainOverrideLibrary__Sensor__cost_model.base_cost; SI_SELF_BINDING: ChainOverrideLibrary__Sensor__cost_model.sensitivity",
+   "status": "refused"
+  },
+  "chain_spike_model": {
+   "codes": [
+    "SI_SELF_BINDING",
+    "SI_SELF_BINDING",
+    "SI_SELF_BINDING"
+   ],
+   "error_type": "ElaborationError",
+   "message": "SI_SELF_BINDING: ChainSpikeDesign__spike_design__area_calc.length; SI_SELF_BINDING: ChainSpikeDesign__spike_design__area_calc.width; SI_SELF_BINDING: ChainSpikeDesign__spike_design__cost_calc.rate",
+   "status": "refused"
+  },
+  "constraint_inline": {
+   "aliases": 0,
+   "constraints": 1,
+   "entry_points": 1,
+   "modules": 2,
+   "sha256": "4006ed9768da9e1a0c7d39d716a7befd0600ea012b1320431c1fd0d9d72d1574",
+   "snapshot": "tests/fixtures/constraint_inline/instance_graph_snapshot.json",
+   "status": "graph"
+  },
+  "constraint_multi_instance": {
+   "aliases": 0,
+   "constraints": 3,
+   "entry_points": 3,
+   "modules": 7,
+   "sha256": "6bc5676591ab4922970c95a87a05fe09cbe203200bfac78850aa774f31d15287",
+   "snapshot": "tests/fixtures/constraint_multi_instance/instance_graph_snapshot.json",
+   "status": "graph"
+  },
+  "constraint_non_numerical": {
+   "aliases": 0,
+   "constraints": 1,
+   "entry_points": 1,
+   "modules": 2,
+   "sha256": "b3e484efec192c58cc6d341bd5ffc1a416fec29069e67d0fd5b6bbde3f22e037",
+   "snapshot": "tests/fixtures/constraint_non_numerical/instance_graph_snapshot.json",
+   "status": "graph"
+  },
+  "crosspart_rollup_twolevel": {
+   "codes": [
+    "SI_SELF_BINDING"
+   ],
+   "error_type": "ElaborationError",
+   "message": "SI_SELF_BINDING: CrossPartRollupLib__Subsystem__cost_calc.base",
+   "status": "refused"
+  },
+  "d38_caret": {
+   "aliases": 0,
+   "constraints": 0,
+   "entry_points": 6,
+   "modules": 2,
+   "sha256": "5de29b842379586e91263a7cbbba53e06705b8f99a318ee532c6d6b19d4aab2c",
+   "snapshot": "tests/fixtures/d38_caret/instance_graph_snapshot.json",
+   "status": "graph"
+  },
+  "deep_cross_scope_probe": {
+   "aliases": 1,
+   "constraints": 0,
+   "entry_points": 4,
+   "modules": 5,
+   "sha256": "495755f5ae6dc00d5b87a00b0c7b9f8de7e19dd847d84eb422c05aeaa3d5c69e",
+   "snapshot": "tests/fixtures/deep_cross_scope_probe/instance_graph_snapshot.json",
+   "status": "graph"
+  },
+  "expression_binding_probe": {
+   "codes": [
+    "SI_EXPRESSION_SOURCE_UNSUPPORTED",
+    "SI_EXPRESSION_SOURCE_UNSUPPORTED",
+    "SI_EXPRESSION_SOURCE_UNSUPPORTED",
+    "SI_EXPRESSION_SOURCE_UNSUPPORTED",
+    "SI_EXPRESSION_SOURCE_UNSUPPORTED",
+    "SI_EXPRESSION_SOURCE_UNSUPPORTED",
+    "SI_SELF_BINDING",
+    "SI_SELF_BINDING",
+    "SI_SELF_BINDING"
+   ],
+   "error_type": "ElaborationError",
+   "message": "SI_EXPRESSION_SOURCE_UNSUPPORTED: ExpressionBindingDesign__expr_probe__adjusted_calc.combined_input; SI_SELF_BINDING: ExpressionBindingDesign__expr_probe__adjusted_calc.tax_rate; SI_EXPRESSION_SOURCE_UNSUPPORTED: ExpressionBindingDesign__expr_probe__cost_calc.combined_input; SI_SELF_BINDING: ExpressionBindingDesign__expr_probe__cost_calc.tax_rate; SI_EXPRESSION_SOURCE_UNSUPPORTED: ExpressionBindingDesign__expr_probe__delta_calc.value_a; SI_EXPRESSION_SOURCE_UNSUPPORTED: ExpressionBindingDesign__expr_probe__delta_calc.value_b; SI_EXPRESSION_SOURCE_UNSUPPORTED: ExpressionBindingDesign__expr_probe__full_cost_calc.combined_input; SI_SELF_BINDING: ExpressionBindingDesign__expr_probe__full_cost_calc.tax_rate; SI_EXPRESSION_SOURCE_UNSUPPORTED: ExpressionBindingDesign__expr_probe__net_calc.x",
+   "status": "refused"
+  },
+  "fusion_tea": {
+   "aliases": 7,
+   "constraints": 1,
+   "entry_points": 27,
+   "modules": 9,
+   "sha256": "48bdef5000a8561366ea04221252f89bb94b950a99840c541ac609687e81f5a6",
+   "snapshot": "tests/fixtures/fusion_tea/instance_graph_snapshot.json",
+   "status": "graph"
+  },
+  "gate_a": {
+   "codes": [
+    "SI_SELF_BINDING",
+    "SI_SELF_BINDING"
+   ],
+   "error_type": "ElaborationError",
+   "message": "SI_SELF_BINDING: GateA__Unrelated__doubler.seed; SI_SELF_BINDING: GateA__the_host__viability.gain",
+   "status": "refused"
+  },
+  "gate_a_package_owner": {
+   "codes": [
+    "SI_SELF_BINDING",
+    "SI_SELF_BINDING"
+   ],
+   "error_type": "ElaborationError",
+   "message": "SI_SELF_BINDING: GateAPackageOwner__Unrelated__doubler.seed; SI_SELF_BINDING: GateAPackageOwner__pkg_check.limit",
+   "status": "refused"
+  },
+  "ife_plant": {
+   "codes": [
+    "SI_SELF_BINDING",
+    "SI_SELF_BINDING",
+    "SI_SELF_BINDING",
+    "SI_SELF_BINDING",
+    "SI_SELF_BINDING",
+    "SI_SELF_BINDING",
+    "SI_SELF_BINDING",
+    "SI_SELF_BINDING",
+    "SI_SELF_BINDING",
+    "SI_SELF_BINDING",
+    "SI_SELF_BINDING",
+    "SI_SELF_BINDING",
+    "SI_SELF_BINDING",
+    "SI_SELF_BINDING",
+    "SI_SELF_BINDING",
+    "SI_SELF_BINDING",
+    "SI_SELF_BINDING",
+    "SI_SELF_BINDING",
+    "SI_SELF_BINDING",
+    "SI_SELF_BINDING",
+    "SI_SELF_BINDING"
+   ],
+   "error_type": "ElaborationError",
+   "message": "SI_SELF_BINDING: IfePlantLib__Base_Driver__base_power_calc.bank_energy; SI_SELF_BINDING: IfePlantLib__Base_Driver__base_power_calc.efficiency; SI_SELF_BINDING: IfePlantLib__Coil__volume_calc.radius; SI_SELF_BINDING: IfePlantLib__Hif_Driver__hif_cost_calc.bank_energy; SI_SELF_BINDING: IfePlantLib__Hif_Driver__hif_cost_calc.cost_per_joule; SI_SELF_BINDING: IfePlantLib__Ife_Power_Plant__lcoe_calc.availability; SI_SELF_BINDING: IfePlantLib__Ife_Power_Plant__lcoe_calc.blanket_energy_multiple; SI_SELF_BINDING: IfePlantLib__Ife_Power_Plant__lcoe_calc.discount_rate; SI_SELF_BINDING: IfePlantLib__Ife_Power_Plant__lcoe_calc.driver_cost_constant; SI_SELF_BINDING: IfePlantLib__Ife_Power_Plant__lcoe_calc.driver_efficiency; SI_SELF_BINDING: IfePlantLib__Ife_Power_Plant__lcoe_calc.driver_energy; SI_SELF_BINDING: IfePlantLib__Ife_Power_Plant__lcoe_calc.driver_lifetime_shots; SI_SELF_BINDING: IfePlantLib__Ife_Power_Plant__lcoe_calc.frequency; SI_SELF_BINDING: IfePlantLib__Ife_Power_Plant__lcoe_calc.gain; SI_SELF_BINDING: IfePlantLib__Ife_Power_Plant__lcoe_calc.om_cost_constant; SI_SELF_BINDING: IfePlantLib__Ife_Power_Plant__lcoe_calc.plant_cost_constant; SI_SELF_BINDING: IfePlantLib__Ife_Power_Plant__lcoe_calc.target_cost_constant; SI_SELF_BINDING: IfePlantLib__Ife_Power_Plant__lcoe_calc.thermal_efficiency; SI_SELF_BINDING: IfePlantLib__Ife_Power_Plant__lcoe_calc.yield_cost_constant; SI_SELF_BINDING: IfePlantLib__Reaction_Chamber__yield_calc.blanket_multiple; SI_SELF_BINDING: IfePlantLib__Reaction_Chamber__yield_calc.yield_constant",
+   "status": "refused"
+  },
+  "invocation_binding_probe": {
+   "codes": [
+    "SI_EXPRESSION_SOURCE_UNSUPPORTED"
+   ],
+   "error_type": "ElaborationError",
+   "message": "SI_EXPRESSION_SOURCE_UNSUPPORTED: InvocationBindingDesign__probe__c.x",
+   "status": "refused"
+  },
+  "issue22_model": {
+   "codes": [
+    "SI_SELF_BINDING"
+   ],
+   "error_type": "ElaborationError",
+   "message": "SI_SELF_BINDING: Issue22Library__Widget__cost_model.base_cost",
+   "status": "refused"
+  },
+  "modeled_default_fidelity": {
+   "aliases": 0,
+   "constraints": 3,
+   "entry_points": 6,
+   "modules": 5,
+   "sha256": "316ef13eaea7ee26593de5683ec7671cb2b5115c3090c8c1a4cdbb7599b89773",
+   "snapshot": "tests/fixtures/modeled_default_fidelity/instance_graph_snapshot.json",
+   "status": "graph"
+  },
+  "plant_value_shapes": {
+   "codes": [
+    "SI_SELF_BINDING",
+    "SI_SELF_BINDING"
+   ],
+   "error_type": "ElaborationError",
+   "message": "SI_SELF_BINDING: PlantValueShapesLib__Chamber_Unit__select.footprint; SI_SELF_BINDING: PlantValueShapesLib__Chamber_Unit__select.wall",
+   "status": "refused"
+  },
+  "plant_values": {
+   "codes": [
+    "SI_SELF_BINDING"
+   ],
+   "error_type": "ElaborationError",
+   "message": "SI_SELF_BINDING: PlantValuesLib__Power_Plant__viability.gain",
+   "status": "refused"
+  },
+  "quoted_owner_formula": {
+   "aliases": 0,
+   "constraints": 0,
+   "entry_points": 2,
+   "modules": 2,
+   "sha256": "863582dcb4f64a3b523df65e7a6de7c1143d65286b9716fccd6e81bd8d7f5447",
+   "snapshot": "tests/fixtures/quoted_owner_formula/instance_graph_snapshot.json",
+   "status": "graph"
+  },
+  "return_styles": {
+   "codes": [
+    "SI_SELF_BINDING",
+    "SI_SELF_BINDING",
+    "SI_SELF_BINDING"
+   ],
+   "error_type": "ElaborationError",
+   "message": "SI_SELF_BINDING: ReturnStylesDesign__rs_design__ca.a; SI_SELF_BINDING: ReturnStylesDesign__rs_design__cb.b; SI_SELF_BINDING: ReturnStylesDesign__rs_design__cd.d",
+   "status": "refused"
+  },
+  "retype_model": {
+   "aliases": 0,
+   "constraints": 0,
+   "entry_points": 6,
+   "modules": 6,
+   "sha256": "9b2bdaf7c07d2e91f9be97e478fc08c9a1729916023792b45cab007d352f920c",
+   "snapshot": "tests/fixtures/retype_model/instance_graph_snapshot.json",
+   "status": "graph"
+  },
+  "sample_model": {
+   "aliases": 0,
+   "constraints": 0,
+   "entry_points": 0,
+   "modules": 0,
+   "sha256": "722e70b39cdfdc6336179b1a2b580d159da86da87c807e5a78aab28a8f38d0bf",
+   "snapshot": "tests/fixtures/sample_model/instance_graph_snapshot.json",
+   "status": "graph"
+  },
+  "self_named_binding_trap": {
+   "codes": [
+    "SI_SELF_BINDING"
+   ],
+   "error_type": "ElaborationError",
+   "message": "SI_SELF_BINDING: TrapLib__Trap_Plant__avail_calc.availability",
+   "status": "refused"
+  },
+  "self_named_rescue": {
+   "codes": [
+    "SI_SELF_BINDING"
+   ],
+   "error_type": "ElaborationError",
+   "message": "SI_SELF_BINDING: RescueLib__Rescue_Plant__sink_calc.throughput",
+   "status": "refused"
+  },
+  "shadowed_reference": {
+   "aliases": 0,
+   "constraints": 0,
+   "entry_points": 1,
+   "modules": 1,
+   "sha256": "872d3640cf36ed55d485ee7c69e50e6714171e6d565b69f93a0cb19b3563cf1a",
+   "snapshot": "tests/fixtures/shadowed_reference/instance_graph_snapshot.json",
+   "status": "graph"
+  },
+  "shared_producer": {
+   "codes": [
+    "SI_SELF_BINDING",
+    "SI_SELF_BINDING"
+   ],
+   "error_type": "ElaborationError",
+   "message": "SI_SELF_BINDING: SharedProducer__the_rig__floor_check.gain; SI_SELF_BINDING: SharedProducer__the_rig__scaler.gain",
+   "status": "refused"
+  },
+  "sibling_channel_ambiguity": {
+   "codes": [
+    "SI_SELF_BINDING"
+   ],
+   "error_type": "ElaborationError",
+   "message": "SI_SELF_BINDING: SiblingLib__Chamber__power_calc.fuel",
+   "status": "refused"
+  },
+  "solar_battery_model": {
+   "codes": [
+    "SI_SELF_BINDING",
+    "SI_SELF_BINDING",
+    "SI_SELF_BINDING",
+    "SI_SELF_BINDING",
+    "SI_SELF_BINDING",
+    "SI_SELF_BINDING",
+    "SI_SELF_BINDING",
+    "SI_SELF_BINDING",
+    "SI_SELF_BINDING",
+    "SI_SELF_BINDING",
+    "SI_SELF_BINDING",
+    "SI_SELF_BINDING",
+    "SI_SELF_BINDING",
+    "SI_SELF_BINDING",
+    "SI_SELF_BINDING",
+    "SI_SELF_BINDING",
+    "SI_SELF_BINDING",
+    "SI_SELF_BINDING",
+    "SI_SELF_BINDING",
+    "SI_SELF_BINDING",
+    "SI_SELF_BINDING",
+    "SI_SELF_BINDING",
+    "SI_SELF_BINDING",
+    "SI_SELF_BINDING"
+   ],
+   "error_type": "ElaborationError",
+   "message": "SI_SELF_BINDING: SolarBatteryDesign__solar_battery_plant__annualized_financial.discount_rate; SI_SELF_BINDING: SolarBatteryDesign__solar_battery_plant__annualized_financial.plant_lifetime; SI_SELF_BINDING: SolarBatteryDesign__solar_battery_plant__annualized_fuel.fuel_consumption; SI_SELF_BINDING: SolarBatteryDesign__solar_battery_plant__annualized_fuel.fuel_unit_cost; SI_SELF_BINDING: SolarBatteryDesign__solar_battery_plant__annualized_om.om_rate_per_kw_year; SI_SELF_BINDING: SolarBatteryDesign__solar_battery_plant__annualized_om.p_net_kw; SI_SELF_BINDING: SolarBatteryDesign__solar_battery_plant__energy_production.n_mod; SI_SELF_BINDING: SolarBatteryDesign__solar_battery_plant__energy_production.p_net_mw; SI_SELF_BINDING: SolarBatteryDesign__solar_battery_plant__energy_production.plant_availability; SI_SELF_BINDING: SolarBatteryDesign__solar_battery_plant__lcoe.plant_lifetime; SI_SELF_BINDING: SolarBatteryDesign__solar_battery_plant__lcoe.yearly_inflation; SI_SELF_BINDING: SolarBatteryLibrary__Array_BOS__cost_model.panel_count; SI_SELF_BINDING: SolarBatteryLibrary__Array_BOS__cost_model.string_count; SI_SELF_BINDING: SolarBatteryLibrary__Battery_BOS__cost_model.pack_count; SI_SELF_BINDING: SolarBatteryLibrary__Battery_Pack__cost_model.capacity_kwh; SI_SELF_BINDING: SolarBatteryLibrary__Battery_Pack__cost_model.chemistry_factor; SI_SELF_BINDING: SolarBatteryLibrary__Electrical_Panel__cost_model.circuit_count; SI_SELF_BINDING: SolarBatteryLibrary__Hybrid_Inverter__cost_model.power_rating; SI_SELF_BINDING: SolarBatteryLibrary__PV_Module__cost_model.efficiency; SI_SELF_BINDING: SolarBatteryLibrary__PV_Module__cost_model.wattage; SI_SELF_BINDING: SolarBatteryLibrary__Permitting_Interconnect__cost_model.system_capacity_kw; SI_SELF_BINDING: SolarBatteryLibrary__Racking_Mounting__cost_model.panel_count; SI_SELF_BINDING: SolarBatteryLibrary__Racking_Mounting__cost_model.tilt_angle; SI_SELF_BINDING: SolarBatteryLibrary__String_Inverter__cost_model.power_rating",
+   "status": "refused"
+  },
+  "spec_chain_channel": {
+   "codes": [
+    "SI_SELF_BINDING"
+   ],
+   "error_type": "ElaborationError",
+   "message": "SI_SELF_BINDING: SpecChainLib__IFE_Driver__meier_cost.drive_power",
+   "status": "refused"
+  },
+  "spec_chain_twolevel": {
+   "codes": [
+    "SI_SELF_BINDING"
+   ],
+   "error_type": "ElaborationError",
+   "message": "SI_SELF_BINDING: TwoLevelLib__IFE_Driver__meier_cost.drive_power",
+   "status": "refused"
+  },
+  "unresolvable_attr_probe": {
+   "aliases": 0,
+   "constraints": 0,
+   "entry_points": 9,
+   "modules": 10,
+   "sha256": "1c5b9a27a90ed22f3b0d59935fed39711c0df58343e7ecf45843a3182252f83b",
+   "snapshot": "tests/fixtures/unresolvable_attr_probe/instance_graph_snapshot.json",
+   "status": "graph"
+  },
+  "wi014_toy": {
+   "aliases": 1,
+   "constraints": 1,
+   "entry_points": 4,
+   "modules": 4,
+   "sha256": "ba505364bc3c2dd16d3990b56b732ade51c3201dbe822217f71f1a4656ef504d",
+   "snapshot": "tests/fixtures/wi014_toy/instance_graph_snapshot.json",
+   "status": "graph"
+  }
+ },
+ "refused": [
+  "agg_localterm_probe",
+  "alias_agg_probe",
+  "catf_mfe_model",
+  "chain_override_probe",
+  "chain_spike_model",
+  "crosspart_rollup_twolevel",
+  "expression_binding_probe",
+  "gate_a",
+  "gate_a_package_owner",
+  "ife_plant",
+  "invocation_binding_probe",
+  "issue22_model",
+  "plant_value_shapes",
+  "plant_values",
+  "return_styles",
+  "self_named_binding_trap",
+  "self_named_rescue",
+  "shared_producer",
+  "sibling_channel_ambiguity",
+  "solar_battery_model",
+  "spec_chain_channel",
+  "spec_chain_twolevel"
+ ],
+ "status": "PROPOSED \u2014 owner acceptance pending (Phase 5 stop)"
+}

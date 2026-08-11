@@ -2936,6 +2936,57 @@ ledger. Execution lane **38 passed** including the 12 real-TEAx nodes at the rec
 No production or test file was removed. **Stopped for the orchestrator's approval of the
 regrouping before any deletion group runs**, per the ruling.
 
+#### Gate 4C part 4 / Part A — the PROPOSED v6 recapture batch (owner acceptance pending)
+
+**Why now.** The deferral cascade ended somewhere incoherent: a v5 writer and 37 fixtures with
+no reader, and the legacy stack retained solely as that writer's import closure. The plan's own
+Gate 4C rule is the exit — the v5 snapshots stay until their accepted v6 replacements are ready
+*in the same candidate*. Readiness is producible now; **acceptance stays the owner's at the
+Phase 5 stop**, so this batch is marked PROPOSED and is authority for nothing.
+
+**What was produced.** `scripts/capture_v6_batch.py --verify`, using the shipped public
+`capture_instance_graph_snapshot` and no capture code of its own, so the batch cannot drift from
+the product.
+
+| | Count | Where |
+|---|---:|---|
+| v6 snapshots | **15** | `tests/fixtures/<name>/instance_graph_snapshot.json` |
+| typed refusal records | **22** | `tests/fixtures/v6_recapture_batch/batch.json` |
+
+**Every outcome matched the amended Phase 2 corpus ledger — 0 deviations**, both error classes
+with their exact code multisets (`SI_SELF_BINDING` and `SI_EXPRESSION_SOURCE_UNSUPPORTED`,
+counts included: 21× for `ife_plant`, 24× for `solar_battery_model`, the 6+3 mix for
+`expression_binding_probe`). No rule-10 stop was triggered.
+
+**Live↔replay equality, per fixture, at the 3A/3B route-test bar.** For all 15: in-place and
+relocated reads agree on the instance fingerprint and on the projected computation graph, and the
+projected graph equals the live route's modulo the one module `source_file` divergence Slice 3B
+pinned and 3E carried.
+
+**Two independent confirmations worth recording.** `fusion_tea`'s already-committed v6 snapshot
+was reproduced **byte-identically** by this run, so capture is deterministic and the committed
+artifact was not a one-off. And no snapshot or manifest entry contains an absolute path, so the
+batch is portable across checkout roots — the defect class L-118 closed on.
+
+**Kept honest by a test, not by the manifest.** `tests/conformance/test_v6_recapture_batch.py`
+(58 nodes) re-derives every claim from the committed bytes: each fixture claimed once, each
+snapshot loading and projecting to its recorded outcome, each digest re-checked, each refusal
+typed with a canonical code multiset, the whole set still agreeing with the corpus ledger, and no
+absolute paths. Most of it runs license-free, which is the point — the batch must be checkable by
+someone who cannot capture.
+
+**Battery.** Full licensed suite **3781 passed / 47 skipped / 38 deselected**, zero failures —
+delta **+58** against 3723, every one a node in the new batch test file; no other count moved.
+Corpus ledger **3 passed**. Execution lane **38 passed** including the 12 real-TEAx nodes at the
+recorded anchors. `ruff` **870 → 870**, `mypy src/` **69 in 16 files → unchanged**,
+`git diff --check` clean, `check_ledger_4a.py paths` **286 rows / 0 problems**, `surface`
+**0 unrowed breakages**.
+
+**Commit:** `PART_A_OID`.
+
+**Reversibility.** The batch and every retirement commit that follows it are separate commits. If
+the owner revises the batch at Phase 5, the retirement reverts with it by Git.
+
 ### Phase 5 Completion
 
 - **Completed:** Pending
