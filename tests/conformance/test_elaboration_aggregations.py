@@ -151,3 +151,44 @@ def test_modeled_finite_multiplicity_expands_the_aggregation() -> None:
     assert set(total.inputs.values()) == {
         node_ref(graph, f"{pack}__cell[{index}]__base_cost") for index in range(4)
     } | {node_ref(graph, f"{pack}__exponent")}
+
+
+def test_the_caret_reaches_python_as_power_never_as_xor(tmp_path) -> None:
+    """D3-8 on the exact route: ``^`` is SysML's power alias, and ``^`` is Python's XOR.
+
+    A renderer that passed the character through would emit code that runs, returns a
+    number, and is wrong — the worst failure class this recovery exists to close. The
+    exact route maps it at ``elaboration/project.py:671``
+    (``"**" if expression.operator == "^"``).
+
+    Asserted one layer further out than the rest of this module, in the generated
+    implementation stencil, because that is where a reader would meet the bug: the
+    aggregation is expanded into one term per occurrence and the exponent applies to the
+    sum. The old legacy pin read a transformed expression *string* off the extractor;
+    this reads the Python that ships.
+
+    Gate 4C part 7 chunk 14 authored this as the replacement for row L-174's D3-8 node.
+    """
+    from sysml_codegen.cli import GenerationConfig, run_codegen
+
+    name = "d38_caret_rendering"
+    package = tmp_path / name
+    assert run_codegen(
+        GenerationConfig(
+            models_path=FIXTURES_DIR / "d38_caret",
+            output_path=package,
+            package_name=name,
+            overwrite=True,
+        )
+    )
+
+    stencil = next(package.rglob("total_cost_impl.py"))
+    body = next(
+        line.strip()
+        for line in stencil.read_text().splitlines()
+        if line.strip().startswith("return")
+    )
+    assert " ** " in body, body
+    assert " ^ " not in body, body
+    # The four occurrences are summed before the exponent applies, not after.
+    assert all(f"total_cost_{index}" in body for index in range(4)), body
