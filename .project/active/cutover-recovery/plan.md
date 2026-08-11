@@ -2982,7 +2982,7 @@ recorded anchors. `ruff` **870 → 870**, `mypy src/` **69 in 16 files → uncha
 `git diff --check` clean, `check_ledger_4a.py paths` **286 rows / 0 problems**, `surface`
 **0 unrowed breakages**.
 
-**Commit:** `PART_A_OID`.
+**Commit:** ``d2d032f` (`d2d032f5613ec1d7cc29b70a0ba80567ece33e87`)`.
 
 **Reversibility.** The batch and every retirement commit that follows it are separate commits. If
 the owner revises the batch at Phase 5, the retirement reverts with it by Git.
