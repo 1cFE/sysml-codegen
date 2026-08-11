@@ -510,11 +510,21 @@ The forensic test audit is the starting shortlist, not a certification result.
 
 ### Slice 3B — Defensive context and exact public projection
 
-- [ ] Write kept public selection, receipt, mutation, aggregation, and route-equality tests first.
-- [ ] Selectively recover `orchestration/{pipeline_context,pipeline_builder,snapshot_context}.py`
-  and `elaboration/project.py` changes without deleting the old builder or registry.
-- [ ] Run both old/new recovery comparison and oracle-independent public assertions.
-- [ ] Run original full suites and commit only the declared 3B path set.
+- [x] Write kept public selection, receipt, mutation, aggregation, and route-equality tests first.
+- [x] Selectively recover `orchestration/{pipeline_context,pipeline_builder,snapshot_context}.py`
+  and `elaboration/project.py` changes without deleting the old builder or registry. **All three
+  `orchestration/` files were Rejected as written** — each forensic hunk *replaces* a shipped
+  authority. The recovered ideas (receipt-bound context, typed target selection) landed in a new
+  `orchestration/exact_pipeline_context.py` beside them. See the 3B dispositions below.
+- [x] Run both old/new recovery comparison and oracle-independent public assertions.
+  Comparison: `evidence/3b-old-new-comparison.md`.
+- [x] Run original full suites and commit only the declared 3B path set.
+- [x] **[AGENT] (orchestrator ruling, 2026-08-11)** Group identity derives from the filename stem,
+  with the `model.sysml` fallback moved from the parent directory to the declaring package of the
+  owning root occurrence. Ruled as option (C) after the implementer stopped under rule 10: a
+  package-wide rule would have retired the owner-ratified compatibility responsibility pinned by
+  `test_parameter_group_name_drives_the_compatible_json_filename`. Under (C) no owner-ratified
+  responsibility is retired. One residual is carried, named below: `d38_caret`.
 
 ### Slice 3C — Coordinated compiler and constraint authority
 
@@ -585,7 +595,7 @@ Record every slice. Do not combine them later.
 | Slice | sysml-codegen OID | agentic-mbse OID | Full suites | Real TEAx |
 |---|---|---|---|---|
 | 3A | fe0b855, audit follow-up 4858911 | N/A | 3473 passed / 47 skipped / 18 deselected (+115, all new) | smoke PASS (fusion_tea, 48-file sealed package) |
-| 3B | PENDING | N/A | PENDING | smoke PENDING |
+| 3B | PENDING | N/A | 3519 passed / 47 skipped / 18 deselected (+46, all new) | smoke PASS (live + v6-snapshot packages, group names equal; legacy CLI package unchanged at 48 files) |
 | 3C | PENDING | PENDING | PENDING | N/A |
 | 3D | PENDING | PENDING if changed | PENDING | PENDING |
 | 3E | PENDING | PENDING if changed | PENDING | PENDING |
@@ -1166,6 +1176,140 @@ amendment, so the certified history remains readable.
   unchanged.
 - `ruff check src`: findings byte-identical to the baseline set — zero new. `mypy src`: error set
   identical — zero new, zero fixed. `git diff --check` clean. Changed paths equal the declared set.
+
+#### Slice 3B Completion — Defensive context and exact public projection
+
+- **Completed:** 2026-08-11
+- **Commit:** PENDING (sysml-codegen only; agentic-mbse untouched and clean at
+  `5088b417c9e5453271291d46cd5fb23fc0579b1e`)
+- **Declared path set:** `elaboration/project.py`,
+  `orchestration/exact_pipeline_context.py` (new), `tests/conformance/test_snapshot_v6_routes.py`,
+  four new `tests/conformance/test_exact_*.py` modules, this plan, `briefs/phase3b.md`, and
+  `evidence/3b-old-new-comparison.md`. Two paths were declared mid-slice and are named as
+  deviations below: `orchestration/elaborated_pipeline.py` and
+  `tests/conformance/test_exact_group_identity.py`. Actual changed paths equal that set.
+
+**What the slice proves.** The exact route now has a public construction that cannot be mutated
+after it is built and cannot hand out a graph that disagrees with what it was built from. A caller
+can ask for the whole model or for the exact closure of named outputs. A package generated from a
+relocated v6 snapshot and a package generated live carry the same input filenames, the same schema
+class names, and the same modelled values — they differ only in `SysML Source:` provenance
+comments, and every differing file is named and checked. A modelled aggregation reaches that
+package with its literal operand intact, which is the B37-01 ruling at the product surface. The
+legacy builder and registry are untouched and remain the shipped authority.
+
+**The rule-10 stop, and the ruling that resolved it.** The brief directed group identity to derive
+from model semantics rather than the file path. Measuring that first — as the recovery plan
+requires and the brief's own defect note assumed — showed a package-wide rule would rename
+`design_params` to `attr_expr_probe_design_params`, breaking
+`test_parameter_group_name_drives_the_compatible_json_filename`
+(`tests/conformance/test_elaboration_phase5_remediation.py:172`), whose module is headed
+*"Owner-ratified Phase 5 remediation"*. At the 3E authority switch it would also rename the
+customer package's `hif_plant_params` to `hif_plant_pkg_params`, because `hif_plant.sysml` declares
+`package hif_plant_pkg`. That is a narrowing of an owner-ratified compatibility guarantee, so the
+slice stopped with the measurement instead of choosing.
+
+The orchestrator ruled option (C): keep the stem, replace only the parent-directory fallback. The
+stem is route-invariant — v6 staging rewrites the directory to `root-N` but preserves the filename
+— so the parent directory was the sole route-variant input, and it is the only thing that changed.
+
+**`_group_identity`, before and after.** `_group_identity` took a source path and returned
+`path.parent.name if path.stem.lower() == "model" else path.stem`. It now takes a `base` chosen by
+`_Projection._group_base` (`elaboration/project.py`) and does nothing but render it. `_group_base`
+picks the stem, or — for a `model.sysml`, which carries no identity of its own — the
+`package_display` of the owning node's root occurrence, which `InstanceGraph.validate` already
+requires to be non-empty on every root. `_entry_source` now takes the owning node rather than a
+source-file string, because the package is a property of the node, not of the path.
+
+Two rendering choices, both recorded because they go beyond the ruling's literal wording:
+
+- A PascalCase package is read as snake_case before rendering (`ElabMatrixC14` →
+  `elab_matrix_c14`). Without it, `sanitize_name(...).lower()` yields `elabmatrixc14`, and eight of
+  the nine `model.sysml` fixtures would have been renamed rather than one. Applied only in the
+  package fallback; a filename stem is already spelled the way the modeller wants it read.
+- `ParameterGroup.source_file` records the normalized identity token, not a path. The ruling asked
+  for the bare stem; the measured legacy route actually stores the file *name* (`hif_plant.sysml`),
+  so "identical to legacy" was not available either way. The token is what makes the field
+  route-invariant, which is what the ruling wanted it for. It reaches generated bytes only as
+  `"Parameters from {label}."` (`generation/entry_point.py:226`).
+
+**Measurement the ruling required, all three checks.**
+
+1. *Group identity that changed under (C):* **one fixture.** `elab_constraint_formal_identity`
+   moves from `elab_constraint_formal_identity_params` (its directory) to
+   `constraint_formal_identity_params` (its package). Every other projecting fixture keeps the exact
+   name and class it had at `a7c13a6`. Internal to the unshipped exact route.
+2. *Exact vs legacy on stem-named fixtures:* nine compared, eight match (one of them matching once
+   the legacy-only `system_design` hierarchy group is set aside). The ninth is `d38_caret`, below.
+3. *Strict route equality:* live, in-place v6, and relocated v6 produce byte-equal entry-point
+   group payloads including name, class, label, and every parameter. The routes test now asserts
+   that equality instead of masking it, and the projected-surface comparison no longer masks
+   `param_group` on module inputs either — a strictly stronger comparison than at `a7c13a6`.
+
+**The named residual — `d38_caret`.** One stem-named fixture where the two routes disagree: exact
+says `library_params`, legacy says `design_params`. **This slice neither caused it nor touches it**
+— the fixture has no `model.sysml`, so the changed fallback never runs, and the measured identity is
+byte-identical before and after. It is a pre-existing disagreement about *which file declares* an
+entry point: the elaborator records the declaration site (`library.sysml`) while the legacy deriver
+attributes it to `design.sysml`. No group-naming rule can reconcile a declaration-site difference.
+Pinned by `test_the_known_exact_versus_legacy_declaration_site_divergence` and recorded in
+`evidence/3b-old-new-comparison.md`. **It needs a disposition before the Slice 3E authority switch**,
+where it would change a shipped input filename for a model of this shape. Surfaced, not absorbed.
+
+**A second residual, pinned rather than fixed: module provenance.** Module `source_file` still
+differs across routes — the live route records absolute checkout paths (one still carrying a
+leftover `//` URI prefix), the v6 route records the portable referent. It reaches generated bytes
+only as a `SysML Source:` comment. The v6 spelling is the one the design intends
+(`generation/stencils.py:243`); making the live route agree means routing it through admission,
+which would undo the arm independence Slice 3A's F2 fix established. Carried to 3E, asserted by
+value on both sides, and the generated-package test names every file the difference reaches.
+
+**Per-file dispositions.**
+
+| Path | Disposition | Reason |
+|---|---|---|
+| `orchestration/pipeline_context.py` | **Reject** | The forensic hunk replaces the whole dataclass with a narrow receipt-bound class, deleting `calc_defs`, `group_deriver`, `backtracking_result`, `output_registry`, `constraint_facts`, and eight more fields the shipped legacy builder and `snapshot/capture.py` populate and read. That is Phase 7 deletion behavior arriving inside a Phase 3 slice. Untouched. |
+| `orchestration/snapshot_context.py` | **Reject** | The forensic hunk replaces `build_pipeline_context_from_snapshot` — the shipped v5 `generate --from-snapshot` route — with a v6 loader. Retirement is Phase 4. Untouched. |
+| `orchestration/pipeline_builder.py` | **Reject** | Same disposition as 3A: the forensic commit cuts a 6-phase 1194-line file to 95 lines. Untouched. |
+| `orchestration/exact_pipeline_context.py` | **Reimplement** as an addition | Carries the recovered receipt idea beside the legacy context rather than on top of it. Dropped from the forensic version: the `_VerifiedProjectionLease` (a sealing-time concern, 3D/3E work) and the `include_all` flag. Added: an explicit refusal when a context is reached without sealed authority. |
+| `elaboration/project.py` — typed target selection | **Reuse**, reviewed per hunk, one signature change | The closure walk, the three output spellings, and the ambiguity refusal are sound and now independently tested. Changed: `targets` + `include_all` collapsed to one `targets` parameter, because two parameters selecting between "everything" and "this closure" via a flag makes `include_all=True, targets=[...]` expressible and meaningless. `None` means the whole model; a sequence means that closure; empty is an error. |
+| `elaboration/project.py` — `_build_output_aliases(selected_outputs=None)` | **Reimplement** | The forensic version takes an optional set used only in some branches. It now always takes the set, and the complete projection passes all of them. Same for `_build_groups`. |
+| `elaboration/project.py` — `mint_constraint_id` import move, `sanitize_name(node.calc_def_name)` | **Reject** | Unrelated to 3B's behavior. The second is a product-visible module-metadata change with no test behind it. |
+| `orchestration/elaborated_pipeline.py` | **Reimplement**, declared mid-slice | `build_elaborated_pipeline` split into `elaborate_model_paths` (load → elaborate → gate) plus the projection, so the sealing builder can take the graph. `build_elaborated_pipeline` keeps its exact behavior and both routes still reach the elaborator by one path, which `test_the_live_arm_does_not_share_the_capture_route` still checks. |
+
+**An Item 6 architectural guard fired, and it was right.**
+`tests/unit/test_elaboration_import_boundaries.py::test_exact_semantic_boundary_has_no_string_or_legacy_identity_route`
+caught two violations in the first draft: `_declaring_package` derived a package by splitting a
+rendered qualified name (`owner_qualified_name.split("::")[0]`), and `_output_index` used
+`next(iter(...))`. Both were removed rather than exempted. The package-scoped branch now fails
+loudly naming the case instead of guessing from a rendered string — no corpus fixture reaches it,
+since it needs a package-scoped entry point in a file named `model.sysml`. The index unpacks a
+set already proven to hold one element. This is the second slice in a row where a test the forensic
+candidate deleted caught a real defect (plan rule 6).
+
+**Tests, red then green.** All five new modules failed to collect at `a7c13a6`
+(`exact_pipeline_context` and `elaborate_model_paths` do not exist there), and
+`test_the_two_routes_diverge_only_on_source_derived_naming` was green there asserting
+`{"root_0_params"}` / `{"Root0Params"}`. After the slice: **46 new tests pass** — 15 context,
+12 selection, 12 group identity, 4 generated package, 3 aggregation — and the routes test is
+renamed and flipped to assert equality.
+
+**Gates.**
+
+- Full licensed suite: **3519 passed / 47 skipped / 18 deselected**, zero failures, zero
+  `no live syside license` lines. Delta versus the 3A baseline is exactly **+46 passed** and nothing
+  else. Skips and deselections unchanged, so no Item 6 test was removed, silenced, or deselected.
+- Execution lane (`pytest tests/execution -m execution`): 18 passed, unchanged.
+- Generated-package smoke, both exact routes: live and relocated-v6 packages have identical file
+  sets, an identical `inputs/source_identity_mixed_consumers_params.json`, and a
+  `SourceIdentityMixedConsumersParams` schema class on both sides. No `root_0` anywhere. Traced by
+  hand: `:>> efficiency = 0.75;` at `model.sysml:234` reaches the generated input file as `0.75`.
+- Shipped legacy CLI smoke: `sysml-codegen generate --models tests/fixtures/fusion_tea` still
+  produces 48 files with `inputs/{hif_driver,hif_plant,ife_plant}_params.json` and
+  `hif_driver__HIF_Driver__efficiency = 0.35`. The customer-visible package did not move.
+- `ruff check src`: **byte-identical** to the `a7c13a6` baseline — zero new. New test modules lint
+  clean. `mypy src`: error set **identical** (71 errors in 17 files; 84 → 85 files checked, so the
+  new module contributes zero). `git diff --check` clean. Changed paths equal the declared set.
 
 ### Phase 4 Completion
 

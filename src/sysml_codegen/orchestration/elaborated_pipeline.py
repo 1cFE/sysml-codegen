@@ -27,12 +27,24 @@ from sysml_codegen.resolution.models import ComputationGraph
 __all__ = [
     "build_elaborated_pipeline",
     "elaborate_admitted_sources",
+    "elaborate_model_paths",
     "require_executable_content",
 ]
 
 
 def build_elaborated_pipeline(model_paths: list[Path]) -> ComputationGraph:
     """Load, elaborate, and project one model through only the exact-ID route."""
+    return project(elaborate_model_paths(model_paths))
+
+
+def elaborate_model_paths(model_paths: list[Path]) -> InstanceGraph:
+    """Load and elaborate live models, stopping at the exact instance graph.
+
+    The projection half is deliberately not here: a caller that seals the graph
+    before projecting (``orchestration/exact_pipeline_context.py``) needs the
+    graph itself, and a caller that only wants the public surface takes
+    ``build_elaborated_pipeline``. Both reach the elaborator by this one path.
+    """
     extractor = SysMLDataExtractor(model_paths)
     try:
         if not extractor.load_models():
@@ -51,7 +63,7 @@ def build_elaborated_pipeline(model_paths: list[Path]) -> ComputationGraph:
         validation_diagnostics=extractor.diagnostics.validation,
     )
     require_executable_content(graph, calc_defs)
-    return project(graph)
+    return graph
 
 
 def require_executable_content(graph: InstanceGraph, calc_definitions: Sequence[object]) -> None:
