@@ -1,36 +1,117 @@
 # 27 — Snapshot-Driven Generation
 
-**Status:** Active · **Epic:** UPSTREAM-FINDINGS Item 2 (SC-9 + SC-10)
+**Status:** Active · **Format:** v6 instance-graph snapshot · **Supersedes:** the v5
+extraction snapshot, which is retiring (see [The v5 extraction snapshot](#the-v5-extraction-snapshot-retiring) below)
 
 ## Why
 
-Generation is gated on a live syside license that expires 2026-08-06. A
-**snapshot** is a versioned JSON capture of the extraction boundary — the typed
-dataclasses live extraction produces, with live syside ASTs nullified and the
-lowered `compilation_results` strings preserved. `generate --from-snapshot` rebuilds
-the same [`PipelineContext`](02-orchestration.md#pipelinecontext) the live 7-step
-sequence produces, but from JSON, so generation runs with **no license at runtime**.
-The snapshot is at the *extraction* boundary, never the graph — resolution and
-generation still run live from it, so a snapshot run tests the same
-resolution/generation code the live run does.
+Generation must be able to run without a live syside license. A **snapshot** is a
+self-contained, license-free capture of one elaborated `InstanceGraph`, sealed into an
+envelope. `generate --from-snapshot` loads it and projects it; nothing about the loaded graph
+needs the model tree, a parser, or a licence.
 
-## Two paths, one context
+The snapshot is at the **instance-graph** boundary, not the extraction boundary. That is the
+load-bearing change from v5: the semantics are already resolved when the file is written, so
+what the offline run reproduces is a decided graph rather than a re-derivation from strings.
+Capture is the only step that can establish that the sealed graph came from the sealed sources,
+so capture elaborates and seals in one step (`snapshot/capture.py:93`).
+
+## Three routes, one authority
 
 ```
-live:      --models         ─► build_pipeline_context()            ┐
-snapshot:  --from-snapshot  ─► build_pipeline_context_from_snapshot() ├─► PipelineContext ─► run_codegen()
-                                └─ snapshot.load_extraction_snapshot(path)
-                                   snapshot.build_full_graph_from_snapshot(...)
+live:      --models         ─► elaborate_model_paths()          ┐
+                                                                 ├─► InstanceGraph ─► seal ─►
+snapshot:  --from-snapshot  ─► load_instance_graph_snapshot()   ┘   ExactPipelineContext
+                                                                            │
+capture:   sysml-codegen snapshot ─► admit_sources()                        ▼
+                                     ─► elaborate_admitted_sources()     project() ─► generate
+                                     ─► build_envelope() ─► atomic write
 ```
 
-The two syside-only context fields — `extractor`, `backtracker` — are `None` on
-the snapshot path (no generation site reads them). The `sysml_codegen.snapshot`
-package owns the loader, serializer, capture, and graph-rebuild helpers; only
-`capture_snapshot` invokes the parser (needs a license). Module import is
-license-free; the constraint is behavioral (never *invoke* the parser on the load
-path).
+`build_exact_pipeline_context` and `build_exact_pipeline_context_from_snapshot`
+(`orchestration/exact_pipeline_context.py`) are the two builders, and they differ only in where
+the graph comes from. Both seal it, and every read re-decodes and re-projects the sealed bytes
+and refuses anything the receipt disagrees with. See [02-orchestration](02-orchestration.md).
 
-## Format schema
+Capture writes atomically: on any refusal — an unadmissible source tree, a model that does not
+elaborate cleanly, a graph that is not projectable — nothing is written and an existing file at
+the output path is left untouched.
+
+**Capture is deterministic.** The same model in the same environment produces byte-identical
+snapshot files.
+
+## What a sealed snapshot may claim
+
+This is the part to read before relying on a snapshot for anything but structure.
+`integrity.digest` is an **unkeyed** SHA-256. Anyone who edits the file recomputes it, so the
+digest proves the document is *coherent* — nobody changed one part and left the rest stale —
+and never that it is *authentic*. Every refusal in the envelope is written to survive a forger
+who re-seals properly (`snapshot/envelope.py:1-53`).
+
+**Anchored** — a forger cannot make these say something false and get past the loader:
+
+| Kind | Fields | Checked against |
+|---|---|---|
+| Constants this build defines | `format`, `version`, the profile markers (`certifiability_profile`, `instance_graph_schema`, `expression_ir_schema`, `executable_profile`, `projector_semantics`) | the constants |
+| Environment facts | SysIDE version, `sysml_codegen` and `agentic_mbse` versions, the pinned standard-library digest and count | the process doing the loading |
+| The graph | the whole `instance_graph` section | re-derived by the codec; must be projectable and diagnostic-free |
+
+**Not anchored** — `sources` is a self-declared manifest: a referent, size, and SHA-256 per
+file, checked for canonical form but never against the files themselves. Offline, the loader
+only cross-checks that every graph row's `source_file` appears in it. So a re-sealed snapshot
+can be re-labelled — the sealed referents renamed consistently across the manifest and every
+graph row, a fabricated row appended, or a real row's digest restated — and it will load.
+**Those three shapes are pinned as accepted behaviour in the conformance matrix**
+(`tests/conformance/test_snapshot_v6_envelope.py`) so the limit is stated rather than implied
+away.
+
+**Passing `source_roots` is what closes them.** The admission is then recomputed from the model
+tree on disk and must reproduce the sealed manifest exactly, which catches all three. A caller
+that needs provenance, rather than only structure, must supply `source_roots`
+(`build_exact_pipeline_context_from_snapshot(..., source_roots=...)`).
+
+**What no amount of checking can prove offline.** That the sealed graph really *is* the
+elaboration of the sealed sources means elaborating them again, which needs the parser and a
+licence. Even `source_roots` only proves the sources are the ones named. That proof belongs to
+capture, which elaborates and seals in one step.
+
+The receipt on `ExactPipelineContext` is a self-consistency check on the same footing: it
+catches a context whose authority moved underneath it — an in-place edit, a partially
+constructed object, a projector whose semantics changed between reads. It cannot make a
+snapshot's own claims about its sources true, and that limit is recorded at
+`orchestration/exact_pipeline_context.py:23-28` rather than left to be discovered.
+
+## The v5 refusal
+
+A v5 extraction snapshot carries no `version` key, so it is refused at load by name rather
+than by a confusing `None`: *"this is a v5 extraction snapshot, but the instance-graph route
+requires snapshot v6. Recapture with `sysml-codegen snapshot`."* There is no cross-version
+coexistence and no in-place up-migration.
+
+## CLI
+
+- `sysml-codegen snapshot --models <path> [--output <file>]` — capture one v6 instance-graph
+  snapshot. Default output `<models-root>/instance_graph_snapshot.json`. Needs the live
+  licence.
+- `sysml-codegen generate --from-snapshot <file> [all other generate flags]` — license-free
+  generation. `--models` and `--from-snapshot` are mutually exclusive and exactly one is
+  required (a required argparse group, so both-forbidden and neither-forbidden come free).
+
+`scripts/capture_v6_batch.py` produces the proposed v6 recapture batch for the 37-fixture
+corpus through that same `capture_instance_graph_snapshot` entry point, so the batch cannot
+drift from the product. A fixture the exact route refuses gets a typed refusal record in the
+batch manifest rather than a snapshot. **Acceptance of that batch is the owner's, at the
+Phase 5 stop** — the script produces readiness, not authority.
+
+## The v5 extraction snapshot (retiring)
+
+Everything below describes the **v5 extraction snapshot**, which no public surface produces or
+consumes any more. It is retained because the format still exists in the tree
+(`snapshot/loader.py`, `serializer.py`, `graph_rebuild.py`, and `capture_snapshot`), the
+committed runtime snapshots are still v5, and its retirement is gated on owner acceptance at
+the Phase 5 stop. Read it as a description of that machinery, not of the public route.
+
+### Format schema (v5)
 
 Top-level keys of `extraction_snapshot.json`:
 
@@ -68,7 +149,7 @@ absolute, or snapshot-relative `source_file` is rejected loudly at load rather t
 silently loaded (`SnapshotFormatError`). Sentinels (`unknown`, `hierarchy`) are not
 real paths and pass through untouched (`serializer.py:55-56`).
 
-## Version / provenance / freshness policy (V1–V6)
+### Version / provenance / freshness policy, v5 (V1–V7)
 
 | Case | Behavior |
 |---|---|
@@ -77,7 +158,7 @@ real paths and pass through untouched (`serializer.py:55-56`).
 | **V3** on-disk source hash ≠ recorded | warn per file + one end-of-run summary; run continues |
 | **V4** version-current but no `compilation_results` | warn + degrade (CalcUsage auto-impl lost) |
 | **V5** every snapshot run | provenance banner to log/console (never into an artifact) |
-| **V6** `generate` extraction input | exactly one of `--models` / `--from-snapshot`; `--from-snapshot` + `--design-path-filter` is a hard error |
+| **V6** `generate` extraction input | exactly one of `--models` / `--from-snapshot`. The paired `--design-path-filter` refusal is now argparse's: Gate 4B-G0 removed the flag, so it is rejected before a snapshot is opened. Still a hard error, never a silent no-op |
 | **V7** missing load-bearing field on a deserialized dict | not silently defaulted. A type/wiring/scoping field (`python_type`, `binding_type`, `parent_part_path`, `owning_part_def_qn`) warns and degrades to its default; a **keying** field (`qualified_name` on a calc usage or design attribute) raises `SnapshotFormatError` — a silent default would mis-key the output registry. The benign majority (`is_input`, `unit`, `source_line`, list fields, …) keeps its `.get(default)` untouched. TRUTH-DEBT Item 6, Site 1. |
 
 **Format migrations (v2 → v5).** v3 added the three top-level constraint sections
@@ -95,15 +176,9 @@ snapshot whose version is not the current 5 is a hard error and every committed
 snapshot is re-captured at the current version in the same change. The loader never
 up-migrates an old snapshot in place.
 
-## CLI
+### Capture scripts (v5)
 
-- `sysml-codegen snapshot --models <path> [--output <file>] [--design-path-filter S]`
-  — capture a versioned snapshot. Default output `<models-root>/extraction_snapshot.json`.
-- `sysml-codegen generate --from-snapshot <file> [all other generate flags]` —
-  license-free generation. `--models` and `--from-snapshot` are mutually exclusive
-  and exactly one is required.
-
-**Capture scripts.** Only `scripts/capture_extraction_snapshots.py` runs live
+Only `scripts/capture_extraction_snapshots.py` runs live
 extraction (needs the syside license). `scripts/capture_pipeline_baselines.py`
 and `scripts/capture_baseline_yaml.py` regenerate the graph/registry and YAML
 baselines **from the committed snapshots** — license-free; the YAML script moved
@@ -111,10 +186,12 @@ off the live path in Item 11, so the YAML and graph baselines are rendered from
 the same graph and can never disagree. The script docstrings are the source of
 truth for this split.
 
-## Requirements & verification matrix
+### Requirements & verification matrix (v5)
 
 REQ-SNAP-01..07 (round-trip / typed-fields / AST-None) are the prior family; this
-item adds REQ-SNAP-08+.
+item adds REQ-SNAP-08+. Every row below is verified against the **v5** machinery. The v6
+envelope's own matrix lives in `tests/conformance/test_snapshot_v6_{envelope,capture,routes}.py`
+and `tests/conformance/test_source_admission_routes.py`.
 
 | REQ | Requirement | Test |
 |---|---|---|
@@ -134,7 +211,10 @@ item adds REQ-SNAP-08+.
 
 ## agentic-mbse impact
 
-Snapshot generation has a coordinated agentic-mbse boundary. Snapshot re-lowering consumes the
+Snapshot generation has a coordinated agentic-mbse boundary, and it applies to **both** formats:
+the v6 envelope anchors the companion's version and the executable-profile marker as
+environment facts, and v5 re-lowering consumes the companion's serialized schemas directly.
+Snapshot re-lowering consumes the
 companion's serialized constraint-fact and expression-IR schemas and applies executable-profile
 v4 behavior to those facts (`PROFILE_SEMANTIC_VERSION = "executable-profile/v4"`,
 `_upstream_pins.py:33`). A snapshot can therefore remain format-current while an incompatible
