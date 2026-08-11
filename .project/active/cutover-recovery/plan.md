@@ -3394,7 +3394,7 @@ unmoved. Execution lane **38 passed** including the 12 real-TEAx nodes at the re
 `ruff` **870 → 870**, `mypy src/` **69 in 16 files → unchanged**, `git diff --check` clean,
 `check_ledger_4a.py paths` **298 rows / 0 problems**, `surface` **0 on both axes**.
 
-**Commit:** `CHUNKB_OID`.
+**Commit:** ``6822685` (`6822685f47b8b2a5d3dd6726ddd682682849e3d5`)`.
 
 ### Phase 5 Completion
 
