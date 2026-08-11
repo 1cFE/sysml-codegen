@@ -1,0 +1,68 @@
+{
+  "phase": 8,
+  "date": "2026-08-10",
+  "batch_invocations": 1,
+  "batch_result": "failed",
+  "candidate_directory": "/tmp/elaborator-cutover-item7-candidate",
+  "required_counts": {
+    "v6": 14,
+    "refusal": 22,
+    "control": 1
+  },
+  "observed_counts_from_preserved_raw_results": {
+    "v6": 15,
+    "refusal": 22,
+    "control": 0,
+    "other": 0
+  },
+  "unexpected_results": [
+    {
+      "id": "B37-01",
+      "fixture": "agg_literal_probe",
+      "required": "CodeGenerationError: no calculation definition; no snapshot",
+      "actual": "v6 graph",
+      "artifact": "snapshots/B37-01-agg_literal_probe.json",
+      "graph_counts": {
+        "occurrences": 5,
+        "attributes": 3,
+        "calculations": 1,
+        "constraints": 0,
+        "nodes": 4,
+        "edges": 3
+      },
+      "fingerprint": "ad63183922961bfb48152205a04e1ea73b1524ddad7e0708c740f90902c7c3aa",
+      "projected_digest": "9d6e1d6e07024b2929c3915ecc1f4fe1d7e1822806e9593c286c7484601558f2",
+      "envelope_bytes": 11979,
+      "envelope_sha256": "753275697124a7f41dcda0f8242e5bb62908c00e0b728fcb82f3b74b0d09f89b"
+    }
+  ],
+  "harness_observation": {
+    "detail": "The driver classified ElaborationError as unexpected-error instead of decoding its readiness findings.",
+    "effect": "accepted-batch.json reports 22 unexpected-error rows, but each preserved live/capture message has the exact approved diagnostic multiset.",
+    "raw_refusal_rows": 22,
+    "raw_refusal_multisets_matching_ledger": 22,
+    "retry_performed": false
+  },
+  "preserved_graph_artifacts": {
+    "count": 15,
+    "relocated_count": 15,
+    "total_snapshot_bytes": 423014,
+    "snapshot_manifest_sha256": "f40d6fd6b2430b2ec35105e19c2ae6bec4928e8158509fd768f57b5a3b289034"
+  },
+  "candidate_file_digests": {
+    "batch-start.json": "244323c1286a93ffd7eaa3fc2f2b8714f5c0732f26b35eaa7a024d953e85fd1a",
+    "environment.json": "fabf2022e6ab233b1a23a7340489adf9c42d2f332b474a76281a3e5bad19a23b",
+    "approved-manifest.json": "6e2034994ef0046d24eab3ff5807643c61a4594a0335f81a8ec29fb69ad59179",
+    "accepted-batch.json": "778c66dacc0e56cf694805a4f040203be1f642be869b8ca412796d2037b3881c",
+    "normalized-diffs.json": "4028236d93ee76e00fe4e55ca10d28508a6a05bfe1c52fa5b663f035d3672c0b"
+  },
+  "pre_batch_tests": {
+    "manifest": "7 passed",
+    "focused_capture_and_public_route": "17 passed",
+    "real_teax_collection": "2 tests collected"
+  },
+  "scale_started": false,
+  "real_teax_started": false,
+  "phase8_checked": false,
+  "next_action": "Resolve B37-01 in its approved production owner and correct ElaborationError evidence decoding. The owner must explicitly authorize any replacement batch; this run was not retried."
+}
