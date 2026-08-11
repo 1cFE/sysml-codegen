@@ -2488,7 +2488,7 @@ equal the declared set.
   failures, zero `no live syside license` lines — delta versus `c48c132` (3557/47/38) is exactly
   **+14 passed**, the checker's own tests. `ruff check` and `mypy` clean on both new files.
   agentic-mbse unchanged and not re-run: nothing in that repository was touched.
-- **Commit:** see the Gate 4A OID recorded below after commit.
+- **Commit:** 804d8a2 (sysml-codegen only; agentic-mbse `N/A` — unchanged).
 
 ### Phase 5 Completion
 
