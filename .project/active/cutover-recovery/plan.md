@@ -3747,12 +3747,25 @@ itself — zero undispositioned files — and the retirement brief is purely mec
 **Chunking.** Multi-session by design. Coherent chunks, full battery per commit, honest remainder
 reported at each stop.
 
+> **Honest remainder at the chunk-15 stop (2026-08-11).** The stage brief asked for **zero
+> undispositioned files** and this stop is at **35**. Three of the brief's four pieces are done —
+> the execution lane (chunk 11), L-180 (chunk 12), and the expression-compiler two-step recorded
+> on its rows (chunk 12, where the recorded premise turned out to be false). The fourth, "the
+> genuine repoints", is 19 of 51 done. What remains is the same kind of work as chunks 13–15 and
+> at the same bar: one file at a time, matched to the exact route's own owner of its subject.
+> Two rows in the remainder are **not** ordinary repoints and are named so nobody budgets them
+> as such: **L-281/L-284** (the expression compiler — a rule-10 stop, ~31 nodes of authoring)
+> and **L-120** (`test_data_models.py`, 61 nodes, coupled to whatever Gate 4D leaves in
+> `09-data-models.md`). The runbook section below is written to the state this stop is actually
+> in, per-step blocker lists included, so the next session resumes from it rather than
+> re-deriving it.
+
 - [ ] Class 1 — the 61 repointable files *(13 done, 48 left)*
 - [x] Class 2 — the 44 no-fixture files *(38 dispositioned, 6 recorded-and-left-blocked with their reason)*
 - [ ] Class 3 — the 35 hard-blocked files, with targeted variants in the ranked order above *(6 done, 29 left)*
 - [ ] Final: `groups` green but for the acceptance gate; ledger + checker consistent with Git truth
 
-##### Progress — ten chunks, 100 files dispositioned, nothing deleted
+##### Progress — fifteen chunks, 128 files dispositioned, nothing deleted
 
 | Chunk | Commit | What |
 |---|---|---|
@@ -3770,10 +3783,12 @@ reported at each stop.
 | 12 | `986b24a` | L-180 repointed and ordered; the expression-compiler premise measured false |
 | 13 | `f2ae234` | the Item-10 mechanism family (5 files) + the retirement runbook |
 | 14 | `5f8d627` | the silent-failure family (6 files), and a caret with no test |
-| 15 | *this commit* | seven more genuine repoints, and the ledger's own gate catching one |
+| 15 | `2168b36` | seven more genuine repoints, and the ledger's own gate catching one |
 
-**Blockers, two-axis: 124 → 43.** G2′ 40, **G3′ 0, G4′ 0**. Row dispositions stand at
-**74 `retire-with-owner`, 23 `repoint`, 17 `archive-with-findings`**.
+**Blockers, two-axis union: 124 → 60 (chunk 10) → 35 (chunk 15).** G2′ 27, v5-family 25,
+**G3′ 0, G4′ 0**. Row dispositions stand at **110 `retire-with-owner`, 23 `repoint`,
+17 `archive-with-findings`**, with **38 still `defer-to-v5-family`** and one `defer-to-part-6`
+(L-290).
 
 > **Count correction, measured at HEAD before chunk 11 (2026-08-11).** "43" above is the
 > **v5-family** blocker count, not the remaining work. The two axes overlap but are not nested:
@@ -3786,15 +3801,15 @@ reported at each stop.
 **READY means dispositioned, not authorised.** G3′ and G4′ have no file whose fate is
 unrecorded; the resequencing ruling still puts their execution after the owner stop.
 
-**Remaining: 43 files, 335 nodes.** The class-1/2/3 split no longer organises the work, because
-of the correction below. What is left is four named pieces:
+**Remaining after chunk 15: 35 files.** The class-1/2/3 split no longer organises the work,
+because of the correction below. What is left, against the four named pieces:
 
 | Piece | Rows | Why it is still open |
 |---|---|---|
 | ~~the execution lane~~ | ~~L-192, L-191, L-193, L-194, and L-113/L-114 behind them~~ | **CLOSED, chunk 11.** See the chunk-11 record below. |
 | the expression compiler | L-284, L-281 (L-280 done) | **still blocked, and for a different reason than recorded** — chunk 12 measured the "mechanical rename" premise false. See below. |
 | doc-coupled | L-120 `test_data_models.py` | its target list is whatever Gate 4D leaves in `09-data-models.md` |
-| the genuine repoints | ~~L-180~~ (done, chunk 12), L-135, L-181, L-182, L-154, L-163, L-164, L-124, L-168, the silent-failure trio, **and the ~40 files the count correction above surfaced** | each needs coverage re-derived, not an import moved |
+| the genuine repoints | **19 done** across chunks 12–15 (L-180, L-170, L-171, L-173, L-183, L-184, L-174, L-175, L-176, L-242, L-243, L-244, L-196, L-200, L-218, L-250, L-172, L-123, L-097). **32 left:** L-094, L-115, L-122, L-124, L-134, L-135, L-141, L-142, L-143, L-147, L-154, L-156, L-162, L-163, L-164, L-166, L-167, L-168, L-178, L-181, L-182, L-185, L-186, L-189, L-190, L-219, L-227, L-236, L-238, L-246, L-278, L-290. Each needs coverage re-derived, not an import moved. |
 
 **`test_snapshot_v5_gate.py` (L-180) is flagged and ordered.** The retirement brief's own
 post-step-4 battery requires "the v5 typed refusal still typed", so this file must be
