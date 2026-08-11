@@ -1,0 +1,201 @@
+"""The Gate 4A ledger checker must fail on the defects that produced the incident.
+
+Two families. The path check must see *deletions* — the original census scanned a worktree,
+where a deleted file simply is not there, and 118 changed paths went unrecorded. The
+replacement check must resolve a real pytest node and watch it pass — the original accepted
+absence as proof, so a deleted responsibility with no replacement scored the same as a
+migrated one.
+"""
+
+from __future__ import annotations
+
+import sys
+from pathlib import Path
+
+import pytest
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "scripts"))
+
+import check_ledger_4a as checker  # noqa: E402
+
+DESELECTED_NODE = "tests/execution/test_fusion_tea_real_teax.py"
+
+
+@pytest.fixture
+def ledger() -> dict:
+    return checker.load_ledger()
+
+
+def test_the_committed_ledger_covers_the_git_derived_set_exactly(ledger: dict) -> None:
+    assert checker.check_paths(ledger) == []
+
+
+def test_the_candidate_set_is_read_from_the_diff_so_deletions_are_visible(
+    ledger: dict,
+) -> None:
+    """The defect that made the original census blind: deletions.
+
+    A worktree scan of the rebuild finds these files present and would report nothing to
+    disposition. Reading the diff finds them deleted by the candidate, which is the set the
+    ledger owes rows for.
+    """
+    source = ledger["git_derived_from"]
+    derived = checker.git_candidate_set(source["base"], source["candidate"])
+    deleted_but_present = {
+        path for path in derived if checker.path_at_head(path)
+    }
+    assert len(deleted_but_present) > 200
+    assert "src/sysml_codegen/orchestration/pipeline_builder.py" not in derived
+    assert "src/sysml_codegen/resolution/producer_resolution.py" in derived
+
+
+def test_an_uncovered_path_fails(ledger: dict) -> None:
+    dropped = next(
+        row for row in ledger["rows"] if row["origin"] == "forensic-diff"
+    )
+    ledger["rows"] = [row for row in ledger["rows"] if row is not dropped]
+    problems = checker.check_paths(ledger)
+    assert any(
+        problem.startswith("uncovered path") and dropped["path"] in problem
+        for problem in problems
+    )
+
+
+def test_an_orphan_row_fails(ledger: dict) -> None:
+    ledger["rows"].append(
+        {
+            "id": "L-999",
+            "path": "src/sysml_codegen/not_in_the_diff.py",
+            "repo": "sysml-codegen",
+            "class": "production",
+            "disposition": "delete",
+            "origin": "forensic-diff",
+            "group": "4B-G1",
+            "authority": "invented",
+            "unreachability": None,
+            "replacement_proof_node": None,
+            "blocked_by": [],
+            "reason": "invented",
+        }
+    )
+    problems = checker.check_paths(ledger)
+    assert any("orphan row" in problem for problem in problems)
+
+
+def test_a_carried_row_that_does_not_exist_at_head_fails(ledger: dict) -> None:
+    ledger["rows"].append(
+        {
+            "id": "L-998",
+            "path": "src/sysml_codegen/gone.py",
+            "repo": "sysml-codegen",
+            "class": "production",
+            "disposition": "delete",
+            "origin": "phase3-carried",
+            "group": "4B-G1",
+            "authority": "invented",
+            "unreachability": None,
+            "replacement_proof_node": None,
+            "blocked_by": [],
+            "reason": "invented",
+        }
+    )
+    problems = checker.check_paths(ledger)
+    assert any("does not exist at HEAD" in problem for problem in problems)
+
+
+def test_a_row_with_no_reason_fails(ledger: dict) -> None:
+    ledger["rows"][0]["reason"] = ""
+    assert any("no reason recorded" in problem for problem in checker.check_paths(ledger))
+
+
+def _write_node(tmp_path: Path, body: str) -> str:
+    module = tmp_path / "test_replacement_probe.py"
+    module.write_text(body)
+    return f"{module}::test_probe"
+
+
+def test_replacement_is_green_on_a_node_that_collects_and_passes(tmp_path: Path) -> None:
+    node = _write_node(tmp_path, "def test_probe() -> None:\n    assert True\n")
+    proof = checker.replacement_is_green(node, sys.executable)
+    assert proof.verdict is checker.Verdict.GREEN
+    assert proof.is_green
+
+
+def test_replacement_is_not_green_when_the_node_is_missing(tmp_path: Path) -> None:
+    node = _write_node(tmp_path, "def test_other() -> None:\n    assert True\n")
+    proof = checker.replacement_is_green(node, sys.executable)
+    assert proof.verdict is checker.Verdict.MISSING
+    assert not proof.is_green
+
+
+def test_replacement_is_not_green_when_the_node_is_deselected() -> None:
+    """A node the required suite never runs is not a replacement.
+
+    ``tests/execution`` is deselected by the default marker expression, so this module
+    exists and passes when its lane is selected — and still cannot prove a replacement in
+    the suite the gate runs.
+    """
+    proof = checker.replacement_is_green(DESELECTED_NODE, sys.executable)
+    assert proof.verdict is checker.Verdict.DESELECTED
+    assert not proof.is_green
+
+
+def test_replacement_is_not_green_when_the_node_fails(tmp_path: Path) -> None:
+    node = _write_node(tmp_path, "def test_probe() -> None:\n    assert False\n")
+    proof = checker.replacement_is_green(node, sys.executable)
+    assert proof.verdict is checker.Verdict.FAILED
+    assert not proof.is_green
+
+
+def test_a_row_may_name_the_lane_its_replacement_runs_in() -> None:
+    """Deselection is judged inside the suite the row declares, not one global suite.
+
+    ``tests/runtime/test_pipeline_runner.py``'s responsibility was superseded by the real-TEAx
+    mutation lane, which the default marker expression excludes. Without a declared lane the
+    row reads as deselected; with one it is checked where it actually runs.
+    """
+    assert checker.SUITES["execution"] == ("-m", "execution")
+    row = next(
+        row
+        for row in checker.load_ledger()["rows"]
+        if row["path"] == "tests/runtime/test_pipeline_runner.py"
+    )
+    assert row["required_suite"] == "execution"
+    assert checker.replacement_is_green(
+        DESELECTED_NODE, sys.executable, "not-a-suite"
+    ).verdict is checker.Verdict.MISSING
+
+
+def test_a_pending_replacement_is_never_green() -> None:
+    proof = checker.replacement_is_green("PENDING-4C: an exact-route fixture", sys.executable)
+    assert proof.verdict is checker.Verdict.PENDING
+    assert not proof.is_green
+
+
+def test_every_row_that_deletes_or_migrates_names_a_replacement_or_a_pending_owner(
+    ledger: dict,
+) -> None:
+    """No silent deletion: a row that removes something owes a named node.
+
+    The three exceptions are stated by path, not by class, so a new one cannot slip in.
+    """
+    allowed_without_node = {
+        "src/sysml_codegen/analysis/signature_extractor.py",  # CONFLICT: no replacement exists
+        "src/sysml_codegen/elaboration/diff.py",  # recovery-only comparator
+        "tests/helpers/legacy_route.py",  # the adapter itself
+    }
+    missing = [
+        row["path"]
+        for row in ledger["rows"]
+        if row["disposition"] in {"delete", "migrate"}
+        and not row["replacement_proof_node"]
+        and row["path"] not in allowed_without_node
+    ]
+    assert missing == []
+
+
+def test_every_conflict_row_states_what_the_orchestrator_must_rule_on(ledger: dict) -> None:
+    conflicts = [row for row in ledger["rows"] if row.get("conflict")]
+    assert conflicts, "the ledger records at least the two derived conflicts"
+    for row in conflicts:
+        assert len(row["conflict"]) > 80, row["id"]

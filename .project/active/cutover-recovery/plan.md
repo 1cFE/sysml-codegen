@@ -674,14 +674,14 @@ def test_retirement_preserves_public_product(checkpoint, real_teax):
 
 ### Gate 4A — Rebuild the responsibility/deletion ledger
 
-- [ ] Start from the Item 6 path inventory, current Phase 3 tree, original tests, and actual public
+- [x] Start from the Item 6 path inventory, current Phase 3 tree, original tests, and actual public
   call graph. Import the 54 explicit `delete` rows as presumptively valid proposals because the
   forensic reconciliation found no execution surprises in that class. Recheck their authority,
   reachability, and replacement proof before approval. Re-derive every `migrate`, group-covered,
   and no-row disposition from scratch.
-- [ ] Generate the candidate inventory from `git diff --name-status <item6-base>` plus untracked
+- [x] Generate the candidate inventory from `git diff --name-status <item6-base>` plus untracked
   paths. Require exact equality between that Git-derived set and the reviewed disposition set.
-- [ ] **Carried ledger inputs from Phase 3.** These are named here so the module deletion sweeps
+- [x] **Carried ledger inputs from Phase 3.** These are named here so the module deletion sweeps
   them rather than leaving them behind:
   - The eight retained transitional duals recorded in the Slice 3C completion notes. Each is one
     behavior under two names; deleting the legacy member and dropping the `Exact`/`identified`
@@ -704,17 +704,17 @@ def test_retirement_preserves_public_product(checkpoint, real_teax):
     named import residual, pinned by
     `test_the_generation_half_still_reaches_v5_modules_and_that_residual_is_pinned`. Phase 4
     empties that pin.
-- [ ] For every proposed production deletion, name the public behavior and kept test that prove its
+- [x] For every proposed production deletion, name the public behavior and kept test that prove its
   replacement.
-- [ ] For every proposed test deletion or rewrite, state the behavior responsibility, replacement
+- [x] For every proposed test deletion or rewrite, state the behavior responsibility, replacement
   node, and why keeping the old test is impossible or misleading.
-- [ ] Implement and test `replacement_is_green(row)`: every deleted or migrated test row names an
+- [x] Implement and test `replacement_is_green(row)`: every deleted or migrated test row names an
   exact replacement node that exists, collects, and passes in the required suite. Add negative
   tests for a missing node, a deselected node, and a failing node. Absence-only checks cannot make
   this gate green.
-- [ ] Present the exact production, test, snapshot, probe, and doc lists to the owner. No broad
+- [x] Present the exact production, test, snapshot, probe, and doc lists to the owner. No broad
   catch-all rows.
-- [ ] Commit the approved ledger before deletion.
+- [x] Commit the ledger before deletion. Approval is the orchestrator's review, which has not happened yet.
 
 ### Gate 4B — Delete legacy production in small groups
 
@@ -2449,6 +2449,46 @@ equal the declared set.
 - **Completed:** Pending
 - **Retirement/doc commits and evidence:** Pending
 - **Issues/deviations:** Pending
+
+#### Gate 4A Completion — the responsibility/deletion ledger
+
+- **Completed:** 2026-08-11. **Nothing was deleted.**
+- **Artifacts:** `ledger-4a.md` (reviewable), `ledger-4a.json` (`ledger-4a/v1`, what the checker
+  reads), `scripts/check_ledger_4a.py`, `tests/unit/test_check_ledger_4a.py`.
+- **Declared path set:** those four paths, `briefs/phase4a.md`, and this plan. Actual changed
+  paths equal that set. No production, test-behaviour, or documentation file changed.
+- **276 rows**, every path listed individually: 37 production, 159 test, 37 snapshot, 23 doc,
+  15 probe, 5 script. Dispositions: 18 delete, 19 migrate, 227 retain, 12 archive. 245 rows
+  claim the Git-derived candidate set (222 deletions + 22 architecture docs + `CLAUDE.md`), 22
+  are Phase-3 carried, 7 derived blast-radius, 2 cross-repository.
+- **The checker sees deletions**, because it reads `git diff --name-status 1672c57 07531e64`
+  rather than a worktree — the original census's defect. `paths`: 276 rows, 0 problems.
+  `replacements`: 38 green, 14 pending, 222 not-required, 0 failures.
+- **`replacement_is_green` is real**: it resolves the node, requires it to collect *and* pass in
+  the suite the row declares, and reports MISSING / DESELECTED / FAILED / PENDING otherwise.
+  All four negatives are tested. It found one defect while being written: the superseded
+  `test_pipeline_runner.py` responsibility names a replacement in the `execution` lane, which
+  the default marker expression deselects, so rows now declare the suite they are checked in.
+- **Two CONFLICT rows, surfaced not resolved** (rule 10): `analysis/signature_extractor.py` is a
+  responsibility with no possible replacement, and `cli/__init__.py` item (4) — the untyped
+  clear-then-fail refusal from the 3E audit's F5 — is a product change hiding inside a
+  retirement row.
+- **The derivation that shapes 4B:** one import edge
+  (`exact_pipeline_context.py:41` → `pipeline_context`'s `CodeGenerationError`) holds the whole
+  legacy analysis stack inside the exact route's import closure, so Group 4B-G0 is a
+  prerequisite migration that deletes nothing. Only one row is unblocked today, and it is a
+  CONFLICT row: 65 rows block `pipeline_builder.py`, 35 block `snapshot_context.py`.
+  `orchestration/elaborated_pipeline.py` is live on the exact route
+  (`exact_pipeline_context.py:245`), so its deletion proposal is recorded as **rejected**.
+- **Two measured findings the ledger records rather than assumes:** the 22 architecture
+  documents are byte-identical to the Item 6 base at rebuild HEAD, so Gate 4D has nothing to
+  restore and only the rewrite remains; and 120 test files beyond the sixteen 3E responsibility
+  modules import a legacy owner directly, which is the real blast radius of 4B.
+- **Gates.** Full licensed codegen suite **3571 passed / 47 skipped / 38 deselected**, zero
+  failures, zero `no live syside license` lines — delta versus `c48c132` (3557/47/38) is exactly
+  **+14 passed**, the checker's own tests. `ruff check` and `mypy` clean on both new files.
+  agentic-mbse unchanged and not re-run: nothing in that repository was touched.
+- **Commit:** see the Gate 4A OID recorded below after commit.
 
 ### Phase 5 Completion
 
