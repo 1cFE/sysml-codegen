@@ -575,7 +575,7 @@ Record every slice. Do not combine them later.
 
 | Slice | sysml-codegen OID | agentic-mbse OID | Full suites | Real TEAx |
 |---|---|---|---|---|
-| 3A | SLICE_3A_OID | N/A | 3462 passed / 47 skipped / 18 deselected (+104, all new) | smoke PASS (fusion_tea, 48-file sealed package) |
+| 3A | fe0b855 | N/A | 3462 passed / 47 skipped / 18 deselected (+104, all new) | smoke PASS (fusion_tea, 48-file sealed package) |
 | 3B | PENDING | N/A | PENDING | smoke PENDING |
 | 3C | PENDING | PENDING | PENDING | N/A |
 | 3D | PENDING | PENDING if changed | PENDING | PENDING |
@@ -968,7 +968,7 @@ Fill these during execution. Amend incorrect content rather than appending contr
 #### Slice 3A Completion — V6 envelope and source admission
 
 - **Completed:** 2026-08-10
-- **Commit:** SLICE_3A_OID (sysml-codegen only; agentic-mbse untouched and clean at
+- **Commit:** fe0b855 (sysml-codegen only; agentic-mbse untouched and clean at
   `5088b417c9e5453271291d46cd5fb23fc0579b1e`)
 
 **What the slice proves.** One model elaborated live, captured to a v6 snapshot, and loaded back
