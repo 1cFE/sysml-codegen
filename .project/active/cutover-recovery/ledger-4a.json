@@ -1774,7 +1774,7 @@
    "blocked_by": [],
    "responsibility_nodes": 2,
    "behaviour_responsibility": "Alias-aggregation probe generation",
-   "reason": "2 nodes repointed at the legacy route in Slice 3E because their specimen is what the cutover retires. Blocks 4B: no legacy owner it drives may be deleted until this row names an exact-route node that collects and passes. Legacy owners it drives: via tests/helpers/legacy_route.py."
+   "reason": "2 nodes repointed at the legacy route in Slice 3E because their specimen is what the cutover retires. Blocks 4B: no legacy owner it drives may be deleted until this row names an exact-route node that collects and passes. Legacy owners it drives: via tests/helpers/legacy_route.py. Gate 4C (S3 ruling, 2026-08-11): the unparseable params schema this row's specimen measured is FIXED \u2014 the field name is sanitized and the exact key is kept as the field's alias, so the JSON surface did not move. Coverage owner for the hole it exposed: tests/conformance/test_generated_schema_importable.py."
   },
   {
    "id": "L-100",
@@ -2038,12 +2038,12 @@
    "group": "4C-responsibility",
    "authority": "Slice 3E reclassification, orchestrator ruling 1 (2026-08-11); plan Gate 4C hard gate on 4B",
    "unreachability": null,
-   "replacement_proof_node": "PENDING-4C: Portability on a v6 pair - BLOCKED by a measured defect. The exact route leaks an absolute source path into a constraint catalog's excluded_records location (the checkout path live, a capture-time /tmp staging directory on replay), and that field feeds the catalog fingerprint and the model contract's semantic fingerprint. One model, two checkout roots x two routes, four fingerprints. The property this row protects is the one that fails, so the row cannot go green. Measured and pinned by tests/conformance/test_exact_route_constraint_portability.py, where the portable half - report module, predicates, pipeline, every other generated file - is green.",
+   "replacement_proof_node": "tests/conformance/test_exact_route_constraint_portability.py",
    "required_suite": null,
    "blocked_by": [],
    "responsibility_nodes": 2,
    "behaviour_responsibility": "Constraint portability live vs replay",
-   "reason": "2 nodes repointed at the legacy route in Slice 3E because their specimen is what the cutover retires. Blocks 4B: no legacy owner it drives may be deleted until this row names an exact-route node that collects and passes. Legacy owners it drives: constraint_lowering, pipeline_builder, serializer, snapshot_context."
+   "reason": "2 nodes repointed at the legacy route in Slice 3E because their specimen is what the cutover retires. Blocks 4B: no legacy owner it drives may be deleted until this row names an exact-route node that collects and passes. Legacy owners it drives: constraint_lowering, pipeline_builder, serializer, snapshot_context. Gate 4C (S1 ruling, 2026-08-11): closed by FIX, not by specimen alone. The excluded constraint location was an absolute path \u2014 the checkout live, the capture staging directory on replay \u2014 and it reached the catalog and semantic fingerprints, so one model minted four fingerprints across two checkout roots and two routes. It is now the portable root-N/<relpath> referent the sealed source manifest uses (orchestration/elaborated_pipeline._rewrite_exclusion_locations), and a snapshot sealed before the fix is refused at load. Enumerated while there: no other catalog or contract field carries an absolute path, and the specimen re-scans both contracts every run."
   },
   {
    "id": "L-119",
@@ -3201,7 +3201,7 @@
    "blocked_by": [],
    "responsibility_nodes": 25,
    "behaviour_responsibility": "Costed-component pattern end to end: leaf costs, allocation, idiot_index aggregation, zero backlog, numerical ground truth",
-   "reason": "25 nodes repointed at the legacy route in Slice 3E because their specimen is what the cutover retires. Blocks 4B: no legacy owner it drives may be deleted until this row names an exact-route node that collects and passes. Legacy owners it drives: via tests/helpers/legacy_route.py. Gate 4C: the exact route refuses a rollup whose two terms read the same attribute name off different children (SI_RENDERING_COLLISION, qualifier-dropping parameter naming), so the replacement fixture uses named per-child aggregations and pins the refusal."
+   "reason": "25 nodes repointed at the legacy route in Slice 3E because their specimen is what the cutover retires. Blocks 4B: no legacy owner it drives may be deleted until this row names an exact-route node that collects and passes. Legacy owners it drives: via tests/helpers/legacy_route.py. Gate 4C: the exact route refuses a rollup whose two terms read the same attribute name off different children (SI_RENDERING_COLLISION, qualifier-dropping parameter naming), so the replacement fixture uses named per-child aggregations and pins the refusal. Gate 4C (S4 ruling, 2026-08-11): the refusal stands as correct recovery-era behaviour \u2014 a silent collapse would be the incident again. Cross-reference: this is the filed Item 10 cross-part child.attr collapse class (the resolver does not follow per-child :>> redefinitions). No code change; the modelling requirement (named per-child intermediates) is carried to the Gate 4D documentation subject list, and the class to the Phase 5 packet. Gate 4C (S3 ruling, 2026-08-11): the unparseable params schema this row's specimen measured is FIXED \u2014 the field name is sanitized and the exact key is kept as the field's alias, so the JSON surface did not move. Coverage owner for the hole it exposed: tests/conformance/test_generated_schema_importable.py."
   },
   {
    "id": "L-200",
@@ -3920,12 +3920,16 @@
    "group": "4C-responsibility",
    "authority": "Slice 3E reclassification, orchestrator ruling 1 (2026-08-11); plan Gate 4C hard gate on 4B",
    "unreachability": null,
-   "replacement_proof_node": "PENDING-4C: V11 abort on the exact route - UNREACHABLE by construction. elaboration/project.py builds every ComputationGraph with fallback_entry_points=set() in both run() and select(), and collect_uncovered_params filters on membership in that set, so cli._reconcile_params_coverage runs on every generation and can never fire. No fixture can seed the gap through the public surface. Pinned at its cause by tests/unit/test_warning_reconciliation_exact_route.py::test_the_projection_hard_codes_an_empty_fall_through_set; the collectors stay covered by the nine route-neutral graph-level nodes in tests/unit/test_uncovered_params.py.",
+   "replacement_proof_node": [
+    "tests/unit/test_warning_reconciliation_exact_route.py::test_the_projection_hard_codes_an_empty_fall_through_set",
+    "tests/unit/test_warning_reconciliation_exact_route.py::test_the_exact_route_projects_no_fall_through_entry_points",
+    "tests/unit/test_uncovered_params.py"
+   ],
    "required_suite": null,
    "blocked_by": [],
    "responsibility_nodes": 1,
    "behaviour_responsibility": "V11 seeded strict-generation abort",
-   "reason": "1 nodes repointed at the legacy route in Slice 3E because their specimen is what the cutover retires. Blocks 4B: no legacy owner it drives may be deleted until this row names an exact-route node that collects and passes. Legacy owners it drives: graph_builder."
+   "reason": "1 nodes repointed at the legacy route in Slice 3E because their specimen is what the cutover retires. Blocks 4B: no legacy owner it drives may be deleted until this row names an exact-route node that collects and passes. Legacy owners it drives: graph_builder. Gate 4C (S2 ruling, 2026-08-11): CLOSED BY PROOF, per the 3E fail-before-mutate alternative. The V11 abort is structurally unreachable on the exact route: elaboration/project.py builds every ComputationGraph with fallback_entry_points=set() in both run() and select(), and collect_uncovered_params filters on membership in that set, so cli._reconcile_params_coverage runs on every generation and cannot fire. No fixture can seed the gap through the public surface, so no behavioural specimen exists to author. V11 coverage owner: tests/unit/test_uncovered_params.py's nine route-neutral graph-level nodes, named in this row's proof node list and run by the checker. The first two nodes are the rot pins \u2014 one asserts the projection literal, one asserts an empty collector result on every accepted fixture \u2014 so the proof fails the day the exact route starts producing fall-through entry points. Flagged to the Phase 5 owner packet: V11's guard is now structural, not behavioural."
   },
   {
    "id": "L-250",

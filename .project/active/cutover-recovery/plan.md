@@ -767,6 +767,19 @@ def test_retirement_preserves_public_product(checkpoint, real_teax):
   11 untouched reference documents merely to make the set uniform.
 - [ ] Build a subject-by-subject update list that states which claims became stale and which new
   public behavior replaces them.
+- [ ] **Carried from Gate 4C (S4 ruling, 2026-08-11): document the aggregation modelling
+  requirement the exact route imposes.** An assembly cannot write
+  `sum(a.capital_cost) + sum(b.capital_cost)`: the projection names an expression parameter
+  after the reference's last member and drops the qualifier, so two terms reading a same-named
+  attribute off different children both render `capital_cost` and the model is refused with
+  `SI_RENDERING_COLLISION`. The refusal is correct recovery-era behaviour — a silent collapse
+  is the incident again — but no document states the requirement, and every child of a costed
+  assembly exposes the same attribute names by construction. The subject must give the working
+  idiom: one named intermediate attribute per child role (`panel_capital`, `caster_capital`),
+  added by the rollup. Worked example: `tests/fixtures/costed_cart_d5/library.sysml`. Refusal
+  pinned by `test_costed_component_exact_route.py::test_a_two_term_same_name_rollup_is_refused`.
+  Cross-reference: this is the filed Item 10 cross-part `child.attr` collapse class, where the
+  resolver does not follow per-child `:>>` redefinitions.
 - [ ] Update one coherent documentation subject per commit. Preserve subject-specific requirements,
   rationale, examples, and cross-links.
 - [ ] Add a check rejecting identical full-file content across distinct numbered reference docs,
@@ -2732,6 +2745,119 @@ proves the refusal leaves no half-written tree.
   attributes give four colliding module class names, and the registry aliases the imports
   (REQ-REG-04). The zero-WARNING sweep names that fixture as the exception with its reason
   rather than being scoped down to whatever passes.
+
+#### Gate 4C Part 2 Completion — the four surfacings, ruled and discharged
+
+- **Completed:** 2026-08-11. **Commit:** `PENDING-OID2` (sysml-codegen only; agentic-mbse `N/A`).
+- **Checker:** `paths` **276 rows, 0 problems**. `replacements` **54 green, 0 pending,
+  220 not-required, 0 failures** — every responsibility row in the ledger now names a proof
+  node that collects and passes.
+
+| Surfacing | Ruling | Outcome |
+|---|---|---|
+| S1 — constraint location leaks an absolute path | FIX | Fixed and closed. L-118 green on 8 nodes. |
+| S2 — V11 abort unreachable | CLOSE BY PROOF | Closed. L-249 green on 3 proof nodes, two of them rot pins. |
+| S3 — params schema does not parse | FIX | Fixed. New coverage module, 21 nodes. |
+| S4 — same-name rollup refused | REFUSAL STANDS | Documented and filed. No code change. |
+
+##### S1 — the excluded-constraint location is now route- and root-invariant
+
+**Cause.** `exclusion_location` was a second, unnormalized copy of a source path. The
+elaborator built it from the raw parser path (`elaboration/elaborate.py:1136`) and the one
+place that rewrites paths to referents,
+`orchestration/elaborated_pipeline._rewrite_sources_as_referents`, only touched `source_file`.
+So the field escaped normalization on both routes: the checkout path live, the private
+`/tmp/sysml-codegen-sources-XXXXXXXX/root-0/` staging path on replay.
+
+**Fix.** `_rewrite_exclusion_locations` re-renders the field against a portable referent, and
+each route supplies the mapping it can prove — the live route maps the raw path against its
+model roots with `map_live_source_referent`, the capture route re-renders from the referent it
+has already written onto `source_file`. One rendering shape, two policies at the call sites.
+A snapshot sealed before the fix is **refused at load** (`snapshot/envelope.py`), because its
+digest is unkeyed and replaying it would mint a fingerprint that varies by capture machine;
+the refusal names the field and says "re-capture".
+
+**Measured, red to green.** Same model, two checkout roots, live and replayed from each:
+
+| | before | after |
+|---|---|---|
+| distinct semantic fingerprints | 4 | **1** |
+| distinct catalog fingerprints | 4 | **1** |
+| files differing across the four routes | 3 | **0** |
+| excluded location | `///tmp/…/checkout-a/models/model.sysml:13` | `root-0/model.sysml:13` |
+
+**The enumeration the ruling asked for.** Every catalog and contract field was scanned, not
+assumed: five constraint-bearing fixtures × two routes × three contract files, matching any
+absolute `.sysml` path. `exclusion.location` was the **only** hit, in `model_contract.json`
+alone. Three further constraint shapes (`constraint_inline`, `constraint_shared_polarity`,
+`constraint_def_owned_redefining`) were scanned at catalog level and are clean; three more
+(`constraint_occurrence_demand/anonymous`, `constraint_blocked_profile`,
+`constraint_malformed_mixed`) are refused by the elaborator and reach no catalog. The scan is
+not a one-off: `test_no_contract_field_carries_an_absolute_source_path` re-runs it on every
+route each time the suite runs, so a newly added leaking field fails there.
+
+##### S2 — L-249 closed by proof, with the V11 coverage owner named
+
+The row's disposition is the derivation, recorded in the row itself:
+`elaboration/project.py` constructs every `ComputationGraph` with
+`fallback_entry_points=set()` in both `run()` and `select()`, and both collectors filter on
+membership in that set, so `cli._reconcile_params_coverage` runs on every generation and cannot
+fire. No fixture can seed the gap through the public surface.
+
+The row's proof node is a list of three, all run by the checker: the two rot pins
+(`test_the_projection_hard_codes_an_empty_fall_through_set`, which asserts the projection
+literal, and `test_the_exact_route_projects_no_fall_through_entry_points`, which asserts an
+empty collector result on every accepted fixture) and **`tests/unit/test_uncovered_params.py`,
+named in the row as the V11 coverage owner** — its nine route-neutral graph-level nodes build
+their graphs directly and are what still proves the collector's semantics. The day the exact
+route starts producing fall-through entry points, the pins fail and the row becomes authorable
+as a behavioural specimen.
+
+**Flagged to the Phase 5 owner packet:** V11's guard is structural, not behavioural. The
+generation boundary still calls it, and the call is not dead code in the reachability sense,
+but on the shipped route it can only ever return empty.
+
+##### S3 — the generated params schema parses, and the JSON surface did not move
+
+**Cause and blast radius.** A modelled finite multiplicity mints keys carrying an occurrence
+index, and the schema template wrote the key straight into a class body as a field name, so
+`schemas/*_params.py` was a `SyntaxError`. Pre-existing and reachable from public `generate`:
+it reproduced at `HEAD` on the ratified corpus fixture `d38_caret`.
+
+**Fix.** `core/qualified_names.params_field_name` sanitizes `[0]` to `_0`, and the schema
+declares the sanitized field with the exact key as its **alias**. The JSON keys are untouched.
+A key with no index passes through unchanged and gets no alias, so every package without a
+multiplicity is byte-identical to before — asserted, not asserted-by-hope, in
+`test_only_an_indexed_key_gets_an_alias`.
+
+**The one thing the alias did not cover, found by asking where the field is read.** The runtime
+resolves a pipeline input `group.<field>` with `getattr` on the loaded params model
+(`teax-simkit`, `pipeline_executor.py:411`), so the YAML's field path had to follow the field
+name or the package would have parsed and then failed at execution with an `AttributeError` —
+strictly worse than the `SyntaxError` it replaced. One helper, used at both sites, keeps them
+in step; `test_the_pipeline_reads_the_field_name_the_schema_declares` checks the agreement
+against the imported model's real `model_fields`. **No shipped JSON key changed anywhere**, so
+the ruling's stop condition was not met. No committed baseline carries an indexed entry-point
+key (checked: the one `[0]` in `baseline_outputs` is a constraint id), so no byte-identity gate
+moved.
+
+**Coverage.** `tests/conformance/test_generated_schema_importable.py`, 21 nodes over five
+fixtures — three that mint an index and two that do not. It parses every generated file,
+**imports** each schema and validates the package's own emitted JSON through it (the layer a
+parse check cannot reach), and asserts the emitted keys equal the graph's entry-point names
+verbatim. A collision guard refuses a group whose two keys would sanitize onto one field rather
+than letting the second declaration silently replace the first.
+
+##### S4 — the refusal stands; the modelling requirement is now documentation work
+
+No code change. The fail-closed `SI_RENDERING_COLLISION` is correct recovery-era behaviour, and
+a silent collapse is the incident this recovery exists to undo. What was missing is that no
+document states the requirement, so the working idiom — one named intermediate attribute per
+child role, added by the rollup — is now a **Gate 4D documentation subject** (added to that
+gate's checklist above, with `tests/fixtures/costed_cart_d5/library.sysml` as the worked
+example). The Item 10 cross-reference — the cross-part `child.attr` collapse class, where the
+resolver does not follow per-child `:>>` redefinitions — is recorded on ledger row L-199 and
+carried to the Phase 5 packet. The refusal pin stays where it is.
 
 ### Phase 5 Completion
 

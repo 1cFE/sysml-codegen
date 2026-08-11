@@ -239,27 +239,18 @@ def test_the_pipeline_yaml_orders_producers_before_consumers(package: Path) -> N
     )
 
 
-def test_the_only_unparseable_generated_file_is_the_indexed_key_schema(package: Path) -> None:
-    """Every generated file parses except one, and that one is a surfaced defect.
+def test_every_generated_file_is_valid_python(package: Path) -> None:
+    """Including the params schema, which this fixture's ``[4]`` children index.
 
-    A modelled finite multiplicity mints entry-point keys carrying an index
-    (``…__caster[0]__load_rating``), and the params schema writes those keys as
-    Python field names, so ``schemas/library_params.py`` does not parse. This is
-    not this fixture's doing: it reproduces identically on the ratified corpus
-    fixture ``d38_caret`` at ``HEAD``, whose ``…__cell[0]__base_cost`` keys break
-    the same file. Recorded as a Gate 4C rule-10 surfacing in the recovery plan.
-
-    The set is pinned rather than the count, so a *second* file starting to fail
-    is a failure here, and so is this one being fixed without the surfacing
-    being closed.
+    When this module was authored the schema was a ``SyntaxError``: a modelled
+    multiplicity mints ``…__caster[0]__load_rating`` and that key was written
+    straight into a class body. The S3 fix sanitizes the field name and keeps the
+    key as its alias. The whole-package check stays here as the local guard; the
+    subject itself is owned by
+    ``tests/conformance/test_generated_schema_importable.py``.
     """
-    unparseable = []
     for path in sorted(package.rglob("*.py")):
-        try:
-            ast.parse(path.read_text(), filename=str(path))
-        except SyntaxError:
-            unparseable.append(str(path.relative_to(package)))
-    assert unparseable == ["schemas/library_params.py"]
+        ast.parse(path.read_text(), filename=str(path))
 
 
 @pytest.mark.parametrize(

@@ -12,6 +12,7 @@ from typing import Any
 
 import jinja2
 
+from sysml_codegen.core.qualified_names import params_field_name
 from sysml_codegen.generation.type_mapping import map_sysml_type_to_python
 
 logger = logging.getLogger(__name__)
@@ -126,6 +127,29 @@ def generate_inputs_readme(
     return "\n".join(readme)
 
 
+def _refuse_colliding_field_names(group_label: str, fields: list[dict[str, Any]]) -> None:
+    """Refuse a group whose keys sanitize onto one Python field name.
+
+    Two distinct params keys must never share a field: the second declaration
+    would silently replace the first and one modelled value would vanish from
+    the schema. Only an indexed key is rewritten at all, so this can only fire
+    when a model also declares the unindexed spelling — rare, and a genuine
+    ambiguity the operator has to resolve in the model.
+    """
+    from sysml_codegen.core.errors import CodeGenerationError
+
+    seen: dict[str, str] = {}
+    for field in fields:
+        name, alias = field["name"], field["alias"]
+        prior = seen.get(name)
+        if prior is not None and prior != alias:
+            raise CodeGenerationError(
+                f"parameter group {group_label!r}: keys {prior!r} and {alias!r} both "
+                f"render as the schema field {name!r} — rename one in the model"
+            )
+        seen[name] = alias
+
+
 def generate_derived_group_schema(
     group,  # DerivedParameterGroup
     template_env: jinja2.Environment,
@@ -150,12 +174,14 @@ def generate_derived_group_schema(
 
         # Build field dict with default from derivation
         field: dict[str, Any] = {
-            "name": param.name,
+            "name": params_field_name(param.name),
+            "alias": param.name,
             "type": python_type,
             "description": param.description or f"Parameter {param.name}",
             "default": param.default_value,
         }
         fields.append(field)
+    _refuse_colliding_field_names(group.class_name, fields)
 
     # Build description based on source type
     if group.source_type == "design":
@@ -215,12 +241,14 @@ def generate_all_derived_schemas(
         fields: list[dict[str, Any]] = []
         for ep in group.parameters:
             field: dict[str, Any] = {
-                "name": ep.qualified_name,
+                "name": params_field_name(ep.qualified_name),
+                "alias": ep.qualified_name,
                 "type": getattr(ep, "python_type", "float"),
                 "description": f"Entry point: {ep.simple_name}",
                 "default": ep.default_value,
             }
             fields.append(field)
+        _refuse_colliding_field_names(group.name, fields)
 
         # Build description from source file
         description = f"Parameters from {group.source_file}."

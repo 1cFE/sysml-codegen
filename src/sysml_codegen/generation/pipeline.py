@@ -12,6 +12,7 @@ Key Design:
 from jinja2 import Environment
 
 # UPDATED: Import from sysml_codegen package
+from sysml_codegen.core.qualified_names import params_field_name
 from sysml_codegen.resolution.models import (
     ComputationGraph,
     ModuleInput,
@@ -181,12 +182,17 @@ def _input_to_context(
         else:
             source = channel
     else:
-        # Entry point - use "group.qualified_name" format
+        # Entry point — "group.<schema field>". The runtime resolves the part
+        # after the dot with ``getattr`` on the loaded params model, so it must
+        # be the *field* name, which differs from the params key exactly when a
+        # modelled multiplicity indexed it. The JSON key itself is unchanged and
+        # stays the field's alias.
+        field = params_field_name(inp.source.qualified_name)
         if inp.source.param_group:
-            source = f"{inp.source.param_group}.{inp.source.qualified_name}"
+            source = f"{inp.source.param_group}.{field}"
         else:
             # Fallback if no group (shouldn't happen in practice)
-            source = inp.source.qualified_name
+            source = field
 
     return {
         "name": inp.param_name,

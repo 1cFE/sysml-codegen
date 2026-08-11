@@ -7,10 +7,18 @@ class {{ class_name }}(BaseModel):
     Generated from SysML calculation definitions.
     """
 {% for field in fields %}
+{% if field.alias is defined and field.alias != field.name %}
+{% if field.default is none %}
+    {{ field.name }}: {{ field.type }} = Field(alias="{{ field.alias }}", description="{{ field.description }}")
+{% else %}
+    {{ field.name }}: {{ field.type }} = Field(default={{ field.default }}, alias="{{ field.alias }}", description="{{ field.description }}")
+{% endif %}
+{% else %}
 {% if field.default is none %}
     {{ field.name }}: {{ field.type }} = Field(description="{{ field.description }}")
 {% else %}
     {{ field.name }}: {{ field.type }} = Field(default={{ field.default }}, description="{{ field.description }}")
+{% endif %}
 {% endif %}
 {% endfor %}
 

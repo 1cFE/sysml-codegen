@@ -11,9 +11,10 @@ portable ``root-N/<relpath>`` source referents on every graph node.
 
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from pathlib import Path
 
+from sysml_codegen.analysis.source_referent import map_live_source_referent
 from sysml_codegen.core.errors import CodeGenerationError, SysMLParsingError
 from sysml_codegen.elaboration import elaborate, project
 from sysml_codegen.elaboration.graph import AttrNode, CalcNode, ConstraintNode, InstanceGraph
@@ -60,6 +61,13 @@ def elaborate_model_paths(model_paths: list[Path]) -> InstanceGraph:
         validation_diagnostics=extractor.diagnostics.validation,
     )
     require_executable_content(graph, calc_defs)
+    # The live route keeps raw parser paths on ``source_file`` — they are the
+    # checkout, and the provenance comment says so on purpose. The excluded
+    # constraint location is different: it is sealed into the catalog and the
+    # model contract, so it is normalized here and nowhere else.
+    _rewrite_exclusion_locations(
+        graph, lambda node: map_live_source_referent(node.source_file, model_paths)
+    )
     return graph
 
 
@@ -112,6 +120,10 @@ def elaborate_admitted_sources(admission: SourceAdmission) -> InstanceGraph:
     admission.verify_after_parse(extractor.model)
     require_executable_content(graph, calc_definitions)
     _rewrite_sources_as_referents(graph, admission)
+    # ``source_file`` is already the referent by the line above, so the excluded
+    # location is re-rendered from it rather than from the staged absolute path
+    # the elaborator saw.
+    _rewrite_exclusion_locations(graph, lambda node: node.source_file)
     return graph
 
 
@@ -120,6 +132,25 @@ def _rewrite_sources_as_referents(graph: InstanceGraph, admission: SourceAdmissi
     for nodes in (graph.attrs, graph.calcs, graph.constraints):
         for node in nodes.values():
             node.source_file = _referent_for(node, staged_to_referent)
+
+
+def _rewrite_exclusion_locations(
+    graph: InstanceGraph, referent_of: Callable[[ConstraintNode], str]
+) -> None:
+    """Re-render every excluded constraint's location against a portable referent.
+
+    ``exclusion_location`` is the one field in the sealed constraint catalog that
+    carries a source path, and the elaborator builds it from the raw parser path
+    it happened to be handed — the checkout directory live, and the private
+    staging directory during a capture. Both are absolute, both reach the catalog
+    fingerprint and through it the model contract's semantic fingerprint, so a
+    package built at a different path authenticated as a different model. Each
+    route supplies the mapping it can prove; the rendering is one shape.
+    """
+    for node in graph.constraints.values():
+        if node.exclusion_location is None:
+            continue
+        node.exclusion_location = f"{referent_of(node)}:{node.source_line}"
 
 
 def _referent_for(

@@ -484,6 +484,22 @@ def _validate_sources(document: dict[str, Any], source_roots: Sequence[Path] | N
                     f"graph source_file {row.get('source_file')!r} is absent from sources.files"
                 )
 
+    # ``exclusion_location`` is a second copy of a source path, and it is the only
+    # one sealed into the constraint catalog and the model contract's semantic
+    # fingerprint. A snapshot captured before that field was normalized carries an
+    # absolute staging path there, and replaying it would mint a fingerprint that
+    # varies by capture machine. Refuse it rather than replay it.
+    for row in graph["constraints"]:
+        location = row.get("exclusion_location")
+        if location is None:
+            continue
+        referent, _, line = str(location).rpartition(":")
+        if referent not in referents or not line.isdigit():
+            raise SnapshotIntegrityError(
+                f"constraint exclusion_location {location!r} is not a sealed "
+                "'<referent>:<line>' pair — re-capture the snapshot"
+            )
+
     if source_roots is not None:
         _verify_replacement_roots(sources, source_roots)
 

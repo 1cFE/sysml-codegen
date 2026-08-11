@@ -63,26 +63,20 @@ def test_the_fixture_really_does_carry_quoted_calc_def_names() -> None:
         assert f"calc def {name}" in source
 
 
-def test_the_only_unparseable_file_is_the_indexed_key_schema(package: Path) -> None:
+def test_every_generated_file_parses(package: Path) -> None:
     """No ``'margin calc'.py`` and no ``class 'Margin Calc'Module`` reaches disk.
 
-    One file does not parse, and it is not a quoting failure: the ``[3]`` widget
-    array mints entry-point keys carrying an index
-    (``…__widget[0]__base_cost``), and the params schema writes those keys as
-    Python field names. The same file breaks the same way on the ratified corpus
-    fixture ``d38_caret`` at ``HEAD``, so it is a surfaced Gate 4C defect rather
-    than anything this fixture introduced. The set is pinned, not the count.
+    The ``[3]`` widget array also indexes its params keys, which used to make the
+    schema a ``SyntaxError``; the S3 fix sanitizes the field name and keeps the
+    key as the field's alias, so the whole package parses.
     """
     files = [path for path in package.rglob("*.py") if path.is_file()]
     assert files, "generation produced no Python files"
-
-    unparseable = []
     for path in files:
         try:
             ast.parse(path.read_text())
-        except SyntaxError:
-            unparseable.append(str(path.relative_to(package)))
-    assert unparseable == ["schemas/alias_agg_d5_design_params.py"]
+        except SyntaxError as error:  # pragma: no cover - failure path
+            pytest.fail(f"generated file {path.relative_to(package)} does not parse: {error}")
 
 
 def test_every_derived_identifier_is_quote_and_space_free(package: Path) -> None:

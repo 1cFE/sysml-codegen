@@ -1,38 +1,36 @@
-"""Gate 4C, row L-118: constraint portability, live versus replay — and one defect.
+"""Gate 4C, row L-118: constraint portability, live versus replay, exact route.
 
 The responsibility this row carries is that a constraint-bearing model's lowered
 catalog, its model contract, and the generated constraint report are the same
-whether the package was generated live or replayed from a snapshot, the same
-across two checkout roots, and free of any checkout path. The retired specimen
-proved it on the legacy route with a **v5** snapshot of ``catf_mfe_model``,
-corpus row 5, which the exact route refuses.
+whether the package was generated live or replayed from a snapshot, and the same
+across two checkout roots. The retired specimen proved it on the legacy route
+with a **v5** snapshot of ``catf_mfe_model``, corpus row 5, which the exact route
+refuses.
 
-**On the exact route it does not hold, and this module says so rather than
-asserting around it.** A constraint the catalog *excludes* records its source
-``location`` as an absolute path — the checkout path in a live run, and the
-capture-time staging directory (``/tmp/sysml-codegen-sources-XXXXXXXX/root-0/…``)
-in a replay. That location is inside the catalog fingerprint, which is inside the
-model contract's semantic fingerprint, so one model produces four different
-semantic fingerprints across two checkout roots x two routes. Measured, at the
-values one run produced:
+**This module is the red-to-green record of the S1 fix.** When it was first
+authored, the exact route failed the property: a constraint the catalog
+*excludes* recorded its source ``location`` as an absolute path — the checkout
+path in a live run, the private staging directory in a replay — and that field
+is inside the catalog fingerprint, which is inside the model contract's semantic
+fingerprint. One model at two checkout roots on two routes minted four different
+semantic fingerprints, and three files moved with the build directory.
 
-    live-a    ebbeda695a59   ///tmp/cp2/checkout-a/models/model.sysml:13
-    live-b    5bef4ec1fb5c   ///tmp/cp2/checkout-b/models/model.sysml:13
-    replay-a  97a9518d6776   ///tmp/sysml-codegen-sources-btsdvdfx/root-0/model.sysml:13
-    replay-b  b0a802944d37   ///tmp/sysml-codegen-sources-xz63d9p_/root-0/model.sysml:13
+The fix normalizes that location to the same portable ``root-N/<relpath>``
+referent the sealed source manifest already uses
+(``orchestration/elaborated_pipeline.py``, ``_rewrite_exclusion_locations``),
+with each route supplying the mapping it can prove: the live route maps the raw
+parser path against its model roots, and the capture route re-renders from the
+referent it has already written onto ``source_file``. A snapshot captured before
+the fix is refused at load rather than replayed, because replaying it would mint
+a fingerprint that varies by capture machine.
 
-So this module does two jobs. It proves the parts that *are* portable — the
-constraint report module, the predicate module, and the pipeline YAML are
-identical across all four routes — and it pins the leak, so the defect is a
-recorded measurement rather than an absence of coverage. Row L-118 stays
-**pending** in ``ledger-4a.json`` until the leak is closed: the property the row
-exists to protect is the one that fails, and Gate 4B may not delete the legacy
-owners while it does.
+So the assertions below are the property, not the defect: four routes, one
+package, byte for byte.
 
 The fixture is ``constraint_non_numerical``, corpus row 10, which the exact route
 accepts and which carries both a numerically executable constraint and a
 cataloged-as-excluded string comparison — the excluded record being exactly what
-the leak rides on.
+the leak rode on.
 """
 
 from __future__ import annotations
@@ -55,6 +53,11 @@ REPORT_MODULE = "modules/constraints/constraintreportaggregatormodule.py"
 PREDICATES_MODULE = "modules/constraints/predicates.py"
 
 _STAGING_DIR = re.compile(r"/tmp/sysml-codegen-sources-\w+/root-0/")
+
+# An absolute filesystem path ending in ``.sysml``. The leading ``/`` must not be
+# preceded by a word character or dash, so the portable ``root-0/model.sysml``
+# referent never matches while ``/home/reid/.../model.sysml`` does.
+_ABSOLUTE_SYSML = re.compile(r"(?<![\w-])/(?:[\w.-]+/)+[\w.-]+\.sysml")
 
 
 def _portable_model_text() -> str:
@@ -130,14 +133,14 @@ def routes(tmp_path_factory) -> dict[str, Path]:
 ROUTE_NAMES = ["live-a", "live-b", "replay-a", "replay-b"]
 
 
-def test_exactly_three_files_move_with_the_checkout_root(routes) -> None:
-    """The blast radius of the leak, named file by file.
+def test_the_whole_package_is_identical_on_every_route(routes) -> None:
+    """The property, at its widest: four routes, one package, byte for byte.
 
-    Everything else in the package — the module wrappers, the predicates, the
-    pipeline, the inputs, the schemas — is identical across both checkout roots
-    and both routes. The three that are not all trace to one field: the model
-    contract carries the leaked location, the constraint report embeds the
-    catalog fingerprint derived from it, and the package contract hashes both.
+    Before the S1 fix this listed three files that moved with the build
+    directory — the model contract carrying the leaked location, the constraint
+    report embedding the catalog fingerprint derived from it, and the package
+    contract hashing both. The set is asserted empty rather than dropped, so a
+    *new* route-dependent byte fails here.
     """
     trees = {
         name: {
@@ -154,11 +157,7 @@ def test_exactly_three_files_move_with_the_checkout_root(routes) -> None:
     differing = sorted(
         path for path in every_path if len({trees[name][path] for name in ROUTE_NAMES}) > 1
     )
-    assert differing == [
-        "contracts/model_contract.json",
-        "contracts/package_contract.json",
-        REPORT_MODULE,
-    ]
+    assert differing == []
 
 
 def test_the_predicate_module_and_pipeline_are_identical_on_every_route(routes) -> None:
@@ -182,37 +181,47 @@ def test_the_catalog_admits_the_numerical_constraint_and_excludes_the_string_one
     assert "positive_value" in report, "the numerical constraint must still execute"
 
 
-def test_the_excluded_record_leaks_an_absolute_source_path(routes) -> None:
-    """The surfaced defect, measured. Closing it must delete this test, not edit it.
+def test_the_excluded_location_is_the_portable_referent_on_every_route(routes) -> None:
+    """The fix, at the field it fixed.
 
-    Live records the checkout path; a replay records the capture-time staging
-    directory. Both are absolute, and neither is the portable ``root-0/``
-    referent every generated file uses.
+    ``root-0/model.sysml:13`` is the same shape the sealed source manifest names
+    the file by, so it says nothing about where the package was built. Asserted
+    literally, not by absence of the old paths: a location that became empty or
+    ``<unknown>`` would pass a mere no-absolute-path check.
     """
     root = routes["_root"].as_posix()
-
-    for name in ("a", "b"):
-        live_location = _excluded_location(routes[f"live-{name}"])
-        assert live_location == f"//{root}/checkout-{name}/models/model.sysml:13"
-
-        replay_location = _excluded_location(routes[f"replay-{name}"])
-        assert _STAGING_DIR.search(replay_location), replay_location
-        assert replay_location.endswith("root-0/model.sysml:13")
+    for name in ROUTE_NAMES:
+        location = _excluded_location(routes[name])
+        assert location == "root-0/model.sysml:13", f"{name}: {location}"
+        assert root not in location
+        assert not _STAGING_DIR.search(location)
 
 
-def test_the_leak_reaches_the_catalog_and_semantic_fingerprints(routes) -> None:
-    """Why the leak matters: one model, four fingerprints.
+def test_no_contract_field_carries_an_absolute_source_path(routes) -> None:
+    """Enumerated, not assumed: the whole contract is scanned, not one field.
 
-    A fingerprint that moves with the directory a package was built in cannot
-    authenticate anything, which is what row L-118 exists to protect.
+    S1's ruling asked whether any *other* catalog or contract field stored an
+    absolute path. This is the check that answers it on every run rather than
+    once, so a newly added field that leaks one fails here.
     """
-    semantic = {name: _model_contract(routes[name])["semantic_fingerprint"] for name in ROUTE_NAMES}
+    for name in ROUTE_NAMES:
+        for contract in ("model_contract.json", "package_contract.json"):
+            text = (routes[name] / "contracts" / contract).read_text()
+            hits = sorted(set(_ABSOLUTE_SYSML.findall(text)))
+            assert hits == [], f"{name}/{contract} carries {hits}"
+
+
+def test_the_catalog_and_semantic_fingerprints_are_route_and_root_invariant(routes) -> None:
+    """One model, one fingerprint. This is what the row exists to protect."""
+    semantic = {
+        name: _model_contract(routes[name])["semantic_fingerprint"] for name in ROUTE_NAMES
+    }
     catalog = {
         name: _model_contract(routes[name])["constraint_catalog"]["fingerprint"]
         for name in ROUTE_NAMES
     }
-    assert len(set(semantic.values())) == 4, semantic
-    assert len(set(catalog.values())) == 4, catalog
+    assert len(set(semantic.values())) == 1, semantic
+    assert len(set(catalog.values())) == 1, catalog
 
 
 def test_replaying_one_snapshot_twice_is_deterministic(routes, tmp_path: Path) -> None:
@@ -226,3 +235,40 @@ def test_replaying_one_snapshot_twice_is_deterministic(routes, tmp_path: Path) -
     first = _generate_replay(snapshot, tmp_path / "first")
     second = _generate_replay(snapshot, tmp_path / "second")
     assert _model_contract(first) == _model_contract(second)
+
+
+def test_a_snapshot_carrying_a_pre_fix_location_is_refused_at_load(
+    routes, tmp_path: Path
+) -> None:
+    """The fix cannot be undone by an old artifact: a stale snapshot is refused.
+
+    A snapshot captured before ``exclusion_location`` was normalized stores the
+    capture machine's staging path there. Replaying it would mint a fingerprint
+    that varies by capture machine — exactly the defect — so the envelope refuses
+    the load instead of quietly reproducing it.
+    """
+    from sysml_codegen.snapshot.envelope import (
+        SnapshotIntegrityError,
+        _outer_digest,
+        load_instance_graph_snapshot,
+    )
+
+    sealed = routes["_root"] / "checkout-a" / "models" / "snapshot.json"
+    document = json.loads(sealed.read_text())
+    rows = document["instance_graph"]["graph"]["constraints"]
+    stale = [row for row in rows if row.get("exclusion_location") is not None]
+    assert len(stale) == 1, "the fixture must seal exactly one excluded constraint"
+    stale[0]["exclusion_location"] = "/tmp/sysml-codegen-sources-deadbeef/root-0/model.sysml:13"
+
+    # The digest is unkeyed and the envelope docstring says so: a writer that
+    # sealed this location recomputed the digest over it. Recomputing here is
+    # what makes the document a pre-fix snapshot rather than a corrupt one, so
+    # the refusal under test is the location check and not the digest check.
+    document["integrity"]["digest"] = _outer_digest(document)
+    tampered = tmp_path / "stale.json"
+    tampered.write_text(json.dumps(document))
+
+    with pytest.raises(SnapshotIntegrityError) as refusal:
+        load_instance_graph_snapshot(tampered)
+    assert "exclusion_location" in str(refusal.value)
+    assert "re-capture" in str(refusal.value)

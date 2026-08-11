@@ -65,13 +65,22 @@ are L-006 and L-241, which gained the C1 ruling's three proof modules (73 nodes)
 **Checker results, after Gate 4C part 1.** `paths`: 276 rows, **0 problems**. `replacements`:
 **52 green, 2 pending, 220 not-required, 0 failures**. Twelve of the fourteen pending
 responsibility rows named an authored exact-route specimen (121 new nodes, three new fixtures
-outside the corpus). The two that did not are rule-10 surfacings, and their rows carry the
-reason rather than a node: **L-118** is blocked by a measured portability defect — an excluded
-constraint record's `location` is an absolute path, and it reaches the catalog and semantic
-fingerprints, so one model yields four fingerprints across two checkout roots and two routes —
-and **L-249** is unreachable by construction, because `elaboration/project.py` builds every
-graph with `fallback_entry_points=set()`, so the V11 guard can never fire on the shipped route.
-Both still block their groups. Full detail in the plan's Gate 4C part 1 completion notes.
+outside the corpus). The two that did not were rule-10 surfacings: **L-118** was blocked by a
+measured portability defect, and **L-249** was unreachable by construction. Full detail in the
+plan's Gate 4C part 1 completion notes.
+
+**Checker results, after Gate 4C part 2 — the rulings.** `paths`: 276 rows, **0 problems**.
+`replacements`: **54 green, 0 pending, 220 not-required, 0 failures**. Every responsibility row
+in this ledger now names a proof node that collects and passes. **L-118** closed on a *fix*:
+the excluded-constraint location is the portable `root-N/<relpath>` referent on both routes, so
+one model mints one semantic fingerprint across two checkout roots and two routes, and a
+snapshot sealed before the fix is refused at load. **L-249** closed *by proof*: the row records
+the structural-unreachability derivation as its disposition, names
+`tests/unit/test_uncovered_params.py`'s nine route-neutral nodes as the V11 coverage owner, and
+carries two rot pins that fail if the exact route ever starts producing fall-through entry
+points. Two further product defects were ruled in the same pass — the unparseable params schema
+is fixed without moving any JSON key, and the same-name rollup refusal stands as correct
+behaviour with its modelling requirement carried to Gate 4D.
 
 ## The two CONFLICT rows
 
