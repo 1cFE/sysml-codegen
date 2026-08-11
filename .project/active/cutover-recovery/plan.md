@@ -595,7 +595,7 @@ Record every slice. Do not combine them later.
 | Slice | sysml-codegen OID | agentic-mbse OID | Full suites | Real TEAx |
 |---|---|---|---|---|
 | 3A | fe0b855, audit follow-up 4858911 | N/A | 3473 passed / 47 skipped / 18 deselected (+115, all new) | smoke PASS (fusion_tea, 48-file sealed package) |
-| 3B | PENDING | N/A | 3519 passed / 47 skipped / 18 deselected (+46, all new) | smoke PASS (live + v6-snapshot packages, group names equal; legacy CLI package unchanged at 48 files) |
+| 3B | d91431b | N/A | 3519 passed / 47 skipped / 18 deselected (+46, all new) | smoke PASS (live + v6-snapshot packages, group names equal; legacy CLI package unchanged at 48 files) |
 | 3C | PENDING | PENDING | PENDING | N/A |
 | 3D | PENDING | PENDING if changed | PENDING | PENDING |
 | 3E | PENDING | PENDING if changed | PENDING | PENDING |
@@ -1180,7 +1180,7 @@ amendment, so the certified history remains readable.
 #### Slice 3B Completion — Defensive context and exact public projection
 
 - **Completed:** 2026-08-11
-- **Commit:** PENDING (sysml-codegen only; agentic-mbse untouched and clean at
+- **Commit:** d91431b (sysml-codegen only; agentic-mbse untouched and clean at
   `5088b417c9e5453271291d46cd5fb23fc0579b1e`)
 - **Declared path set:** `elaboration/project.py`,
   `orchestration/exact_pipeline_context.py` (new), `tests/conformance/test_snapshot_v6_routes.py`,
