@@ -612,27 +612,40 @@ package SolarBatteryLibrary {
         attribute misc_hardware_cost : Real = allocation_model.total_allocation;
 
         // Aggregate costs from children using sum() for arrayed parts
+        attribute pv_module_capital_cost : Real = sum(pv_module.capital_cost);
+        attribute inverter_capital_cost : Real = sum(inverter.capital_cost);
+        attribute array_bos_capital_cost : Real = array_bos.capital_cost;
         :>> capital_cost =
-            sum(pv_module.capital_cost) +
-            sum(inverter.capital_cost) +
-            array_bos.capital_cost +
+            pv_module_capital_cost +
+            inverter_capital_cost +
+            array_bos_capital_cost +
             misc_hardware_cost;
 
+        attribute pv_module_raw_material_cost : Real = sum(pv_module.raw_material_cost);
+        attribute inverter_raw_material_cost : Real = sum(inverter.raw_material_cost);
+        attribute array_bos_raw_material_cost : Real = array_bos.raw_material_cost;
+        attribute allocation_model_material_portion : Real = allocation_model.material_portion;
         :>> raw_material_cost =
-            sum(pv_module.raw_material_cost) +
-            sum(inverter.raw_material_cost) +
-            array_bos.raw_material_cost +
-            allocation_model.material_portion;
+            pv_module_raw_material_cost +
+            inverter_raw_material_cost +
+            array_bos_raw_material_cost +
+            allocation_model_material_portion;
 
+        attribute pv_module_fabrication_cost : Real = sum(pv_module.fabrication_cost);
+        attribute inverter_fabrication_cost : Real = sum(inverter.fabrication_cost);
+        attribute array_bos_fabrication_cost : Real = array_bos.fabrication_cost;
         :>> fabrication_cost =
-            sum(pv_module.fabrication_cost) +
-            sum(inverter.fabrication_cost) +
-            array_bos.fabrication_cost;
+            pv_module_fabrication_cost +
+            inverter_fabrication_cost +
+            array_bos_fabrication_cost;
 
+        attribute pv_module_installation_cost : Real = sum(pv_module.installation_cost);
+        attribute inverter_installation_cost : Real = sum(inverter.installation_cost);
+        attribute array_bos_installation_cost : Real = array_bos.installation_cost;
         :>> installation_cost =
-            sum(pv_module.installation_cost) +
-            sum(inverter.installation_cost) +
-            array_bos.installation_cost;
+            pv_module_installation_cost +
+            inverter_installation_cost +
+            array_bos_installation_cost;
 
         :>> idiot_index = capital_cost / raw_material_cost;
     }
@@ -656,25 +669,37 @@ package SolarBatteryLibrary {
         part battery_bos : 'Battery BOS';
 
         // Aggregate costs from children
+        attribute battery_pack_capital_cost : Real = sum(battery_pack.capital_cost);
+        attribute hybrid_inverter_capital_cost : Real = hybrid_inverter.capital_cost;
+        attribute battery_bos_capital_cost : Real = battery_bos.capital_cost;
         :>> capital_cost =
-            sum(battery_pack.capital_cost) +
-            hybrid_inverter.capital_cost +
-            battery_bos.capital_cost;
+            battery_pack_capital_cost +
+            hybrid_inverter_capital_cost +
+            battery_bos_capital_cost;
 
+        attribute battery_pack_raw_material_cost : Real = sum(battery_pack.raw_material_cost);
+        attribute hybrid_inverter_raw_material_cost : Real = hybrid_inverter.raw_material_cost;
+        attribute battery_bos_raw_material_cost : Real = battery_bos.raw_material_cost;
         :>> raw_material_cost =
-            sum(battery_pack.raw_material_cost) +
-            hybrid_inverter.raw_material_cost +
-            battery_bos.raw_material_cost;
+            battery_pack_raw_material_cost +
+            hybrid_inverter_raw_material_cost +
+            battery_bos_raw_material_cost;
 
+        attribute battery_pack_fabrication_cost : Real = sum(battery_pack.fabrication_cost);
+        attribute hybrid_inverter_fabrication_cost : Real = hybrid_inverter.fabrication_cost;
+        attribute battery_bos_fabrication_cost : Real = battery_bos.fabrication_cost;
         :>> fabrication_cost =
-            sum(battery_pack.fabrication_cost) +
-            hybrid_inverter.fabrication_cost +
-            battery_bos.fabrication_cost;
+            battery_pack_fabrication_cost +
+            hybrid_inverter_fabrication_cost +
+            battery_bos_fabrication_cost;
 
+        attribute battery_pack_installation_cost : Real = sum(battery_pack.installation_cost);
+        attribute hybrid_inverter_installation_cost : Real = hybrid_inverter.installation_cost;
+        attribute battery_bos_installation_cost : Real = battery_bos.installation_cost;
         :>> installation_cost =
-            sum(battery_pack.installation_cost) +
-            hybrid_inverter.installation_cost +
-            battery_bos.installation_cost;
+            battery_pack_installation_cost +
+            hybrid_inverter_installation_cost +
+            battery_bos_installation_cost;
 
         :>> idiot_index = capital_cost / raw_material_cost;
     }
@@ -700,25 +725,37 @@ package SolarBatteryLibrary {
         part permitting : 'Permitting & Interconnect';
 
         // Aggregate costs from children using + for singletons
+        attribute racking_capital_cost : Real = racking.capital_cost;
+        attribute electrical_panel_capital_cost : Real = electrical_panel.capital_cost;
+        attribute permitting_capital_cost : Real = permitting.capital_cost;
         :>> capital_cost =
-            racking.capital_cost +
-            electrical_panel.capital_cost +
-            permitting.capital_cost;
+            racking_capital_cost +
+            electrical_panel_capital_cost +
+            permitting_capital_cost;
 
+        attribute racking_raw_material_cost : Real = racking.raw_material_cost;
+        attribute electrical_panel_raw_material_cost : Real = electrical_panel.raw_material_cost;
+        attribute permitting_raw_material_cost : Real = permitting.raw_material_cost;
         :>> raw_material_cost =
-            racking.raw_material_cost +
-            electrical_panel.raw_material_cost +
-            permitting.raw_material_cost;
+            racking_raw_material_cost +
+            electrical_panel_raw_material_cost +
+            permitting_raw_material_cost;
 
+        attribute racking_fabrication_cost : Real = racking.fabrication_cost;
+        attribute electrical_panel_fabrication_cost : Real = electrical_panel.fabrication_cost;
+        attribute permitting_fabrication_cost : Real = permitting.fabrication_cost;
         :>> fabrication_cost =
-            racking.fabrication_cost +
-            electrical_panel.fabrication_cost +
-            permitting.fabrication_cost;
+            racking_fabrication_cost +
+            electrical_panel_fabrication_cost +
+            permitting_fabrication_cost;
 
+        attribute racking_installation_cost : Real = racking.installation_cost;
+        attribute electrical_panel_installation_cost : Real = electrical_panel.installation_cost;
+        attribute permitting_installation_cost : Real = permitting.installation_cost;
         :>> installation_cost =
-            racking.installation_cost +
-            electrical_panel.installation_cost +
-            permitting.installation_cost;
+            racking_installation_cost +
+            electrical_panel_installation_cost +
+            permitting_installation_cost;
 
         :>> idiot_index = capital_cost / raw_material_cost;
     }
@@ -740,25 +777,37 @@ package SolarBatteryLibrary {
         part site_infra : 'Site Infrastructure';
 
         // Top-level aggregation
+        attribute solar_array_capital_cost : Real = solar_array.capital_cost;
+        attribute battery_system_capital_cost : Real = battery_system.capital_cost;
+        attribute site_infra_capital_cost : Real = site_infra.capital_cost;
         :>> capital_cost =
-            solar_array.capital_cost +
-            battery_system.capital_cost +
-            site_infra.capital_cost;
+            solar_array_capital_cost +
+            battery_system_capital_cost +
+            site_infra_capital_cost;
 
+        attribute solar_array_raw_material_cost : Real = solar_array.raw_material_cost;
+        attribute battery_system_raw_material_cost : Real = battery_system.raw_material_cost;
+        attribute site_infra_raw_material_cost : Real = site_infra.raw_material_cost;
         :>> raw_material_cost =
-            solar_array.raw_material_cost +
-            battery_system.raw_material_cost +
-            site_infra.raw_material_cost;
+            solar_array_raw_material_cost +
+            battery_system_raw_material_cost +
+            site_infra_raw_material_cost;
 
+        attribute solar_array_fabrication_cost : Real = solar_array.fabrication_cost;
+        attribute battery_system_fabrication_cost : Real = battery_system.fabrication_cost;
+        attribute site_infra_fabrication_cost : Real = site_infra.fabrication_cost;
         :>> fabrication_cost =
-            solar_array.fabrication_cost +
-            battery_system.fabrication_cost +
-            site_infra.fabrication_cost;
+            solar_array_fabrication_cost +
+            battery_system_fabrication_cost +
+            site_infra_fabrication_cost;
 
+        attribute solar_array_installation_cost : Real = solar_array.installation_cost;
+        attribute battery_system_installation_cost : Real = battery_system.installation_cost;
+        attribute site_infra_installation_cost : Real = site_infra.installation_cost;
         :>> installation_cost =
-            solar_array.installation_cost +
-            battery_system.installation_cost +
-            site_infra.installation_cost;
+            solar_array_installation_cost +
+            battery_system_installation_cost +
+            site_infra_installation_cost;
 
         :>> idiot_index = capital_cost / raw_material_cost;
     }

@@ -95,6 +95,93 @@ def _rename_binding_left_sides(text: str, name: str) -> str:
     )
 
 
+
+
+# --- Stage 2: the aggregation split ------------------------------------------
+#
+# The rename alone is not enough for an assembly that rolls several children up into one
+# metric. The exact route names an expression parameter after the last member of a reference
+# and drops the qualifier, so `sum(pv_module.raw_material_cost) + sum(inverter.raw_material_cost)`
+# renders both terms `raw_material_cost` and projection refuses with SI_RENDERING_COLLISION.
+# That refusal is ratified correct (S4); the cure is the `costed_cart_d5` shape — each term
+# gets its own named attribute and the rollup adds those names.
+#
+# This is a *shape* change, so the strip check cannot cover it: no suffix removal recovers an
+# original from a model with different attributes. What replaces byte-identity is an
+# enumerated difference. Every added attribute is derived by one deterministic rule from the
+# original, the whole list is written into the variant's README, and `strip_check` undoes
+# exactly that list before comparing — so anything the list does not name survives the undo
+# and fails the comparison. Nothing unlisted can ride along.
+
+#: A rollup line and the terms it adds, as authored.
+ROLLUP = re.compile(r"^(?P<indent>[ \t]*):>> (?P<metric>\w+) =\s*\n(?P<body>.*?;)\s*$", re.M | re.S)
+
+
+def _terms(body: str) -> list[str]:
+    return [term.strip() for term in body.rstrip(";").replace("\n", " ").split("+")]
+
+
+def _rendered(term: str) -> str:
+    """What the exact route will call this term's parameter: last member, qualifier dropped."""
+    inner = re.sub(r"^sum\((.*)\)$", r"\1", term).strip()
+    return inner.rsplit(".", 1)[-1]
+
+
+def _intermediate_name(term: str) -> str:
+    """A deterministic name for one term's contribution: its reference path, flattened."""
+    inner = re.sub(r"^sum\((.*)\)$", r"\1", term).strip()
+    return inner.replace(".", "_")
+
+
+def aggregation_rewrites(text: str) -> list[dict]:
+    """Every rollup whose terms collide, and the named intermediates that separate them.
+
+    Derived from the text by one rule, never hand-listed, so the enumeration in the README is
+    reproducible rather than maintained.
+    """
+    rewrites = []
+    for match in ROLLUP.finditer(text):
+        terms = _terms(match.group("body"))
+        if len(terms) < 2:
+            continue
+        rendered = [_rendered(term) for term in terms]
+        if len(set(rendered)) == len(rendered):
+            continue
+        indent = match.group("indent")
+        added, replacements = [], []
+        for term in terms:
+            if "." not in term:
+                replacements.append(term)
+                continue
+            name = _intermediate_name(term)
+            added.append(f"{indent}attribute {name} : Real = {term};")
+            replacements.append(name)
+        rollup = f"{indent}:>> {match.group('metric')} =\n"
+        rollup += " +\n".join(f"{indent}    {name}" for name in replacements) + ";"
+        rewrites.append(
+            {
+                "metric": match.group("metric"),
+                "terms": terms,
+                "added": added,
+                "original": match.group(0).rstrip(),
+                "rewritten": "\n".join(added) + "\n" + rollup,
+            }
+        )
+    return rewrites
+
+
+def apply_aggregation_split(text: str) -> str:
+    for rewrite in aggregation_rewrites(text):
+        text = text.replace(rewrite["original"], rewrite["rewritten"], 1)
+    return text
+
+
+def undo_aggregation_split(text: str, rewrites: list[dict]) -> str:
+    for rewrite in rewrites:
+        text = text.replace(rewrite["rewritten"], rewrite["original"], 1)
+    return text
+
+
 def build_variant(source: str, target: str, formals: list[str]) -> list[Path]:
     source_dir, target_dir = FIXTURES / source, FIXTURES / target
     if target_dir.exists():
@@ -117,6 +204,7 @@ def build_variant(source: str, target: str, formals: list[str]) -> list[Path]:
                 if re.search(declares, text[span[0] : span[1]]):
                     text = _rename_in_span(text, span, name)
             text = _rename_binding_left_sides(text, name)
+        text = apply_aggregation_split(text)
         if text != original:
             file.write_text(text)
             written.append(file.relative_to(ROOT))
@@ -145,6 +233,15 @@ def strip_check(source: str, target: str, formals: list[str]) -> list[str]:
 
     for relative in sorted(originals & variants):
         stripped = (target_dir / relative).read_text()
+        # Undo the enumerated aggregation edits first, then the renames. An edit the
+        # enumeration does not name survives this and fails the byte comparison below.
+        renamed = (source_dir / relative).read_text()
+        for name in formals:
+            for span in sorted(_calc_def_blocks(renamed).values(), reverse=True):
+                if re.search(rf"\bin\s+attribute\s+{re.escape(name)}\b", renamed[span[0]:span[1]]):
+                    renamed = _rename_in_span(renamed, span, name)
+            renamed = _rename_binding_left_sides(renamed, name)
+        stripped = undo_aggregation_split(stripped, aggregation_rewrites(renamed))
         for name in formals:
             stripped = re.sub(rf"\b{re.escape(name)}_in\b", name, stripped)
         if stripped.encode() != (source_dir / relative).read_bytes():

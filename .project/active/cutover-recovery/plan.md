@@ -3166,6 +3166,59 @@ nodes at the recorded anchors. `ruff` **870 → 870**, `mypy src/` **69 in 16 fi
 
 **Commit:** ``1935af3` (`1935af374e1d99c2f919801ddcdb6aa9db2a58d5`)`. **Deletes nothing, and repoints no test yet.**
 
+#### Gate 4C part 6, stage 2 — `solar_battery_d5` accepted, on an enumerated difference
+
+**The exact route now accepts a full twelve-assembly costing hierarchy: 77 modules, 199 entry
+points, 221 output aliases.** That is the scale-shaped evidence ruling 1 ordered, for the
+solar half.
+
+**What stage 2 did.** With the self-bindings renamed away, projection refused with
+`SI_RENDERING_COLLISION` — ratified-correct S4 behaviour. The cure is the `costed_cart_d5`
+shape: **16 rollups rewritten, 49 named intermediates added**, one per term that names a
+reference path.
+
+**The proof, since byte-identity cannot cover a shape change.** Every added attribute is
+derived from the original by one deterministic rule in `scripts/make_d5_variant.py` — a term
+naming a reference path gets an attribute called after that path, flattened — and
+`strip_check` **undoes exactly that enumerated list before comparing bytes**. An edit the list
+does not name survives the undo and fails the comparison, which is the property byte-identity
+was there to give. Both variants still report **strip check: 0 problems**.
+
+The three conditions ruling 1 attached, each pinned by a test rather than asserted in prose:
+
+- **The enumeration is published.** The full list of 49 attributes is in
+  `tests/fixtures/solar_battery_d5/PROVENANCE.md` with the S4 / Gate-4D citation, and
+  `test_the_enumerated_list_matches_what_the_readme_publishes` fails if the README and the
+  generator disagree.
+- **Same summands.** `test_the_aggregation_split_changed_no_summand` re-derives every rollup's
+  terms from the original and requires each to appear as an authored attribute in the variant.
+- **The disease stays visible.**
+  `test_the_rename_alone_still_collides_so_the_cure_is_not_hiding_the_disease` builds the
+  stage-1-only text in `tmp_path` and asserts the exact route *still* refuses it with
+  `SI_RENDERING_COLLISION`. If the collision ever stops firing, that fails here rather than
+  passing silently in a variant that no longer needs the cure.
+
+**Hand arithmetic — Site Infrastructure, checked against the projected graph.** Derived from
+the model, never copied from a route's output. Racking: 20 × 57 = 1140.0 material, 513.0
+fabrication, 342.0 installation, **1995.0** total. Electrical Panel: 150 + 4×34 = 286.0
+material, 128.7, 85.8, **500.5**. Permitting: zero material, 8 × 187.5 = **1500.0**. Rollups:
+capital **3995.5**, raw material **1426.0**, fabrication **641.7**, installation **427.8**.
+The test evaluates each leaf's own `calc_expressions` seeded from the graph's entry points —
+so a design attribute that failed to reach the graph fails the test instead of quietly
+defaulting — and separately asserts each rollup reads exactly three named intermediates wired
+to the child channels the table names.
+
+**The corpus is still untouched**: `solar_battery_model` keeps its refused shape and its v5
+snapshot, the 15/22 split is unmoved, and the v6 batch is unchanged (61 nodes green).
+
+**Battery.** Full licensed suite **3804 passed / 47 skipped / 38 deselected**, delta **+5**
+against 3799, all in `test_d5_variants.py`. Corpus ledger and v6 batch **61 passed**. Execution
+lane **38 passed** including the 12 real-TEAx nodes at the recorded anchors. `ruff`
+**870 → 870**, `mypy src/` **69 in 16 files → unchanged**, `git diff --check` clean,
+`check_ledger_4a.py paths` **298 rows / 0 problems**, `surface` **0 on both axes**.
+
+**Commit:** `STAGE2_OID`. **Deletes nothing; no test repointed yet.**
+
 ### Phase 5 Completion
 
 - **Completed:** Pending
