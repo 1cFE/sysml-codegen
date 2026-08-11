@@ -915,7 +915,7 @@
      ]
     }
    ],
-   "dual_migration": "Gate 4C part 7 chunk 12 measured this row's three duals the same way: 48 passed / 26 failed / 5 errors under the qualifier drop. Chunk 16 re-checked the remaining five duals (L-034, L-036 x1, L-037 x3) and every one of them failed too - the Gate 4A characterisation is false for all eight, not for three. See the chunk-16 record."
+   "dual_migration": "Gate 4C part 7 chunk 12 measured this row's three duals under the qualifier drop: 48 passed / 26 failed / 5 errors. Chunk 16 re-checked the remaining five duals and every one failed too. Phase 4 audit follow-up (2026-08-11) measured something further: the DELETION is not ready either. compile_calc_def_exact - the survivor - constructs a legacy CompilationResult at extraction/expression_compiler.py:378, inside its own body (240-391). Deleting the legacy dual takes the exact route with it: 287 failed / 254 errors against 86 / 58 with it kept. The whole row is owner-gated; it is not part of step 2."
   },
   {
    "id": "L-034",
@@ -1943,7 +1943,7 @@
    "responsibility": "Conformance test configuration and fixtures.",
    "breaks_on": "sysml_codegen.orchestration.snapshot_context (L-026, 4B-G2); sysml_codegen.snapshot:load_extraction_snapshot (L-028, 4B-G2)",
    "breaks_a_free_group": true,
-   "disposition_4c_note": "Gate 4C part 7 chunk 19 (2026-08-11), superseding the part-5 defer. The conformance conftest, no test nodes of its own, and two different things in one file. The v5 half is the session-scoped extraction_snapshots fixture and the eleven per-model convenience fixtures built on it; it retires with the v5 family, and by then no node asks for it, because every consumer of those fixtures is dispositioned in this part. The half that must survive is the marker registration and offline_input_sources, which every conformance file collects through - a file-level retirement here would take the whole directory down. load_extraction_snapshot moved out of module scope into the session fixture (method note 1), so step 1 leaves collection intact and the fixture bodies are the only thing that goes."
+   "disposition_4c_note": "Gate 4C part 7 chunk 19 (2026-08-11). CORRECTED by the Phase 4 audit follow-up (2026-08-11): the v5 session fixture and the eleven per-model conveniences retire as recorded, and so does offline_input_sources - it calls orchestration/snapshot_context (L-026), which step 1 deletes, and the simulation measured that every one of its callers retires in the same step. The markers and the directory's collection survive, which is what saved the directory."
   },
   {
    "id": "L-095",
@@ -2849,7 +2849,7 @@
    "responsibility": "C03: SysMLDataExtractor conformance tests.",
    "breaks_on": "sysml_codegen.orchestration.pipeline_builder (L-029, 4B-v5-family)",
    "breaks_a_free_group": false,
-   "disposition_4c_note": "Gate 4C part 7 chunk 19 (2026-08-11), superseding the part-5 defer. Fifty-nine nodes exercising the extractor directly, and exactly two of them drove the legacy wired path through build_pipeline_context. That import was at module scope and is now inside the two node bodies (method note 1), so 57 nodes keep collecting after step 1 and the two retire per-node with the route they drive. The extractor itself is not in any deletion group; what retires here is the wired-path assembly, not the extraction subject."
+   "disposition_4c_note": "Gate 4C part 7 chunk 19 (2026-08-11). SUPERSEDED IN PART by the Phase 4 audit follow-up simulation (2026-08-11): the claim that two nodes drove the legacy wired path and 57 keep collecting is false. Measured at the step-1 post-state, 58 of the file's 74 collected nodes read the retiring conformance v5 fixtures and go red; 16 survive. The extractor itself is live production and is in no deletion group, so this is a coverage decision about a retained subject, not a mechanical edit. Owner-gated - runbook fifth entry, item 3."
   },
   {
    "id": "L-136",
@@ -6355,7 +6355,7 @@
    "breaks_on": "",
    "breaks_a_free_group": false,
    "disposition_4c": "repoint",
-   "disposition_4c_note": "Names the v5 snapshot filename only to exclude it from a variant, so a variant can never come to look like a corpus fixture. Nothing to change when the family retires.",
+   "disposition_4c_note": "Phase 4 audit follow-up F2 (2026-08-11), CORRECTING the note copied from L-297. The file does not only name the v5 snapshot filename to exclude it: line 116, inside test_the_original_is_untouched_by_its_variant, asserts (d5.FIXTURES / original / 'extraction_snapshot.json').is_file() as a POSITIVE existence check, parametrized over catf_mfe_model (L-061), solar_battery_model (L-089) and gate_a (L-072) - all three deleted by the v5-family step. Measured: 3 failures. The corpus guarantee that node makes has to be restated against what survives (the fixture's v6 record) or the assertion retires with the corpus it checks. The CORPUS_MARKER negative assertion at line 105 is unaffected and stays true. Named in the runbook's step-2 edit table.",
    "reason": "Authored by Gate 4C part 6. Named by the second-axis scan because it excludes extraction_snapshot.json by name when copying a fixture."
   },
   {

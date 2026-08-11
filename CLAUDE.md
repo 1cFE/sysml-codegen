@@ -84,7 +84,11 @@ removal is fully prepared and gated on owner acceptance at the recovery's Phase 
 
 Two conformance nodes in `tests/conformance/test_public_authority_switch.py` hold that state:
 the construction closure reaches no legacy authority, and the CLI's *import* closure still
-reaches three of those modules — pinned by name so the residual cannot grow.
+reaches a **pinned four-module set, of which three are reached** — pinned by name so that
+residual cannot grow. The pin is not a claim about the whole closure: measured, `sysml_codegen.cli`
+imports **10 of the 11** modules listed above (every one but `orchestration/snapshot_context`).
+Importable is not reachable — nothing in that set is constructed through — but the number to
+carry into Phase 5 is ten, not three.
 
 Reference documents 03, 04, 05, 07, 10, 11, 12, 13, 17, 24, and 25 describe that stack and open
 with a retiring banner. Document 09 is mixed and says which models are which. Do not read them

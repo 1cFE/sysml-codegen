@@ -982,10 +982,18 @@ def test_final_candidate_is_repeatable_and_executable(real_teax):
 
 - [ ] **The headline decision at the owner stop, per the Phase 4 resequencing ruling.** Present
   together: the PROPOSED v6 recapture batch (15 captured / 22 typed refusals), and the
-  **fully-prepared retirement** — every one of the 4B groups with a per-file disposition and a
-  green replacement proof, so that acceptance makes the retirement mechanical. State plainly that
-  the candidate ships with the legacy stack **present-but-unreachable**, and name the 3E pins that
-  hold that property.
+  **prepared retirement** — every one of the 4B groups with a per-file disposition and a green
+  replacement proof, and a runbook whose step 1 has been executed and measured green in a
+  scratch worktree. State plainly that the candidate ships with the legacy stack
+  **present-but-unreachable**, and name the 3E pins that hold that property. State just as
+  plainly what the runbook does **not** yet carry (audit 4, F1/F2 follow-up): steps 2–4 have a
+  derived row list and a scripted mechanical half, and their post-state is not yet proven, and
+  six items need an owner ruling before any step can end green.
+- [ ] **Price the batch decision honestly.** Revising the PROPOSED v6 batch is Git-reversible
+  but not free: measured, removing the 15 snapshots the batch added leaves **38 failed and 57
+  errors** across the suite. Revising means re-running `capture_v6_batch.py` and re-greening
+  those ~95 outcomes, not reverting a commit. The owner needs that number to price the
+  decision; it strengthens the batch's case rather than weakening it.
 - [ ] Build a fresh candidate record binding both repository OIDs, exact diffs, path inventories,
   test inventories, corpus outcomes, environment, real TEAx revision, performance, and evidence
   hashes.
@@ -4520,51 +4528,127 @@ files**. Deletes nothing.
 
 ---
 
+#### Phase 4 audit follow-up — the eight findings closed (2026-08-11)
+
+Audit 4 (`evidence/audit-4.md`, committed at `ee8fc40`) returned FINDINGS: two high on the
+runbook, and six lower. All eight are closed here. The runbook was not patched — it was rebuilt
+against measurement, and the section below is the result.
+
+**F1 + F2 (high) — the runbook now names every row and proves what it can.** The step lists are
+derived by `scripts/retirement_worklist.py` from the ledger's own columns and checked by a test
+node; 257 rows are placed across four steps and the owner-gated entry, against the 66 the old
+version named. Step 1 was executed in a scratch worktree and its whole battery recorded; it is
+green. Steps 2–4 are not, and the section says so rather than rounding up. The simulation is
+what found the step ORDER was inverted, that a step has to close itself in the ledger, that the
+checker reads a `retire-with-owner` deletion as unauthorised, and six items that need an owner.
+L-298's false note is corrected, `test_d5_variants.py:116` is named in the step-2 table, and the
+two v5-refusal pins in `test_public_authority_switch.py` are in step 1's post-step check and
+pass there.
+
+**F3 (medium) — `CLAUDE.md`.** The import-residual sentence now says what was measured: a pinned
+four-module set of which three are reached, and a real closure of **10 of the 11** listed modules
+(all but `orchestration/snapshot_context`). The four-module pin statement is re-checked and still
+true.
+
+**F4 (medium) — the batch's price.** The Phase 5 packet section now carries it: revising the
+PROPOSED v6 batch costs **38 failed + 57 errors** of dependent evidence until recaptured.
+Git-reversible, not free.
+
+**F5–F8 (low).** Two more stale production docstrings fixed in place, because the retirement does
+not rewrite those files (`generation/constraint_catalog.py`, `generation/pipeline.py`).
+`check_proof_integrity.py` can fail again: split into testable pieces with six cases on
+constructed rows, and its docstring says what a 0/0 reading means. The four machinery ceilings
+are recorded in `check_ledger_4a.py`'s own docstring. The dead
+`should_regenerate_stencil_from_graph` alias and both its re-exports are deleted.
+
+**Batteries.** `ab30659`: full suite **3854 passed / 47 skipped / 53 deselected** (+14, all
+nodes of the two new test files), execution lane **53**, `--verify` **15/22/0**, corpus **12**,
+`ruff src` **16** / whole tree **869**, `mypy` **69 in 16**, checker `paths` **298/0**, `surface`
+**0**, `groups` READY, proof integrity **0/0**, `git diff --check` clean. Later commits in this
+follow-up touch scripts, tests and records only, and their numbers are in the runbook's own
+tables.
+
+**Deletes nothing.** Every retirement action in this section is still gated on owner acceptance
+at the Phase 5 stop.
+
 ### The retirement runbook — post-acceptance execution
 
-**Status: MECHANICAL, with one owner ruling outstanding that the sequence routes around.**
-`scripts/check_ledger_4a.py groups` reports **all six groups READY** and **zero blocked files**;
-`scripts/check_proof_integrity.py` reports **0 problems over 0 blocked files**. Every file in the
-deferred blast radius carries a `disposition_4c`.
+**Status: step 1 is PROVEN. Steps 2–4 are prepared and not proven. Six items are owner-gated.**
+Rebuilt at the Phase 4 audit follow-up (2026-08-11) against audit-4 F1 and F2. The previous
+version said "MECHANICAL" while naming 66 of the 189 dispositioned rows and carrying an edit
+table for one step; the audit measured that claim false. What replaced it is below, and every
+number in it was measured in a scratch `git worktree` that was created, measured and discarded —
+the audited tree was never mutated and **nothing has retired**.
 
-**The exact post-acceptance sequence.**
+#### How a step knows what it contains
 
-| # | Step | Rows | State |
-|---|---|---|---|
-| 1 | the v5 family | 61 (L-036/L-037 held out) | READY — deletes; does **not** rename |
-| 2 | G2′, the v5 read path | 4 | READY — runs after step 1 |
-| 3 | G3′ | 1 | READY |
-| 4 | G4′ | 2 | READY — last thing that can reach the legacy route; full battery |
-| — | the dual **qualifier drop** | L-033, L-034, L-036, L-037 | **OWNER-GATED.** Not part of any step. Measured in chunks 12 and 16. |
+The step lists are **derived from the ledger**, not copied out of it.
+`scripts/retirement_worklist.py` places every actionable row in exactly one step:
 
-The one thing that is *not* mechanical is the qualifier drop, and it has been lifted out of step
-1 rather than left inside it as an unbudgeted line. Steps 1–4 delete the legacy members; nothing
-renames a survivor into a freed name until the owner rules on `agentic-mbse` validation levels 4
-and 6, whose production call sites this ledger does not cover.
+- a production, fixture or script row goes with its deletion `group`;
+- a dispositioned test/probe/script row goes to the earliest step whose group its `breaks_on`
+  names;
+- the seventeen data-axis rows that carry no `breaks_on` are placed by an explicit table, one
+  reason per row;
+- eleven rows the simulation measured red **earlier** than their columns place them are pinned
+  in `PULLED_FORWARD` with the measured reason — every one is a function-local import or a
+  fixture use, which is the class the checker's module-level AST scan cannot see;
+- test-module import edges are walked, because deleting a test module breaks the siblings that
+  import it — the class that turned `tests/helpers/legacy_route.py` into 16 collection errors.
 
-**Standing preconditions, all of them already met.**
+```bash
+$PY scripts/retirement_worklist.py check     # every actionable row named exactly once
+$PY scripts/retirement_worklist.py step 1    # the step's rows, action and placement reason
+```
 
-- **The resequencing ruling governs.** Nothing here runs before the Phase 5 owner stop. Option
-  (a) — wholesale `retire-with-owner` over an undispositioned blast radius — is refused
-  permanently.
-- **L-180's precondition is satisfied** (chunk 12). `test_snapshot_v5_gate.py` is repointed onto
-  `snapshot/envelope.py`, which is in no deletion group, so the post-step-2 "the typed refusal is
-  still typed" check has a subject that survives. **Its four v6-envelope nodes are that check.**
-- **Proof integrity is mechanical** (chunk 11). `scripts/check_proof_integrity.py` fails any row
-  whose replacement node lives in a file still blocking a deletion, transitively across all six
-  groups. Run it before **and after** every step.
+`check` is a test node as well (`tests/unit/test_retirement_worklist.py`), so the property the
+runbook rests on fails the suite if it stops holding.
 
-**The per-step battery, identical at every step.** Nothing here is step-specific; a step that
-needs a special case is a step that was not prepared.
+| # | Step | Rows | delete / archive / edit | State |
+|---|---|---:|---|---|
+| 1 | G2′, the v5 read path | 99 | 78 / 7 / 14 | **PROVEN green in simulation** |
+| 2 | the v5 family | 150 | 106 / 11 / 33 | prepared; **not green** — see the fifth entry |
+| 3 | G3′ | 1 | 1 / 0 / 0 | prepared; not simulated |
+| 4 | G4′ | 5 | 5 / 0 / 0 | prepared; not simulated |
+| — | owner-gated | 2 + 5 named items | — | **not scheduled** |
+
+257 of the 300 ledger rows are placed: 68 deletion-group rows and 189 dispositioned ones. The
+other 43 are `retain` rows the retirement does not touch, the 4D documentation rows (whose own
+pass is named below), and the Gate 4B-G0/G1 rows already executed.
+
+#### The order is G2′ first, and that is a correction
+
+The previous sequence ran the v5 family first because the fixtures should go before the reader
+that loads them. On the import axis the dependency runs the other way, and the import axis wins:
+`snapshot/graph_rebuild.py:15` imports `analysis.constraint_lowering`, `:20-24` imports the
+backtracker, the parameter groups, the occurrence index and `graph_builder`. Measured, with the
+v5 family's own edit table fully applied and the read path still present:
+
+```
+>>> import sysml_codegen.snapshot
+ModuleNotFoundError: No module named 'sysml_codegen.analysis.constraint_lowering'
+```
+
+The whole package stops importing. Reversing the two steps removes that state, and the checker's
+placement follows automatically because the step numbers are a table in one place.
+
+#### The per-step battery
+
+Unchanged from the previous version, plus the environment assertion the recovery requires and
+the `TEAX_SIMKIT_PATH` a scratch worktree needs (a worktree outside the primary checkout cannot
+find the TEAx sibling, and `tests/execution`'s twelve real-TEAx anchors error there — that is
+environment, not regression).
 
 ```bash
 set -a; source /home/reid/1cfe/agentic-mbse/.env; set +a
 PY=/home/reid/1cfe/item7-rebuild-venv/bin/python
+export TEAX_SIMKIT_PATH=/home/reid/1cfe/teax/packages/teax-simkit    # scratch worktrees only
+export PYTHONPATH=<worktree>/src                                     # scratch worktrees only
 $PY -c "import sysml_codegen, agentic_mbse; print(sysml_codegen.__file__, agentic_mbse.__file__)"
 $PY -m pytest -q                                          # delta must be explained row by row
-$PY -m pytest tests/execution -m execution -q             # incl. the 12 real-TEAx anchors
-$PY scripts/capture_v6_batch.py --verify                  # 15 captured / 22 refused / 0 deviations
-$PY -m pytest -q -k corpus                                # the corpus ledger test
+$PY -m pytest tests/execution -m execution -q
+$PY scripts/capture_v6_batch.py --verify
+$PY -m pytest -q -k corpus
 $PY -m ruff check src; $PY -m ruff check src tests scripts
 $PY -m mypy src
 $PY scripts/check_ledger_4a.py paths
@@ -4575,124 +4659,196 @@ $PY scripts/check_proof_integrity.py
 git diff --check
 ```
 
-Recorded values to compare against, measured at chunk 19: suite **3830 passed / 47 skipped /
-53 deselected**; execution lane **53 passed**; `--verify` **15/22/0**; `ruff` **16** on `src` and
-**866** whole-tree (868 before chunk 19; `ruff --select I001 --fix` cleaned two pre-existing
-import-order errors in files this part localised imports in); `mypy` **69 errors in 16 files**;
-`paths` **298 rows / 0 problems**;
-`surface` **0 unrowed breakages**; `groups` **all six READY**; proof integrity **0 problems over
-0 blocked files**.
+`check_proof_integrity.py` reads **0 problems over 0 blocked files** and that means *nothing left
+to check*, not *checked and clean* (audit 4, F6). It stays in the battery as a tripwire: if a
+step re-blocks a file, this is what says so.
 
-#### Step 1 — the v5 family (61 rows) — **READY, except the dual line**
+#### How a step is executed, and how it is closed
 
-Deletes the legacy analysis/resolution stack, the v5 serializer, `pipeline_builder`, the 37
-committed `extraction_snapshot.json` fixtures and `scripts/capture_extraction_snapshots.py`.
+```bash
+$PY scripts/retire_step.py apply N        # git rm the deletions, git mv the archives
+#   ...make the edits in the step's table below, then commit...
+$PY scripts/retire_step.py close N <oid>  # mark the step's rows executed at that commit
+#   ...commit the ledger, then run the battery...
+```
 
-**Rows:** L-001 to L-005, L-007, L-010, L-011, L-013, L-014, L-017, L-018, L-021, L-027,
-L-029 to L-035, L-057 to L-093 (the 37 fixtures), L-275. **L-036 and L-037 (`agentic-mbse`) are
-held out of this step** — see the dual table below.
+**The close is not optional.** `check_ledger_4a.py` verifies every state claim against Git, so a
+step whose files are gone while its rows still say `proposed` fails the checker. The simulation
+found this and it is why the close exists; the previous runbook had no step for it.
 
-**Blockers: none.** All 25 files that blocked this step at chunk 15 carry a clearing
-disposition (chunks 17–19). `groups` reports READY.
+Two checker changes the simulation proved necessary landed with this rebuild: a
+`retire-with-owner` row carries `disposition: retain` from Gate 4A, so both `check_paths` and
+`check_states` now read `disposition_4c` before calling an absence unauthorised; and
+`scripts/archive/` is skipped by both surface scans, because an archived file is a preserved
+record and scanning it reports the very legacy names it exists to remember. An archived row keeps
+its `path` — that path is its identity in the Git-derived candidate set — and gains `archived_to`.
 
-**The per-node edits this step makes inside surviving files.** These are named so the step stays
-mechanical; each is a file whose row is `repoint`, where some nodes retire with the owner.
+---
 
-| File | Row | What comes out |
+#### Step 1 — G2′, the v5 read path (99 rows) — **PROVEN**
+
+Deletes `snapshot/graph_rebuild.py`, `snapshot/loader.py`, `orchestration/snapshot_context.py`,
+the two baseline-capture scripts, and the 71 test modules that break when they go. Archives 7 files to
+`scripts/archive/` — six probes and spikes, plus `test_source_identity_routes.py` (L-182), the
+learning-test record whose findings home is the research doc it cites. Edits 14 surviving files.
+
+**Post-state, measured** (scratch worktree at `610ade8`, full battery). The baseline column is
+the same commit before the step: the suite, checker and lint numbers are the main tree's, and the
+execution-lane and whole-tree-ruff numbers are the scratch worktree's own, because a worktree
+outside the primary checkout cannot reach the TEAx sibling and carries the archived files.
+
+| Gate | Baseline | After step 1 |
 |---|---|---|
-| `tests/conformance/conftest.py` | L-094 | the `extraction_snapshots` session fixture and the eleven per-model convenience fixtures |
-| `tests/conformance/test_data_models.py` | L-120 | four `SOURCE_FILE_SPECS` rows (`BacktrackingResult`, `DesignAttributeData`, `DerivedParameterGroup`, `ParameterSource`) and the `test_output_registry` / phantom-report nodes — **in the same commit as Gate 4D's edit to `09-data-models.md`** |
-| `tests/conformance/test_extractor.py` | L-135 | the two nodes driving `build_pipeline_context` |
-| `tests/conformance/test_source_identity_extraction.py` | L-181 | the four nodes calling `extract_design_attributes` / `_rewrite_virtual_bindings` / `extract_constraint_facts` |
-| `tests/conformance/test_return_style_extraction.py` | L-167 | the five offline `return_styles` nodes |
-| `tests/conformance/test_type_indexing.py` | L-185 | the five offline `retype_model` nodes |
-| `tests/conformance/test_type_mapping_consolidation.py` | L-186 | `test_all_generators_use_shared_function` |
-| `tests/conformance/test_wi014_toy.py` | L-189 | the four offline nodes |
-| `tests/unit/test_exit_point_aliases.py` | L-219 | the four end-to-end nodes behind `_v5_graph` |
-| `tests/conformance/test_expression_compiler.py` | L-281 | the thirteen bodies that import the L-033 duals locally |
-| `tests/unit/test_expression_compiler.py` | L-284 | the sixteen nodes the dry run measured against the legacy shape |
+| Full licensed suite | 3854 passed / 47 skipped / 53 deselected | **2347 passed / 43 skipped / 35 deselected, 0 failed** |
+| Execution lane | 41 passed + 12 env errors | **23 passed** + the same 12 |
+| Corpus ledger | 12 passed | **11 passed** |
+| `capture_v6_batch.py --verify` | 15 / 22 / 0 | **15 / 22 / 0** |
+| `ruff check src` / whole tree | 16 / 866 | **16 / 301** |
+| `mypy src` | 69 errors in 16 files (87 files) | **69 in 16** (84 files) |
+| `check_ledger_4a.py paths` | 300 rows / 0 problems | **300 / 0** |
+| `surface` / `groups` / proof integrity | 0 / READY / 0-0 | **0 / all six READY / 0-0** |
+| `git diff --check` | clean | **clean** |
 
-**The dual retirement inside this step is four migrations, not a rename pass.** Chunks 12 and 16
-measured all eight retained 3C duals under the prescribed qualifier drop and **every one failed**.
-The step's own line "drops the `Exact`/`identified` qualifiers" cannot be executed as written.
+**The edit table.** Each entry is what changes inside a file that survives the step.
 
-| Row | Duals | Measured cost | Status |
-|---|---|---|---|
-| L-033 | 3 (expression compiler) | 31 of 76 nodes bound to the legacy *shape* — L-281 16 of 27, L-284 16 of 52 | the *deletion* is ready (those nodes retire with it, chunk 19); the *qualifier drop* is not |
-| L-034 | 1 (`CalculationDefinitionData` `_by_id`) | 58 of 86 consumer nodes | blocked; same authoring family as L-033, and its own proof node is in the breakage |
-| L-036 | 1 (`extract_constraint_facts`) | 34 of 450 nodes **plus a production call site with no ledger row** | **cannot execute the `removes` block at all** |
-| L-037 | 3 (profile/result/preflight) | 134 of 450 nodes **plus a production call site with no ledger row** | **cannot execute the `removes` block at all** |
-
-**L-036/L-037 are a hard stop, not a queue.** `agentic_mbse/validation/level4_constraints.py` and
-`level6_architecture.py` call the legacy members and are outside this ledger. Deleting those
-symbols breaks production this recovery never proposed to touch. **Owner-gated:** either those two
-validation levels migrate to the UUID-keyed payload — its own gate, 164 nodes plus two call sites,
-in a repo this ledger does not cover — or the duals stay and this step drops only codegen's own
-legacy-route usage. Nothing in this step may touch them until that is ruled.
-
-**What is ready and what is not, stated separately, because chunk 19 separated them.** Deleting
-`compile_calc_def` / `CompilationResult` / `CalcDefCompilationResult` (L-033) and the name-keyed
-`CalculationDefinitionData` fields (L-034) **is** ready: every consumer file carries a
-disposition, and the nodes bound to the legacy shape retire per-node with it. What is **not**
-ready — and is not scheduled — is *renaming the survivor into the freed name*. That is a payload
-migration for the consumers listed above, and for L-036/L-037 it cannot happen at all until the
-owner rules on validation levels 4 and 6. The step therefore deletes; it does not rename.
+| Row | File | Edit |
+|---|---|---|
+| L-028 | `snapshot/__init__.py` | drop the `graph_rebuild` and `loader` re-exports and their three `__all__` entries |
+| L-094 | `tests/conformance/conftest.py` | drop the `extraction_snapshots` session fixture, the eleven per-model conveniences, **and `offline_input_sources`** — its callers all retire in this step, so the row's "it survives" is false |
+| L-167 | `test_return_style_extraction.py` | drop `_snapshot_calc_defs`, `TestReturnStylesSnapshotIO`, `TestReturnStylesCompilationResults` (5 nodes) |
+| L-185 | `test_type_indexing.py` | drop `retype_snapshot`, its two helpers and the five offline nodes |
+| L-186 | `test_type_mapping_consolidation.py` | drop `TestCrossGeneratorConsistency` |
+| L-189 | `test_wi014_toy.py` | drop `wi014_snapshot` and the four offline nodes |
+| L-219 | `test_exit_point_aliases.py` | drop `_v5_graph`, `_exit_line` and the four end-to-end nodes |
+| L-180 | `test_snapshot_v5_gate.py` | drop `_v5_payload` and the six v5-envelope nodes; the four v6-envelope nodes stay and are this step's typed-refusal check |
+| L-249 | `test_uncovered_params.py` | drop `_graph` and nine nodes; keep `test_unwired_fallthrough_partition`, the one route-neutral node; drop the three module-level imports |
+| L-279 | `test_public_authority_switch.py` | the 3E residual pin drops to `{pipeline_builder}` — measured. **At step 2 the residual empties and the node retires**; both edits belong to this row |
+| L-292 | `test_capture_fixtures_filter.py` | drop `capture_pipeline_baselines.py` from the parametrized script list |
+| L-296 | `test_check_ledger_4a.py` | the "still present in the rebuild" threshold moves (`> 200` → `> 150`; measured 162), and the multi-node green case repoints off `test_gen_stencils.py`, which this step deletes |
+| L-277 | `test_generation_boundary.py` | no change at this step |
+| L-135, L-281 | `test_extractor.py`, `test_expression_compiler.py` | **owner-gated** — see the fifth entry. The simulation trimmed them provisionally to prove the rest |
 
 **Post-step check beyond the battery:** the v5 typed refusal is still typed —
 `pytest tests/conformance/test_snapshot_v5_gate.py -k "v6_envelope or v5_extraction or public_route"`,
-four nodes, all against `snapshot/envelope.py`. The six v5-envelope nodes in the same file retire
-*in* this step, with the fixtures they read; that is the expected suite delta, not a regression.
+four nodes against `snapshot/envelope.py`, **and** the two `test_public_authority_switch.py`
+nodes `test_a_v5_snapshot_is_refused_by_name_at_the_loader` and
+`test_generate_from_a_v5_snapshot_refuses_without_falling_back`, which audit 4 (F2) found the
+old check did not cover. All six pass in the simulated post-state.
 
-#### Step 2 — G2′, the v5 read path (4 rows) — **READY**
+#### Step 2 — the v5 family (150 rows) — prepared, **not green**
 
-**Rows:** L-015 `snapshot/graph_rebuild.py`, L-016 `snapshot/loader.py`, L-026
-`orchestration/snapshot_context.py`, L-028 `snapshot/__init__.py` (migrate — empties the v5
-re-exports that keep `pipeline_builder`, `snapshot.loader` and `snapshot.graph_rebuild` inside
-`cli`'s transitive import closure, which is what
-`test_the_generation_half_still_reaches_v5_modules_and_that_residual_is_pinned` pins).
+Deletes the legacy analysis/resolution stack, the v5 serializer, `pipeline_builder`,
+`graph_builder`, the 37 committed `extraction_snapshot.json` fixtures,
+`scripts/capture_extraction_snapshots.py` and 106 rows' worth of test modules; archives 11
+probes; edits 33 files.
 
-**Blockers: none.** All 27 files that blocked this step at chunk 15 carry a clearing disposition
-(chunks 17–19). `groups` reports READY.
+**The production edit table** (all measured to apply cleanly):
 
-**Ordering: still after step 1**, and the reason is unchanged by readiness — 19 of those 27 files
-also belong to step 1, and the fixtures they read must go before the reader that loads them, or
-the intermediate state has nodes reading bytes through a route that is already gone.
+| Row | File | Edit |
+|---|---|---|
+| L-030 | `core/__init__.py` | drop the `OutputRegistry` / `is_transitive_default` re-export |
+| L-031 | `analysis/__init__.py` | drop the backtracker, parameter-group and phantom-detector re-exports |
+| L-032 | `orchestration/__init__.py` | drop the builder and `PipelineContext` re-exports; the 3E F4 pin (`build_elaborated_pipeline` stays out) survives |
+| L-018 | `orchestration/pipeline_context.py` | the class goes; the file becomes the two error re-exports |
+| L-021 | `generation/initialization.py` | drop the `PipelineContext` alias |
+| — | `generation/__init__.py` | drop its `PipelineContext` re-export. **No `removes` block names this**; the simulation found it |
+| L-027 | `snapshot/capture.py` | delete `capture_snapshot` and the two serializer imports |
+| L-028 | `snapshot/__init__.py` | drop the capture/serializer re-exports (the v5-family half of its `removes` block) |
+| L-011 | `resolution/graph_builder.py` | delete the module; drop the two `resolution/__init__.py` notes; `uncovered_params.py`'s docstring stops saying it is re-exported |
+| L-035 | `elaboration/project.py` | rename `_CONSTRAINT_LOGGER` off the deleted module's name |
+| L-033 | `extraction/expression_compiler.py` | **blocked** — see the fifth entry |
+| L-034 | `extraction/data_models.py` | **not simulated** — the name-keyed fields' only reader is `compile_calc_def`, which this step deletes, but the extractor still writes them |
+| L-249 | `test_uncovered_params.py` | repoint the collector import off `graph_builder`'s re-export onto `resolution/uncovered_params.py` |
 
-**Post-step check beyond the battery:** the four `snapshot/envelope.py` nodes named under step 1
-run again here. This is the step that removes `SnapshotFormatError`'s only raiser, so it is the
-one the L-180 repoint (chunk 12) was ordered ahead of.
+**Post-state, measured** (same worktree, step 1 applied and closed first, step 2's mechanical
+half plus the production table above):
 
-#### Step 3 — G3′ (1 row) — **READY**
+- with `CompilationResult` **kept**: **1526 passed, 86 failed, 58 errors**
+- with L-033 executed as written: **1129 passed, 287 failed, 254 errors**
 
-**Row:** L-012 `src/sysml_codegen/resolution/producer_completeness.py`. No file blocks it, and
-none has since chunk 9.
+The step is not green and the runbook does not claim it is. The 86/58 remainder is per-node edit
+work in 33 surviving files of exactly the shape step 1's table carries; the 287/254 version is
+the L-033 finding below, which is not edit work at all.
 
-#### Step 4 — G4′ (2 rows) — **READY**
+#### Step 3 — G3′ (1 row) — prepared, not simulated
 
-**Rows:** L-008 `src/sysml_codegen/elaboration/diff.py`, L-276 `tests/helpers/legacy_route.py`.
-No file blocks it. `legacy_route.py` is a test helper, so this step is the last thing that can
-reach the legacy route at all — run the full battery, not a subset.
+**Row:** L-012 `resolution/producer_completeness.py`. No file blocks it, and none has since
+chunk 9. Not reached in simulation because step 2 is not green.
 
-#### Also in this phase, already prepared
+#### Step 4 — G4′ (5 rows) — prepared, not simulated
 
-Three items are carried on their Gate 4A rows and execute with the group that owns them, not as
-their own steps: the `_CONSTRAINT_LOGGER` name in `elaboration/project.py:83` (retires with
-`constraint_lowering`, step 1); the dead `GrandfatheredSnapshotError` import and handler in
-`cli/__init__.py` (`:1061`, `:1139` — retire with the v5 route, step 1); and
-`orchestration.__init__`'s re-export of `build_pipeline_context` (step 1, with L-032).
+**Rows:** L-008 `elaboration/diff.py`, L-276 `tests/helpers/legacy_route.py`, plus the three
+rows the simulation showed break with them. `legacy_route.py` is a test helper, so this step is
+the last thing that can reach the legacy route at all — run the full battery, not a subset. The
+16 collection errors audit 4 measured for this step come from modules steps 1 and 2 now delete;
+that is why the derivation walks test-module import edges.
 
-#### What had to be true before this section could say "mechanical" — resolved
+#### The documentation pass
 
-1. **Every blocking file carries a clearing `disposition_4c`.** ✅ Done, chunks 17–19. 35 files:
-   23 `retire-with-owner`, 11 `repoint`, 1 `archive-with-findings`.
-2. **`groups` shows all six groups READY.** ✅ Measured at chunk 19.
-3. **`replacements` green for every row and `check_proof_integrity.py` at 0.** ✅ Measured at
-   chunk 19: proof integrity **0 problems over 0 blocked files**.
-4. **The dual retirement has a scope.** ⚠️ **Resolved by separation, not by scoping.** The
-   *deletions* are ready and belong to step 1. The *qualifier drop* is a fifth item, owner-gated,
-   outside the four steps, with its cost measured (L-033 31 nodes, L-034 58, L-036 34, L-037 134,
-   plus two `agentic-mbse` production call sites with no ledger row). It is **not** scheduled and
-   must not be started without a ruling. This is the one item the acceptance packet has to carry.
+Not driven off a disposition column, so it is named here. Ten reference documents carry a
+retiring banner whose subject this retirement deletes (`reference/03, 04, 05, 07, 10, 11, 12,
+13, 24, 25`), `reference/09` carries the scoped mixed banner whose model rows ship with L-120,
+and `reference/15 §7`, `16` and `18` are recorded stale-minor "ships with the retirement" in the
+4D update list. Their content decision is authorship, not a mechanical edit.
+
+#### The fifth entry — owner-gated, not scheduled
+
+Six items. None may be started without a ruling, and no step can end green while items 2–5 stand.
+
+1. **The dual qualifier drop** — L-033, L-034, L-036, L-037. Measured in chunks 12 and 16: all
+   eight retained 3C duals fail under the prescribed drop. L-036/L-037 cannot execute at all —
+   `agentic_mbse/validation/level4_constraints.py:55-56` and `level6_architecture.py:620-621`
+   call the legacy members and are outside this ledger.
+2. **L-033's deletion is not ready either, and this is new.** The plan said the *deletion* was
+   ready and only the rename was gated. Measured: `compile_calc_def_exact` — the survivor —
+   constructs a legacy `CompilationResult` at `extraction/expression_compiler.py:378`, inside
+   its own body (240–391). Deleting the legacy dual breaks the exact route: 287 failed / 254
+   errors, against 86 / 58 with it kept. Detangling it is the type migration the qualifier drop
+   *is*, so L-033 belongs wholly to this entry, not to step 2.
+3. **L-135 `test_extractor.py` — the disposition understates the loss by a factor of 29.** The
+   row says two nodes drove the legacy wired path and 57 keep collecting. Measured at step 1:
+   **58 of its 74 collected nodes** read the retiring v5 fixtures and go red; 16 survive. The
+   extractor itself is live production, so this is a coverage decision about a retained subject.
+4. **L-153 `test_hierarchy_resolver.py` and L-100 `test_ast_dispatch_invariant.py` carry no
+   disposition at all.** Both are `4C-retained` / `retain` rows, and both break at step 1
+   through the conformance v5 fixtures: 44 of 46 nodes and 3 of 20 respectively — **47 nodes**.
+   Their subjects (`extraction/hierarchy_resolver.py`, the AST dispatch invariant) are live and
+   survive; only their evidence source retires. Repointing them onto v6 or live evidence is
+   authorship.
+5. **L-281 `test_expression_compiler.py`** — five nodes beyond the sixteen its per-node table
+   names read the conformance v5 fixtures.
+6. **`scripts/capture_filter.py` loses its last caller at step 2** and has no ledger row.
+   `capture_v6_batch.py` takes positional fixture names but has no license-free unknown-name
+   refusal, so L-292's "the same filter responsibility is carried by `capture_v6_batch.py`" is
+   only half true. Delete the filter, or wire it into the v6 capture — either is a decision.
+
+Items 3, 4 and 5 are the same class audit 4 found in L-298: a disposition note that is false
+against the code. They were found the only way that class can be found — by executing the step
+and running the suite.
+
+#### Corrections to specific rows, from the simulation
+
+- **L-298** (`test_d5_variants.py`) said "Names the v5 snapshot filename only to exclude it from
+  a variant … Nothing to change when the family retires." False: `:116` asserts
+  `(d5.FIXTURES / original / "extraction_snapshot.json").is_file()` for three originals the v5
+  family step deletes. The note is corrected in the ledger and the assertion is in step 2's
+  table.
+- **L-094** said `offline_input_sources` survives. It calls `snapshot_context`, which step 1
+  deletes, and has no remaining caller.
+- **L-292**: `capture_pipeline_baselines.py` goes at step 1 and `capture_extraction_snapshots.py`
+  at step 2, so its parametrized node loses one case per step.
+- **L-011**'s reason says "the rest of the file is deleted in G3" while its `group` says the v5
+  family. The group is authoritative and the reason is stale; the file goes at step 2.
+
+#### What had to be true before this section could say "mechanical" — restated
+
+1. **Every actionable row is named by exactly one step.** ✅ Derived, and checked by a test node.
+2. **Every step has a complete edit table.** ✅ for step 1, proven by executing it. Partial for
+   step 2 (production table complete and applied; the per-node test table is not). Steps 3–4 have
+   no surviving-file edits recorded because they were not reached.
+3. **Each step's post-state is proven.** ✅ step 1. ❌ steps 2, 3, 4.
+4. **Nothing is scheduled that needs a decision that is not the operator's.** ✅ — six items,
+   named above with their measured cost, none of them softened into a step.
 
 ### Phase 5 Completion
 
