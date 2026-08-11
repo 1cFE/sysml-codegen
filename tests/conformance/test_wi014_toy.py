@@ -49,7 +49,6 @@ from pathlib import Path
 import pytest
 
 from sysml_codegen.extraction.data_models import ComputedAttributeClassification
-from sysml_codegen.snapshot import load_extraction_snapshot
 from tests.conftest import requires_license, snapshot_fixture
 
 FIXTURES_DIR = Path(__file__).resolve().parents[1] / "fixtures"
@@ -63,6 +62,10 @@ FIXTURES_DIR = Path(__file__).resolve().parents[1] / "fixtures"
 @pytest.fixture(scope="module")
 def wi014_snapshot() -> dict:
     """Load the committed wi014_toy extraction snapshot."""
+    # Localised import (Gate 4C method note 1): the four offline nodes retire with the v5
+    # fixture they read; the three live nodes below keep collecting after that step.
+    from sysml_codegen.snapshot import load_extraction_snapshot
+
     return load_extraction_snapshot(snapshot_fixture("wi014_toy"))
 
 
@@ -107,6 +110,7 @@ def test_wi014_toy_shape_a_resolves_offline_via_scoped_alias() -> None:
     from sysml_codegen.orchestration.pipeline_builder import (
         _register_partdef_expose_scoped_aliases,
     )
+    from sysml_codegen.snapshot import load_extraction_snapshot
 
     snap = load_extraction_snapshot(snapshot_fixture("wi014_toy"))
     registry = build_output_registry(

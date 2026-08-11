@@ -10,7 +10,6 @@ from __future__ import annotations
 
 import pytest
 
-from sysml_codegen.snapshot import load_extraction_snapshot
 from tests.conftest import snapshot_fixture
 
 
@@ -77,6 +76,12 @@ def pytest_configure(config):
 @pytest.fixture(scope="session")
 def extraction_snapshots():
     """Load all extraction snapshots once per session."""
+    # Localised import (Gate 4C method note 1): this session fixture is the v5 half of the
+    # conformance conftest and retires with the v5 family. Keeping the reader out of module
+    # scope is what lets the marker registration and offline_input_sources - which every
+    # conformance file collects through - survive that step.
+    from sysml_codegen.snapshot import load_extraction_snapshot
+
     return {
         name: load_extraction_snapshot(snapshot_fixture(name))
         for name in SNAPSHOT_MODELS

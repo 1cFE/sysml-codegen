@@ -31,7 +31,6 @@ from sysml_codegen.resolution.models import (
     OutputAlias,
     PipelineModule,
 )
-from sysml_codegen.snapshot import build_full_graph_from_snapshot
 from tests.conftest import snapshot_fixture
 
 TEMPLATE_DIR = Path("src/sysml_codegen/templates")
@@ -120,10 +119,24 @@ def _exit_line(yaml_text: str, channel: str) -> str:
     raise AssertionError(f"no exit line for channel {channel}")
 
 
+
+def _v5_graph(fixture: str):
+    """Build a graph from a committed v5 snapshot, importing the reader locally.
+
+    Gate 4C method note 1: the v5 reader retires with the v5 family and only the four
+    end-to-end nodes below reach it. Keeping the import out of module scope is what lets the
+    three mechanism nodes -- which run on controlled inputs, not on a snapshot -- keep
+    collecting after that step.
+    """
+    from sysml_codegen.snapshot import build_full_graph_from_snapshot
+
+    return build_full_graph_from_snapshot(snapshot_fixture(fixture))
+
+
 def test_wi014_yaml_renames_total_cost() -> None:
     """Shape A end-to-end: the cost channel's exit filename is the modeler's name;
     the key stays the channel."""
-    graph, _ = build_full_graph_from_snapshot(snapshot_fixture("wi014_toy"))
+    graph, _ = _v5_graph("wi014_toy")
     yaml_text = generate_pipeline_yaml(graph, "wi014_toy", _template_env())
     channel = "toy_plant__demo_plant__cost_calc__cost"
     line = _exit_line(yaml_text, channel)
@@ -134,7 +147,7 @@ def test_wi014_yaml_renames_total_cost() -> None:
 def test_attr_expr_probe_yaml_renames_three_only() -> None:
     """Shape B end-to-end: the three aliased channels rename; every other exit line
     keeps its ``{channel}.json`` default."""
-    graph, _ = build_full_graph_from_snapshot(snapshot_fixture("attr_expr_probe"))
+    graph, _ = _v5_graph("attr_expr_probe")
     yaml_text = generate_pipeline_yaml(graph, "attr_expr_probe", _template_env())
     renamed = {
         "AttrExprProbeDesign__probe_design__scale_calc__result": "probe_design__scale_result.json",
@@ -153,9 +166,7 @@ def test_attr_expr_probe_yaml_renames_three_only() -> None:
 def test_sibling_channel_ambiguity_distinct_filenames() -> None:
     """D5: two siblings exposing the same name (``power`` on ``chamber_a`` /
     ``chamber_b``) produce two distinct exit filenames — no duplicate (INV-4)."""
-    graph, _ = build_full_graph_from_snapshot(
-        snapshot_fixture("sibling_channel_ambiguity")
-    )
+    graph, _ = _v5_graph("sibling_channel_ambiguity")
     files = {a.output_filename for a in graph.output_aliases}
     assert files == {
         "twin_plant.chamber_a__power.json",
@@ -171,7 +182,7 @@ def test_sibling_channel_ambiguity_distinct_filenames() -> None:
 def test_nested_shape_b_catf_no_dropped_exit() -> None:
     """Nested shape-B (catf_mfe) renders aliased filenames and drops no exit line —
     every declared channel still has an exit, aliased or not."""
-    graph, _ = build_full_graph_from_snapshot(snapshot_fixture("catf_mfe_model"))
+    graph, _ = _v5_graph("catf_mfe_model")
     yaml_text = generate_pipeline_yaml(graph, "catf_mfe", _template_env())
     declared = {o.channel_name for m in graph.modules for o in m.outputs}
     for channel in declared:

@@ -21,9 +21,7 @@ import pytest
 from sysml_codegen.generation.type_mapping import (
     map_sysml_type_to_python,
 )
-
 from tests.conftest import snapshot_fixture
-
 
 # ---------------------------------------------------------------------------
 # Constants

@@ -32,9 +32,7 @@ from sysml_codegen.extraction.calc_compat_renderer import (
 from sysml_codegen.extraction.expression_compiler import (
     Compilability,
     CompilationError,
-    CompilationResult,
     classify_compilability,
-    compile_calc_def,
 )
 
 # ---------------------------------------------------------------------------
@@ -351,6 +349,8 @@ class TestReqEc05CycleDetection:
         self, mock_syside_adapter, mock_extract_feature_refs
     ):
         """Mutual dependency (a→b, b→a) → all outputs MANUAL_REQUIRED."""
+        from sysml_codegen.extraction.expression_compiler import compile_calc_def
+
         calc_def, expr_asts = self._make_cycle(mock_extract_feature_refs)
         result = compile_calc_def(calc_def, expr_asts)
         assert result.overall_compilability == Compilability.MANUAL_REQUIRED
@@ -360,6 +360,8 @@ class TestReqEc05CycleDetection:
         self, mock_syside_adapter, mock_extract_feature_refs
     ):
         """Cycle → CalcDefCompilationResult.execution_order == []."""
+        from sysml_codegen.extraction.expression_compiler import compile_calc_def
+
         calc_def, expr_asts = self._make_cycle(mock_extract_feature_refs)
         result = compile_calc_def(calc_def, expr_asts)
         assert result.execution_order == []
@@ -368,6 +370,8 @@ class TestReqEc05CycleDetection:
         self, mock_syside_adapter, mock_extract_feature_refs
     ):
         """Each MANUAL output from a cycle has 'circular' in unsupported_reason."""
+        from sysml_codegen.extraction.expression_compiler import compile_calc_def
+
         calc_def, expr_asts = self._make_cycle(mock_extract_feature_refs)
         result = compile_calc_def(calc_def, expr_asts)
         for r in result.output_results:
@@ -387,6 +391,8 @@ class TestReqEc06WorstCaseRollup:
 
     def test_rollup_all_fully_returns_fully(self):
         """[FULLY, FULLY] → FULLY."""
+        from sysml_codegen.extraction.expression_compiler import CompilationResult
+
         results = [
             CompilationResult("a", Compilability.FULLY_COMPILABLE, "expr_a"),
             CompilationResult("b", Compilability.FULLY_COMPILABLE, "expr_b"),
@@ -395,6 +401,8 @@ class TestReqEc06WorstCaseRollup:
 
     def test_rollup_any_manual_returns_manual(self):
         """[FULLY, MANUAL] → MANUAL."""
+        from sysml_codegen.extraction.expression_compiler import CompilationResult
+
         results = [
             CompilationResult("a", Compilability.FULLY_COMPILABLE, "expr_a"),
             CompilationResult("b", Compilability.MANUAL_REQUIRED),
@@ -403,6 +411,8 @@ class TestReqEc06WorstCaseRollup:
 
     def test_rollup_mixed_returns_partially(self):
         """[FULLY, PARTIALLY] → PARTIALLY."""
+        from sysml_codegen.extraction.expression_compiler import CompilationResult
+
         results = [
             CompilationResult("a", Compilability.FULLY_COMPILABLE, "expr_a"),
             CompilationResult("b", Compilability.PARTIALLY_COMPILABLE, "expr_b"),
@@ -415,6 +425,8 @@ class TestReqEc06WorstCaseRollup:
 
     def test_rollup_unknown_raises_assertion(self):
         """[UNKNOWN] → AssertionError (UNKNOWN is sentinel, not valid result)."""
+        from sysml_codegen.extraction.expression_compiler import CompilationResult
+
         results = [CompilationResult("a", Compilability.UNKNOWN)]
         with pytest.raises(AssertionError, match="UNKNOWN"):
             classify_compilability(results)
@@ -433,6 +445,8 @@ class TestReqEc07UndeclaredIntermediates:
         self, mock_syside_adapter, mock_extract_feature_refs
     ):
         """Output references member not in inputs/outputs → discovered as intermediate."""
+        from sysml_codegen.extraction.expression_compiler import compile_calc_def
+
         calc_def = _make_calc_def(
             "IntermCalc",
             input_names=["x"],
@@ -467,6 +481,8 @@ class TestReqEc07UndeclaredIntermediates:
 
     def test_iterative_chain_discovery(self, mock_syside_adapter, mock_extract_feature_refs):
         """4-deep chain: inter_a → inter_b → inter_c → inter_d → final_result."""
+        from sysml_codegen.extraction.expression_compiler import compile_calc_def
+
         calc_def = _make_calc_def(
             "ChainCalc",
             input_names=["i1", "i2"],
@@ -539,6 +555,8 @@ class TestReqEc07UndeclaredIntermediates:
 
     def test_undeclared_flag_set_correctly(self, mock_syside_adapter, mock_extract_feature_refs):
         """is_undeclared_intermediate=True for discovered members, False for declared outputs."""
+        from sysml_codegen.extraction.expression_compiler import compile_calc_def
+
         calc_def = _make_calc_def(
             "FlagCalc",
             input_names=["x"],
@@ -574,6 +592,8 @@ class TestReqEc07UndeclaredIntermediates:
         self, mock_syside_adapter, mock_extract_feature_refs
     ):
         """Undeclared intermediate with no member_expressions entry → MANUAL_REQUIRED."""
+        from sysml_codegen.extraction.expression_compiler import compile_calc_def
+
         calc_def = _make_calc_def(
             "NoExprCalc",
             input_names=["x"],
@@ -679,6 +699,8 @@ class TestCrossModelValidation:
         mock_extract_feature_refs,
     ):
         """compile_calc_def with real calc def metadata → valid compilation result."""
+        from sysml_codegen.extraction.expression_compiler import compile_calc_def
+
         snapshot = extraction_snapshots[model_name]
         ref_map = mock_extract_feature_refs
 

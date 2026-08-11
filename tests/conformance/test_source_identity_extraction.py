@@ -20,20 +20,17 @@ import dataclasses
 from typing import Any
 
 import pytest
-from agentic_mbse.sysml.constraint_extraction import extract_constraint_facts
 from agentic_mbse.sysml.expression_facts import FeatureReferenceFact
 from agentic_mbse.sysml.types import BindingType
 
-from sysml_codegen.analysis.parameter_groups import extract_design_attributes
+from sysml_codegen.extraction.extractor import SysMLDataExtractor
+from sysml_codegen.extraction.hierarchy_resolver import extract_hierarchy_data
 from sysml_codegen.extraction.source_evidence import (
     ReadinessCode,
     SourceForm,
     screen_source_readiness,
 )
-from sysml_codegen.extraction.extractor import SysMLDataExtractor
-from sysml_codegen.extraction.hierarchy_resolver import extract_hierarchy_data
 from sysml_codegen.extraction.usage_extractor import extract_calculation_usages
-from sysml_codegen.orchestration.pipeline_builder import _rewrite_virtual_bindings
 from tests.conftest import FIXTURES_DIR, requires_license
 
 pytestmark = requires_license
@@ -207,6 +204,8 @@ def test_cross_owner_consumers_share_one_exact_referent(mixed) -> None:
     assert child.referent.owner_is_definition
     assert not child.is_self_binding
 
+    from agentic_mbse.sysml.constraint_extraction import extract_constraint_facts
+
     facts = extract_constraint_facts(mixed["model"])
     guards = [
         usage
@@ -308,6 +307,8 @@ def test_occurrence_override_value_sites_carry_exact_identity(mixed) -> None:
 
 
 def test_definition_default_value_site_carries_raw_qn(mixed) -> None:
+    from sysml_codegen.analysis.parameter_groups import extract_design_attributes
+
     attrs_by_file = extract_design_attributes(mixed["model"])
     raw_qns = {
         attr.raw_qualified_name
@@ -340,6 +341,8 @@ def test_stamp_cannot_mutate_reference_evidence(mixed) -> None:
     assert before is not None
     assert before.source_form is SourceForm.BARE_REFERENCE
 
+    from sysml_codegen.orchestration.pipeline_builder import _rewrite_virtual_bindings
+
     _rewrite_virtual_bindings(mixed["usages"], hierarchy)
 
     stamped = _binding(mixed["usages"], "__stamp_plant__stamp_calc", "value_in")
@@ -357,6 +360,8 @@ def test_stamp_cannot_mutate_reference_evidence(mixed) -> None:
 def test_deep_chain_evidence_survives_rewrite(mixed) -> None:
     hierarchy = extract_hierarchy_data(mixed["model"])
     before = _evidence(mixed["usages"], "__computed_station__computed_calc", "value_in")
+    from sysml_codegen.orchestration.pipeline_builder import _rewrite_virtual_bindings
+
     _rewrite_virtual_bindings(mixed["usages"], hierarchy)
     after = _evidence(mixed["usages"], "__computed_station__computed_calc", "value_in")
     assert after == before

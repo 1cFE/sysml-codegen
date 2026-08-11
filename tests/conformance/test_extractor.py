@@ -28,7 +28,6 @@ from sysml_codegen.extraction.data_models import (
     SumTerm,
 )
 from sysml_codegen.extraction.extractor import SysMLDataExtractor
-from sysml_codegen.orchestration.pipeline_builder import build_pipeline_context
 
 # ---------------------------------------------------------------------------
 # Expected counts from Phase 0 snapshot capture
@@ -948,6 +947,11 @@ class TestReqExt09ConstraintDropDiagnostic:
         assert "part_def" in owner_kinds, "no part-def-owned constraint swept"
         assert "part_usage" in owner_kinds, "no part-usage-owned constraint swept"
 
+        # Localised import (Gate 4C method note 1): two of this file's 59 nodes drive the
+        # legacy wired path; the other 57 exercise the extractor directly and keep collecting
+        # after step 1 deletes pipeline_builder.
+        from sysml_codegen.orchestration.pipeline_builder import build_pipeline_context
+
         ctx = build_pipeline_context([FIXTURES_DIR / "catf_mfe_model"])
         assert len(ctx.concrete_constraints) == self.CATF_DROPPABLE
         assert all(not c.eligible for c in ctx.concrete_constraints), (
@@ -964,6 +968,8 @@ class TestReqExt09ConstraintDropDiagnostic:
         asserts = [e for e in manifest if e.constraint_kind is ConstraintKind.ASSERT]
         assert len(asserts) == 1, "wi014_toy must carry exactly one assert constraint"
         assert asserts[0].constraint_name == "affordable"
+
+        from sysml_codegen.orchestration.pipeline_builder import build_pipeline_context
 
         ctx = build_pipeline_context([FIXTURES_DIR / "wi014_toy"])
         usage_qn = f"{asserts[0].owner_qualified_name}::{asserts[0].constraint_name}"
