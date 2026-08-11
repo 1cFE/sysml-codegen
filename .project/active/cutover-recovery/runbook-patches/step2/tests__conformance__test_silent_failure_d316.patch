@@ -1,0 +1,22 @@
+diff --git a/tests/conformance/test_silent_failure_d316.py b/tests/conformance/test_silent_failure_d316.py
+index ea65361..87f5f00 100644
+--- a/tests/conformance/test_silent_failure_d316.py
++++ b/tests/conformance/test_silent_failure_d316.py
+@@ -17,7 +17,7 @@ from sysml_codegen.extraction.computed_attribute_extractor import (
+     extract_computed_attributes,
+ )
+ from sysml_codegen.extraction.extractor import SysMLDataExtractor
+-from tests.conftest import requires_license, snapshot_fixture
++from tests.conftest import FIXTURES_DIR, requires_license
+ 
+ 
+ def _calc_usage_names(part) -> set[str]:
+@@ -30,7 +30,7 @@ def _calc_usage_names(part) -> set[str]:
+ 
+ @requires_license
+ def test_d316_crosspart_expose_warns_not_silent(caplog):
+-    fixture_dir = snapshot_fixture("d316_crosspart_expose").parent
++    fixture_dir = FIXTURES_DIR / "d316_crosspart_expose"
+     ex = SysMLDataExtractor([fixture_dir])
+     assert ex.load_models()
+ 

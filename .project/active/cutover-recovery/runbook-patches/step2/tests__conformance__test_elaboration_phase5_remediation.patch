@@ -1,0 +1,58 @@
+diff --git a/tests/conformance/test_elaboration_phase5_remediation.py b/tests/conformance/test_elaboration_phase5_remediation.py
+index eb54b22..14654fa 100644
+--- a/tests/conformance/test_elaboration_phase5_remediation.py
++++ b/tests/conformance/test_elaboration_phase5_remediation.py
+@@ -148,17 +148,15 @@ def test_valid_deep_cross_scope_redefinitions_resolve_every_reference() -> None:
+ 
+ 
+ def test_public_compatibility_keeps_names_but_uses_occurrence_sources() -> None:
++    """The public names the legacy route shipped, now stated by value.
++
++    The legacy half of this comparison retired with the v5 family (retirement step 2), per
++    the per-node disposition on ledger L-130. What it contributed was the *compatibility*
++    claim: the exact route ships the legacy route's output aliases and constraint
++    catalogue unchanged. Both are written out below, read from the fixture rather than
++    from a second route, so the claim survives the comparison.
++    """
+     graph = _exact("wi014_toy")
+-    # Gate 4C part 7, per-node disposition (ledger L-130): this node's subject is
+-    # the exact-versus-legacy public compatibility comparison, so it retires with
+-    # the legacy route (ruling 3's shape). Local import so the other 10 nodes in
+-    # this file — which several ledger rows name as their replacement proof — keep
+-    # collecting after pipeline_builder goes.
+-    from sysml_codegen.orchestration.pipeline_builder import build_pipeline_context
+-
+-    legacy = build_pipeline_context(
+-        [FIXTURES_DIR / "wi014_toy"], lower_constraints_enabled=True
+-    ).computation_graph
+ 
+     [group] = graph.entry_point_groups
+     assert group.name == "toy_plant_params"
+@@ -167,12 +165,22 @@ def test_public_compatibility_keeps_names_but_uses_occurrence_sources() -> None:
+     }
+     assert all("__demo_plant__" in parameter.qualified_name for parameter in group.parameters)
+ 
+-    assert graph.output_aliases == legacy.output_aliases
+-    assert graph.constraint_catalog is not None
+-    assert legacy.constraint_catalog is not None
+-    assert [entry.constraint_id for entry in graph.constraint_catalog.concrete_entries] == [
+-        entry.constraint_id for entry in legacy.constraint_catalog.concrete_entries
++    # `total_cost` is the shape-A EXPOSE_PURE derived attribute on `part def 'Toy Plant'`
++    # (tests/fixtures/wi014_toy/toy_plant.sysml); the alias is the modeller's name for the
++    # channel, and both routes shipped it.
++    assert [(alias.alias_name, alias.instance_path) for alias in graph.output_aliases] == [
++        ("total_cost", "demo_plant")
+     ]
++    # The fixture models one constraint — `assert constraint affordable : 'Cost Within
++    # Budget'` on `part demo_plant` (toy_plant.sysml:51) — so the catalogue carries exactly
++    # one entry, on the one occurrence. The legacy comparison asserted the id list matched
++    # entry for entry; with one route left, the shape and the occurrence it is keyed to are
++    # what that claim reduces to. The id's hash suffix is deliberately not spelled out: it
++    # is a fingerprint of the canonical tuple, pinned by `test_exact_constraint_route.py`.
++    assert graph.constraint_catalog is not None
++    (entry,) = graph.constraint_catalog.concrete_entries
++    assert entry.constraint_id.startswith("toy_plant__demo_plant__affordable__")
++    assert entry.evaluation_channel == f"{entry.constraint_id}__evaluation"
+ 
+ 
+ def test_parameter_group_name_drives_the_compatible_json_filename() -> None:

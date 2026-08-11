@@ -1,0 +1,50 @@
+diff --git a/src/sysml_codegen/analysis/__init__.py b/src/sysml_codegen/analysis/__init__.py
+index bed4720..315885e 100644
+--- a/src/sysml_codegen/analysis/__init__.py
++++ b/src/sysml_codegen/analysis/__init__.py
+@@ -1,41 +1,7 @@
+ """Analysis layer for SysML code generation.
+ 
+-This layer provides analysis capabilities for extracted SysML data:
+-- Parameter group derivation for entry point organization
+-- Phantom entry point detection for binding validation
+-- Dependency backtracking for pipeline ordering
+-- Signature extraction for implementation preservation
++The dependency backtracker, the parameter-group deriver and the phantom detector were
++the string-resolution stack's analysis half and retired with the v5 family (retirement
++step 2). What remains in this package is reached by module path, not through this
++re-export surface.
+ """
+-
+-from sysml_codegen.analysis.dependency_backtracker import (
+-    BacktrackingResult,
+-    CircularDependencyError,
+-    DependencyBacktracker,
+-    TargetNotFoundError,
+-)
+-from sysml_codegen.analysis.parameter_groups import (
+-    DesignAttributeData,
+-    ParameterGroupDeriver,
+-)
+-from sysml_codegen.analysis.phantom_detector import (
+-    DomainKeywords,
+-    PhantomCandidate,
+-    PhantomDetectionReport,
+-    PhantomDetector,
+-)
+-
+-__all__ = [
+-    # dependency_backtracker
+-    "BacktrackingResult",
+-    "CircularDependencyError",
+-    "DependencyBacktracker",
+-    "TargetNotFoundError",
+-    # parameter_groups
+-    "DesignAttributeData",
+-    "ParameterGroupDeriver",
+-    # phantom_detector
+-    "DomainKeywords",
+-    "PhantomCandidate",
+-    "PhantomDetectionReport",
+-    "PhantomDetector",
+-]

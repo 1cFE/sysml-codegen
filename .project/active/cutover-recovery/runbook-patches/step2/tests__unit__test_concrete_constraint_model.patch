@@ -1,0 +1,74 @@
+diff --git a/tests/unit/test_concrete_constraint_model.py b/tests/unit/test_concrete_constraint_model.py
+index 3666dca..8707192 100644
+--- a/tests/unit/test_concrete_constraint_model.py
++++ b/tests/unit/test_concrete_constraint_model.py
+@@ -97,59 +97,16 @@ def test_unassessed_shape_carries_kind_and_no_node():
+     assert cc.inputs == []
+ 
+ 
+-# --- the three legacy-guard nodes ---------------------------------------------
+-# `assert_unique_constraint_ids` is the ONE name in this file that does not survive
+-# the cutover: it lives in `analysis/constraint_lowering.py` (ledger L-001) and is
+-# called only from inside that module. The import is local to these three nodes so
+-# the other 23 — pure `resolution/models.py` data-contract pins — keep collecting
+-# after L-001 goes. Ledger L-212 records the per-node disposition: they retire at
+-# L-001's retirement commit, and the property they guard survives in a stronger
+-# form. The exact route mints the same ids (`core/identifier_types.mint_constraint_id`)
+-# and claims `f"{constraint_id}__evaluation"` as a public channel, so two constraints
+-# minting one id collide at the seam with a typed `SI_RENDERING_COLLISION`
+-# (`elaboration/project.py:287`) rather than passing a post-hoc assertion.
+-
+-
+-def test_assert_unique_constraint_ids_raises_on_duplicate():
+-    from sysml_codegen.analysis.constraint_lowering import assert_unique_constraint_ids
+-
+-    a = _make_cc("dup_id", "Design__c__cell[0]")
+-    b = _make_cc("dup_id", "Design__c__cell[1]")
+-    with pytest.raises(CodeGenerationError, match="dup_id"):
+-        assert_unique_constraint_ids([a, b])
+-
+-
+-def test_genuine_duplicate_id_rejection_describes_both_records_truthfully():
+-    from sysml_codegen.analysis.constraint_lowering import assert_unique_constraint_ids
+-
+-    first = _make_cc("forced_duplicate", "Design__first")
+-    second = _make_cc("forced_duplicate", "Design__second").model_copy(
+-        update={
+-            "usage_qualified_name": "Design__other__check",
+-            "source_local_identity": "other_check",
+-            "owner_qualified_name": "Design__OtherOwner",
+-        }
+-    )
+-    with pytest.raises(CodeGenerationError) as error:
+-        assert_unique_constraint_ids([first, second])
+-    message = str(error.value)
+-    assert "forced_duplicate" in message
+-    assert "Design__c__cell__nonneg" in message
+-    assert "Design__other__check" in message
+-    assert "Design__Cell" in message
+-    assert "Design__OtherOwner" in message
+-    assert "Design__first" in message
+-    assert "Design__second" in message
+-    assert "hash collision" not in message.lower()
+-    assert "broken model" not in message.lower()
+-
+-
+-def test_assert_unique_constraint_ids_passes_on_distinct():
+-    from sysml_codegen.analysis.constraint_lowering import assert_unique_constraint_ids
+-
+-    a = _make_cc("id_0", "Design__c__cell[0]")
+-    b = _make_cc("id_1", "Design__c__cell[1]")
+-    assert_unique_constraint_ids([a, b])  # no raise
++# The three ``assert_unique_constraint_ids`` guard nodes that stood here retired with the
++# v5 family (retirement step 2): that helper lived in ``analysis/constraint_lowering.py``
++# (ledger L-001) and was called only from inside it, and ledger L-212 records the per-node
++# disposition. The property they guarded survives in a stronger form. The exact route mints
++# the same ids (``core/identifier_types.mint_constraint_id``) and claims
++# ``f"{constraint_id}__evaluation"`` as a public channel, so two constraints minting one id
++# now collide *at the seam*, with a typed ``SI_RENDERING_COLLISION`` refusal
++# (``elaboration/project.py:287``) instead of a post-hoc assertion. That refusal is pinned by
++# ``tests/conformance/test_elaboration_projection.py:156`` on constructed inputs and by
++# ``tests/conformance/test_d5_variants.py:273`` end to end.
+ 
+ 
+ # --- invariant enforcement (code-quality remediation, 2026-07-14) ---------------

@@ -4573,12 +4573,16 @@ at the Phase 5 stop.
 
 ### The retirement runbook — post-acceptance execution
 
-**Status: step 1 is PROVEN. Steps 2–4 are prepared and not proven. Six items are owner-gated.**
-Rebuilt at the Phase 4 audit follow-up (2026-08-11) against audit-4 F1 and F2. The previous
-version said "MECHANICAL" while naming 66 of the 189 dispositioned rows and carrying an edit
-table for one step; the audit measured that claim false. What replaced it is below, and every
-number in it was measured in a scratch `git worktree` that was created, measured and discarded —
-the audited tree was never mutated and **nothing has retired**.
+**Status: all four steps are PROVEN green in simulation. Seven items are owner-gated, and
+one battery gate is unmeasured.** Rebuilt at the Phase 4 audit follow-up (2026-08-11) against
+audit-4 F1 and F2, then completed by executing every step in order. Every number below was
+measured in a scratch `git worktree` created for the purpose; the audited tree was never
+mutated and **nothing has retired**.
+
+What "proven" means here, exactly: with the seven owner-gated items held out as a named,
+committed trim (113 test nodes, listed in `runbook-patches/provisional-trim.txt`), each of the
+four steps ends with **0 failed and 0 errors** across the full battery. What it does not mean:
+the gated items are not solved, and nothing is executed until the owner accepts.
 
 #### How a step knows what it contains
 
@@ -4590,9 +4594,10 @@ The step lists are **derived from the ledger**, not copied out of it.
   names;
 - the seventeen data-axis rows that carry no `breaks_on` are placed by an explicit table, one
   reason per row;
-- eleven rows the simulation measured red **earlier** than their columns place them are pinned
-  in `PULLED_FORWARD` with the measured reason — every one is a function-local import or a
-  fixture use, which is the class the checker's module-level AST scan cannot see;
+- fourteen rows the simulation measured red **earlier** than their columns place them are
+  pinned in `PULLED_FORWARD` with the measured reason — every one is a function-local import,
+  a fixture use, or a subprocess/`importlib` load, which is the class the checker's
+  module-level AST scan cannot see;
 - test-module import edges are walked, because deleting a test module breaks the siblings that
   import it — the class that turned `tests/helpers/legacy_route.py` into 16 collection errors.
 
@@ -4607,37 +4612,49 @@ runbook rests on fails the suite if it stops holding.
 | # | Step | Rows | delete / archive / edit | State |
 |---|---|---:|---|---|
 | 1 | G2′, the v5 read path | 99 | 78 / 7 / 14 | **PROVEN green in simulation** |
-| 2 | the v5 family | 150 | 106 / 11 / 33 | prepared; **not green** — see the fifth entry |
-| 3 | G3′ | 1 | 1 / 0 / 0 | prepared; not simulated |
-| 4 | G4′ | 5 | 5 / 0 / 0 | prepared; not simulated |
-| — | owner-gated | 2 + 5 named items | — | **not scheduled** |
+| 2 | the v5 family | 153 | 109 / 11 / 33 | **PROVEN green in simulation** |
+| 3 | G3′ | 1 | 1 / 0 / 0 | **PROVEN green in simulation** |
+| 4 | G4′ | 2 | 2 / 0 / 0 | **PROVEN green in simulation** |
+| — | owner-gated | 2 + 6 named items | — | **not scheduled** |
 
-257 of the 300 ledger rows are placed: 68 deletion-group rows and 189 dispositioned ones. The
-other 43 are `retain` rows the retirement does not touch, the 4D documentation rows (whose own
-pass is named below), and the Gate 4B-G0/G1 rows already executed.
+Step 2 gained three rows and step 4 lost three: `L-198`, `L-199` and `L-201` — the three
+`tests/integration/*_e2e.py` modules — are pulled forward, because they drive
+`tests/helpers/legacy_route.py`, which calls `build_pipeline_context`. Their disposition is
+already `retire-with-owner`, so nothing new is decided; only the placement moves.
 
-#### The order is G2′ first, and that is a correction
+#### The prepared edits are patches, and a test keeps them honest
 
-The previous sequence ran the v5 family first because the fixtures should go before the reader
-that loads them. On the import axis the dependency runs the other way, and the import axis wins:
-`snapshot/graph_rebuild.py:15` imports `analysis.constraint_lowering`, `:20-24` imports the
-backtracker, the parameter groups, the occurrence index and `graph_builder`. Measured, with the
-v5 family's own edit table fully applied and the read path still present:
+The runbook executes after acceptance, so each surviving file's edit lives as a reviewable
+patch, one patch per file, under `.project/active/cutover-recovery/runbook-patches/`:
 
+| | patches | covers |
+|---|---:|---|
+| `step1/` | 12 | the 12 files step 1 edits (`L-135` and `L-281` are owner-gated, so 12 of the 14 rows) |
+| `step2/` | 41 | 40 file edits plus `ledger__L-011.patch`, the one ledger-row correction |
+| `step3/`, `step4/` | 0 | those steps delete only; the simulation confirmed no surviving file needs an edit |
+
+The patches are **sequenced**: step 2's were derived against the tree with step 1's applied,
+and six files are edited by both steps. `tests/unit/test_runbook_patches.py` replays them in
+order into a scratch directory seeded from HEAD, so the suite goes red the day the tree moves
+under a prepared edit — which is the only thing that makes a pending patch reviewable.
+
+Apply order, per step:
+
+```bash
+$PY scripts/retire_step.py apply N                       # git rm the deletions, git mv the archives
+git apply .project/active/cutover-recovery/runbook-patches/stepN/*.patch
+#   ...commit...
+$PY scripts/retire_step.py close N <oid>                 # mark the step's rows executed
+#   ...commit the ledger, then run the battery...
 ```
->>> import sysml_codegen.snapshot
-ModuleNotFoundError: No module named 'sysml_codegen.analysis.constraint_lowering'
-```
 
-The whole package stops importing. Reversing the two steps removes that state, and the checker's
-placement follows automatically because the step numbers are a table in one place.
+**The close is not optional.** `check_ledger_4a.py` verifies every state claim against Git, so
+a step whose files are gone while its rows still say `proposed` fails the checker. The
+simulation found this and it is why the close exists.
 
 #### The per-step battery
 
-Unchanged from the previous version, plus the environment assertion the recovery requires and
-the `TEAX_SIMKIT_PATH` a scratch worktree needs (a worktree outside the primary checkout cannot
-find the TEAx sibling, and `tests/execution`'s twelve real-TEAx anchors error there — that is
-environment, not regression).
+Unchanged from the previous version, plus two environment requirements a scratch worktree has.
 
 ```bash
 set -a; source /home/reid/1cfe/agentic-mbse/.env; set +a
@@ -4659,129 +4676,185 @@ $PY scripts/check_proof_integrity.py
 git diff --check
 ```
 
-`check_proof_integrity.py` reads **0 problems over 0 blocked files** and that means *nothing left
-to check*, not *checked and clean* (audit 4, F6). It stays in the battery as a tripwire: if a
-step re-blocks a file, this is what says so.
+**Put the scratch worktree beside `agentic-mbse`, not in `/tmp`.** Measured: a worktree at
+`/tmp` adds five `test_ast_dispatch_invariant.py` failures that are pure environment — the
+file resolves the shared `agentic_mbse/sysml/{aggregation,hierarchy}.py` dispatch sites by
+`parents[4] / "agentic-mbse"`. The twelve `tests/execution` errors are the same class for the
+TEAx sibling and are why `TEAX_SIMKIT_PATH` is set.
 
-#### How a step is executed, and how it is closed
+`check_proof_integrity.py` reads **0 problems over 0 blocked files** and that means *nothing
+left to check*, not *checked and clean* (audit 4, F6). It stays in the battery as a tripwire: if
+a step re-blocks a file, this is what says so.
 
-```bash
-$PY scripts/retire_step.py apply N        # git rm the deletions, git mv the archives
-#   ...make the edits in the step's table below, then commit...
-$PY scripts/retire_step.py close N <oid>  # mark the step's rows executed at that commit
-#   ...commit the ledger, then run the battery...
-```
-
-**The close is not optional.** `check_ledger_4a.py` verifies every state claim against Git, so a
-step whose files are gone while its rows still say `proposed` fails the checker. The simulation
-found this and it is why the close exists; the previous runbook had no step for it.
-
-Two checker changes the simulation proved necessary landed with this rebuild: a
-`retire-with-owner` row carries `disposition: retain` from Gate 4A, so both `check_paths` and
-`check_states` now read `disposition_4c` before calling an absence unauthorised; and
-`scripts/archive/` is skipped by both surface scans, because an archived file is a preserved
-record and scanning it reports the very legacy names it exists to remember. An archived row keeps
-its `path` — that path is its identity in the Git-derived candidate set — and gains `archived_to`.
+**`replacements` is the one battery gate the simulation did not measure**, at any step. It runs
+a pytest invocation per proof-node row and did not finish inside a 10-minute bound; the
+previous version's step-1 table did not record it either. It is a real gap, not a passed gate:
+run it once, out of band, before executing step 1 for real.
 
 ---
 
 #### Step 1 — G2′, the v5 read path (99 rows) — **PROVEN**
 
 Deletes `snapshot/graph_rebuild.py`, `snapshot/loader.py`, `orchestration/snapshot_context.py`,
-the two baseline-capture scripts, and the 71 test modules that break when they go. Archives 7 files to
-`scripts/archive/` — six probes and spikes, plus `test_source_identity_routes.py` (L-182), the
-learning-test record whose findings home is the research doc it cites. Edits 14 surviving files.
+the two baseline-capture scripts, and the 71 test modules that break when they go. Archives 7
+files to `scripts/archive/` — six probes and spikes, plus `test_source_identity_routes.py`
+(L-182), the learning-test record whose findings home is the research doc it cites. Edits 12
+files, with two more owner-gated.
 
-**Post-state, measured** (scratch worktree at `610ade8`, full battery). The baseline column is
-the same commit before the step: the suite, checker and lint numbers are the main tree's, and the
-execution-lane and whole-tree-ruff numbers are the scratch worktree's own, because a worktree
-outside the primary checkout cannot reach the TEAx sibling and carries the archived files.
+**Post-state, measured** (scratch worktree at `5b682c1`, full battery, provisional trim
+applied). The baseline column is the main tree at the same commit.
 
 | Gate | Baseline | After step 1 |
 |---|---|---|
-| Full licensed suite | 3854 passed / 47 skipped / 53 deselected | **2347 passed / 43 skipped / 35 deselected, 0 failed** |
+| Full licensed suite | 3854 passed / 47 skipped / 53 deselected | **2352 passed / 43 skipped / 145 deselected, 0 failed, 0 errors** |
 | Execution lane | 41 passed + 12 env errors | **23 passed** + the same 12 |
 | Corpus ledger | 12 passed | **11 passed** |
 | `capture_v6_batch.py --verify` | 15 / 22 / 0 | **15 / 22 / 0** |
-| `ruff check src` / whole tree | 16 / 866 | **16 / 301** |
+| `ruff check src` / whole tree | 16 / 866 | **16 / 769** |
 | `mypy src` | 69 errors in 16 files (87 files) | **69 in 16** (84 files) |
 | `check_ledger_4a.py paths` | 300 rows / 0 problems | **300 / 0** |
 | `surface` / `groups` / proof integrity | 0 / READY / 0-0 | **0 / all six READY / 0-0** |
 | `git diff --check` | clean | **clean** |
 
-**The edit table.** Each entry is what changes inside a file that survives the step.
+Two numbers differ from the version this replaces, and both are re-measurements, not
+regressions. The suite reads **2352**, not 2347: this session re-derived step 1's edit table
+independently and its `test_snapshot_v5_gate.py` and `test_public_authority_switch.py` splits
+land five collected nodes differently. The whole-tree ruff count reads **769**, not 301, and
+that gap is **unexplained** — the baseline 866 reproduces exactly on the main tree, so 769 is
+the number this session stands behind and 301 is not reconcilable against it.
+
+**The edit table.** One row per patch, in `runbook-patches/step1/`.
 
 | Row | File | Edit |
 |---|---|---|
 | L-028 | `snapshot/__init__.py` | drop the `graph_rebuild` and `loader` re-exports and their three `__all__` entries |
-| L-094 | `tests/conformance/conftest.py` | drop the `extraction_snapshots` session fixture, the eleven per-model conveniences, **and `offline_input_sources`** — its callers all retire in this step, so the row's "it survives" is false |
-| L-167 | `test_return_style_extraction.py` | drop `_snapshot_calc_defs`, `TestReturnStylesSnapshotIO`, `TestReturnStylesCompilationResults` (5 nodes) |
-| L-185 | `test_type_indexing.py` | drop `retype_snapshot`, its two helpers and the five offline nodes |
-| L-186 | `test_type_mapping_consolidation.py` | drop `TestCrossGeneratorConsistency` |
-| L-189 | `test_wi014_toy.py` | drop `wi014_snapshot` and the four offline nodes |
-| L-219 | `test_exit_point_aliases.py` | drop `_v5_graph`, `_exit_line` and the four end-to-end nodes |
-| L-180 | `test_snapshot_v5_gate.py` | drop `_v5_payload` and the six v5-envelope nodes; the four v6-envelope nodes stay and are this step's typed-refusal check |
-| L-249 | `test_uncovered_params.py` | drop `_graph` and nine nodes; keep `test_unwired_fallthrough_partition`, the one route-neutral node; drop the three module-level imports |
-| L-279 | `test_public_authority_switch.py` | the 3E residual pin drops to `{pipeline_builder}` — measured. **At step 2 the residual empties and the node retires**; both edits belong to this row |
+| L-094 | `tests/conformance/conftest.py` | the file becomes marker registration and nothing else: the `extraction_snapshots` session fixture, the eleven per-model conveniences, `SNAPSHOT_MODELS` **and `offline_input_sources`** all go — the row's "it survives" is false, its callers all retire here |
+| L-167 | `test_return_style_extraction.py` | drop `_snapshot_calc_defs` and the two offline classes (5 nodes); the module docstring stops promising two layers |
+| L-185 | `test_type_indexing.py` | drop `retype_snapshot`, its two helpers, the five offline nodes and the three constants only they used |
+| L-186 | `test_type_mapping_consolidation.py` | drop `TestCrossGeneratorConsistency` (2 nodes) and its `PARAMETRIZED_MODELS` / `MODEL_IDS` tables; the docstring names the sibling literal tables that pin the map's content |
+| L-189 | `test_wi014_toy.py` | drop `wi014_snapshot` and the four offline nodes; the REQ-CA-09 discharge note repoints to the live node that still pins it |
+| L-219 | `test_exit_point_aliases.py` | drop `_v5_graph`, `_exit_line`, `_template_env` and the four end-to-end nodes; the three mechanism nodes stay |
+| L-180 | `test_snapshot_v5_gate.py` | drop the v5-envelope half — six functions, seven nodes. Three of them (`test_envelope_is_v5`, and the two committed-snapshot sweeps) do **not** break at this step; they go by disposition, because their subject is the v5 extraction envelope and its only reader is deleted here |
+| L-249 | `test_uncovered_params.py` | drop `_graph`, nine fixture-driven nodes and the three module-level imports; keep `test_unwired_fallthrough_partition`. The docstring names where the V11 raise is still pinned (`cli/__init__.py:277-287` via `test_gate_b_generation_gate.py`) rather than leaving the reader to assume it is lost |
+| L-279 | `test_public_authority_switch.py` | `LEGACY_AUTHORITY_MODULES` and the 3E residual pin both drop to `{pipeline_builder}` — measured |
 | L-292 | `test_capture_fixtures_filter.py` | drop `capture_pipeline_baselines.py` from the parametrized script list |
-| L-296 | `test_check_ledger_4a.py` | the "still present in the rebuild" threshold moves (`> 200` → `> 150`; measured 162), and the multi-node green case repoints off `test_gen_stencils.py`, which this step deletes |
+| L-296 | `test_check_ledger_4a.py` | the "still present in the rebuild" threshold and the multi-node green case both repoint (see step 2, where both are rewritten to stop depending on a number that moves every step) |
 | L-277 | `test_generation_boundary.py` | no change at this step |
-| L-135, L-281 | `test_extractor.py`, `test_expression_compiler.py` | **owner-gated** — see the fifth entry. The simulation trimmed them provisionally to prove the rest |
+| L-135, L-281 | `test_extractor.py`, `test_expression_compiler.py` | **owner-gated** — see the fifth entry. No patch is prepared; the simulation trimmed them |
 
 **Post-step check beyond the battery:** the v5 typed refusal is still typed —
-`pytest tests/conformance/test_snapshot_v5_gate.py -k "v6_envelope or v5_extraction or public_route"`,
-four nodes against `snapshot/envelope.py`, **and** the two `test_public_authority_switch.py`
-nodes `test_a_v5_snapshot_is_refused_by_name_at_the_loader` and
+`pytest tests/conformance/test_snapshot_v5_gate.py`, five surviving v6-envelope nodes against
+`snapshot/envelope.py`, **and** the two `test_public_authority_switch.py` nodes
+`test_a_v5_snapshot_is_refused_by_name_at_the_loader` and
 `test_generate_from_a_v5_snapshot_refuses_without_falling_back`, which audit 4 (F2) found the
-old check did not cover. All six pass in the simulated post-state.
+old check did not cover. All seven pass in the simulated post-state.
 
-#### Step 2 — the v5 family (150 rows) — prepared, **not green**
+#### Step 2 — the v5 family (153 rows) — **PROVEN**
 
 Deletes the legacy analysis/resolution stack, the v5 serializer, `pipeline_builder`,
-`graph_builder`, the 37 committed `extraction_snapshot.json` fixtures,
-`scripts/capture_extraction_snapshots.py` and 106 rows' worth of test modules; archives 11
-probes; edits 33 files.
+`graph_builder`, `producer_resolution`, `output_registry`, the 37 committed
+`extraction_snapshot.json` fixtures, `scripts/capture_extraction_snapshots.py`,
+`scripts/run_elaboration_corpus.py`, the three pulled-forward `*_e2e.py` modules and 109 rows'
+worth of files in total; archives 11 probes; edits 33.
 
-**The production edit table** (all measured to apply cleanly):
+**Post-state, measured** (same worktree, step 1 applied and closed first):
+
+| Gate | After step 1 | After step 2 |
+|---|---|---|
+| Full licensed suite | 2352 / 43 / 145, 0 failed | **1582 passed / 34 skipped / 148 deselected, 0 failed, 0 errors** |
+| Execution lane | 23 + 12 env errors | **23** + the same 12 |
+| Corpus ledger | 11 passed | **9 passed** |
+| `capture_v6_batch.py --verify` | 15 / 22 / 0 | **15 / 22 / 0** |
+| `ruff check src` / whole tree | 16 / 769 | **15 / 646** |
+| `mypy src` | 69 in 16 (84 files) | **58 in 12** (72 files) |
+| `paths` / `surface` / `groups` / proof | 300-0 / 0 / READY / 0-0 | **300-0 / 0 / all six READY / 0-0** |
+| `git diff --check` | clean | **clean** |
+
+The deselected count rises by three because the trim grew by three nodes at this step (see the
+fifth entry, items 3 and 6).
+
+**The production edit table** (patches in `runbook-patches/step2/`):
 
 | Row | File | Edit |
 |---|---|---|
 | L-030 | `core/__init__.py` | drop the `OutputRegistry` / `is_transitive_default` re-export |
-| L-031 | `analysis/__init__.py` | drop the backtracker, parameter-group and phantom-detector re-exports |
-| L-032 | `orchestration/__init__.py` | drop the builder and `PipelineContext` re-exports; the 3E F4 pin (`build_elaborated_pipeline` stays out) survives |
+| L-031 | `analysis/__init__.py` | the file becomes a docstring: backtracker, parameter-group and phantom-detector re-exports all go |
+| L-032 | `orchestration/__init__.py` | keeps the two error re-exports and nothing else; the 3E F4 pin survives, and is now the whole rule |
 | L-018 | `orchestration/pipeline_context.py` | the class goes; the file becomes the two error re-exports |
 | L-021 | `generation/initialization.py` | drop the `PipelineContext` alias |
 | — | `generation/__init__.py` | drop its `PipelineContext` re-export. **No `removes` block names this**; the simulation found it |
+| — | `core/identifier_types.py` | its `mint_constraint_id` docstring cites `constraint_lowering.assert_unique_constraint_ids`. **Row-less**; the simulation found it |
+| — | `cli/__init__.py` | `cmd_snapshot`'s docstring says the v5 capture "is still in the tree". **Row-less**; the simulation found it |
 | L-027 | `snapshot/capture.py` | delete `capture_snapshot` and the two serializer imports |
 | L-028 | `snapshot/__init__.py` | drop the capture/serializer re-exports (the v5-family half of its `removes` block) |
-| L-011 | `resolution/graph_builder.py` | delete the module; drop the two `resolution/__init__.py` notes; `uncovered_params.py`'s docstring stops saying it is re-exported |
+| L-011 | `resolution/graph_builder.py` | delete the module; drop the two `resolution/__init__.py` notes; `uncovered_params.py`'s docstring stops saying it is re-exported. **Its ledger row also changes** — see the corrections below and `ledger__L-011.patch` |
 | L-035 | `elaboration/project.py` | rename `_CONSTRAINT_LOGGER` off the deleted module's name |
-| L-033 | `extraction/expression_compiler.py` | **blocked** — see the fifth entry |
-| L-034 | `extraction/data_models.py` | **not simulated** — the name-keyed fields' only reader is `compile_calc_def`, which this step deletes, but the extractor still writes them |
+| L-033 | `extraction/expression_compiler.py` | **owner-gated, and out of the step** — see the fifth entry. Step 2 goes green with `CompilationResult` kept |
+| L-034 | `extraction/data_models.py` | **owner-gated, and out of the step.** The name-keyed fields' only reader is `compile_calc_def`, which this step deletes, but the extractor still writes them. Step 2 goes green with them kept |
 | L-249 | `test_uncovered_params.py` | repoint the collector import off `graph_builder`'s re-export onto `resolution/uncovered_params.py` |
 
-**Post-state, measured** (same worktree, step 1 applied and closed first, step 2's mechanical
-half plus the production table above):
+**The per-node test table.** Every row below is a patch in `runbook-patches/step2/`. The bar is
+the part-6 one: where a node's subject survives, its expectation is re-derived and stated by
+value, from the fixture or the mechanism, never copied out of the code under test; where a
+node's subject genuinely ends with the v5 family, the node retires and the row says so.
 
-- with `CompilationResult` **kept**: **1526 passed, 86 failed, 58 errors**
-- with L-033 executed as written: **1129 passed, 287 failed, 254 errors**
+| Row | File | Nodes | What changes |
+|---|---|---:|---|
+| L-120 | `test_data_models.py` | 11 retire | The analysis-layer importables, `OutputRegistry`, `PhantomDetectionReport`, `BacktrackingResult`'s field set and their four documented-source-file rows. Doc 09's model rows ship with this row, which is what authorises it |
+| L-133 | `test_exact_group_identity.py` | 5 re-derived, 2 rewritten | The five-fixture "matches the legacy route" node becomes five by-value rows in the existing identity table, each expectation read from the fixture's own SysML. `retype_model` reads `library_params`, not `design_params`, because its `design.sysml` declares no attribute at all. The two divergence nodes keep their exact column in full and keep the retired legacy column as a decision record in prose |
+| L-279 | `test_public_authority_switch.py` | 3 retire, 2 re-derived | The legacy-arm discriminator and the legacy rescue arm retire; the residual pin retires because the residual is empty. The two v5-refusal nodes stop reading a retiring fixture and synthesise the payload — the refusal keys only on `snapshot/envelope.py:261-268`, so `{"snapshot_format_version": 5}` is the whole input. `LEGACY_AUTHORITY_MODULES` is repurposed from "unreachable" to "still absent", which is the only non-vacuous statement left once the modules are gone |
+| L-180 | `test_snapshot_v5_gate.py` | 2 re-derived | Same synthesis, same reason: the by-name refusal outlives the fixtures it was demonstrated on |
+| L-296 | `test_check_ledger_4a.py` | 4 re-derived | The `> 200` → `> 150` threshold is replaced by named still-present paths — a count that has to move at every step says nothing and breaks anyway. The executed-delete case builds its row instead of borrowing one that retires. The data-axis wiring case constructs a pending delete row, because after the retirement every delete row is executed and the axis has no surface to trip over. The multi-node case drops the deleted third node |
+| L-277 | `test_generation_boundary.py` | 1 re-derived | The node imported `PipelineContext` from its new home to prove the Step-7.6 move. It now checks the boundary that move existed to establish: no `class PipelineContext` anywhere under `generation/` |
+| L-212 | `test_concrete_constraint_model.py` | 3 retire | `assert_unique_constraint_ids`. Recorded per-node disposition, and the property survives in a stronger form — a duplicate id now collides at the seam with a typed `SI_RENDERING_COLLISION`, pinned by `test_elaboration_projection.py:156` and `test_d5_variants.py:273`. Both citations verified |
+| L-129 | `test_elaboration_expose_shapes.py` | 1 re-derived | The typed-index read goes; the two model facts it was a consequence of stay |
+| L-130 | `test_elaboration_phase5_remediation.py` | 1 re-derived | The compatibility claim is stated by value: the shape-A output alias, and the one modelled constraint (`toy_plant.sysml:51`) keyed to the one occurrence. The id's hash suffix is deliberately not spelled out |
+| L-132 | `test_exact_constraint_route.py` | 1 re-derived | "Shared with the legacy module" becomes "still owned by the exact route's own modules" |
+| L-125 | `test_dm08_enforced_surface.py` | 1 retires | Recorded per-node disposition; (a) and (c) are unaffected |
+| L-174 | `test_silent_failure_family1.py` | 1 re-derived, 3 repointed | The caret-aggregation node reads the walk from its owner (`extraction/hierarchy_resolver.extract_hierarchy_data`) instead of through the legacy builder, which was only ever a courier. Three more repoint `snapshot_fixture(x).parent` onto `FIXTURES_DIR / x` |
+| L-181 | `test_source_identity_extraction.py` | 3 retire | Two asserted that the legacy virtual-binding rewrite could not mutate frozen evidence; that rewrite is the only mutator, so the property has no counter-example left. The third read `raw_qualified_name`, a field that no longer exists anywhere in `src/` |
+| L-189 | `test_wi014_toy.py` | 2 re-derived | REQ-CA-09's discharge moves off the legacy `_scoped_alias` table onto the public `OutputAlias` the projection ships. The no-collapse node asserts the two halves are never joined, which is the actual guarantee |
+| L-135 | `test_extractor.py` | 1 re-derived, 1 gated | The wi014 assert node reads the catalogue off the exact route. The catf node **cannot** — see the fifth entry, item 3 |
+| L-100 | `test_ast_dispatch_invariant.py` | 5 re-derived | The retired `parameter_groups` dispatch site leaves the tables; the two guardrail counts drop 4→3 and 8→7, both re-measured by running the scan, not by decrementing |
+| L-103 | `test_catalog_no_reconstruction.py` | 2 re-derived | The scan set swaps the retired lowering module for `elaboration/project.py` and `elaboration/graph.py`, which is where the exact route mints `ConcreteConstraint`s. The guard-the-guard node gains an assertion that the minting site is covered |
+| L-096 | `test_agg_literal_dispatch.py` | 1 repointed | Runs the walk instead of reading its serialized output. The node becomes license-gated, which is a real change and is stated in the docstring |
+| L-298 | `test_d5_variants.py` | 3 re-derived, 1 repurposed | The originals carry no v6 capture, so the "untouched" second half has no file left to speak about and the SysML text becomes the whole check. The "a variant is not a corpus fixture" node is repurposed into a tripwire that no fixture anywhere carries an `extraction_snapshot.json` |
+| L-297 | `scripts/make_d5_variant.py` | — | `NOT_INHERITED` loses the retired filename; `CORPUS_MARKER` is renamed `RETIRED_CORPUS_MARKER` and re-documented as the tripwire's subject |
+| L-127 | `test_elaboration_corpus_ledger.py` | 2 retire | Both drove `scripts/run_elaboration_corpus.py` (L-044), whose subject is the dual run. The exact half of the measurement is `capture_v6_batch.py --verify`, pinned by `test_v6_recapture_batch.py`, both already in every battery |
+| L-289 | `tests/conftest.py` | — | `snapshot_fixture` goes; `instance_graph_fixture` and `exact_graph_from_fixture` stop describing it as the live counterpart |
+| L-291 | `test_silent_failure_d316.py` | — | `snapshot_fixture(x).parent` → `FIXTURES_DIR / x` |
+| L-295 | `tests/helpers/corpus.py` | — | docstring tense only; the enumeration was already route-neutral |
+| L-299, L-300 | `retirement_worklist.py`, `test_retirement_worklist.py` | 1 re-derived | The three pull-forwards land in `PULLED_FORWARD`. The 37-fixture node reads the ledger and re-runs `place()` per row instead of asking the work-list, which would go red the moment the step it describes actually ran |
+| L-284, L-287, L-288, L-293, L-294 | `test_expression_compiler.py`, `test_calc_compat_parity.py`, `test_computed_attribute_golden.py`, `check_ledger_4a.py`, `capture_v6_batch.py` | 0 | Placed at step 2 by derivation; measured green with no edit. `test_expression_compiler.py` has five separately gated nodes (fifth entry, item 5) |
+| — | `test_elaboration_import_boundaries.py` | 1 re-derived | **Row-less.** Its CLI/capture boundary node asserted the v5 capture *kept* its legacy owner; it now asserts the absence, on both the capture module and the orchestration package |
 
-The step is not green and the runbook does not claim it is. The 86/58 remainder is per-node edit
-work in 33 surviving files of exactly the shape step 1's table carries; the 287/254 version is
-the L-033 finding below, which is not edit work at all.
+#### Step 3 — G3′ (1 row) — **PROVEN**
 
-#### Step 3 — G3′ (1 row) — prepared, not simulated
+**Row:** L-012 `resolution/producer_completeness.py`. Deletion only, no surviving-file edits.
 
-**Row:** L-012 `resolution/producer_completeness.py`. No file blocks it, and none has since
-chunk 9. Not reached in simulation because step 2 is not green.
+| Gate | After step 2 | After step 3 |
+|---|---|---|
+| Full licensed suite | 1582 / 34 / 148, 0 failed | **1582 / 34 / 148, 0 failed, 0 errors** |
+| Execution lane / corpus / capture | 23+12 / 9 / 15-22-0 | **23+12 / 9 / 15-22-0** |
+| `ruff check src` / whole tree | 15 / 646 | **14 / 645** |
+| `mypy src` | 58 in 12 (72 files) | **57 in 11** (71 files) |
+| `paths` / `surface` / `groups` / proof | 300-0 / 0 / READY / 0-0 | **300-0 / 0 / all six READY / 0-0** |
 
-#### Step 4 — G4′ (5 rows) — prepared, not simulated
+#### Step 4 — G4′ (2 rows) — **PROVEN**
 
-**Rows:** L-008 `elaboration/diff.py`, L-276 `tests/helpers/legacy_route.py`, plus the three
-rows the simulation showed break with them. `legacy_route.py` is a test helper, so this step is
-the last thing that can reach the legacy route at all — run the full battery, not a subset. The
-16 collection errors audit 4 measured for this step come from modules steps 1 and 2 now delete;
-that is why the derivation walks test-module import edges.
+**Rows:** L-008 `elaboration/diff.py` and L-276 `tests/helpers/legacy_route.py`. Deletion only.
+The three rows the previous version expected to break here moved to step 2. `legacy_route.py`
+is a test helper, so this step is the last thing that can reach the legacy route at all — run
+the full battery, not a subset.
+
+| Gate | After step 3 | After step 4 |
+|---|---|---|
+| Full licensed suite | 1582 / 34 / 148, 0 failed | **1582 / 34 / 148, 0 failed, 0 errors** |
+| Execution lane / corpus / capture | 23+12 / 9 / 15-22-0 | **23+12 / 9 / 15-22-0** |
+| `ruff check src` / whole tree | 14 / 645 | **14 / 644** |
+| `mypy src` | 57 in 11 (71 files) | **57 in 11** (70 files) |
+| `paths` / `surface` / `groups` / proof | 300-0 / 0 / READY / 0-0 | **300-0 / 0 / all six READY / 0-0** |
+| `retirement_worklist.py check` | 0 problems | **0 problems**, and every step is empty |
 
 #### The documentation pass
 
@@ -4793,62 +4866,104 @@ and `reference/15 §7`, `16` and `18` are recorded stale-minor "ships with the r
 
 #### The fifth entry — owner-gated, not scheduled
 
-Six items. None may be started without a ruling, and no step can end green while items 2–5 stand.
+Seven items. None may be started without a ruling. Together they are the 113-node provisional
+trim in `runbook-patches/provisional-trim.txt`, which is what every "0 failed" above is
+measured with held out.
 
 1. **The dual qualifier drop** — L-033, L-034, L-036, L-037. Measured in chunks 12 and 16: all
    eight retained 3C duals fail under the prescribed drop. L-036/L-037 cannot execute at all —
    `agentic_mbse/validation/level4_constraints.py:55-56` and `level6_architecture.py:620-621`
    call the legacy members and are outside this ledger.
-2. **L-033's deletion is not ready either, and this is new.** The plan said the *deletion* was
-   ready and only the rename was gated. Measured: `compile_calc_def_exact` — the survivor —
-   constructs a legacy `CompilationResult` at `extraction/expression_compiler.py:378`, inside
-   its own body (240–391). Deleting the legacy dual breaks the exact route: 287 failed / 254
-   errors, against 86 / 58 with it kept. Detangling it is the type migration the qualifier drop
-   *is*, so L-033 belongs wholly to this entry, not to step 2.
-3. **L-135 `test_extractor.py` — the disposition understates the loss by a factor of 29.** The
-   row says two nodes drove the legacy wired path and 57 keep collecting. Measured at step 1:
-   **58 of its 74 collected nodes** read the retiring v5 fixtures and go red; 16 survive. The
-   extractor itself is live production, so this is a coverage decision about a retained subject.
+2. **L-033's deletion is not ready either.** The plan said the *deletion* was ready and only
+   the rename was gated. Measured: `compile_calc_def_exact` — the survivor — constructs a
+   legacy `CompilationResult` at `extraction/expression_compiler.py:378`, inside its own body
+   (240–391). Detangling it is the type migration the qualifier drop *is*, so L-033 belongs
+   wholly to this entry. **L-034 joins it**: the name-keyed `data_models.py` fields lose their
+   only reader at step 2 but the extractor still writes them, and removing them is the same
+   migration. Both are held out, and step 2 is green with both held out — that is the
+   measurement that says this entry is separable from the steps, not that it is optional.
+3. **L-135 `test_extractor.py` — the disposition understates the loss, and by more than
+   before.** The row says two nodes drove the legacy wired path and 57 keep collecting.
+   Measured at step 1: **58 of its 74 collected nodes** read the retiring v5 fixtures. Measured
+   at step 2: **one more** —
+   `TestReqExt09ConstraintDropDiagnostic::test_dropped_constraints_land_unassessed_spanning_owner_kinds`.
+   Its second arm asserts where catf_mfe's 65 swept constraints land, and it cannot be
+   repointed to the exact route, because the exact route **refuses `catf_mfe_model`**
+   (`SI_SELF_BINDING: CATFMFEVacuum__catf_vacuum_pumping__pump_load.pumping_speed_total`).
+   Dropping the arm, or moving the subject to a fixture the exact route accepts, is a coverage
+   decision about a retained subject. **59 nodes.**
 4. **L-153 `test_hierarchy_resolver.py` and L-100 `test_ast_dispatch_invariant.py` carry no
    disposition at all.** Both are `4C-retained` / `retain` rows, and both break at step 1
-   through the conformance v5 fixtures: 44 of 46 nodes and 3 of 20 respectively — **47 nodes**.
-   Their subjects (`extraction/hierarchy_resolver.py`, the AST dispatch invariant) are live and
-   survive; only their evidence source retires. Repointing them onto v6 or live evidence is
-   authorship.
+   through the conformance v5 fixtures: **44 of 46 and 3 of 20 — 47 nodes**, re-measured this
+   session and identical to the previous measurement. Their subjects are live and survive;
+   only their evidence source retires. Repointing them onto v6 or live evidence is authorship.
+   (L-100's *other* five nodes, the step-2 dispatch-table ones, are ordinary edit work and are
+   in step 2's table.)
 5. **L-281 `test_expression_compiler.py`** — five nodes beyond the sixteen its per-node table
    names read the conformance v5 fixtures.
-6. **`scripts/capture_filter.py` loses its last caller at step 2** and has no ledger row.
-   `capture_v6_batch.py` takes positional fixture names but has no license-free unknown-name
-   refusal, so L-292's "the same filter responsibility is carried by `capture_v6_batch.py`" is
-   only half true. Delete the filter, or wire it into the v6 capture — either is a decision.
+6. **`scripts/capture_filter.py` loses its last caller at step 2**, and now with a measurement.
+   Two `test_capture_fixtures_filter.py` nodes go red —
+   `test_unknown_fixture_name_errors[capture_extraction_snapshots.py]` and
+   `test_extraction_filter_touches_only_named` — and the four `select_fixtures` nodes that stay
+   green cover a module nothing calls. `capture_v6_batch.py` takes positional fixture names but
+   has no license-free unknown-name refusal, so L-292's "the same filter responsibility is
+   carried by `capture_v6_batch.py`" is only half true. Delete the filter, or wire it into the
+   v6 capture — either is a decision.
+7. **`snapshot/__init__.py` keeps a dead v5 surface, and no row names it.** After step 2,
+   `SNAPSHOT_FORMAT_VERSION`, `CONSTRAINT_LOWERING_MODE_*`, `VALID_CONSTRAINT_LOWERING_MODES`,
+   `SnapshotFormatError`, `GrandfatheredSnapshotError` and `assert_snapshot_certifiable` have
+   **zero readers** in `src/`, `scripts/` or `tests/` — measured by grep at the step-2
+   post-state. They are the v5 extraction envelope's constants and its certifiability gate.
+   Nothing breaks either way, which is why no step needs them: deleting them is a decision
+   about how much of the v5 vocabulary the tree keeps, and L-028's `removes` block does not
+   name them.
 
-Items 3, 4 and 5 are the same class audit 4 found in L-298: a disposition note that is false
-against the code. They were found the only way that class can be found — by executing the step
-and running the suite.
+Items 3, 4, 6 and 7 are the same class audit 4 found in L-298: a disposition note, or a
+silence, that is false against the code. They were found the only way that class can be found —
+by executing the step and running the suite.
 
 #### Corrections to specific rows, from the simulation
 
-- **L-298** (`test_d5_variants.py`) said "Names the v5 snapshot filename only to exclude it from
-  a variant … Nothing to change when the family retires." False: `:116` asserts
-  `(d5.FIXTURES / original / "extraction_snapshot.json").is_file()` for three originals the v5
-  family step deletes. The note is corrected in the ledger and the assertion is in step 2's
-  table.
+- **L-011** (`resolution/graph_builder.py`) carried `disposition: migrate` while its migration
+  half was pending. The residual module is deleted at step 2, and `check_ledger_4a.py`
+  correctly refuses an executed `migrate` row whose file is gone. The row reverts to the
+  census disposition its own `authority` field already records (`delete`), its stale
+  `remaining` field goes, and its `reason` says why it read `migrate` for a while. Its old
+  reason also said the residual went in G3, which its own `group` contradicts.
+  `ledger__L-011.patch`.
+- **L-127** (`test_elaboration_corpus_ledger.py`) says it "imports no legacy owner, so no Phase
+  4 action reaches it". False: two of its three nodes `importlib`-load
+  `scripts/run_elaboration_corpus.py`, which is L-044 and retires at step 2.
+- **L-198, L-199, L-201** are placed at step 4 by their `breaks_on`, and measured red at step 2:
+  `tests/helpers/legacy_route.py` calls `build_pipeline_context` inside its own body. Pulled
+  forward, with the measured reason.
+- **L-298** (`test_d5_variants.py`) said "Nothing to change when the family retires." False:
+  `:116` asserts the original's `extraction_snapshot.json` is present, for three originals the
+  v5 family step deletes.
 - **L-094** said `offline_input_sources` survives. It calls `snapshot_context`, which step 1
   deletes, and has no remaining caller.
 - **L-292**: `capture_pipeline_baselines.py` goes at step 1 and `capture_extraction_snapshots.py`
-  at step 2, so its parametrized node loses one case per step.
-- **L-011**'s reason says "the rest of the file is deleted in G3" while its `group` says the v5
-  family. The group is authoritative and the reason is stale; the file goes at step 2.
+  at step 2, so its parametrized node loses one case per step — and at step 2 the node is
+  gated, not edited (fifth entry, item 6).
+- Three files are edited by the retirement with **no ledger row naming them**:
+  `generation/__init__.py`, `core/identifier_types.py` and `cli/__init__.py`. All three are in
+  step 2's production table with a `—` for the row.
 
 #### What had to be true before this section could say "mechanical" — restated
 
 1. **Every actionable row is named by exactly one step.** ✅ Derived, and checked by a test node.
-2. **Every step has a complete edit table.** ✅ for step 1, proven by executing it. Partial for
-   step 2 (production table complete and applied; the per-node test table is not). Steps 3–4 have
-   no surviving-file edits recorded because they were not reached.
-3. **Each step's post-state is proven.** ✅ step 1. ❌ steps 2, 3, 4.
-4. **Nothing is scheduled that needs a decision that is not the operator's.** ✅ — six items,
+2. **Every step has a complete edit table.** ✅ All four, each entry a patch that a test node
+   re-checks against the tree.
+3. **Each step's post-state is proven.** ✅ All four, green at every boundary, with the
+   owner-gated trim held out and named.
+4. **Nothing is scheduled that needs a decision that is not the operator's.** ✅ — seven items,
    named above with their measured cost, none of them softened into a step.
+5. **Every battery gate is measured.** ❌ — `check_ledger_4a.py replacements` was not measured
+   at any step. Named above, with what it costs to close.
+
+**So: steps 1–4 are MECHANICAL, on two conditions stated in the open.** The seven owner-gated
+items are ruled on first (or held out deliberately, as the simulation held them), and
+`replacements` is measured once before step 1 runs for real.
 
 ### Phase 5 Completion
 

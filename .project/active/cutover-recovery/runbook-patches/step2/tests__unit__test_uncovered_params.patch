@@ -1,0 +1,13 @@
+diff --git a/tests/unit/test_uncovered_params.py b/tests/unit/test_uncovered_params.py
+index 2615376..3cae129 100644
+--- a/tests/unit/test_uncovered_params.py
++++ b/tests/unit/test_uncovered_params.py
+@@ -21,7 +21,7 @@ from __future__ import annotations
+ 
+ from pathlib import Path
+ 
+-from sysml_codegen.resolution.graph_builder import (
++from sysml_codegen.resolution.uncovered_params import (
+     collect_uncovered_params,
+     collect_unwired_fallthrough,
+ )

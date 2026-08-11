@@ -1,0 +1,16 @@
+diff --git a/src/sysml_codegen/cli/__init__.py b/src/sysml_codegen/cli/__init__.py
+index 74b24ca..e217544 100644
+--- a/src/sysml_codegen/cli/__init__.py
++++ b/src/sysml_codegen/cli/__init__.py
+@@ -727,9 +727,8 @@ def cmd_snapshot(args: argparse.Namespace) -> int:
+     """Capture one v6 instance-graph snapshot from live models.
+ 
+     This subcommand emits what this CLI's ``generate --from-snapshot`` accepts.
+-    The v5 extraction snapshot (``snapshot.capture_snapshot``) is still in the
+-    tree for the recovery's retired specimens, but no public surface produces or
+-    consumes it any more.
++    It is the only snapshot this tool writes: the v5 extraction snapshot retired
++    with the v5 family.
+     """
+     level = logging.DEBUG if args.verbose else logging.INFO
+     logging.basicConfig(level=level, format="%(levelname)s: %(message)s")
