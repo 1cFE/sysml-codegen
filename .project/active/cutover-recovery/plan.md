@@ -2987,6 +2987,88 @@ recorded anchors. `ruff` **870 → 870**, `mypy src/` **69 in 16 files → uncha
 **Reversibility.** The batch and every retirement commit that follows it are separate commits. If
 the owner revises the batch at Phase 5, the retirement reverts with it by Git.
 
+#### Gate 4C part 5 — the second axis, and the refused-fixture stop
+
+**Ordered after Part B step 1 stopped.** The approved Gate 4C part 3 blast radius was measured
+on one axis: imports of `src/` modules. Retiring the v5 family breaks two more it never looked
+at — reading a delete row's **bytes** (`tests/fixtures/*/extraction_snapshot.json`, by path or
+by glob) and importing a **script** that is itself a row
+(`from scripts.capture_extraction_snapshots import MODELS`). Neither is a package import.
+
+**The checker now measures both, permanently.** `data_surface` / `check_data_surface_coverage`,
+wired into `paths` alongside the part-3 check, so steps 2–4 cannot hit this class again. The
+scan is deliberately textual and therefore conservative — a glob, an f-string and a subprocess
+argument all count — because under-reporting is what produced the stop. 9 new checker tests
+(45 total in that file, all green), covering path reads, globs, script imports, subprocess
+invocation, retained rows contributing nothing, and a script not reporting itself.
+
+**Ledger amendments.** The 37 v5 fixture rows and `scripts/capture_extraction_snapshots.py`
+(L-275) moved from `retain` to `delete` in `4B-v5-family` — their step-1 disposition — and each
+now names `tests/conformance/test_v6_recapture_batch.py` as its replacement proof node, which is
+the "replacements ready in the same candidate" link made machine-checkable. Ten rows added,
+L-287 … L-296, for every file the second axis revealed.
+
+**Ruling 4 executed.** `MODELS` / `EXTRACTION_ONLY_MODELS` stay in the capture script, which is
+where their capture-specific rationale belongs. The two consumers only ever needed the corpus
+*names*, so the neutral home is the v6 batch manifest, surfaced by `tests/helpers/corpus.py`
+(recorded pick). Checked before the move: the capture script's corpus and the batch manifest name
+**the same 37 fixtures**, so no test's corpus changed. `test_calc_compat_parity.py` gets L-287
+with disposition `repoint` and its Gate 4A out-of-scope subject status noted on the row.
+
+**Ruling 3 executed in part.** `tests/conftest.py` is now L-289, `migrate` — infrastructure, not
+coverage. Its `snapshot_fixture` helper names a v5 path and is used by ~50 call sites; the v6
+equivalent is authored with the proof-node repoint, so the row honestly carries
+`PENDING-4C` rather than a green node it has not earned. `scripts/capture_filter.py` survives
+untouched, as ruled.
+
+##### The stop: 22 of 37 corpus fixtures have no v6 graph, and coverage rides on them
+
+Ruling 2 asked me to say per row where a proof node cannot honestly be repointed. It is not one
+row, and the reason is not "intrinsically v5".
+
+**The exact route refuses 22 of the 37 corpus fixtures** — the outcome the amended Phase 2 ledger
+records and the owner approved. The refusal is by design: `SI_SELF_BINDING` means "binding
+resolves to its own formal; the binding is legal, inert SysML and supplies no enclosing feature"
+(`extraction/source_evidence.py:230`). The legacy route tolerated the idiom; the exact route
+fails closed on it.
+
+Measured consequence: **66 test/script files carrying 699 nodes need a graph from at least one
+refused fixture**, and **27 files (241 nodes) use only refused fixtures**. For those, no v6
+evidence exists and none can be produced — not for want of authoring, but because the route
+declines the input.
+
+The sharpest cases:
+
+| File | Nodes | Fixtures it uses | Proof node for |
+|---|---:|---|---|
+| `test_gen_stencils.py` | 23 | `catf_mfe_model`, `solar_battery_model` — both refused | **L-006, L-241 (already executed, `6ba346e`)** |
+| `test_gen_schemas.py` | 17 | same two, both refused | — |
+| `test_gen_json_templates.py` | 15 | same two, both refused | — |
+| `test_gen_module_wrappers.py` | 14 | same two, both refused | — |
+| `test_parameter_group_deriver.py` | 25 | three, all refused | — |
+| `test_entry_point_classifier.py` | 22 | three, all refused | — |
+
+The generation-layer conformance family builds every graph from the two largest models in the
+corpus, and the exact route refuses both. So the exact route has never been shown to generate a
+package from a model of that size and shape, and retiring v5 removes the only coverage that says
+it can.
+
+**Disposition of the remaining ~100 files is parked on the owner ruling**, per rule 10: following
+the instruction (repoint to v6) works against the recorded goal (keep the gate meaningful),
+because the v6 evidence cannot exist for these fixtures. Migrating the coverage means remodelling
+the 22 refused fixtures onto idioms the exact route accepts — the same named-per-child-intermediate
+requirement the S4 ruling already carried to Gate 4D — which is SysML authoring work, and it
+changes what a regression fixture *is*.
+
+**Battery.** Full licensed suite **3790 passed / 47 skipped / 38 deselected**, delta **+9**
+against 3781, every one a new checker node. Corpus ledger **3 passed**. Execution lane **38
+passed** including the 12 real-TEAx nodes at the recorded anchors. `ruff` **870 → 870** (three
+new findings introduced and fixed to hold parity), `mypy src/` **69 in 16 files → unchanged**,
+`git diff --check` clean, `check_ledger_4a.py paths` **296 rows / 0 problems**, `surface`
+**0 unrowed breakages on either axis**.
+
+**Commit:** `PART5_OID`. **Deletes nothing.** No retirement commit was made.
+
 ### Phase 5 Completion
 
 - **Completed:** Pending

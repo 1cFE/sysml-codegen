@@ -181,6 +181,86 @@ def removal_surface(
     )
 
 
+def data_surface(
+    ledger: dict, only_groups: frozenset[str] | None = None
+) -> dict[str, Owner]:
+    """What a deletion group removes that is *not* an importable module.
+
+    Gate 4C part 3 measured one axis — imports of ``src/`` modules — and Part B step 1 walked
+    into the two it missed. A test can depend on a delete row by reading its bytes
+    (``tests/fixtures/<name>/extraction_snapshot.json``) or by importing a *script* that is
+    itself a row (``from scripts.capture_extraction_snapshots import MODELS``). Neither is an
+    import of a package module, so neither was visible.
+
+    Keys are the token a dependent would have to name: a removed data file's basename, or
+    ``scripts.<stem>`` for a removed script.
+    """
+    owners: dict[str, Owner] = {}
+    for row in ledger["rows"]:
+        if row.get("state") == "executed" or row["disposition"] != "delete":
+            continue
+        group = row.get("group") or ""
+        if only_groups is not None and group not in only_groups:
+            continue
+        path = row["path"]
+        if path.endswith(".py"):
+            if path.startswith("scripts/"):
+                stem = path[len("scripts/") : -len(".py")].replace("/", ".")
+                owners[f"scripts.{stem}"] = Owner(row["id"], group)
+            continue
+        owners[Path(path).name] = Owner(row["id"], group)
+    return owners
+
+
+def data_hits(repo: Path, surface: dict[str, Owner]) -> dict[str, dict[str, str]]:
+    """Map each file to the non-module surface tokens its source names.
+
+    Deliberately textual and therefore conservative: a glob, an f-string, a subprocess
+    argument and a docstring all count. Under-reporting here is what produced the Part B
+    stop, and a gate that must not under-report is allowed to over-report.
+    """
+    hits: dict[str, dict[str, str]] = {}
+    for tree in SCANNED_TREES:
+        for file in sorted((repo / tree).rglob("*.py")):
+            try:
+                source = file.read_text()
+            except UnicodeDecodeError:
+                continue
+            relative = str(file.relative_to(repo))
+            found = {}
+            for token, owner in surface.items():
+                if token.startswith("scripts."):
+                    stem = token[len("scripts.") :]
+                    named = f"import {token}" in source or f"from {token} " in source
+                    named = named or f"scripts/{stem.replace('.', '/')}.py" in source
+                    if named and relative != f"scripts/{stem.replace('.', '/')}.py":
+                        found[token] = "script-import"
+                elif token in source and relative != f"{tree}/{token}":
+                    found[token] = "data-read"
+            if found:
+                hits[relative] = found
+    return hits
+
+
+def check_data_surface_coverage(ledger: dict, repo: Path = REPO_ROOT) -> list[str]:
+    """Fail for any file that reads a delete row's bytes or imports it, with no row."""
+    surface = data_surface(ledger)
+    rows = {row["path"] for row in ledger["rows"]}
+    problems = []
+    for path, found in sorted(data_hits(repo, surface).items()):
+        if path in rows:
+            continue
+        authorities = ", ".join(
+            f"{token} ({surface[token].row_id}, {surface[token].group})"
+            for token in sorted(found)
+        )
+        problems.append(
+            f"unrowed data breakage: {path} depends on removed non-module surface "
+            f"— {authorities}"
+        )
+    return problems
+
+
 def _import_keys(node: ast.stmt, surface: Surface) -> set[str]:
     """Which surface keys one import statement depends on."""
     keys: set[str] = set()
@@ -322,15 +402,20 @@ def check_paths(ledger: dict) -> list[str]:
                 "it must claim the diff instead"
             )
         # A carried row must still be in the tree — unless its own deletion is the thing
-        # that already happened, which `check_states` verifies from the other side.
+        # that already happened, which `check_states` verifies from the other side. The
+        # probe is the worktree rather than HEAD so that a row added in the same commit as
+        # the file it names is not a false failure; an unauthorised deletion still fails,
+        # because the file is gone from the worktree too.
         executed_delete = row.get("state") == "executed" and row["disposition"] == "delete"
-        if row["repo"] == "sysml-codegen" and not executed_delete and not path_at_head(row["path"]):
+        present = (REPO_ROOT / row["path"]).exists()
+        if row["repo"] == "sysml-codegen" and not executed_delete and not present:
             problems.append(
                 f"{row['id']}: carried row {row['path']} does not exist at HEAD"
             )
 
     problems.extend(check_states(rows))
     problems.extend(check_surface_coverage(ledger))
+    problems.extend(check_data_surface_coverage(ledger))
 
     ids = {row["id"] for row in rows}
     for row in rows:
@@ -523,7 +608,7 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     if args.mode == "surface":
-        problems = check_surface_coverage(ledger)
+        problems = check_surface_coverage(ledger) + check_data_surface_coverage(ledger)
         for problem in problems:
             print(f"FAIL {problem}")
         print(f"{len(problems)} unrowed breakages")

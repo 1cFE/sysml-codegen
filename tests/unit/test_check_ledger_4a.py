@@ -478,3 +478,115 @@ def test_a_retire_with_owner_row_names_the_green_replacement_that_covers_it(
         assert row.get("replacement_proof_node"), (
             f"{row['id']} retires with its owner but names no replacement node"
         )
+
+
+# --- Gate 4C part 5: the second axis -----------------------------------------
+#
+# Part 3 measured imports of src/ modules. Part B step 1 walked into the two axes it
+# missed: a file can depend on a delete row by reading its bytes, or by importing a
+# *script* that is itself a row. Neither is a package import, so neither was visible, and
+# six live files were found breaking with no row at all.
+
+
+FIXTURE_ROW = {
+    "id": "L-910",
+    "path": "tests/fixtures/toy/extraction_snapshot.json",
+    "repo": "sysml-codegen",
+    "class": "snapshot",
+    "disposition": "delete",
+    "origin": "forensic-diff",
+    "group": "4B-G9",
+    "reason": "a v5 fixture",
+}
+SCRIPT_ROW = {
+    "id": "L-911",
+    "path": "scripts/capture_legacy.py",
+    "repo": "sysml-codegen",
+    "class": "script",
+    "disposition": "delete",
+    "origin": "forensic-diff",
+    "group": "4B-G9",
+    "reason": "the v5 capture driver",
+}
+
+
+def test_the_committed_ledger_has_no_unrowed_data_breakage(ledger: dict) -> None:
+    assert checker.check_data_surface_coverage(ledger) == []
+
+
+def test_reading_a_deleted_fixture_by_path_is_surface(tmp_path: Path) -> None:
+    repo = _fake_repo(
+        tmp_path,
+        "tests/test_reads.py",
+        'PATH = "tests/fixtures/toy/extraction_snapshot.json"\n',
+    )
+    problems = checker.check_data_surface_coverage({"rows": [FIXTURE_ROW]}, repo)
+    assert len(problems) == 1
+    assert "L-910" in problems[0] and "tests/test_reads.py" in problems[0]
+
+
+def test_globbing_deleted_fixtures_is_surface(tmp_path: Path) -> None:
+    """A glob names no single path, which is exactly why a path-set check cannot see it."""
+    repo = _fake_repo(
+        tmp_path, "tests/test_globs.py", 'FIXTURES.glob("*/extraction_snapshot.json")\n'
+    )
+    assert len(checker.check_data_surface_coverage({"rows": [FIXTURE_ROW]}, repo)) == 1
+
+
+def test_importing_a_deleted_script_is_surface(tmp_path: Path) -> None:
+    repo = _fake_repo(
+        tmp_path, "tests/test_imports.py", "from scripts.capture_legacy import MODELS\n"
+    )
+    problems = checker.check_data_surface_coverage({"rows": [SCRIPT_ROW]}, repo)
+    assert len(problems) == 1
+    assert "L-911" in problems[0]
+
+
+def test_running_a_deleted_script_by_path_is_surface(tmp_path: Path) -> None:
+    """A subprocess argument is a dependency the import graph cannot see at all."""
+    repo = _fake_repo(
+        tmp_path,
+        "tests/test_subprocess.py",
+        'run([sys.executable, "scripts/capture_legacy.py", "--fixture", "toy"])\n',
+    )
+    assert len(checker.check_data_surface_coverage({"rows": [SCRIPT_ROW]}, repo)) == 1
+
+
+def test_a_file_with_a_row_is_not_reported_on_the_data_axis(tmp_path: Path) -> None:
+    repo = _fake_repo(
+        tmp_path, "tests/test_rowed.py", 'open("tests/fixtures/toy/extraction_snapshot.json")\n'
+    )
+    rowed = {"id": "L-912", "path": "tests/test_rowed.py", "repo": "sysml-codegen",
+             "class": "test", "disposition": "retain", "origin": "derived-blast-radius",
+             "group": None, "reason": "has a row"}
+    assert checker.check_data_surface_coverage({"rows": [FIXTURE_ROW, rowed]}, repo) == []
+
+
+def test_a_retained_fixture_contributes_no_data_surface(tmp_path: Path) -> None:
+    """Only a *delete* row removes anything. A retained fixture breaks nobody."""
+    repo = _fake_repo(
+        tmp_path, "tests/test_reads.py", 'open("tests/fixtures/toy/extraction_snapshot.json")\n'
+    )
+    retained = dict(FIXTURE_ROW, disposition="retain")
+    assert checker.check_data_surface_coverage({"rows": [retained]}, repo) == []
+
+
+def test_a_deleted_script_does_not_report_itself(tmp_path: Path) -> None:
+    repo = _fake_repo(tmp_path, "scripts/capture_legacy.py", "MODELS = {}\n")
+    assert checker.check_data_surface_coverage({"rows": [SCRIPT_ROW]}, repo) == []
+
+
+def test_the_paths_check_now_fails_on_either_axis(ledger: dict) -> None:
+    """Both surface checks are wired into `paths`, so neither can be forgotten."""
+    problems = checker.check_paths(ledger)
+    assert problems == []
+    # Drop the row that covers a real data-axis dependent and the wiring must notice.
+    without = dict(
+        ledger,
+        rows=[row for row in ledger["rows"] if row["path"] != "tests/conftest.py"],
+    )
+    problems = checker.check_paths(without)
+    assert any(
+        "unrowed data breakage" in problem and "tests/conftest.py" in problem
+        for problem in problems
+    )

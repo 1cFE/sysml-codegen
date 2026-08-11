@@ -137,15 +137,13 @@ def _display(outcome: dict[str, object]) -> str:
 
 
 def discover_corpus() -> list[str]:
-    """The corpus fixture names, from the batch manifest once it exists.
+    """The corpus fixture names, from the committed batch manifest.
 
-    Before the batch exists the only enumeration is the v5 snapshots themselves, which is
-    what makes this script the thing that frees them: after it runs, the corpus is named by
-    the batch and no longer by the files it is meant to replace.
+    The manifest is the corpus enumeration now. It was seeded from the v5 snapshots when the
+    batch was first produced; naming them again here would put the v5 fixtures back on the
+    critical path of the thing built to replace them.
     """
-    if MANIFEST.exists():
-        return sorted(json.loads(MANIFEST.read_text())["fixtures"])
-    return sorted(path.parent.name for path in FIXTURES.glob("*/extraction_snapshot.json"))
+    return sorted(json.loads(MANIFEST.read_text())["fixtures"])
 
 
 def verify_live_matches_replay(fixture: Path, snapshot: Path) -> None:
