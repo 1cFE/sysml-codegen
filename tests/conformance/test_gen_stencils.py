@@ -38,10 +38,7 @@ from sysml_codegen.generation.preservation import (
 from sysml_codegen.generation.stencils import generate_implementation
 from sysml_codegen.core.identifier_types import PythonModulePath, SysMLQualifiedName
 from sysml_codegen.resolution.models import ComputationGraph, ModuleKind, PipelineModule
-from sysml_codegen.snapshot import (
-    build_full_graph_from_snapshot,
-)
-from tests.conftest import snapshot_fixture
+from tests.conftest import exact_graph_from_fixture
 
 # ---------------------------------------------------------------------------
 # Constants
@@ -50,14 +47,19 @@ from tests.conftest import snapshot_fixture
 TEMPLATE_DIR = Path(__file__).parent.parent.parent / "src" / "sysml_codegen" / "templates"
 SRC_DIR = Path(__file__).parent.parent.parent / "src" / "sysml_codegen"
 
+# The D-5 migrated variants, not the corpus originals: the exact route refuses both
+# originals (SI_SELF_BINDING, and for solar a same-name rollup collision), so a
+# generation-layer test that reads them can only ever exercise the legacy route. The
+# variants carry the same models in the form the exact route accepts. See each fixture's
+# PROVENANCE.md and the Gate 4C part 6 notes.
 PARAMETRIZED_MODELS = [
-    "solar_battery_model",
-    "catf_mfe_model",
+    "solar_battery_d5",
+    "catf_mfe_d5",
 ]
 
 MODEL_IDS = {
-    "solar_battery_model": "solar_battery",
-    "catf_mfe_model": "catf_mfe",
+    "solar_battery_d5": "solar_battery",
+    "catf_mfe_d5": "catf_mfe",
 }
 
 
@@ -76,13 +78,13 @@ def template_env():
 
 
 @pytest.fixture(scope="session")
-def all_graph_data() -> dict[str, tuple[ComputationGraph, dict]]:
-    """Build ComputationGraphs + inputs for all models (once per session)."""
-    data = {}
-    for model_name in PARAMETRIZED_MODELS:
-        graph, inputs = build_full_graph_from_snapshot(snapshot_fixture(model_name))
-        data[model_name] = (graph, inputs)
-    return data
+def all_graph_data() -> dict[str, ComputationGraph]:
+    """Project each model's sealed v6 graph, once per session.
+
+    The legacy call returned ``(graph, classifier_inputs)`` and every consumer here bound the
+    second element to ``_inputs``, so the exact route's graph-only result loses nothing.
+    """
+    return {name: exact_graph_from_fixture(name) for name in PARAMETRIZED_MODELS}
 
 
 # ---------------------------------------------------------------------------
@@ -129,7 +131,7 @@ def _make_test_auto_impl_context(module: PipelineModule) -> dict:
 
 def _get_first_calcusage_module(graph_data, model_name) -> PipelineModule:
     """Get first CalcUsage PipelineModule from model for targeted tests."""
-    graph, _inputs = graph_data[model_name]
+    graph = graph_data[model_name]
     modules = _get_calcusage_modules(graph)
     return modules[0]
 
@@ -148,7 +150,7 @@ class TestFullyCompilableProducesAutoImpl:
     def test_req_gen_04_fully_compilable_produces_auto_impl(
         self, model_name, all_graph_data, template_env,
     ):
-        graph, _inputs = all_graph_data[model_name]
+        graph = all_graph_data[model_name]
         modules = _get_calcusage_modules(graph)
 
         tested = 0
@@ -186,7 +188,7 @@ class TestNonCompilableProducesStub:
     def test_req_gen_04_non_compilable_produces_stub(
         self, model_name, all_graph_data, template_env,
     ):
-        graph, _inputs = all_graph_data[model_name]
+        graph = all_graph_data[model_name]
         modules = _get_calcusage_modules(graph)
 
         tested = 0
@@ -225,7 +227,7 @@ class TestStencilValidPython:
     def test_req_gen_04_stencil_valid_python(
         self, model_name, all_graph_data, template_env,
     ):
-        graph, _inputs = all_graph_data[model_name]
+        graph = all_graph_data[model_name]
         modules = _get_calcusage_modules(graph)
 
         failures = []
@@ -275,7 +277,7 @@ class TestStencilFunctionSignature:
     def test_req_gen_04_stencil_function_signature(
         self, model_name, all_graph_data, template_env,
     ):
-        graph, _inputs = all_graph_data[model_name]
+        graph = all_graph_data[model_name]
         modules = _get_calcusage_modules(graph)
 
         failures = []
@@ -315,7 +317,7 @@ class TestMultiOutputReturnType:
     def test_req_gen_04_multi_output_return_type(
         self, model_name, all_graph_data, template_env,
     ):
-        graph, _inputs = all_graph_data[model_name]
+        graph = all_graph_data[model_name]
         modules = _get_calcusage_modules(graph)
 
         multi_output_count = 0
@@ -356,14 +358,17 @@ class TestMultiOutputReturnType:
         f"tuple[{', '.join(['float']*n)}]" -- self-shaped on n, so it can't catch a wrong
         arity. Pin one named module's full return string as a literal.
         """
-        graph, _inputs = all_graph_data["solar_battery_model"]
+        graph = all_graph_data["solar_battery_d5"]
         module = next(
             m for m in _get_calcusage_modules(graph)
             if m.name
-            == "solarbatterydesign__solar_battery_plant__solar_array__pv_module__cost_model"
+            == "solarbatterydesign__solar_battery_plant__solar_array__pv_module[0]__cost_model"
         )
         # provenance: pv_module cost_model has 5 outputs (material_cost, fab_cost,
         #   install_cost, total_cost, idiot_index) -- library.sysml PVModuleCostCalc.
+        # The `[0]` is the exact route carrying per-occurrence identity: `part pv_module :
+        #   'PV Module' [module_count]` expands to one module per panel rather than one
+        #   collapsed module for the array, so the name indexes the occurrence.
         stub_module = module.model_copy(update={"auto_impl_context": None})
         code = generate_implementation(
             stub_module, template_env, Path("/tmp/test.py"), package_name="solar_battery",
@@ -387,7 +392,7 @@ class TestStencilImportPathConsistency:
     def test_stencil_import_path_consistency(
         self, model_name, all_graph_data, template_env,
     ):
-        graph, _inputs = all_graph_data[model_name]
+        graph = all_graph_data[model_name]
         modules = _get_calcusage_modules(graph)
         package_name = MODEL_IDS[model_name]
 
@@ -464,7 +469,7 @@ class TestTwoLevelSignatureMatching:
         fields matches what generate_implementation() produces."""
         from sysml_codegen.generation.preservation import _generate_expected_signature_from_module
 
-        graph, _inputs = all_graph_data[model_name]
+        graph = all_graph_data[model_name]
         modules = _get_calcusage_modules(graph)
 
         failures = []
@@ -563,7 +568,7 @@ class TestDecisionTree:
         self, all_graph_data, tmp_path,
     ):
         """Case 1: Non-existent file → (True, 'New module...')."""
-        module = _get_first_calcusage_module(all_graph_data, "solar_battery_model")
+        module = _get_first_calcusage_module(all_graph_data, "solar_battery_d5")
         non_existent = tmp_path / "does_not_exist.py"
 
         should_regen, reason = should_regenerate_stencil(module, non_existent)
@@ -577,7 +582,7 @@ class TestDecisionTree:
         """Case 2 (D3-14, Item 5): a NON-EMPTY file that fails to parse is a
         *transient* parse error — preserve the (maybe-valid handwritten) impl,
         do NOT stub over it. Was (True, 'Could not parse'); now preserved."""
-        module = _get_first_calcusage_module(all_graph_data, "solar_battery_model")
+        module = _get_first_calcusage_module(all_graph_data, "solar_battery_d5")
         bad_file = tmp_path / "bad_impl.py"
         bad_file.write_text("def broken(\n    # syntax error\n")
 
@@ -589,7 +594,7 @@ class TestDecisionTree:
     def test_req_sr_03_empty_impl_regenerates(self, all_graph_data, tmp_path):
         """D3-14 boundary: a genuinely-EMPTY impl has nothing to preserve →
         regenerate (distinct from the transient non-empty parse error)."""
-        module = _get_first_calcusage_module(all_graph_data, "solar_battery_model")
+        module = _get_first_calcusage_module(all_graph_data, "solar_battery_d5")
         empty_file = tmp_path / "empty_impl.py"
         empty_file.write_text("   \n")
 
@@ -602,7 +607,7 @@ class TestDecisionTree:
         self, all_graph_data, template_env, tmp_path,
     ):
         """Case 3: File matching expected signature → (False, 'Signature unchanged')."""
-        module = _get_first_calcusage_module(all_graph_data, "solar_battery_model")
+        module = _get_first_calcusage_module(all_graph_data, "solar_battery_d5")
 
         # Generate a stub and write it to disk
         stub_module = module.model_copy(update={"auto_impl_context": None})
@@ -622,7 +627,7 @@ class TestDecisionTree:
         self, all_graph_data, tmp_path,
     ):
         """Case 4: File with different return type → (True, 'Signature changed...')."""
-        module = _get_first_calcusage_module(all_graph_data, "solar_battery_model")
+        module = _get_first_calcusage_module(all_graph_data, "solar_battery_d5")
 
         # Write a file with a run_ function that has a different return type
         func_name = f"run_{module.calc_def_name.lower()}"
@@ -655,7 +660,7 @@ class TestStubUpgradeThreeConditions:
     ):
         """Generate stub → verify NotImplementedError → add auto_impl_context →
         verify upgrade to auto-impl produces different (non-stub) code."""
-        graph, _inputs = all_graph_data[model_name]
+        graph = all_graph_data[model_name]
         modules = _get_calcusage_modules(graph)
 
         tested = 0
@@ -711,7 +716,7 @@ class TestStubUpgradeThreeConditions:
 
         The 3-condition check requires 'NotImplementedError' in existing content.
         If the user has already written real implementation code, it must be preserved."""
-        graph, _inputs = all_graph_data[model_name]
+        graph = all_graph_data[model_name]
         modules = _get_calcusage_modules(graph)
 
         module = next(m for m in modules if m.outputs)

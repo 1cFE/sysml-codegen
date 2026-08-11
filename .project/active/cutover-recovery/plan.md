@@ -3086,16 +3086,17 @@ Two did not:
   (My earlier report put this file in Class C; the classifier missed a fixture named inside a
   path string rather than on its own. Corrected here.)
 
-##### Named temporary weakness — L-006 / L-241
+##### Named temporary weakness — L-006 / L-241, now narrowed
 
-`tests/conformance/test_gen_stencils.py` is the green replacement proof for **L-006** and
-**L-241**, both already executed at `6ba346e`, and it builds every graph from `catf_mfe_model`
-and `solar_battery_model` — two fixtures the exact route refuses. **Those two rows are therefore
-proved only on the legacy route today.** This is a live weakness, recorded here on the
-orchestrator's instruction and to be removed, not carried: when `test_gen_stencils` runs green on
-the Gate 4C part 6 variant graphs, `replacements` is re-run and the rows are recorded as
-re-backed. **Until that commit lands, treat L-006 and L-241 as proved on evidence that cannot
-survive the v5 retirement.**
+`tests/conformance/test_gen_stencils.py` **is repointed and v6-backed** as of Gate 4C part 6:
+32 nodes, built from `solar_battery_d5` and `catf_mfe_d5`, green, and `replacements` re-run
+reports **L-006 and L-241 green** against it.
+
+The weakness is **narrowed, not gone**. Those two rows name three proof modules (73 nodes, the
+C1 ruling), and one of them — `tests/conformance/test_generation_boundary.py`, 20 nodes — still
+reads `catf_mfe_model` and `solar_battery_model`, which the exact route refuses. So L-006 and
+L-241 are today backed by v6 evidence *and* by one module of legacy-only evidence. It closes
+when the rest of the generation-layer family is repointed.
 
 #### Gate 4C part 6 — the D-5 variants: rename stage done, second layer surfaced
 
@@ -3349,6 +3350,51 @@ unchanged**, `git diff --check` clean, `check_ledger_4a.py paths` **298 rows / 0
 `surface` **0 on both axes**.
 
 **Commit:** ``bba3d92` (`bba3d92becd4b1e20c9b52dfc745aa326e144ddd`)`.
+
+#### Gate 4C part 6 — the generation-layer repoint, first chunk
+
+**`tests/conformance/test_gen_stencils.py` is repointed and green on the exact route: 32 nodes,
+same count as before, no assertion thinned.** It is the highest-value file in the family — the
+named replacement proof for L-006 and L-241 — so it went first.
+
+`chain_spike_model` needed a variant too (three generation-layer files parametrise over it). It
+is refused with 3× `SI_SELF_BINDING`, pure recipe: **`chain_spike_d5`, 3 formals, strip check
+byte-identity 0 problems**, accepted at 3 modules / 3 entry points.
+
+**Two expectations were re-derived from the model, not copied.**
+
+- The exact route **expands an arrayed part into one module per occurrence**. `part pv_module :
+  'PV Module' [module_count]` yields `…pv_module[0]__cost_model` … `[9]`, where the legacy route
+  produced one collapsed module. 38 `cost_model` modules across the plant. The five-output pin
+  now names `pv_module[0]` and the comment says why the index is there.
+- The graph-only fixture returns a graph rather than `(graph, classifier_inputs)`. Every
+  consumer in this file had already bound the second element to `_inputs`, so nothing was lost —
+  which is the check that the legacy intermediate was not load-bearing here.
+
+**Six files remain, with a measured inventory rather than an estimate.** After the mechanical
+repoint they stand at **17 failures**, every one a genuine expectation re-derivation, not a
+mechanical swap:
+
+| File | Failures | What has to be re-derived |
+|---|---:|---|
+| `test_generation_boundary.py` | 7 | graph-only preservation, backlog and auto-impl dispatch on variant graphs |
+| `test_gen_pipeline_yaml.py` | 5 | YAML baselines, entry-point fusion counts |
+| `test_gen_json_templates.py` | 5 | parameter-group counts and schema-field sets — the 3E group-derivation change is visible here (`2 == 3`), and the D-5 rename moves entry-point keys (`width` → `width_in`) |
+| `test_gen_schemas.py`, `test_gen_module_wrappers.py` | 0 after the mechanical pass | — |
+| `test_gen_registry.py` | 18 errors | deepest: several tests read `inputs["snap"]`, the legacy classifier intermediate, to derive aggregation names, and one drives `generate_via_legacy_route` from a v5 snapshot |
+
+Those six were **reverted to `HEAD` rather than committed half-migrated**. Re-deriving 17
+expectations properly is more than this session's remaining budget allows, and the ruling is
+explicit that assertions must not be thinned to fit. The tree stays green and the next session
+starts from a known state with the inventory above.
+
+**Battery.** Full licensed suite **3810 passed / 47 skipped / 38 deselected**, unchanged — the
+repoint moved no node count. Variants, corpus ledger and v6 batch **75 passed**; corpus 15/22
+unmoved. Execution lane **38 passed** including the 12 real-TEAx nodes at the recorded anchors.
+`ruff` **870 → 870**, `mypy src/` **69 in 16 files → unchanged**, `git diff --check` clean,
+`check_ledger_4a.py paths` **298 rows / 0 problems**, `surface` **0 on both axes**.
+
+**Commit:** `CHUNKB_OID`.
 
 ### Phase 5 Completion
 
