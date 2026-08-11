@@ -2626,6 +2626,113 @@ blast-radius dispositions) → G2 → G3 → G4, with the full battery per group
   `pipeline_builder.py`) and G4 (5 rows). The 14 pending 4C responsibilities and the 119-row
   blast radius are the work between here and G2.
 
+#### Gate 4C Part 1 Completion — the fourteen exact-route specimens
+
+- **Completed:** 2026-08-11. **Commit:** `PENDING-OID` (sysml-codegen only; agentic-mbse `N/A`).
+- **What this stage did:** authored exact-route specimens for the fourteen pending
+  responsibility rows. It deleted nothing and repointed nothing. Twelve rows are now green;
+  two are rule-10 surfacings and stay pending with their reason in the row.
+- **Checker:** `paths` **276 rows, 0 problems**. `replacements` **52 green, 2 pending,
+  220 not-required, 0 failures** — was 40/14/220 after G1.
+
+##### Row → specimen
+
+| Row | Responsibility | Fixture | Specimen node | Green |
+|---|---|---|---|---|
+| L-099 | Alias-aggregation probe generation | **new** `alias_agg_d5` | `conformance/test_exact_route_alias_aggregation.py` | 7 |
+| L-118 | Constraint portability live vs replay | `constraint_non_numerical` (corpus row 10) | `conformance/test_exact_route_constraint_portability.py` | 6, **row stays pending** |
+| L-140 | Fingerprint stability | committed `fusion_tea` v6 snapshot; `wi014_toy`, `constraint_multi_instance` live | `conformance/test_exact_route_fingerprint_stability.py` | 4 |
+| L-148 | Registry across module kinds | `source_identity_mixed_consumers` + **new** `costed_cart_d5` | `conformance/test_exact_route_registry.py` | 7 |
+| L-169 | Seal step 9 | committed `fusion_tea` v6 snapshot | `conformance/test_exact_route_seal_step9.py` | 12 |
+| L-179 | Licence-free generation, no provenance leak, route parity | committed `fusion_tea` v6 snapshot | `conformance/test_exact_route_snapshot_generation.py` **+ cited** `test_exact_route_generated_package.py::test_the_two_packages_differ_only_in_provenance_comments` | 10 + 1 |
+| L-188 | Whole-tree checkout-root portability | committed `fusion_tea` v6 snapshot | `conformance/test_exact_route_whole_tree_portability.py` | 3 |
+| L-198 | FORMULA computed attributes | `attr_expr_probe` (corpus row 4) + **new** `costed_cart_d5` | `integration/test_computed_attributes_exact_route.py` | 15 |
+| L-199 | Costed-component pattern end to end | **new** `costed_cart_d5` | `integration/test_costed_component_exact_route.py` | 18 |
+| L-201 | Auto-impl classification, stub fallback, backlog | **new** `expr_compile_d5` | `integration/test_expression_compilation_exact_route.py` | 7 |
+| L-202 | `run_codegen` phase sequence, design params, exit-point types | **new** `costed_cart_d5` | `integration/test_full_pipeline_exact_route.py` | 5 |
+| L-203 | BF3–BF5 aggregation wrappers, instance-scoped paths | **new** `costed_cart_d5` | `integration/test_hierarchy_exact_route.py` | 5 |
+| L-249 | V11 seeded strict-generation abort | — | — **row stays pending**, cause pinned in the L-251 module | — |
+| L-251 | Warning reconciliation categories | five accepted fixtures + v6 replay | `unit/test_warning_reconciliation_exact_route.py` | 22 |
+
+**121 new nodes, all green.** Three new fixtures, none of them in the 37-path corpus and none
+of the 37 touched: `costed_cart_d5`, `alias_agg_d5`, `expr_compile_d5`, each with a
+`PROVENANCE.md` recording why it exists, what it differs from, and its hand-derived values.
+
+##### Rule-10 surfacings
+
+Four, in the order a reader should care about them. The first two block rows; the last two are
+product defects this stage measured and pinned rather than routed around.
+
+**S1 — L-118 is blocked by a portability defect, not by a missing specimen.** A constraint the
+catalog *excludes* records its source `location` as an absolute path: the checkout path in a
+live run, and the capture-time staging directory (`/tmp/sysml-codegen-sources-XXXXXXXX/root-0/…`)
+in a replay. That field is inside the catalog fingerprint, which is inside the model contract's
+semantic fingerprint. One model at two checkout roots on two routes produced **four different
+semantic fingerprints**. Exactly three files move with the root — `contracts/model_contract.json`,
+`contracts/package_contract.json`, and the constraint report module that embeds the catalog
+fingerprint — and every other generated file is identical. A fingerprint that moves with the
+build directory authenticates nothing, and that is the property L-118 exists to protect, so the
+row cannot go green. **Gate 4B may not delete the legacy constraint owners while it stands**;
+the legacy route passed this specimen.
+
+**S2 — L-249 is unreachable by construction on the exact route.** `elaboration/project.py`
+builds every `ComputationGraph` with `fallback_entry_points=set()`, in both `run()` and
+`select()`, and both collectors filter on membership in that set. So
+`cli._reconcile_params_coverage` — the V11 abort and the reconciliation summary — runs on every
+generation and can never fire. No fixture can seed the gap through the public surface, so the
+row's specimen is not merely unwritten, it is unwritable. Two consequences the owner should
+weigh: the Gate 4A note that the two migrated collectors are "live public-route code that the
+CLI calls on every run" is true only in the calling sense, and V11 coverage for the shipped
+route now rests entirely on the nine route-neutral graph-level nodes in
+`tests/unit/test_uncovered_params.py`. Pinned at its cause by
+`test_the_projection_hard_codes_an_empty_fall_through_set`, which fails the day the projection
+starts populating the set.
+
+**S3 — the params schema does not parse when a modelled multiplicity indexes an entry-point
+key.** A finite multiplicity mints keys like `…__caster[0]__load_rating`, and
+`schemas/library_params.py` writes those keys as Python field names, so the file is a
+`SyntaxError`. This is **not** new and **not** fixture-specific: it reproduces at `HEAD` on the
+ratified corpus fixture `d38_caret`, whose `…__cell[0]__base_cost` keys break the same file, and
+`d38_caret` is corpus row 12 — a shipped-package cell the 3E switch already flagged to the
+Phase 5 owner packet. No existing test parses a generated package's schema files, which is why
+it went unseen. Both new fixtures that use a multiplicity pin the set of unparseable files
+rather than asserting emptiness, so a *second* file failing is a test failure and so is this one
+being fixed without the surfacing being closed.
+
+**S4 — the exact route refuses the Costed Component pattern's central idiom.** An assembly
+cannot write `sum(deck_panel.capital_cost) + sum(caster.capital_cost)`: the projection names an
+expression parameter after the reference's *last member* and drops the qualifier
+(`elaboration/elaborate.py:1901`), so both terms render `capital_cost` and the model is refused
+with `SI_RENDERING_COLLISION` (`elaboration/project.py:598-604`). Every child of a costed
+assembly exposes the same attribute names by construction, so this is the pattern, not an edge
+case. The workaround the fixture uses — one named intermediate attribute per child role, added
+by the rollup — is legal and natural, but it is a *remodelling requirement the route imposes*,
+and no document says so. This is the same qualifier-dropping collapse recorded as the Item 10
+cross-part blocker. Pinned by
+`test_costed_component_exact_route.py::test_a_two_term_same_name_rollup_is_refused`, which also
+proves the refusal leaves no half-written tree.
+
+##### Notes a reviewer should not have to re-derive
+
+- **Live-vs-snapshot byte identity is not an exact-route property, and must not be asserted as
+  one.** A v6 snapshot records its sources under the portable `root-0/` referent, never the
+  checkout path — that portability is the point of the referent — so every file carrying a
+  `SysML Source:` comment differs between the two routes by construction. What holds is that the
+  difference is *only* the provenance comment (already pinned, cited on row L-179) and that the
+  model contract's **semantic** fingerprint is equal across the two (newly pinned on L-140,
+  alongside the executable fingerprint's divergence, so the difference is recorded rather than
+  ignored). The plan's own wording — byte identity "where still required" — is what this
+  discharges.
+- **The alias-collision count-summary retired with its mechanism.** L-251's second half is
+  emitted while building an `OutputRegistry`, and the exact route never constructs one. The
+  specimen asserts the message's absence, including on `costed_cart_d5`, whose four same-named
+  module classes are the nearest thing the exact route has to those collisions. Nothing was
+  lost; `output_registry_builder` is already a G3 deletion row.
+- **`costed_cart_d5` warns once, legitimately.** Three assemblies rolling the same four
+  attributes give four colliding module class names, and the registry aliases the imports
+  (REQ-REG-04). The zero-WARNING sweep names that fixture as the exception with its reason
+  rather than being scoped down to whatever passes.
+
 ### Phase 5 Completion
 
 - **Completed:** Pending

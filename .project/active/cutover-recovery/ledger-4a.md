@@ -62,6 +62,17 @@ candidate diff, so an executed deletion is what its row already claimed, not a n
 `replacements`: **40 green, 14 pending, 220 not-required, 0 failures**; the two rows that moved
 are L-006 and L-241, which gained the C1 ruling's three proof modules (73 nodes).
 
+**Checker results, after Gate 4C part 1.** `paths`: 276 rows, **0 problems**. `replacements`:
+**52 green, 2 pending, 220 not-required, 0 failures**. Twelve of the fourteen pending
+responsibility rows named an authored exact-route specimen (121 new nodes, three new fixtures
+outside the corpus). The two that did not are rule-10 surfacings, and their rows carry the
+reason rather than a node: **L-118** is blocked by a measured portability defect — an excluded
+constraint record's `location` is an absolute path, and it reaches the catalog and semantic
+fingerprints, so one model yields four fingerprints across two checkout roots and two routes —
+and **L-249** is unreachable by construction, because `elaboration/project.py` builds every
+graph with `fallback_entry_points=set()`, so the V11 guard can never fire on the shipped route.
+Both still block their groups. Full detail in the plan's Gate 4C part 1 completion notes.
+
 ## The two CONFLICT rows
 
 **C1 — RULED: delete, with the living owner named. Spent in G1 (`6ba346e`).** The orchestrator
