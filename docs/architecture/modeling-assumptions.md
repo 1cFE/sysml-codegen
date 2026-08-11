@@ -247,13 +247,50 @@ PartDef attributes may use `:>>` redefinition with aggregation expressions combi
 
 **Conditions** (ALL must hold):
 - Expression uses only `sum()` calls on child PartUsage attributes and direct child attribute references
-- All array children are uniform (same parameters per instance)
 - Expression is on a PartDef in `library/` (not `designs/`)
+- **No two terms in one expression may read a same-named attribute off different children** — see the rule below
+
+### One named intermediate per child role
+
+> **An assembly cannot write `sum(a.capital_cost) + sum(b.capital_cost)`. Give each child's
+> contribution its own named attribute and add the names.**
 
 ```sysml
-// PERMITTED: aggregation redefinition on PartDef
-:>> capital_cost = sum(pv_module.capital_cost) + array_bos.capital_cost + misc_hardware_cost;
+// REFUSED: two terms, both reading `capital_cost`
+:>> capital_cost = sum(deck_panel.capital_cost) + sum(caster.capital_cost);
+
+// WORKS: one named intermediate per child role, added by the rollup
+attribute panel_capital  : Real = sum(deck_panel.capital_cost);
+attribute caster_capital : Real = sum(caster.capital_cost);
+:>> capital_cost = panel_capital + caster_capital;
 ```
+
+**Why.** An expression parameter is named after the **last member** of the reference, with the
+qualifier dropped (`fact.resolved_member_names[-1]`, `elaboration/elaborate.py:1937`). Two terms
+reading a same-named attribute off different children therefore both render `capital_cost`, and
+the projection refuses the model with `SI_RENDERING_COLLISION` rather than letting two distinct
+sources collapse onto one parameter (`elaboration/project.py:598-604`).
+
+**The refusal is correct, and is the point.** A silent collapse here is exactly the failure this
+architecture exists to prevent: two different children's costs quietly becoming one number. The
+refusal names the parameter and the owner, so the fix is mechanical.
+
+**This bites every costed assembly by construction.** A part hierarchy where children specialize
+a shared interface — the Costed Item pattern, where every child exposes `capital_cost`,
+`raw_material_cost`, `fabrication_cost` — has same-named attributes on every child by design.
+Any rollup over two or more such children needs the named-intermediate form.
+
+**Worked example:** `tests/fixtures/costed_cart_d5/library.sysml`. Its `Deck Assembly` names
+`panel_capital`, `caster_capital`, `panel_material`, `caster_material`, `panel_fabrication`,
+and `caster_fabrication`, then adds them in the four `:>>` rollups. Its `Frame Assembly` does
+the same for two singleton children (`rail_capital`, `brace_capital`). Refusal pinned by
+`tests/integration/test_costed_component_exact_route.py::test_a_two_term_same_name_rollup_is_refused`.
+
+**Cross-reference — the same class from the other side.** This is the filed Item 10 cross-part
+`child.attr` collapse class, where the resolver does not follow per-child `:>>` redefinitions.
+The retiring route collapsed those terms through a qualifier-dropping name match; the exact
+route refuses instead. Recorded on recovery ledger row L-199 and carried to the Phase 5 owner
+packet.
 
 ---
 
@@ -365,29 +402,24 @@ sole trigger).
 
 ---
 
-## 6. Uniform-Array Assumption for Aggregation
+## 6. Arrayed Children Are Enumerated, Not Multiplied
 
-When a part contains arrayed children with multiplicity (e.g., `pv_module : 'PV Module' [20]`), the pipeline uses **parametric multiply**: compute once for one instance, multiply by count.
+When a part contains arrayed children with multiplicity (e.g., `pv_module : 'PV Module' [20]`), the elaborator **enumerates the occurrences**. Each one is a separate occurrence node with its own attribute nodes, and an aggregation over them expands into one term per occurrence.
 
-### The Transformation
+### The Consequences for a Modeller
 
-`sum(child.attribute)` transforms to `count * child.attribute` at compile time.
+- **Each occurrence is its own parameter.** A modelled attribute on an arrayed child mints one entry point per occurrence, and the key carries the index: `…__battery_pack[0]__capacity_kwh`, `…__battery_pack[1]__capacity_kwh`. Three modelled members do not collapse into one shared parameter (`test_exact_projection_aggregation.py::test_every_member_occurrence_is_its_own_entry_point`).
+- **Non-uniform arrays are expressible.** Different values per instance are a normal shape now, not an unsupported one, because each occurrence carries its own value site.
+- **The multiplicity must be modelled.** `part cell [count]` where `count` is a modelled attribute with a value produces that many occurrences; the count is read from the model rather than left as a user-supplied array size.
+- **The output grows with the array.** Enumeration means one node per member rather than one multiply. That is a real size change: `solar_battery`'s pipeline YAML grows from 526 to 1343 lines under enumeration.
 
-```
-sum(pv_module.capital_cost)  ->  module_count * pv_module__cost_model.total_cost
-```
+### Schema Field Names vs JSON Keys
 
-This produces one aggregation module per assembly attribute, not N modules per array element.
+An occurrence-indexed key (`…__battery_pack[0]__capacity_kwh`) is not a legal Python identifier, so it cannot be a schema field name. `core/qualified_names.params_field_name` sanitizes the field, and the generated schema keeps the exact key as the field's **alias**. The JSON key is the graph's entry-point name verbatim; the Python attribute is the sanitized form. See [22-output-schema-rules](reference/22-output-schema-rules.md).
 
-### Multiplicity as Entry Point
+### Parametric Multiply (retired)
 
-Multiplicity counts become Integer entry points in parameter schemas, defaulting to the PartDef-declared value. Users may override them to change array sizes without modifying SysML.
-
-### Uniform-Array Requirement
-
-**All instances in an array MUST share the same parameter bindings.** Design overrides apply uniformly -- `:>> pv_module.wattage = 400.0` applies to all instances in the array.
-
-**Non-uniform arrays** (different parameters per instance) are not supported by parametric multiply. Models requiring non-uniform arrays should use Approach E: create an explicit CalcDef with multiplicity as an input parameter and per-instance outputs.
+The retiring route rewrote `sum(child.attribute)` to `count * child.attribute` at compile time and required every instance in an array to share the same parameter bindings. That transformation is gone with that route. If you are reading a model or a baseline that assumed it, the uniform-array requirement no longer applies and the per-instance keys are the expected shape.
 
 ---
 
