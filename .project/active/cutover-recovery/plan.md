@@ -2628,7 +2628,7 @@ blast-radius dispositions) → G2 → G3 → G4, with the full battery per group
 
 #### Gate 4C Part 1 Completion — the fourteen exact-route specimens
 
-- **Completed:** 2026-08-11. **Commit:** `PENDING-OID` (sysml-codegen only; agentic-mbse `N/A`).
+- **Completed:** 2026-08-11. **Commit:** `5dfb900` (sysml-codegen only; agentic-mbse `N/A`).
 - **What this stage did:** authored exact-route specimens for the fourteen pending
   responsibility rows. It deleted nothing and repointed nothing. Twelve rows are now green;
   two are rule-10 surfacings and stay pending with their reason in the row.
