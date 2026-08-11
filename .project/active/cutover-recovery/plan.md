@@ -642,7 +642,7 @@ Record every slice. Do not combine them later.
 | 3B | d91431b, audit follow-up 2f28dde | N/A | 3520 passed / 47 skipped / 18 deselected (+47, all new) | smoke PASS (live + v6-snapshot packages, group names equal; legacy CLI package unchanged at 48 files) |
 | 3C | 7af5dc9, audit follow-up a6c41bc | 8b63393, audit follow-up cc6c7a7 | codegen 3538 passed / 47 skipped / 18 deselected (+18, all new); agentic 1825 passed / 1 skipped / 5 deselected (+6, all new) | N/A |
 | 3D | 848628b, audit follow-up fa4eea0 | N/A (untouched, clean at `cc6c7a7`) | codegen 3539 passed / 47 skipped / 38 deselected (+1 passed, +20 deselected — all new); agentic 1825 passed / 1 skipped / 5 deselected (unchanged) | **PASS** — 20 real-TEAx tests, live + relocated-v6 sealed packages, 11 outputs each, LCOE `270.1211779380445` |
-| 3E | 430e26a, audit follow-up PENDING_FOLLOWUP | N/A (untouched, clean at `cc6c7a7`) | codegen 3557 passed / 47 skipped / 38 deselected (+18, all new); agentic 1825 passed / 1 skipped / 5 deselected (unchanged) | **PASS** — 38 execution nodes through the SWITCHED public `run_codegen`, live + relocated-v6, 11 channels each, LCOE `270.1211779380445` |
+| 3E | 430e26a, audit follow-up c48c132 | N/A (untouched, clean at `cc6c7a7`) | codegen 3557 passed / 47 skipped / 38 deselected (+18, all new); agentic 1825 passed / 1 skipped / 5 deselected (unchanged) | **PASS** — 38 execution nodes through the SWITCHED public `run_codegen`, live + relocated-v6, 11 channels each, LCOE `270.1211779380445` |
 
 ---
 
@@ -2341,7 +2341,7 @@ remains the ruling-2 residual for the Phase 5 packet.
 
 - **Completed:** 2026-08-11
 - **Audit:** `evidence/audit-3e.md`, verdict **CERTIFY** (nothing blocked Phase 4), 6 findings —
-  1 Medium, 4 Low, 1 Informational. Recorded at `f2f2016`. Commit: PENDING
+  1 Medium, 4 Low, 1 Informational. Recorded at `f2f2016`. Commit: c48c132
 - **Declared path set:** `tests/conformance/test_public_authority_switch.py`,
   `tests/unit/test_elaboration_import_boundaries.py`,
   `evidence/3e-package-comparison.md`,
