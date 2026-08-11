@@ -11,7 +11,7 @@ changed, and upgrades stubs to auto-implementations when possible.
 
 | ID | Requirement | Verified by |
 |----|-------------|-------------|
-| REQ-SR-01 | Signature comparison SHALL use two-level matching: type-level (required) then field-level (optional) | `FunctionSignature.matches()` in `generation/preservation.py` (a parallel copy exists in `analysis/signature_extractor.py`) |
+| REQ-SR-01 | Signature comparison SHALL use two-level matching: type-level (required) then field-level (optional) | `FunctionSignature.matches()` in `generation/preservation.py` — the only copy |
 | REQ-SR-02 | Field comparison SHALL be order-independent (sorted) | `sorted(self.input_fields) == sorted(other.input_fields)` |
 | REQ-SR-03 | `should_regenerate_stencil()` SHALL implement the [6-case decision tree](#the-6-case-decision-tree) | 6 return paths in `should_regenerate_stencil()` (`generation/preservation.py`) — Item 5 split the unparseable leaf into preserve-on-transient / preserve-non-empty / regenerate-empty |
 | REQ-SR-04 | Stub upgrade SHALL require all 3 conditions: signature match, `NotImplementedError` present, `auto_impl_context` available | `_generate_stencils()` in `cli/__init__.py` checks all three |
@@ -23,9 +23,10 @@ changed, and upgrades stubs to auto-implementations when possible.
 
 ## FunctionSignature Data Model
 
-**File**: `generation/preservation.py` (`FunctionSignature`). This is the copy the
-decision tree uses at runtime; a parallel copy exists in
-`analysis/signature_extractor.py`.
+**File**: `generation/preservation.py` (`FunctionSignature`). This is the only copy. A parallel
+`analysis/signature_extractor.py` used to exist beside it with no production caller; the
+recovery deleted it (Gate 4B-G1, `6ba346e`), so the duplication this document used to warn
+about is gone.
 
 ```python
 @dataclass
@@ -64,9 +65,8 @@ comparison is skipped and only type-level checks apply.
 ### From Existing File
 
 `_extract_signature_from_impl(impl_path: Path) -> FunctionSignature | None` in
-`generation/preservation.py` — this is what the decision tree calls. (A public
-`extract_signature_from_impl()` in `analysis/signature_extractor.py` does the same
-job but is not on the decision-tree path.)
+`generation/preservation.py` — this is what the decision tree calls, and the only
+implementation.
 
 Uses Python AST to find `run_*` function:
 1. Parse source with `ast.parse()`
@@ -97,9 +97,10 @@ else:  # >= 2
 input_fields = [inp.param_name for inp in module.inputs]
 ```
 
-> **Note**: `analysis/signature_extractor.py` also has a `generate_expected_signature()`
-> that takes `CalculationDefinitionData` directly. The preservation
-> module's version is the one used by the decision tree at runtime.
+> **Note**: the expected signature is derived from `PipelineModule` on purpose. A
+> `generate_expected_signature()` taking `CalculationDefinitionData` directly used to exist in
+> `analysis/signature_extractor.py`; deriving from the graph rather than from extraction data
+> is what REQ-PIPE-07 asks for, and the extraction-fed version had no caller and is gone.
 
 ---
 
@@ -223,7 +224,7 @@ are always regenerated since they lack handwritten content (REQ-SR-06).
 
 | Model | File | Role |
 |-------|------|------|
-| `FunctionSignature` | `generation/preservation.py` (also in `analysis/signature_extractor.py`) | Signature comparison |
+| `FunctionSignature` | `generation/preservation.py` | Signature comparison |
 | `PipelineModule` | `resolution/models.py` | Expected signature source (via `calc_def_name`, `inputs`, `outputs`) |
 | `Compilability` | `extraction/expression_compiler.py` | Upstream enum; stub upgrade checks `module.auto_impl_context` ([doc 14](14-expression-compiler.md)) |
 | `GenerationConfig` | `cli/__init__.py` | smart_regen, preserve_handwritten flags |
