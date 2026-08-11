@@ -599,7 +599,7 @@ Record every slice. Do not combine them later.
 |---|---|---|---|---|
 | 3A | fe0b855, audit follow-up 4858911 | N/A | 3473 passed / 47 skipped / 18 deselected (+115, all new) | smoke PASS (fusion_tea, 48-file sealed package) |
 | 3B | d91431b, audit follow-up 2f28dde | N/A | 3520 passed / 47 skipped / 18 deselected (+47, all new) | smoke PASS (live + v6-snapshot packages, group names equal; legacy CLI package unchanged at 48 files) |
-| 3C | 7af5dc9 | 8b63393 | codegen 3528 passed / 47 skipped / 18 deselected (+8, all new); agentic 1824 passed / 1 skipped / 5 deselected (+5, all new) | N/A |
+| 3C | 7af5dc9, audit follow-up a6c41bc | 8b63393, audit follow-up cc6c7a7 | codegen 3538 passed / 47 skipped / 18 deselected (+18, all new); agentic 1825 passed / 1 skipped / 5 deselected (+6, all new) | N/A |
 | 3D | PENDING | PENDING if changed | PENDING | PENDING |
 | 3E | PENDING | PENDING if changed | PENDING | PENDING |
 
@@ -1579,8 +1579,7 @@ both, so every existing caller and monkeypatch target still resolves;
 
 - **Completed:** 2026-08-11
 - **Audit:** `evidence/audit-3c.md`, verdict **CERTIFY** (nothing blocked 3D), 4 findings.
-  Recorded at `aaa85e0`. Commits: agentic-mbse `cc6c7a7`, sysml-codegen
-  `PENDING_CODEGEN_OID`.
+  Recorded at `aaa85e0`. Commits: agentic-mbse `cc6c7a7`, sysml-codegen `a6c41bc`.
 - **Declared path set, agentic-mbse:** `validation/level6_architecture.py`,
   `tests/test_sysml_quality_checks.py`, `tests/test_sysml/test_executable_profile.py`.
 - **Declared path set, sysml-codegen:** `tests/conformance/test_exact_constraint_route.py` and
