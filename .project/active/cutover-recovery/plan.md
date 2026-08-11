@@ -595,7 +595,7 @@ Record every slice. Do not combine them later.
 | Slice | sysml-codegen OID | agentic-mbse OID | Full suites | Real TEAx |
 |---|---|---|---|---|
 | 3A | fe0b855, audit follow-up 4858911 | N/A | 3473 passed / 47 skipped / 18 deselected (+115, all new) | smoke PASS (fusion_tea, 48-file sealed package) |
-| 3B | d91431b | N/A | 3519 passed / 47 skipped / 18 deselected (+46, all new) | smoke PASS (live + v6-snapshot packages, group names equal; legacy CLI package unchanged at 48 files) |
+| 3B | d91431b, audit follow-up 2f28dde | N/A | 3520 passed / 47 skipped / 18 deselected (+47, all new) | smoke PASS (live + v6-snapshot packages, group names equal; legacy CLI package unchanged at 48 files) |
 | 3C | PENDING | PENDING | PENDING | N/A |
 | 3D | PENDING | PENDING if changed | PENDING | PENDING |
 | 3E | PENDING | PENDING if changed | PENDING | PENDING |
@@ -1341,7 +1341,7 @@ renamed and flipped to assert equality.
 
 - **Completed:** 2026-08-11
 - **Audit:** `evidence/audit-3b.md`, verdict **CERTIFY** (nothing blocked 3C), 7 findings.
-  Recorded at `9d05f49`. Commit: PENDING
+  Recorded at `9d05f49`. Commit: 2f28dde
 - **Declared path set:** `elaboration/project.py`,
   `orchestration/exact_pipeline_context.py`, `tests/conformance/test_exact_group_identity.py`,
   `tests/conformance/test_exact_route_generated_package.py`,
