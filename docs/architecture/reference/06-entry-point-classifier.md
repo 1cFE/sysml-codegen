@@ -2,14 +2,73 @@
 
 ## What Are Entry Points?
 
-An entry point is a pipeline input that no upstream module produces. When
-the [input resolver](04-producer-resolution.md) finishes wiring module-to-module
-connections, some inputs remain unresolved -- they have
-`source_type == "entry_point"`. These values must come from the user at
-runtime, delivered through JSON files.
+An entry point is a pipeline input that no upstream module produces. Its value comes from the
+user at runtime, delivered through a JSON input file.
 
-Example: a `unit_cost` parameter from a design specification. No module
-computes it, so the user supplies it via a JSON input file.
+Example: a `unit_cost` parameter from a design specification. No module computes it, so the
+user supplies it via a JSON input file.
+
+## How the public route mints and keys an entry point
+
+There is no classification pass. Projection decides an input's type **where it mints it**
+(`elaboration/project.py`), from what elaboration already resolved:
+
+| The input is… | Type | Public key |
+|---|---|---|
+| supplied by a modelled attribute node | `DESIGN_ATTRIBUTE` | that attribute's display path (`attr.display_path`) |
+| a literal written in the calc-usage binding | `USAGE_LITERAL` | `{consumer_display_path}__{formal}` |
+| an unbound formal falling back to its calc-def default | `LIBRARY_DEFAULT` | `{consumer_display_path}__{formal}` |
+
+Two rules follow, and both are visible in the shipped JSON.
+
+### The key names the supplier, not the consumer (consumer collapse)
+
+A design-attribute entry point is keyed by the **attribute that supplies the value**
+(`_source_for_edge`, the `NodeRef` branch). Two calculations reading the same modelled
+attribute therefore share **one** key and one JSON entry. The retiring route named the key
+after the consuming calc-usage formal, so the same modelled value appeared once per consumer.
+
+This is the largest customer-visible change of the cutover. On the customer model, the two
+routes publish 31 versus 27 keys, sharing 13; the full delta — three collapses, eleven
+one-to-one renames, ten group moves — is enumerated in the recovery's
+`evidence/3e-package-comparison.md` and is flagged to the owner packet.
+
+A library default and a usage literal still key by the consumer, because there *is* no
+supplying attribute: the value belongs to that formal at that usage.
+
+### The key carries the occurrence index
+
+An attribute on an arrayed child mints one entry point per occurrence, and the display path
+carries the index: `…__battery_pack[0]__capacity_kwh`. Three modelled members never collapse
+into one shared parameter. The generated schema declares a sanitized field name and keeps the
+exact key as the field's `alias`, because an indexed key is not a legal Python identifier
+(`core/qualified_names.params_field_name`). See
+[modeling-assumptions §6](../modeling-assumptions.md#6-arrayed-children-are-enumerated-not-multiplied).
+
+### Groups are named after the declaring file
+
+An entry point's group is chosen at mint time from the file that **declares** its owner node —
+the attribute node for a design attribute, the consuming calc node for a library default or a
+usage literal (`_group_base`). The retiring deriver named the group after the *using* file, so
+a parameter declared in a library and used from a design landed in the design's group. See
+[17-parameter-group-deriver](17-parameter-group-deriver.md) for the rule and its one fallback.
+
+### Rendering collisions are refused, not merged
+
+Because a key is minted rather than assigned, two distinct semantic sources can in principle
+render as one name. Projection refuses that with `SI_RENDERING_COLLISION` in three separate
+places: distinct semantic sources rendering as one entry-point key, one key with conflicting
+projected metadata, and one key rendering into two parameter groups. There is no orphan group
+and no `system_design` fallback bucket — every entry point has a group because a group was
+chosen when it was minted.
+
+---
+
+## The retiring classifier
+
+Everything below describes `_classify_entry_points()` and the two creation paths in
+`resolution/graph_builder.py`, with grouping via `analysis/parameter_groups.py`. It is accurate
+about that code, which is still in the tree, and is **not** a description of the public route.
 
 ## Requirements
 
