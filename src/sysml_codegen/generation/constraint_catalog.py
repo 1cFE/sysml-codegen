@@ -1,9 +1,9 @@
 """ConstraintCatalog assembly + the same-IR generation guard (Item 7 / D6, INV-2).
 
-Assembly runs once, early (`orchestration/pipeline_builder.py`, right after
-`extend_graph_with_constraints`) and sets the result on the graph — every seam that needs
-catalog data reads `graph.constraint_catalog`, never `ctx` (Appendix A: "generation reads only
-the graph"). The same-IR guard re-reads the catalog at generation time (`assert_same_ir`,
+Assembly runs once, early. On the exact route projection builds the catalog and sets it on the
+graph it mints (`elaboration/project.py:266`, `_build_constraint_catalog`) — every seam that
+needs catalog data reads `graph.constraint_catalog`, never `ctx` (Appendix A: "generation reads
+only the graph"). The same-IR guard re-reads the catalog at generation time (`assert_same_ir`,
 called from the module-wrapper seam before the single per-definition compile), so a
 post-assembly mutation of a catalog entry is caught where it matters — at the point the shared
 predicate is about to be compiled — not baked into a stale assembly-time check.

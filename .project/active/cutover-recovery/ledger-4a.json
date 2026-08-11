@@ -6357,6 +6357,46 @@
    "disposition_4c": "repoint",
    "disposition_4c_note": "Names the v5 snapshot filename only to exclude it from a variant, so a variant can never come to look like a corpus fixture. Nothing to change when the family retires.",
    "reason": "Authored by Gate 4C part 6. Named by the second-axis scan because it excludes extraction_snapshot.json by name when copying a fixture."
+  },
+  {
+   "id": "L-299",
+   "path": "scripts/retirement_worklist.py",
+   "repo": "sysml-codegen",
+   "class": "script",
+   "disposition": "retain",
+   "origin": "derived-blast-radius",
+   "group": null,
+   "authority": "Phase 4 audit follow-up F1 (2026-08-11): created to derive the runbook's per-step row assignment from this ledger; named by the same second-axis scan as L-293/L-296",
+   "unreachability": null,
+   "replacement_proof_node": "tests/unit/test_retirement_worklist.py",
+   "blocked_by": [],
+   "responsibility": "Derives which retirement step names each ledger row, so the runbook's step lists are checkable rather than hand-copied.",
+   "node_count": 0,
+   "breaks_on": "",
+   "breaks_a_free_group": false,
+   "reason": "Named by the second-axis scan because its placement table quotes the surface tokens it places rows against. Nothing to change when the family retires; the row exists so the scan needs no hard-coded exception for its own source, exactly as L-293 and L-296 do.",
+   "disposition_4c": "repoint",
+   "disposition_4c_note": "Phase 4 audit follow-up F1 (2026-08-11). The script reads the ledger and names no legacy module at import time; every surface token in it is inside a docstring or a placement reason. It survives the retirement it schedules, and is the artifact a fresh operator runs to get each step's row list."
+  },
+  {
+   "id": "L-300",
+   "path": "tests/unit/test_retirement_worklist.py",
+   "repo": "sysml-codegen",
+   "class": "test",
+   "disposition": "retain",
+   "origin": "derived-blast-radius",
+   "group": null,
+   "authority": "Phase 4 audit follow-up F1 (2026-08-11); named by the same second-axis scan as L-296",
+   "unreachability": null,
+   "replacement_proof_node": null,
+   "blocked_by": [],
+   "responsibility": "The retirement work-list deriver's own tests: the placement rule, and the property that every actionable row is named by exactly one step.",
+   "node_count": 8,
+   "breaks_on": "",
+   "breaks_a_free_group": false,
+   "reason": "Named by the second-axis scan because its constructed cases quote the surface tokens they place rows against. Self-referential, like L-296.",
+   "disposition_4c": "repoint",
+   "disposition_4c_note": "Phase 4 audit follow-up F1 (2026-08-11). Every surface token is inside a dict literal built in the test body, not a real import or a real fixture read. Nothing to change when the family retires; one case counts the 37 v5 fixtures step 1 deletes and is expected to keep passing because it counts ledger rows, not files on disk."
   }
  ]
 }

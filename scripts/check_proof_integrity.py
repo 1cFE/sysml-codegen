@@ -14,6 +14,13 @@ The check is transitive by construction: `group_readiness` reports a group's blo
 *all* the deletion groups' surfaces, so a proof node in a file that only breaks on G4' is
 caught even though it survives the v5-family step.
 
+**What a 0/0 reading means.** Since Gate 4C part 7 chunk 19 every group is READY, so there are
+zero blocked files and the problem loop has nothing to iterate. "0 problems over 0 blocked
+files" therefore reads *nothing left to check*, not *checked and clean*. The check did its job
+during preparation — it caught six proof nodes — and stays in the battery as a tripwire: if a
+step of the retirement re-blocks a file, this is what says so. Its own failure path is proven
+by `tests/unit/test_check_proof_integrity.py`, not by the live tree.
+
     python scripts/check_proof_integrity.py
 """
 
@@ -21,6 +28,7 @@ from __future__ import annotations
 
 import runpy
 import sys
+from collections.abc import Callable
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
@@ -39,33 +47,51 @@ def _checker() -> dict:
         sys.argv = argv
 
 
-def main() -> int:
-    checker = _checker()
-    ledger = checker["load_ledger"]()
+def blocked_paths(ledger: dict, readiness: Callable[[dict, str], object]) -> dict[str, str]:
+    """Map each still-blocking file to the ledger row that blocks with it.
 
-    blocked_paths: dict[str, str] = {}
+    `readiness` is the Gate 4A checker's `group_readiness`; each blocker it reports is a
+    ``"<row id> <path>"`` string.
+    """
+    blocked: dict[str, str] = {}
     for group in GROUPS:
-        for blocker in checker["group_readiness"](ledger, group).blockers:
+        for blocker in readiness(ledger, group).blockers:
             row_id, _, path = blocker.partition(" ")
-            blocked_paths.setdefault(path, row_id)
+            blocked.setdefault(path, row_id)
+    return blocked
 
+
+def find_problems(rows: list[dict], blocked: dict[str, str]) -> list[str]:
+    """Every row whose replacement proof lives in a file that is still blocking a deletion."""
     problems = []
-    for row in ledger["rows"]:
+    for row in rows:
         nodes = row["replacement_proof_node"]
         if nodes is None:
             continue
         for node in [nodes] if isinstance(nodes, str) else nodes:
             path = node.split("::", 1)[0]
-            if path in blocked_paths:
+            if path in blocked:
                 problems.append(
                     f"{row['id']} ({row['path']}) is proven by {node}, whose file is still "
-                    f"blocking a deletion group as {blocked_paths[path]}"
+                    f"blocking a deletion group as {blocked[path]}"
                 )
+    return problems
 
+
+def report(problems: list[str], blocked_count: int) -> int:
     for problem in problems:
         print(f"FAIL {problem}")
-    print(f"proof integrity: {len(problems)} problems over {len(blocked_paths)} blocked files")
+    print(f"proof integrity: {len(problems)} problems over {blocked_count} blocked files")
+    if not blocked_count:
+        print("  (0 blocked files means nothing left to check, not checked-and-clean)")
     return 1 if problems else 0
+
+
+def main() -> int:
+    checker = _checker()
+    ledger = checker["load_ledger"]()
+    blocked = blocked_paths(ledger, checker["group_readiness"])
+    return report(find_problems(ledger["rows"], blocked), len(blocked))
 
 
 if __name__ == "__main__":

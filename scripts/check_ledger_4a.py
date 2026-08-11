@@ -23,6 +23,29 @@ class: it derives the removal surface from the ledger's own delete and migrate r
 ``tests/`` and ``scripts/`` by AST, and fails for any file that imports the surface at
 module level (so it stops collecting) without a row saying what becomes of it.
 
+**What this checker cannot see.** Four ceilings, measured by the Phase 4 composite audit (F7)
+by attacking the machinery rather than reading it. They are limits, not defects: read a green
+run as "these four classes are unchecked", never as "the ledger is true".
+
+1. **Transitive import breakage is invisible.** ``surface_hits`` walks each file's own AST, so
+   a file that breaks because a *helper it imports* breaks is not seen. Measured: the checker
+   reports 2 surviving files broken at module level by ``4B-G4``; deleting
+   ``tests/helpers/legacy_route.py`` actually stops 16 modules collecting. The detector for
+   this class is executing the step in a scratch worktree and running the suite, which is what
+   the runbook's per-step simulations do.
+2. **``group_readiness`` clears on the disposition *label*, not on measurement.**
+   ``check_surface_coverage`` skips any path that has a row at all, so a ``repoint`` row clears
+   its group whether or not the repoint was performed. "All six groups READY" means 187
+   hand-authored labels say the files are handled. One of them (L-298) was false.
+3. **Vacuity is undetectable, and 89 proof entries name a whole file.** ``replacement_is_green``
+   runs the node and looks for ``passed``; a node that exists and asserts nothing is green. For
+   the 89 entries (32 distinct files) that name a file rather than a ``::node``, "green" means
+   "that file passes", usually true regardless of whether it covers the retired responsibility.
+   The per-node accounting that carries that weight lives in prose on the rows.
+4. **A textual data scan misses computed filenames.** ``data_hits`` matches literal basenames,
+   so a path built by f-string or reached by ``glob("*.json")`` is missed. The over-reporting
+   posture on the non-module axis is the deliberate trade.
+
 Usage::
 
     python scripts/check_ledger_4a.py paths

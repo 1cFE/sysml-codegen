@@ -35,7 +35,6 @@ from sysml_codegen.generation.pipeline import (
 from sysml_codegen.generation.preservation import (
     backup_implementation,
     should_regenerate_stencil,
-    should_regenerate_stencil_from_graph,
 )
 from sysml_codegen.generation.registry import (
     generate_registry,
@@ -77,7 +76,6 @@ __all__ = [
     # preservation
     "backup_implementation",
     "should_regenerate_stencil",
-    "should_regenerate_stencil_from_graph",
     # registry
     "generate_registry",
     "generate_registry_from_graph",

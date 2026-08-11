@@ -4,7 +4,7 @@ This module generates pipeline YAML configuration from the ComputationGraph,
 which is the single source of truth for pipeline structure.
 
 Key Design:
-- Takes ComputationGraph (from graph_builder) as input
+- Takes ComputationGraph (from `elaboration/project.py`) as input
 - Uses Jinja2 template for YAML generation
 - Handles entry points (JSON loading), modules, and exit points
 """

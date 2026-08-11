@@ -163,10 +163,6 @@ def should_regenerate_stencil(
         return True, "Signature changed (interface differs)"
 
 
-# Keep old name as alias for backward compatibility during transition
-should_regenerate_stencil_from_graph = should_regenerate_stencil
-
-
 def _generate_expected_signature_from_module(module) -> FunctionSignature:
     """Generate expected function signature from PipelineModule."""
     func_name = f"run_{module.calc_def_name.lower()}"
@@ -221,5 +217,4 @@ def backup_implementation(
 __all__ = [
     "backup_implementation",
     "should_regenerate_stencil",
-    "should_regenerate_stencil_from_graph",
 ]
