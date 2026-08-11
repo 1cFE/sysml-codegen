@@ -18,7 +18,6 @@ from __future__ import annotations
 import pytest
 
 from sysml_codegen.orchestration.elaborated_pipeline import build_elaborated_pipeline
-from sysml_codegen.orchestration.pipeline_builder import build_pipeline_context
 from tests.conftest import FIXTURES_DIR, requires_license
 
 pytestmark = requires_license
@@ -104,6 +103,12 @@ def test_a_stem_named_group_keeps_the_name_the_legacy_route_ships(fixture) -> No
     Each has its own by-value pin below: ``d38_caret`` and
     ``unresolvable_attr_probe``.
     """
+    # Gate 4C part 7, per-node disposition (ledger L-133): this node's subject IS
+    # the exact-versus-legacy comparison, so it retires with the legacy route
+    # (ruling 3's shape). Local import so the three pure exact-route nodes in
+    # this file keep collecting.
+    from sysml_codegen.orchestration.pipeline_builder import build_pipeline_context
+
     path = FIXTURES_DIR / fixture
     exact = {
         (group.name, group.class_name)
@@ -148,6 +153,12 @@ def test_the_known_exact_versus_legacy_divergence_on_d38_caret() -> None:
     now what the product ships. Diff-ledger row 12 carries the measured
     before/after package cells; both are flagged to the Phase 5 owner packet.
     """
+    # Gate 4C part 7, per-node disposition (ledger L-133): this node's subject IS
+    # the exact-versus-legacy comparison, so it retires with the legacy route
+    # (ruling 3's shape). Local import so the three pure exact-route nodes in
+    # this file keep collecting.
+    from sysml_codegen.orchestration.pipeline_builder import build_pipeline_context
+
     path = FIXTURES_DIR / "d38_caret"
     exact = build_elaborated_pipeline([path])
     legacy = build_pipeline_context([path]).computation_graph
@@ -191,6 +202,12 @@ def test_the_known_exact_versus_legacy_divergence_on_unresolvable_attr_probe() -
     fixture is a graph-level probe no test generates a package from, and both
     halves are flagged to the Phase 5 owner packet.
     """
+    # Gate 4C part 7, per-node disposition (ledger L-133): this node's subject IS
+    # the exact-versus-legacy comparison, so it retires with the legacy route
+    # (ruling 3's shape). Local import so the three pure exact-route nodes in
+    # this file keep collecting.
+    from sysml_codegen.orchestration.pipeline_builder import build_pipeline_context
+
     path = FIXTURES_DIR / "unresolvable_attr_probe"
     exact = build_elaborated_pipeline([path])
     legacy = build_pipeline_context([path]).computation_graph

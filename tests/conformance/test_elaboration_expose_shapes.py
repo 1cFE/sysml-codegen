@@ -24,7 +24,6 @@ import pytest
 from agentic_mbse.sysml.expression import feature_chain_facts
 from agentic_mbse.sysml.syside_adapter import SysideAdapter
 
-from sysml_codegen.analysis.part_instance_index import build_part_instance_index
 from sysml_codegen.elaboration import (
     ElaborationError,
     InstanceGraph,
@@ -150,6 +149,12 @@ def test_fact_untyped_part_usages_are_invisible_to_the_typed_index(
 ) -> None:
     """d316: the model has zero user part defs; the untyped ``consumer`` part has no
     occurrence in the typed index — the shape the elaborator must supplement."""
+    # Gate 4C part 7, per-node disposition (ledger L-129): the typed index is
+    # legacy (analysis/part_instance_index.py, L-004) and this is the only node
+    # in the file that reads it. Local import so the other 14 keep collecting
+    # after L-004 goes; this one retires with it.
+    from sysml_codegen.analysis.part_instance_index import build_part_instance_index
+
     model = loaded_cache("d316_crosspart_expose").model
     assert user_partdef_lookup(model) == {}
     index = build_part_instance_index(model)
