@@ -208,14 +208,26 @@ SUITES = {None: (), "default": (), "execution": ("-m", "execution")}
 
 
 def replacement_is_green(
-    node: str | None, python: str = sys.executable, required_suite: str | None = None
+    node: str | list[str] | None,
+    python: str = sys.executable,
+    required_suite: str | None = None,
 ) -> Proof:
     """Resolve a row's named replacement node and report what it actually did.
 
     ``None`` means the row deletes nothing, so no replacement is owed.
     ``PENDING-4C:`` means the replacement has not been authored yet — a real answer, and
-    never a green one.
+    never a green one. A list means the responsibility is carried by several nodes, as
+    C1's ruling carries signature preservation: every one of them must be green, and the
+    first that is not is the verdict.
     """
+    if isinstance(node, list):
+        if not node:
+            return Proof(Verdict.MISSING, "empty replacement node list")
+        proofs = [replacement_is_green(one, python, required_suite) for one in node]
+        failed = next((proof for proof in proofs if not proof.is_green), None)
+        if failed is not None:
+            return failed
+        return Proof(Verdict.GREEN, "; ".join(proof.detail for proof in proofs))
     if node is None:
         return Proof(Verdict.NOT_REQUIRED, "row deletes nothing")
     if node.startswith("PENDING-4C"):

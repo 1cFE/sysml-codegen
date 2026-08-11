@@ -180,7 +180,6 @@ def test_every_row_that_deletes_or_migrates_names_a_replacement_or_a_pending_own
     The three exceptions are stated by path, not by class, so a new one cannot slip in.
     """
     allowed_without_node = {
-        "src/sysml_codegen/analysis/signature_extractor.py",  # CONFLICT: no replacement exists
         "src/sysml_codegen/elaboration/diff.py",  # recovery-only comparator
         "tests/helpers/legacy_route.py",  # the adapter itself
     }
@@ -268,3 +267,16 @@ def test_an_executed_carried_delete_is_not_reported_as_a_missing_carried_row(
     row["executed_commit"] = "0" * 40
     problems = checker.check_paths(ledger)
     assert not any("does not exist at HEAD" in problem for problem in problems)
+
+
+def test_a_multi_node_replacement_is_green_only_when_every_node_is(tmp_path: Path) -> None:
+    """C1's ruling names three modules for one responsibility; all three must pass."""
+    green = [
+        "tests/conformance/test_gen_stencils.py",
+        "tests/unit/test_stencils.py",
+    ]
+    assert checker.replacement_is_green(green).is_green
+
+    missing = checker.replacement_is_green([*green, "tests/unit/test_does_not_exist.py"])
+    assert missing.verdict is checker.Verdict.MISSING
+    assert not checker.replacement_is_green([]).is_green

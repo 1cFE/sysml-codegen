@@ -177,12 +177,16 @@
    "group": "4B-G1",
    "authority": "no census row for this path [EVIDENCE: forensic map Finding 2]; plan Gate 4B; fresh reachability derivation at HEAD",
    "unreachability": "not reachable from sysml_codegen.cli at all; the only importer anywhere in src is the analysis package __init__ (:20 re-export), which no runtime caller goes through",
-   "replacement_proof_node": null,
+   "replacement_proof_node": [
+    "tests/conformance/test_gen_stencils.py",
+    "tests/conformance/test_generation_boundary.py",
+    "tests/unit/test_stencils.py"
+   ],
    "blocked_by": [
     "L-241"
    ],
-   "reason": "Genuinely dead: zero production callers, and the sole consumer anywhere is tests/unit/test_signature_extractor.py. Nothing on the exact route performs this responsibility, so there is no replacement node to name.",
-   "conflict": "Rule-10: a responsibility with no possible replacement. Either the behaviour was never needed (delete module and test together, orchestrator ruling recorded) or it was lost silently before Item 7. Do not delete on absence alone."
+   "reason": "A dead duplicate, not a lost responsibility: zero production callers, the sole consumer anywhere was tests/unit/test_signature_extractor.py, and the behaviour lives on in generation/preservation.py. Retired together with its unit test and the analysis/__init__.py:26 re-export under the C1 ruling.",
+   "conflict": "Rule-10 CONFLICT, RULED by the orchestrator 2026-08-11 (plan, Gate 4A approval): delete, with the living owner named. The COST-PATTERN refactor (d6c725f) copied the signature/preservation logic into generation/preservation.py, which is live production (generation/__init__ -> cli/__init__.py:432, should_regenerate_stencil) and covered by the three passing modules now named as this row's replacement proof (73 nodes, measured). Not an absence-driven deletion: the responsibility has a living owner."
   },
   {
    "id": "L-007",
@@ -3767,14 +3771,18 @@
    "path": "tests/unit/test_signature_extractor.py",
    "repo": "sysml-codegen",
    "class": "test",
-   "disposition": "retain",
+   "disposition": "delete",
    "origin": "forensic-diff",
-   "group": "4C-blast-radius",
-   "authority": "plan rule 6 \u2014 keep the Item 6 tests until after product proof; every removed or rewritten test needs a responsibility-level disposition first",
+   "group": "4B-G1",
+   "authority": "C1 ruling, orchestrator 2026-08-11 (plan, Gate 4A approval) \u2014 the recorded responsibility retirement plan rule 6 requires before a test may be deleted",
    "unreachability": null,
-   "replacement_proof_node": null,
+   "replacement_proof_node": [
+    "tests/conformance/test_gen_stencils.py",
+    "tests/conformance/test_generation_boundary.py",
+    "tests/unit/test_stencils.py"
+   ],
    "blocked_by": [],
-   "reason": "Unit tests for signature extraction and field-level comparison. Imports legacy owners (signature_extractor) directly, so 4B's deletion breaks it. Retain now; before the owning 4B group lands, this row needs either a public-behaviour rewrite or a recorded responsibility retirement."
+   "reason": "Unit tests for signature extraction and field-level comparison, and the only consumer of analysis/signature_extractor.py anywhere. The C1 ruling retires module and test together, naming generation/preservation.py as the living owner and the three stencil/boundary modules as the replacement proof. Retaining the test alone is not possible: its subject is the module being deleted."
   },
   {
    "id": "L-242",

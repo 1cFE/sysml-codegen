@@ -23,11 +23,6 @@ from sysml_codegen.analysis.phantom_detector import (
     PhantomDetectionReport,
     PhantomDetector,
 )
-from sysml_codegen.analysis.signature_extractor import (
-    FunctionSignature,
-    extract_signature_from_impl,
-    generate_expected_signature,
-)
 
 __all__ = [
     # dependency_backtracker
@@ -43,8 +38,4 @@ __all__ = [
     "PhantomCandidate",
     "PhantomDetectionReport",
     "PhantomDetector",
-    # signature_extractor
-    "FunctionSignature",
-    "extract_signature_from_impl",
-    "generate_expected_signature",
 ]
