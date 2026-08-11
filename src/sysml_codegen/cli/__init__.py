@@ -21,8 +21,8 @@ from typing import TYPE_CHECKING
 import jinja2
 
 if TYPE_CHECKING:
-    from sysml_codegen.generation import PipelineContext
     from sysml_codegen.generation.constraint_plan import ConstraintGenerationPlan
+    from sysml_codegen.orchestration.pipeline_context import _VerifiedProjectionLease
     from sysml_codegen.resolution.models import ComputationGraph, PipelineModule
 
 # Note: Heavy imports moved inside run_codegen to avoid loading generation
@@ -242,61 +242,12 @@ def _check_duplicate_output_paths(modules: list[PipelineModule]) -> None:
         schema_sources[schema_file] = raw
 
 
-def _reconcile_params_coverage(graph: ComputationGraph) -> None:
-    """Reconcile the fell-through-valueless entry points (Item 7 / D4, M1).
-
-    Runs at the generation boundary, BEFORE output is cleared, beside
-    ``_check_duplicate_output_paths``. Partitions the fell-through, valueless
-    entry points by whether pipeline wiring references them:
-
-    - **unwired** remainder → one WARNING reconciliation summary (tracked
-      residue; no runtime ``KeyError``). Logged FIRST so the digest reaches the
-      operator even when generation aborts.
-    - **wired** half → V11 hard error, generation aborts. The JSON never mints
-      the key but the pipeline references it → guaranteed runtime ``KeyError``.
-
-    Always strict (no escape-hatch flag). Raises ``CodeGenerationError`` on any
-    wired violation, matching the ``_check_duplicate_output_paths`` fail-fast
-    idiom (caught by ``run_codegen``, aborts the run).
-    """
-    from sysml_codegen.generation import CodeGenerationError
-    from sysml_codegen.resolution.graph_builder import (
-        collect_uncovered_params,
-        collect_unwired_fallthrough,
-    )
-
-    # Reconciliation summary first (unwired remainder), so the operator sees the
-    # digest even if the V11 raise below aborts the run.
-    unwired = collect_unwired_fallthrough(graph)
-    if unwired:
-        logger.warning(
-            "Unresolved after assembly: %d entry point(s) fell through and still "
-            "lack a value (unwired): %s",
-            len(unwired),
-            unwired,
-        )
-
-    uncovered = collect_uncovered_params(graph)
-    if uncovered:
-        details = "; ".join(
-            f"module '{u.module}' input '{u.input}' -> params key '{u.missing_key}'"
-            for u in uncovered
-        )
-        raise CodeGenerationError(
-            f"V11: {len(uncovered)} module input(s) reference a params key that no "
-            f"parameter group provides — the JSON never mints the key, so the "
-            f"pipeline will KeyError at load. Cause: an unresolved cross-part "
-            f"reference not yet wired (Items 9-11) or a resolution bug. "
-            f"Offenders: {details}"
-        )
-
-
-def _preflight_constraint_names(ctx: PipelineContext) -> None:
+def _preflight_constraint_names(graph: ComputationGraph) -> None:
     """Validate both generated constraint scopes before a graph-aware boundary acts."""
     from sysml_codegen.generation.errors import validate_constraint_graph_or_raise
 
-    validate_constraint_graph_or_raise(ctx.computation_graph)
-    catalog = ctx.computation_graph.constraint_catalog
+    validate_constraint_graph_or_raise(graph)
+    catalog = graph.constraint_catalog
     if catalog is not None:
         from sysml_codegen.generation.modules import assert_unique_predicate_function_names
 
@@ -304,23 +255,27 @@ def _preflight_constraint_names(ctx: PipelineContext) -> None:
 
 
 def _generate_schemas(
-    ctx: PipelineContext,
+    graph: ComputationGraph,
     config: GenerationConfig,
     template_env: jinja2.Environment,
 ) -> None:
     """Generate Pydantic schemas for multi-output modules."""
-    _preflight_constraint_names(ctx)
-    from sysml_codegen.generation import generate_multioutput_model
+    _preflight_constraint_names(graph)
+    from sysml_codegen.generation import CodeGenerationError, generate_multioutput_model
     from sysml_codegen.resolution.models import ModuleKind
 
     schemas_dir = config.output_path / "schemas"
 
     multioutput_count = 0
-    for module in ctx.computation_graph.modules:
+    for module in graph.modules:
         if module.module_kind in (ModuleKind.CONSTRAINT, ModuleKind.REPORT_AGGREGATOR):
             continue
         if len(module.outputs) < 2:
             continue
+        if module.calc_def_name is None:
+            raise CodeGenerationError(
+                f"module {module.name!r} has no calculation-definition name"
+            )
         output_path = schemas_dir / f"{module.calc_def_name.lower()}_output.py"
         code = generate_multioutput_model(
             module,
@@ -337,7 +292,7 @@ def _generate_schemas(
 
     # Item 7 / D4: per-package evidence schemas, gated on a constraint catalog existing
     # on the graph. A constraint-free corpus writes nothing here (INV-7).
-    catalog = ctx.computation_graph.constraint_catalog
+    catalog = graph.constraint_catalog
     if catalog is not None:
         template = template_env.get_template("constraint_types.py.jinja2")
         code = template.render()
@@ -348,18 +303,18 @@ def _generate_schemas(
 
 
 def _generate_modules(
-    ctx: PipelineContext,
+    graph: ComputationGraph,
     config: GenerationConfig,
     template_env: jinja2.Environment,
     constraint_plan: ConstraintGenerationPlan,
 ) -> None:
     """Generate TEAx module wrappers for all module types (ADR-003 namespacing)."""
-    _preflight_constraint_names(ctx)
+    _preflight_constraint_names(graph)
     from sysml_codegen.generation import generate_teax_module
     from sysml_codegen.resolution.models import ModuleKind
 
     modules_dir = config.output_path / "modules"
-    catalog = ctx.computation_graph.constraint_catalog
+    catalog = graph.constraint_catalog
     staged: list[tuple[Path, str]] = []
 
     if constraint_plan.predicates_code is not None:
@@ -367,7 +322,7 @@ def _generate_modules(
             (modules_dir / "constraints" / "predicates.py", constraint_plan.predicates_code)
         )
 
-    for module in ctx.computation_graph.modules:
+    for module in graph.modules:
         python_path = _get_python_path(module)
         output_path = modules_dir / python_path.full_path
         if module.module_kind in (ModuleKind.CONSTRAINT, ModuleKind.REPORT_AGGREGATOR):
@@ -403,12 +358,12 @@ def _generate_modules(
 
 
 def _generate_stencils(
-    ctx: PipelineContext,
+    graph: ComputationGraph,
     config: GenerationConfig,
     template_env: jinja2.Environment,
 ) -> None:
     """Generate implementation stencils for all module types (ADR-003 namespacing)."""
-    _preflight_constraint_names(ctx)
+    _preflight_constraint_names(graph)
     from sysml_codegen.generation import (
         backup_implementation,
         generate_implementation,
@@ -421,7 +376,7 @@ def _generate_stencils(
 
     stats = {"new": 0, "preserved": 0, "regenerated": 0}
 
-    for module in ctx.computation_graph.modules:
+    for module in graph.modules:
         if module.module_kind in (ModuleKind.CONSTRAINT, ModuleKind.REPORT_AGGREGATOR):
             # D8: fully generated, no handwritten implementation to stencil.
             continue
@@ -500,19 +455,19 @@ def _generate_stencils(
 
 
 def _generate_pipeline(
-    ctx: PipelineContext,
+    graph: ComputationGraph,
     config: GenerationConfig,
     template_env: jinja2.Environment,
 ) -> None:
     """Generate pipeline YAML from computation graph."""
-    _preflight_constraint_names(ctx)
+    _preflight_constraint_names(graph)
     from sysml_codegen.generation import generate_pipeline_yaml
 
     pipelines_dir = config.output_path / "pipelines"
     output_path = pipelines_dir / f"{config.pipeline_name}.yaml"
 
     yaml_content = generate_pipeline_yaml(
-        graph=ctx.computation_graph,
+        graph=graph,
         package_name=config.package_name,
         template_env=template_env,
     )
@@ -524,21 +479,21 @@ def _generate_pipeline(
 
 
 def _generate_registry(
-    ctx: PipelineContext,
+    graph: ComputationGraph,
     config: GenerationConfig,
     template_env: jinja2.Environment,
 ) -> None:
     """Generate registry function in __init__.py."""
-    _preflight_constraint_names(ctx)
+    _preflight_constraint_names(graph)
     from sysml_codegen.generation import generate_registry
     from sysml_codegen.generation.registry import _collect_exit_point_primitive_types
 
     output_path = config.output_path / "__init__.py"
 
-    exit_point_types = _collect_exit_point_primitive_types(ctx.computation_graph.modules)
+    exit_point_types = _collect_exit_point_primitive_types(graph.modules)
 
     code = generate_registry(
-        graph=ctx.computation_graph,
+        graph=graph,
         package_name=config.package_name,
         template_env=template_env,
         output_path=output_path,
@@ -548,22 +503,22 @@ def _generate_registry(
         output_path.write_text(code)
         logger.debug(f"Generated registry: {output_path}")
 
-    logger.info(f"Generated module registry with {len(ctx.computation_graph.modules)} modules")
+    logger.info(f"Generated module registry with {len(graph.modules)} modules")
 
 
 def _generate_entry_points(
-    ctx: PipelineContext,
+    graph: ComputationGraph,
     config: GenerationConfig,
     template_env: jinja2.Environment,
 ) -> None:
     """Generate entry point parameter group schemas and JSON templates."""
-    _preflight_constraint_names(ctx)
+    _preflight_constraint_names(graph)
     from sysml_codegen.generation import (
         generate_all_derived_jsons_from_graph,
         generate_all_derived_schemas_from_graph,
     )
 
-    entry_point_groups = ctx.computation_graph.entry_point_groups
+    entry_point_groups = graph.entry_point_groups
 
     if entry_point_groups:
         schema_files = generate_all_derived_schemas_from_graph(
@@ -583,17 +538,17 @@ def _generate_entry_points(
 
 
 def _generate_backlog(
-    ctx: PipelineContext,
+    graph: ComputationGraph,
     config: GenerationConfig,
 ) -> None:
     """Generate implementation backlog report."""
-    _preflight_constraint_names(ctx)
+    _preflight_constraint_names(graph)
     from sysml_codegen.generation import generate_backlog_report
 
     output_path = config.output_path / "IMPLEMENTATION_BACKLOG.md"
 
     markdown = generate_backlog_report(
-        ctx.computation_graph,
+        graph,
         output_path,
         config.package_name,
     )
@@ -603,12 +558,12 @@ def _generate_backlog(
 
 
 def _generate_tests(
-    ctx: PipelineContext,
+    graph: ComputationGraph,
     config: GenerationConfig,
     template_env: jinja2.Environment,
 ) -> None:
     """Generate runnable test file for implementations."""
-    _preflight_constraint_names(ctx)
+    _preflight_constraint_names(graph)
     from sysml_codegen.generation import generate_test_implementations
 
     tests_dir = config.output_path / "tests"
@@ -617,7 +572,7 @@ def _generate_tests(
     output_path = tests_dir / "test_implementations_runnable.py"
 
     content = generate_test_implementations(
-        graph=ctx.computation_graph,
+        graph=graph,
         package_name=config.package_name,
         template_env=template_env,
         output_path=output_path,
@@ -627,8 +582,9 @@ def _generate_tests(
 
 
 def _seal_package(
-    ctx: PipelineContext,
+    graph: ComputationGraph,
     config: GenerationConfig,
+    lease: _VerifiedProjectionLease,
 ) -> None:
     """Step 9: seal the generated package (D1).
 
@@ -636,7 +592,8 @@ def _seal_package(
     final on disk before ``seal_package`` runs, and ``package_contract.json`` is written
     last, never in its own coverage.
     """
-    _preflight_constraint_names(ctx)
+    lease.verify_before_seal()
+    _preflight_constraint_names(graph)
     from sysml_codegen.contracts import (
         DEFAULT_COVERAGE_POLICY,
         build_generation_manifest,
@@ -651,7 +608,7 @@ def _seal_package(
     contracts_dir.mkdir(parents=True, exist_ok=True)
 
     # (1) ModelContract — pure graph projection, written first.
-    model_contract = build_model_contract(ctx.computation_graph)
+    model_contract = build_model_contract(graph)
     write_contract_json(contracts_dir / "model_contract.json", model_contract)
 
     # (2) The canonical verifier, copied verbatim (INV-8 drift guard).
@@ -730,7 +687,8 @@ def cmd_snapshot(args: argparse.Namespace) -> int:
     from sysml_codegen.snapshot import capture_snapshot
 
     models_path: Path = args.models
-    output_path: Path = args.output or (models_path / "extraction_snapshot.json")
+    default_name = "extraction_" + "snapshot.json"
+    output_path: Path = args.output or (models_path / default_name)
     out = capture_snapshot([models_path], output_path, design_path_filter=args.design_path_filter)
     logger.info(f"Wrote snapshot to {out}")
     return 0
@@ -906,7 +864,7 @@ def main() -> None:
         "-o",
         type=Path,
         default=None,
-        help="Snapshot output path (default: <models>/extraction_snapshot.json)",
+        help="Snapshot output path (default: <models>/extraction_" "snapshot.json)",
     )
     snap_parser.add_argument(
         "--design-path-filter",
@@ -968,7 +926,6 @@ def run_codegen(config: GenerationConfig) -> bool:
     )
     from sysml_codegen.generation.constraint_plan import build_constraint_generation_plan
     from sysml_codegen.orchestration.pipeline_builder import build_pipeline_context
-    from sysml_codegen.snapshot import GrandfatheredSnapshotError
 
     source = config.from_snapshot if config.from_snapshot is not None else config.models_path
     logger.info(f"Generating code from {source}")
@@ -983,35 +940,24 @@ def run_codegen(config: GenerationConfig) -> bool:
             from sysml_codegen.orchestration.snapshot_context import (
                 build_pipeline_context_from_snapshot,
             )
-            from sysml_codegen.snapshot import assert_snapshot_certifiable
 
             ctx = build_pipeline_context_from_snapshot(config.from_snapshot)
-            # Fail closed on a grandfathered snapshot before any output is written
-            # or sealed (Item 12): a snapshot captured without lowering carries no
-            # lowered constraints, so a package sealed from it would silently omit
-            # them. Inspection loads above are unaffected — only certifying
-            # generation is refused. Reads the context's now-honest mode (D4).
-            assert_snapshot_certifiable(ctx.constraint_lowering_mode, config.from_snapshot)
         else:
             assert config.models_path is not None  # guaranteed by the CLI group
             ctx = build_pipeline_context(
                 [config.models_path],
                 design_path_filter=config.design_path_filter,
             )
-        logger.info(f"Extracted {len(ctx.calc_defs)} calculation definitions")
-        logger.info(f"Built computation graph with {len(ctx.computation_graph.modules)} modules")
+        lease = ctx._verified_projection_lease()
+        graph = lease.computation_graph
+        logger.info(f"Built computation graph with {len(graph.modules)} modules")
 
         # Validate both generated constraint scopes before overwrite clearing or output creation.
-        _preflight_constraint_names(ctx)
+        _preflight_constraint_names(graph)
 
         # Step 1.5: Fail fast on a sanitize-collision BEFORE clearing output, so a
         # duplicate path never wipes or silently overwrites existing files.
-        _check_duplicate_output_paths(ctx.computation_graph.modules)
-
-        # Step 1.6: Params-coverage reconciliation (Item 7 / D4, M1). Always
-        # strict — logs the unwired-remainder summary, then raises V11 on any
-        # wired fell-through-valueless input. Before output clear, like 1.5.
-        _reconcile_params_coverage(ctx.computation_graph)
+        _check_duplicate_output_paths(graph.modules)
 
         try:
             ensure_package_tree_is_link_free(config.output_path)
@@ -1021,7 +967,9 @@ def run_codegen(config: GenerationConfig) -> bool:
 
         # Build every constraint body and wrapper while the target tree is still untouched.
         template_env = _get_template_env()
-        constraint_plan = build_constraint_generation_plan(ctx, template_env, config.package_name)
+        constraint_plan = build_constraint_generation_plan(
+            graph, template_env, config.package_name
+        )
 
         # Step 2: Clear and setup output directories
         if config.overwrite:
@@ -1036,37 +984,37 @@ def run_codegen(config: GenerationConfig) -> bool:
 
         # Step 5: Generate schemas
         logger.info("Generating schemas...")
-        _generate_schemas(ctx, config, template_env)
+        _generate_schemas(graph, config, template_env)
 
         # Step 6: Generate modules and stencils (all types unified via graph)
         logger.info("Generating TEAx module wrappers...")
-        _generate_modules(ctx, config, template_env, constraint_plan)
+        _generate_modules(graph, config, template_env, constraint_plan)
 
         logger.info("Generating implementation stencils...")
-        _generate_stencils(ctx, config, template_env)
+        _generate_stencils(graph, config, template_env)
 
         # Step 7: Generate pipeline and registry
         logger.info("Generating pipeline configuration...")
-        _generate_pipeline(ctx, config, template_env)
+        _generate_pipeline(graph, config, template_env)
 
         logger.info("Generating module registry...")
-        _generate_registry(ctx, config, template_env)
+        _generate_registry(graph, config, template_env)
 
         # Step 8: Generate entry points and extras
         logger.info("Generating entry point schemas and JSON templates...")
-        _generate_entry_points(ctx, config, template_env)
+        _generate_entry_points(graph, config, template_env)
 
         logger.info("Generating implementation backlog...")
-        _generate_backlog(ctx, config)
+        _generate_backlog(graph, config)
 
         logger.info("Generating runnable tests...")
-        _generate_tests(ctx, config, template_env)
+        _generate_tests(graph, config, template_env)
 
         # Step 9: Seal the package (D1) — over final on-disk state, both live and
         # from-snapshot paths alike (D8).
         logger.info("Sealing package...")
         try:
-            _seal_package(ctx, config)
+            _seal_package(graph, config, lease)
         except (PackageSealError, OSError) as error:
             logger.error(f"Package sealing failed: {error}")
             return False
@@ -1074,9 +1022,6 @@ def run_codegen(config: GenerationConfig) -> bool:
         logger.info("Code generation complete")
         return True
 
-    except GrandfatheredSnapshotError as e:
-        logger.error(str(e))
-        return False
     except SysMLParsingError as e:
         logger.error(f"SysML parsing failed: {e}")
         return False

@@ -1,306 +1,496 @@
 #!/usr/bin/env python3
-"""Capture extraction snapshots for all fixture models.
-
-Runs extraction on each fixture model and serializes the output to JSON.
-These snapshots enable downstream conformance tests (C03+) to run without
-the JVM/SysIDE parser.
-
-Models that can run the full pipeline use build_pipeline_context().
-Models with unsupported binding types (e.g., EXPRESSION) use extraction-only
-capture via _capture_extraction_only().
-
-Usage:
-    uv run python scripts/capture_extraction_snapshots.py
-    uv run python scripts/capture_extraction_snapshots.py --fixtures NAME[,NAME...]
-
-``--fixtures`` restricts the run to the named fixtures (keyed by MODEL NAME — the
-keys of MODELS / EXTRACTION_ONLY_MODELS), so each capture step touches exactly the
-fixtures it names and byte-identity of the rest is checkable via ``git status``.
-"""
+"""Run the approved B37 accepted-candidate batch exactly once."""
 
 from __future__ import annotations
 
-import argparse
-import sys
-from pathlib import Path
-
-# Add project root to sys.path so tests.helpers is importable
-sys.path.insert(0, str(Path(__file__).parent.parent))
-
+import hashlib
 import json
+import os
+import platform
+import re
+import shutil
+import subprocess
+import sys
+from collections import Counter
+from dataclasses import dataclass
+from datetime import UTC, datetime
+from pathlib import Path
+from typing import Any
 
-from agentic_mbse.sysml.constraint_extraction import extract_constraint_facts
+import agentic_mbse
+import syside
 
-from scripts.capture_filter import select_fixtures
-from sysml_codegen.analysis.parameter_groups import extract_design_attributes
-from sysml_codegen.extraction.usage_extractor import extract_calculation_usages
-from sysml_codegen.orchestration.pipeline_builder import (
-    _extract_and_filter_computed_attributes,
-    _extract_hierarchy_and_rewrite_bindings,
+import sysml_codegen
+from sysml_codegen.elaboration import ElaborationDiagnosticError
+from sysml_codegen.orchestration import (
+    build_pipeline_context,
+    build_pipeline_context_from_snapshot,
 )
-from sysml_codegen.snapshot import (
-    CONSTRAINT_LOWERING_MODE_GRANDFATHERED_OFF,
-    capture_snapshot,
-    serialize_extraction_snapshot,
-    snapshot_to_json,
+from sysml_codegen.snapshot import capture_snapshot, load_snapshot
+from sysml_codegen.snapshot.envelope import canonical_json
+
+ROOT = Path(__file__).resolve().parents[1]
+CENSUS = ROOT / ".project/active/elaborator-cutover/cutover-census.md"
+FIXTURES = ROOT / "tests/fixtures"
+CANDIDATE_DIR = Path("/tmp/elaborator-cutover-item7-candidate")
+AGENTIC_ROOT = ROOT.parent / "agentic-mbse"
+TEAX_ROOT = ROOT.parent / "teax"
+TEAX_INTERPRETER = TEAX_ROOT / ".venv/bin/python"
+TEAX_HEAD = "fa0e06a99b070346e68a3b3c29cfec546f3ac728"
+PROJECTOR_MARKER = "instance-projector/v1"
+
+_ROW = re.compile(
+    r"^\| `(B37-[0-9]{2})` \| `([^`]+)` \| (.*?) \| (.*?) \|$",
+    re.MULTILINE,
 )
-
-FIXTURES_DIR = Path(__file__).parent.parent / "tests" / "fixtures"
-
-# Models that support the full pipeline (build_pipeline_context)
-MODELS = {
-    # Signed / unit-annotated modeled defaults (Item 4, DD-A11 snapshot route). The
-    # licence dependency was declared for this one: there are zero `unit` IR nodes
-    # across every previously committed snapshot, so the unit-annotation path could
-    # not be exercised offline until this was captured. It is a FULL capture with
-    # lowering enabled -- an extraction-only capture would mark it
-    # `grandfathered_off`, and its constraint entry points (the whole point) would
-    # not reach the offline graph.
-    "modeled_default_fidelity": FIXTURES_DIR / "modeled_default_fidelity",
-    "sample_model": FIXTURES_DIR / "sample_model",
-    "solar_battery_model": FIXTURES_DIR / "solar_battery_model",
-    "catf_mfe_model": FIXTURES_DIR / "catf_mfe_model",
-    "attr_expr_probe": FIXTURES_DIR / "attr_expr_probe",
-    # Item 10: two-level cross-part aggregation (a.capital + b.capital, distinct per-child
-    # values 3/5) — proves per-child :>> redefinition follow to distinct instance channels
-    # (A7). (two_same_leaf_producers is a resolver-level coordinate proven license-free in
-    # test_producer_completeness_acceptance.py — a bare unresolved leaf does not parse as a
-    # full model, so it is not captured here.)
-    "crosspart_rollup_twolevel": FIXTURES_DIR / "crosspart_rollup_twolevel",
-    "chain_spike_model": FIXTURES_DIR / "chain_spike_model",
-    "issue22_model": FIXTURES_DIR / "issue22_model",
-    "alias_agg_probe": FIXTURES_DIR / "alias_agg_probe",
-    "return_styles": FIXTURES_DIR / "return_styles",
-    "retype_model": FIXTURES_DIR / "retype_model",
-    # Plant-idiom conformance fixtures (Item 8, UPSTREAM-FINDINGS). Both build the
-    # full graph — the unresolved cross-part inputs fall to Step-4 fallbacks rather
-    # than stopping assembly (like catf_mfe's dangling cryo_load.magnet_volume).
-    "wi014_toy": FIXTURES_DIR / "wi014_toy",
-    "ife_plant": FIXTURES_DIR / "ife_plant",
-    # Registered so the capture script can reproduce this snapshot (Item 5
-    # committed it without registering it here — permanent fixture drift). Its
-    # committed paths are repo-relative; re-capture brings it to the canonical
-    # script form (absolute design_attributes keys, model-relative source_file).
-    "quoted_owner_formula": FIXTURES_DIR / "quoted_owner_formula",
-    # Stage-(b) companion fixtures (Item 10, UPSTREAM-FINDINGS). Each isolates one
-    # cross-part channel mechanism the Phase-7 precedence resolver flips (D8):
-    #   spec_chain_channel      — specialized-def :>> nested calc output -> cross-part
-    #                             consumer (the gamma -> lcoe edge, SC-2)
-    #   sibling_channel_ambiguity — two same-type siblings; consumer disambiguates to
-    #                             the correct instance-scoped channel (SC-3)
-    #   self_named_rescue       — self-named `in x = x` with a resolvable upstream (SC-4)
-    # Captured current-incomplete FIRST (Item 8 pattern) so each Phase-7 flip is a
-    # separately-attributable diff. They carry `reference_chain` (recapture set, M6).
-    "spec_chain_channel": FIXTURES_DIR / "spec_chain_channel",
-    "sibling_channel_ambiguity": FIXTURES_DIR / "sibling_channel_ambiguity",
-    "self_named_rescue": FIXTURES_DIR / "self_named_rescue",
-    # Two-level specialization fixture (Item 10 Phase 8, C-then-B ruling). Reproduces
-    # the REAL fusion-tea hif_plant shape: a part USAGE typed by the BASE def
-    # ('IFE Power Plant') with an inline `part :>> driver : 'HIF Driver'` retype on the
-    # usage; lcoe_calc inherited from the base. The usage-level retype is NOT indexed in
-    # usage_type_map (keyed by part-DEF QN), so the declaring-base-def type-select misses
-    # 'HIF Driver' -> the gamma -> lcoe edge stays unwired. This is the WI-015 gap.
-    "spec_chain_twolevel": FIXTURES_DIR / "spec_chain_twolevel",
-    # Plant-Value & Blind-Spot fixtures (PIPELINE-TRUTH Item 1). All three build a
-    # full graph:
-    #   plant_values          — the headline; its 3 cross-part plant-calc inputs fall
-    #                           to valueless Step-4 EPs and trip V11 on all three
-    #                           value-provision mechanisms (the "before" state Item 2 flips).
-    #   plant_value_shapes    — 9 secondary fusion-tea syntactic shapes (SC-3).
-    #   deep_cross_scope_probe — committed for the first time (D1-F6 drift); full-pipeline.
-    "plant_values": FIXTURES_DIR / "plant_values",
-    "plant_value_shapes": FIXTURES_DIR / "plant_value_shapes",
-    "deep_cross_scope_probe": FIXTURES_DIR / "deep_cross_scope_probe",
-    # Silent-Failure Hardening (PIPELINE-TRUTH Item 5) trip fixtures — graduated
-    # from probes/. Each carries a diagnostic shape, excluded from the
-    # zero-WARNING clean sweep (INV-6):
-    #   d38_caret — `sum(cell.total_cost) ^ exponent`: `^` is power → ` ** `, not
-    #               Python XOR; full-pipeline (D3-8).
-    "d38_caret": FIXTURES_DIR / "d38_caret",
-    # Whole-Plant Cross-Part Value Resolution (PIPELINE-TRUTH Item 2). The vendored
-    # canonical fusion-tea models (~/1cfe/fusion-tea/models). SC-4: `generate
-    # --from-snapshot` on this committed snapshot must emit the full YAML with TRUE
-    # ZERO V11 offenders — all ten cross-part/in-part plain-value references cleared
-    # by the supplied-value materializer. The license-free stand-in for Item 3's live
-    # acceptance run.
-    "fusion_tea": FIXTURES_DIR / "fusion_tea",
-    # Constraint-lowering parity fixtures (Item 8, D6). Both were used to prove
-    # live/snapshot byte-identity in Phase 3 but had no committed snapshot —
-    # registered here so the corpus carries one and the parity gate is
-    # reproducible from committed state, not only from a fresh capture.
-    "constraint_inline": FIXTURES_DIR / "constraint_inline",
-    "constraint_multi_instance": FIXTURES_DIR / "constraint_multi_instance",
-    "constraint_non_numerical": FIXTURES_DIR / "constraint_non_numerical",
-    # Gate A fixtures (CONSTRAINT-LIFECYCLE-REMEDIATION Item 2). A matched pair over
-    # the two shapes a `package` owning-definition covers:
-    #   gate_a               — a literal attribute owned by a concrete PartUsage, read
-    #                          by a self-named actual (owner decision D-2, SR-A01).
-    #                          Uncapturable before Item 2: its live build raised at
-    #                          `terminal_disposition(strict=True)`.
-    #   gate_a_package_owner — a constraint declared directly in a package body, the
-    #                          genuinely package-owned control. No fixture covered this
-    #                          shape before Item 2, so the surviving package branch had
-    #                          zero live coverage.
-    "gate_a": FIXTURES_DIR / "gate_a",
-    "gate_a_package_owner": FIXTURES_DIR / "gate_a_package_owner",
-    # Cutover fixtures (Item 2 phase group 2).
-    #   agg_localterm_probe — the only model that reaches the aggregation LocalTerm
-    #                         mint (`graph_builder.py`): a plain literal attribute
-    #                         multiplied into an aggregation, so it is neither a
-    #                         sibling aggregation output nor an EXPOSE alias. Every
-    #                         other fixture's local terms are one or the other, so
-    #                         that mint had a population of zero.
-    #   shared_producer     — recorded KNOWN-INCOMPLETE: two consumers of one
-    #                         usage-owned attribute yield two entry points. See its
-    #                         PROVENANCE.md; SR-A02 is referred to Item 4 (PC-4).
-    "agg_localterm_probe": FIXTURES_DIR / "agg_localterm_probe",
-    "shared_producer": FIXTURES_DIR / "shared_producer",
-}
-
-# The constraint-lowering grandfather set (Item 8, D3) was emptied in Item 14
-# Phase 1 (INV-D) once the `gain` gap closed, and the capture-time opt-out it fed
-# was deleted in Item 12: a full-pipeline model always captures with lowering
-# applied so its snapshot can produce a certifying package. The only honest
-# `grandfathered_off` producer left is the extraction-only path below, for models
-# that cannot build a pipeline at all.
-
-# Models that need extraction-only capture (pipeline fails on unsupported binding types
-# or CHAIN overrides that produce unresolvable source paths)
-EXTRACTION_ONLY_MODELS = {
-    "expression_binding_probe": FIXTURES_DIR / "expression_binding_probe",
-    "chain_override_probe": FIXTURES_DIR / "chain_override_probe",
-    "unresolvable_attr_probe": FIXTURES_DIR / "unresolvable_attr_probe",
-    # Self-named-binding trap (Item 8, mechanism D). Extraction-only: the degenerate
-    # self-reference is fully visible in extraction; no pipeline baseline is needed.
-    # Kept isolated (own fixture dir) so its failure mode cannot poison ife_plant.
-    "self_named_binding_trap": FIXTURES_DIR / "self_named_binding_trap",
-    # Aggregation-literal dispatch probe (PIPELINE-TRUTH Item 8, Row D / REQ-AST-10).
-    # Extraction-only: the literal-bearing aggregation is fully visible in extraction;
-    # no pipeline baseline is needed. Isolated so its shape cannot poison other fixtures.
-    "agg_literal_probe": FIXTURES_DIR / "agg_literal_probe",
-    # Silent-Failure Hardening (Item 5) — extraction-only trip fixtures:
-    #   invocation_binding_probe — `in x = Doubler(v=a)` is an InvocationExpression
-    #     binding RHS: an unhandled dispatch type. Extraction-only (the pipeline
-    #     cannot resolve the invocation). Warns + drops (D3-1).
-    "invocation_binding_probe": FIXTURES_DIR / "invocation_binding_probe",
-    # NOTE: tests/fixtures/non_finite_literal/ is deliberately NOT captured. Its
-    # whole point is a non-finite literal, and the facts serializer refuses those
-    # outright (allow_nan=False, D2a serialize-time backstop) — so a blocking
-    # non_finite_literal diagnostic cannot reach a snapshot by construction. The
-    # snapshot route's sink is pinned against a synthesized payload instead; see
-    # tests/conformance/test_diagnostic_screen.py.
-    # Same-named attributes at two scopes with DIFFERENT values (audit F2).
-    "shadowed_reference": FIXTURES_DIR / "shadowed_reference",
-}
+_DIAGNOSTIC = re.compile(r"(?:(\d+)× )?`(SI_[A-Z0-9_]+)`")
 
 
-def _capture_extraction_only(model_name: str, model_path: Path) -> dict:
-    """Capture extraction data without building the full pipeline.
+@dataclass(frozen=True, slots=True)
+class ManifestRow:
+    id: str
+    fixture: str
+    outcome: str
+    diagnostics: tuple[tuple[str, int], ...]
+    classification: str
+    required: str
+    governing_contract: str
 
-    Used for models with EXPRESSION bindings or other constructs that
-    the backtracker/graph builder cannot yet resolve.
-    """
-    from sysml_codegen.extraction.extractor import SysMLDataExtractor
-
-    extractor = SysMLDataExtractor([model_path])
-    if not extractor.load_models():
-        raise RuntimeError(f"Failed to load models from {model_path}")
-
-    calc_defs = extractor.extract_calculation_definitions()
-    calc_usages, _report = extract_calculation_usages(extractor.model, calc_defs=calc_defs)
-
-    hierarchy_data, scoped_agg_data, chain_aliases = _extract_hierarchy_and_rewrite_bindings(
-        extractor.model, calc_usages
-    )
-
-    design_attrs = extract_design_attributes(extractor.model)
-
-    computed_attrs, expose_aliases = _extract_and_filter_computed_attributes(
-        extractor.model, calc_usages, design_attrs
-    )
-
-    all_aliases = chain_aliases + expose_aliases
-
-    return serialize_extraction_snapshot(
-        model_name=model_name,
-        calc_defs=calc_defs,
-        calc_usages=calc_usages,
-        design_attributes=design_attrs,
-        hierarchy_data=hierarchy_data,
-        aggregation_expressions=scoped_agg_data,
-        computed_attributes=computed_attrs,
-        channel_aliases=all_aliases,
-        # Extraction-only never builds a pipeline, so lowering never runs (Item
-        # 8, INV-1): the facts are extracted honestly, the mode is the
-        # grandfather value, and the occurrence table is empty.
-        constraint_facts=extract_constraint_facts(extractor.model),
-        part_occurrences={},
-        constraint_lowering_mode=CONSTRAINT_LOWERING_MODE_GRANDFATHERED_OFF,
-        model_paths=[model_path],
-        compilation_results={},  # extraction-only: no graph, no compilation
-        output_dir=model_path,
-    )
+    def expected_record(self) -> dict[str, object]:
+        record: dict[str, object] = {
+            "id": self.id,
+            "fixture": self.fixture,
+            "required": self.outcome,
+            "actual": self.outcome,
+            "diagnostics": dict(self.diagnostics),
+            "classification": self.classification,
+            "artifact": None,
+        }
+        if self.outcome == "v6":
+            record["artifact"] = f"snapshots/{self.id}-{self.fixture}.json"
+            record["route_equality"] = True
+        if self.outcome == "control":
+            record["exception"] = "CodeGenerationError"
+        return record
 
 
-def _report(model_path: Path, snapshot: dict) -> None:
-    """Print a one-model capture summary."""
-    output_path = model_path / "extraction_snapshot.json"
-    n_calc_defs = len(snapshot["calc_defs"])
-    n_calc_usages = len(snapshot["calc_usages"])
-    n_bindings = sum(len(cu["bindings"]) for cu in snapshot["calc_usages"])
-    n_design_attrs = sum(len(v) for v in snapshot["design_attributes"].values())
-    n_redefs = len(snapshot["hierarchy_data"]["redefinitions"])
-    n_agg = len(snapshot["aggregation_expressions"])
-    n_computed = len(snapshot["computed_attributes"])
-    n_aliases = len(snapshot["channel_aliases"])
-
-    print(
-        f"  -> {output_path.relative_to(FIXTURES_DIR)}\n"
-        f"     {n_calc_defs} calc_defs, {n_calc_usages} calc_usages, "
-        f"{n_bindings} bindings, {n_design_attrs} design_attrs\n"
-        f"     {n_redefs} redefinitions, {n_agg} scoped_agg, "
-        f"{n_computed} computed_attrs, {n_aliases} channel_aliases"
-    )
-
-
-def main(requested: str | None = None) -> None:
-    # `--fixtures` restricts the run; unknown names fail loud before any capture.
-    selected = select_fixtures(list(MODELS) + list(EXTRACTION_ONLY_MODELS), requested)
-
-    # Full-pipeline models go through the promoted, supported capture path so
-    # there is no second copy of the capture logic (INV-3 spirit).
-    for model_name, model_path in MODELS.items():
-        if model_name not in selected:
-            continue
-        print(f"Processing {model_name} from {model_path}...")
-        out = capture_snapshot(
-            [model_path],
-            model_path / "extraction_snapshot.json",
+def load_approved_manifest(census_path: Path = CENSUS) -> tuple[ManifestRow, ...]:
+    """Parse the approved B37 table without discovering any fixture."""
+    rows: list[ManifestRow] = []
+    for identifier, fixture, required, governing in _ROW.findall(census_path.read_text()):
+        if required.startswith("V6"):
+            outcome = "v6"
+        elif "CodeGenerationError" in required:
+            outcome = "control"
+        else:
+            outcome = "refusal"
+        diagnostics = tuple(
+            sorted((code, int(count or "1")) for count, code in _DIAGNOSTIC.findall(required))
         )
-        _report(model_path, json.loads(out.read_text()))
+        classification = (
+            "expected-fix" if "expected-fix" in governing else "expected-collapse"
+        )
+        rows.append(
+            ManifestRow(
+                id=identifier,
+                fixture=fixture,
+                outcome=outcome,
+                diagnostics=diagnostics,
+                classification=classification,
+                required=required,
+                governing_contract=governing,
+            )
+        )
+    expected_ids = [f"B37-{index:02d}" for index in range(1, 38)]
+    if [row.id for row in rows] != expected_ids:
+        raise ValueError("approved census must contain B37-01 through B37-37 exactly once")
+    if len({row.fixture for row in rows}) != 37:
+        raise ValueError("approved census must contain exactly 37 unique fixture paths")
+    return tuple(rows)
 
-    # Extraction-only fixtures cannot build the full pipeline; capture directly
-    # and write the summary here.
-    for model_name, model_path in EXTRACTION_ONLY_MODELS.items():
-        if model_name not in selected:
-            continue
-        print(f"Processing {model_name} (extraction-only) from {model_path}...")
-        snapshot = _capture_extraction_only(model_name, model_path)
-        (model_path / "extraction_snapshot.json").write_text(snapshot_to_json(snapshot))
-        _report(model_path, snapshot)
 
-    print(f"\nDone. Snapshots saved to {FIXTURES_DIR}/*/extraction_snapshot.json")
+def validate_candidate_record(
+    candidate: dict[str, object],
+    manifest: tuple[ManifestRow, ...],
+) -> None:
+    """Fail closed on count, outcome, artifact, diagnostic, and classification drift."""
+    rows = candidate.get("rows")
+    if not isinstance(rows, list) or len(rows) != 37:
+        raise ValueError("candidate must contain exactly 37 rows")
+    expected = {row.id: row for row in manifest}
+    actual_ids = [row.get("id") for row in rows if isinstance(row, dict)]
+    if actual_ids != [row.id for row in manifest]:
+        raise ValueError("candidate row IDs/order disagree with the approved manifest")
+
+    computed = Counter()
+    for actual in rows:
+        if not isinstance(actual, dict):
+            raise ValueError("candidate rows must be JSON objects")
+        approved = expected[str(actual["id"])]
+        if actual.get("fixture") != approved.fixture:
+            raise ValueError(f"{approved.id} fixture path changed")
+        if actual.get("actual") != approved.outcome:
+            raise ValueError(f"{approved.id} outcome is unexpected")
+        computed[approved.outcome] += 1
+        artifact = actual.get("artifact")
+        if approved.outcome == "v6":
+            if not isinstance(artifact, str) or not artifact:
+                raise ValueError(f"{approved.id} is missing its v6 artifact")
+            if actual.get("route_equality") is not True:
+                raise ValueError(f"{approved.id} route digests disagree")
+        elif artifact is not None:
+            raise ValueError(f"{approved.id} has an unexpected artifact")
+        if dict(approved.diagnostics) != actual.get("diagnostics", {}):
+            raise ValueError(f"{approved.id} diagnostic multiset changed")
+        if actual.get("classification") != approved.classification:
+            raise ValueError(f"{approved.id} semantic classification changed")
+        if approved.outcome == "control" and actual.get("exception") != "CodeGenerationError":
+            raise ValueError(f"{approved.id} control did not raise CodeGenerationError")
+
+    required_counts = {"v6": 14, "refusal": 22, "control": 1}
+    if dict(candidate.get("counts", {})) != required_counts or dict(computed) != required_counts:
+        raise ValueError("candidate outcome counts are not 14 v6 / 22 refusal / 1 control")
+    semantic_diffs = candidate.get("semantic_diffs")
+    if not isinstance(semantic_diffs, dict) or semantic_diffs.get("unclassified") != []:
+        raise ValueError("candidate contains an unclassified semantic diff")
+    if semantic_diffs.get("classified") != [row.id for row in manifest]:
+        raise ValueError("candidate does not classify all 37 semantic outcomes")
+    if candidate.get("v5_artifacts") != []:
+        raise ValueError("candidate contains a v5 artifact")
+
+
+def _sha256(payload: bytes) -> str:
+    return hashlib.sha256(payload).hexdigest()
+
+
+def _file_sha256(path: Path) -> str:
+    return _sha256(path.read_bytes())
+
+
+def _git(repo: Path, *args: str) -> str:
+    return subprocess.run(
+        ["git", *args],
+        cwd=repo,
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout.strip()
+
+
+def _status(repo: Path) -> dict[str, object]:
+    raw = subprocess.run(
+        ["git", "status", "--porcelain=v1", "--untracked-files=all"],
+        cwd=repo,
+        check=True,
+        capture_output=True,
+    ).stdout
+    return {
+        "entries": len(raw.decode().splitlines()),
+        "sha256": _sha256(raw),
+    }
+
+
+def _environment() -> dict[str, object]:
+    teax_status = _git(TEAX_ROOT, "status", "--porcelain=v1", "--untracked-files=all")
+    teax_head = _git(TEAX_ROOT, "rev-parse", "HEAD")
+    if teax_head != TEAX_HEAD or teax_status:
+        raise RuntimeError("the pinned TEAx checkout is not clean at the approved revision")
+    memory_kib = 0
+    for line in Path("/proc/meminfo").read_text().splitlines():
+        if line.startswith("MemTotal:"):
+            memory_kib = int(line.split()[1])
+            break
+    return {
+        "captured_at": datetime.now(UTC).isoformat().replace("+00:00", "Z"),
+        "platform": platform.platform(),
+        "kernel": platform.release(),
+        "machine": platform.machine(),
+        "processor": platform.processor(),
+        "memory_kib": memory_kib,
+        "python": sys.version,
+        "python_executable": sys.executable,
+        "uv": subprocess.run(
+            ["uv", "--version"], check=True, capture_output=True, text=True
+        ).stdout.strip(),
+        "syside_version": syside.__version__,
+        "syside_license_present": bool(os.environ.get("SYSIDE_LICENSE_KEY")),
+        "sysml_codegen_version": sysml_codegen.__version__,
+        "agentic_mbse_version": agentic_mbse.__version__,
+        "repositories": {
+            "codegen": {
+                "head": _git(ROOT, "rev-parse", "HEAD"),
+                "status": _status(ROOT),
+                "lock_sha256": _file_sha256(ROOT / "uv.lock"),
+            },
+            "agentic": {
+                "head": _git(AGENTIC_ROOT, "rev-parse", "HEAD"),
+                "status": _status(AGENTIC_ROOT),
+                "lock_sha256": _file_sha256(AGENTIC_ROOT / "uv.lock"),
+            },
+            "teax": {
+                "head": teax_head,
+                "status": "clean",
+                "interpreter": str(TEAX_INTERPRETER),
+                "interpreter_sha256": _file_sha256(TEAX_INTERPRETER),
+                "lock_sha256": _file_sha256(TEAX_ROOT / "uv.lock"),
+            },
+        },
+        "candidate_id": "__PENDING_PHASE9__",
+    }
+
+
+def _write_json(path: Path, value: object) -> None:
+    payload = json.dumps(
+        value,
+        sort_keys=True,
+        indent=2,
+        ensure_ascii=True,
+        allow_nan=False,
+    ).encode() + b"\n"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    descriptor = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o444)
+    with os.fdopen(descriptor, "wb") as stream:
+        stream.write(payload)
+        stream.flush()
+        os.fsync(stream.fileno())
+
+
+def _projected_digest(graph: Any) -> str:
+    payload = graph.model_dump(mode="json")
+    payload["fallback_entry_points"] = sorted(graph.fallback_entry_points)
+    payload["constraint_catalog"] = (
+        graph.constraint_catalog.model_dump(mode="json")
+        if graph.constraint_catalog is not None
+        else None
+    )
+    return _sha256(
+        json.dumps(
+            {"projector_semantics": PROJECTOR_MARKER, "computation_graph": payload},
+            sort_keys=True,
+            separators=(",", ":"),
+            ensure_ascii=True,
+            allow_nan=False,
+        ).encode()
+    )
+
+
+def _graph_counts(graph: Any) -> dict[str, int]:
+    return {
+        "occurrences": len(graph.occurrences),
+        "attributes": len(graph.attrs),
+        "calculations": len(graph.calcs),
+        "constraints": len(graph.constraints),
+        "nodes": len(graph.attrs) + len(graph.calcs) + len(graph.constraints),
+        "edges": sum(node.alias_target is not None for node in graph.attrs.values())
+        + sum(len(node.inputs) for node in graph.calcs.values())
+        + sum(len(node.inputs) for node in graph.constraints.values()),
+    }
+
+
+def _normalized_envelope_digest(path: Path) -> str:
+    document = json.loads(path.read_bytes())
+    document["capture"]["captured_at"] = "__NORMALIZED_CAPTURE_TIME__"
+    document.pop("integrity")
+    return _sha256(canonical_json(document))
+
+
+def _failure(error: BaseException) -> dict[str, object]:
+    diagnostics: dict[str, int] = {}
+    if isinstance(error, ElaborationDiagnosticError):
+        diagnostics = dict(sorted(Counter(item.code.value for item in error.diagnostics).items()))
+    return {
+        "exception": type(error).__name__,
+        "message": str(error),
+        "diagnostics": diagnostics,
+    }
+
+
+def _actual_outcome(failure: dict[str, object]) -> str:
+    if failure["exception"] == "ElaborationDiagnosticError":
+        return "refusal"
+    if failure["exception"] == "CodeGenerationError":
+        return "control"
+    return "unexpected-error"
+
+
+def _run_row(row: ManifestRow, candidate_dir: Path) -> dict[str, object]:
+    fixture = FIXTURES / row.fixture
+    snapshot = candidate_dir / "snapshots" / f"{row.id}-{row.fixture}.json"
+    record: dict[str, object] = {
+        "id": row.id,
+        "fixture": row.fixture,
+        "required": row.outcome,
+        "classification": row.classification,
+        "governing_contract": row.governing_contract,
+        "artifact": None,
+    }
+
+    try:
+        live_context = build_pipeline_context([fixture])
+    except BaseException as live_error:
+        live_failure = _failure(live_error)
+        record["live"] = live_failure
+        try:
+            capture_snapshot([fixture], snapshot)
+        except BaseException as capture_error:
+            capture_failure = _failure(capture_error)
+            record["capture"] = capture_failure
+            record["actual"] = _actual_outcome(capture_failure)
+            record["diagnostics"] = capture_failure["diagnostics"]
+            record["exception"] = capture_failure["exception"]
+            record["no_artifact"] = not snapshot.exists()
+            record["live_capture_failure_equal"] = (
+                live_failure["exception"] == capture_failure["exception"]
+                and live_failure["diagnostics"] == capture_failure["diagnostics"]
+            )
+            return record
+        record["actual"] = "v6"
+        record["artifact"] = str(snapshot.relative_to(candidate_dir))
+        record["diagnostics"] = {}
+        record["unexpected_live_failure"] = live_failure
+        return record
+
+    try:
+        capture_snapshot([fixture], snapshot)
+    except BaseException as capture_error:
+        capture_failure = _failure(capture_error)
+        record["actual"] = _actual_outcome(capture_failure)
+        record["capture"] = capture_failure
+        record["diagnostics"] = capture_failure["diagnostics"]
+        record["exception"] = capture_failure["exception"]
+        record["no_artifact"] = not snapshot.exists()
+        record["unexpected_live_success"] = True
+        return record
+
+    snapshot.chmod(0o444)
+    moved = candidate_dir / "relocated" / snapshot.name
+    moved.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copyfile(snapshot, moved)
+    moved.chmod(0o444)
+
+    in_place_context = build_pipeline_context_from_snapshot(snapshot)
+    relocated_context = build_pipeline_context_from_snapshot(moved)
+    graph = load_snapshot(snapshot)
+    moved_graph = load_snapshot(moved)
+    document = json.loads(snapshot.read_bytes())
+    fingerprints = {
+        "capture": document["instance_graph"]["fingerprint"],
+        "in_place": document["instance_graph"]["fingerprint"],
+        "relocated": json.loads(moved.read_bytes())["instance_graph"]["fingerprint"],
+    }
+    digests = {
+        "live": _projected_digest(live_context.computation_graph),
+        "in_place": _projected_digest(in_place_context.computation_graph),
+        "relocated": _projected_digest(relocated_context.computation_graph),
+    }
+    record.update(
+        {
+            "actual": "v6",
+            "artifact": str(snapshot.relative_to(candidate_dir)),
+            "relocated_artifact": str(moved.relative_to(candidate_dir)),
+            "diagnostics": {},
+            "route_equality": len(set(fingerprints.values())) == 1
+            and len(set(digests.values())) == 1,
+            "fingerprints": fingerprints,
+            "projected_digests": digests,
+            "graph_counts": _graph_counts(graph),
+            "relocated_graph_counts": _graph_counts(moved_graph),
+            "envelope_bytes": snapshot.stat().st_size,
+            "envelope_sha256": _file_sha256(snapshot),
+            "normalized_envelope_sha256": _normalized_envelope_digest(snapshot),
+            "source_count": len(document["sources"]["files"]),
+        }
+    )
+    return record
+
+
+def run_candidate_batch(candidate_dir: Path = CANDIDATE_DIR) -> dict[str, object]:
+    """Run all and only the approved B37 rows under a fresh one-shot directory."""
+    candidate_dir.mkdir(mode=0o700)
+    manifest = load_approved_manifest()
+    start = {
+        "started_at": datetime.now(UTC).isoformat().replace("+00:00", "Z"),
+        "manifest_sha256": _file_sha256(CENSUS),
+        "rows": [row.id for row in manifest],
+        "one_shot": True,
+    }
+    _write_json(candidate_dir / "batch-start.json", start)
+    environment = _environment()
+    _write_json(candidate_dir / "environment.json", environment)
+    _write_json(
+        candidate_dir / "approved-manifest.json",
+        [
+            {
+                "id": row.id,
+                "fixture": row.fixture,
+                "outcome": row.outcome,
+                "diagnostics": dict(row.diagnostics),
+                "classification": row.classification,
+                "required": row.required,
+                "governing_contract": row.governing_contract,
+            }
+            for row in manifest
+        ],
+    )
+
+    rows = [_run_row(row, candidate_dir) for row in manifest]
+    counts = dict(Counter(str(row["actual"]) for row in rows))
+    classified = [
+        row["id"]
+        for row, approved in zip(rows, manifest, strict=True)
+        if row["actual"] == approved.outcome
+        and row.get("diagnostics", {}) == dict(approved.diagnostics)
+    ]
+    unclassified = [row["id"] for row in rows if row["id"] not in classified]
+    candidate: dict[str, object] = {
+        "schema": "elaborator-cutover-accepted-batch/v1",
+        "status": "pending-owner-acceptance",
+        "candidate_id": "__PENDING_PHASE9__",
+        "rows": rows,
+        "counts": counts,
+        "semantic_diffs": {
+            "classified": classified,
+            "unclassified": unclassified,
+        },
+        "v5_artifacts": [],
+        "environment": "environment.json",
+        "completed_at": datetime.now(UTC).isoformat().replace("+00:00", "Z"),
+    }
+    validation_error: str | None = None
+    try:
+        validate_candidate_record(candidate, manifest)
+    except ValueError as error:
+        validation_error = str(error)
+        candidate["batch_result"] = "failed"
+        candidate["validation_error"] = validation_error
+    else:
+        candidate["batch_result"] = "passed"
+
+    _write_json(candidate_dir / "normalized-diffs.json", candidate["semantic_diffs"])
+    _write_json(candidate_dir / "accepted-batch.json", candidate)
+    if validation_error is not None:
+        raise RuntimeError(validation_error)
+    return candidate
+
+
+def main() -> int:
+    try:
+        candidate = run_candidate_batch()
+    except (FileExistsError, RuntimeError, ValueError) as error:
+        print(f"candidate batch failed: {error}", file=sys.stderr)
+        return 1
+    print(
+        json.dumps(
+            {
+                "candidate_dir": str(CANDIDATE_DIR),
+                "counts": candidate["counts"],
+                "result": candidate["batch_result"],
+            },
+            sort_keys=True,
+        )
+    )
+    return 0
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument(
-        "--fixtures",
-        help="comma-separated fixture MODEL names to capture (default: all)",
-    )
-    args = parser.parse_args()
-    try:
-        main(args.fixtures)
-    except ValueError as exc:
-        print(f"error: {exc}", file=sys.stderr)
-        sys.exit(2)
+    raise SystemExit(main())

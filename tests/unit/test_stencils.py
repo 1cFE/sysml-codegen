@@ -330,7 +330,11 @@ def test_auto_impl_with_undeclared_intermediates():
     module = _make_pipeline_module(
         auto_impl_context=_make_multi_output_auto_impl_context(
             output_results=[
-                {"name": "temp", "expression": "(inputs.x + 1)", "is_undeclared_intermediate": True},
+                {
+                    "name": "temp",
+                    "expression": "(inputs.x + 1)",
+                    "is_undeclared_intermediate": True,
+                },
                 {"name": "result", "expression": "(temp * 2)"},
             ],
             has_crossrefs=False,
@@ -492,7 +496,11 @@ class TestAutoImplOutputCrossRefs:
             num_outputs=2,
             auto_impl_context=_make_multi_output_auto_impl_context(
                 output_results=[
-                    {"name": "temp", "expression": "(inputs.x + 1)", "is_undeclared_intermediate": True},
+                    {
+                        "name": "temp",
+                        "expression": "(inputs.x + 1)",
+                        "is_undeclared_intermediate": True,
+                    },
                     {"name": "out0", "expression": "(temp * 2)"},
                     {"name": "out1", "expression": "(out0 + 3)"},
                 ],
@@ -548,8 +556,6 @@ class TestSmartRegenStubUpgrade:
 
     def _run_smart_regen(self, tmp_path, existing_content, module):
         """Run _generate_stencils with smart_regen=True, return stencil path."""
-        from types import SimpleNamespace
-
         from sysml_codegen.cli import GenerationConfig, _generate_stencils
 
         output_path = tmp_path / "output"
@@ -572,16 +578,17 @@ class TestSmartRegenStubUpgrade:
             execution_order=[module.name],
         )
 
-        ctx = SimpleNamespace(computation_graph=graph)
-
         template_env = _get_template_env()
-        _generate_stencils(ctx, config, template_env)
+        _generate_stencils(graph, config, template_env)
 
         return stencil_path
 
     def test_stub_upgraded_when_fully_compilable(self, tmp_path):
         """Stub file + FULLY_COMPILABLE -> upgraded to auto-impl."""
-        stub = 'def run_testcalc(inputs: TestCalcInput) -> float:\n    raise NotImplementedError("TODO")\n'
+        stub = (
+            "def run_testcalc(inputs: TestCalcInput) -> float:\n"
+            '    raise NotImplementedError("TODO")\n'
+        )
         module = _make_pipeline_module(
             auto_impl_context=_make_auto_impl_context(),
             compilability=Compilability.FULLY_COMPILABLE,
@@ -621,7 +628,10 @@ class TestSmartRegenStubUpgrade:
 
     def test_stub_preserved_when_not_compilable(self, tmp_path):
         """Stub file + no auto_impl_context -> preserved."""
-        stub = 'def run_testcalc(inputs: TestCalcInput) -> float:\n    raise NotImplementedError("TODO")\n'
+        stub = (
+            "def run_testcalc(inputs: TestCalcInput) -> float:\n"
+            '    raise NotImplementedError("TODO")\n'
+        )
         module = _make_pipeline_module(
             auto_impl_context=None,
             compilability=Compilability.UNKNOWN,
@@ -637,7 +647,10 @@ class TestSmartRegenStubUpgrade:
         upgraded to auto-impl, and a backup preserving the PRE-regen (stub)
         content must exist in `handwritten/backup/` afterward. Writes only to
         `tmp_path`, never a committed baseline (no byte-identity risk)."""
-        stub = 'def run_testcalc(inputs: TestCalcInput) -> float:\n    raise NotImplementedError("TODO")\n'
+        stub = (
+            "def run_testcalc(inputs: TestCalcInput) -> float:\n"
+            '    raise NotImplementedError("TODO")\n'
+        )
         module = _make_pipeline_module(
             auto_impl_context=_make_auto_impl_context(),
             compilability=Compilability.FULLY_COMPILABLE,

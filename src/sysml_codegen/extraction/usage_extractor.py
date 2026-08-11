@@ -9,7 +9,6 @@ Key features:
 - Unbound parameter identification for entry point candidates
 """
 
-import copy
 import logging
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -360,268 +359,10 @@ def user_partdef_lookup(model: Any) -> dict[str, Any]:
     return lookup
 
 
-def _build_part_usage_index(model: Any) -> dict[str, list[Any]]:
-    """Build index mapping PartDef qualified names to their PartUsage elements.
-
-    Iterates all PartUsage elements. Keys each usage under **every user-model
-    PartDefinition it carries** — the set union of its owned FeatureTyping targets
-    and the user PartDefs in ``usage.types`` (both projected to ``__``-form QNs and
-    filtered to ``user_qn_set``, so library types like ``Part`` are excluded). This
-    is a superset of the old first-``.types`` key (REQ-EXT-13):
-
-    - A plain ``part x : Sub`` carries only ``Sub`` (B2-plain) → one key, identical to
-      before.
-    - A retyped ``part :>> driver : Sub`` carries both ``Sub`` (owned typing) and its
-      user supertype (present in ``.types``) → keyed under both, so the subtype's
-      template calcs and the preserved supertype flow both find an instantiation path.
-
-    The per-usage key set is a ``set``: the declared type is both an owned typing and
-    a ``.types`` member, so the union dedups it (INV-1).
-
-    Args:
-        model: Parsed SysIDE model.
-
-    Returns:
-        Dict mapping PartDef QN to list of PartUsage AST elements.
-    """
-    from collections import defaultdict
-
-    user_qn_set = set(user_partdef_lookup(model))
-    index: dict[str, list[Any]] = defaultdict(list)
-
-    for usage in SysideAdapter.elements_of_type(model, "PartUsage"):
-        key_qns: set[str] = set(user_partdef_types(usage, user_qn_set))
-        for target in owned_feature_typing_targets(usage):
-            target_qn = build_element_qualified_name(target)
-            if target_qn in user_qn_set:
-                key_qns.add(target_qn)
-        for part_def_qn in key_qns:
-            index[part_def_qn].append(usage)
-
-    return dict(index)
-
-
-def _find_instantiation_paths(
-    target_part_def_qn: str,
-    part_usage_index: dict[str, list[Any]],
-    _visited: set[str] | None = None,
-) -> list[str]:
-    """Find all design-relative qualified paths to PartUsages of a target PartDef.
-
-    Recursively resolves the instantiation chain from design root through
-    intermediate PartDefs to the target. Returns fully qualified paths using
-    the ``__`` separator per ADR-003.
-
-    Args:
-        target_part_def_qn: QN of the PartDef to find instantiation paths for.
-        part_usage_index: Prebuilt index from :func:`_build_part_usage_index`.
-        _visited: Recursion guard set (internal).
-
-    Returns:
-        List of design-relative qualified name prefixes (deduplicated).
-    """
-    if _visited is None:
-        _visited = set()
-
-    if target_part_def_qn in _visited:
-        return []
-    _visited = _visited | {target_part_def_qn}
-
-    usages = part_usage_index.get(target_part_def_qn, [])
-    if not usages:
-        return []
-
-    seen_paths: set[str] = set()
-    result: list[str] = []
-
-    for usage in usages:
-        owning_type = getattr(usage, "owning_type", None)
-        if owning_type is not None and SysideAdapter.is_instance(
-            owning_type, "PartDefinition"
-        ):
-            # PartUsage inside another PartDef → recurse
-            parent_def_qn = build_element_qualified_name(owning_type)
-            parent_paths = _find_instantiation_paths(
-                parent_def_qn, part_usage_index, _visited
-            )
-            usage_name = sanitize_name(getattr(usage, "name", ""))
-            for parent_path in parent_paths:
-                path = f"{parent_path}__{usage_name}"
-                if path not in seen_paths:
-                    seen_paths.add(path)
-                    result.append(path)
-        else:
-            # Terminal node: owned by Package, PartUsage, or other non-PartDef
-            path = build_element_qualified_name(usage)
-            if path and path not in seen_paths:
-                seen_paths.add(path)
-                result.append(path)
-
-    return result
-
-
-def _create_virtual_calc_usage(
-    template: CalcUsageData,
-    instantiation_path: str,
-) -> CalcUsageData:
-    """Create a virtual CalcUsage for a specific instantiation path.
-
-    Args:
-        template: The template CalcUsageData from the PartDefinition.
-        instantiation_path: Full design-relative path to the PartUsage.
-
-    Returns:
-        New CalcUsageData with design-relative qualified name and
-        bindings copied from the template.
-    """
-    calc_name = sanitize_name(template.instance_name)
-    qualified_name = f"{instantiation_path}__{calc_name}"
-
-    # Build dot-separated parent_part_path from the instantiation path
-    path_segments = instantiation_path.split("__")
-    part_segments = path_segments[1:] if len(path_segments) > 1 else path_segments
-    parent_part_path = ".".join(part_segments)
-
-    return CalcUsageData(
-        instance_name=qualified_name,
-        calc_def_name=template.calc_def_name,
-        calc_def_qualified_name=template.calc_def_qualified_name,
-        module_type=template.module_type,
-        # Shallow-copy each BindingInfo so sibling instances never share a binding
-        # object (REQ-VBR-08 / D2). The rewrite reassigns only scalar fields, so a
-        # shallow copy gives each instance independent scalars while the read-only
-        # AST-node references stay shared (copy.deepcopy would recurse into the
-        # SysIDE parse subgraph — slow and possibly cyclic).
-        bindings=[copy.copy(b) for b in template.bindings],
-        unbound_params=list(template.unbound_params),
-        source_file=template.source_file,
-        source_line=template.source_line,
-        parent_part_path=parent_part_path,
-        qualified_name=qualified_name,
-        is_template=False,
-        owning_part_def_qn=template.owning_part_def_qn,
-        raw_element=template.raw_element,
-    )
-
-
-def _expand_template_calc_usages(
-    model: Any,
-    calc_usages: list[CalcUsageData],
-    warnings: list[str],
-) -> list[CalcUsageData]:
-    """Replace template CalcUsages with virtual per-instance CalcUsages.
-
-    Args:
-        model: Parsed SysIDE model.
-        calc_usages: Extracted CalcUsages (may include templates).
-        warnings: List to append warnings to.
-
-    Returns:
-        Expanded list: concrete CalcUsages unchanged, templates replaced
-        by virtual instances (one per PartUsage instantiation).
-    """
-    index = _build_part_usage_index(model)
-    # Lookup for the collision tiebreak's most-specific-owner comparison (FIX 3).
-    lookup = user_partdef_lookup(model)
-
-    concrete: list[CalcUsageData] = []
-    templates: list[CalcUsageData] = []
-    for usage in calc_usages:
-        if usage.is_template:
-            templates.append(usage)
-        else:
-            concrete.append(usage)
-
-    if templates:
-        template_count = len(templates)
-        logger.info(
-            "Template detection: %d templates, %d concrete CalcUsages",
-            template_count,
-            len(concrete),
-        )
-
-    virtual_usages: list[CalcUsageData] = []
-    # Virtual QN -> the winning virtual stored under it. A dict (not a set) so a
-    # second template resolving to the same QN can be compared, not blindly dropped.
-    seen_qns: dict[str, CalcUsageData] = {}
-    # Collision classes already warned, keyed (owner_a, owner_b, calc_name), so a
-    # usage instantiated N times warns once, not N times (V9 dedup).
-    collisions_warned: set[tuple[str, str, str]] = set()
-
-    for template in templates:
-        owner_qn = template.owning_part_def_qn
-        if not owner_qn:
-            msg = (
-                f"Template CalcUsage '{template.instance_name}' "
-                f"has is_template=True but no owning_part_def_qn — skipped"
-            )
-            logger.warning(msg)
-            warnings.append(msg)
-            continue
-        paths = _find_instantiation_paths(owner_qn, index)
-        if not paths:
-            msg = (
-                f"Template CalcUsage '{template.instance_name}' "
-                f"(PartDef '{owner_qn}') has no "
-                f"PartUsage instantiations — dropped"
-            )
-            logger.warning(msg)
-            warnings.append(msg)
-            continue
-
-        for path in paths:
-            virtual = _create_virtual_calc_usage(template, path)
-            existing = seen_qns.get(virtual.qualified_name)
-            if existing is None:
-                seen_qns[virtual.qualified_name] = virtual
-                virtual_usages.append(virtual)
-                continue
-
-            existing_owner = existing.owning_part_def_qn
-            assert existing_owner is not None  # virtuals always carry their owner
-            if existing_owner == owner_qn:
-                # Same owner arriving via another instantiation path — idempotent.
-                continue
-
-            # Genuine collision: two different owners resolve to the same virtual QN
-            # (same instantiation path + same calc instance name). Keep the
-            # most-specific owner; emit V9 once per collision class.
-            winner_qn, _incomparable = most_specific([existing_owner, owner_qn], lookup)
-            if winner_qn == owner_qn:
-                for i, stored in enumerate(virtual_usages):
-                    if stored is existing:
-                        virtual_usages[i] = virtual
-                        break
-                seen_qns[virtual.qualified_name] = virtual
-
-            owner_a, owner_b = sorted([existing_owner, owner_qn])
-            calc_name = sanitize_name(template.instance_name)
-            dedup_key = (owner_a, owner_b, calc_name)
-            if dedup_key not in collisions_warned:
-                collisions_warned.add(dedup_key)
-                msg = (
-                    f"Template collision on '{virtual.qualified_name}': owners "
-                    f"'{owner_a}' and '{owner_b}' both define calc '{calc_name}'; "
-                    f"kept most-specific owner '{winner_qn}'."
-                )
-                logger.warning(msg)
-                warnings.append(msg)
-
-    if virtual_usages:
-        logger.info(
-            "Template expansion: %d templates → %d virtual instances",
-            len(templates),
-            len(virtual_usages),
-        )
-
-    return concrete + virtual_usages
-
-
 def extract_calculation_usages(
     model: Any,
     known_calc_defs: set[str] | None = None,
     calc_defs: list | None = None,
-    expand_templates: bool = True,
 ) -> tuple[list[CalcUsageData], ExtractionReport]:
     """Extract all calculation usages from a SysML model.
 
@@ -629,8 +370,6 @@ def extract_calculation_usages(
         model: Parsed SysIDE model
         known_calc_defs: Set of known calc def names for validation (optional)
         calc_defs: List of CalculationDefinitionData for detecting algorithm params
-        expand_templates: If True, replace template CalcUsages (owned by PartDefs)
-            with virtual per-instance CalcUsages. Default True.
 
     Returns:
         Tuple of (list of CalcUsageData, ExtractionReport with statistics)
@@ -646,9 +385,6 @@ def extract_calculation_usages(
         usage_data = _extract_single_usage(elem, known_calc_defs, warnings, calc_def_map)
         if usage_data:
             usages.append(usage_data)
-
-    if expand_templates:
-        usages = _expand_template_calc_usages(model, usages, warnings)
 
     report = ExtractionReport(
         total_usages=len(usages),
@@ -1004,5 +740,4 @@ def _get_parent_part_path(elem: Any) -> str:
         current = owner
 
     return ".".join(parts)
-
 

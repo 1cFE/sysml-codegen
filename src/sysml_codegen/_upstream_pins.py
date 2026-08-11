@@ -1,10 +1,8 @@
 """The exact agentic-mbse schema and profile versions this repo is written against.
 
-Three version strings used to be hand-copied literals scattered across the
-downstream repo — two `RuntimeError` guards in `snapshot/loader.py` and one in
-`analysis/constraint_lowering.py`. Each guard is real and load-bearing, but a
-literal buried in the module it guards is a literal a coordinated bump can slip
-past: nothing points at it, so nothing tells you the set is incomplete.
+The three version strings are coordinated with the upstream facts, profile, and
+expression IR. Keeping them together makes an incomplete coordinated bump fail
+at one explicit boundary.
 
 They live here instead, in one place a reviewer can read in full, and
 `tests/conformance/test_upstream_pins.py` compares every entry against the value

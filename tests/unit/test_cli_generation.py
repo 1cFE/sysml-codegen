@@ -2,7 +2,6 @@
 
 import os
 from pathlib import Path
-from types import SimpleNamespace
 
 import pytest
 from agentic_mbse.sysml.constraint_facts import ConstraintFacts
@@ -42,8 +41,23 @@ from sysml_codegen.resolution.models import (
     PipelineModule,
 )
 
-REPO_ROOT = Path(__file__).resolve().parents[2]
-CHAIN_SNAPSHOT = REPO_ROOT / "tests/fixtures/chain_spike_model/extraction_snapshot.json"
+
+class _FakeLease:
+    def __init__(self, graph: ComputationGraph) -> None:
+        self.computation_graph = graph
+        self.seal_verifications = 0
+
+    def verify_before_seal(self) -> None:
+        self.seal_verifications += 1
+
+
+class _FakeContext:
+    def __init__(self, graph: ComputationGraph) -> None:
+        self.computation_graph = graph
+        self.lease = _FakeLease(graph)
+
+    def _verified_projection_lease(self) -> _FakeLease:
+        return self.lease
 
 
 class TestEnsurePackageInitFiles:
@@ -169,7 +183,7 @@ def _colliding_context():
     graph = ComputationGraph(
         modules=[], entry_point_groups=[], execution_order=[], constraint_catalog=catalog
     )
-    return SimpleNamespace(calc_defs=[], computation_graph=graph)
+    return _FakeContext(graph)
 
 
 def _complete_tree_manifest(root: Path):
@@ -254,15 +268,14 @@ def _unsafe_name_context(name: str = "value"):
         execution_order=["c1"],
         constraint_catalog=catalog,
     )
-    return SimpleNamespace(calc_defs=[], computation_graph=graph)
+    return _FakeContext(graph)
 
 
 def _missing_catalog_context():
     context = _unsafe_name_context("safe_name")
-    context.computation_graph = context.computation_graph.model_copy(
-        update={"constraint_catalog": None}
+    return _FakeContext(
+        context.computation_graph.model_copy(update={"constraint_catalog": None})
     )
-    return context
 
 
 GRAPH_AWARE_WRITERS = (
@@ -290,13 +303,22 @@ def test_unsafe_graph_rejected_before_writer_io(writer, initial_tree, tmp_path):
     ctx = _unsafe_name_context()
     template_env = _get_template_env()
     if writer in (_generate_backlog, _seal_package):
-        args = (ctx, config)
+        args = (
+            (ctx.computation_graph, config, ctx.lease)
+            if writer is _seal_package
+            else (ctx.computation_graph, config)
+        )
     elif writer is _generate_modules:
         from sysml_codegen.generation.constraint_plan import ConstraintGenerationPlan
 
-        args = (ctx, config, template_env, ConstraintGenerationPlan({}, None, {}))
+        args = (
+            ctx.computation_graph,
+            config,
+            template_env,
+            ConstraintGenerationPlan({}, None, {}),
+        )
     else:
-        args = (ctx, config, template_env)
+        args = (ctx.computation_graph, config, template_env)
     with pytest.raises(CodeGenerationError) as error:
         writer(*args)
     assert error.value.name_safety_violation is not None
@@ -316,13 +338,22 @@ def test_missing_catalog_rejected_before_writer_io(writer, initial_tree, tmp_pat
     ctx = _missing_catalog_context()
     template_env = _get_template_env()
     if writer in (_generate_backlog, _seal_package):
-        args = (ctx, config)
+        args = (
+            (ctx.computation_graph, config, ctx.lease)
+            if writer is _seal_package
+            else (ctx.computation_graph, config)
+        )
     elif writer is _generate_modules:
         from sysml_codegen.generation.constraint_plan import ConstraintGenerationPlan
 
-        args = (ctx, config, template_env, ConstraintGenerationPlan({}, None, {}))
+        args = (
+            ctx.computation_graph,
+            config,
+            template_env,
+            ConstraintGenerationPlan({}, None, {}),
+        )
     else:
-        args = (ctx, config, template_env)
+        args = (ctx.computation_graph, config, template_env)
     with pytest.raises(CodeGenerationError) as error:
         writer(*args)
     assert error.value.name_safety_violation is not None
@@ -439,7 +470,7 @@ def test_generation_rejects_symlink_root_before_output_mutation(tmp_path, monkey
     monkeypatch.setattr("sysml_codegen.cli._clear_output_directory", record_clear)
     config = GenerationConfig(
         output_path=output,
-        from_snapshot=CHAIN_SNAPSHOT,
+        models_path=tmp_path,
         package_name="chain_spike",
         overwrite=True,
     )

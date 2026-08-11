@@ -18,11 +18,8 @@ from __future__ import annotations
 
 import pytest
 
-from sysml_codegen.elaboration import (
-    InstanceGraph,
-    elaborate,
-)
-from sysml_codegen.extraction.extractor import SysMLDataExtractor
+from sysml_codegen.orchestration.pipeline_builder import build_pipeline_context
+from sysml_codegen.snapshot.instance_graph import decode_instance_graph
 from tests.conftest import FIXTURES_DIR, requires_license
 from tests.helpers.elaboration_graph import attr, calc, node_ref, producer_ref
 
@@ -33,20 +30,13 @@ MIXED = "source_identity_mixed_consumers"
 
 @pytest.fixture(scope="module")
 def graph_cache():
-    cache: dict[str, InstanceGraph] = {}
+    cache = {}
 
-    def get(name: str, *, strict: bool = True) -> InstanceGraph:
-        key = f"{name}:{strict}"
-        if key not in cache:
-            extractor = SysMLDataExtractor([FIXTURES_DIR / name])
-            assert extractor.load_models(), f"fixture {name} failed to load"
-            cache[key] = elaborate(
-                extractor.model,
-                extractor.extract_calculation_definitions(),
-                validation_diagnostics=extractor.diagnostics.validation,
-                strict=strict,
-            )
-        return cache[key]
+    def get(name: str):
+        if name not in cache:
+            context = build_pipeline_context([FIXTURES_DIR / name])
+            cache[name] = decode_instance_graph(context._instance_bytes)
+        return cache[name]
 
     return get
 
@@ -101,44 +91,11 @@ def test_aggregation_chain_to_producer_output(graph_cache) -> None:
     }
 
 
-def test_crosspart_rollup_keeps_per_child_channels_distinct(graph_cache) -> None:
-    """The Item-10 collapse family (crosspart_rollup_twolevel): the rollup's
-    two terms follow each child's OWN ``:>> capital = cost_calc.cost`` alias —
-    distinct producers, a qualifier-drop collapse cannot occur."""
-    graph = graph_cache("crosspart_rollup_twolevel", strict=False)
-    plant = "CrossPartRollupDesign__rollup_plant"
-    node = calc(graph, f"{plant}__grand_total")
-    assert node.is_computed
-    assert set(node.inputs.values()) == {
-        producer_ref(graph, f"{plant}__a__cost_calc", "cost"),
-        producer_ref(graph, f"{plant}__b__cost_calc", "cost"),
-    }
-    consumer = calc(graph, f"{plant}__final")
-    assert consumer.input_by_name("t") == producer_ref(
-        graph, f"{plant}__grand_total", "grand_total"
-    )
-
-
-def test_local_term_and_per_instance_producers_mix(graph_cache) -> None:
-    """agg_localterm_probe: ``sum(cell.capital_cost) * markup`` — three
-    per-instance producer edges (each through the cell's chain redefinition)
-    plus the plain local attribute node."""
-    graph = graph_cache("agg_localterm_probe", strict=False)
-    bank = "AggLocalTermProbe__the_bank"
-    node = calc(graph, f"{bank}__capital_cost")
-    expected = {producer_ref(graph, f"{bank}__cell[{i}]__cost_model", "cost") for i in range(3)}
-    expected.add(node_ref(graph, f"{bank}__markup"))
-    assert set(node.inputs.values()) == expected
-
-
 def test_modeled_finite_multiplicity_expands_the_aggregation() -> None:
     """``cell[count]`` has four occurrences when ``count`` is modeled as 4."""
-    extractor = SysMLDataExtractor([FIXTURES_DIR / "d38_caret"])
-    assert extractor.load_models()
-    graph = elaborate(
-        extractor.model,
-        extractor.extract_calculation_definitions(),
-        validation_diagnostics=extractor.diagnostics.validation,
+    context = build_pipeline_context([FIXTURES_DIR / "d38_caret"])
+    graph = decode_instance_graph(
+        context._instance_bytes
     )
 
     pack = "D38Design__plant__pack"

@@ -220,8 +220,8 @@ def extract_computed_attributes(
 
     Returns:
         Tuple of (computed_attributes, channel_aliases).
-        EXPOSE_PURE attrs appear in BOTH lists (CAD for graph builder compat,
-        ChannelAlias for OutputRegistry in Item 3).
+        EXPOSE_PURE attrs appear in both lists as extraction facts for the exact
+        projector.
     """
     # Build context
     sibling_attr_names: set[str] = set()

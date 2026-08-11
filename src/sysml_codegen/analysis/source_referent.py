@@ -3,11 +3,11 @@
 from __future__ import annotations
 
 import os
-import re
 from pathlib import Path
-from urllib.parse import quote, unquote_to_bytes
+from urllib.parse import quote
 
-_CANONICAL_PATTERN = re.compile(r"root-(0|[1-9][0-9]*)/(.+)")
+from sysml_codegen.snapshot.source_manifest import validate_source_referent
+
 _SEGMENT_SAFE = "-._~"
 
 
@@ -60,21 +60,5 @@ def map_live_source_referent(raw_file: str, model_paths: list[Path]) -> str:
 
 
 def validate_snapshot_source_referent(stored_file: str) -> str:
-    """Validate and return one already-canonical snapshot source referent."""
-    match = _CANONICAL_PATTERN.fullmatch(stored_file)
-    if match is None:
-        raise ValueError(f"invalid canonical source referent: {stored_file!r}")
-    payload = match.group(2)
-    segments = payload.split("/")
-    for encoded in segments:
-        if not encoded:
-            raise ValueError(f"invalid canonical source referent: {stored_file!r}")
-        try:
-            decoded = unquote_to_bytes(encoded).decode("utf-8")
-        except UnicodeDecodeError as error:
-            raise ValueError(f"invalid canonical source referent: {stored_file!r}") from error
-        if decoded in ("", ".", "..") or "/" in decoded or "\\" in decoded:
-            raise ValueError(f"invalid canonical source referent: {stored_file!r}")
-        if quote(decoded, safe=_SEGMENT_SAFE, encoding="utf-8") != encoded:
-            raise ValueError(f"invalid canonical source referent: {stored_file!r}")
-    return stored_file
+    """Compatibility import for legacy callers pending their Phase 7 deletion."""
+    return validate_source_referent(stored_file)

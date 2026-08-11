@@ -9,24 +9,19 @@ import pytest
 from sysml_codegen.elaboration import (
     GraphValidationError,
     ValueSite,
-    elaborate,
     project,
 )
-from sysml_codegen.extraction.extractor import SysMLDataExtractor
+from sysml_codegen.orchestration.pipeline_builder import build_pipeline_context
 from sysml_codegen.resolution.models import EntryPointType, ModuleKind
+from sysml_codegen.snapshot.instance_graph import decode_instance_graph
 from tests.conftest import FIXTURES_DIR, requires_license
 
 pytestmark = requires_license
 
 
 def _graph(fixture: str):
-    extractor = SysMLDataExtractor([FIXTURES_DIR / fixture])
-    assert extractor.load_models()
-    return elaborate(
-        extractor.model,
-        extractor.extract_calculation_definitions(),
-        validation_diagnostics=extractor.diagnostics.validation,
-    )
+    context = build_pipeline_context([FIXTURES_DIR / fixture])
+    return decode_instance_graph(context._instance_bytes)
 
 
 def test_occurrence_records_are_total_and_computed_ir_stays_typed() -> None:
@@ -108,13 +103,8 @@ def test_constraint_port_type_comes_from_exact_feature_typing(tmp_path) -> None:
 }
 """
     )
-    extractor = SysMLDataExtractor([tmp_path])
-    assert extractor.load_models()
-    graph = elaborate(
-        extractor.model,
-        extractor.extract_calculation_definitions(),
-        validation_diagnostics=extractor.diagnostics.validation,
-    )
+    context = build_pipeline_context([tmp_path])
+    graph = decode_instance_graph(context._instance_bytes)
     [constraint] = graph.constraints.values()
 
     assert {metadata.python_type for metadata in constraint.input_metadata.values()} == {

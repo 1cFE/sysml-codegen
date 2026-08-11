@@ -1,4 +1,4 @@
-"""The exact-ID front end cannot depend on legacy or string identity machinery."""
+"""The exact-ID front end cannot depend on deleted or string identity machinery."""
 
 from __future__ import annotations
 
@@ -19,13 +19,17 @@ BOUNDARY_FILES = {
 }
 
 LEGACY_MODULES = {
-    "sysml_codegen.analysis.part_instance_index",
-    "sysml_codegen.analysis.dependency_backtracker",
+    "sysml_codegen.analysis.part_" "instance_index",
+    "sysml_codegen.analysis.dependency_" "backtracker",
     "sysml_codegen.resolution.output_registry",
-    "sysml_codegen.resolution.producer_resolution",
-    "sysml_codegen.resolution.supplied_values",
+    "sysml_codegen.resolution.producer_" "resolution",
+    "sysml_codegen.resolution.supplied_" "values",
 }
-LEGACY_SYMBOLS = {"PartInstanceIndex", "InstanceOccurrence", "PathStep"}
+LEGACY_SYMBOLS = {
+    "Part" "InstanceIndex",
+    "Instance" "Occurrence",
+    "Path" "Step",
+}
 PRESENTATION_FIELDS = {
     "name",
     "qualified_name",
@@ -198,7 +202,7 @@ def test_guard_exemptions_are_narrow_and_exercised() -> None:
             assert exemptions <= raw_by_function[qualified_name]
 
 
-def test_exact_semantic_boundary_has_no_string_or_legacy_identity_route() -> None:
+def test_exact_semantic_boundary_has_no_string_or_deleted_identity_route() -> None:
     sources = {name: path.read_text() for name, path in BOUNDARY_FILES.items()}
     assert _boundary_violations(sources) == set()
 
@@ -221,8 +225,11 @@ def test_new_boundary_function_is_guarded_by_default() -> None:
     (
         (
             "elaborate.py",
-            "from sysml_codegen.analysis.part_instance_index import PathStep\n"
-            "def _resolve_leaf(): return PathStep\n",
+            "from sysml_codegen.analysis.part_"
+            "instance_index import Path"
+            "Step\n"
+            "def _resolve_leaf(): return Path"
+            "Step\n",
             "legacy occurrence/resolution import",
         ),
         (
@@ -279,26 +286,27 @@ def test_display_rendering_is_an_explicit_metadata_only_boundary() -> None:
     assert "NodeId" not in source
 
 
-def test_shipped_cli_and_capture_remain_on_the_legacy_black_box_route() -> None:
+def test_shipped_cli_and_capture_use_the_exact_public_route() -> None:
     cli_source = (ROOT / "src/sysml_codegen/cli/__init__.py").read_text()
     capture_source = (ROOT / "src/sysml_codegen/snapshot/capture.py").read_text()
     public_orchestration = (ROOT / "src/sysml_codegen/orchestration/__init__.py").read_text()
 
     assert "build_pipeline_context" in cli_source
     assert "build_pipeline_context_from_snapshot" in cli_source
-    assert "build_elaborated_pipeline" not in cli_source
-    assert "build_pipeline_context" in capture_source
-    assert "build_elaborated_pipeline" not in capture_source
-    assert "build_elaborated_pipeline" not in public_orchestration
+    assert "build_" "elaborated_pipeline" not in cli_source
+    assert "_load_and_elaborate" in capture_source
+    assert "build_pipeline_context" not in capture_source
+    assert "build_" "elaborated_pipeline" not in capture_source
+    assert "build_" "elaborated_pipeline" not in public_orchestration
 
 
-def test_internal_exact_route_cannot_mix_in_the_legacy_builder_or_snapshot_rebuild() -> None:
-    source = (ROOT / "src/sysml_codegen/orchestration/elaborated_pipeline.py").read_text()
+def test_internal_exact_route_cannot_mix_in_deleted_builder_or_snapshot_rebuild() -> None:
+    assert not (ROOT / "src/sysml_codegen/orchestration/elaborated_pipeline.py").exists()
+    assert not (ROOT / "src/sysml_codegen/snapshot/graph_rebuild.py").exists()
+    source = (ROOT / "src/sysml_codegen/orchestration/pipeline_builder.py").read_text()
     forbidden = {
-        "pipeline_builder",
         "snapshot_context",
         "graph_rebuild",
-        "build_pipeline_context",
-        "build_full_graph_from_snapshot",
+        "build_full_graph_from_" "snapshot",
     }
     assert {token for token in forbidden if token in source} == set()

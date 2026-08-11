@@ -1,7 +1,8 @@
-"""PIPELINE-TRUTH Item 3, SC-B: fusion-tea's real plant executes to run-C's lcoe.
+"""Fusion Tea's exact live route generates the preserved arithmetic controls.
 
-License-free acceptance proof. The vendored canonical fusion-tea models (committed v2
-snapshot, true-zero V11 offenders) generate a package that:
+The maintained Fusion Tea models generate through the public live builder. These focused tests use
+the historical local simkit runner only as an arithmetic oracle; Phase 8 separately owns real TEAx
+execution and route acceptance.
 
   * executes to the epic's headline lcoe (``270.1211779380445/MWh``) through the
     ``run_pipeline`` runner — anchor C, the full pipeline (``test_run_c_reproduces``);
@@ -27,7 +28,7 @@ import sys
 import pytest
 
 from sysml_codegen.cli import GenerationConfig, run_codegen
-from tests.conftest import snapshot_fixture
+from tests.conftest import FIXTURES_DIR, requires_license
 from tests.runtime.pipeline_runner import (
     _install_simkit_stub,
     _module_import_path,
@@ -37,10 +38,12 @@ from tests.runtime.pipeline_runner import (
 _LCOE_CHANNEL = "hif_plant_pkg__hif_plant__lcoe_calc__lcoe"
 _RUN_C_LCOE = 270.1211779380445
 
+pytestmark = requires_license
+
 # gain is emitted per-consumer (it is a plant DESIGN_ATTRIBUTE bound into each calc usage,
 # NOT a cross-part fan-out that collapses by source QN). So lcoe_calc reads its own key,
 # distinct from recirc_calc's. Perturbing only lcoe_calc's key moves lcoe alone.
-_GAIN_EP_KEY = "hif_plant_pkg__hif_plant__lcoe_calc__gain"
+_GAIN_EP_KEY = "hif_plant_pkg__hif_plant__gain"
 _GAIN_PERTURBED = 100.0
 
 # Hand-computed from ife_lcoe.sysml:53-125 with gain=100 and the emitted inputs, and the
@@ -83,7 +86,7 @@ _ANCHOR_B_F_RECIRC = 0.07222302470027446
 
 
 def _gen(tmp_path):
-    """Generate the fusion-tea package from the committed v2 snapshot (license-free).
+    """Generate a per-test package from the maintained exact live route.
 
     The package name is unique per test (derived from pytest's per-test tmp_path). The
     runner imports the package by its directory name; a shared name across tests would
@@ -92,7 +95,7 @@ def _gen(tmp_path):
     pkg_name = "ftacc_" + tmp_path.name.replace("-", "_").lower()
     cfg = GenerationConfig(
         output_path=tmp_path / pkg_name,
-        from_snapshot=snapshot_fixture("fusion_tea"),
+        models_path=FIXTURES_DIR / "fusion_tea",
         package_name=pkg_name,
         overwrite=True,
     )
@@ -129,7 +132,10 @@ def test_meier_driver_cost_module(tmp_path):
     """Anchor A (module-level): the Meier driver-cost calc's own arithmetic."""
     cls = _module_class(_gen(tmp_path), "hif_economics.Meier_HIF_Driver_CostModule")
     data = cls().run(
-        beam_energy_mj=5.0, driver_efficiency=0.35, num_chambers=1.0, rep_rate=3.5
+        beam_energy_mj_in=5.0,
+        driver_efficiency=0.35,
+        num_chambers_in=1.0,
+        rep_rate=3.5,
     ).data
     assert data.gamma == pytest.approx(_ANCHOR_A_GAMMA, rel=1e-6)
     assert data.cost_billions == pytest.approx(_ANCHOR_A_COST_BILLIONS, rel=1e-6)
@@ -139,6 +145,9 @@ def test_recirc_fraction_module(tmp_path):
     """Anchor B (module-level): the recirculating-power-fraction calc's own arithmetic."""
     cls = _module_class(_gen(tmp_path), "fusion_cycle.Recirculating_Power_FractionModule")
     data = cls().run(
-        eta=0.35, gain=80.0, blanket_multiplier=1.15, thermal_efficiency=0.43
+        eta=0.35,
+        gain_in=80.0,
+        blanket_multiplier=1.15,
+        thermal_efficiency_in=0.43,
     ).data
     assert data.root == pytest.approx(_ANCHOR_B_F_RECIRC, rel=1e-6)

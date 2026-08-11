@@ -1,0 +1,2198 @@
+{
+  "aggregations": {
+    "bank_cell_occurrence_ids": {
+      "source_identity_mixed_consumers__bank__cell[0]__cell_cost": "[[\"1bba2c55-0e70-597b-a76f-c5fdc9e28fa2\",null],[\"b55438b7-0fd8-571c-acee-75424e195907\",0]]",
+      "source_identity_mixed_consumers__bank__cell[1]__cell_cost": "[[\"1bba2c55-0e70-597b-a76f-c5fdc9e28fa2\",null],[\"b55438b7-0fd8-571c-acee-75424e195907\",1]]",
+      "source_identity_mixed_consumers__bank__cell[2]__cell_cost": "[[\"1bba2c55-0e70-597b-a76f-c5fdc9e28fa2\",null],[\"b55438b7-0fd8-571c-acee-75424e195907\",2]]"
+    },
+    "bank_total": {
+      "node_id": "[\"calculation\",[\"occurrence\",\"[[\\\"1bba2c55-0e70-597b-a76f-c5fdc9e28fa2\\\",null]]\"],[\"slot\",\"c9d49a57-36fe-5ac8-a662-a9d17de96311\"]]",
+      "term_edges": [
+        {
+          "port": {
+            "consumer_node_id": "[\"calculation\",[\"occurrence\",\"[[\\\"1bba2c55-0e70-597b-a76f-c5fdc9e28fa2\\\",null]]\"],[\"slot\",\"c9d49a57-36fe-5ac8-a662-a9d17de96311\"]]",
+            "edge_ordinal": 0,
+            "kind": "expression",
+            "reference_ordinal": 0,
+            "referenced_declaration_id": "868c60f8-41fc-5470-ab26-1accc707f740",
+            "target_occurrence_id": "[[\"1bba2c55-0e70-597b-a76f-c5fdc9e28fa2\",null],[\"b55438b7-0fd8-571c-acee-75424e195907\",0]]"
+          },
+          "source": {
+            "kind": "node",
+            "node_id": "[\"attribute\",[\"occurrence\",\"[[\\\"1bba2c55-0e70-597b-a76f-c5fdc9e28fa2\\\",null],[\\\"b55438b7-0fd8-571c-acee-75424e195907\\\",0]]\"],[\"slot\",\"868c60f8-41fc-5470-ab26-1accc707f740\"]]"
+          }
+        },
+        {
+          "port": {
+            "consumer_node_id": "[\"calculation\",[\"occurrence\",\"[[\\\"1bba2c55-0e70-597b-a76f-c5fdc9e28fa2\\\",null]]\"],[\"slot\",\"c9d49a57-36fe-5ac8-a662-a9d17de96311\"]]",
+            "edge_ordinal": 1,
+            "kind": "expression",
+            "reference_ordinal": 0,
+            "referenced_declaration_id": "868c60f8-41fc-5470-ab26-1accc707f740",
+            "target_occurrence_id": "[[\"1bba2c55-0e70-597b-a76f-c5fdc9e28fa2\",null],[\"b55438b7-0fd8-571c-acee-75424e195907\",1]]"
+          },
+          "source": {
+            "kind": "node",
+            "node_id": "[\"attribute\",[\"occurrence\",\"[[\\\"1bba2c55-0e70-597b-a76f-c5fdc9e28fa2\\\",null],[\\\"b55438b7-0fd8-571c-acee-75424e195907\\\",1]]\"],[\"slot\",\"868c60f8-41fc-5470-ab26-1accc707f740\"]]"
+          }
+        },
+        {
+          "port": {
+            "consumer_node_id": "[\"calculation\",[\"occurrence\",\"[[\\\"1bba2c55-0e70-597b-a76f-c5fdc9e28fa2\\\",null]]\"],[\"slot\",\"c9d49a57-36fe-5ac8-a662-a9d17de96311\"]]",
+            "edge_ordinal": 2,
+            "kind": "expression",
+            "reference_ordinal": 0,
+            "referenced_declaration_id": "868c60f8-41fc-5470-ab26-1accc707f740",
+            "target_occurrence_id": "[[\"1bba2c55-0e70-597b-a76f-c5fdc9e28fa2\",null],[\"b55438b7-0fd8-571c-acee-75424e195907\",2]]"
+          },
+          "source": {
+            "kind": "node",
+            "node_id": "[\"attribute\",[\"occurrence\",\"[[\\\"1bba2c55-0e70-597b-a76f-c5fdc9e28fa2\\\",null],[\\\"b55438b7-0fd8-571c-acee-75424e195907\\\",2]]\"],[\"slot\",\"868c60f8-41fc-5470-ab26-1accc707f740\"]]"
+          }
+        }
+      ]
+    },
+    "d38_cell_occurrence_ids": {
+      "D38Design__plant__pack__cell[0]__base_cost": "[[\"6622e95c-3b83-533c-813f-134cd10d4db4\",null],[\"2a820161-9930-5b5e-9670-f6776b9686f5\",null],[\"5d5512fa-fb83-50bd-bd69-93ec689d59c2\",0]]",
+      "D38Design__plant__pack__cell[1]__base_cost": "[[\"6622e95c-3b83-533c-813f-134cd10d4db4\",null],[\"2a820161-9930-5b5e-9670-f6776b9686f5\",null],[\"5d5512fa-fb83-50bd-bd69-93ec689d59c2\",1]]",
+      "D38Design__plant__pack__cell[2]__base_cost": "[[\"6622e95c-3b83-533c-813f-134cd10d4db4\",null],[\"2a820161-9930-5b5e-9670-f6776b9686f5\",null],[\"5d5512fa-fb83-50bd-bd69-93ec689d59c2\",2]]",
+      "D38Design__plant__pack__cell[3]__base_cost": "[[\"6622e95c-3b83-533c-813f-134cd10d4db4\",null],[\"2a820161-9930-5b5e-9670-f6776b9686f5\",null],[\"5d5512fa-fb83-50bd-bd69-93ec689d59c2\",3]]"
+    },
+    "d38_total": {
+      "node_id": "[\"calculation\",[\"occurrence\",\"[[\\\"6622e95c-3b83-533c-813f-134cd10d4db4\\\",null],[\\\"2a820161-9930-5b5e-9670-f6776b9686f5\\\",null]]\"],[\"slot\",\"b3d07169-e146-50c4-9031-fed76b73798d\"]]",
+      "term_edges": [
+        {
+          "port": {
+            "consumer_node_id": "[\"calculation\",[\"occurrence\",\"[[\\\"6622e95c-3b83-533c-813f-134cd10d4db4\\\",null],[\\\"2a820161-9930-5b5e-9670-f6776b9686f5\\\",null]]\"],[\"slot\",\"b3d07169-e146-50c4-9031-fed76b73798d\"]]",
+            "edge_ordinal": 0,
+            "kind": "expression",
+            "reference_ordinal": 0,
+            "referenced_declaration_id": "bf49e5cc-6507-5ebd-9957-cab3f108d503",
+            "target_occurrence_id": "[[\"6622e95c-3b83-533c-813f-134cd10d4db4\",null],[\"2a820161-9930-5b5e-9670-f6776b9686f5\",null],[\"5d5512fa-fb83-50bd-bd69-93ec689d59c2\",0]]"
+          },
+          "source": {
+            "kind": "node",
+            "node_id": "[\"attribute\",[\"occurrence\",\"[[\\\"6622e95c-3b83-533c-813f-134cd10d4db4\\\",null],[\\\"2a820161-9930-5b5e-9670-f6776b9686f5\\\",null],[\\\"5d5512fa-fb83-50bd-bd69-93ec689d59c2\\\",0]]\"],[\"slot\",\"78571ed3-7792-59be-be52-4c50de2bb5f2\"]]"
+          }
+        },
+        {
+          "port": {
+            "consumer_node_id": "[\"calculation\",[\"occurrence\",\"[[\\\"6622e95c-3b83-533c-813f-134cd10d4db4\\\",null],[\\\"2a820161-9930-5b5e-9670-f6776b9686f5\\\",null]]\"],[\"slot\",\"b3d07169-e146-50c4-9031-fed76b73798d\"]]",
+            "edge_ordinal": 0,
+            "kind": "expression",
+            "reference_ordinal": 1,
+            "referenced_declaration_id": "5fa17184-04fe-5211-b0c3-ac53da4eb200",
+            "target_occurrence_id": "[[\"6622e95c-3b83-533c-813f-134cd10d4db4\",null],[\"2a820161-9930-5b5e-9670-f6776b9686f5\",null]]"
+          },
+          "source": {
+            "kind": "node",
+            "node_id": "[\"attribute\",[\"occurrence\",\"[[\\\"6622e95c-3b83-533c-813f-134cd10d4db4\\\",null],[\\\"2a820161-9930-5b5e-9670-f6776b9686f5\\\",null]]\"],[\"slot\",\"5fa17184-04fe-5211-b0c3-ac53da4eb200\"]]"
+          }
+        },
+        {
+          "port": {
+            "consumer_node_id": "[\"calculation\",[\"occurrence\",\"[[\\\"6622e95c-3b83-533c-813f-134cd10d4db4\\\",null],[\\\"2a820161-9930-5b5e-9670-f6776b9686f5\\\",null]]\"],[\"slot\",\"b3d07169-e146-50c4-9031-fed76b73798d\"]]",
+            "edge_ordinal": 1,
+            "kind": "expression",
+            "reference_ordinal": 0,
+            "referenced_declaration_id": "bf49e5cc-6507-5ebd-9957-cab3f108d503",
+            "target_occurrence_id": "[[\"6622e95c-3b83-533c-813f-134cd10d4db4\",null],[\"2a820161-9930-5b5e-9670-f6776b9686f5\",null],[\"5d5512fa-fb83-50bd-bd69-93ec689d59c2\",1]]"
+          },
+          "source": {
+            "kind": "node",
+            "node_id": "[\"attribute\",[\"occurrence\",\"[[\\\"6622e95c-3b83-533c-813f-134cd10d4db4\\\",null],[\\\"2a820161-9930-5b5e-9670-f6776b9686f5\\\",null],[\\\"5d5512fa-fb83-50bd-bd69-93ec689d59c2\\\",1]]\"],[\"slot\",\"78571ed3-7792-59be-be52-4c50de2bb5f2\"]]"
+          }
+        },
+        {
+          "port": {
+            "consumer_node_id": "[\"calculation\",[\"occurrence\",\"[[\\\"6622e95c-3b83-533c-813f-134cd10d4db4\\\",null],[\\\"2a820161-9930-5b5e-9670-f6776b9686f5\\\",null]]\"],[\"slot\",\"b3d07169-e146-50c4-9031-fed76b73798d\"]]",
+            "edge_ordinal": 2,
+            "kind": "expression",
+            "reference_ordinal": 0,
+            "referenced_declaration_id": "bf49e5cc-6507-5ebd-9957-cab3f108d503",
+            "target_occurrence_id": "[[\"6622e95c-3b83-533c-813f-134cd10d4db4\",null],[\"2a820161-9930-5b5e-9670-f6776b9686f5\",null],[\"5d5512fa-fb83-50bd-bd69-93ec689d59c2\",2]]"
+          },
+          "source": {
+            "kind": "node",
+            "node_id": "[\"attribute\",[\"occurrence\",\"[[\\\"6622e95c-3b83-533c-813f-134cd10d4db4\\\",null],[\\\"2a820161-9930-5b5e-9670-f6776b9686f5\\\",null],[\\\"5d5512fa-fb83-50bd-bd69-93ec689d59c2\\\",2]]\"],[\"slot\",\"78571ed3-7792-59be-be52-4c50de2bb5f2\"]]"
+          }
+        },
+        {
+          "port": {
+            "consumer_node_id": "[\"calculation\",[\"occurrence\",\"[[\\\"6622e95c-3b83-533c-813f-134cd10d4db4\\\",null],[\\\"2a820161-9930-5b5e-9670-f6776b9686f5\\\",null]]\"],[\"slot\",\"b3d07169-e146-50c4-9031-fed76b73798d\"]]",
+            "edge_ordinal": 3,
+            "kind": "expression",
+            "reference_ordinal": 0,
+            "referenced_declaration_id": "bf49e5cc-6507-5ebd-9957-cab3f108d503",
+            "target_occurrence_id": "[[\"6622e95c-3b83-533c-813f-134cd10d4db4\",null],[\"2a820161-9930-5b5e-9670-f6776b9686f5\",null],[\"5d5512fa-fb83-50bd-bd69-93ec689d59c2\",3]]"
+          },
+          "source": {
+            "kind": "node",
+            "node_id": "[\"attribute\",[\"occurrence\",\"[[\\\"6622e95c-3b83-533c-813f-134cd10d4db4\\\",null],[\\\"2a820161-9930-5b5e-9670-f6776b9686f5\\\",null],[\\\"5d5512fa-fb83-50bd-bd69-93ec689d59c2\\\",3]]\"],[\"slot\",\"78571ed3-7792-59be-be52-4c50de2bb5f2\"]]"
+          }
+        }
+      ]
+    },
+    "producer_total": {
+      "node_id": "[\"calculation\",[\"occurrence\",\"[[\\\"fb3b756a-1e8d-53a5-9f0d-3a9541aaee1b\\\",null]]\"],[\"slot\",\"5318185a-ac82-5dc1-aee6-ff96c75bf65f\"]]",
+      "term_edges": [
+        {
+          "port": {
+            "consumer_node_id": "[\"calculation\",[\"occurrence\",\"[[\\\"fb3b756a-1e8d-53a5-9f0d-3a9541aaee1b\\\",null]]\"],[\"slot\",\"5318185a-ac82-5dc1-aee6-ff96c75bf65f\"]]",
+            "edge_ordinal": 0,
+            "kind": "expression",
+            "reference_ordinal": 0,
+            "referenced_declaration_id": "36a5b67b-1d39-571e-8ead-ce31fce7fc82",
+            "target_occurrence_id": null
+          },
+          "source": {
+            "calculation_node_id": "[\"calculation\",[\"occurrence\",\"[[\\\"fb3b756a-1e8d-53a5-9f0d-3a9541aaee1b\\\",null],[\\\"5b5b10f5-1d8f-5e45-a470-1de8f7440d29\\\",null]]\"],[\"declaration\",\"d5c0363a-5d24-5928-bd42-77a96e4daf0c\"]]",
+            "kind": "producer",
+            "output_declaration_id": "36a5b67b-1d39-571e-8ead-ce31fce7fc82"
+          }
+        }
+      ]
+    },
+    "qualified_total": {
+      "node_id": "[\"calculation\",[\"occurrence\",\"[[\\\"7982950d-5a57-5d47-ac62-0af67b927ceb\\\",null]]\"],[\"slot\",\"47b84746-553c-58f9-91f8-c7790000dc4a\"]]",
+      "term_edges": [
+        {
+          "port": {
+            "consumer_node_id": "[\"calculation\",[\"occurrence\",\"[[\\\"7982950d-5a57-5d47-ac62-0af67b927ceb\\\",null]]\"],[\"slot\",\"47b84746-553c-58f9-91f8-c7790000dc4a\"]]",
+            "edge_ordinal": 0,
+            "kind": "expression",
+            "reference_ordinal": 0,
+            "referenced_declaration_id": "60bd2378-27e2-55eb-80d2-28909ff3ffa7",
+            "target_occurrence_id": "[[\"7982950d-5a57-5d47-ac62-0af67b927ceb\",null],[\"26d10a26-f8aa-5595-95f9-cf718e74c009\",null]]"
+          },
+          "source": {
+            "kind": "node",
+            "node_id": "[\"attribute\",[\"occurrence\",\"[[\\\"7982950d-5a57-5d47-ac62-0af67b927ceb\\\",null],[\\\"26d10a26-f8aa-5595-95f9-cf718e74c009\\\",null]]\"],[\"slot\",\"60bd2378-27e2-55eb-80d2-28909ff3ffa7\"]]"
+          }
+        }
+      ]
+    },
+    "station_total": {
+      "node_id": "[\"calculation\",[\"occurrence\",\"[[\\\"c49378ea-68ee-5e5b-9e39-8c0196ad769a\\\",null]]\"],[\"slot\",\"ed4b278b-3ed5-5360-a52f-a45bc3a435fb\"]]",
+      "term_edges": [
+        {
+          "port": {
+            "consumer_node_id": "[\"calculation\",[\"occurrence\",\"[[\\\"c49378ea-68ee-5e5b-9e39-8c0196ad769a\\\",null]]\"],[\"slot\",\"ed4b278b-3ed5-5360-a52f-a45bc3a435fb\"]]",
+            "edge_ordinal": 0,
+            "kind": "expression",
+            "reference_ordinal": 0,
+            "referenced_declaration_id": "80d376a8-2300-5f5f-9387-5d5685ebfcf5",
+            "target_occurrence_id": "[[\"c49378ea-68ee-5e5b-9e39-8c0196ad769a\",null],[\"e49fb4bf-8c71-5477-856a-64aa11643373\",null]]"
+          },
+          "source": {
+            "kind": "node",
+            "node_id": "[\"attribute\",[\"occurrence\",\"[[\\\"c49378ea-68ee-5e5b-9e39-8c0196ad769a\\\",null],[\\\"e49fb4bf-8c71-5477-856a-64aa11643373\\\",null]]\"],[\"slot\",\"3e58b84d-c0a3-541c-adfc-43eaf06d153c\"]]"
+          }
+        }
+      ]
+    }
+  },
+  "boundary_guard": {
+    "exemptions": [
+      "identity.py:OccurrenceId.from_wire \u2014 IR string parsing for identity",
+      "identity.py:NodeId.from_wire \u2014 IR string parsing for identity",
+      "elaborate.py:_ExactElaborator._direction \u2014 prefix/suffix rendering",
+      "project.py:_group_identity \u2014 prefix/suffix rendering",
+      "project.py:_Projection._constraint_module_type \u2014 prefix/suffix rendering"
+    ],
+    "test_count": 14
+  },
+  "cells": {
+    "C1": {
+      "baseline_routes": {
+        "in_place_v6": {
+          "computation_digest": "49f1c4bc7deb2305aa73ceeb231ce3026982d58d1bf4f0e7d955ccaff9c54ffd",
+          "instance_fingerprint": "35f023e5c65fdc628e3276f95a03bce43edf33f37a9dcb855c003ff98513150d"
+        },
+        "live": {
+          "computation_digest": "49f1c4bc7deb2305aa73ceeb231ce3026982d58d1bf4f0e7d955ccaff9c54ffd",
+          "instance_fingerprint": "35f023e5c65fdc628e3276f95a03bce43edf33f37a9dcb855c003ff98513150d"
+        },
+        "relocated_v6": {
+          "computation_digest": "49f1c4bc7deb2305aa73ceeb231ce3026982d58d1bf4f0e7d955ccaff9c54ffd",
+          "instance_fingerprint": "35f023e5c65fdc628e3276f95a03bce43edf33f37a9dcb855c003ff98513150d"
+        }
+      },
+      "changed_public_keys": [
+        "source_identity_mixed_consumers__stamp_plant__efficiency"
+      ],
+      "changed_routes": {
+        "in_place_v6": {
+          "computation_digest": "5dd580cb570190562530accdb0bd7dbb29d1d03172303efa78f874269756fe30",
+          "instance_fingerprint": "b1a368cea47cf74e93439311770fbe1c4a648fa7f6940a86d50da2b9a5100ed2"
+        },
+        "live": {
+          "computation_digest": "5dd580cb570190562530accdb0bd7dbb29d1d03172303efa78f874269756fe30",
+          "instance_fingerprint": "b1a368cea47cf74e93439311770fbe1c4a648fa7f6940a86d50da2b9a5100ed2"
+        },
+        "relocated_v6": {
+          "computation_digest": "5dd580cb570190562530accdb0bd7dbb29d1d03172303efa78f874269756fe30",
+          "instance_fingerprint": "b1a368cea47cf74e93439311770fbe1c4a648fa7f6940a86d50da2b9a5100ed2"
+        }
+      },
+      "complete_negative_unaffected_keys_by_route": {
+        "in_place_v6": [
+          "source_identity_mixed_consumers__avail_ctx__avail_plant__availability",
+          "source_identity_mixed_consumers__bank__cell[0]__cell_cost",
+          "source_identity_mixed_consumers__bank__cell[1]__cell_cost",
+          "source_identity_mixed_consumers__bank__cell[2]__cell_cost",
+          "source_identity_mixed_consumers__bare_station__bare_rig__intensity",
+          "source_identity_mixed_consumers__computed_station__source_identity_computed__base_rate",
+          "source_identity_mixed_consumers__parent_unit__shared_rate",
+          "source_identity_mixed_consumers__qual_station__qual_plant__level",
+          "source_identity_mixed_consumers__stamp_plant__lit_calc__value_in",
+          "source_identity_mixed_consumers__station__rig__gain_setting",
+          "source_identity_mixed_consumers__twin_bay__sensor_a__reading",
+          "source_identity_mixed_consumers__twin_bay__sensor_b__reading"
+        ],
+        "live": [
+          "source_identity_mixed_consumers__avail_ctx__avail_plant__availability",
+          "source_identity_mixed_consumers__bank__cell[0]__cell_cost",
+          "source_identity_mixed_consumers__bank__cell[1]__cell_cost",
+          "source_identity_mixed_consumers__bank__cell[2]__cell_cost",
+          "source_identity_mixed_consumers__bare_station__bare_rig__intensity",
+          "source_identity_mixed_consumers__computed_station__source_identity_computed__base_rate",
+          "source_identity_mixed_consumers__parent_unit__shared_rate",
+          "source_identity_mixed_consumers__qual_station__qual_plant__level",
+          "source_identity_mixed_consumers__stamp_plant__lit_calc__value_in",
+          "source_identity_mixed_consumers__station__rig__gain_setting",
+          "source_identity_mixed_consumers__twin_bay__sensor_a__reading",
+          "source_identity_mixed_consumers__twin_bay__sensor_b__reading"
+        ],
+        "relocated_v6": [
+          "source_identity_mixed_consumers__avail_ctx__avail_plant__availability",
+          "source_identity_mixed_consumers__bank__cell[0]__cell_cost",
+          "source_identity_mixed_consumers__bank__cell[1]__cell_cost",
+          "source_identity_mixed_consumers__bank__cell[2]__cell_cost",
+          "source_identity_mixed_consumers__bare_station__bare_rig__intensity",
+          "source_identity_mixed_consumers__computed_station__source_identity_computed__base_rate",
+          "source_identity_mixed_consumers__parent_unit__shared_rate",
+          "source_identity_mixed_consumers__qual_station__qual_plant__level",
+          "source_identity_mixed_consumers__stamp_plant__lit_calc__value_in",
+          "source_identity_mixed_consumers__station__rig__gain_setting",
+          "source_identity_mixed_consumers__twin_bay__sensor_a__reading",
+          "source_identity_mixed_consumers__twin_bay__sensor_b__reading"
+        ]
+      },
+      "exact_positive_consumers": [
+        {
+          "consumer_display_path": "source_identity_mixed_consumers__stamp_plant__stamp_calc",
+          "consumer_kind": "calculation",
+          "param_name": "value_in",
+          "port": {
+            "consumer_node_id": "[\"calculation\",[\"occurrence\",\"[[\\\"1f829adc-3a98-5485-93c2-145121ffc560\\\",null]]\"],[\"declaration\",\"e55762cb-9a30-5111-aa6e-d4cae42203d2\"]]",
+            "formal_declaration_id": "c25633d3-ac85-56f9-90c6-3f4910e8a43e",
+            "kind": "consumer"
+          },
+          "source": "source_identity_mixed_consumers__stamp_plant__efficiency"
+        }
+      ],
+      "fixture": "source_identity_mixed_consumers",
+      "source_ids": {
+        "source_identity_mixed_consumers__stamp_plant__efficiency": {
+          "kind": "node",
+          "node_id": "[\"attribute\",[\"occurrence\",\"[[\\\"1f829adc-3a98-5485-93c2-145121ffc560\\\",null]]\"],[\"slot\",\"942e802f-1687-5458-885d-bdafad84df06\"]]"
+        }
+      }
+    },
+    "C11": {
+      "baseline_routes": {
+        "in_place_v6": {
+          "computation_digest": "49f1c4bc7deb2305aa73ceeb231ce3026982d58d1bf4f0e7d955ccaff9c54ffd",
+          "instance_fingerprint": "35f023e5c65fdc628e3276f95a03bce43edf33f37a9dcb855c003ff98513150d"
+        },
+        "live": {
+          "computation_digest": "49f1c4bc7deb2305aa73ceeb231ce3026982d58d1bf4f0e7d955ccaff9c54ffd",
+          "instance_fingerprint": "35f023e5c65fdc628e3276f95a03bce43edf33f37a9dcb855c003ff98513150d"
+        },
+        "relocated_v6": {
+          "computation_digest": "49f1c4bc7deb2305aa73ceeb231ce3026982d58d1bf4f0e7d955ccaff9c54ffd",
+          "instance_fingerprint": "35f023e5c65fdc628e3276f95a03bce43edf33f37a9dcb855c003ff98513150d"
+        }
+      },
+      "changed_public_keys": [
+        "source_identity_mixed_consumers__station__rig__gain_setting"
+      ],
+      "changed_routes": {
+        "in_place_v6": {
+          "computation_digest": "71190a488054c103c7df6b53da48275e5874f94fd4375e5e4ebf026971b3c043",
+          "instance_fingerprint": "8bb7c46f1dda1666118c0b310568cf038bbe6fb55501d7649dd96928cd4d218a"
+        },
+        "live": {
+          "computation_digest": "71190a488054c103c7df6b53da48275e5874f94fd4375e5e4ebf026971b3c043",
+          "instance_fingerprint": "8bb7c46f1dda1666118c0b310568cf038bbe6fb55501d7649dd96928cd4d218a"
+        },
+        "relocated_v6": {
+          "computation_digest": "71190a488054c103c7df6b53da48275e5874f94fd4375e5e4ebf026971b3c043",
+          "instance_fingerprint": "8bb7c46f1dda1666118c0b310568cf038bbe6fb55501d7649dd96928cd4d218a"
+        }
+      },
+      "complete_negative_unaffected_keys_by_route": {
+        "in_place_v6": [
+          "source_identity_mixed_consumers__avail_ctx__avail_plant__availability",
+          "source_identity_mixed_consumers__bank__cell[0]__cell_cost",
+          "source_identity_mixed_consumers__bank__cell[1]__cell_cost",
+          "source_identity_mixed_consumers__bank__cell[2]__cell_cost",
+          "source_identity_mixed_consumers__bare_station__bare_rig__intensity",
+          "source_identity_mixed_consumers__computed_station__source_identity_computed__base_rate",
+          "source_identity_mixed_consumers__parent_unit__shared_rate",
+          "source_identity_mixed_consumers__qual_station__qual_plant__level",
+          "source_identity_mixed_consumers__stamp_plant__efficiency",
+          "source_identity_mixed_consumers__stamp_plant__lit_calc__value_in",
+          "source_identity_mixed_consumers__twin_bay__sensor_a__reading",
+          "source_identity_mixed_consumers__twin_bay__sensor_b__reading"
+        ],
+        "live": [
+          "source_identity_mixed_consumers__avail_ctx__avail_plant__availability",
+          "source_identity_mixed_consumers__bank__cell[0]__cell_cost",
+          "source_identity_mixed_consumers__bank__cell[1]__cell_cost",
+          "source_identity_mixed_consumers__bank__cell[2]__cell_cost",
+          "source_identity_mixed_consumers__bare_station__bare_rig__intensity",
+          "source_identity_mixed_consumers__computed_station__source_identity_computed__base_rate",
+          "source_identity_mixed_consumers__parent_unit__shared_rate",
+          "source_identity_mixed_consumers__qual_station__qual_plant__level",
+          "source_identity_mixed_consumers__stamp_plant__efficiency",
+          "source_identity_mixed_consumers__stamp_plant__lit_calc__value_in",
+          "source_identity_mixed_consumers__twin_bay__sensor_a__reading",
+          "source_identity_mixed_consumers__twin_bay__sensor_b__reading"
+        ],
+        "relocated_v6": [
+          "source_identity_mixed_consumers__avail_ctx__avail_plant__availability",
+          "source_identity_mixed_consumers__bank__cell[0]__cell_cost",
+          "source_identity_mixed_consumers__bank__cell[1]__cell_cost",
+          "source_identity_mixed_consumers__bank__cell[2]__cell_cost",
+          "source_identity_mixed_consumers__bare_station__bare_rig__intensity",
+          "source_identity_mixed_consumers__computed_station__source_identity_computed__base_rate",
+          "source_identity_mixed_consumers__parent_unit__shared_rate",
+          "source_identity_mixed_consumers__qual_station__qual_plant__level",
+          "source_identity_mixed_consumers__stamp_plant__efficiency",
+          "source_identity_mixed_consumers__stamp_plant__lit_calc__value_in",
+          "source_identity_mixed_consumers__twin_bay__sensor_a__reading",
+          "source_identity_mixed_consumers__twin_bay__sensor_b__reading"
+        ]
+      },
+      "exact_positive_consumers": [
+        {
+          "consumer_display_path": "source_identity_mixed_consumers__station__chain_calc",
+          "consumer_kind": "calculation",
+          "param_name": "value_in",
+          "port": {
+            "consumer_node_id": "[\"calculation\",[\"occurrence\",\"[[\\\"c49378ea-68ee-5e5b-9e39-8c0196ad769a\\\",null]]\"],[\"declaration\",\"6ed9d252-a0b8-57ad-9d59-2a167de51f08\"]]",
+            "formal_declaration_id": "02d70a82-6b83-5d2d-a9c9-3b27bfc52377",
+            "kind": "consumer"
+          },
+          "source": "source_identity_mixed_consumers__station__rig__gain_setting"
+        },
+        {
+          "consumer_display_path": "source_identity_mixed_consumers__station__chain_guard",
+          "consumer_kind": "constraint",
+          "param_name": "v",
+          "port": {
+            "consumer_node_id": "[\"constraint\",[\"occurrence\",\"[[\\\"c49378ea-68ee-5e5b-9e39-8c0196ad769a\\\",null]]\"],[\"declaration\",\"c118c1f2-531b-56d8-9568-2ec5339f97fa\"]]",
+            "formal_declaration_id": "de40f2f7-6210-5cfd-95a2-7978d502de10",
+            "kind": "consumer"
+          },
+          "source": "source_identity_mixed_consumers__station__rig__gain_setting"
+        },
+        {
+          "consumer_display_path": "source_identity_mixed_consumers__station__station_total",
+          "consumer_kind": "formula",
+          "param_name": "gain_setting",
+          "port": {
+            "consumer_node_id": "[\"calculation\",[\"occurrence\",\"[[\\\"c49378ea-68ee-5e5b-9e39-8c0196ad769a\\\",null]]\"],[\"slot\",\"ed4b278b-3ed5-5360-a52f-a45bc3a435fb\"]]",
+            "edge_ordinal": 0,
+            "kind": "expression",
+            "reference_ordinal": 0,
+            "referenced_declaration_id": "80d376a8-2300-5f5f-9387-5d5685ebfcf5",
+            "target_occurrence_id": "[[\"c49378ea-68ee-5e5b-9e39-8c0196ad769a\",null],[\"e49fb4bf-8c71-5477-856a-64aa11643373\",null]]"
+          },
+          "source": "source_identity_mixed_consumers__station__rig__gain_setting"
+        }
+      ],
+      "fixture": "source_identity_mixed_consumers",
+      "source_ids": {
+        "source_identity_mixed_consumers__station__rig__gain_setting": {
+          "kind": "node",
+          "node_id": "[\"attribute\",[\"occurrence\",\"[[\\\"c49378ea-68ee-5e5b-9e39-8c0196ad769a\\\",null],[\\\"e49fb4bf-8c71-5477-856a-64aa11643373\\\",null]]\"],[\"slot\",\"3e58b84d-c0a3-541c-adfc-43eaf06d153c\"]]"
+        }
+      }
+    },
+    "C12": {
+      "baseline_routes": {
+        "in_place_v6": {
+          "computation_digest": "49f1c4bc7deb2305aa73ceeb231ce3026982d58d1bf4f0e7d955ccaff9c54ffd",
+          "instance_fingerprint": "35f023e5c65fdc628e3276f95a03bce43edf33f37a9dcb855c003ff98513150d"
+        },
+        "live": {
+          "computation_digest": "49f1c4bc7deb2305aa73ceeb231ce3026982d58d1bf4f0e7d955ccaff9c54ffd",
+          "instance_fingerprint": "35f023e5c65fdc628e3276f95a03bce43edf33f37a9dcb855c003ff98513150d"
+        },
+        "relocated_v6": {
+          "computation_digest": "49f1c4bc7deb2305aa73ceeb231ce3026982d58d1bf4f0e7d955ccaff9c54ffd",
+          "instance_fingerprint": "35f023e5c65fdc628e3276f95a03bce43edf33f37a9dcb855c003ff98513150d"
+        }
+      },
+      "changed_public_keys": [
+        "source_identity_mixed_consumers__qual_station__qual_plant__level"
+      ],
+      "changed_routes": {
+        "in_place_v6": {
+          "computation_digest": "8733fde4651064d5f5d0c51cb1634aa3cf9a2fbcfbfcd71a46af5f422fcd200c",
+          "instance_fingerprint": "3caaa513733c94d0a672a104b7875e17df7566d258e3ed30e27934405ce46fa1"
+        },
+        "live": {
+          "computation_digest": "8733fde4651064d5f5d0c51cb1634aa3cf9a2fbcfbfcd71a46af5f422fcd200c",
+          "instance_fingerprint": "3caaa513733c94d0a672a104b7875e17df7566d258e3ed30e27934405ce46fa1"
+        },
+        "relocated_v6": {
+          "computation_digest": "8733fde4651064d5f5d0c51cb1634aa3cf9a2fbcfbfcd71a46af5f422fcd200c",
+          "instance_fingerprint": "3caaa513733c94d0a672a104b7875e17df7566d258e3ed30e27934405ce46fa1"
+        }
+      },
+      "complete_negative_unaffected_keys_by_route": {
+        "in_place_v6": [
+          "source_identity_mixed_consumers__avail_ctx__avail_plant__availability",
+          "source_identity_mixed_consumers__bank__cell[0]__cell_cost",
+          "source_identity_mixed_consumers__bank__cell[1]__cell_cost",
+          "source_identity_mixed_consumers__bank__cell[2]__cell_cost",
+          "source_identity_mixed_consumers__bare_station__bare_rig__intensity",
+          "source_identity_mixed_consumers__computed_station__source_identity_computed__base_rate",
+          "source_identity_mixed_consumers__parent_unit__shared_rate",
+          "source_identity_mixed_consumers__stamp_plant__efficiency",
+          "source_identity_mixed_consumers__stamp_plant__lit_calc__value_in",
+          "source_identity_mixed_consumers__station__rig__gain_setting",
+          "source_identity_mixed_consumers__twin_bay__sensor_a__reading",
+          "source_identity_mixed_consumers__twin_bay__sensor_b__reading"
+        ],
+        "live": [
+          "source_identity_mixed_consumers__avail_ctx__avail_plant__availability",
+          "source_identity_mixed_consumers__bank__cell[0]__cell_cost",
+          "source_identity_mixed_consumers__bank__cell[1]__cell_cost",
+          "source_identity_mixed_consumers__bank__cell[2]__cell_cost",
+          "source_identity_mixed_consumers__bare_station__bare_rig__intensity",
+          "source_identity_mixed_consumers__computed_station__source_identity_computed__base_rate",
+          "source_identity_mixed_consumers__parent_unit__shared_rate",
+          "source_identity_mixed_consumers__stamp_plant__efficiency",
+          "source_identity_mixed_consumers__stamp_plant__lit_calc__value_in",
+          "source_identity_mixed_consumers__station__rig__gain_setting",
+          "source_identity_mixed_consumers__twin_bay__sensor_a__reading",
+          "source_identity_mixed_consumers__twin_bay__sensor_b__reading"
+        ],
+        "relocated_v6": [
+          "source_identity_mixed_consumers__avail_ctx__avail_plant__availability",
+          "source_identity_mixed_consumers__bank__cell[0]__cell_cost",
+          "source_identity_mixed_consumers__bank__cell[1]__cell_cost",
+          "source_identity_mixed_consumers__bank__cell[2]__cell_cost",
+          "source_identity_mixed_consumers__bare_station__bare_rig__intensity",
+          "source_identity_mixed_consumers__computed_station__source_identity_computed__base_rate",
+          "source_identity_mixed_consumers__parent_unit__shared_rate",
+          "source_identity_mixed_consumers__stamp_plant__efficiency",
+          "source_identity_mixed_consumers__stamp_plant__lit_calc__value_in",
+          "source_identity_mixed_consumers__station__rig__gain_setting",
+          "source_identity_mixed_consumers__twin_bay__sensor_a__reading",
+          "source_identity_mixed_consumers__twin_bay__sensor_b__reading"
+        ]
+      },
+      "exact_positive_consumers": [
+        {
+          "consumer_display_path": "source_identity_mixed_consumers__qual_station__qual_plant__qual_calc",
+          "consumer_kind": "calculation",
+          "param_name": "value_in",
+          "port": {
+            "consumer_node_id": "[\"calculation\",[\"occurrence\",\"[[\\\"7982950d-5a57-5d47-ac62-0af67b927ceb\\\",null],[\\\"26d10a26-f8aa-5595-95f9-cf718e74c009\\\",null]]\"],[\"declaration\",\"5a1bb1c1-5275-5db0-b2ac-c9b54ef7ecc1\"]]",
+            "formal_declaration_id": "7d0d4b12-4bb6-5e0a-aa2c-be9b24aa2f6b",
+            "kind": "consumer"
+          },
+          "source": "source_identity_mixed_consumers__qual_station__qual_plant__level"
+        },
+        {
+          "consumer_display_path": "source_identity_mixed_consumers__qual_station__qual_plant__qual_guard",
+          "consumer_kind": "constraint",
+          "param_name": "v",
+          "port": {
+            "consumer_node_id": "[\"constraint\",[\"occurrence\",\"[[\\\"7982950d-5a57-5d47-ac62-0af67b927ceb\\\",null],[\\\"26d10a26-f8aa-5595-95f9-cf718e74c009\\\",null]]\"],[\"declaration\",\"a622a55d-2eda-58db-aa05-88ae366a840b\"]]",
+            "formal_declaration_id": "de40f2f7-6210-5cfd-95a2-7978d502de10",
+            "kind": "consumer"
+          },
+          "source": "source_identity_mixed_consumers__qual_station__qual_plant__level"
+        },
+        {
+          "consumer_display_path": "source_identity_mixed_consumers__qual_station__qual_total",
+          "consumer_kind": "formula",
+          "param_name": "level",
+          "port": {
+            "consumer_node_id": "[\"calculation\",[\"occurrence\",\"[[\\\"7982950d-5a57-5d47-ac62-0af67b927ceb\\\",null]]\"],[\"slot\",\"47b84746-553c-58f9-91f8-c7790000dc4a\"]]",
+            "edge_ordinal": 0,
+            "kind": "expression",
+            "reference_ordinal": 0,
+            "referenced_declaration_id": "60bd2378-27e2-55eb-80d2-28909ff3ffa7",
+            "target_occurrence_id": "[[\"7982950d-5a57-5d47-ac62-0af67b927ceb\",null],[\"26d10a26-f8aa-5595-95f9-cf718e74c009\",null]]"
+          },
+          "source": "source_identity_mixed_consumers__qual_station__qual_plant__level"
+        }
+      ],
+      "fixture": "source_identity_mixed_consumers",
+      "source_ids": {
+        "source_identity_mixed_consumers__qual_station__qual_plant__level": {
+          "kind": "node",
+          "node_id": "[\"attribute\",[\"occurrence\",\"[[\\\"7982950d-5a57-5d47-ac62-0af67b927ceb\\\",null],[\\\"26d10a26-f8aa-5595-95f9-cf718e74c009\\\",null]]\"],[\"slot\",\"60bd2378-27e2-55eb-80d2-28909ff3ffa7\"]]"
+        }
+      }
+    },
+    "C13": {
+      "baseline_routes": {
+        "in_place_v6": {
+          "computation_digest": "49f1c4bc7deb2305aa73ceeb231ce3026982d58d1bf4f0e7d955ccaff9c54ffd",
+          "instance_fingerprint": "35f023e5c65fdc628e3276f95a03bce43edf33f37a9dcb855c003ff98513150d"
+        },
+        "live": {
+          "computation_digest": "49f1c4bc7deb2305aa73ceeb231ce3026982d58d1bf4f0e7d955ccaff9c54ffd",
+          "instance_fingerprint": "35f023e5c65fdc628e3276f95a03bce43edf33f37a9dcb855c003ff98513150d"
+        },
+        "relocated_v6": {
+          "computation_digest": "49f1c4bc7deb2305aa73ceeb231ce3026982d58d1bf4f0e7d955ccaff9c54ffd",
+          "instance_fingerprint": "35f023e5c65fdc628e3276f95a03bce43edf33f37a9dcb855c003ff98513150d"
+        }
+      },
+      "changed_public_keys": [
+        "source_identity_mixed_consumers__bare_station__bare_rig__intensity"
+      ],
+      "changed_routes": {
+        "in_place_v6": {
+          "computation_digest": "7bbcd25e1d8cdf31f8c3ea89f346aeebb1345ad8facc380449e7602cc9173729",
+          "instance_fingerprint": "eb95d5e6825f4b03d33624233800d14eb46497a0246ebea5af4cca420941c818"
+        },
+        "live": {
+          "computation_digest": "7bbcd25e1d8cdf31f8c3ea89f346aeebb1345ad8facc380449e7602cc9173729",
+          "instance_fingerprint": "eb95d5e6825f4b03d33624233800d14eb46497a0246ebea5af4cca420941c818"
+        },
+        "relocated_v6": {
+          "computation_digest": "7bbcd25e1d8cdf31f8c3ea89f346aeebb1345ad8facc380449e7602cc9173729",
+          "instance_fingerprint": "eb95d5e6825f4b03d33624233800d14eb46497a0246ebea5af4cca420941c818"
+        }
+      },
+      "complete_negative_unaffected_keys_by_route": {
+        "in_place_v6": [
+          "source_identity_mixed_consumers__avail_ctx__avail_plant__availability",
+          "source_identity_mixed_consumers__bank__cell[0]__cell_cost",
+          "source_identity_mixed_consumers__bank__cell[1]__cell_cost",
+          "source_identity_mixed_consumers__bank__cell[2]__cell_cost",
+          "source_identity_mixed_consumers__computed_station__source_identity_computed__base_rate",
+          "source_identity_mixed_consumers__parent_unit__shared_rate",
+          "source_identity_mixed_consumers__qual_station__qual_plant__level",
+          "source_identity_mixed_consumers__stamp_plant__efficiency",
+          "source_identity_mixed_consumers__stamp_plant__lit_calc__value_in",
+          "source_identity_mixed_consumers__station__rig__gain_setting",
+          "source_identity_mixed_consumers__twin_bay__sensor_a__reading",
+          "source_identity_mixed_consumers__twin_bay__sensor_b__reading"
+        ],
+        "live": [
+          "source_identity_mixed_consumers__avail_ctx__avail_plant__availability",
+          "source_identity_mixed_consumers__bank__cell[0]__cell_cost",
+          "source_identity_mixed_consumers__bank__cell[1]__cell_cost",
+          "source_identity_mixed_consumers__bank__cell[2]__cell_cost",
+          "source_identity_mixed_consumers__computed_station__source_identity_computed__base_rate",
+          "source_identity_mixed_consumers__parent_unit__shared_rate",
+          "source_identity_mixed_consumers__qual_station__qual_plant__level",
+          "source_identity_mixed_consumers__stamp_plant__efficiency",
+          "source_identity_mixed_consumers__stamp_plant__lit_calc__value_in",
+          "source_identity_mixed_consumers__station__rig__gain_setting",
+          "source_identity_mixed_consumers__twin_bay__sensor_a__reading",
+          "source_identity_mixed_consumers__twin_bay__sensor_b__reading"
+        ],
+        "relocated_v6": [
+          "source_identity_mixed_consumers__avail_ctx__avail_plant__availability",
+          "source_identity_mixed_consumers__bank__cell[0]__cell_cost",
+          "source_identity_mixed_consumers__bank__cell[1]__cell_cost",
+          "source_identity_mixed_consumers__bank__cell[2]__cell_cost",
+          "source_identity_mixed_consumers__computed_station__source_identity_computed__base_rate",
+          "source_identity_mixed_consumers__parent_unit__shared_rate",
+          "source_identity_mixed_consumers__qual_station__qual_plant__level",
+          "source_identity_mixed_consumers__stamp_plant__efficiency",
+          "source_identity_mixed_consumers__stamp_plant__lit_calc__value_in",
+          "source_identity_mixed_consumers__station__rig__gain_setting",
+          "source_identity_mixed_consumers__twin_bay__sensor_a__reading",
+          "source_identity_mixed_consumers__twin_bay__sensor_b__reading"
+        ]
+      },
+      "exact_positive_consumers": [
+        {
+          "consumer_display_path": "source_identity_mixed_consumers__bare_station__bare_rig__bare_calc",
+          "consumer_kind": "calculation",
+          "param_name": "value_in",
+          "port": {
+            "consumer_node_id": "[\"calculation\",[\"occurrence\",\"[[\\\"cc32c0d0-59ec-5f34-bd7c-448e70b29df8\\\",null],[\\\"858e3e42-fe91-533a-ab7e-93085cc094c7\\\",null]]\"],[\"declaration\",\"1e00233f-eb7d-5944-880f-16d753fef7b4\"]]",
+            "formal_declaration_id": "2a1fb772-a10a-588f-a3b8-06fce07fc490",
+            "kind": "consumer"
+          },
+          "source": "source_identity_mixed_consumers__bare_station__bare_rig__intensity"
+        },
+        {
+          "consumer_display_path": "source_identity_mixed_consumers__bare_station__bare_rig__bare_guard",
+          "consumer_kind": "constraint",
+          "param_name": "v",
+          "port": {
+            "consumer_node_id": "[\"constraint\",[\"occurrence\",\"[[\\\"cc32c0d0-59ec-5f34-bd7c-448e70b29df8\\\",null],[\\\"858e3e42-fe91-533a-ab7e-93085cc094c7\\\",null]]\"],[\"declaration\",\"2ebe3398-6cdf-54ac-be6a-7741d45a5cf2\"]]",
+            "formal_declaration_id": "de40f2f7-6210-5cfd-95a2-7978d502de10",
+            "kind": "consumer"
+          },
+          "source": "source_identity_mixed_consumers__bare_station__bare_rig__intensity"
+        },
+        {
+          "consumer_display_path": "source_identity_mixed_consumers__bare_station__bare_total",
+          "consumer_kind": "formula",
+          "param_name": "intensity",
+          "port": {
+            "consumer_node_id": "[\"calculation\",[\"occurrence\",\"[[\\\"cc32c0d0-59ec-5f34-bd7c-448e70b29df8\\\",null]]\"],[\"slot\",\"e2da9487-fa25-5fc4-b447-70253b587f82\"]]",
+            "edge_ordinal": 0,
+            "kind": "expression",
+            "reference_ordinal": 0,
+            "referenced_declaration_id": "2bd8710d-c12a-5b38-bdf9-a3a9bce62ec1",
+            "target_occurrence_id": "[[\"cc32c0d0-59ec-5f34-bd7c-448e70b29df8\",null],[\"858e3e42-fe91-533a-ab7e-93085cc094c7\",null]]"
+          },
+          "source": "source_identity_mixed_consumers__bare_station__bare_rig__intensity"
+        }
+      ],
+      "fixture": "source_identity_mixed_consumers",
+      "source_ids": {
+        "source_identity_mixed_consumers__bare_station__bare_rig__intensity": {
+          "kind": "node",
+          "node_id": "[\"attribute\",[\"occurrence\",\"[[\\\"cc32c0d0-59ec-5f34-bd7c-448e70b29df8\\\",null],[\\\"858e3e42-fe91-533a-ab7e-93085cc094c7\\\",null]]\"],[\"slot\",\"cdcc57e7-83f1-5e34-9a86-9de673f9142f\"]]"
+        }
+      }
+    },
+    "C14": {
+      "baseline_routes": {
+        "in_place_v6": {
+          "computation_digest": "2cf161374e6562e8f3a8335ec5ff0b829eefb79966efa4549711b87b965390e8",
+          "instance_fingerprint": "88381ad3a4709fc430f5a3977d033652005e7ba57339b7ca653efeafe4bb5ecb"
+        },
+        "live": {
+          "computation_digest": "2cf161374e6562e8f3a8335ec5ff0b829eefb79966efa4549711b87b965390e8",
+          "instance_fingerprint": "88381ad3a4709fc430f5a3977d033652005e7ba57339b7ca653efeafe4bb5ecb"
+        },
+        "relocated_v6": {
+          "computation_digest": "2cf161374e6562e8f3a8335ec5ff0b829eefb79966efa4549711b87b965390e8",
+          "instance_fingerprint": "88381ad3a4709fc430f5a3977d033652005e7ba57339b7ca653efeafe4bb5ecb"
+        }
+      },
+      "changed_public_keys": [
+        "ElabMatrixC14__host__source__value"
+      ],
+      "changed_routes": {
+        "in_place_v6": {
+          "computation_digest": "cceade2a3c3432641ab9c95d6666860ab800573b71942aa27e75d8cdc12d43f6",
+          "instance_fingerprint": "b0ca61d47cf83baf03c1b0f89c38043d94ad552b6ea37fb9360e161292463c8c"
+        },
+        "live": {
+          "computation_digest": "cceade2a3c3432641ab9c95d6666860ab800573b71942aa27e75d8cdc12d43f6",
+          "instance_fingerprint": "b0ca61d47cf83baf03c1b0f89c38043d94ad552b6ea37fb9360e161292463c8c"
+        },
+        "relocated_v6": {
+          "computation_digest": "cceade2a3c3432641ab9c95d6666860ab800573b71942aa27e75d8cdc12d43f6",
+          "instance_fingerprint": "b0ca61d47cf83baf03c1b0f89c38043d94ad552b6ea37fb9360e161292463c8c"
+        }
+      },
+      "complete_negative_unaffected_keys_by_route": {
+        "in_place_v6": [],
+        "live": [],
+        "relocated_v6": []
+      },
+      "exact_positive_consumers": [
+        {
+          "consumer_display_path": "ElabMatrixC14__host__first_calc",
+          "consumer_kind": "calculation",
+          "param_name": "first_input",
+          "port": {
+            "consumer_node_id": "[\"calculation\",[\"occurrence\",\"[[\\\"a02caf35-897b-5fd2-b7dc-52fce1a4758b\\\",null]]\"],[\"declaration\",\"8034e12a-9c7d-5008-882a-bfcda21c52a4\"]]",
+            "formal_declaration_id": "ebded605-a796-5898-85e8-f178745ac00a",
+            "kind": "consumer"
+          },
+          "source": "ElabMatrixC14__host__source__value"
+        },
+        {
+          "consumer_display_path": "ElabMatrixC14__host__second",
+          "consumer_kind": "calculation",
+          "param_name": "second_input",
+          "port": {
+            "consumer_node_id": "[\"calculation\",[\"occurrence\",\"[[\\\"a02caf35-897b-5fd2-b7dc-52fce1a4758b\\\",null]]\"],[\"declaration\",\"a96e590e-0733-5f8d-a460-51aa2734b292\"]]",
+            "formal_declaration_id": "682cc66d-4676-5d71-a113-63901d359977",
+            "kind": "consumer"
+          },
+          "source": "ElabMatrixC14__host__source__value"
+        }
+      ],
+      "fixture": "elab_matrix_c14",
+      "source_ids": {
+        "ElabMatrixC14__host__source__value": {
+          "kind": "node",
+          "node_id": "[\"attribute\",[\"occurrence\",\"[[\\\"a02caf35-897b-5fd2-b7dc-52fce1a4758b\\\",null],[\\\"ffd8077d-0d00-5503-a419-69d3c12cc6a9\\\",null]]\"],[\"slot\",\"3e9f9d43-1001-5bf8-aac9-0c10687e1af3\"]]"
+        }
+      }
+    },
+    "C15": {
+      "baseline_routes": {
+        "in_place_v6": {
+          "computation_digest": "49f1c4bc7deb2305aa73ceeb231ce3026982d58d1bf4f0e7d955ccaff9c54ffd",
+          "instance_fingerprint": "35f023e5c65fdc628e3276f95a03bce43edf33f37a9dcb855c003ff98513150d"
+        },
+        "live": {
+          "computation_digest": "49f1c4bc7deb2305aa73ceeb231ce3026982d58d1bf4f0e7d955ccaff9c54ffd",
+          "instance_fingerprint": "35f023e5c65fdc628e3276f95a03bce43edf33f37a9dcb855c003ff98513150d"
+        },
+        "relocated_v6": {
+          "computation_digest": "49f1c4bc7deb2305aa73ceeb231ce3026982d58d1bf4f0e7d955ccaff9c54ffd",
+          "instance_fingerprint": "35f023e5c65fdc628e3276f95a03bce43edf33f37a9dcb855c003ff98513150d"
+        }
+      },
+      "changed_public_keys": [
+        "source_identity_mixed_consumers__parent_unit__shared_rate"
+      ],
+      "changed_routes": {
+        "in_place_v6": {
+          "computation_digest": "1153d4f5e717cfef9c5c0a27d055d0c3a09343a8ae1b569d5f8b1a83322d3630",
+          "instance_fingerprint": "b1540f561f5af1622ea6c79ad2dd96470fed6583e96370168bb7ccd434af5073"
+        },
+        "live": {
+          "computation_digest": "1153d4f5e717cfef9c5c0a27d055d0c3a09343a8ae1b569d5f8b1a83322d3630",
+          "instance_fingerprint": "b1540f561f5af1622ea6c79ad2dd96470fed6583e96370168bb7ccd434af5073"
+        },
+        "relocated_v6": {
+          "computation_digest": "1153d4f5e717cfef9c5c0a27d055d0c3a09343a8ae1b569d5f8b1a83322d3630",
+          "instance_fingerprint": "b1540f561f5af1622ea6c79ad2dd96470fed6583e96370168bb7ccd434af5073"
+        }
+      },
+      "complete_negative_unaffected_keys_by_route": {
+        "in_place_v6": [
+          "source_identity_mixed_consumers__avail_ctx__avail_plant__availability",
+          "source_identity_mixed_consumers__bank__cell[0]__cell_cost",
+          "source_identity_mixed_consumers__bank__cell[1]__cell_cost",
+          "source_identity_mixed_consumers__bank__cell[2]__cell_cost",
+          "source_identity_mixed_consumers__bare_station__bare_rig__intensity",
+          "source_identity_mixed_consumers__computed_station__source_identity_computed__base_rate",
+          "source_identity_mixed_consumers__qual_station__qual_plant__level",
+          "source_identity_mixed_consumers__stamp_plant__efficiency",
+          "source_identity_mixed_consumers__stamp_plant__lit_calc__value_in",
+          "source_identity_mixed_consumers__station__rig__gain_setting",
+          "source_identity_mixed_consumers__twin_bay__sensor_a__reading",
+          "source_identity_mixed_consumers__twin_bay__sensor_b__reading"
+        ],
+        "live": [
+          "source_identity_mixed_consumers__avail_ctx__avail_plant__availability",
+          "source_identity_mixed_consumers__bank__cell[0]__cell_cost",
+          "source_identity_mixed_consumers__bank__cell[1]__cell_cost",
+          "source_identity_mixed_consumers__bank__cell[2]__cell_cost",
+          "source_identity_mixed_consumers__bare_station__bare_rig__intensity",
+          "source_identity_mixed_consumers__computed_station__source_identity_computed__base_rate",
+          "source_identity_mixed_consumers__qual_station__qual_plant__level",
+          "source_identity_mixed_consumers__stamp_plant__efficiency",
+          "source_identity_mixed_consumers__stamp_plant__lit_calc__value_in",
+          "source_identity_mixed_consumers__station__rig__gain_setting",
+          "source_identity_mixed_consumers__twin_bay__sensor_a__reading",
+          "source_identity_mixed_consumers__twin_bay__sensor_b__reading"
+        ],
+        "relocated_v6": [
+          "source_identity_mixed_consumers__avail_ctx__avail_plant__availability",
+          "source_identity_mixed_consumers__bank__cell[0]__cell_cost",
+          "source_identity_mixed_consumers__bank__cell[1]__cell_cost",
+          "source_identity_mixed_consumers__bank__cell[2]__cell_cost",
+          "source_identity_mixed_consumers__bare_station__bare_rig__intensity",
+          "source_identity_mixed_consumers__computed_station__source_identity_computed__base_rate",
+          "source_identity_mixed_consumers__qual_station__qual_plant__level",
+          "source_identity_mixed_consumers__stamp_plant__efficiency",
+          "source_identity_mixed_consumers__stamp_plant__lit_calc__value_in",
+          "source_identity_mixed_consumers__station__rig__gain_setting",
+          "source_identity_mixed_consumers__twin_bay__sensor_a__reading",
+          "source_identity_mixed_consumers__twin_bay__sensor_b__reading"
+        ]
+      },
+      "exact_positive_consumers": [
+        {
+          "consumer_display_path": "source_identity_mixed_consumers__parent_unit__child__child_calc",
+          "consumer_kind": "calculation",
+          "param_name": "value_in",
+          "port": {
+            "consumer_node_id": "[\"calculation\",[\"occurrence\",\"[[\\\"1df75c6d-a631-5058-ad41-f070da5ad310\\\",null],[\\\"caa7fa58-c34d-52f8-b4fb-df2b327c7a32\\\",null]]\"],[\"declaration\",\"e0ed0dd1-6c84-5afe-a346-9f6db06b1fc9\"]]",
+            "formal_declaration_id": "85b8cef1-68a7-5caf-938d-7e16d5bbf74d",
+            "kind": "consumer"
+          },
+          "source": "source_identity_mixed_consumers__parent_unit__shared_rate"
+        },
+        {
+          "consumer_display_path": "source_identity_mixed_consumers__parent_unit__parent_guard",
+          "consumer_kind": "constraint",
+          "param_name": "v",
+          "port": {
+            "consumer_node_id": "[\"constraint\",[\"occurrence\",\"[[\\\"1df75c6d-a631-5058-ad41-f070da5ad310\\\",null]]\"],[\"declaration\",\"ed45cc6e-a290-5a41-99b0-3f29a003cb81\"]]",
+            "formal_declaration_id": "de40f2f7-6210-5cfd-95a2-7978d502de10",
+            "kind": "consumer"
+          },
+          "source": "source_identity_mixed_consumers__parent_unit__shared_rate"
+        },
+        {
+          "consumer_display_path": "source_identity_mixed_consumers__parent_unit__parent_total",
+          "consumer_kind": "formula",
+          "param_name": "shared_rate",
+          "port": {
+            "consumer_node_id": "[\"calculation\",[\"occurrence\",\"[[\\\"1df75c6d-a631-5058-ad41-f070da5ad310\\\",null]]\"],[\"slot\",\"e498d8ff-1280-56a1-aecb-c2a20bd00904\"]]",
+            "edge_ordinal": 0,
+            "kind": "expression",
+            "reference_ordinal": 0,
+            "referenced_declaration_id": "3ddba943-848c-5679-807c-1539f4a8228b",
+            "target_occurrence_id": "[[\"1df75c6d-a631-5058-ad41-f070da5ad310\",null]]"
+          },
+          "source": "source_identity_mixed_consumers__parent_unit__shared_rate"
+        }
+      ],
+      "fixture": "source_identity_mixed_consumers",
+      "source_ids": {
+        "source_identity_mixed_consumers__parent_unit__shared_rate": {
+          "kind": "node",
+          "node_id": "[\"attribute\",[\"occurrence\",\"[[\\\"1df75c6d-a631-5058-ad41-f070da5ad310\\\",null]]\"],[\"slot\",\"3ddba943-848c-5679-807c-1539f4a8228b\"]]"
+        }
+      }
+    },
+    "C16": {
+      "baseline_routes": {
+        "in_place_v6": {
+          "computation_digest": "7cb4c19c0361f4daf1af62a03363c59f71dd013b755ff5db5ec65a87cf192068",
+          "instance_fingerprint": "80e1b0c1c7134d5b567c1b7481cd961390ecde9b28a77f948a36094585af0d32"
+        },
+        "live": {
+          "computation_digest": "7cb4c19c0361f4daf1af62a03363c59f71dd013b755ff5db5ec65a87cf192068",
+          "instance_fingerprint": "80e1b0c1c7134d5b567c1b7481cd961390ecde9b28a77f948a36094585af0d32"
+        },
+        "relocated_v6": {
+          "computation_digest": "7cb4c19c0361f4daf1af62a03363c59f71dd013b755ff5db5ec65a87cf192068",
+          "instance_fingerprint": "80e1b0c1c7134d5b567c1b7481cd961390ecde9b28a77f948a36094585af0d32"
+        }
+      },
+      "changed_public_keys": [
+        "ElabMatrixC16__host__left__x"
+      ],
+      "changed_routes": {
+        "in_place_v6": {
+          "computation_digest": "3de8a1ef3b55263282c2f9d8fc03e7952256672ee83425d2e0e9d180e96c24c4",
+          "instance_fingerprint": "d96162ef1a54bf86591131e429133240618b24d97b1ce2a53d3d37032bd8a5b9"
+        },
+        "live": {
+          "computation_digest": "3de8a1ef3b55263282c2f9d8fc03e7952256672ee83425d2e0e9d180e96c24c4",
+          "instance_fingerprint": "d96162ef1a54bf86591131e429133240618b24d97b1ce2a53d3d37032bd8a5b9"
+        },
+        "relocated_v6": {
+          "computation_digest": "3de8a1ef3b55263282c2f9d8fc03e7952256672ee83425d2e0e9d180e96c24c4",
+          "instance_fingerprint": "d96162ef1a54bf86591131e429133240618b24d97b1ce2a53d3d37032bd8a5b9"
+        }
+      },
+      "complete_negative_unaffected_keys_by_route": {
+        "in_place_v6": [
+          "ElabMatrixC16__host__right__x"
+        ],
+        "live": [
+          "ElabMatrixC16__host__right__x"
+        ],
+        "relocated_v6": [
+          "ElabMatrixC16__host__right__x"
+        ]
+      },
+      "exact_positive_consumers": [
+        {
+          "consumer_display_path": "ElabMatrixC16__host__left",
+          "consumer_kind": "calculation",
+          "param_name": "x",
+          "port": {
+            "consumer_node_id": "[\"calculation\",[\"occurrence\",\"[[\\\"0bcf982d-f4a7-55b4-9349-b4f750c579f1\\\",null]]\"],[\"declaration\",\"ce46794c-bd47-5a66-8ed9-136b03f2dc5a\"]]",
+            "formal_declaration_id": "d6a7585e-73ff-563e-9e60-3ef4333fe1dc",
+            "kind": "consumer"
+          },
+          "source": "ElabMatrixC16__host__left__x"
+        },
+        {
+          "consumer_display_path": "ElabMatrixC16__host__right",
+          "consumer_kind": "calculation",
+          "param_name": "x",
+          "port": {
+            "consumer_node_id": "[\"calculation\",[\"occurrence\",\"[[\\\"0bcf982d-f4a7-55b4-9349-b4f750c579f1\\\",null]]\"],[\"declaration\",\"097a7f72-2478-5e7f-bf37-b4a227a163f9\"]]",
+            "formal_declaration_id": "19e279a4-7e84-509d-90fd-4d9cd5bacc4e",
+            "kind": "consumer"
+          },
+          "source": "ElabMatrixC16__host__right__x"
+        }
+      ],
+      "fixture": "elab_matrix_c16",
+      "source_ids": {
+        "ElabMatrixC16__host__left__x": {
+          "kind": "literal_value_site",
+          "port": {
+            "consumer_node_id": "[\"calculation\",[\"occurrence\",\"[[\\\"0bcf982d-f4a7-55b4-9349-b4f750c579f1\\\",null]]\"],[\"declaration\",\"ce46794c-bd47-5a66-8ed9-136b03f2dc5a\"]]",
+            "formal_declaration_id": "d6a7585e-73ff-563e-9e60-3ef4333fe1dc",
+            "kind": "consumer"
+          }
+        },
+        "ElabMatrixC16__host__right__x": {
+          "kind": "literal_value_site",
+          "port": {
+            "consumer_node_id": "[\"calculation\",[\"occurrence\",\"[[\\\"0bcf982d-f4a7-55b4-9349-b4f750c579f1\\\",null]]\"],[\"declaration\",\"097a7f72-2478-5e7f-bf37-b4a227a163f9\"]]",
+            "formal_declaration_id": "19e279a4-7e84-509d-90fd-4d9cd5bacc4e",
+            "kind": "consumer"
+          }
+        }
+      }
+    },
+    "C17": {
+      "baseline_routes": {
+        "in_place_v6": {
+          "computation_digest": "24aac9d4a8eaaf67876763e37fd6190798b903616443a63af30a9eedc32808ab",
+          "instance_fingerprint": "98a8a8edfc20d17e4b36af23cb90ac0bd495b35eca5a14bdd14741f1ceb202bf"
+        },
+        "live": {
+          "computation_digest": "24aac9d4a8eaaf67876763e37fd6190798b903616443a63af30a9eedc32808ab",
+          "instance_fingerprint": "98a8a8edfc20d17e4b36af23cb90ac0bd495b35eca5a14bdd14741f1ceb202bf"
+        },
+        "relocated_v6": {
+          "computation_digest": "24aac9d4a8eaaf67876763e37fd6190798b903616443a63af30a9eedc32808ab",
+          "instance_fingerprint": "98a8a8edfc20d17e4b36af23cb90ac0bd495b35eca5a14bdd14741f1ceb202bf"
+        }
+      },
+      "changed_public_keys": [
+        "ElabMatrixAggregations__host__permitting__base_cost"
+      ],
+      "changed_routes": {
+        "in_place_v6": {
+          "computation_digest": "6ae374ea91c830120a546cf0386ec0ae550ca65f725f68025f0bcf39d8e010ee",
+          "instance_fingerprint": "b24a7af39f4d2d54edb7c52b8f20959df430d372fd182009f82bc78dfd55f1c2"
+        },
+        "live": {
+          "computation_digest": "6ae374ea91c830120a546cf0386ec0ae550ca65f725f68025f0bcf39d8e010ee",
+          "instance_fingerprint": "b24a7af39f4d2d54edb7c52b8f20959df430d372fd182009f82bc78dfd55f1c2"
+        },
+        "relocated_v6": {
+          "computation_digest": "6ae374ea91c830120a546cf0386ec0ae550ca65f725f68025f0bcf39d8e010ee",
+          "instance_fingerprint": "b24a7af39f4d2d54edb7c52b8f20959df430d372fd182009f82bc78dfd55f1c2"
+        }
+      },
+      "complete_negative_unaffected_keys_by_route": {
+        "in_place_v6": [
+          "ElabMatrixAggregations__host__permitting__fabrication_cost",
+          "ElabMatrixAggregations__host__permitting__installation_cost",
+          "ElabMatrixAggregations__host__permitting__raw_material_cost"
+        ],
+        "live": [
+          "ElabMatrixAggregations__host__permitting__fabrication_cost",
+          "ElabMatrixAggregations__host__permitting__installation_cost",
+          "ElabMatrixAggregations__host__permitting__raw_material_cost"
+        ],
+        "relocated_v6": [
+          "ElabMatrixAggregations__host__permitting__fabrication_cost",
+          "ElabMatrixAggregations__host__permitting__installation_cost",
+          "ElabMatrixAggregations__host__permitting__raw_material_cost"
+        ]
+      },
+      "exact_positive_consumers": [
+        {
+          "consumer_display_path": "ElabMatrixAggregations__host__permitting__cost_model",
+          "consumer_kind": "calculation",
+          "param_name": "base",
+          "port": {
+            "consumer_node_id": "[\"calculation\",[\"occurrence\",\"[[\\\"58fd0736-3726-5ee0-bef0-a308a7ba841a\\\",null],[\\\"7b118614-cf42-5520-9e5a-59e3937b3794\\\",null]]\"],[\"declaration\",\"bcbf7227-31b9-5e8f-ad05-d5e9f39cafa5\"]]",
+            "formal_declaration_id": "68fc4ca6-f1bd-5cf8-bd0b-0fbbc1066c20",
+            "kind": "consumer"
+          },
+          "source": "ElabMatrixAggregations__host__permitting__base_cost"
+        },
+        {
+          "consumer_display_path": "ElabMatrixAggregations__host__producer_total",
+          "consumer_kind": "formula",
+          "param_name": "capital_cost",
+          "port": {
+            "consumer_node_id": "[\"calculation\",[\"occurrence\",\"[[\\\"58fd0736-3726-5ee0-bef0-a308a7ba841a\\\",null]]\"],[\"slot\",\"2765aa69-c358-571f-822d-12e56dd636bc\"]]",
+            "edge_ordinal": 0,
+            "kind": "expression",
+            "reference_ordinal": 0,
+            "referenced_declaration_id": "16909422-a12b-53db-897d-465ba6642000",
+            "target_occurrence_id": "[[\"58fd0736-3726-5ee0-bef0-a308a7ba841a\",null],[\"7b118614-cf42-5520-9e5a-59e3937b3794\",null]]"
+          },
+          "source": "channel:ElabMatrixAggregations__host__permitting__cost_model__cost"
+        }
+      ],
+      "fixture": "elab_matrix_aggregations",
+      "source_ids": {
+        "ElabMatrixAggregations__host__permitting__base_cost": {
+          "kind": "node",
+          "node_id": "[\"attribute\",[\"occurrence\",\"[[\\\"58fd0736-3726-5ee0-bef0-a308a7ba841a\\\",null],[\\\"7b118614-cf42-5520-9e5a-59e3937b3794\\\",null]]\"],[\"slot\",\"3eb35363-6404-5b72-84a3-785042a335ff\"]]"
+        },
+        "channel:ElabMatrixAggregations__host__permitting__cost_model__cost": {
+          "calculation_node_id": "[\"calculation\",[\"occurrence\",\"[[\\\"58fd0736-3726-5ee0-bef0-a308a7ba841a\\\",null],[\\\"7b118614-cf42-5520-9e5a-59e3937b3794\\\",null]]\"],[\"declaration\",\"bcbf7227-31b9-5e8f-ad05-d5e9f39cafa5\"]]",
+          "kind": "producer",
+          "output_declaration_id": "80d7fd7b-06ad-55ae-b591-a5bd2d6948c2"
+        }
+      }
+    },
+    "C19": {
+      "baseline_routes": {
+        "in_place_v6": {
+          "computation_digest": "7c4dd1f68c8aec1fcb9410361856010f4bea553c5e2c9fbe2e4398837264683e",
+          "instance_fingerprint": "e858863a0f04a20a8270b5cab575b6b4d2c56c8b650f7628101741b8fc96c9dc"
+        },
+        "live": {
+          "computation_digest": "7c4dd1f68c8aec1fcb9410361856010f4bea553c5e2c9fbe2e4398837264683e",
+          "instance_fingerprint": "e858863a0f04a20a8270b5cab575b6b4d2c56c8b650f7628101741b8fc96c9dc"
+        },
+        "relocated_v6": {
+          "computation_digest": "7c4dd1f68c8aec1fcb9410361856010f4bea553c5e2c9fbe2e4398837264683e",
+          "instance_fingerprint": "e858863a0f04a20a8270b5cab575b6b4d2c56c8b650f7628101741b8fc96c9dc"
+        }
+      },
+      "changed_public_keys": [
+        "nested_occurrence_override_probe__the_design__panel__source__reading"
+      ],
+      "changed_routes": {
+        "in_place_v6": {
+          "computation_digest": "8428610e3cdd62c0963be12e3a8fac61650edc5eedb25a7c3368103ebb94d59f",
+          "instance_fingerprint": "c5e444ae82ce144c9a418d1f4b2e2ed0f33f2d8adb51495ed8248e53f0f4e574"
+        },
+        "live": {
+          "computation_digest": "8428610e3cdd62c0963be12e3a8fac61650edc5eedb25a7c3368103ebb94d59f",
+          "instance_fingerprint": "c5e444ae82ce144c9a418d1f4b2e2ed0f33f2d8adb51495ed8248e53f0f4e574"
+        },
+        "relocated_v6": {
+          "computation_digest": "8428610e3cdd62c0963be12e3a8fac61650edc5eedb25a7c3368103ebb94d59f",
+          "instance_fingerprint": "c5e444ae82ce144c9a418d1f4b2e2ed0f33f2d8adb51495ed8248e53f0f4e574"
+        }
+      },
+      "complete_negative_unaffected_keys_by_route": {
+        "in_place_v6": [],
+        "live": [],
+        "relocated_v6": []
+      },
+      "exact_positive_consumers": [
+        {
+          "consumer_display_path": "nested_occurrence_override_probe__the_design__panel__noop",
+          "consumer_kind": "calculation",
+          "param_name": "x",
+          "port": {
+            "consumer_node_id": "[\"calculation\",[\"occurrence\",\"[[\\\"c648a501-efc1-556d-a60a-95ed72cb5003\\\",null],[\\\"53c6df3f-133f-5694-82f7-a30d66976f12\\\",null]]\"],[\"declaration\",\"4e8677fe-5d5c-5b4b-ab90-bd8ae28de026\"]]",
+            "formal_declaration_id": "587ecd9f-b0ce-517d-9d20-f9f0abae94ef",
+            "kind": "consumer"
+          },
+          "source": "nested_occurrence_override_probe__the_design__panel__source__reading"
+        },
+        {
+          "consumer_display_path": "nested_occurrence_override_probe__the_design__panel__within",
+          "consumer_kind": "constraint",
+          "param_name": "v",
+          "port": {
+            "consumer_node_id": "[\"constraint\",[\"occurrence\",\"[[\\\"c648a501-efc1-556d-a60a-95ed72cb5003\\\",null],[\\\"53c6df3f-133f-5694-82f7-a30d66976f12\\\",null]]\"],[\"declaration\",\"2f231970-e8cb-5707-90c4-733b412063dd\"]]",
+            "formal_declaration_id": "ed2b8b7b-4b2c-534b-879f-1d8e2a96599f",
+            "kind": "consumer"
+          },
+          "source": "nested_occurrence_override_probe__the_design__panel__source__reading"
+        }
+      ],
+      "fixture": "nested_occurrence_override_probe",
+      "source_ids": {
+        "nested_occurrence_override_probe__the_design__panel__source__reading": {
+          "kind": "node",
+          "node_id": "[\"attribute\",[\"occurrence\",\"[[\\\"c648a501-efc1-556d-a60a-95ed72cb5003\\\",null],[\\\"53c6df3f-133f-5694-82f7-a30d66976f12\\\",null],[\\\"a9317e3a-cdb7-5774-ae1a-8a9e28dd9ea9\\\",null]]\"],[\"slot\",\"667a23a2-56c9-5449-aa81-5e738d17b609\"]]"
+        }
+      }
+    },
+    "C2": {
+      "baseline_routes": {
+        "in_place_v6": {
+          "computation_digest": "6f67ded0c5fde1d1a3f4c8677b243f77621e730495eef527079b01afa800f4aa",
+          "instance_fingerprint": "6313350186d8e5fe685fde27397379a1e56b677da04d6bc4858a49ddae9261fc"
+        },
+        "live": {
+          "computation_digest": "6f67ded0c5fde1d1a3f4c8677b243f77621e730495eef527079b01afa800f4aa",
+          "instance_fingerprint": "6313350186d8e5fe685fde27397379a1e56b677da04d6bc4858a49ddae9261fc"
+        },
+        "relocated_v6": {
+          "computation_digest": "6f67ded0c5fde1d1a3f4c8677b243f77621e730495eef527079b01afa800f4aa",
+          "instance_fingerprint": "6313350186d8e5fe685fde27397379a1e56b677da04d6bc4858a49ddae9261fc"
+        }
+      },
+      "changed_public_keys": [
+        "ElabMatrixC2__host__source"
+      ],
+      "changed_routes": {
+        "in_place_v6": {
+          "computation_digest": "809f19dd9054249b43f282466968bfb227fb38d1da54192db2a60a7cbeca0062",
+          "instance_fingerprint": "b1ecc1cdd314be6b0e9b8c2b0cb99ae4160c6fc54e22e82f5f6a55ca4a1cd2b8"
+        },
+        "live": {
+          "computation_digest": "809f19dd9054249b43f282466968bfb227fb38d1da54192db2a60a7cbeca0062",
+          "instance_fingerprint": "b1ecc1cdd314be6b0e9b8c2b0cb99ae4160c6fc54e22e82f5f6a55ca4a1cd2b8"
+        },
+        "relocated_v6": {
+          "computation_digest": "809f19dd9054249b43f282466968bfb227fb38d1da54192db2a60a7cbeca0062",
+          "instance_fingerprint": "b1ecc1cdd314be6b0e9b8c2b0cb99ae4160c6fc54e22e82f5f6a55ca4a1cd2b8"
+        }
+      },
+      "complete_negative_unaffected_keys_by_route": {
+        "in_place_v6": [],
+        "live": [],
+        "relocated_v6": []
+      },
+      "exact_positive_consumers": [
+        {
+          "consumer_display_path": "ElabMatrixC2__host__first_calc",
+          "consumer_kind": "calculation",
+          "param_name": "x",
+          "port": {
+            "consumer_node_id": "[\"calculation\",[\"occurrence\",\"[[\\\"bbb2c40a-c45b-5e9a-93a8-18dbf4fd30c7\\\",null]]\"],[\"declaration\",\"36a5f35d-73e8-5685-a035-722bd81b71e4\"]]",
+            "formal_declaration_id": "610ee13d-ac64-5b8b-b43a-62539c93b113",
+            "kind": "consumer"
+          },
+          "source": "ElabMatrixC2__host__source"
+        },
+        {
+          "consumer_display_path": "ElabMatrixC2__host__second",
+          "consumer_kind": "calculation",
+          "param_name": "x",
+          "port": {
+            "consumer_node_id": "[\"calculation\",[\"occurrence\",\"[[\\\"bbb2c40a-c45b-5e9a-93a8-18dbf4fd30c7\\\",null]]\"],[\"declaration\",\"0d10830b-2ef5-52e5-95d2-29d7504a52f9\"]]",
+            "formal_declaration_id": "96f495c3-36d9-57e3-a571-7e2fb8bd6def",
+            "kind": "consumer"
+          },
+          "source": "ElabMatrixC2__host__source"
+        }
+      ],
+      "fixture": "elab_matrix_c2",
+      "source_ids": {
+        "ElabMatrixC2__host__source": {
+          "kind": "node",
+          "node_id": "[\"attribute\",[\"occurrence\",\"[[\\\"bbb2c40a-c45b-5e9a-93a8-18dbf4fd30c7\\\",null]]\"],[\"slot\",\"aade226b-d6d2-57ce-becf-8dc8c920bcdf\"]]"
+        }
+      }
+    },
+    "C20": {
+      "baseline_routes": {
+        "in_place_v6": {
+          "computation_digest": "20ee77fce621b636e0e8cf58563e3a8953ab86a9b4e2e2fdf5b0b4ac2ee32663",
+          "instance_fingerprint": "d2a3197bde9aa18f36a7fc281206c9585784ae8c2eea2329f3812fa4f20e15b0"
+        },
+        "live": {
+          "computation_digest": "20ee77fce621b636e0e8cf58563e3a8953ab86a9b4e2e2fdf5b0b4ac2ee32663",
+          "instance_fingerprint": "d2a3197bde9aa18f36a7fc281206c9585784ae8c2eea2329f3812fa4f20e15b0"
+        },
+        "relocated_v6": {
+          "computation_digest": "20ee77fce621b636e0e8cf58563e3a8953ab86a9b4e2e2fdf5b0b4ac2ee32663",
+          "instance_fingerprint": "d2a3197bde9aa18f36a7fc281206c9585784ae8c2eea2329f3812fa4f20e15b0"
+        }
+      },
+      "changed_public_keys": [
+        "ShadowedReference__the_outer__scale"
+      ],
+      "changed_routes": {
+        "in_place_v6": {
+          "computation_digest": "d62f2dcdc8133090d62e0862164a99feea3dc95f86bc22d205ee44c84b472dab",
+          "instance_fingerprint": "0fadb135966fe7aab6c4af4ba70099943ff9a6e235bb50dca5e7f11dfec85cf6"
+        },
+        "live": {
+          "computation_digest": "d62f2dcdc8133090d62e0862164a99feea3dc95f86bc22d205ee44c84b472dab",
+          "instance_fingerprint": "0fadb135966fe7aab6c4af4ba70099943ff9a6e235bb50dca5e7f11dfec85cf6"
+        },
+        "relocated_v6": {
+          "computation_digest": "d62f2dcdc8133090d62e0862164a99feea3dc95f86bc22d205ee44c84b472dab",
+          "instance_fingerprint": "0fadb135966fe7aab6c4af4ba70099943ff9a6e235bb50dca5e7f11dfec85cf6"
+        }
+      },
+      "complete_negative_unaffected_keys_by_route": {
+        "in_place_v6": [],
+        "live": [],
+        "relocated_v6": []
+      },
+      "exact_positive_consumers": [
+        {
+          "consumer_display_path": "ShadowedReference__the_outer__inner__shadowed_calc",
+          "consumer_kind": "calculation",
+          "param_name": "factor",
+          "port": {
+            "consumer_node_id": "[\"calculation\",[\"occurrence\",\"[[\\\"78f3584c-716f-5e2a-af99-728d11e81c01\\\",null],[\\\"277edfb5-3999-56e6-8828-2301e42ad5a6\\\",null]]\"],[\"declaration\",\"4e038e68-bc49-5d8e-b8be-820640f070fe\"]]",
+            "formal_declaration_id": "143b6500-a135-5f70-bbbe-7f9627dddd78",
+            "kind": "consumer"
+          },
+          "source": "ShadowedReference__the_outer__scale"
+        }
+      ],
+      "fixture": "shadowed_reference",
+      "source_ids": {
+        "ShadowedReference__the_outer__scale": {
+          "kind": "node",
+          "node_id": "[\"attribute\",[\"occurrence\",\"[[\\\"78f3584c-716f-5e2a-af99-728d11e81c01\\\",null]]\"],[\"slot\",\"57723b7a-e2b0-5015-ae96-d9af9374ebd7\"]]"
+        }
+      }
+    },
+    "C21": {
+      "baseline_routes": {
+        "in_place_v6": {
+          "computation_digest": "e781e3aa567dab8d529fd757b6eee02ba9b836b3db28d33a546f89d815f94d07",
+          "instance_fingerprint": "5d5bc6551851b9d762450759fbd10e4779c1d0b2e6a26309763bfb5f8e70b344"
+        },
+        "live": {
+          "computation_digest": "e781e3aa567dab8d529fd757b6eee02ba9b836b3db28d33a546f89d815f94d07",
+          "instance_fingerprint": "5d5bc6551851b9d762450759fbd10e4779c1d0b2e6a26309763bfb5f8e70b344"
+        },
+        "relocated_v6": {
+          "computation_digest": "e781e3aa567dab8d529fd757b6eee02ba9b836b3db28d33a546f89d815f94d07",
+          "instance_fingerprint": "5d5bc6551851b9d762450759fbd10e4779c1d0b2e6a26309763bfb5f8e70b344"
+        }
+      },
+      "changed_public_keys": [
+        "ElabMatrixC21__plant__driver__rate"
+      ],
+      "changed_routes": {
+        "in_place_v6": {
+          "computation_digest": "199900fff679432e7e2ba2be2a164d298b506a3391362b8d7c853aa788bcce5b",
+          "instance_fingerprint": "a7be58fb1a670a38fa26897b62eb2e55e2e4d80cbb410cfb4e2252a469e5ff5e"
+        },
+        "live": {
+          "computation_digest": "199900fff679432e7e2ba2be2a164d298b506a3391362b8d7c853aa788bcce5b",
+          "instance_fingerprint": "a7be58fb1a670a38fa26897b62eb2e55e2e4d80cbb410cfb4e2252a469e5ff5e"
+        },
+        "relocated_v6": {
+          "computation_digest": "199900fff679432e7e2ba2be2a164d298b506a3391362b8d7c853aa788bcce5b",
+          "instance_fingerprint": "a7be58fb1a670a38fa26897b62eb2e55e2e4d80cbb410cfb4e2252a469e5ff5e"
+        }
+      },
+      "complete_negative_unaffected_keys_by_route": {
+        "in_place_v6": [],
+        "live": [],
+        "relocated_v6": []
+      },
+      "exact_positive_consumers": [
+        {
+          "consumer_display_path": "ElabMatrixC21__plant__observation",
+          "consumer_kind": "calculation",
+          "param_name": "x",
+          "port": {
+            "consumer_node_id": "[\"calculation\",[\"occurrence\",\"[[\\\"8892eae1-d0ae-56c2-a94b-d4dbbf7316db\\\",null]]\"],[\"declaration\",\"a96f5aef-a4a7-5525-8823-6fdf2ec78186\"]]",
+            "formal_declaration_id": "d894f56e-6642-59e1-883a-9fbc4f6ab7d3",
+            "kind": "consumer"
+          },
+          "source": "ElabMatrixC21__plant__driver__rate"
+        }
+      ],
+      "fixture": "elab_matrix_c21",
+      "source_ids": {
+        "ElabMatrixC21__plant__driver__rate": {
+          "kind": "node",
+          "node_id": "[\"attribute\",[\"occurrence\",\"[[\\\"8892eae1-d0ae-56c2-a94b-d4dbbf7316db\\\",null],[\\\"a8ab49b7-a333-53b1-86f1-549d1e42af82\\\",null]]\"],[\"slot\",\"e4d1773c-9478-58fb-a219-c51afef074e7\"]]"
+        }
+      }
+    },
+    "C23": {
+      "baseline_routes": {
+        "in_place_v6": {
+          "computation_digest": "bee4efe47734771597243ac65df2ddec2a7990be125fedf8f5190909e114bd22",
+          "instance_fingerprint": "38fe9abb3b9e51ec1fad9124d754ce44d576ff64259517f317f608d7fd1209b3"
+        },
+        "live": {
+          "computation_digest": "bee4efe47734771597243ac65df2ddec2a7990be125fedf8f5190909e114bd22",
+          "instance_fingerprint": "38fe9abb3b9e51ec1fad9124d754ce44d576ff64259517f317f608d7fd1209b3"
+        },
+        "relocated_v6": {
+          "computation_digest": "bee4efe47734771597243ac65df2ddec2a7990be125fedf8f5190909e114bd22",
+          "instance_fingerprint": "38fe9abb3b9e51ec1fad9124d754ce44d576ff64259517f317f608d7fd1209b3"
+        }
+      },
+      "changed_public_keys": [
+        "ElabMatrixC23__host__first_calc__x"
+      ],
+      "changed_routes": {
+        "in_place_v6": {
+          "computation_digest": "bee4efe47734771597243ac65df2ddec2a7990be125fedf8f5190909e114bd22",
+          "instance_fingerprint": "38fe9abb3b9e51ec1fad9124d754ce44d576ff64259517f317f608d7fd1209b3"
+        },
+        "live": {
+          "computation_digest": "bee4efe47734771597243ac65df2ddec2a7990be125fedf8f5190909e114bd22",
+          "instance_fingerprint": "38fe9abb3b9e51ec1fad9124d754ce44d576ff64259517f317f608d7fd1209b3"
+        },
+        "relocated_v6": {
+          "computation_digest": "bee4efe47734771597243ac65df2ddec2a7990be125fedf8f5190909e114bd22",
+          "instance_fingerprint": "38fe9abb3b9e51ec1fad9124d754ce44d576ff64259517f317f608d7fd1209b3"
+        }
+      },
+      "complete_negative_unaffected_keys_by_route": {
+        "in_place_v6": [
+          "ElabMatrixC23__host__second__x"
+        ],
+        "live": [
+          "ElabMatrixC23__host__second__x"
+        ],
+        "relocated_v6": [
+          "ElabMatrixC23__host__second__x"
+        ]
+      },
+      "exact_positive_consumers": [
+        {
+          "consumer_display_path": "ElabMatrixC23__host__first_calc",
+          "consumer_kind": "calculation",
+          "param_name": "x",
+          "port": {
+            "consumer_node_id": "[\"calculation\",[\"occurrence\",\"[[\\\"ac32cd74-974d-5502-8c36-ee456c3ed6fc\\\",null]]\"],[\"declaration\",\"f2442caf-7ac9-5c89-abe4-ae90927f1e37\"]]",
+            "formal_declaration_id": "d97b0e34-7fef-5a7a-96c0-0009ba8a508f",
+            "kind": "consumer"
+          },
+          "source": "ElabMatrixC23__host__first_calc__x"
+        },
+        {
+          "consumer_display_path": "ElabMatrixC23__host__second",
+          "consumer_kind": "calculation",
+          "param_name": "x",
+          "port": {
+            "consumer_node_id": "[\"calculation\",[\"occurrence\",\"[[\\\"ac32cd74-974d-5502-8c36-ee456c3ed6fc\\\",null]]\"],[\"declaration\",\"dbd2a6ef-810e-5299-ae82-fca07b1f95be\"]]",
+            "formal_declaration_id": "d97b0e34-7fef-5a7a-96c0-0009ba8a508f",
+            "kind": "consumer"
+          },
+          "source": "ElabMatrixC23__host__second__x"
+        }
+      ],
+      "fixture": "elab_matrix_c23",
+      "source_ids": {
+        "ElabMatrixC23__host__first_calc__x": {
+          "kind": "unbound_formal_value_site",
+          "port": {
+            "consumer_node_id": "[\"calculation\",[\"occurrence\",\"[[\\\"ac32cd74-974d-5502-8c36-ee456c3ed6fc\\\",null]]\"],[\"declaration\",\"f2442caf-7ac9-5c89-abe4-ae90927f1e37\"]]",
+            "formal_declaration_id": "d97b0e34-7fef-5a7a-96c0-0009ba8a508f",
+            "kind": "consumer"
+          }
+        },
+        "ElabMatrixC23__host__second__x": {
+          "kind": "unbound_formal_value_site",
+          "port": {
+            "consumer_node_id": "[\"calculation\",[\"occurrence\",\"[[\\\"ac32cd74-974d-5502-8c36-ee456c3ed6fc\\\",null]]\"],[\"declaration\",\"dbd2a6ef-810e-5299-ae82-fca07b1f95be\"]]",
+            "formal_declaration_id": "d97b0e34-7fef-5a7a-96c0-0009ba8a508f",
+            "kind": "consumer"
+          }
+        }
+      }
+    },
+    "C24": {
+      "baseline_routes": {
+        "in_place_v6": {
+          "computation_digest": "49f1c4bc7deb2305aa73ceeb231ce3026982d58d1bf4f0e7d955ccaff9c54ffd",
+          "instance_fingerprint": "35f023e5c65fdc628e3276f95a03bce43edf33f37a9dcb855c003ff98513150d"
+        },
+        "live": {
+          "computation_digest": "49f1c4bc7deb2305aa73ceeb231ce3026982d58d1bf4f0e7d955ccaff9c54ffd",
+          "instance_fingerprint": "35f023e5c65fdc628e3276f95a03bce43edf33f37a9dcb855c003ff98513150d"
+        },
+        "relocated_v6": {
+          "computation_digest": "49f1c4bc7deb2305aa73ceeb231ce3026982d58d1bf4f0e7d955ccaff9c54ffd",
+          "instance_fingerprint": "35f023e5c65fdc628e3276f95a03bce43edf33f37a9dcb855c003ff98513150d"
+        }
+      },
+      "changed_public_keys": [
+        "source_identity_mixed_consumers__computed_station__source_identity_computed__base_rate"
+      ],
+      "changed_routes": {
+        "in_place_v6": {
+          "computation_digest": "c5722f4c5636fd14f9a9144330798e896b223252c48fdc88ec93f7bd618495ed",
+          "instance_fingerprint": "50a9f665fb2d255e79343813a55fe92057e8ed46040ec5279a5e5c2498788660"
+        },
+        "live": {
+          "computation_digest": "c5722f4c5636fd14f9a9144330798e896b223252c48fdc88ec93f7bd618495ed",
+          "instance_fingerprint": "50a9f665fb2d255e79343813a55fe92057e8ed46040ec5279a5e5c2498788660"
+        },
+        "relocated_v6": {
+          "computation_digest": "c5722f4c5636fd14f9a9144330798e896b223252c48fdc88ec93f7bd618495ed",
+          "instance_fingerprint": "50a9f665fb2d255e79343813a55fe92057e8ed46040ec5279a5e5c2498788660"
+        }
+      },
+      "complete_negative_unaffected_keys_by_route": {
+        "in_place_v6": [
+          "source_identity_mixed_consumers__avail_ctx__avail_plant__availability",
+          "source_identity_mixed_consumers__bank__cell[0]__cell_cost",
+          "source_identity_mixed_consumers__bank__cell[1]__cell_cost",
+          "source_identity_mixed_consumers__bank__cell[2]__cell_cost",
+          "source_identity_mixed_consumers__bare_station__bare_rig__intensity",
+          "source_identity_mixed_consumers__parent_unit__shared_rate",
+          "source_identity_mixed_consumers__qual_station__qual_plant__level",
+          "source_identity_mixed_consumers__stamp_plant__efficiency",
+          "source_identity_mixed_consumers__stamp_plant__lit_calc__value_in",
+          "source_identity_mixed_consumers__station__rig__gain_setting",
+          "source_identity_mixed_consumers__twin_bay__sensor_a__reading",
+          "source_identity_mixed_consumers__twin_bay__sensor_b__reading"
+        ],
+        "live": [
+          "source_identity_mixed_consumers__avail_ctx__avail_plant__availability",
+          "source_identity_mixed_consumers__bank__cell[0]__cell_cost",
+          "source_identity_mixed_consumers__bank__cell[1]__cell_cost",
+          "source_identity_mixed_consumers__bank__cell[2]__cell_cost",
+          "source_identity_mixed_consumers__bare_station__bare_rig__intensity",
+          "source_identity_mixed_consumers__parent_unit__shared_rate",
+          "source_identity_mixed_consumers__qual_station__qual_plant__level",
+          "source_identity_mixed_consumers__stamp_plant__efficiency",
+          "source_identity_mixed_consumers__stamp_plant__lit_calc__value_in",
+          "source_identity_mixed_consumers__station__rig__gain_setting",
+          "source_identity_mixed_consumers__twin_bay__sensor_a__reading",
+          "source_identity_mixed_consumers__twin_bay__sensor_b__reading"
+        ],
+        "relocated_v6": [
+          "source_identity_mixed_consumers__avail_ctx__avail_plant__availability",
+          "source_identity_mixed_consumers__bank__cell[0]__cell_cost",
+          "source_identity_mixed_consumers__bank__cell[1]__cell_cost",
+          "source_identity_mixed_consumers__bank__cell[2]__cell_cost",
+          "source_identity_mixed_consumers__bare_station__bare_rig__intensity",
+          "source_identity_mixed_consumers__parent_unit__shared_rate",
+          "source_identity_mixed_consumers__qual_station__qual_plant__level",
+          "source_identity_mixed_consumers__stamp_plant__efficiency",
+          "source_identity_mixed_consumers__stamp_plant__lit_calc__value_in",
+          "source_identity_mixed_consumers__station__rig__gain_setting",
+          "source_identity_mixed_consumers__twin_bay__sensor_a__reading",
+          "source_identity_mixed_consumers__twin_bay__sensor_b__reading"
+        ]
+      },
+      "exact_positive_consumers": [
+        {
+          "consumer_display_path": "source_identity_mixed_consumers__computed_station__computed_calc",
+          "consumer_kind": "calculation",
+          "param_name": "value_in",
+          "port": {
+            "consumer_node_id": "[\"calculation\",[\"occurrence\",\"[[\\\"fb3b756a-1e8d-53a5-9f0d-3a9541aaee1b\\\",null]]\"],[\"declaration\",\"b1e427c0-2f9a-52a4-baa3-e8d0608e7e24\"]]",
+            "formal_declaration_id": "2d96d3cd-0739-5750-b28e-4f5353c91929",
+            "kind": "consumer"
+          },
+          "source": "channel:source_identity_mixed_consumers__computed_station__source_identity_computed__producer_calc__result"
+        },
+        {
+          "consumer_display_path": "source_identity_mixed_consumers__computed_station__computed_guard",
+          "consumer_kind": "constraint",
+          "param_name": "v",
+          "port": {
+            "consumer_node_id": "[\"constraint\",[\"occurrence\",\"[[\\\"fb3b756a-1e8d-53a5-9f0d-3a9541aaee1b\\\",null]]\"],[\"declaration\",\"c4f1e1cb-6370-525d-b2bf-a97aa3f8d7cc\"]]",
+            "formal_declaration_id": "de40f2f7-6210-5cfd-95a2-7978d502de10",
+            "kind": "consumer"
+          },
+          "source": "channel:source_identity_mixed_consumers__computed_station__source_identity_computed__producer_calc__result"
+        },
+        {
+          "consumer_display_path": "source_identity_mixed_consumers__computed_station__computed_total",
+          "consumer_kind": "formula",
+          "param_name": "result",
+          "port": {
+            "consumer_node_id": "[\"calculation\",[\"occurrence\",\"[[\\\"fb3b756a-1e8d-53a5-9f0d-3a9541aaee1b\\\",null]]\"],[\"slot\",\"5318185a-ac82-5dc1-aee6-ff96c75bf65f\"]]",
+            "edge_ordinal": 0,
+            "kind": "expression",
+            "reference_ordinal": 0,
+            "referenced_declaration_id": "36a5b67b-1d39-571e-8ead-ce31fce7fc82",
+            "target_occurrence_id": null
+          },
+          "source": "channel:source_identity_mixed_consumers__computed_station__source_identity_computed__producer_calc__result"
+        },
+        {
+          "consumer_display_path": "source_identity_mixed_consumers__computed_station__source_identity_computed__producer_calc",
+          "consumer_kind": "calculation",
+          "param_name": "base",
+          "port": {
+            "consumer_node_id": "[\"calculation\",[\"occurrence\",\"[[\\\"fb3b756a-1e8d-53a5-9f0d-3a9541aaee1b\\\",null],[\\\"5b5b10f5-1d8f-5e45-a470-1de8f7440d29\\\",null]]\"],[\"declaration\",\"d5c0363a-5d24-5928-bd42-77a96e4daf0c\"]]",
+            "formal_declaration_id": "f2ccf93f-bb25-5830-b018-c3303c7bc5af",
+            "kind": "consumer"
+          },
+          "source": "source_identity_mixed_consumers__computed_station__source_identity_computed__base_rate"
+        }
+      ],
+      "fixture": "source_identity_mixed_consumers",
+      "source_ids": {
+        "channel:source_identity_mixed_consumers__computed_station__source_identity_computed__producer_calc__result": {
+          "calculation_node_id": "[\"calculation\",[\"occurrence\",\"[[\\\"fb3b756a-1e8d-53a5-9f0d-3a9541aaee1b\\\",null],[\\\"5b5b10f5-1d8f-5e45-a470-1de8f7440d29\\\",null]]\"],[\"declaration\",\"d5c0363a-5d24-5928-bd42-77a96e4daf0c\"]]",
+          "kind": "producer",
+          "output_declaration_id": "36a5b67b-1d39-571e-8ead-ce31fce7fc82"
+        },
+        "source_identity_mixed_consumers__computed_station__source_identity_computed__base_rate": {
+          "kind": "node",
+          "node_id": "[\"attribute\",[\"occurrence\",\"[[\\\"fb3b756a-1e8d-53a5-9f0d-3a9541aaee1b\\\",null],[\\\"5b5b10f5-1d8f-5e45-a470-1de8f7440d29\\\",null]]\"],[\"slot\",\"9f801498-5a7a-5948-aca2-549d096021b2\"]]"
+        }
+      }
+    },
+    "C25": {
+      "baseline_routes": {
+        "in_place_v6": {
+          "computation_digest": "49f1c4bc7deb2305aa73ceeb231ce3026982d58d1bf4f0e7d955ccaff9c54ffd",
+          "instance_fingerprint": "35f023e5c65fdc628e3276f95a03bce43edf33f37a9dcb855c003ff98513150d"
+        },
+        "live": {
+          "computation_digest": "49f1c4bc7deb2305aa73ceeb231ce3026982d58d1bf4f0e7d955ccaff9c54ffd",
+          "instance_fingerprint": "35f023e5c65fdc628e3276f95a03bce43edf33f37a9dcb855c003ff98513150d"
+        },
+        "relocated_v6": {
+          "computation_digest": "49f1c4bc7deb2305aa73ceeb231ce3026982d58d1bf4f0e7d955ccaff9c54ffd",
+          "instance_fingerprint": "35f023e5c65fdc628e3276f95a03bce43edf33f37a9dcb855c003ff98513150d"
+        }
+      },
+      "changed_public_keys": [
+        "source_identity_mixed_consumers__avail_ctx__avail_plant__availability"
+      ],
+      "changed_routes": {
+        "in_place_v6": {
+          "computation_digest": "8f2a5e26662766faa041e67c50cec830e284b7ffe11f83a2b315ad6eb87cd5a0",
+          "instance_fingerprint": "d4a14c2f7fdfca76021e900cf493305a5696511093d7da6236a640da6621a314"
+        },
+        "live": {
+          "computation_digest": "8f2a5e26662766faa041e67c50cec830e284b7ffe11f83a2b315ad6eb87cd5a0",
+          "instance_fingerprint": "d4a14c2f7fdfca76021e900cf493305a5696511093d7da6236a640da6621a314"
+        },
+        "relocated_v6": {
+          "computation_digest": "8f2a5e26662766faa041e67c50cec830e284b7ffe11f83a2b315ad6eb87cd5a0",
+          "instance_fingerprint": "d4a14c2f7fdfca76021e900cf493305a5696511093d7da6236a640da6621a314"
+        }
+      },
+      "complete_negative_unaffected_keys_by_route": {
+        "in_place_v6": [
+          "source_identity_mixed_consumers__bank__cell[0]__cell_cost",
+          "source_identity_mixed_consumers__bank__cell[1]__cell_cost",
+          "source_identity_mixed_consumers__bank__cell[2]__cell_cost",
+          "source_identity_mixed_consumers__bare_station__bare_rig__intensity",
+          "source_identity_mixed_consumers__computed_station__source_identity_computed__base_rate",
+          "source_identity_mixed_consumers__parent_unit__shared_rate",
+          "source_identity_mixed_consumers__qual_station__qual_plant__level",
+          "source_identity_mixed_consumers__stamp_plant__efficiency",
+          "source_identity_mixed_consumers__stamp_plant__lit_calc__value_in",
+          "source_identity_mixed_consumers__station__rig__gain_setting",
+          "source_identity_mixed_consumers__twin_bay__sensor_a__reading",
+          "source_identity_mixed_consumers__twin_bay__sensor_b__reading"
+        ],
+        "live": [
+          "source_identity_mixed_consumers__bank__cell[0]__cell_cost",
+          "source_identity_mixed_consumers__bank__cell[1]__cell_cost",
+          "source_identity_mixed_consumers__bank__cell[2]__cell_cost",
+          "source_identity_mixed_consumers__bare_station__bare_rig__intensity",
+          "source_identity_mixed_consumers__computed_station__source_identity_computed__base_rate",
+          "source_identity_mixed_consumers__parent_unit__shared_rate",
+          "source_identity_mixed_consumers__qual_station__qual_plant__level",
+          "source_identity_mixed_consumers__stamp_plant__efficiency",
+          "source_identity_mixed_consumers__stamp_plant__lit_calc__value_in",
+          "source_identity_mixed_consumers__station__rig__gain_setting",
+          "source_identity_mixed_consumers__twin_bay__sensor_a__reading",
+          "source_identity_mixed_consumers__twin_bay__sensor_b__reading"
+        ],
+        "relocated_v6": [
+          "source_identity_mixed_consumers__bank__cell[0]__cell_cost",
+          "source_identity_mixed_consumers__bank__cell[1]__cell_cost",
+          "source_identity_mixed_consumers__bank__cell[2]__cell_cost",
+          "source_identity_mixed_consumers__bare_station__bare_rig__intensity",
+          "source_identity_mixed_consumers__computed_station__source_identity_computed__base_rate",
+          "source_identity_mixed_consumers__parent_unit__shared_rate",
+          "source_identity_mixed_consumers__qual_station__qual_plant__level",
+          "source_identity_mixed_consumers__stamp_plant__efficiency",
+          "source_identity_mixed_consumers__stamp_plant__lit_calc__value_in",
+          "source_identity_mixed_consumers__station__rig__gain_setting",
+          "source_identity_mixed_consumers__twin_bay__sensor_a__reading",
+          "source_identity_mixed_consumers__twin_bay__sensor_b__reading"
+        ]
+      },
+      "exact_positive_consumers": [
+        {
+          "consumer_display_path": "source_identity_mixed_consumers__avail_ctx__avail_plant__def_authored_calc",
+          "consumer_kind": "calculation",
+          "param_name": "value_in",
+          "port": {
+            "consumer_node_id": "[\"calculation\",[\"occurrence\",\"[[\\\"761055f1-1d63-5ff5-a6b1-963cd986520f\\\",null],[\\\"65aa9ab1-1eb5-596c-99fb-508f62dc0b87\\\",null]]\"],[\"declaration\",\"4e5a3703-7738-5f58-952e-e3a6aaf6b5e3\"]]",
+            "formal_declaration_id": "ddda5fe8-e784-52da-a1b7-edcb841ed98c",
+            "kind": "consumer"
+          },
+          "source": "source_identity_mixed_consumers__avail_ctx__avail_plant__availability"
+        },
+        {
+          "consumer_display_path": "source_identity_mixed_consumers__avail_ctx__avail_plant__usage_authored_calc",
+          "consumer_kind": "calculation",
+          "param_name": "value_in",
+          "port": {
+            "consumer_node_id": "[\"calculation\",[\"occurrence\",\"[[\\\"761055f1-1d63-5ff5-a6b1-963cd986520f\\\",null],[\\\"65aa9ab1-1eb5-596c-99fb-508f62dc0b87\\\",null]]\"],[\"declaration\",\"aa778c3f-6d95-5113-ac5b-840d126c4e1b\"]]",
+            "formal_declaration_id": "e8956135-db30-5a53-b645-90aacc919258",
+            "kind": "consumer"
+          },
+          "source": "source_identity_mixed_consumers__avail_ctx__avail_plant__availability"
+        }
+      ],
+      "fixture": "source_identity_mixed_consumers",
+      "source_ids": {
+        "source_identity_mixed_consumers__avail_ctx__avail_plant__availability": {
+          "kind": "node",
+          "node_id": "[\"attribute\",[\"occurrence\",\"[[\\\"761055f1-1d63-5ff5-a6b1-963cd986520f\\\",null],[\\\"65aa9ab1-1eb5-596c-99fb-508f62dc0b87\\\",null]]\"],[\"slot\",\"adbcfefc-8ab3-58f4-82d8-24dd08018845\"]]"
+        }
+      }
+    },
+    "C26": {
+      "baseline_routes": {
+        "in_place_v6": {
+          "computation_digest": "24aac9d4a8eaaf67876763e37fd6190798b903616443a63af30a9eedc32808ab",
+          "instance_fingerprint": "98a8a8edfc20d17e4b36af23cb90ac0bd495b35eca5a14bdd14741f1ceb202bf"
+        },
+        "live": {
+          "computation_digest": "24aac9d4a8eaaf67876763e37fd6190798b903616443a63af30a9eedc32808ab",
+          "instance_fingerprint": "98a8a8edfc20d17e4b36af23cb90ac0bd495b35eca5a14bdd14741f1ceb202bf"
+        },
+        "relocated_v6": {
+          "computation_digest": "24aac9d4a8eaaf67876763e37fd6190798b903616443a63af30a9eedc32808ab",
+          "instance_fingerprint": "98a8a8edfc20d17e4b36af23cb90ac0bd495b35eca5a14bdd14741f1ceb202bf"
+        }
+      },
+      "changed_public_keys": [
+        "ElabMatrixAggregations__host__permitting__raw_material_cost"
+      ],
+      "changed_routes": {
+        "in_place_v6": {
+          "computation_digest": "07ca67159644f6866b2db8f605af45882b519f1c14cb25f572e14e59e390ff33",
+          "instance_fingerprint": "f202b8dd0a0ad596778dfac87b843f7d6f91d50640deb5b384f3c978788c370f"
+        },
+        "live": {
+          "computation_digest": "07ca67159644f6866b2db8f605af45882b519f1c14cb25f572e14e59e390ff33",
+          "instance_fingerprint": "f202b8dd0a0ad596778dfac87b843f7d6f91d50640deb5b384f3c978788c370f"
+        },
+        "relocated_v6": {
+          "computation_digest": "07ca67159644f6866b2db8f605af45882b519f1c14cb25f572e14e59e390ff33",
+          "instance_fingerprint": "f202b8dd0a0ad596778dfac87b843f7d6f91d50640deb5b384f3c978788c370f"
+        }
+      },
+      "complete_negative_unaffected_keys_by_route": {
+        "in_place_v6": [
+          "ElabMatrixAggregations__host__permitting__base_cost",
+          "ElabMatrixAggregations__host__permitting__fabrication_cost",
+          "ElabMatrixAggregations__host__permitting__installation_cost"
+        ],
+        "live": [
+          "ElabMatrixAggregations__host__permitting__base_cost",
+          "ElabMatrixAggregations__host__permitting__fabrication_cost",
+          "ElabMatrixAggregations__host__permitting__installation_cost"
+        ],
+        "relocated_v6": [
+          "ElabMatrixAggregations__host__permitting__base_cost",
+          "ElabMatrixAggregations__host__permitting__fabrication_cost",
+          "ElabMatrixAggregations__host__permitting__installation_cost"
+        ]
+      },
+      "exact_positive_consumers": [
+        {
+          "consumer_display_path": "ElabMatrixAggregations__host__fabrication_total",
+          "consumer_kind": "formula",
+          "param_name": "fabrication_cost",
+          "port": {
+            "consumer_node_id": "[\"calculation\",[\"occurrence\",\"[[\\\"58fd0736-3726-5ee0-bef0-a308a7ba841a\\\",null]]\"],[\"slot\",\"dce9ef10-52a4-5be4-b1b5-268bfe3d1b49\"]]",
+            "edge_ordinal": 0,
+            "kind": "expression",
+            "reference_ordinal": 0,
+            "referenced_declaration_id": "7e5575d4-b4a5-5e5e-994c-f3ff7d82eeb8",
+            "target_occurrence_id": "[[\"58fd0736-3726-5ee0-bef0-a308a7ba841a\",null],[\"7b118614-cf42-5520-9e5a-59e3937b3794\",null]]"
+          },
+          "source": "ElabMatrixAggregations__host__permitting__fabrication_cost"
+        },
+        {
+          "consumer_display_path": "ElabMatrixAggregations__host__installation_total",
+          "consumer_kind": "formula",
+          "param_name": "installation_cost",
+          "port": {
+            "consumer_node_id": "[\"calculation\",[\"occurrence\",\"[[\\\"58fd0736-3726-5ee0-bef0-a308a7ba841a\\\",null]]\"],[\"slot\",\"ad64c9a4-a2da-533c-a364-cfa595a5186c\"]]",
+            "edge_ordinal": 0,
+            "kind": "expression",
+            "reference_ordinal": 0,
+            "referenced_declaration_id": "4300882c-07cb-5a1f-b6b5-ce4e346daa8b",
+            "target_occurrence_id": "[[\"58fd0736-3726-5ee0-bef0-a308a7ba841a\",null],[\"7b118614-cf42-5520-9e5a-59e3937b3794\",null]]"
+          },
+          "source": "ElabMatrixAggregations__host__permitting__installation_cost"
+        },
+        {
+          "consumer_display_path": "ElabMatrixAggregations__host__raw_total",
+          "consumer_kind": "formula",
+          "param_name": "raw_material_cost",
+          "port": {
+            "consumer_node_id": "[\"calculation\",[\"occurrence\",\"[[\\\"58fd0736-3726-5ee0-bef0-a308a7ba841a\\\",null]]\"],[\"slot\",\"4abb7b48-8721-53ce-86d7-3d74dad461a2\"]]",
+            "edge_ordinal": 0,
+            "kind": "expression",
+            "reference_ordinal": 0,
+            "referenced_declaration_id": "91c531b3-db33-5880-a24a-f28729c5bee6",
+            "target_occurrence_id": "[[\"58fd0736-3726-5ee0-bef0-a308a7ba841a\",null],[\"7b118614-cf42-5520-9e5a-59e3937b3794\",null]]"
+          },
+          "source": "ElabMatrixAggregations__host__permitting__raw_material_cost"
+        }
+      ],
+      "fixture": "elab_matrix_aggregations",
+      "source_ids": {
+        "ElabMatrixAggregations__host__permitting__fabrication_cost": {
+          "kind": "node",
+          "node_id": "[\"attribute\",[\"occurrence\",\"[[\\\"58fd0736-3726-5ee0-bef0-a308a7ba841a\\\",null],[\\\"7b118614-cf42-5520-9e5a-59e3937b3794\\\",null]]\"],[\"slot\",\"7e5575d4-b4a5-5e5e-994c-f3ff7d82eeb8\"]]"
+        },
+        "ElabMatrixAggregations__host__permitting__installation_cost": {
+          "kind": "node",
+          "node_id": "[\"attribute\",[\"occurrence\",\"[[\\\"58fd0736-3726-5ee0-bef0-a308a7ba841a\\\",null],[\\\"7b118614-cf42-5520-9e5a-59e3937b3794\\\",null]]\"],[\"slot\",\"4300882c-07cb-5a1f-b6b5-ce4e346daa8b\"]]"
+        },
+        "ElabMatrixAggregations__host__permitting__raw_material_cost": {
+          "kind": "node",
+          "node_id": "[\"attribute\",[\"occurrence\",\"[[\\\"58fd0736-3726-5ee0-bef0-a308a7ba841a\\\",null],[\\\"7b118614-cf42-5520-9e5a-59e3937b3794\\\",null]]\"],[\"slot\",\"91c531b3-db33-5880-a24a-f28729c5bee6\"]]"
+        }
+      }
+    },
+    "C3": {
+      "baseline_routes": {
+        "in_place_v6": {
+          "computation_digest": "9cf1b32bd06a2c22273f8415257520cc2a6a2b40006bc92f17a635c6e44fadf2",
+          "instance_fingerprint": "87871ff8ec05ec7e580489d4056379f6b7f7cfdeb529ac13e4ba2b80d60a3b44"
+        },
+        "live": {
+          "computation_digest": "9cf1b32bd06a2c22273f8415257520cc2a6a2b40006bc92f17a635c6e44fadf2",
+          "instance_fingerprint": "87871ff8ec05ec7e580489d4056379f6b7f7cfdeb529ac13e4ba2b80d60a3b44"
+        },
+        "relocated_v6": {
+          "computation_digest": "9cf1b32bd06a2c22273f8415257520cc2a6a2b40006bc92f17a635c6e44fadf2",
+          "instance_fingerprint": "87871ff8ec05ec7e580489d4056379f6b7f7cfdeb529ac13e4ba2b80d60a3b44"
+        }
+      },
+      "changed_public_keys": [
+        "ElabMatrixC3__host__source"
+      ],
+      "changed_routes": {
+        "in_place_v6": {
+          "computation_digest": "8ead74046bc8b11d18cd6de4c1d92a31866bcebc48e8506a7e9479a8b36645c9",
+          "instance_fingerprint": "7220214dade6227f7bd57eb23ba6a5ca807995a7b952b5429682cc92995e8f6b"
+        },
+        "live": {
+          "computation_digest": "8ead74046bc8b11d18cd6de4c1d92a31866bcebc48e8506a7e9479a8b36645c9",
+          "instance_fingerprint": "7220214dade6227f7bd57eb23ba6a5ca807995a7b952b5429682cc92995e8f6b"
+        },
+        "relocated_v6": {
+          "computation_digest": "8ead74046bc8b11d18cd6de4c1d92a31866bcebc48e8506a7e9479a8b36645c9",
+          "instance_fingerprint": "7220214dade6227f7bd57eb23ba6a5ca807995a7b952b5429682cc92995e8f6b"
+        }
+      },
+      "complete_negative_unaffected_keys_by_route": {
+        "in_place_v6": [],
+        "live": [],
+        "relocated_v6": []
+      },
+      "exact_positive_consumers": [
+        {
+          "consumer_display_path": "ElabMatrixC3__host__first_calc",
+          "consumer_kind": "calculation",
+          "param_name": "x",
+          "port": {
+            "consumer_node_id": "[\"calculation\",[\"occurrence\",\"[[\\\"221cdbc2-cc0f-5547-9e23-71756e687f8f\\\",null]]\"],[\"declaration\",\"bd78483e-9e40-51bd-8e43-fbc718114752\"]]",
+            "formal_declaration_id": "c384741e-e3fd-5d75-8a06-9ecf6c6bb4a3",
+            "kind": "consumer"
+          },
+          "source": "ElabMatrixC3__host__source"
+        },
+        {
+          "consumer_display_path": "ElabMatrixC3__host__second",
+          "consumer_kind": "calculation",
+          "param_name": "x",
+          "port": {
+            "consumer_node_id": "[\"calculation\",[\"occurrence\",\"[[\\\"221cdbc2-cc0f-5547-9e23-71756e687f8f\\\",null]]\"],[\"declaration\",\"787b2778-5693-5a1e-aaca-67eabb4db717\"]]",
+            "formal_declaration_id": "921ed560-2f9a-558a-89cc-7dd18c93a888",
+            "kind": "consumer"
+          },
+          "source": "ElabMatrixC3__host__source"
+        }
+      ],
+      "fixture": "elab_matrix_c3",
+      "source_ids": {
+        "ElabMatrixC3__host__source": {
+          "kind": "node",
+          "node_id": "[\"attribute\",[\"occurrence\",\"[[\\\"221cdbc2-cc0f-5547-9e23-71756e687f8f\\\",null]]\"],[\"slot\",\"5fe99e03-df85-5331-9207-69d4fe48e352\"]]"
+        }
+      }
+    },
+    "C4": {
+      "baseline_routes": {
+        "in_place_v6": {
+          "computation_digest": "04411fa86997afeace132bfa179f85d28956d7b178e398958e36624559fe5708",
+          "instance_fingerprint": "0a954e2808e099b9dcc61bda40fa7b554de7f6f3a3f7b7fb1fb43538bffa1b05"
+        },
+        "live": {
+          "computation_digest": "04411fa86997afeace132bfa179f85d28956d7b178e398958e36624559fe5708",
+          "instance_fingerprint": "0a954e2808e099b9dcc61bda40fa7b554de7f6f3a3f7b7fb1fb43538bffa1b05"
+        },
+        "relocated_v6": {
+          "computation_digest": "04411fa86997afeace132bfa179f85d28956d7b178e398958e36624559fe5708",
+          "instance_fingerprint": "0a954e2808e099b9dcc61bda40fa7b554de7f6f3a3f7b7fb1fb43538bffa1b05"
+        }
+      },
+      "changed_public_keys": [
+        "ElabMatrixC4__host__source"
+      ],
+      "changed_routes": {
+        "in_place_v6": {
+          "computation_digest": "588ac5614b82ad6b82eb51ecc848971544248f32c5266852ce158f6bd3d59eb7",
+          "instance_fingerprint": "3c5a05012867eaa682553e4cdc1f5e5e8f1c1f0b2b4a4a691ca28f03b257bab0"
+        },
+        "live": {
+          "computation_digest": "588ac5614b82ad6b82eb51ecc848971544248f32c5266852ce158f6bd3d59eb7",
+          "instance_fingerprint": "3c5a05012867eaa682553e4cdc1f5e5e8f1c1f0b2b4a4a691ca28f03b257bab0"
+        },
+        "relocated_v6": {
+          "computation_digest": "588ac5614b82ad6b82eb51ecc848971544248f32c5266852ce158f6bd3d59eb7",
+          "instance_fingerprint": "3c5a05012867eaa682553e4cdc1f5e5e8f1c1f0b2b4a4a691ca28f03b257bab0"
+        }
+      },
+      "complete_negative_unaffected_keys_by_route": {
+        "in_place_v6": [],
+        "live": [],
+        "relocated_v6": []
+      },
+      "exact_positive_consumers": [
+        {
+          "consumer_display_path": "ElabMatrixC4__host__first_calc",
+          "consumer_kind": "calculation",
+          "param_name": "x",
+          "port": {
+            "consumer_node_id": "[\"calculation\",[\"occurrence\",\"[[\\\"ca9d7ba5-6599-5968-8fe4-c7bd59e57033\\\",null]]\"],[\"declaration\",\"102934a8-b14a-5fef-b75b-477cff158074\"]]",
+            "formal_declaration_id": "182d0860-9e77-50b2-a5ad-3d14b0379c83",
+            "kind": "consumer"
+          },
+          "source": "ElabMatrixC4__host__source"
+        },
+        {
+          "consumer_display_path": "ElabMatrixC4__host__second",
+          "consumer_kind": "calculation",
+          "param_name": "x",
+          "port": {
+            "consumer_node_id": "[\"calculation\",[\"occurrence\",\"[[\\\"ca9d7ba5-6599-5968-8fe4-c7bd59e57033\\\",null]]\"],[\"declaration\",\"4a106eb8-c64b-5318-b8df-bebb158b399b\"]]",
+            "formal_declaration_id": "10026aa5-d495-54b3-8ae1-1880c6a573cd",
+            "kind": "consumer"
+          },
+          "source": "ElabMatrixC4__host__source"
+        }
+      ],
+      "fixture": "elab_matrix_c4",
+      "source_ids": {
+        "ElabMatrixC4__host__source": {
+          "kind": "node",
+          "node_id": "[\"attribute\",[\"occurrence\",\"[[\\\"ca9d7ba5-6599-5968-8fe4-c7bd59e57033\\\",null]]\"],[\"slot\",\"d8c7bcc6-2d2a-59ee-8b17-2328168224b2\"]]"
+        }
+      }
+    },
+    "C5": {
+      "baseline_routes": {
+        "in_place_v6": {
+          "computation_digest": "30dae383519de5a9827a8d9be848057aa53e49767aef950fe5467989c66e879c",
+          "instance_fingerprint": "d85e350c862765c13086ff9ba285622ade167d802a0d5c04b97b67d236eabb97"
+        },
+        "live": {
+          "computation_digest": "30dae383519de5a9827a8d9be848057aa53e49767aef950fe5467989c66e879c",
+          "instance_fingerprint": "d85e350c862765c13086ff9ba285622ade167d802a0d5c04b97b67d236eabb97"
+        },
+        "relocated_v6": {
+          "computation_digest": "30dae383519de5a9827a8d9be848057aa53e49767aef950fe5467989c66e879c",
+          "instance_fingerprint": "d85e350c862765c13086ff9ba285622ade167d802a0d5c04b97b67d236eabb97"
+        }
+      },
+      "changed_public_keys": [
+        "ElabMatrixC5__measurement_system__analyzer__baseline"
+      ],
+      "changed_routes": {
+        "in_place_v6": {
+          "computation_digest": "78f1fb113152655cb3a3c5fd6ffe1e3d8226ded4ba5e2275b8848fbedbacb8fa",
+          "instance_fingerprint": "d7f9bbcf4fa2d64b189c8b73bd5a3525b09a4fe163f26bdcda6f64e7f56ed0eb"
+        },
+        "live": {
+          "computation_digest": "78f1fb113152655cb3a3c5fd6ffe1e3d8226ded4ba5e2275b8848fbedbacb8fa",
+          "instance_fingerprint": "d7f9bbcf4fa2d64b189c8b73bd5a3525b09a4fe163f26bdcda6f64e7f56ed0eb"
+        },
+        "relocated_v6": {
+          "computation_digest": "78f1fb113152655cb3a3c5fd6ffe1e3d8226ded4ba5e2275b8848fbedbacb8fa",
+          "instance_fingerprint": "d7f9bbcf4fa2d64b189c8b73bd5a3525b09a4fe163f26bdcda6f64e7f56ed0eb"
+        }
+      },
+      "complete_negative_unaffected_keys_by_route": {
+        "in_place_v6": [],
+        "live": [],
+        "relocated_v6": []
+      },
+      "exact_positive_consumers": [
+        {
+          "consumer_display_path": "ElabMatrixC5__measurement_system__analyzer__observation",
+          "consumer_kind": "calculation",
+          "param_name": "x",
+          "port": {
+            "consumer_node_id": "[\"calculation\",[\"occurrence\",\"[[\\\"20a4b7bd-2a9a-5fe6-aa44-7cdf9646de32\\\",null],[\\\"e4e62d31-c62e-56da-bb2e-f52726c9286a\\\",null]]\"],[\"declaration\",\"0d822237-b141-5ed0-b1ff-ea9580b71578\"]]",
+            "formal_declaration_id": "89e696e6-3e8c-5502-821c-f4253f2ed118",
+            "kind": "consumer"
+          },
+          "source": "ElabMatrixC5__measurement_system__analyzer__baseline"
+        }
+      ],
+      "fixture": "elab_matrix_c5",
+      "source_ids": {
+        "ElabMatrixC5__measurement_system__analyzer__baseline": {
+          "kind": "node",
+          "node_id": "[\"attribute\",[\"occurrence\",\"[[\\\"20a4b7bd-2a9a-5fe6-aa44-7cdf9646de32\\\",null],[\\\"e4e62d31-c62e-56da-bb2e-f52726c9286a\\\",null]]\"],[\"slot\",\"b3fda5ae-4249-5df5-9772-8b056987d38c\"]]"
+        }
+      }
+    },
+    "C6": {
+      "baseline_routes": {
+        "in_place_v6": {
+          "computation_digest": "88a8ddbc163f8571176ab744096ddc0782179de67d40107dcf30a07a4d181374",
+          "instance_fingerprint": "c671c8dde929670b11fc04acc12e9467d0273ece5ef62e1d3f6f1c71ce0b94bd"
+        },
+        "live": {
+          "computation_digest": "88a8ddbc163f8571176ab744096ddc0782179de67d40107dcf30a07a4d181374",
+          "instance_fingerprint": "c671c8dde929670b11fc04acc12e9467d0273ece5ef62e1d3f6f1c71ce0b94bd"
+        },
+        "relocated_v6": {
+          "computation_digest": "88a8ddbc163f8571176ab744096ddc0782179de67d40107dcf30a07a4d181374",
+          "instance_fingerprint": "c671c8dde929670b11fc04acc12e9467d0273ece5ef62e1d3f6f1c71ce0b94bd"
+        }
+      },
+      "changed_public_keys": [
+        "ElabMatrixC6__host__source__value"
+      ],
+      "changed_routes": {
+        "in_place_v6": {
+          "computation_digest": "c91f7a9d601fe67f655299d437f597f5686f36827ddd7c495484066f3fdb10a1",
+          "instance_fingerprint": "dd826752f9ce0614873126d7dbf24431560055add573c63a8ca97401c5be163b"
+        },
+        "live": {
+          "computation_digest": "c91f7a9d601fe67f655299d437f597f5686f36827ddd7c495484066f3fdb10a1",
+          "instance_fingerprint": "dd826752f9ce0614873126d7dbf24431560055add573c63a8ca97401c5be163b"
+        },
+        "relocated_v6": {
+          "computation_digest": "c91f7a9d601fe67f655299d437f597f5686f36827ddd7c495484066f3fdb10a1",
+          "instance_fingerprint": "dd826752f9ce0614873126d7dbf24431560055add573c63a8ca97401c5be163b"
+        }
+      },
+      "complete_negative_unaffected_keys_by_route": {
+        "in_place_v6": [],
+        "live": [],
+        "relocated_v6": []
+      },
+      "exact_positive_consumers": [
+        {
+          "consumer_display_path": "ElabMatrixC6__host__first_calc",
+          "consumer_kind": "calculation",
+          "param_name": "x",
+          "port": {
+            "consumer_node_id": "[\"calculation\",[\"occurrence\",\"[[\\\"58bec26c-01d5-5008-b860-56e04947ccf7\\\",null]]\"],[\"declaration\",\"c4107d5d-e70d-5d6f-9464-350a8917c0fd\"]]",
+            "formal_declaration_id": "d100945a-9996-5405-8f61-75e0de1ae110",
+            "kind": "consumer"
+          },
+          "source": "ElabMatrixC6__host__source__value"
+        },
+        {
+          "consumer_display_path": "ElabMatrixC6__host__second",
+          "consumer_kind": "calculation",
+          "param_name": "x",
+          "port": {
+            "consumer_node_id": "[\"calculation\",[\"occurrence\",\"[[\\\"58bec26c-01d5-5008-b860-56e04947ccf7\\\",null]]\"],[\"declaration\",\"356dcd0c-1017-5d49-9b43-c1c25781fad8\"]]",
+            "formal_declaration_id": "cd072181-a34e-58d2-9efa-2c2e1f9e3dec",
+            "kind": "consumer"
+          },
+          "source": "ElabMatrixC6__host__source__value"
+        }
+      ],
+      "fixture": "elab_matrix_c6",
+      "source_ids": {
+        "ElabMatrixC6__host__source__value": {
+          "kind": "node",
+          "node_id": "[\"attribute\",[\"occurrence\",\"[[\\\"58bec26c-01d5-5008-b860-56e04947ccf7\\\",null],[\\\"903f513a-00d7-5911-85ba-e385f935b1b9\\\",null]]\"],[\"slot\",\"54f60673-4ae5-536c-9d8c-759989181369\"]]"
+        }
+      }
+    },
+    "C7": {
+      "baseline_routes": {
+        "in_place_v6": {
+          "computation_digest": "d646d41521ff0d4f5f77d06f704e65f1ccacd9e0699bd21c10b052697ebed17f",
+          "instance_fingerprint": "bd3bd7ab75e34ec8f64d948dcc517b045e7ddb96f9e381d38446fe5b5585f5a6"
+        },
+        "live": {
+          "computation_digest": "d646d41521ff0d4f5f77d06f704e65f1ccacd9e0699bd21c10b052697ebed17f",
+          "instance_fingerprint": "bd3bd7ab75e34ec8f64d948dcc517b045e7ddb96f9e381d38446fe5b5585f5a6"
+        },
+        "relocated_v6": {
+          "computation_digest": "d646d41521ff0d4f5f77d06f704e65f1ccacd9e0699bd21c10b052697ebed17f",
+          "instance_fingerprint": "bd3bd7ab75e34ec8f64d948dcc517b045e7ddb96f9e381d38446fe5b5585f5a6"
+        }
+      },
+      "changed_public_keys": [
+        "ElabMatrixC7__host__left__value"
+      ],
+      "changed_routes": {
+        "in_place_v6": {
+          "computation_digest": "a506295353103345fdb85b04258fbdbbb817cb80dfdd330c87ece43742bf8e81",
+          "instance_fingerprint": "f3e3fa3ce4deeeacd5b439da2becf07af5d9d182d0cb954a9a3a564a6355cd2f"
+        },
+        "live": {
+          "computation_digest": "a506295353103345fdb85b04258fbdbbb817cb80dfdd330c87ece43742bf8e81",
+          "instance_fingerprint": "f3e3fa3ce4deeeacd5b439da2becf07af5d9d182d0cb954a9a3a564a6355cd2f"
+        },
+        "relocated_v6": {
+          "computation_digest": "a506295353103345fdb85b04258fbdbbb817cb80dfdd330c87ece43742bf8e81",
+          "instance_fingerprint": "f3e3fa3ce4deeeacd5b439da2becf07af5d9d182d0cb954a9a3a564a6355cd2f"
+        }
+      },
+      "complete_negative_unaffected_keys_by_route": {
+        "in_place_v6": [
+          "ElabMatrixC7__host__right__value"
+        ],
+        "live": [
+          "ElabMatrixC7__host__right__value"
+        ],
+        "relocated_v6": [
+          "ElabMatrixC7__host__right__value"
+        ]
+      },
+      "exact_positive_consumers": [
+        {
+          "consumer_display_path": "ElabMatrixC7__host__left_calc",
+          "consumer_kind": "calculation",
+          "param_name": "x",
+          "port": {
+            "consumer_node_id": "[\"calculation\",[\"occurrence\",\"[[\\\"4bd49d29-d053-59b7-9da9-86c9909ec49e\\\",null]]\"],[\"declaration\",\"05c3b051-5692-5615-b864-b54ca97f5b53\"]]",
+            "formal_declaration_id": "69c93964-0a04-5d36-bd26-c41b4e9e1047",
+            "kind": "consumer"
+          },
+          "source": "ElabMatrixC7__host__left__value"
+        },
+        {
+          "consumer_display_path": "ElabMatrixC7__host__right_calc",
+          "consumer_kind": "calculation",
+          "param_name": "x",
+          "port": {
+            "consumer_node_id": "[\"calculation\",[\"occurrence\",\"[[\\\"4bd49d29-d053-59b7-9da9-86c9909ec49e\\\",null]]\"],[\"declaration\",\"3b4634bc-8072-55f3-a957-cdae6ae05e50\"]]",
+            "formal_declaration_id": "928d622e-c558-5e66-8b7b-4e5bd203f332",
+            "kind": "consumer"
+          },
+          "source": "ElabMatrixC7__host__right__value"
+        }
+      ],
+      "fixture": "elab_matrix_c7",
+      "source_ids": {
+        "ElabMatrixC7__host__left__value": {
+          "kind": "node",
+          "node_id": "[\"attribute\",[\"occurrence\",\"[[\\\"4bd49d29-d053-59b7-9da9-86c9909ec49e\\\",null],[\\\"af501e0a-4de6-5caa-98cb-ff98d1df96b7\\\",null]]\"],[\"slot\",\"2e76d4ed-09c4-5d29-bb38-9d66ff6d5581\"]]"
+        },
+        "ElabMatrixC7__host__right__value": {
+          "kind": "node",
+          "node_id": "[\"attribute\",[\"occurrence\",\"[[\\\"4bd49d29-d053-59b7-9da9-86c9909ec49e\\\",null],[\\\"8b3a59f2-f543-5ddb-bebb-a3f368c71b13\\\",null]]\"],[\"slot\",\"2e76d4ed-09c4-5d29-bb38-9d66ff6d5581\"]]"
+        }
+      }
+    },
+    "C8": {
+      "baseline_routes": {
+        "in_place_v6": {
+          "computation_digest": "49f1c4bc7deb2305aa73ceeb231ce3026982d58d1bf4f0e7d955ccaff9c54ffd",
+          "instance_fingerprint": "35f023e5c65fdc628e3276f95a03bce43edf33f37a9dcb855c003ff98513150d"
+        },
+        "live": {
+          "computation_digest": "49f1c4bc7deb2305aa73ceeb231ce3026982d58d1bf4f0e7d955ccaff9c54ffd",
+          "instance_fingerprint": "35f023e5c65fdc628e3276f95a03bce43edf33f37a9dcb855c003ff98513150d"
+        },
+        "relocated_v6": {
+          "computation_digest": "49f1c4bc7deb2305aa73ceeb231ce3026982d58d1bf4f0e7d955ccaff9c54ffd",
+          "instance_fingerprint": "35f023e5c65fdc628e3276f95a03bce43edf33f37a9dcb855c003ff98513150d"
+        }
+      },
+      "changed_public_keys": [
+        "source_identity_mixed_consumers__twin_bay__sensor_a__reading"
+      ],
+      "changed_routes": {
+        "in_place_v6": {
+          "computation_digest": "1819381005a390d9517fdded8c1e19e42b0859e22e3d523eacd82466735dfba9",
+          "instance_fingerprint": "f3c7a3e4834a69afcd36f873efd5a6d8ab59e0a61c5a9e597e31a64db8624898"
+        },
+        "live": {
+          "computation_digest": "1819381005a390d9517fdded8c1e19e42b0859e22e3d523eacd82466735dfba9",
+          "instance_fingerprint": "f3c7a3e4834a69afcd36f873efd5a6d8ab59e0a61c5a9e597e31a64db8624898"
+        },
+        "relocated_v6": {
+          "computation_digest": "1819381005a390d9517fdded8c1e19e42b0859e22e3d523eacd82466735dfba9",
+          "instance_fingerprint": "f3c7a3e4834a69afcd36f873efd5a6d8ab59e0a61c5a9e597e31a64db8624898"
+        }
+      },
+      "complete_negative_unaffected_keys_by_route": {
+        "in_place_v6": [
+          "source_identity_mixed_consumers__avail_ctx__avail_plant__availability",
+          "source_identity_mixed_consumers__bank__cell[0]__cell_cost",
+          "source_identity_mixed_consumers__bank__cell[1]__cell_cost",
+          "source_identity_mixed_consumers__bank__cell[2]__cell_cost",
+          "source_identity_mixed_consumers__bare_station__bare_rig__intensity",
+          "source_identity_mixed_consumers__computed_station__source_identity_computed__base_rate",
+          "source_identity_mixed_consumers__parent_unit__shared_rate",
+          "source_identity_mixed_consumers__qual_station__qual_plant__level",
+          "source_identity_mixed_consumers__stamp_plant__efficiency",
+          "source_identity_mixed_consumers__stamp_plant__lit_calc__value_in",
+          "source_identity_mixed_consumers__station__rig__gain_setting",
+          "source_identity_mixed_consumers__twin_bay__sensor_b__reading"
+        ],
+        "live": [
+          "source_identity_mixed_consumers__avail_ctx__avail_plant__availability",
+          "source_identity_mixed_consumers__bank__cell[0]__cell_cost",
+          "source_identity_mixed_consumers__bank__cell[1]__cell_cost",
+          "source_identity_mixed_consumers__bank__cell[2]__cell_cost",
+          "source_identity_mixed_consumers__bare_station__bare_rig__intensity",
+          "source_identity_mixed_consumers__computed_station__source_identity_computed__base_rate",
+          "source_identity_mixed_consumers__parent_unit__shared_rate",
+          "source_identity_mixed_consumers__qual_station__qual_plant__level",
+          "source_identity_mixed_consumers__stamp_plant__efficiency",
+          "source_identity_mixed_consumers__stamp_plant__lit_calc__value_in",
+          "source_identity_mixed_consumers__station__rig__gain_setting",
+          "source_identity_mixed_consumers__twin_bay__sensor_b__reading"
+        ],
+        "relocated_v6": [
+          "source_identity_mixed_consumers__avail_ctx__avail_plant__availability",
+          "source_identity_mixed_consumers__bank__cell[0]__cell_cost",
+          "source_identity_mixed_consumers__bank__cell[1]__cell_cost",
+          "source_identity_mixed_consumers__bank__cell[2]__cell_cost",
+          "source_identity_mixed_consumers__bare_station__bare_rig__intensity",
+          "source_identity_mixed_consumers__computed_station__source_identity_computed__base_rate",
+          "source_identity_mixed_consumers__parent_unit__shared_rate",
+          "source_identity_mixed_consumers__qual_station__qual_plant__level",
+          "source_identity_mixed_consumers__stamp_plant__efficiency",
+          "source_identity_mixed_consumers__stamp_plant__lit_calc__value_in",
+          "source_identity_mixed_consumers__station__rig__gain_setting",
+          "source_identity_mixed_consumers__twin_bay__sensor_b__reading"
+        ]
+      },
+      "exact_positive_consumers": [
+        {
+          "consumer_display_path": "source_identity_mixed_consumers__twin_bay__calc_a",
+          "consumer_kind": "calculation",
+          "param_name": "value_in",
+          "port": {
+            "consumer_node_id": "[\"calculation\",[\"occurrence\",\"[[\\\"b38d8137-dc71-51ff-8609-106ae98413e8\\\",null]]\"],[\"declaration\",\"508e886f-6139-513b-9070-14487da34b0e\"]]",
+            "formal_declaration_id": "c850b736-d568-5277-a621-4ce59c1d6a14",
+            "kind": "consumer"
+          },
+          "source": "source_identity_mixed_consumers__twin_bay__sensor_a__reading"
+        },
+        {
+          "consumer_display_path": "source_identity_mixed_consumers__twin_bay__calc_b",
+          "consumer_kind": "calculation",
+          "param_name": "value_in",
+          "port": {
+            "consumer_node_id": "[\"calculation\",[\"occurrence\",\"[[\\\"b38d8137-dc71-51ff-8609-106ae98413e8\\\",null]]\"],[\"declaration\",\"d588805d-7eff-54d1-a8c6-bbcef4105de9\"]]",
+            "formal_declaration_id": "a90be371-404f-5a3d-878b-70ab92ed8ab5",
+            "kind": "consumer"
+          },
+          "source": "source_identity_mixed_consumers__twin_bay__sensor_b__reading"
+        }
+      ],
+      "fixture": "source_identity_mixed_consumers",
+      "source_ids": {
+        "source_identity_mixed_consumers__twin_bay__sensor_a__reading": {
+          "kind": "node",
+          "node_id": "[\"attribute\",[\"occurrence\",\"[[\\\"b38d8137-dc71-51ff-8609-106ae98413e8\\\",null],[\\\"c747b56f-d214-544a-83ee-15e603916598\\\",null]]\"],[\"slot\",\"2380af17-4bd8-5a4e-a253-a90b669dd9ba\"]]"
+        },
+        "source_identity_mixed_consumers__twin_bay__sensor_b__reading": {
+          "kind": "node",
+          "node_id": "[\"attribute\",[\"occurrence\",\"[[\\\"b38d8137-dc71-51ff-8609-106ae98413e8\\\",null],[\\\"5ba31cb5-698c-5be7-9453-6c0a973d782f\\\",null]]\"],[\"slot\",\"2380af17-4bd8-5a4e-a253-a90b669dd9ba\"]]"
+        }
+      }
+    }
+  },
+  "legacy_owner_guard": "tests/unit/test_elaboration_import_boundaries.py",
+  "legacy_owner_import_or_call_count": 0,
+  "route_names": [
+    "live",
+    "in_place_v6",
+    "relocated_v6"
+  ],
+  "runtime_cell_count": 22,
+  "schema": "item7-phase4-public-route-evidence/v1"
+}

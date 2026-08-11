@@ -8,7 +8,6 @@ import shutil
 from collections import Counter
 from collections.abc import Callable
 from dataclasses import dataclass
-from functools import cache
 from pathlib import Path
 
 import jinja2
@@ -19,18 +18,19 @@ from sysml_codegen.elaboration import (
     ElaborationCode,
     ElaborationError,
     elaborate,
-    project,
 )
 from sysml_codegen.elaboration.graph import LiteralInput, NodeRef, ProducerRef
 from sysml_codegen.extraction.extractor import SysMLDataExtractor
 from sysml_codegen.extraction.source_evidence import ReadinessCode
 from sysml_codegen.generation.entry_point import generate_all_derived_jsons
 from sysml_codegen.generation.pipeline import generate_pipeline_yaml
-from sysml_codegen.resolution.models import ModuleKind
-from sysml_codegen.snapshot.instance_graph import (
-    decode_instance_graph,
-    encode_instance_graph,
+from sysml_codegen.orchestration.pipeline_builder import build_pipeline_context
+from sysml_codegen.orchestration.snapshot_context import (
+    build_pipeline_context_from_snapshot,
 )
+from sysml_codegen.resolution.models import ModuleKind
+from sysml_codegen.snapshot import capture_snapshot
+from sysml_codegen.snapshot.instance_graph import decode_instance_graph
 from tests.conftest import FIXTURES_DIR, requires_license
 
 pytestmark = requires_license
@@ -570,11 +570,6 @@ def _load_internal(model_path: Path, *, strict: bool = True):
     )
 
 
-@cache
-def _baseline_internal(fixture: str):
-    return _load_internal(FIXTURES_DIR / fixture)
-
-
 def _defaults(graph) -> dict[str, float | int | str | bool | None]:
     return {
         parameter.qualified_name: parameter.default_value
@@ -719,41 +714,76 @@ def _mutated_model_path(evidence: RuntimeEvidence, output_dir: Path) -> Path:
     return changed_dir
 
 
+def _public_routes(model_path: Path, output_dir: Path):
+    output_dir.mkdir(parents=True)
+    captured = capture_snapshot([model_path], output_dir / "in-place.json")
+    relocated = output_dir / "relocated" / "case.json"
+    relocated.parent.mkdir()
+    shutil.copyfile(captured, relocated)
+    contexts = {
+        "live": build_pipeline_context([model_path]),
+        "in_place_v6": build_pipeline_context_from_snapshot(captured),
+        "relocated_v6": build_pipeline_context_from_snapshot(relocated),
+    }
+    receipts = {
+        route: (
+            context._receipt.instance_fingerprint,
+            context._receipt.computation_digest,
+        )
+        for route, context in contexts.items()
+    }
+    assert len(set(receipts.values())) == 1
+    return (
+        decode_instance_graph(contexts["live"]._instance_bytes),
+        {route: context.computation_graph for route, context in contexts.items()},
+    )
+
+
 def _assert_runtime_cell(evidence: RuntimeEvidence, tmp_path: Path) -> None:
-    internal = _baseline_internal(evidence.fixture)
-    payload = encode_instance_graph(internal)
-    relocated = tmp_path / "instance-graph.json"
-    relocated.write_bytes(payload)
-
-    live = project(internal)
-    rebuilt = project(decode_instance_graph(relocated.read_bytes()))
-    assert rebuilt == live
-    _assert_expected_defaults(live, evidence)
-    _assert_expected_defaults(rebuilt, evidence)
-    _assert_complete_public_topology(live, evidence)
-    _assert_complete_public_topology(rebuilt, evidence)
-
-    baseline_payload = _generated_payload(live, tmp_path / "baseline")
-    _assert_generated_pipeline(live, evidence)
+    internal, baseline_routes = _public_routes(
+        FIXTURES_DIR / evidence.fixture,
+        tmp_path / "baseline-routes",
+    )
+    assert len({graph.model_dump_json() for graph in baseline_routes.values()}) == 1
+    baseline_payloads = {}
+    for route, graph in baseline_routes.items():
+        _assert_expected_defaults(graph, evidence)
+        _assert_complete_public_topology(graph, evidence)
+        baseline_payloads[route] = _generated_payload(
+            graph, tmp_path / "baseline-generated" / route
+        )
+        _assert_generated_pipeline(graph, evidence)
 
     if evidence.public_override is not None:
         qualified_name, value = evidence.public_override
-        changed_payload = _override_generated_input(tmp_path / "baseline", qualified_name, value)
+        for route, baseline_payload in baseline_payloads.items():
+            changed_payload = _override_generated_input(
+                tmp_path / "baseline-generated" / route,
+                qualified_name,
+                value,
+            )
+            _assert_only_expected_public_changes(
+                baseline_payload,
+                changed_payload,
+                set(evidence.changed_defaults),
+            )
     else:
-        changed_internal = _load_internal(
-            _mutated_model_path(evidence, tmp_path / "changed-model")
+        changed_internal, changed_routes = _public_routes(
+            _mutated_model_path(evidence, tmp_path / "changed-model"),
+            tmp_path / "changed-routes",
         )
         assert _typed_route_inventory(changed_internal) == _typed_route_inventory(internal)
-        changed = project(changed_internal)
-        _assert_complete_public_topology(changed, evidence)
-        _assert_generated_pipeline(changed, evidence)
-        changed_payload = _generated_payload(changed, tmp_path / "changed")
-
-    _assert_only_expected_public_changes(
-        baseline_payload,
-        changed_payload,
-        set(evidence.changed_defaults),
-    )
+        for route, changed in changed_routes.items():
+            _assert_complete_public_topology(changed, evidence)
+            _assert_generated_pipeline(changed, evidence)
+            changed_payload = _generated_payload(
+                changed, tmp_path / "changed-generated" / route
+            )
+            _assert_only_expected_public_changes(
+                baseline_payloads[route],
+                changed_payload,
+                set(evidence.changed_defaults),
+            )
 
 
 def _assert_only_expected_public_changes(
@@ -776,7 +806,7 @@ def test_mutation_evidence_rejects_a_phantom_public_input() -> None:
 
 def _src_01(_tmp_path: Path) -> None:
     with pytest.raises(ElaborationError) as excinfo:
-        _load_internal(FIXTURES_DIR / "fusion_tea")
+        _load_internal(FIXTURES_DIR / "self_named_binding_trap")
     assert any(finding.code is ReadinessCode.SI_SELF_BINDING for finding in excinfo.value.findings)
 
 

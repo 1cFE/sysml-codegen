@@ -77,8 +77,8 @@ def test_live_extraction_carries_total_calc_declaration_identity(
         assert all(isinstance(member.element_id, UUID) for member in members)
         assert all(member.element_id.version == 5 for member in members)
         assert {member.element_id for member in members} <= calc_def.all_member_ids
-        assert set(calc_def.member_names_by_id) == calc_def.all_member_ids
-        assert set(calc_def.output_expression_asts_by_id) == {
+        assert set(calc_def.member_names) == calc_def.all_member_ids
+        assert set(calc_def.output_expression_asts) == {
             member.element_id for member in calc_def.output_attributes
         }
 
@@ -88,7 +88,7 @@ def test_exact_compiler_keys_definition_outputs_and_dependencies_by_uuid(
 ) -> None:
     _extractor, calc_defs = extracted
     for calc_def in calc_defs:
-        result = expression_compiler.compile_calc_def_exact(calc_def)
+        result = expression_compiler.compile_calc_def(calc_def)
         assert result.definition_id == calc_def.element_id
         assert result.declared_output_ids == tuple(
             member.element_id for member in calc_def.output_attributes
@@ -295,7 +295,7 @@ def test_constraint_profile_decision_inventory_disagreement_fails_closed(
 ) -> None:
     extractor, calc_defs = extracted
     elaboration_module = importlib.import_module("sysml_codegen.elaboration.elaborate")
-    evaluate_exact = elaboration_module.evaluate_identified_profile
+    evaluate_exact = elaboration_module.evaluate_profile
 
     def corrupted_profile(identified):
         result = evaluate_exact(identified)
@@ -312,7 +312,7 @@ def test_constraint_profile_decision_inventory_disagreement_fails_closed(
 
     monkeypatch.setattr(
         elaboration_module,
-        "evaluate_identified_profile",
+        "evaluate_profile",
         corrupted_profile,
     )
 

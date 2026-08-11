@@ -3,7 +3,7 @@
 Factored out of ``usage_extractor`` (ELABORATE-FIRST design D2) so the legacy
 extraction front end and the elaborator build identical
 :class:`~sysml_codegen.extraction.source_evidence.SourceReferenceEvidence`
-records during dual-run. Everything here reads the live AST/CST once and
+records at the extraction boundary. Everything here reads the live AST/CST once and
 produces frozen evidence; nothing here resolves, rewrites, or interprets a
 reference.
 """

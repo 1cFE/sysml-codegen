@@ -82,8 +82,8 @@ class ChannelAlias(BaseModel):
         alias_name: The alias lookup key. For CHAIN aliases, this is scoped
             (e.g., "solar_array.total_capex"). For EXPOSE_PURE aliases, this
             is bare (e.g., "total_capex") -- scoping happens at registration.
-        canonical_name: The dotted target key that resolves to a canonical
-            channel via the OutputRegistry (e.g., "component_cost.total_cost").
+        canonical_name: The dotted target key for a canonical output channel
+            (e.g., "component_cost.total_cost").
         owning_part_qn: Qualified name of the PartDef/PartUsage where the
             alias originates (e.g., "SolarBatteryLibrary__Solar_Array").
         source: Provenance tag: "redefinition" | "expose_pure" | "design_override".

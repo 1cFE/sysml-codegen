@@ -22,11 +22,10 @@ from sysml_codegen.elaboration import (
     PortMetadata,
     ProjectionError,
     ValueSite,
-    elaborate,
     project,
 )
 from sysml_codegen.extraction.expression_compiler import Compilability
-from sysml_codegen.extraction.extractor import SysMLDataExtractor
+from sysml_codegen.orchestration.pipeline_builder import build_pipeline_context
 from sysml_codegen.resolution.models import EntryPointType, ModuleKind
 from tests.conftest import FIXTURES_DIR, requires_license
 
@@ -35,14 +34,9 @@ pytestmark = requires_license
 
 @pytest.fixture(scope="module")
 def projected():
-    extractor = SysMLDataExtractor([FIXTURES_DIR / "source_identity_mixed_consumers"])
-    assert extractor.load_models()
-    graph = elaborate(
-        extractor.model,
-        extractor.extract_calculation_definitions(),
-        validation_diagnostics=extractor.diagnostics.validation,
-    )
-    return project(graph)
+    return build_pipeline_context(
+        [FIXTURES_DIR / "source_identity_mixed_consumers"]
+    ).computation_graph
 
 
 def test_projection_covers_every_live_module_kind(projected) -> None:

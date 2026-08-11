@@ -37,9 +37,9 @@ uv run sysml-codegen generate --from-snapshot path/to/snapshot --output path/to/
 
 1. **Extraction** (`extraction/`) - Parse SysML models via `agentic_mbse.sysml.syside_adapter.SysideAdapter`. `SysMLDataExtractor` produces `CalculationDefinitionData` and `PartDefinitionData` with input/output attributes, constraints, and source locations.
 
-2. **Analysis** (`analysis/`) - `DependencyBacktracker` traces calculation dependencies and resolves bindings. `ParameterGroupDeriver` classifies entry points into parameter groups for JSON input files.
+2. **Elaboration** (`elaboration/`) - strict identity, occurrence, value, equation, and physics passes build one validated `InstanceGraph`.
 
-3. **Resolution** (`resolution/`) - `graph_builder.build_computation_graph()` converts backtracking results into a `ComputationGraph` (Pydantic model) - the single source of truth for pipeline structure.
+3. **Projection** (`elaboration/project.py`) - the validated instance graph projects into the route-neutral `ComputationGraph` consumed by generation.
 
 4. **Generation** (`generation/`) - Jinja2 templates render the ComputationGraph into:
    - TEAx module wrappers (`modules/`)
@@ -48,17 +48,15 @@ uv run sysml-codegen generate --from-snapshot path/to/snapshot --output path/to/
    - Parameter group schemas and JSON templates (`schemas/`, `inputs/`)
    - Module registry (`__init__.py`)
 
-5. **Snapshot** (`snapshot/`) - Serialized extraction snapshots decouple generation from
-   the syside license: `generate --from-snapshot` rebuilds the pipeline context from a
-   captured snapshot (versioned format with `snapshot_format_version`; CalcUsage
-   auto-implementation preserved via serialized `compilation_results`). See
+5. **Snapshot** (`snapshot/`) - Strict v6 instance-graph envelopes decouple generation from
+   the syside license. `generate --from-snapshot` validates and projects the captured graph. See
    `docs/architecture/reference/27-snapshot-generation.md`.
 
 ### Key Data Models
 
 - `CalculationDefinitionData` - Extracted calc def with inputs/outputs
 - `CalcUsageData` - Calculation usage instance with bindings
-- `BacktrackingResult` - Resolved dependencies and entry points
+- `InstanceGraph` - Validated semantic authority produced by elaboration
 - `ComputationGraph` - Pipeline modules with inputs wired to upstream outputs or entry points
 - `PipelineModule` - Single calculation in the pipeline with `ModuleInput`/`ModuleOutput`
 

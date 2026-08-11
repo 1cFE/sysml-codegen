@@ -268,9 +268,6 @@ def test_generate_stencils_skips_constraint(tmp_path):
     config = GenerationConfig(output_path=tmp_path, package_name="pkg")
     (tmp_path / "handwritten").mkdir(parents=True)
 
-    class _Ctx:
-        computation_graph = _graph_with_constraint()
-
-    _generate_stencils(_Ctx(), config, _get_template_env())
+    _generate_stencils(_graph_with_constraint(), config, _get_template_env())
     written = list((tmp_path / "handwritten").rglob("*.py"))
     assert written == []

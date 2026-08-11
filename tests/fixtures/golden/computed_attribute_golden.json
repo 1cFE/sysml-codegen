@@ -388,13 +388,6 @@
       "compiled_expression": "(inputs.net_margin * 2.0)"
     }
   },
-  "self_named_rescue": {
-    "RescueLib::'Rescue Plant'::throughput": {
-      "classification": "expose_pure",
-      "compilability": "manual_required",
-      "compiled_expression": null
-    }
-  },
   "sibling_channel_ambiguity": {
     "SiblingLib::Chamber::power": {
       "classification": "expose_pure",

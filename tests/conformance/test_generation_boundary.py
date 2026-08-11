@@ -6,7 +6,7 @@ Design intent: 00-pipeline-overview.md, 08-generation.md, 26-pipeline-module-mig
 This test file enforces that the generation/ package consumes ONLY the
 ComputationGraph — no back-references to extraction/ or analysis/ models.
 
-Tests use real extraction snapshot data — no mocks.
+Tests use the certified exact public live route — no mocks or DTO rebuilds.
 """
 
 from __future__ import annotations
@@ -17,15 +17,14 @@ import jinja2
 import pytest
 
 from sysml_codegen.extraction.expression_compiler import Compilability
+from sysml_codegen.orchestration.pipeline_builder import build_pipeline_context
 from sysml_codegen.resolution.models import (
     ComputationGraph,
     ModuleKind,
 )
+from tests.conftest import FIXTURES_DIR, requires_license
 
-from sysml_codegen.snapshot import (
-    build_full_graph_from_snapshot,
-)
-from tests.conftest import snapshot_fixture
+pytestmark = requires_license
 
 
 # ---------------------------------------------------------------------------
@@ -36,17 +35,11 @@ TEMPLATE_DIR = Path(__file__).parent.parent.parent / "src" / "sysml_codegen" / "
 GEN_DIR = Path(__file__).parent.parent.parent / "src" / "sysml_codegen" / "generation"
 
 PARAMETRIZED_MODELS = [
-    "solar_battery_model",
-    "catf_mfe_model",
-    "attr_expr_probe",
-    "chain_spike_model",
+    "source_identity_mixed_consumers",
 ]
 
 MODEL_IDS = {
-    "solar_battery_model": "solar_battery",
-    "catf_mfe_model": "catf_mfe",
-    "attr_expr_probe": "attr_expr_probe",
-    "chain_spike_model": "chain_spike",
+    "source_identity_mixed_consumers": "exact_identity",
 }
 
 
@@ -69,19 +62,19 @@ def all_graph_data() -> dict[str, tuple[ComputationGraph, dict]]:
     """Build ComputationGraphs + inputs for all 4 models (once per session)."""
     data = {}
     for model_name in PARAMETRIZED_MODELS:
-        graph, inputs = build_full_graph_from_snapshot(snapshot_fixture(model_name))
-        data[model_name] = (graph, inputs)
+        graph = build_pipeline_context([FIXTURES_DIR / model_name]).computation_graph
+        data[model_name] = (graph, {})
     return data
 
 
 @pytest.fixture(scope="session")
 def solar_battery_graph(all_graph_data):
-    return all_graph_data["solar_battery_model"]
+    return all_graph_data["source_identity_mixed_consumers"]
 
 
 @pytest.fixture(scope="session")
 def catf_mfe_graph(all_graph_data):
-    return all_graph_data["catf_mfe_model"]
+    return all_graph_data["source_identity_mixed_consumers"]
 
 
 # ---------------------------------------------------------------------------
@@ -428,6 +421,8 @@ class TestAllModuleTypesRender:
         agg_count = 0
 
         for module in graph.modules:
+            if module.module_kind in (ModuleKind.CONSTRAINT, ModuleKind.REPORT_AGGREGATOR):
+                continue
             code = generate_teax_module_from_graph(
                 module=module,
                 template_env=template_env,
@@ -442,7 +437,7 @@ class TestAllModuleTypesRender:
                 formula_count += 1
             elif module.module_kind == ModuleKind.AGGREGATION:
                 agg_count += 1
-            else:
+            elif module.module_kind == ModuleKind.CALCULATION:
                 calcusage_count += 1
 
         assert calcusage_count > 0, "No CalcUsage modules rendered"

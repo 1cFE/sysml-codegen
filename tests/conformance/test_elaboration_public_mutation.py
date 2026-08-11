@@ -9,16 +9,16 @@ from pathlib import Path
 import jinja2
 import yaml
 
-from sysml_codegen.elaboration import elaborate, project
 from sysml_codegen.elaboration.graph import NodeRef
-from sysml_codegen.extraction.extractor import SysMLDataExtractor
 from sysml_codegen.generation.entry_point import generate_all_derived_jsons
 from sysml_codegen.generation.pipeline import generate_pipeline_yaml
-from sysml_codegen.resolution.models import ModuleKind
-from sysml_codegen.snapshot.instance_graph import (
-    decode_instance_graph,
-    encode_instance_graph,
+from sysml_codegen.orchestration.pipeline_builder import build_pipeline_context
+from sysml_codegen.orchestration.snapshot_context import (
+    build_pipeline_context_from_snapshot,
 )
+from sysml_codegen.resolution.models import ModuleKind
+from sysml_codegen.snapshot import capture_snapshot
+from sysml_codegen.snapshot.instance_graph import decode_instance_graph
 from tests.conftest import FIXTURES_DIR, requires_license
 
 pytestmark = requires_license
@@ -32,16 +32,6 @@ EXPECTED_CONSUMERS = {
 }
 SHADOWED_OUTER_QN = "ShadowedReference__the_outer__scale"
 SHADOWED_CALC = "shadowedreference__the_outer__inner__shadowed_calc"
-
-
-def _load_graph(model_path: Path):
-    extractor = SysMLDataExtractor([model_path])
-    assert extractor.load_models()
-    return elaborate(
-        extractor.model,
-        extractor.extract_calculation_definitions(),
-        validation_diagnostics=extractor.diagnostics.validation,
-    )
 
 
 def _source_consumers(graph) -> set[tuple[str, ModuleKind]]:
@@ -133,16 +123,20 @@ def _defaults(graph) -> dict[str, float | None]:
     }
 
 
-def _projected_routes(baseline_path: Path, changed_path: Path):
-    baseline_internal = _load_graph(baseline_path)
-    changed_internal = _load_graph(changed_path)
+def _public_routes(model_path: Path, output_dir: Path):
+    output_dir.mkdir(parents=True)
+    captured = capture_snapshot([model_path], output_dir / "in-place.json")
+    relocated = output_dir / "relocated" / "case.json"
+    relocated.parent.mkdir()
+    shutil.copyfile(captured, relocated)
+    contexts = {
+        "live": build_pipeline_context([model_path]),
+        "in_place_v6": build_pipeline_context_from_snapshot(captured),
+        "relocated_v6": build_pipeline_context_from_snapshot(relocated),
+    }
     return (
-        (baseline_internal, changed_internal),
-        (project(baseline_internal), project(changed_internal)),
-        (
-            project(decode_instance_graph(encode_instance_graph(baseline_internal))),
-            project(decode_instance_graph(encode_instance_graph(changed_internal))),
-        ),
+        decode_instance_graph(contexts["live"]._instance_bytes),
+        {route: context.computation_graph for route, context in contexts.items()},
     )
 
 
@@ -155,14 +149,20 @@ def test_public_mutation_reaches_exactly_one_source_fanout(tmp_path: Path) -> No
         model_path.read_text().replace(":>> gain_setting = 42.0;", ":>> gain_setting = 47.0;", 1)
     )
 
-    internal, *routes = _projected_routes(baseline_path, changed_path)
-    baseline_internal, changed_internal = internal
+    baseline_internal, baseline_routes = _public_routes(
+        baseline_path, tmp_path / "baseline-routes"
+    )
+    changed_internal, changed_routes = _public_routes(
+        changed_path, tmp_path / "changed-routes"
+    )
     typed_consumers = _typed_source_consumers(baseline_internal, SOURCE_QN)
     assert len(typed_consumers) == len(EXPECTED_CONSUMERS)
     assert _typed_consumer_surface(baseline_internal, typed_consumers) == EXPECTED_CONSUMERS
     assert _typed_source_consumers(changed_internal, SOURCE_QN) == typed_consumers
 
-    for baseline, changed in routes:
+    for route in baseline_routes:
+        baseline = baseline_routes[route]
+        changed = changed_routes[route]
         assert _source_consumers(baseline) == EXPECTED_CONSUMERS
         assert _source_consumers(changed) == EXPECTED_CONSUMERS
         assert _source_default(baseline) == 42.0
@@ -174,9 +174,10 @@ def test_public_mutation_reaches_exactly_one_source_fanout(tmp_path: Path) -> No
             name for name in baseline_defaults if baseline_defaults[name] != changed_defaults[name]
         } == {SOURCE_QN}
 
-    assert _generated_source_consumers(routes[0][1], SOURCE_QN) == EXPECTED_CONSUMERS
+    changed_live = changed_routes["live"]
+    assert _generated_source_consumers(changed_live, SOURCE_QN) == EXPECTED_CONSUMERS
 
-    generated = generate_all_derived_jsons(routes[0][1].entry_point_groups, tmp_path / "public")
+    generated = generate_all_derived_jsons(changed_live.entry_point_groups, tmp_path / "public")
     public_payload = {
         key: value for output in generated for key, value in json.loads(output.read_text()).items()
     }
@@ -195,15 +196,21 @@ def test_public_shadow_mutation_keeps_the_resolved_outer_referent(tmp_path: Path
         )
     )
 
-    internal, *routes = _projected_routes(baseline_path, changed_path)
-    baseline_internal, changed_internal = internal
+    baseline_internal, baseline_routes = _public_routes(
+        baseline_path, tmp_path / "baseline-routes"
+    )
+    changed_internal, changed_routes = _public_routes(
+        changed_path, tmp_path / "changed-routes"
+    )
     typed_consumers = _typed_source_consumers(baseline_internal, SHADOWED_OUTER_QN)
     assert len(typed_consumers) == 1
     assert _typed_consumer_surface(baseline_internal, typed_consumers) == {
         (SHADOWED_CALC, ModuleKind.CALCULATION)
     }
     assert _typed_source_consumers(changed_internal, SHADOWED_OUTER_QN) == typed_consumers
-    for baseline, changed in routes:
+    for route in baseline_routes:
+        baseline = baseline_routes[route]
+        changed = changed_routes[route]
         for graph in (baseline, changed):
             calculation = next(module for module in graph.modules if module.name == SHADOWED_CALC)
             (factor,) = calculation.inputs
@@ -217,12 +224,13 @@ def test_public_shadow_mutation_keeps_the_resolved_outer_referent(tmp_path: Path
             name for name in baseline_defaults if baseline_defaults[name] != changed_defaults[name]
         } == {SHADOWED_OUTER_QN}
 
-    generated = generate_all_derived_jsons(routes[0][1].entry_point_groups, tmp_path / "shadow")
+    changed_live = changed_routes["live"]
+    generated = generate_all_derived_jsons(changed_live.entry_point_groups, tmp_path / "shadow")
     public_payload = {
         key: value for output in generated for key, value in json.loads(output.read_text()).items()
     }
     assert public_payload[SHADOWED_OUTER_QN] == 3.0
     assert list(public_payload) == [SHADOWED_OUTER_QN]
-    assert _generated_source_consumers(routes[0][1], SHADOWED_OUTER_QN) == {
+    assert _generated_source_consumers(changed_live, SHADOWED_OUTER_QN) == {
         (SHADOWED_CALC, ModuleKind.CALCULATION)
     }

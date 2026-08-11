@@ -16,16 +16,17 @@ from pathlib import Path
 
 from sysml_codegen.cli import GenerationConfig, cmd_seal, run_codegen
 from sysml_codegen.contracts.verify import verify_package
+from sysml_codegen.orchestration import build_pipeline_context
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-CHAIN_SNAPSHOT = REPO_ROOT / "tests/fixtures/chain_spike_model/extraction_snapshot.json"
+PROJECTABLE_MODEL = REPO_ROOT / "tests/fixtures/source_identity_mixed_consumers"
 SRC_VERIFY = REPO_ROOT / "src" / "sysml_codegen" / "contracts" / "verify.py"
 
 
 def _snapshot_config(output_path: Path, package_name: str = "chain_spike") -> GenerationConfig:
     return GenerationConfig(
         output_path=output_path,
-        from_snapshot=CHAIN_SNAPSHOT,
+        models_path=PROJECTABLE_MODEL,
         package_name=package_name,
         overwrite=True,
     )
@@ -160,8 +161,6 @@ def test_reseal_rejects_linked_contracts_before_model_contract_check(tmp_path):
 def test_step9_rejects_linked_contracts_without_writing_contract(tmp_path):
     from sysml_codegen.cli import _seal_package
     from sysml_codegen.contracts.seal import PackageSealError
-    from sysml_codegen.resolution.models import ComputationGraph
-
     output = tmp_path / "out"
     output.mkdir()
     outside = tmp_path / "outside"
@@ -170,18 +169,11 @@ def test_step9_rejects_linked_contracts_without_writing_contract(tmp_path):
     marker.write_text("unchanged\n")
     (output / "contracts").symlink_to(outside, target_is_directory=True)
     config = _snapshot_config(output, package_name="chain_spike")
-    context = type(
-        "Context",
-        (),
-        {
-            "computation_graph": ComputationGraph(
-                modules=[], entry_point_groups=[], execution_order=[]
-            )
-        },
-    )()
+    context = build_pipeline_context([PROJECTABLE_MODEL])
+    lease = context._verified_projection_lease()
 
     try:
-        _seal_package(context, config)
+        _seal_package(lease.computation_graph, config, lease)
     except PackageSealError as error:
         assert error.path == "contracts"
     else:

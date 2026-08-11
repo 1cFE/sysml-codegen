@@ -11,6 +11,7 @@ import hashlib
 import json
 import logging
 from collections import defaultdict
+from collections.abc import Sequence
 from pathlib import Path
 from typing import NoReturn
 
@@ -25,7 +26,6 @@ from agentic_mbse.sysml.expression_ir import (
     serialize_expression,
 )
 
-from sysml_codegen.analysis.constraint_lowering import mint_constraint_id
 from sysml_codegen.core.identifier_types import derive_module_type
 from sysml_codegen.core.qualified_names import (
     get_channel_name,
@@ -56,6 +56,7 @@ from sysml_codegen.elaboration.identity import (
     PackageScopeId,
 )
 from sysml_codegen.extraction.expression_compiler import Compilability
+from sysml_codegen.generation.constraint_catalog import mint_constraint_id
 from sysml_codegen.resolution.models import (
     ComputationGraph,
     ConstraintCatalog,
@@ -78,7 +79,7 @@ from sysml_codegen.resolution.models import (
 
 __all__ = ["ProjectionError", "project"]
 
-_CONSTRAINT_LOGGER = logging.getLogger("sysml_codegen.analysis.constraint_lowering")
+_CONSTRAINT_LOGGER = logging.getLogger("sysml_codegen.elaboration.project")
 
 
 class ProjectionError(ValueError):
@@ -677,7 +678,7 @@ class _Projection:
                     compiled_expression=compiled,
                     module_kind=kind,
                     auto_impl_context=auto_impl_context,
-                    calc_def_name=node.calc_def_name,
+                    calc_def_name=sanitize_name(node.calc_def_name),
                     calc_def_qualified_name=node.calc_def_qualified_name,
                     doc_comment=node.doc_comment,
                     calc_expressions=list(node.calc_expressions) or None,
@@ -803,13 +804,18 @@ class _Projection:
             ),
         )
 
-    def _build_output_aliases(self) -> list[OutputAlias]:
+    def _build_output_aliases(
+        self,
+        selected_outputs: set[OutputPortId] | None = None,
+    ) -> list[OutputAlias]:
         aliases: list[OutputAlias] = []
         rendered: dict[tuple[str, str], OutputPortId] = {}
         for node in sorted(self.graph.attrs.values(), key=lambda item: item.node_id.to_wire()):
             if not node.is_alias:
                 continue
             if not isinstance(node.alias_target, ProducerRef):
+                continue
+            if selected_outputs is not None and node.alias_target.target not in selected_outputs:
                 continue
             channel = self.output_channels.get(node.alias_target.target)
             if channel is None:
@@ -1059,6 +1065,183 @@ class _Projection:
         )
 
 
-def project(graph: InstanceGraph) -> ComputationGraph:
-    """Render one complete resolved graph as a generation ``ComputationGraph``."""
-    return _Projection(graph).run()
+def _selection_error(detail: str) -> NoReturn:
+    from sysml_codegen.orchestration.pipeline_context import CodeGenerationError
+
+    raise CodeGenerationError(f"Target selection failed: {detail}")
+
+
+def _canonical_targets(targets: Sequence[str] | None, include_all: bool) -> tuple[str, ...]:
+    if not isinstance(include_all, bool):
+        raise TypeError("include_all must be a bool")
+    if targets is None:
+        return ()
+    if isinstance(targets, (str, bytes)) or not isinstance(targets, Sequence):
+        raise TypeError("targets must be a sequence of nonempty strings or None")
+    if any(not isinstance(target, str) or not target for target in targets):
+        raise TypeError("every target must be a nonempty string")
+    return tuple(sorted(set(targets)))
+
+
+def _target_index(projection: _Projection) -> dict[str, set[NodeId]]:
+    index: dict[str, set[NodeId]] = defaultdict(set)
+    for semantic, module in projection.modules_by_semantic.items():
+        if not isinstance(semantic, NodeId) or semantic not in projection.graph.calcs:
+            continue
+        node = projection.graph.calcs[semantic]
+        ordered_outputs = sorted(node.outputs.items(), key=lambda item: item[0].to_wire())
+        for (declaration, _port), output in zip(ordered_outputs, module.outputs, strict=True):
+            raw_name = node.output_names[declaration]
+            for rendered in {
+                output.channel_name,
+                f"{module.name}.{output.field_name}",
+                f"{module.name}.{raw_name}",
+            }:
+                index[rendered].add(semantic)
+    return index
+
+
+def _typed_selection_closure(
+    graph: InstanceGraph,
+    projection: _Projection,
+    targets: tuple[str, ...],
+) -> tuple[set[NodeId], set[NodeId | str]]:
+    index = _target_index(projection)
+    pending: list[NodeId] = []
+    for target in targets:
+        matches = index.get(target, set())
+        if not matches:
+            _selection_error(f"requested output {target!r} does not exist")
+        if len(matches) != 1:
+            _selection_error(f"requested output {target!r} is ambiguous")
+        pending.extend(matches)
+    pending.extend(
+        node.node_id
+        for node in graph.constraints.values()
+        if node.eligibility is Eligibility.ADMIT
+    )
+
+    selected_nodes: set[NodeId] = set()
+    while pending:
+        node_id = pending.pop()
+        if node_id in selected_nodes:
+            continue
+        node = (
+            graph.calcs.get(node_id)
+            or graph.constraints.get(node_id)
+            or graph.attrs.get(node_id)
+        )
+        if node is None:
+            _selection_error(f"typed dependency {node_id.to_wire()!r} is absent")
+        selected_nodes.add(node_id)
+        edges = list(getattr(node, "inputs", {}).values())
+        alias_target = getattr(node, "alias_target", None)
+        if alias_target is not None:
+            edges.append(alias_target)
+        for edge in edges:
+            if isinstance(edge, ProducerRef):
+                pending.append(edge.target.calculation)
+            elif isinstance(edge, NodeRef):
+                pending.append(edge.target)
+
+    selected: set[NodeId | str] = {
+        node_id for node_id in selected_nodes if node_id in projection.modules_by_semantic
+    }
+    admitted_constraints = {
+        node_id for node_id in selected if node_id in graph.constraints
+    }
+    if admitted_constraints:
+        selected.add("constraint-report-aggregator")
+    return selected_nodes, selected
+
+
+def _selected_groups(
+    projection: _Projection,
+    selected_nodes: set[NodeId],
+) -> tuple[list[ParameterGroup], set[str]]:
+    by_group: dict[str, tuple[str, Path, list[EntryPoint]]] = {}
+    selected_entry_names: set[str] = set()
+    for qualified_name, semantic in projection.entry_semantics.items():
+        if isinstance(semantic, NodeId):
+            selected = semantic in selected_nodes
+        elif isinstance(semantic, tuple) and semantic and isinstance(semantic[0], NodeId):
+            selected = semantic[0] in selected_nodes
+        else:
+            selected = False
+        if not selected:
+            continue
+        selected_entry_names.add(qualified_name)
+        name, class_name, source_file = projection.entry_sources[qualified_name]
+        entry = projection.entry_points[qualified_name].model_copy(deep=True)
+        prior = by_group.get(name)
+        if prior is None:
+            by_group[name] = (class_name, source_file, [entry])
+        else:
+            prior[2].append(entry)
+    groups = [
+        ParameterGroup(
+            name=name,
+            class_name=class_name,
+            source_file=source_file,
+            parameters=sorted(parameters, key=lambda item: item.qualified_name),
+        )
+        for name, (class_name, source_file, parameters) in sorted(by_group.items())
+    ]
+    return groups, selected_entry_names
+
+
+def _select_projection(
+    projection: _Projection,
+    complete: ComputationGraph,
+    targets: tuple[str, ...],
+) -> ComputationGraph:
+    selected_nodes, selected_semantics = _typed_selection_closure(
+        projection.graph, projection, targets
+    )
+    modules = [
+        projection.modules_by_semantic[semantic].model_copy(
+            update={"execution_order": ordinal}, deep=True
+        )
+        for ordinal, semantic in enumerate(
+            semantic
+            for semantic in projection.semantic_module_order
+            if semantic in selected_semantics
+        )
+    ]
+    selected_outputs = {
+        output
+        for node_id in selected_nodes
+        for output in (
+            projection.graph.calcs[node_id].outputs.values()
+            if node_id in projection.graph.calcs
+            else ()
+        )
+    }
+    groups, selected_entry_names = _selected_groups(projection, selected_nodes)
+    aliases = projection._build_output_aliases(selected_outputs)
+    return ComputationGraph(
+        modules=modules,
+        entry_point_groups=groups,
+        execution_order=[module.name for module in modules],
+        fallback_entry_points=complete.fallback_entry_points & selected_entry_names,
+        output_aliases=aliases,
+        constraint_catalog=(
+            complete.constraint_catalog.model_copy(deep=True)
+            if complete.constraint_catalog is not None
+            else None
+        ),
+    )
+
+
+def project(
+    graph: InstanceGraph,
+    targets: Sequence[str] | None = None,
+    include_all: bool = True,
+) -> ComputationGraph:
+    """Render a complete graph or one exact typed target closure."""
+    canonical_targets = _canonical_targets(targets, include_all)
+    projection = _Projection(graph)
+    complete = projection.run()
+    if include_all:
+        return complete
+    return _select_projection(projection, complete, canonical_targets)

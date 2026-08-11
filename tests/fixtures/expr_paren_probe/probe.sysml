@@ -3,7 +3,7 @@ package ExprParenProbe {
     private import ScalarValues::Boolean;
 
     // Source-only fixture for the Item-6 real-AST regression test (D4). No
-    // committed extraction_snapshot.json: a stored snapshot is text, not an AST,
+    // committed stored capture: serialized data is text, not an AST,
     // so it cannot exercise the `.function`-bearing node that caused the dispatch
     // bug. Each output covers one helper branch shape so a C2/C3-class bug cannot
     // ship silently.

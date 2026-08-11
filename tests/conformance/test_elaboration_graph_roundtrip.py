@@ -56,6 +56,30 @@ def test_graph_codec_rejects_foreign_schema_and_tampered_fingerprint() -> None:
         decode_instance_graph(payload.replace(b'"fingerprint":"', b'"fingerprint":"0'))
 
 
+def test_graph_codec_rejects_duplicate_and_unknown_keys() -> None:
+    payload = encode_instance_graph(_graph())
+    duplicate = payload.replace(b"{", b'{"schema_version":"duplicate",', 1)
+    with pytest.raises(InstanceGraphCodecError, match="duplicate"):
+        decode_instance_graph(duplicate)
+
+    document = json.loads(payload)
+    document["graph"]["attrs"][0]["foreign"] = "must refuse"
+    signed = {
+        "schema_version": document["schema_version"],
+        "graph": document["graph"],
+    }
+    document["fingerprint"] = hashlib.sha256(
+        json.dumps(
+            signed,
+            sort_keys=True,
+            separators=(",", ":"),
+            ensure_ascii=True,
+        ).encode()
+    ).hexdigest()
+    with pytest.raises(InstanceGraphCodecError, match="unknown"):
+        decode_instance_graph(json.dumps(document))
+
+
 def test_graph_codec_preserves_blocking_diagnostics() -> None:
     extractor = SysMLDataExtractor([FIXTURES_DIR / "elab_fail_closed_probe"])
     assert extractor.load_models()
@@ -140,10 +164,8 @@ def test_graph_codec_rejects_missing_and_dangling_occurrence_records() -> None:
         decode_instance_graph(_refingerprint(missing))
 
     dangling = json.loads(encode_instance_graph(_graph()))
-    child = next(
-        item for item in dangling["graph"]["occurrences"] if item["parent_id"] is not None
-    )
-    child["parent_id"] = "[[\"00000000-0000-5000-8000-000000000000\",null]]"
+    child = next(item for item in dangling["graph"]["occurrences"] if item["parent_id"] is not None)
+    child["parent_id"] = '[["00000000-0000-5000-8000-000000000000",null]]'
     with pytest.raises(InstanceGraphCodecError):
         decode_instance_graph(_refingerprint(dangling))
 
@@ -170,9 +192,7 @@ def test_graph_codec_rejects_invalid_ir_and_extra_expression_port() -> None:
 
 def test_graph_codec_rejects_missing_metadata_and_conflicting_output_port() -> None:
     missing_metadata = json.loads(encode_instance_graph(_graph()))
-    calc_with_input = next(
-        item for item in missing_metadata["graph"]["calcs"] if item["inputs"]
-    )
+    calc_with_input = next(item for item in missing_metadata["graph"]["calcs"] if item["inputs"])
     del calc_with_input["inputs"][0]["metadata"]
     with pytest.raises(InstanceGraphCodecError):
         decode_instance_graph(_refingerprint(missing_metadata))
@@ -181,9 +201,7 @@ def test_graph_codec_rejects_missing_metadata_and_conflicting_output_port() -> N
     calc_with_output = next(
         item for item in conflicting_output["graph"]["calcs"] if item["outputs"]
     )
-    calc_with_output["outputs"][0]["port"]["output"] = (
-        "00000000-0000-5000-8000-000000000000"
-    )
+    calc_with_output["outputs"][0]["port"]["output"] = "00000000-0000-5000-8000-000000000000"
     with pytest.raises(InstanceGraphCodecError):
         decode_instance_graph(_refingerprint(conflicting_output))
 

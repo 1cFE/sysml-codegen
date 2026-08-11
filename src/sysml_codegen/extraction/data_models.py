@@ -168,40 +168,13 @@ class CalculationDefinitionData:
     source_line: int = 0
     source_hash: str = ""
 
-    # Raw syside AST nodes for each output attribute's expression.
-    # Key: sanitized output attribute name. Value: raw syside AST node.
-    output_expression_asts: dict[str, Any] = field(default_factory=dict)
-
-    # All owned_member names from the raw CalcDef element.
-    # Needed by expression compiler for undeclared intermediate resolution.
-    all_member_names: set[str] = field(default_factory=set)
-
-    # Raw syside AST nodes for non-input/non-output members.
-    # Key: sanitized member name. Value: raw syside AST node.
-    member_expressions: dict[str, Any] = field(default_factory=dict)
-
-    # Live exact-route sidecars. These preserve SysIDE's resolved declaration
-    # identity without changing the frozen snapshot-v5 wire contract.
-    element_id: UUID | None = field(
-        default=None,
-        metadata={"snapshot_exclude": True},
-    )
-    output_expression_asts_by_id: dict[UUID, Any] = field(
-        default_factory=dict,
-        metadata={"snapshot_exclude": True},
-    )
-    all_member_ids: set[UUID] = field(
-        default_factory=set,
-        metadata={"snapshot_exclude": True},
-    )
-    member_expressions_by_id: dict[UUID, Any] = field(
-        default_factory=dict,
-        metadata={"snapshot_exclude": True},
-    )
-    member_names_by_id: dict[UUID, str] = field(
-        default_factory=dict,
-        metadata={"snapshot_exclude": True},
-    )
+    # Sole calculation payload identity. ASTs and names are declaration-ID keyed;
+    # names are renderer metadata and never select an expression or dependency.
+    element_id: UUID | None = None
+    output_expression_asts: dict[UUID, Any] = field(default_factory=dict)
+    all_member_ids: set[UUID] = field(default_factory=set)
+    member_expressions: dict[UUID, Any] = field(default_factory=dict)
+    member_names: dict[UUID, str] = field(default_factory=dict)
 
 
 class ComputedAttributeClassification(str, Enum):

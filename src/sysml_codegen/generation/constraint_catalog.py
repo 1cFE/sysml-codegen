@@ -34,6 +34,7 @@ if TYPE_CHECKING:
 __all__ = [
     "assemble_constraint_catalog",
     "assert_same_ir",
+    "mint_constraint_id",
     "predicate_definition_key",
 ]
 
@@ -53,6 +54,22 @@ def predicate_definition_key(entry: ConcreteConstraint | ConstraintCatalogEntry)
 
 def _canonical_json(obj: Any) -> str:
     return json.dumps(obj, sort_keys=True, separators=(",", ":"), ensure_ascii=True)
+
+
+def mint_constraint_id(
+    *,
+    instance_path: str,
+    source_local: str,
+    tuple_: tuple,
+    digest_hex_length: int = 16,
+) -> str:
+    """Render one deterministic constraint ID from its exact semantic tuple."""
+
+    canonical = _canonical_json(list(tuple_))
+    if digest_hex_length < 1 or digest_hex_length > 64:
+        raise ValueError("digest_hex_length must be between 1 and 64")
+    suffix = hashlib.sha256(canonical.encode()).hexdigest()[:digest_hex_length]
+    return f"{instance_path}__{source_local}__{suffix}"
 
 
 def assemble_constraint_catalog(

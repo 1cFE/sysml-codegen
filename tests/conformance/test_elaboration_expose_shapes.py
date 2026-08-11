@@ -24,7 +24,6 @@ import pytest
 from agentic_mbse.sysml.expression import feature_chain_facts
 from agentic_mbse.sysml.syside_adapter import SysideAdapter
 
-from sysml_codegen.analysis.part_instance_index import build_part_instance_index
 from sysml_codegen.elaboration import (
     ElaborationError,
     InstanceGraph,
@@ -95,7 +94,6 @@ def _declarations(extractor: SysMLDataExtractor):
     usages, _report = extract_calculation_usages(
         extractor.model,
         calc_defs=extractor.extract_calculation_definitions(),
-        expand_templates=False,
     )
     return usages
 
@@ -145,15 +143,13 @@ def test_fact_cross_package_chain_root_is_a_package_level_part_usage(
     assert evidence.resolved_member_names == ("pump_power",)
 
 
-def test_fact_untyped_part_usages_are_invisible_to_the_typed_index(
+def test_fact_untyped_part_usages_have_no_owned_feature_typing(
     loaded_cache,
 ) -> None:
     """d316: the model has zero user part defs; the untyped ``consumer`` part has no
     occurrence in the typed index — the shape the elaborator must supplement."""
     model = loaded_cache("d316_crosspart_expose").model
     assert user_partdef_lookup(model) == {}
-    index = build_part_instance_index(model)
-    assert index.occurrences_of_part_usage("D316Design::consumer") == []
     (consumer,) = [
         part
         for part in SysideAdapter.elements_of_type(model, "PartUsage")

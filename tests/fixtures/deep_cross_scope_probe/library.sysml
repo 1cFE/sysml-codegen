@@ -8,7 +8,7 @@
  * EXPECTED FINDINGS:
  * - Step 1b normalization extracts only last 2 segments of QN, losing
  *   intermediate nesting context. Deep QN paths may fail to resolve.
- * - Deep CHAIN bindings (. notation) may work if OutputRegistry keys
+ * - Deep CHAIN bindings (. notation) resolve through exact occurrence identity
  *   include the full dotted path.
  *
  * Created: 2026-02-17

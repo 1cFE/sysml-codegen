@@ -1,0 +1,217 @@
+{
+  "candidate_kind": "implementation evidence; not owner acceptance",
+  "cross_repository_pins": {
+    "constraint_facts": {
+      "agentic": "constraint-facts/v2",
+      "codegen": "constraint-facts/v2"
+    },
+    "executable_profile": {
+      "agentic": "executable-profile/v4",
+      "codegen": "executable-profile/v4"
+    },
+    "expression_ir": {
+      "agentic": "expression-ir/v1",
+      "codegen": "expression-ir/v1"
+    }
+  },
+  "focused_tests": {
+    "agentic": "441 passed in 3.07s",
+    "codegen": "76 passed in 0.40s"
+  },
+  "graph_v6_round_trip": {
+    "command": "uv run pytest tests/conformance/test_snapshot_v6_routes.py tests/conformance/test_elaboration_graph_roundtrip.py -q",
+    "result": "15 passed in 3.70s"
+  },
+  "identity_trace": {
+    "colliding_definition_guard": "agentic-mbse/tests/test_sysml/test_executable_profile.py::test_identified_profile_uses_exact_ids_for_colliding_and_anonymous_definitions",
+    "live_usage_to_projection": [
+      {
+        "decision": "admit",
+        "effective_definition_id": "ffff4ad4-27f2-5df0-9b23-b57063eb58b5",
+        "exact_graph_node_id": "NodeId(kind=<NodeKind.CONSTRAINT: 'constraint'>, scope=OccurrenceId(steps=(OccurrenceStep(containment_slot=FeatureSlotId(root_declaration=DeclarationId(value=UUID('3b3e894e-b214-583c-b7a7-1647db4b6cea'))), occurrence_index=None), OccurrenceStep(containment_slot=FeatureSlotId(root_declaration=DeclarationId(value=UUID('6c05d869-c93c-55a7-9cc7-6e42ed3e0f1e'))), occurrence_index=None))), declaration=DeclarationId(value=UUID('a02f9f71-c7d7-5cb4-95a3-78a3f28b83e4')))",
+        "graph_declaration_id": "DeclarationId(value=UUID('a02f9f71-c7d7-5cb4-95a3-78a3f28b83e4'))",
+        "graph_effective_definition_id": "DeclarationId(value=UUID('ffff4ad4-27f2-5df0-9b23-b57063eb58b5'))",
+        "projected_constraint_module": "constraint_shared_polarity__the_design__h__pos_bound__9effb47066a9367d",
+        "usage_id": "a02f9f71-c7d7-5cb4-95a3-78a3f28b83e4"
+      },
+      {
+        "decision": "admit",
+        "effective_definition_id": "ffff4ad4-27f2-5df0-9b23-b57063eb58b5",
+        "exact_graph_node_id": "NodeId(kind=<NodeKind.CONSTRAINT: 'constraint'>, scope=OccurrenceId(steps=(OccurrenceStep(containment_slot=FeatureSlotId(root_declaration=DeclarationId(value=UUID('3b3e894e-b214-583c-b7a7-1647db4b6cea'))), occurrence_index=None), OccurrenceStep(containment_slot=FeatureSlotId(root_declaration=DeclarationId(value=UUID('6c05d869-c93c-55a7-9cc7-6e42ed3e0f1e'))), occurrence_index=None))), declaration=DeclarationId(value=UUID('dfbe216f-b09f-5b54-b768-fa7522dd354d')))",
+        "graph_declaration_id": "DeclarationId(value=UUID('dfbe216f-b09f-5b54-b768-fa7522dd354d'))",
+        "graph_effective_definition_id": "DeclarationId(value=UUID('ffff4ad4-27f2-5df0-9b23-b57063eb58b5'))",
+        "projected_constraint_module": "constraint_shared_polarity__the_design__h__neg_bound__83eec5635133386b",
+        "usage_id": "dfbe216f-b09f-5b54-b768-fa7522dd354d"
+      }
+    ],
+    "reversed_order_guard": "agentic-mbse/tests/test_sysml/test_constraint_extraction_ordering.py::test_identified_anonymous_usages_keep_exact_ids_when_enumeration_reverses"
+  },
+  "neutral_schema_and_golden": {
+    "disposition": "unchanged; test_production_golden_self_compares and the neutral codec round trip passed in the 441-test agentic focused command",
+    "production_golden": "tests/fixtures/constraint_fact_shapes/production_facts.json",
+    "production_golden_sha256": "3270886a2775192ae5b03873fc3d9dad9dd008808cc30b7333f43d0ee5c81800",
+    "s1_referent_golden": "tests/fixtures/constraint_fact_shapes/golden.json",
+    "s1_referent_golden_sha256": "5c66cf31ddaa3455cef90c1abdce066d52a30ee6f91804f452c716ba0aaf3868",
+    "schema": "constraint-facts/v2"
+  },
+  "phase": 5,
+  "public_surfaces": {
+    "agentic": {
+      "constraint_extraction_exports": [
+        "extract_constraint_facts",
+        "extract_expression_ir"
+      ],
+      "evaluate_profile_return_type": "IdentifiedProfileResult",
+      "evaluate_profile_signature": "(facts: 'IdentifiedConstraintFacts') -> 'IdentifiedProfileResult'",
+      "executable_profile_exports": [
+        "PROFILE_SEMANTIC_VERSION",
+        "REASON_CODES",
+        "CONSTRAINT_USAGE_FACT_FIELD_CONSUMERS",
+        "Eligibility",
+        "EligibilityDiagnostic",
+        "IdentifiedProfileResult",
+        "IdentifiedUsageDecision",
+        "PreflightResult",
+        "UsageDecision",
+        "classify_equality",
+        "classify_ordering",
+        "evaluate_profile",
+        "preflight",
+        "unit_compatibility"
+      ],
+      "extract_constraint_facts_return_type": "IdentifiedConstraintFacts",
+      "extract_constraint_facts_signature": "(model: 'Any') -> 'IdentifiedConstraintFacts'",
+      "preflight_return_type": "PreflightResult",
+      "preflight_signature": "(result: 'IdentifiedProfileResult') -> 'PreflightResult'"
+    },
+    "codegen": {
+      "export": "sysml_codegen.extraction.expression_compiler.compile_calc_def",
+      "return_type": "CalcDefCompilationResult",
+      "signature": "(calc_def: 'Any') -> 'CalcDefCompilationResult'"
+    }
+  },
+  "quality": {
+    "agentic": {
+      "changed_file_ruff": "clean",
+      "diff_check": "clean",
+      "full_tree_ruff": 127,
+      "item6_mypy_baseline": {
+        "errors": 105,
+        "files": 23
+      },
+      "item6_ruff_baseline": 127,
+      "mypy_errors": 95,
+      "mypy_files": 20,
+      "phase5_file_mypy_errors": 0,
+      "production_ruff": "one inherited finding in src/agentic_mbse/extraction/index.py; outside Phase 5 cutover scope"
+    },
+    "codegen": {
+      "changed_file_ruff": "clean",
+      "diff_check": "clean",
+      "full_tree_ruff": 353,
+      "item6_mypy_baseline": {
+        "errors": 71,
+        "files": 17
+      },
+      "item6_ruff_baseline": 358,
+      "mypy_errors": 68,
+      "mypy_files": 16,
+      "phase5_file_mypy_errors": 0,
+      "production_ruff": "clean"
+    }
+  },
+  "recapture_37_paths_run": false,
+  "repositories": {
+    "agentic": {
+      "branch": "elaborate-first-salvage",
+      "dirty": true,
+      "head": "5088b417c9e5453271291d46cd5fb23fc0579b1e",
+      "status_short": [
+        "M src/agentic_mbse/sysml/constraint_extraction.py",
+        " M src/agentic_mbse/sysml/executable_profile.py",
+        " M src/agentic_mbse/validation/level4_constraints.py",
+        " M src/agentic_mbse/validation/level6_architecture.py",
+        " M tests/test_sysml/test_constraint_extraction.py",
+        " M tests/test_sysml/test_constraint_extraction_ordering.py",
+        " M tests/test_sysml/test_constraint_fact_shapes.py",
+        " M tests/test_sysml/test_executable_profile.py",
+        " M tests/test_sysml/test_executable_profile_arithmetic.py",
+        " M tests/test_sysml/test_executable_profile_v3.py",
+        " M tests/test_sysml/test_executable_profile_v4.py",
+        " M tests/test_sysml/test_expression_ir_extraction.py",
+        " M tests/test_sysml/test_public_api_exports.py",
+        " M tests/test_validation/test_item12_checks.py",
+        " M tests/test_validation/test_level4_reconciliation.py",
+        "?? .orchestrate-logs/"
+      ]
+    },
+    "codegen": {
+      "branch": "source-identity-epic",
+      "dirty": true,
+      "head": "1672c5766f67e7716f3c9f8f636c21e2ea444601",
+      "status_short": [
+        "M .project/CURRENT_WORK.md",
+        " M src/sysml_codegen/analysis/constraint_lowering.py",
+        " M src/sysml_codegen/analysis/source_referent.py",
+        " M src/sysml_codegen/cli/__init__.py",
+        " M src/sysml_codegen/elaboration/elaborate.py",
+        " M src/sysml_codegen/elaboration/project.py",
+        " M src/sysml_codegen/extraction/data_models.py",
+        " M src/sysml_codegen/extraction/expression_compiler.py",
+        " M src/sysml_codegen/extraction/extractor.py",
+        " M src/sysml_codegen/generation/constraint_catalog.py",
+        " M src/sysml_codegen/generation/constraint_plan.py",
+        " M src/sysml_codegen/orchestration/__init__.py",
+        " M src/sysml_codegen/orchestration/pipeline_builder.py",
+        " M src/sysml_codegen/orchestration/pipeline_context.py",
+        " M src/sysml_codegen/orchestration/snapshot_context.py",
+        " M src/sysml_codegen/resolution/graph_builder.py",
+        " M src/sysml_codegen/snapshot/__init__.py",
+        " M src/sysml_codegen/snapshot/capture.py",
+        " M src/sysml_codegen/snapshot/instance_graph.py",
+        " M src/sysml_codegen/snapshot/loader.py",
+        " M tests/conformance/test_elaboration_aggregations.py",
+        " M tests/conformance/test_elaboration_contract_matrix.py",
+        " M tests/conformance/test_elaboration_graph_roundtrip.py",
+        " M tests/conformance/test_elaboration_payload_identity.py",
+        " M tests/conformance/test_elaboration_phase5_remediation.py",
+        " M tests/conformance/test_elaboration_projection.py",
+        " M tests/conformance/test_elaboration_projection_one_way.py",
+        " M tests/conformance/test_elaboration_public_mutation.py",
+        " M tests/conformance/test_expression_compiler.py",
+        " M tests/conformance/test_generation_boundary.py",
+        " M tests/conformance/test_pipeline_e2e.py",
+        " M tests/unit/test_capture_fixtures_filter.py",
+        " M tests/unit/test_cli_generation.py",
+        " M tests/unit/test_elaboration_import_boundaries.py",
+        " M tests/unit/test_expression_compiler.py",
+        " M tests/unit/test_source_referent.py",
+        " M tests/unit/test_source_referent_shape_gate.py",
+        "?? .project/active/elaborator-cutover/",
+        "?? scripts/check_cutover_census.py",
+        "?? scripts/check_cutover_residue.py",
+        "?? src/sysml_codegen/elaboration/value_defaults.py",
+        "?? src/sysml_codegen/snapshot/envelope.py",
+        "?? src/sysml_codegen/snapshot/source_manifest.py",
+        "?? tests/conformance/test_cutover_projection_receipt.py",
+        "?? tests/conformance/test_cutover_public_api.py",
+        "?? tests/conformance/test_cutover_target_selection.py",
+        "?? tests/conformance/test_elaboration_occurrence.py",
+        "?? tests/conformance/test_exact_compiler_core.py",
+        "?? tests/conformance/test_exact_constraint_route.py",
+        "?? tests/conformance/test_snapshot_v6_capture.py",
+        "?? tests/conformance/test_snapshot_v6_envelope.py",
+        "?? tests/conformance/test_snapshot_v6_routes.py",
+        "?? tests/conformance/test_source_admission_routes.py",
+        "?? tests/unit/test_check_cutover_census.py",
+        "?? tests/unit/test_check_cutover_residue.py",
+        "?? tests/unit/test_source_admission.py"
+      ]
+    }
+  },
+  "residue": {
+    "expect": "absent",
+    "hits": 0,
+    "rule": "item6-dual-2"
+  }
+}

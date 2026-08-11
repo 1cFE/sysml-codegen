@@ -40,7 +40,7 @@ def generate_pipeline_yaml(
     4. Exit point module (captures results)
 
     Args:
-        graph: ComputationGraph from build_computation_graph()
+        graph: ComputationGraph projected from the exact instance graph
         package_name: Package name for metadata (parameterized)
         template_env: Jinja2 Environment with pipeline template
         selected_channels: Test-only exit-membership narrowing (Item 7 / D1),

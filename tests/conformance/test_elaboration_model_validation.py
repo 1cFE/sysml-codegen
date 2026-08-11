@@ -10,7 +10,7 @@ from sysml_codegen.elaboration import (
     elaborate,
 )
 from sysml_codegen.extraction.extractor import SysMLDataExtractor
-from sysml_codegen.orchestration.elaborated_pipeline import build_elaborated_pipeline
+from sysml_codegen.orchestration import build_pipeline_context
 from tests.conftest import FIXTURES_DIR, requires_license
 
 pytestmark = requires_license
@@ -50,7 +50,7 @@ def test_namespace_conflicts_block_before_occurrence_expansion() -> None:
     assert all("explicit `:>>`" in diagnostic.detail for diagnostic in diagnostics)
 
     with pytest.raises(ElaborationDiagnosticError) as route_error:
-        build_elaborated_pipeline([FIXTURES_DIR / "elab_namespace_distinguishability_probe"])
+        build_pipeline_context([FIXTURES_DIR / "elab_namespace_distinguishability_probe"])
     assert [diagnostic.code for diagnostic in route_error.value.diagnostics] == [
         ElaborationCode.SYSML_NAMESPACE_NOT_DISTINGUISHABLE,
         ElaborationCode.SYSML_NAMESPACE_NOT_DISTINGUISHABLE,

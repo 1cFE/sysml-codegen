@@ -38,7 +38,7 @@ rather than directly at package level.
   `nested_occurrence_override_probe__the_design__panel`;
   `_binding_target('source.reading', '..._the_design__panel')` →
   `qn = '..._the_design__panel__source__reading'`, `part_usage = 'source'`, `attr = 'reading'`.
-- `supplied_values._match_override` (tier-1 dotted branch) requires
+- Exact modeled-default resolution in `elaboration/value_defaults.py` requires
   `ov.owning_part_qn == instance_scope`; `Design__panel` != `the_design__panel`, so the literal
   is never found. Tier 2a also misses: `usage_type_map` is definition-keyed
   (`('..._Design','panel') -> '..._Panel'`) and carries no entry for the occurrence

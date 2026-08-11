@@ -21,7 +21,6 @@ from pathlib import Path
 import pytest
 from agentic_mbse.sysml.constraint_extraction import extract_expression_ir
 
-from scripts.capture_extraction_snapshots import EXTRACTION_ONLY_MODELS, MODELS
 from sysml_codegen.extraction.calc_compat_renderer import (
     collect_calc_refs,
     render_calc_expression,
@@ -32,11 +31,8 @@ from tests.conftest import requires_license
 FIXTURES_DIR = Path(__file__).resolve().parents[1] / "fixtures"
 GOLDEN_PATH = FIXTURES_DIR / "golden" / "calc_compat_parity_golden.json"
 
-# The corpus `capture_extraction_snapshots.py` already covers (its MODELS +
-# EXTRACTION_ONLY_MODELS), reused rather than re-listed so this test's corpus can never
-# silently drift from the capture script's (N5: this set includes `return_styles`, whose
-# two integer-literal outputs gate the literal rule).
-CALC_CORPUS_FIXTURES = sorted({**MODELS, **EXTRACTION_ONLY_MODELS})
+# The maintained golden is the exact corpus manifest for this compatibility proof.
+CALC_CORPUS_FIXTURES = sorted(json.loads(GOLDEN_PATH.read_text()))
 
 
 def _golden() -> dict[str, dict[str, dict]]:
@@ -69,11 +65,14 @@ def test_calc_compat_parity(fixture):
 
         # N1: the sets compile_calc_def actually derives, not a re-derivation.
         input_names = {a.name for a in calc_def.input_attributes}
-        output_names = {a.name for a in calc_def.output_attributes}
-        member_names = output_names | (calc_def.all_member_names or set())
+        member_names = set(calc_def.member_names.values())
+        member_ids_by_name = {
+            member_name: member_id
+            for member_id, member_name in calc_def.member_names.items()
+        }
 
         for name, expected in expected_outputs.items():
-            node = calc_def.output_expression_asts[name]
+            node = calc_def.output_expression_asts[member_ids_by_name[name]]
             ir = extract_expression_ir(node)
 
             new_expr = render_calc_expression(ir, input_names, member_names)

@@ -10,14 +10,14 @@ from typing import Any
 from uuid import UUID
 
 from agentic_mbse.sysml.constraint_extraction import (
+    extract_constraint_facts,
     extract_expression_ir,
-    extract_identified_constraint_facts,
 )
 from agentic_mbse.sysml.data_models import ResolvedSemanticReferenceFact
 from agentic_mbse.sysml.executable_profile import (
     Eligibility,
     UsageDecision,
-    evaluate_identified_profile,
+    evaluate_profile,
 )
 from agentic_mbse.sysml.expression import (
     feature_chain_facts,
@@ -27,7 +27,6 @@ from agentic_mbse.sysml.expression import (
 from agentic_mbse.sysml.expression_ir import serialize_expression
 from agentic_mbse.sysml.syside_adapter import SysideAdapter
 
-from sysml_codegen.analysis.constraint_lowering import resolve_modeled_default
 from sysml_codegen.elaboration.diagnostics import ElaborationInvariantError
 from sysml_codegen.elaboration.display import display_name, display_qualified_name
 from sysml_codegen.elaboration.graph import (
@@ -65,13 +64,14 @@ from sysml_codegen.elaboration.occurrence import (
     build_feature_slot_index,
     build_occurrence_index,
 )
+from sysml_codegen.elaboration.value_defaults import resolve_modeled_default
 from sysml_codegen.extraction import binding_evidence
 from sysml_codegen.extraction.data_models import CalculationDefinitionData
 from sysml_codegen.extraction.expression_compiler import (
+    CalcDefCompilationResult,
     Compilability,
     CompilationError,
-    ExactCalcDefCompilationResult,
-    compile_calc_def_exact,
+    compile_calc_def,
 )
 from sysml_codegen.extraction.expression_utils import extract_literal_value
 from sysml_codegen.extraction.source_evidence import (
@@ -300,8 +300,8 @@ class _ExactElaborator:
                 )
             stable_definition_ids[raw_id] = declaration_id_for(definition)
 
-        identified = extract_identified_constraint_facts(model)
-        profile = evaluate_identified_profile(identified)
+        identified = extract_constraint_facts(model)
+        profile = evaluate_profile(identified)
         try:
             missing_profile_ids = profile.missing_usage_ids
             decisions_by_id = profile.by_usage_id
@@ -390,11 +390,11 @@ class _ExactElaborator:
 
     def _compile_calculation_payloads(
         self,
-    ) -> dict[DeclarationId, ExactCalcDefCompilationResult]:
-        result: dict[DeclarationId, ExactCalcDefCompilationResult] = {}
+    ) -> dict[DeclarationId, CalcDefCompilationResult]:
+        result: dict[DeclarationId, CalcDefCompilationResult] = {}
         for definition_id, calc_def in self._calc_defs.items():
             try:
-                compilation = compile_calc_def_exact(calc_def)
+                compilation = compile_calc_def(calc_def)
             except (CompilationError, ValueError) as error:
                 raise ElaborationInvariantError(
                     ElaborationCode.SI_EDGE_DANGLING,
@@ -617,10 +617,19 @@ class _ExactElaborator:
         display_path = self._display_path(scope, name)
         expression = getattr(writer, "feature_value_expression", None)
         value_site = self._value_site(base, writer, scope)
-        literal = extract_literal_value(expression) if expression is not None else None
+        enumeration_value = self._enumeration_value(expression)
+        literal = (
+            enumeration_value
+            if enumeration_value is not None
+            else extract_literal_value(expression) if expression is not None else None
+        )
         source_file, source_line = self._source_location(writer)
 
-        if expression is not None and not is_literal_node(expression):
+        if (
+            expression is not None
+            and not is_literal_node(expression)
+            and enumeration_value is None
+        ):
             if self._is_reference_expression(expression):
                 node_id = NodeId(NodeKind.ATTRIBUTE, scope, slot)
                 alias_node = AttrNode(
@@ -702,6 +711,28 @@ class _ExactElaborator:
             ),
         )
         self._register_attr(attr_node)
+
+    @staticmethod
+    def _enumeration_value(expression: Any) -> str | None:
+        """Return the resolved enum literal carried by a feature reference."""
+        if expression is None or not SysideAdapter.is_instance(
+            expression, "FeatureReferenceExpression"
+        ):
+            return None
+        referent = getattr(expression, "referent", None)
+        referent_owner = getattr(referent, "owner", None)
+        if referent is None or not SysideAdapter.is_instance(
+            referent_owner, "EnumerationDefinition"
+        ):
+            return None
+        declaration_id_for(referent)
+        qualified_name = getattr(referent, "qualified_name", None)
+        if qualified_name is None:
+            raise ElaborationInvariantError(
+                ElaborationCode.SI_ID_MISSING,
+                "enumeration value referent has no qualified identity",
+            )
+        return str(qualified_name)
 
     @staticmethod
     def _is_reference_expression(expression: Any) -> bool:
@@ -943,13 +974,51 @@ class _ExactElaborator:
     def _calculation_auto_impl_context(compilation: Any) -> dict | None:
         if compilation.overall_compilability is not Compilability.FULLY_COMPILABLE:
             return None
-        output_expressions = [
-            {"name": result.output_name, "expression": result.python_expression}
+        results = {result.output_id: result for result in compilation.output_results}
+        # Projection renders multi-output schemas in exact declaration-ID order.
+        # Return values must use the same semantic order; source/member names do
+        # not decide this boundary.
+        declared_outputs = tuple(sorted(compilation.declared_output_ids))
+        declared_output_set = set(declared_outputs)
+        output_crossrefs = any(
+            set(result.dependency_ids) & declared_output_set
             for result in compilation.output_results
-            if result.python_expression is not None
-        ]
+            if result.output_id in declared_output_set
+        )
+        execution_steps: list[dict[str, str]] = []
+        output_expressions: list[dict[str, str]] = []
+        if output_crossrefs:
+            for member_id in compilation.execution_order:
+                result = results.get(member_id)
+                if result is not None and result.python_expression is not None:
+                    execution_steps.append(
+                        {"name": result.output_name, "expression": result.python_expression}
+                    )
+            for output_id in declared_outputs:
+                result = results.get(output_id)
+                if result is not None:
+                    output_expressions.append(
+                        {"name": result.output_name, "expression": result.output_name}
+                    )
+        else:
+            for member_id in compilation.execution_order:
+                result = results.get(member_id)
+                if (
+                    result is not None
+                    and result.python_expression is not None
+                    and result.is_undeclared_intermediate
+                ):
+                    execution_steps.append(
+                        {"name": result.output_name, "expression": result.python_expression}
+                    )
+            for output_id in declared_outputs:
+                result = results.get(output_id)
+                if result is not None and result.python_expression is not None:
+                    output_expressions.append(
+                        {"name": result.output_name, "expression": result.python_expression}
+                    )
         return {
-            "execution_steps": [],
+            "execution_steps": execution_steps,
             "output_expressions": output_expressions,
             "output_count": len(output_expressions),
             "single_output_expression": (

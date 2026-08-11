@@ -1,0 +1,105 @@
+{
+  "phase": 6,
+  "status": "green",
+  "contract_resolution": {
+    "requirements": "R9",
+    "rejected_alternatives": "D11",
+    "semantic_owner": "src/sysml_codegen/elaboration/{identity,occurrence,elaborate,graph}.py",
+    "classification": "The seven SI_OCCURRENCE_MISSING findings were a bug in the existing inherited-occurrence value-node owner, not a fixture premise conflict."
+  },
+  "focused_occurrence_regression": {
+    "command": "env UV_CACHE_DIR=/tmp/item7-uv-cache uv run pytest tests/conformance/test_fusion_tea_cutover.py::test_inherited_enum_values_are_effective_exact_occurrences tests/conformance/test_fusion_tea_cutover.py::test_fusion_tea_inherited_enum_occurrences_are_projectable -q",
+    "red": "8 failed in 0.40s",
+    "red_observation": "All seven occurrence nodes, canonical slots, and effective writer IDs existed, but their resolved enum referents were misclassified as aliases and strict mode reported seven SI_OCCURRENCE_MISSING diagnostics.",
+    "green": "8 passed in 0.30s",
+    "implementation": "The existing exact value-node owner classifies a feature reference whose exact referent is owned by an EnumerationDefinition as the occurrence's qualified enum scalar. Other feature references retain the existing alias path."
+  },
+  "fixture_migration": {
+    "formal_binding_renames": 15,
+    "same_named_bindings_remaining": 0,
+    "sibling_fixture_added": false,
+    "fusion_tea_v5_snapshot_changed": false,
+    "physics_or_topology_changed": false
+  },
+  "golden_diff": {
+    "calc_def_compilation_changed_records": [
+      "IFE_LCOE.discount_factor_con",
+      "IFE_LCOE.discount_factor_op",
+      "IFE_LCOE.fusion_energy_per_shot",
+      "IFE_LCOE.net_electric_power",
+      "IFE_LCOE.annual_capital_cost",
+      "IFE_LCOE.annual_energy",
+      "IFE_LCOE.pvf_construction",
+      "IFE_LCOE.pvf_operation",
+      "IFE_LCOE.shots_per_year",
+      "IFE_LCOE.annual_operating_cost",
+      "Meier_COE.coe_cents_kwh",
+      "Meier_HIF_Driver_Cost.bank_energy_joules",
+      "Meier_HIF_Driver_Cost.cost_billions",
+      "Meier_Reactor_Cost.reactor_cost_billions",
+      "Recirculating_Power_Fraction.fusion_cycle_gain"
+    ],
+    "calc_compat_changed_records": [
+      "Meier_COE.coe_cents_kwh",
+      "Meier_HIF_Driver_Cost.cost_billions",
+      "Meier_Reactor_Cost.reactor_cost_billions"
+    ],
+    "unchanged_controls": [
+      "IFE_LCOE.lcoe",
+      "Meier_HIF_Driver_Cost.gamma",
+      "Recirculating_Power_Fraction.f_recirc"
+    ],
+    "ordering_rule": "Rendered output records compare by output name; exact declaration-ID order remains owned by CUT-COMP-01."
+  },
+  "commands": {
+    "phase_focused": {
+      "command": "env UV_CACHE_DIR=/tmp/item7-uv-cache uv run pytest tests/conformance/test_fusion_tea_cutover.py tests/conformance/test_cutover_c19.py tests/conformance/test_wi014_toy.py tests/conformance/test_compile_calc_def_golden.py tests/runtime/test_fusion_tea_acceptance.py -q",
+      "result": "45 passed, 9 skipped in 3.29s"
+    },
+    "golden_02": {
+      "command": "env UV_CACHE_DIR=/tmp/item7-uv-cache uv run pytest tests/conformance/test_calc_compat_parity.py -q",
+      "result": "28 passed, 9 skipped in 0.32s"
+    },
+    "regressions": {
+      "command": "env UV_CACHE_DIR=/tmp/item7-uv-cache uv run pytest tests/conformance/test_elaboration_contract_matrix.py tests/conformance/test_elaboration_public_mutation.py tests/conformance/test_snapshot_v6_routes.py -q",
+      "result": "34 passed in 14.95s"
+    },
+    "residue": {
+      "command": ".venv/bin/python scripts/check_cutover_residue.py --repo codegen=. --repo agentic=../agentic-mbse --inventory .project/active/elaborator-cutover/cutover-inventory.json --rule all --expect inventoried",
+      "result": "{\"expect\": \"inventoried\", \"hits\": 334, \"rule\": \"all\"}"
+    },
+    "ruff_prescribed_scope": {
+      "command": "env UV_CACHE_DIR=/tmp/item7-uv-cache uv run ruff check tests/conformance tests/runtime",
+      "result": "93 inherited findings"
+    },
+    "ruff_full_tree_baseline": {
+      "command": "env UV_CACHE_DIR=/tmp/item7-uv-cache uv run ruff check src tests --output-format json | jq length",
+      "result": 353,
+      "phase_5_baseline": 353
+    },
+    "ruff_phase_files": {
+      "result": "All checks passed"
+    },
+    "diff_check": {
+      "command": "git diff --check",
+      "result": "clean"
+    }
+  },
+  "arithmetic_controls": {
+    "lcoe": 270.1211779380445,
+    "lcoe_gain_100": 216.55528392479388,
+    "meier_gamma": 68.247088,
+    "meier_cost_billions": 0.9749584,
+    "recirculating_fraction": 0.07222302470027446
+  },
+  "repositories": {
+    "codegen_head": "1672c5766f67e7716f3c9f8f636c21e2ea444601",
+    "agentic_head": "5088b417c9e5453271291d46cd5fb23fc0579b1e",
+    "heads_unchanged": true,
+    "item_6_dirty_worktrees_preserved": true
+  },
+  "actions_not_taken": [
+    "No 37-path corpus recapture",
+    "No commit, push, tag, ref promotion, or owner-acceptance claim"
+  ]
+}

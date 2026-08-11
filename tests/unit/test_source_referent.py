@@ -5,10 +5,8 @@ from pathlib import Path
 
 import pytest
 
-from sysml_codegen.analysis.source_referent import (
-    map_live_source_referent,
-    validate_snapshot_source_referent,
-)
+from sysml_codegen.analysis.source_referent import map_live_source_referent
+from sysml_codegen.snapshot.source_manifest import validate_source_referent
 
 
 def test_directory_and_exact_file_roots(tmp_path: Path):
@@ -80,7 +78,7 @@ def test_utf8_segments_are_canonically_percent_encoded(tmp_path: Path):
     source.write_text("")
     referent = map_live_source_referent(str(source), [root])
     assert referent == "root-0/space%20here/caf%C3%A9%23.sysml"
-    assert validate_snapshot_source_referent(referent) == referent
+    assert validate_source_referent(referent) == referent
 
 
 @pytest.mark.parametrize(
@@ -103,7 +101,7 @@ def test_utf8_segments_are_canonically_percent_encoded(tmp_path: Path):
 )
 def test_malformed_snapshot_referents_fail_loud(referent: str):
     with pytest.raises(ValueError, match="canonical source referent"):
-        validate_snapshot_source_referent(referent)
+        validate_source_referent(referent)
 
 
 def test_live_mapping_never_depends_on_cwd(tmp_path: Path, monkeypatch):

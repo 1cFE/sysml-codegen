@@ -353,10 +353,8 @@ class ConcreteConstraint(_TransactionalAssignmentModel):
         owner_kind: ``OwningDefinitionFact.kind`` (``part_def`` / ``calc_def`` /
             ``package`` / ``requirement_def``).
         owner_qualified_name: The resolved owning definition's qualified name.
-        owner_instance_path: This concrete instance's own identity — an
-            :class:`~sysml_codegen.analysis.part_instance_index.InstanceOccurrence`
-            path for ``part_def`` owners, the calc-usage/package-usage
-            qualified name otherwise.
+        owner_instance_path: This concrete instance's occurrence identity for
+            ``part_def`` owners, and its usage identity otherwise.
         membership_kind: ``assert`` (nullable-guarded upstream, INV-8).
         is_negated: Polarity (nullable-guarded upstream, INV-8).
         expected_value: Derived from ``is_negated`` (``not is_negated``).
@@ -574,12 +572,9 @@ class ComputationGraph(BaseModel):
         modules: All pipeline modules in execution order
         entry_point_groups: Entry points grouped by source file
         execution_order: Module names in topological order
-        fallback_entry_points: QNs of Step-4 fall-through entry points — bound
-            bindings that matched no resolution strategy and no design attribute
-            (Item 7 / D4). Carried onto the graph so ``collect_uncovered_params``
-            is pure over the graph alone. In-memory analysis artifact consumed at
-            the generation boundary; ``exclude=True`` keeps it out of the
-            serialized graph so committed baselines do not churn.
+        fallback_entry_points: Exact qualified names of unresolved inputs carried
+            to the generation boundary. ``exclude=True`` keeps this in-memory
+            projection detail out of serialized generation data.
         output_aliases: EXPOSE_PURE modeler names surfaced onto their canonical
             output channels (Item 11 / SC-7), stable-sorted by
             ``(instance_path, alias_name)``. A genuine schema field describing

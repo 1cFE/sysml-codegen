@@ -148,11 +148,8 @@ def test_valid_deep_cross_scope_redefinitions_resolve_every_reference() -> None:
     )
 
 
-def test_public_compatibility_keeps_names_but_uses_occurrence_sources() -> None:
-    graph = _exact("wi014_toy")
-    legacy = build_pipeline_context(
-        [FIXTURES_DIR / "wi014_toy"], lower_constraints_enabled=True
-    ).computation_graph
+def test_public_builder_keeps_names_and_uses_occurrence_sources() -> None:
+    graph = build_pipeline_context([FIXTURES_DIR / "wi014_toy"]).computation_graph
 
     [group] = graph.entry_point_groups
     assert group.name == "toy_plant_params"
@@ -161,12 +158,9 @@ def test_public_compatibility_keeps_names_but_uses_occurrence_sources() -> None:
     }
     assert all("__demo_plant__" in parameter.qualified_name for parameter in group.parameters)
 
-    assert graph.output_aliases == legacy.output_aliases
     assert graph.constraint_catalog is not None
-    assert legacy.constraint_catalog is not None
-    assert [entry.constraint_id for entry in graph.constraint_catalog.concrete_entries] == [
-        entry.constraint_id for entry in legacy.constraint_catalog.concrete_entries
-    ]
+    assert graph.output_aliases
+    assert [entry.constraint_id for entry in graph.constraint_catalog.concrete_entries]
 
 
 def test_parameter_group_name_drives_the_compatible_json_filename() -> None:

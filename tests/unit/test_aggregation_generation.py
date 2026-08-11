@@ -10,15 +10,12 @@ from __future__ import annotations
 from pathlib import Path
 
 import jinja2
-import pytest
 
 from sysml_codegen.core.qualified_names import get_module_name
 from sysml_codegen.extraction.data_models import (
     AggregationExpressionData,
-    CalculationDefinitionData,
     ScopedAggregationData,
 )
-from sysml_codegen.extraction.expression_compiler import Compilability
 from sysml_codegen.generation.pipeline import _module_to_context
 from sysml_codegen.generation.registry import generate_registry
 from sysml_codegen.generation.stencils import generate_backlog_report
@@ -28,10 +25,8 @@ from sysml_codegen.resolution.models import (
     ModuleInput,
     ModuleKind,
     ModuleOutput,
-    ParameterGroup,
     PipelineModule,
 )
-
 
 # ---------------------------------------------------------------------------
 # Test helpers
@@ -102,7 +97,18 @@ def _make_aggregation_module(
         module_kind=ModuleKind.AGGREGATION,
         calc_def_name=attribute_name,
         calc_def_qualified_name=owning_part_qn,
-        auto_impl_context={"execution_steps": [], "output_expressions": [{"name": attribute_name, "expression": "sum(...)"}], "output_count": 1, "single_output_expression": "sum(...)"} if auto_impl else None,
+        auto_impl_context=(
+            {
+                "execution_steps": [],
+                "output_expressions": [
+                    {"name": attribute_name, "expression": "sum(...)"}
+                ],
+                "output_count": 1,
+                "single_output_expression": "sum(...)",
+            }
+            if auto_impl
+            else None
+        ),
     )
 
 
@@ -333,7 +339,11 @@ class TestAggregationModuleGeneration:
             "package_name": "test_pkg",
             "is_multioutput": False,
             "input_attributes": [
-                {"name": "child_capital_cost", "type_hint": "float", "description": "Input child_capital_cost"},
+                {
+                    "name": "child_capital_cost",
+                    "type_hint": "float",
+                    "description": "Input child_capital_cost",
+                },
                 {"name": "child_count", "type_hint": "float", "description": "Input child_count"},
             ],
             "output_attributes": [
@@ -429,55 +439,6 @@ class TestAggregationAutoImpl:
         """has_unsupported_nodes=True should NOT produce auto-implementation."""
         agg = _make_scoped_agg(has_unsupported_nodes=True)
         assert agg.expression.has_unsupported_nodes is True
-
-
-# ---------------------------------------------------------------------------
-# Tests: Virtual CalcUsage Code Path (Issue #2)
-# ---------------------------------------------------------------------------
-
-
-class TestVirtualCalcUsageAutoImpl:
-    """Verify virtual CalcUsages share the regular CalcDef auto-impl code path.
-
-    Virtual CalcUsages are just CalcUsageData with is_virtual=True. Their
-    CalcDefs go through _generate_modules() and _generate_stencils() -- the
-    same path as regular CalcDefs. This test confirms the template renders
-    identically for a virtual CalcUsage's calc def.
-    """
-
-    def test_virtual_calc_usage_module_renders_normally(self):
-        """A CalcDef from a virtual CalcUsage renders the same module template."""
-        env = _get_template_env()
-        template = env.get_template("teax_module.py.jinja2")
-
-        # Context identical to regular CalcDef -- virtual CalcUsages
-        # produce standard CalculationDefinitionData entries
-        context = {
-            "class_name": "CostModelModule",
-            "input_class_name": "CostModelInput",
-            "output_class_name": None,
-            "schema_name": None,
-            "handler_name": "design__plant__solar_array__pv_module__cost_model",
-            "impl_import_path": "lib.pv_module.cost_model_impl",
-            "doc_comment": "Virtual CalcUsage module.",
-            "package_name": "test_pkg",
-            "is_multioutput": False,
-            "input_attributes": [
-                {"name": "wattage", "type_hint": "float", "description": "Input wattage"},
-            ],
-            "output_attributes": [
-                {"name": "total_cost", "description": "Calculated total_cost"},
-            ],
-            "calc_expressions": ["total_cost = wattage * cost_per_watt"],
-            "sysml_source": "models/pv_module.sysml:42",
-            "primitive_imports": ["Float"],
-        }
-
-        rendered = template.render(**context)
-
-        assert "class CostModelInput(BaseModel):" in rendered
-        assert "class CostModelModule(ModuleBase[CostModelInput, Float]):" in rendered
-        assert "wattage: float" in rendered
 
 
 # ---------------------------------------------------------------------------

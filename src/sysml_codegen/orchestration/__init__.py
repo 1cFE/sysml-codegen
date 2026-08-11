@@ -1,35 +1,34 @@
-"""Orchestration layer: pipeline construction and output registry building.
+"""Supported orchestration builders, context, and live errors."""
 
-Extracted from generation/initialization.py (Step 7.1).
-PipelineContext moved here from generation/initialization.py (Step 7.6).
-"""
+from __future__ import annotations
 
-from sysml_codegen.orchestration.output_registry_builder import (
-    build_output_registry,
-)
-from sysml_codegen.orchestration.pipeline_builder import (
-    _build_chain_aliases,
-    _remove_formula_from_design_attrs,
-    _rewrite_virtual_bindings,
-    _scope_aggregation_expressions,
-    build_pipeline_context,
-    find_instance_paths_for_partdef,
-)
+from typing import Any
+
 from sysml_codegen.orchestration.pipeline_context import (
     CodeGenerationError,
     PipelineContext,
     SysMLParsingError,
 )
 
+
+def __getattr__(name: str) -> Any:
+    if name == "build_pipeline_context":
+        from sysml_codegen.orchestration.pipeline_builder import build_pipeline_context
+
+        return build_pipeline_context
+    if name == "build_pipeline_context_from_snapshot":
+        from sysml_codegen.orchestration.snapshot_context import (
+            build_pipeline_context_from_snapshot,
+        )
+
+        return build_pipeline_context_from_snapshot
+    raise AttributeError(name)
+
+
 __all__ = [
     "CodeGenerationError",
     "PipelineContext",
     "SysMLParsingError",
-    "_build_chain_aliases",
-    "_remove_formula_from_design_attrs",
-    "_rewrite_virtual_bindings",
-    "_scope_aggregation_expressions",
-    "build_output_registry",
     "build_pipeline_context",
-    "find_instance_paths_for_partdef",
+    "build_pipeline_context_from_snapshot",
 ]

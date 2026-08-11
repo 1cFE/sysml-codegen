@@ -1,10 +1,17 @@
 # Current Work
 
-**Last Updated**: 2026-08-10 (Item 6 CERTIFIED by targeted re-audit; Item 7 cutover unblocked)
+**Last Updated**: 2026-08-10 (Item 7 atomic-cutover spec revised after P0/P1 review; Item 6 certified)
 
 ---
 
 ## Active Work
+
+### 2026-08-10: ELABORATE-FIRST Item 7 — Atomic Cutover spec in progress
+
+Draft spec: `.project/active/elaborator-cutover/spec.md`. The P0/P1 review corrections now pin
+provenance grades, the in-place Fusion Tea C25/C2 migration, outcome-specific snapshot behavior,
+closed API/deletion censuses, envelope integrity, measurable real-TEAx evidence, coordinated-repo
+gates, and one accepted recapture batch. The recapture owner checkpoint remains pending.
 
 ### 2026-08-07: ELABORATE-FIRST epic ratified — Item 1 (forensic freeze + transition) DONE
 

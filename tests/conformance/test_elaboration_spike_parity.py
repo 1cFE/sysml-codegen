@@ -22,15 +22,8 @@ from typing import Any
 
 import pytest
 
-from sysml_codegen.elaboration import (
-    ElaborationError,
-    InstanceGraph,
-    LiteralInput,
-    ValueSite,
-    elaborate,
-)
+from sysml_codegen.elaboration import InstanceGraph, LiteralInput, ValueSite, elaborate
 from sysml_codegen.extraction.extractor import SysMLDataExtractor
-from sysml_codegen.extraction.source_evidence import ReadinessCode
 from tests.conftest import FIXTURES_DIR, requires_license
 from tests.helpers.elaboration_graph import (
     attr,
@@ -224,23 +217,6 @@ def test_c19_deep_path_override_reaches_both_consumers(graph_cache) -> None:
     assert guard_ref == node_ref(graph, target)
 
     assert graph.diagnostics == []
-
-
-def test_fusion_tea_self_binding_fails_loud() -> None:
-    """``in gain = gain`` is a hard elaboration error carrying SI_SELF_BINDING
-    and every offending binding — never reinterpreted (contract D-3/SRC-01)."""
-    with pytest.raises(ElaborationError) as excinfo:
-        _elaborate_fixture("fusion_tea")
-    message = str(excinfo.value)
-    assert "SI_SELF_BINDING" in message
-    assert "gain" in message
-    self_bindings = [
-        finding
-        for finding in excinfo.value.findings
-        if finding.code is ReadinessCode.SI_SELF_BINDING
-    ]
-    assert self_bindings, excinfo.value.findings
-    assert any("gain" == finding.param_name for finding in self_bindings)
 
 
 # ---------------------------------------------------------------------------

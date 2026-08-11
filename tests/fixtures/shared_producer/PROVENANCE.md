@@ -37,7 +37,7 @@ schema bump — and it works on unmodified v3 snapshots.
 
 The calculation consumer now supplies `written_reference` and
 `occurrence_owner_path` as row 16's two dedicated request inputs
-(`resolution/producer_resolution.py`), so it reaches the same key the constraint
+through exact occurrence and referent identity, so it reaches the same key the constraint
 consumer reaches. No name is inferred from a formal.
 
 **The written reference is the reference as written, including a chain qualifier.**

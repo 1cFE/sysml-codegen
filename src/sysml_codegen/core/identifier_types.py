@@ -46,7 +46,7 @@ cannot even arise. Distinct namespace from the flat string ``ScopedKey`` alias."
 def make_scoped_key(usage_eqn: str, attr_name: str) -> ScopedKey:
     """Derive a ScopedKey from a usage EQN and attribute name.
 
-    Replaces ``OutputRegistry.derive_key_c()``. Splits EQN on ``__``,
+    Splits an exact qualified name on ``__``,
     drops ``segments[0]`` (design prefix), joins remaining with ``.``,
     appends ``.{attr_name}``.
 
