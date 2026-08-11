@@ -642,7 +642,7 @@ Record every slice. Do not combine them later.
 | 3B | d91431b, audit follow-up 2f28dde | N/A | 3520 passed / 47 skipped / 18 deselected (+47, all new) | smoke PASS (live + v6-snapshot packages, group names equal; legacy CLI package unchanged at 48 files) |
 | 3C | 7af5dc9, audit follow-up a6c41bc | 8b63393, audit follow-up cc6c7a7 | codegen 3538 passed / 47 skipped / 18 deselected (+18, all new); agentic 1825 passed / 1 skipped / 5 deselected (+6, all new) | N/A |
 | 3D | 848628b, audit follow-up fa4eea0 | N/A (untouched, clean at `cc6c7a7`) | codegen 3539 passed / 47 skipped / 38 deselected (+1 passed, +20 deselected — all new); agentic 1825 passed / 1 skipped / 5 deselected (unchanged) | **PASS** — 20 real-TEAx tests, live + relocated-v6 sealed packages, 11 outputs each, LCOE `270.1211779380445` |
-| 3E | PENDING | N/A (untouched, clean at `cc6c7a7`) | codegen 3557 passed / 47 skipped / 38 deselected (+18, all new); agentic 1825 passed / 1 skipped / 5 deselected (unchanged) | **PASS** — 38 execution nodes through the SWITCHED public `run_codegen`, live + relocated-v6, 11 channels each, LCOE `270.1211779380445` |
+| 3E | 430e26a | N/A (untouched, clean at `cc6c7a7`) | codegen 3557 passed / 47 skipped / 38 deselected (+18, all new); agentic 1825 passed / 1 skipped / 5 deselected (unchanged) | **PASS** — 38 execution nodes through the SWITCHED public `run_codegen`, live + relocated-v6, 11 channels each, LCOE `270.1211779380445` |
 
 ---
 
@@ -2072,7 +2072,7 @@ set.
 #### Slice 3E Completion — Public authority switch
 
 - **Completed:** 2026-08-11
-- **Commit:** PENDING (sysml-codegen only; agentic-mbse `N/A` — nothing changed there, and its
+- **Commit:** 430e26a (sysml-codegen only; agentic-mbse `N/A` — nothing changed there, and its
   suite was still run from the paired worktree: 1825 passed / 1 skipped / 5 deselected, unchanged)
 - **Declared path set, sysml-codegen:** `src/sysml_codegen/cli/__init__.py`,
   `src/sysml_codegen/snapshot/envelope.py`; new `tests/conformance/test_public_authority_switch.py`,
