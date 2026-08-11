@@ -982,15 +982,15 @@ def test_final_candidate_is_repeatable_and_executable(real_teax):
 
 - [ ] **The headline decision at the owner stop, per the Phase 4 resequencing ruling.** Present
   together: the PROPOSED v6 recapture batch (15 captured / 22 typed refusals), and the
-  **prepared retirement** — every one of the 4B groups with a per-file disposition and a green
+  **prepared retirement** — every one of the 4B groups with a per-file disposition and a
   replacement proof, and a runbook whose four steps have each been executed in order and
   measured green in a scratch worktree, with their per-file edits shipped as reviewable
   patches. State plainly that the candidate ships with the legacy stack
   **present-but-unreachable**, and name the 3E pins that hold that property. State just as
-  plainly what the runbook does **not** carry: **seven items need an owner ruling** — they are
-  what the simulation held out as a named 113-node trim, so "green at every boundary" is green
-  *with those held out* — and one battery gate (`check_ledger_4a.py replacements`) was never
-  measured, at any step.
+  plainly what the runbook does **not** carry: **eight items need an owner ruling** — seven of
+  them are what the simulation held out as a named 113-node trim, so "green at every boundary"
+  is green *with those held out* — and `check_ledger_4a.py replacements` returns **9 FAIL** at the
+  proven post-state, three of which are among those eight.
 - [ ] **Price the batch decision honestly.** Revising the PROPOSED v6 batch is Git-reversible
   but not free: measured, removing the 15 snapshots the batch added leaves **38 failed and 57
   errors** across the suite. Revising means re-running `capture_v6_batch.py` and re-greening
@@ -4552,9 +4552,9 @@ order in the same kind of scratch worktree, with their edits authored to the par
 whole battery run at each boundary. All four are green with the owner-gated items held out. The
 runbook below is the result; it supersedes the "steps 2–4 are not proven" sentence above, which
 was true when it was written. What the completion changed: the owner-gated entry grew from six
-items to seven, each with a measurement; three `*_e2e.py` rows moved from step 4 to step 2; and
-`check_ledger_4a.py replacements` is recorded as the one battery gate the simulation never
-measured, at any step.
+items to eight, each with a measurement; three `*_e2e.py` rows moved from step 4 to step 2; and
+`check_ledger_4a.py replacements` — measured once out of band — turned up nine rows whose
+replacement proof node the retirement itself deletes.
 
 **F3 (medium) — `CLAUDE.md`.** The import-residual sentence now says what was measured: a pinned
 four-module set of which three are reached, and a real closure of **10 of the 11** listed modules
@@ -4584,13 +4584,13 @@ at the Phase 5 stop.
 
 ### The retirement runbook — post-acceptance execution
 
-**Status: all four steps are PROVEN green in simulation. Seven items are owner-gated, and
-one battery gate is unmeasured.** Rebuilt at the Phase 4 audit follow-up (2026-08-11) against
+**Status: all four steps are PROVEN green in simulation. Eight items are owner-gated, and one
+battery gate cannot come back green until three of them are ruled on.** Rebuilt at the Phase 4 audit follow-up (2026-08-11) against
 audit-4 F1 and F2, then completed by executing every step in order. Every number below was
 measured in a scratch `git worktree` created for the purpose; the audited tree was never
 mutated and **nothing has retired**.
 
-What "proven" means here, exactly: with the seven owner-gated items held out as a named,
+What "proven" means here, exactly: with the seven trim-carrying owner-gated items held out as a named,
 committed trim (113 test nodes, listed in `runbook-patches/provisional-trim.txt`), each of the
 four steps ends with **0 failed and 0 errors** across the full battery. What it does not mean:
 the gated items are not solved, and nothing is executed until the owner accepts.
@@ -4641,7 +4641,7 @@ patch, one patch per file, under `.project/active/cutover-recovery/runbook-patch
 | | patches | covers |
 |---|---:|---|
 | `step1/` | 12 | the 12 files step 1 edits (`L-135` and `L-281` are owner-gated, so 12 of the 14 rows) |
-| `step2/` | 41 | 40 file edits plus `ledger__L-011.patch`, the one ledger-row correction |
+| `step2/` | 42 | 40 file edits plus two ledger patches — `ledger__L-011.patch` (one row's disposition) and `ledger__replacement-proof-nodes.patch` (six rows' proof nodes) |
 | `step3/`, `step4/` | 0 | those steps delete only; the simulation confirmed no surviving file needs an edit |
 
 The patches are **sequenced**: step 2's were derived against the tree with step 1's applied,
@@ -4697,10 +4697,15 @@ TEAx sibling and are why `TEAX_SIMKIT_PATH` is set.
 left to check*, not *checked and clean* (audit 4, F6). It stays in the battery as a tripwire: if
 a step re-blocks a file, this is what says so.
 
-**`replacements` is the one battery gate the simulation did not measure**, at any step. It runs
-a pytest invocation per proof-node row and did not finish inside a 10-minute bound; the
-previous version's step-1 table did not record it either. It is a real gap, not a passed gate:
-run it once, out of band, before executing step 1 for real.
+**`replacements` runs for about 40 minutes** — a pytest invocation per proof-node row — so it is
+not in the per-step tables below. It was measured once, out of band, at the step-4 post-state:
+**209 green, 80 not-required, 9 FAIL**. All nine are the same thing, and it is a class of
+runbook work nothing else surfaced: a ledger row whose `replacement_proof_node` names a node
+**the retirement itself deletes or renames**. Six are repointed by
+`runbook-patches/step2/ledger__replacement-proof-nodes.patch`, whose six targets were each run
+and are green; three need an owner (fifth entry, item 8). The repointed nine were **not**
+re-measured through `replacements` — that is a second 40-minute run, and it is the one thing on
+this page that is prepared and unproven.
 
 ---
 
@@ -4877,9 +4882,9 @@ and `reference/15 §7`, `16` and `18` are recorded stale-minor "ships with the r
 
 #### The fifth entry — owner-gated, not scheduled
 
-Seven items. None may be started without a ruling. Together they are the 113-node provisional
-trim in `runbook-patches/provisional-trim.txt`, which is what every "0 failed" above is
-measured with held out.
+Eight items. None may be started without a ruling. Items 1–7 are the 113-node provisional trim
+in `runbook-patches/provisional-trim.txt`, which is what every "0 failed" above is measured
+with held out; item 8 costs no test node and blocks one checker gate instead.
 
 1. **The dual qualifier drop** — L-033, L-034, L-036, L-037. Measured in chunks 12 and 16: all
    eight retained 3C duals fail under the prescribed drop. L-036/L-037 cannot execute at all —
@@ -4929,7 +4934,17 @@ measured with held out.
    about how much of the v5 vocabulary the tree keeps, and L-028's `removes` block does not
    name them.
 
-Items 3, 4, 6 and 7 are the same class audit 4 found in L-298: a disposition note, or a
+8. **Three rows lose their replacement proof, and there is nothing obvious to repoint them to.**
+   `check_ledger_4a.py replacements` at the step-4 post-state returns 9 FAIL, every one a row
+   whose `replacement_proof_node` the retirement deletes or renames. Six repoint mechanically
+   and are in `ledger__replacement-proof-nodes.patch`. **L-039** and **L-040** (the two
+   baseline-capture scripts) and **L-289** (`tests/conftest.py`) name only nodes in
+   `tests/conformance/test_gen_registry.py`, which step 2 deletes, so each needs a *new*
+   surviving node chosen to prove the same responsibility — which is authorship, not a
+   repoint. Until they are ruled on, `replacements` cannot come back green, and it is the one
+   battery gate a green step 4 does not currently carry.
+
+Items 3, 4, 6, 7 and 8 are the same class audit 4 found in L-298: a disposition note, or a
 silence, that is false against the code. They were found the only way that class can be found —
 by executing the step and running the suite.
 
@@ -4967,14 +4982,17 @@ by executing the step and running the suite.
    re-checks against the tree.
 3. **Each step's post-state is proven.** ✅ All four, green at every boundary, with the
    owner-gated trim held out and named.
-4. **Nothing is scheduled that needs a decision that is not the operator's.** ✅ — seven items,
+4. **Nothing is scheduled that needs a decision that is not the operator's.** ✅ — eight items,
    named above with their measured cost, none of them softened into a step.
-5. **Every battery gate is measured.** ❌ — `check_ledger_4a.py replacements` was not measured
-   at any step. Named above, with what it costs to close.
+5. **Every battery gate is measured.** ✅ measured — ❌ not all green. `replacements` returns
+   **209 green / 80 not-required / 9 FAIL** at the step-4 post-state, six of the nine repointed
+   by a prepared ledger patch and three needing an owner (item 8). Named above, with what it
+   costs to close.
 
-**So: steps 1–4 are MECHANICAL, on two conditions stated in the open.** The seven owner-gated
-items are ruled on first (or held out deliberately, as the simulation held them), and
-`replacements` is measured once before step 1 runs for real.
+**So: steps 1–4 are MECHANICAL, on two conditions stated in the open.** The eight owner-gated
+items are ruled on first (or held out deliberately, as the simulation held items 1–7), and
+`replacements` is re-run after the six prepared repoints land, because that repoint is the one
+prepared edit on this page whose effect was not itself measured.
 
 ### Phase 5 Completion
 
