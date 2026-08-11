@@ -3217,7 +3217,7 @@ lane **38 passed** including the 12 real-TEAx nodes at the recorded anchors. `ru
 **870 → 870**, `mypy src/` **69 in 16 files → unchanged**, `git diff --check` clean,
 `check_ledger_4a.py paths` **298 rows / 0 problems**, `surface` **0 on both axes**.
 
-**Commit:** `STAGE2_OID`. **Deletes nothing; no test repointed yet.**
+**Commit:** ``57016f0` (`57016f0decfc36e367450dd5fbbbc00930a26968`)`. **Deletes nothing; no test repointed yet.**
 
 ### Phase 5 Completion
 
