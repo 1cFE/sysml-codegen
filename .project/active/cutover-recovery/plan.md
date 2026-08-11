@@ -3769,7 +3769,8 @@ reported at each stop.
 | 11 | `c674064` | **the execution lane** — the last Gate 4C must-restore (6 files) |
 | 12 | `986b24a` | L-180 repointed and ordered; the expression-compiler premise measured false |
 | 13 | `f2ae234` | the Item-10 mechanism family (5 files) + the retirement runbook |
-| 14 | *this commit* | the silent-failure family (6 files), and a caret with no test |
+| 14 | `5f8d627` | the silent-failure family (6 files), and a caret with no test |
+| 15 | *this commit* | seven more genuine repoints, and the ledger's own gate catching one |
 
 **Blockers, two-axis: 124 → 43.** G2′ 40, **G3′ 0, G4′ 0**. Row dispositions stand at
 **74 `retire-with-owner`, 23 `repoint`, 17 `archive-with-findings`**.
@@ -4120,12 +4121,64 @@ kept the aggregation unexpanded.
 passed (from 3829; +1, the caret node). Everything else in the battery unchanged. Deletes
 nothing.
 
+#### Gate 4C part 7 chunk 15 — seven genuine repoints, and the ledger's own gate catching one
+
+Seven rows, no shared family — each one taken on its own subject and matched to the exact
+route's own owner of that subject.
+
+| Row | Subject | Disposition | Proven by |
+|---|---|---|---|
+| L-196 | Bug 2, EXPOSE two-hop resolves to a module output | retire | `test_elaboration_expose_shapes.py`, incl. the multi-hop cross-package shape |
+| L-200 | full-pipeline YAML + Issue 22 aggregation | retire | `test_exact_route_generated_package.py` + `test_exact_route_alias_aggregation.py` |
+| L-218 | `design_overrides` survives the offline path | retire | `test_elaboration_shadowing.py` + the graph round-trip |
+| L-250 | REQ-VBR-08/09 virtual-binding hardening | retire | shadowing + identity collisions |
+| L-172 | SR-A02 convergence on one entry point | retire | `test_elaboration_spike_parity.py::test_c11_chain_calc_and_constraint_converge` |
+| L-123 | the two default lanes disagree | retire | the modelled-default execution node (see below) |
+| L-097 | the silent LocalTerm mint | retire | `test_elaboration_aggregations.py::test_local_term_and_per_instance_producers_mix` |
+
+**Three of these are stronger than what they replace, for the same structural reason.** The
+legacy claim was about the *emitted table* — two consumers share one QN-keyed entry point
+(L-172), an expose lands on a module output rather than an entry point (L-196), a local term
+carries a default (L-097). A route that minted duplicates and then deduplicated them by key
+would satisfy all three. The exact-route replacements assert convergence at the *node* — the
+calc chain and the constraint actual read the same occurrence node, by reference — so there is
+nothing left to deduplicate and no key to collide on.
+
+**L-250's mechanism disappears, but its risk does not.** Virtual CalcUsages were the legacy
+route's per-instance stand-ins, and REQ-VBR-08 existed because two stand-ins could share one
+`BindingInfo`, so rewriting one sibling to a literal would skip the other. The exact route
+materialises every occurrence, so there is nothing to mint and nothing to share. The
+replacement pins the risk where a collapse would now show: **equal-valued** independent
+literals stay distinct. Equal-valued is the sharp case — precisely where a route keying on
+value or rendered name would silently merge two siblings.
+
+**L-123 retires with its subject, and its own docstring said so first**: *"If the lanes are ever
+made to agree … this test should fail and be deleted with that change."* Step 1 is that change —
+both lanes (`constraint_lowering.resolve_modeled_default` and
+`parameter_groups.design_attribute_float_default`) are deleted in it.
+
+**The ledger's own gate caught the first attempt, and that is recorded rather than tidied away.**
+L-123 was first written with `replacement_proof_node: null`, on the reasoning that a row deleting
+a *record of a defect* owes no replacement.
+`tests/unit/test_check_ledger_4a.py::test_a_retire_with_owner_row_names_the_green_replacement_that_covers_it`
+refused it. The gate was right and the reasoning was wrong: DD-R23 wants a positive statement,
+not the absence of a negative one. The row now names
+`test_a_modeled_default_is_an_overridable_entry_point_not_a_baked_constant` — on the exact route
+a constraint formal's modelled default reaches the generated entry points as a real overridable
+value *and* is absent from the compiled predicate body, so there is exactly one representation
+and it is the entry-point one. A second lane reappearing as a baked constant is what that node
+fails on.
+
+**Blockers after chunk 15: G2′ 31 → 27, v5-family 30 → 25, union 42 → 35.** Suite **3830**
+passed, unchanged — every row in this chunk points at coverage that already existed, so no node
+was added. Everything else in the battery unchanged. Deletes nothing.
+
 ---
 
 ### The retirement runbook — post-acceptance execution
 
-**Status: NOT YET MECHANICAL. 42 files still block, across G2′ and the v5 family** (G2′ 31, v5
-family 30; the union is 42 because most block both). This section
+**Status: NOT YET MECHANICAL. 35 files still block, across G2′ and the v5 family** (G2′ 27, v5
+family 25; the union is 35 because most block both). This section
 is written to the state it is actually in, so a later session executes from it rather than
 re-deriving it. Steps 3 and 4 *are* ready; steps 1 and 2 are not, and the per-step blocker lists
 below say exactly what is missing.
@@ -4163,12 +4216,12 @@ $PY scripts/check_proof_integrity.py
 git diff --check
 ```
 
-Recorded values to compare against, measured at chunk 14: suite **3830 passed / 47 skipped /
+Recorded values to compare against, measured at chunk 15: suite **3830 passed / 47 skipped /
 53 deselected**; execution lane **53 passed**; `--verify` **15/22/0**; `ruff` **16** on `src` and
 **868** whole-tree; `mypy` **69 errors in 16 files**; `paths` **298 rows / 0 problems**;
 `surface` **0 unrowed breakages**; proof integrity **0 problems**.
 
-#### Step 1 — the v5 family (61 rows) — **BLOCKED by 30 files**
+#### Step 1 — the v5 family (61 rows) — **BLOCKED by 25 files**
 
 Deletes the legacy analysis/resolution stack, the v5 serializer, `pipeline_builder`, the 37
 committed `extraction_snapshot.json` fixtures and `scripts/capture_extraction_snapshots.py`, and
@@ -4178,9 +4231,9 @@ drops the `Exact`/`identified` qualifiers from the retained 3C duals.
 L-029 to L-037 (L-036/L-037 in `agentic-mbse` — a coordinated pair, commit both), L-057 to L-093
 (the 37 fixtures), L-275.
 
-**Blockers, all 30 named:** L-115, L-120, L-122, L-123, L-124, L-135, L-141, L-142, L-143,
-L-154, L-156, L-163, L-164, L-166, L-168, L-172, L-178, L-181, L-182, L-189, L-190, L-196,
-L-200, L-236, L-238, L-246, L-250, L-281, L-284, L-290.
+**Blockers, all 25 named:** L-115, L-120, L-122, L-124, L-135, L-141, L-142, L-143, L-154,
+L-156, L-163, L-164, L-166, L-168, L-178, L-181, L-182, L-189, L-190, L-236, L-238, L-246,
+L-281, L-284, L-290.
 
 **Two of those are a stop, not a queue.** L-281 and L-284 are the expression compiler, and chunk
 12 measured the recorded "mechanical rename" premise false — 31 of their 76 nodes are bound to
@@ -4192,7 +4245,7 @@ cannot be scheduled until that authoring is scoped and done.** See the chunk-12 
 four nodes, all against `snapshot/envelope.py`. The six v5-envelope nodes in the same file retire
 *in* this step, with the fixtures they read; that is the expected suite delta, not a regression.
 
-#### Step 2 — G2′, the v5 read path (4 rows) — **BLOCKED by 31 files**
+#### Step 2 — G2′, the v5 read path (4 rows) — **BLOCKED by 27 files**
 
 **Rows:** L-015 `snapshot/graph_rebuild.py`, L-016 `snapshot/loader.py`, L-026
 `orchestration/snapshot_context.py`, L-028 `snapshot/__init__.py` (migrate — empties the v5
@@ -4200,11 +4253,11 @@ re-exports that keep `pipeline_builder`, `snapshot.loader` and `snapshot.graph_r
 `cli`'s transitive import closure, which is what
 `test_the_generation_half_still_reaches_v5_modules_and_that_residual_is_pinned` pins).
 
-**Blockers, all 31 named:** L-094, L-097, L-115, L-122, L-123, L-124, L-134, L-141, L-142,
-L-147, L-154, L-156, L-162, L-163, L-164, L-166, L-167, L-168, L-172, L-178, L-182, L-185,
-L-186, L-189, L-190, L-218, L-219, L-227, L-238, L-246, L-278.
+**Blockers, all 27 named:** L-094, L-115, L-122, L-124, L-134, L-141, L-142, L-147, L-154,
+L-156, L-162, L-163, L-164, L-166, L-167, L-168, L-178, L-182, L-185, L-186, L-189, L-190,
+L-219, L-227, L-238, L-246, L-278.
 
-**Ordering:** after step 1, because 21 of these 31 also block step 1 and the fixtures they read
+**Ordering:** after step 1, because 19 of these 27 also block step 1 and the fixtures they read
 go first.
 
 #### Step 3 — G3′ (1 row) — **READY**
@@ -4227,7 +4280,7 @@ their own steps: the `_CONSTRAINT_LOGGER` name in `elaboration/project.py:83` (r
 
 #### What has to be true before this section can say "mechanical"
 
-1. Every one of the 42 blocking files carries a clearing `disposition_4c`.
+1. Every one of the 35 blocking files carries a clearing `disposition_4c`.
 2. `scripts/check_ledger_4a.py groups` shows all six groups READY.
 3. `scripts/check_ledger_4a.py replacements` is green for every row, and
    `scripts/check_proof_integrity.py` reports 0 problems.
