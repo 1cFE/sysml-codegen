@@ -12,10 +12,10 @@ their subjects. Variants join no corpus ledger.
 
 The recipe, applied per refused formal:
 
-- inside the ``calc def`` that declares it, the formal and every use of it in that block
-  gain an ``_in`` suffix;
-- at every ``calc <usage> : <ThatCalcDef>`` binding, the *left* side gains the suffix and the
-  right side does not — which is precisely what stops the binding resolving to itself.
+- inside the ``calc def`` or ``constraint def`` that declares it, the formal and every use of
+  it in that block gain an ``_in`` suffix;
+- at every ``calc``/``assert constraint`` usage binding, the *left* side gains the suffix and
+  the right side does not — which is precisely what stops the binding resolving to itself.
 
 **The proof is a strip check, not a diff review.** Removing the ``_in`` suffix from the
 renamed names everywhere in the variant must reproduce the original **byte for byte**. That
@@ -72,10 +72,20 @@ def refused_formals(fixture: str) -> list[str]:
     return sorted({line.rsplit(".", 1)[-1].strip() for line in record["message"].split("; ")})
 
 
-def _calc_def_blocks(text: str) -> dict[str, tuple[int, int]]:
-    """Span of every ``calc def <Name> { ... }`` block, by brace depth."""
+#: The definition forms that declare ``in`` formals a usage then binds. Both are in the D-5
+#: recipe's scope for the same reason: the refusal is about a binding whose right side
+#: resolves to its own formal, and a ``constraint def`` declares formals exactly as a
+#: ``calc def`` does. Renaming only the binding's left side without renaming the declaration
+#: leaves the model inconsistent, which is what `gate_a_d5` measured on the first attempt
+#: (generation refused with ``cross_scope_binding_disagreement``). Constraint-def names may be
+#: single-quoted (``constraint def 'Viability Threshold'``).
+_DEFINITION_BLOCK = re.compile(r"\b(?:calc|constraint)\s+def\s+('[^']+'|\w+)\s*\{")
+
+
+def _definition_blocks(text: str) -> dict[str, tuple[int, int]]:
+    """Span of every ``calc def`` / ``constraint def`` block, by brace depth."""
     blocks = {}
-    for match in re.finditer(r"\bcalc\s+def\s+(\w+)\s*\{", text):
+    for match in _DEFINITION_BLOCK.finditer(text):
         depth, index = 0, match.end() - 1
         while index < len(text):
             if text[index] == "{":
@@ -205,7 +215,7 @@ def build_variant(source: str, target: str, formals: list[str]) -> list[Path]:
         for name in formals:
             # Late blocks first: renaming shifts offsets, so earlier spans stay valid.
             for span in sorted(
-                (span for span in _calc_def_blocks(text).values()), reverse=True
+                (span for span in _definition_blocks(text).values()), reverse=True
             ):
                 declares = rf"\bin\s+attribute\s+{re.escape(name)}\b"
                 if re.search(declares, text[span[0] : span[1]]):
@@ -223,10 +233,13 @@ def strip_check(source: str, target: str, formals: list[str]) -> list[str]:
     source_dir, target_dir = FIXTURES / source, FIXTURES / target
     problems = []
 
+    # VARIANT_ONLY is excluded from BOTH sides. A provenance record belongs to the fixture it
+    # sits in, so a source that carries one of its own (the occurrence-demand fixtures each
+    # do) must not make the variant's own record read as a missing file.
     originals = {
         path.relative_to(source_dir)
         for path in source_dir.rglob("*")
-        if path.is_file() and path.name not in NOT_INHERITED
+        if path.is_file() and path.name not in NOT_INHERITED | VARIANT_ONLY
     }
     variants = {
         path.relative_to(target_dir)
@@ -244,7 +257,7 @@ def strip_check(source: str, target: str, formals: list[str]) -> list[str]:
         # enumeration does not name survives this and fails the byte comparison below.
         renamed = (source_dir / relative).read_text()
         for name in formals:
-            for span in sorted(_calc_def_blocks(renamed).values(), reverse=True):
+            for span in sorted(_definition_blocks(renamed).values(), reverse=True):
                 if re.search(rf"\bin\s+attribute\s+{re.escape(name)}\b", renamed[span[0]:span[1]]):
                     renamed = _rename_in_span(renamed, span, name)
             renamed = _rename_binding_left_sides(renamed, name)
@@ -261,9 +274,23 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("source")
     parser.add_argument("target")
     parser.add_argument("--check", action="store_true", help="strip-check only; write nothing")
+    parser.add_argument(
+        "--formals",
+        help=(
+            "comma-separated refused formals, for a fixture with no batch record. The batch "
+            "manifest only covers the 37 corpus fixtures; a non-corpus fixture's formals come "
+            "from the exact route's own refusal message, which is what the manifest records. "
+            "Supplying them here is a caller decision, so the caller states where they came "
+            "from — the manifest stays the only automatic source."
+        ),
+    )
     args = parser.parse_args(argv)
 
-    formals = refused_formals(args.source)
+    formals = (
+        sorted({name.strip() for name in args.formals.split(",")})
+        if args.formals
+        else refused_formals(args.source)
+    )
     if not args.check:
         written = build_variant(args.source, args.target, formals)
         print(f"{args.target}: {len(formals)} formals renamed across {len(written)} files")

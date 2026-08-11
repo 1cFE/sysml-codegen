@@ -3765,10 +3765,19 @@ reported at each stop.
 | 7 | `c5e753b` | the legacy factories, deriver, classifier and registry (11 files) |
 | 8 | `5e02832` | twelve more legacy suites, and the class-3 correction |
 | 9 | `cd520a5` | G3′ and G4′ reach READY (8 files) |
-| 10 | *this commit* | the constraint conformance family (8 files) + the L-130 repoint |
+| 10 | `b176674` | the constraint conformance family (8 files) + the L-130 repoint |
+| 11 | *this commit* | **the execution lane** — the last Gate 4C must-restore (6 files) |
 
 **Blockers, two-axis: 124 → 43.** G2′ 40, **G3′ 0, G4′ 0**. Row dispositions stand at
 **74 `retire-with-owner`, 23 `repoint`, 17 `archive-with-findings`**.
+
+> **Count correction, measured at HEAD before chunk 11 (2026-08-11).** "43" above is the
+> **v5-family** blocker count, not the remaining work. The two axes overlap but are not nested:
+> G2′ blocked on 40 and the v5 family on 43, and their **union is 60 files**. The stage brief's
+> "last 43 files" inherits the same undercount. The four named pieces below cover 14 of the 60;
+> the other 46 carry the generic part-5 defer note and are the bulk of the "genuine repoints"
+> row. Recorded rather than silently corrected, because every earlier chunk's remainder figure
+> was quoted off this number.
 
 **READY means dispositioned, not authorised.** G3′ and G4′ have no file whose fate is
 unrecorded; the resequencing ruling still puts their execution after the owner stop.
@@ -3778,7 +3787,7 @@ of the correction below. What is left is four named pieces:
 
 | Piece | Rows | Why it is still open |
 |---|---|---|
-| the execution lane | L-192, L-191, L-193, L-194, and L-113/L-114 behind them | real-simkit constraint verdict execution — a Gate 4C must-restore. `test_zero_assertion_aggregator_not_assessed` is the live subject of the ruling-2 mechanism and needs a per-node disposition. |
+| ~~the execution lane~~ | ~~L-192, L-191, L-193, L-194, and L-113/L-114 behind them~~ | **CLOSED, chunk 11.** See the chunk-11 record below. |
 | the expression compiler | L-284, L-281 (L-280 done) | cannot be finished before L-033 drops the `Exact` qualifier |
 | doc-coupled | L-120 `test_data_models.py` | its target list is whatever Gate 4D leaves in `09-data-models.md` |
 | the genuine repoints | L-135, L-181, L-182, L-154, L-163, L-164, L-124, L-168, L-180, and the silent-failure trio | each needs coverage re-derived, not an import moved |
@@ -3843,6 +3852,110 @@ Two consequences, both recorded rather than left to be met later:
 
 **Carried to the Phase 5 packet:** whether the empty-report surface is a behaviour the exact
 route should carry is a product question for the owner, not a test question.
+
+##### Gate 4C part 7 chunk 11 — the execution lane, and the last Gate 4C must-restore
+
+**Real constraint verdict execution now exists on the public exact route.** That was the one
+must-restore Gate 4C still owed, and it is the piece the whole retirement was waiting on: six
+rows (L-192, L-191, L-193, L-194, and L-113/L-114 behind them) whose evidence ran entirely
+against owners the retirement deletes.
+
+**Why none of the four execution files could be repointed.** Method note 1 (localise, don't
+retire) does not reach them. Nine of L-192's fifteen nodes *construct a `ComputationGraph` by
+hand* out of `analysis.constraint_lowering`, `analysis.parameter_groups` and
+`resolution.models`; the other six drive `orchestration.pipeline_builder`; and the three
+siblings import `_generate_full_package`/`_run` from L-192, so they break twice over. There is
+no import to move — the graph assembly *is* the legacy route.
+
+**What replaces them.** `tests/execution/test_constraint_verdicts_exact_route.py`, 15 nodes,
+every one going model → `run_codegen` → TEAx's own `ProvisionalPackageLoader` → the real
+executor. No graph construction, no patched import, no v5 snapshot anywhere in the path. The
+per-node accounting for all fifteen legacy nodes is on the L-192 row; the four things worth
+lifting out of it:
+
+- **`test_zero_assertion_aggregator_not_assessed` retires with its subject.** It is the live
+  subject named by ruling 2 above. Legacy emits the aggregator with nothing to assess; the
+  exact route returns early (`elaboration/project.py:887`) and that early return stands. Not
+  replaced, not silently dropped — carried to the Phase 5 packet as the owner's product
+  question, exactly as the ruling said it would be.
+- **The seal changed how a value moves, and that is recorded rather than worked around.** The
+  legacy lane edited a generated `inputs/*.json` and re-ran. The exact route seals what it
+  writes, so that edit is now a `SealVerificationError` — and the plan already calls
+  edit-and-reseal the invalid route. Values move through TEAx typed entry injection
+  (`CandidateBridge` + `PreparedEvaluator`), the protocol Slice 3D ratified. That gives two
+  observation surfaces and the specimens use both deliberately: the file-backed sealed run
+  publishes whole `ConstraintEvaluation` objects (status, `actual_value`, `margin`,
+  `observed`) and persists the report, while injection is what can move a modelled value and
+  projects verdict *statuses*. A claim about the shape of a verdict is made against the first;
+  a claim about a value driving a verdict against the second.
+- **Two replacements are stronger than what they replace.** The R-3 name-safety refusal
+  reached the legacy node through a v5 snapshot of `constraint_inline`; the replacement reaches
+  the same refusal from the live model and additionally requires that no package tree was left
+  behind. And `test_break_the_yaml_surfaces_execution_failure` becomes
+  `test_rewiring_the_generated_pipeline_is_caught_before_anything_executes`: under the seal a
+  rewired `pipeline.yaml` is refused before the executor sees it, which is earlier and more
+  specific than the executor's wiring error.
+- **One legacy row had no execution-level counterpart and now does.** The polarity
+  parametrization's `strict-boundary` case needed a `>` predicate, and no fixture carried one.
+  `constraint_strict_boundary` is `constraint_shared_polarity` with the operator swapped, and
+  the replacement pins the two operators *disagreeing at equality* rather than sampling one.
+
+**Three fixtures authored, at the established standards.**
+
+| Fixture | Kind | Standard met |
+|---|---|---|
+| `gate_a_d5` | D-5 variant of corpus `gate_a` | strip check, 0 problems; original byte-untouched with its v5 snapshot; joins no ledger |
+| `constraint_occurrence_demand_overrides_d5` | D-5 variant | strip check plus **one enumerated difference** — see below |
+| `constraint_arithmetic_raise`, `constraint_strict_boundary` | new originals, D-5 form from the start | no variant needed; the exact route admits both unchanged |
+
+**The D-5 recipe was widened to `constraint def`, and that was measured, not assumed.** The
+first `gate_a_d5` renamed only the *binding's* left side inside `assert constraint viability`,
+leaving the declaration saying `gain` and the binding saying `gain_in`. The exact route refused
+that model at generation with `cross_scope_binding_disagreement` — a refusal outside
+`SI_SELF_BINDING`, which is the refusal-layer protocol's stop trigger. It resolved to a gap in
+the tool rather than a premise conflict: the recipe's own wording is "inside the block that
+declares the formal", and a `constraint def` declares formals exactly as a `calc def` does.
+`_DEFINITION_BLOCK` in `scripts/make_d5_variant.py` now matches both, including single-quoted
+names. **Every pre-existing variant's strip check was re-run and still passes.**
+
+**A second-layer refusal, investigated and bounded rather than engineered around.** After the
+rename, `constraint_occurrence_demand_overrides_d5` refused again, at projection:
+
+```
+SI_RENDERING_COLLISION: package-scoped 'OccurrenceOverride__keep_pipeline' in a model.sysml
+has no root occurrence to take a parameter-group identity from
+```
+
+That is the ratified Slice 3B option-C rule — group identity comes from the filename stem, and
+the `model.sysml` fallback wants the declaring package of the owning root occurrence, which a
+package-scoped calc has none of. Nothing was invented to get past it: the file is *named*,
+which is what the rule asks a model to do. The difference is **one filename and zero bytes**,
+enumerated in the fixture's `PROVENANCE.md` and pinned by
+`test_the_occurrence_overrides_variant_differs_by_the_rename_and_the_filename`.
+
+**The proof-integrity cross-check is now a script, not a habit.** Method note 2 said to run it
+every chunk and it has caught something twice. `scripts/check_proof_integrity.py` reads the
+Gate 4A checker's own `group_readiness` over all six groups and fails any row whose replacement
+node lives in a file still blocking a deletion — transitive through G2′/G3′/G4′ by construction,
+because readiness is measured over every group's surface. Clean at chunk 11: **0 problems over
+54 blocked files.** It is also what unblocked L-113/L-114, whose earlier note held them back
+precisely because their owner (L-193) was still scheduled to break.
+
+**Blockers after chunk 11: G2′ 40 → 38, v5-family 43 → 37, union 60 → 54.** G3′ and G4′ stay
+at 0.
+
+**Battery.** Full licensed suite **3822 passed / 47 skipped / 53 deselected**, from 3816/47/38.
+Delta fully explained: **+6 passed**, all in `tests/conformance/test_d5_variants.py` (the four
+parametrized proofs applied to `gate_a_d5`, plus the two nodes that carry the occurrence
+variant's enumerated difference); **+15 deselected**, the new execution-marked nodes. Execution
+lane `pytest tests/execution -m execution` **53 passed**, from 38 — the 12 real-TEAx anchors
+unchanged. `capture_v6_batch.py --verify` **15 captured / 22 refused / 0 deviations**. Corpus
+ledger test 12 passed. `ruff check src` **16**, whole tree **868** — both unchanged. `mypy src`
+**69 errors in 16 files**, unchanged. `git diff --check` clean. Checker: `paths` 298 rows / 0
+problems, `surface` 0 unrowed breakages, `groups` as above, `replacements` green for all six
+rows under `required_suite: execution`.
+
+**Deletes nothing.**
 
 ### Phase 5 Completion
 

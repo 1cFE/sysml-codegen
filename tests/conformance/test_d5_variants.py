@@ -25,7 +25,11 @@ sys.path.insert(0, str(ROOT / "scripts"))
 import make_d5_variant as d5  # noqa: E402
 
 #: Every variant, with the original it was derived from.
-VARIANTS = [("catf_mfe_model", "catf_mfe_d5"), ("solar_battery_model", "solar_battery_d5")]
+VARIANTS = [
+    ("catf_mfe_model", "catf_mfe_d5"),
+    ("solar_battery_model", "solar_battery_d5"),
+    ("gate_a", "gate_a_d5"),
+]
 
 
 @pytest.fixture(scope="module")
@@ -112,6 +116,39 @@ def test_the_original_is_untouched_by_its_variant(original: str, variant: str) -
     assert (d5.FIXTURES / original / "extraction_snapshot.json").is_file()
 
 
+#: The occurrence-overrides variant, which the parametrized set above cannot carry: it has no
+#: batch record (so `refused_formals` has nothing to read), and it differs from its original by
+#: one filename as well as by the rename. Both differences are enumerated in its PROVENANCE.md.
+OVERRIDES_ORIGINAL = d5.FIXTURES / "constraint_occurrence_demand" / "overrides" / "model.sysml"
+OVERRIDES_VARIANT = (
+    d5.FIXTURES / "constraint_occurrence_demand_overrides_d5" / "occurrence_overrides.sysml"
+)
+
+
+def test_the_occurrence_overrides_variant_differs_by_the_rename_and_the_filename() -> None:
+    """Two enumerated differences, and the byte comparison catches a third if one rode along.
+
+    The file is named rather than left as ``model.sysml`` because the exact route refuses a
+    package-scoped calc in a ``model.sysml`` — parameter-group identity comes from the filename
+    stem, and the fallback wants an owning root occurrence a package-scoped calc does not have
+    (Slice 3B orchestrator ruling, option C). That is a rename of the file, not of its contents:
+    stripping ``_in`` must still reproduce the original's bytes exactly.
+    """
+    import re as _re
+
+    assert not (OVERRIDES_VARIANT.parent / "model.sysml").exists(), (
+        "the variant carries both names; the filename difference is supposed to be a rename"
+    )
+    stripped = _re.sub(r"\breading_in\b", "reading", OVERRIDES_VARIANT.read_text())
+    assert stripped.encode() == OVERRIDES_ORIGINAL.read_bytes()
+
+
+def test_the_occurrence_overrides_original_is_untouched() -> None:
+    """The original still carries the refused self-binding shape."""
+    assert "in reading = reading;" in OVERRIDES_ORIGINAL.read_text()
+    assert "reading_in" not in OVERRIDES_ORIGINAL.read_text()
+
+
 def test_a_refusal_code_outside_the_rename_recipe_stops_rather_than_guesses() -> None:
     """The recipe addresses SI_SELF_BINDING. Anything else is a finding, not a variant."""
     import json
@@ -182,7 +219,7 @@ def _renamed(text: str) -> str:
     import re as _re
 
     for name in d5.refused_formals("solar_battery_model"):
-        for span in sorted(d5._calc_def_blocks(text).values(), reverse=True):
+        for span in sorted(d5._definition_blocks(text).values(), reverse=True):
             if _re.search(rf"\bin\s+attribute\s+{_re.escape(name)}\b", text[span[0] : span[1]]):
                 text = d5._rename_in_span(text, span, name)
         text = d5._rename_binding_left_sides(text, name)

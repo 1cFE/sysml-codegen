@@ -2334,15 +2334,18 @@
    "group": "4C-blast-radius",
    "authority": "plan rule 6 \u2014 keep the Item 6 tests until after product proof; every removed or rewritten test needs a responsibility-level disposition first",
    "unreachability": null,
-   "replacement_proof_node": null,
+   "replacement_proof_node": [
+    "tests/execution/test_constraint_verdicts_exact_route.py::test_sibling_occurrence_overrides_reach_distinct_verdicts"
+   ],
    "blocked_by": [],
    "reason": "Stable public RED/GREEN surface for lifecycle-remediation Item 1. Imports legacy owners (pipeline_builder) directly, so 4B's deletion breaks it. Retain now; before the owning 4B group lands, this row needs either a public-behaviour rewrite or a recorded responsibility retirement.",
-   "disposition_4c": "defer-to-v5-family",
+   "disposition_4c": "retire-with-owner",
    "node_count": 6,
    "responsibility": "Stable public RED/GREEN surface for lifecycle-remediation Item 1.",
    "breaks_on": "sysml_codegen.snapshot:build_full_graph_from_snapshot (L-028, 4B-G2); sysml_codegen.snapshot:capture_snapshot (L-028, 4B-v5-family); sysml_codegen.orchestration.pipeline_builder (L-029, 4B-v5-family)",
    "breaks_a_free_group": true,
-   "disposition_4c_note": "Gate 4C part 7 (2026-08-11): ANALYSED, NOT YET DISPOSITIONED \u2014 deliberately left blocked so the checker does not report a readiness that is not true. Lifecycle-remediation Item 1's public RED/GREEN surface for occurrence demand. Its behaviour is owned end-to-end by tests/execution/test_constraint_occurrence_demand_execution.py, which is ITSELF still blocked, so dispositioning this now would back it with a node scheduled to break. Sequence it after the execution-lane repoint (L-191..L-194 with L-192), and disposition the pair together."
+   "disposition_4c_note": "Gate 4C part 7 chunk 11 (2026-08-11). Unblocked exactly as its earlier note said it would be: it was held back because its behaviour is owned by tests/execution/test_constraint_occurrence_demand_execution.py (L-193), which was itself blocked, and a row may not be proven by a node scheduled to break. L-193's responsibility is now on the exact route and that node is not scheduled to break, so the pair disposition the earlier note called for is executed here. The public RED/GREEN surface for occurrence demand is the distinctness of the two sibling values end to end, and the replacement asserts it on the pair - both entry points and both verdicts - which is the shape a collapse or a duplication fails.",
+   "required_suite": "execution"
   },
   {
    "id": "L-114",
@@ -2354,15 +2357,18 @@
    "group": "4C-blast-radius",
    "authority": "plan rule 6 \u2014 keep the Item 6 tests until after product proof; every removed or rewritten test needs a responsibility-level disposition first",
    "unreachability": null,
-   "replacement_proof_node": null,
+   "replacement_proof_node": [
+    "tests/execution/test_constraint_verdicts_exact_route.py::test_sibling_occurrence_overrides_reach_distinct_verdicts"
+   ],
    "blocked_by": [],
    "reason": "Supplementary public nodes for lifecycle-remediation Item 1. Imports legacy owners (pipeline_builder) directly, so 4B's deletion breaks it. Retain now; before the owning 4B group lands, this row needs either a public-behaviour rewrite or a recorded responsibility retirement.",
-   "disposition_4c": "defer-to-v5-family",
+   "disposition_4c": "retire-with-owner",
    "node_count": 1,
    "responsibility": "Supplementary public nodes for lifecycle-remediation Item 1.",
    "breaks_on": "sysml_codegen.orchestration.pipeline_builder (L-029, 4B-v5-family)",
    "breaks_a_free_group": false,
-   "disposition_4c_note": "Gate 4C part 7 (2026-08-11): ANALYSED, NOT YET DISPOSITIONED \u2014 deliberately left blocked so the checker does not report a readiness that is not true. Lifecycle-remediation Item 1's public RED/GREEN surface for occurrence demand. Its behaviour is owned end-to-end by tests/execution/test_constraint_occurrence_demand_execution.py, which is ITSELF still blocked, so dispositioning this now would back it with a node scheduled to break. Sequence it after the execution-lane repoint (L-191..L-194 with L-192), and disposition the pair together."
+   "disposition_4c_note": "Gate 4C part 7 chunk 11 (2026-08-11). Same unblocking as L-113 and for the same reason: its one supplementary node sits behind L-193, which is now restored on the exact route and no longer scheduled to break.",
+   "required_suite": "execution"
   },
   {
    "id": "L-115",
@@ -4003,15 +4009,18 @@
    "group": "4C-blast-radius",
    "authority": "plan rule 6 \u2014 keep the Item 6 tests until after product proof; every removed or rewritten test needs a responsibility-level disposition first",
    "unreachability": null,
-   "replacement_proof_node": null,
+   "replacement_proof_node": [
+    "tests/execution/test_constraint_verdicts_exact_route.py::test_a_redefined_actual_drives_the_verdict"
+   ],
    "blocked_by": [],
    "reason": "Case 18 (Appendix C) under real simkit: a definition-owned assert whose actual is Imports legacy owners (pipeline_builder) directly, so 4B's deletion breaks it. Retain now; before the owning 4B group lands, this row needs either a public-behaviour rewrite or a recorded responsibility retirement.",
-   "disposition_4c": "defer-to-v5-family",
+   "disposition_4c": "retire-with-owner",
    "node_count": 1,
-   "responsibility": "Case 18 (Appendix C) under real simkit: a definition-owned assert whose actual is redefined at a package-level usage reaches execution and produces the expected verdict.",
+   "responsibility": "Case 18: a definition-owned assert whose actual is redefined at a package-level usage reaches execution and the redefined value drives the verdict.",
    "breaks_on": "sysml_codegen.orchestration.pipeline_builder (L-029, 4B-v5-family)",
    "breaks_a_free_group": false,
-   "disposition_4c_note": "No green replacement, and every owner it depends on is now deferred: the v5 read path is retained by consequence of keeping the v5 writer and the 37 fixtures, so this file's coverage is still load-bearing. Retires with the v5 family at Phase 5 owner acceptance."
+   "disposition_4c_note": "Gate 4C part 7 chunk 11 (2026-08-11), superseding the part-5 defer. Its one node imports build_pipeline_context AND _generate_full_package/_run from L-192, so it breaks on both the owner deletion and on L-192's retirement. Restored on the exact route against the same constraint_def_owned_redefining fixture, which the exact route admits unchanged - no variant needed. The replacement keeps both legs of the claim: the redefined literal reaches the generated inputs under constraint_def_owned_redefining__panel__source__reading, and moving it flips satisfied to violated, which is the OD-R35 lesson that a non-null resolution is not the claim.",
+   "required_suite": "execution"
   },
   {
    "id": "L-192",
@@ -4023,15 +4032,27 @@
    "group": "4C-blast-radius",
    "authority": "plan rule 6 \u2014 keep the Item 6 tests until after product proof; every removed or rewritten test needs a responsibility-level disposition first",
    "unreachability": null,
-   "replacement_proof_node": null,
+   "replacement_proof_node": [
+    "tests/execution/test_constraint_verdicts_exact_route.py::test_both_truth_values_and_the_violated_run_still_completes",
+    "tests/execution/test_constraint_verdicts_exact_route.py::test_a_non_finite_operand_reads_as_indeterminate_never_a_confident_verdict",
+    "tests/execution/test_constraint_verdicts_exact_route.py::test_the_generated_wrapper_propagates_a_native_arithmetic_failure",
+    "tests/execution/test_constraint_verdicts_exact_route.py::test_one_shared_definition_two_polarities_two_verdicts",
+    "tests/execution/test_constraint_verdicts_exact_route.py::test_polarity_holds_at_every_boundary_of_the_shared_predicate",
+    "tests/execution/test_constraint_verdicts_exact_route.py::test_the_strict_operator_disagrees_with_the_inclusive_one_at_the_boundary",
+    "tests/execution/test_constraint_verdicts_exact_route.py::test_n_instances_produce_n_verdicts_from_one_compiled_predicate",
+    "tests/execution/test_constraint_verdicts_exact_route.py::test_a_binding_that_collides_with_a_generated_name_is_refused_at_generation",
+    "tests/execution/test_constraint_verdicts_exact_route.py::test_rewiring_the_generated_pipeline_is_caught_before_anything_executes",
+    "tests/execution/test_constraint_verdicts_exact_route.py::test_a_modeled_default_is_an_overridable_entry_point_not_a_baked_constant"
+   ],
    "blocked_by": [],
    "reason": "Real-simkit execution lane (Item 7 / D10) \u2014 the single teax-dependent lane. Imports legacy owners (constraint_lowering, parameter_groups, pipeline_builder, snapshot_context) directly, so 4B's deletion breaks it. Retain now; before the owning 4B group lands, this row needs either a public-behaviour rewrite or a recorded responsibility retirement.",
-   "disposition_4c": "defer-to-v5-family",
-   "node_count": 11,
-   "responsibility": "Real-simkit execution lane (Item 7 / D10) \u2014 the single teax-dependent lane.",
+   "disposition_4c": "retire-with-owner",
+   "node_count": 15,
+   "responsibility": "Real constraint verdict execution under real simkit: both truth values, indeterminate, arithmetic-exception propagation, polarity, multi-instance expansion, modelled-default override, name-safety refusal, and the rewired-pipeline failure.",
    "breaks_on": "sysml_codegen.analysis.constraint_lowering (L-001, 4B-v5-family); sysml_codegen.analysis.parameter_groups (L-003, 4B-v5-family); sysml_codegen.orchestration.snapshot_context (L-026, 4B-G2); sysml_codegen.orchestration.pipeline_builder (L-029, 4B-v5-family)",
    "breaks_a_free_group": true,
-   "disposition_4c_note": "No green replacement, and every owner it depends on is now deferred: the v5 read path is retained by consequence of keeping the v5 writer and the 37 fixtures, so this file's coverage is still load-bearing. Retires with the v5 family at Phase 5 owner acceptance."
+   "disposition_4c_note": "Gate 4C part 7 chunk 11 (2026-08-11), superseding the part-5 defer. THE GATE 4C MUST-RESTORE. This file cannot be repointed: nine of its fifteen nodes hand-assemble a ComputationGraph out of analysis.constraint_lowering, analysis.parameter_groups and resolution.models, and the other six drive orchestration.pipeline_builder \u2014 three of the owners the retirement deletes. Its responsibility is restored instead, on the public exact route, in tests/execution/test_constraint_verdicts_exact_route.py: model -> run_codegen -> ProvisionalPackageLoader -> real executor, 15 nodes, no graph construction and no v5 snapshot anywhere in the path. PER-NODE ACCOUNTING, all fifteen: (1) test_s4_slice_both_truth_values -> test_both_truth_values_and_the_violated_run_still_completes, satisfied at margin 30.0 with the observed map, then violated by injection, INV-3 preserved and the report persisted; (2) test_zero_assertion_aggregator_not_assessed -> RETIRES WITH ITS SUBJECT, not replaced. It is the live subject of orchestrator ruling 2 (the zero-constraint report aggregator): legacy emits the aggregator with nothing to assess, the exact route returns early at elaboration/project.py:887, and that early return STANDS. Carried to the Phase 5 packet as a product question for the owner, per the ruling. (3) test_multi_instance_expansion_n_modules_one_predicate -> test_n_instances_produce_n_verdicts_from_one_compiled_predicate, three occurrences and three entry points enumerated, one compiled predicate body; (4) test_committed_inline_snapshot_rejects_reserved_value -> test_a_binding_that_collides_with_a_generated_name_is_refused_at_generation, and STRONGER: the legacy node reached the R-3 refusal through a v5 snapshot of constraint_inline, the replacement reaches the same refusal from the live model, and additionally requires that no package tree was left behind; (5) test_indeterminate_point_at_execution -> test_a_non_finite_operand_reads_as_indeterminate_never_a_confident_verdict, plus the headline check the legacy node did not make; (6) test_generated_constraint_wrapper_propagates_arithmetic_exception -> test_the_generated_wrapper_propagates_a_native_arithmetic_failure, on the new constraint_arithmetic_raise fixture, with an added guard that the wrapper module really imports ConstraintEvaluation so the substitution cannot pass vacuously; (7) test_negated_inline_assertion_at_execution -> test_polarity_holds_at_every_boundary_of_the_shared_predicate[false], the raw-False direction where the negated usage is the satisfied one; (8-12) test_shared_definition_opposite_polarity_exact_once_execution[true|false|inclusive-boundary|non-finite] -> the matching ids of test_polarity_holds_at_every_boundary_of_the_shared_predicate, and [strict-boundary] -> test_the_strict_operator_disagrees_with_the_inclusive_one_at_the_boundary on the new constraint_strict_boundary fixture, which pins the operators DISAGREEING at equality rather than only sampling one of them; (13) test_name_safety_collision_free_exact_evidence -> already replaced at Gate 4C part 7 chunk 10 by L-111's two exact-route rows, and re-stated here by the observed-map equality in node (1); (14) test_modeled_default_override_flips_verdict -> test_a_modeled_default_is_an_overridable_entry_point_not_a_baked_constant, which adds the direct INV-6 check that the default is absent from the compiled predicate body; (15) test_break_the_yaml_surfaces_execution_failure -> test_rewiring_the_generated_pipeline_is_caught_before_anything_executes. SUBJECT CHANGE, recorded not thinned: the exact route seals the package it writes, so a rewired pipeline.yaml is refused by seal verification before the executor sees it. That is earlier and more specific than the legacy executor error, and the replacement makes the tamper real and requires the refusal rather than accepting any exception. The same seal is why no replacement edits a generated inputs/*.json: the plan calls edit-and-reseal invalid, so values move through TEAx typed entry injection (CandidateBridge + PreparedEvaluator), the ratified protocol Slice 3D established. Node count corrected from 11 to 15: the ledger counted the polarity parametrization as one.",
+   "required_suite": "execution"
   },
   {
    "id": "L-193",
@@ -4043,15 +4064,18 @@
    "group": "4C-blast-radius",
    "authority": "plan rule 6 \u2014 keep the Item 6 tests until after product proof; every removed or rewritten test needs a responsibility-level disposition first",
    "unreachability": null,
-   "replacement_proof_node": null,
+   "replacement_proof_node": [
+    "tests/execution/test_constraint_verdicts_exact_route.py::test_sibling_occurrence_overrides_reach_distinct_verdicts"
+   ],
    "blocked_by": [],
    "reason": "Real-simkit execution lane for lifecycle-remediation Item 1 (OD-A11). Imports legacy owners (pipeline_builder) directly, so 4B's deletion breaks it. Retain now; before the owning 4B group lands, this row needs either a public-behaviour rewrite or a recorded responsibility retirement.",
-   "disposition_4c": "defer-to-v5-family",
+   "disposition_4c": "retire-with-owner",
    "node_count": 1,
-   "responsibility": "Real-simkit execution lane for lifecycle-remediation Item 1 (OD-A11).",
+   "responsibility": "OD-A11: sibling occurrence overrides stay distinct through generation and execution and reach different verdicts.",
    "breaks_on": "sysml_codegen.orchestration.pipeline_builder (L-029, 4B-v5-family)",
    "breaks_a_free_group": false,
-   "disposition_4c_note": "No green replacement, and every owner it depends on is now deferred: the v5 read path is retained by consequence of keeping the v5 writer and the 37 fixtures, so this file's coverage is still load-bearing. Retires with the v5 family at Phase 5 owner acceptance."
+   "disposition_4c_note": "Gate 4C part 7 chunk 11 (2026-08-11), superseding the part-5 defer. Same double break as L-191. Restored on the exact route against the new constraint_occurrence_demand_overrides_d5 variant, because the exact route refuses the original with SI_SELF_BINDING. Two enumerated differences, both in the variant's PROVENANCE.md and both pinned by tests/conformance/test_d5_variants.py: the D-5 rename (strip-checked byte for byte), and the model filename, which the ratified Slice 3B option-C rule requires because a package-scoped calc in a model.sysml has no owning root occurrence to take a parameter-group identity from. The replacement keeps the pair-level assertion that is the whole point - 4.0 violated and 6.0 satisfied, margins -1.0 and 1.0 - plus the persisted report, so a collapse cannot hide behind an in-process object.",
+   "required_suite": "execution"
   },
   {
    "id": "L-194",
@@ -4063,15 +4087,19 @@
    "group": "4C-blast-radius",
    "authority": "plan rule 6 \u2014 keep the Item 6 tests until after product proof; every removed or rewritten test needs a responsibility-level disposition first",
    "unreachability": null,
-   "replacement_proof_node": null,
+   "replacement_proof_node": [
+    "tests/execution/test_constraint_verdicts_exact_route.py::test_both_truth_values_and_the_violated_run_still_completes",
+    "tests/execution/test_constraint_verdicts_exact_route.py::test_a_modeled_default_is_an_overridable_entry_point_not_a_baked_constant"
+   ],
    "blocked_by": [],
    "reason": "Gate A under real simkit: the usage-owned literal reaches execution and moves the verdict. Imports legacy owners (pipeline_builder) directly, so 4B's deletion breaks it. Retain now; before the owning 4B group lands, this row needs either a public-behaviour rewrite or a recorded responsibility retirement.",
-   "disposition_4c": "defer-to-v5-family",
+   "disposition_4c": "retire-with-owner",
    "node_count": 1,
-   "responsibility": "Gate A under real simkit: the usage-owned literal reaches execution and moves the verdict.",
+   "responsibility": "Gate A (SR-A01/SR-R22): the usage-owned literal resolves under its real qualified name and moves a real evaluated verdict.",
    "breaks_on": "sysml_codegen.orchestration.pipeline_builder (L-029, 4B-v5-family)",
    "breaks_a_free_group": false,
-   "disposition_4c_note": "No green replacement, and every owner it depends on is now deferred: the v5 read path is retained by consequence of keeping the v5 writer and the 37 fixtures, so this file's coverage is still load-bearing. Retires with the v5 family at Phase 5 owner acceptance."
+   "disposition_4c_note": "Gate 4C part 7 chunk 11 (2026-08-11), superseding the part-5 defer. Same double break as L-191. Restored on the exact route against the new gate_a_d5 variant; gate_a itself is corpus and a ratified expected-collapse refused with 2x SI_SELF_BINDING, so it stays untouched with its v5 snapshot. The replacement keeps the Gate A claim exactly - GateA__the_host__gain reaches the generated inputs under its REAL qualified name, not GateA__the_host__viability__gain, which is the strict terminal miss the owner-classification fix closed - and then moves it to flip the verdict. Authoring gate_a_d5 widened the D-5 recipe to constraint def blocks: the first attempt renamed only the binding's left side, leaving declaration and binding disagreeing, and the exact route refused at generation with cross_scope_binding_disagreement. make_d5_variant.py now matches constraint def as well as calc def; every pre-existing variant's strip check was re-run and still passes.",
+   "required_suite": "execution"
   },
   {
    "id": "L-195",
