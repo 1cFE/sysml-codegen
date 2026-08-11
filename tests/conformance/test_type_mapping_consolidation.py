@@ -22,9 +22,6 @@ from sysml_codegen.generation.type_mapping import (
     map_sysml_type_to_python,
 )
 
-from sysml_codegen.snapshot import (
-    build_full_graph_from_snapshot,
-)
 from tests.conftest import snapshot_fixture
 
 
@@ -147,6 +144,11 @@ class TestCrossGeneratorConsistency:
         # CONTENT is pinned independently by the literal siblings
         # test_gen_schemas.py:359-381 and test_gen_module_wrappers.py (map literal table).
         # Kept as a consistency guard, not deleted; sibling-pinned for content.
+        # Localised import (Gate 4C method note 1): this is the only node in the file that
+        # reaches the v5 route, and it retires with it. The eight type-map nodes below and
+        # above do not, and this keeps them collecting.
+        from sysml_codegen.snapshot import build_full_graph_from_snapshot
+
         graph, inputs = build_full_graph_from_snapshot(snapshot_fixture(model_name))
         snap = inputs["snap"]
         calc_defs = snap["calc_defs"]

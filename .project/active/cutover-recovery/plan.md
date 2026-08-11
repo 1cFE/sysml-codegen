@@ -4188,6 +4188,118 @@ fails on.
 passed, unchanged — every row in this chunk points at coverage that already existed, so no node
 was added. Everything else in the battery unchanged. Deletes nothing.
 
+#### Gate 4C part 7 chunk 16 — the eight duals re-checked, and all eight premises are false
+
+Chunk 12 measured the Gate 4A "one behavior under two names, qualifier drop at retirement"
+characterisation false for the expression compiler's three duals and asked that the other five
+be re-checked before any of them was scheduled as a rename. This chunk is that re-check, by the
+same method: rebind the legacy name to the survivor implementation exactly as the prescribed
+rename would, run the consumers, read the failure classes. One dual per run, so a failure
+attributes to a single rename rather than to the pile.
+
+Two probes, both committed: `scripts/probes/probe_calc_def_data_qualifier_drop.py` (L-034) and
+`scripts/probes/probe_constraint_profile_qualifier_drop.py` (L-036/L-037, run in the paired
+worktree). Node lists archived at
+`.project/active/cutover-recovery/evidence/dual-qualifier-drop-dryruns.txt`.
+
+**Five probes, five failures. None of the five is a rename.**
+
+| Dual | Row | Failing / consumer nodes | What the failures say |
+|---|---|---:|---|
+| `output_expression_asts` etc. → `_by_id` | L-034 | 58 / 86 | 28 `KeyError` on a rendered name, 30 `AssertionError`. Legacy is name-keyed, survivor UUID-keyed. |
+| `extract_constraint_facts` → `..._identified_...` | L-036 | 34 / 450 | every one an `AttributeError` for a field the identified payload does not carry (`identity`, `source`, `owner`, `actuals`, `schema_version`). |
+| `evaluate_profile` → `evaluate_identified_profile` | L-037 | 134 / 450 | 96 `'ConstraintUsageFact' object has no attribute 'usage_id'`, 38 the same for `definition_id`. |
+| `ProfileResult` → `IdentifiedProfileResult` | L-037 | 134 / 450 | all on `missing 1 required positional argument: 'expected_usage_ids'` — the same 134 nodes, because `evaluate_profile` constructs the module-global name. |
+| `preflight` → `preflight_identified` | L-037 | 4 / 450 | `'ConstraintFacts' object has no attribute 'decisions'`. The two take different arguments — facts versus an already-decided result — which their own docstrings state. |
+
+Baselines: 450 passed in the agentic-mbse consumer set, 311 passed / 18 skipped in the codegen
+one. L-037's three duals share one 134-node consumer set; with L-036's 34, the agentic-mbse
+union is **164 nodes**.
+
+**The finding that outranks the sizing: two of these rows cannot execute their `removes` block
+at all.** `agentic_mbse/validation/level4_constraints.py:55` and `level6_architecture.py:620`
+call `extract_constraint_facts`; `:56` and `:621` call `evaluate_profile`. **Neither file has a
+ledger row** — validation levels 4 and 6 are outside this recovery's blast radius entirely, and
+nothing here retires them. So deleting the legacy member breaks live production the recovery
+never proposed to touch, and the qualifier cannot be dropped from the survivor either, because
+the freed name is still occupied. L-036's own `reason` field said this in passing from the
+start — "the legacy route **and both validation levels** call the second" — and the prescribed
+disposition was written as though it did not.
+
+**What the migration actually is, sized honestly and not started.**
+
+- **agentic-mbse (L-036, L-037), 164 nodes plus two production call sites.** Levels 4 and 6
+  would have to consume the UUID-keyed payload, and their suites re-expressed against records
+  that carry `usage_id`/`definition_id` instead of neutral display identity. This is authoring
+  in a repo whose files this ledger does not cover. **It is its own gate**, and it is named here
+  rather than started.
+- **codegen (L-034), 58 nodes.** `test_calc_compat_parity.py` (28), `test_compile_calc_def_golden.py`
+  (28) and `test_return_style_extraction.py` (2) must be re-expressed against the UUID-keyed
+  fields. Same authoring class as L-281/L-284, and it belongs with them: `test_compile_calc_def_golden.py`
+  is L-280, which already retires with L-033.
+- **L-034 is proven by a node set its own prescribed rename breaks.** Its `replacement_proof_node`
+  is `tests/conformance/test_calc_compat_parity.py`, and 28 of that file's nodes fail the dry run.
+  That is the same defect the chunk-7 note caught for L-033/L-280, found here by measurement
+  rather than by inspection.
+
+**Consequence for step 1.** The step's closing line — "drops the `Exact`/`identified` qualifiers
+from the retained 3C duals" — is now measured to be four separate migrations, not a rename pass:
+L-033's (chunk 12, 31 of 76 nodes), L-034's (58 nodes), and L-036/L-037's (164 nodes plus a
+cross-repo production migration that the ledger does not scope). The runbook below carries them
+as a named blocker with the measurements attached. **No rename was executed and none is
+scheduled.**
+
+**Deletes nothing.** No production change; two probe scripts and four ledger `dual_migration`
+notes.
+
+#### Gate 4C part 7 chunk 17 — the snapshot-format family, where the subject itself ends
+
+Nine rows, one coherent subject: files whose claims are about **the v5 extraction snapshot
+format and its reader**, not about a behaviour that outlives them. This is the case the stage
+brief named — a disposition of `retire-with-owner` where the *subject* ends, which is not
+thinning — and six of the nine are it. The other three keep a live subject and get the
+import-localisation treatment instead.
+
+| Row | File | Nodes | Disposition |
+|---|---|---:|---|
+| L-134 | `test_extraction_snapshots.py` | 9 | retire — REQ-SNAP-01…07 are the v5 format's own round-trip contract |
+| L-178 | `test_snapshot_contract.py` | 8 | retire — INV-2/3/5, all three about machinery steps 1–2 remove |
+| L-227 | `test_hygiene_tail_loader.py` | 9 | retire — `snapshot/loader.py`'s own degrade-with-a-warning tail |
+| L-246 | `test_source_referent_shape_gate.py` | 4 | retire — the v5 shape gate; the same claim is enforced on v6 |
+| L-156 | `test_matcher_reclassification.py` | 3 | retire — every clause is a statement about matching rendered strings |
+| L-142 | `test_fusion_tea_snapshot.py` | 3 | retire — the committed v5 fusion-tea snapshot, three claims, three exact-route owners |
+| L-167 | `test_return_style_extraction.py` | 12 | **repoint** — 7 live nodes saved, 5 offline localised |
+| L-185 | `test_type_indexing.py` | 7 | **repoint** — 2 live nodes saved, 5 offline localised |
+| L-186 | `test_type_mapping_consolidation.py` | 9 | **repoint** — 8 of 9 nodes never touched the route |
+
+**The retirements are stronger than what they replace, and for one shared reason.** v5 read
+what it was handed and made the best of it: a missing load-bearing field warned and degraded, a
+wrongly typed field round-tripped, a bad version was caught after the load. The v6 envelope
+refuses each of those, before payload interpretation. A warning is how a route continues past a
+shape it cannot account for, and the exact route does not continue — the same argument chunk 14
+made for the Item 5 silent-failure family, arriving here from the format side.
+
+**L-156 is the one worth reading twice.** Its three claims — quoted-owner references match their
+def-owned design attribute, entry points reclassify from a valueless `USAGE_LITERAL` to a
+`DESIGN_ATTRIBUTE` carrying a real default, two `hif_calc` usages collapse onto one shared key —
+are *all* statements about matching rendered strings. The exact route keys on occurrence
+identity, so a quoted owner is not a sanitising hazard and there is no valueless residue to
+reclassify. Note the direction: the collapse this file wanted was the legacy route making a
+rendered-name decision, where the exact route converges by node reference with nothing left to
+deduplicate (chunk 15's L-172 finding, arriving from the other side).
+
+**Three localisations, three files that keep collecting.** `test_return_style_extraction.py`
+keeps its seven live REQ-EXT-10/11/12 nodes; `test_type_indexing.py` keeps REQ-EXT-13's live
+index-key assertion and the V9 collision warning, which was never serialised into a snapshot at
+all; `test_type_mapping_consolidation.py` keeps eight of nine, the ninth being a node whose own
+in-file note already called it a weak, partly self-referential guard with its content pinned by
+literal sibling tables.
+
+**Blockers after chunk 17: G2′ 27 → 18, v5-family 25 → 21, union 35 → 26.** Suite **3830**
+passed, unchanged — every row points at coverage that already existed, and the three
+localisations move imports without adding or removing a node. Proof integrity **0 problems over
+26 blocked files**. Deletes nothing.
+
 ---
 
 ### The retirement runbook — post-acceptance execution
@@ -4250,10 +4362,26 @@ L-029 to L-037 (L-036/L-037 in `agentic-mbse` — a coordinated pair, commit bot
 L-156, L-163, L-164, L-166, L-168, L-178, L-181, L-182, L-189, L-190, L-236, L-238, L-246,
 L-281, L-284, L-290.
 
-**Two of those are a stop, not a queue.** L-281 and L-284 are the expression compiler, and chunk
-12 measured the recorded "mechanical rename" premise false — 31 of their 76 nodes are bound to
-the legacy *shape*, not the legacy *name*. **L-033's dual retirement is part of this step and
-cannot be scheduled until that authoring is scoped and done.** See the chunk-12 record.
+**The dual retirement inside this step is four migrations, not a rename pass.** Chunks 12 and 16
+measured all eight retained 3C duals under the prescribed qualifier drop and **every one failed**.
+The step's own line "drops the `Exact`/`identified` qualifiers" cannot be executed as written.
+
+| Row | Duals | Measured cost | Status |
+|---|---|---|---|
+| L-033 | 3 (expression compiler) | 31 of 76 nodes bound to the legacy *shape* — L-281 15 of 52, L-281's sibling L-284 16 of 24 | blocked; needs its own scope |
+| L-034 | 1 (`CalculationDefinitionData` `_by_id`) | 58 of 86 consumer nodes | blocked; same authoring family as L-033, and its own proof node is in the breakage |
+| L-036 | 1 (`extract_constraint_facts`) | 34 of 450 nodes **plus a production call site with no ledger row** | **cannot execute the `removes` block at all** |
+| L-037 | 3 (profile/result/preflight) | 134 of 450 nodes **plus a production call site with no ledger row** | **cannot execute the `removes` block at all** |
+
+**L-036/L-037 are a hard stop, not a queue.** `agentic_mbse/validation/level4_constraints.py` and
+`level6_architecture.py` call the legacy members and are outside this ledger. Deleting those
+symbols breaks production this recovery never proposed to touch. **Owner-gated:** either those two
+validation levels migrate to the UUID-keyed payload — its own gate, 164 nodes plus two call sites,
+in a repo this ledger does not cover — or the duals stay and this step drops only codegen's own
+legacy-route usage. Nothing in this step may touch them until that is ruled.
+
+**L-281 and L-284 are the same stop on the codegen side.** See the chunk-12 and chunk-16 records
+for both measurements.
 
 **Post-step check beyond the battery:** the v5 typed refusal is still typed —
 `pytest tests/conformance/test_snapshot_v5_gate.py -k "v6_envelope or v5_extraction or public_route"`,
@@ -4299,7 +4427,10 @@ their own steps: the `_CONSTRAINT_LOGGER` name in `elaboration/project.py:83` (r
 2. `scripts/check_ledger_4a.py groups` shows all six groups READY.
 3. `scripts/check_ledger_4a.py replacements` is green for every row, and
    `scripts/check_proof_integrity.py` reports 0 problems.
-4. The L-033 dual retirement has a scope, because step 1 contains it.
+4. The dual retirement has a scope, because step 1 contains it — and after chunk 16 that means
+   all four rows (L-033, L-034, L-036, L-037), not L-033 alone. Two of them (L-036, L-037) need
+   an **owner ruling** first, because their `removes` blocks delete symbols that live production
+   outside this ledger calls.
 
 ### Phase 5 Completion
 

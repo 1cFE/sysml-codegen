@@ -914,7 +914,8 @@
       "compile_calc_def"
      ]
     }
-   ]
+   ],
+   "dual_migration": "Gate 4C part 7 chunk 12 measured this row's three duals the same way: 48 passed / 26 failed / 5 errors under the qualifier drop. Chunk 16 re-checked the remaining five duals (L-034, L-036 x1, L-037 x3) and every one of them failed too - the Gate 4A characterisation is false for all eight, not for three. See the chunk-16 record."
   },
   {
    "id": "L-034",
@@ -928,7 +929,8 @@
    "unreachability": "live on both routes",
    "replacement_proof_node": "tests/conformance/test_calc_compat_parity.py",
    "blocked_by": [],
-   "reason": "The fourth codegen dual from 3C: CalculationDefinitionData's {output_expression_asts,member_expressions,member_names}_by_id and all_member_ids against the legacy output_expression_asts / member_expressions / all_member_names."
+   "reason": "The fourth codegen dual from 3C: CalculationDefinitionData's {output_expression_asts,member_expressions,member_names}_by_id and all_member_ids against the legacy output_expression_asts / member_expressions / all_member_names.",
+   "dual_migration": "Gate 4C part 7 chunk 16 (2026-08-11): the Gate 4A 'one behavior under two names' premise is MEASURED FALSE for this dual. scripts/probes/probe_calc_def_data_qualifier_drop.py rebinds the three legacy fields to their _by_id survivors - exactly what dropping the qualifier leaves - and runs the consumers: 58 of 86 nodes fail (28 KeyError on a rendered name, because the survivor is UUID-keyed and every name lookup misses; 30 AssertionError). By file: test_calc_compat_parity.py 28, test_compile_calc_def_golden.py 28, test_return_style_extraction.py 2. The legacy fields are name-keyed and the survivors UUID-keyed, so this is a payload change, not a rename. NOTE: this row's own replacement_proof_node is test_calc_compat_parity.py, 28 of whose nodes the prescribed rename breaks - the same defect the chunk-7 note caught for L-033/L-280. The migration is authoring work against the UUID-keyed payload, in the same family as L-281/L-284, and belongs to the same gate."
   },
   {
    "id": "L-035",
@@ -964,7 +966,8 @@
       "extract_constraint_facts"
      ]
     }
-   ]
+   ],
+   "dual_migration": "Gate 4C part 7 chunk 16 (2026-08-11): premise MEASURED FALSE, and the row's removes block cannot execute as recorded. probe_constraint_profile_qualifier_drop.py facts (run in the paired worktree) rebinds extract_constraint_facts to extract_identified_constraint_facts: 34 of 450 consumer nodes fail, every one an AttributeError naming a field the identified payload does not carry (IdentifiedConstraintUsage has no identity/source/owner/actuals; IdentifiedConstraintFacts has no schema_version). By file: test_constraint_extraction.py 14, test_constraint_fact_shapes.py 7, test_expression_ir_extraction.py 7, test_constraint_extraction_ordering.py 2, plus 2 validation-level nodes. STRONGER FINDING: agentic_mbse/validation/level4_constraints.py:55 and level6_architecture.py:620 call extract_constraint_facts, and neither file has a ledger row - they are outside this recovery's blast radius entirely. Deleting the legacy member breaks live production nothing here retires, so the qualifier cannot be dropped either (the name would collide). See the chunk-16 record: this is a gate of its own, not a step-1 line item."
   },
   {
    "id": "L-037",
@@ -988,7 +991,8 @@
       "preflight"
      ]
     }
-   ]
+   ],
+   "dual_migration": "Gate 4C part 7 chunk 16 (2026-08-11): premise MEASURED FALSE for all three duals, and the removes block has the same non-retiring-consumer problem as L-036. Per-dual probes: evaluate_profile -> evaluate_identified_profile 134 of 450 nodes fail (96 AttributeError 'ConstraintUsageFact' object has no attribute 'usage_id', 38 the same for definition_id) - the survivor reads UUID-carrying records the neutral payload does not have; ProfileResult -> IdentifiedProfileResult fails the SAME 134 nodes, all on IdentifiedProfileResult.__init__() missing 1 required positional argument: 'expected_usage_ids', because evaluate_profile constructs the module-global name; preflight -> preflight_identified fails 4 nodes on 'ConstraintFacts' object has no attribute 'decisions' - the two take different arguments (facts vs an already-decided result), which their own docstrings say. The three duals' union is one 134-node set. Same as L-036: validation/level4_constraints.py:56 and level6_architecture.py:621 call evaluate_profile and have no ledger row."
   },
   {
    "id": "L-038",
@@ -2802,15 +2806,19 @@
    "group": "4C-retained",
    "authority": "plan rule 6",
    "unreachability": null,
-   "replacement_proof_node": null,
+   "replacement_proof_node": [
+    "tests/conformance/test_snapshot_v6_envelope.py::test_envelope_carries_only_anchored_fields",
+    "tests/conformance/test_snapshot_v6_envelope.py::test_wrong_typed_field_is_refused",
+    "tests/conformance/test_snapshot_v5_gate.py::test_a_v5_extraction_snapshot_is_refused_by_name_not_by_a_null_version"
+   ],
    "blocked_by": [],
    "reason": "Conformance tests for extraction snapshot round-trip. Passes at rebuild HEAD and imports no legacy owner, so no Phase 4 action reaches it. The forensic candidate's deletion had only a family-level census row.",
-   "disposition_4c": "defer-to-v5-family",
+   "disposition_4c": "retire-with-owner",
    "node_count": 9,
    "responsibility": "Conformance tests for extraction snapshot round-trip.",
    "breaks_on": "sysml_codegen.snapshot:load_extraction_snapshot (L-028, 4B-G2)",
    "breaks_a_free_group": true,
-   "disposition_4c_note": "No green replacement, and every owner it depends on is now deferred: the v5 read path is retained by consequence of keeping the v5 writer and the 37 fixtures, so this file's coverage is still load-bearing. Retires with the v5 family at Phase 5 owner acceptance."
+   "disposition_4c_note": "Gate 4C part 7 chunk 17 (2026-08-11), superseding the part-5 defer. Nine nodes, each parametrized over the committed v5 models, and the subject is the v5 extraction snapshot FORMAT itself: REQ-SNAP-01 to REQ-SNAP-07 ask whether a serialized snapshot reconstructs typed dataclasses with enums, Paths and set types intact. Step 1 deletes the serializer and all 37 fixtures and step 2 the reader, so the format this file asks about stops existing. This is the subject ending, not thinning. What the format owed is owed by v6 instead, and answered more strictly: the v6 envelope carries only anchored fields and refuses a wrongly typed one outright, where v5 round-tripped whatever it was handed. The typed refusal of a v5 payload by name (L-180, on snapshot/envelope.py, which is in no deletion group) is what keeps the retiring format visible after it is gone."
   },
   {
    "id": "L-135",
@@ -2981,15 +2989,19 @@
    "group": "4C-blast-radius",
    "authority": "plan rule 6 \u2014 keep the Item 6 tests until after product proof; every removed or rewritten test needs a responsibility-level disposition first",
    "unreachability": null,
-   "replacement_proof_node": null,
+   "replacement_proof_node": [
+    "tests/conformance/test_exact_route_snapshot_generation.py::test_generation_from_a_v6_snapshot_needs_no_license",
+    "tests/conformance/test_elaboration_projection.py::test_projection_is_topological_and_every_input_is_covered",
+    "tests/conformance/test_elaboration_spike_parity.py::test_c11_chain_calc_and_constraint_converge"
+   ],
    "blocked_by": [],
    "reason": "SC-4: the committed fusion-tea snapshot resolves to TRUE ZERO V11 offenders. Imports legacy owners (graph_builder) directly, so 4B's deletion breaks it. Retain now; before the owning 4B group lands, this row needs either a public-behaviour rewrite or a recorded responsibility retirement.",
-   "disposition_4c": "defer-to-v5-family",
+   "disposition_4c": "retire-with-owner",
    "node_count": 3,
    "responsibility": "SC-4: the committed fusion-tea snapshot resolves to TRUE ZERO V11 offenders.",
    "breaks_on": "sysml_codegen.resolution.graph_builder (L-011, 4B-v5-family); sysml_codegen.snapshot:build_full_graph_from_snapshot (L-028, 4B-G2)",
    "breaks_a_free_group": true,
-   "disposition_4c_note": "No green replacement, and every owner it depends on is now deferred: the v5 read path is retained by consequence of keeping the v5 writer and the 37 fixtures, so this file's coverage is still load-bearing. Retires with the v5 family at Phase 5 owner acceptance."
+   "disposition_4c_note": "Gate 4C part 7 chunk 17 (2026-08-11), superseding the part-5 defer. Three nodes driving the committed fusion_tea V5 snapshot: zero V11 offenders, the full YAML package emits, and renamed consumers collapse to one source entry point. The fixture and the route both retire in step 1/step 2, and each claim has an exact-route owner that is not a restatement. Zero uncovered parameters is asserted at the projection rather than by a post-hoc scan of a built graph - every input covered and the order topological, which is the property the V11 scan was looking for after the fact. The full offline package emit is asserted on the committed fusion_tea V6 snapshot with every license variable scrubbed. The collapse claim is chunk 15's L-172 finding: convergence at the node, by reference, with nothing left to deduplicate."
   },
   {
    "id": "L-143",
@@ -3272,15 +3284,18 @@
    "group": "4C-blast-radius",
    "authority": "plan rule 6 \u2014 keep the Item 6 tests until after product proof; every removed or rewritten test needs a responsibility-level disposition first",
    "unreachability": null,
-   "replacement_proof_node": null,
+   "replacement_proof_node": [
+    "tests/conformance/test_exact_route_generated_package.py::test_the_generated_entry_point_json_carries_the_modelled_defaults",
+    "tests/conformance/test_elaboration_identity_collisions.py::test_semantic_graph_keeps_same_rendered_names_distinct"
+   ],
    "blocked_by": [],
    "reason": "Pin the retype_model reclassification \u2014 Item 7's headline behavioral change (SC-8). Imports legacy owners (graph_rebuild) directly, so 4B's deletion breaks it. Retain now; before the owning 4B group lands, this row needs either a public-behaviour rewrite or a recorded responsibility retirement.",
-   "disposition_4c": "defer-to-v5-family",
+   "disposition_4c": "retire-with-owner",
    "node_count": 3,
    "responsibility": "Pin the retype_model reclassification \u2014 Item 7's headline behavioral change (SC-8).",
    "breaks_on": "sysml_codegen.snapshot.graph_rebuild (L-015, 4B-G2)",
    "breaks_a_free_group": true,
-   "disposition_4c_note": "No green replacement, and every owner it depends on is now deferred: the v5 read path is retained by consequence of keeping the v5 writer and the 37 fixtures, so this file's coverage is still load-bearing. Retires with the v5 family at Phase 5 owner acceptance."
+   "disposition_4c_note": "Gate 4C part 7 chunk 17 (2026-08-11), superseding the part-5 defer. Three nodes pinning the Item 7 matcher fix on retype_model: per-segment sanitizing of ::-form REFERENCE paths lets a quoted-owner reference match its def-owned design attribute, so the affected entry points reclassify from USAGE_LITERAL carrying None to DESIGN_ATTRIBUTE carrying the attribute's real default, and two hif_calc usages collapse onto one shared key. Every clause of that is a statement about matching rendered strings. The exact route does not match on rendered strings: it keys on occurrence identity, so a quoted owner is not a sanitizing hazard and there is no valueless-literal residue to reclassify away from. The two replacements take the two halves - a modelled default reaches the generated entry-point JSON as a real value, and same-rendered-name siblings stay distinct nodes rather than collapsing onto one key. The collapse this file WANTED (two usages onto one key) was the legacy route making a rendered-name decision; the exact route's convergence is by node reference, which chunk 15 recorded for L-172."
   },
   {
    "id": "L-157",
@@ -3518,12 +3533,12 @@
    "replacement_proof_node": null,
    "blocked_by": [],
    "reason": "Conformance tests for return-style and bare-parameter extraction (SC-2). Passes at rebuild HEAD and imports no legacy owner, so no Phase 4 action reaches it. The forensic candidate's deletion had only a family-level census row.",
-   "disposition_4c": "defer-to-v5-family",
+   "disposition_4c": "repoint",
    "node_count": 12,
    "responsibility": "Conformance tests for return-style and bare-parameter extraction (SC-2).",
    "breaks_on": "sysml_codegen.snapshot:load_extraction_snapshot (L-028, 4B-G2)",
    "breaks_a_free_group": true,
-   "disposition_4c_note": "No green replacement, and every owner it depends on is now deferred: the v5 read path is retained by consequence of keeping the v5 writer and the 37 fixtures, so this file's coverage is still load-bearing. Retires with the v5 family at Phase 5 owner acceptance."
+   "disposition_4c_note": "Gate 4C part 7 chunk 17 (2026-08-11), superseding the part-5 defer. Twelve nodes, two layers, and only the offline layer touches the retiring route. The live REQ-EXT-10/11/12 layer (seven nodes) drives SysMLDataExtractor directly and reaches no deleted owner. The five offline nodes read the committed return_styles v5 snapshot through load_extraction_snapshot, which was a module-scope import and is now localised into _snapshot_calc_defs and into test_style_b_compiled_style_d_absent (method note 1). The file keeps collecting after step 1; those five retire per-node with the fixture they read. Nothing is thinned - the offline layer existed to pin the same shapes license-free, and the live layer that owns the requirements stays."
   },
   {
    "id": "L-168",
@@ -3761,15 +3776,19 @@
    "group": "4C-retained",
    "authority": "plan rule 6",
    "unreachability": null,
-   "replacement_proof_node": null,
+   "replacement_proof_node": [
+    "tests/conformance/test_snapshot_v6_envelope.py::test_missing_current_and_future_versions_refuse_before_payload_interpretation",
+    "tests/conformance/test_snapshot_v6_routes.py::test_the_route_carries_real_modelled_content",
+    "tests/conformance/test_snapshot_v5_gate.py::test_a_v5_extraction_snapshot_is_refused_by_name_not_by_a_null_version"
+   ],
    "blocked_by": [],
    "reason": "Conformance tests for the promoted snapshot machinery (Item 2, SC-9 + SC-10). Passes at rebuild HEAD and imports no legacy owner, so no Phase 4 action reaches it. The forensic candidate's deletion had only a family-level census row.",
-   "disposition_4c": "defer-to-v5-family",
+   "disposition_4c": "retire-with-owner",
    "node_count": 8,
    "responsibility": "Conformance tests for the promoted snapshot machinery (Item 2, SC-9 + SC-10).",
    "breaks_on": "sysml_codegen.snapshot:build_full_graph_from_snapshot (L-028, 4B-G2); sysml_codegen.snapshot:load_extraction_snapshot (L-028, 4B-G2); sysml_codegen.extraction.expression_compiler:CalcDefCompilationResult (L-033, 4B-v5-family)",
    "breaks_a_free_group": true,
-   "disposition_4c_note": "No green replacement, and every owner it depends on is now deferred: the v5 read path is retained by consequence of keeping the v5 writer and the 37 fixtures, so this file's coverage is still load-bearing. Retires with the v5 family at Phase 5 owner acceptance."
+   "disposition_4c_note": "Gate 4C part 7 chunk 17 (2026-08-11), superseding the part-5 defer. Eight nodes on the v5 format contract (REQ-SNAP-08 to REQ-SNAP-14), and all three of its invariants are about machinery step 1 and step 2 remove. INV-2 (a missing or mismatched snapshot_format_version is a hard error) is answered by the v6 envelope, and answered earlier: the version gate runs before payload interpretation rather than after a load. INV-5 (a re-captured expression-bearing snapshot carries compilation_results) has no v6 analogue because the instance graph carries modelled content by construction, not as a sidecar block that can go missing - the route test asserts that content is really there. INV-3 (no second copy of the promoted helpers survives in tests/helpers) retires with the helpers it polices: sysml_codegen.snapshot's v5 members are what step 2 empties. This row also carries a module-level CalcDefCompilationResult import, one of the L-033 duals, so it would break at the dual retirement too."
   },
   {
    "id": "L-179",
@@ -3922,12 +3941,12 @@
    "replacement_proof_node": null,
    "blocked_by": [],
    "reason": "Conformance tests for part-usage type indexing (SC-3, Item 4). Passes at rebuild HEAD and imports no legacy owner, so no Phase 4 action reaches it. The forensic candidate's deletion had only a family-level census row.",
-   "disposition_4c": "defer-to-v5-family",
+   "disposition_4c": "repoint",
    "node_count": 7,
    "responsibility": "Conformance tests for part-usage type indexing (SC-3, Item 4).",
    "breaks_on": "sysml_codegen.snapshot:load_extraction_snapshot (L-028, 4B-G2)",
    "breaks_a_free_group": true,
-   "disposition_4c_note": "No green replacement, and every owner it depends on is now deferred: the v5 read path is retained by consequence of keeping the v5 writer and the 37 fixtures, so this file's coverage is still load-bearing. Retires with the v5 family at Phase 5 owner acceptance."
+   "disposition_4c_note": "Gate 4C part 7 chunk 17 (2026-08-11), superseding the part-5 defer. Seven nodes, five offline and two live, and the split is the same as L-167's. load_extraction_snapshot moved from module scope into the retype_snapshot fixture, so the two live nodes - REQ-EXT-13's index key set and the V9 collision warning, which is an extraction report warning that was never serialized into a snapshot - keep collecting after step 1. The five offline nodes retire per-node with the retype_model fixture. The retype subject itself is separately owned on the exact route by test_elaboration_specialization_retypes.py, which chunk 13 extended with the single-level chain shape."
   },
   {
    "id": "L-186",
@@ -3942,12 +3961,12 @@
    "replacement_proof_node": null,
    "blocked_by": [],
    "reason": "Conformance tests for Type Mapping Consolidation (X01). Passes at rebuild HEAD and imports no legacy owner, so no Phase 4 action reaches it. The forensic candidate's deletion had only a family-level census row.",
-   "disposition_4c": "defer-to-v5-family",
+   "disposition_4c": "repoint",
    "node_count": 9,
    "responsibility": "Conformance tests for Type Mapping Consolidation (X01).",
    "breaks_on": "sysml_codegen.snapshot:build_full_graph_from_snapshot (L-028, 4B-G2)",
    "breaks_a_free_group": true,
-   "disposition_4c_note": "No green replacement, and every owner it depends on is now deferred: the v5 read path is retained by consequence of keeping the v5 writer and the 37 fixtures, so this file's coverage is still load-bearing. Retires with the v5 family at Phase 5 owner acceptance."
+   "disposition_4c_note": "Gate 4C part 7 chunk 17 (2026-08-11), superseding the part-5 defer. Nine nodes and exactly one of them reaches the retiring route: test_all_generators_use_shared_function builds a graph per model from a v5 snapshot. Its own in-file note already records it as a weak, partly self-referential consistency guard whose content claim is pinned by literal sibling tables in test_gen_schemas.py and test_gen_module_wrappers.py, so its retirement with the v5 family costs the type-map contract nothing. build_full_graph_from_snapshot moved from module scope into that node's body; the other eight - the map table, the no-divergent-copies AST scan, the module-shape checks - collect and pass untouched after step 1."
   },
   {
    "id": "L-187",
@@ -4882,15 +4901,18 @@
    "group": "4C-blast-radius",
    "authority": "plan rule 6 \u2014 keep the Item 6 tests until after product proof; every removed or rewritten test needs a responsibility-level disposition first",
    "unreachability": null,
-   "replacement_proof_node": null,
+   "replacement_proof_node": [
+    "tests/conformance/test_snapshot_v6_envelope.py::test_missing_outer_field_is_refused",
+    "tests/conformance/test_snapshot_v6_envelope.py::test_wrong_typed_field_is_refused"
+   ],
    "blocked_by": [],
    "reason": "D3 Hygiene Tail Site 1 \u2014 loud load-bearing-field diagnostics in the snapshot Imports legacy owners (loader) directly, so 4B's deletion breaks it. Retain now; before the owning 4B group lands, this row needs either a public-behaviour rewrite or a recorded responsibility retirement.",
-   "disposition_4c": "defer-to-v5-family",
+   "disposition_4c": "retire-with-owner",
    "node_count": 9,
    "responsibility": "D3 Hygiene Tail Site 1 \u2014 loud load-bearing-field diagnostics in the snapshot loader (TRUTH-DEBT Item 6).",
    "breaks_on": "sysml_codegen.snapshot.loader (L-016, 4B-G2)",
    "breaks_a_free_group": true,
-   "disposition_4c_note": "No green replacement, and every owner it depends on is now deferred: the v5 read path is retained by consequence of keeping the v5 writer and the 37 fixtures, so this file's coverage is still load-bearing. Retires with the v5 family at Phase 5 owner acceptance."
+   "disposition_4c_note": "Gate 4C part 7 chunk 17 (2026-08-11), superseding the part-5 defer. Nine nodes whose subject is snapshot/loader.py's own hygiene tail: the loader deserializes with .get(field, default), so a load-bearing field that goes missing warns and degrades (python_type, binding_type, parent_part_path, owning_part_def_qn) or raises (qualified_name, a keying field). The loader is L-016 and step 2 deletes it. The replacement is stronger for a structural reason worth stating: the v6 reader has no degrade path at all. A missing field is refused and a wrongly typed field is refused, so there is no silent default left for a diagnostic to make loud. A warning is how a route continues past a shape it cannot account for, and the exact route does not continue - the same argument chunk 14 made for the PIPELINE-TRUTH Item 5 family."
   },
   {
    "id": "L-228",
@@ -5319,15 +5341,18 @@
    "group": "4C-blast-radius",
    "authority": "plan rule 6 \u2014 keep the Item 6 tests until after product proof; every removed or rewritten test needs a responsibility-level disposition first",
    "unreachability": null,
-   "replacement_proof_node": null,
+   "replacement_proof_node": [
+    "tests/conformance/test_snapshot_v6_envelope.py::test_source_referent_shape_is_enforced",
+    "tests/conformance/test_snapshot_v6_routes.py::test_relocated_snapshot_needs_no_source_tree"
+   ],
    "blocked_by": [],
    "reason": "Item 5 v5 shape gate: a source_file that is not a portable referent is rejected. Imports legacy owners (loader) directly, so 4B's deletion breaks it. Retain now; before the owning 4B group lands, this row needs either a public-behaviour rewrite or a recorded responsibility retirement.",
-   "disposition_4c": "defer-to-v5-family",
+   "disposition_4c": "retire-with-owner",
    "node_count": 4,
    "responsibility": "Item 5 v5 shape gate: a source_file that is not a portable referent is rejected.",
    "breaks_on": "sysml_codegen.snapshot.loader (L-016, 4B-G2)",
    "breaks_a_free_group": true,
-   "disposition_4c_note": "No green replacement, and every owner it depends on is now deferred: the v5 read path is retained by consequence of keeping the v5 writer and the 37 fixtures, so this file's coverage is still load-bearing. Retires with the v5 family at Phase 5 owner acceptance."
+   "disposition_4c_note": "Gate 4C part 7 chunk 17 (2026-08-11), superseding the part-5 defer. Four nodes closing Item 4 note N1 on the v5 loader: a source_file that is not a portable referent (absolute, or snapshot-dir-relative, or field-less) is rejected loudly in both skew directions rather than loaded silently, which is what reintroduced the checkout-absolute leak. The claim survives the loader verbatim - the v6 envelope enforces the source referent shape as its own gate - and the portability half it existed to protect is asserted directly, by generating from a relocated snapshot with no source tree present."
   },
   {
    "id": "L-247",

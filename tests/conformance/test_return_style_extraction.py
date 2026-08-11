@@ -31,7 +31,6 @@ import pytest
 
 from sysml_codegen.extraction.data_models import CalculationDefinitionData
 from sysml_codegen.extraction.extractor import SysMLDataExtractor
-from sysml_codegen.snapshot import load_extraction_snapshot
 from tests.conftest import snapshot_fixture
 
 FIXTURES_DIR = Path(__file__).resolve().parents[1] / "fixtures"
@@ -150,6 +149,11 @@ class TestV7Reworded:
 
 
 def _snapshot_calc_defs() -> dict[str, CalculationDefinitionData]:
+    # Localised import (Gate 4C method note 1): the v5 reader retires with the v5 family,
+    # and only the offline nodes below reach it. Keeping it out of module scope is what lets
+    # the live REQ-EXT-10/11/12 half of this file keep collecting after that step.
+    from sysml_codegen.snapshot import load_extraction_snapshot
+
     snap = load_extraction_snapshot(snapshot_fixture("return_styles"))
     return {cd.name: cd for cd in snap["calc_defs"]}
 
@@ -182,6 +186,8 @@ class TestReturnStylesCompilationResults:
     """The snapshot's compilation_results block pins auto-impl offline (D4/M2)."""
 
     def test_style_b_compiled_style_d_absent(self) -> None:
+        from sysml_codegen.snapshot import load_extraction_snapshot
+
         snap = load_extraction_snapshot(snapshot_fixture("return_styles"))
         keys = snap["compilation_results"].keys()
         # Style B's inline return expression compiled -> auto-impl.

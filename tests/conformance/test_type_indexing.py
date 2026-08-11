@@ -46,7 +46,6 @@ from sysml_codegen.extraction.usage_extractor import (
     _build_part_usage_index,
     extract_calculation_usages,
 )
-from sysml_codegen.snapshot import load_extraction_snapshot
 from tests.conftest import snapshot_fixture
 
 FIXTURES_DIR = Path(__file__).resolve().parents[1] / "fixtures"
@@ -66,6 +65,11 @@ MULTI = ("RetypeLibrary__MultiHolder", "multi")
 @pytest.fixture(scope="module")
 def retype_snapshot() -> dict:
     """Load the committed retype_model extraction snapshot."""
+    # Localised import (Gate 4C method note 1): only the five offline nodes below reach the
+    # v5 reader, and they retire with the fixture they read. The two live REQ-EXT-13 / V9
+    # nodes keep collecting after that step because this import is not at module scope.
+    from sysml_codegen.snapshot import load_extraction_snapshot
+
     return load_extraction_snapshot(snapshot_fixture("retype_model"))
 
 
