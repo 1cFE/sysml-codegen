@@ -497,9 +497,13 @@ The forensic test audit is the starting shortlist, not a certification result.
   the remainder is pinned rather than claimed.** `model_name`/`captured_at` re-labelling is refused.
   Re-labelling through the `sources` manifest is *not* refusable offline; it is refused when the
   caller supplies `source_roots`, and the three offline-accepted shapes are pinned as tests naming an
-  accepted, documented limit. See "F1" in the 3A follow-up notes. **[OWNER decision open]** whether
-  that residual limit is acceptable, or whether provenance-critical loads must be made to require
-  `source_roots`.
+  accepted, documented limit. See "F1" in the 3A follow-up notes. **[AGENT] (orchestrator ruling,
+  2026-08-10):** the residual limit is accepted for the rebuild. The plan's named must-fail cell
+  (model-identity swap) is closed structurally; the residual is source-referent provenance, which
+  no offline check of forger-controlled bytes can validate — mandating `source_roots` would break
+  the relocated-snapshot route the cutover exists to support. Pinned tests + docstring state the
+  truth, and the freshness path refuses all three shapes. Flagged for the Phase 5 owner review
+  packet as a named residual, not silently absorbed.
 - [x] Run original full suites, the named relocation/tamper matrix, and one generated package
   smoke.
 - [x] Commit only the declared 3A path set.
@@ -1145,7 +1149,10 @@ carried B37-01 obligations are discharged there, including the re-derived count 
 now produces 14 public graphs and 23 typed errors** on the 37-fixture corpus, measured rather than
 chosen. The `14/22/1` versus `15/22/0` question is a different axis (the Phase-8 batch manifest) and
 stays open. **[OWNER visibility]** this edits a completed, certified record; Phase 2 explicitly
-carried the update to Phase 3/4, so it is a discharge rather than a rewrite.
+carried the update to Phase 3/4, so it is a discharge rather than a rewrite. **Confirmed by the
+orchestrator (2026-08-10):** the edit is inside the scope the B37-01 owner pre-ruling authorized
+("amend the ledger/spec/census rows"); the Item 6 measured figures are retained beside the
+amendment, so the certified history remains readable.
 
 **Gates.**
 
