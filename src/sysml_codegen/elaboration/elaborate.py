@@ -27,7 +27,6 @@ from agentic_mbse.sysml.expression import (
 from agentic_mbse.sysml.expression_ir import serialize_expression
 from agentic_mbse.sysml.syside_adapter import SysideAdapter
 
-from sysml_codegen.analysis.constraint_lowering import resolve_modeled_default
 from sysml_codegen.elaboration.diagnostics import ElaborationInvariantError
 from sysml_codegen.elaboration.display import display_name, display_qualified_name
 from sysml_codegen.elaboration.graph import (
@@ -74,6 +73,7 @@ from sysml_codegen.extraction.expression_compiler import (
     compile_calc_def_exact,
 )
 from sysml_codegen.extraction.expression_utils import extract_literal_value
+from sysml_codegen.extraction.modeled_defaults import resolve_modeled_default
 from sysml_codegen.extraction.source_evidence import (
     ReadinessCode,
     ReadinessFinding,
@@ -941,15 +941,56 @@ class _ExactElaborator:
 
     @staticmethod
     def _calculation_auto_impl_context(compilation: Any) -> dict | None:
+        """Render the stencil's assignment steps and return values in exact order.
+
+        A compiled member becomes an assignment step when something else consumes
+        it: every undeclared intermediate, plus any declared output another
+        declared output depends on. Stepped members are then returned by name, so
+        the rendered function never forward-references or recomputes a value.
+
+        Return values follow declaration-UUID order because that is the order
+        projection renders the module's outputs in (``_Projection._outputs``
+        sorts on ``DeclarationId.to_wire()``); the returned tuple has to line up
+        with that schema positionally, and rendered member names never decide it.
+        """
         if compilation.overall_compilability is not Compilability.FULLY_COMPILABLE:
             return None
-        output_expressions = [
-            {"name": result.output_name, "expression": result.python_expression}
+        results = {result.output_id: result for result in compilation.output_results}
+        consumed_ids = {
+            dependency
             for result in compilation.output_results
-            if result.python_expression is not None
-        ]
+            for dependency in result.dependency_ids
+        }
+        execution_steps: list[dict[str, str]] = []
+        stepped_ids: set[UUID] = set()
+        for member_id in compilation.execution_order:
+            result = results.get(member_id)
+            if result is None or result.python_expression is None:
+                continue
+            if not result.is_undeclared_intermediate and member_id not in consumed_ids:
+                continue
+            execution_steps.append(
+                {"name": result.output_name, "expression": result.python_expression}
+            )
+            stepped_ids.add(member_id)
+
+        output_expressions: list[dict[str, str]] = []
+        for output_id in sorted(compilation.declared_output_ids):
+            result = results.get(output_id)
+            if result is None or result.python_expression is None:
+                continue
+            output_expressions.append(
+                {
+                    "name": result.output_name,
+                    "expression": (
+                        result.output_name
+                        if output_id in stepped_ids
+                        else result.python_expression
+                    ),
+                }
+            )
         return {
-            "execution_steps": [],
+            "execution_steps": execution_steps,
             "output_expressions": output_expressions,
             "output_count": len(output_expressions),
             "single_output_expression": (

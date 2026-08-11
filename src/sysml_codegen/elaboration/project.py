@@ -27,8 +27,7 @@ from agentic_mbse.sysml.expression_ir import (
     serialize_expression,
 )
 
-from sysml_codegen.analysis.constraint_lowering import mint_constraint_id
-from sysml_codegen.core.identifier_types import derive_module_type
+from sysml_codegen.core.identifier_types import derive_module_type, mint_constraint_id
 from sysml_codegen.core.qualified_names import (
     get_channel_name,
     sanitize_name,

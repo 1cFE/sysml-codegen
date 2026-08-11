@@ -47,10 +47,8 @@ def _route_record(facts):
         design_attrs={},
     )
     catalog = assemble_constraint_catalog(concrete, facts)
-    context = SimpleNamespace(
-        computation_graph=SimpleNamespace(constraint_catalog=catalog, modules=[])
-    )
-    plan = build_constraint_generation_plan(context, _get_template_env(), "route_pkg")
+    graph = SimpleNamespace(constraint_catalog=catalog, modules=[])
+    plan = build_constraint_generation_plan(graph, _get_template_env(), "route_pkg")
     return {
         "decisions": [
             (

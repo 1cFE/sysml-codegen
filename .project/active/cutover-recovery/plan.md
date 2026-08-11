@@ -528,12 +528,15 @@ The forensic test audit is the starting shortlist, not a certification result.
 
 ### Slice 3C — Coordinated compiler and constraint authority
 
-- [ ] Write collision, declaration-identity, ordering, and profile behavior tests first in both
+- [x] Write collision, declaration-identity, ordering, and profile behavior tests first in both
   repositories.
-- [ ] Selectively recover the exact compiler/constraint changes from sysml-codegen and
-  agentic-mbse. Retain the old route until the coordinated new route is proven.
-- [ ] Run both full suites from the exact paired worktrees.
-- [ ] Commit both repositories and record the paired OIDs together.
+- [x] Selectively recover the exact compiler/constraint changes from sysml-codegen and
+  agentic-mbse. Retain the old route until the coordinated new route is proven. **The forensic
+  Phase-5 material turned out to be almost entirely rename-and-delete, not new behavior** — see
+  the 3C completion notes. Every rename hunk was Rejected for this slice and recorded as a
+  retained dual for Phase 4; the behavior the slice does recover is named per file below.
+- [x] Run both full suites from the exact paired worktrees.
+- [x] Commit both repositories and record the paired OIDs together.
 
 ### Slice 3D — Fusion Tea customer vertical and real TEAx
 
@@ -596,7 +599,7 @@ Record every slice. Do not combine them later.
 |---|---|---|---|---|
 | 3A | fe0b855, audit follow-up 4858911 | N/A | 3473 passed / 47 skipped / 18 deselected (+115, all new) | smoke PASS (fusion_tea, 48-file sealed package) |
 | 3B | d91431b, audit follow-up 2f28dde | N/A | 3520 passed / 47 skipped / 18 deselected (+47, all new) | smoke PASS (live + v6-snapshot packages, group names equal; legacy CLI package unchanged at 48 files) |
-| 3C | PENDING | PENDING | PENDING | N/A |
+| 3C | PENDING_CODEGEN_OID | 8b63393 | codegen 3528 passed / 47 skipped / 18 deselected (+8, all new); agentic 1824 passed / 1 skipped / 5 deselected (+5, all new) | N/A |
 | 3D | PENDING | PENDING if changed | PENDING | PENDING |
 | 3E | PENDING | PENDING if changed | PENDING | PENDING |
 
@@ -1391,6 +1394,176 @@ lines — delta versus `d91431b` is exactly **+1 passed**, that same pin, with s
 unchanged. Execution lane 18 passed. `ruff check src` byte-identical to the baseline set; the new
 test modules lint clean. `mypy src` error set identical (71 errors in 17 files). `git diff --check`
 clean. Changed paths equal the declared set.
+
+#### Slice 3C Completion — Coordinated compiler and constraint authority
+
+- **Completed:** 2026-08-11
+- **Commits:** agentic-mbse `8b63393` (committed first), sysml-codegen `PENDING_CODEGEN_OID`
+  (names the agentic OID in its message). This is the first slice where both repositories move.
+- **Declared path set, sysml-codegen:** `core/identifier_types.py`,
+  `extraction/modeled_defaults.py` (new), `analysis/constraint_lowering.py`,
+  `elaboration/{elaborate,project}.py`, `generation/constraint_plan.py`, `cli/__init__.py`,
+  `tests/conformance/test_exact_{compiler_core,constraint_route}.py` (new),
+  `tests/fixtures/exact_calc_ordering/model.sysml` (new), the five
+  `build_constraint_generation_plan` call sites in tests, this plan, and `briefs/phase3c.md`.
+- **Declared path set, agentic-mbse:** `sysml/executable_profile.py`,
+  `validation/{level4_constraints,level6_architecture}.py`,
+  `tests/test_sysml/test_executable_profile.py`, `tests/test_sysml_quality_checks.py`.
+- Actual changed paths equal both sets. Two codegen call sites were found after the first full
+  suite run and declared then — named as a deviation below.
+
+**The premise finding this slice turned up, and why it is a disposition rather than a stop.**
+The brief expected the forensic Phase-5 patch to converge the exact compiler and constraint
+authority by making the unsuffixed names the one exact route. Reviewing it hunk by hunk in both
+repositories shows something narrower: **the exact route already exists at the Item 6 baseline
+under suffixed and `*_by_id` names, and the forensic patch is a rename plus a deletion of the
+legacy twin.** `compile_calc_def_exact` → `compile_calc_def`, `ExactCompilationResult` →
+`CompilationResult`, `extract_identified_constraint_facts` → `extract_constraint_facts`,
+`evaluate_identified_profile` → `evaluate_profile`, `CalculationDefinitionData.*_by_id` →
+the unsuffixed field names — each reuses a name the legacy route still occupies.
+
+Under this plan those renames are not available in Phase 3, and the brief's own instruction
+resolves it: keep both callable, record the dual for Phase 4. Keeping both is only possible by
+*not* renaming, because the new names collide with the shipped ones. The measured cost of doing
+it anyway is on the record in the forensic tree: its 11 migrated agentic-mbse test modules each
+grew a module-local `evaluate_profile` shim that fabricates UUIDs and returns a `SimpleNamespace`
+imitation of the deleted `ProfileResult`, so those tests stopped exercising production. Rejecting
+the renames avoids that, and it keeps the shipped legacy codegen route
+(`analysis/constraint_lowering.py:498`, `orchestration/pipeline_builder.py:896`) working.
+
+No Item 6 pin moved. `SI_CONSTRAINT_BLOCKED` on the strict, lenient, and round-tripped routes
+(`tests/conformance/test_elaboration_payload_identity.py:236-266`) is green throughout. No rule-10
+stop arose.
+
+**What the slice does prove.** Three things, each behavior rather than spelling:
+
+1. *The exact route no longer takes constraint authority from the legacy lowering module.*
+   `elaborate.py` and `project.py` imported `mint_constraint_id` and `resolve_modeled_default`
+   from `analysis/constraint_lowering.py` — a 1,650-line legacy module Phase 4 is meant to delete.
+   Both now live in modules the two routes share, and neither exact file imports the legacy module
+   at all. Pinned by an AST import check over both files.
+2. *A rendered calculation implementation is correct for intermediates, cross-referencing outputs,
+   and output order.* `_calculation_auto_impl_context` emitted `execution_steps: []` always and
+   listed every compiled member as a return value in topological order. On a calculation with an
+   undeclared intermediate that renders a function returning the intermediate as an output and
+   referencing names it never assigned; with two declared outputs it can also return them in an
+   order the projected schema does not use. Both are fixed by one rule — a member becomes an
+   assignment step when something else consumes it, and returns follow declaration-UUID order,
+   which is the order `_Projection._outputs` sorts on.
+3. *The exact gate exists and agrees with the neutral one.* agentic-mbse's `preflight` only took
+   neutral facts and re-derived the usage/definition association by qualified name. The new
+   `preflight_identified` partitions an already-decided exact result. It follows the UUID
+   association where the neutral payload cannot (two definitions, one qualified name, different
+   predicates), and it produces the same partition as `preflight` when identity is unambiguous.
+
+**Per-file dispositions — sysml-codegen.**
+
+| Path | Disposition | Reason |
+|---|---|---|
+| `extraction/expression_compiler.py` | **Reject** (whole forensic hunk) | Pure rename: `compile_calc_def_exact` → `compile_calc_def`, `Exact*Result` → `*Result`, plus deletion of the legacy name-keyed compiler and `_topological_sort`. Both names cannot exist; the legacy compiler is still the shipped route's. Untouched. Four duals recorded. |
+| `extraction/data_models.py` | **Reject** | Collapses the name-keyed `output_expression_asts`/`member_expressions`/`all_member_names` into the ID-keyed fields, deleting the legacy halves the extractor and legacy compiler read. Item 6 already carries both; the deletion is Phase 4. Untouched. |
+| `extraction/extractor.py` | **Reject** | Same change on the producing side, same reason. Untouched. |
+| `elaboration/elaborate.py` — `_calculation_auto_impl_context` | **Reimplement** | The idea (steps for consumed members, declaration-ordered returns) is right and is the slice's real behavior recovery. The forensic version branches on an `output_crossrefs` flag and duplicates both loops under it. Rewritten as one rule with no mode flag: a member is stepped when it is an undeclared intermediate *or* another member depends on it, and a stepped member is returned by name. |
+| `elaboration/elaborate.py` — `_enumeration_value` | **Reject for 3C** | Genuinely new behavior (enum literals in attribute values), unrelated to the compiler/constraint authority this slice converges, and no fixture in the tree exercises it. Carried as candidate 3D material rather than imported untested. |
+| `elaboration/elaborate.py` — `resolve_modeled_default` import move | **Reuse**, different home | The forensic tree moves it to `elaboration/value_defaults.py`, which would make the legacy `analysis` module import `elaboration`. It landed at `extraction/modeled_defaults.py`, which both layers already import from. |
+| `generation/constraint_catalog.py` — `mint_constraint_id` | **Reuse**, different home | The forensic tree adds it to `generation/`, which would make `elaboration/project.py` import `generation/`. It landed in `core/identifier_types.py`, beside `make_scoped_key`, which is the bottom layer both routes already import. |
+| `generation/constraint_plan.py` | **Reuse** | `build_constraint_generation_plan` took a whole `PipelineContext` and read one attribute off it. It now takes the `ComputationGraph`, so the exact route calls it with what it has instead of fabricating a context. Five call sites updated, two of which had been fabricating a `SimpleNamespace` context for exactly this reason. |
+| `core/{identifier_types,models}.py`, `extraction/binding_evidence.py`, `generation/pipeline.py` docstring hunks | **Reject** | Comment-only edits describing symbols this slice does not retire. They belong with the Phase 4 deletion that makes them true. |
+| `tests/conformance/test_exact_compiler_core.py` | **Reimplement** from the candidate as material | The forensic module's collision case and hand-built cycle fixture are good and are kept, retargeted at `compile_calc_def_exact`. Its first assertion — `"compile_calc_def_exact" not in vars(expression_compiler)` — is a naming assertion that contradicts the retention rule and is dropped. Three ordering cases added. |
+| `tests/conformance/test_exact_constraint_route.py` | **Reimplement** from the candidate as material | The end-to-end agreement test is sound and is kept, retargeted at the suffixed names and at `preflight_identified`. Its two "the unsuffixed name is the only one" assertions are dropped for the same reason. Two tests added: the legacy-import check, and a check that both routes still reach the moved helpers. |
+
+**Per-file dispositions — agentic-mbse**, including the three quality-cleanup hunks the brief
+asked to be judged separately.
+
+| Path | Disposition | Reason |
+|---|---|---|
+| `sysml/constraint_extraction.py` | **Reject** | Renames `extract_identified_constraint_facts` onto `extract_constraint_facts` and deletes the neutral function. Both are live: codegen's exact route calls the first, its legacy route and both validation levels call the second. Untouched. Two duals recorded. |
+| `sysml/executable_profile.py` — rename hunks | **Reject** | Same shape: `evaluate_identified_profile` → `evaluate_profile`, with `ProfileResult`, `_evaluate_usage` and the neutral `evaluate_profile` deleted. Untouched. Three duals recorded. |
+| `sysml/executable_profile.py` — `preflight` signature change | **Reimplement** as an addition | The forensic patch *replaces* `preflight(ConstraintFacts)` with `preflight(IdentifiedProfileResult)`. Added `preflight_identified` beside it instead; both delegate to one `_partition_decisions` helper. The exact gate now exists without the neutral one being retired. |
+| `sysml/executable_profile.py` — duplicate helper removal (**quality hunk 1**) | **Reuse** | `_promote_non_numerical_diagnostic` is defined twice, byte-identically, at `:950` and `:968`. The second shadows the first and nothing can reach it. Zero behavior change, and mypy loses a `no-redef` error. |
+| `validation/level4_constraints.py` — import fallback (**quality hunk 2**) | **Reuse** | The `try: from .common import … except ImportError: from common import …` pair becomes one absolute import. This cannot change direct-file execution: the module already imports `agentic_mbse.sysml.*` absolutely at `:12`, so an installed package is required either way and the `common` fallback could never be the only working path. Measured both ways and now covered by `test_direct_file_execution_resolves_its_shared_helpers`, which runs the module as a script. |
+| `validation/level6_architecture.py` — `load_manifest` cleanup (**quality hunk 3**) | **Reuse with added cover** | `except Exception` narrows to `(OSError, yaml.YAMLError)`, and well-formed YAML that is not a mapping is refused here rather than subscripted by a caller. That second part *is* a behavior change, so it did not ship uncovered: `test_manifest_valid_yaml_that_is_not_a_mapping` is the red→green case and `test_manifest_read_failure_is_reported_not_raised` guards the narrowed except. The `dict` → `dict[Any, Any]` annotation is typing only. |
+| `validation/level6_architecture.py` — `item.decision` unpacking | **Reject** | Part of the rename migration, not a cleanup. Untouched. |
+| The 11 forensic test-file migrations | **Reject** | Each adds a module-local shim that fabricates UUIDs and a `SimpleNamespace` stand-in for the deleted `ProfileResult`, so the migrated tests stop exercising production. `test_public_api_exports.py` also loses assertions. Not imported. |
+
+**Retained duals, for the Phase 4 ledger.** Each pair is one behavior reachable under two names,
+retained deliberately this slice. Phase 4 deletes the legacy member and renames the exact one.
+
+| Repository | Exact (kept, suffixed) | Legacy twin (kept callable) |
+|---|---|---|
+| sysml-codegen | `expression_compiler.compile_calc_def_exact` | `expression_compiler.compile_calc_def` |
+| sysml-codegen | `expression_compiler.ExactCompilationResult` | `expression_compiler.CompilationResult` |
+| sysml-codegen | `expression_compiler.ExactCalcDefCompilationResult` | `expression_compiler.CalcDefCompilationResult` |
+| sysml-codegen | `CalculationDefinitionData.{output_expression_asts,member_expressions,member_names}_by_id`, `all_member_ids` | `CalculationDefinitionData.{output_expression_asts,member_expressions,all_member_names}` |
+| agentic-mbse | `constraint_extraction.extract_identified_constraint_facts` | `constraint_extraction.extract_constraint_facts` |
+| agentic-mbse | `executable_profile.evaluate_identified_profile` | `executable_profile.evaluate_profile` |
+| agentic-mbse | `executable_profile.IdentifiedProfileResult` | `executable_profile.ProfileResult` |
+| agentic-mbse | `executable_profile.preflight_identified` | `executable_profile.preflight` |
+
+Two names moved rather than duplicated, so they are *not* duals and Phase 4 has nothing to delete
+for them: `mint_constraint_id` (now `core/identifier_types.py`) and `resolve_modeled_default` /
+`ModeledDefault` (now `extraction/modeled_defaults.py`). `analysis/constraint_lowering.py` imports
+both, so every existing caller and monkeypatch target still resolves;
+`test_the_shared_constraint_identity_and_default_helpers_stay_callable_on_both_routes` pins that.
+
+**Tests, red then green.**
+
+- sysml-codegen: 8 new tests, **5 red at `38c2e15`** — the three ordering cases (measured red
+  output: `output_expressions` named `['scaled', 'half', 'doubled_half']` against a two-output
+  schema, with `execution_steps` empty), the legacy-import check (`elaborate.py` failed it), and
+  the shared-helper check (`ImportError` on `mint_constraint_id`). The collision and cycle cases
+  pass at head and are guards: they pin behavior the rename would have moved.
+- agentic-mbse: 5 new tests, **1 red at `5088b417`** by assertion (`load_manifest` returned
+  `['alpha', 'beta']` where `None` is required) and **2 red by collection** (the two
+  `preflight_identified` gate tests fail the module import). The remaining two are guards on the
+  two cleanup hunks, green both before and after by design.
+
+**Gates.**
+
+- Full codegen suite: **3528 passed / 47 skipped / 18 deselected**, zero failures, zero
+  `no live syside license` lines. Delta versus the 3B follow-up baseline is exactly **+8 passed**,
+  the eight new tests. Skips and deselections unchanged.
+- Full agentic-mbse suite from the paired rebuild worktree: **1824 passed / 1 skipped /
+  5 deselected**, zero failures. Delta versus the Phase 2 baseline of 1819/1/5 is exactly
+  **+5 passed**, the five new tests.
+- Execution lane (`pytest tests/execution -m execution`): 18 passed, unchanged.
+- 3A/3B surface re-run (`test_snapshot_v6_routes`, `test_exact_route_generated_package`,
+  `test_exact_group_identity`, `test_exact_pipeline_context`, `test_exact_target_selection`,
+  `test_elaboration_payload_identity`, `test_constraint_profile_route_parity`,
+  `test_constraint_generation_live`): **70 passed**. The coordinated change did not move it.
+- Shipped legacy CLI smoke: `sysml-codegen generate --models tests/fixtures/fusion_tea` still
+  produces 48 files with `inputs/{hif_driver,hif_plant,ife_plant}_params.json` and
+  `hif_driver__HIF_Driver__efficiency = 0.35`. Customer-visible package unchanged.
+- Manual generated-artifact check: the auto-implementation rendered for
+  `exactcalcordering__rig__split` assigns `scaled = (inputs.total * 2.0)` then
+  `half = (scaled / 4.0)` and returns `(half, (half * 2.0))`, matching the module's
+  `['half', 'doubled_half']` output schema and the fixture's hand arithmetic
+  (`total=8.0 → scaled=16.0 → half=4.0 → doubled_half=8.0`). At `38c2e15` the same template
+  renders three return values, two of them referencing names the function never assigns.
+- codegen `ruff check src`: **byte-identical** to the baseline set (16 findings) — zero new. The
+  two new test modules lint clean. `mypy src`: error set **identical** (71 errors in 17 files;
+  85 → 86 files checked, so `modeled_defaults.py` contributes zero).
+- agentic-mbse `ruff check src`: identical to its baseline (1 pre-existing finding) — zero new.
+  `mypy src`: **118 → 108 errors, zero new and ten fixed**, all ten from the three cleanup hunks.
+- `git diff --check` clean in both repositories. Changed paths equal the declared sets.
+
+**Issues and deviations.**
+
+- **Two call sites declared mid-slice.** Narrowing `build_constraint_generation_plan` to a
+  `ComputationGraph` reached five call sites, not three. The first full suite run found the two
+  missed ones (`tests/conformance/test_constraint_generation_integration.py:158`,
+  `tests/execution/test_constraint_execution.py:67`) as a hard failure rather than a silent pass,
+  which is the gate working. Declared and fixed before commit.
+- **Two forensic helper homes changed**, both to avoid a layering inversion the forensic tree
+  introduced: `mint_constraint_id` to `core/`, not `generation/`; `resolve_modeled_default` to
+  `extraction/`, not `elaboration/`. Reasons are in the disposition table.
+- **The slice is thinner on the agentic-mbse side than the brief implies.** The brief describes
+  that repository as "the incident's cleanest phase boundary: one 15-file Phase 5 patch". It is
+  clean, but on inspection it contains no new decision behavior — 4 source files of renames plus
+  3 cleanup hunks, and 11 test files migrating to the renamed API. The slice therefore recovers
+  the cleanups, adds the missing exact gate, and defers the renames. Recorded rather than dressed
+  up as more.
+- No deletions in either repository. No Item 6 test was removed, silenced, or deselected.
 
 ### Phase 4 Completion
 

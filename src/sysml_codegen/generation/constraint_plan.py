@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     import jinja2
 
-    from sysml_codegen.orchestration.pipeline_context import PipelineContext
+    from sysml_codegen.resolution.models import ComputationGraph
 
 
 @dataclass(frozen=True)
@@ -23,7 +23,7 @@ class ConstraintGenerationPlan:
 
 
 def build_constraint_generation_plan(
-    ctx: PipelineContext,
+    graph: ComputationGraph,
     template_env: jinja2.Environment,
     package_name: str,
 ) -> ConstraintGenerationPlan:
@@ -36,14 +36,14 @@ def build_constraint_generation_plan(
     )
     from sysml_codegen.resolution.models import ModuleKind
 
-    catalog = ctx.computation_graph.constraint_catalog
+    catalog = graph.constraint_catalog
     if catalog is None:
         return ConstraintGenerationPlan(MappingProxyType({}), None, MappingProxyType({}))
 
     compiled = compile_shared_predicates(catalog)
     predicates_code = render_constraint_predicates_module(compiled, template_env)
     rendered: dict[str, str] = {}
-    for module in ctx.computation_graph.modules:
+    for module in graph.modules:
         if module.module_kind is ModuleKind.CONSTRAINT:
             rendered[module.name] = render_constraint_module(
                 module, catalog, compiled, template_env, package_name

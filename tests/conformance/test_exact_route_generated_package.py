@@ -47,7 +47,7 @@ def _generate(context, output_path: Path) -> Path:
         output_path=output_path, package_name=PACKAGE, pipeline_name="exact_pipeline"
     )
     template_env = _get_template_env()
-    plan = build_constraint_generation_plan(context, template_env, config.package_name)
+    plan = build_constraint_generation_plan(context.computation_graph, template_env, config.package_name)
     _setup_output_directories(config)
     _generate_schemas(context, config, template_env)
     _generate_modules(context, config, template_env, plan)

@@ -64,7 +64,7 @@ def _generate_full_package(ctx, output_path: Path, package_name: str) -> None:
     _generate_schemas(fake_ctx, config, template_env)
     from sysml_codegen.generation.constraint_plan import build_constraint_generation_plan
 
-    plan = build_constraint_generation_plan(fake_ctx, template_env, config.package_name)
+    plan = build_constraint_generation_plan(fake_ctx.computation_graph, template_env, config.package_name)
     _generate_modules(fake_ctx, config, template_env, plan)
     _generate_stencils(fake_ctx, config, template_env)
     _generate_pipeline(fake_ctx, config, template_env)

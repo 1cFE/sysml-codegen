@@ -1021,7 +1021,9 @@ def run_codegen(config: GenerationConfig) -> bool:
 
         # Build every constraint body and wrapper while the target tree is still untouched.
         template_env = _get_template_env()
-        constraint_plan = build_constraint_generation_plan(ctx, template_env, config.package_name)
+        constraint_plan = build_constraint_generation_plan(
+            ctx.computation_graph, template_env, config.package_name
+        )
 
         # Step 2: Clear and setup output directories
         if config.overwrite:

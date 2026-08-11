@@ -155,7 +155,7 @@ def test_full_constraint_surface_generates_and_parses(tmp_path):
     _generate_schemas(ctx, config, template_env)
     from sysml_codegen.generation.constraint_plan import build_constraint_generation_plan
 
-    plan = build_constraint_generation_plan(ctx, template_env, config.package_name)
+    plan = build_constraint_generation_plan(ctx.computation_graph, template_env, config.package_name)
     _generate_modules(ctx, config, template_env, plan)
     _generate_stencils(ctx, config, template_env)
     _generate_pipeline(ctx, config, template_env)

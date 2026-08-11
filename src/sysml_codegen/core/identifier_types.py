@@ -13,6 +13,8 @@ Typed identifier wrappers (NewType over str) for the typed registry refactor:
 See: 27-typed-registry-refactor.md
 """
 
+import hashlib
+import json
 from dataclasses import dataclass
 from typing import NewType
 
@@ -198,6 +200,32 @@ def derive_python_path(qualified_name: str) -> str:
     return PythonModulePath.from_sysml(sqn).full_path
 
 
+def mint_constraint_id(
+    *,
+    instance_path: str,
+    source_local: str,
+    tuple_: tuple,
+    digest_hex_length: int = 16,
+) -> str:
+    """Mint a deterministic, collision-checkable ``constraint_id`` (D3/N1).
+
+    ``{instance_path}__{source_local}__{sha256[:16] of the canonical tuple}``.
+    The prefix is human-scannable; the suffix folds source-local identity,
+    owner-instance identity, membership kind, and polarity into a 64-bit
+    collision-visible fingerprint (a hard duplicate is a generation error,
+    checked post-expansion by
+    :func:`sysml_codegen.analysis.constraint_lowering.assert_unique_constraint_ids`).
+
+    Lives here rather than in the legacy lowering module so the exact
+    projection route and the legacy route mint one identity by one rule.
+    """
+    canonical = json.dumps(list(tuple_), sort_keys=True, separators=(",", ":"), ensure_ascii=True)
+    if digest_hex_length < 1 or digest_hex_length > 64:
+        raise ValueError("digest_hex_length must be between 1 and 64")
+    suffix = hashlib.sha256(canonical.encode()).hexdigest()[:digest_hex_length]
+    return f"{instance_path}__{source_local}__{suffix}"
+
+
 __all__ = [
     "SysMLQualifiedName",
     "ModuleType",
@@ -212,4 +240,5 @@ __all__ = [
     "ScopedKey",
     "make_scoped_key",
     "make_canonical_channel",
+    "mint_constraint_id",
 ]

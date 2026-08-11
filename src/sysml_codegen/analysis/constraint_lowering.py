@@ -9,8 +9,6 @@ design attribute, or an overridable modeled default — never synthesized. See
 
 from __future__ import annotations
 
-import hashlib
-import json
 import logging
 import os
 from collections.abc import Callable
@@ -29,10 +27,8 @@ from agentic_mbse.sysml.expression_ir import (
     ExpressionIR,
     FeatureReferenceNode,
     InvocationNode,
-    LiteralNode,
     OperatorNode,
     UnitAnnotationNode,
-    parse_expression,
     serialize_expression,
 )
 
@@ -45,7 +41,9 @@ from sysml_codegen.analysis.source_referent import (
     map_live_source_referent,
     validate_snapshot_source_referent,
 )
+from sysml_codegen.core.identifier_types import mint_constraint_id
 from sysml_codegen.core.qualified_names import sanitize_name, sanitize_qualified_name
+from sysml_codegen.extraction.modeled_defaults import ModeledDefault, resolve_modeled_default
 from sysml_codegen.resolution.models import (
     ComputationGraph,
     ConcreteConstraint,
@@ -205,28 +203,6 @@ def resolve_actual(
         resolution=ConstraintInputResolution.DESIGN_ATTRIBUTE,
         design_attribute_qn=resolution.identity,
     )
-
-
-def mint_constraint_id(
-    *,
-    instance_path: str,
-    source_local: str,
-    tuple_: tuple,
-    digest_hex_length: int = 16,
-) -> str:
-    """Mint a deterministic, collision-checkable ``constraint_id`` (D3/N1).
-
-    ``{instance_path}__{source_local}__{sha256[:16] of the canonical tuple}``.
-    The prefix is human-scannable; the suffix folds source-local identity,
-    owner-instance identity, membership kind, and polarity into a 64-bit
-    collision-visible fingerprint (a hard duplicate is a generation error,
-    checked post-expansion by :func:`assert_unique_constraint_ids`).
-    """
-    canonical = json.dumps(list(tuple_), sort_keys=True, separators=(",", ":"), ensure_ascii=True)
-    if digest_hex_length < 1 or digest_hex_length > 64:
-        raise ValueError("digest_hex_length must be between 1 and 64")
-    suffix = hashlib.sha256(canonical.encode()).hexdigest()[:digest_hex_length]
-    return f"{instance_path}__{source_local}__{suffix}"
 
 
 def assert_unique_constraint_ids(concrete: list[ConcreteConstraint]) -> None:
@@ -1373,65 +1349,6 @@ def _constraint_module_type(c: ConcreteConstraint) -> str:
     base = _pascal(f"{inst_local}_{c.source_local_identity}")
     namespace = c.owner_instance_path.split("__")[0].lower()
     return f"{namespace}.{base}ConstraintModule"
-
-
-@dataclass(frozen=True)
-class ModeledDefault:
-    """What a modeled default's IR resolves to.
-
-    ``value is None`` means unresolved. ``unresolved_node_kind`` names the IR node
-    that stopped resolution when there was one to name, and is ``None`` when there
-    was simply no default IR at all — an absence is not an unsupported node.
-    """
-
-    value: float | None = None
-    unit_text: str | None = None
-    unresolved_node_kind: str | None = None
-
-
-def _resolve_default_node(node: ExpressionIR) -> ModeledDefault:
-    """Unwrap unit annotations and fold a unary sign over a modeled default.
-
-    Scope is exactly what an explicitly modeled default needs (DD-R25): general
-    constant folding and unit *conversion* stay out. A ``UnitAnnotationNode``
-    contributes its numeric value and carries its unit text; it is never converted.
-    This mirrors what ``generation/predicate_compiler.py`` already does structurally
-    for the predicate lane — the drift this closes is that the default lane never
-    got it.
-    """
-    if isinstance(node, LiteralNode):
-        try:
-            return ModeledDefault(value=float(node.literal.value))
-        except (TypeError, ValueError):
-            return ModeledDefault(unresolved_node_kind=node.kind)
-
-    if isinstance(node, UnitAnnotationNode):
-        inner = _resolve_default_node(node.value)
-        if inner.value is None:
-            return inner
-        return ModeledDefault(value=inner.value, unit_text=node.unit_text or inner.unit_text)
-
-    if isinstance(node, OperatorNode) and len(node.operands) == 1 and node.operator in ("+", "-"):
-        inner = _resolve_default_node(node.operands[0])
-        if inner.value is None:
-            return inner
-        signed = -inner.value if node.operator == "-" else inner.value
-        return ModeledDefault(value=signed, unit_text=inner.unit_text)
-
-    return ModeledDefault(unresolved_node_kind=node.kind)
-
-
-def resolve_modeled_default(serialized_ir: str | None) -> ModeledDefault:
-    """A modeled default's value, unit, and — when unresolved — the IR kind that stopped it.
-
-    Replaces the former ``_literal_float``, which returned a value only for a bare
-    ``LiteralNode``: `:= -0.1` parses as an ``OperatorNode`` over a literal and
-    `= 40.0 [MW]` as a ``UnitAnnotationNode``, so both silently became ``None`` and
-    the generated JSON simply omitted the key (DD-R20, DD-R21).
-    """
-    if serialized_ir is None:
-        return ModeledDefault()
-    return _resolve_default_node(parse_expression(serialized_ir))
 
 
 def _group_for_qn(
