@@ -1,19 +1,117 @@
-# 02 -- Orchestration: The Pipeline Builder
+# 02 -- Orchestration: The Public Surface
 
 ## What orchestration does
 
-Orchestration is the conductor of the sysml-codegen pipeline. It does not
-extract SysML data, resolve dependencies, or render templates. It calls
-those layers in the right order and threads data between them:
+Orchestration decides **which authority builds the graph a package is generated from**, and it
+decides it once. It does not extract SysML data, resolve references, or render templates.
 
 ```
-  extraction  -->  orchestration  -->  resolution  -->  generation
-                   (this layer)
+  extraction  -->  elaboration  -->  orchestration  -->  generation
+                                     (this layer)
 ```
 
-This logic lives in `orchestration/pipeline_builder.py`. It is coordination
-code (not generation) that produces the [PipelineContext](#pipelinecontext)
-that [generation](08-generation.md) consumes.
+`run_codegen` (`cli/__init__.py:956`) is the single public generation entry point, and it
+constructs exactly one way.
+
+## One entry point, two sources, one receipt
+
+```python
+source = config.from_snapshot if config.from_snapshot is not None else config.models_path
+if config.from_snapshot is not None:
+    context = build_exact_pipeline_context_from_snapshot(config.from_snapshot)
+else:
+    context = build_exact_pipeline_context([config.models_path])
+graph = context.computation_graph      # one read, one projection
+```
+
+`--models` and `--from-snapshot` are two **sources** for the same authority, not two
+implementations. There is no flag, environment variable, or config field that selects an
+implementation. Both builders live in `orchestration/exact_pipeline_context.py` and both end at
+the same `_seal`.
+
+**One read, one projection.** Every later generation step works from that single `graph`
+object, so a package is never assembled out of several separately derived graphs.
+
+### What the context holds, and what follows from it
+
+An `ExactPipelineContext` holds the canonical **bytes** of the instance graph it was built from,
+plus a receipt over those bytes, the target selection, and the resulting computation graph. It
+does not hold a `ComputationGraph` object at all. Two consequences, and they are the point of
+the design:
+
+- **Nothing can be mutated after the build.** Attribute assignment and deletion raise, and the
+  context is neither copyable nor picklable, so there is no second context that could drift
+  from the first.
+- **Every read is checked and isolated.** `computation_graph` decodes the sealed bytes,
+  re-projects them, and refuses to return anything whose receipt disagrees. Each read returns a
+  fresh object, so a caller that mutates the graph it received cannot affect the next caller.
+
+The receipt (`ProjectionReceipt`) carries the instance fingerprint, the target selection, the
+projector-semantics marker, and a digest over every semantic field of the projected graph —
+including `fallback_entry_points` (a set) and `constraint_catalog` (excluded from the parent's
+`model_dump`), because a plain dump would leave both out and a change in either would pass
+unnoticed.
+
+**What the receipt is not.** It is a self-consistency check, not a forgery defence. It catches a
+context whose authority moved underneath it — an in-place edit, a partially constructed object,
+a projector whose semantics changed between reads. It cannot make a snapshot's own claims about
+its sources true; that limit belongs to the envelope
+([27-snapshot-generation](27-snapshot-generation.md)).
+
+### The refusals, and where they fire
+
+`run_codegen` keeps the refusal classes distinct in the log rather than collapsing them, because
+collapsing them loses which gate refused:
+
+| Refusal | Meaning |
+|---|---|
+| `InstanceGraphSnapshotError` | the snapshot was refused — shape, integrity, compatibility, or stale sources |
+| `ElaborationError` | the model is not ready for the exact route (readiness `.findings`) |
+| `ElaborationDiagnosticError` | the model failed exact-route validation (diagnostics) |
+| `SysMLParsingError` | the sources did not load |
+| `CodeGenerationError` | projection, a preflight check, or generation refused |
+
+Four preflight checks then run **before** any output is written or cleared
+(`cli/__init__.py:1042-1060`): constraint name safety, duplicate output paths, params coverage
+(V11), and registry class-name collisions. Fail-before-mutate is deliberate and is pinned by
+two conformance nodes that inject a refusal at that boundary and assert the target tree is
+byte-for-byte as it was.
+
+## The single-authority state, stated exactly
+
+The legacy builders — `orchestration/pipeline_builder.py`,
+`orchestration/snapshot_context.py`, and the v5 `snapshot/loader.py` and
+`snapshot/graph_rebuild.py` — remain in the tree and remain importable by name. They are simply
+not reachable from `run_codegen`. Their removal is Phase 4 work, prepared and gated on owner
+acceptance.
+
+Two conformance nodes in `tests/conformance/test_public_authority_switch.py` hold that state,
+and they are worth reading as a pair:
+
+- `test_the_construction_path_reaches_no_legacy_authority_even_transitively` — the whole
+  import closure of `orchestration.exact_pipeline_context` contains no legacy authority module.
+- `test_the_generation_half_still_reaches_v5_modules_and_that_residual_is_pinned` — the CLI's
+  *transitive* closure still contains `pipeline_builder`, `snapshot.loader`, and
+  `snapshot.graph_rebuild`, because `snapshot/__init__.py` re-exports the v5 machinery and the
+  CLI imports that package for other reasons. Nothing in that set is constructed through, but
+  importable is importable, and the set is pinned by name so it cannot quietly grow. Phase 4
+  empties it.
+
+That module also proves the switch **behaviourally** rather than by spelling: a test that
+asserts "the CLI imports `build_exact_pipeline_context`" passes the moment the import exists.
+Instead it generates `d38_caret` through the public CLI and reads the emitted `inputs/*.json`
+(the two routes ship different entry-point groups for it), checks that a corpus fixture the
+exact route refuses is refused publicly, and checks that a v5 snapshot is refused by name while
+a snapshot this CLI captured is accepted.
+
+---
+
+## The retiring pipeline builder
+
+Everything below describes `orchestration/pipeline_builder.py` and
+`orchestration/output_registry_builder.py` — the legacy construction route. It is accurate
+about that code and is **not** a description of what the public route does. It is retained
+because the code is still in the tree and its retirement is gated on owner acceptance.
 
 ## Requirements
 
@@ -219,9 +317,11 @@ See [13-aggregation-scoping](13-aggregation-scoping.md) for full detail.
 
 ## PipelineContext
 
-> A `PipelineContext` can also be rebuilt from a captured JSON snapshot instead of
-> live extraction (`build_pipeline_context_from_snapshot`), enabling license-free
-> `generate --from-snapshot`. See [27-snapshot-generation](27-snapshot-generation.md).
+> `PipelineContext` is the retiring route's context. The public route builds an
+> `ExactPipelineContext` instead — see [One entry point, two sources, one
+> receipt](#one-entry-point-two-sources-one-receipt) above. `build_pipeline_context_from_snapshot`
+> (`orchestration/snapshot_context.py`) rebuilt a `PipelineContext` from a v5 snapshot and is
+> no longer reachable from any public caller.
 
 The `PipelineContext` dataclass carries all pipeline state. Key fields:
 
@@ -259,8 +359,9 @@ the pipeline builder.
 
 ## Related Documents
 
-- **Upstream**: [00-pipeline-overview](00-pipeline-overview.md) -- Steps 1-7 overview, [01-extraction](01-extraction.md) -- provides calc defs, usages, hierarchy data
-- **Downstream**: [03-resolution-overview](03-resolution-overview.md) (consumes PipelineContext), [08-generation](08-generation.md) (consumes ComputationGraph)
+- **Upstream**: [00-pipeline-overview](00-pipeline-overview.md) -- the route, [01-extraction](01-extraction.md) -- provides calc defs, usages, hierarchy data
+- **Public route**: [27-snapshot-generation](27-snapshot-generation.md) -- the v6 snapshot source and what it can prove, [29-contracts-and-sealing](29-contracts-and-sealing.md) -- what generation seals
+- **Downstream**: [03-resolution-overview](03-resolution-overview.md) (consumes PipelineContext; retiring), [08-generation](08-generation.md) (consumes ComputationGraph)
 - **Registry**: [10-output-registry](10-output-registry.md) -- 4-phase protocol detail, [15-naming-conventions](15-naming-conventions.md) -- key formats
 - **Sub-processes**: [12-virtual-binding-rewrite](12-virtual-binding-rewrite.md), [13-aggregation-scoping](13-aggregation-scoping.md), [16-computed-attributes](16-computed-attributes.md), [17-parameter-group-deriver](17-parameter-group-deriver.md)
 - **Data models**: [09-data-models](09-data-models.md) -- PipelineContext, ComputationGraph, all extraction types
