@@ -10,13 +10,18 @@ derivable from the model files alone:
 - ``library/analyses/fusion_cycle.sysml`` — recirculating power fraction.
 - ``library/analyses/ife_lcoe.sysml`` — the Hawker LCOE chain.
 
-The design-point inputs come from the design files:
-``designs/hif_ife/hif_plant.sysml`` (availability 0.9, gain 80.0, thermal
-efficiency 0.43, frequency 3.5, discount rate 0.08, O&M 65.0, plant cost 2000.0,
-net electric 1.0 GW, thermal power 2.054 GW), ``designs/hif_ife/hif_driver.sysml``
-(beam energy 5.0 MJ, efficiency 0.35, energy 14286000.0 J, 1 chamber, pulse rate
-3.5 Hz, lifetime 6e9 shots), and ``designs/generic_ife/ife_subsystems.sysml``
-(blanket multiple 1.15, yield cost 5e6, target cost 10.0, target factory 0.1).
+The design-point inputs come from two design files.
+``designs/hif_ife/hif_plant.sysml`` carries all of the plant's own values —
+availability 0.9, gain 80.0, thermal efficiency 0.43, frequency 3.5, discount
+rate 0.08, O&M 65.0, plant cost 2000.0, net electric 1.0 GW, thermal power
+2.054 GW — and also the subsystem redefinitions: target cost 10.0 on
+``target_factory`` (``:48``), blanket multiple 1.15 and yield cost 5e6 on
+``chamber`` (``:63-64``), and the target-factory cost 0.1 bound inside
+``meier_capital_calc`` (``:202``). ``designs/hif_ife/hif_driver.sysml`` carries
+beam energy 5.0 MJ, efficiency 0.35, energy 14286000.0 J, 1 chamber, pulse rate
+3.5 Hz, and lifetime 6e9 shots. ``designs/generic_ife/ife_subsystems.sysml``
+declares the subsystem attributes but assigns no values, so it is not a source
+for any number here.
 """
 
 from __future__ import annotations

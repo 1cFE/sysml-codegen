@@ -622,6 +622,7 @@ class _ExactElaborator:
         # Reading it as a reference sends it down the alias walk, which then fails
         # with SI_OCCURRENCE_MISSING against a leaf slot that is an enum member.
         enumeration_literal = self._enumeration_literal(expression)
+        literal: float | int | str | None
         if enumeration_literal is not None:
             literal = enumeration_literal
         elif expression is not None:

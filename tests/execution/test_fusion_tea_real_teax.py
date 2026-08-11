@@ -256,24 +256,37 @@ def test_the_constraint_report_carries_the_modeled_verdict(
 
     ``eta * gain_in >= threshold`` with the modelled 0.35, 80.0, and 10.0 is
     satisfied with margin 18.0 — arithmetic done here, not read back.
+
+    Compared as a whole dump rather than field by field, so a field the report
+    starts carrying has to be accounted for here before this passes. The one
+    exception is ``catalog_fingerprint``, which is a digest of the catalog rather
+    than a modelled value: there is nothing to derive it from by hand, so it is
+    popped and checked for shape.
     """
     result = (live_package if route == "live" else relocated_package)["result"]
-    report = result.outputs["constraint_report"]
+    dump = result.outputs["constraint_report"].model_dump(mode="json")
 
-    assert report.headline == "all_satisfied"
-    assert report.assessed_count == 1
-    (evaluation,) = report.results
-    assert evaluation.constraint_id == VIABILITY_ID
-    assert evaluation.status == "satisfied"
-    assert evaluation.actual_value is True
-    assert evaluation.observed == {
-        "eta": hand.DRIVER_EFFICIENCY,
-        "gain_in": hand.GAIN,
-        "threshold": hand.VIABILITY_THRESHOLD,
+    fingerprint = dump.pop("catalog_fingerprint")
+    assert isinstance(fingerprint, str)
+    assert len(fingerprint) == 64 and set(fingerprint) <= set("0123456789abcdef")
+
+    assert dump == {
+        "headline": "all_satisfied",
+        "assessed_count": 1,
+        "results": [
+            {
+                "constraint_id": VIABILITY_ID,
+                "status": "satisfied",
+                "actual_value": True,
+                "margin": hand.DRIVER_EFFICIENCY * hand.GAIN - hand.VIABILITY_THRESHOLD,
+                "observed": {
+                    "eta": hand.DRIVER_EFFICIENCY,
+                    "gain_in": hand.GAIN,
+                    "threshold": hand.VIABILITY_THRESHOLD,
+                },
+            }
+        ],
     }
-    assert evaluation.margin == pytest.approx(
-        hand.DRIVER_EFFICIENCY * hand.GAIN - hand.VIABILITY_THRESHOLD, rel=REL
-    )
 
 
 def test_c19_the_one_modeled_gain_reaches_the_calculation_and_the_constraint(
@@ -342,30 +355,46 @@ def test_the_two_packages_carry_the_same_model_and_differ_only_in_provenance(
     assert live_package["fingerprint"] != relocated_package["fingerprint"]
 
     def tree(root: Path, package_name: str) -> dict[str, str]:
+        # Every file, not a suffix subset: the JSON contracts and the emitted
+        # entry-point payloads are exactly where a real divergence would hide.
         # The two packages must carry distinct import names to coexist in one
         # interpreter, and that name is written into the generated text. Neutralise
         # it so the comparison is about the model, not about the name.
         return {
             str(path.relative_to(root)): path.read_text().replace(package_name, "<pkg>")
             for path in sorted(root.rglob("*"))
-            if path.is_file()
-            and path.suffix in {".py", ".yaml", ".md"}
-            and "__pycache__" not in path.parts
+            if path.is_file() and "__pycache__" not in path.parts
         }
 
     live_tree = tree(live_dir, str(live_package["name"]))
     relocated_tree = tree(relocated_dir, str(relocated_package["name"]))
     assert set(live_tree) == set(relocated_tree)
-    differing = {name for name in live_tree if live_tree[name] != relocated_tree[name]}
+
+    # The seal is a hash manifest over the tree, so it restates every difference
+    # below as a changed digest and can carry no independent information. Excused
+    # by name, and only this one file: anything else differing must be a
+    # provenance comment.
+    seal = "contracts/package_contract.json"
+    assert seal in live_tree
+    assert live_tree[seal] != relocated_tree[seal]
+
+    differing = {
+        name
+        for name in live_tree
+        if name != seal and live_tree[name] != relocated_tree[name]
+    }
     assert differing
     for name in differing:
-        only_live = set(live_tree[name].splitlines()) - set(
-            relocated_tree[name].splitlines()
-        )
-        assert only_live
-        assert all("SysML Source:" in line for line in only_live), (
+        live_lines = set(live_tree[name].splitlines())
+        relocated_lines = set(relocated_tree[name].splitlines())
+        # Both directions: a line the relocated package has and the live one does
+        # not is just as much a divergence, and a one-sided check would let it
+        # through whenever a provenance line also differed.
+        only_one_side = (live_lines - relocated_lines) | (relocated_lines - live_lines)
+        assert only_one_side
+        assert all("SysML Source:" in line for line in only_one_side), (
             f"{name} differs somewhere other than its provenance comment: "
-            f"{sorted(only_live)[:3]}"
+            f"{sorted(only_one_side)[:3]}"
         )
 
 

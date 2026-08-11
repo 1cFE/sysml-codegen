@@ -605,7 +605,7 @@ Record every slice. Do not combine them later.
 | 3A | fe0b855, audit follow-up 4858911 | N/A | 3473 passed / 47 skipped / 18 deselected (+115, all new) | smoke PASS (fusion_tea, 48-file sealed package) |
 | 3B | d91431b, audit follow-up 2f28dde | N/A | 3520 passed / 47 skipped / 18 deselected (+47, all new) | smoke PASS (live + v6-snapshot packages, group names equal; legacy CLI package unchanged at 48 files) |
 | 3C | 7af5dc9, audit follow-up a6c41bc | 8b63393, audit follow-up cc6c7a7 | codegen 3538 passed / 47 skipped / 18 deselected (+18, all new); agentic 1825 passed / 1 skipped / 5 deselected (+6, all new) | N/A |
-| 3D | 848628b | N/A (untouched, clean at `cc6c7a7`) | codegen 3539 passed / 47 skipped / 38 deselected (+1 passed, +20 deselected — all new); agentic 1825 passed / 1 skipped / 5 deselected (unchanged) | **PASS** — 20 real-TEAx tests, live + relocated-v6 sealed packages, 11 outputs each, LCOE `270.1211779380445` |
+| 3D | 848628b, audit follow-up PENDING_3D_FU | N/A (untouched, clean at `cc6c7a7`) | codegen 3539 passed / 47 skipped / 38 deselected (+1 passed, +20 deselected — all new); agentic 1825 passed / 1 skipped / 5 deselected (unchanged) | **PASS** — 20 real-TEAx tests, live + relocated-v6 sealed packages, 11 outputs each, LCOE `270.1211779380445` |
 | 3E | PENDING | PENDING if changed | PENDING | PENDING |
 
 ---
@@ -1803,7 +1803,7 @@ modeller meant). The rename does not change what the model computes; it changes 
 | Path | Disposition | Reason |
 |---|---|---|
 | `elaboration/elaborate.py` — `_enumeration_value` | **Reimplement** as `_enumeration_literal` | Slice 3C deferred this hunk as "candidate 3D material" because no fixture then exercised it. It is what the customer model needs: `:>> scope = 'CAS Scope'::shared;` is a `FeatureReferenceExpression` whose referent is an enumeration member, and the elaborator was sending it down the alias walk, producing 7 `SI_OCCURRENCE_MISSING` diagnostics that had nothing to do with the renames. Changed from the forensic version: its `SI_ID_MISSING` branch is unreachable (`declaration_id_for` already raises when `qualified_name` is `None`) and is dropped, and the surviving `declaration_id_for(referent)` call is commented as what it is — an identity gate, not a value read. The three-way literal choice is spelled as statements rather than a nested conditional expression. |
-| `elaboration/project.py` — `sanitize_name(node.calc_def_name)` | **Reuse** | Slice 3B **Rejected** this exact hunk as "a product-visible module-metadata change with no test behind it". It now has one, and it is not cosmetic: `'Recirculating Power Fraction'` reaches generation as a class name and a schema filename, so without it the exact route ships `class Recirculating Power FractionModule` and `schemas/meier hif driver cost_output.py` and the package does not import. It also brings the exact route onto the legacy route's spelling (`Recirculating_Power_Fraction`), which is what the census requires stay fixed. Caught by the real-TEAx test on its first run, which is the gate working. |
+| `elaboration/project.py` — `sanitize_name(node.calc_def_name)` | **Reuse** | Slice 3B **Rejected** this exact hunk as "a product-visible module-metadata change with no test behind it". It now has one, and it is not cosmetic: `'Recirculating Power Fraction'` reaches generation as a class name and a schema filename, so without it the exact route ships `class Meier HIF Driver CostOutput(MultiOutput):`, `class TestRecirculating Power FractionRunnable:`, and `schemas/meier hif driver cost_output.py`, and the package does not import. *(Corrected after the 3D audit, F3: this row and the `848628b` commit message both named `class Recirculating Power FractionModule`, which the red state does not emit — the module class takes its name from the module type, not the calc-def name. The three strings above are measured by reverting `project.py` alone.)* It also brings the exact route onto the legacy route's spelling (`Recirculating_Power_Fraction`), which is what the census requires stay fixed. Caught by the real-TEAx test on its first run, which is the gate working. |
 
 **Corpus, 37 paths, measured.** `scripts/run_elaboration_corpus.py` over all 37 fixtures, both
 routes: legacy 36 graphs / 1 error; **exact 15 public graphs / 22 typed errors**, all 22 of them
@@ -1900,7 +1900,7 @@ model — correctly green on both sides, and a guard rather than a red. After th
 - codegen `ruff check src`: **byte-identical** to the baseline set (16 findings) — zero new. The
   four new test modules lint clean; the one pre-existing `tests/execution` finding
   (`test_constraint_execution.py:67`, E501) is unchanged, as is the pre-existing `I001` in
-  `test_source_identity_routes.py`. `mypy src`: error set **identical** (71 errors in 17 files).
+  `test_source_identity_routes.py`. `mypy src`: **71 errors in 17 files, identical to the `26e7d04` baseline** — re-measured at the audit follow-up after the figure below was recorded without being re-run. See the correction note in the follow-up section.
 - agentic-mbse `ruff check src` and `mypy src`: not re-run against a change — nothing in that
   repository changed this slice.
 - `git diff --check` clean. Changed paths equal the declared set.
@@ -1925,6 +1925,103 @@ model — correctly green on both sides, and a guard rather than a red. After th
   bans. That is a real limit on how "public" this route's generation half is today, and it is 3E's
   work to close, not 3D's.
 - No deletions in either repository. No Item 6 test was removed, silenced, or deselected.
+
+#### Slice 3D audit follow-up — F1 through F5
+
+- **Completed:** 2026-08-11
+- **Audit:** `evidence/audit-3d.md`, verdict **CERTIFY** (nothing blocked 3E), 5 findings.
+  Recorded at `d78788f`. Commit: PENDING_3D_FU
+- **Declared path set:** `src/sysml_codegen/elaboration/elaborate.py`,
+  `tests/execution/test_fusion_tea_real_teax.py`, `tests/execution/fusion_tea_arithmetic.py`, and
+  this plan. Actual changed paths equal that set.
+
+All five findings are closed. One changed production, two strengthened tests, one corrected a test
+docstring, one corrected this plan.
+
+**F1 (Medium) — the mypy gate was recorded without being re-run, and it was wrong.** The 3D notes
+said `mypy src`: error set **identical** (71 errors in 17 files). The measured truth at `848628b`
+was **72 errors in 18 files**. The extra one is this slice's:
+
+```
+src/sysml_codegen/elaboration/elaborate.py:628: error: Incompatible types in assignment
+(expression has type "float | int | str | None", variable has type "str")  [assignment]
+```
+
+`literal` takes its type from the first branch, where `enumeration_literal` is narrowed to `str`,
+so the `elif` branch's wider `extract_literal_value` return no longer fits. Fixed by annotating the
+target — `literal: float | int | str | None` — ahead of the branch, which is what the variable has
+always actually held. No runtime behavior changes.
+
+**Say it plainly: the number in the notes was carried over from the previous slice's baseline
+rather than measured against the final tree.** Every other 3D gate figure was re-run; this one was
+not, and the notes stated it as if it had been. That is the self-certification failure mode this
+whole recovery exists to close, and it got into a slice whose own contract is that written claims
+survive being checked. Recorded here rather than quietly overwritten.
+
+Re-measured after the fix, with only the two production files swapped between commits and
+everything else held fixed:
+
+| tree | `mypy src` |
+|---|---|
+| `26e7d04` (parent) | 71 errors in 17 files (86 source files checked) |
+| `848628b` (as committed) | 72 errors in 18 files |
+| this follow-up | **71 errors in 17 files — line-for-line identical to the `26e7d04` baseline** |
+
+The 3D gates block above now carries the measured figure and a pointer to this note.
+
+**F2 (Low) — the live/relocated confinement assertion now matches the claim it backs.** It compared
+one direction (`live_lines - relocated_lines`) over three file suffixes, while the prose said the
+difference was confined "over the whole tree". Two changes:
+
+- The difference set is symmetric, `(live - relocated) | (relocated - live)`. A line the relocated
+  package carries and the live one does not is just as much a divergence, and the one-sided form
+  would have let it through whenever a provenance line also differed.
+- `tree()` now takes every file rather than `.py`/`.yaml`/`.md`, so the JSON contracts and the
+  emitted entry-point payloads — exactly where a real divergence would hide — are inside the
+  comparison. `contracts/package_contract.json` is excused **by name, alone, and with the reason at
+  the site**: it is a hash manifest over the tree, so it restates every difference below it as a
+  changed digest and can carry no independent information. The test asserts it is present and that
+  it does differ, so the excuse cannot silently stop applying.
+
+Green with the wider, bidirectional form, which is the same comparison the auditor ran
+independently: outside the seal, the only lines differing in either direction are `SysML Source:`
+comments.
+
+**F3 (Low) — the red-state specimen is corrected.** The 3D notes and the `848628b` commit message
+both said that without the `sanitize_name` hunk the exact route ships
+`class Recirculating Power FractionModule`. It does not: the module class takes its name from the
+module type, not the calc-def name. Measured by reverting `project.py` alone, the red state ships
+`class Meier HIF Driver CostOutput(MultiOutput):`,
+`class TestRecirculating Power FractionRunnable:`, and `schemas/meier hif driver cost_output.py`.
+The conclusion is unchanged — the package does not import, and 11 of the 12 real-TEAx tests error
+without the hunk. History is not rewritten; the disposition row above carries the correction.
+
+**F4 (Informational) — the transcription docstring pointed at the wrong file.**
+`tests/execution/fusion_tea_arithmetic.py` credited `designs/generic_ife/ife_subsystems.sysml` with
+the blanket multiple 1.15, yield cost 5e6, target cost 10.0, and target-factory cost 0.1. That file
+declares those attributes and assigns none of them; all four values live in
+`designs/hif_ife/hif_plant.sysml` (`:63-64` on `chamber`, `:48` on `target_factory`, `:202` inside
+`meier_capital_calc`). The numbers were right, the pointer was not — which matters because the
+module's stated purpose is to be checkable from the model files alone. Corrected with line
+references, and `ife_subsystems.sysml` is now named as declaring-only.
+
+**F5 (Informational) — the constraint report is pinned as a whole dump.** It was asserted field by
+field, so an added field would have slipped through. It now compares the full
+`model_dump(mode="json")` against a literal expectation whose every value is derived from the model
+(margin still computed, not read back). `catalog_fingerprint` is popped and checked for shape — 64
+lowercase hex characters — rather than by value, because it is a digest of the catalog with nothing
+to derive it from by hand. Recorded rather than left as the auditor's optional: the report is the
+constraint route's public surface, and a field-by-field pin does not say "and nothing else".
+
+**Gates.** Execution lane `pytest tests/execution -m execution`: **38 passed**, unchanged in count —
+F2 and F5 strengthened existing assertions rather than adding nodes. Full licensed codegen suite
+**3539 passed / 47 skipped / 38 deselected**, zero failures, zero `no live syside license` lines —
+delta versus `848628b` is **zero on every axis**, since no test node was added or removed. Full
+agentic-mbse suite from the paired worktree: **1825 passed / 1 skipped / 5 deselected**, unchanged;
+nothing in that repository changed. `ruff check src` byte-identical to the baseline set (16
+findings) and the two changed test modules lint clean. `mypy src` **71 errors in 17 files, measured,
+identical to the `26e7d04` baseline**. `git diff --check` clean. Changed paths equal the declared
+set.
 
 ### Phase 4 Completion
 
