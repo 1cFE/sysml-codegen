@@ -4623,9 +4623,9 @@ runbook rests on fails the suite if it stops holding.
 | # | Step | Rows | delete / archive / edit | State |
 |---|---|---:|---|---|
 | 1 | G2′, the v5 read path | 99 | 78 / 7 / 14 | **PROVEN green in simulation** |
-| 2 | the v5 family | 153 | 109 / 11 / 33 | **PROVEN green in simulation** |
+| 2 | the v5 family | 155 | 109 / 11 / 35 | **PROVEN green in simulation** |
 | 3 | G3′ | 1 | 1 / 0 / 0 | **PROVEN green in simulation** |
-| 4 | G4′ | 2 | 2 / 0 / 0 | **PROVEN green in simulation** |
+| 4 | G4′ | 3 | 3 / 0 / 0 | **PROVEN green in simulation** |
 | — | owner-gated | 2 + 6 named items | — | **not scheduled** |
 
 Step 2 gained three rows and step 4 lost three: `L-198`, `L-199` and `L-201` — the three
@@ -4654,10 +4654,10 @@ preference**:
 
 ```bash
 P=.project/active/cutover-recovery/runbook-patches
-git apply $P/stepN/ledger__*.patch                       # step 2 only
-git apply $P/stepN/scripts__retirement_worklist.patch    # step 2 only
+git apply $P/step2/ledger__L-011.patch $P/step2/ledger__replacement-proof-nodes.patch
+git apply $P/step2/scripts__retirement_worklist.patch    # note: scripts__, not tests__
 $PY scripts/retire_step.py apply N                       # git rm the deletions, git mv the archives
-git apply $P/stepN/*.patch                               # the rest; the two above are already in
+git apply $(ls $P/stepN/*.patch | grep -vF -f <(printf '%s\n' ledger__ scripts__retirement_worklist))
 #   ...commit...
 $PY scripts/retire_step.py close N <oid>                 # mark the step's rows executed
 #   ...commit the ledger, then run the battery...
@@ -4670,6 +4670,12 @@ the naive order: `L-011`'s row still read `disposition: migrate`, so `apply 2` t
 `*_e2e.py` rows were still placed at step 4 when `apply 2` ran and at step 2 when `apply 4` ran,
 so neither step deleted them. Both are silent — the tree simply keeps a file — and both surface
 only at the next battery.
+
+There is a third patch whose name contains `retirement_worklist`, and it is an ordinary test
+edit: `tests__unit__test_retirement_worklist.patch`. Excluding the work-list patch from the
+second `git apply` by substring drops that one too, and the replay measured the result — a
+green suite except one node, because the file it edits is the file that node lives in. Exclude
+by exact filename.
 
 **The close is not optional.** `check_ledger_4a.py` verifies every state claim against Git, so
 a step whose files are gone while its rows still say `proposed` fails the checker. The
@@ -4747,9 +4753,25 @@ applied). The baseline column is the main tree at the same commit.
 Two numbers differ from the version this replaces, and both are re-measurements, not
 regressions. The suite reads **2352**, not 2347: this session re-derived step 1's edit table
 independently and its `test_snapshot_v5_gate.py` and `test_public_authority_switch.py` splits
-land five collected nodes differently. The whole-tree ruff count reads **769**, not 301, and
-that gap is **unexplained** — the baseline 866 reproduces exactly on the main tree, so 769 is
-the number this session stands behind and 301 is not reconcilable against it.
+land five collected nodes differently.
+
+The whole-tree ruff count reads **769**, not 301, and **769 is right**. It is now derived as
+well as measured. Ruff reports 866 findings over `src tests scripts` at the baseline, and each
+one belongs to a file, so the step's effect on the count is just arithmetic over the files it
+moves:
+
+- 173 findings sit in files step 1 removes from their current path — 98 in the deleted test
+  modules, 1 in a deleted script, 74 in the seven files it archives;
+- 76 of those 173 come straight back, because **archiving moves a file, it does not delete it**:
+  `scripts/archive/` is still inside the scanned tree, and `spike_c11b_typed_dispatch.py` alone
+  carries 53 findings;
+- 866 − 173 + 76 = **769**, which is what two independent replays measured to the unit.
+
+301 is not reachable at any point in this retirement. Every file all four steps *delete*
+carries 230 findings between them, so the whole-tree count has a floor of 866 − 230 = 636 —
+and the measured post-step-4 number is 644. Nor is 301 a path subset of a post-step-1 tree:
+`src tests` is 275 there, `tests` alone 259, `src` 16. The 301 record is wrong, its origin is
+not recoverable, and the tables above carry the measured and derived number instead.
 
 **The edit table.** One row per patch, in `runbook-patches/step1/`.
 
@@ -4777,7 +4799,7 @@ the number this session stands behind and 301 is not reconcilable against it.
 `test_generate_from_a_v5_snapshot_refuses_without_falling_back`, which audit 4 (F2) found the
 old check did not cover. All seven pass in the simulated post-state.
 
-#### Step 2 — the v5 family (153 rows) — **PROVEN**
+#### Step 2 — the v5 family (155 rows) — **PROVEN**
 
 Deletes the legacy analysis/resolution stack, the v5 serializer, `pipeline_builder`,
 `graph_builder`, `producer_resolution`, `output_registry`, the 37 committed
@@ -4868,7 +4890,7 @@ node's subject genuinely ends with the v5 family, the node retires and the row s
 | `mypy src` | 58 in 12 (72 files) | **57 in 11** (71 files) |
 | `paths` / `surface` / `groups` / proof | 300-0 / 0 / READY / 0-0 | **300-0 / 0 / all six READY / 0-0** |
 
-#### Step 4 — G4′ (2 rows) — **PROVEN**
+#### Step 4 — G4′ (3 rows) — **PROVEN**
 
 **Rows:** L-008 `elaboration/diff.py` and L-276 `tests/helpers/legacy_route.py`. Deletion only.
 The three rows the previous version expected to break here moved to step 2. `legacy_route.py`
