@@ -3,11 +3,8 @@
 import pytest
 
 import sysml_codegen.resolution.models as resolution_models
-from sysml_codegen.analysis.constraint_lowering import (
-    assert_unique_constraint_ids,
-    mint_constraint_id,
-)
-from sysml_codegen.orchestration.pipeline_context import CodeGenerationError
+from sysml_codegen.core.errors import CodeGenerationError
+from sysml_codegen.core.identifier_types import mint_constraint_id
 from sysml_codegen.resolution.models import (
     ConcreteConstraint,
     ConcreteConstraintInput,
@@ -100,7 +97,22 @@ def test_unassessed_shape_carries_kind_and_no_node():
     assert cc.inputs == []
 
 
+# --- the three legacy-guard nodes ---------------------------------------------
+# `assert_unique_constraint_ids` is the ONE name in this file that does not survive
+# the cutover: it lives in `analysis/constraint_lowering.py` (ledger L-001) and is
+# called only from inside that module. The import is local to these three nodes so
+# the other 23 — pure `resolution/models.py` data-contract pins — keep collecting
+# after L-001 goes. Ledger L-212 records the per-node disposition: they retire at
+# L-001's retirement commit, and the property they guard survives in a stronger
+# form. The exact route mints the same ids (`core/identifier_types.mint_constraint_id`)
+# and claims `f"{constraint_id}__evaluation"` as a public channel, so two constraints
+# minting one id collide at the seam with a typed `SI_RENDERING_COLLISION`
+# (`elaboration/project.py:287`) rather than passing a post-hoc assertion.
+
+
 def test_assert_unique_constraint_ids_raises_on_duplicate():
+    from sysml_codegen.analysis.constraint_lowering import assert_unique_constraint_ids
+
     a = _make_cc("dup_id", "Design__c__cell[0]")
     b = _make_cc("dup_id", "Design__c__cell[1]")
     with pytest.raises(CodeGenerationError, match="dup_id"):
@@ -108,6 +120,8 @@ def test_assert_unique_constraint_ids_raises_on_duplicate():
 
 
 def test_genuine_duplicate_id_rejection_describes_both_records_truthfully():
+    from sysml_codegen.analysis.constraint_lowering import assert_unique_constraint_ids
+
     first = _make_cc("forced_duplicate", "Design__first")
     second = _make_cc("forced_duplicate", "Design__second").model_copy(
         update={
@@ -131,6 +145,8 @@ def test_genuine_duplicate_id_rejection_describes_both_records_truthfully():
 
 
 def test_assert_unique_constraint_ids_passes_on_distinct():
+    from sysml_codegen.analysis.constraint_lowering import assert_unique_constraint_ids
+
     a = _make_cc("id_0", "Design__c__cell[0]")
     b = _make_cc("id_1", "Design__c__cell[1]")
     assert_unique_constraint_ids([a, b])  # no raise

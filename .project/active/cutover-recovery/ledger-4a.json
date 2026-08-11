@@ -2207,15 +2207,19 @@
    "group": "4C-blast-radius",
    "authority": "plan rule 6 \u2014 keep the Item 6 tests until after product proof; every removed or rewritten test needs a responsibility-level disposition first",
    "unreachability": null,
-   "replacement_proof_node": null,
+   "replacement_proof_node": [
+    "tests/conformance/test_exact_constraint_route.py::test_the_exact_route_takes_no_constraint_authority_from_legacy_lowering",
+    "tests/conformance/test_exact_route_constraint_portability.py::test_the_excluded_location_is_the_portable_referent_on_every_route",
+    "tests/conformance/test_exact_route_constraint_portability.py::test_no_contract_field_carries_an_absolute_source_path"
+   ],
    "blocked_by": [],
    "reason": " Imports legacy owners (constraint_lowering) directly, so 4B's deletion breaks it. Retain now; before the owning 4B group lands, this row needs either a public-behaviour rewrite or a recorded responsibility retirement.",
-   "disposition_4c": "defer-to-v5-family",
+   "disposition_4c": "retire-with-owner",
    "node_count": 4,
-   "responsibility": "(no module docstring)",
+   "responsibility": "Integrity of the legacy lowering step: that it refuses rather than emits when its input facts are inconsistent.",
    "breaks_on": "sysml_codegen.analysis.constraint_lowering (L-001, 4B-v5-family); agentic_mbse.sysml.executable_profile:evaluate_profile (L-037, 4B-v5-family)",
    "breaks_a_free_group": false,
-   "disposition_4c_note": "No green replacement, and every owner it depends on is now deferred: the v5 read path is retained by consequence of keeping the v5 writer and the 37 fixtures, so this file's coverage is still load-bearing. Retires with the v5 family at Phase 5 owner acceptance."
+   "disposition_4c_note": "Gate 4C part 7 (2026-08-11), superseding the part-5 defer. Same owner as L-215 and L-213. The refusal discipline it pinned is exactly what the exact route enforces at its own seam, with typed codes instead of a lowering-internal check, and the excluded-constraint location is now route- and root-invariant (the S1 ruling at Gate 4C part 2)."
   },
   {
    "id": "L-110",
@@ -2347,15 +2351,18 @@
    "group": "4C-blast-radius",
    "authority": "plan rule 6 \u2014 keep the Item 6 tests until after product proof; every removed or rewritten test needs a responsibility-level disposition first",
    "unreachability": null,
-   "replacement_proof_node": null,
+   "replacement_proof_node": [
+    "tests/conformance/test_exact_constraint_route.py::test_identified_facts_gate_and_projected_constraints_agree_by_usage_id",
+    "tests/conformance/test_exact_constraint_route.py::test_the_shared_constraint_identity_and_default_helpers_stay_callable_on_both_routes"
+   ],
    "blocked_by": [],
    "reason": "Integrated live/codec continuity for profile-v4 source identity and polarity. Imports legacy owners (constraint_lowering, pipeline_builder) directly, so 4B's deletion breaks it. Retain now; before the owning 4B group lands, this row needs either a public-behaviour rewrite or a recorded responsibility retirement.",
-   "disposition_4c": "defer-to-v5-family",
+   "disposition_4c": "retire-with-owner",
    "node_count": 3,
-   "responsibility": "Integrated live/codec continuity for profile-v4 source identity and polarity.",
+   "responsibility": "Live/codec continuity for profile-v4 source identity and polarity: that extract_constraint_facts and evaluate_profile agree across the parse/serialize round trip.",
    "breaks_on": "sysml_codegen.analysis.constraint_lowering (L-001, 4B-v5-family); sysml_codegen.orchestration.pipeline_builder (L-029, 4B-v5-family); agentic_mbse.sysml.constraint_extraction:extract_constraint_facts (L-036, 4B-v5-family); agentic_mbse.sysml.executable_profile:evaluate_profile (L-037, 4B-v5-family); tests.helpers.legacy_route (L-276, 4B-G4)",
    "breaks_a_free_group": true,
-   "disposition_4c_note": "No green replacement, and every owner it depends on is now deferred: the v5 read path is retained by consequence of keeping the v5 writer and the 37 fixtures, so this file's coverage is still load-bearing. Retires with the v5 family at Phase 5 owner acceptance."
+   "disposition_4c_note": "Gate 4C part 7 (2026-08-11), superseding the part-5 defer. Retires in the PAIRED G4' commit, per orchestrator ruling 4 (agentic-mbse first, sysml-codegen names it). Its two subjects are the agentic duals L-036 (constraint_extraction) and L-037 (executable_profile), and it also drives constraint_lowering and tests.helpers.legacy_route, so it cannot outlive either repo's half. The surviving statement of the same property is that the two routes agree by usage id and that the shared identity and default helpers stay callable on both."
   },
   {
    "id": "L-117",
@@ -2367,15 +2374,19 @@
    "group": "4C-blast-radius",
    "authority": "plan rule 6 \u2014 keep the Item 6 tests until after product proof; every removed or rewritten test needs a responsibility-level disposition first",
    "unreachability": null,
-   "replacement_proof_node": null,
+   "replacement_proof_node": [
+    "tests/conformance/test_exact_route_constraint_portability.py::test_replaying_one_snapshot_twice_is_deterministic",
+    "tests/conformance/test_exact_route_constraint_portability.py::test_a_snapshot_carrying_a_pre_fix_location_is_refused_at_load",
+    "tests/conformance/test_exact_route_constraint_portability.py::test_the_catalog_and_semantic_fingerprints_are_route_and_root_invariant"
+   ],
    "blocked_by": [],
    "reason": " Imports legacy owners (constraint_lowering, serializer) directly, so 4B's deletion breaks it. Retain now; before the owning 4B group lands, this row needs either a public-behaviour rewrite or a recorded responsibility retirement.",
-   "disposition_4c": "defer-to-v5-family",
+   "disposition_4c": "retire-with-owner",
    "node_count": 6,
-   "responsibility": "(no module docstring)",
+   "responsibility": "Constraint identity across the v5 snapshot boundary: that lowering a model, serializing it and reloading it yields the same constraint identities and catalog.",
    "breaks_on": "sysml_codegen.analysis.constraint_lowering (L-001, 4B-v5-family); sysml_codegen.snapshot.serializer (L-017, 4B-v5-family)",
    "breaks_a_free_group": false,
-   "disposition_4c_note": "No green replacement, and every owner it depends on is now deferred: the v5 read path is retained by consequence of keeping the v5 writer and the 37 fixtures, so this file's coverage is still load-bearing. Retires with the v5 family at Phase 5 owner acceptance."
+   "disposition_4c_note": "Gate 4C part 7 (2026-08-11), superseding the part-5 defer. Its specimen is the v5 snapshot itself \u2014 it drives snapshot.serializer.serialize_extraction_snapshot (L-017) \u2014 so the subject retires with the format, not merely with the module. The property is not lost: the exact route's own replay identity is pinned harder, including determinism across two replays of one snapshot and refusal of a snapshot carrying a pre-fix location."
   },
   {
    "id": "L-118",
@@ -4308,15 +4319,18 @@
    "group": "4C-blast-radius",
    "authority": "plan rule 6 \u2014 keep the Item 6 tests until after product proof; every removed or rewritten test needs a responsibility-level disposition first",
    "unreachability": null,
-   "replacement_proof_node": null,
+   "replacement_proof_node": [
+    "tests/unit/test_concrete_constraint_model.py",
+    "tests/conformance/test_elaboration_identity_collisions.py::test_semantic_graph_keeps_same_rendered_names_distinct"
+   ],
    "blocked_by": [],
    "reason": "Phase 1: ConcreteConstraint data contract + constraint_id minting (offline, no model). Imports legacy owners (constraint_lowering) directly, so 4B's deletion breaks it. Retain now; before the owning 4B group lands, this row needs either a public-behaviour rewrite or a recorded responsibility retirement.",
-   "disposition_4c": "defer-to-v5-family",
+   "disposition_4c": "repoint",
    "node_count": 26,
-   "responsibility": "Phase 1: ConcreteConstraint data contract + constraint_id minting (offline, no model).",
+   "responsibility": "The ConcreteConstraint data contract and constraint_id minting: catalog/exclusion model shape, transactional mutation rejection, per-arm input validation, and id determinism.",
    "breaks_on": "sysml_codegen.analysis.constraint_lowering (L-001, 4B-v5-family)",
    "breaks_a_free_group": false,
-   "disposition_4c_note": "No green replacement, and every owner it depends on is now deferred: the v5 read path is retained by consequence of keeping the v5 writer and the 37 fixtures, so this file's coverage is still load-bearing. Retires with the v5 family at Phase 5 owner acceptance."
+   "disposition_4c_note": "Gate 4C part 7 (2026-08-11), superseding the part-5 defer. REPOINTED IN THIS COMMIT, not retired \u2014 23 of its 26 nodes never needed the legacy module at all. They pin resolution/models.py (a retained module) and mint_constraint_id, which Slice 3C moved to core/identifier_types.py; the file simply imported both through constraint_lowering's re-export. Module-level imports now name the surviving homes (core.identifier_types, core.errors), so the file keeps collecting after L-001 goes. PER-NODE DISPOSITION for the three that genuinely depend on the legacy module \u2014 test_assert_unique_constraint_ids_raises_on_duplicate, test_genuine_duplicate_id_rejection_describes_both_records_truthfully, test_assert_unique_constraint_ids_passes_on_distinct: their import is now local to each node, and they retire at L-001's retirement commit. What they guard survives in a STRONGER form, verified at source rather than assumed: assert_unique_constraint_ids is a post-hoc assertion called only from inside constraint_lowering, while the exact route claims f'{constraint_id}__evaluation' as a public channel (elaboration/project.py:862), so two constraints minting one id fail at the seam with a typed SI_RENDERING_COLLISION (project.py:287)."
   },
   {
    "id": "L-213",
@@ -4328,15 +4342,19 @@
    "group": "4C-blast-radius",
    "authority": "plan rule 6 \u2014 keep the Item 6 tests until after product proof; every removed or rewritten test needs a responsibility-level disposition first",
    "unreachability": null,
-   "replacement_proof_node": null,
+   "replacement_proof_node": [
+    "tests/conformance/test_exact_constraint_route.py::test_identified_facts_gate_and_projected_constraints_agree_by_usage_id",
+    "tests/conformance/test_exact_route_constraint_portability.py::test_the_catalog_and_semantic_fingerprints_are_route_and_root_invariant",
+    "tests/conformance/test_exact_route_constraint_portability.py::test_the_predicate_module_and_pipeline_are_identical_on_every_route"
+   ],
    "blocked_by": [],
    "reason": "Phase 4 (P3 EXTEND): extend_graph_with_constraints \u2014 offline, no syside needed. Imports legacy owners (constraint_lowering, graph_builder, parameter_groups) directly, so 4B's deletion breaks it. Retain now; before the owning 4B group lands, this row needs either a public-behaviour rewrite or a recorded responsibility retirement.",
-   "disposition_4c": "defer-to-v5-family",
+   "disposition_4c": "retire-with-owner",
    "node_count": 11,
-   "responsibility": "Phase 4 (P3 EXTEND): extend_graph_with_constraints \u2014 offline, no syside needed.",
+   "responsibility": "extend_graph_with_constraints: folding concrete constraints into a ComputationGraph, and the parameter groups that follow.",
    "breaks_on": "sysml_codegen.analysis.constraint_lowering (L-001, 4B-v5-family); sysml_codegen.analysis.parameter_groups (L-003, 4B-v5-family); sysml_codegen.resolution.graph_builder (L-011, 4B-v5-family)",
    "breaks_a_free_group": false,
-   "disposition_4c_note": "No green replacement, and every owner it depends on is now deferred: the v5 read path is retained by consequence of keeping the v5 writer and the 37 fixtures, so this file's coverage is still load-bearing. Retires with the v5 family at Phase 5 owner acceptance."
+   "disposition_4c_note": "Gate 4C part 7 (2026-08-11), superseding the part-5 defer. The legacy two-step \u2014 build a graph, then extend it with constraints \u2014 has no successor: the exact route projects constraints as CONSTRAINT modules in the same pass that builds every other module (elaboration/project.py:862), so there is no extension step to test. The behaviour survives as the projected result, including the catalog's admit/exclude decision and route-invariant fingerprints."
   },
   {
    "id": "L-214",
@@ -4368,15 +4386,19 @@
    "group": "4C-blast-radius",
    "authority": "plan rule 6 \u2014 keep the Item 6 tests until after product proof; every removed or rewritten test needs a responsibility-level disposition first",
    "unreachability": null,
-   "replacement_proof_node": null,
+   "replacement_proof_node": [
+    "tests/conformance/test_exact_constraint_route.py::test_identified_facts_gate_and_projected_constraints_agree_by_usage_id",
+    "tests/conformance/test_exact_constraint_route.py::test_the_exact_route_takes_no_constraint_authority_from_legacy_lowering",
+    "tests/conformance/test_exact_route_constraint_portability.py::test_the_catalog_admits_the_numerical_constraint_and_excludes_the_string_one"
+   ],
    "blocked_by": [],
    "reason": "Association and preparation: the Item 1 lifecycle boundary. Imports legacy owners (constraint_lowering, part_instance_index, supplied_values) directly, so 4B's deletion breaks it. Retain now; before the owning 4B group lands, this row needs either a public-behaviour rewrite or a recorded responsibility retirement.",
-   "disposition_4c": "defer-to-v5-family",
+   "disposition_4c": "retire-with-owner",
    "node_count": 20,
-   "responsibility": "Association and preparation: the Item 1 lifecycle boundary.",
+   "responsibility": "The Item 1 constraint lifecycle boundary: association of constraint usages to their parts, and preparation of the facts the lowering step consumes.",
    "breaks_on": "sysml_codegen.analysis.constraint_lowering (L-001, 4B-v5-family); sysml_codegen.analysis.part_instance_index (L-004, 4B-v5-family); sysml_codegen.resolution.supplied_values (L-014, 4B-v5-family); agentic_mbse.sysml.executable_profile:ProfileResult (L-037, 4B-v5-family); agentic_mbse.sysml.executable_profile:evaluate_profile (L-037, 4B-v5-family)",
    "breaks_a_free_group": false,
-   "disposition_4c_note": "No green replacement, and every owner it depends on is now deferred: the v5 read path is retained by consequence of keeping the v5 writer and the 37 fixtures, so this file's coverage is still load-bearing. Retires with the v5 family at Phase 5 owner acceptance."
+   "disposition_4c_note": "Gate 4C part 7 (2026-08-11), superseding the part-5 defer. Bound to constraint_lowering's internals \u2014 it injects a ProfileResult at the production profile-evaluation boundary (constraint_lowering.evaluate_profile) and reads part_instance_index and supplied_values, all delete rows. The exact route takes no constraint authority from legacy lowering at all, which is itself pinned; what survives is the outcome, that identified facts and projected constraints agree usage by usage."
   },
   {
    "id": "L-216",

@@ -3752,6 +3752,33 @@ reported at each stop.
 - [ ] Class 3 — the 35 hard-blocked files, with targeted variants in the ranked order above
 - [ ] Final: `groups` green but for the acceptance gate; ledger + checker consistent with Git truth
 
+##### Named mechanism — the zero-constraint report aggregator (orchestrator ruling 2)
+
+**[ORCHESTRATOR]** ruling, 2026-08-11, recorded here as a named mechanism so later
+expectation deltas can cite it instead of re-deriving it. **No code change.**
+
+Legacy emits a `constraint_report_aggregator` module whenever the constraint pathway runs at
+all, even with zero eligible constraints — a deliberate D11 choice, so "a model that asserts
+nothing still produces the `not_assessed` report surface"
+(`analysis/constraint_lowering.py:1511`). **The exact route returns early instead**
+(`elaboration/project.py:887`, `if not constraint_outputs: return`), and **that early return
+STANDS**: no synthetic module without content, consistent with the epic's no-synthetic-entries
+direction. Measured on `catf_mfe`: legacy 43 modules including the aggregator, exact 42
+without. The exact route does emit one when there are entries.
+
+Two consequences, both recorded rather than left to be met later:
+
+- `test_generation_boundary.py::test_auto_impl_context_none_for_manual` (4 nodes) now
+  quantifies over an empty set on all four models. No assertion was thinned — the universe
+  shrank. The dispatch behaviour keeps a live subject in
+  `test_from_graph_stencil_stub_dispatch`.
+- `tests/execution/test_constraint_execution.py::test_zero_assertion_aggregator_not_assessed`
+  is the **live subject of the retiring behaviour**. It gets a per-node disposition when
+  that file is repointed, not a silent drop.
+
+**Carried to the Phase 5 packet:** whether the empty-report surface is a behaviour the exact
+route should carry is a product question for the owner, not a test question.
+
 ### Phase 5 Completion
 
 - **Completed:** Pending
