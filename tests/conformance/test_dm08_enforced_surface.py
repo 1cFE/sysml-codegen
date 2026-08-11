@@ -31,7 +31,6 @@ import textwrap
 import pytest
 
 from sysml_codegen.core import identifier_types
-from sysml_codegen.core.output_registry import OutputRegistry
 
 # Hand-authored expectation: wrapper name -> base type it must wrap.
 # (Enumerated from ADR/27-typed-registry-refactor.md, not read off the code.)
@@ -83,6 +82,13 @@ class TestDM08EnforcedSurface:
         AST scan of OutputRegistry.__init__ (PEP-526 self.x annotations never
         reach __annotations__, so this is the only honest static check).
         """
+        # Gate 4C part 7, per-node disposition (ledger L-125): OutputRegistry
+        # (L-007) retires with the v5 family, so this one node of the three goes
+        # with it while (a) and (c) — the NewType wrappers themselves, in the
+        # retained core/identifier_types.py — keep collecting. Local import so
+        # this node fails alone rather than at module scope.
+        from sysml_codegen.core.output_registry import OutputRegistry
+
         src = textwrap.dedent(inspect.getsource(OutputRegistry.__init__))
         tree = ast.parse(src)
 
