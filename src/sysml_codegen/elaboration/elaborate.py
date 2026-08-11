@@ -615,7 +615,9 @@ class _ExactElaborator:
         writer_id = declaration_id_for(writer)
         name = str(getattr(base, "name", None) or getattr(writer, "name", None) or "value")
         display_path = self._display_path(scope, name)
-        expression = getattr(writer, "feature_value_expression", None)
+        expression = self._without_unit_annotation(
+            getattr(writer, "feature_value_expression", None)
+        )
         value_site = self._value_site(base, writer, scope)
         # An enumeration value reference names a value, not another feature:
         # `:>> scope = 'CAS Scope'::shared;` has no occurrence to resolve against.
@@ -717,6 +719,40 @@ class _ExactElaborator:
             ),
         )
         self._register_attr(attr_node)
+
+    @staticmethod
+    def _without_unit_annotation(expression: Any) -> Any:
+        """The expression a unit annotation annotates — the rule, applied once, up front.
+
+        **A unit annotation contributes its value and never a reference.** That is the same
+        rule ``extraction/modeled_defaults._resolve_default_node`` states for the ``default
+        40.0 [W]`` lane; this is the ``= 0.2 [m]`` lane obeying it. The two cannot share an
+        implementation because they consume different representations — that one reads a
+        parsed ``ExpressionIR``, this one the syside AST — so the rule is named identically
+        at both sites instead.
+
+        Without this the annotation reached the reference walk, whose second operand is a
+        standard-library element (``SI::metre``), and ``FeatureSlotIndex`` indexes only the
+        user model's features — so the walk failed with ``SI_OCCURRENCE_MISSING`` against a
+        unit. That is the same category error Slice 3D fixed for enumeration members: a
+        reference that names something other than a data source has no occurrence to resolve
+        against. Unwrapping here rather than at each downstream test is what keeps it one
+        rule instead of a second special case beside ``_enumeration_literal``.
+
+        A unit annotation parses as an ``OperatorExpression`` whose operator is ``[``, with
+        the value first and the unit second. Structural throughout: no name is read.
+        """
+        if expression is None or not SysideAdapter.is_instance(expression, "OperatorExpression"):
+            return expression
+        if str(getattr(expression, "operator", "")) != "[":
+            return expression
+        operands = list(getattr(expression, "operands", ()) or ())
+        if not operands:
+            raise ElaborationInvariantError(
+                ElaborationCode.SI_EDGE_DANGLING,
+                "unit annotation carries no annotated value",
+            )
+        return operands[0]
 
     @staticmethod
     def _enumeration_literal(expression: Any) -> str | None:

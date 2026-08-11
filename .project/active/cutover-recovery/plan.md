@@ -3295,6 +3295,61 @@ disposition, and that is part of the same ruling.
 unproven on the exact route. `solar_battery_d5` is accepted and carries the twelve-assembly
 costing hierarchy. The named temporary weakness on L-006 / L-241 stands.
 
+#### Gate 4C part 6, ruling 1 — the units fix, and `catf_mfe_d5` accepted
+
+**`catf_mfe_d5` now elaborates: 42 modules.** No third refusal layer.
+
+**The fix is one rule applied once, up front.** `_ExactElaborator._without_unit_annotation`
+unwraps a unit annotation to the expression it annotates, at the top of `_create_value_node`,
+*before* anything downstream decides whether the expression is a literal, an enumeration
+member or a reference. Doing it there rather than at each downstream test is what keeps it one
+rule instead of a second special case beside `_enumeration_literal`. Structural throughout — a
+unit annotation is an `OperatorExpression` whose operator is `[`, value first, unit second — so
+the F30 boundary guard's ban on name/QN-keyed association is untouched, and
+`test_elaboration_import_boundaries.py` stays green.
+
+**The asymmetry is closed as one rule, and stated once at both sites.** The rule is "a unit
+annotation contributes its value and never a reference", which
+`extraction/modeled_defaults._resolve_default_node` already states for the `default 40.0 [W]`
+lane. The two lanes **cannot share an implementation** — that one reads a parsed
+`ExpressionIR`, this one the syside AST — so the rule is named identically at both sites
+instead of being duplicated as logic. Recorded plainly because it is the one place the ruling's
+"prefer a shared helper" could not be met literally.
+
+**Scope check, measured, all three clean.**
+
+- **Corpus 15/22 unmoved.** `test_dual_run_ledger_outcomes_match_a_live_corpus_run` compares
+  the exact per-fixture outcome strings for all 37 and passes, so no refused fixture became
+  accepted and no accepted one moved.
+- **v6 batch byte-unchanged.** Re-ran `capture_v6_batch.py --verify` after the fix: 15 captured,
+  22 refused, 0 deviations, and `git status tests/fixtures/` reports no modified tracked file —
+  every one of the 15 snapshots is byte-identical.
+- **Suite delta is only new tests**: 3804 → **3810**, +6, all in
+  `tests/conformance/test_unit_annotation_values.py`.
+
+**Red → green, proved by reverting.** With `elaborate.py` stashed the new file is **5 failed /
+1 passed**; with the fix applied it is **6 passed**. The one that passes in the red state is the
+bare-model parametrisation, which is correct — it never carried a unit.
+
+**The pins (ruling 2).** `tests/fixtures/unit_annotation_lanes` carries **both spellings in one
+model** — `default 40.0 [W]` on a calc-def formal and `= 0.5 [m]` on an attribute value — with
+`unit_annotation_lanes_bare` as the same model minus the annotations. The tests assert the
+annotated value resolves, the default value still resolves, **the two models resolve to
+identical values**, no `SI::` element appears as a graph dependency, and 0.5 × 40.0 = 20.0 read
+off the model by hand. The asymmetry cannot come back silently.
+
+The one-character evidence probe under `evidence/catf-occurrence-probe/` is **deleted**: it
+documented a red state that no longer reproduces, and the fixtures supersede it. Keeping a
+reproducer that no longer reproduces would be a trap for the next reader.
+
+**Battery.** Full licensed suite **3810 passed / 47 skipped / 38 deselected**, delta **+6**.
+Corpus ledger **3 passed**, 15/22 unmoved. Execution lane **38 passed** including the 12
+real-TEAx nodes at the recorded anchors. `ruff` **870 → 870**, `mypy src/` **69 in 16 files →
+unchanged**, `git diff --check` clean, `check_ledger_4a.py paths` **298 rows / 0 problems**,
+`surface` **0 on both axes**.
+
+**Commit:** `UNITS_OID`.
+
 ### Phase 5 Completion
 
 - **Completed:** Pending
