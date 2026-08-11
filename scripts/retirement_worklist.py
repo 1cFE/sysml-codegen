@@ -78,6 +78,10 @@ DATA_AXIS_STEP = {
     "L-300": (2, "quotes the retiring surface tokens in its own cases"),
 }
 
+#: The three tests/execution rows below are pinned here rather than left to
+#: `tighten_by_test_imports`, because that walk reads the tree: once step 1 has deleted the
+#: module they import, the edge is gone and the placement would drift back a step.
+#:
 #: Rows the per-step scratch-worktree simulation measured red EARLIER than the ledger's own
 #: columns place them. Every one is a function-local import or a fixture use, which is the
 #: class `check_ledger_4a.py`'s module-level AST scan cannot see (its ceiling 1). The reason
@@ -94,6 +98,9 @@ PULLED_FORWARD = {
     "L-281": (1, "its SysIDE-dependent nodes read the conformance v5 fixtures"),
     "L-135": (1, "its wired-path nodes read the conformance v5 fixtures"),
     "L-292": (1, "subprocess-runs scripts/capture_pipeline_baselines.py, an L-040 deletion"),
+    "L-191": (1, "imports the helper in tests/execution/test_constraint_execution.py"),
+    "L-193": (1, "imports the helper in tests/execution/test_constraint_execution.py"),
+    "L-194": (1, "imports the helper in tests/execution/test_constraint_execution.py"),
 }
 
 #: How each disposition executes.

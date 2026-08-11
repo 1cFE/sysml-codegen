@@ -38,8 +38,12 @@ def apply_step(step: int) -> int:
     (REPO_ROOT / ARCHIVE).mkdir(parents=True, exist_ok=True)
 
     for item in items:
-        if item.action == "delete":
-            git("rm", "-q", item.path)
+        if item.action != "delete":
+            continue
+        if not (REPO_ROOT / item.path).exists():
+            print(f"  {item.row}: {item.path} is already gone")
+            continue
+        git("rm", "-q", item.path)
 
     moved: dict[str, str] = {}
     for item in items:
