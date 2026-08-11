@@ -3747,10 +3747,48 @@ itself — zero undispositioned files — and the retirement brief is purely mec
 **Chunking.** Multi-session by design. Coherent chunks, full battery per commit, honest remainder
 reported at each stop.
 
-- [ ] Class 1 — the 61 repointable files
-- [ ] Class 2 — the 44 no-fixture files
-- [ ] Class 3 — the 35 hard-blocked files, with targeted variants in the ranked order above
+- [ ] Class 1 — the 61 repointable files *(13 done, 48 left)*
+- [x] Class 2 — the 44 no-fixture files *(38 dispositioned, 6 recorded-and-left-blocked with their reason)*
+- [ ] Class 3 — the 35 hard-blocked files, with targeted variants in the ranked order above *(6 done, 29 left)*
 - [ ] Final: `groups` green but for the acceptance gate; ledger + checker consistent with Git truth
+
+##### Progress — six chunks, 57 files dispositioned, nothing deleted
+
+| Chunk | Commit | What |
+|---|---|---|
+| 1 | `2b5e88f` | the 21 scripts, probes and spikes |
+| 2 | `b146ec6` | the legacy resolution-stack unit tests (12 files, 183 nodes) |
+| 3 | `d7b7d31` | the legacy constraint stack (6 files) |
+| 4 | `6f8e653` | the small legacy-internals files (8 files) |
+| 5 | `7ad8186` | the proof nodes that were themselves blocked (5 files) |
+| 6 | `7bae77f` | class 2 closed out (5 retired, 6 recorded) |
+
+**Blockers, two-axis: 124 → 83.** G2′ 62, G3′ 2, G4′ 1. Row dispositions now stand at
+**48 `retire-with-owner`, 20 `repoint`, 17 `archive-with-findings`**.
+
+**Remaining: 83 files, 979 nodes** — 48 class 1 (447 nodes), 6 class 2 (128, each with its
+blocking reason already on its row), 29 class 3 (404).
+
+**Three method notes the next session should not have to re-derive.**
+
+1. **Localise, don't retire the file.** Repeatedly the legacy touch was one node in a file of
+   fifteen or twenty. Moving that import inside the node it serves keeps the rest collecting and
+   turns a file-level retirement into a per-node one: L-212 (23 of 26 saved), L-125 (2 of 3),
+   L-129 (14 of 15), L-133 (3 of 6), L-132, L-277. The checker sees the scope change — a hit
+   recorded as `func` rather than `module`.
+2. **Check the proof nodes against the blocker set.** Chunk 5 found five proof files that were
+   themselves `defer-to-v5-family`, backing fifteen rows including two already-executed
+   deletions. Re-run that cross-check after every chunk; it is a one-liner over
+   `replacement_proof_node` and `group_readiness`.
+3. **A row that cannot be finished stays blocked.** Six rows carry their analysis in
+   `disposition_4c_note` with no clearing disposition, deliberately, so the checker never reports
+   a readiness that is not true. L-120 is coupled to Gate 4D's doc-09 rewrite; L-284 waits on
+   L-033's rename; L-168 needs INV-1 re-derived against the v6 envelope; L-242/L-244/L-243 are
+   one per-node pass over the silent-failure diagnostics.
+
+**Where the real remaining cost is.** Class 3's 29 files need D-5 variants for the 19 refused
+fixtures, ranked above. Gate 4C part 6 spent a full session on three variants, so this is several
+sessions, not one — and it is the honest floor for retiring the family without losing coverage.
 
 ##### Named mechanism — the zero-constraint report aggregator (orchestrator ruling 2)
 
