@@ -918,14 +918,19 @@ class _Projection:
                 continue
             if not isinstance(node.alias_target, ProducerRef):
                 continue
-            if node.alias_target.target not in selected_outputs:
-                continue
+            # The dangling check runs before the selection filter, not after. Above
+            # it, ``selected_outputs`` on the complete path is exactly
+            # ``set(self.output_channels)``, so the filter's condition is the same
+            # condition as ``channel is None`` — and an alias pointing at an absent
+            # producer would be silently skipped instead of refused.
             channel = self.output_channels.get(node.alias_target.target)
             if channel is None:
                 _fail(
                     ElaborationCode.SI_EDGE_DANGLING,
                     f"output alias {node.display_path!r} targets an absent producer",
                 )
+            if node.alias_target.target not in selected_outputs:
+                continue
             if isinstance(node.scope, OccurrenceId):
                 instance_path = self.graph.occurrence_instance_path(node.scope)
             elif isinstance(node.scope, PackageScopeId):

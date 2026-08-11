@@ -119,6 +119,16 @@ def test_the_two_packages_differ_only_in_provenance_comments(packages) -> None:
     live, from_snapshot = packages
     differing = {name for name in live if live[name] != from_snapshot[name]}
 
+    # Pin the set, not just its emptiness: a file that newly started differing
+    # would otherwise slip through, and "every differing file is named" would
+    # stop being true without any test saying so.
+    assert differing == {
+        name
+        for name in live
+        if name.startswith(("modules/", "handwritten/")) and name.endswith(".py")
+        and "SysML Source:" in live[name]
+    }, "the set of files differing between the two routes moved"
+
     for name in differing:
         live_only = set(live[name].splitlines()) - set(from_snapshot[name].splitlines())
         snapshot_only = set(from_snapshot[name].splitlines()) - set(live[name].splitlines())

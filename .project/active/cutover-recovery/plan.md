@@ -1239,22 +1239,42 @@ Two rendering choices, both recorded because they go beyond the ruling's literal
    moves from `elab_constraint_formal_identity_params` (its directory) to
    `constraint_formal_identity_params` (its package). Every other projecting fixture keeps the exact
    name and class it had at `a7c13a6`. Internal to the unshipped exact route.
-2. *Exact vs legacy on stem-named fixtures:* nine compared, eight match (one of them matching once
-   the legacy-only `system_design` hierarchy group is set aside). The ninth is `d38_caret`, below.
+2. *Exact vs legacy on stem-named fixtures:* ten compared, eight match (one of them matching once
+   the legacy-only `system_design` hierarchy group is set aside). The two that do not are
+   `d38_caret` and `unresolvable_attr_probe`, both below.
 3. *Strict route equality:* live, in-place v6, and relocated v6 produce byte-equal entry-point
    group payloads including name, class, label, and every parameter. The routes test now asserts
    that equality instead of masking it, and the projected-surface comparison no longer masks
    `param_group` on module inputs either — a strictly stronger comparison than at `a7c13a6`.
 
-**The named residual — `d38_caret`.** One stem-named fixture where the two routes disagree: exact
-says `library_params`, legacy says `design_params`. **This slice neither caused it nor touches it**
-— the fixture has no `model.sysml`, so the changed fallback never runs, and the measured identity is
-byte-identical before and after. It is a pre-existing disagreement about *which file declares* an
-entry point: the elaborator records the declaration site (`library.sysml`) while the legacy deriver
-attributes it to `design.sysml`. No group-naming rule can reconcile a declaration-site difference.
-Pinned by `test_the_known_exact_versus_legacy_declaration_site_divergence` and recorded in
-`evidence/3b-old-new-comparison.md`. **It needs a disposition before the Slice 3E authority switch**,
-where it would change a shipped input filename for a model of this shape. Surfaced, not absorbed.
+**Two named residuals for Slice 3E — `d38_caret` and `unresolvable_attr_probe`.** *(Second one and
+the mechanism added 2026-08-11 after the 3B audit, F3 and F5. The earlier note named only
+`d38_caret` and described it as a declaration-site difference alone.)*
+
+These are the two stem-named fixtures where the exact and legacy routes ship different packages.
+**This slice neither caused nor touches either** — both lack a `model.sysml`, so the changed
+fallback never runs on them, and both measure byte-identical before and after. Each is now pinned
+by value in `tests/conformance/test_exact_group_identity.py`, and each **needs a disposition before
+the Slice 3E authority switch**, where it would change a shipped input filename *and* what that file
+contains.
+
+The mechanism in both is legacy fallback attribution, not the naming rule:
+
+- `d38_caret` — exact `library_params` (6 parameters), legacy `design_params` (1). The single
+  shared parameter is a declaration-site difference: the elaborator records where the node is
+  declared (`library.sysml`), the legacy deriver attributes it to `design.sysml`, and the group
+  name follows. The other five are a content difference — the exact route resolves four modelled
+  `cell` occurrences and an exponent that the legacy route drops.
+- `unresolvable_attr_probe` — exact `design_params` (9 parameters), legacy `system_design` (1).
+  **The routes share no entry point at all.** The exact route resolves inherited design attributes
+  onto three concrete instances, which `test_elaboration_phase5_remediation.py::
+  test_inherited_formulas_are_scoped_to_three_concrete_instances` already pins as correct exact
+  behavior; the legacy deriver drops all nine and emits one literal attributed to its synthetic
+  `hierarchy` source, and *that* attribution is what names the group `system_design`.
+
+So no group-naming rule can reconcile either: change the naming rule however you like and these
+routes still ship different files with different contents. Surfaced, not absorbed. Full measurement
+in `evidence/3b-old-new-comparison.md`.
 
 **A second residual, pinned rather than fixed: module provenance.** Module `source_file` still
 differs across routes — the live route records absolute checkout paths (one still carrying a
@@ -1262,7 +1282,8 @@ leftover `//` URI prefix), the v6 route records the portable referent. It reache
 only as a `SysML Source:` comment. The v6 spelling is the one the design intends
 (`generation/stencils.py:243`); making the live route agree means routing it through admission,
 which would undo the arm independence Slice 3A's F2 fix established. Carried to 3E, asserted by
-value on both sides, and the generated-package test names every file the difference reaches.
+value on both sides, and the generated-package test pins the exact set of files the difference
+reaches, not merely that the set is non-empty (tightened 2026-08-11 after the 3B audit, F6).
 
 **Per-file dispositions.**
 
@@ -1287,8 +1308,13 @@ since it needs a package-scoped entry point in a file named `model.sysml`. The i
 set already proven to hold one element. This is the second slice in a row where a test the forensic
 candidate deleted caught a real defect (plan rule 6).
 
-**Tests, red then green.** All five new modules failed to collect at `a7c13a6`
-(`exact_pipeline_context` and `elaborate_model_paths` do not exist there), and
+**Tests, red then green.** *(Corrected 2026-08-11 after the 3B audit, F4 — the earlier note said
+all five modules failed to collect.)* Four of the five new modules failed to collect at `a7c13a6`,
+because `exact_pipeline_context` and `elaborate_model_paths` do not exist there. The fifth,
+`test_exact_group_identity.py`, imports only functions that do exist there, so it collects and
+reports **4 failed / 8 passed** against the old production code: the four identity assertions are
+the red, and the eight that pass are the ones that should — including the `d38_caret` pin and the
+stem-compatibility test, which is independent evidence that the stem rule was untouched. Also,
 `test_the_two_routes_diverge_only_on_source_derived_naming` was green there asserting
 `{"root_0_params"}` / `{"Root0Params"}`. After the slice: **46 new tests pass** — 15 context,
 12 selection, 12 group identity, 4 generated package, 3 aggregation — and the routes test is
@@ -1310,6 +1336,61 @@ renamed and flipped to assert equality.
 - `ruff check src`: **byte-identical** to the `a7c13a6` baseline — zero new. New test modules lint
   clean. `mypy src`: error set **identical** (71 errors in 17 files; 84 → 85 files checked, so the
   new module contributes zero). `git diff --check` clean. Changed paths equal the declared set.
+
+#### Slice 3B audit follow-up — F1 through F7
+
+- **Completed:** 2026-08-11
+- **Audit:** `evidence/audit-3b.md`, verdict **CERTIFY** (nothing blocked 3C), 7 findings.
+  Recorded at `9d05f49`. Commit: PENDING
+- **Declared path set:** `elaboration/project.py`,
+  `orchestration/exact_pipeline_context.py`, `tests/conformance/test_exact_group_identity.py`,
+  `tests/conformance/test_exact_route_generated_package.py`,
+  `tests/conformance/test_exact_pipeline_context.py`, this plan, and
+  `evidence/3b-old-new-comparison.md`. Actual changed paths equal that set.
+
+All seven findings are closed. Two changed production, three changed tests, two were factual
+corrections to this plan and the evidence file.
+
+- **F1 (Low) — the dangling-alias guard could no longer fire.** The `selected_outputs` filter sat
+  above the channel lookup in `_build_output_aliases`, and on the complete path its condition is
+  identical to `channel is None`, so an alias pointing at an absent producer was silently skipped
+  where it used to raise. The filter now sits *below* the lookup, restoring the unconditional check
+  the code had at `a7c13a6` while the filter still prunes on the selected path. The reason is
+  commented at the site so the ordering is not "tidied" back. It stays defence-in-depth behind
+  `validate()` (`graph.py:706`); no fixture reaches it, and I did not manufacture one — a
+  white-box probe that removes an indexed channel trips an earlier `KeyError` in module building
+  first, so the honest claim is restored reachability, not a demonstrated firing.
+- **F2 (Low) — the inert `_targets` slot is deleted.** `_seal` wrote it and nothing read it;
+  `receipt.targets` was always the authority. Removed from `__slots__`, the annotations, and
+  `_seal`, so the slots now carry only what is verified.
+- **F3 (Medium) — `unresolvable_attr_probe` is now a named residual with a by-value pin.** It was
+  in the evidence table but not in this plan's residual list and had no test, so unlike `d38_caret`
+  it could have moved unnoticed. Pinned by
+  `test_the_known_exact_versus_legacy_divergence_on_unresolvable_attr_probe`, added to the residual
+  list above, and the "nine compared" count corrected to ten. The mechanism is identified: legacy
+  fallback attribution, not the naming rule — the two routes share no entry point at all.
+- **F4 (Low) — the red-state claim is corrected** from "all five modules failed to collect" to the
+  measured four-failed-to-collect plus 4 failed / 8 passed for the fifth.
+- **F5 (Low) — the `d38_caret` pin is widened to the full measured divergence.** It asserted group
+  names only; it now asserts both routes' complete parameter sets, which is where five of the six
+  differences actually live. The prose in this plan and the evidence file is corrected to say the
+  routes disagree on the declaration site *and* the entry-point set.
+- **F6 (Low) — the differing-file set is pinned.** `test_the_two_packages_differ_only_in_provenance_comments`
+  asserted only that the set was non-empty while this plan claimed every differing file was named.
+  The test now asserts the set itself, derived from the live tree rather than hard-coded, so a file
+  that newly starts differing fails the test.
+- **F7 (Low) — the near-tautological digest assertion is labelled as what it is.** The line compares
+  a digest against a graph production has already verified, so it is a field-coverage check on the
+  digest formula, not an independent receipt check. The module docstring claimed more than that; it
+  now names which assertion is independent (the instance fingerprint, re-elaborated and re-encoded
+  by the test) and points at the tamper set as what proves the receipt has teeth.
+
+**Gates.** Slice tests **53 passed** (+1: the new `unresolvable_attr_probe` pin). Full licensed
+suite **3520 passed / 47 skipped / 18 deselected**, zero failures, zero `no live syside license`
+lines — delta versus `d91431b` is exactly **+1 passed**, that same pin, with skips and deselections
+unchanged. Execution lane 18 passed. `ruff check src` byte-identical to the baseline set; the new
+test modules lint clean. `mypy src` error set identical (71 errors in 17 files). `git diff --check`
+clean. Changed paths equal the declared set.
 
 ### Phase 4 Completion
 

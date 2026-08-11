@@ -144,10 +144,9 @@ def _project_or_fail(graph: InstanceGraph, targets: tuple[str, ...] | None) -> C
 class ExactPipelineContext:
     """One sealed instance graph plus the receipt for what it projects to."""
 
-    __slots__ = ("_instance_bytes", "_targets", "_receipt")
+    __slots__ = ("_instance_bytes", "_receipt")
 
     _instance_bytes: bytes
-    _targets: tuple[str, ...] | None
     _receipt: ProjectionReceipt
 
     def __new__(cls, *args: object, **kwargs: object) -> ExactPipelineContext:
@@ -233,7 +232,6 @@ def _seal(graph: InstanceGraph, targets: tuple[str, ...] | None) -> ExactPipelin
     )
     context = object.__new__(ExactPipelineContext)
     object.__setattr__(context, "_instance_bytes", instance_bytes)
-    object.__setattr__(context, "_targets", targets)
     object.__setattr__(context, "_receipt", receipt)
     return context
 

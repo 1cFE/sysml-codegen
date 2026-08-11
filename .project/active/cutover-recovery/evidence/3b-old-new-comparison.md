@@ -22,7 +22,7 @@ and class it had at `a7c13a6`, including every stem-named one.
 ## 2. Exact vs legacy, stem-named fixtures (no `model.sysml`)
 
 The ruling requires these to match the legacy route exactly, since the stem rule is
-untouched. `moved by 3B` says whether this slice changed the exact side's identity.
+untouched. Ten fixtures, eight matching; the two that do not are analysed below. `moved by 3B` says whether this slice changed the exact side's identity.
 
 | fixture | exact | legacy | verdict | moved by 3B |
 |---|---|---|---|---|
@@ -37,22 +37,45 @@ untouched. `moved by 3B` says whether this slice changed the exact side's identi
 | `unresolvable_attr_probe` | `[('design_params', 'DesignParams')]` | `[('system_design', 'SystemDesign')]` | legacy emits only the hierarchy group | no |
 | `wi014_toy` | `[('toy_plant_params', 'ToyPlantParams')]` | `[('toy_plant_params', 'ToyPlantParams')]` | match | no |
 
-### The one mismatch, named
+### The two mismatches, named
 
-`d38_caret` is the single stem-named fixture where the exact and legacy routes disagree:
-exact says `library_params`, legacy says `design_params`. **This slice did not cause it and
-does not touch it** — the fixture has no `model.sysml`, so the changed fallback never runs,
-and the measured identity is byte-identical before and after (`moved by 3B = no`).
+**Neither is caused or touched by this slice.** Both fixtures lack a `model.sysml`, so the changed
+fallback never runs on either, and both measure byte-identical before and after (`moved by 3B =
+no`). Both are pinned by value in `tests/conformance/test_exact_group_identity.py` so they cannot
+move unnoticed, and both need a disposition before the Slice 3E authority switch, where each would
+change a shipped input filename **and** what that file contains.
 
-It is a pre-existing property of *which file each route thinks declares an entry point*: the
-elaborator records a node's declaration site, which for this fixture is `library.sysml`, while
-the legacy deriver attributes it to `design.sysml`. That is a declaration-site question, not a
-naming-rule question, so no group-naming rule can reconcile it.
+Corrected 2026-08-11 after the 3B audit (F3, F5): an earlier version of this section named only
+`d38_caret`, and described it as a declaration-site difference alone. Measured, both fixtures also
+disagree on the entry-point *set*, which is the larger half of each.
 
-Surfaced rather than absorbed. It is pinned by
-`tests/conformance/test_exact_group_identity.py::test_the_known_exact_versus_legacy_declaration_site_divergence`
-so it cannot move unnoticed, and it needs a disposition before the public authority switch in
-Slice 3E, where it would change a shipped input filename for a model of this shape.
+**`d38_caret`** — exact `library_params`, legacy `design_params`.
+
+| | parameters |
+|---|---|
+| exact | `noop__x`, `pack__exponent`, `pack__cell[0..3]__base_cost` (6) |
+| legacy | `noop__x` (1) |
+
+The one shared parameter is a declaration-site difference: the elaborator records the node's
+declaration site (`library.sysml`), the legacy deriver attributes it to `design.sysml`, and the
+group name follows from that. The other five are a content difference — the exact route resolves
+the four modelled `cell` occurrences and the exponent that the legacy route drops.
+
+**`unresolvable_attr_probe`** — exact `design_params`, legacy `system_design`. **The two routes
+share no entry point at all.**
+
+| | parameters |
+|---|---|
+| exact | nine `design_attribute` entries: `{derived_instance, design_derived_instance, grandchild_instance}` × their attributes |
+| legacy | one `usage_literal`: `design_derived_instance__my_calc__x` |
+
+This one is not a naming difference in any part. The exact route resolves the inherited design
+attributes onto three concrete instances — behavior the Item 6 suite already pins as correct in
+`test_elaboration_phase5_remediation.py::test_inherited_formulas_are_scoped_to_three_concrete_instances`.
+The legacy deriver drops all nine and emits one literal instead, attributed to its synthetic
+`hierarchy` source; *that* attribution is what names the group `system_design`. So the group name is
+downstream of a **legacy fallback-attribution difference**: change the naming rule however you like
+and these two routes still ship different files with different contents.
 
 ## 3. Exact vs legacy, `model.sysml` fixtures
 

@@ -94,10 +94,15 @@ def test_a_stem_named_group_keeps_the_name_the_legacy_route_ships(fixture) -> No
     """The stem rule is untouched, so these must still match the shipped route.
 
     This is the compatibility guarantee ``test_elaboration_phase5_remediation.py``
-    pins for one fixture, widened to every stem-named fixture both routes can
-    project. The legacy route additionally emits a ``system_design`` group built
+    pins for one fixture, widened to every stem-named fixture where both routes
+    agree. The legacy route additionally emits a ``system_design`` group built
     from hierarchy data, which the exact route has no equivalent for; it is
     excluded here and carried as a Slice 3E question.
+
+    Two stem-named fixtures are deliberately absent from this list because the
+    routes genuinely diverge on them, both for reasons that predate Slice 3B.
+    Each has its own by-value pin below: ``d38_caret`` and
+    ``unresolvable_attr_probe``.
     """
     path = FIXTURES_DIR / fixture
     exact = {
@@ -112,24 +117,88 @@ def test_a_stem_named_group_keeps_the_name_the_legacy_route_ships(fixture) -> No
     assert exact == legacy - {("system_design", "SystemDesign")}
 
 
-def test_the_known_exact_versus_legacy_declaration_site_divergence() -> None:
+def _parameters(graph) -> set[str]:
+    return {
+        parameter.qualified_name
+        for group in graph.entry_point_groups
+        for parameter in group.parameters
+    }
+
+
+def test_the_known_exact_versus_legacy_divergence_on_d38_caret() -> None:
     """One fixture where the two routes disagree, pinned rather than absorbed.
 
     ``d38_caret`` has no ``model.sysml``, so Slice 3B's changed fallback never
     runs on it and this divergence predates the slice — it is byte-identical at
-    ``a7c13a6``. The routes disagree about *which file declares* the entry point:
-    the elaborator records the declaration site (``library.sysml``) while the
-    legacy deriver attributes it to ``design.sysml``. No naming rule can
-    reconcile that, so it needs a disposition before the Slice 3E authority
-    switch, where it would change a shipped input filename.
+    ``a7c13a6``.
 
-    Recorded in ``evidence/3b-old-new-comparison.md``.
+    Two things differ, and the whole measured divergence is asserted here rather
+    than the group name alone. The routes disagree on the *declaration site* of
+    the one entry point they share (the elaborator records ``library.sysml``, the
+    legacy deriver attributes it to ``design.sysml``), and they disagree on the
+    *entry-point set*: the exact route additionally resolves the four modelled
+    ``cell`` occurrences and the exponent that the legacy route drops entirely.
+    The group name follows from the first; the second is why no naming rule can
+    reconcile the two routes here.
+
+    Needs a disposition before the Slice 3E authority switch, where it would
+    change both a shipped input filename and what that file contains. Recorded in
+    ``evidence/3b-old-new-comparison.md``.
     """
     path = FIXTURES_DIR / "d38_caret"
-    exact = {group.name for group in build_elaborated_pipeline([path]).entry_point_groups}
-    legacy = {
-        group.name for group in build_pipeline_context([path]).computation_graph.entry_point_groups
+    exact = build_elaborated_pipeline([path])
+    legacy = build_pipeline_context([path]).computation_graph
+
+    assert {group.name for group in exact.entry_point_groups} == {"library_params"}
+    assert {group.name for group in legacy.entry_point_groups} == {"design_params"}
+
+    shared = "D38Design__plant__noop__x"
+    assert _parameters(legacy) == {shared}
+    assert _parameters(exact) == {
+        shared,
+        "D38Design__plant__pack__exponent",
+        *(f"D38Design__plant__pack__cell[{index}]__base_cost" for index in range(4)),
     }
 
-    assert exact == {"library_params"}
-    assert legacy == {"design_params"}
+
+def test_the_known_exact_versus_legacy_divergence_on_unresolvable_attr_probe() -> None:
+    """The second measured divergence, and it is not a naming difference at all.
+
+    The two routes here share **no** entry point. The exact route resolves the
+    inherited design attributes onto three concrete instances — nine
+    ``design_attribute`` entries, which
+    ``test_elaboration_phase5_remediation.py::test_inherited_formulas_are_scoped_to_three_concrete_instances``
+    already pins as correct exact behavior. The legacy deriver drops all nine and
+    emits one ``usage_literal`` instead, attributed to its synthetic ``hierarchy``
+    source, which is what names the group ``system_design``.
+
+    So the group name is downstream of a legacy fallback-attribution difference,
+    not of any naming rule: change the naming rule however you like and these two
+    still ship different files with different contents. Like ``d38_caret``, it
+    predates Slice 3B — the fixture has no ``model.sysml``, so the changed
+    fallback never runs on it — and it needs a disposition before Slice 3E.
+    """
+    path = FIXTURES_DIR / "unresolvable_attr_probe"
+    exact = build_elaborated_pipeline([path])
+    legacy = build_pipeline_context([path]).computation_graph
+
+    assert {(group.name, group.class_name) for group in exact.entry_point_groups} == {
+        ("design_params", "DesignParams")
+    }
+    assert {(group.name, group.class_name) for group in legacy.entry_point_groups} == {
+        ("system_design", "SystemDesign")
+    }
+
+    assert _parameters(legacy) == {
+        "UnresolvableAttrProbeDesign__design_derived_instance__my_calc__x"
+    }
+    assert _parameters(exact) == {
+        f"UnresolvableAttrProbeDesign__{instance}__{attribute}"
+        for instance, attributes in (
+            ("derived_instance", ("base_factor", "base_rate", "local_multiplier")),
+            ("design_derived_instance", ("base_factor", "base_rate", "local_val")),
+            ("grandchild_instance", ("base_factor", "base_rate", "local_multiplier")),
+        )
+        for attribute in attributes
+    }
+    assert not _parameters(exact) & _parameters(legacy), "the routes share no entry point at all"

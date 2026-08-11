@@ -1,9 +1,12 @@
 """The exact route's public context is receipt-bound and cannot be mutated.
 
-Every expectation here is derived in this module — the instance fingerprint is
-read out of the canonical encoding, and the computation digest is recomputed
-from the projected graph with this file's own canonical-JSON code. Nothing is
-read back off the context and compared with itself.
+The instance fingerprint is derived independently: this module elaborates and
+encodes the graph again and compares. The computation digest is recomputed with
+this file's own canonical-JSON code, which is a field-coverage check rather than
+an independent one — the graph it hashes comes back from the context, and
+production has already checked that equality before returning it. What proves
+the receipt has teeth is the tamper set below, where the sealed authority is
+moved out from under a built context and the read is refused.
 
 The tamper cases reach past ``__setattr__`` with ``object.__setattr__``. That is
 deliberate: the point is not that the public API refuses mutation (a separate
@@ -63,8 +66,16 @@ def test_the_receipt_binds_the_instance_bytes_and_the_projection() -> None:
     from sysml_codegen.orchestration.elaborated_pipeline import elaborate_model_paths
     from sysml_codegen.snapshot.instance_graph import encode_instance_graph
 
+    # Independent: the graph is elaborated and encoded again here, by this test,
+    # and the fingerprint must match what the context sealed.
     independent_bytes = encode_instance_graph(elaborate_model_paths([FIXTURE]))
     assert receipt.instance_fingerprint == json.loads(independent_bytes)["fingerprint"]
+
+    # Not independent, and not claimed to be: `computation_graph` is only
+    # returned after production has already checked this same equality. What it
+    # does buy is field coverage — it fails if the digest formula stops covering
+    # a field this test's local copy covers. The receipt's teeth are proven by
+    # the tamper cases below, not by this line.
     assert receipt.computation_digest == _expected_digest(context.computation_graph)
     assert receipt.targets is None
     assert receipt.projector_semantics == "instance-projector/v1"
