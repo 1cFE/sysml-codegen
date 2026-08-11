@@ -908,15 +908,19 @@ and execution lanes did not move. `mypy src/` **69 errors in 16 files**, unchang
 `ruff check src/` clean, clean on both new files. `check_ledger_4a.py paths` **298 rows / 0
 problems**, `surface` **0 unrowed breakages**. `git diff --check` clean at every commit.
 
-**Environment divergence, surfaced not worked around.** Both suite runs ignore
-`tests/conformance/test_exact_constraint_route.py`, which cannot import: the wired companion
-checkout (`/home/reid/1cfe/agentic-mbse`, branch `elaborate-first-salvage`, `5088b41`) does not
-export `preflight_identified`, so pytest interrupts collection. **Reproduced on a clean tree
-before any Gate 4D edit** — pre-existing, not caused by this gate — and both the before and
-after numbers are measured the same way, so the delta stands. The recorded 3790-node baseline
-from Gate 4C part 4 was measured against a companion that provided the symbol and is therefore
-not comparable to either number here. **The companion checkout needs an owner before Phase 5
-runs its acceptance suite.**
+**Environment divergence — RESOLVED as a session-local resolution failure, not a repo state
+problem (orchestrator, 2026-08-11).** The Gate 4D session's suite runs ignored
+`tests/conformance/test_exact_constraint_route.py` after diagnosing that the wired companion
+lacked `preflight_identified`. The orchestrator re-verified directly after the gate closed: the
+paired worktree `/home/reid/1cfe/agentic-mbse-item7-rebuild` is on `item7-rebuild` at
+`cc6c7a7` (clean), the rebuild venv resolves `agentic_mbse` into that worktree, the import
+succeeds, and the module passes 13/13. The 4D session had resolved `agentic_mbse` from the
+ORIGINAL checkout — the F2 trap, in the form the 3C audit warned about. The gate's internal
+deltas stand (before/after were measured the same way). Clean post-4D full licensed suite,
+measured by the orchestrator in the correct environment: **3840 passed / 47 skipped /
+53 deselected, zero `no live syside license` lines** — exactly 3827 + the 13 recovered nodes.
+No owner action needed; Phase 5's acceptance runs must assert import paths first, as every
+session since F2 has been required to.
 
 ### Validation
 
