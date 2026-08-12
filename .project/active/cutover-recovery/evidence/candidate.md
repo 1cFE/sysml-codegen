@@ -4,6 +4,8 @@
 and has not run against this record.
 **Assembled:** 2026-08-11
 **Authority:** `.project/active/cutover-recovery/plan.md` — Phase 5, "Changes required"
+**Record commit:** `013d6a1` — this record and its run artifacts only; it changes no production
+or test file, so the candidate under review is the tree at `c4e9b76`.
 **Machine-readable twin:** `evidence/candidate.json` (every number below is derived there; the
 builder is `evidence/phase5-runs/build_candidate.py`)
 

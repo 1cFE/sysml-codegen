@@ -1038,8 +1038,11 @@ remains.
 ### Owner gate
 
 - Owner disposition: `PENDING`
-- Final sysml-codegen candidate OID: `PENDING`
-- Final agentic-mbse candidate OID: `PENDING`
+- Final sysml-codegen candidate OID: `c4e9b76c024b7852da6ebccb46ab62ac4e7a4bfb` (branch `item7-rebuild`).
+  The candidate record itself is committed on top at `013d6a1`, which changes no production or
+  test file; the candidate under review is the tree at `c4e9b76`.
+- Final agentic-mbse candidate OID: `cc6c7a7411f6338a4811a7cc58ca002c29ef177b` (branch `item7-rebuild`)
+- Candidate record: `evidence/candidate.md` + `evidence/candidate.json`, committed at `013d6a1`
 - Audit artifact: `PENDING`
 
 ---
@@ -5044,8 +5047,8 @@ items are ruled on first, or held out deliberately, exactly as the simulation he
   in it is typed by hand. Run artifacts for all three runs are committed under
   `evidence/phase5-runs/`.
 - **Candidate OIDs:** sysml-codegen `item7-rebuild` `c4e9b76` + agentic-mbse `item7-rebuild`
-  `cc6c7a7`, with TEAx pinned at `fa0e06a9`. Recorded in the record; the OID of the commit
-  carrying the record itself is written back below.
+  `cc6c7a7`, with TEAx pinned at `fa0e06a9`. The record itself is committed on top at `013d6a1`,
+  which changes no production or test file.
 - **Three consecutive complete runs, all identical** (compared field by field in the builder, not
   by eye): codegen suite **3862 / 47 / 53** with zero license-skip lines, agentic suite
   **1825 / 1 / 5**, execution lane **53**, corpus **15 graphs / 22 `ElaborationError`** with
