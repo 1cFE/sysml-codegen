@@ -6,6 +6,20 @@ standalone data structures that Item 4 consumes for pipeline integration.
 This is a pure extraction-layer module — no pipeline, backtracker, or
 generation changes.
 
+**Off the shipped route, retained, and here is the measurement (Revise step 6d).** Nothing
+in ``src/`` imports this module: its consumer was the deleted ``pipeline_builder.py`` stack,
+and the elaborator reads redefinitions, multiplicity and aggregation terms itself from the
+occurrence graph. What keeps it in the tree is ``tests/helpers/live_extraction.py``, the
+shared live-extraction harness six conformance modules read — including
+``test_ast_dispatch_invariant.py``, whose other legs pin shipped code
+(``expression_utils.reconstruct_expression``, ``calc_compat_renderer``). Deleting this
+module therefore means re-authoring that harness and the AST/HR requirement families, and
+the elaborator's equivalents are not shown to be equivalent. That is a retirement step, not
+a repair, so it is recorded here and left to an owner rather than taken silently.
+
+Read it as the legacy extraction lane's redefinition reader. It is not a second
+implementation the product keeps in sync with anything.
+
 Key functions:
 - extract_redefinitions(): Scan :>> ReferenceUsage members on a PartDef
 - extract_design_overrides(): Scan design PartUsages for deep-path :>> overrides

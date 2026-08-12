@@ -1,22 +1,31 @@
-"""Deterministic on-disk JSON serialization for contract files (design.md:196-201).
+"""Deterministic JSON serialization for contracts (design.md:196-201), both forms.
 
-The fingerprint payload form lives in ``generation.constraint_catalog._canonical_json``
-(compact, reused per P2). This is the sibling on-disk form: pretty and human-readable but
-still byte-stable across two builds (INV-6), so a contract file's own bytes hash
-reproducibly inside the seal.
+Two byte-stable spellings live here, side by side because they are the same decision seen
+twice. ``canonical_json`` is the compact fingerprint payload form — what gets hashed.
+``write_contract_json`` is the on-disk form: pretty and human-readable but still identical
+across two builds (INV-6), so a contract file's own bytes hash reproducibly inside the seal.
+
+``canonical_json`` moved here from ``generation.constraint_catalog`` in Revise step 6d. It
+sat there because catalog assembly was its first caller; assembly is now the projector's
+(`elaboration/project.py`), and the contract fingerprint is the only reader left.
 """
 
 from __future__ import annotations
 
 import json
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from pathlib import Path
 
     from pydantic import BaseModel
 
-__all__ = ["write_contract_json"]
+__all__ = ["canonical_json", "write_contract_json"]
+
+
+def canonical_json(obj: Any) -> str:
+    """Return the compact, key-sorted, ASCII-safe JSON form used as a fingerprint payload."""
+    return json.dumps(obj, sort_keys=True, separators=(",", ":"), ensure_ascii=True)
 
 
 def write_contract_json(path: Path, model: BaseModel) -> None:

@@ -23,7 +23,7 @@ from agentic_mbse.sysml.expression_ir import (
 )
 
 from sysml_codegen.generation import CodeGenerationError
-from sysml_codegen.generation.constraint_catalog import assemble_constraint_catalog, assert_same_ir
+from sysml_codegen.generation.constraint_catalog import assert_same_ir
 from sysml_codegen.generation.modules import (
     compile_shared_predicates,
     constraint_predicate_function_name,
@@ -38,6 +38,7 @@ from sysml_codegen.resolution.models import (
     ModuleOutput,
     PipelineModule,
 )
+from tests.helpers.retired_catalog_assembly import assemble_constraint_catalog
 
 TEMPLATE_DIR = Path(__file__).parent.parent.parent / "src" / "sysml_codegen" / "templates"
 

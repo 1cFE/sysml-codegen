@@ -2,7 +2,6 @@
 
 import os
 from pathlib import Path
-from types import SimpleNamespace
 
 import pytest
 from agentic_mbse.sysml.constraint_facts import ConstraintFacts
@@ -18,6 +17,7 @@ from sysml_codegen.cli import (
     _generate_backlog,
     _generate_entry_points,
     _generate_modules,
+    _generate_package_from_graph,
     _generate_pipeline,
     _generate_registry,
     _generate_schemas,
@@ -25,11 +25,9 @@ from sysml_codegen.cli import (
     _generate_tests,
     _get_template_env,
     _seal_package,
-    _generate_package_from_graph,
     run_codegen,
 )
 from sysml_codegen.generation import CodeGenerationError
-from sysml_codegen.generation.constraint_catalog import assemble_constraint_catalog
 from sysml_codegen.resolution.models import (
     ComputationGraph,
     ConcreteConstraint,
@@ -42,6 +40,7 @@ from sysml_codegen.resolution.models import (
     ModuleOutput,
     PipelineModule,
 )
+from tests.helpers.retired_catalog_assembly import assemble_constraint_catalog
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 D38_MODEL = REPO_ROOT / "tests/fixtures/d38_caret"

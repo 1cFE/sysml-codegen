@@ -13,9 +13,6 @@
 > Everything below is retained as the record of the deleted design. It is accurate about the
 > code that was removed and is **not a description of what the product does**. For that, read
 > [00-pipeline-overview](00-pipeline-overview.md).
->
-> This document also cites `core/graph_algorithms.py`, which has never existed in this tree.
-> Recorded rather than fixed: it predates the recovery and needs an owner.
 
 After [resolution](03-resolution-overview.md), [module construction](05-module-factory.md),
 and [entry point classification](06-entry-point-classifier.md), every piece of the
@@ -380,10 +377,11 @@ The codebase currently has two Kahn's implementations:
 2. **`_unified_topological_sort`** (resolution layer) -- operates on
    `PipelineModule` objects, uses `deque` for O(1) popleft, O(V + E).
 
-Post-refactor, these converge into one canonical `topological_sort(nodes, edges)`
-in `core/graph_algorithms.py`. Both call sites adapt their data into the
-`(nodes, edges)` interface. One implementation, one set of tests, one place
-to fix bugs.
+The plan was to converge these into one canonical `topological_sort(nodes, edges)` in a
+`core/graph_algorithms.py`. **That module was never written**, and both call sites above
+were deleted with the legacy stack, so the convergence has no subject left. The shipped
+route has one topological sort, `_topological_modules` in `elaboration/project.py`, which
+is where the plan's "one implementation" ended up by a different road.
 
 ## Related Documents
 

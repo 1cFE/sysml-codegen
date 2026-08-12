@@ -16,8 +16,8 @@ from sysml_codegen.contracts.models import (
     ContractParameter,
     ModelContract,
 )
+from sysml_codegen.contracts.serialize import canonical_json
 from sysml_codegen.contracts.versions import CATALOG_SCHEMA_VERSION
-from sysml_codegen.generation.constraint_catalog import _canonical_json
 
 if TYPE_CHECKING:
     from sysml_codegen.resolution.models import ComputationGraph
@@ -67,7 +67,7 @@ def build_model_contract(graph: ComputationGraph) -> ModelContract:
         "catalog_schema_version": CATALOG_SCHEMA_VERSION,
     }
     semantic_fingerprint = hashlib.sha256(
-        _canonical_json(unfingerprinted).encode("utf-8")
+        canonical_json(unfingerprinted).encode("utf-8")
     ).hexdigest()
 
     return ModelContract(

@@ -25,11 +25,12 @@ SRC_DIR = Path(__file__).resolve().parents[2] / "src" / "sysml_codegen"
 # The modules that assemble the catalog and record its identity fields. A reconstruction
 # workaround would live here — this is where the recorded fields are read and projected.
 # The lowering module that used to hold the minting half retired with the v5 family
-# (retirement step 2); the exact route mints its ``ConcreteConstraint``s in
-# ``elaboration/project.py``, off the ``ConstraintNode`` fields ``elaboration/graph.py``
-# records, so those two files take its place in the scan set.
+# (retirement step 2); the exact route mints its ``ConcreteConstraint``s *and* projects the
+# catalog entries in ``elaboration/project.py``, off the ``ConstraintNode`` fields
+# ``elaboration/graph.py`` records. ``generation/constraint_catalog.py`` left the scan set in
+# Revise step 6d when its assembler moved to ``tests/helpers/retired_catalog_assembly.py``:
+# it produces no catalog now, so scanning it would prove nothing.
 CATALOG_PRODUCER_FILES = [
-    SRC_DIR / "generation" / "constraint_catalog.py",
     SRC_DIR / "elaboration" / "project.py",
     SRC_DIR / "elaboration" / "graph.py",
     SRC_DIR / "resolution" / "models.py",
@@ -79,9 +80,10 @@ def test_scan_actually_covers_the_catalog_producer():
     scan proves nothing."""
     for path in CATALOG_PRODUCER_FILES:
         assert path.is_file(), f"catalog producer file missing from scan set: {path}"
-    assembly = (SRC_DIR / "generation" / "constraint_catalog.py").read_text()
-    assert "source_form=" in assembly, "scan set no longer covers catalog entry projection"
-    minting = (SRC_DIR / "elaboration" / "project.py").read_text()
-    assert "source_form=node.source_form" in minting, (
+    projection = (SRC_DIR / "elaboration" / "project.py").read_text()
+    assert "ConstraintCatalogEntry(" in projection, (
+        "scan set no longer covers catalog entry projection"
+    )
+    assert "source_form=node.source_form" in projection, (
         "scan set no longer covers the exact route's ConcreteConstraint minting"
     )
