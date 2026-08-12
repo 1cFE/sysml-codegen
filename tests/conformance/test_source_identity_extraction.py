@@ -204,9 +204,12 @@ def test_cross_owner_consumers_share_one_exact_referent(mixed) -> None:
     assert child.referent.owner_is_definition
     assert not child.is_self_binding
 
-    from agentic_mbse.sysml.constraint_extraction import extract_constraint_facts
+    from agentic_mbse.sysml.constraint_extraction import extract_identified_constraint_facts
 
-    facts = extract_constraint_facts(mixed["model"])
+    # `.facts` is the same neutral payload the retired `extract_constraint_facts`
+    # returned — both come from one `_extract_constraint_facts` sweep — so no
+    # expectation below moves with the repoint.
+    facts = extract_identified_constraint_facts(mixed["model"]).facts
     guards = [
         usage
         for usage in facts.usages
