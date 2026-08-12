@@ -158,6 +158,61 @@ class _PendingAlias:
     expression: Any
 
 
+def _computed_expression_input_names(
+    facts: Sequence[tuple[ResolvedSemanticReferenceFact, bool]],
+) -> dict[int, str]:
+    """Render the narrowest names that distinguish same-leaf semantic chains.
+
+    A unique leaf keeps the established leaf-only name. Exact repeated chains
+    keep it too, so projection can deduplicate repeated reads of one source.
+    Only distinct resolved-ID chains with the same leaf name add resolved segment
+    names, using the shortest suffix that distinguishes the chains.
+    """
+    names_by_ordinal: dict[int, str] = {}
+    chains_by_leaf: dict[
+        str,
+        dict[tuple[UUID, ...], tuple[str, ...]],
+    ] = defaultdict(dict)
+
+    for reference_ordinal, (fact, _plural) in enumerate(facts):
+        leaf = fact.leaf
+        if leaf is None:
+            continue
+        leaf_name = (
+            fact.resolved_member_names[-1]
+            if fact.resolved_member_names
+            else leaf.element_name
+        )
+        names_by_ordinal[reference_ordinal] = leaf_name
+        chain_identity = fact.segment_element_ids or (leaf.element_id,)
+        resolved_names = tuple(
+            segment.element_name for segment in fact.segments if segment.element_name
+        )
+        chains_by_leaf[leaf_name].setdefault(chain_identity, resolved_names or (leaf_name,))
+
+    for leaf_name, chains in chains_by_leaf.items():
+        if len(chains) < 2:
+            continue
+        rendered_by_chain: dict[tuple[UUID, ...], str] | None = None
+        for suffix_width in range(2, max(map(len, chains.values())) + 1):
+            candidates = {
+                identity: "_".join(resolved_names[-suffix_width:])
+                for identity, resolved_names in chains.items()
+            }
+            rendered_by_chain = candidates
+            if len(set(candidates.values())) == len(candidates):
+                break
+        if rendered_by_chain is None:
+            continue
+        for reference_ordinal, (fact, _plural) in enumerate(facts):
+            if names_by_ordinal.get(reference_ordinal) != leaf_name or fact.leaf is None:
+                continue
+            chain_identity = fact.segment_element_ids or (fact.leaf.element_id,)
+            names_by_ordinal[reference_ordinal] = rendered_by_chain[chain_identity]
+
+    return names_by_ordinal
+
+
 def elaborate(
     model: Any,
     calc_defs: Sequence[CalculationDefinitionData],
@@ -1890,6 +1945,11 @@ class _ExactElaborator:
                     error.detail,
                 )
                 continue
+            input_names = (
+                _computed_expression_input_names(facts)
+                if isinstance(pending.consumer, CalcNode)
+                else {}
+            )
             aggregation_ordinals: list[int] = []
             for reference_ordinal, (fact, plural) in enumerate(facts):
                 if plural:
@@ -1928,10 +1988,13 @@ class _ExactElaborator:
                             leaf,
                             target_scope,
                         )
-                    input_name = (
-                        fact.resolved_member_names[-1]
-                        if fact.resolved_member_names
-                        else leaf_fact.element_name
+                    input_name = input_names.get(
+                        reference_ordinal,
+                        (
+                            fact.resolved_member_names[-1]
+                            if fact.resolved_member_names
+                            else leaf_fact.element_name
+                        ),
                     )
                     pending.consumer.input_names[port] = input_name
                     pending.consumer.input_metadata[port] = PortMetadata(

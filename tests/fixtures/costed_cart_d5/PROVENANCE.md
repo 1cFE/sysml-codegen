@@ -19,15 +19,13 @@ corpus row 33, a ratified `expected-collapse`: the exact route refuses it with 2
 1. **D-5 binding form.** Every calc-usage binding renames the formal
    (`in area_in = area`) rather than binding a formal to an attribute of its own name.
 
-2. **One named term per aggregation.** An assembly cannot write
-   `sum(deck_panel.capital_cost) + sum(caster.capital_cost)`. The exact route names an
-   expression parameter after the last member of the reference and drops the qualifier
-   (`elaboration/elaborate.py:1901`), so both terms render `capital_cost` and the projection
-   refuses the model with `SI_RENDERING_COLLISION`
-   (`elaboration/project.py:598-604`). Each child's contribution therefore gets its own
-   named attribute and the rollup adds those names. The refusal is pinned as public
-   behaviour by
-   `tests/integration/test_costed_component_exact_route.py::test_a_two_term_same_name_rollup_is_refused`.
+2. **Named aggregation terms.** The fixture gives each child's contribution its own named
+   attribute and adds those names. This remains useful for readable rollups and independently
+   inspectable per-role modules. It is no longer required to avoid `SI_RENDERING_COLLISION`:
+   when distinct resolved chains in one expression share a leaf name, the exact route retains
+   the shortest resolved qualifier that distinguishes them. The direct two-term form and its
+   `panel_capital_cost_{0,1}` / `caster_capital_cost_{0,1}` inputs are pinned by
+   `tests/integration/test_costed_component_exact_route.py::test_a_two_term_same_name_rollup_keeps_both_resolved_source_families`.
 
 ## Hand-derived values
 

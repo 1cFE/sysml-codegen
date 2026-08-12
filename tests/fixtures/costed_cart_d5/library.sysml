@@ -6,24 +6,21 @@ package CostedCartLibrary {
     pattern that ``solar_battery_model`` carried. That fixture is a ratified
     ``expected-collapse`` row (24x ``SI_SELF_BINDING``), so the exact route
     refuses it and its end-to-end proof could not follow the authority switch.
-    The shape here is the same one, written the two ways the exact route
-    requires.
+    The shape here is the same one, with the D-5 binding form and readable
+    named aggregation terms.
 
     **Difference one — the D-5 binding form.** Every calc-usage binding renames
     the formal (``in area_in = area``) instead of binding a formal to an
     attribute of its own name.
 
-    **Difference two — one named term per aggregation.** An assembly cannot
-    write ``sum(deck_panel.capital_cost) + sum(caster.capital_cost)``. The
-    exact route names an expression parameter after the *last member* of the
-    reference, dropping the qualifier, so two terms reading a same-named
-    attribute off different children both render ``capital_cost`` and the
-    projection refuses the model with ``SI_RENDERING_COLLISION``. Each child's
-    contribution therefore gets its own named attribute
-    (``panel_capital``, ``caster_capital``) and the rollup adds those. The
-    refusal is public behaviour and is pinned by
-    ``test_costed_component_exact_route.py::test_a_two_term_same_name_rollup_is_refused``;
-    it is a recorded gap, not this fixture's invention.
+    **Difference two — named aggregation terms.** Each child's contribution
+    gets its own named attribute (``panel_capital``, ``caster_capital``) and
+    the rollup adds those. This remains useful for readable rollups and
+    independently inspectable per-role modules. It is no longer required to
+    avoid ``SI_RENDERING_COLLISION``: a direct expression over same-named
+    leaves keeps enough resolved child identity to distinguish its inputs.
+    ``test_costed_component_exact_route.py::test_a_two_term_same_name_rollup_keeps_both_resolved_source_families``
+    pins the direct form.
 
     What the shape carries, one trigger per bullet:
       * leaf parts with an embedded cost model, exposing their cost attributes
@@ -44,7 +41,7 @@ package CostedCartLibrary {
 
     **Source**: authored for recovery plan Gate 4C, rows L-199/L-203/L-198/L-201
     **Reference**: .project/active/cutover-recovery/plan.md, Gate 4C
-    **Last Updated**: 2026-08-11
+    **Last Updated**: 2026-08-12
     */
 
     private import ScalarValues::Real;

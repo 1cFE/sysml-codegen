@@ -15,10 +15,10 @@ topologically ordered, and the arithmetic matches values derived by hand from
 the model (``tests/fixtures/costed_cart_d5/PROVENANCE.md``), never read back
 from the generator.
 
-One property the original could not state is stated here: the exact route
-**refuses** a rollup whose two terms read the same attribute name off different
-children. That refusal is why the fixture uses named per-child aggregations,
-so it is pinned rather than left as fixture folklore.
+One property the original could not state is stated here: the exact route keeps
+the resolved child identity when one rollup reads the same attribute name from
+two different child roles. The fixture's named per-child aggregations remain a
+readable authored pattern, while a direct two-term rollup is executable too.
 """
 
 from __future__ import annotations
@@ -321,13 +321,15 @@ def test_the_deck_rollup_sums_its_four_panels_and_the_allocation(package: Path) 
     assert total["capital_cost"] == 650.0
 
 
-def test_a_two_term_same_name_rollup_is_refused(tmp_path: Path) -> None:
-    """The constraint that shaped the fixture, pinned as public behaviour.
+def test_a_two_term_same_name_rollup_keeps_both_resolved_source_families(
+    tmp_path: Path,
+) -> None:
+    """A same-leaf rollup keeps both child roles through the public route.
 
-    Two rollup terms reading the same attribute name off different children both
-    render the parameter ``capital_cost`` — the exact route names an expression
-    parameter after the reference's last member and drops the qualifier — so the
-    projection refuses the model rather than silently dropping a term.
+    ``panel_total`` pins the narrow boundary: with only one resolved chain in
+    that expression, its public inputs keep their prior leaf-only names.
+    ``repeated_panel`` pins semantic-source deduplication without adding another
+    licensed test node.
     """
     source = tmp_path / "model.sysml"
     source.write_text(
@@ -350,25 +352,74 @@ def test_a_two_term_same_name_rollup_is_refused(tmp_path: Path) -> None:
         "        part panel : 'PanelX' [2];\n"
         "        part caster : 'CasterX' [2];\n"
         "        :>> capital_cost = sum(panel.capital_cost) + sum(caster.capital_cost);\n"
+        "        attribute panel_total : Real = sum(panel.capital_cost);\n"
+        "        attribute repeated_panel : Real = "
+        "sum(panel.capital_cost) + sum(panel.capital_cost);\n"
         "    }\n"
         "    part asm : 'AsmX' { :>> panel.x = 1.0; :>> caster.x = 3.0; }\n"
         "}\n"
     )
 
-    from sysml_codegen.generation import CodeGenerationError
+    from sysml_codegen.contracts.verify import verify_package
     from sysml_codegen.orchestration.exact_pipeline_context import build_exact_pipeline_context
 
-    with pytest.raises(CodeGenerationError) as refusal:
-        build_exact_pipeline_context([tmp_path])
-    assert "SI_RENDERING_COLLISION" in str(refusal.value)
-    assert "capital_cost_0" in str(refusal.value)
+    context = build_exact_pipeline_context([tmp_path])
+    graph = context.computation_graph
+    module_by_name = {module.name: module for module in graph.modules}
 
-    # The same model refused through the public surface, without a half-written tree.
+    rollup = module_by_name["twotermrollup__asm__capital_cost"]
+    source_by_parameter = {
+        item.param_name: item.source.producer_channel for item in rollup.inputs
+    }
+    assert source_by_parameter == {
+        "panel_capital_cost_0": "TwoTermRollup__asm__panel[0]__cm__total",
+        "panel_capital_cost_1": "TwoTermRollup__asm__panel[1]__cm__total",
+        "caster_capital_cost_0": "TwoTermRollup__asm__caster[0]__cm__total",
+        "caster_capital_cost_1": "TwoTermRollup__asm__caster[1]__cm__total",
+    }
+
+    panel_total = module_by_name["twotermrollup__asm__panel_total"]
+    assert [item.param_name for item in panel_total.inputs] == [
+        "capital_cost_0",
+        "capital_cost_1",
+    ]
+    repeated_panel = module_by_name["twotermrollup__asm__repeated_panel"]
+    assert [item.param_name for item in repeated_panel.inputs] == [
+        "capital_cost_0",
+        "capital_cost_1",
+    ]
+    assert repeated_panel.compiled_expression is not None
+    assert repeated_panel.compiled_expression.count("inputs.capital_cost_0") == 2
+    assert repeated_panel.compiled_expression.count("inputs.capital_cost_1") == 2
+
     output = tmp_path / "out"
     assert run_codegen(
         GenerationConfig(models_path=tmp_path, output_path=output, package_name="two_term")
-    ) is False
-    assert not output.exists(), "a refused model must leave no output tree"
+    ) is True
+    assert verify_package(output, "two_term").ok
+
+    impl = output / "handwritten" / "twotermrollup" / "asm" / "capital_cost_impl.py"
+    body = extract_function_body(impl)
+    assert body is not None
+    consumed = {
+        node.attr
+        for node in ast.walk(ast.parse(body))
+        if isinstance(node, ast.Attribute)
+        and isinstance(node.value, ast.Name)
+        and node.value.id == "inputs"
+    }
+    assert consumed == set(source_by_parameter)
+    result = execute_impl_body(
+        body,
+        {
+            "panel_capital_cost_0": 1.0 * 2.0,
+            "panel_capital_cost_1": 1.0 * 2.0,
+            "caster_capital_cost_0": 3.0 * 2.0,
+            "caster_capital_cost_1": 3.0 * 2.0,
+        },
+        ["capital_cost"],
+    )
+    assert result == {"capital_cost": 16.0}
 
 
 def test_the_fixture_is_not_a_corpus_fixture() -> None:

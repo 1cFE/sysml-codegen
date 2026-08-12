@@ -1,37 +1,44 @@
 # Current Work
 
-**Last Updated**: 2026-08-12 (Item 7 narrow-correction steps 1–2 complete; R8 is next)
+**Last Updated**: 2026-08-12 (Item 7 narrow-correction steps 1–3 complete; coverage step 4 is next)
 
 ---
 
 ## Active Work
 
-### 2026-08-12: Item 7 cutover recovery — compiler convergence complete; R8 next
+### 2026-08-12: Item 7 cutover recovery — R8 complete; replacement coverage next
 
-**Where it stands.** Narrow-correction steps 1–2 are complete. The real compiler convergence and
+**Where it stands.** Narrow-correction steps 1–3 are complete. The real compiler convergence and
 ledger-checker hardening landed in codegen commit
-`057bf29a3209470cd6ccfd882b1d3e6dd6d76a45`: the legacy name-keyed compiler/result definitions
-and calculation payload fields are absent, exact API names remain unchanged, and the checker now
-verifies executed symbol removals and deleted-test replacement proof. **[AGENT] (ratified for
-execution by owner, 2026-08-12)** The recovered implementation stays in place. Item 7 remains open
-for R8 and narrow-correction steps 4–10.
+`057bf29a3209470cd6ccfd882b1d3e6dd6d76a45`. R8 now keeps the shortest resolved qualifier only
+when distinct reference chains in one expression share a leaf name; unique chains keep their
+prior leaf-only public names, and repeated exact sources still deduplicate. **[AGENT] (ratified
+for execution by owner, 2026-08-12)** The recovered implementation stays in place. Item 7 remains
+open for narrow-correction steps 4–10.
 
 - **Correction authority:** all ten ratified dispositions are recorded question by question in
   `.project/active/cutover-recovery/owner-disposition-20260811.md`; the persistent ten-step
   execution sequence is in `.project/active/cutover-recovery/plan.md`.
-- **Progress:** narrow-correction steps 1–2 are complete. **Next active step: R8, preserving
-  qualified identity through rendering.** Steps 4–10 follow in plan order.
+- **Progress:** narrow-correction steps 1–3 are complete. **Next active step: replacement and
+  matrix coverage plus the `gain = 100` three-route proof (step 4).** Steps 5–10 follow in plan
+  order.
+- **R8 result:** the direct two-term witness projects exact
+  `panel_capital_cost_{0,1}` and `caster_capital_cost_{0,1}` inputs to four distinct occurrence
+  channels and executes to **16.0**. A unique `panel.capital_cost` chain remains
+  `capital_cost_{0,1}`. The D-5-renamed stage-one solar model now preserves its PV-module,
+  inverter, and array-BOS same-leaf families. Named intermediates remain a useful authored
+  pattern, but are not required to avoid `SI_RENDERING_COLLISION`.
+- **Dependency conclusion:** fix-first succeeded within the elaboration name seam. Item 10 is not
+  an Item 7 dependency.
 - **Step-2 node account:** L-281 retired 10 exact legacy-shape nodes and L-284 retired 11; three
   redundant extractor schema assertions also retired and six checker nodes were added. The
   structured 21-node list and named replacements are in `ledger-4a.json`; the full collection
   decreased by 18 nodes exactly.
-- **Step-2 gates:** focused suite **345 passed / 9 skipped**; full licensed suite **1689 passed /
-  34 skipped / 65 deselected**, zero license-skip lines. Ledger `paths` **304/0**, `surface` **0
-  unrowed**, all six `groups` READY, full `replacements` exit 0 including L-207 **20 passed** and
-  L-033/L-034/L-281/L-284 green. Proof integrity **0 problems over 0 blocked files**; document
-  distinctness **31 checked / 0 identical groups**. Ruff remains **14** existing UP042 findings
-  with zero new findings; the two touched-file findings are unchanged. Mypy remains **57 errors
-  in 11 files**.
+- **Step-3 gates:** focused suite **101 passed**; full licensed suite **1689 passed / 34 skipped /
+  65 deselected** from the unchanged 1,788-node collection, zero license-skip lines; v6 recapture
+  **15/22/0**; corpus **9**; execution **65**. Ledger `paths` **304/0**, `surface` **0**, all six
+  `groups` READY, proof integrity **0/0**, and doc distinctness **31/0**. Changed Python files are
+  ruff-clean; `ruff check src` remains **14** and mypy remains **57 errors in 11 files**.
 - **Superseded checkpoint OIDs:** codegen `6c35aa0`, agentic-mbse `3fbda2f`, TEAx pinned
   `fa0e06a9`.
 - **Checkpoint gates:** codegen suite **1707 passed / 34 skipped / 65 deselected**, zero

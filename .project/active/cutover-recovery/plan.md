@@ -6545,7 +6545,7 @@ record-integrity corrections remain.
       payload shape for real; migrate or retire the recorded legacy-shape nodes; make executed
       rows with deleted responsibility and no replacement proof fail; verify every
       `removes.symbols` entry absent.
-- [ ] **3. R8 fix first.** **[AGENT] (ratified for execution by owner, 2026-08-12)** Preserve
+- [x] **3. R8 fix first.** **[AGENT] (ratified for execution by owner, 2026-08-12)** Preserve
       qualified identity through rendering. Fall back to a shipping gate only if measurement
       shows a substantially larger naming-contract change; Item 10 becomes an explicit Item 7
       dependency only under that fallback.
@@ -6635,6 +6635,72 @@ confirmed zero new findings, so they remain for narrow-correction step 6. `mypy 
 **57 errors in 11 files**. The product worktree was clean after the implementation commit, the
 companion stayed clean at `3fbda2fbfa82f43d59b0262cedd7a7ae241f37d0`, and no premise conflict
 occurred. R8 is the next active step.
+
+#### Narrow-correction step 3 completion
+
+**Completed:** 2026-08-12. **Implementation:** the bounded stage commit reported in the stage
+handoff. R8 was fixed at the elaboration naming seam. Item 10 is not an Item 7 dependency because
+the fix-first path succeeded without a broader naming-contract change.
+
+**Pre-edit measurement.** The authored two-term witness already resolved four distinct typed
+sources. Reference 0 reached `panel.capital_cost` at panel occurrences 0 and 1; reference 1 reached
+`caster.capital_cost` at caster occurrences 0 and 1. Their typed ports, target occurrences, and
+producer edges were distinct. The only loss was `CalcNode.input_names`: all four ports rendered the
+base `capital_cost`, so projection tried `capital_cost_0` and `capital_cost_1` for both families and
+raised `SI_RENDERING_COLLISION`.
+
+**Implementation rule.** Input-name selection now groups reference occurrences by their existing
+leaf name. A leaf used by one resolved chain stays leaf-only. Repeated use of the same exact chain,
+identified by its resolved segment declaration IDs, also stays leaf-only so the existing projector
+deduplication remains intact. Only distinct exact chains that collide on that leaf add resolved
+segment names. The shortest suffix that distinguishes the chains is used. The qualifier comes from
+`ResolvedSemanticReferenceFact.segments`; authored expression text and string lookup are not read.
+Expression port IDs, target occurrences, resolved edges, plural ordering, schemas, channels, and
+projection logic are unchanged.
+
+For the R8 witness, the graph/public-name change is exact:
+
+| reference | source occurrences | before input base / projected candidate | after input base / public parameters |
+|---|---|---|---|
+| `panel.capital_cost` | `panel[0].cm.total`, `panel[1].cm.total` | `capital_cost` / `capital_cost_{0,1}` | `panel_capital_cost` / `panel_capital_cost_{0,1}` |
+| `caster.capital_cost` | `caster[0].cm.total`, `caster[1].cm.total` | `capital_cost` / `capital_cost_{0,1}` | `caster_capital_cost` / `caster_capital_cost_{0,1}` |
+
+The public `run_codegen` route now writes a sealed, integrity-verifiable package. Its target module
+has exactly those four parameters and the four corresponding
+`TwoTermRollup__asm__{panel,caster}[0,1]__cm__total` channels. The generated implementation consumes
+all four and evaluates `2 * (1.0 * 2.0) + 2 * (3.0 * 2.0)` to **16.0**. The same node also proves
+that a non-colliding `panel.capital_cost` expression remains `capital_cost_{0,1}`, and that repeating
+that exact source chain twice still emits only those two inputs. The no-half-written-tree refusal
+contract remains covered by
+`test_public_authority_switch.py::test_generate_from_a_v5_snapshot_refuses_without_falling_back`
+and the missing-snapshot refusal in `test_exact_route_snapshot_generation.py`.
+
+The one full-suite impact was the recorded stage-one `solar_battery_model` refusal oracle in
+`test_d5_variants.py`. The owner-expanded stage boundary replaced it in place with a positive
+exact-source-family check: the D-5-renamed stage-one model now elaborates, with 20
+`pv_module_raw_material_cost_*` inputs, four `inverter_raw_material_cost_*` inputs, and one
+`array_bos_raw_material_cost` input reaching their exact producer occurrence channels. The
+committed named-intermediate variant remains useful and its arithmetic proofs remain unchanged.
+
+**Validation:**
+
+- Focused D-5/R8, option-C group identity and filename, plural elaboration/projection, computed
+  expression, and public generation tests: **101 passed**.
+- Full licensed non-execution suite: **1,788 collected / 1,723 selected / 1,689 passed / 34
+  skipped / 65 deselected**, zero license-skip lines. Both changed tests were repurposed in place,
+  so the node count did not change.
+- `capture_v6_batch.py --verify`: **15 captured / 22 refused / 0 deviations**; corpus selection:
+  **9 passed**.
+- Execution lane: **65 passed**. The first sandboxed attempt reached 52 passes and 13 relocated-
+  snapshot setup errors because `/home/reid/1cfe` was read-only; the permitted canonical rerun
+  created the documented sibling scratch directories and passed all 65.
+- Ledger: `paths` **304 rows / 0 problems**, `surface` **0**, all six `groups` **READY**; proof
+  integrity **0 problems over 0 blocked files**; doc distinctness **31 / 0**.
+- Ruff on all three changed Python files: clean. `ruff check src`: the unchanged **14** UP042
+  findings. `mypy src`: the unchanged **57 errors in 11 files** over 71 source files.
+- `git diff --check`: clean. The option-C parameter sets and parameter-group filename pin stayed
+  unchanged. No JSON key, schema field, parameter-group identity, module name, package path, or
+  output channel outside the same-leaf witnesses changed. No premise conflict occurred.
 
 ---
 

@@ -173,11 +173,10 @@ def test_a_refusal_code_outside_the_rename_recipe_stops_rather_than_guesses() ->
 
 # --- Stage 2: the aggregation split ------------------------------------------
 #
-# The rename alone leaves an assembly's rollup refusing with SI_RENDERING_COLLISION, which is
-# ratified correct behaviour. The cure is the costed_cart_d5 shape: one named attribute per
-# term. A shape change cannot be proved by stripping a suffix, so these pin the three things
-# that make the enumerated difference trustworthy — the summands did not change, the numbers
-# are hand-derived, and the disease still fires without the cure.
+# The committed D-5 variant retains one named attribute per term. Those intermediates remain a
+# useful authored shape, but R8 no longer requires them to distinguish same-leaf source families.
+# A shape change cannot be proved by stripping a suffix, so these pin the summands, hand-derived
+# numbers, and the stage-one graph that now succeeds without the split.
 
 SOLAR = "solar_battery_d5"
 
@@ -262,15 +261,42 @@ def _stage_one_only(destination: Path) -> Path:
     return root
 
 
-def test_the_rename_alone_still_collides_so_the_cure_is_not_hiding_the_disease(
+def test_the_rename_alone_preserves_distinct_same_leaf_source_families(
     tmp_path: Path,
 ) -> None:
-    """Curing a refusal must not hide it. Without stage 2, the collision still fires."""
+    """The stage-one model projects every same-leaf role without the authored split."""
     from sysml_codegen.orchestration.elaborated_pipeline import build_elaborated_pipeline
 
-    with pytest.raises(Exception) as refusal:
-        build_elaborated_pipeline([_stage_one_only(tmp_path)])
-    assert "SI_RENDERING_COLLISION" in str(refusal.value)
+    graph = build_elaborated_pipeline([_stage_one_only(tmp_path)])
+    rollup = _module(graph, "solar_array__raw_material_cost")
+    source_by_parameter = {
+        item.param_name: item.source.producer_channel for item in rollup.inputs
+    }
+
+    plant = "SolarBatteryDesign__solar_battery_plant__solar_array"
+    assert {
+        name for name in source_by_parameter if name.startswith("pv_module_raw_material_cost_")
+    } == {f"pv_module_raw_material_cost_{index}" for index in range(20)}
+    assert {
+        source
+        for name, source in source_by_parameter.items()
+        if name.startswith("pv_module_raw_material_cost_")
+    } == {
+        f"{plant}__pv_module[{index}]__cost_model__material_cost" for index in range(20)
+    }
+    assert {
+        name for name in source_by_parameter if name.startswith("inverter_raw_material_cost_")
+    } == {f"inverter_raw_material_cost_{index}" for index in range(4)}
+    assert {
+        source
+        for name, source in source_by_parameter.items()
+        if name.startswith("inverter_raw_material_cost_")
+    } == {
+        f"{plant}__inverter[{index}]__cost_model__material_cost" for index in range(4)
+    }
+    assert source_by_parameter["array_bos_raw_material_cost"] == (
+        f"{plant}__array_bos__cost_model__material_cost"
+    )
 
 
 def test_the_variant_projects_the_site_infrastructure_arithmetic_by_hand(
