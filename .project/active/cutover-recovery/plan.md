@@ -6124,6 +6124,171 @@ resolves `agentic_mbse` to the wrong branch and the suite fails to collect
 (`ImportError: cannot import name 'preflight_identified'`). Assert the interpreter first, as
 the runbook says.
 
+### Revise step 6c completion — the doc authorship pass, integrity cleanup, D3/R2
+
+**Completed:** 2026-08-12. Brief: `b1c85f7`. Commits: docs `053505d`, integrity `8a96618`,
+design records + this note in the commit carrying them. Clean start at codegen `dcb75ff` /
+agentic `3fbda2f`, re-measured and identical to the brief's expected numbers.
+
+#### Part 1 — the authorship pass, and why the set was bigger than twelve
+
+The set was re-derived at HEAD from `doc-update-list-4d.md`'s own verdicts, and it came out
+**larger than the retirement's 03/04/05/07/09/10/11/12/13/17/24/25**. The extra documents are
+ones the list had already marked *rewritten* or *no stale claims*: their bodies are fine, but
+each carried a paragraph asserting the legacy stack was present-but-unreachable with removal
+gated on owner acceptance. That paragraph is false at HEAD, and it is the same false claim in
+every one of them.
+
+| Doc | What it now claims |
+|---|---|
+| 03, 04, 05, 07, 10, 11, 12, 13, 24 | Historical: the module named is deleted, and the body is the record of the deleted design, not a description of the product. |
+| 09 | Which model rows are live and which describe types deleted with their owners; the rows stay because the historical docs link into them, and L-120 already repointed the test that pinned them. |
+| 17 | Half live, half historical: the declaration-site grouping rule is the product, the deriver below it is deleted code. |
+| 25 | The one survivor — `extraction/hierarchy_resolver.py` is still in the tree with its own coverage and is off the shipped route. Disposition unrecorded. |
+| 00 | The legacy stack is deleted, not pinned-as-residual; the package block lists what went; the index note points at the historical banners. |
+| 02 | The single-authority section states deletion and the two absence checks; the builder half is headed "Historical: the deleted pipeline builder"; `PipelineContext` no longer exists. |
+| 06 | The classifier half is headed "Historical: the deleted classifier"; REQ-EPC-02..08 are that code's. |
+| 16 | New banner: the classification taxonomy is live, the resolution-map half is deleted code, and the elaborator's equivalent is unwritten. |
+| 18 | New banner: `_find_literal_redefinition` is deleted; the shipped equivalent is `ValueSite` on the attribute node, also unwritten. |
+| 27 | The v5 section is historical — measured **0** `extraction_snapshot.json` files in the tree. The recapture batch is recorded owner-accepted. |
+| 30 | The severity-skew section, rewritten (below). |
+| `overview.md` | The same corrections at overview altitude, with the two survivors named. |
+| `modeling-assumptions.md` | Two "retiring route" references re-worded to "deleted legacy route". |
+| `verification-matrix.md` | A measurement instead of a caveat (below). |
+| `doc-update-list-4d.md` | Preamble rewritten to the retired tree, plus a 6c section recording this pass. |
+
+**Doc 30's severity-skew section.** The dead-premise banner is removed and the section rewritten
+to the fact it was surfacing: no severity crosses a process boundary on disk, because the v6
+envelope carries no `ConstraintFacts` and no `severity` field, so skew is impossible **by
+construction** rather than guarded. The v5 three-guard prose is deleted rather than annotated,
+the history is one line, and two sentences note that the upstream guards still exist in
+`agentic_mbse.sysml.constraint_facts` for a caller that does parse serialized facts. The
+REQ-DIAG-04 row now reads "discharged by construction" with that evidence.
+
+**The verification matrix, measured not caveated.** Of the **81** test modules the matrix cites,
+**56 no longer exist in the tree**. A PASS beside one of them records what passed before the
+retirement and cannot be re-run. The header note says so, names where the replacement evidence
+lives (the ledger's `replacement_proof_node`, 221 green / 81 not-required / 0 fail), and records
+that re-deriving the matrix against that map needs an owner.
+
+**Doc distinctness: 31 / 0.**
+
+#### Part 2 — the five integrity items, each with its measurement
+
+1. **One owner per compatibility marker.** `snapshot/envelope.py` restated `expression-ir/v1`
+   and `executable-profile/v4`, both owned by `_upstream_pins.py:27-33`, and
+   `instance-projector/v1` was spelled twice — `envelope.py:103` and
+   `exact_pipeline_context.py:57`. The projector now owns its own semantics
+   (`elaboration/project.py:83`, `PROJECTOR_SEMANTICS`) and both readers import it; the two
+   upstream pins are imported at `envelope.py:101-102`. Three literals became three imports.
+2. **`CONSTRAINT_FACTS_SCHEMA_VERSION` — kept, with its reader named.** Measured: no runtime
+   consumer in `src/` (its guard was the deleted `snapshot/loader.py`), and one reader,
+   `tests/conformance/test_upstream_pins.py`. The module docstring (`_upstream_pins.py:1-31`)
+   now says where each of the three pins is read and why this one has no runtime consumer left.
+   Not deleted: the facts it names are still read live, and the pin plus its test is the only
+   thing that would notice an upstream bump.
+3. **`generation/constraint_catalog.py` — alive via tests, citation fixed, and a bigger fact
+   surfaced.** `assert_same_ir` and `predicate_definition_key` have `src/` callers
+   (`generation/modules.py:157,107,226`), so the module is alive and no ledger row is wanted.
+   But `assemble_constraint_catalog` (`:58`) has **no `src/` caller at all** — its call site was
+   the deleted `pipeline_builder.py`, and the projector assembles the catalog itself
+   (`elaboration/project.py:_build_constraint_catalog`). Three unit modules keep it alive
+   (`test_constraint_emission.py`, `test_catalog_usage_tier.py`, `test_cli_generation.py`). The
+   docstring now says that plainly. **Rule-10:** whether a second assembler earns its place, or
+   the tests should read the projector's, is a disposition with no recorded authority.
+4. **Typed `auto_impl_context`.** `AutoImplContext` / `AutoImplStep` / `AutoImplOutput`
+   (`core/models.py`) replace the untyped dict on `CalcNode` (`elaboration/graph.py:171`) and
+   `PipelineModule` (`resolution/models.py:235`). The codec encodes and decodes it exactly
+   (`snapshot/instance_graph.py`, `_auto_impl_context_to_data` / `_auto_impl_context_from_data`)
+   instead of checking `isinstance(dict)`, and the stencil passes four **named** template inputs
+   (`generation/stencils.py:178-186`) instead of merging arbitrary keys. `output_count` and
+   `single_output_expression` stay because every sealed v6 snapshot carries them; a model
+   validator now makes that redundancy a checked invariant rather than two readers that can
+   disagree. **Wire form unchanged, proved:** `--verify` 15/22/0 over the accepted batch,
+   corpus 9. Three nodes in `test_exact_compiler_core.py` moved from `["key"]` to attribute
+   access — same assertions, same values.
+5. **Unit-annotation normalization, one owner.** `extraction/unit_annotation.py` states the rule
+   once and carries both spellings it needs: `annotated_ast_value` for the syside AST (the
+   `= 0.2 [m]` lane) and `annotated_ir_value` for parsed IR (the `default 40.0 [W]` lane).
+   `elaborate.py` and `modeled_defaults.py` now call it. The two representations still cannot
+   share one implementation — they are not the same data — but the rule now has one home, so a
+   change to what a unit annotation means is an edit to one file rather than two kept in sync by
+   hand. Policy stayed at the call site: the mechanism raises `ValueError`, the elaborator
+   converts it to `ElaborationInvariantError(SI_EDGE_DANGLING)`. The pinned lanes did not move
+   (`tests/conformance/test_unit_annotation_values.py`, 6 nodes green).
+
+#### Part 3 — D3 and R2, recorded as amendments
+
+Both are in `.project/active/elaborator-cutover/design.md`, under **"Amendments — recorded after
+implementation, pending owner ratification"**, each marked `[AGENT amendment, re-derived
+2026-08-12 — pending owner ratification at the gate]`. Spec R2 carries a pointer to A2.
+
+- **D3 (A1) — recorded, not converged, and the reason is audit-F4.** D3 wanted live and capture
+  to share one staged-admission owner. Capture does; live reads caller paths
+  (`orchestration/elaborated_pipeline.py:59` vs `:116`), and `test_snapshot_v6_routes.py:201`
+  pins the split. Re-derived against D3's recorded reasoning: its purpose is that claimed bytes
+  cannot race parsed semantics, and only capture *claims* bytes, so the purpose is served. The
+  pin also buys something D3 did not weigh — two independent arms for the route-parity
+  comparison. **Convergence is not a small, safe change here:** it would rewrite every live
+  node's `source_file` from checkout-absolute to a staged referent, which is exactly
+  **audit-F4**, an open owner question (disposition, question 5). Doing it would answer F4 by
+  side effect. The split is left as shipped, the pin un-inverted, and the amendment says so.
+- **R2 (A2) — amendment, and the design's envelope is not needed.** The implementation omits the
+  designed `capture` object; producer versions live in `authority` instead. Re-derived against
+  R2's own load-bearing rule (integrity-bound and validated, *or* provably non-authoritative):
+  `model_name` and `captured_at` are unverifiable even with the sources in hand, and the digest
+  is unkeyed, so binding them proves nothing about identity; `captured_at` would additionally
+  destroy capture determinism, which is what `--verify` rests on; `options.design_path_filter`
+  names a flag Gate 4B-G0 removed. The shipped envelope satisfies R2's rule better than the
+  designed one. No ruling requested, nothing built.
+- **audit-F4 was not touched.** Where Part 1's rewrites reach the affected text, the present
+  behaviour is stated factually and the open question cited.
+
+#### Battery
+
+| check | baseline (`dcb75ff`) | this stage |
+|---|---|---|
+| licensed suite | 1705 / 34 / 65 | **1705 / 34 / 65**, 0 failed, 0 errors, 0 license-skip lines |
+| exec lane (`pytest tests/execution -m execution`) | 65 | **65** |
+| `capture_v6_batch.py --verify` | 15 / 22 / 0 | **15 / 22 / 0** |
+| `-k corpus` | 9 | **9** |
+| `ruff check src` | 14 | **14** |
+| `ruff check src tests scripts` | 643 | **643** |
+| `mypy src` | 57 in 11 | **57 in 11** (71 files) |
+| `check_ledger_4a paths` | 304 / 0 | **304 / 0** |
+| `surface` | 0 | **0** |
+| `groups` | all affected=0 | **all six affected=0, READY** |
+| `check_proof_integrity.py` | 0 / 0 | **0 / 0** |
+| doc distinctness | 31 / 0 | **31 / 0** |
+| `git diff --check` | clean | **clean** |
+
+No ruff or mypy delta, so nothing to explain row by row. The new module
+`extraction/unit_annotation.py` is clean under ruff.
+
+**One measurement trap, recorded.** The execution lane reads **65 green** as
+`pytest tests/execution -m execution`, which is the gate. Run instead as
+`pytest tests/ -m execution` over the whole tree it reads **64 passed / 1 failed**:
+`test_the_lane_runs_the_real_simkit` asserts the in-repo stub runner is absent from
+`sys.modules`, and a collected sibling imports it first. **Reproduced identically at `dcb75ff`**
+in a scratch worktree before any 6c edit — pre-existing invocation artifact, not caused by this
+stage and not a product defect. Named so the step-7 audit does not read it as a regression.
+
+#### Rule-10 surfacings
+
+1. **The verification matrix cites 56 test modules that no longer exist.** Re-deriving it row by
+   row against the ledger's replacement map is authorship with no recorded authority. Named in
+   the matrix's own header note. Needs an owner.
+2. **Docs 16 and 18 describe deleted mechanisms whose shipped equivalents are unwritten.**
+   Bannered, not rewritten — writing the elaborator's computed-attribute and value-site
+   descriptions is content authorship, not repair.
+3. **Two extraction modules survived the retirement with no public caller:**
+   `extraction/hierarchy_resolver.py` and `extraction/computed_attribute_extractor.py`, both
+   with live conformance coverage. No record says whether they stay.
+4. **`assemble_constraint_catalog` is a second catalog assembler with no `src/` caller**
+   (item 3 above).
+5. **`reference/07` still cites `core/graph_algorithms.py`, which has never existed** — carried
+   forward from Gate 4D, unchanged.
+
 ---
 
 **Status:** Draft → Owner-approved → In progress → Audited → Owner accepted/revised

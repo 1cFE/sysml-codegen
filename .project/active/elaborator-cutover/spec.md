@@ -100,7 +100,10 @@ resolved graph through the public offline route. Sources: `.project/CURRENT_WORK
   Internal implementation phases may be reviewable, but no completed or releasable state may expose
   both projectable authorities. Source: epic `[AGENT] (ratified by owner, 2026-08-07)` strategy at
   `.project/backlog/epic_elaborate_first_architecture.md:113-137`.
-- **[INFERRED] R2 — Complete integrity-bound v6 envelope.** The shipped envelope uses
+- **[INFERRED] R2 — Complete integrity-bound v6 envelope.** *Amended after implementation: the
+  shipped envelope carries no `capture` object. See design.md "Amendments", A2 —
+  `[AGENT amendment, re-derived 2026-08-12 — pending owner ratification at the gate]`.* The
+  shipped envelope uses
   `snapshot_format_version = 6`. A later integer is allowed only if another committed format change
   has already consumed v6 and the design records that fact. The envelope carries model identity,
   capture provenance, a portable source-staleness manifest, the validated instance graph and its
