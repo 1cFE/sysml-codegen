@@ -45,7 +45,7 @@ resolved graph through the public offline route. Sources: `.project/CURRENT_WORK
   `.project/concepts/constraint-execution-authoritative-lifecycle-contract.md:350-379`,
   `.project/completed/20260810_elaborator-identity-completion/spec.md:48-51` and its certification
   at `.project/completed/20260810_elaborator-identity-completion/audit_v3.md:287-302`.
-- [ ] **[NEED] Instance-graph snapshot outcome.** The public snapshot carries the resolved instance
+- [x] **[NEED] Instance-graph snapshot outcome.** The public snapshot carries the resolved instance
   graph the pipeline needs, not extraction facts that require semantic reconstruction. Authority:
   the owner snapshot ruling at `.project/backlog/epic_elaborate_first_architecture.md:67-70`.
 - [ ] **[INFERRED] One atomic shipped authority.** Public live generation, capture, snapshot load,

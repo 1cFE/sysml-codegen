@@ -1,12 +1,12 @@
 # Current Work
 
-**Last Updated**: 2026-08-10 (Item 7 cutover execution SUPERSEDED; recovery is the active work)
+**Last Updated**: 2026-08-11 (Item 7 recovery audit: NEEDS WORK)
 
 ---
 
 ## Active Work
 
-### 2026-08-10: Item 7 cutover recovery — ACTIVE (Phase 2 done)
+### 2026-08-11: Item 7 cutover recovery — ACTIVE (audit: NEEDS WORK)
 
 **The Item 7 cutover execution recorded further down this file is superseded.** It produced no
 commit. Its uncommitted candidate mixed useful work with 222 tracked deletions, 22 corrupted
@@ -16,30 +16,25 @@ show that the cutover preserved the product. Nothing from it is authority.
 - **Plan of record:** `.project/active/cutover-recovery/plan.md` **[OWNER 2026-08-10 approved]**.
   `.project/active/elaborator-cutover/` is retained as shaping and census evidence only, and its
   plan carries a superseded banner.
-- **Phase 1 (preserve) DONE.** The whole incident is recoverable: external archive at
-  `/home/reid/1cfe/item7-recovery-archive/` (manifest SHA-256 `26bdc230…`, 2198 members, every
-  digest re-verified) plus paired forensic commits `item7-forensic-20260810` — codegen
-  `07531e64`, agentic-mbse `ed5b8b02`. Both are local, unpushed, and **never a merge source**.
-  The Item 6 refs never moved: `source-identity-epic` = `1672c576`, `elaborate-first-salvage` =
-  `5088b417`.
-- **Phase 2 (clean baseline) DONE.** Rebuild worktrees `/home/reid/1cfe/sysml-codegen-item7-rebuild`
-  and `/home/reid/1cfe/agentic-mbse-item7-rebuild`, both on branch `item7-rebuild`. Measured
-  baseline: codegen **3358 passed / 47 skipped / 18 deselected** licensed with zero license-skip
-  lines (matches Item 6 exactly), agentic-mbse **1819 passed / 1 skipped / 5 deselected**, the
-  37-path corpus reproducing the certified ledger with **zero mismatches**, and Fusion Tea green
-  at LCOE `270.1211779380445`. Full evidence:
-  `.project/active/cutover-recovery/evidence/baseline.json`.
-- **B37-01 resolved.** All four evidence legs matched on the clean baseline, so the owner
-  pre-ruling applies: **modeled aggregation is executable**. `agg_literal_probe`'s
-  `CodeGenerationError` came from the pre-elaboration calc-def gate, not from aggregation
-  semantics, so the ledger owned the correction, not the implementation. Ledger, spec, and census
-  rows are amended; restoring the literal-bearing test and building a genuinely empty control are
-  Phase 3/4 obligations.
-- **C25/C2 mutation protocol decided.** Mutate at runtime through TEAx typed-entry injection
-  (`PreparedEvaluator.evaluate` / `CandidateBridge.build`); never touch sealed bytes.
-  `inputs/*.json` is inside the seal, and re-sealing an edited input is already refused in code.
-- **Next:** Phase 3 — rebuild the cutover as functional vertical slices (3A…3E), each a green
-  commit reviewed by an independent audit agent before the next begins.
+- **Phases 1–3 DONE.** The incident is preserved, the rebuild started from the certified Item 6
+  baseline, and the exact route now serves the public CLI. The candidate is codegen `ceaade4`
+  with companion `cc6c7a7`; the owner disposition remains pending.
+- **Phase 4 PARTIAL.** The retirement runbook is prepared, but owner-gated deletion of v5,
+  legacy builders, dual-run code, test shims, and wrong-oracle tests has not run.
+- **Phase 5 AUDITED — NEEDS WORK.** The independent audit is
+  `.project/active/cutover-recovery/audit.md`; its product-lens ledger is
+  `.project/active/cutover-recovery/product-lens.md`. Only the instance-graph snapshot success
+  criterion was certified.
+- **[AGENT] Blocking findings.** Companion validation still suppresses the owner-forbidden true
+  self-binding diagnostic when an outer same-named feature exists. The duplicate legacy authority
+  and CLI-shaped test shim remain executable. Public live/relocated mutation and generated-byte
+  parity evidence also remain incomplete. These findings block certification even though the
+  current suites are green.
+- **Fresh audit gates:** codegen **3862 passed / 47 skipped / 53 deselected**; companion **1825
+  passed / 1 skipped / 5 deselected**; real TEAx lane **53 passed**. `ruff check src` still reports
+  16 findings, and mypy remains at the recorded 69-error baseline.
+- **Next:** resolve the product-lens blocks, reconcile the design deviations, obtain owner
+  disposition, execute the reviewed retirement, then rerun `$my-audit`.
 - **Environment:** one task-specific venv at `/home/reid/1cfe/item7-rebuild-venv`. Re-assert
   resolved import paths after any rebuild of it — uv's global cache silently produced an editable
   install pointing at the original worktree (finding F2).

@@ -1008,7 +1008,7 @@ def test_final_candidate_is_repeatable_and_executable(real_teax):
 - [x] Run warm-up plus repeated scale measurements with declared budgets and environment.
 - [x] Run both complete repository suites, lint, type-baseline comparison, diff checks, import
   boundaries, no-residue checks, documentation checks, and test-inventory reconciliation.
-- [ ] Run `$my-audit` with the forensic branch, clean Item 6 baseline, corrected plan, commit series,
+- [x] Run `$my-audit` with the forensic branch, clean Item 6 baseline, corrected plan, commit series,
   and final candidate all available to the auditor.
 - [ ] Stop for explicit owner accept/revise disposition. Do not commit evidence materialization,
   tag, push, promote, or release from this plan.
@@ -1026,7 +1026,7 @@ def test_final_candidate_is_repeatable_and_executable(real_teax):
 
 **Manual**
 
-- [ ] Independent audit reads code and runs checks rather than trusting implementation notes.
+- [x] Independent audit reads code and runs checks rather than trusting implementation notes.
 - [ ] Owner reviews the commit series, functional evidence, deletions, test delta, docs, and audit.
 
 **What we know works after this phase**
@@ -1045,8 +1045,10 @@ remains.
   green at `800ec84`: 3862 / 47 / 53, zero license-skip lines).
 - Final agentic-mbse candidate OID: `cc6c7a7411f6338a4811a7cc58ca002c29ef177b` (branch `item7-rebuild`)
 - Candidate record: `evidence/candidate.md` + `evidence/candidate.json`, committed at `013d6a1`
-- Audit artifact: `evidence/audit-5-final.md` — verdict: the candidate tree certifies, with
+- Candidate-tree audit: `evidence/audit-5-final.md` — verdict: the candidate tree certifies, with
   five findings (one medium, four low), all closed at `4313d6c`/`800ec84`
+- Independent certification audit: `audit.md` — verdict: **Needs Work**; product-lens findings
+  `audit-F1` and `audit-F2` block certification
 
 ---
 
@@ -5047,8 +5049,8 @@ items are ruled on first, or held out deliberately, exactly as the simulation he
 
 ### Phase 5 Completion
 
-- **Candidate assembly completed:** 2026-08-11. **Independent audit:** pending (separate stage).
-  **Owner disposition:** pending.
+- **Candidate assembly completed:** 2026-08-11. **Independent certification audit:**
+  **Needs Work** (`audit.md`). **Owner disposition:** pending.
 - **Record:** `evidence/candidate.md` with its machine-readable twin `evidence/candidate.json`,
   built by `evidence/phase5-runs/build_candidate.py` from the run logs and the tree, so no number
   in it is typed by hand. Run artifacts for all three runs are committed under
