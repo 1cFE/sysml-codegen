@@ -1,5 +1,5 @@
 diff --git a/scripts/retirement_worklist.py b/scripts/retirement_worklist.py
-index ff12133..8e1beb8 100644
+index 502e0cd..91e33a8 100644
 --- a/scripts/retirement_worklist.py
 +++ b/scripts/retirement_worklist.py
 @@ -101,6 +101,9 @@ PULLED_FORWARD = {
@@ -9,6 +9,6 @@ index ff12133..8e1beb8 100644
 +    "L-198": (2, "drives tests/helpers/legacy_route.py, which calls build_pipeline_context"),
 +    "L-199": (2, "drives tests/helpers/legacy_route.py, which calls build_pipeline_context"),
 +    "L-201": (2, "drives tests/helpers/legacy_route.py, which calls build_pipeline_context"),
- }
- 
- #: How each disposition executes.
+     # final-audit F1: the patch-replay test necessarily fails once step 1's patches are
+     # applied to HEAD (it asserts unapplied patches replay cleanly). Deleting it in step 1
+     # instead of step 4 keeps every boundary at 0 failed. Measured: 1 failed at boundaries
