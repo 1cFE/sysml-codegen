@@ -10,8 +10,9 @@ Testing strategy:
   (CONSTRAINT-EXEC Item 13 re-anchored these from the retired ExpressionAST suite).
 - SysIDE-dependent functions (compile_calc_def) tested with mock SysIDE adapter --
   acceptable per Ground Rule 1.
-- Cross-model validation uses real calc def metadata (names, attributes) from
-  extraction snapshots with mock ASTs.
+- Cross-model validation uses real calc def metadata (names, attributes) from live
+  extraction (``tests/helpers/live_extraction.py``), not the retiring v5 extraction
+  snapshots, with mock ASTs; those nodes are license-gated by the fixture.
 
 Requirements: REQ-EC-01 through REQ-EC-07, REQ-AST-01.
 """
@@ -652,12 +653,12 @@ class TestCrossModelValidation:
         ids=["solar_battery", "catf_mfe", "chain_spike"],
     )
     def test_reference_resolution_with_real_attribute_names(
-        self, extraction_snapshots, model_name
+        self, live_extraction_facts, model_name
     ):
         """Build IR FRE nodes using real attribute names → verify correct classification
         (re-anchored onto render_calc_expression -- CONSTRAINT-EXEC Item 13; classification
         is now a render-time policy over caller-supplied name sets, not baked into the tree)."""
-        snapshot = extraction_snapshots[model_name]
+        snapshot = live_extraction_facts[model_name]
         for cd in snapshot["calc_defs"]:
             input_names, output_names = _extract_name_sets(cd)
 
@@ -685,7 +686,7 @@ class TestCrossModelValidation:
     )
     def test_compile_calc_def_with_real_metadata(
         self,
-        extraction_snapshots,
+        live_extraction_facts,
         model_name,
         mock_syside_adapter,
         mock_extract_feature_refs,
@@ -693,7 +694,7 @@ class TestCrossModelValidation:
         """compile_calc_def with real calc def metadata → valid compilation result."""
         from sysml_codegen.extraction.expression_compiler import compile_calc_def
 
-        snapshot = extraction_snapshots[model_name]
+        snapshot = live_extraction_facts[model_name]
         ref_map = mock_extract_feature_refs
 
         for cd in snapshot["calc_defs"]:

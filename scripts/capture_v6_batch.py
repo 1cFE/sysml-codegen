@@ -224,7 +224,21 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     logging.disable(logging.CRITICAL)
 
-    names = args.fixtures or discover_corpus()
+    corpus = discover_corpus()
+    unknown = sorted(set(args.fixtures) - set(corpus))
+    if unknown:
+        # Fail loud before anything is loaded, so a mistyped name can never silently
+        # no-op into an empty capture. Checked against the manifest alone, so it needs
+        # no syside license — the same guarantee ``scripts/capture_filter.py`` gave the
+        # v5 capture scripts, carried here as those retire.
+        print(
+            f"error: unknown fixture name(s): {', '.join(unknown)}. "
+            f"known: {', '.join(corpus)}",
+            file=sys.stderr,
+        )
+        return 2
+
+    names = args.fixtures or corpus
     if args.check:
         if not MANIFEST.exists():
             print("FAIL no batch manifest to check")

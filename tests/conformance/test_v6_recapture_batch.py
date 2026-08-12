@@ -15,6 +15,7 @@ to be checkable by someone who cannot capture.
 from __future__ import annotations
 
 import json
+import subprocess
 import sys
 from pathlib import Path
 
@@ -110,3 +111,41 @@ def test_every_corpus_fixture_with_a_snapshot_is_one_the_batch_claims() -> None:
     assert set(CAPTURED) == on_disk & set(RECORDS), (
         "the batch and the committed corpus snapshots disagree"
     )
+
+
+def test_an_unknown_positional_fixture_name_is_refused_before_anything_loads() -> None:
+    """A mistyped fixture name fails loud, license-free, naming the offender.
+
+    The v5 capture scripts got this from their shared name filter, which loses its last
+    caller when they retire. The rejection moves here, to the driver that survives
+    (owner ruling 2026-08-11, REVISE step 2 item 6). License-free because the check reads
+    only the committed manifest: no model is loaded on this path, which is what makes it
+    runnable in the same place as the rest of this file.
+
+    Named replacement for ``tests/unit/test_capture_fixtures_filter.py``'s
+    ``test_unknown_fixture_name_errors`` and its four ``select_fixtures`` unit nodes.
+    """
+    result = subprocess.run(
+        [sys.executable, "scripts/capture_v6_batch.py", "no_such_fixture", "sample_model"],
+        capture_output=True,
+        text=True,
+        cwd=ROOT,
+    )
+    assert result.returncode == 2, result.stdout
+    assert "no_such_fixture" in result.stderr
+    # The valid name in the same argument list is not treated as a partial success.
+    assert "captured" not in result.stdout
+
+
+def test_a_known_fixture_name_passes_the_same_check() -> None:
+    """The refusal discriminates: ``--check`` with a real corpus name still runs.
+
+    Without this, a driver that rejected every positional name would pass the node above.
+    """
+    result = subprocess.run(
+        [sys.executable, "scripts/capture_v6_batch.py", "--check", "sample_model"],
+        capture_output=True,
+        text=True,
+        cwd=ROOT,
+    )
+    assert result.returncode == 0, result.stdout + result.stderr

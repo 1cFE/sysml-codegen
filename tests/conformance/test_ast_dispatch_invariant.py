@@ -9,7 +9,8 @@ Testing strategy:
 - Static analysis tests parse source files with Python ast module -- no mocks.
 - Behavioral tests use SysIDE adapter name-based fallback with dual-match mock
   classes (acceptable per Ground Rule 1).
-- Snapshot tests use real extraction snapshots from Phase 0.
+- Model-fact tests read live extraction (``tests/helpers/live_extraction.py``), not the
+  retiring v5 extraction snapshots; they are license-gated by the fixture.
 
 Requirements: REQ-AST-01 through REQ-AST-07.
 """
@@ -348,9 +349,9 @@ class TestReqAst04DispatchSiteGuardrail:
 class TestReqAst05SingletonTermClassification:
     """FCE nodes in aggregation AST must be classified as SingletonTerm, not LocalTerm."""
 
-    def test_fce_classified_as_singleton_term_solar_battery(self, solar_battery_snapshot):
+    def test_fce_classified_as_singleton_term_solar_battery(self, solar_battery_facts):
         """Every SingletonTerm in solar_battery has dotted source_path (from FCE)."""
-        hd = solar_battery_snapshot["hierarchy_data"]
+        hd = solar_battery_facts["hierarchy_data"]
         for agg in hd.aggregation_expressions:
             for st in agg.singleton_terms:
                 assert "." in st.source_path, (
@@ -358,9 +359,9 @@ class TestReqAst05SingletonTermClassification:
                     f"(expected dotted FCE path) in aggregation {agg.attribute_name}"
                 )
 
-    def test_no_singleton_term_in_local_terms(self, solar_battery_snapshot):
+    def test_no_singleton_term_in_local_terms(self, solar_battery_facts):
         """No LocalTerm has a dotted attribute_name (Bug A regression)."""
-        hd = solar_battery_snapshot["hierarchy_data"]
+        hd = solar_battery_facts["hierarchy_data"]
         for agg in hd.aggregation_expressions:
             for lt in agg.local_terms:
                 assert "." not in lt.attribute_name, (
@@ -441,9 +442,9 @@ class TestReqAst07ReconstructExpressionFormat:
         result = reconstruct_expression(node)
         assert ".(" not in result, f"Bug A regression: result contains '.(' pattern: {result!r}"
 
-    def test_transformed_expressions_no_dot_paren_in_snapshots(self, solar_battery_snapshot):
+    def test_transformed_expressions_no_dot_paren_in_snapshots(self, solar_battery_facts):
         """No solar_battery transformed_expression contains the '.()' pattern."""
-        hd = solar_battery_snapshot["hierarchy_data"]
+        hd = solar_battery_facts["hierarchy_data"]
         for agg in hd.aggregation_expressions:
             assert ".(" not in agg.transformed_expression, (
                 f"Bug A regression: aggregation {agg.attribute_name} "

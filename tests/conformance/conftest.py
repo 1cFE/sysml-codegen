@@ -146,3 +146,87 @@ def unresolvable_attr_snapshot(extraction_snapshots):
 def alias_agg_probe_snapshot(extraction_snapshots):
     """Convenience fixture for alias_agg_probe snapshot."""
     return extraction_snapshots["alias_agg_probe"]
+
+
+# ---------------------------------------------------------------------------
+# Live extraction facts — the surviving half
+#
+# The fixtures above read the committed v5 ``extraction_snapshot.json`` files through
+# ``snapshot.load_extraction_snapshot``; both retire with the v5 family. The four
+# conformance files whose subject is extraction itself read the fixtures below instead,
+# which run the same three extractors live. See ``tests/helpers/live_extraction.py`` for
+# why the v6 instance-graph snapshot is not a substitute. Live extraction needs a syside
+# license, so every file that reads these carries ``pytestmark = requires_license``.
+# ---------------------------------------------------------------------------
+
+# The models the extraction-fact sweeps range over. Same list as SNAPSHOT_MODELS above,
+# which retires with it; kept separate so the two can be edited independently.
+EXTRACTION_FACT_MODELS = [
+    "sample_model",
+    "solar_battery_model",
+    "catf_mfe_model",
+    "attr_expr_probe",
+    "chain_spike_model",
+    "issue22_model",
+    "expression_binding_probe",
+    "chain_override_probe",
+    "unresolvable_attr_probe",
+    "alias_agg_probe",
+    "wi014_toy",
+    "ife_plant",
+    "self_named_binding_trap",
+    "plant_values",
+    "plant_value_shapes",
+    "gate_a",
+    "gate_a_package_owner",
+    "agg_localterm_probe",
+    "shared_producer",
+]
+
+
+@pytest.fixture(scope="session")
+def live_extraction_facts():
+    """Every sweep model's live extraction facts, keyed by model name.
+
+    License-gated here rather than by a ``requires_license`` mark on each of the ~110
+    reading nodes: the gate belongs to the evidence, and a node that stops reading this
+    fixture stops being gated with no mark to remember to remove. The skip reason is the
+    shared one, so the battery's "zero ``no live syside license`` skip lines" proof still
+    counts these nodes.
+    """
+    from tests.conftest import _license_available
+    from tests.helpers.live_extraction import live_facts
+
+    if not _license_available():
+        pytest.skip("no live syside license")
+    return {name: live_facts(name) for name in EXTRACTION_FACT_MODELS}
+
+
+@pytest.fixture
+def solar_battery_facts(live_extraction_facts):
+    """Live extraction facts for solar_battery_model."""
+    return live_extraction_facts["solar_battery_model"]
+
+
+@pytest.fixture
+def catf_mfe_facts(live_extraction_facts):
+    """Live extraction facts for catf_mfe_model."""
+    return live_extraction_facts["catf_mfe_model"]
+
+
+@pytest.fixture
+def issue22_facts(live_extraction_facts):
+    """Live extraction facts for issue22_model."""
+    return live_extraction_facts["issue22_model"]
+
+
+@pytest.fixture
+def expression_binding_facts(live_extraction_facts):
+    """Live extraction facts for expression_binding_probe."""
+    return live_extraction_facts["expression_binding_probe"]
+
+
+@pytest.fixture
+def alias_agg_probe_facts(live_extraction_facts):
+    """Live extraction facts for alias_agg_probe."""
+    return live_extraction_facts["alias_agg_probe"]

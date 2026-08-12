@@ -97,6 +97,12 @@ PULLED_FORWARD = {
     "L-279": (1, "its 3E residual pin names snapshot.loader, which step 1 removes"),
     "L-281": (1, "its SysIDE-dependent nodes read the conformance v5 fixtures"),
     "L-135": (1, "its wired-path nodes read the conformance v5 fixtures"),
+    # Placed at step 1 by the same measurement as L-135/L-281: their evidence was the
+    # conformance conftest's v5 extraction-snapshot fixtures, which step 1's conftest edit
+    # removes. Both were repointed onto live extraction at REVISE step 3, so the step has
+    # no edit left to make for either — the placement records where they used to break.
+    "L-153": (1, "its model-fact nodes read the conformance v5 fixtures"),
+    "L-100": (1, "its three model-fact nodes read the conformance v5 fixtures"),
     "L-292": (1, "subprocess-runs scripts/capture_pipeline_baselines.py, an L-040 deletion"),
     "L-191": (1, "imports the helper in tests/execution/test_constraint_execution.py"),
     "L-193": (1, "imports the helper in tests/execution/test_constraint_execution.py"),

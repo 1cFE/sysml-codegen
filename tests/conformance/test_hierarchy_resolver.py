@@ -4,6 +4,10 @@ Verifies that hierarchy extraction output conforms to REQ-HR-01 through
 REQ-HR-07 from design intent doc 25-hierarchy-resolver.md. All tests use
 real snapshot data captured in Phase 0 -- no mocks.
 
+Evidence: live extraction (``tests/helpers/live_extraction.py``), not the retiring v5
+extraction snapshots. Every node that reads a ``*_facts`` fixture is license-gated by the
+fixture itself.
+
 Requirements: REQ-HR-01 through REQ-HR-07.
 """
 
@@ -75,10 +79,10 @@ ALL_MODELS = [
 class TestReqHr01RedefinitionTypes:
     """Every RedefinitionData has a valid, exclusive RedefinitionType."""
 
-    def test_every_redef_has_valid_type(self, extraction_snapshots):
+    def test_every_redef_has_valid_type(self, live_extraction_facts):
         """Every redefinition_type in {LITERAL, CHAIN, EXPRESSION} across all models."""
         valid = set(RedefinitionType)
-        for model_name, snapshot in extraction_snapshots.items():
+        for model_name, snapshot in live_extraction_facts.items():
             hd = snapshot["hierarchy_data"]
             for redef in hd.redefinitions:
                 assert redef.redefinition_type in valid, (
@@ -86,11 +90,11 @@ class TestReqHr01RedefinitionTypes:
                     f"{redef.redefinition_type}"
                 )
 
-    def test_all_three_types_present_solar_battery(self, solar_battery_snapshot):
+    def test_all_three_types_present_solar_battery(self, solar_battery_facts):
         """solar_battery has all 3 RedefinitionType values: 54 CHAIN, 4 LITERAL, 20 EXPRESSION."""
         from collections import Counter
 
-        hd = solar_battery_snapshot["hierarchy_data"]
+        hd = solar_battery_facts["hierarchy_data"]
         counts = Counter(r.redefinition_type for r in hd.redefinitions)
         for rtype, expected in SOLAR_BATTERY_REDEF_COUNTS.items():
             assert counts[rtype] == expected, (
@@ -101,9 +105,9 @@ class TestReqHr01RedefinitionTypes:
             f"Total redefinitions: expected {total}, got {len(hd.redefinitions)}"
         )
 
-    def test_redef_type_exclusive(self, extraction_snapshots):
+    def test_redef_type_exclusive(self, live_extraction_facts):
         """Each redefinition has exactly one type (not None, is valid enum member)."""
-        for model_name, snapshot in extraction_snapshots.items():
+        for model_name, snapshot in live_extraction_facts.items():
             hd = snapshot["hierarchy_data"]
             for redef in hd.redefinitions:
                 assert redef.redefinition_type is not None, (
@@ -124,9 +128,9 @@ class TestReqHr01RedefinitionTypes:
 class TestReqHr02ChainPatterns:
     """CHAIN redefs include both dotted-path (FCE) and bare-name (FRE) source_paths."""
 
-    def test_chain_includes_both_dotted_and_bare(self, solar_battery_snapshot):
+    def test_chain_includes_both_dotted_and_bare(self, solar_battery_facts):
         """CHAIN redefs in solar_battery include both dotted-path and bare-name source_paths."""
-        hd = solar_battery_snapshot["hierarchy_data"]
+        hd = solar_battery_facts["hierarchy_data"]
         chains = [r for r in hd.redefinitions if r.redefinition_type == RedefinitionType.CHAIN]
         assert len(chains) == 54, f"Expected 54 CHAIN redefs, got {len(chains)}"
 
@@ -135,9 +139,9 @@ class TestReqHr02ChainPatterns:
         assert len(dotted) > 0, "No dotted-path CHAIN redefs found (FCE pattern)"
         assert len(bare) > 0, "No bare-name CHAIN redefs found (FRE pattern)"
 
-    def test_fce_and_fre_both_produce_chain(self, solar_battery_snapshot):
+    def test_fce_and_fre_both_produce_chain(self, solar_battery_facts):
         """No CHAIN redef has redefinition_type other than CHAIN; both patterns map to same type."""
-        hd = solar_battery_snapshot["hierarchy_data"]
+        hd = solar_battery_facts["hierarchy_data"]
         chains = [r for r in hd.redefinitions if r.redefinition_type == RedefinitionType.CHAIN]
         for redef in chains:
             assert redef.source_path is not None, (
@@ -157,9 +161,9 @@ class TestReqHr02ChainPatterns:
 class TestReqHr03DeepPath:
     """Design-level :>> overrides are correctly flagged as deep-path."""
 
-    def test_design_overrides_deep_path(self, solar_battery_snapshot):
+    def test_design_overrides_deep_path(self, solar_battery_facts):
         """All 13 solar_battery design_overrides have is_deep_path=True."""
-        hd = solar_battery_snapshot["hierarchy_data"]
+        hd = solar_battery_facts["hierarchy_data"]
         assert len(hd.design_overrides) == 13, (
             f"Expected 13 design_overrides, got {len(hd.design_overrides)}"
         )
@@ -169,18 +173,18 @@ class TestReqHr03DeepPath:
                 f"has is_deep_path={override.is_deep_path}, expected True"
             )
 
-    def test_deep_path_target_populated(self, solar_battery_snapshot):
+    def test_deep_path_target_populated(self, solar_battery_facts):
         """All deep-path overrides have non-empty target_path with >= 2 segments."""
-        hd = solar_battery_snapshot["hierarchy_data"]
+        hd = solar_battery_facts["hierarchy_data"]
         for override in hd.design_overrides:
             assert len(override.target_path) >= 2, (
                 f"Override {override.attribute_name} has target_path={override.target_path} "
                 f"(expected >= 2 segments)"
             )
 
-    def test_shallow_redefs_not_deep(self, solar_battery_snapshot):
+    def test_shallow_redefs_not_deep(self, solar_battery_facts):
         """Non-deep-path redefinitions have is_deep_path=False and empty target_path."""
-        hd = solar_battery_snapshot["hierarchy_data"]
+        hd = solar_battery_facts["hierarchy_data"]
         for redef in hd.redefinitions:
             if not redef.is_deep_path:
                 assert redef.target_path == [], (
@@ -208,9 +212,9 @@ class TestReqHr04Multiplicity:
         list(SOLAR_BATTERY_MULTIPLICITIES.items()),
         ids=list(SOLAR_BATTERY_MULTIPLICITIES.keys()),
     )
-    def test_multiplicity_counts_correct(self, solar_battery_snapshot, usage_name, expected_count):
+    def test_multiplicity_counts_correct(self, solar_battery_facts, usage_name, expected_count):
         """solar_battery: pv_module=20, inverter=4, battery_pack=8."""
-        hd = solar_battery_snapshot["hierarchy_data"]
+        hd = solar_battery_facts["hierarchy_data"]
         mult_map = {m.part_usage_name: m for m in hd.multiplicities}
         assert usage_name in mult_map, (
             f"Multiplicity for {usage_name} not found. Available: {list(mult_map.keys())}"
@@ -219,18 +223,18 @@ class TestReqHr04Multiplicity:
             f"{usage_name}: expected count={expected_count}, got {mult_map[usage_name].count}"
         )
 
-    def test_multiplicity_integer_type(self, solar_battery_snapshot):
+    def test_multiplicity_integer_type(self, solar_battery_facts):
         """All multiplicity count values are int (not float, not off-by-one)."""
-        hd = solar_battery_snapshot["hierarchy_data"]
+        hd = solar_battery_facts["hierarchy_data"]
         for mult in hd.multiplicities:
             if mult.count is not None:
                 assert isinstance(mult.count, int), (
                     f"{mult.part_usage_name}: count is {type(mult.count).__name__}, expected int"
                 )
 
-    def test_count_attribute_name_populated(self, solar_battery_snapshot):
+    def test_count_attribute_name_populated(self, solar_battery_facts):
         """All multiplicities with non-None count have non-None count_attribute_name."""
-        hd = solar_battery_snapshot["hierarchy_data"]
+        hd = solar_battery_facts["hierarchy_data"]
         for mult in hd.multiplicities:
             if mult.count is not None:
                 assert mult.count_attribute_name is not None, (
@@ -280,9 +284,9 @@ class TestReqHr05DispatchOrdering:
 class TestReqHr06SumTerms:
     """SumTerm aggregation with parametric multiply transformation."""
 
-    def test_sum_terms_have_multiplicity(self, solar_battery_snapshot):
+    def test_sum_terms_have_multiplicity(self, solar_battery_facts):
         """All SumTerms in solar_battery have non-None multiplicity_attr and multiplicity_count."""
-        hd = solar_battery_snapshot["hierarchy_data"]
+        hd = solar_battery_facts["hierarchy_data"]
         for agg in hd.aggregation_expressions:
             for st in agg.sum_terms:
                 assert st.multiplicity_attr is not None, (
@@ -294,9 +298,9 @@ class TestReqHr06SumTerms:
                     f"{agg.attribute_name} has None multiplicity_count"
                 )
 
-    def test_transformed_expression_has_parametric_multiply(self, solar_battery_snapshot):
+    def test_transformed_expression_has_parametric_multiply(self, solar_battery_facts):
         """Transformed expressions with sum_terms contain (mult_attr * child.attr) pattern."""
-        hd = solar_battery_snapshot["hierarchy_data"]
+        hd = solar_battery_facts["hierarchy_data"]
         for agg in hd.aggregation_expressions:
             for st in agg.sum_terms:
                 if st.multiplicity_attr is not None:
@@ -308,9 +312,9 @@ class TestReqHr06SumTerms:
                         f"'{expected_pattern}' in: {agg.transformed_expression}"
                     )
 
-    def test_entry_points_contain_multiplicity_attrs(self, solar_battery_snapshot):
+    def test_entry_points_contain_multiplicity_attrs(self, solar_battery_facts):
         """For expressions with sum_terms, entry_points includes the multiplicity_attr names."""
-        hd = solar_battery_snapshot["hierarchy_data"]
+        hd = solar_battery_facts["hierarchy_data"]
         for agg in hd.aggregation_expressions:
             for st in agg.sum_terms:
                 if st.multiplicity_attr is not None:
@@ -320,9 +324,9 @@ class TestReqHr06SumTerms:
                         f"entry_points={agg.entry_points}"
                     )
 
-    def test_no_multiplicity_edge_case_issue22(self, issue22_snapshot):
+    def test_no_multiplicity_edge_case_issue22(self, issue22_facts):
         """issue22 SumTerm has multiplicity_attr=None (no named count attribute)."""
-        hd = issue22_snapshot["hierarchy_data"]
+        hd = issue22_facts["hierarchy_data"]
         assert len(hd.aggregation_expressions) == 1, (
             f"Expected 1 aggregation expression, got {len(hd.aggregation_expressions)}"
         )
@@ -350,13 +354,13 @@ class TestReqHr06SumTerms:
 class TestReqHr07AliasDetection:
     """CHAIN-type alias detection on aggregation expressions."""
 
-    def test_alias_detection_zero_result_correct(self, solar_battery_snapshot):
+    def test_alias_detection_zero_result_correct(self, solar_battery_facts):
         """All 20 solar_battery aggregation expressions have empty aliases.
 
         This is correct because no CHAIN sibling source_path ends with an
         aggregation attribute_name. Zero-alias is the expected result, not a bug.
         """
-        hd = solar_battery_snapshot["hierarchy_data"]
+        hd = solar_battery_facts["hierarchy_data"]
         assert len(hd.aggregation_expressions) == 20
         for agg in hd.aggregation_expressions:
             assert agg.aliases == [], (
@@ -364,9 +368,9 @@ class TestReqHr07AliasDetection:
                 f"has unexpected aliases: {agg.aliases}"
             )
 
-    def test_alias_field_exists_and_is_list(self, extraction_snapshots):
+    def test_alias_field_exists_and_is_list(self, live_extraction_facts):
         """Every AggregationExpressionData has aliases field of type list."""
-        for model_name, snapshot in extraction_snapshots.items():
+        for model_name, snapshot in live_extraction_facts.items():
             hd = snapshot["hierarchy_data"]
             for agg in hd.aggregation_expressions:
                 assert isinstance(agg.aliases, list), (
@@ -374,14 +378,14 @@ class TestReqHr07AliasDetection:
                     f"{type(agg.aliases).__name__}, expected list"
                 )
 
-    def test_alias_detection_positive_case(self, alias_agg_probe_snapshot):
+    def test_alias_detection_positive_case(self, alias_agg_probe_facts):
         """alias_agg_probe: CHAIN sibling 'reported_cost = total_cost' detected as alias.
 
         This is the POSITIVE case for REQ-HR-07. The hierarchy resolver detects
         that ':>> reported_cost = total_cost' is a CHAIN-type sibling redef
         whose source_path ends with the aggregation attribute_name 'total_cost'.
         """
-        hd = alias_agg_probe_snapshot["hierarchy_data"]
+        hd = alias_agg_probe_facts["hierarchy_data"]
         assert len(hd.aggregation_expressions) == 1, (
             f"Expected 1 aggregation expression, got {len(hd.aggregation_expressions)}"
         )
@@ -393,9 +397,9 @@ class TestReqHr07AliasDetection:
             f"Expected aliases=['reported_cost'], got {agg.aliases}"
         )
 
-    def test_alias_sibling_redef_is_chain_type(self, alias_agg_probe_snapshot):
+    def test_alias_sibling_redef_is_chain_type(self, alias_agg_probe_facts):
         """The alias sibling redefinition has type=CHAIN, source_path='total_cost'."""
-        hd = alias_agg_probe_snapshot["hierarchy_data"]
+        hd = alias_agg_probe_facts["hierarchy_data"]
         alias_redef = [
             r
             for r in hd.redefinitions
@@ -421,9 +425,9 @@ class TestReqHr07AliasDetection:
 class TestPartUsageNames:
     """part_usage_names correctly maps assembly PartDefs to child names."""
 
-    def test_part_usage_names_populated(self, solar_battery_snapshot):
+    def test_part_usage_names_populated(self, solar_battery_facts):
         """solar_battery part_usage_names has entries for assembly PartDefs."""
-        hd = solar_battery_snapshot["hierarchy_data"]
+        hd = solar_battery_facts["hierarchy_data"]
         assert len(hd.part_usage_names) == 4, (
             f"Expected 4 part_usage_names entries, got {len(hd.part_usage_names)}"
         )
@@ -432,9 +436,9 @@ class TestPartUsageNames:
         solar_array_keys = [k for k in qn_keys if "Solar_Array" in k]
         assert len(solar_array_keys) == 1, f"Expected one Solar_Array key, got {solar_array_keys}"
 
-    def test_part_usage_names_child_names_correct(self, solar_battery_snapshot):
+    def test_part_usage_names_child_names_correct(self, solar_battery_facts):
         """Solar_Array's children include {pv_module, inverter, array_bos}."""
-        hd = solar_battery_snapshot["hierarchy_data"]
+        hd = solar_battery_facts["hierarchy_data"]
         solar_array_key = [k for k in hd.part_usage_names if "Solar_Array" in k][0]
         children = hd.part_usage_names[solar_array_key]
         expected = {"pv_module", "inverter", "array_bos"}
@@ -442,9 +446,9 @@ class TestPartUsageNames:
             f"Solar_Array missing expected children: {expected - children}. Actual: {children}"
         )
 
-    def test_part_usage_names_all_models(self, extraction_snapshots):
+    def test_part_usage_names_all_models(self, live_extraction_facts):
         """part_usage_names populated correctly across all models with hierarchy data."""
-        for model_name, snapshot in extraction_snapshots.items():
+        for model_name, snapshot in live_extraction_facts.items():
             hd = snapshot["hierarchy_data"]
             for qn, names in hd.part_usage_names.items():
                 assert isinstance(qn, str), (
@@ -459,16 +463,16 @@ class TestPartUsageNames:
 class TestUsageTypeMap:
     """usage_type_map maps (parent_qn, child_name) to type PartDef QN."""
 
-    def test_usage_type_map_populated(self, solar_battery_snapshot):
+    def test_usage_type_map_populated(self, solar_battery_facts):
         """solar_battery usage_type_map has entries mapping usage names to type PartDef QNs."""
-        hd = solar_battery_snapshot["hierarchy_data"]
+        hd = solar_battery_facts["hierarchy_data"]
         assert len(hd.usage_type_map) == 12, (
             f"Expected 12 usage_type_map entries, got {len(hd.usage_type_map)}"
         )
 
-    def test_usage_type_map_tuple_keys(self, solar_battery_snapshot):
+    def test_usage_type_map_tuple_keys(self, solar_battery_facts):
         """All usage_type_map keys are tuple[str, str] (deserialized correctly)."""
-        hd = solar_battery_snapshot["hierarchy_data"]
+        hd = solar_battery_facts["hierarchy_data"]
         for key, value in hd.usage_type_map.items():
             assert isinstance(key, tuple), f"usage_type_map key is {type(key)}, expected tuple"
             assert len(key) == 2, f"usage_type_map key has {len(key)} elements, expected 2"
@@ -482,9 +486,9 @@ class TestUsageTypeMap:
 class TestTermTypeClassification:
     """Aggregation terms are correctly classified into SumTerm, SingletonTerm, LocalTerm."""
 
-    def test_term_type_all_three_present(self, solar_battery_snapshot):
+    def test_term_type_all_three_present(self, solar_battery_facts):
         """solar_battery aggregation expressions collectively have all 3 term types."""
-        hd = solar_battery_snapshot["hierarchy_data"]
+        hd = solar_battery_facts["hierarchy_data"]
         has_sum = any(len(a.sum_terms) > 0 for a in hd.aggregation_expressions)
         has_singleton = any(len(a.singleton_terms) > 0 for a in hd.aggregation_expressions)
         has_local = any(len(a.local_terms) > 0 for a in hd.aggregation_expressions)
@@ -492,9 +496,9 @@ class TestTermTypeClassification:
         assert has_singleton, "No SingletonTerms found in solar_battery aggregation expressions"
         assert has_local, "No LocalTerms found in solar_battery aggregation expressions"
 
-    def test_singleton_terms_have_dotted_source_path(self, solar_battery_snapshot):
+    def test_singleton_terms_have_dotted_source_path(self, solar_battery_facts):
         """Every SingletonTerm.source_path contains '.' (dotted FCE pattern)."""
-        hd = solar_battery_snapshot["hierarchy_data"]
+        hd = solar_battery_facts["hierarchy_data"]
         for agg in hd.aggregation_expressions:
             for st in agg.singleton_terms:
                 assert "." in st.source_path, (
@@ -502,9 +506,9 @@ class TestTermTypeClassification:
                     f"in aggregation {agg.attribute_name}"
                 )
 
-    def test_local_terms_have_bare_name(self, solar_battery_snapshot):
+    def test_local_terms_have_bare_name(self, solar_battery_facts):
         """Every LocalTerm.attribute_name does NOT contain '.' (bare name FRE pattern)."""
-        hd = solar_battery_snapshot["hierarchy_data"]
+        hd = solar_battery_facts["hierarchy_data"]
         for agg in hd.aggregation_expressions:
             for lt in agg.local_terms:
                 assert "." not in lt.attribute_name, (
@@ -512,9 +516,9 @@ class TestTermTypeClassification:
                     f"in aggregation {agg.attribute_name}"
                 )
 
-    def test_sum_terms_have_child_dot_attr(self, solar_battery_snapshot):
+    def test_sum_terms_have_child_dot_attr(self, solar_battery_facts):
         """Every SumTerm has non-empty part_usage_name and attribute_name."""
-        hd = solar_battery_snapshot["hierarchy_data"]
+        hd = solar_battery_facts["hierarchy_data"]
         for agg in hd.aggregation_expressions:
             for st in agg.sum_terms:
                 assert st.part_usage_name, (
@@ -528,9 +532,9 @@ class TestTermTypeClassification:
 class TestExpressionValidity:
     """Transformed expressions are valid Python."""
 
-    def test_transformed_expression_valid_python(self, solar_battery_snapshot):
+    def test_transformed_expression_valid_python(self, solar_battery_facts):
         """All 20 transformed expressions pass ast.parse() as valid Python (no .() syntax)."""
-        hd = solar_battery_snapshot["hierarchy_data"]
+        hd = solar_battery_facts["hierarchy_data"]
         assert len(hd.aggregation_expressions) == 20
         for agg in hd.aggregation_expressions:
             try:
@@ -546,13 +550,13 @@ class TestExpressionValidity:
 class TestCrossModelIssue22:
     """Cross-model validation on issue22_model."""
 
-    def test_cross_model_issue22_hierarchy(self, issue22_snapshot):
+    def test_cross_model_issue22_hierarchy(self, issue22_facts):
         """issue22 has 2 redefs, 1 design override, 1 multiplicity, 1 aggregation.
 
         The design override is the plain-usage deep-path literal
         ``:>> widget.base_cost = 100.0`` — captured since Item 9 (REQ-HR-08).
         """
-        hd = issue22_snapshot["hierarchy_data"]
+        hd = issue22_facts["hierarchy_data"]
         assert len(hd.redefinitions) == 2, f"Expected 2 redefinitions, got {len(hd.redefinitions)}"
         assert len(hd.design_overrides) == 1, (
             f"Expected 1 design_override (widget.base_cost), got {len(hd.design_overrides)}"
@@ -573,9 +577,9 @@ class TestCrossModelNoHierarchy:
         ["sample_model", "chain_spike_model"],
         ids=["sample", "chain_spike"],
     )
-    def test_cross_model_no_hierarchy_models(self, extraction_snapshots, model_name):
+    def test_cross_model_no_hierarchy_models(self, live_extraction_facts, model_name):
         """sample_model and chain_spike_model have empty hierarchy data."""
-        hd = extraction_snapshots[model_name]["hierarchy_data"]
+        hd = live_extraction_facts[model_name]["hierarchy_data"]
         assert len(hd.redefinitions) == 0, (
             f"{model_name}: expected 0 redefinitions, got {len(hd.redefinitions)}"
         )
@@ -594,9 +598,9 @@ class TestCrossModelNoHierarchy:
 class TestDataIntegrity:
     """HierarchyExtractionResult structural completeness."""
 
-    def test_hierarchy_data_structure_complete(self, solar_battery_snapshot):
+    def test_hierarchy_data_structure_complete(self, solar_battery_facts):
         """HierarchyExtractionResult has all 7 expected fields."""
-        hd = solar_battery_snapshot["hierarchy_data"]
+        hd = solar_battery_facts["hierarchy_data"]
         assert isinstance(hd, HierarchyExtractionResult)
         assert hasattr(hd, "redefinitions")
         assert hasattr(hd, "design_overrides")
@@ -606,9 +610,9 @@ class TestDataIntegrity:
         assert hasattr(hd, "part_usage_names")
         assert hasattr(hd, "usage_type_map")
 
-    def test_aggregation_expression_count(self, solar_battery_snapshot):
+    def test_aggregation_expression_count(self, solar_battery_facts):
         """solar_battery has exactly 20 aggregation expressions, one per EXPRESSION-type redef."""
-        hd = solar_battery_snapshot["hierarchy_data"]
+        hd = solar_battery_facts["hierarchy_data"]
         expression_redefs = [
             r for r in hd.redefinitions if r.redefinition_type == RedefinitionType.EXPRESSION
         ]
@@ -632,14 +636,14 @@ class TestAliasAggProbe:
     aliases list. Previously, all fixture models had empty aliases.
     """
 
-    def test_hierarchy_structure(self, alias_agg_probe_snapshot):
+    def test_hierarchy_structure(self, alias_agg_probe_facts):
         """alias_agg_probe has 3 redefs, 1 design override, 1 multiplicity, 1 aggregation.
 
         The design override is the plain-usage deep-path literal
         ``:>> widget.base_cost = 50.0`` — dropped before Item 9's guard
         relaxation (REQ-HR-08), captured since.
         """
-        hd = alias_agg_probe_snapshot["hierarchy_data"]
+        hd = alias_agg_probe_facts["hierarchy_data"]
         assert len(hd.redefinitions) == 3, f"Expected 3 redefinitions, got {len(hd.redefinitions)}"
         assert len(hd.design_overrides) == 1, (
             f"Expected 1 design_override (widget.base_cost), got {len(hd.design_overrides)}"
@@ -651,11 +655,11 @@ class TestAliasAggProbe:
             f"Expected 1 aggregation expression, got {len(hd.aggregation_expressions)}"
         )
 
-    def test_redefinition_types(self, alias_agg_probe_snapshot):
+    def test_redefinition_types(self, alias_agg_probe_facts):
         """Alias probe has two CHAIN redefinitions and one EXPRESSION redefinition."""
         from collections import Counter
 
-        hd = alias_agg_probe_snapshot["hierarchy_data"]
+        hd = alias_agg_probe_facts["hierarchy_data"]
         counts = Counter(r.redefinition_type for r in hd.redefinitions)
         assert counts[RedefinitionType.CHAIN] == 2, (
             f"Expected 2 CHAIN redefs, got {counts[RedefinitionType.CHAIN]}"
@@ -664,9 +668,9 @@ class TestAliasAggProbe:
             f"Expected 1 EXPRESSION redef, got {counts[RedefinitionType.EXPRESSION]}"
         )
 
-    def test_aggregation_sum_term(self, alias_agg_probe_snapshot):
+    def test_aggregation_sum_term(self, alias_agg_probe_facts):
         """Aggregation has 1 SumTerm: widget.total_cost with literal multiplicity (no attr)."""
-        hd = alias_agg_probe_snapshot["hierarchy_data"]
+        hd = alias_agg_probe_facts["hierarchy_data"]
         agg = hd.aggregation_expressions[0]
         assert len(agg.sum_terms) == 1, f"Expected 1 sum_term, got {len(agg.sum_terms)}"
         st = agg.sum_terms[0]
@@ -681,9 +685,9 @@ class TestAliasAggProbe:
             f"Expected multiplicity_attr=None (literal [3]), got {st.multiplicity_attr!r}"
         )
 
-    def test_multiplicity_literal(self, alias_agg_probe_snapshot):
+    def test_multiplicity_literal(self, alias_agg_probe_facts):
         """widget has count=3 with count_attribute_name=None (literal multiplicity)."""
-        hd = alias_agg_probe_snapshot["hierarchy_data"]
+        hd = alias_agg_probe_facts["hierarchy_data"]
         assert len(hd.multiplicities) == 1
         mult = hd.multiplicities[0]
         assert mult.part_usage_name == "widget", (
@@ -694,9 +698,9 @@ class TestAliasAggProbe:
             f"Expected count_attribute_name=None, got {mult.count_attribute_name!r}"
         )
 
-    def test_calc_usages_correct(self, alias_agg_probe_snapshot):
+    def test_calc_usages_correct(self, alias_agg_probe_facts):
         """3 CalcUsages: cost_model (leaf), margin_calc (direct), report_calc (via alias)."""
-        calc_usages = alias_agg_probe_snapshot["calc_usages"]
+        calc_usages = alias_agg_probe_facts["calc_usages"]
         instance_names = {cu.instance_name for cu in calc_usages}
         expected_suffixes = {"cost_model", "margin_calc", "report_calc"}
         for suffix in expected_suffixes:
@@ -705,9 +709,9 @@ class TestAliasAggProbe:
                 f"No CalcUsage instance ending with '{suffix}'. Actual: {instance_names}"
             )
 
-    def test_report_calc_binds_through_alias(self, alias_agg_probe_snapshot):
+    def test_report_calc_binds_through_alias(self, alias_agg_probe_facts):
         """report_calc binds cost_input to reported_cost (the CHAIN alias attribute)."""
-        calc_usages = alias_agg_probe_snapshot["calc_usages"]
+        calc_usages = alias_agg_probe_facts["calc_usages"]
         report_calc = [cu for cu in calc_usages if cu.instance_name.endswith("report_calc")]
         assert len(report_calc) == 1
         bindings = report_calc[0].bindings
@@ -724,20 +728,32 @@ class TestAliasAggProbe:
             f"got {binding.source_path!r}"
         )
 
-    def test_part_usage_names_widget_assembly(self, alias_agg_probe_snapshot):
+    def test_part_usage_names_widget_assembly(self, alias_agg_probe_facts):
         """Widget_Assembly's part_usage_names includes 'widget'."""
-        hd = alias_agg_probe_snapshot["hierarchy_data"]
+        hd = alias_agg_probe_facts["hierarchy_data"]
         wa_keys = [k for k in hd.part_usage_names if "Widget_Assembly" in k]
         assert len(wa_keys) == 1, f"Expected 1 Widget_Assembly key, got {wa_keys}"
         children = hd.part_usage_names[wa_keys[0]]
         assert "widget" in children, f"Expected 'widget' in children, got {children}"
 
-    def test_channel_alias_from_chain_redef(self, alias_agg_probe_snapshot):
-        """Widget's ':>> total_cost = cost_model.unit_cost' produces a channel alias."""
-        aliases = alias_agg_probe_snapshot["channel_aliases"]
-        assert len(aliases) >= 1, f"Expected at least 1 channel alias, got {len(aliases)}"
-        # The CHAIN redef on Widget produces a channel alias
-        widget_aliases = [a for a in aliases if "Widget" in a.owning_part_qn]
-        assert len(widget_aliases) >= 1, (
-            f"Expected at least 1 Widget-related alias, got {len(widget_aliases)}"
+    def test_aggregation_carries_its_chain_alias(self, alias_agg_probe_facts):
+        """Widget Assembly's ':>> reported_cost = total_cost' aliases the aggregation.
+
+        REQ-HR-07. The sibling CHAIN redefinition whose source path is the aggregated
+        attribute is recorded as an alias on the aggregation itself
+        (``extraction/hierarchy_resolver.py``, the sibling-alias pass), so a consumer
+        binding ``reported_cost`` reads the same channel as one binding ``total_cost``.
+
+        Repointed from ``test_channel_alias_from_chain_redef``, whose oracle was the v5
+        pipeline's rendered ``channel_aliases`` list (``_build_chain_aliases`` in
+        ``orchestration/pipeline_builder.py``, a deletion row). The generated-package half
+        of that subject is stated on the exact route by
+        ``test_exact_route_alias_aggregation.py::test_the_aggregation_and_its_chain_alias_both_reach_a_consumer``.
+        """
+        hd = alias_agg_probe_facts["hierarchy_data"]
+        assert len(hd.aggregation_expressions) == 1
+        agg = hd.aggregation_expressions[0]
+        assert agg.attribute_name == "total_cost"
+        assert agg.aliases == ["reported_cost"], (
+            f"Expected aliases=['reported_cost'], got {agg.aliases}"
         )
