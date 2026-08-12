@@ -34,10 +34,10 @@ CAPTURED: list[str] = MANIFEST["captured"]
 REFUSED: list[str] = MANIFEST["refused"]
 
 
-def test_the_batch_is_marked_proposed_and_not_accepted() -> None:
-    """It is readiness, not authority, until the owner says otherwise at Phase 5."""
-    assert MANIFEST["status"].startswith("PROPOSED")
-    assert "owner acceptance pending" in MANIFEST["status"]
+def test_the_batch_is_marked_accepted() -> None:
+    """Owner accepted the 15/22 batch at the 2026-08-11 REVISE disposition."""
+    assert MANIFEST["status"].startswith("ACCEPTED")
+    assert "owner ruling 2026-08-11" in MANIFEST["status"]
 
 
 def test_the_batch_claims_every_corpus_fixture_exactly_once() -> None:

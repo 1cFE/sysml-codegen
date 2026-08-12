@@ -1010,8 +1010,9 @@ def test_final_candidate_is_repeatable_and_executable(real_teax):
   boundaries, no-residue checks, documentation checks, and test-inventory reconciliation.
 - [x] Run `$my-audit` with the forensic branch, clean Item 6 baseline, corrected plan, commit series,
   and final candidate all available to the auditor.
-- [ ] Stop for explicit owner accept/revise disposition. Do not commit evidence materialization,
-  tag, push, promote, or release from this plan.
+- [x] Stop for explicit owner accept/revise disposition. Do not commit evidence materialization,
+  tag, push, promote, or release from this plan. (Stopped 2026-08-11; disposition REVISE —
+  see the owner gate.)
 
 ### Validation
 
@@ -1027,7 +1028,8 @@ def test_final_candidate_is_repeatable_and_executable(real_teax):
 **Manual**
 
 - [x] Independent audit reads code and runs checks rather than trusting implementation notes.
-- [ ] Owner reviews the commit series, functional evidence, deletions, test delta, docs, and audit.
+- [x] Owner reviews the commit series, functional evidence, deletions, test delta, docs, and audit.
+  (2026-08-11 — verdict REVISE, `owner-disposition-20260811.md`.)
 
 **What we know works after this phase**
 
@@ -1037,7 +1039,13 @@ remains.
 
 ### Owner gate
 
-- Owner disposition: `PENDING`
+- Owner disposition: **`REVISE`** **[OWNER 2026-08-11]** — the candidate is accepted as a
+  credible **pre-retirement checkpoint**; Item 7 is not complete. The prescribed path is
+  recorded in `owner-disposition-20260811.md` (carried via `handoff-20260811.md`): accept the
+  v6 batch, implement the seven gated migrations, add all-route off-default mutation tests,
+  resolve or shipping-gate R8 plus an R10 collision test, retire with **no provisional trim**,
+  run full gates on the actual retired tree, audit that tree, and regenerate one internally
+  consistent candidate record at the final paired OIDs.
 - Final sysml-codegen candidate OID: `800ec84` (branch `item7-rebuild`). Production and test
   content is the tree certified by the final audit at `c4e9b76`; the commits on top
   (`013d6a1`..`800ec84`) are the candidate record, the final audit record, and the audit's five
@@ -3005,16 +3013,25 @@ parse check cannot reach), and asserts the emitted keys equal the graph's entry-
 verbatim. A collision guard refuses a group whose two keys would sanitize onto one field rather
 than letting the second declaration silently replace the first.
 
-##### S4 — the refusal stands; the modelling requirement is now documentation work
+##### S4 — the refusal is not the final disposition **[OWNER 2026-08-11, amending the ruling above]**
 
-No code change. The fail-closed `SI_RENDERING_COLLISION` is correct recovery-era behaviour, and
-a silent collapse is the incident this recovery exists to undo. What was missing is that no
-document states the requirement, so the working idiom — one named intermediate attribute per
-child role, added by the rollup — is now a **Gate 4D documentation subject** (added to that
-gate's checklist above, with `tests/fixtures/costed_cart_d5/library.sysml` as the worked
-example). The Item 10 cross-reference — the cross-part `child.attr` collapse class, where the
-resolver does not follow per-child `:>>` redefinitions — is recorded on ledger row L-199 and
-carried to the Phase 5 packet. The refusal pin stays where it is.
+The original ruling here — accept the refusal, treat the modelling requirement as
+documentation work — is **overruled** (this is the review's R8). The graph already
+distinguishes `panel.capital_cost` from `caster.capital_cost`; only
+`elaborate.py:1937-1938` (`input_name = fact.resolved_member_names[-1]`) drops the
+qualifier before rendering. The owner's disposition: **preserve the resolved qualifier
+through rendering**, OR record a temporary product defect with an explicit shipping
+dependency on Item 10. The choice between fix-first-with-fallback and
+straight-to-shipping-gate is an **open owner question — do not implement until answered**
+(`owner-disposition-20260811.md`, open question 1). If fixing: check blast radius against
+the 3B option-C group-naming pins, and invert — not delete — the refusal pin at
+`test_costed_component_exact_route.py:324`.
+
+What survives from the original ruling: the fail-closed `SI_RENDERING_COLLISION` was
+correct recovery-era behaviour (a silent collapse is the incident this recovery exists to
+undo), the Gate 4D documentation of the named-intermediate idiom
+(`tests/fixtures/costed_cart_d5/library.sysml` as the worked example), and the Item 10
+cross-reference (the cross-part `child.attr` collapse class) recorded on ledger row L-199.
 
 #### Gate 4C part 3 — the disposition pass and the regrouping (awaiting approval)
 
@@ -3093,13 +3110,15 @@ ledger. Execution lane **38 passed** including the 12 real-TEAx nodes at the rec
 No production or test file was removed. **Stopped for the orchestrator's approval of the
 regrouping before any deletion group runs**, per the ruling.
 
-#### Gate 4C part 4 / Part A — the PROPOSED v6 recapture batch (owner acceptance pending)
+#### Gate 4C part 4 / Part A — the v6 recapture batch (ACCEPTED **[OWNER 2026-08-11]**)
 
 **Why now.** The deferral cascade ended somewhere incoherent: a v5 writer and 37 fixtures with
 no reader, and the legacy stack retained solely as that writer's import closure. The plan's own
 Gate 4C rule is the exit — the v5 snapshots stay until their accepted v6 replacements are ready
-*in the same candidate*. Readiness is producible now; **acceptance stays the owner's at the
-Phase 5 stop**, so this batch is marked PROPOSED and is authority for nothing.
+*in the same candidate*. Readiness was produced at this gate and the batch was marked PROPOSED,
+authority for nothing, pending the Phase 5 stop. **At the 2026-08-11 REVISE disposition the
+owner accepted the 15/22 batch** (`owner-disposition-20260811.md`, step 1): it is now the
+authoritative replacement set for the 37 v5 snapshots it stands in for.
 
 **What was produced.** `scripts/capture_v6_batch.py --verify`, using the shipped public
 `capture_instance_graph_snapshot` and no capture code of its own, so the batch cannot drift from
@@ -4936,11 +4955,20 @@ retiring banner whose subject this retirement deletes (`reference/03, 04, 05, 07
 and `reference/15 §7`, `16` and `18` are recorded stale-minor "ships with the retirement" in the
 4D update list. Their content decision is authorship, not a mechanical edit.
 
-#### The fifth entry — owner-gated, not scheduled
+#### The fifth entry — ruled: implement, do not hold out **[OWNER 2026-08-11]**
 
-Seven items. None may be started without a ruling. Together they are the 113-node provisional
+Seven items, formerly owner-gated and not scheduled. Together they are the 113-node provisional
 trim in `runbook-patches/provisional-trim.txt`, which is what every "0 failed" above is
 measured with held out.
+
+**The rulings (REVISE disposition, `owner-disposition-20260811.md`, step 2):** items 1–2 —
+the coordinated exact-ID type migration in BOTH repos is Item 7 scope; items 3–5 — replace or
+repoint the ~111/113 affected behavior tests before deleting their evidence sources, to the
+part-6 bar (independent expectations, mechanism citations, no thinning; per-node dispositions
+only where a subject genuinely ends, with named replacement); item 6 — carry unknown-fixture
+rejection into the v6 capture driver; item 7 — remove the dead v5 exports. **The provisional
+trim must not be used in the final retirement run.** The per-item text below is the measured
+inventory those rulings act on.
 
 1. **The dual qualifier drop** — L-033, L-034, L-036, L-037. Measured in chunks 12 and 16: all
    eight retained 3C duals fail under the prescribed drop. L-036/L-037 cannot execute at all —
@@ -5050,7 +5078,8 @@ items are ruled on first, or held out deliberately, exactly as the simulation he
 ### Phase 5 Completion
 
 - **Candidate assembly completed:** 2026-08-11. **Independent certification audit:**
-  **Needs Work** (`audit.md`). **Owner disposition:** pending.
+  **Needs Work** (`audit.md`). **Owner disposition:** REVISE, 2026-08-11
+  (`owner-disposition-20260811.md`).
 - **Record:** `evidence/candidate.md` with its machine-readable twin `evidence/candidate.json`,
   built by `evidence/phase5-runs/build_candidate.py` from the run logs and the tree, so no number
   in it is typed by hand. Run artifacts for all three runs are committed under

@@ -252,7 +252,7 @@ def main(argv: list[str] | None = None) -> int:
         MANIFEST.write_text(
             json.dumps(
                 {
-                    "status": "PROPOSED — owner acceptance pending (Phase 5 stop)",
+                    "status": "ACCEPTED — owner ruling 2026-08-11 (REVISE disposition, step 1)",
                     "fixtures": sorted(records),
                     "captured": captured,
                     "refused": refused,

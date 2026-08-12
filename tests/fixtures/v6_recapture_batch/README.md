@@ -1,10 +1,10 @@
-# PROPOSED v6 recapture batch — owner acceptance pending (Phase 5 stop)
+# ACCEPTED v6 recapture batch — owner ruling 2026-08-11
 
-**This batch is not authority.** It is *readiness*. The plan's Gate 4C rule keeps the 37
-committed v5 snapshots "until their accepted v6 replacements are ready in the same
-candidate". This is the replacement set, produced so the retirement can be executed in one
-candidate and reviewed as a whole. **Whether it is accepted is the owner's decision at the
-Phase 5 stop**, and until then nothing here supersedes the v5 fixtures it stands in for.
+**This batch is authority.** The owner accepted it at the 2026-08-11 REVISE disposition
+(`.project/active/cutover-recovery/owner-disposition-20260811.md`, step 1). The plan's
+Gate 4C rule keeps the 37 committed v5 snapshots "until their accepted v6 replacements are
+ready in the same candidate" — this is that accepted replacement set, and the retirement
+executes against it.
 
 Everything in this batch is reversible by Git. If the owner revises the batch, the
 retirement commits that follow it revert with it.

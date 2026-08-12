@@ -1,12 +1,12 @@
 # Current Work
 
-**Last Updated**: 2026-08-11 (Item 7 recovery audit: NEEDS WORK)
+**Last Updated**: 2026-08-11 (Item 7 recovery: owner REVISE disposition; executing the revise path)
 
 ---
 
 ## Active Work
 
-### 2026-08-11: Item 7 cutover recovery — ACTIVE (audit: NEEDS WORK)
+### 2026-08-11: Item 7 cutover recovery — ACTIVE (owner disposition: REVISE, executing)
 
 **The Item 7 cutover execution recorded further down this file is superseded.** It produced no
 commit. Its uncommitted candidate mixed useful work with 222 tracked deletions, 22 corrupted
@@ -17,8 +17,14 @@ show that the cutover preserved the product. Nothing from it is authority.
   `.project/active/elaborator-cutover/` is retained as shaping and census evidence only, and its
   plan carries a superseded banner.
 - **Phases 1–3 DONE.** The incident is preserved, the rebuild started from the certified Item 6
-  baseline, and the exact route now serves the public CLI. The candidate is codegen `ceaade4`
-  with companion `cc6c7a7`; the owner disposition remains pending.
+  baseline, and the exact route now serves the public CLI. The pre-retirement checkpoint is
+  codegen `800ec84` with companion `cc6c7a7`.
+- **[OWNER 2026-08-11] Disposition: REVISE.** The candidate is a credible pre-retirement
+  checkpoint, not a completed Item 7. The prescribed path is
+  `.project/active/cutover-recovery/owner-disposition-20260811.md`: v6 batch accepted (done),
+  implement the seven formerly-gated migrations, all-route mutation tests, R8/R10, retirement
+  with no provisional trim, full gates + audit on the retired tree, one regenerated candidate
+  record. Open owner questions: R8 approach, ruff-16, audit-F4 byte parity.
 - **Phase 4 PARTIAL.** The retirement runbook is prepared, but owner-gated deletion of v5,
   legacy builders, dual-run code, test shims, and wrong-oracle tests has not run.
 - **Phase 5 AUDITED — NEEDS WORK.** The independent audit is
@@ -33,8 +39,8 @@ show that the cutover preserved the product. Nothing from it is authority.
 - **Fresh audit gates:** codegen **3862 passed / 47 skipped / 53 deselected**; companion **1825
   passed / 1 skipped / 5 deselected**; real TEAx lane **53 passed**. `ruff check src` still reports
   16 findings, and mypy remains at the recorded 69-error baseline.
-- **Next:** resolve the product-lens blocks, reconcile the design deviations, obtain owner
-  disposition, execute the reviewed retirement, then rerun `$my-audit`.
+- **Next:** revise-path step 2 — the coordinated dual type migrations in both repos (plus
+  audit-F1 exemption removal and the invalid-manifest fix), then steps 3–7 in order.
 - **Environment:** one task-specific venv at `/home/reid/1cfe/item7-rebuild-venv`. Re-assert
   resolved import paths after any rebuild of it — uv's global cache silently produced an editable
   install pointing at the original worktree (finding F2).
