@@ -91,10 +91,27 @@ def test_an_executed_row_is_placed_nowhere() -> None:
 
 
 def test_the_owner_gated_duals_are_in_no_step() -> None:
-    items = {item.row: item for item in worklist.load_items()}
-    for row in ("L-036", "L-037"):
-        assert items[row].step is None
-        assert items[row].action == "owner-gated"
+    """The two agentic duals are in no step — and after retirement step 6, in no list.
+
+    The owner ruled them in (disposition 2026-08-11, step 2 items 1-2), revise step 2
+    migrated their consumers, and revise step 6 deleted the members and closed both rows at
+    the agentic commit. An executed row is placed nowhere, so the ledger half of this node
+    is now that absence.
+
+    The mechanism it was written to pin is still live and still worth a claim, so it is
+    stated over a constructed row instead of over a spent one: a *proposed* row in
+    ``OWNER_GATED`` is held out of every step rather than falling into one.
+    """
+    rows = {row["id"]: row for row in json.loads(worklist.LEDGER.read_text())["rows"]}
+    placed = {item.row for item in worklist.load_items()}
+    for rid in ("L-036", "L-037"):
+        assert rows[rid]["state"] == "executed"
+        assert rid not in placed
+
+    held_out = worklist.place(dict(rows["L-036"], state="proposed"))
+    assert held_out is not None
+    assert held_out.step is None
+    assert held_out.action == "owner-gated"
 
 
 def test_a_dispositioned_row_that_cannot_be_placed_refuses_rather_than_defaults() -> None:

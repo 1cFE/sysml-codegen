@@ -5831,6 +5831,15 @@ step 4:
 so both rows are marked `executed` at `3fbda2f` with a `revise_step6` note. The ledger now
 reads **0 placed rows, every step empty, no owner-gated rows, 0 problems**.
 
+That close ended one node's subject, and it is re-derived rather than thinned.
+`test_retirement_worklist.py::test_the_owner_gated_duals_are_in_no_step` read the two rows
+out of `load_items()` and asserted their `owner-gated` placement; `place()` returns `None`
+for an executed row before it ever reaches the `OWNER_GATED` branch, so that read has nothing
+to find. The node now states both halves: the ledger fact (both rows `executed`, neither
+placed) and the mechanism the original was written for, over a **constructed** proposed row —
+an `OWNER_GATED` row that is not yet spent is still held out of every step rather than
+falling into one. Without the second half the node would only restate the close.
+
 #### Stale docstrings and an amended pin
 
 Three module docstrings the audit's code-integrity finding named, all amended in the step-2
