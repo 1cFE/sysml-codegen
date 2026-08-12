@@ -4621,10 +4621,17 @@ existed; the final audit re-measured all four boundaries on the candidate tree (
 the tables below carry those numbers. Every number was measured in a scratch `git worktree`;
 the audited tree was never mutated and **nothing has retired**.
 
-What "proven" means here, exactly: with the seven trim-carrying owner-gated items held out as a named,
-committed trim (113 test nodes, listed in `runbook-patches/provisional-trim.txt`), each of the
-four steps ends with **0 failed and 0 errors** across the full battery. What it does not mean:
-the gated items are not solved, and nothing is executed until the owner accepts.
+What "proven" meant when this was written: with the seven trim-carrying owner-gated items held
+out as a named, committed trim (113 test nodes, listed in `runbook-patches/provisional-trim.txt`),
+each of the four steps ends with **0 failed and 0 errors** across the full battery.
+
+**The trim is retired from the final-run flow [OWNER 2026-08-11].** The owner ruled that
+retirement executes with no provisional trim, and that the affected behaviour tests are replaced
+or repointed before their evidence sources are deleted. REVISE step 3 did that: all 113 nodes are
+accounted for without deselecting any of them — 111 repointed onto live extraction, 2
+dispositioned with their replacement authored and green (see "Revise step 3 completion" below). The file
+stays in the tree as the record of what the simulation held out; **it must not be passed to the
+final run.**
 
 #### How a step knows what it contains
 
@@ -4653,10 +4660,15 @@ runbook rests on fails the suite if it stops holding.
 
 | # | Step | Rows | delete / archive / edit | State |
 |---|---|---:|---|---|
-| 1 | G2′, the v5 read path | 99 | 78 / 7 / 14 | **PROVEN green in simulation** |
-| 2 | the v5 family | 155 | 109 / 11 / 35 | **PROVEN green in simulation** |
+| 1 | G2′, the v5 read path | 102 | 80 / 7 / 15 | **PROVEN green in simulation** |
+| 2 | the v5 family | 153 | 107 / 11 / 35 | **PROVEN green in simulation** |
 | 3 | G3′ | 1 | 1 / 0 / 0 | **PROVEN green in simulation** |
-| 4 | G4′ | 3 | 3 / 0 / 0 | **PROVEN green in simulation** |
+| 4 | G4′ | 5 | 5 / 0 / 0 | **PROVEN green in simulation** |
+
+Row counts re-measured at REVISE step 3 (`retirement_worklist.py step N`). The previous
+numbers (99 / 155 / 1 / 3) were already stale before this stage: the tree read 100 / 152 / 1 / 5
+at its HEAD. Step 3 moved four rows — `L-153` and `L-100` gained a step-1 placement, `L-292`
+became a deletion rather than an edit, and the new `L-305` joins step 2.
 | — | owner-gated | 2 + 6 named items | — | **not scheduled** |
 
 Step 2 gained three rows and step 4 lost three: `L-198`, `L-199` and `L-201` — the three
@@ -4671,7 +4683,7 @@ patch, one patch per file, under `.project/active/cutover-recovery/runbook-patch
 
 | | patches | covers |
 |---|---:|---|
-| `step1/` | 12 | the 12 files step 1 edits (`L-135` and `L-281` are owner-gated, so 12 of the 14 rows) |
+| `step1/` | 11 | the 11 files step 1 still edits. It was 12; `L-292`'s patch went at REVISE step 3, when that row became a step-1 deletion. `L-135`, `L-153`, `L-100` and `L-281` are repointed in the tree, so step 1 has no edit left to make for any of them |
 | `step2/` | 43 | 41 file edits plus two ledger patches — `ledger__L-011.patch` (one row's disposition) and `ledger__replacement-proof-nodes.patch` (six rows' proof nodes) |
 | `step3/`, `step4/` | 0 | those steps delete only; the simulation confirmed no surviving file needs an edit |
 
@@ -5017,6 +5029,10 @@ inventory those rulings act on.
    (`SI_SELF_BINDING: CATFMFEVacuum__catf_vacuum_pumping__pump_load.pumping_speed_total`).
    Dropping the arm, or moving the subject to a fixture the exact route accepts, is a coverage
    decision about a retained subject. **59 nodes.**
+
+   **EXECUTED at revise step 3 (2026-08-11), `78979ac`.** All 59 repointed onto live
+   extraction; no node dropped, no expectation changed, one node split into its two arms.
+   The catf decision went the second way — see the completion note below.
 4. **L-153 `test_hierarchy_resolver.py` and L-100 `test_ast_dispatch_invariant.py` carry no
    disposition at all.** Both are `4C-retained` / `retain` rows, and both break at step 1
    through the conformance v5 fixtures: **44 of 46 and 3 of 20 — 47 nodes**, re-measured this
@@ -5024,8 +5040,18 @@ inventory those rulings act on.
    only their evidence source retires. Repointing them onto v6 or live evidence is authorship.
    (L-100's *other* five nodes, the step-2 dispatch-table ones, are ordinary edit work and are
    in step 2's table.)
+
+   **EXECUTED at revise step 3 (2026-08-11), `78979ac`.** All 47 repointed onto live
+   extraction. One node needed a decision (`test_channel_alias_from_chain_redef`); it is
+   repointed in place, not retired. Both rows gained the disposition they had been missing.
 5. **L-281 `test_expression_compiler.py`** — five nodes beyond the sixteen its per-node table
    names read the conformance v5 fixtures.
+
+   **EXECUTED at revise step 3 (2026-08-11), `78979ac`.** The five are
+   `TestCrossModelValidation::test_compile_calc_def_with_real_metadata[catf_mfe, solar_battery]`
+   and `::test_reference_resolution_with_real_attribute_names[catf_mfe, chain_spike,
+   solar_battery]`, re-measured at HEAD; all five repointed onto live extraction. The ~32
+   legacy-shape-bound nodes were not touched — their step-2 ruling stands.
 6. **`scripts/capture_filter.py` loses its last caller at step 2**, and now with a measurement.
    Two `test_capture_fixtures_filter.py` nodes go red —
    `test_unknown_fixture_name_errors[capture_extraction_snapshots.py]` and
@@ -5034,6 +5060,10 @@ inventory those rulings act on.
    has no license-free unknown-name refusal, so L-292's "the same filter responsibility is
    carried by `capture_v6_batch.py`" is only half true. Delete the filter, or wire it into the
    v6 capture — either is a decision.
+
+   **EXECUTED at revise step 3 (2026-08-11), `78979ac`.** Both: the refusal is wired into
+   `capture_v6_batch.py` (owner's ruling), and the filter is now a deletion row (`L-305`, its
+   first). Two nodes carry the replacement; `L-292`'s six all end at retirement step 2.
 7. **`snapshot/__init__.py` keeps a dead v5 surface, and no row names it.** After step 2,
    `SNAPSHOT_FORMAT_VERSION`, `CONSTRAINT_LOWERING_MODE_*`, `VALID_CONSTRAINT_LOWERING_MODES`,
    `SnapshotFormatError`, `GrandfatheredSnapshotError` and `assert_snapshot_certifiable` have
@@ -5296,9 +5326,155 @@ across both repositories.**
 #### Still open, named
 
 - L-034's migration and its dependent readers L-287 (28 nodes) and L-135 → **revise step 3**.
+  **Cleared** — see "Revise step 3 completion" below.
 - L-281/L-284's ~32 per-node retirements → executed as **runbook deletions at revise step 6**,
   not here.
 - Nothing else from this stage's worklist is outstanding.
+
+### Revise step 3 completion — the gated behaviour tests, replaced and repointed
+
+**Completed:** 2026-08-11. **Executes:** `owner-disposition-20260811.md` step 2, items 3–6,
+and step 5 (no provisional trim). **Commits:** `78979ac` (the tests, the driver, the ledger),
+`e1e022f` (the runbook patches that moved under it).
+
+#### The one decision that shaped the whole stage
+
+All four files assert on **extraction** facts — calc definitions, calc usages and their
+bindings, the hierarchy result. The v6 instance-graph snapshot cannot carry them: it is an
+elaborated graph with no `CalcUsageData` bindings and no `HierarchyExtractionResult` at all,
+and the exact route refuses 22 of the 37 corpus fixtures, including every model these files
+lean on except `sample_model` and `attr_expr_probe`. So the evidence moves to the extractor
+itself, run live — `tests/helpers/live_extraction.py`, reached through the conformance
+conftest's `live_extraction_facts` and five per-model `*_facts` fixtures.
+
+That is not a weaker oracle. The committed snapshot was a stored copy of this same
+extractor's output; the expectations were always the files' own hand-transcribed constants,
+and not one of them changed. What changes is that the nodes are now license-gated. The gate
+sits on the fixture rather than as a mark on ~110 nodes, so a node that stops reading the
+evidence stops being gated with no mark left behind, and the skip reason is the shared
+`no live syside license` string, so the battery's zero-license-skip proof still counts them.
+
+Cost, measured: the nineteen sweep models load in **0.65 s** for the session.
+
+#### Per file
+
+| Row | File | Nodes | What happened |
+|---|---|---:|---|
+| L-135 | `test_extractor.py` | 59 | repointed onto live extraction; 2 nodes decided (below); file 74 → 75 |
+| L-153 | `test_hierarchy_resolver.py` | 44 of 46 | repointed; 1 node decided (below); node count unchanged |
+| L-100 | `test_ast_dispatch_invariant.py` | 3 of 20 | repointed; the other 17 are static analysis, untouched |
+| L-281 | `test_expression_compiler.py` | 5 | repointed; the ~32 shape-bound nodes untouched, their step-2 ruling stands |
+| L-287 | `test_calc_compat_parity.py` | 28 | input facts rebuilt off the `_by_id` inventory; **no assertion changed** |
+| L-292 | `test_capture_fixtures_filter.py` | 6 | dispositioned; replacement authored on the v6 driver |
+
+**Zero per-node dispositions on the four extraction files.** Three nodes looked like
+subjects that end, and none of them does:
+
+- `test_expression_binding_ast_nullified_in_snapshot` asserted the v5 serializer nulls the
+  live parser AST. The serializer retires. Repointed in place as
+  `test_expression_binding_ast_is_a_live_parser_handle_not_data`: the handle is present and
+  `json.dumps` refuses it, which is the reason no snapshot could ever hold it. The oracle is
+  now `json`, not the route under test.
+- `test_channel_alias_from_chain_redef` read the v5 pipeline's rendered `channel_aliases`
+  list, minted by `_build_chain_aliases` in `orchestration/pipeline_builder.py` — a deletion
+  row. The mechanism underneath survives: the sibling-alias pass in
+  `extraction/hierarchy_resolver.py` records `aliases=['reported_cost']` on the aggregation
+  itself. Repointed in place as `test_aggregation_carries_its_chain_alias`. The
+  generated-package half of the same subject is already stated on the exact route by
+  `test_exact_route_alias_aggregation.py::test_the_aggregation_and_its_chain_alias_both_reach_a_consumer`.
+- The catf node — see next.
+
+#### The catf_mfe decision, in the open
+
+`test_dropped_constraints_land_unassessed_spanning_owner_kinds` had two arms. Arm 1 sweeps
+catf_mfe's 65 droppable constraint usages across all three owner kinds; it is pure extraction
+and needed nothing. Arm 2 asserted all 65 land as ineligible `concrete_constraints` in a
+`build_pipeline_context` — a builder that retires, on a model the exact route refuses
+(`SI_SELF_BINDING`).
+
+**Measured at this HEAD: `catf_mfe_d5` is now ACCEPTED by the exact route.** Its own
+`PROVENANCE.md` still says "INCOMPLETE — 152 × `SI_OCCURRENCE_MISSING`"; that is stale, and
+`build_exact_pipeline_context` on it returns a context. Its manifest is the identical sweep —
+65 usages, `calc_def` 51 / `part_def` 5 / `part_usage` 9, the same as `catf_mfe_model`.
+
+So the brief's preferred option is available and was taken. The node splits:
+
+- `test_dropped_constraints_span_owner_kinds` — arm 1, unchanged, still on `catf_mfe_model`
+  live, now pinning the full owner-kind split rather than just its membership.
+- `test_instance_reaching_constraints_all_land_unassessed` — arm 2, on `catf_mfe_d5` through
+  the exact route, re-asserting the identical sweep first so the move cannot quietly change
+  the subject.
+
+**The number changes from 65 to 9, and that is the honest statement, not a thinning.** The
+exact route records only constraints that reach a design instance. Exactly the nine
+part-usage-owned ones do; the other 56 are owned by a definition and mint no instance-path
+record at all. All nine land `unassessed_form` / `eligibility_unassessed`, and
+`concrete_entries` is empty. The claim that mattered — none is silently eligible — is now
+stated over the route that ships, and the 9 is derivable from the owner-kind split arm 1
+pins.
+
+#### L-287, and what it clears
+
+The 28 nodes now build their input facts from `member_names_by_id`, `all_member_ids` and
+`output_expression_asts_by_id` — the inventory the surviving `compile_calc_def_exact` reads —
+instead of L-034's name-keyed `all_member_names` and `output_expression_asts`. The renderer's
+own signature is name-based, so the ids resolve to names at the call site. The golden, the
+corpus enumeration and every assertion are untouched, which keeps this row's out-of-scope
+subject out of scope. **L-034 now has no live reader outside the retirement-owned set**, so
+its deletion row can execute.
+
+#### The capture filter — owner's item 6
+
+The refusal is carried into the v6 driver: `capture_v6_batch.py` now rejects an unknown
+positional fixture name before anything loads, checked against the committed batch manifest
+so it stays license-free, exiting 2 and naming the offender. Two nodes in
+`test_v6_recapture_batch.py` state it — the refusal and a discrimination pin that a real
+corpus name still runs, without which a driver that rejected everything would pass.
+
+`scripts/capture_filter.py` had **no ledger row at all**; it gets one (`L-305`, `delete`,
+`4B-v5-family`), because with both v5 capture scripts gone it has no caller. `L-292` moves
+from `repoint` to `delete`: all six of its nodes end at retirement step 2, and the two new
+nodes are their named replacement. Neither deletion happens here — both execute with the
+runbook.
+
+#### Runbook patches
+
+Two moved. `step1/tests__conformance__conftest.patch` was regenerated: it still removes the
+v5 session fixtures, the eleven per-model conveniences and `offline_input_sources`, and now
+keeps the live half. `step1/tests__unit__test_capture_fixtures_filter.patch` was **deleted** —
+`L-292` is a step-1 deletion now, so an edit patch for it would be applied to a file the same
+step removes. Regenerated from a scratch worktree at the new committed HEAD; the exclusion
+trap (exclude by exact filename, not substring) did not arise, because neither patch is in
+the excluded set.
+
+#### Battery
+
+| Gate | Reading |
+|---|---|
+| Full licensed suite | **3866 / 47 / 53**, **0** license-skip lines (baseline 3863 / 47 / 53) |
+| Node delta | **+3 collected**, exactly the nodes named below; 2 further nodes renamed in place |
+| `capture_v6_batch.py --check` | **15 captured / 22 refused / 0 deviations** |
+| `ruff check src` | **16** (unchanged, none new) |
+| `mypy src` | **69 in 16** (unchanged) |
+| `git diff --check` | clean |
+| `check_ledger_4a.py` `paths` / `surface` / `groups` | **304 rows, 0 problems** / **0** / all six READY |
+| `retirement_worklist.py check` | 304 rows, 263 placed, **0 problems** |
+| `test_runbook_patches.py` | **4 passed** |
+
+The +3, node by node: `test_dropped_constraints_span_owner_kinds` and
+`test_instance_reaching_constraints_all_land_unassessed` replace one node (+1);
+`test_an_unknown_positional_fixture_name_is_refused_before_anything_loads` and
+`test_a_known_fixture_name_passes_the_same_check` are new (+2). Two nodes were renamed in
+place with no count change. Ledger `paths` goes 303 → 304 for `L-305`.
+
+#### Left for later stages, named
+
+- L-281/L-284's ~32 per-node retirements — runbook deletions at revise step 6.
+- The deletions this stage scheduled but did not perform: `scripts/capture_filter.py` and
+  `tests/unit/test_capture_fixtures_filter.py`, both with the runbook.
+- `tests/fixtures/catf_mfe_d5/PROVENANCE.md` says the exact route refuses the fixture. It no
+  longer does. Not corrected here — the fixture's provenance is its own artefact and the
+  correction belongs with whoever re-measures the D-5 set.
 
 ---
 

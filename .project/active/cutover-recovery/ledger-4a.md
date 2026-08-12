@@ -343,6 +343,38 @@ route. **Any future dual inventory must be measured across both repositories.**
 - `groups` — per-group readiness with the blocking rows named.
 - `replacements` — unchanged.
 
+### REVISE step 3 — the gated behaviour tests, and one new row
+
+Provenance: **[OWNER 2026-08-11]** for the rulings (`owner-disposition-20260811.md`, step 2
+items 3–6 and step 5); the per-row execution notes are agent work and live on each row's
+`revise_step3` field in `ledger-4a.json`, which is the machine-readable authority. Commits
+`78979ac` and `e1e022f`. The narrative, with the catf_mfe decision and the measured battery,
+is in the plan under "Revise step 3 completion".
+
+**Six rows changed.**
+
+- **L-135, L-153, L-100, L-281** — their nodes' evidence moves from the committed v5
+  extraction snapshots to live extraction. No expectation changed; the nodes become
+  license-gated, by the fixture rather than by a mark. **L-153 and L-100 gained the
+  disposition they had never carried** (`repoint`), which was the fifth entry's item 4.
+- **L-287** — its 28 nodes now read the exact-identity inventory instead of L-034's
+  name-keyed fields. No assertion changed, so its out-of-scope subject stays out of scope.
+  This clears **L-034**'s last named dependent reader.
+- **L-292** — `repoint` → `delete`. Its recorded reason claimed the v6 driver already carried
+  the filter responsibility; item 6 measured that half true, and the owner ruled the missing
+  half into the driver. With that done, all six of its nodes end at retirement step 2 and the
+  two new `test_v6_recapture_batch.py` nodes are their named replacement.
+
+**One row added: L-305**, `scripts/capture_filter.py`, in the scripts table above. `paths`
+goes 303 → 304.
+
+**The provisional trim is retired from the final-run flow.** All 113 nodes it deselected are
+accounted for without deselecting any. The 111 on the four extraction files are repointed onto
+live extraction (two of them by replacing the oracle in place, which is why they are renamed);
+the 2 on `test_capture_fixtures_filter.py` are dispositioned, with their replacement authored
+and green before the deletion runs. The file stays as the record of what the simulation held
+out; it must not be passed to the final run.
+
 ## What the 3E responsibility rows actually cost
 
 The Slice 3E reclassification named 16 modules carrying 100 nodes. Two are already discharged
@@ -719,12 +751,13 @@ Every one of these imports a module 4B deletes. None can be deleted on that basi
 | L-092 | `tests/fixtures/unresolvable_attr_probe/extraction_snapshot.json` | retain | census B37-01..37 via inventory INV-RES-CG-109 (disposition migrate) [EVIDENCE]; plan Gate 4C — v5 snapshots stay until accepted v6 replacements are ready in the same candidate | — | A committed v5 extraction snapshot. The forensic candidate deleted all 37 with zero v6 replacements committed — the single worst migrate-before-replacement defect in Finding 2. Retain until an accepted v6 recapture batch exists; that batch is Phase 5 / owner territory and B37-01 may change its count. |
 | L-093 | `tests/fixtures/wi014_toy/extraction_snapshot.json` | retain | census B37-01..37 via inventory INV-RES-CG-110 (disposition migrate) [EVIDENCE]; plan Gate 4C — v5 snapshots stay until accepted v6 replacements are ready in the same candidate | — | A committed v5 extraction snapshot. The forensic candidate deleted all 37 with zero v6 replacements committed — the single worst migrate-before-replacement defect in Finding 2. Retain until an accepted v6 recapture batch exists; that batch is Phase 5 / owner territory and B37-01 may change its count. |
 
-### 4C — scripts — 3 rows
+### 4C — scripts — 4 rows
 
 | Row | Path | Disp. | Authority | Replacement proof node | Reason |
 |---|---|---|---|---|---|
 | L-039 | `scripts/capture_baseline_yaml.py` | retain | census SCR-02 via inventory INV-RES-CG-008 (disposition migrate) [EVIDENCE]; plan rule 7; kept-test evidence at HEAD | `tests/conformance/test_gen_pipeline_yaml.py` | Capture baseline pipeline YAML for the tracked models. SCR-02 MIGRATE to a v6 capture driver. No v6 capture driver exists, and two kept tests reference this one. Retain until the replacement lands. |
 | L-040 | `scripts/capture_pipeline_baselines.py` | retain | census SCR-02 via inventory INV-RES-CG-010 (disposition migrate) [EVIDENCE]; plan rule 7; kept-test evidence at HEAD | `tests/unit/test_capture_fixtures_filter.py` | Capture pipeline baselines: ComputationGraph JSON and registry __init__.py. SCR-02 MIGRATE to a v6 capture driver. No replacement exists and a kept test references it. Retain. |
+| L-305 | `scripts/capture_filter.py` | **delete** | REVISE disposition 2026-08-11 step 2 item 6 [OWNER]; row added at REVISE step 3 | `tests/conformance/test_v6_recapture_batch.py::test_an_unknown_positional_fixture_name_is_refused_before_anything_loads` | The `--fixtures` name filter shared by the two v5 capture scripts. No earlier row named it — Gate 4C part 5 saw it only through its unit test (L-292). Both callers are deletion rows, so it has none left at the v5-family step. The owner ruled its responsibility into `capture_v6_batch.py`, which now carries a license-free unknown-name refusal; the replacement node above is green. Deletion executes with the runbook at step 2. |
 | L-044 | `scripts/run_elaboration_corpus.py` | retain | census SCR-01 via inventory INV-RES-CG-012 (disposition delete) [EVIDENCE]; plan rule 7; kept-test evidence at HEAD | `tests/conformance/test_elaboration_corpus_ledger.py` | Run legacy and exact-ID construction independently over all 37 snapshots. SCR-01 says DELETE/MIGRATE into an accepted-batch manifest driver owned by CUT-CORP-01. That driver does not exist, and this script is the 37-path corpus driver the rebuild's own ledger test drives. Retain until its replacement lands; retire its legacy arm with elaboration/diff.py in 4B-G4. |
 
 ### 4C — probes and spikes — 16 rows
