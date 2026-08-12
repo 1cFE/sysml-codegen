@@ -101,6 +101,14 @@ PULLED_FORWARD = {
     "L-191": (1, "imports the helper in tests/execution/test_constraint_execution.py"),
     "L-193": (1, "imports the helper in tests/execution/test_constraint_execution.py"),
     "L-194": (1, "imports the helper in tests/execution/test_constraint_execution.py"),
+    # final-audit F1: the patch-replay test necessarily fails once step 1's patches are
+    # applied to HEAD (it asserts unapplied patches replay cleanly). Deleting it in step 1
+    # instead of step 4 keeps every boundary at 0 failed. Measured: 1 failed at boundaries
+    # 1-3 with the module present, 0 failed at step 4 where L-304 originally deleted it.
+    "L-304": (
+        1,
+        "self-referential: asserts spent step-1 patches still apply; fails from step 1 on",
+    ),
 }
 
 #: How each disposition executes.

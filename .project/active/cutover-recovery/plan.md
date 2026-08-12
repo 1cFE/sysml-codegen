@@ -4587,11 +4587,15 @@ at the Phase 5 stop.
 
 ### The retirement runbook — post-acceptance execution
 
-**Status: all four steps are PROVEN green in simulation, and every battery gate is measured
-green. Seven items are owner-gated.** Rebuilt at the Phase 4 audit follow-up (2026-08-11) against
-audit-4 F1 and F2, then completed by executing every step in order. Every number below was
-measured in a scratch `git worktree` created for the purpose; the audited tree was never
-mutated and **nothing has retired**.
+**Status: all four steps are PROVEN in simulation — step 4 ends 0 failed / 0 errors; steps 1–3
+carry exactly one known-failing node (the self-referential patch-replay test, resolved by the
+L-304 pull-forward below). Seven items are owner-gated.** Rebuilt at the Phase 4 audit follow-up
+(2026-08-11) against audit-4 F1 and F2, then completed by executing every step in order.
+**Corrected per final-audit F1 (audit-5-final.md):** the original step 1–3 boundary numbers were
+measured at `5b682c1`, before `test_runbook_patches.py` and `test_public_route_baselines.py`
+existed; the final audit re-measured all four boundaries on the candidate tree (`c4e9b76`) and
+the tables below carry those numbers. Every number was measured in a scratch `git worktree`;
+the audited tree was never mutated and **nothing has retired**.
 
 What "proven" means here, exactly: with the seven trim-carrying owner-gated items held out as a named,
 committed trim (113 test nodes, listed in `runbook-patches/provisional-trim.txt`), each of the
@@ -4753,7 +4757,7 @@ applied). The baseline column is the main tree at the same commit.
 
 | Gate | Baseline | After step 1 |
 |---|---|---|
-| Full licensed suite | 3854 passed / 47 skipped / 53 deselected | **2352 passed / 43 skipped / 145 deselected, 0 failed, 0 errors** |
+| Full licensed suite | 3862 passed / 47 skipped / 53 deselected (candidate tree `c4e9b76`) | **2356 passed / 1 failed / 0 errors** — the one failure is `test_runbook_patches.py::test_the_prepared_patches_replay_cleanly_in_step_order`, failing BY DESIGN once step 1's patches are applied to HEAD (final-audit F1); resolved by the L-304 pull-forward: executing L-304 (delete `test_runbook_patches.py`) inside step 1 removes the node class, leaving the boundary 0 failed |
 | Execution lane | 41 passed + 12 env errors | **23 passed** + the same 12 |
 | Corpus ledger | 12 passed | **11 passed** |
 | `capture_v6_batch.py --verify` | 15 / 22 / 0 | **15 / 22 / 0** |
@@ -4824,7 +4828,7 @@ worth of files in total; archives 11 probes; edits 33.
 
 | Gate | After step 1 | After step 2 |
 |---|---|---|
-| Full licensed suite | 2352 / 43 / 145, 0 failed | **1582 passed / 34 skipped / 148 deselected, 0 failed, 0 errors** |
+| Full licensed suite | 2356 / 1 failed (patch-replay node; final-audit F1 — 0 failed once L-304 pulls forward) | **1589 passed, with the same single patch-replay failure until L-304 executes** (recorded 1582 was pre-`c4e9b76`; final audit measured 1589 on the candidate tree) |
 | Execution lane | 23 + 12 env errors | **23** + the same 12 |
 | Corpus ledger | 11 passed | **9 passed** |
 | `capture_v6_batch.py --verify` | 15 / 22 / 0 | **15 / 22 / 0** |
@@ -4897,7 +4901,7 @@ node's subject genuinely ends with the v5 family, the node retires and the row s
 
 | Gate | After step 2 | After step 3 |
 |---|---|---|
-| Full licensed suite | 1582 / 34 / 148, 0 failed | **1582 / 34 / 148, 0 failed, 0 errors** |
+| Full licensed suite | 1589 + 1 patch-replay failure (final-audit F1) | **1589 passed + the same single failure** — unchanged by this step; 0 failed once L-304 pulls forward |
 | Execution lane / corpus / capture | 23+12 / 9 / 15-22-0 | **23+12 / 9 / 15-22-0** |
 | `ruff check src` / whole tree | 15 / 646 | **14 / 645** |
 | `mypy src` | 58 in 12 (72 files) | **57 in 11** (71 files) |
@@ -4912,7 +4916,7 @@ the full battery, not a subset.
 
 | Gate | After step 3 | After step 4 |
 |---|---|---|
-| Full licensed suite | 1582 / 34 / 148, 0 failed | **1582 / 34 / 148, 0 failed, 0 errors** |
+| Full licensed suite | 1589 + 1 patch-replay failure (final-audit F1) | **1586 passed, 0 failed, 0 errors** — measured by the final audit on the candidate tree; L-304 deletes the patch-replay module here (or at step 1 under the pull-forward) |
 | Execution lane / corpus / capture | 23+12 / 9 / 15-22-0 | **23+12 / 9 / 15-22-0** |
 | `ruff check src` / whole tree | 14 / 645 | **14 / 644** |
 | `mypy src` | 57 in 11 (71 files) | **57 in 11** (70 files) |

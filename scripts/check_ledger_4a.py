@@ -23,9 +23,10 @@ class: it derives the removal surface from the ledger's own delete and migrate r
 ``tests/`` and ``scripts/`` by AST, and fails for any file that imports the surface at
 module level (so it stops collecting) without a row saying what becomes of it.
 
-**What this checker cannot see.** Four ceilings, measured by the Phase 4 composite audit (F7)
-by attacking the machinery rather than reading it. They are limits, not defects: read a green
-run as "these four classes are unchecked", never as "the ledger is true".
+**What this checker cannot see.** Five ceilings, measured by attacking the machinery rather
+than reading it (1-4 by the Phase 4 composite audit F7; 5 by the final audit F5, which planted
+both shapes and watched ``paths`` and ``surface`` report 0 problems). They are limits, not
+defects: read a green run as "these five classes are unchecked", never as "the ledger is true".
 
 1. **Transitive import breakage is invisible.** ``surface_hits`` walks each file's own AST, so
    a file that breaks because a *helper it imports* breaks is not seen. Measured: the checker
@@ -45,6 +46,11 @@ run as "these four classes are unchecked", never as "the ledger is true".
 4. **A textual data scan misses computed filenames.** ``data_hits`` matches literal basenames,
    so a path built by f-string or reached by ``glob("*.json")`` is missed. The over-reporting
    posture on the non-module axis is the deliberate trade.
+5. **Dynamic imports and pytest fixture requests are invisible on every axis.** A file that
+   ``importlib.import_module``-s a delete-row module, or requests a conftest fixture that a
+   deletion removes, hits neither the AST walk nor the textual scans. The class is handled by
+   the runbook's ``PULLED_FORWARD`` table (scripts/retirement_worklist.py), whose entries were
+   found by scratch-worktree execution — the only detector this class has.
 
 Usage::
 
