@@ -1,25 +1,25 @@
 diff --git a/tests/conformance/conftest.py b/tests/conformance/conftest.py
-index 5ddcdb4..e16948c 100644
+index c02a4dd..2ca673b 100644
 --- a/tests/conformance/conftest.py
 +++ b/tests/conformance/conftest.py
-@@ -1,148 +1,14 @@
--"""Conformance test configuration and fixtures.
-+"""Conformance test configuration.
+@@ -2,165 +2,33 @@
  
--Provides:
--- Marker registration (req, baseline)
+ Provides:
+ - Marker registration (req, baseline)
 -- Session-scoped extraction snapshot fixtures
 -- Per-model convenience fixtures
-+Provides marker registration (req, baseline). The session-scoped extraction-snapshot
-+fixtures, the eleven per-model conveniences and ``offline_input_sources`` retired with the
-+v5 read path (retirement step 1) — every one of them read a committed
-+``extraction_snapshot.json`` through the v5 loader or ``snapshot_context``.
++- Session-scoped live extraction facts, and the per-model conveniences over them
++
++The v5 half — the session-scoped extraction-snapshot fixtures, the eleven per-model
++conveniences and ``offline_input_sources`` — retired with the v5 read path (retirement
++step 1). Every one of them read a committed extraction snapshot through the v5 loader or
++``snapshot_context``.
  """
  
  from __future__ import annotations
  
--import pytest
--
+ import pytest
+ 
 -from tests.conftest import snapshot_fixture
 -
 -
@@ -81,8 +81,8 @@ index 5ddcdb4..e16948c 100644
  def pytest_configure(config):
      config.addinivalue_line("markers", "req(id): map test to requirement ID")
      config.addinivalue_line("markers", "baseline: pipeline baseline comparison test")
--
--
+ 
+ 
 -@pytest.fixture(scope="session")
 -def extraction_snapshots():
 -    """Load all extraction snapshots once per session."""
@@ -156,3 +156,26 @@ index 5ddcdb4..e16948c 100644
 -def alias_agg_probe_snapshot(extraction_snapshots):
 -    """Convenience fixture for alias_agg_probe snapshot."""
 -    return extraction_snapshots["alias_agg_probe"]
+-
+-
+ # ---------------------------------------------------------------------------
+-# Live extraction facts — the surviving half
++# Live extraction facts
+ #
+-# The fixtures above read the committed v5 ``extraction_snapshot.json`` files through
+-# ``snapshot.load_extraction_snapshot``; both retire with the v5 family. The four
+-# conformance files whose subject is extraction itself read the fixtures below instead,
+-# which run the same three extractors live. See ``tests/helpers/live_extraction.py`` for
+-# why the v6 instance-graph snapshot is not a substitute. Live extraction needs a syside
+-# license, so every file that reads these carries ``pytestmark = requires_license``.
++# The four conformance files whose subject is extraction itself read these. They run the
++# three extractors live; see ``tests/helpers/live_extraction.py`` for why the v6
++# instance-graph snapshot is not a substitute.
+ # ---------------------------------------------------------------------------
+ 
+-# The models the extraction-fact sweeps range over. Same list as SNAPSHOT_MODELS above,
+-# which retires with it; kept separate so the two can be edited independently.
++# The models the extraction-fact sweeps range over.
+ EXTRACTION_FACT_MODELS = [
+     "sample_model",
+     "solar_battery_model",
