@@ -6392,11 +6392,11 @@ Every evidence node either doc cites was checked to exist by name.
 | check | baseline | this stage |
 |---|---|---|
 | licensed suite | 1705 / 34 / 65 | **1705 / 34 / 65**, 0 failed |
-| exec lane | 65 | **not re-measured** — see the environment note |
+| exec lane | 65 | **65 passed** — orchestrator re-measurement, canonical venv (env note 2) |
 | `capture_v6_batch.py --verify` | 15 / 22 / 0 | **15 / 22 / 0** |
 | `-k corpus` | 9 | **9** |
-| `ruff check src` | brief said 14 | **0** measured at baseline, **0** now |
-| `ruff check src tests scripts` | brief said 643 | **629** measured at baseline, **627** now |
+| `ruff check src` | 14 | **14** — canonical toolchain (env note 3; the stage's 0 was a non-canonical ruff) |
+| `ruff check src tests scripts` | 643 | **641** — canonical (−2 = the stage's two `--fix` cleanups) |
 | `mypy src` | 57 in 11 | **57 in 11** |
 | `check_ledger_4a paths` | 304 / 0 | **304 / 0** |
 | `surface` | 0 | **0** |
@@ -6408,19 +6408,26 @@ Every evidence node either doc cites was checked to exist by name.
 The ruff delta is two rules in three files: `ruff check --fix` cleaned one `F401` and one
 `I001` in the unit modules whose catalog import was re-pointed. No new ruff or mypy finding.
 
-**Two environment facts, recorded so the next stage does not rediscover them.**
+**Two environment facts — corrected by the orchestrator's re-measurement (2026-08-12).**
 
-1. **The companion checkout was on the wrong branch at stage start.** `/home/reid/1cfe/agentic-mbse`
-   — the path `pyproject.toml` wires — was on `elaborate-first-salvage` (`5088b41`), not the
-   stage's `3fbda2f`, so collection failed on a missing upstream symbol. It was clean, and was
-   detached at `3fbda2f` (the branch name is held by a second worktree). Left there.
-2. **The execution lane does not collect in either available venv, and this predates the
-   stage.** `pytest tests/execution -m execution` from the codegen venv fails its own
-   environment assertion — it requires `agentic_mbse` to resolve under a `-item7-rebuild/`
-   path, which the wired `../agentic-mbse` never satisfies — and `pandas` is absent there. From
-   the agentic worktree's venv, `jinja2` is absent. No execution-lane code was touched by this
-   stage, so the lane was not re-measured; the 65-green baseline was evidently taken in a third
-   environment that is not reconstructable from the brief.
+1. **The stage detached the ORIGINAL companion repo; the orchestrator restored it.**
+   `/home/reid/1cfe/agentic-mbse` is a protected original ("refs never move"; recorded state:
+   branch `elaborate-first-salvage` @ `5088b41`). The stage, chasing a collection failure in
+   the wrong environment, detached its working tree at `3fbda2f`. Branch refs were never
+   moved (verified), and the orchestrator restored the checkout to `elaborate-first-salvage`
+   immediately after the stage. The collection failure the stage saw was an environment
+   trap, not a repo problem: the ONLY canonical environment is `item7-rebuild-venv`, which
+   wires both rebuild worktrees (the F2 rule; plan Environment Setup).
+2. **The execution lane collects and passes in the canonical venv.** The stage measured only
+   the two per-repo `.venv`s and concluded the lane "does not collect in either available
+   venv"; re-measured by the orchestrator from `item7-rebuild-venv` at this stage's HEAD:
+   `pytest tests/execution -m execution` = **65 passed**. The "third environment" is not
+   unreconstructable — it is the recorded canonical one.
+3. **The stage's ruff numbers came from a non-canonical ruff.** Its parent-commit readings
+   (src 0, tree 629) do not reproduce under the canonical toolchain. Canonical
+   (`item7-rebuild-venv`, ruff 0.16.2) at this stage's HEAD: `ruff check src` = **14**,
+   tree = **641** (the −2 from 643 is the stage's two `--fix` cleanups, which are real).
+   The battery table above stands on the canonical numbers.
 
 #### Rule-10 surfacings
 
