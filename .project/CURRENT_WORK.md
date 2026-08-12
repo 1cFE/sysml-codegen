@@ -1,10 +1,28 @@
 # Current Work
 
-**Last Updated**: 2026-08-12 (Item 7 narrow-correction steps 1–3 complete; coverage step 4 is next)
+**Last Updated**: 2026-08-12 (constraint-semantics contract spec drafted; Item 7 steps 4–10 wait behind it)
 
 ---
 
 ## Active Work
+
+### 2026-08-12: Constraint-semantics contract — spec drafted (owner-directed priority)
+
+**[OWNER 2026-08-12]** redirected priority after the Item 7 step-4 probe: settle constraint
+semantics first ("get to the bottom of 'how do constraints work'"), fix docs and the test model to
+match, then test. Research:
+`.project/research/20260812-101200_constraint-semantics-end-to-end.md` (65 authored CATF checks →
+9 visible dispositions → 0 executed; 56 usages with no catalog carrier; docs contradict code and
+standard; report can claim `all_satisfied` over partial coverage; TEAx sees such models as
+`unconstrained`). Eight rulings recorded 2026-08-12 (assert-only enforcement; calc-def gate
+semantics ruled + staged; catalog totality hard-gated with severity by cause; bindings-only
+predicates + equality-usage instruction; coverage-true headline; boundary-default study policy;
+requirements-side non-executable; migration in a new CATF derivative).
+**Spec: `.project/active/constraint-semantics-contract/spec.md` — reviewed (verdict Revise) and
+revised same day; all findings resolved in `spec-review.md`, four owner-selected refinements
+recorded in `rulings-20260812.md` (asserted-gates denominator; vacuous = missing assessment until
+dispositioned; all-65 CATF disposition table; umbrella structure). Next: `/_my_epic_plan`
+decomposition.** Item 7 narrow-correction steps 4–10 resume after this contract lands.
 
 ### 2026-08-12: Item 7 cutover recovery — R8 complete; replacement coverage next
 
@@ -19,9 +37,12 @@ open for narrow-correction steps 4–10.
 - **Correction authority:** all ten ratified dispositions are recorded question by question in
   `.project/active/cutover-recovery/owner-disposition-20260811.md`; the persistent ten-step
   execution sequence is in `.project/active/cutover-recovery/plan.md`.
-- **Progress:** narrow-correction steps 1–3 are complete. **Next active step: replacement and
-  matrix coverage plus the `gain = 100` three-route proof (step 4).** Steps 5–10 follow in plan
-  order.
+- **Progress:** narrow-correction steps 1–3 are complete. **[OWNER 2026-08-12] Steps 4–10 are
+  PAUSED until the constraint-semantics contract work (entry above) lands.** The pause record
+  with resumption consequences is in `plan.md` ("PAUSED at step 4"): the step-4 brief is
+  partially superseded and needs revision before execution; steps 7–8 (batteries + candidate
+  record) run once, after the contract work, at the true final tree; the contract epic owns the
+  evidence-invalidation register. Steps 1–3's committed work stands (orthogonal subjects).
 - **R8 result:** the direct two-term witness projects exact
   `panel_capital_cost_{0,1}` and `caster_capital_cost_{0,1}` inputs to four distinct occurrence
   channels and executes to **16.0**. A unique `panel.capital_cost` chain remains

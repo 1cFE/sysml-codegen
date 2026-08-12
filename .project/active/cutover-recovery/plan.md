@@ -6575,7 +6575,28 @@ record-integrity corrections remain.
       **[AGENT] (ratified for execution by owner, 2026-08-12)** authorizes no push, tag,
       promotion, close, or archive.
 
-#### Narrow-correction step 2 completion
+#### PAUSED at step 4 — constraint-semantics contract takes precedence (2026-08-12)
+
+**[OWNER 2026-08-12]** Steps 4–10 are paused until the constraint-semantics contract work lands.
+The step-4 probe exposed that the constraint story is contractually unsettled (plain-vs-asserted
+semantics, 56-of-65 catalog absence, coverage-blind report headline); the owner redirected: settle
+the semantics, align docs and the test model, then test. The contract authority is
+`.project/active/constraint-semantics-contract/spec.md` (reviewed and revised 2026-08-12; ruling
+record `rulings-20260812.md`), decomposed via epic plan into child items.
+
+Consequences for this sequence, recorded so resumption is honest:
+
+- Steps 1–3 stand as committed (`057bf29` compiler convergence, `8aa3b28` R8); their subjects are
+  orthogonal to constraint semantics.
+- The step-4 brief (`briefs/correction-step4-matrix-replacements.md`) is **partially superseded**:
+  its zero-input-report instruction and its REQ-CL-03/REQ-CL-04 matrix-row closures are
+  subordinate to the new contract (which also re-grades REQ-EXT-09). Step 4 requires a revised
+  brief before execution; do not execute it as written.
+- Steps 7–8 (three batteries at one final paired OID set; regenerated candidate record) run once,
+  **after** the contract work, at the true final tree state — not before and again after.
+- The contract epic owns the evidence-invalidation register (which step-4/7/8 evidence and
+  whether the 37-fixture recapture repeats); see the spec's Open Questions.
+- Nothing here changes step 10: final acceptance remains owner-grade, no push/tag/close/archive.
 
 **Completed:** 2026-08-12. **Implementation:**
 `057bf29a3209470cd6ccfd882b1d3e6dd6d76a45`. The legacy
