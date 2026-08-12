@@ -346,7 +346,9 @@
     "L-165",
     "L-237"
    ],
-   "reason": "Completeness check over the legacy resolver's captured resolutions. Consumers are three tests and the v5 capture script, all ledger rows of their own."
+   "reason": "Completeness check over the legacy resolver's captured resolutions. Consumers are three tests and the v5 capture script, all ledger rows of their own.",
+   "state": "executed",
+   "executed_commit": "882fc8dd064f136254e29bcaa90e797e5e39a2e6"
   },
   {
    "id": "L-013",
