@@ -4,7 +4,7 @@
 approval: the external archive moved to a durable non-temp path, and an independent audit agent
 required after every Phase 3 slice.
 **Created:** 2026-08-10
-**Last Updated:** 2026-08-10
+**Last Updated:** 2026-08-12
 
 ## Authority and Source Material
 
@@ -167,11 +167,13 @@ switching or deletion until this passes.
 - [x] Phase 5 — Assemble a repeatable candidate, audit it, and stop for owner acceptance
       — presented the fully-prepared retirement as the headline decision; owner disposition
       **REVISE** 2026-08-11 at `800ec84` (`owner-disposition-20260811.md`)
-- [ ] REVISE path (owner steps 1–7) — executed through step 7; **open at the final owner
-      disposition** on the regenerated candidate record (`evidence/candidate.md`) at codegen
-      `6c35aa0` / agentic `3fbda2f`. Retired-tree gates: three identical runs (step 7a);
-      independent audit `evidence/audit-7-retired.md`, verdict FINDINGS, all eight probes
-      CONFIRM, F1–F3 dispositioned (step 7b); record regenerated (step 7c).
+- [x] First REVISE path (owner steps 1–7) — executed through step 7. Its regenerated candidate
+      at codegen `6c35aa0` / agentic `3fbda2f` is a **superseded checkpoint under active
+      correction**, not a final-acceptance candidate. The recovered implementation stays in
+      place; no rollback and no second rebuild.
+- [ ] Narrow correction (2026-08-12) — **step 1 complete**. The ratified dispositions are now
+      persistent in `owner-disposition-20260811.md` and in the executable sequence at the end of
+      this plan. **Next blocker: real L-033/L-034 compiler convergence and checker hardening.**
 
 ---
 
@@ -1048,12 +1050,13 @@ remains.
 
 ### Owner gate
 
-**Two gates, both recorded here.** Gate 1 is the 2026-08-11 REVISE disposition on the
-pre-retirement candidate at `800ec84`. Gate 2 is the post-REVISE candidate at the final content
-OIDs, awaiting the owner's final disposition. Neither replaces the other: gate 1 is settled
-history, gate 2 is open.
+**Two checkpoints, both recorded here.** Gate 1 is the 2026-08-11 REVISE disposition on the
+pre-retirement candidate at `800ec84` and remains settled history. Gate 2 is the regenerated
+post-REVISE checkpoint at the recorded content OIDs. The 2026-08-12 correction verdict supersedes
+Gate 2 as an acceptance candidate while preserving it as evidence; the narrow-correction sequence
+at the end of this plan now controls execution.
 
-#### Gate 2 — the post-REVISE candidate (OPEN)
+#### Gate 2 — the post-REVISE candidate (SUPERSEDED CHECKPOINT; CORRECTION ACTIVE)
 
 - Content OIDs: sysml-codegen `6c35aa0` (branch `item7-rebuild`), agentic-mbse `3fbda2f`
   (branch `item7-rebuild`), TEAx pinned `fa0e06a9`. The record commit lands on top of
@@ -1070,9 +1073,12 @@ history, gate 2 is open.
   withheld on the one agentic-side item the auditor could not read; all eight requested probes
   executed and CONFIRM, so the record's own clause resolves to **Certify with the residual
   list** once F1–F3 are dispositioned — dispositioned in the step-7 stage note.
-- **Owner disposition: PENDING.** What is still owner-grade: the final disposition itself, and
-  R8 (resolve or shipping-gate) plus the other open questions in
-  `owner-disposition-20260811.md` before close.
+- **Current disposition:** **[AGENT] (ratified for execution by owner, 2026-08-12)** Keep the
+  recovered implementation in place, with no rollback and no second rebuild. This checkpoint is
+  not eligible for final acceptance because compiler convergence was falsely recorded as
+  executed, replacement proof is incomplete, and record-integrity corrections remain. R8 and the
+  former open questions are dispositioned in `owner-disposition-20260811.md`. Final acceptance
+  remains owner-grade after the correction sequence.
 
 #### Gate 1 — the pre-retirement candidate at `800ec84` (SETTLED, 2026-08-11)
 
@@ -3052,19 +3058,17 @@ parse check cannot reach), and asserts the emitted keys equal the graph's entry-
 verbatim. A collision guard refuses a group whose two keys would sanitize onto one field rather
 than letting the second declaration silently replace the first.
 
-##### S4 — the refusal is not the final disposition **[OWNER 2026-08-11, amending the ruling above]**
+##### S4 — fix first **[AGENT] (ratified for execution by owner, 2026-08-12)**
 
 The original ruling here — accept the refusal, treat the modelling requirement as
 documentation work — is **overruled** (this is the review's R8). The graph already
 distinguishes `panel.capital_cost` from `caster.capital_cost`; only
 `elaborate.py:1937-1938` (`input_name = fact.resolved_member_names[-1]`) drops the
-qualifier before rendering. The owner's disposition: **preserve the resolved qualifier
-through rendering**, OR record a temporary product defect with an explicit shipping
-dependency on Item 10. The choice between fix-first-with-fallback and
-straight-to-shipping-gate is an **open owner question — do not implement until answered**
-(`owner-disposition-20260811.md`, open question 1). If fixing: check blast radius against
-the 3B option-C group-naming pins, and invert — not delete — the refusal pin at
-`test_costed_component_exact_route.py:324`.
+qualifier before rendering. Preserve the resolved qualifier through rendering and check the
+blast radius against the 3B option-C group-naming pins. Invert — do not delete — the refusal
+pin at `test_costed_component_exact_route.py:324`. Fall back to a shipping gate only if
+measurement shows a substantially larger naming-contract change. Item 10 becomes an explicit
+Item 7 dependency only under that fallback.
 
 What survives from the original ruling: the fail-closed `SI_RENDERING_COLLISION` was
 correct recovery-era behaviour (a silent collapse is the incident this recovery exists to
@@ -5629,8 +5633,9 @@ three routes its spec text names.
 ### Revise step 5 (partial) — the R10 same-named-constraint collision test
 
 **Completed:** 2026-08-12. **Executes:** `owner-disposition-20260811.md` step 4, R10 half
-only. R8 is untouched and stays blocked on open question 1 — nothing here changes
-`elaborate.py`'s qualifier handling or any `SI_RENDERING_COLLISION` pin.
+only. R8 was untouched by this historical step. Its current disposition is **fix first** under
+**[AGENT] (ratified for execution by owner, 2026-08-12)** and appears as narrow-correction
+sequence step 3 below.
 
 #### The measurement: **(b)**, a typed refusal before generation
 
@@ -5981,10 +5986,11 @@ Seven nodes green at the step-1 post-state and at HEAD: the five surviving
   **Closed by Revise step 6b below.**
 - **`scripts/probes/probe_constraint_profile_qualifier_drop.py`** — disposition unrecorded.
   **Closed by Revise step 6b below** (archived, on the orchestrator's ruling).
-- The four open questions in `owner-disposition-20260811.md` are untouched by this stage: R8
-  (question 1), the ruff 16 (question 2), Item 10 scheduling, and how the final audit runs.
-  `ruff check src` reads **14** at HEAD, down from 16, because two of the sixteen sat in files
-  steps 2 and 3 deleted. The question itself is unanswered.
+- This historical stage did not settle R8, ruff, Item 10 scheduling, or the final-audit shape.
+  Those items are now dispositioned by **[AGENT] (ratified for execution by owner,
+  2026-08-12)** in `owner-disposition-20260811.md`. `ruff check src` reads **14** at HEAD,
+  down from 16 because two of the sixteen sat in files steps 2 and 3 deleted; that value is the
+  canonical sysml-codegen `src` baseline for the zero-new R12 amendment.
 
 ### Revise step 6b completion — REQ-DIAG-02/03, re-homed on the exact route
 
@@ -6256,11 +6262,12 @@ that re-deriving the matrix against that map needs an owner.
    converts it to `ElaborationInvariantError(SI_EDGE_DANGLING)`. The pinned lanes did not move
    (`tests/conformance/test_unit_annotation_values.py`, 6 nodes green).
 
-#### Part 3 — D3 and R2, recorded as amendments
+#### Part 3 — D3 and R2, ratified amendments
 
 Both are in `.project/active/elaborator-cutover/design.md`, under **"Amendments — recorded after
-implementation, pending owner ratification"**, each marked `[AGENT amendment, re-derived
-2026-08-12 — pending owner ratification at the gate]`. Spec R2 carries a pointer to A2.
+implementation"`. Their current disposition is **[AGENT] (ratified for execution by owner,
+2026-08-12)**. Spec R2 carries a pointer to A2. The design's stale pending labels are amended in
+the later correction step that owns design artifacts; this record does not upgrade their origin.
 
 - **D3 (A1) — recorded, not converged, and the reason is audit-F4.** D3 wanted live and capture
   to share one staged-admission owner. Capture does; live reads caller paths
@@ -6270,8 +6277,9 @@ implementation, pending owner ratification"**, each marked `[AGENT amendment, re
   pin also buys something D3 did not weigh — two independent arms for the route-parity
   comparison. **Convergence is not a small, safe change here:** it would rewrite every live
   node's `source_file` from checkout-absolute to a staged referent, which is exactly
-  **audit-F4**, an open owner question (disposition, question 5). Doing it would answer F4 by
-  side effect. The split is left as shipped, the pin un-inverted, and the amendment says so.
+  **audit-F4**. The narrow correction now authorizes portable provenance and an invariant-35
+  amendment explicitly, so that work runs as its own correction step rather than by side effect.
+  The D3 split and its amendment are ratified.
 - **R2 (A2) — amendment, and the design's envelope is not needed.** The implementation omits the
   designed `capture` object; producer versions live in `authority` instead. Re-derived against
   R2's own load-bearing rule (integrity-bound and validated, *or* provably non-authoritative):
@@ -6280,8 +6288,9 @@ implementation, pending owner ratification"**, each marked `[AGENT amendment, re
   destroy capture determinism, which is what `--verify` rests on; `options.design_path_filter`
   names a flag Gate 4B-G0 removed. The shipped envelope satisfies R2's rule better than the
   designed one. No ruling requested, nothing built.
-- **audit-F4 was not touched.** Where Part 1's rewrites reach the affected text, the present
-  behaviour is stated factually and the open question cited.
+- **audit-F4 was not touched by this historical stage.** It is now authorized as
+  narrow-correction sequence step 5 with **[AGENT] (ratified for execution by owner,
+  2026-08-12)** provenance.
 
 #### Battery
 
@@ -6468,21 +6477,21 @@ The ruff delta is two rules in three files: `ruff check --fix` cleaned one `F401
    tree = **641** (the −2 from 643 is the stage's two `--fix` cleanups, which are real).
    The battery table above stands on the canonical numbers.
 
-#### Rule-10 surfacings
+#### Rule-10 surfacings — dispositioned by the narrow correction
 
-All four are owner questions. None is a stale artifact.
-
-1. **The shipped constraint catalog dropped a guarantee, and nothing recorded it.** The
-   projector emits no `source_record` for a definition with zero eligible entries; the deleted
-   assembler emitted one. Surfaced on REQ-CL-03. Whether the total-inventory guarantee should
-   be restored is a product question.
-2. **Two extraction modules ship nothing and are kept by their tests.** Retained with reasons
-   recorded; whether they stay is an owner call.
-3. **Nine matrix rows describe live behaviour nothing proves.** Real coverage the retirement
-   removed with no replacement, now itemised instead of hidden behind a PASS.
-4. **The elaborator's own mechanisms have no REQ families.** The v6 envelope, occurrence
-   identity, and the projection receipt are proved by tests and described by documents, but no
-   requirement family names them. This pass deliberately did not invent one.
+1. **[AGENT] (ratified for execution by owner, 2026-08-12)** **REQ-CL-03:** amend only after a
+   public-behavior check proves that zero eligible assertions still emit the `not_assessed`
+   report and that no instance-reaching usage is silently dropped. A failed check is a product
+   defect to surface, not authority to amend.
+2. **[AGENT] (ratified for execution by owner, 2026-08-12)** **The two non-shipping extraction
+   modules are nonblocking cleanup:** delete them or fold them into test helpers. They are not a
+   certification dependency.
+3. **[AGENT] (ratified for execution by owner, 2026-08-12)** **The nine UNTESTED matrix rows
+   require the triage recorded in `owner-disposition-20260811.md`:** add output-schema coverage;
+   test, retire, or amend smart-regen behavior; and keep REQ-GA-05 only for an intentional public
+   or serialized field-set contract.
+4. **[AGENT] (ratified for execution by owner, 2026-08-12)** **Missing elaborator REQ families
+   are backlog**, not an Item 7 certification dependency.
 
 ---
 
@@ -6513,9 +6522,58 @@ All four are owner questions. None is a stale artifact.
     pinned by `tests/conformance/test_cli_snapshot_refusal.py` (2 nodes: ife_plant refuses
     with `SI_SELF_BINDING` in the message, exit 1, nothing written; sample_model still
     captures).
-- The audit's four owner-question surfacings (REQ-CL-03 guarantee, the two non-shipping
-  extraction modules, the nine UNTESTED rows, the missing elaborator REQ families) join the
-  open-questions list in `owner-disposition-20260811.md`.
+- The audit's four surfacings (REQ-CL-03 guarantee, the two non-shipping extraction modules,
+  the nine UNTESTED rows, and the missing elaborator REQ families) are dispositioned by the
+  2026-08-12 narrow correction recorded in `owner-disposition-20260811.md` and below.
+
+---
+
+### Narrow correction — executable sequence (2026-08-12)
+
+**Authority and verdict.** Every decision in this section is agent-authored and remains
+agent-grade after the owner forwarded the proposal for execution. The recovered implementation
+stays in place: no rollback and no second rebuild. Item 7 remains open because compiler
+convergence was falsely recorded as executed, replacement proof is incomplete, and
+record-integrity corrections remain.
+
+- [x] **1. Dispositions.** **[AGENT] (ratified for execution by owner, 2026-08-12)** Record all
+      ten question-by-question dispositions in `owner-disposition-20260811.md`, amend the stale
+      Gate 2 and current-work status, and install this sequence as the persistent execution
+      authority.
+- [ ] **2. Real L-033/L-034 compiler convergence plus checker hardening.** **[AGENT] (ratified
+      for execution by owner, 2026-08-12)** Remove the legacy compiler symbols and name-keyed
+      payload shape for real; migrate or retire the recorded legacy-shape nodes; make executed
+      rows with deleted responsibility and no replacement proof fail; verify every
+      `removes.symbols` entry absent.
+- [ ] **3. R8 fix first.** **[AGENT] (ratified for execution by owner, 2026-08-12)** Preserve
+      qualified identity through rendering. Fall back to a shipping gate only if measurement
+      shows a substantially larger naming-contract change; Item 10 becomes an explicit Item 7
+      dependency only under that fallback.
+- [ ] **4. Replacement and matrix tests plus the `gain = 100` three-route proof.** **[AGENT]
+      (ratified for execution by owner, 2026-08-12)** Add the required UNTESTED and PARTIAL-row
+      coverage and the exact consumer/independent-output proof on live, in-place-snapshot, and
+      relocated-snapshot routes. Apply the recorded REQ-CL-03 pre-amendment behavior check.
+- [ ] **5. Portable provenance and invariant 35.** **[AGENT] (ratified for execution by owner,
+      2026-08-12)** Make provenance referents portable and amend invariant 35 to semantic
+      equality plus generated-byte equality after defined normalization of permitted provenance
+      metadata.
+- [ ] **6. Ruff R12 amendment.** **[AGENT] (ratified for execution by owner, 2026-08-12)** Set
+      the zero-new baseline to sysml-codegen `src` **14** and agentic-mbse `src` **1**: no new
+      findings, changed files clean unless a recorded pre-existing finding is unchanged, totals
+      no worse.
+- [ ] **7. Three complete final batteries at the final paired OIDs.** **[AGENT] (ratified for
+      execution by owner, 2026-08-12)** Run all three complete batteries after the substantive
+      corrections, against one final codegen/agentic OID pair.
+- [ ] **8. Candidate-record regeneration.** **[AGENT] (ratified for execution by owner,
+      2026-08-12)** Regenerate one internally consistent candidate record from the final evidence
+      and paired OIDs.
+- [ ] **9. Fresh narrow audit.** **[AGENT] (ratified for execution by owner, 2026-08-12)** Audit
+      compiler convergence and symbol removal, replacement coverage for deleted tests, R8,
+      portable provenance, final gate semantics, and evidence consistency. Do not re-review all
+      195 deletions.
+- [ ] **10. Return to the owner for final acceptance.** Final acceptance remains owner-grade.
+      **[AGENT] (ratified for execution by owner, 2026-08-12)** authorizes no push, tag,
+      promotion, close, or archive.
 
 ---
 

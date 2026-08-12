@@ -1,32 +1,39 @@
 # Current Work
 
-**Last Updated**: 2026-08-12 (Item 7 recovery: revise path executed through step 7; owner
-disposition on the regenerated candidate is the open gate)
+**Last Updated**: 2026-08-12 (Item 7 narrow correction active; disposition record complete;
+real compiler convergence is next)
 
 ---
 
 ## Active Work
 
-### 2026-08-12: Item 7 cutover recovery — REVISE path executed; awaiting the owner's final disposition
+### 2026-08-12: Item 7 cutover recovery — narrow correction active; compiler convergence next
 
-**Where it stands.** Every prescribed REVISE step (owner steps 1–7) has run. The legacy
-string-resolution stack is **gone from the tree**, retired with no provisional trim. The retired
-tree passed three consecutive identical gate runs, was independently audited, and the audit's
-findings F1–F3 are dispositioned. The regenerated candidate record is
-`.project/active/cutover-recovery/evidence/candidate.md` (+ `candidate.json`), built by
-`evidence/phase5-runs/build_candidate_revise.py`.
+**Where it stands.** The first REVISE path ran through step 7 and the legacy string-resolution
+stack is gone from the tree, with no provisional trim. Its regenerated record is now a
+**superseded checkpoint under active correction**, not a final-acceptance candidate.
+**[AGENT] (ratified for execution by owner, 2026-08-12)** The recovered implementation stays in
+place: no rollback and no second rebuild. Item 7 remains open because compiler convergence was
+falsely recorded as executed, replacement proof is incomplete, and record-integrity corrections
+remain.
 
-- **Content OIDs:** codegen `6c35aa0`, agentic-mbse `3fbda2f`, TEAx pinned `fa0e06a9`.
-- **Gates at the content OID:** codegen suite **1707 passed / 34 skipped / 65 deselected**, zero
+- **Correction authority:** all ten ratified dispositions are recorded question by question in
+  `.project/active/cutover-recovery/owner-disposition-20260811.md`; the persistent ten-step
+  execution sequence is in `.project/active/cutover-recovery/plan.md`.
+- **Progress:** narrow-correction step 1 is complete. **Next blocker: execute L-033/L-034 compiler
+  convergence for real and harden the ledger checker.** Steps 3–10 follow in plan order.
+- **Superseded checkpoint OIDs:** codegen `6c35aa0`, agentic-mbse `3fbda2f`, TEAx pinned
+  `fa0e06a9`.
+- **Checkpoint gates:** codegen suite **1707 passed / 34 skipped / 65 deselected**, zero
   `no live syside license` skip lines; ledger **304 rows / 0 problems**; `git diff --check` clean
   in both repos. The three step-7a runs (at `c0ceb24`) agree field for field —
   `evidence/phase5-runs/revise-runs/comparison.md`.
-- **Audit:** `evidence/audit-7-retired.md`, verdict FINDINGS (10, none blocking). All eight
+- **Checkpoint audit:** `evidence/audit-7-retired.md`, verdict FINDINGS (10, none blocking). All eight
   requested probes were executed and CONFIRM, so its own clause resolves to *Certify with the
-  residual list* now that F1–F3 are dispositioned.
-- **THE OPEN GATE: the owner's final disposition** on that record. Also owner-grade before
-  close: R8 (resolve or shipping-gate), the ruff findings (now 14, not 16), audit-F4, and the
-  six question-6 items in `owner-disposition-20260811.md`.
+  residual list* now that F1–F3 are dispositioned. The narrow correction requires a fresh audit
+  after the substantive fixes; it is not a re-review of all 195 deletions.
+- **Final acceptance remains owner-grade.** The correction proposal authorizes no push, tag,
+  promotion, close, or archive.
 - **Do not** treat the numbers in the superseded 2026-08-11 record as current; that record
   described the pre-retirement tree and lives at commit `013d6a1`.
 
@@ -50,7 +57,9 @@ show that the cutover preserved the product. Nothing from it is authority.
   `.project/active/cutover-recovery/owner-disposition-20260811.md`: v6 batch accepted (done),
   implement the seven formerly-gated migrations, all-route mutation tests, R8/R10, retirement
   with no provisional trim, full gates + audit on the retired tree, one regenerated candidate
-  record. Open owner questions: R8 approach, ruff-16, audit-F4 byte parity.
+  record. The R8, ruff, audit-F4, and related questions open at that checkpoint are now
+  dispositioned by **[AGENT] (ratified for execution by owner, 2026-08-12)** in the current
+  correction record.
 - **Phase 4 PARTIAL.** The retirement runbook is prepared, but owner-gated deletion of v5,
   legacy builders, dual-run code, test shims, and wrong-oracle tests has not run.
 - **Phase 5 AUDITED — NEEDS WORK.** The independent audit is
