@@ -746,9 +746,9 @@
      "GrandfatheredSnapshotError",
      "assert_snapshot_certifiable"
     ],
-    "measured": "Zero readers in src/, scripts/ or tests/ at the step-2 post-state (grep, runbook completion 2026-08-11). They are the v5 extraction envelope's version constant, its lowering-mode vocabulary, its two error classes and its certifiability gate.",
-    "state": "owner-gated, fifth entry item 7 \u2014 not in any `removes` block and not scheduled",
-    "why_not_a_row_of_its_own": "check_paths refuses two rows for one path (check_ledger_4a.py:426), and this file already has L-028. The symbols are recorded here instead, which is where the file's other symbol losses are recorded."
+    "measured": "Recorded as zero readers at the step-2 post-state (runbook completion 2026-08-11). Re-measured at REVISE step 6: two readers survived step 2, both in tests/helpers/legacy_route.py (L-276), which retires at step 4.",
+    "state": "EXECUTED at retirement step 4 under the owner ruling above. The file is now a docstring describing the v6 machinery and re-exports nothing.",
+    "why_not_a_row_of_its_own": "check_paths refuses two rows for one path (check_ledger_4a.py:433), and this file already has L-028. The symbols are recorded as a third `removes` block instead, which is where the file's other symbol losses are recorded."
    },
    "removes": [
     {
@@ -766,6 +766,20 @@
       "serialize_extraction_snapshot",
       "snapshot_to_json"
      ]
+    },
+    {
+     "group": "4B-G4",
+     "symbols": [
+      "SNAPSHOT_FORMAT_VERSION",
+      "CONSTRAINT_LOWERING_MODE_APPLIED",
+      "CONSTRAINT_LOWERING_MODE_GRANDFATHERED_OFF",
+      "VALID_CONSTRAINT_LOWERING_MODES",
+      "SnapshotFormatError",
+      "GrandfatheredSnapshotError",
+      "assert_snapshot_certifiable"
+     ],
+     "authority": "REVISE disposition 2026-08-11 step 2 item 7 [OWNER] \u2014 remove the dead v5 exports; recorded here rather than as a new row because check_paths refuses two rows for one path (check_ledger_4a.py:433) and this file already has L-028. Minted under the orchestrator's delegated ledger authority at REVISE step 6.",
+     "note": "The owner's ruling slots this at steps 1-2 on the ledger's recorded measurement of zero readers at the step-2 post-state. That measurement was false at the retirement's HEAD: tests/helpers/legacy_route.py:44,52 still read GrandfatheredSnapshotError and assert_snapshot_certifiable after step 2, and that file is L-276, a step-4 deletion. Executed at step 4 instead - the first step at which all seven are dead - so no commit ships a module whose imports are broken. Re-measured there: 0 readers of every symbol across src/, scripts/ and tests/, any file type."
     }
    ],
    "state": "executed",
