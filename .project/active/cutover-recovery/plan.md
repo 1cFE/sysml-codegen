@@ -6291,4 +6291,153 @@ stage and not a product defect. Named so the step-7 audit does not read it as a 
 
 ---
 
+### Revise step 6d completion — matrix re-citation and the dead-surface dispositions
+
+**Completed:** 2026-08-12. Brief: `af9d22d`. Commits: dispositions `f424d7e`, matrix `009a67a`,
+docs 16/18 `6b78f50`. Clean start at codegen `af9d22d` / agentic `3fbda2f`.
+
+This step closed all five step-6c rule-10 surfacings, so the step-7 audit reads no known-stale
+artifact and no undispositioned dead surface. Four questions stay open, and all four are owner
+questions rather than stale artifacts — they are listed at the end.
+
+#### Part 1 — the verification matrix, re-cited
+
+**The measurement that made this necessary.** The matrix cited 81 test modules; 56 were gone.
+205 of 276 rows carried a PASS beside a file nobody could run.
+
+Every one of those rows was re-read against its own requirement text, not against its family
+label, and given one of two endings. Where the deletion ledger recorded where a deleted
+module's responsibility went (`replacement_proof_node`), that recorded heir is what the row
+cites — so the mapping carries the ledger's authority rather than this pass's judgement. Where
+the row's text names deleted code, no heir was substituted: substituting one would have made
+`test_elaboration_aggregations.py` appear to prove "SumTerm fallback SHALL call
+`_find_literal_redefinition()`", which it does not.
+
+| | before | after |
+|---|---|---|
+| PASS | 275 | **136** |
+| RETIRED (new status) | — | **131** |
+| UNTESTED | 1 | **9** |
+| distinct kept test files cited | 77 claimed | **50 measured** |
+
+The new number reads worse and is the point: the old 275 counted 205 rows of history as
+current measurement.
+
+**Verified mechanically, not asserted.** Every test file named in a PASS row exists in the
+tree (0 exceptions). All 27 explicitly-cited pytest node ids collect
+(`pytest --collect-only` over the extracted set). A test filename inside an UNTESTED cell is
+part of the disposition — it says which retired module took the proof with it — and the header
+says so, so a future checker does not read it as a citation.
+
+**Ten families are retired end to end** (AS, BT, DRA, IR, MF, OR, ORCH, PGD, SVM, VBR) and
+carry a banner naming their behavioural heirs; SNAP-01..21 already had one. Two family notes
+were rewritten rather than annotated: DRA's and IR's "re-projected onto the shared
+`resolve_producer()` table" is dead, because that table is deleted too.
+
+**The nine UNTESTED rows are the retirement's real coverage debt.** Four output-schema rules
+(REQ-GEN-03, REQ-OSR-02/03/05) and four smart-regen internals (REQ-SR-01/02/06/07) lost their
+only pin with `test_gen_schemas.py` and `test_gen_stencils.py` — ledger rows L-149 and L-150,
+neither of which recorded a replacement. REQ-GA-05's exact-graph-field-set pin went with
+`test_graph_assembly.py` (L-152), so a field added to or removed from `ComputationGraph` now
+passes silently. The tail section groups them so the gap reads as one paragraph.
+
+#### Part 2 — the four dead surfaces, each measured before it was disposed
+
+1. **`assemble_constraint_catalog` — re-homed out of `src/`, and it was not what it looked
+   like.** Measured against the shipped assembler rather than assumed to duplicate it: this one
+   derives `source_records` from `facts.definitions` (every definition, visible with zero
+   eligible entries) where the projector derives them from the constraints it projected, and
+   the exclusion records diverge the same way. So it is not a synchronized second
+   implementation — it is the retired route's assembler, used by three unit modules as a
+   fixture builder. It moved to `tests/helpers/retired_catalog_assembly.py`. `_canonical_json`
+   went with the module's loss of purpose, to `contracts/serialize.py` beside the on-disk form
+   it is the sibling of, since the contract fingerprint is its only remaining reader.
+   `test_catalog_no_reconstruction.py`'s scan set drops the file that no longer produces a
+   catalog.
+2. **The divergence that measurement exposed is surfaced, not resolved.** REQ-CL-03 states a
+   total-inventory guarantee that is **false of the shipped catalog**. The row keeps its
+   passing test and gains a row-local note stating the divergence and parking it. Re-citing it
+   onto a projector test would have hidden a real product question behind a green cell.
+3. **`extraction/hierarchy_resolver.py` and `extraction/computed_attribute_extractor.py` —
+   retained, with the reason recorded in each docstring.** Neither is imported from `src/`.
+   The hierarchy resolver is held by `tests/helpers/live_extraction.py`, the shared harness six
+   conformance modules read, one of which (`test_ast_dispatch_invariant.py`) pins shipped code
+   on its other legs; deleting it means re-authoring that harness and the AST/HR families. The
+   computed-attribute classifier is held by a whole-corpus classification golden the elaborator
+   has no equivalent surface for. Both deletions are retirement steps whose replacements are
+   not proved, so they are recorded where a reader meets them and left to an owner. Doc 25's
+   "disposition unrecorded" line now points at the docstring that records it.
+4. **`core/graph_algorithms.py` — stated in place.** It was never a file. Doc 07 cited it as a
+   post-refactor convergence target; both call sites it would have merged are deleted, so the
+   plan has no subject. The shipped route's one topological sort is `_topological_modules`
+   (`elaboration/project.py`). The rule-10 line comes off doc 07's banner.
+
+#### Part 3 — docs 16 and 18
+
+Both subjects are live shipped mechanisms, so both got written rather than left bannered.
+Neither restates the historical body; each leads with the shape difference, because that is
+what a reader carrying the old model gets wrong.
+
+- **18** — there is no propagation. One value writer per slot per occurrence, ambiguity
+  refused (`SI_REDEFINITION_INVALID`); `ValueSite` is a record of *where*, not a switch, and
+  all four sites project as `DESIGN_ATTRIBUTE`.
+- **16** — there is no classification pass. One branch, three outcomes. No EXPOSE_COMPUTED, no
+  tentative state, no `AttributeResolutionKind` map, and an unrepresentable expression is
+  refused at elaboration instead of shipping as a module with no implementation.
+
+Every evidence node either doc cites was checked to exist by name.
+
+#### Battery
+
+| check | baseline | this stage |
+|---|---|---|
+| licensed suite | 1705 / 34 / 65 | **1705 / 34 / 65**, 0 failed |
+| exec lane | 65 | **not re-measured** — see the environment note |
+| `capture_v6_batch.py --verify` | 15 / 22 / 0 | **15 / 22 / 0** |
+| `-k corpus` | 9 | **9** |
+| `ruff check src` | brief said 14 | **0** measured at baseline, **0** now |
+| `ruff check src tests scripts` | brief said 643 | **629** measured at baseline, **627** now |
+| `mypy src` | 57 in 11 | **57 in 11** |
+| `check_ledger_4a paths` | 304 / 0 | **304 / 0** |
+| `surface` | 0 | **0** |
+| `groups` | all affected=0 | **all six affected=0, READY** |
+| `check_proof_integrity.py` | 0 / 0 | **0 / 0** |
+| doc distinctness | 31 / 0 | **31 / 0** |
+| `git diff --check` | clean | **clean** |
+
+The ruff delta is two rules in three files: `ruff check --fix` cleaned one `F401` and one
+`I001` in the unit modules whose catalog import was re-pointed. No new ruff or mypy finding.
+
+**Two environment facts, recorded so the next stage does not rediscover them.**
+
+1. **The companion checkout was on the wrong branch at stage start.** `/home/reid/1cfe/agentic-mbse`
+   — the path `pyproject.toml` wires — was on `elaborate-first-salvage` (`5088b41`), not the
+   stage's `3fbda2f`, so collection failed on a missing upstream symbol. It was clean, and was
+   detached at `3fbda2f` (the branch name is held by a second worktree). Left there.
+2. **The execution lane does not collect in either available venv, and this predates the
+   stage.** `pytest tests/execution -m execution` from the codegen venv fails its own
+   environment assertion — it requires `agentic_mbse` to resolve under a `-item7-rebuild/`
+   path, which the wired `../agentic-mbse` never satisfies — and `pandas` is absent there. From
+   the agentic worktree's venv, `jinja2` is absent. No execution-lane code was touched by this
+   stage, so the lane was not re-measured; the 65-green baseline was evidently taken in a third
+   environment that is not reconstructable from the brief.
+
+#### Rule-10 surfacings
+
+All four are owner questions. None is a stale artifact.
+
+1. **The shipped constraint catalog dropped a guarantee, and nothing recorded it.** The
+   projector emits no `source_record` for a definition with zero eligible entries; the deleted
+   assembler emitted one. Surfaced on REQ-CL-03. Whether the total-inventory guarantee should
+   be restored is a product question.
+2. **Two extraction modules ship nothing and are kept by their tests.** Retained with reasons
+   recorded; whether they stay is an owner call.
+3. **Nine matrix rows describe live behaviour nothing proves.** Real coverage the retirement
+   removed with no replacement, now itemised instead of hidden behind a PASS.
+4. **The elaborator's own mechanisms have no REQ families.** The v6 envelope, occurrence
+   identity, and the projection receipt are proved by tests and described by documents, but no
+   requirement family names them. This pass deliberately did not invent one.
+
+---
+
 **Status:** Draft → Owner-approved → In progress → Audited → Owner accepted/revised
