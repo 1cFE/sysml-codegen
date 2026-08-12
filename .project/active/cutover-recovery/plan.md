@@ -5748,7 +5748,21 @@ suite **1701 / 34 / 65**, 0 failed, 0 errors, **0** license-skip lines; executio
 `--verify` **15/22/0**; corpus **9**; `ruff check src` **14** / whole tree **643**; `mypy`
 **57 in 11**; `paths` **304 / 0**; `surface` **0**; `groups` all four **affected 0, READY**;
 proof integrity **0 / 0**; `retirement_worklist.py check` **0 problems, every step empty**;
-`git diff --check` clean. Whole-tree ruff is 643 rather than the step-4 boundary's 644 because
+doc distinctness **31 / 0**; `git diff --check` clean.
+
+**`check_ledger_4a.py replacements`, run out of band against the final tree: 221 green /
+81 not-required / 0 fail**, over 302 rows. The runbook projected 219 / 82 / 0 from the
+step-4 post-state; the two rows that move are L-036 and L-037, which emitted no line at all
+in the projection ("the two owner-gated dual rows that cannot execute") and now emit a line
+each, because they executed. Nothing failed. The gate the packet needs holds on the real
+tree.
+
+A first `replacements` run was started right after the step-4 battery and **discarded**: the
+agentic deletion, the L-036/L-037 close and the doc commits all landed while it was reading
+the tree, and a 40-minute per-row pytest sweep over a moving tree proves nothing. The number
+above is from a re-run against a clean working tree at the final HEAD.
+
+Whole-tree ruff is 643 rather than the step-4 boundary's 644 because
 step 2's `tests__unit__test_retirement_worklist.patch` inserted `import json` between the
 `__future__` import and the stdlib block — an `I001` the patch introduced, clean at the
 pre-retirement baseline, sorted here.
