@@ -1,5 +1,17 @@
 # 18 -- Literal Value Propagation for Aggregation Entry Points
 
+> **Status: historical.** The mechanism this document describes,
+> `_find_literal_redefinition` in `resolution/graph_builder.py`, was **deleted** by the Item 7
+> retirement (2026-08-12, `19072ad` / `82c7951` / `882fc8d` / `3071fba`).
+>
+> The problem is real and the shipped route still solves it: a literal written at a
+> redefinition becomes a `ValueSite` on the attribute node during elaboration, and projection
+> reads the value from that node when it mints the entry point. There is no separate
+> propagation pass and no search. **That path has no settled written description yet** — it is
+> named here rather than guessed at, and needs an owner.
+>
+> Everything below is retained as the record of the deleted design.
+
 ## The Problem
 
 When an aggregation input (SumTerm or SingletonTerm) can't be wired to an

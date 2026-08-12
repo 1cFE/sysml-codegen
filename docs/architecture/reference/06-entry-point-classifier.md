@@ -25,7 +25,7 @@ Two rules follow, and both are visible in the shipped JSON.
 
 A design-attribute entry point is keyed by the **attribute that supplies the value**
 (`_source_for_edge`, the `NodeRef` branch). Two calculations reading the same modelled
-attribute therefore share **one** key and one JSON entry. The retiring route named the key
+attribute therefore share **one** key and one JSON entry. The deleted route named the key
 after the consuming calc-usage formal, so the same modelled value appeared once per consumer.
 
 This is the largest customer-visible change of the cutover. On the customer model, the two
@@ -49,7 +49,7 @@ exact key as the field's `alias`, because an indexed key is not a legal Python i
 
 An entry point's group is chosen at mint time from the file that **declares** its owner node —
 the attribute node for a design attribute, the consuming calc node for a library default or a
-usage literal (`_group_base`). The retiring deriver named the group after the *using* file, so
+usage literal (`_group_base`). The deleted deriver named the group after the *using* file, so
 a parameter declared in a library and used from a design landed in the design's group. See
 [17-parameter-group-deriver](17-parameter-group-deriver.md) for the rule and its one fallback.
 
@@ -64,11 +64,14 @@ chosen when it was minted.
 
 ---
 
-## The retiring classifier
+## Historical: the deleted classifier
 
 Everything below describes `_classify_entry_points()` and the two creation paths in
-`resolution/graph_builder.py`, with grouping via `analysis/parameter_groups.py`. It is accurate
-about that code, which is still in the tree, and is **not** a description of the public route.
+`resolution/graph_builder.py`, with grouping via `analysis/parameter_groups.py`. Both modules
+were **deleted** by the Item 7 retirement (2026-08-12, `19072ad` / `82c7951` / `882fc8d` /
+`3071fba`). It is accurate about the code that was removed and is **not** a description of the
+product; REQ-EPC-02..08 below are that classifier's requirements, and no shipped code answers
+them.
 
 ## Requirements
 

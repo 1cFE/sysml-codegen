@@ -1,13 +1,14 @@
 # 17 -- ParameterGroupDeriver
 
-> **Status: retiring.** `analysis/parameter_groups.py` is not reachable from any public caller
-> and its removal is prepared, gated on owner acceptance at the Phase 5 stop. This document is
-> accurate about that module; it is not a description of what the public route does. The live
-> rule is stated immediately below, and the rest of the document describes the retiring deriver.
+> **Status: half live, half historical.** `analysis/parameter_groups.py` was **deleted** by the
+> Item 7 retirement (2026-08-12, `19072ad` / `82c7951` / `882fc8d` / `3071fba`) and is not in
+> the tree. The live rule is stated immediately below and is what the product does. Everything
+> after it is retained as the record of the deleted deriver — accurate about the code that was
+> removed, and not a description of the product.
 
 ## The live rule: a group is named after the declaring file
 
-On the public route there is no deriver and no separate grouping pass. A group is chosen when
+On the shipped route there is no deriver and no separate grouping pass. A group is chosen when
 an entry point is minted, from the file that **declares** the owner node — the attribute node
 for a design attribute, the consuming calc node for a library default or a usage literal
 (`_group_base`, `elaboration/project.py:308`).
@@ -19,7 +20,7 @@ owner.source_file  ->  stem  ->  sanitize + lowercase  ->  "{stem}_params" / "{S
 Three details carry the rule:
 
 - **Declaration site, not use site.** A parameter declared in a library file and consumed from
-  a design lands in the *library's* group. The retiring deriver attributed it to the design
+  a design lands in the *library's* group. The deleted deriver attributed it to the design
   file. This is why the customer model gains two exact-route-only groups, and why two of the
   catf model's eight group names move without the count changing — the names are now pinned
   alongside the counts in conformance, because a count-only assertion would accept a wholly

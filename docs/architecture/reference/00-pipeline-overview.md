@@ -77,16 +77,17 @@ sources, elaborates them once, and seals the graph into an envelope (this captur
 syside license); `generate --from-snapshot` loads that envelope license-free. A v5 extraction
 snapshot is refused by name at load. See [27-snapshot-generation](27-snapshot-generation.md).
 
-**What the legacy route is now.** The string-resolution stack this document used to describe —
-`orchestration/pipeline_builder.py`, `analysis/`, `resolution/graph_builder.py`, and the v5
-snapshot loader — is still in the tree and still importable, and is not reachable from any
-public caller. Its retirement is prepared and gated on owner acceptance. Two conformance nodes
-hold that state exactly: `test_public_authority_switch.py::
-test_the_construction_path_reaches_no_legacy_authority_even_transitively` (the construction
-closure is clean) and `::test_the_generation_half_still_reaches_v5_modules_and_that_residual_is_pinned`
-(the CLI's *import* closure still contains three of them, pinned by name so it cannot grow).
-Documents 03, 04, 05, 07, 10, 11, 12, 13, 17, 24, and 25 describe that stack and carry a
-retiring banner.
+**What the legacy route is now: gone.** The string-resolution stack this document used to
+describe — `orchestration/pipeline_builder.py`, `analysis/`'s backtracker and parameter groups,
+`resolution/graph_builder.py`, `resolution/producer_resolution.py`, `core/output_registry.py`,
+and the v5 snapshot loader/serializer/rebuild — was deleted by the Item 7 retirement
+(2026-08-12, `19072ad` / `82c7951` / `882fc8d` / `3071fba`). Two conformance nodes now pin the
+**absence**: `test_public_authority_switch.py` checks that the construction closure reaches no
+legacy authority and that the modules do not exist, and
+`tests/unit/test_elaboration_import_boundaries.py` checks that the CLI names none of them.
+Documents 03, 04, 05, 07, 10, 11, 12, 13, 17, and 24 describe that deleted stack and open with
+a historical banner; 25 describes `extraction/hierarchy_resolver.py`, which survived the
+retirement but is off the shipped route.
 
 ## Running example: battery_pack cost_model
 
@@ -213,11 +214,13 @@ sysml_codegen/
   cli/              generate (--models | --from-snapshot), snapshot, seal subcommands
 ```
 
-Present in the tree, publicly unreachable, retirement prepared and gated on owner acceptance:
-`orchestration/pipeline_builder.py`, `orchestration/snapshot_context.py`, `analysis/`
-(backtracker, parameter groups, constraint lowering), `resolution/graph_builder.py`,
+Deleted by the Item 7 retirement and no longer in the tree:
+`orchestration/pipeline_builder.py`, `orchestration/snapshot_context.py`, `analysis/`'s
+backtracker, parameter groups and constraint lowering, `resolution/graph_builder.py`,
 `resolution/producer_resolution.py`, `core/output_registry.py`, and the v5 snapshot
-`loader.py` / `serializer.py` / `graph_rebuild.py`.
+`loader.py` / `serializer.py` / `graph_rebuild.py`. `analysis/` now holds one module,
+`source_referent.py`; `orchestration/pipeline_context.py` survives as the
+`SysMLParsingError` / `CodeGenerationError` re-export point and carries no `PipelineContext`.
 
 See [02-orchestration.md](02-orchestration.md) for the public surface and its pins.
 
@@ -228,7 +231,7 @@ See [02-orchestration.md](02-orchestration.md) for the public surface and its pi
 | Doc | Topic | Key data models |
 |-----|-------|-----------------|
 | [01-extraction](01-extraction.md) | SysML model parsing: calc defs, usages, bindings, redefinitions | `CalculationDefinitionData`, `CalcUsageData`, `BindingInfo` |
-| [02-orchestration](02-orchestration.md) | The public surface: one entry point, two sources, one receipt (and the retiring pipeline builder) | `ExactPipelineContext`, `ProjectionReceipt` |
+| [02-orchestration](02-orchestration.md) | The public surface: one entry point, two sources, one receipt | `ExactPipelineContext`, `ProjectionReceipt` |
 | [03-resolution-overview](03-resolution-overview.md) | Why input resolution is hard (270 combinations) | `BindingResolution` |
 | [04-producer-resolution](04-producer-resolution.md) | Unified 5-strategy resolver | `InputSource`, `ResolutionContext` |
 | [05-module-factory](05-module-factory.md) | The three calc module kinds as pure data transformers (constraint kinds: [28](28-constraint-lowering-and-catalog.md)) | `PipelineModule`, `ModuleKind` |
@@ -263,7 +266,9 @@ See [02-orchestration.md](02-orchestration.md) for the public surface and its pi
 | [29-contracts-and-sealing](29-contracts-and-sealing.md) | Package integrity: semantic `ModelContract`, physical seal, emitted verifier |
 | [30-diagnostic-severity](30-diagnostic-severity.md) | Extraction-diagnostic severity: writer-set field, blocking vs advisory, fail-closed skew |
 
-**Reading the index after the cutover.** Documents 03, 04, 05, 07, 10, 11, 12, 13, 17, 24, and
-25 describe the retiring string-resolution stack and open with a banner saying so. They are
-accurate about the components they document; they are not descriptions of what the public route
-does. Document 09 is mixed and carries a scoped banner naming which halves are which.
+**Reading the index after the retirement.** Documents 03, 04, 05, 07, 10, 11, 12, 13, 17, and
+24 describe the string-resolution stack that was deleted, and open with a historical banner
+saying so. They are accurate about the code that was removed; they are not descriptions of what
+the product does. Document 09 is mixed and carries a scoped banner naming which model rows are
+live and which are history. Document 25's subject, `extraction/hierarchy_resolver.py`, is still
+in the tree but is not on the shipped route.

@@ -1,19 +1,19 @@
 # 24 -- Resolution Architecture: One Authority, Called at Two Pipeline Stages
 
-> **Status: retiring.** This document explains why the calculation consumer resolves *during*
-> the backtracker's DFS while the constraint and aggregation consumers resolve after. Both
-> owners (`analysis/dependency_backtracker.py`, `resolution/producer_resolution.py`) are present
-> in the tree and importable, and **not reachable from any public caller** — since Slice 3E the
-> exact route is the only public authority. Removal is prepared and gated on owner acceptance
-> at the Phase 5 stop (recovery plan, Gate 4B).
+> **Status: historical.** This document explains why the calculation consumer resolved *during*
+> the backtracker's DFS while the constraint and aggregation consumers resolved after. Both
+> owners — `analysis/dependency_backtracker.py` and `resolution/producer_resolution.py` — were
+> **deleted** by the Item 7 retirement (2026-08-12, `19072ad` / `82c7951` / `882fc8d` /
+> `3071fba`) and are not in the tree.
 >
 > **The distinction this document exists to explain does not survive.** There is no DFS to
 > resolve during: the elaborator resolves every reference while building the instance graph, and
 > projection reads what it resolved. One stage, not two.
 >
-> Everything below is accurate about the two-stage arrangement. It also cites
+> Everything below is retained as the record of the deleted design. It is accurate about the
+> two-stage arrangement and is **not a description of what the product does**. It also cites
 > `resolution/input_resolver.py`, which was deleted before the recovery began (at `936315c`).
-> For the public route, read [00-pipeline-overview](00-pipeline-overview.md).
+> For the shipped route, read [00-pipeline-overview](00-pipeline-overview.md).
 
 ## The Shape
 

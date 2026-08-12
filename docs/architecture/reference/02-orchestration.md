@@ -81,21 +81,18 @@ byte-for-byte as it was.
 
 The legacy builders — `orchestration/pipeline_builder.py`,
 `orchestration/snapshot_context.py`, and the v5 `snapshot/loader.py` and
-`snapshot/graph_rebuild.py` — remain in the tree and remain importable by name. They are simply
-not reachable from `run_codegen`. Their removal is Phase 4 work, prepared and gated on owner
-acceptance.
+`snapshot/graph_rebuild.py` — are **not in the tree**. The Item 7 retirement deleted them
+(2026-08-12, `19072ad` / `82c7951` / `882fc8d` / `3071fba`), and `snapshot/__init__.py`
+re-exports nothing.
 
-Two conformance nodes in `tests/conformance/test_public_authority_switch.py` hold that state,
-and they are worth reading as a pair:
+Two checks hold that state, and they are worth reading as a pair:
 
-- `test_the_construction_path_reaches_no_legacy_authority_even_transitively` — the whole
-  import closure of `orchestration.exact_pipeline_context` contains no legacy authority module.
-- `test_the_generation_half_still_reaches_v5_modules_and_that_residual_is_pinned` — the CLI's
-  *transitive* closure still contains `pipeline_builder`, `snapshot.loader`, and
-  `snapshot.graph_rebuild`, because `snapshot/__init__.py` re-exports the v5 machinery and the
-  CLI imports that package for other reasons. Nothing in that set is constructed through, but
-  importable is importable, and the set is pinned by name so it cannot quietly grow. Phase 4
-  empties it.
+- `tests/conformance/test_public_authority_switch.py` — the whole import closure of
+  `orchestration.exact_pipeline_context` reaches no legacy authority module, and each named
+  module does not exist.
+- `tests/unit/test_elaboration_import_boundaries.py` — the CLI names none of them, so the
+  residual import closure the pre-retirement candidate had to pin is empty by construction
+  rather than by list.
 
 That module also proves the switch **behaviourally** rather than by spelling: a test that
 asserts "the CLI imports `build_exact_pipeline_context`" passes the moment the import exists.
@@ -106,12 +103,13 @@ a snapshot this CLI captured is accepted.
 
 ---
 
-## The retiring pipeline builder
+## Historical: the deleted pipeline builder
 
 Everything below describes `orchestration/pipeline_builder.py` and
-`orchestration/output_registry_builder.py` — the legacy construction route. It is accurate
-about that code and is **not** a description of what the public route does. It is retained
-because the code is still in the tree and its retirement is gated on owner acceptance.
+`orchestration/output_registry_builder.py` — the legacy construction route, **deleted** by the
+Item 7 retirement. It is accurate about the code that was removed and is **not** a description
+of what the product does. It is retained as the record of that design: the requirements
+REQ-ORCH-01..07 below are the retired orchestrator's, and no shipped code answers them.
 
 ## Requirements
 
@@ -317,11 +315,11 @@ See [13-aggregation-scoping](13-aggregation-scoping.md) for full detail.
 
 ## PipelineContext
 
-> `PipelineContext` is the retiring route's context. The public route builds an
+> `PipelineContext` was the legacy route's context and no longer exists. The product builds an
 > `ExactPipelineContext` instead — see [One entry point, two sources, one
 > receipt](#one-entry-point-two-sources-one-receipt) above. `build_pipeline_context_from_snapshot`
-> (`orchestration/snapshot_context.py`) rebuilt a `PipelineContext` from a v5 snapshot and is
-> no longer reachable from any public caller.
+> (`orchestration/snapshot_context.py`) rebuilt a `PipelineContext` from a v5 snapshot; both it
+> and its module were deleted by the retirement.
 
 The `PipelineContext` dataclass carries all pipeline state. Key fields:
 
@@ -361,7 +359,7 @@ the pipeline builder.
 
 - **Upstream**: [00-pipeline-overview](00-pipeline-overview.md) -- the route, [01-extraction](01-extraction.md) -- provides calc defs, usages, hierarchy data
 - **Public route**: [27-snapshot-generation](27-snapshot-generation.md) -- the v6 snapshot source and what it can prove, [29-contracts-and-sealing](29-contracts-and-sealing.md) -- what generation seals
-- **Downstream**: [03-resolution-overview](03-resolution-overview.md) (consumes PipelineContext; retiring), [08-generation](08-generation.md) (consumes ComputationGraph)
+- **Downstream**: [03-resolution-overview](03-resolution-overview.md) (consumed `PipelineContext`; historical), [08-generation](08-generation.md) (consumes ComputationGraph)
 - **Registry**: [10-output-registry](10-output-registry.md) -- 4-phase protocol detail, [15-naming-conventions](15-naming-conventions.md) -- key formats
 - **Sub-processes**: [12-virtual-binding-rewrite](12-virtual-binding-rewrite.md), [13-aggregation-scoping](13-aggregation-scoping.md), [16-computed-attributes](16-computed-attributes.md), [17-parameter-group-deriver](17-parameter-group-deriver.md)
 - **Data models**: [09-data-models](09-data-models.md) -- PipelineContext, ComputationGraph, all extraction types

@@ -123,75 +123,29 @@ follows. This mirrors the warning-pre-pass discipline in constraint lowering, wh
 a degraded warning location is confined to the warning's own text and never written
 into the strict cache the halt path reads (Item 4 invariant I3).
 
-## What happens on severity skew — in each direction
+## Severity skew cannot happen here — by construction
 
-> **Surfaced, not resolved (step 6b).** This whole section rests on a premise that
-> no longer holds in codegen: that a severity crosses a process boundary on disk.
-> It did under the v5 extraction snapshot, which serialized `ConstraintFacts`. The
-> v6 instance-graph envelope carries no `ConstraintFacts`, no
-> `ExtractionDiagnosticFact`, and no `severity` field at all — `severity` appears
-> zero times under `src/sysml_codegen/snapshot/`, and `constraint_facts.parse` has
-> no caller in `src/` or `tests/`. Extraction severity is now read only in-process,
-> at the elaboration sink above, and capture screens before it seals. So guards 2
-> and 3 below are still true *upstream* but are unreachable from codegen, and the
-> envelope citation in guard 1 names `snapshot/loader.py`, which the retirement
-> deleted. What REQ-DIAG-04 should say against a v6-only reader is an authorship
-> decision with no recorded authority. Left for the owner; the text below is kept
-> verbatim so the decision is made against what was written, not a paraphrase.
+"Skew" means a stored severity and the reading process's writer table disagree about a
+diagnostic kind. In codegen that comparison has nothing to compare: **no severity crosses a
+process boundary on disk.** The v6 instance-graph envelope carries no `ConstraintFacts`, no
+`ExtractionDiagnosticFact`, and no `severity` field — `severity` appears zero times under
+`src/sysml_codegen/snapshot/`, and `constraint_facts.parse` has no caller in `src/` or
+`tests/`. Extraction severity is read once, in-process, at the elaboration sink described
+above, and capture screens before it seals anything. A snapshot therefore cannot carry a stale
+severity into a later reader, because it carries no severity at all.
 
-"Skew" means a snapshot's stored severity and the reading codegen's writer-table
-disagree about a kind. Every skew is refused; none is silently resolved either way.
-Three guards stack, outermost first.
+That is the whole of REQ-DIAG-04's outcome on this product: the failure mode is impossible,
+not merely guarded. **History, in one line:** the requirement was written against the v5
+extraction snapshot, which serialized `ConstraintFacts` and needed a three-guard fail-closed
+stack to survive a reclassification; the Item 7 retirement (2026-08-12) deleted that format,
+its loader, and every committed fixture of it.
 
-**1. The version gate (primary, catches skew before it reaches a field).**
-Both the fact schema and the snapshot envelope are pinned by *exact* equality — not
-`>=`, so a version string that is **ahead of** or **behind** the reader's pin is
-refused identically:
-
-- Facts: `parse` refuses any `schema_version != "constraint-facts/v2"`
-  (`agentic-mbse constraint_facts.py:397-408`). Codegen additionally pins the
-  expected string in `_upstream_pins.py:24-27`
-  (`CONSTRAINT_FACTS_SCHEMA_VERSION = "constraint-facts/v2"`), with a guard test
-  that fails if the imported companion drifts behind unchanged package metadata.
-- Envelope: the loader refuses any `snapshot_format_version != SNAPSHOT_FORMAT_VERSION`
-  (`snapshot/loader.py:723-734`). No cross-version coexistence; the loader never
-  up-migrates in place (see [27-snapshot-generation](27-snapshot-generation.md)).
-
-A reclassification that follows the discipline (bump the version) is caught here:
-the stale snapshot's version no longer matches, in whichever direction it differs.
-
-**2. The severity cross-check (backstop, catches a reclassification that skipped
-the version bump).** When a snapshot's facts are reconstructed,
-`_diagnostic_from_dict` (`agentic-mbse constraint_facts.py:362-386`) does three
-things:
-
-- validates the stored `severity` string is a known enum member, else raises
-  (`:363-370`);
-- reconstructs the fact, which **re-derives** severity from *this reader's* writer
-  table via `severity_for_kind` (`:374-379`);
-- refuses if the re-derived severity disagrees with the stored one, in either
-  direction — "refuse rather than silently prefer either side" (`:380-385`).
-
-So even a discipline violation — someone reclassifies a kind without bumping the
-schema version — fails closed: the stored `blocking` against a table that now says
-`advisory` (or the reverse) raises at reconstruction, naming the kind and both
-values.
-
-**3. Unknown kind (fail-closed for a code the reader cannot interpret).**
-`severity_for_kind` refuses any kind outside the closed set
-(`agentic-mbse constraint_facts.py:87-95`), at both construction (writer side) and
-reconstruction (reader side). An unrecognized diagnostic kind cannot be classified
-either way, so it is refused rather than guessed (Item 4 DD-R01). This is the one
-guarantee the severity field does *not* buy over a reader-side map — an unknown
-kind fails closed under both designs; the field's advantage is confined to
-*recognized* kinds whose classification moved.
-
-**Shape gate (a clean error for a malformed snapshot).** Before reconstruction, the
-loader's `_validate_diagnostic` (`snapshot/loader.py:586-604`) checks that `kind`,
-`message`, and `severity` are present strings — `severity` joined the shape at
-`constraint-facts/v2`, so validating it here (`:588-591`) turns a missing severity
-into a clean shape error naming its JSON pointer instead of a raw `KeyError` from
-the reconstructor further down.
+The upstream guards still exist for a caller that does parse serialized facts —
+`agentic_mbse.sysml.constraint_facts` refuses a `schema_version` mismatch, refuses a stored
+severity that disagrees with the reader's writer table, and refuses an unknown kind, all by
+exact equality rather than a `>=` range. Codegen does not exercise them, and pins the schema
+string it was written against in `_upstream_pins.py` so an upstream bump fails loudly in
+`tests/conformance/test_upstream_pins.py` rather than silently.
 
 ## Requirements traced here
 
@@ -200,7 +154,7 @@ the reconstructor further down.
 | REQ-DIAG-01 | A diagnostic's severity is fixed at construction from the writer table and never recomputed by a reader-side `kind → severity` lookup (I1). | `severity_for_kind` is the only mapping; `__post_init__` derives at construction (`agentic-mbse constraint_facts.py:78-95,230-233`). Provable by `rg` — no reader-side table exists. |
 | REQ-DIAG-02 | A blocking diagnostic halts generation before lowering, on both the live and snapshot routes, naming every blocking diagnostic. | `screen_extraction_diagnostics` raises under `EXTRACTION_DIAGNOSTIC_BLOCKING` (`elaboration/extraction_screen.py:72-79`), called at `elaboration/elaborate.py:246` — the one elaborator read both routes share (`orchestration/elaborated_pipeline.py:59,116`). Pinned live and on capture by `tests/conformance/test_extraction_diagnostic_screen.py:49,60`. |
 | REQ-DIAG-03 | An advisory diagnostic is rendered and generation continues; advisory rendering cannot swallow the blocking halt. | Advisory logged first, degrading location to `<no location>` (`elaboration/extraction_screen.py:40-48,69-73`). Pinned at `tests/conformance/test_extraction_diagnostic_screen.py:95,105`; both pins are synthetic because the writer table has no ADVISORY kind today. |
-| REQ-DIAG-04 | Severity skew fails closed in both directions: version gate, then severity cross-check, then unknown-kind refusal. | Exact-equality version gates (`agentic-mbse constraint_facts.py:397-408`; `snapshot/loader.py:723-734`); cross-check (`agentic-mbse constraint_facts.py:374-385`); unknown-kind raise (`:87-95`). |
+| REQ-DIAG-04 | Severity skew fails closed in both directions. | **Discharged by construction:** no severity crosses a process boundary on disk, so there is no skew to fail closed on. The v6 envelope carries no `ConstraintFacts` and no `severity` field, and `constraint_facts.parse` has no caller in `src/` or `tests/`. The upstream exact-equality guards remain in `agentic_mbse.sysml.constraint_facts` for callers that parse serialized facts. |
 
 ## Related Documents
 

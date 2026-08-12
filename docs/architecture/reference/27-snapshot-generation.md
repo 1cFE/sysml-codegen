@@ -1,7 +1,8 @@
 # 27 — Snapshot-Driven Generation
 
 **Status:** Active · **Format:** v6 instance-graph snapshot · **Supersedes:** the v5
-extraction snapshot, which is retiring (see [The v5 extraction snapshot](#the-v5-extraction-snapshot-retiring) below)
+extraction snapshot, whose code and fixtures were deleted by the Item 7 retirement (see
+[The v5 extraction snapshot](#the-v5-extraction-snapshot-historical) below)
 
 ## Why
 
@@ -100,16 +101,18 @@ coexistence and no in-place up-migration.
 `scripts/capture_v6_batch.py` produces the proposed v6 recapture batch for the 37-fixture
 corpus through that same `capture_instance_graph_snapshot` entry point, so the batch cannot
 drift from the product. A fixture the exact route refuses gets a typed refusal record in the
-batch manifest rather than a snapshot. **Acceptance of that batch is the owner's, at the
-Phase 5 stop** — the script produces readiness, not authority.
+batch manifest rather than a snapshot. **The owner accepted that batch** (disposition of 2026-08-11, step 1); the script produces
+readiness, not authority, and `--verify` re-derives it byte for byte on demand.
 
-## The v5 extraction snapshot (retiring)
+## The v5 extraction snapshot (historical)
 
-Everything below describes the **v5 extraction snapshot**, which no public surface produces or
-consumes any more. It is retained because the format still exists in the tree
-(`snapshot/loader.py`, `serializer.py`, `graph_rebuild.py`, and `capture_snapshot`), the
-committed runtime snapshots are still v5, and its retirement is gated on owner acceptance at
-the Phase 5 stop. Read it as a description of that machinery, not of the public route.
+Everything below describes the **v5 extraction snapshot**. Its code — `snapshot/loader.py`,
+`serializer.py`, `graph_rebuild.py`, `capture_snapshot` — and every committed
+`extraction_snapshot.json` fixture were **deleted** by the Item 7 retirement (2026-08-12,
+`19072ad` / `82c7951` / `882fc8d` / `3071fba`). Nothing in the tree reads or writes the format,
+and `generate --from-snapshot` refuses a v5 document by name. This section is retained as the
+record of what that format was, so a v5 file found outside the tree can still be read. It is
+not a description of anything the product does.
 
 ### Format schema (v5)
 

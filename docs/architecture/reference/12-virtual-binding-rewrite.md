@@ -1,17 +1,16 @@
 # 12 - Virtual Binding Rewriting
 
-> **Status: retiring.** This document describes template expansion and
-> `_rewrite_virtual_bindings()` in `orchestration/pipeline_builder.py`. That module is present
-> in the tree and importable, and **not reachable from any public caller** — since Slice 3E the
-> exact route is the only public authority. Removal is prepared and gated on owner acceptance
-> at the Phase 5 stop (recovery plan, Gate 4B).
+> **Status: historical.** Template expansion and `_rewrite_virtual_bindings()` lived in
+> `orchestration/pipeline_builder.py`, **deleted** by the Item 7 retirement (2026-08-12,
+> `19072ad` / `82c7951` / `882fc8d` / `3071fba`).
 >
-> **The public route has no virtual copies to rewrite.** A calc declared on a part def is
+> **The shipped route has no virtual copies to rewrite.** A calc declared on a part def is
 > instantiated per occurrence by the elaborator, and each occurrence's values come from its own
 > value site. There is no template binding carrying a generic reference that a later pass has
 > to redirect, so there is no in-place mutation step and no ordering constraint around it.
 >
-> Everything below is accurate about the rewrite. For the public route, read
+> Everything below is retained as the record of the deleted design. It is accurate about the
+> code that was removed and is **not a description of what the product does**. For that, read
 > [00-pipeline-overview](00-pipeline-overview.md).
 
 ## What Are "Virtual" Calc Usages?

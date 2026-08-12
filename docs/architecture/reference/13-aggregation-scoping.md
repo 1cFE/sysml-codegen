@@ -1,13 +1,11 @@
 # 13 - Aggregation Scoping
 
-> **Status: retiring.** This document describes `find_instance_paths_for_partdef()`,
-> `_scope_aggregation_expressions()`, and `_build_chain_aliases()` in
-> `orchestration/pipeline_builder.py`. All three are present in the tree and importable, and
-> **not reachable from any public caller** — since Slice 3E the exact route is the only public
-> authority. Removal is prepared and gated on owner acceptance at the Phase 5 stop (recovery
-> plan, Gate 4B).
+> **Status: historical.** `find_instance_paths_for_partdef()`,
+> `_scope_aggregation_expressions()`, and `_build_chain_aliases()` lived in
+> `orchestration/pipeline_builder.py`, **deleted** by the Item 7 retirement (2026-08-12,
+> `19072ad` / `82c7951` / `882fc8d` / `3071fba`).
 >
-> **The public route scopes aggregation by enumeration, not by instance discovery.** A part
+> **The shipped route scopes aggregation by enumeration, not by instance discovery.** A part
 > def's aggregation is elaborated once per occurrence of that def, and an aggregation over an
 > arrayed child expands into one term per member occurrence — no parametric multiply, no
 > instance-path matching against virtual usages.
@@ -19,7 +17,8 @@
 > render `capital_cost` and the model is refused with `SI_RENDERING_COLLISION`. Give each
 > child's contribution its own named attribute and add the names.
 >
-> Everything below is accurate about the legacy scoping. For the public route, read
+> Everything below is retained as the record of the deleted design. It is accurate about the
+> code that was removed and is **not a description of what the product does**. For that, read
 > [00-pipeline-overview](00-pipeline-overview.md).
 
 ## The Problem

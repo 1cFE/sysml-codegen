@@ -292,7 +292,7 @@ the same for two singleton children (`rail_capital`, `brace_capital`). Refusal p
 
 **Cross-reference — the same class from the other side.** This is the filed Item 10 cross-part
 `child.attr` collapse class, where the resolver does not follow per-child `:>>` redefinitions.
-The retiring route collapsed those terms through a qualifier-dropping name match; the exact
+The deleted legacy route collapsed those terms through a qualifier-dropping name match; the exact
 route refuses instead. Recorded on recovery ledger row L-199 and carried to the Phase 5 owner
 packet.
 
@@ -423,7 +423,7 @@ An occurrence-indexed key (`…__battery_pack[0]__capacity_kwh`) is not a legal 
 
 ### Parametric Multiply (retired)
 
-The retiring route rewrote `sum(child.attribute)` to `count * child.attribute` at compile time and required every instance in an array to share the same parameter bindings. That transformation is gone with that route. If you are reading a model or a baseline that assumed it, the uniform-array requirement no longer applies and the per-instance keys are the expected shape.
+The deleted legacy route rewrote `sum(child.attribute)` to `count * child.attribute` at compile time and required every instance in an array to share the same parameter bindings. That transformation is gone with that route. If you are reading a model or a baseline that assumed it, the uniform-array requirement no longer applies and the per-instance keys are the expected shape.
 
 ---
 

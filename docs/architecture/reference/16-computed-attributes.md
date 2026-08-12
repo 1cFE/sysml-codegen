@@ -1,5 +1,20 @@
 # 16 -- Computed Attributes: FORMULA, EXPOSE, and Classification
 
+> **Status: mixed, and the resolution half is historical.** The classification taxonomy below
+> is extraction-level and still true: `extraction/computed_attribute_extractor.py` is in the
+> tree and classifies FORMULA / EXPOSE_PURE / EXPOSE_COMPUTED as described. Everything about
+> the **attribute resolution map**, Phase 3b confirmation, and the `AttributeResolutionKind`
+> enum describes `resolution/graph_builder.py`, `orchestration/pipeline_builder.py` and
+> `orchestration/output_registry_builder.py`, all **deleted** by the Item 7 retirement
+> (2026-08-12, `19072ad` / `82c7951` / `882fc8d` / `3071fba`), together with
+> `snapshot/graph_rebuild.py`. REQ-CA-06 and REQ-CA-11 are that deleted code's requirements.
+>
+> The shipped route reaches these shapes through the elaborator instead: a computed attribute
+> becomes a `FORMULA` or `AGGREGATION` calc node with a compiled expression, and an EXPOSE
+> becomes an alias on an attribute node. **That mechanism has no settled written description
+> yet.** Writing one is content authorship, not a repair of a stale claim, so it is named here
+> rather than guessed at. Needs an owner.
+
 ## What This Module Does
 
 Some PartDef/PartUsage attributes have inline expressions rather than literal

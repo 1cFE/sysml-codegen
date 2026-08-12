@@ -44,15 +44,15 @@ Generated package
 
 `run_codegen` (`cli/__init__.py`) is the single public entry point and constructs one way. `--models` and `--from-snapshot` are two *sources* for the same authority, not two implementations: both seal into an `ExactPipelineContext` whose receipt binds the sealed instance graph to what it projects to. No flag, environment variable, or config field selects an implementation. See [02-orchestration](reference/02-orchestration.md).
 
-Eligible modelled assertions become `CONSTRAINT` modules during projection, together with the `ConstraintCatalog` embedded on the graph. A `REPORT_AGGREGATOR` module is emitted only when there is at least one constraint output; a constraint-free model produces neither family. See [28-constraint-lowering-and-catalog](reference/28-constraint-lowering-and-catalog.md), whose lowering half describes `analysis/constraint_lowering.py` — a retiring component, not the public route.
+Eligible modelled assertions become `CONSTRAINT` modules during projection, together with the `ConstraintCatalog` embedded on the graph. A `REPORT_AGGREGATOR` module is emitted only when there is at least one constraint output; a constraint-free model produces neither family. See [28-constraint-lowering-and-catalog](reference/28-constraint-lowering-and-catalog.md), whose lowering half describes `analysis/constraint_lowering.py` — deleted by the Item 7 retirement, so read that half as history, not as the product.
 
 The license-free path is the **v6 instance-graph snapshot**. `sysml-codegen snapshot` admits the sources, elaborates them once, and seals the resulting graph into an envelope (`capture_instance_graph_snapshot` in `snapshot/capture.py` — this capture step needs the live syside license). `generate --from-snapshot` loads that envelope with no license at runtime. A v5 extraction snapshot is refused at load, by name. See [27-snapshot-generation](reference/27-snapshot-generation.md).
 
 ### Where the legacy route went
 
-The string-resolution stack — `orchestration/pipeline_builder.py`, `analysis/`, `resolution/graph_builder.py`, `core/output_registry.py`, and the v5 snapshot loader — is **present in the tree and importable, and unreachable from any public caller**. Its retirement is fully prepared and gated on owner acceptance. Two conformance nodes hold that state: `test_public_authority_switch.py::test_the_construction_path_reaches_no_legacy_authority_even_transitively` proves the construction closure is clean, and `::test_the_generation_half_still_reaches_v5_modules_and_that_residual_is_pinned` states the honest residual — the CLI's *import* closure still contains `pipeline_builder`, `snapshot.loader`, and `snapshot.graph_rebuild`, pinned by name so it cannot grow.
+The string-resolution stack — `orchestration/pipeline_builder.py`, `analysis/`'s backtracker and parameter groups, `resolution/graph_builder.py`, `resolution/producer_resolution.py`, `core/output_registry.py`, and the v5 snapshot loader/serializer/rebuild — was **deleted** by the Item 7 retirement (2026-08-12, `19072ad` / `82c7951` / `882fc8d` / `3071fba`). None of it is in the tree, and `snapshot/__init__.py` re-exports nothing. Two checks pin the absence: `test_public_authority_switch.py` (the construction closure reaches no legacy authority, and the modules do not exist) and `tests/unit/test_elaboration_import_boundaries.py` (the CLI names none of them).
 
-Reference documents 03, 04, 05, 07, 10, 11, 12, 13, 17, 24, and 25 describe that stack and open with a banner saying so. They remain accurate about the components they document.
+Reference documents 03, 04, 05, 07, 10, 11, 12, 13, 17, and 24 describe that deleted stack and open with a historical banner. They remain accurate about the code that was removed. Document 25's subject, `extraction/hierarchy_resolver.py`, survived the retirement and is off the shipped route.
 
 ---
 
@@ -71,7 +71,7 @@ Two consequences a reader should carry into the reference documents:
 - **An arrayed child is enumerated, not multiplied.** Three occurrences produce three attribute nodes, three entry points, and three terms in an aggregation over them.
 - **An unresolvable reference is a typed refusal.** `ElaborationError` (readiness findings) and `ElaborationDiagnosticError` (validation diagnostics) stay distinct all the way to the CLI log, and projection refuses on a rendering collision rather than letting two distinct things render as one name.
 
-The four-typed-registry design and the one-authority `resolve_producer()` ladder that this section used to describe belong to the retiring stack. They are documented, accurately, in [10-output-registry](reference/10-output-registry.md), [04-producer-resolution](reference/04-producer-resolution.md), [03-resolution-overview](reference/03-resolution-overview.md), and [24-dual-resolution-architecture](reference/24-dual-resolution-architecture.md), each of which now opens with a banner.
+The four-typed-registry design and the one-authority `resolve_producer()` ladder that this section used to describe were deleted with the legacy stack. They are documented, accurately, in [10-output-registry](reference/10-output-registry.md), [04-producer-resolution](reference/04-producer-resolution.md), [03-resolution-overview](reference/03-resolution-overview.md), and [24-dual-resolution-architecture](reference/24-dual-resolution-architecture.md), each of which now opens with a banner.
 
 ### Test-First with Real SysML Data
 
@@ -130,7 +130,7 @@ sysml_codegen/
     __init__.py                  generate (--models | --from-snapshot), snapshot, seal
 ```
 
-Present in the tree, publicly unreachable, retirement prepared and gated on owner acceptance:
+Deleted by the Item 7 retirement and no longer in the tree:
 
 ```
   orchestration/pipeline_builder.py, orchestration/snapshot_context.py
@@ -157,10 +157,10 @@ Present in the tree, publicly unreachable, retirement prepared and gated on owne
    - [08-generation](reference/08-generation.md) -- Jinja2 rendering to Python, YAML, JSON
    - [29-contracts-and-sealing](reference/29-contracts-and-sealing.md) -- what a sealed package promises
 
-   For the retiring string-resolution stack, read [03](reference/03-resolution-overview.md),
+   For the deleted string-resolution stack, read [03](reference/03-resolution-overview.md),
    [11](reference/11-analysis-backtracker.md), [05](reference/05-module-factory.md), and
-   [07](reference/07-graph-assembly.md) — accurate about those components, not about the
-   public route.
+   [07](reference/07-graph-assembly.md) — accurate about the code that was removed, not
+   about the product.
 4. **Data models** -- [09-data-models](reference/09-data-models.md) as a reference companion to any of the above
 
 ### Deep dives by topic
@@ -183,11 +183,13 @@ Present in the tree, publicly unreachable, retirement prepared and gated on owne
 
 ## Component Index
 
-**Read this index with the cutover in mind.** C05, C06, C08–C19, C27, and X02 name components
-of the retiring string-resolution stack (`extraction/computed_attribute_extractor.py`,
-`extraction/hierarchy_resolver.py`, `core/output_registry.py`, `analysis/`,
-`orchestration/pipeline_builder.py`, `resolution/graph_builder.py` and its resolver). Their
-documents are accurate about those components and are not descriptions of the public route.
+**Read this index with the retirement in mind.** C05, C06, C08–C19, C27, and X02 name
+components of the string-resolution stack that the Item 7 retirement deleted
+(`core/output_registry.py`, `analysis/`, `orchestration/pipeline_builder.py`,
+`resolution/graph_builder.py` and its resolver). Two of them survived and are simply off the
+shipped route: `extraction/computed_attribute_extractor.py` and
+`extraction/hierarchy_resolver.py`. Their documents are accurate about that code and are not
+descriptions of the product.
 C02, C03, C04, C07, C20–C26, C28, C29, and X01 are live on the exact route; C01's models are
 mixed and doc 09 says which are which.
 
@@ -230,7 +232,7 @@ mixed and doc 09 says which are which.
 ## Known Limitations
 
 The following open issues are documented in the codebase. Items 2, 3, and 6 are limitations of
-the **retiring** extraction/resolution classifier; the exact route reaches those shapes by a
+the **deleted** extraction/resolution classifier; the exact route reaches those shapes by a
 different mechanism and its behaviour on each has not been separately re-derived, so read them
 as history rather than as current public limits. Items 1, 4, 5, and 7 are modelling- or
 package-level and hold on either route.

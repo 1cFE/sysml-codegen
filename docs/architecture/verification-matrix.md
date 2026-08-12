@@ -23,20 +23,27 @@ UNTESTED requirements are either cross-cutting architectural principles verified
 indirectly through component-level tests, or design-only requirements that constrain
 the documentation rather than executable code.
 
-> **Reading a PASS row after the cutover.** Since Slice 3E the exact route is the only public
-> authority; the string-resolution stack (`analysis/`, `resolution/graph_builder.py` and its
-> resolver, `core/output_registry.py`, `orchestration/pipeline_builder.py`, the v5 snapshot
-> loader) is present, importable, and unreachable from any public caller, with its retirement
-> gated on owner acceptance. Rows in the families that own that stack — AS, BT, DRA, EPC, GA,
-> HR, LVP, MF, OR, ORCH, PGD, RES, VBR, and SNAP-01..21 — are **still true as test-state**:
-> the named test exists and passes. They are **not** evidence about the public route's
-> behaviour. Where a row's requirement text names a legacy function
-> (`build_pipeline_context()`, `build_computation_graph()`, `resolve_producer()`), read it as
-> naming that function, not the product. The public route's own evidence lives in
-> `test_public_authority_switch.py`, `test_exact_*`, `test_elaboration_*`, and
-> `test_snapshot_v6_*`; a dedicated requirement family for it is the retirement's work, not
-> this gate's. Status is deliberately left at test-state, as the contract-disposition
-> convention above already establishes.
+> **Reading a PASS row after the retirement — most of them are history, and here is the
+> measurement.** The Item 7 retirement (2026-08-12, `19072ad` / `82c7951` / `882fc8d` /
+> `3071fba`) deleted the string-resolution stack and the tests that pinned it. Of the **81**
+> test modules this matrix cites, **56 no longer exist in the tree**. A PASS beside one of
+> them records what passed before the retirement; it is not a current measurement, and
+> re-running it is not possible.
+>
+> The families that own the deleted stack — AS, BT, DRA, EPC, GA, HR, LVP, MF, OR, ORCH, PGD,
+> RES, VBR, and SNAP-01..21 — are where those rows are. Where a row's requirement text names a
+> legacy function (`build_pipeline_context()`, `build_computation_graph()`,
+> `resolve_producer()`), read it as naming code that was removed, not the product.
+>
+> What replaced each retired test is recorded per row in the recovery's deletion ledger
+> (`.project/active/cutover-recovery/ledger-4a.json`, the `replacement_proof_node` field;
+> `check_ledger_4a.py replacements` reads 221 green / 81 not-required / 0 fail against the
+> retired tree). Re-deriving this matrix against that map is **authorship with no recorded
+> authority yet and needs an owner** — it is named here rather than guessed at row by row.
+>
+> The shipped route's own evidence lives in `test_public_authority_switch.py`, `test_exact_*`,
+> `test_elaboration_*`, and `test_snapshot_v6_*`. Status is deliberately left at test-state,
+> as the contract-disposition convention above already establishes.
 
 > **Sweep note (PIPELINE-TRUTH Item 7).** The ~175-row deep-read sweep found ~30 PASS
 > rows whose cited test passes but pins *less* than the full requirement text (e.g.
@@ -568,15 +575,16 @@ indirectly via the emitted verifier.
 
 **Extraction Snapshots** — Extraction Snapshots — [reference/27-snapshot-generation.md](reference/27-snapshot-generation.md)
 
-> **These rows are the v5 extraction snapshot.** REQ-SNAP-01..21 describe the format the public
-> route no longer produces or consumes; `generate --from-snapshot` takes a **v6
-> instance-graph** snapshot and refuses a v5 document by name. Two consequences for a reader:
-> "current: 5" in REQ-SNAP-09 is the v5 loader's own gate, not the product's snapshot version;
-> and REQ-SNAP-16's `--design-path-filter` clause survives as a refusal but not as a flag —
-> Gate 4B-G0 removed it, so argparse rejects it before a snapshot is opened, which is what the
-> cited test now asserts. Every row's test still exists and passes. The v6 envelope's evidence
-> is `test_snapshot_v6_{envelope,capture,routes}.py` and `test_source_admission_routes.py`; a
-> REQ family for it is the retirement's work.
+> **These rows are the v5 extraction snapshot, and its code is gone.** REQ-SNAP-01..21 describe
+> a format the product no longer produces or consumes; `generate --from-snapshot` takes a **v6
+> instance-graph** snapshot and refuses a v5 document by name. The v5 loader, serializer and
+> rebuild modules were deleted by the retirement, and so were the tests these rows cite —
+> "current: 5" in REQ-SNAP-09 named the deleted loader's gate, never the product's snapshot
+> version, and REQ-SNAP-16's `--design-path-filter` clause survives as a refusal but not as a
+> flag (Gate 4B-G0 removed it, so argparse rejects it before a snapshot is opened). Read the
+> whole family as history. The v6 envelope's evidence is
+> `test_snapshot_v6_{envelope,capture,routes}.py` and `test_source_admission_routes.py`; a REQ
+> family for it is unwritten and needs an owner.
 
 | REQ ID | Requirement | Test File | Status |
 |--------|-------------|-----------|--------|

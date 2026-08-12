@@ -1,18 +1,17 @@
 # 07 -- Graph Assembly
 
-> **Status: retiring.** This document describes `build_computation_graph()` and its helpers in
-> `resolution/graph_builder.py`. That module is present in the tree and importable, and is
-> **not reachable from any public caller** — since Slice 3E the exact route is the only public
-> authority. Removal is prepared and gated on owner acceptance at the Phase 5 stop (recovery
-> plan, Gate 4B).
+> **Status: historical.** `build_computation_graph()` and its helpers lived in
+> `resolution/graph_builder.py`, **deleted** by the Item 7 retirement (2026-08-12, `19072ad` /
+> `82c7951` / `882fc8d` / `3071fba`).
 >
-> **The subject survives; the owner does not.** The public route still topologically sorts the
+> **The subject survives; the owner does not.** The shipped route still topologically sorts the
 > modules, still refuses a producer reference with no output, and still packs one
 > `ComputationGraph` — projection does it (`elaboration/project.py`, `_topological_modules` and
 > `_claim_channel`). The V11 params-coverage check is unchanged and still runs at the generation
-> boundary, from `resolution/uncovered_params.py`.
+> boundary, from `resolution/uncovered_params.py`, which is in the tree.
 >
-> Everything below is accurate about the legacy assembly. For the public route, read
+> Everything below is retained as the record of the deleted design. It is accurate about the
+> code that was removed and is **not a description of what the product does**. For that, read
 > [00-pipeline-overview](00-pipeline-overview.md).
 >
 > This document also cites `core/graph_algorithms.py`, which has never existed in this tree.
