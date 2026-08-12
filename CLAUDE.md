@@ -73,26 +73,28 @@ two implementations.
    proves coherence and not authenticity; pass `source_roots` when provenance matters. See
    `docs/architecture/reference/27-snapshot-generation.md`.
 
-### Pending retirement — read before trusting a module or a document
+### Retired — read before trusting a document
 
-The legacy string-resolution stack is **present in the tree and importable, and unreachable
-from any public caller**: `orchestration/pipeline_builder.py`,
-`orchestration/snapshot_context.py`, `analysis/` (backtracker, parameter groups, constraint
-lowering), `resolution/graph_builder.py`, `resolution/producer_resolution.py`,
-`core/output_registry.py`, and the v5 `snapshot/{loader,serializer,graph_rebuild}.py`. Its
-removal is fully prepared and gated on owner acceptance at the recovery's Phase 5 stop.
+The legacy string-resolution stack is **gone from the tree**, deleted by the cutover
+recovery's four retirement steps (2026-08-12, `19072ad` / `82c7951` / `882fc8d` / `3071fba`):
+`orchestration/pipeline_builder.py`, `orchestration/snapshot_context.py`, `analysis/`'s
+backtracker, parameter groups and constraint lowering, `resolution/graph_builder.py`,
+`resolution/producer_resolution.py`, `resolution/producer_completeness.py`,
+`core/output_registry.py`, the v5 `snapshot/{loader,serializer,graph_rebuild}.py`,
+`elaboration/diff.py`, both v5 capture scripts, and every committed
+`extraction_snapshot.json` fixture. The exact route is the only authority left, and the
+v5 exports it kept are gone too — `snapshot/__init__.py` re-exports nothing.
 
-Two conformance nodes in `tests/conformance/test_public_authority_switch.py` hold that state:
-the construction closure reaches no legacy authority, and the CLI's *import* closure still
-reaches a **pinned four-module set, of which three are reached** — pinned by name so that
-residual cannot grow. The pin is not a claim about the whole closure: measured, `sysml_codegen.cli`
-imports **10 of the 11** modules listed above (every one but `orchestration/snapshot_context`).
-Importable is not reachable — nothing in that set is constructed through — but the number to
-carry into Phase 5 is ten, not three.
+`tests/conformance/test_public_authority_switch.py` and
+`tests/unit/test_elaboration_import_boundaries.py` now pin the **absence**: the modules do
+not exist, and the CLI names none of them. `orchestration/pipeline_context.py` survives as
+the `SysMLParsingError` / `CodeGenerationError` re-export point and carries no
+`PipelineContext`.
 
-Reference documents 03, 04, 05, 07, 10, 11, 12, 13, 17, 24, and 25 describe that stack and open
-with a retiring banner. Document 09 is mixed and says which models are which. Do not read them
-as descriptions of what the product does.
+Reference documents 03, 04, 05, 07, 10, 11, 12, 13, 17, 24, and 25 describe that stack and
+open with a retiring banner; document 09 is mixed and says which models are which. Their
+rewrite is a separate authorship pass that has not run. **Do not read them as descriptions
+of what the product does.**
 
 ### Key Data Models
 
