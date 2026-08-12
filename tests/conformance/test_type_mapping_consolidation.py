@@ -6,7 +6,11 @@ Design intent: 08-generation.md
 Tests verify that SysML-to-Python type mapping is consistent across all
 generators, using a single shared function from type_mapping.py.
 
-Tests use real extraction snapshot data -- no mocks.
+The cross-generator consistency class read two committed extraction snapshots through
+the v5 route and retired with the v5 family (retirement step 1). What remains is the
+type-map table itself: the primitive mapping, the no-divergent-copies AST scan, and the
+shared-module API. The map's CONTENT stays pinned by the literal sibling tables in
+``test_gen_schemas.py`` and ``test_gen_module_wrappers.py``.
 """
 
 from __future__ import annotations
@@ -21,7 +25,6 @@ import pytest
 from sysml_codegen.generation.type_mapping import (
     map_sysml_type_to_python,
 )
-from tests.conftest import snapshot_fixture
 
 # ---------------------------------------------------------------------------
 # Constants
@@ -29,16 +32,6 @@ from tests.conftest import snapshot_fixture
 
 SRC_DIR = Path(__file__).parent.parent.parent / "src" / "sysml_codegen"
 TEMPLATE_DIR = SRC_DIR / "templates"
-
-PARAMETRIZED_MODELS = [
-    "solar_battery_model",
-    "catf_mfe_model",
-]
-
-MODEL_IDS = {
-    "solar_battery_model": "solar_battery",
-    "catf_mfe_model": "catf_mfe",
-}
 
 # Generator source files that should NOT have their own type mapping copies
 GENERATOR_FILES_TO_CHECK = {
@@ -122,80 +115,6 @@ class TestNoDivergentCopies:
                 f"{rel_path} still defines {func_name}(). "
                 f"Should use shared function from generation/type_mapping.py instead."
             )
-
-
-# ===========================================================================
-# REQ-GEN-06: Cross-generator consistency with real fixture data
-# ===========================================================================
-class TestCrossGeneratorConsistency:
-    """REQ-GEN-06: All generators produce consistent types for the same SysML type."""
-
-    @pytest.mark.req("REQ-GEN-06")
-    @pytest.mark.parametrize("model_name", PARAMETRIZED_MODELS, ids=lambda m: MODEL_IDS[m])
-    def test_all_generators_use_shared_function(self, model_name, extraction_snapshots):
-        """For each CalcUsage module, all type annotations are consistent
-        with map_sysml_type_to_python() output for the same SysML type."""
-        # NOTE (Item 6, L4): this is a weak, partly self-referential check --
-        # expected = map_sysml_type_to_python(attr.sysml_type) recomputes the graph's own
-        # value. Its residual value is real but narrow: it proves every generator routes
-        # through the shared mapping (a divergent hardcode would fail). The actual type-map
-        # CONTENT is pinned independently by the literal siblings
-        # test_gen_schemas.py:359-381 and test_gen_module_wrappers.py (map literal table).
-        # Kept as a consistency guard, not deleted; sibling-pinned for content.
-        # Localised import (Gate 4C method note 1): this is the only node in the file that
-        # reaches the v5 route, and it retires with it. The eight type-map nodes below and
-        # above do not, and this keeps them collecting.
-        from sysml_codegen.snapshot import build_full_graph_from_snapshot
-
-        graph, inputs = build_full_graph_from_snapshot(snapshot_fixture(model_name))
-        snap = inputs["snap"]
-        calc_defs = snap["calc_defs"]
-
-        # Build lookup: calc_def name -> calc_def
-        calc_def_by_name = {cd.name: cd for cd in calc_defs}
-
-        # For each module, verify input types are consistent with shared mapping
-        for module in graph.modules:
-            # Find matching calc_def (CalcUsage modules match by name)
-            calc_def = calc_def_by_name.get(module.name)
-            if calc_def is None:
-                # FORMULA or aggregation module -- skip (no calc_def)
-                continue
-
-            # Verify input types match shared mapping
-            for mod_input in module.inputs:
-                # Find matching attribute in calc_def
-                matching_attrs = [
-                    a for a in calc_def.input_attributes
-                    if a.name == mod_input.name
-                ]
-                if not matching_attrs:
-                    continue
-
-                attr = matching_attrs[0]
-                expected_python_type = map_sysml_type_to_python(attr.sysml_type)
-                assert mod_input.python_type == expected_python_type, (
-                    f"Module {module.name} input {mod_input.name}: "
-                    f"python_type={mod_input.python_type!r} != "
-                    f"map_sysml_type_to_python({attr.sysml_type!r})={expected_python_type!r}"
-                )
-
-            # Verify output types match shared mapping
-            for mod_output in module.outputs:
-                matching_out_attrs = [
-                    a for a in calc_def.output_attributes
-                    if a.name == mod_output.name or mod_output.field_name == "root"
-                ]
-                if not matching_out_attrs:
-                    continue
-
-                attr = matching_out_attrs[0]
-                expected_python_type = map_sysml_type_to_python(attr.sysml_type)
-                assert mod_output.python_type == expected_python_type, (
-                    f"Module {module.name} output {mod_output.name}: "
-                    f"python_type={mod_output.python_type!r} != "
-                    f"map_sysml_type_to_python({attr.sysml_type!r})={expected_python_type!r}"
-                )
 
 
 # ===========================================================================

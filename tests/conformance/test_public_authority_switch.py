@@ -174,14 +174,9 @@ def main_returns(argv: list[str]) -> None:
 
 #: Every module that owns a legacy construction authority. A public caller
 #: reaching any of these is the dual authority this slice exists to close.
-LEGACY_AUTHORITY_MODULES = frozenset(
-    {
-        "sysml_codegen.orchestration.pipeline_builder",
-        "sysml_codegen.orchestration.snapshot_context",
-        "sysml_codegen.snapshot.loader",
-        "sysml_codegen.snapshot.graph_rebuild",
-    }
-)
+#: Retirement step 1 deleted ``snapshot_context``, ``snapshot.loader`` and
+#: ``snapshot.graph_rebuild``; step 2 deletes ``pipeline_builder``, and this set empties.
+LEGACY_AUTHORITY_MODULES = frozenset({"sysml_codegen.orchestration.pipeline_builder"})
 
 
 def _imported_modules(source: Path) -> set[str]:
@@ -515,8 +510,8 @@ def test_the_generation_half_still_reaches_v5_modules_and_that_residual_is_pinne
     """State the limit honestly instead of implying the whole CLI is clean.
 
     ``sysml_codegen.cli``'s *transitive* closure still contains the legacy
-    modules, because ``snapshot/__init__.py`` re-exports the v5 capture, loader
-    and rebuild machinery and the CLI imports that package for other reasons.
+    builder, because ``orchestration/__init__.py`` re-exports it and the CLI
+    imports that package for other reasons.
     Nothing in that set is *constructed through* — the test above proves the
     construction closure is clean — but importable is importable, and a slice
     whose contract is that written claims survive checking should not round that
@@ -527,8 +522,6 @@ def test_the_generation_half_still_reaches_v5_modules_and_that_residual_is_pinne
     reachable = _reachable_sysml_codegen_modules("sysml_codegen.cli")
     assert LEGACY_AUTHORITY_MODULES & reachable == {
         "sysml_codegen.orchestration.pipeline_builder",
-        "sysml_codegen.snapshot.loader",
-        "sysml_codegen.snapshot.graph_rebuild",
     }
 
 

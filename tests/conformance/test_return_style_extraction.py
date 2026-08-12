@@ -6,15 +6,11 @@ named ``return`` and bare ``in`` parameters (which syside models as
 member; an anonymous ``return`` (unnamed result) now gets its own diagnostic
 (V8) instead of the generic zero-output error (V7).
 
-Two test layers:
-
-- **Live extractor tests** (skip without a syside license) prove the raw
-  extraction shape end-to-end: auto-impl AST presence, the V8 raise, the
-  reworded V7, no double-ingestion. They mirror the ``_load_live_extractor``
-  convention in ``test_extractor.py``.
-- **Offline snapshot tests** (license-free) assert the committed
-  ``return_styles`` snapshot's I/O and its ``compilation_results`` keys, which
-  pin auto-impl (style B present, style D absent) without a live parser.
+One test layer: live extractor tests (skip without a syside license) prove the raw
+extraction shape end-to-end -- auto-impl AST presence, the V8 raise, the reworded V7,
+no double-ingestion. They mirror the ``_load_live_extractor`` convention in
+``test_extractor.py``. The offline layer read the committed ``return_styles``
+extraction snapshot and retired with the v5 family (retirement step 1).
 
 REQ-EXT-10: direction-carrying ReferenceUsage members (named return, bare in)
             are extracted; named inline return auto-implements.
@@ -31,7 +27,6 @@ import pytest
 
 from sysml_codegen.extraction.data_models import CalculationDefinitionData
 from sysml_codegen.extraction.extractor import SysMLDataExtractor
-from tests.conftest import snapshot_fixture
 
 FIXTURES_DIR = Path(__file__).resolve().parents[1] / "fixtures"
 
@@ -141,57 +136,3 @@ class TestV7Reworded:
         message = str(exc.value)
         assert "not yet extracted" not in message
         assert "Item 3" not in message
-
-
-# ---------------------------------------------------------------------------
-# Offline snapshot tests (REQ-EXT-10/12) -- license-free
-# ---------------------------------------------------------------------------
-
-
-def _snapshot_calc_defs() -> dict[str, CalculationDefinitionData]:
-    # Localised import (Gate 4C method note 1): the v5 reader retires with the v5 family,
-    # and only the offline nodes below reach it. Keeping it out of module scope is what lets
-    # the live REQ-EXT-10/11/12 half of this file keep collecting after that step.
-    from sysml_codegen.snapshot import load_extraction_snapshot
-
-    snap = load_extraction_snapshot(snapshot_fixture("return_styles"))
-    return {cd.name: cd for cd in snap["calc_defs"]}
-
-
-@pytest.mark.req(id="REQ-EXT-10")
-class TestReturnStylesSnapshotIO:
-    """Offline I/O assertions on the committed return_styles snapshot."""
-
-    def test_all_four_styles_present(self) -> None:
-        defs = _snapshot_calc_defs()
-        assert set(defs) == {"ControlA", "NamedReturnB", "BareInC", "StyleD"}
-
-    def test_named_return_output(self) -> None:
-        cd = _snapshot_calc_defs()["NamedReturnB"]
-        assert [a.name for a in cd.input_attributes] == ["b"]
-        assert [a.name for a in cd.output_attributes] == ["y"]
-
-    def test_bare_in_input(self) -> None:
-        cd = _snapshot_calc_defs()["BareInC"]
-        assert "x" in {a.name for a in cd.input_attributes}
-        assert [a.name for a in cd.output_attributes] == ["y"]
-
-    def test_style_d_single_output(self) -> None:
-        cd = _snapshot_calc_defs()["StyleD"]
-        assert [a.name for a in cd.output_attributes].count("y") == 1
-
-
-@pytest.mark.req(id="REQ-EXT-10")
-class TestReturnStylesCompilationResults:
-    """The snapshot's compilation_results block pins auto-impl offline (D4/M2)."""
-
-    def test_style_b_compiled_style_d_absent(self) -> None:
-        from sysml_codegen.snapshot import load_extraction_snapshot
-
-        snap = load_extraction_snapshot(snapshot_fixture("return_styles"))
-        keys = snap["compilation_results"].keys()
-        # Style B's inline return expression compiled -> auto-impl.
-        assert "NamedReturnB" in keys
-        # Style D is EXPECTED degraded: no captured expression -> no compilation
-        # entry. See the body-assignment-capture backlog note.
-        assert "StyleD" not in keys

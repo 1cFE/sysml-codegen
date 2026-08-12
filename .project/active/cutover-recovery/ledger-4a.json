@@ -1033,7 +1033,8 @@
    "breaks_on": "sysml_codegen.orchestration.output_registry_builder (L-010, 4B-v5-family); sysml_codegen.snapshot:load_extraction_snapshot (L-028, 4B-G2)",
    "breaks_a_free_group": true,
    "disposition_4c_note": "Gate 4C part 7 (2026-08-11). Quick Q5 debug one-off: traces Key_F and FORMULA canonical channels on the legacy output registry. No findings document exists \u2014 the question and the expected shape are in the file's own docstring, which is why the file itself is the record and is preserved. At retirement: move to scripts/archive/ with a header naming the owner that retired it and the findings home below. The file is preserved, not deleted \u2014 plan rule 7. It carries zero test nodes, so no coverage moves with it.",
-   "findings_home": "none \u2014 the file is its own record (see note)"
+   "findings_home": "none \u2014 the file is its own record (see note)",
+   "archived_to": "scripts/archive/_q5_debug.py"
   },
   {
    "id": "L-039",
@@ -1100,7 +1101,8 @@
    "breaks_on": "sysml_codegen.orchestration.snapshot_context (L-026, 4B-G2)",
    "breaks_a_free_group": true,
    "disposition_4c_note": "Gate 4C part 7 (2026-08-11). Item 4 entry-point probe. No findings document beyond the census inventory \u2014 the file's docstring is the record, so it is preserved rather than deleted. At retirement: move to scripts/archive/ with a header naming the owner that retired it and the findings home below. The file is preserved, not deleted \u2014 plan rule 7. It carries zero test nodes, so no coverage moves with it.",
-   "findings_home": "none \u2014 the file is its own record (see note)"
+   "findings_home": "none \u2014 the file is its own record (see note)",
+   "archived_to": "scripts/archive/probe_item4_entrypoints.py"
   },
   {
    "id": "L-042",
@@ -1121,7 +1123,8 @@
    "breaks_on": "sysml_codegen.resolution.producer_resolution (L-013, 4B-v5-family); sysml_codegen.orchestration.snapshot_context (L-026, 4B-G2)",
    "breaks_a_free_group": true,
    "disposition_4c_note": "Gate 4C part 7 (2026-08-11). Item 4 gate-3 probe. Same class as L-041: no separate findings document, the file is its own record. At retirement: move to scripts/archive/ with a header naming the owner that retired it and the findings home below. The file is preserved, not deleted \u2014 plan rule 7. It carries zero test nodes, so no coverage moves with it.",
-   "findings_home": "none \u2014 the file is its own record (see note)"
+   "findings_home": "none \u2014 the file is its own record (see note)",
+   "archived_to": "scripts/archive/probe_item4_gate3.py"
   },
   {
    "id": "L-043",
@@ -1222,7 +1225,8 @@
    "breaks_on": "sysml_codegen.analysis.dependency_backtracker (L-002, 4B-v5-family); sysml_codegen.core.output_registry (L-007, 4B-v5-family); sysml_codegen.orchestration.output_registry_builder (L-010, 4B-v5-family); sysml_codegen.snapshot:load_extraction_snapshot (L-028, 4B-G2)",
    "breaks_a_free_group": true,
    "disposition_4c_note": "Gate 4C part 7 (2026-08-11). Backtracker resolution-path spike. Its finding is the conformance plan's premise. At retirement: move to scripts/archive/ with a header naming the owner that retired it and the findings home below. The file is preserved, not deleted \u2014 plan rule 7. It carries zero test nodes, so no coverage moves with it.",
-   "findings_home": ".project/completed/20260217_backtracker-conformance/plan.md"
+   "findings_home": ".project/completed/20260217_backtracker-conformance/plan.md",
+   "archived_to": "scripts/archive/spike_backtracker_resolution_paths.py"
   },
   {
    "id": "L-048",
@@ -1243,7 +1247,8 @@
    "breaks_on": "sysml_codegen.analysis.dependency_backtracker (L-002, 4B-v5-family); sysml_codegen.core.output_registry (L-007, 4B-v5-family); sysml_codegen.orchestration.output_registry_builder (L-010, 4B-v5-family); sysml_codegen.snapshot:load_extraction_snapshot (L-028, 4B-G2)",
    "breaks_a_free_group": true,
    "disposition_4c_note": "Gate 4C part 7 (2026-08-11). C11b typed-dispatch spike. Its finding is the typed-dispatch plan's premise. At retirement: move to scripts/archive/ with a header naming the owner that retired it and the findings home below. The file is preserved, not deleted \u2014 plan rule 7. It carries zero test nodes, so no coverage moves with it.",
-   "findings_home": ".project/completed/20260217_backtracker-typed-dispatch/plan.md"
+   "findings_home": ".project/completed/20260217_backtracker-typed-dispatch/plan.md",
+   "archived_to": "scripts/archive/spike_c11b_typed_dispatch.py"
   },
   {
    "id": "L-049",
@@ -1264,7 +1269,8 @@
    "breaks_on": "sysml_codegen.analysis.dependency_backtracker (L-002, 4B-v5-family); sysml_codegen.orchestration.output_registry_builder (L-010, 4B-v5-family); sysml_codegen.snapshot:load_extraction_snapshot (L-028, 4B-G2)",
    "breaks_a_free_group": true,
    "disposition_4c_note": "Gate 4C part 7 (2026-08-11). C12 input-resolver spike. Its finding is the input-resolver plan's premise. At retirement: move to scripts/archive/ with a header naming the owner that retired it and the findings home below. The file is preserved, not deleted \u2014 plan rule 7. It carries zero test nodes, so no coverage moves with it.",
-   "findings_home": ".project/completed/20260217_input-resolver/plan.md"
+   "findings_home": ".project/completed/20260217_input-resolver/plan.md",
+   "archived_to": "scripts/archive/spike_c12_input_resolver.py"
   },
   {
    "id": "L-050",
@@ -3958,7 +3964,8 @@
    "breaks_on": "sysml_codegen.orchestration.snapshot_context (L-026, 4B-G2); sysml_codegen.snapshot:load_extraction_snapshot (L-028, 4B-G2); sysml_codegen.orchestration.pipeline_builder (L-029, 4B-v5-family)",
    "breaks_a_free_group": true,
    "disposition_4c_note": "Gate 4C part 7 chunk 19 (2026-08-11), superseding the part-5 defer. Twelve nodes and the file says what they are in its first line: learning tests that PIN CURRENT BEHAVIOUR, including the two known fan-out defects, so that the Item 4/5 repair shows up as deliberate red. They are a record of two forensic findings - path A, an occurrence override silently stamped into three public fields; path B, a lenient miss minting a per-consumer entry point with the value backfilled so the identity loss is invisible - not a contract anything should keep satisfying. Archiving rather than retiring is the honest disposition: the findings outlive the pins, and their home is the research doc the file itself cites. The repair those pins were waiting for is the exact route, and where a claim here is a POSITIVE one it already has an owner: the shared-producer and dotted-cross-part controls converge at the node (chunk 15, L-172), and reference-derived versus authored literals stay distinguishable through the identity evidence L-181 pins live.",
-   "findings_home": ".project/research/20260805-054752_source-identity-route-evidence.md"
+   "findings_home": ".project/research/20260805-054752_source-identity-route-evidence.md",
+   "archived_to": "scripts/archive/test_source_identity_routes.py"
   },
   {
    "id": "L-183",
