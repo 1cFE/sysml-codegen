@@ -5743,6 +5743,16 @@ brief's expected clean start.
 **Zero failures and zero errors at every boundary, with no trim.** That is the thing the
 simulation could only assert with 113 nodes held out.
 
+**Final tree** (after the agentic deletion, the ledger closes and the doc commits): licensed
+suite **1701 / 34 / 65**, 0 failed, 0 errors, **0** license-skip lines; execution lane **65**;
+`--verify` **15/22/0**; corpus **9**; `ruff check src` **14** / whole tree **643**; `mypy`
+**57 in 11**; `paths` **304 / 0**; `surface` **0**; `groups` all four **affected 0, READY**;
+proof integrity **0 / 0**; `retirement_worklist.py check` **0 problems, every step empty**;
+`git diff --check` clean. Whole-tree ruff is 643 rather than the step-4 boundary's 644 because
+step 2's `tests__unit__test_retirement_worklist.patch` inserted `import json` between the
+`__future__` import and the stdlib block — an `I001` the patch introduced, clean at the
+pre-retirement baseline, sorted here.
+
 `mypy` and `ruff check src` land on the runbook's predicted numbers to the unit at every
 step (69→69→58→57→57; 16→16→15→14→14), as do corpus (12→11→9→9→9) and the file counts
 mypy checks (87→84→72→71→70).
