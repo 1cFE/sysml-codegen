@@ -8,9 +8,8 @@ on, that every actionable row is named by exactly one step.
 
 from __future__ import annotations
 
-import json
-
 import importlib.util
+import json
 import sys
 from pathlib import Path
 
