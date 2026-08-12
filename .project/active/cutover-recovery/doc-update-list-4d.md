@@ -166,12 +166,12 @@ legacy stack was present-but-unreachable with removal gated. That paragraph is f
 | `reference/03` `04` `05` `07` `10` `11` `12` `13` `24` | Historical: the module named is deleted, the body is the record of the deleted design, not a description of the product. |
 | `reference/09` | Which model rows are live (`resolution/models.py`, `core/models.py`, the extraction models) and which describe types deleted with their owners; the rows are kept because the historical documents link into them. |
 | `reference/17` | Half live, half historical — the declaration-site grouping rule is the product; the deriver below it is deleted code. |
-| `reference/25` | The one survivor: `extraction/hierarchy_resolver.py` is still in the tree with its own coverage, and is off the shipped route. Disposition unrecorded. |
+| `reference/25` | The one survivor: `extraction/hierarchy_resolver.py` is still in the tree with its own coverage, and is off the shipped route. *(Step 6d recorded the disposition in the module docstring.)* |
 | `reference/00` | The legacy stack is deleted, not pinned-as-residual; the package block lists what went; the index note points at historical banners. |
 | `reference/02` | Single-authority section states deletion and the two absence checks; the builder half is headed "Historical: the deleted pipeline builder"; the `PipelineContext` note says the type no longer exists. |
 | `reference/06` | The classifier half is headed "Historical: the deleted classifier"; REQ-EPC-02..08 are that code's, unanswered by anything shipped. |
-| `reference/16` | New banner: the classification taxonomy is live, the resolution-map half is deleted code, and the elaborator's equivalent has no settled written form — needs an owner. |
-| `reference/18` | New banner: `_find_literal_redefinition` is deleted; the shipped equivalent is `ValueSite` on the attribute node, also unwritten — needs an owner. |
+| `reference/16` | New banner: the classification taxonomy is live, the resolution-map half is deleted code. *(Step 6d wrote the elaborator's equivalent — see below.)* |
+| `reference/18` | New banner: `_find_literal_redefinition` is deleted; the shipped equivalent is `ValueSite` on the attribute node. *(Step 6d wrote it — see below.)* |
 | `reference/27` | The v5 section is headed historical: its code and every committed `extraction_snapshot.json` fixture are gone (measured: **0** in the tree). The batch is recorded as owner-accepted. |
 | `reference/30` | The severity-skew section is rewritten — see below. |
 | `overview.md` | Same corrections at overview altitude: deleted not unreachable, the component index re-framed, the two survivors named. |
@@ -201,3 +201,43 @@ that does parse serialized facts. The requirements table's REQ-DIAG-04 row now r
    says whether they stay. Named in docs 25 and 16 and in this list's preamble.
 4. **`reference/07` still cites `core/graph_algorithms.py`, which has never existed.**
    Carried forward from the Gate 4D surfacing; unchanged, still needs an owner.
+
+---
+
+## Revise step 6d — the five surfacings above, closed
+
+Each numbered rule-10 item from step 6c got an ending. Nothing on that list is still open in
+the same form; what remains open is named as an owner question, not as a stale artifact.
+
+| 6c item | Ending |
+|---|---|
+| 1 — the matrix cites 56 modules that no longer exist | **Re-cited.** 205 rows re-read against their requirement text: 136 PASS (citing kept nodes, every file present, every explicit node collecting), 131 RETIRED (subject deleted, ledger row named), 9 UNTESTED (subject live, proof ended, gap named). The measurement banner is replaced by a record of what the pass did and did not do. |
+| 2 — docs 16 and 18 have unwritten shipped equivalents | **Written.** Both subjects are live shipped mechanisms, so both got a "What the shipped route does instead" section derived from the code, each with verified evidence nodes. See below. |
+| 3 — two extraction modules with no public caller | **Retained, with the reason recorded in each module's docstring** where a reader meets it. Neither is imported from `src/`. Deleting either is a retirement step whose replacement is not proved; recorded and left to an owner rather than taken silently. Doc 25's "disposition unrecorded" line is answered by the docstring it points at. |
+| 4 — `assemble_constraint_catalog`, a second assembler | **Re-homed out of `src/`.** Measured first: it is not a synchronized duplicate of the projector's assembler — it derives `source_records` from `facts.definitions` where the projector derives them from the constraints it projected. So it is the retired route's assembler being used as a fixture builder, and it now lives at `tests/helpers/retired_catalog_assembly.py`. The divergence it exposed is surfaced on REQ-CL-03, not resolved. |
+| 5 — `reference/07` cites `core/graph_algorithms.py` | **Stated in place.** The module was never written; both call sites it would have merged are deleted, so the plan has no subject. The shipped route's one topological sort is `_topological_modules` in `elaboration/project.py`. The rule-10 line comes off doc 07's banner. |
+
+**Docs 16 and 18, what was actually written.** Neither is filler and neither restates the
+historical body. Each leads with the shape difference, because that is the thing a reader
+carrying the old model gets wrong:
+
+- **18** — there is no propagation. Elaboration resolves exactly one value writer per attribute
+  slot per occurrence and refuses ambiguity (`SI_REDEFINITION_INVALID`); `ValueSite` records
+  *where* that writer was, and is a record rather than a switch — all four sites project as
+  `DESIGN_ATTRIBUTE`. The deleted design ran a two-strategy search after wiring failed; this
+  one never reaches that position.
+- **16** — there is no classification pass. One branch on the value expression yields three
+  outcomes (literal → `AttrNode`, reference → alias node queued for the walk, anything else →
+  computed `CalcNode`). No EXPOSE_COMPUTED, no tentative state, no `AttributeResolutionKind`
+  map, and compilability is not a spectrum: an unrepresentable expression is refused at
+  elaboration rather than shipped as a module with no implementation.
+
+**What is still open after this step** — all owner questions, none of them stale artifacts:
+
+1. Whether the shipped constraint catalog should carry the retired assembler's total-inventory
+   guarantee (surfaced on REQ-CL-03).
+2. Whether `extraction/hierarchy_resolver.py` and `extraction/computed_attribute_extractor.py`
+   stay, given neither ships.
+3. The nine UNTESTED matrix rows — real coverage the retirement removed with no replacement.
+4. REQ families for the elaborator's own mechanisms (v6 envelope, occurrence identity,
+   projection receipt), which the legacy stack never had and which are still unwritten.

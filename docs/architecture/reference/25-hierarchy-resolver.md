@@ -6,8 +6,12 @@
 > conformance coverage (`tests/conformance/test_hierarchy_resolver.py`,
 > `test_ast_dispatch_invariant.py`). What is true is that no public caller reaches it:
 > measured, the exact route's construction closure reaches `extraction/extractor.py` and
-> `extraction/expression_compiler.py`, and not this module. Its long-term disposition is
-> unrecorded and needs an owner.
+> `extraction/expression_compiler.py`, and not this module. **The disposition is now
+> recorded, in the module's own docstring** (Revise step 6d): it is retained because
+> `tests/helpers/live_extraction.py` — the shared live-extraction harness six conformance
+> modules read, one of which pins shipped code on its other legs — depends on it, and the
+> elaborator's equivalents are not shown to be equivalent. Deleting it is a retirement step
+> whose replacement is unproved, so it waits on an owner rather than on a rediscovery.
 >
 > **The structural patterns are still read — by the elaborator, from the model.** `:>>`
 > redefinitions become value sites on attribute nodes, multiplicity becomes enumerated

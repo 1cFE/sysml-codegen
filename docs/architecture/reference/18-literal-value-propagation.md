@@ -1,16 +1,63 @@
 # 18 -- Literal Value Propagation for Aggregation Entry Points
 
-> **Status: historical.** The mechanism this document describes,
-> `_find_literal_redefinition` in `resolution/graph_builder.py`, was **deleted** by the Item 7
-> retirement (2026-08-12, `19072ad` / `82c7951` / `882fc8d` / `3071fba`).
->
-> The problem is real and the shipped route still solves it: a literal written at a
-> redefinition becomes a `ValueSite` on the attribute node during elaboration, and projection
-> reads the value from that node when it mints the entry point. There is no separate
-> propagation pass and no search. **That path has no settled written description yet** — it is
-> named here rather than guessed at, and needs an owner.
->
-> Everything below is retained as the record of the deleted design.
+> **Status: the mechanism below was deleted; the shipped equivalent is described first.**
+> `_find_literal_redefinition` in `resolution/graph_builder.py` went with the Item 7
+> retirement (2026-08-12, `19072ad` / `82c7951` / `882fc8d` / `3071fba`). The problem it
+> solved is real and the shipped route still solves it, by a different shape — that is the
+> next section. Everything from "The Problem" onward is retained as the record of the deleted
+> design; read it as history, and REQ-LVP-01..07 as that code's requirements.
+
+## What the shipped route does instead
+
+**The short version: there is no propagation.** A literal is not searched for after the fact,
+because by the time anything asks for it the value already sits on the attribute node that
+owns it. Elaboration decides once, per occurrence, who writes a value; projection reads it.
+
+The mental model is a **slot with exactly one writer**. Elaboration walks occurrences, and for
+each attribute slot in a scope it collects every declaration that could supply a value —
+the base declaration, a specialized definition's `:>>`, an occurrence's own override — and
+resolves them to one (`elaboration/elaborate.py`, `_resolve_value_writer` /
+`_require_one_writer`). Two writers it cannot order raise
+`SI_REDEFINITION_INVALID`. That is the whole precedence mechanism: not a strategy ladder that
+tries and falls back, but a single-writer requirement that fails loudly when the model is
+ambiguous.
+
+Having picked the writer, `_create_value_node` records **where the value came from** as a
+`ValueSite` on the node (`elaboration/graph.py:59`):
+
+| `ValueSite` | The writer is |
+|---|---|
+| `OCCURRENCE_OVERRIDE` | a `:>>` on the part usage, inside this occurrence's scope |
+| `SPECIALIZED_DEF` | a different declaration from the base — a specializing def redefined it |
+| `DEFINITION_DEFAULT` | the base declaration's own value |
+| `NONE` | there is no value expression at all |
+
+`value_site` is a **record, not a switch**. Nothing branches on it to decide how to find a
+value; it says where the one value already found was written. Projection reads it only to
+classify the entry point, and all four sites classify the same way — `DESIGN_ATTRIBUTE`
+(`elaboration/project.py:456-460`), because in every case a modelled attribute is what
+supplies the number. The default that lands in the JSON template is `attr.value`, read
+straight off the node.
+
+Deep-path redefinitions (`:>> a.b.c = 0.0`, which parse as anonymous features with no
+qualified name of their own) are applied in a separate sweep,
+`_apply_deep_literal_redefinitions`, before the graph is handed on. That is the one place the
+elaborator looks a value up rather than being handed it, and it is scoped to features the
+occurrence walk cannot reach by name.
+
+**What this buys over the deleted design.** The old mechanism ran after wiring failed: an
+aggregation term that could not reach an upstream channel triggered a two-strategy search for
+a matching redefinition, type-aware first, name-based second. Both strategies could miss, and
+a name-based hit could be the wrong attribute. The shipped route never reaches that position —
+the value is attached to the occurrence's node at elaboration, so an entry point either has
+its modelled default or the model never wrote one.
+
+**Evidence.** `tests/unit/test_zero_default_exact_route.py` (a `0.0` default projects as zero,
+not null, and the check is identity not truthiness),
+`tests/conformance/test_elaboration_shadowing.py` (the innermost definition wins per
+occurrence; equal-valued independent literals stay distinct), and
+`tests/conformance/test_elaboration_specialization_retypes.py` (a specialized definition's
+`:>>` reaches the occurrence that retyped to it).
 
 ## The Problem
 
