@@ -1,9 +1,11 @@
 """Per-binding source-evidence builders, shared by both front ends.
 
-Factored out of ``usage_extractor`` (ELABORATE-FIRST design D2) so the legacy
-extraction front end and the elaborator build identical
+Factored out of ``usage_extractor`` (ELABORATE-FIRST design D2) so the calc-definition
+extractor and the elaborator build identical
 :class:`~sysml_codegen.extraction.source_evidence.SourceReferenceEvidence`
-records during dual-run. Everything here reads the live AST/CST once and
+records. It was written for dual-run parity; the dual run retired with the
+string-resolution stack, and both front ends still share it. Everything here reads
+the live AST/CST once and
 produces frozen evidence; nothing here resolves, rewrites, or interprets a
 reference.
 """
