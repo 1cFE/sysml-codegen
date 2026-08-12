@@ -25,6 +25,12 @@ checkpoint** and refused to call Item 7 complete. The prescribed path:
 4. **[OWNER]** Resolve or explicitly shipping-gate R8 (the qualifier-dropping rollup
    refusal) — the accept-the-refusal ruling in Gate 4D S4 is **overruled**; and add a
    collision test for R10 (same-named constraint threshold keys under one owner).
+   - **R10 — EXECUTED** 2026-08-12 [AGENT status note]. Measured outcome (b): the product
+     refuses, typed, before generation (`SI_ID_UNSTABLE`, via the null qualified name
+     SysIDE leaves on the shadowed usage). Pinned by
+     `tests/conformance/test_constraint_name_collision.py` (4 nodes) over two new
+     non-corpus fixtures. No rule-10 surfacing. Plan: "Revise step 5 (partial)".
+   - **R8 — BLOCKED**, still awaiting open question 1 below.
 5. **[OWNER]** Execute retirement with **no provisional trim** — the 113-node deselection
    list (`runbook-patches/provisional-trim.txt`) must not be used in the final run.
 6. **[OWNER]** Run the full licensed suites and real TEAx against the **actual retired

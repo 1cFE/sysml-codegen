@@ -5587,6 +5587,101 @@ was "kept in-place and relocated snapshot mutation tests are absent" — they ar
 green. SC7's was "the named fixture lacks a kept public-v6 route test" — it has one, on all
 three routes its spec text names.
 
+### Revise step 5 (partial) — the R10 same-named-constraint collision test
+
+**Completed:** 2026-08-12. **Executes:** `owner-disposition-20260811.md` step 4, R10 half
+only. R8 is untouched and stays blocked on open question 1 — nothing here changes
+`elaborate.py`'s qualifier handling or any `SI_RENDERING_COLLISION` pin.
+
+#### The measurement: **(b)**, a typed refusal before generation
+
+Two constraint usages sharing one name under one part owner are **refused**, typed, at
+elaboration. No key is minted, no package is written, and nothing silently collapses. So
+this is outcome (b) and it is pinned; there is no rule-10 surfacing.
+
+The mechanism, end to end — three steps, and the middle one is the load-bearing one:
+
+1. SysIDE reports the shadowing as a **warning**, not an error:
+   `warning (namespace-distinguishability): Member name 'viability' shadows
+   ConstraintNameCollision::the_host::viability`. On its own this would not stop anything.
+2. SysIDE leaves the shadowed usage's `qualified_name` **null**. Exactly one of the two
+   same-named usages keeps a qualified name; the other has none.
+3. `_index_constraint_associations` (`elaboration/elaborate.py:278`) asks
+   `declaration_id_for` (`elaboration/identity.py:66`) for a reload-stable declaration ID,
+   and the identity boundary refuses a null-QN element. `elaborate()` wraps the
+   `IdentityBoundaryError` as a validation diagnostic, so the user gets:
+
+   ```
+   SI_ID_UNSTABLE: <model>: AssertConstraintUsage has no reload-stable qualified
+   declaration identity
+   ```
+
+   `run_codegen` catches `ElaborationDiagnosticError`, logs
+   "Model failed exact-route validation", returns `False`, and the output tree is never
+   created.
+
+**Worth knowing, not blocking.** The existing `SYSML_NAMESPACE_NOT_DISTINGUISHABLE` refusal
+is *not* what fires here. `_blocking_model_validation_diagnostics`
+(`elaborate.py:191-224`) only promotes a namespace-distinguishability warning whose source
+location matches a **PartUsage**; this warning sits at a constraint usage, so it is not
+promoted, and the identity boundary refuses first. The refusal is correct and fail-closed,
+but its message names an identity invariant rather than the duplicate name the user wrote.
+Recorded as an observation about diagnostic quality — the product refuses, which is what
+R10 asked.
+
+#### What the non-colliding case does
+
+The control mints two distinct keys, which is what makes "must not mint the same key" a
+real claim rather than a tautology. Its full entry-point set, exact:
+
+```
+ConstraintNameCollision__the_host__primary_gain                     40.0
+ConstraintNameCollision__the_host__backup_gain                      20.0
+ConstraintNameCollision__the_host__viability__threshold             10.0
+ConstraintNameCollision__the_host__backup_viability__threshold      10.0
+ConstraintNameCollision__the_other__seed                             3.0
+```
+
+Two catalog entries, distinct ids and distinct evaluation channels:
+`ConstraintNameCollision__the_host__viability__fb8eee6519fa76c7` and
+`ConstraintNameCollision__the_host__backup_viability__63ab135fa7b82888`.
+
+#### Fixtures and nodes
+
+Two new fixtures, neither a corpus row: they carry no `extraction_snapshot.json`, so
+`run_elaboration_corpus.py`'s discovery never sees them, they join no ledger, and the 37
+ratified fixtures and the accepted 15/22 batch are untouched.
+
+- `tests/fixtures/constraint_name_collision_probe/model.sysml` — one `part the_host`
+  carrying two `assert constraint viability : 'Viability Threshold'` usages, each with the
+  `gate_a` idiom's `in attribute threshold : Real default 10.0`.
+- `tests/fixtures/constraint_name_collision_control/model.sysml` — the same model with the
+  second usage renamed `backup_viability`.
+
+New file `tests/conformance/test_constraint_name_collision.py`, **4 nodes**:
+
+| node | what it pins |
+|---|---|
+| `test_the_control_is_the_probe_with_one_name_changed` | strip check: comments removed and the rename reversed, the two models are line-identical — so the name is the sole cause |
+| `test_the_collision_is_refused_before_generation` | the parser warning verbatim, exactly one null QN among the two usages, and `[SI_ID_UNSTABLE]` with its exact detail from `build_elaborated_pipeline` |
+| `test_the_public_route_writes_nothing_for_the_collision` | `run_codegen` returns `False` and the output path does not exist |
+| `test_distinct_usage_names_mint_distinct_constraint_keys` | the control's whole key set by equality, plus the two catalog ids, local identities, usage QNs and owner QN — exact vocabulary, no substring matching |
+
+#### Battery
+
+| gate | result |
+|---|---|
+| `pytest -q` (licensed) | **3870 passed, 47 skipped**, 83 deselected — +4, exactly the new nodes |
+| `no live syside license` lines | **0** |
+| execution lane collected | **83** — unchanged |
+| `capture_v6_batch.py --check` | 15 captured / 22 refused / **0 deviations** |
+| `ruff check src` | **16** — unchanged |
+| `ruff check` on the new test | clean |
+| `mypy src` | **69 errors in 16 files** — unchanged |
+| `git diff --check` | clean |
+| `check_ledger_4a.py` `paths` / `surface` / `groups` | **304 rows, 0 problems** / **0** / READY |
+| `test_runbook_patches.py` | **4 passed** |
+
 ---
 
 **Status:** Draft → Owner-approved → In progress → Audited → Owner accepted/revised
