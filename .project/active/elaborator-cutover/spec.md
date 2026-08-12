@@ -58,7 +58,7 @@ resolved graph through the public offline route. Sources: `.project/CURRENT_WORK
   R7. Only `RUNTIME_SOURCE` requires live, in-place-snapshot, and relocated-snapshot parity;
   diagnostic and load-error cells retain their own route obligations. Source:
   `.project/concepts/constraint-execution-authoritative-lifecycle-contract.md:749-768`.
-- [ ] **[INFERRED] F19 in-place customer proof.** The existing maintained
+- [x] **[INFERRED] F19 in-place customer proof.** The existing maintained
   `tests/fixtures/fusion_tea/` model is migrated in place, without a parallel fixture or a 38th
   corpus row. All current SRC-01 sites migrate to the bare-renamed D-5 form, the C25/C2 topology in
   R9 is exact, and separate off-default mutations of availability and thermal efficiency reach
@@ -66,7 +66,7 @@ resolved graph through the public offline route. Sources: `.project/CURRENT_WORK
   routes. Source: contract D-5 and customer checkpoint item 8, both `[AGENT] (ratified by owner,
   2026-08-05)`, plus C25/C2 in
   `.project/concepts/constraint-execution-authoritative-lifecycle-contract.md:443-476,932-947,1201-1224`.
-- [ ] **[INHERITED] C19 runtime proof.** The named nested-occurrence fixture applies `80.0` to its
+- [x] **[INHERITED] C19 runtime proof.** The named nested-occurrence fixture applies `80.0` to its
   one calculation and one constraint consumer on public live, in-place-snapshot, and relocated-
   snapshot routes. Source:
   `.project/concepts/constraint-execution-authoritative-lifecycle-contract.md:1317-1330`.

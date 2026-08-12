@@ -1,4 +1,13 @@
-"""Slice 3D: C25 and C2 mutations against the sealed package, in real TEAx.
+"""C25 and C2 mutations against the sealed package, in real TEAx, on all three routes.
+
+**The matrix.** Every mutation runs on every route a customer can generate
+through — live from the model tree, from the committed v6 snapshot read in
+place beside that model, and from a v6 snapshot read at a foreign checkout root
+with the model tree deleted. The assertions are identical across the three, so
+a route that wired an entry point differently, or that lost a consumer, fails
+here rather than in the field. One harness builds all three (``_harness``); the
+routes differ only in how the package is generated and where its graph comes
+from.
 
 The protocol is the one Phase 2 decided under delegated authority: mutate at
 runtime through TEAx's typed entry injection —
@@ -39,7 +48,10 @@ from sysml_codegen.contracts import (
     check_reseal_provenance,
     ensure_package_tree_is_link_free,
 )
-from sysml_codegen.orchestration.exact_pipeline_context import build_exact_pipeline_context
+from sysml_codegen.orchestration.exact_pipeline_context import (
+    build_exact_pipeline_context,
+    build_exact_pipeline_context_from_snapshot,
+)
 from tests.execution import fusion_tea_arithmetic as hand
 from tests.execution.real_teax import (
     FUSION_TEA,
@@ -47,7 +59,9 @@ from tests.execution.real_teax import (
     all_ports,
     consumer_ports,
     generate_package_from_models,
+    generate_package_from_snapshot,
     package_loader,
+    relocated_snapshot,
 )
 
 pytestmark = pytest.mark.execution
@@ -65,15 +79,16 @@ LCOE_AT_AVAILABILITY_091 = 269.5300723203276
 LCOE_AT_THERMAL_044 = 263.85170462810606
 
 
-@pytest.fixture(scope="module")
-def sealed(tmp_path_factory) -> dict[str, object]:
-    """One generated, sealed package plus its prepared evaluator and bridge."""
+#: The committed v6 snapshot, read where it sits beside its own model tree.
+IN_PLACE_SNAPSHOT = FUSION_TEA / "instance_graph_snapshot.json"
+
+ROUTES = ("live", "in_place_snapshot", "relocated_snapshot")
+
+
+def _harness(root: Path, name: str, package: Path, graph) -> dict[str, object]:
+    """Seal-load one generated package and prepare its evaluator and bridge."""
     from simkit.evaluation.evaluator import PreparedEvaluator
     from simkit.study.bridge import CandidateBridge
-
-    root = tmp_path_factory.mktemp("ft-mutation")
-    name = "fusion_tea_mutation"
-    package = generate_package_from_models(FUSION_TEA, root / name, name)
 
     loader = package_loader(package, name, root / "link")
     evaluator = PreparedEvaluator(loader, package / "pipelines" / "pipeline.yaml")
@@ -81,10 +96,49 @@ def sealed(tmp_path_factory) -> dict[str, object]:
         "root": root,
         "name": name,
         "package": package,
-        "graph": build_exact_pipeline_context([FUSION_TEA]).computation_graph,
+        "graph": graph,
         "evaluator": evaluator,
         "bridge": CandidateBridge(evaluator.entry_models),
     }
+
+
+@pytest.fixture(scope="module")
+def live_harness(tmp_path_factory) -> dict[str, object]:
+    """Generated from the model tree, the way a licensed user generates."""
+    root = tmp_path_factory.mktemp("ft-mutation-live")
+    name = "fusion_tea_mutation_live"
+    package = generate_package_from_models(FUSION_TEA, root / name, name)
+    graph = build_exact_pipeline_context([FUSION_TEA]).computation_graph
+    return _harness(root, name, package, graph)
+
+
+@pytest.fixture(scope="module")
+def in_place_snapshot_harness(tmp_path_factory) -> dict[str, object]:
+    """Generated license-free from the committed snapshot, read in place."""
+    root = tmp_path_factory.mktemp("ft-mutation-in-place")
+    name = "fusion_tea_mutation_in_place"
+    package = generate_package_from_snapshot(IN_PLACE_SNAPSHOT, root / name, name)
+    graph = build_exact_pipeline_context_from_snapshot(
+        IN_PLACE_SNAPSHOT
+    ).computation_graph
+    return _harness(root, name, package, graph)
+
+
+@pytest.fixture(scope="module")
+def relocated_snapshot_harness(tmp_path_factory) -> dict[str, object]:
+    """Generated from a snapshot at a foreign root, with the model tree deleted."""
+    root = tmp_path_factory.mktemp("ft-mutation-relocated")
+    name = "fusion_tea_mutation_relocated"
+    with relocated_snapshot(FUSION_TEA, "item7-ft-mutation-") as snapshot:
+        package = generate_package_from_snapshot(snapshot, root / name, name)
+        graph = build_exact_pipeline_context_from_snapshot(snapshot).computation_graph
+    return _harness(root, name, package, graph)
+
+
+@pytest.fixture(scope="module", params=ROUTES)
+def sealed(request) -> dict[str, object]:
+    """Each test below runs once per generation route."""
+    return request.getfixturevalue(f"{request.param}_harness")
 
 
 def _evaluate(sealed, selected_fields: dict[str, float]):
@@ -221,15 +275,19 @@ def test_the_mutations_left_the_sealed_package_untouched(sealed) -> None:
     assert fingerprint == sealed["evaluator"].fingerprint
 
 
-def test_an_unknown_entry_field_fails_closed(sealed) -> None:
-    """The bridge refuses a field no channel declares, so a typo cannot no-op."""
+def test_an_unknown_entry_field_fails_closed(live_harness) -> None:
+    """The bridge refuses a field no channel declares, so a typo cannot no-op.
+
+    A property of the injection protocol rather than of a generation route, so
+    it is proved once rather than once per route.
+    """
     from simkit.evaluation.failure import EvaluationFailed
 
     with pytest.raises(EvaluationFailed):
-        _evaluate(sealed, {"hif_plant_pkg__hif_plant__not_a_field": 1.0})
+        _evaluate(live_harness, {"hif_plant_pkg__hif_plant__not_a_field": 1.0})
 
 
-def test_editing_a_sealed_input_and_resealing_is_refused(sealed, tmp_path) -> None:
+def test_editing_a_sealed_input_and_resealing_is_refused(live_harness, tmp_path) -> None:
     """The invalid route, demonstrated against the real provenance gate.
 
     ``inputs/*.json`` is inside the sealed set, and ``check_reseal_provenance``
@@ -238,7 +296,7 @@ def test_editing_a_sealed_input_and_resealing_is_refused(sealed, tmp_path) -> No
     tests above go through the evaluator instead.
     """
     copy = tmp_path / "edited"
-    shutil.copytree(sealed["package"], copy)
+    shutil.copytree(live_harness["package"], copy)
 
     target = copy / "inputs" / "hif_plant_params.json"
     payload = json.loads(target.read_text())

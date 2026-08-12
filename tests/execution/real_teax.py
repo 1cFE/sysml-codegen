@@ -19,6 +19,10 @@ in-repo ``tests/runtime/pipeline_runner.py`` does install a fake ``simkit``
 
 from __future__ import annotations
 
+import shutil
+import tempfile
+from collections.abc import Iterator
+from contextlib import contextmanager
 from pathlib import Path
 from types import ModuleType
 
@@ -26,6 +30,11 @@ from sysml_codegen.cli import GenerationConfig, run_codegen
 
 FUSION_TEA = Path(__file__).resolve().parents[1] / "fixtures" / "fusion_tea"
 LCOE_CHANNEL = "hif_plant_pkg__hif_plant__lcoe_calc__lcoe"
+
+#: Where a relocated read is staged: the directory the checkouts themselves sit
+#: in, not ``/tmp``. The relocated route's claim is that a snapshot generates the
+#: same package from a *different checkout root*, and ``/tmp`` is not one.
+SCRATCH_PARENT = Path(__file__).resolve().parents[2].parent
 
 
 def generate_package_from_models(models: Path, output_path: Path, package_name: str) -> Path:
@@ -57,6 +66,40 @@ def _generate(config: GenerationConfig) -> Path:
     return config.output_path
 
 
+@contextmanager
+def relocated_snapshot(models: Path, prefix: str) -> Iterator[Path]:
+    """Yield a v6 snapshot captured from a copy of ``models`` at a foreign root.
+
+    Three things make the read relocated rather than merely indirect: the model
+    is copied to a scratch root beside the checkouts, the snapshot is then moved
+    away from where it was captured, and the copied model tree is deleted before
+    the caller generates. A generator that reached back to the source files
+    would fail rather than quietly succeed.
+
+    The scratch root is removed on exit, so the caller must generate inside the
+    ``with`` block and write its package somewhere else.
+    """
+    SCRATCH_PARENT.mkdir(parents=True, exist_ok=True)
+    root = Path(tempfile.mkdtemp(prefix=prefix, dir=SCRATCH_PARENT))
+    try:
+        from sysml_codegen.snapshot.capture import capture_instance_graph_snapshot
+
+        model_copy = root / "model-tree" / models.name
+        shutil.copytree(models, model_copy)
+        captured = capture_instance_graph_snapshot(
+            [model_copy], root / "capture" / "snapshot.json"
+        )
+
+        moved = root / "elsewhere" / "snapshot.json"
+        moved.parent.mkdir(parents=True)
+        shutil.copyfile(captured, moved)
+        shutil.rmtree(root / "model-tree")
+        assert not model_copy.exists()
+        yield moved
+    finally:
+        shutil.rmtree(root, ignore_errors=True)
+
+
 def load_sealed_package(
     package_dir: Path, package_name: str, link_root: Path
 ) -> tuple[ModuleType, str]:
@@ -76,6 +119,37 @@ def package_loader(package_dir: Path, package_name: str, link_root: Path):
     return ProvisionalPackageLoader(
         package_dir=package_dir, package_name=package_name, link_root=link_root
     )
+
+
+def execute_sealed_package(package: Path, name: str, root: Path) -> dict[str, object]:
+    """Seal-load a generated package and run its pipeline through real TEAx.
+
+    ``root`` is scratch space: the loader's link tree and the run directory are
+    created under it.
+    """
+    from simkit.core.pipeline import execute_pipeline
+    from simkit.core.registry_builder import create_registry
+
+    module, fingerprint = load_sealed_package(package, name, root / "link")
+
+    factory = getattr(module, f"create_{name}_registry")
+    registry = factory()
+    result = execute_pipeline(
+        package / "pipelines/pipeline.yaml",
+        root / "run",
+        registry=registry,
+        custom_schema_types=module.CUSTOM_SCHEMA_TYPES,
+    )
+    return {
+        "package": package,
+        "name": name,
+        "module": module,
+        "fingerprint": fingerprint,
+        "registry_backing": factory.__globals__.get("create_registry"),
+        "public_create_registry": create_registry,
+        "registry": registry,
+        "result": result,
+    }
 
 
 def consumer_ports(graph, entry_point_qualified_name: str) -> set[tuple[str, str]]:

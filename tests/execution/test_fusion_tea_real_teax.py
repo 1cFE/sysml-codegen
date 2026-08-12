@@ -42,9 +42,9 @@ from tests.execution import fusion_tea_arithmetic as hand
 from tests.execution.real_teax import (
     FUSION_TEA,
     LCOE_CHANNEL,
+    execute_sealed_package,
     generate_package_from_models,
     generate_package_from_snapshot,
-    load_sealed_package,
 )
 
 pytestmark = pytest.mark.execution
@@ -118,7 +118,7 @@ def live_package(tmp_path_factory, environment) -> dict[str, object]:
     root = tmp_path_factory.mktemp("ft-live")
     name = "fusion_tea_live"
     package = generate_package_from_models(FUSION_TEA, root / name, name)
-    return _load_and_run(package, name, root)
+    return execute_sealed_package(package, name, root)
 
 
 @pytest.fixture(scope="module")
@@ -142,33 +142,7 @@ def relocated_package(tmp_path_factory, environment) -> dict[str, object]:
 
     name = "fusion_tea_relocated"
     package = generate_package_from_snapshot(moved, root / name, name)
-    return _load_and_run(package, name, root)
-
-
-def _load_and_run(package: Path, name: str, root: Path) -> dict[str, object]:
-    from simkit.core.pipeline import execute_pipeline
-    from simkit.core.registry_builder import create_registry
-
-    module, fingerprint = load_sealed_package(package, name, root / "link")
-
-    factory = getattr(module, f"create_{name}_registry")
-    registry = factory()
-    result = execute_pipeline(
-        package / "pipelines/pipeline.yaml",
-        root / "run",
-        registry=registry,
-        custom_schema_types=module.CUSTOM_SCHEMA_TYPES,
-    )
-    return {
-        "package": package,
-        "name": name,
-        "module": module,
-        "fingerprint": fingerprint,
-        "registry_backing": factory.__globals__.get("create_registry"),
-        "public_create_registry": create_registry,
-        "registry": registry,
-        "result": result,
-    }
+    return execute_sealed_package(package, name, root)
 
 
 # ---------------------------------------------------------------------------

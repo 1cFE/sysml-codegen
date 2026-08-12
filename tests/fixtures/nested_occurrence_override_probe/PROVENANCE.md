@@ -1,4 +1,17 @@
-# Provenance — KNOWN-INCOMPLETE PROBE
+# Provenance — the C19 repair case
+
+**Read the route first.** On the exact identity route this fixture is a *passing* case: the
+`80.0` reaches both consumers and the package generates, seals, and executes in real TEAx.
+`tests/execution/test_c19_nested_occurrence_teax.py` proves that on all three public routes
+(live, in-place v6 snapshot, relocated v6 snapshot), and
+`tests/fixtures/nested_occurrence_override_probe/instance_graph_snapshot.json` is the
+committed envelope the two snapshot routes read.
+
+Everything below the next heading describes the **retiring string-resolution route**, where
+the same fixture halts. It is kept as the recorded root cause of what the exact route fixed,
+not as a description of what the product does.
+
+## The string route's failure (historical, pin `7526665`)
 
 Permanent reproducible coordinate for a **general supplied-value gap**: a `:>>` override on a
 usage nested inside an *instantiated* part def is captured definition-relative and never
@@ -6,9 +19,9 @@ expanded to its occurrence path, so its literal is lost on **both** the calc and
 constraint resolution paths. Authored per owner ruling 2026-07-20 (Item 13 composed proof,
 case-18 addendum, Option A) — plant-idiom style, so the gap has a standing test coordinate.
 
-This fixture is **expected to halt** at generation. It is not a passing acceptance case; it
-pins a filed backlog gap (Item-10 occurrence-materialization family). See
-`.project/backlog/BACKLOG.md`.
+On the string route this fixture **halts** at generation. It pinned a filed backlog gap
+(Item-10 occurrence-materialization family); see `.project/backlog/BACKLOG.md` for what
+remains of that family beyond this shape.
 
 ## The shape
 
@@ -62,7 +75,7 @@ relative demand. The calc binding `in x = source.reading` loses the same value (
 to a manual-required entry point were the constraint not halting first); the gap is not
 constraint-specific.
 
-## Why this is not fixed here
+## Why the string route did not fix it
 
 The contract row 18 mandates only "definition-owned assert through redefining usage," which the
 flat `constraint_def_owned_redefining` fixture satisfies faithfully. The occurrence-expansion

@@ -5476,6 +5476,117 @@ place with no count change. Ledger `paths` goes 303 → 304 for `L-305`.
   longer does. Not corrected here — the fixture's provenance is its own artefact and the
   correction belongs with whoever re-measures the D-5 set.
 
+### Revise step 4 completion — the all-route mutation matrix and the C19 public-v6 node
+
+**Completed:** 2026-08-11. **Executes:** `owner-disposition-20260811.md` step 3, plus the
+SC7 residue that disposition slotted with it. **Commit:** see the stage commit below.
+
+Certification work, as the owner predicted. Every cell passed on the first run, no product
+change was needed, and no rule-10 surfacing arose: the two owner anchors reproduced to the
+last digit on all three routes.
+
+#### The matrix
+
+Six cells, `tests/execution/test_fusion_tea_mutation_teax.py`. The unmutated baseline is
+`270.1211779380445` on every route.
+
+| mutation | route | LCOE | movers |
+|---|---|---|---|
+| C25 availability 0.9 → 0.91 | live | `269.5300723203276` | lcoe, Meier COE |
+| C25 availability 0.9 → 0.91 | in-place snapshot | `269.5300723203276` | lcoe, Meier COE |
+| C25 availability 0.9 → 0.91 | relocated snapshot | `269.5300723203276` | lcoe, Meier COE |
+| C2 thermal 0.43 → 0.44 | live | `263.85170462810606` | lcoe, f_recirc |
+| C2 thermal 0.43 → 0.44 | in-place snapshot | `263.85170462810606` | lcoe, f_recirc |
+| C2 thermal 0.43 → 0.44 | relocated snapshot | `263.85170462810606` | lcoe, f_recirc |
+
+"Movers" is an exact set, computed by `_movers` over every projected output and every
+constraint response before and after: it is the every-and-only claim, not a spot check. The
+structural leg pins the same two consumer ports per mutation against every other port in the
+graph, per route.
+
+#### What each route is
+
+- **live** — `generate_package_from_models(FUSION_TEA, …)`, the licensed path.
+- **in-place snapshot** — the committed `tests/fixtures/fusion_tea/instance_graph_snapshot.json`,
+  read where it sits beside its own model. License-free.
+- **relocated snapshot** — `real_teax.relocated_snapshot`, new shared machinery: copy the
+  model to a scratch root **beside the checkouts** (`SCRATCH_PARENT = /home/reid/1cfe`, not
+  `/tmp` — the claim is about a different checkout root), capture, move the snapshot away from
+  where it was captured, delete the copied model tree, then generate. The scratch root is
+  removed on exit.
+
+One harness (`_harness`) serves all three; the routes differ only in how the package is
+generated and where its graph comes from. A single module-scoped `sealed` fixture
+parametrized over `ROUTES` is what turns each mutation test into three nodes.
+
+The protocol is unchanged and still TEAx typed-entry injection at runtime — nothing is
+written to disk, and `test_editing_a_sealed_input_and_resealing_is_refused` still pins
+`check_reseal_provenance`'s refusal of the invalid edit-and-reseal route. That test and
+`test_an_unknown_entry_field_fails_closed` are properties of the injection protocol rather
+than of a generation route, so they run once, on the live harness, rather than three times.
+
+#### The C19 public-v6 node (SC7 residue)
+
+New file `tests/execution/test_c19_nested_occurrence_teax.py`, 18 nodes, the named
+`nested_occurrence_override_probe` fixture on all three routes in real TEAx. On each:
+`noop__y == 80.0`, the constraint sees `observed == {"v": 80.0}`, verdict `satisfied`,
+margin `20.0`, and the three routes agree channel-for-channel including the constraint
+catalog fingerprint.
+
+The expectation is derived, not read back: `_modelled()` parses `:>> source.reading = 80.0`
+and `v <= 100.0` out of `model.sysml`, and every asserted value is computed from those two
+literals. A generator that emitted a self-consistent wrong number still fails.
+
+Two supporting changes:
+
+- **`tests/fixtures/nested_occurrence_override_probe/instance_graph_snapshot.json`** —
+  captured through the shipped public `capture_instance_graph_snapshot`. Portable (referents
+  only, zero absolute paths), same envelope shape as the other committed v6 snapshots. The
+  fixture is not one of the 37 corpus rows, so this touches neither the accepted 15/22 batch
+  nor its manifest; `capture_v6_batch.py --verify` still reads 15/22/0.
+- **`tests/fixtures/nested_occurrence_override_probe/PROVENANCE.md`** — corrected. It said
+  the fixture is "expected to halt at generation" with no route qualifier, which was true of
+  the string route and is false of the exact route this stage just proved. The historical
+  root cause is kept, now under a heading that says which route it describes. This is the
+  same class of staleness the step-3 note left open for `catf_mfe_d5`; here it was corrected
+  because this stage is what made the claim false.
+
+#### Shared machinery, not triplicated
+
+`tests/execution/real_teax.py` gained `relocated_snapshot` (the contextmanager above) and
+`execute_sealed_package` (seal-load, build the registry, run the pipeline). The latter is a
+straight lift of `test_fusion_tea_real_teax._load_and_run`, which now calls it — one
+load-and-run on the lane instead of two.
+
+#### Battery
+
+| gate | result |
+|---|---|
+| `pytest tests/execution -m execution -q` | **83 passed**, from 53 |
+| `pytest -q` (licensed) | **3866 passed, 47 skipped**, 83 deselected — unchanged |
+| `no live syside license` lines | **0** in both |
+| `capture_v6_batch.py --verify` | 15 captured / 22 refused / **0 deviations** |
+| `ruff check src` | **16** — unchanged, and the unanswered owner question |
+| `ruff check tests/execution` | **3**, identical findings before and after (all pre-existing) |
+| `mypy src` | **69 errors in 16 files** — unchanged |
+| `git diff --check` | clean |
+| `check_ledger_4a.py` `paths` / `surface` / `groups` | **304 rows, 0 problems** / **0** / READY |
+| `test_runbook_patches.py` | **4 passed** |
+
+The +30 execution nodes, named: `test_fusion_tea_mutation_teax.py` goes 8 → 20 (**+12**) —
+six tests were single-route and are now three-route (+12), and the two protocol-property
+tests stayed single (+0). `test_c19_nested_occurrence_teax.py` is new at **18**: seven
+five route-parametrized tests × 3 = 15, plus three that are route-independent by
+construction — the committed-envelope check, the three-route parity comparison, and the
+relocated route's own precondition.
+
+#### Spec boxes
+
+SC6 and SC7 are ticked at `.project/active/elaborator-cutover/spec.md`. SC6's remaining gap
+was "kept in-place and relocated snapshot mutation tests are absent" — they are now kept and
+green. SC7's was "the named fixture lacks a kept public-v6 route test" — it has one, on all
+three routes its spec text names.
+
 ---
 
 **Status:** Draft → Owner-approved → In progress → Audited → Owner accepted/revised
