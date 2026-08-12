@@ -1,27 +1,37 @@
 # Current Work
 
-**Last Updated**: 2026-08-12 (Item 7 narrow correction active; disposition record complete;
-real compiler convergence is next)
+**Last Updated**: 2026-08-12 (Item 7 narrow-correction steps 1–2 complete; R8 is next)
 
 ---
 
 ## Active Work
 
-### 2026-08-12: Item 7 cutover recovery — narrow correction active; compiler convergence next
+### 2026-08-12: Item 7 cutover recovery — compiler convergence complete; R8 next
 
-**Where it stands.** The first REVISE path ran through step 7 and the legacy string-resolution
-stack is gone from the tree, with no provisional trim. Its regenerated record is now a
-**superseded checkpoint under active correction**, not a final-acceptance candidate.
-**[AGENT] (ratified for execution by owner, 2026-08-12)** The recovered implementation stays in
-place: no rollback and no second rebuild. Item 7 remains open because compiler convergence was
-falsely recorded as executed, replacement proof is incomplete, and record-integrity corrections
-remain.
+**Where it stands.** Narrow-correction steps 1–2 are complete. The real compiler convergence and
+ledger-checker hardening landed in codegen commit
+`057bf29a3209470cd6ccfd882b1d3e6dd6d76a45`: the legacy name-keyed compiler/result definitions
+and calculation payload fields are absent, exact API names remain unchanged, and the checker now
+verifies executed symbol removals and deleted-test replacement proof. **[AGENT] (ratified for
+execution by owner, 2026-08-12)** The recovered implementation stays in place. Item 7 remains open
+for R8 and narrow-correction steps 4–10.
 
 - **Correction authority:** all ten ratified dispositions are recorded question by question in
   `.project/active/cutover-recovery/owner-disposition-20260811.md`; the persistent ten-step
   execution sequence is in `.project/active/cutover-recovery/plan.md`.
-- **Progress:** narrow-correction step 1 is complete. **Next blocker: execute L-033/L-034 compiler
-  convergence for real and harden the ledger checker.** Steps 3–10 follow in plan order.
+- **Progress:** narrow-correction steps 1–2 are complete. **Next active step: R8, preserving
+  qualified identity through rendering.** Steps 4–10 follow in plan order.
+- **Step-2 node account:** L-281 retired 10 exact legacy-shape nodes and L-284 retired 11; three
+  redundant extractor schema assertions also retired and six checker nodes were added. The
+  structured 21-node list and named replacements are in `ledger-4a.json`; the full collection
+  decreased by 18 nodes exactly.
+- **Step-2 gates:** focused suite **345 passed / 9 skipped**; full licensed suite **1689 passed /
+  34 skipped / 65 deselected**, zero license-skip lines. Ledger `paths` **304/0**, `surface` **0
+  unrowed**, all six `groups` READY, full `replacements` exit 0 including L-207 **20 passed** and
+  L-033/L-034/L-281/L-284 green. Proof integrity **0 problems over 0 blocked files**; document
+  distinctness **31 checked / 0 identical groups**. Ruff remains **14** existing UP042 findings
+  with zero new findings; the two touched-file findings are unchanged. Mypy remains **57 errors
+  in 11 files**.
 - **Superseded checkpoint OIDs:** codegen `6c35aa0`, agentic-mbse `3fbda2f`, TEAx pinned
   `fa0e06a9`.
 - **Checkpoint gates:** codegen suite **1707 passed / 34 skipped / 65 deselected**, zero

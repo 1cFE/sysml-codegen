@@ -171,9 +171,9 @@ switching or deletion until this passes.
       at codegen `6c35aa0` / agentic `3fbda2f` is a **superseded checkpoint under active
       correction**, not a final-acceptance candidate. The recovered implementation stays in
       place; no rollback and no second rebuild.
-- [ ] Narrow correction (2026-08-12) — **step 1 complete**. The ratified dispositions are now
+- [ ] Narrow correction (2026-08-12) — **steps 1–2 complete**. The ratified dispositions are
       persistent in `owner-disposition-20260811.md` and in the executable sequence at the end of
-      this plan. **Next blocker: real L-033/L-034 compiler convergence and checker hardening.**
+      this plan. **Next active step: R8 qualified-identity preservation.**
 
 ---
 
@@ -6540,7 +6540,7 @@ record-integrity corrections remain.
       ten question-by-question dispositions in `owner-disposition-20260811.md`, amend the stale
       Gate 2 and current-work status, and install this sequence as the persistent execution
       authority.
-- [ ] **2. Real L-033/L-034 compiler convergence plus checker hardening.** **[AGENT] (ratified
+- [x] **2. Real L-033/L-034 compiler convergence plus checker hardening.** **[AGENT] (ratified
       for execution by owner, 2026-08-12)** Remove the legacy compiler symbols and name-keyed
       payload shape for real; migrate or retire the recorded legacy-shape nodes; make executed
       rows with deleted responsibility and no replacement proof fail; verify every
@@ -6574,6 +6574,67 @@ record-integrity corrections remain.
 - [ ] **10. Return to the owner for final acceptance.** Final acceptance remains owner-grade.
       **[AGENT] (ratified for execution by owner, 2026-08-12)** authorizes no push, tag,
       promotion, close, or archive.
+
+#### Narrow-correction step 2 completion
+
+**Completed:** 2026-08-12. **Implementation:**
+`057bf29a3209470cd6ccfd882b1d3e6dd6d76a45`. The legacy
+`CompilationResult`, `CalcDefCompilationResult`, and `compile_calc_def` definitions are absent;
+the three exact-named definitions are the sole compiler core. `CalculationDefinitionData` and
+the extractor have no name-keyed `output_expression_asts`, `all_member_names`, or
+`member_expressions` payload. The surviving payload is keyed by declaration UUID and retains
+`member_names_by_id` only as rendering metadata.
+
+The current collection retired **21** legacy-compiler nodes, not the historical estimate of about
+32. L-281 retired these 10 exact IDs:
+
+- `tests/conformance/test_expression_compiler.py::test_exact_compiler_surface_does_not_replace_the_legacy_adapter`
+- `tests/conformance/test_expression_compiler.py::TestReqEc05CycleDetection::test_cycle_marks_all_outputs_manual_required`
+- `tests/conformance/test_expression_compiler.py::TestReqEc05CycleDetection::test_cycle_produces_empty_execution_order`
+- `tests/conformance/test_expression_compiler.py::TestReqEc05CycleDetection::test_cycle_unsupported_reason_mentions_circular`
+- `tests/conformance/test_expression_compiler.py::TestReqEc07UndeclaredIntermediates::test_undeclared_intermediate_discovered_from_members`
+- `tests/conformance/test_expression_compiler.py::TestReqEc07UndeclaredIntermediates::test_iterative_chain_discovery`
+- `tests/conformance/test_expression_compiler.py::TestReqEc07UndeclaredIntermediates::test_undeclared_flag_set_correctly`
+- `tests/conformance/test_expression_compiler.py::TestReqEc07UndeclaredIntermediates::test_undeclared_without_member_expression_gets_manual`
+- `tests/conformance/test_expression_compiler.py::TestCrossModelValidation::test_compile_calc_def_with_real_metadata[solar_battery]`
+- `tests/conformance/test_expression_compiler.py::TestCrossModelValidation::test_compile_calc_def_with_real_metadata[catf_mfe]`
+
+L-284 retired these 11 exact IDs:
+
+- `tests/unit/test_expression_compiler.py::TestCompileCalcDef::test_pattern_b_multi_step_topological_order`
+- `tests/unit/test_expression_compiler.py::TestCompileCalcDef::test_pattern_e_pi_as_repeated_literal`
+- `tests/unit/test_expression_compiler.py::TestCompileCalcDef::test_edge1_unresolved_reference_verdict_escalation`
+- `tests/unit/test_expression_compiler.py::TestCompileCalcDef::test_edge2_circular_dependency_returns_manual`
+- `tests/unit/test_expression_compiler.py::TestCompileCalcDef::test_edge3_missing_ast_partial_compilability`
+- `tests/unit/test_expression_compiler.py::TestCompileCalcDef::test_edge4_unsupported_operator_verdict_escalation`
+- `tests/unit/test_expression_compiler.py::TestCompileCalcDef::test_edge5_feature_chain_returns_manual`
+- `tests/unit/test_expression_compiler.py::TestCompileCalcDef::test_undeclared_intermediates_4_chain`
+- `tests/unit/test_expression_compiler.py::TestCompileCalcDef::test_overall_compilability_is_worst_case`
+- `tests/unit/test_expression_compiler.py::TestCompileCalcDef::test_single_output_fully_compilable`
+- `tests/unit/test_expression_compiler.py::TestCompileCalcDefEdge6::test_expression_with_operators_compiles_normally`
+
+Three obsolete extractor schema assertions also retired because the exact sidecar assertions
+already existed beside them. Six kept checker tests were added, so the full collection moved from
+1,806 to 1,788 nodes: 24 retired minus 6 added, a net decrease of 18.
+
+**Validation:** focused compiler/data-model/extractor/return-style/checker tests **345 passed / 9
+skipped**. The full licensed suite selected 1,723 nodes and finished **1,689 passed / 34 skipped /
+65 deselected**, with zero `no live syside license` lines. The checker reported **304 rows / 0
+problems** for `paths`, **0 unrowed breakages** for `surface`, and all six groups READY with zero
+affected rows. Proof integrity reported **0 problems over 0 blocked files**; distinctness checked
+**31** numbered reference documents with **0** identical-content groups. The permission-complete
+replacement sweep exited 0, including L-033, L-034, L-281, and L-284 green and L-207 **20
+passed**. An earlier sandboxed L-207 attempt had six read-only-filesystem setup errors when its
+documented relocated-snapshot scratch directory could not be created; the permitted L-207 and
+full-sweep reruns established that this was an execution-permission artifact.
+
+Canonical ruff 0.16.2 reports the existing `src` baseline of **14 UP042 findings**. Two unchanged
+findings are in touched files (`ComputedAttributeClassification` in `data_models.py` and
+`Compilability` in `expression_compiler.py`); changed-file comparison against the parent commit
+confirmed zero new findings, so they remain for narrow-correction step 6. `mypy src` remains at
+**57 errors in 11 files**. The product worktree was clean after the implementation commit, the
+companion stayed clean at `3fbda2fbfa82f43d59b0262cedd7a7ae241f37d0`, and no premise conflict
+occurred. R8 is the next active step.
 
 ---
 

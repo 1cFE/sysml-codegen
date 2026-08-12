@@ -960,7 +960,7 @@
   },
   {
    "id": "L-033",
-   "revise_step2": "REVISE step 2 ruling [AGENT (orchestrator, delegated deletion-ledger authority per plan), 2026-08-11]. **Executed, in part.** The survivor is detangled: `compile_calc_def_exact` no longer constructs a legacy `CompilationResult`. `classify_compilability` now takes `Sequence[Compilability]` \u2014 the per-output verdicts are all it ever read \u2014 so each compiler reaches it carrying its own result type. The ten `classify_compilability` nodes in the tests/unit and tests/conformance `test_expression_compiler.py` files moved with the signature and are green. **The legacy members' deletion stays with the retirement runbook.** **Exit measurement, as amended by this ruling:** zero legacy readers outside the definition site AND the retirement-owned nodes \u2014 the same treatment L-280 already carries. Measured at this stage's post-state, the readers of `compile_calc_def` / `CompilationResult` / `CalcDefCompilationResult` are: the definition site itself (the `compile_calc_def` body, 395-558); `orchestration/pipeline_builder.py:51,1083` and `snapshot/loader.py:47,889` (both retirement-owned); `test_compile_calc_def_golden.py` (L-280, retire-with-owner); `test_graph_builder.py` (retires with `resolution/graph_builder.py`); the ~32 per-node retirements recorded on L-281/L-284; and two prose mentions in `test_orchestrator.py`. No consumer outside that set remains.",
+   "revise_step2": "Narrow-correction step 2 [AGENT] (ratified for execution by owner, 2026-08-12): EXECUTED at 057bf29a3209470cd6ccfd882b1d3e6dd6d76a45. `CompilationResult`, `CalcDefCompilationResult`, and `compile_calc_def` are deleted. `ExactCompilationResult`, `ExactCalcDefCompilationResult`, and `compile_calc_def_exact` keep their exact names and are the sole compiler core. The earlier 82c7951 execution claim was false: blanket `retire_step.py close 2` stamped every step-2 row even though the runbook edit table still held L-033 out, so no symbol deletion occurred. The checker now parses every executed `removes.symbols` path and would reject that state.",
    "path": "src/sysml_codegen/extraction/expression_compiler.py",
    "repo": "sysml-codegen",
    "class": "production",
@@ -974,7 +974,7 @@
     "tests/conformance/test_exact_compiler_core.py::test_returned_values_line_up_with_the_projected_output_schema"
    ],
    "blocked_by": [],
-   "reason": "Three of the eight retained duals from 3C live here: compile_calc_def_exact / compile_calc_def, ExactCompilationResult / CompilationResult, ExactCalcDefCompilationResult / CalcDefCompilationResult. Delete the legacy member and drop the Exact qualifier from the survivor. Gate 4C part 7: re-backed off tests/conformance/test_compile_calc_def_golden.py, which retires with this row's own removed symbol (L-280) \u2014 a row may not be proven by a node that dies with it.",
+   "reason": "Retire the name-keyed compiler/result shape. The UUID-keyed exact compiler and result types survive under their existing exact names; no unsuffixed alias replaces a removed symbol.",
    "removes": [
     {
      "group": "4B-v5-family",
@@ -985,13 +985,13 @@
      ]
     }
    ],
-   "dual_migration": "Gate 4C part 7 chunk 12 measured this row's three duals under the qualifier drop: 48 passed / 26 failed / 5 errors. Chunk 16 re-checked the remaining five duals and every one failed too. Phase 4 audit follow-up (2026-08-11) measured something further: the DELETION is not ready either. compile_calc_def_exact - the survivor - constructs a legacy CompilationResult at extraction/expression_compiler.py:378, inside its own body (240-391). Deleting the legacy dual takes the exact route with it: 287 failed / 254 errors against 86 / 58 with it kept. The whole row is owner-gated; it is not part of step 2.",
+   "dual_migration": "Historical measurement proved this was a payload migration, not a qualifier drop. REVISE step 2 detangled the exact survivor; narrow-correction step 2 then deleted the legacy implementation and retired the 21 currently-collected legacy-shape nodes recorded on L-281/L-284. Exact-core replacement coverage stayed green.",
    "state": "executed",
-   "executed_commit": "82c79512b314d912b49f536061787b0ec91c6afa"
+   "executed_commit": "057bf29a3209470cd6ccfd882b1d3e6dd6d76a45"
   },
   {
    "id": "L-034",
-   "revise_step2": "REVISE step 2 ruling [AGENT (orchestrator, delegated deletion-ledger authority per plan), 2026-08-11]. **Not migrated at this stage, and not blocked either.** Repointing how the dependent nodes CONSTRUCT their input facts (name-keyed to the `_by_id` twins) is evidence repointing, not authoring against a subject: their assertions are untouched. That work is revise step 3's. **The name-keyed fields therefore retain named dependent readers, which step 3 clears before this row's deletion row executes:** L-287 `test_calc_compat_parity.py` (28 nodes) and L-135 `test_extractor.py` (fifth-entry item 3). Also reading them: `test_compile_calc_def_golden.py` (L-280, retire-with-owner, 28 nodes), `test_return_style_extraction.py` (2), `test_data_models.py`, `test_extraction_snapshots.py`. The extractor still writes the fields (`extraction/extractor.py:224,263,354`), and `snapshot/serializer.py`, `snapshot/loader.py` and `orchestration/pipeline_builder.py` read them \u2014 all retirement-owned. The post-stage reader count is unchanged by this stage, by ruling.",
+   "revise_step2": "Narrow-correction step 2 [AGENT] (ratified for execution by owner, 2026-08-12): EXECUTED at 057bf29a3209470cd6ccfd882b1d3e6dd6d76a45. `output_expression_asts`, `all_member_names`, and `member_expressions` are deleted from `CalculationDefinitionData`; the extractor no longer constructs or writes name-keyed payloads. Schema, extractor, and return-style assertions now use the UUID-keyed fields and `member_names_by_id`. The earlier 82c7951 claim came from the same blanket `retire_step.py close 2` stamping even though L-034 was held out of the edit table. The checker now owns these declared fields through the `removes` block below.",
    "path": "src/sysml_codegen/extraction/data_models.py",
    "repo": "sysml-codegen",
    "class": "production",
@@ -1000,13 +1000,27 @@
    "group": "4B-v5-family",
    "authority": "no census row for this path [EVIDENCE: forensic map Finding 2]; Phase 3 completion notes / plan Gate 4A carried inputs",
    "unreachability": "live on both routes",
-   "replacement_proof_node": "tests/conformance/test_calc_compat_parity.py",
+   "replacement_proof_node": [
+    "tests/conformance/test_elaboration_payload_identity.py::test_live_extraction_carries_total_calc_declaration_identity",
+    "tests/conformance/test_elaboration_payload_identity.py::test_exact_compiler_keys_definition_outputs_and_dependencies_by_uuid",
+    "tests/conformance/test_calc_compat_parity.py"
+   ],
    "blocked_by": [],
-   "reason": "The fourth codegen dual from 3C: CalculationDefinitionData's {output_expression_asts,member_expressions,member_names}_by_id and all_member_ids against the legacy output_expression_asts / member_expressions / all_member_names.",
-   "dual_migration": "Gate 4C part 7 chunk 16 (2026-08-11): the Gate 4A 'one behavior under two names' premise is MEASURED FALSE for this dual. scripts/probes/probe_calc_def_data_qualifier_drop.py rebinds the three legacy fields to their _by_id survivors - exactly what dropping the qualifier leaves - and runs the consumers: 58 of 86 nodes fail (28 KeyError on a rendered name, because the survivor is UUID-keyed and every name lookup misses; 30 AssertionError). By file: test_calc_compat_parity.py 28, test_compile_calc_def_golden.py 28, test_return_style_extraction.py 2. The legacy fields are name-keyed and the survivors UUID-keyed, so this is a payload change, not a rename. NOTE: this row's own replacement_proof_node is test_calc_compat_parity.py, 28 of whose nodes the prescribed rename breaks - the same defect the chunk-7 note caught for L-033/L-280. The migration is authoring work against the UUID-keyed payload, in the same family as L-281/L-284, and belongs to the same gate.",
+   "reason": "Retire the name-keyed calculation payload. Exact declaration UUIDs own AST lookup and dependency attachment; `member_names_by_id` carries rendering metadata only.",
+   "removes": [
+    {
+     "group": "4B-v5-family",
+     "symbols": [
+      "output_expression_asts",
+      "all_member_names",
+      "member_expressions"
+     ]
+    }
+   ],
+   "dual_migration": "Historical measurement proved rebinding names to UUID-keyed fields was invalid (58 of 86 nodes failed). REVISE step 3 repointed compatible evidence construction; narrow-correction step 2 removed the legacy fields and migrated the remaining live schema/extractor/return-style assertions without changing expression reconstruction or the exact member inventory.",
    "revise_step3": "REVISE step 3 (2026-08-11): the two named dependent readers of the name-keyed fields are cleared. L-287's 28 nodes now read the _by_id inventory; L-135's live reads are gone with its repointing, and its one remaining raw-JSON read retires with its own subject under the prepared step-2 patch. Nothing outside the retirement-owned set reads output_expression_asts, all_member_names or member_expressions at this commit.",
    "state": "executed",
-   "executed_commit": "82c79512b314d912b49f536061787b0ec91c6afa"
+   "executed_commit": "057bf29a3209470cd6ccfd882b1d3e6dd6d76a45"
   },
   {
    "id": "L-035",
@@ -6520,7 +6534,7 @@
   },
   {
    "id": "L-281",
-   "revise_step2": "REVISE step 2 ruling [AGENT (orchestrator, delegated deletion-ledger authority per plan), 2026-08-11]. **Do not migrate.** The recorded Gate 4C disposition stands verbatim \u2014 the nodes bound to the legacy shape retire with the shape at their runbook step, and no assertion transfers to the survivor. This is the part-6 bar's allowed case: a subject that genuinely ends with the shape, with the named replacement already green (`tests/conformance/test_exact_compiler_core.py`, L-033's replacement_proof_node). It is NOT the banned provisional trim: these are recorded per-node dispositions executed as runbook deletions, not a deselection list. Sixteen nodes, as measured. The one node whose replacement was missing is now authored \u2014 see L-284. Migrated at this stage, and NOT part of the per-node retirement: the five `classify_compilability` nodes, which moved with that function's new `Sequence[Compilability]` signature and are green.",
+   "revise_step2": "Narrow-correction step 2 [AGENT] (ratified for execution by owner, 2026-08-12): EXECUTED at 057bf29a3209470cd6ccfd882b1d3e6dd6d76a45. Ten currently-collected nodes whose subject or setup invoked the removed name-keyed compiler/result shape retired exactly as listed in `deleted_test_nodes`; 17 renderer, classification, AST-boundary, and live-metadata nodes remain. The stale estimate of sixteen included responsibilities already migrated before convergence. Exact-core replacement nodes are named below.",
    "path": "tests/conformance/test_expression_compiler.py",
    "repo": "sysml-codegen",
    "class": "test",
@@ -6529,18 +6543,34 @@
    "group": null,
    "authority": "Gate 4C part 3 surface measurement (check_ledger_4a.py surface); plan rule 10 \u2014 a file with no row that a deletion group breaks is an unexplained blast radius",
    "unreachability": null,
-   "replacement_proof_node": null,
+   "replacement_proof_node": [
+    "tests/conformance/test_exact_compiler_core.py::test_an_exact_dependency_cycle_is_total_and_manual",
+    "tests/conformance/test_exact_compiler_core.py::test_an_undeclared_intermediate_is_assigned_before_the_output_that_uses_it",
+    "tests/conformance/test_exact_compiler_core.py::test_returned_values_line_up_with_the_projected_output_schema"
+   ],
+   "deleted_test_nodes": [
+    "tests/conformance/test_expression_compiler.py::test_exact_compiler_surface_does_not_replace_the_legacy_adapter",
+    "tests/conformance/test_expression_compiler.py::TestReqEc05CycleDetection::test_cycle_marks_all_outputs_manual_required",
+    "tests/conformance/test_expression_compiler.py::TestReqEc05CycleDetection::test_cycle_produces_empty_execution_order",
+    "tests/conformance/test_expression_compiler.py::TestReqEc05CycleDetection::test_cycle_unsupported_reason_mentions_circular",
+    "tests/conformance/test_expression_compiler.py::TestReqEc07UndeclaredIntermediates::test_undeclared_intermediate_discovered_from_members",
+    "tests/conformance/test_expression_compiler.py::TestReqEc07UndeclaredIntermediates::test_iterative_chain_discovery",
+    "tests/conformance/test_expression_compiler.py::TestReqEc07UndeclaredIntermediates::test_undeclared_flag_set_correctly",
+    "tests/conformance/test_expression_compiler.py::TestReqEc07UndeclaredIntermediates::test_undeclared_without_member_expression_gets_manual",
+    "tests/conformance/test_expression_compiler.py::TestCrossModelValidation::test_compile_calc_def_with_real_metadata[solar_battery]",
+    "tests/conformance/test_expression_compiler.py::TestCrossModelValidation::test_compile_calc_def_with_real_metadata[catf_mfe]"
+   ],
    "blocked_by": [],
    "responsibility": "C04: Expression Compiler conformance tests.",
-   "node_count": 24,
+   "node_count": 17,
    "disposition_4c": "repoint",
    "reason": "Found by the Gate 4C part 3 surface check. Imports the legacy compile_calc_def and CompilationResult duals (L-033) at module level. Defers with them in 4B-v5-family; the exact-route half is already pinned separately by test_compile_calc_def_golden.py.",
    "breaks_on": "sysml_codegen.extraction.expression_compiler:CompilationResult (L-033, 4B-v5-family); sysml_codegen.extraction.expression_compiler:compile_calc_def (L-033, 4B-v5-family)",
    "breaks_a_free_group": false,
-   "disposition_4c_note": "Gate 4C part 7 chunk 19 (2026-08-11), replacing the chunk-12 hold. Twenty-seven collected nodes, and the file's own strategy note splits them: pure renderer functions (render_calc_expression, collect_calc_refs, classify_compilability) built on constructed ExpressionIR trees, and the SysIDE-dependent compile_calc_def orchestration. Only the second group touches the L-033 duals. The dry run measured 16 of them; the module-scope imports of compile_calc_def and CompilationResult are now inside the thirteen function bodies that use them (method note 1), so the renderer group keeps collecting after step 1. One of the thirteen, test_exact_compiler_surface_does_not_replace_the_legacy_adapter, exists precisely to assert that the two duals are DISTINCT - it is the pin that recorded what the chunk-12 dry run later measured, and its subject ends with the dual by construction. The chunk-12 and chunk-16 measurements STAND and are not softened by this disposition: the dual is not a rename, and no assertion here is transferred to the survivor. What changed is the frame. The question a disposition answers is what happens to this FILE when the legacy member is deleted, and the answer is per-node: the nodes bound to the legacy shape retire with the shape, and the rest keep collecting. The survivor's own coverage is tests/conformance/test_exact_compiler_core.py, which is already this dual's replacement_proof_node on L-033 (re-backed in chunk 7 when L-280 was found to die with the symbol it proved), and it owns the same behaviours from the exact side: an undeclared intermediate assigned before the output that uses it, a dependency cycle that is total and manual, and returned values lining up with the projected output schema. The qualifier drop itself remains owner-gated on L-033/L-034/L-036/L-037 with its measurements attached - nothing here schedules it.",
-   "revise_step3": "REVISE step 3 EXECUTED (2026-08-11), for the five nodes beyond the per-node retirement table: TestCrossModelValidation::test_compile_calc_def_with_real_metadata[catf_mfe, solar_battery] and ::test_reference_resolution_with_real_attribute_names[catf_mfe, chain_spike, solar_battery]. They read real calc-def metadata off the retiring v5 extraction snapshots; repointed onto live extraction via the conformance conftest's live_extraction_facts fixture, assertions unchanged, license gate stated in the module docstring. The ~32 legacy-shape-bound nodes are untouched \u2014 their step-2 ruling (retire with the shape, replacement tests/conformance/test_exact_compiler_core.py) stands and executes as runbook deletions at revise step 6.",
+   "disposition_4c_note": "The file remains a 17-node renderer/classification/live-metadata suite. The ten exact IDs in `deleted_test_nodes` retired with the legacy compiler shape; no assertion was mechanically renamed onto the exact API. The exact compiler owns cycle, dependency ordering, and returned-schema behavior in `test_exact_compiler_core.py`.",
+   "revise_step3": "REVISE step 3 repointed all five live-metadata nodes off v5 evidence. Narrow-correction step 2 preserved the three renderer-only live-metadata nodes and retired only the two whose setup still constructed the legacy compiler input shape.",
    "state": "executed",
-   "executed_commit": "19072adf41dcfe3bf1385e843a52c414fac02969"
+   "executed_commit": "057bf29a3209470cd6ccfd882b1d3e6dd6d76a45"
   },
   {
    "id": "L-282",
@@ -6592,7 +6622,7 @@
   },
   {
    "id": "L-284",
-   "revise_step2": "REVISE step 2 ruling [AGENT (orchestrator, delegated deletion-ledger authority per plan), 2026-08-11]. **Do not migrate.** Same ruling as L-281: the sixteen legacy-shape-bound nodes retire with the shape at their runbook step, no assertion transfers, and `test_exact_compiler_core.py` owns the survivor. Not the provisional trim. **One replacement authored this stage.** `test_edge1_unresolved_reference_verdict_escalation`'s subject \u2014 an unresolved reference degrading to a MANUAL_REQUIRED verdict \u2014 genuinely ends: the exact compiler raises `CompilationError` from `_exact_reference_ids` on the same input class, which is ratified fail-closed recovery semantics, not a gap. Named replacement: `tests/conformance/test_exact_compiler_core.py::test_a_reference_with_no_resolved_declaration_is_refused_not_degraded`, authored at this stage. Recorded as no coverage loss. Migrated at this stage, and NOT part of the per-node retirement: the five `classify_compilability` nodes, which moved with that function's new `Sequence[Compilability]` signature and are green.",
+   "revise_step2": "Narrow-correction step 2 [AGENT] (ratified for execution by owner, 2026-08-12): EXECUTED at 057bf29a3209470cd6ccfd882b1d3e6dd6d76a45. Eleven currently-collected legacy-orchestrator nodes retired exactly as listed in `deleted_test_nodes`; 41 enum, renderer, classification, and exact-compiler nodes remain. The stale estimate of sixteen included five classification nodes already migrated to the verdict-only interface.",
    "path": "tests/unit/test_expression_compiler.py",
    "repo": "sysml-codegen",
    "class": "test",
@@ -6601,17 +6631,35 @@
    "group": null,
    "authority": "Gate 4C part 3 surface measurement (check_ledger_4a.py surface/groups); plan rule 10",
    "unreachability": null,
-   "replacement_proof_node": null,
+   "replacement_proof_node": [
+    "tests/conformance/test_exact_compiler_core.py::test_an_exact_dependency_cycle_is_total_and_manual",
+    "tests/conformance/test_exact_compiler_core.py::test_a_reference_with_no_resolved_declaration_is_refused_not_degraded",
+    "tests/conformance/test_exact_compiler_core.py::test_an_undeclared_intermediate_is_assigned_before_the_output_that_uses_it",
+    "tests/conformance/test_exact_compiler_core.py::test_returned_values_line_up_with_the_projected_output_schema"
+   ],
+   "deleted_test_nodes": [
+    "tests/unit/test_expression_compiler.py::TestCompileCalcDef::test_pattern_b_multi_step_topological_order",
+    "tests/unit/test_expression_compiler.py::TestCompileCalcDef::test_pattern_e_pi_as_repeated_literal",
+    "tests/unit/test_expression_compiler.py::TestCompileCalcDef::test_edge1_unresolved_reference_verdict_escalation",
+    "tests/unit/test_expression_compiler.py::TestCompileCalcDef::test_edge2_circular_dependency_returns_manual",
+    "tests/unit/test_expression_compiler.py::TestCompileCalcDef::test_edge3_missing_ast_partial_compilability",
+    "tests/unit/test_expression_compiler.py::TestCompileCalcDef::test_edge4_unsupported_operator_verdict_escalation",
+    "tests/unit/test_expression_compiler.py::TestCompileCalcDef::test_edge5_feature_chain_returns_manual",
+    "tests/unit/test_expression_compiler.py::TestCompileCalcDef::test_undeclared_intermediates_4_chain",
+    "tests/unit/test_expression_compiler.py::TestCompileCalcDef::test_overall_compilability_is_worst_case",
+    "tests/unit/test_expression_compiler.py::TestCompileCalcDef::test_single_output_fully_compilable",
+    "tests/unit/test_expression_compiler.py::TestCompileCalcDefEdge6::test_expression_with_operators_compiles_normally"
+   ],
    "blocked_by": [],
    "responsibility": "Unit tests for the expression compiler module.",
-   "node_count": 52,
+   "node_count": 41,
    "disposition_4c": "repoint",
    "breaks_on": "",
    "breaks_a_free_group": false,
-   "disposition_4c_note": "Gate 4C part 7 chunk 19 (2026-08-11), replacing the chunk-12 hold. Fifty-two nodes and every reference to the L-033 duals is already inside a test body - the checker records this row's hits as func, not module, so nothing collapses at collection and no edit was needed. The dry run measured 16 of the 52 bound to the legacy shape; those retire per-node with the legacy member in step 1. The other 36 - the Compilability enum, the pure data-model and renderer phases, and the compile_calc_def_exact orchestration nodes this file already carries - are untouched by any step. The chunk-12 and chunk-16 measurements STAND and are not softened by this disposition: the dual is not a rename, and no assertion here is transferred to the survivor. What changed is the frame. The question a disposition answers is what happens to this FILE when the legacy member is deleted, and the answer is per-node: the nodes bound to the legacy shape retire with the shape, and the rest keep collecting. The survivor's own coverage is tests/conformance/test_exact_compiler_core.py, which is already this dual's replacement_proof_node on L-033 (re-backed in chunk 7 when L-280 was found to die with the symbol it proved), and it owns the same behaviours from the exact side: an undeclared intermediate assigned before the output that uses it, a dependency cycle that is total and manual, and returned values lining up with the projected output schema. The qualifier drop itself remains owner-gated on L-033/L-034/L-036/L-037 with its measurements attached - nothing here schedules it.",
+   "disposition_4c_note": "The file remains a 41-node enum/renderer/classification/exact-compiler suite. The eleven exact IDs in `deleted_test_nodes` retired with the legacy compiler shape. Exact-core tests own the survivor behavior, including fail-closed unresolved identity.",
    "reason": "Found by the Gate 4C part 3 surface measurement. Uses the legacy compile_calc_def and CompilationResult duals (L-033) inside test bodies, so its nodes fail rather than its collection. Defers with those duals in 4B-v5-family, because pipeline_builder.py:51 calls compile_calc_def on the retained v5 capture path.",
    "state": "executed",
-   "executed_commit": "82c79512b314d912b49f536061787b0ec91c6afa"
+   "executed_commit": "057bf29a3209470cd6ccfd882b1d3e6dd6d76a45"
   },
   {
    "id": "L-285",
