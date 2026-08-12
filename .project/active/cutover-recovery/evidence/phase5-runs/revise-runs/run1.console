@@ -1,0 +1,50 @@
+[run1] suite_codegen rc=0 86s
+[run1] suite_agentic rc=0 15s
+[run1] execution_lane rc=0 4s
+[run1] corpus_tests rc=0 1s
+[run1] batch_verify rc=0 8s
+[run1] batch_check rc=0 0s
+[run1] ruff_src rc=1 1s
+[run1] ruff_all rc=1 0s
+[run1] mypy_src rc=1 0s
+[run1] mb_ruff_src rc=1 0s
+[run1] mb_ruff_tests rc=1 0s
+[run1] mb_mypy_src rc=1 0s
+[run1] ledger_paths rc=0 1s
+[run1] ledger_surface rc=0 1s
+[run1] ledger_groups rc=0 2s
+[run1] ledger_replace rc=0 666s
+[run1] proof_integrity rc=0 2s
+[run1] doc_distinct rc=0 0s
+[run1] scale rc=0 78s
+[run1] diff_check_cg rc=0 0s
+[run1] diff_check_mb rc=0 0s
+[run1] status_cg rc=0 0s
+[run1] status_mb rc=0 0s
+[run1] status_teax rc=0 0s
+=== run1 complete ===
+env_gate	0	0
+suite_codegen	0	86
+suite_agentic	0	15
+execution_lane	0	4
+corpus_tests	0	1
+batch_verify	0	8
+batch_check	0	0
+ruff_src	1	1
+ruff_all	1	0
+mypy_src	1	0
+mb_ruff_src	1	0
+mb_ruff_tests	1	0
+mb_mypy_src	1	0
+ledger_paths	0	1
+ledger_surface	0	1
+ledger_groups	0	2
+ledger_replace	0	666
+proof_integrity	0	2
+doc_distinct	0	0
+scale	0	78
+diff_check_cg	0	0
+diff_check_mb	0	0
+status_cg	0	0
+status_mb	0	0
+status_teax	0	0

@@ -1,0 +1,39 @@
+graph    agg_literal_probe  graph 1/3/0/0
+refused  agg_localterm_probe  error: SI_SELF_BINDING
+refused  alias_agg_probe  error: SI_SELF_BINDING
+graph    attr_expr_probe  graph 17/16/0/3
+refused  catf_mfe_model  error: SI_SELF_BINDING
+refused  chain_override_probe  error: 2× SI_SELF_BINDING
+refused  chain_spike_model  error: 3× SI_SELF_BINDING
+graph    constraint_inline  graph 2/1/1/0
+graph    constraint_multi_instance  graph 7/3/3/0
+graph    constraint_non_numerical  graph 2/1/1/0
+refused  crosspart_rollup_twolevel  error: SI_SELF_BINDING
+graph    d38_caret  graph 2/6/0/0
+graph    deep_cross_scope_probe  graph 5/4/0/1
+refused  expression_binding_probe  error: 6× SI_EXPRESSION_SOURCE_UNSUPPORTED + 3× SI_SELF_BINDING
+graph    fusion_tea  graph 9/27/1/7
+refused  gate_a  error: 2× SI_SELF_BINDING
+refused  gate_a_package_owner  error: 2× SI_SELF_BINDING
+refused  ife_plant  error: 21× SI_SELF_BINDING
+refused  invocation_binding_probe  error: SI_EXPRESSION_SOURCE_UNSUPPORTED
+refused  issue22_model  error: SI_SELF_BINDING
+graph    modeled_default_fidelity  graph 5/6/3/0
+refused  plant_value_shapes  error: 2× SI_SELF_BINDING
+refused  plant_values  error: SI_SELF_BINDING
+graph    quoted_owner_formula  graph 2/2/0/0
+refused  return_styles  error: 3× SI_SELF_BINDING
+graph    retype_model  graph 6/6/0/0
+graph    sample_model  graph 0/0/0/0
+refused  self_named_binding_trap  error: SI_SELF_BINDING
+refused  self_named_rescue  error: SI_SELF_BINDING
+graph    shadowed_reference  graph 1/1/0/0
+refused  shared_producer  error: 2× SI_SELF_BINDING
+refused  sibling_channel_ambiguity  error: SI_SELF_BINDING
+refused  solar_battery_model  error: 24× SI_SELF_BINDING
+refused  spec_chain_channel  error: SI_SELF_BINDING
+refused  spec_chain_twolevel  error: SI_SELF_BINDING
+graph    unresolvable_attr_probe  graph 10/9/0/0
+graph    wi014_toy  graph 4/4/1/1
+
+15 captured, 22 refused, 0 deviations

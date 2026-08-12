@@ -1,0 +1,193 @@
+Module class name collisions detected: ['capital_costModule', 'fabrication_costModule', 'idiot_indexModule', 'installation_costModule', 'raw_material_costModule']. Generating aliased imports for 20 modules.
+Module class name collisions detected: ['capital_costModule', 'fabrication_costModule', 'idiot_indexModule', 'installation_costModule', 'raw_material_costModule']. Generating aliased imports for 20 modules.
+Module class name collisions detected: ['capital_costModule', 'fabrication_costModule', 'idiot_indexModule', 'installation_costModule', 'raw_material_costModule']. Generating aliased imports for 20 modules.
+Module class name collisions detected: ['capital_costModule', 'fabrication_costModule', 'idiot_indexModule', 'installation_costModule', 'raw_material_costModule']. Generating aliased imports for 20 modules.
+Module class name collisions detected: ['capital_costModule', 'fabrication_costModule', 'idiot_indexModule', 'installation_costModule', 'raw_material_costModule']. Generating aliased imports for 20 modules.
+Module class name collisions detected: ['capital_costModule', 'fabrication_costModule', 'idiot_indexModule', 'installation_costModule', 'raw_material_costModule']. Generating aliased imports for 20 modules.
+Module class name collisions detected: ['capital_costModule', 'fabrication_costModule', 'idiot_indexModule', 'installation_costModule', 'raw_material_costModule']. Generating aliased imports for 20 modules.
+Module class name collisions detected: ['capital_costModule', 'fabrication_costModule', 'idiot_indexModule', 'installation_costModule', 'raw_material_costModule']. Generating aliased imports for 20 modules.
+{
+  "fusion_tea": {
+    "runs": [
+      {
+        "timings": {
+          "live_elaborate_s": 0.1207,
+          "project_s": 0.0029,
+          "capture_s": 0.1671,
+          "generate_live_s": 0.1944,
+          "generate_snapshot_s": 0.0888
+        },
+        "counts": {
+          "attrs": 56,
+          "calcs": 7,
+          "constraints": 1,
+          "occurrences": 8,
+          "modules": 9,
+          "entry_points": 27
+        },
+        "envelope_bytes": 112046,
+        "peak_rss_mib_process_cumulative": 222.8
+      },
+      {
+        "timings": {
+          "live_elaborate_s": 0.1181,
+          "project_s": 0.0029,
+          "capture_s": 0.1657,
+          "generate_live_s": 0.1961,
+          "generate_snapshot_s": 0.0886
+        },
+        "counts": {
+          "attrs": 56,
+          "calcs": 7,
+          "constraints": 1,
+          "occurrences": 8,
+          "modules": 9,
+          "entry_points": 27
+        },
+        "envelope_bytes": 112046,
+        "peak_rss_mib_process_cumulative": 238.9
+      },
+      {
+        "timings": {
+          "live_elaborate_s": 0.1331,
+          "project_s": 0.0029,
+          "capture_s": 0.1628,
+          "generate_live_s": 0.196,
+          "generate_snapshot_s": 0.0882
+        },
+        "counts": {
+          "attrs": 56,
+          "calcs": 7,
+          "constraints": 1,
+          "occurrences": 8,
+          "modules": 9,
+          "entry_points": 27
+        },
+        "envelope_bytes": 112046,
+        "peak_rss_mib_process_cumulative": 244.7
+      }
+    ]
+  },
+  "solar_battery_d5": {
+    "runs": [
+      {
+        "timings": {
+          "live_elaborate_s": 0.3319,
+          "project_s": 0.0367,
+          "capture_s": 0.6062,
+          "generate_live_s": 0.7648,
+          "generate_snapshot_s": 0.5825
+        },
+        "counts": {
+          "attrs": 350,
+          "calcs": 77,
+          "constraints": 0,
+          "occurrences": 42,
+          "modules": 77,
+          "entry_points": 199
+        },
+        "envelope_bytes": 1104445,
+        "peak_rss_mib_process_cumulative": 264.8
+      },
+      {
+        "timings": {
+          "live_elaborate_s": 0.3247,
+          "project_s": 0.0359,
+          "capture_s": 0.5802,
+          "generate_live_s": 0.7799,
+          "generate_snapshot_s": 0.6005
+        },
+        "counts": {
+          "attrs": 350,
+          "calcs": 77,
+          "constraints": 0,
+          "occurrences": 42,
+          "modules": 77,
+          "entry_points": 199
+        },
+        "envelope_bytes": 1104445,
+        "peak_rss_mib_process_cumulative": 273.4
+      },
+      {
+        "timings": {
+          "live_elaborate_s": 0.3269,
+          "project_s": 0.0367,
+          "capture_s": 0.5926,
+          "generate_live_s": 0.7702,
+          "generate_snapshot_s": 0.5948
+        },
+        "counts": {
+          "attrs": 350,
+          "calcs": 77,
+          "constraints": 0,
+          "occurrences": 42,
+          "modules": 77,
+          "entry_points": 199
+        },
+        "envelope_bytes": 1104445,
+        "peak_rss_mib_process_cumulative": 280.9
+      }
+    ]
+  },
+  "catf_mfe_d5": {
+    "runs": [
+      {
+        "timings": {
+          "live_elaborate_s": 4.9729,
+          "project_s": 0.0136,
+          "capture_s": 5.1363,
+          "generate_live_s": 5.1787,
+          "generate_snapshot_s": 0.2748
+        },
+        "counts": {
+          "attrs": 376,
+          "calcs": 42,
+          "constraints": 9,
+          "occurrences": 61,
+          "modules": 42,
+          "entry_points": 60
+        },
+        "envelope_bytes": 621270,
+        "peak_rss_mib_process_cumulative": 311.0
+      },
+      {
+        "timings": {
+          "live_elaborate_s": 4.9832,
+          "project_s": 0.0141,
+          "capture_s": 5.1519,
+          "generate_live_s": 5.1828,
+          "generate_snapshot_s": 0.2771
+        },
+        "counts": {
+          "attrs": 376,
+          "calcs": 42,
+          "constraints": 9,
+          "occurrences": 61,
+          "modules": 42,
+          "entry_points": 60
+        },
+        "envelope_bytes": 621270,
+        "peak_rss_mib_process_cumulative": 320.0
+      },
+      {
+        "timings": {
+          "live_elaborate_s": 4.9787,
+          "project_s": 0.0135,
+          "capture_s": 5.1309,
+          "generate_live_s": 5.1893,
+          "generate_snapshot_s": 0.2909
+        },
+        "counts": {
+          "attrs": 376,
+          "calcs": 42,
+          "constraints": 9,
+          "occurrences": 61,
+          "modules": 42,
+          "entry_points": 60
+        },
+        "envelope_bytes": 621270,
+        "peak_rss_mib_process_cumulative": 320.0
+      }
+    ]
+  }
+}
