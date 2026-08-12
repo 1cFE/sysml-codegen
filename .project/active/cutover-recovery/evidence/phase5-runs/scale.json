@@ -1,0 +1,185 @@
+{
+  "fusion_tea": {
+    "runs": [
+      {
+        "timings": {
+          "live_elaborate_s": 0.113,
+          "project_s": 0.0029,
+          "capture_s": 0.1603,
+          "generate_live_s": 0.1874,
+          "generate_snapshot_s": 0.0852
+        },
+        "counts": {
+          "attrs": 56,
+          "calcs": 7,
+          "constraints": 1,
+          "occurrences": 8,
+          "modules": 9,
+          "entry_points": 27
+        },
+        "envelope_bytes": 112046,
+        "peak_rss_mib_process_cumulative": 221.7
+      },
+      {
+        "timings": {
+          "live_elaborate_s": 0.1158,
+          "project_s": 0.0028,
+          "capture_s": 0.1626,
+          "generate_live_s": 0.1891,
+          "generate_snapshot_s": 0.0978
+        },
+        "counts": {
+          "attrs": 56,
+          "calcs": 7,
+          "constraints": 1,
+          "occurrences": 8,
+          "modules": 9,
+          "entry_points": 27
+        },
+        "envelope_bytes": 112046,
+        "peak_rss_mib_process_cumulative": 237.3
+      },
+      {
+        "timings": {
+          "live_elaborate_s": 0.1142,
+          "project_s": 0.0028,
+          "capture_s": 0.1626,
+          "generate_live_s": 0.1848,
+          "generate_snapshot_s": 0.0859
+        },
+        "counts": {
+          "attrs": 56,
+          "calcs": 7,
+          "constraints": 1,
+          "occurrences": 8,
+          "modules": 9,
+          "entry_points": 27
+        },
+        "envelope_bytes": 112046,
+        "peak_rss_mib_process_cumulative": 237.4
+      }
+    ]
+  },
+  "solar_battery_d5": {
+    "runs": [
+      {
+        "timings": {
+          "live_elaborate_s": 0.324,
+          "project_s": 0.035,
+          "capture_s": 0.5742,
+          "generate_live_s": 0.7465,
+          "generate_snapshot_s": 0.5856
+        },
+        "counts": {
+          "attrs": 350,
+          "calcs": 77,
+          "constraints": 0,
+          "occurrences": 42,
+          "modules": 77,
+          "entry_points": 199
+        },
+        "envelope_bytes": 1104445,
+        "peak_rss_mib_process_cumulative": 266.9
+      },
+      {
+        "timings": {
+          "live_elaborate_s": 0.3178,
+          "project_s": 0.0353,
+          "capture_s": 0.5706,
+          "generate_live_s": 0.7535,
+          "generate_snapshot_s": 0.573
+        },
+        "counts": {
+          "attrs": 350,
+          "calcs": 77,
+          "constraints": 0,
+          "occurrences": 42,
+          "modules": 77,
+          "entry_points": 199
+        },
+        "envelope_bytes": 1104445,
+        "peak_rss_mib_process_cumulative": 279.0
+      },
+      {
+        "timings": {
+          "live_elaborate_s": 0.3295,
+          "project_s": 0.0349,
+          "capture_s": 0.5577,
+          "generate_live_s": 0.7689,
+          "generate_snapshot_s": 0.5709
+        },
+        "counts": {
+          "attrs": 350,
+          "calcs": 77,
+          "constraints": 0,
+          "occurrences": 42,
+          "modules": 77,
+          "entry_points": 199
+        },
+        "envelope_bytes": 1104445,
+        "peak_rss_mib_process_cumulative": 290.7
+      }
+    ]
+  },
+  "catf_mfe_d5": {
+    "runs": [
+      {
+        "timings": {
+          "live_elaborate_s": 5.0144,
+          "project_s": 0.0136,
+          "capture_s": 5.1486,
+          "generate_live_s": 5.2131,
+          "generate_snapshot_s": 0.2597
+        },
+        "counts": {
+          "attrs": 376,
+          "calcs": 42,
+          "constraints": 9,
+          "occurrences": 61,
+          "modules": 42,
+          "entry_points": 60
+        },
+        "envelope_bytes": 621270,
+        "peak_rss_mib_process_cumulative": 312.3
+      },
+      {
+        "timings": {
+          "live_elaborate_s": 4.9993,
+          "project_s": 0.0135,
+          "capture_s": 5.1752,
+          "generate_live_s": 5.2965,
+          "generate_snapshot_s": 0.283
+        },
+        "counts": {
+          "attrs": 376,
+          "calcs": 42,
+          "constraints": 9,
+          "occurrences": 61,
+          "modules": 42,
+          "entry_points": 60
+        },
+        "envelope_bytes": 621270,
+        "peak_rss_mib_process_cumulative": 327.7
+      },
+      {
+        "timings": {
+          "live_elaborate_s": 5.0485,
+          "project_s": 0.014,
+          "capture_s": 5.2211,
+          "generate_live_s": 5.3036,
+          "generate_snapshot_s": 0.2705
+        },
+        "counts": {
+          "attrs": 376,
+          "calcs": 42,
+          "constraints": 9,
+          "occurrences": 61,
+          "modules": 42,
+          "entry_points": 60
+        },
+        "envelope_bytes": 621270,
+        "peak_rss_mib_process_cumulative": 333.2
+      }
+    ]
+  }
+}

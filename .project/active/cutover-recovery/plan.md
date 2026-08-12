@@ -980,7 +980,7 @@ def test_final_candidate_is_repeatable_and_executable(real_teax):
 
 ### Changes required
 
-- [ ] **The headline decision at the owner stop, per the Phase 4 resequencing ruling.** Present
+- [x] **The headline decision at the owner stop, per the Phase 4 resequencing ruling.** Present
   together: the PROPOSED v6 recapture batch (15 captured / 22 typed refusals), and the
   **prepared retirement** — every one of the 4B groups with a per-file disposition and a
   replacement proof, and a runbook whose four steps have each been executed in order and
@@ -990,23 +990,23 @@ def test_final_candidate_is_repeatable_and_executable(real_teax):
   plainly what the runbook does **not** carry: **seven items need an owner ruling**, and they
   are what the simulation held out as a named 113-node trim, so "green at every boundary" is
   green *with those held out*.
-- [ ] **Price the batch decision honestly.** Revising the PROPOSED v6 batch is Git-reversible
+- [x] **Price the batch decision honestly.** Revising the PROPOSED v6 batch is Git-reversible
   but not free: measured, removing the 15 snapshots the batch added leaves **38 failed and 57
   errors** across the suite. Revising means re-running `capture_v6_batch.py` and re-greening
   those ~95 outcomes, not reverting a commit. The owner needs that number to price the
   decision; it strengthens the batch's case rather than weakening it.
-- [ ] Build a fresh candidate record binding both repository OIDs, exact diffs, path inventories,
+- [x] Build a fresh candidate record binding both repository OIDs, exact diffs, path inventories,
   test inventories, corpus outcomes, environment, real TEAx revision, performance, and evidence
   hashes.
-- [ ] Run the complete 37-path corpus repeatedly. Expected outcomes come from the Phase 2 owner-
+- [x] Run the complete 37-path corpus repeatedly. Expected outcomes come from the Phase 2 owner-
   reviewed ledger, not the failed candidate's automatic recapture.
-- [ ] In every run, classify both `ElaborationError.findings` and
+- [x] In every run, classify both `ElaborationError.findings` and
   `ElaborationDiagnosticError.diagnostics` and compare their exact multisets with the approved
   ledger.
-- [ ] Run live and relocated v6 generation, verification, sealing, registry discovery, and real
+- [x] Run live and relocated v6 generation, verification, sealing, registry discovery, and real
   TEAx execution.
-- [ ] Run warm-up plus repeated scale measurements with declared budgets and environment.
-- [ ] Run both complete repository suites, lint, type-baseline comparison, diff checks, import
+- [x] Run warm-up plus repeated scale measurements with declared budgets and environment.
+- [x] Run both complete repository suites, lint, type-baseline comparison, diff checks, import
   boundaries, no-residue checks, documentation checks, and test-inventory reconciliation.
 - [ ] Run `$my-audit` with the forensic branch, clean Item 6 baseline, corrected plan, commit series,
   and final candidate all available to the auditor.
@@ -1017,12 +1017,12 @@ def test_final_candidate_is_repeatable_and_executable(real_teax):
 
 **Automated**
 
-- [ ] Three consecutive complete runs produce identical semantic results and approved outcomes.
-- [ ] Both real TEAx tests pass with no skip, xfail, monkeypatch, or private compatibility runner.
-- [ ] Every test-count/path delta from Item 6 is explained by the approved responsibility ledger.
-- [ ] No unapproved deleted path, generic reference doc, v5 callable route, legacy public authority,
+- [x] Three consecutive complete runs produce identical semantic results and approved outcomes.
+- [x] Both real TEAx tests pass with no skip, xfail, monkeypatch, or private compatibility runner.
+- [x] Every test-count/path delta from Item 6 is explained by the approved responsibility ledger.
+- [x] No unapproved deleted path, generic reference doc, v5 callable route, legacy public authority,
   or forensic-branch import remains.
-- [ ] Each repository is clean at its recorded candidate OID.
+- [x] Each repository is clean at its recorded candidate OID.
 
 **Manual**
 
@@ -5037,9 +5037,36 @@ items are ruled on first, or held out deliberately, exactly as the simulation he
 
 ### Phase 5 Completion
 
-- **Completed:** Pending
-- **Candidate/audit/owner disposition:** Pending
-- **Issues/deviations:** Pending
+- **Candidate assembly completed:** 2026-08-11. **Independent audit:** pending (separate stage).
+  **Owner disposition:** pending.
+- **Record:** `evidence/candidate.md` with its machine-readable twin `evidence/candidate.json`,
+  built by `evidence/phase5-runs/build_candidate.py` from the run logs and the tree, so no number
+  in it is typed by hand. Run artifacts for all three runs are committed under
+  `evidence/phase5-runs/`.
+- **Candidate OIDs:** sysml-codegen `item7-rebuild` `c4e9b76` + agentic-mbse `item7-rebuild`
+  `cc6c7a7`, with TEAx pinned at `fa0e06a9`. Recorded in the record; the OID of the commit
+  carrying the record itself is written back below.
+- **Three consecutive complete runs, all identical** (compared field by field in the builder, not
+  by eye): codegen suite **3862 / 47 / 53** with zero license-skip lines, agentic suite
+  **1825 / 1 / 5**, execution lane **53**, corpus **15 graphs / 22 `ElaborationError`** with
+  identical per-fixture digests, `--verify` **15 / 22 / 0** writing nothing, `ruff` **16 / 866**,
+  `mypy` **69 in 16**, `paths` **303 / 0**, `surface` **0**, `groups` all six READY, proof
+  integrity **0/0**, doc distinctness **31 / 0**, `git diff --check` clean in both repositories.
+- **`replacements`, once out of band: 219 green / 82 not-required / 0 fail** — the same reading
+  the runbook records for the post-retirement state. It emits no line for `L-036` and `L-037`, the
+  two owner-gated dual rows that cannot execute.
+- **Scale:** measured against the Item 7 spec's `[INFERRED] R10` budget, which is declared for
+  `fusion_tea` only. Every fusion_tea threshold holds with a wide margin (elaboration 0.113–0.116 s
+  against 10 s; capture 0.160–0.163 s against 5 s; generation + seal 0.185–0.189 s against 30 s;
+  envelope 0.107 MiB against 25 MiB; peak RSS 237 MiB against 512 MiB). The two D-5 variants are
+  recorded as their own declared baseline with no pass/fail claim; `catf_mfe_d5` costs ~5.0 s in
+  live elaboration and 0.26 s from a sealed snapshot.
+- **Issues/deviations:** one, and it was the runner's, not the candidate's. The first attempt at
+  run 1 reported ten agentic-mbse failures, all `FileNotFoundError: 'python'`, because several of
+  that suite's tests shell out to a bare `python` and the host PATH carries only `python3`. The
+  runner now puts the acceptance venv's `bin` on PATH; the discarded run is kept in full at
+  `evidence/phase5-runs/run0-harness-defect/`. No production or test file was changed by this
+  stage.
 
 ---
 

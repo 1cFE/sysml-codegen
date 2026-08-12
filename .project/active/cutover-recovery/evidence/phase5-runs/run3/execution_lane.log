@@ -1,0 +1,16 @@
+============================= test session starts ==============================
+platform linux -- Python 3.12.11, pytest-9.1.1, pluggy-1.6.0
+rootdir: /home/reid/1cfe/sysml-codegen-item7-rebuild
+configfile: pyproject.toml
+plugins: cov-7.1.0
+collected 53 items
+
+tests/execution/test_constraint_def_owned_redefining_execution.py .      [  1%]
+tests/execution/test_constraint_execution.py ...............             [ 30%]
+tests/execution/test_constraint_occurrence_demand_execution.py .         [ 32%]
+tests/execution/test_constraint_verdicts_exact_route.py ...............  [ 60%]
+tests/execution/test_fusion_tea_mutation_teax.py ........                [ 75%]
+tests/execution/test_fusion_tea_real_teax.py ............                [ 98%]
+tests/execution/test_gate_a_execution.py .                               [100%]
+
+============================== 53 passed in 3.38s ==============================

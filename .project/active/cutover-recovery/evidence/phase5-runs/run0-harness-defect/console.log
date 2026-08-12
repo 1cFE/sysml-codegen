@@ -1,0 +1,5 @@
+[run1] suite_codegen rc=0 157s
+[run1] suite_agentic rc=1 12s
+[run1] execution_lane rc=0 4s
+[run1] corpus_tests rc=0 14s
+[run1] corpus_driver rc=0 12s
