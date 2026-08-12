@@ -1,6 +1,6 @@
 """The exact-ID calculation compiler, and the implementation it makes the stencil render.
 
-Two properties, both about identity rather than spelling:
+Three properties, all about identity rather than spelling:
 
 - Rendered member names collide across calculation definitions; declaration UUIDs do not.
   The compiler keys everything by UUID, so two definitions that render the same names keep
@@ -8,6 +8,9 @@ Two properties, both about identity rather than spelling:
 - The rendered implementation's assignment steps and return values follow the compiler's
   execution order and the projection's declaration-UUID output order. A flat list of compiled
   results cannot express either, which is what `exact_calc_ordering` exists to show.
+- A reference the parser did not resolve has no declaration UUID, so it stops the compile
+  rather than becoming a degraded verdict. Identity is the compiler's only input; missing
+  identity is a refusal, not a result.
 """
 
 from __future__ import annotations
@@ -145,6 +148,52 @@ def test_an_exact_dependency_cycle_is_total_and_manual(monkeypatch) -> None:
     assert {item.unsupported_reason for item in result.output_results} == {
         "circular dependency detected"
     }
+
+
+def test_a_reference_with_no_resolved_declaration_is_refused_not_degraded(monkeypatch) -> None:
+    """An unresolvable reference stops the compile; it does not become a MANUAL verdict.
+
+    The legacy compiler answered an unresolved reference with a `MANUAL_REQUIRED` result and
+    carried on, so a calculation whose dependency graph could not be built still produced a
+    result object. The exact compiler has no such answer: a reference the parser did not
+    resolve has no declaration UUID, so there is no edge to draw and nothing to key the
+    result on. It raises instead — fail-closed, at the point the identity is missing.
+
+    Named replacement for `test_expression_compiler.py`'s
+    `test_edge1_unresolved_reference_verdict_escalation`, whose subject (verdict escalation
+    on an unresolved reference) ends with `compile_calc_def`.
+    """
+    definition_id = UUID("00000000-0000-5000-8000-000000000300")
+    input_id = UUID("00000000-0000-5000-8000-000000000301")
+    output_id = UUID("00000000-0000-5000-8000-000000000302")
+    expression = object()
+    monkeypatch.setattr(
+        expression_compiler,
+        "extract_feature_refs",
+        # The parser found the name and resolved nothing behind it.
+        lambda _expression, ignore_std_lib=True: [
+            SimpleNamespace(name="nowhere", element=None)
+        ],
+    )
+    calc_def = CalculationDefinitionData(
+        name="Unresolved",
+        qualified_name="Exact::Unresolved",
+        doc_comment="",
+        calc_expressions=[],
+        input_attributes=[AttributeInfo(name="given", element_id=input_id)],
+        output_attributes=[AttributeInfo(name="answer", element_id=output_id)],
+        references=[],
+        source_file=Path("unresolved.sysml"),
+        element_id=definition_id,
+        output_expression_asts_by_id={output_id: expression},
+        all_member_ids={input_id, output_id},
+        member_names_by_id={input_id: "given", output_id: "answer"},
+    )
+
+    with pytest.raises(
+        expression_compiler.CompilationError, match="no resolved declaration element"
+    ):
+        compile_calc_def_exact(calc_def)
 
 
 def test_an_undeclared_intermediate_is_assigned_before_the_output_that_uses_it(

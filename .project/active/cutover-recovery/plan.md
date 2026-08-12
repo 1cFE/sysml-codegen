@@ -4974,6 +4974,14 @@ inventory those rulings act on.
    eight retained 3C duals fail under the prescribed drop. L-036/L-037 cannot execute at all —
    `agentic_mbse/validation/level4_constraints.py:55-56` and `level6_architecture.py:620-621`
    call the legacy members and are outside this ledger.
+
+   **EXECUTED at revise step 2 (2026-08-11)** — see "Revise step 2 completion" below.
+   L-036 and L-037 are migrated in full: both production call sites now run identified
+   evaluation, and all 134 + 34 measured consumer nodes are green on the exact route. The
+   premise the chunk-16 probes measured false ("one behaviour under two names") is not
+   contradicted — the probes rebound the names, which is not what a migration does; the
+   consumers were changed instead, and the exact types did not bend. L-033/L-034 are
+   partially executed and partially ruled to step 3; item 2 below carries the detail.
 2. **L-033's deletion is not ready either.** The plan said the *deletion* was ready and only
    the rename was gated. Measured: `compile_calc_def_exact` — the survivor — constructs a
    legacy `CompilationResult` at `extraction/expression_compiler.py:378`, inside its own body
@@ -4982,6 +4990,23 @@ inventory those rulings act on.
    only reader at step 2 but the extractor still writes them, and removing them is the same
    migration. Both are held out, and step 2 is green with both held out — that is the
    measurement that says this entry is separable from the steps, not that it is optional.
+
+   **EXECUTED IN PART at revise step 2 (2026-08-11).** The detangle is done: the survivor no
+   longer constructs a legacy `CompilationResult`. The entanglement turned out to be a single
+   call — `classify_compilability` took result records and read one field off each — so it now
+   takes `Sequence[Compilability]` and both compilers reach it carrying their own result type.
+   The ten `classify_compilability` test nodes moved with the signature.
+
+   **What did NOT move, by ruling [AGENT (orchestrator, delegated deletion-ledger authority
+   per plan), 2026-08-11]:** L-281/L-284's ~32 legacy-shape-bound nodes are **not** migrated —
+   their recorded Gate 4C dispositions ("retire with the shape … no assertion transfers to the
+   survivor") stand, and `test_exact_compiler_core.py` already owns the survivor. That is the
+   part-6 bar's allowed case, not the banned provisional trim. L-033's exit measurement is
+   amended accordingly: zero legacy readers outside the definition site **and the
+   retirement-owned nodes**, the treatment L-280 already carries. One replacement was owed and
+   is authored — see the completion note. L-034's dependent readers (L-287, L-135) are
+   evidence repointing and belong to revise step 3, which clears them before L-034's deletion
+   row executes.
 3. **L-135 `test_extractor.py` — the disposition understates the loss, and by more than
    before.** The row says two nodes drove the legacy wired path and 57 keep collecting.
    Measured at step 1: **58 of its 74 collected nodes** read the retiring v5 fixtures. Measured
@@ -5108,6 +5133,172 @@ items are ruled on first, or held out deliberately, exactly as the simulation he
   runner now puts the acceptance venv's `bin` on PATH; the discarded run is kept in full at
   `evidence/phase5-runs/run0-harness-defect/`. No production or test file was changed by this
   stage.
+
+### Revise step 2 completion — the coordinated dual exact-ID type migrations
+
+**Completed:** 2026-08-11. **Executes:** `owner-disposition-20260811.md` step 2, items 1–2,
+plus the two audit findings slotted here (audit-F1, invalid-manifest fallback).
+**Battery numbers below are pre-commit, measured in the working tree; the orchestrator
+re-verifies before committing.**
+
+#### Declared path set
+
+**agentic-mbse** (`/home/reid/1cfe/agentic-mbse-item7-rebuild`), 16 paths:
+
+| Path | Why |
+|---|---|
+| `src/agentic_mbse/validation/level4_constraints.py` | L-036/L-037 production call site → identified evaluation |
+| `src/agentic_mbse/validation/level6_architecture.py` | L-036/L-037 production call site; invalid-manifest fallback |
+| `src/agentic_mbse/validation/level2_structure.py` | audit-F1: the self-binding exemption |
+| `src/agentic_mbse/sysml/constraint_extraction.py` | one stale docstring cite on the survivor |
+| `tests/helpers/__init__.py`, `tests/helpers/identified_facts.py` | new: exact-identity minting for synthetic payloads |
+| `tests/test_sysml/test_executable_profile.py` + `_v3` + `_v4` + `_arithmetic` | L-037 consumer migration |
+| `tests/test_sysml/test_constraint_extraction.py`, `_ordering.py`, `test_constraint_fact_shapes.py`, `test_expression_ir_extraction.py` | L-036 consumer migration |
+| `tests/test_validation/test_item12_checks.py` | audit-F1 realignment + L-036 monkeypatch |
+| `tests/test_validation/test_level4_reconciliation.py` | L-036 monkeypatch |
+| `tests/test_sysml_quality_checks.py` | invalid-manifest blessing tests |
+| `docs/patterns/plant-idiom.md` | audit-F1 doc correction |
+
+**codegen** (`/home/reid/1cfe/sysml-codegen-item7-rebuild`), 8 paths:
+
+| Path | Why |
+|---|---|
+| `src/sysml_codegen/extraction/expression_compiler.py` | L-033 survivor detangle |
+| `tests/unit/test_expression_compiler.py`, `tests/conformance/test_expression_compiler.py` | `classify_compilability` signature (5 nodes each) |
+| `tests/conformance/test_exact_compiler_core.py` | the authored refusal replacement |
+| `tests/conformance/test_constraint_profile_route_parity.py` | the cross-repo L-036 consumer that broke |
+| `.project/active/cutover-recovery/{plan.md,ledger-4a.md,ledger-4a.json}` | bookkeeping |
+
+No path outside this set changed. Six pre-existing ruff findings in the agentic test files
+this stage edits were cleared by `ruff --fix` while linting them; incidental fixes to
+27 files outside the set were reverted.
+
+#### Per-dual reader counts, before → after
+
+Measured by grep over `src/`, `tests/`, `scripts/` in **both** repositories. "After" counts
+exclude the symbol's own definition module, its publication surface, and retirement-owned
+modules and nodes — the carve-out L-280 already had, extended to L-033 by ruling.
+
+| Dual | Legacy member | Before | After | Node delta |
+|---|---|---:|---:|---|
+| L-036 | `extract_constraint_facts` | 34 nodes / 78 call sites | **0** | 0 (all pass on the exact route) |
+| L-037 | `evaluate_profile` / `ProfileResult` / `preflight` | 134 nodes (one union set) | **0** | −1 retired, 1 repurposed in place |
+| L-033 | `compile_calc_def` / `CompilationResult` / `CalcDefCompilationResult` | 26 failed + 5 errors of 79 | **0 outside the carve-out** | +1 authored; ~32 nodes recorded as per-node retirements on L-281/L-284 |
+| L-034 | `output_expression_asts` / `all_member_names` / `member_expressions` | 58 of 86 | **unchanged, by ruling** | 0 — step 3 |
+
+L-033's residue, named: the `compile_calc_def` body itself (395–558);
+`orchestration/pipeline_builder.py:51,1083` and `snapshot/loader.py:47,889`;
+`test_compile_calc_def_golden.py` (L-280); `test_graph_builder.py`; the ~32 L-281/L-284 nodes;
+two prose mentions in `test_orchestrator.py`.
+
+L-036/L-037's residue, named: the two definition modules (including `preflight`'s internal
+call to `evaluate_profile` and the `__all__` entries); `sysml/__init__.py:44,164`;
+`test_public_api_exports.py:66,72`; and the codegen retirement-owned stack.
+
+#### The two production call sites
+
+`level4_constraints.eligibility_coverage_metrics` and
+`level6_architecture.check_constraint_executability` both now run
+`evaluate_identified_profile(extract_identified_constraint_facts(model))`. Level 4 counts
+eligibilities directly (the exact result type carries no derived-count properties and must not
+grow them); Level 6 unwraps `IdentifiedUsageDecision.decision`. The audit's order-dependence
+(`executable_profile.py:1036` overwrote duplicate qualified names by dictionary order) is not
+inherited: the exact route keys by definition UUID, keeps both same-named definitions, and
+raises on a duplicate UUID rather than picking a winner.
+
+#### audit-F1 — the self-binding exemption
+
+`_owner_covers_name` and its guard are gone from `level2_structure.py`. The diagnostic's
+message no longer says "no feature named P is in scope to supply it", which implied the very
+outer-reference reading D-4 forbids.
+
+**Firing set, measured.** agentic `tests/fixtures/item12`: **1 → 4** —
+`self_named_deadend` (fired before), `self_named_trap`, `self_named_rescue`, and
+`c6_false_positives`'s `C6Lib::'Trap Plant'::avail_calc` (a quoted-name variant of the trap,
+which no C1 test drives, so no test moved for it). Across the codegen fixture tree:
+**103 bindings in 25 fixtures**, led by `solar_battery_model` (24), `ife_plant` (21) and
+`catf_mfe_model` (15).
+
+**The premise checked before proceeding**, because 103 firings looked like a rule-10 stop:
+the exact route *already* refuses every one of these fixtures with `SI_SELF_BINDING`, and the
+owner **accepted** that batch (`v6_recapture_batch/batch.json`, 15 captured / 22 refused,
+`status: ACCEPTED — owner ruling 2026-08-11`). The validator was the lenient one, out of step
+with the shipped generator. No conflict; removing the exemption closes the gap.
+
+**Tests realigned:** `test_c1_self_named_trap_does_not_fire` →
+`test_c1_self_named_binding_fires_over_a_covering_attribute`;
+`test_c1_self_named_rescue_does_not_fire` →
+`test_c1_self_named_binding_fires_over_a_covering_calc_output`; new
+`test_c1_message_does_not_offer_the_outer_feature_as_a_rescue`;
+`test_c1_self_named_deadend_fails`'s docstring corrected; the module docstring's C1 line
+rewritten. **Doc:** `plant-idiom.md` §"Design-attribute bindings" rewritten as
+"Self-named bindings are not supported" — *including the core-shape example at :24*, which
+taught `in radius = radius`. Replaced with forms verified against accepted fixtures
+(`fusion_tea`'s `in beam_energy_mj_in = beam_energy_mj`, `wi014_toy`'s `in length =
+plant_length`).
+
+#### Invalid-manifest fallback
+
+`load_manifest` now separates absent from invalid: `None` only when the design carries no
+manifest, and a named `ManifestError` when one exists but is unreadable, malformed, or not a
+mapping. The policy — one unusable manifest fails Level 6 and must not stop the sweep — is
+stated at the call site in `_check_manifests`, not hidden in the loader. Four blessing tests
+rewritten (the invalid-YAML one now also proves the *next* design is still visited and
+reported), one added for the absent case.
+
+#### Battery — pre-commit, orchestrator re-verifies
+
+| Gate | agentic-mbse | codegen |
+|---|---|---|
+| Suite | **1826 / 1 / 5** (baseline 1825 / 1 / 5) | **3862 / 47 / 53**, **0** license-skip lines (baseline identical) |
+| `ruff check src` | **1** (unchanged) | **16** (unchanged, none new) |
+| `ruff check tests` | **120** (was 126; −6 pre-existing, none new) | unchanged |
+| `mypy src` | **108 in 26** (unchanged) | **69 in 16** (unchanged) |
+| `git diff --check` | clean | clean |
+| Corpus `capture_v6_batch.py --check` | — | **15 captured / 22 refused / 0 deviations** |
+| `check_ledger_4a.py paths` / `surface` / `groups` | — | **303 rows, 0 problems** / **0 unrowed breakages** / **all READY** |
+| `test_runbook_patches.py` | — | **4 passed** (no prepared patch broken) |
+
+Execution lane not run: no path this stage touches is in it.
+
+#### The agentic +1 suite delta, node by node
+
+- `test_item12_checks.py` **+1**: two `*_does_not_fire` nodes became two `*_fires_over_*`
+  nodes (2 → 2), and `test_c1_message_does_not_offer_the_outer_feature_as_a_rescue` is new.
+- `test_executable_profile.py` **−1**: `test_profile_result_derived_counts` retired — its
+  subject is `ProfileResult`'s four derived count properties, which the exact result type does
+  not carry; named replacement `test_preflight_partitions_by_outcome`, which states the same
+  partition over the exact gate on the same fixture.
+  `test_exact_gate_and_neutral_gate_agree_when_definition_identity_is_unambiguous` was
+  repurposed in place (not retired) as
+  `test_exact_gate_over_a_sole_unambiguous_definition_lands_every_bucket`, so it is net zero.
+- `test_sysml_quality_checks.py` **+1**: `test_manifest_absent_is_not_an_error` is new; the
+  four existing manifest nodes were rewritten, two renamed, none removed.
+
+Net **+1**. No other file's node count changed.
+
+#### Rule-10 surfacing, raised and ruled
+
+Raised: the brief's "migrate every consumer" against L-281/L-284's recorded "retire with the
+shape … no assertion transfers to the survivor", and the same fork on L-034 via L-287's
+out-of-scope subject. Ruled by the orchestrator (see the ledger's "REVISE step 2" section for
+all five rulings and their provenance). Nothing was resolved silently and nothing was
+committed against the open fork.
+
+#### Cross-repo finding for the retirement runbook
+
+The chunk-16 dual inventories were measured one repository at a time and therefore missed ~35
+readers of the agentic L-036/L-037 members inside the *codegen* repo. All but one are
+retirement-owned; the exception, `test_constraint_profile_route_parity.py:229`, was live and
+broke on the production migration, and is fixed. **Any future dual inventory must be measured
+across both repositories.**
+
+#### Still open, named
+
+- L-034's migration and its dependent readers L-287 (28 nodes) and L-135 → **revise step 3**.
+- L-281/L-284's ~32 per-node retirements → executed as **runbook deletions at revise step 6**,
+  not here.
+- Nothing else from this stage's worklist is outstanding.
 
 ---
 

@@ -11,6 +11,7 @@ analysis/, resolution/, or generation/.
 from __future__ import annotations
 
 import re
+from collections.abc import Sequence
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any
@@ -128,23 +129,21 @@ def _sanitize_name(name: str) -> str:
 
 
 def classify_compilability(
-    output_results: list[CompilationResult],
+    verdicts: Sequence[Compilability],
 ) -> Compilability:
-    """Return worst-case Compilability across a list of CompilationResults."""
-    if not output_results:
+    """Return the worst-case Compilability across one CalcDef's per-output verdicts.
+
+    Takes the verdicts themselves, not the records that carry them, because that is all the
+    aggregation reads. Both compilers reach it with their own result type intact.
+    """
+    if not verdicts:
         return Compilability.MANUAL_REQUIRED
     assert all(
-        r.compilability != Compilability.UNKNOWN for r in output_results
+        verdict != Compilability.UNKNOWN for verdict in verdicts
     ), "UNKNOWN is a PipelineModule sentinel, not a valid compilation result"
-    if all(
-        r.compilability == Compilability.FULLY_COMPILABLE
-        for r in output_results
-    ):
+    if all(verdict == Compilability.FULLY_COMPILABLE for verdict in verdicts):
         return Compilability.FULLY_COMPILABLE
-    if any(
-        r.compilability == Compilability.MANUAL_REQUIRED
-        for r in output_results
-    ):
+    if any(verdict == Compilability.MANUAL_REQUIRED for verdict in verdicts):
         return Compilability.MANUAL_REQUIRED
     return Compilability.PARTIALLY_COMPILABLE
 
@@ -373,15 +372,7 @@ def compile_calc_def_exact(calc_def: Any) -> ExactCalcDefCompilationResult:
             )
         )
 
-    overall = classify_compilability(
-        [
-            CompilationResult(
-                output_name=result.output_name,
-                compilability=result.compilability,
-            )
-            for result in results
-        ]
-    )
+    overall = classify_compilability([result.compilability for result in results])
     return ExactCalcDefCompilationResult(
         definition_id=definition_id,
         overall_compilability=overall,
@@ -559,7 +550,9 @@ def compile_calc_def(
             )
         )
 
-    overall = classify_compilability(output_results)
+    overall = classify_compilability(
+        [result.compilability for result in output_results]
+    )
 
     return CalcDefCompilationResult(
         calc_def_name=calc_def.name,

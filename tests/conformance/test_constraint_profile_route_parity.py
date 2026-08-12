@@ -3,9 +3,14 @@
 from __future__ import annotations
 
 from types import SimpleNamespace
+from uuid import UUID
 
 import pytest
-from agentic_mbse.sysml.constraint_extraction import extract_constraint_facts
+from agentic_mbse.sysml.constraint_extraction import (
+    IdentifiedConstraintFacts,
+    IdentifiedConstraintUsage,
+    extract_constraint_facts,
+)
 from agentic_mbse.sysml.constraint_facts import parse, serialize
 from agentic_mbse.sysml.executable_profile import Eligibility, evaluate_profile
 from agentic_mbse.sysml.expression_facts import IdentityFact, LiteralFact, OperandTypeFact
@@ -226,7 +231,18 @@ def test_compound_profile_diagnostics_reach_level6_and_preserve_output_tree(
     ]
     assert [item.construct for item in decision.diagnostics] == ["comparison", "comparison"]
 
-    monkeypatch.setattr(level6_architecture, "extract_constraint_facts", lambda _model: facts)
+    # Level 6 runs the exact route. The payload here is one synthetic inline usage, so it
+    # names no definition and its exact association is None.
+    identified = IdentifiedConstraintFacts(
+        facts=facts,
+        definitions=(),
+        usages=(IdentifiedConstraintUsage(UUID(int=0xE0000), None, usage),),
+    )
+    monkeypatch.setattr(
+        level6_architecture,
+        "extract_identified_constraint_facts",
+        lambda _model: identified,
+    )
     issues = level6_architecture.check_constraint_executability(object())
     assert [issue.suggestion for issue in issues] == [
         "ordering '<' requires Integer/Real operands or two Quantity operands; got "

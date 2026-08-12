@@ -278,6 +278,62 @@ that now retires in Phase 5. Authoring those rewrites now would add a second lan
 against a route that is not retiring, and each would still need its own rule-6 review at Phase 5.
 Recorded here rather than done, for the orchestrator to rule on at the regrouping approval.
 
+### REVISE step 2 — the dual exact-ID type migrations, and five rulings
+
+Provenance for all five: **[AGENT (orchestrator, delegated deletion-ledger authority per
+plan), 2026-08-11]**. Each ruling is also recorded on its row's `revise_step2` field in
+`ledger-4a.json`, which is the machine-readable authority; this section is the narrative.
+
+**Executed — the agentic-mbse duals (L-036, L-037).** Every consumer moved onto the exact
+shapes. The two unledgered production call sites, `validation/level4_constraints.py:55` and
+`validation/level6_architecture.py:620`, now run identified evaluation, which is also what
+discharges the audit's order-dependent-constraint-validation finding: the neutral route
+indexed definitions by qualified name and kept whichever the enumeration reached last; the
+exact route keys by definition UUID, keeps both same-named definitions, and raises on a
+duplicate UUID. Nothing was adapted, shimmed, or re-exported. Synthetic fact payloads carry
+no parser UUIDs, so a new test helper (`tests/helpers/identified_facts.py`) mints them
+positionally — and refuses to infer a usage-to-definition association, which would have put
+the collapsed name lookup back inside the tests' own oracle.
+
+**Executed — the codegen survivor's detangle (L-033).** `compile_calc_def_exact` no longer
+constructs a legacy `CompilationResult` inside its own body. The entanglement was one call:
+`classify_compilability` took a list of result records and read one field off each. It now
+takes the verdicts, `Sequence[Compilability]`, so both compilers reach it carrying their own
+result type.
+
+**Ruled — L-281 and L-284 do not migrate.** Their recorded Gate 4C dispositions say the
+nodes bound to the legacy shape retire with the shape and that no assertion transfers to the
+survivor. That stands. This is the part-6 bar's allowed case — a subject that genuinely ends,
+with the named replacement already green (`test_exact_compiler_core.py`, which is L-033's own
+`replacement_proof_node`). It is **not** the banned provisional trim: a per-node disposition
+executed as a runbook deletion is a different thing from a deselection list.
+
+Consequently **L-033's exit measurement is amended**: zero legacy readers outside the
+definition site *and the retirement-owned nodes* — the same treatment L-280 has carried since
+Gate 4C part 7. A reader that retires with the symbol it pins was never a migration target.
+
+**Ruled — one replacement authored.** `test_edge1_unresolved_reference_verdict_escalation`
+had no surviving counterpart: the legacy compiler answered an unresolved reference with a
+`MANUAL_REQUIRED` verdict and carried on, while the exact compiler raises from
+`_exact_reference_ids`, because a reference the parser did not resolve has no declaration UUID
+to draw an edge from. That is ratified fail-closed recovery semantics, not a gap, and it is now
+pinned by `test_exact_compiler_core.py::test_a_reference_with_no_resolved_declaration_is_
+refused_not_degraded`. Recorded as no coverage loss.
+
+**Ruled — L-034, L-287 and L-135 are step 3.** Repointing how those nodes *construct* their
+input facts (name-keyed fields to the `_by_id` twins) is evidence repointing; their assertions
+are untouched, and L-287's subject is out of Item 7 scope by its own Gate 4A record. L-034's
+name-keyed fields therefore keep L-287 and L-135 as **named dependent readers**, which revise
+step 3 clears before L-034's deletion row executes.
+
+**Cross-repo finding, new this stage.** The chunk-16 dual inventories were measured one
+repository at a time. Measured across both, the *codegen* repo holds ~35 further readers of the
+agentic L-036/L-037 members. All but one sit inside the retirement-owned legacy
+constraint-lowering stack. The exception was live and went red the moment the production
+migration landed: `tests/conformance/test_constraint_profile_route_parity.py:229` monkeypatched
+agentic's `level6_architecture.extract_constraint_facts`. It is migrated to the identified
+route. **Any future dual inventory must be measured across both repositories.**
+
 ### What the checker now enforces
 
 - `paths` — 286 rows, exact set equality both directions, plus **surface coverage**: a file with no

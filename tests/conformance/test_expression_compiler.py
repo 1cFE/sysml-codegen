@@ -391,33 +391,27 @@ class TestReqEc06WorstCaseRollup:
 
     def test_rollup_all_fully_returns_fully(self):
         """[FULLY, FULLY] → FULLY."""
-        from sysml_codegen.extraction.expression_compiler import CompilationResult
-
-        results = [
-            CompilationResult("a", Compilability.FULLY_COMPILABLE, "expr_a"),
-            CompilationResult("b", Compilability.FULLY_COMPILABLE, "expr_b"),
+        verdicts = [
+            Compilability.FULLY_COMPILABLE,
+            Compilability.FULLY_COMPILABLE,
         ]
-        assert classify_compilability(results) == Compilability.FULLY_COMPILABLE
+        assert classify_compilability(verdicts) == Compilability.FULLY_COMPILABLE
 
     def test_rollup_any_manual_returns_manual(self):
         """[FULLY, MANUAL] → MANUAL."""
-        from sysml_codegen.extraction.expression_compiler import CompilationResult
-
-        results = [
-            CompilationResult("a", Compilability.FULLY_COMPILABLE, "expr_a"),
-            CompilationResult("b", Compilability.MANUAL_REQUIRED),
+        verdicts = [
+            Compilability.FULLY_COMPILABLE,
+            Compilability.MANUAL_REQUIRED,
         ]
-        assert classify_compilability(results) == Compilability.MANUAL_REQUIRED
+        assert classify_compilability(verdicts) == Compilability.MANUAL_REQUIRED
 
     def test_rollup_mixed_returns_partially(self):
         """[FULLY, PARTIALLY] → PARTIALLY."""
-        from sysml_codegen.extraction.expression_compiler import CompilationResult
-
-        results = [
-            CompilationResult("a", Compilability.FULLY_COMPILABLE, "expr_a"),
-            CompilationResult("b", Compilability.PARTIALLY_COMPILABLE, "expr_b"),
+        verdicts = [
+            Compilability.FULLY_COMPILABLE,
+            Compilability.PARTIALLY_COMPILABLE,
         ]
-        assert classify_compilability(results) == Compilability.PARTIALLY_COMPILABLE
+        assert classify_compilability(verdicts) == Compilability.PARTIALLY_COMPILABLE
 
     def test_rollup_empty_returns_manual(self):
         """[] → MANUAL."""
@@ -425,11 +419,9 @@ class TestReqEc06WorstCaseRollup:
 
     def test_rollup_unknown_raises_assertion(self):
         """[UNKNOWN] → AssertionError (UNKNOWN is sentinel, not valid result)."""
-        from sysml_codegen.extraction.expression_compiler import CompilationResult
-
-        results = [CompilationResult("a", Compilability.UNKNOWN)]
+        verdicts = [Compilability.UNKNOWN]
         with pytest.raises(AssertionError, match="UNKNOWN"):
-            classify_compilability(results)
+            classify_compilability(verdicts)
 
 
 # ---------------------------------------------------------------------------

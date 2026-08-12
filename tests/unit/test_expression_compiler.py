@@ -382,41 +382,38 @@ class TestClassifyCompilability:
     def test_all_fully_returns_fully(self):
         from sysml_codegen.extraction.expression_compiler import (
             Compilability,
-            CompilationResult,
             classify_compilability,
         )
 
-        results = [
-            CompilationResult("a", Compilability.FULLY_COMPILABLE, "expr_a"),
-            CompilationResult("b", Compilability.FULLY_COMPILABLE, "expr_b"),
+        verdicts = [
+            Compilability.FULLY_COMPILABLE,
+            Compilability.FULLY_COMPILABLE,
         ]
-        assert classify_compilability(results) == Compilability.FULLY_COMPILABLE
+        assert classify_compilability(verdicts) == Compilability.FULLY_COMPILABLE
 
     def test_any_manual_returns_manual(self):
         from sysml_codegen.extraction.expression_compiler import (
             Compilability,
-            CompilationResult,
             classify_compilability,
         )
 
-        results = [
-            CompilationResult("a", Compilability.FULLY_COMPILABLE, "expr_a"),
-            CompilationResult("b", Compilability.MANUAL_REQUIRED),
+        verdicts = [
+            Compilability.FULLY_COMPILABLE,
+            Compilability.MANUAL_REQUIRED,
         ]
-        assert classify_compilability(results) == Compilability.MANUAL_REQUIRED
+        assert classify_compilability(verdicts) == Compilability.MANUAL_REQUIRED
 
     def test_mix_fully_and_partial_returns_partial(self):
         from sysml_codegen.extraction.expression_compiler import (
             Compilability,
-            CompilationResult,
             classify_compilability,
         )
 
-        results = [
-            CompilationResult("a", Compilability.FULLY_COMPILABLE, "expr_a"),
-            CompilationResult("b", Compilability.PARTIALLY_COMPILABLE, "expr_b"),
+        verdicts = [
+            Compilability.FULLY_COMPILABLE,
+            Compilability.PARTIALLY_COMPILABLE,
         ]
-        assert classify_compilability(results) == Compilability.PARTIALLY_COMPILABLE
+        assert classify_compilability(verdicts) == Compilability.PARTIALLY_COMPILABLE
 
     def test_empty_list_returns_manual(self):
         from sysml_codegen.extraction.expression_compiler import (
@@ -429,15 +426,14 @@ class TestClassifyCompilability:
     def test_unknown_in_results_raises_assertion(self):
         from sysml_codegen.extraction.expression_compiler import (
             Compilability,
-            CompilationResult,
             classify_compilability,
         )
 
-        results = [
-            CompilationResult("a", Compilability.UNKNOWN),
+        verdicts = [
+            Compilability.UNKNOWN,
         ]
         with pytest.raises(AssertionError, match="UNKNOWN"):
-            classify_compilability(results)
+            classify_compilability(verdicts)
 
 
 # ---------------------------------------------------------------------------
