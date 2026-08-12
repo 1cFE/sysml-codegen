@@ -202,11 +202,9 @@ def test_an_undeclared_intermediate_is_assigned_before_the_output_that_uses_it(
     """`scaled` is a step in the rendered body, never a returned value."""
     context = ordering_module.auto_impl_context
     assert context is not None
-    assert context["execution_steps"][0] == {
-        "name": "scaled",
-        "expression": "(inputs.total * 2.0)",
-    }
-    assert "scaled" not in [item["name"] for item in context["output_expressions"]]
+    assert context.execution_steps[0].name == "scaled"
+    assert context.execution_steps[0].expression == "(inputs.total * 2.0)"
+    assert "scaled" not in [item.name for item in context.output_expressions]
 
 
 def test_an_output_read_by_another_output_is_assigned_once_then_returned_by_name(
@@ -214,11 +212,11 @@ def test_an_output_read_by_another_output_is_assigned_once_then_returned_by_name
 ) -> None:
     """`half` feeds `doubled_half`, so it is a step and its return value is its name."""
     context = ordering_module.auto_impl_context
-    assert [item["name"] for item in context["execution_steps"]] == ["scaled", "half"]
-    assert context["execution_steps"][1]["expression"] == "(scaled / 4.0)"
-    assert context["output_expressions"] == [
-        {"name": "half", "expression": "half"},
-        {"name": "doubled_half", "expression": "(half * 2.0)"},
+    assert [item.name for item in context.execution_steps] == ["scaled", "half"]
+    assert context.execution_steps[1].expression == "(scaled / 4.0)"
+    assert [(item.name, item.expression) for item in context.output_expressions] == [
+        ("half", "half"),
+        ("doubled_half", "(half * 2.0)"),
     ]
 
 
@@ -227,8 +225,8 @@ def test_returned_values_line_up_with_the_projected_output_schema(
 ) -> None:
     """The tuple the stencil returns is positionally the module's output list."""
     context = ordering_module.auto_impl_context
-    assert [item["name"] for item in context["output_expressions"]] == [
+    assert [item.name for item in context.output_expressions] == [
         output.field_name for output in ordering_module.outputs
     ]
-    assert context["output_count"] == len(ordering_module.outputs) == 2
-    assert context["single_output_expression"] is None
+    assert context.output_count == len(ordering_module.outputs) == 2
+    assert context.single_output_expression is None

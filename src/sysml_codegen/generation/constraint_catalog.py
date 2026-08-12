@@ -60,13 +60,22 @@ def assemble_constraint_catalog(
 ) -> ConstraintCatalog:
     """Build the catalog from eligible concrete entries + source definitions.
 
-    Called only when ``concrete`` is non-empty (the ``pipeline_builder.py`` call site guards
-    on it), i.e. exactly when the constraint pathway is active and
+    **No shipped route calls this.** Its call site was ``pipeline_builder.py``, deleted by
+    the Item 7 retirement; on the exact route projection assembles the catalog itself
+    (``elaboration/project.py:_build_constraint_catalog``) and sets it on the graph. What
+    keeps the function in the tree is its unit coverage: ``tests/unit/test_constraint_emission.py``,
+    ``test_catalog_usage_tier.py`` and ``test_cli_generation.py`` build catalogs through it
+    to pin the same eligibility, ordering and fingerprint rules the projector implements.
+    Whether that second assembler earns its place, or the tests should read the projector's,
+    is an open disposition (Revise step 6c, rule-10 surfacing).
+
+    The guarantees below are the ones both assemblers keep. Callers pass ``concrete``
+    non-empty, i.e. exactly when the constraint pathway is active and
     ``extend_graph_with_constraints`` also runs — so the aggregator's ``CATALOG_FINGERPRINT``
     always has a catalog to read, even with zero eligible entries (D11: a model whose
     assertions are all unassessed still gets a ``not_assessed`` report surface, needing
     the fingerprint but no ``concrete_entries``). A model with zero constraint facts at all
-    never reaches this function — ``graph.constraint_catalog`` stays ``None``, preserving
+    yields no catalog — ``graph.constraint_catalog`` stays ``None``, preserving
     INV-7. Ordering follows ``concrete`` (already sorted by ``constraint_id``, Item 5 /
     INV-4), so the fingerprint is deterministic across repeated live loads with identical
     input (INV-8).

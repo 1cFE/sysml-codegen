@@ -28,6 +28,7 @@ from agentic_mbse.sysml.expression import (
 from agentic_mbse.sysml.expression_ir import serialize_expression
 from agentic_mbse.sysml.syside_adapter import SysideAdapter
 
+from sysml_codegen.core.models import AutoImplContext, AutoImplOutput, AutoImplStep
 from sysml_codegen.elaboration.diagnostics import ElaborationInvariantError
 from sysml_codegen.elaboration.display import display_name, display_qualified_name
 from sysml_codegen.elaboration.extraction_screen import screen_extraction_diagnostics
@@ -82,6 +83,7 @@ from sysml_codegen.extraction.source_evidence import (
     SourceForm,
     SourceReferenceEvidence,
 )
+from sysml_codegen.extraction.unit_annotation import annotated_ast_value
 
 __all__ = ["ElaborationDiagnosticError", "ElaborationError", "elaborate"]
 
@@ -731,37 +733,20 @@ class _ExactElaborator:
 
     @staticmethod
     def _without_unit_annotation(expression: Any) -> Any:
-        """The expression a unit annotation annotates — the rule, applied once, up front.
+        """Apply the unit-annotation rule to a syside AST, refusing typed if it is malformed.
 
-        **A unit annotation contributes its value and never a reference.** That is the same
-        rule ``extraction/modeled_defaults._resolve_default_node`` states for the ``default
-        40.0 [W]`` lane; this is the ``= 0.2 [m]`` lane obeying it. The two cannot share an
-        implementation because they consume different representations — that one reads a
-        parsed ``ExpressionIR``, this one the syside AST — so the rule is named identically
-        at both sites instead.
-
-        Without this the annotation reached the reference walk, whose second operand is a
-        standard-library element (``SI::metre``), and ``FeatureSlotIndex`` indexes only the
-        user model's features — so the walk failed with ``SI_OCCURRENCE_MISSING`` against a
-        unit. That is the same category error Slice 3D fixed for enumeration members: a
-        reference that names something other than a data source has no occurrence to resolve
-        against. Unwrapping here rather than at each downstream test is what keeps it one
-        rule instead of a second special case beside ``_enumeration_literal``.
-
-        A unit annotation parses as an ``OperatorExpression`` whose operator is ``[``, with
-        the value first and the unit second. Structural throughout: no name is read.
+        The rule and both of its spellings live in ``extraction/unit_annotation``; this is
+        the elaborator saying how it refuses. Unwrapping here rather than at each downstream
+        test is what keeps it one rule instead of a second special case beside
+        ``_enumeration_literal``.
         """
-        if expression is None or not SysideAdapter.is_instance(expression, "OperatorExpression"):
-            return expression
-        if str(getattr(expression, "operator", "")) != "[":
-            return expression
-        operands = list(getattr(expression, "operands", ()) or ())
-        if not operands:
+        try:
+            return annotated_ast_value(expression)
+        except ValueError as error:
             raise ElaborationInvariantError(
                 ElaborationCode.SI_EDGE_DANGLING,
-                "unit annotation carries no annotated value",
-            )
-        return operands[0]
+                str(error),
+            ) from error
 
     @staticmethod
     def _enumeration_literal(expression: Any) -> str | None:
@@ -1018,7 +1003,7 @@ class _ExactElaborator:
         return str(getattr(member, "direction", "")).rsplit(".", 1)[-1].lower()
 
     @staticmethod
-    def _calculation_auto_impl_context(compilation: Any) -> dict | None:
+    def _calculation_auto_impl_context(compilation: Any) -> AutoImplContext | None:
         """Render the stencil's assignment steps and return values in exact order.
 
         A compiled member becomes an assignment step when something else consumes
@@ -1039,7 +1024,7 @@ class _ExactElaborator:
             for result in compilation.output_results
             for dependency in result.dependency_ids
         }
-        execution_steps: list[dict[str, str]] = []
+        execution_steps: list[AutoImplStep] = []
         stepped_ids: set[UUID] = set()
         for member_id in compilation.execution_order:
             result = results.get(member_id)
@@ -1048,33 +1033,33 @@ class _ExactElaborator:
             if not result.is_undeclared_intermediate and member_id not in consumed_ids:
                 continue
             execution_steps.append(
-                {"name": result.output_name, "expression": result.python_expression}
+                AutoImplStep(name=result.output_name, expression=result.python_expression)
             )
             stepped_ids.add(member_id)
 
-        output_expressions: list[dict[str, str]] = []
+        output_expressions: list[AutoImplOutput] = []
         for output_id in sorted(compilation.declared_output_ids):
             result = results.get(output_id)
             if result is None or result.python_expression is None:
                 continue
             output_expressions.append(
-                {
-                    "name": result.output_name,
-                    "expression": (
+                AutoImplOutput(
+                    name=result.output_name,
+                    expression=(
                         result.output_name
                         if output_id in stepped_ids
                         else result.python_expression
                     ),
-                }
+                )
             )
-        return {
-            "execution_steps": execution_steps,
-            "output_expressions": output_expressions,
-            "output_count": len(output_expressions),
-            "single_output_expression": (
-                output_expressions[0]["expression"] if len(output_expressions) == 1 else None
+        return AutoImplContext(
+            execution_steps=execution_steps,
+            output_expressions=output_expressions,
+            output_count=len(output_expressions),
+            single_output_expression=(
+                output_expressions[0].expression if len(output_expressions) == 1 else None
             ),
-        }
+        )
 
     def _constraint_metadata(
         self,

@@ -17,7 +17,11 @@ from typing import Literal
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 # Import shared types from core for re-export (backward compatibility)
-from sysml_codegen.core.models import BindingResolution, BindingResolutionType
+from sysml_codegen.core.models import (
+    AutoImplContext,
+    BindingResolution,
+    BindingResolutionType,
+)
 from sysml_codegen.extraction.expression_compiler import Compilability
 
 
@@ -228,7 +232,7 @@ class PipelineModule(BaseModel):
     compiled_expression: str | None = None
     module_kind: ModuleKind
     output_schema_type: str | None = None
-    auto_impl_context: dict | None = None
+    auto_impl_context: AutoImplContext | None = None
     # Metadata from CalcDef / ComputedAttributeData / AggregationExpressionData
     calc_def_name: str | None = None
     calc_def_qualified_name: str | None = None

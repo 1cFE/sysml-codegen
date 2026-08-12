@@ -63,7 +63,9 @@ from typing import Any
 import agentic_mbse
 
 import sysml_codegen
+from sysml_codegen._upstream_pins import EXPRESSION_IR_SCHEMA_VERSION, PROFILE_SEMANTIC_VERSION
 from sysml_codegen.elaboration.graph import GraphValidationError, InstanceGraph
+from sysml_codegen.elaboration.project import PROJECTOR_SEMANTICS
 from sysml_codegen.extraction.source_manifest import (
     PINNED_STANDARD_LIBRARY_COUNT,
     PINNED_STANDARD_LIBRARY_SHA256,
@@ -98,9 +100,14 @@ __all__ = [
 INSTANCE_GRAPH_SNAPSHOT_VERSION = 6
 SNAPSHOT_FORMAT = "sysml-codegen-instance-graph"
 CERTIFIABILITY_PROFILE = "projectable-instance-graph/v1"
-EXPRESSION_IR_SCHEMA = "expression-ir/v1"
-EXECUTABLE_PROFILE = "executable-profile/v4"
-PROJECTOR_SEMANTICS = "instance-projector/v1"
+#: The authority block restates three markers this module does not own. They are
+#: imported, never re-spelled: an upstream schema bump is pinned once in
+#: ``_upstream_pins`` (checked against the installed companion by
+#: ``tests/conformance/test_upstream_pins.py``), and the projector names its own
+#: semantics in ``elaboration/project``. A copy here would be a second literal a
+#: coordinated bump could slip past.
+EXPRESSION_IR_SCHEMA = EXPRESSION_IR_SCHEMA_VERSION
+EXECUTABLE_PROFILE = PROFILE_SEMANTIC_VERSION
 INTEGRITY_ALGORITHM = "sha256"
 INTEGRITY_CANONICALIZATION = "sysml-codegen-json-v1"
 

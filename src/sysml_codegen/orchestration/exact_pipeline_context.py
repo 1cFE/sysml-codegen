@@ -37,7 +37,7 @@ from typing import NoReturn
 
 from sysml_codegen.core.errors import CodeGenerationError
 from sysml_codegen.elaboration.graph import GraphValidationError, InstanceGraph
-from sysml_codegen.elaboration.project import ProjectionError, project
+from sysml_codegen.elaboration.project import PROJECTOR_SEMANTICS, ProjectionError, project
 from sysml_codegen.resolution.models import ComputationGraph
 from sysml_codegen.snapshot.instance_graph import (
     InstanceGraphCodecError,
@@ -50,11 +50,6 @@ __all__ = [
     "build_exact_pipeline_context",
     "build_exact_pipeline_context_from_snapshot",
 ]
-
-#: Bumped whenever projection semantics change in a way that would make an
-#: older receipt meaningless. It is part of the digest so a receipt minted by a
-#: different projector cannot be mistaken for a current one.
-_PROJECTOR_SEMANTICS = "instance-projector/v1"
 
 _CONSTRUCTION_ERROR = (
     "ExactPipelineContext is builder-created; use build_exact_pipeline_context or "
@@ -110,7 +105,7 @@ def _computation_digest(graph: ComputationGraph) -> str:
     the receipt and a change in either would pass unnoticed.
     """
     payload = {
-        "projector_semantics": _PROJECTOR_SEMANTICS,
+        "projector_semantics": PROJECTOR_SEMANTICS,
         "modules": [module.model_dump(mode="json") for module in graph.modules],
         "entry_point_groups": [group.model_dump(mode="json") for group in graph.entry_point_groups],
         "execution_order": list(graph.execution_order),
@@ -193,10 +188,10 @@ class ExactPipelineContext:
             # object exists but carries no authority, so there is nothing to
             # verify against and nothing safe to return.
             _receipt_failure("this context carries no sealed authority", error)
-        if receipt.projector_semantics != _PROJECTOR_SEMANTICS:
+        if receipt.projector_semantics != PROJECTOR_SEMANTICS:
             _receipt_failure(
                 f"receipt was minted by projector {receipt.projector_semantics!r}, "
-                f"this build projects {_PROJECTOR_SEMANTICS!r}"
+                f"this build projects {PROJECTOR_SEMANTICS!r}"
             )
         if _instance_fingerprint(self._instance_bytes) != receipt.instance_fingerprint:
             _receipt_failure("the sealed instance bytes no longer match the receipt")
@@ -226,7 +221,7 @@ def _seal(graph: InstanceGraph, targets: tuple[str, ...] | None) -> ExactPipelin
     receipt = ProjectionReceipt(
         instance_fingerprint=_instance_fingerprint(instance_bytes),
         targets=targets,
-        projector_semantics=_PROJECTOR_SEMANTICS,
+        projector_semantics=PROJECTOR_SEMANTICS,
         computation_digest=_computation_digest(projected),
     )
     context = object.__new__(ExactPipelineContext)

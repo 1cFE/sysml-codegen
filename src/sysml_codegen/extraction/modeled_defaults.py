@@ -1,8 +1,8 @@
 """What an explicitly modeled default's expression IR resolves to.
 
-Shared by the legacy constraint-lowering route and the exact elaborator, so both
-read one modeled default by one rule. Scope is exactly what a modeled default
-needs (DD-R25): general constant folding and unit *conversion* stay out.
+One modeled default, one rule, read by the exact elaborator. Scope is exactly
+what a modeled default needs (DD-R25): general constant folding stays out, and
+the unit annotation defers to its single owner, ``extraction/unit_annotation``.
 """
 
 from __future__ import annotations
@@ -16,6 +16,8 @@ from agentic_mbse.sysml.expression_ir import (
     UnitAnnotationNode,
     parse_expression,
 )
+
+from sysml_codegen.extraction.unit_annotation import annotated_ir_value
 
 __all__ = ["ModeledDefault", "resolve_modeled_default"]
 
@@ -38,11 +40,9 @@ def _resolve_default_node(node: ExpressionIR) -> ModeledDefault:
     """Unwrap unit annotations and fold a unary sign over a modeled default.
 
     Scope is exactly what an explicitly modeled default needs (DD-R25): general
-    constant folding and unit *conversion* stay out. A ``UnitAnnotationNode``
-    contributes its numeric value and carries its unit text; it is never converted.
-    This mirrors what ``generation/predicate_compiler.py`` already does structurally
-    for the predicate lane — the drift this closes is that the default lane never
-    got it.
+    constant folding stays out. The unit annotation follows the one rule, in its
+    IR spelling (``extraction/unit_annotation``): the annotated value is what
+    counts, the unit text is carried, and nothing is converted.
     """
     if isinstance(node, LiteralNode):
         try:
@@ -51,10 +51,11 @@ def _resolve_default_node(node: ExpressionIR) -> ModeledDefault:
             return ModeledDefault(unresolved_node_kind=node.kind)
 
     if isinstance(node, UnitAnnotationNode):
-        inner = _resolve_default_node(node.value)
+        annotated, unit_text = annotated_ir_value(node)
+        inner = _resolve_default_node(annotated)
         if inner.value is None:
             return inner
-        return ModeledDefault(value=inner.value, unit_text=node.unit_text or inner.unit_text)
+        return ModeledDefault(value=inner.value, unit_text=unit_text or inner.unit_text)
 
     if isinstance(node, OperatorNode) and len(node.operands) == 1 and node.operator in ("+", "-"):
         inner = _resolve_default_node(node.operands[0])

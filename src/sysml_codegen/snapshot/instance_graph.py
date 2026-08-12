@@ -19,7 +19,9 @@ from agentic_mbse.sysml.expression_ir import (
     expression_ir_from_dict,
     serialize_expression,
 )
+from pydantic import ValidationError as PydanticValidationError
 
+from sysml_codegen.core.models import AutoImplContext
 from sysml_codegen.elaboration.diagnostics import (
     ElaborationCode,
     ElaborationInvariantError,
@@ -286,6 +288,38 @@ def _metadata_from_data(data: object) -> PortMetadata:
     )
 
 
+def _auto_impl_context_to_data(context: AutoImplContext | None) -> object | None:
+    """Seal the auto-implementation protocol in the shape v6 has always written."""
+    if context is None:
+        return None
+    return {
+        "execution_steps": [
+            {"name": step.name, "expression": step.expression} for step in context.execution_steps
+        ],
+        "output_expressions": [
+            {"name": output.name, "expression": output.expression}
+            for output in context.output_expressions
+        ],
+        "output_count": context.output_count,
+        "single_output_expression": context.single_output_expression,
+    }
+
+
+def _auto_impl_context_from_data(data: object) -> AutoImplContext | None:
+    """Decode the protocol exactly, so a malformed record refuses at the boundary."""
+    if data is None:
+        return None
+    value = _mapping(
+        data,
+        "calculation.auto_impl_context",
+        {"execution_steps", "output_expressions", "output_count", "single_output_expression"},
+    )
+    try:
+        return AutoImplContext.model_validate(value)
+    except PydanticValidationError as error:
+        raise ValueError(f"calculation auto_impl_context is not a valid record: {error}") from error
+
+
 def _expression_to_data(expression: ExpressionIR | None) -> object | None:
     if expression is None:
         return None
@@ -509,7 +543,7 @@ def _calc_to_data(node: CalcNode) -> dict[str, object]:
         "expression_ir": _expression_to_data(node.expression_ir),
         "aggregation_reference_ordinals": list(node.aggregation_reference_ordinals),
         "compilability": node.compilability.value,
-        "auto_impl_context": node.auto_impl_context,
+        "auto_impl_context": _auto_impl_context_to_data(node.auto_impl_context),
         "doc_comment": node.doc_comment,
         "calc_expressions": list(node.calc_expressions),
         "calculation_definition_id": (
@@ -587,9 +621,7 @@ def _calc_from_data(data: object) -> CalcNode:
         outputs[output_declaration] = port
         output_names[output_declaration] = _string(record.get("name"), "output.name")
         output_metadata[output_declaration] = _metadata_from_data(record.get("metadata"))
-    auto_impl_context = value.get("auto_impl_context")
-    if auto_impl_context is not None and not isinstance(auto_impl_context, dict):
-        raise ValueError("calculation auto_impl_context must be an object or null")
+    auto_impl_context = _auto_impl_context_from_data(value.get("auto_impl_context"))
     raw_calculation_definition_id = value.get("calculation_definition_id")
     calculation_definition_id = (
         DeclarationId.from_wire(

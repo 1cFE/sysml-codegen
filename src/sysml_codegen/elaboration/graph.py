@@ -19,6 +19,7 @@ from agentic_mbse.sysml.expression_ir import (
     UnsupportedNode,
 )
 
+from sysml_codegen.core.models import AutoImplContext
 from sysml_codegen.elaboration.diagnostics import ElaborationCode
 from sysml_codegen.elaboration.identity import (
     ConsumerPortId,
@@ -167,7 +168,7 @@ class CalcNode:
     expression_ir: ExpressionIR | None = None
     aggregation_reference_ordinals: tuple[int, ...] = ()
     compilability: Compilability = Compilability.UNKNOWN
-    auto_impl_context: dict | None = None
+    auto_impl_context: AutoImplContext | None = None
     doc_comment: str | None = None
     calc_expressions: tuple[str, ...] = ()
     calculation_definition_id: DeclarationId | None = None

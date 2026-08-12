@@ -176,7 +176,15 @@ def generate_implementation(
     context = _build_stencil_context_from_graph(module, output_path, package_name)
 
     if module.auto_impl_context is not None:
-        context.update(module.auto_impl_context)
+        # Named inputs, one per field the auto-implementation template reads. A
+        # wholesale merge would let any key the protocol grew reach the template
+        # unannounced, and would let a renamed field fail silently as an empty
+        # loop instead of loudly here.
+        auto_impl = module.auto_impl_context
+        context["execution_steps"] = auto_impl.execution_steps
+        context["output_expressions"] = auto_impl.output_expressions
+        context["output_count"] = auto_impl.output_count
+        context["single_output_expression"] = auto_impl.single_output_expression
         template = template_env.get_template("auto_implementation.py.jinja2")
     else:
         template = template_env.get_template("implementation_stencil.py.jinja2")

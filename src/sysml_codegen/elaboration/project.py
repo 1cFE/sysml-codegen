@@ -28,6 +28,7 @@ from agentic_mbse.sysml.expression_ir import (
 )
 
 from sysml_codegen.core.identifier_types import derive_module_type, mint_constraint_id
+from sysml_codegen.core.models import AutoImplContext, AutoImplOutput
 from sysml_codegen.core.qualified_names import (
     get_channel_name,
     sanitize_name,
@@ -78,7 +79,14 @@ from sysml_codegen.resolution.models import (
     PipelineModule,
 )
 
-__all__ = ["ProjectionError", "project"]
+__all__ = ["PROJECTOR_SEMANTICS", "ProjectionError", "project"]
+
+#: What this projector promises, and the single owner of that marker. Bump it
+#: whenever projection semantics change in a way that makes an older receipt or a
+#: sealed snapshot's authority block meaningless. Two readers import it rather
+#: than restating it: the receipt digest (``orchestration/exact_pipeline_context``)
+#: and the v6 envelope's authority block (``snapshot/envelope``).
+PROJECTOR_SEMANTICS = "instance-projector/v1"
 
 _CONSTRAINT_LOGGER = logging.getLogger("sysml_codegen.elaboration.project")
 
@@ -728,7 +736,7 @@ class _Projection:
     def _build_calculation_modules(self) -> None:
         for node in sorted(self.graph.calcs.values(), key=lambda item: item.node_id.to_wire()):
             name = node.display_path.lower()
-            auto_impl_context: dict | None
+            auto_impl_context: AutoImplContext | None
             if node.is_computed:
                 inputs, param_by_port = self._computed_inputs(node)
                 compiled = self._compile_computed_expression(node, param_by_port)
@@ -751,12 +759,12 @@ class _Projection:
                         consumer_display=node.display_path,
                     )
                 (output_name,) = node.output_names.values()
-                auto_impl_context = {
-                    "execution_steps": [],
-                    "output_expressions": [{"name": output_name, "expression": compiled}],
-                    "output_count": 1,
-                    "single_output_expression": compiled,
-                }
+                auto_impl_context = AutoImplContext(
+                    execution_steps=[],
+                    output_expressions=[AutoImplOutput(name=output_name, expression=compiled)],
+                    output_count=1,
+                    single_output_expression=compiled,
+                )
                 compilability = Compilability.FULLY_COMPILABLE
             else:
                 inputs = self._regular_inputs(node)
