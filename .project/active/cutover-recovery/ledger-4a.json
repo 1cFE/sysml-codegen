@@ -604,16 +604,16 @@
    "path": "src/sysml_codegen/analysis/diagnostic_screen.py",
    "repo": "sysml-codegen",
    "class": "production",
-   "disposition": "migrate",
+   "disposition": "delete",
    "origin": "phase3-carried",
    "group": "4B-G0",
-   "authority": "no census row for this path [EVIDENCE: forensic map Finding 2]; Phase 3 completion notes / plan Gate 4A carried inputs",
-   "unreachability": "live on the exact route",
-   "replacement_proof_node": "tests/conformance/test_public_authority_switch.py::test_generate_refuses_a_model_the_exact_route_rejects",
+   "authority": "retirement step 6 rule-10 surfacing (plan.md, 'Rule-10 surfacing \u2014 analysis/diagnostic_screen.py is dead, and no row says so'); REVISE step 6b brief (commit a3adea0); REQ-DIAG-02/03 are Active recorded requirements (CONSTRAINT-EXEC Item 4, merged main)",
+   "unreachability": "never reachable on the exact route \u2014 the module's only two call sites were the v5 builders (pipeline_builder.py:898, snapshot_context.py:48), both deleted by retirement steps 1-2. The earlier value 'live on the exact route' was false: the exact route never called it, so the gap predates the retirement and dates to the Phase 3 authority switch.",
+   "replacement_proof_node": "tests/conformance/test_extraction_diagnostic_screen.py::test_the_live_route_refuses_a_blocking_diagnostic_by_its_typed_error",
    "blocked_by": [],
-   "reason": "Imports CodeGenerationError from pipeline_context (:73). Repoint.",
+   "reason": "AMENDED (REVISE step 6b). Dead code: zero callers in src/, tests/ or scripts/, and its test module (L-124) went with it at step 1. Deleted, not migrated. REQ-DIAG-02/03, which docs/architecture/reference/30-diagnostic-severity.md discharged against it, are re-homed on the shipping route at elaboration/extraction_screen.py:50, called from elaboration/elaborate.py:246 \u2014 the elaborator's single read of the identified constraint facts, which both the live route and v6 capture reach through orchestration/elaborated_pipeline.py:59,116. The superseded reason was the G0 import repoint: 'Imports CodeGenerationError from pipeline_context (:73). Repoint.'",
    "state": "executed",
-   "executed_commit": "db00482"
+   "executed_commit": "bcb8989"
   },
   {
    "id": "L-024",

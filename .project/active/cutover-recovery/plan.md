@@ -5939,11 +5939,190 @@ Seven nodes green at the step-1 post-state and at HEAD: the five surviving
 #### Left for the owner, named
 
 - **`analysis/diagnostic_screen.py`** — the rule-10 item above. Blocking for the step-7 record.
+  **Closed by Revise step 6b below.**
 - **`scripts/probes/probe_constraint_profile_qualifier_drop.py`** — disposition unrecorded.
+  **Closed by Revise step 6b below** (archived, on the orchestrator's ruling).
 - The four open questions in `owner-disposition-20260811.md` are untouched by this stage: R8
   (question 1), the ruff 16 (question 2), Item 10 scheduling, and how the final audit runs.
   `ruff check src` reads **14** at HEAD, down from 16, because two of the sixteen sat in files
   steps 2 and 3 deleted. The question itself is unanswered.
+
+### Revise step 6b completion — REQ-DIAG-02/03, re-homed on the exact route
+
+Resolves the step-6 rule-10 surfacing. Product commit `bcb8989`; the record commit is the
+one carrying this note. Brief: `a3adea0`.
+
+#### The measurements, re-verified
+
+All three of the orchestrator's facts hold, with one correction.
+
+1. **`analysis/diagnostic_screen.py` had zero callers**, and L-023's
+   `unreachability: "live on the exact route"` was false. Confirmed by grep across `src/`,
+   `tests/`, `scripts/`. The gap predates the retirement: the exact route never called the
+   screen, so the shipped public route has behaved this way since the Phase 3 authority
+   switch.
+2. **The accidental halt reproduces.** With the fix stashed,
+   `build_elaborated_pipeline([tests/fixtures/non_finite_literal])` raises
+   `ValueError: Out of range float values are not JSON compliant: inf` out of
+   `project.py:1132` → `serialize_expression` → `json.dumps`. Nothing in the message names
+   the model, the constraint, or the literal.
+   **Correction to measurement 2:** that `ValueError` is *not* swallowed by the catch-all at
+   `cli/__init__.py:1133`. Projection runs inside the receipt mint, so on the public CLI the
+   sealing layer wraps it and `run_codegen` reports
+   `Code generation failed: exact instance graph is not projectable: SI_SNAPSHOT_INVALID:
+   cannot encode resolved graph: Out of range float values are not JSON compliant: inf`
+   (exit 1, no output written). Still an accident, still naming nothing in the model, but
+   caught by the named `CodeGenerationError` handler at `:1015`, not by the catch-all. The
+   catch-all is a separate audit finding and is narrowed on its own merits below.
+3. **The data still flows.** `IdentifiedConstraintFacts.facts` is a `ConstraintFacts` whose
+   `diagnostics` carry writer-set severity, unchanged at agentic `3fbda2f`.
+
+#### The new mechanism
+
+`screen_extraction_diagnostics` (`elaboration/extraction_screen.py:50`), called from
+`elaboration/elaborate.py:246`.
+
+**One sink, not two.** The retired screen needed two call sites because the v5 stack read
+the facts twice. The elaborator reads them once, in `_ExactElaborator.__init__`, and both
+routes reach the elaborator through `orchestration/elaborated_pipeline.py` — live at `:59`,
+v6 capture at `:116`, which is what `snapshot/capture.py:30` calls. **Verified**, which is
+what makes one site enough for "both routes" in REQ-DIAG-02. The screen runs before any
+node is built, so it is ahead of lowering, projection and sealing on both.
+
+The extraction is now hoisted into `__init__` and `_index_constraint_associations` takes the
+facts it indexes rather than re-deriving them. That keeps the policy — halt on blocking — at
+the call site, and leaves the indexer doing one job.
+
+The refusal is `ElaborationInvariantError` under a new
+`ElaborationCode.EXTRACTION_DIAGNOSTIC_BLOCKING` (`elaboration/diagnostics.py:27`), which is
+how every other check in that constructor refuses; `elaborate` converts it to the route's
+typed `ElaborationDiagnosticError` at `:178-190`, and `run_codegen` already catches that by
+name at `cli/__init__.py:1009-1011`. No new error class, no new catch.
+
+**The refusal, both routes, on the fixture** (one blocking diagnostic, so one entry; the
+rendering is `; `-joined over every blocking diagnostic):
+
+| route | text |
+|---|---|
+| live (`generate`) | `Model failed exact-route validation: EXTRACTION_DIAGNOSTIC_BLOCKING: <model>: extraction raised blocking diagnostics: [blocking/non_finite_literal] tests/fixtures/non_finite_literal/model.sysml:36:24: Non-finite literal operand encountered during extraction: inf` |
+| capture (`snapshot`) | the same `ElaborationDiagnosticError`, with the staged referent in place of the checkout path; no snapshot file is written |
+
+Two notes on the capture text, neither in this stage's scope and neither a defect in the
+screen: `cmd_snapshot` (`cli/__init__.py:726`) has no handler at all, so the typed refusal
+reaches the terminal as a traceback; and the staged location renders as `///tmp/…`, from the
+upstream `LocationFact`, not from anything here.
+
+#### Nodes added — `tests/conformance/test_extraction_diagnostic_screen.py`
+
+| node | what it pins |
+|---|---|
+| `test_the_live_route_refuses_a_blocking_diagnostic_by_its_typed_error` (`:49`) | live route: the code, the kind, `model.sysml:36:24`, and that it is not a `ValueError` |
+| `test_capture_refuses_a_blocking_diagnostic_before_it_seals_anything` (`:60`) | capture: the same typed refusal, and that the destination directory is left empty |
+| `test_an_advisory_diagnostic_is_rendered_and_the_screen_continues` (`:95`) | REQ-DIAG-03's continue path |
+| `test_advisory_rendering_cannot_swallow_the_blocking_halt` (`:105`) | ordering: the advisory is logged, then the halt lands, with `<no location>` degraded not raised |
+
+**The two advisory nodes are synthetic, and the file says so.** `EXTRACTION_DIAGNOSTIC_SEVERITY`
+has exactly one entry and it is BLOCKING, so no model can produce an advisory fact. Rather
+than add a kind upstream to make the branch reachable — machinery the tree does not have,
+and a `constraint-facts` schema bump — they rewrite the writer-derived `severity` on a real
+fact. The screen reads the field and looks nothing up, so the field is the whole input; what
+is not covered is an end-to-end advisory, and no shape exists to cover it with.
+
+#### The CLI catch-all
+
+`except Exception` at the tail of `_generate_package_from_graph` narrows to `except OSError`.
+The filesystem is the only unnamed *operational* failure that half can hit — it creates and
+writes the output tree from step 2 on. A jinja2 template defect, a graph field the renderer
+did not expect, an assertion: all now reach the CLI boundary with a traceback instead of
+becoming `Unexpected error: …` and exit 1.
+
+**Measured and deliberately not changed:** a failure after step 2 leaves the partially
+written output tree on disk. That is already true of the named `CodeGenerationError` and
+`SysMLParsingError` handlers above it, so adding cleanup would be a new decision about
+destroying a user's output directory, not a narrowing. Recorded here, left for the owner.
+
+One stale docstring went with it: `run_codegen` still said "the legacy builders remain in
+the tree and are still importable by name".
+
+#### L-023, amended
+
+`disposition` `migrate` → **`delete`**; `state` stays `executed`, `executed_commit`
+`db00482` → `bcb8989`. The false `unreachability` is replaced, not appended to: it now says
+the module was never reachable on the exact route, names the two v5 call sites, and dates the
+gap to the Phase 3 switch. `reason` is replaced by the amendment and quotes the superseded
+G0-repoint text inline. `replacement_proof_node` moves from the authority-switch node to
+`test_extraction_diagnostic_screen.py::test_the_live_route_refuses_a_blocking_diagnostic_by_its_typed_error`.
+`authority` cites the step-6 surfacing, this brief, and REQ-DIAG-02/03 as Active recorded
+requirements. No row was minted; `paths` still reads 304 rows, and the probe move needed no
+row of its own.
+
+#### Doc 30
+
+- REQ-DIAG-02 row → `extraction_screen.py:72-79`, `elaborate.py:246`,
+  `elaborated_pipeline.py:59,116`, pins at `test_extraction_diagnostic_screen.py:49,60`.
+- REQ-DIAG-03 row → `extraction_screen.py:40-48,69-73`, pins at `:95,105`, marked synthetic.
+- "Where the gate runs" rewritten to one sink, with the history in one line: screen retired
+  with the v5 builders, requirement re-homed at the elaboration boundary.
+- "two sinks" in the intro → "one sink".
+
+##### Rule-10 surfacing — doc 30's severity-skew section rests on a dead premise
+
+**Surfaced in the doc, not resolved.** The whole "What happens on severity skew" section
+(REQ-DIAG-04) assumes a severity crosses a process boundary on disk. It did under the v5
+extraction snapshot, which serialized `ConstraintFacts`. The v6 envelope carries no
+`ConstraintFacts`, no `ExtractionDiagnosticFact` and no `severity` field — `severity` appears
+zero times under `src/sysml_codegen/snapshot/`, and `constraint_facts.parse` has no caller in
+`src/` or `tests/`. So guards 2 and 3 remain true upstream but are unreachable from codegen,
+and guard 1's envelope citation names `snapshot/loader.py`, which the retirement deleted, as
+does the shape-gate paragraph.
+
+What REQ-DIAG-04 should say against a v6-only reader is authorship with no recorded
+authority, and CLAUDE.md already holds that the reference-document rewrite is a separate
+pass. The section is left verbatim under a banner naming the dead premise and the dead
+citations, so the decision is made against what was written. **Owner input needed.**
+
+Two adjacent drifts found while measuring, recorded not fixed: `_upstream_pins.py`'s
+`CONSTRAINT_FACTS_SCHEMA_VERSION` now has no runtime consumer in `src/` (only the conformance
+test), and `generation/constraint_catalog.py:58`'s docstring cites the deleted
+`pipeline_builder.py` as its guarding call site while having no `src/` caller at all.
+
+#### The probe
+
+`scripts/probes/probe_constraint_profile_qualifier_drop.py` → `scripts/archive/`, with a
+three-line header saying its legacy column became unexecutable at the retirement and it is
+committed evidence, not live tooling. **Zero ruff delta from the move** — the archive
+directory is linted the same way; `ruff check src tests scripts` reads 643 before and after.
+
+#### Battery
+
+Interpreter asserted first: `/home/reid/1cfe/item7-rebuild-venv/bin/python`, wired to this
+worktree and to `agentic-mbse-item7-rebuild` (`3fbda2f`).
+
+| check | baseline (`46ad549`) | this stage |
+|---|---|---|
+| licensed suite | 1701 / 34 / 65 | **1705 / 34 / 65** — +4, the new nodes, named above |
+| exec lane | 65 | **65** |
+| `capture_v6_batch.py --verify` | 15 / 22 / 0 | **15 / 22 / 0** |
+| `-k corpus` | 9 | **9** |
+| `ruff check src` | 14 | **14** |
+| `ruff check src tests scripts` | 643 | **643** |
+| `mypy src` | 57 in 11 | **57 in 11** |
+| `check_ledger_4a paths` | 304 / 0 | **304 / 0** |
+| `check_ledger_4a surface` | 0 | **0** |
+| `check_ledger_4a groups` | all affected=0 | **all affected=0, READY** |
+| `check_proof_integrity.py` | 0 / 0 | **0 / 0** |
+| `git diff --check` | clean | **clean** |
+
+No ruff or mypy delta at all, so nothing to explain row by row. `test_runbook_patches.py`
+does not exist in the tree and no runbook patch is touched by this stage.
+
+**One environment trap, recorded for the next stage.** `/home/reid/1cfe/agentic-mbse` — the
+plain checkout — is on `elaborate-first-salvage` (`5088b41`), not on `item7-rebuild`. The
+pair for this branch is the worktree `/home/reid/1cfe/agentic-mbse-item7-rebuild` (`3fbda2f`),
+and `item7-rebuild-venv` is already wired to it. A run through this repo's own `.venv`
+resolves `agentic_mbse` to the wrong branch and the suite fails to collect
+(`ImportError: cannot import name 'preflight_identified'`). Assert the interpreter first, as
+the runbook says.
 
 ---
 
