@@ -80,7 +80,7 @@ from sysml_codegen.resolution.models import (
 
 __all__ = ["ProjectionError", "project"]
 
-_CONSTRAINT_LOGGER = logging.getLogger("sysml_codegen.analysis.constraint_lowering")
+_CONSTRAINT_LOGGER = logging.getLogger("sysml_codegen.elaboration.project")
 
 
 class ProjectionError(ValueError):

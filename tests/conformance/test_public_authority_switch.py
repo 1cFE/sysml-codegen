@@ -35,7 +35,6 @@ import pytest
 from sysml_codegen.cli import GenerationConfig, main, run_codegen
 from sysml_codegen.snapshot.envelope import SnapshotShapeError
 from tests.conftest import FIXTURES_DIR, requires_license
-from tests.helpers.legacy_route import generate_via_legacy_route
 
 pytestmark = requires_license
 
@@ -46,7 +45,11 @@ CLI_SOURCE = Path(__import__("sysml_codegen.cli", fromlist=["cli"]).__file__)
 #: entry point it keeps to ``design.sysml``. Measured, not chosen — see
 #: ``test_exact_group_identity.py`` and diff-ledger row 12.
 EXACT_D38_GROUP = "library_params"
-LEGACY_D38_GROUP = "design_params"
+#: What the legacy route shipped for the same model, before it retired with the v5 family
+#: (retirement step 2): one ``design_params`` group carrying only
+#: ``D38Design__plant__noop__x``. Kept as a named constant because it is what makes
+#: ``EXACT_D38_GROUP`` a discriminator rather than a coincidence.
+RETIRED_LEGACY_D38_GROUP = "design_params"
 EXACT_D38_PARAMETERS = {
     "D38Design__plant__noop__x",
     "D38Design__plant__pack__exponent",
@@ -76,9 +79,10 @@ def _generate(models: Path, output: Path, **overrides: object) -> bool:
 def test_generate_from_models_ships_the_exact_routes_package(tmp_path: Path) -> None:
     """``generate --models`` emits the entry points only the exact route derives.
 
-    The legacy route ships one ``design_params`` parameter for this model. If
-    the switch had not landed, the file below would not exist and the assertion
-    would name the legacy group instead.
+    The legacy route shipped one ``design_params`` parameter for this model, measured
+    by a sibling node until that route retired with the v5 family (retirement step 2).
+    That is what makes ``library_params`` a discriminator: if the switch had not landed,
+    the file below would not exist and the assertion would name the retired group.
     """
     output = tmp_path / "package"
     assert _generate(FIXTURES_DIR / "d38_caret", output) is True
@@ -86,26 +90,6 @@ def test_generate_from_models_ships_the_exact_routes_package(tmp_path: Path) -> 
     payloads = _input_payloads(output)
     assert set(payloads) == {EXACT_D38_GROUP}
     assert set(payloads[EXACT_D38_GROUP]) == EXACT_D38_PARAMETERS
-
-
-def test_the_legacy_route_still_ships_its_own_answer_on_the_same_model(
-    tmp_path: Path,
-) -> None:
-    """The discriminator above is a real one: the two routes genuinely differ.
-
-    Without this arm the test above could be green because *both* routes emit
-    ``library_params``. The legacy implementation is not deleted, so its answer
-    is still measurable, and it is different.
-    """
-    output = tmp_path / "package"
-    config = GenerationConfig(
-        models_path=FIXTURES_DIR / "d38_caret", output_path=output, package_name="legacy_probe"
-    )
-    assert generate_via_legacy_route(config) is True
-
-    payloads = _input_payloads(output)
-    assert LEGACY_D38_GROUP in payloads
-    assert set(payloads[LEGACY_D38_GROUP]) == {"D38Design__plant__noop__x"}
 
 
 def test_generate_from_a_v6_snapshot_ships_the_same_exact_package(tmp_path: Path) -> None:
@@ -133,24 +117,16 @@ def test_generate_refuses_a_model_the_exact_route_rejects(
 ) -> None:
     """A public refusal is a public behaviour, and it is the exact route's.
 
-    ``chain_spike_model`` is diff-ledger row 7: three self-named bindings the
-    legacy route silently rescued and the exact route refuses. The second arm
-    measures the legacy answer on the same model in the same test, so this is a
-    route difference rather than a broken fixture.
+    ``chain_spike_model`` is diff-ledger row 7: three self-named bindings the legacy
+    route silently rescued and the exact route refuses. The legacy arm that measured
+    the rescue in this same node retired with the v5 family (retirement step 2), so
+    what is left is the refusal itself: named diagnostic, no package on disk.
     """
     output = tmp_path / "package"
     with caplog.at_level(logging.ERROR):
         assert _generate(FIXTURES_DIR / "chain_spike_model", output) is False
     assert "SI_SELF_BINDING" in caplog.text
     assert not output.exists()
-
-    legacy_output = tmp_path / "legacy"
-    legacy_config = GenerationConfig(
-        models_path=FIXTURES_DIR / "chain_spike_model",
-        output_path=legacy_output,
-        package_name="legacy_probe",
-    )
-    assert generate_via_legacy_route(legacy_config) is True
 
 
 # ---------------------------------------------------------------------------
@@ -174,9 +150,28 @@ def main_returns(argv: list[str]) -> None:
 
 #: Every module that owns a legacy construction authority. A public caller
 #: reaching any of these is the dual authority this slice exists to close.
-#: Retirement step 1 deleted ``snapshot_context``, ``snapshot.loader`` and
-#: ``snapshot.graph_rebuild``; step 2 deletes ``pipeline_builder``, and this set empties.
-LEGACY_AUTHORITY_MODULES = frozenset({"sysml_codegen.orchestration.pipeline_builder"})
+#: Every module that owned a legacy construction authority. Retirement step 1 deleted the
+#: first three and step 2 deleted the fourth, so a public caller can no longer reach any of
+#: them — but the names stay here, and the nodes below now check that they stay *gone*.
+#: Checking absence rather than unreachability is the only non-vacuous statement left: the
+#: node that pinned the CLI's non-empty import residual retired when the residual emptied.
+LEGACY_AUTHORITY_MODULES = frozenset(
+    {
+        "sysml_codegen.orchestration.pipeline_builder",
+        "sysml_codegen.orchestration.snapshot_context",
+        "sysml_codegen.snapshot.loader",
+        "sysml_codegen.snapshot.graph_rebuild",
+    }
+)
+
+
+def _module_exists(module_name: str) -> bool:
+    import importlib.util
+
+    try:
+        return importlib.util.find_spec(module_name) is not None
+    except (ImportError, AttributeError, ValueError):
+        return False
 
 
 def _imported_modules(source: Path) -> set[str]:
@@ -284,15 +279,26 @@ def test_generation_config_carries_no_route_selector() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_a_v5_snapshot_is_refused_by_name_at_the_loader() -> None:
+def _v5_extraction_payload(tmp_path: Path) -> Path:
+    """A v5 extraction snapshot, as far as the v6 loader can tell.
+
+    The refusal keys on one thing (``snapshot/envelope.py:261-268``): the absent ``version``
+    key, plus ``snapshot_format_version`` naming the format actually handed over. Nothing
+    below that line is read, so the payload does not need to be a real v5 document — and
+    writing it here is what keeps this check alive after the committed v5 fixtures retired
+    with the family (retirement step 2).
+    """
+    path = tmp_path / "extraction_snapshot.json"
+    path.write_text(json.dumps({"snapshot_format_version": 5, "calc_defs": []}))
+    return path
+
+
+def test_a_v5_snapshot_is_refused_by_name_at_the_loader(tmp_path: Path) -> None:
     """The typed refusal names both the version found and the version required."""
     from sysml_codegen.snapshot.envelope import load_instance_graph_snapshot
 
-    v5 = FIXTURES_DIR / "fusion_tea" / "extraction_snapshot.json"
-    assert json.loads(v5.read_text())["snapshot_format_version"] == 5
-
     with pytest.raises(SnapshotShapeError) as refusal:
-        load_instance_graph_snapshot(v5)
+        load_instance_graph_snapshot(_v5_extraction_payload(tmp_path))
     message = str(refusal.value)
     assert "v5" in message
     assert "v6" in message
@@ -304,7 +310,7 @@ def test_generate_from_a_v5_snapshot_refuses_without_falling_back(
     """The CLI reports the refusal and writes nothing — no legacy fall-back, no traceback."""
     output = tmp_path / "package"
     config = GenerationConfig(
-        from_snapshot=FIXTURES_DIR / "fusion_tea" / "extraction_snapshot.json",
+        from_snapshot=_v5_extraction_payload(tmp_path),
         output_path=output,
         package_name="switch_probe",
     )
@@ -506,23 +512,18 @@ def test_the_construction_path_reaches_no_legacy_authority_even_transitively() -
     assert LEGACY_AUTHORITY_MODULES & reachable == set()
 
 
-def test_the_generation_half_still_reaches_v5_modules_and_that_residual_is_pinned() -> None:
-    """State the limit honestly instead of implying the whole CLI is clean.
+def test_no_legacy_construction_authority_has_come_back() -> None:
+    """The retirement's standing half: these four modules do not exist, in any spelling.
 
-    ``sysml_codegen.cli``'s *transitive* closure still contains the legacy
-    builder, because ``orchestration/__init__.py`` re-exports it and the CLI
-    imports that package for other reasons.
-    Nothing in that set is *constructed through* — the test above proves the
-    construction closure is clean — but importable is importable, and a slice
-    whose contract is that written claims survive checking should not round that
-    down to zero.
-
-    Pinned by name so the residual cannot quietly grow. Phase 4 empties it.
+    Once the modules are deleted, "the construction closure does not reach them" is true
+    for free, so it stops being evidence. What is still worth checking is that nothing
+    re-creates them — a re-added ``pipeline_builder`` would be a second construction
+    authority again, and this is what says so before anything imports it.
     """
-    reachable = _reachable_sysml_codegen_modules("sysml_codegen.cli")
-    assert LEGACY_AUTHORITY_MODULES & reachable == {
-        "sysml_codegen.orchestration.pipeline_builder",
-    }
+    resurrected = {name for name in LEGACY_AUTHORITY_MODULES if _module_exists(name)}
+    assert resurrected == set(), (
+        f"a retired construction authority is importable again: {sorted(resurrected)}"
+    )
 
 
 def _reads_the_environment(module_name: str) -> bool:

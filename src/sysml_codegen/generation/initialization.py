@@ -1,15 +1,13 @@
 """Shared exception types for codegen scripts.
 
-PipelineContext has been moved to sysml_codegen.orchestration.pipeline_context
-(Step 7.6). Exception classes remain here for backward compatibility and are
-also re-exported from orchestration/.
+The ``PipelineContext`` alias retired with the v5 family (retirement step 2); the
+dataclass it aliased is gone. The exception classes are defined in ``core/errors.py``
+and re-exported here and from ``orchestration/``.
 """
 
 from sysml_codegen.core.errors import CodeGenerationError, SysMLParsingError
-from sysml_codegen.orchestration.pipeline_context import PipelineContext
 
 __all__ = [
     "CodeGenerationError",
-    "PipelineContext",
     "SysMLParsingError",
 ]

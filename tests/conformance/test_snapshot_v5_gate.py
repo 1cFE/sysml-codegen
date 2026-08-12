@@ -25,11 +25,23 @@ import json
 import pytest
 
 from sysml_codegen.snapshot.envelope import SnapshotShapeError, load_instance_graph_snapshot
-from tests.conftest import FIXTURES_DIR, snapshot_fixture
+from tests.conftest import FIXTURES_DIR
 
 #: A committed v6 instance-graph snapshot, read for its bytes only — the fixture it came from
 #: is immaterial to an envelope check.
 V6_SNAPSHOT = FIXTURES_DIR / "gate_a_d5" / "instance_graph_snapshot.json"
+
+
+def _v5_extraction_payload() -> dict:
+    """A v5 extraction snapshot, as far as the v6 loader is concerned.
+
+    The refusal keys on exactly two things (``snapshot/envelope.py:255-268``): no ``version``
+    key, and a ``snapshot_format_version`` naming the format actually handed over. Nothing
+    below that line is read. Building the payload here rather than reading a committed
+    fixture is what keeps the by-name refusal checkable after the v5 fixtures retired with
+    the family (retirement step 2).
+    """
+    return {"snapshot_format_version": 5, "calc_defs": [], "calc_usages": []}
 
 
 def _write(tmp_path, payload: dict, name: str = "extraction_snapshot.json"):
@@ -68,7 +80,7 @@ def test_a_v5_extraction_snapshot_is_refused_by_name_not_by_a_null_version(tmp_p
     `v5 extraction snapshot` and gives the recapture instruction, which is what makes the
     refusal actionable rather than merely correct.
     """
-    payload = json.loads(snapshot_fixture("wi014_toy").read_text())
+    payload = _v5_extraction_payload()
     with pytest.raises(SnapshotShapeError) as refusal:
         load_instance_graph_snapshot(_write(tmp_path, payload))
     assert "v5 extraction snapshot" in str(refusal.value)
@@ -101,7 +113,7 @@ def test_the_public_route_refuses_a_foreign_snapshot_and_writes_no_package(tmp_p
 
     from sysml_codegen.cli import GenerationConfig, run_codegen
 
-    payload = json.loads(snapshot_fixture("wi014_toy").read_text())
+    payload = _v5_extraction_payload()
     output = tmp_path / "refused_package"
     with caplog.at_level(logging.ERROR, logger="sysml_codegen.cli"):
         accepted = run_codegen(

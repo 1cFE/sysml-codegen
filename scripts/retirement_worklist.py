@@ -107,6 +107,9 @@ PULLED_FORWARD = {
     "L-191": (1, "imports the helper in tests/execution/test_constraint_execution.py"),
     "L-193": (1, "imports the helper in tests/execution/test_constraint_execution.py"),
     "L-194": (1, "imports the helper in tests/execution/test_constraint_execution.py"),
+    "L-198": (2, "drives tests/helpers/legacy_route.py, which calls build_pipeline_context"),
+    "L-199": (2, "drives tests/helpers/legacy_route.py, which calls build_pipeline_context"),
+    "L-201": (2, "drives tests/helpers/legacy_route.py, which calls build_pipeline_context"),
     # final-audit F1: the patch-replay test necessarily fails once step 1's patches are
     # applied to HEAD (it asserts unapplied patches replay cleanly). Deleting it in step 1
     # instead of step 4 keeps every boundary at 0 failed. Measured: 1 failed at boundaries

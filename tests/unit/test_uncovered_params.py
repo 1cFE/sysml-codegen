@@ -21,7 +21,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from sysml_codegen.resolution.graph_builder import (
+from sysml_codegen.resolution.uncovered_params import (
     collect_uncovered_params,
     collect_unwired_fallthrough,
 )

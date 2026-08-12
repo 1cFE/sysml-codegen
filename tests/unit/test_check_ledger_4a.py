@@ -38,13 +38,21 @@ def test_the_candidate_set_is_read_from_the_diff_so_deletions_are_visible(
     A worktree scan of the rebuild finds these files present and would report nothing to
     disposition. Reading the diff finds them deleted by the candidate, which is the set the
     ledger owes rows for.
+
+    The blindness, not a count, is what this pins. An earlier version asserted the
+    still-present subset was larger than a threshold, and the threshold had to move at every
+    retirement step as the rebuild deleted its own copies — a number that says nothing and
+    breaks anyway. Naming files that are deleted-by-candidate and present-at-HEAD says the
+    same thing and keeps saying it: each one is a row a worktree scan would have missed.
     """
     source = ledger["git_derived_from"]
     derived = checker.git_candidate_set(source["base"], source["candidate"])
     deleted_but_present = {
         path for path in derived if checker.path_at_head(path)
     }
-    assert len(deleted_but_present) > 150
+    assert deleted_but_present
+    assert "CLAUDE.md" in deleted_but_present
+    assert "docs/architecture/overview.md" in deleted_but_present
     assert "src/sysml_codegen/orchestration/pipeline_builder.py" not in derived
     assert "src/sysml_codegen/resolution/producer_resolution.py" in derived
 
@@ -246,7 +254,12 @@ def test_a_proposed_row_may_not_claim_a_commit(ledger: dict) -> None:
 
 def test_an_executed_delete_whose_file_is_still_there_fails(ledger: dict) -> None:
     """The claim is checked against Git, exactly as the candidate set is."""
-    row = _row(ledger, "L-001")  # constraint_lowering.py, still at HEAD
+    # A file every step of the retirement leaves alone, so the case stays constructible
+    # however much of the retirement has run. Borrowing a real delete row's path was what
+    # the earlier version did, and it stopped working the moment that row executed.
+    row = _row(ledger, "L-001")
+    row["path"] = "CLAUDE.md"
+    row["disposition"] = "delete"
     row["state"] = "executed"
     row["executed_commit"] = "0" * 40
     problems = checker.check_states(ledger["rows"])
@@ -632,13 +645,31 @@ def test_a_deleted_script_does_not_report_itself(tmp_path: Path) -> None:
 
 
 def test_the_paths_check_now_fails_on_either_axis(ledger: dict) -> None:
-    """Both surface checks are wired into `paths`, so neither can be forgotten."""
+    """Both surface checks are wired into `paths`, so neither can be forgotten.
+
+    The data axis needs a *pending* delete row to have any surface at all, and after the
+    retirement every delete row is executed — which is the check working, not a gap, but it
+    leaves nothing to trip over. So the case is constructed: one pending delete row for a
+    committed v6 snapshot, whose basename ``tests/conftest.py`` names at :64. Dropping the
+    row that covers that dependent must make `paths` report it.
+    """
     problems = checker.check_paths(ledger)
     assert problems == []
-    # Drop the row that covers a real data-axis dependent and the wiring must notice.
+
+    pending_v6_fixture = {
+        "id": "L-990", "path": "tests/fixtures/gate_a_d5/instance_graph_snapshot.json",
+        "repo": "sysml-codegen", "class": "fixture", "disposition": "delete",
+        "origin": "derived-blast-radius", "group": "4B-v5-family",
+        "reason": "constructed: a pending delete row, so the data axis has a surface",
+    }
+    with_pending = dict(ledger, rows=[*ledger["rows"], pending_v6_fixture])
+
+    # Drop the row that covers a real data-axis dependent and the wiring must notice. Only
+    # this dependent is asserted on: a constructed pending row gives every v6 reader a
+    # surface, and the other reports are that row being fictional, not a ledger defect.
     without = dict(
-        ledger,
-        rows=[row for row in ledger["rows"] if row["path"] != "tests/conftest.py"],
+        with_pending,
+        rows=[row for row in with_pending["rows"] if row["path"] != "tests/conftest.py"],
     )
     problems = checker.check_paths(without)
     assert any(

@@ -1,7 +1,10 @@
 """Canonical internal codec for the resolved exact-ID instance graph.
 
-This is Item-6 evidence for a future snapshot boundary.  It is intentionally
-not connected to the shipped extraction-snapshot loader or capture command.
+This is the codec the shipped v6 snapshot boundary is built on: ``snapshot/
+envelope.py`` seals and loads through it, and both ``sysml-codegen snapshot``
+and ``generate --from-snapshot`` reach it that way.  It began as Item-6
+evidence for a future boundary, beside a v5 extraction-snapshot loader that is
+now retired.
 """
 
 from __future__ import annotations

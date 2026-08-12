@@ -213,11 +213,10 @@ def mint_constraint_id(
     The prefix is human-scannable; the suffix folds source-local identity,
     owner-instance identity, membership kind, and polarity into a 64-bit
     collision-visible fingerprint (a hard duplicate is a generation error,
-    checked post-expansion by
-    :func:`sysml_codegen.analysis.constraint_lowering.assert_unique_constraint_ids`).
+    checked post-expansion by the projection).
 
-    Lives here rather than in the legacy lowering module so the exact
-    projection route and the legacy route mint one identity by one rule.
+    Lives here rather than with its caller so that the identity rule has one
+    owner; the legacy lowering module that shared it retired with the v5 family.
     """
     canonical = json.dumps(list(tuple_), sort_keys=True, separators=(",", ":"), ensure_ascii=True)
     if digest_hex_length < 1 or digest_hex_length > 64:

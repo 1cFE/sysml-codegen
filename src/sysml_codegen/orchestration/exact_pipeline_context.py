@@ -1,9 +1,8 @@
 """Receipt-bound pipeline context built from the exact instance graph.
 
-The legacy ``PipelineContext`` (``orchestration/pipeline_context.py``) and its
-builders remain the shipped authority; nothing here replaces them. This is the
-exact route's own construction, added beside them, so both can be run on the
-same model and compared while the cutover is in progress.
+This is the shipped authority, and the only one: the string-resolution
+``PipelineContext`` and its builders are retired, and ``run_codegen`` reaches
+the pipeline through this module on both the live and the from-snapshot source.
 
 What "defensive" means here, concretely. The context holds one thing: the
 canonical bytes of the instance graph it was built from, plus a receipt over

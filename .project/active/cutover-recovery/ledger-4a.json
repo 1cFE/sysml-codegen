@@ -178,7 +178,6 @@
    "authority": "no census row for this path [EVIDENCE: forensic map Finding 2]; plan Gate 4B; fresh reachability derivation at HEAD",
    "unreachability": "not reachable from sysml_codegen.cli at all; the only importer anywhere in src is the analysis package __init__ (:20 re-export), which no runtime caller goes through",
    "replacement_proof_node": [
-    "tests/conformance/test_gen_stencils.py",
     "tests/conformance/test_generation_boundary.py",
     "tests/unit/test_stencils.py"
    ],
@@ -298,17 +297,16 @@
    "path": "src/sysml_codegen/resolution/graph_builder.py",
    "repo": "sysml-codegen",
    "class": "production",
-   "disposition": "migrate",
+   "disposition": "delete",
    "origin": "forensic-diff",
    "group": "4B-v5-family",
    "authority": "census PROD-09/10 via inventory INV-DISC-038 (disposition delete) [EVIDENCE]; plan Gate 4B; fresh reachability derivation at HEAD",
    "unreachability": "reachable from cli/__init__.py:262 for exactly two functions; the legacy build_computation_graph is reached only from pipeline_builder.py:64",
    "replacement_proof_node": "tests/conformance/test_public_authority_switch.py::test_a_refusal_after_the_context_but_before_the_writer_also_leaves_the_tree",
    "blocked_by": [],
-   "reason": "Not a clean delete. collect_uncovered_params and collect_unwired_fallthrough are live public-route code inside an otherwise legacy module; they migrate in G0, the rest of the file is deleted in G3.",
+   "reason": "Not a clean delete in one go. collect_uncovered_params and collect_unwired_fallthrough are live public-route code inside an otherwise legacy module; they migrated to resolution/uncovered_params.py at Gate 4B-G0, and the residual module goes with the v5 family. `disposition` read `migrate` while the migration was the pending half; the census disposition recorded in `authority` was always `delete`, and the row carries it again now that the residual is deleted. Retirement step 2 correction: the old reason also said the residual went in G3, which its own `group` contradicts.",
    "state": "partially-executed",
    "executed_commit": "db00482",
-   "remaining": "collect_uncovered_params and collect_unwired_fallthrough moved to resolution/uncovered_params.py and are re-exported here; the rest of the module is deleted in G3.",
    "removes": [
     {
      "group": "4B-v5-family",
@@ -711,7 +709,7 @@
    "group": "4B-G2",
    "authority": "census PROD-12/API-13 via inventory INV-RES-CG-022 (disposition migrate) [EVIDENCE]; Phase 3 completion notes / plan Gate 4A carried inputs",
    "unreachability": "live",
-   "replacement_proof_node": "tests/conformance/test_public_authority_switch.py::test_the_generation_half_still_reaches_v5_modules_and_that_residual_is_pinned",
+   "replacement_proof_node": "tests/conformance/test_public_authority_switch.py::test_no_legacy_construction_authority_has_come_back",
    "blocked_by": [],
    "reason": "Re-exports graph_rebuild (:81), loader (:85) and serializer (:86). This is the whole of the named v5 import residual carried from 3E; dropping these three lines is what empties that pin. Census API-13 says the same.",
    "orphaned_after_step_2": {
@@ -1160,7 +1158,8 @@
    "disposition_4c": "archive-with-findings",
    "findings_home": ".project/completed/20260720_constraint-lifecycle-diagnostics-defaults/design.md",
    "responsibility": "Item 4 Phase 0 snapshot-only measurement probe.",
-   "disposition_4c_note": "Gate 4C part 7 (2026-08-11). This row's reason says 4B does not break it, which was true on the import axis and is wrong on the data axis measured at part 5: the probe reads shared_producer's v5 extraction_snapshot.json by path, and that fixture retires with the family with no v6 route. Correcting the row rather than leaving the stale claim. It carries zero test nodes and its measurement is carried in the constraint-lifecycle design. At retirement: move to scripts/archive/ with a header naming the owner that retired it and the findings home. The file is preserved, not deleted \u2014 plan rule 7."
+   "disposition_4c_note": "Gate 4C part 7 (2026-08-11). This row's reason says 4B does not break it, which was true on the import axis and is wrong on the data axis measured at part 5: the probe reads shared_producer's v5 extraction_snapshot.json by path, and that fixture retires with the family with no v6 route. Correcting the row rather than leaving the stale claim. It carries zero test nodes and its measurement is carried in the constraint-lifecycle design. At retirement: move to scripts/archive/ with a header naming the owner that retired it and the findings home. The file is preserved, not deleted \u2014 plan rule 7.",
+   "archived_to": "scripts/archive/probe_item4_phase0.py"
   },
   {
    "id": "L-044",
@@ -1201,7 +1200,8 @@
    "breaks_on": "sysml_codegen.resolution.graph_builder (L-011, 4B-v5-family); sysml_codegen.generation.initialization:PipelineContext (L-021, 4B-v5-family); sysml_codegen.orchestration.pipeline_builder (L-029, 4B-v5-family)",
    "breaks_a_free_group": false,
    "disposition_4c_note": "Gate 4C part 7 (2026-08-11). Aggregation-wiring hypotheses H1-H4. The spikes plan records what each hypothesis returned and the bugfix design records what was built on it. At retirement: move to scripts/archive/ with a header naming the owner that retired it and the findings home below. The file is preserved, not deleted \u2014 plan rule 7. It carries zero test nodes, so no coverage moves with it.",
-   "findings_home": ".project/completed/20260216_aggregation-wiring-spikes/plan.md; .project/completed/20260216_aggregation-wiring-bugfix/design.md"
+   "findings_home": ".project/completed/20260216_aggregation-wiring-spikes/plan.md; .project/completed/20260216_aggregation-wiring-bugfix/design.md",
+   "archived_to": "scripts/archive/spike_agg_wiring_h1_h4.py"
   },
   {
    "id": "L-046",
@@ -1222,7 +1222,8 @@
    "breaks_on": "sysml_codegen.core.output_registry (L-007, 4B-v5-family); sysml_codegen.orchestration.pipeline_builder (L-029, 4B-v5-family)",
    "breaks_a_free_group": false,
    "disposition_4c_note": "Gate 4C part 7 (2026-08-11). Aggregation validation spike. Its measurement is the full-scope analysis' evidence base. At retirement: move to scripts/archive/ with a header naming the owner that retired it and the findings home below. The file is preserved, not deleted \u2014 plan rule 7. It carries zero test nodes, so no coverage moves with it.",
-   "findings_home": ".project/research/20260216-001500_aggregation-wiring-full-scope-analysis.md"
+   "findings_home": ".project/research/20260216-001500_aggregation-wiring-full-scope-analysis.md",
+   "archived_to": "scripts/archive/spike_aggregation_validation.py"
   },
   {
    "id": "L-047",
@@ -1343,7 +1344,8 @@
    "breaks_on": "sysml_codegen.analysis.parameter_groups (L-003, 4B-v5-family); sysml_codegen.orchestration.pipeline_builder (L-029, 4B-v5-family)",
    "breaks_a_free_group": false,
    "disposition_4c_note": "Gate 4C part 7 (2026-08-11). Pure-chain EXPOSE spike. Result recorded in the SysIDE-assumptions spike results. At retirement: move to scripts/archive/ with a header naming the owner that retired it and the findings home below. The file is preserved, not deleted \u2014 plan rule 7. It carries zero test nodes, so no coverage moves with it.",
-   "findings_home": ".project/research/20260213_spike_results_syside_assumptions.md"
+   "findings_home": ".project/research/20260213_spike_results_syside_assumptions.md",
+   "archived_to": "scripts/archive/spike_expose_pure_chain.py"
   },
   {
    "id": "L-053",
@@ -1364,7 +1366,8 @@
    "breaks_on": "sysml_codegen.analysis.dependency_backtracker (L-002, 4B-v5-family); sysml_codegen.analysis.parameter_groups (L-003, 4B-v5-family); sysml_codegen.orchestration.pipeline_builder (L-029, 4B-v5-family)",
    "breaks_a_free_group": false,
    "disposition_4c_note": "Gate 4C part 7 (2026-08-11). Issue 22 aggregation-REFERENCE spike. Its answer is carried in the orchestration-extraction plan. At retirement: move to scripts/archive/ with a header naming the owner that retired it and the findings home below. The file is preserved, not deleted \u2014 plan rule 7. It carries zero test nodes, so no coverage moves with it.",
-   "findings_home": ".project/completed/20260220_orchestration-extraction/plan.md"
+   "findings_home": ".project/completed/20260220_orchestration-extraction/plan.md",
+   "archived_to": "scripts/archive/spike_issue22_agg_ref.py"
   },
   {
    "id": "L-054",
@@ -1385,7 +1388,8 @@
    "breaks_on": "sysml_codegen.analysis.dependency_backtracker (L-002, 4B-v5-family); sysml_codegen.analysis.parameter_groups (L-003, 4B-v5-family); sysml_codegen.orchestration.pipeline_builder (L-029, 4B-v5-family)",
    "breaks_a_free_group": false,
    "disposition_4c_note": "Gate 4C part 7 (2026-08-11). Output-registry end-to-end spike. Its own dedicated results document. At retirement: move to scripts/archive/ with a header naming the owner that retired it and the findings home below. The file is preserved, not deleted \u2014 plan rule 7. It carries zero test nodes, so no coverage moves with it.",
-   "findings_home": ".project/research/20260213_spike_results_output_registry_e2e.md"
+   "findings_home": ".project/research/20260213_spike_results_output_registry_e2e.md",
+   "archived_to": "scripts/archive/spike_output_registry_e2e.py"
   },
   {
    "id": "L-055",
@@ -1406,7 +1410,8 @@
    "breaks_on": "sysml_codegen.analysis.dependency_backtracker (L-002, 4B-v5-family); sysml_codegen.analysis.parameter_groups (L-003, 4B-v5-family); sysml_codegen.orchestration.pipeline_builder (L-029, 4B-v5-family)",
    "breaks_a_free_group": false,
    "disposition_4c_note": "Gate 4C part 7 (2026-08-11). Reference-resolution spike. Result recorded in the iteration-2 spike results. At retirement: move to scripts/archive/ with a header naming the owner that retired it and the findings home below. The file is preserved, not deleted \u2014 plan rule 7. It carries zero test nodes, so no coverage moves with it.",
-   "findings_home": ".project/research/20260213_spike_results_iteration2.md"
+   "findings_home": ".project/research/20260213_spike_results_iteration2.md",
+   "archived_to": "scripts/archive/spike_reference_resolution.py"
   },
   {
    "id": "L-056",
@@ -2489,7 +2494,7 @@
    "unreachability": null,
    "replacement_proof_node": [
     "tests/conformance/test_exact_constraint_route.py::test_identified_facts_gate_and_projected_constraints_agree_by_usage_id",
-    "tests/conformance/test_exact_constraint_route.py::test_the_shared_constraint_identity_and_default_helpers_stay_callable_on_both_routes"
+    "tests/conformance/test_exact_constraint_route.py::test_the_shared_constraint_identity_and_default_helpers_are_callable"
    ],
    "blocked_by": [],
    "reason": "Integrated live/codec continuity for profile-v4 source identity and polarity. Imports legacy owners (constraint_lowering, pipeline_builder) directly, so 4B's deletion breaks it. Retain now; before the owning 4B group lands, this row needs either a public-behaviour rewrite or a recorded responsibility retirement.",
@@ -3751,7 +3756,7 @@
    "authority": "plan rule 6 \u2014 keep the Item 6 tests until after product proof; every removed or rewritten test needs a responsibility-level disposition first",
    "unreachability": null,
    "replacement_proof_node": [
-    "tests/conformance/test_exact_group_identity.py::test_a_stem_named_group_keeps_the_name_the_legacy_route_ships",
+    "tests/conformance/test_exact_group_identity.py::test_group_identity_comes_from_the_declaring_file_or_package",
     "tests/conformance/test_exact_route_alias_aggregation.py::test_every_derived_identifier_is_quote_and_space_free",
     "tests/conformance/test_elaboration_identity_collisions.py::test_semantic_graph_keeps_same_rendered_names_distinct"
    ],
@@ -4634,7 +4639,6 @@
    "authority": "plan rule 6 \u2014 keep the Item 6 tests until after product proof; every removed or rewritten test needs a responsibility-level disposition first",
    "unreachability": null,
    "replacement_proof_node": [
-    "tests/conformance/test_gen_registry.py::TestImportPathsMatchFilesystem::test_req_reg_02_import_paths_match_filesystem[solar_battery]",
     "tests/conformance/test_exact_route_registry.py"
    ],
    "blocked_by": [],
@@ -5507,7 +5511,6 @@
    "authority": "C1 ruling, orchestrator 2026-08-11 (plan, Gate 4A approval) \u2014 the recorded responsibility retirement plan rule 6 requires before a test may be deleted",
    "unreachability": null,
    "replacement_proof_node": [
-    "tests/conformance/test_gen_stencils.py",
     "tests/conformance/test_generation_boundary.py",
     "tests/unit/test_stencils.py"
    ],
@@ -6268,7 +6271,8 @@
    "breaks_on": "sysml_codegen.orchestration.pipeline_builder (L-029, 4B-v5-family)",
    "breaks_a_free_group": false,
    "disposition_4c_note": "Gate 4C part 7 (2026-08-11). Item 1 phase-0 baseline probe. Its finding is the baseline-diagnostics plan's starting measurement. At retirement: move to scripts/archive/ with a header naming the owner that retired it and the findings home below. The file is preserved, not deleted \u2014 plan rule 7. It carries zero test nodes, so no coverage moves with it.",
-   "findings_home": ".project/active/baseline-diagnostics/plan.md"
+   "findings_home": ".project/active/baseline-diagnostics/plan.md",
+   "archived_to": "scripts/archive/probe_item1_phase0.py"
   },
   {
    "id": "L-283",
@@ -6289,7 +6293,8 @@
    "breaks_on": "sysml_codegen.analysis.parameter_groups (L-003, 4B-v5-family)",
    "breaks_a_free_group": false,
    "disposition_4c_note": "Gate 4C part 7 (2026-08-11). Design-attribute defaults spike. Result recorded in the iteration-2 spike results. At retirement: move to scripts/archive/ with a header naming the owner that retired it and the findings home below. The file is preserved, not deleted \u2014 plan rule 7. It carries zero test nodes, so no coverage moves with it.",
-   "findings_home": ".project/research/20260213_spike_results_iteration2.md"
+   "findings_home": ".project/research/20260213_spike_results_iteration2.md",
+   "archived_to": "scripts/archive/spike_design_attr_defaults.py"
   },
   {
    "id": "L-284",
@@ -6331,7 +6336,8 @@
    "breaks_a_free_group": false,
    "disposition_4c_note": "Gate 4C part 7 (2026-08-11). Probe 3, alias resolution for the Solar Battery Plant ':>> total_capex = capital_cost' redefinition. Its finding drove the alias wiring fix and survives in the synthesis report; README.md keeps the question. At retirement: move to scripts/archive/ with a header naming the owner that retired it and the findings home below. The file is preserved, not deleted \u2014 plan rule 7. It carries zero test nodes, so no coverage moves with it.",
    "reason": "Found by the Gate 4C part 3 surface measurement. Calls pipeline_builder (L-029) inside a function. Rule 7: archive with its finding when the v5 family retires.",
-   "findings_home": ".project/reports/05_synthesis_and_fixes.md; scripts/probes/README.md"
+   "findings_home": ".project/reports/05_synthesis_and_fixes.md; scripts/probes/README.md",
+   "archived_to": "scripts/archive/probe_alias_resolution.py"
   },
   {
    "id": "L-286",
@@ -6352,7 +6358,8 @@
    "breaks_a_free_group": false,
    "disposition_4c_note": "Gate 4C part 7 (2026-08-11). Backtracker resolution probe against the legacy resolver. Indexed in the investigation report; the README keeps its question. At retirement: move to scripts/archive/ with a header naming the owner that retired it and the findings home below. The file is preserved, not deleted \u2014 plan rule 7. It carries zero test nodes, so no coverage moves with it.",
    "reason": "Found by the Gate 4C part 3 surface measurement. Calls pipeline_builder (L-029) inside a function. Rule 7: archive with its finding when the v5 family retires.",
-   "findings_home": ".project/reports/00_investigation_index.md; scripts/probes/README.md"
+   "findings_home": ".project/reports/00_investigation_index.md; scripts/probes/README.md",
+   "archived_to": "scripts/archive/probe_backtracker_resolution.py"
   },
   {
    "id": "L-287",

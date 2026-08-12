@@ -644,41 +644,12 @@ class TestReqExt07AstFields:
         assert all(calc_fields[name].metadata.get("snapshot_exclude") for name in expected)
         assert attr_fields["element_id"].metadata.get("snapshot_exclude") is True
 
-    def test_snapshot_ast_fields_nullified_in_raw_json(self):
-        """Raw snapshot JSON has null AST fields (serialization boundary).
-
-        The snapshot serializer nullifies SysIDE Java objects that can't
-        survive JSON round-trip. This test reads the raw JSON directly
-        (bypassing the loader) to verify the serializer did its job.
-        Full AST content verification is deferred to C04.
-        """
-        import json
-
-        snapshot_path = (
-            Path(__file__).parent.parent
-            / "fixtures"
-            / "solar_battery_model"
-            / "extraction_snapshot.json"
-        )
-        raw = json.loads(snapshot_path.read_text())
-        for cd in raw["calc_defs"]:
-            ast_val = cd.get("output_expression_asts")
-            assert ast_val is None or ast_val == {}, (
-                f"calc_def {cd['name']}: raw JSON "
-                f"output_expression_asts should be null/empty, "
-                f"got {ast_val!r}"
-            )
-            member_val = cd.get("member_expressions")
-            assert member_val is None or member_val == {}, (
-                f"calc_def {cd['name']}: raw JSON "
-                f"member_expressions should be null/empty, "
-                f"got {member_val!r}"
-            )
-            assert "element_id" not in cd
-            assert "output_expression_asts_by_id" not in cd
-            assert "all_member_ids" not in cd
-            assert "member_expressions_by_id" not in cd
-            assert "member_names_by_id" not in cd
+    # ``test_snapshot_ast_fields_nullified_in_raw_json`` stood here. It read a committed
+    # ``extraction_snapshot.json`` and asserted the v5 serializer had nullified the SysIDE
+    # AST fields that cannot survive a JSON round trip. Serializer and fixtures both retired
+    # with the v5 family (retirement step 2), so there is no serialized form left to check.
+    # The declaration side of the same rule — which fields are marked ``snapshot_exclude``
+    # — is asserted by the sibling node above and is unaffected.
 
 
 # ---------------------------------------------------------------------------
@@ -1019,13 +990,15 @@ class TestReqExt09ConstraintDropDiagnostic:
         assert len(asserts) == 1, "wi014_toy must carry exactly one assert constraint"
         assert asserts[0].constraint_name == "affordable"
 
-        from sysml_codegen.orchestration.pipeline_builder import build_pipeline_context
+        # Read off the exact route: the legacy builder this arm used retired with the v5
+        # family (retirement step 2), and the catalogue is the same public artefact.
+        from sysml_codegen.orchestration.elaborated_pipeline import build_elaborated_pipeline
 
-        ctx = build_pipeline_context([FIXTURES_DIR / "wi014_toy"])
+        graph = build_elaborated_pipeline([FIXTURES_DIR / "wi014_toy"])
         usage_qn = f"{asserts[0].owner_qualified_name}::{asserts[0].constraint_name}"
         eligible_usage_qns = {
             e.usage_qualified_name
-            for e in (ctx.computation_graph.constraint_catalog.concrete_entries or [])
+            for e in (graph.constraint_catalog.concrete_entries or [])
         }
         assert usage_qn in eligible_usage_qns, (
             "the assert constraint must be carried as an eligible catalog entry"

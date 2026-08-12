@@ -22,7 +22,6 @@ from sysml_codegen.generation.entry_point import (
 )
 from sysml_codegen.generation.initialization import (
     CodeGenerationError,
-    PipelineContext,
     SysMLParsingError,
 )
 from sysml_codegen.generation.modules import (
@@ -66,7 +65,6 @@ __all__ = [
     "generate_inputs_readme",
     # initialization
     "CodeGenerationError",
-    "PipelineContext",
     "SysMLParsingError",
     # modules
     "generate_teax_module",

@@ -1,9 +1,10 @@
-"""Internal complete route through the exact-ID elaborator.
+"""The complete route through the exact-ID elaborator.
 
-This module exists for Item-5 dual-run evidence.  It is deliberately absent
-from the CLI and does not call, adapt, or import the shipped legacy builder.
+This is the shipped authority.  It was Item-5 dual-run evidence while the
+string-resolution builder was still in the tree; that builder is retired, so
+there is no other route left to compare against.
 
-``elaborate_admitted_sources`` is the front half of that route taken from an
+``elaborate_admitted_sources`` is the front half of the route taken from an
 admitted source set rather than from raw caller paths.  It is what the live and
 the v6 capture routes share, so both see the same parsed documents and the same
 portable ``root-N/<relpath>`` source referents on every graph node.

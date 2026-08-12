@@ -147,18 +147,17 @@ def test_fact_cross_package_chain_root_is_a_package_level_part_usage(
 def test_fact_untyped_part_usages_are_invisible_to_the_typed_index(
     loaded_cache,
 ) -> None:
-    """d316: the model has zero user part defs; the untyped ``consumer`` part has no
-    occurrence in the typed index — the shape the elaborator must supplement."""
-    # Gate 4C part 7, per-node disposition (ledger L-129): the typed index is
-    # legacy (analysis/part_instance_index.py, L-004) and this is the only node
-    # in the file that reads it. Local import so the other 14 keep collecting
-    # after L-004 goes; this one retires with it.
-    from sysml_codegen.analysis.part_instance_index import build_part_instance_index
+    """d316: the model has zero user part defs, so the untyped ``consumer`` part carries
+    no owned feature typing — the shape the elaborator must supplement.
 
+    The typed index this node was named for (``analysis/part_instance_index.py``, L-004)
+    retired with the v5 family (retirement step 2), per the per-node disposition on ledger
+    L-129. Its assertion — that ``consumer`` has no occurrence in that index — was a
+    consequence of the two model facts below, which are what the elaborator actually reads,
+    so they stay and the index read goes.
+    """
     model = loaded_cache("d316_crosspart_expose").model
     assert user_partdef_lookup(model) == {}
-    index = build_part_instance_index(model)
-    assert index.occurrences_of_part_usage("D316Design::consumer") == []
     (consumer,) = [
         part
         for part in SysideAdapter.elements_of_type(model, "PartUsage")

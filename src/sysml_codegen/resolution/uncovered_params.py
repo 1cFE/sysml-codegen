@@ -5,10 +5,9 @@ The two halves of the M1 partition (Item 7 / D4). Both are pure: they read a
 what a finding means — V11 abort for the wired half, a WARNING summary for the
 unwired remainder.
 
-They lived in ``resolution/graph_builder.py`` until Gate 4B-G0. That module is
-the legacy graph construction authority and retires in G3; these two functions
-are live public-route code that the CLI calls on every run, so they moved here
-first. ``graph_builder`` re-exports them until it goes.
+They lived in ``resolution/graph_builder.py`` until Gate 4B-G0 moved them here, ahead
+of that module's retirement with the v5 family (retirement step 2), because they are
+live public-route code the CLI calls on every run.
 """
 
 from __future__ import annotations

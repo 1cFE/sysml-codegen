@@ -75,18 +75,12 @@ class TestDM08EnforcedSurface:
             "ScopedAliasKey is not a NewType over tuple[str, str]"
         )
 
-    @pytest.mark.req("REQ-DM-08")
-    def test_registry_dict_annotations_name_newtypes(self):
-        """(b) The four registry dicts are annotated dict[NewType, NewType].
-
-        AST scan of OutputRegistry.__init__ (PEP-526 self.x annotations never
-        reach __annotations__, so this is the only honest static check).
-        """
-        # Gate 4C part 7, per-node disposition (ledger L-125): OutputRegistry
-        # (L-007) retires with the v5 family, so this one node of the three goes
-        # with it while (a) and (c) — the NewType wrappers themselves, in the
-        # retained core/identifier_types.py — keep collecting. Local import so
-        # this node fails alone rather than at module scope.
+    # (b) — the AST scan asserting the four ``OutputRegistry.__init__`` dicts are
+    # annotated ``dict[NewType, NewType]`` — retired with the v5 family (retirement
+    # step 2) together with ``core/output_registry.py`` (L-007), per the per-node
+    # disposition on ledger L-125. (a) and (c), the NewType wrappers themselves in the
+    # retained ``core/identifier_types.py``, are unaffected.
+    def _retired_registry_dict_annotations(self):
         from sysml_codegen.core.output_registry import OutputRegistry
 
         src = textwrap.dedent(inspect.getsource(OutputRegistry.__init__))
