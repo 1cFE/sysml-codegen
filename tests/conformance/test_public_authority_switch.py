@@ -148,8 +148,6 @@ def main_returns(argv: list[str]) -> None:
         sys.argv = original
 
 
-#: Every module that owns a legacy construction authority. A public caller
-#: reaching any of these is the dual authority this slice exists to close.
 #: Every module that owned a legacy construction authority. Retirement step 1 deleted the
 #: first three and step 2 deleted the fourth, so a public caller can no longer reach any of
 #: them — but the names stay here, and the nodes below now check that they stay *gone*.

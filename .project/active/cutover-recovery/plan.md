@@ -5682,6 +5682,236 @@ New file `tests/conformance/test_constraint_name_collision.py`, **4 nodes**:
 | `check_ledger_4a.py` `paths` / `surface` / `groups` | **304 rows, 0 problems** / **0** / READY |
 | `test_runbook_patches.py` | **4 passed** |
 
+### Revise step 6 — the retirement, executed
+
+**Completed:** 2026-08-12. **Executes:** `owner-disposition-20260811.md` step 5 — the
+retirement runbook's four steps on the real tree, **with no provisional trim**, plus gated
+item 7, the agentic legacy members, and the stale production docstrings the audit named.
+
+Every prior run of these steps was a simulation in a scratch worktree. This is the tree.
+`runbook-patches/provisional-trim.txt` was not passed to any run, and no battery below
+deselects anything the tree does not deselect by default.
+
+#### What executed, per step
+
+Row counts re-derived at HEAD before starting (`retirement_worklist.py check`), and they
+matched the table above to the unit: **102 / 153 / 1 / 5**, 0 problems. The work-list patch
+then moved the three `*_e2e.py` rows forward, so step 2 ran 156 and step 4 ran 2.
+
+| Step | Rows | delete / archive / edit | Step commit | Close commit |
+|---|---:|---|---|---|
+| 1 — G2′, the v5 read path | 102 | 80 / 7 / 15 | `19072ad` | `104a8c2` |
+| 2 — the v5 family | 156 | 111 / 11 / 34 | `82c7951` | `a5b5d5d` |
+| 3 — G3′ | 1 | 1 / 0 / 0 | `882fc8d` | `5ef24fe` |
+| 4 — G4′ | 2 | 2 / 0 / 0 | `3071fba` | `9c6f505` |
+
+The apply order the runbook insists on was followed and is what made it work: step 2's two
+ledger patches and `scripts__retirement_worklist.patch` landed **before** `retire_step.py
+apply 2`, and the remaining 40 patches were excluded by exact filename, so
+`tests__unit__test_retirement_worklist.patch` still applied. No patch failed to apply, at any
+step. No file outside the work-list was touched by a step.
+
+Both `close`es were needed exactly as recorded. Run before the close, the step-2 suite reads
+**5 failed** and step 4 reads **3 failed**, all in `test_check_ledger_4a.py`: ten
+"carried row … does not exist at HEAD" problems, plus L-011's "partially-executed row does
+not say what is left" (its patch drops the stale `remaining` field while the state is still
+`partially-executed`, which the close then clears). Both classes go with the close.
+
+#### The batteries
+
+Baseline is HEAD `c394640`, re-measured at the start of this stage and identical to the
+brief's expected clean start.
+
+| Gate | Baseline | Step 1 | Step 2 | Step 3 | Step 4 |
+|---|---|---|---|---|---|
+| Licensed suite | 3870 / 47 / 83 | **2468 / 43 / 65** | **1701 / 34 / 65** | 1701 / 34 / 65 | **1701 / 34 / 65** |
+| failed / errors | 0 / 0 | **0 / 0** | **0 / 0** | 0 / 0 | **0 / 0** |
+| `no live syside license` lines | 0 | 0 | 0 | — | **0** |
+| Execution lane | 83 | **65** | 65 | 65 | **65** |
+| `capture_v6_batch.py --verify` | 15/22/0 | 15/22/0 | 15/22/0 | 15/22/0 | **15/22/0** |
+| corpus `-k corpus` | 12 | **11** | **9** | 9 | **9** |
+| `ruff check src` | 16 | 16 | **15** | **14** | **14** |
+| `ruff` whole tree | 866 | **768** | **645** | **644** | **644** |
+| `mypy src` | 69 in 16 (87 files) | 69 in 16 (84) | **58 in 12** (72) | **57 in 11** (71) | **57 in 11** (70) |
+| `check_ledger_4a.py paths` | 304 / 0 | 304 / 0 | 304 / 0 | 304 / 0 | **304 / 0** |
+| `surface` | 0 | 0 | 0 | 0 | **0** |
+| `groups` | all READY | all READY | all READY | all READY | **all READY, affected 0** |
+| proof integrity | 0 / 0 | 0 / 0 | 0 / 0 | 0 / 0 | **0 / 0** |
+| `git diff --check` | clean | clean | clean | clean | **clean** |
+| `retirement_worklist.py check` | 263 placed, 0 problems | — | — | — | **0 placed, every step empty, 0 problems** |
+
+**Zero failures and zero errors at every boundary, with no trim.** That is the thing the
+simulation could only assert with 113 nodes held out.
+
+`mypy` and `ruff check src` land on the runbook's predicted numbers to the unit at every
+step (69→69→58→57→57; 16→16→15→14→14), as do corpus (12→11→9→9→9) and the file counts
+mypy checks (87→84→72→71→70).
+
+#### The suite delta, accounted node by node
+
+Not by arithmetic — by set difference over collected node ids, taken at each boundary
+against a scratch worktree at `c394640` (put beside the checkouts, per the runbook).
+
+- **Step 1: 1406 nodes lost, 0 gained, 0 unexplained.** Every one belongs to a step-1 row:
+  1358 from 71 deletion rows, 12 from the one archive row that carried nodes
+  (`test_source_identity_routes.py`, moved out of the tests tree), 36 from 7 edit rows. The
+  seven edit rows match the plan's step-1 edit table exactly — L-167 −5, L-180 −7, L-185 −5,
+  L-186 −2, L-189 −4, L-219 −4 (3 mechanism nodes stay), L-249 −9 (`test_unwired_fallthrough_partition`
+  stays). 1402 passed + 4 skipped = 1406.
+- **Step 2: 784 lost, 8 gained, 0 unexplained.** 749 from 58 deletion rows; the rest from
+  files with a prepared step-2 patch. Net −776, which is exactly the suite's
+  2511 → 1735 (passed + skipped) move. The four files that changed without a *placed* step-2
+  row are L-100, L-135, L-277 and L-279 — step-1 edit rows already closed, each with a
+  prepared `step2/` patch and each landing the node change its step-2 table entry describes.
+- **Execution lane, −18 at step 1:** the four deletion rows L-191/192/193/194, node for node.
+  Unchanged at steps 2–4.
+- **Whole-tree ruff, derived not just measured:** 866 − 173 + 75 = **768** at step 1, where
+  173 findings sit in files step 1 moves off their path and 75 come back under
+  `scripts/archive/`. The plan's recorded 769 is one high: it counted 76 returning. Measured
+  per file, the seven archived files carry 74 findings at source and 75 at destination —
+  `test_source_identity_routes.py` gains exactly one rule by moving from `tests/` into
+  `scripts/`. The count is descriptive; `ruff check src` is the gate and it never moved
+  except where a step deleted a file carrying a finding.
+
+#### Gated item 7 — and the premise correction under it
+
+**Ruling:** [OWNER 2026-08-11], disposition step 2 item 7 — remove the dead v5 exports from
+`snapshot/__init__.py`, inside steps 1–2.
+
+**No row could be minted.** `check_ledger_4a.py check_paths` refuses two rows for one path
+(`:433`), and `snapshot/__init__.py` already has L-028 — which the ledger's own
+`why_not_a_row_of_its_own` field already records. So the item is carried as a **third
+`removes` block on L-028**, group `4B-G4`, naming all seven symbols, with the owner ruling as
+its `authority`, minted under the orchestrator's delegated ledger authority. That is the row,
+in the only form the checker admits.
+
+**The slot moved from step 2 to step 4, and the reason is a false measurement, surfaced not
+resolved.** L-028's `orphaned_after_step_2` field recorded "zero readers in src/, scripts/ or
+tests/ at the step-2 post-state". Measured at this HEAD, that is false:
+`tests/helpers/legacy_route.py:44,52` still read `GrandfatheredSnapshotError` and
+`assert_snapshot_certifiable` after step 2, and that file is **L-276, a step-4 deletion**.
+Executing at step 2 would have meant either editing a file the retirement deletes two steps
+later, or shipping two commits whose `legacy_route.py` cannot import. Executed at step 4
+instead — the first step at which all seven are genuinely dead, re-measured there at **0
+readers of every symbol across `src/`, `scripts/` and `tests/`, any file type**. The ruling's
+substance (the dead v5 surface goes with the retirement, closing Blocker 1) is delivered; only
+its step number moved, and both the row and the step-4 commit message say so.
+
+`snapshot/__init__.py` is now a docstring describing the v6 machinery, re-exporting nothing.
+
+#### The agentic legacy members — and a second cross-repo miss
+
+**Deleted** in `agentic-mbse` `item7-rebuild` **`3fbda2f`**: `extract_constraint_facts`,
+`evaluate_profile`, `ProfileResult`, `preflight`, their `__all__` entries, and their
+`sysml/__init__.py` publication surface (the static `TYPE_CHECKING` import and the `_LAZY`
+entry). `test_public_api_exports.py` realigned to the identified names; two docstrings that
+named the deleted members re-worded; the now-unused `ConstraintFacts` import dropped.
+
+**Battery:** suite **1826 / 1 / 5** — unchanged from the pre-state, node for node. `ruff src`
+**1** (the pre-existing `N806`), `ruff tests` **120**, `mypy` **108 in 26**, `git diff --check`
+clean. All identical to the recorded pre-state.
+
+**The premise "codegen step 2 removes the last codegen readers" was false**, in the same way
+and for the same reason as the REVISE step-2 cross-repo finding. Two codegen readers survived
+step 4:
+
+- `tests/conformance/test_source_identity_extraction.py:207` called `extract_constraint_facts`
+  live. L-181 is a **surviving** edit row, so this reader was never retirement-owned; the
+  step-2 inventory counted it so. Repointed onto
+  `extract_identified_constraint_facts(...).facts` in codegen **`603aa5e`**, before the
+  agentic deletion. This is not a migration judgment call: both functions return the payload of
+  one `_extract_constraint_facts` sweep, so no assertion moved.
+- `scripts/probes/probe_constraint_profile_qualifier_drop.py` names the deleted members in its
+  dual table. It is a forensic probe with no ledger row and no test node, and its findings are
+  already recorded (`evidence/dual-qualifier-drop-dryruns.txt`, and the chunk-16 records on
+  L-036/L-037). Its legacy column can no longer run. **Left in place and surfaced** — deleting
+  or archiving it is a disposition no record authorises, and nothing in the suite depends on it.
+
+**L-036 and L-037 are closed.** Their `removes` blocks name exactly the four symbols deleted,
+so both rows are marked `executed` at `3fbda2f` with a `revise_step6` note. The ledger now
+reads **0 placed rows, every step empty, no owner-gated rows, 0 problems**.
+
+#### Stale docstrings and an amended pin
+
+Three module docstrings the audit's code-integrity finding named, all amended in the step-2
+commit, all of which called the exact route Item-5-only or absent from the CLI while it is the
+shipped authority: `orchestration/elaborated_pipeline.py`,
+`orchestration/exact_pipeline_context.py`, `snapshot/instance_graph.py`. All three are on the
+CLI's construction path (`cli/__init__.py:978-995`, `snapshot/capture.py:26`,
+`snapshot/envelope.py:76`), which is what makes the old text false rather than merely dated.
+
+One amended 3E pin needed a correction the patch did not make.
+`test_public_authority_switch.py`'s `LEGACY_AUTHORITY_MODULES` comment carried **both** the old
+present-tense claim ("Every module that owns a legacy construction authority") and the new
+absence claim, stacked. The old two lines are removed; the pin's nodes were already checking
+absence (`:196`, `:512`, `:523`) and are correct as they stand.
+
+#### Rule-10 surfacing — `analysis/diagnostic_screen.py` is dead, and no row says so
+
+**Not fixed. Not deleted. Surfaced with the evidence, which is what rule 10 asks for.**
+
+`screen_extraction_diagnostics` (`analysis/diagnostic_screen.py:51`) has **zero callers** in
+`src/`, `tests/` or `scripts/` after step 2. Its only two call sites were
+`pipeline_builder.py:898` and `snapshot_context.py:48` — deleted by steps 2 and 1. Its test
+module `tests/conformance/test_diagnostic_screen.py` (L-124) went at step 1 with its 8 nodes.
+
+Its ledger row **L-023** says `disposition: migrate`, `state: executed`, and
+`unreachability: "live on the exact route"`. That last field is false: the exact route never
+called it. The row's whole recorded reason is a G0 import repoint ("Imports
+CodeGenerationError from pipeline_context (:73). Repoint."), and nothing in it anticipates the
+module losing both callers.
+
+What is at stake is not the dead code. `docs/architecture/reference/30-diagnostic-severity.md`
+discharges **REQ-DIAG-02** and **REQ-DIAG-03** against this function, citing the two now-deleted
+call sites by line. So the retirement removed a requirement's implementation from the shipped
+route, silently, and the checker could not see it: L-023 is a `migrate` row whose file is still
+present, which is exactly the shape `paths`, `surface` and `groups` all read as fine.
+
+The exact route refuses a diagnostic-carrying model by a different mechanism —
+`elaborate()` raising `ElaborationDiagnosticError`, which `run_codegen` catches. Whether that
+mechanism discharges REQ-DIAG-02/03, and whether `diagnostic_screen.py` should be wired to it,
+retired with a row, or left, is a decision with no recorded authority. **Owner input needed.**
+
+#### The v5 typed refusal, still typed
+
+Seven nodes green at the step-1 post-state and at HEAD: the five surviving
+`test_snapshot_v5_gate.py` v6-envelope nodes against `snapshot/envelope.py`, plus
+`test_a_v5_snapshot_is_refused_by_name_at_the_loader` and
+`test_generate_from_a_v5_snapshot_refuses_without_falling_back`.
+
+#### The legacy surface, by grep
+
+- `build_pipeline_context`: **0 definitions, 0 live call sites.** Every mention in the live
+  tree is an assertion of its absence (`test_elaboration_import_boundaries.py:302-324`,
+  `test_public_authority_switch.py`), a decision record in prose, or the work-list's own data
+  table. The remaining executable call sites are all inside `scripts/archive/`, by design.
+- v5 loaders — `load_extraction_snapshot`, `build_full_graph_from_snapshot`,
+  `build_classifier_inputs_from_snapshot`, `serialize_extraction_snapshot`, `snapshot_to_json`,
+  `capture_snapshot`, `snapshot_context`: no definition and no caller outside
+  `scripts/archive/`; the live-tree hits are absence pins and one stale docstring line
+  (`analysis/diagnostic_screen.py:5`, part of the rule-10 item above).
+- `tests/helpers/legacy_route.py`, `elaboration/diff.py` (the dual-run diff),
+  `orchestration/pipeline_builder.py`, `orchestration/snapshot_context.py`,
+  `resolution/graph_builder.py`, `resolution/producer_resolution.py`,
+  `resolution/producer_completeness.py`, `core/output_registry.py`,
+  `snapshot/{loader,serializer,graph_rebuild}.py`, the `analysis/` legacy trio: **all gone.**
+  `analysis/` holds `diagnostic_screen.py` and `source_referent.py`.
+  `orchestration/pipeline_context.py` survives as its L-018 edit specifies — the two-error
+  re-export point, no `PipelineContext`.
+- `extraction_snapshot.json` fixtures: **0**. Both v5 capture scripts, `capture_filter.py` and
+  `run_elaboration_corpus.py`: gone.
+- The agentic neutral route, from codegen: **0 live readers**. One comment naming it as retired,
+  and the probe script above.
+
+#### Left for the owner, named
+
+- **`analysis/diagnostic_screen.py`** — the rule-10 item above. Blocking for the step-7 record.
+- **`scripts/probes/probe_constraint_profile_qualifier_drop.py`** — disposition unrecorded.
+- The four open questions in `owner-disposition-20260811.md` are untouched by this stage: R8
+  (question 1), the ruff 16 (question 2), Item 10 scheduling, and how the final audit runs.
+  `ruff check src` reads **14** at HEAD, down from 16, because two of the sixteen sat in files
+  steps 2 and 3 deleted. The question itself is unanswered.
+
 ---
 
 **Status:** Draft → Owner-approved → In progress → Audited → Owner accepted/revised
