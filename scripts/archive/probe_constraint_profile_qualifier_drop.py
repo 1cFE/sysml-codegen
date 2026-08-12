@@ -1,5 +1,9 @@
 """Dry run: what an `identified`-qualifier drop would do to the four agentic-mbse duals.
 
+ARCHIVED (retirement step 6): its legacy column became unexecutable when the
+string-resolution stack left the tree. Kept as committed evidence of the measurement,
+not as live tooling — do not run it against the current checkout.
+
 Same method as `probe_expression_compiler_qualifier_drop.py`, applied to the duals the Gate
 4A carried-input note describes the same way — "one behavior under two names", to be retired
 by "delete the legacy member and drop the qualifier from the survivor". The four live in

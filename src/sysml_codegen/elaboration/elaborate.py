@@ -10,6 +10,7 @@ from typing import Any
 from uuid import UUID
 
 from agentic_mbse.sysml.constraint_extraction import (
+    IdentifiedConstraintFacts,
     extract_expression_ir,
     extract_identified_constraint_facts,
 )
@@ -29,6 +30,7 @@ from agentic_mbse.sysml.syside_adapter import SysideAdapter
 
 from sysml_codegen.elaboration.diagnostics import ElaborationInvariantError
 from sysml_codegen.elaboration.display import display_name, display_qualified_name
+from sysml_codegen.elaboration.extraction_screen import screen_extraction_diagnostics
 from sysml_codegen.elaboration.graph import (
     AttrNode,
     CalcNode,
@@ -236,7 +238,13 @@ class _ExactElaborator:
         self._strict = strict
         self._calc_defs = self._index_calculation_payloads(calc_defs)
         self._compilation_results = self._compile_calculation_payloads()
-        self._constraint_associations = self._index_constraint_associations(model)
+        # The one read of the identified constraint facts. Screening the extraction
+        # diagnostics here — before any node is built — is what puts the blocking
+        # halt ahead of lowering and serialization on both the live and the capture
+        # route (REQ-DIAG-02/03; docs/architecture/reference/30-diagnostic-severity.md).
+        identified = extract_identified_constraint_facts(model)
+        screen_extraction_diagnostics(identified.facts)
+        self._constraint_associations = self._index_constraint_associations(model, identified)
         self._slots = build_feature_slot_index(model)
         self._occurrences = build_occurrence_index(model, self._slots)
         self._graph = InstanceGraph(
@@ -275,7 +283,9 @@ class _ExactElaborator:
         self._readiness_keys: set[tuple[DeclarationId, ReadinessCode]] = set()
 
     @staticmethod
-    def _index_constraint_associations(model: Any) -> dict[UUID, _ConstraintAssociation]:
+    def _index_constraint_associations(
+        model: Any, identified: IdentifiedConstraintFacts
+    ) -> dict[UUID, _ConstraintAssociation]:
         stable_usage_ids: dict[UUID, DeclarationId] = {}
         for usage in SysideAdapter.elements_of_type(
             model, "ConstraintUsage", include_subtypes=True
@@ -300,7 +310,6 @@ class _ExactElaborator:
                 )
             stable_definition_ids[raw_id] = declaration_id_for(definition)
 
-        identified = extract_identified_constraint_facts(model)
         profile = evaluate_identified_profile(identified)
         try:
             missing_profile_ids = profile.missing_usage_ids

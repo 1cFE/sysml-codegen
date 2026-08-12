@@ -20,7 +20,7 @@ is refused, in both directions. The rest of this doc is that rule and its guards
 
 The severity type and the diagnostic facts live in `agentic-mbse`
 (`agentic_mbse/sysml/constraint_facts.py`); codegen imports them and reads them at
-two sinks. Citations into `agentic-mbse` below are to that companion repo (merged
+one sink. Citations into `agentic-mbse` below are to that companion repo (merged
 main `f4ebdce`); citations without a repo note are sysml-codegen (merged main
 `936315c`).
 
@@ -70,20 +70,27 @@ semantic change to snapshots already on disk. It therefore requires bumping
 classification map was meant to avoid — and the reason the map lost (Item 4 design
 DD-B1).
 
-## Where the gate runs — two sinks, both before lowering
+## Where the gate runs — one sink, ahead of both routes
 
-Codegen reads extraction facts two ways, and screens each **before constraint
-lowering** consumes them. The sink is one function,
-`screen_extraction_diagnostics` (`analysis/diagnostic_screen.py:51`), called at two
-sites:
+Codegen reads the extraction facts **once**, in the elaborator, and screens them
+there. The sink is one function, `screen_extraction_diagnostics`
+(`elaboration/extraction_screen.py:50`), called from the elaborator's single read of
+the identified constraint facts (`elaboration/elaborate.py:245-246`), before any
+node is built.
 
-- **Live route** — `orchestration/pipeline_builder.py:898`, right after
-  `extract_constraint_facts` and before lowering.
-- **Snapshot route** — `orchestration/snapshot_context.py:48`, screening the loaded
-  snapshot's `constraint_facts` **before** `build_full_graph_from_snapshot` (which
-  lowers). It sits above the graph build deliberately: screening after it would let
-  lowering hit a non-finite literal first and hand the user an obscure lowering
-  failure instead of the actionable diagnostic (Item 4 audit F1).
+That one site covers both routes because both reach the elaborator through
+`orchestration/elaborated_pipeline.py` — live generation at `:59`, v6 capture at
+`:116`, which is what `snapshot/capture.py:30` calls. So the halt lands before
+constraint lowering, before projection, and before a snapshot can be sealed.
+Screening later would let lowering or serialization hit a non-finite literal first
+and hand the user an obscure failure instead of the actionable diagnostic (Item 4
+audit F1). It did exactly that until this sink existed: projection reached
+`json.dumps(inf)` and raised a `ValueError` naming nothing in the model.
+
+**History.** The requirement was first discharged by `analysis/diagnostic_screen.py`,
+called from the two v5 builders; it lost both call sites when the string-resolution
+stack was retired (cutover-recovery retirement step 2), and the requirement was
+re-homed at the elaboration boundary in step 6b, which deleted that module.
 
 The sink is **not** a routing or registry layer (explicit Non-Goal). It reads a
 field the writer already decided and branches on it. Codegen's own diagnostics —
@@ -93,19 +100,23 @@ discipline and are emitted locally.
 
 ### What the gate does with each severity
 
-`screen_extraction_diagnostics` (`analysis/diagnostic_screen.py:56-78`):
+`screen_extraction_diagnostics` (`elaboration/extraction_screen.py:50-79`):
 
 1. Partitions the diagnostics into blocking and advisory by the `severity` field
-   (`:56-65`).
-2. Logs every advisory at `logger.warning` first (`:67-68`).
-3. If there are no blocking diagnostics, returns (`:70-71`).
-4. Otherwise raises `CodeGenerationError` naming **every** blocking diagnostic —
-   its severity, kind, location, and message — before lowering (`:73-78`).
+   (`:58-67`).
+2. Logs every advisory at `logger.warning` first (`:69-70`).
+3. If there are no blocking diagnostics, returns (`:72-73`).
+4. Otherwise raises `ElaborationInvariantError` under
+   `ElaborationCode.EXTRACTION_DIAGNOSTIC_BLOCKING`
+   (`elaboration/diagnostics.py:27`), naming **every** blocking diagnostic — its
+   severity, kind, location, and message (`:75-79`). `elaborate` converts that into
+   the route's typed `ElaborationDiagnosticError` (`elaboration/elaborate.py:178-190`),
+   which `run_codegen` already catches by name (`cli/__init__.py:1009-1011`).
 
 ### Ordering: warning rendering can never swallow the halt
 
 Advisory rendering runs first (step 2), and it cannot fail in a way that occupies
-the slot the blocking halt needs. `_render` (`analysis/diagnostic_screen.py:39-48`)
+the slot the blocking halt needs. `_render` (`elaboration/extraction_screen.py:40-48`)
 degrades a missing location to the literal `<no location>` rather than raising, so
 a location failure inside an advisory can never pre-empt the blocking check that
 follows. This mirrors the warning-pre-pass discipline in constraint lowering, where
@@ -113,6 +124,20 @@ a degraded warning location is confined to the warning's own text and never writ
 into the strict cache the halt path reads (Item 4 invariant I3).
 
 ## What happens on severity skew — in each direction
+
+> **Surfaced, not resolved (step 6b).** This whole section rests on a premise that
+> no longer holds in codegen: that a severity crosses a process boundary on disk.
+> It did under the v5 extraction snapshot, which serialized `ConstraintFacts`. The
+> v6 instance-graph envelope carries no `ConstraintFacts`, no
+> `ExtractionDiagnosticFact`, and no `severity` field at all — `severity` appears
+> zero times under `src/sysml_codegen/snapshot/`, and `constraint_facts.parse` has
+> no caller in `src/` or `tests/`. Extraction severity is now read only in-process,
+> at the elaboration sink above, and capture screens before it seals. So guards 2
+> and 3 below are still true *upstream* but are unreachable from codegen, and the
+> envelope citation in guard 1 names `snapshot/loader.py`, which the retirement
+> deleted. What REQ-DIAG-04 should say against a v6-only reader is an authorship
+> decision with no recorded authority. Left for the owner; the text below is kept
+> verbatim so the decision is made against what was written, not a paraphrase.
 
 "Skew" means a snapshot's stored severity and the reading codegen's writer-table
 disagree about a kind. Every skew is refused; none is silently resolved either way.
@@ -173,8 +198,8 @@ the reconstructor further down.
 | Req | Statement | Evidence |
 |---|---|---|
 | REQ-DIAG-01 | A diagnostic's severity is fixed at construction from the writer table and never recomputed by a reader-side `kind → severity` lookup (I1). | `severity_for_kind` is the only mapping; `__post_init__` derives at construction (`agentic-mbse constraint_facts.py:78-95,230-233`). Provable by `rg` — no reader-side table exists. |
-| REQ-DIAG-02 | A blocking diagnostic halts generation before lowering, on both the live and snapshot routes, naming every blocking diagnostic. | `screen_extraction_diagnostics` raises `CodeGenerationError` (`analysis/diagnostic_screen.py:70-78`); called at `pipeline_builder.py:898` and `snapshot_context.py:48`. |
-| REQ-DIAG-03 | An advisory diagnostic is rendered and generation continues; advisory rendering cannot swallow the blocking halt. | Advisory logged first, degrading location to `<no location>` (`analysis/diagnostic_screen.py:39-48,67-71`). |
+| REQ-DIAG-02 | A blocking diagnostic halts generation before lowering, on both the live and snapshot routes, naming every blocking diagnostic. | `screen_extraction_diagnostics` raises under `EXTRACTION_DIAGNOSTIC_BLOCKING` (`elaboration/extraction_screen.py:72-79`), called at `elaboration/elaborate.py:246` — the one elaborator read both routes share (`orchestration/elaborated_pipeline.py:59,116`). Pinned live and on capture by `tests/conformance/test_extraction_diagnostic_screen.py:49,60`. |
+| REQ-DIAG-03 | An advisory diagnostic is rendered and generation continues; advisory rendering cannot swallow the blocking halt. | Advisory logged first, degrading location to `<no location>` (`elaboration/extraction_screen.py:40-48,69-73`). Pinned at `tests/conformance/test_extraction_diagnostic_screen.py:95,105`; both pins are synthetic because the writer table has no ADVISORY kind today. |
 | REQ-DIAG-04 | Severity skew fails closed in both directions: version gate, then severity cross-check, then unknown-kind refusal. | Exact-equality version gates (`agentic-mbse constraint_facts.py:397-408`; `snapshot/loader.py:723-734`); cross-check (`agentic-mbse constraint_facts.py:374-385`); unknown-kind raise (`:87-95`). |
 
 ## Related Documents

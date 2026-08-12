@@ -961,8 +961,8 @@ def run_codegen(config: GenerationConfig) -> bool:
     whose receipt binds the instance graph to what it projects to. There is no
     flag, environment variable, or config field that selects an implementation.
 
-    The legacy builders remain in the tree and are still importable by name;
-    they are simply not reachable from here. Their removal is Phase 4 work.
+    The legacy builders are gone from the tree entirely (retirement steps 1-4);
+    there is no other construction authority left to be reachable from here.
 
     Args:
         config: Generation configuration with paths and options.
@@ -1129,11 +1129,18 @@ def _generate_package_from_graph(graph: ComputationGraph, config: GenerationConf
             extra={"constraint_name_safety": e.name_safety_violation},
         )
         return False
-    except Exception as e:
-        import traceback
-
-        logger.error(f"Unexpected error: {e}")
-        logger.debug(traceback.format_exc())
+    except OSError as e:
+        # The only unnamed failure this half can operationally hit is the
+        # filesystem: the output tree is created and written from step 2 onward.
+        # Everything else reaching here — a template defect, a graph field the
+        # renderer did not expect — is a programming defect, and it now propagates
+        # to the CLI boundary with its traceback instead of becoming a bare
+        # "generation failed" and exit 1.
+        #
+        # Measured, and deliberately not changed here: any failure after step 2
+        # leaves the partially written output tree on disk. That is true of the
+        # named refusals above as well, and has been since before this narrowing.
+        logger.error(f"Writing the generated package failed: {e}")
         return False
 
 
