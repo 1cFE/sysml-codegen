@@ -739,11 +739,31 @@ def cmd_snapshot(args: argparse.Namespace) -> int:
         logger.error("agentic-mbse is not installed. Please install it first.")
         return 1
 
+    from sysml_codegen.elaboration.elaborate import (
+        ElaborationDiagnosticError,
+        ElaborationError,
+    )
+    from sysml_codegen.generation import SysMLParsingError
     from sysml_codegen.snapshot.capture import capture_instance_graph_snapshot
 
     models_path: Path = args.models
     output_path: Path = args.output or (models_path / "instance_graph_snapshot.json")
-    out = capture_instance_graph_snapshot([models_path], output_path)
+    # The same distinct refusal classes run_codegen keeps distinct: a model the
+    # exact route declines gets its typed message and exit 1, never a traceback.
+    try:
+        out = capture_instance_graph_snapshot([models_path], output_path)
+    except ElaborationError as error:
+        logger.error(f"Model is not ready for the exact route: {error}")
+        return 1
+    except ElaborationDiagnosticError as error:
+        logger.error(f"Model failed exact-route validation: {error}")
+        return 1
+    except SysMLParsingError as error:
+        logger.error(f"SysML parsing failed: {error}")
+        return 1
+    except OSError as error:
+        logger.error(f"Snapshot could not be written: {error}")
+        return 1
     logger.info(f"Wrote snapshot to {out}")
     return 0
 

@@ -6447,4 +6447,37 @@ All four are owner questions. None is a stale artifact.
 
 ---
 
+### Revise step 7 — gates, independent audit, and the audit's findings dispositioned
+
+- **7a — three identical gate runs on the retired tree** (owner step 6): 33/33 fields
+  identical across three consecutive complete runs at codegen `c0ceb24` / agentic `3fbda2f`,
+  compared mechanically (`compare_revise_runs.py`, re-run by the orchestrator, exit 0); zero
+  license-skip lines proven with `-rs`. Artifacts under `evidence/phase5-runs/revise-runs/`,
+  committed `48bf1b0`.
+- **7b — independent audit of the retired tree**: `evidence/audit-7-retired.md`, committed
+  `267fe7a` with the orchestrator's probe addendum. Verdict FINDINGS (none blocking); all
+  eight requested probes CONFIRM the pending lines (audit-F1 fixed in the companion,
+  identified route live at both production call sites, manifest refusal typed, matrix cells
+  green, canonical environment, ledger clean). Per the record's own certification clause the
+  standing verdict is **Certify with the residual list once findings F1–F3 are
+  dispositioned** — done below.
+- **Audit-7 finding dispositions** [AGENT (orchestrator), 2026-08-12, with the audit as
+  evidence]:
+  - **F1 (HR family read as shipped coverage):** family-stand disclosure added to the HR
+    section of `verification-matrix.md`, matching the CA sibling's pattern.
+  - **F2 (three re-cited rows weaker than their text):** REQ-CL-04, REQ-EPC-01, REQ-GA-03
+    moved PASS → **PARTIAL**, each cell naming exactly what a violation could do without
+    failing the heir; PARTIAL added to the legend; counts recounted mechanically
+    (133 PASS / 3 PARTIAL / 131 RETIRED / 9 UNTESTED = 276).
+  - **F3 (`cmd_snapshot` traceback on refused models):** the subcommand now carries the same
+    distinct refusal handlers `run_codegen` keeps distinct (`cli/__init__.py`, cmd_snapshot);
+    pinned by `tests/conformance/test_cli_snapshot_refusal.py` (2 nodes: ife_plant refuses
+    with `SI_SELF_BINDING` in the message, exit 1, nothing written; sample_model still
+    captures).
+- The audit's four owner-question surfacings (REQ-CL-03 guarantee, the two non-shipping
+  extraction modules, the nine UNTESTED rows, the missing elaborator REQ families) join the
+  open-questions list in `owner-disposition-20260811.md`.
+
+---
+
 **Status:** Draft → Owner-approved → In progress → Audited → Owner accepted/revised

@@ -58,6 +58,22 @@ clean). The orchestrator recommended clearing the 16; **not yet confirmed by the
    design invariants 34–35): make live provenance portable, or amend the contract with
    proper authority. Surfaced by the independent certification audit (`audit.md`), which
    postdates the owner review.
+6. **[AGENT, raised during the REVISE execution 2026-08-12]** Surfaced by the stages and the
+   retired-tree audit; none blocks the mechanical path, all need an owner ruling:
+   - **REQ-CL-03**: the projector emits no `source_record` for a definition with zero
+     eligible entries; the deleted assembler emitted one. Restore the total-inventory
+     guarantee, or amend the requirement.
+   - Whether the two **non-shipping extraction modules** (hierarchy resolver, computed-
+     attribute classifier — kept as test-evidence infrastructure) stay in the tree.
+   - The **nine UNTESTED matrix rows** (output-schema rules, smart-regen internals,
+     REQ-GA-05): coverage the retirement removed with no replacement, itemised in
+     `verification-matrix.md`.
+   - The **three PARTIAL matrix rows** (REQ-CL-04, REQ-EPC-01, REQ-GA-03): kept heirs weaker
+     than the requirement text, gap named per cell (audit-7 F2).
+   - **Missing REQ families** for the elaborator's own mechanisms (v6 envelope, occurrence
+     identity, projection receipt) — proved by tests, named by no requirement.
+   - **D3 and R2 design amendments** (`elaborator-cutover/design.md` § Amendments) pending
+     ratification at the gate.
 
 ## Additional scope folded into the path [AGENT slotting, from `audit.md`]
 

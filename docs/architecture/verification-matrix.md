@@ -7,7 +7,8 @@ Traceability matrix mapping every REQ-\* tag to its conformance test file and st
 | Metric | Count |
 |--------|-------|
 | Total requirements | 276 |
-| PASS (a kept test proves it and passes) | 136 |
+| PASS (a kept test proves it and passes) | 133 |
+| PARTIAL (a kept test covers part of the requirement; the gap is named in the cell) | 3 |
 | RETIRED (subject deleted with the legacy stack) | 131 |
 | UNTESTED (subject live, no test proves it) | 9 |
 | DEFERRED | 0 |
@@ -16,6 +17,7 @@ Traceability matrix mapping every REQ-\* tag to its conformance test file and st
 
 **Status definitions:**
 - **PASS**: At least one test **that exists in the tree** proves this requirement and passes
+- **PARTIAL**: A kept, passing test covers part of the requirement, and the cell names exactly what a violation could do without failing it (audit-7 finding F2: a partially-covered row must not sit beside full-strength green unmarked)
 - **RETIRED**: The requirement's subject was deleted by the Item 7 retirement. The row is the record of a removed design, not a claim about the product. The cell names the deletion-ledger row that carries the deletion and, through its `replacement_proof_node`, whatever behaviour survived
 - **UNTESTED**: The subject is live but nothing proves it — either it never had a dedicated test, or its test retired with no replacement. The cell says which
 - **DEFERRED**: Behavior implemented; real-fixture test deferred to a later item (none open — REQ-CA-09 discharged by Item 10)
@@ -209,7 +211,7 @@ re-derives from scratch and is named here as a known gap, not silently covered.
 | REQ-CL-01 | `resolve_actual`'s strict ladder SHALL resolve a bound actual through, in order: registry scoped/alias/scoped-alias lookup, occurrence-scoped design attribute, definition-scoped target QN, definition-scoped base-literal-default (Item 14 D2-twin) — before the shared terminal-disposition switch (`strict=True`, never synthesizes) | — *(subject deleted — ledger L-214)* | RETIRED |
 | REQ-CL-02 | Every concrete entry expanded from one `ConstraintUsageFact` SHALL share one compile-once predicate (grouped by `usage_qualified_name`), even across N owner-instance occurrences | `test_constraint_emission.py` | PASS |
 | REQ-CL-03 | `assemble_constraint_catalog` SHALL build `source_records` from every `ConstraintDefinition` in the model's facts (visible even with zero eligible entries) and `concrete_entries` from eligible concrete constraints only, fingerprinted deterministically | `test_constraint_emission.py` — but see the divergence note below: the subject is the **retired** assembler, not the shipped one | PASS |
-| REQ-CL-04 | The manifest->catalog mapping SHALL be total and silent-drop-free: every usage `collect_constraint_manifest` sweeps has a catalog carrier (eligible or unassessed) or is a named, justified requirement/satisfy exclusion | `test_exact_route_constraint_portability.py::test_the_catalog_admits_the_numerical_constraint_and_excludes_the_string_one`, `::test_the_excluded_location_is_the_portable_referent_on_every_route` | PASS |
+| REQ-CL-04 | The manifest->catalog mapping SHALL be total and silent-drop-free: every usage `collect_constraint_manifest` sweeps has a catalog carrier (eligible or unassessed) or is a named, justified requirement/satisfy exclusion | `test_exact_route_constraint_portability.py::test_the_catalog_admits_the_numerical_constraint_and_excludes_the_string_one`, `::test_the_excluded_location_is_the_portable_referent_on_every_route` | PARTIAL *(audit-7 F2: the heir is a 2-constraint specimen — admits one, excludes one — not a totality proof over every swept usage; a mapping that silently dropped a third constraint would not fail it)* |
 | REQ-CL-05 | A constraint input resolved to a design attribute SHALL mint a deduped entry point (reused, not re-minted, if already present); a resolved module-output input SHALL wire the producer channel with no mint; a resolved modeled-default input SHALL mint a `LIBRARY_DEFAULT` entry point scoped to its constraint | `test_exact_constraint_route.py::test_identified_facts_gate_and_projected_constraints_agree_by_usage_id`, `test_exact_route_constraint_portability.py::test_the_predicate_module_and_pipeline_are_identical_on_every_route` | PASS |
 
 > **Divergence surfaced — REQ-CL-03 does not describe the shipped catalog** (Revise step 6d).
@@ -308,7 +310,7 @@ indirectly via the emitted verifier.
 
 | REQ ID | Requirement | Test File | Status |
 |--------|-------------|-----------|--------|
-| REQ-EPC-01 | Every entry point SHALL be classified as exactly one EntryPointType: {`DESIGN_ATTRIBUTE`,... | `test_exact_pipeline_context.py::test_the_live_and_v6_contexts_agree_on_the_public_entry_point_surface`, `test_exact_projection_aggregation.py::test_every_member_occurrence_is_its_own_entry_point` | PASS |
+| REQ-EPC-01 | Every entry point SHALL be classified as exactly one EntryPointType: {`DESIGN_ATTRIBUTE`,... | `test_exact_pipeline_context.py::test_the_live_and_v6_contexts_agree_on_the_public_entry_point_surface`, `test_exact_projection_aggregation.py::test_every_member_occurrence_is_its_own_entry_point` | PARTIAL *(audit-7 F2: the heirs prove route parity and per-occurrence minting, not that every entry point lands in exactly one of the three types; a misclassified-but-route-consistent type would not fail them)* |
 | REQ-EPC-02 | Classification SHALL follow strict precedence: `DESIGN_ATTRIBUTE` > `LIBRARY_DEFAULT` > `... | — *(subject deleted — ledger L-131)* | RETIRED |
 | REQ-EPC-03 | `default_value` SHALL be converted to `float` at classification time; if conversion fails... | — *(subject deleted — ledger L-131)* | RETIRED |
 | REQ-EPC-04 | Every classified entry point SHALL be assigned a `param_group` via ParameterGroupDeriver.... | — *(subject deleted — ledger L-131)* | RETIRED |
@@ -346,7 +348,7 @@ indirectly via the emitted verifier.
 |--------|-------------|-----------|--------|
 | REQ-GA-01 | `execution_order` SHALL be a valid topological sort: no module reads from a module that e... | `test_elaboration_projection.py::test_projection_is_topological_and_every_input_is_covered` | PASS |
 | REQ-GA-02 | If a cycle exists, `_unified_topological_sort` SHALL raise `CircularDependencyError` list... | — *(subject deleted — ledger L-152)* | RETIRED |
-| REQ-GA-03 | Every `module_output` `producer_channel` SHALL resolve to a declared output channel. | `test_elaboration_projection_one_way.py::test_graph_validation_rejects_missing_occurrence_and_typed_producer_cycle` | PASS |
+| REQ-GA-03 | Every `module_output` `producer_channel` SHALL resolve to a declared output channel. | `test_elaboration_projection_one_way.py::test_graph_validation_rejects_missing_occurrence_and_typed_producer_cycle` | PARTIAL *(audit-7 F2: the cited arms exercise a missing occurrence and a typed producer cycle, not an unresolvable producer channel; the specific violation this row names has no failing arm)* |
 | REQ-GA-04 | A module SHALL NOT depend on itself, even if its own output channel name appears in its i... | `test_elaboration_projection_one_way.py::test_graph_validation_rejects_missing_occurrence_and_typed_producer_cycle` | PASS |
 | REQ-GA-05 | The returned `ComputationGraph` SHALL contain exactly the reviewed field set: sorted `modules`, `entry_point_groups`, `execution_order`, in-memory `fallback_entry_points` (REQ-GA-08), serialized `output_aliases` (REQ-DM-09); any field-set change is a deliberate reviewed rev (the exact-set test flips red) | — *(the exact-field-set pin retired with `test_graph_assembly.py` (ledger L-152) and has no recorded replacement; no kept node asserts the `ComputationGraph` field set)* | UNTESTED |
 | REQ-GA-06 | `execution_order` list SHALL equal `[m.name for m in modules]` (names match module orderi... | `test_exact_target_selection.py::test_selection_renumbers_execution_order_without_gaps` | PASS |
@@ -370,6 +372,15 @@ indirectly via the emitted verifier.
 ### HR
 
 **Hierarchy Resolver** — Component C06 — [reference/25-hierarchy-resolver.md](reference/25-hierarchy-resolver.md)
+
+**Where this family stands after the retirement.** The component these rows describe,
+`extraction/hierarchy_resolver.py`, is in the tree but **off the shipped route** — nothing in
+`src/` imports it. It is retained because `tests/helpers/live_extraction.py` (the evidence
+source six conformance modules read) depends on it (disposition and reason recorded in the
+module docstring, REVISE step 6d). So a PASS here certifies component correctness, not
+shipped-route coverage; the shipped route lifts aggregation in the elaborator, whose evidence
+the GA and elaboration families carry. (Added at audit-7 finding F1 — this family previously
+read as shipped coverage with no disclosure, unlike its CA sibling.)
 
 | REQ ID | Requirement | Test File | Status |
 |--------|-------------|-----------|--------|
