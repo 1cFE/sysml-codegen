@@ -1,0 +1,197 @@
+============================= test session starts ==============================
+platform linux -- Python 3.12.11, pytest-9.1.1, pluggy-1.6.0
+rootdir: /home/reid/1cfe/sysml-codegen-item7-rebuild
+configfile: pyproject.toml
+testpaths: tests
+plugins: cov-7.1.0
+collected 1806 items / 65 deselected / 1741 selected
+
+tests/conformance/test_agg_literal_dispatch.py .                         [  0%]
+tests/conformance/test_ast_dispatch_invariant.py .................       [  1%]
+tests/conformance/test_baselines.py .................                    [  2%]
+tests/conformance/test_calc_compat_parity.py ss.......ss....ss...s...... [  3%]
+..ss......                                                               [  4%]
+tests/conformance/test_catalog_no_reconstruction.py ..                   [  4%]
+tests/conformance/test_catalog_schema_version.py ..                      [  4%]
+tests/conformance/test_cli_snapshot_refusal.py ..                        [  4%]
+tests/conformance/test_computed_attribute_golden.py sss..sssssss.s.ss.ss [  5%]
+ss..ssss.ss..ss..                                                        [  6%]
+tests/conformance/test_constraint_generation_integration.py .            [  6%]
+tests/conformance/test_constraint_name_collision.py ....                 [  6%]
+tests/conformance/test_d5_variants.py ....................               [  8%]
+tests/conformance/test_data_models.py .................................. [  9%]
+....................................................                     [ 12%]
+tests/conformance/test_dm08_enforced_surface.py ..                       [ 13%]
+tests/conformance/test_elaboration_aggregations.py ........              [ 13%]
+tests/conformance/test_elaboration_computed_attrs.py .........           [ 14%]
+tests/conformance/test_elaboration_contract_matrix.py .................. [ 15%]
+.............                                                            [ 15%]
+tests/conformance/test_elaboration_corpus_ledger.py .                    [ 15%]
+tests/conformance/test_elaboration_expose_shapes.py ...............      [ 16%]
+tests/conformance/test_elaboration_fail_closed.py .......                [ 17%]
+tests/conformance/test_elaboration_generation_boundary.py .              [ 17%]
+tests/conformance/test_elaboration_graph_roundtrip.py .............      [ 17%]
+tests/conformance/test_elaboration_identity_collisions.py ...            [ 18%]
+tests/conformance/test_elaboration_identity_foundation.py ....           [ 18%]
+tests/conformance/test_elaboration_identity_vertical.py ..               [ 18%]
+tests/conformance/test_elaboration_model_validation.py ..                [ 18%]
+tests/conformance/test_elaboration_payload_identity.py .............     [ 19%]
+tests/conformance/test_elaboration_phase5_remediation.py ...........     [ 19%]
+tests/conformance/test_elaboration_plural_scope.py ..                    [ 20%]
+tests/conformance/test_elaboration_projection.py ....                    [ 20%]
+tests/conformance/test_elaboration_projection_one_way.py ......          [ 20%]
+tests/conformance/test_elaboration_public_mutation.py ..                 [ 20%]
+tests/conformance/test_elaboration_shadowing.py ....                     [ 21%]
+tests/conformance/test_elaboration_sibling_channels.py .....             [ 21%]
+tests/conformance/test_elaboration_specialization_retypes.py ........    [ 21%]
+tests/conformance/test_elaboration_spike_parity.py ..................    [ 22%]
+tests/conformance/test_exact_compiler_core.py ......                     [ 23%]
+tests/conformance/test_exact_constraint_route.py .............           [ 23%]
+tests/conformance/test_exact_group_identity.py ...........               [ 24%]
+tests/conformance/test_exact_pipeline_context.py ...............         [ 25%]
+tests/conformance/test_exact_projection_aggregation.py ...               [ 25%]
+tests/conformance/test_exact_route_alias_aggregation.py .......          [ 25%]
+tests/conformance/test_exact_route_constraint_portability.py ........    [ 26%]
+tests/conformance/test_exact_route_fingerprint_stability.py ....         [ 26%]
+tests/conformance/test_exact_route_generated_package.py ....             [ 26%]
+tests/conformance/test_exact_route_registry.py .......                   [ 27%]
+tests/conformance/test_exact_route_seal_step9.py ............            [ 27%]
+tests/conformance/test_exact_route_snapshot_generation.py ..........     [ 28%]
+tests/conformance/test_exact_route_whole_tree_portability.py ...         [ 28%]
+tests/conformance/test_exact_target_selection.py ............            [ 29%]
+tests/conformance/test_expression_compiler.py .......................... [ 30%]
+.                                                                        [ 30%]
+tests/conformance/test_expression_reconstruction_fidelity.py .           [ 31%]
+tests/conformance/test_extraction_diagnostic_screen.py ....              [ 31%]
+tests/conformance/test_extractor.py .................................... [ 33%]
+......................................                                   [ 35%]
+tests/conformance/test_generated_schema_importable.py .................. [ 36%]
+...                                                                      [ 36%]
+tests/conformance/test_generation_boundary.py ....................       [ 37%]
+tests/conformance/test_hierarchy_resolver.py ........................... [ 39%]
+...................                                                      [ 40%]
+tests/conformance/test_module_kind_faildloud.py ............             [ 41%]
+tests/conformance/test_naming_conventions.py ........................... [ 42%]
+...................                                                      [ 43%]
+tests/conformance/test_no_expression_ast.py .                            [ 43%]
+tests/conformance/test_public_authority_switch.py ..................     [ 44%]
+tests/conformance/test_public_route_baselines.py ....                    [ 45%]
+tests/conformance/test_reference_doc_distinctness.py ..........          [ 45%]
+tests/conformance/test_return_style_extraction.py .......                [ 46%]
+tests/conformance/test_silent_failure_d316.py .                          [ 46%]
+tests/conformance/test_silent_failure_family1.py .......                 [ 46%]
+tests/conformance/test_snapshot_v5_gate.py .....                         [ 46%]
+tests/conformance/test_snapshot_v6_capture.py ......                     [ 47%]
+tests/conformance/test_snapshot_v6_envelope.py ......................... [ 48%]
+..........................................                               [ 51%]
+tests/conformance/test_snapshot_v6_routes.py .....                       [ 51%]
+tests/conformance/test_source_admission_routes.py ......                 [ 51%]
+tests/conformance/test_source_identity_extraction.py .............       [ 52%]
+tests/conformance/test_type_indexing.py ..                               [ 52%]
+tests/conformance/test_type_mapping_consolidation.py ............        [ 53%]
+tests/conformance/test_unit_annotation_values.py ......                  [ 53%]
+tests/conformance/test_upstream_pins.py ....                             [ 53%]
+tests/conformance/test_v6_recapture_batch.py ........................... [ 55%]
+.................................                                        [ 57%]
+tests/conformance/test_wi014_toy.py ...                                  [ 57%]
+tests/integration/test_computed_attributes_exact_route.py .............. [ 58%]
+.                                                                        [ 58%]
+tests/integration/test_costed_component_exact_route.py ................. [ 59%]
+.                                                                        [ 59%]
+tests/integration/test_expression_compilation_exact_route.py .......     [ 59%]
+tests/integration/test_full_pipeline_exact_route.py .....                [ 60%]
+tests/integration/test_hierarchy_exact_route.py .....                    [ 60%]
+tests/runtime/test_fusion_tea_acceptance.py ....                         [ 60%]
+tests/unit/test_aggregation_generation.py ....................           [ 61%]
+tests/unit/test_catalog_usage_tier.py ......                             [ 62%]
+tests/unit/test_check_ledger_4a.py ..................................... [ 64%]
+...........                                                              [ 64%]
+tests/unit/test_check_proof_integrity.py ......                          [ 65%]
+tests/unit/test_cli_generation.py ...................................... [ 67%]
+..................                                                       [ 68%]
+tests/unit/test_computed_attr_generation.py ...............              [ 69%]
+tests/unit/test_concrete_constraint_model.py .........................   [ 70%]
+tests/unit/test_constraint_emission.py .......................           [ 71%]
+tests/unit/test_constraint_name_safety.py .........................      [ 73%]
+tests/unit/test_contract_models.py .................                     [ 74%]
+tests/unit/test_data_models.py .........                                 [ 74%]
+tests/unit/test_duplicate_path_failfast.py ...                           [ 75%]
+tests/unit/test_elaboration_identity.py ....                             [ 75%]
+tests/unit/test_elaboration_import_boundaries.py ..............          [ 76%]
+tests/unit/test_elaboration_occurrence.py .........                      [ 76%]
+tests/unit/test_exit_pin.py ...                                          [ 76%]
+tests/unit/test_exit_point_aliases.py ...                                [ 76%]
+tests/unit/test_expression_compiler.py ................................. [ 78%]
+...................                                                      [ 79%]
+tests/unit/test_expression_paren_helper.py ...........                   [ 80%]
+tests/unit/test_expression_utils_shim.py ..                              [ 80%]
+tests/unit/test_extractor.py .............                               [ 81%]
+tests/unit/test_hierarchy_resolver.py .................................. [ 83%]
+.................................                                        [ 85%]
+tests/unit/test_hygiene_tail_registry.py ..                              [ 85%]
+tests/unit/test_package_metadata.py ..                                   [ 85%]
+tests/unit/test_predicate_compiler.py .................................. [ 87%]
+..............                                                           [ 88%]
+tests/unit/test_qualified_names.py .............                         [ 89%]
+tests/unit/test_qualified_names_shim.py ...                              [ 89%]
+tests/unit/test_registry_generation.py .....                             [ 89%]
+tests/unit/test_retirement_worklist.py ........                          [ 89%]
+tests/unit/test_sc11_recheck.py ..                                       [ 90%]
+tests/unit/test_source_admission.py ...............................      [ 91%]
+tests/unit/test_source_referent.py ...................                   [ 92%]
+tests/unit/test_stencils.py .....................                        [ 94%]
+tests/unit/test_teax_discovery.py ......                                 [ 94%]
+tests/unit/test_template_detection.py ..........................         [ 95%]
+tests/unit/test_type_indexing_helpers.py ......                          [ 96%]
+tests/unit/test_uncovered_params.py .                                    [ 96%]
+tests/unit/test_verify_package.py ...................................... [ 98%]
+                                                                         [ 98%]
+tests/unit/test_warning_reconciliation_exact_route.py .................. [ 99%]
+....                                                                     [ 99%]
+tests/unit/test_zero_default_exact_route.py ...                          [100%]
+
+=============================== warnings summary ===============================
+../item7-rebuild-venv/lib/python3.12/site-packages/_pytest/python.py:124
+  /home/reid/1cfe/item7-rebuild-venv/lib/python3.12/site-packages/_pytest/python.py:124: PytestRemovedIn10Warning: Passing a non-Collection iterable to parametrize is deprecated.
+  Test: tests/unit/test_constraint_name_safety.py::test_graph_diagnostic_is_invariant_under_all_input_permutations, argvalues type: product
+  Please convert to a list or tuple.
+  See https://docs.pytest.org/en/stable/deprecations.html#parametrize-iterators
+    metafunc.parametrize(*marker.args, **marker.kwargs, _param_mark=marker)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+SKIPPED [1] tests/conformance/test_calc_compat_parity.py:63: agg_literal_probe: no calc output expressions in the golden
+SKIPPED [1] tests/conformance/test_calc_compat_parity.py:63: agg_localterm_probe: no calc output expressions in the golden
+SKIPPED [1] tests/conformance/test_calc_compat_parity.py:63: constraint_non_numerical: no calc output expressions in the golden
+SKIPPED [1] tests/conformance/test_calc_compat_parity.py:63: crosspart_rollup_twolevel: no calc output expressions in the golden
+SKIPPED [1] tests/conformance/test_calc_compat_parity.py:63: gate_a: no calc output expressions in the golden
+SKIPPED [1] tests/conformance/test_calc_compat_parity.py:63: gate_a_package_owner: no calc output expressions in the golden
+SKIPPED [1] tests/conformance/test_calc_compat_parity.py:63: modeled_default_fidelity: no calc output expressions in the golden
+SKIPPED [1] tests/conformance/test_calc_compat_parity.py:63: shadowed_reference: no calc output expressions in the golden
+SKIPPED [1] tests/conformance/test_calc_compat_parity.py:63: shared_producer: no calc output expressions in the golden
+SKIPPED [1] tests/conformance/test_computed_attribute_golden.py:48: agg_literal_probe: no computed attributes in the golden
+SKIPPED [1] tests/conformance/test_computed_attribute_golden.py:48: agg_localterm_probe: no computed attributes in the golden
+SKIPPED [1] tests/conformance/test_computed_attribute_golden.py:48: alias_agg_probe: no computed attributes in the golden
+SKIPPED [1] tests/conformance/test_computed_attribute_golden.py:48: chain_override_probe: no computed attributes in the golden
+SKIPPED [1] tests/conformance/test_computed_attribute_golden.py:48: chain_spike_model: no computed attributes in the golden
+SKIPPED [1] tests/conformance/test_computed_attribute_golden.py:48: constraint_inline: no computed attributes in the golden
+SKIPPED [1] tests/conformance/test_computed_attribute_golden.py:48: constraint_multi_instance: no computed attributes in the golden
+SKIPPED [1] tests/conformance/test_computed_attribute_golden.py:48: constraint_non_numerical: no computed attributes in the golden
+SKIPPED [1] tests/conformance/test_computed_attribute_golden.py:48: crosspart_rollup_twolevel: no computed attributes in the golden
+SKIPPED [1] tests/conformance/test_computed_attribute_golden.py:48: d38_caret: no computed attributes in the golden
+SKIPPED [1] tests/conformance/test_computed_attribute_golden.py:48: expression_binding_probe: no computed attributes in the golden
+SKIPPED [1] tests/conformance/test_computed_attribute_golden.py:48: gate_a: no computed attributes in the golden
+SKIPPED [1] tests/conformance/test_computed_attribute_golden.py:48: gate_a_package_owner: no computed attributes in the golden
+SKIPPED [1] tests/conformance/test_computed_attribute_golden.py:48: invocation_binding_probe: no computed attributes in the golden
+SKIPPED [1] tests/conformance/test_computed_attribute_golden.py:48: issue22_model: no computed attributes in the golden
+SKIPPED [1] tests/conformance/test_computed_attribute_golden.py:48: modeled_default_fidelity: no computed attributes in the golden
+SKIPPED [1] tests/conformance/test_computed_attribute_golden.py:48: plant_value_shapes: no computed attributes in the golden
+SKIPPED [1] tests/conformance/test_computed_attribute_golden.py:48: return_styles: no computed attributes in the golden
+SKIPPED [1] tests/conformance/test_computed_attribute_golden.py:48: retype_model: no computed attributes in the golden
+SKIPPED [1] tests/conformance/test_computed_attribute_golden.py:48: sample_model: no computed attributes in the golden
+SKIPPED [1] tests/conformance/test_computed_attribute_golden.py:48: self_named_binding_trap: no computed attributes in the golden
+SKIPPED [1] tests/conformance/test_computed_attribute_golden.py:48: shadowed_reference: no computed attributes in the golden
+SKIPPED [1] tests/conformance/test_computed_attribute_golden.py:48: shared_producer: no computed attributes in the golden
+SKIPPED [1] tests/conformance/test_computed_attribute_golden.py:48: spec_chain_channel: no computed attributes in the golden
+SKIPPED [1] tests/conformance/test_computed_attribute_golden.py:48: spec_chain_twolevel: no computed attributes in the golden
+==== 1707 passed, 34 skipped, 65 deselected, 1 warning in 85.23s (0:01:25) =====

@@ -1,12 +1,38 @@
 # Current Work
 
-**Last Updated**: 2026-08-11 (Item 7 recovery: owner REVISE disposition; executing the revise path)
+**Last Updated**: 2026-08-12 (Item 7 recovery: revise path executed through step 7; owner
+disposition on the regenerated candidate is the open gate)
 
 ---
 
 ## Active Work
 
-### 2026-08-11: Item 7 cutover recovery — ACTIVE (owner disposition: REVISE, executing)
+### 2026-08-12: Item 7 cutover recovery — REVISE path executed; awaiting the owner's final disposition
+
+**Where it stands.** Every prescribed REVISE step (owner steps 1–7) has run. The legacy
+string-resolution stack is **gone from the tree**, retired with no provisional trim. The retired
+tree passed three consecutive identical gate runs, was independently audited, and the audit's
+findings F1–F3 are dispositioned. The regenerated candidate record is
+`.project/active/cutover-recovery/evidence/candidate.md` (+ `candidate.json`), built by
+`evidence/phase5-runs/build_candidate_revise.py`.
+
+- **Content OIDs:** codegen `6c35aa0`, agentic-mbse `3fbda2f`, TEAx pinned `fa0e06a9`.
+- **Gates at the content OID:** codegen suite **1707 passed / 34 skipped / 65 deselected**, zero
+  `no live syside license` skip lines; ledger **304 rows / 0 problems**; `git diff --check` clean
+  in both repos. The three step-7a runs (at `c0ceb24`) agree field for field —
+  `evidence/phase5-runs/revise-runs/comparison.md`.
+- **Audit:** `evidence/audit-7-retired.md`, verdict FINDINGS (10, none blocking). All eight
+  requested probes were executed and CONFIRM, so its own clause resolves to *Certify with the
+  residual list* now that F1–F3 are dispositioned.
+- **THE OPEN GATE: the owner's final disposition** on that record. Also owner-grade before
+  close: R8 (resolve or shipping-gate), the ruff findings (now 14, not 16), audit-F4, and the
+  six question-6 items in `owner-disposition-20260811.md`.
+- **Do not** treat the numbers in the superseded 2026-08-11 record as current; that record
+  described the pre-retirement tree and lives at commit `013d6a1`.
+
+The pre-REVISE state, kept for context:
+
+### 2026-08-11: Item 7 cutover recovery — owner disposition REVISE (superseded by the entry above)
 
 **The Item 7 cutover execution recorded further down this file is superseded.** It produced no
 commit. Its uncommitted candidate mixed useful work with 222 tracked deletions, 22 corrupted
@@ -39,8 +65,8 @@ show that the cutover preserved the product. Nothing from it is authority.
 - **Fresh audit gates:** codegen **3862 passed / 47 skipped / 53 deselected**; companion **1825
   passed / 1 skipped / 5 deselected**; real TEAx lane **53 passed**. `ruff check src` still reports
   16 findings, and mypy remains at the recorded 69-error baseline.
-- **Next:** revise-path step 2 — the coordinated dual type migrations in both repos (plus
-  audit-F1 exemption removal and the invalid-manifest fix), then steps 3–7 in order.
+- **Next (as of 2026-08-11, now done):** revise-path steps 2–7. See the 2026-08-12 entry above
+  for the executed state; the gate numbers in this entry are pre-retirement and stale.
 - **Environment:** one task-specific venv at `/home/reid/1cfe/item7-rebuild-venv`. Re-assert
   resolved import paths after any rebuild of it — uv's global cache silently produced an editable
   install pointing at the original worktree (finding F2).

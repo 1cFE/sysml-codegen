@@ -158,11 +158,20 @@ switching or deletion until this passes.
 - [x] Phase 1 — Preserve the incident and create paired forensic snapshot commits
 - [x] Phase 2 — Create clean rebuild worktrees, correct the Item 7 plan, and measure Item 6
 - [x] Phase 3 — Rebuild and commit the cutover as functional vertical slices
-- [ ] Phase 4 — Retire production, tests/probes/snapshots, and docs under separate gates
-      — **RESEQUENCED**: retirement steps 1–4 move behind the Phase 5 owner stop; Phase 4 owns
-      G0+G1 (done) plus the full disposition preparation. See the ruling at the head of Phase 4.
-- [ ] Phase 5 — Assemble a repeatable candidate, audit it, and stop for owner acceptance
-      — now also presents the fully-prepared retirement as the headline decision
+- [x] Phase 4 — Retire production, tests/probes/snapshots, and docs under separate gates
+      — **RESEQUENCED then EXECUTED**: retirement steps 1–4 moved behind the Phase 5 owner stop
+      (ruling at the head of Phase 4), and ran there under the REVISE disposition, with **no
+      provisional trim** — `19072ad` (step 1, G2′), `82c7951` (step 2, the v5 family), `882fc8d`
+      (step 3, G3′), `3071fba` (step 4, G4′ + the dead v5 surface). Phase 4's own G0+G1 and the
+      full disposition preparation were complete before the stop.
+- [x] Phase 5 — Assemble a repeatable candidate, audit it, and stop for owner acceptance
+      — presented the fully-prepared retirement as the headline decision; owner disposition
+      **REVISE** 2026-08-11 at `800ec84` (`owner-disposition-20260811.md`)
+- [ ] REVISE path (owner steps 1–7) — executed through step 7; **open at the final owner
+      disposition** on the regenerated candidate record (`evidence/candidate.md`) at codegen
+      `6c35aa0` / agentic `3fbda2f`. Retired-tree gates: three identical runs (step 7a);
+      independent audit `evidence/audit-7-retired.md`, verdict FINDINGS, all eight probes
+      CONFIRM, F1–F3 dispositioned (step 7b); record regenerated (step 7c).
 
 ---
 
@@ -669,11 +678,11 @@ Record every slice. Do not combine them later.
 >
 > **Revised shape.**
 >
-> | Phase | What it now owns |
-> |---|---|
-> | **Phase 4** | G0 + G1 (executed) + the **full disposition preparation** — Gate 4C part 7 and Gate 4D. Deletes nothing further. |
-> | **Phase 5** | Assembles the candidate with the legacy stack **present-but-unreachable** (the 3E pins define that state and stay green), presents the PROPOSED batch **and the fully-prepared retirement** as the headline decision at the owner stop. |
-> | **Post-acceptance** | The retirement executes as the immediate next step, with every battery intact. |
+> | Phase | What it now owns | State |
+> |---|---|---|
+> | **Phase 4** | G0 + G1 (executed) + the **full disposition preparation** — Gate 4C part 7 and Gate 4D. Deletes nothing further. | done |
+> | **Phase 5** | Assembles the candidate with the legacy stack **present-but-unreachable** (the 3E pins define that state and stay green), presents the PROPOSED batch **and the fully-prepared retirement** as the headline decision at the owner stop. | done; disposition REVISE 2026-08-11 |
+> | **Post-acceptance** | The retirement executes as the immediate next step, with every battery intact. | **executed** at REVISE step 6, no provisional trim: `19072ad` / `82c7951` / `882fc8d` / `3071fba`. See "Revise step 6 — the retirement, executed". |
 >
 > This satisfies both plan clauses at once: accepted-replacements-before-v5-deletion, and the
 > final candidate decision resting with the owner.
@@ -1039,6 +1048,34 @@ remains.
 
 ### Owner gate
 
+**Two gates, both recorded here.** Gate 1 is the 2026-08-11 REVISE disposition on the
+pre-retirement candidate at `800ec84`. Gate 2 is the post-REVISE candidate at the final content
+OIDs, awaiting the owner's final disposition. Neither replaces the other: gate 1 is settled
+history, gate 2 is open.
+
+#### Gate 2 — the post-REVISE candidate (OPEN)
+
+- Content OIDs: sysml-codegen `6c35aa0` (branch `item7-rebuild`), agentic-mbse `3fbda2f`
+  (branch `item7-rebuild`), TEAx pinned `fa0e06a9`. The record commit lands on top of
+  `6c35aa0`, so it names these rather than containing its own OID.
+- Candidate record: `evidence/candidate.md` + `evidence/candidate.json`, regenerated from
+  scratch at REVISE step 7c by `evidence/phase5-runs/build_candidate_revise.py`.
+- What it is: the **retired tree**. The legacy string-resolution stack is gone from the tree,
+  executed with no provisional trim (`19072ad` / `82c7951` / `882fc8d` / `3071fba`).
+- Gates: three consecutive complete runs at `c0ceb24` / `3fbda2f`, every compared field
+  identical (`evidence/phase5-runs/revise-runs/comparison.md`); re-measured at `6c35aa0` after
+  the F3 disposition — 1707 passed / 34 skipped / 65 deselected, zero license-skip lines,
+  ledger 304 rows / 0 problems.
+- Audit: `evidence/audit-7-retired.md` — verdict **FINDINGS** (10, none blocking), certification
+  withheld on the one agentic-side item the auditor could not read; all eight requested probes
+  executed and CONFIRM, so the record's own clause resolves to **Certify with the residual
+  list** once F1–F3 are dispositioned — dispositioned in the step-7 stage note.
+- **Owner disposition: PENDING.** What is still owner-grade: the final disposition itself, and
+  R8 (resolve or shipping-gate) plus the other open questions in
+  `owner-disposition-20260811.md` before close.
+
+#### Gate 1 — the pre-retirement candidate at `800ec84` (SETTLED, 2026-08-11)
+
 - Owner disposition: **`REVISE`** **[OWNER 2026-08-11]** — the candidate is accepted as a
   credible **pre-retirement checkpoint**; Item 7 is not complete. The prescribed path is
   recorded in `owner-disposition-20260811.md` (carried via `handoff-20260811.md`): accept the
@@ -1052,7 +1089,9 @@ remains.
   finding closures (F1–F5, all record/runbook corrections; the full licensed suite re-measured
   green at `800ec84`: 3862 / 47 / 53, zero license-skip lines).
 - Final agentic-mbse candidate OID: `cc6c7a7411f6338a4811a7cc58ca002c29ef177b` (branch `item7-rebuild`)
-- Candidate record: `evidence/candidate.md` + `evidence/candidate.json`, committed at `013d6a1`
+- Candidate record as it stood at this gate: `evidence/candidate.{md,json}` at commit `013d6a1`.
+  Those paths now hold the gate-2 record; read the `013d6a1` revision for what the owner saw
+  (`git show 013d6a1:.project/active/cutover-recovery/evidence/candidate.md`)
 - Candidate-tree audit: `evidence/audit-5-final.md` — verdict: the candidate tree certifies, with
   five findings (one medium, four low), all closed at `4313d6c`/`800ec84`
 - Independent certification audit: `audit.md` — verdict: **Needs Work**; product-lens findings

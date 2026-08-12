@@ -1,29 +1,39 @@
-# Phase 5 candidate — the repeatable two-repository candidate, and the owner's decision surface
+# The post-REVISE candidate — the retired tree, its gates, its audit, and what is left for the owner
 
-**Status:** ASSEMBLED. Owner disposition **PENDING**. The independent audit is a separate stage
-and has not run against this record.
-**Assembled:** 2026-08-11
-**Authority:** `.project/active/cutover-recovery/plan.md` — Phase 5, "Changes required"
-**Record commit:** `013d6a1` — this record and its run artifacts only; it changes no production
-or test file, so the candidate under review is the tree at `c4e9b76`.
-**Machine-readable twin:** `evidence/candidate.json` (every number below is derived there; the
-builder is `evidence/phase5-runs/build_candidate.py`)
+**Status:** ASSEMBLED at the content OIDs below. **Owner final disposition PENDING.**
+**Assembled:** 2026-08-12, REVISE step 7c.
+**Authority:** `.project/active/cutover-recovery/plan.md` — the owner gate, and
+`owner-disposition-20260811.md` step 7.
+**Content OIDs:** sysml-codegen `6c35aa0`, agentic-mbse `3fbda2f`, TEAx pinned `fa0e06a9`.
+The record commit lands on top of `6c35aa0`, so it names the content OIDs rather than
+containing its own.
+**Machine-readable twin:** `evidence/candidate.json`. **Builder:**
+`evidence/phase5-runs/build_candidate_revise.py`. Every table below is emitted by that builder
+into `evidence/phase5-runs/revise-candidate-tables.md` and quoted here verbatim; §9 says how
+each number was derived.
 
-This record does two things and nothing else. It **certifies what the current tree pair is** —
-measured three times, identically — and it **prices the decisions the owner has to make**. It
-takes no decision itself. Every entry in the decision surface was recorded earlier, in the plan
-or in an audit; this collates them with their evidence pointers and their costs.
+**This record replaces the one the owner reviewed on 2026-08-11.** That record described the
+**pre-retirement** tree at `c4e9b76` and said the independent audit had not run. Both statements
+were true then and are false now. The superseded record is at commit `013d6a1`
+(`git show 013d6a1:.project/active/cutover-recovery/evidence/candidate.md`). §8 lists the five
+discrepancies the owner named and what each now reads.
 
-What the candidate contains, stated plainly:
+What the candidate is, stated plainly:
 
-- The exact route is the **sole public generation authority**, since Slice 3E.
-- The legacy string-resolution stack is **present in the tree, importable, and unreachable from
-  any public caller**. Nothing has been retired.
-- The retirement of that stack is **prepared**: a runbook whose four steps were each executed in
-  order in a scratch worktree and measured green, 55 reviewable patches, and a PROPOSED v6
-  recapture batch. Executing it is gated on owner acceptance.
-- **Seven items need an owner ruling** before the retirement runs. Every "green at every
-  boundary" in the runbook is green *with those seven held out*, as a named 113-node trim.
+- The exact route is the **sole public generation authority**, and the legacy string-resolution
+  stack is **gone from the tree** — not unreachable, gone. The retirement executed with **no
+  provisional trim**, as the owner required.
+- The v6 recapture batch is **ACCEPTED** (owner ruling 2026-08-11, recorded in
+  `tests/fixtures/v6_recapture_batch/batch.json`).
+- The retired tree passed **three consecutive complete gate runs with every compared field
+  identical**, and was **independently audited** by a fresh session that did not implement any
+  of the work.
+- The audit's verdict is **FINDINGS** — ten, none blocking — with certification withheld on one
+  item it could not reach. All eight probes it requested were executed and confirm the pending
+  lines, so its own clause resolves to *Certify with the residual list* once F1–F3 are
+  dispositioned. They are dispositioned.
+- **Nothing here accepts anything.** R8 is untouched and parked, the ruff findings are unruled,
+  audit-F4 is parked, and six further owner questions are open. §7 is the list.
 
 ---
 
@@ -33,22 +43,37 @@ What the candidate contains, stated plainly:
 |---|---|---|
 | Path | `/home/reid/1cfe/sysml-codegen-item7-rebuild` | `/home/reid/1cfe/agentic-mbse-item7-rebuild` |
 | Branch | `item7-rebuild` | `item7-rebuild` |
-| OID | `c4e9b76c024b7852da6ebccb46ab62ac4e7a4bfb` | `cc6c7a7411f6338a4811a7cc58ca002c29ef177b` |
-| Item 6 base | `1672c5766f67e7716f3c9f8f636c21e2ea444601` (`source-identity-epic`) | `5088b417c9e5453271291d46cd5fb23fc0579b1e` (`elaborate-first-salvage`) |
-| Diff vs base | 362 files changed, 63,324 insertions, 2,074 deletions | 5 files changed, 268 insertions, 53 deletions |
-| Name-status | 249 added / 111 modified / **2 deleted** | 5 modified, 0 added, 0 deleted |
-| Commits since base | 108 | 2 |
-| Status at the recorded OID | clean (two untracked paths, both this stage's own: the Phase 5 brief and `evidence/phase5-runs/`) | clean |
+| Content OID | `6c35aa01c28e2afa3331db002d871bc9634121c9` | `3fbda2fbfa82f43d59b0262cedd7a7ae241f37d0` |
+| Item 6 base | `1672c5766f67e7716f3c9f8f636c21e2ea444601` | `5088b417c9e5453271291d46cd5fb23fc0579b1e` |
+| Diff vs base | 818 files changed, 181532 insertions(+), 104700 deletions(-) | 21 files changed, 738 insertions(+), 344 deletions(-) |
+| Name-status vs base | 491 added / 114 modified / **195 deleted** | 2 added / 19 modified / **0 deleted** |
+| Commits since base | 160 (`1672c5766f67e7716f3c9f8f636c21e2ea444601..6c35aa0`) | 4 (`5088b417c9e5453271291d46cd5fb23fc0579b1e..3fbda2f`) |
+| Shipped paths (`src`, `tests`, `scripts`, `docs`, `pyproject.toml`) | clean | clean |
 
-The two deleted paths are `src/sysml_codegen/analysis/signature_extractor.py` and
-`tests/unit/test_signature_extractor.py` — ledger rows **L-006** and **L-241**, group 4B-G1,
-executed at `6ba346e`. Nothing else has been deleted anywhere in the recovery.
+Pinned TEAx: `fa0e06a99b070346e68a3b3c29cfec546f3ac728`.
 
-The two agentic-mbse commits are `8b63393` (an exact constraint gate beside the neutral one) and
-`cc6c7a7` (a mis-encoded manifest warns instead of aborting the check).
+The last row is scoped to shipped paths on purpose. Writing this record dirties `.project/`,
+so a whole-tree status would print a different value every time the builder ran and the record
+would not survive its own re-run. What it asserts is the thing that matters: **this stage
+changed no product, test, script, doc or packaging file**, in either repository.
 
-**Pinned TEAx:** `/home/reid/1cfe/teax` at `fa0e06a99b070346e68a3b3c29cfec546f3ac728`, as
-expected.
+**The commit count has one definition and one number.** 160 is
+`git rev-list --count 1672c576…..6c35aa0` — every commit reachable from the codegen content OID
+and not from the Item 6 base this recovery branched from. The record commit lands on top of the
+content OID, so it is not counted. The old record's 108 was the same measurement taken at the
+pre-retirement OID `c4e9b76`. The 108-vs-112 ambiguity was the same measurement over two
+different endpoints, re-derived here: `…..c4e9b76` (the product tree) counts 108 and
+`…..800ec84` (the branch tip, record commits included) counts 112. Neither is wrong; naming the
+endpoint is what was missing. There is one number here and its range is printed beside it.
+
+**The 195 deletions are the point of this candidate.** The pre-retirement tree had deleted two
+paths in the whole recovery. The retirement deleted the rest: the legacy builders, the v5 read
+path and its family, the dual-run code, the test shims and the committed v5 snapshot fixtures.
+§4 names the commits.
+
+The four agentic-mbse commits are `8b63393` (an exact constraint gate beside the neutral one),
+`cc6c7a7` (a mis-encoded manifest warns instead of aborting), `ffb6628` (every consumer migrated
+onto the identified constraint route) and `3fbda2f` (the neutral route deleted).
 
 **Forensic, do-not-merge** (preserved in Phase 1, referenced by nothing in the candidate):
 sysml-codegen `07531e64ed912d6046afce47ef0d958605e6ca08`, agentic-mbse
@@ -58,378 +83,333 @@ sysml-codegen `07531e64ed912d6046afce47ef0d958605e6ca08`, agentic-mbse
 
 | | sysml-codegen | agentic-mbse |
 |---|---:|---:|
-| Tracked files | 1,888 | 1,834 |
-| Production modules (`src/**.py`) | 87 | — |
-| Test modules | 257 | 67 |
-| Fixture directories | 94 | — |
+| Tracked files | 1,938 | 1,836 |
+| Production modules (`src/**.py`) | 71 | — |
+| Test modules | 127 | 67 |
+| Fixture directories | 96 | — |
 | Numbered reference documents | 31 | — |
-| Scripts (`scripts/**.py`) | 47 | — |
+| Scripts (`scripts/**.py`) | 43 | — |
+
+Production modules went 87 → 71 and test modules 257 → 127 across the retirement. The test-module
+drop is large because the v5 family, the dual-run tests and the wrong-oracle tests went together;
+what the surviving suite still proves is the ledger's subject, and the replacement-proof gate
+below is the mechanical check that it does.
 
 ---
 
 ## 2. Environment
 
-Asserted **before** any measurement in each of the three runs, as the plan requires after the 4D
-resolution trap. The gate reads PASS in all three: no import resolves into an original or
-forensic worktree.
+Asserted **before** any measurement in each of the three runs, and each run aborts if the gate
+fails. All three `env.json` files are byte-identical.
 
 ```
-python       3.12.11   /home/reid/1cfe/item7-rebuild-venv/bin/python
-sysml_codegen  /home/reid/1cfe/sysml-codegen-item7-rebuild/src/sysml_codegen/__init__.py
-agentic_mbse   /home/reid/1cfe/agentic-mbse-item7-rebuild/src/agentic_mbse/__init__.py
-simkit         /home/reid/1cfe/teax/packages/teax-simkit/simkit/__init__.py
-jinja2         3.1.6      syside 0.8.4      pydantic 2.13.4
-pytest         9.1.1      ruff   0.16.2     mypy     2.3.0
-license      set -a; source /home/reid/1cfe/agentic-mbse/.env; set +a   (key present)
+import-path gate  PASS   (all three runs)
+python            3.12.11  /home/reid/1cfe/item7-rebuild-venv/bin/python
+sysml_codegen     /home/reid/1cfe/sysml-codegen-item7-rebuild/src/sysml_codegen/__init__.py
+agentic_mbse      /home/reid/1cfe/agentic-mbse-item7-rebuild/src/agentic_mbse/__init__.py
+simkit            /home/reid/1cfe/teax/packages/teax-simkit/simkit/__init__.py
+ruff 0.16.2   mypy 2.3.0   pytest 9.1.1   pydantic 2.13.4   jinja2 3.1.6   syside 0.8.4
+license           key present (set -a; source /home/reid/1cfe/agentic-mbse/.env; set +a)
 ```
 
-Installed distributions: `sysml-codegen 0.1.0`, `agentic-mbse 0.1.2`, `teax-simkit 0.1.0`,
-`syside 0.8.4`. There is no separate producer distribution — the SysML producer ships inside
-`syside`, so 0.8.4 is the producer version too.
+The gate pins each of the three imports to its own required worktree, so a cross-wired venv
+cannot pass it. Neither protected original checkout was touched.
 
-**One harness correction, recorded rather than hidden.** The first attempt at run 1 reported ten
-agentic-mbse failures, all `FileNotFoundError: 'python'`: several of that suite's tests shell out
-to a bare `python`, and the host's PATH carries only `python3`. That is a property of the runner,
-not of the candidate. The runner now puts the acceptance venv's `bin` on PATH, and the discarded
-run is kept in full at `evidence/phase5-runs/run0-harness-defect/` so the correction can be
-checked rather than taken on trust. The three runs below are the first three runs after it.
+**The licence proof is direct, not inferential.** The codegen suite runs with `-rs`, so every
+skip prints its reason, and `no live syside license` appears **zero** times — in all three runs
+and in the step-7c re-measurement. The 34 skips are model-content skips.
 
 ---
 
-## 3. Three consecutive complete runs
+## 3. Three consecutive complete runs on the retired tree
 
-Every field below was compared across the three runs programmatically, not by eye
-(`build_candidate.py`, `three_runs_identical`). **All identical.**
+Measured at codegen `c0ceb24` / agentic `3fbda2f` / TEAx `fa0e06a9` (REVISE step 7a). Compared
+field by field by `compare_revise_runs.py`, not by eye.
 
-| Gate | run 1 | run 2 | run 3 |
-|---|---|---|---|
-| Full licensed codegen suite | **3862 passed / 47 skipped / 53 deselected**, 0 failed | 3862 / 47 / 53 | 3862 / 47 / 53 |
-| `no live syside license` skip lines | 0 | 0 | 0 |
-| agentic-mbse suite, from the paired worktree | **1825 passed / 1 skipped / 5 deselected** | 1825 / 1 / 5 | 1825 / 1 / 5 |
-| Execution lane (`-m execution`), incl. real TEAx | **53 passed**, 0 skipped | 53 | 53 |
-| Corpus ledger tests | **12 passed** | 12 | 12 |
-| Corpus driver, 37 paths — exact arm | **15 graphs / 22 `ElaborationError`** | 15 / 22 | 15 / 22 |
-| Corpus driver — legacy arm | 36 graphs / 1 `CodeGenerationError` | 36 / 1 | 36 / 1 |
-| Exact code multiset | `SI_SELF_BINDING` ×75, `SI_EXPRESSION_SOURCE_UNSUPPORTED` ×7 | same | same |
-| Per-fixture outcome digest | `f8da45e7…9393` | same | same |
-| `capture_v6_batch.py --verify` | **15 captured / 22 refused / 0 deviations** | 15 / 22 / 0 | 15 / 22 / 0 |
-| `capture_v6_batch.py --check` | 15 / 22 / 0 | 15 / 22 / 0 | 15 / 22 / 0 |
-| `ruff check src` | 16 | 16 | 16 |
-| `ruff check src tests scripts` | 866 | 866 | 866 |
-| `mypy src` | 69 errors in 16 files (87 checked) | same | same |
-| `check_ledger_4a.py paths` | **303 rows, 0 problems** | 303 / 0 | 303 / 0 |
-| `check_ledger_4a.py surface` | 0 unrowed breakages | 0 | 0 |
-| `check_ledger_4a.py groups` | all six READY | all six READY | all six READY |
-| `check_proof_integrity.py` | 0 problems over 0 blocked files | same | same |
-| Doc distinctness | 31 documents, 0 identical-content groups | same | same |
-| `git diff --check`, both repos | clean | clean | clean |
-| Wall clock, whole battery | ~3m 40s | ~3m 45s | ~3m 45s |
-
-**Both error classes are classified separately in every run.** The driver records `error_type`
-beside the code list and never collapses one class into the other. Across the 37 paths the exact
-route raises `ElaborationError` 22 times and `ElaborationDiagnosticError` **zero** times; the
-single legacy error is a `CodeGenerationError`. That the diagnostic class is unexercised is a
-property of this corpus, not a relaxation of the rule.
-
-**The `--verify` run writes nothing.** After each of the three `--verify` runs — which re-capture
-all 15 v6 snapshots through the shipped public capture entry point — `git status --porcelain`
-reported **no modified tracked file**, and the non-timestamp diff filter caught 0 lines. Capture is
-byte-deterministic, and the committed batch is reproducible from the model.
-
-**Real TEAx, at the anchor values.** The execution lane's real-TEAx nodes build the package
-through the shipped `run_codegen` on both the live and relocated-v6 routes, discover modules
-through the generated `create_*_registry` surface, and execute through SimKit's own pipeline. The
-anchors are asserted inside the tests, not restated here: exactly eleven published channels, LCOE
-`270.1211779380445` within `1e-6` of the independently hand-transcribed value in
-`tests/execution/fusion_tea_arithmetic.py`, live and relocated executing to equal outputs, and the
-relocated package built with no model tree present.
-
-**The 40-minute gate, run once out of band.** `check_ledger_4a.py replacements` runs one pytest
-invocation per proof-node row, so it is measured separately rather than three times:
-**219 green / 82 not-required / 0 fail**, on
-the current tree. Those are the same three numbers the plan records for the *post-retirement*
-state, which is the point of the gate: the replacement proofs hold on both sides of the
-retirement. It covers **301 of the ledger's 303 rows**; the two it emits nothing for are `L-036`
-and `L-037`, which are exactly the two owner-gated dual rows that cannot execute at all (§7.3,
-item 1).
-
----
-
-## 4. Reconciliation against the Phase 2 baseline
-
-The Phase 2 inventory is `evidence/baseline.json`, measured 2026-08-10 on the clean rebuild
-worktrees. Test inventory is compared at module granularity from `git ls-files tests`, and node
-counts from the suite summaries.
-
-### sysml-codegen — 218 modules → 257
-
-| Delta | Count | Authority |
-|---|---:|---|
-| Removed | **1** | `tests/unit/test_signature_extractor.py` — ledger **L-241** with production row **L-006**, group 4B-G1, executed at `6ba346e`. The responsibility moved to `generation/preservation.py`, and the checker re-proves it green (73 nodes). |
-| Added | **40** | Every one is traceable to the commit that introduced it, and every commit is a named slice or gate. Full mapping in `candidate.json`. |
-
-The 40 additions group as: 5 from Slice 3A (`fe0b855`, v6 snapshot and source admission), 5 from
-3B (`d91431b`, receipt-bound context and exact projection), 2 from 3C (`7af5dc9`, constraint
-identity), 2 from 3D (`848628b`, real TEAx), 1 from 3E (`430e26a`, the authority switch), 13 from
-Gate 4C part 1 (`5dfb900`, the exact-route specimens), and 12 from the later 4C parts, 4D and the
-Phase 4 audit follow-up (`6d58ad2`, `d2d032f`, `b146ec6`, `bba3d92`, `c674064`, `1935af3`,
-`804d8a2`, `f40a745`, `ab30659`, `31f973d`, `858a6a6`).
-
-**Node count.** Phase 2 collected 3,423 nodes (3,358 passed / 47 skipped / 18 deselected). The
-candidate reads 3,862 passed / 47 skipped / 53 deselected. The skip count has not moved once in
-the whole recovery. The last recorded suite total before this stage was **3,854** at `ab30659`;
-the **+8** since is exactly the two test modules added after it — `test_runbook_patches.py` and
-`test_public_route_baselines.py`, 8 nodes between them, measured by collection.
-
-### agentic-mbse — 67 modules → 67
-
-No module added, none removed. Nodes move from 1,819 passed to **1,825 passed** (+6), from the two
-coordinated commits `8b63393` and `cc6c7a7`, which add `test_executable_profile.py` and
-`test_sysml_quality_checks.py` nodes beside the existing ones.
-
-### Corpus — two rows moved since Phase 2, both with ledger authority
-
-The Phase 2 baseline recorded the exact arm at 13 graphs / 24 errors (23 `ElaborationError` +
-1 `CodeGenerationError`; corrected per final-audit F2 — an earlier transcription here dropped
-the `CodeGenerationError`). It now reads **15 graphs / 22 errors**. Comparing per fixture, exactly two rows moved, and no other row moved at all:
-
-| Fixture | Phase 2 | Candidate | Authority |
-|---|---|---|---|
-| `agg_literal_probe` | `CodeGenerationError` | graph | diff-ledger row **1**, `expected-fix` — the B37-01 ruling, which predicted this cell moving when the front gate became a graph-level emptiness gate in Slice 3A |
-| `fusion_tea` | `ElaborationError`, 15× `SI_SELF_BINDING` (corrected per final-audit F3; `baseline.json` records 15×) | graph | diff-ledger row **15**, `expected-fix` — Slice 3D migrated the customer model's fifteen self-named bindings to the D-5 form (census obligation `B37-15`) |
-
-`test_elaboration_corpus_ledger.py` compares the per-fixture outcome **strings** for all 37
-against the amended ledger on every suite run, so this reconciliation is enforced continuously,
-not just here.
-
----
-
-## 5. Scale
-
-**Budget authority.** The Item 7 spec records one, `[INFERRED] R10` in
-`.project/active/elaborator-cutover/spec.md`: thresholds stated for the migrated `fusion_tea`
-fixture, with the explicit note that changing them takes a spec amendment. Measured with one
-warm-up plus three timed runs per fixture, through public entry points only, on an otherwise
-quiet machine after the three battery runs.
-
-### fusion_tea — measured against the declared budget
-
-| Phase | Budget | run 1 | run 2 | run 3 | |
-|---|---:|---:|---:|---:|---|
-| Live load + elaboration | 10.0 s | 0.113 | 0.116 | 0.114 | ✅ |
-| Projection | 2.0 s | 0.0029 | 0.0028 | 0.0028 | ✅ |
-| Capture + envelope serialization | 5.0 s | 0.160 | 0.163 | 0.163 | ✅ |
-| Generation + seal (live) | 30.0 s | 0.187 | 0.189 | 0.185 | ✅ |
-| Generation + seal (from v6 snapshot) | — | 0.085 | 0.098 | 0.086 | — |
-| Peak RSS (process, cumulative over all runs) | 512 MiB | 222 | 237 | 237 | ✅ |
-| v6 envelope size | 25 MiB | 0.107 MiB (112,046 bytes, identical in all three) | | | ✅ |
-
-Real-TEAx execution has a 30.0 s budget. The whole 53-node execution lane — which builds and
-executes both the live and the relocated Fusion Tea packages inside it — completes in **3.4 s** in
-every run, so the budget holds with a wide margin. Graph counts are identical across the three
-runs: 56 attribute nodes, 7 calculations, 1 constraint, 8 occurrences, 9 modules, 27 entry points.
-
-### The two D-5 scale variants — recorded as their own declared baseline
-
-R10's thresholds are declared for `fusion_tea` only. These numbers are the new baseline for the
-variants, with **no pass/fail claim**, and are shown against fusion_tea's shape for reference.
-
-| Fixture | Live elaborate | Project | Capture | Generate (live) | Generate (snapshot) | Envelope | Graph |
-|---|---:|---:|---:|---:|---:|---:|---|
-| `solar_battery_d5` | 0.318–0.330 s | 0.035 s | 0.558–0.574 s | 0.747–0.769 s | 0.571–0.586 s | 1,104,445 B | 350 attrs / 77 calcs / 42 occ / 77 modules / 199 EPs |
-| `catf_mfe_d5` | 4.999–5.049 s | 0.014 s | 5.149–5.221 s | 5.213–5.304 s | 0.260–0.283 s | 621,270 B | 376 attrs / 42 calcs / 9 constraints / 61 occ / 42 modules / 60 EPs |
-
-Two things a reader should take from that table rather than re-derive:
-
-- **`catf_mfe_d5` costs five seconds in live elaboration, and everything live inherits it.**
-  Capture and live generation are elaboration plus a small tail. Generating the same model from a
-  sealed v6 snapshot takes 0.26 s — roughly twenty times faster. That is the offline route's
-  practical argument, measured.
-- **Held against fusion_tea's thresholds, `catf_mfe_d5`'s capture would sit just over the 5.0 s
-  capture line** (5.15–5.22 s), for that same reason. It is not a budget breach, because no budget
-  is declared for this fixture; it is the number an owner would want before declaring one.
-
-Envelope bytes and every graph count are identical across the three runs for all three fixtures.
-
----
-
-## 6. Residue and boundary checks
-
-Run by `evidence/phase5-runs/check_residue.sh`; raw output in
-`evidence/phase5-runs/residue.json`. The greps are scoped to shipped code and data — `src`,
-`tests`, `scripts`, `docs`, `pyproject.toml`. The recovery's own records under `.project/` cite
-the forensic OIDs deliberately; that is the archive, not an import.
-
-| Check | Result |
-|---|---|
-| Forensic OIDs or `item7-forensic` referenced from shipped paths | **none** |
-| Import-boundary tests (`test_elaboration_import_boundaries.py`) | 14 passed |
-| Single-authority pins (`test_public_authority_switch.py`) | 19 passed |
-| v6 batch pins (`test_v6_recapture_batch.py`) | 58 passed |
-| Runbook patch pins (`test_runbook_patches.py`, `test_retirement_worklist.py`) | 12 passed |
-| `retirement_worklist.py check` | 0 problems |
-| `git diff --check`, both repos | clean, all three runs |
-
-**One residue class found, named rather than rounded down.** 38 tracked files carry an absolute
-path into an *original* checkout (`/home/reid/1cfe/sysml-codegen/…`). Thirty-five of them are v5
-`extraction_snapshot.json` fixtures — captured long ago in the original worktree, and exactly the
-non-portability the v6 batch and the L-118 fix exist to end. They belong to the retiring v5 family
-and go with it. The other three are the documented license-`.env` convention, not imports:
-`tests/fixtures/v6_recapture_batch/README.md`, `scripts/spikes/_helpers.py`,
-`scripts/probes/probe_item1_phase0.py`. **No v6 snapshot and no manifest entry contains an
-absolute path** — re-checked by the batch's own test on every suite run.
-
-**Clean status at the recorded OIDs.** Both repositories report clean at every one of the three
-runs. The only untracked entries in sysml-codegen are this stage's own: the Phase 5 brief and
-`evidence/phase5-runs/`, both committed with this record.
-
----
-
-## 7. The owner decision surface
-
-Nothing here is new. Each entry names what it is, where the evidence is, and what accepting or
-deferring costs.
-
-### 7.1 Decision — the PROPOSED v6 recapture batch
-
-**What it is.** 15 v6 snapshots at `tests/fixtures/<name>/instance_graph_snapshot.json` plus 22
-typed refusal records in `tests/fixtures/v6_recapture_batch/batch.json`, produced by
-`scripts/capture_v6_batch.py` through the shipped public capture entry point, so the batch cannot
-drift from the product. Every outcome matches the amended Phase 2 corpus ledger with **0
-deviations**, both error classes with exact code multisets. It is marked **PROPOSED** and is
-authority for nothing until the owner accepts.
-
-**Evidence.** Plan, "Gate 4C part 4 / Part A" (commit `d2d032f`);
-`tests/conformance/test_v6_recapture_batch.py`, 58 nodes that re-derive every claim from the
-committed bytes, most of them license-free; re-verified 15/22/0 in all three runs above, writing
-nothing.
-
-**Accepting costs** nothing beyond the review: the batch is already in the tree and green.
-
-**Revising costs a measured 95 outcomes.** Removing the 15 snapshots the batch added leaves **38
-failed and 57 errors** across the suite. Revising means re-running `capture_v6_batch.py` and
-re-greening those, not reverting a commit. It is Git-reversible, and it is not free. (Phase 4
-audit F4.)
-
-### 7.2 Decision — the prepared retirement
-
-**What it is.** The legacy stack ships **present-but-unreachable**. Its removal is prepared as a
-four-step runbook, and every step was executed in order in a scratch `git worktree` with the full
-battery run at each boundary. All four end with **0 failed and 0 errors**. The audited tree was
-never mutated; nothing has retired.
-
-| Step | Subject | Rows | Post-state |
-|---|---|---:|---|
-| 1 | G2′, the v5 read path | 99 | 2352 passed / 43 skipped / 145 deselected, 0 failed |
-| 2 | the v5 family | 155 | 1582 / 34 / 148, 0 failed |
-| 3 | G3′ (`resolution/producer_completeness.py`) | 1 | 1582 / 34 / 148, 0 failed |
-| 4 | G4′ (`elaboration/diff.py`, `tests/helpers/legacy_route.py`) | 3 | 1582 / 34 / 148, 0 failed |
-
-The step lists are **derived** from the ledger's own columns by
-`scripts/retirement_worklist.py` and checked by a test node — 257 rows placed across the four
-steps and the owner-gated entry. The per-file edits ship as **55 reviewable patches** (12 in
-`runbook-patches/step1/`, 43 in `runbook-patches/step2/`), each re-checked against the tree by
-`tests/unit/test_runbook_patches.py`. After the retirement,
-`check_ledger_4a.py replacements` reads **219 green / 82 not-required / 0 fail** — measured, not
-projected.
-
-**The property that holds it in place.** Two conformance nodes in
-`tests/conformance/test_public_authority_switch.py` pin the present-but-unreachable state: the
-construction closure reaches no legacy authority, transitively; and the CLI's *import* closure
-still reaches a pinned four-module set, of which three are reached, pinned by name so the residual
-cannot silently grow. `CLAUDE.md` states the honest measured number beside it — `sysml_codegen.cli`
-imports **10 of the 11** listed legacy modules. Importable is not reachable, and the number to
-carry into a retirement decision is ten, not three.
-
-**Accepting** means the four steps become mechanical work after the seven rulings below.
-**Deferring** costs nothing immediately and keeps a dead stack in the tree that every future
-reader has to be told about — which is what the retiring banners on documents 03, 04, 05, 07, 09,
-10, 11, 12, 13, 17, 24 and 25 currently do.
-
-**One condition, stated in the open.** "Mechanical" holds *only* with the seven items below ruled
-on first, or held out deliberately, exactly as the simulation held them.
-
-### 7.3 The seven owner-gated items
-
-Together these are the 113-node provisional trim in `runbook-patches/provisional-trim.txt`. Every
-"0 failed" in §7.2 is measured with them held out.
-
-| # | Item | Measurement | What the ruling costs |
-|---|---|---|---|
-| 1 | **The dual qualifier drop** — L-033, L-034, L-036, L-037 | All eight retained 3C duals fail under the prescribed drop (chunks 12 and 16). L-036/L-037 cannot execute at all: `agentic_mbse/validation/level4_constraints.py:55-56` and `level6_architecture.py:620-621` call the legacy members and are outside this ledger | A type migration crossing the repository boundary, or a decision to keep the name-keyed members |
-| 2 | **L-033's deletion, and L-034 with it** | `compile_calc_def_exact` — the survivor — constructs a legacy `CompilationResult` at `extraction/expression_compiler.py:378`, inside its own body. L-034's name-keyed `data_models.py` fields lose their only reader at step 2 while the extractor still writes them | The same migration as item 1. Step 2 is green with both held out, which is what says the entry is separable, not optional |
-| 3 | **L-135 `test_extractor.py`** | 58 of 74 collected nodes read the retiring v5 fixtures at step 1, and one more at step 2 — the constraint-drop diagnostic whose second arm asserts where catf_mfe's 65 swept constraints land. It cannot be repointed: the exact route **refuses** `catf_mfe_model`. **59 nodes** | A coverage decision about a retained subject: drop the arm, or move the subject to a fixture the exact route accepts |
-| 4 | **L-153 `test_hierarchy_resolver.py` and L-100 `test_ast_dispatch_invariant.py`** | Both are `retain` rows carrying no disposition, and both break at step 1 through the conformance v5 fixtures: 44 of 46 and 3 of 20 — **47 nodes**. Their subjects survive; only their evidence source retires | Authorship: repointing them onto v6 or live evidence |
-| 5 | **L-281 `test_expression_compiler.py`** | Five nodes beyond the sixteen its per-node table names read the conformance v5 fixtures | The same authorship, smaller |
-| 6 | **`scripts/capture_filter.py` loses its last caller at step 2** | Two `test_capture_fixtures_filter.py` nodes go red; the four `select_fixtures` nodes that stay green cover a module nothing calls. `capture_v6_batch.py` takes positional fixture names but has no license-free unknown-name refusal, so L-292's "the same responsibility is carried" is half true | Delete the filter, or wire it into the v6 capture |
-| 7 | **`snapshot/__init__.py` keeps a dead v5 surface, named by no row** | After step 2, `SNAPSHOT_FORMAT_VERSION`, `CONSTRAINT_LOWERING_MODE_*`, `VALID_CONSTRAINT_LOWERING_MODES`, `SnapshotFormatError`, `GrandfatheredSnapshotError` and `assert_snapshot_certifiable` have zero readers in `src/`, `scripts/` or `tests/` | How much v5 vocabulary the tree keeps. Nothing breaks either way, which is why no step needs it |
-
-Items 3, 4, 6 and 7 are the class audit 4 found in L-298: a disposition note, or a silence, that
-is false against the code. They were found the only way that class can be found — by executing the
-step and running the suite.
-
-**What used to be an eighth item is closed.** The nine rows whose replacement proof the retirement
-itself deletes: six repoint mechanically, and the other three are answered by
-`tests/conformance/test_public_route_baselines.py`, four license-free nodes that state the two
-capture scripts' responsibility as a property of the public route rather than as a stored file.
-
-### 7.4 The named residuals carried from Phases 3 and 4
-
-| # | Residual | What it is | Evidence | Accepting / deferring |
+| Gate | run 1 | run 2 | run 3 | identical |
 |---|---|---|---|---|
-| R1 | **Offline provenance limit** | A v6 snapshot records its sources under the portable `root-0/` referent, never the checkout path — that portability is the point. So every generated file carrying a `SysML Source:` comment differs between the live and snapshot routes **by construction**. Live-vs-snapshot byte identity is not an exact-route property and must not be asserted as one. What holds: the difference is *only* the provenance comment, and the model contract's **semantic** fingerprint is equal across the two | Plan, "Notes a reviewer should not have to re-derive"; pinned on ledger rows L-179 and L-140 | Accepting records the limit as product behaviour. There is nothing to fix without giving up snapshot portability |
-| R2 | **Module `source_file` divergence** | Module `source_file` still differs across routes: live records absolute checkout paths (one still carrying a leftover `//` URI prefix), v6 records the portable referent. It reaches generated bytes only as a `SysML Source:` comment. The v6 spelling is the one the design intends (`generation/stencils.py:243`) | Plan, Slice 3B completion, "A second residual, pinned rather than fixed"; asserted by value on both sides, and the generated-package test pins the exact file set the difference reaches | Deferring keeps one cosmetic divergence. Fixing means routing the live path through admission, which would undo the arm independence Slice 3A's F2 fix established |
-| R3 | **`d38_caret` — diff-ledger row 12** | A shipped-package cell amendment. A modelled finite multiplicity mints keys carrying an occurrence index; the generated `schemas/*_params.py` wrote those keys straight into a class body. Pre-existing and reachable from public `generate` — it reproduced at HEAD on this ratified corpus fixture. **Fixed** at Gate 4C part 2 (surfacing S3), with a new coverage module of 21 nodes, and the fixtures pin the *set* of unparseable files rather than asserting emptiness | Plan, S3; diff-ledger row 12 | The amendment is the record of a fixed defect. Accepting the row is accepting that the shipped key spelling changed |
-| R4 | **`unresolvable_attr_probe` — diff-ledger row 36** | On the exact route this fixture now reaches generation and the module-class collision guard **refuses the package**, because two of nine formulas alias to one class name. The refusal was untyped and fired *after* the output tree was cleared, leaving a half-written package (measured: 34 files, no contracts, no seal). Ruled C2 and **fixed in Gate 4B-G0**: typed refusal, ordered before the clear, with a specimen | Plan, 3E audit F5 and the 4A approval's C2 ruling; `test_public_authority_switch.py::test_a_registry_class_name_collision_refuses_before_the_writer_runs` | Accepting the row is accepting a public refusal on a fixture legacy accepted. The defect it exposed is closed |
-| R5 | **The zero-constraint report aggregator** | Legacy emits a `constraint_report_aggregator` whenever the constraint pathway runs, even with zero eligible constraints — a deliberate D11 choice. The exact route returns early instead (`elaboration/project.py:887`), and that early return **stands**: no synthetic module without content. Measured on `catf_mfe`: legacy 43 modules, exact 42 | Plan, "Named mechanism — the zero-constraint report aggregator" (orchestrator ruling 2); `test_zero_assertion_aggregator_not_assessed` is the live subject of the retiring behaviour | **A product question, not a test question.** Whether the empty-report surface is a behaviour the exact route should carry. Deferring means the surface disappears with the retirement |
-| R6 | **V11 coverage is structural, not behavioural** | `elaboration/project.py` constructs every graph with `fallback_entry_points=set()` in both `run()` and `select()`, and both collectors filter on membership, so `cli._reconcile_params_coverage` runs on every generation and **cannot fire**. No fixture can seed the gap through the public surface | Plan, S2 / ledger row L-249, closed by proof on three nodes: two rot pins plus `tests/unit/test_uncovered_params.py` as the named V11 coverage owner | Accepting means the guard is a rot pin, not a live gate. The day the exact route produces fall-through entry points, the pins fail and the row becomes authorable as a behavioural specimen |
-| R7 | **The units gap — surfaced, then closed** | The exact route refused a model carrying unit annotations, isolated to one character (` [m]`). Remodelling would have meant deleting annotations from **148 sites** in a customer-derived model. Ruled a bounded product gap and then **fixed** as one rule applied once: `_ExactElaborator._without_unit_annotation` unwraps the annotation before anything downstream classifies the expression. `catf_mfe_d5` now elaborates, 42 modules | Plan, Gate 4C part 6 ruling 2 (the finding) and ruling 1 (the fix); `tests/fixtures/unit_annotation_lanes` carries both spellings in one model, with the bare model as its control | Nothing outstanding. Recorded because the fixture, the pins and the deleted probe are all consequences an owner should see once |
-| R8 | **S4 / Item 10 — the same-name rollup refusal** | An assembly cannot write `sum(deck_panel.capital_cost) + sum(caster.capital_cost)`: projection names an expression parameter after the reference's last member and drops the qualifier (`elaboration/elaborate.py:1937-1938`, `input_name = fact.resolved_member_names[-1]`; pointer corrected per final-audit F4), so both terms render `capital_cost` and the model is refused with `SI_RENDERING_COLLISION`. Every child of a costed assembly exposes the same names by construction, so this is the pattern, not an edge case. **Ruling: the refusal stands**; the workaround (one named intermediate attribute per child role) is a remodelling requirement the route imposes | Plan, S4; `test_costed_component_exact_route.py::test_a_two_term_same_name_rollup_is_refused`; documented at Gate 4D subject 4 in `modeling-assumptions.md` §4, §6 | **This is the same qualifier-dropping collapse filed as the Item 10 cross-part `child.attr` blocker.** Accepting means the modelling requirement is documentation, not a defect. It is the one entry here that reaches outside Item 7 |
-| R9 | **The fingerprint residual** | The provenance-comment `executable_fingerprint` differs between the live and relocated packages. Unchanged since Slice 3D and carried through the 3E switch | Plan, Slice 3E completion, "the ruling-2 residual"; newly pinned on L-140 alongside the semantic fingerprint's equality, so the difference is recorded rather than ignored | The same shape as R1: it follows from provenance, and closing it means giving up portability |
-| R10 | **The constraint-threshold disambiguator drop** | On the shipped input-key surface the exact route drops the disambiguating id from a constraint threshold key (`…__viability__81ddf10fb1d1749b__threshold` → `…__viability__threshold`). The id is retained identically in the module id and the evaluation channel. Two constraint usages with the same name under one owner would mint the same key — **no corpus model has that shape and no failure was measured** | Plan, 3E audit F1; diff-ledger row 15 | A packet question, not a defect claim. Accepting means the operator-facing surface keeps the shorter key |
-| R11 | **The customer-visible entry-point key rename** | The largest customer-visible change in the recovery. Legacy names an entry point after the consuming calc-usage formal; the exact route names it after the modelled attribute that supplies it. `fusion_tea`: legacy publishes 31 keys, exact 27, sharing 13 — three collapses, ten one-to-one renames, the threshold above, and ten group moves | `evidence/3e-package-comparison.md` enumerates every delta with its consumer set | **An owner accepting this candidate should read the table, not a summary of it.** Every legacy-only key is matched to an exact-only or shared key by identical consumer set, which is the proof that no entry point was lost or gained |
+| Full licensed codegen suite | 1705 passed, 34 skipped, 65 deselected | same | same | yes |
+| `no live syside license` skip lines | 0 | same | same | yes |
+| agentic-mbse suite, from the paired worktree | 1826 passed, 1 skipped, 5 deselected | same | same | yes |
+| Execution lane (`-m execution`), incl. real TEAx | 65 passed | same | same | yes |
+| Corpus ledger gate (`-k corpus`) | 9 passed, 1795 deselected | same | same | yes |
+| `capture_v6_batch.py --verify` | 15 captured, 22 refused, 0 deviations | same | same | yes |
+| Non-timestamp fixture diff after `--verify` | 0 | same | same | yes |
+| `capture_v6_batch.py --check` | 15 captured, 22 refused, 0 deviations | same | same | yes |
+| `ruff check src` | Found 14 error | same | same | yes |
+| `ruff check src tests scripts` | Found 641 error | same | same | yes |
+| `mypy src` | Found 57 errors in 11 files | same | same | yes |
+| agentic `ruff check src` | Found 1 error | same | same | yes |
+| agentic `ruff check tests` | Found 120 error | same | same | yes |
+| agentic `mypy src` | Found 108 errors in 26 files | same | same | yes |
+| `check_ledger_4a.py paths` | 304 rows checked, 0 problems | same | same | yes |
+| `check_ledger_4a.py surface` | 0 unrowed breakages | same | same | yes |
+| `check_ledger_4a.py replacements` — green | 221 | same | same | yes |
+| `check_ledger_4a.py replacements` — not required | 81 | same | same | yes |
+| `check_ledger_4a.py replacements` — FAIL | 0 | same | same | yes |
+| `check_proof_integrity.py` | proof integrity: 0 problems over 0 blocked files | same | same | yes |
+| `check_doc_distinctness.py` | 31 numbered reference documents checked, 0 identical-content groups | same | same | yes |
+| `git diff --check`, codegen | rc=0 clean | same | same | yes |
+| `git diff --check`, agentic | rc=0 clean | same | same | yes |
 
-Three further items are recorded rather than resolved, from Gate 4D, and belong to whoever
-touches those files next: `reference/07` cites `core/graph_algorithms.py`, which has never existed
-in this tree (pre-existing, needs an owner); two production docstrings are stale in the way the
-documents were, and belong to the retirement commit that touches those files; and `reference/16`
-and `reference/18` are stale-minor with no settled replacement content, which is authorship rather
-than repair.
+**51 / 51 compared fields identical across all three runs**, re-derived from the committed logs
+by the builder through `compare_revise_runs.fields`. The rows above are the headline subset; the
+full field list is in `candidate.json` under `three_runs.fields`.
+
+**Two counting notes, so a reader does not trip over them.**
+
+- `revise-runs/comparison.md` reports **33/33**. That document is authored prose whose table is a
+  curated view of this same comparison, and its headline counts its own rows. The comparator over
+  the same logs emits 51 fields. **No field differs under either count**, and the builder now
+  reads comparison.md's headline back so the two numbers stay reconciled.
+- The **`replacements` not-required count is 81**, not 0. The comparator's pattern read
+  `not required` where the checker writes `not-required`, so its own line reported 0 while
+  comparison.md's 81 — read straight from the log — was right. Corrected in
+  `compare_revise_runs.py` at this step, with the reason in a comment. 221 green + 81 not-required
+  = 302 of the ledger's 304 rows; the two that emit no line are **L-036 and L-037**, the pair that
+  cannot execute, computed from the log and the ledger rather than recalled.
+
+**`check_proof_integrity.py` reading `0 problems over 0 blocked files` means nothing left to
+check, not checked-and-clean.** The log says so; the previous summary dropped the caveat
+(audit-7 F4), and this record carries it.
+
+### Scale, from the same three runs
+
+Wall-clock is measurement, not a semantic result, so it is reported as a range rather than
+compared for identity. Node counts, module counts, entry-point counts and envelope bytes **are**
+compared and are byte-stable.
+
+| fixture | live elaborate s | generate live s | peak RSS MiB (cumulative) | envelope bytes |
+|---|---|---|---|---|
+| `catf_mfe_d5` | 4.960–5.272 | 5.132–5.426 | 308.9–326.4 | 621,270 |
+| `fusion_tea` | 0.117–0.133 | 0.191–0.196 | 222.7–244.7 | 112,046 |
+| `solar_battery_d5` | 0.320–0.348 | 0.755–0.827 | 264.8–285.0 | 1,104,445 |
+
+The declared budget (spec R10, `[INFERRED]`) covers `fusion_tea` only: 10.0 s live elaboration,
+30.0 s generation, 512 MiB peak RSS, 25 MiB envelope. `fusion_tea` holds every one with two
+orders of magnitude to spare. The two D-5 variants carry **no pass/fail claim** — they are the
+declared baseline for those fixtures, and `catf_mfe_d5`'s five-second live elaboration is the
+number an owner would want before declaring a budget for it.
+
+### The content OID, re-measured at step 7c
+
+The three runs measured `c0ceb24`. The only product change since is the audited and dispositioned
+audit-7 F3 CLI handler and its two pinned nodes, so this stage re-measured at the content OID
+rather than carrying a number from a tree that no longer exists. Logs:
+`evidence/phase5-runs/head-6c35aa0/`.
+
+| Gate | value at the content OID |
+|---|---|
+| Full licensed codegen suite | 1707 passed, 34 skipped, 65 deselected |
+| `no live syside license` skip lines | 0 |
+| `check_ledger_4a.py paths` | 304 rows checked, 0 problems |
+| `check_ledger_4a.py surface` | 0 unrowed breakages |
+| `check_doc_distinctness.py` | 31 numbered reference documents checked, 0 identical-content groups |
+| `git diff --check`, codegen | clean |
+| `git diff --check`, agentic | clean |
+
+**1707 / 34 / 65 at `6c35aa0` against 1705 / 34 / 65 in the three runs.** The delta is exactly
+`tests/conformance/test_cli_snapshot_refusal.py`'s two nodes, added with the F3 fix. Skips and
+deselections did not move.
 
 ---
 
-## 8. Evidence hashes
+## 4. The retirement, executed
 
-Full SHA-256 table in `candidate.json` under `evidence_hashes_sha256` — it covers the plan, both
-ledger forms, the 4D update list, every audit and evidence document, the v6 batch manifest, all 55
-runbook patches, the provisional trim, and this stage's own scripts. The headline entries:
+Owner step 5 required the retirement to run against the real tree with **no provisional trim** —
+the 113-node deselection list must not be used. It ran that way, in four commits.
+
+| commit | subject | paths touched |
+|---|---|---|
+| `19072ad` | retire(step 1): G2' — the v5 read path | 99 |
+| `82c7951` | retire(step 2): the v5 family | 167 |
+| `882fc8d` | retire(step 3): G3' — resolution/producer_completeness.py | 1 |
+| `3071fba` | retire(step 4): G4' — the last reach at the legacy route, and the dead v5 surface | 4 |
+
+What is gone from the working tree, verified by the auditor by grep at HEAD rather than by
+reading a note: `orchestration/pipeline_builder.py`, `orchestration/snapshot_context.py`,
+`resolution/graph_builder.py`, `resolution/producer_resolution.py`,
+`resolution/producer_completeness.py`, `core/output_registry.py`,
+`snapshot/{loader,serializer,graph_rebuild}.py`, `elaboration/diff.py`,
+`tests/helpers/legacy_route.py`, `tests/conformance/test_elaboration_dual_run.py`,
+`scripts/capture_filter.py`, `scripts/run_elaboration_corpus.py`, and every committed
+`extraction_snapshot.json`. `snapshot/__init__.py` re-exports nothing.
+`orchestration/pipeline_context.py` survives as the `SysMLParsingError` /
+`CodeGenerationError` re-export point and carries no `PipelineContext`.
+
+**What holds the absence in place.** `tests/conformance/test_public_authority_switch.py` and
+`tests/unit/test_elaboration_import_boundaries.py` pin the modules' non-existence and pin that
+the CLI names none of them. The ledger checker is the mechanical half: an executed `delete` row
+whose file is still present is a problem, and an executed `migrate`/`retain` row whose file is
+gone is *also* a problem unless a recorded Gate 4C disposition authorises the absence. 304 rows,
+0 problems, in three independent runs and again at the content OID.
+
+The seven formerly owner-gated items were **implemented**, not held out — the coordinated
+exact-ID type migration across both repositories, the ~111 affected behaviour tests repointed or
+replaced before their evidence sources were deleted, unknown-fixture rejection carried into the
+v6 capture driver, and the dead v5 exports removed. The per-step record is in the plan's "Revise
+step 2/3/6" sections.
+
+---
+
+## 5. The independent audit
+
+`evidence/audit-7-retired.md`, 2026-08-12, a fresh session that implemented none of the work and
+audited the retired tree at `48bf1b0` (product content `c0ceb24`).
+
+**Verdict: FINDINGS — ten, none blocking. Certification withheld on one item it could not
+reach.** The withheld item is not a defect the auditor found; it is a gap in what the auditor
+could read: the product-lens ledger's controlling BLOCK is `audit-F1`, which lives entirely in
+`agentic-mbse`, and that session had no read access to the companion repository and no
+interpreter. Its own words: a certification that treats an unread repository as green is the
+failure mode that caused the original incident.
+
+**The certification clause, and how it resolves.** The record says: run probes P1–P8; if they
+come back as the stage notes describe, the honest verdict on the evidence gathered is **Certify
+with the residual list, once F1–F3 are dispositioned**. All eight probes were executed by the
+orchestrator from the canonical environment and appended to the audit as the probe addendum.
+**All eight CONFIRM** — the self-binding exemption is gone from the companion with its tests and
+docs realigned (P1–P3), both production call sites run the identified constraint route with the
+four legacy members absent (P4), the manifest refusal is typed (P5), the six mutation-matrix
+cells pass (P6, 20 passed), the three import paths resolve to the required worktrees (P7), and
+the ledger reads 304/0 at the audited OID (P8).
+
+**F1–F3 are dispositioned** (plan, "Revise step 7"): the HR family carries the same
+off-shipped-route disclosure its sibling family had; the three re-cited rows whose heir proves
+less than the requirement text moved PASS → PARTIAL with the gap named per cell; and
+`cmd_snapshot` now carries the same named refusal handlers `run_codegen` keeps, pinned by two
+nodes. So the standing verdict is **Certify with the residual list**.
+
+**F4–F10 are low or informational and remain open as record-quality work**, not as gates: the
+vacuous proof-integrity cell (carried in §3 of this record), a matrix file count off by one, the
+spec's stale success-criteria checkboxes (ticked at this step for SC4/SC8/SC9/SC10, with
+provenance recorded in the spec), a plan sentence that overstates step 2's containment, a
+single-owner claim that is true for two lanes rather than the tree, unit tests that build a
+catalog shape the projector no longer emits, and three ledger rows whose `retain` disposition
+reads against an authorised deletion.
+
+**What the auditor could not verify, in its own list:** the entire agentic-mbse half, anything
+requiring execution, the six mutation cells observed rather than read, the 304 rows one by one,
+the scale timings, ~120 of the re-cited matrix rows, TEAx internals, and the forensic branches.
+The probe addendum closes the first two for the items that decided the verdict; the rest stand as
+stated limits.
+
+---
+
+## 6. What the customer proof rests on
+
+Not re-derived here; named so the owner knows what was checked and by whom.
+
+- **The mutation matrix.** Two off-default mutations × three public routes (live,
+  in-place-snapshot, relocated-snapshot) = six cells, in
+  `tests/execution/test_fusion_tea_mutation_teax.py`. The auditor derived the consumer sets from
+  the SysML *before* reading the test's expectations and got exactly the two consumers each that
+  the test asserts. The mover set is computed over every projected output and every constraint
+  response, so it is an every-and-only claim. LCOE is checked against an independent hand
+  transcription **and** against the forensic constants, so a self-consistent wrong answer still
+  fails. Probe P6 observed 20 passed.
+- **The accepted batch.** 15 v6 snapshots and 22 typed refusal records, produced through the
+  shipped public capture entry point. `--verify` re-captures all 15 and writes nothing: zero
+  non-timestamp diff lines in all three runs.
+- **The R10 collision test.** `tests/conformance/test_constraint_name_collision.py`, 4 nodes: two
+  same-named constraint usages under one owner are refused, typed (`SI_ID_UNSTABLE`), before
+  generation, with the output path never created.
+
+---
+
+## 7. What is still the owner's
+
+Nothing in this section is new, and nothing here has been decided by an agent.
+
+**The gate: the final disposition on this candidate.**
+
+| # | Open question | Where it is recorded | State |
+|---|---|---|---|
+| 1 | **R8** — the qualifier-dropping same-name rollup refusal: fix-first, or shipping-gate with Item 10 scheduled | `owner-disposition-20260811.md` Q1; plan S4 | Untouched. The audit diffed the range and confirmed no `SI_RENDERING_COLLISION` logic moved. **Owner step 4 requires resolution or an explicit shipping gate before Item 7 closes.** |
+| 2 | **The ruff findings** — clear them (orchestrator recommendation) or amend the spec | Q2 | Unanswered. Now **14**, not 16; the two that went sat in deleted files. All are `UP042`-class style findings with unsafe-only fixes. This is why the spec's coordinated-repository-gates criterion is deliberately left unticked. |
+| 3 | **Item 10 scheduling** — raised by R8 either way | Q3 | Not blocking |
+| 4 | **How the final audit runs** | Q4 | Answered in practice: it ran as a fresh independent session |
+| 5 | **audit-F4** — route-dependent generated bytes: make live provenance portable, or amend invariants 34–35 with proper authority | Q5 | Properly parked, verified untouched. Design amendment A1 explicitly declines to converge D3 *because* convergence would answer audit-F4 by side effect |
+| 6 | **Six items surfaced during the REVISE execution** — REQ-CL-03's total-inventory guarantee; whether the two non-shipping extraction modules stay; the nine UNTESTED matrix rows; the three PARTIAL rows; missing REQ families for the elaborator's own mechanisms; ratification of design amendments D3/R2 | Q6 | All genuinely owner-grade; none blocks the mechanical path |
+
+**Accepted residuals, restated so they are in one place** (full list and evidence in
+`evidence/audit-7-retired.md`): `mypy src` at 57 errors in 11 files, unchanged across the whole
+REVISE path; 131 RETIRED matrix rows and the honest 275 → 136 drop, which after the F2
+disposition reads 133 PASS + 3 PARTIAL; two extraction modules
+kept by their tests with a measured disposition in their docstrings; one deliberately-kept
+compatibility pin with no runtime consumer; `scripts/archive/` unreachable by collection; a
+partial output tree surviving a mid-write failure, measured and deliberately unchanged; a stale
+`PROVENANCE.md` in the `catf_mfe_d5` fixture; and ~110 behaviour nodes licence-gated by fixture,
+detectable by skip reason.
+
+**One provenance floor the owner should know.** `owner-disposition-20260811.md` is graded
+`[INHERITED: handoff-20260811.md]`: the owner's review was given in a session transcript that the
+recording session could not read, so every `[OWNER]` ruling in this REVISE path rests on an
+agent-written handoff rather than on the owner's own words. The disposition record discloses this
+in its second paragraph; the auditor raised it too.
+
+---
+
+## 8. The five record-integrity discrepancies, before and after
+
+The owner named five. Each is listed with what the record said and what it says now.
+
+| # | Before | After |
+|---|---|---|
+| 1 | "The independent audit … has not run against this record"; the candidate described as the tree at `c4e9b76` with the legacy stack "present in the tree, importable, unreachable — nothing has been retired" | This record describes the **retired** tree at `6c35aa0`: §4 the executed retirement, §3 the three-run gate table, §5 the audit verdict, its certification clause, the eight-probe addendum, and the F1–F3 dispositions. `c4e9b76` appears only where this record points back at the superseded one |
+| 2 | "Commits since base 108", with a 108-vs-112 ambiguity and no stated range | **160**, one number, printed with its range `1672c576…..6c35aa0` and the command that produced it (`git rev-list --count`), in §1 and in `candidate.json` under `commit_counts` |
+| 3 | The plan's owner gate named `800ec84` as *the* candidate | The plan's owner gate now records **both**: gate 1, the settled 2026-08-11 REVISE disposition at `800ec84`; gate 2, the post-REVISE candidate at `6c35aa0` / `3fbda2f`, open and awaiting the final disposition |
+| 4 | Progress checkboxes read Phase 4 and Phase 5 unticked, with retirement "postponed"; the Phase 4 resequencing table's post-acceptance row read as future work | Phase 4 and Phase 5 are ticked with the executed retirement cited by commit (`19072ad` / `82c7951` / `882fc8d` / `3071fba`); the resequencing table carries a state column saying the same; a third line tracks the REVISE path as executed through step 7 and open at the owner's disposition |
+| 5 | — | Three further inconsistencies found while regenerating, all fixed and disclosed above: the **51-vs-33** field count (§3), the comparator's **not-required 0** where the checker writes `not-required` and the true count is 81 (§3), and the dropped **proof-integrity caveat** (§3, audit-7 F4). The spec's four stale success-criteria checkboxes (audit-7 F6) were ticked with provenance, leaving the two the evidence does not support |
+
+---
+
+## 9. How every number here was derived
+
+The rule for this record is that no number is typed by hand.
+
+- **Run values** — parsed from the committed logs under `evidence/phase5-runs/revise-runs/` by
+  `compare_revise_runs.fields`, the same parser behind `comparison.md`, called from
+  `build_candidate_revise.py`.
+- **The content-OID re-measurement** — run by this stage into
+  `evidence/phase5-runs/head-6c35aa0/` and parsed from those logs by the same builder. The suite
+  ran with `-rs` under the licence, from the canonical venv.
+- **OIDs, commit counts, diff stats, name-status counts, path inventory, the retirement commits'
+  subjects and path counts** — `git`, run by the builder, each with the range or command that
+  defines it recorded beside the value in `candidate.json`.
+- **Evidence hashes** — SHA-256 over the bytes on disk, 37 artifacts, in `candidate.json` under
+  `evidence_hashes_sha256`. Headline entries:
 
 | Artifact | SHA-256 |
 |---|---|
-| `.project/active/cutover-recovery/plan.md` | `ee37cf2ed005ad8f642fe0fbd790e48127fdd8e3a7b68455fbc92e85777630bb` |
-| `evidence/baseline.json` | `8162966c0ede1b58bb4562def9e862c794d25b505b2753fb4e2a4e8ddd66aa55` |
-| `ledger-4a.json` | `ee6d1a4b48628b1b06063c48cb99d7a9824769af7f9514c191d2d3213a833c48` |
-| `ledger-4a.md` | `4f7a1a8395b7adf92652d70103256ee4dfaaeef346727925ec41656106ef2da6` |
-| `doc-update-list-4d.md` | `a48b69bae7b2510538707a2140fd1d72fc05b854e90f533eae6e8539afc42de4` |
-| `tests/fixtures/v6_recapture_batch/batch.json` | `7c72e34c6bb23d92294d27530c7d40bc26661358a6186858fbee1a6ff8c79ef7` |
-| `evidence/audit-4.md` | `efb23e2a3c6205286636f683f386770162882d90e7f57814eab9eeac5968500c` |
-| `evidence/3e-package-comparison.md` | `6653acb04f7b40160b650ad6e909092375cdf5dcd307fcdb2c291b961f278d97` |
+| `.project/active/cutover-recovery/plan.md` | `1f10f2df24a450887364da8c15aad9d46f413e8324a218b0d22f8aa922b93e0e` |
+| `.project/active/cutover-recovery/ledger-4a.json` | `013cd4aec88e91dbd4e06bafd4de481713210dd04c77774e3f20142a53484faf` |
+| `.project/active/cutover-recovery/owner-disposition-20260811.md` | `17e115061d9268ed0dd45ba763f749e8d6106a6a538d93faf0c13b9ed3c8be0d` |
+| `evidence/audit-7-retired.md` | `6b7b651fc5d7c0744cbe679c45c69fd82d112dc09534a5978dc39bb55f3f0e33` |
+| `evidence/phase5-runs/revise-runs/comparison.md` | `372cfcd0335d374f2c646121d1617dc9c4b950e06cd777f427784a3b34e88299` |
+| `tests/fixtures/v6_recapture_batch/batch.json` | `8feb8099a99273f390eb71f68f37f5d9786f9236954ab34880582ed22e1c462c` |
 
-Audit verdicts, for the auditor's convenience: 3A FINDINGS then CERTIFY with one named residual,
-3B CERTIFY (7 findings), 3C CERTIFY (4), 3D CERTIFY (5), 3E CERTIFY (6), audit 4 FINDINGS (8, all
-closed at the Phase 4 audit follow-up).
+The plan hash covers the gate-2 and checkbox amendments made at this step. `candidate.md` and
+`candidate.json` are excluded from their own hash table.
+
+**The old builder is not deleted and is not the authority.** `build_candidate.py` reads inputs
+the retirement removed (`scripts/run_elaboration_corpus.py` and its corpus-driver, residue and
+scale outputs), so it cannot run against this tree. `build_candidate_revise.py` is its
+replacement and says so in its docstring.
 
 ---
 
-## 9. What this record does not claim
+## 10. What this record does not claim
 
-- It is **not** an audit. The independent audit is the next stage and has not read this.
-- It does **not** accept anything. The PROPOSED batch is still PROPOSED, the retirement has not
-  run, and the seven gated items are unruled.
-- "Green at every boundary" in §7.2 is green **with the 113-node trim held out**, named in
-  `runbook-patches/provisional-trim.txt`.
+- It is **not** an audit. The audit is `evidence/audit-7-retired.md`, written by a session that
+  did not implement the work; this record collates it.
+- It does **not** accept anything. The final disposition is the owner's, R8 is unresolved, the
+  ruff question is unanswered, audit-F4 is parked, and the six step-7 surfacings are open.
+- The audit's own certification is **conditional**, and this record states the condition rather
+  than rounding it to "certified".
 - `check_proof_integrity.py` reading `0 problems over 0 blocked files` means *nothing left to
-  check*, not *checked and clean*. It is in the battery as a tripwire.
-- The v6 envelope digest is unkeyed. It proves coherence, not authenticity.
-- The corpus exercises `ElaborationDiagnosticError` zero times. The separate-classification rule
-  still binds; this corpus does not test it.
+  check*.
+- The v6 envelope digest is unkeyed: it proves coherence, not authenticity.
+- Scale numbers for the two D-5 variants are a baseline, not a pass.
+- Every `[OWNER]` ruling in the REVISE path rests on an agent-written handoff, not on the owner's
+  own words.

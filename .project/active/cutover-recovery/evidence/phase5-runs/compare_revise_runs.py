@@ -151,7 +151,10 @@ def fields(run: str) -> dict[str, str]:
             f[f"ledger group {m.group(1)}"] = f"affected={m.group(2)} {m.group(3).strip()}"
     rep = read(run, "ledger_replace.log")
     f["ledger replacements green"] = str(len(re.findall(r"^green\b", rep, re.M)))
-    f["ledger replacements not-required"] = str(len(re.findall(r"^not required\b", rep, re.M)))
+    # The checker writes `not-required`, hyphenated. An earlier `^not required` pattern here
+    # matched nothing and reported 0; corrected at step 7c. `comparison.md`'s 81 was read from
+    # the log directly and was right all along.
+    f["ledger replacements not-required"] = str(len(re.findall(r"^not[- ]required\b", rep, re.M)))
     f["ledger replacements FAIL"] = str(len(re.findall(r"^FAIL\b", rep, re.M)))
     f["ledger replacements rc"] = str(st.get("ledger_replace", ("?",))[0])
 

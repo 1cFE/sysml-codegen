@@ -1,880 +1,465 @@
 {
-  "record": "Phase 5 candidate \u2014 a certification of the current tree pair, and the owner's priced decision surface",
-  "assembled": "2026-08-11T16:57:30-07:00",
-  "authority": ".project/active/cutover-recovery/plan.md \u2014 Phase 5",
-  "status": "ASSEMBLED \u2014 owner disposition PENDING; the independent audit is a separate stage",
+  "record": "Item 7 cutover recovery \u2014 the post-REVISE candidate: the retired tree, its gates, its audit, and what is left for the owner",
+  "supersedes": "the 2026-08-11 pre-retirement record at commit 013d6a1, which described the tree at c4e9b76",
+  "status": "ASSEMBLED at the content OIDs \u2014 owner final disposition PENDING",
+  "assembled_from": {
+    "three_run_battery": "evidence/phase5-runs/revise-runs/ (REVISE step 7a)",
+    "head_measurement": "evidence/phase5-runs/head-6c35aa0/ (REVISE step 7c)",
+    "audit": "evidence/audit-7-retired.md (REVISE step 7b) + its probe addendum",
+    "tree": "git, run by this builder"
+  },
+  "content_oids": {
+    "sysml-codegen": "6c35aa0",
+    "agentic-mbse": "3fbda2f",
+    "teax_pinned": "fa0e06a9",
+    "note": "the record commit lands on top of the codegen content OID, so it cannot contain its own OID"
+  },
   "repositories": {
     "sysml-codegen": {
       "path": "/home/reid/1cfe/sysml-codegen-item7-rebuild",
       "branch": "item7-rebuild",
-      "head": "c4e9b76c024b7852da6ebccb46ab62ac4e7a4bfb",
+      "content_oid": "6c35aa01c28e2afa3331db002d871bc9634121c9",
+      "record_commit_parent": "954dd13db46a55785d3fc1bec6a1fa5ea5f16b4c",
       "item6_base": "1672c5766f67e7716f3c9f8f636c21e2ea444601",
-      "diff_stat_vs_item6_base": "362 files changed, 63324 insertions(+), 2074 deletions(-)",
+      "diff_stat_vs_item6_base": "818 files changed, 181532 insertions(+), 104700 deletions(-)",
       "name_status_counts": {
-        "M": 111,
-        "A": 249,
-        "D": 2
+        "M": 114,
+        "A": 491,
+        "R": 18,
+        "D": 195
       },
-      "deleted_paths": [
-        "src/sysml_codegen/analysis/signature_extractor.py",
-        "tests/unit/test_signature_extractor.py"
-      ],
-      "commits_since_item6_base": 108
+      "shipped_worktree_state": "clean"
     },
     "agentic-mbse": {
       "path": "/home/reid/1cfe/agentic-mbse-item7-rebuild",
       "branch": "item7-rebuild",
-      "head": "cc6c7a7411f6338a4811a7cc58ca002c29ef177b",
+      "content_oid": "3fbda2fbfa82f43d59b0262cedd7a7ae241f37d0",
       "item6_base": "5088b417c9e5453271291d46cd5fb23fc0579b1e",
-      "diff_stat_vs_item6_base": "5 files changed, 268 insertions(+), 53 deletions(-)",
-      "changed_paths": [
-        "M\tsrc/agentic_mbse/sysml/executable_profile.py",
-        "M\tsrc/agentic_mbse/validation/level4_constraints.py",
-        "M\tsrc/agentic_mbse/validation/level6_architecture.py",
-        "M\ttests/test_sysml/test_executable_profile.py",
-        "M\ttests/test_sysml_quality_checks.py"
-      ],
-      "commits_since_item6_base": [
+      "diff_stat_vs_item6_base": "21 files changed, 738 insertions(+), 344 deletions(-)",
+      "commits": [
+        "3fbda2f retire(item7): delete the neutral constraint route",
+        "ffb6628 refactor(validation): migrate every consumer onto the identified constraint route",
         "cc6c7a7 fix(validation): a mis-encoded manifest warns instead of aborting the check",
         "8b63393 feat(profile): an exact constraint gate beside the neutral one"
-      ]
+      ],
+      "name_status_counts": {
+        "M": 19,
+        "A": 2
+      },
+      "shipped_worktree_state": "clean"
     },
     "teax_pinned": {
       "path": "/home/reid/1cfe/teax",
       "head": "fa0e06a99b070346e68a3b3c29cfec546f3ac728",
-      "expected_head": "fa0e06a99b070346e68a3b3c29cfec546f3ac728"
+      "expected": "fa0e06a9"
+    }
+  },
+  "commit_counts": {
+    "definition": "`git rev-list --count <item6-base>..<content-OID>` \u2014 every commit reachable from the content OID and not from the Item 6 base this recovery branched from. The record commit itself lands on top of the content OID and is therefore not counted.",
+    "sysml-codegen": {
+      "range": "1672c5766f67e7716f3c9f8f636c21e2ea444601..6c35aa0",
+      "count": 160
     },
-    "forensic_do_not_merge": {
-      "sysml-codegen": "07531e64ed912d6046afce47ef0d958605e6ca08",
-      "agentic-mbse": "ed5b8b02a3064e767799cc6ee58e0119e9bfecba",
-      "branch": "item7-forensic-20260810"
+    "agentic-mbse": {
+      "range": "5088b417c9e5453271291d46cd5fb23fc0579b1e..3fbda2f",
+      "count": 4
     }
   },
   "path_inventory": {
+    "method": "`git ls-files` in the working tree, which is the content OID plus the record commit's .project/ files only",
     "sysml-codegen": {
-      "tracked_files": 1888,
-      "src_modules": 87,
-      "test_modules": 257,
-      "fixtures": 94,
+      "tracked_files": 1938,
+      "src_modules": 71,
+      "test_modules": 127,
+      "fixture_directories": 96,
       "reference_docs": 31,
-      "scripts": 47
+      "scripts": 43
     },
     "agentic-mbse": {
-      "tracked_files": 1834,
+      "tracked_files": 1836,
       "test_modules": 67
     }
   },
-  "test_inventory_reconciliation": {
-    "method": "collected test-module paths from `git ls-files tests`, against the Phase 2 baseline inventory in evidence/baseline.json",
-    "sysml-codegen": {
-      "baseline_modules": 218,
-      "current_modules": 257,
-      "removed": [
-        "tests/unit/test_signature_extractor.py"
-      ],
-      "removed_authority": {
-        "tests/unit/test_signature_extractor.py": "ledger-4a L-241 (with production row L-006), group 4B-G1, executed at 6ba346e; responsibility carried by generation/preservation.py and re-proved green by the checker"
-      },
-      "added": {
-        "tests/conformance/test_d5_variants.py": "1935af3 feat(cutover): Gate 4C part 6 \u2014 D-5 variants, rename stage proved, second layer surfaced",
-        "tests/conformance/test_exact_compiler_core.py": "7af5dc9 feat(exact): shared constraint identity, and a correct rendered calculation",
-        "tests/conformance/test_exact_constraint_route.py": "7af5dc9 feat(exact): shared constraint identity, and a correct rendered calculation",
-        "tests/conformance/test_exact_group_identity.py": "d91431b feat(elaboration): receipt-bound exact context, typed target selection, model-derived group identity",
-        "tests/conformance/test_exact_pipeline_context.py": "d91431b feat(elaboration): receipt-bound exact context, typed target selection, model-derived group identity",
-        "tests/conformance/test_exact_projection_aggregation.py": "d91431b feat(elaboration): receipt-bound exact context, typed target selection, model-derived group identity",
-        "tests/conformance/test_exact_route_alias_aggregation.py": "5dfb900 feat(cutover): Gate 4C part 1 \u2014 twelve exact-route specimens, two surfacings",
-        "tests/conformance/test_exact_route_constraint_portability.py": "5dfb900 feat(cutover): Gate 4C part 1 \u2014 twelve exact-route specimens, two surfacings",
-        "tests/conformance/test_exact_route_fingerprint_stability.py": "5dfb900 feat(cutover): Gate 4C part 1 \u2014 twelve exact-route specimens, two surfacings",
-        "tests/conformance/test_exact_route_generated_package.py": "d91431b feat(elaboration): receipt-bound exact context, typed target selection, model-derived group identity",
-        "tests/conformance/test_exact_route_registry.py": "5dfb900 feat(cutover): Gate 4C part 1 \u2014 twelve exact-route specimens, two surfacings",
-        "tests/conformance/test_exact_route_seal_step9.py": "5dfb900 feat(cutover): Gate 4C part 1 \u2014 twelve exact-route specimens, two surfacings",
-        "tests/conformance/test_exact_route_snapshot_generation.py": "5dfb900 feat(cutover): Gate 4C part 1 \u2014 twelve exact-route specimens, two surfacings",
-        "tests/conformance/test_exact_route_whole_tree_portability.py": "5dfb900 feat(cutover): Gate 4C part 1 \u2014 twelve exact-route specimens, two surfacings",
-        "tests/conformance/test_exact_target_selection.py": "d91431b feat(elaboration): receipt-bound exact context, typed target selection, model-derived group identity",
-        "tests/conformance/test_generated_schema_importable.py": "6d58ad2 fix(cutover): Gate 4C part 2 \u2014 the four surfacings, ruled and discharged",
-        "tests/conformance/test_public_authority_switch.py": "430e26a feat(cutover): the public authority switches to the exact instance-graph route",
-        "tests/conformance/test_public_route_baselines.py": "858a6a6 docs(4-audit): complete the ledger and author the three authored replacement proofs",
-        "tests/conformance/test_reference_doc_distinctness.py": "f40a745 test(cutover): Gate 4D \u2014 reject identical content across distinct numbered reference docs",
-        "tests/conformance/test_snapshot_v6_capture.py": "fe0b855 feat(snapshot): v6 instance-graph snapshots that cannot be re-labelled",
-        "tests/conformance/test_snapshot_v6_envelope.py": "fe0b855 feat(snapshot): v6 instance-graph snapshots that cannot be re-labelled",
-        "tests/conformance/test_snapshot_v6_routes.py": "fe0b855 feat(snapshot): v6 instance-graph snapshots that cannot be re-labelled",
-        "tests/conformance/test_source_admission_routes.py": "fe0b855 feat(snapshot): v6 instance-graph snapshots that cannot be re-labelled",
-        "tests/conformance/test_unit_annotation_values.py": "bba3d92 fix(elaboration): a unit annotation contributes its value, never a reference",
-        "tests/conformance/test_v6_recapture_batch.py": "d2d032f feat(cutover): PROPOSED v6 recapture batch \u2014 owner acceptance pending (Phase 5 stop)",
-        "tests/execution/test_constraint_verdicts_exact_route.py": "c674064 feat(cutover): Gate 4C part 7 chunk 11 \u2014 the execution lane, the last Gate 4C must-restore",
-        "tests/execution/test_fusion_tea_mutation_teax.py": "848628b feat(exact): the customer model executes in real TEAx, live and relocated",
-        "tests/execution/test_fusion_tea_real_teax.py": "848628b feat(exact): the customer model executes in real TEAx, live and relocated",
-        "tests/integration/test_computed_attributes_exact_route.py": "5dfb900 feat(cutover): Gate 4C part 1 \u2014 twelve exact-route specimens, two surfacings",
-        "tests/integration/test_costed_component_exact_route.py": "5dfb900 feat(cutover): Gate 4C part 1 \u2014 twelve exact-route specimens, two surfacings",
-        "tests/integration/test_expression_compilation_exact_route.py": "5dfb900 feat(cutover): Gate 4C part 1 \u2014 twelve exact-route specimens, two surfacings",
-        "tests/integration/test_full_pipeline_exact_route.py": "5dfb900 feat(cutover): Gate 4C part 1 \u2014 twelve exact-route specimens, two surfacings",
-        "tests/integration/test_hierarchy_exact_route.py": "5dfb900 feat(cutover): Gate 4C part 1 \u2014 twelve exact-route specimens, two surfacings",
-        "tests/unit/test_check_ledger_4a.py": "804d8a2 docs(cutover): Gate 4A ledger \u2014 276 rows, checked against Git truth",
-        "tests/unit/test_check_proof_integrity.py": "ab30659 fix(4-audit): close F5-F8 \u2014 stale docstrings, a checker that can fail, the ceilings, the dead alias",
-        "tests/unit/test_retirement_worklist.py": "ab30659 fix(4-audit): close F5-F8 \u2014 stale docstrings, a checker that can fail, the ceilings, the dead alias",
-        "tests/unit/test_runbook_patches.py": "31f973d docs(4-audit): complete the retirement runbook \u2014 all four steps proven in simulation",
-        "tests/unit/test_source_admission.py": "fe0b855 feat(snapshot): v6 instance-graph snapshots that cannot be re-labelled",
-        "tests/unit/test_warning_reconciliation_exact_route.py": "5dfb900 feat(cutover): Gate 4C part 1 \u2014 twelve exact-route specimens, two surfacings",
-        "tests/unit/test_zero_default_exact_route.py": "b146ec6 feat(cutover): Gate 4C part 7 chunk 2 \u2014 the legacy resolution-stack unit tests"
-      },
-      "node_counts": {
-        "baseline_collected": 3423,
-        "current_passed_skipped_deselected": {
-          "passed": 3862,
-          "skipped": 47,
-          "deselected": 53
-        }
-      }
+  "retirement_commits": {
+    "19072ad": {
+      "subject": "19072ad retire(step 1): G2' \u2014 the v5 read path",
+      "paths_touched": 99
     },
-    "agentic-mbse": {
-      "baseline_modules": 67,
-      "current_modules": 67,
-      "removed": [],
-      "added": [],
-      "node_counts": {
-        "baseline_collected": 1825,
-        "current_passed_skipped_deselected": {
-          "passed": 1825,
-          "skipped": 1,
-          "deselected": 5
-        }
+    "82c7951": {
+      "subject": "82c7951 retire(step 2): the v5 family",
+      "paths_touched": 167
+    },
+    "882fc8d": {
+      "subject": "882fc8d retire(step 3): G3' \u2014 resolution/producer_completeness.py",
+      "paths_touched": 1
+    },
+    "3071fba": {
+      "subject": "3071fba retire(step 4): G4' \u2014 the last reach at the legacy route, and the dead v5 surface",
+      "paths_touched": 4
+    }
+  },
+  "ledger": {
+    "row_count": 304,
+    "states": {
+      "executed": 271,
+      "?": 33
+    }
+  },
+  "three_runs": {
+    "curated_view_rows": 33,
+    "curated_view_note": "revise-runs/comparison.md is authored prose whose table is a curated subset of the comparator's fields; its headline counts its own rows, this record's counts every field the comparator emits. No field differs under either count.",
+    "measured_at": {
+      "sysml-codegen": "c0ceb24",
+      "agentic-mbse": "3fbda2f",
+      "teax": "fa0e06a9"
+    },
+    "fields": {
+      "env import-path gate": [
+        "PASS",
+        "PASS",
+        "PASS"
+      ],
+      "env license key present": [
+        "True",
+        "True",
+        "True"
+      ],
+      "env python": [
+        "3.12.11",
+        "3.12.11",
+        "3.12.11"
+      ],
+      "env ruff / mypy / pytest": [
+        "0.16.2 / 2.3.0 / 9.1.1",
+        "0.16.2 / 2.3.0 / 9.1.1",
+        "0.16.2 / 2.3.0 / 9.1.1"
+      ],
+      "env sysml_codegen": [
+        "/home/reid/1cfe/sysml-codegen-item7-rebuild/src/sysml_codegen/__init__.py",
+        "/home/reid/1cfe/sysml-codegen-item7-rebuild/src/sysml_codegen/__init__.py",
+        "/home/reid/1cfe/sysml-codegen-item7-rebuild/src/sysml_codegen/__init__.py"
+      ],
+      "env agentic_mbse": [
+        "/home/reid/1cfe/agentic-mbse-item7-rebuild/src/agentic_mbse/__init__.py",
+        "/home/reid/1cfe/agentic-mbse-item7-rebuild/src/agentic_mbse/__init__.py",
+        "/home/reid/1cfe/agentic-mbse-item7-rebuild/src/agentic_mbse/__init__.py"
+      ],
+      "env simkit": [
+        "/home/reid/1cfe/teax/packages/teax-simkit/simkit/__init__.py",
+        "/home/reid/1cfe/teax/packages/teax-simkit/simkit/__init__.py",
+        "/home/reid/1cfe/teax/packages/teax-simkit/simkit/__init__.py"
+      ],
+      "HEAD codegen": [
+        "c0ceb24b886c595b55dcf1cea4c0d1cc5b183446",
+        "c0ceb24b886c595b55dcf1cea4c0d1cc5b183446",
+        "c0ceb24b886c595b55dcf1cea4c0d1cc5b183446"
+      ],
+      "HEAD agentic": [
+        "3fbda2fbfa82f43d59b0262cedd7a7ae241f37d0",
+        "3fbda2fbfa82f43d59b0262cedd7a7ae241f37d0",
+        "3fbda2fbfa82f43d59b0262cedd7a7ae241f37d0"
+      ],
+      "HEAD teax": [
+        "fa0e06a99b070346e68a3b3c29cfec546f3ac728",
+        "fa0e06a99b070346e68a3b3c29cfec546f3ac728",
+        "fa0e06a99b070346e68a3b3c29cfec546f3ac728"
+      ],
+      "codegen suite": [
+        "1705 passed, 34 skipped, 65 deselected",
+        "1705 passed, 34 skipped, 65 deselected",
+        "1705 passed, 34 skipped, 65 deselected"
+      ],
+      "codegen suite license-skip lines": [
+        "0",
+        "0",
+        "0"
+      ],
+      "codegen suite rc": [
+        "0",
+        "0",
+        "0"
+      ],
+      "exec lane": [
+        "65 passed",
+        "65 passed",
+        "65 passed"
+      ],
+      "corpus -k corpus": [
+        "9 passed, 1795 deselected",
+        "9 passed, 1795 deselected",
+        "9 passed, 1795 deselected"
+      ],
+      "capture_v6_batch --verify": [
+        "15 captured, 22 refused, 0 deviations",
+        "15 captured, 22 refused, 0 deviations",
+        "15 captured, 22 refused, 0 deviations"
+      ],
+      "batch non-timestamp fixture diff lines": [
+        "0",
+        "0",
+        "0"
+      ],
+      "capture_v6_batch --check rc": [
+        "0",
+        "0",
+        "0"
+      ],
+      "capture_v6_batch --check tail": [
+        "15 captured, 22 refused, 0 deviations",
+        "15 captured, 22 refused, 0 deviations",
+        "15 captured, 22 refused, 0 deviations"
+      ],
+      "ruff check src": [
+        "Found 14 error",
+        "Found 14 error",
+        "Found 14 error"
+      ],
+      "ruff check src tests scripts": [
+        "Found 641 error",
+        "Found 641 error",
+        "Found 641 error"
+      ],
+      "mypy src": [
+        "Found 57 errors in 11 files",
+        "Found 57 errors in 11 files",
+        "Found 57 errors in 11 files"
+      ],
+      "agentic suite": [
+        "1826 passed, 1 skipped, 5 deselected",
+        "1826 passed, 1 skipped, 5 deselected",
+        "1826 passed, 1 skipped, 5 deselected"
+      ],
+      "agentic ruff check src": [
+        "Found 1 error",
+        "Found 1 error",
+        "Found 1 error"
+      ],
+      "agentic ruff check tests": [
+        "Found 120 error",
+        "Found 120 error",
+        "Found 120 error"
+      ],
+      "agentic mypy src": [
+        "Found 108 errors in 26 files",
+        "Found 108 errors in 26 files",
+        "Found 108 errors in 26 files"
+      ],
+      "ledger paths": [
+        "304 rows checked, 0 problems",
+        "304 rows checked, 0 problems",
+        "304 rows checked, 0 problems"
+      ],
+      "ledger surface": [
+        "0 unrowed breakages",
+        "0 unrowed breakages",
+        "0 unrowed breakages"
+      ],
+      "ledger group 4B-G0": [
+        "affected=0 READY",
+        "affected=0 READY",
+        "affected=0 READY"
+      ],
+      "ledger group 4B-G1": [
+        "affected=0 READY",
+        "affected=0 READY",
+        "affected=0 READY"
+      ],
+      "ledger group 4B-G2": [
+        "affected=0 READY",
+        "affected=0 READY",
+        "affected=0 READY"
+      ],
+      "ledger group 4B-G3": [
+        "affected=0 READY",
+        "affected=0 READY",
+        "affected=0 READY"
+      ],
+      "ledger group 4B-G4": [
+        "affected=0 READY",
+        "affected=0 READY",
+        "affected=0 READY"
+      ],
+      "ledger group 4B-v5-family": [
+        "affected=0 READY",
+        "affected=0 READY",
+        "affected=0 READY"
+      ],
+      "ledger replacements green": [
+        "221",
+        "221",
+        "221"
+      ],
+      "ledger replacements not-required": [
+        "81",
+        "81",
+        "81"
+      ],
+      "ledger replacements FAIL": [
+        "0",
+        "0",
+        "0"
+      ],
+      "ledger replacements rc": [
+        "0",
+        "0",
+        "0"
+      ],
+      "proof integrity": [
+        "proof integrity: 0 problems over 0 blocked files",
+        "proof integrity: 0 problems over 0 blocked files",
+        "proof integrity: 0 problems over 0 blocked files"
+      ],
+      "doc distinctness": [
+        "31 numbered reference documents checked, 0 identical-content groups",
+        "31 numbered reference documents checked, 0 identical-content groups",
+        "31 numbered reference documents checked, 0 identical-content groups"
+      ],
+      "git diff --check codegen": [
+        "rc=0 clean",
+        "rc=0 clean",
+        "rc=0 clean"
+      ],
+      "git diff --check agentic": [
+        "rc=0 clean",
+        "rc=0 clean",
+        "rc=0 clean"
+      ],
+      "git status codegen": [
+        "## item7-rebuild | ?? .project/active/cutover-recovery/evidence/phase5-runs/chain_revise.sh | ?? .project/active/cutover-recovery/evidence/phase5-runs/compare_revise_runs.py | ?? .project/active/cutover-recovery/evidence/phase5-runs/revise-runs/ | ?? .project/active/cutover-recovery/evidence/phase5-runs/run_revise_battery.sh",
+        "## item7-rebuild | ?? .project/active/cutover-recovery/evidence/phase5-runs/chain_revise.sh | ?? .project/active/cutover-recovery/evidence/phase5-runs/compare_revise_runs.py | ?? .project/active/cutover-recovery/evidence/phase5-runs/revise-runs/ | ?? .project/active/cutover-recovery/evidence/phase5-runs/run_revise_battery.sh",
+        "## item7-rebuild | ?? .project/active/cutover-recovery/evidence/phase5-runs/chain_revise.sh | ?? .project/active/cutover-recovery/evidence/phase5-runs/compare_revise_runs.py | ?? .project/active/cutover-recovery/evidence/phase5-runs/revise-runs/ | ?? .project/active/cutover-recovery/evidence/phase5-runs/run_revise_battery.sh"
+      ],
+      "git status agentic": [
+        "## item7-rebuild",
+        "## item7-rebuild",
+        "## item7-rebuild"
+      ],
+      "git status teax": [
+        "## main...origin/main [ahead 1]",
+        "## main...origin/main [ahead 1]",
+        "## main...origin/main [ahead 1]"
+      ],
+      "scale fusion_tea counts": [
+        "{\"attrs\": 56, \"calcs\": 7, \"constraints\": 1, \"entry_points\": 27, \"modules\": 9, \"occurrences\": 8}",
+        "{\"attrs\": 56, \"calcs\": 7, \"constraints\": 1, \"entry_points\": 27, \"modules\": 9, \"occurrences\": 8}",
+        "{\"attrs\": 56, \"calcs\": 7, \"constraints\": 1, \"entry_points\": 27, \"modules\": 9, \"occurrences\": 8}"
+      ],
+      "scale fusion_tea envelope bytes": [
+        "112046",
+        "112046",
+        "112046"
+      ],
+      "scale solar_battery_d5 counts": [
+        "{\"attrs\": 350, \"calcs\": 77, \"constraints\": 0, \"entry_points\": 199, \"modules\": 77, \"occurrences\": 42}",
+        "{\"attrs\": 350, \"calcs\": 77, \"constraints\": 0, \"entry_points\": 199, \"modules\": 77, \"occurrences\": 42}",
+        "{\"attrs\": 350, \"calcs\": 77, \"constraints\": 0, \"entry_points\": 199, \"modules\": 77, \"occurrences\": 42}"
+      ],
+      "scale solar_battery_d5 envelope bytes": [
+        "1104445",
+        "1104445",
+        "1104445"
+      ],
+      "scale catf_mfe_d5 counts": [
+        "{\"attrs\": 376, \"calcs\": 42, \"constraints\": 9, \"entry_points\": 60, \"modules\": 42, \"occurrences\": 61}",
+        "{\"attrs\": 376, \"calcs\": 42, \"constraints\": 9, \"entry_points\": 60, \"modules\": 42, \"occurrences\": 61}",
+        "{\"attrs\": 376, \"calcs\": 42, \"constraints\": 9, \"entry_points\": 60, \"modules\": 42, \"occurrences\": 61}"
+      ],
+      "scale catf_mfe_d5 envelope bytes": [
+        "621270",
+        "621270",
+        "621270"
+      ]
+    },
+    "field_count": 51,
+    "identical_field_count": 51,
+    "differing_fields": [],
+    "all_identical": true,
+    "timings": {
+      "run1": {
+        "fusion_tea live_elaborate_s": "0.117\u20130.133",
+        "fusion_tea project_s": "0.003\u20130.003",
+        "fusion_tea capture_s": "0.165\u20130.167",
+        "fusion_tea generate_live_s": "0.192\u20130.196",
+        "fusion_tea generate_snapshot_s": "0.088\u20130.099",
+        "fusion_tea peak_rss_mib": "224.2\u2013244.2",
+        "solar_battery_d5 live_elaborate_s": "0.326\u20130.348",
+        "solar_battery_d5 project_s": "0.037\u20130.038",
+        "solar_battery_d5 capture_s": "0.605\u20130.619",
+        "solar_battery_d5 generate_live_s": "0.808\u20130.827",
+        "solar_battery_d5 generate_snapshot_s": "0.609\u20130.621",
+        "solar_battery_d5 peak_rss_mib": "271.5\u2013284.3",
+        "catf_mfe_d5 live_elaborate_s": "5.005\u20135.228",
+        "catf_mfe_d5 project_s": "0.013\u20130.014",
+        "catf_mfe_d5 capture_s": "5.169\u20135.369",
+        "catf_mfe_d5 generate_live_s": "5.218\u20135.426",
+        "catf_mfe_d5 generate_snapshot_s": "0.270\u20130.295",
+        "catf_mfe_d5 peak_rss_mib": "308.9\u2013319.3"
+      },
+      "run2": {
+        "fusion_tea live_elaborate_s": "0.118\u20130.133",
+        "fusion_tea project_s": "0.003\u20130.003",
+        "fusion_tea capture_s": "0.163\u20130.167",
+        "fusion_tea generate_live_s": "0.194\u20130.196",
+        "fusion_tea generate_snapshot_s": "0.088\u20130.089",
+        "fusion_tea peak_rss_mib": "222.8\u2013244.7",
+        "solar_battery_d5 live_elaborate_s": "0.325\u20130.332",
+        "solar_battery_d5 project_s": "0.036\u20130.037",
+        "solar_battery_d5 capture_s": "0.580\u20130.606",
+        "solar_battery_d5 generate_live_s": "0.765\u20130.780",
+        "solar_battery_d5 generate_snapshot_s": "0.583\u20130.601",
+        "solar_battery_d5 peak_rss_mib": "264.8\u2013280.9",
+        "catf_mfe_d5 live_elaborate_s": "4.973\u20134.983",
+        "catf_mfe_d5 project_s": "0.013\u20130.014",
+        "catf_mfe_d5 capture_s": "5.131\u20135.152",
+        "catf_mfe_d5 generate_live_s": "5.179\u20135.189",
+        "catf_mfe_d5 generate_snapshot_s": "0.275\u20130.291",
+        "catf_mfe_d5 peak_rss_mib": "311.0\u2013320.0"
+      },
+      "run3": {
+        "fusion_tea live_elaborate_s": "0.117\u20130.129",
+        "fusion_tea project_s": "0.003\u20130.003",
+        "fusion_tea capture_s": "0.161\u20130.165",
+        "fusion_tea generate_live_s": "0.191\u20130.193",
+        "fusion_tea generate_snapshot_s": "0.087\u20130.088",
+        "fusion_tea peak_rss_mib": "222.7\u2013242.1",
+        "solar_battery_d5 live_elaborate_s": "0.320\u20130.329",
+        "solar_battery_d5 project_s": "0.035\u20130.037",
+        "solar_battery_d5 capture_s": "0.572\u20130.618",
+        "solar_battery_d5 generate_live_s": "0.755\u20130.770",
+        "solar_battery_d5 generate_snapshot_s": "0.575\u20130.589",
+        "solar_battery_d5 peak_rss_mib": "265.9\u2013285.0",
+        "catf_mfe_d5 live_elaborate_s": "4.960\u20135.272",
+        "catf_mfe_d5 project_s": "0.013\u20130.014",
+        "catf_mfe_d5 capture_s": "5.165\u20135.428",
+        "catf_mfe_d5 generate_live_s": "5.132\u20135.201",
+        "catf_mfe_d5 generate_snapshot_s": "0.273\u20130.287",
+        "catf_mfe_d5 peak_rss_mib": "318.8\u2013326.4"
       }
     }
   },
-  "runs": {
-    "run1": {
-      "status": {
-        "env_gate": {
-          "rc": 0,
-          "seconds": 0
-        },
-        "suite_codegen": {
-          "rc": 0,
-          "seconds": 155
-        },
-        "suite_agentic": {
-          "rc": 0,
-          "seconds": 15
-        },
-        "execution_lane": {
-          "rc": 0,
-          "seconds": 4
-        },
-        "corpus_tests": {
-          "rc": 0,
-          "seconds": 14
-        },
-        "corpus_driver": {
-          "rc": 0,
-          "seconds": 12
-        },
-        "batch_verify": {
-          "rc": 0,
-          "seconds": 8
-        },
-        "batch_check": {
-          "rc": 0,
-          "seconds": 0
-        },
-        "ruff_src": {
-          "rc": 1,
-          "seconds": 0
-        },
-        "ruff_all": {
-          "rc": 1,
-          "seconds": 0
-        },
-        "mypy_src": {
-          "rc": 1,
-          "seconds": 0
-        },
-        "ledger_paths": {
-          "rc": 0,
-          "seconds": 1
-        },
-        "ledger_surface": {
-          "rc": 0,
-          "seconds": 1
-        },
-        "ledger_groups": {
-          "rc": 0,
-          "seconds": 5
-        },
-        "proof_integrity": {
-          "rc": 0,
-          "seconds": 4
-        },
-        "doc_distinct": {
-          "rc": 0,
-          "seconds": 0
-        },
-        "diff_check_cg": {
-          "rc": 0,
-          "seconds": 0
-        },
-        "diff_check_mb": {
-          "rc": 0,
-          "seconds": 0
-        },
-        "status_cg": {
-          "rc": 0,
-          "seconds": 0
-        },
-        "status_mb": {
-          "rc": 0,
-          "seconds": 0
-        },
-        "status_teax": {
-          "rc": 0,
-          "seconds": 0
-        }
-      },
-      "suite_codegen": {
-        "passed": 3862,
-        "skipped": 47,
-        "deselected": 53
-      },
-      "suite_agentic": {
-        "passed": 1825,
-        "skipped": 1,
-        "deselected": 5
-      },
-      "execution_lane": {
-        "passed": 53
-      },
-      "corpus_ledger_tests": {
-        "passed": 12,
-        "deselected": 3950
-      },
-      "corpus_driver": {
-        "fixture_count": 37,
-        "arms": {
-          "legacy": {
-            "CodeGenerationError": 1,
-            "graph": 36
-          },
-          "exact": {
-            "graph": 15,
-            "ElaborationError": 22
-          }
-        },
-        "exact_code_multiset": {
-          "SI_EXPRESSION_SOURCE_UNSUPPORTED": 7,
-          "SI_SELF_BINDING": 75
-        },
-        "per_fixture_exact_outcome": {
-          "agg_literal_probe": "graph",
-          "agg_localterm_probe": "ElaborationError:SI_SELF_BINDING",
-          "alias_agg_probe": "ElaborationError:SI_SELF_BINDING",
-          "attr_expr_probe": "graph",
-          "catf_mfe_model": "ElaborationError:SI_SELF_BINDING",
-          "chain_override_probe": "ElaborationError:SI_SELF_BINDING,SI_SELF_BINDING",
-          "chain_spike_model": "ElaborationError:SI_SELF_BINDING,SI_SELF_BINDING,SI_SELF_BINDING",
-          "constraint_inline": "graph",
-          "constraint_multi_instance": "graph",
-          "constraint_non_numerical": "graph",
-          "crosspart_rollup_twolevel": "ElaborationError:SI_SELF_BINDING",
-          "d38_caret": "graph",
-          "deep_cross_scope_probe": "graph",
-          "expression_binding_probe": "ElaborationError:SI_EXPRESSION_SOURCE_UNSUPPORTED,SI_EXPRESSION_SOURCE_UNSUPPORTED,SI_EXPRESSION_SOURCE_UNSUPPORTED,SI_EXPRESSION_SOURCE_UNSUPPORTED,SI_EXPRESSION_SOURCE_UNSUPPORTED,SI_EXPRESSION_SOURCE_UNSUPPORTED,SI_SELF_BINDING,SI_SELF_BINDING,SI_SELF_BINDING",
-          "fusion_tea": "graph",
-          "gate_a": "ElaborationError:SI_SELF_BINDING,SI_SELF_BINDING",
-          "gate_a_package_owner": "ElaborationError:SI_SELF_BINDING,SI_SELF_BINDING",
-          "ife_plant": "ElaborationError:SI_SELF_BINDING,SI_SELF_BINDING,SI_SELF_BINDING,SI_SELF_BINDING,SI_SELF_BINDING,SI_SELF_BINDING,SI_SELF_BINDING,SI_SELF_BINDING,SI_SELF_BINDING,SI_SELF_BINDING,SI_SELF_BINDING,SI_SELF_BINDING,SI_SELF_BINDING,SI_SELF_BINDING,SI_SELF_BINDING,SI_SELF_BINDING,SI_SELF_BINDING,SI_SELF_BINDING,SI_SELF_BINDING,SI_SELF_BINDING,SI_SELF_BINDING",
-          "invocation_binding_probe": "ElaborationError:SI_EXPRESSION_SOURCE_UNSUPPORTED",
-          "issue22_model": "ElaborationError:SI_SELF_BINDING",
-          "modeled_default_fidelity": "graph",
-          "plant_value_shapes": "ElaborationError:SI_SELF_BINDING,SI_SELF_BINDING",
-          "plant_values": "ElaborationError:SI_SELF_BINDING",
-          "quoted_owner_formula": "graph",
-          "return_styles": "ElaborationError:SI_SELF_BINDING,SI_SELF_BINDING,SI_SELF_BINDING",
-          "retype_model": "graph",
-          "sample_model": "graph",
-          "self_named_binding_trap": "ElaborationError:SI_SELF_BINDING",
-          "self_named_rescue": "ElaborationError:SI_SELF_BINDING",
-          "shadowed_reference": "graph",
-          "shared_producer": "ElaborationError:SI_SELF_BINDING,SI_SELF_BINDING",
-          "sibling_channel_ambiguity": "ElaborationError:SI_SELF_BINDING",
-          "solar_battery_model": "ElaborationError:SI_SELF_BINDING,SI_SELF_BINDING,SI_SELF_BINDING,SI_SELF_BINDING,SI_SELF_BINDING,SI_SELF_BINDING,SI_SELF_BINDING,SI_SELF_BINDING,SI_SELF_BINDING,SI_SELF_BINDING,SI_SELF_BINDING,SI_SELF_BINDING,SI_SELF_BINDING,SI_SELF_BINDING,SI_SELF_BINDING,SI_SELF_BINDING,SI_SELF_BINDING,SI_SELF_BINDING,SI_SELF_BINDING,SI_SELF_BINDING,SI_SELF_BINDING,SI_SELF_BINDING,SI_SELF_BINDING,SI_SELF_BINDING",
-          "spec_chain_channel": "ElaborationError:SI_SELF_BINDING",
-          "spec_chain_twolevel": "ElaborationError:SI_SELF_BINDING",
-          "unresolvable_attr_probe": "graph",
-          "wi014_toy": "graph"
-        },
-        "canonical_sha256": "f8da45e7b3fa085b934286700393eb9a1b1bdec2c5db1a9847f79bc2e8da9393"
-      },
-      "v6_batch_verify": [
-        "15",
-        "22",
-        "0"
-      ],
-      "v6_batch_check": [
-        "15",
-        "22",
-        "0"
-      ],
-      "batch_verify_left_worktree": [
-        "?? .project/active/cutover-recovery/briefs/phase5-assembly.md",
-        "?? .project/active/cutover-recovery/evidence/phase5-runs/"
-      ],
-      "batch_verify_nontimestamp_diff_lines": 0,
-      "ruff": {
-        "src": 16,
-        "src_tests_scripts": 866
-      },
-      "mypy_src": {
-        "errors": 69,
-        "files_with_errors": 16,
-        "source_files_checked": 87
-      },
-      "checker": {
-        "paths": [
-          "303",
-          "0"
-        ],
-        "surface": "0 unrowed breakages",
-        "groups": [
-          "4B-G0            affected=  0  READY",
-          "4B-G1            affected=  0  READY",
-          "4B-G2            affected= 76  READY",
-          "4B-G3            affected=  3  READY",
-          "4B-G4            affected= 18  READY",
-          "4B-v5-family     affected=158  READY"
-        ],
-        "proof_integrity": "proof integrity: 0 problems over 0 blocked files"
-      },
-      "doc_distinctness": "31 numbered reference documents checked, 0 identical-content groups",
-      "git_diff_check": {
-        "sysml-codegen": "",
-        "agentic-mbse": ""
-      },
-      "git_status": {
-        "sysml-codegen": [
-          "## item7-rebuild",
-          "?? .project/active/cutover-recovery/briefs/phase5-assembly.md",
-          "?? .project/active/cutover-recovery/evidence/phase5-runs/"
-        ],
-        "agentic-mbse": [
-          "## item7-rebuild"
-        ],
-        "teax": [
-          "## main...origin/main [ahead 1]"
-        ]
-      },
-      "environment": {
-        "python": "3.12.11",
-        "executable": "/home/reid/1cfe/item7-rebuild-venv/bin/python",
-        "resolved_import_paths": {
-          "sysml_codegen": "/home/reid/1cfe/sysml-codegen-item7-rebuild/src/sysml_codegen/__init__.py",
-          "agentic_mbse": "/home/reid/1cfe/agentic-mbse-item7-rebuild/src/agentic_mbse/__init__.py",
-          "simkit": "/home/reid/1cfe/teax/packages/teax-simkit/simkit/__init__.py",
-          "jinja2": "/home/reid/1cfe/item7-rebuild-venv/lib/python3.12/site-packages/jinja2/__init__.py",
-          "syside": "/home/reid/1cfe/item7-rebuild-venv/lib/python3.12/site-packages/syside/__init__.py"
-        },
-        "import_path_gate": "PASS",
-        "license_key_present": true,
-        "versions": {
-          "syside": "0.8.4",
-          "syside-producer": null,
-          "jinja2": "3.1.6",
-          "pydantic": "2.13.4",
-          "pytest": "9.1.1",
-          "ruff": "0.16.2",
-          "mypy": "2.3.0"
-        }
-      }
-    },
-    "run2": {
-      "status": {
-        "env_gate": {
-          "rc": 0,
-          "seconds": 0
-        },
-        "suite_codegen": {
-          "rc": 0,
-          "seconds": 158
-        },
-        "suite_agentic": {
-          "rc": 0,
-          "seconds": 15
-        },
-        "execution_lane": {
-          "rc": 0,
-          "seconds": 4
-        },
-        "corpus_tests": {
-          "rc": 0,
-          "seconds": 13
-        },
-        "corpus_driver": {
-          "rc": 0,
-          "seconds": 13
-        },
-        "batch_verify": {
-          "rc": 0,
-          "seconds": 8
-        },
-        "batch_check": {
-          "rc": 0,
-          "seconds": 0
-        },
-        "ruff_src": {
-          "rc": 1,
-          "seconds": 0
-        },
-        "ruff_all": {
-          "rc": 1,
-          "seconds": 0
-        },
-        "mypy_src": {
-          "rc": 1,
-          "seconds": 0
-        },
-        "ledger_paths": {
-          "rc": 0,
-          "seconds": 1
-        },
-        "ledger_surface": {
-          "rc": 0,
-          "seconds": 1
-        },
-        "ledger_groups": {
-          "rc": 0,
-          "seconds": 4
-        },
-        "proof_integrity": {
-          "rc": 0,
-          "seconds": 5
-        },
-        "doc_distinct": {
-          "rc": 0,
-          "seconds": 0
-        },
-        "diff_check_cg": {
-          "rc": 0,
-          "seconds": 0
-        },
-        "diff_check_mb": {
-          "rc": 0,
-          "seconds": 0
-        },
-        "status_cg": {
-          "rc": 0,
-          "seconds": 0
-        },
-        "status_mb": {
-          "rc": 0,
-          "seconds": 0
-        },
-        "status_teax": {
-          "rc": 0,
-          "seconds": 0
-        }
-      },
-      "suite_codegen": {
-        "passed": 3862,
-        "skipped": 47,
-        "deselected": 53
-      },
-      "suite_agentic": {
-        "passed": 1825,
-        "skipped": 1,
-        "deselected": 5
-      },
-      "execution_lane": {
-        "passed": 53
-      },
-      "corpus_ledger_tests": {
-        "passed": 12,
-        "deselected": 3950
-      },
-      "corpus_driver": {
-        "fixture_count": 37,
-        "arms": {
-          "legacy": {
-            "CodeGenerationError": 1,
-            "graph": 36
-          },
-          "exact": {
-            "graph": 15,
-            "ElaborationError": 22
-          }
-        },
-        "exact_code_multiset": {
-          "SI_EXPRESSION_SOURCE_UNSUPPORTED": 7,
-          "SI_SELF_BINDING": 75
-        },
-        "per_fixture_exact_outcome": {
-          "agg_literal_probe": "graph",
-          "agg_localterm_probe": "ElaborationError:SI_SELF_BINDING",
-          "alias_agg_probe": "ElaborationError:SI_SELF_BINDING",
-          "attr_expr_probe": "graph",
-          "catf_mfe_model": "ElaborationError:SI_SELF_BINDING",
-          "chain_override_probe": "ElaborationError:SI_SELF_BINDING,SI_SELF_BINDING",
-          "chain_spike_model": "ElaborationError:SI_SELF_BINDING,SI_SELF_BINDING,SI_SELF_BINDING",
-          "constraint_inline": "graph",
-          "constraint_multi_instance": "graph",
-          "constraint_non_numerical": "graph",
-          "crosspart_rollup_twolevel": "ElaborationError:SI_SELF_BINDING",
-          "d38_caret": "graph",
-          "deep_cross_scope_probe": "graph",
-          "expression_binding_probe": "ElaborationError:SI_EXPRESSION_SOURCE_UNSUPPORTED,SI_EXPRESSION_SOURCE_UNSUPPORTED,SI_EXPRESSION_SOURCE_UNSUPPORTED,SI_EXPRESSION_SOURCE_UNSUPPORTED,SI_EXPRESSION_SOURCE_UNSUPPORTED,SI_EXPRESSION_SOURCE_UNSUPPORTED,SI_SELF_BINDING,SI_SELF_BINDING,SI_SELF_BINDING",
-          "fusion_tea": "graph",
-          "gate_a": "ElaborationError:SI_SELF_BINDING,SI_SELF_BINDING",
-          "gate_a_package_owner": "ElaborationError:SI_SELF_BINDING,SI_SELF_BINDING",
-          "ife_plant": "ElaborationError:SI_SELF_BINDING,SI_SELF_BINDING,SI_SELF_BINDING,SI_SELF_BINDING,SI_SELF_BINDING,SI_SELF_BINDING,SI_SELF_BINDING,SI_SELF_BINDING,SI_SELF_BINDING,SI_SELF_BINDING,SI_SELF_BINDING,SI_SELF_BINDING,SI_SELF_BINDING,SI_SELF_BINDING,SI_SELF_BINDING,SI_SELF_BINDING,SI_SELF_BINDING,SI_SELF_BINDING,SI_SELF_BINDING,SI_SELF_BINDING,SI_SELF_BINDING",
-          "invocation_binding_probe": "ElaborationError:SI_EXPRESSION_SOURCE_UNSUPPORTED",
-          "issue22_model": "ElaborationError:SI_SELF_BINDING",
-          "modeled_default_fidelity": "graph",
-          "plant_value_shapes": "ElaborationError:SI_SELF_BINDING,SI_SELF_BINDING",
-          "plant_values": "ElaborationError:SI_SELF_BINDING",
-          "quoted_owner_formula": "graph",
-          "return_styles": "ElaborationError:SI_SELF_BINDING,SI_SELF_BINDING,SI_SELF_BINDING",
-          "retype_model": "graph",
-          "sample_model": "graph",
-          "self_named_binding_trap": "ElaborationError:SI_SELF_BINDING",
-          "self_named_rescue": "ElaborationError:SI_SELF_BINDING",
-          "shadowed_reference": "graph",
-          "shared_producer": "ElaborationError:SI_SELF_BINDING,SI_SELF_BINDING",
-          "sibling_channel_ambiguity": "ElaborationError:SI_SELF_BINDING",
-          "solar_battery_model": "ElaborationError:SI_SELF_BINDING,SI_SELF_BINDING,SI_SELF_BINDING,SI_SELF_BINDING,SI_SELF_BINDING,SI_SELF_BINDING,SI_SELF_BINDING,SI_SELF_BINDING,SI_SELF_BINDING,SI_SELF_BINDING,SI_SELF_BINDING,SI_SELF_BINDING,SI_SELF_BINDING,SI_SELF_BINDING,SI_SELF_BINDING,SI_SELF_BINDING,SI_SELF_BINDING,SI_SELF_BINDING,SI_SELF_BINDING,SI_SELF_BINDING,SI_SELF_BINDING,SI_SELF_BINDING,SI_SELF_BINDING,SI_SELF_BINDING",
-          "spec_chain_channel": "ElaborationError:SI_SELF_BINDING",
-          "spec_chain_twolevel": "ElaborationError:SI_SELF_BINDING",
-          "unresolvable_attr_probe": "graph",
-          "wi014_toy": "graph"
-        },
-        "canonical_sha256": "f8da45e7b3fa085b934286700393eb9a1b1bdec2c5db1a9847f79bc2e8da9393"
-      },
-      "v6_batch_verify": [
-        "15",
-        "22",
-        "0"
-      ],
-      "v6_batch_check": [
-        "15",
-        "22",
-        "0"
-      ],
-      "batch_verify_left_worktree": [
-        "?? .project/active/cutover-recovery/briefs/phase5-assembly.md",
-        "?? .project/active/cutover-recovery/evidence/phase5-runs/"
-      ],
-      "batch_verify_nontimestamp_diff_lines": 0,
-      "ruff": {
-        "src": 16,
-        "src_tests_scripts": 866
-      },
-      "mypy_src": {
-        "errors": 69,
-        "files_with_errors": 16,
-        "source_files_checked": 87
-      },
-      "checker": {
-        "paths": [
-          "303",
-          "0"
-        ],
-        "surface": "0 unrowed breakages",
-        "groups": [
-          "4B-G0            affected=  0  READY",
-          "4B-G1            affected=  0  READY",
-          "4B-G2            affected= 76  READY",
-          "4B-G3            affected=  3  READY",
-          "4B-G4            affected= 18  READY",
-          "4B-v5-family     affected=158  READY"
-        ],
-        "proof_integrity": "proof integrity: 0 problems over 0 blocked files"
-      },
-      "doc_distinctness": "31 numbered reference documents checked, 0 identical-content groups",
-      "git_diff_check": {
-        "sysml-codegen": "",
-        "agentic-mbse": ""
-      },
-      "git_status": {
-        "sysml-codegen": [
-          "## item7-rebuild",
-          "?? .project/active/cutover-recovery/briefs/phase5-assembly.md",
-          "?? .project/active/cutover-recovery/evidence/phase5-runs/"
-        ],
-        "agentic-mbse": [
-          "## item7-rebuild"
-        ],
-        "teax": [
-          "## main...origin/main [ahead 1]"
-        ]
-      },
-      "environment": {
-        "python": "3.12.11",
-        "executable": "/home/reid/1cfe/item7-rebuild-venv/bin/python",
-        "resolved_import_paths": {
-          "sysml_codegen": "/home/reid/1cfe/sysml-codegen-item7-rebuild/src/sysml_codegen/__init__.py",
-          "agentic_mbse": "/home/reid/1cfe/agentic-mbse-item7-rebuild/src/agentic_mbse/__init__.py",
-          "simkit": "/home/reid/1cfe/teax/packages/teax-simkit/simkit/__init__.py",
-          "jinja2": "/home/reid/1cfe/item7-rebuild-venv/lib/python3.12/site-packages/jinja2/__init__.py",
-          "syside": "/home/reid/1cfe/item7-rebuild-venv/lib/python3.12/site-packages/syside/__init__.py"
-        },
-        "import_path_gate": "PASS",
-        "license_key_present": true,
-        "versions": {
-          "syside": "0.8.4",
-          "syside-producer": null,
-          "jinja2": "3.1.6",
-          "pydantic": "2.13.4",
-          "pytest": "9.1.1",
-          "ruff": "0.16.2",
-          "mypy": "2.3.0"
-        }
-      }
-    },
-    "run3": {
-      "status": {
-        "env_gate": {
-          "rc": 0,
-          "seconds": 0
-        },
-        "suite_codegen": {
-          "rc": 0,
-          "seconds": 157
-        },
-        "suite_agentic": {
-          "rc": 0,
-          "seconds": 15
-        },
-        "execution_lane": {
-          "rc": 0,
-          "seconds": 4
-        },
-        "corpus_tests": {
-          "rc": 0,
-          "seconds": 13
-        },
-        "corpus_driver": {
-          "rc": 0,
-          "seconds": 13
-        },
-        "batch_verify": {
-          "rc": 0,
-          "seconds": 8
-        },
-        "batch_check": {
-          "rc": 0,
-          "seconds": 0
-        },
-        "ruff_src": {
-          "rc": 1,
-          "seconds": 0
-        },
-        "ruff_all": {
-          "rc": 1,
-          "seconds": 0
-        },
-        "mypy_src": {
-          "rc": 1,
-          "seconds": 0
-        },
-        "ledger_paths": {
-          "rc": 0,
-          "seconds": 1
-        },
-        "ledger_surface": {
-          "rc": 0,
-          "seconds": 1
-        },
-        "ledger_groups": {
-          "rc": 0,
-          "seconds": 4
-        },
-        "proof_integrity": {
-          "rc": 0,
-          "seconds": 5
-        },
-        "doc_distinct": {
-          "rc": 0,
-          "seconds": 0
-        },
-        "diff_check_cg": {
-          "rc": 0,
-          "seconds": 0
-        },
-        "diff_check_mb": {
-          "rc": 0,
-          "seconds": 0
-        },
-        "status_cg": {
-          "rc": 0,
-          "seconds": 0
-        },
-        "status_mb": {
-          "rc": 0,
-          "seconds": 0
-        },
-        "status_teax": {
-          "rc": 0,
-          "seconds": 0
-        }
-      },
-      "suite_codegen": {
-        "passed": 3862,
-        "skipped": 47,
-        "deselected": 53
-      },
-      "suite_agentic": {
-        "passed": 1825,
-        "skipped": 1,
-        "deselected": 5
-      },
-      "execution_lane": {
-        "passed": 53
-      },
-      "corpus_ledger_tests": {
-        "passed": 12,
-        "deselected": 3950
-      },
-      "corpus_driver": {
-        "fixture_count": 37,
-        "arms": {
-          "legacy": {
-            "CodeGenerationError": 1,
-            "graph": 36
-          },
-          "exact": {
-            "graph": 15,
-            "ElaborationError": 22
-          }
-        },
-        "exact_code_multiset": {
-          "SI_EXPRESSION_SOURCE_UNSUPPORTED": 7,
-          "SI_SELF_BINDING": 75
-        },
-        "per_fixture_exact_outcome": {
-          "agg_literal_probe": "graph",
-          "agg_localterm_probe": "ElaborationError:SI_SELF_BINDING",
-          "alias_agg_probe": "ElaborationError:SI_SELF_BINDING",
-          "attr_expr_probe": "graph",
-          "catf_mfe_model": "ElaborationError:SI_SELF_BINDING",
-          "chain_override_probe": "ElaborationError:SI_SELF_BINDING,SI_SELF_BINDING",
-          "chain_spike_model": "ElaborationError:SI_SELF_BINDING,SI_SELF_BINDING,SI_SELF_BINDING",
-          "constraint_inline": "graph",
-          "constraint_multi_instance": "graph",
-          "constraint_non_numerical": "graph",
-          "crosspart_rollup_twolevel": "ElaborationError:SI_SELF_BINDING",
-          "d38_caret": "graph",
-          "deep_cross_scope_probe": "graph",
-          "expression_binding_probe": "ElaborationError:SI_EXPRESSION_SOURCE_UNSUPPORTED,SI_EXPRESSION_SOURCE_UNSUPPORTED,SI_EXPRESSION_SOURCE_UNSUPPORTED,SI_EXPRESSION_SOURCE_UNSUPPORTED,SI_EXPRESSION_SOURCE_UNSUPPORTED,SI_EXPRESSION_SOURCE_UNSUPPORTED,SI_SELF_BINDING,SI_SELF_BINDING,SI_SELF_BINDING",
-          "fusion_tea": "graph",
-          "gate_a": "ElaborationError:SI_SELF_BINDING,SI_SELF_BINDING",
-          "gate_a_package_owner": "ElaborationError:SI_SELF_BINDING,SI_SELF_BINDING",
-          "ife_plant": "ElaborationError:SI_SELF_BINDING,SI_SELF_BINDING,SI_SELF_BINDING,SI_SELF_BINDING,SI_SELF_BINDING,SI_SELF_BINDING,SI_SELF_BINDING,SI_SELF_BINDING,SI_SELF_BINDING,SI_SELF_BINDING,SI_SELF_BINDING,SI_SELF_BINDING,SI_SELF_BINDING,SI_SELF_BINDING,SI_SELF_BINDING,SI_SELF_BINDING,SI_SELF_BINDING,SI_SELF_BINDING,SI_SELF_BINDING,SI_SELF_BINDING,SI_SELF_BINDING",
-          "invocation_binding_probe": "ElaborationError:SI_EXPRESSION_SOURCE_UNSUPPORTED",
-          "issue22_model": "ElaborationError:SI_SELF_BINDING",
-          "modeled_default_fidelity": "graph",
-          "plant_value_shapes": "ElaborationError:SI_SELF_BINDING,SI_SELF_BINDING",
-          "plant_values": "ElaborationError:SI_SELF_BINDING",
-          "quoted_owner_formula": "graph",
-          "return_styles": "ElaborationError:SI_SELF_BINDING,SI_SELF_BINDING,SI_SELF_BINDING",
-          "retype_model": "graph",
-          "sample_model": "graph",
-          "self_named_binding_trap": "ElaborationError:SI_SELF_BINDING",
-          "self_named_rescue": "ElaborationError:SI_SELF_BINDING",
-          "shadowed_reference": "graph",
-          "shared_producer": "ElaborationError:SI_SELF_BINDING,SI_SELF_BINDING",
-          "sibling_channel_ambiguity": "ElaborationError:SI_SELF_BINDING",
-          "solar_battery_model": "ElaborationError:SI_SELF_BINDING,SI_SELF_BINDING,SI_SELF_BINDING,SI_SELF_BINDING,SI_SELF_BINDING,SI_SELF_BINDING,SI_SELF_BINDING,SI_SELF_BINDING,SI_SELF_BINDING,SI_SELF_BINDING,SI_SELF_BINDING,SI_SELF_BINDING,SI_SELF_BINDING,SI_SELF_BINDING,SI_SELF_BINDING,SI_SELF_BINDING,SI_SELF_BINDING,SI_SELF_BINDING,SI_SELF_BINDING,SI_SELF_BINDING,SI_SELF_BINDING,SI_SELF_BINDING,SI_SELF_BINDING,SI_SELF_BINDING",
-          "spec_chain_channel": "ElaborationError:SI_SELF_BINDING",
-          "spec_chain_twolevel": "ElaborationError:SI_SELF_BINDING",
-          "unresolvable_attr_probe": "graph",
-          "wi014_toy": "graph"
-        },
-        "canonical_sha256": "f8da45e7b3fa085b934286700393eb9a1b1bdec2c5db1a9847f79bc2e8da9393"
-      },
-      "v6_batch_verify": [
-        "15",
-        "22",
-        "0"
-      ],
-      "v6_batch_check": [
-        "15",
-        "22",
-        "0"
-      ],
-      "batch_verify_left_worktree": [
-        "?? .project/active/cutover-recovery/briefs/phase5-assembly.md",
-        "?? .project/active/cutover-recovery/evidence/phase5-runs/"
-      ],
-      "batch_verify_nontimestamp_diff_lines": 0,
-      "ruff": {
-        "src": 16,
-        "src_tests_scripts": 866
-      },
-      "mypy_src": {
-        "errors": 69,
-        "files_with_errors": 16,
-        "source_files_checked": 87
-      },
-      "checker": {
-        "paths": [
-          "303",
-          "0"
-        ],
-        "surface": "0 unrowed breakages",
-        "groups": [
-          "4B-G0            affected=  0  READY",
-          "4B-G1            affected=  0  READY",
-          "4B-G2            affected= 76  READY",
-          "4B-G3            affected=  3  READY",
-          "4B-G4            affected= 18  READY",
-          "4B-v5-family     affected=158  READY"
-        ],
-        "proof_integrity": "proof integrity: 0 problems over 0 blocked files"
-      },
-      "doc_distinctness": "31 numbered reference documents checked, 0 identical-content groups",
-      "git_diff_check": {
-        "sysml-codegen": "",
-        "agentic-mbse": ""
-      },
-      "git_status": {
-        "sysml-codegen": [
-          "## item7-rebuild",
-          "?? .project/active/cutover-recovery/briefs/phase5-assembly.md",
-          "?? .project/active/cutover-recovery/evidence/phase5-runs/"
-        ],
-        "agentic-mbse": [
-          "## item7-rebuild"
-        ],
-        "teax": [
-          "## main...origin/main [ahead 1]"
-        ]
-      },
-      "environment": {
-        "python": "3.12.11",
-        "executable": "/home/reid/1cfe/item7-rebuild-venv/bin/python",
-        "resolved_import_paths": {
-          "sysml_codegen": "/home/reid/1cfe/sysml-codegen-item7-rebuild/src/sysml_codegen/__init__.py",
-          "agentic_mbse": "/home/reid/1cfe/agentic-mbse-item7-rebuild/src/agentic_mbse/__init__.py",
-          "simkit": "/home/reid/1cfe/teax/packages/teax-simkit/simkit/__init__.py",
-          "jinja2": "/home/reid/1cfe/item7-rebuild-venv/lib/python3.12/site-packages/jinja2/__init__.py",
-          "syside": "/home/reid/1cfe/item7-rebuild-venv/lib/python3.12/site-packages/syside/__init__.py"
-        },
-        "import_path_gate": "PASS",
-        "license_key_present": true,
-        "versions": {
-          "syside": "0.8.4",
-          "syside-producer": null,
-          "jinja2": "3.1.6",
-          "pydantic": "2.13.4",
-          "pytest": "9.1.1",
-          "ruff": "0.16.2",
-          "mypy": "2.3.0"
-        }
-      }
+  "head_measurement": {
+    "what": "re-measured at the content OID by this stage, because the three step-7a runs measured c0ceb24 and the F3 disposition added two pinned nodes since",
+    "codegen_suite": "1707 passed, 34 skipped, 65 deselected",
+    "codegen_suite_license_skip_lines": 0,
+    "ledger_paths": "304 rows checked, 0 problems",
+    "ledger_surface": "0 unrowed breakages",
+    "doc_distinctness": "31 numbered reference documents checked, 0 identical-content groups",
+    "git_diff_check_codegen": "clean",
+    "git_diff_check_agentic": "clean",
+    "heads_at_measurement": {
+      "sysml-codegen": "954dd13db46a55785d3fc1bec6a1fa5ea5f16b4c",
+      "agentic-mbse": "3fbda2fbfa82f43d59b0262cedd7a7ae241f37d0",
+      "teax": "fa0e06a99b070346e68a3b3c29cfec546f3ac728"
     }
   },
   "evidence_hashes_sha256": {
-    ".project/active/cutover-recovery/plan.md": "ee37cf2ed005ad8f642fe0fbd790e48127fdd8e3a7b68455fbc92e85777630bb",
-    ".project/active/cutover-recovery/ledger-4a.json": "ee6d1a4b48628b1b06063c48cb99d7a9824769af7f9514c191d2d3213a833c48",
-    ".project/active/cutover-recovery/ledger-4a.md": "4f7a1a8395b7adf92652d70103256ee4dfaaeef346727925ec41656106ef2da6",
-    ".project/active/cutover-recovery/doc-update-list-4d.md": "a48b69bae7b2510538707a2140fd1d72fc05b854e90f533eae6e8539afc42de4",
-    "tests/fixtures/v6_recapture_batch/batch.json": "7c72e34c6bb23d92294d27530c7d40bc26661358a6186858fbee1a6ff8c79ef7",
+    ".project/active/cutover-recovery/plan.md": "1f10f2df24a450887364da8c15aad9d46f413e8324a218b0d22f8aa922b93e0e",
+    ".project/active/cutover-recovery/ledger-4a.json": "013cd4aec88e91dbd4e06bafd4de481713210dd04c77774e3f20142a53484faf",
+    ".project/active/cutover-recovery/ledger-4a.md": "c2fafa90d14db629706eb150a8ed36ef32fd6d913fa3e91aff56923f63141090",
+    ".project/active/cutover-recovery/doc-update-list-4d.md": "39c091d2a9a76ce587ec79fcd47da54ce7dccb96afad3ad45c439636507ed240",
+    ".project/active/cutover-recovery/owner-disposition-20260811.md": "17e115061d9268ed0dd45ba763f749e8d6106a6a538d93faf0c13b9ed3c8be0d",
+    ".project/active/cutover-recovery/handoff-20260811.md": "4743c5b9f382b4357f3da9d61a09afd75f70a705d62a0332faf12d98f43c1372",
+    "tests/fixtures/v6_recapture_batch/batch.json": "8feb8099a99273f390eb71f68f37f5d9786f9236954ab34880582ed22e1c462c",
     ".project/active/cutover-recovery/evidence/3b-old-new-comparison.md": "5a85c919f3166c7058174bde9ef525f8ac2c2e2bd015aaaf382343514fc2b520",
     ".project/active/cutover-recovery/evidence/3e-package-comparison.md": "6653acb04f7b40160b650ad6e909092375cdf5dcd307fcdb2c291b961f278d97",
     ".project/active/cutover-recovery/evidence/audit-3a.md": "61866d6d8724182c02a2923463286d0f6a5803ad1bc8adb577f337039dc19886",
@@ -883,349 +468,27 @@
     ".project/active/cutover-recovery/evidence/audit-3d.md": "7bb3ba2f024f41248e706f29d456ae35d9277b0b7b251f20f17f2146fc35c2ac",
     ".project/active/cutover-recovery/evidence/audit-3e.md": "94aa3ce395ada12e3f024d0cdc7d72a619796d07e43d508794dc524dca881f72",
     ".project/active/cutover-recovery/evidence/audit-4.md": "efb23e2a3c6205286636f683f386770162882d90e7f57814eab9eeac5968500c",
+    ".project/active/cutover-recovery/evidence/audit-5-final.md": "6aaa3101140232bba52b9840a422409140b7c055b812140363081f0b7686ef75",
+    ".project/active/cutover-recovery/evidence/audit-7-retired.md": "6b7b651fc5d7c0744cbe679c45c69fd82d112dc09534a5978dc39bb55f3f0e33",
     ".project/active/cutover-recovery/evidence/baseline.json": "8162966c0ede1b58bb4562def9e862c794d25b505b2753fb4e2a4e8ddd66aa55",
     ".project/active/cutover-recovery/evidence/dual-qualifier-drop-dryruns.txt": "00639b7224e7b91019f018a9b62a6f14b2045925796d1226cf9663f1518fe235",
     ".project/active/cutover-recovery/evidence/expression-compiler-qualifier-drop-dryrun.txt": "c9e69b25bd80f6082de8caf89fe78473fe695927612fc0f333d169ea00ed1952",
-    ".project/active/cutover-recovery/runbook-patches/step1/src__sysml_codegen__snapshot____init__.patch": "65d30590a5b622780431ff6c6f1b040fb46f7d7f6ba7ad50f7876fed5588c4f2",
-    ".project/active/cutover-recovery/runbook-patches/step1/tests__conformance__conftest.patch": "86eeb23b1a5bfb49683f332ef107f04fc7bbc4921ed7c60d3c66a2e0d2ff8472",
-    ".project/active/cutover-recovery/runbook-patches/step1/tests__conformance__test_public_authority_switch.patch": "0ec23a92b60ac067826ab2546f432c8e560c21250e650b9fd86171c9c0164eaf",
-    ".project/active/cutover-recovery/runbook-patches/step1/tests__conformance__test_return_style_extraction.patch": "b38fec42ccb84de2ec86965f0ed7ad4282e69d9795fd519d120db10c1f093725",
-    ".project/active/cutover-recovery/runbook-patches/step1/tests__conformance__test_snapshot_v5_gate.patch": "128571aaf78be23695eefe63d2e5059326b3ddc3e4d4e35dc3a1851384cb9e71",
-    ".project/active/cutover-recovery/runbook-patches/step1/tests__conformance__test_type_indexing.patch": "0bb8cf144f86f136ed9018b53d1ebea361a372b81892d7f00626315457763232",
-    ".project/active/cutover-recovery/runbook-patches/step1/tests__conformance__test_type_mapping_consolidation.patch": "0e6cd81fd37ea0e1344d9467d07b1a11724fbacfeec0e93f7be2c0a64f420143",
-    ".project/active/cutover-recovery/runbook-patches/step1/tests__conformance__test_wi014_toy.patch": "87ffdc6668dbc7cbf85742dd633465c5a091e2818747117df045b7ad2f3d21d7",
-    ".project/active/cutover-recovery/runbook-patches/step1/tests__unit__test_capture_fixtures_filter.patch": "b3327af48b2f6ba5e97495d23b45bee3dc0e8d61c71831a38c0f2d0ea4b327da",
-    ".project/active/cutover-recovery/runbook-patches/step1/tests__unit__test_check_ledger_4a.patch": "9f6a01180c29eb6a89cd4a4d1a20f35b9f312cdff01773bbe816e00a0e0e4928",
-    ".project/active/cutover-recovery/runbook-patches/step1/tests__unit__test_exit_point_aliases.patch": "8124283822e0ee70d8d3e794c9d59f4b7899fb0c408bf1a633926b1c06562232",
-    ".project/active/cutover-recovery/runbook-patches/step1/tests__unit__test_uncovered_params.patch": "9d43927a5000020886347af452d3e18a8d944fb922284c355881b6530bb171da",
-    ".project/active/cutover-recovery/runbook-patches/step2/ledger__L-011.patch": "86cc3ef9b6d76234d1cbc35a2b0b9eb9d8d39a156e5020eb7ba3668b645029d7",
-    ".project/active/cutover-recovery/runbook-patches/step2/ledger__replacement-proof-nodes.patch": "ac423472b4096e9288e8b050dc0bf3191de30d506b9b3078efae339d1d18fcf8",
-    ".project/active/cutover-recovery/runbook-patches/step2/scripts__make_d5_variant.patch": "1db6801b4004f4803e8690173d3f4ce9dfd35ee5b841456f1836805a33be7307",
-    ".project/active/cutover-recovery/runbook-patches/step2/scripts__retirement_worklist.patch": "9e896ac8f52fe4fcf720b969363fee7c6eb042941c17182969f214299040d40a",
-    ".project/active/cutover-recovery/runbook-patches/step2/src__sysml_codegen__analysis____init__.patch": "480bb42950669b4f728d147f4d5ccb9bd3a207092ad4127597c70f65b853f501",
-    ".project/active/cutover-recovery/runbook-patches/step2/src__sysml_codegen__cli____init__.patch": "e5de0d5e75b220607f720cdc6c8cbf46fcdfd6fd57efcafe15e127e242d6e00f",
-    ".project/active/cutover-recovery/runbook-patches/step2/src__sysml_codegen__core____init__.patch": "e2e815b6edc587a8d3fcb77154bfb63d3b383d223b00b004cf738a63070d13d2",
-    ".project/active/cutover-recovery/runbook-patches/step2/src__sysml_codegen__core__identifier_types.patch": "c45c161226bd5192c68fc348761f994bd2da6be54c4338b7a5a6295f67df04ab",
-    ".project/active/cutover-recovery/runbook-patches/step2/src__sysml_codegen__elaboration__project.patch": "718f97db9a773248d721589ec84d481640c99298717875c6c2aa0c8cbbeb0ed6",
-    ".project/active/cutover-recovery/runbook-patches/step2/src__sysml_codegen__generation____init__.patch": "762e58a1f7249e400e4e6729e65a1cead47e933e194660592939a29669ec5613",
-    ".project/active/cutover-recovery/runbook-patches/step2/src__sysml_codegen__generation__initialization.patch": "e2ae12d00764600cb6bd43f4caafcb5328b0c1dfcab92113de6a7877769aa6f4",
-    ".project/active/cutover-recovery/runbook-patches/step2/src__sysml_codegen__orchestration____init__.patch": "44c78e9efcf34296bbb04271c1881bad26e70769f01dd03a5f98c2524940cff9",
-    ".project/active/cutover-recovery/runbook-patches/step2/src__sysml_codegen__orchestration__pipeline_context.patch": "a8d0b55f390000c51c78f8a01479479ae649b2e5d29a0c08250a52ccfd9f131e",
-    ".project/active/cutover-recovery/runbook-patches/step2/src__sysml_codegen__resolution____init__.patch": "4ef993009657bbddfd448f8c6de12c4c896d462d11522066b30603892023d5e8",
-    ".project/active/cutover-recovery/runbook-patches/step2/src__sysml_codegen__resolution__uncovered_params.patch": "fb2c78733ea0ba8ef463df8a79f4fe0c02b24fb374f078d7049134c09131b59c",
-    ".project/active/cutover-recovery/runbook-patches/step2/src__sysml_codegen__snapshot____init__.patch": "4ef2074c334c5978d73248aef659dcaaac5ba318899a96ff4e896d3b6bef0593",
-    ".project/active/cutover-recovery/runbook-patches/step2/src__sysml_codegen__snapshot__capture.patch": "d0cab49aa36c248e55cf1ee5451e5ca9696977d530316129233184fa485c8977",
-    ".project/active/cutover-recovery/runbook-patches/step2/tests__conformance__test_agg_literal_dispatch.patch": "eccc8aea237244675904441696794fdbab7420d8e926534ca47bffe3e838e4e9",
-    ".project/active/cutover-recovery/runbook-patches/step2/tests__conformance__test_ast_dispatch_invariant.patch": "0618564a88aa3b5ba5e5e22421ac5a8df617dc6afd382c97669daa03fcc80046",
-    ".project/active/cutover-recovery/runbook-patches/step2/tests__conformance__test_catalog_no_reconstruction.patch": "ad3a69eab6caff5420554bce791cc7c72d1e68b14011b29ebb47096aa9d0bc5e",
-    ".project/active/cutover-recovery/runbook-patches/step2/tests__conformance__test_d5_variants.patch": "ad5ad89efccce3237dc47588c62503b49eb4235772599e797fbe699f5d1033b8",
-    ".project/active/cutover-recovery/runbook-patches/step2/tests__conformance__test_data_models.patch": "224def8eeac861ae0d29c06479dbccab351ac61e0fedd4e3356d56115e021d2f",
-    ".project/active/cutover-recovery/runbook-patches/step2/tests__conformance__test_dm08_enforced_surface.patch": "1d3639c25cd7108f613df4a19ffe84bbb1a94d5ad0e34c5a2f8c246d7fcb398c",
-    ".project/active/cutover-recovery/runbook-patches/step2/tests__conformance__test_elaboration_corpus_ledger.patch": "482f6aa653037a1504e2d0514792d26d9ca7ae99369f90e7b3b7f9e33b2bb445",
-    ".project/active/cutover-recovery/runbook-patches/step2/tests__conformance__test_elaboration_expose_shapes.patch": "bd380383fbcaae6cd98d37b07498eb32333d7124b3e81b4ae12930dc6bdd7735",
-    ".project/active/cutover-recovery/runbook-patches/step2/tests__conformance__test_elaboration_phase5_remediation.patch": "e238d5166b68da9c56d363375312c62e55a3e2ccce97bc90b54a5591e1cf706f",
-    ".project/active/cutover-recovery/runbook-patches/step2/tests__conformance__test_exact_constraint_route.patch": "6097235ab3d06cee285062afd4939d28d5428bd77399289b717ea6d7c76eaa03",
-    ".project/active/cutover-recovery/runbook-patches/step2/tests__conformance__test_exact_group_identity.patch": "c79d67599646f7723781a0876a93cff46340b3eceed7e29be1d4afa817228fe6",
-    ".project/active/cutover-recovery/runbook-patches/step2/tests__conformance__test_extractor.patch": "db54659011bca2e9c8b32c622c9a403019e2d81181cd4f72f8a6b2e57d34e934",
-    ".project/active/cutover-recovery/runbook-patches/step2/tests__conformance__test_generation_boundary.patch": "6664b32eef15e8e4f5dbc6149fa73187fda76f6d449041ad17c78bacb79e009f",
-    ".project/active/cutover-recovery/runbook-patches/step2/tests__conformance__test_public_authority_switch.patch": "893d52b240fd16ee26cf86ad93665e867e8fae9b82b6b845bb877b554461aa40",
-    ".project/active/cutover-recovery/runbook-patches/step2/tests__conformance__test_silent_failure_d316.patch": "b92eea3be173c5061aaf4b66ddb741383fd31365f70740a3883f5fea55b2782e",
-    ".project/active/cutover-recovery/runbook-patches/step2/tests__conformance__test_silent_failure_family1.patch": "b1220af3157e334a38b392b59d1f26deb335e64912b71bc829c27477232cdfd3",
-    ".project/active/cutover-recovery/runbook-patches/step2/tests__conformance__test_snapshot_v5_gate.patch": "e64a5780a24e6f7ad24c965ec0fec7a7941f27fb70978c7267423e7d5bb45611",
-    ".project/active/cutover-recovery/runbook-patches/step2/tests__conformance__test_source_identity_extraction.patch": "7e4193abbff60f476d80402572d25034d1256547afabcafb9a1006fcb76e09d6",
-    ".project/active/cutover-recovery/runbook-patches/step2/tests__conformance__test_wi014_toy.patch": "fde23421783c3da44ff2a17805a9b7d8b5526feb81bb851bd0b9e5ba238abcae",
-    ".project/active/cutover-recovery/runbook-patches/step2/tests__conftest.patch": "e36807acebe5285a8fd317b9f839e85e98957d373eb45fbf1c09de54e95bea0e",
-    ".project/active/cutover-recovery/runbook-patches/step2/tests__helpers__corpus.patch": "8becceef034a5212a47e9bb390fe746d2d901942222635376eb618c1ed1bfbb8",
-    ".project/active/cutover-recovery/runbook-patches/step2/tests__unit__test_check_ledger_4a.patch": "2314fde60cfaef5a0f2c047ef290231a35af5af87469c3f7c93a9f89f5edfcf4",
-    ".project/active/cutover-recovery/runbook-patches/step2/tests__unit__test_concrete_constraint_model.patch": "ccdc76b08600d0f2aff43e8bc78b9fa840fb8e7f37dd4be1ef7b7635072ddd7a",
-    ".project/active/cutover-recovery/runbook-patches/step2/tests__unit__test_elaboration_import_boundaries.patch": "57fdeba021feed9fff9ba681c9bd50d7a508afdab2504696902b68119077cc38",
-    ".project/active/cutover-recovery/runbook-patches/step2/tests__unit__test_retirement_worklist.patch": "da4621a6d6116a3d23b40fac576b6504f5abd5ef438298e0dbd4e9a235251e62",
-    ".project/active/cutover-recovery/runbook-patches/step2/tests__unit__test_uncovered_params.patch": "1e0dd5b905b48483ecbe702fb79b58d316b5d71e49f86a9fb4a09e5771c2eed6",
-    ".project/active/cutover-recovery/runbook-patches/provisional-trim.txt": "aac9a700af6b128c3abb008391d83c1619bb32f2f26d87f3d6afa0d2712916e7",
     ".project/active/cutover-recovery/evidence/phase5-runs/build_candidate.py": "29a82781d35afef406809695e6a257081b7fd4156b3c212c51c180710bd40fd2",
+    ".project/active/cutover-recovery/evidence/phase5-runs/build_candidate_revise.py": "16e9f3c23e9d1c7ca76a5735f0aee2ff89bb2a9a9b073d6fac40eea2f4afe575",
+    ".project/active/cutover-recovery/evidence/phase5-runs/compare_revise_runs.py": "156df3f5ba3763f121865f6b54680438028c63a90da43c1eb7b75bd250895522",
     ".project/active/cutover-recovery/evidence/phase5-runs/measure_scale.py": "2824127c18b8005e36adbc27ddb1df5e97d8f8337df8d4519cfa59c27fcf76ee",
+    ".project/active/cutover-recovery/evidence/phase5-runs/build_comparison.sh": "b34d731da4b5294f6eb94732f213f175b6544353ec08235f73322ff0c483a313",
     ".project/active/cutover-recovery/evidence/phase5-runs/chain.sh": "04dbaa75a905bc9c6779397830bfe806c5b0ebdccb581b3af44fa12259785c5b",
+    ".project/active/cutover-recovery/evidence/phase5-runs/chain_revise.sh": "34ea449a6784e00aaf9d820be9040cb300ef079d2f8deda4dd8bf2b57c9f5610",
     ".project/active/cutover-recovery/evidence/phase5-runs/check_residue.sh": "138c8e59a4b2c1fd050ec5e32ac81a0e1db02d0732d37096932beba4cb0f58f6",
-    ".project/active/cutover-recovery/evidence/phase5-runs/run_candidate_battery.sh": "d03ab2954001a850cbe214b5b2d8121ee2100359b873d2e9c5c7f0b198acf858"
-  },
-  "three_runs_identical": {
-    "suite_codegen": true,
-    "suite_agentic": true,
-    "execution_lane": true,
-    "corpus_ledger_tests": true,
-    "v6_batch_verify": true,
-    "v6_batch_check": true,
-    "ruff": true,
-    "mypy_src": true,
-    "checker": true,
-    "doc_distinctness": true,
-    "corpus_driver_per_fixture": true,
-    "corpus_driver_canonical_sha256": true
-  },
-  "three_runs_identical_overall": true,
-  "scale": {
-    "budget_authority": ".project/active/elaborator-cutover/spec.md \u2014 R10 [INFERRED], thresholds declared for tests/fixtures/fusion_tea",
-    "budget_fusion_tea": {
-      "live_load_and_elaboration_s": 10.0,
-      "projection_s": 2.0,
-      "capture_and_envelope_serialization_s": 5.0,
-      "generation_and_seal_s": 30.0,
-      "real_teax_execution_s": 30.0,
-      "peak_rss_mib": 512,
-      "envelope_mib": 25
-    },
-    "method": "one warm-up plus three measured runs per fixture, public entry points only",
-    "measurements": {
-      "fusion_tea": {
-        "runs": [
-          {
-            "timings": {
-              "live_elaborate_s": 0.113,
-              "project_s": 0.0029,
-              "capture_s": 0.1603,
-              "generate_live_s": 0.1874,
-              "generate_snapshot_s": 0.0852
-            },
-            "counts": {
-              "attrs": 56,
-              "calcs": 7,
-              "constraints": 1,
-              "occurrences": 8,
-              "modules": 9,
-              "entry_points": 27
-            },
-            "envelope_bytes": 112046,
-            "peak_rss_mib_process_cumulative": 221.7
-          },
-          {
-            "timings": {
-              "live_elaborate_s": 0.1158,
-              "project_s": 0.0028,
-              "capture_s": 0.1626,
-              "generate_live_s": 0.1891,
-              "generate_snapshot_s": 0.0978
-            },
-            "counts": {
-              "attrs": 56,
-              "calcs": 7,
-              "constraints": 1,
-              "occurrences": 8,
-              "modules": 9,
-              "entry_points": 27
-            },
-            "envelope_bytes": 112046,
-            "peak_rss_mib_process_cumulative": 237.3
-          },
-          {
-            "timings": {
-              "live_elaborate_s": 0.1142,
-              "project_s": 0.0028,
-              "capture_s": 0.1626,
-              "generate_live_s": 0.1848,
-              "generate_snapshot_s": 0.0859
-            },
-            "counts": {
-              "attrs": 56,
-              "calcs": 7,
-              "constraints": 1,
-              "occurrences": 8,
-              "modules": 9,
-              "entry_points": 27
-            },
-            "envelope_bytes": 112046,
-            "peak_rss_mib_process_cumulative": 237.4
-          }
-        ]
-      },
-      "solar_battery_d5": {
-        "runs": [
-          {
-            "timings": {
-              "live_elaborate_s": 0.324,
-              "project_s": 0.035,
-              "capture_s": 0.5742,
-              "generate_live_s": 0.7465,
-              "generate_snapshot_s": 0.5856
-            },
-            "counts": {
-              "attrs": 350,
-              "calcs": 77,
-              "constraints": 0,
-              "occurrences": 42,
-              "modules": 77,
-              "entry_points": 199
-            },
-            "envelope_bytes": 1104445,
-            "peak_rss_mib_process_cumulative": 266.9
-          },
-          {
-            "timings": {
-              "live_elaborate_s": 0.3178,
-              "project_s": 0.0353,
-              "capture_s": 0.5706,
-              "generate_live_s": 0.7535,
-              "generate_snapshot_s": 0.573
-            },
-            "counts": {
-              "attrs": 350,
-              "calcs": 77,
-              "constraints": 0,
-              "occurrences": 42,
-              "modules": 77,
-              "entry_points": 199
-            },
-            "envelope_bytes": 1104445,
-            "peak_rss_mib_process_cumulative": 279.0
-          },
-          {
-            "timings": {
-              "live_elaborate_s": 0.3295,
-              "project_s": 0.0349,
-              "capture_s": 0.5577,
-              "generate_live_s": 0.7689,
-              "generate_snapshot_s": 0.5709
-            },
-            "counts": {
-              "attrs": 350,
-              "calcs": 77,
-              "constraints": 0,
-              "occurrences": 42,
-              "modules": 77,
-              "entry_points": 199
-            },
-            "envelope_bytes": 1104445,
-            "peak_rss_mib_process_cumulative": 290.7
-          }
-        ]
-      },
-      "catf_mfe_d5": {
-        "runs": [
-          {
-            "timings": {
-              "live_elaborate_s": 5.0144,
-              "project_s": 0.0136,
-              "capture_s": 5.1486,
-              "generate_live_s": 5.2131,
-              "generate_snapshot_s": 0.2597
-            },
-            "counts": {
-              "attrs": 376,
-              "calcs": 42,
-              "constraints": 9,
-              "occurrences": 61,
-              "modules": 42,
-              "entry_points": 60
-            },
-            "envelope_bytes": 621270,
-            "peak_rss_mib_process_cumulative": 312.3
-          },
-          {
-            "timings": {
-              "live_elaborate_s": 4.9993,
-              "project_s": 0.0135,
-              "capture_s": 5.1752,
-              "generate_live_s": 5.2965,
-              "generate_snapshot_s": 0.283
-            },
-            "counts": {
-              "attrs": 376,
-              "calcs": 42,
-              "constraints": 9,
-              "occurrences": 61,
-              "modules": 42,
-              "entry_points": 60
-            },
-            "envelope_bytes": 621270,
-            "peak_rss_mib_process_cumulative": 327.7
-          },
-          {
-            "timings": {
-              "live_elaborate_s": 5.0485,
-              "project_s": 0.014,
-              "capture_s": 5.2211,
-              "generate_live_s": 5.3036,
-              "generate_snapshot_s": 0.2705
-            },
-            "counts": {
-              "attrs": 376,
-              "calcs": 42,
-              "constraints": 9,
-              "occurrences": 61,
-              "modules": 42,
-              "entry_points": 60
-            },
-            "envelope_bytes": 621270,
-            "peak_rss_mib_process_cumulative": 333.2
-          }
-        ]
-      }
-    }
-  },
-  "replacements_gate": {
-    "note": "one out-of-band run; a pytest invocation per proof-node row, ~40 minutes",
-    "green": 219,
-    "not_required": 82,
-    "fail": 0,
-    "ledger_rows": 303,
-    "rows_emitting_no_line": [
-      "L-036",
-      "L-037"
-    ]
-  },
-  "residue_and_boundary": {
-    "forensic_references_in_shipped_paths": [],
-    "original_checkout_absolute_paths": {
-      "files": [
-        "scripts/probes/probe_item1_phase0.py",
-        "scripts/spikes/_helpers.py",
-        "tests/fixtures/agg_localterm_probe/extraction_snapshot.json",
-        "tests/fixtures/alias_agg_probe/extraction_snapshot.json",
-        "tests/fixtures/attr_expr_probe/extraction_snapshot.json",
-        "tests/fixtures/catf_mfe_model/extraction_snapshot.json",
-        "tests/fixtures/chain_override_probe/extraction_snapshot.json",
-        "tests/fixtures/chain_spike_model/extraction_snapshot.json",
-        "tests/fixtures/constraint_inline/extraction_snapshot.json",
-        "tests/fixtures/constraint_multi_instance/extraction_snapshot.json",
-        "tests/fixtures/constraint_non_numerical/extraction_snapshot.json",
-        "tests/fixtures/crosspart_rollup_twolevel/extraction_snapshot.json",
-        "tests/fixtures/d38_caret/extraction_snapshot.json",
-        "tests/fixtures/deep_cross_scope_probe/extraction_snapshot.json",
-        "tests/fixtures/expression_binding_probe/extraction_snapshot.json",
-        "tests/fixtures/gate_a/extraction_snapshot.json",
-        "tests/fixtures/gate_a_package_owner/extraction_snapshot.json",
-        "tests/fixtures/ife_plant/extraction_snapshot.json",
-        "tests/fixtures/invocation_binding_probe/extraction_snapshot.json",
-        "tests/fixtures/issue22_model/extraction_snapshot.json",
-        "tests/fixtures/modeled_default_fidelity/extraction_snapshot.json",
-        "tests/fixtures/plant_values/extraction_snapshot.json",
-        "tests/fixtures/plant_value_shapes/extraction_snapshot.json",
-        "tests/fixtures/quoted_owner_formula/extraction_snapshot.json",
-        "tests/fixtures/return_styles/extraction_snapshot.json",
-        "tests/fixtures/retype_model/extraction_snapshot.json",
-        "tests/fixtures/sample_model/extraction_snapshot.json",
-        "tests/fixtures/self_named_binding_trap/extraction_snapshot.json",
-        "tests/fixtures/self_named_rescue/extraction_snapshot.json",
-        "tests/fixtures/shadowed_reference/extraction_snapshot.json",
-        "tests/fixtures/shared_producer/extraction_snapshot.json",
-        "tests/fixtures/sibling_channel_ambiguity/extraction_snapshot.json",
-        "tests/fixtures/solar_battery_model/extraction_snapshot.json",
-        "tests/fixtures/spec_chain_channel/extraction_snapshot.json",
-        "tests/fixtures/spec_chain_twolevel/extraction_snapshot.json",
-        "tests/fixtures/unresolvable_attr_probe/extraction_snapshot.json",
-        "tests/fixtures/v6_recapture_batch/README.md",
-        "tests/fixtures/wi014_toy/extraction_snapshot.json"
-      ],
-      "count": 38,
-      "outside_the_retiring_v5_snapshots": [
-        "scripts/probes/probe_item1_phase0.py",
-        "scripts/spikes/_helpers.py",
-        "tests/fixtures/v6_recapture_batch/README.md"
-      ]
-    },
-    "import_boundary_tests": "============================== 14 passed in 0.23s ==============================",
-    "single_authority_pins": "============================== 19 passed in 1.02s ==============================",
-    "v6_batch_pins": "============================== 58 passed in 0.22s ==============================",
-    "runbook_patch_pins": "============================== 12 passed in 1.52s ==============================",
-    "retirement_worklist_check": "0 problems"
+    ".project/active/cutover-recovery/evidence/phase5-runs/run_candidate_battery.sh": "d03ab2954001a850cbe214b5b2d8121ee2100359b873d2e9c5c7f0b198acf858",
+    ".project/active/cutover-recovery/evidence/phase5-runs/run_revise_battery.sh": "cde78bc0e6f1ef7142574220f45d7c19705ec1fec0d5a38c9f289748459c72b2",
+    ".project/active/cutover-recovery/evidence/phase5-runs/revise-runs/comparison.md": "372cfcd0335d374f2c646121d1617dc9c4b950e06cd777f427784a3b34e88299",
+    ".project/active/cutover-recovery/evidence/phase5-runs/head-6c35aa0/diff_check_cg.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    ".project/active/cutover-recovery/evidence/phase5-runs/head-6c35aa0/diff_check_mb.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    ".project/active/cutover-recovery/evidence/phase5-runs/head-6c35aa0/doc_distinct.log": "9286f7b9064a849d59a14083742a71bd01640e04dd3ef9fc37265422eac3fca9",
+    ".project/active/cutover-recovery/evidence/phase5-runs/head-6c35aa0/ledger_paths.log": "c62a11cf218cbba0f063e507e790cac7f21f84f9960a04d99e6e6734ef8904bb",
+    ".project/active/cutover-recovery/evidence/phase5-runs/head-6c35aa0/ledger_surface.log": "adb1d52f49c1aa39877691fe6dc8b6eb2f6604908614b17d525f47d9169dc6c8",
+    ".project/active/cutover-recovery/evidence/phase5-runs/head-6c35aa0/suite_codegen.log": "9012b536584518028d06520d8b18604ae1a4b32cee68f59fdb81c2e37def8b3e"
   }
 }

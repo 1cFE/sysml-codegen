@@ -48,7 +48,7 @@ resolved graph through the public offline route. Sources: `.project/CURRENT_WORK
 - [x] **[NEED] Instance-graph snapshot outcome.** The public snapshot carries the resolved instance
   graph the pipeline needs, not extraction facts that require semantic reconstruction. Authority:
   the owner snapshot ruling at `.project/backlog/epic_elaborate_first_architecture.md:67-70`.
-- [ ] **[INFERRED] One atomic shipped authority.** Public live generation, capture, snapshot load,
+- [x] **[INFERRED] One atomic shipped authority.** Public live generation, capture, snapshot load,
   relocated load, and projection use one authority. The old front end, parallel exact entry point,
   dual-run route, and alternate projectable adapters are absent. Cutover, deletion, version bump,
   accepted recapture, and owner disposition form one mergeable unit. Source: epic `[AGENT]
@@ -70,14 +70,14 @@ resolved graph through the public offline route. Sources: `.project/CURRENT_WORK
   one calculation and one constraint consumer on public live, in-place-snapshot, and relocated-
   snapshot routes. Source:
   `.project/concepts/constraint-execution-authoritative-lifecycle-contract.md:1317-1330`.
-- [ ] **[INFERRED] C19 legacy deletion.** The supplied-value tripwire and its mechanism test are
+- [x] **[INFERRED] C19 legacy deletion.** The supplied-value tripwire and its mechanism test are
   deleted with the cutover mechanism. Source: the agent-authored Item-7 deletion scope at
   `.project/backlog/epic_elaborate_first_architecture.md:427-466`.
-- [ ] **[INFERRED] Closed API and deletion surface.** The public-API census in R3 and cutover census
+- [x] **[INFERRED] Closed API and deletion surface.** The public-API census in R3 and cutover census
   in R6 are closed with no undecided row. Every R4 responsibility and Item-6 transitional dual is
   deleted, migrated, or retained under one nonlegacy owner; every deleted behavioral oracle has an
   independent one-to-one replacement; static gates prove no residue.
-- [ ] **[INFERRED] F26 and dual-run removal.** The live legacy-oracle assertion is replaced by
+- [x] **[INFERRED] F26 and dual-run removal.** The live legacy-oracle assertion is replaced by
   independently pinned public names and stable IDs. The dual-run runner, diff code, parallel entry
   point, and executable ledger-comparison tests are gone. The Item-5 ledger remains historical
   authority at `.project/completed/20260809_elaborator-breadth/diff-ledger.md`.
@@ -92,6 +92,16 @@ resolved graph through the public offline route. Sources: `.project/CURRENT_WORK
   a timestamp-churn-controlled classified diff, and zero unclassified changes. The owner's
   recapture review and recorded disposition are prerequisites to Item-7 completion and merge. The
   checkpoint is **pending**; this spec does not claim approval.
+
+**Tick provenance** [AGENT, REVISE step 7c, 2026-08-12]. SC4 (one atomic shipped authority), SC8
+(C19 legacy deletion), SC9 (closed API and deletion surface) and SC10 (F26 and dual-run removal)
+were ticked on the retired tree's evidence, at the request of `evidence/audit-7-retired.md`
+finding F6: the independent audit read all four as met at `48bf1b0` and named the absent modules
+and the green checker runs. Left unticked deliberately: **coordinated repository gates**, because
+`ruff check src` reads 14 and R12 wants clean production (owner question 2 is unanswered), and the
+**mission outcome**, whose self-binding half sits in the companion repository the auditor could not
+open. The orchestrator's probe P1 confirms the fix is there, but that confirmation comes from
+outside the independent audit, so the tick is the owner's to make.
 
 ## Known Requirements
 
