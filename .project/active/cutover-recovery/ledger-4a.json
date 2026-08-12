@@ -255,7 +255,9 @@
    "blocked_by": [
     "L-128"
    ],
-   "reason": "The recovery-only old/new comparator. The plan keeps it while both implementations exist, so it is the last production row, retired together with tests/conformance/test_elaboration_dual_run.py and the legacy arm of scripts/run_elaboration_corpus.py."
+   "reason": "The recovery-only old/new comparator. The plan keeps it while both implementations exist, so it is the last production row, retired together with tests/conformance/test_elaboration_dual_run.py and the legacy arm of scripts/run_elaboration_corpus.py.",
+   "state": "executed",
+   "executed_commit": "3071fba780478d3f98456a05bbb15e1711c4bcef"
   },
   {
    "id": "L-009",
@@ -6408,7 +6410,9 @@
    "responsibility": "The test adapter that drives package generation from the LEGACY authority, kept expressly so retiring tests could still reach it.",
    "breaks_on": "sysml_codegen.orchestration.snapshot_context (L-026, 4B-G2); sysml_codegen.snapshot:capture_snapshot (L-028, 4B-v5-family); sysml_codegen.orchestration.pipeline_builder (L-029, 4B-v5-family)",
    "breaks_a_free_group": true,
-   "disposition_4c_note": "Gate 4C part 7 (2026-08-11), superseding the part-5 defer. It IS the legacy route's test entry point \u2014 its own docstring says it exists for retirement \u2014 so it retires in G4' with the route it drives. Nothing repoints onto it: every file that called it either retires in the same wave or keeps only its exact-route arm. The public route's own generation path is what survives, pinned end to end on a generated package."
+   "disposition_4c_note": "Gate 4C part 7 (2026-08-11), superseding the part-5 defer. It IS the legacy route's test entry point \u2014 its own docstring says it exists for retirement \u2014 so it retires in G4' with the route it drives. Nothing repoints onto it: every file that called it either retires in the same wave or keeps only its exact-route arm. The public route's own generation path is what survives, pinned end to end on a generated package.",
+   "state": "executed",
+   "executed_commit": "3071fba780478d3f98456a05bbb15e1711c4bcef"
   },
   {
    "id": "L-277",
