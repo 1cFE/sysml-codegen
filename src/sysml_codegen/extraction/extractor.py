@@ -218,11 +218,8 @@ class SysMLDataExtractor:
         # Also capture AST data for expression compilation
         input_attributes = []
         output_attributes = []
-        input_names: set[str] = set()
-        output_names: set[str] = set()
-        all_member_names: set[str] = set()
-        output_expression_asts: dict[str, Any] = {}
-        member_expressions: dict[str, Any] = {}
+        input_ids: set[UUID] = set()
+        output_ids: set[UUID] = set()
         output_expression_asts_by_id: dict[UUID, Any] = {}
         all_member_ids: set[UUID] = set()
         member_expressions_by_id: dict[UUID, Any] = {}
@@ -239,7 +236,6 @@ class SysMLDataExtractor:
             member_name = sanitize_name(member.name)
             member_id = self._stable_declaration_id(member)
             if member_name:
-                all_member_names.add(member_name)
                 if member_id is not None:
                     all_member_ids.add(member_id)
                     member_names_by_id[member_id] = member_name
@@ -249,10 +245,12 @@ class SysMLDataExtractor:
             if attr_info:
                 if is_output:
                     output_attributes.append(attr_info)
-                    output_names.add(member_name)
+                    if member_id is not None:
+                        output_ids.add(member_id)
                 elif is_input:
                     input_attributes.append(attr_info)
-                    input_names.add(member_name)
+                    if member_id is not None:
+                        input_ids.add(member_id)
 
             # Capture ASTs and expression text
             if hasattr(member, "feature_value_expression") and member.feature_value_expression:
@@ -260,7 +258,6 @@ class SysMLDataExtractor:
 
                 # Store raw AST for output attributes
                 if is_output and member_name:
-                    output_expression_asts[member_name] = expr
                     if member_id is not None:
                         output_expression_asts_by_id[member_id] = expr
 
@@ -279,13 +276,16 @@ class SysMLDataExtractor:
             if not self._is_parameter_member(member):
                 continue
             member_name = sanitize_name(member.name)
-            if not member_name or member_name in input_names or member_name in output_names:
-                continue
             member_id = self._stable_declaration_id(member)
+            if (
+                not member_name
+                or member_id is None
+                or member_id in input_ids
+                or member_id in output_ids
+            ):
+                continue
             if hasattr(member, "feature_value_expression") and member.feature_value_expression:
-                member_expressions[member_name] = member.feature_value_expression
-                if member_id is not None:
-                    member_expressions_by_id[member_id] = member.feature_value_expression
+                member_expressions_by_id[member_id] = member.feature_value_expression
 
         # Always append doc comment as additional context
         if doc_comment:
@@ -351,9 +351,6 @@ class SysMLDataExtractor:
             source_file=source_file,
             source_line=source_line,
             source_hash=source_hash,
-            output_expression_asts=output_expression_asts,
-            all_member_names=all_member_names,
-            member_expressions=member_expressions,
             element_id=calc_definition_id,
             output_expression_asts_by_id=output_expression_asts_by_id,
             all_member_ids=all_member_ids,

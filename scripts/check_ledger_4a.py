@@ -1,6 +1,6 @@
-"""Gate 4A ledger checker: exact path-set equality, and real replacement proof.
+"""Gate 4A ledger checker: paths, executed removals, and real replacement proof.
 
-Two independent checks, both of which the original Item 7 census failed.
+The checks cover four failure classes that the original Item 7 census missed.
 
 **Path-set equality.** The candidate set is derived from a Git *diff*, never from the
 worktree. A worktree scan cannot see a deleted file, which is how 118 changed paths went
@@ -14,6 +14,15 @@ actually happened: it collected and passed, it does not exist, it was deselected
 failed. A row whose replacement is absent cannot be green, which is the rule the original
 run inverted when it accepted absence as proof.
 
+**Executed responsibility.** A row with a structured ``deleted_test_nodes`` list records
+behavioral responsibility that left the suite. Once executed, that row must name replacement
+proof. The deleted node IDs stay machine-readable rather than being hidden in prose.
+
+**Executed symbols.** Every symbol in an executed ``removes`` block must be absent from the
+declared module or class surface at the row's path. Deleted paths pass by absence; surviving
+paths are parsed and checked for definitions, imports, assignments, and declared class fields.
+Companion rows are checked in the paired rebuild checkout.
+
 **Surface coverage.** Gate 4C part 3. The path check above proves every path the candidate
 *touched* has a row. It says nothing about a file the candidate never touched that a future
 deletion group will break. Two such files were found by hand at Gate 4B-G2 —
@@ -23,7 +32,8 @@ class: it derives the removal surface from the ledger's own delete and migrate r
 ``tests/`` and ``scripts/`` by AST, and fails for any file that imports the surface at
 module level (so it stops collecting) without a row saying what becomes of it.
 
-**What this checker cannot see.** Five ceilings, measured by attacking the machinery rather
+**What this checker cannot see.** Five ceilings remain after executed symbols and recorded
+deleted responsibility became mechanical. They were measured by attacking the machinery rather
 than reading it (1-4 by the Phase 4 composite audit F7; 5 by the final audit F5, which planted
 both shapes and watched ``paths`` and ``surface`` report 0 problems). They are limits, not
 defects: read a green run as "these five classes are unchecked", never as "the ledger is true".
@@ -81,6 +91,11 @@ CARRIED_ORIGINS = frozenset(
     {"phase3-carried", "derived-blast-radius", "phase3-carried-crossrepo"}
 )
 
+REPO_ROOTS = {
+    "sysml-codegen": REPO_ROOT,
+    "agentic-mbse": REPO_ROOT.parent / "agentic-mbse-item7-rebuild",
+}
+
 
 def git(*args: str, repo: Path = REPO_ROOT) -> str:
     return subprocess.run(
@@ -120,6 +135,100 @@ def path_at_head(path: str, repo: Path = REPO_ROOT) -> bool:
         ).returncode
         == 0
     )
+
+
+def _assigned_names(target: ast.expr) -> set[str]:
+    """Return names declared by one assignment target."""
+    if isinstance(target, ast.Name):
+        return {target.id}
+    if isinstance(target, (ast.Tuple, ast.List)):
+        return set().union(*(_assigned_names(item) for item in target.elts))
+    return set()
+
+
+def _declared_names(statements: list[ast.stmt]) -> set[str]:
+    """Return definitions and declarations directly owned by one surface."""
+    names: set[str] = set()
+    for statement in statements:
+        if isinstance(statement, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+            names.add(statement.name)
+        elif isinstance(statement, ast.Assign):
+            for target in statement.targets:
+                names.update(_assigned_names(target))
+        elif isinstance(statement, ast.AnnAssign):
+            names.update(_assigned_names(statement.target))
+        elif isinstance(statement, (ast.Import, ast.ImportFrom)):
+            for alias in statement.names:
+                names.add(alias.asname or alias.name.split(".")[0])
+    return names
+
+
+def declared_surface(path: Path) -> set[str]:
+    """Return declared module names and fields/methods of every declared class."""
+    parsed = ast.parse(path.read_text(), filename=str(path))
+    names = _declared_names(parsed.body)
+    for node in ast.walk(parsed):
+        if isinstance(node, ast.ClassDef):
+            names.update(_declared_names(node.body))
+    return names
+
+
+def check_removed_symbols(
+    rows: list[dict], repo_roots: dict[str, Path] | None = None
+) -> list[str]:
+    """Fail when an executed ``removes.symbols`` claim is false in either rebuild repo."""
+    roots = REPO_ROOTS if repo_roots is None else repo_roots
+    problems: list[str] = []
+    for row in rows:
+        if row.get("state") != "executed" or not row.get("removes"):
+            continue
+        repo = roots.get(row["repo"])
+        if repo is None:
+            problems.append(f"{row['id']}: no checkout configured for repo {row['repo']!r}")
+            continue
+        path = repo / row["path"]
+        if not path.exists():
+            continue
+        try:
+            declared = declared_surface(path)
+        except (OSError, SyntaxError, UnicodeDecodeError) as error:
+            problems.append(f"{row['id']}: cannot inspect removed symbols at {path}: {error}")
+            continue
+        for block in row["removes"]:
+            for symbol in block["symbols"]:
+                if symbol == "*" and declared:
+                    remaining = ", ".join(sorted(declared))
+                    problems.append(
+                        f"{row['id']}: executed removes.symbols '*' but declared surface "
+                        f"remains at {row['path']}: {remaining}"
+                    )
+                elif symbol in declared:
+                    problems.append(
+                        f"{row['id']}: executed removes.symbols still declared at "
+                        f"{row['path']}: {symbol}"
+                    )
+    return problems
+
+
+def check_deleted_responsibility(rows: list[dict]) -> list[str]:
+    """Require proof and exact node IDs when an executed row records test deletion."""
+    problems: list[str] = []
+    for row in rows:
+        if row.get("state") != "executed" or "deleted_test_nodes" not in row:
+            continue
+        nodes = row["deleted_test_nodes"]
+        if not isinstance(nodes, list) or not nodes or not all(
+            isinstance(node, str) and node.startswith(f"{row['path']}::") for node in nodes
+        ):
+            problems.append(f"{row['id']}: deleted_test_nodes must name exact nodes in its path")
+        if isinstance(nodes, list) and len(nodes) != len(set(nodes)):
+            problems.append(f"{row['id']}: deleted_test_nodes contains duplicates")
+        if not row.get("replacement_proof_node"):
+            problems.append(
+                f"{row['id']}: executed row deletes test responsibility but names no "
+                "replacement_proof_node"
+            )
+    return problems
 
 
 #: Directories whose files must have a row before a deletion group may break them.
@@ -464,6 +573,8 @@ def check_paths(ledger: dict) -> list[str]:
             )
 
     problems.extend(check_states(rows))
+    problems.extend(check_deleted_responsibility(rows))
+    problems.extend(check_removed_symbols(rows))
     problems.extend(check_surface_coverage(ledger))
     problems.extend(check_data_surface_coverage(ledger))
 

@@ -53,6 +53,17 @@ def _live_calc_defs(model_name: str) -> dict[str, CalculationDefinitionData]:
     return {cd.name: cd for cd in extractor.extract_calculation_definitions()}
 
 
+def _member_id(calc_def: CalculationDefinitionData, name: str):
+    """Return the sole exact declaration UUID rendered as ``name``."""
+    matches = [
+        member_id
+        for member_id, rendered in calc_def.member_names_by_id.items()
+        if rendered == name
+    ]
+    assert len(matches) == 1, f"expected one member named {name!r}, got {matches}"
+    return matches[0]
+
+
 # ---------------------------------------------------------------------------
 # Live extractor tests (REQ-EXT-10/11/12) -- license-gated
 # ---------------------------------------------------------------------------
@@ -67,7 +78,7 @@ class TestReqExt10DirectionCarryingReferenceUsage:
         (auto-impl, not a stencil) -- I5."""
         cd = _live_calc_defs("return_styles")["NamedReturnB"]
         assert "y" in {a.name for a in cd.output_attributes}
-        assert cd.output_expression_asts.get("y"), (
+        assert cd.output_expression_asts_by_id.get(_member_id(cd, "y")), (
             "named inline return must carry a captured expression AST"
         )
 
@@ -81,7 +92,7 @@ class TestReqExt10DirectionCarryingReferenceUsage:
         cd = _live_calc_defs("return_styles")["ControlA"]
         assert "a" in {a.name for a in cd.input_attributes}
         assert "y" in {a.name for a in cd.output_attributes}
-        assert cd.output_expression_asts.get("y")
+        assert cd.output_expression_asts_by_id.get(_member_id(cd, "y"))
 
     def test_every_supported_return_style_carries_exact_member_ids(self) -> None:
         """AttributeUsage and direction-carrying ReferenceUsage share the UUID boundary."""
@@ -104,10 +115,11 @@ class TestReqExt12NoDoubleIngestion:
         )
         # The direction-None body-assignment ReferenceUsage must not leak as a
         # phantom intermediate member.
-        assert "y" not in cd.member_expressions
+        output_id = _member_id(cd, "y")
+        assert output_id not in cd.member_expressions_by_id
         # Degraded: no auto-impl for the body-assignment form (expression capture
         # deferred -- see backlog note).
-        assert not cd.output_expression_asts.get("y")
+        assert not cd.output_expression_asts_by_id.get(output_id)
 
 
 @pytest.mark.req(id="REQ-EXT-11")

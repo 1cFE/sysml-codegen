@@ -579,53 +579,16 @@ def _matches_any(module_name: str, prefixes: list[str]) -> bool:
 
 
 # ---------------------------------------------------------------------------
-# REQ-EXT-07: output_expression_asts preserves raw SysIDE AST nodes
+# REQ-EXT-07: exact-ID expression payload preserves raw SysIDE AST nodes
 # ---------------------------------------------------------------------------
 
 
 @pytest.mark.req("REQ-EXT-07")
 class TestReqExt07AstFields:
-    """AST fields exist with correct type annotations. Content verification deferred to C04."""
-
-    def test_field_exists(self):
-        """CalculationDefinitionData has output_expression_asts field with type dict[str, Any]."""
-        from sysml_codegen.extraction.data_models import CalculationDefinitionData
-
-        fields = {f.name: f for f in dataclasses.fields(CalculationDefinitionData)}
-        assert "output_expression_asts" in fields, (
-            "CalculationDefinitionData missing output_expression_asts field"
-        )
-        # Type annotation should be dict[str, Any]
-        field_type = fields["output_expression_asts"].type
-        # The field is annotated as dict[str, Any]; accept string or type repr
-        assert "dict" in str(field_type).lower(), (
-            f"output_expression_asts type is {field_type}, expected dict[str, Any]"
-        )
-
-    def test_member_expressions_field_exists(self):
-        """CalculationDefinitionData has member_expressions field."""
-        from sysml_codegen.extraction.data_models import CalculationDefinitionData
-
-        fields = {f.name for f in dataclasses.fields(CalculationDefinitionData)}
-        assert "member_expressions" in fields, (
-            "CalculationDefinitionData missing member_expressions field"
-        )
-
-    def test_all_member_names_field_exists(self):
-        """CalculationDefinitionData has all_member_names field (set[str])."""
-        from sysml_codegen.extraction.data_models import CalculationDefinitionData
-
-        fields = {f.name: f for f in dataclasses.fields(CalculationDefinitionData)}
-        assert "all_member_names" in fields, (
-            "CalculationDefinitionData missing all_member_names field"
-        )
-        field_type = fields["all_member_names"].type
-        assert "set" in str(field_type).lower(), (
-            f"all_member_names type is {field_type}, expected set[str]"
-        )
+    """The live compiler payload is keyed only by declaration UUID."""
 
     def test_live_exact_identity_sidecar_fields_exist(self):
-        """Exact-route calc/member UUID fields are explicit live-only sidecars."""
+        """Exact calc/member UUID fields are the explicit live compiler payload."""
         from sysml_codegen.extraction.data_models import (
             AttributeInfo,
             CalculationDefinitionData,

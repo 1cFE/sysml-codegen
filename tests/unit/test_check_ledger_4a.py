@@ -357,6 +357,129 @@ def _fake_repo(tmp_path: Path, relpath: str, source: str) -> Path:
     return tmp_path
 
 
+def test_executed_deleted_responsibility_requires_replacement_proof() -> None:
+    row = {
+        "id": "L-920",
+        "path": "tests/test_retired.py",
+        "state": "executed",
+        "deleted_test_nodes": ["tests/test_retired.py::test_old_behavior"],
+        "replacement_proof_node": None,
+    }
+    assert checker.check_deleted_responsibility([row]) == [
+        "L-920: executed row deletes test responsibility but names no "
+        "replacement_proof_node"
+    ]
+    row["replacement_proof_node"] = []
+    assert checker.check_deleted_responsibility([row]) == [
+        "L-920: executed row deletes test responsibility but names no "
+        "replacement_proof_node"
+    ]
+
+
+def test_deleted_responsibility_must_carry_exact_unique_node_ids() -> None:
+    row = {
+        "id": "L-921",
+        "path": "tests/test_retired.py",
+        "state": "executed",
+        "deleted_test_nodes": ["tests/test_other.py::test_old_behavior"] * 2,
+        "replacement_proof_node": "tests/test_replacement.py::test_new_behavior",
+    }
+    assert checker.check_deleted_responsibility([row]) == [
+        "L-921: deleted_test_nodes must name exact nodes in its path",
+        "L-921: deleted_test_nodes contains duplicates",
+    ]
+
+
+def test_executed_removed_module_definition_fails(tmp_path: Path) -> None:
+    repo = _fake_repo(
+        tmp_path,
+        "src/sysml_codegen/compiler.py",
+        "def compile_old():\n    return None\n",
+    )
+    row = {
+        "id": "L-922",
+        "repo": "sysml-codegen",
+        "path": "src/sysml_codegen/compiler.py",
+        "state": "executed",
+        "removes": [{"group": "4B-G9", "symbols": ["compile_old"]}],
+    }
+    problems = checker.check_removed_symbols([row], {"sysml-codegen": repo})
+    assert problems == [
+        "L-922: executed removes.symbols still declared at "
+        "src/sysml_codegen/compiler.py: compile_old"
+    ]
+
+
+def test_executed_removed_dataclass_field_fails(tmp_path: Path) -> None:
+    repo = _fake_repo(
+        tmp_path,
+        "src/sysml_codegen/payload.py",
+        "class Payload:\n    legacy_name: str\n",
+    )
+    row = {
+        "id": "L-923",
+        "repo": "sysml-codegen",
+        "path": "src/sysml_codegen/payload.py",
+        "state": "executed",
+        "removes": [{"group": "4B-G9", "symbols": ["legacy_name"]}],
+    }
+    problems = checker.check_removed_symbols([row], {"sysml-codegen": repo})
+    assert problems == [
+        "L-923: executed removes.symbols still declared at "
+        "src/sysml_codegen/payload.py: legacy_name"
+    ]
+
+
+def test_removed_symbols_accept_deleted_paths_and_ignore_prose(tmp_path: Path) -> None:
+    repo = _fake_repo(
+        tmp_path,
+        "src/sysml_codegen/survivor.py",
+        '"""compile_old and legacy_name are retired."""\n',
+    )
+    rows = [
+        {
+            "id": "L-924",
+            "repo": "sysml-codegen",
+            "path": "src/sysml_codegen/deleted.py",
+            "state": "executed",
+            "removes": [{"group": "4B-G9", "symbols": ["*"]}],
+        },
+        {
+            "id": "L-925",
+            "repo": "sysml-codegen",
+            "path": "src/sysml_codegen/survivor.py",
+            "state": "executed",
+            "removes": [
+                {"group": "4B-G9", "symbols": ["compile_old", "legacy_name"]}
+            ],
+        },
+    ]
+    assert checker.check_removed_symbols(rows, {"sysml-codegen": repo}) == []
+
+
+def test_removed_symbols_inspect_the_paired_companion_checkout(tmp_path: Path) -> None:
+    codegen = tmp_path / "codegen"
+    companion = _fake_repo(
+        tmp_path / "companion",
+        "src/agentic_mbse/sysml/compiler.py",
+        "class LegacyResult:\n    pass\n",
+    )
+    row = {
+        "id": "L-926",
+        "repo": "agentic-mbse",
+        "path": "src/agentic_mbse/sysml/compiler.py",
+        "state": "executed",
+        "removes": [{"group": "4B-G9", "symbols": ["LegacyResult"]}],
+    }
+    problems = checker.check_removed_symbols(
+        [row], {"sysml-codegen": codegen, "agentic-mbse": companion}
+    )
+    assert problems == [
+        "L-926: executed removes.symbols still declared at "
+        "src/agentic_mbse/sysml/compiler.py: LegacyResult"
+    ]
+
+
 DELETE_ROW = {
     "id": "L-900",
     "path": "src/sysml_codegen/legacy/reader.py",
