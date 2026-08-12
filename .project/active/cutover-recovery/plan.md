@@ -1038,12 +1038,15 @@ remains.
 ### Owner gate
 
 - Owner disposition: `PENDING`
-- Final sysml-codegen candidate OID: `c4e9b76c024b7852da6ebccb46ab62ac4e7a4bfb` (branch `item7-rebuild`).
-  The candidate record itself is committed on top at `013d6a1`, which changes no production or
-  test file; the candidate under review is the tree at `c4e9b76`.
+- Final sysml-codegen candidate OID: `800ec84` (branch `item7-rebuild`). Production and test
+  content is the tree certified by the final audit at `c4e9b76`; the commits on top
+  (`013d6a1`..`800ec84`) are the candidate record, the final audit record, and the audit's five
+  finding closures (F1–F5, all record/runbook corrections; the full licensed suite re-measured
+  green at `800ec84`: 3862 / 47 / 53, zero license-skip lines).
 - Final agentic-mbse candidate OID: `cc6c7a7411f6338a4811a7cc58ca002c29ef177b` (branch `item7-rebuild`)
 - Candidate record: `evidence/candidate.md` + `evidence/candidate.json`, committed at `013d6a1`
-- Audit artifact: `PENDING`
+- Audit artifact: `evidence/audit-5-final.md` — verdict: the candidate tree certifies, with
+  five findings (one medium, four low), all closed at `4313d6c`/`800ec84`
 
 ---
 
