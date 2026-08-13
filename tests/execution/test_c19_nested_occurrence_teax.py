@@ -166,6 +166,11 @@ def test_the_three_routes_agree_channel_for_channel(
     ``catalog_fingerprint`` is included on purpose: it is a digest of the
     constraint catalog, so a route that built a different catalog and still
     happened to produce ``80.0`` fails here.
+
+    Since CONSTRAINT-SEMANTICS Item 3 the dumped report also carries the
+    ``coverage`` account, so this is route parity *including the coverage
+    numbers* — a route whose catalog enumerated a different set of authored
+    usages fails here even if every verdict agreed.
     """
 
     def dump(run) -> dict[str, object]:

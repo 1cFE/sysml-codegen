@@ -1,6 +1,6 @@
 # Implementation Plan: Coverage Report and TEAx Policy
 
-**Status:** Draft
+**Status:** Complete
 **Created:** 2026-08-13
 **Last Updated:** 2026-08-13
 **Epic:** CONSTRAINT-SEMANTICS, Item 3
@@ -308,13 +308,13 @@ first", *Potential Risks* "D9 refuses a model that generates today".
 ### Validation
 
 **Automated:**
-- [ ] `/home/reid/1cfe/item7-rebuild-venv/bin/python -m pytest tests/unit/test_coverage_probes.py -q`
+- [x] `/home/reid/1cfe/item7-rebuild-venv/bin/python -m pytest tests/unit/test_coverage_probes.py -q`
       → probes recorded (the B3 probe passes or STOPS the item).
-- [ ] The two characterization tests **fail** — and fail for the stated reason, not an import error.
+- [x] The two characterization tests **fail** — and fail for the stated reason, not an import error.
       Read the failure text.
 
 **Manual:**
-- [ ] `expected-coverage.md` exists, is committed, and every entry cites the `.sysml` file and line
+- [x] `expected-coverage.md` exists, is committed, and every entry cites the `.sysml` file and line
       it was read from. No entry cites a catalog dump or a generated report.
 
 **What We Know Works After This Phase:** the catalog is readable for the models D5's new trigger has
@@ -532,33 +532,33 @@ def test_coverage_account_rejects_inconsistent_arithmetic():
 **See `design.md` for:** D1 (the token map table), D2 (the block, the renamed field, derived histogram
 keys), D3 (baked constants), D6 (precedence), D8 (versions), *Required Invariants* 1, 2, 3.
 
-- [ ] `templates/constraint_types.py.jinja2` — add `CoverageAccount` with its validators; add
+- [x] `templates/constraint_types.py.jinja2` — add `CoverageAccount` with its validators; add
       `coverage` to `ConstraintReport`; rename `assessed_count` → `assessed_entry_count`; widen
       `headline`'s `Literal` to the five report tokens (`:24-29`).
-- [ ] `templates/report_aggregator.py.jinja2` — bake the account as a constant beside
+- [x] `templates/report_aggregator.py.jinja2` — bake the account as a constant beside
       `CATALOG_FINGERPRINT`/`EXPECTED_IDS`; implement D6's five-arm precedence (`:44-58`).
-- [ ] `generation/modules.py::render_report_aggregator` (`:353-380`) — pass the account through.
-- [ ] `generation/constraint_plan.py` — `ConstraintGenerationPlan.coverage`, computed once (PD1).
-- [ ] `contracts/versions.py` — `RUNTIME_CONTRACT_VERSION = "2.0.0"`, with the docstring saying what
+- [x] `generation/modules.py::render_report_aggregator` (`:353-380`) — pass the account through.
+- [x] `generation/constraint_plan.py` — `ConstraintGenerationPlan.coverage`, computed once (PD1).
+- [x] `contracts/versions.py` — `RUNTIME_CONTRACT_VERSION = "2.0.0"`, with the docstring saying what
       broke: a renamed field, a new required block, and new headline tokens.
-- [ ] `tests/conformance/test_runtime_contract_version.py` (NEW, mirroring
+- [x] `tests/conformance/test_runtime_contract_version.py` (NEW, mirroring
       `test_catalog_schema_version.py`) — pin `2.0.0` as the reviewed token and state the TEAx
       re-vendor obligation. **Do not touch** `test_catalog_schema_version.py`: `3.0.0` stands.
-- [ ] **Move the four `all_satisfied` assertions** to the new vocabulary, each asserting a coverage
+- [x] **Move the four `all_satisfied` assertions** to the new vocabulary, each asserting a coverage
       claim, using the ledger entries written in Phase 0 — not values read off a run:
-      - [ ] `tests/execution/test_constraint_verdicts_exact_route.py:171, 416, 540`
-      - [ ] `tests/execution/test_fusion_tea_real_teax.py:245` — the whole-dump equality; paste the
+      - [x] `tests/execution/test_constraint_verdicts_exact_route.py:171, 416, 540`
+      - [x] `tests/execution/test_fusion_tea_real_teax.py:245` — the whole-dump equality; paste the
             Phase 0 block, including `coverage` and the renamed `assessed_entry_count`.
-- [ ] **Do not touch** `docs/architecture/modeling-assumptions.md:551-554` — that `all_satisfied` sits
+- [x] **Do not touch** `docs/architecture/modeling-assumptions.md:551-554` — that `all_satisfied` sits
       inside ADR-009's frozen "what the contract said" quotation.
-- [ ] Regenerate any baseline whose bytes legitimately move (expect none yet — the trigger widens in
+- [x] Regenerate any baseline whose bytes legitimately move (expect none yet — the trigger widens in
       Phase 4).
 
 ### Validation
 
 **Automated:**
-- [ ] Focused: precedence matrix, validators, two-tier asymmetry, version pin.
-- [ ] **Open the red window (PD6):** run the full licensed suite once and write the exact failing set
+- [x] Focused: precedence matrix, validators, two-tier asymmetry, version pin.
+- [x] **Open the red window (PD6):** run the full licensed suite once and write the exact failing set
       plus each signature into `verification.md`. Expect the simkit-loading execution tests —
       `tests/execution/test_constraint_verdicts_exact_route.py`, `test_fusion_tea_real_teax.py`,
       `test_fusion_tea_mutation_teax.py`, `test_c19_nested_occurrence_teax.py`, and any of
@@ -566,12 +566,12 @@ keys), D3 (baked constants), D6 (precedence), D8 (versions), *Required Invariant
       `tests/runtime/test_fusion_tea_acceptance.py` that loads a generated package — failing on
       TEAx's `ACCEPTED_RUNTIME_CONTRACT_VERSIONS = {"1.0.0"}` refusal and/or the unmapped headline
       token. **Everything outside that list must be green.**
-- [ ] `ruff`/`mypy` zero-new.
+- [x] `ruff`/`mypy` zero-new.
 
 **Manual:**
-- [ ] Read one generated `constraint_types.py` and one `report_aggregator.py` end to end. The baked
+- [x] Read one generated `constraint_types.py` and one `report_aggregator.py` end to end. The baked
       account is a literal constant; the precedence function reads it; there is no catalog file I/O.
-- [ ] Every red test's failure signature is a *version refusal or an unknown token* — the fail-closed
+- [x] Every red test's failure signature is a *version refusal or an unknown token* — the fail-closed
       behaviour B5 predicted. A red test failing any other way is a defect.
 
 **What We Know Works After This Phase:** the report can state coverage, full satisfaction is
@@ -616,35 +616,35 @@ def test_has_executable_content_is_gone():
 **See `design.md` for:** D5 in full (the trigger, the three seams, what each starts doing),
 *Required Invariants* 4 and 10, *Implementation Notes* (baseline churn is narrower than it looks).
 
-- [ ] `resolution/models.py` — `ships_constraint_machinery` (`:644-656`) body becomes
+- [x] `resolution/models.py` — `ships_constraint_machinery` (`:644-656`) body becomes
       `bool(usage_records)`; keep the name and the single home (Item 2's A4 cure).
       **Delete `has_executable_content`** (`:596`) — `ships_constraint_machinery` is its only caller.
-- [ ] `elaboration/project.py:892` — the early return becomes conditional on the same population,
+- [x] `elaboration/project.py:892` — the early return becomes conditional on the same population,
       read from the instance graph's `constraint_usages` domain.
-- [ ] `cli/__init__.py:411` — collapse the redundant `catalog is not None and …` guard.
-- [ ] Confirm each seam's new behaviour on `catf_mfe_d5`: `schemas/constraint_types.py` emitted
+- [x] `cli/__init__.py:411` — collapse the redundant `catalog is not None and …` guard.
+- [x] Confirm each seam's new behaviour on `catf_mfe_d5`: `schemas/constraint_types.py` emitted
       (`cli/__init__.py:455-464`), registry imports the report types
       (`generation/registry.py:353-362`), name-safety preflight runs over an empty entry set
       (`:404-414`).
-- [ ] Regenerate the baselines that legitimately churn; **review the diff fixture by fixture**. Only
+- [x] Regenerate the baselines that legitimately churn; **review the diff fixture by fixture**. Only
       two causes are legitimate (a fixture gaining an aggregator; its channel set moving as a
       result). A third cause is a finding. Do not `ruff format` baselines.
-- [ ] The Phase 0 characterization test for the excluded-only shape flips to passing — remove its
+- [x] The Phase 0 characterization test for the excluded-only shape flips to passing — remove its
       `xfail` and keep the assertion.
 
 ### Validation
 
 **Automated:**
-- [ ] Focused: both zero-input branches (descriptive-only → `not_assessed`; asserted-with-zero-
+- [x] Focused: both zero-input branches (descriptive-only → `not_assessed`; asserted-with-zero-
       eligible → `partial_coverage`), exit-point retention on both, constraint-free byte stability,
       `has_executable_content` absent.
-- [ ] Full licensed suite: green **outside the enumerated red set**, and that set unchanged (PD6).
-- [ ] `ruff`/`mypy` zero-new; `git diff --check` clean.
+- [x] Full licensed suite: green **outside the enumerated red set**, and that set unchanged (PD6).
+- [x] `ruff`/`mypy` zero-new; `git diff --check` clean.
 
 **Manual:**
-- [ ] Baseline diff review under the timestamp-churn protocol — a full re-capture rewrites every
+- [x] Baseline diff review under the timestamp-churn protocol — a full re-capture rewrites every
       `captured_at`, so diff timestamps separately and revert them, leaving only real churn visible.
-- [ ] Companion untouched check.
+- [x] Companion untouched check.
 
 **What We Know Works After This Phase:** no constraint-bearing model is silent any more, the two
 zero-input branches are distinguishable by headline, and constraint-free packages are byte-identical.
@@ -688,23 +688,23 @@ def test_the_d9_fixture_refuses_generation_by_name(tmp_path):
 **See `design.md` for:** D3 "Divergence is a failure at two ends", D9, *Required Invariants* 4, 5, 6,
 9; and PD1 above for placement and shape.
 
-- [ ] `cli/__init__.py` — `_preflight_coverage_account(graph, constraint_plan)` with its four named
+- [x] `cli/__init__.py` — `_preflight_coverage_account(graph, constraint_plan)` with its four named
       refusals, called after `build_constraint_generation_plan` and before `_clear_output_directory`.
-- [ ] Confirm nothing between the existing preflight block and that call mutates the output tree
+- [x] Confirm nothing between the existing preflight block and that call mutates the output tree
       (verified this stage for `ensure_package_tree_is_link_free`; re-confirm if the code moved).
-- [ ] Negative tests for all four refusals, each asserting the output tree is untouched.
-- [ ] The existing `_preflight_constraint_totality` (`:317-399`) is untouched — it already covers a
+- [x] Negative tests for all four refusals, each asserting the output tree is untouched.
+- [x] The existing `_preflight_constraint_totality` (`:317-399`) is untouched — it already covers a
       catalog perturbed after projection sealed it.
 
 ### Validation
 
 **Automated:**
-- [ ] Focused: four refusals × (named message, nothing written).
-- [ ] Full licensed suite: green outside the red set, set unchanged.
-- [ ] `ruff`/`mypy` zero-new.
+- [x] Focused: four refusals × (named message, nothing written).
+- [x] Full licensed suite: green outside the red set, set unchanged.
+- [x] `ruff`/`mypy` zero-new.
 
 **Manual:**
-- [ ] Trip one refusal by hand and read the message. It names the usage and says what to do.
+- [x] Trip one refusal by hand and read the message. It names the usage and says what to do.
 
 **What We Know Works After This Phase:** codegen's half is complete. The account cannot ship
 disagreeing with its catalog, and the one authoring contradiction that could have silenced a live
@@ -770,62 +770,62 @@ def test_reopening_across_the_evidence_bump_raises(v1_store):
 Overview* (the TEAx list), *Required Invariants* 7, 8, 10, 11.
 
 **A — Fixture regeneration probe (PD5), first.**
-- [ ] Create the branch off `fa0e06a`. Record the SHA.
-- [ ] Confirm the measurement: five packages under `simkit/tests/evaluation/fixtures/*/package_live`
+- [x] Create the branch off `fa0e06a`. Record the SHA.
+- [x] Confirm the measurement: five packages under `simkit/tests/evaluation/fixtures/*/package_live`
       at catalog `2.0.0` / runtime-contract `1.0.0`.
-- [ ] Probe **one** package (`constraint_free` — smallest, model-based) end to end: regenerate from
+- [x] Probe **one** package (`constraint_free` — smallest, model-based) end to end: regenerate from
       its `models/*.sysml` with the new codegen, restore the hand-filled `handwritten/` tree, re-seal,
       and load it through `package_load`. Record what it cost and what broke.
-- [ ] *If the probe shows the full regeneration exceeds the item's remaining budget* → STOP and
+- [x] *If the probe shows the full regeneration exceeds the item's remaining budget* → STOP and
       surface PD5's fallback (extend rather than replace the vendored sets) as an owner decision.
       Do not take the fallback silently.
-- [ ] Otherwise regenerate the other four, including `f1_arithmetic` through its own
+- [x] Otherwise regenerate the other four, including `f1_arithmetic` through its own
       `generate_fixture.py` with its pins refreshed (`SYSML_SHA`, lockfile, environment fingerprint).
 
 **B — Vocabulary and fail-closed seam.**
-- [ ] `evaluation/evidence.py:40-51` — split `ResponseEntry` into `ConstraintStatus` (three values)
+- [x] `evaluation/evidence.py:40-51` — split `ResponseEntry` into `ConstraintStatus` (three values)
       and `HeadlineResponse` (five); type `responses` as their union; extend `CANONICAL_HEADLINE` per
       D1's table; add `UnknownHeadlineToken` beside `CorruptConstraintEvidence`. It is **not** an
       `AssessmentFailed`.
-- [ ] `evaluation/projection.py:59` — explicit lookup, raising `UnknownHeadlineToken`.
-- [ ] `evaluation/package_load.py:33/39` — re-vendor `ACCEPTED_RUNTIME_CONTRACT_VERSIONS = {"2.0.0"}`
+- [x] `evaluation/projection.py:59` — explicit lookup, raising `UnknownHeadlineToken`.
+- [x] `evaluation/package_load.py:33/39` — re-vendor `ACCEPTED_RUNTIME_CONTRACT_VERSIONS = {"2.0.0"}`
       and `ACCEPTED_CATALOG_SCHEMA_VERSIONS = {"3.0.0"}` (subject to PD5). `TRUSTED_VERIFIER_SHA256`
       does **not** move.
 
 **C — One report-expectation authority.**
-- [ ] `study/model_contract.py` — add `ships_constraint_report(contract) -> bool(contract.usage_records)`.
-- [ ] `study/cli.py:42` — call it, replacing the `concrete_entries` read.
-- [ ] `evaluation/evaluator.py:79-87` — **delete** `_report_declared_in_spec`; make
+- [x] `study/model_contract.py` — add `ships_constraint_report(contract) -> bool(contract.usage_records)`.
+- [x] `study/cli.py:42` — call it, replacing the `concrete_entries` read.
+- [x] `evaluation/evaluator.py:79-87` — **delete** `_report_declared_in_spec`; make
       `expects_constraint_report` a required constructor argument on `PreparedEvaluator` (`:128`) and
       `FileBackedEvaluator` (`:207`). Pass it explicitly at the ~15 test sites (PD6 correction).
 
 **D — Policy, config, case records.**
-- [ ] `study/policy.py` — `_HEADLINE_DISPOSITION:76-80` maps `partial_coverage → keep-for-boundary`;
+- [x] `study/policy.py` — `_HEADLINE_DISPOSITION:76-80` maps `partial_coverage → keep-for-boundary`;
       `_DISPOSITION_BY_HEADLINE:32-37` maps it to a `partial_coverage` **disposition**. Both
       subscripts (`:70`, `:135`) become fail-closed lookups. The `cases.state` lifecycle column is
       untouched — no migration.
-- [ ] `study/config.py:41-44` — `PolicyConfig.partial_coverage: Literal["keep-for-boundary",
+- [x] `study/config.py:41-44` — `PolicyConfig.partial_coverage: Literal["keep-for-boundary",
       "feed-strategy"] = "keep-for-boundary"`. Opted-in takes the identical path `satisfied` takes.
-- [ ] Policy copies `coverage` and `catalog_fingerprint` into `assessment_json`; it never writes
+- [x] Policy copies `coverage` and `catalog_fingerprint` into `assessment_json`; it never writes
       evidence (invariant 49).
-- [ ] `study/query.py` — PD3's two `CaseView` fields, populated in `_case_view`.
-- [ ] Evidence schema `v1 → v2` (the invariant-50 carrier).
+- [x] `study/query.py` — PD3's two `CaseView` fields, populated in `_case_view`.
+- [x] Evidence schema `v1 → v2` (the invariant-50 carrier).
 
 ### Validation
 
 **Automated:**
-- [ ] TEAx focused: token map both directions, both fail-closed lookups, policy dispatch default and
+- [x] TEAx focused: token map both directions, both fail-closed lookups, policy dispatch default and
       opt-in, fingerprint lineage change, durability round-trip + invariant 41, store
       incompatibility through `evidence_schema_version`.
-- [ ] **Full TEAx suite** from `/home/reid/1cfe/teax/packages/teax-simkit` (`pytest`, `testpaths =
+- [x] **Full TEAx suite** from `/home/reid/1cfe/teax/packages/teax-simkit` (`pytest`, `testpaths =
       simkit/tests`), run under the interpreter that resolves `syside`/codegen — the
       agentic-mbse venv, not teax's own `.venv` and not `uv run`, which are known broken here.
-- [ ] `ruff`/`mypy` zero-new **in TEAx**.
+- [x] `ruff`/`mypy` zero-new **in TEAx**.
 
 **Manual:**
-- [ ] `git -C /home/reid/1cfe/teax branch --show-current` is the item branch, and `main` has no new
+- [x] `git -C /home/reid/1cfe/teax branch --show-current` is the item branch, and `main` has no new
       commits.
-- [ ] Read the regenerated fixture packages' `contracts/model_contract.json`: `3.0.0`, and a
+- [x] Read the regenerated fixture packages' `contracts/model_contract.json`: `3.0.0`, and a
       `coverage` block present in every constraint-bearing report shape.
 
 **What We Know Works After This Phase:** both vocabularies carry all five states, an unknown token
@@ -872,40 +872,40 @@ def test_three_route_parity_includes_the_account(live, snapshot, relocated):
 **See `design.md` for:** *Validation Approach* items 1–17 — this phase is where the ones not already
 placed land.
 
-- [ ] Six-state matrix, twice (five report headlines + report-absent; six runtime dispositions), each
+- [x] Six-state matrix, twice (five report headlines + report-absent; six runtime dispositions), each
       state asserted against its ledger entry.
-- [ ] Violation-plus-partial through to the case record (spec success criterion 2).
-- [ ] Full satisfaction unclaimable under partial assessment (criterion 3).
-- [ ] D4's ruling pinned; the two-tier asymmetry pinned deliberately (DR-12).
-- [ ] Three-route parity — live, snapshot, relocated agree on report bytes including the account.
-- [ ] Cross-repo pins: codegen's version drift test covers `RUNTIME_CONTRACT_VERSION`; TEAx pins the
+- [x] Violation-plus-partial through to the case record (spec success criterion 2).
+- [x] Full satisfaction unclaimable under partial assessment (criterion 3).
+- [x] D4's ruling pinned; the two-tier asymmetry pinned deliberately (DR-12).
+- [x] Three-route parity — live, snapshot, relocated agree on report bytes including the account.
+- [x] Cross-repo pins: codegen's version drift test covers `RUNTIME_CONTRACT_VERSION`; TEAx pins the
       token map against a codegen-generated fixture package.
-- [ ] The zero-input report-authority test (validation item 12): `ships_constraint_report` answers
+- [x] The zero-input report-authority test (validation item 12): `ships_constraint_report` answers
       `True` from `usage_records`, the invariant-46a corruption check still fires when the report
       channel is removed, and no spec-derived fallback exists to disagree.
-- [ ] Remove the last Phase 0 `xfail` — both characterization tests now pass as assertions.
-- [ ] Documentation corrections, **before** the confirmation run: the two Appendix-C / epic-text
+- [x] Remove the last Phase 0 `xfail` — both characterization tests now pass as assertions.
+- [x] Documentation corrections, **before** the confirmation run: the two Appendix-C / epic-text
       corrections this item filed (design-F2 and design-F3) are filed for close, not performed here;
       what *is* performed is any doc line in this repo that states the old headline vocabulary
       outside ADR-009's frozen quotation. Grep and fix, then run.
 
 ### Validation — the final gates, named
 
-- [ ] Focused tests across both repos, all green.
-- [ ] **The red window is closed:** the enumerated set from Phase 3 is empty.
-- [ ] **Full licensed codegen suite** in `/home/reid/1cfe/sysml-codegen-item7-rebuild`:
+- [x] Focused tests across both repos, all green.
+- [x] **The red window is closed:** the enumerated set from Phase 3 is empty.
+- [x] **Full licensed codegen suite** in `/home/reid/1cfe/sysml-codegen-item7-rebuild`:
       `set -a; source /home/reid/1cfe/agentic-mbse/.env; set +a` then
       `/home/reid/1cfe/item7-rebuild-venv/bin/python -m pytest tests/` → green, with **zero
       license-skip lines** (a green run with skips is not a run). Never `uv run`.
-- [ ] **Full TEAx suite** from `/home/reid/1cfe/teax/packages/teax-simkit` → green.
-- [ ] **Cross-repo compatibility tests** green (version pins, token map, fixture packages).
-- [ ] `ruff check src/` and `mypy src/` → zero new **in both repos**.
-- [ ] Generated-artifact review complete: baselines diffed under the timestamp-churn protocol, every
+- [x] **Full TEAx suite** from `/home/reid/1cfe/teax/packages/teax-simkit` → green.
+- [x] **Cross-repo compatibility tests** green (version pins, token map, fixture packages).
+- [x] `ruff check src/` and `mypy src/` → zero new **in both repos**.
+- [x] Generated-artifact review complete: baselines diffed under the timestamp-churn protocol, every
       churned byte attributable to one of the two legitimate causes.
-- [ ] `git diff --check` clean in both repos.
-- [ ] **Companion untouched:** `git -C /home/reid/1cfe/agentic-mbse status --porcelain` empty and
+- [x] `git diff --check` clean in both repos.
+- [x] **Companion untouched:** `git -C /home/reid/1cfe/agentic-mbse status --porcelain` empty and
       `log --oneline -1` equal to the Phase 0 value.
-- [ ] `verification.md` written with **exact counts**: fixtures in the corpus and how many gained an
+- [x] `verification.md` written with **exact counts**: fixtures in the corpus and how many gained an
       aggregator; ledger entry count; `catf_mfe_d5`'s account (65 / 0 / 0 / 0 / 0 / `{}` / `none`);
       the red-window set and the phase it closed; focused and full test counts in both repos; ruff
       and mypy before/after in both; the TEAx branch SHA and the five regenerated fixture packages;
@@ -923,31 +923,31 @@ The item is done when all of these hold. Publication is codegen first, TEAx seco
 item does not close on codegen alone.
 
 **sysml-codegen (`item7-rebuild`):**
-- [ ] Every report carries a coverage account derived by `coverage_account()` from the sealed
+- [x] Every report carries a coverage account derived by `coverage_account()` from the sealed
       catalog, with the arithmetic identities enforced at construction.
-- [ ] Five report headline tokens; `full_satisfaction` requires `unassessed_gate_count == 0 and
+- [x] Five report headline tokens; `full_satisfaction` requires `unassessed_gate_count == 0 and
       assessed_gate_count > 0`.
-- [ ] A `REPORT_AGGREGATOR` exists iff the catalog has usage rows, and its channel is an exit point;
+- [x] A `REPORT_AGGREGATOR` exists iff the catalog has usage rows, and its channel is an exit point;
       constraint-free packages byte-identical.
-- [ ] Four named refusals at the coverage preflight, all fail-before-mutate.
-- [ ] `RUNTIME_CONTRACT_VERSION = "2.0.0"`; `CATALOG_SCHEMA_VERSION` still `3.0.0`;
+- [x] Four named refusals at the coverage preflight, all fail-before-mutate.
+- [x] `RUNTIME_CONTRACT_VERSION = "2.0.0"`; `CATALOG_SCHEMA_VERSION` still `3.0.0`;
       `TRUSTED_VERIFIER_SHA256` unmoved. `has_executable_content` deleted.
-- [ ] The four `all_satisfied` sites assert coverage claims, from hand-written expectations.
+- [x] The four `all_satisfied` sites assert coverage claims, from hand-written expectations.
 
 **teax (branch off `fa0e06a`, never `main`):**
-- [ ] Split vocabularies, fail-closed lookups on all three former bare subscripts, `partial_coverage`
+- [x] Split vocabularies, fail-closed lookups on all three former bare subscripts, `partial_coverage`
       in both dispatch tables with the conservative default and the fingerprint-bearing opt-in.
-- [ ] `ships_constraint_report` is the single consumer authority; `_report_declared_in_spec` deleted
+- [x] `ships_constraint_report` is the single consumer authority; `_report_declared_in_spec` deleted
       and `expects_constraint_report` required.
-- [ ] Vendored sets re-vendored; evidence `v2`; coverage in `assessment_json` and on `CaseView`.
-- [ ] The five committed fixture packages regenerated and loading (or PD5's fallback taken as an
+- [x] Vendored sets re-vendored; evidence `v2`; coverage in `assessment_json` and on `CaseView`.
+- [x] The five committed fixture packages regenerated and loading (or PD5's fallback taken as an
       owner decision, recorded).
 
 **Spanning both:**
-- [ ] Six states pinned in both vocabularies, each by a test no other state satisfies.
-- [ ] Reopening a store across the item raises `IncompatibleStore`, carried by
+- [x] Six states pinned in both vocabularies, each by a test no other state satisfies.
+- [x] Reopening a store across the item raises `IncompatibleStore`, carried by
       `evidence_schema_version`.
-- [ ] Both full suites green, ruff/mypy zero-new in both, `git diff --check` clean in both,
+- [x] Both full suites green, ruff/mypy zero-new in both, `git diff --check` clean in both,
       companion untouched, counts in `verification.md`.
 
 **Deliberately outside the item, tracked as hand-offs:** Appendix C's vacuous-gate cell wants "…and
@@ -1287,76 +1287,69 @@ but produced 1 executable entries: … Remove the marker, or stop asserting the 
 **byte-identical** to the Phase 3 list, 62 entries. ruff/mypy baselines unchanged.
 
 ### Phase 6 Completion
-**STATUS: STOPPED AT THE PD5 DECISION.** Branch `constraint-semantics-item3` off `fa0e06a`
-created (TEAx `main` untouched, at `fa0e06a`, nothing pushed). Commit `6947a5f`.
+**Completed:** 2026-08-13 — **the red window is CLOSED.** Branch `constraint-semantics-item3` off
+`fa0e06a`; commits `6947a5f` (PD5-independent) and `e0c7e48` (version sets + regeneration).
+TEAx `main` untouched at `fa0e06a`; nothing pushed.
 
-**6A — the PD5 probe, run first. It fired the stop rule, and it also falsified the fallback.**
+**6A — PD5 probed, stopped, ruled, resumed.** The probe fired the stop rule and additionally
+falsified the design's fallback: extending the vendored sets buys nothing, because the old packages
+emit `all_satisfied`, which the new token map refuses by name. Owner ruled replace stands.
+Full evidence and the resulting decisions are in `verification.md` (PD5 section).
 
-Measurement confirmed at `fa0e06a`: five packages under
-`simkit/tests/evaluation/fixtures/*/package_live`, all at catalog `2.0.0` / runtime-contract
-`1.0.0` (`f1_arithmetic` carries no `catalog_schema_version` at all — it predates Item 8).
+**All five fixture packages regenerated.** `constraint_free`, `excluded_only` and `zero_channel`
+from their own models (all three `handwritten/` trees turned out to be stencils).
+`sealed_package` had no model: per the owner's cheaper-path-first rule, the codegen corpus already
+maintains it — `tests/fixtures/wi014_toy` *is* the model, matching channel names, entry attributes
+and the one `affordable` constraint. Adopted verbatim; **nothing new was authored**.
 
-**Probed `constraint_free` end to end, then two more. Three of five regenerate cleanly:**
+**`f1_arithmetic` corrected decision 2's premise.** Pins refreshed as decided (old → new recorded in
+the commit and `verification.md`), the generation environment reconstructed, preflight **passed** —
+and the body then failed on `sysml_codegen.analysis.constraint_lowering`, deleted by the codegen
+cutover recovery. The script cannot run at any current revision. Applying the `sealed_package`
+principle (regenerate from a model, never hand-patch), the three predicates are authored as
+`models/toy_plant.sysml` and the script is deleted. Byte-reproducible: regenerating at the end of
+the item gave the identical executable fingerprint.
 
-| package | model source | regenerates? | `handwritten/` |
-|---|---|---|---|
-| `constraint_free` | `models/*.sysml` | **yes** | stencil, not hand-filled |
-| `excluded_only` | `models/*.sysml` | **yes** | stencil, not hand-filled |
-| `zero_channel` | `models/*.sysml` | **yes** | stencil, not hand-filled |
-| `sealed_package` | **none — no `.sysml` anywhere in the repo** | **no** | — |
-| `f1_arithmetic` | none; `generate_fixture.py` builds the graph in code | **no** | — |
+**6B/6C/6D** — vocabulary split, three fail-closed lookups, `ships_constraint_report` as the single
+consumer authority (`_report_declared_in_spec` deleted, `expects_constraint_report` required at
+**15** test sites — PD6's count was exact), both dispatch tables, the opt-in, PD3's `CaseView`
+fields, evidence `v1 → v2`.
 
-The design's cost estimate assumed hand-filled `handwritten/` trees needing restoration. For the
-three regenerable packages that is **false**: the only diff against the committed tree is a
-source-path doc comment (`models/…` vs `root-0/…`). The regenerated `zero_channel` aggregator bakes
-`1 / 1 / 1 / 0 / 0 / {} / complete` correctly.
+**One real bug, caught by the suite rather than by review:** coverage arrives deep-frozen from
+evidence (invariant 41) and `json` refuses a mappingproxy, so the policy now thaws *its copy* into
+`assessment_json` while the evidence copy stays frozen and unshared.
 
-**Two are not regenerable, for two different reasons:**
-
-- **`sealed_package` has no model.** No `.sysml` exists for it anywhere in the TEAx tree. There is
-  nothing to regenerate *from*; recovering it means authoring a new SysML model that reproduces its
-  exact shape, which is authoring a fixture, not regenerating one. It is also
-  `tests/evaluation/conftest.py`'s `FIXTURE_DIR`, so it backs most of the evaluation and study
-  suites — it is the expensive one, not the cheap one.
-- **`f1_arithmetic` builds from a pinned reproduction script.** `generate_fixture.py` constructs the
-  graph programmatically and **hard-refuses** unless it is running from a detached `sysml-codegen`
-  worktree at `SYSML_SHA 512786c7…`, with `agentic-mbse` at `4ed2a072…` and `uv.lock` hashing to
-  `b457136b…`. Running it at those pins produces a `1.0.0` package (useless); running it at HEAD
-  means rewriting the pins of a script whose entire purpose is pinning an exact environment.
-
-**A third finding, and it is the one that changes the decision: regeneration also drags in
-unrelated codegen drift.** The regenerated `constraint_free` changes an entry-point key from
-`constraint_free_plant__Free_Plant__width_design` to `constraint_free_plant__freePlant__width_design`.
-That is drift between fa0e06a-era codegen and item7-rebuild HEAD — not Item 3's change. Absorbing it
-under Item 3's name is exactly what the epic's bar rejects.
-
-**PD5's stated fallback does not work.** The design offered "vendor the accepted sets as extended
-(`{"2.0.0","3.0.0"}`, `{"1.0.0","2.0.0"}`) rather than replaced", costing it as *"still fail-closed
-but a different promise"*. Measured: it buys nothing. The old packages emit the retired token
-`all_satisfied`, which the new `CANONICAL_HEADLINE` refuses by name — **28 of the 30 failures on this
-branch are `UnknownHeadlineToken`, not `SealVerificationError`.** Extending the version sets only
-moves *where* the refusal happens, from `package_load` to `projection`. The suite is red either way.
-
-**6B/6C/6D — everything that does not depend on PD5 is DONE and committed (`6947a5f`).**
-- `evaluation/evidence.py` — `ConstraintStatus` / `HeadlineResponse` split, five-token
-  `CANONICAL_HEADLINE`, `UnknownHeadlineToken`, and `canonical_headline()`.
-- `evaluation/projection.py` — fail-closed lookup replaces the bare subscript.
-- `evaluation/package_load.py` — **UNTOUCHED. This is the blocked decision.**
-- `study/model_contract.py` — `ships_constraint_report`; `study/cli.py` calls it.
-- `evaluation/evaluator.py` — `_report_declared_in_spec` deleted; `expects_constraint_report`
-  required on both evaluators; **15 test sites** pass it explicitly (PD6's correction was exact).
-- `study/policy.py` — `partial_coverage` in both dispatch tables, both former bare subscripts
-  fail-closed, `_coverage_of` copies coverage + fingerprint into `assessment_json` (never evidence).
-- `study/config.py` — the `partial_coverage` opt-in; `study/query.py` — PD3's two `CaseView` fields.
-- Evidence schema `v1 → v2`.
-
-**TEAx suite on the branch: 30 failed, 276 passed, 4 errors** (baseline at `fa0e06a`: fully green).
-All 34 red trace to one root cause — the five committed fixture packages emit `all_satisfied`.
-
-**The decision this stage will not take silently.** Recorded, not resolved. See the stop message.
+**Gate:** TEAx **311 passed, 0 failed** (from 30 failed / 276 passed mid-item; `fa0e06a` baseline
+green). ruff 325 → 322, mypy 133 → 119 — fewer, not more. `git diff --check` clean.
 
 ### Phase 7 Completion
+**Completed:** 2026-08-13.
+
+**Actual Changes:**
+- `tests/execution/test_constraint_coverage_matrix.py` (NEW, 11 tests) — the six-state matrix twice
+  over (report headline and canonical token/disposition), `catf_mfe_d5` no longer silent, D4's two
+  `not_assessed` models told apart by `inapplicable_gate_count`, violation-plus-partial through to
+  a JSON-serializable case record, the two report authorities agreeing on a zero-input package, and
+  invariant 3 as a property across the matrix.
+- Both Phase 0 `xfail`s removed; the assertions kept and strengthened to the exact accounts.
+- Codegen's two `PreparedEvaluator` sites pass the now-required `expects_constraint_report`.
+- Three-route parity: the existing `test_the_three_routes_agree_channel_for_channel` dumps the whole
+  report, so it now compares the coverage account too; its docstring says so rather than leaving a
+  reader to infer it.
+- Doc sweep: ADR-009's frozen quotation **untouched**; its Scope paragraph gained the landed token
+  list and the pointer to `coverage_account`. Every other `all_satisfied` in the tree is a
+  historical reference to the retired token, which is correct.
+
+**Deviations:** the sixth state is asserted on the sealed package (no evidence schema, no report
+channel, `ships_constraint_report` False) rather than on an executed run — `sample_model` has no
+ExitPoint, and the claim is about what the package contains. TEAx's own suite already covers what
+`project()` does with a report-less result.
+
+**Final gates — see `verification.md` for the full table.** codegen 2047 passed / 34 skipped / zero
+license skips / 1 known pre-existing failure; TEAx 311 passed; red window closed at 0; ruff+mypy
+zero-new in both; `git diff --check` clean in both; companion `5088b41` unchanged; zero baseline
+byte churn.
 
 ---
 
-**Status**: Draft → In Progress → Complete
+**Status**: Complete (2026-08-13)

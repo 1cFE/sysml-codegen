@@ -1,16 +1,15 @@
-"""What the report gets wrong today, pinned so we are told the moment it stops being wrong.
+"""The two defects that motivated Item 3, now pinned as the behaviour that replaced them.
 
-Two defects, one per test, both `xfail(strict=True)`:
+Two defects, one per test. Both were pinned `xfail(strict=True)` in Phase 0 and both now
+pass as ordinary assertions — Phase 3 fixed the first, Phase 4 the second. The tests are kept,
+strengthened, because they are the two shapes that motivated the item:
 
-1. A model with one gate assessed and one gate never checked reports `all_satisfied`. The
-   headline is computed from the statuses that happened to arrive
-   (`templates/report_aggregator.py.jinja2:44-58`), so a shrinking denominator is invisible.
-2. A model that authors constraints but has nothing eligible emits no report at all
-   (`elaboration/project.py:892`), which a consumer reads as "this model has no constraints"
-   — the same reading a genuinely constraint-free model gets.
-
-Strict xfail is the point: when Item 3's Phases 3 and 4 land, these start passing and pytest
-fails them loudly rather than letting a stale characterization sit green.
+1. A model with one gate assessed and one gate never checked used to report `all_satisfied`,
+   because the headline was computed from the statuses that happened to arrive — so a
+   shrinking denominator was invisible. It now reads `partial_coverage` and states its counts.
+2. A model that authored constraints but had nothing eligible emitted no report at all, which
+   a consumer read as "this model has no constraints" — the same reading a genuinely
+   constraint-free model gets. It now ships a `not_assessed` report.
 
 Expected accounts for both fixtures are hand-written from source in
 `.project/active/constraint-coverage-policy/expected-coverage.md`.
@@ -48,19 +47,31 @@ def _execute(fixture: str, package_name: str, root: Path):
     )
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="Item 3: the report can lie — partial assessment reads all_satisfied",
-)
 def test_partial_assessment_does_not_read_as_full_satisfaction(tmp_path):
     """`constraint_domain_detached_owner`: one gate assessed and passing, one never checked.
 
-    Ledger entry: 2 / 2 / 1 / 1 / 0 / `{owner_has_no_occurrences: 1}` / `partial`. The
-    unchecked gate is `vacuous_gate` (`model.sysml:14`), asserted on a `part def` nothing
-    instantiates. Today the headline reads `all_satisfied` off the one status that arrived.
+    **Fixed in Phase 3** — the `xfail` is removed and the assertion strengthened from "not the
+    old token" to the exact account. Ledger entry:
+    2 / 2 / 1 / 1 / 0 / `{owner_has_no_occurrences: 1}` / `partial`. The unchecked gate is
+    `vacuous_gate` (`model.sysml:14`), asserted on a `part def` nothing instantiates.
+
+    This is spec success criterion 3 through a real executed package: every gate that ran
+    passed, and full satisfaction is still unclaimable.
     """
-    result = _execute("constraint_domain_detached_owner", "partial_probe", tmp_path)
-    assert result.outputs[REPORT_CH].headline != "all_satisfied"
+    report = _execute("constraint_domain_detached_owner", "partial_probe", tmp_path).outputs[
+        REPORT_CH
+    ]
+    assert report.headline == "partial_coverage"
+    assert report.coverage.model_dump() == {
+        "authored_usage_total": 2,
+        "applicable_gate_total": 2,
+        "assessed_gate_count": 1,
+        "unassessed_gate_count": 1,
+        "inapplicable_gate_count": 0,
+        "unassessed_reasons": {"owner_has_no_occurrences": 1},
+        "coverage_state": "partial",
+    }
+    assert [r.status for r in report.results] == ["satisfied"]
 
 
 def test_excluded_only_model_ships_a_report():

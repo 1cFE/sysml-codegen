@@ -91,7 +91,13 @@ def _harness(root: Path, name: str, package: Path, graph) -> dict[str, object]:
     from simkit.study.bridge import CandidateBridge
 
     loader = package_loader(package, name, root / "link")
-    evaluator = PreparedEvaluator(loader, package / "pipelines" / "pipeline.yaml")
+    # `expects_constraint_report` is a required argument since CONSTRAINT-SEMANTICS Item 3:
+    # TEAx's evaluation layer no longer derives it from the pipeline spec, because it has no
+    # catalog authority to derive it from. Every fixture reaching this helper is
+    # constraint-bearing, which is why the helper exists.
+    evaluator = PreparedEvaluator(
+        loader, package / "pipelines" / "pipeline.yaml", expects_constraint_report=True
+    )
     return {
         "root": root,
         "name": name,

@@ -96,7 +96,13 @@ def _entry_injector(package: Path, package_name: str, root: Path):
     from simkit.study.bridge import CandidateBridge
 
     loader = package_loader(package, package_name, root / "link_injected")
-    evaluator = PreparedEvaluator(loader, package / "pipelines" / "pipeline.yaml")
+    # `expects_constraint_report` is a required argument since CONSTRAINT-SEMANTICS Item 3:
+    # TEAx's evaluation layer no longer derives it from the pipeline spec, because it has no
+    # catalog authority to derive it from. Every fixture reaching this helper is
+    # constraint-bearing, which is why the helper exists.
+    evaluator = PreparedEvaluator(
+        loader, package / "pipelines" / "pipeline.yaml", expects_constraint_report=True
+    )
     bridge = CandidateBridge(evaluator.entry_models)
 
     def evaluate(selected_fields: dict[str, float]):

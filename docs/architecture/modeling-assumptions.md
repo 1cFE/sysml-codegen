@@ -567,7 +567,12 @@ design point at the boundary rather than accepting it on a coverage gap.
 
 **Scope.** This record governs the headline vocabulary's meaning. The concrete report and runtime
 token spellings, the report schema, and the normalization-seam code are CONSTRAINT-SEMANTICS Item
-3's.
+3's, and they landed 2026-08-13. The five report tokens are `violation`, `indeterminate`,
+`full_satisfaction`, `partial_coverage`, `not_assessed` (`templates/constraint_types.py.jinja2`),
+each mapping to exactly one runtime token in TEAx's `CANONICAL_HEADLINE`. `all_satisfied` was
+renamed rather than redefined, so a stale reader refuses by name instead of misreading the
+strengthened claim; the coverage account beside the headline is derived by
+`generation/coverage.py::coverage_account`.
 
 **Consequences filed:** lifecycle contract invariants 1, 9, 28, 32, 33, 46/46a, 48, new 61, and
 Appendix B/C cells; companion LC-E05/E06/E10/E11/E12 and LC-G07.
