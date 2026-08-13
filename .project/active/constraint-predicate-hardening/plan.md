@@ -339,16 +339,16 @@ without a companion CST read.
 
 ### Changes
 
-- [ ] **Re-verify the companion citations before editing** (the evidence file's standing
+- [x] **Re-verify the companion citations before editing** (the evidence file's standing
       constraint): `executable_profile.py:357-374` (`_diagnostic` default),
       `:535-537` (`_walk_value`), `:702-707` (proposition walk),
       `expression.py:611-637` (`extract_feature_chain_segments` appends the root first).
-- [ ] `executable_profile.py:535-537` — pass `message=` naming `".".join(chain_segments)` and the
+- [x] `executable_profile.py:535-537` — pass `message=` naming `".".join(chain_segments)` and the
       bindings rewrite. Exact shape: `design.md#the-message-shape`. **One line, no newline**
       (invariant 8).
-- [ ] `executable_profile.py:702-707` — the same message. **Both sites, or the fix covers one lane
+- [x] `executable_profile.py:702-707` — the same message. **Both sites, or the fix covers one lane
       of two.**
-- [ ] If P3 falsified the unit's survival, the rewrite in the message drops the annotation
+- [x] If P3 falsified the unit's survival, the rewrite in the message drops the annotation
       (invariant 6).
 
 ### How to verify
@@ -666,9 +666,38 @@ zero license-skip lines. `ruff check src` = 12, `mypy src` = 55. Companion untou
 **Issues / deviations:** none beyond the surfaced finding above.
 
 ### Phase 4 Completion
-**Completed:**
-**Companion citations re-verified:**
-**Issues / deviations:**
+**Completed:** 2026-08-13 · companion `bc69f04` → `0a52942`
+
+**Companion citations re-verified before editing, all four exact at `bc69f04`:**
+`executable_profile.py:355-372` (`_diagnostic`, `message or f"{construct}: {reason}"`);
+`:535-537` (`_walk_value`, `isinstance(node, FeatureReferenceNode)` +
+`node.reference.chain_segments`); `:702-707` (proposition walk, same shape);
+`expression.py:611-637` (`extract_feature_chain_segments` appends
+`reconstruct_expression(operands[0])` first, then the target's chaining feature names).
+
+**Change:** one new helper `_feature_chain_message(reference)` beside `_diagnostic`, passed
+as `message=` at **both** block sites. No `REASON_CODES` change (D9).
+
+**P4 confirmed live, not only statically.** The rendered detail on
+`constraint_blocked_chain_multi` reads `feature chain 'bioshield.outer_radius' …` — the
+authored spelling, reproduced by `".".join(chain_segments)`. B3 holds.
+
+**Counts:** companion suite (default selection, never `-m ""`) **1821 passed, 1 skipped,
+5 deselected, 10 failed**. Those 10 fail identically at `bc69f04` with the change stashed —
+verified by re-running them on the stashed tree — so the gate is zero-new, not zero.
+They are `test_cli.py` console-script lookups (`FileNotFoundError`), two `test_index.py`
+script runs, one quality-check CLI exit-code test, and two validation baseline comparisons:
+all environment-bound to the prescribed codegen interpreter, none touching the profile.
+`ruff check src` = 1, `mypy src` = 108 — both at the companion's own baseline.
+
+**Deviation from the landing order: steps 4 and 5 are one landing, not two.**
+The design's "safe alone" note held for the *pre-existing* codegen tests — none asserts the
+tautology — but this item's own Phase-1 characterizations assert the cure, which is the
+point of red-first. The editable install makes the companion message live for codegen the
+instant it commits, so two `xfail(strict=True)` rows XPASSed and failed the codegen suite
+until their markers came off. That is the anti-rot mechanism doing its job. The companion
+commit and the codegen commit that unmarks those two rows land back to back; the pair leaves
+both trees green, and no commit in between was reported as green.
 
 ### Phase 5 Completion
 **Completed:**

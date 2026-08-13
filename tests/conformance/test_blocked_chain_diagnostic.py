@@ -55,14 +55,12 @@ def _blocked_detail() -> str:
     return blocked.detail
 
 
-@pytest.mark.xfail(strict=True, reason=_ITEM4_B)
 def test_the_detail_names_each_blocked_chain_as_authored() -> None:
     detail = _blocked_detail()
     assert "bioshield.outer_radius" in detail
     assert "bioshield.inner_radius" in detail
 
 
-@pytest.mark.xfail(strict=True, reason=_ITEM4_B)
 def test_the_detail_states_the_bindings_rewrite() -> None:
     """The rewrite must be a *supported* form, and must be spelled out per chain."""
     detail = _blocked_detail()
