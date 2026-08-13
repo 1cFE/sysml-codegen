@@ -127,9 +127,12 @@ non-executable/non-certifying.
 
 ### Meaning and visibility
 
-1. Every usage gets one profile disposition. Any `BLOCK` halts the model. After generation, every
-   other usage has executable concrete representation or a visible exclusion. After evaluation,
-   every module yields evidence or a named execution failure.
+1. (amended 2026-08-12, CONSTRAINT-SEMANTICS Item 1) Every usage gets one profile disposition. A
+   `BLOCK` on an **asserted** usage halts the model. A non-asserted usage never halts generation:
+   the form gate runs before the predicate walk, so an unsupported predicate written inside a plain
+   `constraint` is never reached and the usage catalogs as unassessed. Descriptive constraints are
+   never load-bearing. After generation, every other usage has executable concrete representation or
+   a visible exclusion. After evaluation, every module yields evidence or a named execution failure.
 2. Neutral facts contain model semantics and provenance only. They contain no graph roles, Python
    names, generated identity, or study policy.
 3. `ExpressionIR` is the structural semantic representation. Reconstructed text is display only.
@@ -143,8 +146,13 @@ non-executable/non-certifying.
 
 7. The profile is pure, deterministic, total, and versioned independently from the fact schema.
 8. Outcomes are exactly `ADMIT`, `BLOCK`, `NON_NUMERICAL`, and `UNASSESSED`.
-9. `ADMIT` places canonical IR inside the compiler's semantic envelope. Downstream may not
-   reclassify it, but named contextual lowering, graph, input, and runtime failures remain.
+9. (amended 2026-08-12, CONSTRAINT-SEMANTICS Item 1) `ADMIT` places canonical IR inside the
+   compiler's semantic envelope. Downstream may not reclassify it, but named contextual lowering,
+   graph, input, and runtime failures remain. One of those named contextual failures halts
+   generation: an asserted usage whose form is in executable scope but which has no attachment
+   capability — structurally unattachable — fails loudly, naming the usage and the missing
+   attachment. It is a contextual failure of the kind this invariant already admits; invariant 8's
+   four outcomes are unchanged and `ADMIT` is not reclassified.
 10. The ratification target is numerical profile v4. Ordering admits Integer/Real pairs and
     compatible exact-unit Quantity pairs. Boolean/String/enum ordering blocks. This is a target
     requirement until a compatible cross-repository revision set is committed and pinned.
@@ -210,8 +218,12 @@ non-executable/non-certifying.
 
 ### Catalog, generation, and package
 
-28. The canonical catalog exposes definition inventory, one visible disposition per usage, and one
-    concrete execution entry per admitted occurrence. It carries source form, usage name and QN,
+28. (amended 2026-08-12, CONSTRAINT-SEMANTICS Item 1) The canonical catalog exposes definition
+    inventory, one visible disposition per usage, and one concrete execution entry per admitted
+    occurrence. A visible disposition is one of three kinds — eligible, excluded-with-reason, or
+    non-reaching-with-reason — and every authored usage carries exactly one, so the dispositions
+    cover the complete authored-usage domain: "reaches no instance" is a disposition, not an
+    absence. It carries source form, usage name and QN,
     owner QN, definition QN, an explicit definition-to-usage join, and per-occurrence identity. The
     five TEAx-consumed fields live on each per-eligible concrete entry; `owner_qn` is a real qualified
     name distinct from `owner_instance_path`, and the definition-to-usage join is entry-level.
@@ -224,12 +236,18 @@ non-executable/non-certifying.
 30. Names and paths are proven collision-free against generated scopes before output mutation.
 31. The precomputed generation plan validates catalog/source/polarity/IR/input/name/compile/render
     agreement before clearing the target; writers do not change its semantic contents.
-32. The report aggregator has one required exact-schema input per eligible concrete assertion.
-    Missing or extra evidence fails, and the aggregator is structurally retained as an exit ancestor
-    whenever a constraint report is required. A model with constraint usages but zero eligible
-    concrete assertions still requires the zero-input aggregator and a `not_assessed` report; a model
-    with no constraint usages remains inert and has no aggregator.
-33. Headline precedence is violation, then indeterminate, then all satisfied, then not assessed.
+32. (amended 2026-08-12, CONSTRAINT-SEMANTICS Item 1) The report aggregator has one required
+    exact-schema input per eligible concrete assertion. Missing or extra evidence fails, and the
+    aggregator is structurally retained as an exit ancestor whenever a constraint report is required.
+    A constraint-bearing model with no applicable asserted gate still requires the zero-input
+    aggregator and a report whose headline is the not-assessed state ("Headline states and coverage
+    truth"); a model with no constraint usages remains inert and has no aggregator.
+33. (amended 2026-08-12, CONSTRAINT-SEMANTICS Item 1) Headline precedence is violation, then
+    indeterminate, then full satisfaction, then partial coverage, then not assessed. Full
+    satisfaction means every applicable asserted gate was assessed and passed — a coverage claim, not
+    the absence of a failure. The states, the term "applicable asserted gate", and the
+    inventory-versus-feasibility split are defined under "Headline states and coverage truth".
+    Decision record: ADR-009.
 34. Semantic source referents are portable. Checkout-absolute paths never enter IDs, fingerprints,
     contracts, generated code or docstrings, reports, catalogs, or reconstructed snapshot fields.
 35. Live and supported snapshot routes agree on decisions, diagnostics, retained producers,
@@ -259,15 +277,22 @@ non-executable/non-certifying.
 45. Prepared and file-backed evaluators normalize a module failure identically, name the exact
     phase/module, preserve the original exception as cause, and return equal report content for
     equivalent completed executions.
-46. The public file-backed route persists and harvests the exact report plus package identity with no
-    consumer schema adapter.
-46a. A constraint-free package is valid input to TEAx. Absence of the constraint report produces
-    empty constraint evidence rather than a `KeyError`; codegen remains free to omit constraint-only
-    catalog/modules for byte-stable constraint-free generation.
+46. (amended 2026-08-12, CONSTRAINT-SEMANTICS Item 1) The public file-backed route persists and
+    harvests the exact report plus package identity with no consumer schema adapter. The exact
+    report carries compact coverage accounting derived from the catalog (invariant 48), and
+    persistence and harvest carry it through unchanged.
+46a. (amended 2026-08-12, CONSTRAINT-SEMANTICS Item 1) A constraint-free package is valid input to
+    TEAx. Absence of the constraint report produces empty constraint evidence rather than a
+    `KeyError`; codegen remains free to omit constraint-only catalog/modules for byte-stable
+    constraint-free generation. The same fail-closed obligation extends to headline values: an
+    unknown or unmapped headline fails closed with a named error, never a `KeyError` and never a
+    fallthrough to a satisfied or unconstrained reading.
 47. The study bridge supplies every typed entry channel. A candidate changes selected fields in a
     complete typed baseline; it does not omit unrelated channels.
-48. Codegen's catalog embedded in the model contract is the sole catalog schema authority. TEAx
-    consumes its source form, usage identity, owner QN, definition QN, explicit join, and occurrence
+48. (amended 2026-08-12, CONSTRAINT-SEMANTICS Item 1) Codegen's catalog embedded in the model
+    contract is the sole catalog schema authority and the sole authority for coverage truth: the
+    report's coverage accounting is derived from it in one direction and is never an independently
+    maintained second inventory. TEAx consumes its source form, usage identity, owner QN, definition QN, explicit join, and occurrence
     data directly. The alternate TEAx schema, hand-authored schema fixture, stand-in fingerprint,
     and consumer materializer are retired. A separately serialized catalog, if independently
     justified later, contains the same schema/fingerprint and performs no reconstruction.
@@ -483,6 +508,35 @@ load/evaluation, and study APIs. Private mutation, conversion, and wrappers do n
   **Option referent [AGENT]:** A, selected: the embedded codegen catalog is canonical and TEAx reads
   it directly; any later standalone export is mechanically identical. B, rejected: a codegen-owned
   standalone catalog is canonical and the model contract references its fingerprint.
+
+### Equality intent and authoring policy
+
+Added 2026-08-12 (CONSTRAINT-SEMANTICS Item 1). This is the authority copy; agentic-mbse's authoring
+guidance cites it and does not restate it.
+
+**[NEED]** (owner-stated, 2026-08-12) Narrow bands of viability make design exploration really
+difficult, so the guidance must say *when* an equality should be used at all — not only how the
+pipeline treats one. **[NEED]** (owner-stated, 2026-08-12) Tolerance values are modeled values the
+modeler chooses. The pipeline never invents one.
+
+**[AGENT] (ratified by owner, 2026-08-12)** The intent behind a written `a == b` falls into four
+classes, and each has a different correct authoring move. This taxonomy is agent-originated and
+owner-reviewed; challenge it by re-deriving against the reasoning recorded here.
+
+1. **Structural identity** — `b` is `a` by construction. Derive it; do not constrain it. A constraint
+   here adds a gate that can only ever pass or reveal a modeling error.
+2. **Cross-check of independently computed values** — two paths compute the same physical quantity.
+   Use a loose, physically motivated validity band, sized to the disagreement you would actually
+   accept, not to floating-point noise.
+3. **Feasibility gate** — you want the design to satisfy a limit. Prefer a one-sided inequality. If a
+   quantity genuinely must equal a value, fix it as an input rather than search for it and then
+   constrain it; searching a zero-measure set is why exploration collapses.
+4. **Composition closure** — terms must sum to a whole. Derive the last term by construction; where
+   that is not possible, use a banded validity check as in class 2.
+
+Behavioral consequence, already stated elsewhere and repeated here only as a pointer: invariant 11
+governs which equality forms execute, and the profile's real-equality block list is documented in
+`docs/architecture/modeling-assumptions.md` §8.
 
 ### Source-identity dispositions (D-4 onward)
 
@@ -709,7 +763,7 @@ contract chain.
 | Snapshot docs' profile v3 / package 0.1.1 claims are current | Public snapshot docs | Target is profile v4 / package 0.1.2; landing must pin compatible commits and update docs. |
 | “No equality or inequality enters execution” | Historical public docs | No equality executes; target profile admits numerical ordering inequalities. |
 | The retired manifest defines subtype coverage | Migration-era tests/docs | Base constraint-usage facts plus explicit per-usage catalog disposition are authoritative. |
-| Aggregator always exists even with no usage | Original concept | No usages is inert; excluded-only usages retain `not_assessed` visibility. |
+| Aggregator always exists even with no usage | Original concept | No usages is inert. A constraint-bearing model whose usages are all non-asserted reads not assessed; an excluded **asserted** usage puts the report at partial coverage. (amended 2026-08-12, CONSTRAINT-SEMANTICS Item 1) |
 | Snapshot replay is the live route after extraction | Conversational supersession (no documentary source); historical architecture prose | Replay uses route-specific `include_all`; grandfathered skip-lowering fails closed for certification. |
 | A consumed input whose value expression resolves to its own parameter is rescued by binding to a same-named outer feature | L2 rescue-aware exemption (`../agentic-mbse/src/agentic_mbse/validation/level2_structure.py:309-355`); `_rescue_self_named_bindings`; wrong-oracle acceptance tests | D-4 and family SRC-01: the self-binding is legal and inert; the outcome is a blocking diagnostic (invariant 59), and the rescue is an impermissible identity mechanism (D-16). |
 | A bound model reference that fails resolution may lenient-mint a per-consumer entry point | REQ-IR-06 reading; Path B behavior; 75 measured model-derived mints | D-17: never a mint for a bound reference; an absent authored target fails language loading under invariant 20 and C18; external inputs enter only through the explicit external-input contract. |
@@ -731,7 +785,8 @@ coordinates and exempts nothing.
 | Case | Required observation |
 |---|---|
 | Zero constraint usages | No constraint catalog/modules; bytes unchanged; the sealed package loads/evaluates in TEAx through both the prepared and file-backed evaluators with empty constraint evidence. |
-| Excluded-only usages | Portable exclusions plus `not_assessed`; no silent omission; the sealed package evaluates in TEAx with a `not_assessed` report surface. |
+| Excluded-only usages | Portable exclusions with no silent omission; the sealed package evaluates in TEAx with a not-assessed report surface when every excluded usage is non-asserted, and a partial-coverage surface when any excluded usage is asserted. (amended 2026-08-12, CONSTRAINT-SEMANTICS Item 1) |
+| Asserted vacuous gate | An asserted usage whose owner has zero occurrences catalogs with a non-reaching-with-reason disposition at warning grade, authoring validation emits the advisory naming the usage and its detached owner, generation does not halt, and the report headline reads partial coverage; the same usage carrying an explicit inapplicability disposition drops out of the feasibility denominator and the headline reads full satisfaction when every remaining gate passed. |
 | ADMIT + NON_NUMERICAL + BLOCK mix | Warnings in order, then one halt before mutation; no compiler call. |
 | Positive/negated × inline/definition-typed | Source-authored forms, including live `assert not constraint`, preserve positive IR/raw value and complementary truth/status/margin. |
 | Shared definition × mixed polarity | One neutral compiled body; each source-authored usage retains its own polarity and margin sign independent of ordering. |
@@ -757,7 +812,7 @@ coordinates and exempts nothing.
 | Catalog/profile/runtime schema skew | Older/newer combinations fail closed in both directions before semantic use. |
 | Generation-plan nested mutation | Written semantic contents equal the preflight-validated plan. |
 | Out-of-root warning then `BLOCK` | Portable warning renders and does not mask the later halt. |
-| Mixed satisfied/violated/indeterminate population | Headline precedence is violation → indeterminate → satisfied → not assessed with every ordinary output retained. |
+| Mixed satisfied/violated/indeterminate population | Headline precedence is violation → indeterminate → full satisfaction → partial coverage → not assessed, with every ordinary output retained. (amended 2026-08-12, CONSTRAINT-SEMANTICS Item 1) |
 | Four exceptional-arithmetic shapes | Both evaluators agree on phase/module/cause and complete report content, not merely on one shared failure wrapper, with the expected phase for each shape pinned by the fixture rather than established by mutual agreement. |
 | Successful/violated/indeterminate file-backed reports | Verified identity, exact JSON persistence, routing, and harvest with no adapter for every completed status. |
 | Trusted verifier bootstrap | A verifier modified to return unconditional success is rejected before any package code runs; verifier-version skew also fails closed. |

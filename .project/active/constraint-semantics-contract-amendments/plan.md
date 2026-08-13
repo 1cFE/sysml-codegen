@@ -296,22 +296,23 @@ git diff -- .project/concepts/... | grep -nE "^[-+].*D-2 \[OWNER-VERBATIM\]|D-4 
 **See `design.md` Appendix A, sections A1–A11** for every target text. Edit order within the file,
 fixed here (design left this open):
 
-- [ ] A1 — invariant 1 (asserted-only halt scope)
-- [ ] A3 — invariant 9 (structurally-unattachable asserted usage halts)
-- [ ] A4 — invariant 28 (third disposition kind; remainder unchanged)
-- [ ] A5 — invariant 32 (applicable-asserted-gate trigger)
-- [ ] A6 — invariant 33 (five-state precedence, pointing at A0)
-- [ ] A7 — invariants 46 and 46a (compact coverage accounting; fail-closed extends to headlines)
-- [ ] A8 — invariant 48 (sole authority for coverage truth)
-- [ ] A9 — Appendix B, the one target row. The neighbouring "Catalog is absent when no assertion is
-      admitted" row is a **guardrail**: do not collect a collateral edit
-- [ ] A10 — Appendix C, two cells: mixed-population precedence, and the excluded-only
-      form-splitting clause
-- [ ] A10b — Appendix C, new "Asserted vacuous gate" row, immediately after excluded-only
-- [ ] A11 — new `### Equality intent and authoring policy` under `## Supported boundary and owner
-      decisions`, after D-3 and before `### Source-identity dispositions (D-4 onward)`. It gets no
-      `D-n` number
-- [ ] A2 — invariant 8 is a **guardrail**: no edit. Record "verified already-correct" in the
+- [x] A1 — invariant 1 (asserted-only halt scope)
+- [x] A3 — invariant 9 (structurally-unattachable asserted usage halts)
+- [x] A4 — invariant 28 (third disposition kind; remainder unchanged)
+- [x] A5 — invariant 32 (applicable-asserted-gate trigger)
+- [x] A6 — invariant 33 (five-state precedence, pointing at A0)
+- [x] A7 — invariants 46 and 46a (compact coverage accounting; fail-closed extends to headlines)
+- [x] A8 — invariant 48 (sole authority for coverage truth)
+- [x] A9 — Appendix B, the one target row (`:737`). The neighbouring "Catalog is absent when no
+      assertion is admitted" row (`:725`) is untouched — RI-4 diff check returns no output
+- [x] A10 — Appendix C, two cells: mixed-population precedence (`:785`), and the excluded-only
+      form-splitting clause (`:759`)
+- [x] A10b — Appendix C, new "Asserted vacuous gate" row, immediately after excluded-only
+- [x] A11 — new `### Equality intent and authoring policy` under `## Supported boundary and owner
+      decisions`, after D-3 and before `### Source-identity dispositions (D-4 onward)`. No `D-n`
+      number. Its pointer to invariant 11 is verified: invariant 11 (`:159`) does govern which
+      equality forms execute
+- [x] A2 — invariant 8 is a **guardrail**: no edit made. "Verified already-correct" recorded in the
       discharge table with the reason
 
 Every amended statement carries `(amended 2026-08-12, CONSTRAINT-SEMANTICS Item 1)` at the head, per
@@ -319,14 +320,18 @@ the live convention of invariants 19/20/22/26 (DD4).
 
 ### Validation
 
-- [ ] Guardrail check stencil above returns no output
-- [ ] A11's two `[NEED]` markers and the `[AGENT] (ratified by owner, 2026-08-12)` grade on the
+- [x] Guardrail check stencil above returns no output — both the RI-4 grep and the RI-5 D-2/D-4 grep
+      are empty
+- [x] A11's two `[NEED]` markers and the `[AGENT] (ratified by owner, 2026-08-12)` grade on the
       four-class taxonomy are present and correctly attached — the taxonomy is agent-grade, the
       *need* is owner-grade (RI-2)
-- [ ] No amendment names a token spelling except inside a quotation (RI-3)
-- [ ] Each of A5, A6, A7 **points at** A0 rather than restating it; A10's mixed-population cell
-      restates and cites (design Core Concept)
-- [ ] `git diff --check` clean
+- [x] No amendment names a token spelling except inside a quotation (RI-3) — the states are named in
+      prose throughout; `ADMIT`/`BLOCK`/`NON_NUMERICAL`/`UNASSESSED` are invariant 8's profile
+      outcomes, which are not headline tokens and are unchanged
+- [x] Each of A5, A6, A7 **points at** A0 rather than restating it (A5 and A6 name "Headline states
+      and coverage truth"; A7 names invariant 48 and the fail-closed obligation); A10's
+      mixed-population cell restates the precedence in full, per the design's Core Concept
+- [x] `git diff --check` clean
 
 **What We Know After This Phase:** the ratified contract teaches the settled semantics, and the
 equality instruction has an authority copy.
