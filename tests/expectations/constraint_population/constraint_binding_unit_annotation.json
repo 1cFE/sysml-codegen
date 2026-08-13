@@ -1,0 +1,17 @@
+{
+  "constraint_usages": [
+    {
+      "owner_qualified_name": "constraint_binding_unit_annotation::Host",
+      "source_file": "model.sysml",
+      "source_line": 52,
+      "usage_qualified_name": "constraint_binding_unit_annotation::Host::bad_band"
+    },
+    {
+      "owner_qualified_name": "constraint_binding_unit_annotation::Host",
+      "source_file": "model.sysml",
+      "source_line": 47,
+      "usage_qualified_name": "constraint_binding_unit_annotation::Host::band"
+    }
+  ],
+  "fixture": "constraint_binding_unit_annotation"
+}

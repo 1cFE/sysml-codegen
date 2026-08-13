@@ -49,6 +49,8 @@ EXPECTATIONS = Path(__file__).parents[1] / "expectations/constraint_population"
 REFUSED_BY_DESIGN = frozenset(
     {
         "catf_mfe_model",
+        "constraint_binding_unit_annotation",
+        "constraint_blocked_chain_multi",
         "constraint_blocked_owner",
         "constraint_blocked_profile",
         "constraint_domain_calc_def_owner",
@@ -66,6 +68,13 @@ REFUSED_BY_DESIGN = frozenset(
         "item4_require",
         "non_finite_literal",
         "plant_values",
+        # CONSTRAINT-SEMANTICS Item 4. `predicate_unit_annotation` is exempt only while
+        # Defect A is open — the whole item is that it should elaborate — so D1's commit
+        # removes it from this set, and rule 4 below is what forces that. The other two
+        # refuse permanently: an incompatible dimension is a real profile block, and
+        # `bad_band`'s `in tol = a + b;` is a readiness refusal D2 deliberately keeps.
+        "predicate_unit_annotation",
+        "predicate_unit_annotation_incompatible",
         "shared_producer",
     }
 )

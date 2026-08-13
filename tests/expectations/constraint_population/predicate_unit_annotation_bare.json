@@ -1,0 +1,11 @@
+{
+  "constraint_usages": [
+    {
+      "owner_qualified_name": "predicate_unit_annotation_bare::GapHost",
+      "source_file": "model.sysml",
+      "source_line": 23,
+      "usage_qualified_name": "predicate_unit_annotation_bare::GapHost::gap_guard"
+    }
+  ],
+  "fixture": "predicate_unit_annotation_bare"
+}

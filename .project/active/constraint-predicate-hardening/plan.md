@@ -148,19 +148,19 @@ fixture is wrong (surface it; do not weaken the test).
 ### Fixtures (all new, under `tests/fixtures/`, each with the repo's fixture-header comment block —
 see `tests/fixtures/unit_annotation_lanes/model.sysml:5-21` for the convention)
 
-- [ ] `predicate_unit_annotation/model.sysml` — one part def, one attribute, one **inline asserted**
+- [x] `predicate_unit_annotation/model.sysml` — one part def, one attribute, one **inline asserted**
       inequality carrying a compatible unit-annotated literal, plus a `Noop` calc def so the pipeline
       has a module (idiom: `tests/fixtures/constraint_blocked_profile/model.sysml:6-9`).
       **Keep it to exactly that** — an over-built fixture has tripped an unrelated gap in this
       project before (`design.md#potential-risks`).
-- [ ] `predicate_unit_annotation_bare/model.sysml` — the same model with `[m]` removed (the asymmetry
+- [x] `predicate_unit_annotation_bare/model.sysml` — the same model with `[m]` removed (the asymmetry
       twin, mirroring `unit_annotation_lanes_bare`).
-- [ ] `predicate_unit_annotation_incompatible/model.sysml` — the same predicate with a dimensionally
+- [x] `predicate_unit_annotation_incompatible/model.sysml` — the same predicate with a dimensionally
       incompatible annotation.
-- [ ] `constraint_binding_unit_annotation/model.sysml` — a constraint usage with **both**
+- [x] `constraint_binding_unit_annotation/model.sysml` — a constraint usage with **both**
       `in tol = 0.05 [m];` and `in ref = other_feature [m];`, predicate an inequality using both,
       plus `in bad = a + b;` on a second usage to pin that genuine expression sources stay refused.
-- [ ] `constraint_blocked_chain_multi/model.sysml` — a **plain** (not asserted) constraint whose
+- [x] `constraint_blocked_chain_multi/model.sysml` — a **plain** (not asserted) constraint whose
       predicate is a 3-term `and` over two distinct chains, one repeated. Plain, not asserted,
       because an asserted block halts before the detail can be read.
 
@@ -184,7 +184,7 @@ def test_the_cured_predicate_is_a_working_gate() -> None:
     assert row.disposition_kind == "eligible"               # assessed, not blocked, not non-reaching
 ```
 
-- [ ] `tests/conformance/test_predicate_unit_annotation.py` — Defect A rows from
+- [x] `tests/conformance/test_predicate_unit_annotation.py` — Defect A rows from
       `design.md#test-plan`: elaborates without `SI_OCCURRENCE_MISSING`; **working gate** (catalog
       carrier, `disposition_kind == "eligible"`, assessed, counted by
       `generation/coverage.py:coverage_account`'s `assessed_gate_count`); no `SI::` element as a
@@ -193,32 +193,32 @@ def test_the_cured_predicate_is_a_working_gate() -> None:
       fixture still BLOCKs on a dimension reason (invariant 2, regression guard on the companion
       path — **not** a D1 discriminator, review A1); a malformed annotation in a predicate
       hard-refuses with `SI_EDGE_DANGLING` (M7's stated route).
-- [ ] `tests/conformance/test_constraint_binding_unit_annotation.py` — the fourth lane, **both**
+- [x] `tests/conformance/test_constraint_binding_unit_annotation.py` — the fourth lane, **both**
       admitted shapes (M6c): `in tol = 0.05 [m]` → `LiteralInput(0.05)`; `in ref = other_feature [m]`
       → a reference binding; neither yields `SI_EXPRESSION_SOURCE_UNSUPPORTED`; `in bad = a + b`
       still does.
-- [ ] `tests/conformance/test_blocked_chain_diagnostic.py` — the rendered detail contains the joined
+- [x] `tests/conformance/test_blocked_chain_diagnostic.py` — the rendered detail contains the joined
       chain text, the `in <formal> = <chain>;` rewrite fragment, and `basename:line`; 3 occurrences →
       **2** entries; two elaborations of one model produce byte-identical detail;
       `assert "\n" not in blocked[0].detail` (invariant 8). **Assert on the chain text, the rewrite
       fragment, and the location — never on the companion's full sentence** (drift mitigation).
-- [ ] `tests/unit/test_render_block_reasons.py` — over hand-built diagnostics, no license needed:
+- [x] `tests/unit/test_render_block_reasons.py` — over hand-built diagnostics, no license needed:
       `location=None` renders no ` [...]` suffix (M4); `None` `line`/`column` raise no `TypeError`;
       two entries differing only in `construct` produce stable output under input permutation (M1).
-- [ ] Add one asserted-chain assertion to the existing strict-path test pinning that **halting is
+- [x] Add one asserted-chain assertion to the existing strict-path test pinning that **halting is
       unchanged** (`design.md#fixture-plan`).
-- [ ] **Do NOT edit** `tests/conformance/test_elaboration_payload_identity.py:236-266` (D7). If
+- [x] **Do NOT edit** `tests/conformance/test_elaboration_payload_identity.py:236-266` (D7). If
       implementation finds it must change, that is a **stated amendment to the design**, recorded in
       this plan's Implementation Notes — never a silent test edit.
 
 ### Capture the red (D8 + review A3)
 
-- [ ] Run each characterization file once with the `xfail` markers stripped (a scratch copy or
+- [x] Run each characterization file once with the `xfail` markers stripped (a scratch copy or
       `-p no:cacheprovider` + a temporary edit reverted before commit), licensed env sourced.
-- [ ] Paste the failure output verbatim into
+- [x] Paste the failure output verbatim into
       `.project/active/constraint-predicate-hardening/probes/red-evidence.md`, one section per
       defect, with the command and the codegen/companion SHAs at the top.
-- [ ] Confirm the markers are restored before committing.
+- [x] Confirm the markers are restored before committing.
 
 ### How to verify
 
@@ -511,10 +511,72 @@ work.** Do not resolve it silently in either direction.
 _[TO BE FILLED DURING IMPLEMENTATION]_
 
 ### Phase 1 Completion
-**Completed:**
-**Actual changes:**
-**Red evidence:** `probes/red-evidence.md`
-**Issues / deviations:**
+**Completed:** 2026-08-13 · codegen `3ca94af` → Phase-1 commit · companion `bc69f04` untouched
+
+**Actual changes:** five new fixtures under `tests/fixtures/`; three new characterization
+files plus `tests/unit/test_render_block_reasons.py`; five new expectation files under
+`tests/expectations/constraint_population/`; two edits to existing tests (below).
+
+**Counts:** focused run **6 passed, 20 xfailed, 0 failed, 0 xpassed**. Full licensed codegen
+suite **1989 passed, 34 skipped, 79 deselected, 20 xfailed**, `grep -ci license` = **0**.
+Marker-stripped run: **20 failed, 6 passed** — the same 20/6 split, so every marker carries a
+real failure and none masks a pass. Output captured verbatim in `probes/red-evidence.md`.
+
+**Deviations from the plan, all recorded rather than silent:**
+
+1. **The demonstration predicate annotates *both* operands: `gap_width [m] >= 0.25 [m]`.**
+   The plan's shape (`gap_width >= 0.25 [m]`) reproduces Defect A, but it *also* blocks on
+   `block_ordering_category_pair` — "ordering '>=' requires Integer/Real operands or two
+   Quantity operands; got real/quantity". A bare `Real` feature reference is category `real`
+   and an annotated literal is category `quantity`, and `(real, quantity)` is not an admitted
+   ordering pair (companion `executable_profile.py:318-341`). That is a real profile limit,
+   not the defect under test, so the fixture could not pin a *working* gate.
+   The design's stated fallback — give the LHS attribute a compatible declared unit — is
+   **unreachable**: codegen refuses a quantity-typed feature outright
+   (`elaborate.py:1805-1814`, `SI_EDGE_DANGLING: feature … has unsupported exact type
+   'ISQBase::LengthValue'`). Annotating both operands reaches the same designed end (a
+   `quantity`/`quantity` pair the profile admits) by the one route the product supports.
+   Measured: with both operands annotated the profile **admits** the predicate and the only
+   refusal left is `SI_OCCURRENCE_MISSING` — exactly the item's premise. **Fixture changed,
+   design unchanged** (P1's branch instruction), and the substitution is written into the
+   fixture header.
+
+2. **The multi-chain fixture is asserted, not plain.** The design chose plain so the detail
+   could be read off a graph that generates. Measured, a *plain* constraint never consults the
+   profile at all: it grades `excluded` / `unassessed_form` and emits **no** block reasons, so
+   there would be no detail to read. Block reasons exist only on the asserted path. The
+   characterizations read them through the non-strict elaboration idiom already used at
+   `test_elaboration_payload_identity.py:246-253`, and the same fixture now also pins that the
+   strict path still halts. The plain-and-blocked half of the Item 2 contract stays pinned by
+   `constraint_domain_plain_forms`.
+
+3. **`_render_block_reasons` takes the diagnostics list, not the decision.** Building a
+   `UsageDecision` in a unit test means satisfying its polarity `__post_init__`; the renderer
+   reads nothing but `decision.diagnostics`. Taking the list is the same helper with a
+   contract the signature states.
+
+4. **Two rows are green before the fix, not red:** `test_the_detail_is_a_single_line` and
+   `test_two_elaborations_of_one_model_produce_byte_identical_detail`. Today's tautology is
+   already one deterministic line. They are kept as guards on what the fix could break — the
+   plan's verify step allows exactly this ("or passed, for the rows that already hold").
+
+5. **`in ref = …` does not parse** — `ref` is a SysML keyword. The fourth-lane fixture binds
+   `ref_value`.
+
+6. **Two pre-existing test edits, both required to have a runnable suite at all:**
+   - `tests/unit/test_coverage_ledger_agreement.py:25` pointed at
+     `.project/active/constraint-coverage-policy/expected-coverage.md`, which Item 3's close
+     (`cec3f03`) moved to `.project/completed/20260813_constraint-coverage-policy/`. Collection
+     raised `FileNotFoundError` and **took the whole suite's collection down** — the full
+     licensed suite does not run at `3ca94af` without this. Path corrected; nothing else.
+   - `tests/conformance/test_constraint_population_oracle.py` gains expectation files for the
+     five new fixtures (its rule 1: a new constraint-bearing fixture may not become silent
+     coverage) and four `REFUSED_BY_DESIGN` entries.
+     `predicate_unit_annotation` is exempt **only while Defect A is open**; its rule-4 test
+     (`test_every_exempt_fixture_actually_refuses`) is what forces the exemption off in
+     Phase 2, the same way `strict=True` forces the `xfail` markers off.
+
+7. **`test_elaboration_payload_identity.py` not edited** (D7). Confirmed by `git status`.
 
 ### Phase 2 Completion
 **Completed:**

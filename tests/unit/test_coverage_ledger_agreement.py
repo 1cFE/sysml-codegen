@@ -22,9 +22,13 @@ from sysml_codegen.generation.coverage import coverage_account
 from sysml_codegen.orchestration.elaborated_pipeline import elaborate_model_paths
 from tests.conftest import FIXTURES_DIR, requires_license
 
+#: The ledger moved with its item when Item 3 was archived (`cec3f03`), and this path was
+#: left pointing at `.project/active/`, so collecting this module raised `FileNotFoundError`
+#: and took the whole suite's collection down with it. Pointing it at the archived artifact
+#: is the whole fix; nothing about the ledger's content changed.
 LEDGER_FILE = (
     Path(__file__).resolve().parents[2]
-    / ".project/active/constraint-coverage-policy/expected-coverage.md"
+    / ".project/completed/20260813_constraint-coverage-policy/expected-coverage.md"
 )
 
 

@@ -1,0 +1,11 @@
+{
+  "constraint_usages": [
+    {
+      "owner_qualified_name": "constraint_blocked_chain_multi::Plant",
+      "source_file": "model.sysml",
+      "source_line": 43,
+      "usage_qualified_name": "constraint_blocked_chain_multi::Plant::layer_continuity"
+    }
+  ],
+  "fixture": "constraint_blocked_chain_multi"
+}
