@@ -845,6 +845,84 @@ calculation definitions without building the capability inside this epic.
 
 ---
 
+### Item 7: ADR, Product Promise, and Agent-Facing Documentation Sync (0.5–1 day)
+
+**Type**: Documentation / Contract
+
+**Boundary authority**: **[OWNER 2026-08-13]** "the ADR + documentation is critical. Including:
+cross-repo, agent prompts." Item slicing and scope below are **[AGENT]** (filed same day at the
+owner's direction).
+
+**Objective**: Give the landed constraint-semantics contract its durable decision record and
+propagate the landed concrete semantics into every surface humans and agents read — cross-repo
+documentation and agent prompts/skills — so the next authoring session teaches the new policy
+instead of the superseded one.
+
+**Current State** (verified 2026-08-13, post Items 1–3):
+
+- ✅ Item 1 landed the contract-level docs: ADR-009, contract amendments, D1–D7 corrections,
+  the equality-intent taxonomy in agentic-mbse `docs/patterns/constraints.md`.
+- ✅ Items 2–3 corrected every doc their changes falsified (modeling-assumptions pointers,
+  REQ-EXT-09/REQ-CL-04 rows, docs 28/30, four TEAx-side stale sites).
+- ❌ No product-promise/ADR home exists for the coverage-truth promise (Item 3 audit-F4); the
+  repo has no `.project/product/` ledger and no ADR registry beyond modeling-assumptions.md
+  sections. Filing one needs an owner-originated promise statement.
+- ❌ agentic-mbse `docs/patterns/constraints.md` has zero mention of `@inapplicable:` authoring
+  or the eligible+inapplicable contradiction refusal; TEAx docs have zero mention of
+  `partial_coverage`/`full_satisfaction`, the keep-for-boundary default, or the feed-strategy
+  opt-in config; nothing documents the disposition vocabulary or carrier concepts as shipped.
+- ❌ Agent prompts are stale against the policy: the codegen `sysml-conventions` skill's
+  constraint example (`SKILL.md:136`) is an inline assert with a unit literal — the shape the
+  blessed bindings-only pattern supersedes; no CLAUDE.md or expert-agent reference teaches the
+  new authoring rules.
+- ❌ Two Item 3 close residuals were homed to "Item 1's companion-side authoring guidance,"
+  which has no future execution vehicle — they re-home here.
+
+**Scope**:
+
+1. **Owner checkpoint (first):** capture the owner-originated coverage-truth product-promise
+   statement; decide the promise/ADR home (`.project/product/` first-capture ledger per the
+   global convention, plus per-repo ADR convention) and file it with correct provenance.
+   Includes the owner disposition for the parked item3-F2 premise conflict (the unreachable
+   BLOCK clause) if the owner chooses to rule it here.
+2. **Cross-repo doc sweep for the landed surfaces:** `@inapplicable:` authoring, the
+   eligible+inapplicable refusal, and the D9 advisory guidance → agentic-mbse
+   `docs/patterns/constraints.md`; disposition vocabulary, carriers, totality gate, severity
+   by cause → codegen reference docs; six states, coverage block, policy defaults, opt-in
+   config, durable-record fields → TEAx docs.
+3. **Agent prompts and skills:** update the `sysml-conventions` skill (bindings-only blessed
+   pattern, equality-intent taxonomy pointer, `@inapplicable:` usage, corrected example);
+   sweep CLAUDE.md in all three repos and the expert-agent definitions for superseded
+   constraint teaching; verify agent-facing examples elaborate cleanly under the current
+   profile.
+4. **Re-home the close-time orphans:** design-F2's Appendix C cell and the D9 advisory
+   guidance obligations move from "Item 1" to this item and are executed here.
+
+**Out of Scope**:
+
+- Any code, fixture, or schema change; the derivative fixture docs (Item 5 owns its
+  PROVENANCE and worked example).
+- Re-litigating the contract; this item documents what landed.
+
+**Success Criteria**:
+
+- [ ] **[OWNER]** The coverage-truth promise is owner-stated, filed in a named home, and cited
+      from the product-lens trail (closes Item 3 audit-F4).
+- [ ] No shipped doc, skill, or agent prompt in the three repos teaches the superseded
+      constraint semantics; the sweep record lists every hit and disposition (Item 1's
+      three-sweep method).
+- [ ] `@inapplicable:`, the disposition vocabulary, the six states, and the TEAx opt-in are
+      documented where their users (human and agent) will find them.
+- [ ] Documentation checks and `git diff --check` pass in every touched repository.
+
+**Estimated Effort**: 0.5–1 day (owner checkpoint 0.5h, sweep + edits 3–5h, verification 1h)
+
+**Location**: `.project/active/constraint-docs-agent-sync/`
+
+**Dependencies**: Items 4–6 landed (documents the final state); before epic close/pre_pr.
+
+---
+
 ## Dependencies
 
 **External**:
@@ -892,7 +970,8 @@ Item 1: Contract and authoring policy
 
 ## Timeline
 
-**Total Effort**: 8.5–9.5 working days over 2–3 weeks, plus owner-checkpoint turnaround
+**Total Effort**: 9–10.5 working days over 2–3 weeks, plus owner-checkpoint turnaround
+(Item 7 added 2026-08-13 at owner direction)
 
 | Item | Effort | Dependencies |
 |------|--------|--------------|
@@ -902,6 +981,7 @@ Item 1: Contract and authoring policy
 | Item 4: Predicate Defect Hardening | 0.5–1 day | Item 1 |
 | Item 5: CATF Derivative and End-to-End Acceptance | 1.5–2 days | Item 1 for checkpoint; Items 2–4 for implementation |
 | Item 6: Calculation-Definition Gate Capability Design | 1 day | Items 1–2 |
+| Item 7: ADR, Product Promise, and Agent-Facing Documentation Sync | 0.5–1 day | Items 4–6 landed; before epic close/pre_pr |
 
 ---
 
