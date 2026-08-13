@@ -311,3 +311,34 @@ out, and the design's in-repo standard for it (make the agreement a check, not a
 standard to apply. F2 and F3 are precision gaps that cost a sentence each. The design's real exposure
 remains B1, which no lens finding can reach from inside this item; the hand-written-expected-accounts
 mitigation is the right one and is the owner's sequencing instruction applied.
+
+### Design-stage addendum — rev 2 (2026-08-12, after design review DR-1..DR-13)
+
+- **design-F4 [DONE at rev 2] — an annotation could have become a silent kill-switch for a live gate.**
+  The rev-1 design bet silently that a usage's disposition and its `@inapplicable:` marker could not
+  co-occur in a way that matters. They can: the marker is read off the documentation at mint
+  (`elaborate.py:1188-1235`) independently of the disposition, and Item 2's own field docstring says it
+  "never rewrites the disposition beside it." So an **eligible** gate — one that expanded, produced
+  concrete entries, and returns real verdicts — can carry it. Honouring the marker there would let one
+  doc comment remove a failing physics check from the feasibility denominator while the headline read
+  `full_satisfaction`: the epic's founding defect, reintroduced by the mechanism meant to cure it. —
+  source: contract "Headline states and coverage truth" (unconditional inapplicability clause);
+  invariant 61; Item 2 `Inapplicability` docstring (all agent/ratified) — **disposition:** design **D9**
+  publishes a ruling — the combination is an authoring contradiction and refuses generation by name,
+  before any output is written, never a silent drop. The authoring-time advisory is **filed** for the
+  companion (Item 2 D10's home), not built here.
+
+- **design-F1 update.** The rev-1 finding (TEAx's `expects_report` derived from `concrete_entries`) had
+  a sibling the design review found: `_report_declared_in_spec` (`evaluator.py:79-87`), the default for
+  both evaluators, whose docstring states the coupling outright. Rev 2 removes the duplication instead
+  of re-syncing it — one TEAx-side authority, `ships_constraint_report(contract)` over `usage_records`,
+  and the spec-derived fallback deleted.
+
+**Two consumer-side re-derivations removed at rev 2, none added.** DR-7's proposed runtime
+report-vs-catalog fingerprint check was deleted rather than demoted (it verifies no account and can only
+fail on a codegen defect inside a sealed package), and DR-2's spec-derived default is gone. That
+direction — the producer states a fact once, consumers read it — is the D-3 owner-verbatim posture and
+the invariant-48 one, and rev 2 moves toward it on both counts.
+
+**Gate: DISPOSED (design-F1..design-F4)** — nothing blocks. The reviewer's own lens pass
+(`design_review-F1..F3`) reached the same gate and is folded into DR-2, DR-3, and DR-13.

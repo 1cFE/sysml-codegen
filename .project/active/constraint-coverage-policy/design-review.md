@@ -501,7 +501,144 @@ should all land as written.
 
 ## Resolutions
 
-*(Stage 4 — filled in as the owner resolves each finding. Empty at hand-off.)*
+Recorded 2026-08-12 by the design agent, incorporating into `design.md` **rev 2**. Every finding is
+resolved in the design; nothing is deferred. Orchestrator steers on DR-1..DR-6 followed as given.
+
+**Numbering note.** §7 "Bets & Decisions Integrity" cross-references DR-2/DR-4/DR-5 for what "Issues by
+Severity" numbers DR-4/DR-5/DR-6, and §6 "Route Safety" cites DR-2 for DR-4's subject. The **Issues by
+Severity** numbering is treated as authoritative throughout (it matches the Recommendations list and
+the orchestrator's steers). No finding was dropped in the reconciliation.
+
+- **DR-1 (critical) — RESOLVED.** D3 now carries the bucket table: two predicates (**asserted** ≡
+  `source_form in ASSERTED_SOURCE_FORMS`; **inapplicable** ≡ `inapplicability_reason is not None`) over
+  four exhaustive, mutually exclusive rows — inventory only / inapplicable gate / assessed gate /
+  unassessed gate — each naming the fields it contributes to, with the contract clause each row
+  implements. Totality is argued explicitly rather than assumed: `disposition_kind` is closed to three
+  values by `DISPOSITION_REASONS` and `_preflight_constraint_totality` already refuses an unknown
+  kind/reason pair, so the rows cover every record. The one combination that is *not* counted (row 2 ∧
+  `eligible`) is stated as a refusal rather than omitted — that is DR-4/D9. `authored_usage_total`
+  falls out as the sum. Required Invariant 6 and Validation item 7 (a unit test over hand-built records
+  covering every row and every reason token) make the table checkable rather than aspirational, and
+  Implementation Notes instructs the plan to implement it as the function's literal structure, not as
+  scattered conditionals.
+
+- **DR-2 (major) — RESOLVED by removal, not by re-syncing.** D7 now names both derivations
+  (`study/cli.py:42` and `_report_declared_in_spec`, `evaluator.py:79-87`, the default for both
+  `PreparedEvaluator` and `FileBackedEvaluator`) and Research Findings records the coupling docstring
+  verbatim. The fix takes the review's "better" option and the orchestrator's steer: TEAx gains one
+  function, `study/model_contract.py::ships_constraint_report(contract) -> bool(contract.usage_records)`
+  — the same population as codegen's D5 trigger — and `_report_declared_in_spec` is **deleted**, with
+  `expects_constraint_report` becoming a required constructor argument on both evaluators. The "two must
+  agree" docstring becomes a single-authority read. Reasoning recorded: the evaluation layer is
+  isolation-clean and genuinely has no catalog authority, so inventing one from the pipeline spec was
+  the defect the docstring was papering over. Required Invariant 10 states the one-place rule per repo;
+  Validation item 12 pins it on a zero-input package (authority answers `True`, the 46a corruption check
+  still fires, no fallback exists to disagree). The fourteen affected test call sites are sized in
+  Potential Risks so the plan does not discover them. Nothing is deferred to Non-Goals.
+
+- **DR-3 (major) — RESOLVED.** The seven-token list is gone. D2 now states that histogram keys are
+  *derived* from D3's table — a key exists iff some record lands in the unassessed-gate bucket carrying
+  that reason — with no zero-filled keys and no list to drift against `DISPOSITION_REASONS`. Which of
+  the nine non-`admitted` reasons can appear is a consequence, not an input, so the "seven of nine"
+  question dissolves rather than being answered. Per the orchestrator's steer, D3 also states the
+  behaviour when Item 2's vocabulary grows: `generation/coverage.py` pins a frozen `KNOWN_REASONS` set
+  and compares it against `DISPOSITION_REASONS` **at preflight** — not only when a record happens to
+  carry a new token — refusing by name with the instruction that a new cause needs a coverage ruling.
+  Required Invariant 6; Validation item 7's second half.
+
+- **DR-4 (major) — RESOLVED by a published ruling, D9, following the orchestrator's steer.** An
+  eligible usage carrying `@inapplicable:` is an **authoring contradiction** and refuses generation by
+  name at the coverage preflight, before any output is written, naming the usage QN, its
+  `declaration_id`, and its entry count. It is never silently dropped from the denominator. Reasoning is
+  published with the ruling, led by the risk the steer named: honouring the marker would make an
+  annotation a silent kill-switch — one doc comment could remove a failing physics check from the
+  feasible set while the headline read `full_satisfaction`, which is the exact defect class this epic
+  exists to end. Supporting reasons: it is a *directive* defect and Item 2 already grades those loudly
+  (a malformed marker is error-grade, audit A3/R2); inapplicability stays legitimate on every unassessed
+  gate (rows 2 and 4), so only the gate that demonstrably ran is refused; and `eligible` ⇔ "produced
+  entries" (Item 2 precedence step 3), so no separate occurrence test is needed. Three rejected
+  alternatives recorded, including forbidding it at authoring time in Item 2 — declined as the wrong
+  layer and a surfacing event, with the companion authoring advisory **filed** as a follow-on (Item 2
+  D10's home) rather than built. The refusal also discharges the review's three named consequences at
+  once: the arithmetic cannot break, D6's top arm cannot fire from a non-applicable gate (stated in D6
+  with contract state 1's "applicable" quoted, and no runtime applicability filter added — a second
+  place for the rule), and D4's startling edge becomes unreachable. Required Invariant 9; Validation
+  item 6; Potential Risks records that nothing in the tree carries the combination — verified: the
+  marker appears in five fixtures and sits on a zero-occurrence `Detached` owner in every one.
+
+- **DR-5 (major) — RESOLVED, mechanism corrected.** The review's premise is confirmed first-hand:
+  `semantic_fingerprint` is computed over `parameters`, `outputs`, `constraint_catalog`,
+  `evaluation_semantics`, `catalog_schema_version` only (`contracts/model_contract.py:59-70`), and this
+  item adds no catalog field and holds `CATALOG_SCHEMA_VERSION` at `3.0.0`, so
+  `model_contract_fingerprint` can be byte-identical for exactly the packages that could have a store.
+  Research Findings now states this as a rev-1 correction; B4 names `evidence_schema_version` as the
+  carrying field; D7's invariant-50 paragraph makes the `v1 -> v2` bump the **primary** mechanism rather
+  than a legibility nicety, with `executable_fingerprint` noted as the second, over-determining carrier.
+  Validation item 11 pins the refusal against `evidence_schema_version` specifically, with the reason
+  spelled out: a test varying only the model-contract fingerprint could pass today and silently stop
+  proving anything.
+
+- **DR-6 (major) — RESOLVED.** Potential Risks now states which of the two readings is required, in
+  the design's own words rather than by implication: each fixture's expected account is written from
+  that fixture's `.sysml` source and D3's bucket table — reading what the author wrote — and **never**
+  transcribed from a catalog dump, a generated report, or Item 2's disposition table, because a
+  transcription inherits the exact error B1 names and falsifies nothing. B1's bullet points at it so the
+  bet and its mitigation are not read separately. The `catf_mfe_d5` question the review asked is
+  answered concretely and the answer was run this stage: two greps over the fixture source give
+  `assert` = 0 and bare `constraint` = 65, which puts all 65 in bucket 1 and fixes every field of the
+  account without counting to 65 by eye — still source-derived, since it reads what the author wrote
+  rather than what the catalog concluded. Next-Stage Handoff carries it as an **inherited instruction,
+  not a note**, so the plan is bound by it.
+
+- **DR-7 (minor) — RESOLVED by deletion.** The third "check" is removed rather than demoted. D3 now
+  reads "checked from both ends" truthfully (generation preflight + construction validators) and records
+  why the runtime fingerprint comparison went: it proves the report and the catalog are the same
+  catalog and verifies no account; it could only ever fail on a codegen defect inside one seal-verified
+  package; and it would have been a third consumer-side re-derivation added in the same breath as DR-2
+  removes the second. The package seal is named as the real runtime protection. The
+  `.raw["constraint_catalog"]["fingerprint"]` access note is moot with the check gone.
+
+- **DR-8 (minor) — RESOLVED.** `has_executable_content` is deleted, not retained. Verified the review's
+  claim first-hand: `ships_constraint_machinery` is its only caller in `src/` and `tests/`. D5 and the
+  Component Overview say deleted; the "retained for future callers" sentence is gone.
+
+- **DR-9 (minor) — RESOLVED.** D7 says **disposition**, not case state, and adds the pointer that makes
+  it unambiguous for the plan: those values surface as `CaseView.disposition` from `assessment_json`
+  (`study/query.py:130`), while the `cases.state` lifecycle column is untouched and needs no migration.
+
+- **DR-10 (minor) — RESOLVED, all three.** `project.py:892` (was `:891`); the catalog spelling
+  `inapplicability_reason` (`resolution/models.py:519`) is used everywhere `coverage_account` is
+  described, with the graph-record spelling `inapplicability` (`graph.py:318`) distinguished in Research
+  Findings; `config.py:61-73` (was `:69`). D3's bucket table uses the catalog spelling in its predicate
+  definition, which is the place an implementer will copy from.
+
+- **DR-11 (minor) — RESOLVED.** D5 gains a "What the three seams then do" paragraph naming each
+  consequence for a descriptive-only package (`schemas/constraint_types.py` emitted; registry imports
+  added; the name-safety preflight running over an empty entry set), states that all three are correct,
+  and instructs collapsing the redundant `catalog is not None and …` guard at `cli/__init__.py:411`.
+  Implementation Notes replaces rev 1's over-broad "every constraint-bearing baseline regenerates" with
+  the accurate account: baselines hold only `registry_init.py` and `computation_graph.json`, so fixtures
+  that gain an aggregator churn in both, fixtures already carrying one churn in neither unless their
+  channel set moves, and constraint-free fixtures must stay byte-identical.
+
+- **DR-12 (minor) — RESOLVED, and the corner the review named is now unreachable.** D9's refusal means
+  an inapplicable gate never produces an entry, so `results` non-empty beside `assessed_gate_count == 0`
+  cannot occur; Required Invariant 9 states the property and D2 says so explicitly rather than leaving a
+  reader to infer it. The *genuine* two-tier asymmetry that remains — one gate over many occurrences,
+  `assessed_gate_count = 1` beside `assessed_entry_count = n` — is named in D2 and pinned by Validation
+  item 16, asserted deliberately so it is not later "fixed".
+
+- **DR-13 (minor) — RESOLVED.** Validation item 13 adds the invariant-46 round-trip: generate, persist,
+  and harvest through `FileBackedEvaluator`, asserting the `coverage` block survives byte-equal with no
+  consumer-side adapter, homed in TEAx's existing
+  `tests/evaluation/test_constraint_evidence_durability.py` (which already covers the prepared/
+  file-backed pair). Research Findings records the mechanism that makes it cheap —
+  `study/evidence_io.py:47-56` passes the sealed report tree through without a second dump — so the
+  test pins a property rather than building one.
+
+**Not changed, per the review's own instruction** ("nothing above asks for a different design"): D1's
+token map, D4's ruling and its reasoning, D6's precedence arms, D7's vocabulary split and opt-in
+mechanism, and D8's landing order all land as written at rev 1.
 
 ---
 
