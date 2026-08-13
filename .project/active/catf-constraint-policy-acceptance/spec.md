@@ -86,11 +86,11 @@ item's criteria; SC-8 carries the folded-in residual.
       tolerance disposition. The table lives in `owner-disposition.md` and is approved before
       design begins. *Met 2026-08-13: the owner ruled on all 65 rows, both tolerances, and the
       open points; `owner-disposition.md` is RULED status and design had not started.*
-- [ ] **SC-2 — Every derivative change is accounted for.**
+- [x] **SC-2 — Every derivative change is accounted for.**
       **[INHERITED: epic Item 5]** The derivative's PROVENANCE and a machine-checkable diff
       account for every change from `catf_mfe_d5`, with a reason per change. Both frozen twins
       retain their ratified modeled syntax and their existing byte-reversal relationship.
-- [ ] **SC-3 — The derivative accounts for all 65 and shows honest coverage.**
+- [x] **SC-3 — The derivative accounts for all 65 and shows honest coverage.**
       **AMENDED — authorized by the owner 2026-08-13, adopting the ruled table's option 1; the
       option's content is [AGENT] (ratified by owner, 2026-08-13). Identity restated same day
       under the D-S1/D-S2 ruling (option 3 — restatement authorized as a mechanical consequence,
@@ -106,22 +106,22 @@ item's criteria; SC-8 carries the folded-in residual.
       *(The pre-amendment wording — "exactly 65 catalog carriers" — and the surfaced item5-F1
       conflict that forced the ruling are preserved in this file's git history at `102ee6a`;
       resolution recorded per capture-fidelity §3: amended, not annotated.)*
-- [ ] **SC-4 — Every applicable asserted gate executes, and the rest match their approved
+- [x] **SC-4 — Every applicable asserted gate executes, and the rest match their approved
       dispositions.** **[INHERITED: epic Item 5]** The five part-definition and 51
       calculation-definition groups land exactly where `owner-disposition.md` puts them.
-- [ ] **SC-5 — A physics rejection is proved through the real TEAx route.**
+- [x] **SC-5 — A physics rejection is proved through the real TEAx route.**
       **[INHERITED: epic Item 5]** At least one physically valid candidate reaches the configured
       satisfied path, and at least one unphysical mutation of a physics input reaches `reject`
       through generated package → TEAx normalization → policy → durable case storage.
-- [ ] **SC-6 — Expected outputs precede confirmation tests.**
+- [x] **SC-6 — Expected outputs precede confirmation tests.**
       **[OWNER, 2026-08-12 sequence]** Expected catalog, report, and study outputs are committed
       before any confirmation test runs, and match the resulting outputs with no
       reverse-engineering edit. A commit-order argument, not a claim.
-- [ ] **SC-7 — All acceptance gates pass with exact numbers recorded.**
+- [x] **SC-7 — All acceptance gates pass with exact numbers recorded.**
       **[INHERITED: epic Item 5]** Licensed live generation, in-place snapshot, relocated
       snapshot, generation, seal, execution, and TEAx acceptance all pass; counts and fingerprints
       are recorded in `verification.md`, not summarized.
-- [ ] **SC-8 — The calc-def-only package shape has a committed byte baseline.**
+- [x] **SC-8 — The calc-def-only package shape has a committed byte baseline.**
       **[AGENT, announced at the 2026-08-13 Align checkpoint, unobjected]** Item 2's residual R3 is
       discharged: the shape is covered by a real baseline in the byte-identity gate, not by
       generation-level tests alone.

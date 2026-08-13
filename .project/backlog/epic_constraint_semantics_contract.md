@@ -815,22 +815,22 @@ that generated feasibility evidence rejects an unphysical candidate through TEAx
 
 **Success Criteria**:
 
-- [ ] **[NEED carried from spec.md]** The owner approves a table with exactly 65 usages and no
+- [x] **[NEED carried from spec.md]** The owner approves a table with exactly 65 usages and no
       missing intent, target-form, attachment, inapplicability, derivation, capability, or
       tolerance disposition.
-- [ ] The derivative's PROVENANCE and machine-checkable diff account for every change from
+- [x] The derivative's PROVENANCE and machine-checkable diff account for every change from
       `catf_mfe_d5`; both frozen twins retain their ratified modeled syntax and existing reversal
       relationship.
 - [ ] The derivative generates exactly 65 catalog carriers and reports full feasibility coverage
       over its applicable asserted gates without counting descriptive or requirement-side usages.
-- [ ] Every applicable asserted gate executes; the five part-definition and 51
+- [x] Every applicable asserted gate executes; the five part-definition and 51
       calculation-definition groups match their approved dispositions.
-- [ ] At least one physically valid candidate reaches the configured satisfied path and one
+- [x] At least one physically valid candidate reaches the configured satisfied path and one
       unphysical mutation reaches `reject` through generated package, TEAx normalization, policy,
       and durable case storage.
-- [ ] Expected catalog/report/study outputs are saved before confirmation tests and match the
+- [x] Expected catalog/report/study outputs are saved before confirmation tests and match the
       resulting outputs without reverse-engineering edits.
-- [ ] Licensed live, in-place snapshot, relocated snapshot, generation, seal, execution, and TEAx
+- [x] Licensed live, in-place snapshot, relocated snapshot, generation, seal, execution, and TEAx
       acceptance gates pass with exact counts and fingerprints recorded.
 
 **Estimated Effort**: 1.5–2 days after owner checkpoint (spec 1h, design 2h, plan 1h, execute and

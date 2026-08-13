@@ -435,3 +435,86 @@ single habit: the design reasons carefully and then states its conclusions one r
 confidently downstream — a parked row is parked in the design but not in the fixture, a superseded
 premise is carried as measured, and an identity the design pointedly declines to restate is
 validated as if it held.
+
+---
+
+## audit — 2026-08-13 — rev 7c076b6
+Epic: CONSTRAINT-SEMANTICS (`epic_constraint_semantics_contract.md`, Item 5 — CATF Derivative and
+End-to-End Acceptance)
+
+**Auditor note.** Findings audit-F1, audit-F2 and audit-F6 were re-verified independently by the
+audit before the gate was accepted (see `audit.md` §Probe record). audit-F1 reproduces:
+`grep -rn "CHOSEN BASIS\|Relation (undirected)" tests/fixtures/catf_mfe_gated --include=*.sysml`
+returns `library/physics/power_balance.sysml` only, against a PROVENANCE §2 claim that the
+statements "appear in both places". The audit adds a second instance of the same shape (the
+`value` → `quantity` rename, `audit.md` finding **A-2**), which the lens caught only as a nit.
+
+Point (re-derived): A design search can trust the generated feasibility evidence to represent
+every applicable asserted physics gate, while every other authored constraint remains visibly
+dispositioned — and every disposition the item claims is carried by the artifact it claims to
+carry it, not only by the item's own records.
+[source: `.project/backlog/epic_constraint_semantics_contract.md:18` (Critical Success Factor,
+[OWNER]); supported by `docs/architecture/modeling-assumptions.md` §8 and §9/ADR-009,
+grade: owner/HARD for the CSF, agent/ratified for §8–§9]
+
+Falsifier: elaborate/generate `catf_mfe_gated` and find any of — (a) an authored `.sysml`
+constraint usage with no catalog record; (b) `full_satisfaction` while an applicable asserted gate
+went unassessed; (c) a disposition or obligation asserted in `owner-disposition.md` /
+`PROVENANCE.md` that no committed check ties to the shipped fixture bytes.
+
+Findings:
+- audit-F1 [DON'T] The owner's derivation documentation obligation is unmet in source for two of
+  the three derivations. Only C37 carries it (`tests/fixtures/catf_mfe_gated/library/physics/power_balance.sysml:66-70`);
+  A7 (`designs/catf_mfe/shield.sysml:105`) and A8 (`designs/catf_mfe/vacuum.sysml:53`) are bare
+  initializers with no undirected relation and no chosen-basis statement. PROVENANCE §2 asserts
+  the opposite — "Those statements are carried in source beside each derivation" — and its
+  recorded deviation covers only `//` vs `doc /* … */` form while reaffirming that the statements
+  "are mandatory either way and appear in both places". The obligation exists so the relation
+  intent survives the deletion in the model, not only in a sidecar doc.
+  — `owner-disposition.md:37-41`, "Derivation documentation obligation **[OWNER 2026-08-13,
+  structural amendment]**" (owner) — disposition: **BLOCK**
+- audit-F2 [DO] No check ties a `derive-instead` deletion to the derivation that replaces it.
+  `scripts/check_gated_manifest.py` joins four sources and never opens a `.sysml`. §8's standard is
+  that domain completeness is proved by evidence outside the domain; the deletion side is owed the
+  same. This is why audit-F1 landed green through Phases 3–7. — AGENT/INFERRED — disposition:
+  extend the check to assert, per `derive-instead` record, that the named derivation exists in
+  source and carries its relation + chosen-basis statement
+- audit-F3 [DO] SC-5's end-to-end claim is not regression-protected. The coverage half is durably
+  gated (population oracle by scan; `tests/unit/data/expected-coverage.md` drives
+  `tests/unit/test_coverage_ledger_agreement.py`); the feasibility-rejection half exists only as a
+  recorded run reproduced from `probes/acceptance_run.py`. — INHERITED/aspirational — disposition:
+  record the TEAx lane as intentionally manual, or file it as a test
+- audit-F4 [DO] No verification-matrix rows filed for this item's new gates. —
+  `docs/architecture/verification-matrix.md` (INHERITED) — disposition: file rows, or record the
+  matrix as out of scope for this epic
+- audit-F5 [DO] The derivative ships `coverage_state: complete` / `full_satisfaction` with
+  `applicable_gate_total = 2` while A5/A6/A9 — instance-reaching physics gates whose ruled target
+  form is an executing assert — sit outside the denominator as plain usages, indistinguishable in
+  the generated evidence from the 48 `awaits-capability` guards. — §9/ADR-009 + D-S1/D-S2
+  (agent/ratified) — disposition: **DISPOSED** by the D-S1/D-S2 ruling ([AGENT], ratified by owner
+  2026-08-13); carried forward as an explicit obligation on the epic Item 9 follow-on
+- audit-F6 [DO] `tests/conformance/test_zero_entry_package_golden.py:69-87` hand-rolls the
+  generation sequence from seven private `_generate_*` seams, omitting the preflight block,
+  `_generate_primitives`, `_generate_backlog` and `_generate_tests` that `run_codegen` runs
+  (`src/sysml_codegen/cli/__init__.py:1204-1299`). The tree's first committed-bytes gate pins a
+  route kept in sync with the shipping route by hand. — `CLAUDE.md` ("`run_codegen` is the single
+  public generation entry point and constructs exactly one way") (INHERITED) — disposition: drive
+  the golden through `run_codegen`, or record why the private seams are the intended subject
+
+Smells fired (escalated into the audit's Product Judgment):
+- Smell 3 (a special category exempts a case whose user-visible meaning is unchanged) —
+  `blocked-by-defect` removes A5/A6/A9 from the feasibility denominator while what the modeler
+  wrote, a physics gate, is unchanged. Escalated at audit-F5; **disposed** by the D-S1/D-S2 ruling
+  with the follow-on obligation named there.
+- Smell 1 (two representations manually kept synchronized) — the zero-entry golden's generation
+  sequence versus `run_codegen`'s. Escalated at audit-F6; **not resolved**.
+
+**Gate: BLOCKED (audit-F1).**
+
+**Gate resolution (audit cure re-verification, 2026-08-13, rev `b5f6fd8`):** audit-F1 **RESOLVED**
+by `995a058` (both missing statements authored at `shield.sysml:105,107` and `vacuum.sysml:53,55`;
+re-verified by the auditor) and `b083c47`. audit-F2 **RESOLVED** by `b083c47` — the manifest check
+now opens the derivative's `.sysml` and gates the obligation, with both failure modes falsified by
+the auditor. audit-F3 → residual A-5, audit-F4 → residual A-8, audit-F6 → residual A-4, each
+carrying a stated disposition (`audit.md` §Addendum). Smell 1 remains open as residual A-4.
+**Gate: CLEAR.**
