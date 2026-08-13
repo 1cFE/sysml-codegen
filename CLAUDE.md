@@ -61,8 +61,10 @@ two implementations.
    - Parameter group schemas and JSON templates (`schemas/`, `inputs/`)
    - Module registry (`__init__.py`)
 
-   Four preflight checks run before any output is written or cleared: constraint name safety,
-   duplicate output paths, params coverage (V11), and registry class-name collisions.
+   Five preflight checks run before any output is written or cleared: constraint name safety,
+   duplicate output paths, params coverage (V11), registry class-name collisions, and
+   constraint totality (the catalog accounts for every authored constraint usage, and its
+   rows still match the fingerprint projection sealed them with).
 
 5. **Sealing** (`contracts/`) - A semantic `ModelContract` over the graph and a physical `PackageContract` over the final on-disk bytes, on the live and from-snapshot paths alike.
 
@@ -91,8 +93,11 @@ not exist, and the CLI names none of them. `orchestration/pipeline_context.py` s
 the `SysMLParsingError` / `CodeGenerationError` re-export point and carries no
 `PipelineContext`.
 
-Reference documents 03, 04, 05, 07, 10, 11, 12, 13, 17, 24, and 25 describe that stack and
-open with a retiring banner; document 09 is mixed and says which models are which. Their
+Reference documents 03, 04, 05, 07, 10, 11, 12, 13, 17, 24, 25, and 28 describe that stack
+and open with a retiring banner; document 09 is mixed and says which models are which.
+Document 28's subject (`analysis/constraint_lowering.py`) was deleted by the same
+retirement, and its account of the constraint catalog is separately superseded by
+CONSTRAINT-SEMANTICS Item 2 — its banner says which parts and where the live text is. Their
 rewrite is a separate authorship pass that has not run. **Do not read them as descriptions
 of what the product does.**
 

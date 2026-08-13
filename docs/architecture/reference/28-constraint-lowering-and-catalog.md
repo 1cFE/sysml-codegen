@@ -1,5 +1,30 @@
 # Constraint Lowering & Catalog
 
+> **Status: historical for the lowering half; superseded for the catalog half.** This
+> document's subject is `analysis/constraint_lowering.py`, which was **deleted** by the
+> Item 7 retirement (2026-08-12, `19072ad` / `82c7951` / `882fc8d` / `3071fba`). The
+> directory it names now holds only `source_referent.py`. There is no lowering pass: the
+> elaborator decides every constraint usage while building the instance graph, and
+> projection renders what it decided.
+>
+> **Its account of the catalog is superseded too.** CONSTRAINT-SEMANTICS Item 2 (2026-08-12)
+> moved the record's birth point upstream of occurrence expansion, so the population and the
+> vocabulary below are both wrong now:
+>
+> - Every authored `ConstraintUsage` gets a record, including one whose owner expands to
+>   nothing. A `calc def` owner mints `non_reaching` / `owner_kind_unattachable` — 51 of
+>   `catf_mfe_d5`'s 65 usages — where this document says it yields no record at all.
+> - The disposition vocabulary is `eligible` / `excluded` / `non_reaching` with a closed
+>   reason per kind, not the `eligible=False` flag this document describes. A
+>   `requirement_def` owner is `excluded` / `out_of_profile_owner`.
+> - `catalog.usage_records` is the whole domain keyed by `declaration_id`, not the admitted
+>   subset keyed by a qualified-name pair, at `CATALOG_SCHEMA_VERSION` `3.0.0`.
+>
+> Everything below is retained as the record of the deleted design. It is **not a description
+> of what the product does.** For the shipped behaviour read
+> [modeling-assumptions.md](../modeling-assumptions.md) (the disposition vocabulary and the
+> totality rule) and [01-extraction.md](01-extraction.md) (REQ-EXT-09).
+
 Component: constraint execution (Items 5-9; Item 14 closes the extraction-side gap
 that blocked the two grandfathered fixtures and retires the drop-manifest era).
 
@@ -47,16 +72,17 @@ For each prepared item:
    `package` owners are already concrete (one instance, top-level scope). An
    owner kind with no expansion rule (e.g. `requirement_def`) yields no
    occurrence, and the usage is cataloged with one record, `eligible=False`, no
-   expansion, no formal resolution, no node (D7).
+   expansion, no formal resolution, no node (D7). *(Superseded: the disposition is now
+   `excluded` / `out_of_profile_owner`; there is no `eligible=False` flag.)*
 
    **Unassessed status follows source form, not owner kind.** The axes are
    independent (contract invariant 16): only the assert family executes, so a
    plain, `require`, `assume`, or requirement-side usage catalogs unassessed
    under *any* owner kind, and an asserted usage under an expandable owner is the
-   only shape that can become eligible. *(Target state for the owner-kind half:
-   today an owner kind with no expansion branch — a `calc def` owner — yields no
-   occurrence and therefore no catalog record at all. CONSTRAINT-SEMANTICS
-   Item 2 closes that.)*
+   only shape that can become eligible. *(Superseded by CONSTRAINT-SEMANTICS Item 2:
+   an owner kind with no expansion branch — a `calc def` owner — now mints a record
+   carrying `non_reaching` / `owner_kind_unattachable`. It is no longer true that it
+   yields no catalog record.)*
 3. **Per-instance formal resolution** (`resolve_actual`, the strict ladder):
    registry `scoped_lookup` → `alias_lookup` → `scoped_alias_lookup` (each tried
    occurrence-scoped then de-indexed) → occurrence-scoped design attribute
