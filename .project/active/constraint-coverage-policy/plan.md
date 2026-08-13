@@ -817,6 +817,11 @@ Overview* (the TEAx list), *Required Invariants* 7, 8, 10, 11.
 - [x] TEAx focused: token map both directions, both fail-closed lookups, policy dispatch default and
       opt-in, fingerprint lineage change, durability round-trip + invariant 41, store
       incompatibility through `evidence_schema_version`.
+      **Corrected 2026-08-13 (audit A-1/A-2/A-3): this box was ticked at Phase 6 when only the
+      token map and the durability round-trip had tests.** The fail-closed lookups, the opt-in,
+      invariant 41 over the nested block, and the `evidence_schema_version` carrier were built
+      and probed but unpinned. All four landed in the cure commits `4101325` / `0f6f022`; the
+      box is now earned. See `verification.md`'s cure addendum.
 - [x] **Full TEAx suite** from `/home/reid/1cfe/teax/packages/teax-simkit` (`pytest`, `testpaths =
       simkit/tests`), run under the interpreter that resolves `syside`/codegen — the
       agentic-mbse venv, not teax's own `.venv` and not `uv run`, which are known broken here.

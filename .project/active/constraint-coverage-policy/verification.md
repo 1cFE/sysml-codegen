@@ -450,7 +450,7 @@ implies:
 that it was previously ticked against a test varying a different field. The overclaim was the more
 serious half of A-3: a `[x]` on an unbuilt test is what stops the next reader looking.
 
-## A-4 — `indeterminate` end to end, and the precedence pair the item created · commit `d7c1f4a`
+## A-4 — `indeterminate` end to end, and the precedence pair the item created · commit `0f6f022`
 
 Two tiers.
 
