@@ -165,3 +165,149 @@ two are records for close. The design's own weak point is not a lens finding but
 catalog's per-usage dispositions are correct) is unfalsifiable from inside this item, and the
 mitigation — hand-written expected accounts per fixture rather than generated ones — is the same
 discipline the owner's sequencing instruction already demands.
+
+---
+
+## design_review — 2026-08-12 — rev 328032e (codegen) / fa0e06a (TEAx, read-only)
+Epic: CONSTRAINT-SEMANTICS, Item 3 (Coverage Report and TEAx Policy). This is the
+**design-review-stage** entry; it does not replace the design-stage entry above.
+
+**Runner note:** unlike both prior entries, `/home/reid/.claude/scripts/product-lens.md` was **read
+directly this session** — the §1 oracle-first protocol, the §2 grade table, this §3 format, and the
+§4 smell list are the spec's own text, not a reconstruction. `/home/reid/1cfe/teax` was readable
+(read-only, clean `fa0e06a`); every TEAx line cited below was opened first-hand this session, as was
+every codegen line.
+
+**Point** (re-derived from SOURCES before the WORK was opened; consistent with the prior two entries,
+restated in the form this stage tested):
+
+1. A design search must be able to tell a candidate that passed its physics gates from one nobody
+   checked — so no report and no study label may claim more coverage than was assessed. [source:
+   `.project/active/constraint-semantics-contract/spec.md:17` **[OWNER-VERBATIM]**; grade: owner]
+2. Full satisfaction is a coverage claim over **applicable asserted gates**; inventory totality and
+   feasibility coverage stay two totals. [source: contract "Headline states and coverage truth",
+   invariants 32/33/61, ADR-009, LC-E10/E11/E12/E13; grade: agent/ratified]
+3. Coverage truth has exactly one authority — the embedded catalog — derived in one direction, with
+   TEAx consuming it directly and reconstructing nothing. [source: invariant 48; **D-3
+   [OWNER-VERBATIM]** "100% Option A. We need to purge this mess."; grade: owner for the no-second-
+   catalog rule, agent/ratified for the derivation direction]
+4. Every state has a counterpart in both vocabularies across one seam; an unknown or unmapped
+   headline fails closed with a named error. [source: invariant 46a; umbrella `[HARD]` L1-1]
+5. Policy reads evidence, never writes it; partial coverage keeps for boundary; coverage reaches
+   durable case records on both paths; study identity is never silently reassigned. [source:
+   invariants 41/49/50, Q6; grade: agent/ratified]
+
+**Falsifier** (design-stage form): the design would show a constraint-bearing model still emitting no
+report; a coverage number sourced from anything but the sealed catalog; a state present in one
+vocabulary only; a report-required or report-expected predicate that two components can answer
+differently; or a durable store rebound without a stated route.
+
+### Findings
+
+- **design_review-F1 [DO] — the report-expected predicate has two live derivations in TEAx and D7
+  moves only one.** `evaluator.py:79-87` (`_report_declared_in_spec`) is the default `expects_report`
+  for **both** `PreparedEvaluator` and `FileBackedEvaluator` (`evaluator.py:139-143`, `:243-246`); its
+  own docstring states the coupling — "The study layer overrides this with the catalog authority; the
+  two must agree." D7 moves the catalog-side authority (`study/cli.py:42`) from `concrete_entries` to
+  `usage_records` and never names the spec-side default, so the design changes one half of a stated
+  two-way agreement and leaves the other unexamined. It happens to stay true — the report channel is
+  pinned as an exit output for every minted aggregator (`generation/pipeline.py:284-296`), so a
+  zero-input aggregator does appear in the spec — but that is now load-bearing and unstated, over the
+  exact check (invariant 46a corruption detection, `projection.py:50-55`) that design-F1 was raised to
+  keep alive. The design closes the same hazard *inside* codegen with a preflight (D5, "Two readings of
+  one rule is the drift A4 exists to stop") and does not apply that standard across the repo boundary.
+  — source: invariant 46a; Item 2's A4 one-rule cure carried in the spec (agent/ratified) —
+  **disposition:** DISPOSE — D7 names `evaluator.py:79-87`, states why the spec-declared report
+  channel and non-empty `usage_records` agree, and pins the agreement with a test on a zero-input
+  package; or the producer states the answer once in the model contract and both TEAx sites read it.
+
+- **design_review-F2 [DO, low] — the unassessed-reason histogram is specified as a token list, where
+  the obligation is a rule, and the list is 7 of the landed 9.** D2 keys `unassessed_reasons` by seven
+  tokens. The landed closed vocabulary (`elaboration/graph.py:258-278`) has nine: D2 omits
+  `out_of_scope_satisfy` and `out_of_profile_owner`. Both omissions are *correct* — they fire for
+  satisfy references and `requirement_def`-owned usages (`elaborate.py:1253-1265`), which the contract
+  says are never applicable asserted gates — but the design gives the list without the criterion, and
+  the criterion is the two-totals rule this item exists to implement. An implementer comparing D2
+  against the enum sees two missing buckets and no way to tell oversight from exclusion; Required
+  Invariant 2's `sum(unassessed_reasons) == unassessed_gate_count` validator is what breaks if the call
+  goes the other way. — source: contract "Headline states and coverage truth", two-totals paragraph;
+  invariant 33 (agent/ratified) — **disposition:** DISPOSE — state denominator membership as a rule
+  over the landed vocabulary (which reasons are inside the feasibility denominator and which are
+  inventory-only), and derive the histogram keys from it.
+
+- **design_review-F3 [DO, low] — invariant 46's persist/harvest clause is carried by mechanism and
+  pinned by nothing.** The contract requires the file-backed route to carry the coverage accounting
+  through persistence and harvest unchanged, with no consumer schema adapter. Verified this session
+  that the mechanism gives it for free: `FileBackedEvaluator` shares the same `project(...)`
+  (`evaluator.py:270`) and `encode_evidence` passes the sealed report tree whole
+  (`study/evidence_io.py:49-56`). But neither the Component Overview nor any of the twelve Validation
+  Approach items names the file-backed route or a persist-then-harvest round-trip of `coverage` — the
+  design's TEAx-side evidence is entirely `PreparedEvaluator`-shaped. — source: invariants 45 and 46
+  (agent/ratified) — **disposition:** DISPOSE — add the round-trip to Validation, or state that the
+  existing prepared/file-backed parity test already covers the new block and cite it.
+
+### Smells (§4, design pair)
+
+- **Smell 2 — a consumer compensates for something the producer guarantees: FIRES**, on
+  design_review-F1. "Does this package ship a constraint report" is a producer rule: codegen decides it
+  in `ships_constraint_machinery` (`resolution/models.py:643-656`, D5) and mints the aggregator
+  accordingly. TEAx answers the same question twice more, independently — once from the pipeline spec
+  and once from catalog rows — and the design's own design-F1 is the record of that duplication
+  already going wrong once. D7 repairs the instance by re-syncing a copy rather than by removing the
+  duplication, and adds a third consumer-side check in the same shape (D3 point 3, the report/contract
+  fingerprint comparison, which inside one sealed and seal-verified package can only fail on a codegen
+  defect). **Escalation:** the review's leading judgment should ask whether the model contract states
+  `ships_constraint_report` once as a producer fact. Grade agent/ratified (invariant 48, Item 2's A4
+  cure) — a real finding, not a BLOCK: D-3's owner-verbatim prohibition is on QN/predicate-text
+  reconstruction and a consumer materializer, and reading a row count is direct consumption, so
+  stretching D-3 to owner-grade here would be manufactured authority.
+- **Smell 7 — the solution changes who owns an invariant without saying so: DOES NOT FIRE.** Three
+  ownership moves are in this design and all three are stated in the open: coverage truth moves from a
+  runtime observation to a generation-time constant (Core Concept, D3, and **B2 states it as a
+  falsifiable bet with its failure mode**); the report-expected authority moves from `concrete_entries`
+  to `usage_records` (D7, and the design raised it as its own finding); and `ships_constraint_machinery`
+  changes what it says while D5 explicitly preserves where it lives. Nothing here relocates an
+  invariant quietly.
+
+**Not findings (checked first-hand, clean):**
+- **No owner-graded statement is contradicted.** D-1 — the account is baked at generation, so no
+  post-build or late-fill mutation seam is added. D-2 — untouched. D-3 — the compact account is a
+  summary the contract itself mandates (invariant 46, "the exact report carries compact coverage
+  accounting derived from the catalog"), derived one-directionally, addressed back to the catalog by
+  fingerprint, carrying no per-usage rows; no second inventory and no consumer materializer.
+- The `[OWNER-VERBATIM]` design-search quote is carried whole in **The Point**, at the owner's
+  emphasis, as the governing obligation. The `[NEED]` sequencing instruction is honoured in D8 step 1
+  (fusion expectation hand-written before the run), and the `[NEED]` TEAx-branch-only instruction is
+  honoured with the publication/checkout distinction stated rather than assumed.
+- **A hazard the two-tier rule could have hidden does not exist.** A usage-tier `assessed_gate_count`
+  would be wrong if one usage could have both eligible and excluded occurrences. It cannot:
+  `project.py:1093-1114` branches on `node.eligibility`, which is one profile decision per usage
+  (invariant 1), so occurrence-tier exclusions never hide inside an "assessed" usage.
+- **B1's inputs are landed, verified field by field**: `ConstraintCatalogUsageRecord`
+  (`resolution/models.py:476-521`) carries `declaration_id`, `source_form`, `membership_kind`,
+  `disposition_kind`/`_reason`/`_severity`, `inapplicability_reason`, `occurrence_count`. One cite
+  drift for the plan, not a finding: D2/D4 speak of reading `inapplicability is not None`; the landed
+  field is `inapplicability_reason`.
+- **D8's landing order rests on a verified fact.** TEAx pins
+  `ACCEPTED_CATALOG_SCHEMA_VERSIONS = frozenset({"2.0.0"})` (`evaluation/package_load.py:39`) while
+  codegen ships `CATALOG_SCHEMA_VERSION = "3.0.0"` (`contracts/versions.py:18`), so the fail-closed
+  window is genuinely already open and codegen-first is safe as claimed.
+- **D8's "the verifier hash does not move" is consistent with the rule it could have broken.**
+  `versions.py:43-47` binds bytes to version in one direction — a `verify.py` byte change forces a
+  version bump — not the converse, so bumping `RUNTIME_CONTRACT_VERSION` with unchanged verifier bytes
+  breaks nothing. `RUNTIME_CONTRACT_VERSION` is marked "Owner-overridable; this is the initial token",
+  i.e. agent-grade, so the bump contradicts no owner decision.
+- D4's ruling stays inside this item's mandate: it publishes reasoning against the contract, files the
+  Appendix C amendment to Item 1 rather than performing it, and its added non-vacuity condition
+  (`assessed_gate_count > 0`) is the reading the governing obligation forces.
+- D1's token map is a bijection over five states plus report-absent, satisfying invariant 46a's
+  counterpart requirement in both directions, with fail-closed on each side by a different mechanism
+  (pydantic `Literal` on the report side, `UnknownHeadlineToken` on the runtime side).
+
+**Gate: DISPOSED (design_review-F1..design_review-F3)** — nothing blocks. No owner-graded statement is
+contradicted and no Item 1 ruling is overturned, so no finding reaches BLOCK grade. F1 is the one that
+should change the artifact: it is the same class of defect as the design's own design-F1, one layer
+out, and the design's in-repo standard for it (make the agreement a check, not a convention) is the
+standard to apply. F2 and F3 are precision gaps that cost a sentence each. The design's real exposure
+remains B1, which no lens finding can reach from inside this item; the hand-written-expected-accounts
+mitigation is the right one and is the owner's sequencing instruction applied.
