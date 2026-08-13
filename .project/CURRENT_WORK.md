@@ -1,12 +1,12 @@
 # Current Work
 
-**Last Updated**: 2026-08-12 (CONSTRAINT-SEMANTICS Item 2 audited Needs-work; A1–A4 cured; awaiting re-audit)
+**Last Updated**: 2026-08-12 (CONSTRAINT-SEMANTICS Item 2 re-audited **Certify-with-residuals**, R2/R4 corrected; Item 3 orchestration starting)
 
 ---
 
 ## Active Work
 
-### 2026-08-12: CONSTRAINT-SEMANTICS Item 2 — canonical usage domain and catalog totality (AUDITED Needs-work; A1–A4 CURED, awaiting re-audit)
+### 2026-08-12: CONSTRAINT-SEMANTICS Item 2 — canonical usage domain and catalog totality (AUDITED: Certify-with-residuals)
 
 **Audit `audit.md` returned Needs-work** at codegen `ba756fb`. Its summary is worth keeping:
 the core is "genuinely done, and the hard part is done well" — the circularity risk is closed
@@ -36,12 +36,30 @@ exactly. The findings were gaps at the edges of a correct design.
 - **A7** (no plan/implement-stage product-lens entry) is a process record with nothing in the tree
   to change — left for `/_my_close`.
 
-**Gates after cures:** codegen **1857 passed / 34 skipped / 65 deselected / 0 failed**, zero
-licence-skip lines; focused **215** across 13 modules; `ruff check src` **12** (zero new, diffed
-finding-by-finding rather than by count); `mypy` **56**; `git diff --check` clean; both trees
-clean; **no snapshot fixture moved**, so the single reviewed recapture stands.
+**Re-audit (same day): Certify-with-residuals** — the auditor re-ran every original probe plus
+harder cases (including a reseal-defeating projection defect: both public routes refuse, naming
+the member by QN + `declaration_id`). All four findings CURED at family level. Two
+record-residuals corrected immediately (`014597b`, `35ee82f`): **R4** — the mypy +1 was a lost
+type narrowing at `cli/__init__.py:409`, not the addendum's claim; fixed (mypy back to 55) and
+the attribution corrected. **R2** — the accepted severity carve-out (a malformed
+`@inapplicable:` marker is a *directive* defect and halts for any form) is now written beside
+the inherited severity line it contradicts, `[AGENT]` provenance, **owner should see it**
+(spec.md, Dispositions); the confirmation step found the plain-form case had NO pinning test —
+now committed (`constraint_domain_inapplicable_plain_form`). Traveling residuals: **R1**
+(bare-`ComputationGraph` internal seam is seal-only; one production caller), **R3**
+(calc-def-only shape had no pre-item baseline), **R5** (lens-ledger gaps at plan/implement —
+for close).
 
-**Next: re-audit of the cures, then `/_my_close`.**
+**Final gates:** codegen **1860 passed / 34 skipped / 65 deselected / 0 failed**, zero
+licence-skip lines; `ruff check src` **12**, `mypy src` **55** (both at/below baseline); oracle
+**113 nodes**; `git diff --check` clean; both trees clean; companion untouched at `bc69f04`.
+
+**This was an orchestrated run** (owner-invoked `/_my_orchestrate`, check-ins waived): stage
+briefs in `.project/active/constraint-catalog-totality/briefs/`, one commit per stage/decision;
+full audit trail in `audit.md` (per-finding cure verdicts) and `verification.md` (dated cure
+addendum). **Close and pre_pr are left to the owner.** Next per epic: Item 3 orchestration
+(owner-directed same night, same session); Item 4 can run in parallel; Item 5's owner
+checkpoint remains open.
 
 ---
 
@@ -93,7 +111,7 @@ no advisory) is accepted by design and pinned from both sides. **TEAx must re-ve
 `ACCEPTED_CATALOG_SCHEMA_VERSIONS` with `3.0.0`** — filed as a hand-off in the epic; until then
 TEAx fails closed on newly generated packages, which is the intended direction.
 
-**Next:** `/_my_audit`. Not run: audit, close, pre_pr. Nothing pushed; `main` untouched in both repos.
+**Since audited** — see the entry above for the verdict and cures. Nothing pushed; `main` untouched in both repos.
 
 ### 2026-08-12: CONSTRAINT-SEMANTICS Item 2 — spec/design/plan (superseded by the entry above)
 

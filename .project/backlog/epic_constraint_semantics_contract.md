@@ -268,6 +268,14 @@ implementation changes the catalog or report.
 
 ### Item 2: Canonical Usage Domain and Catalog Totality (2 days)
 
+**Status (2026-08-12): IMPLEMENTED and AUDITED — Certify-with-residuals.** All success criteria
+met at codegen `35ee82f` / companion `bc69f04` (65/65 carriers on frozen `catf_mfe_d5` — 9
+reaching, 0 eligible, a measured correction to the item's "9 eligible" premise; full licensed
+suite 1860/0 zero-skip). Traveling residuals R1/R3/R5 and the audit trail live in
+`.project/active/constraint-catalog-totality/{audit,verification}.md`. Close/pre_pr with the
+owner. One scope note: the vocabulary below spells the first disposition kind `executable`; the
+landed contract vocabulary is `eligible` (contract governs, recorded in the item spec).
+
 **Type**: Code / Integration
 
 **Boundary authority**: **[AGENT] (ratified by owner, 2026-08-12)**. Behavioral requirements are
