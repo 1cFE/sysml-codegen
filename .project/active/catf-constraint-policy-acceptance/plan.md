@@ -1,6 +1,6 @@
 # Implementation Plan: CATF Derivative and End-to-End Acceptance
 
-**Status:** Draft
+**Status:** Complete
 **Created:** 2026-08-13
 **Last Updated:** 2026-08-13
 **Epic:** CONSTRAINT-SEMANTICS, Item 5
@@ -471,27 +471,27 @@ crosses zero. **D6's mechanics are already measured** (M4, closed by the orchest
   mutated inputs **before** the acceptance run (B3's mitigation).
 
 ### Steps
-- [ ] Offline B3 check: mutated inputs drive `p_electric_net_out` negative. If not, fall back to A3's
+- [x] Offline B3 check: mutated inputs drive `p_electric_net_out` negative. If not, fall back to A3's
       parasitic-contributor mutation (named in the ruled table) and record the fallback.
-- [ ] **Route 1 — licensed live** (`--models`): generate, seal. Record module count, entry-point
+- [x] **Route 1 — licensed live** (`--models`): generate, seal. Record module count, entry-point
       count, catalog counts, package fingerprint. Grep for license-skip lines → 0.
-- [ ] **Route 2 — in-place snapshot** (`--from-snapshot` at the fixture): same, license-free.
-- [ ] **Route 3 — relocated snapshot** (copy the snapshot elsewhere, generate from there): same.
-- [ ] All three agree on the instance fingerprint and the projected graph. Record **exact** counts and
+- [x] **Route 2 — in-place snapshot** (`--from-snapshot` at the fixture): same, license-free.
+- [x] **Route 3 — relocated snapshot** (copy the snapshot elsewhere, generate from there): same.
+- [x] All three agree on the instance fingerprint and the projected graph. Record **exact** counts and
       fingerprints per route in `verification.md` — not a summary.
-- [ ] Execute both candidates through TEAx (`/home/reid/1cfe/teax` @ `5b70ae9`, branch unchanged).
+- [x] Execute both candidates through TEAx (`/home/reid/1cfe/teax` @ `5b70ae9`, branch unchanged).
       Host in the agentic-mbse venv with a `sys.path` insert of `teax/packages/teax-simkit`; the teax
       `.venv` / `uv run` route is broken.
-- [ ] **Valid candidate:** headline `full_satisfaction`, both gates satisfied, study default
+- [x] **Valid candidate:** headline `full_satisfaction`, both gates satisfied, study default
       feed-strategy/penalize.
-- [ ] **Mutated candidate:** A2 reports `violation`, the candidate reaches **`reject`**.
-- [ ] **Both runs:** coverage lands in the durable case records; query them back and record the
+- [x] **Mutated candidate:** A2 reports `violation`, the candidate reaches **`reject`**.
+- [x] **Both runs:** coverage lands in the durable case records; query them back and record the
       coverage fields.
-- [ ] All observed outcomes equal Phase 2's committed expectations, with no edit to those expectations.
+- [x] All observed outcomes equal Phase 2's committed expectations, with no edit to those expectations.
 
 ### Validation
-- [ ] Licensed full suite green at baseline + the new rows; zero license-skip lines.
-- [ ] `verification.md` carries: three route blocks with exact counts and fingerprints, both TEAx run
+- [x] Licensed full suite green at baseline + the new rows; zero license-skip lines.
+- [x] `verification.md` carries: three route blocks with exact counts and fingerprints, both TEAx run
       outcomes, the durable-record coverage fields, the SC-6 commit hashes from Phase 2, Phase 1's
       reconciliation table, Phase 4's and Phase 5's falsification records, and the TEAx tip.
 
@@ -505,15 +505,15 @@ crosses zero. **D6's mechanics are already measured** (M4, closed by the orchest
 Leave the item auditable.
 
 ### Steps
-- [ ] `verification.md` complete against SC-1…SC-8, one section per criterion, numbers not prose.
-- [ ] Re-check the two round-1 minors are still closed at HEAD (they were fixed in design rev 2):
+- [x] `verification.md` complete against SC-1…SC-8, one section per criterion, numbers not prose.
+- [x] Re-check the two round-1 minors are still closed at HEAD (they were fixed in design rev 2):
       the whole-model BLOCK cite reads `elaborate.py:1145-1152`, and the `[unit]`-literal note is
       scoped rather than stated as a flat rule. Correct anything that drifted, in both `design.md`
       and `spec.md`.
-- [ ] Backlog filings from the ruling are present: epic Item 8 (unit-lane defect), Item 9 (derivative
+- [x] Backlog filings from the ruling are present: epic Item 8 (unit-lane defect), Item 9 (derivative
       upgrade), the divertor option (O5), the acausal-relations capability question, and the O3 debt note.
-- [ ] `git diff --check` clean; ruff 12; mypy 55; licensed suite at baseline + new rows.
-- [ ] Suggest `/_my_audit`.
+- [x] `git diff --check` clean; ruff 12; mypy 55; licensed suite at baseline + new rows.
+- [x] Suggest `/_my_audit`.
 
 **What we know after this phase:** every criterion has a recorded, re-runnable proof.
 
@@ -741,8 +741,62 @@ labelling of "valid candidate" is open — and that is a modeling decision, as i
 coefficient. Parked for a ruling rather than resolved. The coverage account is unaffected at
 every probed point; the one wrong cell in the committed expectations is the **headline**.
 
+### Phase 6 Completion (continued) — closed under the 6-D ruling
+
+**Completed:** 2026-08-13, commits **`e01c3b4`** (the standalone 6-D amendment), **`609c777`**
+(acceptance evidence), **`2872ca6`** (backlog filings).
+
+**The ruling, applied.** Candidates are labeled **gate-feasible / gate-infeasible under the
+model as authored**. The authored CATF design point is the **rejected** candidate; the
+raised-`p_fusion` candidate carries the satisfied path as a **machinery exemplar, not a
+recommended design**, and is recorded that way in every artifact that mentions it.
+
+**SC-5 met**, full route, both candidates, verdict **and** coverage persisted on each:
+
+| | gate-infeasible (authored) | gate-feasible (exemplar) |
+|---|---|---|
+| A2 / A3 | `violated` / `violated` | `satisfied` / `satisfied` |
+| report headline | `violation` | `full_satisfaction` |
+| policy disposition | **`reject`** | `feed-strategy` |
+| coverage on the record | `58/2/2/0/0/{}/complete` | *identical* |
+
+**The amendment's basis is a source-derived computation**, per the ruling — `cryo_derivation.py`
+re-derives `cooling_power` from model source and asserts it reproduces the executed value
+bit-exactly. Doing that **corrected my own STOP-report figures**: the model runs at **20 K**, not
+the 4.5 K I had assumed, so the amplification is **50×** and the cryogenic load **167.92 MW**, of
+which `heat_leak` is **116.72 MW** (69.5%).
+
+**Deviation:** the coverage *numbers* were never wrong and were not touched. One cell moved —
+the headline — in a commit that names the finding.
+
 ### Phase 7 Completion
+
+**Completed:** 2026-08-13, this commit.
+
+**`verification.md` is complete against SC-1 … SC-8**, one section per criterion, numbers not
+prose. All eight are **MET**.
+
+**Round-1 minors re-checked at HEAD:** the whole-model BLOCK cite reads `elaborate.py:1145-1152`
+in both `spec.md:209` and `design.md:141`, and line 1145 is in fact the `Eligibility.BLOCK`
+branch; the `[unit]`-literal note at `design.md:492-495` is scoped rather than stated as a flat
+rule. Neither drifted; nothing to correct.
+
+**Backlog filings all present:** epic Item 8, epic Item 9 (plus the B1–B5 marker retirement),
+the divertor option (O5), the acausal-relations capability question, the O3 model-debt note, and
+this item's three new filings — `[INLINE-PREDICATE-MARKER-DROP]`, `[CATF-CRYO-HEATLEAK]`, and
+`[CATALOG-FINGERPRINT-ROUTE-PORTABILITY]`.
+
+**Final gates:** licensed full suite **2103 passed / 34 skipped**, **zero** `no live syside
+license` lines; `ruff check src/` **12**; `mypy src/` **55**; `git diff --check` clean. The one
+failure is `test_the_lane_runs_the_real_simkit`, pre-existing and quoted verbatim from
+`CURRENT_WORK.md:468-472` in `verification.md`, ruled out of this item's floor.
+
+**The Phase-1 gap is recorded** in `verification.md` and carried into the epic's Lessons
+Learned: the de-risk probe elaborated but never generated, so the five generation preflights
+went untested at the gate built to catch exactly that class of refusal.
+
+**Next:** `/_my_audit`.
 
 ---
 
-**Status:** Draft → In Progress → Complete
+**Status:** Complete (2026-08-13)

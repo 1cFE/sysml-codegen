@@ -629,3 +629,102 @@ those checks became executable gates, the authored candidate was rejected on phy
 
 That is the epic's founding failure mode — a design search cannot tell a candidate that passed
 its gates from one nobody checked — **demonstrated and closed by the same item**.
+
+---
+
+## Phase 7 — Close-out against SC-1 … SC-8
+
+One section per criterion, numbers not prose. Every count below is measured at
+`item7-rebuild` HEAD with the licensed environment sourced.
+
+### SC-1 — the owner approves a table covering exactly 65 usages — **MET (at spec stage)**
+
+`owner-disposition.md` RULED 2026-08-13, all 65 rows, both tolerances, all open points. Row
+authority joined 1:1 against `tests/expectations/constraint_population/catf_mfe_d5.json` (65).
+
+### SC-2 — every derivative change is accounted for — **MET**
+
+```
+$ python scripts/check_gated_manifest.py --check
+identity closes: 65 = 58 carriers + 7 named deletions
+  carriers matched by name:         56
+  carriers matched by renamed_from: 2
+```
+
+License-free, and **seen to fail three ways** (Phase 4). Frozen twins: `git status` clean on
+`catf_mfe_model`; `catf_mfe_d5` differs only in its PROVENANCE paragraph; all three
+`make_d5_variant.py --check` pairs pass.
+
+### SC-3 — the derivative accounts for all 65 and shows honest coverage — **MET**
+
+Identity `65 = 58 + 7` closes (SC-2). Catalog: **58 usage rows, 2 concrete entries**,
+`{eligible 2, excluded 3, non_reaching 53}`. Coverage account
+**`58 / 2 / 2 / 0 / 0 / {} / complete`** — the denominator counts applicable asserted gates
+only, so the 56 plain usages appear in `authored_usage_total` and never in
+`applicable_gate_total`. The frozen-twin half is untouched: `catf_mfe_d5` still shows 65/65.
+
+### SC-4 — dispositions land where the ruled table puts them — **MET**
+
+| ruled group | expected | measured |
+|---|---|---|
+| A2, A3 asserted and executing | 2 `eligible` | **2** |
+| A5, A6, A9 plain, reaching (`blocked-by-defect`) | 3 `excluded` | **3** |
+| B1–B5 part-def guards (`inapplicable`) | `non_reaching` | included in **53** |
+| Group C minus C37/C21/C28 (`awaits-capability`) | 48 `non_reaching` | included in **53** |
+| deletions A1, A4, A7, A8, C37, C21, C28 | absent, each a named PROVENANCE record | **7 records, all citing an authorizing row** |
+
+No calc-def-owned guard is asserted. All five `@inapplicable:` dispositions are recorded in
+PROVENANCE rather than in source, per the 2026-08-13 ruling — see §Phase 1 FINDING.
+
+### SC-5 — a physics rejection through the real TEAx route — **MET**
+
+Full table in §Phase 6 (continued). Headline result: the **authored** design point reaches
+**`reject`**; a raised-`p_fusion` candidate reaches the satisfied path as a machinery exemplar.
+Both persist verdict **and** coverage in the durable case record.
+
+### SC-6 — expected outputs precede confirmation tests — **MET**
+
+Expectations `1247a3b` → fixture `7369b3e`, parent to child, by the per-artifact-kind recipe in
+§Phase 2. The fixture reproduced every pre-committed number **with no edit to the expectations**.
+The one later amendment (`e01c3b4`, the 6-D headline cell) is a separate, named commit made
+*after* the acceptance run and does not touch the ordering evidence — the coverage numbers it
+leaves untouched are the ones the ordering was for.
+
+### SC-7 — all acceptance gates pass with exact numbers recorded — **MET**
+
+Three routes gated with exact counts and fingerprints in §Phase 6. Routes 2 and 3 byte-identical;
+route 1 differs only by provenance paths and the route-relative catalog fingerprint filed as
+`[CATALOG-FINGERPRINT-ROUTE-PORTABILITY]`.
+
+### SC-8 — the calc-def-only package shape has a committed byte baseline — **MET**
+
+Two-file golden on `constraint_domain_satisfy_calc_def`, regenerated from a committed v6
+snapshot and diffed byte for byte, plus the two registry import assertions. The tree's first
+committed-bytes gate, falsified once and reverted (§Phase 5).
+
+### Round-1 minors, re-checked at HEAD
+
+| minor | state |
+|---|---|
+| whole-model BLOCK cite reads `elaborate.py:1145-1152` | ✓ in `spec.md:209` and `design.md:141`; line 1145 is the `Eligibility.BLOCK` branch |
+| `[unit]`-literal note is scoped, not a flat rule | ✓ `design.md:492-495` — the §8 both-operands spelling is named as the supported unit-carrying form, these two gates simply don't use it |
+
+### Backlog filings from the ruling, all present
+
+| filing | location |
+|---|---|
+| epic Item 8 — unit-lane port metadata defect | `epic_constraint_semantics_contract.md:1045` |
+| epic Item 9 — derivative upgrade under held intent | `epic_constraint_semantics_contract.md:1108` (+ the B1–B5 marker retirement) |
+| divertor option (O5) | `BACKLOG.md:348` |
+| acausal-relations capability question | `BACKLOG.md:365` |
+| O3 model debt | `BACKLOG.md:353` `[CATF-SHIELD-MODEL-DEBT]` |
+| `[INLINE-PREDICATE-MARKER-DROP]` | `BACKLOG.md`, filed by this item |
+| `[CATF-CRYO-HEATLEAK]` | `BACKLOG.md`, filed by this item |
+| `[CATALOG-FINGERPRINT-ROUTE-PORTABILITY]` | `BACKLOG.md`, filed by this item |
+
+### The Phase-1 gap, recorded
+
+Phase 1 re-elaborated after every edit group but **never generated**, so the five generation
+preflights went untested at the gate built to be the cheap place to find refusals. One of them
+(`constraint_name_safety`, `generated_binding_overlap`) then refused the ruled A2 spelling at
+Phase 6 — finding 6-B. Carried into the epic's Lessons Learned.
