@@ -264,3 +264,186 @@ Re-`grep`ed before each edit rather than trusted:
       the author-time advisory that does not.
 - [x] Invariant 9's containment direction proven: companion trigger ⊆ codegen vacuous set.
 - [x] Invariant 59 independence proven: the domain is byte-identical with the advisory suppressed.
+
+---
+
+# Cure addendum — audit findings A1–A4
+
+**Dated:** 2026-08-12 (same day as the audit)
+**Audit:** `audit.md`, verdict **Needs-work**, at codegen `ba756fb` / companion `bc69f04`
+**Cured at:** codegen `10450dc`. **The companion is untouched** — no finding named it, and it
+stays at `bc69f04`.
+
+Four commits, one per finding family, each with the finding ID leading the subject:
+
+| commit | finding |
+|---|---|
+| `656e270` | A1 — the 56 non-reaching carriers |
+| `97e48f0` | A2 + A6 — doc 28's banner, the sibling sweep, CLAUDE.md |
+| `4939cba` | A3 + A5 — invariant-5 conformance, and the oracle's fourth rule |
+| `10450dc` | A4 — one rule at the three catalog-nullable seams |
+
+Each was reproduced before it was fixed, per the verify-then-fix discipline.
+
+## Gates after the cures
+
+| gate | before cures | after cures |
+|---|---|---|
+| full licensed codegen suite | 1826 passed / 34 skipped / 65 deselected / **0 failed** | **1857 passed / 34 skipped / 65 deselected / 0 failed** |
+| licence-skip lines | 0 | **0** |
+| focused modules | 155 across 11 modules | **215 across 13 modules** |
+| `ruff check src` | 12 | **12** — zero new, diffed finding-by-finding against `ba756fb` rather than compared by count. The cures briefly added two: moving the fingerprint computation onto the model left `hashlib` and `json` unused in `project.py`. Both removed. |
+| `mypy src` | 55 | **56** (baseline 57; the A4 helper's `ComputationGraph` forward reference is the one addition, still two below baseline) |
+| `git diff --check` | clean | **clean** |
+| working tree | clean | **clean** |
+| snapshot fixtures | 21 | **21, none moved** — no cure changed graph bytes, so the single reviewed recapture stands |
+
+**+31 suite nodes**: the removal matrix (4), the seal-tamper test (1), two A4 generation-level
+tests, three receipt tests, four A3 invariant-5 tests replacing two, 18 A5 exemption checks, less
+the parametrization the A3 rewrite collapsed.
+
+## A1 — removing a non-reaching carrier now fails generation
+
+**Reproduced first** (`probes/a1_repro.py`), matching the audit exactly:
+
+```
+constraint_domain_detached_owner   removed occ=0 -> generation=True    <- silent
+constraint_domain_detached_owner   removed occ=1 -> generation=False
+catf_mfe_d5                        removed occ=0 -> generation=True    <- silent
+catf_mfe_d5                        removed occ=1 -> generation=False
+```
+
+After the cure, all four read `generation=False`.
+
+**Two guards, because there are two threats and neither guard covers both.** This is the
+substance of the cure, and it is stated plainly rather than claimed as one fix:
+
+- **Tampering after projection** — the audit's probe. Caught by the catalog's own seal, now
+  verified in `_preflight_constraint_totality`. `fingerprint` was minted at projection from the
+  domain, so it still knows the removed row existed; that is what a removed non-reaching row
+  cannot slip past, having no occurrence to orphan and no count to contradict.
+  `ConstraintCatalog.recomputed_fingerprint()` moves the payload shape onto the model so
+  projection and the preflight compute it by one rule, not two divergent copies. **Covers every
+  route, including the internal bare-`ComputationGraph` seam the audit measured.**
+- **A projection defect** that renders fewer rows and seals the shorter list coherently slips past
+  the seal by construction — the fingerprint is computed over whatever was rendered.
+  `ExactPipelineContext` catches that: it already re-decodes and re-projects, so it still holds
+  the domain and names the missing member. Verified by a probe that patches projection *before*
+  the seal, so the receipt's own digest agrees with itself:
+
+  > `ExactPipelineContext receipt verification failed: the catalog is missing 1 of 65 constraint
+  > usage domain members: FusionAnalysesThermalLoads::VacuumPumpPower::PositiveInputs
+  > (073aa510-5b07-508d-b5a7-b096bf8f7bee)`
+
+**Owner's ruling on the cure home, recorded because the audit declined to choose.** The spec's
+"usage-identifying" criterion is met on the supported public routes, which is what the spec
+governs; the bare-`ComputationGraph` seam is internal and gets the uniform seal backstop. Sealing
+an expected declaration-id set into the catalog was rejected: it would mint a second population
+copy inside the artifact it checks, which is the parallel-inventory smell this item removes. If a
+re-audit judges the wording unmet, escalate then, not preemptively.
+
+**Design invariant 4 is now a check, not only a producer obligation** — `exact_pipeline_context.py`,
+where both sides are in scope.
+
+**A6 overlap closed.** All five existing catalog mutations now re-seal after mutating, so each
+exercises the identity join it names instead of stopping at the seal, and every one asserts the
+usage is identified **by qualified name and by declaration id**. Removal is parametrized over
+reaching × non-reaching × both fixtures.
+
+## A2 + A6 — the falsifier is closed
+
+`docs/architecture/reference/28-constraint-lowering-and-catalog.md` gets a retiring banner. Both
+halves are stale for different reasons and the banner says which is which: the lowering half is
+**historical** (its subject `analysis/constraint_lowering.py` was deleted by the Item 7
+retirement; the directory now holds only `source_referent.py`), and the catalog half is
+**superseded** by this item. The banner names the three reversals a reader would otherwise
+absorb — calc-def owners mint `non_reaching` / `owner_kind_unattachable` rather than no record
+(51 of 65), the vocabulary is three disposition kinds rather than an `eligible=False` flag, and
+`usage_records` is the whole domain keyed by `declaration_id` at catalog `3.0.0` — and points at
+the two live documents. The two in-body statements the audit named are corrected in place too, so
+a reader who scrolls past the banner is not taught the old behaviour a second time.
+
+**Sibling sweep:** the only other docs naming CONSTRAINT-SEMANTICS Item 2 (`30-diagnostic-severity.md`,
+`verification-matrix.md`) cite it **backwards**, as the change that landed, not forwards as pending
+work. `scripts/check_doc_distinctness.py`: 31 documents, 0 identical-content groups.
+
+**CLAUDE.md:** 28 added to the retired-docs list with a note on its two-part staleness, and
+"Four preflight checks" corrected to **five** — a line the A1 cure made doubly wrong, since step
+1.8 now also verifies the seal.
+
+## A3 — minting never raises, for any form
+
+`_inapplicability` became `_read_annotation`, which **reports** a defect instead of raising. The
+mint turns a defect into the error-grade `classification_incomplete` disposition the design
+already built for it, and the completeness gate turns that into a named halt. The halt splits by
+cause: an unattachable owner keeps `SI_CONSTRAINT_UNATTACHED` naming the missing attachment
+(invariant 9), an unclassifiable usage gets `SI_CONSTRAINT_INCOMPLETE` saying what could not be
+read.
+
+**Both docstrings the audit flagged are corrected** — they are the sharper problem, because a
+future reader would have trusted them.
+
+**Tests re-pointed from "the model-wide raise happens" to what invariant 5 actually claims.** The
+near-miss still halts and names the usage, **and** the model still carries both authored usages
+with the other one correctly graded `eligible` / `admitted` / `info`, **and** exactly one
+diagnostic is reported. Before the cure a typo in one doc comment left *no* usage in the model
+with a disposition.
+
+**Recorded deviation: `classification_incomplete`'s scope widens.** The design scoped it to "zero
+scopes **and** an asserted form whose classification cannot complete"; it now also covers a usage
+of any form whose annotation cannot be read. Using it keeps the disposition vocabulary closed
+rather than inventing a kind, and it gives that branch its first real exercise — the audit noted
+it was otherwise unreachable at this upstream version (open item 2 in the list above is thereby
+partly discharged: the branch is now exercised, though its two *original* triggers remain
+unconstructible).
+
+## A4 — one rule, three seams
+
+**The rule, per the owner:** executable constraint machinery — `schemas/constraint_types.py` and
+the registry's `ConstraintEvaluation` / `ConstraintReport` imports — ships **iff the package has
+at least one concrete entry**. That matches what shipped before this item, so this is alignment,
+not new behaviour. The predicate lives once as `ships_constraint_machinery`; all three seams call
+it, including the predicate-name preflight. The INV-7 comment now distinguishes a constraint-free
+corpus from one that declares constraints none of which reach.
+
+**Recorded explicitly, because it is a real product question with a scheduled answer:** contract
+invariant 32's zero-input `not_assessed` aggregator deliberately changes this for a
+constraint-bearing package with nothing reaching. **That is Item 3's work, and Item 2 does not
+build it early.** The note is in the `has_executable_content` docstring, so the next reader finds
+it at the seam rather than in a changelog.
+
+**The catalog itself is untouched by this rule** — it still carries all `usage_records` regardless.
+The rule governs only the executable machinery.
+
+Two generation-level tests pin both directions, which is the coverage the audit found missing:
+the usage-only package ships neither the file nor the imports; a reaching package still ships both.
+
+## A5 — closed free by the A3 cure
+
+Not chased, but the A3 cure changed *why* two `REFUSED_BY_DESIGN` members refuse, so leaving the
+exemption set unchecked would have been leaving a guard I had just invalidated. The oracle gains
+the fourth rule the audit asked for: **every exempt fixture must actually refuse**, checked rather
+than asserted, 18 parametrized nodes. All 18 pass.
+
+## Not cured
+
+- **A7** (no plan-stage or implement-stage product-lens entry) — a process record about passes that
+  did not happen; nothing in the tree to change. Left for `/_my_close`.
+- **A8** was informational and already resolved by the auditor (a stale `.pytest_cache` entry).
+
+## Environment note
+
+The licensed-run protocol is unchanged and is the one the brief names:
+
+```
+set -a; source /home/reid/1cfe/agentic-mbse/.env; set +a
+/home/reid/1cfe/item7-rebuild-venv/bin/python -m pytest tests/
+```
+
+Never `uv run` — it resolves `agentic_mbse` to the main checkout rather than the companion
+worktree, and the suite does not collect under it. A 6-line wrapper encoding this lives at
+`.project/active/constraint-catalog-totality/probes/licensed.sh` for a session whose shell blocks
+the inline form; it was not needed for these gates.
+
+The two A1 reproduction probes are kept beside it (`a1_repro.py`, `a1_receipt_probe.py`) as the
+before-and-after record. They are standalone scripts, not suite nodes.
