@@ -503,6 +503,36 @@ is the constraint usage's, so a long predicate points you at the gate rather tha
 (`x - tol <= y` and `y <= x + tol`) rather than `x == y` — the profile admits an inequality
 comparison on real/quantity operands, never a bare equality one.
 
+**Authoring a gate that carries units.** An ordering admits exactly two operand-category pairs:
+`real`/`real` and `quantity`/`quantity`. A bare `Real` feature reference is category `real`, and a
+unit-annotated literal is category `quantity`, so the natural-looking one-sided spelling is
+refused — not by a bug, by the rule:
+
+```
+gap_width >= 0.25 [m]
+→ block_ordering_category_pair: ordering '>=' requires Integer/Real operands or two
+  Quantity operands; got real/quantity. Rewrite both operands as one admitted numerical
+  pair. [model.sysml:53]
+```
+
+Two spellings work, and a third does not:
+
+- **Annotate both operands** — `gap_width [m] >= 0.25 [m]`. This is the supported way to write a
+  unit-carrying gate, and the units are then compared: mismatched dimensions block
+  (`block_incompatible_dimensions`).
+- **Annotate neither** — `gap_width >= 0.25`. A `real`/`real` comparison, admitted, with the unit
+  living in the attribute's own value and in the model's prose rather than in the gate.
+- **Not available: a declared quantity type on the attribute.** `attribute gap_width :
+  ISQ::LengthValue` is refused before the profile ever runs — codegen's exact typing admits only
+  `ScalarValues::{Boolean,Integer,Real,String}` and refuses anything else with `SI_EDGE_DANGLING:
+  … has unsupported exact type`.
+
+**A unit on a constraint *binding* is carried, not checked.** `in tol = 0.05 [m];` is admitted and
+contributes the number `0.05`, but a bound formal takes its operand category from the constraint
+definition's declared type, so the annotation never reaches the profile's dimension check. A band
+binding whose unit is wrong is admitted silently. If a gate must *check* units, put the comparison
+and both annotations in the predicate body.
+
 **Every authored usage has a carrier — and it is true by construction, not by check.**
 The domain is one `ConstraintUsageRecord` per authored `ConstraintUsage`, minted *before* owner-to-
 scope expansion, so a usage whose owner yields no scope still has a record. It used not to: records
