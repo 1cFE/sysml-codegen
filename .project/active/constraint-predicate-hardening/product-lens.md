@@ -169,3 +169,51 @@ that two other published rules independently forbid. item4-F2 is the same class 
 cure's advice pointing at a route the spec itself records as broken. F3 and F4 each cost a sentence.
 The shape running through F1, F3, and F4 is a boundary drawn one step too early: the item measures
 elaboration where the product's promise is an assessed gate and an actionable message.
+
+---
+
+## design — 2026-08-13 — design-review stage (carried re-check, NOT a fresh lens run)
+
+**Runner note:** the lens script was not re-run at this stage. This session's standing
+instruction bars spawning subagents unprompted, and the script itself
+(`~/.claude/scripts/product-lens.md`) is outside the sandbox — the same refusal the spec-stage
+entry records. What follows is the design-reviewer re-checking the spec-stage findings against
+`design.md`, not an independent second derivation of the Point. Graded accordingly: weaker
+evidence than the entry above.
+
+**Disposition of the spec-stage findings in the design:**
+
+- **item4-F1 [DO]** — discharged. The demonstration shape is an inequality carrying a compatible
+  unit-annotated literal, not `== <literal> [unit]`, and the pinned end state is a working gate
+  (catalog carrier, `disposition_kind == "eligible"`, assessed, counted in coverage) rather than
+  the absence of one error code. Design "Fixture Plan" + "Test Plan".
+- **item4-F2 [DO]** — discharged by **D2**: the fourth lane (`in tol = 0.05 [m]`) is cured in
+  this item, so the rewrite the new diagnostic advertises is reachable. Invariant 6 keeps the
+  fallback (drop the annotation from the advertised rewrite) if P3 falsifies it.
+- **item4-F3 [DO, low]** — discharged. The end state is named as a catalog carrier with an
+  assessed disposition counted in the coverage account.
+- **item4-F4 [DO, low]** — discharged, and the citation corrected: the promise is
+  `docs/architecture/modeling-assumptions.md:535` (the ledger's `:538` was stale; `:535` verified
+  at HEAD this session). The residue list required by success criterion 3 is present but
+  **incomplete — `block_invocation` is missing** (design-review M3).
+
+**Smells at design stage:**
+
+- **A test that passes only because it selects one interpretation: fires weakly, again.** The
+  `predicate_unit_annotation_incompatible` fixture is presented as guarding B2 (that D1 does not
+  strip units from the profile), but the profile verdict is computed at `elaborate.py:403` from
+  the companion's own extraction, independent of the reference walk D1 touches. The fixture
+  therefore passes whether or not the walk drops the unit. It is a regression guard, not a
+  discriminator. Escalated into the review's judgment as Advisory A1, not left in a rubric.
+  Not BLOCK grade: the invariant it names is true by construction, so the item cannot land the
+  failure the fixture was meant to catch.
+- **Two representations kept in sync: does not fire** (unchanged from spec stage — one rule, one
+  owner, invariant 1 forbids a stray `operator == "["` test elsewhere).
+- **Consumer compensating for a producer guarantee: does not fire.** D3 puts the message where
+  the block is decided and the location where the source is known.
+- **Ownership of an invariant changing hands silently: does not fire.** The profile keeps
+  deciding what is admitted; `extraction/unit_annotation.py` keeps owning the unit rule.
+
+**Gate: DISPOSED — nothing blocks.** No owner-graded statement is contradicted; no finding
+reaches BLOCK grade. Verdict carried into the design review: **Revise** on seven must-fix items,
+none of which moves a seam.
