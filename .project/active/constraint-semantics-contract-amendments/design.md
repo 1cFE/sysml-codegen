@@ -66,11 +66,22 @@ acceptance matrix (`:669`). The contract's own reading rule (`:19-21`) says earl
 specs, and designs "remain provenance" and do not override an explicit correction here.
 
 **Companion structure** (`constraint-execution-lifecycle-requirements.md`, 687 lines). The
-copy-and-freeze header (`:3-7`) makes it the only place forward requirement amendments land. Its
-amendment convention differs from the contract's: LC-E04 (`:272-274`) appends a sentence —
-"Amended 2026-08-05 (SOURCE-IDENTITY Item 3): …" — after the restated requirement, rather than
-prefixing a parenthetical. LC-E11 (`:299-301`) carries the direct contradiction verbatim; LC-G07
-(`:362-366`) is `[NEED]` with an owner quote.
+copy-and-freeze header (`:3-7`) is the licensing text: "forward requirement amendments happen here
+only." That is what authorizes this item to change requirement text at all, and it is not limited
+to appending.
+
+The file's one prior amendment is **LC-E04B** (`:269-274`; LC-E04 is a different, owner-adjacent
+requirement at `:263`). It is a **pure append**: comparing the live body (`:269-271`) against the
+archived close-state copy
+(`.project/completed/20260720_constraint-execution-lifecycle-contract/spec.md:253-255`), the
+requirement text is byte-identical and the 2026-08-05 amendment added only the trailing "Amended
+2026-08-05 (SOURCE-IDENTITY Item 3): …" sentence. **So there is no in-place-rewrite precedent in
+this file, and this design does not claim one** — see DD4 and B3, which ground the rewrite on the
+header rule instead. What LC-E04B *does* establish is the trailing-sentence form of the amendment
+note, which this item reuses.
+
+LC-E11 (`:299-301`) carries the direct contradiction verbatim; LC-G07 (`:362-366`) is `[NEED]`
+with an owner quote.
 
 **ADR precedent.** `git show --stat eda48f9` confirms the review's account: eight ADR files
 deleted, content synthesized into `docs/architecture/modeling-assumptions.md`. ADR identifiers
@@ -85,11 +96,12 @@ D7-docs = `:482-487`, `reference/01-extraction.md:20`, `reference/28-…:100-101
 **two** sites in `tests/conformance/test_extractor.py` (`:880` docstring, `:902` comment — the
 spec named one). `verification-matrix.md:336` cites two live tests and grades PASS.
 
-**Live evidence that survives.** `01-extraction.md:20`'s evidence cell has three clauses; only the
-first cites the retired test. The `wi014_toy` assert landing and the `include_subtypes=False`
-mutation check are both live (`tests/conformance/test_extractor.py:975`, `:1020-1032`). The cell
-therefore does not become evidence-free — a materially cheaper outcome than the spec's open
-question assumed.
+**Live evidence that survives.** `01-extraction.md:20`'s evidence cell has **four** clauses: the
+retired-test claim, the `wi014_toy` assert landing, the `include_subtypes=False` mutation check,
+and a pointer to the companion's subtype-enumeration decision table. Only the first cites the
+retired test; the other three stay (`tests/conformance/test_extractor.py:975`, `:1020-1032` are
+live). The cell therefore does not become evidence-free — a materially cheaper outcome than the
+spec's open question assumed.
 
 **Sweep pre-run (codegen only).** `test_constraint_migration_mapping` → 6 living-surface hits (the
 5 above plus `modeling-assumptions.md:484`), the rest in dated records. `require constraint` → 9
@@ -116,8 +128,20 @@ modeler-facing paragraph.
 So the design does not scatter the semantics. It puts the definitions in exactly one place — a new
 **"Headline states and coverage truth"** subsection in the lifecycle contract, carrying the
 definition of *applicable asserted gate*, the six state meanings, the precedence order, the
-inventory-versus-feasibility split, and new invariant 61 (the vacuous-gate warning tier). Every
-other amendment states its local rule and points there. ADR-009 records *why the change was made*
+inventory-versus-feasibility split, and new invariant 61 (the vacuous-gate warning tier).
+
+**Stated accurately, because it changes what the audit must do:** the definitions have one *home*,
+not one *copy*. Some amendments point at the home and some must restate it, and which is which is
+fixed by each document's structure, not by preference. Pointing: invariant 33 (A6), invariant 32
+(A5), invariant 46a (A7). Restating in full, because an acceptance cell must state its own
+observation, a frozen requirement must carry its own text, and a decision record must record what
+changed: Appendix C's mixed-population cell (A10), LC-E11 (B4), and ADR-009 (C1). The five-state
+precedence therefore ends up written out in five places and the three disposition kinds in three.
+Where an amendment restates, it restates **verbatim in meaning and order** and cites the home. No
+checker enforces that — see Non-Goals — so the audit compares the copies pairwise against A0
+(Validation Approach step 2).
+
+ADR-009 records *why the change was made*
 and what the superseded statements said; the contract records *what is true now*. Those are
 different jobs and they get different homes, which is also what keeps capture-fidelity law 3
 satisfiable: a corrected statement is rewritten in place with nothing left behind, because the
@@ -142,11 +166,17 @@ boundary and cited from the companion's authoring guidance.
   precedence, and their coverage semantics using state *names* while Item 3 chooses the report and
   runtime tokens. *If false → Item 3 finds the definitions unimplementable without re-deriving
   semantics, and the Item 1/Item 3 boundary collapses into a round-trip.*
-- **B3.** The companion's copy-and-freeze header licenses in-place rewriting of a requirement's
-  text, not merely appending to it. Its own LC-E04 precedent (`:272-274`) rewrote the meaning of a
-  term in place and recorded the amendment in a trailing sentence. *If false → LC-E11's false
-  precedence has to stay on the page under an amendment note, which capture-fidelity law 3
-  forbids, and the item needs an owner ruling before it can proceed.*
+- **B3.** The companion's copy-and-freeze header — "forward requirement amendments happen here
+  only" (`:3-7`) — licenses rewriting a requirement's text, not merely appending to it. The bet is
+  on the header's plain meaning: a document designated as the only place a forward amendment may
+  land must be able to carry an amendment that *contradicts* the frozen text, or LC-E11 has no
+  home at all. **No precedent supports this**; the file's one prior amendment (LC-E04B) is a pure
+  append, verified against the archived close-state copy, and this item is what establishes the
+  rewrite convention the header licenses. *If false → LC-E11's superseded precedence has to stay
+  on the page under an amendment note, which capture-fidelity law 3 forbids, and the item needs an
+  owner ruling before it can proceed.* Mitigation, and why this does not need to block: every
+  rewrite quotes the text it supersedes inside its own amendment note, so nothing is lost from the
+  record even if the owner later prefers append-only — the recovery is mechanical.
 - **B4.** The companion-repo facts in the stage brief are accurate as of 2026-08-12 and the tree
   is unchanged when the plan executes. *If false → the D3/D4/D5 edits miss or damage their
   targets. Mitigated by a mandatory re-read-then-edit step per site.*
@@ -176,12 +206,21 @@ boundary and cited from the companion's authoring guidance.
   enforcing.* The lifecycle contract is in `.project/concepts/`, so the owner's "call out in our
   concept" is satisfied. It gets no `D-n` number: the D-register from D-4 onward is
   source-identity scoped, and borrowing a number there would misfile it.
-- **DD4. Each repository's amendments follow that repository's own recorded convention.** Contract:
-  `(amended 2026-08-12, CONSTRAINT-SEMANTICS Item 1)` at the head of the restated statement.
-  Companion: the statement is rewritten and a trailing `Amended 2026-08-12 (CONSTRAINT-SEMANTICS
-  Item 1): …` sentence records what changed and cites the governing invariant. *Rejected: forcing
-  one convention across both — the companion's LC-E04 precedent is its own, and a foreign
-  convention reads as a foreign edit in a frozen document.*
+- **DD4. Each file's amendments follow that file's own convention, and the companion's rewrites are
+  grounded on its header rule rather than on a precedent.** Contract: `(amended 2026-08-12,
+  CONSTRAINT-SEMANTICS Item 1)` at the head of the restated statement — the live convention of
+  invariants 19/20/22/26. Companion: the statement is rewritten in place and a trailing
+  `Amended 2026-08-12 (CONSTRAINT-SEMANTICS Item 1), [AGENT] (ratified by owner, 2026-08-12): …`
+  sentence records what changed, **quotes the text it supersedes**, and cites the governing
+  invariant. The license for rewriting is the copy-and-freeze header's "forward requirement
+  amendments happen here only" (`:3-7`), not LC-E04B — LC-E04B is a pure append and carries no
+  rewrite precedent. This item establishes the rewrite convention the header licenses, and says so
+  in its first amendment note. *Rejected: append-only, leaving LC-E11's superseded precedence on
+  the page under a note — capture-fidelity law 3 requires the corrected content to be deleted or
+  rewritten, and a frozen requirement that still reads "else any assessed result → all_satisfied"
+  is exactly the statement Items 2–3 would build against. Rejected: forcing the contract's
+  parenthetical convention onto the companion — a foreign convention reads as a foreign edit in a
+  frozen document, and LC-E04B's trailing-sentence form is native there.*
 - **DD5. The sweep covers living-guidance surfaces only, and records the exclusion.** In scope:
   `docs/`, `src/`, `tests/`, `scripts/`, `README.md`, `CLAUDE.md`, `.project/concepts/`,
   `.project/backlog/` in both repositories. Out of scope: `.project/research/`,
@@ -192,7 +231,9 @@ boundary and cited from the companion's authoring guidance.
 - **DD6. The matrix pointer lands in REQ-EXT-09's evidence cell, not its Status cell.**
   *Rejected: the Status cell — an annotation there reads as a re-grade, which is Item 2's and is a
   stated non-goal.* Exact line in Appendix D.
-- **DD7. `01-extraction.md`'s REQ-EXT-09 evidence cell keeps its two live clauses.** Only the
+- **DD7. `01-extraction.md`'s REQ-EXT-09 evidence cell keeps its other three clauses** (the
+  `wi014_toy` landing, the `include_subtypes=False` mutation check, and the decision-table
+  pointer — four clauses in total). Only the
   retired-test clause is removed and replaced with a dated pending note. *Rejected: emptying the
   cell — the `wi014_toy` landing and the `include_subtypes=False` mutation check are live and
   unrelated to the retired test; deleting live evidence to signal a gap would be a worse
@@ -238,11 +279,15 @@ and checked by the audit against this design.
   content carries `[AGENT] (ratified by owner, 2026-08-12)` and says so where a grade is visible.
 - **RI-3.** No amendment names a headline token spelling or a report schema field name as
   normative. Where a current spelling appears it appears as today's text being amended.
-- **RI-4.** Contract invariant 8's four profile outcomes are byte-identical after this item.
-  Appendix C's "Zero constraint usages" cell and Appendix B's catalog/report-visibility row
-  (`:648`) are byte-identical after this item.
-- **RI-5.** No edit touches contract D-2 (`:417-425`) or D-4/SRC-01 (`:464-471`), in either
-  direction. The parked conflict stays parked.
+- **RI-4.** Three guardrail statements are byte-identical after this item, **anchored by quoted
+  text, not line number** — A0 and A11 insert above all three, so the line numbers move:
+  invariant 8 ("Outcomes are exactly `ADMIT`, `BLOCK`, `NON_NUMERICAL`, and `UNASSESSED`.");
+  Appendix C's "Zero constraint usages" row; Appendix B's row whose superseded claim reads
+  "Catalog is absent when no assertion is admitted".
+- **RI-5.** No edit touches contract **D-2** (the bullet opening "**D-2 [OWNER-VERBATIM], decided
+  2026-07-19:**") or **D-4/SRC-01** (the bullet opening "**D-4 [OWNER-VERBATIM], decided
+  2026-08-05:**"), in either direction. Anchored by that quoted text, not by line number — A11
+  inserts between D-3 and D-4 and shifts D-4 down. The parked conflict stays parked.
 - **RI-6.** No executable text changes. `git diff` over both repositories shows changes only in
   Markdown files and in comment/docstring lines of Python files. A correction that cannot avoid
   executable text is recorded in `verification.md` and handed on, not made.
@@ -257,9 +302,9 @@ and checked by the audit against this design.
 | C1 | ADR-009 | codegen `docs/architecture/modeling-assumptions.md` §9 (new) | Records the intended change, the superseded text, the reasoning, the grade |
 | C2 | Definitions subsection | contract, new `### Headline states and coverage truth` before `## Supported boundary` | Applicable asserted gate; six states; precedence; two totals; invariant 61 |
 | C3 | Invariant amendments | contract invariants 1, 9, 28, 32, 33, 46, 46a, 48 | The one move, projected per invariant |
-| C4 | Appendix amendments | contract Appendix B (`:660`), Appendix C (two cells) | Register and acceptance consistency |
+| C4 | Appendix amendments | contract Appendix B (the "Aggregator always exists even with no usage" row), Appendix C (two cells amended, one added for invariant 61) | Register and acceptance consistency |
 | C5 | Equality instruction | contract, new `### Equality intent and authoring policy` | Authority copy of the four-class taxonomy + owner reason |
-| C6 | Companion amendments | companion LC-E05/E06/E10/E11/E12, LC-G07 | Frozen-requirement mirror |
+| C6 | Companion amendments | companion LC-E05/E06/E10/E11/E12, LC-G07, new LC-E13 | Frozen-requirement mirror, invariant 61 included |
 | C7 | Codegen doc corrections | `modeling-assumptions.md` §8, `reference/01-extraction.md`, `reference/28-…md`, `verification-matrix.md` | D1, D2, D2b, D6, D7-docs, matrix pointer |
 | C8 | Code-comment corrections | `extraction/constraint_report.py`, `tests/conformance/test_extractor.py` | D7-code, three sites, zero behavior change |
 | C9 | Companion doc corrections | agentic-mbse `docs/subtype-enumeration-decision-table.md`, `docs/patterns/constraints.md`, `docs/patterns/semantic-operators.md`, `docs/patterns/syntax-reference.md`, `claude/agents/sysml-expert.md` | D3, D4, D5 + equality-instruction cite |
@@ -285,7 +330,10 @@ problem.
 - **D3 is a substitution, not a deletion.** The enumeration decision — `include_subtypes=True`,
   `RequirementUsage` excluded — must appear verbatim after the edit. Item 2's totality gate and
   REQ-EXT-09 both rest on it.
-- **Two `test_extractor.py` sites, not one.** `:880` and `:902`.
+- **Dead citations outnumber the filename hits.** `test_extractor.py` has two filename sites
+  (`:880`, `:902`) plus a by-description reference at `:881-882`; `constraint_report.py` has one
+  filename site (`:6`) plus three by-description references (`:9`, `:10-11`, `:15-16`). The S1 grep
+  finds only the filename ones — the rest come from C7a/C7b's explicit lists, not from the sweep.
 - **`modeling-assumptions.md` §8 is edited in four places** (D1, D2, D2b, D7-docs). Make them as
   separate edits against separate quoted strings so an auditor can check each against Appendix C.
 - **`captured_at` churn does not apply.** No fixture regeneration happens in this item.
@@ -301,8 +349,13 @@ problem.
   inside a quotation of pre-amendment text.
 - **The vacuous-gate warning tier lands as a new invariant (61) rather than in an existing one.**
   A new invariant is a larger contract move than an amendment. It is the honest one: the rule has
-  no existing home, invariant 28 supplies only the disposition kind, and the contract already grew
-  by 54–60 under a prior epic. Recorded here so review can challenge the choice directly.
+  no existing home, invariant 28 supplies only the disposition kind and carries no severity
+  vocabulary, and the contract already grew by 54–60 under a prior epic. Because it is a real new
+  rule it gets the full treatment every other invariant amendment gets — a companion mirror
+  (B7/LC-E13) and an Appendix C acceptance cell (A10b) — by the same symmetry argument this design
+  uses for LC-G07. The contract keeps no next-free-number register, so 61 could in principle
+  collide with a concurrent epic; A0 records that 61 was minted by this item on 2026-08-12, which
+  is the cheap half of the fix. A register is not worth building.
 - **Six states, two dialects, and a normalization seam described in prose only.** If Item 3 finds a
   state with no counterpart on one side, that is a defect in this item's output by the spec's own
   criterion — so the definitions subsection states each state's counterpart obligation explicitly
@@ -322,14 +375,25 @@ which may begin as soon as those publish. ADR-009's identifier is cited back int
 
 1. **Per-amendment audit against Appendix A–C of this design.** Each amendment's post-edit text
    matches the target text here, or the deviation is recorded with its reason.
-2. **Discharge check (RI-7).** Every listed entry appears in `verification.md` as amended or as
+2. **Pairwise agreement check (M7 — the price of five copies and no checker).** The five statements
+   of the headline precedence (A0, A6, A10's mixed-population cell, B4, C1) are compared against A0
+   and must agree in meaning and order. The three statements of the disposition kinds (A0/A4, B1,
+   and the catalog text in C5) are compared the same way. A disagreement is a defect, not a
+   stylistic variation.
+3. **RI-1 disposition check (M4).** Every statement this item publishes as a description of
+   behavior carries, in `verification.md`, one of two dispositions: "verified true of current
+   behavior, with the evidence" or "target statement — Item N makes it true", with the item named
+   in the published text. C2, C3, and C5 are dispositioned in Appendix C; the audit confirms the
+   published text matches the disposition.
+4. **Discharge check (RI-7).** Every listed entry appears in `verification.md` as amended or as
    verified-already-correct.
-3. **Guardrail check (RI-4).** `git diff` shows zero changes to invariant 8, Appendix C "Zero
-   constraint usages", Appendix B `:648`, contract D-2, and D-4.
-4. **Boundary check (RI-3, RI-6).** Diff contains no new normative token spelling or report field
+5. **Guardrail check (RI-4, RI-5).** `git diff` shows zero changes to the three RI-4 guardrail
+   statements and to contract D-2 and D-4, located by their quoted text rather than by line
+   number.
+6. **Boundary check (RI-3, RI-6).** Diff contains no new normative token spelling or report field
    name; Python diff hunks are comment/docstring only.
-5. **The recorded sweep**, run and dispositioned per Appendix D.
-6. **Mechanical checks.** Codegen: `python scripts/check_doc_distinctness.py` and
+7. **The recorded sweep**, run and dispositioned per Appendix D.
+8. **Mechanical checks.** Codegen: `python scripts/check_doc_distinctness.py` and
    `git diff --check`. Companion: `git diff --check`, plus relative-link resolution for every
    edited Markdown file, plus — because no doc-check script exists there — a grep of `tests/` for
    the edited documentation paths; if any test references one, run it, and if none does, record
@@ -376,10 +440,13 @@ decisions`, currently `:406`). Numbering stays monotone: invariant 61 follows 60
 > code are CONSTRAINT-SEMANTICS Item 3's.
 >
 > **Applicable asserted gate.** A usage is an applicable asserted gate when its source form is in
-> the assert family and that form is in executable scope. A vacuous gate — one whose owner has zero
-> occurrences — is still applicable. A usage stops being applicable only when it carries an
-> explicit inapplicability disposition. Plain and requirement-side usages are never applicable
-> asserted gates.
+> the assert family and that form is in executable scope. **The test is on the form, not on the
+> predicate:** an asserted usage whose predicate the profile `BLOCK`s or classifies
+> `NON_NUMERICAL` is still an applicable asserted gate, and it stays in the feasibility
+> denominator as an unassessed one. A vacuous gate — one whose owner has zero occurrences — is
+> still applicable. A usage stops being applicable only when it carries an explicit
+> inapplicability disposition. Plain and requirement-side usages are never applicable asserted
+> gates.
 >
 > **Two totals, kept apart.** *Inventory totality* counts every authored usage of every form.
 > *Feasibility coverage* counts applicable asserted gates only. Descriptive and requirement-side
@@ -405,6 +472,10 @@ decisions`, currently `:406`). Numbering stays monotone: invariant 61 follows 60
 > and a counterpart across the seam. A state defined on one side with no counterpart on the other
 > is a defect, and an unmapped value fails closed (invariant 46a) rather than falling through to a
 > satisfied or unconstrained reading.
+>
+> Invariant 61 below was minted by CONSTRAINT-SEMANTICS Item 1 on 2026-08-12; invariant 60 was the
+> highest live number before it. Its companion mirror is LC-E13 (companion requirements) and its
+> acceptance cell is Appendix C's "Asserted vacuous gate" (A10b).
 >
 > 61. (added 2026-08-12, CONSTRAINT-SEMANTICS Item 1) An asserted usage whose owner has zero
 >     occurrences — a vacuous gate — is visible at warning grade. The catalog carries a
@@ -455,7 +526,7 @@ remain."
 
 ## A4. Invariant 28 — target
 
-**Current (`:216-219`):** begins "The canonical catalog exposes definition inventory, one visible
+**Current (`:213-219`; the quoted first sentence spans `:213-215`):** begins "The canonical catalog exposes definition inventory, one visible
 disposition per usage, and one concrete execution entry per admitted occurrence." (Rest of the
 invariant — the field list, `owner_qn`, the entry-level join, the additive-schema-work note —
 is unchanged.)
@@ -551,9 +622,10 @@ retain `not_assessed` visibility."
 > assessed; an excluded **asserted** usage puts the report at partial coverage. (amended
 > 2026-08-12, CONSTRAINT-SEMANTICS Item 1)
 
-**Guardrail row (`:648`)**, "Catalog is absent when no assertion is admitted" → "It is absent when
-no usages exist; excluded-only usages retain catalog/report visibility." Verified already-correct;
-no edit. Byte-identity checked by RI-4.
+**Guardrail row**, located by its superseded-claim text "Catalog is absent when no assertion is
+admitted" (governing correction: "It is absent when no usages exist; excluded-only usages retain
+catalog/report visibility"). Verified already-correct; no edit. Byte-identity checked by RI-4
+against that quoted text — A0/A11 insert above it and move its line number.
 
 ## A10. Appendix C — two cells amended, one guarded
 
@@ -576,8 +648,20 @@ with a `not_assessed` report surface."
 > not-assessed report surface when every excluded usage is non-asserted, and a partial-coverage
 > surface when any excluded usage is asserted. (amended 2026-08-12, CONSTRAINT-SEMANTICS Item 1)
 
-**Guardrail (`:681`), "Zero constraint usages".** Reads correctly as state 6. Verified
-already-correct; no edit. Byte-identity checked by RI-4.
+**Guardrail, the "Zero constraint usages" row** (located by that case name). Reads correctly as
+state 6. Verified already-correct; no edit. Byte-identity checked by RI-4 against the quoted row.
+
+## A10b. Appendix C — one cell added, for invariant 61
+
+Invariant 61 introduces observable behavior — a warning-grade disposition, an authoring-time
+advisory, and a partial-coverage consequence — and Appendix C is the *mandatory* acceptance matrix,
+so a new invariant with no cell would be a rule nothing has to demonstrate. Added under the same
+"design may add, may not drop" clause the spec applies to the amendment list; recorded in
+`verification.md` as a design addition with this reason.
+
+**New row, placed immediately after the "Excluded-only usages" row:**
+
+> | Asserted vacuous gate | An asserted usage whose owner has zero occurrences catalogs with a non-reaching-with-reason disposition at warning grade, authoring validation emits the advisory naming the usage and its detached owner, generation does not halt, and the report headline reads partial coverage; the same usage carrying an explicit inapplicability disposition drops out of the feasibility denominator and the headline reads full satisfaction when every remaining gate passed. |
 
 ## A11. New subsection: "Equality intent and authoring policy"
 
@@ -620,42 +704,67 @@ before `### Source-identity dispositions (D-4 onward)` (`:435`).
 # Appendix B — Companion amendments (target text)
 
 Repository: codegen. File: `.project/concepts/constraint-execution-lifecycle-requirements.md`.
-Convention (DD4, per the file's own LC-E04 precedent at `:272-274`): the requirement text is
-rewritten and a trailing `Amended 2026-08-12 (CONSTRAINT-SEMANTICS Item 1): …` sentence records
-what changed and cites the governing invariant. **Grades are not touched** (RI-2).
+**Convention (DD4).** The license to rewrite is the copy-and-freeze header's "forward requirement
+amendments happen here only" (`:3-7`). The *form* of the amendment note follows LC-E04B's
+trailing-sentence shape (`:272-274`), which is the file's only precedent and is a pure append —
+this item is what establishes the rewrite. Every amendment note therefore does four things:
+
+1. carries its own grade, `[AGENT] (ratified by owner, 2026-08-12)`, so new content never wears the
+   amended statement's grade (RI-2, spec `[HARD]` law 1);
+2. **quotes the text it supersedes**, so a rewrite loses nothing from the record;
+3. cites the governing contract invariant, and ADR-009 where the change is the headline decision;
+4. leaves the requirement's own grade marker and `Source:` line untouched.
+
+B1's note additionally carries the one-time convention statement: *"This item rewrites requirement
+text in place under the header's forward-amendment rule; the superseded text is quoted in each
+amendment note."*
 
 **B1. LC-E05** `[INFERRED]` — insert the disposition-kind clause after "one visible disposition per
 usage," and append:
 
-> Amended 2026-08-12 (CONSTRAINT-SEMANTICS Item 1): a visible disposition is one of three kinds —
-> eligible, excluded-with-reason, or non-reaching-with-reason — and the dispositions cover the
-> complete authored-usage domain; "reaches no instance" is a disposition, not an absence. See
-> contract invariant 28 (amended).
+> Amended 2026-08-12 (CONSTRAINT-SEMANTICS Item 1), `[AGENT] (ratified by owner, 2026-08-12)`: a
+> visible disposition is one of three kinds — eligible, excluded-with-reason, or
+> non-reaching-with-reason — and the dispositions cover the complete authored-usage domain;
+> "reaches no instance" is a disposition, not an absence. Superseded: the requirement named no
+> disposition kinds and left non-reaching usages uncovered. See contract invariant 28 (amended).
+> *(This item rewrites requirement text in place under the header's forward-amendment rule; the
+> superseded text is quoted in each amendment note.)*
 
 **B2. LC-E06** `[INHERITED]` — rewrite the first clause to name non-reaching usages, then append:
 
 > Excluded, unassessed, and non-reaching usages remain inspectable with identity, reason, and
 > portable location. They never masquerade as executed constraints or vanish from coverage.
-> Amended 2026-08-12 (CONSTRAINT-SEMANTICS Item 1): the same guarantee covers non-reaching usages.
-> See contract invariant 28 (amended).
+> Amended 2026-08-12 (CONSTRAINT-SEMANTICS Item 1), `[AGENT] (ratified by owner, 2026-08-12)`: the
+> same guarantee now covers non-reaching usages. Superseded: "Excluded/unassessed usages remain
+> inspectable…". See contract invariant 28 (amended).
 
 **B3. LC-E10** `[INHERITED]` — replace the final sentence's trigger, then append:
 
 > …A model with constraint usages but no applicable asserted gate still requires the zero-input
 > aggregator and a report carrying the not-assessed state; a model with no constraint usages
-> remains inert and has no aggregator. Amended 2026-08-12 (CONSTRAINT-SEMANTICS Item 1): the
-> trigger is the absence of an applicable asserted gate, not the absence of eligible concrete
-> assertions — an applicable gate that produced zero eligible entries reads partial coverage. See
-> contract invariant 32 (amended).
+> remains inert and has no aggregator. Amended 2026-08-12 (CONSTRAINT-SEMANTICS Item 1),
+> `[AGENT] (ratified by owner, 2026-08-12)`: the trigger is the absence of an applicable asserted
+> gate, not the absence of eligible concrete assertions — an applicable gate that produced zero
+> eligible entries reads partial coverage. Superseded: "A model with constraint usages but zero
+> eligible concrete assertions still requires the zero-input aggregator and a `not_assessed`
+> report". See contract invariant 32 (amended).
 
-**B4. LC-E11** `[INHERITED]` — the direct contradiction. Full rewrite of the precedence:
+**B4. LC-E11** `[INHERITED]` — the direct contradiction, and the one wholesale replacement. The
+requirement keeps its `[INHERITED]` marker and its `Source:` line, because those grade *what the
+requirement is about* and where it came from; the replacement body carries its own grade so no
+reader mistakes the new precedence for something inherited from the original concept:
 
 > - **LC-E11 [INHERITED]** Report headline precedence is: violation, then indeterminate, then full
 >   satisfaction, then partial coverage, then not assessed. Full satisfaction requires every
 >   applicable asserted gate to have been assessed and passed; an assessed result alone does not
->   earn it. Source: original concept and generation spec. Amended 2026-08-12 (CONSTRAINT-SEMANTICS
->   Item 1): the coverage-truthful five-state precedence replaces the previous "else any assessed
->   result" rule. See contract invariant 33 (amended) and ADR-009.
+>   earn it. Source: original concept and generation spec — which is the source of the requirement's
+>   subject, not of the precedence below. Amended 2026-08-12 (CONSTRAINT-SEMANTICS Item 1),
+>   `[AGENT] (ratified by owner, 2026-08-12)`, sourced to
+>   `.project/active/constraint-semantics-contract/spec.md` and ADR-009: the coverage-truthful
+>   five-state precedence above **replaces** the inherited rule in full. Superseded: "Report
+>   headline precedence is: any violation → `violation`; else any indeterminate → `indeterminate`;
+>   else any assessed result → `all_satisfied`; else `not_assessed`." See contract invariant 33
+>   (amended).
 
 **B5. LC-E12** `[INHERITED]` — rewrite the final sentence:
 
@@ -663,8 +772,10 @@ usage," and append:
 >   constraint catalog or modules. An asserted usage with zero eligible entries still produces
 >   visible exclusions and puts the report at the partial-coverage state; a constraint-bearing model
 >   whose usages are all non-asserted reads not assessed. Amended 2026-08-12 (CONSTRAINT-SEMANTICS
->   Item 1): zero eligible entries under an asserted usage is partial coverage, not the
->   not-assessed surface. See contract invariant 33 (amended) and ADR-009.
+>   Item 1), `[AGENT] (ratified by owner, 2026-08-12)`, sourced to ADR-009: zero eligible entries
+>   under an asserted usage is partial coverage, not the not-assessed surface. Superseded:
+>   "Constraint usages with zero eligible entries still produce visible exclusions and the
+>   `not_assessed` report surface." See contract invariants 32 and 33 (both amended).
 
 **B6. LC-G07** `[NEED]`, owner-sourced — the clause is mirrored, and the mirror carries its own
 grade so the owner grade is not diluted (RI-2). Append, leaving the existing text and its owner
@@ -674,6 +785,23 @@ quote byte-identical:
 > embedded catalog is also the sole authority for coverage truth — the report's coverage accounting
 > derives from it in one direction and is never an independently maintained second inventory. See
 > contract invariant 48 (amended). The owner-sourced requirement above is unchanged.
+
+**B7. LC-E13 — new requirement, the companion mirror of invariant 61.** Added after LC-E12 in
+section E, taking the next free identifier in that block.
+
+> - **LC-E13 [AGENT] (ratified by owner, 2026-08-12)** An asserted usage whose owner has zero
+>   occurrences — a vacuous gate — is visible at warning grade: the catalog carries a
+>   non-reaching-with-reason disposition and authoring validation emits an advisory naming the usage
+>   and its detached owner. It counts as missing assessment for feasibility coverage until it
+>   carries an explicit inapplicability disposition, at which point it leaves the denominator. It is
+>   neither a generation halt nor a silent pass. Added 2026-08-12 (CONSTRAINT-SEMANTICS Item 1),
+>   mirroring contract invariant 61 (minted by the same item); acceptance in contract Appendix C,
+>   "Asserted vacuous gate".
+
+*Why the mirror exists:* the same argument the design makes for LC-G07 below, applied
+symmetrically. The frozen companion is what Items 2 and 3 read for requirements; an invariant with
+no companion requirement means the warning tier — the whole middle tier between the halting error
+and the never-errors record — is invisible on the side that implements it.
 
 *Design ruling on the spec's "if design concludes the clause needs no companion mirror":* it needs
 one. LC-G07 and invariant 48 are a stated pair; leaving only one of them carrying the coverage-truth
@@ -734,6 +862,17 @@ docs/architecture/modeling-assumptions.md §9 (2026-08-12).` No other product-le
 a real value in scope, and keep any equality check as an explicit two-inequality tolerance band. If
 the profile BLOCKs it, the generation error names the exact construct to fix."
 
+**RI-1 disposition: verified true of current behavior at `882161e`.** The assert-family-only rule
+is what the profile does today — `agentic_mbse/sysml/executable_profile.py:949-950` routes
+`satisfy`, `requirement_constraint`, and `plain_usage` to UNASSESSED *before predicate inspection*,
+and `constraint_extraction.py:726-735`'s `_effective_predicate_source` returns `None` for
+`plain_usage`, so an authored bare body is never read as a predicate. Evidence:
+`.project/research/20260812-101200_constraint-semantics-end-to-end.md` §2 ("Form classification",
+"Profile gate"). The blessed shape's end-to-end behavior is likewise current — the same register
+records `fusion_tea`'s `assert constraint x : Def { in formal = child.attr; }` admitting, lowering,
+generating a module and aggregator, and driving study dispositions. No pending marker; no item
+named.
+
 **Replacement** (discharges D1, publishes the blessed gate shape and its three scope carve-outs,
 the modeler-owned-tolerance `[NEED]`, and the equality-instruction cite):
 
@@ -755,10 +894,17 @@ the modeler-owned-tolerance `[NEED]`, and the equality-instruction cite):
 > candidate, not a closed door.
 >
 > **Tolerances are yours.** Where a check needs a band, the tolerance is a modeled value you choose
-> and can override; the pipeline never invents one. Before writing an equality at all, read the
-> equality-intent guidance in the lifecycle contract's "Equality intent and authoring policy"
-> (`.project/concepts/constraint-execution-authoritative-lifecycle-contract.md`) — most written
-> equalities want a derivation or a one-sided inequality instead.
+> and can override; the pipeline never invents one.
+>
+> **Before writing an equality at all**, check which of four intents you have. Structural identity:
+> derive it, do not constrain it. A cross-check of two independently computed values: use a loose,
+> physically motivated validity band. A feasibility gate: prefer a one-sided inequality, and if a
+> quantity must equal a value, fix it as an input rather than search for it and then constrain it.
+> Composition closure: derive the last term by construction, or fall back to a banded check. The
+> reasoning behind these four, and the owner's reason for them, is in the lifecycle contract's
+> "Equality intent and authoring policy" (this repository,
+> `.project/concepts/constraint-execution-authoritative-lifecycle-contract.md`) — the authority
+> copy.
 >
 > If the profile BLOCKs an asserted constraint, the generation error names the exact construct to
 > fix.
@@ -770,14 +916,26 @@ the modeler-owned-tolerance `[NEED]`, and the equality-instruction cite):
 out-of-profile owner (e.g. a `requirement_def` owner) is cataloged defensively — one record, no
 expansion, no formal resolution, no node — never silently absent."
 
+**RI-1 disposition: split — the never-executed half is current, the cataloged half is a target.**
+
+- *Never executed under any non-assert form*: **verified true at `882161e`**, same evidence as C2
+  (`executable_profile.py:949-950`; a standalone `require constraint` classifies `plain_usage`, and
+  a `require`/`assume` under a `RequirementConstraintMembership` classifies
+  `requirement_constraint` — both route to UNASSESSED pre-predicate).
+- *Cataloged, one record each, never silently absent*: **target — CONSTRAINT-SEMANTICS Item 2 makes
+  it true.** Today only usages that produced instance-graph nodes get carriers; a usage with zero
+  scopes appears nowhere (research register §2 "Catalog"; the CATF census shows 56 of 65 usages
+  with no carrier). Per RI-1 the published text says what must be true and names the item.
+
 **Replacement:**
 
-> - **unassessed** — every usage outside the assert family is cataloged and never executed: a plain
->   `constraint`, a `require constraint`, an `assume constraint`, and the requirement-side
+> - **unassessed** — every usage outside the assert family is never executed: a plain `constraint`,
+>   a `require constraint`, an `assume constraint`, and the requirement-side
 >   `RequirementUsage`/`SatisfyRequirementUsage` all land here. So does an out-of-profile owner
 >   (e.g. a `requirement_def` owner), which draws a named visible exclusion rather than an
->   unreachable-assert error. Each gets one record — no expansion, no formal resolution, no node —
->   never silently absent.
+>   unreachable-assert error. Each one gets a catalog record — no expansion, no formal resolution,
+>   no node — and none is silently absent. *(Catalog totality is the target state: today a usage
+>   that reaches no instance gets no carrier at all. CONSTRAINT-SEMANTICS Item 2 closes that gap.)*
 
 ## C4 — D2b (design-added, codegen `modeling-assumptions.md:460`)
 
@@ -806,6 +964,15 @@ concrete calc usage; `package` owners are already concrete (one instance, top-le
 other owner kind (e.g. `requirement_def`) is defensively cataloged **unassessed** — one record,
 `eligible=False`, no expansion, no formal resolution, no node (D7)."
 
+**RI-1 disposition: split, the same way as C3.** *Status follows source form*: **verified true at
+`882161e`** — the profile gates on form before predicate inspection
+(`executable_profile.py:949-950`). *Catalogs unassessed under **any** owner kind*: **target —
+CONSTRAINT-SEMANTICS Item 2 makes it true.** `elaboration/elaborate.py:522-539`
+(`_scopes_for_owner`) has branches for `PartDefinition`, `PartUsage`, and `Package` and **no
+`CalculationDefinition` branch**, so calc-def-owned usages produce zero nodes and no carrier
+regardless of form (research register §2 "Instance reach"; 51 of CATF's 65 usages). The published
+text names the item.
+
 **Replacement** (the two axes separated, per contract invariant 16):
 
 > 2. **Owner-kind dispatch** (D5) decides *occurrence expansion only*: `part_def` owners expand to
@@ -818,7 +985,9 @@ other owner kind (e.g. `requirement_def`) is defensively cataloged **unassessed*
 >    **Unassessed status follows source form, not owner kind.** The axes are independent (contract
 >    invariant 16): only the assert family executes, so a plain, `require`, `assume`, or
 >    requirement-side usage catalogs unassessed under *any* owner kind, and an asserted usage under
->    an expandable owner is the only shape that can become eligible.
+>    an expandable owner is the only shape that can become eligible. *(Target state for the
+>    owner-kind half: today an owner kind with no expansion branch — a `calc def` owner — yields no
+>    occurrence and therefore no catalog record at all. CONSTRAINT-SEMANTICS Item 2 closes that.)*
 
 ## C6 — D7-docs, three sites
 
@@ -851,7 +1020,7 @@ catalog outcome."
 "`test_constraint_migration_mapping.py` proves this total across every constraint-bearing fixture;"
 then carries two further clauses.
 
-**Replacement of that first clause only** (DD7 — the two live clauses stay verbatim):
+**Replacement of that first clause only** (DD7 — the other three clauses stay verbatim):
 
 > Totality across every constraint-bearing fixture has no live proof: the test that carried it
 > retired with the legacy stack, and CONSTRAINT-SEMANTICS Item 2 re-anchors the evidence (citation
@@ -867,14 +1036,24 @@ the manifest->catalog no-silent-drop mapping test
 
 **Replacement:** "…the manifest side of the manifest->catalog no-silent-drop mapping. The test that
 proved that mapping retired with the legacy stack; CONSTRAINT-SEMANTICS Item 2 re-anchors the
-proof." The docstring's later references to "the mapping test" (`:11`, `:16`) become "the mapping"
-so the module does not cite a deleted file by implication.
+proof." **Three dangling references in the same docstring go with it** — the S1 grep will not find
+them, because they name the test by description rather than by filename:
+
+- `:9` "the catalog is now the **proven** single source of truth" → drop "proven"; the proof it
+  referred to is the retired test. (Same word C7b strips from the parallel phrase.)
+- `:10-11` "both load-bearing for the mapping test" → "both load-bearing for the mapping".
+- `:15-16` "the mapping test's justified carrier-free category" → "the mapping's justified
+  carrier-free category".
 
 **C7b. `tests/conformance/test_extractor.py:878-882`** (class docstring). Current: "…(the catalog is
-now the proven single source of truth, `test_constraint_migration_mapping.py`); what survives here…"
+now the proven single source of truth, `test_constraint_migration_mapping.py`); what survives here
+is the manifest sweep itself (still live, still load-bearing for the mapping test)…"
 
 **Replacement:** "…(the catalog is now the single source of truth; its totality proof retired with
-the legacy stack and is re-anchored by CONSTRAINT-SEMANTICS Item 2); what survives here…"
+the legacy stack and is re-anchored by CONSTRAINT-SEMANTICS Item 2); what survives here is the
+manifest sweep itself (still live, still load-bearing for the manifest→catalog mapping)…" — the
+`:881-882` "the mapping test" reference is corrected in the same edit, for the same reason as
+C7a's dangling three.
 
 **C7c. `tests/conformance/test_extractor.py:902`** (inline comment). Current: "# confirmed
 empirically — see test_constraint_migration_mapping.py)."
@@ -953,18 +1132,44 @@ that block first and matches its vocabulary.
   implementer records which branch fired and quotes the sentence that decided it. Default
   expectation, stated so a deviation is visible: the no-edit branch.
 
-**Equality-instruction cite (DD2/DD3).** One pointer added to `docs/patterns/constraints.md`, in or
-adjacent to the four-outcome block at `:25-41`:
+**Equality instruction, rendered in full (DD2/DD3, revised per review M6).** The owner asked for
+this "in our concept **in addition to** the sysml-codegen support," so the companion gets the
+instruction, not a pointer to it. A modeler reading `docs/patterns/constraints.md` must be able to
+act on it without a second checkout — `.project/` is working-artifact space and a companion reader
+may not have the codegen tree at all. Added to `docs/patterns/constraints.md`, adjacent to the
+four-outcome block at `:25-41`:
 
-> **When should you write an equality at all?** Four intent classes and the authoring move for each
-> are in the lifecycle contract's "Equality intent and authoring policy"
-> (sysml-codegen `.project/concepts/constraint-execution-authoritative-lifecycle-contract.md`) —
-> the authority copy. Tolerance values are modeled values you choose; the pipeline never invents
-> one.
+> ### When should you write an equality at all?
+>
+> A numerical `==` does not execute as a check (see the outcomes above), and even where it could, an
+> exact equality is usually not what you mean. Find your intent, then use the move next to it.
+>
+> | Your intent | The move |
+> |---|---|
+> | `b` **is** `a` by construction — structural identity | Derive `b`. Do not constrain it. |
+> | Two independently computed values should agree — a cross-check | A loose, physically motivated validity band, sized to the disagreement you would accept. |
+> | The design must meet a limit — a feasibility gate | A one-sided inequality. If a quantity must *equal* a value, fix it as an input rather than searching for it and constraining it. |
+> | Terms must sum to a whole — composition closure | Derive the last term by construction; where you cannot, use a banded check as above. |
+>
+> **Why it matters:** narrow bands of viability make design exploration really difficult — searching
+> a zero-measure set is why a study stops finding feasible points.
+>
+> **Tolerances are yours.** A band's tolerance is a modeled value you choose and can override. The
+> pipeline never invents one.
+>
+> `[AGENT] (ratified by owner, 2026-08-12)` — the four classes are agent-originated and
+> owner-reviewed; the *need* for this guidance is owner-stated. The reasoning behind each class,
+> and the record you would challenge it against, is the authority copy: sysml-codegen
+> `.project/concepts/constraint-execution-authoritative-lifecycle-contract.md`, "Equality intent and
+> authoring policy". **This is not a second authority** — it is the same instruction, rendered where
+> the instructed reader is. If the two ever disagree, the contract governs.
 
-**ADR-009 cite (DD2).** One line in `docs/subtype-enumeration-decision-table.md` next to the D3
-correction: `Coverage and headline semantics: ADR-009 (sysml-codegen
-docs/architecture/modeling-assumptions.md §9).` No stub file.
+**ADR-009 cite (DD2, home revised per review n6).** One line in `docs/patterns/constraints.md` — the
+document a reader of constraint semantics is actually in, and the one that already carries the
+correct four-outcome story at `:25-41` and now the equality instruction: `Coverage and headline
+semantics are recorded in ADR-009 (sysml-codegen docs/architecture/modeling-assumptions.md §9).`
+*Rejected: `docs/subtype-enumeration-decision-table.md` — a coverage-and-headline decision cited
+from a subtype-enumeration table is an odd meeting place.* No stub file.
 
 ## C10 — Backlog filings (codegen `.project/backlog/BACKLOG.md`)
 
@@ -994,17 +1199,30 @@ by this item. D1–D7 plus the sites named in the spec are the floor.
 rule (`:19-21`). The exclusion and this reason are written into `verification.md`; the boundary is
 recorded, not silent.
 
-**Terms.** Three, run over documentation *and* comment/docstring text (the `--include` set covers
+**Terms.** Five, run over documentation *and* comment/docstring text (the `--include` set covers
 `.md`, `.py`, and `.sysml`):
 
 | # | Term | Command shape |
 |---|---|---|
 | S1 | retired test name | `grep -rn "test_constraint_migration_mapping" <scope>` |
 | S2 | `require constraint` taught as a check | `grep -rn "require constraint" <scope>` |
-| S3 | plain-constraint-enforces claims | `grep -rniE "constraint[s]? (are \|is )?(enforced\|checked\|a gate\|gates)\|enforced (gate\|constraint)\|plain constraint.*(execut\|enforc\|gate\|check)" <scope>` |
+| S3 | plain-constraint-enforces claims (verb alternation widened per review M5) | `grep -rniE "constraint[s]? (are \|is )?(enforced\|checked\|verified\|evaluated\|a gate\|gates\|blocks)\|enforced (gate\|constraint)\|plain constraint.*(execut\|enforc\|gate\|check\|verif\|evaluat\|block)" <scope>` |
+| S4 | the superseded headline precedence | `grep -rniE "all[_ ]satisfied\|else any assessed\|any assessed result" <scope>` |
+| S5 | `assume`/`satisfy` taught as a check | `grep -rn "assume constraint\|satisfy requirement" <scope>` |
 
-Run S1–S3 in the companion repository with the same scope. Add S4 there if the D4/D5 reads surface a
-local idiom the three terms miss; adding a term is allowed, dropping one is not.
+**Why S4 and S5 exist.** They cover the item's *own* corrected vocabulary, which the first three
+terms miss. S4 catches a sixth living statement of the superseded precedence — the report template
+and its tests run on the old vocabulary today, so living prose almost certainly restates it, and a
+statement of the old precedence surviving this item would contradict the five places the item
+amends. S5 catches guidance teaching `assume constraint` or `satisfy` as an enforcement form: C2 and
+C3 widen the never-executes set to include both, which puts them inside the defect class.
+
+*Expected S4 collision, resolved in advance:* S4 will hit the amended text this item writes, since
+the amendment notes quote the superseded precedence verbatim (M2). Run S4 **before** the edits, and
+disposition any post-edit hit inside an amendment note as "quoted supersession, correct as written".
+
+Run S1–S5 in the companion repository with the same scope. Add a term there if the D4/D5 reads
+surface a local idiom these five miss; adding a term is allowed, dropping one is not.
 
 **Disposition format.** One row per raw hit. A summary does not discharge the criterion.
 
@@ -1027,7 +1245,11 @@ implementer re-runs and records the raw output, and does not copy this):
   `ConstraintUsage`, which is true and is not check guidance. `BACKLOG.md:170-171` sits in an
   excluded-by-content historical finding block; the implementer dispositions it explicitly either
   way rather than skipping it.
-- S3 → 1 living-surface hit, `modeling-assumptions.md:489`, D1's own heading, corrected by C2.
+- S3 → 1 living-surface hit under the *narrow* regex, `modeling-assumptions.md:489`, D1's own
+  heading, corrected by C2. The widened alternation was not pre-run; expect more.
+- **S4 and S5 were not pre-run.** They were added after the design review and their hit sets are
+  unknown. Treat that as unsized work in the plan, not as an empty result — S4 in particular is
+  expected to hit living prose around the report template and its tests.
 
 **Checks recorded in `verification.md` alongside the sweep.** Codegen:
 `python scripts/check_doc_distinctness.py`, `git diff --check`. Companion: `git diff --check`;
@@ -1036,8 +1258,23 @@ grep `tests/` for the edited documentation paths, run any test that references o
 does, record "the companion has no doc-check script and no docs-referencing tests; `git diff --check`
 plus link resolution is the whole mechanical surface" as the finding rather than as a pass.
 
-**Also recorded in `verification.md`:** every RI-7 discharge — invariant 8, Appendix C "Zero
-constraint usages", Appendix B `:648` as verified-already-correct with their verification notes; the
-C4/D2b design addition with its reason; the D5-e branch that fired with its quoted framing sentence;
-and any correction that could not be made without touching executable text, handed on by name to the
-item that owns it.
+**Second table: the discharge record.** Everything that is not a sweep hit gets the same treatment —
+one row, not prose, so the RI-7 check is mechanical rather than interpretive:
+
+```markdown
+| Entry | Disposition | Verification note |
+|-------|-------------|-------------------|
+| contract invariant 8 | verified already-correct | four outcomes unchanged; new severity is a contextual failure (A3), not a fifth outcome |
+| Appendix C "Zero constraint usages" | verified already-correct | reads as state 6 (unconstrained, report absent) |
+| Appendix B "Catalog is absent when no assertion is admitted" | verified already-correct | catalog/report visibility claim is unaffected by the coverage change |
+| C4 / D2b ("three outcomes" → four) | design addition | §8 contradicted invariant 8, the guardrail this item pins |
+| A10b (Appendix C "Asserted vacuous gate") | design addition | invariant 61 is a mandatory-matrix behavior with no cell |
+| B7 (LC-E13) | design addition | companion mirror for invariant 61, per the LC-G07 symmetry argument |
+| C2 / C3 / C5 RI-1 dispositions | current-behavior or target | one row each, evidence or the item named (see Appendix C) |
+| D5-e (`syntax-reference.md:185`) | branch fired: … | the quoted framing sentence that decided it |
+| <any correction blocked by executable text> | handed on | the item that owns that code, by name |
+```
+
+Also recorded: the DD5 scope exclusion and its reason; the companion doc-check finding; and the
+convention statement B1 carries (this item establishes in-place rewriting under the companion
+header's forward-amendment rule).

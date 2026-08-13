@@ -464,7 +464,98 @@ file, commit split). That is a high bar and the design clears it.
 
 ## Resolutions
 
-*(Stage 4 — filled in as the owner resolves each finding. Empty at write time.)*
+Resolved 2026-08-12 in the design-agent session, under orchestrator rulings on the seven majors.
+One entry per finding. All incorporated into `design.md`.
+
+### Majors
+
+- **M1 (companion convention rests on a misread precedent) — resolved, re-grounded.** The reviewer's
+  verification stands: `:272-274` is LC-E04**B**'s amendment sentence (LC-E04 is at `:263`), and
+  comparing the live body against the archived close-state copy confirms it is a **pure append**.
+  DD4 and B3 no longer claim a rewrite precedent. The license is now the copy-and-freeze header's
+  "forward requirement amendments happen here only" (`:3-7`), and the design states plainly that
+  **this item establishes the in-place-rewrite convention the header licenses** — B1's amendment
+  note carries that statement once, and it is recorded in `verification.md`. LC-E04B is still cited,
+  correctly, for the *form* of the trailing amendment sentence. Per the orchestrator ruling, in-place
+  rewriting is kept rather than surfaced to the owner, because **every rewrite now quotes the text it
+  supersedes inside its own amendment note** (see M2) — nothing is silently lost, so the recovery is
+  mechanical if the owner later prefers append-only. B3's if-false clause is rewritten to say so.
+  Research Findings "Companion structure" is corrected.
+- **M2 (drafted amendments carry no grade) — resolved, all five.** B1–B5 now get the B6 treatment:
+  `Amended 2026-08-12 (CONSTRAINT-SEMANTICS Item 1), [AGENT] (ratified by owner, 2026-08-12): …`.
+  Every note also quotes the superseded text. For **B4** (LC-E11, the wholesale replacement), per the
+  orchestrator ruling: the `[INHERITED]` marker and the `Source:` line stay on the requirement, with
+  one clarifying clause noting the inherited source is the source of the requirement's *subject*, not
+  of the precedence; the replacement body is explicitly sourced to
+  `.project/active/constraint-semantics-contract/spec.md` and ADR-009 at agent-ratified grade; and
+  the note quotes the superseded precedence verbatim. **B5** gets the same shape.
+- **M3 (invariant 61 has no mirror and no acceptance cell) — resolved, both added.** The LC-G07
+  symmetry argument is applied to 61: new **B7 / LC-E13** in the companion (agent-ratified grade,
+  citing invariant 61), and new **A10b** — an Appendix C row, "Asserted vacuous gate", covering the
+  warning-grade disposition, the advisory, the no-halt, the partial-coverage headline, and the
+  explicit-inapplicability path out of the denominator. Both are recorded as design additions with
+  their reason in the `verification.md` discharge table. A0 records that 61 was minted by this item
+  on 2026-08-12 with 60 as the prior high-water mark; no next-free register is built.
+- **M4 (RI-1 undischarged for C2/C3/C5 — the hidden bet) — resolved, and the bet was partly
+  wrong.** Each is now dispositioned against the research register's code reads:
+  - **C2** — verified true of current behavior at `882161e`. `executable_profile.py:949-950` routes
+    `satisfy`/`requirement_constraint`/`plain_usage` to UNASSESSED before predicate inspection, and
+    `_effective_predicate_source` returns `None` for `plain_usage`. No pending marker.
+  - **C3** — **split.** "Never executed" is current; "cataloged, one record each, never silently
+    absent" is a **target**: today a usage that reaches no instance gets no carrier at all (56 of
+    CATF's 65). The published text now names CONSTRAINT-SEMANTICS Item 2.
+  - **C5** — **split** the same way. Status-follows-form is current; "catalogs unassessed under *any*
+    owner kind" is a target, because `_scopes_for_owner` (`elaborate.py:522-539`) has no
+    `CalculationDefinition` branch and 51 calc-def-owned usages produce zero nodes. Item 2 named in
+    the published text.
+    The reviewer was right that this was an unstated bet, and right that it was worth checking — two
+    of the three statements were target, not current.
+- **M5 (sweep misses the item's own corrected vocabulary) — resolved.** S3's verb alternation is
+  widened (`verified`, `evaluated`, `blocks`). **S4** added for the superseded precedence
+  (`all[_ ]satisfied|else any assessed|any assessed result`) and **S5** for `assume constraint` /
+  `satisfy requirement`. A pre-recorded resolution handles the S4/amendment-note collision: run S4
+  before the edits, and disposition any post-edit hit inside an amendment note as "quoted
+  supersession, correct as written". Neither new term was pre-run, and the design says so rather than
+  implying an empty result. The `.project/` exclusion (DD5) is kept, per the reviewer's own
+  assessment and the orchestrator ruling.
+- **M6 (companion equality rendering is a pointer, not an instruction) — resolved, rendered in
+  full.** `docs/patterns/constraints.md` now receives the four intent classes as a table (intent →
+  the authoring move), the owner's reason for the guidance, the modeler-owned-tolerance statement,
+  and the `[AGENT] (ratified by owner, 2026-08-12)` grade — self-contained, actionable without a
+  second checkout. The contract is cited as the authority for the *reasoning* and as the challenge
+  target, with "if the two disagree, the contract governs" stated. The same reachability fix is
+  applied to C2's blessed-gate paragraph in `modeling-assumptions.md`: the four moves are stated
+  inline in one sentence each, with the contract cite kept for the reasoning (that pointer is
+  same-repository, so it stays).
+- **M7 (single-home claim overstated, no check) — resolved, both halves.** The Core Concept now says
+  the definitions have one *home*, not one *copy*, and names which amendments point (A5, A6, A7) and
+  which must restate for their document's structure (A10, B4, C1) — five precedence statements and
+  three disposition-kind statements. Where an amendment restates, it restates verbatim in meaning and
+  order and cites the home. Validation Approach gains **step 2**: the five precedence statements and
+  the three disposition-kind statements are compared pairwise against A0 and must agree in meaning
+  and order; disagreement is a defect. Declining to build a checker is unchanged.
+
+### Minors — all nine fixed
+
+- **n1** — invariant 28's cite corrected to `:213-219` (quoted first sentence `:213-215`).
+- **n2** — the `01-extraction.md:20` evidence cell has **four** clauses; Research Findings and DD7
+  both corrected. C6c's first-clause-only scope was already right and is unchanged.
+- **n3** — `constraint_report.py:9` ("the catalog is now the *proven* single source of truth") added
+  to C7a, along with the two other by-description references at `:10-11` and `:15-16`.
+- **n4** — `test_extractor.py:881-882` ("still load-bearing for the mapping test") added to C7b.
+  Implementation Notes now states that by-description references outnumber the filename hits and that
+  the S1 grep will not find them.
+- **n5** — RI-4 and RI-5 re-anchored on quoted text instead of line numbers, with the reason (A0 and
+  A11 insert above all the guardrails). A9's and A10's guardrail rows re-anchored the same way.
+- **n6** — the ADR-009 companion cite moves to `docs/patterns/constraints.md`, with the
+  subtype-enumeration table recorded as the rejected alternative.
+- **n7** — B5 now cites invariants **32 and 33**.
+- **n8** — A0's applicability test now says explicitly that it is a **form-level** test: a `BLOCK`ed
+  or `NON_NUMERICAL` asserted usage stays an applicable asserted gate and stays in the denominator as
+  an unassessed one. This is what makes A9's excluded-asserted → partial-coverage claim hold.
+- **n9** — Appendix D gains a second table stub (entry | disposition | verification note) covering
+  the RI-7 discharges, the three design additions (C4/D2b, A10b, B7), the C2/C3/C5 RI-1
+  dispositions, the D5-e branch, and any correction handed on for touching executable text.
 
 ---
 
