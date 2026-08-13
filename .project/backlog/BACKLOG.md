@@ -145,6 +145,39 @@ PUSH-DOWN items (all certified; archived to `completed/20260720_*`):
 
 ---
 
+### [CATF-CRYO-HEAT-LEAK-COEFFICIENT] Magnet static heat-leak coefficient ~3–6 orders high; authored CATF design point is gate-infeasible — P1, unowned (filed at owner direction, 2026-08-13)
+
+**The defect (measured, Item 5 finding 6-D):** `heat_leak = magnet_volume * 0.05 // MW`
+(`library/analyses/thermal_loads.sysml:59`) puts ~38 MW of static heat leak into a 4.5 K
+system; after Carnot/efficiency amplification (~×220) the cryoplant draws **8,396 MW against
+1,547 MW gross**, so net electric power is negative at the authored inputs. Real 4.5 K plants
+see kilowatt-scale static leak. The identical number reproduces on untouched `catf_mfe_d5` —
+it was always true and always invisible, because d5 executes zero gates. The first execution
+of the derivative's asserted gates (CONSTRAINT-SEMANTICS Item 5) caught it: the epic's
+founding failure mode, demonstrated and closed by the same item.
+
+**Why P1, not P3 — the prioritization insight [AGENT] (ratified by owner, 2026-08-13):** a
+design search run against the uncorrected cryo model rejects essentially everything near the
+authored regime. The corrected coefficient is a **prerequisite for design search being
+useful**, not merely honest — so this should be scheduled soon after the CONSTRAINT-SEMANTICS
+epic lands, ahead of any real CATF study campaign.
+
+**Scope of the fix (separately authorized per the 6-D ruling; NOT inside Item 5):**
+- First decision is the fix's **home**, made in daylight with its own provenance: the
+  derivative's copy of the library (frozen twins untouched; physics diverges deliberately;
+  PROVENANCE records it) vs the upstream shared library (frozen-twin territory; needs its own
+  ruling).
+- A physically defensible replacement coefficient is a **modeling decision** — owner or
+  domain-source signed, never agent-invented (same rule as tolerances).
+- Re-run of the Item 5 Phase 6 acceptance under the corrected model (coverage unaffected;
+  headline flips back; the SC-5 candidate labeling reverts to the natural direction).
+
+**Evidence home:** Item 5's verification record and the 6-D ruling
+(`.project/active/catf-constraint-policy-acceptance/`); acceptance record states the authored
+point is gate-infeasible under the model as authored.
+
+---
+
 ### [CONSTRAINT-SILENCE] `assert constraint` invisible to the drop report — RESOLVED (PIPELINE-TRUTH Item 4)
 
 **RESOLVED by PIPELINE-TRUTH Item 4** (`.project/completed/20260720_epic_pipeline_truth.md`), 2026-07-06. The drop report now
