@@ -30,9 +30,6 @@ pytestmark = requires_license
 
 FIXTURE = FIXTURES_DIR / "constraint_blocked_chain_multi"
 
-_ITEM4_B = "CONSTRAINT-SEMANTICS Item 4 — Defect B (D3/D4/D5/D6)"
-
-
 def _elaborate(*, strict: bool) -> InstanceGraph:
     extractor = SysMLDataExtractor([FIXTURE])
     assert extractor.load_models()
@@ -68,7 +65,6 @@ def test_the_detail_states_the_bindings_rewrite() -> None:
     assert "in inner_radius = bioshield.inner_radius;" in detail
 
 
-@pytest.mark.xfail(strict=True, reason=_ITEM4_B)
 def test_the_detail_names_the_source_location_by_basename() -> None:
     """`basename:line`, never the absolute path — an absolute path is checkout-dependent."""
     detail = _blocked_detail()
@@ -76,7 +72,6 @@ def test_the_detail_names_the_source_location_by_basename() -> None:
     assert str(FIXTURE) not in detail
 
 
-@pytest.mark.xfail(strict=True, reason=_ITEM4_B)
 def test_three_chain_occurrences_collapse_to_two_distinct_entries() -> None:
     """Identification, not repetition: the same reference twice is one entry."""
     assert _blocked_detail().count("block_feature_chain") == 2

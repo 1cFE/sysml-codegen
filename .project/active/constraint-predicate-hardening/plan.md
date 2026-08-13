@@ -384,24 +384,24 @@ mode here is a flaky landing, not a documentation gap.
 
 ### Changes
 
-- [ ] New private helper `_render_block_reasons(decision)` in `elaborate.py`, called from
+- [x] New private helper `_render_block_reasons(decision)` in `elaborate.py`, called from
       `_build_constraint_nodes` (`:1097-1108`). It exists so the ordering key is testable alone.
-- [ ] **One key**, used for de-dup *and* order:
+- [x] **One key**, used for de-dup *and* order:
       `(basename(file), line, column, reason, construct, message)`, each field normalized
       independently at construction — `basename(file) if file else ""`, `line if line is not None
       else -1`, `column if column is not None else -1` (D5, must-fix M1 + advisory A4). Because the
       order key **is** the de-dup identity, no two survivors tie, so the sort never falls back to the
       companion's walk order.
-- [ ] Render ` [basename:line]` for **every** block reason; omit the suffix entirely when the
+- [x] Render ` [basename:line]` for **every** block reason; omit the suffix entirely when the
       location is absent — `LocationFact` is `None`, `file` empty, or `line` `None` (D6, M4).
       `column` is ordering-only, never rendered. **Never the absolute path.**
-- [ ] Join multiple entries with `"; "`. **One line, no newline** (invariant 8) — two consumers
+- [x] Join multiple entries with `"; "`. **One line, no newline** (invariant 8) — two consumers
       depend on it: `test_elaboration_payload_identity.py:243` (regex `.` does not cross a newline)
       and `project.py:97` → `:265`.
-- [ ] One `SI_CONSTRAINT_BLOCKED` diagnostic per blocked constraint node, before and after
+- [x] One `SI_CONSTRAINT_BLOCKED` diagnostic per blocked constraint node, before and after
       (invariant 4; held by `test_elaboration_payload_identity.py:253` and
       `tests/unit/test_constraint_usage_record_mint.py:94`).
-- [ ] Remove `xfail` from `tests/conformance/test_blocked_chain_diagnostic.py` and
+- [x] Remove `xfail` from `tests/conformance/test_blocked_chain_diagnostic.py` and
       `tests/unit/test_render_block_reasons.py`.
 
 ### How to verify
@@ -700,9 +700,41 @@ commit and the codegen commit that unmarks those two rows land back to back; the
 both trees green, and no commit in between was reported as green.
 
 ### Phase 5 Completion
-**Completed:**
-**`test_elaboration_payload_identity.py` edited? (must be NO — any yes is a stated design amendment):**
-**Issues / deviations:**
+**Completed:** 2026-08-13
+
+**Actual change:** three module-level private functions in `elaborate.py` —
+`_block_reason_key`, `_render_block_reason`, `_render_block_reasons` — replacing the inline
+join at `_build_constraint_nodes`. Module level rather than a method: none of them reads
+`self`, and the key is the thing the unit test needs to reach on its own. The rendering reads
+the same normalized key it sorts by, so "absent location" is defined once.
+
+**`test_elaboration_payload_identity.py` edited? NO.** `git status` shows it unmodified, and
+its 13 tests pass. D7 holds, and invariant 8 with it — the detail is still one line.
+
+**Rendered result on `constraint_blocked_chain_multi`** (3 occurrences → 2 entries):
+
+```
+constraint profile blocked execution: block_feature_chain: feature chain
+'bioshield.inner_radius' is not executable in a predicate body; bind it to a constraint
+formal in the usage (in inner_radius = bioshield.inner_radius;) and use the formal in the
+predicate [model.sysml:43]; block_feature_chain: feature chain 'bioshield.outer_radius' …
+[model.sysml:43]
+```
+
+**One limit worth naming: the location is the constraint usage's, not the chain's.** Both
+entries read `[model.sysml:43]`, the line the `assert constraint` opens on, because that is
+the `LocationFact` the companion attaches to the decision — there is no per-node location in
+the payload. For a long predicate the location points at the gate, not at the term. Naming
+the reference is what disambiguates *within* a predicate, and it does. Recorded in the docs
+text rather than left implied; a per-node location would be a companion payload change and
+is out of this item's scope.
+
+**Counts:** full licensed codegen suite **2010 passed, 34 skipped, 79 deselected, 0 xfailed**,
+zero license-skip lines. Every `xfail` marker is gone — the last of them came off here.
+`ruff check src` = 12, `mypy src` = 55.
+
+**Issues / deviations:** `_render_block_reasons` takes the diagnostics sequence rather than
+the decision (recorded at Phase 1, deviation 3).
 
 ### Phase 6 Completion
 **Completed:**

@@ -18,18 +18,9 @@ from agentic_mbse.sysml.constraint_facts import LocationFact
 from agentic_mbse.sysml.executable_profile import EligibilityDiagnostic
 from agentic_mbse.sysml.expression_facts import IdentityFact
 
-pytestmark = pytest.mark.xfail(
-    strict=True, reason="CONSTRAINT-SEMANTICS Item 4 — Defect B (D4/D5/D6)"
-)
+from sysml_codegen.elaboration.elaborate import _render_block_reasons
 
 _IDENTITY = IdentityFact(kind="AssertConstraintUsage", name="guard", qualified_name="P::guard")
-
-
-def _render_block_reasons(diagnostics: list[EligibilityDiagnostic]) -> str:
-    """Imported inside the test so the red phase is an xfail, not a collection error."""
-    from sysml_codegen.elaboration.elaborate import _render_block_reasons as renderer
-
-    return renderer(diagnostics)
 
 
 def _diagnostic(

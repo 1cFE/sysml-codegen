@@ -17,6 +17,7 @@ from agentic_mbse.sysml.constraint_extraction import (
 from agentic_mbse.sysml.data_models import ResolvedSemanticReferenceFact
 from agentic_mbse.sysml.executable_profile import (
     Eligibility,
+    EligibilityDiagnostic,
     UsageDecision,
     evaluate_identified_profile,
 )
@@ -314,6 +315,53 @@ def _blocking_model_validation_diagnostics(
             )
         )
     return tuple(result)
+
+
+def _block_reason_key(diagnostic: EligibilityDiagnostic) -> tuple[str, int, int, str, str, str]:
+    """The diagnostic's normalized identity: what de-duplicates it, and what orders it.
+
+    One key for both jobs. De-duplicating on the reason alone would collapse two *different*
+    blocked chains at different lines into one entry and lose the identification the modeler
+    needs; ordering on anything narrower than the full identity lets two survivors tie, and a
+    tie hands the order back to the profile's walk. Because the order key *is* the de-dup
+    identity, no two survivors can tie.
+
+    Every field is normalized here rather than at the comparison, so a missing file, line, or
+    column never meets an `int`. The file is basenamed in the key as well as in the rendering:
+    an absolute path is checkout-dependent and would make the order machine-dependent too.
+    """
+    location = diagnostic.location
+    return (
+        Path(location.file).name if location is not None and location.file else "",
+        location.line if location is not None and location.line is not None else -1,
+        location.column if location is not None and location.column is not None else -1,
+        diagnostic.reason,
+        diagnostic.construct,
+        diagnostic.message,
+    )
+
+
+def _render_block_reason(diagnostic: EligibilityDiagnostic) -> str:
+    """One block reason as `reason: message [basename:line]`.
+
+    The location suffix is omitted entirely when there is no usable location — no
+    placeholder, because a placeholder advertises a place that does not exist. `column`
+    orders and is never rendered.
+    """
+    file, line, _column, reason, _construct, message = _block_reason_key(diagnostic)
+    suffix = f" [{file}:{line}]" if file and line >= 0 else ""
+    return f"{reason}: {message}{suffix}"
+
+
+def _render_block_reasons(diagnostics: Sequence[EligibilityDiagnostic]) -> str:
+    """Every distinct block reason on one line, in an order the payload decides.
+
+    A repeated reason is one entry: `LayerContinuity` blocks the same chain thirteen times
+    and a modeler needs to read it once. Joined with `"; "` and never a newline — two
+    consumers fold this string into a one-line regex match.
+    """
+    distinct = {_block_reason_key(diagnostic): diagnostic for diagnostic in diagnostics}
+    return "; ".join(_render_block_reason(distinct[key]) for key in sorted(distinct))
 
 
 class _ExactElaborator:
@@ -1095,10 +1143,7 @@ class _ExactElaborator:
                 )
                 self._graph.constraints[node_id] = node
                 if association.decision.eligibility is Eligibility.BLOCK:
-                    reasons = "; ".join(
-                        f"{diagnostic.reason}: {diagnostic.message}"
-                        for diagnostic in association.decision.diagnostics
-                    )
+                    reasons = _render_block_reasons(association.decision.diagnostics)
                     self._diagnose(
                         ElaborationCode.SI_CONSTRAINT_BLOCKED,
                         node.node_id,
