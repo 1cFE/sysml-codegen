@@ -202,7 +202,46 @@ class ExactPipelineContext:
         projected = _project_or_fail(graph, receipt.targets)
         if _computation_digest(projected) != receipt.computation_digest:
             _receipt_failure("the projected computation graph disagrees with the receipt")
+        _verify_constraint_usage_population(graph, projected)
         return projected
+
+
+def _verify_constraint_usage_population(
+    graph: InstanceGraph, projected: ComputationGraph
+) -> None:
+    """Design invariant 4: exactly one catalog usage row per domain member, by identity.
+
+    This is the one place both sides are in scope. Everything downstream sees only the
+    ``ComputationGraph``, so the catalog can there be checked against itself but never
+    against the population it is supposed to render — and a *non-reaching* member's row can
+    go missing without leaving any internal inconsistency behind. Here the sealed instance
+    bytes still carry the domain, so the missing member can be named rather than merely
+    counted.
+
+    Cheap by construction: the caller has just re-decoded and re-projected anyway, so this
+    adds a set comparison over data already in hand.
+    """
+    catalog = projected.constraint_catalog
+    rendered = (
+        {row.declaration_id for row in catalog.usage_records} if catalog is not None else set()
+    )
+    minted = {key.to_wire(): record for key, record in graph.constraint_usages.items()}
+
+    missing = sorted(minted.keys() - rendered)
+    if missing:
+        named = ", ".join(
+            f"{minted[item].usage_qualified_name} ({item})" for item in missing[:5]
+        )
+        _receipt_failure(
+            f"the catalog is missing {len(missing)} of {len(minted)} constraint usage "
+            f"domain members: {named}"
+        )
+    unknown = sorted(rendered - minted.keys())
+    if unknown:
+        _receipt_failure(
+            f"the catalog carries {len(unknown)} usage rows that join no domain member: "
+            f"{', '.join(unknown[:5])}"
+        )
 
 
 def _seal(graph: InstanceGraph, targets: tuple[str, ...] | None) -> ExactPipelineContext:

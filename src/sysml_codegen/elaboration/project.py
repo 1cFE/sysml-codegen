@@ -1180,27 +1180,17 @@ class _Projection:
             )
             for definition_qn, formals in sorted(source_formals.items())
         ]
-        payload = {
-            "source_records": [item.model_dump(mode="json") for item in source_records],
-            "usage_records": [item.model_dump(mode="json") for item in usages],
-            "concrete_entries": [item.model_dump(mode="json") for item in entries],
-            "excluded_records": [item.model_dump(mode="json") for item in excluded_records],
-        }
-        fingerprint = hashlib.sha256(
-            json.dumps(
-                payload,
-                sort_keys=True,
-                separators=(",", ":"),
-                ensure_ascii=True,
-            ).encode()
-        ).hexdigest()
-        return ConstraintCatalog(
+        # Seal the rows, then stamp the seal onto the catalog. The payload shape lives on
+        # the model itself so the generation preflight recomputes it by the same rule
+        # rather than by a second, silently divergent copy.
+        sealed = ConstraintCatalog(
             source_records=source_records,
             usage_records=usages,
             concrete_entries=entries,
             excluded_records=excluded_records,
-            fingerprint=fingerprint,
+            fingerprint="",
         )
+        return sealed.model_copy(update={"fingerprint": sealed.recomputed_fingerprint()})
 
 
 def _requested_targets(targets: Sequence[str]) -> tuple[str, ...]:

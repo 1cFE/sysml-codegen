@@ -326,6 +326,16 @@ def _preflight_constraint_totality(graph: ComputationGraph) -> None:
 
     It joins by ``declaration_id`` only, never by qualified name, and it refuses rather
     than repairs.
+
+    **Two kinds of check, and the second is why removal of a non-reaching row is caught.**
+    The joins below are catalog-internal: they compare the row lists against each other,
+    which catches a duplicate, an orphaned occurrence row, and a disagreeing count. They
+    cannot catch a *removed* row whose ``occurrence_count`` is zero, because such a row has
+    no occurrence to orphan and no count to contradict — its removal leaves the catalog
+    perfectly self-consistent. That is 56 of ``catf_mfe_d5``'s 65 members, which is the
+    whole population this item exists to make visible. The seal check is the guard for
+    those: ``fingerprint`` was minted at projection from the domain, so it still knows the
+    removed row existed.
     """
     from sysml_codegen.elaboration.graph import DISPOSITION_REASONS
     from sysml_codegen.generation import CodeGenerationError
@@ -339,6 +349,14 @@ def _preflight_constraint_totality(graph: ComputationGraph) -> None:
                 "but carries no catalog"
             )
         return
+
+    if catalog.recomputed_fingerprint() != catalog.fingerprint:
+        raise CodeGenerationError(
+            "constraint usage domain incomplete: the catalog's "
+            f"{len(catalog.usage_records)} usage rows no longer match the fingerprint "
+            "sealed at projection, so a row was added, removed, or altered after the "
+            "domain was rendered"
+        )
 
     rows_by_id: dict[str, ConstraintCatalogUsageRecord] = {}
     for row in catalog.usage_records:

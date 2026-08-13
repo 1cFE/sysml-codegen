@@ -194,3 +194,83 @@ def test_the_live_and_v6_contexts_agree_on_the_public_entry_point_surface(tmp_pa
     assert [alias.model_dump(mode="json") for alias in live.output_aliases] == [
         alias.model_dump(mode="json") for alias in from_snapshot.output_aliases
     ]
+
+
+# --- Design invariant 4, where both sides are in scope (audit A1) -----------------------
+
+
+def _with_projection(monkeypatch, mutate) -> None:
+    """Route every projection — the seal's and every later read's — through `mutate`.
+
+    Patching before the context is built is what makes this a *projection defect* rather
+    than tampering: the receipt's own digest is minted from the defective output, so it
+    agrees with itself, and the catalog it produces is internally consistent. Nothing
+    downstream of projection can see it. Only a check that still holds the domain can.
+    """
+    from sysml_codegen.orchestration import exact_pipeline_context as module
+
+    real = module._project_or_fail
+
+    def defective(graph, targets):
+        projected = real(graph, targets)
+        mutate(projected.constraint_catalog)
+        return projected
+
+    monkeypatch.setattr(module, "_project_or_fail", defective)
+
+
+def test_a_catalog_missing_a_non_reaching_member_is_refused_by_name(monkeypatch) -> None:
+    """The 56-of-65 shape: no occurrence to orphan, no count to contradict, still caught."""
+    dropped: dict[str, object] = {}
+
+    def drop_a_non_reaching_row(catalog):
+        # Deterministic across every call: the seal and each later read must drop the SAME
+        # row, or the receipt's digest check fires first and this proves nothing.
+        if catalog is None:
+            return
+        candidates = sorted(
+            (row for row in catalog.usage_records if row.occurrence_count == 0),
+            key=lambda row: row.declaration_id,
+        )
+        if not candidates:
+            return
+        victim = candidates[0]
+        dropped["row"] = victim
+        catalog.usage_records.remove(victim)
+        object.__setattr__(catalog, "fingerprint", catalog.recomputed_fingerprint())
+
+    _with_projection(monkeypatch, drop_a_non_reaching_row)
+    context = build_exact_pipeline_context([FIXTURES_DIR / "catf_mfe_d5"])
+
+    with pytest.raises(CodeGenerationError) as raised:
+        _ = context.computation_graph
+
+    message = str(raised.value)
+    assert "missing 1 of 65 constraint usage domain members" in message
+    assert dropped["row"].usage_qualified_name in message
+    assert dropped["row"].declaration_id in message
+
+
+def test_a_catalog_row_that_joins_no_domain_member_is_refused(monkeypatch) -> None:
+    """The other direction: a row the domain never minted."""
+
+    def append_a_ghost_row(catalog):
+        if catalog is None or any(
+            row.declaration_id == "ghost" for row in catalog.usage_records
+        ):
+            return
+        ghost = catalog.usage_records[0].model_copy(update={"declaration_id": "ghost"})
+        catalog.usage_records.append(ghost)
+        object.__setattr__(catalog, "fingerprint", catalog.recomputed_fingerprint())
+
+    _with_projection(monkeypatch, append_a_ghost_row)
+    context = build_exact_pipeline_context([FIXTURE])
+
+    with pytest.raises(CodeGenerationError, match="join no domain member"):
+        _ = context.computation_graph
+
+
+def test_an_intact_catalog_passes_the_population_check() -> None:
+    """The guard is not vacuous: the unmutated public route still reads clean."""
+    graph = build_exact_pipeline_context([FIXTURES_DIR / "catf_mfe_d5"]).computation_graph
+    assert len(graph.constraint_catalog.usage_records) == 65

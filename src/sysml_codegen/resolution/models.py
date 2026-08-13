@@ -10,6 +10,8 @@ Key Design Principles:
 3. Qualified names use __ separator per ADR-001
 """
 
+import hashlib
+import json
 from enum import Enum
 from pathlib import Path
 from typing import Literal
@@ -591,6 +593,33 @@ class ConstraintCatalog(BaseModel):
     concrete_entries: list[ConstraintCatalogEntry] = Field(default_factory=list)
     excluded_records: list[ConstraintCatalogExcludedRecord] = Field(default_factory=list)
     fingerprint: str
+
+    def recomputed_fingerprint(self) -> str:
+        """The fingerprint these four row lists imply, right now.
+
+        Projection seals ``fingerprint`` from the domain; this recomputes it from whatever
+        the catalog currently holds. The two disagreeing means the rows changed after they
+        were sealed — which is the only way a row can go missing without leaving the
+        catalog internally consistent. That is what makes this the check a removed
+        *non-reaching* row cannot slip past: it has no occurrence row to orphan and no
+        count to contradict, but it was inside the seal.
+        """
+        payload = {
+            "source_records": [item.model_dump(mode="json") for item in self.source_records],
+            "usage_records": [item.model_dump(mode="json") for item in self.usage_records],
+            "concrete_entries": [item.model_dump(mode="json") for item in self.concrete_entries],
+            "excluded_records": [
+                item.model_dump(mode="json") for item in self.excluded_records
+            ],
+        }
+        return hashlib.sha256(
+            json.dumps(
+                payload,
+                sort_keys=True,
+                separators=(",", ":"),
+                ensure_ascii=True,
+            ).encode()
+        ).hexdigest()
 
 
 class ComputationGraph(BaseModel):
