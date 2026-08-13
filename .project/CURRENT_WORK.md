@@ -6,6 +6,15 @@
 
 ## Active Work
 
+### 2026-08-12: CONSTRAINT-SEMANTICS Item 2 — canonical usage domain and catalog totality (spec in progress)
+
+Spec at `.project/active/constraint-catalog-totality/spec.md`; product-lens gate DISPOSED
+(spec-F1..spec-F5, none blocking). Spec review returned **Revise**; all eleven findings resolved
+in-place, resolutions recorded per finding ID in `spec-review.md`. The substantive change: form
+classification is now anchored on the exact route's classifier (`elaborate.py:1119-1137`), not the
+companion repo's legacy pass, and the named `satisfy` exclusion is recorded as new work rather than
+preserved behavior. Next: `/_my_design`.
+
 ### 2026-08-12: CONSTRAINT-SEMANTICS Item 1 — contract and authoring policy (AUDITED: Certify-with-residuals)
 
 **All six phases landed.** The documentation half of the owner's sequence is done: the ratified

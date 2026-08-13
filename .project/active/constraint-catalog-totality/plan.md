@@ -231,26 +231,26 @@ def test_catf_mfe_d5_authored_population_is_total(catf_mfe_d5_graph):
 **See design.md for:** *The Point* / *Research Findings* (the 65→9 measurement and its cause),
 *De-risk first* (the spike's two questions).
 
-- [ ] Create `tests/conformance/test_constraint_usage_domain_totality.py` with the stencil above.
+- [x] Create `tests/conformance/test_constraint_usage_domain_totality.py` with the stencil above.
       Run it; record the exact failure mode (attribute absent) in the plan's Implementation Notes.
       **It stays failing through Phases 1–2.**
-- [ ] Run `/_my_spike` on one annotated fixture: add a `/* @inapplicable: reason */` doc comment to
+- [x] Run `/_my_spike` on one annotated fixture: add a `/* @inapplicable: reason */` doc comment to
       a scratch copy of a constraint usage, and confirm at elaboration (a) the comment body is
       reachable from the `ConstraintUsage` element, (b) `.strip().strip("*").strip()` + `\n`-join
       reproduces the extraction-side shape, (c) a second comment body lands on a later line of the
       join. Record the answers in `verification.md`.
-- [ ] Re-measure and record: constraint-bearing fixture directories (design says 31 at `ccf4c21`),
+- [x] Re-measure and record: constraint-bearing fixture directories (design says 31 at `ccf4c21`),
       snapshot-bearing fixture directories (design says 21). These are counts recorded at execution,
       not targets.
 
 ### Validation
 
 **Automated:**
-- [ ] `uv run --extra dev pytest tests/conformance/test_constraint_usage_domain_totality.py` → fails
+- [x] `uv run --extra dev pytest tests/conformance/test_constraint_usage_domain_totality.py` → fails
       for the expected reason (no `constraint_usages` on the graph), not an import or fixture error.
 
 **Manual:**
-- [ ] Spike answers recorded. If (a) is false, **STOP and surface it** — D2's mechanism assumption
+- [x] Spike answers recorded. If (a) is false, **STOP and surface it** — D2's mechanism assumption
       is broken and the design has to move before Phase 4.
 
 **What We Know Works After This Phase:** the failure is reproduced by a test that will fail again if
@@ -966,10 +966,55 @@ repos, which costs more in context-switching than in code. Call the item **~2.5 
 [TO BE FILLED DURING IMPLEMENTATION]
 
 ### Phase 1 Completion
-**Completed:**
+**Completed:** 2026-08-12
+
 **Actual Changes:**
-**Issues:**
-**Deviations:**
+- Created `tests/conformance/test_constraint_usage_domain_totality.py` (3 nodes: the 65/9
+  headline, one-disposition-each, and the two-tier `declaration_id` join with arity).
+- No `src/` change.
+
+**Gate:** the file fails with `AttributeError: 'InstanceGraph' object has no attribute
+'constraint_usages'` — the expected failure mode, not an import or fixture error. Licensed run
+(the fixture loaded live), so the failure is real elaboration.
+
+**Corpus re-measure (recorded at execution, not targets):** 31 constraint-bearing fixture
+directories, 21 snapshot-bearing fixture directories. Both agree with the design's `ccf4c21`
+measurement, so Phase 7a's scale note stands as written.
+
+**Spike answers (D2's unobserved dependency) — probes under `/tmp/spike_inapp/`:**
+- (a) **CONFIRMED, with a scope limit.** A `ConstraintUsage`'s `doc /* … */` arrives as a
+  `Documentation` owned member, `SysideAdapter.is_instance(member, "Comment")` is true, and it is
+  reachable from the element at elaboration exactly as at extraction.
+- (b) **CONFIRMED.** The body arrives already trimmed of the comment delimiters;
+  `.strip().strip("*").strip()` is a no-op on it and reproduces the extraction-side shape.
+- (c) **CONFIRMED.** Two `doc` comments produce two `Documentation` members in source order, and
+  the `\n`-join puts the second on a later line
+  (`'first body\n@inapplicable: second body'`) — so the design's "marker on a later comment body
+  is a malformed-annotation halt" rule is implementable as written.
+
+**SURFACED — the scope limit on (a), which the design did not anticipate.** Documentation is
+reachable for every constraint-usage body shape *except* an **inline predicate**. For
+`assert constraint c { doc /* … */ <expr> }` SysIDE attaches no `Documentation` member at all;
+instead the usage ends up with the predicate `OperatorExpression` **duplicated** (two identical
+children where an undocumented inline constraint has one). Verified against an undocumented
+control on the same shape. Consequences:
+1. `inline` is an asserted form, so a vacuous *inline* gate cannot be marked `@inapplicable:`,
+   and D2's "a near-miss halts rather than silently doing nothing" cannot fire there — the marker
+   is gone before elaboration sees the element. This is the one silent no-op D2 exists to prevent.
+2. The author-side workaround is real and cheap: give the usage a non-expression body
+   (`assert constraint c : SomeDef { doc /* @inapplicable: … */ }`), which the spike confirms
+   works, including for an otherwise-empty body.
+3. **Mitigation taken in this item (deviation, recorded in Phase 7a):** the license-free oracle
+   scanner also greps `.sysml` source for an `@inapplicable` marker and fails when a marker in
+   source produced no `Inapplicability` on the domain record. That converts the silent no-op into
+   a loud corpus-wide test failure without inventing a parser.
+4. The duplicated-predicate parse artifact is an upstream SysIDE observation, not this item's to
+   fix. Recorded here so a later reader does not re-derive it.
+
+This does not trip the plan's STOP criterion: (a) is confirmed — documentation *is* reachable at
+elaboration — so D2's mechanism stands. What moved is its reach, and the reach is now guarded.
+
+**Deviations:** one, the scanner-side `@inapplicable` marker check above (additive to Phase 7a).
 
 ### Phase 2 Completion
 
