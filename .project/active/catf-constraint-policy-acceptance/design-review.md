@@ -381,3 +381,193 @@ design-agent session) and point it at this review to incorporate. The reviewer d
 design. C1, C2 and C3 should land **before** `/_my_plan`, independently of the owner's D-S1/D-S2
 ruling — the ruling determines the parked rows' content, not whether these three corrections are
 needed.
+
+---
+---
+
+# Round 2 Addendum — re-verdict on the revision
+
+**Design revision:** `d236067` (rev 2)
+**Scope:** deltas only. Settled rows and unchanged sections are not re-opened.
+**Date:** 2026-08-13
+
+**Ruling now in force (context, not under review):** D-S1/D-S2 ruled option 3 — land the landable
+shape now; A5/A6/A9 retained as visible plain usages dispositioned `blocked-by-defect`; identity
+restated **65 = 58 carriers + 7 named deletions**; the unit-lane defect filed as epic Item 8 and the
+derivative's upgrade as Item 9.
+
+## Round-1 findings — disposition
+
+| # | round-1 finding | round-2 status |
+|---|---|---|
+| **C1** | D7 premise false at HEAD; `MODELS` row is not a byte gate | **CLOSED** — rebuilt from scratch |
+| **C2** | ruled identity validated as if it held | **CLOSED** |
+| **C3** | smell (b): parked rows undispositioned in the shipped artifact | **CLOSED** |
+| **M1** | D2's join breaks on renamed carriers | **CLOSED** |
+| **M2** | B2's de-risk step under-covers B2 | **CLOSED** |
+| **M3** | SC-6's invariant vacuous | **CLOSED**, one mechanical residual (r2-1) |
+| **M4** | nothing measured past projection; D6/B3 mechanics unprobed | **OPEN** — carried to plan |
+| **M5** | D3 narrower than "dimensionless-safe" | **half closed** by the ruling; residual (r2-2) |
+| **M6** | `inapplicable_gate_count` unstated and likely wrong | **CLOSED** |
+| **m1** | `elaborate.py:488` wrong citation | **not fixed** (design.md:141) |
+| **m2** | `[unit]`-literal note contradicts §8 | **not fixed** (design.md:485) |
+| **m3/m4** | D5 park-dependency; B1 unfalsifiable in-item | moot / unchanged, both fine |
+
+### C1 — closed, and the rebuild is the strongest work in the revision
+
+D7 was not patched; it was thrown away and rebuilt on a measurement. The new mechanism — capture a
+v6 snapshot for `constraint_domain_satisfy_calc_def`, commit a golden of the two files that *are*
+the shape, and add one conformance test that regenerates from the committed snapshot and diffs them
+byte for byte — is a real byte gate, and it is the first committed-bytes gate in the tree. I checked
+every load-bearing claim in the new §"SC-8 — what R3 actually needs, verified at HEAD":
+
+- The fixture carries **only `model.sysml`** — no committed snapshot. ✓
+- The two golden files are named exactly as the product writes them:
+  `schemas/constraint_types.py` and `modules/constraints/constraintreportaggregatormodule.py`, both
+  asserted live at `test_constraint_catalog_totality.py:109-120` along with the empty-denominator
+  values. ✓
+- `tests/fixtures/baseline_yaml/` is genuinely orphaned — its only occurrence anywhere is a
+  docstring line in `test_public_route_baselines.py:3` naming the *retired* capture script. ✓
+- `test_baselines.py` never regenerates; `model_dir` accepted and unused. ✓ (round-1 finding, now
+  carried into the design's own Research Findings as the reason D7 took the shape it did)
+
+Two things I want on the record because they are easy to lose. The **deliberate falsification step**
+("flip the machinery bar and confirm the gate goes red — a golden nobody has seen fail is not yet a
+gate") is the part that makes this a gate rather than a fixture; it must survive into the plan as a
+step, not a sentence. And the **two-file scoping** is argued from the tree's own failure mode — a
+whole-tree golden churns and gets abandoned, which is how `baseline_yaml/` died. That reasoning
+applies to the new golden too, and the design says so. Accepted with eyes open.
+
+### C2 — closed
+
+The identity is the owner's restatement, not an agent's re-derivation, and the design says so. Every
+number in the Validation Approach is now the ruled shape, flagged as such in a header line. The
+carrier breakdown (2 asserted / 3 blocked-by-defect / 5 marked / 48 awaits-capability = 58) is stated
+as a table and is arithmetically consistent with the ruled deletions (A1, A4, A7, A8, C37, C21, C28).
+The expected coverage account is given field by field and derived from `coverage.py`'s bucket rule
+before any run. The handoff now says the identity is the *first* thing the plan commits, and requires
+the P7 composite (65 rows, nothing deleted, axis leg derived) to be reconciled against the ruled
+58-carrier target **before** any expectation file is written — which is the specific error round 1
+was worried about, named and pre-empted.
+
+### C3 — closed; smell (b) resolved
+
+The parked-row records are specified to the field: qualified name and d5 `file:line`,
+`blocked-by-defect` with its surfacing finding and the measured `SI_RENDERING_COLLISION` including
+the colliding entry point, epic Item 8 as the fix and Item 9 as the upgrade, and the held intent
+(A5/A6's ruled basis, A9's `assert-band` at 1% relative). Invariant 2b makes it checkable. Most
+importantly, the design now states outright that the catalog row is indistinguishable from any other
+plain usage and that PROVENANCE is where "visibly dispositioned" lives for these three. That is the
+ownership move **said out loud**, which is exactly what the fired smell required and exactly what D2
+already did for the byte-reversal → script move. Smell (b) is resolved.
+
+### M1, M2, M6 — closed
+
+**M1:** `renamed_from:` is specified as a PROVENANCE field, the script consults it before declaring
+an unmatched row, and the check fails closed in both directions (unmatched carrier fails; a
+`renamed_from:` naming a row a deletion record also claims fails). The rejection of `declaration_id`
+as a join key is correct and well-reasoned — it is content-derived, so a rewritten usage does not
+keep it. Correctly narrowed to **two** renamed carriers: under the ruling A9 stays plain and
+unrenamed, so only A2 and A3 rename.
+
+**M2:** B2 now enumerates every remaining edit and states plainly that "P7 covered only part of
+this." The de-risk step carries the full set, including the axis-leg *reversal* the ruling
+introduced. Correctly sequenced before authoring.
+
+**M6:** stated three times — in the coverage account table, as an implementation note, and in the
+handoff's list of first commits — each time with the bucket-rule reason attached rather than as a
+bare number. That is the right way to hand a fact to a plan.
+
+### M3 — closed, with one mechanical residual
+
+Invariant 5 is restated to the ordering that carries meaning (expectation before *actual*), and it
+explains why the old phrasing was vacuous. Validation step 4 gives a concrete command and explicitly
+declines to cite the reader tests' dates.
+
+**Residual r2-1 (minor).** The command is `git log --diff-filter=A` over three artifacts, but one of
+them — the `expected-coverage.md` ledger row — is a *row added to a file that already exists*, so
+`--diff-filter=A` returns Item 3's file-creation commit, not the row's. The same applies to "the
+manifest's expected identity" if it lives inside `check_gated_manifest.py`. Two of the three
+artifacts need a content-scoped command (`git log -S'<row text>' -- <file>`) instead. One-line fix
+to the recipe; the argument it supports is sound.
+
+### M5 — half closed by the ruling; one residual
+
+The ruling settles the contingency half: A9 was the only ruled band with a real dimension
+(`m^3/s`), and it is now a plain usage, so D3's dimensionless-safety is no longer contingent on a
+park — A2 and A3 are the only asserted gates and both are dimensionless-safe. The round-1 checkpoint
+result stands unchanged: **A2 binds `p_electric_net_out` (MW) against the authored literal `0`; A3
+binds `p_parasitic_total` and `p_electric_gross`, both MW, with `0.10`/`0.90` dimensionless. Both
+gates verified against the authored source.**
+
+**Residual r2-2 (minor).** D3's text is unchanged, and PROVENANCE record kind 5 is still "per-gate
+unit reasoning" without naming *what* the human is on the hook for. The uncheckable surface is the
+**operand pair**, not only the tolerance — binding a non-power into `whole_power` would also be
+admitted silently. One clause in the PROVENANCE spec closes it.
+
+### M4 — open, carried to plan
+
+Not addressed, and it is the one round-1 Major the revision did not touch. Every probe still stops
+at elaboration/projection. D6 rests on `p_fusion` surfacing as a mutable key in the generated
+`inputs/*.json` and on TEAx consuming a mutated inputs JSON without a study-config override; the
+risk table's B3 mitigation covers the *physics* (does `p_net` cross zero) and not the *mechanics*,
+and D6 has no risk row of its own.
+
+**Severity reassessed downward.** If this is wrong it does not threaten the atomic landing or
+require re-authoring — it means picking a different mutation vector, and the ruled table already
+names A3's parasitic-contributor mutation as an alternative. So it is a plan-stage item, not a
+design defect.
+
+I attempted to settle it in this review by generating `catf_mfe_d5` license-free from its committed
+v6 snapshot and reading the inputs JSON keys. The run needed a permission this session does not
+have. The probe is written and ready at
+`.project/active/catf-constraint-policy-acceptance/probes/review_r2_inputs_key.py` — it is
+license-free (reads the committed snapshot) and takes one command. **Run it before the plan commits
+to D6.**
+
+### m1, m2 — not fixed
+
+Both round-1 minors survive verbatim: `elaborate.py:488` is still cited for the whole-model BLOCK
+halt (design.md:141; the halt is around `elaborate.py:1145-1152`, and the spec marks the wrong line
+"verified"), and "A `[unit]` literal must not appear in a predicate body" (design.md:485) is still
+stated as a flat rule where `modeling-assumptions.md` §8, carried `[HARD]`, says the both-operands
+form is the *supported* unit-carrying spelling. Neither affects the work; both are the kind of line
+a plan quotes back as a fact.
+
+### Trivial note
+
+The new ledger row has ten cells; the design pins eight. `entries` is unstated. Low consequence —
+`test_coverage_ledger_agreement.py:84-86` binds `_headline` and `_entries` and asserts neither — but
+the row still has to be written.
+
+---
+
+## Round-2 Verdict
+
+**Approve**, with four named carry-forwards to `/_my_plan`.
+
+All three Criticals are closed, and C1 in particular was rebuilt from a measurement rather than
+patched — the revision went and checked the tree, found that no committed-bytes gate exists anywhere
+in it, and designed the first one, with a falsification step attached. C2 and C3 are closed by a
+combination of the owner's ruling and real design work (the carrier-class table, the field-level
+parked-row record spec, invariant 2b). Five of six Majors are closed. Nothing in the revision
+introduced a new problem, and the two round-1 items the revision chose not to act on are both
+contained.
+
+**Carry to the plan, as named items rather than waived:**
+
+1. **M4** — run `probes/review_r2_inputs_key.py` (license-free, one command) before committing to
+   D6's mutation vector.
+2. **r2-1** — SC-6's evidence command needs a content-scoped form for the two artifacts that are
+   edits to existing files.
+3. **r2-2** — the per-gate PROVENANCE unit reasoning should name the operand-pair obligation, not
+   only the tolerance dimension.
+4. **m1, m2** — two one-line corrections (the `elaborate.py:488` cite, here and in the spec; the
+   `[unit]`-literal note's scope).
+
+And two things to protect through the plan, because they are where the value is: D7's **deliberate
+falsification step**, and the handoff's requirement to **reconcile the P7 probe composite against the
+ruled 58-carrier target before writing any expectation file**.
+
+**Next Steps:** proceed to `/_my_plan` with the ruled-shape reconciliation. The four carry-forwards
+belong in the plan as steps; none of them needs another design pass.

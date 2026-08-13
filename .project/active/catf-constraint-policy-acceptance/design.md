@@ -138,7 +138,7 @@ the owner's sequence, and it is the only thing that stops an expectation from be
 reverse-engineered out of a dump.
 
 **Landing is all-or-nothing, so authoring is probe-first.** A profile BLOCK on any asserted
-constraint halts the whole model (`elaborate.py:488`), and — as the probes found — so does a
+constraint halts the whole model (`elaborate.py:1145-1152`, `SI_CONSTRAINT_BLOCKED`), and — as the probes found — so does a
 projection collision. There is no partial state. So the design's job is to establish, *before* the
 fixture exists, exactly which edits generate. That job ran, and it came back with two refusals.
 
@@ -296,7 +296,14 @@ actually lives for these three.
   `ProductWithinBand` is **not authored** — its only consumer (A9) is parked. Graduation into
   published authoring guidance stays filed for Item 7 (item5-F4).
   *Rejected: a shared cross-fixture library (nothing else consumes it yet; premature).*
-- **D6. SC-5 mutation lives in the generated `inputs/*.json`, not in the model.** The valid
+- **D6 — MEASURED (M4 closed, orchestrator-run 2026-08-13, `probes/review_r2_inputs_key.py`,
+  license-free from d5's committed snapshot):** `p_fusion` surfaces as the mutable key
+  `CATFMFEPhysics__catf_physics__p_fusion: 2600.0` in `physics_params.json`. Note for the plan:
+  `tritium_params.json` carries an independent `CATFMFETritium__catf_tritium__fusion_power:
+  2600.0` (a separate modeled attribute, not a fan-out); the SC-5 mutation moves the
+  physics-chain key only, deliberately — an unphysical candidate is the point, and A2's gate
+  hangs off the physics chain.
+  **D6. SC-5 mutation lives in the generated `inputs/*.json`, not in the model.** The valid
   candidate is the authored `p_fusion = 2600.0`; the rejected one drops it until `p_electric_net_out`
   goes negative. One generated package, two input sets, two TEAx runs. *Rejected: a mutated fixture
   (a second model to keep in sync) and a study-config override (hides the mutation in harness
@@ -482,7 +489,10 @@ simkit imported from `/home/reid/1cfe/teax` on `constraint-semantics-item3` @ `5
 - **Never author a bare self-named binding.** None is required — every surviving formal is named off
   its attribute (`value` ← `p_electric_net_out`, `part_power` ← `p_parasitic_total`). If one becomes
   unavoidable, surface and stop; the D-2 vs D-4/SRC-01 conflict is parked at the umbrella level.
-- **A `[unit]` literal must not appear in a predicate body.** Neither surviving gate carries one.
+- **No `[unit]` literal appears in either surviving gate's predicate body.** (The §8
+  both-operands spelling — annotating *both* sides — remains the one supported unit-carrying
+  form; these two gates simply don't use it, per D3. Annotating one operand only is what's
+  refused.)
 - **Test invocation** is `/home/reid/1cfe/item7-rebuild-venv/bin/python -m pytest`, never `uv run`.
   Licensed env: `set -a; source /home/reid/1cfe/agentic-mbse/.env; set +a` (the `probes/licensed.sh`
   wrapper does both).

@@ -206,7 +206,8 @@ item's criteria; SC-8 carries the folded-in residual.
   cross-check is appropriate. **[AGENT]** This item decides and records the library's home and
   naming, which the umbrella spec left open.
 - **[HARD]** A profile BLOCK on an asserted constraint halts generation of the **whole model**
-  (`elaborate.py:488`, verified). Migration is therefore atomic per model: there is no
+  (`elaborate.py:1145-1152`, `SI_CONSTRAINT_BLOCKED`; citation corrected at design review round
+  2 — the behavior itself re-verified). Migration is therefore atomic per model: there is no
   partial-migration state where some gates are asserted and the model still builds past a block.
   Plan the derivative's authoring as one all-or-nothing landing.
 - **[HARD]** A unit-carrying comparison has exactly one supported in-predicate spelling —
