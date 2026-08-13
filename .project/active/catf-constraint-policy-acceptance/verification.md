@@ -217,3 +217,17 @@ identical to the histogram without them: 2 / 3 / 53. **Every number the plan com
 2 survives this finding untouched.**
 
 **Parked, not resolved.** Surfaced to the orchestrator per capture-fidelity §4.
+
+**Scope of the finding, measured.** The five marker lines sit inside `doc` bodies *after*
+each constraint's declaration line, and no other constraint usage follows them in those five
+files. Scanning both variants:
+
+```
+with markers: 58 rows   without markers: 58 rows
+rows whose (usage_qualified_name, source_file, source_line) identity differs: 0
+```
+
+So **Phase 2's expectation artifacts are independent of how this is resolved** — the
+population oracle's 58 identities and the coverage account are byte-identical either way.
+The decision changes Phase 3's fixture bytes and the PROVENANCE record for B1–B5, nothing
+upstream of them.
