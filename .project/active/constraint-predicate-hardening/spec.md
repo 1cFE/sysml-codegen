@@ -58,29 +58,31 @@ unsupported form is stopped without being told what to change (B).
 
 ## Success Criteria
 
-- [ ] An asserted predicate containing a compatible unit-annotated literal elaborates without
+- [x] An asserted predicate containing a compatible unit-annotated literal elaborates without
       `SI_OCCURRENCE_MISSING`. Incompatible- and unknown-unit behavior remains governed by the
       profile (`block_incompatible_dimensions`, `block_unknown_exact_unit`,
       `block_unit_conversion_required`) — unchanged in both directions.
-- [ ] That predicate's **end state is a working gate**, pinned positively and not as the absence of
+- [x] That predicate's **end state is a working gate**, pinned positively and not as the absence of
       one error code: an otherwise-supported asserted predicate carrying a unit-annotated literal
       is admitted by the profile, gets a catalog carrier with an assessed (not blocked, not
       non-reaching) disposition, and counts toward feasibility coverage — the landed Item 2 and
       Item 3 contract applied to the cured shape. The demonstration predicate is an inequality; it
       is not `== <literal> [unit]`.
-- [ ] The published promise Defect B discharges is true after this item:
+- [x] The published promise Defect B discharges is true after this item:
       `docs/architecture/modeling-assumptions.md:535` — "If the profile BLOCKs an asserted
       constraint, the generation error names the exact construct to fix." It is false today for the
       chain block. If the fix leaves any block reason still unable to keep it, that reason is named
       in the item's record rather than left implied.
-- [ ] A blocked feature chain names the exact offending written reference, as authored, and states
+- [x] A blocked feature chain names the exact offending written reference, as authored, and states
       the supported rewrite (bind the chain to a formal in the usage; use the formal in the
       predicate body).
-- [ ] A predicate carrying more than one blocked chain identifies each **distinct** offending
+- [x] A predicate carrying more than one blocked chain identifies each **distinct** offending
       reference, deterministically — same model, same message, every run and every order.
-- [ ] Kept failing characterizations for both defects are committed **before** the fixes
+- [x] Kept failing characterizations for both defects are committed **before** the fixes
       (the epic's de-risking posture), and each is demonstrated red first.
-- [ ] Existing quantity, occurrence, profile, and diagnostic tests do not regress — in particular
+      *(Audit residual F1: one row's assertion was rewritten, not merely unmarked, between red
+      and green — disclosed in `plan.md` Phase 2, missing from `verification.md`'s list.)*
+- [x] Existing quantity, occurrence, profile, and diagnostic tests do not regress — in particular
       `tests/conformance/test_unit_annotation_values.py` (the two already-cured lanes) and
       `tests/conformance/test_elaboration_payload_identity.py:236-266` (the blocked-guard diagnostic
       shape, which asserts on the rendered detail string and may need a *stated* update rather than
