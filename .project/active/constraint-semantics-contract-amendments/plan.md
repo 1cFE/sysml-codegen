@@ -156,32 +156,50 @@ git -C /home/reid/1cfe/agentic-mbse-item7-rebuild status --short   # must be cle
 **See `design.md#appendix-d--the-recorded-sweep`** for the exact term patterns, the scope decision
 (DD5) and its recorded reason, the disposition table format, and the pre-run codegen result.
 
-- [ ] Create `verification.md` with the two table stubs from Appendix D (hit dispositions; discharge
+- [x] Create `verification.md` with the two table stubs from Appendix D (hit dispositions; discharge
       record) plus a header stating the scope, the exclusion, and its reason
-- [ ] Run S1–S5 over the codegen scope; paste the **raw** output into the hit table, one row per hit
-- [ ] Run S1–S5 over the companion-repo scope with `grep -rn` under that path; same treatment
-- [ ] For S4 and S5 specifically: record the hit counts as a finding, since neither was pre-run. If
-      S4 hits the report template or its tests, list each hit and mark it planned-correction or
-      correct-as-written **now**, before Phase 1
-- [ ] Pre-dispose every hit as `fix-here (C-ref)` / `correct-as-written (reason)` /
+- [x] Run S1–S5 over the codegen scope; paste the **raw** output into the hit table, one row per hit
+      — 34 hits, all rowed
+- [x] Run S1–S5 over the companion-repo scope with `grep -rn` under that path; same treatment.
+      **Scope additions recorded:** `claude/` added (D5-a's target lives there, outside every DD5
+      directory) and companion `BACKLOG.md` swept at the repository root
+- [x] For S4 and S5 specifically: record the hit counts as a finding, since neither was pre-run.
+      **S4 codegen: 12** (4 executable test assertions → Item 3; 2 amended here; 6 correct as
+      written). **S4 companion: 0.** **S5 codegen: 2**, both correct as written. **S5 companion: 33**,
+      of which 27+6 are vendored corpora. The design expected S4 to hit "the report template and its
+      tests" — the tests, yes; no report-template prose restates the precedence
+- [x] Pre-dispose every hit as `fix-here (C-ref)` / `correct-as-written (reason)` /
       `hand-to-Item-N (reason)`. A hit with no disposition blocks the phase gate
-- [ ] Explicitly disposition `BACKLOG.md:170-171` either way — it is in an historical finding block
-      and must not be skipped silently
-- [ ] Re-verify all five companion-repo sites by reading them: `docs/subtype-enumeration-decision-table.md`
-      row 1, `docs/patterns/constraints.md:190-199`, `claude/agents/sysml-expert.md:124`,
-      `docs/patterns/semantic-operators.md` (three sites), `docs/patterns/syntax-reference.md:185`.
-      Confirm each quoted string in `design.md#c9--companion-repository-corrections-agentic-mbse`
-- [ ] Any quoted string that does not match: **stop, record the actual text in `verification.md`, and
-      do not improvise the edit.** A moved target is a recorded stop
-- [ ] Apply the DD8 test to `syntax-reference.md:185` and record which branch fires, with the quoted
-      framing sentence that decided it. Default expectation is the no-edit branch
+- [x] Explicitly disposition `BACKLOG.md:170-171` either way — dispositioned **correct as written**
+      (Table 1 row 16), with the reason: dated historical finding naming retired modules
+- [x] Re-verify all five companion-repo sites by reading them — **all five confirmed verbatim**;
+      B4 is resolved
+- [x] Any quoted string that does not match: none mismatched. **One characterization mismatch**
+      recorded instead: D5-a's line is verbatim but sits inside a `requirement def`, so the design's
+      "replace the form with `assert constraint`" would teach invalid SysML. Dispositioned against
+      the design's stated intent — keep the form, add the settled-semantics sentence
+- [x] Apply the DD8 test to `syntax-reference.md:185` and record which branch fires — **no-edit
+      branch fired** (the default), framing sentence `**Constraint Prefixes:**` quoted in
+      `verification.md`. `:186` ruled the same way
 
 ### Validation
 
-- [ ] Every raw hit has a row and a disposition
-- [ ] Five companion-repo sites confirmed present, or the mismatch recorded
-- [ ] S4/S5 hit counts recorded as findings, not as "none found" by implication
-- [ ] `git -C /home/reid/1cfe/agentic-mbse-item7-rebuild status --short` was clean at phase start
+- [x] Every raw hit has a row and a disposition — project-authored hits one row each; vendored
+      `docs/sysmlv2/` and `docs/syside/` corpora aggregated by directory with counts and file lists,
+      and the aggregation flagged with its reason
+- [x] Five companion-repo sites confirmed present, or the mismatch recorded
+- [x] S4/S5 hit counts recorded as findings, not as "none found" by implication
+- [x] `git -C /home/reid/1cfe/agentic-mbse-item7-rebuild status --short` was clean at phase start
+
+**Deviation — three design additions in the companion**, each recorded in `verification.md` with its
+reason: D5-b′ (the "Wrong:" half of the pair D5-b corrects carries the identical false claim),
+D5-f (`common-mistakes.md` Mistake 8, a third instance of the D4 defect, surfaced by S3), and
+`constraints.md:43`'s "unassessed **today**", which reads the assert-only rule as temporary.
+
+**Pre-existing dirt in codegen at phase start**, not this item's and not committed by it:
+`.project/CURRENT_WORK.md` (modified), `.project/backlog/BACKLOG.md` (modified), and
+`.project/backlog/epic_constraint_semantics_contract.md` (untracked) — all from the earlier
+orchestration stages of this same epic. Every codegen commit below is a pathspec commit.
 
 **What We Know After This Phase:** the true size of the correction set, including whatever S4 and S5
 surfaced, and whether the companion-repo edits can proceed as designed.
