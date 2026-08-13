@@ -1,7 +1,8 @@
 # Verification: Predicate Defect Hardening (CONSTRAINT-SEMANTICS Item 4)
 
 **Date:** 2026-08-13
-**Codegen:** `item7-rebuild`, `3ca94af` → **`3459127`**
+**Codegen:** `item7-rebuild`, `3ca94af` → **`3459127`** (implementation) →
+**`a395f33`** (audit cure pass, 2026-08-13 — see the cure addendum at the end)
 **Companion:** `/home/reid/1cfe/agentic-mbse-item7-rebuild`, `item7-rebuild`, `bc69f04` → **`0a52942`**
 **TEAx:** untouched, `/home/reid/1cfe/teax` still on `constraint-semantics-item3`, working tree clean.
 
@@ -86,8 +87,12 @@ Unchanged in both directions:
 - `test_unit_annotation_values.py` — the two previously cured lanes, 6 tests, unchanged and green.
 - `test_the_unit_is_not_resolved_as_a_reference` — no `SI::` element appears as a graph
   dependency, following `test_unit_annotation_values.py:53-60` verbatim.
-- `test_the_annotated_and_bare_twins_wire_up_identically` — invariant 7: same wiring shape, and
-  `{"gap_width": 0.5}` on both twins, so no dependency edge was lost.
+- `test_the_annotated_and_bare_twins_wire_up_identically` — the twins agree on wiring shape and
+  on `{"gap_width": 0.5}`. Note the limit, corrected in the cure pass (audit F2): this pin does
+  **not** observe invariant 7, because both annotated sites are inside `gap_guard` and a
+  constraint contributes no module input. Invariant 7 holds structurally — the second operand of
+  `[` is a unit by construction (design M6b) — and audit probe R6 measured the widening's blast
+  radius directly: deleting the unwrap fails exactly 7 tests, all scoped to this item's fixture.
 
 ### 2. That predicate's end state is a **working gate**, pinned positively
 
