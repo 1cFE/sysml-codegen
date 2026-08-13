@@ -6,6 +6,14 @@
 
 ## Active Work
 
+### 2026-08-13: CONSTRAINT-SEMANTICS Item 4 — predicate defect hardening (spec in progress)
+
+`.project/active/constraint-predicate-hardening/` — orchestrated run, brief in `briefs/spec.md`.
+Removes the two reproduced predicate-boundary defects: the `[m]`-literal `SI_OCCURRENCE_MISSING`
+(codegen, a third lane of an already-cured rule) and the tautological
+`feature_chain: block_feature_chain` diagnostic (companion profile emits, codegen renders).
+Must finish before Item 5 acceptance.
+
 ### 2026-08-12: CONSTRAINT-SEMANTICS Item 1 — contract and authoring policy (AUDITED: Certify-with-residuals)
 
 **All six phases landed.** The documentation half of the owner's sequence is done: the ratified

@@ -647,12 +647,14 @@ asserted-constraint authoring.
       `SI_OCCURRENCE_MISSING`; incompatible-unit behavior remains governed by the profile.
 - [x] A blocked feature chain names the exact offending written reference and the bindings rewrite;
       a multi-chain predicate identifies each distinct offending reference deterministically.
-- [ ] Existing quantity, occurrence, profile, and diagnostic tests do not regress.
-      *(Implementation verified static; the green run is author-reported — audit probe R1.)*
-- [ ] Focused companion/codegen tests, full maintained suites, ruff/mypy zero-new gates, and
+- [x] Existing quantity, occurrence, profile, and diagnostic tests do not regress.
+      *(Audit addendum R1, 2026-08-13: 2010 passed / 34 skipped / 0 failed, zero license skips —
+      no longer author-reported.)*
+- [x] Focused companion/codegen tests, full maintained suites, ruff/mypy zero-new gates, and
       `git diff --check` pass with exact counts recorded.
-      *(`git diff --check` verified; counts author-reported, and the companion baseline was never
-      stated — audit probes R1–R3.)*
+      *(Audit addendum R2/R3: codegen ruff 12 / mypy 55; companion baseline established at
+      `bc69f04` directly — ruff 1, mypy 108, failing node IDs byte-identical to tip, so zero-new
+      holds on membership and not only on count.)*
 
 **Audit (2026-08-13): Certify-with-residuals** — `.project/active/constraint-predicate-hardening/audit.md`,
 including the orchestrator addendum (probes R1–R7 all PASS). Both blocking residuals are

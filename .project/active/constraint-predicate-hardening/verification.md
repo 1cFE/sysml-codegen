@@ -309,3 +309,60 @@ Companion (`item7-rebuild`): `0a52942` — a blocked feature chain names the cha
 **Red evidence:** `.project/active/constraint-predicate-hardening/probes/red-evidence.md`
 **Reason-code reconciliation (for the close record):**
 `.project/active/constraint-predicate-hardening/reason-codes-reconciliation.md`
+
+---
+
+## Cure addendum — 2026-08-13
+
+The audit returned **Certify-with-residuals**
+(`.project/active/constraint-predicate-hardening/audit.md`) and the orchestrator executed all
+seven requested probes; **R1–R7 all PASS** (addendum at the end of that file). This section
+records what the probes settled and what the cure pass changed.
+
+### What the probes settled
+
+| Probe | Result | Effect |
+|---|---|---|
+| **R1** | 2010 passed / 34 skipped / 0 failed / 79 deselected; `-rs` shows zero license skips | Criteria 1–5's runs are independently verified, no longer author-reported |
+| **R2** | `ruff check src` 12, `mypy src` 55 | Zero-new confirmed |
+| **R3** | Companion baseline established at `bc69f04` directly: ruff **1**, mypy **108**; suite 10 failed / 1821 passed at both commits with **byte-identical failing node IDs** | The companion baseline the spec never stated is now measured. Zero-new holds on *membership*, not only on count — a count match masking a swapped failure is ruled out |
+| **R4** | `0a52942` touches `executable_profile.py` only (+42/−3), helper plus `message=` at **both** chain-block sites, zero added lines mention `REASON_CODES`, `diff --check` clean | D3 and D9 verified on the companion side, which the audit session could not read |
+| **R5** | Strengthened twin assertion **fails**; printed wirings show identical edges and a package-name-embedded identity param that leaf-splitting cannot strip | **F1 confirmed a naming artifact, not concealment. Not promoted.** |
+| **R6** | Deleting the D1 unwrap fails exactly **7** tests — 5 in `test_predicate_unit_annotation.py` and 2 population-oracle rows over the same fixture; 2003 pass | M6b's widening bound measured, not argued: no pre-existing behavior depends on the widening. The audit's "one file" expectation was narrow by one file, not wrong |
+| **R7** | The one-sided variant refuses with `block_ordering_category_pair: ordering '>=' requires Integer/Real operands or two Quantity operands; got real/quantity. … [model.sysml:53]` | The fixture header's authoring claim is true, and is now published |
+
+**Criterion 8 and epic Item 4 criteria 3–4 are checked** on that evidence.
+
+### Finding → cure
+
+| Finding | Grade | Cure | Commit |
+|---|---|---|---|
+| **F1** — deviation list claimed completeness and omitted the rewritten characterization | Medium (record) | Deviation 8 added above, with R5's measurement of why the original assertion cannot be restored | `062f46d` |
+| **F7** — the two surfaced findings sat only in a folder close will archive | Medium (placement) | Both carried into the epic's Item 5 **Current State** as ⚠️ entries with their measurements and their consequence for that item, plus **Required Reading** path-cites; the Item 4 audit note records the discharge | `8fefff9` |
+| **F2** — the invariant-7 pin's docstring claimed evidence it cannot produce | Low–Medium | Docstring rewritten to state what the test observes (twin wiring shape, `gap_width = 0.5` at the entry point) and that invariant 7 holds *structurally*; `_input_wiring` carries R5's measurement | `d31cc00` |
+| **F3** — the M7 test's name asserted a route its body never drove | Low | Renamed to the walk it drives, and its second half made checkable: the raised error is asserted **not** to be an `_UnsupportedExpressionError`, which is the only thing the predicate caller catches — so the escape to a hard refusal is typed rather than argued. The docstring states why no end-to-end fixture exists (a `[` node with no annotated value is not authorable SysML) | `d31cc00` |
+| **F4** — D2's refusal bound pinned by one of two named shapes | Low | `invoked_band` (`in tol = sum(other_feature);`) pins the invocation arm; `chain_band` (`in ref_value = cell.reading [m];`) pins the admitted chain arm of shape (ii), previously untested. Population expectation file regenerated | `d6b65f9` |
+| **F5** — a live gate reads an artifact under `.project/completed/` | Low | **Accepted as-is, no change.** The repair was minimal and forced (the whole suite's collection was down), and the residual is a convention question — where the coverage ledger durably lives — that is an owner decision, not an implementation one. Recorded in the epic's Item 4 audit note as awaiting that decision | — |
+| **F6** — the only working unit-carrying authoring route lived in a fixture header | Low | `modeling-assumptions.md` §8 gains "Authoring a gate that carries units": the two spellings that work, the one that does not (a declared quantity type, refused earlier by codegen's exact typing), and R7's verified message. It also states that a unit on a *binding* is carried but not checked | `9251286` |
+
+### Gates after the cures
+
+No `src/` file was touched by this pass (`git status --short src` empty), so the full licensed
+suite was not re-run; the focused files and both lint gates were.
+
+- Focused: `test_predicate_unit_annotation.py`, `test_constraint_binding_unit_annotation.py`,
+  `test_blocked_chain_diagnostic.py`, `test_render_block_reasons.py`,
+  `test_constraint_population_oracle.py`, `test_elaboration_payload_identity.py`,
+  `test_unit_annotation_values.py` — **184 passed, 0 failed**.
+- `ruff check src` → **12**; `mypy src` → **55**. Both at baseline.
+- `git diff --check` clean.
+
+### Cure commits
+
+| SHA | |
+|---|---|
+| `062f46d` | cure F1 — the deviation list names the rewritten characterization |
+| `8fefff9` | cure F7 — Item 4's two surfaced limits move to the epic's Item 5 section |
+| `d31cc00` | cure L1/L2 (F2, F3) — two docstrings claim only what their test observes |
+| `d6b65f9` | cure L3 (F4) — D2's refusal bound pinned on both members, and the admitted edge |
+| `9251286` | cure L5 (F6) — the unit-carrying gate authoring rule lands in §8 |

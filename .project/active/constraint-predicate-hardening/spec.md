@@ -87,8 +87,13 @@ unsupported form is stopped without being told what to change (B).
       `tests/conformance/test_elaboration_payload_identity.py:236-266` (the blocked-guard diagnostic
       shape, which asserts on the rendered detail string and may need a *stated* update rather than
       a silent one).
-- [ ] Focused companion/codegen tests, full maintained suites, `ruff check src` = 12,
+- [x] Focused companion/codegen tests, full maintained suites, `ruff check src` = 12,
       `mypy src` = 55 (zero-new), and `git diff --check` pass, with exact counts recorded.
+      *(Verified independently by the audit's orchestrator addendum, 2026-08-13: R1 — 2010
+      passed / 34 skipped / 0 failed, zero license skips; R2 — ruff 12, mypy 55; R3 — the
+      companion baseline the spec never stated, established at `bc69f04` directly: ruff 1,
+      mypy 108, and the 10 failing node IDs byte-identical to tip. Counts in
+      `verification.md`.)*
 
 ## Known Requirements
 
