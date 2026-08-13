@@ -89,7 +89,9 @@ COMPARABLE = [path for path in CONSTRAINT_BEARING if path.name not in REFUSED_BY
 
 def test_every_constraint_bearing_fixture_has_an_expectation_file():
     missing = [
-        path.name for path in CONSTRAINT_BEARING if not (EXPECTATIONS / f"{path.name}.json").exists()
+        path.name
+        for path in CONSTRAINT_BEARING
+        if not (EXPECTATIONS / f"{path.name}.json").exists()
     ]
     assert not missing, f"no expectation file: {missing}"
 

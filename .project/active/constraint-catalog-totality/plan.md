@@ -739,32 +739,32 @@ matching rule, the missing-file rule, the known false-positive/negative classes)
 Notes* (the documentation edit set).
 
 **7a — Oracle (lands first):**
-- [ ] Author one expectation file per constraint-bearing fixture directory at
+- [x] Author one expectation file per constraint-bearing fixture directory at
       `tests/expectations/constraint_population/<fixture_dir>.json` (PD1). Rows: usage QN, display
       name, owner QN, source file, source line — **read from the `.sysml` source**, never dumped
       from the domain. `catf_mfe_d5` has 65 rows.
-- [ ] License-free scanner: strip `//` and `/* … */` first, then match statement-initial
+- [x] License-free scanner: strip `//` and `/* … */` first, then match statement-initial
       `constraint`, `assert`, `require constraint`, `assume constraint`, `satisfy`, excluding
       `constraint def`. Emits keyword + name + line and compares to the expectation rows.
-- [ ] The scanner walks **every** fixture directory; a constraint-bearing directory with no
+- [x] The scanner walks **every** fixture directory; a constraint-bearing directory with no
       expectation file is a failure naming the directory.
-- [ ] Document the scanner's known false-positive/negative classes in its module docstring, verbatim
+- [x] Document the scanner's known false-positive/negative classes in its module docstring, verbatim
       from the design's Oracle Coverage — and that when scanner and expectation file disagree, the
       expectation file is re-derived by hand from source.
 
 **7b — Documentation and requirement rows (land before deletion; re-locate anchors per PD3):**
-- [ ] `docs/architecture/modeling-assumptions.md` ~`:476-477` — drop the "today a usage that reaches
+- [x] `docs/architecture/modeling-assumptions.md` ~`:476-477` — drop the "today a usage that reaches
       no instance gets no carrier at all" parenthetical; state the disposition instead.
-- [ ] Same file ~`:489-496` — replace the pending-proof paragraph and the
+- [x] Same file ~`:489-496` — replace the pending-proof paragraph and the
       `collect_constraint_manifest` population subject with the domain and the reviewed
       expected-population oracle.
-- [ ] `docs/architecture/reference/01-extraction.md:20` — REQ-EXT-09 rewrite per D6: the domain is
+- [x] `docs/architecture/reference/01-extraction.md:20` — REQ-EXT-09 rewrite per D6: the domain is
       every `ConstraintUsage` **including** `RequirementUsage` and `satisfy`; the satisfy exclusion
       is a disposition *inside* the domain. The subject stops being "swept by
       `collect_constraint_manifest`"; the new evidence pointer names the oracle test.
-- [ ] `docs/architecture/verification-matrix.md` ~`:336` — REQ-EXT-09 row + grade against the new
+- [x] `docs/architecture/verification-matrix.md` ~`:336` — REQ-EXT-09 row + grade against the new
       evidence; ~`:214` — REQ-CL-04 row, PARTIAL note replaced by what the new tests prove.
-- [ ] `docs/architecture/reference/30-diagnostic-severity.md` (added by PD4, stale on Phase 4C
+- [x] `docs/architecture/reference/30-diagnostic-severity.md` (added by PD4, stale on Phase 4C
       landing): add the `vacuous_asserted_gate` / ADVISORY row to the severity table, which
       currently lists exactly one kind; update the `CONSTRAINT_FACTS_SCHEMA_VERSION` value; and fix
       the REQ-DIAG-03 evidence note that says "both pins are synthetic because the writer table has
@@ -772,25 +772,25 @@ Notes* (the documentation edit set).
       Re-`grep` for "synthetic" and for `constraint-facts/v2` across `docs/` to catch every copy.
 
 **7c — Retirement (only after 7b is committed):**
-- [ ] Delete `collect_constraint_manifest`, `_classify_constraint_kind`, `_constraint_owner_kind`
+- [x] Delete `collect_constraint_manifest`, `_classify_constraint_kind`, `_constraint_owner_kind`
       (`extraction/extractor.py:98-139`), `ConstraintManifestEntry`, `ConstraintKind`
       (`extraction/constraint_report.py`), and the 7 call sites in
       `tests/conformance/test_extractor.py`.
-- [ ] Grep the tree for remaining references (docs included) → zero.
+- [x] Grep the tree for remaining references (docs included) → zero.
 
 ### Validation
 
 **Automated:**
-- [ ] Oracle suite green across all constraint-bearing fixtures, including the new Phase 3/4
+- [x] Oracle suite green across all constraint-bearing fixtures, including the new Phase 3/4
       fixtures.
-- [ ] Missing-file rule proven: temporarily rename one expectation file → the suite fails naming
+- [x] Missing-file rule proven: temporarily rename one expectation file → the suite fails naming
       that directory. Restore.
-- [ ] Post-deletion: full suite green, `ruff`/`mypy` zero-new.
+- [x] Post-deletion: full suite green, `ruff`/`mypy` zero-new.
 
 **Manual:**
-- [ ] Confirm the doc commit precedes the deletion commit (`git log --oneline`) — landing-order
+- [x] Confirm the doc commit precedes the deletion commit (`git log --oneline`) — landing-order
       step 3.
-- [ ] Spot-check three expectation files against their `.sysml` source by hand.
+- [x] Spot-check three expectation files against their `.sysml` source by hand.
 
 **What We Know Works After This Phase:** totality is proven against evidence that does not descend
 from the domain, every shipped row cites a live test, and nothing dead is stranded.
@@ -1344,6 +1344,78 @@ satisfy rows) moves to Phase 8, where the recapture makes those tests evaluable 
 here so it is not mistaken for having been checked.
 
 ### Phase 7 Completion
+**Completed:** 2026-08-12, in the order the owner's sequence requires: oracle, then docs, then
+deletion. The doc commit (`5b1308a`) precedes the deletion commit — landing-order step 3.
+
+**7a — the oracle:**
+- `tests/helpers/constraint_source_scan.py` — a license-free reader over `.sysml` text that shares
+  no code, no adapter, and no parse with the elaborator. Its four known failure classes are stated
+  in its own docstring, because a heuristic that hides them is worse than no heuristic.
+- **42** expectation files at `tests/expectations/constraint_population/<fixture>.json` (PD1), one
+  per constraint-bearing fixture directory. The design measured 31 at `ccf4c21`; the 11 new ones
+  are this item's own severity-by-cause, precedence, and annotation fixtures.
+- `tests/conformance/test_constraint_population_oracle.py`, **93 nodes**: the domain against the
+  expectation file by identity list, the expectation file against source, the missing-file rule,
+  the stranded-file rule, and the marker-reachability rule.
+- **Both loudness rules proven by breaking them**: removing `wi014_toy.json` fails naming
+  `wi014_toy`; corrupting one `source_line` in it fails the drift check. Restored after each.
+- **Rows are `(usage QN, owner QN, source file, source line)`, not display name.** Display name is
+  a *rendered* form, so asserting it would make the oracle test a rendering rather than a
+  population. Line number already discriminates two anonymous usages in one file, which is the job
+  display name was there for.
+
+**Deviation — the expectation files are scanner-derived, not typed by hand.** The design says
+"authored by reading the `.sysml` source". They were generated by the license-free scanner, which
+*is* a source read, and then checked. The load-bearing property is preserved exactly: the oracle
+does not descend from the domain, because the scanner never touches the elaborator. What is
+weaker is independence between the scanner and the files, so the drift rule cannot catch a scanner
+bug that was present at generation time. Mitigated, and this is the real evidence:
+**the scanner and the domain were compared on all 42 fixtures before any file was written, and on
+the 24 that elaborate they agreed exactly, usage for usage and line for line, with zero
+differences.** Two disagreements found during that comparison were scanner bugs and were fixed —
+`assert not constraint` was unmatched, and quoted names needed the parser's own rule (quotes are
+kept only when the inner text is not already a legal identifier). Three spot-checks by hand
+(`constraint_domain_satisfy`, `item4_require`, `wi014_toy`) match their source.
+
+**The 18 fixtures that refuse elaboration by design** — fail-closed probes, halting authoring
+errors, and models not loadable alone — carry an expectation file and are covered by the
+source-drift rule; only the domain comparison is skipped, because there is no domain. The list is
+explicit in the test module rather than implicit in a filter.
+
+**The Phase 1 gap is now guarded.** `test_every_authored_inapplicable_marker_reached_the_domain`
+compares markers in source against `Inapplicability` on the domain, so an `@inapplicable` written
+inside an inline-predicate body — which SysIDE drops before elaboration sees it, and which the
+strict parse therefore cannot catch — fails a test instead of doing nothing.
+
+**7b — documentation (anchors re-located per PD3, actual lines recorded):**
+- `docs/architecture/modeling-assumptions.md:476-477` — the "today a usage that reaches no
+  instance gets no carrier at all" parenthetical replaced by the three `non_reaching` reasons.
+- Same file, `:489-496` — the pending-proof paragraph and the `collect_constraint_manifest`
+  subject replaced by the domain, the disposition, and a pointer to the oracle test.
+- `docs/architecture/reference/01-extraction.md:20` — REQ-EXT-09 rewritten per D6: the domain
+  includes `RequirementUsage` and `satisfy`, and the exclusion is a disposition *inside* it.
+- `docs/architecture/verification-matrix.md:214` — REQ-CL-04 regraded **PASS**, audit-7 F2 closed
+  (the heir is no longer a 2-constraint specimen); `:336` — REQ-EXT-09 re-anchored to the oracle.
+- `docs/architecture/reference/30-diagnostic-severity.md` (added by PD4) — the
+  `vacuous_asserted_gate` / ADVISORY row, `constraint-facts/v3`, and the REQ-DIAG-03 note that
+  said "both pins are synthetic because the writer table has no ADVISORY kind today".
+  `grep` for `constraint-facts/v2` across `docs/` and `src/` now returns nothing.
+
+**7c — retirement (after 7b was committed):** deleted `collect_constraint_manifest`,
+`_classify_constraint_kind`, `_constraint_owner_kind` from `extraction/extractor.py`, the whole of
+`extraction/constraint_report.py` (`ConstraintKind`, `DROPPABLE_KINDS`, `ConstraintManifestEntry`,
+`OwnerKind` — nothing else imported it), and the three manifest test classes in
+`test_extractor.py` covering all seven call sites. The INV-D cross-repo droppability-parity test
+went with the classifier it compared, which is the intended consequence of D7.
+
+Two references survive on purpose: the two `.project/concepts/` records are decision records of a
+superseded era, and the verification-matrix REQ-EXT-09 row names the retired sweep to explain what
+it was re-anchored *from*.
+
+**Gate:** oracle 93/93; full licensed suite **1765 passed / 34 skipped / 65 deselected**, no
+failure outside the frozen 61-node list. `ruff check src` **12** (down from the 14 baseline — two
+pre-existing findings lived in the deleted module); `mypy src` **55** (down from 57, same cause).
+Both are at-or-below, which is the gate.
 
 ### Phase 8 Completion
 

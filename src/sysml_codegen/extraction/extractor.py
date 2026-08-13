@@ -16,11 +16,6 @@ from uuid import UUID
 from agentic_mbse.sysml.syside_adapter import SysideAdapter
 
 from sysml_codegen.core.qualified_names import sanitize_name
-from sysml_codegen.extraction.constraint_report import (
-    ConstraintKind,
-    ConstraintManifestEntry,
-    OwnerKind,
-)
 from sysml_codegen.extraction.data_models import (
     AttributeInfo,
     CalculationDefinitionData,
@@ -94,77 +89,6 @@ class SysMLDataExtractor:
                 calc_defs.append(calc_data)
 
         return calc_defs
-
-    def collect_constraint_manifest(
-        self, *, include_subtypes: bool = True
-    ) -> list[ConstraintManifestEntry]:
-        """Sweep the model for constraint usages and tag each by kind (INV-C/INV-G).
-
-        The manifest holds the entire ``ConstraintUsage`` subtree — including the
-        requirement-side usages that are not dropped — so the report's scanned /
-        excluded counts reproduce offline. Each entry is classified by an ordered
-        is_instance ladder (assert -> satisfy -> requirement -> plain; satisfy
-        before requirement because ``SatisfyRequirementUsage`` is a
-        ``RequirementUsage``).
-
-        ``include_subtypes`` is the injectable policy the mutation check flips to
-        ``False`` (MF5): an exact-type sweep sees zero ``assert`` constraints, so
-        the assert pin then fails, proving the test discriminates.
-
-        Entries are stable-sorted by ``(owner_qualified_name, constraint_name)``
-        (INV-G) so serialized bytes and rendered order are deterministic.
-        """
-        if not self.model:
-            return []
-
-        entries: list[ConstraintManifestEntry] = []
-        for constraint in self.adapter.elements_of_type(
-            self.model, "ConstraintUsage", include_subtypes=include_subtypes
-        ):
-            owner = getattr(constraint, "owner", None)
-            entries.append(
-                ConstraintManifestEntry(
-                    owner_kind=self._constraint_owner_kind(owner),
-                    owner_name=sanitize_name(getattr(owner, "name", None) or "")
-                    or "<unknown>",
-                    owner_qualified_name=str(
-                        getattr(owner, "qualified_name", None) or ""
-                    ),
-                    constraint_name=sanitize_name(constraint.name) or "<anonymous>",
-                    constraint_kind=self._classify_constraint_kind(constraint),
-                    source_line=self._get_source_location(constraint)[1],
-                )
-            )
-        entries.sort(key=lambda e: (e.owner_qualified_name, e.constraint_name))
-        return entries
-
-    def _classify_constraint_kind(self, constraint) -> ConstraintKind:
-        """Classify a swept ConstraintUsage by an ordered is_instance ladder.
-
-        Satisfy before requirement: ``SatisfyRequirementUsage`` is a
-        ``RequirementUsage`` subtype, so the broader check must come second or it
-        would shadow satisfy. Assert first, plain (``require``/bare constraint)
-        last.
-        """
-        if self.adapter.is_instance(constraint, "AssertConstraintUsage"):
-            return ConstraintKind.ASSERT
-        if self.adapter.is_instance(constraint, "SatisfyRequirementUsage"):
-            return ConstraintKind.SATISFY
-        if self.adapter.is_instance(constraint, "RequirementUsage"):
-            return ConstraintKind.REQUIREMENT
-        return ConstraintKind.PLAIN
-
-    def _constraint_owner_kind(self, owner) -> OwnerKind:
-        """Owner-kind token for a constraint usage diagnostic (render maps to text)."""
-        if owner is None:
-            return OwnerKind.MODEL
-        if self.adapter.is_instance(owner, "CalculationDefinition"):
-            return OwnerKind.CALC_DEF
-        if self.adapter.is_instance(owner, "PartDefinition"):
-            return OwnerKind.PART_DEF
-        if self.adapter.is_instance(owner, "PartUsage"):
-            return OwnerKind.PART_USAGE
-        return OwnerKind.ELEMENT
 
     def _extract_part_definition(self, elem) -> PartDefinitionData | None:
         """Extract data from single part definition element."""
