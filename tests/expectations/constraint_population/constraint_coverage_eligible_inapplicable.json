@@ -1,0 +1,11 @@
+{
+  "constraint_usages": [
+    {
+      "owner_qualified_name": "constraint_coverage_eligible_inapplicable::Live",
+      "source_file": "model.sysml",
+      "source_line": 25,
+      "usage_qualified_name": "constraint_coverage_eligible_inapplicable::Live::live_but_marked"
+    }
+  ],
+  "fixture": "constraint_coverage_eligible_inapplicable"
+}

@@ -184,10 +184,20 @@ Appendix C's cell read with its antecedent satisfied. D4 rules only the degenera
 
 Named `constraint_coverage_*`. One shape per fixture (PD4).
 
+**A parser constraint the authoring had to work around.** The `@inapplicable:` marker is read off
+the usage's owned `Comment` members, and SysIDE drops a `doc` comment written inside an
+*inline-predicate* constraint body — the gap `test_constraint_population_oracle.py`'s rule 3 exists
+to make loud. Measured again here: the marker did not reach the domain on the inline form and did on
+the definition-typed form. So both marked fixtures below are authored as
+`assert constraint <name> : Positive { doc /* @inapplicable: … */ in v = <attr>; }`. That changes
+`source_form` from `inline` to `definition_typed`; both are in `ASSERTED_SOURCE_FORMS`, so no bucket
+and no account field moves.
+
 ### `constraint_coverage_zero_eligible` — asserted gates, zero eligible entries
 
-**Intended source.** One `assert constraint` inside a `part def` nothing instantiates, and no live
-gate anywhere. Asserted, unmarked, reaches nothing → bucket 4.
+**Source.** `model.sysml:18` — `assert constraint unreached_gate` (inline) inside `part def Detached`,
+which nothing instantiates. The only other content is a live part with a calc and no gate. Asserted,
+unmarked, reaches nothing → bucket 4.
 
 **1 / 1 / 0 / 1 / 0 / `{"owner_has_no_occurrences": 1}` / `partial`**
 → `headline = "partial_coverage"`, `assessed_entry_count = 0`.
@@ -197,9 +207,10 @@ model has an unchecked gate. Today this model emits no report at all.
 
 ### `constraint_coverage_all_inapplicable` — D4's ruling
 
-**Intended source.** One `assert constraint` carrying `@inapplicable:` in its doc comment, on a
-`part def` nothing instantiates, and no other gate. Asserted and marked → bucket 2, and nothing lands
-in bucket 3 or 4.
+**Source.** `model.sysml:28` — `assert constraint waived_gate : Positive` whose doc comment carries
+`@inapplicable: this variant is documentation only`, inside the never-instantiated `part def
+Detached`. No other constraint usage. Asserted and marked → bucket 2, and nothing lands in bucket 3
+or 4.
 
 **1 / 0 / 0 / 0 / 1 / `{}` / `none`** → `headline = "not_assessed"`, `assessed_entry_count = 0`.
 
@@ -209,8 +220,10 @@ D4: the full-satisfaction arm requires `assessed_gate_count > 0`, so zero assess
 
 ### `constraint_coverage_violation_partial` — spec success criterion 2
 
-**Intended source.** One `assert constraint` on an instantiated part whose modelled values make the
-predicate **false**, plus one `assert constraint` on a `part def` nothing instantiates.
+**Source.** `model.sysml:21` — `assert constraint failing_gate { reading > 10.0 }` inside
+`part def Live`, instantiated at `:33`, with `reading` modelled `3.0` at `:20`. `3.0 > 10.0` is
+false, margin `-7.0` — derived here, not read back. `model.sysml:30` — `assert constraint
+unreached_gate` inside the never-instantiated `part def Detached`.
 
 **2 / 2 / 1 / 1 / 0 / `{"owner_has_no_occurrences": 1}` / `partial`**
 → `headline = "violation"` (the top precedence arm), `coverage_state = "partial"`,
@@ -221,15 +234,46 @@ was never checked", which is the distinction the study policy needs.
 
 ### `constraint_coverage_eligible_inapplicable` — D9's refusal (generation must fail)
 
-**Intended source.** One `assert constraint` on an **instantiated** part, carrying `@inapplicable:` in
-its doc comment. Asserted, marked, and it expands → `disposition_kind == "eligible"` beside
-`inapplicability_reason is not None`.
+**Source.** `model.sysml:25` — `assert constraint live_but_marked : Positive` whose doc comment
+carries `@inapplicable: this gate is not part of the feasible set`, inside `part def Live`,
+instantiated at `:29`. Asserted, marked, and it expands → `disposition_kind == "eligible"` beside
+`inapplicability_reason is not None`, which `tests/unit/test_coverage_fixture_shapes.py` pins as the
+combination on a single record.
 
 **No account.** Generation refuses by name at the coverage preflight, before any output is written:
 *"`<usage QN>` (`<declaration_id>`) is marked inapplicable but produced `<n>` executable entries…"*.
 This fixture is registered wherever a corpus sweep enumerates fixtures, so a sweep expects the refusal.
 
 ---
+
+---
+
+## Ledger index — the machine-readable form
+
+One line per fixture, in the field order used throughout: `authored_usage_total /
+applicable_gate_total / assessed_gate_count / unassessed_gate_count / inapplicable_gate_count /
+unassessed_reasons / coverage_state / headline / assessed_entry_count`.
+
+`tests/unit/test_coverage_ledger_agreement.py` parses this block and asserts
+`coverage_account()` reproduces every line. The prose entries above are the derivation and the
+evidence; these lines are the same numbers in a form a test can read, so the two cannot drift apart
+silently. `constraint_coverage_eligible_inapplicable` has no line: generation refuses it.
+
+```ledger
+fusion_tea                            | 1 | 1 | 1 | 0 | 0 | {} | complete | full_satisfaction | 1
+gate_a_d5                             | 1 | 1 | 1 | 0 | 0 | {} | complete | full_satisfaction | 1
+constraint_multi_instance             | 1 | 1 | 1 | 0 | 0 | {} | complete | full_satisfaction | 3
+constraint_def_owned_redefining       | 1 | 1 | 1 | 0 | 0 | {} | complete | full_satisfaction | 1
+constraint_domain_inapplicable        | 2 | 1 | 1 | 0 | 1 | {} | complete | full_satisfaction | 1
+catf_mfe_d5                           | 65 | 0 | 0 | 0 | 0 | {} | none | not_assessed | 0
+constraint_domain_plain_forms         | 2 | 0 | 0 | 0 | 0 | {} | none | not_assessed | 0
+constraint_domain_satisfy             | 2 | 0 | 0 | 0 | 0 | {} | none | not_assessed | 0
+constraint_coverage_all_inapplicable  | 1 | 0 | 0 | 0 | 1 | {} | none | not_assessed | 0
+constraint_domain_detached_owner      | 2 | 2 | 1 | 1 | 0 | {owner_has_no_occurrences: 1} | partial | partial_coverage | 1
+constraint_non_numerical              | 2 | 2 | 1 | 1 | 0 | {non_numerical: 1} | partial | partial_coverage | 1
+constraint_coverage_zero_eligible     | 1 | 1 | 0 | 1 | 0 | {owner_has_no_occurrences: 1} | partial | partial_coverage | 0
+constraint_coverage_violation_partial | 2 | 2 | 1 | 1 | 0 | {owner_has_no_occurrences: 1} | partial | violation | 1
+```
 
 ## Corpus probe cross-check (Phase 0, read-only)
 

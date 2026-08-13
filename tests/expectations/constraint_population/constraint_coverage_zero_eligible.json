@@ -1,0 +1,11 @@
+{
+  "constraint_usages": [
+    {
+      "owner_qualified_name": "constraint_coverage_zero_eligible::Detached",
+      "source_file": "model.sysml",
+      "source_line": 18,
+      "usage_qualified_name": "constraint_coverage_zero_eligible::Detached::unreached_gate"
+    }
+  ],
+  "fixture": "constraint_coverage_zero_eligible"
+}

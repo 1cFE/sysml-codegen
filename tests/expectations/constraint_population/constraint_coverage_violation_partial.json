@@ -1,0 +1,17 @@
+{
+  "constraint_usages": [
+    {
+      "owner_qualified_name": "constraint_coverage_violation_partial::Live",
+      "source_file": "model.sysml",
+      "source_line": 20,
+      "usage_qualified_name": "constraint_coverage_violation_partial::Live::failing_gate"
+    },
+    {
+      "owner_qualified_name": "constraint_coverage_violation_partial::Detached",
+      "source_file": "model.sysml",
+      "source_line": 29,
+      "usage_qualified_name": "constraint_coverage_violation_partial::Detached::unreached_gate"
+    }
+  ],
+  "fixture": "constraint_coverage_violation_partial"
+}

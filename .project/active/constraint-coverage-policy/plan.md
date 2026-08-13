@@ -355,23 +355,23 @@ def test_fixture_produces_the_intended_dispositions(fixture, expected_kinds):
 **See `design.md` for:** *Validation Approach* (the fixture list), D3's bucket table, D4, D9,
 *Implementation Notes* (`catf_mfe_d5` is descriptive-only, not partial).
 
-- [ ] **Survey first (PD4).** For each of the design's five required shapes, check whether an
+- [x] **Survey first (PD4).** For each of the design's five required shapes, check whether an
       existing fixture already carries it: `constraint_domain_detached_owner`,
       `constraint_domain_block_non_reaching`, the five `constraint_domain_inapplicable*`,
       `constraint_non_numerical`, `constraint_domain_plain_forms`, `catf_mfe_d5`. Record the mapping.
-- [ ] Author only the missing ones, as `constraint_coverage_*`:
-      - [ ] `…_zero_eligible` — applicable asserted gates, zero eligible entries → `partial_coverage`
-      - [ ] `…_all_inapplicable` — every asserted gate carries `@inapplicable:` → D4's `not_assessed`
+- [x] Author only the missing ones, as `constraint_coverage_*`:
+      - [x] `…_zero_eligible` — applicable asserted gates, zero eligible entries → `partial_coverage`
+      - [x] `…_all_inapplicable` — every asserted gate carries `@inapplicable:` → D4's `not_assessed`
             with positive `inapplicable_gate_count`
-      - [ ] `…_partial_mixed` — some gates assessed and passing, some unassessed → `partial_coverage`
-      - [ ] `…_violation_partial` — one violated gate plus ≥1 unassessed applicable gate →
+      - [x] `…_partial_mixed` — some gates assessed and passing, some unassessed → `partial_coverage`
+      - [x] `…_violation_partial` — one violated gate plus ≥1 unassessed applicable gate →
             `violation` **and** a non-full account
-      - [ ] `…_eligible_inapplicable` — the D9 refusal fixture (generation must fail on it)
-- [ ] Register the refusal fixture wherever corpus sweeps enumerate fixtures (PD4), so a sweep
+      - [x] `…_eligible_inapplicable` — the D9 refusal fixture (generation must fail on it)
+- [x] Register the refusal fixture wherever corpus sweeps enumerate fixtures (PD4), so a sweep
       expects the refusal instead of tripping on it.
-- [ ] Keep fixtures **minimal**. An over-built fixture has burned this epic before: Item 13's cell 18
+- [x] Keep fixtures **minimal**. An over-built fixture has burned this epic before: Item 13's cell 18
       turned out to be a fixture-shape defect, not a product defect. One shape per fixture.
-- [ ] Write the ledger entry for every fixture above — including reused ones — into
+- [x] Write the ledger entry for every fixture above — including reused ones — into
       `expected-coverage.md`, from source, per PD2's expectation rule. `catf_mfe_d5`'s entry uses the
       two documented greps; re-run and record them: `assert constraint` = **0**, bare `constraint`
       usage declarations = **65**, `constraint def` = **0** (measured this stage), which puts all 65
@@ -382,14 +382,14 @@ def test_fixture_produces_the_intended_dispositions(fixture, expected_kinds):
 ### Validation
 
 **Automated:**
-- [ ] Fixture-shape tests pass — each new fixture produces the dispositions its ledger entry assumes.
-- [ ] Full licensed suite still green (no production code has moved; a red here means a fixture
+- [x] Fixture-shape tests pass — each new fixture produces the dispositions its ledger entry assumes.
+- [x] Full licensed suite still green (no production code has moved; a red here means a fixture
       broke a sweep).
 
 **Manual:**
-- [ ] Ledger reviewed entry by entry against the fixture source. Any entry whose evidence is "the
+- [x] Ledger reviewed entry by entry against the fixture source. Any entry whose evidence is "the
       catalog says so" is rewritten from source or deleted.
-- [ ] Companion untouched check.
+- [x] Companion untouched check.
 
 **What We Know Works After This Phase:** every state in the six-state matrix has a model that
 produces it, the expected answer for each is written down and source-derived, and none of it can have
@@ -453,33 +453,33 @@ def test_derived_account_equals_the_hand_written_account(fixture, expected):
 do), D9's ruling and message, *Component Overview* (`generation/coverage.py`), *Required Invariants*
 2, 5, 6, 9.
 
-- [ ] **`src/sysml_codegen/generation/coverage.py`** (NEW): `coverage_account(catalog)`, the frozen
+- [x] **`src/sysml_codegen/generation/coverage.py`** (NEW): `coverage_account(catalog)`, the frozen
       `KNOWN_REASONS` set, and the vocabulary-pin check. Implement the table **as the function's
       literal structure** — a row predicate per row — not as scattered conditionals (design,
       *Implementation Notes*). The two predicates read `source_form in ASSERTED_SOURCE_FORMS` and
       `inapplicability_reason is not None`, using the **catalog** spelling
       (`resolution/models.py:519`), not the graph's `inapplicability`.
-- [ ] D9's refusal raises here, naming usage QN, `declaration_id`, and the entry count.
-- [ ] The account is returned as a plain dataclass/mapping at this phase — the pydantic
+- [x] D9's refusal raises here, naming usage QN, `declaration_id`, and the entry count.
+- [x] The account is returned as a plain dataclass/mapping at this phase — the pydantic
       `CoverageAccount` with validators is the *generated* type and lands in Phase 3. Keep the
       arithmetic identities asserted here too, so a bad account cannot leave the function.
-- [ ] `KNOWN_REASONS` documents, per token, whether it sits inside or outside the feasibility
+- [x] `KNOWN_REASONS` documents, per token, whether it sits inside or outside the feasibility
       denominator — that is the ruling a future reason has to make.
 
 ### Validation
 
 **Automated:**
-- [ ] Unit tests: every bucket row, every one of the nine non-`admitted` reason tokens
+- [x] Unit tests: every bucket row, every one of the nine non-`admitted` reason tokens
       (5 `excluded` + 4 `non_reaching`, `elaboration/graph.py:259-278`), the identities, D9's
       refusal, the vocabulary-pin refusal.
-- [ ] **Ledger agreement over the whole corpus** — the first proof point.
-- [ ] Full licensed codegen suite green, **zero license-skip lines**. Nothing generated moved, so a
+- [x] **Ledger agreement over the whole corpus** — the first proof point.
+- [x] Full licensed codegen suite green, **zero license-skip lines**. Nothing generated moved, so a
       regression here is real.
-- [ ] `ruff check src/`, `mypy src/` → zero new.
+- [x] `ruff check src/`, `mypy src/` → zero new.
 
 **Manual:**
-- [ ] Read the diff of `coverage.py` against D3's table side by side. Four rows, four branches.
-- [ ] Any ledger mismatch is triaged before proceeding: **fixture wrong, ledger wrong, or B1 false**.
+- [x] Read the diff of `coverage.py` against D3's table side by side. Four rows, four branches.
+- [x] Any ledger mismatch is triaged before proceeding: **fixture wrong, ledger wrong, or B1 false**.
       If B1 is false — the catalog's enumeration or a disposition is wrong — STOP and surface; that
       is an Item 2 defect and the plan does not absorb it.
 
@@ -1049,8 +1049,83 @@ five listed, or the Phase 6A probe goes badly, say so at that point rather than 
   declaration. The account stands at one usage, exactly as the plan carried it.
 
 ### Phase 1 Completion
+**Completed:** 2026-08-13
+
+**PD4 survey — the design listed five new fixtures; three were genuinely missing.**
+
+| design's required shape | outcome |
+|---|---|
+| asserted-with-zero-eligible | **authored** `constraint_coverage_zero_eligible`. No existing fixture has it: every fixture carrying an asserted non-reaching gate also carries a live one. |
+| all-inapplicable | **authored** `constraint_coverage_all_inapplicable`. `constraint_domain_inapplicable` has a marked gate *beside* a live one, which is the non-degenerate case, not D4's. |
+| mixed-partial | **reused** `constraint_domain_detached_owner` (1 assessed + 1 non-reaching). `constraint_domain_block_non_reaching`, `constraint_domain_containment`, and `constraint_non_numerical` carry the same shape; `constraint_non_numerical` is also in the ledger because its unassessed reason is `non_numerical` rather than a reachability one. |
+| violation-plus-partial | **authored** `constraint_coverage_violation_partial`. |
+| eligible-plus-inapplicable (refusal) | **authored** `constraint_coverage_eligible_inapplicable`. |
+| descriptive-only | **reused** `catf_mfe_d5`, unedited. |
+
+**Actual Changes:**
+- Four fixtures under `tests/fixtures/constraint_coverage_*/model.sysml`, one shape each.
+- Four expectation files under `tests/expectations/constraint_population/` — Item 2's oracle
+  requires one per constraint-bearing fixture, and rules 1 and 2 fail without them.
+- `tests/unit/test_coverage_fixture_shapes.py` (NEW) — 10 cases: the disposition histogram and the
+  marker count for each of the nine ledger fixtures, plus the D9 contradiction asserted as a
+  combination on a single record (a histogram cannot see a combination).
+- `expected-coverage.md` extended with a machine-readable ledger index block.
+
+**Issues:**
+- **The marker does not attach on the inline form.** Both marked fixtures were first authored as
+  `assert constraint x { doc /* @inapplicable: … */ <predicate> }` and the marker never reached the
+  domain. This is the known SysIDE gap that `test_constraint_population_oracle.py`'s rule 3 exists to
+  make loud — a `doc` comment inside an inline-predicate constraint body is dropped. Both were
+  re-authored on the definition-typed form (`assert constraint x : Positive { doc /* … */ in v = a; }`),
+  which is how every existing marked fixture is written. `source_form` moves `inline` →
+  `definition_typed`; both are asserted, so no bucket and no account field moves.
+- **The oracle counts marker *tokens in the file*, not markers on usages.** An explanatory `//`
+  comment in `constraint_coverage_eligible_inapplicable` that quoted the marker token made the source
+  scan read two markers against one on the domain. Reworded; the fixture now says why in a comment.
+
+**Deviations:** three new fixtures rather than five, per the survey. Recorded above with the reason
+for each reuse.
+
+**Gate:** full licensed suite green — **1938 passed, 34 skipped, 67 deselected**, and
+**zero `no live syside license` skip lines** (all 34 skips are parametrized "nothing to compare in
+the golden" cases in `test_computed_attribute_golden.py` (25) and `test_calc_compat_parity.py` (9)).
+Companion still `5088b41`, clean.
 
 ### Phase 2 Completion
+**Completed:** 2026-08-13
+
+**Actual Changes:**
+- `src/sysml_codegen/generation/coverage.py` (NEW, 233 lines) — `coverage_account(catalog)`,
+  `CoverageAccountData`, the frozen `KNOWN_REASONS` map, `assert_reason_vocabulary_is_known`, and
+  D9's refusal. The bucket table is the function's literal structure: four branches in table order,
+  each commented with its row number, and the two predicates are named functions
+  (`_is_asserted`, `_is_inapplicable`) reading the **catalog** spelling `inapplicability_reason`.
+- `KNOWN_REASONS` is a mapping rather than a set, so each token carries the ruling a future reason
+  will have to make — where it sits relative to the feasibility denominator.
+- `tests/unit/test_coverage_account.py` (NEW) — 40 cases: every bucket row, all three non-asserted
+  forms × row 1, all nine non-`admitted` tokens × all three asserted forms × row 4, row 2 for every
+  asserted form, the empty catalog, the derived-histogram rule, and both refusals.
+- `tests/unit/test_coverage_ledger_agreement.py` (NEW) — the ledger index parsed out of
+  `expected-coverage.md` rather than transcribed, so the artifact the owner reviews and the table the
+  test asserts cannot drift apart.
+
+**FIRST PROOF POINT — passed.** All 13 ledger entries reproduce exactly, including `catf_mfe_d5`'s
+65 / 0 / 0 / 0 / 0 / `{}` / `none` and `fusion_tea`'s complete account. Every expectation was
+committed in Phase 0/1 before this code existed. **B1 is discharged**: no triage was needed, so the
+catalog's enumeration and dispositions are correct for every shape in the corpus.
+
+**Issues:** none.
+
+**Deviations:**
+- The plan's stencil returns an object whose `coverage_state` is a field. It is a property here,
+  derived from the counts, so the state and the counts cannot disagree by construction — the
+  validator the design asks for on the generated model has nothing to check on this side.
+- `coverage_account` is `applicable + inapplicable <= authored` rather than `==`: bucket 1 (inventory
+  only) is real and populated, so equality would be wrong.
+
+**Gate:** 54 focused tests green; full licensed suite green, zero license-skip lines; zero new ruff
+(`src/` baseline 12, unchanged) and zero new mypy (`src/` baseline 55, unchanged) — neither tool
+reports anything in the new files. No generated byte moved.
 
 ### Phase 3 Completion
 

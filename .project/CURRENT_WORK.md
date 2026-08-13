@@ -6,11 +6,14 @@
 
 ## Active Work
 
-### 2026-08-12: CONSTRAINT-SEMANTICS Item 3 — coverage report and TEAx policy (SPEC IN PROGRESS)
+### 2026-08-12: CONSTRAINT-SEMANTICS Item 3 — coverage report and TEAx policy (SPEC REVISED)
 
 `.project/active/constraint-coverage-policy/` — orchestrated run, briefs in `briefs/`. Spec
-drafted; product-lens DISPOSED (item3-F1..F6, all dispositioned in
-`constraint-coverage-policy/product-lens.md`). Next: `/_my_spec_review` in a fresh session.
+drafted; product-lens DISPOSED (item3-F1..F6); independent spec review returned **Revise** with
+nine findings, all resolved and recorded by ID in `spec-review.md`. The load-bearing resolution:
+**coverage is a second axis, not a slot in the headline** — the headline stays the single
+precedence-ordered token, while the coverage account is always present and always reaches the
+durable case record, so a `violation` report still says how much was checked. Next: `/_my_design`.
 
 ---
 
