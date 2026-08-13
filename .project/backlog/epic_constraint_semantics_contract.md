@@ -389,6 +389,14 @@ narrower set recovers it exactly by filtering `disposition_kind == "eligible"`.
 > than defects. **Scope 4's wording still wants the contract's correction** (design-F3): the trigger
 > is the absence of an *applicable asserted gate*, not of executable assertions — an applicable gate
 > that produced zero eligible entries reads partial coverage. Filed for close, not performed.
+>
+> **Residual cures applied same night (2026-08-13)** — A-1..A-6 all cured, +29 pinning tests
+> (codegen `0f6f022`/`3d32ae4`, TEAx `4101325`/`5b70ae9`); both unearned checkboxes corrected
+> (invariant-50 carrier + Phase 6's over-ticked validation box). Final gates: codegen
+> **2050/34/zero-skip**, TEAx **337/0**, lint unchanged, companion untouched, TEAx `main` at
+> `fa0e06a` with all work on branch `constraint-semantics-item3`. TEAx checkout stays on that
+> branch until merge (the codegen execution lane imports simkit from its working tree).
+> Close/pre_pr with the owner.
 
 **Type**: Code / Integration
 

@@ -1,6 +1,6 @@
 # Current Work
 
-**Last Updated**: 2026-08-13 (CONSTRAINT-SEMANTICS Item 3 audited **Certify-with-residuals** at codegen `cb19011` / TEAx `e0c7e48`)
+**Last Updated**: 2026-08-13 (CONSTRAINT-SEMANTICS Items 2 AND 3 both audited **Certify-with-residuals**, all named residual cures applied; close/pre_pr with the owner)
 
 ---
 
@@ -49,8 +49,30 @@ drift annotations are complete and honest, and `test_the_lane_runs_the_real_simk
 pre-existing collection-order artifact (`tests/execution` alone is 78/78 green; Item 3 touched
 neither `tests/runtime/` nor the guard).
 
-Product-lens gate **DISPOSED** at every stage, no standing BLOCK. Epic item heading not marked ✅ —
-three criteria open. Next: cure A-1..A-3 (or correct A-3's claim), then `/_my_close`.
+Product-lens gate **DISPOSED** at every stage, no standing BLOCK.
+
+**All six residuals CURED same night** (codegen `0f6f022`/`3d32ae4`, TEAx `4101325`/`5b70ae9`,
++29 tests): A-1 all three seams pinned by name against the retired token AND an invented one,
+opt-in pinned 11 ways incl. typo-fails-closed; A-2 deep-freeze pinned at both nesting levels;
+A-3 the carrier test now varies `evidence_schema_version` specifically and the `[x]` cites it —
+plus a second unearned-checkbox instance the cure pass found itself (Phase 6's over-ticked
+validation box) corrected the same way; A-4 indeterminate pinned end to end over a partial
+account; A-5 vacuous case split and guarded non-empty; A-6 four stale doc sites corrected
+(`projection.py:44-47` first). **Final gates: codegen 2050/34/zero-skip; TEAx 337/0; lint
+counters unchanged; companion untouched; TEAx `main` still `fa0e06a`.** Orchestrator
+spot-verification: the four new TEAx test files run green standalone (35 tests). The cures are
+pinning tests + record corrections over audit-probe-verified mechanisms, so no third audit
+round was run — verification recorded here per pipeline convention.
+
+**Hand-offs and merge notes:** TEAx checkout must STAY on `constraint-semantics-item3` until
+merge — the codegen execution lane imports simkit from that working tree (D8's checkout
+inversion). Publication order: codegen first, TEAx after. The five TEAx fixture packages were
+regenerated (PD5 replace ruling); `sealed_package`'s model is codegen's `wi014_toy` (adopted,
+recorded in GENERATION.md); `f1_arithmetic`'s pinned generation script was DELETED (it called
+modules the cutover removed — could not run at any current revision) and replaced by
+`models/toy_plant.sysml` + the ordinary route, byte-reproducible. `Free_Plant → freePlant`
+entry-key drift (fa0e06a→HEAD, ADR-001) accepted and annotated at every site — not an Item 3
+semantic change. **Close and pre_pr are left to the owner** (both Items 2 and 3).
 
 ---
 
