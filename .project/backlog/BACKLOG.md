@@ -2,7 +2,7 @@
 
 Prioritized list of epics and features.
 
-**Last Updated**: 2026-08-05
+**Last Updated**: 2026-08-12
 
 ---
 
@@ -29,10 +29,20 @@ Prioritized list of epics and features.
 
 | Epic | Status | Notes |
 |------|--------|-------|
+| [CONSTRAINT-SEMANTICS] Constraint Semantics and Design-Search Feasibility | Ready (scope and six-item decomposition owner-approved 2026-08-12; product lens CLEAR) | P0 owner-directed prerequisite for ELABORATE-FIRST Item 7 steps 4–10. Establishes assert-only authoring policy, canonical 65/65 usage totality, truthful report/TEAx coverage, CATF derivative acceptance, two predicate fixes, and the staged calculation-definition gate design. 8.5–9.5 working days over 2–3 weeks plus owner-checkpoint turnaround. See [epic](epic_constraint_semantics_contract.md). |
 | ~~[SOURCE-IDENTITY] One Modeled Value, One Runtime Source~~ | Superseded (2026-08-07; archived 2026-08-10). Archived to: `.project/completed/20260810_epic_semantic_source_identity.md` | Items 1–3 complete and inherited unchanged as the semantic authority (29-cell matrix, dispositions, invariants); the Item-4/5 shadow-layer architecture was stopped after Item-4 Phases 1–2 (recovery assessment) and replaced by [ELABORATE-FIRST](epic_elaborate_first_architecture.md); Items 6–8 intent absorbed into ELABORATE-FIRST Items 7–8. Item-4 artifacts archived to `completed/20260810_source-identity-occurrence-foundation/`; stopped implementation preserved on `item4-phases12-forensic`. |
 | [GAP-CLOSE] Constraint-Expression Gap Closure | Local scope certified; external F1 leg now verified closed (2026-07-20) | The blocking `[GAP-CLOSE-F1-TEAX-NORMALIZATION]` leg is closed in merged teax main (see the closed entry below). Remaining before full certification: Item 5 closeout state and the independent audit's open full-suite wave-gate leg — a certification pass, not new code. See `epic_gap_close.md`. |
 | ~~[CONSTRAINT-LIFECYCLE-REMEDIATION] Constraint Execution Lifecycle Remediation~~ ✅ | Complete (2026-07-20). Archived to: `.project/completed/20260720_epic_constraint_execution_lifecycle_remediation.md` | All 14 items done; composed public proof 41/41 at the pinned set. Merged 2026-07-20: agentic-mbse #11 → sysml-codegen #9 → teax #3. Release record + 41/41 register in `completed/20260720_constraint-lifecycle-composed-proof/`. |
 | ~~[CONSTRAINT-WAVE-REMEDIATION] Constraint PR-Wave Remediation~~ | Superseded — partially completed (2026-07-19). Archived to: `.project/completed/20260720_epic_constraint_pr_wave_remediation.md` | Items 1/2 complete and Items 4/6 certified; all unfinished work was mapped into CONSTRAINT-LIFECYCLE-REMEDIATION (now complete). Retained as history. |
+
+CONSTRAINT-SEMANTICS items (ready; decomposition owner-approved 2026-08-12):
+
+- [ ] Item 1 — Contract and Authoring Policy
+- [ ] Item 2 — Canonical Usage Domain and Catalog Totality
+- [ ] Item 3 — Coverage Report and TEAx Policy
+- [ ] Item 4 — Predicate Defect Hardening
+- [ ] Item 5 — CATF Derivative and End-to-End Acceptance
+- [ ] Item 6 — Calculation-Definition Gate Capability Design
 
 SOURCE-IDENTITY items (epic superseded 2026-08-07, archived 2026-08-10 — see epic row above):
 - [x] Item 1 — Binding semantics and authoring-form spike (complete 2026-08-05)
@@ -704,6 +714,15 @@ the new row and does not treat it as an orphan.
 
 ## Ideas / Future Considerations
 
+- **In-predicate feature-chain admission (CONSTRAINT-SEMANTICS Item 1, filed 2026-08-12).** The
+  blessed gate shape restricts predicate bodies to formals; feature chains stay supported in
+  binding position. Admitting them inside the predicate body was left open as a candidate rather
+  than decided against — the published contract calls it a filed future capability, and this is
+  the filing.
+- **Evaluated advisory tier for plain constraints (CONSTRAINT-SEMANTICS Item 1, filed
+  2026-08-12).** A plain `constraint` is a visible, cataloged, never-executed description. Whether
+  a plain constraint could additionally be *evaluated* and surfaced as a non-gating advisory was
+  left open as a candidate; this is the filing.
 - ~~**Aggregation-literal dispatch bug (from UPSTREAM-FINDINGS Item 6, SC-6).**~~
   **✅ RESOLVED by PIPELINE-TRUTH Item 8 (Row D), 2026-07-06.** `_walk_aggregation_ast`'s
   literal branch was hoisted above the invocation catch-all (the executable-path twin of the

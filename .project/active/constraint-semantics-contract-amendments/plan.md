@@ -428,34 +428,37 @@ grep -rn "test_constraint_migration_mapping" docs src tests scripts README.md CL
 
 **See `design.md` Appendix C, C2–C8 and C10.**
 
-- [ ] C2 — D1, `modeling-assumptions.md` §8: the replacement paragraph, carrying the blessed gate
+- [x] C2 — D1, `modeling-assumptions.md` §8: the replacement paragraph, carrying the blessed gate
       shape, the three scope carve-outs, the modeler-owned-tolerance `[NEED]`, and the four equality
       moves stated inline with the contract cited for the reasoning
-- [ ] C3 — D2, unassessed enumeration, with the Item 2 target marker in the parenthetical
-- [ ] C4 — D2b, "three outcomes" → four, plus the `NON_NUMERICAL` bullet. **Design addition** —
-      record it in the discharge table with its reason
-- [ ] C5 — D6, `reference/28-…md`: the two axes separated per invariant 16, with the Item 2 target
+- [x] C3 — D2, unassessed enumeration, with the Item 2 target marker in the parenthetical
+- [x] C4 — D2b, "three outcomes" → four, plus the `NON_NUMERICAL` bullet. **Design addition** —
+      recorded in the discharge table with its reason
+- [x] C5 — D6, `reference/28-…md`: the two axes separated per invariant 16, with the Item 2 target
       marker
-- [ ] C6a/b/c — D7-docs at three sites. C6c removes **only** the first clause of `01-extraction.md:20`;
-      the other three clauses stay verbatim (DD7)
-- [ ] C7a — `constraint_report.py`: the filename site **plus** the three by-description references at
-      `:9`, `:10-11`, `:15-16`. The S1 grep does not find these
-- [ ] C7b — `test_extractor.py` class docstring, including the `:881-882` by-description reference
-- [ ] C7c — `test_extractor.py:902` inline comment
-- [ ] C8 — matrix pointer appended to REQ-EXT-09's **Test File** cell, never the Status cell (DD6)
-- [ ] C10 — two bullets under `## Ideas / Future Considerations` in `.project/backlog/BACKLOG.md`,
+- [x] C6a/b/c — D7-docs at three sites. C6c removes **only** the first clause of `01-extraction.md:20`;
+      the other three clauses stay verbatim (DD7) — the `wi014_toy` landing, the
+      `include_subtypes=False` mutation check, and the decision-table pointer all survive
+- [x] C7a — `constraint_report.py`: the filename site **plus** the three by-description references at
+      `:9`, `:10-11`, `:15-16`
+- [x] C7b — `test_extractor.py` class docstring, including the `:881-882` by-description reference
+- [x] C7c — `test_extractor.py:902` inline comment
+- [x] C8 — matrix pointer appended to REQ-EXT-09's **Test File** cell, never the Status cell (DD6).
+      The `PASS` status and the requirement text are unchanged
+- [x] C10 — two bullets under `## Ideas / Future Considerations` in `.project/backlog/BACKLOG.md`,
       phrased as decision records
-- [ ] Make the four `modeling-assumptions.md` §8 edits as **separate edits against separate quoted
-      strings**, so an auditor can check each independently
+- [x] Make the four `modeling-assumptions.md` §8 edits as **separate edits against separate quoted
+      strings** — four independent edits: the outcomes count, the unassessed bullet plus the new
+      `NON_NUMERICAL` bullet, the migration-invariant paragraph, and the enforced-gate paragraph
 
 ### Validation
 
-- [ ] `git diff -- '*.py'` shows only comment and docstring lines — no assertion, name, or value
-      changed at any of the three sites (RI-6)
-- [ ] The S1 grep over the codegen living scope returns zero hits
-- [ ] Both C10 bullets exist — without them, the word "filed" in the published contract is false
-- [ ] Every RI-1 target statement (C3, C5) names CONSTRAINT-SEMANTICS Item 2 in the published text
-- [ ] `python scripts/check_doc_distinctness.py` passes; `git diff --check` clean
+- [x] `git diff -- '*.py'` shows only comment and docstring lines — no assertion, name, or value
+      changed at any of the three sites (RI-6). Diff read in full and confirmed
+- [x] The S1 grep over the codegen living scope returns zero hits
+- [x] Both C10 bullets exist — without them, the word "filed" in the published contract is false
+- [x] Every RI-1 target statement (C3, C5) names CONSTRAINT-SEMANTICS Item 2 in the published text
+- [x] `python3 scripts/check_doc_distinctness.py` passes; `git diff --check` clean
 
 **What We Know After This Phase:** the codegen repository contains no statement that a plain or
 requirement-side constraint enforces, and no citation of the retired test.

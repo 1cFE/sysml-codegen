@@ -876,10 +876,11 @@ class TestReqExt09ConstraintDropDiagnostic:
     of the production query.
 
     Re-anchored for Item 14 W2: the drop-manifest report/render surface these
-    tests originally pinned is retired (the catalog is now the proven single
-    source of truth, `test_constraint_migration_mapping.py`); what survives here
-    is the manifest sweep itself (still live, still load-bearing for the mapping
-    test) and its catalog/unassessed-carrier counterpart, replacing the report's
+    tests originally pinned is retired (the catalog is now the single source of
+    truth; its totality proof retired with the legacy stack and is re-anchored by
+    CONSTRAINT-SEMANTICS Item 2); what survives here is the manifest sweep itself
+    (still live, still load-bearing for the manifest->catalog mapping) and its
+    catalog/unassessed-carrier counterpart, replacing the report's
     log-line assertions.
     """
 
@@ -899,7 +900,7 @@ class TestReqExt09ConstraintDropDiagnostic:
 
     def test_dropped_constraints_span_owner_kinds(self):
         # I4: catf_mfe's 65 droppable usages span all three owner kinds (R1,
-        # confirmed empirically — see test_constraint_migration_mapping.py).
+        # confirmed empirically against the fixture source, transcribed above).
         from collections import Counter
 
         extractor = _load_live_extractor("catf_mfe_model")

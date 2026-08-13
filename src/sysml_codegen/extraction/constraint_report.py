@@ -3,16 +3,16 @@
 ``collect_constraint_manifest`` (on the extractor) sweeps the model for
 ``ConstraintUsage`` and its subtypes and produces a typed
 :class:`ConstraintManifestEntry` list — the manifest side of the manifest->catalog
-no-silent-drop mapping test (`tests/conformance/test_constraint_migration_mapping.py`,
-D1/INV-A). The report/render/snapshot-replay half this manifest used to feed (the
-drop-manifest era: a blanket not-executable warning) retired with Item 14 — the
-catalog is now the proven single source of truth for what happens to a constraint
-usage, so this module keeps only the sweep and its kind vocabulary, both load-bearing
-for the mapping test.
+no-silent-drop mapping. The test that proved that mapping retired with the legacy
+stack; CONSTRAINT-SEMANTICS Item 2 re-anchors the proof. The report/render/
+snapshot-replay half this manifest used to feed (the drop-manifest era: a blanket
+not-executable warning) retired with Item 14 — the catalog is now the single source
+of truth for what happens to a constraint usage, so this module keeps only the sweep
+and its kind vocabulary, both load-bearing for the mapping.
 
 The manifest holds the *whole* swept subtree, including the requirement-side usages
 that are not dropped (``REQUIREMENT`` / ``SATISFY``), tagged by kind (INV-C) — the
-mapping test's justified carrier-free category.
+mapping's justified carrier-free category.
 """
 
 from __future__ import annotations

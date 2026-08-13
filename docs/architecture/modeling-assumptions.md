@@ -457,7 +457,7 @@ for any of them and dropped every one, loudly. Items 5-9 built the real path (se
 [28-constraint-lowering-and-catalog.md](reference/28-constraint-lowering-and-catalog.md) for the
 mechanism); this section teaches what a modeler should now expect.
 
-**The three outcomes.** `agentic-mbse`'s executable profile (`evaluate_profile`) classifies every
+**The four outcomes.** `agentic-mbse`'s executable profile (`evaluate_profile`) classifies every
 swept `ConstraintUsage` (subtypes included) exactly one way:
 
 - **ADMIT** — the predicate lowers: every formal strictly resolves to a real producer channel, a
@@ -465,9 +465,16 @@ swept `ConstraintUsage` (subtypes included) exactly one way:
   evaluation is a real output channel.
 - **BLOCK** — generation halts before any lowering, naming every offending usage and its reason. This
   is the one loud, hard-stop diagnostic (never a silent drop, never retried with a fallback).
-- **unassessed** — a requirement-side usage (`RequirementUsage`/`SatisfyRequirementUsage`, excluded
-  from execution by design) or an out-of-profile owner (e.g. a `requirement_def` owner) is cataloged
-  defensively — one record, no expansion, no formal resolution, no node — never silently absent.
+- **NON_NUMERICAL** — the predicate is well-formed but not numerically executable (Boolean, string,
+  or enum comparison). It warns with its identity, location, and profile diagnostics, then becomes a
+  visible exclusion.
+- **unassessed** — every usage outside the assert family is never executed: a plain `constraint`, a
+  `require constraint`, an `assume constraint`, and the requirement-side
+  `RequirementUsage`/`SatisfyRequirementUsage` all land here. So does an out-of-profile owner (e.g. a
+  `requirement_def` owner), which draws a named visible exclusion rather than an unreachable-assert
+  error. Each one gets a catalog record — no expansion, no formal resolution, no node — and none is
+  silently absent. *(Catalog totality is the target state: today a usage that reaches no instance
+  gets no carrier at all. CONSTRAINT-SEMANTICS Item 2 closes that gap.)*
 
 **The block list.** A predicate BLOCKs for an unsupported construct or operand shape, most commonly:
 an invocation expression (`block_invocation`), a feature-chain reference the profile cannot resolve
@@ -479,17 +486,45 @@ units (`block_unit_conversion_required`, `block_incompatible_dimensions`, `block
 (`x - tol <= y` and `y <= x + tol`) rather than `x == y` — the profile admits an inequality
 comparison on real/quantity operands, never a bare equality one.
 
-**Every manifest entry has a carrier — the migration invariant.** `collect_constraint_manifest()`
-still sweeps the model exactly as before (REQ-EXT-09) — it is the license-free proof surface a kept
-conformance test (`test_constraint_migration_mapping.py`) reads directly, not a generation-time
-report anymore. That test proves, for every constraint-bearing fixture, that each swept usage has a
-catalog carrier: an eligible concrete entry, an explicit unassessed record, or a named,
-justified requirement/satisfy exclusion — nothing silently absent.
+**Every manifest entry has a carrier — the migration invariant.**
+`collect_constraint_manifest()` still sweeps the model exactly as before (REQ-EXT-09), and the
+catalog is where every swept usage lands: an eligible concrete entry, an explicit unassessed
+record, or a named, justified requirement/satisfy exclusion — nothing silently absent. The
+license-free totality proof that used to be cited here retired with the legacy stack; the
+independent proof that the invariant holds across every constraint-bearing fixture is pending,
+and CONSTRAINT-SEMANTICS Item 2 re-anchors it. (citation removed 2026-08-12,
+CONSTRAINT-SEMANTICS Item 1)
 
-**What a modeler needing an enforced gate should do.** Author an `assert constraint` (or bare
-`constraint`/`require constraint`) against a defined `constraint def`, bind every formal to a real
-value in scope, and keep any equality check as an explicit two-inequality tolerance band. If the
-profile BLOCKs it, the generation error names the exact construct to fix.
+**What a modeler needing an enforced gate should do.** Use the assert family. It is the only
+enforcement opt-in: a bare `constraint`, a `require constraint`, an `assume constraint`, and a
+`satisfy` are visible, cataloged descriptions that never execute. The blessed shape is a
+`constraint def` with formals, asserted with every formal bound to a real value in scope:
+
+```sysml
+constraint def MarginOk { in produced : Real; in required : Real; produced >= required }
+// ...
+assert constraint g : MarginOk { in produced = plant.net_power; in required = target_power; }
+```
+
+Three scope points that are easy to over-read. The restriction on what a predicate body may
+reference is **predicate-body-only**: the body works over formals. Feature chains in *binding*
+position stay supported, as the example shows. Inline asserted forms stay admitted — a definition is
+not required. Admitting feature chains inside the predicate body is a filed future capability
+candidate, not a closed door.
+
+**Tolerances are yours.** Where a check needs a band, the tolerance is a modeled value you choose and
+can override; the pipeline never invents one.
+
+**Before writing an equality at all**, check which of four intents you have. Structural identity:
+derive it, do not constrain it. A cross-check of two independently computed values: use a loose,
+physically motivated validity band. A feasibility gate: prefer a one-sided inequality, and if a
+quantity must equal a value, fix it as an input rather than search for it and then constrain it.
+Composition closure: derive the last term by construction, or fall back to a banded check. The
+reasoning behind these four, and the owner's reason for them, is in the lifecycle contract's
+"Equality intent and authoring policy" (this repository,
+`.project/concepts/constraint-execution-authoritative-lifecycle-contract.md`) — the authority copy.
+
+If the profile BLOCKs an asserted constraint, the generation error names the exact construct to fix.
 
 ---
 

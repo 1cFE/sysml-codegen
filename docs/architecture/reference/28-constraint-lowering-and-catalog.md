@@ -41,12 +41,22 @@ For each prepared item:
    A `NON_NUMERICAL` usage warns with its identity, location, and actionable profile diagnostics,
    then becomes a validated exclusion. An `UNASSESSED` usage becomes a validated exclusion
    without predicate execution.
-2. **Owner-kind dispatch** (D5): `part_def` owners expand to one concrete
-   instance per `OccurrenceIndex.occurrences_of()` result; `calc_def` owners
-   expand to one per matching concrete calc usage; `package` owners are already
-   concrete (one instance, top-level scope). Any other owner kind (e.g.
-   `requirement_def`) is defensively cataloged **unassessed** — one record,
-   `eligible=False`, no expansion, no formal resolution, no node (D7).
+2. **Owner-kind dispatch** (D5) decides *occurrence expansion only*: `part_def`
+   owners expand to one concrete instance per `OccurrenceIndex.occurrences_of()`
+   result; `calc_def` owners expand to one per matching concrete calc usage;
+   `package` owners are already concrete (one instance, top-level scope). An
+   owner kind with no expansion rule (e.g. `requirement_def`) yields no
+   occurrence, and the usage is cataloged with one record, `eligible=False`, no
+   expansion, no formal resolution, no node (D7).
+
+   **Unassessed status follows source form, not owner kind.** The axes are
+   independent (contract invariant 16): only the assert family executes, so a
+   plain, `require`, `assume`, or requirement-side usage catalogs unassessed
+   under *any* owner kind, and an asserted usage under an expandable owner is the
+   only shape that can become eligible. *(Target state for the owner-kind half:
+   today an owner kind with no expansion branch — a `calc def` owner — yields no
+   occurrence and therefore no catalog record at all. CONSTRAINT-SEMANTICS
+   Item 2 closes that.)*
 3. **Per-instance formal resolution** (`resolve_actual`, the strict ladder):
    registry `scoped_lookup` → `alias_lookup` → `scoped_alias_lookup` (each tried
    occurrence-scoped then de-indexed) → occurrence-scoped design attribute
@@ -97,8 +107,9 @@ embedded on the graph (Item 7):
 
 A `BLOCK` decision never reaches catalog assembly. `NON_NUMERICAL` and `UNASSESSED` records do:
 they are ineligible concrete records projected into `excluded_records`, never
-`concrete_entries`. The migration mapping test (`test_constraint_migration_mapping.py`, D1/INV-A)
-proves every swept usage lands in exactly one catalog outcome.
+`concrete_entries`. Every swept usage lands in exactly one catalog outcome. The test that proved
+this retired with the legacy stack; the replacement totality proof is pending under
+CONSTRAINT-SEMANTICS Item 2. (citation removed 2026-08-12, CONSTRAINT-SEMANTICS Item 1)
 
 ## Contracts
 
