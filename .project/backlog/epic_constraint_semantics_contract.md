@@ -1208,15 +1208,43 @@ ruling; Item 8 may add one reviewed fixture recapture if churn fires)
 
 **What Went Well**:
 
-- TBD
+- **The founding failure mode was demonstrated and closed by the same item.** Item 5's first
+  execution of these gates caught a model defect that had been invisible for the CATF model's
+  entire life. `catf_mfe_d5` carries 65 authored constraint usages and executes **zero** of them,
+  so it reports `not_assessed` and nothing ever contradicted its design point. The moment two of
+  those checks became executable gates, the model's **own authored design point** was rejected on
+  physics: the magnet cryoplant draws 8396 MW against 1546.7 MW of gross electric output (5.43×),
+  so net power is negative before any mutation, and the candidate reaches the study default
+  `reject`. Root cause is `heat_leak = magnet_volume * 0.05  // MW`
+  (`library/analyses/thermal_loads.sysml:59`) — 116.72 MW of static heat leak into a 20 K system,
+  filed as `[CATF-CRYO-HEATLEAK]`. This is exactly the epic's critical success factor —
+  *a design search can tell a candidate that passed its physics gates from one nobody checked* —
+  working on its first real outing, on the richest model available, against a defect nobody was
+  looking for. (CONSTRAINT-SEMANTICS Item 5, finding 6-D, ruled 2026-08-13.)
 
 **What Could Improve**:
 
-- TBD
+- **De-risk probes must generate, not only elaborate.** Item 5's Phase 1 was designed to be the
+  cheap place to discover refusals before an atomic fixture landing, and it re-elaborated after
+  every edit group. It never ran generation, so the five **generation preflights** went untested —
+  and one of them (`constraint_name_safety`, `generated_binding_overlap`) then refused the ruled
+  A2 spelling at Phase 6, because `value` is a reserved generated local and the ruled table
+  proposed `constraint def PositiveQuantity { in value : Real; … }`. Elaboration admitting is only
+  half of "it lands". Any future probe gating an atomic landing should carry a generation step.
 
 **Surprises**:
 
-- TBD
+- **A ruled target form can be unbuildable for a reason no authority knew about.** Two ruled rows
+  could not be authored at all (`SI_RENDERING_COLLISION`, D-S1/D-S2), a third ruled spelling hit a
+  reserved name, and five ruled `@inapplicable:` markers could not reach the domain because SysIDE
+  drops `doc` bodies inside inline-predicate constraints. In each case the disposition stayed
+  ruled and only the *recording mechanism* moved — into PROVENANCE, under the owner's D-S1/D-S2
+  pattern. The pattern generalized further than the case that created it.
+- **An expectation can be wrong in a way no cross-check catches, because it encodes an assumption
+  about the world rather than about the code.** `expected-coverage.md`'s headline cell said
+  `full_satisfaction` on the entirely reasonable assumption that a model's authored design point
+  satisfies its own gates. Every count around it was right; only that cell was wrong, and only
+  running the physics could tell.
 
 ---
 
