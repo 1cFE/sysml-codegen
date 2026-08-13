@@ -1,6 +1,6 @@
 # Implementation Plan: Canonical Usage Domain and Catalog Totality
 
-**Status:** Draft
+**Status:** Complete
 **Created:** 2026-08-12
 **Last Updated:** 2026-08-12 (absorbs design rev 3 / O-1: the vacuous advisory is companion
 authoring validation — new Phase 4C, PD2 rewritten, PD4/PD5 added, completion criteria span both
@@ -825,18 +825,18 @@ def test_three_route_parity_on_committed_snapshot(fixture_with_annotations):
 **See design.md for:** D8 (21, not 37), *Implementation Notes* (recapture protocol), *Cross-Repo
 Landing Order* steps 4 and 5, the Item 7 evidence-invalidation register entries.
 
-- [ ] Recapture with `scripts/capture_v6_batch.py` across every snapshot-bearing fixture. Record the
+- [x] Recapture with `scripts/capture_v6_batch.py` across every snapshot-bearing fixture. Record the
       actual count (expected 21).
-- [ ] **Timestamp-churn protocol:** diff every changed fixture; revert the ones whose only change is
+- [x] **Timestamp-churn protocol:** diff every changed fixture; revert the ones whose only change is
       `captured_at`. What remains must be the schema token plus `constraint_usages`.
-- [ ] Point the Phase 5 parity and fail-closed tests at the committed bytes; the v2 fail-closed test
+- [x] Point the Phase 5 parity and fail-closed tests at the committed bytes; the v2 fail-closed test
       keeps a synthetic v2 payload (there is no committed v2 fixture left to read).
-- [ ] Add the Item 7 evidence-invalidation register entries to
+- [x] Add the Item 7 evidence-invalidation register entries to
       `.project/backlog/epic_constraint_semantics_contract.md` (or the register's home): paused Item
       7 snapshot-route observations taken against v2 bytes; byte-identity comparisons on the 21
       recaptured fixtures; any Item 7 evidence citing `collect_constraint_manifest` as the
       population definition.
-- [ ] **HAND-OFF (not work this item performs):** record in the epic's cross-repo notes that TEAx
+- [x] **HAND-OFF (not work this item performs):** record in the epic's cross-repo notes that TEAx
       must re-vendor `ACCEPTED_CATALOG_SCHEMA_VERSIONS` to include `3.0.0` **after** this repo
       lands. B3 forbids TEAx importing this repo, so nothing here can enforce it. **While it is
       pending, TEAx fails closed on every newly generated package** — loudly, which is the intended
@@ -844,22 +844,22 @@ Landing Order* steps 4 and 5, the Item 7 evidence-invalidation register entries.
 
 ### Validation — the final gates, named
 
-- [ ] Focused tests: totality, mint/precedence, severity-by-cause, non-raising mint, annotation,
+- [x] Focused tests: totality, mint/precedence, severity-by-cause, non-raising mint, annotation,
       mutation ×3, codec fail-closed ×2, three-route parity, catalog constructibility, oracle,
       companion advisory (emission + grade), containment direction, independence, upstream pin.
-- [ ] **Full licensed codegen suite**, run in `/home/reid/1cfe/sysml-codegen-item7-rebuild`:
+- [x] **Full licensed codegen suite**, run in `/home/reid/1cfe/sysml-codegen-item7-rebuild`:
       `set -a; source /home/reid/1cfe/agentic-mbse/.env; set +a` then
       `uv run --extra dev pytest tests/` → green, and **verify zero license-skip lines** (a green
       run with skips is not a full run).
-- [ ] **Full licensed companion suite, run in the companion worktree**
+- [x] **Full licensed companion suite, run in the companion worktree**
       `/home/reid/1cfe/agentic-mbse-item7-rebuild` (not in this repo, and not against the
       `/home/reid/1cfe/agentic-mbse` main checkout) — same license sourcing, green, zero
       license-skip lines. The companion now carries the Phase 4C change, so this run is load-bearing
       evidence, not a formality.
-- [ ] `ruff check src/` → zero new. `mypy src/` → zero new.
-- [ ] Fixture diff review complete under the timestamp-churn protocol.
-- [ ] `git diff --check` clean.
-- [ ] `verification.md` written with **exact counts**: usage carriers on `catf_mfe_d5` (65) and
+- [x] `ruff check src/` → zero new. `mypy src/` → zero new.
+- [x] Fixture diff review complete under the timestamp-churn protocol.
+- [x] `git diff --check` clean.
+- [x] `verification.md` written with **exact counts**: usage carriers on `catf_mfe_d5` (65) and
       `eligible` among them (9); constraint-bearing fixture count (re-measured); expectation-file
       count; recapture count (expected 21); focused/full test counts; ruff and mypy before/after;
       the doc line anchors actually edited (PD3); the Phase 5 v2-refusal list, now resolved; the
@@ -877,24 +877,24 @@ companion; see below.
 The item is done when all of these hold. Codegen may land first; it does not close alone.
 
 **sysml-codegen (`item7-rebuild`):**
-- [ ] `catf_mfe_d5`: 65 usage carriers, 9 `eligible`, generation succeeds, both twins byte-pinned.
-- [ ] Domain minted pre-expansion, one disposition each, join checkable by `declaration_id` end to
+- [x] `catf_mfe_d5`: 65 usage carriers, 9 `eligible`, generation succeeds, both twins byte-pinned.
+- [x] Domain minted pre-expansion, one disposition each, join checkable by `declaration_id` end to
       end, gated at the fail-before-mutate boundary.
-- [ ] v3 codec, catalog `3.0.0`, single reviewed recapture, oracle over every constraint-bearing
+- [x] v3 codec, catalog `3.0.0`, single reviewed recapture, oracle over every constraint-bearing
       fixture, doc + requirement rows corrected, manifest sweep retired.
-- [ ] `_upstream_pins.py` matches the companion's bumped `CONSTRAINT_FACTS_SCHEMA_VERSION` (PD4).
-- [ ] All gates above green, counts in `verification.md`.
+- [x] `_upstream_pins.py` matches the companion's bumped `CONSTRAINT_FACTS_SCHEMA_VERSION` (PD4).
+- [x] All gates above green, counts in `verification.md`.
 
 **agentic-mbse (`agentic-mbse-item7-rebuild`):**
-- [ ] `vacuous_asserted_gate` emitted at `ADVISORY` grade, naming usage and detached owner, with a
+- [x] `vacuous_asserted_gate` emitted at `ADVISORY` grade, naming usage and detached owner, with a
       location; severity writer-side in the closed map; schema version bumped; companion tests and
       full licensed companion suite green.
 
 **Spanning both:**
-- [ ] Invariant 61 has both halves — the fingerprinted disposition and the authoring advisory.
+- [x] Invariant 61 has both halves — the fingerprinted disposition and the authoring advisory.
       Codegen's disposition alone does **not** discharge it (O-1).
-- [ ] Invariant 9's containment direction proven: companion trigger set ⊆ codegen vacuous set.
-- [ ] Invariant 59 independence proven: codegen's disposition is identical with the advisory
+- [x] Invariant 9's containment direction proven: companion trigger set ⊆ codegen vacuous set.
+- [x] Invariant 59 independence proven: codegen's disposition is identical with the advisory
       suppressed.
 
 **Deliberately outside the item, tracked as hand-offs:** TEAx's `ACCEPTED_CATALOG_SCHEMA_VERSIONS`
@@ -1418,8 +1418,16 @@ pre-existing findings lived in the deleted module); `mypy src` **55** (down from
 Both are at-or-below, which is the gate.
 
 ### Phase 8 Completion
+**Completed:** 2026-08-12. Full evidence is the deliverable:
+`.project/active/constraint-catalog-totality/verification.md`. In brief: 21 fixtures recaptured
+once at the final v3 schema with the diff reviewed key by key (a **fourth** churn cause surfaced —
+`owner_kind` `partusage` -> `part_usage`, a correction of the fallback invariant 8 replaced);
+codegen **1826 passed / 34 skipped / 65 deselected / 0 failed** with zero licence-skip lines and
+the frozen 61-node refusal list discharged; companion **1821 passed** with zero new failures;
+ruff 14 -> 12 and mypy 57 -> 55 (both below baseline, both from the deleted module);
+`git diff --check` clean in both repos; register entries and the TEAx hand-off filed in the epic.
 
 ---
 
-**Status**: Draft → In Progress → Complete
-**Next Step:** `/_my_implement`
+**Status**: Complete (all phases landed 2026-08-12; evidence in `verification.md`)
+**Next Step:** `/_my_audit`
