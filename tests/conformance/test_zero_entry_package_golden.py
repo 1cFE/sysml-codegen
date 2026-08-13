@@ -29,6 +29,16 @@ Two files is the smallest set that pins "what a zero-entry package ships".
 
 The goldens are **generator-owned bytes and stay format-exempt**: never run a formatter over
 them, or the gate starts failing for a reason that has nothing to do with the generator.
+
+**Known limit — this drives the private seams, not `run_codegen` (audit A-4).** CLAUDE.md names
+`run_codegen` the single public generation entry point, and it runs a preflight block plus three
+further steps this sequence omits. So if `run_codegen` stopped emitting
+`schemas/constraint_types.py` for this shape, or a preflight began refusing it, this gate would
+stay green. The sequence below is copied from `test_exact_route_generated_package.py`, which
+drives the same seams for the same reason — `run_codegen` writes a whole sealed package to a
+path it owns, and this gate wants two files from one in-process render. Recorded as a residual
+rather than fixed: the gate does pin the bytes it claims to pin, and it has been seen to fail.
+Rewiring it onto `run_codegen` is the improvement, not a correction.
 """
 
 from __future__ import annotations

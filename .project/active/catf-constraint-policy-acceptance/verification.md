@@ -744,3 +744,132 @@ Phase 1 re-elaborated after every edit group but **never generated**, so the fiv
 preflights went untested at the gate built to be the cheap place to find refusals. One of them
 (`constraint_name_safety`, `generated_binding_overlap`) then refused the ruled A2 spelling at
 Phase 6 — finding 6-B. Carried into the epic's Lessons Learned.
+
+---
+
+## Audit cure — 2026-08-13
+
+Against `audit.md` (verdict: Needs work — narrow). Findings A-1 and A-2 were blocking; A-3 was
+the auditor's same-pass recommendation; A-4…A-8 are residuals with named dispositions.
+
+### A-1 — the [OWNER] derivation-documentation obligation — **CURED** (`995a058`)
+
+Two of three in-fixture derivations were bare initializers while PROVENANCE claimed all three
+carried the statements. Both authored to C37's form, each citing its ruled row; A7's also
+carries the O3 partial-closure pointer.
+
+**The comments were not inert.** Measured before/after, and ruled rather than absorbed:
+
+| | before | after |
+|---|---|---|
+| modules | 47 | **47** |
+| `usage_records` | 58 | **58** |
+| `concrete_entries` | 2 | **2** |
+| histogram | `{2, 3, 53}` | **`{2, 3, 53}`** |
+| A2 / A3 evaluation channels | `…d8cad14493e47fbd…` / `…280b94b2e8d184f5…` | **unchanged** |
+| catalog fingerprint (live) | `4edaf85e8c6737e5fb55a7c07cf2beabf8a3112ec5539d1267a3648bda7c022c` | `6d68e0105cc35ae02b6d25b5f06f373d9fe54eab4bfa48a455fe328953ac0843` |
+| catalog fingerprint (snapshot) | `65083fb7e1350f6862974428c7bf1f6b960bc6b76011583b42d62c7848f33b25` | `c57127dac35c36563408a7956ad3c7cd2f6b41758bbcef3abc187b6f5d0a6491` |
+
+**Cause, mechanical:** the catalog hashes `usage_records`, which carry `source_line`, and five
+comment lines in `vacuum.sysml` sit above A9. Exactly one row moved —
+`PumpingSpeedConsistency`, `vacuum.sysml:164` → `:169` — with membership identical (58 = 58,
+same names). `shield.sysml` shifted nothing. Same sensitivity as finding 6-A, in the other axis.
+
+**Ruled Option A** by the orchestrator: the obligation's purpose is a reader of the model seeing
+the relation and the chosen basis, so a 300-character trailing comment that preserved the line
+number would serve the fingerprint at the reader's expense. Five mechanical edits followed, zero
+expected values moved; recorded as the third post-fixture expectation edit in §SC-6.
+
+### A-2 — the `value` → `quantity` rename — **CURED** (`1869c29`)
+
+Four PROVENANCE statements corrected in place, no compensating prose: the verbatim source quote
+(:42), the self-named-binding argument (:84), and the unit-obligation record (:330, :334-335).
+Added the missing per-change record — why the ruled spelling cannot generate, with the refusal
+quoted, and O7 as the authority — and a pointer at `owner-disposition.md`'s A2 row so a reader
+arriving at the ruled table has a route to the rename.
+
+### A-3 — nothing tied a deletion to its derivation — **CURED** (`b083c47`)
+
+`check_gated_manifest.py` gains a fifth source: the derivative's `.sysml`. For each
+`derive-instead` row it locates the promised initializer and requires the undirected relation
+and the chosen-basis statement above it. A1 and A4 map to `None` deliberately — deletions with
+no derivation of their own — so the table states its own coverage.
+
+Both failure modes falsified for real, against temp copies:
+
+```
+documentation stripped -> CompositionConsistency: the derivation at designs/catf_mfe/shield.sysml:108
+                          is missing the undirected relation and the chosen-basis statement —
+                          required by owner-disposition.md:37-41
+initializer removed    -> ThicknessConsistency: derive-instead promises
+                          `attribute outer_radius : Real = inner_radius + wall_thickness;` in
+                          designs/catf_mfe/vacuum.sysml, not found
+```
+
+Both are committed tests. **This turns the A-1 class from a claim into a gated property** — the
+same gap would now fail the manifest check instead of passing four phases of gates.
+
+### A-4 — the SC-8 golden does not run the shipping route — **RECORDED, not fixed**
+
+The auditor's own two options were "drive the golden through `run_codegen`, or record why the
+private seams are deliberately the subject". Took the second: the limit is now stated in the
+test's docstring, including what would go undetected (a `run_codegen` preflight starting to
+refuse this shape, or the schema no longer being emitted by the public route). The sequence is
+the same one `test_exact_route_generated_package.py` uses, for the same reason — `run_codegen`
+writes a whole sealed package to a path it owns, and this gate wants two files from one
+in-process render. **Rewiring it is an improvement, not a correction**, and it is left open.
+
+### A-5 — SC-5's rejection lane has no committed test — **RECORDED as a deliberate scope call**
+
+The coverage half is durably gated: the population oracle picks the fixture up by directory scan
+and the ledger row drives `test_coverage_ledger_agreement.py`. The feasibility half — satisfied
+path, `reject` through TEAx normalization, policy, durable case storage — lives in
+`probes/acceptance_run.py`, which asserts every claim rather than printing it, and is archived
+with the item home.
+
+**The lane is intentionally manual, and this is what re-runs it:**
+
+```
+cd .project/active/catf-constraint-policy-acceptance/probes && ./licensed.sh acceptance_run.py
+```
+
+It needs the licensed environment, the TEAx checkout on `constraint-semantics-item3` @ `5b70ae9`,
+and a generated package at `/tmp/item5acc/route2_inplace`. Filing it as an `execution`-marked
+test would need all three available in CI, which they are not. **Left open** as a candidate for
+the epic's close, not resolved here.
+
+### A-6 — SC-6 named one post-fixture edit; there were two (now three) — **CURED** (`995a058`)
+
+§SC-6 now names all three with their causes and states what each did not change.
+
+### A-7 — the satisfied leg's disposition is the probe's constant — **RECORDED**
+
+`disposition_for` short-circuits `satisfied` → `feed-strategy` before consulting
+`_disposition_for`, because `_HEADLINE_DISPOSITION` deliberately omits `satisfied` —
+`ObjectivePolicy` resolves it against `penalty_threshold`. The shortcut is faithful to default
+configuration, and the auditor verified that. **The load-bearing half of SC-5 — the rejection —
+goes through the real policy table**, so SC-5 stands. Recorded here so a later reader does not
+over-read the satisfied leg as policy output.
+
+### A-8 — no verification-matrix rows for this item's gates — **left open**
+
+`test_gated_manifest_identity.py`, `test_zero_entry_package_golden.py` and the `catf_mfe_gated`
+ledger row are not filed in `docs/architecture/verification-matrix.md`. Low severity, and a
+known drift class in this repo (auto-memory: verification-matrix drift modes). **Not done here**
+— filing rows for three gates while the matrix's existing "Item 5" rows belong to a different
+epic would add to the drift rather than reduce it. Recommended for the epic's close, where the
+matrix can be reconciled once.
+
+### Final gate set after the cure
+
+| gate | result |
+|---|---|
+| licensed suite, `-m ""` | **2106 passed / 34 skipped / 1 failed** (the pre-existing real-simkit lane) |
+| `no live syside license` lines | **0** |
+| `ruff check src/` | **12** |
+| `mypy src/` | **55 errors in 11 files** |
+| `git diff --check` | clean |
+| `make_d5_variant.py --check` × 3 | `strip check: 0 problems` each |
+| `check_gated_manifest.py --check` | `65 = 58 + 7`, 56 by name, 2 by `renamed_from:` |
+
+The suite gains 3 over the pre-cure 2103: A-3's three new tests.
