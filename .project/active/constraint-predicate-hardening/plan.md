@@ -1,6 +1,6 @@
 # Implementation Plan: Predicate Defect Hardening (CONSTRAINT-SEMANTICS Item 4)
 
-**Status:** Draft
+**Status:** Complete
 **Created:** 2026-08-13
 **Last Updated:** 2026-08-13
 **Size:** 0.5–1 day. Seven phases, each one sitting; each ends committed and green in **both** trees.
@@ -454,8 +454,8 @@ adjectives.
 
 ### Steps
 
-- [ ] Focused suites: the four new/edited test files, green.
-- [ ] **Full licensed codegen suite:**
+- [x] Focused suites: the four new/edited test files, green.
+- [x] **Full licensed codegen suite:**
       ```
       set -a; source /home/reid/1cfe/agentic-mbse/.env; set +a
       /home/reid/1cfe/item7-rebuild-venv/bin/python -m pytest 2>&1 | tee /tmp/item4-codegen.log
@@ -463,17 +463,17 @@ adjectives.
       ```
       Record passed / failed / skipped / xfailed / xpassed exactly. **Zero license-skip lines or the
       run is not full and may not be reported as one.**
-- [ ] **Full companion suite**, default selection, from the companion worktree. **Never `-m ""`.**
+- [x] **Full companion suite**, default selection, from the companion worktree. **Never `-m ""`.**
       Record the same counts.
-- [ ] `ruff check src` → **12** (zero-new).
-- [ ] `mypy src` → **55** (zero-new).
-- [ ] `git diff --check` in **both** repos → clean.
-- [ ] Confirm the frozen twins are untouched: `git status` shows no change under
+- [x] `ruff check src` → **12** (zero-new).
+- [x] `mypy src` → **55** (zero-new).
+- [x] `git diff --check` in **both** repos → clean.
+- [x] Confirm the frozen twins are untouched: `git status` shows no change under
       `tests/fixtures/catf_mfe_model/` or `tests/fixtures/catf_mfe_d5/`.
-- [ ] Confirm TEAx is untouched and still on `constraint-semantics-item3`.
-- [ ] Write `verification.md`: commands, exact counts, both repo SHAs, the P1/P2/P3 outcomes, and a
+- [x] Confirm TEAx is untouched and still on `constraint-semantics-item3`.
+- [x] Write `verification.md`: commands, exact counts, both repo SHAs, the P1/P2/P3 outcomes, and a
       pointer to `probes/red-evidence.md`.
-- [ ] Carry the M3 `REASON_CODES` reconciliation into the close record.
+- [x] Carry the M3 `REASON_CODES` reconciliation into the close record.
 
 **What we know works after this phase:** both suites are green on the recorded interpreter with the
 license live, the lint gates held at baseline, and the item's claims are checkable against captured
@@ -766,11 +766,25 @@ coarse. The reconciliation file states what is actually there. No test or promis
 the design's count.
 
 ### Phase 7 Completion
-**Completed:**
-**Counts:** codegen suite · companion suite · ruff · mypy
-**Issues / deviations:**
+**Completed:** 2026-08-13 · `verification.md` written
+
+**Counts:**
+- codegen suite **2010 passed · 0 failed · 34 skipped · 79 deselected · 0 xfailed · 0 xpassed**,
+  zero license-skip lines (the one `grep -i license` hit is a test *name*; all 34 skips are
+  content-shape skips, confirmed with `-rs`)
+- companion suite **1821 passed · 10 failed · 1 skipped · 5 deselected** — the same 10 fail at
+  `bc69f04` with the change stashed, so zero-new
+- codegen `ruff` **12**, `mypy` **55**; companion `ruff` **1**, `mypy` **108** — all at baseline
+- `git diff --check` clean in both repos; frozen twins byte-untouched; TEAx clean on
+  `constraint-semantics-item3`
+
+**Issues / deviations:** the M3 reconciliation went to
+`reason-codes-reconciliation.md` in this folder rather than straight into the close record,
+because `/_my_close` has not run. `verification.md` points at it and the close record lifts it.
+
+**Status:** Draft → In Progress → **Complete**
 
 ---
 
-**Status:** Draft → In Progress → Complete
-**Next step:** `/_my_implement`
+**Status:** Complete
+**Next step:** `/_my_audit`
