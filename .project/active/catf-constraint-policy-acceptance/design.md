@@ -12,9 +12,10 @@ unit-lane defect filed as its own epic item**
 ## Overview
 
 Fork `catf_mfe_gated` from `catf_mfe_d5`, author the owner-ruled dispositions into it, and prove a
-physics rejection through the real TEAx route. Design-stage probes found that two of the ruled
-rows cannot be authored at all against the current projection — that finding is the headline, and
-it is surfaced rather than worked around.
+physics rejection through the real TEAx route. Design-stage probes found that three of the ruled
+rows (A5, A6, A9) cannot be authored at all against the current projection. That was surfaced
+rather than worked around, and it is now **ruled**: land the landable shape, retain the three as
+visible plain usages with their intent held, and file the defect as its own epic item.
 
 ## Related Artifacts
 
@@ -108,8 +109,11 @@ colliding case. `catf_vacuum_pumping`'s `n_pumps` and `pumping_speed_total` both
   fixture with no expectation file fails that suite by name.
 - **Variant integrity precedent:** `scripts/make_d5_variant.py --check` + `tests/conformance/test_d5_variants.py`
   — a mechanical, license-free, reversible proof rather than a diff review.
-- **Byte baselines:** `tests/fixtures/baseline_outputs/<name>/{computation_graph.json,registry_init.py}`,
-  read by `tests/conformance/test_baselines.py`; 13 directories today.
+- **"Byte baselines" are not byte gates.** `tests/fixtures/baseline_outputs/` (13 directories) has
+  exactly one reader, `tests/conformance/test_baselines.py`, which never regenerates anything — its
+  `model_dir` parameter is accepted and unused, and the widening test only checks each committed JSON
+  against itself. `tests/fixtures/baseline_yaml/` has no reader at all. Every real byte gate at HEAD
+  compares **two runs of the same route**, not a run against committed bytes. This drives D7.
 
 ---
 
@@ -129,9 +133,9 @@ joins the derivative's catalog against the ruled table and proves `65 = carriers
 row by row.
 
 **Expected before actual, proved by commit order.** The catalog, coverage, and study outcomes are
-derived from the ruled table and committed *before* any confirmation test runs. This is the owner's
-sequence, and it is the only thing that stops an expectation from being reverse-engineered out of a
-dump.
+derived from the ruled table and committed *before the derivative exists to produce them*. This is
+the owner's sequence, and it is the only thing that stops an expectation from being
+reverse-engineered out of a dump.
 
 **Landing is all-or-nothing, so authoring is probe-first.** A profile BLOCK on any asserted
 constraint halts the whole model (`elaborate.py:488`), and — as the probes found — so does a
@@ -164,10 +168,10 @@ The ruled row makes A9 an `assert-band` at 1% relative tolerance. Binding `n_pum
 because both attributes are already unit-carrying entry points of `calc pump_load`. Measured at
 P3 and P3b. No formal naming, unit comment, or tolerance form changes it.
 
-**Parked, not worked around.** A shim attribute introduced solely to dodge the collision would be
-exactly the silent workaround the brief forbids. The owner's options are: fix the defect in the
-product (constraint/computed port metadata inherits the bound attribute's unit), re-disposition A9,
-or accept it as `awaits-capability`. That is an owner decision.
+**Was parked, not worked around.** A shim attribute introduced solely to dodge the collision would
+have been exactly the silent workaround the brief forbids. **Ruled:** A9 stays a plain usage,
+`blocked-by-defect` in the table and PROVENANCE; its 1%-relative tolerance and cross-check intent
+are held as recorded intent for the epic Item 9 upgrade.
 
 ### D-S2 — A5/A6 cannot be derived for 26 of 27 radii
 
@@ -177,19 +181,54 @@ design attribute on every layer radius. 26 of the 27 refuse for the same reason:
 `minor_calc`. Measured at P4a and P5. Only `axis_region.outer_radius` — the one layer with no
 geometry calc on it — derives cleanly (P6).
 
-**Parked.** Same three owner options. Note the shape of the trap: the derivation is *correct
-modeling* and the constraint it replaces is *correct policy*; the toolchain refuses the combination.
+**Ruled.** A5/A6 stay plain usages, `blocked-by-defect`; the axis-region leg is *not* derived either,
+so the radial build keeps one consistent basis rather than a half-migrated one. The ruled basis
+(axis root radius + 14 thicknesses free) is held as recorded intent. Note the shape of the trap: the
+derivation is *correct modeling* and the constraint it replaces is *correct policy*; the toolchain
+refuses the combination.
 
-### What this does to the ruled accounting identity
+### The accounting identity in force
 
-The identity **65 = 56 carriers + 9 named deletions** was ruled on the assumption that all seven
-derive-instead rows and all three asserted gates could be authored. Under the probes, the landable
-set is **A2 + A3 asserted; A4, A7, A8 (and A1/C37, unprobed) deleted-with-derivation; A5, A6, A9
-not landable as ruled**.
+**65 = 58 carriers + 7 named deletions** (`[OWNER 2026-08-13]` restatement, mechanical consequence
+of the option-3 ruling). The 7 deletions: **A1, A4, A7, A8, C37** (derive-instead) + **C21, C28**
+(O2 placeholders). A5, A6 and A9 move out of the deletion column and into the carrier column.
 
-**The design does not restate the identity.** Recomputing it would be an agent silently
-re-dispositioning owner-ruled rows. The arithmetic consequence is stated so the owner can rule; the
-number in force stays the ruled one until they do.
+The 58 carriers break down as:
+
+| carrier class | count | rows |
+|---|---|---|
+| asserted, executing | **2** | A2, A3 |
+| plain, `blocked-by-defect` (intent held) | **3** | A5, A6, A9 |
+| plain, `@inapplicable:`-marked part-def guards | **5** | B1–B5 |
+| plain, `awaits-capability` calc-def guards | **48** | Group C minus C37, C21, C28 |
+
+This is the shape every expected output pins.
+
+### The expected coverage account, derived from the ruled shape
+
+Derived from the ruled table against `coverage.py`'s bucket rule, before any run. **The five
+`@inapplicable:` markers sit on *plain* usages, and bucket row 1 ("not asserted → inventory only")
+is decided before the inapplicable predicate is consulted** (`generation/coverage.py:7-27`). So
+`inapplicable_gate_count` is **0, not 5** — this is the single most likely place for an expectation
+to be written wrong, and the plan inherits it as a fact, not a guess.
+
+| field | value |
+|---|---|
+| `authored_usage_total` | 58 |
+| `applicable_gate_total` | 2 |
+| `assessed_gate_count` | 2 |
+| `unassessed_gate_count` | 0 |
+| `inapplicable_gate_count` | **0** |
+| `unassessed_reasons` | `{}` |
+| `coverage_state` | `complete` |
+
+Headline `full_satisfaction` for the valid candidate; `violation` for the SC-5 mutation.
+
+The three `blocked-by-defect` carriers catalog exactly as they do in `catf_mfe_d5` today —
+`excluded`, `unassessed form` — because they are still plain usages and Item 2's disposition
+vocabulary is closed. Nothing in the catalog distinguishes them from any other plain usage. **What
+distinguishes them is their PROVENANCE record** (C3 below); that is where "visibly dispositioned"
+actually lives for these three.
 
 ---
 
@@ -198,18 +237,20 @@ number in force stays the ruled one until they do.
 - **B1.** The two refusals are one defect with one cause — port metadata for non-calc consumers
   carries no unit — and not three coincidences. *If false → fixing the named seam does not unblock
   A5/A6/A9, and the parked threads need separate diagnosis before any of them lands.*
-- **B2.** The landable set (P7: 48 modules, 2 executing gates) is stable under the remaining
-  authoring work — the `@inapplicable:` markers, the C21/C28 deletions, and the A1/C37 calc-def
-  derivation do not introduce a new collision. *If false → the atomic landing fails on the first
-  real authoring pass and the whole probe-first premise has to be re-run at fixture scale.*
-- **B3.** A2 alone carries SC-5: mutating `p_fusion` propagates through seven calc modules into
-  `p_electric_net_out` and crosses zero. *If false → SC-5 has no surviving gate to cross, because
-  A3's band is a plausibility envelope the owner explicitly said does not gate viability, and A9 is
-  parked.*
+- **B2.** The landable set (P7: 48 modules, 2 executing gates) is stable under **every** remaining
+  edit — the A1 and C37 calc-def derivation, the A4 deletion, the C21/C28 placeholder deletions, the
+  A7/A8 derivations, and the five `@inapplicable:` markers — with no new collision. *If false → the
+  atomic landing fails on the first real authoring pass and the probe-first premise has to be re-run
+  at fixture scale.* **P7 covered only part of this**: it deleted nothing and left A1/C37 alone, so
+  the de-risk re-probe below must carry the full edit set, not just markers and deletions.
+- **B3.** A2 carries SC-5: mutating `p_fusion` propagates through seven calc modules into
+  `p_electric_net_out` and crosses zero. *If false → SC-5 falls back to A3 alone, whose band the
+  owner explicitly recorded as a plausibility envelope that does not gate viability — a weaker
+  proof of the same criterion.*
 - **B4.** The accounting identity is machine-checkable from committed artifacts alone — the ruled
-  table's rows join 1:1 against the derivative's catalog plus PROVENANCE deletion records. *If
-  false → SC-2's "machine-checkable diff" degrades to a human diff review, which is what
-  byte-reversal existed to avoid.*
+  table's rows join 1:1 against the derivative's catalog plus PROVENANCE records, **including across
+  the two renamed carriers**. *If false → SC-2's "machine-checkable diff" degrades to a human diff
+  review, which is what byte-reversal existed to avoid.*
 
 ## Key Decisions
 
@@ -219,10 +260,21 @@ number in force stays the ruled one until they do.
 - **D2. Integrity check is an accounting-identity manifest, not a byte reversal.**
   `scripts/check_gated_manifest.py --check` joins three committed sources by usage identity: the
   ruled table's rows, `tests/expectations/constraint_population/catf_mfe_gated.json`, and the
-  derivative's `PROVENANCE.md` deletion records. It proves every d5 usage is either a carrier or a
-  named deletion citing an authorizing row, and that the counts close. License-free by construction.
+  derivative's `PROVENANCE.md` records. It proves every d5 usage is either a carrier or a
+  named deletion citing an authorizing row, and that `65 = 58 + 7` closes. License-free by
+  construction.
+  **The join key, including the renamed carriers.** Usage qualified name joins 56 of the 58 carriers
+  directly. The two asserted gates are *renamed* by the rewrite — `…::ViabilityCheck` →
+  `…::net_power_viable`, `…::ReasonableParasiticTotal` → `…::parasitic_fraction_ok` — so a name join
+  would read them as one deletion plus one addition. Their PROVENANCE per-change record therefore
+  carries an explicit `renamed_from:` field holding the d5 qualified name alongside the table row
+  cite, and the script consults it before declaring an unmatched row. A carrier that matches neither
+  by name nor by `renamed_from:` fails the check; a `renamed_from:` naming a d5 row that is also
+  claimed by a deletion record fails it too. Mechanical in both directions.
   *Rejected: a raw provenance-diff manifest of changed lines (proves what changed, not that what
-  changed was authorized — the authorization is the whole point here).*
+  changed was authorized — the authorization is the whole point here). Rejected: joining by
+  `declaration_id` (it is content-derived, so a rewritten usage does not keep it — the rename is
+  exactly the case it cannot bridge).*
 - **D3. Unit approach, per gate (O4): both surviving gates take the dimensionless, unit-blind
   library band under human review.** The probes settled item5-F3 harder than the spec expected —
   a constraint formal *cannot* carry unit text at all, so the per-dimension in-predicate spelling is
@@ -249,12 +301,51 @@ number in force stays the ruled one until they do.
   goes negative. One generated package, two input sets, two TEAx runs. *Rejected: a mutated fixture
   (a second model to keep in sync) and a study-config override (hides the mutation in harness
   config, which is precisely what the acausal-relations filing warns against).*
-- **D7. SC-8's R3 baseline is `constraint_domain_satisfy_calc_def`** — the measured calc-def-only
-  example, whose package correctly ships no `schemas/constraint_types.py`. It enters as a new
-  `tests/fixtures/baseline_outputs/constraint_domain_satisfy_calc_def/` directory and a new row in
-  `test_baselines.py::MODELS`. No existing baseline directory is touched, so no other fixture churns.
-  *Rejected: putting the baseline on `catf_mfe_gated` (it is not a calc-def-only package — it ships
-  two executing gates, so it cannot pin the absent-machinery shape).*
+- **D7. SC-8's R3 baseline is a committed golden of the constraint-machinery files that
+  `constraint_domain_satisfy_calc_def` generates, diffed byte-for-byte from its (new) committed v6
+  snapshot.** Reworked from scratch after design review found the first version's premise false; the
+  verification is below under "SC-8 — what R3 actually needs, verified at HEAD".
+  *Rejected: a `tests/fixtures/baseline_outputs/` directory plus a `test_baselines.py::MODELS` row —
+  measured at HEAD, that file never regenerates anything (`model_dir` is accepted and unused, and the
+  glob test only checks each committed JSON against itself), and it is the sole reader of that
+  directory. A row there would have added a self-consistency check and pinned no bytes.
+  Rejected: putting the baseline on `catf_mfe_gated` — it ships two executing gates, so it is not the
+  zero-entry shape R3 names.*
+
+---
+
+## SC-8 — what R3 actually needs, verified at HEAD
+
+The first draft of D7 repeated R3's own wording — "a package whose constraint usages all fail to
+reach, which correctly ships no `schemas/constraint_types.py`". **That wording is stale, and the
+design review was right to reject it.** Three things checked at HEAD:
+
+1. **The shape survived; its expected bytes inverted.** R3 was written inside Item 2's window, when
+   the machinery bar was one *concrete entry*. Item 3 moved the bar to one *authored usage*
+   (`resolution/models.py::ships_constraint_machinery`), so a zero-entry constraint-declaring package
+   now **does** ship `schemas/constraint_types.py` and the registry's `ConstraintEvaluation` /
+   `ConstraintReport` imports — and the aggregator it ships bakes an empty denominator
+   (`applicable_gate_total: 0`, `authored_usage_total: 2`, `coverage_state: 'none'`). All four
+   assertions are live at `tests/conformance/test_constraint_catalog_totality.py:109-120`.
+2. **The fixture is still the right one.** `constraint_domain_satisfy_calc_def` genuinely has the
+   shape — non-empty `usage_records`, empty `concrete_entries`. It carries only `model.sysml`, so it
+   has no committed v6 snapshot yet.
+3. **No committed-bytes gate exists anywhere in the tree.** Every byte gate at HEAD is a *two-run
+   self-consistency* check (`test_exact_route_generated_package.py`, `test_public_route_baselines.py:125`,
+   `test_exact_route_whole_tree_portability.py`, `test_v6_recapture_batch.py:76`) — they prove
+   determinism, not that the bytes are the *right* bytes. `tests/fixtures/baseline_yaml/` is
+   orphaned; `tests/fixtures/baseline_outputs/` has one reader that never regenerates.
+
+So R3's residual is real and still open, and closing it needs a genuinely new mechanism rather than
+a row in an existing table. **The minimal one:** capture a v6 snapshot for the fixture, commit a
+golden of the two files that *are* the shape — `schemas/constraint_types.py` and
+`modules/constraints/constraintreportaggregatormodule.py` — and add one conformance test that
+regenerates from the committed snapshot and compares those files byte for byte, plus asserts the two
+registry import lines. License-free, because the snapshot is committed.
+
+Scoped to two files deliberately: a whole-tree golden would churn on every unrelated generator
+change and would be abandoned within an item, which is how `baseline_yaml/` got orphaned. Two files
+is the smallest set that actually pins "what a zero-entry package ships".
 
 ---
 
@@ -268,12 +359,16 @@ owner-disposition.md  (RULED, authority)
         ├──► tests/fixtures/catf_mfe_gated/           the worked example
         │        ├── designs/, library/               forked from catf_mfe_d5
         │        ├── library/constraints/gate_forms.sysml   (D5)
-        │        ├── PROVENANCE.md                    per-change + 9 deletion records
+        │        ├── PROVENANCE.md                    per-change + 7 deletion + 3 parked records
         │        └── instance_graph_snapshot.json     sealed v6, for the license-free routes
         │
         ├──► tests/expectations/constraint_population/catf_mfe_gated.json   (population oracle)
         ├──► tests/unit/data/expected-coverage.md     one new ledger row (Item 3's home)
-        └──► scripts/check_gated_manifest.py          joins all three, proves the identity (D2)
+        └──► scripts/check_gated_manifest.py          joins all three, proves 65 = 58 + 7 (D2)
+
+separately, SC-8:
+     tests/fixtures/constraint_domain_satisfy_calc_def/instance_graph_snapshot.json  (new)
+     tests/conformance/<golden>.py + committed golden of the two machinery files      (D7)
 ```
 
 **Nothing flows backwards.** The catalog is read to cross-check *which usages exist*, never to
@@ -294,14 +389,20 @@ simkit imported from `/home/reid/1cfe/teax` on `constraint-semantics-item3` @ `5
 
 1. **Both frozen twins are byte-untouched** except d5's stale acceptance paragraph in
    `tests/fixtures/catf_mfe_d5/PROVENANCE.md`. `make_d5_variant.py --check` still passes.
-2. **Every d5 authored usage is either a carrier in the derivative or a named deletion record**
-   citing its authorizing table row. Checked by D2's script, not by reading.
+2. **Every d5 authored usage is either a carrier in the derivative (by name or by `renamed_from:`)
+   or a named deletion record** citing its authorizing table row, and `65 = 58 + 7` closes. Checked
+   by D2's script, not by reading.
+2b. **Each of the three `blocked-by-defect` carriers has a PROVENANCE record** naming its surfacing
+   finding, the epic item that unblocks it, and its held intent. Their catalog rows are
+   indistinguishable from any other plain usage, so this record is the only place the disposition is
+   visible.
 3. **No calc-def-owned guard is asserted.** Asserted-plus-unattachable is a generation-halting
    error, and the halt is whole-model.
 4. **Every `@inapplicable:` marker is authored exactly.** A malformed directive halts generation at
    `error` whatever the usage's form — including a plain one.
-5. **Expected outputs are committed in an earlier commit than the confirmation tests that read
-   them.** SC-6 is a commit-order argument, and `git log` is the evidence.
+5. **Every expectation artifact is committed in an earlier commit than the derivative fixture whose
+   outputs it pins.** The reader tests already exist at HEAD, so "expectations before the tests"
+   would be vacuous — the ordering that carries meaning is expectation-before-*actual*.
 6. **The feasibility denominator counts applicable asserted gates only.** Descriptive and
    requirement-side usages appear in the inventory and never in the denominator.
 7. **Zero `no live syside license` skip lines** on every claimed licensed run.
@@ -311,30 +412,55 @@ simkit imported from `/home/reid/1cfe/teax` on `constraint-semantics-item3` @ `5
 ## Component Overview
 
 - **`tests/fixtures/catf_mfe_gated/`** — the derivative. Diff from d5: two asserted gates rewritten
-  bindings-only; one new library file; the landable derivations replacing literals; the authorized
-  deletions removed; five `@inapplicable:` markers on the part-def guards; PROVENANCE.
+  bindings-only (and renamed); one new library file; the A7/A8 derivations replacing literals and the
+  A1/C37 derivation inside `AlphaNeutronSplit`; the seven authorized deletions removed; five
+  `@inapplicable:` markers on the part-def guards; A5/A6/A9 left exactly as d5 wrote them; PROVENANCE.
 - **`library/constraints/gate_forms.sysml`** — `CATFGateForms::{PositiveQuantity, FractionWithinBand}`.
   Two definitions, both over bare `Real` formals, predicates over formals only.
-- **`PROVENANCE.md`** — per-change records; the named deletion records (each carrying the undirected
-  relation and the "direction is a chosen basis, not physics" statement for the derivations); the two
-  O3 model-debt entries (A7's partial 2-of-4 shield closure; B4's mismatched thickness sets); the
-  per-gate unit reasoning (D3).
+- **`PROVENANCE.md`** — five kinds of record:
+  1. **Per-change records**, one per edit, each citing its authorizing table row. The two asserted
+     gates' records carry `renamed_from:` (D2).
+  2. **Seven named deletion records** (A1, A4, A7, A8, C37, C21, C28). The five derive-instead ones
+     carry the undirected relation and the ruled "direction is a chosen basis, not physics"
+     statement; the two placeholder ones cite O2.
+  3. **Three parked-row records** — A5, A6, A9. See below; this is C3's remedy.
+  4. **Two O3 model-debt entries** — A7's partial 2-of-4 shield closure; B4's mismatched thickness
+     sets.
+  5. **Per-gate unit reasoning** for A2 and A3 (D3), so the human-owned invariant has a committed
+     home rather than a review conversation.
+
+  **The three parked-row records, specified.** Each of A5, A6 and A9 gets a record naming, in this
+  order: the usage's qualified name and d5 file:line; **`blocked-by-defect`**, with the surfacing
+  finding (**D-S1** for A9, **D-S2** for A5/A6) and the measured refusal
+  (`SI_RENDERING_COLLISION`, with the colliding entry point); **epic Item 8** as the item that fixes
+  the unit-lane defect and **epic Item 9** as the item that upgrades this row once it lands; and the
+  **held intent** — A5/A6's ruled basis (axis root radius + 14 thicknesses free, all radii derived)
+  and A9's ruled target form (`assert-band`, 1% relative). It states explicitly that the usage's
+  catalog row reads `excluded` / unassessed form, exactly as it does in `catf_mfe_d5`, and that this
+  record is what distinguishes a blocked row from an ordinary plain one.
 - **`scripts/check_gated_manifest.py`** — the integrity check (D2). License-free.
 - **`tests/expectations/constraint_population/catf_mfe_gated.json`** — the population oracle's
   identity list, derived from the derivative's source.
 - **`tests/unit/data/expected-coverage.md`** — one new ledger row for the derivative, in the
-  existing parsed-block format.
+  existing parsed-block format, carrying the account above (note `inapplicable_gate_count = 0`).
+- **SC-8's three pieces** — a committed v6 snapshot for `constraint_domain_satisfy_calc_def`, a
+  committed golden of its two constraint-machinery files, and the conformance test that regenerates
+  and diffs them (D7).
 - **`verification.md`** — exact counts and fingerprints for all three routes (SC-7).
 
 ---
 
 ## Non-Goals
 
-- Resolving D-S1 or D-S2. Both are surfaced for owner ruling; this design lands what is landable and
-  parks what is not.
+- Fixing the unit-lane defect behind D-S1/D-S2. Ruled out of this item and filed as epic Item 8;
+  the derivative's upgrade under the already-ruled A5/A6/A9 rows is epic Item 9.
 - Editing the shared library calc defs' unit comments to dodge the collision.
+- Deriving the axis-region layer on its own. It is the one A5/A6 leg that generates, but a
+  half-migrated radial build carries two bases at once, which is worse modeling than the constraint
+  it would replace.
 - Implementing calc-def gate attachment (Item 6).
-- Inventing a tolerance, an intent class, or a re-derived accounting identity.
+- Inventing a tolerance or an intent class. The accounting identity is the owner's restatement
+  (`65 = 58 + 7`); no agent re-derives it.
 - Graduating the constraint-def library into published authoring guidance (filed for Item 7).
 - Changing BLOCK-halts-generation semantics, the report vocabulary, or the coverage contract.
 
@@ -344,8 +470,13 @@ simkit imported from `/home/reid/1cfe/teax` on `constraint-semantics-item3` @ `5
 
 - **Author probe-first, in the probe order that worked.** `probes/` at
   `/tmp/item5probe/p7` is the exact composite that generates: library, then A2, then A3, then the
-  three landable derivations. Reproduce that state in the real fixture before adding the markers and
-  deletions, and re-elaborate after each group.
+  A7/A8 derivations. **P7 is not the ruled shape** — it deleted nothing, kept all 65 rows, and
+  derived the axis leg the ruling drops. Reproduce it, then add the remaining edits group by group,
+  re-elaborating after each: A1/C37's calc-def derivation, the A4/C21/C28 deletions, the axis-leg
+  reversal, and the five markers.
+- **`inapplicable_gate_count` is 0, not 5.** The five `@inapplicable:` markers sit on plain usages,
+  and the bucket rule decides "not asserted → inventory only" before it consults the inapplicable
+  predicate (`generation/coverage.py:7-27`). Write the expectation with 0.
 - **Drive rewrites off the chain name, not the file:line.** Every entry of a multi-chain block
   renders the same location; `block_feature_chain` carries the offending reference (Item 4 limit 2).
 - **Never author a bare self-named binding.** None is required — every surviving formal is named off
@@ -366,35 +497,50 @@ simkit imported from `/home/reid/1cfe/teax` on `constraint-semantics-item3` @ `5
 
 | risk | mitigation |
 |---|---|
-| The owner rules "fix the defect" on D-S1/D-S2, and the fix reaches elaboration's metadata seam mid-item | Land the landable set first as its own commit; the fix is a separate item with its own probes. The derivative is additive to it. |
-| B2 is false — the markers or deletions introduce a new collision | Re-elaborate after each authoring group, not once at the end. The atomic landing means a late discovery costs the whole pass. |
+| Epic Item 8's unit-lane fix lands mid-item and moves minted units on existing fixtures | Ruled out of scope here. Item 8 carries its own fingerprint/churn assessment and the one-reviewed-recapture obligation; this item's derivative is additive to whatever it lands. |
+| B2 is false — one of the untested edits introduces a new collision | Re-elaborate after each authoring group, not once at the end. The atomic landing means a late discovery costs the whole pass. |
+| The `renamed_from:` field is written wrong or omitted, and the identity check passes vacuously | The check fails closed both ways: an unmatched carrier fails, and a `renamed_from:` pointing at a row a deletion record also claims fails. |
 | A malformed `@inapplicable:` typo halts generation | Five markers, authored by copy from the Item 2 fixtures that pin the exact form, then re-elaborated. |
 | SC-5's mutation crosses no gate because A2's chain is shorter than assumed | B3 is checked before the acceptance run, by evaluating the projected chain on mutated inputs offline. |
 | Expected outputs drift from the ruled table | D2's script joins them; a drift fails the check rather than passing quietly. |
 
 ## Integration Strategy
 
-The derivative is **additive**: a new fixture directory, one new script, one new baseline directory,
-one new expectations file, one new ledger row. Nothing existing is repointed. `catf_mfe_d5` keeps
-its role, its bytes, and its 65/65 carrier proof; the only edit to it is the stale acceptance
-paragraph SC-2 requires. `catf_mfe_model` is untouched.
+The derivative is **additive**: a new fixture directory, one new script, one new expectations file,
+one new ledger row, plus SC-8's three pieces on a different fixture. Nothing existing is repointed.
+`catf_mfe_d5` keeps its role, its bytes, and its 65/65 carrier proof; the only edit to it is the
+stale acceptance paragraph SC-2 requires. `catf_mfe_model` is untouched.
 
 ## Validation Approach
 
-1. **Integrity (SC-2, SC-3):** `check_gated_manifest.py --check` passes; `make_d5_variant.py --check`
-   still passes for all three existing variants.
-2. **Dispositions (SC-4):** the population oracle's identity list matches; the catalog's disposition
-   histogram matches the pre-committed expectation.
-3. **Coverage (SC-3):** the new `expected-coverage.md` row agrees with `coverage_account`.
-4. **Commit order (SC-6):** `git log --oneline` shows expectations committed before the confirmation
-   tests that read them.
+Every number below is the **ruled** shape, not the probe shape.
+
+1. **Integrity (SC-2, SC-3):** `check_gated_manifest.py --check` closes `65 = 58 + 7`, matching all
+   58 carriers (56 by name, 2 by `renamed_from:`) and all 7 deletion records to authorizing table
+   rows; `make_d5_variant.py --check` still passes for all three existing variants; d5's bytes differ
+   only in the PROVENANCE paragraph.
+2. **Dispositions (SC-4):** the population oracle lists exactly the 58 carriers; the catalog's
+   disposition histogram matches the pre-committed expectation — **2 `eligible`** (A2, A3) and 56
+   split between `excluded` and `non_reaching`, with the three parked rows reading `excluded` /
+   unassessed form exactly as they do in d5.
+3. **Coverage (SC-3):** the new ledger row agrees with `coverage_account` field for field —
+   `58 / 2 / 2 / 0 / 0 / {} / complete`, headline `full_satisfaction`.
+4. **Commit order (SC-6):** `git log --diff-filter=A --format=%H` for each expectation artifact (the
+   population JSON, the ledger row's commit, the manifest's expected identity) returns a commit that
+   precedes `git log --diff-filter=A` on `tests/fixtures/catf_mfe_gated/`. Expectation before actual;
+   the reader tests already existed, so their dates prove nothing and are not cited.
 5. **Acceptance (SC-5):** two TEAx runs from one generated package — the authored candidate reaches
-   the satisfied path, the mutated `p_fusion` reaches `reject`, and both land coverage in durable
-   case records.
+   the satisfied path with both gates satisfied, the mutated `p_fusion` drives `p_electric_net_out`
+   negative so **A2** reports `violation` and the candidate reaches `reject`, and coverage lands in
+   durable case records in both runs. A3 is the second executing gate and is reported either way;
+   the ruling does not ask it to carry the rejection.
 6. **Gates (SC-7):** licensed live, in-place snapshot, and relocated snapshot, with exact counts and
    fingerprints recorded in `verification.md` and zero license-skip lines.
-7. **Residual (SC-8):** the new calc-def-only baseline directory is read by `test_baselines.py` and
-   no other baseline's bytes change.
+7. **Residual (SC-8):** regenerating `constraint_domain_satisfy_calc_def` from its committed v6
+   snapshot reproduces the committed golden of `schemas/constraint_types.py` and
+   `modules/constraints/constraintreportaggregatormodule.py` byte for byte, and the registry carries
+   both import lines. Deliberately falsified once during implementation — flip the machinery bar and
+   confirm the gate goes red — because a golden nobody has seen fail is not yet a gate.
 
 ## Next-Stage Handoff
 
@@ -402,14 +548,23 @@ paragraph SC-2 requires. `catf_mfe_model` is untouched.
 probe-first authoring order. Both frozen twins' byte-untouched status.
 
 **Resolved since drafting.** D-S1/D-S2 are ruled (see the SURFACED section header): the landable
-shape is the ruled shape, identity `65 = 58 + 7`, A5/A6/A9 blocked-by-defect as plain usages with
-held intent. The plan must reconcile the P7 probe composite (which deleted nothing and asserted
-nothing on A5/A6/A9's rows — 65 usage rows) against the ruled 58-carrier target explicitly, so
-expected outputs pin the ruled shape, not the probe shape.
+shape is the ruled shape, identity `65 = 58 + 7`, A5/A6/A9 `blocked-by-defect` as plain usages with
+held intent, the defect filed as epic Item 8 and the derivative's upgrade as Item 9.
 
-**De-risk first.** B2. Before authoring the real fixture, re-run the composite probe with the five
-`@inapplicable:` markers and the C21/C28 deletions added. That is the cheapest place to discover a
-second collision, and the atomic landing makes it the only cheap place.
+**Nothing is open that blocks starting.** The identity is not a side note — it is the first thing
+the plan commits, because SC-6 requires the expectation artifacts to land *before* the fixture
+generates. Concretely, the plan's first commits pin: **58 carriers** in the population oracle, the
+coverage account **`58 / 2 / 2 / 0 / 0 / {} / complete`** with `inapplicable_gate_count = 0`, and the
+manifest's expected `65 = 58 + 7` with its 7 named deletions and 2 `renamed_from:` carriers. Those
+numbers come from the ruled table, not from a run. The plan must therefore reconcile the P7 probe
+composite (65 rows, nothing deleted, axis leg derived) against the ruled 58-carrier target *before*
+writing a single expectation file — P7 is evidence that the shape generates, not a description of
+the shape.
+
+**De-risk first.** B2, at full scope. Before authoring the real fixture, re-run the composite probe
+carrying **every** remaining edit: A1 and C37's calc-def derivation, the A4 deletion, the C21/C28
+placeholder deletions, the axis-leg reversal, and the five `@inapplicable:` markers. P7 tested none
+of these. The atomic landing makes this the only cheap place to find a second collision.
 
 ---
 **Next Step:** D-S1/D-S2 ruled (2026-08-13). `/_my_design_review`, then `/_my_plan` with the
