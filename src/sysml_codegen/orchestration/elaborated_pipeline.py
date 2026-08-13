@@ -66,6 +66,7 @@ def elaborate_model_paths(model_paths: list[Path]) -> InstanceGraph:
         extractor.model,
         calc_defs,
         validation_diagnostics=extractor.diagnostics.validation,
+        model_paths=model_paths,
     )
     require_executable_content(graph, calc_defs)
     # The live route keeps raw parser paths on ``source_file`` — they are the
@@ -123,6 +124,7 @@ def elaborate_admitted_sources(admission: SourceAdmission) -> InstanceGraph:
         extractor.model,
         calc_definitions,
         validation_diagnostics=extractor.diagnostics.validation,
+        model_paths=admission.staged_files,
     )
     admission.verify_after_parse(extractor.model)
     require_executable_content(graph, calc_definitions)

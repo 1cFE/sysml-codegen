@@ -35,6 +35,8 @@ from tests.conftest import FIXTURES_DIR, requires_license
 pytestmark = requires_license
 
 FIXTURE = FIXTURES_DIR / "source_identity_mixed_consumers"
+A9 = FIXTURES_DIR / "unit_lane_a9"
+A9_COUNT_KEY = "CATFMFEVacuum__catf_vacuum_pumping__n_pumps"
 
 OUTER_FIELDS = ("format", "version", "authority", "sources", "instance_graph", "integrity")
 
@@ -44,6 +46,12 @@ def captured_payload(tmp_path_factory) -> bytes:
     """One captured v6 snapshot, reused by every read-only cell in this module."""
     destination = tmp_path_factory.mktemp("v6-envelope") / "case.json"
     return capture_instance_graph_snapshot([FIXTURE], destination).read_bytes()
+
+
+@pytest.fixture(scope="module")
+def a9_captured_payload(tmp_path_factory) -> bytes:
+    destination = tmp_path_factory.mktemp("v6-envelope-a9") / "case.json"
+    return capture_instance_graph_snapshot([A9], destination).read_bytes()
 
 
 def _document(payload: bytes) -> dict:
@@ -590,6 +598,25 @@ def test_a_graph_carrying_diagnostics_is_not_certifiable(
     _reseal_graph(document)
     with pytest.raises(v6.SnapshotCertifiabilityError):
         v6.load_instance_graph_snapshot(_written(tmp_path, "diagnostic.json", document))
+
+
+def test_resealed_unit_collision_is_not_certifiable(
+    tmp_path: Path, a9_captured_payload: bytes
+) -> None:
+    document = _document(a9_captured_payload)
+    [constraint] = document["instance_graph"]["graph"]["constraints"]
+    [count] = [item for item in constraint["inputs"] if item["name"] == "count"]
+    assert count["metadata"]["unit"] == "Dimensionless"
+    count["metadata"]["unit"] = "cm"
+    _reseal_graph(document)
+
+    with pytest.raises(v6.SnapshotCertifiabilityError) as excinfo:
+        v6.load_instance_graph_snapshot(_written(tmp_path, "unit-collision.json", document))
+
+    [diagnostic] = excinfo.value.diagnostics
+    assert diagnostic.code.value == "SI_RENDERING_COLLISION"
+    assert A9_COUNT_KEY in diagnostic.detail
+    assert "conflicting projected metadata" in diagnostic.detail
 
 
 def test_every_refusal_shares_one_public_base_type(tmp_path: Path, captured_payload: bytes) -> None:

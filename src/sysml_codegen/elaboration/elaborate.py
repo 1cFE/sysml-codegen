@@ -70,6 +70,7 @@ from sysml_codegen.elaboration.identity import (
     declaration_id_for,
 )
 from sysml_codegen.elaboration.occurrence import (
+    FeatureSlotIndex,
     build_feature_slot_index,
     build_occurrence_index,
 )
@@ -82,6 +83,7 @@ from sysml_codegen.extraction.expression_compiler import (
     compile_calc_def_exact,
 )
 from sysml_codegen.extraction.expression_utils import extract_literal_value
+from sysml_codegen.extraction.feature_metadata import extract_feature_unit
 from sysml_codegen.extraction.modeled_defaults import resolve_modeled_default
 from sysml_codegen.extraction.source_evidence import (
     ReadinessCode,
@@ -252,6 +254,7 @@ def elaborate(
     calc_defs: Sequence[CalculationDefinitionData],
     *,
     validation_diagnostics: Sequence[Any],
+    model_paths: Sequence[Path] = (),
     strict: bool = True,
 ) -> InstanceGraph:
     """Resolve a live model into one typed instance graph.
@@ -267,7 +270,12 @@ def elaborate(
         return InstanceGraph(diagnostics=list(model_diagnostics))
 
     try:
-        return _ExactElaborator(model, calc_defs, strict=strict).run()
+        return _ExactElaborator(
+            model,
+            calc_defs,
+            model_paths=model_paths,
+            strict=strict,
+        ).run()
     except ElaborationInvariantError as error:
         raise ElaborationDiagnosticError(
             (
@@ -364,6 +372,56 @@ def _render_block_reasons(diagnostics: Sequence[EligibilityDiagnostic]) -> str:
     return "; ".join(_render_block_reason(distinct[key]) for key in sorted(distinct))
 
 
+class _EffectiveInputFormalSelector:
+    """Select the exact effective input declaration from a definition's native view."""
+
+    def __init__(self, model: Any, slots: FeatureSlotIndex) -> None:
+        self._slots = slots
+        self._loaded_user_inputs = {
+            declaration_id_for(feature): feature
+            for feature in SysideAdapter.elements_of_type(
+                model, "Feature", include_subtypes=True
+            )
+            if getattr(feature, "qualified_name", None) is not None
+            and self._is_input(feature)
+        }
+
+    def effective_input_formals(
+        self, definition: Any
+    ) -> dict[FeatureSlotId, DeclarationId]:
+        native: dict[DeclarationId, Any] = {}
+        for candidate in getattr(definition, "usages", ()) or ():
+            if not SysideAdapter.is_instance(candidate, "Feature"):
+                continue
+            if getattr(candidate, "qualified_name", None) is None:
+                continue
+            candidate_id = declaration_id_for(candidate)
+            if candidate_id not in self._loaded_user_inputs:
+                continue
+            if not self._is_input(candidate):
+                continue
+            existing = native.get(candidate_id)
+            if existing is not None and existing is not candidate:
+                raise ElaborationInvariantError(
+                    ElaborationCode.SI_REDEFINITION_INVALID,
+                    f"native input view repeats declaration {candidate_id.to_wire()}",
+                )
+            native[candidate_id] = candidate
+
+        by_slot: dict[FeatureSlotId, set[DeclarationId]] = defaultdict(set)
+        for candidate_id in native:
+            by_slot[self._slots.slot_of(candidate_id)].add(candidate_id)
+        return {
+            slot: self._slots.effective_declaration(candidates)
+            for slot, candidates in by_slot.items()
+        }
+
+    @staticmethod
+    def _is_input(member: Any) -> bool:
+        direction = getattr(member, "direction", None)
+        return direction is not None and direction is getattr(type(direction), "In", None)
+
+
 class _ExactElaborator:
     def __init__(
         self,
@@ -371,8 +429,10 @@ class _ExactElaborator:
         calc_defs: Sequence[CalculationDefinitionData],
         *,
         strict: bool,
+        model_paths: Sequence[Path] = (),
     ) -> None:
         self._model = model
+        self._model_paths = tuple(model_paths)
         self._strict = strict
         self._calc_defs = self._index_calculation_payloads(calc_defs)
         self._compilation_results = self._compile_calculation_payloads()
@@ -384,6 +444,10 @@ class _ExactElaborator:
         screen_extraction_diagnostics(identified.facts)
         self._constraint_associations = self._index_constraint_associations(model, identified)
         self._slots = build_feature_slot_index(model)
+        self._formal_selector = _EffectiveInputFormalSelector(model, self._slots)
+        self._effective_formals_by_definition: dict[
+            DeclarationId, dict[FeatureSlotId, DeclarationId]
+        ] = {}
         self._occurrences = build_occurrence_index(model, self._slots)
         self._graph = InstanceGraph(
             occurrences={
@@ -1113,7 +1177,7 @@ class _ExactElaborator:
             self._graph.calcs[node_id] = node
             for declaration in applicable:
                 self._calcs[(scope, declaration_id_for(declaration))] = node
-            self._collect_bound_members(usage, node)
+            self._collect_bound_members(usage, definition, node)
             self._collect_unbound_calculation_formals(definition, node)
 
     def _build_constraint_nodes(self) -> None:
@@ -1151,8 +1215,8 @@ class _ExactElaborator:
                         None,
                         f"constraint profile blocked execution: {reasons}",
                     )
-                self._collect_bound_members(usage, node)
-                if definition is not None:
+                self._collect_bound_members(usage, definition, node)
+                if definition is not None and node.source_form == "definition_typed":
                     self._collect_unbound_constraint_formals(definition, node)
                 if node.source_form in ("inline", "requirement_constraint"):
                     predicate_expression = getattr(usage, "result_expression", None)
@@ -1661,35 +1725,50 @@ class _ExactElaborator:
             )
         return outputs, names, metadata
 
-    def _collect_bound_members(self, usage: Any, consumer: CalcNode | ConstraintNode) -> None:
+    def _collect_bound_members(
+        self,
+        usage: Any,
+        definition: Any | None,
+        consumer: CalcNode | ConstraintNode,
+    ) -> None:
         unbound: list[DeclarationId] = []
         for member in getattr(usage, "owned_members", None) or ():
             if self._direction(member) != "in":
                 continue
             member_id = declaration_id_for(member)
-            formal_id = (
-                self._slots.slot_of(member_id).root_declaration
-                if isinstance(consumer, ConstraintNode)
-                else member_id
+            if definition is None:
+                raise ElaborationInvariantError(
+                    ElaborationCode.SI_EDGE_DANGLING,
+                    f"bound input {member_id.to_wire()} has no selected definition",
+                )
+            effective_formal_id = self._unit_source_for_formal(definition, member_id)
+            structural_formal_id = (
+                effective_formal_id if isinstance(consumer, ConstraintNode) else member_id
             )
-            port = ConsumerPortId(consumer.node_id, formal_id)
+            port = ConsumerPortId(consumer.node_id, structural_formal_id)
             name = str(getattr(member, "name", None) or "input")
             consumer.input_names[port] = display_name(name)
             extracted = None
             if isinstance(consumer, CalcNode):
-                extracted = self._calculation_input_attribute(consumer, formal_id)
+                extracted = self._calculation_input_attribute(
+                    consumer, effective_formal_id
+                )
             consumer.input_metadata[port] = PortMetadata(
                 python_type=(
                     extracted.python_type
                     if extracted is not None
-                    else self._feature_python_type(formal_id)
+                    else self._feature_python_type(effective_formal_id)
                 ),
                 description=(extracted.description if extracted is not None else None),
                 default_value=(extracted.default_value if extracted is not None else None),
-                unit=extracted.unit if extracted is not None else None,
+                unit=(
+                    extracted.unit
+                    if extracted is not None
+                    else self._unit_for_declaration(effective_formal_id)
+                ),
                 qualified_name=str(getattr(member, "qualified_name", None) or ""),
                 formal_provenance=(
-                    self._formal_provenance(formal_id)
+                    self._formal_provenance(effective_formal_id)
                     if isinstance(consumer, ConstraintNode)
                     else None
                 ),
@@ -1702,7 +1781,7 @@ class _ExactElaborator:
                 getattr(member, "feature_value_expression", None)
             )
             if expression is None:
-                unbound.append(formal_id)
+                unbound.append(structural_formal_id)
                 continue
             evidence = self._binding_evidence(member, expression)
             literal = extract_literal_value(expression)
@@ -1722,18 +1801,10 @@ class _ExactElaborator:
             if isinstance(port, ConsumerPortId)
         }
         unbound = list(consumer.unbound_formals)
-        formals = [
-            formal
-            for formal in SysideAdapter.elements_of_type(
-                self._model, "AttributeUsage", include_subtypes=True
-            )
-            if getattr(formal, "owner", None) is definition and self._direction(formal) == "in"
-        ]
-        for formal in formals:
-            formal_id = declaration_id_for(formal)
-            slot = self._slots.slot_of(formal_id)
+        for slot, formal_id in self._effective_input_formals(definition).items():
             if slot in occupied_slots:
                 continue
+            formal = self._feature(formal_id)
             port = ConsumerPortId(consumer.node_id, formal_id)
             name = str(getattr(formal, "name", None) or "input")
             expression = getattr(formal, "feature_value_expression", None)
@@ -1747,7 +1818,7 @@ class _ExactElaborator:
             consumer.input_metadata[port] = PortMetadata(
                 python_type=self._feature_python_type(formal_id),
                 default_value=resolved_default.value,
-                unit=resolved_default.unit_text,
+                unit=resolved_default.unit_text or self._unit_for_declaration(formal_id),
                 qualified_name=str(getattr(formal, "qualified_name", None) or ""),
                 unresolved_default_kind=resolved_default.unresolved_node_kind,
                 formal_provenance=self._formal_provenance(formal_id),
@@ -1763,18 +1834,10 @@ class _ExactElaborator:
             if isinstance(port, ConsumerPortId)
         }
         unbound = list(consumer.unbound_formals)
-        formals = [
-            formal
-            for formal in SysideAdapter.elements_of_type(
-                self._model, "AttributeUsage", include_subtypes=True
-            )
-            if getattr(formal, "owner", None) is definition and self._direction(formal) == "in"
-        ]
-        for formal in formals:
-            formal_id = declaration_id_for(formal)
-            slot = self._slots.slot_of(formal_id)
+        for slot, formal_id in self._effective_input_formals(definition).items():
             if slot in occupied_slots:
                 continue
+            formal = self._feature(formal_id)
             port = ConsumerPortId(consumer.node_id, formal_id)
             name = str(getattr(formal, "name", None) or "input")
             extracted = self._calculation_input_attribute(consumer, formal_id)
@@ -1795,7 +1858,8 @@ class _ExactElaborator:
                     else extracted.default_value
                 ),
                 unit=resolved_default.unit_text
-                or extracted.unit,
+                or extracted.unit
+                or self._unit_for_declaration(formal_id),
                 qualified_name=str(getattr(formal, "qualified_name", None) or ""),
                 unresolved_default_kind=resolved_default.unresolved_node_kind,
             )
@@ -1820,11 +1884,10 @@ class _ExactElaborator:
                 ElaborationCode.SI_EDGE_DANGLING,
                 f"calculation definition {definition_id.to_wire()} has no exact payload",
             )
-        root_formal = self._slots.slot_of(formal_id).root_declaration
         matches = [
             item
             for item in calc_data.input_attributes
-            if item.element_id is not None and DeclarationId(item.element_id) == root_formal
+            if item.element_id is not None and DeclarationId(item.element_id) == formal_id
         ]
         if len(matches) != 1:
             raise ElaborationInvariantError(
@@ -1865,6 +1928,44 @@ class _ExactElaborator:
                 f"feature {root_id.to_wire()} has unsupported exact type {type_name!r}",
             )
         return python_type
+
+    def _effective_input_formals(
+        self, definition: Any
+    ) -> dict[FeatureSlotId, DeclarationId]:
+        definition_id = declaration_id_for(definition)
+        selected = self._effective_formals_by_definition.get(definition_id)
+        if selected is None:
+            selected = self._formal_selector.effective_input_formals(definition)
+            self._effective_formals_by_definition[definition_id] = selected
+        return selected
+
+    def _unit_source_for_formal(
+        self, definition: Any, declaration_id: DeclarationId
+    ) -> DeclarationId:
+        slot = self._slots.slot_of(declaration_id)
+        selected = self._effective_input_formals(definition).get(slot)
+        if selected is None:
+            raise ElaborationInvariantError(
+                ElaborationCode.SI_EDGE_DANGLING,
+                f"input slot {slot!r} has no effective formal on selected definition "
+                f"{declaration_id_for(definition).to_wire()}",
+            )
+        return selected
+
+    def _feature(self, declaration_id: DeclarationId) -> Any:
+        feature = self._elements.get(declaration_id)
+        if feature is None or not SysideAdapter.is_instance(feature, "Feature"):
+            raise ElaborationInvariantError(
+                ElaborationCode.SI_EDGE_DANGLING,
+                f"feature {declaration_id.to_wire()} has no exact live declaration",
+            )
+        return feature
+
+    def _unit_for_declaration(self, declaration_id: DeclarationId) -> str | None:
+        return extract_feature_unit(
+            self._feature(declaration_id),
+            model_paths=self._model_paths,
+        )
 
     def _formal_provenance(self, declaration_id: DeclarationId) -> FormalProvenance:
         formal = self._elements.get(declaration_id)
@@ -2398,6 +2499,7 @@ class _ExactElaborator:
                     pending.consumer.input_names[port] = input_name
                     pending.consumer.input_metadata[port] = PortMetadata(
                         python_type=self._feature_python_type(leaf),
+                        unit=self._unit_for_declaration(leaf),
                         qualified_name=leaf_fact.qualified_name,
                         formal_provenance=(
                             self._formal_provenance(leaf)

@@ -11,7 +11,6 @@ import argparse
 from pathlib import Path
 
 from sysml_codegen.cli import cmd_snapshot
-
 from tests.conftest import requires_license
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -41,3 +40,25 @@ def test_an_accepted_model_still_captures(tmp_path) -> None:
     rc = cmd_snapshot(_args(ROOT / "tests" / "fixtures" / "sample_model", output))
     assert rc == 0
     assert output.is_file()
+
+
+@requires_license
+def test_unit_collision_exits_one_with_exact_diagnostic_and_preserves_destination(
+    tmp_path, caplog
+) -> None:
+    output = tmp_path / "instance_graph_snapshot.json"
+    sentinel = b"item-8-cli-sentinel\n"
+    output.write_bytes(sentinel)
+    fixture = ROOT / "tests" / "fixtures" / "unit_lane_constraint_disagreement"
+
+    with caplog.at_level("ERROR"):
+        rc = cmd_snapshot(_args(fixture, output))
+
+    assert rc == 1
+    assert output.read_bytes() == sentinel
+    assert not list(tmp_path.glob(".instance_graph_snapshot.json.*.tmp"))
+    joined = "\n".join(record.getMessage() for record in caplog.records)
+    assert "SI_RENDERING_COLLISION" in joined
+    assert "UnitLaneConstraintDisagreement__disagreement__shared_length" in joined
+    assert "conflicting projected metadata" in joined
+    assert "Traceback" not in joined

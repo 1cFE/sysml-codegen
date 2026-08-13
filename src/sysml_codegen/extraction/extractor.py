@@ -6,7 +6,6 @@ Uses SysideAdapter for all syside interactions (centralizes syside dependency).
 
 import hashlib
 import logging
-import re
 from collections.abc import Iterable
 from pathlib import Path
 from typing import Any
@@ -23,6 +22,7 @@ from sysml_codegen.extraction.data_models import (
     PartDefinitionData,
 )
 from sysml_codegen.extraction.expression_utils import reconstruct_expression
+from sysml_codegen.extraction.feature_metadata import extract_feature_unit
 
 # Setup logging
 logger = logging.getLogger(__name__)
@@ -549,170 +549,8 @@ class SysMLDataExtractor:
         return ""
 
     def _extract_unit(self, attr_elem, sysml_type: str, description: str) -> str | None:
-        """Extract unit annotation from attribute using multiple sources."""
-        unit = self._extract_unit_from_type(attr_elem, sysml_type)
-        if unit:
-            return unit
-
-        unit = self._extract_unit_from_cst(attr_elem)
-        if unit:
-            return unit
-
-        unit = self._extract_unit_from_description(description)
-        if unit:
-            return unit
-
-        return None
-
-    def _extract_unit_from_type(self, attr_elem, sysml_type: str) -> str | None:
-        """Extract unit from ISQ/SI type heritage."""
-        isq_to_unit = {
-            "Length": "m", "Mass": "kg", "Time": "s", "ElectricCurrent": "A",
-            "ThermodynamicTemperature": "K", "AmountOfSubstance": "mol",
-            "LuminousIntensity": "cd", "Power": "W", "Energy": "J", "Force": "N",
-            "Pressure": "Pa", "Frequency": "Hz", "Voltage": "V",
-            "ElectricResistance": "Ω", "MagneticFluxDensity": "T", "Area": "m²",
-            "Volume": "m³", "Velocity": "m/s", "Acceleration": "m/s²",
-            "Density": "kg/m³", "HeatFlux": "W/m²",
-        }
-
-        si_to_unit = {
-            "Metre": "m", "Kilogram": "kg", "Second": "s", "Ampere": "A",
-            "Kelvin": "K", "Mole": "mol", "Candela": "cd", "Watt": "W",
-            "Joule": "J", "Newton": "N", "Pascal": "Pa", "Hertz": "Hz",
-            "Volt": "V", "Ohm": "Ω", "Tesla": "T",
-        }
-
-        if sysml_type in isq_to_unit:
-            return isq_to_unit[sysml_type]
-        if sysml_type in si_to_unit:
-            return si_to_unit[sysml_type]
-
-        if hasattr(attr_elem, 'heritage') and attr_elem.heritage:
-            for relationship, target in attr_elem.heritage:
-                if self.adapter.is_instance(relationship, "FeatureTyping"):
-                    if hasattr(target, 'qualified_name'):
-                        qname = target.qualified_name
-                        if qname and '::' in qname:
-                            parts = qname.split('::')
-                            if len(parts) >= 2:
-                                namespace = parts[-2]
-                                type_name = parts[-1]
-                                if namespace == "ISQ" and type_name in isq_to_unit:
-                                    return isq_to_unit[type_name]
-                                if namespace == "SI" and type_name in si_to_unit:
-                                    return si_to_unit[type_name]
-
-        return None
-
-    def _extract_unit_from_cst(self, attr_elem) -> str | None:
-        """Extract unit from inline comment in original source."""
-        if not hasattr(attr_elem, 'cst_node') or not attr_elem.cst_node:
-            return None
-
-        cst_node = attr_elem.cst_node
-        if not hasattr(cst_node, 'start_byte'):
-            return None
-
-        start_byte = cst_node.start_byte
-        source_file = self._get_source_file_for_element(attr_elem)
-        if not source_file or not source_file.exists():
-            return None
-
-        try:
-            source_content = source_file.read_text(encoding='utf-8')
-        except Exception:
-            return None
-
-        lines = source_content.split('\n')
-        cumulative = 0
-        source_line = None
-        for line in lines:
-            if cumulative <= start_byte < cumulative + len(line) + 1:
-                source_line = line
-                break
-            cumulative += len(line) + 1
-
-        if not source_line:
-            return None
-
-        match = re.search(r'//\s*(\[?[A-Za-z°Ω²³/·⋅\-]+\]?)\s*(?:-|$|\s)', source_line)
-        if match:
-            unit = match.group(1).strip('[]')
-            non_units = {
-                "the",
-                "this",
-                "that",
-                "todo",
-                "note",
-                "fixme",
-                "energy",
-                "power",
-            }
-            if unit.lower() not in non_units:
-                return unit
-
-        return None
-
-    def _get_source_file_for_element(self, elem) -> Path | None:
-        """Get the source file Path for an element."""
-        current = elem
-        while current:
-            if hasattr(current, 'document'):
-                doc = current.document
-                if doc and hasattr(doc, 'url'):
-                    url = doc.url
-                    if hasattr(url, 'path'):
-                        return Path(url.path)
-                    url_str = str(url)
-                    if url_str.startswith('file:'):
-                        return Path(url_str[5:])
-                    return Path(url_str)
-            if hasattr(current, 'source_file'):
-                return Path(current.source_file) if current.source_file else None
-            if hasattr(current, 'owning_document'):
-                doc = current.owning_document
-                if doc and hasattr(doc, 'uri'):
-                    return Path(doc.uri) if doc.uri else None
-            if hasattr(current, 'owner'):
-                current = current.owner
-            else:
-                break
-
-        if hasattr(self, 'model_paths') and self.model_paths:
-            files = []
-            for path in self.model_paths:
-                if path.is_file():
-                    files.append(path)
-                elif path.is_dir():
-                    files.extend(path.glob('**/*.sysml'))
-            if len(files) == 1:
-                return files[0]
-
-        return None
-
-    def _extract_unit_from_description(self, description: str) -> str | None:
-        """Extract unit from description/doc comment."""
-        if not description:
-            return None
-
-        match = re.search(r'\[([A-Za-z°Ω²³/·⋅\-]+)\]', description)
-        if match:
-            return match.group(1)
-
-        match = re.match(r'^([A-Za-z°Ω²³/·⋅]+)\s*[-–—]', description)
-        if match:
-            unit = match.group(1)
-            if unit.lower() not in ['the', 'this', 'that', 'total', 'maximum', 'minimum']:
-                return unit
-
-        match = re.search(r'\(([A-Za-z°Ω²³/·⋅\-]+)\)', description)
-        if match:
-            unit = match.group(1)
-            if len(unit) <= 10 and not unit.lower().startswith(('e.g', 'i.e', 'typ', 'def')):
-                return unit
-
-        return None
+        """Delegate exact unit extraction to the declaration-owned helper."""
+        return extract_feature_unit(attr_elem, model_paths=self.model_paths)
 
     def _map_sysml_to_python_type(self, sysml_type: str) -> str:
         """Map SysML type to Python type."""

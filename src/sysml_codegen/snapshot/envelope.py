@@ -65,7 +65,11 @@ import agentic_mbse
 import sysml_codegen
 from sysml_codegen._upstream_pins import EXPRESSION_IR_SCHEMA_VERSION, PROFILE_SEMANTIC_VERSION
 from sysml_codegen.elaboration.graph import GraphValidationError, InstanceGraph
-from sysml_codegen.elaboration.project import PROJECTOR_SEMANTICS
+from sysml_codegen.elaboration.project import (
+    PROJECTOR_SEMANTICS,
+    ProjectionError,
+    project,
+)
 from sysml_codegen.extraction.source_manifest import (
     PINNED_STANDARD_LIBRARY_COUNT,
     PINNED_STANDARD_LIBRARY_SHA256,
@@ -152,6 +156,15 @@ class SnapshotStaleSourceError(InstanceGraphSnapshotError):
 class SnapshotCertifiabilityError(InstanceGraphSnapshotError):
     """The decoded graph is not an empty-diagnostic projectable authority."""
 
+    def __init__(self, diagnostics: Sequence[Any]) -> None:
+        self.diagnostics = tuple(diagnostics)
+        super().__init__(
+            "; ".join(
+                f"{diagnostic.code.value}: {diagnostic.detail}"
+                for diagnostic in self.diagnostics
+            )
+        )
+
 
 class _DuplicateKeyError(ValueError):
     pass
@@ -174,12 +187,7 @@ def build_envelope(graph: InstanceGraph, admission: SourceAdmission) -> dict[str
     Refuses any graph that is not projectable: a snapshot exists to be generated
     from, and a graph carrying diagnostics cannot be.
     """
-    try:
-        graph.require_projectable()
-    except GraphValidationError as error:
-        raise SnapshotCertifiabilityError(
-            f"only a projectable, diagnostic-free graph may be sealed: {error}"
-        ) from error
+    _require_certifiable(graph)
 
     document: dict[str, object] = {
         "format": SNAPSHOT_FORMAT,
@@ -292,13 +300,17 @@ def _decode_graph(document: dict[str, Any]) -> InstanceGraph:
         graph = decode_instance_graph(canonical_json(instance))
     except InstanceGraphCodecError as error:
         raise SnapshotShapeError(str(error)) from error
+    _require_certifiable(graph)
+    return graph
+
+
+def _require_certifiable(graph: InstanceGraph) -> None:
+    """Require graph integrity and the existing projector's lossless public view."""
     try:
         graph.require_projectable()
-    except GraphValidationError as error:
-        raise SnapshotCertifiabilityError(
-            f"sealed graph is not a projectable authority: {error}"
-        ) from error
-    return graph
+        project(graph)
+    except (GraphValidationError, ProjectionError) as error:
+        raise SnapshotCertifiabilityError(error.diagnostics) from error
 
 
 def _parse_document(payload: bytes | str) -> dict[str, Any]:

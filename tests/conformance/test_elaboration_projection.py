@@ -154,3 +154,58 @@ def test_public_rendering_collision_blocks_without_merging_nodes() -> None:
         project(graph)
 
     assert excinfo.value.diagnostics[0].code is ElaborationCode.SI_RENDERING_COLLISION
+
+
+def test_unit_text_and_missing_unit_remain_a_rendering_collision() -> None:
+    scope = PackageScopeId(_declaration(20))
+    slot = FeatureSlotId(_declaration(21))
+    source_id = NodeId(NodeKind.ATTRIBUTE, scope, slot)
+    consumer_id = NodeId(NodeKind.CALCULATION, scope, _declaration(22))
+    metre_port = ConsumerPortId(consumer_id, _declaration(23))
+    missing_port = ConsumerPortId(consumer_id, _declaration(24))
+    graph = InstanceGraph(
+        attrs={
+            source_id: AttrNode(
+                source_id,
+                scope,
+                _declaration(21),
+                slot,
+                "pkg__shared_length",
+                "shared_length",
+                "pkg::shared_length",
+                1.0,
+                ValueSite.DEFINITION_DEFAULT,
+            )
+        },
+        calcs={
+            consumer_id: CalcNode(
+                node_id=consumer_id,
+                scope=scope,
+                declaration_id=_declaration(22),
+                display_path="pkg__consumer",
+                display_name="consumer",
+                calc_def_name="Consumer",
+                calc_def_qualified_name="pkg::Consumer",
+                inputs={
+                    metre_port: NodeRef(source_id),
+                    missing_port: NodeRef(source_id),
+                },
+                input_names={metre_port: "metres", missing_port: "unspecified"},
+                input_metadata={
+                    metre_port: PortMetadata(unit="m"),
+                    missing_port: PortMetadata(unit=None),
+                },
+                calculation_definition_id=_declaration(25),
+                compilation_definition_id=_declaration(25),
+                compilability=Compilability.MANUAL_REQUIRED,
+            )
+        },
+    )
+
+    with pytest.raises(ProjectionError) as excinfo:
+        project(graph)
+
+    [diagnostic] = excinfo.value.diagnostics
+    assert diagnostic.code is ElaborationCode.SI_RENDERING_COLLISION
+    assert "pkg__shared_length" in diagnostic.detail
+    assert "conflicting projected metadata" in diagnostic.detail

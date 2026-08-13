@@ -18,6 +18,7 @@ Requirements: REQ-EXT-01 through REQ-EXT-09.
 from __future__ import annotations
 
 import dataclasses
+import importlib
 import json
 from pathlib import Path
 
@@ -31,6 +32,81 @@ from sysml_codegen.extraction.data_models import (
     SumTerm,
 )
 from sysml_codegen.extraction.extractor import SysMLDataExtractor
+
+
+def test_shared_feature_unit_precedence_and_exact_text(tmp_path: Path) -> None:
+    feature_metadata = importlib.import_module("sysml_codegen.extraction.feature_metadata")
+    extract_feature_unit = feature_metadata.extract_feature_unit
+
+    source = tmp_path / "model.sysml"
+    source.write_text("attribute flow : Real; // [m³/s] - exact\n", encoding="utf-8")
+
+    class Node:
+        start_byte = 0
+
+    class Target:
+        name = "Real"
+        qualified_name = "ScalarValues::Real"
+
+    class Relationship:
+        __class__ = type("FeatureTyping", (), {})
+
+    class DocumentUrl:
+        path = str(source)
+
+    class Document:
+        url = DocumentUrl()
+
+    class Feature:
+        cst_node = Node()
+        document = Document()
+        heritage = ()
+        documentation = ()
+        owner = None
+
+    feature = Feature()
+    assert extract_feature_unit(feature, model_paths=[source]) == "m³/s"
+
+    source.write_text(
+        "attribute flow : Real; // From an external source\n", encoding="utf-8"
+    )
+    assert extract_feature_unit(feature, model_paths=[source]) is None
+
+    feature.cst_node = None
+    feature.documentation = [type("Doc", (), {"body": "[kg/m³] - exact"})()]
+    assert extract_feature_unit(feature, model_paths=[source]) == "kg/m³"
+
+    feature.documentation = []
+    assert extract_feature_unit(feature, model_paths=[source]) is None
+
+
+def test_shared_feature_unit_type_precedes_authored_text() -> None:
+    feature_metadata = importlib.import_module("sysml_codegen.extraction.feature_metadata")
+
+    class FeatureTyping:
+        pass
+
+    class Target:
+        name = "Length"
+        qualified_name = "ISQ::Length"
+
+    class Doc:
+        body = "[cm]"
+
+    class Feature:
+        heritage = ((FeatureTyping(), Target()),)
+        documentation = (Doc(),)
+        cst_node = None
+        owner = None
+
+    original = feature_metadata.SysideAdapter.is_instance
+    feature_metadata.SysideAdapter.is_instance = staticmethod(
+        lambda item, type_name: type(item).__name__ == type_name
+    )
+    try:
+        assert feature_metadata.extract_feature_unit(Feature()) == "m"
+    finally:
+        feature_metadata.SysideAdapter.is_instance = original
 
 # ---------------------------------------------------------------------------
 # Expected counts from Phase 0 snapshot capture

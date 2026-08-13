@@ -903,6 +903,10 @@ def cmd_snapshot(args: argparse.Namespace) -> int:
     )
     from sysml_codegen.generation import SysMLParsingError
     from sysml_codegen.snapshot.capture import capture_instance_graph_snapshot
+    from sysml_codegen.snapshot.envelope import (
+        InstanceGraphSnapshotError,
+        SnapshotCertifiabilityError,
+    )
 
     models_path: Path = args.models
     output_path: Path = args.output or (models_path / "instance_graph_snapshot.json")
@@ -918,6 +922,16 @@ def cmd_snapshot(args: argparse.Namespace) -> int:
         return 1
     except SysMLParsingError as error:
         logger.error(f"SysML parsing failed: {error}")
+        return 1
+    except InstanceGraphSnapshotError as error:
+        if isinstance(error, SnapshotCertifiabilityError):
+            detail = "; ".join(
+                f"{diagnostic.code.value}: {diagnostic.detail}"
+                for diagnostic in error.diagnostics
+            )
+            logger.error(f"Snapshot refused: {detail}")
+        else:
+            logger.error(f"Snapshot refused: {error}")
         return 1
     except OSError as error:
         logger.error(f"Snapshot could not be written: {error}")

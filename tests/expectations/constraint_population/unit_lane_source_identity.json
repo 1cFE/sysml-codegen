@@ -1,0 +1,17 @@
+{
+  "constraint_usages": [
+    {
+      "owner_qualified_name": "UnitLaneSourceIdentity::SourceIdentityCases",
+      "source_file": "model.sysml",
+      "source_line": 45,
+      "usage_qualified_name": "UnitLaneSourceIdentity::SourceIdentityCases::base_guard"
+    },
+    {
+      "owner_qualified_name": "UnitLaneSourceIdentity::SourceIdentityCases",
+      "source_file": "model.sysml",
+      "source_line": 50,
+      "usage_qualified_name": "UnitLaneSourceIdentity::SourceIdentityCases::redefined_guard"
+    }
+  ],
+  "fixture": "unit_lane_source_identity"
+}

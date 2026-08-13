@@ -1,0 +1,11 @@
+{
+  "constraint_usages": [
+    {
+      "owner_qualified_name": "CATFMFEVacuum::catf_vacuum_pumping",
+      "source_file": "model.sysml",
+      "source_line": 31,
+      "usage_qualified_name": "CATFMFEVacuum::catf_vacuum_pumping::pumping_speed_agrees"
+    }
+  ],
+  "fixture": "unit_lane_a9"
+}
