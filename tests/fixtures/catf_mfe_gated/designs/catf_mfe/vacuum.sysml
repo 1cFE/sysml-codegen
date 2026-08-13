@@ -50,7 +50,12 @@ package CATFMFEVacuum {
         // Geometry (from radial build and PyFECONS vacuum config)
         attribute inner_radius : Real = 6.3 [m];   // From radial build line 82
         attribute wall_thickness : Real = 0.2 [m]; // From radial build line 82
-        attribute outer_radius : Real = inner_radius + wall_thickness;
+        // Relation (undirected): outer_radius = inner_radius + wall_thickness. A structural
+        // identity of the vessel wall, true by construction rather than something to check.
+        // Direction is a CHOSEN BASIS, not physics: inner_radius and wall_thickness are taken as
+        // free and outer_radius derived. Solving the same relation for wall_thickness would be
+        // equally valid. Authority: owner-disposition.md Group A, A8 (derive-instead).
+        attribute outer_radius : Real = inner_radius + wall_thickness;  // m
         attribute height : Real = 18.0 [m];        // Estimated from 2*elongation*plasma_outer_radius
 
         // Material Properties

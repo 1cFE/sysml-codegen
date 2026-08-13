@@ -102,6 +102,13 @@ package CATFMFEShield {
 
             attribute material : String = "LeadLithium";
             attribute thickness : Real = 0.04 [m];  // 10% of 0.4m total shield
+            // Relation (undirected): neutron_shield.fraction_volume + gamma_shield.fraction_volume = 1.0.
+            // A composition closure over two terms, so the last term is derived rather than checked.
+            // Direction is a CHOSEN BASIS, not physics: neutron_shield.fraction_volume is taken as
+            // the free term and gamma derived as the remainder. The reverse basis is equally valid.
+            // Authority: owner-disposition.md Group A, A7 (derive-instead); basis ruled there.
+            // Model debt (O3): the closure covers 2 of the 4 shield layers — thermal_shield and
+            // biological_shield carry no fraction_volume. Recorded in PROVENANCE §4, not embedded.
             attribute fraction_volume : Real = 1.0 - neutron_shield.fraction_volume;
             attribute density : Real = 9400 [kg/m^3];
         }

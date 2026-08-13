@@ -686,9 +686,25 @@ Both persist verdict **and** coverage in the durable case record.
 
 Expectations `1247a3b` → fixture `7369b3e`, parent to child, by the per-artifact-kind recipe in
 §Phase 2. The fixture reproduced every pre-committed number **with no edit to the expectations**.
-The one later amendment (`e01c3b4`, the 6-D headline cell) is a separate, named commit made
-*after* the acceptance run and does not touch the ordering evidence — the coverage numbers it
-leaves untouched are the ones the ordering was for.
+**Three later edits touched an expectation file, all after the fixture, all named.** None moved
+an expected value that the ordering exists to protect:
+
+1. **`e01c3b4`** — the 6-D headline cell, `full_satisfaction` → `violation`. A separate, named
+   commit made after the acceptance run, on a source-derived basis. The coverage account it
+   leaves untouched is the thing the ordering was for.
+2. **`3a85d77`** — a backlog-ID string rename (`[CATF-CRYO-HEATLEAK]` →
+   `[CATF-CRYO-HEAT-LEAK-COEFFICIENT]`) inside a `_note` field and one prose line, when a
+   duplicate filing was consolidated. **No expected value moved** (audit A-6).
+3. **the audit cure** — one `source_line` in
+   `tests/expectations/constraint_population/catf_mfe_gated.json`, A9's
+   `PumpingSpeedConsistency` from `vacuum.sysml:164` to `:169`. **Cause:** the owner-required
+   derivation documentation added at audit cure (A-1) puts five comment lines above A9 in the
+   same file. **Zero expected values moved** — same 58 identities, same membership, same
+   counts, same coverage account. Ruled Option A by the orchestrator 2026-08-13: the
+   obligation's purpose is a reader of the model seeing the relation and the chosen basis, and
+   a line number moving because required documentation was added is the honest consequence.
+   **A-3's source-tie check now makes those comments a gated property** rather than a claim, so
+   the class of gap that produced A-1 fails the manifest check instead of passing silently.
 
 ### SC-7 — all acceptance gates pass with exact numbers recorded — **MET**
 

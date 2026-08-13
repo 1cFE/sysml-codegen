@@ -136,7 +136,7 @@ A1, A4, A7, A8, C37; 2 O2 placeholder deletions — C21, C28). Every counted usa
   `ReasonableParasiticTotal`). Both are `assert constraint … : <def>` over
   `library/constraints/gate_forms.sysml`, bindings-only, chains in binding position.
 - **3 plain, reaching** — `radial_build.sysml:604` (A5 `LayerContinuity`),
-  `radial_build.sysml:622` (A6 `RadiusThicknessConsistency`), `vacuum.sysml:164`
+  `radial_build.sysml:622` (A6 `RadiusThicknessConsistency`), `vacuum.sysml:169`
   (A9 `PumpingSpeedConsistency`). Retained as visible plain usages under the D-S1/D-S2 ruling.
 - **5 plain, part-definition-owned** — `library/components/divertor.sysml:216`,
   `first_wall.sysml:220`, `radial_build.sysml:55`, `shield.sysml:160`, `vacuum.sysml:155`

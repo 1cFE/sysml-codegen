@@ -185,7 +185,7 @@ visible.** That is the point of writing them down here.
 |---|---|---|---|
 | usage | `CATFMFERadialBuild::catf_radial_build::LayerContinuity` | `CATFMFERadialBuild::catf_radial_build::RadiusThicknessConsistency` | `CATFMFEVacuum::catf_vacuum_pumping::PumpingSpeedConsistency` |
 | d5 `file:line` | `radial_build.sysml:612` | `radial_build.sysml:630` | `vacuum.sysml:169` |
-| here | `radial_build.sysml:604` | `radial_build.sysml:622` | `vacuum.sysml:164` |
+| here | `radial_build.sysml:604` | `radial_build.sysml:622` | `vacuum.sysml:169` |
 | disposition | `blocked-by-defect` | `blocked-by-defect` | `blocked-by-defect` |
 | surfacing finding | **D-S2** | **D-S2** | **D-S1** |
 | catalog row reads | `excluded` / unassessed form | `excluded` / unassessed form | `excluded` / unassessed form |
