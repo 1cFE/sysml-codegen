@@ -82,35 +82,42 @@ the location is an open question below.
 
 ## Success Criteria
 
-- [ ] **[INHERITED: constraint-semantics-contract/spec.md]** A live ADR records the intended
+- [x] **[INHERITED: constraint-semantics-contract/spec.md]** A live ADR records the intended
       contract change with agent-originated, owner-ratified provenance, and its id is cited from
       the product-lens disposition trail.
-- [ ] **[INHERITED: constraint-semantics-contract/spec.md]** The lifecycle contract and the frozen
+- [x] **[INHERITED: constraint-semantics-contract/spec.md]** The lifecycle contract and the frozen
       requirements companion publish the full amendment set, invariant by invariant and
       requirement by requirement, with the original provenance grades of amended statements intact.
-- [ ] **[INHERITED: research D1–D7]** No statement remains in either repository that a plain or
+- [x] **[INHERITED: research D1–D7]** No statement remains in either repository that a plain or
       requirement-side constraint is an enforced gate, and none cites the retired totality test as
       living evidence. Each defect is corrected at its location by amendment or deletion — not
       annotated, and not answered with compensating prohibition prose.
-- [ ] The universal claim above is **checked, not asserted**: a recorded sweep runs over both
+- [x] The universal claim above is **checked, not asserted**: a recorded sweep runs over both
       repositories' documentation and their comment/docstring text, and every hit is dispositioned
       (corrected, or recorded as correct with the reason) in `verification.md`. D1–D7 plus the
       three locations named in this spec are the floor, not the ceiling.
-- [ ] **[NEED carried from constraint-semantics-contract/spec.md]** Authoring guidance explains
+- [x] **[NEED carried from constraint-semantics-contract/spec.md]** Authoring guidance explains
       when equality intent should be derived, band-checked, one-sided, fixed as an input, or
       closed by construction, and states that tolerance values are modeled values the modeler
       chooses.
-- [ ] The blessed assert-with-bindings gate shape is published, together with its scope precision:
+- [x] The blessed assert-with-bindings gate shape is published, together with its scope precision:
       the restriction is predicate-body-only, binding-position feature chains stay supported, and
       inline asserted forms stay admitted.
-- [ ] Both headline vocabularies — the generated report's and TEAx's canonical runtime one — have
+- [x] Both headline vocabularies — the generated report's and TEAx's canonical runtime one — have
       a published **meaning** for every state, including the new partial-coverage state, and the
       precedence order among them. The spec text draws an explicit line: Item 1 owns meaning,
       Item 3 owns token spellings, schema field names, and normalization code.
-- [ ] **[OWNER]** Documentation is correct before confirmation testing begins. No amendment in
+- [x] **[OWNER]** Documentation is correct before confirmation testing begins. No amendment in
       this item is written to match current behavior.
-- [ ] `scripts/check_doc_distinctness.py`, the equivalent documentation checks in the companion
+- [x] `scripts/check_doc_distinctness.py`, the equivalent documentation checks in the companion
       repository, and `git diff --check` pass in both touched repositories.
+
+**All nine were ticked at close (2026-08-13), none on evidence the close pass produced.** The
+audit verified seven from the codegen worktree with `file:line` evidence (`audit.md`, spec
+conformance table); the two it could not — `check_doc_distinctness.py` and the companion-side
+checks — were closed by the orchestrator's probes P-1 (31 documents, 0 identical-content groups)
+and P-3 (companion `git diff --check` clean, five documentation files, `src/`+`tests/` diff empty),
+recorded in the audit addendum. No suite was re-run at close.
 
 ## Known Requirements
 

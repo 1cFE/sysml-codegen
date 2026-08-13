@@ -4,6 +4,119 @@ Historical record of completed work.
 
 ---
 
+## [2026-08-13] - [CONSTRAINT-SEMANTICS Item 1] Contract and Authoring Policy
+
+**Type**: Item (orchestrated run; audited Certify-with-residuals → H-1/M-1/M-2 cured, M-3 ratified
+at close)
+**Duration**: spec 2026-08-12 → closed 2026-08-13
+**Archived to**: `.project/completed/20260813_constraint-semantics-contract-amendments/`
+**Commits**: codegen item tip `76e3ab7` (branch `item7-rebuild`, unpushed) / companion `dcb187b` in
+`/home/reid/1cfe/agentic-mbse-item7-rebuild` (five documentation/guidance files, none under `src/`
+or `tests/`) / TEAx untouched
+
+### Summary
+The constraint-semantics contract was settled, and nothing a modeler or an implementing agent
+actually reads said so. The ratified lifecycle contract and its frozen requirements companion still
+defined the old headline and disposition behaviour; no ADR recorded the intentional
+coverage-vocabulary change; seven documentation statements across both repositories taught that a
+bare `constraint` or a `require constraint` is an enforced gate, or cited a retired test as living
+totality evidence; and the blessed authoring pattern was unpublished. This item is the documentation
+half of the owner's required sequence — settle semantics, fix the documentation to match, *then*
+test — so Items 2–5 build against text that agrees with the contract they implement.
+
+What published: **ADR-009** as a numbered section in `docs/architecture/modeling-assumptions.md`,
+quoting what invariant 33 and LC-E11 said before and carrying `[AGENT] (ratified by owner,
+2026-08-12)` with its challenge route stated; contract amendments to invariants 1, 9, 28, 32, 33,
+46/46a and 48 plus new invariant 61, an Appendix B row and three Appendix C cells; companion
+amendments to LC-E05/E06/E10/E11/E12 and LC-G07 plus new LC-E13, every `[INHERITED]` grade left
+intact; the **applicable asserted gate** membership test defined where it is first used, the
+inventory-versus-feasibility split, the six headline states with their precedence in both
+vocabularies, and the blessed assert-with-bindings gate shape with its three carve-outs; the
+four-class equality-intent taxonomy with the owner's narrow-bands reason and the rule that
+tolerances are modeler-chosen; D1–D7 corrected at their locations across both repositories.
+
+Nothing executable changed. The Python diff is one module docstring and two
+test-docstring/comment citations of a retired test, verified line by line at audit.
+
+### Deliverables
+- `spec.md`, `spec-review.md`, `design.md`, `design-review.md`, `plan.md` (91 checkboxes with
+  completion notes), `verification.md` (pre-edit and post-edit sweeps with per-hit dispositions,
+  the pairwise precedence-agreement check, the RI-1..RI-7 discharge table), `audit.md` (+
+  orchestrator probe addendum), `product-lens.md` (spec + close blocks), `briefs/`.
+- Codegen: ADR-009 §9 in `modeling-assumptions.md`; amended
+  `.project/concepts/constraint-execution-authoritative-lifecycle-contract.md` and
+  `.project/concepts/constraint-execution-lifecycle-requirements.md`; D1/D2/D6/D7 corrections in
+  `modeling-assumptions.md`, `reference/28-constraint-lowering-and-catalog.md`,
+  `reference/01-extraction.md`; the dated "re-grade pending, Item 2" pointer at
+  `verification-matrix.md:336`; two future-capability lines filed in `BACKLOG.md`.
+- Companion (`dcb187b`): D3's reason substituted with the row-1 subtype enumeration preserved
+  verbatim, D4 and D5-b..f corrections, the four-class equality taxonomy rendered in full in
+  `docs/patterns/constraints.md` with its ADR-009 cite and not-a-second-authority clause.
+- Gates: `check_doc_distinctness.py` **31 documents / 0 identical-content groups**;
+  `git diff --check` clean in both repositories; companion
+  `tests/test_validation/test_item9_checks.py` **2 passed** on a licensed run. No suite was re-run
+  at close — the verification record stands.
+
+### Decisions and deviations
+- **M-3 ratified at close, not reversed.** The 52 companion sweep hits in `docs/sysmlv2/` and
+  `docs/syside/` stay aggregated into four rows by term and corpus — every file named, every count
+  given, one uniform "out of class — vendored upstream reference corpus" disposition. Project-
+  authored hits are still one row each. The aggregated class is the OMG specification, the standard
+  library, and generated SysIDE API documentation, which this item has no authority to amend; the
+  audit reproduced all five sweep terms independently. Expanding to 52 rows adds rows, not
+  information. The deviation from the spec's raw-hit-list wording is recorded as a decision.
+- **D5-a: `require constraint` kept inside the requirement-def example**, against the design's
+  instruction to swap the form, with a settled-semantics sentence added instead
+  (companion `claude/agents/sysml-expert.md:124`). The audit judged this **sounder than the
+  design's instruction**: the nested `require constraint` is the SysML v2 idiom that makes a
+  constraint requirement-side at all, so substituting `assert constraint` would have taught invalid
+  requirement modeling and deleted the visible requirement-side form ruling Q7 exists to preserve.
+  The published rule never forbids the form — it says the form never executes and the assert family
+  is the sole enforcement opt-in. Recorded with its reasoning *before* it was taken.
+- **Invariant 61 and LC-E13 were minted by the implementer** and stamped
+  `(ratified by owner, 2026-08-12)`. The owner did not see those texts; their substance is the
+  umbrella's Q3 warning tier, which was ratified that day. A challenger re-derives against Q3's
+  reasoning, which is the correct route for an agent-with-ratification grade.
+
+### Carried forward (not closed by this item)
+- **Both deliberate hand-offs are DISCHARGED**, recorded at close: Item 3's token migration
+  corrected the four `all_satisfied` assertions in `tests/execution/`, and Item 2 landed
+  REQ-EXT-09's replacement totality proof (`test_constraint_population_oracle.py` plus 42 reviewed
+  expected-population files) and performed the REQ-EXT-09/REQ-CL-04 re-grade.
+- **Residuals other closes homed against "Item 1's authoring guidance" are re-homed to epic
+  Item 7**, not reabsorbed here: Item 3's design-F2 (the Appendix C vacuous-gate cell), the D9
+  advisory guidance, and item3-F2 (the unreachable `BLOCK`ed-asserted-usage clause, still a
+  surfaced premise conflict in both directions).
+- **The parked D-2 vs D-4/SRC-01 premise conflict stays parked** at the umbrella level
+  (`.project/active/constraint-semantics-contract/spec.md:325`), verified byte-untouched across the
+  item range at close. It needs the owner.
+- **No product-promise entry was filed and no id was hand-minted** — this repo still has no
+  `.project/adr/` or `.project/product/` ledger and no `adr.sh`/`product.sh`. Item 1's decision
+  record is ADR-009 itself. The coverage-truth promise needs an owner-originated statement, which
+  is epic Item 7's first beat.
+- **The umbrella shaping folder `.project/active/constraint-semantics-contract/` stays active** —
+  it is cited by every item and archives at epic close.
+
+### Lessons Learned
+- **Documentation-first only works if the documentation is written from the settled rule, not from
+  the code.** The spec's hardest constraint was that no amendment may soften toward today's
+  behaviour; where the published text describes a target it says so and names the item that makes
+  it true. That is why Items 2–4 could build against it while the code still disagreed.
+- **A definition nobody owns is the one that goes missing.** "Applicable asserted gate" is the term
+  every state meaning, the precedence, and both totals turn on — and no later item had the mandate
+  to define it. The lens caught it as item1-F2 before drafting, not after.
+- **The contract can misdescribe its own governance.** H-1 was one stale sentence saying the
+  companion "cites and does not restate" the equality instruction, written for a design that
+  changed under it — the only place a future editor is told what maintenance obligation the
+  arrangement carries, and it said "none."
+- **A sweep is what makes a universal claim checkable.** "No statement remains anywhere" is not
+  auditable as an assertion; five named terms over named directories, with every hit dispositioned
+  and the raw list kept, is. The auditor re-ran all five and reproduced the record term for term —
+  which is also what made ratifying the one aggregated class an informed decision instead of a
+  concession.
+
+---
+
 ## [2026-08-13] - [CONSTRAINT-SEMANTICS Item 3] Coverage Report and TEAx Policy
 
 **Type**: Item (orchestrated run; audited Certify-with-residuals → all six residuals cured)

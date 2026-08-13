@@ -1,6 +1,6 @@
 # Current Work
 
-**Last Updated**: 2026-08-13 (CONSTRAINT-SEMANTICS Item 4 AUDITED **Certify-with-residuals**, all cures applied same day; Items 2 and 3 CLOSED and archived; close/pre_pr with the owner for Item 4)
+**Last Updated**: 2026-08-13 (CONSTRAINT-SEMANTICS Item 4 AUDITED **Certify-with-residuals**, all cures applied same day; Items 1, 2 and 3 CLOSED and archived; close/pre_pr with the owner for Item 4)
 
 ---
 
@@ -59,53 +59,6 @@ session DID commit during the run (`4e5bc71` files epic Item 7; Items 2/3 archiv
 
 **Close and pre_pr are left to the owner.** Next per epic: Item 5's owner checkpoint (all-65
 disposition table) and Item 6 design; both now unblocked by Items 2–4.
-
-### 2026-08-12: CONSTRAINT-SEMANTICS Item 1 — contract and authoring policy (AUDITED: Certify-with-residuals)
-
-**All six phases landed.** The documentation half of the owner's sequence is done: the ratified
-contract, the frozen requirements companion, and every living-surface statement across both
-repositories now teach assert-only enforcement and coverage-truthful headlines.
-
-**What Items 2–5 may now build against:**
-
-- **The definitions home** — the lifecycle contract's `### Headline states and coverage truth`
-  subsection: the applicable-asserted-gate test (on the form, not the predicate), the
-  inventory-versus-feasibility split, the six states, the precedence, and the both-vocabularies
-  obligation. Item 3 reads this for state meanings, and invariants 46/46a for fail-closed behavior.
-- **New invariant 61** (vacuous gate at warning grade), with its companion mirror LC-E13 and its
-  Appendix C acceptance cell.
-- **Invariant 28 + LC-E05** — the third disposition kind, non-reaching-with-reason, for Item 2.
-- **Invariant 48 + LC-G07** — the embedded catalog as sole authority for coverage truth.
-- **ADR-009** (`docs/architecture/modeling-assumptions.md` §9) — why the change was made and what
-  the superseded contract and companion text said.
-- **The equality instruction** — authority copy in the contract's supported boundary, rendered in
-  full in agentic-mbse `docs/patterns/constraints.md` for Item 5's all-65 owner checkpoint.
-
-**Two things stayed open, deliberately.** Four `all_satisfied` assertions in `tests/execution/`
-are executable text and the token spelling is Item 3's — handed on, not corrected. REQ-EXT-09's
-totality evidence carries a pointer to Item 2 and keeps its `PASS` status; choosing the
-replacement proof is Item 2's.
-
-Evidence: `.project/active/constraint-semantics-contract-amendments/verification.md` — the
-pre-edit and post-edit sweeps with per-hit dispositions, the pairwise precedence-agreement check,
-the RI-1..RI-7 discharge table, and every mechanical check. Companion commit `dcb187b` in
-`/home/reid/1cfe/agentic-mbse-item7-rebuild`.
-
-**Audit (same day): Certify-with-residuals** — `audit.md` in the item folder, verdict in the
-header, orchestrator addendum at the end. All five requested live probes matched expected
-outcomes (including the licensed companion run, 2 passed). Cures applied in `76e3ab7`: H-1
-(contract equality-policy preamble now states render-in-full governance), M-1 (the
-`all_satisfied` hand-off recorded in the epic's Item 3 section), M-2 (LC-E05 note
-deduplicated). M-3 (vendored S2 hits aggregated per corpus, not raw-listed) accepted as an
-orchestrator call, reversible at close. The audit judged the D5-a deviation (keeping
-`require constraint` inside the `requirement def` example) sounder than the design's
-instruction. The parked D-2 vs D-4/SRC-01 conflict is confirmed untouched.
-
-**This was an orchestrated run** (owner-invoked `/_my_orchestrate`, check-ins waived): stage
-briefs live in `.project/active/constraint-semantics-contract-amendments/briefs/`, one commit
-per stage/decision. **Close and pre_pr are left to the owner.** Next per epic: Items 2 and 4
-can start; Item 5's all-65 owner checkpoint can begin now that the authoring policy is
-published.
 
 ### 2026-08-12: Constraint-semantics contract — spec drafted (owner-directed priority)
 
@@ -569,6 +522,44 @@ surfaces as matrix-row candidates.
 ---
 
 ## Recently Completed
+
+### 2026-08-13: CONSTRAINT-SEMANTICS Item 1 — Contract and Authoring Policy (audited + cured + closed)
+- **Every durable authority a modeler or an implementing agent reads now teaches the settled
+  rule.** Before this item, the ratified lifecycle contract, its frozen requirements companion,
+  and seven documentation statements across both repositories still taught that a bare
+  `constraint` or a `require constraint` is an enforced gate, and that any assessed pass means
+  satisfaction. Now assert-only enforcement, the applicable-asserted-gate membership test, the
+  inventory-versus-feasibility split, the six headline states and their precedence, and the
+  warning tier for a vacuous asserted gate are published — with **ADR-009**
+  (`docs/architecture/modeling-assumptions.md` §9) as the decision record, cited back into the
+  umbrella product-lens trail. This was the documentation half of the owner's sequence (settle →
+  fix docs → then test), and Items 2–4 built against it.
+- **Nothing executable changed, and that boundary was verified by reading the diff, not by
+  trusting the claim.** The only Python touched is a module docstring and two test-docstring/
+  comment citations of a retired test. The four `all_satisfied` assertions that carry the
+  superseded meaning were **handed to Item 3** rather than forced through.
+- **Both deliberate hand-offs are now DISCHARGED** — recorded at close: Item 3's token migration
+  corrected the four `all_satisfied` assertions (`full_satisfaction`, with `UnknownHeadlineToken`
+  failing closed), and Item 2 landed REQ-EXT-09's replacement totality proof
+  (`test_constraint_population_oracle.py` + 42 reviewed expected-population files) and performed
+  the REQ-EXT-09/REQ-CL-04 re-grade Item 1 deliberately did not.
+- Audited **Certify-with-residuals**; H-1, M-1 and M-2 cured in `76e3ab7`; all five requested live
+  probes run and matched, including the licensed companion run. **M-3 dispositioned at close: the
+  vendored-corpora aggregation is RATIFIED as final** — the 52 hits in the OMG spec, the standard
+  library, and generated SysIDE API docs stay aggregated per corpus with every file named and one
+  uniform out-of-class disposition; every project-authored hit is still one row each. Expanding to
+  52 rows would add rows, not information.
+- **The D5-a deviation stands and was judged sounder than the design's instruction:**
+  `require constraint` was kept inside its `requirement def` example in the companion's
+  `sysml-expert.md` and given a settled-semantics sentence, because swapping it to
+  `assert constraint` would have taught invalid requirement modeling and deleted the visible
+  requirement-side form ruling Q7 exists to preserve.
+- Archived to `.project/completed/20260813_constraint-semantics-contract-amendments/`. Companion
+  commit `dcb187b` in `/home/reid/1cfe/agentic-mbse-item7-rebuild`. Nothing pushed, no `main`
+  touched, TEAx untouched — **`pre_pr` remains with the owner.** Residuals other closes homed
+  against "Item 1's authoring guidance" (design-F2's Appendix C cell, the D9 advisory, item3-F2's
+  premise conflict) are **re-homed to epic Item 7**, not reabsorbed here. The parked D-2 vs
+  D-4/SRC-01 premise conflict stays parked at the umbrella level, verified byte-untouched.
 
 ### 2026-08-13: CONSTRAINT-SEMANTICS Item 3 — Coverage Report and TEAx Policy (audited + cured + closed)
 - **A generated report can no longer claim more coverage than was assessed, and TEAx can no longer

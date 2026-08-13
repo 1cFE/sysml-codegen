@@ -190,7 +190,62 @@ Item 1 -> Item 2 -> Item 3 -> Item 5
 
 ## Backlog Items
 
-### Item 1: Contract and Authoring Policy (1.5 days)
+### Item 1: Contract and Authoring Policy (1.5 days) ✅
+
+**Status (2026-08-13): CLOSED — implemented, audited Certify-with-residuals, archived to
+`.project/completed/20260813_constraint-semantics-contract-amendments/`.** All success criteria
+met at codegen `76e3ab7` / companion `dcb187b`. Nothing pushed, no `main` touched, TEAx untouched;
+`pre_pr` remains with the owner. Nothing executable changed — the Python diff is comment- and
+docstring-only, verified by reading.
+
+**What Items 2–7 build against** (published by this item, unchanged by close):
+
+- The lifecycle contract's `### Headline states and coverage truth` subsection — the
+  **applicable-asserted-gate** membership test (decided on the form, not the predicate), the
+  inventory-versus-feasibility split, the six states, the precedence, and the both-vocabularies
+  obligation.
+- **Invariant 61** (asserted vacuous gate at warning grade) with its companion mirror **LC-E13**;
+  **invariant 28 + LC-E05** (the third disposition kind, non-reaching-with-reason);
+  **invariant 48 + LC-G07** (embedded catalog as sole authority for coverage truth).
+- **ADR-009** (`docs/architecture/modeling-assumptions.md` §9) — the decision record for the
+  coverage-vocabulary change, at `[AGENT] (ratified by owner, 2026-08-12)`, quoting what invariant
+  33 and LC-E11 said before.
+- The equality-intent taxonomy — authority copy in the contract's supported-boundary section,
+  rendered in full in agentic-mbse `docs/patterns/constraints.md` for Item 5's all-65 checkpoint.
+
+**Both deliberate hand-offs are DISCHARGED** (recorded at close, not left open):
+
+- The four `all_satisfied` assertions in `tests/execution/` were corrected by **Item 3**'s token
+  migration to `full_satisfaction` (`.project/completed/20260813_constraint-coverage-policy/`).
+- REQ-EXT-09's replacement totality proof was landed by **Item 2** —
+  `tests/conformance/test_constraint_population_oracle.py` plus 42 reviewed expected-population
+  files, with the REQ-EXT-09/REQ-CL-04 re-grade performed there
+  (`.project/completed/20260813_constraint-catalog-totality/`). The dated "re-grade pending" pointer
+  Item 1 added at `verification-matrix.md:336` has served its window.
+
+**Audit residual M-3 dispositioned at close: the vendored-corpora aggregation is RATIFIED as
+final.** The 52 companion hits in `docs/sysmlv2/` and `docs/syside/` stay aggregated into four
+rows by term and corpus, each naming every file with its count and one uniform disposition; every
+project-authored hit is still one row each. The aggregated class is the OMG specification, the
+standard library, and generated SysIDE API docs — text this item has no authority to amend — and
+the audit reproduced all five sweep terms independently. Expanding to 52 rows would add rows, not
+information. The deviation from the spec's raw-hit-list wording is a recorded decision, not a gap.
+
+**The D5-a deviation was judged sounder than the design's instruction and stands.** At companion
+`claude/agents/sysml-expert.md:124` the `require constraint` example was kept inside its
+`requirement def` and given a settled-semantics sentence, rather than being swapped to `assert
+constraint`. Substituting would have taught invalid requirement modeling and deleted the visible
+requirement-side form that ruling Q7 exists to preserve. Recorded with its reasoning before it was
+taken; probe P-2 confirmed the landed wording.
+
+**Residuals other items homed against "Item 1's authoring guidance" are NOT Item 1's** — Item 1 is
+closed and has no execution vehicle. Item 3's design-F2 (Appendix C vacuous-gate cell), the D9
+advisory guidance, and item3-F2 (the unreachable `BLOCK`ed-asserted-usage clause) are re-homed to
+**Item 7**, whose scope item 4 executes them.
+
+**The parked D-2 vs D-4/SRC-01 premise conflict stays parked at the umbrella level**
+(`.project/active/constraint-semantics-contract/spec.md:325`) and was verified byte-untouched at
+close. It needs the owner; no item may resolve it silently.
 
 **Type**: Contract / Documentation
 
@@ -229,20 +284,21 @@ implementation changes the catalog or report.
 
 **Success Criteria**:
 
-- [ ] **[INHERITED: spec.md]** A live ADR records the intended contract change and is cited from
+- [x] **[INHERITED: spec.md]** A live ADR records the intended contract change and is cited from
       the product-lens disposition trail.
-- [ ] **[INHERITED: spec.md]** The lifecycle contract and requirements companion publish the full
+- [x] **[INHERITED: spec.md]** The lifecycle contract and requirements companion publish the full
       amendment set with their original provenance intact.
-- [ ] **[INHERITED: research D1–D7]** Codegen and agentic-mbse contain no remaining statement that
+- [x] **[INHERITED: research D1–D7]** Codegen and agentic-mbse contain no remaining statement that
       a plain or requirement-side constraint is an enforced gate.
-- [ ] **[NEED carried from spec.md]** Authoring guidance explains when equality intent should be
+- [x] **[NEED carried from spec.md]** Authoring guidance explains when equality intent should be
       derived, band-checked, one-sided, fixed as input, or closed by construction.
-- [ ] **[OWNER]** Documentation is correct before confirmation testing begins.
-- [ ] Documentation checks and `git diff --check` pass in every touched repository.
+- [x] **[OWNER]** Documentation is correct before confirmation testing begins.
+- [x] Documentation checks and `git diff --check` pass in every touched repository.
 
 **Estimated Effort**: 1.5 days (spec 1h, design 2h, plan 1h, execute and review 8h)
 
-**Location**: `.project/active/constraint-semantics-contract-amendments/`
+**Location**: `.project/completed/20260813_constraint-semantics-contract-amendments/` (archived
+2026-08-13; was `.project/active/constraint-semantics-contract-amendments/`)
 
 **Dependencies**: None; the approved umbrella spec is the input.
 
@@ -257,12 +313,12 @@ implementation changes the catalog or report.
 
 **Deliverables**:
 
-- `.project/active/constraint-semantics-contract-amendments/spec.md`
-- `.project/active/constraint-semantics-contract-amendments/design.md`
-- `.project/active/constraint-semantics-contract-amendments/plan.md`
+- `.project/completed/20260813_constraint-semantics-contract-amendments/spec.md`
+- `.project/completed/20260813_constraint-semantics-contract-amendments/design.md`
+- `.project/completed/20260813_constraint-semantics-contract-amendments/plan.md`
 - Live ADR plus amended contract, requirements companion, codegen references, and agentic-mbse
   authoring guidance.
-- `.project/active/constraint-semantics-contract-amendments/verification.md`
+- `.project/completed/20260813_constraint-semantics-contract-amendments/verification.md`
 
 ---
 
@@ -464,19 +520,23 @@ read. What remains is merge sequencing, owned by `pre_pr` and the owner.
 - **design-F2 [FILED — Item 1 territory]** — Appendix C's vacuous-gate cell over-permits in the
   degenerate case; it wants "…and at least one gate remains". Item 3's design D4 published a
   RULING (**not assessed**) with its reasoning against the contract, so behaviour is settled; the
-  contract text is not. **Owner:** Item 1's contract authority
-  (`.project/active/constraint-semantics-contract-amendments/`).
+  contract text is not. **Owner: re-homed to Item 7** at Item 1's close (2026-08-13) — Item 1 is
+  archived at `.project/completed/20260813_constraint-semantics-contract-amendments/` and has no
+  execution vehicle; Item 7's scope item 4 executes this.
 - **D9 follow-on [FILED — companion territory]** — the authoring-time advisory for the
   eligible-plus-`@inapplicable:` combination belongs in `agentic-mbse` authoring guidance. D9
   refuses the combination loudly at generation time, so nothing ships wrong; the advisory would
-  catch it a step earlier. **Owner:** Item 1's companion-side authoring guidance.
+  catch it a step earlier. **Owner: re-homed to Item 7** at Item 1's close (2026-08-13), same
+  reason; Item 7's scope items 2 and 4 execute it.
 - **item3-F2 [DEFERRED, surfaced not resolved]** — the inherited "a `BLOCK`ed asserted usage stays
   in the denominator" clause is unreachable under invariant 1 as amended (a `BLOCK` on an asserted
   usage halts the model, so no package and no report exist to carry it). Item 3 carried the clause
   as one row of a total map over `DISPOSITION_REASONS` — a totality claim, not a reachability
   claim — and correctly did **not** write the unbuildable "asserted + BLOCKed → partial coverage"
-  fixture. **Owner:** Item 1 must rule whether the clause is dead text or invariant 1 is narrower
-  than written. Do not let a later agent read it as a live requirement.
+  fixture. **Owner: re-homed to Item 7** at Item 1's close (2026-08-13) — the ruling (dead text, or
+  invariant 1 narrower than written) rides Item 7's scope-item-1 owner checkpoint. It stays a
+  surfaced premise conflict in both directions until then. Do not let a later agent read the clause
+  as a live requirement.
 - **audit-F4 [no home available]** — this repo has no `.project/product/` index and no
   `product.sh`, so the coverage-truth promise has no product-promise entry; it exists as a concept
   subsection plus ADR-009 at `[AGENT] (ratified)`. No id was hand-minted. File a first-capture
@@ -527,7 +587,8 @@ asserted feasibility was assessed.
 - ⚠️ Hand-off from Item 1 (audit M-1): four `all_satisfied` assertions in codegen
   `tests/execution/` embody the superseded any-assessed-result headline meaning and move with
   this item's vocabulary change (sweep record:
-  `.project/active/constraint-semantics-contract-amendments/verification.md`).
+  `.project/completed/20260813_constraint-semantics-contract-amendments/verification.md`).
+  **Discharged** by this item's token migration; recorded at Item 1's close (2026-08-13).
 
 **Scope**:
 
@@ -1045,5 +1106,6 @@ Item 1: Contract and authoring policy
 ---
 
 **Last Updated**: 2026-08-12
-**Next Action**: Start Item 1; begin Item 5's all-65 owner checkpoint as soon as Item 1 publishes
-the authoring policy.
+**Next Action**: Item 1 is CLOSED (2026-08-13) alongside Items 2 and 3, so the authoring policy is
+published and Item 5's all-65 owner checkpoint is unblocked. Next: Item 5's owner checkpoint and
+Item 6's design; Item 7 runs last, before epic close/pre_pr.
