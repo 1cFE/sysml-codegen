@@ -1,12 +1,62 @@
 # Current Work
 
-**Last Updated**: 2026-08-12 (CONSTRAINT-SEMANTICS Item 1 implemented; Items 2–5 have a published contract)
+**Last Updated**: 2026-08-12 (CONSTRAINT-SEMANTICS Item 2 implemented across both repos; awaiting audit)
 
 ---
 
 ## Active Work
 
-### 2026-08-12: CONSTRAINT-SEMANTICS Item 2 — canonical usage domain and catalog totality (spec in progress)
+### 2026-08-12: CONSTRAINT-SEMANTICS Item 2 — canonical usage domain and catalog totality (IMPLEMENTED, unaudited)
+
+**All eight phases landed** (plus companion Phase 4C). Evidence:
+`.project/active/constraint-catalog-totality/verification.md`. Codegen tip `7b6225e`,
+companion tip `bc69f04` in `/home/reid/1cfe/agentic-mbse-item7-rebuild`.
+
+**The headline.** `catf_mfe_d5` authors 65 constraint usages; the domain and the shipped catalog
+now hold all 65, where the pre-item catalog held 9 `excluded_records` and an **empty**
+`usage_records` list. The record is minted before owner-to-scope expansion, so totality is a
+property of where records are born rather than a check bolted on after the population was already
+truncated.
+
+**Read this before citing the design or plan: "9 eligible" is wrong.** Every one of
+`catf_mfe_d5`'s 65 usages is a bare `constraint`, so the 9 that expand grade `excluded` /
+`unassessed_form` and the fixture has **zero** eligible constraints. The 9 was always the count of
+visible dispositions. Correct phrasing: **65 members, 9 reaching, 0 eligible.**
+
+**What Items 3, 5, and 6 may now build against:**
+- `InstanceGraph.constraint_usages: dict[DeclarationId, ConstraintUsageRecord]` — one record per
+  authored usage with exactly one `UsageDisposition` (kind / reason / derived severity / detail),
+  `occurrence_count`, and `inapplicability`. Every input Item 3's feasibility denominator needs is
+  present; Item 3 adds no usage-tier field.
+- `catalog.usage_records` is the whole domain, keyed by `declaration_id`, as are the entry and
+  excluded rows. `CATALOG_SCHEMA_VERSION` `3.0.0`. Old set = filter `disposition_kind == "eligible"`.
+- `instance-graph/v3` carries the tier; no v2 reader kept; all 21 snapshot fixtures recaptured once.
+- The oracle: 42 reviewed expected-population files + a license-free source scanner, 93 nodes.
+
+**Schema/pin moves:** `instance-graph/v2`→`v3`, `CATALOG_SCHEMA_VERSION` `2.0.0`→`3.0.0`,
+companion `constraint-facts/v2`→`v3` (new `vacuous_asserted_gate` ADVISORY kind) with codegen's
+`_upstream_pins.py` moved in the same window.
+
+**Two environment/process facts worth keeping:**
+- **`uv run` is the wrong interpreter for this item.** It resolves `agentic_mbse` to
+  `/home/reid/1cfe/agentic-mbse` (the main checkout) and the suite does not collect under it. Use
+  `/home/reid/1cfe/item7-rebuild-venv/bin/python -m pytest`, whose editable install reads the
+  companion **worktree**. This is the recorded F2 class recurring.
+- Phase 5 had to be pulled forward into the Phase 3 landing (the plan's own contingency): the new
+  join check refuses a snapshot-loaded graph with an empty domain. The suite then carried a frozen,
+  enumerated 61-node refusal list as its gate until the Phase 8 recapture discharged it to zero.
+
+**Open, deliberately** (all in `verification.md`): an `inline`-form vacuous gate cannot carry
+`@inapplicable:` because SysIDE drops the doc comment — guarded by a source-vs-domain marker test
+rather than hidden; invariant 5's `classification_incomplete` has no constructible corpus trigger
+at this upstream; the invariant-9 residual (typed-but-uninstantiated owner gets a disposition and
+no advisory) is accepted by design and pinned from both sides. **TEAx must re-vendor
+`ACCEPTED_CATALOG_SCHEMA_VERSIONS` with `3.0.0`** — filed as a hand-off in the epic; until then
+TEAx fails closed on newly generated packages, which is the intended direction.
+
+**Next:** `/_my_audit`. Not run: audit, close, pre_pr. Nothing pushed; `main` untouched in both repos.
+
+### 2026-08-12: CONSTRAINT-SEMANTICS Item 2 — spec/design/plan (superseded by the entry above)
 
 Spec at `.project/active/constraint-catalog-totality/spec.md`; product-lens gate DISPOSED
 (spec-F1..spec-F5, none blocking). Spec review returned **Revise**; all eleven findings resolved
