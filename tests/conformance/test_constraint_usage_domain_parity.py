@@ -28,10 +28,11 @@ from tests.conftest import FIXTURES_DIR, requires_license
 
 pytestmark = requires_license
 
-# Chosen because it carries both a reaching gate and a vacuous one, so the parity claim
-# covers a record whose disposition came from the profile and one whose disposition came
-# from the attachment cause.
-FIXTURE = FIXTURES_DIR / "constraint_domain_detached_owner"
+# Chosen because it carries a reaching gate, a vacuous one, and an ``@inapplicable:``
+# annotation. The annotation is the concrete drift risk: reading a doc comment is a
+# live-only elaboration step, so if it were re-read downstream instead of sealed, this is
+# the fixture on which live and snapshot would diverge while both sealed cleanly.
+FIXTURE = FIXTURES_DIR / "constraint_domain_inapplicable"
 
 
 def _comparable(domain: dict) -> dict:
@@ -70,6 +71,21 @@ def test_the_domain_is_not_empty_so_the_comparison_means_something(routes):
         "admitted",
         "owner_has_no_occurrences",
     }
+    assert len([record for record in live.values() if record.inapplicability]) == 1
+
+
+def test_the_live_only_annotation_read_survives_both_snapshot_routes(routes):
+    """The one field that could make live and snapshot disagree, asserted on all three."""
+    marked = [
+        {
+            record.usage_qualified_name: record.inapplicability
+            for record in domain.values()
+            if record.inapplicability is not None
+        }
+        for domain in routes
+    ]
+    assert marked[0] == marked[1] == marked[2]
+    assert next(iter(marked[0].values())).reason == "no build of this variant is planned"
 
 
 def test_the_sealed_routes_carry_a_portable_source_referent(routes):

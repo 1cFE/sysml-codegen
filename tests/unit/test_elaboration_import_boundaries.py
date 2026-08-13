@@ -48,6 +48,15 @@ FUNCTION_EXEMPTIONS = {
     ("elaborate.py", "_ExactElaborator._direction"): frozenset(
         {STRING_SELECTOR_VIOLATION}
     ),
+    # The one place the elaborator reads author-written prose. It parses an
+    # ``@inapplicable: <reason>`` marker out of a usage's joined documentation, which is
+    # text handling by nature and touches no identity: the record it lands on was already
+    # keyed by ``declaration_id`` before this runs, and nothing here selects, resolves, or
+    # names a node. The parse is strict, so a near-miss halts rather than silently
+    # matching something adjacent.
+    ("elaborate.py", "_ExactElaborator._inapplicability"): frozenset(
+        {STRING_SELECTOR_VIOLATION}
+    ),
     ("project.py", "_group_identity"): frozenset({STRING_SELECTOR_VIOLATION}),
     ("project.py", "_Projection._constraint_module_type"): frozenset(
         {STRING_SELECTOR_VIOLATION}

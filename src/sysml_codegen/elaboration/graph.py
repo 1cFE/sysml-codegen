@@ -321,11 +321,14 @@ class Inapplicability:
     Carried beside the disposition and never folded into it: marking a gate
     inapplicable is a coverage statement, and it must not be able to suppress an
     authoring error.
+
+    It holds the reason and nothing else. The annotation is written on the usage, so the
+    usage record's own ``source_file`` and ``source_line`` already locate it, and a second
+    copy of a source path here would be a second thing reaching the fingerprint that every
+    route has to remember to rewrite — the defect ``exclusion_location`` already taught.
     """
 
     reason: str
-    source_file: str
-    source_line: int
 
 
 @dataclass

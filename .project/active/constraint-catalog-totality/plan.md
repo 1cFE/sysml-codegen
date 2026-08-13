@@ -450,20 +450,20 @@ def test_malformed_annotation_halts(model_with_typo_marker):    # "@inapplicable
 **See design.md for:** D2, *Required Invariants* 6, *Implementation Notes* (the parse is defined
 against the `_extract_documentation` seam, not against "the doc comment"), *Potential Risks*.
 
-- [ ] `elaboration/elaborate.py` — read the usage's joined documentation at mint time; parse a first
+- [x] `elaboration/elaborate.py` — read the usage's joined documentation at mint time; parse a first
       line matching exactly `@inapplicable: <reason>`; record an `Inapplicability` on the record.
-- [ ] Halt cases: a first line beginning `@inapplicable` that does not match the shape; the marker
+- [x] Halt cases: a first line beginning `@inapplicable` that does not match the shape; the marker
       appearing on a **later** comment body of the join. Both are named halts, never no-ops.
-- [ ] Fixtures: an annotated vacuous asserted gate; a malformed annotation; a later-comment marker.
-- [ ] Confirm an annotated asserted **unattachable** gate still halts (invariant 6 — marking it does
+- [x] Fixtures: an annotated vacuous asserted gate; a malformed annotation; a later-comment marker.
+- [x] Confirm an annotated asserted **unattachable** gate still halts (invariant 6 — marking it does
       not suppress invariant 9).
 
 ### Validation
 
 **Automated:**
-- [ ] Focused annotation tests pass, including both halt shapes.
-- [ ] The annotation's presence moves the graph fingerprint (assert on the fingerprint before/after).
-- [ ] `ruff`/`mypy` zero-new.
+- [x] Focused annotation tests pass, including both halt shapes.
+- [x] The annotation's presence moves the graph fingerprint (assert on the fingerprint before/after).
+- [x] `ruff`/`mypy` zero-new.
 
 **What We Know Works After This Phase:** inapplicability is explicit, fingerprinted, and structurally
 incapable of changing an asserted usage's coverage role.
@@ -1176,6 +1176,43 @@ move the recapture off the end. Resolution, recorded rather than taken silently:
 join check first landed.
 
 ### Phase 4 Completion
+**Completed:** 2026-08-12
+
+**Actual Changes:**
+- `elaboration/elaborate.py` — `_INAPPLICABLE_MARKER` and `_ExactElaborator._inapplicability`,
+  read at mint time off the usage's joined documentation. Two named halts: a first line that
+  begins with the marker but is not `@inapplicable: <reason>`, and the marker on any later line
+  of the join. Both raise `SI_CONSTRAINT_INCOMPLETE`; neither is a no-op.
+- Four fixtures: `constraint_domain_inapplicable` (annotated vacuous gate),
+  `_malformed` (marker with no reason), `_late_marker` (marker on a second `doc` body), and
+  `_unattachable` (annotated **and** owned by a `calc def`, which must still halt).
+- New `tests/unit/test_constraint_inapplicability.py` (7 nodes) and two more parity nodes.
+- `tests/conformance/test_constraint_usage_domain_parity.py` now runs on the annotated fixture,
+  which is what the design asks for: the annotation read is the one live-only elaboration step,
+  so it is the concrete way live and snapshot could diverge while both seal cleanly.
+
+**Gate:** focused 7/7 + parity 4/4 + codec 5/5. Full licensed suite **1663 passed / 34 skipped /
+65 deselected**, and **no failure outside the frozen 61-node v2-refusal list**. `ruff check src`
+14, `mypy src` 57 — both at baseline.
+
+**Deviation — `Inapplicability` carries the reason and nothing else.** The design's sketch was
+open; the first cut carried `source_file` and `source_line` too, and the three-route parity test
+caught it immediately: a second copy of a source path inside the fingerprint that the capture
+route did not rewrite, so live and sealed bytes disagreed. That is the same defect
+`exclusion_location` already taught this repo. The annotation is written on the usage, so the
+record's own `source_file` / `source_line` already locate it, and dropping the duplicate is
+strictly better than teaching a second rewrite site.
+
+**Deviation — a sixth named exemption in the F30 boundary guard.**
+`tests/unit/test_elaboration_import_boundaries.py` denies string selectors across the six
+boundary files by default, and the annotation parse is genuinely string work. It is exempted by
+name with the reason recorded inline: it reads author-written prose and touches no identity — the
+record it lands on was keyed by `declaration_id` before the parse runs. The guard's own mechanism
+is per-function naming, so this does not widen it for anything else.
+
+**Carried from Phase 1, unresolved by design:** an `inline`-form vacuous gate still cannot be
+annotated, because SysIDE drops a `doc` comment inside an inline predicate body. Phase 7a's
+scanner is what makes that loud.
 
 ### Phase 4C Completion
 **Companion commit:**

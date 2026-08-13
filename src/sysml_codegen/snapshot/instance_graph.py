@@ -727,11 +727,7 @@ def _constraint_usage_to_data(record: ConstraintUsageRecord) -> dict[str, object
         "inapplicability": (
             None
             if record.inapplicability is None
-            else {
-                "reason": record.inapplicability.reason,
-                "source_file": record.inapplicability.source_file,
-                "source_line": record.inapplicability.source_line,
-            }
+            else {"reason": record.inapplicability.reason}
         ),
     }
 
@@ -765,15 +761,9 @@ def _constraint_usage_from_data(data: object) -> ConstraintUsageRecord:
     raw_inapplicability = value.get("inapplicability")
     inapplicability = None
     if raw_inapplicability is not None:
-        marked = _mapping(
-            raw_inapplicability,
-            "usage record inapplicability",
-            {"reason", "source_file", "source_line"},
-        )
+        marked = _mapping(raw_inapplicability, "usage record inapplicability", {"reason"})
         inapplicability = Inapplicability(
-            reason=_string(marked.get("reason"), "inapplicability.reason"),
-            source_file=_string(marked.get("source_file"), "inapplicability.source_file"),
-            source_line=_integer(marked.get("source_line"), "inapplicability.source_line"),
+            reason=_string(marked.get("reason"), "inapplicability.reason")
         )
     return ConstraintUsageRecord(
         declaration_id=DeclarationId.from_wire(

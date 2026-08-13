@@ -41,6 +41,7 @@ from sysml_codegen.elaboration.graph import (
     Diagnostic,
     ElaborationCode,
     FormalProvenance,
+    Inapplicability,
     InputRef,
     InstanceGraph,
     LiteralInput,
@@ -155,6 +156,10 @@ class _ConstraintAssociation:
     effective_definition_id: DeclarationId | None
     decision: UsageDecision
 
+
+#: The one spelling of the inapplicability marker. Anchored to the first line of the
+#: joined documentation and parsed strictly, so a typo halts rather than doing nothing.
+_INAPPLICABLE_MARKER = "@inapplicable"
 
 #: Precedence step 3, reached only by a usage that expanded to at least one scope.
 _ELIGIBILITY_DISPOSITIONS: dict[Eligibility, tuple[str, str]] = {
@@ -1143,7 +1148,55 @@ class _ExactElaborator:
                 if source_form == "definition_typed"
                 else None
             ),
+            inapplicability=self._inapplicability(usage),
         )
+
+    @staticmethod
+    def _inapplicability(usage: Any) -> Inapplicability | None:
+        """Read an explicit ``@inapplicable: <reason>`` decision off the usage's documentation.
+
+        Read once, here, and recorded on the record — so it travels in the graph and the
+        snapshot and no downstream route re-reads the source. The parse is strict on
+        purpose: a first line that begins with the marker but does not match the shape,
+        or a marker on a later comment body, halts. A near-miss that silently did nothing
+        would be indistinguishable from not having written it.
+
+        The seam is the joined documentation, not "the doc comment": the extractor
+        collects every ``Comment`` owned member, trims each body, and joins the survivors
+        with newlines (``extraction/extractor.py:803-814``). ``strip("*")`` means a
+        ``doc /* … */`` body arrives already trimmed, so "first line" means the first line
+        of the join.
+        """
+        bodies = [
+            trimmed
+            for member in (getattr(usage, "owned_members", None) or ())
+            if SysideAdapter.is_instance(member, "Comment")
+            and (raw := getattr(member, "body", None))
+            and (trimmed := str(raw).strip().strip("*").strip())
+        ]
+        if not bodies:
+            return None
+        lines = "\n".join(bodies).split("\n")
+        usage_qn = str(getattr(usage, "qualified_name", None) or "<anonymous>")
+        for later in lines[1:]:
+            if later.strip().startswith(_INAPPLICABLE_MARKER):
+                raise ElaborationInvariantError(
+                    ElaborationCode.SI_CONSTRAINT_INCOMPLETE,
+                    f"constraint {usage_qn} carries {_INAPPLICABLE_MARKER!r} on a later "
+                    "documentation line; it is only read on the first line of the joined "
+                    "documentation",
+                )
+        first = lines[0].strip()
+        if not first.startswith(_INAPPLICABLE_MARKER):
+            return None
+        reason = first[len(_INAPPLICABLE_MARKER) :]
+        if not reason.startswith(":") or not reason[1:].strip():
+            raise ElaborationInvariantError(
+                ElaborationCode.SI_CONSTRAINT_INCOMPLETE,
+                f"constraint {usage_qn} has a malformed inapplicability annotation "
+                f"{first!r}; the shape is '{_INAPPLICABLE_MARKER}: <reason>'",
+            )
+        return Inapplicability(reason=reason[1:].strip())
 
     def _usage_disposition(
         self,
