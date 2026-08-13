@@ -6,7 +6,7 @@
 
 ## Active Work
 
-### 2026-08-12: CONSTRAINT-SEMANTICS Item 1 — contract and authoring policy (IMPLEMENTED)
+### 2026-08-12: CONSTRAINT-SEMANTICS Item 1 — contract and authoring policy (AUDITED: Certify-with-residuals)
 
 **All six phases landed.** The documentation half of the owner's sequence is done: the ratified
 contract, the frozen requirements companion, and every living-surface statement across both
@@ -35,7 +35,23 @@ replacement proof is Item 2's.
 Evidence: `.project/active/constraint-semantics-contract-amendments/verification.md` — the
 pre-edit and post-edit sweeps with per-hit dispositions, the pairwise precedence-agreement check,
 the RI-1..RI-7 discharge table, and every mechanical check. Companion commit `dcb187b` in
-`/home/reid/1cfe/agentic-mbse-item7-rebuild`. Next: `/_my_audit`.
+`/home/reid/1cfe/agentic-mbse-item7-rebuild`.
+
+**Audit (same day): Certify-with-residuals** — `audit.md` in the item folder, verdict in the
+header, orchestrator addendum at the end. All five requested live probes matched expected
+outcomes (including the licensed companion run, 2 passed). Cures applied in `76e3ab7`: H-1
+(contract equality-policy preamble now states render-in-full governance), M-1 (the
+`all_satisfied` hand-off recorded in the epic's Item 3 section), M-2 (LC-E05 note
+deduplicated). M-3 (vendored S2 hits aggregated per corpus, not raw-listed) accepted as an
+orchestrator call, reversible at close. The audit judged the D5-a deviation (keeping
+`require constraint` inside the `requirement def` example) sounder than the design's
+instruction. The parked D-2 vs D-4/SRC-01 conflict is confirmed untouched.
+
+**This was an orchestrated run** (owner-invoked `/_my_orchestrate`, check-ins waived): stage
+briefs live in `.project/active/constraint-semantics-contract-amendments/briefs/`, one commit
+per stage/decision. **Close and pre_pr are left to the owner.** Next per epic: Items 2 and 4
+can start; Item 5's all-65 owner checkpoint can begin now that the authoring policy is
+published.
 
 ### 2026-08-12: Constraint-semantics contract — spec drafted (owner-directed priority)
 
