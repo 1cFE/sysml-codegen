@@ -1,12 +1,51 @@
 # Current Work
 
-**Last Updated**: 2026-08-12 (CONSTRAINT-SEMANTICS Item 2 implemented across both repos; awaiting audit)
+**Last Updated**: 2026-08-12 (CONSTRAINT-SEMANTICS Item 2 audited Needs-work; A1–A4 cured; awaiting re-audit)
 
 ---
 
 ## Active Work
 
-### 2026-08-12: CONSTRAINT-SEMANTICS Item 2 — canonical usage domain and catalog totality (IMPLEMENTED, unaudited)
+### 2026-08-12: CONSTRAINT-SEMANTICS Item 2 — canonical usage domain and catalog totality (AUDITED Needs-work; A1–A4 CURED, awaiting re-audit)
+
+**Audit `audit.md` returned Needs-work** at codegen `ba756fb`. Its summary is worth keeping:
+the core is "genuinely done, and the hard part is done well" — the circularity risk is closed
+by deleting the second inventory rather than syncing it, and every headline number reproduced
+exactly. The findings were gaps at the edges of a correct design.
+
+**A1–A4 cured 2026-08-12, one commit per family, tip `29bb41a`.** Companion untouched at
+`bc69f04` — no finding named it.
+
+- **A1 (HIGH)** — removing a catalog row with `occurrence_count == 0` generated silently: 56 of
+  `catf_mfe_d5`'s 65 members, the population the item exists to make visible. Two guards, because
+  there are two threats: the catalog's **seal** is verified in the preflight (covers tampering on
+  every route, including the internal bare-`ComputationGraph` seam), and **`ExactPipelineContext`**
+  compares the rendered rows against the domain it still holds (covers a projection defect, and
+  names the missing usage). Design invariant 4 is now a check, not only a producer obligation.
+- **A2 (HIGH)** — doc 28 read as current while teaching pre-landing behaviour and naming this item
+  as its future fix; now banner-retired (lowering half historical, catalog half superseded) and
+  added to CLAUDE.md's retired list. **A6** rode along: "Four preflight checks" → five.
+- **A3 (MEDIUM)** — an unreadable `@inapplicable:` marker raised out of the mint, taking the whole
+  domain down and violating design invariant 5. Now a per-usage error-grade disposition that the
+  gate converts to a named halt. **A5** closed free: the oracle gained the fourth rule (every
+  exempt fixture must actually refuse), because the cure changed why two of them refuse.
+- **A4 (MEDIUM)** — `constraint_catalog is not None` had changed meaning under three generation
+  seams. One rule now, `ships_constraint_machinery`: executable machinery ships **iff** there is at
+  least one concrete entry. **Contract invariant 32's zero-input `not_assessed` aggregator is Item
+  3's deliberate change and supersedes this rule; Item 2 does not build it early.**
+- **A7** (no plan/implement-stage product-lens entry) is a process record with nothing in the tree
+  to change — left for `/_my_close`.
+
+**Gates after cures:** codegen **1857 passed / 34 skipped / 65 deselected / 0 failed**, zero
+licence-skip lines; focused **215** across 13 modules; `ruff check src` **12** (zero new, diffed
+finding-by-finding rather than by count); `mypy` **56**; `git diff --check` clean; both trees
+clean; **no snapshot fixture moved**, so the single reviewed recapture stands.
+
+**Next: re-audit of the cures, then `/_my_close`.**
+
+---
+
+### 2026-08-12: Item 2 — the implemented state (pre-audit record, still accurate on substance)
 
 **All eight phases landed** (plus companion Phase 4C). Evidence:
 `.project/active/constraint-catalog-totality/verification.md`. Codegen tip `7b6225e`,

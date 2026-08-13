@@ -1180,7 +1180,12 @@ join check first landed.
 
 **Actual Changes:**
 - `elaboration/elaborate.py` — `_INAPPLICABLE_MARKER` and `_ExactElaborator._inapplicability`,
-  read at mint time off the usage's joined documentation. Two named halts: a first line that
+  read at mint time off the usage's joined documentation. **Superseded by the A3 cure
+  (2026-08-12):** the two near-misses below are reported, not raised — they become the
+  error-grade `classification_incomplete` disposition and the completeness gate turns that
+  into a named halt, so one authoring typo no longer takes the whole model's domain down
+  (design invariant 5). The halts themselves are unchanged in effect. Two named halts: a
+  first line that
   begins with the marker but is not `@inapplicable: <reason>`, and the marker on any later line
   of the join. Both raise `SI_CONSTRAINT_INCOMPLETE`; neither is a no-op.
 - Four fixtures: `constraint_domain_inapplicable` (annotated vacuous gate),
@@ -1429,5 +1434,7 @@ ruff 14 -> 12 and mypy 57 -> 55 (both below baseline, both from the deleted modu
 
 ---
 
-**Status**: Complete (all phases landed 2026-08-12; evidence in `verification.md`)
-**Next Step:** `/_my_audit`
+**Status**: Complete, then cured (all phases landed 2026-08-12; audit returned Needs-work the
+same day; findings A1–A4 cured at `29bb41a`, with A5/A6 closing alongside). Evidence in
+`verification.md` — the base record plus the dated cure addendum at its end.
+**Next Step:** re-audit of the A1–A4 cures, then `/_my_close`
