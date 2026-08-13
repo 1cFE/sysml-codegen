@@ -30,19 +30,24 @@ Questions, and the Surfaced section. The epic section
    refused form. This lane sits on Item 5's blessed tolerance-band recipe, so if it is cheaply
    curable under that rule, cure it.
 
-## Probe before you commit to a mechanism
+## Evidence base (your sandbox cannot read the companion or execute code)
 
-You have execution in this session. The spec's companion-side statements were made WITHOUT
-reading companion source (sandbox restriction, now lifted for you) — verify them against
-`/home/reid/1cfe/agentic-mbse-item7-rebuild/src/agentic_mbse/sysml/executable_profile.py`
-before designing the Defect B split. Throwaway probes (scratchpad, not committed) that confirm
-where the `[` operand walk raises and what payload the profile can carry are cheap and have
-repeatedly refuted design assumptions in this project — use them.
+The orchestrator read the companion source directly and recorded the verified seams in
+`.project/active/constraint-predicate-hardening/probes/companion-evidence.md` — read it; it
+supersedes the spec's research-record-only companion claims (the tautology is the companion's
+`_diagnostic` default message; both chain-block sites already hold `chain_segments` and a
+`LocationFact`; `REASON_CODES` is a closed vocabulary enforced in `__post_init__`).
 
-- Test interpreter: `/home/reid/1cfe/item7-rebuild-venv/bin/python -m pytest`
-- License for live-model probes: `set -a; source /home/reid/1cfe/agentic-mbse/.env; set +a`
-- Companion worktree: `/home/reid/1cfe/agentic-mbse-item7-rebuild` (tip `bc69f04`); codegen
-  branch `item7-rebuild` (tip `cb5be20`). Do NOT commit code in this stage; design only.
+Codegen source under this working directory is fully readable — verify every codegen-side
+claim you build on. Where a design decision genuinely needs evidence you cannot get (a live
+elaboration probe, a companion detail not in the evidence file), do NOT guess and do NOT
+pause: record it in the design under a "Requested probes" heading with the exact
+command/model shape and the expected discriminating outcome, design both branches, and finish
+the artifact. The orchestrator runs the probes and resumes you with results.
+
+- Companion worktree (for citations only): `/home/reid/1cfe/agentic-mbse-item7-rebuild`
+  (tip `bc69f04`); codegen branch `item7-rebuild` (tip `4a149e1`). Design only — no code
+  edits, no commits.
 
 ## Constraints to carry (do not re-decide)
 
