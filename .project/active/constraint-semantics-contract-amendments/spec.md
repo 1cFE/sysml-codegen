@@ -3,7 +3,15 @@
 **Status:** Draft
 **Owner:** Reid W
 **Created:** 2026-08-12
-**Complexity:** MEDIUM (no code; two repositories, ratified authorities, strict provenance)
+**Complexity:** MEDIUM–HIGH (two repositories, ratified authorities, strict provenance; no
+executable code, but dead-citation fixes in comments and docstrings are in scope — see the
+code-text boundary under Documentation corrections)
+**Estimated effort:** 2.5–3 days, revising the epic's 1.5-day figure (spec 1h, design 3h, plan 1h,
+execute and review 14–18h). The epic figure is a guideline, not a cap. The revision is what the
+work actually is: one ADR, roughly seventeen amendments across the contract and companion, seven
+documentation corrections plus whatever the recorded sweep adds, a six-state vocabulary published
+in two dialects, and two policies published in two repositories — half of it in a repository this
+worktree cannot read. Under-budgeting Item 1 pushes thin text into four downstream items.
 **Branch:** `item7-rebuild` (worktrees `/home/reid/1cfe/sysml-codegen-item7-rebuild` and
 `/home/reid/1cfe/agentic-mbse-item7-rebuild`)
 
@@ -23,9 +31,12 @@ study defaults. Every durable authority in the two repositories still states the
   gate dispositioned it INTENDED-CHANGE and requires a filed ADR, cited back into the lens trail,
   **before implementation**
   (`.project/active/constraint-semantics-contract/product-lens.md`, spec-F1).
-- **The ratified lifecycle contract still teaches the old behavior.** Invariants 1, 8/9, 28, 32,
-  33, 46/46a, 48 and three Appendix C cells state pre-amendment semantics
-  (`.project/concepts/constraint-execution-authoritative-lifecycle-contract.md`).
+- **The ratified lifecycle contract still teaches the old behavior.** Invariants 1, 9, 28, 32, 33,
+  46/46a, 48 and the Appendix B/C cells that restate them carry pre-amendment semantics
+  (`.project/concepts/constraint-execution-authoritative-lifecycle-contract.md`). Invariant 8 is
+  in the amendment set as a **guardrail**, not a target: it fixes the profile's four outcomes and
+  must survive unchanged, because the new severity is a named contextual failure rather than a
+  fifth outcome.
 - **The frozen requirements companion has no amendment yet**, though its header makes it the only
   place forward requirement amendments may land; LC-E05/E06/E10/E11/E12 all state behavior this
   contract changes (`.project/concepts/constraint-execution-lifecycle-requirements.md:3-7`).
@@ -51,6 +62,24 @@ Two obligations carry decision force into this item:
 Until this lands, every downstream item builds against text that contradicts the contract it is
 implementing, and any modeler following current guidance authors constraints that never execute.
 
+## What publishes where
+
+The whole deliverable in one pass. "Decided" means this spec fixes the location; "design" means
+the location is an open question below.
+
+| What | Repository / file | Location |
+|---|---|---|
+| ADR-009, the coverage-headline change record | codegen `docs/architecture/modeling-assumptions.md` | decided (placement within the file: design) |
+| Contract amendments (invariants 1, 9, 28, 32, 33, 46/46a, 48; the warning tier; Appendix B and C cells) | codegen `.project/concepts/constraint-execution-authoritative-lifecycle-contract.md` | decided |
+| Companion amendments (LC-E05/E06/E10/E11/E12, LC-G07) | codegen `.project/concepts/constraint-execution-lifecycle-requirements.md` | decided |
+| Headline vocabulary meanings, both dialects | with the contract amendments (invariants 32/33) | decided |
+| D1, D2, D6, D7 corrections + blessed gate shape | codegen `docs/architecture/modeling-assumptions.md`, `reference/28-constraint-lowering-and-catalog.md`, `reference/01-extraction.md` | decided |
+| D3, D4, D5 corrections + authoring policy + equality taxonomy | agentic-mbse `docs/subtype-enumeration-decision-table.md`, `docs/patterns/constraints.md`, `docs/patterns/semantic-operators.md`, `claude/agents/sysml-expert.md` | decided (line positions unverified from this worktree) |
+| Equality instruction, concept-layer copy | codegen `.project/concepts/…` | design picks the file; the other copy cites it |
+| Dead-citation fixes in comments and docstrings | codegen `src/sysml_codegen/extraction/constraint_report.py`, `tests/conformance/test_extractor.py` | decided |
+| Two future-capability candidate lines | codegen `.project/backlog/BACKLOG.md` | decided |
+| Recorded sweep output and its hit-list dispositions | `.project/active/constraint-semantics-contract-amendments/verification.md` | decided |
+
 ## Success Criteria
 
 - [ ] **[INHERITED: constraint-semantics-contract/spec.md]** A live ADR records the intended
@@ -60,8 +89,13 @@ implementing, and any modeler following current guidance authors constraints tha
       requirements companion publish the full amendment set, invariant by invariant and
       requirement by requirement, with the original provenance grades of amended statements intact.
 - [ ] **[INHERITED: research D1–D7]** No statement remains in either repository that a plain or
-      requirement-side constraint is an enforced gate. Each of D1–D7 is corrected at the defect by
-      amendment or deletion — not annotated, and not answered with compensating prohibition prose.
+      requirement-side constraint is an enforced gate, and none cites the retired totality test as
+      living evidence. Each defect is corrected at its location by amendment or deletion — not
+      annotated, and not answered with compensating prohibition prose.
+- [ ] The universal claim above is **checked, not asserted**: a recorded sweep runs over both
+      repositories' documentation and their comment/docstring text, and every hit is dispositioned
+      (corrected, or recorded as correct with the reason) in `verification.md`. D1–D7 plus the
+      three locations named in this spec are the floor, not the ceiling.
 - [ ] **[NEED carried from constraint-semantics-contract/spec.md]** Authoring guidance explains
       when equality intent should be derived, band-checked, one-sided, fixed as an input, or
       closed by construction, and states that tolerance values are modeled values the modeler
@@ -83,7 +117,10 @@ implementing, and any modeler following current guidance authors constraints tha
 Citation key: `(Qn)` and `(Ln-n)` cite
 `.project/active/constraint-semantics-contract/rulings-20260812.md`; `(lens spec-Fn)` cites
 `.project/active/constraint-semantics-contract/product-lens.md`; `(Dn)` cites the research
-register §7. Every requirement text stands alone.
+register §7; `(umbrella spec-review Ln-n)` cites
+`.project/active/constraint-semantics-contract/spec-review.md`, which is a different document from
+the ruling record and uses a colliding ID form — always spelled out in full here. Every
+requirement text stands alone.
 
 ### Provenance discipline (binding on every artifact this item writes)
 
@@ -110,27 +147,42 @@ register §7. Every requirement text stands alone.
   disposition resolves against a live document rather than an intention.
 - **[INFERRED]** The ADR is discoverable from the contract and companion amendments it justifies,
   and from this item's ledger. A decision recorded where no reader will meet it is not filed.
-- **[INFERRED]** **Decision recorded here, revisable in design:** the ADR lands in this repository
-  at `docs/architecture/ADR-009-constraint-coverage-and-headline-semantics.md`. Rationale:
-  ADR-001 through ADR-008 are already-consumed identifiers in this repository's citations, so 009
-  is the next free number; `docs/architecture/` is the path CLAUDE.md and code comments already
-  imply for codegen ADRs; and the report whose vocabulary changes is generated here. The single
-  ADR governs both repositories' vocabularies — the companion repository cites it rather than
-  mirroring it, so there is one authority for one decision.
+- **[INFERRED]** **Decision recorded here, corrected from the first draft:** the ADR is
+  **ADR-009**, and it lands as an identified decision entry inside this repository's
+  `docs/architecture/modeling-assumptions.md` — not as a standalone file. Rationale, from the
+  repository's actual recorded decision: commit `eda48f9` ("docs(D3/D5): Consolidate ADRs into
+  modeling-assumptions.md", 2026-02-22) deleted all eight standalone ADR files from
+  `docs/architecture/` and folded their content into `modeling-assumptions.md` as numbered topical
+  sections. Codegen ADRs are citation-identifiers over consolidated prose, and a revived
+  standalone file would reverse an owner-authored consolidation. 009 is the next free identifier:
+  ADR-001 through ADR-008 are consumed by live citations. Placement within the file — a new
+  numbered section, or an entry inside §8 "Constraints Execute Under a Profile", which is already
+  the D1/D2/D7 correction home — is design's call. The single ADR governs both repositories'
+  vocabularies; the companion cites it rather than mirroring it, so there is one authority for one
+  decision.
+- **[INFERRED]** The filing route named in the product-lens disposition (`.project/scripts/adr.sh
+  new` + `amend`) does not exist in this repository — `.project/scripts/` holds only
+  `get-metadata.sh`. The ADR is hand-authored into the consolidated document. This is recorded so
+  a later reader does not go looking for a tool.
 
 ### Lifecycle contract amendments
 
 - **[INFERRED]** (lens spec-F2) The amendment set covers at minimum the following, published
   invariant by invariant. Design may add a statement it finds carrying the superseded rule; it may
-  not drop one from this list.
+  not drop one from this list. **The no-drop rule does not force an edit onto correct text**: an
+  entry marked here as a guardrail, or one design reads and finds already consistent with the
+  ruled semantics, is discharged by recording "verified already-correct, no amendment needed"
+  with the verification note. Silently skipping an entry is what the rule forbids.
   - **Invariant 1** — the halt scope narrows from "any `BLOCK` halts the model" to "`BLOCK` on an
     **asserted** constraint halts the model", and the consequence is written down as a product
     statement: an unsupported predicate inside a plain `constraint` never halts generation,
     because the form gate runs before the predicate walk, and the usage catalogs as unassessed.
     Descriptive constraints are never load-bearing.
-  - **Invariants 8/9** — a new generation-halting severity exists for an **asserted, structurally
-    unattachable** usage: an in-scope asserted form with no attachment capability. It is a named
-    contextual failure, not a fifth profile outcome, and does not reclassify `ADMIT`.
+  - **Invariant 9 (target), invariant 8 (guardrail)** — a new generation-halting severity exists
+    for an **asserted, structurally unattachable** usage: an in-scope asserted form with no
+    attachment capability. It is a named contextual failure of the kind invariant 9 already
+    admits, so the amendment lands on 9. Invariant 8's four profile outcomes must survive
+    unchanged — the new severity is not a fifth outcome and does not reclassify `ADMIT`.
   - **Invariant 28** — a third visible disposition kind, non-reaching-with-reason, joins eligible
     and excluded-with-reason. Every authored usage carries exactly one disposition, and "reaches
     no instance" is a disposition rather than an absence.
@@ -146,12 +198,20 @@ register §7. Every requirement text stands alone.
   - **Invariant 48** — the embedded catalog remains the sole catalog schema authority and the
     authority for coverage truth; the report's coverage accounting is derived from it in one
     direction and is never an independently maintained second inventory.
-  - **Appendix C** — the "Excluded-only usages", "Zero constraint usages", and "Mixed
-    satisfied/violated/indeterminate population" cells are amended to the new headline and
-    disposition semantics.
+  - **Appendix C, three cells, with different asks:**
+    - "Mixed satisfied/violated/indeterminate population" (**target**) states the old precedence
+      verbatim and is restated to the five-state order.
+    - "Excluded-only usages" (**target, narrow ask**) stays true for a plain-only model and is
+      wrong only when the exclusions include an asserted usage. The whole ask is a clause that
+      splits by form: plain-only reads not-assessed, an excluded asserted usage reads partial
+      coverage. Not a rewrite.
+    - "Zero constraint usages" (**guardrail**) already reads correctly as the new vocabulary's
+      report-absent state. Verify and record; do not amend.
   - **Appendix B** — the correction-register row carrying the same superseded claim as the
     Appendix C excluded-only cell ("excluded-only usages retain `not_assessed` visibility") is
-    amended with it, so the two do not disagree.
+    amended with it, so the two do not disagree. The neighbouring row on catalog/report
+    visibility for excluded-only usages stays true and is a **guardrail** — naming it here so it
+    does not collect a collateral edit.
   - **The warning tier of severity by cause** — an asserted **vacuous** usage (its owner has zero
     occurrences) is a warning-grade visible disposition plus an authoring-time advisory, and it
     counts as missing assessment until it carries an explicit inapplicability disposition. Design
@@ -217,29 +277,61 @@ register §7. Every requirement text stands alone.
 - **[INFERRED]** **Boundary, stated explicitly:** Item 1 fixes what each state means and when it
   is claimed. Item 3 owns the concrete token spellings, report schema field names and shapes, the
   normalization-seam mapping code, generated-schema migration, and the TEAx policy defaults that
-  dispatch on the canonical tokens. No amendment in this item names a token spelling as normative;
-  where a current spelling is quoted it is quoted as today's text being amended.
+  dispatch on the canonical tokens. **No amendment in this item names a token spelling or a report
+  schema field name as normative**; where a current spelling is quoted it is quoted as today's
+  text being amended. The invariant 46/46a amendment in particular says that the report carries
+  compact coverage accounting and that unknown headline tokens fail closed — it does not say what
+  the fields are called or shaped.
 
 ### Documentation corrections (D1–D7) and published authoring policy
 
-- **[INHERITED: research §7]** Each defect is corrected at its location. All seven are
-  agent-authored text with no OWNER/HARD/ADR marker, so correction by deletion or rewrite is the
+- **[INHERITED: research §7]** Each defect is corrected at its location. All are agent-authored
+  text with no OWNER/HARD/ADR marker, so correction by deletion or rewrite is the
   capture-fidelity-correct move (lens ledger, "Not findings" note).
+- **[INFERRED]** The table below is the **floor, not the closed set** — the same "at minimum …
+  design may add, may not drop" rule the contract amendment set carries. The register was
+  inherited from the research doc and a one-minute grep found three further instances of the same
+  defects, named in the table. The recorded sweep below is what makes the set complete.
 
   | # | Location | Required correction |
   |---|---|---|
   | D1 | codegen `docs/architecture/modeling-assumptions.md` (the "what a modeler needing an enforced gate should do" paragraph) | Remove the claim that a bare `constraint` or `require constraint` gives an enforced gate; state assert-only enforcement |
   | D2 | codegen `docs/architecture/modeling-assumptions.md` (unassessed enumeration) | Include `plain_usage`, `require`, and `assume` in the unassessed set, not requirement-side and bad-owner only |
-  | D3 | agentic-mbse `docs/subtype-enumeration-decision-table.md` | Delete or rewrite "require/plain are executable constraint usages (lowered under the profile)" |
+  | D3 | agentic-mbse `docs/subtype-enumeration-decision-table.md` | **Substitute the reason, stated positively — do not delete the enumeration.** The sentence is the row-1 rationale for sweeping `require`/plain subtypes, and that enumeration (`include_subtypes=True`, `RequirementUsage` excluded) is what REQ-EXT-09 and Item 2's totality gate rest on; it must survive verbatim. Corrected reason: `require` and plain subtypes are enumerated for **visibility and catalog totality** — every authored usage gets a catalog disposition — not because those forms execute. Only the assert family executes |
   | D4 | agentic-mbse `docs/patterns/constraints.md` | Replace the false reason for bare `constraint` being wrong; the parser does produce a `ConstraintUsage`, classified `plain_usage` — the form gate is why it does not execute |
   | D5 | agentic-mbse `claude/agents/sysml-expert.md`, `docs/patterns/semantic-operators.md` | Stop teaching `require constraint` as an equal alternative for a check |
   | D6 | codegen `docs/architecture/reference/28-constraint-lowering-and-catalog.md` | Unassessed status follows source form; owner kind decides occurrence expansion. The axes are independent (contract invariant 16) |
-  | D7 | codegen `docs/architecture/modeling-assumptions.md`, `docs/architecture/reference/01-extraction.md` | Remove the citation of the retired `test_constraint_migration_mapping.py` as living totality evidence |
+  | D7 | codegen `docs/architecture/modeling-assumptions.md`, `docs/architecture/reference/01-extraction.md`, **and** `docs/architecture/reference/28-constraint-lowering-and-catalog.md` (the "migration mapping test … proves every swept usage lands in exactly one catalog outcome" sentence) | Remove the citation of the retired `test_constraint_migration_mapping.py` as living totality evidence |
+  | D7-code | codegen `src/sysml_codegen/extraction/constraint_report.py` (module docstring), `tests/conformance/test_extractor.py` (test docstring) | Same dead citation, in comment text — see the code-text boundary below |
 
-- **[INFERRED]** (D7 boundary) Item 1 removes the dead-evidence citation and states plainly that
-  the totality proof is pending. It does **not** re-grade or re-anchor REQ-EXT-09 or REQ-CL-04 in
-  `docs/architecture/verification-matrix.md` — those move with the totality gate in Item 2 (lens
-  spec-F7).
+- **[INFERRED]** (D7 boundary, stated by requirement rather than by file) **Item 1 removes
+  dead-evidence citations wherever they appear** and states plainly that the totality proof is
+  pending — including `01-extraction.md`'s REQ-EXT-09 evidence cell, which cites only the retired
+  test, and any verification-matrix-adjacent prose carrying the same citation. **Item 2 owns the
+  re-grade and re-anchor** of the REQ-EXT-09 and REQ-CL-04 rows themselves: their grade, their new
+  proof, and the independent totality evidence behind it (lens spec-F7). Removing a citation to a
+  deleted file is not a re-anchor; choosing the replacement proof is.
+- **[INFERRED]** (the matrix-row window, decided) `docs/architecture/verification-matrix.md`
+  already cites live tests for REQ-EXT-09 rather than the retired one, so no dead citation sits
+  there — only the PASS grade, which the totality evidence does not yet support. Item 1 adds a
+  dated "re-grade pending, CONSTRAINT-SEMANTICS Item 2" pointer at the row. That is an addition,
+  not a re-grade, so it stays inside the non-goal, and a reader who meets the green row meets the
+  pointer with it.
+- **[INFERRED]** (code-text boundary, ruled for this item) **A comment or docstring edit that
+  fixes a dead citation is in scope**, recorded per file, with zero behavior change — the
+  criterion is "no remaining statement in either repository", and a docstring is a statement a
+  reader meets. **Executable text stays out**: no code, no test assertions, no behavior. If a
+  correction cannot be made without touching executable text, it is recorded in `verification.md`
+  and handed to the item that owns that code.
+- **[INFERRED]** (lens item1 review L1-2/L3-2) **A recorded sweep closes the class.** Before the
+  item closes, a search runs over both repositories' documentation **and** their comment and
+  docstring text for at least: the retired test name `test_constraint_migration_mapping`;
+  `require constraint` presented as check guidance; and claims that a plain or bare `constraint`
+  enforces, gates, or is checked. Every hit is listed in `verification.md` with its disposition —
+  corrected, or correct-as-written with the reason. The named search terms, the directories
+  covered, and the raw hit list are part of the record; a summary is not.
+  `scripts/check_doc_distinctness.py` does not substitute: it compares byte-identity between
+  numbered reference documents and would never see a wrong sentence.
 - **[INFERRED]** (Q4, scope precision lens spec-F6) The blessed gate shape is published: a
   `constraint def` with formals, asserted as `assert constraint g : Def { in formal = <path>; }`,
   with the predicate body over formals only. Published with it: the restriction is
@@ -263,6 +355,11 @@ register §7. Every requirement text stands alone.
   agentic-mbse authoring guidance, per the owner's "call out in our concept … in addition to the
   sysml-codegen support". One is the authority and the other cites it; which is which is a design
   choice recorded in Open Questions.
+- **[INFERRED]** (lens item1 review L2-2) **"Filed as a future capability" names an artifact.** The
+  two commitments the published text makes — in-predicate feature-chain admission (Q4) and the
+  evaluated-advisory tier for plain constraints (Q1) — each get one line in
+  `.project/backlog/BACKLOG.md`, phrased as a decision record rather than an instruction to a
+  future agent. Without those two lines, the word "filed" in the published contract is false.
 - **[INFERRED]** (Q1, Q7) The published rule states that bare `constraint` is a visible, cataloged,
   never-executed description; that the assert family is the sole enforcement opt-in; and that
   `require`/`assume`/`satisfy` stay non-executable and visible, with an out-of-scope form drawing
@@ -280,11 +377,14 @@ register §7. Every requirement text stands alone.
 ## Non-Goals
 
 - Implementing anything. Catalog totality, the completeness gate, report coverage, TEAx
-  projection and policy, fixtures, and the predicate defect fixes belong to Items 2–5.
+  projection and policy, fixtures, and the predicate defect fixes belong to Items 2–5. Executable
+  text is untouched; only comment and docstring citations are corrected.
 - Choosing the concrete headline token spellings, report schema field names, or the normalization
   seam's code shape — Item 3.
 - Designing calculation-definition constraint attachment — Item 6.
-- Re-grading or re-anchoring REQ-EXT-09 and REQ-CL-04 in the verification matrix — Item 2.
+- Re-grading REQ-EXT-09 or REQ-CL-04, and choosing the proof that re-anchors them — Item 2,
+  wherever those rows and their evidence cells live. Item 1 removes citations to a deleted test
+  and adds the dated pending pointer; it picks no replacement evidence.
 - Choosing CATF tolerance values or intent classes — Item 5, behind the owner checkpoint.
 - **Resolving the parked D-2 vs D-4/SRC-01 premise conflict** (umbrella spec Open Questions, lens
   spec-F6). Contract D-2's acceptance cell requires "a usage-owned attribute on a concrete
@@ -298,11 +398,12 @@ register §7. Every requirement text stands alone.
 
 ## Open Questions / Deferred to design
 
-- **ADR home and number.** Decided above as
-  `docs/architecture/ADR-009-constraint-coverage-and-headline-semantics.md` on the next-free-number
-  and implied-path rationale. Design may relocate it if a better precedent surfaces; it may not
-  leave it unfiled. Related unknown: whether the companion repository wants a stub cite next to
-  `docs/patterns/adr002-calculations.md`.
+- **ADR placement within `modeling-assumptions.md`.** The file and the identifier are decided
+  above (ADR-009, consolidated into `docs/architecture/modeling-assumptions.md`, per commit
+  `eda48f9`). Open: whether it reads better as a new numbered section or as an entry inside §8,
+  which is already the D1/D2/D7 correction home. Also open: whether the companion repository wants
+  a stub cite next to `docs/patterns/adr002-calculations.md`, the one ADR-with-a-file left
+  standing across the pair.
 - **Which concept file hosts the equality instruction.** Candidates are
   `.project/concepts/constraint-execution-and-design-space-studies.md` (the ratified concept the
   owner's word "concept" most likely names) and the lifecycle contract's supported-boundary
@@ -316,11 +417,10 @@ register §7. Every requirement text stands alone.
   the D3–D5 defect descriptions come from the research register, not from a read in this session.
 - Whether the published vocabulary meanings live in one place both repositories cite, or in the
   contract with the ADR as the change record. Related to the ADR-discoverability requirement.
-- **The REQ-EXT-09 window** (lens item1-F6). Item 1 writes "totality proof pending" while
-  `docs/architecture/verification-matrix.md` still reads PASS for that row, and the re-grade is
-  Item 2's. Design decides between a dated "re-grade pending, CONSTRAINT-SEMANTICS Item 2" pointer
-  at the row — an addition, not a re-grade, so it stays inside the non-goal — and accepting the
-  window explicitly.
+- **The `01-extraction.md` evidence gap.** Item 1 removes the retired test from REQ-EXT-09's
+  evidence cell there and leaves the cell citing no proof until Item 2 re-anchors it. Design
+  decides the interim wording so the gap reads as pending rather than as an omission.
+  (The matrix-row window itself is no longer open — the dated pending pointer is decided above.)
 
 ---
 
@@ -336,6 +436,8 @@ register §7. Every requirement text stands alone.
   - `.project/concepts/constraint-execution-lifecycle-requirements.md` (frozen companion)
 - **Product-lens ledger:**
   `.project/active/constraint-semantics-contract-amendments/product-lens.md`
+- **Spec review:** `.project/active/constraint-semantics-contract-amendments/spec-review.md`
+  (verdict Revise, 2026-08-12; resolutions recorded there by finding ID and incorporated here)
 - **Design:** `.project/active/constraint-semantics-contract-amendments/design.md` (to be created)
 
 ---

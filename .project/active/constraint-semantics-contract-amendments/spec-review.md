@@ -257,8 +257,70 @@ in the spec text and this is a strong contract for design.
 
 ## Resolutions
 
-*To be filled in as findings are resolved. One entry per finding, keyed by ID — this is what the
-spec agent reads to incorporate the review.*
+Resolved 2026-08-12 in the spec-agent session, under orchestrator rulings on the must-fixes. One
+entry per finding.
+
+- **L1-1 (ADR home) — resolved, rationale replaced.** The stale premise is gone. `eda48f9`
+  ("docs(D3/D5): Consolidate ADRs into modeling-assumptions.md", 2026-02-22) deleted all eight
+  standalone ADR files and folded them into `docs/architecture/modeling-assumptions.md` as
+  numbered topical sections, so codegen ADRs are citation-identifiers over consolidated prose.
+  ADR-009 now lands as an identified decision entry **inside `modeling-assumptions.md`**; only the
+  number survives from the first draft. Placement within that file (new numbered section vs. an
+  entry in §8, already the D1/D2/D7 correction home) is design's, and is recorded in Open
+  Questions. The absent `.project/scripts/adr.sh` is recorded explicitly — `.project/scripts/`
+  holds only `get-metadata.sh`, so the ADR is hand-authored. Discoverability and the
+  lens-citation requirement are unchanged.
+- **L1-2 (D-table closed) — resolved.** The D-table now carries the same "at minimum … design may
+  add, may not drop" clause as the contract set, with the reason stated (the register was
+  inherited and never re-checked). The three missed locations are named in the table:
+  `reference/28-constraint-lowering-and-catalog.md:100-101`,
+  `src/sysml_codegen/extraction/constraint_report.py:6`, and `tests/conformance/test_extractor.py`
+  (all three verified in this session).
+- **L1-3 (D3) — resolved as a substitution of reason, stated positively.** The row now says the
+  enumeration must survive verbatim (`include_subtypes=True`, `RequirementUsage` excluded) because
+  REQ-EXT-09 and Item 2's totality gate rest on it, and that the correction replaces the *reason*:
+  `require`/plain subtypes are enumerated for visibility and catalog totality, not because they
+  execute. "Delete or rewrite" is gone.
+- **L1-4 (invariant 8) — resolved.** Invariant 9 is marked the target and invariant 8 the
+  guardrail, in both the Problem section and the amendment list.
+- **L1-5 (Appendix C/B) — resolved with per-cell asks.** "Mixed satisfied/violated/indeterminate
+  population" is a target; "Excluded-only usages" is a target with a narrow ask (a clause that
+  splits by form, not a rewrite); "Zero constraint usages" is a guardrail. Appendix B's
+  catalog/report-visibility row is named as a guardrail so it does not collect a collateral edit.
+  A general refinement to the no-drop rule was added: a listed entry that reads correctly is
+  discharged by recording "verified already-correct, no amendment needed" with the verification
+  note — the rule forbids skipping silently, not leaving correct text alone.
+- **L2-1 (effort) — resolved.** The estimate is restated in the header as 2.5–3 days (spec 1h,
+  design 3h, plan 1h, execute and review 14–18h), with the reason, and with the epic's 1.5-day
+  figure named as the guideline it is.
+- **L2-2 (future-capability filings) — resolved, stronger option chosen.** Both commitments —
+  in-predicate feature-chain admission and the plain-constraint advisory tier — get one line each
+  in `.project/backlog/BACKLOG.md`, phrased as decision records. Without them the word "filed" in
+  the published contract would be false.
+- **L3-1 (code boundary) — resolved by ruling, both halves.** (1) Comment and docstring edits that
+  fix dead citations are in scope for this item: zero behavior change, recorded per file.
+  Executable text stays out, and a correction that cannot avoid it is handed on via
+  `verification.md`. The header's complexity line now says so instead of "no code". (2) The D7
+  boundary is stated by requirement, not by file: Item 1 removes dead-evidence citations wherever
+  they appear, `01-extraction.md`'s evidence cell included; Item 2 owns the re-grade and the
+  choice of replacement proof for the REQ-EXT-09 and REQ-CL-04 rows. Removing a citation to a
+  deleted file is not a re-anchor; choosing the replacement is.
+- **L3-2 (uncheckable criterion) — resolved.** A recorded sweep is now a requirement and a success
+  criterion: named search terms (the retired test name, `require constraint` as check guidance,
+  plain-constraint-enforces claims), both repositories, documentation plus comment/docstring text,
+  raw hit list and per-hit disposition in `verification.md`. The spec states why
+  `check_doc_distinctness.py` does not substitute.
+- **L3-3 (46/46a scope) — resolved.** The no-normative-spelling rule now covers report schema
+  field names as well as token spellings, in the same sentence as the obligation, with the
+  invariant 46/46a case spelled out.
+- **L3-4 (citation key) — resolved.** The key now names
+  `.project/active/constraint-semantics-contract/spec-review.md` and flags the colliding ID form.
+- **L5-1 (no single deliverable list) — resolved.** A "What publishes where" table sits between
+  Problem and Success Criteria: artifact, repository/file, and whether the location is decided or
+  design's.
+- **Matrix-row window (review's option pair) — decided.** Item 1 adds a dated "re-grade pending,
+  CONSTRAINT-SEMANTICS Item 2" pointer at the REQ-EXT-09 row. It is an addition, not a re-grade,
+  so it stays inside the non-goal, and a reader who meets the green row meets the pointer with it.
 
 ---
 
