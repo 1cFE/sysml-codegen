@@ -36,9 +36,6 @@ ANNOTATED = FIXTURES_DIR / "predicate_unit_annotation"
 BARE = FIXTURES_DIR / "predicate_unit_annotation_bare"
 INCOMPATIBLE = FIXTURES_DIR / "predicate_unit_annotation_incompatible"
 
-_ITEM4_A = "CONSTRAINT-SEMANTICS Item 4 — Defect A (D1)"
-
-
 def _gap_guard_row(fixture: Path) -> Any:
     catalog = build_elaborated_pipeline([fixture]).constraint_catalog
     assert catalog is not None
@@ -50,23 +47,35 @@ def _gap_guard_row(fixture: Path) -> Any:
     return row
 
 
-def _module_inputs(fixture: Path) -> list[tuple[str, str]]:
+def _entry_point_values(fixture: Path) -> dict[str, float | int | str | bool | None]:
     graph = build_elaborated_pipeline([fixture])
-    return sorted(
-        (module_input.param_name, module_input.source.source_type)
-        for module in graph.modules
+    return {
+        parameter.qualified_name.rsplit("__", 1)[-1]: parameter.default_value
+        for group in graph.entry_point_groups
+        for parameter in group.parameters
+    }
+
+
+def _input_wiring(fixture: Path) -> list[tuple[int, str]]:
+    """One row per module input: which module it feeds, and what kind of source feeds it.
+
+    Compared across twins by shape rather than by name, because the identifiers carry the
+    package name and the two fixtures are two packages.
+    """
+    graph = build_elaborated_pipeline([fixture])
+    return [
+        (index, module_input.source.source_type)
+        for index, module in enumerate(graph.modules)
         for module_input in module.inputs
-    )
+    ]
 
 
-@pytest.mark.xfail(strict=True, reason=_ITEM4_A)
 def test_an_asserted_predicate_carrying_a_unit_annotation_elaborates() -> None:
     """Today: `SI_OCCURRENCE_MISSING: leaf declaration <uuid> has no feature slot`."""
     graph = elaborate_model_paths([ANNOTATED])
     assert graph.constraint_usages
 
 
-@pytest.mark.xfail(strict=True, reason="CONSTRAINT-SEMANTICS Item 4 — Defect A, working gate")
 def test_the_cured_predicate_is_a_working_gate() -> None:
     """The positive end state: a carrier, an assessed disposition, and a coverage count."""
     row = _gap_guard_row(ANNOTATED)
@@ -80,7 +89,6 @@ def test_the_cured_predicate_is_a_working_gate() -> None:
     assert account.unassessed_gate_count == 0
 
 
-@pytest.mark.xfail(strict=True, reason=_ITEM4_A)
 def test_the_unit_is_not_resolved_as_a_reference() -> None:
     """The defect's signature, checked the way the cured lanes check it.
 
@@ -94,10 +102,15 @@ def test_the_unit_is_not_resolved_as_a_reference() -> None:
             assert "SI::" not in (module_input.source.producer_channel or "")
 
 
-@pytest.mark.xfail(strict=True, reason=_ITEM4_A)
-def test_the_annotated_and_bare_twins_produce_identical_module_inputs() -> None:
-    """Invariant 7: unwrapping the annotation drops no real dependency edge."""
-    assert _module_inputs(ANNOTATED) == _module_inputs(BARE)
+def test_the_annotated_and_bare_twins_wire_up_identically() -> None:
+    """Invariant 7: unwrapping the annotation drops no real dependency edge.
+
+    The asymmetry pin, mirroring `test_unit_annotation_values.py`. If the `[` second
+    operand ever resolved to a user-model feature rather than a library element, the
+    annotated twin would come up an edge short here.
+    """
+    assert _input_wiring(ANNOTATED) == _input_wiring(BARE)
+    assert _entry_point_values(ANNOTATED) == _entry_point_values(BARE) == {"gap_width": 0.5}
 
 
 def test_an_incompatible_annotation_still_blocks_on_a_dimension_reason() -> None:
@@ -125,7 +138,6 @@ class _MalformedUnitAnnotation:
 _MalformedUnitAnnotation.__name__ = "OperatorExpression"
 
 
-@pytest.mark.xfail(strict=True, reason="CONSTRAINT-SEMANTICS Item 4 — Defect A, M7 route")
 def test_a_malformed_annotation_in_a_predicate_hard_refuses() -> None:
     """M7, decided deliberately: one rule, one refusal.
 

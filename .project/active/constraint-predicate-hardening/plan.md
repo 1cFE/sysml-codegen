@@ -257,14 +257,14 @@ another library reference, the class stays open: record it, do not widen the fix
 
 ### Changes
 
-- [ ] `src/sysml_codegen/elaboration/elaborate.py:2371` — unwrap at the head. **No structural
+- [x] `src/sysml_codegen/elaboration/elaborate.py:2371` — unwrap at the head. **No structural
       `operator == "["` test anywhere** (invariant 1) — the rule has one owner
       (`extraction/unit_annotation.py`) and one wrapper (`elaborate.py:862-878`).
-- [ ] Remove `xfail` from the Defect A rows in `tests/conformance/test_predicate_unit_annotation.py`.
-- [ ] **Probe P1** — elaborate `predicate_unit_annotation` and print the constraint's disposition.
+- [x] Remove `xfail` from the Defect A rows in `tests/conformance/test_predicate_unit_annotation.py`.
+- [x] **Probe P1** — elaborate `predicate_unit_annotation` and print the constraint's disposition.
       Record the outcome in Implementation Notes. If a unit reason appears, amend the **fixture**
       (give the LHS attribute a compatible declared unit); the design does not change.
-- [ ] **Probe P2** — elaborate `predicate_unit_annotation_incompatible` once. Expected: still BLOCKs.
+- [x] **Probe P2** — elaborate `predicate_unit_annotation_incompatible` once. Expected: still BLOCKs.
       Does not gate this phase. If it fails, **surface**, do not patch.
 
 ### How to verify
@@ -579,10 +579,41 @@ real failure and none masks a pass. Output captured verbatim in `probes/red-evid
 7. **`test_elaboration_payload_identity.py` not edited** (D7). Confirmed by `git status`.
 
 ### Phase 2 Completion
-**Completed:**
-**P1 outcome (branch selected):**
-**P2 outcome (insurance):**
-**Issues / deviations:**
+**Completed:** 2026-08-13
+
+**Actual change:** one line plus its comment at the head of `_expression_references`
+(`elaborate.py:2371`), before any structural dispatch. No `operator == "["` test anywhere
+(invariant 1). Five `xfail` markers removed from `test_predicate_unit_annotation.py`, and
+`predicate_unit_annotation` removed from the population oracle's `REFUSED_BY_DESIGN` — rule 4
+forced that, exactly as designed.
+
+**P1 outcome (branch selected): PRIMARY — the fixture stands as amended in Phase 1.**
+`disposition_kind == "eligible"`, `disposition_reason == "admitted"`, severity `info`;
+coverage account `assessed_gate_count = 1`, `unassessed_gate_count = 0`,
+`applicable_gate_total = 1`. B4 holds for the both-operands-annotated shape. It does **not**
+hold for the plan's original one-sided shape, and the design's stated remedy for that branch
+(a declared quantity type on the LHS) is unreachable in codegen — see Phase 1 deviation 1,
+which is where the fixture was already amended.
+
+**P2 outcome (insurance): as expected, no surprise.**
+`predicate_unit_annotation_incompatible` still refuses with
+`SI_CONSTRAINT_BLOCKED: … block_incompatible_dimensions: ordering '>=' cannot compare
+different dimensions.` Invariant 2 holds: the unit is still a unit to the profile after
+codegen stops reading it as a reference. Gated nothing (review A1).
+
+**B1 (the assumption under test) held.** No `SI_OCCURRENCE_MISSING` remained anywhere after
+the unwrap, on the new fixtures or across the full suite, so the walk had no other route to a
+standard-library element. The class is closed, not just the reproduction.
+
+**Counts:** full licensed codegen suite **1995 passed, 34 skipped, 79 deselected, 15 xfailed**,
+zero license-skip lines. `ruff check src` = 12, `mypy src` = 55. Companion untouched.
+
+**Issues / deviations:** one test rewritten while unmarking it.
+`test_the_annotated_and_bare_twins_produce_identical_module_inputs` compared generated
+identifiers, which carry the package name — the twins are two packages, so it could never
+pass as written. It now compares the wiring *shape* (which module each input feeds, and what
+kind of source feeds it) plus the entry-point values (`{"gap_width": 0.5}` on both), which is
+what invariant 7 actually claims and what `test_unit_annotation_values.py` compares.
 
 ### Phase 3 Completion
 **Completed:**

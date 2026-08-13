@@ -2371,6 +2371,14 @@ class _ExactElaborator:
     def _expression_references(
         self, expression: Any, *, plural: bool
     ) -> list[tuple[ResolvedSemanticReferenceFact, bool]]:
+        # A unit annotation contributes its value and never a reference, and the walk is
+        # where the predicate lane learns that. It has to be the head, before any
+        # structural dispatch, and it has to be here rather than at the predicate entry:
+        # `gap_width [m] >= 0.25 [m]` nests both annotations under the comparison, so an
+        # entry-level unwrap is a no-op on the actual defect. Safe against the dispatch
+        # below because `annotated_ast_value` returns the expression unchanged unless its
+        # operator is `[`, and a FeatureChainExpression's is not.
+        expression = self._without_unit_annotation(expression)
         # FeatureChainExpression MUST be before OperatorExpression: SysIDE
         # models the former as an operator subtype.
         if SysideAdapter.is_instance(expression, "FeatureChainExpression"):

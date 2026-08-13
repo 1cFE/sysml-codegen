@@ -68,12 +68,10 @@ REFUSED_BY_DESIGN = frozenset(
         "item4_require",
         "non_finite_literal",
         "plant_values",
-        # CONSTRAINT-SEMANTICS Item 4. `predicate_unit_annotation` is exempt only while
-        # Defect A is open — the whole item is that it should elaborate — so D1's commit
-        # removes it from this set, and rule 4 below is what forces that. The other two
-        # refuse permanently: an incompatible dimension is a real profile block, and
-        # `bad_band`'s `in tol = a + b;` is a readiness refusal D2 deliberately keeps.
-        "predicate_unit_annotation",
+        # CONSTRAINT-SEMANTICS Item 4. Both refuse permanently: an incompatible dimension
+        # is a real profile block, and `bad_band`'s `in tol = a + b;` is a readiness refusal
+        # D2 deliberately keeps. `predicate_unit_annotation` was exempt while Defect A was
+        # open and left this set when D1 landed — rule 4 below is what forced that.
         "predicate_unit_annotation_incompatible",
         "shared_producer",
     }
