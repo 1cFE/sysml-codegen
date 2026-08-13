@@ -35,11 +35,33 @@ blessed bindings-only gate shape (`rulings-20260812.md` Q4).
 `ProductWithinBand` is **deliberately not authored**. Its only consumer was A9, which the D-S1
 ruling parks; authoring it would ship an unused definition. Authority: design D5, open point O7.
 
+**`PositiveQuantity`'s formal is named `quantity`, not `value` — a change from the ruled table's
+proposed spelling.** `owner-disposition.md`'s A2 cell proposes
+`constraint def PositiveQuantity { in value : Real; value > 0 }`. That spelling **cannot
+generate**: `value` is a reserved generated local in predicate scope
+(`src/sysml_codegen/generation/constraint_name_safety.py:39`,
+`generated_locals=frozenset({"value"})`), so generation refuses the model with
+
+```
+Constraint name-safety violation: … scope='predicate', kind='generated_binding_overlap',
+final_binding='value' collides with generated binding 'value'
+```
+
+Elaboration admits it; the refusal is a **generation preflight**, which is why it surfaced only
+at the acceptance run (Item 5 finding **6-B**). The formal is therefore named `quantity`, in the
+definition and in its one binding.
+
+**Authority: open point O7**, which records the library's names as **provisional and
+design-owned** — this is a formal's spelling, not a disposition, tolerance, intent class, or
+count, and none of those moved. The spec independently blesses formal renaming as "a local edit"
+for the structurally identical self-named-binding case. The change moves no usage qualified name
+and no source line, so every committed expectation still matched with no edit.
+
 ### A2 — `designs/catf_mfe/physics.sysml:126`, asserted and renamed
 
 - **`renamed_from:` `CATFMFEPhysics::catf_physics::ViabilityCheck`** (d5 `physics.sysml:134`)
 - **now:** `CATFMFEPhysics::catf_physics::net_power_viable`
-- Rewritten as `assert constraint net_power_viable : PositiveQuantity { in value = p_electric_net_out; }`.
+- Rewritten as `assert constraint net_power_viable : PositiveQuantity { in quantity = p_electric_net_out; }`.
 - The intent is unchanged — it was already a one-sided gate and already the only row with a
   measured ADMIT. What changed is the `assert` prefix and the bindings-only shape.
 - Authority: `owner-disposition.md` Group A, A2 (`assert-one-sided`).
@@ -81,7 +103,7 @@ of C37's identity, and A4 asserted a literal against itself.
   basis, per the D-S2 ruling.
 - No `[unit]` literal appears in either surviving gate's predicate body (D3).
 - **No bare self-named binding is authored anywhere.** Every surviving formal is named differently
-  from the attribute it binds (`value` ← `p_electric_net_out`, `part_power` ←
+  from the attribute it binds (`quantity` ← `p_electric_net_out`, `part_power` ←
   `p_parasitic_total`). The parked D-2 versus D-4/SRC-01 conflict is untouched.
 
 ---
@@ -325,14 +347,14 @@ constraint formal cannot carry unit text at all, so the per-dimension in-predica
 only unit-carrying option and it costs one definition per dimension — which buys nothing for these
 two.
 
-### A2 `net_power_viable` — `value > 0`
+### A2 `net_power_viable` — `quantity > 0`
 
-- **Operands:** `value` ← `p_electric_net_out`, a **power in MW**. The threshold `0` is the
+- **Operands:** `quantity` ← `p_electric_net_out`, a **power in MW**. The threshold `0` is the
   authored physical zero.
 - **Why it is dimensionless-safe:** a `real`/`real` comparison against zero. Zero has no dimension,
   so there is no tolerance whose dimension could be wrong, and nothing to mis-unit.
-- **What the human is on the hook for:** that `value` is bound to a **power**. Binding a
-  non-power into `value` would be admitted silently.
+- **What the human is on the hook for:** that `quantity` is bound to a **power**. Binding a
+  non-power into `quantity` would be admitted silently.
 
 ### A3 `parasitic_fraction_ok` — `part_power > whole_power * lower_frac and part_power < whole_power * upper_frac`
 
