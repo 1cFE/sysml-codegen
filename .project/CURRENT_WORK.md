@@ -1,10 +1,41 @@
 # Current Work
 
-**Last Updated**: 2026-08-12 (constraint-semantics contract spec drafted; Item 7 steps 4–10 wait behind it)
+**Last Updated**: 2026-08-12 (CONSTRAINT-SEMANTICS Item 1 implemented; Items 2–5 have a published contract)
 
 ---
 
 ## Active Work
+
+### 2026-08-12: CONSTRAINT-SEMANTICS Item 1 — contract and authoring policy (IMPLEMENTED)
+
+**All six phases landed.** The documentation half of the owner's sequence is done: the ratified
+contract, the frozen requirements companion, and every living-surface statement across both
+repositories now teach assert-only enforcement and coverage-truthful headlines.
+
+**What Items 2–5 may now build against:**
+
+- **The definitions home** — the lifecycle contract's `### Headline states and coverage truth`
+  subsection: the applicable-asserted-gate test (on the form, not the predicate), the
+  inventory-versus-feasibility split, the six states, the precedence, and the both-vocabularies
+  obligation. Item 3 reads this for state meanings, and invariants 46/46a for fail-closed behavior.
+- **New invariant 61** (vacuous gate at warning grade), with its companion mirror LC-E13 and its
+  Appendix C acceptance cell.
+- **Invariant 28 + LC-E05** — the third disposition kind, non-reaching-with-reason, for Item 2.
+- **Invariant 48 + LC-G07** — the embedded catalog as sole authority for coverage truth.
+- **ADR-009** (`docs/architecture/modeling-assumptions.md` §9) — why the change was made and what
+  the superseded contract and companion text said.
+- **The equality instruction** — authority copy in the contract's supported boundary, rendered in
+  full in agentic-mbse `docs/patterns/constraints.md` for Item 5's all-65 owner checkpoint.
+
+**Two things stayed open, deliberately.** Four `all_satisfied` assertions in `tests/execution/`
+are executable text and the token spelling is Item 3's — handed on, not corrected. REQ-EXT-09's
+totality evidence carries a pointer to Item 2 and keeps its `PASS` status; choosing the
+replacement proof is Item 2's.
+
+Evidence: `.project/active/constraint-semantics-contract-amendments/verification.md` — the
+pre-edit and post-edit sweeps with per-hit dispositions, the pairwise precedence-agreement check,
+the RI-1..RI-7 discharge table, and every mechanical check. Companion commit `dcb187b` in
+`/home/reid/1cfe/agentic-mbse-item7-rebuild`. Next: `/_my_audit`.
 
 ### 2026-08-12: Constraint-semantics contract — spec drafted (owner-directed priority)
 

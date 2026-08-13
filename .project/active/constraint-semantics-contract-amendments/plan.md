@@ -1,6 +1,6 @@
 # Implementation Plan: Constraint Contract and Authoring Policy (CONSTRAINT-SEMANTICS Item 1)
 
-**Status:** Draft
+**Status:** Complete
 **Created:** 2026-08-12
 **Last Updated:** 2026-08-12
 **Branch:** `item7-rebuild`, in both worktrees
@@ -495,30 +495,43 @@ git -C $CO status --short   # nothing outside this item's files; no uv.lock
 **See `design.md#c9--companion-repository-corrections-agentic-mbse`** for every target text, and the
 equality-instruction block rendered in full (M6).
 
-- [ ] D3 — `docs/subtype-enumeration-decision-table.md` row 1 Rationale. **Substitution of reason
+- [x] D3 — `docs/subtype-enumeration-decision-table.md` row 1 Rationale. **Substitution of reason
       only.** `include_subtypes=True`, the `RequirementUsage` EXCLUDE decision, and every other column
       are unchanged
-- [ ] D4 — `docs/patterns/constraints.md`: heading, inline comment, and error line. Match the
+- [x] D4 — `docs/patterns/constraints.md`: heading, inline comment, and error line. Matches the
       vocabulary of the correct four-outcome block already at `:25-41`
-- [ ] D5-a — `claude/agents/sysml-expert.md:124`
-- [ ] D5-b/c/d — `docs/patterns/semantic-operators.md`, three sites
-- [ ] D5-e — `docs/patterns/syntax-reference.md:185`: apply the Phase 0 branch ruling. If the no-edit
-      branch fired, make no edit and confirm the disposition is already in `verification.md`
-- [ ] Equality instruction — the full block (intent → move table, the owner's reason, the
-      modeler-owned-tolerance statement, the `[AGENT] (ratified by owner, 2026-08-12)` grade, and the
-      "if the two disagree, the contract governs" line) into `docs/patterns/constraints.md`, adjacent
-      to the four-outcome block. **Rendered in full, not as a pointer** — a companion reader may not
-      have the codegen tree
-- [ ] ADR-009 cite — one line in `docs/patterns/constraints.md`. No stub file (DD2)
+- [x] D5-a — `claude/agents/sysml-expert.md:124`. **Deviated as dispositioned in Phase 0**: the
+      `require constraint` stays, because it sits inside a `requirement def` where it is the correct
+      SysML idiom and substituting `assert constraint` would teach invalid modeling. A sentence
+      stating the settled semantics is added instead. Full reasoning in `verification.md`
+- [x] D5-b/c/d — `docs/patterns/semantic-operators.md`, three sites, plus **D5-b′** (design addition):
+      the "Wrong:" half of the same pair carried the identical false parser claim
+- [x] D5-e — `docs/patterns/syntax-reference.md:185`: the **no-edit branch fired** (Phase 0 ruling,
+      the design's default). No edit made; disposition and framing sentence are in `verification.md`.
+      `:186` ruled the same way
+- [x] Equality instruction — the full block into `docs/patterns/constraints.md`, adjacent to the
+      four-outcome block. **Rendered in full, not as a pointer**
+- [x] ADR-009 cite — one line in `docs/patterns/constraints.md`. No stub file (DD2)
+- [x] **D5-f** (design addition) — `docs/patterns/common-mistakes.md` Mistake 8, a third instance of
+      the D4 defect, surfaced by S3
+- [x] **`docs/patterns/constraints.md:43`** (design addition) — "unassessed **today**" read the
+      assert-only rule as a temporary implementation state
 
 ### Validation
 
-- [ ] D3's enumeration decision greps intact
-- [ ] Relative links in every edited Markdown file resolve
-- [ ] `git -C $CO diff --check` clean
-- [ ] `git -C $CO status --short` shows only this item's files, and no `uv.lock`
-- [ ] Grep the companion's `tests/` for the edited documentation paths. If a test references one, run
-      it. If none does, record the absence in `verification.md` as the finding it is
+- [x] D3's enumeration decision greps intact — `include_subtypes=True` and the EXCLUDE
+      `RequirementUsage` decision both present in row 1, columns unchanged
+- [x] Relative links in every edited Markdown file resolve — no link target was added or changed;
+      the two new cross-repository references are plain prose paths, deliberately not links, since
+      a companion reader may not have the codegen tree
+- [x] `git -C $CO diff --check` clean
+- [x] `git -C $CO status --short` shows only this item's five files, and no `uv.lock`
+- [x] Grep the companion's `tests/` for the edited documentation paths — **two hits**, both naming
+      `semantic-operators.md` in prose about the literal binding form, not about constraints
+      (`tests/fixtures/item9/attr_redef_literal/model.sysml:22`,
+      `tests/test_validation/test_item9_checks.py:17`). The referencing test was run:
+      `uv run --extra dev pytest tests/test_validation/test_item9_checks.py` → **2 passed**. It needs
+      `SYSIDE_LICENSE_KEY`; without it the run is a 2-failed ImportError, not a real result
 
 **What We Know After This Phase:** a modeler reading agentic-mbse authoring guidance is taught the
 assert family as the sole enforcement opt-in, and can act on the equality instruction without a
@@ -556,30 +569,37 @@ git -C /home/reid/1cfe/agentic-mbse-item7-rebuild diff --check
 
 ### Changes Required
 
-- [ ] Re-run S1–S5 in both repositories; append the post-edit raw output to `verification.md`
-- [ ] Disposition every post-edit hit. Any S4 hit inside an amendment note is "quoted supersession,
-      correct as written" — pre-resolved, but it must still appear as a row
-- [ ] **Pairwise precedence-agreement check** (design Validation Approach step 2): compare the five
-      statements of the headline precedence — A0, A6, A10's mixed-population cell, B4, C1 — against
-      A0. They must agree in meaning and order. Compare the three disposition-kind statements —
-      A0/A4, B1, and the catalog text in C5 — the same way. A disagreement is a defect, not a
-      stylistic variation. Record the comparison, not just its verdict
-- [ ] Complete the discharge table: invariant 8, Appendix C "Zero constraint usages", Appendix B
-      "Catalog is absent…", the three design additions (C4/D2b, A10b, B7), the C2/C3/C5 RI-1
-      dispositions, the D5-e branch, and anything handed on for touching executable text
-- [ ] Record the DD5 scope exclusion and its reason, the companion doc-check finding, and the B1
+- [x] Re-run S1–S5 in both repositories; append the post-edit raw output to `verification.md`
+      (Table 1b)
+- [x] Disposition every post-edit hit. **S1 → zero in both repositories.** Two S4 hits are inside
+      amendment notes and are rowed as "quoted supersession, correct as written" (ADR-009's
+      superseded block, LC-E11's note)
+- [x] **Pairwise precedence-agreement check**: all five copies (A0, A6, A10, B4, C1) agree in
+      meaning and order — five terms, same sequence, no state added, dropped, or reordered; the only
+      variation is the connective. The three disposition-kind statements agree too, with one
+      recorded ambiguity: the design's step 2 names "the catalog text in C5" while its Component
+      Overview assigns C5 to the equality instruction, which has no catalog text. Appendix section
+      C5 (D6, doc 28) is the reading used, since the other has nothing to compare. Full comparison
+      tables in `verification.md`, not just the verdict
+- [x] Complete the discharge table — 21 rows, including the three RI-4 guardrails, the RI-5 parked
+      bullets, six design additions (C4/D2b, A10b, B7, D5-b′, D5-f, `constraints.md:43`), the
+      C2/C3/C5 RI-1 dispositions with their evidence, the D5-e branch, the D5-a deviation, and the
+      four `all_satisfied` assertions handed to Item 3 for touching executable text
+- [x] Record the DD5 scope exclusion and its reason, the companion doc-check finding, and the B1
       convention statement
-- [ ] Run the RI-4/RI-5 guardrail diff checks and the RI-3/RI-6 boundary checks; record the results
-- [ ] Update `.project/CURRENT_WORK.md` with Item 1 status and what Items 2–5 may now build against
+- [x] Run the RI-4/RI-5 guardrail diff checks and the RI-3/RI-6 boundary checks; results recorded
+- [x] Update `.project/CURRENT_WORK.md` with Item 1 status and what Items 2–5 may now build against
 
 ### Validation
 
-- [ ] Every listed spec and design entry appears in `verification.md` as amended or as
+- [x] Every listed spec and design entry appears in `verification.md` as amended or as
       verified-already-correct. **Silence discharges nothing** (RI-7)
-- [ ] Every post-edit sweep hit has a disposition
-- [ ] The pairwise check is recorded with its comparisons
-- [ ] `check_doc_distinctness.py` passes; `git diff --check` clean in both repositories
-- [ ] No `pytest` run was needed, and the plan says so — do not add one to feel complete
+- [x] Every post-edit sweep hit has a disposition
+- [x] The pairwise check is recorded with its comparisons
+- [x] `check_doc_distinctness.py` passes; `git diff --check` clean in both repositories
+- [x] No `pytest` run was needed in codegen and none was run there. **One conditional run did fire**,
+      in the companion: the design's own exception clause — grep `tests/` for the edited
+      documentation paths and run any test that references one. Two hits, one test, 2 passed
 
 **What We Know After This Phase:** the "no remaining statement" criterion is checked, not asserted,
 and Items 2–5 have a published contract to build against.
@@ -616,26 +636,69 @@ and Items 2–5 have a published contract to build against.
 
 ## Implementation Notes
 
-[TO BE FILLED DURING IMPLEMENTATION — record deviations in the phase checkboxes as they happen]
+All six phases completed 2026-08-12, one commit per phase in the repository that phase touches.
+Deviations are recorded in the phase checkboxes above and in `verification.md`; this section is the
+summary a reader wants first.
 
-### Phase 0 Completion
-**Completed:**
-**Actual Changes:**
-**Issues:**
-**Deviations:**
+### Phase 0 Completion — `5612ef4`
+**Changes:** `verification.md` created with the scope header, both sweep tables, and the
+companion re-verification record.
+**Findings:** S4 and S5, never pre-run, are sized — S4 finds 12 codegen hits and 0 companion hits;
+S5 finds 2 codegen hits and 33 companion hits of which 33 are vendored corpora or fixtures. Design
+bet B4 resolved: all five companion quoted strings confirmed verbatim, no site is a recorded stop.
+**Deviations:** three, all recorded — `claude/` added to the companion scope (D5-a's target lives
+there); vendored `docs/sysmlv2/` and `docs/syside/` aggregated by directory rather than one row per
+line, with the reason flagged; D5-a's characterization mismatch dispositioned rather than edited as
+written.
 
-### Phase 1 Completion
+### Phase 1 Completion — `90041b7`
+**Changes:** contract `### Headline states and coverage truth` (A0) including invariant 61;
+`modeling-assumptions.md` §9 = ADR-009; product-lens spec-F1 cite-back.
+**Issues:** the plan's stencil says `python scripts/check_doc_distinctness.py`; bare `python` is
+not on PATH here, so `python3` is the working form.
+**Deviations:** none.
 
-### Phase 2 Completion
+### Phase 2 Completion — `8d6d2f3`
+**Changes:** invariants 1, 9, 28, 32, 33, 46, 46a, 48; Appendix B's aggregator row; Appendix C's
+mixed-population and excluded-only cells plus the new "Asserted vacuous gate" row; the
+`### Equality intent and authoring policy` subsection.
+**Deviations:** none. All three RI-4 guardrails byte-identical, D-2 and D-4 untouched.
 
-### Phase 3 Completion
+### Phase 3 Completion — `0e98fcc`
+**Changes:** LC-E05, LC-E06, LC-E10, LC-E11, LC-E12, LC-G07; new LC-E13.
+**Issues:** the plan's grade-marker check stencil reports two false positives, for LC-E06 and
+LC-E11, because both are rewrites of the marker's own line. Both `+` sides carry the identical
+`[INHERITED]` marker; the grades were read on both sides.
+**Deviations:** none. Design bet B3 is what this phase establishes rather than tests — every
+rewrite quotes what it supersedes, so an owner reversal to append-only is mechanical.
 
-### Phase 4 Completion
+### Phase 4 Completion — `dffc71e`
+**Changes:** `modeling-assumptions.md` §8 in four separate edits (C2, C3, C4, C6a);
+`reference/28-…md` (C5, C6b); `reference/01-extraction.md` (C6c); `verification-matrix.md` (C8);
+`constraint_report.py` and `test_extractor.py` (C7a/b/c); `BACKLOG.md` (C10).
+**Deviations:** none. The Python diff is comment and docstring lines only, read in full. The S1
+grep over the codegen living scope returns zero.
 
-### Phase 5 Completion
+### Phase 5 Completion — companion `dcb187b`
+**Changes:** `subtype-enumeration-decision-table.md` (D3); `patterns/constraints.md` (D4, the
+`:43` correction, the equality instruction in full, the ADR-009 cite);
+`patterns/semantic-operators.md` (D5-b, D5-b′, D5-c, D5-d); `patterns/common-mistakes.md` (D5-f);
+`claude/agents/sysml-expert.md` (D5-a).
+**Deviations:** D5-a deviated as dispositioned in Phase 0 — the `require constraint` stays because
+it sits inside a `requirement def` where it is the correct SysML idiom, and a settled-semantics
+sentence is added instead. D5-e made no edit (the ruled default branch). Three additions beyond the
+design's register, each recorded with its reason.
+**Note:** the companion test that references an edited doc needs `SYSIDE_LICENSE_KEY` from
+`/home/reid/1cfe/agentic-mbse/.env`. Without it the run reports 2 failed on an ImportError, which
+is not a real result. With it: 2 passed.
 
-### Phase 6 Completion
+### Phase 6 Completion — this commit
+**Changes:** post-edit sweep table, pairwise precedence-agreement check, 21-row discharge table,
+mechanical-check record; `CURRENT_WORK.md` updated.
+**Open, deliberately:** four `all_satisfied` assertions in `tests/execution/` are executable text
+and the token spelling is Item 3's — handed on, not corrected. This is the item's one sweep residue
+and it is recorded as handed on rather than closed.
 
 ---
 
-**Status**: Draft → In Progress → Complete
+**Status**: Complete

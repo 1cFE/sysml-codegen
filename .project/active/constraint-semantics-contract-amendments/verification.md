@@ -213,16 +213,165 @@ improvised silently.
 
 ---
 
-## Table 2 — Discharge record
+## Table 1b — Post-edit sweep hits and dispositions
 
-Completed in Phase 6.
+Re-run 2026-08-12 after every edit in both repositories, same scope and same five terms.
+
+### Codegen
+
+**S1 → zero hits.** Every citation of the retired test is gone from the living surfaces.
+
+| # | Term | File:line | Disposition |
+|---|------|-----------|-------------|
+| P1 | S2 | `docs/architecture/modeling-assumptions.md:472`, `:499` | correct as written — this item's own text, naming `require constraint` as a form that never executes |
+| P2 | S2 | `constraint_report.py:35`, `item4_require/model.sysml:5,17,19`, `test_extractor.py:984,988,996,1009` | unchanged from pre-edit rows 8–15; classification statements and fixture/executable text |
+| P3 | S2 | `.project/backlog/BACKLOG.md:170-171` | unchanged from pre-edit row 16; dated historical finding |
+| P4 | S3 | `docs/architecture/modeling-assumptions.md:498` | correct as written — this item's own corrected heading, "**What a modeler needing an enforced gate should do.** Use the assert family." |
+| P5 | S3 | `.project/backlog/epic_constraint_semantics_contract.md:62,234,314` | unchanged from pre-edit rows 18–20 |
+| P6 | S3 | `.project/backlog/BACKLOG.md:724` | correct as written — this item's own C10 filing, which describes a plain constraint as never-executed and asks whether an advisory tier is worth building |
+| P7 | S4 | `docs/architecture/modeling-assumptions.md:544`, `:546` | **quoted supersession, correct as written** — ADR-009's "What the contract said" block, which exists to preserve the superseded text |
+| P8 | S4 | `.project/concepts/constraint-execution-lifecycle-requirements.md:326` | **quoted supersession, correct as written** — LC-E11's amendment note quoting what it replaced |
+| P9 | S4 | `tests/execution/test_fusion_tea_real_teax.py:245`, `tests/execution/test_constraint_verdicts_exact_route.py:171,416,540` | unchanged; **handed to CONSTRAINT-SEMANTICS Item 3**, which owns the token spelling (RI-6) |
+| P10 | S4 | `.project/concepts/constraint-execution-and-design-space-studies.md:99,198` | unchanged from pre-edit rows 25–26; provenance under the contract's reading rule |
+| P11 | S4 | `.project/backlog/epic_constraint_semantics_contract.md:52,89,366,398` | unchanged from pre-edit rows 29–32 |
+| P12 | S5 | `docs/architecture/modeling-assumptions.md:472`, `:499` | correct as written — this item's own text, which names `assume constraint` precisely to say it never executes |
+| P13 | S5 | `constraint_report.py:37`, `constraint-execution-and-design-space-studies-claude.md:88` | unchanged from pre-edit rows 33–34 |
+
+**The four `all_satisfied` test assertions are the item's one open residue**, and they are open by
+design: RI-6 forbids touching executable text, and Item 3 owns the token. They are recorded here as
+handed on, not as closed.
+
+### Companion repository
+
+**S1 → zero. S4 → zero.** Vendored corpora unchanged and still out of class.
+
+| # | Term | File:line | Disposition |
+|---|------|-----------|-------------|
+| PC1 | S2 | `docs/patterns/constraints.md:111`, `:116` | correct as written — syntax examples; the same document now states the assert-only rule as settled at `:43` |
+| PC2 | S2 | `docs/patterns/syntax-reference.md:185` | correct as written — DD8 no-edit branch, ruled above |
+| PC3 | S2 | `docs/patterns/semantic-operators.md:520` | correct as written — this item's own D5-c replacement, which says `require` is not executed |
+| PC4 | S2 | `claude/agents/sysml-expert.md:124`, `:132` | correct as written — the requirement-def example and this item's own D5-a sentence stating that it never executes |
+| PC5 | S2/S5 | `tests/fixtures/constraint_fact_shapes/source_forms.sysml:12,15,87` | correct as written — fixture source exercising form classification (RI-6) |
+| PC6 | S3 | `docs/patterns/common-mistakes.md:244,246`, `semantic-operators.md:493`, `constraints.md:221` | correct as written — this item's own corrected headings, each of which says the plain form is *not* a check |
+| PC7 | S5 | `docs/patterns/constraints.md:125`, `:130` | correct as written — syntax examples, same reason as PC1 |
+| PC8 | S5 | `docs/patterns/semantic-operators.md:522` | correct as written — this item's own text saying `assume` is not executed |
+| PC9 | S5 | `docs/patterns/syntax-reference.md:186` | correct as written — DD8 no-edit branch |
+
+---
+
+## Pairwise precedence-agreement check (design Validation Approach step 2)
+
+Five statements of the headline precedence exist because five documents each need to carry their own.
+No checker enforces their agreement, so they are compared here against A0, in full rather than by
+verdict.
+
+| Copy | Location | Statement as written |
+|------|----------|----------------------|
+| **A0 (home)** | contract, "Headline states and coverage truth" | "violation → indeterminate → full satisfaction → partial coverage → not assessed" |
+| A6 | contract invariant 33 | "violation, then indeterminate, then full satisfaction, then partial coverage, then not assessed" |
+| A10 | contract Appendix C, mixed-population cell | "violation → indeterminate → full satisfaction → partial coverage → not assessed" |
+| B4 | companion LC-E11 | "violation, then indeterminate, then full satisfaction, then partial coverage, then not assessed" |
+| C1 | ADR-009 | "violation → indeterminate → full satisfaction → partial coverage → not assessed" |
+
+**Verdict: all five agree in meaning and order.** Five terms, same sequence, no copy adding,
+dropping, or reordering a state. The only variation is the connective (arrow versus "then"), which
+carries no meaning. Each of A6, A10, B4 and C1 also points back at A0 or ADR-009 by name.
+
+The definition of full satisfaction is restated in four of the five (A0, A6, B4, C1) and reads the
+same each time: every applicable asserted gate was assessed and passed, a coverage claim rather than
+the absence of a failure. A10's cell states the precedence only, which is what an acceptance cell is
+for.
+
+Three statements of the disposition kinds, compared the same way:
+
+| Copy | Location | Statement as written |
+|------|----------|----------------------|
+| **A0/A4 (home)** | contract invariant 28 | "one of three kinds — eligible, excluded-with-reason, or non-reaching-with-reason — and every authored usage carries exactly one … 'reaches no instance' is a disposition, not an absence" |
+| B1 | companion LC-E05 | "one of three kinds — eligible, excluded-with-reason, or non-reaching-with-reason — and the dispositions cover the complete authored-usage domain" |
+| C5 | `reference/28-…md`, catalog text | does not enumerate the kinds; instantiates the third — "An owner kind with no expansion rule … yields no occurrence, and the usage is cataloged with one record, `eligible=False`" |
+
+**Verdict: agreement holds.** A0/A4 and B1 name the same three kinds in the same order with the same
+totality claim. C5 is not a restatement and was never going to be one — it describes what happens to
+one kind at one pipeline step, and what it describes is that kind. **Recorded ambiguity:** the
+design's Validation Approach names "the catalog text in C5", while its Component Overview assigns C5
+to the equality instruction, which has no catalog text. The comparison above uses Appendix C's
+section C5 (D6, doc 28), the only C5 with catalog text. The alternative reading has nothing to
+compare, so this reading is the one that discharges the check.
+
+---
+
+## Table 2 — Discharge record
 
 | Entry | Disposition | Verification note |
 |-------|-------------|-------------------|
-| _(filled in Phase 6)_ | | |
+| contract invariant 8 | verified already-correct | Four outcomes unchanged; the new severity in A3 is a named contextual failure of the kind invariant 9 already admits, not a fifth outcome, and `ADMIT` is not reclassified. Byte-identity confirmed: `git diff \| grep "^-.*Outcomes are exactly"` is empty |
+| contract Appendix C, "Zero constraint usages" | verified already-correct | Reads as state 6 (unconstrained, report absent). Byte-identity confirmed by the same diff grep |
+| contract Appendix B, "Catalog is absent when no assertion is admitted" | verified already-correct | The catalog/report visibility claim is unaffected by the coverage change. Byte-identity confirmed by the same diff grep; A0 and A11 moved its line number from `:660` to `:725` and did not touch it |
+| contract D-2 and D-4/SRC-01 | untouched, both directions (RI-5) | `git diff \| grep -E "^[-+].*D-2 \[OWNER-VERBATIM\]\|D-4 \[OWNER-VERBATIM\]"` is empty. A11 inserted between D-3 and D-4 and shifted D-4 down without editing it. The parked conflict stays parked |
+| C4 / D2b ("three outcomes" → four) | design addition | §8 contradicted invariant 8, the guardrail this item pins. Leaving it would ship a modeler doc contradicting a guardrail in the same item that pins the guardrail |
+| A10b (Appendix C "Asserted vacuous gate") | design addition | Invariant 61 introduces observable behavior and Appendix C is the mandatory acceptance matrix; a new invariant with no cell is a rule nothing has to demonstrate |
+| B7 (LC-E13) | design addition | Companion mirror for invariant 61, by the LC-G07 symmetry argument. The frozen companion is what Items 2 and 3 read for requirements |
+| D5-b′ (`semantic-operators.md:493-501`) | design addition | The "Wrong:" half of the pair D5-b corrects carries the identical false parser claim; correcting one half leaves the document self-contradicting inside nine lines |
+| D5-f (`common-mistakes.md` Mistake 8) | design addition | A third instance of the D4 defect, in the document a modeler reads *for* mistakes. Surfaced by S3 |
+| `constraints.md:43` ("unassessed **today**") | design addition | Read the assert-only rule as a temporary implementation state, in the same file the equality instruction and D4 land in |
+| C2 (D1) RI-1 disposition | **verified true of current behavior at `882161e`** | The assert-family-only rule is what the profile does today: `executable_profile.py:949-950` routes `satisfy`, `requirement_constraint`, and `plain_usage` to UNASSESSED before predicate inspection, and `constraint_extraction.py:726-735`'s `_effective_predicate_source` returns `None` for `plain_usage`. Evidence: research register `20260812-101200_constraint-semantics-end-to-end.md` §2. No pending marker; no item named in the published text |
+| C3 (D2) RI-1 disposition | **split — never-executed half current, cataloged half a target** | Never-executed under any non-assert form: verified true at `882161e`, same evidence. Catalog totality: target — the published text says so in a parenthetical and names CONSTRAINT-SEMANTICS Item 2 |
+| C5 (D6) RI-1 disposition | **split, same shape as C3** | Status-follows-form: verified true at `882161e`. Catalogs unassessed under *any* owner kind: target — `elaborate.py:522-539` has no `CalculationDefinition` branch, so calc-def-owned usages produce no carrier. The published text names CONSTRAINT-SEMANTICS Item 2 |
+| D5-e (`syntax-reference.md:185`) | **branch fired: no edit** (the design's default) | Framing sentence quoted above: `**Constraint Prefixes:**`, a syntax inventory. The entry does not claim the form is checked, enforced, or gates anything. `:186` ruled the same way |
+| D5-a (`sysml-expert.md:124`) | **deviation, dispositioned against the design's stated intent** | The quote matched; the design's characterization did not. Substituting `assert constraint` inside a `requirement def` would teach invalid SysML. The form stays; a settled-semantics sentence is added. Full reasoning above |
+| The four `all_satisfied` test assertions | **handed on — CONSTRAINT-SEMANTICS Item 3** | `test_fusion_tea_real_teax.py:245`, `test_constraint_verdicts_exact_route.py:171,416,540`. Executable text (RI-6), and the headline token spelling is Item 3's by RI-3 |
+| REQ-EXT-09 / REQ-CL-04 re-grade | **not done, by design** | A stated non-goal. C8 appends a pointer to REQ-EXT-09's Test File cell (DD6) and leaves the requirement text and the `PASS` status alone. Choosing the replacement proof is Item 2's |
+| B1 convention statement | recorded | The companion's first in-place rewrite. Licensed by the copy-and-freeze header's "forward requirement amendments happen here only" (`:3-7`), not by LC-E04B, which is a pure append. Every rewrite quotes what it supersedes, so an owner who prefers append-only can recover mechanically |
+| DD5 scope exclusion | recorded | `.project/research/`, `.project/completed/`, `.project/active/` excluded as dated provenance; reason stated at the head of this file, with the vendored-corpora sub-exclusion |
+| Companion doc-check finding | recorded | See below |
+| New consistency tooling | **not built, by design** | A cross-document checker for constraint semantics is a stated non-goal. The pairwise agreement check above is the price paid instead, and it is a gate, not a read-through |
 
 ---
 
 ## Mechanical checks
 
-Recorded in Phase 6.
+**Codegen**
+
+- `python3 scripts/check_doc_distinctness.py` → `31 numbered reference documents checked, 0
+  identical-content groups`. **Note:** bare `python` is not on PATH in this environment; the plan's
+  stencil needs `python3`.
+- `git diff --check` → clean at every phase and at close.
+- `git diff -- '*.py'` → two files, comment and docstring lines only. No assertion, name, or value
+  changed. Read in full at Phase 4.
+- No `pytest` run was required and none was run in this repository. This is a documentation item and
+  it changes no executable text (RI-6). Adding a test run to feel complete would prove nothing.
+
+**Companion (agentic-mbse)**
+
+- `git diff --check` → clean.
+- `git status --short` → five files, all this item's, no `uv.lock`.
+- Relative-link resolution: no link target was added or changed in any edited file. The two new
+  cross-repository references (the equality instruction's authority-copy pointer and the ADR-009
+  cite) are deliberately plain prose paths rather than Markdown links, because a companion reader
+  may not have the codegen tree — a relative link to `../../sysml-codegen/...` would resolve for
+  nobody.
+- **The docs-referencing-test finding.** The companion has no doc-check script. Grepping `tests/`
+  for the edited documentation paths returned **two hits**, both naming `semantic-operators.md` in
+  prose about the literal binding form, not about constraints:
+  `tests/fixtures/item9/attr_redef_literal/model.sysml:22` and
+  `tests/test_validation/test_item9_checks.py:17`. The referencing test was run —
+  `uv run --extra dev pytest tests/test_validation/test_item9_checks.py` → **2 passed**. It needs
+  `SYSIDE_LICENSE_KEY` from `/home/reid/1cfe/agentic-mbse/.env`; without it the same command reports
+  2 failed on an ImportError, which is not a real result. So the finding is *not* "no
+  docs-referencing tests" as the design anticipated: two exist, they reference a file this item
+  edited, they do not depend on the edited passage, and they pass.
+
+**Guardrail and boundary checks**
+
+- RI-4 (three guardrail statements byte-identical): confirmed, anchored on quoted text. Diff grep
+  empty.
+- RI-5 (D-2 and D-4 untouched in both directions): confirmed. Diff grep empty.
+- RI-3 (no normative token spelling or report field name): confirmed by reading the diff. The only
+  headline tokens in the diff are inside ADR-009's "What the contract said" block and LC-E11's
+  amendment note, both quotations of pre-amendment text. `ADMIT`, `BLOCK`, `NON_NUMERICAL` and
+  `UNASSESSED` appear as invariant 8's profile outcomes, which are not headline tokens and are
+  unchanged.
+- RI-6 (no executable text): confirmed. The Python diff is comment and docstring lines only, and the
+  one class of correction that could not avoid executable text — the four `all_satisfied`
+  assertions — was handed on rather than made.
+- RI-7 (visible discharge): Table 2 above. Silence discharges nothing, so every entry has a row.
