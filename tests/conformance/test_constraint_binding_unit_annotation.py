@@ -81,6 +81,32 @@ def test_neither_annotated_binding_is_refused_as_an_expression_source(
     assert not [name for name in _refused_formals(graph) if "__band." in name]
 
 
-def test_a_genuine_expression_source_is_still_refused(graph: InstanceGraph) -> None:
-    """The bound on what D2 admits: `in tol = a + b;` is arithmetic, not an annotation."""
-    assert [name for name in _refused_formals(graph) if name.endswith("__bad_band.tol")]
+@pytest.mark.parametrize(
+    "refused_formal",
+    ["__bad_band.tol", "__invoked_band.tol"],
+    ids=["arithmetic", "invocation"],
+)
+def test_a_genuine_expression_source_is_still_refused(
+    graph: InstanceGraph, refused_formal: str
+) -> None:
+    """The bound on what D2 admits, on both members the design named.
+
+    Arithmetic (`in tol = a + b;`) and an invocation (`in tol = sum(other_feature);`) each
+    carry an operator that is not `[`, so `annotated_ast_value` returns them unchanged,
+    `_binding_evidence` still falls through to `expression_evidence`, and `_unsupported_code`
+    still refuses them. The unwrap admits annotations, not expressions.
+    """
+    assert [name for name in _refused_formals(graph) if name.endswith(refused_formal)]
+
+
+def test_an_annotated_chain_binding_resolves_as_a_chain(graph: InstanceGraph) -> None:
+    """The other edge of shape (ii): `in ref_value = cell.reading [m];`.
+
+    Named in D2's admitted set alongside the plain reference and otherwise untested. The
+    unwrap contributes the chain, so `_binding_evidence` classifies it as a chain binding and
+    it resolves to the cross-part attribute, instead of falling to `expression_evidence`.
+    """
+    bindings = _bindings(graph, "__chain_band")
+    assert isinstance(bindings["ref_value"], NodeRef)
+    assert bindings["tol"] == LiteralInput(0.05)
+    assert not [name for name in _refused_formals(graph) if "__chain_band." in name]
