@@ -1029,7 +1029,11 @@ instead of the superseded one.
 
 **Location**: `.project/active/constraint-docs-agent-sync/`
 
-**Dependencies**: Items 4–6 landed (documents the final state); before epic close/pre_pr.
+**Dependencies**: Items 4–6, 8, and 9 landed (documents the final state — Item 8 changes the
+unit-on-binding behavior `modeling-assumptions.md` §8 currently documents, and Item 9 changes
+the derivative this item's worked-example references describe); before epic close/pre_pr.
+(Edges amended 2026-08-13 when Items 8–9 were filed; numbering deliberately unchanged — item
+numbers are already cited by close records and rulings.)
 
 ---
 
@@ -1069,11 +1073,20 @@ constraint (or a derivation) no longer refuses the model.
       ADMIT with correct unit text on the minted ports.
 - [ ] No existing fixture's behavior changes silently: churn assessed, recapture (if any)
       reviewed once, byte gates re-baselined knowingly.
+- [ ] Live, in-place snapshot, and relocated snapshot routes mint identical port unit metadata
+      (three-route parity — minted units travel in the v3 graph).
 - [ ] Item 6's design cites this item's characterization of the constraint-formal unit lane.
+- [ ] Focused tests, full licensed suite, ruff zero-new, mypy zero-new, and `git diff --check`
+      pass with exact counts recorded in `verification.md`.
+
+**Estimated Effort**: 0.5–1 day, **plus** the one reviewed fixture recapture if the churn
+assessment shows minted units move on existing fixtures (Item 2 precedent: 21 fixtures).
 
 **Location**: `.project/active/unit-lane-port-metadata/` (to be created)
 
-**Dependencies**: Item 5's probe evidence (landed). Runs independently; Item 9 consumes it.
+**Dependencies**: Item 5's probe evidence (landed). Runs independently; Item 9 consumes it;
+Item 7's documentation sweep depends on it (this item changes the behavior
+`modeling-assumptions.md` §8 documents).
 
 ---
 
@@ -1130,6 +1143,10 @@ Item 1: Contract and authoring policy
   ├─> Item 4: Predicate defect hardening ────────────┤
   └─> Item 5: Owner checkpoint ──────────────────────┤
                                                      └─> Item 5 implementation and acceptance
+                                                           ├─> Item 8: Unit-lane defect fix
+                                                           │     └─> Item 9: Derivative upgrade
+                                                           └─────────────┐
+Items 4–6, 8, 9 ──> Item 7: ADR + docs + agent-prompt sync ──> epic close/pre_pr
 ```
 
 ---
@@ -1150,8 +1167,9 @@ Item 1: Contract and authoring policy
 
 ## Timeline
 
-**Total Effort**: 9–10.5 working days over 2–3 weeks, plus owner-checkpoint turnaround
-(Item 7 added 2026-08-13 at owner direction)
+**Total Effort**: 10–12 working days over 2–3 weeks, plus owner-checkpoint turnaround
+(Item 7 added 2026-08-13 at owner direction; Items 8–9 filed 2026-08-13 under the D-S1/D-S2
+ruling; Item 8 may add one reviewed fixture recapture if churn fires)
 
 | Item | Effort | Dependencies |
 |------|--------|--------------|
@@ -1161,8 +1179,8 @@ Item 1: Contract and authoring policy
 | Item 4: Predicate Defect Hardening | 0.5–1 day | Item 1 |
 | Item 5: CATF Derivative and End-to-End Acceptance | 1.5–2 days | Item 1 for checkpoint; Items 2–4 for implementation |
 | Item 6: Calculation-Definition Gate Capability Design | 1 day | Items 1–2 |
-| Item 7: ADR, Product Promise, and Agent-Facing Documentation Sync | 0.5–1 day | Items 4–6 landed; before epic close/pre_pr |
-| Item 8: Unit-Lane Port Metadata Defect | 0.5–1 day | Item 5 probe evidence (filed 2026-08-13, D-S1/D-S2 ruling) |
+| Item 7: ADR, Product Promise, and Agent-Facing Documentation Sync | 0.5–1 day | Items 4–6, 8, 9 landed; before epic close/pre_pr |
+| Item 8: Unit-Lane Port Metadata Defect | 0.5–1 day (+recapture if churn fires) | Item 5 probe evidence (filed 2026-08-13, D-S1/D-S2 ruling) |
 | Item 9: Derivative Upgrade Under Held Intent | 0.5 day | Items 5 and 8 |
 
 ---
