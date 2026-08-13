@@ -669,7 +669,7 @@ asserted feasibility was assessed.
 
 ---
 
-### Item 4: Predicate Defect Hardening (0.5–1 day)
+### Item 4: Predicate Defect Hardening (0.5–1 day) ✅
 
 **Type**: Implementation
 
@@ -717,7 +717,7 @@ asserted-constraint authoring.
       `bc69f04` directly — ruff 1, mypy 108, failing node IDs byte-identical to tip, so zero-new
       holds on membership and not only on count.)*
 
-**Audit (2026-08-13): Certify-with-residuals** — `.project/active/constraint-predicate-hardening/audit.md`,
+**Audit (2026-08-13): Certify-with-residuals** — `.project/completed/20260813_constraint-predicate-hardening/audit.md`,
 including the orchestrator addendum (probes R1–R7 all PASS). Both blocking residuals are
 **discharged**: the two surfaced findings are carried into Item 5's Current State and Required
 Reading below (audit F7), and the rewritten red-first assertion is deviation 8 in
@@ -729,7 +729,7 @@ so suite collection no longer depends on archive layout.
 
 **Estimated Effort**: 0.5–1 day (spec 0.5h, design 1h, plan 0.5h, execute and validate 4–6h)
 
-**Location**: `.project/active/constraint-predicate-hardening/`
+**Location**: `.project/completed/20260813_constraint-predicate-hardening/`
 
 **Dependencies**: Item 1; runs in parallel with Items 2–3.
 
@@ -741,11 +741,11 @@ so suite collection no longer depends on archive layout.
 
 **Deliverables**:
 
-- `.project/active/constraint-predicate-hardening/spec.md`
-- `.project/active/constraint-predicate-hardening/design.md`
-- `.project/active/constraint-predicate-hardening/plan.md`
+- `.project/completed/20260813_constraint-predicate-hardening/spec.md`
+- `.project/completed/20260813_constraint-predicate-hardening/design.md`
+- `.project/completed/20260813_constraint-predicate-hardening/plan.md`
 - Literal-elaboration and diagnostic implementation with kept regression tests.
-- `.project/active/constraint-predicate-hardening/verification.md`
+- `.project/completed/20260813_constraint-predicate-hardening/verification.md`
 
 ---
 
@@ -778,7 +778,7 @@ that generated feasibility evidence rejects an unphysical candidate through TEAx
   band is admitted silently by a gate whose purpose is catching wrong physics. The all-65 table
   cannot rely on the profile to catch unit mistakes in bindings; a wrong unit there has to be
   caught by review or by an explicit in-predicate comparison.
-  *(Item 4 probe P3; `.project/active/constraint-predicate-hardening/verification.md` "Surfaced",
+  *(Item 4 probe P3; `.project/completed/20260813_constraint-predicate-hardening/verification.md` "Surfaced",
   `reason-codes-reconciliation.md`.)*
 - ⚠️ **A blocked chain's location is the constraint usage's line, not the offending term's.** The
   `LocationFact` the companion attaches to a decision belongs to the usage; the payload has no
@@ -786,7 +786,7 @@ that generated feasibility evidence rejects an unphysical candidate through TEAx
   disambiguates within a predicate is the named reference, which `block_feature_chain` now
   carries. **Consequence for this item:** on a long predicate the diagnostic points at the gate,
   not at the term — read the chain name, not the line, when driving the 65 rewrites.
-  *(`.project/active/constraint-predicate-hardening/reason-codes-reconciliation.md` "Also
+  *(`.project/completed/20260813_constraint-predicate-hardening/reason-codes-reconciliation.md` "Also
   surfaced".)*
 
 **Scope**:
@@ -850,7 +850,7 @@ validate 8–12h)
 - `tests/fixtures/catf_mfe_d5/PROVENANCE.md`
 - Item 1's amended authoring guidance and Items 2–3's catalog/report contracts.
 - **Item 4's two surfaced limits**, both summarized in Current State above with their measurements:
-  `.project/active/constraint-predicate-hardening/verification.md` ("Surfaced") and
+  `.project/completed/20260813_constraint-predicate-hardening/verification.md` ("Surfaced") and
   `reason-codes-reconciliation.md` ("Also surfaced"). Read them before fixing the tolerance-band
   form — the first one decides how much the profile can be trusted to check a band.
 - `docs/architecture/modeling-assumptions.md` §8, "Authoring a gate that carries units" — the one

@@ -6,60 +6,6 @@
 
 ## Active Work
 
-### 2026-08-13: CONSTRAINT-SEMANTICS Item 4 — predicate defect hardening (AUDITED: Certify-with-residuals, cures applied)
-
-`.project/active/constraint-predicate-hardening/` — orchestrated run (owner-invoked
-`/_my_orchestrate`, check-ins waived), stage briefs in `briefs/`, one commit per
-stage/decision. Codegen tip `e9972e9` on `item7-rebuild`; companion tip `0a52942` (one
-commit, `executable_profile.py` only) in `/home/reid/1cfe/agentic-mbse-item7-rebuild`.
-**Nothing pushed; TEAx untouched on `constraint-semantics-item3`; frozen twins byte-untouched.**
-
-**What landed.** Both Q8 must-fix defects plus a third lane found en route, cured under one
-rule ("a unit annotation contributes its value and never a reference," one owner,
-`extraction/unit_annotation.py`):
-
-- **Defect A** — unit-annotated literals in inline asserted predicates no longer raise
-  `SI_OCCURRENCE_MISSING`; the cure is one unwrap at the head of `_expression_references`
-  (`elaborate.py:2432`). Pinned positively: the demonstration gate is admitted, catalogued,
-  assessed (`disposition_kind == "eligible"`, coverage 1/0) on an inequality, not `==`.
-- **Fourth lane** — `in tol = 0.05 [m];` constraint bindings resolve as `LiteralInput(0.05)`
-  instead of refusing `SI_EXPRESSION_SOURCE_UNSUPPORTED`; same rule, one unwrap at `:1701`.
-  Genuine expression sources (invocations) still refuse — pinned on both sides of the line.
-- **Defect B** — a blocked feature chain now names the joined written chain, its location,
-  and the bindings rewrite (companion passes `message=` at both block sites; codegen
-  de-duplicates and orders on one normalized key; single-line detail invariant). Worked
-  example + the both-operands ordering rule + unit-authoring guidance in
-  `modeling-assumptions.md` §8; all 23 `block_*` codes reconciled in
-  `reason-codes-reconciliation.md`.
-
-**Audit** (`audit.md`, fresh session): Certify-with-residuals; 7 findings (2 Medium, both
-record/placement — none code); all 7 requested live probes run by the orchestrator and
-appended as an addendum (R1–R7 PASS; R5 confirmed the flagged assertion rewrite was a naming
-artifact, not concealment; R6 measured D1's blast radius: deleting the unwrap fails exactly 7
-Item-4-fixture-scoped tests and nothing else). All findings cured same day, one commit per
-family (`062f46d..e9972e9`); checkboxes cite the probe evidence.
-
-**Two surfaced limits, parked for Item 5** (carried into the epic's Item 5 section — read
-them before the tolerance-band migration): a unit on a constraint *binding* is dimensionally
-inert to the profile (a mis-united tolerance band is admitted — the profile does NOT catch
-unit mistakes in bindings); a blocked chain's reported location is the usage's line, not the
-term's.
-
-**Final gates:** codegen full licensed suite **2010 passed / 34 skipped / 0 failed**, zero
-license-skip lines; focused post-cure files 184/0; `ruff check src` **12**, `mypy src` **55**;
-companion **1821 passed / 10 failed** where the 10 are pre-existing (identical failing node
-IDs with the change reverted — orchestrator-verified), companion ruff 1 / mypy 108 both at
-baseline; `git diff --check` clean both repos.
-
-**Record note:** `a395f33` swept an uncommitted 8-line CURRENT_WORK stub into an unrelated
-commit; recorded in `e9972e9` as a concurrent-owner edit, but it was actually this run's own
-spec-stage stub (superseded by this entry) — no owner content was touched. A concurrent owner
-session DID commit during the run (`4e5bc71` files epic Item 7; Items 2/3 archived to
-`completed/20260813_*`) — none of it absorbed into Item 4 work.
-
-**Close and pre_pr are left to the owner.** Next per epic: Item 5's owner checkpoint (all-65
-disposition table) and Item 6 design; both now unblocked by Items 2–4.
-
 ### 2026-08-12: Constraint-semantics contract — spec drafted (owner-directed priority)
 
 **[OWNER 2026-08-12]** redirected priority after the Item 7 step-4 probe: settle constraint
@@ -522,6 +468,20 @@ surfaces as matrix-row candidates.
 ---
 
 ## Recently Completed
+
+### 2026-08-13: CONSTRAINT-SEMANTICS Item 4 — Predicate Defect Hardening (audited + cured + closed)
+- Both Q8 must-fix predicate-boundary defects cured under the one existing unit-annotation rule,
+  plus a fourth lane (`in tol = 0.05 [m];` bindings) found at spec and cured under the recorded
+  same-rule test; a blocked chain now names the joined written chain, location, and bindings
+  rewrite (companion `0a52942` + codegen render de-dup/order). End state pinned positively: an
+  admitted, catalogued, assessed inequality gate.
+- Audit Certify-with-residuals with all 7 requested probes run by the orchestrator (R6: deleting
+  the cure fails exactly the 7 item-fixture tests, nothing else); all findings cured; F5 resolved
+  **[OWNER 2026-08-13]** — the coverage ledger's durable home is `tests/unit/data/`.
+- Two limits parked for Item 5 in the epic's Item 5 section: binding units are dimensionally
+  inert to the profile; a blocked chain's location is the usage's line. Archived to
+  `completed/20260813_constraint-predicate-hardening/`; gates 2010/34/0 licensed, ruff 12,
+  mypy 55, companion 10 failures proven pre-existing.
 
 ### 2026-08-13: CONSTRAINT-SEMANTICS Item 1 — Contract and Authoring Policy (audited + cured + closed)
 - **Every durable authority a modeler or an implementing agent reads now teaches the settled

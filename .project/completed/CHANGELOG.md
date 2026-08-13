@@ -4,6 +4,70 @@ Historical record of completed work.
 
 ---
 
+## [2026-08-13] - [CONSTRAINT-SEMANTICS Item 4] Predicate Defect Hardening
+
+**Type**: Item (orchestrated run; audited Certify-with-residuals → all findings cured same day,
+F5 resolved by owner ruling at close)
+**Duration**: spec 2026-08-13 → closed 2026-08-13 (same day)
+**Archived to**: `.project/completed/20260813_constraint-predicate-hardening/`
+**Commits**: codegen `7f1b943..886a11f` (branch `item7-rebuild`, unpushed) / companion `0a52942`
+in `/home/reid/1cfe/agentic-mbse-item7-rebuild` (one file, `executable_profile.py`) / TEAx
+untouched on `constraint-semantics-item3`
+
+### Summary
+Two reproduced defects sat exactly on the boundary a modeler crosses when writing an asserted
+physics gate (must-fix per rulings Q8): a unit-annotated literal such as `8.55 [m]` in an
+asserted predicate raised `SI_OCCURRENCE_MISSING` because the reference walk recursed into the
+`[` annotation's second operand (`SI::metre`), and the blocked-feature-chain diagnostic was the
+tautology `feature_chain: block_feature_chain` — no reference, no location, no rewrite. Both are
+now cured under the product's one existing rule ("a unit annotation contributes its value and
+never a reference"): one unwrap at the head of `_expression_references` (Defect A), one at the
+binding read (the fourth lane, `in tol = 0.05 [m];`, found during spec and cured under the
+recorded same-rule test), and a companion `message=` at both chain-block sites that codegen
+de-duplicates and orders on one normalized key (Defect B). The pinned end state is a *working*
+gate — admitted, catalogued, assessed, on an inequality — not the absence of an error code.
+
+The admitted set changed only by the two named annotation shapes; chains stay blocked,
+equalities stay untoleranced, BLOCK still halts. All 23 `block_*` reasons reconciled against
+the promise "the generation error names the exact construct to fix"
+(`reason-codes-reconciliation.md`).
+
+### Deliverables
+- `spec.md`, `design.md` (rev 2 after Revise review, 7 must-fixes applied), `design-review.md`,
+  `plan.md`, `verification.md` (8 deviations + cure addendum), `audit.md` (7 findings + R1–R7
+  orchestrator probe addendum), `product-lens.md`, `reason-codes-reconciliation.md`, `briefs/`
+  (every stage brief), `probes/` (companion evidence + captured red).
+- Codegen: walk-head + binding unwraps in `elaboration/elaborate.py`; `_render_block_reasons`
+  de-dup/order; five new fixtures; three characterization files (red-first, strict-xfail, red
+  captured); `modeling-assumptions.md` §8 worked message + unit-authoring rules; the coverage
+  ledger's durable home moved to `tests/unit/data/` (owner ruling, F5).
+- Companion (`0a52942`): `_feature_chain_message` naming the joined written chain at both block
+  sites; no `REASON_CODES` change.
+- Gates: codegen full licensed suite **2010/34/0**, zero license-skip lines; `ruff check src`
+  **12**; `mypy src` **55**; companion **1821 passed / 10 pre-existing failures** (failing node
+  IDs proven identical with the change reverted), ruff 1 / mypy 108 at baseline;
+  `git diff --check` clean; frozen twins byte-untouched.
+
+### Decisions and deviations
+- Fourth lane cured in-scope under the orchestrator's pre-recorded rule (same rule, one more
+  lane); an annotated *chain* in a binding is admitted (design's named set), pinned on both
+  sides of the refusal bound.
+- Two limits surfaced and parked for Item 5 (carried into the epic's Item 5 section): a unit on
+  a constraint binding is dimensionally inert to the profile, and a blocked chain's location is
+  the usage's line, not the term's.
+- R6 measured D1's blast radius: deleting the cure fails exactly 7 Item-4-fixture tests,
+  nothing else. R5 proved the flagged assertion rewrite concealed nothing (naming artifact).
+- Process residual, recorded at close: the product-lens ledger has spec + design blocks only
+  (both DISPOSED); no plan/implement/audit-stage entries — same class Items 2/3 carried.
+- ADR/product-ledger infra absent in this repo (no `adr.sh`/`product.sh`); the F5 durable-home
+  ruling and the block-diagnostic promise are recorded in the item artifacts, the epic, and
+  `modeling-assumptions.md` §8 respectively.
+
+### Lessons Learned
+[TODO: Add lessons learned]
+
+---
+
 ## [2026-08-13] - [CONSTRAINT-SEMANTICS Item 1] Contract and Authoring Policy
 
 **Type**: Item (orchestrated run; audited Certify-with-residuals → H-1/M-1/M-2 cured, M-3 ratified
