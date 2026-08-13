@@ -483,6 +483,22 @@ an invocation expression (`block_invocation`), a feature-chain reference the pro
 form (`block_assert_by_reference`), a real-valued or quantity-typed `==`/`!=` comparison with no
 tolerance band (`block_real_equality_requires_tolerance`), or a comparison across incompatible/unknown
 units (`block_unit_conversion_required`, `block_incompatible_dimensions`, `block_unknown_exact_unit`).
+
+**What a block tells you.** Every block reason names where it was decided —
+`… [model.sysml:43]`, by file basename and line, or no suffix at all when the payload carries no
+location. Repeated reasons collapse: a predicate that blocks the same chain thirteen times reports
+it once, and the order is a function of the payload rather than of the profile's walk.
+`block_feature_chain` goes further and names the offending reference and the rewrite:
+
+```
+block_feature_chain: feature chain 'bioshield.outer_radius' is not executable in a predicate
+body; bind it to a constraint formal in the usage (in outer_radius = bioshield.outer_radius;)
+and use the formal in the predicate [radial_build.sysml:605]
+```
+
+The other reasons name their construct and their place, not the offending sub-expression. The line
+is the constraint usage's, so a long predicate points you at the gate rather than at the term.
+
 **The real-equality idiom:** model a tolerance band explicitly as two inequalities
 (`x - tol <= y` and `y <= x + tol`) rather than `x == y` — the profile admits an inequality
 comparison on real/quantity operands, never a bare equality one.
@@ -532,7 +548,10 @@ reasoning behind these four, and the owner's reason for them, is in the lifecycl
 "Equality intent and authoring policy" (this repository,
 `.project/concepts/constraint-execution-authoritative-lifecycle-contract.md`) — the authority copy.
 
-If the profile BLOCKs an asserted constraint, the generation error names the exact construct to fix.
+If the profile BLOCKs an asserted constraint, the generation error names the construct and where it
+was written. For a feature chain in a predicate body it also names the offending reference and the
+supported rewrite; for the other reasons it names the reason code and the location, and you read the
+construct off that line. See "What a block tells you" in §8 for the shape.
 
 ---
 

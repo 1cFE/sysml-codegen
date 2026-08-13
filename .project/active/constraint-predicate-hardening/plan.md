@@ -425,16 +425,16 @@ Make the published promise text true, and discharge the design's **totality cave
 
 ### Changes
 
-- [ ] `docs/architecture/modeling-assumptions.md` — around `:480-486` and `:535`, update the block
+- [x] `docs/architecture/modeling-assumptions.md` — around `:480-486` and `:535`, update the block
       list / promise text to match what the diagnostic now says.
-- [ ] Grep the companion's `REASON_CODES` (`executable_profile.py:66-100`) for its `block_*` members
+- [x] Grep the companion's `REASON_CODES` (`executable_profile.py:66-100`) for its `block_*` members
       and reconcile against the design's nine-row published residue table. The verbatim list is
       already recorded in `probes/companion-evidence.md` — **23 `block_*` members**, of which the
       published list names nine. **The close record carries the final list, not the design's table.**
-- [ ] Write the reconciliation into the close record: which of the 23 still cannot "name the exact
+- [x] Write the reconciliation into the close record: which of the 23 still cannot "name the exact
       construct to fix" after this item, and for each, why that is acceptable or what it is filed as.
       `block_feature_chain` is the one cured here.
-- [ ] Update any reference-doc text describing the old rendering.
+- [x] Update any reference-doc text describing the old rendering.
 
 ### How to verify
 
@@ -737,9 +737,33 @@ zero license-skip lines. Every `xfail` marker is gone — the last of them came 
 the decision (recorded at Phase 1, deviation 3).
 
 ### Phase 6 Completion
-**Completed:**
-**REASON_CODES reconciliation (23 `block_*` members):**
-**Issues / deviations:**
+**Completed:** 2026-08-13
+
+**Docs:** `docs/architecture/modeling-assumptions.md` gains a "What a block tells you"
+paragraph after the block list (§8, around `:480-486`) with the worked `block_feature_chain`
+message, and the promise sentence at `:535` is rewritten to say what is now true: the error
+names the construct **and where it was written**; for a chain it also names the reference and
+the rewrite; for the rest you read the construct off the line. The published block list itself
+is unchanged — no reason was added or removed.
+
+**REASON_CODES reconciliation (23 `block_*` members): written in full to
+`reason-codes-reconciliation.md` in this folder**, read at companion `0a52942`, for the close
+record to lift. Headline: **1 of 23 names the fix** (`block_feature_chain`, cured here),
+**11 name the shape** (they already carried an explicit, actionable message — the design's
+nine-row table understated this), **10 name the reason only**, and `block_unsupported_node` is
+mixed. Every one of the 23 gained a location, which none had before.
+
+Three reason-only rows are named as the cheap follow-on — `block_invocation` (name the
+function), `block_unresolved_definition` (name the definition), `block_derived_unit_unsupported`
+(name the operator and units) — each one `message=` at one companion site. Four more
+(`block_xor`, `block_implies`, `block_unsupported_operator`, `block_non_predicate_root`) carry
+the operator or node kind as their construct and are adequate with a location.
+
+**Issues / deviations:** the design's residue table said eight of nine published reasons were
+residue. Measured against the source, most of those eight already carry explicit messages
+(`executable_profile.py:646-707`) and are **not** tautologies; only their construct-naming is
+coarse. The reconciliation file states what is actually there. No test or promise depended on
+the design's count.
 
 ### Phase 7 Completion
 **Completed:**
