@@ -1,19 +1,56 @@
 # Current Work
 
-**Last Updated**: 2026-08-12 (CONSTRAINT-SEMANTICS Item 2 re-audited **Certify-with-residuals**, R2/R4 corrected; Item 3 orchestration starting)
+**Last Updated**: 2026-08-13 (CONSTRAINT-SEMANTICS Item 3 audited **Certify-with-residuals** at codegen `cb19011` / TEAx `e0c7e48`)
 
 ---
 
 ## Active Work
 
-### 2026-08-12: CONSTRAINT-SEMANTICS Item 3 — coverage report and TEAx policy (SPEC REVISED)
+### 2026-08-13: CONSTRAINT-SEMANTICS Item 3 — coverage report and TEAx policy (AUDITED: Certify-with-residuals)
 
-`.project/active/constraint-coverage-policy/` — orchestrated run, briefs in `briefs/`. Spec
-drafted; product-lens DISPOSED (item3-F1..F6); independent spec review returned **Revise** with
-nine findings, all resolved and recorded by ID in `spec-review.md`. The load-bearing resolution:
-**coverage is a second axis, not a slot in the headline** — the headline stays the single
-precedence-ordered token, while the coverage account is always present and always reaches the
-durable case record, so a `violation` report still says how much was checked. Next: `/_my_design`.
+`.project/active/constraint-coverage-policy/` — orchestrated run, briefs in `briefs/`. All eight
+phases landed at codegen `cb19011` (branch `item7-rebuild`) with the coordinated TEAx branch
+`constraint-semantics-item3` at `e0c7e48`, two commits off pinned `main` `fa0e06a`. **Nothing is
+pushed; TEAx `main` was never committed to; companion untouched at `5088b41`.**
+
+The load-bearing design resolution held all the way through: **coverage is a second axis, not a slot
+in the headline** — the headline stays the single precedence-ordered token, while the coverage
+account is always present and always reaches the durable case record, so a `violation` report still
+says how much was checked.
+
+**Audit `audit.md` returned Certify-with-residuals.** Every headline claim reproduced independently:
+codegen 2047 passed / 34 skipped / 1 known pre-existing failure with zero license-skip lines, TEAx
+311 / 0, all four lint counters exact, zero baseline byte churn. Both regenerated-fixture
+byte-reproducibility claims were re-derived by regenerating from source and comparing executable
+fingerprints, and one ledger account was hand-derived from `.sysml` to confirm the B1 mitigation is
+source-derived rather than transcribed.
+
+**The residuals are one shape: four new refusal and opt-in paths are implemented correctly and
+pinned by no test.** Each mechanism was verified by direct probe at audit time, so these are gaps in
+proof, not defects — but three are named spec criteria left unchecked:
+
+- **A-1 (MEDIUM)** — `UnknownHeadlineToken` is referenced by no test in either repo. All three
+  runtime seams refuse by name under probe; only the report-side `Literal` is pinned. The
+  `partial_coverage → feed-strategy` opt-in path is untested in the same family.
+- **A-2 (MEDIUM)** — invariant 41 over the nested coverage block: deep-freeze works, no test.
+- **A-3 (MEDIUM)** — invariant 50's carrier is claimed `[x]` in `verification.md:351`, but the only
+  `IncompatibleStore` test predates the item and varies `strategy_config`, not
+  `evidence_schema_version` — the exact substitution the design warned would "silently stop proving
+  anything." Fix the claim even if the test waits.
+- **A-4/A-5/A-6 (LOW)** — `indeterminate` never pinned end to end or against a partial account; one
+  regenerated-fixture parametrized case went vacuous (`earlier_channels = ()`); four doc sites still
+  teach the retired rule, the worst being `projection.py:44-47`, which describes a deleted mechanism.
+
+All four judgment calls resolved in the implementer's favour, verified rather than accepted: the
+`f1_arithmetic` script deletion is correct on the merits (decision 2's premise was genuinely false,
+and the replacement is byte-reproducible), `excluded_only`'s `not_assessed → partial_coverage` is
+**mandated** by LC-E12's owner-ratified amendment and not a widening, the `Free_Plant → freePlant`
+drift annotations are complete and honest, and `test_the_lane_runs_the_real_simkit` is a genuinely
+pre-existing collection-order artifact (`tests/execution` alone is 78/78 green; Item 3 touched
+neither `tests/runtime/` nor the guard).
+
+Product-lens gate **DISPOSED** at every stage, no standing BLOCK. Epic item heading not marked ✅ —
+three criteria open. Next: cure A-1..A-3 (or correct A-3's claim), then `/_my_close`.
 
 ---
 

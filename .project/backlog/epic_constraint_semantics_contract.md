@@ -379,6 +379,17 @@ narrower set recovers it exactly by filtering `disposition_kind == "eligible"`.
 
 ### Item 3: Coverage Report and TEAx Policy (2 days)
 
+> **Audited 2026-08-13 — Certify-with-residuals**, codegen `cb19011` / TEAx `e0c7e48`
+> (`.project/active/constraint-coverage-policy/audit.md`). Heading deliberately **not** marked ✅:
+> nine of twelve spec success criteria are verified and marked, three are met in code but proven by
+> no test (audit A-1 unknown-token fail-closed on the runtime side, A-2 invariant 41 over the nested
+> coverage block, A-3 invariant 50's `evidence_schema_version` carrier — the last is claimed `[x]`
+> in `verification.md` against a test that predates the item and varies a different field). All
+> three mechanisms were verified by direct probe at audit time, so these are gaps in proof rather
+> than defects. **Scope 4's wording still wants the contract's correction** (design-F3): the trigger
+> is the absence of an *applicable asserted gate*, not of executable assertions — an applicable gate
+> that produced zero eligible entries reads partial coverage. Filed for close, not performed.
+
 **Type**: Code / Integration
 
 **Boundary authority**: **[AGENT] (ratified by owner, 2026-08-12)**. Behavioral requirements are
@@ -424,19 +435,19 @@ asserted feasibility was assessed.
 
 **Success Criteria**:
 
-- [ ] Fully covered satisfaction, partial coverage, violation, indeterminate, descriptive-only
+- [x] Fully covered satisfaction, partial coverage, violation, indeterminate, descriptive-only
       `not_assessed`, and truly unconstrained states each have an independently pinned report and
       canonical TEAx outcome.
-- [ ] `all_satisfied` is impossible when any applicable asserted usage lacks assessment.
-- [ ] A model containing only plain or requirement-side usages generates a zero-input
+- [x] `all_satisfied` is impossible when any applicable asserted usage lacks assessment.
+- [x] A model containing only plain or requirement-side usages generates a zero-input
       `not_assessed` report; a zero-usage model remains report-free and maps to `unconstrained`.
-- [ ] Report coverage is derived from the catalog in one direction and cannot diverge from the
+- [x] Report coverage is derived from the catalog in one direction and cannot diverge from the
       per-usage inventory without a generation or verification failure.
-- [ ] Partial coverage defaults to keep-for-boundary; feed-strategy occurs only with an explicit
+- [x] Partial coverage defaults to keep-for-boundary; feed-strategy occurs only with an explicit
       config line; both paths persist coverage counts and catalog linkage.
 - [ ] Unknown report and runtime headline tokens fail closed rather than falling through or raising
       an unnormalized key error.
-- [ ] Cross-repository compatibility tests, codegen and TEAx full suites, ruff/mypy zero-new gates,
+- [x] Cross-repository compatibility tests, codegen and TEAx full suites, ruff/mypy zero-new gates,
       generated-artifact review, and `git diff --check` pass with exact counts recorded.
 
 **Estimated Effort**: 2 days (spec 1h, design 3h, plan 1h, execute and validate 11h)

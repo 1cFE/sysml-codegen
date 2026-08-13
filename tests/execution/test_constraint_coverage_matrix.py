@@ -16,6 +16,7 @@ source before any of this code existed.
 
 from __future__ import annotations
 
+import math
 from pathlib import Path
 
 import pytest
@@ -92,6 +93,47 @@ def test_each_state_is_pinned_by_something_no_other_state_satisfies(
     assert report.coverage.coverage_state == coverage_state
     assert _canonical(report) == canonical
     assert _disposition(canonical) == disposition
+
+
+def test_indeterminate_outranks_partial_coverage_end_to_end(tmp_path):
+    """State 2, through the whole chain, and against a PARTIAL account on purpose.
+
+    `constraint_domain_detached_owner` has one live gate and one that nothing instantiates, so
+    its account is partial whatever the run does. Driving the live gate's operand non-finite
+    makes its status `indeterminate`, and the headline must then read `indeterminate` rather
+    than `partial_coverage` — the status arms outrank the account arms.
+
+    This is the one contract-ordered precedence pair the item newly created: before it there
+    was no `partial_coverage` for `indeterminate` to outrank. "We could not assess this gate"
+    is a stronger statement about the candidate than "we did not assess that one", and the
+    coverage account is still carried beside it so nothing is lost by the ordering.
+    """
+    from simkit.evaluation.evaluator import PreparedEvaluator
+    from simkit.study.bridge import CandidateBridge
+
+    from tests.execution.real_teax import package_loader
+
+    name = "matrix_indeterminate"
+    package = generate_package_from_models(
+        FIXTURES / "constraint_domain_detached_owner", tmp_path / name, name
+    )
+    loader = package_loader(package, name, tmp_path / "link")
+    evaluator = PreparedEvaluator(
+        loader, package / "pipelines" / "pipeline.yaml", expects_constraint_report=True
+    )
+    bridge = CandidateBridge(evaluator.entry_models)
+    (entry,) = [key for key in evaluator.entry_models[
+        next(iter(evaluator.entry_models))
+    ].model_fields]
+
+    evidence = evaluator.evaluate(bridge.build({entry: math.inf}))
+
+    assert evidence.responses["headline"] == "indeterminate"
+    # The account beside it is unchanged and still partial: the ordering decides the headline,
+    # not what the account says.
+    assert evidence.report["coverage"]["coverage_state"] == "partial"
+    assert evidence.report["coverage"]["unassessed_gate_count"] == 1
+    assert _disposition("indeterminate") == KEEP
 
 
 def test_the_sixth_state_is_the_absence_of_a_report(tmp_path):

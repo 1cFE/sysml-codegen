@@ -53,6 +53,12 @@ ALL_INAPPLICABLE = CoverageAccountData(
         (["violated", "satisfied"], PARTIAL, "violation"),
         (["violated"], COMPLETE, "violation"),
         (["indeterminate", "satisfied"], COMPLETE, "indeterminate"),
+        # Indeterminate outranks partial coverage — the interaction this item created, and the
+        # one contract-ordered pair that had no test at any tier. "We could not assess this
+        # gate" is a stronger statement about the candidate than "we did not assess that one",
+        # so the status arm must win over the account arm.
+        (["indeterminate"], PARTIAL, "indeterminate"),
+        (["indeterminate", "satisfied"], PARTIAL, "indeterminate"),
         # Everything assessed passed, and everything applicable was assessed.
         (["satisfied"], COMPLETE, "full_satisfaction"),
         # Spec success criterion 3: full satisfaction is unclaimable under partial assessment,
@@ -68,6 +74,8 @@ ALL_INAPPLICABLE = CoverageAccountData(
         "violation-over-partial",
         "violation-over-complete",
         "indeterminate",
+        "indeterminate-over-partial",
+        "indeterminate-over-partial-with-a-pass",
         "full-satisfaction",
         "satisfied-but-partial",
         "zero-input-partial",

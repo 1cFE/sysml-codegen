@@ -349,7 +349,13 @@ zero-input branches collapsing into one, which is exactly what this item exists 
 **Spanning both** — all met.
 - [x] Six states pinned in both vocabularies, each by a test no other state satisfies.
 - [x] Reopening a store across the item raises `IncompatibleStore`, carried by
-      `evidence_schema_version`.
+      `evidence_schema_version` — pinned by
+      `teax/…/simkit/tests/study/test_compatibility.py::test_reopening_a_store_across_the_
+      evidence_bump_raises`, which varies **that field specifically**, with a same-version
+      control and a check that the evaluator stamps `v2`. **Corrected 2026-08-13 (audit A-3):
+      when this box was first ticked the only `IncompatibleStore` test was a pre-existing one
+      varying `strategy_config`, which is the test the design explicitly warned would "pass
+      today and silently stop proving anything." The claim now cites the test that earns it.**
 - [x] Both full suites green, ruff/mypy zero-new in both, `git diff --check` clean in both,
       companion untouched.
 
@@ -367,3 +373,128 @@ zero-input branches collapsing into one, which is exactly what this item exists 
   untouched, still need an owner.
 - **Nothing is pushed.** Publication order when it happens is codegen first, TEAx second (D8
   step 4). TEAx `main` is still at `fa0e06a`.
+
+---
+
+# Cure addendum — 2026-08-13 (audit verdict: Certify-with-residuals)
+
+All six residuals cured. Every one was the same shape: **a mechanism built correctly that no test
+pinned.** The audit verified each by direct probe, so nothing here fixes a defect — what it fixes
+is that a future refactor could have removed any of them and gone green.
+
+## Counts after the cure
+
+| gate | before | after |
+|---|---|---|
+| codegen full licensed suite (all markers) | 2047 passed | **2050 passed**, 34 skipped |
+| codegen license-skip lines | 0 | **0** |
+| TEAx full suite | 311 passed | **337 passed**, 0 failed |
+| codegen ruff / mypy (`src/` + `tests/`, `src/`) | 138 / 55 | **138 / 55** — unchanged |
+| TEAx ruff / mypy | 322 / 119 | **322 / 119** — unchanged |
+| `git diff --check` both repos | clean | **clean** |
+| companion `agentic-mbse` | `5088b41`, empty | **`5088b41`, empty** |
+| TEAx `main` | `fa0e06a` | **`fa0e06a`** — still never committed to, nothing pushed |
+
+**+29 tests: +26 TEAx, +3 codegen.** The one pre-existing failure
+(`test_the_lane_runs_the_real_simkit`) is unchanged and still out of scope.
+
+## A-1 — the runtime fail-closed path, at all three seams · commit `4101325`
+
+`simkit/tests/evaluation/test_headline_vocabulary.py` (NEW, 15 cases). Each of the three seams the
+auditor probed is now pinned **by name**, against the retired `all_satisfied` *and* an invented
+token — the second proving the refusal is a closed-vocabulary rule rather than a special case for
+one string:
+
+| seam | site |
+|---|---|
+| projection | `canonical_headline` |
+| `ObjectivePolicy` dispatch | `_disposition_for(…, _HEADLINE_DISPOSITION, …)` |
+| `DispositionPolicy` dispatch | `_disposition_for(…, _DISPOSITION_BY_HEADLINE, …)` |
+
+Also pinned: the token map is injective; no seam returns a value at all on an unknown token (the
+`.get(token, "satisfied")` failure mode asserted as a property, not just as a raise); and
+`UnknownHeadlineToken` is **not** an `AssessmentFailed`, because a token the runtime cannot map must
+stop the run rather than record a per-case failure that looks healthy in the store.
+
+**A-1 family — the `partial_coverage` opt-in.** `simkit/tests/study/test_partial_coverage_policy.py`
+(NEW, 11 cases). Three ways of *not* opting in — no config, a config without the line, and the line
+written explicitly to `keep-for-boundary` — all reach `keep-for-boundary`. The
+`partial_coverage: feed-strategy` line, and only that line, reaches `feed-strategy`, on the
+identical path `satisfied` takes (objective values present, penalty slot present) rather than a
+third bespoke shape no configuration could explain. Both dispositions persist the full coverage
+counts and the catalog fingerprint into a JSON-serializable assessment; `DispositionPolicy` agrees;
+and a typo in either the key or the value fails closed on `extra="forbid"` and the `Literal`.
+
+## A-2 — invariant 41 over the nested block · commit `4101325`
+
+`test_constraint_evidence_durability.py::test_the_nested_coverage_block_is_unmutable_through_evidence`.
+Asserted at **both** levels of nesting deliberately: a `_freeze` that stopped recursing one level
+down would pass a top-level-only check while leaving `unassessed_reasons` writable — and that
+histogram is the field that says *why* gates went unassessed. Covers write, insert, and delete on
+the block; write and insert on the histogram; and replacement of the block through the report tree
+above it. Ends by asserting nothing actually changed.
+
+## A-3 — invariant 50's carrier, and the unearned checkbox · commit `4101325`
+
+`test_compatibility.py::test_reopening_a_store_across_the_evidence_bump_raises` varies
+**`evidence_schema_version` specifically**, which is what the design asked for and what the
+pre-existing `strategy_config` test could never provide. With two supports the design's reasoning
+implies:
+
+- a same-version control, so the refusal cannot pass merely because reopening never works;
+- `PreparedEvaluator.EVIDENCE_SCHEMA_VERSION == "v2"`, because a store bound to `v1` and an
+  evaluator still stamping `v1` makes the refusal unreachable in practice — which is exactly how an
+  archive-and-begin transition silently becomes a no-op.
+
+**The checkbox at "Spanning both" is corrected in place**, citing the new test by name and recording
+that it was previously ticked against a test varying a different field. The overclaim was the more
+serious half of A-3: a `[x]` on an unbuilt test is what stops the next reader looking.
+
+## A-4 — `indeterminate` end to end, and the precedence pair the item created · commit `d7c1f4a`
+
+Two tiers.
+
+- **Unit:** `test_report_precedence.py` gains `(["indeterminate"], PARTIAL, "indeterminate")` and
+  `(["indeterminate", "satisfied"], PARTIAL, "indeterminate")` — 15 → 17 cases.
+- **Execution:** `test_indeterminate_outranks_partial_coverage_end_to_end` runs
+  `constraint_domain_detached_owner` through the whole chain twice. Its account is partial either
+  way (one live gate, one nothing instantiates); driving the live operand non-finite flips the
+  headline `partial_coverage` → `indeterminate` while `coverage_state` stays `partial`.
+
+**Measured, so the test is not vacuous:** baseline `partial_coverage / partial`; with `inf`,
+`indeterminate / partial / unassessed 1`. Before this item there was no `partial_coverage` for
+`indeterminate` to outrank, which is why the pair had no test at any tier.
+
+## A-5 — the case asserting over an empty tuple · commit `5b70ae9`
+
+Split rather than patched. `test_later_failure_keeps_earlier_work_internal_without_aggregate` now
+carries `division_by_zero` (fails second, one earlier channel) beside `zero_negative_power` (fails
+last, two), and **asserts `earlier_channels` is non-empty** so a future reorder cannot silently
+empty it again. The first-module case becomes its own test asserting the real property — *no*
+evaluation channel present and no aggregate formed — instead of a loop with no iterations.
+
+## A-6 — four stale doc sites, worst first · commit `5b70ae9`
+
+1. **`evaluation/projection.py`** — described a deleted mechanism at the seam this item rebuilt:
+   `expects_report` derived from `concrete_entries`, and "the evaluator's spec-derived default
+   agrees". Both false. Now names `ships_constraint_report` over `usage_records` as the one
+   authority and records that the spec-derived default was *deleted* rather than re-synced, with the
+   reason — "the two must agree" is what a second derivation always has to say.
+2. **`study/policy.py`** — `DispositionPolicy` listed a four-token vocabulary while dispatching on
+   five twelve lines below.
+3. **`excluded_only/models/excl_library.sysml`** — claimed its package emits `not_assessed`; it
+   emits `partial_coverage`, and the doc now says why an excluded asserted gate stays in the
+   denominator. **Verified byte-identical after regeneration** — a `constraint def` doc comment does
+   not reach the generated package, so no seal moved and no fixture needed re-sealing.
+4. **`test_constraint_evidence_durability.py`** — a section header reading "exact `not_assessed`
+   surface" above a test correctly named for and asserting `partial_coverage`.
+
+## What the cure did not change
+
+No production behaviour. Every cure is a test, a docstring, or a doc comment, with two exceptions
+that are neither: the `verification.md` checkbox correction, and the A-5 split, which changes which
+*cases* a parametrization runs. Both suites' pass counts rose by exactly the number of tests added;
+no existing test changed its verdict. Plan phase claims are unaffected, so no checkbox moved — the
+phases' work was done; what was missing was proof of three of its mechanisms, which is what the
+addendum above adds.
+
