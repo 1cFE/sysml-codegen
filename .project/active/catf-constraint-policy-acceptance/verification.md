@@ -415,25 +415,15 @@ modules/constraints/constraintreportaggregatormodule.py
 +    CATALOG_FINGERPRINT = "65083fb7e1350f6862974428c7bf1f6b960bc6b76011583b42d62c7848f33b25"   (snapshot)
 ```
 
-**Cause, chased to source.** `ConstraintCatalog.recomputed_fingerprint`
-(`resolution/models.py:597-622`) hashes the full model dump of `usage_records`, and those rows
-carry `source_file`. The live route records `tests/fixtures/catf_mfe_gated/…`; the snapshot
-route records `root-0/…`. Same graph, same semantics, different paths, different fingerprint —
-and the generated aggregator bakes it in as a runtime coherence check.
+**Filed, with the full analysis, as backlog `[CATALOG-FINGERPRINT-ROUTE-PORTABILITY]`** — cause
+chased to `ConstraintCatalog.recomputed_fingerprint` (`resolution/models.py:597-622`), which
+hashes `usage_records` rows carrying route-relative `source_file` paths; measured fingerprints
+for both fixtures; reproduction on the untouched frozen twin; and the fix direction. That entry
+is the home for the substance; this section keeps only the pointer.
 
-**Ownership: pre-existing, not this item's.** Reproduced on the untouched frozen twin:
-
-```
-catf_mfe_d5 live     CATALOG_FINGERPRINT = 39d02855cd9bfa9adf628af94f6c91d8fddf783d947ad8a6762b5e2aec78027f
-catf_mfe_d5 snapshot CATALOG_FINGERPRINT = beaaa339a11dd229462f22e0ae51e41c6922e0aa1abfb5d605d6f495893c91ca
-```
-
-It does **not** reproduce on `constraint_domain_satisfy_calc_def`, whose model is a single flat
-`model.sysml` — both routes there agree (`9b93a157…`). So the split appears when a model has a
-nested source layout, which is why no existing fixture caught it.
-
-Recorded, not fixed: it contradicts the plan's "all three agree on the instance fingerprint",
-but it is not against a ruled row and not caused by Item 5.
+**Pre-existing, not this item's**, and it contradicts the plan's "all three agree on the
+instance fingerprint" — recorded, not fixed. In-place and relocated snapshot reads agree with
+each other exactly; only the live-versus-snapshot pair diverges.
 
 ### FINDING 6-B — `value` is a reserved name, so the ruled A2 spelling cannot generate
 

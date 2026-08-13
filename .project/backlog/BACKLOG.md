@@ -1085,3 +1085,49 @@ completed rows were removed from this unresolved backlog.
   this entry is for closing the gap, not for detecting it. Until it closes, an inapplicability
   disposition on an inline-predicate usage has to be recorded in PROVENANCE instead of in source
   (the Item 5 workaround that epic Item 9 retires).
+- **[CATF-CRYO-HEATLEAK] The CATF magnet cryogenic heat-leak coefficient makes the authored design
+  point infeasible — P3 `[AGENT]`, unowned.** `MagnetCryogenicLoad`
+  (`library/analyses/thermal_loads.sysml:59`) computes `heat_leak = magnet_volume * 0.05  // MW`.
+  With `magnet_volume = 2334.47 m³` that is **116.72 MW** of static heat leak into a **20 K**
+  magnet system — three to six orders of magnitude above any real cryostat, where static loads run
+  in the kilowatts. It is **69.5%** of the 167.92 MW cryogenic-temperature load, which the
+  refrigeration term then amplifies by `300/(20 × 0.3) = 50×` into
+  **`cooling_power = 8396.054399837172 MW`** — **5.43× the plant's entire gross electric output**
+  (`p_electric_gross = 1546.723690193402 MW`). Net electric power is therefore negative at the
+  authored inputs, and CONSTRAINT-SEMANTICS Item 5's two executable gates both report `violated`
+  there, taking the authored candidate to the study default `reject`.
+  The coefficient reads as W/m³ or kW/m³ written as MW/m³. **Measured, not inferred:** the
+  derivation is re-computed from model source and reproduces the executed value bit-exactly
+  (`.project/active/catf-constraint-policy-acceptance/cryo_derivation.py`). It **reproduces on the
+  untouched `catf_mfe_d5`** (identical `cooling_power`), so it is a property of the CATF model, not
+  of Item 5's derivative — d5 simply executes no gates, which is why it went unseen for the model's
+  entire life.
+  **Follow-on structure, owner-authorized (finding 6-D ruling, 2026-08-13).** Item 5 was ruled to
+  land option (a) — label the authored point *gate-infeasible under the model as authored* and
+  record it as the rejected candidate. Correcting the coefficient is option (b), a **separately
+  authorized follow-on**, and its **first decision is the fix's home**: the derivative's own copy
+  of the library versus the frozen shared library that `catf_mfe_model` and `catf_mfe_d5` also
+  read. That choice changes which fixtures move and whether a frozen twin is touched, so it is made
+  in daylight before any edit.
+- **[CATALOG-FINGERPRINT-ROUTE-PORTABILITY] The constraint catalog fingerprint is not portable
+  across the live and snapshot routes — P3 `[AGENT]`, unowned, pre-existing.**
+  `ConstraintCatalog.recomputed_fingerprint` (`src/sysml_codegen/resolution/models.py:597-622`)
+  hashes the full model dump of `usage_records`, and those rows carry `source_file`. The live
+  route records paths relative to the invocation root (`tests/fixtures/catf_mfe_gated/…`); the
+  snapshot route records `root-0/…`. Same sealed graph, same semantics, different paths,
+  **different fingerprint** — and the generated aggregator bakes it in as
+  `CATALOG_FINGERPRINT`, a runtime coherence check, so two packages generated from one graph via
+  different routes ship different values. It also propagates into the model contract's
+  `semantic_fingerprint`.
+  **Measured** (CONSTRAINT-SEMANTICS Item 5 Phase 6). On `catf_mfe_gated`, live
+  `4edaf85e8c6737e5fb55a7c07cf2beabf8a3112ec5539d1267a3648bda7c022c` versus snapshot
+  `65083fb7e1350f6862974428c7bf1f6b960bc6b76011583b42d62c7848f33b25`; normalising the source-root
+  prefix in every provenance comment leaves this as the **only** substantive difference between
+  the two packages. **Reproduces on the untouched frozen twin `catf_mfe_d5`** (live
+  `39d02855…027f`, snapshot `beaaa339…c91ca`), so it is pre-existing and not caused by Item 5.
+  It does **not** reproduce on `constraint_domain_satisfy_calc_def`, whose model is a single flat
+  `model.sysml` — both routes agree there (`9b93a157…5254`). That is why no existing fixture caught
+  it: the split needs a nested source layout. In-place and relocated snapshot reads agree with each
+  other exactly, so only the live-versus-snapshot pair diverges. Fix direction: make the hashed
+  identity route-independent (relative-to-model-root paths, or exclude `source_file` from the
+  fingerprint and pin it elsewhere).
