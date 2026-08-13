@@ -38,8 +38,11 @@ Prioritized list of epics and features.
 CONSTRAINT-SEMANTICS items (ready; decomposition owner-approved 2026-08-12):
 
 - [ ] Item 1 — Contract and Authoring Policy
-- [ ] Item 2 — Canonical Usage Domain and Catalog Totality
-- [ ] Item 3 — Coverage Report and TEAx Policy
+- [x] Item 2 — Canonical Usage Domain and Catalog Totality *(closed + archived 2026-08-13 →
+      `completed/20260813_constraint-catalog-totality/`)*
+- [x] Item 3 — Coverage Report and TEAx Policy *(closed + archived 2026-08-13 →
+      `completed/20260813_constraint-coverage-policy/`; coordinated TEAx branch
+      `constraint-semantics-item3` complete but **unmerged**)*
 - [ ] Item 4 — Predicate Defect Hardening
 - [ ] Item 5 — CATF Derivative and End-to-End Acceptance
 - [ ] Item 6 — Calculation-Definition Gate Capability Design

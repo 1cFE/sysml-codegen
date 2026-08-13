@@ -89,13 +89,25 @@ Item 3]** unless marked.
       permissive disposition, and what a fully-covered satisfied candidate gets today) happens only
       with an explicit config line. Both paths persist coverage counts and catalog linkage in
       durable case records.
-- [ ] **[INFERRED]** (review L3-3a) The new nested coverage block is proven unmutable from
+- [x] **[INFERRED]** (review L3-3a) The new nested coverage block is proven unmutable from
       downstream code, to the same standard invariant 41 sets for the rest of the report.
-- [ ] Unknown or unmapped report and runtime headline tokens fail closed with a named error — no
+      *(Ticked at close, 2026-08-13: audit A-2 left this open as built-but-unpinned; the cure adds
+      `test_constraint_evidence_durability.py::test_the_nested_coverage_block_is_unmutable_through_evidence`,
+      asserted at both nesting levels. Evidence: `verification.md` §Cure addendum A-2.)*
+- [x] Unknown or unmapped report and runtime headline tokens fail closed with a named error — no
       fallthrough to a satisfied or unconstrained reading, no unnormalized `KeyError`.
-- [ ] **[INHERITED: invariant 50]** (review L3-3b) The durable-store transition is proven, not
+      *(Ticked at close, 2026-08-13: audit A-1's cure pins all three runtime seams by name against
+      both the retired token and an invented one —
+      `simkit/tests/evaluation/test_headline_vocabulary.py`, 15 cases. Evidence: `verification.md`
+      §Cure addendum A-1.)*
+- [x] **[INHERITED: invariant 50]** (review L3-3b) The durable-store transition is proven, not
       assumed: either an equivalence proof over old and new artifacts, or an archived old store with
       a new lineage begun. No stored record is rebound to a new identity silently.
+      *(Ticked at close, 2026-08-13: audit A-3's cure adds
+      `test_compatibility.py::test_reopening_a_store_across_the_evidence_bump_raises`, which varies
+      `evidence_schema_version` specifically, with a same-version control and a check that the
+      evaluator stamps `v2`. The earlier claim cited a pre-existing test varying `strategy_config`
+      and was corrected in place. Evidence: `verification.md` §Cure addendum A-3.)*
 - [x] Cross-repository compatibility tests pass, codegen and TEAx full suites pass, ruff/mypy are
       zero-new against baseline, generated artifacts are reviewed, and `git diff --check` is clean —
       with exact counts recorded in `verification.md`.

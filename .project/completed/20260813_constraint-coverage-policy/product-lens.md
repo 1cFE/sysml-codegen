@@ -451,3 +451,49 @@ untested), A-2 (invariant 41 over the nested block untested) or A-3 (invariant 5
 against named spec criteria rather than product contradictions, so they belong in the audit rubric,
 not in this ledger — recorded here only so a later reader does not read a DISPOSED gate as "nothing
 outstanding."
+
+---
+
+## close — 2026-08-13 — rev `3d32ae4` (codegen, branch `item7-rebuild`) / `5b70ae9` (teax, branch `constraint-semantics-item3`)
+
+No new lens pass was run at close, and none is claimed. This block records where every open
+ledger item was homed, so a later reader does not have to reconstruct it from a DISPOSED gate.
+
+**Gate at close: DISPOSED, no standing BLOCK anywhere in this ledger.** Every stage block was
+re-read at close (spec, design, design_review, design rev 2, audit), not just the latest one. No
+finding is left un-dispositioned, and no earlier `BLOCK` exists that a later `DISPOSED` could have
+papered over.
+
+**Where the open items went:**
+
+- **item3-F2 (DEFERRED — the unreachable `BLOCK`ed-asserted-usage clause).** Carried into the
+  epic's Item 3 section as a traveling residual, owned by Item 1's contract authority
+  (`.project/active/constraint-semantics-contract-amendments/`). It is a surfaced premise
+  conflict, not a resolved one: Item 1 must rule whether the clause is dead text or invariant 1 is
+  narrower than written. It stays surfaced until then, in both directions.
+- **audit-F4 (no product-promise home).** Recorded honestly rather than worked around: this repo
+  has no `.project/product/` index and no `product.sh`, so the coverage-truth promise has no
+  ledger entry and **no id was hand-minted**. The same gap was recorded at Item 2's close. The
+  promise lives as ADR-009 at `[AGENT] (ratified)` plus a concept subsection. File a first-capture
+  entry when the owner next states it in their own words — an owner-originated statement is what
+  the entry needs, and inventing one at close would be exactly the provenance failure the ledger
+  exists to prevent.
+- **design-F2 and the D9 follow-on advisory.** Both were filed-for-close by construction and are
+  now homed in the epic's Item 3 section with named owners (Item 1's contract text; Item 1's
+  companion-side authoring guidance). Neither is a behaviour gap — D4 published its ruling and D9
+  refuses loudly at generation time.
+- **design-F3 (the epic's scope-4 wording).** **Performed at close**, not deferred again. The epic
+  scope-4 text now says the trigger is the absence of an *applicable asserted gate* rather than of
+  executable assertions, and names LC-E10. The contract itself was already right; the epic wording
+  was the looser of the two, and the item followed the contract.
+
+**No retroactive stage entries were written.** This ledger has spec, design, design_review and
+audit blocks; it has no plan-stage or implement-stage block, and one was not backfilled at close.
+A judgment made with the outcome in hand is not stage-time evidence. Same disposition as Item 2's
+R5, and the same reason.
+
+**Three spec success criteria were ticked at close** (A-1, A-2, A-3), each citing the cure test by
+name in the spec text. They were left unchecked by the audit because the mechanisms were built but
+pinned by nothing; the cure pass pinned all three. The two *unearned* checkboxes this item found in
+its own records — the invariant-50 carrier claim and Phase 6's validation box — were corrected in
+place during the cure, with what they had previously claimed written down beside them.

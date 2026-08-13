@@ -1,80 +1,10 @@
 # Current Work
 
-**Last Updated**: 2026-08-13 (CONSTRAINT-SEMANTICS **Item 2 CLOSED and archived**; Item 3 audited **Certify-with-residuals** and active. All named residual cures applied; `pre_pr` with the owner for both)
+**Last Updated**: 2026-08-13 (CONSTRAINT-SEMANTICS **Items 2 and 3 both CLOSED and archived**. All named residual cures applied; Item 3's coordinated TEAx work is complete on an **unmerged** branch; `pre_pr` with the owner for both items)
 
 ---
 
 ## Active Work
-
-### 2026-08-13: CONSTRAINT-SEMANTICS Item 3 — coverage report and TEAx policy (AUDITED: Certify-with-residuals)
-
-`.project/active/constraint-coverage-policy/` — orchestrated run, briefs in `briefs/`. All eight
-phases landed at codegen `cb19011` (branch `item7-rebuild`) with the coordinated TEAx branch
-`constraint-semantics-item3` at `e0c7e48`, two commits off pinned `main` `fa0e06a`. **Nothing is
-pushed; TEAx `main` was never committed to; companion untouched at `5088b41`.**
-
-The load-bearing design resolution held all the way through: **coverage is a second axis, not a slot
-in the headline** — the headline stays the single precedence-ordered token, while the coverage
-account is always present and always reaches the durable case record, so a `violation` report still
-says how much was checked.
-
-**Audit `audit.md` returned Certify-with-residuals.** Every headline claim reproduced independently:
-codegen 2047 passed / 34 skipped / 1 known pre-existing failure with zero license-skip lines, TEAx
-311 / 0, all four lint counters exact, zero baseline byte churn. Both regenerated-fixture
-byte-reproducibility claims were re-derived by regenerating from source and comparing executable
-fingerprints, and one ledger account was hand-derived from `.sysml` to confirm the B1 mitigation is
-source-derived rather than transcribed.
-
-**The residuals are one shape: four new refusal and opt-in paths are implemented correctly and
-pinned by no test.** Each mechanism was verified by direct probe at audit time, so these are gaps in
-proof, not defects — but three are named spec criteria left unchecked:
-
-- **A-1 (MEDIUM)** — `UnknownHeadlineToken` is referenced by no test in either repo. All three
-  runtime seams refuse by name under probe; only the report-side `Literal` is pinned. The
-  `partial_coverage → feed-strategy` opt-in path is untested in the same family.
-- **A-2 (MEDIUM)** — invariant 41 over the nested coverage block: deep-freeze works, no test.
-- **A-3 (MEDIUM)** — invariant 50's carrier is claimed `[x]` in `verification.md:351`, but the only
-  `IncompatibleStore` test predates the item and varies `strategy_config`, not
-  `evidence_schema_version` — the exact substitution the design warned would "silently stop proving
-  anything." Fix the claim even if the test waits.
-- **A-4/A-5/A-6 (LOW)** — `indeterminate` never pinned end to end or against a partial account; one
-  regenerated-fixture parametrized case went vacuous (`earlier_channels = ()`); four doc sites still
-  teach the retired rule, the worst being `projection.py:44-47`, which describes a deleted mechanism.
-
-All four judgment calls resolved in the implementer's favour, verified rather than accepted: the
-`f1_arithmetic` script deletion is correct on the merits (decision 2's premise was genuinely false,
-and the replacement is byte-reproducible), `excluded_only`'s `not_assessed → partial_coverage` is
-**mandated** by LC-E12's owner-ratified amendment and not a widening, the `Free_Plant → freePlant`
-drift annotations are complete and honest, and `test_the_lane_runs_the_real_simkit` is a genuinely
-pre-existing collection-order artifact (`tests/execution` alone is 78/78 green; Item 3 touched
-neither `tests/runtime/` nor the guard).
-
-Product-lens gate **DISPOSED** at every stage, no standing BLOCK.
-
-**All six residuals CURED same night** (codegen `0f6f022`/`3d32ae4`, TEAx `4101325`/`5b70ae9`,
-+29 tests): A-1 all three seams pinned by name against the retired token AND an invented one,
-opt-in pinned 11 ways incl. typo-fails-closed; A-2 deep-freeze pinned at both nesting levels;
-A-3 the carrier test now varies `evidence_schema_version` specifically and the `[x]` cites it —
-plus a second unearned-checkbox instance the cure pass found itself (Phase 6's over-ticked
-validation box) corrected the same way; A-4 indeterminate pinned end to end over a partial
-account; A-5 vacuous case split and guarded non-empty; A-6 four stale doc sites corrected
-(`projection.py:44-47` first). **Final gates: codegen 2050/34/zero-skip; TEAx 337/0; lint
-counters unchanged; companion untouched; TEAx `main` still `fa0e06a`.** Orchestrator
-spot-verification: the four new TEAx test files run green standalone (35 tests). The cures are
-pinning tests + record corrections over audit-probe-verified mechanisms, so no third audit
-round was run — verification recorded here per pipeline convention.
-
-**Hand-offs and merge notes:** TEAx checkout must STAY on `constraint-semantics-item3` until
-merge — the codegen execution lane imports simkit from that working tree (D8's checkout
-inversion). Publication order: codegen first, TEAx after. The five TEAx fixture packages were
-regenerated (PD5 replace ruling); `sealed_package`'s model is codegen's `wi014_toy` (adopted,
-recorded in GENERATION.md); `f1_arithmetic`'s pinned generation script was DELETED (it called
-modules the cutover removed — could not run at any current revision) and replaced by
-`models/toy_plant.sysml` + the ordinary route, byte-reproducible. `Free_Plant → freePlant`
-entry-key drift (fa0e06a→HEAD, ADR-001) accepted and annotated at every site — not an Item 3
-semantic change. **Close and pre_pr are left to the owner** (both Items 2 and 3).
-
----
 
 ### 2026-08-12: CONSTRAINT-SEMANTICS Item 1 — contract and authoring policy (AUDITED: Certify-with-residuals)
 
@@ -497,6 +427,20 @@ The superseded PR-wave epic is archived alongside
 - 41/41 register: `.project/completed/20260720_constraint-lifecycle-composed-proof/evidence-coordinate-register.md`
 - Ratified authority (unchanged home): `.project/concepts/constraint-execution-authoritative-lifecycle-contract.md`
 
+### Unmerged branch: TEAx `constraint-semantics-item3` (CONSTRAINT-SEMANTICS Item 3, closed 2026-08-13)
+
+`/home/reid/1cfe/teax`, branch `constraint-semantics-item3` at `5b70ae9` — four commits off pinned
+`main` `fa0e06a`, complete, **not merged**, nothing pushed. Item 3 closed in codegen bookkeeping
+with this branch as a named deliverable; merge sequencing belongs to `pre_pr` and the owner.
+
+- **Do not switch the TEAx checkout off this branch until merge.** codegen's execution lane imports
+  simkit from that working tree (D8's checkout inversion), so switching breaks codegen's own suite.
+- **Publication order is codegen first, TEAx second.** The reverse makes TEAx accept a runtime
+  contract no generator produces.
+- Item 2's hand-off is **discharged on this branch**: the accepted schema sets were re-vendored —
+  replaced, not extended — so a pre-item package fails at seal verification before any report is
+  read.
+
 ### Unmerged branches awaiting owner (both items CLOSED 2026-07-24, owner-directed)
 
 - **`docs-lifecycle-sync`** — docs + `.project/` only. Item archived to
@@ -560,10 +504,52 @@ surfaces as matrix-row candidates.
 - `ruff format --check src` fails on 22 files and `mypy src` has 72 errors — accepted baselines;
   the maintained gates are `ruff check` clean + mypy-zero-new.
 - Two `-O` failures in `test_expression_compiler` are pre-existing (assert-stripped).
+- **`tests/runtime/…::test_the_lane_runs_the_real_simkit` fails on a whole-set run and passes in
+  isolation** — a collection-order artifact, reproduced at the parent commit and therefore
+  pre-existing. Surfaced (and re-confirmed) by CONSTRAINT-SEMANTICS Item 3, which touched neither
+  `tests/runtime/` nor the guard; `tests/execution` alone is green. Recorded here so it is not
+  rediscovered as a regression. **Still needs an owner** — no item has claimed it.
+- The two known stale-baseline classes (`deep_cross_scope`, `plant_values`) remain pre-existing,
+  untouched, and still need an owner.
 
 ---
 
 ## Recently Completed
+
+### 2026-08-13: CONSTRAINT-SEMANTICS Item 3 — Coverage Report and TEAx Policy (audited + cured + closed)
+- **A generated report can no longer claim more coverage than was assessed, and TEAx can no longer
+  read silence as freedom.** Before this item, two-of-nine assessed read `all_satisfied`, an
+  excluded-only model emitted no report at all, and TEAx labelled such a package `unconstrained` —
+  the same disposition a genuinely constraint-free model gets. Now every report carries a coverage
+  account derived in one direction from the sealed catalog, the vocabulary has a `partial_coverage`
+  state in both repos, and a constraint-bearing-but-unassessed package is distinguishable from a
+  constraint-free one at the study-policy seam.
+- **The load-bearing design resolution held all the way through: coverage is a second axis, not a
+  slot in the headline.** The headline stays one precedence-ordered token (violation →
+  indeterminate → full satisfaction → partial coverage → not assessed) while the coverage account
+  is always present and always reaches the durable case record — so a `violation` report still says
+  how much was checked. Partial coverage defaults to **keep-for-boundary**; `feed-strategy` needs an
+  explicit, fingerprint-bearing config line, and a typo in either the key or the value fails closed.
+- Audited **Certify-with-residuals**; **all six residuals (A-1..A-6) cured the same night** with
+  **+29 pinning tests** (+26 TEAx, +3 codegen). Every residual was the same shape — a mechanism
+  built correctly that no test pinned — so no cure fixed a defect and no production behaviour
+  changed. All twelve spec success criteria are now verified and marked. Final gates: codegen
+  **2050 passed / 34 skipped / zero licence-skip**, TEAx **337 / 0**, lint counters unchanged in
+  both, **zero baseline byte churn**, companion untouched at `5088b41`. Nothing pushed; no `main`
+  touched anywhere — **`pre_pr` remains with the owner.**
+- **The coordinated TEAx work is a named unmerged deliverable**, branch `constraint-semantics-item3`
+  at `5b70ae9`, four commits off pinned `main` `fa0e06a`. Keep the TEAx checkout on that branch
+  until merge — codegen's execution lane imports simkit from its working tree. Publication order is
+  codegen first. Item 2's re-vendor hand-off is discharged on that branch (accepted sets replaced,
+  not extended). Details in §Unmerged branch above.
+- **Two unearned checkboxes were found and corrected in this item's own records** — one ticked
+  against a test varying the wrong field, one over an unrun validation step. Both were caught by
+  looking, not by a failure, which is the point: an unearned `[x]` is what stops the next reader
+  looking.
+- Archived to `.project/completed/20260813_constraint-coverage-policy/`. Traveling residuals
+  (design-F2's Appendix C cell, D9's companion advisory, item3-F2's unreachable `BLOCK` clause) are
+  homed in the epic's Item 3 section with named owners; the epic's scope-4 wording correction was
+  **performed** at close.
 
 ### 2026-08-13: CONSTRAINT-SEMANTICS Item 2 — Canonical Usage Domain and Catalog Totality (audited + closed)
 - **Every authored constraint usage now has exactly one visible disposition, minted before

@@ -4,6 +4,138 @@ Historical record of completed work.
 
 ---
 
+## [2026-08-13] - [CONSTRAINT-SEMANTICS Item 3] Coverage Report and TEAx Policy
+
+**Type**: Item (orchestrated run; audited Certify-with-residuals → all six residuals cured)
+**Duration**: spec 2026-08-12 → closed 2026-08-13
+**Archived to**: `.project/completed/20260813_constraint-coverage-policy/`
+**Commits**: codegen item tip `3d32ae4` (branch `item7-rebuild`, unpushed) / TEAx branch
+`constraint-semantics-item3` tip `5b70ae9` in `/home/reid/1cfe/teax` (**unmerged**, four commits
+off pinned `main` `fa0e06a`) / companion untouched at `5088b41`
+
+### Summary
+A generated package could report `all_satisfied` while most of the model's authored feasibility
+checks were never assessed, and TEAx could label such a package `unconstrained` — the same
+disposition a genuinely constraint-free model gets. The headline was a not-failed claim, not a
+coverage claim: it read violation → indeterminate → `all_satisfied` (any non-empty result list) →
+`not_assessed`, and never consulted exclusions. There was no state between "all good" and "nothing
+assessed", and an excluded-only model emitted no report at all, because generation returned before
+minting the aggregator when nothing was eligible. A design search therefore could not tell "this
+candidate passed its physics gates" from "nobody checked."
+
+This item makes the report say exactly how much applicable asserted feasibility was assessed, using
+Item 2's canonical catalog as the one authority it derives from. The report now carries a coverage
+account — authored total, assessed count, excluded and non-reaching counts, an unassessed-reason
+histogram, and a coverage state — computed in one direction from the sealed catalog, with identity
+enforced at construction on both the producer dataclass and the generated validator. The headline
+vocabulary gains `partial_coverage` in both repos, `full_satisfaction` replaces `all_satisfied` and
+is impossible unless `unassessed_gate_count == 0 and assessed_gate_count > 0`, and a constraint-
+bearing model with nothing eligible now generates a zero-input aggregator instead of silence. A
+zero-usage model stays report-free and byte-identical.
+
+The load-bearing design resolution was to keep **coverage as a second axis rather than a slot in the
+headline**. The headline stays a single precedence-ordered token; the account is always present and
+always reaches the durable case record, so a `violation` report still says how much was checked. On
+the TEAx side the two vocabularies are split (`ConstraintStatus` / `HeadlineResponse`), all three
+former bare subscripts fail closed by name via `UnknownHeadlineToken`, `partial_coverage` defaults
+to **keep-for-boundary**, and `feed-strategy` requires an explicit, fingerprint-bearing config line
+whose key or value typo fails closed. `ships_constraint_report` became the single consumer
+authority and the spec-derived default was **deleted** rather than re-synced — a second derivation
+can only ever say "the two must agree."
+
+### Deliverables
+- `spec.md`, `spec-review.md`, `design.md` rev 2, `design-review.md`, `plan.md` (8 phases with
+  completion notes and deviations), `verification.md` (+ dated cure addendum), `audit.md`,
+  `product-lens.md` (spec / design / design_review / audit / close blocks), `briefs/`,
+  `expected-coverage.md`, `red-window.txt`.
+- Codegen: `coverage_account()`, the nested coverage block, five headline tokens, the zero-input
+  aggregator with its channel asserted as a real exit point, four named fail-before-mutate refusals,
+  `RUNTIME_CONTRACT_VERSION` `1.x`→`2.0.0`, `has_executable_content` deleted.
+- TEAx: split vocabularies, `UnknownHeadlineToken` at all three seams, `partial_coverage` in both
+  dispatch tables, coverage persisted into `assessment_json` and onto `CaseView`, evidence schema
+  `v1`→`v2`, accepted schema sets re-vendored (**replaced, not extended**), all five committed
+  fixture packages regenerated.
+- `expected-coverage.md` — 13 expected accounts, hand-derived from `.sysml` source **before** the
+  code existed, plus `test_coverage_ledger_agreement.py` which parses the ledger rather than
+  transcribing it.
+- Six states pinned twice, once in each vocabulary, each by a test no other state satisfies.
+- Gates: codegen **2050 passed / 34 skipped / zero licence-skip**, TEAx **337 / 0**, ruff and mypy
+  counters unchanged in both repos, `git diff --check` clean in both, **zero baseline byte churn**.
+
+### Deviations, all judged ACCEPTABLE at audit
+- **PD5 was a probe-and-stop, and the orchestrator ruled replace-and-regenerate.** The design parked
+  the fixture-package question rather than guessing it; the probe measured the real blast radius,
+  and the ruling regenerated all five committed TEAx fixture packages instead of hand-patching them.
+- **`f1_arithmetic`'s pinned generation script was deleted, not repaired — its premise was false.**
+  It called modules the cutover recovery removed, so it could not run at any current revision. The
+  replacement is `models/toy_plant.sysml` driven through the ordinary public route,
+  byte-reproducible, with unchanged case values. The audit endorsed the swap on the merits: it
+  removes a bespoke exemption rather than creating one.
+- **`sealed_package`'s model was regenerated from codegen's `wi014_toy`** (adopted, recorded in
+  TEAx `GENERATION.md`).
+- **The `Free_Plant → freePlant` entry-key drift is pre-existing** (`fa0e06a`→HEAD, ADR-001),
+  surfaced by regeneration rather than caused by it — accepted and annotated at every site, not an
+  Item 3 semantic change.
+- **`excluded_only` moved `not_assessed` → `partial_coverage`, which LC-E12's owner-ratified
+  amendment mandates.** An excluded asserted gate stays in the denominator, so a package with one is
+  partially covered, not unassessed. This is a required correction, not a widening.
+
+### Carried forward (not closed by this item)
+- **The TEAx branch `constraint-semantics-item3` (`5b70ae9`) is complete but unmerged.** Keep the
+  TEAx checkout on it until merge — codegen's execution lane imports simkit from that working tree.
+  **Publication order: codegen first, TEAx second**; the reverse makes TEAx accept a runtime
+  contract no generator produces. Item 2's re-vendor hand-off is **discharged on this branch**; what
+  remains is merge sequencing, owned by `pre_pr` and the owner.
+- **design-F2** — Appendix C's vacuous-gate cell over-permits in the degenerate case and wants "…and
+  at least one gate remains". D4 published a ruling with its reasoning, so behaviour is settled;
+  the contract text is not. Owner: Item 1.
+- **D9 follow-on** — the authoring-time advisory for the eligible-plus-`@inapplicable:` combination
+  belongs in companion authoring guidance. D9 already refuses the combination loudly at generation
+  time. Owner: Item 1.
+- **item3-F2 (surfaced, not resolved)** — the inherited "a `BLOCK`ed asserted usage stays in the
+  denominator" clause is unreachable under invariant 1 as amended, since a `BLOCK` on an asserted
+  usage halts the model and no report exists to carry it. Item 3 carried the clause as one row of a
+  total map (a totality claim, not a reachability claim) and correctly did not write the unbuildable
+  fixture. Item 1 must rule whether the clause is dead text or invariant 1 is narrower than written.
+- **The epic's scope-4 wording correction was performed at close**, not deferred again: the trigger
+  is the absence of an *applicable asserted gate*, not of executable assertions (LC-E10).
+
+### Known issues (pre-existing, not caused by this item)
+- **`test_the_lane_runs_the_real_simkit` fails on a whole-set run and passes in isolation** — a
+  collection-order artifact, reproduced at the parent commit. Item 3 touched neither
+  `tests/runtime/` nor the guard, and `tests/execution` alone is green. Recorded here and in
+  `CURRENT_WORK.md` so it is not rediscovered as a regression. **Still needs an owner.**
+- The two stale-baseline classes `deep_cross_scope` and `plant_values` remain untouched and
+  unowned.
+
+### Lessons Learned
+- **An unearned checkbox is worse than an unchecked one, because it stops the next reader looking.**
+  Two `[x]`s in this item claimed evidence they did not have: one cited a pre-existing test that
+  varied `strategy_config` where invariant 50 needed `evidence_schema_version` — the exact
+  substitution the design had warned would "pass today and silently stop proving anything" — and one
+  ticked a validation step that had not run. Neither was caught by a failing test. Both were caught
+  by someone reading the claim against the artifact it cited. The cure corrected both in place and
+  wrote down what they had previously claimed.
+- **All six audit residuals were the same shape: a mechanism built correctly that no test pinned.**
+  The auditor verified each by direct probe, so nothing was broken — but a probe is not a regression
+  test, and any of the six could have been removed by a refactor and gone green. Building it right
+  and pinning it are two separate pieces of work, and the second is the one that survives you.
+- **A stopped probe beat a guess.** PD5's design parked the fixture-package question instead of
+  assuming an answer, and the measurement it produced is what made replace-and-regenerate an
+  obviously right call rather than a defensible one.
+- **A pinned script whose premise has expired is not an asset.** `f1_arithmetic`'s generator had
+  been unable to run since the cutover deleted the modules it called. Deleting it for an authored
+  model on the public route removed a bespoke exemption; keeping it would have preserved the *look*
+  of reproducibility with none of the substance.
+- **The gap noted at Item 2's close is unchanged:** no `.project/adr/` or `.project/product/` ledger
+  and no `adr.sh`/`product.sh` in this repo. The audit's own lens pass flagged that the
+  coverage-truth promise has no product-promise home (audit-F4). No ids were hand-minted, and no
+  entry was invented — the promise needs an owner-originated statement, and manufacturing one at
+  close would be the provenance failure the ledger exists to prevent. Item 3's decisions live in its
+  archived `design.md` (D1–D9) and in ADR-009.
+
+---
+
 ## [2026-08-13] - [CONSTRAINT-SEMANTICS Item 2] Canonical Usage Domain and Catalog Totality
 
 **Type**: Item (orchestrated run; audited Needs-work → cured → re-audited Certify-with-residuals)
