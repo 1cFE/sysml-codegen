@@ -411,3 +411,75 @@ carrier from the shipped catalog does not fail generation, leaving spec success 
 for 56 of the 65 members). Recommended: A1, audit-F1 and audit-F2 closed in this item before close;
 audit-F3 fixed or its exemption written down; audit-F4 filed as the oracle's fourth rule; audit-F5
 a one-line correction. Full probe evidence in `audit.md`.
+
+---
+
+## close — 2026-08-13 — rev 546ac20 (clean tree; item tip `35ee82f`, companion `bc69f04`)
+
+Epic: CONSTRAINT-SEMANTICS (Item 2)
+Epic gate: CLEAR — carried unchanged from the audit-stage entry; grade preserved.
+
+This block is a **process record**, not a new lens pass. It exists to do two things the
+append-only ledger requires and no earlier block could do: disposition the ledger's own coverage
+gap, and record — by citation — how the audit-stage block's open conditions were resolved.
+
+### Ledger coverage gap — audit finding A7 / audit residual R5: RECORDED, not backfilled
+
+The ledger holds **spec**, **design** (covering `design-review`), **audit**, and this **close**
+block. It has **no plan-stage and no implement-stage entry**. The lens should have run at both.
+
+**Disposition: recorded as a gap; no retroactive entries written.** A lens pass is a judgment made
+against the tree as it stood at that stage, by an agent that had not yet seen the outcome. Writing
+one now, with the audit and its cures already in hand, would produce a record that looks like
+stage-time evidence and is not — the exact record-accuracy failure the audit's R2/R4 residuals were
+raised about. The honest artifact is this note.
+
+**What the gap did and did not cost.** The plan- and implement-stage passes would have judged the
+same point against the same WORK the audit then judged in full, with probes, at both `ba756fb` and
+`77b4e3c`. So the point was checked — later than it should have been, and once rather than three
+times. What was genuinely lost is *earlier* detection: the audit-stage pass fired the ledger's
+recorded falsifier (audit-F1, a shipped doc still teaching pre-landing behaviour) and two
+structural smells, all three of which a plan- or implement-stage pass could plausibly have caught
+before they reached an auditor.
+
+**Not carried forward as an item obligation.** This is a process observation about how this run was
+staffed, not a defect in the landed work.
+
+### Audit-stage open conditions — resolved by citation
+
+The audit-stage block above graded **DISPOSED** but attached three conditions. Recording their
+resolution here, per the ledger's resolution-by-citation rule (a later block must cite the finding
+and record the disposition; the re-audit lives in `audit.md` and does not clear a ledger condition
+on its own):
+
+- **audit-F1 — the recorded falsifier fired** ("tests pass while shipped documentation still
+  describes the pre-landing behaviour", against the **[OWNER]**-graded sequencing rule at
+  `rulings-20260812.md:19-21`). **CLOSED.** Cured as `audit.md` **A2**; the re-audit reproduced the
+  original probe against the cured tree and it does not reproduce (`audit.md`, per-finding cure
+  verdicts, A2 — CURED). The missed file was reference doc 28; its banner now says which parts are
+  superseded and where the live text is.
+- **audit-F2 — smell #2** (a special category exempts a case whose user-visible meaning is
+  unchanged; a malformed `@inapplicable:` marker erased all 65 carriers). **RESOLVED** by the A3
+  cure, which makes the failure a **per-usage** disposition instead of a model-wide raise
+  (`audit.md`, A3 — CURED, family-level).
+- **audit-F3 — smell #4** (correctness depends on downstream knowledge of an internal
+  representation; three generation seams read `constraint_catalog is not None` as a proxy).
+  **RESOLVED** by the A4 cure's single named rule, `ships_constraint_machinery(graph)`
+  (`audit.md`, A4 — CURED).
+
+Consequence: the condition that "an unresolved fired smell forbids Certify" no longer applies. The
+re-audit verdict is **Certify-with-residuals**.
+
+### Gate
+
+**DISPOSED** — nothing in the lens blocks close. The audit-stage conditions are closed above by
+citation; the one open lens item, the missing plan/implement entries, is dispositioned as a
+recorded process gap rather than a defect in the work.
+
+**One item the owner should read, surfaced here because close is where it lands** (also carried in
+the epic's Item 2 section): the item spec now carries an **[AGENT]** severity exception beside an
+**[INHERITED]** line (`spec.md:184-194`). A **malformed `@inapplicable:` directive** halts at
+`error` grade **whatever the usage's form**, including a plain one — which overrides the inherited
+"plain and out-of-scope forms are never errors" rule for that one cause. The umbrella spec is
+untouched and its Q3 form-caused severity rule is unchanged. The exception was accepted at audit
+(A3 / residual R2) and orchestrator-ratified; it has not been ruled on by the owner.

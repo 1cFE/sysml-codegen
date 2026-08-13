@@ -1,6 +1,6 @@
 # Current Work
 
-**Last Updated**: 2026-08-13 (CONSTRAINT-SEMANTICS Items 2 AND 3 both audited **Certify-with-residuals**, all named residual cures applied; close/pre_pr with the owner)
+**Last Updated**: 2026-08-13 (CONSTRAINT-SEMANTICS **Item 2 CLOSED and archived**; Item 3 audited **Certify-with-residuals** and active. All named residual cures applied; `pre_pr` with the owner for both)
 
 ---
 
@@ -75,122 +75,6 @@ entry-key drift (fa0e06a→HEAD, ADR-001) accepted and annotated at every site �
 semantic change. **Close and pre_pr are left to the owner** (both Items 2 and 3).
 
 ---
-
-### 2026-08-12: CONSTRAINT-SEMANTICS Item 2 — canonical usage domain and catalog totality (AUDITED: Certify-with-residuals)
-
-**Audit `audit.md` returned Needs-work** at codegen `ba756fb`. Its summary is worth keeping:
-the core is "genuinely done, and the hard part is done well" — the circularity risk is closed
-by deleting the second inventory rather than syncing it, and every headline number reproduced
-exactly. The findings were gaps at the edges of a correct design.
-
-**A1–A4 cured 2026-08-12, one commit per family, tip `29bb41a`.** Companion untouched at
-`bc69f04` — no finding named it.
-
-- **A1 (HIGH)** — removing a catalog row with `occurrence_count == 0` generated silently: 56 of
-  `catf_mfe_d5`'s 65 members, the population the item exists to make visible. Two guards, because
-  there are two threats: the catalog's **seal** is verified in the preflight (covers tampering on
-  every route, including the internal bare-`ComputationGraph` seam), and **`ExactPipelineContext`**
-  compares the rendered rows against the domain it still holds (covers a projection defect, and
-  names the missing usage). Design invariant 4 is now a check, not only a producer obligation.
-- **A2 (HIGH)** — doc 28 read as current while teaching pre-landing behaviour and naming this item
-  as its future fix; now banner-retired (lowering half historical, catalog half superseded) and
-  added to CLAUDE.md's retired list. **A6** rode along: "Four preflight checks" → five.
-- **A3 (MEDIUM)** — an unreadable `@inapplicable:` marker raised out of the mint, taking the whole
-  domain down and violating design invariant 5. Now a per-usage error-grade disposition that the
-  gate converts to a named halt. **A5** closed free: the oracle gained the fourth rule (every
-  exempt fixture must actually refuse), because the cure changed why two of them refuse.
-- **A4 (MEDIUM)** — `constraint_catalog is not None` had changed meaning under three generation
-  seams. One rule now, `ships_constraint_machinery`: executable machinery ships **iff** there is at
-  least one concrete entry. **Contract invariant 32's zero-input `not_assessed` aggregator is Item
-  3's deliberate change and supersedes this rule; Item 2 does not build it early.**
-- **A7** (no plan/implement-stage product-lens entry) is a process record with nothing in the tree
-  to change — left for `/_my_close`.
-
-**Re-audit (same day): Certify-with-residuals** — the auditor re-ran every original probe plus
-harder cases (including a reseal-defeating projection defect: both public routes refuse, naming
-the member by QN + `declaration_id`). All four findings CURED at family level. Two
-record-residuals corrected immediately (`014597b`, `35ee82f`): **R4** — the mypy +1 was a lost
-type narrowing at `cli/__init__.py:409`, not the addendum's claim; fixed (mypy back to 55) and
-the attribution corrected. **R2** — the accepted severity carve-out (a malformed
-`@inapplicable:` marker is a *directive* defect and halts for any form) is now written beside
-the inherited severity line it contradicts, `[AGENT]` provenance, **owner should see it**
-(spec.md, Dispositions); the confirmation step found the plain-form case had NO pinning test —
-now committed (`constraint_domain_inapplicable_plain_form`). Traveling residuals: **R1**
-(bare-`ComputationGraph` internal seam is seal-only; one production caller), **R3**
-(calc-def-only shape had no pre-item baseline), **R5** (lens-ledger gaps at plan/implement —
-for close).
-
-**Final gates:** codegen **1860 passed / 34 skipped / 65 deselected / 0 failed**, zero
-licence-skip lines; `ruff check src` **12**, `mypy src` **55** (both at/below baseline); oracle
-**113 nodes**; `git diff --check` clean; both trees clean; companion untouched at `bc69f04`.
-
-**This was an orchestrated run** (owner-invoked `/_my_orchestrate`, check-ins waived): stage
-briefs in `.project/active/constraint-catalog-totality/briefs/`, one commit per stage/decision;
-full audit trail in `audit.md` (per-finding cure verdicts) and `verification.md` (dated cure
-addendum). **Close and pre_pr are left to the owner.** Next per epic: Item 3 orchestration
-(owner-directed same night, same session); Item 4 can run in parallel; Item 5's owner
-checkpoint remains open.
-
----
-
-### 2026-08-12: Item 2 — the implemented state (pre-audit record, still accurate on substance)
-
-**All eight phases landed** (plus companion Phase 4C). Evidence:
-`.project/active/constraint-catalog-totality/verification.md`. Codegen tip `7b6225e`,
-companion tip `bc69f04` in `/home/reid/1cfe/agentic-mbse-item7-rebuild`.
-
-**The headline.** `catf_mfe_d5` authors 65 constraint usages; the domain and the shipped catalog
-now hold all 65, where the pre-item catalog held 9 `excluded_records` and an **empty**
-`usage_records` list. The record is minted before owner-to-scope expansion, so totality is a
-property of where records are born rather than a check bolted on after the population was already
-truncated.
-
-**Read this before citing the design or plan: "9 eligible" is wrong.** Every one of
-`catf_mfe_d5`'s 65 usages is a bare `constraint`, so the 9 that expand grade `excluded` /
-`unassessed_form` and the fixture has **zero** eligible constraints. The 9 was always the count of
-visible dispositions. Correct phrasing: **65 members, 9 reaching, 0 eligible.**
-
-**What Items 3, 5, and 6 may now build against:**
-- `InstanceGraph.constraint_usages: dict[DeclarationId, ConstraintUsageRecord]` — one record per
-  authored usage with exactly one `UsageDisposition` (kind / reason / derived severity / detail),
-  `occurrence_count`, and `inapplicability`. Every input Item 3's feasibility denominator needs is
-  present; Item 3 adds no usage-tier field.
-- `catalog.usage_records` is the whole domain, keyed by `declaration_id`, as are the entry and
-  excluded rows. `CATALOG_SCHEMA_VERSION` `3.0.0`. Old set = filter `disposition_kind == "eligible"`.
-- `instance-graph/v3` carries the tier; no v2 reader kept; all 21 snapshot fixtures recaptured once.
-- The oracle: 42 reviewed expected-population files + a license-free source scanner, 93 nodes.
-
-**Schema/pin moves:** `instance-graph/v2`→`v3`, `CATALOG_SCHEMA_VERSION` `2.0.0`→`3.0.0`,
-companion `constraint-facts/v2`→`v3` (new `vacuous_asserted_gate` ADVISORY kind) with codegen's
-`_upstream_pins.py` moved in the same window.
-
-**Two environment/process facts worth keeping:**
-- **`uv run` is the wrong interpreter for this item.** It resolves `agentic_mbse` to
-  `/home/reid/1cfe/agentic-mbse` (the main checkout) and the suite does not collect under it. Use
-  `/home/reid/1cfe/item7-rebuild-venv/bin/python -m pytest`, whose editable install reads the
-  companion **worktree**. This is the recorded F2 class recurring.
-- Phase 5 had to be pulled forward into the Phase 3 landing (the plan's own contingency): the new
-  join check refuses a snapshot-loaded graph with an empty domain. The suite then carried a frozen,
-  enumerated 61-node refusal list as its gate until the Phase 8 recapture discharged it to zero.
-
-**Open, deliberately** (all in `verification.md`): an `inline`-form vacuous gate cannot carry
-`@inapplicable:` because SysIDE drops the doc comment — guarded by a source-vs-domain marker test
-rather than hidden; invariant 5's `classification_incomplete` has no constructible corpus trigger
-at this upstream; the invariant-9 residual (typed-but-uninstantiated owner gets a disposition and
-no advisory) is accepted by design and pinned from both sides. **TEAx must re-vendor
-`ACCEPTED_CATALOG_SCHEMA_VERSIONS` with `3.0.0`** — filed as a hand-off in the epic; until then
-TEAx fails closed on newly generated packages, which is the intended direction.
-
-**Since audited** — see the entry above for the verdict and cures. Nothing pushed; `main` untouched in both repos.
-
-### 2026-08-12: CONSTRAINT-SEMANTICS Item 2 — spec/design/plan (superseded by the entry above)
-
-Spec at `.project/active/constraint-catalog-totality/spec.md`; product-lens gate DISPOSED
-(spec-F1..spec-F5, none blocking). Spec review returned **Revise**; all eleven findings resolved
-in-place, resolutions recorded per finding ID in `spec-review.md`. The substantive change: form
-classification is now anchored on the exact route's classifier (`elaborate.py:1119-1137`), not the
-companion repo's legacy pass, and the named `satisfy` exclusion is recorded as new work rather than
-preserved behavior. Next: `/_my_design`.
 
 ### 2026-08-12: CONSTRAINT-SEMANTICS Item 1 — contract and authoring policy (AUDITED: Certify-with-residuals)
 
@@ -680,6 +564,41 @@ surfaces as matrix-row candidates.
 ---
 
 ## Recently Completed
+
+### 2026-08-13: CONSTRAINT-SEMANTICS Item 2 — Canonical Usage Domain and Catalog Totality (audited + closed)
+- **Every authored constraint usage now has exactly one visible disposition, minted before
+  occurrence expansion.** `catf_mfe_d5` was 65 authored usages → 9 carriers, with 56 simply
+  *absent*; it is now **65 members, 9 reaching, 0 eligible** (the "9 eligible" premise the spec
+  inherited was wrong — all 65 are bare `constraint`, so the 9 that expand grade
+  `excluded`/`unassessed_form`). The proof is independent of the thing it checks: the
+  `collect_constraint_manifest` sweep was **deleted** rather than kept in sync, and the oracle is 42
+  reviewed expected-population files plus a licence-free `.sysml` scanner sharing no code, adapter,
+  or parse with the elaborator.
+- **What Items 3, 5, 6 build against** (unchanged by close):
+  `InstanceGraph.constraint_usages: dict[DeclarationId, ConstraintUsageRecord]`;
+  `catalog.usage_records` is the whole domain keyed by `declaration_id`; schema pins moved
+  `instance-graph/v2`→`v3`, `CATALOG_SCHEMA_VERSION` `2.0.0`→`3.0.0`, companion
+  `constraint-facts/v2`→`v3`; all 21 snapshot-bearing fixtures recaptured once at the final schema.
+  A consumer wanting the old narrower set filters `disposition_kind == "eligible"`.
+  **TEAx must still re-vendor `ACCEPTED_CATALOG_SCHEMA_VERSIONS` with `3.0.0`** — hand-off filed in
+  the epic; until then TEAx fails closed on newly generated packages, which is the intended
+  direction.
+- Audited **Certify-with-residuals** after a Needs-work first pass; A1–A4 cured one commit per
+  family and re-probed at `77b4e3c`, R2/R4 record corrections landed (`014597b`, `35ee82f`). Final
+  gates: codegen **1860 passed / 34 skipped / 0 failed**, zero licence-skip; `ruff` 12, `mypy` 55
+  (both at/below baseline); `git diff --check` clean; companion untouched at `bc69f04`. Nothing
+  pushed, `main` untouched in both repos — **`pre_pr` remains with the owner.**
+- **Owner should read** the epic's Item 2 section: an **[AGENT]** severity exception now sits beside
+  an **[INHERITED]** line — a malformed `@inapplicable:` directive halts at `error` grade whatever
+  the usage's form, overriding "plain forms are never errors" for that one cause. Accepted at audit,
+  orchestrator-ratified, not owner-ruled. Traveling residuals **R1** (internal bare-`ComputationGraph`
+  seam is seal-only; no production caller) and **R3** (calc-def-only shape has no pre-item baseline)
+  are carried in that same section; **R5** (no plan/implement-stage product-lens entry) is
+  dispositioned as a recorded process gap in the ledger's close block, not backfilled.
+- Archived to `.project/completed/20260813_constraint-catalog-totality/`. Environment fact worth
+  keeping: **`uv run` is the wrong interpreter for this pair of worktrees** — it resolves
+  `agentic_mbse` to the main checkout and the suite does not collect; use
+  `/home/reid/1cfe/item7-rebuild-venv/bin/python -m pytest`.
 
 ### 2026-08-10: ELABORATE-FIRST Item 6 — Exact-Identity Completion (certified + closed)
 - Exact declaration identity now covers the whole internal route: calc payload/compilation/

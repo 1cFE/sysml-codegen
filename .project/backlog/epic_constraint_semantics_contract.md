@@ -266,15 +266,62 @@ implementation changes the catalog or report.
 
 ---
 
-### Item 2: Canonical Usage Domain and Catalog Totality (2 days)
+### Item 2: Canonical Usage Domain and Catalog Totality (2 days) ✅
 
-**Status (2026-08-12): IMPLEMENTED and AUDITED — Certify-with-residuals.** All success criteria
-met at codegen `35ee82f` / companion `bc69f04` (65/65 carriers on frozen `catf_mfe_d5` — 9
-reaching, 0 eligible, a measured correction to the item's "9 eligible" premise; full licensed
-suite 1860/0 zero-skip). Traveling residuals R1/R3/R5 and the audit trail live in
-`.project/active/constraint-catalog-totality/{audit,verification}.md`. Close/pre_pr with the
-owner. One scope note: the vocabulary below spells the first disposition kind `executable`; the
-landed contract vocabulary is `eligible` (contract governs, recorded in the item spec).
+**Status (2026-08-13): CLOSED — implemented, audited Certify-with-residuals, archived to
+`.project/completed/20260813_constraint-catalog-totality/`.** All success criteria met at codegen
+`35ee82f` / companion `bc69f04` (65/65 carriers on frozen `catf_mfe_d5` — 9 reaching, 0 eligible,
+a measured correction to the item's "9 eligible" premise; full licensed suite 1860/34/0
+zero-skip). `pre_pr` remains with the owner; nothing pushed, no `main` touched. One scope note:
+the vocabulary below spells the first disposition kind `executable`; the landed contract
+vocabulary is `eligible` (contract governs, recorded in the item spec).
+
+**Owner should read this before ratifying downstream items.** The item spec carries an **[AGENT]**
+severity exception recorded beside an **[INHERITED]** line
+(`.project/completed/20260813_constraint-catalog-totality/spec.md:184-194`): a **malformed
+`@inapplicable:` directive** grades `non_reaching` / `classification_incomplete` at **`error`** and
+halts by name **whatever the usage's form**, including a plain one. That overrides the inherited
+"plain and out-of-scope forms are visible records and never errors" rule for this one cause. The
+reasoning: a malformed marker is a defect in an instruction the author wrote *to the tool*, not a
+fact about the model, and silently ignoring it would be indistinguishable from never having written
+it — the absence-not-disposition failure this item exists to end. The umbrella spec is untouched and
+its Q3 form-caused severity rule is unchanged. Accepted at audit (A3 / residual **R2**),
+orchestrator-ratified, **not owner-ruled**.
+
+**Traveling residuals from Item 2's audit** (`audit.md` §Residuals; none blocked certification):
+
+- **R1 — the internal bare-`ComputationGraph` seam is seal-only.** A *resealed* removal of a
+  non-reaching catalog row still passes silently there, and the reaching-case diagnostic degrades
+  from usage-identifying to fingerprint-only. **No production caller reaches it**; the completeness
+  guarantee is intact on both public routes (live and `--from-snapshot`). Recorded so the boundary
+  is written down. **Owner:** whoever next adds a production caller to that seam — adding one
+  reopens the guarantee, so the check must move with it.
+- **R3 — the calc-def-only package shape has no pre-item baseline.** The A4 cure's justification
+  ("matches what shipped before this item") could not be measured: within the audit window
+  `catf_mfe_d5` shipped `schemas/constraint_types.py` at `ba756fb` and does not at HEAD, and no cure
+  commit changed baseline bytes, so no byte gate covers the shape. It is pinned only by the two new
+  generation-level tests. The change is defensible and probably right; the justification reaches
+  back to a state that was not observable. **Owner:** Item 5 (CATF derivative and end-to-end
+  acceptance) is the natural place to give this shape a real baseline.
+- **R5 — the item's product-lens ledger has no plan-stage or implement-stage entry.** Dispositioned
+  at close as a recorded process gap, not backfilled with retroactive entries
+  (`20260813_constraint-catalog-totality/product-lens.md`, close block). Process observation about
+  how the run was staffed; not an obligation on any later item.
+
+**Recorded deviations from the Item 2 orchestrated run, both judged ACCEPTABLE at audit** (kept
+here because they explain why the landed evidence looks the way it does):
+
+- **The "9 eligible" premise was wrong, and the correction is the measured one.** The spec and
+  research inherited "65 authored usages produce 9 carriers" reading the 9 as *eligible*. The 9 are
+  **reaching** usages carrying visible dispositions; `catf_mfe_d5` has **zero** eligible
+  constraints. Confirmed from `.sysml` source without the elaborator: 70 `constraint` lines minus 5
+  comments = 65, all bare inline form, zero `assert`. The 65 headline is unaffected.
+- **The 42 expectation files were scanner-generated, then reviewed** — the design asked for
+  hand-authored, source-read files. Accepted: the load-bearing property is independence *from the
+  domain*, and it holds completely (the licence-free scanner shares no code, no adapter, and no
+  parse with the elaborator). The weaker property — independence between scanner and files — is
+  named rather than argued away; the mitigation was a full 42-fixture scanner-vs-domain comparison
+  *before* any file was written, which found and fixed two scanner bugs.
 
 **Type**: Code / Integration
 
@@ -317,25 +364,27 @@ before occurrence expansion can erase it.
 
 **Success Criteria**:
 
-- [ ] **[INHERITED: spec.md]** Frozen `catf_mfe_d5` produces exactly 65 usage carriers with zero
+- [x] **[INHERITED: spec.md]** Frozen `catf_mfe_d5` produces exactly 65 usage carriers with zero
       absence and no change to its authored constraint syntax.
-- [ ] Removing or duplicating any carrier fails generation with a named, usage-identifying
-      completeness diagnostic.
-- [ ] An asserted structurally unattachable fixture halts; an asserted vacuous fixture produces
+- [x] Removing or duplicating any carrier fails generation with a named, usage-identifying
+      completeness diagnostic. *(Met on both public routes; the internal seal-only seam is residual
+      R1 above.)*
+- [x] An asserted structurally unattachable fixture halts; an asserted vacuous fixture produces
       the visible warning/advisory; a plain constraint with a blocked predicate still generates
       and catalogs as unassessed.
-- [ ] The inapplicability mechanism is explicit, fingerprinted, and cannot silently change an
+- [x] The inapplicability mechanism is explicit, fingerprinted, and cannot silently change an
       asserted usage's coverage role.
-- [ ] Live, in-place snapshot, and relocated snapshot routes produce the same authored domain and
+- [x] Live, in-place snapshot, and relocated snapshot routes produce the same authored domain and
       dispositions; old or malformed snapshot shapes fail closed under the selected version rule.
-- [ ] REQ-EXT-09 and REQ-CL-04 cite non-self-referential tests that fail if a pre-expansion usage
+- [x] REQ-EXT-09 and REQ-CL-04 cite non-self-referential tests that fail if a pre-expansion usage
       vanishes.
-- [ ] Focused tests, full licensed codegen/companion suites, ruff zero-new, mypy zero-new, fixture
+- [x] Focused tests, full licensed codegen/companion suites, ruff zero-new, mypy zero-new, fixture
       diff review, and `git diff --check` pass with exact counts recorded.
 
 **Estimated Effort**: 2 days (spec 1h, design 3h, plan 1h, execute and validate 11h)
 
-**Location**: `.project/active/constraint-catalog-totality/`
+**Location**: `.project/completed/20260813_constraint-catalog-totality/` (archived 2026-08-13; was
+`.project/active/constraint-catalog-totality/`)
 
 **Dependencies**: Item 1.
 
@@ -351,12 +400,12 @@ before occurrence expansion can erase it.
 
 **Deliverables**:
 
-- `.project/active/constraint-catalog-totality/spec.md`
-- `.project/active/constraint-catalog-totality/design.md`
-- `.project/active/constraint-catalog-totality/plan.md`
+- `.project/completed/20260813_constraint-catalog-totality/spec.md`
+- `.project/completed/20260813_constraint-catalog-totality/design.md`
+- `.project/completed/20260813_constraint-catalog-totality/plan.md`
 - Canonical authored-domain, disposition, codec, catalog, gate, and diagnostic implementation.
 - Independent totality and three-route parity tests.
-- `.project/active/constraint-catalog-totality/verification.md`
+- `.project/completed/20260813_constraint-catalog-totality/verification.md`
 
 ---
 

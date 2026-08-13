@@ -4,6 +4,105 @@ Historical record of completed work.
 
 ---
 
+## [2026-08-13] - [CONSTRAINT-SEMANTICS Item 2] Canonical Usage Domain and Catalog Totality
+
+**Type**: Item (orchestrated run; audited Needs-work → cured → re-audited Certify-with-residuals)
+**Duration**: spec 2026-08-12 → closed 2026-08-13
+**Archived to**: `.project/completed/20260813_constraint-catalog-totality/`
+**Commits**: codegen item tip `35ee82f` (branch `item7-rebuild`, unpushed) / companion
+`bc69f04` in `/home/reid/1cfe/agentic-mbse-item7-rebuild`
+
+### Summary
+The lifecycle contract promised that every authored constraint usage stays visible with exactly one
+disposition, and the exact route did not keep it. Constraint records only began *after*
+owner-to-scope expansion, so on `catf_mfe_d5` — the richest model in the corpus — 65 authored
+constraint usages produced 9 carriers and the other 56 were not excluded, not deferred, but
+**absent**: nothing recorded that they had ever been written. Worse, a totality gate written against
+that data would have been circular, comparing two projections of an already-truncated set, and the
+two requirement rows meant to catch this read PASS because each specimen fixture happened to have a
+carrier.
+
+This item makes the domain total and proves it with evidence that does not descend from the domain.
+The instance graph now mints one `ConstraintUsageRecord` per authored usage **before** occurrence
+expansion, each carrying exactly one disposition (eligible / excluded-with-reason /
+non-reaching-with-reason) plus its severity, occurrence count, and inapplicability state, joined to
+the per-occurrence tier by declaration identity. Severity follows cause, not convenience. A
+generation-time completeness gate fails on a removed, duplicated, or misjoined disposition and names
+the offending usage. The domain travels through a bumped `instance-graph/v3` codec that fails closed
+on v2 and on stripped-tier shapes, with live, in-place-snapshot, and relocated-snapshot routes
+verified field for field.
+
+The result on the fixture: **65 members, 9 reaching, 0 eligible** — a measured correction to the
+item's inherited "9 eligible" premise (all 65 usages are bare `constraint`, so the 9 that expand
+grade `excluded`/`unassessed_form`). And the strongest evidence that this was the right piece of
+work is what it deleted: `collect_constraint_manifest`, its two classifiers,
+`extraction/constraint_report.py`, and all seven test call sites are **gone** from `src/` and
+`tests/` rather than demoted to a second inventory kept in sync. The replacement oracle reads
+`.sysml` source through a licence-free scanner that shares no code, no adapter, and no parse with
+the elaborator.
+
+### Deliverables
+- `spec.md`, `spec-review.md` (11 findings resolved), `design.md` rev 3, `design-review.md`,
+  `plan.md` (8 phases with completion notes and deviations), `verification.md` (+ dated cure
+  addendum), `audit.md` (original record + re-audit with per-finding cure verdicts),
+  `product-lens.md` (spec / design / audit / close blocks), `briefs/`, `probes/`,
+  `v2-refusal-list.txt`.
+- Canonical authored-usage domain, disposition minting, `@inapplicable:` mechanism, completeness
+  preflight (the fifth), `instance-graph/v3` codec, and named diagnostics.
+- Independent totality oracle: 42 reviewed expected-population files + licence-free source scanner
+  (`tests/conformance/test_constraint_population_oracle.py`).
+- Schema pins: `instance-graph/v2`→`v3`, `CATALOG_SCHEMA_VERSION` `2.0.0`→`3.0.0`, companion
+  `constraint-facts/v2`→`v3` (new `vacuous_asserted_gate` ADVISORY kind, agentic-mbse `bc69f04`).
+  All 21 snapshot-bearing fixtures recaptured **once** at the final schema.
+- REQ-EXT-09 and REQ-CL-04 re-graded and re-anchored to the oracle; REQ-EXT-09's domain-vs-carrier
+  self-contradiction resolved; reference doc 28 banner-retired; CLAUDE.md preflight count corrected.
+- Gates: codegen **1860 passed / 34 skipped / 65 deselected / 0 failed**, zero licence-skip lines;
+  `ruff check src` 12, `mypy src` 55 (both at/below baseline); `git diff --check` clean.
+
+### Carried forward (not closed by this item)
+- **TEAx must re-vendor `ACCEPTED_CATALOG_SCHEMA_VERSIONS` with `3.0.0`.** B3 forbids TEAx importing
+  sysml-codegen, so nothing here can enforce it. While pending, TEAx fails closed on every newly
+  generated package — loudly, which is the intended direction. Do not bump TEAx first.
+- **Residual R1** — the internal bare-`ComputationGraph` seam is seal-only; a *resealed* removal of a
+  non-reaching row passes silently there. No production caller reaches it; both public routes hold.
+- **Residual R3** — the calc-def-only package shape has no pre-item baseline, so the A4 cure's
+  "this is alignment, not new behaviour" justification is asserted rather than demonstrated. Pinned
+  only by two generation-level tests. Natural home: Item 5.
+- **The [AGENT] severity exception the owner has not ruled on** — a malformed `@inapplicable:`
+  directive halts at `error` grade **whatever the usage's form**, overriding an `[INHERITED]` line
+  that says plain forms are never errors. Recorded beside that line in the spec, surfaced in the
+  epic's Item 2 section and the lens close block.
+- Both R1/R3 and the exception are recorded in
+  `.project/backlog/epic_constraint_semantics_contract.md` §Item 2.
+
+### Lessons Learned
+- **A totality proof must not descend from the thing it checks.** The tempting build here was a
+  second constraint inventory compared against the graph; it would have produced a green gate that
+  could never detect the failure that mattered. Deleting the sweep and reading `.sysml` source
+  through an independent scanner is what made the evidence worth anything.
+- **Absence is worse than a bad answer, because it is invisible.** Two requirement rows read PASS
+  for as long as this defect existed, purely because every specimen fixture happened to have a
+  carrier. Selection bias in the fixture set is a failure mode a green matrix cannot show you.
+- **Two deviations were accepted at audit, both because they were surfaced rather than smoothed
+  over**: the 42 expectation files were scanner-generated then reviewed (independence *from the
+  domain* is the load-bearing property, and a full 42-fixture cross-check before any file was
+  written found and fixed two scanner bugs); and Phase 5's codec work was pulled into the Phase 3
+  window when the plan's own recorded contingency fired, with the intermediate gate redefined as a
+  committed, enumerated 61-node frozen refusal list that the Phase 8 recapture discharged to zero.
+- **The product-lens ledger was not run at plan or implement stage** (audit A7 / residual R5). The
+  point was still checked — later, once, by the audit, with probes — but the audit-stage pass fired
+  the ledger's own falsifier and two structural smells that an earlier pass could plausibly have
+  caught before they reached an auditor. Dispositioned at close as a recorded gap; retroactive
+  stage entries were deliberately **not** written, because a judgment made with the outcome in hand
+  is not stage-time evidence.
+- **Tooling gap noted at close:** this repo has no `.project/adr/` or `.project/product/` ledger and
+  no `adr.sh`/`product.sh` (decision records live as ADR sections in
+  `docs/architecture/modeling-assumptions.md`). No ids were hand-minted. Item 2's cross-cutting
+  decisions are recorded in its archived `design.md` (D1–D10, invariants 1–9) and in the
+  requirement rows it re-anchored.
+
+---
+
 ## [2026-08-10] - [SOURCE-IDENTITY] Epic + Item 4 archived as SUPERSEDED
 
 **Type**: Supersession archive (not a completion)
