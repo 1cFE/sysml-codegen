@@ -12,13 +12,16 @@ from sysml_codegen.elaboration.elaborate import (
     elaborate,
 )
 from sysml_codegen.elaboration.graph import (
+    ASSERTED_SOURCE_FORMS,
     AttrNode,
     CalcNode,
     ConstraintNode,
+    ConstraintUsageRecord,
     Diagnostic,
     ElaborationCode,
     FormalProvenance,
     GraphValidationError,
+    Inapplicability,
     InputRef,
     InstanceGraph,
     LiteralInput,
@@ -26,6 +29,7 @@ from sysml_codegen.elaboration.graph import (
     OccurrenceRecord,
     PortMetadata,
     ProducerRef,
+    UsageDisposition,
     ValueSite,
 )
 from sysml_codegen.elaboration.identity import (
@@ -45,9 +49,13 @@ from sysml_codegen.elaboration.identity import (
 from sysml_codegen.elaboration.project import ProjectionError, project
 
 __all__ = [
+    "ASSERTED_SOURCE_FORMS",
     "AttrNode",
     "CalcNode",
     "ConstraintNode",
+    "ConstraintUsageRecord",
+    "Inapplicability",
+    "UsageDisposition",
     "ConsumerPortId",
     "DeclarationId",
     "Diagnostic",

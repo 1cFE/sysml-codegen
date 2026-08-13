@@ -35,7 +35,7 @@ def test_resolved_graph_round_trip_is_canonical_and_projectable() -> None:
     document = json.loads(first)
     rebuilt = decode_instance_graph(first)
 
-    assert document["schema_version"] == "instance-graph/v2"
+    assert document["schema_version"] == "instance-graph/v3"
     assert document["graph"]["occurrences"]
     assert all(
         isinstance(node["expression_ir"], dict)
@@ -51,7 +51,7 @@ def test_graph_codec_rejects_foreign_schema_and_tampered_fingerprint() -> None:
     payload = encode_instance_graph(_graph())
 
     with pytest.raises(InstanceGraphCodecError):
-        decode_instance_graph(payload.replace(b'"instance-graph/v2"', b'"other-graph/v2"'))
+        decode_instance_graph(payload.replace(b'"instance-graph/v3"', b'"other-graph/v2"'))
     with pytest.raises(InstanceGraphCodecError):
         decode_instance_graph(payload.replace(b'"fingerprint":"', b'"fingerprint":"0'))
 

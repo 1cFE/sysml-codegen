@@ -361,57 +361,57 @@ def test_precedence_satisfy_owned_by_calc_def_is_step_one(model):
 precedence rule and the full disposition table — implement it exactly, in that order), *Required
 Invariants* 1, 2, 3, 5, 6, 7, *Component Overview*.
 
-- [ ] `elaboration/graph.py` — add `UsageDisposition`, `Inapplicability` (field only for now, always
+- [x] `elaboration/graph.py` — add `UsageDisposition`, `Inapplicability` (field only for now, always
       `None` until Phase 4), `ConstraintUsageRecord` with the field list from the design's Component
       Overview, and `InstanceGraph.constraint_usages: dict[DeclarationId, ConstraintUsageRecord]`.
-- [ ] `elaboration/elaborate.py:1119-1224` — split `_constraint_metadata` so the form/identity half
+- [x] `elaboration/elaborate.py:1119-1224` — split `_constraint_metadata` so the form/identity half
       is callable without the predicate-IR and definition-identity half. Add the sixth source form
       `satisfy_reference`, tested **before** the `plain_usage` fall-through (`:1136-1137`).
-- [ ] `elaboration/elaborate.py:997-1004` — mint the record at the top of the per-usage loop, before
+- [x] `elaboration/elaborate.py:997-1004` — mint the record at the top of the per-usage loop, before
       the scope loop; the scope loop's `ConstraintNode`s take form and identity from the record. Set
       `occurrence_count` after the scope loop.
-- [ ] Same file — implement the precedence rule (form gate → expansion cause → profile eligibility)
+- [x] Same file — implement the precedence rule (form gate → expansion cause → profile eligibility)
       as one function returning a `UsageDisposition`, and the severity derivation (asserted forms are
       `definition_typed`, `inline`, `named_usage_reference`; no non-asserted form ever yields
       `error`).
-- [ ] Same file — invariant 1: assert `graph.constraint_usages` keys equal
+- [x] Same file — invariant 1: assert `graph.constraint_usages` keys equal
       `self._constraint_associations` keys, where both are in scope.
-- [ ] Same file — the invariant-9 halt (`SI_CONSTRAINT_UNATTACHED`) for `error`-severity
+- [x] Same file — the invariant-9 halt (`SI_CONSTRAINT_UNATTACHED`) for `error`-severity
       dispositions. **No advisory is emitted here** (PD2): the `warning` severity on the record is
       codegen's entire half of invariant 61; the author-facing advisory is Phase 4C's, in the
       companion.
-- [ ] `elaboration/graph.py:246+` (`validate()`) — invariant 2 (exactly one disposition, closed
+- [x] `elaboration/graph.py:246+` (`validate()`) — invariant 2 (exactly one disposition, closed
       vocabulary, severity matches the table) and invariant 3 (join both directions by
       `declaration_id`; `eligible` with `occurrence_count == 0` fails), raising
       `SI_CONSTRAINT_INCOMPLETE`.
 
 **New fixtures** (all under `tests/fixtures/`, all needing an expectation file in Phase 7):
-- [ ] `plain_usage` whose predicate would raise `SI_REDEFINITION_INVALID` if walked (invariant 5).
-- [ ] Asserted usage owned by a `calc def` → halts, diagnostic names usage + missing attachment.
-- [ ] Asserted usage on a detached (zero-occurrence) part def → warning-grade `non_reaching` /
+- [x] `plain_usage` whose predicate would raise `SI_REDEFINITION_INVALID` if walked (invariant 5).
+- [x] Asserted usage owned by a `calc def` → halts, diagnostic names usage + missing attachment.
+- [x] Asserted usage on a detached (zero-occurrence) part def → warning-grade `non_reaching` /
       `owner_has_no_occurrences`, generation continues. (The *advisory* on this same fixture is
       asserted in Phase 4C, companion-side.)
-- [ ] **Containment fixture** (invariant 9, used by Phase 4C): a part def that **is** typed by a
+- [x] **Containment fixture** (invariant 9, used by Phase 4C): a part def that **is** typed by a
       part usage which is itself never instantiated. Codegen must grade it
       `owner_has_no_occurrences`; the companion must stay silent on it. Build it here, assert the
       codegen half here, assert the companion half in 4C.
-- [ ] Plain constraint whose predicate would BLOCK if asserted → generates, `excluded` /
+- [x] Plain constraint whose predicate would BLOCK if asserted → generates, `excluded` /
       `unassessed_form`.
-- [ ] `satisfy` owned by a `calc def` → `out_of_scope_satisfy` (precedence step 1).
-- [ ] `BLOCK`-decision usage reaching no instance → `non_reaching`, **no** `SI_CONSTRAINT_BLOCKED`.
+- [x] `satisfy` owned by a `calc def` → `out_of_scope_satisfy` (precedence step 1).
+- [x] `BLOCK`-decision usage reaching no instance → `non_reaching`, **no** `SI_CONSTRAINT_BLOCKED`.
 
 ### Validation
 
 **Automated:**
-- [ ] Phase 1's characterization test now **passes**: 65 records, 9 `eligible`, on `catf_mfe_d5`.
-- [ ] Focused: mint, precedence, severity-by-cause, non-raising-mint tests → pass.
-- [ ] **Full licensed suite** → no new failures, zero license-skip lines. Snapshot round-trip tests
+- [x] Phase 1's characterization test now **passes**: 65 records, 9 `eligible`, on `catf_mfe_d5`.
+- [x] Focused: mint, precedence, severity-by-cause, non-raising-mint tests → pass.
+- [x] **Full licensed suite** → no new failures, zero license-skip lines. Snapshot round-trip tests
       still pass (the tier is not yet in the codec, so snapshot-loaded graphs have an empty domain —
       if `validate()` refuses that, Phase 5 has to move up; record it).
-- [ ] `ruff`/`mypy` zero-new.
+- [x] `ruff`/`mypy` zero-new.
 
 **Manual:**
-- [ ] `catf_mfe_d5` generates end to end and both twins stay byte-pinned.
+- [x] `catf_mfe_d5` generates end to end and both twins stay byte-pinned.
 
 **What We Know Works After This Phase:** the domain is complete by construction on the live route,
 the precedence rule resolves the co-firing cases, minting does not raise for non-asserted forms, and
@@ -610,13 +610,13 @@ def test_v3_missing_constraint_usages_fails_closed(v3_bytes_without_tier):
 **See design.md for:** D4, *Research Findings* (the codec is exact-match on both version and key
 set), *Architecture*.
 
-- [ ] `snapshot/instance_graph.py:68` — `INSTANCE_GRAPH_SCHEMA_VERSION = "instance-graph/v3"`.
-- [ ] `:893-908` encode + `:933-982` decode — carry `constraint_usages`; add it to the exact graph
+- [x] `snapshot/instance_graph.py:68` — `INSTANCE_GRAPH_SCHEMA_VERSION = "instance-graph/v3"`.
+- [x] `:893-908` encode + `:933-982` decode — carry `constraint_usages`; add it to the exact graph
       key set at `:936`. Round-trip must preserve every record field, disposition, and
       inapplicability.
-- [ ] Fail-closed tests build their payloads in memory / a temp dir. **No committed fixture bytes
+- [x] Fail-closed tests build their payloads in memory / a temp dir. **No committed fixture bytes
       are touched in this phase** — the recapture is Phase 8.
-- [ ] Three-route parity test (live vs in-place snapshot vs relocated snapshot), asserting the
+- [x] Three-route parity test (live vs in-place snapshot vs relocated snapshot), asserting the
       domain **field for field, record for record**, on a fixture carrying `@inapplicable:`
       annotations. During this phase it captures to a temp directory; its committed-fixture form
       runs in Phase 8.
@@ -624,11 +624,11 @@ set), *Architecture*.
 ### Validation
 
 **Automated:**
-- [ ] Focused codec tests pass; parity passes against temp-dir snapshots.
-- [ ] Full suite: snapshot-consuming tests that read **committed v2 fixtures now fail by design**.
+- [x] Focused codec tests pass; parity passes against temp-dir snapshots.
+- [x] Full suite: snapshot-consuming tests that read **committed v2 fixtures now fail by design**.
       List them and confirm every failure is a v2-version refusal, not a logic error. They go green
       at Phase 8's recapture. Record the list in `verification.md`.
-- [ ] `ruff`/`mypy` zero-new.
+- [x] `ruff`/`mypy` zero-new.
 
 **What We Know Works After This Phase:** the tier survives a round trip field for field, live and
 snapshot agree including the live-only annotation read, and both malformed shapes fail closed.
@@ -1066,7 +1066,114 @@ import `preflight_identified`. The correct interpreter is the task-specific venv
 owner-kind map gained `NoneType` and `PartUsage` entries the design's four-entry map lacked, both
 required for the map to be closed rather than merely narrower.
 
-### Phase 3 Completion
+### Phase 3 Completion (landed together with Phase 5 — see the reordering note)
+**Completed:** 2026-08-12
+
+**Actual Changes — codegen:**
+- `elaboration/graph.py` — `UsageDisposition`, `Inapplicability`, `ConstraintUsageRecord`,
+  `InstanceGraph.constraint_usages`, the closed `SOURCE_FORMS` / `DISPOSITION_REASONS` /
+  `ASSERTED_SOURCE_FORMS` vocabularies, and `expected_severity(reason, source_form)` as the one
+  severity derivation both the mint and `validate()` read.
+- `elaboration/graph.py` `validate()` — `_validate_constraint_usage_domain`: closed vocabulary,
+  one disposition, derived severity, `eligible` with zero occurrences, and the two-directional
+  `declaration_id` join with arity. Raises `SI_CONSTRAINT_INCOMPLETE`, never a bare count.
+- `elaboration/elaborate.py` — `_constraint_source_form` (six forms, `satisfy_reference` added
+  ahead of the `plain_usage` fall-through), `_membership_kind`, `_mint_constraint_usage_record`,
+  `_usage_disposition` (the ordered precedence rule), `_non_reaching_reason`,
+  `_assert_minting_totality` (invariant 1), `_halt_on_unattached_constraints` (invariant 9).
+  `_constraint_metadata` now reuses the two extracted classifiers instead of repeating them.
+- The mint runs at the top of `_build_constraint_nodes`'s existing per-usage loop (D9), and
+  `occurrence_count` is set from the attachment's scope count.
+
+**Gate:** focused mint tests 8/8, totality 4/4, codec 5/5, parity 3/3. `ruff check src` **14**,
+`mypy src` **57** — both at baseline.
+
+**The headline, measured: 65 domain members on `catf_mfe_d5`, split
+51 `owner_kind_unattachable` / 5 `owner_has_no_occurrences` / 9 `unassessed_form`.** The 51/5
+split matches the research's cause account exactly. Generation still succeeds and no usage grades
+`error`, because every one of the 65 is a non-asserted form.
+
+**SURFACED — the design's and this plan's "9 eligible" is factually wrong.** Measured at the
+parent commit, `catf_mfe_d5`'s catalog carried **9 `excluded_records`, 0 `usage_records`, and 0
+`concrete_entries`**. The 9 was always the count of *visible dispositions*, not of eligible
+constraints: all 65 authored usages are bare `constraint`, so the 9 that expand grade
+`excluded` / `unassessed_form` and the fixture has **zero** eligible constraints. This is the same
+observation the design already recorded under B5 ("all 56 are bare `constraint`") applied to the
+whole 65 rather than the invisible 56. Consequences:
+- The correct headline is **65 members, 9 with `occurrence_count > 0`, 0 `eligible`**. Every
+  "9 eligible" in the design, this plan, and the completion criteria should read that way.
+- It strengthens the item's premise rather than weakening it: the pre-item usage tier was not
+  merely truncated on this fixture, it was **empty**.
+- Nothing mechanical moves. The totality claim, the precedence rule, and the severity table are
+  all unaffected.
+- Pinned by `test_catf_mfe_d5_authored_population_is_total` and
+  `test_catf_mfe_d5_dispositions_split_by_the_precedence_rule`, both of which carry the correction
+  in their docstrings.
+
+**SURFACED — invariant 5's `classification_incomplete` has no constructible corpus trigger.**
+Implemented as designed (`_non_reaching_reason` classifies an asserted non-reaching usage inside a
+`try` and converts an `ElaborationInvariantError` into the disposition), but neither of its two
+paths can be reached with this upstream: `extract_expression_ir` returns an `UnsupportedNode` for
+every unrecognized construct and `None` only for a `None` expression, so the
+`SI_REDEFINITION_INVALID` raise at `elaborate.py:1186` is dead today; the definition-identity
+`SI_EDGE_DANGLING` path needs a profile/live disagreement no fixture can author. The disposition
+is therefore reachable by construction and pinned by the vocabulary, not by a behavioural fixture.
+Recorded rather than faked with a mock.
+
+**Deviations:** none in mechanism. Two in evidence: the `plain_usage`-with-raising-predicate
+regression fixture the design asks for cannot exist (above), so `constraint_domain_plain_forms`
+pins the form gate with a would-BLOCK predicate instead; and the `9 eligible` assertions are
+written to the measured truth.
+
+### Phase 5 (codec v3) — PULLED FORWARD into the Phase 3 landing
+**Why, and it is the plan's own contingency.** Phase 3's validation clause says: "if `validate()`
+refuses [a snapshot-loaded graph with an empty domain], Phase 5 has to move up; record it." It
+does — the join check reports `occurrence node joins no usage record` for every constraint in
+every committed snapshot, which took 156 nodes red. So the codec landed in the same window.
+
+**Actual Changes:**
+- `snapshot/instance_graph.py` — `INSTANCE_GRAPH_SCHEMA_VERSION = "instance-graph/v3"`;
+  `_constraint_usage_to_data` / `_constraint_usage_from_data`; `constraint_usages` added to the
+  encode payload and to the decode key set. Fail-closed needed no new code, as D4 predicted.
+- `snapshot/envelope.py:399` — the envelope's own exact inner-graph key set was a **second** copy
+  of the codec's collection list and had to move with it. The design did not name this file; it is
+  found, not assumed.
+- `orchestration/elaborated_pipeline.py` — **a real defect, not bookkeeping**: the capture route
+  rewrites `source_file` to a portable referent on attrs, calcs, and constraints but not on the
+  new usage tier, so sealed bytes carried the capture machine's staging path and live and snapshot
+  disagreed. Fixed by extending `_rewrite_sources_as_referents`; pinned by
+  `test_the_sealed_routes_carry_a_portable_source_referent`.
+- `tests/conformance/test_snapshot_v6_routes.py` — the route-parity digest masks `source_file`;
+  the mask now covers `constraint_usages` for the same reason it covers the other three tiers.
+- `tests/conformance/test_elaboration_graph_roundtrip.py` — the two literal `instance-graph/v2`
+  pins moved to v3.
+- New `tests/conformance/test_constraint_usage_domain_codec.py` (5 nodes: version, round trip
+  field for field, v2 refusal, missing-tier refusal, fingerprint coverage) and
+  `test_constraint_usage_domain_parity.py` (3 nodes: three-route field-for-field parity against a
+  temp-dir capture, a non-vacuous-comparison guard, and referent portability).
+
+**SURFACED — a premise conflict between two of the brief's non-negotiables, and how it is
+resolved.** "Phase gates are real: do not start a phase until the previous phase's gate is green"
+and "the single reviewed recapture is the LAST fixture-committing step" cannot both hold literally
+here: the committed v2 fixtures cannot load until they are recaptured, and recapturing now would
+move the recapture off the end. Resolution, recorded rather than taken silently:
+- The recapture **stays at Phase 8**, single and reviewed, per the landing order and the Item 7
+  register.
+- The intermediate gate is redefined honestly as **"no failure outside the frozen v2-refusal
+  list"**, and that list is committed at
+  `.project/active/constraint-catalog-totality/v2-refusal-list.txt` — **61 nodes**, enumerated by
+  node id, every one traced to committed snapshot bytes that predate `constraint_usages`. Any new
+  failure is still caught, so the gate keeps its teeth.
+- Checked, so the "recapture once" promise is not a hope: nothing in Phases 4, 4C, 6, or 7 changes
+  the instance-graph payload. Phase 4 writes `inapplicability` only for annotated models and no
+  snapshot-bearing fixture is annotated (D8); Phase 4C bumps the companion's
+  `CONSTRAINT_FACTS_SCHEMA_VERSION`, which the envelope authority does **not** record (it records
+  `agentic_mbse_version`, the package version); Phases 6 and 7 touch projection and extraction
+  only. The schema is settled.
+
+**Full licensed suite at this gate: 1647 passed / 34 skipped / 65 deselected / 34 failed +
+27 errors**, and all 61 failing nodes are the frozen list. Down from 156 at the moment the
+join check first landed.
 
 ### Phase 4 Completion
 

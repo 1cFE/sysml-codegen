@@ -33,9 +33,11 @@ from sysml_codegen.elaboration.diagnostics import ElaborationInvariantError
 from sysml_codegen.elaboration.display import display_name, display_qualified_name
 from sysml_codegen.elaboration.extraction_screen import screen_extraction_diagnostics
 from sysml_codegen.elaboration.graph import (
+    ASSERTED_SOURCE_FORMS,
     AttrNode,
     CalcNode,
     ConstraintNode,
+    ConstraintUsageRecord,
     Diagnostic,
     ElaborationCode,
     FormalProvenance,
@@ -46,7 +48,9 @@ from sysml_codegen.elaboration.graph import (
     OccurrenceRecord,
     PortMetadata,
     ProducerRef,
+    UsageDisposition,
     ValueSite,
+    expected_severity,
 )
 from sysml_codegen.elaboration.identity import (
     ConsumerPortId,
@@ -150,6 +154,15 @@ class _ConstraintAssociation:
     usage_id: DeclarationId
     effective_definition_id: DeclarationId | None
     decision: UsageDecision
+
+
+#: Precedence step 3, reached only by a usage that expanded to at least one scope.
+_ELIGIBILITY_DISPOSITIONS: dict[Eligibility, tuple[str, str]] = {
+    Eligibility.ADMIT: ("eligible", "admitted"),
+    Eligibility.NON_NUMERICAL: ("excluded", "non_numerical"),
+    Eligibility.UNASSESSED: ("excluded", "unassessed_form"),
+    Eligibility.BLOCK: ("excluded", "profile_blocked"),
+}
 
 
 @dataclass(frozen=True)
@@ -1042,7 +1055,12 @@ class _ExactElaborator:
             association = self._constraint_association(usage)
             usage_id = association.usage_id
             definition = self._typed_definition(usage, "ConstraintDefinition", required=False)
-            for scope in self._scopes_for_owner(self._semantic_owner(usage)):
+            scopes, cause = self._attachment(self._semantic_owner(usage))
+            record = self._mint_constraint_usage_record(
+                usage, definition, association, cause, len(scopes)
+            )
+            self._graph.constraint_usages[usage_id] = record
+            for scope in scopes:
                 node_id = NodeId(NodeKind.CONSTRAINT, scope, usage_id)
                 name = str(getattr(usage, "name", None) or "constraint")
                 metadata = self._constraint_metadata(usage, definition, association)
@@ -1077,6 +1095,204 @@ class _ExactElaborator:
                         self._pending_expressions.append(
                             _PendingExpression(node, predicate_expression)
                         )
+        self._assert_minting_totality()
+        self._halt_on_unattached_constraints()
+
+    # ---- the usage tier ---------------------------------------------------
+
+    def _mint_constraint_usage_record(
+        self,
+        usage: Any,
+        definition: Any | None,
+        association: _ConstraintAssociation,
+        cause: str | None,
+        occurrence_count: int,
+    ) -> ConstraintUsageRecord:
+        """One domain member for one authored usage, minted before expansion.
+
+        The form gate runs first and the record is built from identity metadata alone,
+        so a usage that reaches no instance still gets a visible carrier however its
+        predicate would behave if walked. Only an *asserted* non-reaching usage is
+        classified any further, because an asserted gate that cannot be understood is a
+        real failure — and even then the failure arrives as this record's disposition
+        rather than as a bare error that leaves every other usage without a carrier.
+        """
+        source_form = self._constraint_source_form(usage)
+        owner = self._semantic_owner(usage)
+        owner_kind = self._owner_kind(owner)
+        source_file, source_line = self._source_location(usage)
+        name = str(getattr(usage, "name", None) or "constraint")
+        disposition = self._usage_disposition(
+            usage, definition, association, source_form, owner_kind, cause
+        )
+        return ConstraintUsageRecord(
+            declaration_id=association.usage_id,
+            usage_qualified_name=str(getattr(usage, "qualified_name", None) or "<anonymous>"),
+            display_name=display_name(name),
+            source_form=source_form,
+            owner_kind=owner_kind,
+            owner_qualified_name=str(getattr(owner, "qualified_name", None) or ""),
+            membership_kind=self._membership_kind(usage),
+            is_negated=bool(getattr(usage, "is_negated", False)),
+            source_file=source_file,
+            source_line=source_line,
+            disposition=disposition,
+            occurrence_count=occurrence_count,
+            definition_qualified_name=(
+                str(getattr(definition, "qualified_name", None) or "")
+                if source_form == "definition_typed"
+                else None
+            ),
+        )
+
+    def _usage_disposition(
+        self,
+        usage: Any,
+        definition: Any | None,
+        association: _ConstraintAssociation,
+        source_form: str,
+        owner_kind: str,
+        cause: str | None,
+    ) -> UsageDisposition:
+        """The ordered precedence rule: form gate, then expansion cause, then profile.
+
+        The causes co-fire — a ``satisfy`` owned by a ``calc def`` matches both the form
+        gate and the unattachable-owner rule — so this evaluates in a fixed order and
+        stops at the first match. Exactly one disposition comes out, every run.
+        """
+        usage_qn = str(getattr(usage, "qualified_name", None) or "<anonymous>")
+        if source_form == "satisfy_reference":
+            return self._disposition(
+                "excluded",
+                "out_of_scope_satisfy",
+                source_form,
+                f"{usage_qn} is a satisfy reference, outside the executable scope",
+            )
+        if owner_kind == "requirement_def":
+            return self._disposition(
+                "excluded",
+                "out_of_profile_owner",
+                source_form,
+                f"{usage_qn} is owned by the requirement definition "
+                f"{self._semantic_owner(usage).qualified_name}, outside the executable profile",
+            )
+        if cause is not None:
+            reason = self._non_reaching_reason(usage, definition, association, source_form, cause)
+            return self._disposition(
+                "non_reaching",
+                reason,
+                source_form,
+                f"{usage_qn} reaches no instance: {reason}",
+            )
+        eligibility = association.decision.eligibility
+        kind, reason = _ELIGIBILITY_DISPOSITIONS[eligibility]
+        return self._disposition(
+            kind, reason, source_form, f"{usage_qn} profile eligibility {eligibility.value}"
+        )
+
+    def _non_reaching_reason(
+        self,
+        usage: Any,
+        definition: Any | None,
+        association: _ConstraintAssociation,
+        source_form: str,
+        cause: str,
+    ) -> str:
+        """The expansion cause, unless an asserted usage cannot be classified at all.
+
+        Classification is attempted only for asserted forms. For every other form the
+        mint stops at the gate, which is what makes minting non-raising: the predicate
+        walk and the definition cross-check are the only two paths that can fail, and
+        neither runs.
+        """
+        if source_form not in ASSERTED_SOURCE_FORMS:
+            return cause
+        try:
+            self._constraint_metadata(usage, definition, association)
+        except ElaborationInvariantError:
+            return "classification_incomplete"
+        return cause
+
+    @staticmethod
+    def _disposition(kind: str, reason: str, source_form: str, detail: str) -> UsageDisposition:
+        return UsageDisposition(
+            kind=kind,
+            reason=reason,
+            severity=expected_severity(reason, source_form),
+            detail=detail,
+        )
+
+    def _assert_minting_totality(self) -> None:
+        """Invariant 1: the domain is the pre-expansion sweep, member for member.
+
+        Asserted here because this is the one place both are in scope. The sweep behind
+        ``_constraint_associations`` is already proven equal to the profile's decision
+        inventory in both directions (``_index_constraint_associations``), so a member
+        missing here is a minting defect and nothing else.
+        """
+        swept = {association.usage_id for association in self._constraint_associations.values()}
+        minted = set(self._graph.constraint_usages)
+        if swept != minted:
+            missing = sorted(item.to_wire() for item in swept - minted)
+            unknown = sorted(item.to_wire() for item in minted - swept)
+            raise ElaborationInvariantError(
+                ElaborationCode.SI_CONSTRAINT_INCOMPLETE,
+                "constraint usage domain incomplete: the minted domain disagrees with the "
+                f"pre-expansion sweep: unminted={missing}, unswept={unknown}",
+            )
+
+    def _halt_on_unattached_constraints(self) -> None:
+        """Invariant 9: an asserted gate nothing could ever attach is an authoring error.
+
+        Raised as a graph diagnostic rather than an immediate exception so that every
+        *other* usage in the model still carries a visible record when it fires — the
+        whole point of moving the mint upstream. Strict elaboration turns the diagnostic
+        into the halt.
+        """
+        for record in self._graph.constraint_usages.values():
+            if record.disposition.severity != "error":
+                continue
+            self._diagnose(
+                ElaborationCode.SI_CONSTRAINT_UNATTACHED,
+                None,
+                record.usage_qualified_name,
+                None,
+                f"constraint {record.usage_qualified_name} "
+                f"({record.declaration_id.to_wire()}) at "
+                f"{record.source_file}:{record.source_line} is asserted "
+                f"({record.source_form}) but its owner "
+                f"{record.owner_qualified_name or '<none>'} ({record.owner_kind}) provides no "
+                f"attachment: {record.disposition.reason}",
+            )
+
+    @staticmethod
+    def _constraint_source_form(usage: Any) -> str:
+        """Which of the six authored shapes this usage is, from membership and type alone.
+
+        Total and non-raising by construction — every branch is a type or membership
+        test — which is what lets it run over usages that never reached an instance.
+        """
+        membership = getattr(usage, "owning_feature_membership", None)
+        if SysideAdapter.is_instance(membership, "RequirementConstraintMembership"):
+            return "requirement_constraint"
+        if SysideAdapter.is_instance(usage, "AssertConstraintUsage"):
+            asserted = getattr(usage, "asserted_constraint", None)
+            if asserted is not usage:
+                return "named_usage_reference"
+            if getattr(usage, "result_expression", None) is None:
+                return "definition_typed"
+            return "inline"
+        if SysideAdapter.is_instance(usage, "SatisfyRequirementUsage"):
+            return "satisfy_reference"
+        return "plain_usage"
+
+    @staticmethod
+    def _membership_kind(usage: Any) -> str | None:
+        membership = getattr(usage, "owning_feature_membership", None)
+        if not SysideAdapter.is_instance(membership, "RequirementConstraintMembership"):
+            return None
+        raw_kind = getattr(membership, "kind", None)
+        return str(getattr(raw_kind, "name", raw_kind)).lower()
 
     @staticmethod
     def _typed_definition(usage: Any, type_name: str, *, required: bool = True) -> Any | None:
@@ -1163,19 +1379,7 @@ class _ExactElaborator:
         definition: Any | None,
         association: _ConstraintAssociation,
     ) -> dict[str, Any]:
-        membership = getattr(usage, "owning_feature_membership", None)
-        if SysideAdapter.is_instance(membership, "RequirementConstraintMembership"):
-            source_form = "requirement_constraint"
-        elif SysideAdapter.is_instance(usage, "AssertConstraintUsage"):
-            asserted = getattr(usage, "asserted_constraint", None)
-            if asserted is not usage:
-                source_form = "named_usage_reference"
-            elif getattr(usage, "result_expression", None) is None:
-                source_form = "definition_typed"
-            else:
-                source_form = "inline"
-        else:
-            source_form = "plain_usage"
+        source_form = self._constraint_source_form(usage)
 
         if source_form in ("inline", "requirement_constraint"):
             predicate_source = usage
@@ -1222,10 +1426,7 @@ class _ExactElaborator:
             if decision.eligibility is Eligibility.NON_NUMERICAL
             else ()
         )
-        membership_kind = None
-        if SysideAdapter.is_instance(membership, "RequirementConstraintMembership"):
-            raw_kind = getattr(membership, "kind", None)
-            membership_kind = str(getattr(raw_kind, "name", raw_kind)).lower()
+        membership_kind = self._membership_kind(usage)
         definition_qn = (
             str(getattr(definition, "qualified_name", None) or "")
             if source_form == "definition_typed"

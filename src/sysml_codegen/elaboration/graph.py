@@ -35,9 +35,16 @@ from sysml_codegen.extraction.expression_compiler import Compilability
 from sysml_codegen.extraction.source_evidence import ReadinessCode
 
 __all__ = [
+    "ASSERTED_SOURCE_FORMS",
     "AttrNode",
     "CalcNode",
     "ConstraintNode",
+    "ConstraintUsageRecord",
+    "DISPOSITION_REASONS",
+    "Inapplicability",
+    "SOURCE_FORMS",
+    "UsageDisposition",
+    "expected_severity",
     "Diagnostic",
     "ElaborationCode",
     "GraphValidationError",
@@ -231,12 +238,130 @@ class ConstraintNode:
         return matches[0]
 
 
+#: The three source forms that assert their predicate. Everything else — ``plain_usage``,
+#: ``requirement_constraint``, ``satisfy_reference`` — states a condition without asking
+#: for it to be enforced, and no non-asserted form ever grades ``error``.
+ASSERTED_SOURCE_FORMS = frozenset({"definition_typed", "inline", "named_usage_reference"})
+
+#: Every source form the classifier can emit, closed.
+SOURCE_FORMS = frozenset(
+    {
+        "definition_typed",
+        "inline",
+        "named_usage_reference",
+        "plain_usage",
+        "requirement_constraint",
+        "satisfy_reference",
+    }
+)
+
+#: The closed reason vocabulary, per disposition kind.
+DISPOSITION_REASONS: Mapping[str, frozenset[str]] = {
+    "eligible": frozenset({"admitted"}),
+    "excluded": frozenset(
+        {
+            "out_of_scope_satisfy",
+            "out_of_profile_owner",
+            "non_numerical",
+            "unassessed_form",
+            "profile_blocked",
+        }
+    ),
+    "non_reaching": frozenset(
+        {
+            "owner_absent",
+            "owner_kind_unattachable",
+            "owner_has_no_occurrences",
+            "classification_incomplete",
+        }
+    ),
+}
+
+#: Reason -> the severity an *asserted* form gets. A reason absent from this map is
+#: ``info`` for every form; a reason present is that grade for an asserted form and
+#: ``info`` otherwise. ``classification_incomplete`` only ever arises for an asserted
+#: form, so it is unconditional.
+_ASSERTED_SEVERITY: Mapping[str, str] = {
+    "owner_absent": "error",
+    "owner_kind_unattachable": "error",
+    "owner_has_no_occurrences": "warning",
+    "classification_incomplete": "error",
+}
+
+
+def expected_severity(reason: str, source_form: str) -> str:
+    """The one severity a (reason, form) pair may carry.
+
+    Severity is derived, never authored, and it keys on form *and* cause together: a
+    non-reaching gate that nobody asserted is a fact about the model, while the same
+    cause under an asserted form is either an authoring error (nothing could ever attach
+    it) or a vacuous gate (nothing was ever instantiated to run it against).
+    """
+    if reason == "classification_incomplete":
+        return "error"
+    if source_form not in ASSERTED_SOURCE_FORMS:
+        return "info"
+    return _ASSERTED_SEVERITY.get(reason, "info")
+
+
+@dataclass(frozen=True)
+class UsageDisposition:
+    """Why one authored constraint usage stands where it does. Exactly one per member."""
+
+    kind: str
+    reason: str
+    severity: str
+    detail: str
+
+
+@dataclass(frozen=True)
+class Inapplicability:
+    """An author's explicit decision that a usage is not part of the feasible set.
+
+    Carried beside the disposition and never folded into it: marking a gate
+    inapplicable is a coverage statement, and it must not be able to suppress an
+    authoring error.
+    """
+
+    reason: str
+    source_file: str
+    source_line: int
+
+
+@dataclass
+class ConstraintUsageRecord:
+    """One authored ``ConstraintUsage``, minted before occurrence expansion.
+
+    This is the domain. It exists whether or not the usage's owner expanded to any
+    scope, which is what makes totality a property of where records are born rather
+    than a check bolted on after the population has already been truncated. It carries
+    no ``predicate_ir`` — that authority stays on the per-occurrence tier, and leaving
+    it off is what lets the mint stop before the predicate walk.
+    """
+
+    declaration_id: DeclarationId
+    usage_qualified_name: str
+    display_name: str
+    source_form: str
+    owner_kind: str
+    owner_qualified_name: str
+    membership_kind: str | None
+    is_negated: bool
+    source_file: str
+    source_line: int
+    disposition: UsageDisposition
+    occurrence_count: int = 0
+    inapplicability: Inapplicability | None = None
+    definition_qualified_name: str | None = None
+
+
 @dataclass
 class InstanceGraph:
     occurrences: dict[OccurrenceId, OccurrenceRecord] = field(default_factory=dict)
     attrs: dict[NodeId, AttrNode] = field(default_factory=dict)
     calcs: dict[NodeId, CalcNode] = field(default_factory=dict)
     constraints: dict[NodeId, ConstraintNode] = field(default_factory=dict)
+    constraint_usages: dict[DeclarationId, ConstraintUsageRecord] = field(default_factory=dict)
     diagnostics: list[Diagnostic] = field(default_factory=list)
 
     @property
@@ -315,8 +440,90 @@ class InstanceGraph:
                         )
                     )
         self._validate_producer_cycles(failures)
+        self._validate_constraint_usage_domain(failures)
         if failures:
             raise GraphValidationError(failures)
+
+    def _validate_constraint_usage_domain(self, failures: list[Diagnostic]) -> None:
+        """Per-record structure and the two-tier join, both by ``declaration_id``.
+
+        This runs on the live route, on both decode paths, and on the sealed context, so
+        a domain that arrives malformed from any of them is refused in the same place and
+        with the same words. It checks join integrity, not totality: totality is
+        established upstream by where the records are minted, and proven independently by
+        the reviewed expected-population files.
+        """
+        for declaration_id, record in self.constraint_usages.items():
+            display = record.usage_qualified_name
+            if record.declaration_id != declaration_id:
+                failures.append(
+                    self._incomplete(
+                        f"usage record key disagrees with its declaration id for {display}"
+                    )
+                )
+            if record.source_form not in SOURCE_FORMS:
+                failures.append(
+                    self._incomplete(f"unknown source form {record.source_form!r} for {display}")
+                )
+            reasons = DISPOSITION_REASONS.get(record.disposition.kind)
+            if reasons is None:
+                failures.append(
+                    self._incomplete(
+                        f"unknown disposition kind {record.disposition.kind!r} for {display}"
+                    )
+                )
+            elif record.disposition.reason not in reasons:
+                failures.append(
+                    self._incomplete(
+                        f"reason {record.disposition.reason!r} is outside kind "
+                        f"{record.disposition.kind!r} for {display}"
+                    )
+                )
+            else:
+                severity = expected_severity(record.disposition.reason, record.source_form)
+                if record.disposition.severity != severity:
+                    failures.append(
+                        self._incomplete(
+                            f"severity {record.disposition.severity!r} disagrees with the "
+                            f"derived {severity!r} for {display}"
+                        )
+                    )
+            if record.disposition.kind == "eligible" and record.occurrence_count == 0:
+                failures.append(
+                    self._incomplete(f"eligible usage reaches no occurrence: {display}")
+                )
+
+        counted: dict[DeclarationId, int] = {}
+        for node in self.constraints.values():
+            if node.declaration_id not in self.constraint_usages:
+                failures.append(
+                    self._incomplete(
+                        "occurrence node joins no usage record: "
+                        f"{node.usage_qualified_name} ({node.declaration_id.to_wire()})"
+                    )
+                )
+                continue
+            counted[node.declaration_id] = counted.get(node.declaration_id, 0) + 1
+        for declaration_id, record in self.constraint_usages.items():
+            nodes = counted.get(declaration_id, 0)
+            if record.occurrence_count != nodes:
+                failures.append(
+                    self._incomplete(
+                        f"occurrence_count {record.occurrence_count} disagrees with {nodes} "
+                        f"nodes for {record.usage_qualified_name} "
+                        f"({declaration_id.to_wire()})"
+                    )
+                )
+
+    @staticmethod
+    def _incomplete(detail: str) -> Diagnostic:
+        return Diagnostic(
+            code=ElaborationCode.SI_CONSTRAINT_INCOMPLETE,
+            consumer=None,
+            consumer_display="<constraint-usage-domain>",
+            param_name=None,
+            detail=f"constraint usage domain incomplete: {detail}",
+        )
 
     def _validate_constraint_formal_provenance(
         self,

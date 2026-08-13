@@ -18,7 +18,13 @@ from pathlib import Path
 from sysml_codegen.analysis.source_referent import map_live_source_referent
 from sysml_codegen.core.errors import CodeGenerationError, SysMLParsingError
 from sysml_codegen.elaboration import elaborate, project
-from sysml_codegen.elaboration.graph import AttrNode, CalcNode, ConstraintNode, InstanceGraph
+from sysml_codegen.elaboration.graph import (
+    AttrNode,
+    CalcNode,
+    ConstraintNode,
+    ConstraintUsageRecord,
+    InstanceGraph,
+)
 from sysml_codegen.extraction.extractor import SysMLDataExtractor
 from sysml_codegen.extraction.source_manifest import SourceAdmission
 from sysml_codegen.resolution.models import ComputationGraph
@@ -133,6 +139,11 @@ def _rewrite_sources_as_referents(graph: InstanceGraph, admission: SourceAdmissi
     for nodes in (graph.attrs, graph.calcs, graph.constraints):
         for node in nodes.values():
             node.source_file = _referent_for(node, staged_to_referent)
+    # The usage tier carries a source location too, and it is sealed into the snapshot
+    # and the catalog. Left as the staged absolute path it would make the captured bytes
+    # vary by capture machine and disagree with the live route on the same model.
+    for record in graph.constraint_usages.values():
+        record.source_file = _referent_for(record, staged_to_referent)
 
 
 def _rewrite_exclusion_locations(
@@ -155,7 +166,8 @@ def _rewrite_exclusion_locations(
 
 
 def _referent_for(
-    node: AttrNode | CalcNode | ConstraintNode, staged_to_referent: dict[str, str]
+    node: AttrNode | CalcNode | ConstraintNode | ConstraintUsageRecord,
+    staged_to_referent: dict[str, str],
 ) -> str:
     referent = staged_to_referent.get(str(Path(node.source_file).resolve()))
     if referent is None:

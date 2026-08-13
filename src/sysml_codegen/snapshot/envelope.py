@@ -394,12 +394,19 @@ def _validate_graph_shape(raw_graph: object) -> None:
     """Check the graph's outer shape only; the codec owns every typed field.
 
     Re-listing every node field here would be a second, silently divergent copy
-    of the codec's contract. What this layer owns is that the payload is the five
+    of the codec's contract. What this layer owns is that the payload is the six
     expected collections, so the ordering guarantee above still holds.
     """
     graph = _exact(
         raw_graph,
-        {"occurrences", "attrs", "calcs", "constraints", "diagnostics"},
+        {
+            "occurrences",
+            "attrs",
+            "calcs",
+            "constraints",
+            "constraint_usages",
+            "diagnostics",
+        },
         "instance_graph.graph",
     )
     for key, rows in graph.items():

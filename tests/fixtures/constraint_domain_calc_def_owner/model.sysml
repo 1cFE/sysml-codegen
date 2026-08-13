@@ -15,9 +15,9 @@ package constraint_domain_calc_def_owner {
     }
 
     part def Rig {
-        attribute demand : Real = 4.0;
+        attribute load : Real = 4.0;
         calc sizer : Sizer {
-            in demand = demand;
+            in demand = load;
         }
     }
 

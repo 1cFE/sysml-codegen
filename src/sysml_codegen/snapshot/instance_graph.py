@@ -30,9 +30,11 @@ from sysml_codegen.elaboration.graph import (
     AttrNode,
     CalcNode,
     ConstraintNode,
+    ConstraintUsageRecord,
     Diagnostic,
     FormalProvenance,
     GraphValidationError,
+    Inapplicability,
     InputPortId,
     InputRef,
     InstanceGraph,
@@ -41,6 +43,7 @@ from sysml_codegen.elaboration.graph import (
     OccurrenceRecord,
     PortMetadata,
     ProducerRef,
+    UsageDisposition,
     ValueSite,
 )
 from sysml_codegen.elaboration.identity import (
@@ -65,7 +68,7 @@ __all__ = [
     "encode_instance_graph",
 ]
 
-INSTANCE_GRAPH_SCHEMA_VERSION = "instance-graph/v2"
+INSTANCE_GRAPH_SCHEMA_VERSION = "instance-graph/v3"
 
 
 class InstanceGraphCodecError(ElaborationInvariantError):
@@ -701,6 +704,119 @@ def _calc_from_data(data: object) -> CalcNode:
     )
 
 
+def _constraint_usage_to_data(record: ConstraintUsageRecord) -> dict[str, object]:
+    return {
+        "declaration_id": record.declaration_id.to_wire(),
+        "usage_qualified_name": record.usage_qualified_name,
+        "display_name": record.display_name,
+        "source_form": record.source_form,
+        "owner_kind": record.owner_kind,
+        "owner_qualified_name": record.owner_qualified_name,
+        "membership_kind": record.membership_kind,
+        "is_negated": record.is_negated,
+        "source_file": record.source_file,
+        "source_line": record.source_line,
+        "occurrence_count": record.occurrence_count,
+        "definition_qualified_name": record.definition_qualified_name,
+        "disposition": {
+            "kind": record.disposition.kind,
+            "reason": record.disposition.reason,
+            "severity": record.disposition.severity,
+            "detail": record.disposition.detail,
+        },
+        "inapplicability": (
+            None
+            if record.inapplicability is None
+            else {
+                "reason": record.inapplicability.reason,
+                "source_file": record.inapplicability.source_file,
+                "source_line": record.inapplicability.source_line,
+            }
+        ),
+    }
+
+
+def _constraint_usage_from_data(data: object) -> ConstraintUsageRecord:
+    value = _mapping(
+        data,
+        "constraint usage record",
+        {
+            "declaration_id",
+            "usage_qualified_name",
+            "display_name",
+            "source_form",
+            "owner_kind",
+            "owner_qualified_name",
+            "membership_kind",
+            "is_negated",
+            "source_file",
+            "source_line",
+            "occurrence_count",
+            "definition_qualified_name",
+            "disposition",
+            "inapplicability",
+        },
+    )
+    disposition = _mapping(
+        value.get("disposition"),
+        "usage record disposition",
+        {"kind", "reason", "severity", "detail"},
+    )
+    raw_inapplicability = value.get("inapplicability")
+    inapplicability = None
+    if raw_inapplicability is not None:
+        marked = _mapping(
+            raw_inapplicability,
+            "usage record inapplicability",
+            {"reason", "source_file", "source_line"},
+        )
+        inapplicability = Inapplicability(
+            reason=_string(marked.get("reason"), "inapplicability.reason"),
+            source_file=_string(marked.get("source_file"), "inapplicability.source_file"),
+            source_line=_integer(marked.get("source_line"), "inapplicability.source_line"),
+        )
+    return ConstraintUsageRecord(
+        declaration_id=DeclarationId.from_wire(
+            _string(value.get("declaration_id"), "usage record.declaration_id")
+        ),
+        usage_qualified_name=_string(
+            value.get("usage_qualified_name"), "usage record.usage_qualified_name"
+        ),
+        display_name=_string(value.get("display_name"), "usage record.display_name"),
+        source_form=_string(value.get("source_form"), "usage record.source_form"),
+        owner_kind=_string(value.get("owner_kind"), "usage record.owner_kind"),
+        owner_qualified_name=_string(
+            value.get("owner_qualified_name"), "usage record.owner_qualified_name"
+        ),
+        membership_kind=(
+            None
+            if value.get("membership_kind") is None
+            else _string(value.get("membership_kind"), "usage record.membership_kind")
+        ),
+        is_negated=_boolean(value.get("is_negated"), "usage record.is_negated"),
+        source_file=_string(value.get("source_file"), "usage record.source_file"),
+        source_line=_integer(value.get("source_line"), "usage record.source_line"),
+        occurrence_count=_integer(
+            value.get("occurrence_count"), "usage record.occurrence_count"
+        ),
+        definition_qualified_name=(
+            None
+            if value.get("definition_qualified_name") is None
+            else _string(
+                value.get("definition_qualified_name"),
+                "usage record.definition_qualified_name",
+            )
+        ),
+        disposition=UsageDisposition(
+            kind=_string(disposition.get("kind"), "disposition.kind"),
+            reason=_string(disposition.get("reason"), "disposition.reason"),
+            severity=_string(disposition.get("severity"), "disposition.severity"),
+            detail=_string(disposition.get("detail"), "disposition.detail"),
+        ),
+        inapplicability=inapplicability,
+    )
+
+
 def _constraint_to_data(node: ConstraintNode) -> dict[str, object]:
     return {
         "node_id": node.node_id.to_wire(),
@@ -894,6 +1010,13 @@ def _graph_to_data(graph: InstanceGraph) -> dict[str, object]:
             _constraint_to_data(node)
             for node in sorted(graph.constraints.values(), key=lambda item: item.node_id.to_wire())
         ],
+        "constraint_usages": [
+            _constraint_usage_to_data(record)
+            for record in sorted(
+                graph.constraint_usages.values(),
+                key=lambda item: item.declaration_id.to_wire(),
+            )
+        ],
         "diagnostics": [_diagnostic_to_data(item) for item in graph.diagnostics],
     }
 
@@ -933,7 +1056,14 @@ def decode_instance_graph(payload: bytes | str) -> InstanceGraph:
         graph_data = _mapping(
             document.get("graph"),
             "document.graph",
-            {"occurrences", "attrs", "calcs", "constraints", "diagnostics"},
+            {
+                "occurrences",
+                "attrs",
+                "calcs",
+                "constraints",
+                "constraint_usages",
+                "diagnostics",
+            },
         )
         expected = _fingerprint(schema_version, graph_data)
         actual = _string(document.get("fingerprint"), "document.fingerprint")
@@ -964,11 +1094,20 @@ def decode_instance_graph(payload: bytes | str) -> InstanceGraph:
             if constraint_node.node_id in constraints:
                 raise ValueError("duplicate constraint node identity")
             constraints[constraint_node.node_id] = constraint_node
+        constraint_usages: dict[DeclarationId, ConstraintUsageRecord] = {}
+        for raw_record in _list(
+            graph_data.get("constraint_usages"), "graph.constraint_usages"
+        ):
+            record = _constraint_usage_from_data(raw_record)
+            if record.declaration_id in constraint_usages:
+                raise ValueError("duplicate usage record")
+            constraint_usages[record.declaration_id] = record
         graph = InstanceGraph(
             occurrences=occurrences,
             attrs=attrs,
             calcs=calcs,
             constraints=constraints,
+            constraint_usages=constraint_usages,
             diagnostics=[
                 _diagnostic_from_data(item)
                 for item in _list(graph_data.get("diagnostics"), "graph.diagnostics")

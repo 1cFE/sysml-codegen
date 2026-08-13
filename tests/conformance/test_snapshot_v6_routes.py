@@ -75,7 +75,7 @@ def _live_instance_graph(fixture: Path):
 def _graph_digest_ignoring_sources(graph) -> str:
     """Digest the whole encoded graph with only ``source_file`` neutralised."""
     document = json.loads(encode_instance_graph(graph))
-    for group in ("attrs", "calcs", "constraints"):
+    for group in ("attrs", "calcs", "constraints", "constraint_usages"):
         for row in document["graph"][group]:
             row["source_file"] = MASK
     encoded = json.dumps(

@@ -23,6 +23,6 @@ package constraint_domain_satisfy {
     // otherwise be indistinguishable from a bare `constraint`. It gets its own source
     // form and its own named exclusion inside the domain, never an absence.
     part the_rig : Rig {
-        satisfy requirement budget_met : MassBudget by the_rig;
+        satisfy requirement budget_met : MassBudget;
     }
 }
