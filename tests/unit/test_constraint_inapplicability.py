@@ -168,3 +168,32 @@ def test_marking_an_unattachable_gate_does_not_suppress_the_halt():
         )
     assert "marked_but_unattachable" in str(raised.value)
     assert "owner_kind_unattachable" in str(raised.value)
+
+
+def test_a_malformed_directive_halts_even_on_a_non_asserted_form():
+    """Design invariant 7's one named exception, pinned so record and behaviour cannot drift.
+
+    Severity by cause grades the *form*, and no non-asserted form errors on a cause about
+    the model. A malformed `@inapplicable:` directive is a different kind of cause — a
+    defect in an instruction written to the tool — so it halts for any form, plain
+    included. Recorded as `[AGENT]` (audit-accepted 2026-08-12) in design invariant 7 and
+    beside the `[INHERITED]` severity line in `spec.md`; this is the test that keeps those
+    records honest.
+    """
+    graph = _lenient("constraint_domain_inapplicable_plain_form")
+    (record,) = [
+        item
+        for item in graph.constraint_usages.values()
+        if item.usage_qualified_name.endswith("plain_typo")
+    ]
+    assert record.source_form == "plain_usage"
+    assert (
+        record.disposition.kind,
+        record.disposition.reason,
+        record.disposition.severity,
+    ) == ("non_reaching", "classification_incomplete", "error")
+
+    with pytest.raises(ElaborationDiagnosticError, match="malformed inapplicability annotation"):
+        elaborate_model_paths(
+            [Path(FIXTURES_DIR / "constraint_domain_inapplicable_plain_form")]
+        )

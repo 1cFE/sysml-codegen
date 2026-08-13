@@ -54,6 +54,7 @@ REFUSED_BY_DESIGN = frozenset(
         "constraint_domain_calc_def_owner",
         "constraint_domain_inapplicable_late_marker",
         "constraint_domain_inapplicable_malformed",
+        "constraint_domain_inapplicable_plain_form",
         "constraint_domain_inapplicable_unattachable",
         "constraint_malformed_mixed",
         "constraint_name_collision_probe",

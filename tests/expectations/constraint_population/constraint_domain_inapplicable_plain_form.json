@@ -1,0 +1,11 @@
+{
+  "constraint_usages": [
+    {
+      "owner_qualified_name": "constraint_domain_inapplicable_plain_form::Host",
+      "source_file": "model.sysml",
+      "source_line": 21,
+      "usage_qualified_name": "constraint_domain_inapplicable_plain_form::Host::plain_typo"
+    }
+  ],
+  "fixture": "constraint_domain_inapplicable_plain_form"
+}

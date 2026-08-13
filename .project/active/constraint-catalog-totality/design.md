@@ -339,6 +339,13 @@ attachment**; the `warning` cell is invariant 61's vacuous gate, whose authoring
 usage and its detached owner — emitted by the **companion's** authoring validation, not by codegen
 (see [The Companion Advisory](#the-companion-advisory-invariant-61--lc-e13)).
 
+**The one cause that ignores the form column.** `classification_incomplete`'s `error` is
+unconditional in the table above, and that is load-bearing rather than an oversight: it is the row
+for a usage whose *classification could not complete*, so there is no reliable form reading to
+grade against. A malformed `@inapplicable:` directive reaches it for **any** form, plain forms
+included — see invariant 7's named exception. **[AGENT]** (audit-accepted 2026-08-12,
+orchestrator-ratified; `audit.md` A3 / R2).
+
 **Source forms** become six: the five `_constraint_metadata` emits today plus `satisfy_reference`,
 tested ahead of the `plain_usage` fall-through.
 
@@ -413,7 +420,16 @@ weight and is not redundant with the fingerprint.
    kind, reason, and severity unchanged, including for the halting case. Marking an asserted,
    structurally-unattachable gate inapplicable does not suppress the halt: invariant 9 is about a
    structural authoring error, invariant 61 is about coverage.
-7. **Severity keys on form and cause together.** No non-asserted form ever produces `error`.
+7. **Severity keys on form and cause together.** No non-asserted form ever produces `error`
+   **from a cause about the model**. One named exception, and it is about a cause of a different
+   kind: a **malformed inapplicability directive**. A `plain_usage`, `requirement_constraint`, or
+   `satisfy_reference` whose `@inapplicable:` marker cannot be read grades
+   `classification_incomplete` at `error` for **any** form, because that is not a fact about the
+   model — it is a defect in an instruction the author wrote *to the tool*, and D2's strict parse
+   exists so that a near-miss halts rather than being indistinguishable from never having written
+   it. `expected_severity` (`graph.py`) implements this by short-circuiting
+   `classification_incomplete` ahead of the non-asserted `info` rule. **[AGENT]** (audit-accepted
+   2026-08-12, orchestrator-ratified; see `audit.md` A3 / R2).
 8. **Owner-kind classification refuses rather than guesses.** The owner-kind map at
    `elaborate.py:1177-1182` ends in `.get(..., type(owner).__name__.lower())` — a silent fallback
    that would let an unmapped owner kind be graded by accident. It becomes a refusal: an owner kind

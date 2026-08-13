@@ -447,3 +447,71 @@ the inline form; it was not needed for these gates.
 
 The two A1 reproduction probes are kept beside it (`a1_repro.py`, `a1_receipt_probe.py`) as the
 before-and-after record. They are standalone scripts, not suite nodes.
+
+---
+
+## Re-audit residual corrections — R4 and R2
+
+**Dated:** 2026-08-12, after the re-audit returned **Certify-with-residuals**. Record
+corrections only; **no behaviour changed** beyond restoring a lost type narrowing.
+
+### R4 — the mypy +1 was misattributed
+
+The addendum above first read `mypy src` **56** and blamed the A4 helper's `ComputationGraph`
+forward reference. Wrong, and it was a guess where the auditor did the work: diffing the error
+sets rather than comparing counts showed **one** new error, a lost narrowing at
+`cli/__init__.py:409`. The A4 cure replaced `if catalog is not None:` with
+`if ships_constraint_machinery(graph):` — the right semantic guard, but it stopped narrowing, so
+`assert_unique_predicate_function_names` took a `ConstraintCatalog | None`.
+
+Fixed by binding the catalog and keeping the predicate as the guard; the redundant `is not None`
+is spelled out for the narrowing alone and the comment says so. **The A4 rule is untouched.**
+
+**`mypy src`: 55** — equal to the pre-cure figure, zero new. `ruff check src`: **12**, unchanged.
+
+### R2 — the accepted widening is now written down where it is contradicted
+
+The re-audit **accepted** the behaviour (a malformed `@inapplicable:` directive halts by name
+regardless of form) and asked only that the records stop contradicting it. Reproduced by the
+auditor on a constructed plain-form fixture; that shape is now a committed pin rather than a
+temp probe.
+
+Behaviour is unchanged. Three records amended:
+
+- **`design.md` invariant 7** — keeps "no non-asserted form ever produces `error`" and qualifies
+  it *from a cause about the model*, then names the one exception: a malformed inapplicability
+  directive is a defect in an instruction written **to the tool**, not a fact about the model, so
+  it grades `error` for any form per D2's strict-parse rationale. Marked **[AGENT]**
+  (audit-accepted 2026-08-12, orchestrator-ratified; `audit.md` A3 / R2).
+- **`design.md` severity table** — a note that `classification_incomplete`'s `error` ignores the
+  form column by construction: it is the row for a usage whose classification could not complete,
+  so there is no reliable form reading to grade against.
+- **`spec.md:183`** — the `[INHERITED]` sentence is **kept verbatim** and the exception is
+  recorded **beside** it, not reworded into it, because the umbrella Q3 line grades form-caused
+  severity and this is a distinct cause. The annotation carries its provenance and states plainly
+  that **an inherited line has been overridden and the owner should see it**. The umbrella spec
+  itself is not touched.
+
+**The pin the records now depend on.**
+`test_a_malformed_directive_halts_even_on_a_non_asserted_form` asserts a `plain_usage` constraint
+with a typo'd marker grades `non_reaching` / `classification_incomplete` / `error` and halts by
+name. It did not exist — every annotation fixture was an asserted form — so the exception was
+real behaviour with no test, which is exactly how a record and its behaviour drift apart.
+New fixture `constraint_domain_inapplicable_plain_form`, with its expectation file and its
+`REFUSED_BY_DESIGN` entry.
+
+### Gates after the residual corrections
+
+| gate | value |
+|---|---|
+| full licensed codegen suite | **1860 passed / 34 skipped / 65 deselected / 0 failed** (1857 + 3: the plain-form pin, its oracle drift row, and its exemption check) |
+| licence-skip lines | **0** |
+| `mypy src` (codegen) | **55** — zero new |
+| `ruff check src` (codegen) | **12** — zero new |
+| companion `mypy src` | **108 in 26 files** — untouched, still `bc69f04` |
+| companion `ruff check src` | **1** — untouched |
+| oracle nodes | **113** (was 111; +2 from the new fixture) |
+| `git diff --check` | clean, both repos |
+
+**R1, R3 and R5 are left as the auditor recorded them** — R1 and R3 are accepted boundary and
+justification notes, R5 (the missing plan/implement-stage product-lens entries) is `/_my_close`'s.

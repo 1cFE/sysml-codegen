@@ -181,6 +181,17 @@ for that pair throughout.
     Per invariant 61 and LC-E13 that advisory is emitted by authoring validation at warning grade;
     this item implements that, it does not reopen it;
   - plain and out-of-scope forms are visible records and never errors.
+    - **[AGENT]** (audit-accepted 2026-08-12, orchestrator-ratified; `audit.md` A3 / R2) —
+      **one named exception, recorded beside the inherited line rather than reworded into it.**
+      The inherited sentence above grades severity by **form**, and it stands for every cause the
+      umbrella Q3 line was reasoning about. A **malformed `@inapplicable:` directive** is a
+      distinct cause: not a fact about the model, but a defect in an instruction the author wrote
+      to the tool. Such a usage grades `non_reaching` / `classification_incomplete` at `error` and
+      halts by name **whatever its form**, including a plain one. Silently ignoring it would be
+      indistinguishable from never having written it — the absence-not-disposition failure this
+      item exists to end. **This overrides an `[INHERITED]` line and the owner should see that**:
+      the umbrella spec itself is not touched, and its Q3 rule is unchanged for form-caused
+      severity.
 - **[INFERRED]** The severity rule keys on **form and cause together**, so `catf_mfe_d5` still
   generates after this item: its 51 calc-def-owned and 5 part-def-owned usages are all bare
   `constraint`, so they become visible records, not halts. The halting path is reachable only once
