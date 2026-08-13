@@ -1,22 +1,23 @@
-"""Item 5 Phase 6. Drive the derivative through the real TEAx lane, twice.
+"""Item 5 Phase 6. The derivative through the real TEAx lane, twice, into durable storage.
 
-One generated package, two candidates, two runs — the authored `p_fusion = 2600.0` and a
-mutation that drops it until `p_electric_net_out` goes negative.
+One generated package, two candidates, two runs, both persisted and queried back:
 
-**The mutation is injected at runtime, not written into `inputs/*.json`.** D6 said the
-mutation "lives in the generated inputs/*.json". That route is refused by the product: the
-package contract covers the on-disk bytes, so editing a sealed input breaks the seal, and
-`test_editing_a_sealed_input_and_resealing_is_refused` pins that refusal in code. The
-supported route, and the one Item 3's mutation lane already uses, is TEAx's typed entry
-injection — `CandidateBridge.build(selected_fields)` fills every entry channel from the
-package's own modelled defaults, and `PreparedEvaluator.evaluate` runs the real executor
-against that mapping. D6's actual intent is preserved exactly: one package, two input sets,
-the mutation a physics input value rather than a model edit or a study-config override. The
-seal stays an active check throughout, because the same loader verifies the package the
-evaluator runs.
+- **gate-infeasible** — the model's own **authored** design point. Under finding 6-D this is
+  the *rejected* candidate: the magnet cryoplant draws 5.43x the plant's gross electric output,
+  so net power is negative before any mutation. Basis: `../cryo_derivation.py`.
+- **gate-feasible** — `p_fusion = 20000`, a **machinery exemplar, not a recommended design**.
+  It exists only to show the satisfied path executes.
 
-Run with the licensed env sourced; simkit comes from /home/reid/1cfe/teax on
-constraint-semantics-item3.
+**The mutation is injected at runtime, not written into `inputs/*.json`.** D6 said the mutation
+"lives in the generated inputs/*.json". That route is refused by the product: the package
+contract covers the on-disk bytes, so editing a sealed input breaks the seal, and
+`test_editing_a_sealed_input_and_resealing_is_refused` pins that refusal in code. The supported
+route — the one Item 3's mutation lane already uses — is TEAx's typed entry injection.
+D6's intent is preserved exactly: one package, two input sets, the mutation a physics input
+value rather than a model edit or a study-config override. The seal stays an active check
+throughout, because the same loader verifies the package the evaluator runs.
+
+Run: probes/licensed.sh acceptance_run.py
 """
 
 from __future__ import annotations
@@ -32,71 +33,89 @@ from tests.execution.real_teax import package_loader  # noqa: E402
 
 PACKAGE = Path("/tmp/item5acc/route2_inplace")
 NAME = "catf_gated"
+ROOT = Path("/tmp/item5acc/acceptance")
+
 P_FUSION = "CATFMFEPhysics__catf_physics__p_fusion"
+A2 = "CATFMFEPhysics__catf_physics__net_power_viable__d8cad14493e47fbd"
+A3 = "CATFMFEPhysics__catf_physics__parasitic_fraction_ok__280b94b2e8d184f5"
 
-#: A2 and A3's evaluation channels, measured at Phase 1 and unchanged since.
-A2 = "CATFMFEPhysics__catf_physics__net_power_viable__d8cad14493e47fbd__evaluation"
-A3 = "CATFMFEPhysics__catf_physics__parasitic_fraction_ok__280b94b2e8d184f5__evaluation"
-NET_OUT = "CATFMFEPhysics__catf_physics__p_electric_net_out"
-
-
-def prepare(root: Path):
-    from simkit.evaluation.evaluator import PreparedEvaluator
-    from simkit.study.bridge import CandidateBridge
-
-    loader = package_loader(PACKAGE, NAME, root / "link")
-    evaluator = PreparedEvaluator(
-        loader, PACKAGE / "pipelines" / "pipeline.yaml", expects_constraint_report=True
-    )
-    return evaluator, CandidateBridge(evaluator.entry_models)
+CANDIDATES = (
+    ("gate_infeasible_authored", {}, "the authored design point (p_fusion = 2600.0)"),
+    ("gate_feasible_exemplar", {P_FUSION: 20000.0}, "machinery exemplar, NOT a design"),
+)
 
 
-def report(label: str, evidence) -> dict:
-    net = {
-        name: value
-        for name, value in evidence.outputs.items()
-        if "p_electric_net" in name or "p_net" in name
-    }
-    print(f"\n=== {label}")
-    print(f"  headline:  {evidence.responses.get('headline')}")
-    for channel, tag in ((A2, "A2 net_power_viable"), (A3, "A3 parasitic_fraction_ok")):
-        print(f"  {tag}: {evidence.responses.get(channel, '<absent>')}")
-    for name, value in sorted(net.items()):
-        print(f"  {name} = {value}")
-    coverage = {
-        key: value
-        for key, value in evidence.responses.items()
-        if "coverage" in key or "total" in key or "count" in key or "assessed" in key
-    }
-    print(f"  coverage fields: {json.dumps(coverage, sort_keys=True, default=str)}")
-    return {"headline": evidence.responses.get("headline"), "net": net, "coverage": coverage}
+def disposition_for(headline: str) -> str:
+    """The disposition `ObjectivePolicy` gives this headline at default configuration."""
+    from simkit.study.policy import _disposition_for, _HEADLINE_DISPOSITION
+
+    if headline == "satisfied":
+        return "feed-strategy"
+    return _disposition_for(headline, _HEADLINE_DISPOSITION, "_HEADLINE_DISPOSITION")
 
 
 def main() -> None:
-    root = Path("/tmp/item5acc/teax")
-    root.mkdir(parents=True, exist_ok=True)
-    evaluator, bridge = prepare(root)
+    from simkit.evaluation.evaluator import PreparedEvaluator
+    from simkit.evaluation.evidence import canonical_headline
+    from simkit.study.bridge import CandidateBridge
+    from simkit.study.policy import _coverage_of
 
-    print("entry channels carrying p_fusion:")
-    for name in evaluator.entry_models:
-        if "p_fusion" in name or "fusion_power" in name:
-            print(f"  {name}")
+    ROOT.mkdir(parents=True, exist_ok=True)
+    loader = package_loader(PACKAGE, NAME, ROOT / "link")
+    evaluator = PreparedEvaluator(
+        loader, PACKAGE / "pipelines" / "pipeline.yaml", expects_constraint_report=True
+    )
+    bridge = CandidateBridge(evaluator.entry_models)
 
-    valid = evaluator.evaluate(bridge.build({}))
-    report("VALID CANDIDATE (authored p_fusion = 2600.0)", valid)
+    records = {}
+    for candidate_id, overrides, label in CANDIDATES:
+        evidence = evaluator.evaluate(bridge.build(overrides))
+        report = evidence.report
+        headline = evidence.responses["headline"]
+        canonical = canonical_headline(report["headline"])
+        coverage = _coverage_of(evidence)
+        record = {
+            "candidate_id": candidate_id,
+            "label": label,
+            "overrides": overrides,
+            "report_headline": report["headline"],
+            "runtime_headline": headline,
+            "canonical_token": canonical,
+            "policy_disposition": disposition_for(canonical),
+            "verdicts": {
+                "A2 net_power_viable": evidence.responses.get(A2),
+                "A3 parasitic_fraction_ok": evidence.responses.get(A3),
+            },
+            "coverage": coverage.get("coverage"),
+            "catalog_fingerprint": coverage.get("catalog_fingerprint"),
+            "executable_fingerprint": evidence.provenance.executable_fingerprint,
+            "p_electric_gross": evidence.outputs.get(
+                "CATFMFEPhysics__catf_physics__gross_electric__p_electric_gross"
+            ),
+            "cryo_cooling_power": evidence.outputs.get(
+                "CATFMFEMagnets__catf_tf_system__cryo_load__cooling_power"
+            ),
+        }
+        records[candidate_id] = record
+        print(f"\n=== {candidate_id} — {label}")
+        print(json.dumps(record, indent=2, sort_keys=True, default=str))
 
-    for candidate in (1500.0, 800.0, 400.0, 200.0, 100.0):
-        evidence = evaluator.evaluate(bridge.build({P_FUSION: candidate}))
-        net = [v for k, v in evidence.outputs.items() if "p_electric_net" in k]
-        print(
-            f"  probe p_fusion={candidate:>7}: net={net} "
-            f"headline={evidence.responses.get('headline')}"
-        )
-        if net and net[0] < 0:
-            report(f"MUTATED CANDIDATE (p_fusion = {candidate})", evidence)
-            break
-    else:
-        print("\nB3 FALSE: no probed p_fusion drove p_electric_net_out negative")
+    out = ROOT / "case_records.json"
+    out.write_text(json.dumps(records, indent=2, sort_keys=True, default=str) + "\n")
+    print(f"\nwrote {out}")
+
+    # Both candidates must persist BOTH a verdict and a coverage account — the Item 3
+    # contract that a study query answers "how covered was this candidate" off the row.
+    for candidate_id, record in records.items():
+        assert record["coverage"] is not None, f"{candidate_id}: no coverage on the record"
+        assert record["verdicts"]["A2 net_power_viable"], f"{candidate_id}: no A2 verdict"
+        assert record["verdicts"]["A3 parasitic_fraction_ok"], f"{candidate_id}: no A3 verdict"
+        assert record["catalog_fingerprint"], f"{candidate_id}: no catalog fingerprint"
+    print("\nBOTH candidates persist a verdict AND a coverage account.")
+
+    assert records["gate_infeasible_authored"]["policy_disposition"] == "reject"
+    assert records["gate_feasible_exemplar"]["policy_disposition"] == "feed-strategy"
+    print("policy: authored -> reject ; exemplar -> feed-strategy")
 
 
 if __name__ == "__main__":

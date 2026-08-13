@@ -553,5 +553,89 @@ stand; the one wrong cell is the **headline**.
 is `full_satisfaction` / `violation` (ADR-009, one-to-one). No contradiction — but the
 expectation files use the report vocabulary and the runtime evidence uses the runtime tokens.
 
-**Parked for a ruling.** Picking which candidate is "physically valid" is a modeling decision,
-and the heat-leak coefficient needs an owner. Not resolved here.
+**RULED 2026-08-13 — option (a), `[AGENT]` ratified by owner.** Candidates are labeled
+**gate-feasible / gate-infeasible under the model as authored**. The authored CATF design point
+is the **rejected** candidate. The raised-`p_fusion` candidate carries the satisfied path as a
+**machinery exemplar, not a recommended design**. The coefficient defect is filed as
+`[CATF-CRYO-HEATLEAK]`; correcting it is a separately-authorized follow-on. Acceptance completed
+below.
+
+**Correction to the diagnosis above, from the source-derived re-computation.** The ruling
+required the amended expectations to rest on a computation re-derived from model source rather
+than transcribed from output, and doing that caught an error in my own first estimate. The
+figures in the STOP report assumed a 4.5 K system and a ~220× amplification, giving ~38 MW.
+The model says `operating_temp = 20 [K]` (`magnets.sysml:66`), so:
+
+| term | source | value |
+|---|---|---|
+| `nuclear_heating` | `0.05 * 2079.41 * (15.31526418625125 / 31.101767270540993)` | 51.197595 MW |
+| `ac_losses` | authored `0.0` | 0.0 MW |
+| **`heat_leak`** | **`magnet_volume * 0.05` = `2334.4698659954747 * 0.05`** | **116.723493 MW** |
+| `thermal_load_cryo` | sum, at **20 K** | 167.921088 MW |
+| amplification | `300 / (20 * 0.3)` | **50.0×** |
+| `cooling_power` | `167.921088 * 50` | **8396.054399837172 MW** |
+
+The derivation reproduces the executed value **bit-exactly**, which is what licenses it as the
+basis for the amended cells. `heat_leak` is **69.5%** of the cryogenic load, and
+`cooling_power / p_electric_gross = 5.43×`. Runnable and self-checking at
+`cryo_derivation.py` in this item home.
+
+---
+
+## Phase 6 (continued) — acceptance completed under the 6-D ruling
+
+### Both candidates, through generate → seal → load → execute → policy → durable record
+
+One generated package (`route2_inplace`), two candidates, injected through TEAx's typed entry
+route (`CandidateBridge` + `PreparedEvaluator`) — see finding 6-C for why not `inputs/*.json`.
+
+| | **gate-infeasible (authored)** | **gate-feasible (exemplar)** |
+|---|---|---|
+| overrides | *none* — `p_fusion = 2600.0` as authored | `CATFMFEPhysics__catf_physics__p_fusion = 20000.0` |
+| A2 `net_power_viable` | **`violated`** | `satisfied` |
+| A3 `parasitic_fraction_ok` | **`violated`** | `satisfied` |
+| report headline | **`violation`** | `full_satisfaction` |
+| TEAx runtime headline | `violated` | `satisfied` |
+| canonical token | `violated` | `satisfied` |
+| **policy disposition** | **`reject`** | `feed-strategy` |
+| `p_electric_gross` | 1546.723690193402 MW | 11743.95146302617 MW |
+| `cryo_load.cooling_power` | 8396.054399837172 MW | 8396.054399837172 MW |
+| `executable_fingerprint` | `cb61b0ec67fc9d9a037820a6fc605bcf4cc09bcff968454a34caf0cef5fded2f` | *same* |
+| `catalog_fingerprint` | `65083fb7e1350f6862974428c7bf1f6b960bc6b76011583b42d62c7848f33b25` | *same* |
+
+The cryo load is identical across both because it depends on magnet geometry, not `p_fusion`.
+That is the whole mechanism: raising fusion power outruns a fixed parasitic load rather than
+fixing it, which is why the exemplar is explicitly **not** a design.
+
+### The durable case record carries verdict **and** coverage, for both candidates
+
+Both records assert non-null. Coverage account persisted on each row, identical:
+
+```
+authored_usage_total 58 | applicable_gate_total 2 | assessed_gate_count 2
+unassessed_gate_count 0 | inapplicable_gate_count 0 | unassessed_reasons {}
+coverage_state "complete"
+```
+
+Equal to the pre-committed ledger row, **at both candidates** — coverage is about the
+denominator, so the rejection does not move it. Each record also carries its
+`catalog_fingerprint`, which is what lets a study query answer "how covered was this candidate"
+off the row without opening evidence artifacts (Item 3 / D7).
+
+Records written to `/tmp/item5acc/acceptance/case_records.json`; the run is reproducible from
+`probes/acceptance_run.py`, which asserts every claim above rather than printing it.
+
+**SC-5 is met.** A candidate reaches the configured satisfied path, and a physics input value
+takes a candidate to **`reject`** through generated package → TEAx normalization → policy →
+durable case storage. Under the ruling, the rejected one is the model's own authored design
+point.
+
+### What this item actually caught
+
+The first execution of these gates found a model defect that had been invisible for the model's
+entire life. `catf_mfe_d5` carries the same 65 authored checks and executes **zero** of them, so
+it reports `not_assessed` and nothing ever contradicted the design point. The moment two of
+those checks became executable gates, the authored candidate was rejected on physics.
+
+That is the epic's founding failure mode — a design search cannot tell a candidate that passed
+its gates from one nobody checked — **demonstrated and closed by the same item**.
