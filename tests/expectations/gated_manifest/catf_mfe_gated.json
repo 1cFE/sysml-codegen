@@ -90,7 +90,7 @@
       "teax_runtime_token": "satisfied"
     },
     "gate_infeasible_candidate": {
-      "_note": "This is the model's OWN authored design point, and it is the rejected candidate. MagnetCryogenicLoad.cooling_power = 8396.054399837172 MW against p_electric_gross = 1546.723690193402 MW (5.43x), so p_electric_net_out is negative before any mutation. Cause: heat_leak = magnet_volume * 0.05 // MW (library/analyses/thermal_loads.sysml:59) contributes 116.72 MW of the 167.92 MW cryogenic load, amplified 300/(20*0.3) = 50x. Filed as backlog [CATF-CRYO-HEATLEAK]; reproduces on the untouched catf_mfe_d5.",
+      "_note": "This is the model's OWN authored design point, and it is the rejected candidate. MagnetCryogenicLoad.cooling_power = 8396.054399837172 MW against p_electric_gross = 1546.723690193402 MW (5.43x), so p_electric_net_out is negative before any mutation. Cause: heat_leak = magnet_volume * 0.05 // MW (library/analyses/thermal_loads.sysml:59) contributes 116.72 MW of the 167.92 MW cryogenic load, amplified 300/(20*0.3) = 50x. Filed as backlog [CATF-CRYO-HEAT-LEAK-COEFFICIENT]; reproduces on the untouched catf_mfe_d5.",
       "gate_reporting_violation": "CATFMFEPhysics::catf_physics::net_power_viable",
       "headline": "violation",
       "inputs": "the authored defaults; CATFMFEPhysics__catf_physics__p_fusion = 2600.0",

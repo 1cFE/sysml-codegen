@@ -783,7 +783,7 @@ rule. Neither drifted; nothing to correct.
 
 **Backlog filings all present:** epic Item 8, epic Item 9 (plus the B1–B5 marker retirement),
 the divertor option (O5), the acausal-relations capability question, the O3 model-debt note, and
-this item's three new filings — `[INLINE-PREDICATE-MARKER-DROP]`, `[CATF-CRYO-HEATLEAK]`, and
+this item's three new filings — `[INLINE-PREDICATE-MARKER-DROP]`, `[CATF-CRYO-HEAT-LEAK-COEFFICIENT]`, and
 `[CATALOG-FINGERPRINT-ROUTE-PORTABILITY]`.
 
 **Final gates:** licensed full suite **2103 passed / 34 skipped**, **zero** `no live syside

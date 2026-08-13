@@ -1217,7 +1217,7 @@ ruling; Item 8 may add one reviewed fixture recapture if churn fires)
   so net power is negative before any mutation, and the candidate reaches the study default
   `reject`. Root cause is `heat_leak = magnet_volume * 0.05  // MW`
   (`library/analyses/thermal_loads.sysml:59`) — 116.72 MW of static heat leak into a 20 K system,
-  filed as `[CATF-CRYO-HEATLEAK]`. This is exactly the epic's critical success factor —
+  filed as `[CATF-CRYO-HEAT-LEAK-COEFFICIENT]`. This is exactly the epic's critical success factor —
   *a design search can tell a candidate that passed its physics gates from one nobody checked* —
   working on its first real outing, on the richest model available, against a defect nobody was
   looking for. (CONSTRAINT-SEMANTICS Item 5, finding 6-D, ruled 2026-08-13.)

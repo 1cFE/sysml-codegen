@@ -195,7 +195,7 @@ the *rejected* candidate for SC-5. A raised-`p_fusion` candidate (≥ 20000 MW s
 gates) carries the satisfied path as a **machinery exemplar, not a recommended design**.
 
 The cryogenic heat-leak coefficient itself is a model defect, filed as backlog
-`[CATF-CRYO-HEATLEAK]`; correcting it is a separately-authorized follow-on. It reproduces on
+`[CATF-CRYO-HEAT-LEAK-COEFFICIENT]`; correcting it is a separately-authorized follow-on. It reproduces on
 the untouched `catf_mfe_d5`, so it is not this derivative's doing — d5 simply executes no gates,
 which is why it went unseen.
 

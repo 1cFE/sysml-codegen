@@ -147,11 +147,25 @@ PUSH-DOWN items (all certified; archived to `completed/20260720_*`):
 
 ### [CATF-CRYO-HEAT-LEAK-COEFFICIENT] Magnet static heat-leak coefficient ~3–6 orders high; authored CATF design point is gate-infeasible — P1, unowned (filed at owner direction, 2026-08-13)
 
-**The defect (measured, Item 5 finding 6-D):** `heat_leak = magnet_volume * 0.05 // MW`
-(`library/analyses/thermal_loads.sysml:59`) puts ~38 MW of static heat leak into a 4.5 K
-system; after Carnot/efficiency amplification (~×220) the cryoplant draws **8,396 MW against
-1,547 MW gross**, so net electric power is negative at the authored inputs. Real 4.5 K plants
-see kilowatt-scale static leak. The identical number reproduces on untouched `catf_mfe_d5` —
+**The defect (measured, Item 5 finding 6-D; figures corrected 2026-08-13 — see below):**
+`heat_leak = magnet_volume * 0.05 // MW` (`library/analyses/thermal_loads.sysml:59`) puts
+**116.72 MW** of static heat leak into a **20 K** system — `magnet_volume = 2334.47 m³ × 0.05`.
+That is **69.5%** of the **167.92 MW** cryogenic-temperature load, which the refrigeration term
+then amplifies by **`300/(20 × 0.3)` = 50×** into `cooling_power = 8396.054399837172 MW`,
+**5.43× the plant's gross electric output of 1546.723690193402 MW**. Net electric power is
+therefore negative at the authored inputs. Real cryostats see kilowatt-scale static leak, so
+the coefficient reads as W/m³ or kW/m³ written as MW/m³.
+
+> **Correction, recorded.** This entry was filed carrying "~38 MW into a 4.5 K system, ~×220
+> amplification". Those figures came from a hand estimate in Item 5's STOP report that assumed
+> a 4.5 K magnet system. The model says `operating_temp = 20 [K]`
+> (`designs/catf_mfe/magnets.sysml:66`). The corrected figures above are **re-derived from
+> model source and shown to reproduce the executed value bit-exactly** by
+> `.project/active/catf-constraint-policy-acceptance/cryo_derivation.py`, which is runnable and
+> self-checking. The conclusion is unchanged and the headline numbers (8396 MW vs 1547 MW,
+> 5.43×) were always right; only the internal breakdown moved.
+
+The identical number reproduces on untouched `catf_mfe_d5` —
 it was always true and always invisible, because d5 executes zero gates. The first execution
 of the derivative's asserted gates (CONSTRAINT-SEMANTICS Item 5) caught it: the epic's
 founding failure mode, demonstrated and closed by the same item.
@@ -1085,30 +1099,6 @@ completed rows were removed from this unresolved backlog.
   this entry is for closing the gap, not for detecting it. Until it closes, an inapplicability
   disposition on an inline-predicate usage has to be recorded in PROVENANCE instead of in source
   (the Item 5 workaround that epic Item 9 retires).
-- **[CATF-CRYO-HEATLEAK] The CATF magnet cryogenic heat-leak coefficient makes the authored design
-  point infeasible — P3 `[AGENT]`, unowned.** `MagnetCryogenicLoad`
-  (`library/analyses/thermal_loads.sysml:59`) computes `heat_leak = magnet_volume * 0.05  // MW`.
-  With `magnet_volume = 2334.47 m³` that is **116.72 MW** of static heat leak into a **20 K**
-  magnet system — three to six orders of magnitude above any real cryostat, where static loads run
-  in the kilowatts. It is **69.5%** of the 167.92 MW cryogenic-temperature load, which the
-  refrigeration term then amplifies by `300/(20 × 0.3) = 50×` into
-  **`cooling_power = 8396.054399837172 MW`** — **5.43× the plant's entire gross electric output**
-  (`p_electric_gross = 1546.723690193402 MW`). Net electric power is therefore negative at the
-  authored inputs, and CONSTRAINT-SEMANTICS Item 5's two executable gates both report `violated`
-  there, taking the authored candidate to the study default `reject`.
-  The coefficient reads as W/m³ or kW/m³ written as MW/m³. **Measured, not inferred:** the
-  derivation is re-computed from model source and reproduces the executed value bit-exactly
-  (`.project/active/catf-constraint-policy-acceptance/cryo_derivation.py`). It **reproduces on the
-  untouched `catf_mfe_d5`** (identical `cooling_power`), so it is a property of the CATF model, not
-  of Item 5's derivative — d5 simply executes no gates, which is why it went unseen for the model's
-  entire life.
-  **Follow-on structure, owner-authorized (finding 6-D ruling, 2026-08-13).** Item 5 was ruled to
-  land option (a) — label the authored point *gate-infeasible under the model as authored* and
-  record it as the rejected candidate. Correcting the coefficient is option (b), a **separately
-  authorized follow-on**, and its **first decision is the fix's home**: the derivative's own copy
-  of the library versus the frozen shared library that `catf_mfe_model` and `catf_mfe_d5` also
-  read. That choice changes which fixtures move and whether a frozen twin is touched, so it is made
-  in daylight before any edit.
 - **[CATALOG-FINGERPRINT-ROUTE-PORTABILITY] The constraint catalog fingerprint is not portable
   across the live and snapshot routes — P3 `[AGENT]`, unowned, pre-existing.**
   `ConstraintCatalog.recomputed_fingerprint` (`src/sysml_codegen/resolution/models.py:597-622`)

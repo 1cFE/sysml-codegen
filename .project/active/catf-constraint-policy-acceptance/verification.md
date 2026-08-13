@@ -547,7 +547,7 @@ expectation files use the report vocabulary and the runtime evidence uses the ru
 **gate-feasible / gate-infeasible under the model as authored**. The authored CATF design point
 is the **rejected** candidate. The raised-`p_fusion` candidate carries the satisfied path as a
 **machinery exemplar, not a recommended design**. The coefficient defect is filed as
-`[CATF-CRYO-HEATLEAK]`; correcting it is a separately-authorized follow-on. Acceptance completed
+`[CATF-CRYO-HEAT-LEAK-COEFFICIENT]`; correcting it is a separately-authorized follow-on. Acceptance completed
 below.
 
 **Correction to the diagnosis above, from the source-derived re-computation.** The ruling
@@ -719,7 +719,7 @@ committed-bytes gate, falsified once and reverted (§Phase 5).
 | acausal-relations capability question | `BACKLOG.md:365` |
 | O3 model debt | `BACKLOG.md:353` `[CATF-SHIELD-MODEL-DEBT]` |
 | `[INLINE-PREDICATE-MARKER-DROP]` | `BACKLOG.md`, filed by this item |
-| `[CATF-CRYO-HEATLEAK]` | `BACKLOG.md`, filed by this item |
+| `[CATF-CRYO-HEAT-LEAK-COEFFICIENT]` | `BACKLOG.md` — filed in parallel at **P1** by owner direction while this item was running; this item consolidated its own duplicate P3 entry into it and corrected its figures from the source-derived computation |
 | `[CATALOG-FINGERPRINT-ROUTE-PORTABILITY]` | `BACKLOG.md`, filed by this item |
 
 ### The Phase-1 gap, recorded
