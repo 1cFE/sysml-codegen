@@ -4,6 +4,93 @@ Historical record of completed work.
 
 ---
 
+## [2026-08-13] - [CONSTRAINT-SEMANTICS Item 5] CATF Derivative and End-to-End Acceptance
+
+**Type**: Item (orchestrated run; audited *Needs work* → two blocking findings cured same day →
+re-verdict **Certify-with-residuals**, SC-2 earned)
+**Duration**: spec 2026-08-13 → closed 2026-08-13 (same day)
+**Archived to**: `.project/completed/20260813_catf-constraint-policy-acceptance/`
+**Commits**: codegen `886a11f..ba51980` (branch `item7-rebuild`, unpushed) / companion untouched /
+TEAx untouched on `constraint-semantics-item3` @ `5b70ae9` (the acceptance lane runs against that
+checkout; nothing pushed, no `main` touched anywhere)
+
+### Summary
+The constraint-semantics contract was built across Items 1–4 and verified only against purpose-built
+fixtures. This item ran it end to end on the richest model in the tree. `catf_mfe_d5` carries 65
+authored constraint usages and executes **zero** of them, so it reports `not_assessed` and nothing
+in it has ever contradicted its own design point — that is the counter-example the epic exists to
+close. A derivative, `catf_mfe_gated`, was forked from it under an owner-ruled disposition for all
+65 usages, and driven through generation, sealing, execution, TEAx policy, and durable case storage
+on all three routes.
+
+The result: 47 modules, 58 usage rows, 2 executing gates (A2, A3), histogram `{eligible 2,
+excluded 3, non_reaching 53}`, coverage `58 / 2 / 2 / 0 / 0 / {} / complete`. The cross-fixture
+accounting identity is **65 = 58 carriers + 7 named deletions** — the SC-3 amendment the owner
+authorized when the ruled `derive-instead` deletions made "exactly 65 carriers" arithmetically
+wrong — and it is machine-proved by `scripts/check_gated_manifest.py --check`, which also ties each
+deletion to the derivation that replaces it in source. Expected outputs were committed before the
+confirmation run (`1247a3b` → `7369b3e`) and were not reverse-engineered afterwards.
+
+### Deliverables
+- `spec.md`, `owner-disposition.md` (the RULED all-65 table), `design.md`, `design-review.md`,
+  `plan.md`, `verification.md`, `audit.md` (8 findings + cure addendum + re-verdict),
+  `product-lens.md` (spec/design/design-2/audit blocks, gate CLEAR), `briefs/`, `probes/`,
+  `cryo_derivation.py` (runnable, self-checking, reproduces the executed cryo value bit-exactly).
+- Product artifacts staying in the tree: the derivative fixture `tests/fixtures/catf_mfe_gated`
+  and its `PROVENANCE.md`; `scripts/check_gated_manifest.py`; the expected-coverage ledger row;
+  the SC-8 committed-bytes golden; `tests/fixtures/catf_mfe_d5/PROVENANCE.md`'s corrected
+  acceptance paragraph (the only byte moved on either frozen twin).
+- Gates at audit: licensed suite **2106 passed / 34 skipped / 1 known pre-existing failure**
+  (`test_the_lane_runs_the_real_simkit`, collection-order artifact, out of floor), **zero
+  license-skip lines**; ruff 12; mypy 55; `git diff --check` clean; `make_d5_variant --check` 0
+  problems ×3; manifest identity closes 65 = 58 + 7.
+
+### Decisions and deviations
+- **Three owner rulings amended inherited criteria**, all recorded with provenance in the epic's
+  Item 5 section: **item5-F1** — SC-3 becomes the accounting identity 65 = 58 + 7 (owner-authorized;
+  the original wording predated the ruled deletions). **D-S1/D-S2 option 3** — A5, A6 and A9 are
+  marked `blocked-by-defect` and their ruled intent is *held*, not withdrawn, because the unit-lane
+  port defect makes their target forms unbuildable ([AGENT] ratified by owner). **6-D option (a)**
+  — candidates are labeled gate-feasible/gate-infeasible under the model as authored, and the
+  authored point is the reject candidate ([AGENT] ratified by owner).
+- **Two epic items were filed out of the D-S1/D-S2 ruling**: Item 8 (unit-lane port metadata
+  defect, standalone by a later owner ruling) and Item 9 (derivative upgrade under held intent).
+  A5/A6's ruled basis and A9's **[OWNER] 1% relative** tolerance stay in force and are Item 9's
+  input, at the archived `owner-disposition.md`.
+- **Three toolchain limits found, all "correct authoring, toolchain refuses" class**: unit-lane
+  port metadata (epic Item 8); `@inapplicable:` markers silently dropped on inline-predicate
+  constraints (`[INLINE-PREDICATE-MARKER-DROP]`, so B1–B5's inapplicability is recorded in
+  PROVENANCE instead — epic Item 7 documents the two mechanisms, Item 9 retires the workaround);
+  catalog fingerprint not route-portable (`[CATALOG-FINGERPRINT-ROUTE-PORTABILITY]`, pre-existing,
+  reproduces on the untouched frozen twin).
+- **Residuals homed at close**: A-4 → `[GOLDEN-BYPASSES-RUN-CODEGEN]`; A-5 →
+  `[CATF-ACCEPTANCE-LANE-MANUAL]`; A-8 → epic Item 7's verification-matrix reconciliation pass;
+  A-7 (satisfied leg probe-asserted) accepted as recorded, no vehicle needed.
+- ADR/product-ledger infra is still absent in this repo (no `.project/adr/`, no `.project/product/`,
+  no `adr.sh`/`product.sh`); the coverage-truth promise home is epic Item 7's owner checkpoint, so
+  nothing was hand-minted here.
+
+### Lessons Learned
+- **The founding failure mode was demonstrated and closed by the same item.** The first execution
+  of these gates caught a model defect that had been invisible for the CATF model's entire life:
+  the magnet cryoplant draws 8396.05 MW against 1546.72 MW of gross electric output (5.43×), so the
+  authored design point is rejected on physics before any mutation. Root cause `heat_leak =
+  magnet_volume * 0.05` (`library/analyses/thermal_loads.sysml:59`) — 116.72 MW of static heat leak
+  into a 20 K system, filed `[CATF-CRYO-HEAT-LEAK-COEFFICIENT]` P1. This is exactly the epic's
+  critical success factor — a design search can tell a candidate that passed its physics gates from
+  one nobody checked — working on its first real outing, against a defect nobody was looking for.
+- **De-risk probes must generate, not only elaborate.** Phase 1 was designed as the cheap place to
+  find refusals before an atomic fixture landing, and it re-elaborated after every edit group. It
+  never ran generation, so the five **generation preflights** went untested — and one of them then
+  refused the ruled A2 spelling at Phase 6, because `value` is a reserved generated local. Elaboration
+  admitting is only half of "it lands"; any probe gating an atomic landing needs a generation step.
+- **An expectation can be wrong in a way no cross-check catches**, because it encodes an assumption
+  about the world rather than about the code: `expected-coverage.md`'s headline cell said
+  `full_satisfaction` on the reasonable assumption that a model's authored design point satisfies
+  its own gates. Every count around it was right. Only running the physics could tell.
+
+---
+
 ## [2026-08-13] - [CONSTRAINT-SEMANTICS Item 4] Predicate Defect Hardening
 
 **Type**: Item (orchestrated run; audited Certify-with-residuals → all findings cured same day,

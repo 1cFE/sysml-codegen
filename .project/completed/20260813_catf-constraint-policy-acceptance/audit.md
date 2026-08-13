@@ -1,6 +1,8 @@
 # Audit: CATF Derivative and End-to-End Acceptance (CONSTRAINT-SEMANTICS Item 5)
 
-**Verdict:** Needs work — narrow, three defects, everything else certified
+**Verdict (final):** **Certify with residuals** — see §Re-verdict at the end of this file
+(`b5f6fd8` / `2b490f8`). SC-2 earned; residuals A-4, A-5, A-7, A-8 open with stated dispositions.
+**Verdict (round 1, superseded):** Needs work — narrow, three defects, everything else certified
 **Audited:** 2026-08-13
 **Branch:** `item7-rebuild`
 **Commit:** `7c076b6`

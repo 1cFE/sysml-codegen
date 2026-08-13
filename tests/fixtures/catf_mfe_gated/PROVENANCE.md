@@ -1,7 +1,7 @@
 # Provenance — `catf_mfe_gated`
 
 Forked from `tests/fixtures/catf_mfe_d5` on 2026-08-13 for **CONSTRAINT-SEMANTICS Item 5**
-(`.project/active/catf-constraint-policy-acceptance/`). This fixture is the **worked example of
+(`.project/completed/20260813_catf-constraint-policy-acceptance/`). This fixture is the **worked example of
 the ruled constraint policy**: nothing in it is invented, and every difference from `catf_mfe_d5`
 traces to a row in `owner-disposition.md` (RULED 2026-08-13).
 
@@ -374,7 +374,7 @@ two.
 
 ## Authority
 
-- **Ruled disposition table:** `.project/active/catf-constraint-policy-acceptance/owner-disposition.md`
+- **Ruled disposition table:** `.project/completed/20260813_catf-constraint-policy-acceptance/owner-disposition.md`
   (RULED 2026-08-13) — sole source of intent classes, tolerance values, deletion authority, and bases.
 - **Spec / design / plan:** the same item home. SC-3's identity is `65 = 58 + 7`.
 - **Integrity check:** `scripts/check_gated_manifest.py --check`, license-free.

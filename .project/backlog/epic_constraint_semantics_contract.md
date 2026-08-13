@@ -749,7 +749,7 @@ so suite collection no longer depends on archive layout.
 
 ---
 
-### Item 5: CATF Derivative and End-to-End Acceptance (1.5–2 days)
+### Item 5: CATF Derivative and End-to-End Acceptance (1.5–2 days) ✅
 
 **Type**: Modeling / Acceptance
 
@@ -828,19 +828,73 @@ that generated feasibility evidence rejects an unphysical candidate through TEAx
       descriptive or requirement-side usages. `catf_mfe_d5` itself keeps its 65/65 proof.
       *(Audited: manifest closes the identity; audit `2b490f8`.)*
 - [x] Every applicable asserted gate executes; the five part-definition and 51
-      calculation-definition groups match their approved dispositions.
+      calculation-definition groups match their approved dispositions. **Amended by the D-S1/D-S2
+      ruling (option 3, [AGENT] ratified by owner 2026-08-13):** A5, A6 and A9 are marked
+      `blocked-by-defect` and sit outside the applicable denominator — their ruled target forms
+      are unbuildable while the unit-lane port defect stands (epic Item 8), so the ruled intent is
+      *held*, not withdrawn, and executes in Item 9. Read as: every applicable asserted gate that
+      the toolchain can build executes (A2, A3), and the three held rows are visibly marked rather
+      than silently absent.
+      *(Audited: `{eligible 2, excluded 3, non_reaching 53}`; audit `2b490f8`.)*
 - [x] At least one physically valid candidate reaches the configured satisfied path and one
       unphysical mutation reaches `reject` through generated package, TEAx normalization, policy,
-      and durable case storage.
+      and durable case storage. **Amended by finding 6-D, option (a) ([AGENT] ratified by owner
+      2026-08-13):** candidates are labeled **gate-feasible / gate-infeasible under the model as
+      authored**. The first execution of these gates showed the **authored** CATF design point is
+      itself gate-infeasible (cryo load 8396.05 MW vs 1546.72 MW gross), so the authored point is
+      the **reject** candidate — not a mutation of it — and the raised-`p_fusion` candidate carries
+      the satisfied path as a **machinery exemplar, not a recommended design**. The original
+      wording presupposed the authored point was feasible; that premise was measured false.
+      *(Audited: both legs re-run through real TEAx; audit `2b490f8`.)*
 - [x] Expected catalog/report/study outputs are saved before confirmation tests and match the
       resulting outputs without reverse-engineering edits.
 - [x] Licensed live, in-place snapshot, relocated snapshot, generation, seal, execution, and TEAx
       acceptance gates pass with exact counts and fingerprints recorded.
 
+**Audit (2026-08-13): Certify-with-residuals** —
+`.project/completed/20260813_catf-constraint-policy-acceptance/audit.md`. Round 1 returned
+*Needs work* on two blocking findings, both in the derivative's PROVENANCE; both are cured
+(`995a058` A-1, `1869c29` A-2) and the re-verdict at `b5f6fd8`/`2b490f8` is **Certify with
+residuals**, with SC-2 earned. A-3 is the structural cure that matters most: the integrity check
+now opens the derivative's `.sysml` and gates each `derive-instead` deletion against the
+derivation that replaces it, so A-1's shape cannot land green again. A-6 cured in `995a058`.
+Product-lens gate **CLEAR** (spec-stage `item5-F1` resolved by owner ruling; audit-F1/F2 resolved
+by citation).
+
+**Residual homes (recorded at close, 2026-08-13):**
+
+- **A-4** — the zero-entry golden hand-rolls the generation sequence from private `_generate_*`
+  seams instead of `run_codegen` (Smell 1, two representations kept in sync by hand). Accepted as
+  a **stated limit**; filed as `[GOLDEN-BYPASSES-RUN-CODEGEN]` in `BACKLOG.md`.
+- **A-5** — SC-5's feasibility-rejection leg is a reproduced run (`probes/acceptance_run.py`), not
+  a committed test. Accepted as a **stated limit** — the coverage half *is* durably gated
+  (`tests/unit/test_coverage_ledger_agreement.py`); filed as `[CATF-ACCEPTANCE-LANE-MANUAL]` in
+  `BACKLOG.md`.
+- **A-7** — the satisfied leg's policy disposition is probe-asserted. Stands as recorded, no
+  future vehicle: SC-5's load-bearing half (the reject leg) goes through the real policy table.
+- **A-8** — no verification-matrix rows for this item's new gates. Deliberately deferred to the
+  **epic-level matrix reconciliation carried by Item 7** (per-item row filing is how the matrix
+  drifted); named in Item 7's scope below.
+- **B1–B5 marker deviation** — the five part-definition inapplicability markers are recorded in
+  PROVENANCE instead of in source, because SysIDE drops `doc` bodies inside inline-predicate
+  constraints (backlog `[INLINE-PREDICATE-MARKER-DROP]`, already filed — cited, not duplicated).
+  Carries a **documentation obligation on Item 7** (named in its scope) and a **retirement
+  obligation on Item 9**.
+- Route-portability of the catalog fingerprint is backlog `[CATALOG-FINGERPRINT-ROUTE-PORTABILITY]`
+  (already filed, pre-existing, reproduces on the untouched frozen twin).
+
+**Held intent — where Item 9 finds it.** A5's and A6's ruled basis (free parameters: the axis root
+radius plus the 14 layer thicknesses; all other radii derived — **[AGENT] ratified by owner
+2026-08-13**) and A9's **[OWNER 2026-08-13] 1% relative** band tolerance remain **in force** and
+are consumed by Item 9. After archival they live at
+`.project/completed/20260813_catf-constraint-policy-acceptance/owner-disposition.md`, rows A5, A6
+and A9 (basis cells and tolerance cell). No re-disposition is authorized; Item 9 executes them.
+
 **Estimated Effort**: 1.5–2 days after owner checkpoint (spec 1h, design 2h, plan 1h, execute and
 validate 8–12h)
 
-**Location**: `.project/active/catf-constraint-policy-acceptance/`
+**Location**: `.project/completed/20260813_catf-constraint-policy-acceptance/`
+(closed and archived 2026-08-13; was `.project/active/catf-constraint-policy-acceptance/`)
 
 **Dependencies**: Item 1 for the owner checkpoint; Items 2–4 for implementation and acceptance.
 
@@ -862,14 +916,14 @@ validate 8–12h)
 
 **Deliverables**:
 
-- `.project/active/catf-constraint-policy-acceptance/spec.md`
-- `.project/active/catf-constraint-policy-acceptance/owner-disposition.md`
-- `.project/active/catf-constraint-policy-acceptance/design.md`
-- `.project/active/catf-constraint-policy-acceptance/plan.md`
+- `.project/completed/20260813_catf-constraint-policy-acceptance/spec.md`
+- `.project/completed/20260813_catf-constraint-policy-acceptance/owner-disposition.md`
+- `.project/completed/20260813_catf-constraint-policy-acceptance/design.md`
+- `.project/completed/20260813_catf-constraint-policy-acceptance/plan.md`
 - New CATF derivative fixture, PROVENANCE, reusable constraint-definition library, and expected
   outputs.
 - End-to-end mutation, policy, persistence, and three-route evidence.
-- `.project/active/catf-constraint-policy-acceptance/verification.md`
+- `.project/completed/20260813_catf-constraint-policy-acceptance/verification.md`
 
 ---
 
@@ -1016,6 +1070,18 @@ instead of the superseded one.
    profile.
 4. **Re-home the close-time orphans:** design-F2's Appendix C cell and the D9 advisory
    guidance obligations move from "Item 1" to this item and are executed here.
+5. **Teach where an inapplicability marker actually works** (Item 5 close obligation, B1–B5).
+   The authoring docs must say plainly that an `@inapplicable:` marker written on a
+   **bindings-form** constraint reaches the domain, and that on an **inline-predicate** constraint
+   it is silently dropped by SysIDE — so until `[INLINE-PREDICATE-MARKER-DROP]` closes, that
+   disposition is recorded in the fixture's PROVENANCE instead of in source. Cite the worked case
+   (`catf_mfe_gated` B1–B5: five markers written, zero carried) and the loud detector
+   (`tests/conformance/test_constraint_population_oracle.py` rule 3). The point is that a modeler
+   can tell, before authoring, which mechanism carries their disposition.
+6. **Epic-level verification-matrix reconciliation** (Item 5 residual A-8). File matrix rows for
+   the constraint-semantics gates landed across Items 2–5 in one pass, per the recount discipline
+   in `[MATRIX-EPIC-SURFACE-ROWS]` — deliberately *not* filed per item, which is how the matrix
+   drifted in the first place.
 
 **Out of Scope**:
 
@@ -1032,6 +1098,11 @@ instead of the superseded one.
       three-sweep method).
 - [ ] `@inapplicable:`, the disposition vocabulary, the six states, and the TEAx opt-in are
       documented where their users (human and agent) will find them.
+- [ ] The authoring docs state when an in-model `@inapplicable:` marker works (bindings-form) and
+      when PROVENANCE has to carry the disposition instead (inline-predicate form), with the
+      B1–B5 worked case cited (Item 5 close obligation).
+- [ ] Verification-matrix rows exist for the constraint-semantics gates landed in Items 2–5, filed
+      in one reconciliation pass with the index recount done (Item 5 residual A-8).
 - [ ] Documentation checks and `git diff --check` pass in every touched repository.
 
 **Estimated Effort**: 0.5–1 day (owner checkpoint 0.5h, sweep + edits 3–5h, verification 1h)
@@ -1133,7 +1204,17 @@ ruled intent, and restate the accounting identity to `65 = 56 carriers + 9 named
 
 **Location**: follows Item 5's item home conventions (new item folder at execution time)
 
-**Dependencies**: Items 5 and 8.
+**Where the held intent lives** (Item 5 closed and archived 2026-08-13): the ruled rows this item
+executes are in
+`.project/completed/20260813_catf-constraint-policy-acceptance/owner-disposition.md` — rows **A5**
+and **A6** (basis cell: axis root radius + 14 thicknesses free, all other radii derived; **[AGENT]
+ratified by owner 2026-08-13**) and row **A9** (tolerance cell: **[OWNER 2026-08-13] 1% relative**,
+chosen over absolute so the band scales under design-search resizing). The derivative's
+`PROVENANCE.md` carries the same rows' `blocked-by-defect` markings that this item retires. These
+are in-force intent, not history: no re-disposition is authorized here.
+
+**Dependencies**: Items 5 (**closed 2026-08-13**) and 8. Item 5 no longer blocks — this item waits
+only on Item 8.
 
 ---
 
@@ -1198,7 +1279,7 @@ ruling; Item 8 may add one reviewed fixture recapture if churn fires)
 | Item 2: Canonical Usage Domain and Catalog Totality | 2 days | Item 1 |
 | Item 3: Coverage Report and TEAx Policy | 2 days | Items 1–2 |
 | Item 4: Predicate Defect Hardening | 0.5–1 day | Item 1 |
-| Item 5: CATF Derivative and End-to-End Acceptance | 1.5–2 days | Item 1 for checkpoint; Items 2–4 for implementation |
+| Item 5: CATF Derivative and End-to-End Acceptance ✅ | 1.5–2 days | Item 1 for checkpoint; Items 2–4 for implementation (closed 2026-08-13) |
 | Item 6: Calculation-Definition Gate Capability Design | 1 day | Items 1–2 |
 | Item 7: ADR, Product Promise, and Agent-Facing Documentation Sync | 0.5–1 day | Items 4–6, 8, 9 landed; before epic close/pre_pr |
 | Item 8: Unit-Lane Port Metadata Defect | 0.5–1 day (+recapture if churn fires) | Item 5 probe evidence (filed 2026-08-13, D-S1/D-S2 ruling) |
@@ -1252,7 +1333,14 @@ ruling; Item 8 may add one reviewed fixture recapture if churn fires)
 
 ---
 
-**Last Updated**: 2026-08-12
-**Next Action**: Item 1 is CLOSED (2026-08-13) alongside Items 2 and 3, so the authoring policy is
-published and Item 5's all-65 owner checkpoint is unblocked. Next: Item 5's owner checkpoint and
-Item 6's design; Item 7 runs last, before epic close/pre_pr.
+**Last Updated**: 2026-08-13
+**Next Action**: Items 1–5 are CLOSED and archived (2026-08-13); Item 6 is CERTIFIED as a
+design/planning delivery. **Item 8 is fully safe to start now** — it is standalone by owner ruling,
+it depends only on Item 5's landed probe evidence, and no acceptance evidence is in flight for it
+to pollute (Item 5's fixture, expectations, and three-route gates are all committed and closed).
+**Item 9 waits only on Item 8**, and executes the already-ruled held intent recorded in
+`.project/completed/20260813_catf-constraint-policy-acceptance/owner-disposition.md` (A5/A6 basis,
+A9's 1% relative band). Item 7 runs last, after Items 8–9, before epic close/pre_pr; it now also
+carries the B1–B5 marker-mechanism documentation obligation and the epic-level verification-matrix
+reconciliation. `pre_pr` and any push remain with the owner; nothing is pushed and no `main` is
+touched.

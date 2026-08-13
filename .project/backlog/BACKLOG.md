@@ -2,7 +2,7 @@
 
 Prioritized list of epics and features.
 
-**Last Updated**: 2026-08-12
+**Last Updated**: 2026-08-13
 
 ---
 
@@ -29,7 +29,7 @@ Prioritized list of epics and features.
 
 | Epic | Status | Notes |
 |------|--------|-------|
-| [CONSTRAINT-SEMANTICS] Constraint Semantics and Design-Search Feasibility | Ready (scope and six-item decomposition owner-approved 2026-08-12; product lens CLEAR) | P0 owner-directed prerequisite for ELABORATE-FIRST Item 7 steps 4–10. Establishes assert-only authoring policy, canonical 65/65 usage totality, truthful report/TEAx coverage, CATF derivative acceptance, two predicate fixes, and the staged calculation-definition gate design. 8.5–9.5 working days over 2–3 weeks plus owner-checkpoint turnaround. See [epic](epic_constraint_semantics_contract.md). |
+| [CONSTRAINT-SEMANTICS] Constraint Semantics and Design-Search Feasibility | In progress — Items 1–5 closed and archived 2026-08-13, Item 6 certified (design delivery); Items 8–9 filed 2026-08-13 under the Item 5 D-S1/D-S2 ruling; Item 7 runs last. Item 8 is safe to start now; Item 9 waits only on Item 8 | P0 owner-directed prerequisite for ELABORATE-FIRST Item 7 steps 4–10. Establishes assert-only authoring policy, canonical 65/65 usage totality, truthful report/TEAx coverage, CATF derivative acceptance, two predicate fixes, and the staged calculation-definition gate design. 8.5–9.5 working days over 2–3 weeks plus owner-checkpoint turnaround. See [epic](epic_constraint_semantics_contract.md). |
 | ~~[SOURCE-IDENTITY] One Modeled Value, One Runtime Source~~ | Superseded (2026-08-07; archived 2026-08-10). Archived to: `.project/completed/20260810_epic_semantic_source_identity.md` | Items 1–3 complete and inherited unchanged as the semantic authority (29-cell matrix, dispositions, invariants); the Item-4/5 shadow-layer architecture was stopped after Item-4 Phases 1–2 (recovery assessment) and replaced by [ELABORATE-FIRST](epic_elaborate_first_architecture.md); Items 6–8 intent absorbed into ELABORATE-FIRST Items 7–8. Item-4 artifacts archived to `completed/20260810_source-identity-occurrence-foundation/`; stopped implementation preserved on `item4-phases12-forensic`. |
 | [GAP-CLOSE] Constraint-Expression Gap Closure | Local scope certified; external F1 leg now verified closed (2026-07-20) | The blocking `[GAP-CLOSE-F1-TEAX-NORMALIZATION]` leg is closed in merged teax main (see the closed entry below). Remaining before full certification: Item 5 closeout state and the independent audit's open full-suite wave-gate leg — a certification pass, not new code. See `epic_gap_close.md`. |
 | ~~[CONSTRAINT-LIFECYCLE-REMEDIATION] Constraint Execution Lifecycle Remediation~~ ✅ | Complete (2026-07-20). Archived to: `.project/completed/20260720_epic_constraint_execution_lifecycle_remediation.md` | All 14 items done; composed public proof 41/41 at the pinned set. Merged 2026-07-20: agentic-mbse #11 → sysml-codegen #9 → teax #3. Release record + 41/41 register in `completed/20260720_constraint-lifecycle-composed-proof/`. |
@@ -44,7 +44,9 @@ CONSTRAINT-SEMANTICS items (ready; decomposition owner-approved 2026-08-12):
       `completed/20260813_constraint-coverage-policy/`; coordinated TEAx branch
       `constraint-semantics-item3` complete but **unmerged**)*
 - [ ] Item 4 — Predicate Defect Hardening
-- [ ] Item 5 — CATF Derivative and End-to-End Acceptance
+- [x] Item 5 — CATF Derivative and End-to-End Acceptance *(closed + archived 2026-08-13 →
+      `completed/20260813_catf-constraint-policy-acceptance/`; audited Certify-with-residuals.
+      Epic Items 8 and 9 were filed out of this item's D-S1/D-S2 ruling and remain open)*
 - [ ] Item 6 — Calculation-Definition Gate Capability Design
 
 SOURCE-IDENTITY items (epic superseded 2026-08-07, archived 2026-08-10 — see epic row above):
@@ -161,7 +163,7 @@ the coefficient reads as W/m³ or kW/m³ written as MW/m³.
 > a 4.5 K magnet system. The model says `operating_temp = 20 [K]`
 > (`designs/catf_mfe/magnets.sysml:66`). The corrected figures above are **re-derived from
 > model source and shown to reproduce the executed value bit-exactly** by
-> `.project/active/catf-constraint-policy-acceptance/cryo_derivation.py`, which is runnable and
+> `.project/completed/20260813_catf-constraint-policy-acceptance/cryo_derivation.py`, which is runnable and
 > self-checking. The conclusion is unchanged and the headline numbers (8396 MW vs 1547 MW,
 > 5.43×) were always right; only the internal breakdown moved.
 
@@ -187,7 +189,7 @@ epic lands, ahead of any real CATF study campaign.
   headline flips back; the SC-5 candidate labeling reverts to the natural direction).
 
 **Evidence home:** Item 5's verification record and the 6-D ruling
-(`.project/active/catf-constraint-policy-acceptance/`); acceptance record states the authored
+(`.project/completed/20260813_catf-constraint-policy-acceptance/`); acceptance record states the authored
 point is gate-infeasible under the model as authored.
 
 ---
@@ -1121,3 +1123,41 @@ completed rows were removed from this unresolved backlog.
   other exactly, so only the live-versus-snapshot pair diverges. Fix direction: make the hashed
   identity route-independent (relative-to-model-root paths, or exclude `source_file` from the
   fingerprint and pin it elsewhere).
+
+---
+
+## CONSTRAINT-SEMANTICS Item 5 close-time filings (registered 2026-08-13)
+
+Source: the Item 5 audit's accepted residuals
+(`.project/completed/20260813_catf-constraint-policy-acceptance/audit.md` §Residuals). Both are
+`[AGENT]` findings recorded as **stated limits** at close — the scope calls were defensible; what
+was missing was writing them down. Neither blocks the epic.
+
+Already filed above and **not duplicated here**: `[INLINE-PREDICATE-MARKER-DROP]` (the B1–B5
+marker mechanism; epic Item 7 documents it, epic Item 9 retires the PROVENANCE workaround) and
+`[CATALOG-FINGERPRINT-ROUTE-PORTABILITY]` (pre-existing, reproduces on the untouched frozen twin).
+Residual A-7 (the satisfied leg's policy disposition is probe-asserted) is recorded in the item's
+close record only — SC-5's load-bearing reject leg goes through the real policy table, so there is
+nothing to execute. Residual A-8 (verification-matrix rows) is carried by epic Item 7's
+reconciliation pass, not by a backlog entry.
+
+- **[GOLDEN-BYPASSES-RUN-CODEGEN] The zero-entry committed-bytes golden drives private generation
+  seams, not the shipping route — P3 `[AGENT]`, unowned.**
+  `tests/conformance/test_zero_entry_package_golden.py:69-87` hand-rolls the generation sequence
+  from seven private `_generate_*` calls, omitting the preflight block, `_generate_primitives`,
+  `_generate_backlog` and `_generate_tests` that `run_codegen` actually runs
+  (`src/sysml_codegen/cli/__init__.py:1204-1299`). So the tree's first committed-bytes gate pins a
+  route kept in sync with the shipping route **by hand** — against `CLAUDE.md`'s stated rule that
+  `run_codegen` is the single public entry point and constructs exactly one way. Measured and
+  dispositioned in CONSTRAINT-SEMANTICS Item 5 (audit finding A-4, Smell 1). Fix direction: drive
+  the golden through `run_codegen` with a zero-entry model, or record in the test why the private
+  seams are deliberately the subject.
+- **[CATF-ACCEPTANCE-LANE-MANUAL] The CATF end-to-end feasibility-rejection lane is a reproduced
+  run, not a committed test — P3 `[AGENT]`, unowned.** Item 5's SC-5 has two halves. The coverage
+  half is durably gated (population oracle by scan; `tests/unit/data/expected-coverage.md` drives
+  `tests/unit/test_coverage_ledger_agreement.py`). The feasibility half — the authored CATF design
+  point reaching `reject` through generate → seal → load → execute → policy → durable record — is
+  recorded evidence reproducible from `probes/acceptance_run.py` in the archived item home, and
+  nothing fails if it regresses. Deliberate at the time (the lane needs the TEAx checkout on
+  `constraint-semantics-item3`, which is unmerged). Fix direction: mark the lane as intentionally
+  manual in a named place, or file it as a licensed/marked test once the TEAx branch lands.

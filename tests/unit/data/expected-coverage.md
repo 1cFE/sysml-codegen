@@ -123,7 +123,7 @@ emits no report at all.
 ### `catf_mfe_gated` — the CATF derivative, two executing gates
 
 **Derived from the ruled disposition table, not from a run** (CONSTRAINT-SEMANTICS Item 5;
-`.project/active/catf-constraint-policy-acceptance/owner-disposition.md`, RULED 2026-08-13).
+`.project/completed/20260813_catf-constraint-policy-acceptance/owner-disposition.md`, RULED 2026-08-13).
 Committed before the fixture that produces it existed — that commit order is SC-6's evidence.
 
 **The population: 58 carriers.** `65 = 58 carriers + 7 named deletions` (5 derive-instead —
@@ -173,7 +173,7 @@ by the correction — only the headline moves, because coverage is about the den
 headline is about the outcome.
 
 **The basis is a source-derived computation, not an observed run.**
-`.project/active/catf-constraint-policy-acceptance/cryo_derivation.py` re-derives
+`.project/completed/20260813_catf-constraint-policy-acceptance/cryo_derivation.py` re-derives
 `MagnetCryogenicLoad.cooling_power` from the model's own constants and formulas
 (`library/analyses/thermal_loads.sysml:55-66`, `designs/catf_mfe/magnets.sysml:86-94`):
 
