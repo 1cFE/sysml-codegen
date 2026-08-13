@@ -254,3 +254,160 @@ against shipped statements and against the owner's sequencing rule.
   `owner_kind_unattachable` narrowed to executable-scope owner kinds.
 - design-F3 → recapture restated as the last fixture-committing step, with temp-directory capture
   for development-time parity tests and both violation directions named.
+
+---
+
+## audit — 2026-08-12 — rev ba756fb (clean tree; implementation tip d03a415, companion bc69f04)
+
+**Method note — reconstructed provenance.** `~/.claude/scripts/product-lens.md` was unreadable
+from this session, as it was from the design and design-review stages. The method was
+**reconstructed from in-tree examples** — this ledger's spec- and design-stage entries, and
+`.project/active/constraint-semantics-contract/product-lens.md`. Structure, grading vocabulary,
+and the falsifier/findings/gate shape follow those; anything the canonical script requires beyond
+them is not represented here. Findings were verified against running code, not only read.
+
+**Ledger gap, recorded rather than passed over.** This ledger holds only three stage entries: spec,
+design, and this one. **No plan-stage and no implement-stage entry was ever appended.** This is the
+first lens pass over actual code, and it lands at the end rather than running alongside. Filed as
+audit finding **A7** in `audit.md`.
+
+Epic: CONSTRAINT-SEMANTICS (Item 2)
+Epic gate: CLEAR — carried unchanged; grade preserved.
+
+**Point** (re-derived from sources independently of the spec and design): unchanged from the spec-
+and design-stage entries; items 1–4 carry forward. Re-derived against `rulings-20260812.md:13-21`
+(the two **[OWNER-VERBATIM]** quotes and the **[OWNER]** sequence), Q1/Q2/Q3/Q7 (`:29-35`), L2-1
+and L2-2 (`:42-49`), and contract invariants 1, 9, 28, 40, 48, 61. `.project/adr/` and
+`.project/product/INDEX.md` do not exist in this tree; ADR-009 lives in
+`docs/architecture/modeling-assumptions.md` §9. No source narrowed or contradicted the point.
+
+**Falsifier** (the ledger's own recorded one, audit stage): a landing in which the tests pass while
+shipped documentation still describes the pre-landing behavior; or in which an authored usage ends
+a run with no disposition or two; or in which totality rests on a second inventory a generation
+path consults.
+
+**The falsifier FIRED**, on audit-F1. It also fired in a second, subtler way on audit-F2: a run in
+which every authored usage ends with *no* disposition is reachable from one malformed doc comment.
+
+### Findings
+
+- **audit-F1 [DO] — a live reference doc still teaches the exact pre-landing behavior this item
+  removed, and names Item 2 as the thing that will fix it.**
+  `docs/architecture/reference/28-constraint-lowering-and-catalog.md:56-59` reads "*(Target state
+  for the owner-kind half: today an owner kind with no expansion branch — a `calc def` owner —
+  yields no occurrence and therefore no catalog record at all. CONSTRAINT-SEMANTICS Item 2 closes
+  that.)*" False at HEAD: a calc-def-owned usage now mints `non_reaching` /
+  `owner_kind_unattachable`, 51 of `catf_mfe_d5`'s 65 — measured this session. Same paragraph stale
+  twice more: `:48-50` uses the retired `eligible=False` vocabulary for `requirement_def` owners
+  (now `excluded` / `out_of_profile_owner`), and `:46` contradicts `:57`. Doc 28 carries **no**
+  retiring banner (`:1-16`) and is **not** in CLAUDE.md's retired list, so a reader treats it as
+  current — while it documents `analysis/constraint_lowering.py`, which no longer exists.
+  Item 1's two forward pointers in `modeling-assumptions.md:473-496` *were* correctly retired and
+  both matrix rows re-anchored; this file was missed.
+  — point item 4 **[OWNER]** "fix documentation and the test model to match … then run tests to
+  confirm" (`rulings-20260812.md:19-21`); the ledger's own falsifier
+  — disposition: correct `28-*.md:44-59` before close, or give it a retiring banner and add it to
+  CLAUDE.md's list. **Must close before the item closes.**
+
+- **audit-F2 [DO] — minting still raises model-wide on one path, the failure design-F1 was applied
+  to remove.** `_mint_constraint_usage_record` evaluates `self._inapplicability(usage)` inline
+  (`elaborate.py:1151`); `_inapplicability` raises `ElaborationInvariantError` on a late marker
+  (`:1183-1188`) and a malformed shape (`:1194-1198`), propagating out of `_build_constraint_nodes`
+  and converting at `:255-266` into one model-wide `ElaborationDiagnosticError`. **Verified by the
+  item's own tests**, which assert the model-wide type (`test_constraint_inapplicability.py:56,63`),
+  and corroborated by `constraint_domain_inapplicable_late_marker` / `_malformed` sitting in the
+  oracle's `REFUSED_BY_DESIGN` set because they yield no domain. One mistyped doc comment erases the
+  carriers of all 65. Two shipped docstrings assert the opposite: `:1116-1124` and `:1254-1259`.
+  The correct mechanism is already built and already error-grade — `classification_incomplete`
+  (`graph.py:288`, `elaborate.py:1263-1266`, `_halt_on_unattached_constraints:1297-1319`).
+  — contract invariants 1, 28; point item 1; design invariant 5 as amended by design-F1
+  — disposition: route the two parse failures through a per-usage disposition and keep the halt, or
+  correct both docstrings and record the exemption. **Smell #2 fired.**
+
+- **audit-F3 [DO] — `constraint_catalog is not None` changed meaning; three generation seams read
+  it as "this package has executable constraint content."** `project.py:1087` now keys `None` on the
+  *domain* being empty — correct, and the needed fix. But that nullable gates
+  `schemas/constraint_types.py` (`cli/__init__.py:429-436`), the registry's `ConstraintEvaluation` /
+  `ConstraintReport` imports (`generation/registry.py:353-360`), and the predicate-name preflight
+  (`cli/__init__.py:388-392`). **Measured on `constraint_domain_satisfy_calc_def`** (2 usage
+  records, 0 concrete entries): generation succeeds, `constraint_types.py` ships, and the registry
+  imports the report types — a package that previously shipped none. The gate's comment still reads
+  "A constraint-free corpus writes nothing here (INV-7)" (`:427-428`), which no longer distinguishes
+  constraint-free from authored-but-none-reaching. The one test for the shape stops at projection
+  (`test_constraint_catalog_totality.py:68-75`), and no baseline fixture has it.
+  — contract invariant 40; sibling ledger spec-F2's invariant 46a
+  — disposition: state which meaning the gate carries, add a generation-level test, fix the comment.
+  **Smell #4 fired.**
+
+- **audit-F4 [DO] — the oracle's exemption set is asserted, not checked.** `REFUSED_BY_DESIGN`
+  (`test_constraint_population_oracle.py:43-64`) removes 18 of 42 constraint-bearing fixtures from
+  the domain comparison under one collective justification, referenced only at its definition and
+  to build `COMPARABLE` (`:87`); **no test asserts a member actually refuses.** *Verified rather
+  than assumed:* I elaborated all 18 and every one currently refuses (`ElaborationDiagnosticError`
+  ×14, `ElaborationError` ×4). So this is latent drift, not a live hole — graded down accordingly.
+  It is not hypothetical for this epic: `constraint_domain_calc_def_owner` is exempt because the
+  asserted calc-def-owner case halts today, and Q2 stages that capability to land later; when it
+  does, the fixture will elaborate and the oracle will not notice it stopped being checked.
+  — the oracle's own "three rules keep the oracle from quietly shrinking" (`:12-20`)
+  — disposition: add the fourth rule — every `REFUSED_BY_DESIGN` member must raise. Not blocking.
+
+- **audit-F5 [DO] — CLAUDE.md still says four preflight checks; there are five.** `CLAUDE.md:64`
+  omits Step 1.8, the constraint totality preflight (`cli/__init__.py:317-380`, invoked `:1156`).
+  Same falsifier family as audit-F1, one line. — disposition: correct the count. Not blocking.
+
+### Not findings (checked, clean — verified by probe where marked ✓)
+
+- **Smell #1 (a test passes only because it selects one duplicate, route, or interpretation) —
+  CLEAR ✓.** The oracle asserts **by identity list** over every comparable constraint-bearing
+  fixture (`:112-128`), against source read by an independent scanner rather than any projection of
+  the domain — spec-F7's circularity genuinely closed. Route selection closed too: live, in-place
+  snapshot, and relocated snapshot compared **field for field**, not digest against digest. I
+  reproduced this independently on `constraint_domain_inapplicable`: all fields agree on all three
+  routes except `source_file`, which is the documented route-dependent field, and the
+  `@inapplicable:` annotation survives all three. The residual is audit-F4, about the exemption
+  rather than the assertion.
+- **Smell #3 (two representations manually kept in sync) — CLEAR ✓, and the item's strongest
+  result.** `collect_constraint_manifest` has zero hits in `src/` and `tests/`; the only surviving
+  mention records its retirement (`verification-matrix.md:336`). No generation path reads a second
+  inventory. Spec-F3's smell, inherited unresolved from the umbrella ledger, is closed in code.
+- **Smell #5 (a baseline preserves contradicting behavior) — CLEAR ✓.** Both schemas bumped rather
+  than shimmed — `CATALOG_SCHEMA_VERSION` 3.0.0 and `instance-graph/v3` — with a mismatch refused at
+  decode. I verified fail-closed directly: a v2 token and a stripped `constraint_usages` key are
+  both refused by name (`SI_SNAPSHOT_INVALID`). The **[HARD]** `catf_mfe_d5` byte pin survives
+  honestly: all 65 usages are bare `constraint`, all grade `info`, so the halt is unreachable for
+  the frozen twin — asserted, not assumed.
+- **Point 1's "exactly one" is structural ✓**: ordered stop-at-first-match precedence, a closed
+  reason vocabulary per kind, a derived-never-authored severity, and a two-tier identity join
+  checked in both directions. Measured on `catf_mfe_d5`: 65 members, 65 dispositions, join arity
+  exact in both directions.
+- **Point 3's severity-by-cause matches Q3 exactly ✓** — reproduced on all three shapes. The
+  unattachable halt names usage, declaration id, location, owner, owner kind, and reason — past what
+  spec-F5 asked for. The vacuous advisory ships as the first real ADVISORY end to end, and
+  **invariant 59 independence is proven by probe**: codegen's encoded domain is byte-identical with
+  the advisory suppressed writer-side.
+- **Q7 honored structurally** — `satisfy` and requirement-side forms are dispositions *inside* the
+  domain (`out_of_scope_satisfy`, `out_of_profile_owner`), never a boundary that removes the usage.
+- **The headline correction is recorded honestly rather than papered over** — the 9 are visible
+  dispositions, not eligible constraints, and `catf_mfe_d5` has **zero** eligible. I confirmed this
+  from the `.sysml` source without the elaborator: 70 `constraint` lines minus 5 comments = 65, all
+  bare inline form, zero `assert`.
+- **Scope handoffs remain honest** — Q2's staged calc-def execution, L2-1/L2-2's coverage
+  denominator, and the CATF disposition table are all outside this item; none is silently absorbed.
+
+### Gate
+
+**DISPOSED** (audit-F1..audit-F5) — no owner-graded or **[HARD]** statement is contradicted by the
+*behavior*, so nothing in the lens blocks outright. But the ledger's own falsifier fired on
+audit-F1, against an **[OWNER]**-graded sequencing rule, and **audit-F1 must be closed before this
+item closes** — it is a doc edit, not a design question. **Two smells fired: #2** (audit-F2) and
+**#4** (audit-F3); neither is resolved here, and under the audit rubric an unresolved fired smell
+forbids Certify. Smells #1, #3 and #5 are CLEAR, and #3's clearance — the manifest sweep genuinely
+gone with no synced replacement — is the result that makes this the right piece of work.
+
+**Audit-side disposition record (2026-08-12, same session):** findings handed to the item owner
+**unapplied**; nothing was fixed. The audit verdict is **Needs-work**, driven by audit-F1,
+audit-F2, and one finding outside the lens's scope (`audit.md` **A1**: removing a non-reaching
+carrier from the shipped catalog does not fail generation, leaving spec success criterion 2 unmet
+for 56 of the 65 members). Recommended: A1, audit-F1 and audit-F2 closed in this item before close;
+audit-F3 fixed or its exemption written down; audit-F4 filed as the oracle's fourth rule; audit-F5
+a one-line correction. Full probe evidence in `audit.md`.
