@@ -342,3 +342,112 @@ the invariant-48 one, and rev 2 moves toward it on both counts.
 
 **Gate: DISPOSED (design-F1..design-F4)** — nothing blocks. The reviewer's own lens pass
 (`design_review-F1..F3`) reached the same gate and is folded into DR-2, DR-3, and DR-13.
+
+---
+
+## Audit stage — 2026-08-13
+
+**Provenance flag:** unlike the spec- and design-stage entries in this ledger, this one is **not**
+reconstructed. `/home/reid/.claude/scripts/product-lens.md` was readable in this session, so the
+lens was run as specified — a `general-purpose` subagent whose entire instruction set is that
+script, deriving the point independently from SOURCES (repo `README`/`docs/`/`CLAUDE.md`, ADR-009,
+the lifecycle contract and its requirements companion, owner-verbatim in the umbrella spec) against
+WORK (`git diff 826adf0..cb19011` in codegen and `git diff fa0e06a..HEAD` in TEAx, plus the tests).
+The block below is its output. The three findings that change an artifact were each reproduced
+first-hand by the auditor before being carried into `audit.md`.
+
+## audit — 2026-08-13 — rev cb19011 (codegen, branch item7-rebuild) / e0c7e48 (teax, branch constraint-semantics-item3)
+
+**Point** (re-derived): A constraint report must let a design search tell "checked and passed" from
+"not checked", and tell a constraint-bearing-but-unassessed model from a constraint-free one — with
+the sealed catalog as the one authority coverage is derived from, in one direction. — source:
+`.project/active/constraint-semantics-contract/spec.md:17-23` (owner-verbatim framing) and D-3
+owner-verbatim "we need to purge this mess" (`…lifecycle-contract.md:503`), grade: **owner**;
+operationalized by contract "Headline states and coverage truth" + invariants 32/33/46a/48/61 and
+ADR-009 (`docs/architecture/modeling-assumptions.md:539`), grade: agent/ratified.
+
+**Falsifier:** generate the richest model (`catf_mfe_d5`, 65 authored usages, 0 eligible) and a
+constraint-free model; the point is violated if both reach the same runtime disposition, if any
+package reads `full_satisfaction`/`satisfied` while an applicable gate went unassessed, or if the
+report's coverage numbers are maintained anywhere but as a derivation of the sealed catalog.
+
+**Findings**
+
+- **audit-F1 [DO] — the `indeterminate` state is never pinned end to end, and never against a
+  partial account.** `tests/execution/test_constraint_coverage_matrix.py` is titled "All six states,
+  end to end" but `SIX_STATES` carries five rows and none is indeterminate (two `not_assessed`
+  variants occupy the slot). At unit tier `tests/unit/test_report_precedence.py:55` pins
+  `(["indeterminate","satisfied"], COMPLETE)` only, so the contract-ordered case "indeterminate
+  outranks partial coverage" is untested at every tier. — source: contract invariant 33 / "Headline
+  states and coverage truth" states 1-6, LC-E11 (agent/ratified) — falsifier: an aggregator that
+  returned `partial_coverage` when a Kleene-unknown gate coexists with an unassessed one passes the
+  whole suite. — **disposition: DISPOSE** — add `(["indeterminate"], PARTIAL, "indeterminate")` to
+  the precedence table and one execution-lane row; no behaviour defect found (the emitted `run`
+  checks statuses before the account, so the arm is correct as written). Carried as **audit A-4**.
+
+- **audit-F2 [DON'T] — two coordinated-repo texts still teach the superseded rule the item exists to
+  retire.** `teax/…/fixtures/excluded_only/models/excl_library.sysml`'s doc comment states the
+  package's headline is `not_assessed`; the regenerated package correctly emits `partial_coverage`,
+  and the test that reads it is named for the new state. The same fixture's consumer test carries a
+  stale section header, "INV-B — excluded-only → exact not_assessed surface"
+  (`test_constraint_evidence_durability.py:175`). The owner's directing `[NEED]` — documentation and
+  the test model are fixed to match the settled semantics before tests confirm — was honoured for
+  its stated referent (codegen docs and `catf_mfe_d5`; `expected-coverage.md` is hand-written from
+  `.sysml` source before the code existed, and ADR-009's Scope paragraph was updated with the five
+  tokens), so extending it to a TEAx unit fixture is the lens's inference, not the owner's words. —
+  source: `spec.md` owner-directed sequence, applied by extension (AGENT/INFERRED) — falsifier: a
+  modeller reading the fixture model learns the pre-Item-3 rule from a package that disproves it. —
+  **disposition: DISPOSE** — correct both comments; factual, verifiable, no rerun needed. Carried as
+  **audit A-6** (items 3 and 4), which adds two further sites in TEAx production code.
+
+- **audit-F3 [DO] — smell 6 fires, narrowly.** Regenerating `f1_arithmetic` from the new authored
+  model reordered execution (`f3` first), and `test_f1_arithmetic_normalization.py`'s
+  `nested_division` case had its `earlier_channels` tuple emptied (`("f1…","f2…")` → `()`). That
+  parametrized case existed to prove earlier evidence survives a later module's failure; it now
+  asserts over an empty tuple and passes vacuously. The property survives only because the sibling
+  `zero_negative_power` case still carries two earlier channels. — source: contract invariants 44/45
+  (failure normalization preserves evidence) (agent/ratified) — falsifier: break the
+  preserve-earlier-evidence path and the `nested_division` case still goes green. — **disposition:
+  DISPOSE** — re-point the case at the last-executing module or restore two-case coverage. Carried
+  as **audit A-5**.
+
+- **audit-F4 [DO] can't-find** — this repo has no `.project/product/` index, so the coverage-truth
+  promise has no product-promise home; it exists only as a concept subsection plus an
+  `[AGENT] (ratified)` ADR. Nothing in the WORK depends on the gap. — source: no durable statement
+  located (none) — **disposition: DISPOSE** — file a first-capture entry when the owner next states
+  the promise in their own words.
+
+**Smells.** **1 (two representations manually synchronized)** fires on the vendored cross-repo
+constants — codegen `RUNTIME_CONTRACT_VERSION`/`CATALOG_SCHEMA_VERSION` against TEAx `ACCEPTED_*`
+sets — and on the twin headline vocabularies either side of the no-import boundary. Escalated, then
+disposed: the boundary is a standing design constraint, the accepted sets were **replaced not
+extended** so a pre-item package fails at seal verification before any report is read,
+`canonical_headline`/`_disposition_for` refuse an unmapped token by name (invariant 46a), and all
+five report tokens are pinned 1:1 in `teax/…/test_projection.py::test_headline_normalization`.
+**6** fires only as audit-F3. Smells **3, 4, 5** did not fire; the item moves against 5 deliberately
+— `all_satisfied` was renamed rather than redefined and back-compatible acceptance of old packages
+was refused, so a stale reader breaks by name instead of misreading a strengthened claim. The
+deleted `f1_arithmetic/generate_fixture.py` is **not** a smell: it called modules the cutover
+recovery deleted and could not run at any current revision; replacing it with an authored model on
+the ordinary public route removes a bespoke exemption rather than creating one, case values are
+unchanged, and the identity drift it surfaced is annotated at each site.
+
+**Gate: DISPOSED (audit-F1, audit-F2, audit-F3, audit-F4)** — nothing blocks. No owner-graded
+statement is contradicted and no Item 1 ruling is overturned, so no finding reaches BLOCK grade.
+Certify is permitted on this gate.
+
+**Resolves**
+
+- **item3-F2: DEFERRED** — authority: prior disposition (surface, do not resolve; capture-fidelity
+  law 4) — basis: the unreachable "BLOCKed asserted usage stays in the denominator" clause is carried
+  in `generation/coverage.py:65` as one row of a total map over `DISPOSITION_REASONS`, which is a
+  totality claim rather than a reachability claim; the warned-against unbuildable "asserted +
+  BLOCKed → partial coverage" fixture was correctly not written. Still awaiting an Item 1 ruling on
+  whether the clause is dead text or invariant 1 is narrower than written.
+
+**Auditor's note on the three code-level residuals.** The lens did not reach A-1 (`UnknownHeadlineToken`
+untested), A-2 (invariant 41 over the nested block untested) or A-3 (invariant 50's carrier claimed
+`[x]` against a pre-existing test that varies a different field). Those are test-coverage gaps
+against named spec criteria rather than product contradictions, so they belong in the audit rubric,
+not in this ledger — recorded here only so a later reader does not read a DISPOSED gate as "nothing
+outstanding."

@@ -60,30 +60,30 @@ report or study label may claim more coverage than was assessed.
 Carried from the epic's Item 3 section, all **[INHERITED: epic_constraint_semantics_contract.md
 Item 3]** unless marked.
 
-- [ ] Each of the six states — fully-covered satisfaction, partial coverage, violation,
+- [x] Each of the six states — fully-covered satisfaction, partial coverage, violation,
       indeterminate, descriptive-only not-assessed, and truly unconstrained — has an independently
       pinned report outcome **and** an independently pinned canonical TEAx outcome. The matrix is
       five report headline values (the sixth state is report-absent by construction) and six runtime
       dispositions, each pinned by a test that no other state satisfies.
-- [ ] **[AGENT] (orchestrator-ratified, 2026-08-12)** The coverage accounting survives a headline
+- [x] **[AGENT] (orchestrator-ratified, 2026-08-12)** The coverage accounting survives a headline
       that outranks it: a report whose headline is `violation` still states how much of the
       applicable asserted population was assessed, and those numbers reach the durable case record.
       Proven on a model with one violated gate and at least one unassessed applicable asserted gate —
       the report reads `violation` **and** carries a non-full coverage account.
-- [ ] The full-satisfaction headline is impossible when any applicable asserted usage lacks
+- [x] The full-satisfaction headline is impossible when any applicable asserted usage lacks
       assessment — proven on a model where some, not all, applicable asserted gates are assessed
       and all assessed ones pass.
-- [ ] A model containing only plain or requirement-side usages generates a zero-input not-assessed
+- [x] A model containing only plain or requirement-side usages generates a zero-input not-assessed
       report; a model with zero constraint usages remains report-free and maps to `unconstrained`.
-- [ ] **[INHERITED: contract Appendix C "Excluded-only usages" / "Asserted vacuous gate"; LC-E12]**
+- [x] **[INHERITED: contract Appendix C "Excluded-only usages" / "Asserted vacuous gate"; LC-E12]**
       A model whose applicable asserted gates all produced zero eligible concrete entries also
       generates the zero-input aggregator, and its report reads **partial coverage** — pinned
       separately from the descriptive-only not-assessed case, since the two share a shape and differ
       in headline.
-- [ ] Report coverage is derived from the catalog in one direction and cannot diverge from the
+- [x] Report coverage is derived from the catalog in one direction and cannot diverge from the
       per-usage inventory without a generation-time or verification-time failure — proven by a
       negative test that perturbs one side and observes the refusal.
-- [ ] Partial coverage defaults to keep-for-boundary — the conservative disposition: the candidate
+- [x] Partial coverage defaults to keep-for-boundary — the conservative disposition: the candidate
       is retained to inform the feasible boundary, but its results are **not** fed back to steer the
       search. Feeding a partially-covered candidate to the search strategy (feed-strategy, the
       permissive disposition, and what a fully-covered satisfied candidate gets today) happens only
@@ -96,10 +96,10 @@ Item 3]** unless marked.
 - [ ] **[INHERITED: invariant 50]** (review L3-3b) The durable-store transition is proven, not
       assumed: either an equivalence proof over old and new artifacts, or an archived old store with
       a new lineage begun. No stored record is rebound to a new identity silently.
-- [ ] Cross-repository compatibility tests pass, codegen and TEAx full suites pass, ruff/mypy are
+- [x] Cross-repository compatibility tests pass, codegen and TEAx full suites pass, ruff/mypy are
       zero-new against baseline, generated artifacts are reviewed, and `git diff --check` is clean —
       with exact counts recorded in `verification.md`.
-- [ ] **[INHERITED: constraint-semantics-contract-amendments/audit.md M-1]** The four
+- [x] **[INHERITED: constraint-semantics-contract-amendments/audit.md M-1]** The four
       `all_satisfied` assertions in codegen `tests/execution/` are moved to the new vocabulary and
       each now asserts a coverage claim rather than a not-failed one. Three
       (`test_constraint_verdicts_exact_route.py:171,416,540`) are bare headline asserts. The fourth
@@ -108,6 +108,16 @@ Item 3]** unless marked.
       so moving it means hand-writing the expected coverage block for that route, from the settled
       semantics, before the test is run. That is the Sequencing `[NEED]` in action, not a token
       swap.
+
+**Audit 2026-08-13 (`audit.md`, verdict Certify-with-residuals).** Nine of twelve criteria verified
+met and marked. The three left unchecked are met **in code** but proven by no test, each verified by
+a direct probe at audit time and each a named Validation-Approach item the design asked for:
+the nested coverage block's immutability (audit **A-2**, design validation item 10), both-sided
+fail-closed on unknown tokens (**A-1**, item 9 — the report side is pinned, the runtime side is
+not), and invariant 50's carrier (**A-3**, item 11 — the only `IncompatibleStore` test predates this
+item and varies `strategy_config`, not `evidence_schema_version`; `verification.md:351` claims it
+`[x]` and that claim is unearned). The keep-for-boundary criterion is marked, with the residual that
+its `feed-strategy` opt-in path is also untested.
 
 ## Known Requirements
 
