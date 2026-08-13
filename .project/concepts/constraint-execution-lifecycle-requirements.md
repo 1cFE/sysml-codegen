@@ -273,14 +273,26 @@ state are not restated here; the lifecycle contract's "Current conclusion" is th
   (declaration plus concrete occurrence), and owner/name reconstruction is not conformance —
   contract invariant 26 (amended) and invariant 55; see LC-SI-08.
 - **LC-E05 [INFERRED]** The canonical catalog must expose definition/source inventory, one visible
-  disposition per usage, and one concrete execution entry per admitted occurrence. It carries
+  disposition per usage, and one concrete execution entry per admitted occurrence. A visible
+  disposition is one of three kinds — eligible, excluded-with-reason, or non-reaching-with-reason —
+  and the dispositions cover the complete authored-usage domain. It carries
   source form, usage short name/QN, owner QN, definition QN, and an explicit definition-to-usage join,
   each on the per-eligible concrete entry. `owner_qn` is a real qualified name distinct from
   `owner_instance_path`, and the definition-to-usage join is entry-level. Current code lacks the
   admitted per-usage record and these five TEAx-consumed fields; closing the coverage model is
   additive schema work. Each result joins one concrete entry by `constraint_id`.
-- **LC-E06 [INHERITED]** Excluded/unassessed usages remain inspectable with identity, reason, and portable
-  location. They never masquerade as executed constraints or vanish from coverage.
+  Amended 2026-08-12 (CONSTRAINT-SEMANTICS Item 1), `[AGENT] (ratified by owner, 2026-08-12)`: a
+  visible disposition is one of three kinds — eligible, excluded-with-reason, or
+  non-reaching-with-reason — and the dispositions cover the complete authored-usage domain;
+  "reaches no instance" is a disposition, not an absence. Superseded: the requirement named no
+  disposition kinds and left non-reaching usages uncovered. See contract invariant 28 (amended).
+  *(This item rewrites requirement text in place under the header's forward-amendment rule; the
+  superseded text is quoted in each amendment note.)*
+- **LC-E06 [INHERITED]** Excluded, unassessed, and non-reaching usages remain inspectable with
+  identity, reason, and portable location. They never masquerade as executed constraints or vanish
+  from coverage. Amended 2026-08-12 (CONSTRAINT-SEMANTICS Item 1),
+  `[AGENT] (ratified by owner, 2026-08-12)`: the same guarantee now covers non-reaching usages.
+  Superseded: "Excluded/unassessed usages remain inspectable…". See contract invariant 28 (amended).
 - **LC-E07 [INHERITED]** One reusable polarity-neutral predicate body is compiled per true predicate
   source. One wrapper/module exists per concrete assertion. All same-source entries must agree on
   canonical IR bytes while preserving independent source polarity; mixed polarity may not inherit
@@ -294,14 +306,40 @@ state are not restated here; the lifecycle contract's "Current conclusion" is th
 - **LC-E10 [INHERITED]** Constraint evidence schemas are exact and registered. The aggregator requires
   one field per eligible concrete assertion with extras forbidden. Missing evidence is failure. The
   aggregator remains an exit ancestor whenever a constraint report is required. A model with
-  constraint usages but zero eligible concrete assertions still requires the zero-input aggregator
-  and a `not_assessed` report; a model with no constraint usages remains inert and has no aggregator.
-- **LC-E11 [INHERITED]** Report headline precedence is: any violation → `violation`; else any
-  indeterminate → `indeterminate`; else any assessed result → `all_satisfied`; else
-  `not_assessed`. Source: original concept and generation spec.
+  constraint usages but no applicable asserted gate still requires the zero-input aggregator and a
+  report carrying the not-assessed state; a model with no constraint usages remains inert and has no
+  aggregator. Amended 2026-08-12 (CONSTRAINT-SEMANTICS Item 1),
+  `[AGENT] (ratified by owner, 2026-08-12)`: the trigger is the absence of an applicable asserted
+  gate, not the absence of eligible concrete assertions — an applicable gate that produced zero
+  eligible entries reads partial coverage. Superseded: "A model with constraint usages but zero
+  eligible concrete assertions still requires the zero-input aggregator and a `not_assessed`
+  report". See contract invariant 32 (amended).
+- **LC-E11 [INHERITED]** Report headline precedence is: violation, then indeterminate, then full
+  satisfaction, then partial coverage, then not assessed. Full satisfaction requires every
+  applicable asserted gate to have been assessed and passed; an assessed result alone does not earn
+  it. Source: original concept and generation spec — which is the source of the requirement's
+  subject, not of the precedence below. Amended 2026-08-12 (CONSTRAINT-SEMANTICS Item 1),
+  `[AGENT] (ratified by owner, 2026-08-12)`, sourced to
+  `.project/active/constraint-semantics-contract/spec.md` and ADR-009: the coverage-truthful
+  five-state precedence above **replaces** the inherited rule in full. Superseded: "Report headline
+  precedence is: any violation → `violation`; else any indeterminate → `indeterminate`; else any
+  assessed result → `all_satisfied`; else `not_assessed`." See contract invariant 33 (amended).
 - **LC-E12 [INHERITED]** Constraint-free models remain byte-stable. No constraint usage means no
-  constraint catalog or modules. Constraint usages with zero eligible entries still produce
-  visible exclusions and the `not_assessed` report surface.
+  constraint catalog or modules. An asserted usage with zero eligible entries still produces visible
+  exclusions and puts the report at the partial-coverage state; a constraint-bearing model whose
+  usages are all non-asserted reads not assessed. Amended 2026-08-12 (CONSTRAINT-SEMANTICS Item 1),
+  `[AGENT] (ratified by owner, 2026-08-12)`, sourced to ADR-009: zero eligible entries under an
+  asserted usage is partial coverage, not the not-assessed surface. Superseded: "Constraint usages
+  with zero eligible entries still produce visible exclusions and the `not_assessed` report surface."
+  See contract invariants 32 and 33 (both amended).
+- **LC-E13 [AGENT] (ratified by owner, 2026-08-12)** An asserted usage whose owner has zero
+  occurrences — a vacuous gate — is visible at warning grade: the catalog carries a
+  non-reaching-with-reason disposition and authoring validation emits an advisory naming the usage
+  and its detached owner. It counts as missing assessment for feasibility coverage until it carries
+  an explicit inapplicability disposition, at which point it leaves the denominator. It is neither a
+  generation halt nor a silent pass. Added 2026-08-12 (CONSTRAINT-SEMANTICS Item 1), mirroring
+  contract invariant 61 (minted by the same item); acceptance in contract Appendix C, "Asserted
+  vacuous gate".
 
 ### F. Snapshot, contracts, and package integrity
 
@@ -364,6 +402,10 @@ state are not restated here; the lifecycle contract's "Current conclusion" is th
   and occurrence data directly. TEAx binds compatibility to the real semantic/catalog identity,
   not a standalone-byte stand-in. Source: owner, 2026-07-19: “100% Option A. We need to purge this
   mess.”
+  Amended 2026-08-12 (CONSTRAINT-SEMANTICS Item 1), `[AGENT] (ratified by owner, 2026-08-12)`: the
+  embedded catalog is also the sole authority for coverage truth — the report's coverage accounting
+  derives from it in one direction and is never an independently maintained second inventory. See
+  contract invariant 48 (amended). The owner-sourced requirement above is unchanged.
 - **LC-G07A [INFERRED]** The catalog-identity transition either proves an old store artifact-
   equivalent and migrates it, or preserves it as an archived lineage and starts a new store;
   identity is never silently reassigned.

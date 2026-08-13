@@ -370,23 +370,30 @@ git diff -- .project/concepts/constraint-execution-lifecycle-requirements.md | g
 **See `design.md` Appendix B, B1–B7**, including the four things every amendment note does and the
 one-time convention statement B1 carries.
 
-- [ ] B1 — LC-E05, plus the one-time convention statement
-- [ ] B2 — LC-E06
-- [ ] B3 — LC-E10
-- [ ] B4 — LC-E11, the wholesale replacement. `[INHERITED]` marker and `Source:` line stay, with the
+- [x] B1 — LC-E05, plus the one-time convention statement
+- [x] B2 — LC-E06
+- [x] B3 — LC-E10
+- [x] B4 — LC-E11, the wholesale replacement. `[INHERITED]` marker and `Source:` line stay, with the
       clarifying clause; the replacement body is sourced to the umbrella spec and ADR-009 at
       agent-ratified grade
-- [ ] B5 — LC-E12 (cites invariants **32 and 33**)
-- [ ] B6 — LC-G07, append-only. The owner quote and existing text stay **byte-identical**
-- [ ] B7 — new LC-E13, the companion mirror of invariant 61, after LC-E12
+- [x] B5 — LC-E12 (cites invariants **32 and 33**)
+- [x] B6 — LC-G07, append-only. The owner quote and existing text stay **byte-identical**
+- [x] B7 — new LC-E13, the companion mirror of invariant 61, after LC-E12
 
 ### Validation
 
-- [ ] Every one of B1–B5 and B7 carries `[AGENT] (ratified by owner, 2026-08-12)` on its **new**
-      content, and no requirement's own grade marker changed (RI-2)
-- [ ] Every rewrite quotes its superseded text
-- [ ] LC-G07's owner quote is unchanged in the diff
-- [ ] `git diff --check` clean
+- [x] Every one of B1–B5 and B7 carries `[AGENT] (ratified by owner, 2026-08-12)` on its **new**
+      content, and no requirement's own grade marker changed (RI-2). Six `Amended 2026-08-12
+      (CONSTRAINT-SEMANTICS Item 1)` notes (B1–B6); B7 is an addition and carries `Added`
+- [x] Every rewrite quotes its superseded text — five `Superseded:` clauses (B1–B5). B6 is
+      append-only and B7 supersedes nothing
+- [x] LC-G07's owner quote is unchanged in the diff — `git diff | grep "^-.*100% Option A"` is empty
+- [x] `git diff --check` clean
+
+**Note on the grade-marker check stencil.** `git diff | grep -E "^-.*\[INHERITED\]"` returns two
+lines, for LC-E06 and LC-E11. Both are rewrites of the marker's own line, and both `+` sides carry
+the identical `[INHERITED]` marker. RI-2 holds: the check's raw form cannot tell a rewritten line
+from a removed grade, and the grades were read on both sides to confirm.
 
 **What We Know After This Phase:** the side Items 2 and 3 read for requirements states the same rule
 as the contract, including the warning tier.
