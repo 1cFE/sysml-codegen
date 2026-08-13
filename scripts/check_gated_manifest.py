@@ -6,14 +6,22 @@ the other d5 variants cannot transfer to it (`scripts/make_d5_variant.py`). This
 replacement, and it proves a stronger thing than "what changed": it proves **every change was
 authorized**.
 
-The join, over four committed sources and nothing else — **license-free by construction**:
+The join, over committed artifacts and nothing else — **license-free by construction**:
 
 =================================================================  =============================
 `tests/expectations/constraint_population/catf_mfe_d5.json`        the 65 authored usages
 `tests/expectations/constraint_population/catf_mfe_gated.json`     the 58 carriers
 `tests/fixtures/catf_mfe_gated/PROVENANCE.md`                      renames + deletion records
 `tests/expectations/gated_manifest/catf_mfe_gated.json`            the ruled table's counts
+`tests/fixtures/catf_mfe_gated/**/*.sysml`                         the replacing derivations
 =================================================================  =============================
+
+**The fifth source is the deletion side's outside evidence.** The first four are all documents,
+so a deletion record used to be accepted on the strength of citing an authorizing row — whether
+the derivation it promises exists in source, and whether it carries the relation intent the
+owner ruled must survive the deletion, went unchecked. Two bare initializers rode that gap
+through four phases of gates (audit finding A-1). `check_derivations` closes it, which turns the
+owner's documentation obligation from a claim into a gated property.
 
 Every d5 usage must be **either** a carrier — matched by qualified name, or through the
 ``renamed_from:`` field on a carrier's per-change record — **or** a named deletion record citing
@@ -43,7 +51,8 @@ REPO = Path(__file__).resolve().parents[1]
 D5_POPULATION = REPO / "tests/expectations/constraint_population/catf_mfe_d5.json"
 GATED_POPULATION = REPO / "tests/expectations/constraint_population/catf_mfe_gated.json"
 GATED_MANIFEST = REPO / "tests/expectations/gated_manifest/catf_mfe_gated.json"
-PROVENANCE = REPO / "tests/fixtures/catf_mfe_gated/PROVENANCE.md"
+FIXTURE_ROOT = REPO / "tests/fixtures/catf_mfe_gated"
+PROVENANCE = FIXTURE_ROOT / "PROVENANCE.md"
 
 #: One per-change record's rename pair, written as two adjacent bullet lines:
 #:     - **`renamed_from:` `<d5 qualified name>`** (d5 `physics.sysml:134`)
@@ -78,6 +87,41 @@ class DeletionRecord:
     table_row: str
     usage_qualified_name: str
     authorizing_row: str
+
+
+#: Each `derive-instead` row, and how to find the derivation that replaces it in the
+#: derivative's source. Keyed by the deleted usage's qualified name.
+#:
+#: The ruled table (`owner-disposition.md`) names all five. Two of them — A1 and A4 — are
+#: deletions with no derivation of their own: A1 is the instance-level restatement of C37's
+#: identity, and A4 asserted a literal against itself. The other three must exist in source
+#: **and** carry the owner-required relation + chosen-basis statement.
+DERIVATIONS: dict[str, tuple[str, str] | None] = {
+    "CATFMFEPhysics::catf_physics::PowerBalanceConsistency": None,
+    "CATFMFERadialBuild::catf_radial_build::TotalRadiusConsistency": None,
+    "CATFMFEShield::catf_shield::CompositionConsistency": (
+        "designs/catf_mfe/shield.sysml",
+        "attribute fraction_volume : Real = 1.0 - neutron_shield.fraction_volume;",
+    ),
+    "CATFMFEVacuum::catf_vacuum_vessel::ThicknessConsistency": (
+        "designs/catf_mfe/vacuum.sysml",
+        "attribute outer_radius : Real = inner_radius + wall_thickness;",
+    ),
+    "FusionPhysics_PowerBalance::AlphaNeutronSplit::EnergyConservation": (
+        "library/physics/power_balance.sysml",
+        "out attribute p_neutron : Real = p_fusion - p_alpha;",
+    ),
+}
+
+#: The two statements the owner's structural amendment requires beside every derivation
+#: (`owner-disposition.md:37-41`). Matched case-insensitively on the comment block above the
+#: initializer, because the point is that the statements are *there*, not their capitalization.
+RELATION_MARKER = "relation (undirected):"
+BASIS_MARKER = "chosen basis, not physics"
+
+#: How far above an initializer the comment block may start. Generous enough for the longest
+#: authored block (A7's seven lines, which also carries the O3 debt pointer).
+COMMENT_WINDOW = 12
 
 
 @dataclass(frozen=True)
@@ -142,6 +186,64 @@ def parse_deletions(provenance: str) -> list[DeletionRecord]:
     return records
 
 
+def _comment_block_above(lines: list[str], index: int) -> str:
+    """The contiguous `//` comment block immediately above `lines[index]`."""
+    block = []
+    cursor = index - 1
+    while cursor >= 0 and index - cursor <= COMMENT_WINDOW:
+        stripped = lines[cursor].strip()
+        if not stripped.startswith("//"):
+            break
+        block.append(stripped)
+        cursor -= 1
+    return "\n".join(reversed(block)).lower()
+
+
+def check_derivations(fixture_root: Path) -> list[str]:
+    """Every `derive-instead` row's replacing derivation, in source, with its statements.
+
+    The identity check joins four documents and never opens a `.sysml`, so a deletion record
+    is otherwise accepted on the strength of citing an authorizing row — whether the
+    derivation it promises exists, and whether it carries the relation intent the owner ruled
+    must survive the deletion, went unchecked. That gap shipped two bare initializers past
+    four phases of gates (audit finding A-1). This closes it.
+    """
+    problems: list[str] = []
+    for usage, derivation in DERIVATIONS.items():
+        if derivation is None:
+            continue
+        relative, initializer = derivation
+        path = fixture_root / relative
+        if not path.exists():
+            problems.append(f"{usage}: {relative} does not exist")
+            continue
+        lines = path.read_text().splitlines()
+        matches = [i for i, line in enumerate(lines) if initializer in line]
+        if not matches:
+            problems.append(
+                f"{usage}: derive-instead promises `{initializer}` in {relative}, not found"
+            )
+            continue
+        if len(matches) > 1:
+            problems.append(f"{usage}: `{initializer}` is not unique in {relative}")
+            continue
+        comment = _comment_block_above(lines, matches[0])
+        missing = [
+            name
+            for name, marker in (
+                ("the undirected relation", RELATION_MARKER),
+                ("the chosen-basis statement", BASIS_MARKER),
+            )
+            if marker not in comment
+        ]
+        if missing:
+            problems.append(
+                f"{usage}: the derivation at {relative}:{matches[0] + 1} is missing "
+                f"{' and '.join(missing)} — required by owner-disposition.md:37-41"
+            )
+    return problems
+
+
 def run() -> Result:
     """Join the four sources and prove the identity. Raises `ManifestError` on any failure."""
     authored = usage_names(D5_POPULATION)
@@ -182,6 +284,8 @@ def run() -> Result:
         problems.append(
             f"d5 usages that are neither a carrier nor a named deletion: {sorted(unaccounted)}"
         )
+
+    problems.extend(check_derivations(FIXTURE_ROOT))
 
     if problems:
         raise ManifestError("; ".join(problems))

@@ -2,18 +2,25 @@
 
 `catf_mfe_gated` deliberately differs from `catf_mfe_d5`, so the byte-reversal proof that pins
 the other d5 variants cannot transfer to it. `scripts/check_gated_manifest.py` replaces it with
-an accounting identity — ``65 = 58 carriers + 7 named deletions`` — joined from four committed
+an accounting identity — ``65 = 58 carriers + 7 named deletions`` — joined from committed
 artifacts, license-free.
 
 **A check nobody has seen fail is not yet a check.** The identity would close vacuously if the
 `renamed_from:` bridge were dropped or pointed somewhere a deletion already claims, so both of
-those mutations are exercised here for real, against a temporary copy of PROVENANCE, and the
+those mutations are exercised here for real, against a temporary copy of the fixture, and the
 check must refuse each one by name.
+
+The same standard applies to the **deletion** side (audit A-3). A deletion record used to be
+accepted on the strength of citing an authorizing row, so nothing tied it to the derivation it
+promises — which is how two derivations shipped without the relation intent the owner ruled must
+survive the deletion. `check_derivations` reads the `.sysml`, and both of its failure modes are
+exercised here: the documentation stripped, and the initializer itself gone.
 """
 
 from __future__ import annotations
 
 import importlib.util
+import shutil
 import sys
 from pathlib import Path
 
@@ -94,6 +101,55 @@ def test_a_renamed_from_claimed_by_a_deletion_fails(mutated_provenance):
     message = str(failure.value)
     assert "a deletion record also claims" in message
     assert "PowerBalanceConsistency" in message
+
+
+def test_every_derive_instead_row_has_its_derivation_in_source():
+    """The deletion side's outside evidence (audit A-3).
+
+    The document join alone accepted a deletion record on the strength of citing an authorizing
+    row. Whether the derivation it promises exists, and whether it carries the relation intent
+    the owner ruled must survive the deletion, went unchecked — which is how two bare
+    initializers rode through four phases of gates.
+    """
+    assert check_gated_manifest.check_derivations(check_gated_manifest.FIXTURE_ROOT) == []
+
+
+def test_a_derivation_missing_its_basis_comment_fails_closed(tmp_path, monkeypatch):
+    """Strip A7's relation + chosen-basis block and the check must name that row."""
+    root = tmp_path / "catf_mfe_gated"
+    shutil.copytree(check_gated_manifest.FIXTURE_ROOT, root)
+    shield = root / "designs/catf_mfe/shield.sysml"
+    stripped = [
+        line
+        for line in shield.read_text().splitlines(keepends=True)
+        if "Relation (undirected): neutron_shield" not in line
+        and "CHOSEN BASIS, not physics: neutron_shield" not in line
+    ]
+    shield.write_text("".join(stripped))
+
+    problems = check_gated_manifest.check_derivations(root)
+    assert len(problems) == 1
+    assert "CompositionConsistency" in problems[0]
+    assert "the undirected relation" in problems[0]
+    assert "the chosen-basis statement" in problems[0]
+
+
+def test_a_missing_derivation_fails_closed(tmp_path):
+    """The other half: the initializer itself gone, not just its documentation."""
+    root = tmp_path / "catf_mfe_gated"
+    shutil.copytree(check_gated_manifest.FIXTURE_ROOT, root)
+    vacuum = root / "designs/catf_mfe/vacuum.sysml"
+    vacuum.write_text(
+        vacuum.read_text().replace(
+            "attribute outer_radius : Real = inner_radius + wall_thickness;",
+            "attribute outer_radius : Real = 6.5 [m];",
+        )
+    )
+
+    problems = check_gated_manifest.check_derivations(root)
+    assert len(problems) == 1
+    assert "ThicknessConsistency" in problems[0]
+    assert "not found" in problems[0]
 
 
 def test_a_deletion_without_an_authorizing_row_fails(mutated_provenance):
