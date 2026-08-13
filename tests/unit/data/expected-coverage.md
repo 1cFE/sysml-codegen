@@ -120,6 +120,57 @@ usages — not asserted — so all 65 land in bucket 1 and nothing reaches the d
 This is the shape that motivates the item: 65 authored checks, none assessed, and today the package
 emits no report at all.
 
+### `catf_mfe_gated` — the CATF derivative, two executing gates
+
+**Derived from the ruled disposition table, not from a run** (CONSTRAINT-SEMANTICS Item 5;
+`.project/active/catf-constraint-policy-acceptance/owner-disposition.md`, RULED 2026-08-13).
+Committed before the fixture that produces it existed — that commit order is SC-6's evidence.
+
+**The population: 58 carriers.** `65 = 58 carriers + 7 named deletions` (5 derive-instead —
+A1, A4, A7, A8, C37; 2 O2 placeholder deletions — C21, C28). Every counted usage, by
+`file:line` in the derivative:
+
+- **2 asserted, executing** — `designs/catf_mfe/physics.sysml:126`
+  (`catf_physics::net_power_viable`, A2, renamed from `ViabilityCheck`) and
+  `physics.sysml:134` (`catf_physics::parasitic_fraction_ok`, A3, renamed from
+  `ReasonableParasiticTotal`). Both are `assert constraint … : <def>` over
+  `library/constraints/gate_forms.sysml`, bindings-only, chains in binding position.
+- **3 plain, reaching** — `radial_build.sysml:604` (A5 `LayerContinuity`),
+  `radial_build.sysml:622` (A6 `RadiusThicknessConsistency`), `vacuum.sysml:164`
+  (A9 `PumpingSpeedConsistency`). Retained as visible plain usages under the D-S1/D-S2 ruling.
+- **5 plain, part-definition-owned** — `library/components/divertor.sysml:216`,
+  `first_wall.sysml:220`, `radial_build.sysml:55`, `shield.sysml:160`, `vacuum.sysml:155`
+  (B1–B5). No design part is typed by any of these definitions, so they reach zero instances.
+- **48 plain, calculation-definition-owned** — Group C minus C37, C21, C28, spread across
+  `library/analyses/thermal_loads.sysml` and `library/physics/{confinement,geometry,
+  neutronics,performance_metrics,power_balance,thermal}.sysml`. No calc-def attachment
+  capability exists (Item 6), so they reach nothing structurally.
+
+**Why `applicable_gate_total` is 2 and not 58.** The feasibility denominator is applicable
+asserted gates only (rulings-20260812 L2-1). The 56 plain usages are bucket 1 — "not asserted
+→ inventory only" — so they appear in `authored_usage_total` and never in the denominator.
+
+**Why `inapplicable_gate_count` is 0 and not 5.** This is the trap in this entry, and the
+number is 0 for a structural reason rather than an authoring accident. B1–B5 carry an
+inapplicability *disposition*, but they are **plain** usages, and bucket row 1 is decided
+before the inapplicable predicate is ever consulted (`generation/coverage.py:7-27`). A usage
+only reaches bucket 2 by being asserted *and* marked. None of the five is asserted, so all
+five land in bucket 1 and the inapplicable count stays 0. (Measured separately in Item 5
+Phase 1: the marker cannot even reach the domain on their inline-predicate shape, so the
+disposition is recorded in PROVENANCE. That finding does not change this number — the count
+is 0 with or without a marker.)
+
+**Why `assessed_entry_count` is 2.** Each of A2 and A3 hangs off `catf_physics`, which has one
+occurrence, so each eligible usage mints exactly one concrete entry: 1 + 1 = 2.
+
+**58 / 2 / 2 / 0 / 0 / `{}` / `complete`** → `headline = "full_satisfaction"`,
+`assessed_entry_count = 2`.
+
+That headline is the valid candidate's. The SC-5 mutation drops `p_fusion` until
+`p_electric_net_out` goes negative, which makes A2 report `violation` and takes the candidate
+to the study default `reject`; the coverage account above is unchanged by the mutation,
+because coverage is about the denominator and not about the outcome.
+
 ### `constraint_domain_plain_forms` — non-asserted inventory
 
 **Source evidence.** `model.sysml:15` — `constraint blocked_if_asserted` (bare, inside
@@ -265,6 +316,7 @@ gate_a_d5                             | 1 | 1 | 1 | 0 | 0 | {} | complete | full
 constraint_multi_instance             | 1 | 1 | 1 | 0 | 0 | {} | complete | full_satisfaction | 3
 constraint_def_owned_redefining       | 1 | 1 | 1 | 0 | 0 | {} | complete | full_satisfaction | 1
 constraint_domain_inapplicable        | 2 | 1 | 1 | 0 | 1 | {} | complete | full_satisfaction | 1
+catf_mfe_gated                        | 58 | 2 | 2 | 0 | 0 | {} | complete | full_satisfaction | 2
 catf_mfe_d5                           | 65 | 0 | 0 | 0 | 0 | {} | none | not_assessed | 0
 constraint_domain_plain_forms         | 2 | 0 | 0 | 0 | 0 | {} | none | not_assessed | 0
 constraint_domain_satisfy             | 2 | 0 | 0 | 0 | 0 | {} | none | not_assessed | 0
