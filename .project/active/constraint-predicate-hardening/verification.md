@@ -371,3 +371,13 @@ suite was not re-run; the focused files and both lint gates were.
 | `d31cc00` | cure L1/L2 (F2, F3) — two docstrings claim only what their test observes |
 | `d6b65f9` | cure L3 (F4) — D2's refusal bound pinned on both members, and the admitted edge |
 | `9251286` | cure L5 (F6) — the unit-carrying gate authoring rule lands in §8 |
+
+### One slip in the cure pass, recorded
+
+`a395f33`'s `git add -A .project docs` swept in an uncommitted 8-line edit to
+`.project/CURRENT_WORK.md` held by a concurrent owner session — the file the audit deliberately
+left alone for exactly that reason. **The content is intact and committed**, not lost, but it
+landed inside a commit whose subject does not mention it. History was not rewritten to split it
+out, because the surrounding SHAs are cited throughout this file and the reconciliation, and a
+rewrite would make the record wrong to fix a bookkeeping error. If the owner wants that edit
+carried differently, it is `git show a395f33 -- .project/CURRENT_WORK.md`.
