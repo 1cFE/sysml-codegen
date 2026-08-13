@@ -128,7 +128,7 @@ package CATFMFEPhysics {
             Net power must be positive for viable power plant.
             This ensures Q_eng > 1.0
             */
-            in value = p_electric_net_out;
+            in quantity = p_electric_net_out;
         }
 
         assert constraint parasitic_fraction_ok : FractionWithinBand {

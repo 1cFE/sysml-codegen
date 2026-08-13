@@ -256,23 +256,23 @@ tests/unit/test_coverage_ledger_agreement.py             # parses the ```ledger`
 ```
 
 ### Files to commit (one commit, before any fixture byte)
-- [ ] **`tests/expectations/constraint_population/catf_mfe_gated.json`** — the 58 carrier identities
+- [x] **`tests/expectations/constraint_population/catf_mfe_gated.json`** — the 58 carrier identities
       (`usage_qualified_name`, `source_file`, `source_line`), derived from d5's 65-row expectation
       minus the 7 deletions, with the two renamed gates carrying their **new** names
       (`…::net_power_viable`, `…::parasitic_fraction_ok`) and their new lines.
-- [ ] **`tests/unit/data/expected-coverage.md`** — one new prose entry plus one line in the
+- [x] **`tests/unit/data/expected-coverage.md`** — one new prose entry plus one line in the
       ```` ```ledger ```` block, in the existing field order:
       `catf_mfe_gated | 58 | 2 | 2 | 0 | 0 | {} | complete | full_satisfaction | 2`
       The prose entry cites the file and line of every usage it counted and states the
       `inapplicable_gate_count = 0` reasoning explicitly (below).
-- [ ] **Expected catalog disposition histogram** — `2 eligible / 3 excluded / 53 non_reaching`, with
+- [x] **Expected catalog disposition histogram** — `2 eligible / 3 excluded / 53 non_reaching`, with
       the three `excluded` rows named (A5, A6, A9) and stated to be indistinguishable from any other
       plain usage in the catalog.
-- [ ] **D2's expected identity** — `65 = 58 carriers + 7 named deletions`, with the 7 deletions named
+- [x] **D2's expected identity** — `65 = 58 carriers + 7 named deletions`, with the 7 deletions named
       (A1, A4, A7, A8, C37, C21, C28) and the 2 `renamed_from:` carriers named. Store it as a
       committed data file the script reads (not inline in `check_gated_manifest.py`) so the
       commit-order evidence is content-scoped and unambiguous.
-- [ ] **Expected report / study outcomes** — valid candidate: headline `full_satisfaction`, both
+- [x] **Expected report / study outcomes** — valid candidate: headline `full_satisfaction`, both
       gates satisfied, study default feed-strategy/penalize. Mutated candidate: headline `violation`
       via **A2**, study default `reject`. A3 is reported either way and is not asked to carry the
       rejection.
@@ -286,18 +286,18 @@ tests/unit/test_coverage_ledger_agreement.py             # parses the ```ledger`
   that is a triage (fixture wrong / ledger wrong / bet false), never a quiet edit.
 
 ### Commit-order evidence (r2-1 — the recipe differs by artifact kind)
-- [ ] **New files** (`catf_mfe_gated.json`, the identity data file):
+- [x] **New files** (`catf_mfe_gated.json`, the identity data file):
       `git log --diff-filter=A --format=%H -- <path>`
-- [ ] **Edits to existing files** (the `expected-coverage.md` ledger row — `--diff-filter=A` returns
+- [x] **Edits to existing files** (the `expected-coverage.md` ledger row — `--diff-filter=A` returns
       Item 3's file-creation commit, which is the wrong answer):
       `git log -S'catf_mfe_gated' --format=%H -- tests/unit/data/expected-coverage.md`
-- [ ] Both must return commits that **precede** `git log --diff-filter=A --format=%H --
+- [x] Both must return commits that **precede** `git log --diff-filter=A --format=%H --
       tests/fixtures/catf_mfe_gated/`. Record all hashes in `verification.md`.
-- [ ] Do **not** cite the reader tests' dates — they existed at HEAD, so their ordering proves nothing.
+- [x] Do **not** cite the reader tests' dates — they existed at HEAD, so their ordering proves nothing.
 
 ### Validation
-- [ ] `git show --stat HEAD` — the commit touches expectations only, no fixture bytes.
-- [ ] Suite is red on exactly the two named tests (the deliberate window). Record both names and the
+- [x] `git show --stat HEAD` — the commit touches expectations only, no fixture bytes.
+- [x] Suite is red on exactly the two named tests (the deliberate window). Record both names and the
       commit hash. Anything else red is a real failure — stop.
 
 **What we know after this phase:** every number the derivative must reproduce is committed, derived
@@ -316,46 +316,46 @@ That the probe's scratch edits transfer to a committed fixture unchanged — sam
 same result at fixture scale.
 
 ### Steps
-- [ ] Fork `catf_mfe_d5` → `tests/fixtures/catf_mfe_gated/` (**this commit closes the red window**;
+- [x] Fork `catf_mfe_d5` → `tests/fixtures/catf_mfe_gated/` (**this commit closes the red window**;
       land it immediately after Phase 2's commit).
-- [ ] Apply the edits **in Phase 1's proven group order, re-elaborating after each group**:
+- [x] Apply the edits **in Phase 1's proven group order, re-elaborating after each group**:
       library (`library/constraints/gate_forms.sysml`, package `CATFGateForms`:
       `PositiveQuantity`, `FractionWithinBand` — **no `ProductWithinBand`**, its only consumer is
       parked) → A2 → A3 → A7/A8 derivations → A1/C37 derivation → the A4/C21/C28 deletions →
       the five `@inapplicable:` markers. A5, A6, A9 are left exactly as d5 wrote them.
-- [ ] Each of the 7 derivations carries a **doc comment recording the undirected relation and stating
+- [x] Each of the 7 derivations carries a **doc comment recording the undirected relation and stating
       that the direction is a chosen basis, not physics** (owner's structural amendment).
-- [ ] No `[unit]` literal in either surviving gate's predicate body (D3 — both are dimensionless-safe;
+- [x] No `[unit]` literal in either surviving gate's predicate body (D3 — both are dimensionless-safe;
       the §8 both-operands spelling stays the supported unit-carrying form, these two just don't use it).
-- [ ] Capture the fixture's v6 snapshot (`instance_graph_snapshot.json`) through the shipped capture
+- [x] Capture the fixture's v6 snapshot (`instance_graph_snapshot.json`) through the shipped capture
       path. **Not** via `capture_v6_batch.py`.
 
 ### PROVENANCE — five record classes, all of them (`design.md#component-overview`)
-- [ ] **Per-change records**, one per edit, each citing its authorizing table row. The two asserted
+- [x] **Per-change records**, one per edit, each citing its authorizing table row. The two asserted
       gates' records carry **`renamed_from:`** holding the d5 qualified name
       (`…::ViabilityCheck` → `…::net_power_viable`; `…::ReasonableParasiticTotal` →
       `…::parasitic_fraction_ok`).
-- [ ] **Seven named deletion records** — A1, A4, A7, A8, C37 (derive-instead: each carries the
+- [x] **Seven named deletion records** — A1, A4, A7, A8, C37 (derive-instead: each carries the
       undirected relation + the chosen-basis statement) and C21, C28 (citing the O2 ruling).
-- [ ] **Three parked-row records** — A5, A6, A9. Field spec in `design.md#component-overview`: usage
+- [x] **Three parked-row records** — A5, A6, A9. Field spec in `design.md#component-overview`: usage
       QN + d5 `file:line`; `blocked-by-defect` with its surfacing finding (**D-S2** for A5/A6, **D-S1**
       for A9) and the measured `SI_RENDERING_COLLISION` including the colliding entry point; **epic
       Item 8** as the fix and **Item 9** as the upgrade; the held intent (A5/A6's basis — axis root
       radius + 14 thicknesses free, all radii derived; A9's `assert-band` at 1% relative). Each states
       that its catalog row reads `excluded` / unassessed form exactly as in d5, and that **this record
       is the only place the disposition is visible**.
-- [ ] **Two O3 model-debt entries** — A7's partial 2-of-4 shield closure; B4's mismatched thickness
+- [x] **Two O3 model-debt entries** — A7's partial 2-of-4 shield closure; B4's mismatched thickness
       sets (guard sums four layers; the design's `thickness_total` is `0.4 [m]`).
-- [ ] **Per-gate unit reasoning** for A2 and A3 (D3), naming what the human is on the hook for:
+- [x] **Per-gate unit reasoning** for A2 and A3 (D3), naming what the human is on the hook for:
       **the operand pair as well as the tolerance dimension** (r2-2) — binding a non-power into
       `whole_power` would be admitted silently, and no toolchain check catches it.
 
 ### Validation
-- [ ] Licensed elaboration of the committed fixture: 58 usage rows, 2 concrete entries, histogram
+- [x] Licensed elaboration of the committed fixture: 58 usage rows, 2 concrete entries, histogram
       `2/3/53` — equal to Phase 2's committed expectations, **with no edit to the expectations**.
-- [ ] `test_no_expectation_file_is_stranded` and the ledger param are green again; full suite back at
+- [x] `test_no_expectation_file_is_stranded` and the ledger param are green again; full suite back at
       baseline plus the new rows.
-- [ ] `git diff` shows no change to `catf_mfe_d5` or `catf_mfe_model` beyond Phase 0's paragraph;
+- [x] `git diff` shows no change to `catf_mfe_d5` or `catf_mfe_model` beyond Phase 0's paragraph;
       `make_d5_variant.py --check` still passes.
 
 **What we know after this phase:** the ruled policy is authored, it generates, and it reproduces
@@ -388,17 +388,17 @@ def test_a_renamed_from_claimed_by_a_deletion_fails():
 ```
 
 ### Steps
-- [ ] `scripts/check_gated_manifest.py --check` — joins the ruled table's rows, the population JSON,
+- [x] `scripts/check_gated_manifest.py --check` — joins the ruled table's rows, the population JSON,
       and the derivative's PROVENANCE by usage identity; consults `renamed_from:` before declaring an
       unmatched row. **License-free by construction.**
-- [ ] Conformance test wrapping it, plus the two fail-closed cases above (run them once for real,
+- [x] Conformance test wrapping it, plus the two fail-closed cases above (run them once for real,
       then revert the mutation — a check nobody has seen fail is not yet a check).
 
 ### Validation
-- [ ] `--check` closes `65 = 58 + 7`; 56 matched by name, 2 by `renamed_from:`; all 7 deletions cite
+- [x] `--check` closes `65 = 58 + 7`; 56 matched by name, 2 by `renamed_from:`; all 7 deletions cite
       an authorizing table row.
-- [ ] Both fail-closed mutations were observed red, then reverted; recorded in `verification.md`.
-- [ ] `ruff check src/` and `mypy src/` at baseline (12 / 55).
+- [x] Both fail-closed mutations were observed red, then reverted; recorded in `verification.md`.
+- [x] `ruff check src/` and `mypy src/` at baseline (12 / 55).
 
 **What we know after this phase:** nothing in the derivative is unauthorized, and no usage vanished
 silently — proved by a script, not by reading.
@@ -426,23 +426,23 @@ def test_the_zero_entry_package_ships_the_bytes_we_committed():
 ```
 
 ### Steps
-- [ ] Capture the v6 snapshot for `constraint_domain_satisfy_calc_def` (it carries only `model.sysml`
+- [x] Capture the v6 snapshot for `constraint_domain_satisfy_calc_def` (it carries only `model.sysml`
       today). Single-fixture capture path; **not** the batch script, and not into its manifest.
-- [ ] Commit the two-file golden — `schemas/constraint_types.py` and
+- [x] Commit the two-file golden — `schemas/constraint_types.py` and
       `modules/constraints/constraintreportaggregatormodule.py`. Two files deliberately: a whole-tree
       golden churns on every unrelated generator change and gets abandoned, which is how
       `tests/fixtures/baseline_yaml/` died.
-- [ ] Add the regenerate-and-diff conformance test (license-free — the snapshot is committed).
-- [ ] **Deliberate falsification, once, recorded:** flip the machinery bar
+- [x] Add the regenerate-and-diff conformance test (license-free — the snapshot is committed).
+- [x] **Deliberate falsification, once, recorded:** flip the machinery bar
       (`resolution/models.py::ships_constraint_machinery`, which now keys on one *authored usage*,
       not one *concrete entry*), confirm the gate goes red, then revert. Record the red output in
       `verification.md`. A golden nobody has seen fail is not yet a gate.
 
 ### Validation
-- [ ] Test green from the committed snapshot; goldens are generator-owned bytes and stay
+- [x] Test green from the committed snapshot; goldens are generator-owned bytes and stay
       **format-exempt** (never `ruff format` them).
-- [ ] Falsification observed red and reverted; tree clean afterwards.
-- [ ] `test_v6_recapture_batch.py` still green (37 / 15 / 22 untouched).
+- [x] Falsification observed red and reverted; tree clean afterwards.
+- [x] `test_v6_recapture_batch.py` still green (37 / 15 / 22 untouched).
 
 **What we know after this phase:** R3 is closed by a real gate, and the gate has been seen to fail.
 
@@ -635,10 +635,112 @@ identical with and without the markers. Phase 2's expectations are unaffected.
 explicit `@inapplicable:` disposition"), so it is surfaced rather than absorbed.
 
 ### Phase 2 Completion
+
+**Completed:** 2026-08-13, commit **`1247a3b`**. Numbers in `verification.md` §Phase 2.
+
+**Changes:** `tests/expectations/constraint_population/catf_mfe_gated.json` (58 carriers),
+`tests/expectations/gated_manifest/catf_mfe_gated.json` (the identity `65 = 58 + 7`, its 7
+deletions with authorizing rows, both `renamed_from:` carriers, the 2/3/53 histogram, expected
+study outcomes), and one ledger row plus its prose entry in `tests/unit/data/expected-coverage.md`.
+
+**Derivation, not transcription.** Built as `d5's 65 − the 7 deletions + the 2 renames`, then
+cross-checked against a source scan: `derivation and source agree on all 58 identities`. The
+scan supplies line numbers and checks membership; it does not supply it (PD2/DR-6).
+
+**Red window opened as designed.** Suite red on exactly the two named tests and nothing else.
+
+**Deviations:** none.
+
 ### Phase 3 Completion
+
+**Completed:** 2026-08-13, commit **`7369b3e`** — this closes the red window.
+
+**Result:** 47 modules, 58 usage rows, 2 concrete entries, `{eligible 2, excluded 3,
+non_reaching 53}`. Coverage read back from the committed snapshot is
+`58 / 2 / 2 / 0 / 0 / {} / complete`, equal to the pre-committed ledger row **with no edit to
+the expectations**. Source scan vs committed expectation: MATCH, 58 = 58. Every intermediate
+group ADMITs (ladder in `verification.md`). Frozen twins clean.
+
+**SC-6 proved:** all three expectation artifacts at `1247a3b`, fixture at `7369b3e`, parent to
+child.
+
+**Deviations:**
+1. **Derivation basis statements are `//` comments, not `doc` bodies** — orchestrator-confirmed
+   2026-08-13. Verbatim relation + chosen-basis statements are carried in source and repeated
+   in PROVENANCE, as required.
+2. **B1–B5 carry no `@inapplicable:` marker**, per the ruling recorded at `99700ac`.
+
 ### Phase 4 Completion
+
+**Completed:** 2026-08-13, commit **`0d9f474`**.
+
+`check_gated_manifest.py --check` closes `65 = 58 + 7`, 56 matched by name and 2 by
+`renamed_from:`, license-free. Conformance test plus **three** falsifications run for real
+(the plan asked for two; a deletion record with no authorizing row was added as the other
+direction an unauthorized change could slip through). Outputs recorded in `verification.md`.
+
+**Deviation:** the falsifications rewrite a **temp copy** of PROVENANCE and monkeypatch the
+module's path, rather than mutating the committed fixture and reverting. Same proof, and a
+mutation of a committed artifact is one interrupted run away from corrupting the tree.
+
 ### Phase 5 Completion
-### Phase 6 Completion
+
+**Completed:** 2026-08-13, commit **`1a7328c`**.
+
+Committed v6 snapshot for `constraint_domain_satisfy_calc_def` (shape confirmed: `usage_records`
+2, `concrete_entries` 0), a two-file golden, and a license-free regenerate-and-diff test. The
+tree's first committed-bytes gate. Falsification run and reverted: flipping the machinery bar
+back to Item 2's concrete-entry rule stops `schemas/constraint_types.py` being emitted at all
+and strips both registry imports.
+
+**Recorded honestly:** only **one** of the two pinned files moves under that flip — the
+aggregator is still emitted, so its golden stays green. The gate is real; the two files are not
+equally sensitive to that particular bar.
+
+`test_v6_recapture_batch` still green; the 37-record manifest is untouched.
+
+### Phase 6 Completion — **STOPPED at the acceptance run**
+
+**Three routes: done.** Exact counts and fingerprints in `verification.md` §Phase 6. Routes 2
+and 3 are byte-identical; the projected graph is identical on all three
+(47 / 58 / 2 / `{2,3,53}`, coverage `58/2/2/0/0/{}/complete`, 9 groups / 65 entry points).
+
+**Three findings recorded, two resolved inside authority:**
+
+- **6-A — the catalog fingerprint is not portable across routes.** Live and snapshot bake
+  different `CATALOG_FINGERPRINT`s because the fingerprint hashes `usage_records`, whose
+  `source_file` paths are route-relative (`resolution/models.py:597-622`). **Pre-existing** —
+  reproduces on the untouched `catf_mfe_d5`, and does not reproduce on a flat single-file
+  fixture. Contradicts the plan's "all three agree on the instance fingerprint"; not against a
+  ruled row, not caused by this item. Recorded, not fixed.
+- **6-B — `value` is a reserved generated local, so the ruled A2 spelling cannot generate.**
+  Generation's name-safety preflight refused what elaboration admitted
+  (`generated_binding_overlap`). Resolved by renaming the formal `value` → `quantity`, which
+  **O7** authorises (library names provisional, design-owned) and which the spec already
+  blesses as a local edit. Nothing ruled moved; the committed expectation still matches.
+  **This exposes a real gap in Phase 1:** the de-risk probe only elaborated, never generated,
+  so the five generation preflights were untested at the gate meant to be the cheap place to
+  find exactly this.
+- **6-C — D6's mutation route does not exist.** Editing a sealed `inputs/*.json` breaks the
+  package contract, and the refusal is pinned in code. Took TEAx's typed entry injection
+  (`CandidateBridge` + `PreparedEvaluator`), the route Item 3's mutation lane already uses.
+  D6's intent — one package, two input sets, mutation as a physics input value — is preserved.
+
+**6-D — the STOP.** The lane works end to end and both gates report. What is false is the
+direction the ruled SC-5 row assumes: **at the authored inputs, both gates report `violated`**.
+The magnet cryoplant draws 8396 MW against 1547 MW gross, so net power is negative at the
+authored design point.
+
+Ownership is the model, not the derivative — `catf_mfe_d5` produces the identical
+`cooling_power = 8396.054399837172`. Chased to a probable unit error:
+`heat_leak = magnet_volume * 0.05  // MW` implies ~38 MW of static heat leak into a 4.5 K
+system, three to six orders of magnitude high.
+
+Both directions are demonstrated (`p_fusion = 20000` → both gates `satisfied`), so only the
+labelling of "valid candidate" is open — and that is a modeling decision, as is the heat-leak
+coefficient. Parked for a ruling rather than resolved. The coverage account is unaffected at
+every probed point; the one wrong cell in the committed expectations is the **headline**.
+
 ### Phase 7 Completion
 
 ---

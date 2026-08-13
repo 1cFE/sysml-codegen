@@ -233,3 +233,325 @@ So **Phase 2's expectation artifacts are independent of how this is resolved** �
 population oracle's 58 identities and the coverage account are byte-identical either way.
 The decision changes Phase 3's fixture bytes and the PROVENANCE record for B1–B5, nothing
 upstream of them.
+
+---
+
+## Phase 2 — Expectation artifacts (SC-6)
+
+All three landed in **`1247a3b`**, expectations only, no fixture byte.
+
+### Commit-order evidence — the recipe differs by artifact kind (r2-1)
+
+| artifact | command | commit |
+|---|---|---|
+| `tests/expectations/constraint_population/catf_mfe_gated.json` | `git log --diff-filter=A --format=%H -- <path>` | **`1247a3b`** |
+| `tests/expectations/gated_manifest/catf_mfe_gated.json` | `git log --diff-filter=A --format=%H -- <path>` | **`1247a3b`** |
+| `tests/unit/data/expected-coverage.md` ledger row | `git log -S'catf_mfe_gated' --format=%H -- <path>` | **`1247a3b`** |
+| `tests/fixtures/catf_mfe_gated/` | `git log --diff-filter=A --format=%H -- <path>` | **`7369b3e`** |
+
+`1247a3b` is the parent of `7369b3e`. **Expectation precedes actual.** The reader tests'
+dates are not cited — they existed at HEAD, so their ordering proves nothing.
+
+### The deliberate red window, measured
+
+Licensed full suite at `1247a3b`: **2089 passed / 34 skipped / 3 failed**, zero license-skip
+lines. The three failures were exactly:
+
+```
+FAILED tests/conformance/test_constraint_population_oracle.py::test_no_expectation_file_is_stranded
+FAILED tests/unit/test_coverage_ledger_agreement.py::test_derived_account_equals_the_hand_written_account[catf_mfe_gated]
+FAILED tests/execution/test_fusion_tea_real_teax.py::test_the_lane_runs_the_real_simkit   (pre-existing, out of floor)
+```
+
+The first two are the named window. Nothing else was red.
+
+### How the 58 were derived
+
+`d5's 65 rows − the 7 named deletions + the 2 renames`, then **cross-checked** against a source
+scan of what the author would write. The scan supplies line numbers and checks membership; it
+does not supply the membership (PD2/DR-6). Output:
+
+```
+identity: 65 = 58 carriers + 7 named deletions
+cross-check: derivation and source agree on all 58 identities
+```
+
+---
+
+## Phase 3 — The derivative lands
+
+Authored in Phase 1's group order, re-elaborating after every group, at fixture scale:
+
+| step | modules | rows | concrete | histogram |
+|---|---|---|---|---|
+| fork, unedited | 43 | 65 | 0 | 56 non_reaching / 9 excluded |
+| + library | 43 | 65 | 0 | 56 / 9 |
+| + A2 | 44 | 65 | 1 | 1 eligible / 56 / 8 |
+| + A3 | 45 | 65 | 2 | 2 / 56 / 7 |
+| + A7, A8 derivations | 47 | 65 | 2 | 2 / 56 / 7 |
+| + A1, C37 | 47 | 63 | 2 | 2 / 55 / 6 |
+| + A4, C21, C28 | 47 | 60 | 2 | 2 / 53 / 5 |
+| + A7, A8 usage deletions | **47** | **58** | **2** | **2 eligible / 3 excluded / 53 non_reaching** |
+
+Read back from the committed snapshot: coverage account
+**`58 / 2 / 2 / 0 / 0 / {} / complete`** — equal to the ledger row committed at `1247a3b`,
+**with no edit to the expectations**. Source scan vs committed expectation: **MATCH, 58 = 58**.
+
+Full suite at `7369b3e`: **2094 passed / 34 skipped**, zero license-skip lines, red window
+closed.
+
+Frozen twins: `git status --short` clean on both `catf_mfe_d5` and `catf_mfe_model`.
+
+---
+
+## Phase 4 — The identity, machine-checked
+
+```
+$ python scripts/check_gated_manifest.py --check
+identity closes: 65 = 58 carriers + 7 named deletions
+  carriers matched by name:         56
+  carriers matched by renamed_from: 2
+```
+
+License-free. Three falsifications run for real, each against a **temp copy** of PROVENANCE
+with the module's path monkeypatched — not against the committed fixture, so no revert is
+needed and an interrupted run cannot corrupt the tree (deviation from the plan's
+"mutate then revert", same proof):
+
+```
+drop a renamed_from:
+  FAIL: carriers matching neither by name nor by renamed_from:
+        ['CATFMFEPhysics::catf_physics::net_power_viable']; d5 usages that are neither a
+        carrier nor a named deletion: ['CATFMFEPhysics::catf_physics::ViabilityCheck']
+
+point renamed_from: at a row a deletion claims
+  FAIL: renamed_from: claims a d5 usage a deletion record also claims:
+        ['CATFMFEPhysics::catf_physics::PowerBalanceConsistency']
+
+deletion record with no authorizing row
+  FAIL: deletion record A4 (CATFMFERadialBuild::catf_radial_build::TotalRadiusConsistency)
+        cites no authorizing table row
+```
+
+Full suite at `0d9f474`: **2099 passed / 34 skipped**, zero license-skip lines. ruff 12,
+mypy 55, `git diff --check` clean.
+
+---
+
+## Phase 5 — SC-8, the first committed-bytes gate
+
+Fixture shape confirmed as the one R3 names: **`usage_records` 2, `concrete_entries` 0**.
+
+Goldens committed at `tests/conformance/golden/zero_entry_package/`:
+
+| file | bytes |
+|---|---|
+| `schemas/constraint_types.py` | 4664 |
+| `modules/constraints/constraintreportaggregatormodule.py` | 3260 |
+
+Registry carries both `ConstraintEvaluation` and `ConstraintReport`.
+
+**Falsification, run once and reverted.** Flipping `ships_constraint_machinery` back to Item
+2's concrete-entry bar (`catalog.usage_records` → `catalog.concrete_entries`):
+
+```
+FAILED test_the_zero_entry_package_ships_the_bytes_we_committed[schemas/constraint_types.py]
+   FileNotFoundError: .../pkg/schemas/constraint_types.py     (the file is not emitted at all)
+FAILED test_the_registry_imports_the_constraint_machinery
+   AssertionError: assert 'ConstraintEvaluation' in '...'      (both imports gone)
+```
+
+**Recorded honestly: only one of the two pinned files moves under that flip.** The aggregator
+module is still emitted, so its golden stays green. The gate is real but the two files are not
+equally sensitive to this particular bar.
+
+Reverted; `git diff --stat src/sysml_codegen/resolution/models.py` empty; gate green again.
+`test_v6_recapture_batch` still green — the snapshot was captured per fixture through the
+shipped CLI, so the 37-record manifest is untouched.
+
+Full suite at `1a7328c`: **2103 passed / 34 skipped**, zero license-skip lines.
+
+---
+
+## Phase 6 — Acceptance: three routes, and a STOP
+
+### Three routes, exact counts
+
+| | route 1 — live (`--models`, licensed) | route 2 — in-place snapshot | route 3 — relocated snapshot |
+|---|---|---|---|
+| files | 101 | 101 | 101 |
+| module `.py` files | 36 | 36 | 36 |
+| `inputs/*.json` | 9 | 9 | 9 |
+| raw tree digest | `1762214feba0de57bcac8522ac709e1657ecaff0034808c5bc91f6917e6a2d3c` | `9586f5d9b5e8ae64ad1b1f1f3e41972641a9caebc6e95a073113a5db55883510` | `9586f5d9b5e8ae64ad1b1f1f3e41972641a9caebc6e95a073113a5db55883510` |
+| model contract `semantic_fingerprint` | `03b59be74c9a29bc99e082b208dc1ccbca179ac5b0f40d191e807166440bb535` | `5c65622f11d194a9887aae1002c9a131606ffe36f6392c48fcca42997caa090c` | `5c65622f11d194a9887aae1002c9a131606ffe36f6392c48fcca42997caa090c` |
+
+**Routes 2 and 3 are byte-identical.** The relocated read produces the same package as the
+in-place read, which is the portability claim.
+
+The projected graph, from the sealed snapshot, identical across all three:
+
+```
+modules 47 | usage_records 58 | concrete_entries 2 | excluded_records 3
+histogram {eligible: 2, excluded: 3, non_reaching: 53}
+coverage  58 / 2 / 2 / 0 / 0 / {} / complete
+entry-point groups 9 | entry points 65
+ENTRY CATFMFEPhysics::catf_physics::net_power_viable
+      channel CATFMFEPhysics__catf_physics__net_power_viable__d8cad14493e47fbd__evaluation
+ENTRY CATFMFEPhysics::catf_physics::parasitic_fraction_ok
+      channel CATFMFEPhysics__catf_physics__parasitic_fraction_ok__280b94b2e8d184f5__evaluation
+```
+
+`inputs/` and `pipelines/` are byte-identical on all three routes. D6's key is confirmed in
+place: `physics_params.json` carries `CATFMFEPhysics__catf_physics__p_fusion: 2600.0`.
+
+### FINDING 6-A — the catalog fingerprint is not portable across routes (pre-existing)
+
+Route 1 differs from routes 2/3 beyond provenance comments. Normalising the source-root prefix
+in every provenance comment leaves exactly one substantive difference:
+
+```
+modules/constraints/constraintreportaggregatormodule.py
+-    CATALOG_FINGERPRINT = "4edaf85e8c6737e5fb55a7c07cf2beabf8a3112ec5539d1267a3648bda7c022c"   (live)
++    CATALOG_FINGERPRINT = "65083fb7e1350f6862974428c7bf1f6b960bc6b76011583b42d62c7848f33b25"   (snapshot)
+```
+
+**Cause, chased to source.** `ConstraintCatalog.recomputed_fingerprint`
+(`resolution/models.py:597-622`) hashes the full model dump of `usage_records`, and those rows
+carry `source_file`. The live route records `tests/fixtures/catf_mfe_gated/…`; the snapshot
+route records `root-0/…`. Same graph, same semantics, different paths, different fingerprint —
+and the generated aggregator bakes it in as a runtime coherence check.
+
+**Ownership: pre-existing, not this item's.** Reproduced on the untouched frozen twin:
+
+```
+catf_mfe_d5 live     CATALOG_FINGERPRINT = 39d02855cd9bfa9adf628af94f6c91d8fddf783d947ad8a6762b5e2aec78027f
+catf_mfe_d5 snapshot CATALOG_FINGERPRINT = beaaa339a11dd229462f22e0ae51e41c6922e0aa1abfb5d605d6f495893c91ca
+```
+
+It does **not** reproduce on `constraint_domain_satisfy_calc_def`, whose model is a single flat
+`model.sysml` — both routes there agree (`9b93a157…`). So the split appears when a model has a
+nested source layout, which is why no existing fixture caught it.
+
+Recorded, not fixed: it contradicts the plan's "all three agree on the instance fingerprint",
+but it is not against a ruled row and not caused by Item 5.
+
+### FINDING 6-B — `value` is a reserved name, so the ruled A2 spelling cannot generate
+
+Route 1's first run refused at a **generation preflight**, not at elaboration:
+
+```
+ERROR: Code generation failed: Constraint name-safety violation:
+  constraint_id='CATFMFEPhysics__catf_physics__net_power_viable__d8cad14493e47fbd',
+  scope='predicate', kind='generated_binding_overlap',
+  final_binding='value' collides with generated binding 'value';
+  identities=[raw_name='value', qualified_name='CATFGateForms::PositiveQuantity::value']
+```
+
+`value` is a **reserved generated local** in predicate scope
+(`generation/constraint_name_safety.py:39`, `generated_locals=frozenset({"value"})`), so a
+constraint formal can never be named `value` — and `owner-disposition.md`'s A2 cell proposes
+exactly `constraint def PositiveQuantity { in value : Real; value > 0 }`.
+
+**Resolved inside authority, not improvised.** Open point **O7** records the library's names as
+**provisional and design-owned**, and the spec already blesses formal renaming as "a local edit"
+for the structurally identical self-named-binding case. The formal is renamed
+`value` → `quantity` in the definition and its one binding. Nothing ruled changes: no
+disposition, tolerance, intent class, or count moves, and the committed expectation still
+matches the source (**MATCH, 58 = 58**) because the rename touches no usage name or line.
+
+**What this exposes about Phase 1.** The de-risk probe only **elaborated**; it never
+**generated**. A whole class of refusals — the five generation preflights — was untested at the
+gate that existed to be the cheap place to find them. B2 was tested for the wrong half of the
+landing.
+
+### FINDING 6-C — D6's mutation route is refused by the product
+
+D6 says the mutation "lives in the generated `inputs/*.json`". That route does not exist: the
+package contract covers the on-disk bytes, so editing a sealed input breaks the seal, and
+`tests/execution/test_fusion_tea_mutation_teax.py::test_editing_a_sealed_input_and_resealing_is_refused`
+pins the refusal in code rather than policy.
+
+The supported route, already used by Item 3's mutation lane, is TEAx's typed entry injection:
+`CandidateBridge.build(selected_fields)` fills every entry channel from the package's own
+modelled defaults and `PreparedEvaluator.evaluate` runs the real executor against that mapping.
+**D6's intent is preserved exactly** — one generated package, two input sets, the mutation a
+physics input value rather than a model edit or a study-config override — and the seal stays an
+active check, because the same loader verifies the package the evaluator runs. Taken, recorded.
+
+### FINDING 6-D — **STOP.** The authored CATF design point is itself infeasible
+
+The lane works. Generate → seal → load → execute → policy runs end to end, and both gates
+report. What is false is the **direction** the ruled SC-5 row assumes.
+
+Measured on the sealed package through real TEAx, at the **authored** inputs
+(`p_fusion = 2600.0`, no overrides):
+
+```
+headline = 'violated'
+CATFMFEPhysics__catf_physics__net_power_viable__d8cad14493e47fbd      = 'violated'
+CATFMFEPhysics__catf_physics__parasitic_fraction_ok__280b94b2e8d184f5 = 'violated'
+
+CATFMFEPhysics__catf_physics__gross_electric__p_electric_gross =  1546.72 MW
+CATFMFEMagnets__catf_tf_system__cryo_load__cooling_power       =  8396.05 MW
+```
+
+The magnet cryoplant draws **5.4× the plant's entire gross electric output**, so net power is
+negative at the authored design point and A2 correctly reports `violated`.
+
+**Ownership: the model, not the derivative.** Identical numbers from `catf_mfe_d5`, untouched:
+
+```
+catf_mfe_d5  cooling_power = 8396.054399837172   p_electric_gross = 1546.723690193402
+catf_mfe_gated cooling_power = 8396.054399837172 p_electric_gross = 1546.723690193402
+```
+
+Item 5's edits changed no physics. (`catf_mfe_d5` executes no gates, so it reports
+`not_assessed` and this was invisible there — which is the whole point of the epic.)
+
+**Chased to a probable unit error.** `MagnetCryogenicLoad`
+(`library/analyses/thermal_loads.sysml:45-66`):
+
+```
+heat_leak     = magnet_volume * 0.05                                  // MW
+cooling_power = (thermal_load_cryo / operating_temp) * (300.0 / carnot_efficiency)   // MW
+```
+
+The Carnot factor is `300/(T·η) = 300/(4.5 × 0.3) ≈ 222`, so the cryogenic-temperature heat
+load is `8396/222 ≈ 37.8 MW`, essentially all of it `heat_leak = magnet_volume × 0.05`. **A
+static heat leak of ~38 MW into a 4.5 K magnet system is off by three to six orders of
+magnitude** — ITER-scale static loads are tens of kilowatts. The coefficient `0.05` reads as
+W/m³ or kW/m³ written as MW/m³.
+
+**The gate is working as designed.** It caught an implausible model that was previously
+invisible, which is the epic's critical success factor doing its job.
+
+**Both directions demonstrated**, so only the labelling of "valid" is open:
+
+| `p_fusion` (MW) | gross (MW) | A2 | A3 | headline |
+|---|---|---|---|---|
+| **2600 (authored)** | 1546.7 | violated | violated | **violated** |
+| 5000 | 2953.2 | violated | violated | violated |
+| 10000 | 5883.5 | violated | violated | violated |
+| 14000 | 8227.7 | violated | violated | violated |
+| 16000 | 9399.8 | **satisfied** | violated | violated |
+| **20000** | 11744.0 | **satisfied** | **satisfied** | **satisfied** |
+| 30000 | 17604.4 | satisfied | satisfied | satisfied |
+| 60000 | 35185.9 | satisfied | satisfied | satisfied |
+
+**What this contradicts.** `owner-disposition.md`'s SC-5 table gives A2's rejecting mutation as
+"Drop `p_fusion` … far enough that `p_net` goes negative", which presupposes `p_net > 0` at the
+authored point. Measured false. The committed expectations name the authored candidate as the
+valid one (`expected-coverage.md` headline `full_satisfaction`;
+`gated_manifest`'s `expected_study_outcomes.valid_candidate`).
+
+**What this does not touch.** The coverage account is about the denominator, not the outcome:
+`58 / 2 / 2 / 0 / 0 / {} / complete` is unchanged and still correct at every probed point. The
+ledger's parametrized test asserts only `coverage_account`, so the committed row's numbers all
+stand; the one wrong cell is the **headline**.
+
+**Vocabulary note.** TEAx's runtime tokens are `satisfied` / `violated`; the report vocabulary
+is `full_satisfaction` / `violation` (ADR-009, one-to-one). No contradiction — but the
+expectation files use the report vocabulary and the runtime evidence uses the runtime tokens.
+
+**Parked for a ruling.** Picking which candidate is "physically valid" is a modeling decision,
+and the heat-leak coefficient needs an owner. Not resolved here.

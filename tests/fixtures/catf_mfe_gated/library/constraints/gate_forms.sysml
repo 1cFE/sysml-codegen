@@ -10,8 +10,8 @@ package CATFGateForms {
     public import ScalarValues::*;
 
     constraint def PositiveQuantity {
-        in value : Real;
-        value > 0
+        in quantity : Real;
+        quantity > 0
     }
 
     constraint def FractionWithinBand {
