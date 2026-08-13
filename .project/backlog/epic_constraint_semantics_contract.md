@@ -661,9 +661,10 @@ including the orchestrator addendum (probes R1–R7 all PASS). Both blocking res
 **discharged**: the two surfaced findings are carried into Item 5's Current State and Required
 Reading below (audit F7), and the rewritten red-first assertion is deviation 8 in
 `verification.md`, with R5's measurement showing it conceals no edge (audit F1, not promoted).
-The record-and-decide residuals F2–F4 and F6 are cured in the same pass; F5 (the coverage ledger
-now living under `.project/completed/`) is accepted as-is and awaits an owner decision on a
-durable home.
+The record-and-decide residuals F2–F4 and F6 are cured in the same pass; F5 is resolved by
+owner decision **[OWNER 2026-08-13]**: the coverage ledger moved to
+`tests/unit/data/expected-coverage.md` (bytes unchanged, pointer stub at the archived path),
+so suite collection no longer depends on archive layout.
 
 **Estimated Effort**: 0.5–1 day (spec 0.5h, design 1h, plan 0.5h, execute and validate 4–6h)
 
