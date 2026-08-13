@@ -22,7 +22,10 @@ from typing import Any
 import pytest
 
 from sysml_codegen.elaboration.diagnostics import ElaborationCode, ElaborationInvariantError
-from sysml_codegen.elaboration.elaborate import _ExactElaborator
+from sysml_codegen.elaboration.elaborate import (
+    _ExactElaborator,
+    _UnsupportedExpressionError,
+)
 from sysml_codegen.generation.coverage import coverage_account
 from sysml_codegen.orchestration.elaborated_pipeline import (
     build_elaborated_pipeline,
@@ -59,8 +62,11 @@ def _entry_point_values(fixture: Path) -> dict[str, float | int | str | bool | N
 def _input_wiring(fixture: Path) -> list[tuple[int, str]]:
     """One row per module input: which module it feeds, and what kind of source feeds it.
 
-    Compared across twins by shape rather than by name, because the identifiers carry the
-    package name and the two fixtures are two packages.
+    Shape rather than name, and that limit is measured rather than assumed. Putting the leaf
+    param name back into the row fails on these twins: the constraint module's identity
+    parameter is `<package>_the_host_gap_guard_<hash>`, which embeds the package name with no
+    `__` separator, so no leaf-split can normalize it across two differently-named packages.
+    The edges themselves are identical — `(0, entry_point)`, `(1, module_output)`.
     """
     graph = build_elaborated_pipeline([fixture])
     return [
@@ -103,11 +109,20 @@ def test_the_unit_is_not_resolved_as_a_reference() -> None:
 
 
 def test_the_annotated_and_bare_twins_wire_up_identically() -> None:
-    """Invariant 7: unwrapping the annotation drops no real dependency edge.
+    """The asymmetry pin: twin wiring shape agrees, and the annotated value survives.
 
-    The asymmetry pin, mirroring `test_unit_annotation_values.py`. If the `[` second
-    operand ever resolved to a user-model feature rather than a library element, the
-    annotated twin would come up an edge short here.
+    What this observes, exactly: the two twins produce the same module-input wiring shape,
+    and `gap_width [m] = 0.5` still reaches the entry point as `0.5`. The value half is the
+    already-cured `_create_value_node` lane, not the lane D1 opened.
+
+    What it does **not** observe, stated so nobody reads more into it: invariant 7 — that a
+    `[` annotation's second operand is never a user-model feature. Both annotated sites in
+    this fixture are inside `gap_guard`, and a constraint contributes no `PipelineModule`
+    input, so an edge lost there would not change these rows. Invariant 7 holds
+    *structurally*, not because this test would catch its violation: the second operand of
+    `[` is a unit by construction, and no supported authoring shape produces anything else
+    (design M6b). This test is the twin-agreement guard; the structural argument is the
+    invariant's evidence.
     """
     assert _input_wiring(ANNOTATED) == _input_wiring(BARE)
     assert _entry_point_values(ANNOTATED) == _entry_point_values(BARE) == {"gap_width": 0.5}
@@ -138,15 +153,25 @@ class _MalformedUnitAnnotation:
 _MalformedUnitAnnotation.__name__ = "OperatorExpression"
 
 
-def test_a_malformed_annotation_in_a_predicate_hard_refuses() -> None:
-    """M7, decided deliberately: one rule, one refusal.
+def test_the_walk_refuses_a_malformed_annotation_and_the_refusal_is_not_downgradable() -> None:
+    """M7, decided deliberately: one rule, one refusal — pinned in its two checkable halves.
 
-    Inside the walk, `_without_unit_annotation` turns a malformed annotation's
-    `ValueError` into `ElaborationInvariantError(SI_EDGE_DANGLING)`. That is *not* an
-    `_UnsupportedExpressionError`, so it escapes the catch at `elaborate.py:2286-2295`
-    and hard-refuses, exactly as `_create_value_node` already refuses it at `:757`.
+    Half one, driven: the walk itself refuses. `_without_unit_annotation` turns a malformed
+    annotation's `ValueError` into `ElaborationInvariantError(SI_EDGE_DANGLING)`, the same
+    way `_create_value_node` already refuses it.
+
+    Half two, typed: that error is not an `_UnsupportedExpressionError`, which is the only
+    thing the computed/predicate caller catches (`_resolve_computed_expressions`), so the
+    refusal escapes and becomes a hard elaboration failure rather than a readiness finding.
+
+    The name says "the walk" rather than "a predicate" because no predicate is loaded here.
+    An end-to-end fixture is not available: a `[` node carrying no annotated value is not
+    authorable SysML — the parser will not produce one — so the malformed shape can only be
+    reached by handing the walk a synthetic node. The route from the walk to a hard refusal
+    is the type relationship asserted below, not a third thing left unchecked.
     """
     elaborator = _ExactElaborator.__new__(_ExactElaborator)
     with pytest.raises(ElaborationInvariantError) as refusal:
         elaborator._expression_references(_MalformedUnitAnnotation(), plural=False)
     assert refusal.value.code is ElaborationCode.SI_EDGE_DANGLING
+    assert not isinstance(refusal.value, _UnsupportedExpressionError)
