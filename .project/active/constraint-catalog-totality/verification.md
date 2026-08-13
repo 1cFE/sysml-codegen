@@ -293,7 +293,7 @@ Each was reproduced before it was fixed, per the verify-then-fix discipline.
 | licence-skip lines | 0 | **0** |
 | focused modules | 155 across 11 modules | **215 across 13 modules** |
 | `ruff check src` | 12 | **12** — zero new, diffed finding-by-finding against `ba756fb` rather than compared by count. The cures briefly added two: moving the fingerprint computation onto the model left `hashlib` and `json` unused in `project.py`. Both removed. |
-| `mypy src` | 55 | **56** (baseline 57; the A4 helper's `ComputationGraph` forward reference is the one addition, still two below baseline) |
+| `mypy src` | 55 | **55** — zero new. *(Corrected 2026-08-12 per re-audit R4: this first read 56, attributed to the A4 helper's forward reference. That attribution was wrong. The auditor diffed the error sets: the one new error was a lost type narrowing at `cli/__init__.py:409`, where the A4 cure replaced `if catalog is not None:` with `if ships_constraint_machinery(graph):`, leaving the call below with a `ConstraintCatalog | None`. Fixed by binding the catalog and keeping `ships_constraint_machinery` as the semantic guard — the rule is unchanged, only the narrowing is restored.)*
 | `git diff --check` | clean | **clean** |
 | working tree | clean | **clean** |
 | snapshot fixtures | 21 | **21, none moved** — no cure changed graph bytes, so the single reviewed recapture stands |
