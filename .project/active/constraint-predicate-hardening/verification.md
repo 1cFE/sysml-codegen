@@ -262,6 +262,29 @@ All are recorded in `plan.md`'s Implementation Notes at their phase. In one plac
 7. **The design's residue table understated the companion** (Phase 6). Most of the eight published
    "residue" reasons already carry explicit, actionable messages; only their construct-naming is
    coarse. `reason-codes-reconciliation.md` states what is actually there.
+8. **One characterization was rewritten, not merely unmarked, between red and green** (Phase 2;
+   audit F1). `test_the_annotated_and_bare_twins_produce_identical_module_inputs` was renamed to
+   `…_wire_up_identically` **and its assertion replaced**, in `acfba0b` — the same commit that
+   removed its `xfail` marker. Before: `sorted((param_name, source.source_type))` over every
+   module input. After: `[(module_index, source.source_type)]` plus an entry-point value dict.
+
+   The row was genuinely red for Defect A — its captured failure (`probes/red-evidence.md:126-143`)
+   is the real `SI_OCCURRENCE_MISSING` raise. But the assertion that is now green is not the
+   assertion that was red, and the replacement drops `param_name`, so it no longer observes
+   *which* input received which source kind. It was disclosed in `plan.md`'s Phase 2 notes and
+   omitted from this list, which presented itself as complete. That omission is the defect;
+   this entry closes it.
+
+   **Why the assertion could not simply stay** — measured, not argued. Audit probe **R5** put the
+   leaf param name back into the row (`param_name.rsplit("__", 1)[-1]`) and ran the file: it
+   **fails**, and the printed wirings show why. Both twins have identical edges — `(0,
+   entry_point)` and `(1, module_output)`. The only difference is the constraint module's
+   identity parameter, `predicate_unit_annotation_the_host_gap_guard_<hash>` versus
+   `predicate_unit_annotation_bare_the_host_gap_guard_<hash>`, which embeds the *package* name
+   with no `__` separator, so leaf-splitting cannot strip it. **No edge is concealed**, and the
+   stronger assertion could not have passed for any correct implementation of two
+   differently-named packages. The orchestrator's addendum records F1 as a record-completeness
+   residual and explicitly does **not** promote it.
 
 ---
 
