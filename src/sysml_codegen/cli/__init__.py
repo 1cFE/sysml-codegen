@@ -398,6 +398,67 @@ def _preflight_constraint_totality(graph: ComputationGraph) -> None:
             )
 
 
+def _preflight_coverage_account(
+    graph: ComputationGraph, constraint_plan: ConstraintGenerationPlan
+) -> None:
+    """Refuse a coverage account that disagrees with the catalog it summarizes (Item 3 / D3).
+
+    Four refusals, one function: they share the catalog read and the same failure class, and
+    each carries its own message because each has its own cure.
+
+    1. **Recomputation.** The account is derived once, at plan build, and rendered into the
+       aggregator as baked constants. Recomputing it here from the graph's catalog and
+       comparing is what makes "the numbers in the package describe this package's catalog" a
+       check rather than a convention (invariant 5).
+    2. **Aggregator iff usage rows.** D5's rule is read in two places — the instance graph's
+       ``constraint_usages`` when the module is minted, the catalog's ``usage_records`` at the
+       three generation seams. Two readings of one rule is the drift Item 2's A4 cure exists to
+       stop, so the disagreement is refused by name in both directions.
+    3. **The reason vocabulary** and 4. **D9's contradiction** raise from inside
+       :func:`coverage_account`, which the recomputation calls. They fire at plan build too —
+       earlier still — and are re-asserted here so this function is total over the four.
+
+    Runs after the plan is built and before ``_clear_output_directory``, so it is
+    fail-before-mutate. The only thing between the earlier preflight block and this call is
+    ``ensure_package_tree_is_link_free``, which inspects and raises and writes nothing.
+    """
+    from sysml_codegen.generation import CodeGenerationError
+    from sysml_codegen.generation.coverage import coverage_account
+    from sysml_codegen.resolution.models import ModuleKind, ships_constraint_machinery
+
+    catalog = graph.constraint_catalog
+    has_aggregator = any(
+        module.module_kind is ModuleKind.REPORT_AGGREGATOR for module in graph.modules
+    )
+
+    if catalog is None:
+        if has_aggregator:
+            raise CodeGenerationError(
+                "coverage account cannot be built: the graph carries a REPORT_AGGREGATOR "
+                "module but no constraint catalog, so the report it would ship could not "
+                "state its coverage"
+            )
+        return
+
+    if has_aggregator != ships_constraint_machinery(graph):
+        expected = "a REPORT_AGGREGATOR module" if not has_aggregator else "no aggregator"
+        raise CodeGenerationError(
+            "coverage account disagrees with the report-required rule: the catalog has "
+            f"{len(catalog.usage_records)} usage row(s), which requires {expected}. "
+            "A report is required iff the model authored at least one constraint usage; the "
+            "aggregator mint and the generation seams must read that one population."
+        )
+
+    recomputed = coverage_account(catalog)
+    if constraint_plan.coverage != recomputed:
+        raise CodeGenerationError(
+            "coverage account disagrees with its catalog: the plan holds "
+            f"{constraint_plan.coverage}, and the sealed catalog implies {recomputed}. The "
+            "account is a summary of that catalog and nothing else, so it was altered after "
+            "it was derived."
+        )
+
+
 def _preflight_constraint_names(graph: ComputationGraph) -> None:
     """Validate both generated constraint scopes before a graph-aware boundary acts."""
     from sysml_codegen.generation.errors import validate_constraint_graph_or_raise
@@ -1191,6 +1252,12 @@ def _generate_package_from_graph(graph: ComputationGraph, config: GenerationConf
         constraint_plan = build_constraint_generation_plan(
             graph, template_env, config.package_name
         )
+
+        # Step 1.9: the coverage account the package is about to bake agrees with the catalog
+        # it claims to summarize, and the aggregator's existence agrees with the same
+        # population. Still before the clear, so a disagreement refuses without touching the
+        # tree.
+        _preflight_coverage_account(graph, constraint_plan)
 
         # Step 2: Clear and setup output directories
         if config.overwrite:

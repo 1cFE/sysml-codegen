@@ -1249,6 +1249,42 @@ cause of churn appeared, because there was no churn.
 signature. ruff/mypy baselines unchanged. `git diff --check` clean. Companion `5088b41`, clean.
 
 ### Phase 5 Completion
+**Completed:** 2026-08-13 — **red window still open, unchanged.**
+
+**Actual Changes:**
+- `cli/__init__.py::_preflight_coverage_account(graph, constraint_plan)` (NEW), called at step 1.9 —
+  after `build_constraint_generation_plan`, before `_clear_output_directory`. Four named refusals:
+  aggregator-without-catalog, aggregator-disagrees-with-usage-rows (both directions), and the
+  account-recomputation comparison. The reason-vocabulary pin and D9's contradiction raise from
+  inside `coverage_account`, which the recomputation calls, so the function is total over all four.
+- `tests/conformance/test_coverage_preflight.py` (NEW, 7 cases).
+
+**Fail-before-mutate re-confirmed at implementation.** The only thing between the existing preflight
+block and the new call is `ensure_package_tree_is_link_free`, which inspects and raises and writes
+nothing. Both end-to-end negative tests assert the output tree is empty afterwards.
+
+**Issues — three, all in the tests rather than the check:**
+- **The perturbation had to be chosen carefully.** Perturbing `assessed_gate_count` is caught by
+  `CoverageAccountData`'s own identities before the preflight compares anything, which proves the
+  wrong guard. `authored_usage_total` sits outside those identities, so a wrong value there can
+  *only* be caught by comparing against the catalog. That is what makes the recomputation a real
+  check rather than a tautology — the phase's stated assumption under test.
+- **`_generate_package_from_graph` reports a refusal by logging and returning `False`**, which is its
+  contract with the CLI. The end-to-end tests assert on the return value and the logged message,
+  following `test_constraint_catalog_totality.py`'s `_refused` precedent.
+- **The vocabulary pin fires at plan build, not at the preflight.** That is earlier and therefore
+  better; the test asserts it where it actually raises and says why the preflight is still total
+  over it.
+
+**Deviations:** none.
+
+**Manual gate:** tripped D9 by hand on `constraint_coverage_eligible_inapplicable`. The message names
+the usage QN, the `declaration_id`, the entry count, and both cures:
+`constraint_coverage_eligible_inapplicable::Live::live_but_marked (fa74a348-…) is marked inapplicable
+but produced 1 executable entries: … Remove the marker, or stop asserting the gate.`
+
+**Gate:** 1970 passed, 34 skipped (zero license skips) outside the window; the red window
+**byte-identical** to the Phase 3 list, 62 entries. ruff/mypy baselines unchanged.
 
 ### Phase 6 Completion
 
