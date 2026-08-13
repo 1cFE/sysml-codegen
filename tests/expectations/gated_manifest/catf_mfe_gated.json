@@ -10,6 +10,7 @@
   "assessed_entry_count": 2,
   "carrier_total": 58,
   "d5_authored_total": 65,
+  "deletion_total": 7,
   "deletions": [
     {
       "authority": "owner-disposition.md Group A, A1",
@@ -50,7 +51,7 @@
       "authority": "owner-disposition.md open point O2, [OWNER 2026-08-13]",
       "class": "delete-placeholder",
       "d5_source_line": 133,
-      "reason": "Body is the literal `true` — a vacuous always-pass gate waiting for Item 6's capability. The derivative is the worked example of the policy and does not carry it; the frozen twins keep it for history.",
+      "reason": "Body is the literal `true` \u2014 a vacuous always-pass gate waiting for Item 6's capability. The derivative is the worked example of the policy and does not carry it; the frozen twins keep it for history.",
       "usage_qualified_name": "FusionPhysics_Confinement::PlasmaConfinement::Phase2PlasmaParametersPhysical"
     },
     {
@@ -61,7 +62,6 @@
       "usage_qualified_name": "FusionPhysics_Neutronics::TritiumBreedingRatio::Phase2SelfSufficiency"
     }
   ],
-  "deletion_total": 7,
   "disposition_histogram": {
     "eligible": 2,
     "excluded": 3,
@@ -77,27 +77,35 @@
     "unassessed_reasons": {}
   },
   "expected_study_outcomes": {
-    "mutated_candidate": {
-      "gate_reporting_violation": "CATFMFEPhysics::catf_physics::net_power_viable",
-      "headline": "violation",
-      "note": "A3 is reported either way and is not asked to carry the rejection.",
-      "study_default": "reject"
-    },
-    "valid_candidate": {
+    "_basis": "Amended 2026-08-13 under finding 6-D ([AGENT], ratified by owner). Candidates are labeled gate-feasible / gate-infeasible UNDER THE MODEL AS AUTHORED. The basis is the source-derived Carnot computation in .project/active/catf-constraint-policy-acceptance/cryo_derivation.py, re-derived from model source and shown to reproduce the executed value bit-exactly \u2014 not transcribed from an observed run.",
+    "gate_feasible_candidate": {
+      "_note": "A MACHINERY EXEMPLAR, NOT A RECOMMENDED DESIGN. It exists to show the satisfied path executes; no one is proposing a 20 GW fusion plant. A2 alone turns satisfied at p_fusion >= 16000; both gates satisfy at 20000.",
       "gates_satisfied": [
         "CATFMFEPhysics::catf_physics::net_power_viable",
         "CATFMFEPhysics::catf_physics::parasitic_fraction_ok"
       ],
       "headline": "full_satisfaction",
-      "study_default": "feed-strategy/penalize"
+      "inputs": "CATFMFEPhysics__catf_physics__p_fusion = 20000.0, all else authored",
+      "study_default": "feed-strategy/penalize",
+      "teax_runtime_token": "satisfied"
+    },
+    "gate_infeasible_candidate": {
+      "_note": "This is the model's OWN authored design point, and it is the rejected candidate. MagnetCryogenicLoad.cooling_power = 8396.054399837172 MW against p_electric_gross = 1546.723690193402 MW (5.43x), so p_electric_net_out is negative before any mutation. Cause: heat_leak = magnet_volume * 0.05 // MW (library/analyses/thermal_loads.sysml:59) contributes 116.72 MW of the 167.92 MW cryogenic load, amplified 300/(20*0.3) = 50x. Filed as backlog [CATF-CRYO-HEATLEAK]; reproduces on the untouched catf_mfe_d5.",
+      "gate_reporting_violation": "CATFMFEPhysics::catf_physics::net_power_viable",
+      "headline": "violation",
+      "inputs": "the authored defaults; CATFMFEPhysics__catf_physics__p_fusion = 2600.0",
+      "study_default": "reject",
+      "teax_runtime_token": "violated"
     }
   },
   "fixture": "catf_mfe_gated",
   "histogram_rows": {
-    "eligible": "A2 (net_power_viable), A3 (parasitic_fraction_ok) — the two asserted, executing gates",
-    "excluded": "A5 (LayerContinuity), A6 (RadiusThicknessConsistency), A9 (PumpingSpeedConsistency) — reaching, unassessed form, exactly as in catf_mfe_d5 today. Nothing in the catalog distinguishes them from any other plain usage; their PROVENANCE parked-row record is where the blocked-by-defect disposition is visible.",
+    "eligible": "A2 (net_power_viable), A3 (parasitic_fraction_ok) \u2014 the two asserted, executing gates",
+    "excluded": "A5 (LayerContinuity), A6 (RadiusThicknessConsistency), A9 (PumpingSpeedConsistency) \u2014 reaching, unassessed form, exactly as in catf_mfe_d5 today. Nothing in the catalog distinguishes them from any other plain usage; their PROVENANCE parked-row record is where the blocked-by-defect disposition is visible.",
     "non_reaching": "B1-B5 (5 part-definition guards) + 48 awaits-capability Group C calc-def guards = 53"
   },
+  "matched_by_name": 56,
+  "matched_by_renamed_from": 2,
   "renamed_carriers": [
     {
       "authority": "owner-disposition.md Group A, A2 (assert-one-sided)",
@@ -109,7 +117,5 @@
       "renamed_from": "CATFMFEPhysics::catf_physics::ReasonableParasiticTotal",
       "usage_qualified_name": "CATFMFEPhysics::catf_physics::parasitic_fraction_ok"
     }
-  ],
-  "matched_by_name": 56,
-  "matched_by_renamed_from": 2
+  ]
 }

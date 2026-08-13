@@ -163,13 +163,41 @@ is 0 with or without a marker.)
 **Why `assessed_entry_count` is 2.** Each of A2 and A3 hangs off `catf_physics`, which has one
 occurrence, so each eligible usage mints exactly one concrete entry: 1 + 1 = 2.
 
-**58 / 2 / 2 / 0 / 0 / `{}` / `complete`** → `headline = "full_satisfaction"`,
+**58 / 2 / 2 / 0 / 0 / `{}` / `complete`** → `headline = "violation"`,
 `assessed_entry_count = 2`.
 
-That headline is the valid candidate's. The SC-5 mutation drops `p_fusion` until
-`p_electric_net_out` goes negative, which makes A2 report `violation` and takes the candidate
-to the study default `reject`; the coverage account above is unchanged by the mutation,
-because coverage is about the denominator and not about the outcome.
+**Amended 2026-08-13 under finding 6-D** (`[AGENT]`, ratified by owner). The headline cell was
+`full_satisfaction` when this entry was first committed, on the assumption that the model's own
+authored design point satisfies its gates. It does not, and the coverage numbers are untouched
+by the correction — only the headline moves, because coverage is about the denominator and the
+headline is about the outcome.
+
+**The basis is a source-derived computation, not an observed run.**
+`.project/active/catf-constraint-policy-acceptance/cryo_derivation.py` re-derives
+`MagnetCryogenicLoad.cooling_power` from the model's own constants and formulas
+(`library/analyses/thermal_loads.sysml:55-66`, `designs/catf_mfe/magnets.sysml:86-94`):
+
+```
+nuclear_heating   = 0.05 * 2079.41 * (15.31526418625125 / 31.101767270540993) =   51.197595 MW
+heat_leak         = 2334.4698659954747 * 0.05                                 =  116.723493 MW
+thermal_load_cryo =                                                              167.921088 MW  at 20 K
+amplification     = 300 / (20 * 0.3)                                          =        50.0x
+cooling_power     = 167.921088 * 50                                           = 8396.054399837172 MW
+```
+
+Against `p_electric_gross = 1546.723690193402 MW`, the magnet cryoplant draws **5.43× the whole
+plant's gross electric output**, so `p_electric_net_out` is negative at the authored inputs and
+**A2 reports `violated`**. A3's parasitic band is violated for the same reason. The derivation
+reproduces the executed value bit-exactly, which is what licenses it as the basis.
+
+The authored candidate is therefore **gate-infeasible under the model as authored**, and it is
+the *rejected* candidate for SC-5. A raised-`p_fusion` candidate (≥ 20000 MW satisfies both
+gates) carries the satisfied path as a **machinery exemplar, not a recommended design**.
+
+The cryogenic heat-leak coefficient itself is a model defect, filed as backlog
+`[CATF-CRYO-HEATLEAK]`; correcting it is a separately-authorized follow-on. It reproduces on
+the untouched `catf_mfe_d5`, so it is not this derivative's doing — d5 simply executes no gates,
+which is why it went unseen.
 
 ### `constraint_domain_plain_forms` — non-asserted inventory
 
@@ -316,7 +344,7 @@ gate_a_d5                             | 1 | 1 | 1 | 0 | 0 | {} | complete | full
 constraint_multi_instance             | 1 | 1 | 1 | 0 | 0 | {} | complete | full_satisfaction | 3
 constraint_def_owned_redefining       | 1 | 1 | 1 | 0 | 0 | {} | complete | full_satisfaction | 1
 constraint_domain_inapplicable        | 2 | 1 | 1 | 0 | 1 | {} | complete | full_satisfaction | 1
-catf_mfe_gated                        | 58 | 2 | 2 | 0 | 0 | {} | complete | full_satisfaction | 2
+catf_mfe_gated                        | 58 | 2 | 2 | 0 | 0 | {} | complete | violation | 2
 catf_mfe_d5                           | 65 | 0 | 0 | 0 | 0 | {} | none | not_assessed | 0
 constraint_domain_plain_forms         | 2 | 0 | 0 | 0 | 0 | {} | none | not_assessed | 0
 constraint_domain_satisfy             | 2 | 0 | 0 | 0 | 0 | {} | none | not_assessed | 0
