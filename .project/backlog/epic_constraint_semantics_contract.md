@@ -367,6 +367,10 @@ asserted feasibility was assessed.
   result exists and none failed.
 - ❌ Excluded-only models emit no report; the report and runtime vocabularies have no partial state;
   TEAx labels such packages `unconstrained`.
+- ⚠️ Hand-off from Item 1 (audit M-1): four `all_satisfied` assertions in codegen
+  `tests/execution/` embody the superseded any-assessed-result headline meaning and move with
+  this item's vocabulary change (sweep record:
+  `.project/active/constraint-semantics-contract-amendments/verification.md`).
 
 **Scope**:
 

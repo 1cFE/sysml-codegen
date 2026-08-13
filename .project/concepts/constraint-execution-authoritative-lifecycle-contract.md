@@ -512,7 +512,11 @@ load/evaluation, and study APIs. Private mutation, conversion, and wrappers do n
 ### Equality intent and authoring policy
 
 Added 2026-08-12 (CONSTRAINT-SEMANTICS Item 1). This is the authority copy; agentic-mbse's authoring
-guidance cites it and does not restate it.
+guidance renders the same instruction in full where its readers are and cites this section as the
+authority. The rendering is not a second authority — if the two disagree, the contract governs, and
+an edit here obligates a matching edit there. (Corrected 2026-08-12, Item 1 audit H-1: the first
+published sentence said the guidance "cites it and does not restate it", which misdescribed the
+rendering the design review required.)
 
 **[NEED]** (owner-stated, 2026-08-12) Narrow bands of viability make design exploration really
 difficult, so the guidance must say *when* an equality should be used at all — not only how the

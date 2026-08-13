@@ -281,10 +281,9 @@ state are not restated here; the lifecycle contract's "Current conclusion" is th
   `owner_instance_path`, and the definition-to-usage join is entry-level. Current code lacks the
   admitted per-usage record and these five TEAx-consumed fields; closing the coverage model is
   additive schema work. Each result joins one concrete entry by `constraint_id`.
-  Amended 2026-08-12 (CONSTRAINT-SEMANTICS Item 1), `[AGENT] (ratified by owner, 2026-08-12)`: a
-  visible disposition is one of three kinds — eligible, excluded-with-reason, or
-  non-reaching-with-reason — and the dispositions cover the complete authored-usage domain;
-  "reaches no instance" is a disposition, not an absence. Superseded: the requirement named no
+  Amended 2026-08-12 (CONSTRAINT-SEMANTICS Item 1), `[AGENT] (ratified by owner, 2026-08-12)`:
+  added the three-kinds and complete-authored-domain clauses above; "reaches no instance" is a
+  disposition, not an absence. Superseded: the requirement named no
   disposition kinds and left non-reaching usages uncovered. See contract invariant 28 (amended).
   *(This item rewrites requirement text in place under the header's forward-amendment rule; the
   superseded text is quoted in each amendment note.)*
