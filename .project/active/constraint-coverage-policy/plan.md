@@ -1193,6 +1193,60 @@ entry exactly; the precedence function reads it; there is no catalog file I/O.
 in any new file. `git diff --check` clean. Companion still `5088b41`, clean.
 
 ### Phase 4 Completion
+**Completed:** 2026-08-13 — **red window still open, unchanged.**
+
+**Actual Changes:**
+- `resolution/models.py` — `ships_constraint_machinery` reads `bool(catalog.usage_records)`.
+  `has_executable_content` **deleted**; no reader remained anywhere in the tree.
+- `elaboration/project.py` — the early return at the aggregator mint reads
+  `self.graph.constraint_usages`.
+- `cli/__init__.py:411` — the redundant `catalog is not None and …` guard collapsed to the rule
+  itself, with an assert narrowing the type.
+- `tests/unit/test_report_required_trigger.py` (NEW, 6 cases) — both zero-input branches, exit-point
+  retention through the real `_build_exit_points` with membership narrowed to nothing (so the pin is
+  structural, not incidental capture-everything), constraint-free inertness, and the two-readings
+  agreement property the coverage preflight will refuse a violation of.
+- The excluded-only characterization test's `xfail` is removed; the assertion stands.
+
+**Issues — a FOURTH seam, not the three D5 named.**
+`project.py::_typed_module_order` gated the aggregator's *ordering* entry on
+`executable_constraints`, the old rule in a second place. With only the mint widened, the two
+inventories disagreed and projection refused by name
+(`SI_EDGE_DANGLING: typed module inventory disagrees with projected module inventory`) — the fail-
+closed check doing its job. Fixed to read the same `constraint_usages` population. Its dependency
+set is still whatever is executable, which for a zero-input branch is nothing, so a
+descriptive-only model's report orders first.
+
+Two Item 2 tests asserted the old rule and were updated rather than deleted:
+- `test_a_usage_only_package_ships_no_constraint_machinery` → `…ships_the_machinery_and_a_zero_
+  input_report`, assertions inverted against the same three artifacts, plus the baked account.
+  Item 2's own docstring said Item 3 would supersede it.
+- Two hand-built catalogs (`test_module_kind_faildloud.py`, `test_constraint_generation_
+  integration.py`) carried a concrete entry with no usage row — a shape no projection produces,
+  since every entry joins a usage row by `declaration_id`. Both gained the row.
+
+**Baseline churn: ZERO, and that is the LC-E12 gate passing.** A before/after corpus sweep over all
+108 fixture directories shows exactly **8 fixtures gained an aggregator**, none lost one, none
+newly erroring:
+
+| fixture | usages | entries |
+|---|---|---|
+| `catf_mfe_d5` | 65 | 0 |
+| `constraint_domain_plain_forms` | 2 | 0 |
+| `constraint_domain_satisfy` | 2 | 0 |
+| `constraint_domain_satisfy_calc_def` | 2 | 0 |
+| the four `constraint_coverage_*` fixtures (new this item) | 1–2 | 0–1 |
+
+Every one is a constraint-bearing model with zero eligible entries — precisely the population D5
+widened to. **None of the eight has a committed baseline**, so `tests/fixtures/baseline_outputs/*`
+did not move a byte, and constraint-free fixtures are byte-identical by construction. No third
+cause of churn appeared, because there was no churn.
+
+**Deviations:** the fourth seam above. The design's DR-11 named three; there were four.
+
+**Gate:** 1963 passed, 34 skipped (zero license skips) outside the window; the red window
+**byte-identical** to the Phase 3 list, 62 entries, all still the one `SealVerificationError`
+signature. ruff/mypy baselines unchanged. `git diff --check` clean. Companion `5088b41`, clean.
 
 ### Phase 5 Completion
 

@@ -890,7 +890,19 @@ class _Projection:
             )
             constraint_outputs.append((constraint_id, channel))
 
-        if not constraint_outputs:
+        # A report is required iff the model authored at least one constraint usage — not iff
+        # something eligible reached execution (Item 3 / D5). The two zero-input branches this
+        # admits are the whole point: a descriptive-only model like `catf_mfe_d5` (65 bare
+        # constraints) ships a `not_assessed` report, and a model whose asserted gates all
+        # produced zero eligible entries ships a `partial_coverage` one. Returning early on an
+        # empty `constraint_outputs` made both of those silent, and a consumer read the silence
+        # as "this model has no constraints" — the same reading a genuinely constraint-free
+        # model gets.
+        #
+        # Read from the instance graph's authored-usage domain, which is the same population
+        # `ships_constraint_machinery` reads off the catalog. The coverage preflight closes the
+        # gap between those two readings as a check rather than a convention.
+        if not self.graph.constraint_usages:
             return
         aggregator_name = "constraint_report_aggregator"
         self._claim_channel("constraint_report", "constraint-report")
@@ -1013,8 +1025,12 @@ class _Projection:
                 if isinstance(edge, ProducerRef):
                     dependencies[node_id].add(edge.target.calculation)
 
+        # The aggregator exists iff the model authored a constraint usage (Item 3 / D5) — the
+        # same population `_build_constraint_modules` mints against, so the two inventories
+        # agree. Its dependencies are whatever *is* executable, which for a zero-input branch
+        # is nothing: a descriptive-only model's report has no upstream and orders first.
         aggregator = "constraint-report-aggregator"
-        if executable_constraints:
+        if self.graph.constraint_usages:
             dependencies[aggregator] = set(executable_constraints)
 
         for semantic_item, required in dependencies.items():

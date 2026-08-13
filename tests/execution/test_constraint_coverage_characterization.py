@@ -63,15 +63,13 @@ def test_partial_assessment_does_not_read_as_full_satisfaction(tmp_path):
     assert result.outputs[REPORT_CH].headline != "all_satisfied"
 
 
-@pytest.mark.xfail(
-    strict=True, reason="Item 3: an excluded-only model emits no report at all"
-)
 def test_excluded_only_model_ships_a_report():
-    """`constraint_domain_plain_forms`: two authored usages, nothing eligible, no report.
+    """`constraint_domain_plain_forms`: two authored usages, nothing eligible, now a report.
 
-    Ledger entry: 2 / 0 / 0 / 0 / 0 / `{}` / `none`, headline `not_assessed`. The graph is
-    the observation surface here rather than an executed package, because the defect is that
-    the aggregator module is never minted.
+    **Fixed in Phase 4** — the `xfail` is removed and the assertion kept. Ledger entry:
+    2 / 0 / 0 / 0 / 0 / `{}` / `none`, headline `not_assessed`. The graph is the observation
+    surface here rather than an executed package, because the defect was that the aggregator
+    module was never minted.
     """
     from sysml_codegen.elaboration import project
     from sysml_codegen.orchestration.elaborated_pipeline import elaborate_model_paths

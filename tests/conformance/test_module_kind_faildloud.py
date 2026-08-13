@@ -31,6 +31,7 @@ from sysml_codegen.resolution.models import (
     ComputationGraph,
     ConstraintCatalog,
     ConstraintCatalogEntry,
+    ConstraintCatalogUsageRecord,
     ConstraintFormalIdentity,
     InputSource,
     ModuleInput,
@@ -83,7 +84,31 @@ def _catalog() -> ConstraintCatalog:
         predicate_ir=_predicate_ir(),
         evaluation_channel="c1__evaluation",
     )
-    return ConstraintCatalog(concrete_entries=[entry], fingerprint="deadbeef")
+    # The usage row the entry belongs to. Item 2 mints one per authored usage and every entry
+    # joins one by `declaration_id`, so a catalog carrying an entry without its usage row is a
+    # shape no projection produces — and since Item 3 reads `usage_records` for "does this
+    # package ship constraint machinery", omitting it here would test a package that cannot
+    # exist.
+    usage = ConstraintCatalogUsageRecord(
+        declaration_id="decl-C1",
+        usage_qualified_name="Pkg::Def::assert1",
+        source_local_identity="assert1",
+        source_form="definition_typed",
+        owner_kind="part_def",
+        owner_qualified_name="Pkg::Def",
+        definition_qualified_name="Pkg::Def",
+        membership_kind="assert",
+        is_negated=False,
+        expected_value=True,
+        disposition_kind="eligible",
+        disposition_reason="admitted",
+        disposition_severity="info",
+        disposition_detail="",
+        occurrence_count=1,
+    )
+    return ConstraintCatalog(
+        usage_records=[usage], concrete_entries=[entry], fingerprint="deadbeef"
+    )
 
 
 def _constraint_module() -> PipelineModule:

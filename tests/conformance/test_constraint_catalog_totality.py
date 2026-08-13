@@ -75,17 +75,20 @@ def test_a_calc_def_only_model_still_gets_a_catalog():
     assert not catalog.concrete_entries
 
 
-def test_a_usage_only_package_ships_no_constraint_machinery(tmp_path: Path):
-    """A4: the catalog's existence is not "this package has executable content".
+def test_a_usage_only_package_ships_the_machinery_and_a_zero_input_report(tmp_path: Path):
+    """Item 3 supersedes Item 2's rule here, exactly as Item 2's docstring said it would.
 
     ``usage_records`` is the whole authored domain, so it is populated whenever the model
-    declares any constraint at all. Reading the nullable as the executability question
-    shipped an evidence schema and a report type this package can never populate — it has
-    zero concrete entries. The rule is one concrete entry, read the same way at all three
-    seams (``ships_constraint_machinery``).
+    declares any constraint at all. **Item 2's answer** was that this package ships nothing:
+    zero concrete entries meant an evidence schema and a report type it could never populate.
+    **Item 3's answer** is that it ships a report saying so — one whose coverage account has
+    `assessed_gate_count == 0`, so a consumer can tell "declared constraints, assessed none"
+    from "declared no constraints", which is the same silence today.
 
-    Contract invariant 32's zero-input ``not_assessed`` aggregator will supersede this;
-    that is Item 3's deliberate change, and Item 2 does not build it early.
+    The bar moved from one concrete entry to one authored usage, in one place
+    (``ships_constraint_machinery``), read the same way at all three seams. What did *not*
+    move is the seams themselves — that is why this test still asserts against the same three
+    artifacts, with the assertions inverted rather than deleted.
     """
     output = tmp_path / "generated"
     graph = build_elaborated_pipeline([CALC_DEF_ONLY])
@@ -103,10 +106,18 @@ def test_a_usage_only_package_ships_no_constraint_machinery(tmp_path: Path):
         ),
     ) is True
 
-    assert not (output / "schemas/constraint_types.py").exists()
+    assert (output / "schemas/constraint_types.py").exists()
     registry = (output / "__init__.py").read_text()
-    assert "ConstraintEvaluation" not in registry
-    assert "ConstraintReport" not in registry
+    assert "ConstraintEvaluation" in registry
+    assert "ConstraintReport" in registry
+
+    # The aggregator it now ships takes no inputs and bakes an empty denominator: both usages
+    # here are non-asserted (`out_of_profile_owner`, `out_of_scope_satisfy`), so they are
+    # inventory, and the headline the account implies is `not_assessed`.
+    aggregator = (output / "modules/constraints/constraintreportaggregatormodule.py").read_text()
+    assert "'applicable_gate_total': 0" in aggregator
+    assert "'authored_usage_total': 2" in aggregator
+    assert "'coverage_state': 'none'" in aggregator
 
 
 def test_a_reaching_package_still_ships_the_machinery(tmp_path: Path):

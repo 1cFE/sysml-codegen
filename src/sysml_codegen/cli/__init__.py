@@ -404,13 +404,11 @@ def _preflight_constraint_names(graph: ComputationGraph) -> None:
     from sysml_codegen.resolution.models import ships_constraint_machinery
 
     validate_constraint_graph_or_raise(graph)
-    catalog = graph.constraint_catalog
-    # `ships_constraint_machinery` is the semantic guard — one concrete entry, the same rule
-    # the other two seams read. The `catalog is not None` half is redundant to it and is
-    # spelled out only so the type narrows for the call below.
-    if catalog is not None and ships_constraint_machinery(graph):
+    if ships_constraint_machinery(graph):
         from sysml_codegen.generation.modules import assert_unique_predicate_function_names
 
+        catalog = graph.constraint_catalog
+        assert catalog is not None  # ships_constraint_machinery implies it; narrows the type
         assert_unique_predicate_function_names(catalog)
 
 
