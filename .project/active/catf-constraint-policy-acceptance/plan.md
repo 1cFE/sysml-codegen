@@ -147,20 +147,20 @@ That the recorded baselines (2050/34, ruff 12, mypy 55) still hold at this HEAD,
 licensed suite really runs licensed here.
 
 ### Steps
-- [ ] Licensed full suite; record passed/skipped and **grep the output for `no live syside license`
+- [x] Licensed full suite; record passed/skipped and **grep the output for `no live syside license`
       → expect 0 lines**. Record the count in `verification.md` (create it).
-- [ ] `ruff check src/` and `mypy src/` → record counts (expect 12 / 55).
-- [ ] `git -C /home/reid/1cfe/teax rev-parse HEAD` and `--abbrev-ref HEAD` → record; expect
+- [x] `ruff check src/` and `mypy src/` → record counts (expect 12 / 55).
+- [x] `git -C /home/reid/1cfe/teax rev-parse HEAD` and `--abbrev-ref HEAD` → record; expect
       `5b70ae9` on `constraint-semantics-item3`. If it differs, **stop and surface** — acceptance
       evidence cites that tip.
-- [ ] Correct the stale acceptance paragraph in `tests/fixtures/catf_mfe_d5/PROVENANCE.md` (it still
+- [x] Correct the stale acceptance paragraph in `tests/fixtures/catf_mfe_d5/PROVENANCE.md` (it still
       claims the exact route refuses the model with 152× `SI_OCCURRENCE_MISSING`; the model has built
       42 modules since). Nothing else in that fixture changes.
-- [ ] `python scripts/make_d5_variant.py --check` → passes for all three variants.
-- [ ] `git diff --stat tests/fixtures/catf_mfe_d5/` → exactly one file, exactly the paragraph.
+- [x] `python scripts/make_d5_variant.py --check` → passes for all three variants.
+- [x] `git diff --stat tests/fixtures/catf_mfe_d5/` → exactly one file, exactly the paragraph.
 
 ### Validation
-- [ ] Full suite green at the recorded baseline; `git diff --check` clean.
+- [x] Full suite green at the recorded baseline; `git diff --check` clean.
 
 **What we know after this phase:** the environment is real, the baseline is measured at this HEAD,
 and the frozen-twin obligation is discharged and still checkable.
@@ -547,7 +547,39 @@ Leave the item auditable.
 [TO BE FILLED DURING IMPLEMENTATION]
 
 ### Phase 0 Completion
-**Completed:** · **Actual Changes:** · **Issues:** · **Deviations:**
+
+**Completed:** 2026-08-13. Full numbers in `verification.md` §Phase 0.
+
+**Changes made:**
+- `tests/fixtures/catf_mfe_d5/PROVENANCE.md` — the stale acceptance paragraph replaced with
+  the measured state (43 modules, 65 usages / 0 concrete / 9 excluded / 56 non-reaching), and
+  the superseded "What blocks it — 152× `SI_OCCURRENCE_MISSING`" section shrunk to a one-line
+  closed record pointing at git history (capture-fidelity §3: amend, don't accrete). Only file
+  touched in either frozen twin.
+- `verification.md` created.
+
+**What we now know:** the licensed environment really licenses (0 skip lines on both runs),
+lint/type floors hold exactly (ruff 12, mypy 55), the TEAx tip is `5b70ae9` on
+`constraint-semantics-item3`, and the frozen-twin obligation is discharged and still checkable
+(all three `make_d5_variant.py --check` pairs pass).
+
+**Issues / deviations — two count surprises, both recorded rather than absorbed:**
+
+1. **Suite baseline does not equal the inherited 2050/34.** Measured at this HEAD:
+   **2012 passed / 34 skipped / 79 deselected** under the default marker set
+   (`pyproject.toml:46` sets `-m "not execution"`), and **2090 passed / 34 skipped / 1 failed**
+   under `-m ""`. Skipped is 34 in both, matching exactly, and no previously-passing test
+   fails — 2050 sits between the two numbers, so the gap is the marker set plus Item 4's
+   added tests. No test was lost. The floor for the rest of the item is the measured HEAD
+   baseline, stated in `verification.md`. Surfaced to the orchestrator.
+2. **The one failing test is environmental.**
+   `tests/execution/test_fusion_tea_real_teax.py::test_the_lane_runs_the_real_simkit` refuses
+   because the in-repo stub runner is importable in the task venv; that lane must be hosted in
+   the agentic-mbse venv with a `sys.path` insert of `teax/packages/teax-simkit`. Pre-existing,
+   not caused by any Item 5 edit.
+3. **d5 builds 43 modules, not the 42 the plan's prose says.** 43 is the number consistent with
+   every design probe delta (P1 44, P2 45, P6 46, P7 48). No expectation derives from it; the
+   corrected paragraph records 43.
 
 ### Phase 1 Completion
 ### Phase 2 Completion

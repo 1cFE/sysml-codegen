@@ -6,8 +6,11 @@ Authored 2026-08-11 for recovery plan **Gate 4C part 6**
 **Not a corpus fixture.** It joins no ledger and no 37-path corpus run. `catf_mfe_model` is
 untouched: the ratified corpus row and every pin on its refused shape keep their subject.
 
-**INCOMPLETE — the exact route does not yet accept this model.** It is committed at the
-rename stage because that stage is finished and proved, not because it is usable coverage.
+**The exact route accepts this model.** Elaborating the committed
+`instance_graph_snapshot.json` and projecting it yields **43 modules** and a constraint
+catalog of **65 authored usages / 0 concrete entries / 9 excluded / 56 non-reaching**
+(measured 2026-08-13, CONSTRAINT-SEMANTICS Item 5 Phase 0). All 65 usages are bare
+`constraint`; the model asserts nothing, so it executes no gate.
 
 ## What was done — the D-5 rename, complete and proved
 
@@ -22,20 +25,10 @@ byte, file for file, so the rename is the only edit. Pinned by
 `tests/conformance/test_d5_variants.py`, and re-runnable without a license via
 `python scripts/make_d5_variant.py --check catf_mfe_model catf_mfe_d5`.
 
-## What blocks it — a different class the rename does not reach
+## What used to block it — closed
 
-With the self-binding gone, the elaborator refuses the model with
-**152 × `SI_OCCURRENCE_MISSING`** (`ElaborationDiagnosticError`), of the form:
-
-```
-CATFMFERadialBuild__catf_radial_build__ht_shield__thickness:
-    leaf declaration 146016c8-… has no feature slot
-```
-
-These are nested-occurrence resolutions, not bindings. No rename addresses them, and they
-were previously invisible because the self-binding refusal fired first. Slice 3D met the same
-error *code* on the customer model at 7 diagnostics and closed it with a product change
-(`_enumeration_literal`); this is 152 diagnostics on deep part hierarchies, which is not
-obviously the same sub-case.
-
-**Surfaced to the orchestrator as a premise finding, not resolved here.**
+An earlier revision of this file recorded a second refusal behind the rename:
+**152 × `SI_OCCURRENCE_MISSING`** on deep part hierarchies, surfaced as a premise finding
+rather than resolved. That refusal no longer reproduces — the nested-occurrence resolution
+it named was fixed in the product, and the model builds. The record is kept in this file's
+git history.
