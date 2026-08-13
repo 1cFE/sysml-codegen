@@ -643,13 +643,20 @@ asserted-constraint authoring.
 
 **Success Criteria**:
 
-- [ ] An asserted predicate containing a compatible unit-annotated literal elaborates without
+- [x] An asserted predicate containing a compatible unit-annotated literal elaborates without
       `SI_OCCURRENCE_MISSING`; incompatible-unit behavior remains governed by the profile.
-- [ ] A blocked feature chain names the exact offending written reference and the bindings rewrite;
+- [x] A blocked feature chain names the exact offending written reference and the bindings rewrite;
       a multi-chain predicate identifies each distinct offending reference deterministically.
 - [ ] Existing quantity, occurrence, profile, and diagnostic tests do not regress.
+      *(Implementation verified static; the green run is author-reported — audit probe R1.)*
 - [ ] Focused companion/codegen tests, full maintained suites, ruff/mypy zero-new gates, and
       `git diff --check` pass with exact counts recorded.
+      *(`git diff --check` verified; counts author-reported, and the companion baseline was never
+      stated — audit probes R1–R3.)*
+
+**Audit (2026-08-13): Certify-with-residuals** — `.project/active/constraint-predicate-hardening/audit.md`.
+Two residuals to discharge before close: carry the item's two surfaced findings into Item 5's
+section below (audit F7), and record the rewritten red-first assertion as a deviation (audit F1).
 
 **Estimated Effort**: 0.5–1 day (spec 0.5h, design 1h, plan 0.5h, execute and validate 4–6h)
 

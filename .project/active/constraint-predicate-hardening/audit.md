@@ -423,3 +423,48 @@ owner session holds an uncommitted edit to it.
 - **Whether `predicate_unit_annotation_incompatible` remains a genuine block** after any future
   profile change — it is a companion-path guard by design, and design review A1 already recorded
   that it discriminates nothing on the codegen side.
+
+---
+
+## Orchestrator addendum — requested live probes executed (2026-08-13)
+
+All probes run by the orchestrator (full permissions) at codegen `89fc38f` + companion
+`0a52942`, licensed interpreter, mutations reverted after measurement.
+
+- **R1 — PASS.** Full licensed codegen suite: **2010 passed, 34 skipped, 0 failed, 79
+  deselected**; `-rs` shows 34 skip lines, **zero** matching "license". Criteria 1–5's runs
+  are no longer author-reported.
+- **R2 — PASS.** `ruff check src` → **Found 12 errors**; `mypy src` → **55 errors in 11
+  files**. Zero-new holds.
+- **R3 — PASS.** Companion control done as a single-file swap (the whole diff is one file):
+  suite at tip and with `executable_profile.py` at `bc69f04` both give **10 failed / 1821
+  passed / 1 skipped**, and the failing **node IDs are byte-identical** (diff empty). Lint at
+  the baseline profile: ruff **1**, mypy **108 in 26 files** — same as tip. The companion
+  numbers are pre-existing; zero-new holds. File restored, tree clean.
+- **R4 — PASS.** `0a52942` touches only `src/agentic_mbse/sysml/executable_profile.py`
+  (+42/−3): one `_feature_chain_message` helper, passed at **both** chain-block sites; zero
+  added lines mention `REASON_CODES`; `git diff --check bc69f04 0a52942` clean.
+- **R5 — F1 stays a residual; NOT promoted.** The strengthened assertion (leaf param name in
+  the row) **fails**, but the printed wirings show why: both twins have identical edges
+  (`(0, entry_point)`, `(1, module_output)`); the only difference is the constraint module's
+  identity param (`predicate_unit_annotation_the_host_gap_guard_<hash>` vs
+  `…_bare_…_<hash>`), which embeds the *package* name with no `__` separator, so the probe's
+  `rsplit("__", 1)` cannot strip it. A naming artifact exactly as the implementer disclosed;
+  no edge is concealed. The probe as specified could not have passed for any correct
+  implementation of two differently-named packages.
+- **R6 — PASS, with one precision.** Deleting the unwrap at `elaborate.py:2432` fails exactly
+  **7** tests: 5 in `test_predicate_unit_annotation.py` plus 2 population-oracle rows
+  parameterized over the same `predicate_unit_annotation` fixture
+  (`test_constraint_population_oracle.py` re-elaborates every fixture). All 7 are
+  Item-4-fixture-scoped; **no pre-existing behavior anywhere in the suite depends on the
+  widening** (2003 passed otherwise). The audit's "only `test_predicate_unit_annotation.py`"
+  expectation was too narrow by one file, not wrong in substance.
+- **R7 — PASS.** The one-sided variant (`gap_width >= 0.25 [m]`, LHS unannotated) refuses
+  with `SI_CONSTRAINT_BLOCKED … block_ordering_category_pair: ordering '>=' requires
+  Integer/Real operands or two Quantity operands; got real/quantity. Rewrite both operands as
+  one admitted numerical pair. [model.sysml:53]` — the fixture header's authoring claim is
+  true, and the rendered message carries reason, categories, rewrite, and location.
+
+**Effect on the verdict:** Certify-with-residuals stands. Criterion 8 and the
+author-reported runs are now independently verified; F1 is confirmed a record-completeness
+residual (not concealment); F7's placement cure remains open for the cure pass.
