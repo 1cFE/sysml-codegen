@@ -1649,7 +1649,13 @@ class _ExactElaborator:
                     else None
                 ),
             )
-            expression = getattr(member, "feature_value_expression", None)
+            # The same rule, in the binding lane: `in tol = 0.05 [m];` binds the number.
+            # Unwrapped once here rather than inside `_binding_evidence`, because the
+            # literal read below wants the same expression the classifier saw — and
+            # because a second application site is a second place the rule could drift.
+            expression = self._without_unit_annotation(
+                getattr(member, "feature_value_expression", None)
+            )
             if expression is None:
                 unbound.append(formal_id)
                 continue

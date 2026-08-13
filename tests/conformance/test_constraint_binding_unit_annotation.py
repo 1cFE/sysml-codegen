@@ -31,9 +31,6 @@ pytestmark = requires_license
 
 FIXTURE = FIXTURES_DIR / "constraint_binding_unit_annotation"
 
-_ITEM4_D2 = "CONSTRAINT-SEMANTICS Item 4 — the fourth lane (D2)"
-
-
 @pytest.fixture(scope="module")
 def graph() -> InstanceGraph:
     extractor = SysMLDataExtractor([FIXTURE])
@@ -63,19 +60,21 @@ def _refused_formals(graph: InstanceGraph) -> set[str]:
     }
 
 
-@pytest.mark.xfail(strict=True, reason=_ITEM4_D2)
 def test_an_annotated_literal_binding_is_read_as_its_value(graph: InstanceGraph) -> None:
-    """Shape (i): `in tol = 0.05 [m];` contributes the number, and the number is 0.05."""
+    """Shape (i): `in tol = 0.05 [m];` contributes the number, and the number is 0.05.
+
+    The annotation leaves the evidence text with it: `literal_evidence` sets
+    `written_text = str(literal_value)`, so it reads `"0.05"`, not `"0.05 [m]"`. That is
+    the rule, not a loss — the annotation contributed its operand.
+    """
     assert _bindings(graph, "__band")["tol"] == LiteralInput(0.05)
 
 
-@pytest.mark.xfail(strict=True, reason=_ITEM4_D2)
 def test_an_annotated_reference_binding_is_read_as_a_reference(graph: InstanceGraph) -> None:
     """Shape (ii): `in ref_value = other_feature [m];` still names the feature it binds."""
     assert isinstance(_bindings(graph, "__band")["ref_value"], NodeRef)
 
 
-@pytest.mark.xfail(strict=True, reason=_ITEM4_D2)
 def test_neither_annotated_binding_is_refused_as_an_expression_source(
     graph: InstanceGraph,
 ) -> None:

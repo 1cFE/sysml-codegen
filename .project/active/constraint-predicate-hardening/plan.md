@@ -298,16 +298,16 @@ annotation carries value *and* unit on one node.
 
 ### Changes
 
-- [ ] `elaborate.py:1652` — one unwrap on the binding expression. One call site, no new
+- [x] `elaborate.py:1652` — one unwrap on the binding expression. One call site, no new
       classification branch.
-- [ ] **Probe P3 — run before removing the marker.** Elaborate `constraint_binding_unit_annotation`;
+- [x] **Probe P3 — run before removing the marker.** Elaborate `constraint_binding_unit_annotation`;
       check the value is `0.05`, that there is no readiness finding, and that the profile's verdict
       matches the same model written `in tol = 0.05;` with a declared unit. Record the outcome.
       **If the profile loses the unit, invariant 6 fires** — Phase 4's advertised rewrite drops the
       annotation and reads `in tol = 0.05;`. Note that decision in Implementation Notes so Phase 4
       picks it up.
-- [ ] Remove `xfail` from `tests/conformance/test_constraint_binding_unit_annotation.py`.
-- [ ] Confirm the evidence-text consequence is what the tests assert: `written_text` reads `"0.05"`
+- [x] Remove `xfail` from `tests/conformance/test_constraint_binding_unit_annotation.py`.
+- [x] Confirm the evidence-text consequence is what the tests assert: `written_text` reads `"0.05"`
       (not `"0.05 [m]"`) and `"other_feature"` (not `"other_feature [m]"`). That is the rule, not a
       loss (`design.md` D2 consequence note).
 
@@ -616,9 +616,54 @@ kind of source feeds it) plus the entry-point values (`{"gap_width": 0.5}` on bo
 what invariant 7 actually claims and what `test_unit_annotation_values.py` compares.
 
 ### Phase 3 Completion
-**Completed:**
-**P3 outcome (invariant 6 fired? yes/no):**
-**Issues / deviations:**
+**Completed:** 2026-08-13
+
+**Actual change:** one unwrap on the binding expression read at `elaborate.py:1652`, covering
+both `_binding_evidence` and `extract_literal_value`. No new classification branch. Three
+`xfail` markers removed.
+
+**Measured, on `constraint_binding_unit_annotation`:** `in tol = 0.05 [m];` →
+`LiteralInput(0.05)`; `in ref_value = other_feature [m];` → a `NodeRef` to `other_feature`;
+neither yields a readiness finding. `in tol = a + b;` on the second usage still yields
+`SI_EXPRESSION_SOURCE_UNSUPPORTED: unsupported exact source form expression_source ('a + b')`.
+D2's admitted set is exactly the two shapes M6c names, and no wider.
+
+**P3 outcome: invariant 6 does NOT fire — but the reason is not the one the design expected,
+and it is worth carrying forward.**
+
+Probe (three one-usage models, asserted so the profile is actually consulted, each binding a
+`Real` formal of one constraint def):
+
+| Model | Bindings | Profile verdict |
+|---|---|---|
+| `p3a` | `in measured = width;` `in tol = 0.05;` | `eligible` / `admitted` |
+| `p3b` | `in measured = width [m];` `in tol = 0.05 [m];` | `eligible` / `admitted` |
+| `p3c` | `in measured = width [m];` `in tol = 0.05 [s];` | `eligible` / `admitted` |
+
+`p3c` binds a length against a time and the profile admits it. So the profile does **not**
+read a unit off a usage *binding* at all — a bound formal takes its operand category from the
+definition's declared type (`Real` → category `real`), and the binding's annotation never
+reaches `classify_ordering`. That is true before and after D2 alike.
+
+The design's D2 branch condition was "if the profile *loses* the unit, invariant 6 fires."
+Nothing was lost: on this path there was never anything for the unwrap to lose. The advertised
+rewrite therefore keeps its designed shape — and it names no unit anyway
+(`in <formal> = <chain>;`), so invariant 6 is moot for the message Phase 4 writes.
+
+**Surfaced (capture-fidelity §4), because it contradicts B2 as stated and Item 5 depends on
+it.** B2 says "the unit text reaches the profile ... through the companion's own extraction."
+That is true for a unit written *inside a predicate body* (Phase 2's P2 proves it: the
+incompatible in-predicate annotation still blocks). It is **false for a unit written on a
+constraint usage binding**: `in tol = 0.05 [m];` is dimensionally inert to the profile.
+Consequence for Item 5: the blessed tolerance-band recipe can *carry* a unit for a human
+reader, but the profile will not check it, so a wrong unit in a band binding is admitted
+silently. Not resolved here — this item neither widens nor narrows the profile (invariant 3).
+Recorded for the close record and for Item 5.
+
+**Counts:** full licensed codegen suite **1998 passed, 34 skipped, 79 deselected, 12 xfailed**,
+zero license-skip lines. `ruff check src` = 12, `mypy src` = 55. Companion untouched.
+
+**Issues / deviations:** none beyond the surfaced finding above.
 
 ### Phase 4 Completion
 **Completed:**
