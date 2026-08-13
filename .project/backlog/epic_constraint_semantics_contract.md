@@ -882,6 +882,14 @@ calculation definitions without building the capability inside this epic.
 **Current State**:
 
 - ✅ The owner-ratified ruling defines one asserted check per concrete calculation occurrence.
+- ✅ **[AGENT — executable spike evidence, 2026-08-13]** Exact attachment is feasible inside the
+  canonical elaborator: match the constraint owner's `DeclarationId` to
+  `CalcNode.calculation_definition_id`, and identify each result by the constraint usage ID plus
+  the full calculation `NodeId`. The zero/one/two-occurrence probe recovered resolved attribute,
+  literal, and modeled-default inputs without name lookup. It also proved scope alone collides for
+  two sibling uses of one definition, so the concrete constraint identity must carry the
+  calculation node and attachment must precede serialization. See
+  `.project/active/calcdef-constraint-gate-design/probes/findings.md`.
 - ⚠️ Calculation usages and exact calculation-definition identity already exist in the instance
   graph, but constraint scope expansion has no CalculationDefinition branch.
 - ❌ There is no proved attachment rule, report-volume design, or implementation backlog item for
@@ -1025,6 +1033,76 @@ instead of the superseded one.
 
 ---
 
+### Item 8: Unit-Lane Port Metadata Defect (0.5–1 day)
+
+**Type**: Implementation (defect fix)
+
+**Boundary authority**: **[AGENT] (ratified by owner, 2026-08-13)** — filed under the Item 5
+D-S1/D-S2 ruling (option 3). Scope content below is owner-directed in that ruling.
+
+**Objective**: Make constraint-formal and computed-design-attribute entry-point ports carry the
+same unit lane calc-usage bindings already carry, so a design attribute reached by a calc and a
+constraint (or a derivation) no longer refuses the model.
+
+**Current State** (measured by Item 5 design probes P3/P3b/P4a/P5, verified in code):
+
+- ❌ `elaborate.py:1679-1689` mints port unit metadata only for `CalcNode` consumers; constraint
+  formals and computed-attribute expressions carry `unit=None` by construction.
+- ❌ Projection refuses the whole model at `project.py:394-397` (`SI_RENDERING_COLLISION`) when
+  the same attribute is also a unit-carrying calc entry point. Measured blast radius on CATF:
+  A9's assert-band and 26 of 27 radial-build radius derivations.
+- ✅ The trap's shape is recorded: correct modeling plus correct policy, refused by the
+  toolchain. Item 5 landed around it with A5/A6/A9 `blocked-by-defect` (held intent).
+
+**Scope** (owner-directed at the D-S1/D-S2 ruling):
+
+1. Probe-characterized fix with kept failing characterizations first.
+2. Its own tests (constraint-formal lane, computed-attribute lane, agreement/disagreement cases).
+3. Fingerprint/churn assessment: whether minted units move on existing fixtures — and the
+   one-reviewed-recapture obligation if they do (Item 2 precedent: one recapture at final schema).
+4. **Item 6 is a named consumer**: constraint formals are the seam its calc-def gate capability
+   binds on, so this item's characterization feeds that design.
+
+**Success Criteria**:
+
+- [ ] The two kept characterizations (A9 shape, radius-derivation shape) flip from REFUSE to
+      ADMIT with correct unit text on the minted ports.
+- [ ] No existing fixture's behavior changes silently: churn assessed, recapture (if any)
+      reviewed once, byte gates re-baselined knowingly.
+- [ ] Item 6's design cites this item's characterization of the constraint-formal unit lane.
+
+**Location**: `.project/active/unit-lane-port-metadata/` (to be created)
+
+**Dependencies**: Item 5's probe evidence (landed). Runs independently; Item 9 consumes it.
+
+---
+
+### Item 9: Derivative Upgrade Under Held Intent (0.5 day)
+
+**Type**: Modeling (follow-on)
+
+**Boundary authority**: **[AGENT] (ratified by owner, 2026-08-13)** — filed under the Item 5
+D-S1/D-S2 ruling (option 3). The target forms are already ruled; no new dispositions.
+
+**Objective**: Once Item 8 lands, upgrade `catf_mfe_gated` under the already-ruled rows: derive
+the 26 blocked radii per the ruled A5/A6 basis (axis root radius + 14 thicknesses free), assert
+A9's `ProductWithinBand` at the ruled 1% relative tolerance, delete the A5/A6 usages per their
+ruled intent, and restate the accounting identity to `65 = 56 carriers + 9 named deletions`
+(mechanical consequence of executing the held rulings — no re-disposition).
+
+**Success Criteria**:
+
+- [ ] Three executing gates (A2, A3, A9); the `blocked-by-defect` markings retired from table
+      and PROVENANCE; expected outputs re-derived from the table before confirmation tests
+      (same SC-6 discipline as Item 5).
+- [ ] Integrity manifest re-proves the restated identity; frozen twins untouched.
+
+**Location**: follows Item 5's item home conventions (new item folder at execution time)
+
+**Dependencies**: Items 5 and 8.
+
+---
+
 ## Dependencies
 
 **External**:
@@ -1084,6 +1162,8 @@ Item 1: Contract and authoring policy
 | Item 5: CATF Derivative and End-to-End Acceptance | 1.5–2 days | Item 1 for checkpoint; Items 2–4 for implementation |
 | Item 6: Calculation-Definition Gate Capability Design | 1 day | Items 1–2 |
 | Item 7: ADR, Product Promise, and Agent-Facing Documentation Sync | 0.5–1 day | Items 4–6 landed; before epic close/pre_pr |
+| Item 8: Unit-Lane Port Metadata Defect | 0.5–1 day | Item 5 probe evidence (filed 2026-08-13, D-S1/D-S2 ruling) |
+| Item 9: Derivative Upgrade Under Held Intent | 0.5 day | Items 5 and 8 |
 
 ---
 

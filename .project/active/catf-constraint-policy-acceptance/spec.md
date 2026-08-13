@@ -92,11 +92,14 @@ item's criteria; SC-8 carries the folded-in residual.
       retain their ratified modeled syntax and their existing byte-reversal relationship.
 - [ ] **SC-3 — The derivative accounts for all 65 and shows honest coverage.**
       **AMENDED — authorized by the owner 2026-08-13, adopting the ruled table's option 1; the
-      option's content is [AGENT] (ratified by owner, 2026-08-13).** The derivative's catalog
-      shows the accounting identity **65 = 56 carriers + 9 named deletions** (7 derive-instead + 2
-      O2 placeholder deletions): every surviving authored usage is a carrier, and every deleted
-      usage is a named deletion record in PROVENANCE citing its authorizing table row — nothing is
-      a carrier or vanishes silently. The report claims full feasibility coverage over the
+      option's content is [AGENT] (ratified by owner, 2026-08-13). Identity restated same day
+      under the D-S1/D-S2 ruling (option 3 — restatement authorized as a mechanical consequence,
+      not a re-disposition).** The derivative's catalog shows the accounting identity
+      **65 = 58 carriers + 7 named deletions** (5 derive-instead + 2 O2 placeholder deletions;
+      A5/A6/A9 retained as visible plain usages, `blocked-by-defect` in the table and PROVENANCE
+      only, catalog rows within Item 2's closed vocabulary): every surviving authored usage is a
+      carrier, and every deleted usage is a named deletion record in PROVENANCE citing its
+      authorizing table row — nothing is a carrier or vanishes silently. The report claims full feasibility coverage over the
       derivative's applicable asserted gates without counting descriptive or requirement-side
       usages in the denominator. The frozen-twin half is untouched: `catf_mfe_d5` itself still
       shows 65/65 carriers (Item 2's proof stands).

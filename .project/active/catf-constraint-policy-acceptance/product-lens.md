@@ -222,3 +222,216 @@ The thread running through F1, F2 and F3 is a boundary drawn around the *numbers
 the *decision that produces them* — the item measures a count where the product's promise is an
 honest disposition per usage, an executable gate the search can cross, and a band whose units
 someone owns.
+
+---
+
+## design — 2026-08-13 — rev 47e944a (`design.md` committed at `2821c38`)
+Epic: CONSTRAINT-SEMANTICS (`epic_constraint_semantics_contract.md`, Item 5 — CATF Derivative and
+End-to-End Acceptance)
+
+**Runner note:** `~/.claude/scripts/product-lens.md` and its pack source
+(`/home/reid/agentic-project-init/claude-pack/scripts/product-lens.md`) are outside this session's
+sandbox and were refused on every read route again, so the lens was run from its stated purpose —
+an independent two-direction check (does the WORK contradict or narrow the product point; does it
+omit an obligation the point requires) — plus the two named structural smells, in this file's
+existing format. The owner ruling on D-S1/D-S2 is out of scope by instruction; what is judged is
+the design's **handling** of the surprise. `/home/reid/1cfe/teax` was not read. Every codegen,
+docs, and fixture line cited below was opened this session.
+
+**Point** (re-derived from SOURCES before the design was opened; unchanged in substance from the
+spec-stage entry, so it is not restated in full — the two clauses this stage turns on):
+
+- **A search must be able to tell a candidate that passed its physics gates from one nobody
+  checked**, which requires the generated evidence to represent **every applicable asserted gate**
+  *and* every other authored constraint to remain **visibly dispositioned** — visibly, in the
+  shipped artifact a search reads, which in this product is the catalog and the coverage account.
+  [source: epic CSF `epic_constraint_semantics_contract.md:17-19` **[OWNER]**;
+  `rulings-20260812.md:13-15` **[OWNER-VERBATIM]**; ADR-009 / `modeling-assumptions.md` §9;
+  grade: owner]
+- **Two totals, never conflated**, and the machinery that keeps them apart is product-owned:
+  `coverage_account`'s four-bucket table (`src/sysml_codegen/generation/coverage.py:7-27`), the
+  catalog's one-disposition-per-authored-usage domain (`modeling-assumptions.md` §8, "Every
+  authored usage has a carrier"), and the one bar the three generation seams read
+  (`ships_constraint_machinery`, `src/sysml_codegen/resolution/models.py:625-644`).
+  [grade: agent/ratified, over an owner-grade factor]
+
+**Falsifier for this stage:** a design in which a constraint the owner ruled *should gate* ends up
+indistinguishable, in the shipped artifact, from one nobody has gotten to yet; or one whose stated
+validation asserts a check it has already shown cannot pass; or one that discharges a residual
+against a package shape the product no longer produces.
+
+### Findings
+
+- **item5d-F1 [DO] — the three parked rows keep their disposition in `design.md` and lose it in
+  the artifact a search reads.** Under D-S1/D-S2 the derivative cannot author A9's ruled
+  `assert-band` or A5/A6's ruled derivations. Those usages therefore ship **as authored** — bare
+  `constraint`, in-predicate `==` — and the catalog gives them `excluded / unassessed form`, which
+  is the identical row `catf_mfe_d5` shows for them today (`owner-disposition.md:70-72`, Group A
+  header; `spec.md:23-28`). A reader of the derivative cannot distinguish "the owner ruled this a
+  1%-band physics gate and a named product defect refuses it" from "nobody has touched this yet".
+  That is exactly the confusion the CSF names. The design's own artifact list makes the gap
+  concrete: `PROVENANCE.md`'s contents are enumerated at `design.md:304-307` as per-change records,
+  the nine deletion records, the two O3 model-debt entries, and the per-gate unit reasoning —
+  **no parked-row records** — and Non-Goals says only "Resolving D-S1 or D-S2" (`design.md:319`).
+  The surfacing itself is done right: the conflict is named, dependent conclusions are parked, the
+  arithmetic consequence is stated and the ruled number left in force (`design.md:141-178`). What
+  is missing is that the surfacing stops at the `.project/` boundary. — source: CSF (owner),
+  catalog totality (agent/ratified, over owner-grade L2-1/L2-2) — **disposition:** whatever the
+  owner rules, the derivative carries a named record per parked row — qualified name, ruled
+  disposition, the refusing reason code and its measured probe, and the authorizing table row —
+  in the same PROVENANCE that carries the nine deletions. If the ruling is "accept as
+  awaits-capability", that record is the disposition; if it is "fix the defect", the record is what
+  the fix discharges. One list either way, and it belongs beside the fixture, not only here.
+
+- **item5d-F2 [DO] — D7's stated reason is false at HEAD, so SC-8 would be discharged against a
+  package shape the product stopped producing in Item 3.** D7 picks
+  `constraint_domain_satisfy_calc_def` as the R3 baseline because it is the calc-def-only example
+  "whose package correctly ships no `schemas/constraint_types.py`" (`design.md:238-239`), and
+  rejects `catf_mfe_gated` on the ground that it "cannot pin the absent-machinery shape"
+  (`design.md:242-243`). At HEAD that package **does** ship `schemas/constraint_types.py`:
+  `ships_constraint_machinery` moved its bar from one concrete entry to one authored usage
+  (`src/sysml_codegen/resolution/models.py:634-644`), and the conformance suite asserts the
+  shipping positively — `assert (output / "schemas/constraint_types.py").exists()` in
+  `tests/conformance/test_constraint_catalog_totality.py`,
+  `test_a_usage_only_package_ships_the_machinery_and_a_zero_input_report`. The premise is inherited
+  from the spec's Problem section (`spec.md:71-76`), which restates Item 2's R3 wording verbatim;
+  Item 3 superseded it and the design carried it forward as measured. The design elsewhere records
+  the correct rule (`design.md:347`, "`ships_constraint_machinery` now keys on one authored
+  usage"), so this is an internal contradiction, not a missing fact. The fixture choice survives
+  the correction — but what it pins changes, and the change is the more valuable one: not "absent
+  machinery" but **"declared constraints, assessed zero"**, the byte shape that lets a consumer
+  tell that state from a constraint-free model, which is Item 3's central promise and has no byte
+  baseline. — source: Item 3 as landed (agent/ratified), R3 residual (agent) — **disposition:**
+  restate D7's reason and SC-8's claim to the assessed-zero-with-a-report shape. Keep the fixture
+  and the `MODELS` row (`MODELS` covers only four of the thirteen baseline directories today,
+  `tests/conformance/test_baselines.py:26-31`, so the new row is what actually gates it).
+
+- **item5d-F3 [DO] — the Validation Approach asserts an integrity check the SURFACED section has
+  already shown cannot pass, and the handoff calls the parks narrower than they are.** D2's script
+  proves `65 = carriers + named deletions` by joining the ruled table against the derivative's
+  catalog and PROVENANCE (`design.md:205-209`). Under the parked set — A5, A6, A9 not landable —
+  A5/A6's usages are not deleted and A9 is not asserted, so the join against the ruled rows cannot
+  close, by construction. Validation Approach items 1 and 3 nonetheless list
+  "`check_gated_manifest.py --check` passes" and the coverage-row agreement unconditionally
+  (`design.md:370-374`), and Potential Risks (`design.md:353-359`) carries no row for it. The
+  handoff then labels the open group "**blocking their own rows only** … not a blocker on the item"
+  while listing the accounting identity inside it (`design.md:390-392`) — but SC-3 and SC-4 are
+  *item* criteria, not row criteria, so the parks block the item's acceptance, not three rows.
+  The design was right not to restate the identity (`design.md:176-178`); the error is downstream,
+  where the unrestated identity is still validated as if it held. — source: SC-3 as amended
+  (`spec.md:93-105`, [AGENT] ratified by owner), B4 (agent) — **disposition:** state the landable
+  identity as an explicit *conditional* — under the parks the check closes over the landable set
+  plus a named parked list, and closes over the ruled table only once D-S1/D-S2 are ruled — and
+  put the "identity cannot close while the parks stand" row in Potential Risks with the sequencing
+  that follows from it.
+
+- **item5d-F4 [DO, low] — the citation the "all-or-nothing landing" premise rests on points at
+  unrelated code.** `elaborate.py:488` is cited for "a profile BLOCK on any asserted constraint
+  halts the whole model" (`design.md:135`, inherited from `spec.md:206-207`, which says
+  "verified"). Line 488 is an `SI_EDGE_DANGLING` raise for an unrecognized constraint-definition
+  UUID. The whole-model halt is real and lives at
+  `src/sysml_codegen/elaboration/elaborate.py:1145-1152` — `Eligibility.BLOCK` →
+  `_diagnose(SI_CONSTRAINT_BLOCKED, …)`. The premise is correct; only the pointer is wrong, and the
+  design's probe-first shape is built on it, so an implementer verifying it lands nowhere.
+  — source: [HARD] BLOCK-halts-generation (hard) — **disposition:** repoint to
+  `elaborate.py:1145-1152` here and in the spec.
+
+- **item5d-F5 [DO, low] — an Implementation Note states a flat prohibition that the landed
+  authoring contract contradicts.** "A `[unit]` literal must not appear in a predicate body"
+  (`design.md:340`). The landed contract says the opposite for the both-operands spelling:
+  `gap_width [m] >= 0.25 [m]` "is the supported way to write a unit-carrying gate, and the units
+  are then compared" (`docs/architecture/modeling-assumptions.md:520-522`), carried into this
+  item's own spec as `[HARD]` (`spec.md:209-213`). Only the *one*-operand form is refused. The
+  note is harmless for this item — neither surviving gate needs a unit — but it is written as a
+  rule, and `owner-disposition.md:99-101` separately gestures at an "`[m]`-literal elaborator
+  failure (research §6)", so a reader cannot tell whether this is a local scoping choice or a
+  measured contradiction of §8. If it is the latter, it is a §4 surfacing obligation, not an
+  implementation note. — source: §8 as landed (agent/ratified), spec [HARD] (hard) —
+  **disposition:** one clause saying which: "neither surviving gate carries a unit literal, so the
+  question does not arise here", or a measurement against §8 with the contradiction surfaced.
+
+### Smells
+
+- **(a) A consumer compensating for a producer or platform guarantee: DOES NOT FIRE.** This is the
+  case a reviewer should expect to fire, and the design is explicitly clean on it. The compensating
+  move was available, named, and refused: "A shim attribute introduced solely to dodge the
+  collision would be exactly the silent workaround the brief forbids" (`design.md:154-155`). The
+  design chased the refusal to the producer seam instead of routing around it — constraint-formal
+  port metadata takes `unit=None` by construction because the attribute lane is only consulted for
+  a `CalcNode` (`src/sysml_codegen/elaboration/elaborate.py:1678-1689`, cite verified this
+  session), and projection then refuses the mismatched `EntryPoint` pair
+  (`src/sysml_codegen/elaboration/project.py:393-397`, verified) — and it names the product fix as
+  the owner's first option (`design.md:155-156`). It also refused the second available
+  compensation, editing the shared library calc defs' unit comments, as a Non-Goal
+  (`design.md:321`). Two other candidates were checked and do not fire: D2's manifest script is a
+  check the platform *cannot* provide (the identity is cross-fixture, and the totality preflight is
+  per-model), and the seven derivations are the ruled class-1 policy, not a workaround.
+- **(b) A solution that changes who owns an invariant without saying so: FIRES**, on item5d-F1.
+  "Every other authored constraint remains visibly dispositioned" is owned, in the product, by a
+  machine-produced catalog row with a closed disposition vocabulary. For A5, A6 and A9 that
+  ownership moves to a `.project/` design document, and the design does not say so — the PROVENANCE
+  contents list omits parked-row records entirely (`design.md:304-307`) and Non-Goals frames the
+  parks as a resolution question only (`design.md:319`). Note the contrast with the *other* place
+  ownership moves in this design, which is handled correctly: D2 states plainly that the
+  cross-fixture accounting identity moves from byte-reversal to a bespoke script, says why the old
+  mechanism cannot transfer, and books the transfer as bet B4 (`design.md:205-211`, `:195-198`).
+  Same shape, said out loud — which is what makes the silence on the parked rows a finding rather
+  than a preference.
+- **A criterion that goes green only because it selects one interpretation: fires weakly, on
+  item5d-F3, and is not the same defect as the spec stage's.** The identity is no longer a
+  prediction about an unmade owner decision (that was `item5-F1`, resolved by ruling). It is now a
+  ruled number validated unconditionally against a set the design has already measured as
+  unreachable. The fix is a conditional, not a re-ruling.
+- **Two representations kept in sync: accepted, unchanged from the spec stage.** The design
+  tightens it rather than loosening it — "Nothing flows backwards. The catalog is read to
+  cross-check *which usages exist*, never to obtain counts" (`design.md:265-267`), carrying Item
+  3's PD2/DR-6 rule and the ledger-parsing precedent
+  (`tests/unit/test_coverage_ledger_agreement.py:1-11`, whose docstring makes the same argument).
+  Not a finding.
+
+**Not findings (checked, clean):**
+- **The SURFACED handling is correct on every axis capture-fidelity §4 asks for.** The conflict is
+  named against owner-graded content, both dependent conclusions are parked rather than adjusted,
+  the arithmetic consequence is stated *without* restating the identity ("Recomputing it would be
+  an agent silently re-dispositioning owner-ruled rows", `design.md:176-178`), and the owner is
+  given three options — fix the product, re-disposition, accept as `awaits-capability` — with no
+  recommendation smuggled in. The refusals were chased to source and the blast radius **measured**
+  (26 of 27, from `radial_build.sysml:96-565`), not estimated. This is the behavior the rule exists
+  to produce.
+- **D3 discharges the spec's `item5-F3` unit finding honestly, and by the right argument.** It does
+  not transfer the unit invariant to a reviewer; it shows the invariant is vacuous for the landable
+  set — A2 is a `real`/`real` comparison against an authored zero, A3's two edges are genuinely
+  dimensionless — and it lands the reasoning in a committed artifact per gate rather than in a
+  review conversation (`design.md:212-219`). Worth noting for the plan, not as a finding: that
+  vacuity is contingent on A9's park. A9 is the one ruled band whose tolerance carries a real
+  dimension (`m^3/s`), so if the owner unblocks it, item5-F3 returns intact and D3's answer does
+  not cover it.
+- **The probe-first shape is the right response to an atomic landing**, and the design does not
+  overclaim from it: B2 is booked as a bet with a named falsifier, the de-risk instruction is
+  specific (re-run the composite with the five markers and the C21/C28 deletions *before*
+  authoring), and the caveat that A3/A9 were predicted rather than measured is carried from
+  `owner-disposition.md` rather than quietly upgraded.
+- **The coverage denominator is read correctly against the code.** The five part-def guards stay
+  plain, so `coverage_account` puts them in bucket 1 — inventory only, never the denominator
+  (`src/sysml_codegen/generation/coverage.py:218-219`) — and their `@inapplicable:` markers change
+  the catalog row, not the account. Required Invariant 6 (`design.md:291-292`) states exactly this,
+  and Invariant 4 correctly notes that a malformed marker halts "whatever the usage's form —
+  including a plain one".
+- **Provenance grades survive the spec → design hop.** The CSF is quoted `[OWNER]` with its path;
+  the ruled table is cited as sole authority rather than re-derived; the A5/A6/A7 bases are used as
+  `[AGENT] (ratified by owner)` and not promoted; D1–D7 are agent-grade by construction and marked
+  as decisions with rejected alternatives, which is the design register's correct form.
+- **Rejected alternatives read as decision records, not as prohibitions** — one line each, with the
+  reason, inside the decision they belong to.
+
+**Gate: PROCEED — item5d-F1..F5 DISPOSED, no BLOCK.** The reason this is not a BLOCK is the same
+reason the spec stage was one: the test is whether the next step's question is rigged, and here it
+is not. The next step is the owner ruling on D-S1/D-S2, and the design puts three genuine options
+in front of the owner with the measurement behind each and no recommendation attached. Fix F1
+through F3 before `/_my_plan`, not before the ruling — F1 because the ruling determines the
+record's *content* but not whether one is needed, F2 and F3 because both are one-sentence
+corrections that a plan would otherwise inherit as facts. The thread through F1, F2 and F3 is a
+single habit: the design reasons carefully and then states its conclusions one register too
+confidently downstream — a parked row is parked in the design but not in the fixture, a superseded
+premise is carried as measured, and an identity the design pointedly declines to restate is
+validated as if it held.

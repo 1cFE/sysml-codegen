@@ -14,9 +14,20 @@ cells on A5/A6/A7 + the derivation doc-comment obligation) is applied in place b
 
 ## The ruling in force
 
-All 65 rows are approved. The accounting identity is **[OWNER 2026-08-13]**:
+All 65 rows are approved. **Amended by the D-S1/D-S2 ruling (option 3, adopted as recommended —
+[AGENT] (ratified by owner, 2026-08-13)):** design-stage probes measured that A9's assert-band
+and 26 of 27 A5/A6 radius derivations refuse against the current projection
+(`SI_RENDERING_COLLISION`; unit-lane defect, verified in code). Item 5 lands on the landable
+shape now: **A5, A6, A9 are retained as visible plain usages, dispositioned blocked-by-defect in
+this table and PROVENANCE only — no new catalog reason token; their catalog rows stay within
+Item 2's closed vocabulary.** Their ruled basis cells and A9's 1%-relative tolerance remain in
+force as recorded intent for the follow-on item that upgrades the derivative once the unit-lane
+defect fix lands (filed as its own epic item).
 
-> **65 = 56 carriers + 9 named deletions** (7 derive-instead: A1, A4, A5, A6, A7, A8, C37;
+The accounting identity, restated as a mechanical consequence of that ruling (restatement
+authorized by the owner, not a re-disposition):
+
+> **65 = 58 carriers + 7 named deletions** (5 derive-instead: A1, A4, A7, A8, C37;
 > 2 placeholder deletions under the O2 ruling: C21, C28).
 
 Every deletion is a named record in the derivative's PROVENANCE citing its authorizing table row;
@@ -63,7 +74,10 @@ Dispositions used: `derive-instead` (the authored usage is deleted and a derivat
 `assert-one-sided`, `assert-band`, `inapplicable` (an explicit `@inapplicable:` disposition, no
 attachment), `awaits-capability` (Item 6 builds calc-def gate attachment; nothing is built here),
 and `delete-placeholder` (**[OWNER 2026-08-13]**, O2 ruling only — not a disposition the proposal
-could offer).
+could offer). The D-S1/D-S2 ruling added `blocked-by-defect` (**[AGENT] (ratified by owner,
+2026-08-13)**): the usage is retained as a visible plain constraint; the ruled target form stays
+recorded intent for the post-fix follow-on; the marking lives in this table and PROVENANCE only —
+the catalog row uses Item 2's existing vocabulary.
 
 ---
 
@@ -79,14 +93,15 @@ ADMITs (research §3).
 | A2 | `CATFMFEPhysics::catf_physics::ViabilityCheck` | `physics.sysml:134` | `p_electric_net_out > 0` | 3 | **assert-one-sided** | `assert constraint net_power_viable : PositiveQuantity { in value = p_electric_net_out; }` over `constraint def PositiveQuantity { in value : Real; value > 0 }`. Already one-sided, already ADMITs, no rewrite of intent — only the `assert` prefix and the bindings-only shape. | none — the `0` floor is the authored physical zero, not a band | power, MW; threshold `0` is dimensionless-safe as a `real`/`real` comparison | **yes** |
 | A3 | `CATFMFEPhysics::catf_physics::ReasonableParasiticTotal` | `physics.sysml:142` | `net_electric.p_parasitic_total > gross_electric.p_electric_gross * 0.10 and net_electric.p_parasitic_total < gross_electric.p_electric_gross * 0.90` | 3 | **assert-band** | `assert constraint parasitic_fraction_ok : FractionWithinBand { in part_power = net_electric.p_parasitic_total; in whole_power = gross_electric.p_electric_gross; in lower_frac = …; in upper_frac = …; }`; predicate `part_power > whole_power * lower_frac and part_power < whole_power * upper_frac`. Chains move to binding position, which is supported. | **[OWNER 2026-08-13]** lower `0.10`, upper `0.90` [dimensionless fractions] — the authored values, confirmed as a **plausibility envelope**. Recorded promise: this band does not gate viability; viability is A2's job (`p_net > 0`). | power, MW on both compared sides; the two band edges are dimensionless fractions | **yes** |
 | A4 | `CATFMFERadialBuild::catf_radial_build::TotalRadiusConsistency` | `radial_build.sysml:605` | `bioshield.outer_radius == 8.55 [m]` | 3 | **derive-instead** | Delete. Class 3's own rule: a quantity that must equal a value is fixed as an input, not searched for and then constrained. `bioshield.outer_radius` is already the literal `8.55 [m]` (`radial_build.sysml:558`), so the gate asserts a literal against itself. It also carries the `[m]`-literal elaborator defect (research §6). | n/a | length, m | **no** |
-| A5 | `CATFMFERadialBuild::catf_radial_build::LayerContinuity` | `radial_build.sysml:612` | 13-term `and`: `plasma_region.inner_radius == axis_region.outer_radius and … and bioshield.inner_radius == lt_shield.outer_radius` | 1 | **derive-instead** | Delete. Each layer's `inner_radius` **is** the previous layer's `outer_radius` — that is the definition of a radial build, not a check on it. Derive each `inner_radius` from the layer below. Design decides the source edit; it touches 13 attribute declarations. **Basis [AGENT] (ratified by owner, 2026-08-13):** free parameters are the axis root radius plus the 14 layer thicknesses; all other radii derived. A parameterization is an engineering decision carrying owner sign-off, never a side effect of classification. | n/a | length, m | **no** |
-| A6 | `CATFMFERadialBuild::catf_radial_build::RadiusThicknessConsistency` | `radial_build.sysml:630` | 14-term `and`: `axis_region.outer_radius == axis_region.inner_radius + axis_region.thickness and …` | 1 | **derive-instead** | Delete. Derive each `outer_radius := inner_radius + thickness`. Same reasoning as A5, one layer at a time; the two together make the whole radial build a chain of derivations from `axis_region.inner_radius` plus 14 thicknesses. **Basis [AGENT] (ratified by owner, 2026-08-13):** same basis as A5 — axis root radius + 14 thicknesses free; all radii derived. | n/a | length, m | **no** |
+| A5 | `CATFMFERadialBuild::catf_radial_build::LayerContinuity` | `radial_build.sysml:612` | 13-term `and`: `plasma_region.inner_radius == axis_region.outer_radius and … and bioshield.inner_radius == lt_shield.outer_radius` | 1 | **blocked-by-defect** (was derive-instead; D-S2 ruling 2026-08-13 — retained as a visible plain usage until the unit-lane fix lands; the derivation below stays recorded intent) | Ruled intent: delete. Each layer's `inner_radius` **is** the previous layer's `outer_radius` — that is the definition of a radial build, not a check on it. Derive each `inner_radius` from the layer below. Design decides the source edit; it touches 13 attribute declarations. **Basis [AGENT] (ratified by owner, 2026-08-13):** free parameters are the axis root radius plus the 14 layer thicknesses; all other radii derived. A parameterization is an engineering decision carrying owner sign-off, never a side effect of classification. | n/a | length, m | **yes** (until fix; then deleted per ruled intent) |
+| A6 | `CATFMFERadialBuild::catf_radial_build::RadiusThicknessConsistency` | `radial_build.sysml:630` | 14-term `and`: `axis_region.outer_radius == axis_region.inner_radius + axis_region.thickness and …` | 1 | **blocked-by-defect** (was derive-instead; D-S2 ruling 2026-08-13 — retained as a visible plain usage until the unit-lane fix lands; the derivation stays recorded intent) | Ruled intent: delete. Derive each `outer_radius := inner_radius + thickness`. Same reasoning as A5, one layer at a time; the two together make the whole radial build a chain of derivations from `axis_region.inner_radius` plus 14 thicknesses. Probe P6 measured the axis-region leg deriving cleanly; the other 26 radii collide (D-S2). **Basis [AGENT] (ratified by owner, 2026-08-13):** same basis as A5 — axis root radius + 14 thicknesses free; all radii derived. | n/a | length, m | **yes** (until fix; then deleted per ruled intent) |
 | A7 | `CATFMFEShield::catf_shield::CompositionConsistency` | `shield.sysml:171` | `neutron_shield.fraction_volume + gamma_shield.fraction_volume == 1.0` | 4 | **derive-instead** | Delete. Closure over two terms — derive the last: `gamma_shield.fraction_volume := 1.0 - neutron_shield.fraction_volume`. See open point O3: the sum covers 2 of the 4 shield layers, so deriving it encodes a partial closure — ruled: the derivation goes ahead (it encodes exactly what the authored constraint checked, no worse), and the debt gets named model-debt records (O3). **Basis [AGENT] (ratified by owner, 2026-08-13):** `neutron_shield.fraction_volume` free; gamma derived. | n/a | dimensionless volume fractions summing to 1 | **no** |
 | A8 | `CATFMFEVacuum::catf_vacuum_vessel::ThicknessConsistency` | `vacuum.sysml:87` | `outer_radius == inner_radius + wall_thickness` | 1 | **derive-instead** | Delete. Derive `outer_radius := inner_radius + wall_thickness`. All three are literals today (`6.3`, `0.2`, `6.5` at `vacuum.sysml:51-53`) and the source comment on line 53 already says the value came from that sum. | n/a | length, m | **no** |
-| A9 | `CATFMFEVacuum::catf_vacuum_pumping::PumpingSpeedConsistency` | `vacuum.sysml:169` | `pumping_speed_total == n_pumps * pump_capacity_each` | 2 | **assert-band** | `assert constraint pumping_speed_agrees : ProductWithinBand { in observed = pumping_speed_total; in count = n_pumps; in each_capacity = pump_capacity_each; in tol = …; }`; predicate `observed >= count * each_capacity - tol and observed <= count * each_capacity + tol`. Genuine cross-check: `pumping_speed_total` is `volume_to_pump / vacuum_time_constant` = 200, and `n_pumps * pump_capacity_each` = 48 × 4.17 = **200.16**. Two independently authored routes to one number that already disagree by 0.16 — exactly class 2, and exactly why `==` is wrong here. | **[OWNER 2026-08-13]** **1% relative** (band = `count * each_capacity ± 1%`), chosen over absolute so the band scales under design-search resizing; ~12× the authored 0.16 m³/s disagreement. `ProductWithinBand` adjusts to relative form; if the def-shape changes materially, design notes it rather than silently adapting. Band protects: the pump count/capacity sizing still delivers the pumpdown speed the vessel volume needs. | volumetric flow, m^3/s on both sides; `n_pumps` is a dimensionless count, `pump_capacity_each` is m^3/s, product is m^3/s; the relative tolerance is dimensionless | **yes** |
+| A9 | `CATFMFEVacuum::catf_vacuum_pumping::PumpingSpeedConsistency` | `vacuum.sysml:169` | `pumping_speed_total == n_pumps * pump_capacity_each` | 2 | **blocked-by-defect** (was assert-band; D-S1 ruling 2026-08-13 — retained as a visible plain usage until the unit-lane fix lands; the band below stays recorded intent) | Ruled intent: `assert constraint pumping_speed_agrees : ProductWithinBand { in observed = pumping_speed_total; in count = n_pumps; in each_capacity = pump_capacity_each; in rel_tol = …; }` in the relative form. Probes P3/P3b measured every assert spelling refusing (`SI_RENDERING_COLLISION` — both attributes are already unit-carrying entry points of `calc pump_load`). Genuine cross-check: `pumping_speed_total` is `volume_to_pump / vacuum_time_constant` = 200, and `n_pumps * pump_capacity_each` = 48 × 4.17 = **200.16**. Two independently authored routes to one number that already disagree by 0.16 — exactly class 2, and exactly why `==` is wrong here. | **[OWNER 2026-08-13]** **1% relative** (band = `count * each_capacity ± 1%`), chosen over absolute so the band scales under design-search resizing; ~12× the authored 0.16 m³/s disagreement. `ProductWithinBand` adjusts to relative form; if the def-shape changes materially, design notes it rather than silently adapting. Band protects: the pump count/capacity sizing still delivers the pumpdown speed the vessel volume needs. | volumetric flow, m^3/s on both sides; `n_pumps` is a dimensionless count, `pump_capacity_each` is m^3/s, product is m^3/s; the relative tolerance is dimensionless | **yes** |
 
-**Group A totals as proposed:** 6 `derive-instead`, 1 `assert-one-sided`, 2 `assert-band`.
-3 of 9 survive as authored usages.
+**Group A totals as ruled (post D-S1/D-S2):** 4 `derive-instead` (A1, A4, A7, A8),
+1 `assert-one-sided` (A2), 1 `assert-band` (A3), 3 `blocked-by-defect` (A5, A6, A9 — visible
+plain usages, ruled target forms held as recorded intent). 5 of 9 survive as authored usages.
 
 **Self-named bindings:** none required. Every survivor's formal is named differently from the
 attribute it binds (`value` ← `p_electric_net_out`, `part_power` ← `p_parasitic_total`, `observed` ←
@@ -220,27 +235,30 @@ human unit check Group A got.
 option's content stays `[AGENT] (ratified by owner, 2026-08-13)`. The spec carries the amendment
 text; this section records the arithmetic in force.
 
-**The arithmetic, as ruled** (includes the O2 placeholder deletions, which the proposal's
-58-survivor figure predated):
+**The arithmetic, as ruled and restated under the D-S1/D-S2 ruling** (restatement authorized —
+a mechanical consequence, not a re-disposition):
 
 | line | count |
 |---|---|
 | authored usages in `catf_mfe_d5` | 65 |
-| `derive-instead` (usage deleted, derivation replaces it) | **7** — A1, A4, A5, A6, A7, A8, C37 |
+| `derive-instead` (usage deleted, derivation replaces it) | **5** — A1, A4, A7, A8, C37 |
 | `delete-placeholder` (**[OWNER 2026-08-13]**, O2) | **2** — C21, C28 |
-| **surviving authored usages in the derivative (carriers)** | **56** |
+| **surviving authored usages in the derivative (carriers)** | **58** |
 
-Of the 56 survivors: 3 asserted gates (A2, A3, A9), 5 explicitly inapplicable part-def guards
-(B1–B5), 48 plain `awaits-capability` calc-def guards (Group C minus C37, C21, C28).
+Of the 58 survivors: 2 asserted gates (A2, A3), 3 `blocked-by-defect` plain usages (A5, A6, A9 —
+ruled target forms held as recorded intent for the post-fix follow-on), 5 explicitly
+inapplicable part-def guards (B1–B5), 48 plain `awaits-capability` calc-def guards (Group C
+minus C37, C21, C28).
 
 **How PROVENANCE reconciles it.** The derivative's PROVENANCE records the identity
-`65 = 56 carriers + 9 named deletions`. Each of the 9 gets a deletion record naming: the deleted
+`65 = 58 carriers + 7 named deletions`. Each of the 7 gets a deletion record naming: the deleted
 usage's qualified name and d5 file:line, its intent class (or O2 for the placeholders), the
 derivation that replaces it (for the 7) with the undirected relation and chosen-basis statement,
 and the row in this table that authorized it. The machine-checkable diff (SC-2) then accounts for
 every change with a reason, and no usage vanishes silently — it is either a carrier or a named
-deletion. The frozen-twin half of SC-3 (65 carriers on `catf_mfe_d5` itself) is untouched — Item 2
-proved it and it stays.
+deletion. The three `blocked-by-defect` usages additionally carry PROVENANCE records naming
+D-S1/D-S2, the defect item, and the held intent. The frozen-twin half of SC-3 (65 carriers on
+`catf_mfe_d5` itself) is untouched — Item 2 proved it and it stays.
 
 The two rejected alternatives (keep the equalities as descriptive usages beside the derivations;
 reclassify class-1 rows as bands) are recorded in this file's git history at the proposal
@@ -273,6 +291,10 @@ before committing.
 **[OWNER 2026-08-13] Endorsed as laid out:** design probes all three candidates (A2/A3/A9) before
 committing. A2 is the anchor — the only measured ADMIT, and now also the only gate whose
 threshold needed no tolerance ruling.
+
+**Post-probe status (D-S1 ruling, 2026-08-13):** A9 is `blocked-by-defect` and out of the SC-5
+candidate set. **SC-5 proceeds with A2 as anchor and A3 as the second executing gate** — both
+measured ADMIT at design probes P1/P2 (the P2 composite: 45 modules, 2 concrete entries).
 
 ---
 

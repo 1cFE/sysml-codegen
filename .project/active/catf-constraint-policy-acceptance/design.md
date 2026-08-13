@@ -1,6 +1,8 @@
 # Design: CATF Derivative and End-to-End Acceptance
 
-**Status:** Draft — **carries two SURFACED premise conflicts (D-S1, D-S2); dependent conclusions parked**
+**Status:** Draft — **D-S1/D-S2 RULED 2026-08-13 (option 3, [AGENT] ratified): land the landable
+shape now; A5/A6/A9 blocked-by-defect as visible plain usages; identity restated 65 = 58 + 7;
+unit-lane defect filed as its own epic item**
 **Owner:** Reid W
 **Created:** 2026-08-13 · **Branch:** `item7-rebuild` @ `488747b`
 **Epic:** CONSTRAINT-SEMANTICS, Item 5
@@ -140,8 +142,20 @@ fixture exists, exactly which edits generate. That job ran, and it came back wit
 
 ## SURFACED — two ruled rows cannot be authored (capture-fidelity §4)
 
-Both are premise conflicts against `[OWNER 2026-08-13]`-graded content. Neither is resolved here.
-Dependent conclusions are parked, not adjusted.
+**RULED 2026-08-13 — option 3, adopted as recommended, [AGENT] (ratified by owner, 2026-08-13):**
+Item 5 lands on the landable shape now. A5/A6/A9 are retained as visible plain usages,
+dispositioned `blocked-by-defect` in the ruled table and PROVENANCE only (no new catalog reason
+token — catalog rows stay within Item 2's closed vocabulary). Their ruled basis cells and A9's
+1%-relative tolerance remain in force as recorded intent. The identity restates to
+**65 = 58 carriers + 7 named deletions** (restatement owner-authorized as mechanical
+consequence). The unit-lane defect is filed as its own small epic item (probe-characterized fix,
+own tests, fingerprint/churn assessment + one-reviewed-recapture obligation if minted units move
+on existing fixtures, Item 6 named as consumer); a follow-on item upgrades the derivative under
+the already-ruled rows once it lands. SC-5 proceeds with A2 as anchor and A3 as the second
+executing gate. At plan stage, the probe's 65-row composite is reconciled explicitly against the
+ruled 58-carrier target so expected outputs pin the ruled shape.
+
+The original surfacing record follows, kept as the evidence trail for the two findings.
 
 ### D-S1 — A9 cannot be asserted in any spelling
 
@@ -387,13 +401,16 @@ paragraph SC-2 requires. `catf_mfe_model` is untouched.
 **Fixed.** D1–D7. The measured landable set (P7). The ruled table as sole authority. The atomic,
 probe-first authoring order. Both frozen twins' byte-untouched status.
 
-**Open — owner-gated, blocking their own rows only.** D-S1 (A9) and D-S2 (A5/A6), and the accounting
-identity that depends on them. The plan should sequence everything else first and treat these as a
-held sub-scope, not a blocker on the item.
+**Resolved since drafting.** D-S1/D-S2 are ruled (see the SURFACED section header): the landable
+shape is the ruled shape, identity `65 = 58 + 7`, A5/A6/A9 blocked-by-defect as plain usages with
+held intent. The plan must reconcile the P7 probe composite (which deleted nothing and asserted
+nothing on A5/A6/A9's rows — 65 usage rows) against the ruled 58-carrier target explicitly, so
+expected outputs pin the ruled shape, not the probe shape.
 
 **De-risk first.** B2. Before authoring the real fixture, re-run the composite probe with the five
 `@inapplicable:` markers and the C21/C28 deletions added. That is the cheapest place to discover a
 second collision, and the atomic landing makes it the only cheap place.
 
 ---
-**Next Step:** owner ruling on D-S1/D-S2, then `/_my_design_review`, then `/_my_plan`.
+**Next Step:** D-S1/D-S2 ruled (2026-08-13). `/_my_design_review`, then `/_my_plan` with the
+ruled-shape reconciliation.
