@@ -53,7 +53,15 @@ members.
 
 Carried from the epic's Item 2 section; every entry is
 **[INHERITED: `epic_constraint_semantics_contract.md` Item 2 / `constraint-semantics-contract/spec.md`]**
-unless marked otherwise.
+unless marked otherwise. The two sources state the same criteria — the epic's Item 2 success list
+is itself marked `[INHERITED: spec.md]` — so the blanket citation names both rather than splitting
+per entry. Two additions are marked where they occur.
+
+**Carrier** = one usage-tier record in the canonical authored domain, together with the single
+visible disposition attached to it. One carrier per authored constraint usage; a usage with a
+record but no disposition, or a disposition with no record, is not a carrier. Per-occurrence
+execution entries are a separate tier and are never counted as carriers. This spec uses "carrier"
+for that pair throughout.
 
 - [ ] Frozen `catf_mfe_d5` produces exactly **65** usage carriers with zero absence, and its
       authored constraint syntax is unchanged (both twins stay byte-pinned).
@@ -69,7 +77,15 @@ unless marked otherwise.
       the same dispositions; old or malformed snapshot shapes fail closed under the selected
       version rule.
 - [ ] REQ-EXT-09 and REQ-CL-04 cite non-self-referential tests that fail if a pre-expansion usage
-      vanishes, and each row's grade matches its evidence.
+      vanishes; **[INFERRED]** each row's grade matches that evidence, and REQ-EXT-09's
+      domain-versus-carrier self-contradiction is gone.
+- [ ] **[INFERRED, from the [NEED] doc-correction obligation and lens spec-F2]** No shipped
+      documentation still describes pre-landing behavior: the two Item 1 forward pointers
+      (`docs/architecture/modeling-assumptions.md:476-477` and `:489-496`) are corrected before
+      confirmation tests run.
+- [ ] **[INFERRED, from the manifest-fate requirement and lens spec-F4]** The manifest sweep's fate
+      is recorded and executed — retired, or demoted to a test-side oracle with no `src/` caller —
+      and the independent totality oracle is named. Neither is left unowned.
 - [ ] Focused tests, full licensed codegen and companion suites, `ruff` zero-new, `mypy` zero-new,
       fixture diff review, and `git diff --check` pass, with exact counts recorded in
       `verification.md`.
@@ -85,8 +101,10 @@ unless marked otherwise.
   the **complete authored-usage domain before occurrence expansion**. Every constraint usage the
   model authors is in the domain whether or not it reaches an instance; "reaches no instance" is a
   recorded disposition, never an absence.
-- **[INHERITED: contract invariants 40, 48; D-3 owner-verbatim "no second catalog authority"; lens
-  spec-F4]** One authority owns totality: the instance graph and its embedded catalog, the same
+- **[INHERITED: contract invariants 40, 48; owner decision D-3, whose verbatim text is “100% Option
+  A. We need to purge this mess.” (`contract:503`) and whose recorded consequence is that codegen's
+  embedded catalog is canonical with no second catalog authority; lens spec-F4]** One authority owns
+  totality: the instance graph and its embedded catalog, the same
   authority live generation and snapshot generation already read. No parallel constraint inventory
   is created or kept in sync by hand, and the completeness gate reads the graph plus the embedded
   catalog rather than a separate sweep.
@@ -97,34 +115,60 @@ unless marked otherwise.
   kept solely as a test-side independent oracle that no generation path consults — never a second
   representation the graph must be kept in sync with. Which of the two is design's call; leaving it
   unowned is not.
+- **[INFERRED]** Whichever fate design picks, **an independent totality oracle must exist** — some
+  enumeration of the authored population that is not derived from the domain it checks (see the
+  non-self-referential evidence requirement under *The completeness gate*). Today
+  `collect_constraint_manifest` is the only such enumeration, it has no caller in `src/`, and both
+  requirement rows plus `docs/architecture/modeling-assumptions.md:489-492` define the population
+  by it. So "retire the sweep" and "prove totality independently" are coupled: design resolves the
+  fate and names the oracle together, and may not close the first while leaving the second open.
 - **[HARD]** Exact declaration identity is preserved. Constraint identity in this codebase is
   `DeclarationId` / `NodeId` plus the qualified names already carried on `ConstraintNode`
   (`elaboration/graph.py:194-219`), and the snapshot codec already refuses a record whose identity
   fields disagree (`snapshot/instance_graph.py:776`). The domain uses that identity vocabulary; it
   does not introduce qualified-name string matching.
-- **[INHERITED: umbrella spec, Modeling policy (Q1, Q7)]** Form classification is preserved on
-  every domain member: the five source forms produced by
-  `agentic_mbse/sysml/constraint_extraction.py:703-723` (`inline`, `definition_typed`,
-  `named_usage_reference`, `requirement_constraint`, `satisfy`, and the `plain_usage`
-  fall-through), together with owner kind and owner qualified name, source file, and source line.
+- **[INHERITED: epic Item 2 scope 1; contract invariant 28's carried-field list]** Form
+  classification is preserved on every domain member, anchored on **the exact route's own
+  classifier** — `_constraint_metadata` (`elaboration/elaborate.py:1119-1137`), which emits exactly
+  five source forms: `requirement_constraint`, `named_usage_reference`, `definition_typed`,
+  `inline`, and the `plain_usage` fall-through. Owner kind, owner qualified name, source file, and
+  source line are preserved alongside it. The legacy constraint-fact pass in the companion repo
+  (`agentic_mbse/sysml/constraint_extraction.py`) is not the anchor: ELABORATE-FIRST Item 7 scope 2
+  is deleting it (`epic_elaborate_first_architecture.md:444`), and building this domain against a
+  module scheduled for deletion is the failure mode this item exists to prevent.
+- **[INHERITED: umbrella spec, Modeling policy (Q7)]** The named `satisfy` exclusion is **new
+  classification work this item adds**, not preserved behavior. There is no `satisfy` source form
+  in the exact route today: a `SatisfyRequirementUsage` reaching `_constraint_metadata` falls
+  through to `plain_usage` and is indistinguishable from a bare `constraint`. Q7 requires an
+  out-of-scope form to carry a *named* visible exclusion, so satisfy must be newly distinguished
+  before that exclusion can be named.
 - **[INHERITED: contract invariant 28 + LC-E05]** Each usage-tier record also carries the
   definition qualified name and the explicit definition-to-usage join. The per-occurrence tier
   already carries both (`resolution/models.py:397-401, 492-497`); without them on the usage tier,
   a definition-typed asserted gate that never reaches an instance loses the name of the
   `constraint def` that went unassessed.
 - **[INFERRED]** The domain's membership boundary is stated explicitly, in the requirement rows and
-  in the code that builds it. Today's REQ-EXT-09 wording sweeps `ConstraintUsage` including
-  subtypes but excludes `RequirementUsage` and its `satisfy` subtype
-  (`docs/architecture/reference/01-extraction.md:20`), while the umbrella spec's Q7 ruling requires
-  out-of-scope *forms* — including `satisfy` — to carry a named visible exclusion. The domain
-  boundary this item lands must cover every form the umbrella spec requires to be visible, and the
-  re-anchored rows must say so in words rather than leaving the difference implicit.
+  in the code that builds it. **REQ-EXT-09 contradicts itself today**
+  (`docs/architecture/reference/01-extraction.md:20`): the row excludes `RequirementUsage` and its
+  `satisfy` subtype from the swept *domain*, then lists "a named requirement/satisfy exclusion" as
+  an admissible *carrier* — a form cannot be outside the domain and carry a disposition inside it.
+  The umbrella spec's Q7 ruling requires out-of-scope forms, `satisfy` included, to be visible. So
+  the conflict design resolves is internal to the row, and a row rewrite is the likelier fix than a
+  domain-boundary change. Parked here in full, not decided.
+
+  This parked question **cannot move the headline 65**: `catf_mfe_d5` authors no `satisfy` and no
+  requirement usage (verified in this item's product-lens ledger). Either resolution leaves the
+  fixture's authored population at 65.
 
 ### Dispositions
 
 - **[INHERITED: contract invariant 28 + LC-E05]** Exactly one visible disposition per authored
   usage, of exactly three kinds: eligible, excluded-with-reason, or non-reaching-with-reason. Zero
-  dispositions is a failure; two dispositions for one usage is a failure.
+  dispositions is a failure; two dispositions for one usage is a failure. **Vocabulary note:** epic
+  Item 2 scope 2 spells the first kind `executable` (`epic:289-290`) where contract invariant 28
+  and the umbrella spec spell it `eligible` (`contract:223-224`). They name the same kind; the
+  contract governs, and `eligible` also matches the existing `Eligibility` field on `ConstraintNode`
+  (`elaboration/graph.py:201`). Exact token spellings remain design's, within that vocabulary.
 - **[INHERITED: umbrella spec, Report and coverage contract (Q5, two-tier accounting)]** Usage-level
   inventory and per-occurrence execution entries stay separate records. One usage may own many
   concrete entries; the inventory counts usages, the results list occurrences.
@@ -183,10 +227,16 @@ unless marked otherwise.
   `captured_at`, so the review is a timestamp-only diff check followed by reverting untouched
   fixtures). Item 7 then consumes these bytes.
 - **[INFERRED — count discrepancy, surfaced not resolved]** The epic and the Item 7 register both
-  say "37 fixtures". At HEAD this tree holds **21** `instance_graph_snapshot.json` fixtures
-  (`tests/fixtures/*/instance_graph_snapshot.json`). The obligation is one reviewed recapture
-  covering every snapshot fixture in the tree; the exact count is recorded in `verification.md` at
-  execution, and the 37 figure is not treated as a target to hit.
+  say "37 fixtures"; at HEAD this tree holds **21** `instance_graph_snapshot.json` fixtures across
+  **96** fixture directories. The likely explanation, visible in the source: 37 is the **corpus row
+  count** (`epic_elaborate_first_architecture.md:302` "All 37 fixtures have live-checked route
+  outcomes"; `:378` "corpus 37/37"), while 21 is the snapshot-bearing subset. If the Item 7
+  obligation means "recapture every snapshot that exists," 21 is right; if it means "the 37-row
+  corpus must be snapshot-covered," then 16 corpus fixtures lack snapshots and this item's
+  recapture scope grows — a real scope change, not a counting detail. **The requirement, stated so
+  neither reading is picked silently:** the recapture covers every snapshot-bearing fixture in the
+  tree, counted at execution and recorded in `verification.md`; whether the corpus reading adds the
+  16 is design's call, made explicitly. The 37 figure is not a target to hit.
 - **[INHERITED: `.project/active/cutover-recovery/plan.md`, PAUSED at step 4; lens spec-F8]** This
   landing must not silently invalidate more paused Item 7 evidence than the epic's
   evidence-invalidation register already records. Anything newly invalidated is added to that
@@ -242,11 +292,15 @@ unless marked otherwise.
 - **Disposition-kind and reason token spellings**, and how they align with the schema names Item 3
   will read. Item 3 consumes these; a spelling chosen here without that coordination costs a second
   schema change.
-- **Where the authoring advisory surfaces** for the vacuous case (elaboration diagnostic stream
-  versus authoring validation in the companion repo), and at what grade it is recorded.
-- **Whether the re-anchored REQ-EXT-09 row keeps its current membership boundary or adopts the
-  umbrella spec's wider one** (see the domain-boundary requirement above) — the decision belongs
-  to design; leaving it implicit does not.
+- **How REQ-EXT-09's internal contradiction is fixed** — a row rewrite that reconciles its excluded
+  domain with the requirement/satisfy carrier it already admits, or a domain-boundary change (see
+  the domain-boundary requirement above). The decision belongs to design; leaving it implicit does
+  not. Either way it cannot move the 65.
+- **The manifest sweep's fate and the independent totality oracle, decided together** — retire or
+  demote, and what enumerates the authored population independently of the domain under test.
+  Design may not close one and leave the other open.
+- **Whether the recapture covers the 16 corpus fixtures that carry no snapshot** (see the count
+  requirement above) — a scope decision, made explicitly and recorded.
 
 ---
 

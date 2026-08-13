@@ -224,11 +224,77 @@ would catch their omission.
 
 ## Resolutions
 
-_To be filled in as findings are resolved. One entry per finding, keyed by ID._
+All findings resolved in the spec, 2026-08-12 (same session, orchestrated run). Judgment calls on
+L1-1, L2-1, L2-2, L3-1, and the spelling split were made by the orchestrator and are recorded as
+such below.
+
+- **L1-1 — Resolved (rewritten).** The form-classification requirement is re-anchored on the exact
+  route's own classifier, `_constraint_metadata` (`elaboration/elaborate.py:1119-1137`), and names
+  the correct five forms: `requirement_constraint`, `named_usage_reference`, `definition_typed`,
+  `inline`, `plain_usage`. The requirement now says in words that the companion repo's legacy
+  constraint-fact pass is *not* the anchor, and why (ELABORATE-FIRST Item 7 scope 2 deletes it —
+  `epic_elaborate_first_architecture.md:444`); a deleted module must not be load-bearing authority.
+  The `satisfy` token is gone from the form list and became its own requirement: the named satisfy
+  exclusion (Q7) is **new classification work this item adds**, since a `SatisfyRequirementUsage`
+  today falls through to `plain_usage` and is indistinguishable from a bare `constraint`. Orchestrator
+  call on the anchor; the count and the satisfy fact were verified against the source.
+- **L1-2 — Resolved (re-cited).** The requirement's grade now cites what actually supports it: epic
+  Item 2 scope 1 ("preserve exact declaration identity and form classification") and contract
+  invariant 28's carried-field list. Q1/Q7 no longer carry a claim they do not contain; Q7 is cited
+  only on the satisfy requirement, which it does support.
+- **L1-3 — Resolved (quote corrected).** D-3 is now cited as an owner decision whose verbatim text
+  is “100% Option A. We need to purge this mess.” (`contract:503`), with "no second catalog
+  authority" stated as its recorded consequence rather than inside quotation marks. Capture-fidelity
+  law 1 satisfied.
+- **L1-4 — Resolved (parked in full).** The domain-boundary requirement now states the whole fact:
+  REQ-EXT-09 contradicts *itself* — excluding `RequirementUsage`/`satisfy` from the swept domain
+  while admitting "a named requirement/satisfy exclusion" as a carrier — so the conflict is internal
+  to the row and a row rewrite is the likelier fix than a domain-boundary change. The Open Question
+  was rewritten to match.
+- **L1-5 — Resolved (blanket kept, with the reason stated).** Per-entry citations were not added.
+  The Success Criteria header now says why the blanket is honest: the epic's Item 2 success list is
+  itself marked `[INHERITED: spec.md]`, so the two sources state the same criteria. The two entries
+  that are *not* inherited are individually marked `[INFERRED]`, including the "each row's grade
+  matches its evidence" clause the finding flagged.
+- **L2-1 — Resolved (explanation stated; requirement made count-at-execution).** The count
+  requirement now gives the likely explanation with its source — 37 is the corpus row count
+  (`epic_elaborate_first_architecture.md:302`, `:378`), 21 is the snapshot-bearing subset of 96
+  fixture directories — spells out what each reading costs (the corpus reading adds 16 fixtures, a
+  real scope change), and states the obligation as: cover every snapshot-bearing fixture, counted at
+  execution and recorded in `verification.md`, with the corpus question decided explicitly by design.
+  A matching Open Question was added, so neither side is picked silently. Orchestrator call.
+- **L2-2 — Resolved (requirement stated neutrally; coupling named).** The spec does not pick the
+  oracle. It adds an `[INFERRED]` requirement that *whatever* fate design picks for the manifest
+  sweep, an independent (non-self-referential) totality oracle must exist, records why the two are
+  coupled (`collect_constraint_manifest` is today the only independent enumeration, has no `src/`
+  caller, and both requirement rows plus `modeling-assumptions.md:489-492` define the population by
+  it), and forbids design closing the fate while leaving the oracle open. Named as a design
+  obligation in Open Questions. Orchestrator call: state the requirement, don't design the answer.
+- **L3-1 — Resolved (question struck).** The Open Question reopening the vacuous advisory's surface
+  and grade is deleted. Invariant 61 / LC-E13 settled both, Item 1 landed them, and the severity
+  requirement already states it as implemented-not-reopened. Orchestrator call: resolve in favor of
+  Item 1's landed authority.
+- **L3-2 — Resolved (two criteria added).** Success Criteria now carry (a) no shipped documentation
+  still describes pre-landing behavior — the two Item 1 forward pointers are corrected before
+  confirmation tests run; and (b) the manifest sweep's fate is recorded and executed and the
+  independent oracle is named. Both marked `[INFERRED]` with their source obligation.
+- **L3-3 — Resolved (harmlessness stated in the spec).** The domain-boundary requirement now carries
+  the fact that lived only in the ledger: `catf_mfe_d5` authors no `satisfy` and no requirement
+  usage, so either resolution leaves the fixture's authored population at 65. Repeated in the Open
+  Question as a one-line reassurance.
+- **L3-4 — Resolved (vocabulary note added, once).** The disposition requirement records that the
+  epic's `executable` (`epic:289-290`) and the contract's `eligible` (`contract:223-224`) name the
+  same kind, that the contract governs, and that `eligible` matches the existing `Eligibility` field
+  (`elaboration/graph.py:201`). Token spellings stay design's within that vocabulary.
+- **L5-1 — Resolved (term defined once).** "Carrier" is defined at the head of Success Criteria, on
+  first use: one usage-tier record plus the single visible disposition attached to it; a record
+  without a disposition or a disposition without a record is not a carrier; per-occurrence execution
+  entries are a separate tier and never counted. The spec uses the term consistently after that.
 
 ---
 
-**Verdict:** Revise
+**Verdict:** Revise — **all findings resolved 2026-08-12** (see Resolutions above); the spec is
+revised in place and ready for `/_my_design`.
 **Next Steps:** Record resolutions above, then re-run `/_my_spec` (or return to the spec-agent
 session) pointed at this review to incorporate. The reviewer does not edit the spec. Nothing here
 blocks moving to `/_my_design` on the underlying work item — the findings are corrections to the
