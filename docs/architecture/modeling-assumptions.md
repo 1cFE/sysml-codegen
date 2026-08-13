@@ -493,6 +493,44 @@ profile BLOCKs it, the generation error names the exact construct to fix.
 
 ---
 
+## 9. Coverage Truth and Headline Semantics (ADR-009)
+
+**Decision record.** Filed 2026-08-12 under CONSTRAINT-SEMANTICS Item 1.
+**Provenance:** `[AGENT] (ratified by owner, 2026-08-12)` — agent-proposed, owner-ratified.
+Ratification does not make it owner-originated, and it is challengeable by re-deriving against the
+reasoning below.
+
+**Context.** A constraint report headline is what a study reads to decide whether a design point is
+feasible. Two rules made that headline unreliable: a plain `constraint` was cataloged but never
+executed, and the headline claimed satisfaction whenever *any* assessed result passed. A model could
+therefore read fully satisfied while every gate a modeler wrote went unassessed.
+
+**What the contract said.** Lifecycle contract invariant 33: "Headline precedence is violation, then
+indeterminate, then all satisfied, then not assessed." Frozen companion LC-E11: "Report headline
+precedence is: any violation → `violation`; else any indeterminate → `indeterminate`; else any
+assessed result → `all_satisfied`; else `not_assessed`."
+
+**What it says now.** Precedence is violation → indeterminate → full satisfaction → partial coverage
+→ not assessed. Full satisfaction is a coverage claim: every applicable asserted gate was assessed
+and passed. A new partial-coverage state carries the case where an applicable asserted gate exists
+and went unassessed. The definitions live in the lifecycle contract's "Headline states and coverage
+truth" subsection
+(`.project/concepts/constraint-execution-authoritative-lifecycle-contract.md`), which is the one
+authority for both repositories' vocabularies.
+
+**Why.** A headline that cannot distinguish "checked and passed" from "not checked" is not evidence.
+The change makes the claim honest at the cost of one additional state, and the study layer keeps a
+design point at the boundary rather than accepting it on a coverage gap.
+
+**Scope.** This record governs the headline vocabulary's meaning. The concrete report and runtime
+token spellings, the report schema, and the normalization-seam code are CONSTRAINT-SEMANTICS Item
+3's.
+
+**Consequences filed:** lifecycle contract invariants 1, 9, 28, 32, 33, 46/46a, 48, new 61, and
+Appendix B/C cells; companion LC-E05/E06/E10/E11/E12 and LC-G07.
+
+---
+
 ## Validation Rules
 
 The pipeline enforces these rules to catch modeling violations early. V1–V10 fire at

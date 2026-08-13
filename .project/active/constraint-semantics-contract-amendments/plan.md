@@ -237,26 +237,30 @@ grep -rn "ADR-009" docs/ .project/active/constraint-semantics-contract/product-l
 **See `design.md#a0-new-subsection-headline-states-and-coverage-truth`** (target text, placement) and
 **`design.md#c1--adr-009-codegen-docsarchitecturemodeling-assumptionsmd-new-9`**.
 
-- [ ] Contract: add `### Headline states and coverage truth` immediately before
+- [x] Contract: add `### Headline states and coverage truth` immediately before
       `## Supported boundary and owner decisions`, with A0's text verbatim — including the
       form-level applicability test (a `BLOCK`ed or `NON_NUMERICAL` asserted usage stays applicable),
       the two totals, the six states, the precedence, the both-vocabularies paragraph, the
       minting note for invariant 61, and invariant 61 itself
-- [ ] `docs/architecture/modeling-assumptions.md`: add `## 9. Coverage Truth and Headline Semantics
-      (ADR-009)` between §8's closing `---` and `## Validation Rules` (DD1). The heading carries the
-      literal `ADR-009` string
-- [ ] Confirm the two superseded quotations inside ADR-009 are byte-accurate against the still-unedited
-      contract and requirements companion
-- [ ] `.project/active/constraint-semantics-contract/product-lens.md` spec-F1 (`:32-34`): add
-      `Filed: ADR-009 — docs/architecture/modeling-assumptions.md §9 (2026-08-12).` **No other
-      product-lens text changes**
+- [x] `docs/architecture/modeling-assumptions.md`: add `## 9. Coverage Truth and Headline Semantics
+      (ADR-009)` between §8's closing `---` and `## Validation Rules` (DD1) — landed at `:496`
+- [x] Confirm the two superseded quotations inside ADR-009 are byte-accurate against the still-unedited
+      contract and requirements companion — invariant 33 (`:232`) and LC-E11 (`:299-301`) were both
+      still pre-amendment on disk when ADR-009 was written, and both quotes were taken from them
+- [x] `.project/active/constraint-semantics-contract/product-lens.md` spec-F1: add
+      `Filed: ADR-009 — …` — landed at `:35`. **No other product-lens text changed**
 
 ### Validation
 
-- [ ] A0 names no token spelling and no report field name (RI-3)
-- [ ] ADR-009's quoted "what the contract said" block matches the on-disk pre-amendment text exactly
-- [ ] `grep -rn "ADR-009" docs/` returns exactly one heading anchor
-- [ ] `python scripts/check_doc_distinctness.py` passes; `git diff --check` clean
+- [x] A0 names no token spelling and no report field name (RI-3) — the six states are named in
+      prose ("full satisfaction", "partial coverage"), never as tokens; the only backticked
+      identifiers are `BLOCK` and `NON_NUMERICAL`, which are invariant 8's existing profile outcomes,
+      not headline tokens
+- [x] ADR-009's quoted "what the contract said" block matches the on-disk pre-amendment text exactly
+- [x] `grep -rn "ADR-009" docs/` returns exactly one heading anchor (`modeling-assumptions.md:496`)
+- [x] `python3 scripts/check_doc_distinctness.py` passes (31 documents, 0 identical groups);
+      `git diff --check` clean. **Note:** the interpreter is `python3`; bare `python` is not on PATH
+      in this environment
 
 **What We Know After This Phase:** the definitions exist in one place, and every later amendment has
 something to cite.

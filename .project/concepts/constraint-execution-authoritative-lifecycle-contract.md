@@ -403,6 +403,58 @@ The invariant family continues the contract's numbering; invariants 1–53 are u
   recapture of the 37-fixture snapshot corpus, and companion-repo regeneration (Item-2 route
   findings; scope neither softened nor restated).
 
+### Headline states and coverage truth
+
+Added 2026-08-12 (CONSTRAINT-SEMANTICS Item 1). The decision record is ADR-009
+(`docs/architecture/modeling-assumptions.md` §9). Invariants 32, 33, 46a, and 48 point here for the
+meanings they use. This subsection fixes what each state *means* and when it may be claimed; the
+concrete report and runtime token spellings, the report schema, and the normalization-seam code are
+CONSTRAINT-SEMANTICS Item 3's.
+
+**Applicable asserted gate.** A usage is an applicable asserted gate when its source form is in the
+assert family and that form is in executable scope. **The test is on the form, not on the
+predicate:** an asserted usage whose predicate the profile `BLOCK`s or classifies `NON_NUMERICAL` is
+still an applicable asserted gate, and it stays in the feasibility denominator as an unassessed one.
+A vacuous gate — one whose owner has zero occurrences — is still applicable. A usage stops being
+applicable only when it carries an explicit inapplicability disposition. Plain and requirement-side
+usages are never applicable asserted gates.
+
+**Two totals, kept apart.** *Inventory totality* counts every authored usage of every form.
+*Feasibility coverage* counts applicable asserted gates only. Descriptive and requirement-side usages
+appear in inventory and never in the feasibility denominator.
+
+**The six states.**
+
+1. **Violation** — at least one applicable asserted gate was assessed and failed.
+2. **Indeterminate** — no violation, and at least one assessed gate produced Kleene unknown.
+3. **Full satisfaction** — every applicable asserted gate was assessed and passed. This is a
+   coverage claim, not the absence of a failure.
+4. **Partial coverage** — at least one applicable asserted gate exists and went unassessed,
+   including an asserted vacuous gate carrying no explicit inapplicability disposition.
+5. **Not assessed** — the model has constraint usages but no applicable asserted gate at all. A
+   deliberately descriptive model reads here, never partial.
+6. **Unconstrained (report absent)** — the model authors no constraint usage, so no report is
+   generated and the runtime's unconstrained disposition is true by construction.
+
+**Precedence:** violation → indeterminate → full satisfaction → partial coverage → not assessed.
+
+**Both vocabularies.** Two headline vocabularies exist — the generated report's and TEAx's canonical
+runtime one — bridged by a normalization seam. Every state above has a meaning in both and a
+counterpart across the seam. A state defined on one side with no counterpart on the other is a
+defect, and an unmapped value fails closed (invariant 46a) rather than falling through to a satisfied
+or unconstrained reading.
+
+Invariant 61 below was minted by CONSTRAINT-SEMANTICS Item 1 on 2026-08-12; invariant 60 was the
+highest live number before it. Its companion mirror is LC-E13 (companion requirements) and its
+acceptance cell is Appendix C's "Asserted vacuous gate".
+
+61. (added 2026-08-12, CONSTRAINT-SEMANTICS Item 1) An asserted usage whose owner has zero
+    occurrences — a vacuous gate — is visible at warning grade. The catalog carries a
+    non-reaching-with-reason disposition (invariant 28) and authoring validation emits an advisory
+    naming the usage and its detached owner. A vacuous gate counts as missing assessment for
+    feasibility coverage until it carries an explicit inapplicability disposition; carrying one makes
+    it inapplicable and removes it from the denominator. It is neither a halt nor a silent pass.
+
 ## Supported boundary and owner decisions
 
 The supported core is public codegen generation, final V11 and planning, render/seal, verified TEAx

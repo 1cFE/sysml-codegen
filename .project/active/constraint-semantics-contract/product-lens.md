@@ -32,6 +32,7 @@ Findings:
   correction. This is an intentional product-contract change, so per §2 it must be filed:
   disposition: INTENDED-CHANGE — file `.project/scripts/adr.sh new` + `amend` the affected entry with
   owner-ratified provenance and cite the id here. Not blocking.
+  Filed: ADR-009 — docs/architecture/modeling-assumptions.md §9 (2026-08-12).
 - spec-F2 [DO] The amendment set is under-scoped. The spec names only invariants 8, 32, 33 (Open
   Questions) but its rulings also touch: invariant 1 (spec narrows "any `BLOCK` halts the model" to
   "`BLOCK` on an asserted constraint", relying unstated on the profile's pre-predicate form gate — the
