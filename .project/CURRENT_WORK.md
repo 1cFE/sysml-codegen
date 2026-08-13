@@ -6,6 +6,14 @@
 
 ## Active Work
 
+### 2026-08-12: CONSTRAINT-SEMANTICS Item 3 — coverage report and TEAx policy (SPEC IN PROGRESS)
+
+`.project/active/constraint-coverage-policy/` — orchestrated run, briefs in `briefs/`. Spec
+drafted; product-lens DISPOSED (item3-F1..F6, all dispositioned in
+`constraint-coverage-policy/product-lens.md`). Next: `/_my_spec_review` in a fresh session.
+
+---
+
 ### 2026-08-12: CONSTRAINT-SEMANTICS Item 2 — canonical usage domain and catalog totality (AUDITED: Certify-with-residuals)
 
 **Audit `audit.md` returned Needs-work** at codegen `ba756fb`. Its summary is worth keeping:
