@@ -260,21 +260,21 @@ def test_excluded_only_model_ships_a_report(excluded_only_graph):
 **See `design.md` for:** B3 (Key Bets), D9 (the reachable shape), *Implementation Notes* "Probe B3
 first", *Potential Risks* "D9 refuses a model that generates today".
 
-- [ ] Record the companion baseline: `git -C /home/reid/1cfe/agentic-mbse log --oneline -1` and a
+- [x] Record the companion baseline: `git -C /home/reid/1cfe/agentic-mbse log --oneline -1` and a
       clean `status --porcelain`, written into `verification.md`. This is the untouched-companion
       check, taken as a value now so it can be compared later.
-- [ ] **Probe B3** on an existing non-reaching-only fixture (`constraint_domain_detached_owner` is
+- [x] **Probe B3** on an existing non-reaching-only fixture (`constraint_domain_detached_owner` is
       the candidate). Record the answer in `verification.md`. *If `None`* → STOP and surface: D5's
       trigger has to move to the instance graph's `constraint_usages` domain and the design's D5
       needs revising, not working around.
-- [ ] **Probe D9 reachability**: confirm across the corpus that no usage record is both `eligible`
+- [x] **Probe D9 reachability**: confirm across the corpus that no usage record is both `eligible`
       and carries `inapplicability_reason`. The design verified the five
       `constraint_domain_inapplicable*` fixtures all sit on `Detached` parts; confirm corpus-wide, in
       one pass over projected catalogs. Record the count.
-- [ ] **Two kept-failing characterization tests**, exactly the two shapes the brief names: partial
+- [x] **Two kept-failing characterization tests**, exactly the two shapes the brief names: partial
       assessment reading `all_satisfied`, and the excluded-only model emitting no report. Both
       `xfail(strict=True)` so they fail loudly when they start passing. They flip in Phases 3 and 4.
-- [ ] **Hand-write the `test_fusion_tea_real_teax.py:244-259` expected coverage block** into
+- [x] **Hand-write the `test_fusion_tea_real_teax.py:244-259` expected coverage block** into
       `expected-coverage.md` (PD2), from the fixture's SysML source. Derived this stage and carried
       here as the starting entry, to be confirmed not re-derived from output:
 
@@ -301,7 +301,7 @@ first", *Potential Risks* "D9 refuses a model that generates today".
       the viability constraint is *inherited* from the IFE plant. Read the test's model roots and
       that file: if the HIF design declares (rather than inherits) a second usage, the account is for
       two usages and the ledger entry changes before the test is touched.
-- [ ] Add the ledger entries for the three bare-assert sites'
+- [x] Add the ledger entries for the three bare-assert sites'
       fixtures (`test_constraint_verdicts_exact_route.py:171, 416, 540`) the same way — read each
       one's fixture source, write the account, then the headline each site should assert.
 
@@ -1016,10 +1016,37 @@ five listed, or the Phase 6A probe goes badly, say so at that point rather than 
 [TO BE FILLED DURING IMPLEMENTATION]
 
 ### Phase 0 Completion
-**Completed:**
+**Completed:** 2026-08-13
+
 **Actual Changes:**
-**Issues:**
+- `.project/active/constraint-coverage-policy/expected-coverage.md` (NEW) — the PD2 ledger. Nine
+  existing-fixture entries and four intended new-fixture entries, every one derived from `.sysml`
+  source against D3's bucket table, each citing the file and line it counted.
+- `tests/unit/test_coverage_probes.py` (NEW) — B3 and D9's reachability claim, license-free off
+  `catf_mfe_d5`'s committed v6 snapshot. Both pass.
+- `tests/execution/test_constraint_coverage_characterization.py` (NEW) — the two `xfail(strict=True)`
+  characterization tests. Both fail for the stated reason, read under `--runxfail`:
+  `assert 'all_satisfied' != 'all_satisfied'` and the aggregator module absent.
+
+**Probe results (recorded in `verification.md` and in the ledger's cross-check section):**
+- Companion baseline: `agentic-mbse` at `5088b41`, `status --porcelain` empty.
+- **B3 holds.** `catf_mfe_d5` (65 usages, 0 eligible, 0 entries), `constraint_domain_plain_forms`,
+  `constraint_domain_satisfy`, and `constraint_domain_satisfy_calc_def` each project a non-`None`
+  catalog with non-empty `usage_records`. D5's trigger is readable. No stop.
+- **D9 reachability: 0 hits.** A corpus sweep over the 57 fixture directories that elaborate
+  standalone scanned all 105 usage records; none is both `eligible` and carries an
+  `inapplicability_reason`. The `@inapplicable:` marker appears in five fixtures; four are negative
+  fixtures that refuse elaboration already, and in `constraint_domain_inapplicable` the marker sits
+  on a `non_reaching` record.
+
+**Issues:** none.
+
 **Deviations:**
+- The plan's `test_coverage_probes.py` is described as scratch to be folded in later. It was written
+  as a durable test instead — both claims are properties worth keeping, and a scratch file that
+  answers a question once and is deleted leaves nothing pinning the answer.
+- The fusion open check resolved from source: `hif_plant.sysml:223` is a `//` comment, not a second
+  declaration. The account stands at one usage, exactly as the plan carried it.
 
 ### Phase 1 Completion
 
