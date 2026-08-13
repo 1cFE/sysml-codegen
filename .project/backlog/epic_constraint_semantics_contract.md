@@ -654,9 +654,14 @@ asserted-constraint authoring.
       *(`git diff --check` verified; counts author-reported, and the companion baseline was never
       stated — audit probes R1–R3.)*
 
-**Audit (2026-08-13): Certify-with-residuals** — `.project/active/constraint-predicate-hardening/audit.md`.
-Two residuals to discharge before close: carry the item's two surfaced findings into Item 5's
-section below (audit F7), and record the rewritten red-first assertion as a deviation (audit F1).
+**Audit (2026-08-13): Certify-with-residuals** — `.project/active/constraint-predicate-hardening/audit.md`,
+including the orchestrator addendum (probes R1–R7 all PASS). Both blocking residuals are
+**discharged**: the two surfaced findings are carried into Item 5's Current State and Required
+Reading below (audit F7), and the rewritten red-first assertion is deviation 8 in
+`verification.md`, with R5's measurement showing it conceals no edge (audit F1, not promoted).
+The record-and-decide residuals F2–F4 and F6 are cured in the same pass; F5 (the coverage ledger
+now living under `.project/completed/`) is accepted as-is and awaits an owner decision on a
+durable home.
 
 **Estimated Effort**: 0.5–1 day (spec 0.5h, design 1h, plan 0.5h, execute and validate 4–6h)
 
@@ -699,6 +704,26 @@ that generated feasibility evidence rejects an unphysical candidate through TEAx
   part-definition guards are vacuous; 51 calculation-definition guards are unreachable.
 - ❌ There is no all-65 intent/disposition table, owner-approved tolerance set, derivative fixture,
   or CATF rejection proof.
+- ⚠️ **A unit written on a constraint *binding* is dimensionally inert to the executable profile.**
+  `in tol = 0.05 [m];` carries its unit for a human reader and not for the gate: a bound formal
+  takes its operand category from the definition's declared type (`Real` → category `real`), so
+  the binding's annotation never reaches `classify_ordering`. Measured, not inferred — a probe
+  binding a length against a time (`in measured = width [m]; in tol = 0.05 [s];`) is **admitted**.
+  True before and after Item 4, which neither widened nor narrowed the profile. **Consequence for
+  this item:** the band recipe in scope item 3 is exactly this shape, so a mis-united tolerance
+  band is admitted silently by a gate whose purpose is catching wrong physics. The all-65 table
+  cannot rely on the profile to catch unit mistakes in bindings; a wrong unit there has to be
+  caught by review or by an explicit in-predicate comparison.
+  *(Item 4 probe P3; `.project/active/constraint-predicate-hardening/verification.md` "Surfaced",
+  `reason-codes-reconciliation.md`.)*
+- ⚠️ **A blocked chain's location is the constraint usage's line, not the offending term's.** The
+  `LocationFact` the companion attaches to a decision belongs to the usage; the payload has no
+  per-node location, so every entry of a multi-chain block renders the same `file:line`. What
+  disambiguates within a predicate is the named reference, which `block_feature_chain` now
+  carries. **Consequence for this item:** on a long predicate the diagnostic points at the gate,
+  not at the term — read the chain name, not the line, when driving the 65 rewrites.
+  *(`.project/active/constraint-predicate-hardening/reason-codes-reconciliation.md` "Also
+  surfaced".)*
 
 **Scope**:
 
@@ -760,6 +785,12 @@ validate 8–12h)
 - `.project/research/20260812-101200_constraint-semantics-end-to-end.md` §§3, 5–7.
 - `tests/fixtures/catf_mfe_d5/PROVENANCE.md`
 - Item 1's amended authoring guidance and Items 2–3's catalog/report contracts.
+- **Item 4's two surfaced limits**, both summarized in Current State above with their measurements:
+  `.project/active/constraint-predicate-hardening/verification.md` ("Surfaced") and
+  `reason-codes-reconciliation.md` ("Also surfaced"). Read them before fixing the tolerance-band
+  form — the first one decides how much the profile can be trusted to check a band.
+- `docs/architecture/modeling-assumptions.md` §8, "Authoring a gate that carries units" — the one
+  supported spelling for a unit-carrying comparison, which the 65 rewrites will need.
 
 **Deliverables**:
 
