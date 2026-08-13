@@ -64,3 +64,19 @@ root, and the primary branch (`".".join(chain_segments)`) reproduces the authore
 carrier. B3 holds. Static evidence only: the implement stage's multi-chain characterization
 asserts the exact rendered references against a live fixture, which confirms this live.
 P1–P3 are post-fix discriminators and run inside the implement stage at the designed points.
+
+## M3 totality (orchestrator, verbatim from companion `executable_profile.py:66-100`)
+
+`REASON_CODES` contains exactly 23 `block_*` members and 4 `warn_*` members:
+block_assert_by_reference, block_derived_unit_unsupported, block_feature_chain,
+block_implies, block_incompatible_dimensions, block_integer_equality_unpreservable,
+block_invalid_assertion_polarity, block_invocation, block_malformed_operand_fact,
+block_missing_predicate, block_non_numerical_containment, block_non_predicate_root,
+block_ordering_category_pair, block_real_equality_requires_tolerance,
+block_unit_conversion_required, block_unitless_dimensioned, block_unknown_exact_unit,
+block_unresolved_definition, block_unresolved_operand, block_unsupported_node,
+block_unsupported_operand_category, block_unsupported_operator, block_xor;
+warn_non_numerical_equality, warn_non_numerical_implies, warn_non_numerical_predicate,
+warn_non_numerical_xor. The design's residue table (nine published reasons) must be
+reconciled against THIS list in the close record — which of the 23 still cannot "name the
+exact construct to fix" after this item, and why that is acceptable or filed.
