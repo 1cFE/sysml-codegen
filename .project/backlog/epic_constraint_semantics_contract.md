@@ -869,7 +869,12 @@ validate 8–12h)
 
 ---
 
-### Item 6: Calculation-Definition Gate Capability Design (1 day)
+### Item 6: Calculation-Definition Gate Capability Design (1 day) ✅
+
+**Status (2026-08-13): CERTIFIED — design/planning delivery.** The executable probe, spec, revised
+design, three-round independent review, and filed follow-on implementation item satisfy all Item 6
+criteria. Production implementation remains a separately authorized follow-on; its acceptance
+boxes remain open. Audit: `.project/active/calcdef-constraint-gate-design/audit.md`.
 
 **Type**: Design / Planning
 
@@ -892,8 +897,8 @@ calculation definitions without building the capability inside this epic.
   `.project/active/calcdef-constraint-gate-design/probes/findings.md`.
 - ⚠️ Calculation usages and exact calculation-definition identity already exist in the instance
   graph, but constraint scope expansion has no CalculationDefinition branch.
-- ❌ There is no proved attachment rule, report-volume design, or implementation backlog item for
-  the 51 CATF guards in this class.
+- ✅ The exact attachment rule, occurrence/report-volume design, and separately authorized
+  implementation backlog item are filed for this class.
 
 **Scope**:
 
@@ -917,17 +922,17 @@ calculation definitions without building the capability inside this epic.
 
 **Success Criteria**:
 
-- [ ] The probe confirms exact attachment without a second authority, or records the conflicting
+- [x] The probe confirms exact attachment without a second authority, or records the conflicting
       premise and parks dependent design conclusions for owner-visible redesign.
-- [ ] The design covers zero, one, and multiple calculation occurrences; repeated calculation
+- [x] The design covers zero, one, and multiple calculation occurrences; repeated calculation
       definitions; defaults and explicit actuals; snapshot round-trip; and per-occurrence failures.
-- [ ] Usage-level coverage and occurrence-level results remain distinguishable and join through
+- [x] Usage-level coverage and occurrence-level results remain distinguishable and join through
       stable exact identity.
-- [ ] Unsupported or unattachable asserted definitions fail with the Item 2 cause-based severity;
+- [x] Unsupported or unattachable asserted definitions fail with the Item 2 cause-based severity;
       none disappear or downgrade to a plain exclusion.
-- [ ] A follow-on implementation backlog item is filed with file-level scope, dependencies,
+- [x] A follow-on implementation backlog item is filed with file-level scope, dependencies,
       estimates, and customer-shaped acceptance tests.
-- [ ] `my-design-review` finds no unresolved owner/`[HARD]` contradiction or ownership ambiguity.
+- [x] `my-design-review` finds no unresolved owner/`[HARD]` contradiction or ownership ambiguity.
 
 **Estimated Effort**: 1 day (probe 2h, spec 1h, design and review 4h, follow-on plan 1h)
 
