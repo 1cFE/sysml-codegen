@@ -427,7 +427,135 @@ Recording this so the next reader does not re-verify it:
 
 ## Resolutions
 
-*(Stage 4 — filled in as the owner resolves each finding. Empty at hand-off.)*
+*(Recorded 2026-08-12 by the design agent, revising `design.md` to rev 2. Every finding resolved;
+no finding was declined.)*
+
+**F1 (Critical) — catalog usage-record identity key. RESOLVED, adopted as reviewed.**
+`ConstraintCatalogUsageRecord` gains `declaration_id`, and `_build_constraint_catalog`'s dict keys
+on it instead of `(usage_qualified_name, display_name)`. QN and display name stay as display
+metadata. The join is now `ConstraintUsageRecord.declaration_id` ↔ `ConstraintNode.declaration_id`
+↔ `ConstraintCatalogUsageRecord.declaration_id`, by exact identity end to end with no
+qualified-name string matching at any step. Recorded in D1 (with the QN key as a named rejected
+alternative and the anonymous-usage merge as the reason), in Component Overview, in Architecture's
+join paragraph, and in invariant 3. The reviewer's point that the 3.0.0 bump is the one free moment
+is taken — the re-key rides the same bump, and Implementation Notes now say the *key* changes as
+well as the population, since both are breaking for a QN-keyed consumer.
+
+**F2 (Critical) — newly-reached usages can raise. RESOLVED with a structural rule, not a patch.**
+The umbrella spec's form-first rule is made structural: **the form gate runs before any predicate
+walk**. Minting is non-raising for non-asserted forms — a `plain_usage`, `requirement_constraint`,
+or `satisfy_reference` usage always gets its visible record (cataloged per its form) and never
+halts, whatever its predicate would do if walked. Asserted forms may raise as they do today, which
+is severity-by-cause as specced. `_constraint_metadata` splits so the form/identity half is callable
+without the predicate-IR and definition-identity half. Landed as invariant 5, bet B3 (with its "if
+false" fallback), the Core Concept's fourth paragraph, and a Potential Risks entry naming the
+residual (an asserted malformed non-reaching gate now stops elaboration where it used to vanish).
+The reviewer's catch that `_typed_definition` already runs pre-expansion (`:1002`) is recorded in
+Research Findings, so the plan does not chase a raise that was never newly reached. The CATF luck is
+now a **recorded fact** under B5 rather than an implicit bet — all 56 are `plain_usage`, so
+`predicate_source` is `None` (`:1146-1147`), so the `SI_REDEFINITION_INVALID` path is unreachable
+*for that fixture* — and a new regression fixture (a `plain_usage` whose predicate would raise if
+walked) pins the rule instead of the luck.
+
+**F3 (Major) — disposition precedence. RESOLVED as an ordered rule in the Item 3 section.** The
+Token Vocabulary is restated as three ordered steps that stop at the first match: (1) form gate —
+`satisfy_reference` → `out_of_scope_satisfy`; (2) expansion cause → `non_reaching`, with profile
+eligibility explicitly **not** consulted; (3) profile eligibility, consulted only for a usage that
+expanded. Both co-firing cases the reviewer constructed now resolve deterministically (satisfy under
+a `calc def` → step 1; BLOCK with no scopes → step 2), and both became precedence test fixtures. The
+reviewer's semantic note is written into the design rather than left in the reader's head: a
+non-reaching BLOCK usage emits no `SI_CONSTRAINT_BLOCKED`, because that diagnostic lives inside the
+scope loop (`:1018-1029`) — deliberate, since blocking is a statement about executing a predicate
+and there is nothing to execute. Invariant 2 now names the precedence rule as its producer. D5 is no
+longer a bare pointer; it states the decision and its rejected alternative (a flat match table).
+
+**F4 (Major) — oracle coverage. RESOLVED and closed in the design.** New **Oracle Coverage**
+section, and the parked question is deleted from Next-Stage Handoff. Coverage is **all 31
+constraint-bearing fixture directories** (measured at `ccf4c21`, re-measured and recorded at
+execution), not a subset. Expectation files hold one identity row per authored usage and are
+asserted by identity list, not by count. The rule for a fixture with no expectation file is a **test
+failure naming the directory** — a missing expectation is a visible gap, never silent coverage,
+which is what stops a newly added fixture from quietly shrinking the oracle's reach. H4 is addressed
+directly: the scanner's matching rule is stated (strip comments, then statement-initial `constraint`
+/ `assert` / `require constraint` / `assume constraint` / `satisfy`, excluding `constraint def`), it
+emits declaration identities rather than a count so the guard is identity-shaped like the rest of the
+design, and its known false-positive/negative classes are listed. Its job is explicitly drift
+detection on the expectation file — it is never what the domain is checked against.
+
+**F5 (Major) — three-route parity claimed as structural. RESOLVED; the claim is deleted.** The
+"structural, not a separate mechanism" framing is gone. Architecture now says plainly that the
+fingerprint proves the snapshot bytes are internally coherent and says nothing about whether the
+live route re-elaborating the same model mints the same domain, names D2's live-only doc-comment
+read as the concrete drift mechanism, and cites the multi-hop EXPOSE precedent the reviewer alluded
+to. Two reinforcements beyond deleting the claim: D2 now states that the annotation is **captured
+into the graph at elaboration** so it travels in the snapshot and no from-snapshot route re-reads
+source; and the parity test is strengthened to **field for field, record for record** on a fixture
+that exercises annotations, run on both the in-place and relocated snapshot, with an explicit note
+that fingerprint equality would pass while diverging.
+
+**F6 (Major) — cross-repo landing order. RESOLVED as an ordered list with failure modes.** New
+**Cross-Repo Landing Order** section: (1) this repo lands first and is releasable alone — splitting
+the codec bump from the catalog bump would seal a v3 graph with a 2.0.0 token that no version check
+catches; (2) the companion needs no change, stated affirmatively with the reviewer's own reason —
+`_index_constraint_associations`'s cross-check (`:388-395`) already requires a profile decision for
+every swept subtype, `satisfy` included; (3) doc corrections before confirmation tests, and
+specifically D6's REQ-EXT-09 evidence pointer before `collect_constraint_manifest` is deleted (this
+also closes F12); (4) the single reviewed recapture last, at the final schema; (5) TEAx re-vendors
+`ACCEPTED_CATALOG_SCHEMA_VERSIONS` after, tracked in the epic's cross-repo notes, with the
+fail-closed direction noted as the intended failure. The Item 7 evidence-invalidation entries are
+**written now**, not deferred: every paused v2-bytes snapshot-route observation, the byte-identity
+comparisons on the 21 recaptured fixtures, and any evidence citing `collect_constraint_manifest` as
+the population definition.
+
+**F7 (Minor) — two enumerations, two classification passes. RESOLVED; adopted as recommended.** New
+**D9**: the record is minted at the top of `_build_constraint_nodes`'s existing per-usage loop
+(`:998-1004`), before the scope loop, and each `ConstraintNode` takes its form and identity metadata
+from the record. One enumeration, one classification, and the tier join true by construction rather
+than by assertion. The separate `_build_constraint_usage_records()` pass is recorded as the rejected
+alternative. The precision point is taken too: invariant 1 is restated against
+`self._constraint_associations` (`:304`), whose key set `:388-395` already proves equal to the
+sweep, rather than against `stable_usage_ids`, which does not survive the `@staticmethod` call.
+
+**F8 (Minor) — B2's cause split and the silent fallback. RESOLVED.** B2 now says **three** causes,
+adding `owner is None` (`:522-523`), and `owner_absent` is a real row in the precedence table with
+the same asserted/non-asserted severity split. The mitigation is made real rather than gestured at:
+new **invariant 8** turns the owner-kind map's `.get(..., type(owner).__name__.lower())` fallback
+(`:1177-1182`) into a refusal, so an unmapped owner kind fails elaboration by name instead of being
+graded by accident. Potential Risks now points at invariant 8 as the mitigation.
+
+**F9 (Minor) — untested catalog shape. RESOLVED.** Called out in Implementation Notes as a
+combination that has never existed (`usage_records` populated, `concrete_entries` and
+`source_records` empty — the all-calc-def-owned model), and added to Validation Approach as an
+explicit constructibility and deterministic-fingerprint check.
+
+**F10 (Minor) — `@inapplicable:` parse underspecified at the seam. RESOLVED.** Implementation Notes
+now defines the parse against `_extract_documentation`'s actual behavior
+(`extraction/extractor.py:803-814`): it collects every owned `Comment`, applies
+`.strip().strip("*").strip()` per body, and joins with `\n`. So "first line" means the first line of
+the **joined** string; a marker carried by a later comment body is a malformed-annotation halt, not
+a silent accept; and `strip("*")` means a `/* @inapplicable: … */` body arrives already trimmed. The
+multi-comment halt became a validation case, and the de-risk spike is extended to confirm the join
+behavior as well as reachability.
+
+**F11 (Minor) — satisfy churn beyond the schema token. RESOLVED.** Implementation Notes now records
+that adding `satisfy_reference` also changes `ConstraintNode.source_form` for satisfy usages that
+*do* expand, moving their catalog rows and the catalog fingerprint — behaviorally inert
+(`predicate_source` is `None` either way) but a second, independent source of baseline churn the
+plan should expect.
+
+**F12 (Minor) — doc-before-tests ordering for D6. RESOLVED.** Stated twice, deliberately: in D6
+("its new evidence pointer lands **before** the sweep is deleted") and as step 3 of the Cross-Repo
+Landing Order, with the failure mode named — a window in which the shipped row cites a function that
+no longer exists, breaking the doc-before-tests rule in the one place this item exists to fix.
+
+**Gate note — product-lens pass. DISCHARGED in the revision session.** The reviewer could not read
+`~/.claude/scripts/product-lens.md` and correctly left `product-lens.md` untouched rather than
+inventing a format. The script is equally unreadable from this session, so the method was
+reconstructed from the in-tree examples — this item's own spec-stage entry and the two other
+ledgers — and the design-stage entry is appended to
+`.project/active/constraint-catalog-totality/product-lens.md` with that reconstruction noted in the
+entry itself. Verdict: **DISPOSED** (design-F1..design-F3, none blocking, all applied in rev 2). No
+owner-graded or `[HARD]` statement is contradicted by this design.
 
 ---
 
