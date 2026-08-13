@@ -220,7 +220,104 @@ unverified line numbers, so the exposure is a re-grep in design, not a requireme
 
 ## Resolutions
 
-[To be filled in as findings are resolved, keyed by ID.]
+Recorded 2026-08-12 by the spec agent, with orchestrator guidance on the four judgment calls
+(L3-1, L3-2, L2-1, L1-5). All nine findings resolved in `spec.md`; no finding was declined.
+
+**L1-1 — FIXED.** Cite corrected. Re-grepped this session: `SI_CONSTRAINT_BLOCKED` is raised at
+`elaborate.py:1103`, inside the `for scope in scopes:` loop that opens at `:1083`. The spec's
+`[INFERRED]` bullet now carries those two line numbers and marks the correction. The inference
+itself is unchanged, as the review confirmed.
+
+**L1-2 — ACKNOWLEDGED, no change.** The reviewer independently hit the same sandbox boundary and
+reached the same disposition, which is the strongest available confirmation that the flag is
+honest rather than a shortcut. The softening the review supplies (the `policy.py` citation traces
+to the in-repo research record, and the two-vocabulary requirement rests on contract authority, not
+on the line numbers) is already the reason the spec grades that requirement `[HARD]` from the
+interface rather than from the cite. Nothing to change; recorded so a later reader knows two
+sessions checked.
+
+**L1-3 — FIXED, regraded to `[NEED]`.** The reviewer's read of the grade table is right: `[HARD]`
+is for what an interface, physics, or an existing system forces, and "TEAx `main` is never
+committed to" is a working agreement the owner stated at launch. Regraded with the reasoning
+written beside it, and the note that both grades are settled-eligible so nothing downstream
+weakens.
+
+**L1-4 — FIXED.** Both companion requirements are now consumed rather than merely listed. LC-E06
+is carried into the compact-accounting requirement's provenance — it is the obligation the excluded
+and non-reaching counts discharge ("never … vanish from coverage"). LC-E05 is carried into the
+"adds no usage-tier field" requirement, as the obligation that put those fields in the catalog and
+that makes this item their consumer rather than a second author. Neither was dropped from Required
+Reading.
+
+**L1-5 — FIXED.** The M-1 success criterion now separates the three bare headline asserts
+(`test_constraint_verdicts_exact_route.py:171,416,540`) from the fourth
+(`test_fusion_tea_real_teax.py:244-259`), names it as a whole-dump equality on the real-TEAx route,
+quotes its docstring obligation, and states that moving it means hand-writing the expected coverage
+block. Per orchestrator guidance the same fact is recorded in the Sequencing `[NEED]` as its
+concrete instance — capture the expected block from the settled semantics first, then run the
+route.
+
+**L2-1 — FIXED as a bounded requirement plus an owner-visible escape.** Per orchestrator guidance,
+behavior-changing schema migration of durable stores stays out of this item's silent scope: a new
+`[AGENT] (orchestrator-ratified, 2026-08-12)` requirement says whichever invariant-50 route design
+takes must be **additive or versioned**, and that if design finds neither can be, that is an
+owner-visible decision to surface at close, not a design call. The reviewer's "or say no such store
+exists" alternative is captured as a new Open Question that design answers first on the TEAx side,
+since it cannot be checked from this repo.
+
+**L2-2 — FIXED as a sizing note.** The spec does not resize itself. The new Open Question states
+which way it cuts: no durable store worth keeping → the epic's 2-day estimate holds; a real
+transition → the estimate is undersized and design flags it then rather than absorbing it.
+
+**L3-1 — RESOLVED as TWO axes** (orchestrator ruling, `[AGENT]` orchestrator-ratified 2026-08-12).
+The reviewer is right that the spec inherited both readings without noticing they pull apart. The
+ruling, now written into Known Requirements: the **headline** is the single precedence-ordered
+summary token, and the **coverage account** is an orthogonal embedded fact, always present and
+always reaching the durable case record whatever the headline says. The partial-coverage headline
+value is the *summary projection* of the coverage axis, emitted when nothing above it in precedence
+fires. So yes — TEAx can tell "rejected on physics, fully covered" from "rejected on physics, and
+sixty gates were never checked." It is graded `[AGENT]` rather than `[INHERITED]` because it
+derives from Q5's compact accounting and Q6's "regardless" read together rather than restating
+either. Success Criterion 1's phrasing was rewritten accordingly (L5-2), and a new criterion pins
+the case the tension was really about: a `violation` headline carrying a non-full coverage account.
+
+**L3-2 — FIXED, requirement stated.** The no-conflation constraint is now in the field names, not
+just the prose: the compact block's usage-tier count takes a **new, distinct field name**, and the
+existing occurrence-tier `ConstraintReport.assessed_count` either keeps its meaning or is renamed
+with the schema bump this item already pays. Exact spellings stay design's; shipping two
+`assessed_count`s, or one field serving both tiers, does not.
+
+**L3-3 — FIXED for (a) and (b); (c) left as-is, deliberately.** (a) A success criterion now pins
+that the new nested coverage block is unmutable from downstream code to invariant 41's standard.
+(b) A success criterion now requires the durable-store transition to be *proven* — equivalence
+proof, or archived store plus new lineage — with no silent rebind. (c) "Never bump TEAx first" gets
+no separate criterion: it is a landing-order instruction, and the honest catch is the cross-repo
+compatibility test plus the fail-closed window itself, which is the intended direction. Adding a
+criterion would pin a process step, not an outcome.
+
+**L3-4 — FIXED by splitting the bullet.** The spec-level rule (a report is required whenever any
+constraint usage is authored) stays as the `[INFERRED]` supersession. "Stays in one place" moved to
+its own `[INHERITED: Item 2 audit cure A4]` line: it is Item 2's landed constraint, not this spec
+inventing code shape — `constraint_catalog is not None` had already meant three different things
+across those seams, which is why A4 collapsed them. Superseding what the rule says does not reopen
+where it lives.
+
+**L3-5 — FIXED with one added clause.** The review confirms both parkings are correct, with the
+proviso that design treat the all-inapplicable crossing as a ruling to publish rather than a coin
+flip. That proviso is now written into the surfaced item.
+
+**L4-1 — FIXED.** The companion-out-of-scope statement moved to Non-Goals, where boundaries are
+listed, keeping its "if design finds a companion surface, that is a surfacing event, not a quiet
+edit" clause.
+
+**L5-1 — FIXED.** Both terms are glossed at first use in the success criterion: keep-for-boundary
+is the conservative disposition (candidate retained to inform the feasible boundary, results not
+fed back to steer the search); feed-strategy is the permissive one (what a fully-covered satisfied
+candidate gets today).
+
+**L5-2 — FIXED.** The arithmetic gloss is gone. The criterion now states the matrix plainly: five
+report headline values (the sixth state is report-absent by construction) and six runtime
+dispositions, each pinned by a test no other state satisfies.
 
 ---
 

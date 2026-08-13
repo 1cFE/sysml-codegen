@@ -62,9 +62,14 @@ Item 3]** unless marked.
 
 - [ ] Each of the six states — fully-covered satisfaction, partial coverage, violation,
       indeterminate, descriptive-only not-assessed, and truly unconstrained — has an independently
-      pinned report outcome **and** an independently pinned canonical TEAx outcome. Six report
-      states minus one (state 6 is report-absent by construction) means five report headline values
-      and their six runtime dispositions are each proven by a test that no other state satisfies.
+      pinned report outcome **and** an independently pinned canonical TEAx outcome. The matrix is
+      five report headline values (the sixth state is report-absent by construction) and six runtime
+      dispositions, each pinned by a test that no other state satisfies.
+- [ ] **[AGENT] (orchestrator-ratified, 2026-08-12)** The coverage accounting survives a headline
+      that outranks it: a report whose headline is `violation` still states how much of the
+      applicable asserted population was assessed, and those numbers reach the durable case record.
+      Proven on a model with one violated gate and at least one unassessed applicable asserted gate —
+      the report reads `violation` **and** carries a non-full coverage account.
 - [ ] The full-satisfaction headline is impossible when any applicable asserted usage lacks
       assessment — proven on a model where some, not all, applicable asserted gates are assessed
       and all assessed ones pass.
@@ -78,17 +83,31 @@ Item 3]** unless marked.
 - [ ] Report coverage is derived from the catalog in one direction and cannot diverge from the
       per-usage inventory without a generation-time or verification-time failure — proven by a
       negative test that perturbs one side and observes the refusal.
-- [ ] Partial coverage defaults to keep-for-boundary; feed-strategy for partial coverage happens
-      only with an explicit config line; both paths persist coverage counts and catalog linkage in
+- [ ] Partial coverage defaults to keep-for-boundary — the conservative disposition: the candidate
+      is retained to inform the feasible boundary, but its results are **not** fed back to steer the
+      search. Feeding a partially-covered candidate to the search strategy (feed-strategy, the
+      permissive disposition, and what a fully-covered satisfied candidate gets today) happens only
+      with an explicit config line. Both paths persist coverage counts and catalog linkage in
       durable case records.
+- [ ] **[INFERRED]** (review L3-3a) The new nested coverage block is proven unmutable from
+      downstream code, to the same standard invariant 41 sets for the rest of the report.
 - [ ] Unknown or unmapped report and runtime headline tokens fail closed with a named error — no
       fallthrough to a satisfied or unconstrained reading, no unnormalized `KeyError`.
+- [ ] **[INHERITED: invariant 50]** (review L3-3b) The durable-store transition is proven, not
+      assumed: either an equivalence proof over old and new artifacts, or an archived old store with
+      a new lineage begun. No stored record is rebound to a new identity silently.
 - [ ] Cross-repository compatibility tests pass, codegen and TEAx full suites pass, ruff/mypy are
       zero-new against baseline, generated artifacts are reviewed, and `git diff --check` is clean —
       with exact counts recorded in `verification.md`.
 - [ ] **[INHERITED: constraint-semantics-contract-amendments/audit.md M-1]** The four
       `all_satisfied` assertions in codegen `tests/execution/` are moved to the new vocabulary and
-      each now asserts a coverage claim rather than a not-failed one.
+      each now asserts a coverage claim rather than a not-failed one. Three
+      (`test_constraint_verdicts_exact_route.py:171,416,540`) are bare headline asserts. The fourth
+      (`test_fusion_tea_real_teax.py:244-259`) is a **whole-dump equality** on the real-TEAx route —
+      its own docstring says a new report field "has to be accounted for here before this passes" —
+      so moving it means hand-writing the expected coverage block for that route, from the settled
+      semantics, before the test is run. That is the Sequencing `[NEED]` in action, not a token
+      swap.
 
 ## Known Requirements
 
@@ -98,7 +117,11 @@ resolutions L1-1/L2-1/L2-2) and from Item 1's landed definitions home (the lifec
 its frozen requirements companion). The umbrella's rulings are agent-grade, owner-ratified
 2026-08-12, and challengeable only by re-deriving against their recorded reasoning — not by an
 implementing agent's preference. Items marked **[INFERRED]** are this spec's own reading of what
-those obligations force here.
+those obligations force here. Items marked **[AGENT] (orchestrator-ratified, 2026-08-12)** are the
+review's judgment calls:
+they were settled during the spec review because leaving them open would have handed design a coin
+flip, and they derive from the recorded rulings rather than restating one — so they are agent-grade
+and challengeable by re-deriving against those rulings, not settled.
 
 ### What the report must say
 
@@ -108,13 +131,27 @@ those obligations force here.
   violation → indeterminate → full satisfaction → partial coverage → not assessed. Full
   satisfaction is a coverage claim — every applicable asserted gate assessed and passed — not the
   absence of a failure.
+- **[AGENT] (orchestrator-ratified, 2026-08-12)** **Coverage is a second axis, not a slot in the
+  headline.** The two published obligations pull apart unless this is said out loud: precedence
+  makes the headline a single summary token, so a model with one violated gate and sixty unassessed
+  ones reads `violation` and its coverage gap would vanish; but the compact-accounting requirement
+  and Q6's "coverage numbers land in durable case records **regardless**" both describe a coverage
+  fact that exists independently. The ruling: the **headline** is the one precedence-ordered summary
+  token, and the **coverage account** is an orthogonal embedded fact that is always present and
+  always reaches the case record, whatever the headline says. The partial-coverage headline value is
+  the *summary projection* of the coverage axis, emitted when nothing above it in precedence fires —
+  it is not the only place coverage is visible. Concretely: TEAx can tell "rejected on physics,
+  fully covered" from "rejected on physics, and sixty gates were never checked." Derived from the
+  recorded rulings (Q5 compact accounting + Q6 "regardless") rather than restating one of them, so
+  it is agent-grade and challengeable by re-deriving against them.
 - **[INHERITED: contract, same subsection; umbrella Q5 / spec-review L2-1]** The feasibility
   denominator is applicable asserted gates only, and **the test is on the form, not the
   predicate**: an asserted usage whose predicate is `BLOCK`ed or classified `NON_NUMERICAL` stays in
   the denominator as an unassessed gate. Plain and requirement-side usages are never applicable
   asserted gates; a model whose only constraints are descriptive reads not-assessed, never partial.
 - **[INFERRED]** The `BLOCK` half of that clause is testable only where the usage reaches no
-  instance. `SI_CONSTRAINT_BLOCKED` is raised inside the scope loop (`elaborate.py:1018-1029`), so an
+  instance. `SI_CONSTRAINT_BLOCKED` is raised at `elaborate.py:1103`, inside the `for scope in
+  scopes:` loop that opens at `:1083` (cite corrected 2026-08-12, review L1-1), so an
   asserted `BLOCK`ed usage that *does* expand halts the whole model (invariant 1) and never produces
   a report, while one that expands to nothing catalogs `non_reaching` and stays in the denominator
   (Item 2 design, "A non-reaching BLOCK usage emits no halt"). A fixture for "asserted + `BLOCK`ed
@@ -125,13 +162,21 @@ those obligations force here.
   carries an explicit inapplicability disposition, at which point it leaves the denominator. Item 2
   landed the mechanism (`inapplicability` on the usage record); this item consumes its coverage
   consequence by reading `inapplicability is not None`.
-- **[INHERITED: umbrella Q5]** The report embeds *compact* coverage accounting — authored-usage
-  total, assessed count, excluded and non-reaching counts with a reason histogram, and the coverage
-  state. Per-usage exclusion detail stays in the catalog (invariant 48), joined by the catalog
-  fingerprint the report already carries.
+- **[INHERITED: umbrella Q5; LC-E06]** The report embeds *compact* coverage accounting —
+  authored-usage total, assessed count, excluded and non-reaching counts with a reason histogram,
+  and the coverage state. Per-usage exclusion detail stays in the catalog (invariant 48), joined by
+  the catalog fingerprint the report already carries. LC-E06 is the obligation the excluded and
+  non-reaching counts discharge: those usages "never masquerade as executed constraints **or vanish
+  from coverage**."
 - **[INHERITED: umbrella Q5]** Two-tier accounting: coverage counts authored **usages**; the
   results list carries concrete **occurrences**. The two tiers relate through `occurrence_count`
   and are never conflated in one number.
+- **[INFERRED]** (from the two-tier rule; review L3-2) **The tiers must be distinct in the field
+  names, not only in the prose.** `ConstraintReport.assessed_count` today is `len(results)` — an
+  occurrence-tier count. The compact block's assessed count is usage-tier. So the new usage-tier
+  count carries a new, distinct field name; the existing occurrence-tier field keeps its meaning or
+  is renamed with the schema bump this item already pays. Exact spellings are design's; shipping two
+  fields that both read `assessed_count`, or one field serving both tiers, is not.
 - **[INHERITED: invariant 48; product-lens spec-F5]** Coverage truth is derived from the embedded
   catalog in one direction. The report is never a second inventory kept in agreement by hand, and
   a divergence between the two is a generation or verification failure, not a tolerated skew.
@@ -151,8 +196,11 @@ those obligations force here.
 - **[INFERRED]** The zero-input aggregator changes which packages must ship constraint machinery,
   so Item 2's `ships_constraint_machinery` rule (`resolution/models.py:598-654`: machinery ships iff
   at least one concrete entry exists) is superseded here — deliberately, as its docstring records.
-  The replacement is the report-required trigger above (any authored constraint usage), and it stays
-  in one place, so the three generation seams that read it cannot drift apart again.
+  The replacement is the report-required trigger above: any authored constraint usage.
+- **[INHERITED: Item 2 audit cure A4]** The rule stays in one place, so the three generation seams
+  that read it cannot drift apart again. This is Item 2's landed constraint (`constraint_catalog is
+  not None` had already meant three different things across those seams, which is why A4 collapsed
+  them into one rule); superseding what the rule *says* does not reopen where it *lives*.
 
 ### What both vocabularies must do
 
@@ -185,6 +233,12 @@ those obligations force here.
   `2.x` and a report with no coverage block. Crossing that boundary takes one of invariant 50's two
   routes — a migration that proves old and new artifact equivalence, or the old store archived as
   lineage with a new store begun. Identity is never silently reassigned.
+- **[AGENT] (orchestrator-ratified, 2026-08-12)** Whichever route design takes must be **additive or
+  versioned**: a behavior-changing rewrite of existing durable records is not in this item's silent
+  scope. If design finds that neither route can be additive or versioned — that landing coverage
+  accounting forces a destructive or lossy transition of stored results — that is an **owner-visible
+  decision to surface at close**, not a design call. The reviewer flagged this as an owner
+  disposition wearing a design label (review L2-1) and it is treated as one.
 
 ### Cross-repository and scope
 
@@ -192,14 +246,15 @@ those obligations force here.
   re-vendor `ACCEPTED_CATALOG_SCHEMA_VERSIONS` to include `3.0.0`. TEAx fails closed on every newly
   generated package until it does — the intended direction. **Never bump TEAx first**; the landing
   order is codegen, then TEAx.
-- **[HARD]** (owner instruction, align record 2026-08-12) All TEAx work happens on a branch. TEAx
-  `main` is never committed to.
-- **[INFERRED]** The companion (`agentic-mbse`) is out of scope for this item and is expected
-  untouched. Nothing in the report, seam, or policy work names a companion surface; if design finds
-  one, that is a surfacing event, not a quiet edit.
-- **[INHERITED: Item 2 design, "Item 3 coordination"]** This item adds no usage-tier catalog field
-  and renames nothing. Every input the feasibility denominator needs already exists at catalog
-  `3.0.0` keyed by `declaration_id`.
+- **[NEED]** (owner instruction, align record 2026-08-12; regraded from `[HARD]` per review L1-3)
+  All TEAx work happens on a branch. TEAx `main` is never committed to. The grade table reserves
+  `[HARD]` for what an interface, physics, or an existing system forces; a working agreement the
+  owner stated is `[NEED]`. Both are settled-eligible, so nothing downstream weakens.
+- **[INHERITED: Item 2 design, "Item 3 coordination"; LC-E05]** This item adds no usage-tier catalog
+  field and renames nothing. Every input the feasibility denominator needs already exists at catalog
+  `3.0.0` keyed by `declaration_id` — LC-E05 is the obligation that put them there (one visible
+  disposition per usage over the complete authored-usage domain, with source form, identity, owner
+  QN, definition QN, and the explicit join), and this item is its consumer, not a second author.
 - **[INHERITED: epic Item 3 scope 6]** Generated schemas, package contracts, and cross-repository
   pins are versioned or migrated as required, with the landing order specified before code lands.
 
@@ -208,10 +263,15 @@ those obligations force here.
 - **[NEED]** (owner-directed sequence, handoff 2026-08-12, carried from the umbrella spec) Expected
   outputs are captured from the settled semantics before confirmation tests run. Expectations are
   never reverse-engineered from current behavior — which matters most here, because the current
-  behavior is precisely the defect.
+  behavior is precisely the defect. The concrete instance is
+  `test_fusion_tea_real_teax.py:244-259`: its expected coverage block is hand-captured from the
+  settled semantics first, then the real-TEAx route is run against it.
 
 ## Non-Goals
 
+- **Touching the companion (`agentic-mbse`).** It is expected untouched: nothing in the report,
+  seam, or policy work names a companion surface. If design finds one, that is a surfacing event,
+  not a quiet edit.
 - Recomputing or duplicating per-usage constraint detail outside the catalog.
 - Changing Item 2's disposition vocabulary, usage-tier schema, or totality gate.
 - CATF model migration, intent classes, and tolerance decisions — Item 5.
@@ -235,7 +295,12 @@ All of these are deferred by the umbrella spec or by Item 1, not decided here.
 - **Schema migration path** for `ConstraintReport` and the package contract: version bump, what
   happens to already-generated packages and captured baselines, and — named explicitly because the
   TEAx `3.0.0` re-vendor lands in this item — which of invariant 50's two routes existing durable
-  study stores take.
+  study stores take, inside the additive-or-versioned constraint stated in Known Requirements.
+- **Does a durable study store with results worth keeping exist yet?** Design's first act on the
+  TEAx side is to check. If the answer is no, the invariant-50 question collapses to "start clean"
+  and this item is sized as the epic estimated. If the answer is yes, the transition is real work
+  and the 2-day estimate is undersized — flag it then rather than absorbing it (review L2-2). The
+  question is recorded here because it cannot be answered from the codegen repo.
 - **Config opt-in spelling** for the partial-coverage → feed-strategy per-study override, and the
   durable case-record shape that carries coverage counts and catalog linkage.
 - **Landing order**, including where the TEAx `ACCEPTED_CATALOG_SCHEMA_VERSIONS` re-vendor sits and
@@ -252,7 +317,9 @@ All of these are deferred by the umbrella spec or by Item 1, not decided here.
   model whose only asserted gates are all dispositioned inapplicable satisfies both readings: zero
   remaining gates, all vacuously passed, and zero applicable asserted gates. Item 3 writes the
   precedence function, so it will pick one by accident unless design rules it. Both readings are
-  agent-grade Item 1 text; this spec does not choose between them.
+  agent-grade Item 1 text; this spec does not choose between them. Design must treat this as a
+  **ruling to publish** — written down with its reasoning, against the contract — not a coin flip
+  settled inside the precedence function (review L3-5).
 - **The epic's scope-4 wording is looser than the amended contract.** Epic Item 3 scope 4 says
   "constraint-bearing models with no executable assertions"; the amended LC-E10 says explicitly that
   the trigger is the absence of an **applicable asserted gate**, not the absence of eligible
@@ -265,7 +332,10 @@ All of these are deferred by the umbrella spec or by Item 1, not decided here.
   layer, and `ACCEPTED_CATALOG_SCHEMA_VERSIONS` are cited here from the research record and Item 2's
   hand-off, at line numbers captured 2026-08-12. Design must re-grep them in a session with TEAx
   access before relying on any line number, and must confirm the TEAx suite's runner from that
-  repo's own README/pyproject.
+  repo's own README/pyproject. The independent spec review hit the same sandbox boundary and reached
+  the same disposition (review L1-2), and noted what caps the exposure: the load-bearing
+  two-vocabulary requirement rests on contract authority, not on those line numbers, so a wrong cite
+  costs design a re-grep rather than a requirement.
 
 ---
 
@@ -288,8 +358,11 @@ All of these are deferred by the umbrella spec or by Item 1, not decided here.
 - **Orchestration:** `.project/active/constraint-coverage-policy/briefs/align.md`,
   `briefs/spec.md`
 - **Product lens:** `.project/active/constraint-coverage-policy/product-lens.md`
+- **Spec review:** `.project/active/constraint-coverage-policy/spec-review.md` (verdict Revise,
+  2026-08-12; all nine findings resolved, resolutions recorded there by ID)
 - **Design:** `.project/active/constraint-coverage-policy/design.md` (to be created)
 
 ---
 
-**Next Steps:** After approval, `/_my_spec_review` in a fresh session, then `/_my_design`.
+**Next Steps:** Spec review completed 2026-08-12 (verdict Revise; L1-1..L5-2 resolved and
+incorporated, with L3-1/L3-2/L2-1/L1-5 settled by orchestrator ruling). Next: `/_my_design`.
