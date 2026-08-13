@@ -9,7 +9,7 @@ The expectation files here are the outside evidence. They hold one row per autho
 constraint usage, read from the `.sysml` source, and the domain is asserted against them
 **by identity list** rather than by count, so swapping one usage for another fails.
 
-Three rules keep the oracle from quietly shrinking:
+Four rules keep the oracle from quietly shrinking:
 
 1. A constraint-bearing fixture directory with no expectation file is a failure naming the
    directory. A newly added fixture cannot become silent coverage.
@@ -18,6 +18,8 @@ Three rules keep the oracle from quietly shrinking:
    the record is a failure. SysIDE drops a ``doc`` comment inside an inline-predicate
    constraint body, so on that one shape the marker never reaches elaboration and the
    strict parse's near-miss halt cannot fire. This is what makes that gap loud.
+4. Every fixture exempted from the domain comparison must still actually refuse. An
+   exemption that silently stops being true is coverage lost without a failure.
 """
 
 from __future__ import annotations
@@ -27,6 +29,10 @@ from pathlib import Path
 
 import pytest
 
+from sysml_codegen.elaboration.elaborate import (
+    ElaborationDiagnosticError,
+    ElaborationError,
+)
 from sysml_codegen.orchestration.elaborated_pipeline import elaborate_model_paths
 from tests.conftest import FIXTURES_DIR, requires_license
 from tests.helpers.constraint_source_scan import (
@@ -147,3 +153,23 @@ def test_every_authored_inapplicable_marker_reached_the_domain(fixture: Path):
 def test_catf_mfe_d5_expects_all_sixty_five():
     """The headline, stated in the oracle rather than only in the code that produces it."""
     assert len(_expectation(FIXTURES_DIR / "catf_mfe_d5")["constraint_usages"]) == 65
+
+
+@pytest.mark.parametrize("fixture", sorted(REFUSED_BY_DESIGN), ids=lambda name: name)
+@requires_license
+def test_every_exempt_fixture_actually_refuses(fixture: str):
+    """Rule 4: the exemption set is checked, not asserted.
+
+    `REFUSED_BY_DESIGN` removes 18 of the 42 constraint-bearing fixtures from the domain
+    comparison. Nothing verified that a member still refuses, so a fixture that started
+    elaborating cleanly would stay silently exempt — and this epic will do exactly that:
+    `constraint_domain_calc_def_owner` is exempt because the asserted calc-def-owner case
+    halts today, and Item 6 stages that capability to execute later.
+
+    Added with the A3 cure, which changed *why* two members refuse: a malformed
+    `@inapplicable:` marker now halts per usage rather than raising out of the mint, so
+    those two produce a full domain plus one error-grade disposition. They still refuse
+    under strict elaboration, and this is what keeps that true.
+    """
+    with pytest.raises((ElaborationDiagnosticError, ElaborationError)):
+        elaborate_model_paths([FIXTURES_DIR / fixture])

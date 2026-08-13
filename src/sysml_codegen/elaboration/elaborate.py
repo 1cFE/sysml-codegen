@@ -157,6 +157,21 @@ class _ConstraintAssociation:
     decision: UsageDecision
 
 
+@dataclass(frozen=True)
+class _AnnotationRead:
+    """What one usage's documentation said about inapplicability, defect included.
+
+    Two fields rather than a raise, because minting must not raise (invariant 5): the
+    caller needs to know *both* that the marker was unreadable and that it can still build
+    a record for this usage.
+    """
+
+    inapplicability: Inapplicability | None
+    #: ``None`` when the documentation is well formed; otherwise a phrase completing
+    #: "constraint <qn> …", so the disposition detail and the halt read as one sentence.
+    defect: str | None
+
+
 #: The one spelling of the inapplicability marker. Anchored to the first line of the
 #: joined documentation and parsed strictly, so a typo halts rather than doing nothing.
 _INAPPLICABLE_MARKER = "@inapplicable"
@@ -1101,7 +1116,7 @@ class _ExactElaborator:
                             _PendingExpression(node, predicate_expression)
                         )
         self._assert_minting_totality()
-        self._halt_on_unattached_constraints()
+        self._halt_on_error_dispositions()
 
     # ---- the usage tier ---------------------------------------------------
 
@@ -1121,15 +1136,33 @@ class _ExactElaborator:
         classified any further, because an asserted gate that cannot be understood is a
         real failure — and even then the failure arrives as this record's disposition
         rather than as a bare error that leaves every other usage without a carrier.
+
+        The same rule governs an unreadable ``@inapplicable:`` marker: it is reported, not
+        raised, and becomes this record's error-grade disposition. Invariant 5 admits no
+        exception, so nothing on this path may take the model's whole domain down.
         """
         source_form = self._constraint_source_form(usage)
         owner = self._semantic_owner(usage)
         owner_kind = self._owner_kind(owner)
         source_file, source_line = self._source_location(usage)
         name = str(getattr(usage, "name", None) or "constraint")
-        disposition = self._usage_disposition(
-            usage, definition, association, source_form, owner_kind, cause
-        )
+        usage_qn = str(getattr(usage, "qualified_name", None) or "<anonymous>")
+        annotation = self._read_annotation(usage)
+        if annotation.defect is not None:
+            # A marker the author wrote but this cannot read. The usage's coverage role is
+            # unknowable until the annotation is fixed, so it gets the error-grade
+            # disposition the design built for exactly that, and the completeness gate
+            # converts it into a named halt.
+            disposition = self._disposition(
+                "non_reaching",
+                "classification_incomplete",
+                source_form,
+                f"{usage_qn} {annotation.defect}",
+            )
+        else:
+            disposition = self._usage_disposition(
+                usage, definition, association, source_form, owner_kind, cause
+            )
         return ConstraintUsageRecord(
             declaration_id=association.usage_id,
             usage_qualified_name=str(getattr(usage, "qualified_name", None) or "<anonymous>"),
@@ -1148,18 +1181,23 @@ class _ExactElaborator:
                 if source_form == "definition_typed"
                 else None
             ),
-            inapplicability=self._inapplicability(usage),
+            inapplicability=annotation.inapplicability,
         )
 
     @staticmethod
-    def _inapplicability(usage: Any) -> Inapplicability | None:
-        """Read an explicit ``@inapplicable: <reason>`` decision off the usage's documentation.
+    def _read_annotation(usage: Any) -> _AnnotationRead:
+        """Read an ``@inapplicable: <reason>`` decision off the usage's documentation.
 
         Read once, here, and recorded on the record — so it travels in the graph and the
-        snapshot and no downstream route re-reads the source. The parse is strict on
-        purpose: a first line that begins with the marker but does not match the shape,
-        or a marker on a later comment body, halts. A near-miss that silently did nothing
-        would be indistinguishable from not having written it.
+        snapshot and no downstream route re-reads the source.
+
+        **It reports a malformed marker; it never raises.** Invariant 5 says minting never
+        raises for any form, because a raise during minting leaves *no* usage in the model
+        with a disposition — the absence-not-disposition failure this whole item exists to
+        end, reached by an authoring typo in one doc comment. The strictness the design
+        asks for is preserved and is stronger for being per-usage: the caller turns a
+        defect into an error-grade disposition on this record, and the completeness gate
+        turns that into a named halt while every other carrier survives.
 
         The seam is the joined documentation, not "the doc comment": the extractor
         collects every ``Comment`` owned member, trims each body, and joins the survivors
@@ -1175,28 +1213,26 @@ class _ExactElaborator:
             and (trimmed := str(raw).strip().strip("*").strip())
         ]
         if not bodies:
-            return None
+            return _AnnotationRead(None, None)
         lines = "\n".join(bodies).split("\n")
-        usage_qn = str(getattr(usage, "qualified_name", None) or "<anonymous>")
         for later in lines[1:]:
             if later.strip().startswith(_INAPPLICABLE_MARKER):
-                raise ElaborationInvariantError(
-                    ElaborationCode.SI_CONSTRAINT_INCOMPLETE,
-                    f"constraint {usage_qn} carries {_INAPPLICABLE_MARKER!r} on a later "
-                    "documentation line; it is only read on the first line of the joined "
-                    "documentation",
+                return _AnnotationRead(
+                    None,
+                    f"carries {_INAPPLICABLE_MARKER!r} on a later documentation line; it is "
+                    "only read on the first line of the joined documentation",
                 )
         first = lines[0].strip()
         if not first.startswith(_INAPPLICABLE_MARKER):
-            return None
+            return _AnnotationRead(None, None)
         reason = first[len(_INAPPLICABLE_MARKER) :]
         if not reason.startswith(":") or not reason[1:].strip():
-            raise ElaborationInvariantError(
-                ElaborationCode.SI_CONSTRAINT_INCOMPLETE,
-                f"constraint {usage_qn} has a malformed inapplicability annotation "
-                f"{first!r}; the shape is '{_INAPPLICABLE_MARKER}: <reason>'",
+            return _AnnotationRead(
+                None,
+                f"has a malformed inapplicability annotation {first!r}; the shape is "
+                f"'{_INAPPLICABLE_MARKER}: <reason>'",
             )
-        return Inapplicability(reason=reason[1:].strip())
+        return _AnnotationRead(Inapplicability(reason=reason[1:].strip()), None)
 
     def _usage_disposition(
         self,
@@ -1255,8 +1291,10 @@ class _ExactElaborator:
 
         Classification is attempted only for asserted forms. For every other form the
         mint stops at the gate, which is what makes minting non-raising: the predicate
-        walk and the definition cross-check are the only two paths that can fail, and
-        neither runs.
+        walk and the definition cross-check are the only two paths that can fail here, and
+        neither runs. (The other way a usage can fail to classify is an unreadable
+        ``@inapplicable:`` marker; the mint site handles that one before this is reached,
+        and by the same rule — a disposition, never a raise.)
         """
         if source_form not in ASSERTED_SOURCE_FORMS:
             return cause
@@ -1294,16 +1332,37 @@ class _ExactElaborator:
                 f"pre-expansion sweep: unminted={missing}, unswept={unknown}",
             )
 
-    def _halt_on_unattached_constraints(self) -> None:
-        """Invariant 9: an asserted gate nothing could ever attach is an authoring error.
+    def _halt_on_error_dispositions(self) -> None:
+        """Every error-grade disposition becomes a named halt, one diagnostic per usage.
 
-        Raised as a graph diagnostic rather than an immediate exception so that every
-        *other* usage in the model still carries a visible record when it fires — the
-        whole point of moving the mint upstream. Strict elaboration turns the diagnostic
+        Raised as graph diagnostics rather than as an immediate exception so that every
+        *other* usage in the model still carries a visible record when one fires — the
+        whole point of moving the mint upstream. Strict elaboration turns the diagnostics
         into the halt.
+
+        Two causes reach error grade and they get different codes, because a reader acts on
+        them differently. An unattachable owner is invariant 9's structural authoring error:
+        nothing could ever run this gate, so the diagnostic names the usage *and* the
+        missing attachment. A classification that could not complete is a defect in what
+        the author wrote about the usage rather than in where they put it, so it reports
+        what it could not read.
         """
         for record in self._graph.constraint_usages.values():
             if record.disposition.severity != "error":
+                continue
+            where = (
+                f"{record.declaration_id.to_wire()}) at "
+                f"{record.source_file}:{record.source_line}"
+            )
+            if record.disposition.reason == "classification_incomplete":
+                self._diagnose(
+                    ElaborationCode.SI_CONSTRAINT_INCOMPLETE,
+                    None,
+                    record.usage_qualified_name,
+                    None,
+                    f"constraint usage domain incomplete: {record.usage_qualified_name} "
+                    f"({where} cannot be classified: {record.disposition.detail}",
+                )
                 continue
             self._diagnose(
                 ElaborationCode.SI_CONSTRAINT_UNATTACHED,
@@ -1311,8 +1370,7 @@ class _ExactElaborator:
                 record.usage_qualified_name,
                 None,
                 f"constraint {record.usage_qualified_name} "
-                f"({record.declaration_id.to_wire()}) at "
-                f"{record.source_file}:{record.source_line} is asserted "
+                f"({where} is asserted "
                 f"({record.source_form}) but its owner "
                 f"{record.owner_qualified_name or '<none>'} ({record.owner_kind}) provides no "
                 f"attachment: {record.disposition.reason}",

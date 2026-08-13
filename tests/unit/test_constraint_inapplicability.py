@@ -13,7 +13,10 @@ from pathlib import Path
 
 import pytest
 
+from sysml_codegen.elaboration import elaborate
+from sysml_codegen.elaboration.diagnostics import ElaborationCode
 from sysml_codegen.elaboration.elaborate import ElaborationDiagnosticError
+from sysml_codegen.extraction.extractor import SysMLDataExtractor
 from sysml_codegen.orchestration.elaborated_pipeline import elaborate_model_paths
 from sysml_codegen.snapshot.instance_graph import encode_instance_graph
 from tests.conftest import FIXTURES_DIR, requires_license
@@ -52,18 +55,97 @@ def test_an_unannotated_usage_carries_no_inapplicability():
     assert _record("constraint_domain_inapplicable", "reached_gate").inapplicability is None
 
 
-def test_a_malformed_annotation_halts_rather_than_doing_nothing():
-    with pytest.raises(ElaborationDiagnosticError, match="malformed inapplicability annotation"):
-        elaborate_model_paths(
-            [Path(FIXTURES_DIR / "constraint_domain_inapplicable_malformed")]
-        )
+# --- A near-miss halts, but per usage, never model-wide (invariant 5) ------------------
 
 
-def test_a_marker_on_a_later_documentation_line_halts():
-    with pytest.raises(ElaborationDiagnosticError, match="later documentation line"):
-        elaborate_model_paths(
-            [Path(FIXTURES_DIR / "constraint_domain_inapplicable_late_marker")]
-        )
+def _lenient(fixture: str):
+    """The graph a non-strict elaboration produces, diagnostics and all.
+
+    Strict elaboration converts the diagnostics into the halt, so this is how a test sees
+    what the halting model still carried. Invariant 5's whole claim is about that: the
+    difference between a halt that names one usage and a raise that leaves the model with
+    no domain at all.
+    """
+    extractor = SysMLDataExtractor([Path(FIXTURES_DIR / fixture)])
+    assert extractor.load_models()
+    return elaborate(
+        extractor.model,
+        extractor.extract_calculation_definitions(),
+        validation_diagnostics=extractor.diagnostics.validation,
+        strict=False,
+    )
+
+
+@pytest.mark.parametrize(
+    ("fixture", "usage", "phrase"),
+    [
+        (
+            "constraint_domain_inapplicable_malformed",
+            "typo_marker",
+            "malformed inapplicability annotation",
+        ),
+        (
+            "constraint_domain_inapplicable_late_marker",
+            "late_marker",
+            "later documentation line",
+        ),
+    ],
+    ids=["malformed-shape", "marker-on-a-later-line"],
+)
+def test_a_near_miss_halts(fixture: str, usage: str, phrase: str):
+    with pytest.raises(ElaborationDiagnosticError, match=phrase) as raised:
+        elaborate_model_paths([Path(FIXTURES_DIR / fixture)])
+    assert usage in str(raised.value)
+
+
+@pytest.mark.parametrize(
+    ("fixture", "usage"),
+    [
+        ("constraint_domain_inapplicable_malformed", "typo_marker"),
+        ("constraint_domain_inapplicable_late_marker", "late_marker"),
+    ],
+    ids=["malformed-shape", "marker-on-a-later-line"],
+)
+def test_a_near_miss_leaves_every_other_carrier_intact(fixture: str, usage: str):
+    """Invariant 5: minting never raises, so one authoring typo cannot erase the domain.
+
+    Before this cure the parse raised out of the mint, and *no* usage in the model carried
+    a disposition — the absence-not-disposition failure this whole item exists to end,
+    reached by a typo in one doc comment.
+    """
+    graph = _lenient(fixture)
+
+    # Both authored usages are present, not just the well-formed one.
+    assert len(graph.constraint_usages) == 2
+    by_name = {
+        record.usage_qualified_name.rsplit("::", 1)[-1]: record
+        for record in graph.constraint_usages.values()
+    }
+    assert set(by_name) == {usage, "reached_gate"}
+
+    defective = by_name[usage]
+    assert defective.disposition.kind == "non_reaching"
+    assert defective.disposition.reason == "classification_incomplete"
+    assert defective.disposition.severity == "error"
+    assert defective.inapplicability is None
+
+    # The other carrier is untouched and still correctly graded.
+    assert by_name["reached_gate"].disposition.severity == "info"
+    assert by_name["reached_gate"].disposition.kind == "eligible"
+
+
+@pytest.mark.parametrize(
+    "fixture",
+    [
+        "constraint_domain_inapplicable_malformed",
+        "constraint_domain_inapplicable_late_marker",
+    ],
+    ids=["malformed-shape", "marker-on-a-later-line"],
+)
+def test_a_near_miss_reports_exactly_one_diagnostic(fixture: str):
+    """One usage is defective, so one diagnostic — not a model-wide failure."""
+    codes = [item.code for item in _lenient(fixture).diagnostics]
+    assert codes == [ElaborationCode.SI_CONSTRAINT_INCOMPLETE]
 
 
 def test_the_annotation_moves_the_graph_fingerprint():
