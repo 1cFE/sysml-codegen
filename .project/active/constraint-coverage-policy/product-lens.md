@@ -77,3 +77,91 @@ Epic: CONSTRAINT-SEMANTICS, Item 3 (Coverage Report and TEAx Policy)
   it.
 - **item3-F6 → fixed in spec.** Invariant 32's exit-ancestor retention clause is carried as its own
   requirement line beside the zero-input trigger.
+
+---
+
+## design — 2026-08-12 — rev 01c4b34 (+ untracked `.project/active/constraint-coverage-policy/design.md`)
+Epic: CONSTRAINT-SEMANTICS, Item 3 (Coverage Report and TEAx Policy)
+
+**Runner note / provenance flag:** `/home/reid/.claude/scripts/product-lens.md` and its pack source
+are outside this session's sandbox and could not be read. The ledger format is reconstructed from
+this file's spec-stage entry and from `.project/active/constraint-catalog-totality/product-lens.md`,
+per this epic's convention. **Unlike the spec stage, `/home/reid/1cfe/teax` was readable this stage**
+(read-only, at clean `main` `fa0e06a`), so every TEAx-side claim below was verified first-hand.
+
+**Point:** re-derived from SOURCES; all five items recorded at the spec stage still hold unchanged
+and are not restated here.
+
+**Falsifier** (unchanged): a run in which a constraint-bearing model still emits no report (or reads
+`unconstrained`/`not_assessed`) while it carries an applicable asserted gate; or coverage counts
+computed from anything other than the catalog; or a state that exists in one vocabulary with no
+counterpart; or an existing study store silently rebound across the report/catalog schema move.
+
+### Findings
+
+- **design-F1 [DONE, resolved inside the design] — the `expects_report` authority was about to be
+  silently invalidated, and it is invisible from the codegen repo.** TEAx derives
+  `expects_report = bool(load_model_contract(...).concrete_entries)` (`study/cli.py:42`), documented
+  as "empty iff constraint-free" (`evaluation/projection.py:44-46`). Design decision D5 makes a
+  constraint-bearing package with **zero** concrete entries ship a report, at which point that
+  derivation tells the projection seam not to expect one — silently disabling the invariant-46a
+  corruption check (`projection.py:50-55`) for exactly the packages this item teaches to emit a
+  zero-input report. The spec could not have caught it: it flagged the TEAx surfaces as second-hand
+  and this line is not among the four it cites. — source: invariant 46a; contract "Headline states
+  and coverage truth" (agent/ratified) — **disposition:** owned by design D7 — the authority moves to
+  `usage_records`, the same population as the report-required trigger, so the two cannot disagree.
+
+- **design-F2 [FILED — Item 1 territory, not performed here] — Appendix C's vacuous-gate cell
+  over-permits in the degenerate case.** The cell reads "…drops out of the feasibility denominator
+  and the headline reads full satisfaction **when every remaining gate passed**"
+  (`constraint-execution-authoritative-lifecycle-contract.md:793`). The conditional presupposes
+  surviving gates; read literally it also licenses `full_satisfaction` for a model with none, which
+  crosses state 5 (`:459-460`). — source: Appendix C:793 vs states 5/precedence:459-464 (both
+  agent/ratified) — **disposition:** design D4 publishes a RULING (**not assessed**) with its
+  reasoning against the contract, as the spec's surfaced item required. The cell wants "…and at
+  least one gate remains" added; recorded for close, not edited by this item.
+
+- **design-F3 [ACCEPTED, recorded] — the epic's scope-4 wording remains looser than the amended
+  contract.** Design D5 follows LC-E10 (the trigger is any authored constraint usage; an applicable
+  gate with zero eligible entries reads partial coverage), which is what the spec already surfaced.
+  Nothing new to resolve. — **disposition:** no design change; the epic text still wants the same
+  correction at close.
+
+**Not findings (checked, clean):**
+- No owner-graded statement is contradicted. D-1 (no post-build seam), D-2 (direct design-attribute
+  actuals), and **D-3** (canonical embedded catalog, no consumer materializer) are untouched; design
+  D3 derives coverage from the sealed catalog in one direction and adds no second inventory and no
+  consumer-side reconstruction.
+- The `[OWNER-VERBATIM]` design-search quote is carried whole in **The Point**, at the owner's
+  emphasis, as the governing obligation — not reduced to a pointer at the spec.
+- The `[NEED]` owner sequencing instruction is honoured explicitly in D8 step 1, including the
+  prohibition on reverse-engineering the `test_fusion_tea_real_teax.py:244-259` expectation from
+  observed behaviour, and it is named again in Next-Stage Handoff as one of the two de-risk-first
+  items.
+- Q6's default dispositions are reproduced exactly in D7, including keep-for-boundary as the default,
+  the auditable per-study opt-in, and coverage landing in durable case records on both paths.
+- Invariants carried **whole**, not to the needed clause: 32 (zero-input aggregator *and*
+  exit-ancestor retention — the retention half verified already mechanized at
+  `generation/pipeline.py:284-296`), 41 (read-only *and* the deep-freeze enforcement, verified
+  already covered by `evidence.py:17-28`), 48, 49, 50, 61.
+- Invariant 50 is resolved by **verified fact rather than assumption**: no durable study store with
+  results worth keeping exists (the only two `study.db` files are archived spike work dirs under
+  `.project/completed/20260713_constraint-study-integration-spike/_work/`), and TEAx's eight-field
+  compatibility binding (`study/compatibility.py`, `study/store.py:147-151`) already implements the
+  archive-and-begin route. The additive-or-versioned constraint holds and **no owner-visible
+  surfacing is required** — the spec's escape hatch was checked and not needed.
+- The spec's own open question "does a durable study store with results worth keeping exist yet?" is
+  answered **no**, so the item is not undersized on that account (review L2-2 discharged).
+- Every second-hand TEAx line number the spec flagged was re-grepped; the one wrong cite
+  (`CANONICAL_HEADLINE` is defined in `evaluation/evidence.py:44`, not `projection.py`) is corrected
+  in Research Findings, and one surface the spec did not know about (two policy dispatch tables, not
+  one) is carried into D7. As the spec predicted, the cost was a re-grep and no requirement moved.
+- The four `all_satisfied` assertions are carried into D8's landing order with the fourth's
+  hand-written-first obligation stated separately from the three bare ones.
+
+**Gate: DISPOSED (design-F1..design-F3)** — nothing blocks. The one finding that changes the build,
+design-F1, is a premise the spec could not see from its sandbox and is resolved inside D7; the other
+two are records for close. The design's own weak point is not a lens finding but a bet: B1 (the
+catalog's per-usage dispositions are correct) is unfalsifiable from inside this item, and the
+mitigation — hand-written expected accounts per fixture rather than generated ones — is the same
+discipline the owner's sequencing instruction already demands.
