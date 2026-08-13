@@ -1,6 +1,6 @@
 # Design: Canonical Usage Domain and Catalog Totality
 
-**Status:** Draft (rev 2 — resolves design-review F1–F12)
+**Status:** Draft (rev 3 — resolves design-review F1–F12, lens design-F1..F3, and orchestrator O-1)
 **Owner:** Reid W
 **Created:** 2026-08-12
 **Branch:** `item7-rebuild` (worktree `/home/reid/1cfe/sysml-codegen-item7-rebuild`; companion
@@ -275,6 +275,17 @@ Numbered to the eight questions the brief assigns; D9 was added in revision.
   assertion. *Rejected: a separate `_build_constraint_usage_records()` pass (a second
   `elements_of_type` enumeration and a second `_constraint_metadata` call over one population —
   the drift the one-authority rule exists to stop, at a smaller scale).*
+- **D10 — The vacuous advisory lives in the companion, as an ADVISORY extraction diagnostic.**
+  Invariant 61 and LC-E13 both assign it to authoring validation, and invariant 59 defines that as
+  the companion's validator layer. It lands as a new `ExtractionDiagnosticFact` kind,
+  `vacuous_asserted_gate`, registered `ADVISORY` in the closed `EXTRACTION_DIAGNOSTIC_SEVERITY` map
+  (`agentic-mbse constraint_facts.py:78-82`). See
+  **[The Companion Advisory](#the-companion-advisory-invariant-61--lc-e13)**. *Rejected: a codegen
+  `logger.warning` at the mint site. It narrows the contract — invariant 59 makes authoring
+  validation and codegen enforcement two independent surfaces with different jobs, and collapsing
+  the advisory into codegen leaves the author with no feedback at authoring time, which is the only
+  time it is actionable. A codegen log line remains available as optional color; it is not the
+  advisory.*
 
 ## Token Vocabulary (Item 3 cites this section)
 
@@ -325,7 +336,8 @@ For a usage that *does* expand, the existing `SI_CONSTRAINT_BLOCKED` halt is unc
 `requirement_constraint`, and the new `satisfy_reference` are not asserted. The severity column's
 `error` cells are invariant 9's halt, and their diagnostic names the usage **and the missing
 attachment**; the `warning` cell is invariant 61's vacuous gate, whose authoring advisory names the
-usage and its detached owner.
+usage and its detached owner — emitted by the **companion's** authoring validation, not by codegen
+(see [The Companion Advisory](#the-companion-advisory-invariant-61--lc-e13)).
 
 **Source forms** become six: the five `_constraint_metadata` emits today plus `satisfy_reference`,
 tested ahead of the `plain_usage` fall-through.
@@ -406,6 +418,11 @@ weight and is not redundant with the fingerprint.
    `elaborate.py:1177-1182` ends in `.get(..., type(owner).__name__.lower())` — a silent fallback
    that would let an unmapped owner kind be graded by accident. It becomes a refusal: an owner kind
    not in the closed map fails elaboration by name.
+9. **The companion advisory's trigger set is a subset of codegen's vacuous set, never a superset.**
+   The advisory may miss a vacuous gate codegen grades (the companion has no occurrence index); it
+   may never claim vacuity codegen does not grade. Codegen's warning-grade `non_reaching`
+   disposition is the complete authority and does not consult the advisory — contract invariant 59's
+   independence rule, stated here as a checkable containment direction.
 
 ## Component Overview
 
@@ -482,24 +499,98 @@ executing calc-def-owned gates (Item 6); the CATF derivative migration and the a
 table (Item 5); the `[m]`-unit-literal defect (Item 4); any parallel manifest or catalog inventory;
 changing BLOCK-halts-generation semantics for expanded usages; migrating the frozen CATF twins;
 re-planning ELABORATE-FIRST Item 7. Additionally: this design does not add snapshots to fixtures
-that lack them (D8), and does not edit TEAx (the re-vendor is ordered below but lands there).
+that lack them (D8), and does not edit TEAx (the re-vendor is ordered below but lands there). The
+companion **is** in scope, for one scoped change only — invariant 61's advisory (D10). No other
+companion behavior moves in this item.
+
+## The Companion Advisory (invariant 61 / LC-E13)
+
+Invariant 61 and LC-E13 both split the vacuous-gate obligation across **two** surfaces, and rev 2
+built only one of them. The catalog carries a `non_reaching` disposition at warning grade — that is
+codegen's half, and it is done. The other half is "authoring validation emits an advisory naming
+the usage and its detached owner," and invariant 59 fixes what authoring validation means: the
+companion's validator layer, whose diagnostics are **author feedback**, with codegen enforcing the
+same conditions unconditionally and independently of whether validation ran.
+
+**The seam already exists; no new mechanism is invented.** The companion's authoring-validation
+channel for constraint facts is `ExtractionDiagnosticFact`
+(`agentic-mbse constraint_facts.py`), whose severity is set writer-side in `__post_init__` from
+the closed `EXTRACTION_DIAGNOSTIC_SEVERITY` map (`:78-82`, `:230-233`) and never author-supplied.
+Codegen reads them at exactly one sink, `screen_extraction_diagnostics`
+(`elaboration/extraction_screen.py`), which halts on `BLOCKING` and renders `ADVISORY` at warning
+grade. So the advisory is:
+
+- **Where:** a new diagnostic kind `vacuous_asserted_gate`, emitted by the companion's constraint
+  validation alongside the existing extraction diagnostics.
+- **Grade:** `ADVISORY` in the closed severity map — warning grade, generation continues, which is
+  exactly invariant 61's "neither a halt nor a silent pass."
+- **Message:** names the usage (qualified name) and its detached owner (qualified name), with the
+  usage's source location carried in the diagnostic's `location` field so
+  `screen_extraction_diagnostics`'s renderer prints `file:line:column`.
+- **Codegen-side work:** none. The existing sink renders it. That is the point of routing it here
+  rather than inventing a second channel.
+
+**Trigger, and the one place the two surfaces genuinely cannot be made identical.** Codegen grades
+vacuous from the occurrence index: the attachment lookup returns zero scopes for an attachable
+owner kind (`owner_has_no_occurrences`). The companion has no occurrence index, so its trigger is
+the direct structural one — an asserted constraint usage whose owning `part def` is typed by zero
+part usages in the model.
+
+Those two sets are not equal, and pretending otherwise would be the more dangerous move. The
+companion's set is a **strict subset** of codegen's: a part def typed by a usage that is itself
+never instantiated (nested under an uninstantiated parent) has non-zero typings but zero
+occurrences, so codegen grades it vacuous while the companion stays silent. Making them equal would
+mean reimplementing occurrence resolution in the companion — a second implementation of what
+`build_occurrence_index` owns, which is the two-representations smell this item exists to remove.
+
+So the alignment rule is directional, not equal, and it is stated as an invariant rather than left
+implicit: **the companion's trigger set is a subset of codegen's vacuous set, never a superset.**
+The advisory never claims vacuity that codegen does not grade; codegen's fingerprinted disposition
+is the complete authority, per invariant 59. The residual — a vacuous gate codegen grades and the
+author is not warned about — is surfaced here rather than resolved silently, and it is the price of
+not duplicating occurrence resolution.
+
+**The advisory does not travel in the graph, deliberately.** It is author feedback at authoring
+time, so it is emitted on the live and capture routes where the model is read, and it is *not*
+recorded on the usage-tier record. That is not a gap: codegen's warning-grade `non_reaching`
+disposition is what travels in the snapshot and is route-invariant. Keeping the advisory out of the
+graph also keeps it out of the three-route parity surface, so it cannot become a live-only read
+that makes live and snapshot domains diverge — the F5 failure mode.
 
 ## Cross-Repo Landing Order
 
 Closing design-review F6. An ordered list, with what breaks if it is violated.
 
-1. **This repo (`sysml-codegen`) lands first, complete and self-sufficient.** Domain, v3 codec,
+1. **This repo (`sysml-codegen`) lands first; its half is self-sufficient.** Domain, v3 codec,
    catalog `3.0.0`, preflight, oracle, doc corrections, recapture. Generation does not depend on
-   any other repo accepting the new schema, so this step is releasable alone. *Violate it by
+   any other repo accepting the new schema, so this step is releasable alone — but releasable is
+   not the same as complete: step 2 is also in this item. *Violate it by
    splitting the codec bump from the catalog bump and a package seals with a v3 graph and a 2.0.0
    catalog token — an internally inconsistent artifact that no version check catches.*
-2. **The companion (`agentic-mbse`) needs no change, stated affirmatively.** The reason is checkable
-   rather than assumed: `_index_constraint_associations`'s cross-check (`elaborate.py:388-395`)
-   already requires the constraint profile to return a decision for *every* swept `ConstraintUsage`
-   subtype, `satisfy` included — a usage with no decision is already a hard failure today. So the
-   domain never asks the companion for a decision it does not already produce. *Violate this by
-   assuming a companion change is needed and the companion worktree drifts from the codegen branch
-   for no reason.*
+2. **The companion (`agentic-mbse`) lands one change: the `vacuous_asserted_gate` advisory.** A
+   coordinated companion change is normal for this epic — Item 1 landed one (`dcb187b` in
+   `/home/reid/1cfe/agentic-mbse-item7-rebuild`). Scoped precisely, because two things are true at
+   once:
+
+   - **The domain itself needs nothing from the companion**, and the reason is checkable rather
+     than assumed: `_index_constraint_associations`'s cross-check (`elaborate.py:388-395`) already
+     requires the constraint profile to return a decision for *every* swept `ConstraintUsage`
+     subtype, `satisfy` included — a usage with no decision is already a hard failure today. So the
+     domain never asks the companion for a decision it does not already produce.
+   - **Invariant 61's advisory half does need the companion**, because invariant 59 puts authoring
+     validation there. That is the new diagnostic kind above, plus its `ADVISORY` entry in the
+     closed severity map. Codegen's reader needs no change.
+
+   **Order between the two repos is free, by contract.** Invariant 59 says codegen enforces its
+   conditions "unconditionally and independently of whether authoring validation ran," so codegen
+   may land first: the warning-grade `non_reaching` disposition is complete on its own and every
+   codegen test passes without the companion change. What is missing in that window is author
+   feedback, not enforcement — an author sees the disposition in the catalog but gets no advisory
+   at authoring time. Acceptable as a window, not as an end state: invariant 61 is only satisfied
+   once both halves exist, so the companion change is part of *this* item and not a follow-up.
+   *Violate this by treating codegen's disposition as discharging invariant 61 on its own — which
+   is exactly the narrowing rev 2 made — and the contract reads satisfied while half of it was
+   never built.*
 3. **Documentation corrections land before confirmation tests run** (owner-directed sequence), and
    specifically D6's REQ-EXT-09 rewrite lands its new evidence pointer **before**
    `collect_constraint_manifest` is deleted. *Violate it and there is a window where the shipped
@@ -582,6 +673,15 @@ definition. These go into the epic's register in this landing.
   branch today, it would grade as `owner_kind_unattachable` and halt an asserted usage that should
   only warn. Mitigated by invariant 8: the owner-kind map's silent `.get()` fallback becomes a
   refusal, so an unmapped kind fails by name instead of being graded by accident.
+- **The advisory's reach is narrower than the disposition's (invariant 9).** A vacuous gate whose
+  owning part def *is* typed, but by a usage that never instantiates, gets codegen's disposition and
+  no author advisory. Accepted deliberately: closing it means reimplementing occurrence resolution
+  in the companion, which is the second-representation smell this item removes. Surfaced here rather
+  than resolved silently; the containment test pins the direction so the gap can only ever be a
+  missing advisory, never a false one.
+- **Two repos, one contract obligation.** Codegen can land, pass every test, and still leave
+  invariant 61 half-built. Mitigated by scoping the companion change into this item rather than a
+  follow-up, and by landing-order step 2 naming that exact failure.
 - **Expectation files go stale.** Mitigated by the scanner's missing-file failure rule, which is
   what makes a newly added fixture visible rather than silently uncovered.
 
@@ -607,9 +707,18 @@ consumes. The cross-repo sequencing is the ordered list above.
   naming the usage's declaration id and QN.
 - **Severity by cause.** Three fixtures: an asserted usage owned by a `calc def` (halts, diagnostic
   names the usage and the missing attachment per invariant 9); an asserted usage on a detached part
-  def (warning-grade `non_reaching` + authoring advisory naming usage and detached owner, generation
-  continues); a plain constraint whose predicate would BLOCK if asserted (generates, catalogs
-  `excluded` / `unassessed_form`).
+  def (warning-grade `non_reaching`, generation continues); a plain constraint whose predicate would
+  BLOCK if asserted (generates, catalogs `excluded` / `unassessed_form`).
+- **The companion advisory (new, orchestrator finding O-1).** Companion-side: the vacuous fixture
+  emits one `vacuous_asserted_gate` `ExtractionDiagnosticFact` at `ADVISORY` grade whose message
+  names the usage QN and the detached owner QN and whose `location` carries the usage's source
+  position. Codegen-side: `screen_extraction_diagnostics` renders it at warning grade and does not
+  halt, with no codegen change required — assert the existing sink handles the new kind. Then the
+  containment direction (invariant 9): on a fixture where a part def is typed by a usage that is
+  itself never instantiated, codegen grades `owner_has_no_occurrences` and the companion stays
+  silent — the advisory must never fire where codegen does *not* grade vacuous. Finally, the
+  independence check: codegen produces the identical disposition with the companion advisory
+  suppressed, per invariant 59.
 - **Non-raising mint (new, design-review F2).** A regression fixture holding a `plain_usage`
   constraint whose predicate *would* raise `SI_REDEFINITION_INVALID` if walked. It must produce a
   visible record and generate, proving the form gate runs before the predicate walk rather than
@@ -643,7 +752,13 @@ consumes. The cross-repo sequencing is the ordered list above.
 D4 (v3 bump, no v2 reader), D5 (tokens + precedence), D6 (row rewrite, evidence pointer before
 deletion), D7 + Oracle Coverage (retire the sweep; all 31 constraint-bearing fixtures get
 expectation files; missing file is a failure), D8 (21 fixtures), D9 (mint inside the existing
-loop). The cross-repo landing order and the Item 7 register entries are fixed.
+loop), D10 (the vacuous advisory lives in the companion as an `ADVISORY` extraction diagnostic, not
+as a codegen log line). The cross-repo landing order and the Item 7 register entries are fixed.
+
+**This item spans two repos.** Codegen carries the domain and the disposition; the companion
+carries invariant 61's advisory half. Both are in scope for this item — the companion change is not
+a follow-up, because invariant 61 is unsatisfied until both exist. Codegen may land first
+(invariant 59 makes it independent), but the item does not close on codegen alone.
 
 **Open for the plan.** The precise wording of the three diagnostics; whether the expectation files
 are one per fixture directory or one consolidated file; the exact line anchors for the doc edits

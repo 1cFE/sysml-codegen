@@ -548,6 +548,62 @@ plan should expect.
 Landing Order, with the failure mode named — a window in which the shipped row cites a function that
 no longer exists, breaking the doc-before-tests rule in the one place this item exists to fix.
 
+**O-1 (Orchestrator must-fix, raised against rev 2 from the plan stage's output) — "the companion
+needs no change" narrows invariant 61. RESOLVED in rev 3; the finding is correct as stated.**
+
+Verified against landed authority before acting. Invariant 61 and LC-E13
+(`constraint-execution-lifecycle-requirements.md:334-341`) both split the vacuous-gate obligation
+across two surfaces: the catalog carries the `non_reaching` disposition **and** "authoring
+validation emits an advisory naming the usage and its detached owner." Invariant 59
+(`contract:394-400`) fixes what authoring validation means — the companion's validator layer, whose
+diagnostics are author feedback, with codegen enforcing the same conditions unconditionally and
+independently. Appendix C's acceptance cell repeats it. Rev 2 built only codegen's half and then
+asserted affirmatively that the companion needs no change, which reads the contract as satisfied
+while half of it was never designed. The downstream plan's PD2 routing the advisory to a codegen
+`logger.warning` is the same narrowing, one stage further on.
+
+What rev 3 does:
+
+- **New D10 and a new section, [The Companion Advisory](design.md#the-companion-advisory-invariant-61--lc-e13).**
+  The advisory lands as a new `ExtractionDiagnosticFact` kind, `vacuous_asserted_gate`, registered
+  `ADVISORY` in the closed `EXTRACTION_DIAGNOSTIC_SEVERITY` map
+  (`agentic-mbse constraint_facts.py:78-82`, severity set writer-side at `:230-233`). No new
+  mechanism is invented: this is the companion's existing authoring-validation channel, and codegen
+  already reads it at exactly one sink, `screen_extraction_diagnostics`
+  (`elaboration/extraction_screen.py`), which halts on `BLOCKING` and renders `ADVISORY` at warning
+  grade. Codegen-side work is zero. Message names usage QN and detached-owner QN; the diagnostic's
+  `location` carries the usage's source position so the existing renderer prints `file:line:column`.
+- **Codegen's half stays independent, per invariant 59.** The fingerprinted warning-grade
+  `non_reaching` disposition remains codegen's own enforcement and does not consult the advisory. A
+  codegen log line is explicitly demoted to optional color, and D10 records the `logger.warning`
+  route as the rejected alternative with the reason.
+- **Landing-order step 2 rewritten.** It no longer says "no companion change." It now separates two
+  true things: the *domain* needs nothing from the companion (the cross-check at
+  `elaborate.py:388-395` already forces a profile decision for every swept subtype), while
+  *invariant 61's advisory half* does. Order between repos is free because invariant 59 makes
+  codegen independent — codegen may land first, and the window costs author feedback, not
+  enforcement. But the companion change is part of **this** item, not a follow-up, because
+  invariant 61 is unsatisfied until both halves exist. The named violation is precisely rev 2's
+  error: treating codegen's disposition as discharging invariant 61 alone.
+- **Trigger alignment — delivered as far as it honestly goes, with the residual surfaced.** The
+  orchestrator asked to align the trigger so the two surfaces cannot disagree. They cannot be made
+  equal: codegen grades vacuous from the occurrence index, the companion has no occurrence index,
+  and its structural trigger (an asserted usage whose owning `part def` is typed by zero part
+  usages) is a **strict subset** — a part def typed by a usage that never instantiates has non-zero
+  typings and zero occurrences. Equalising them means reimplementing occurrence resolution in the
+  companion, which is the second-representation smell this item exists to remove. So the alignment
+  is stated as a checkable **direction** instead: new **invariant 9** — the companion's trigger set
+  is a subset of codegen's vacuous set, never a superset, so the advisory can only ever be missing,
+  never false. The residual (a vacuous gate codegen grades with no author advisory) is surfaced in
+  Potential Risks rather than resolved silently, per the surfacing duty.
+- **The advisory deliberately does not travel in the graph.** It is author feedback at authoring
+  time; codegen's disposition is what travels and is route-invariant. This also keeps it off the
+  three-route parity surface, so it cannot become the live-only read that F5 warned about.
+- **Validation added:** the advisory's emission and grade; the existing codegen sink handling the
+  new kind with no codegen change; the containment direction on a typed-but-never-instantiated
+  fixture; and an independence check that codegen produces the identical disposition with the
+  advisory suppressed.
+
 **Gate note — product-lens pass. DISCHARGED in the revision session.** The reviewer could not read
 `~/.claude/scripts/product-lens.md` and correctly left `product-lens.md` untouched rather than
 inventing a format. The script is equally unreadable from this session, so the method was
