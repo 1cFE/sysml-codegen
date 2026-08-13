@@ -233,6 +233,7 @@ def test_expected_value_must_derive_from_polarity():
 
 def _catalog_entry(**changes) -> ConstraintCatalogEntry:
     values = {
+        "declaration_id": "decl_id_0",
         "constraint_id": "id_0",
         "usage_qualified_name": "Design__c__cell__nonneg",
         "source_local_identity": "nonneg",

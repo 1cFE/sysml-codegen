@@ -667,36 +667,36 @@ def test_preflight_names_the_usage_on_a_misjoin(graph):
 **See design.md for:** D1 (catalog re-key), D3 (gate home), *Required Invariants* 3 and 4,
 *Implementation Notes* (`CATALOG_SCHEMA_VERSION`, "mutate the graph, not the bytes").
 
-- [ ] `resolution/models.py:474-503` — `ConstraintCatalogUsageRecord` gains `declaration_id` (the new
+- [x] `resolution/models.py:474-503` — `ConstraintCatalogUsageRecord` gains `declaration_id` (the new
       identity and dedup key), `disposition`, `inapplicability`; docstring updated from
       "admitted (eligible)" to the whole domain.
-- [ ] `elaboration/project.py:1084-1146` — `_build_constraint_catalog` renders every domain member;
+- [x] `elaboration/project.py:1084-1146` — `_build_constraint_catalog` renders every domain member;
       dict keyed on `declaration_id`, replacing the `(usage_qualified_name, display_name)` pair at
       `:1145-1146`; the `None` return at `:1084-1085` keys on the **domain** being empty, not
       `graph.constraints`.
-- [ ] `contracts/versions.py:18` — `CATALOG_SCHEMA_VERSION = "3.0.0"`, docstring saying what broke
+- [x] `contracts/versions.py:18` — `CATALOG_SCHEMA_VERSION = "3.0.0"`, docstring saying what broke
       (population widened, key changed) and how a consumer recovers the old set
       (`disposition.kind == "eligible"`). Update the pin in
       `tests/conformance/test_catalog_schema_version.py:19`.
-- [ ] `cli/__init__.py:1064-1079` — add `_preflight_constraint_totality(graph)` as step 1.8, beside
+- [x] `cli/__init__.py:1064-1079` — add `_preflight_constraint_totality(graph)` as step 1.8, beside
       1.5–1.7, **before** `_clear_output_directory`. Join by `declaration_id` only; refuse, never
       repair.
-- [ ] Mutation tests: remove a disposition, duplicate a usage record, misjoin one — each at the
+- [x] Mutation tests: remove a disposition, duplicate a usage record, misjoin one — each at the
       in-memory graph level, each failing generation with a diagnostic naming the declaration id and
       QN.
 
 ### Validation
 
 **Automated:**
-- [ ] Focused: catalog totality, catalog constructibility, three mutation shapes, schema-version pin.
-- [ ] **Full licensed suite** → baseline churn appears here. Every moved baseline must be explained
+- [x] Focused: catalog totality, catalog constructibility, three mutation shapes, schema-version pin.
+- [x] **Full licensed suite** → baseline churn appears here. Every moved baseline must be explained
       by exactly one of: the catalog schema token, the widened/re-keyed `usage_records`, or
       `satisfy_reference` moving an expanded satisfy row. Anything else is a finding — stop and
       investigate.
-- [ ] `ruff`/`mypy` zero-new.
+- [x] `ruff`/`mypy` zero-new.
 
 **Manual:**
-- [ ] `catf_mfe_d5` generates; its catalog carries 65 usage rows, 9 `eligible`.
+- [x] `catf_mfe_d5` generates; its catalog carries 65 usage rows, 9 `eligible`.
 
 **What We Know Works After This Phase:** the catalog is total, the join is checkable by identity end
 to end, and a removed/duplicated/misjoined carrier fails generation by name before anything is
@@ -1283,6 +1283,65 @@ schema bump, not choices.
 ### Phase 5 Completion
 
 ### Phase 6 Completion
+**Completed:** 2026-08-12
+
+**Actual Changes:**
+- `resolution/models.py` — `ConstraintCatalogUsageRecord` gains `declaration_id` (the new identity
+  and dedup key), the four `disposition_*` fields, `inapplicability_reason`, and
+  `occurrence_count`; its docstring now describes the whole domain and names the exact recovery
+  for a consumer that wanted the old set (`disposition_kind == "eligible"`).
+- `elaboration/project.py` — `_build_constraint_catalog` renders `usage_records` from
+  `graph.constraint_usages` directly, sorted by `declaration_id`, instead of accumulating them
+  inside the occurrence loop. The `None` return keys on the **domain** being empty, not on
+  `graph.constraints`.
+- `contracts/versions.py:18` → `CATALOG_SCHEMA_VERSION = "3.0.0"`, docstring stating both breaks
+  (population widened, identity re-keyed) and the recovery. Pin updated in
+  `tests/conformance/test_catalog_schema_version.py`.
+- `cli/__init__.py` — `_preflight_constraint_totality(graph)` as step 1.8, beside 1.5–1.7 and
+  before `_clear_output_directory`. Joins by `declaration_id` only; refuses, never repairs.
+- New `tests/conformance/test_constraint_catalog_totality.py`, 14 nodes.
+- Eleven hand-constructed catalog rows across eight test modules gained the new required fields.
+
+**Deviation — `declaration_id` also lands on `ConstraintCatalogEntry` and
+`ConstraintCatalogExcludedRecord`, which the design named only for the usage row.** D3 asks the
+preflight to assert the "domain↔catalog↔**entry** join **by `declaration_id`**", and the entry had
+no such field: without it the entry half of that join could only be made by qualified name, which
+the spec's `[HARD]` identity row forbids. Both rows are inside the same 3.0.0 breaking bump, so
+the addition costs nothing extra. Recorded because it is a schema surface the design did not
+enumerate.
+
+**Deviation — the preflight's subject is the catalog, not the domain.**
+`_generate_package_from_graph` takes a `ComputationGraph` and is deliberately authority-neutral
+(it "takes a graph and chooses nothing"), so threading the `InstanceGraph` in to re-check
+domain↔catalog would break that. The split is honest and the tests state it: `graph.validate()`
+owns the domain and already runs on the live route, both decode paths, and the sealed context;
+the preflight owns the catalog, which is the artifact that actually ships and the only one a
+consumer reads. They are not redundant — a projection defect yields a broken catalog from a
+perfectly valid graph, and only the preflight is downstream of that.
+
+**Mutation evidence, at both layers, all at the in-memory level (never on bytes — a mutated
+snapshot fails the document fingerprint long before any gate runs):**
+- Graph-level (refused at `project()` by `validate()`): a reason outside the closed set, an
+  `occurrence_count` that disagrees with the node count, and an occurrence node whose usage record
+  was deleted.
+- Catalog-level (refused by the preflight, before `_clear_output_directory`, with the output tree
+  verified untouched): a row with no valid disposition, a duplicated row, an occurrence row that
+  joins no domain member, and disagreeing counts. A fifth node asserts the refusal names the
+  usage **and** its declaration id, never a bare count.
+
+**Catalog constructibility confirmed** — a `calc def`-only model now produces a catalog with
+`usage_records` populated and `concrete_entries` / `source_records` empty, and it fingerprints
+identically across two independent elaborations. That combination had never existed.
+
+**Gate:** focused 14/14. Full licensed suite **1680 passed / 34 skipped / 65 deselected**, **no
+failure outside the frozen 61-node v2-refusal list**. `ruff check src` 14, `mypy src` 57 — both at
+baseline (mypy briefly went to 62 on an unannotated local; annotated rather than accepted).
+
+**Baseline churn:** none observable yet — every generated-baseline comparison currently sits in
+the frozen refusal list because it reads a committed v2 snapshot. The three-cause churn check
+(catalog schema token, widened/re-keyed `usage_records`, `satisfy_reference` moving expanded
+satisfy rows) moves to Phase 8, where the recapture makes those tests evaluable again. Recorded
+here so it is not mistaken for having been checked.
 
 ### Phase 7 Completion
 

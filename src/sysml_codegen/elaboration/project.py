@@ -1081,12 +1081,14 @@ class _Projection:
         ]
 
     def _build_constraint_catalog(self) -> ConstraintCatalog | None:
-        if not self.graph.constraints:
+        # Keyed on the *domain*, not on expansion. A model whose constraints are all owned
+        # by a `calc def` has an empty `graph.constraints` and a full domain; under the old
+        # rule it got no catalog at all, which was the totality hole in its purest form.
+        if not self.graph.constraint_usages:
             return None
         entries: list[ConstraintCatalogEntry] = []
         excluded_records: list[ConstraintCatalogExcludedRecord] = []
         source_formals: dict[str, set[str]] = defaultdict(set)
-        usage_records: dict[tuple[str, str], ConstraintCatalogUsageRecord] = {}
         for node in sorted(
             self.graph.constraints.values(), key=lambda item: item.node_id.to_wire()
         ):
@@ -1106,6 +1108,7 @@ class _Projection:
                     )
                 excluded_records.append(
                     ConstraintCatalogExcludedRecord(
+                        declaration_id=node.declaration_id.to_wire(),
                         constraint_id=constraint_id,
                         usage_qualified_name=node.usage_qualified_name,
                         source_form=node.source_form,
@@ -1126,6 +1129,7 @@ class _Projection:
                     for port in node.input_metadata
                 )
             entry = ConstraintCatalogEntry(
+                declaration_id=node.declaration_id.to_wire(),
                 constraint_id=constraint_id,
                 usage_qualified_name=node.usage_qualified_name,
                 source_local_identity=node.display_name,
@@ -1141,21 +1145,34 @@ class _Projection:
                 evaluation_channel=channel,
             )
             entries.append(entry)
-            usage_key = (node.usage_qualified_name, node.display_name)
-            usage_records.setdefault(
-                usage_key,
-                ConstraintCatalogUsageRecord(
-                    usage_qualified_name=node.usage_qualified_name,
-                    source_local_identity=node.display_name,
-                    source_form=node.source_form,
-                    owner_kind=node.owner_kind,
-                    owner_qualified_name=node.owner_qualified_name,
-                    definition_qualified_name=definition_qn,
-                    membership_kind=node.membership_kind,
-                    is_negated=node.is_negated,
-                    expected_value=not node.is_negated,
+        usages = [
+            ConstraintCatalogUsageRecord(
+                declaration_id=record.declaration_id.to_wire(),
+                usage_qualified_name=record.usage_qualified_name,
+                source_local_identity=record.display_name,
+                source_form=record.source_form,
+                owner_kind=record.owner_kind,
+                owner_qualified_name=record.owner_qualified_name,
+                definition_qualified_name=record.definition_qualified_name or None,
+                membership_kind=record.membership_kind,
+                is_negated=record.is_negated,
+                expected_value=not record.is_negated,
+                disposition_kind=record.disposition.kind,
+                disposition_reason=record.disposition.reason,
+                disposition_severity=record.disposition.severity,
+                disposition_detail=record.disposition.detail,
+                inapplicability_reason=(
+                    record.inapplicability.reason
+                    if record.inapplicability is not None
+                    else None
                 ),
+                occurrence_count=record.occurrence_count,
             )
+            for record in sorted(
+                self.graph.constraint_usages.values(),
+                key=lambda item: item.declaration_id.to_wire(),
+            )
+        ]
         source_records = [
             ConstraintCatalogSourceRecord(
                 definition_qualified_name=definition_qn,
@@ -1163,7 +1180,6 @@ class _Projection:
             )
             for definition_qn, formals in sorted(source_formals.items())
         ]
-        usages = [usage_records[key] for key in sorted(usage_records)]
         payload = {
             "source_records": [item.model_dump(mode="json") for item in source_records],
             "usage_records": [item.model_dump(mode="json") for item in usages],

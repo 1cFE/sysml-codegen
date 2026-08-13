@@ -231,6 +231,7 @@ def _unsafe_name_context(name: str = "value"):
     catalog = ConstraintCatalog(
         concrete_entries=[
             ConstraintCatalogEntry(
+                declaration_id="decl-C1",
                 constraint_id="C1",
                 usage_qualified_name="Pkg::C1",
                 source_local_identity="C1",

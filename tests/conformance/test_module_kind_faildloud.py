@@ -68,6 +68,7 @@ def _predicate_ir() -> str:
 
 def _catalog() -> ConstraintCatalog:
     entry = ConstraintCatalogEntry(
+        declaration_id="decl-C1",
         constraint_id="C1",
         usage_qualified_name="Pkg::Def::assert1",
         source_local_identity="assert1",

@@ -22,7 +22,13 @@ import jinja2
 
 if TYPE_CHECKING:
     from sysml_codegen.generation.constraint_plan import ConstraintGenerationPlan
-    from sysml_codegen.resolution.models import ComputationGraph, PipelineModule
+    from sysml_codegen.resolution.models import (
+        ComputationGraph,
+        ConstraintCatalogEntry,
+        ConstraintCatalogExcludedRecord,
+        ConstraintCatalogUsageRecord,
+        PipelineModule,
+    )
 
 # Note: Heavy imports moved inside run_codegen to avoid loading generation
 # module at CLI import time. This keeps CLI startup fast.
@@ -306,6 +312,72 @@ def _preflight_registry_class_names(graph: ComputationGraph) -> None:
     residual = residual_class_name_collisions(graph)
     if residual:
         raise residual_class_name_collision_error(residual)
+
+
+def _preflight_constraint_totality(graph: ComputationGraph) -> None:
+    """Refuse a catalog whose usage rows and occurrence rows do not account for each other.
+
+    The domain is complete by construction upstream — that is where the records are born —
+    and ``InstanceGraph.validate()`` already gates the domain against the occurrence nodes
+    on every route. What this owns is the *catalog* end of the same join, at the
+    fail-before-mutate boundary, because the catalog is what ships: a package whose
+    catalog lost a carrier would claim coverage it does not have, and nothing downstream
+    would notice.
+
+    It joins by ``declaration_id`` only, never by qualified name, and it refuses rather
+    than repairs.
+    """
+    from sysml_codegen.elaboration.graph import DISPOSITION_REASONS
+    from sysml_codegen.generation import CodeGenerationError
+    from sysml_codegen.resolution.models import ModuleKind
+
+    catalog = graph.constraint_catalog
+    if catalog is None:
+        if any(module.module_kind is ModuleKind.CONSTRAINT for module in graph.modules):
+            raise CodeGenerationError(
+                "constraint usage domain incomplete: the graph generates constraint modules "
+                "but carries no catalog"
+            )
+        return
+
+    rows_by_id: dict[str, ConstraintCatalogUsageRecord] = {}
+    for row in catalog.usage_records:
+        if row.declaration_id in rows_by_id:
+            raise CodeGenerationError(
+                "constraint usage domain incomplete: duplicate usage record for "
+                f"{row.usage_qualified_name} ({row.declaration_id})"
+            )
+        reasons = DISPOSITION_REASONS.get(row.disposition_kind)
+        if reasons is None or row.disposition_reason not in reasons:
+            raise CodeGenerationError(
+                "constraint usage domain incomplete: no disposition for "
+                f"{row.usage_qualified_name} ({row.declaration_id})"
+            )
+        rows_by_id[row.declaration_id] = row
+
+    occurrence_rows: list[ConstraintCatalogEntry | ConstraintCatalogExcludedRecord] = [
+        *catalog.concrete_entries,
+        *catalog.excluded_records,
+    ]
+    occurrences: dict[str, int] = {}
+    for occurrence in occurrence_rows:
+        if occurrence.declaration_id not in rows_by_id:
+            raise CodeGenerationError(
+                "constraint usage domain incomplete: catalog row joins no domain member for "
+                f"{occurrence.usage_qualified_name} ({occurrence.declaration_id})"
+            )
+        occurrences[occurrence.declaration_id] = (
+            occurrences.get(occurrence.declaration_id, 0) + 1
+        )
+
+    for declaration_id, row in rows_by_id.items():
+        counted = occurrences.get(declaration_id, 0)
+        if row.occurrence_count != counted:
+            raise CodeGenerationError(
+                f"constraint usage domain incomplete: occurrence_count {row.occurrence_count} "
+                f"disagrees with {counted} nodes for {row.usage_qualified_name} "
+                f"({declaration_id})"
+            )
 
 
 def _preflight_constraint_names(graph: ComputationGraph) -> None:
@@ -1076,6 +1148,12 @@ def _generate_package_from_graph(graph: ComputationGraph, config: GenerationConf
         # The check itself lives at the registry pass, which runs after the tree
         # is cleared; running it here is what makes the refusal fail-before-mutate.
         _preflight_registry_class_names(graph)
+
+        # Step 1.8: the constraint catalog accounts for every authored usage, and
+        # every occurrence row joins one of them by identity. Before output clear,
+        # like 1.5-1.7: a package that shipped a catalog missing a carrier would
+        # claim coverage it does not have.
+        _preflight_constraint_totality(graph)
 
         try:
             ensure_package_tree_is_link_free(config.output_path)

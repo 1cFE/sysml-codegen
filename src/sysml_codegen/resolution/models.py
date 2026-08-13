@@ -472,21 +472,29 @@ class ConstraintCatalogSourceRecord(BaseModel):
 
 
 class ConstraintCatalogUsageRecord(BaseModel):
-    """One admitted (eligible) constraint usage's identity + definition join (Item 8).
+    """One authored constraint usage — the whole domain, not the admitted subset.
 
     The middle tier between per-definition :class:`ConstraintCatalogSourceRecord` and
-    per-occurrence :class:`ConstraintCatalogEntry`: one row per distinct admitted usage,
-    deduplicated across the usage's concrete occurrences. It is a direct enumeration surface
-    for a consumer (TEAx) — carrying source form, usage identity, owner QN, and the
-    definition→usage join — so the consumer never reconstructs those by QN-splitting or
-    predicate-text search. It carries **no** ``predicate_ir``: that authority stays on the
-    occurrence tier (D2a), guarded by ``assert_same_ir``.
+    per-occurrence :class:`ConstraintCatalogEntry`. It used to hold one row per *admitted*
+    usage, so a usage whose owner expanded to nothing had no row anywhere and simply
+    disappeared. It now holds one row per authored usage, each carrying the disposition
+    elaboration decided, so a consumer can see every check the model declares and why each
+    one stands where it does. A consumer that wanted the old, narrower set recovers it
+    exactly by filtering ``disposition_kind == "eligible"``.
 
-    Dedup identity is ``(usage_qualified_name, source_local_identity)``, not
-    ``usage_qualified_name`` alone — anonymous usages all share ``"<anonymous>"`` and are
-    distinguished by ``source_local_identity`` (F2).
+    It is a direct enumeration surface for a consumer (TEAx) — carrying source form, usage
+    identity, owner QN, and the definition→usage join — so the consumer never reconstructs
+    those by QN-splitting or predicate-text search. It carries **no** ``predicate_ir``:
+    that authority stays on the occurrence tier (D2a), guarded by ``assert_same_ir``.
+
+    Identity is ``declaration_id``. The old dedup key was
+    ``(usage_qualified_name, source_local_identity)``, which was sound only while the rows
+    were occurrences *of one usage*; once the rows are the domain, that pair is doing
+    identity *between distinct usages*, and two anonymous usages sharing a short name would
+    silently merge.
     """
 
+    declaration_id: str
     usage_qualified_name: str
     source_local_identity: str
     source_form: str
@@ -498,6 +506,17 @@ class ConstraintCatalogUsageRecord(BaseModel):
     membership_kind: str | None
     is_negated: bool
     expected_value: bool
+    #: The one disposition elaboration decided. Kind and reason are closed vocabularies and
+    #: severity is derived from them; nothing downstream re-derives any of the three.
+    disposition_kind: str
+    disposition_reason: str
+    disposition_severity: str
+    disposition_detail: str
+    #: The author's explicit "this was never meant to be in the set" reason, or None.
+    #: A coverage statement: it never rewrites the disposition beside it.
+    inapplicability_reason: str | None = None
+    #: How many concrete occurrences this usage expanded to. Zero is a real answer.
+    occurrence_count: int = 0
 
 
 class ConstraintCatalogEntry(_TransactionalAssignmentModel):
@@ -514,6 +533,9 @@ class ConstraintCatalogEntry(_TransactionalAssignmentModel):
 
     model_config = ConfigDict(validate_assignment=True)
 
+    #: The authored usage this occurrence belongs to. The join to
+    #: :class:`ConstraintCatalogUsageRecord` is by this, never by qualified name.
+    declaration_id: str
     constraint_id: str
     usage_qualified_name: str
     source_local_identity: str
@@ -543,6 +565,9 @@ class ConstraintCatalogEntry(_TransactionalAssignmentModel):
 class ConstraintCatalogExcludedRecord(BaseModel):
     """Catalog projection of one validated non-executed concrete record."""
 
+    #: The authored usage this occurrence belongs to. The join to
+    #: :class:`ConstraintCatalogUsageRecord` is by this, never by qualified name.
+    declaration_id: str
     constraint_id: str
     usage_qualified_name: str
     source_form: str

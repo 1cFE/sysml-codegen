@@ -118,6 +118,7 @@ def _graph_with_constraints() -> ComputationGraph:
         ],
         concrete_entries=[
             ConstraintCatalogEntry(
+                declaration_id="decl-c1",
                 constraint_id="c1",
                 usage_qualified_name="Pkg__part__assert1",
                 source_local_identity="assert1",

@@ -15,11 +15,17 @@ Bump the major version on any breaking change to that surface; minor/patch for
 compatible additions. Owner-overridable; this is the initial token (P4).
 """
 
-CATALOG_SCHEMA_VERSION = "2.0.0"
+CATALOG_SCHEMA_VERSION = "3.0.0"
 """The embedded constraint-catalog schema shape a ``model_contract.json`` carries (Item 8).
 
 Bumped from the implicit ``1.x`` (pre-Item-8, no version token) to ``2.0.0`` when the
 admitted-usage tier and the five projected entry fields landed — a breaking schema addition.
+Bumped to ``3.0.0`` at CONSTRAINT-SEMANTICS Item 2, where two things broke at once for a
+consumer reading ``usage_records``: the **population** widened from admitted-only to every
+authored constraint usage, and the **identity** moved from the
+``(usage_qualified_name, source_local_identity)`` string pair to ``declaration_id``, which
+every catalog row now carries. A consumer that wanted the old, narrower set recovers it
+exactly by filtering ``disposition_kind == "eligible"``.
 A consumer (TEAx) vendors an accepted set by copy (B3 forbids importing this repo) and fails
 closed on a version it does not accept, before reading any catalog field (INV-4). It sits
 *inside* the fingerprinted model-contract payload, so a schema bump is also an identity change

@@ -107,6 +107,7 @@ def assemble_constraint_catalog(
         assert c.evaluation_channel is not None
         concrete_entries.append(
             ConstraintCatalogEntry(
+                declaration_id=f"decl-{c.constraint_id}",
                 constraint_id=c.constraint_id,
                 usage_qualified_name=c.usage_qualified_name,
                 source_local_identity=c.source_local_identity,
@@ -125,6 +126,7 @@ def assemble_constraint_catalog(
     usage_records = _assemble_usage_records(eligible)
     excluded_records = [
         ConstraintCatalogExcludedRecord(
+            declaration_id=f"decl-{c.constraint_id}",
             constraint_id=c.constraint_id,
             usage_qualified_name=c.usage_qualified_name,
             source_form=c.source_form,
@@ -169,6 +171,7 @@ def _assemble_usage_records(
             continue
         assert c.is_negated is not None and c.expected_value is not None  # eligible-guarded
         records[key] = ConstraintCatalogUsageRecord(
+            declaration_id=f"decl-{c.constraint_id}",
             usage_qualified_name=c.usage_qualified_name,
             source_local_identity=c.source_local_identity,
             source_form=c.source_form,
@@ -178,5 +181,10 @@ def _assemble_usage_records(
             membership_kind=c.membership_kind,
             is_negated=c.is_negated,
             expected_value=c.expected_value,
+            disposition_kind="eligible",
+            disposition_reason="admitted",
+            disposition_severity="info",
+            disposition_detail=f"{c.usage_qualified_name} profile eligibility admit",
+            occurrence_count=1,
         )
     return list(records.values())
