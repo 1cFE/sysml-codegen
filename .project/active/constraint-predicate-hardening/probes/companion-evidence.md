@@ -52,3 +52,15 @@ covers one lane of two.
   the orchestrator runs it and resumes you with results.
 - Implement stage: runs with full permissions and must re-verify the citations above before
   editing the companion.
+
+## P4 verdict (orchestrator, static read at companion `bc69f04`)
+
+`extract_feature_chain_segments` (`expression.py:611-637`) appends the *root* first —
+`reconstruct_expression(operands[0])` — then the target's chaining feature names. So a chain
+authored `bioshield.outer_radius` yields `["bioshield", "outer_radius"]`: segments include the
+root, and the primary branch (`".".join(chain_segments)`) reproduces the authored spelling.
+`_reference_node` (`constraint_extraction.py:505-518`) also sets
+`source_name = reconstruct_expression(expression)` — the full authored text as a second
+carrier. B3 holds. Static evidence only: the implement stage's multi-chain characterization
+asserts the exact rendered references against a live fixture, which confirms this live.
+P1–P3 are post-fix discriminators and run inside the implement stage at the designed points.
