@@ -1,0 +1,17 @@
+{
+  "constraint_usages": [
+    {
+      "owner_qualified_name": "constraint_domain_satisfy::MassBudget",
+      "source_file": "model.sysml",
+      "source_line": 16,
+      "usage_qualified_name": "constraint_domain_satisfy::MassBudget::within"
+    },
+    {
+      "owner_qualified_name": "constraint_domain_satisfy::the_rig",
+      "source_file": "model.sysml",
+      "source_line": 26,
+      "usage_qualified_name": "constraint_domain_satisfy::the_rig::budget_met"
+    }
+  ],
+  "fixture": "constraint_domain_satisfy"
+}

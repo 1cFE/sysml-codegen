@@ -1,0 +1,29 @@
+{
+  "constraint_usages": [
+    {
+      "owner_qualified_name": "PayloadIdentityDesign::System",
+      "source_file": "model.sysml",
+      "source_line": 41,
+      "usage_qualified_name": "PayloadIdentityDesign::System::blocked_guard"
+    },
+    {
+      "owner_qualified_name": "PayloadIdentityDesign::System",
+      "source_file": "model.sysml",
+      "source_line": 45,
+      "usage_qualified_name": "PayloadIdentityDesign::System::admitted_guard"
+    },
+    {
+      "owner_qualified_name": "PayloadIdentityDesign::System",
+      "source_file": "model.sysml",
+      "source_line": 49,
+      "usage_qualified_name": "PayloadIdentityDesign::System::annotation_guard"
+    },
+    {
+      "owner_qualified_name": "PayloadIdentityDesign::System",
+      "source_file": "model.sysml",
+      "source_line": 52,
+      "usage_qualified_name": "PayloadIdentityDesign::System::unassessed_guard"
+    }
+  ],
+  "fixture": "elab_payload_identity"
+}

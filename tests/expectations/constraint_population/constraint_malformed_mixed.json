@@ -1,0 +1,11 @@
+{
+  "constraint_usages": [
+    {
+      "owner_qualified_name": "constraint_malformed_mixed::MalformedHost",
+      "source_file": "model.sysml",
+      "source_line": 13,
+      "usage_qualified_name": "constraint_malformed_mixed::MalformedHost::mixed_claim"
+    }
+  ],
+  "fixture": "constraint_malformed_mixed"
+}

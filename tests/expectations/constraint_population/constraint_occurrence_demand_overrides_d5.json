@@ -1,0 +1,11 @@
+{
+  "constraint_usages": [
+    {
+      "owner_qualified_name": "OccurrenceOverride::Cell",
+      "source_file": "occurrence_overrides.sysml",
+      "source_line": 16,
+      "usage_qualified_name": "OccurrenceOverride::Cell::threshold"
+    }
+  ],
+  "fixture": "constraint_occurrence_demand_overrides_d5"
+}

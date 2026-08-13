@@ -473,8 +473,9 @@ swept `ConstraintUsage` (subtypes included) exactly one way:
   `RequirementUsage`/`SatisfyRequirementUsage` all land here. So does an out-of-profile owner (e.g. a
   `requirement_def` owner), which draws a named visible exclusion rather than an unreachable-assert
   error. Each one gets a catalog record — no expansion, no formal resolution, no node — and none is
-  silently absent. *(Catalog totality is the target state: today a usage that reaches no instance
-  gets no carrier at all. CONSTRAINT-SEMANTICS Item 2 closes that gap.)*
+  silently absent. A usage that reaches no instance is not an exception to this: it carries a
+  `non_reaching` disposition naming why its owner produced no scope — `owner_absent`,
+  `owner_kind_unattachable`, or `owner_has_no_occurrences` — at the severity its form earns.
 
 **The block list.** A predicate BLOCKs for an unsupported construct or operand shape, most commonly:
 an invocation expression (`block_invocation`), a feature-chain reference the profile cannot resolve
@@ -486,14 +487,21 @@ units (`block_unit_conversion_required`, `block_incompatible_dimensions`, `block
 (`x - tol <= y` and `y <= x + tol`) rather than `x == y` — the profile admits an inequality
 comparison on real/quantity operands, never a bare equality one.
 
-**Every manifest entry has a carrier — the migration invariant.**
-`collect_constraint_manifest()` still sweeps the model exactly as before (REQ-EXT-09), and the
-catalog is where every swept usage lands: an eligible concrete entry, an explicit unassessed
-record, or a named, justified requirement/satisfy exclusion — nothing silently absent. The
-license-free totality proof that used to be cited here retired with the legacy stack; the
-independent proof that the invariant holds across every constraint-bearing fixture is pending,
-and CONSTRAINT-SEMANTICS Item 2 re-anchors it. (citation removed 2026-08-12,
-CONSTRAINT-SEMANTICS Item 1)
+**Every authored usage has a carrier — and it is true by construction, not by check.**
+The domain is one `ConstraintUsageRecord` per authored `ConstraintUsage`, minted *before* owner-to-
+scope expansion, so a usage whose owner yields no scope still has a record. It used not to: records
+began after expansion, and on `catf_mfe_d5` that left 56 of 65 authored usages absent — not
+eligible, not excluded, nothing. Because every downstream artifact descended from that already
+truncated set, no check written against it could see what expansion had dropped.
+
+Each domain member carries exactly one disposition — `eligible`, `excluded`, or `non_reaching` —
+with a reason from that kind's closed set, and the catalog's `usage_records` is the whole domain
+rendered, keyed by `declaration_id`. The proof that the domain itself is complete comes from
+outside it: a reviewed expected-population file per constraint-bearing fixture, read from the
+`.sysml` source and asserted by identity list, in
+`tests/conformance/test_constraint_population_oracle.py`. A directory that declares a constraint
+and has no expectation file fails that suite by name, so a new fixture cannot become silent
+coverage.
 
 **What a modeler needing an enforced gate should do.** Use the assert family. It is the only
 enforcement opt-in: a bare `constraint`, a `require constraint`, an `assume constraint`, and a

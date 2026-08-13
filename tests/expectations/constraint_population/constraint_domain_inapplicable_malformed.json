@@ -1,0 +1,17 @@
+{
+  "constraint_usages": [
+    {
+      "owner_qualified_name": "constraint_domain_inapplicable_malformed::Detached",
+      "source_file": "model.sysml",
+      "source_line": 18,
+      "usage_qualified_name": "constraint_domain_inapplicable_malformed::Detached::typo_marker"
+    },
+    {
+      "owner_qualified_name": "constraint_domain_inapplicable_malformed::Live",
+      "source_file": "model.sysml",
+      "source_line": 26,
+      "usage_qualified_name": "constraint_domain_inapplicable_malformed::Live::reached_gate"
+    }
+  ],
+  "fixture": "constraint_domain_inapplicable_malformed"
+}

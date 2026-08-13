@@ -1,0 +1,11 @@
+{
+  "constraint_usages": [
+    {
+      "owner_qualified_name": "constraint_def_owned_redefining::Panel",
+      "source_file": "model.sysml",
+      "source_line": 27,
+      "usage_qualified_name": "constraint_def_owned_redefining::Panel::within"
+    }
+  ],
+  "fixture": "constraint_def_owned_redefining"
+}

@@ -1,0 +1,11 @@
+{
+  "constraint_usages": [
+    {
+      "owner_qualified_name": "ArithmeticRaise::Meter",
+      "source_file": "arithmetic_raise.sysml",
+      "source_line": 39,
+      "usage_qualified_name": "ArithmeticRaise::Meter::ratio"
+    }
+  ],
+  "fixture": "constraint_arithmetic_raise"
+}

@@ -57,6 +57,7 @@ The table is `EXTRACTION_DIAGNOSTIC_SEVERITY`, a closed `kind → severity` map
 | kind | severity | why |
 |---|---|---|
 | `non_finite_literal` | BLOCKING | a non-finite literal cannot be evaluated downstream; a package that ran with it would publish a value nobody can act on |
+| `vacuous_asserted_gate` | ADVISORY | an asserted gate whose owning `part def` is typed by no part usage can never be checked; the model is well formed and the author is the only one who can act on it (CONSTRAINT-SEMANTICS Item 2, lifecycle invariant 61) |
 
 The table is the *only* place a `kind → severity` mapping exists on any read path
 in either repo. There is no reader-side copy. That is the whole point: two readers
@@ -66,7 +67,7 @@ neither reader classifies (Item 4 bet B1, invariant I1).
 Changing an entry in this table — reclassifying a kind, or adding one — is a
 semantic change to snapshots already on disk. It therefore requires bumping
 `CONSTRAINT_FACTS_SCHEMA_VERSION` (`agentic-mbse constraint_facts.py:54`, currently
-`"constraint-facts/v2"`), which is exactly the version-gate cost a reader-side
+`"constraint-facts/v3"`), which is exactly the version-gate cost a reader-side
 classification map was meant to avoid — and the reason the map lost (Item 4 design
 DD-B1).
 
@@ -153,7 +154,7 @@ string it was written against in `_upstream_pins.py` so an upstream bump fails l
 |---|---|---|
 | REQ-DIAG-01 | A diagnostic's severity is fixed at construction from the writer table and never recomputed by a reader-side `kind → severity` lookup (I1). | `severity_for_kind` is the only mapping; `__post_init__` derives at construction (`agentic-mbse constraint_facts.py:78-95,230-233`). Provable by `rg` — no reader-side table exists. |
 | REQ-DIAG-02 | A blocking diagnostic halts generation before lowering, on both the live and snapshot routes, naming every blocking diagnostic. | `screen_extraction_diagnostics` raises under `EXTRACTION_DIAGNOSTIC_BLOCKING` (`elaboration/extraction_screen.py:72-79`), called at `elaboration/elaborate.py:246` — the one elaborator read both routes share (`orchestration/elaborated_pipeline.py:59,116`). Pinned live and on capture by `tests/conformance/test_extraction_diagnostic_screen.py:49,60`. |
-| REQ-DIAG-03 | An advisory diagnostic is rendered and generation continues; advisory rendering cannot swallow the blocking halt. | Advisory logged first, degrading location to `<no location>` (`elaboration/extraction_screen.py:40-48,69-73`). Pinned at `tests/conformance/test_extraction_diagnostic_screen.py:95,105`; both pins are synthetic because the writer table has no ADVISORY kind today. |
+| REQ-DIAG-03 | An advisory diagnostic is rendered and generation continues; advisory rendering cannot swallow the blocking halt. | Advisory logged first, degrading location to `<no location>` (`elaboration/extraction_screen.py:40-48,69-73`). Pinned at `tests/conformance/test_extraction_diagnostic_screen.py` — the original two pins used a synthetic fact with `severity` forced to ADVISORY, and since CONSTRAINT-SEMANTICS Item 2 the same file also pins the first *real* ADVISORY kind end to end: `vacuous_asserted_gate` is emitted by the companion, rendered by the existing sink at warning grade with no sink change, and generation completes. |
 | REQ-DIAG-04 | Severity skew fails closed in both directions. | **Discharged by construction:** no severity crosses a process boundary on disk, so there is no skew to fail closed on. The v6 envelope carries no `ConstraintFacts` and no `severity` field, and `constraint_facts.parse` has no caller in `src/` or `tests/`. The upstream exact-equality guards remain in `agentic_mbse.sysml.constraint_facts` for callers that parse serialized facts. |
 
 ## Related Documents

@@ -1,0 +1,11 @@
+{
+  "constraint_usages": [
+    {
+      "owner_qualified_name": "constraint_blocked_profile::BlockedHost",
+      "source_file": "model.sysml",
+      "source_line": 17,
+      "usage_qualified_name": "constraint_blocked_profile::BlockedHost::exact"
+    }
+  ],
+  "fixture": "constraint_blocked_profile"
+}

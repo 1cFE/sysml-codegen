@@ -1,0 +1,11 @@
+{
+  "constraint_usages": [
+    {
+      "owner_qualified_name": "constraint_domain_inapplicable_unattachable::Sizer",
+      "source_file": "model.sysml",
+      "source_line": 16,
+      "usage_qualified_name": "constraint_domain_inapplicable_unattachable::Sizer::marked_but_unattachable"
+    }
+  ],
+  "fixture": "constraint_domain_inapplicable_unattachable"
+}

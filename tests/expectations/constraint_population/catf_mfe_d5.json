@@ -1,0 +1,395 @@
+{
+  "constraint_usages": [
+    {
+      "owner_qualified_name": "CATFMFEPhysics::catf_physics",
+      "source_file": "designs/catf_mfe/physics.sysml",
+      "source_line": 125,
+      "usage_qualified_name": "CATFMFEPhysics::catf_physics::PowerBalanceConsistency"
+    },
+    {
+      "owner_qualified_name": "CATFMFEPhysics::catf_physics",
+      "source_file": "designs/catf_mfe/physics.sysml",
+      "source_line": 134,
+      "usage_qualified_name": "CATFMFEPhysics::catf_physics::ViabilityCheck"
+    },
+    {
+      "owner_qualified_name": "CATFMFEPhysics::catf_physics",
+      "source_file": "designs/catf_mfe/physics.sysml",
+      "source_line": 142,
+      "usage_qualified_name": "CATFMFEPhysics::catf_physics::ReasonableParasiticTotal"
+    },
+    {
+      "owner_qualified_name": "CATFMFERadialBuild::catf_radial_build",
+      "source_file": "designs/catf_mfe/radial_build.sysml",
+      "source_line": 605,
+      "usage_qualified_name": "CATFMFERadialBuild::catf_radial_build::TotalRadiusConsistency"
+    },
+    {
+      "owner_qualified_name": "CATFMFERadialBuild::catf_radial_build",
+      "source_file": "designs/catf_mfe/radial_build.sysml",
+      "source_line": 612,
+      "usage_qualified_name": "CATFMFERadialBuild::catf_radial_build::LayerContinuity"
+    },
+    {
+      "owner_qualified_name": "CATFMFERadialBuild::catf_radial_build",
+      "source_file": "designs/catf_mfe/radial_build.sysml",
+      "source_line": 630,
+      "usage_qualified_name": "CATFMFERadialBuild::catf_radial_build::RadiusThicknessConsistency"
+    },
+    {
+      "owner_qualified_name": "CATFMFEShield::catf_shield",
+      "source_file": "designs/catf_mfe/shield.sysml",
+      "source_line": 171,
+      "usage_qualified_name": "CATFMFEShield::catf_shield::CompositionConsistency"
+    },
+    {
+      "owner_qualified_name": "CATFMFEVacuum::catf_vacuum_vessel",
+      "source_file": "designs/catf_mfe/vacuum.sysml",
+      "source_line": 87,
+      "usage_qualified_name": "CATFMFEVacuum::catf_vacuum_vessel::ThicknessConsistency"
+    },
+    {
+      "owner_qualified_name": "CATFMFEVacuum::catf_vacuum_pumping",
+      "source_file": "designs/catf_mfe/vacuum.sysml",
+      "source_line": 169,
+      "usage_qualified_name": "CATFMFEVacuum::catf_vacuum_pumping::PumpingSpeedConsistency"
+    },
+    {
+      "owner_qualified_name": "FusionAnalysesThermalLoads::MagnetCryogenicLoad",
+      "source_file": "library/analyses/thermal_loads.sysml",
+      "source_line": 69,
+      "usage_qualified_name": "FusionAnalysesThermalLoads::MagnetCryogenicLoad::PositiveInputs"
+    },
+    {
+      "owner_qualified_name": "FusionAnalysesThermalLoads::MagnetCryogenicLoad",
+      "source_file": "library/analyses/thermal_loads.sysml",
+      "source_line": 76,
+      "usage_qualified_name": "FusionAnalysesThermalLoads::MagnetCryogenicLoad::ReasonableCryoTemp"
+    },
+    {
+      "owner_qualified_name": "FusionAnalysesThermalLoads::MagnetCryogenicLoad",
+      "source_file": "library/analyses/thermal_loads.sysml",
+      "source_line": 81,
+      "usage_qualified_name": "FusionAnalysesThermalLoads::MagnetCryogenicLoad::CarnotEfficiencyPhysical"
+    },
+    {
+      "owner_qualified_name": "FusionAnalysesThermalLoads::CoolantPumpPower",
+      "source_file": "library/analyses/thermal_loads.sysml",
+      "source_line": 122,
+      "usage_qualified_name": "FusionAnalysesThermalLoads::CoolantPumpPower::PositiveInput"
+    },
+    {
+      "owner_qualified_name": "FusionAnalysesThermalLoads::CoolantPumpPower",
+      "source_file": "library/analyses/thermal_loads.sysml",
+      "source_line": 127,
+      "usage_qualified_name": "FusionAnalysesThermalLoads::CoolantPumpPower::ReasonableFraction"
+    },
+    {
+      "owner_qualified_name": "FusionAnalysesThermalLoads::CoolantPumpPower",
+      "source_file": "library/analyses/thermal_loads.sysml",
+      "source_line": 132,
+      "usage_qualified_name": "FusionAnalysesThermalLoads::CoolantPumpPower::PumpEfficiencyPhysical"
+    },
+    {
+      "owner_qualified_name": "FusionAnalysesThermalLoads::HeatingWallPlugPower",
+      "source_file": "library/analyses/thermal_loads.sysml",
+      "source_line": 171,
+      "usage_qualified_name": "FusionAnalysesThermalLoads::HeatingWallPlugPower::PositiveDelivered"
+    },
+    {
+      "owner_qualified_name": "FusionAnalysesThermalLoads::HeatingWallPlugPower",
+      "source_file": "library/analyses/thermal_loads.sysml",
+      "source_line": 176,
+      "usage_qualified_name": "FusionAnalysesThermalLoads::HeatingWallPlugPower::EfficiencyPhysical"
+    },
+    {
+      "owner_qualified_name": "FusionAnalysesThermalLoads::HeatingWallPlugPower",
+      "source_file": "library/analyses/thermal_loads.sysml",
+      "source_line": 181,
+      "usage_qualified_name": "FusionAnalysesThermalLoads::HeatingWallPlugPower::ReasonableEfficiency"
+    },
+    {
+      "owner_qualified_name": "FusionAnalysesThermalLoads::VacuumPumpPower",
+      "source_file": "library/analyses/thermal_loads.sysml",
+      "source_line": 224,
+      "usage_qualified_name": "FusionAnalysesThermalLoads::VacuumPumpPower::PositiveInputs"
+    },
+    {
+      "owner_qualified_name": "FusionAnalysesThermalLoads::VacuumPumpPower",
+      "source_file": "library/analyses/thermal_loads.sysml",
+      "source_line": 229,
+      "usage_qualified_name": "FusionAnalysesThermalLoads::VacuumPumpPower::VacuumPressure"
+    },
+    {
+      "owner_qualified_name": "FusionAnalysesThermalLoads::VacuumPumpPower",
+      "source_file": "library/analyses/thermal_loads.sysml",
+      "source_line": 234,
+      "usage_qualified_name": "FusionAnalysesThermalLoads::VacuumPumpPower::EfficiencyPhysical"
+    },
+    {
+      "owner_qualified_name": "FusionAnalysesThermalLoads::CryoPumpRefrigeration",
+      "source_file": "library/analyses/thermal_loads.sysml",
+      "source_line": 282,
+      "usage_qualified_name": "FusionAnalysesThermalLoads::CryoPumpRefrigeration::PositiveInputs"
+    },
+    {
+      "owner_qualified_name": "FusionAnalysesThermalLoads::CryoPumpRefrigeration",
+      "source_file": "library/analyses/thermal_loads.sysml",
+      "source_line": 287,
+      "usage_qualified_name": "FusionAnalysesThermalLoads::CryoPumpRefrigeration::CryogenicTemp"
+    },
+    {
+      "owner_qualified_name": "FusionAnalysesThermalLoads::CryoPumpRefrigeration",
+      "source_file": "library/analyses/thermal_loads.sysml",
+      "source_line": 292,
+      "usage_qualified_name": "FusionAnalysesThermalLoads::CryoPumpRefrigeration::CarnotPhysical"
+    },
+    {
+      "owner_qualified_name": "FusionAnalysesThermalLoads::TritiumProcessingPower",
+      "source_file": "library/analyses/thermal_loads.sysml",
+      "source_line": 332,
+      "usage_qualified_name": "FusionAnalysesThermalLoads::TritiumProcessingPower::PositiveFusion"
+    },
+    {
+      "owner_qualified_name": "FusionAnalysesThermalLoads::TritiumProcessingPower",
+      "source_file": "library/analyses/thermal_loads.sysml",
+      "source_line": 337,
+      "usage_qualified_name": "FusionAnalysesThermalLoads::TritiumProcessingPower::ReasonableFactor"
+    },
+    {
+      "owner_qualified_name": "FusionAnalysesThermalLoads::AuxiliarySystemsPower",
+      "source_file": "library/analyses/thermal_loads.sysml",
+      "source_line": 376,
+      "usage_qualified_name": "FusionAnalysesThermalLoads::AuxiliarySystemsPower::PositiveGross"
+    },
+    {
+      "owner_qualified_name": "FusionAnalysesThermalLoads::AuxiliarySystemsPower",
+      "source_file": "library/analyses/thermal_loads.sysml",
+      "source_line": 381,
+      "usage_qualified_name": "FusionAnalysesThermalLoads::AuxiliarySystemsPower::ReasonableFraction"
+    },
+    {
+      "owner_qualified_name": "FusionComponents::Divertor",
+      "source_file": "library/components/divertor.sysml",
+      "source_line": 216,
+      "usage_qualified_name": "FusionComponents::Divertor::HeatLoadBalance"
+    },
+    {
+      "owner_qualified_name": "FusionComponents::'First Wall'",
+      "source_file": "library/components/first_wall.sysml",
+      "source_line": 220,
+      "usage_qualified_name": "FusionComponents::'First Wall'::TotalThicknessConsistency"
+    },
+    {
+      "owner_qualified_name": "FusionComponents::'Radial Build Layer'",
+      "source_file": "library/components/radial_build.sysml",
+      "source_line": 55,
+      "usage_qualified_name": "FusionComponents::'Radial Build Layer'::RadiusConsistency"
+    },
+    {
+      "owner_qualified_name": "FusionComponents::'Shield Assembly'",
+      "source_file": "library/components/shield.sysml",
+      "source_line": 160,
+      "usage_qualified_name": "FusionComponents::'Shield Assembly'::TotalThicknessConsistency"
+    },
+    {
+      "owner_qualified_name": "FusionComponents::'Vacuum Vessel'",
+      "source_file": "library/components/vacuum.sysml",
+      "source_line": 155,
+      "usage_qualified_name": "FusionComponents::'Vacuum Vessel'::ThicknessConsistency"
+    },
+    {
+      "owner_qualified_name": "FusionPhysics_Confinement::PlasmaConfinement",
+      "source_file": "library/physics/confinement.sysml",
+      "source_line": 127,
+      "usage_qualified_name": "FusionPhysics_Confinement::PlasmaConfinement::Phase1PositivePower"
+    },
+    {
+      "owner_qualified_name": "FusionPhysics_Confinement::PlasmaConfinement",
+      "source_file": "library/physics/confinement.sysml",
+      "source_line": 133,
+      "usage_qualified_name": "FusionPhysics_Confinement::PlasmaConfinement::Phase2PlasmaParametersPhysical"
+    },
+    {
+      "owner_qualified_name": "FusionPhysicsGeometry::TorusMinorRadius",
+      "source_file": "library/physics/geometry.sysml",
+      "source_line": 59,
+      "usage_qualified_name": "FusionPhysicsGeometry::TorusMinorRadius::PositiveRadii"
+    },
+    {
+      "owner_qualified_name": "FusionPhysicsGeometry::TorusVolume",
+      "source_file": "library/physics/geometry.sysml",
+      "source_line": 101,
+      "usage_qualified_name": "FusionPhysicsGeometry::TorusVolume::PositiveInputs"
+    },
+    {
+      "owner_qualified_name": "FusionPhysicsGeometry::TorusVolume",
+      "source_file": "library/physics/geometry.sysml",
+      "source_line": 106,
+      "usage_qualified_name": "FusionPhysicsGeometry::TorusVolume::ReasonableElongation"
+    },
+    {
+      "owner_qualified_name": "FusionPhysicsGeometry::TorusSurfaceArea",
+      "source_file": "library/physics/geometry.sysml",
+      "source_line": 146,
+      "usage_qualified_name": "FusionPhysicsGeometry::TorusSurfaceArea::PositiveInputs"
+    },
+    {
+      "owner_qualified_name": "FusionPhysicsGeometry::MagnetSurfaceArea",
+      "source_file": "library/physics/geometry.sysml",
+      "source_line": 185,
+      "usage_qualified_name": "FusionPhysicsGeometry::MagnetSurfaceArea::PositiveInputs"
+    },
+    {
+      "owner_qualified_name": "FusionPhysics_Neutronics::TritiumBreedingRatio",
+      "source_file": "library/physics/neutronics.sysml",
+      "source_line": 132,
+      "usage_qualified_name": "FusionPhysics_Neutronics::TritiumBreedingRatio::Phase1ReasonableTBR"
+    },
+    {
+      "owner_qualified_name": "FusionPhysics_Neutronics::TritiumBreedingRatio",
+      "source_file": "library/physics/neutronics.sysml",
+      "source_line": 138,
+      "usage_qualified_name": "FusionPhysics_Neutronics::TritiumBreedingRatio::Phase2SelfSufficiency"
+    },
+    {
+      "owner_qualified_name": "FusionPhysics_PerformanceMetrics::ScientificQFactor",
+      "source_file": "library/physics/performance_metrics.sysml",
+      "source_line": 80,
+      "usage_qualified_name": "FusionPhysics_PerformanceMetrics::ScientificQFactor::PositivePowers"
+    },
+    {
+      "owner_qualified_name": "FusionPhysics_PerformanceMetrics::ScientificQFactor",
+      "source_file": "library/physics/performance_metrics.sysml",
+      "source_line": 85,
+      "usage_qualified_name": "FusionPhysics_PerformanceMetrics::ScientificQFactor::ReasonableRange"
+    },
+    {
+      "owner_qualified_name": "FusionPhysics_PerformanceMetrics::EngineeringQFactor",
+      "source_file": "library/physics/performance_metrics.sysml",
+      "source_line": 150,
+      "usage_qualified_name": "FusionPhysics_PerformanceMetrics::EngineeringQFactor::PositivePowers"
+    },
+    {
+      "owner_qualified_name": "FusionPhysics_PerformanceMetrics::EngineeringQFactor",
+      "source_file": "library/physics/performance_metrics.sysml",
+      "source_line": 155,
+      "usage_qualified_name": "FusionPhysics_PerformanceMetrics::EngineeringQFactor::ViabilityCheck"
+    },
+    {
+      "owner_qualified_name": "FusionPhysics_PerformanceMetrics::EngineeringQFactor",
+      "source_file": "library/physics/performance_metrics.sysml",
+      "source_line": 160,
+      "usage_qualified_name": "FusionPhysics_PerformanceMetrics::EngineeringQFactor::ReasonableRange"
+    },
+    {
+      "owner_qualified_name": "FusionPhysics_PerformanceMetrics::PlantEfficiency",
+      "source_file": "library/physics/performance_metrics.sysml",
+      "source_line": 212,
+      "usage_qualified_name": "FusionPhysics_PerformanceMetrics::PlantEfficiency::PositivePowers"
+    },
+    {
+      "owner_qualified_name": "FusionPhysics_PerformanceMetrics::PlantEfficiency",
+      "source_file": "library/physics/performance_metrics.sysml",
+      "source_line": 217,
+      "usage_qualified_name": "FusionPhysics_PerformanceMetrics::PlantEfficiency::EfficiencyPhysical"
+    },
+    {
+      "owner_qualified_name": "FusionPhysics_PerformanceMetrics::PlantEfficiency",
+      "source_file": "library/physics/performance_metrics.sysml",
+      "source_line": 222,
+      "usage_qualified_name": "FusionPhysics_PerformanceMetrics::PlantEfficiency::ReasonableEfficiency"
+    },
+    {
+      "owner_qualified_name": "FusionPhysics_PowerBalance::AlphaNeutronSplit",
+      "source_file": "library/physics/power_balance.sysml",
+      "source_line": 69,
+      "usage_qualified_name": "FusionPhysics_PowerBalance::AlphaNeutronSplit::EnergyConservation"
+    },
+    {
+      "owner_qualified_name": "FusionPhysics_PowerBalance::AlphaNeutronSplit",
+      "source_file": "library/physics/power_balance.sysml",
+      "source_line": 75,
+      "usage_qualified_name": "FusionPhysics_PowerBalance::AlphaNeutronSplit::PositivePower"
+    },
+    {
+      "owner_qualified_name": "FusionPhysics_PowerBalance::BlanketThermalPower",
+      "source_file": "library/physics/power_balance.sysml",
+      "source_line": 130,
+      "usage_qualified_name": "FusionPhysics_PowerBalance::BlanketThermalPower::PositiveInputs"
+    },
+    {
+      "owner_qualified_name": "FusionPhysics_PowerBalance::BlanketThermalPower",
+      "source_file": "library/physics/power_balance.sysml",
+      "source_line": 135,
+      "usage_qualified_name": "FusionPhysics_PowerBalance::BlanketThermalPower::ReasonableMultiplication"
+    },
+    {
+      "owner_qualified_name": "FusionPhysics_PowerBalance::BlanketThermalPower",
+      "source_file": "library/physics/power_balance.sysml",
+      "source_line": 140,
+      "usage_qualified_name": "FusionPhysics_PowerBalance::BlanketThermalPower::ReasonableEfficiencies"
+    },
+    {
+      "owner_qualified_name": "FusionPhysics_PowerBalance::GrossElectricPower",
+      "source_file": "library/physics/power_balance.sysml",
+      "source_line": 193,
+      "usage_qualified_name": "FusionPhysics_PowerBalance::GrossElectricPower::PositivePowers"
+    },
+    {
+      "owner_qualified_name": "FusionPhysics_PowerBalance::GrossElectricPower",
+      "source_file": "library/physics/power_balance.sysml",
+      "source_line": 198,
+      "usage_qualified_name": "FusionPhysics_PowerBalance::GrossElectricPower::ThermalEfficiencyPhysical"
+    },
+    {
+      "owner_qualified_name": "FusionPhysics_PowerBalance::GrossElectricPower",
+      "source_file": "library/physics/power_balance.sysml",
+      "source_line": 203,
+      "usage_qualified_name": "FusionPhysics_PowerBalance::GrossElectricPower::DirectConversionRange"
+    },
+    {
+      "owner_qualified_name": "FusionPhysics_PowerBalance::NetElectricPower",
+      "source_file": "library/physics/power_balance.sysml",
+      "source_line": 260,
+      "usage_qualified_name": "FusionPhysics_PowerBalance::NetElectricPower::PositiveGrossElectric"
+    },
+    {
+      "owner_qualified_name": "FusionPhysics_PowerBalance::NetElectricPower",
+      "source_file": "library/physics/power_balance.sysml",
+      "source_line": 265,
+      "usage_qualified_name": "FusionPhysics_PowerBalance::NetElectricPower::NonNegativeParasitics"
+    },
+    {
+      "owner_qualified_name": "FusionPhysics_PowerBalance::NetElectricPower",
+      "source_file": "library/physics/power_balance.sysml",
+      "source_line": 272,
+      "usage_qualified_name": "FusionPhysics_PowerBalance::NetElectricPower::ReasonableParasiticFraction"
+    },
+    {
+      "owner_qualified_name": "FusionPhysics_Thermal::ThermalCycleEfficiency",
+      "source_file": "library/physics/thermal.sysml",
+      "source_line": 125,
+      "usage_qualified_name": "FusionPhysics_Thermal::ThermalCycleEfficiency::TemperaturePhysical"
+    },
+    {
+      "owner_qualified_name": "FusionPhysics_Thermal::ThermalCycleEfficiency",
+      "source_file": "library/physics/thermal.sysml",
+      "source_line": 130,
+      "usage_qualified_name": "FusionPhysics_Thermal::ThermalCycleEfficiency::ReasonableTemperatures"
+    },
+    {
+      "owner_qualified_name": "FusionPhysics_Thermal::ThermalCycleEfficiency",
+      "source_file": "library/physics/thermal.sysml",
+      "source_line": 136,
+      "usage_qualified_name": "FusionPhysics_Thermal::ThermalCycleEfficiency::RealEfficiencyRange"
+    },
+    {
+      "owner_qualified_name": "FusionPhysics_Thermal::ThermalCycleEfficiency",
+      "source_file": "library/physics/thermal.sysml",
+      "source_line": 141,
+      "usage_qualified_name": "FusionPhysics_Thermal::ThermalCycleEfficiency::ThermalEfficiencyPhysical"
+    }
+  ],
+  "fixture": "catf_mfe_d5"
+}

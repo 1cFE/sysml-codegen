@@ -1,0 +1,11 @@
+{
+  "constraint_usages": [
+    {
+      "owner_qualified_name": "InstanceIndexProbe::ConstrainedLeaf",
+      "source_file": "model.sysml",
+      "source_line": 9,
+      "usage_qualified_name": "InstanceIndexProbe::ConstrainedLeaf::nonnegative"
+    }
+  ],
+  "fixture": "instance_index_probe"
+}
