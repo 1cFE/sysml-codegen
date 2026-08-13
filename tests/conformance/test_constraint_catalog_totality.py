@@ -75,6 +75,60 @@ def test_a_calc_def_only_model_still_gets_a_catalog():
     assert not catalog.concrete_entries
 
 
+def test_a_usage_only_package_ships_no_constraint_machinery(tmp_path: Path):
+    """A4: the catalog's existence is not "this package has executable content".
+
+    ``usage_records`` is the whole authored domain, so it is populated whenever the model
+    declares any constraint at all. Reading the nullable as the executability question
+    shipped an evidence schema and a report type this package can never populate — it has
+    zero concrete entries. The rule is one concrete entry, read the same way at all three
+    seams (``ships_constraint_machinery``).
+
+    Contract invariant 32's zero-input ``not_assessed`` aggregator will supersede this;
+    that is Item 3's deliberate change, and Item 2 does not build it early.
+    """
+    output = tmp_path / "generated"
+    graph = build_elaborated_pipeline([CALC_DEF_ONLY])
+    assert graph.constraint_catalog is not None
+    assert graph.constraint_catalog.usage_records
+    assert not graph.constraint_catalog.concrete_entries
+
+    assert _generate_package_from_graph(
+        graph,
+        GenerationConfig(
+            output_path=output,
+            models_path=CALC_DEF_ONLY,
+            package_name="usage_only_probe",
+            overwrite=True,
+        ),
+    ) is True
+
+    assert not (output / "schemas/constraint_types.py").exists()
+    registry = (output / "__init__.py").read_text()
+    assert "ConstraintEvaluation" not in registry
+    assert "ConstraintReport" not in registry
+
+
+def test_a_reaching_package_still_ships_the_machinery(tmp_path: Path):
+    """The rule is not "never": one concrete entry is the bar, and this fixture clears it."""
+    output = tmp_path / "generated"
+    graph = build_elaborated_pipeline([FIXTURE])
+    assert graph.constraint_catalog.concrete_entries
+
+    assert _generate_package_from_graph(
+        graph,
+        GenerationConfig(
+            output_path=output,
+            models_path=FIXTURE,
+            package_name="reaching_probe",
+            overwrite=True,
+        ),
+    ) is True
+
+    assert (output / "schemas/constraint_types.py").exists()
+    assert "ConstraintEvaluation" in (output / "__init__.py").read_text()
+
+
 def test_a_usage_only_catalog_fingerprints_deterministically():
     """A combination that had never existed: usage rows populated, everything else empty."""
     first = project(elaborate_model_paths([CALC_DEF_ONLY])).constraint_catalog

@@ -594,6 +594,25 @@ class ConstraintCatalog(BaseModel):
     excluded_records: list[ConstraintCatalogExcludedRecord] = Field(default_factory=list)
     fingerprint: str
 
+    @property
+    def has_executable_content(self) -> bool:
+        """Does this package carry constraint machinery that could ever run?
+
+        One concrete entry is the bar. ``usage_records`` is the whole authored domain and
+        is populated whenever the model declares any constraint at all, so it answers
+        "did the author write constraints", not "is there anything to execute" — and since
+        CONSTRAINT-SEMANTICS Item 2 widened that population, reading the catalog's mere
+        existence as the second question ships an evidence schema and a report type the
+        package can never populate.
+
+        **This is Item 2's rule and Item 3 will supersede it.** Contract invariant 32's
+        zero-input ``not_assessed`` aggregator deliberately changes the answer for a
+        constraint-bearing package with nothing reaching; that is Item 3's work, and Item 2
+        does not build it early. Until then the behaviour matches what shipped before this
+        item: a package with no concrete entry shipped no constraint machinery.
+        """
+        return bool(self.concrete_entries)
+
     def recomputed_fingerprint(self) -> str:
         """The fingerprint these four row lists imply, right now.
 
@@ -620,6 +639,19 @@ class ConstraintCatalog(BaseModel):
                 ensure_ascii=True,
             ).encode()
         ).hexdigest()
+
+
+def ships_constraint_machinery(graph: "ComputationGraph") -> bool:
+    """The one rule the three generation seams read, so they cannot drift apart.
+
+    Emission of ``schemas/constraint_types.py``, the registry's ``ConstraintEvaluation`` /
+    ``ConstraintReport`` imports, and the predicate-name preflight all used
+    ``constraint_catalog is not None`` as a proxy for "this package has executable
+    constraint content". Item 2 changed what that nullable means, so the proxy had to
+    become the question itself, in one place.
+    """
+    catalog = graph.constraint_catalog
+    return catalog is not None and catalog.has_executable_content
 
 
 class ComputationGraph(BaseModel):

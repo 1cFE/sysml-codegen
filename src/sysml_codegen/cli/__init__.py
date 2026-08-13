@@ -401,13 +401,13 @@ def _preflight_constraint_totality(graph: ComputationGraph) -> None:
 def _preflight_constraint_names(graph: ComputationGraph) -> None:
     """Validate both generated constraint scopes before a graph-aware boundary acts."""
     from sysml_codegen.generation.errors import validate_constraint_graph_or_raise
+    from sysml_codegen.resolution.models import ships_constraint_machinery
 
     validate_constraint_graph_or_raise(graph)
-    catalog = graph.constraint_catalog
-    if catalog is not None:
+    if ships_constraint_machinery(graph):
         from sysml_codegen.generation.modules import assert_unique_predicate_function_names
 
-        assert_unique_predicate_function_names(catalog)
+        assert_unique_predicate_function_names(graph.constraint_catalog)
 
 
 def _generate_schemas(
@@ -442,10 +442,15 @@ def _generate_schemas(
 
     logger.info(f"Generated {multioutput_count} multi-output schemas")
 
-    # Item 7 / D4: per-package evidence schemas, gated on a constraint catalog existing
-    # on the graph. A constraint-free corpus writes nothing here (INV-7).
-    catalog = graph.constraint_catalog
-    if catalog is not None:
+    # Item 7 / D4: per-package evidence schemas, gated on the package actually having
+    # constraint machinery that could run — one concrete entry. A corpus that declares no
+    # constraint writes nothing here (INV-7), and so does one that declares constraints
+    # none of which reach an instance: there would be nothing to populate the evidence
+    # with. See `ships_constraint_machinery` for why the catalog's existence stopped being
+    # the right question, and which item supersedes this rule.
+    from sysml_codegen.resolution.models import ships_constraint_machinery
+
+    if ships_constraint_machinery(graph):
         template = template_env.get_template("constraint_types.py.jinja2")
         code = template.render()
         if not code.endswith("\n"):

@@ -54,7 +54,7 @@ FUNCTION_EXEMPTIONS = {
     # keyed by ``declaration_id`` before this runs, and nothing here selects, resolves, or
     # names a node. The parse is strict, so a near-miss halts rather than silently
     # matching something adjacent.
-    ("elaborate.py", "_ExactElaborator._inapplicability"): frozenset(
+    ("elaborate.py", "_ExactElaborator._read_annotation"): frozenset(
         {STRING_SELECTOR_VIOLATION}
     ),
     ("project.py", "_group_identity"): frozenset({STRING_SELECTOR_VIOLATION}),

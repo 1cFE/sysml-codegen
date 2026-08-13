@@ -350,7 +350,9 @@ def generate_registry(
     constraint_imports.sort()
     imports.extend(constraint_imports)
 
-    if graph.constraint_catalog is not None:
+    from sysml_codegen.resolution.models import ships_constraint_machinery
+
+    if ships_constraint_machinery(graph):
         schema_imports.append(
             f"from {package_name}.schemas.constraint_types "
             "import ConstraintEvaluation as ConstraintEvaluation, "
