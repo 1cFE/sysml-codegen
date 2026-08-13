@@ -1287,6 +1287,73 @@ but produced 1 executable entries: … Remove the marker, or stop asserting the 
 **byte-identical** to the Phase 3 list, 62 entries. ruff/mypy baselines unchanged.
 
 ### Phase 6 Completion
+**STATUS: STOPPED AT THE PD5 DECISION.** Branch `constraint-semantics-item3` off `fa0e06a`
+created (TEAx `main` untouched, at `fa0e06a`, nothing pushed). Commit `6947a5f`.
+
+**6A — the PD5 probe, run first. It fired the stop rule, and it also falsified the fallback.**
+
+Measurement confirmed at `fa0e06a`: five packages under
+`simkit/tests/evaluation/fixtures/*/package_live`, all at catalog `2.0.0` / runtime-contract
+`1.0.0` (`f1_arithmetic` carries no `catalog_schema_version` at all — it predates Item 8).
+
+**Probed `constraint_free` end to end, then two more. Three of five regenerate cleanly:**
+
+| package | model source | regenerates? | `handwritten/` |
+|---|---|---|---|
+| `constraint_free` | `models/*.sysml` | **yes** | stencil, not hand-filled |
+| `excluded_only` | `models/*.sysml` | **yes** | stencil, not hand-filled |
+| `zero_channel` | `models/*.sysml` | **yes** | stencil, not hand-filled |
+| `sealed_package` | **none — no `.sysml` anywhere in the repo** | **no** | — |
+| `f1_arithmetic` | none; `generate_fixture.py` builds the graph in code | **no** | — |
+
+The design's cost estimate assumed hand-filled `handwritten/` trees needing restoration. For the
+three regenerable packages that is **false**: the only diff against the committed tree is a
+source-path doc comment (`models/…` vs `root-0/…`). The regenerated `zero_channel` aggregator bakes
+`1 / 1 / 1 / 0 / 0 / {} / complete` correctly.
+
+**Two are not regenerable, for two different reasons:**
+
+- **`sealed_package` has no model.** No `.sysml` exists for it anywhere in the TEAx tree. There is
+  nothing to regenerate *from*; recovering it means authoring a new SysML model that reproduces its
+  exact shape, which is authoring a fixture, not regenerating one. It is also
+  `tests/evaluation/conftest.py`'s `FIXTURE_DIR`, so it backs most of the evaluation and study
+  suites — it is the expensive one, not the cheap one.
+- **`f1_arithmetic` builds from a pinned reproduction script.** `generate_fixture.py` constructs the
+  graph programmatically and **hard-refuses** unless it is running from a detached `sysml-codegen`
+  worktree at `SYSML_SHA 512786c7…`, with `agentic-mbse` at `4ed2a072…` and `uv.lock` hashing to
+  `b457136b…`. Running it at those pins produces a `1.0.0` package (useless); running it at HEAD
+  means rewriting the pins of a script whose entire purpose is pinning an exact environment.
+
+**A third finding, and it is the one that changes the decision: regeneration also drags in
+unrelated codegen drift.** The regenerated `constraint_free` changes an entry-point key from
+`constraint_free_plant__Free_Plant__width_design` to `constraint_free_plant__freePlant__width_design`.
+That is drift between fa0e06a-era codegen and item7-rebuild HEAD — not Item 3's change. Absorbing it
+under Item 3's name is exactly what the epic's bar rejects.
+
+**PD5's stated fallback does not work.** The design offered "vendor the accepted sets as extended
+(`{"2.0.0","3.0.0"}`, `{"1.0.0","2.0.0"}`) rather than replaced", costing it as *"still fail-closed
+but a different promise"*. Measured: it buys nothing. The old packages emit the retired token
+`all_satisfied`, which the new `CANONICAL_HEADLINE` refuses by name — **28 of the 30 failures on this
+branch are `UnknownHeadlineToken`, not `SealVerificationError`.** Extending the version sets only
+moves *where* the refusal happens, from `package_load` to `projection`. The suite is red either way.
+
+**6B/6C/6D — everything that does not depend on PD5 is DONE and committed (`6947a5f`).**
+- `evaluation/evidence.py` — `ConstraintStatus` / `HeadlineResponse` split, five-token
+  `CANONICAL_HEADLINE`, `UnknownHeadlineToken`, and `canonical_headline()`.
+- `evaluation/projection.py` — fail-closed lookup replaces the bare subscript.
+- `evaluation/package_load.py` — **UNTOUCHED. This is the blocked decision.**
+- `study/model_contract.py` — `ships_constraint_report`; `study/cli.py` calls it.
+- `evaluation/evaluator.py` — `_report_declared_in_spec` deleted; `expects_constraint_report`
+  required on both evaluators; **15 test sites** pass it explicitly (PD6's correction was exact).
+- `study/policy.py` — `partial_coverage` in both dispatch tables, both former bare subscripts
+  fail-closed, `_coverage_of` copies coverage + fingerprint into `assessment_json` (never evidence).
+- `study/config.py` — the `partial_coverage` opt-in; `study/query.py` — PD3's two `CaseView` fields.
+- Evidence schema `v1 → v2`.
+
+**TEAx suite on the branch: 30 failed, 276 passed, 4 errors** (baseline at `fa0e06a`: fully green).
+All 34 red trace to one root cause — the five committed fixture packages emit `all_satisfied`.
+
+**The decision this stage will not take silently.** Recorded, not resolved. See the stop message.
 
 ### Phase 7 Completion
 
