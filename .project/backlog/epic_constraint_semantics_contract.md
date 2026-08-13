@@ -1093,6 +1093,16 @@ assessment shows minted units move on existing fixtures (Item 2 precedent: 21 fi
 Item 7's documentation sweep depends on it (this item changes the behavior
 `modeling-assumptions.md` §8 documents).
 
+**Delivery ruling — Item 8 lands STANDALONE.** **[AGENT] (ratified by owner, 2026-08-13)**
+The Item 6 design's R5 joint-delivery option (folding Item 8 into the future calc-def gate
+implementation to avoid a possible second fixture recapture) is **declined**: joint delivery
+would chain this epic's tail — Items 9, 7, and epic close — to a 7–9 day implementation item
+that is not authorized in this epic. Item 8 ships alone; the accepted cost is that the Item 6
+implementation, if later authorized, performs its own v4 recapture in addition to Item 8's
+conditional v3 recapture. R5's option remains recorded in the Item 6 design should the owner
+authorize the implementation before Item 8 starts, but the default is standalone and no agent
+may revive joint delivery without a new owner ruling.
+
 ---
 
 ### Item 9: Derivative Upgrade Under Held Intent (0.5 day)
