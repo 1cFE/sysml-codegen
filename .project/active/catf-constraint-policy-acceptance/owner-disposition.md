@@ -79,6 +79,12 @@ could offer). The D-S1/D-S2 ruling added `blocked-by-defect` (**[AGENT] (ratifie
 recorded intent for the post-fix follow-on; the marking lives in this table and PROVENANCE only —
 the catalog row uses Item 2's existing vocabulary.
 
+The same recording mechanism was applied to B1–B5's `inapplicable` rows on 2026-08-13
+(**[AGENT]**, orchestrator-applied, flagged for owner review): the disposition is unchanged,
+but the `@inapplicable:` marker cannot reach the domain on their inline-predicate shape, so
+the disposition is recorded in this table and PROVENANCE rather than in a source marker. See
+"B1–B5 recording mechanism" in Group B.
+
 ---
 
 # Group A — 9 instance-reaching gates
@@ -140,6 +146,38 @@ authored, explicitly dispositioned usages and none enters the feasibility denomi
 **Authoring warning carried forward:** a malformed `@inapplicable:` directive halts generation at
 `error` whatever the usage's form, including a plain one. These five markers must be authored
 exactly; a typo is a hard stop, not a silent no-op.
+
+## B1–B5 recording mechanism — orchestrator-applied owner pattern
+
+**[AGENT] 2026-08-13, orchestrator-applied — flagged for owner review.** Applies the owner's
+D-S1/D-S2 pattern (option 3, ratified 2026-08-13) to a new instance of the same defect class.
+
+**The disposition is unchanged.** All five rows stay `inapplicable`, with the reasons above.
+What moves is *where the disposition is recorded*, and only that.
+
+**What was measured** (Item 5 Phase 1, `verification.md`): the five `@inapplicable:` markers
+were authored in the exact form and first-line placement the Item 2 fixtures pin, and
+**5 were written in source while 0 reached the domain**. B1–B5 are inline-predicate
+constraints (`constraint X { doc /* … */ <predicate> }`), and SysIDE drops a `doc` comment
+inside an inline-predicate constraint body. That is rule 3 of
+`tests/conformance/test_constraint_population_oracle.py`, which exists to make this gap loud.
+Every Item 2 fixture that carries a working marker is bindings-form. Placement and spelling
+are already correct, so there is no dodge inside the marker's own form.
+
+**Ruled.** The five guards land in the derivative as **plain usages carrying no marker**.
+Their inapplicability is recorded in this table and in PROVENANCE parked-row-style records
+naming the marker-read defect, oracle rule 3, and the held intent — exactly as A5/A6/A9 are
+handled. **No catalog vocabulary change**; their rows read `non_reaching` as they do in
+`catf_mfe_d5` today. Rewriting the five guards into bindings form was rejected: it is an
+unauthorized model rewrite this table never asked for.
+
+**Held intent.** The markers are authored when the marker-read gap closes. Folded into epic
+**Item 9**'s scope; the defect itself is filed as backlog `[INLINE-PREDICATE-MARKER-DROP]`.
+
+**Nothing downstream moves.** `inapplicable_gate_count` is **0** either way — B1–B5 are plain
+(non-asserted) usages and bucket row 1 decides "not asserted → inventory only" before the
+inapplicable predicate is consulted (`generation/coverage.py:7-27`). Measured: the disposition
+histogram and all 58 expectation identities are byte-identical with and without the markers.
 
 ---
 

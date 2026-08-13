@@ -1109,6 +1109,8 @@ ruled intent, and restate the accounting identity to `65 = 56 carriers + 9 named
       and PROVENANCE; expected outputs re-derived from the table before confirmation tests
       (same SC-6 discipline as Item 5).
 - [ ] Integrity manifest re-proves the restated identity; frozen twins untouched.
+- [ ] Retire the B1–B5 PROVENANCE workaround — author the five `@inapplicable:` markers — when
+      the marker-read gap closes (backlog `[INLINE-PREDICATE-MARKER-DROP]`).
 
 **Location**: follows Item 5's item home conventions (new item folder at execution time)
 

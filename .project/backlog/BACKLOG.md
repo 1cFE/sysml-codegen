@@ -1040,3 +1040,15 @@ completed rows were removed from this unresolved backlog.
   artifact read errors can still raise raw `OSError`. Validate digest syntax, path containment and
   normalization, and the fingerprint derivation rule before integrity checks. Normalize artifact
   walk/read errors into path-specific fatal diagnostics and retain stdlib-only coverage.
+- **[INLINE-PREDICATE-MARKER-DROP] `@inapplicable:` markers on inline-predicate constraints never
+  reach the domain — P3 `[AGENT]`, unowned.** SysIDE drops a `doc` comment inside an
+  inline-predicate constraint body (`constraint X { doc /* … */ <predicate> }`), so an
+  `@inapplicable:` marker written on that shape is silently discarded. Measured in
+  CONSTRAINT-SEMANTICS Item 5 Phase 1 on the CATF derivative's five part-definition guards:
+  **5 markers written in source, 0 carried on the domain**, with the markers in the exact form and
+  first-line placement the Item 2 fixtures pin. Every Item 2 fixture that carries a working marker
+  is bindings-form, so the gap was never exercised. Already named as rule 3 of
+  `tests/conformance/test_constraint_population_oracle.py`, which fails loudly when it happens —
+  this entry is for closing the gap, not for detecting it. Until it closes, an inapplicability
+  disposition on an inline-predicate usage has to be recorded in PROVENANCE instead of in source
+  (the Item 5 workaround that epic Item 9 retires).

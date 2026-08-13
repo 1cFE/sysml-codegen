@@ -25,18 +25,20 @@ because the plan's inherited floor did not say which one it counted.
 | default marker set | `pytest tests/` | **2012** | **34** | 79 | 0 | **0** |
 | all markers | `pytest tests/ -m ""` | **2090** | **34** | 0 | **1** | **0** |
 
-**The one failure is environmental, not a regression.**
-`tests/execution/test_fusion_tea_real_teax.py::test_the_lane_runs_the_real_simkit` fails with
+**The one failure is pre-existing and already recorded — not re-diagnosed here.**
+`test_the_lane_runs_the_real_simkit`, quoting `.project/CURRENT_WORK.md:468-472` verbatim:
 
-```
-AssertionError: the in-repo stub runner was imported on the real-TEAx lane;
-its fake simkit would shadow the installed one
-```
+> **`tests/runtime/…::test_the_lane_runs_the_real_simkit` fails on a whole-set run and passes in
+> isolation** — a collection-order artifact, reproduced at the parent commit and therefore
+> pre-existing. Surfaced (and re-confirmed) by CONSTRAINT-SEMANTICS Item 3, which touched neither
+> `tests/runtime/` nor the guard; `tests/execution` alone is green. Recorded here so it is not
+> rediscovered as a regression. **Still needs an owner** — no item has claimed it.
 
-That lane must be hosted in the agentic-mbse venv with a `sys.path` insert of
-`teax/packages/teax-simkit`; the task venv makes the in-repo stub importable. It is
-pre-existing at this HEAD and unrelated to any Item 5 edit (the only tree change at the time
-of the run is d5's PROVENANCE prose).
+It is **out of this item's floor** by orchestrator ruling (2026-08-13). The observed failure
+message on this run was `AssertionError: the in-repo stub runner was imported on the real-TEAx
+lane; its fake simkit would shadow the installed one` — consistent with the recorded
+collection-order account. No Item 5 edit is involved (the only tree change at the time of the
+run was d5's PROVENANCE prose).
 
 ### Deviation from the inherited floor — recorded, not absorbed
 
