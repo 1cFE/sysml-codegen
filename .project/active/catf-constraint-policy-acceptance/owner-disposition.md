@@ -1,31 +1,35 @@
-# CATF all-65 constraint disposition — PROPOSAL
+# CATF all-65 constraint disposition — RULED
 
-**Status:** DRAFT — every row is `PROPOSED [AGENT]`
+**Status:** RULED — owner ruling 2026-08-13 converted this table to authority. Rows the owner
+approved without change are `[AGENT] (ratified by owner, 2026-08-13)`. Owner-originated items are
+marked `[OWNER 2026-08-13]` where they appear: the two tolerance rulings (A3, A9), the item5-F1
+SC-3 amendment authorization, and the O2/O5 rulings. The owner's structural amendment (basis
+cells on A5/A6/A7 + the derivation doc-comment obligation) is applied in place below.
 **Item:** CONSTRAINT-SEMANTICS Item 5 (`spec.md`, SC-1)
 **Fixture under disposition:** `tests/fixtures/catf_mfe_d5`
 **Row authority:** `tests/expectations/constraint_population/catf_mfe_d5.json` — 65 usages, joined 1:1
-**Created:** 2026-08-13
+**Created:** 2026-08-13 (proposal) · **Ruled:** 2026-08-13
 
 ---
 
-## What you are being asked to decide
+## The ruling in force
 
-Nothing here is settled. This is an agent classification of all 65 authored constraint usages in
-`catf_mfe_d5`, proposed for your ruling at the check-in. Your sign-off converts rows into the
-authority, row by row. Design does not start against this draft.
+All 65 rows are approved. The accounting identity is **[OWNER 2026-08-13]**:
 
-Four things need your ruling:
+> **65 = 56 carriers + 9 named deletions** (7 derive-instead: A1, A4, A5, A6, A7, A8, C37;
+> 2 placeholder deletions under the O2 ruling: C21, C28).
 
-1. **Each row's disposition.** Approve, change, or send back.
-2. **Every tolerance value.** No number in this table is a tolerance. Every band cell reads
-   `TBD-OWNER [unit]`. Tolerances are modeled values you choose; the pipeline never invents one and
-   neither did this draft.
-3. **The item5-F1 conflict.** My honest classification derives 7 usages away, so the derivative
-   would carry **58**, not 65. SC-3 says 65. See "item5-F1 account" below — this is the parked
-   conflict, and it needs your call before design.
-4. **The unit-check column.** Read on.
+Every deletion is a named record in the derivative's PROVENANCE citing its authorizing table row;
+nothing is a carrier or vanishes silently. The frozen-twin half of SC-3 (65 carriers on
+`catf_mfe_d5` itself, proved by Item 2) is untouched.
 
-## Unit-check column — read this before you sign it
+**Derivation documentation obligation [OWNER 2026-08-13, structural amendment]:** each of the
+seven derivations carries a doc comment recording the undirected relation and stating that the
+direction is a **chosen basis, not physics** — and the PROVENANCE deletion record repeats it. The
+relation intent must survive the deletion; a permanently-unassessed catalog row is the wrong home
+for it, documentation on the derivation is the right one.
+
+## Unit-check column — status under the ruling
 
 **The toolchain does not check units on constraint bindings.** A unit written on a binding
 (`in tol = 0.05 [m];`) contributes the number and nothing else; a bound formal takes its operand
@@ -34,8 +38,9 @@ dimension check. A band that compares a length against a time is admitted silent
 (`docs/architecture/modeling-assumptions.md` §8; Item 4 measured limit 1).
 
 So the unit-check column is **human-verified, not toolchain-verified**. It has exactly two
-checkpoints: your sign-off here, and design review re-checking it against the authored source. A
-later reader must not read a filled-in unit cell as evidence that anything machine-checked it.
+checkpoints: the owner's sign-off (given 2026-08-13 with this ruling) and design review
+re-checking it against the authored source. A later reader must not read a filled-in unit cell as
+evidence that anything machine-checked it.
 
 **Worse in this fixture than usual.** Every CATF attribute is a bare `Real`. Units live in
 end-of-line comments (`// MW - Fusion power`) and doc text, never in the model. The units in this
@@ -56,7 +61,9 @@ authority copy `.project/concepts/constraint-execution-authoritative-lifecycle-c
 
 Dispositions used: `derive-instead` (the authored usage is deleted and a derivation replaces it),
 `assert-one-sided`, `assert-band`, `inapplicable` (an explicit `@inapplicable:` disposition, no
-attachment), `awaits-capability` (Item 6 builds calc-def gate attachment; nothing is built here).
+attachment), `awaits-capability` (Item 6 builds calc-def gate attachment; nothing is built here),
+and `delete-placeholder` (**[OWNER 2026-08-13]**, O2 ruling only — not a disposition the proposal
+could offer).
 
 ---
 
@@ -70,13 +77,13 @@ ADMITs (research §3).
 |---|---|---|---|---|---|---|---|---|---|
 | A1 | `CATFMFEPhysics::catf_physics::PowerBalanceConsistency` | `designs/catf_mfe/physics.sysml:125` | `alpha_neutron_split.p_alpha + alpha_neutron_split.p_neutron > p_fusion * 0.999 and … < p_fusion * 1.001` | 1 | **derive-instead** | Delete. `AlphaNeutronSplit` splits `p_fusion` by `3.52/17.58` and `14.06/17.58`, which sum to exactly 1 — conservation is true by construction, and the band checks arithmetic the generator already guarantees. Derive `p_neutron := p_fusion - p_alpha` in the calc def (same edit as C37) and the check has no work left. | n/a | power, MW both sides | **no** |
 | A2 | `CATFMFEPhysics::catf_physics::ViabilityCheck` | `physics.sysml:134` | `p_electric_net_out > 0` | 3 | **assert-one-sided** | `assert constraint net_power_viable : PositiveQuantity { in value = p_electric_net_out; }` over `constraint def PositiveQuantity { in value : Real; value > 0 }`. Already one-sided, already ADMITs, no rewrite of intent — only the `assert` prefix and the bindings-only shape. | none — the `0` floor is the authored physical zero, not a band | power, MW; threshold `0` is dimensionless-safe as a `real`/`real` comparison | **yes** |
-| A3 | `CATFMFEPhysics::catf_physics::ReasonableParasiticTotal` | `physics.sysml:142` | `net_electric.p_parasitic_total > gross_electric.p_electric_gross * 0.10 and net_electric.p_parasitic_total < gross_electric.p_electric_gross * 0.90` | 3 | **assert-band** | `assert constraint parasitic_fraction_ok : FractionWithinBand { in part_power = net_electric.p_parasitic_total; in whole_power = gross_electric.p_electric_gross; in lower_frac = …; in upper_frac = …; }`; predicate `part_power > whole_power * lower_frac and part_power < whole_power * upper_frac`. Chains move to binding position, which is supported. | `TBD-OWNER [dimensionless fraction]` ×2 (lower, upper). Band protects: parasitic load stays a plausible share of gross, and the upper edge is what keeps Q_eng above the CATF minimum. d5 authored `0.10` / `0.90` — yours to confirm or change, not mine to carry forward as settled. | power, MW on both compared sides; the two band edges are dimensionless fractions | **yes** |
+| A3 | `CATFMFEPhysics::catf_physics::ReasonableParasiticTotal` | `physics.sysml:142` | `net_electric.p_parasitic_total > gross_electric.p_electric_gross * 0.10 and net_electric.p_parasitic_total < gross_electric.p_electric_gross * 0.90` | 3 | **assert-band** | `assert constraint parasitic_fraction_ok : FractionWithinBand { in part_power = net_electric.p_parasitic_total; in whole_power = gross_electric.p_electric_gross; in lower_frac = …; in upper_frac = …; }`; predicate `part_power > whole_power * lower_frac and part_power < whole_power * upper_frac`. Chains move to binding position, which is supported. | **[OWNER 2026-08-13]** lower `0.10`, upper `0.90` [dimensionless fractions] — the authored values, confirmed as a **plausibility envelope**. Recorded promise: this band does not gate viability; viability is A2's job (`p_net > 0`). | power, MW on both compared sides; the two band edges are dimensionless fractions | **yes** |
 | A4 | `CATFMFERadialBuild::catf_radial_build::TotalRadiusConsistency` | `radial_build.sysml:605` | `bioshield.outer_radius == 8.55 [m]` | 3 | **derive-instead** | Delete. Class 3's own rule: a quantity that must equal a value is fixed as an input, not searched for and then constrained. `bioshield.outer_radius` is already the literal `8.55 [m]` (`radial_build.sysml:558`), so the gate asserts a literal against itself. It also carries the `[m]`-literal elaborator defect (research §6). | n/a | length, m | **no** |
-| A5 | `CATFMFERadialBuild::catf_radial_build::LayerContinuity` | `radial_build.sysml:612` | 13-term `and`: `plasma_region.inner_radius == axis_region.outer_radius and … and bioshield.inner_radius == lt_shield.outer_radius` | 1 | **derive-instead** | Delete. Each layer's `inner_radius` **is** the previous layer's `outer_radius` — that is the definition of a radial build, not a check on it. Derive each `inner_radius` from the layer below. Design decides the source edit; it touches 13 attribute declarations. | n/a | length, m | **no** |
-| A6 | `CATFMFERadialBuild::catf_radial_build::RadiusThicknessConsistency` | `radial_build.sysml:630` | 14-term `and`: `axis_region.outer_radius == axis_region.inner_radius + axis_region.thickness and …` | 1 | **derive-instead** | Delete. Derive each `outer_radius := inner_radius + thickness`. Same reasoning as A5, one layer at a time; the two together make the whole radial build a chain of derivations from `axis_region.inner_radius` plus 14 thicknesses. | n/a | length, m | **no** |
-| A7 | `CATFMFEShield::catf_shield::CompositionConsistency` | `shield.sysml:171` | `neutron_shield.fraction_volume + gamma_shield.fraction_volume == 1.0` | 4 | **derive-instead** | Delete. Closure over two terms — derive the last: `gamma_shield.fraction_volume := 1.0 - neutron_shield.fraction_volume`. See open point O3: the sum covers 2 of the 4 shield layers, so deriving it encodes a partial closure you should look at. | n/a | dimensionless volume fractions summing to 1 | **no** |
+| A5 | `CATFMFERadialBuild::catf_radial_build::LayerContinuity` | `radial_build.sysml:612` | 13-term `and`: `plasma_region.inner_radius == axis_region.outer_radius and … and bioshield.inner_radius == lt_shield.outer_radius` | 1 | **derive-instead** | Delete. Each layer's `inner_radius` **is** the previous layer's `outer_radius` — that is the definition of a radial build, not a check on it. Derive each `inner_radius` from the layer below. Design decides the source edit; it touches 13 attribute declarations. **Basis [AGENT] (ratified by owner, 2026-08-13):** free parameters are the axis root radius plus the 14 layer thicknesses; all other radii derived. A parameterization is an engineering decision carrying owner sign-off, never a side effect of classification. | n/a | length, m | **no** |
+| A6 | `CATFMFERadialBuild::catf_radial_build::RadiusThicknessConsistency` | `radial_build.sysml:630` | 14-term `and`: `axis_region.outer_radius == axis_region.inner_radius + axis_region.thickness and …` | 1 | **derive-instead** | Delete. Derive each `outer_radius := inner_radius + thickness`. Same reasoning as A5, one layer at a time; the two together make the whole radial build a chain of derivations from `axis_region.inner_radius` plus 14 thicknesses. **Basis [AGENT] (ratified by owner, 2026-08-13):** same basis as A5 — axis root radius + 14 thicknesses free; all radii derived. | n/a | length, m | **no** |
+| A7 | `CATFMFEShield::catf_shield::CompositionConsistency` | `shield.sysml:171` | `neutron_shield.fraction_volume + gamma_shield.fraction_volume == 1.0` | 4 | **derive-instead** | Delete. Closure over two terms — derive the last: `gamma_shield.fraction_volume := 1.0 - neutron_shield.fraction_volume`. See open point O3: the sum covers 2 of the 4 shield layers, so deriving it encodes a partial closure — ruled: the derivation goes ahead (it encodes exactly what the authored constraint checked, no worse), and the debt gets named model-debt records (O3). **Basis [AGENT] (ratified by owner, 2026-08-13):** `neutron_shield.fraction_volume` free; gamma derived. | n/a | dimensionless volume fractions summing to 1 | **no** |
 | A8 | `CATFMFEVacuum::catf_vacuum_vessel::ThicknessConsistency` | `vacuum.sysml:87` | `outer_radius == inner_radius + wall_thickness` | 1 | **derive-instead** | Delete. Derive `outer_radius := inner_radius + wall_thickness`. All three are literals today (`6.3`, `0.2`, `6.5` at `vacuum.sysml:51-53`) and the source comment on line 53 already says the value came from that sum. | n/a | length, m | **no** |
-| A9 | `CATFMFEVacuum::catf_vacuum_pumping::PumpingSpeedConsistency` | `vacuum.sysml:169` | `pumping_speed_total == n_pumps * pump_capacity_each` | 2 | **assert-band** | `assert constraint pumping_speed_agrees : ProductWithinBand { in observed = pumping_speed_total; in count = n_pumps; in each_capacity = pump_capacity_each; in tol = …; }`; predicate `observed >= count * each_capacity - tol and observed <= count * each_capacity + tol`. Genuine cross-check: `pumping_speed_total` is `volume_to_pump / vacuum_time_constant` = 200, and `n_pumps * pump_capacity_each` = 48 × 4.17 = **200.16**. Two independently authored routes to one number that already disagree by 0.16 — exactly class 2, and exactly why `==` is wrong here. | `TBD-OWNER [m^3/s]` (or a dimensionless relative tolerance — your call on form). Band protects: the pump count/capacity sizing still delivers the pumpdown speed the vessel volume needs. Note any band you pick must exceed 0.16 m^3/s or the model is violated as authored. | volumetric flow, m^3/s on both sides; `n_pumps` is a dimensionless count, `pump_capacity_each` is m^3/s, product is m^3/s | **yes** |
+| A9 | `CATFMFEVacuum::catf_vacuum_pumping::PumpingSpeedConsistency` | `vacuum.sysml:169` | `pumping_speed_total == n_pumps * pump_capacity_each` | 2 | **assert-band** | `assert constraint pumping_speed_agrees : ProductWithinBand { in observed = pumping_speed_total; in count = n_pumps; in each_capacity = pump_capacity_each; in tol = …; }`; predicate `observed >= count * each_capacity - tol and observed <= count * each_capacity + tol`. Genuine cross-check: `pumping_speed_total` is `volume_to_pump / vacuum_time_constant` = 200, and `n_pumps * pump_capacity_each` = 48 × 4.17 = **200.16**. Two independently authored routes to one number that already disagree by 0.16 — exactly class 2, and exactly why `==` is wrong here. | **[OWNER 2026-08-13]** **1% relative** (band = `count * each_capacity ± 1%`), chosen over absolute so the band scales under design-search resizing; ~12× the authored 0.16 m³/s disagreement. `ProductWithinBand` adjusts to relative form; if the def-shape changes materially, design notes it rather than silently adapting. Band protects: the pump count/capacity sizing still delivers the pumpdown speed the vessel volume needs. | volumetric flow, m^3/s on both sides; `n_pumps` is a dimensionless count, `pump_capacity_each` is m^3/s, product is m^3/s; the relative tolerance is dimensionless | **yes** |
 
 **Group A totals as proposed:** 6 `derive-instead`, 1 `assert-one-sided`, 2 `assert-band`.
 3 of 9 survive as authored usages.
@@ -164,14 +171,14 @@ have nowhere to attach yet.
 | C18 | `PositiveGross` | `AuxiliarySystemsPower` | `thermal_loads.sysml:376` | `gross_electric > 0` | awaits-capability | Input-domain guard. |
 | C19 | `ReasonableFraction` | `AuxiliarySystemsPower` | `thermal_loads.sysml:381` | `auxiliary_fraction > 0.003 and auxiliary_fraction < 0.02` | awaits-capability | Plausibility band on an input fraction. |
 | C20 | `Phase1PositivePower` | `PlasmaConfinement` | `library/physics/confinement.sysml:127` | `p_fusion_input > 0` | awaits-capability | Input-domain guard. |
-| C21 | `Phase2PlasmaParametersPhysical` | `PlasmaConfinement` | `confinement.sysml:133` | `true  // Placeholder - implement in Phase 2` | awaits-capability | **Poor fit — see O2.** The body is the literal `true`; there is no predicate to attach or derive. `awaits-capability` is the least-wrong of the two available dispositions, not a good one. |
+| C21 | `Phase2PlasmaParametersPhysical` | `PlasmaConfinement` | `confinement.sysml:133` | `true  // Placeholder - implement in Phase 2` | **delete-placeholder [OWNER 2026-08-13, O2]** | Deleted in the derivative as a named deletion record citing O2. A body-`true` constraint is a vacuous always-pass gate waiting for Item 6's capability; the derivative is the worked example of the policy and does not carry it. The frozen twins keep it for history. |
 | C22 | `PositiveRadii` | `TorusMinorRadius` | `library/physics/geometry.sysml:59` | `r_inner >= 0 and r_outer > r_inner and r_major > 0` | awaits-capability | Input-domain and ordering guard. |
 | C23 | `PositiveInputs` | `TorusVolume` | `geometry.sysml:101` | `r_major > 0 and a > 0 and kappa > 0` | awaits-capability | Input-domain guard. |
 | C24 | `ReasonableElongation` | `TorusVolume` | `geometry.sysml:106` | `kappa >= 1.0 and kappa <= 5.0` | awaits-capability | Plausibility band on an input. |
 | C25 | `PositiveInputs` | `TorusSurfaceArea` | `geometry.sysml:146` | `r_major > 0 and a > 0 and kappa > 0` | awaits-capability | Input-domain guard. |
 | C26 | `PositiveInputs` | `MagnetSurfaceArea` | `geometry.sysml:185` | `r_inner > 0 and thickness > 0 and kappa > 0 and f_exposed > 0 and f_exposed <= 1.0` | awaits-capability | Input-domain guard. |
 | C27 | `Phase1ReasonableTBR` | `TritiumBreedingRatio` | `library/physics/neutronics.sysml:132` | `tbr_assumed > 0.9 and tbr_assumed < 1.3` | awaits-capability | Plausibility band on an assumed input. |
-| C28 | `Phase2SelfSufficiency` | `TritiumBreedingRatio` | `neutronics.sysml:138` | `true  // Placeholder - implement in Phase 2` | awaits-capability | **Poor fit — see O2.** Same placeholder shape as C21. |
+| C28 | `Phase2SelfSufficiency` | `TritiumBreedingRatio` | `neutronics.sysml:138` | `true  // Placeholder - implement in Phase 2` | **delete-placeholder [OWNER 2026-08-13, O2]** | Deleted in the derivative as a named deletion record citing O2. Same ruling as C21. |
 | C29 | `PositivePowers` | `ScientificQFactor` | `library/physics/performance_metrics.sysml:80` | `p_fusion > 0 and p_input > 0` | awaits-capability | Input-domain guard. |
 | C30 | `ReasonableRange` | `ScientificQFactor` | `performance_metrics.sysml:85` | `q_sci > 0.01 and q_sci < 1000` | awaits-capability | Plausibility band on a derived output. |
 | C31 | `PositivePowers` | `EngineeringQFactor` | `performance_metrics.sysml:150` | `p_electric_gross > 0 and p_auxiliary_total > 0` | awaits-capability | Input-domain guard. |
@@ -196,8 +203,10 @@ have nowhere to attach yet.
 | C50 | `RealEfficiencyRange` | `ThermalCycleEfficiency` | `thermal.sysml:136` | `eta_real > 0.4 and eta_real < 0.95` | awaits-capability | Plausibility band on an input. |
 | C51 | `ThermalEfficiencyPhysical` | `ThermalCycleEfficiency` | `thermal.sysml:141` | `eta_thermal > 0 and eta_thermal < eta_carnot and eta_thermal < 1.0` | awaits-capability | Physical-range guard against the computed Carnot limit. |
 
-**Group C totals as proposed:** 50 `awaits-capability`, 1 `derive-instead`. No row is asserted-now,
-and none may become so at design time.
+**Group C totals as ruled:** 48 `awaits-capability`, 1 `derive-instead` (C37), 2
+`delete-placeholder` (C21, C28 — **[OWNER 2026-08-13]**, O2; a ruling this table could not
+propose, since deletion was outside its two available dispositions). No row is asserted-now, and
+none may become so at design time.
 
 **Unit-check for Group C:** not applicable while these await capability. Nothing is authored, so
 there is no binding to mis-unit. When Item 6 lands, every one of these rows needs the same
@@ -205,51 +214,37 @@ human unit check Group A got.
 
 ---
 
-# item5-F1 account — the derivative would carry 58, not 65
+# item5-F1 account — RULED: the accounting identity
 
-**Do not read this as a recommendation to change my classifications.** The spec forbids steering the
-table to preserve 65, so I classified honestly and am reporting the consequence.
+**[OWNER 2026-08-13] Option 1 is ruled.** SC-3 is amended to the accounting identity; the
+option's content stays `[AGENT] (ratified by owner, 2026-08-13)`. The spec carries the amendment
+text; this section records the arithmetic in force.
 
-**The arithmetic.**
+**The arithmetic, as ruled** (includes the O2 placeholder deletions, which the proposal's
+58-survivor figure predated):
 
 | line | count |
 |---|---|
 | authored usages in `catf_mfe_d5` | 65 |
 | `derive-instead` (usage deleted, derivation replaces it) | **7** — A1, A4, A5, A6, A7, A8, C37 |
-| **surviving authored usages in the derivative** | **58** |
+| `delete-placeholder` (**[OWNER 2026-08-13]**, O2) | **2** — C21, C28 |
+| **surviving authored usages in the derivative (carriers)** | **56** |
 
-Of the 58 survivors: 3 asserted gates (A2, A3, A9), 5 explicitly inapplicable part-def guards
-(B1–B5), 50 plain `awaits-capability` calc-def guards (Group C minus C37).
+Of the 56 survivors: 3 asserted gates (A2, A3, A9), 5 explicitly inapplicable part-def guards
+(B1–B5), 48 plain `awaits-capability` calc-def guards (Group C minus C37, C21, C28).
 
-**What SC-3 says, and where it collides.** SC-3 requires the derivative to show exactly 65 catalog
-carriers. Intent class 1 says structural identity is derived, not constrained — and a derivation
-**deletes** the authored usage. Six class-1/class-4 rows in Group A and one in Group C are honest
-class-1/4 calls; deriving them is the whole point of the taxonomy. So an honestly applied table
-lands at 58 carriers, and SC-3's "exactly 65" cannot be met at the same time.
+**How PROVENANCE reconciles it.** The derivative's PROVENANCE records the identity
+`65 = 56 carriers + 9 named deletions`. Each of the 9 gets a deletion record naming: the deleted
+usage's qualified name and d5 file:line, its intent class (or O2 for the placeholders), the
+derivation that replaces it (for the 7) with the undirected relation and chosen-basis statement,
+and the row in this table that authorized it. The machine-checkable diff (SC-2) then accounts for
+every change with a reason, and no usage vanishes silently — it is either a carrier or a named
+deletion. The frozen-twin half of SC-3 (65 carriers on `catf_mfe_d5` itself) is untouched — Item 2
+proved it and it stays.
 
-**How PROVENANCE would reconcile it.** The derivative's PROVENANCE records the identity
-`65 = 58 carriers + 7 recorded deletions`. Each of the 7 gets a deletion record naming: the deleted
-usage's qualified name and d5 file:line, its intent class, the derivation that replaces it, and the
-row in this table that authorized it. The machine-checkable diff (SC-2) then accounts for every
-change with a reason, and no usage vanishes silently — it is either a carrier or a named deletion.
-
-**Three ways you can rule. All are yours; none is settled.**
-
-1. **Amend SC-3 to `58 carriers + 7 recorded deletions = 65 accounted`.** The count becomes an
-   accounting identity rather than a carrier count. This is what my honest classification implies,
-   and it is the option I would take, because it keeps the taxonomy and the totality guarantee both
-   intact.
-2. **Keep the equalities as plain descriptive usages beside the derivations.** Carriers stay 65,
-   the taxonomy is still honestly applied (the values *are* derived), and the retained plain
-   constraints never enter the feasibility denominator because plain usages never do (L2-1). The
-   cost is 7 usages that document a truth the model already guarantees — the exact redundancy
-   class 1 exists to remove.
-3. **Reclassify some class-1 rows as bands to preserve the count.** I am naming this only to reject
-   it: it is the steering the spec's Non-Goals forbid, and it would put executable gates on
-   arithmetic the generator already guarantees.
-
-Dependent conclusions stay parked until you rule: the derivative's carrier total, the PROVENANCE
-reconciliation shape, and whether the derivative fixture's integrity check counts carriers at all.
+The two rejected alternatives (keep the equalities as descriptive usages beside the derivations;
+reclassify class-1 rows as bands) are recorded in this file's git history at the proposal
+revision; the second was named only to be rejected as the steering the spec's Non-Goals forbid.
 
 ---
 
@@ -275,64 +270,69 @@ chains in binding position only) and have not been probed. If either fails to ad
 satisfies SC-5 — but the resulting coverage denominator changes, so design should probe all three
 before committing.
 
-**If you rule differently on any Group A row**, note that A2 is the only candidate that does not
-depend on a tolerance you have not yet set.
+**[OWNER 2026-08-13] Endorsed as laid out:** design probes all three candidates (A2/A3/A9) before
+committing. A2 is the anchor — the only measured ADMIT, and now also the only gate whose
+threshold needed no tolerance ruling.
 
 ---
 
-# Open points beyond tolerances
+# Open points — dispositions under the 2026-08-13 ruling
 
-Things my classification could not settle. None is a tolerance question.
+- **O1 — SC-3 versus the derive count. RULED [OWNER 2026-08-13]:** option 1, the accounting
+  identity. See "item5-F1 account" above; the spec carries the SC-3 amendment.
 
-- **O1 — SC-3 versus the derive count.** The item5-F1 account above. This is the parked conflict and
-  it needs your ruling before design starts. Everything downstream of the derivative's carrier count
-  waits on it.
+- **O2 — Two placeholder predicates whose body is the literal `true`. RULED [OWNER 2026-08-13]:
+  delete both in the derivative**, each as a named deletion record citing O2. The derivative is
+  the worked example of the policy; a body-`true` constraint is a vacuous always-pass gate waiting
+  for Item 6's capability. The frozen twins keep them for history. (C21, C28 rows updated above;
+  this is the +2 in the accounting identity.)
 
-- **O2 — Two placeholder predicates whose body is the literal `true`.** `PlasmaConfinement::
-  Phase2PlasmaParametersPhysical` (`confinement.sysml:133`) and `TritiumBreedingRatio::
-  Phase2SelfSufficiency` (`neutronics.sysml:138`) both read `true  // Placeholder - implement in
-  Phase 2`. Neither is a gate and neither is derivable, so `awaits-capability` is the least-wrong of
-  the two dispositions available to Group C rather than a right one. Deleting them, or authoring the
-  Phase-2 predicates, are both outside what this table may propose. Your call whether they stay as
-  placeholders in the derivative.
+- **O3 — Partial shield closure and the mismatched thickness sets. RULED [OWNER 2026-08-13]:
+  record the debt, don't bake it silently.** A7's 2-of-4 closure (`thermal_shield` and
+  `biological_shield` have no `fraction_volume` attribute) and B4's mismatched sets (the guard
+  sums four layer thicknesses while the design's `thickness_total` is `0.4 [m]` labelled "HT
+  shield + structure layers") get **named model-debt entries in the derivative's PROVENANCE plus
+  one backlog note**. The A7 derivation goes ahead — it encodes exactly what the authored
+  constraint checked, no worse — but the debt must be findable, not embedded.
 
-- **O3 — The shield closure is partial, and the shield thickness guard would fail if attached.**
-  A7's sum covers `neutron_shield` and `gamma_shield` only; `thermal_shield` and
-  `biological_shield` have no `fraction_volume` attribute at all. Deriving gamma from neutron
-  therefore encodes closure over two of four layers. Separately, B4's guard sums four layer
-  thicknesses while the design's `thickness_total` is `0.4 [m]` labelled "HT shield + structure
-  layers" — those are not the same set. Both look like modeling debt in d5 rather than constraint
-  policy, but a derivation would bake the debt in.
+- **O4 — Units exist only in comments. Acknowledged, design-owned as stated.** Every CATF
+  attribute is a bare `Real`; units live in end-of-line comments. The unit-check column is a claim
+  about intent, not a fact read from the model. The generic-band-versus-dimension-pinned choice is
+  design's.
 
-- **O4 — Units exist only in comments.** Every CATF attribute is a bare `Real`; units live in
-  end-of-line comments. The unit-check column is therefore a claim about intent, not a fact read
-  from the model. The supported unit-carrying spelling (annotate both operands in the predicate
-  body) also cannot be used with a generic band definition over `Real` formals — pinning a dimension
-  into the predicate means per-dimension constraint definitions. Design picks; the spec explicitly
-  does not, and neither does this table.
+- **O5 — Divertor gate. RULED [OWNER 2026-08-13]: B1 stays inapplicable as proposed.** Gating
+  divertor power exhaust would mean adding a divertor — a modeling-scope decision made in
+  daylight, not smuggled in as a disposition. A follow-on backlog entry ("divertor addition +
+  HeatLoadBalance gating, CATF derivative") records the option, unowned, priority owner's-later.
 
-- **O5 — The one real Group B physics gate has no design part.** `Divertor::HeatLoadBalance` is a
-  proper one-sided feasibility gate, and CATF has no divertor. If you want divertor power exhaust
-  gated in the derivative, that is a model addition and should be decided as one, not smuggled in as
-  a constraint disposition.
+- **O6 — A5/A6 imply 27 attribute-declaration edits. Acknowledged, design-owned; the edit is
+  authorized by the A5/A6 basis ruling** (axis root radius + 14 thicknesses free, radii derived).
+  Design decides the edit shape and PROVENANCE records it.
 
-- **O6 — A5 and A6 imply 27 attribute-declaration edits.** Deriving the radial build turns 14 layers
-  into a chain of derivations from one root radius plus 14 thicknesses. That is the largest source
-  change this table implies and the one most likely to move generated bytes. Design decides the edit
-  shape and PROVENANCE records it; I am flagging the size so it is not a surprise at review.
+- **O7 — Constraint-definition library home. Acknowledged, design-owned as stated.** Three
+  survivors need three definition shapes (`PositiveQuantity`, `FractionWithinBand`,
+  `ProductWithinBand`, names provisional; A9's ruling makes the product band relative-form).
+  Guidance graduation stays filed for Item 7.
 
-- **O7 — Where the constraint-definition library lives.** Three survivors need three definition
-  shapes (`PositiveQuantity`, `FractionWithinBand`, `ProductWithinBand`, names provisional). Whether
-  they live in the derivative's `library/` or a shared fixture library is design's call, and whether
-  they graduate into published authoring guidance is filed for Item 7.
+- **New filing from the ruling [OWNER 2026-08-13] — acausal-relations capability question.**
+  Relation-style parametrics with study-selectable causality ("don't force independent vs
+  dependent") is a capability bet this toolchain cannot currently express; the derive rulings
+  above choose visible in-model bases precisely because the alternative hides causality in study
+  harness config. Filed as one unowned backlog line citing this ruling.
 
 ---
 
 ## Provenance
 
-Every row above is `[AGENT]`. Nothing is settled and nothing is do-not-relitigate. The intent
+Rows the owner approved without change are `[AGENT] (ratified by owner, 2026-08-13)` — settled by
+owner ratification of agent-originated content, challengeable by re-deriving against the recorded
+reasoning. Owner-originated items are `[OWNER 2026-08-13]`: the A3 tolerance values and their
+recorded promise, the A9 relative-tolerance ruling, the item5-F1 SC-3 amendment authorization,
+and the O2/O5 rulings. The A5/A6/A7 basis cells and the derivation doc-comment obligation are the
+owner's structural amendment, content `[AGENT] (ratified by owner, 2026-08-13)`. The intent
 taxonomy is `[INHERITED]` from the lifecycle contract (itself `[AGENT] (ratified by owner,
 2026-08-12)`). The 65-row domain is `[INHERITED]` from
-`tests/expectations/constraint_population/catf_mfe_d5.json`. All predicates are transcribed from the
-`.sysml` sources named in each row, verified against source this session, not from the research
-doc's transcription.
+`tests/expectations/constraint_population/catf_mfe_d5.json`. All predicates are transcribed from
+the `.sysml` sources named in each row, verified against source at the proposal revision, not
+from the research doc's transcription. The proposal form of this table is preserved in git
+history (`0f90e20`).

@@ -309,6 +309,32 @@ silent-on-clean leg is covered by `tests/unit/test_silent_failure_family2.py`
 
 ## P3 - Low Priority
 
+### [CATF-DIVERTOR-GATE] Divertor addition + HeatLoadBalance gating, CATF derivative — P3, unowned (filed at owner direction, 2026-08-13)
+
+`FusionComponents::Divertor::HeatLoadBalance` is a genuine one-sided power-exhaust gate with no
+divertor part anywhere in the CATF design, so Item 5's ruled disposition table leaves it
+`inapplicable` (owner-disposition.md B1/O5, **[OWNER 2026-08-13]**). Gating divertor physics
+means adding a divertor to the model — a modeling-scope decision to make in daylight. This entry
+records the option; priority is the owner's-later.
+
+### [CATF-SHIELD-MODEL-DEBT] d5 shield closure/thickness inconsistencies carried into the derivative as recorded debt — P3, unowned (filed per O3 ruling, 2026-08-13)
+
+Two pre-existing d5 modeling-debt items, ruled "record, don't bake silently" (Item 5
+owner-disposition.md O3, **[OWNER 2026-08-13]**): the shield volume-fraction closure covers 2 of
+4 layers (`thermal_shield`/`biological_shield` have no `fraction_volume`), and
+`'Shield Assembly'::TotalThicknessConsistency` sums four layer thicknesses while the design's
+`thickness_total` is `0.4 [m]` ("HT shield + structure layers") — not the same set; the guard
+would fail if attached. Named model-debt entries live in the derivative's PROVENANCE; this is the
+one backlog note the ruling requires.
+
+### [ACAUSAL-RELATIONS-CAPABILITY] Relation-style parametrics with study-selectable causality — P3, unowned capability bet (filed at owner direction, 2026-08-13)
+
+"Don't force independent vs dependent": acausal constraint relations whose solve direction is
+study-selectable are a capability this toolchain cannot currently express — Item 5's derive
+rulings (owner-disposition.md, ruling item 5, **[OWNER 2026-08-13]**) choose visible in-model
+bases precisely because the alternative hides causality in study harness config. Recorded so the
+bet doesn't quietly die.
+
 ### [MATRIX-EPIC-SURFACE-ROWS] Add verification-matrix rows for the three uncovered lifecycle surfaces — P3 `[OWNER]` (ticketed 2026-07-24)
 
 Owner directed filing this as a ticket at the docs-lifecycle-sync wrap. The lifecycle epic

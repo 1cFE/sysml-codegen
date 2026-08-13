@@ -80,27 +80,29 @@ could not measure. Item 2's close named this item as the natural home
 The seven epic criteria are the floor; all are carried below. SC-1 through SC-7 restate the epic
 item's criteria; SC-8 carries the folded-in residual.
 
-- [ ] **SC-1 — The owner approves a table covering exactly 65 usages.**
+- [x] **SC-1 — The owner approves a table covering exactly 65 usages.**
       **[NEED carried from `constraint-semantics-contract/spec.md`, owner-gated]** No usage is
       missing an intent, target-form, attachment, inapplicability, derivation, capability, or
       tolerance disposition. The table lives in `owner-disposition.md` and is approved before
-      design begins.
+      design begins. *Met 2026-08-13: the owner ruled on all 65 rows, both tolerances, and the
+      open points; `owner-disposition.md` is RULED status and design had not started.*
 - [ ] **SC-2 — Every derivative change is accounted for.**
       **[INHERITED: epic Item 5]** The derivative's PROVENANCE and a machine-checkable diff
       account for every change from `catf_mfe_d5`, with a reason per change. Both frozen twins
       retain their ratified modeled syntax and their existing byte-reversal relationship.
-- [ ] **SC-3 — The derivative shows 65/65 carriers and honest coverage.**
-      **[INHERITED: epic Item 5]** Generation produces exactly 65 catalog carriers, and the report
-      claims full feasibility coverage over its applicable asserted gates without counting
-      descriptive or requirement-side usages in the denominator.
-      > **SURFACED, UNRESOLVED — owner decision required before design** (capture-fidelity §4;
-      > product-lens item5-F1). SC-3's "exactly 65" and SC-1's taxonomy can contradict each other.
-      > Intent class 1 is "structural identity → derive it, don't constrain it", and a derivation
-      > **deletes** the authored usage — so an honestly applied table can leave the derivative with
-      > fewer than 65 authored usages. This spec does not amend SC-3: the count is an epic-inherited
-      > criterion and Non-Goals forbid the agent from steering the table to preserve it. Parked
-      > until the owner rules. Dependent conclusions parked with it: what the derivative's carrier
-      > total is, and how PROVENANCE reconciles it against d5's 65.
+- [ ] **SC-3 — The derivative accounts for all 65 and shows honest coverage.**
+      **AMENDED — authorized by the owner 2026-08-13, adopting the ruled table's option 1; the
+      option's content is [AGENT] (ratified by owner, 2026-08-13).** The derivative's catalog
+      shows the accounting identity **65 = 56 carriers + 9 named deletions** (7 derive-instead + 2
+      O2 placeholder deletions): every surviving authored usage is a carrier, and every deleted
+      usage is a named deletion record in PROVENANCE citing its authorizing table row — nothing is
+      a carrier or vanishes silently. The report claims full feasibility coverage over the
+      derivative's applicable asserted gates without counting descriptive or requirement-side
+      usages in the denominator. The frozen-twin half is untouched: `catf_mfe_d5` itself still
+      shows 65/65 carriers (Item 2's proof stands).
+      *(The pre-amendment wording — "exactly 65 catalog carriers" — and the surfaced item5-F1
+      conflict that forced the ruling are preserved in this file's git history at `102ee6a`;
+      resolution recorded per capture-fidelity §3: amended, not annotated.)*
 - [ ] **SC-4 — Every applicable asserted gate executes, and the rest match their approved
       dispositions.** **[INHERITED: epic Item 5]** The five part-definition and 51
       calculation-definition groups land exactly where `owner-disposition.md` puts them.
@@ -319,14 +321,16 @@ item's criteria; SC-8 carries the folded-in residual.
 - **Items 2–3 close records:** `.project/completed/20260813_constraint-catalog-totality/` and
   `.project/completed/20260813_constraint-coverage-policy/`
 - **Owner disposition table:** `.project/active/catf-constraint-policy-acceptance/owner-disposition.md`
-  (to be created — pre-design, owner-gated)
+  — **RULED 2026-08-13**; the sole source of intent classes, tolerance values, and deletion
+  authority for everything downstream.
 - **Product-lens ledger:** `.project/active/catf-constraint-policy-acceptance/product-lens.md`
-  — spec-stage gate **BLOCK** on item5-F1 (SC-3's fixed 65 versus the owner's pending
-  derive-instead dispositions), surfaced to the owner and unresolved in this spec; item5-F2..F5
-  folded into the requirements above.
+  — spec-stage gate was **BLOCK** on item5-F1; **resolved 2026-08-13 by owner ruling** (SC-3
+  amended to the accounting identity, recorded at SC-3 above). item5-F2..F5 folded into the
+  requirements above.
 - **Design:** `.project/active/catf-constraint-policy-acceptance/design.md` (to be created)
 
 ---
 
-**Next Steps:** Draft `owner-disposition.md` and host the owner check-in on the all-65 table and
-every tolerance value. Design does not begin until that table is approved. Then `/_my_design`.
+**Next Steps:** The owner check-in is complete (2026-08-13): `owner-disposition.md` is RULED, the
+SC-3 amendment is recorded, and the three backlog filings from the ruling are made. Next:
+`/_my_design` against the ruled table.
