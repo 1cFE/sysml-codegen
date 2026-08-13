@@ -61,7 +61,7 @@
    "constraints": 0,
    "entry_points": 3,
    "modules": 1,
-   "sha256": "5d5095ebedcb4e3665fbe1980f4859e5298612596c10fc277e700d4f4457dc5e",
+   "sha256": "3e4981e072b011179fdabdece93a0ba842917074fdb69fa0e74469b2c58f47c0",
    "snapshot": "tests/fixtures/agg_literal_probe/instance_graph_snapshot.json",
    "status": "graph"
   },
@@ -86,7 +86,7 @@
    "constraints": 0,
    "entry_points": 16,
    "modules": 17,
-   "sha256": "7ebaceae9fd13e1ff19c9d2c5fcef9567d18c2022183ca68abf34fa6b431ccaa",
+   "sha256": "293e32caced690d0fb8121dfd6b6de2d23a0123caafc029985c6d519c98aa77e",
    "snapshot": "tests/fixtures/attr_expr_probe/instance_graph_snapshot.json",
    "status": "graph"
   },
@@ -122,7 +122,7 @@
    "constraints": 1,
    "entry_points": 1,
    "modules": 2,
-   "sha256": "4006ed9768da9e1a0c7d39d716a7befd0600ea012b1320431c1fd0d9d72d1574",
+   "sha256": "09a2c2d23ebf6c1265e645ad7f9a3b73ff967c89d2682c8537dab45954767acc",
    "snapshot": "tests/fixtures/constraint_inline/instance_graph_snapshot.json",
    "status": "graph"
   },
@@ -131,7 +131,7 @@
    "constraints": 3,
    "entry_points": 3,
    "modules": 7,
-   "sha256": "6bc5676591ab4922970c95a87a05fe09cbe203200bfac78850aa774f31d15287",
+   "sha256": "dd51d3d6c55bc72bf278ea54cbd0c8288476bceaec77e8171365f30b9da3abe4",
    "snapshot": "tests/fixtures/constraint_multi_instance/instance_graph_snapshot.json",
    "status": "graph"
   },
@@ -140,7 +140,7 @@
    "constraints": 1,
    "entry_points": 1,
    "modules": 2,
-   "sha256": "b3e484efec192c58cc6d341bd5ffc1a416fec29069e67d0fd5b6bbde3f22e037",
+   "sha256": "0b77f709f29a661e7d2796d881fbfd9c2720cddc300824dc8dd6f34b5c9261be",
    "snapshot": "tests/fixtures/constraint_non_numerical/instance_graph_snapshot.json",
    "status": "graph"
   },
@@ -157,7 +157,7 @@
    "constraints": 0,
    "entry_points": 6,
    "modules": 2,
-   "sha256": "5de29b842379586e91263a7cbbba53e06705b8f99a318ee532c6d6b19d4aab2c",
+   "sha256": "8df3672d1826b2cb6a883b6514853963b98bc06e1fef90cefc33505e447ba927",
    "snapshot": "tests/fixtures/d38_caret/instance_graph_snapshot.json",
    "status": "graph"
   },
@@ -166,7 +166,7 @@
    "constraints": 0,
    "entry_points": 4,
    "modules": 5,
-   "sha256": "495755f5ae6dc00d5b87a00b0c7b9f8de7e19dd847d84eb422c05aeaa3d5c69e",
+   "sha256": "1e8274c175349c2415329f057dcabbf683dc476624241ca9bb30b45da278f923",
    "snapshot": "tests/fixtures/deep_cross_scope_probe/instance_graph_snapshot.json",
    "status": "graph"
   },
@@ -191,7 +191,7 @@
    "constraints": 1,
    "entry_points": 27,
    "modules": 9,
-   "sha256": "48bdef5000a8561366ea04221252f89bb94b950a99840c541ac609687e81f5a6",
+   "sha256": "c91a8bf55720cb18cb70ffd16c1442ef4f6aba3a027eeacf300d76abdc2cacd2",
    "snapshot": "tests/fixtures/fusion_tea/instance_graph_snapshot.json",
    "status": "graph"
   },
@@ -262,7 +262,7 @@
    "constraints": 3,
    "entry_points": 6,
    "modules": 5,
-   "sha256": "316ef13eaea7ee26593de5683ec7671cb2b5115c3090c8c1a4cdbb7599b89773",
+   "sha256": "2359d062b6a1c13c3400b837ffe94fb63597f46ba411ceffd4f91b20fd0bb1c7",
    "snapshot": "tests/fixtures/modeled_default_fidelity/instance_graph_snapshot.json",
    "status": "graph"
   },
@@ -288,7 +288,7 @@
    "constraints": 0,
    "entry_points": 2,
    "modules": 2,
-   "sha256": "863582dcb4f64a3b523df65e7a6de7c1143d65286b9716fccd6e81bd8d7f5447",
+   "sha256": "4b92b9183a2e320cbf03ad098727a8eddeadc80358367d31273a25ca60c98971",
    "snapshot": "tests/fixtures/quoted_owner_formula/instance_graph_snapshot.json",
    "status": "graph"
   },
@@ -307,7 +307,7 @@
    "constraints": 0,
    "entry_points": 6,
    "modules": 6,
-   "sha256": "9b2bdaf7c07d2e91f9be97e478fc08c9a1729916023792b45cab007d352f920c",
+   "sha256": "2d90df17a5b9a71afeb66d7114775826c26219ef33bb5bc9b698cc90cd1ceefb",
    "snapshot": "tests/fixtures/retype_model/instance_graph_snapshot.json",
    "status": "graph"
   },
@@ -316,7 +316,7 @@
    "constraints": 0,
    "entry_points": 0,
    "modules": 0,
-   "sha256": "722e70b39cdfdc6336179b1a2b580d159da86da87c807e5a78aab28a8f38d0bf",
+   "sha256": "f168bbffa8c252a84ed7a7ebea117ccc7247e61be68f65f579cd4135495523b5",
    "snapshot": "tests/fixtures/sample_model/instance_graph_snapshot.json",
    "status": "graph"
   },
@@ -341,7 +341,7 @@
    "constraints": 0,
    "entry_points": 1,
    "modules": 1,
-   "sha256": "872d3640cf36ed55d485ee7c69e50e6714171e6d565b69f93a0cb19b3563cf1a",
+   "sha256": "1d4da393100ef1b68fc80902a8b50a2a32a9e07e94758ab7709f58940b27393c",
    "snapshot": "tests/fixtures/shadowed_reference/instance_graph_snapshot.json",
    "status": "graph"
   },
@@ -414,7 +414,7 @@
    "constraints": 0,
    "entry_points": 9,
    "modules": 10,
-   "sha256": "1c5b9a27a90ed22f3b0d59935fed39711c0df58343e7ecf45843a3182252f83b",
+   "sha256": "17494c69284e80aa0bd7a675c2dcd8d0f92774aee059bacf3b7d937d49069a4e",
    "snapshot": "tests/fixtures/unresolvable_attr_probe/instance_graph_snapshot.json",
    "status": "graph"
   },
@@ -423,7 +423,7 @@
    "constraints": 1,
    "entry_points": 4,
    "modules": 4,
-   "sha256": "ba505364bc3c2dd16d3990b56b732ade51c3201dbe822217f71f1a4656ef504d",
+   "sha256": "5caf02bca8169c693c364aab817683448dcfb4596e9cd86c11263d3062d82301",
    "snapshot": "tests/fixtures/wi014_toy/instance_graph_snapshot.json",
    "status": "graph"
   }

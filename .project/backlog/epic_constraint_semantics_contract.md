@@ -180,6 +180,9 @@ Item 1 -> Item 2 -> Item 3 -> Item 5
 | Step 4 REQ-CL-03 pre-amendment behavior check | Superseded where the new contract changes coverage and disposition semantics | Re-derive the row against the amended contract in Items 1–3, then revise the step-4 brief |
 | Step 4 `gain = 100` live, in-place-snapshot, and relocated-snapshot proof | Kept as Item 7 evidence, but any pre-epic run would be stale | Run once after this epic on the final paired codegen/agentic OIDs |
 | Item 7's 37-fixture instance-graph recapture | Item 2 decides whether the canonical-domain representation changes the snapshot schema; if so, Item 2 owns one reviewed recapture at its final schema | Item 7 consumes Item 2's final snapshot bytes; another recapture occurs only if later Item 7 code changes them |
+| Every paused Item 7 snapshot-route observation taken against `instance-graph/v2` bytes | **Invalid.** Item 2 bumped the instance-graph schema to `v3`; no v2 reader is kept, so any v2-derived observation cannot be reproduced | Re-observe against the recaptured v3 bytes |
+| Byte-identity comparisons on the 21 recaptured fixtures | **Invalid.** All 21 snapshot-bearing fixtures were recaptured once at the v3 schema (Item 2, 2026-08-12); every one gained `constraint_usages`, and three also moved `owner_kind` from the ungraded `partusage` to `part_usage` | Re-baseline against the recaptured bytes; the reviewed diff is in Item 2's `verification.md` |
+| Any Item 7 evidence citing `collect_constraint_manifest` as the population definition | **Invalid.** The sweep, its two classifiers, `extraction/constraint_report.py`, and all seven test call sites were deleted in Item 2 Phase 7c | Re-cite `tests/conformance/test_constraint_population_oracle.py`, whose expected-population files are the replacement authority |
 | Step 7 three complete batteries | Deferred until every substantive epic change has landed | Run once at the final paired OIDs after the epic |
 | Step 8 candidate record | Invalid until the final batteries exist | Regenerate once from the post-epic batteries and final paired OIDs |
 
@@ -348,6 +351,23 @@ before occurrence expansion can erase it.
 - `.project/active/constraint-catalog-totality/verification.md`
 
 ---
+
+#### Cross-repo hand-off from Item 2 (not work Item 2 performs)
+
+**TEAx must re-vendor `ACCEPTED_CATALOG_SCHEMA_VERSIONS` to include `3.0.0`, after this repo
+lands.** B3 forbids TEAx importing sysml-codegen, so nothing here can enforce it. While it is
+pending, **TEAx fails closed on every newly generated package** — loudly, which is the intended
+direction. Do not bump TEAx first: that makes TEAx accept a schema no generator produces.
+
+What broke for a consumer at `3.0.0`, both at once: `usage_records` widened from admitted-only to
+every authored constraint usage, and every catalog row is now keyed by `declaration_id` instead of
+the `(usage_qualified_name, source_local_identity)` string pair. A consumer that wanted the old,
+narrower set recovers it exactly by filtering `disposition_kind == "eligible"`.
+
+**Also landed in the companion, and already merged into this epic's paired worktrees:**
+`CONSTRAINT_FACTS_SCHEMA_VERSION` moved `constraint-facts/v2` → `v3` for the new
+`vacuous_asserted_gate` ADVISORY kind (agentic-mbse `bc69f04`), with codegen's
+`_upstream_pins.py` moved in the same window.
 
 ### Item 3: Coverage Report and TEAx Policy (2 days)
 
