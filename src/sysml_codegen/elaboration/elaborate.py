@@ -519,24 +519,65 @@ class _ExactElaborator:
         self._scope_display.setdefault(scope, display_qualified_name(str(package.qualified_name)))
         return scope
 
-    def _scopes_for_owner(self, owner: Any) -> tuple[ScopeId, ...]:
+    def _attachment(self, owner: Any) -> tuple[tuple[ScopeId, ...], str | None]:
+        """The scopes an owner attaches its members to, and why there are none.
+
+        An empty result has three structurally different causes, and the severity of a
+        non-reaching constraint keys on which one it is: the element has no semantic
+        owner at all, the owner's kind has no attachment capability (a ``calc def``), or
+        the owner could attach but nothing of it was ever instantiated. Returning the
+        cause beside the scopes is what lets a caller grade the three differently instead
+        of reading one bare empty tuple three ways.
+        """
         if owner is None:
-            return ()
+            return (), "owner_absent"
         if SysideAdapter.is_instance(owner, "PartDefinition"):
             owner_id = declaration_id_for(owner)
-            return tuple(
+            scopes: tuple[ScopeId, ...] = tuple(
                 occurrence.occurrence_id
                 for occurrence in self._occurrences.occurrences_for_type(owner_id)
             )
+            return scopes, None if scopes else "owner_has_no_occurrences"
         if SysideAdapter.is_instance(owner, "PartUsage"):
             owner_id = declaration_id_for(owner)
-            return tuple(
+            scopes = tuple(
                 occurrence.occurrence_id
                 for occurrence in self._occurrences.occurrences_for_declaration(owner_id)
             )
+            return scopes, None if scopes else "owner_has_no_occurrences"
         if SysideAdapter.is_instance(owner, "Package"):
-            return (self._package_scope(owner),)
-        return ()
+            return (self._package_scope(owner),), None
+        return (), "owner_kind_unattachable"
+
+    def _scopes_for_owner(self, owner: Any) -> tuple[ScopeId, ...]:
+        """The attachment scopes alone, for the callers that cannot act on the cause."""
+        return self._attachment(owner)[0]
+
+    @staticmethod
+    def _owner_kind(owner: Any) -> str:
+        """The graded kind of a constraint usage's semantic owner, from a closed map.
+
+        The map used to end in a ``.get(..., type(owner).__name__.lower())`` fallback,
+        which let an owner kind nobody had considered be graded by accident — and the
+        disposition severity now keys on this value, so an accidental grade would decide
+        whether a model halts. An unmapped kind fails by name instead.
+        """
+        kinds = {
+            "NoneType": "absent",
+            "PartDefinition": "part_def",
+            "PartUsage": "part_usage",
+            "CalculationDefinition": "calc_def",
+            "Package": "package",
+            "RequirementDefinition": "requirement_def",
+        }
+        kind = kinds.get(type(owner).__name__)
+        if kind is None:
+            raise ElaborationInvariantError(
+                ElaborationCode.SI_CONSTRAINT_UNATTACHED,
+                f"constraint owner kind {type(owner).__name__!r} "
+                f"({getattr(owner, 'qualified_name', None)!r}) is not in the closed owner-kind map",
+            )
+        return kind
 
     def _scope_lineage(self, scope: ScopeId) -> tuple[OccurrenceId, ...]:
         if not isinstance(scope, OccurrenceId):
@@ -1174,12 +1215,7 @@ class _ExactElaborator:
                     )
                 predicate_ir = neutral_predicate
         owner = self._semantic_owner(usage)
-        owner_kind = {
-            "PartDefinition": "part_def",
-            "CalculationDefinition": "calc_def",
-            "Package": "package",
-            "RequirementDefinition": "requirement_def",
-        }.get(type(owner).__name__, type(owner).__name__.lower())
+        owner_kind = self._owner_kind(owner)
         source_file, source_line = self._source_location(usage)
         exclusion_reasons = (
             tuple(diagnostic.reason for diagnostic in decision.diagnostics)

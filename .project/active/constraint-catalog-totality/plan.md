@@ -298,26 +298,26 @@ def test_unmapped_owner_kind_refuses_by_name(elaborator):
 **See design.md for:** *Component Overview* (`_attachment`), *Required Invariants* 8, *Potential
 Risks* (cause mis-split).
 
-- [ ] `elaboration/elaborate.py:522-539` — replace `_scopes_for_owner` with `_attachment(owner)`
+- [x] `elaboration/elaborate.py:522-539` — replace `_scopes_for_owner` with `_attachment(owner)`
       returning `(scopes, cause)`; `cause` is `None` when scopes are non-empty. Update the one call
       site at `:1004`.
-- [ ] `elaboration/elaborate.py:1177-1182` — the owner-kind map's `.get(..., type(owner).__name__
+- [x] `elaboration/elaborate.py:1177-1182` — the owner-kind map's `.get(..., type(owner).__name__
       .lower())` fallback becomes a refusal naming the unmapped kind. Extract it as `_owner_kind`
       so the mint and `_constraint_metadata` share one authority.
-- [ ] `elaboration/diagnostics.py` — add `SI_CONSTRAINT_UNATTACHED` and `SI_CONSTRAINT_INCOMPLETE`
+- [x] `elaboration/diagnostics.py` — add `SI_CONSTRAINT_UNATTACHED` and `SI_CONSTRAINT_INCOMPLETE`
       (PD2); nothing raises `SI_CONSTRAINT_INCOMPLETE` until Phase 3.
 
 ### Validation
 
 **Automated:**
-- [ ] Focused: `pytest tests/unit/test_constraint_attachment_cause.py` → pass.
-- [ ] **Full licensed suite** (`set -a; source /home/reid/1cfe/agentic-mbse/.env; set +a`) → no new
+- [x] Focused: `pytest tests/unit/test_constraint_attachment_cause.py` → pass.
+- [x] **Full licensed suite** (`set -a; source /home/reid/1cfe/agentic-mbse/.env; set +a`) → no new
       failures, **zero license-skip lines**. This is the phase where an unmapped owner kind in the
       corpus would appear.
-- [ ] `ruff check src/` and `mypy src/` → zero new.
+- [x] `ruff check src/` and `mypy src/` → zero new.
 
 **Manual:**
-- [ ] Confirm no generated baseline moved (`git status` on `tests/fixtures/`, baseline dirs clean).
+- [x] Confirm no generated baseline moved (`git status` on `tests/fixtures/`, baseline dirs clean).
 
 **What We Know Works After This Phase:** every empty attachment carries its reason, no owner kind is
 graded by accident, and the corpus contains no owner kind outside the closed map.
@@ -1017,6 +1017,54 @@ elaboration — so D2's mechanism stands. What moved is its reach, and the reach
 **Deviations:** one, the scanner-side `@inapplicable` marker check above (additive to Phase 7a).
 
 ### Phase 2 Completion
+**Completed:** 2026-08-12
+
+**Actual Changes:**
+- `elaboration/elaborate.py:522` — `_scopes_for_owner` becomes `_attachment(owner) -> (scopes,
+  cause)` over the three-cause split. `_scopes_for_owner` survives as a one-line accessor
+  returning `[0]`, because there are **four** call sites, not the one the plan named (`:567`,
+  `:863`, `:915`, `:1004`); only the constraint one can act on the cause. Keeping the accessor is
+  what stops the branch logic being written twice.
+- `elaboration/elaborate.py` — `_owner_kind(owner)` extracted as a static method with the closed
+  map plus `NoneType -> "absent"` and `PartUsage -> "part_usage"`, refusing an unmapped kind by
+  name (invariant 8). `_constraint_metadata` now calls it.
+- `elaboration/diagnostics.py` — `SI_CONSTRAINT_UNATTACHED` and `SI_CONSTRAINT_INCOMPLETE` added.
+- New fixtures (Phase 3 will assert against them; authored here because Phase 2's cause test needs
+  two of them): `constraint_domain_calc_def_owner`, `constraint_domain_detached_owner`,
+  `constraint_domain_containment`, `constraint_domain_plain_forms`,
+  `constraint_domain_block_non_reaching`, `constraint_domain_satisfy`,
+  `constraint_domain_satisfy_calc_def`. All seven load clean.
+- New test `tests/unit/test_constraint_attachment_cause.py` (6 nodes): the three empty causes, the
+  non-empty no-cause case, the unmapped-kind refusal, and the `absent` spelling.
+
+**Gate:** focused 6/6 pass. **Full licensed suite: 1695 passed / 34 skipped / 65 deselected**,
+**zero** `no live syside license` lines, with only the three intentional Phase-1 RED nodes
+failing. That is +6 against the recorded 1689-pass baseline and exactly the six new nodes. `ruff
+check src` **14** (baseline 14), `mypy src` **57 errors in 11 files** (baseline 57). No generated
+baseline or fixture snapshot moved (`git status` shows only the two `src/` files and the new test).
+
+**What this buys:** the whole corpus contains no constraint owner kind outside the closed map, so
+invariant 8's refusal is safe to leave in and B2's three-cause split is confirmed against real
+data rather than assumed.
+
+**Issues — SURFACED, environment, and it contradicts the plan's Environment Setup section.**
+`uv run --extra dev pytest` (the CLAUDE.md command, and the command the plan and brief both name)
+resolves `agentic_mbse` to the **main checkout** `/home/reid/1cfe/agentic-mbse`, not the companion
+worktree. Under it the suite does not even collect: `test_exact_constraint_route.py` fails to
+import `preflight_identified`. The correct interpreter is the task-specific venv
+`/home/reid/1cfe/item7-rebuild-venv/bin/python`, whose editable `.pth` reads
+`/home/reid/1cfe/agentic-mbse-item7-rebuild/src`. This is the F2 class recorded in
+`CURRENT_WORK.md` recurring. Consequences carried forward:
+- **Every gate in this item runs `/home/reid/1cfe/item7-rebuild-venv/bin/python -m pytest`**, never
+  `uv run`. The licence sourcing is unchanged.
+- **PD4's premise still holds, and is now checked rather than assumed**: the companion worktree
+  *is* the installed companion under the correct interpreter, so the Phase 4C pin window is real.
+  It would have been invisible under `uv run`, which is the worse failure — the pin test would
+  have compared against a companion nobody was editing.
+
+**Deviations:** `_scopes_for_owner` retained as an accessor (four call sites, not one); the
+owner-kind map gained `NoneType` and `PartUsage` entries the design's four-entry map lacked, both
+required for the map to be closed rather than merely narrower.
 
 ### Phase 3 Completion
 
