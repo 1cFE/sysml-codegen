@@ -6,6 +6,39 @@
 
 ## Active Work
 
+### 2026-08-13: CONSTRAINT-SEMANTICS Item 5 — AUDITED **Certify-with-residuals**; close/pre_pr with the owner
+
+`.project/active/catf-constraint-policy-acceptance/` — the epic's composed proof, complete and
+audited (audit + cures `2b490f8`, cure commits `995a058`/`1869c29`/`b083c47`/`b5f6fd8`). All
+eight spec criteria earned. Headline facts a next session needs:
+
+- **`catf_mfe_gated` landed**: 47 modules, 58 usage rows, 2 executing gates (A2, A3), histogram
+  `{eligible 2, excluded 3, non_reaching 53}`, coverage `58/2/2/0/0/{}/complete`. Accounting
+  identity **65 = 58 carriers + 7 named deletions**, machine-proved by
+  `scripts/check_gated_manifest.py --check` (now also ties each derive-instead deletion to its
+  in-source derivation + basis comment). SC-6 proved by commit order (`1247a3b` → `7369b3e`;
+  three named post-fixture expectation edits, each value-free).
+- **Finding 6-D [owner-ruled 2026-08-13]:** the first execution of these gates caught that **the
+  authored CATF design point is gate-infeasible under its own cryo model** (8,396 MW cryo load
+  vs 1,547 MW gross; `heat_leak = magnet_volume * 0.05` at `thermal_loads.sysml:59`, backlog
+  **[CATF-CRYO-HEAT-LEAK-COEFFICIENT]** P1, corrected derivation in the entry). SC-5's reject
+  leg runs the authored point through real TEAx to `reject`; the raised-`p_fusion` satisfied leg
+  is a machinery exemplar, not a recommended design. Reproduces on untouched `catf_mfe_d5`.
+- **Three toolchain limits found and filed, all "correct authoring, toolchain refuses" class:**
+  unit-lane port metadata (epic **Item 8**, blocks A5/A6/A9 whose ruled intent is held for
+  **Item 9**); `@inapplicable:` markers unreadable on inline-predicate constraints
+  (**[INLINE-PREDICATE-MARKER-DROP]**, B1–B5 recorded in PROVENANCE instead); catalog
+  fingerprint not route-portable (**[CATALOG-FINGERPRINT-ROUTE-PORTABILITY]**, pre-existing).
+- Gates at audit: licensed **2106 / 34 / zero license-skip**, ruff 12, mypy 55,
+  `git diff --check` clean, `make_d5_variant --check` 0 problems ×3, frozen twins byte-untouched
+  except d5's corrected PROVENANCE paragraph. Known pre-existing real_simkit collection-order
+  failure stays out of the floor (see Pre-existing accepted baselines below).
+- Audit residuals open by design: A-4 (SC-8 golden drives private seams), A-5 (TEAx lane manual),
+  A-7 (satisfied leg probe-asserted), A-8 (matrix rows deferred to an epic-level reconciliation).
+- **Nothing pushed; no `main` touched; TEAx stays on `constraint-semantics-item3` @ `5b70ae9`.**
+  `close`/`pre_pr` remain with the owner. Epic Items 8/9 filed; Item 6 design runs in parallel
+  (its `.project/active/calcdef-constraint-gate-design/` working files are another session's).
+
 ### 2026-08-12: Constraint-semantics contract — spec drafted (owner-directed priority)
 
 **[OWNER 2026-08-12]** redirected priority after the Item 7 step-4 probe: settle constraint

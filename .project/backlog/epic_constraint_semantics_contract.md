@@ -821,8 +821,12 @@ that generated feasibility evidence rejects an unphysical candidate through TEAx
 - [x] The derivative's PROVENANCE and machine-checkable diff account for every change from
       `catf_mfe_d5`; both frozen twins retain their ratified modeled syntax and existing reversal
       relationship.
-- [ ] The derivative generates exactly 65 catalog carriers and reports full feasibility coverage
-      over its applicable asserted gates without counting descriptive or requirement-side usages.
+- [x] The derivative accounts for all 65 authored usages under the owner-authorized identity
+      **65 = 58 carriers + 7 named deletions** (SC-3 amendment, owner-authorized 2026-08-13;
+      the original "exactly 65 carriers" wording predated the ruled derive-instead deletions)
+      and reports full feasibility coverage over its applicable asserted gates without counting
+      descriptive or requirement-side usages. `catf_mfe_d5` itself keeps its 65/65 proof.
+      *(Audited: manifest closes the identity; audit `2b490f8`.)*
 - [x] Every applicable asserted gate executes; the five part-definition and 51
       calculation-definition groups match their approved dispositions.
 - [x] At least one physically valid candidate reaches the configured satisfied path and one
