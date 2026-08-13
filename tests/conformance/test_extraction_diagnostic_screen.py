@@ -122,3 +122,63 @@ def test_advisory_rendering_cannot_swallow_the_blocking_halt(
     assert caught.value.code is ElaborationCode.EXTRACTION_DIAGNOSTIC_BLOCKING
     assert "<no location>" in caught.value.detail
     assert "blocking operand" in caught.value.detail
+
+
+# --- The first real ADVISORY kind (CONSTRAINT-SEMANTICS Item 2, invariant 61) ----------
+#
+# Until now every pin in this module used a synthetic fact with `severity` forced to
+# ADVISORY, because the writer table had no advisory kind. `vacuous_asserted_gate` is the
+# first real one, so these assert the *existing* sink handles it — no sink change was
+# needed, which is the point of routing the advisory through the companion rather than
+# inventing a second channel.
+
+VACUOUS_FIXTURE = FIXTURES_DIR / "constraint_domain_detached_owner"
+
+
+@requires_license
+def test_the_sink_renders_the_new_advisory_kind_without_halting(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    from agentic_mbse.sysml.constraint_extraction import extract_identified_constraint_facts
+    from sysml_codegen.extraction.extractor import SysMLDataExtractor
+
+    extractor = SysMLDataExtractor([VACUOUS_FIXTURE])
+    assert extractor.load_models()
+    facts = extract_identified_constraint_facts(extractor.model).facts
+
+    with caplog.at_level(logging.WARNING):
+        screen_extraction_diagnostics(facts)
+
+    assert "advisory/vacuous_asserted_gate" in caplog.text
+    assert "vacuous_gate" in caplog.text
+    assert "model.sysml:" in caplog.text
+
+
+@requires_license
+def test_generation_completes_with_the_advisory_present() -> None:
+    """Warning grade means warning grade: the package still builds."""
+    assert build_elaborated_pipeline([VACUOUS_FIXTURE]) is not None
+
+
+@requires_license
+def test_the_domain_is_identical_with_the_advisory_suppressed(monkeypatch) -> None:
+    """Invariant 59 independence: codegen's grading never consults authoring validation."""
+    from sysml_codegen.orchestration.elaborated_pipeline import elaborate_model_paths
+
+    with_advisory = elaborate_model_paths([VACUOUS_FIXTURE]).constraint_usages
+
+    import sys
+
+    monkeypatch.setattr(
+        sys.modules["sysml_codegen.elaboration.elaborate"],
+        "screen_extraction_diagnostics",
+        lambda facts: None,
+    )
+    without_advisory = elaborate_model_paths([VACUOUS_FIXTURE]).constraint_usages
+
+    assert with_advisory == without_advisory
+    assert [
+        record.disposition
+        for record in with_advisory.values()
+        if record.disposition.severity == "warning"
+    ]

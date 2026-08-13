@@ -35,7 +35,11 @@ from __future__ import annotations
 #: `agentic_mbse.sysml.constraint_facts.CONSTRAINT_FACTS_SCHEMA_VERSION`.
 #: v1 -> v2 at Item 4: `ExtractionDiagnosticFact` gained a severity field and a
 #: closed `kind` vocabulary.
-CONSTRAINT_FACTS_SCHEMA_VERSION = "constraint-facts/v2"
+#: v2 -> v3 at CONSTRAINT-SEMANTICS Item 2: the closed severity map gained
+#: `vacuous_asserted_gate` at ADVISORY grade. Adding a kind is a semantic change to
+#: snapshots already on disk, so it costs a schema bump
+#: (`docs/architecture/reference/30-diagnostic-severity.md`).
+CONSTRAINT_FACTS_SCHEMA_VERSION = "constraint-facts/v3"
 
 #: `agentic_mbse.sysml.expression_ir.EXPRESSION_IR_SCHEMA_VERSION`.
 EXPRESSION_IR_SCHEMA_VERSION = "expression-ir/v1"

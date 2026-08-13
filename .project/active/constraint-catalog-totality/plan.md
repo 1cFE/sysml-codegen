@@ -526,53 +526,53 @@ why the two sets cannot be equal), *Required Invariants* 9, *Potential Risks* (a
 two-repos-one-obligation).
 
 **C0 — Confirm the seam before editing (PD5).** This plan could not read the companion worktree.
-- [ ] Open `agentic_mbse/sysml/constraint_facts.py` in the companion worktree and confirm:
+- [x] Open `agentic_mbse/sysml/constraint_facts.py` in the companion worktree and confirm:
       `DiagnosticSeverity` (BLOCKING | ADVISORY, design cites `:57-68`); the closed
       `EXTRACTION_DIAGNOSTIC_SEVERITY` map (`:78-82`) and `severity_for_kind` (`:78-95`);
       `ExtractionDiagnosticFact` with `severity: field(init=False)` set in `__post_init__`
       (`:230-233`); `CONSTRAINT_FACTS_SCHEMA_VERSION` (`:54`, expected `constraint-facts/v2`).
-- [ ] If any anchor has moved, **record the correction in the Implementation Notes and proceed** —
+- [x] If any anchor has moved, **record the correction in the Implementation Notes and proceed** —
       the seam and D10 stand; only line numbers were second-hand. If a *mechanism* differs (e.g.
       severity is no longer writer-side), STOP and surface it: D10 rests on that.
 
 **C1 — Companion change:**
-- [ ] Add the diagnostic kind `vacuous_asserted_gate` with an `ADVISORY` entry in
+- [x] Add the diagnostic kind `vacuous_asserted_gate` with an `ADVISORY` entry in
       `EXTRACTION_DIAGNOSTIC_SEVERITY`. Severity stays writer-side; no reader-side table appears
       anywhere (REQ-DIAG-01).
-- [ ] Emit it from the companion's constraint validation on the structural trigger: **an asserted
+- [x] Emit it from the companion's constraint validation on the structural trigger: **an asserted
       constraint usage whose owning `part def` is typed by zero part usages in the model.** Do not
       reach for occurrences — the companion has no occurrence index, and reimplementing one is the
       second-representation smell this item removes.
-- [ ] Message names the usage qualified name **and** the detached owner qualified name; `location`
+- [x] Message names the usage qualified name **and** the detached owner qualified name; `location`
       carries the usage's source position so codegen's `_render` prints `file:line:column`.
-- [ ] Bump `CONSTRAINT_FACTS_SCHEMA_VERSION` `constraint-facts/v2` → `constraint-facts/v3` — adding
+- [x] Bump `CONSTRAINT_FACTS_SCHEMA_VERSION` `constraint-facts/v2` → `constraint-facts/v3` — adding
       a kind to the closed map requires it (`docs/architecture/reference/30-diagnostic-severity.md`,
       "The severity type / Severity is set by the writer").
-- [ ] Companion tests: emission + grade on the vacuous fixture; the containment case stays silent;
+- [x] Companion tests: emission + grade on the vacuous fixture; the containment case stays silent;
       the map stays closed.
 
 **C2 — Codegen side (small, but not zero — PD4):**
-- [ ] `src/sysml_codegen/_upstream_pins.py:38` — pin `constraint-facts/v3`. Land it in the same
+- [x] `src/sysml_codegen/_upstream_pins.py:38` — pin `constraint-facts/v3`. Land it in the same
       window as C1, or `tests/conformance/test_upstream_pins.py` fails on every codegen run in
       between (it compares against the *installed* companion, which is the editable worktree).
-- [ ] Extend `tests/conformance/test_extraction_diagnostic_screen.py` with the assertion that the
+- [x] Extend `tests/conformance/test_extraction_diagnostic_screen.py` with the assertion that the
       **existing** sink (`elaboration/extraction_screen.py:56-73`) renders the new kind at warning
       grade and does not halt. This is an assertion about behavior we did not write, which is the
       point of routing the advisory here — no sink change.
-- [ ] Independence check (invariant 59): codegen's disposition for the vacuous fixture is
+- [x] Independence check (invariant 59): codegen's disposition for the vacuous fixture is
       byte-identical with the advisory present and suppressed.
 
 ### Validation
 
 **Automated:**
-- [ ] Companion focused tests pass, run **in the companion worktree**
+- [x] Companion focused tests pass, run **in the companion worktree**
       (`/home/reid/1cfe/agentic-mbse-item7-rebuild`) with the license sourced.
-- [ ] Codegen: `test_upstream_pins.py` green (pin matches the bumped companion), extended screen
+- [x] Codegen: `test_upstream_pins.py` green (pin matches the bumped companion), extended screen
       test green, independence check green.
-- [ ] `ruff`/`mypy` zero-new **in both repos**.
+- [x] `ruff`/`mypy` zero-new **in both repos**.
 
 **Manual:**
-- [ ] Run codegen on the vacuous fixture and read the log: one warning line naming the usage and the
+- [x] Run codegen on the vacuous fixture and read the log: one warning line naming the usage and the
       detached owner, with `file:line:column`, and generation completes.
 
 **What We Know Works After This Phase:** invariant 61 has both halves — a fingerprinted disposition
@@ -1215,8 +1215,70 @@ annotated, because SysIDE drops a `doc` comment inside an inline predicate body.
 scanner is what makes that loud.
 
 ### Phase 4C Completion
-**Companion commit:**
-**C0 anchor confirmation (PD5):**
+**Completed:** 2026-08-12
+**Companion commit:** `bc69f04` in `/home/reid/1cfe/agentic-mbse-item7-rebuild` (branch
+`item7-rebuild`, on top of Item 1's `dcb187b`).
+
+**C0 anchor confirmation (PD5): the mechanism is exactly as designed; three line numbers moved.**
+Confirmed against the companion worktree HEAD before any edit:
+- `CONSTRAINT_FACTS_SCHEMA_VERSION` at `:54` — as cited, value `constraint-facts/v2`. ✓
+- `DiagnosticSeverity` (BLOCKING | ADVISORY) at `:57` — as cited. ✓
+- `EXTRACTION_DIAGNOSTIC_SEVERITY`, the closed writer-side map, at `:78` — as cited, and its
+  comment already states that changing an entry requires a schema bump. ✓
+- `severity_for_kind` at `:87` (design cited `:78-95`, which spans both). ✓
+- `ExtractionDiagnosticFact` at `:217` with `severity: field(init=False)` set in `__post_init__`
+  at `:234-235` (design cited `:230-233`). ✓
+No mechanism differs, so D10 stands and no stop-and-surface was triggered. The moved anchors are
+recorded here, per PD5's instruction.
+
+**C1 — companion:**
+- `constraint_facts.py` — `"vacuous_asserted_gate": DiagnosticSeverity.ADVISORY` in the closed
+  map, with the reason recorded inline; `CONSTRAINT_FACTS_SCHEMA_VERSION` → `constraint-facts/v3`.
+  Severity stays writer-side; no reader-side table appears anywhere.
+- `constraint_extraction.py` — `_ASSERTED_FORMS`, `_typed_part_definition_ids(model)` (the
+  structural stand-in for instantiation, computed once per sweep), and
+  `_vacuous_asserted_gate_fact(...)` returning the fact or `None`. The emit decision is at the
+  sweep's call site; the helper only builds the fact. The message names the usage QN **and** the
+  detached owner QN, and `location` carries the usage's position, so codegen's `_render` prints
+  `file:line:column`.
+- Three fixtures under `tests/fixtures/vacuous_asserted_gate/` and
+  `tests/test_sysml/test_vacuous_asserted_gate_advisory.py` (5 nodes: emission + grade + location,
+  the containment silence, non-asserted silence, the map staying closed, and the schema bump).
+- `production_facts.json` regenerated. Diffed key by key: **exactly two changes** — the schema
+  token, and one real advisory firing on a genuine vacuous gate in the companion's own
+  `type_units.sysml` fixture. The advisory works on data nobody wrote for it.
+- Four version pins in three companion test modules moved to v3, and the skew-direction
+  parametrization moved from `v1`/`v3` to `v2`/`v4` so both directions still straddle the current
+  version rather than one of them accidentally becoming the supported one.
+
+**C2 — codegen (small, but not zero, exactly as PD4 predicted):**
+- `_upstream_pins.py:38` → `constraint-facts/v3`, with the v2→v3 reason recorded beside the
+  v1→v2 one.
+- `tests/conformance/test_extraction_diagnostic_screen.py` — three new nodes: the existing sink
+  renders the new kind at warning grade without halting; generation completes with the advisory
+  present; and the independence check (invariant 59) — the domain is identical with
+  `screen_extraction_diagnostics` stubbed out, so codegen's grading demonstrably does not consult
+  the advisory. **No sink change was needed**, which is what routing the advisory through the
+  companion bought.
+
+**PD4's pin window was real and was closed inside the phase.** C1 and C2 landed together; between
+the companion bump and the codegen pin, `test_upstream_pins.py` compares against the installed
+(editable) companion and fails. Confirmed the install points at the worktree — see the Phase 2
+environment note, which is what made this checkable rather than assumed.
+
+**Gate — both suites, both licensed:**
+- **Codegen** (`/home/reid/1cfe/sysml-codegen-item7-rebuild`): **1666 passed / 34 skipped /
+  65 deselected**, zero `no live syside license` lines, **no failure outside the frozen 61-node
+  v2-refusal list**. `ruff check src` 14, `mypy src` 57 — baseline.
+- **Companion** (`/home/reid/1cfe/agentic-mbse-item7-rebuild`, run in that worktree):
+  **1821 passed / 1 skipped / 5 deselected / 10 failed**. The 10 are the pre-existing baseline,
+  verified by stashing the change and re-running at HEAD: identical set, 1816 passed. So the
+  change is **zero new failures**. The single skip is `Requires fusion_modeling CATF models not
+  in this repo`, not a licence skip — zero `no live syside license` lines. `ruff check src` 1
+  before and after; `mypy src` 108 errors in 26 files before and after — zero new on both.
+
+**Deviations:** none. The regenerated golden and the version-pin updates are consequences of the
+schema bump, not choices.
 
 ### Phase 5 Completion
 
