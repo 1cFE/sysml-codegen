@@ -195,17 +195,17 @@ probes/licensed.sh probes/run_probe.py /tmp/item5probe/p8
 ```
 
 ### Steps
-- [ ] Reproduce P7's composite first, unchanged, and confirm it still admits (48 modules, 2 gates,
+- [x] Reproduce P7's composite first, unchanged, and confirm it still admits (48 modules, 2 gates,
       65 rows). A drift here means something moved under the design and everything after it is suspect.
-- [ ] Add the remaining edits **group by group, re-elaborating after each group**. Record each
+- [x] Add the remaining edits **group by group, re-elaborating after each group**. Record each
       group's outcome. A BLOCK or collision names the group that caused it — that is the whole
       reason for the grouping.
-- [ ] Author the five `@inapplicable:` markers **by copy from the Item 2 fixtures that pin the exact
+- [x] Author the five `@inapplicable:` markers **by copy from the Item 2 fixtures that pin the exact
       form** (`tests/fixtures/constraint_domain_inapplicable/`). A malformed directive halts
       generation at `error` even on a plain usage.
-- [ ] Drive any rewrite off the **chain name** carried by `block_feature_chain`, never off
+- [x] Drive any rewrite off the **chain name** carried by `block_feature_chain`, never off
       `file:line` — every entry of a multi-chain block renders the same location (Item 4 limit 2).
-- [ ] Author **no bare self-named binding**. If one becomes unavoidable, **surface and stop**: the
+- [x] Author **no bare self-named binding**. If one becomes unavoidable, **surface and stop**: the
       D-2 vs D-4/SRC-01 conflict is parked at the umbrella level and is not resolved inside this item.
 
 ### Reconciliation (the gate — write this down before Phase 2 starts)
@@ -224,13 +224,13 @@ And the derived disposition histogram, from the ruled table (not from a dump):
 **`eligible` 2** (A2, A3) · **`excluded` 3** (A5, A6, A9 — reaching, unassessed form, exactly as in
 d5 today) · **`non_reaching` 53** (B1–B5 + the 48 `awaits-capability` Group C rows) = **58**.
 
-- [ ] The probe's measured counts equal the reconciliation table's. **Any mismatch stops the phase**
+- [x] The probe's measured counts equal the reconciliation table's. **Any mismatch stops the phase**
       — triage as fixture-wrong / reconciliation-wrong / B2-false, and surface the third.
 
 ### Validation
-- [ ] Probe ADMITs with 58 usage rows, 2 concrete entries, histogram as above.
-- [ ] Nothing under `tests/` or `src/` changed; `/tmp/item5probe/*` is throwaway.
-- [ ] Reconciliation table committed to `verification.md`.
+- [x] Probe ADMITs with 58 usage rows, 2 concrete entries, histogram as above.
+- [x] Nothing under `tests/` or `src/` changed; `/tmp/item5probe/*` is throwaway.
+- [x] Reconciliation table committed to `verification.md`.
 
 **What we know after this phase:** the ruled shape generates, the atomic landing is safe to attempt,
 and every expectation number now has a measured referent. **No expectation file may be written before
@@ -582,6 +582,58 @@ lint/type floors hold exactly (ruff 12, mypy 55), the TEAx tip is `5b70ae9` on
    corrected paragraph records 43.
 
 ### Phase 1 Completion
+
+**Completed:** 2026-08-13. Full ladder, counts, and reconciliation table in
+`verification.md` §Phase 1.
+
+**Changes made (all throwaway, nothing under `tests/` or `src/`):**
+- `probes/edits3.py` — the edits P7 never tested: the ruled library (no `ProductWithinBand`),
+  the A1/C37 group, the A4/C21/C28 deletions, the A7/A8 usage deletions, the five
+  `@inapplicable:` markers, the axis-leg reversal.
+- `probes/apply3.py`, `probes/check_markers.py` — group runner and a marker-carriage probe.
+- Scratch copy at `/tmp/item5probe/p8`; both frozen twins untouched.
+
+**Result — B2 holds.** The ruled shape generates: **ADMIT, 47 modules, 58 usage rows, 2
+concrete entries, `{eligible: 2, excluded: 3, non_reaching: 53}`** — equal to the
+reconciliation table derived from the ruled table, row for row. No new
+`SI_RENDERING_COLLISION`, no `SI_CONSTRAINT_BLOCKED`, no readiness refusal at any of the six
+re-elaborations. No bare self-named binding was needed or authored.
+
+**Issues / deviations:**
+
+1. **The plan's group list undercounted `derive-instead` by two edits.** It treated "A7, A8
+   derivations" as the whole of those rows; `derive-instead` also deletes the authored usage
+   the derivation replaces. Measured: after groups 3 and 4 the probe sat at **60** rows, not
+   58. Added as group 4b (the A7 and A8 usage deletions), which lands it at exactly 58 and the
+   histogram at exactly 2/3/53. The ruled table is not wrong — its identity names all five
+   derive-instead rows, and the arithmetic only closes if all five usages go.
+2. **Module count is 47, not P7's 48.** The axis-leg reversal returns
+   `axis_region.outer_radius` to a literal and un-mints its module. Expected.
+3. **Derivation basis statements are `//` comments, not `doc` bodies.** The owner's structural
+   amendment asks for a doc comment recording the undirected relation and the chosen-basis
+   statement. An attribute with an initializer would need a trailing `{ doc /* … */ }` body to
+   carry a real doc, which risks perturbing an atomic landing for no gain — and SysIDE's
+   handling of doc bodies in this position is the very thing finding 4 below shows to be
+   unreliable. The relation and the chosen-basis statement are carried verbatim in source
+   comments beside each derivation and repeated in PROVENANCE, which is where the ruling puts
+   the durable record. Flagged for the owner.
+
+**FINDING (surfaced, not resolved) — the five `@inapplicable:` markers cannot reach the
+domain on B1–B5's shape.** Measured: **5 written in source, 0 carried on the domain**, with
+the markers in the exact form and first-line placement the Item 2 fixtures pin. B1–B5 are
+inline-predicate constraints, and SysIDE drops a `doc` comment inside an inline-predicate
+constraint body — rule 3 of `test_constraint_population_oracle.py`, written down to make
+exactly this gap loud. Every Item 2 fixture that carries a working marker is bindings-form.
+
+Consequence: authoring the markers as the ruled table calls for turns
+`test_every_authored_inapplicable_marker_reached_the_domain[catf_mfe_gated]` red. **No
+committed number changes either way** — `inapplicable_gate_count` is 0 regardless (bucket row
+1 decides before the inapplicable predicate is consulted), and the measured histogram is
+identical with and without the markers. Phase 2's expectations are unaffected.
+
+**Phase 2 is not started.** The finding touches an owner-ruled disposition (Group B: "an
+explicit `@inapplicable:` disposition"), so it is surfaced rather than absorbed.
+
 ### Phase 2 Completion
 ### Phase 3 Completion
 ### Phase 4 Completion
