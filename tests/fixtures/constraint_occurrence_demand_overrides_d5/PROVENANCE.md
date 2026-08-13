@@ -73,4 +73,5 @@ supplied value would make them agree here.
 
 `reading_in >= 5.0`. `low` carries `4.0` → violated, margin `-1.0`. `high` carries `6.0` →
 satisfied, margin `1.0`. One violated sibling makes the run's headline `violation`, with
-`assessed_count` 2.
+`assessed_entry_count` 2 (one authored usage over two occurrences, so the
+coverage account reads `assessed_gate_count` 1 beside it).

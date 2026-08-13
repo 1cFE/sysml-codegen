@@ -8,11 +8,28 @@ snapshot determinism).
 
 from __future__ import annotations
 
-RUNTIME_CONTRACT_VERSION = "1.0.0"
+RUNTIME_CONTRACT_VERSION = "2.0.0"
 """The runtime API surface the emitted code targets.
 
 Bump the major version on any breaking change to that surface; minor/patch for
-compatible additions. Owner-overridable; this is the initial token (P4).
+compatible additions. Owner-overridable; ``1.0.0`` was the initial token (P4).
+
+Bumped to ``2.0.0`` at CONSTRAINT-SEMANTICS Item 3, where three things broke at once for a
+runtime reading a ``ConstraintReport``:
+
+- ``assessed_count`` is renamed ``assessed_entry_count``, because a second, coarser count now
+  exists beside it and a reader must not have to guess which tier a field means;
+- ``coverage`` is a new **required** block carrying the ``CoverageAccount``;
+- the ``headline`` vocabulary is replaced, not extended — ``all_satisfied`` becomes
+  ``full_satisfaction`` and the new ``partial_coverage`` state joins it. The rename is
+  deliberate: state 3's meaning strengthens from "nothing failed" to "everything was checked
+  and passed", and a token whose meaning changes under a reader is a silent misread. Renaming
+  turns every stale reader into a named refusal instead.
+
+TEAx **replaces** its vendored ``ACCEPTED_RUNTIME_CONTRACT_VERSIONS`` rather than extending
+it, so a package built before this item fails at seal verification before any report is read.
+``TRUSTED_VERIFIER_SHA256`` does not move: ``contracts/verify.py`` reads the version out of
+the seal data and contains no version literal, so its bytes are unchanged by the bump.
 """
 
 CATALOG_SCHEMA_VERSION = "3.0.0"

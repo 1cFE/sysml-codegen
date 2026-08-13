@@ -241,9 +241,24 @@ def test_the_constraint_report_carries_the_modeled_verdict(
     assert isinstance(fingerprint, str)
     assert len(fingerprint) == 64 and set(fingerprint) <= set("0123456789abcdef")
 
+    # `coverage` and `assessed_entry_count` are hand-written from the fixture's SysML source,
+    # not read off a run: `designs/generic_ife/ife_plant.sysml:155` declares the model's one
+    # and only constraint usage (`fusion_cycle.sysml:29` is a `constraint def`, and
+    # `hif_plant.sysml:223` is a comment saying the constraint is inherited, not a second
+    # declaration). Asserted, unmarked, owner instantiated -> D3 row 3. The derivation and
+    # its evidence are in `.project/active/constraint-coverage-policy/expected-coverage.md`.
     assert dump == {
-        "headline": "all_satisfied",
-        "assessed_count": 1,
+        "headline": "full_satisfaction",
+        "assessed_entry_count": 1,
+        "coverage": {
+            "authored_usage_total": 1,
+            "applicable_gate_total": 1,
+            "assessed_gate_count": 1,
+            "unassessed_gate_count": 0,
+            "inapplicable_gate_count": 0,
+            "unassessed_reasons": {},
+            "coverage_state": "complete",
+        },
         "results": [
             {
                 "constraint_id": VIABILITY_ID,

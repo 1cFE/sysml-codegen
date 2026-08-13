@@ -168,8 +168,20 @@ def test_both_truth_values_and_the_violated_run_still_completes(tmp_path):
         30.0,
     )
     assert evaluation.observed == {"gain_in": 40.0, "threshold": 10.0}
-    assert from_files.outputs[REPORT_CH].headline == "all_satisfied"
-    assert from_files.outputs[REPORT_CH].assessed_count == 1
+    # Ledger entry (expected-coverage.md, source-derived): 1 / 1 / 1 / 0 / 0 / {} / complete.
+    # `model.sysml:57` declares the one usage, on the instantiated `part the_host : Host`.
+    report = from_files.outputs[REPORT_CH]
+    assert report.headline == "full_satisfaction"
+    assert report.assessed_entry_count == 1
+    assert report.coverage.model_dump() == {
+        "authored_usage_total": 1,
+        "applicable_gate_total": 1,
+        "assessed_gate_count": 1,
+        "unassessed_gate_count": 0,
+        "inapplicable_gate_count": 0,
+        "unassessed_reasons": {},
+        "coverage_state": "complete",
+    }
 
     # Persisted beside the ordinary outputs, not merely returned in process.
     (written_file,) = (tmp_path / "run_files").glob("*/constraint_report.json")
@@ -289,7 +301,7 @@ def test_one_shared_definition_two_polarities_two_verdicts(tmp_path):
     result = _execute_from_files(package, name, tmp_path)
 
     report = result.outputs[REPORT_CH]
-    assert report.assessed_count == 2
+    assert report.assessed_entry_count == 2
     assert report.headline == "violation"
 
     by_polarity = {
@@ -411,9 +423,15 @@ def test_n_instances_produce_n_verdicts_from_one_compiled_predicate(tmp_path):
     assert predicates.count("def constraint_pred_") == 1
 
     report = _execute_from_files(package, name, tmp_path).outputs[REPORT_CH]
-    assert report.assessed_count == 3
     # cell_rating 10.0 -> p = 20.0 >= 0.0 on all three.
-    assert report.headline == "all_satisfied"
+    assert report.headline == "full_satisfaction"
+    # The two-tier asymmetry, on a real package: `model.sysml:24` declares ONE usage, and
+    # `part cell : Cell [3]` expands it to three occurrences. Ledger entry:
+    # 1 / 1 / 1 / 0 / 0 / {} / complete, assessed_entry_count 3.
+    assert report.assessed_entry_count == 3
+    assert report.coverage.assessed_gate_count == 1
+    assert report.coverage.applicable_gate_total == 1
+    assert report.coverage.coverage_state == "complete"
     assert [evaluation.status for evaluation in report.results] == ["satisfied"] * 3
 
 
@@ -537,7 +555,9 @@ def test_a_redefined_actual_drives_the_verdict(tmp_path):
     satisfied = _execute_from_files(package, name, tmp_path)
     evaluation = _sole_evaluation(satisfied)
     assert (evaluation.status, evaluation.actual_value) == ("satisfied", True)
-    assert satisfied.outputs[REPORT_CH].headline == "all_satisfied"
+    # Ledger entry: 1 / 1 / 1 / 0 / 0 / {} / complete — `model.sysml:27` is the one usage.
+    assert satisfied.outputs[REPORT_CH].headline == "full_satisfaction"
+    assert satisfied.outputs[REPORT_CH].coverage.coverage_state == "complete"
 
     evaluate = _entry_injector(package, name, tmp_path)
     (constraint_id,) = _verdicts(evaluate({}))
@@ -571,7 +591,7 @@ def test_sibling_occurrence_overrides_reach_distinct_verdicts(tmp_path):
 
     result = _execute_from_files(package, name, tmp_path)
     report = result.outputs[REPORT_CH]
-    assert report.assessed_count == 2
+    assert report.assessed_entry_count == 2
     assert report.headline == "violation"
 
     by_sibling = {
