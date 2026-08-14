@@ -315,30 +315,30 @@ derivation it mutated.
 anchor-failure messages; `design.md` D5 for why line ranges and comment-coupled anchors were
 rejected.**
 
-- [ ] `tests/conformance/test_gated_manifest_identity.py` — the four cases above, occurrence-scoped
-- [ ] `scripts/check_gated_manifest.py` — `DERIVATIONS` becomes
+- [x] `tests/conformance/test_gated_manifest_identity.py` — the four cases above, occurrence-scoped
+- [x] `scripts/check_gated_manifest.py` — `DERIVATIONS` becomes
       `dict[str, tuple[Derivation, ...] | None]` keyed by usage, each `Derivation` carrying
       `(relative, owner, initializer)`; populate all 27 new entries plus the three existing ones
       (`gamma_shield`, `catf_vacuum_vessel`, `AlphaNeutronSplit`) on the same rule
-- [ ] Same file — block scanner: locate the owning block by its declaration header, close it by
+- [x] Same file — block scanner: locate the owning block by its declaration header, close it by
       brace depth, require the initializer **exactly once inside that block**
-- [ ] Same file — **no file-wide fallback**. All three anchor failures append a problem naming the
+- [x] Same file — **no file-wide fallback**. All three anchor failures append a problem naming the
       usage and the owner. A derivation the prover cannot anchor is a failure, never an unchecked
       row.
 
 ### Validation
 
 **Automated:**
-- [ ] `python scripts/check_gated_manifest.py --check` → reports `65 = 56 carriers + 9 named
+- [x] `python scripts/check_gated_manifest.py --check` → reports `65 = 56 carriers + 9 named
       deletions`, `53` by name, `3` by `renamed_from:`, and gates all **30** derivations
-- [ ] `pytest tests/conformance/test_gated_manifest_identity.py` → green, all falsification cases
+- [x] `pytest tests/conformance/test_gated_manifest_identity.py` → green, all falsification cases
       included
-- [ ] `pytest tests/conformance/test_constraint_population_oracle.py -k catf_mfe_gated` → green
+- [x] `pytest tests/conformance/test_constraint_population_oracle.py -k catf_mfe_gated` → green
       (licensed; this is what confirms the population `source_line`)
-- [ ] `pytest tests/unit/test_coverage_ledger_agreement.py` → green (licensed; parses the ledger row)
+- [x] `pytest tests/unit/test_coverage_ledger_agreement.py` → green (licensed; parses the ledger row)
 
 **Manual:**
-- [ ] Confirm the failure messages name the layer, not just the file — read one of them
+- [x] Confirm the failure messages name the layer, not just the file — read one of them
 
 **What we know works after this phase:** the restated identity closes against a prover whose
 strongest claim is gated per occurrence, and the committed expectations are confirmed by a run that
@@ -588,6 +588,47 @@ spec's success criteria has a recorded count behind it.
   keeps the prover's deletion-heading regex from matching it.
 
 ### Phase 3 Completion
+**Completed:** 2026-08-13. This phase holds the **first confirmation run** of the item.
+
+**Actual Changes:**
+- `scripts/check_gated_manifest.py` — `DERIVATIONS` is now
+  `dict[str, tuple[Derivation, ...] | None]`, each `Derivation` carrying
+  `(relative, owner, initializer)`. A5's 13 and A6's 14 entries are built from one `_LAYERS`
+  table so the layer order is stated once; the three pre-existing rows gained their owner anchors
+  (`gamma_shield`, `catf_vacuum_vessel`, `AlphaNeutronSplit`) on the same rule. **30 derivations
+  gated**, counted from the map.
+- Same file — `_owner_block` locates the owning declaration by its header line and closes it by
+  brace depth; `_anchor` requires the initializer **exactly once inside that block**;
+  `_missing_statements` reads the comment window as before. All three anchor failures raise
+  `AnchorError` and are appended as problems naming the usage, the owner and the file. **No
+  file-wide fallback anywhere.**
+- `tests/conformance/test_gated_manifest_identity.py` — four occurrence-scoped falsification
+  cases over a `fixture_copy` whose rewriter is scoped to one layer's `part` block: documentation
+  stripped from `blanket`'s `outer_radius` (exactly one problem, naming both), that initializer
+  removed (exactly one, "not found"), the owning block renamed (two problems, one per usage,
+  "owner block `blanket` not found"), and the block duplicated (two problems, "is ambiguous").
+
+**Confirmation run (licensed, item7-rebuild venv):**
+- `scripts/check_gated_manifest.py --check` →
+  `identity closes: 65 = 56 carriers + 9 named deletions`, `53` by name, `3` by `renamed_from:`.
+  **Every C2 expectation held. Nothing was retuned.**
+- `pytest tests/conformance/test_gated_manifest_identity.py` + the population oracle + the
+  coverage ledger → **169 passed, 7 deselected** (the deselected are `catf_mfe_d5` /
+  `catf_mfe_model` parametrizations, covered again by the full run in Phase 5).
+- `test_constraint_population_oracle.py -k catf_mfe_gated` → 3 passed, which is what confirms
+  A9's committed `source_line: 171` against the authored source.
+- Read one failure message end to end; it names the layer, not just the file:
+  `…::RadiusThicknessConsistency: the derivation \`attribute outer_radius : Real = inner_radius +
+  thickness;\` in \`blanket\` at designs/catf_mfe/radial_build.sysml:243 is missing the undirected
+  relation and the chosen-basis statement — required by owner-disposition.md:37-41`.
+
+**Issues:** none. No committed expectation was contradicted, so the plan's "fix it in its own
+commit" path was not needed.
+
+**Deviations:**
+- The falsification fixture scopes its mutation with a six-line local block scan rather than
+  reaching into the prover's private `_owner_block`. Same scoping property, no circularity
+  between the check and the test that falsifies it.
 
 ### Phase 4 Completion
 

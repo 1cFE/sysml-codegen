@@ -89,27 +89,92 @@ class DeletionRecord:
     authorizing_row: str
 
 
-#: Each `derive-instead` row, and how to find the derivation that replaces it in the
+class AnchorError(Exception):
+    """A derivation could not be located at exactly one place in the derivative's source."""
+
+
+@dataclass(frozen=True)
+class Derivation:
+    """One computed attribute replacing a deleted usage, and where it must be found.
+
+    `owner` is the declaration block that owns it — the anchor. A6's 14 initializers are
+    byte-identical lines, so "unique in the file" cannot distinguish them and "unique inside
+    `blanket`" can.
+    """
+
+    relative: str
+    owner: str
+    initializer: str
+
+
+#: The 14 radial-build layers, outermost-derived-from-innermost, in authored order. `None` marks
+#: the free root: `axis_region.inner_radius` is a free parameter and derives from nothing.
+_LAYERS: tuple[tuple[str, str | None], ...] = (
+    ("axis_region", None),
+    ("plasma_region", "axis_region"),
+    ("vacuum_gap", "plasma_region"),
+    ("first_wall", "vacuum_gap"),
+    ("blanket", "first_wall"),
+    ("reflector", "blanket"),
+    ("ht_shield", "reflector"),
+    ("structure", "ht_shield"),
+    ("gap1", "structure"),
+    ("vessel", "gap1"),
+    ("tf_coil", "vessel"),
+    ("gap2", "tf_coil"),
+    ("lt_shield", "gap2"),
+    ("bioshield", "lt_shield"),
+)
+
+_RADIAL_BUILD = "designs/catf_mfe/radial_build.sysml"
+
+#: A5 — each layer's `inner_radius` derives from the layer below's `outer_radius`. 13 of them;
+#: the axis root has no layer below.
+_LAYER_CONTINUITY = tuple(
+    Derivation(_RADIAL_BUILD, layer, f"attribute inner_radius : Real = {below}.outer_radius;")
+    for layer, below in _LAYERS
+    if below is not None
+)
+
+#: A6 — each layer's `outer_radius` derives from its own `inner_radius` and `thickness`. All 14
+#: initializers are the same bytes, which is why the owning block is the anchor.
+_RADIUS_THICKNESS = tuple(
+    Derivation(_RADIAL_BUILD, layer, "attribute outer_radius : Real = inner_radius + thickness;")
+    for layer, _ in _LAYERS
+)
+
+#: Each `derive-instead` row, and how to find the derivations that replace it in the
 #: derivative's source. Keyed by the deleted usage's qualified name.
 #:
-#: The ruled table (`owner-disposition.md`) names all five. Two of them — A1 and A4 — are
+#: The ruled table (`owner-disposition.md`) names all seven. Two of them — A1 and A4 — are
 #: deletions with no derivation of their own: A1 is the instance-level restatement of C37's
-#: identity, and A4 asserted a literal against itself. The other three must exist in source
-#: **and** carry the owner-required relation + chosen-basis statement.
-DERIVATIONS: dict[str, tuple[str, str] | None] = {
+#: identity, and A4 asserted a literal against itself. Every other derivation must exist in
+#: source **and** carry the owner-required relation + chosen-basis statement, per occurrence.
+DERIVATIONS: dict[str, tuple[Derivation, ...] | None] = {
     "CATFMFEPhysics::catf_physics::PowerBalanceConsistency": None,
     "CATFMFERadialBuild::catf_radial_build::TotalRadiusConsistency": None,
+    "CATFMFERadialBuild::catf_radial_build::LayerContinuity": _LAYER_CONTINUITY,
+    "CATFMFERadialBuild::catf_radial_build::RadiusThicknessConsistency": _RADIUS_THICKNESS,
     "CATFMFEShield::catf_shield::CompositionConsistency": (
-        "designs/catf_mfe/shield.sysml",
-        "attribute fraction_volume : Real = 1.0 - neutron_shield.fraction_volume;",
+        Derivation(
+            "designs/catf_mfe/shield.sysml",
+            "gamma_shield",
+            "attribute fraction_volume : Real = 1.0 - neutron_shield.fraction_volume;",
+        ),
     ),
     "CATFMFEVacuum::catf_vacuum_vessel::ThicknessConsistency": (
-        "designs/catf_mfe/vacuum.sysml",
-        "attribute outer_radius : Real = inner_radius + wall_thickness;",
+        Derivation(
+            "designs/catf_mfe/vacuum.sysml",
+            "catf_vacuum_vessel",
+            "attribute outer_radius : Real = inner_radius + wall_thickness;",
+        ),
     ),
     "FusionPhysics_PowerBalance::AlphaNeutronSplit::EnergyConservation": (
-        "library/physics/power_balance.sysml",
-        "out attribute p_neutron : Real = p_fusion - p_alpha;",
+        Derivation(
+            "library/physics/power_balance.sysml",
+            "AlphaNeutronSplit",
+            "out attribute p_neutron : Real = p_fusion - p_alpha;",
+        ),
     ),
 }
 
@@ -199,48 +264,89 @@ def _comment_block_above(lines: list[str], index: int) -> str:
     return "\n".join(reversed(block)).lower()
 
 
+def _owner_block(lines: list[str], derivation: Derivation) -> range:
+    """The line range of the declaration block that owns `derivation`, closed by brace depth.
+
+    A block whose header is missing, repeated, or never closed raises rather than degrading to
+    file scope: an unanchored derivation must be a reported failure, not an unchecked row.
+    """
+    header = re.compile(rf"^\s*(?:\w+\s+)+{re.escape(derivation.owner)}\s*\{{\s*$")
+    starts = [index for index, line in enumerate(lines) if header.match(line)]
+    where = f"in {derivation.relative}"
+    if not starts:
+        raise AnchorError(f"owner block `{derivation.owner}` not found {where}")
+    if len(starts) > 1:
+        raise AnchorError(f"owner block `{derivation.owner}` is ambiguous {where}")
+    depth = 0
+    for cursor in range(starts[0], len(lines)):
+        depth += lines[cursor].count("{") - lines[cursor].count("}")
+        if depth == 0:
+            return range(starts[0], cursor + 1)
+    raise AnchorError(f"owner block `{derivation.owner}` is never closed {where}")
+
+
+def _anchor(lines: list[str], derivation: Derivation) -> int:
+    """The one line inside the owning block that carries `derivation`'s initializer."""
+    block = _owner_block(lines, derivation)
+    hits = [index for index in block if derivation.initializer in lines[index]]
+    scope = f"inside `{derivation.owner}` in {derivation.relative}"
+    if not hits:
+        raise AnchorError(
+            f"derive-instead promises `{derivation.initializer}` {scope}, not found"
+        )
+    if len(hits) > 1:
+        raise AnchorError(f"`{derivation.initializer}` is not unique {scope}")
+    return hits[0]
+
+
+def _missing_statements(comment: str) -> list[str]:
+    """Which of the owner's two required statements the comment block does not carry."""
+    return [
+        name
+        for name, marker in (
+            ("the undirected relation", RELATION_MARKER),
+            ("the chosen-basis statement", BASIS_MARKER),
+        )
+        if marker not in comment
+    ]
+
+
 def check_derivations(fixture_root: Path) -> list[str]:
-    """Every `derive-instead` row's replacing derivation, in source, with its statements.
+    """Every `derive-instead` row's replacing derivations, in source, with their statements.
 
     The identity check joins four documents and never opens a `.sysml`, so a deletion record
     is otherwise accepted on the strength of citing an authorizing row — whether the
     derivation it promises exists, and whether it carries the relation intent the owner ruled
     must survive the deletion, went unchecked. That gap shipped two bare initializers past
     four phases of gates (audit finding A-1). This closes it.
+
+    A5 and A6 each replace one usage with many derivations, and A6's 14 initializers are
+    byte-identical lines, so the gate is **per occurrence**: each derivation is anchored to its
+    own owning block and its documentation is read there. Stripping one layer's statements names
+    that layer.
     """
     problems: list[str] = []
-    for usage, derivation in DERIVATIONS.items():
-        if derivation is None:
+    for usage, derivations in DERIVATIONS.items():
+        if derivations is None:
             continue
-        relative, initializer = derivation
-        path = fixture_root / relative
-        if not path.exists():
-            problems.append(f"{usage}: {relative} does not exist")
-            continue
-        lines = path.read_text().splitlines()
-        matches = [i for i, line in enumerate(lines) if initializer in line]
-        if not matches:
-            problems.append(
-                f"{usage}: derive-instead promises `{initializer}` in {relative}, not found"
-            )
-            continue
-        if len(matches) > 1:
-            problems.append(f"{usage}: `{initializer}` is not unique in {relative}")
-            continue
-        comment = _comment_block_above(lines, matches[0])
-        missing = [
-            name
-            for name, marker in (
-                ("the undirected relation", RELATION_MARKER),
-                ("the chosen-basis statement", BASIS_MARKER),
-            )
-            if marker not in comment
-        ]
-        if missing:
-            problems.append(
-                f"{usage}: the derivation at {relative}:{matches[0] + 1} is missing "
-                f"{' and '.join(missing)} — required by owner-disposition.md:37-41"
-            )
+        for derivation in derivations:
+            path = fixture_root / derivation.relative
+            if not path.exists():
+                problems.append(f"{usage}: {derivation.relative} does not exist")
+                continue
+            lines = path.read_text().splitlines()
+            try:
+                index = _anchor(lines, derivation)
+            except AnchorError as failure:
+                problems.append(f"{usage}: {failure}")
+                continue
+            missing = _missing_statements(_comment_block_above(lines, index))
+            if missing:
+                problems.append(
+                    f"{usage}: the derivation `{derivation.initializer}` in "
+                    f"`{derivation.owner}` at {derivation.relative}:{index + 1} is missing "
+                    f"{' and '.join(missing)} — required by owner-disposition.md:37-41"
+                )
     return problems
 
 
