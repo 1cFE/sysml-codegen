@@ -10,6 +10,11 @@
 
 Items 5, 6, 8, and 9 all closed and archived today (see Recently Completed). What is live now:
 
+- **Item 7 spec drafted 2026-08-14** — `.project/active/constraint-docs-agent-sync/spec.md`
+  (epic CONSTRAINT-SEMANTICS). Its product-lens run is **owed**: the lens script is outside this
+  session's sandbox, dispositioned in
+  `.project/active/constraint-docs-agent-sync/product-lens.md`.
+
 - **Item 7 (ADR, product promise, and agent-facing documentation sync) is UNBLOCKED and is the
   last item in the epic.** Item home `.project/active/constraint-docs-agent-sync/`. It documents
   the final state and owes three things: the `modeling-assumptions.md` §8 unit-on-binding rewrite
@@ -854,16 +859,62 @@ surfaces as matrix-row candidates.
 
 ---
 
-## Up Next
+## Up Next — the road back from the detour (written 2026-08-14, orchestrator + owner)
 
-1. **Documentation update pass** (see Documentation debt above): severity-system doc home,
-   portability matrix row, `docs/architecture/` sweep vs merged main, EXPLAINER_PROMPT
-   re-anchoring. Reuse the Item 6 three-sweep inventory method.
-2. **CE-F1/F2 follow-ons** (BACKLOG): direct TEAx consumption of codegen's embedded catalog with
-   the alternate catalog schema/materializer removed, plus multi-channel CandidateBridge (teax).
-3. **pipeline_explainer_v2.html build** (`[V2-HTML-BUILD]`, P2, owner-assigned elsewhere) — after
-   EXPLAINER_PROMPT re-anchoring.
-4. **Owner decisions** listed under Open decisions (branch delivery/deletion, stale-baseline
-   owner, nested-occurrence-override scheduling, Item-10 completeness ruling).
+The CONSTRAINT-SEMANTICS epic was a nested detour inside ELABORATE-FIRST Item 7's branch,
+triggered by the step-4 probe. The sequence back out, in order:
+
+**A. Finish CONSTRAINT-SEMANTICS (in flight).** Item 7 (docs/ADR/agent prompts) is running;
+then epic close with Lessons Learned. **No pre_pr at epic close** — the epic's changes live on
+the unmerged `item7-rebuild` line and ship with it; the branch gate runs once, at phase D.
+
+**B. Resume ELABORATE-FIRST Item 7 (cutover recovery steps 4–10),**
+`.project/active/cutover-recovery/plan.md` ("PAUSED at step 4", now released):
+1. Revise the step-4 brief per the pause record (its zero-input-report instruction and
+   REQ-CL-03/04 closures are superseded by the landed contract) and discharge the epic's
+   Item 7 Evidence-Invalidation Register row by row
+   (`epic_constraint_semantics_contract.md` §register — each row names rerun vs absorbed).
+2. Execute steps 4–6, then 7–8 ONCE at the true final paired codegen/companion OIDs (three
+   batteries + one regenerated candidate record), step 9 fresh narrow audit, step 10 **owner
+   final acceptance** (owner-grade; no push/tag/close from agents).
+
+**C. ELABORATE-FIRST Item 8 — Downstream Remediation and Certification (3–5 days,**
+`epic_elaborate_first_architecture.md:472`): Fusion Tea + Stellarator regeneration on the
+corrected architecture, the July IFE impact audit, certification/doc repair (the retired
+reference docs 11/12/13/16/24/25), the `[OWNER-VERBATIM]` allowable-modeling-pattern guidance
+(`in R = R` diagnostic + replacement forms), one composed proof thread. **Scrub its scope
+against what CONSTRAINT-SEMANTICS already delivered first** — Items 1/7 landed part of the
+guidance obligations; don't re-do them.
+
+**D. The PR wave (the answer to "PR into what").** One coordinated branch-level shipment,
+July-wave pattern, after step 10's owner acceptance:
+1. Owner runs `pre_pr` once per repo over the whole branch line (ship-together rule).
+2. Merge order enforced by pins: **agentic-mbse first** (`agentic-mbse-item7-rebuild` → its
+   main; `test_upstream_pins` compares codegen against the installed companion), then
+   **codegen** (`item7-rebuild` → main — one PR carrying the Item-7 cutover + the whole
+   CONSTRAINT-SEMANTICS epic), then **TEAx last** (`constraint-semantics-item3` → main; TEAx
+   is never bumped first and fails closed until codegen lands; remote needs explicit HTTPS).
+3. Until then the TEAx checkout stays on its branch (codegen execution lane imports simkit
+   from that working tree).
+
+**E. Back to the original goals** (what triggered all of this — the demo, and the
+design-search *policy*):
+- The **policy substance is now landed**: assert-only enforcement, coverage-truth headlines,
+  study-policy defaults, the equality taxonomy, and the owner's coverage-truth product promise
+  (first-capture via CONSTRAINT-SEMANTICS Item 7). What was never written is a single
+  user-facing design-search policy narrative — candidate follow-on, owner's call whether the
+  product entry + guidance suffice.
+- The **demo** route back: fusion-tea regenerates in phase C (its `in R = R` fan-out cause is
+  structurally fixed by the exact route; the old workaround question dissolves into
+  migration); a real CATF design-search campaign additionally needs
+  `[CATF-CRYO-HEAT-LEAK-COEFFICIENT]` (P1 — without it the search rejects everything near the
+  authored regime).
+- **Next-slot competitors after D** (owner picks): the cryo fix (P1, small),
+  `[CALCDEF-GATE-IMPLEMENTATION]` (P1, 7–9 days, authorization parked), and a composed
+  design-search demo item that would close the loop on the original intent.
+
+Superseded Up Next items (pre-detour): CE-F1/F2 follow-ons and `[V2-HTML-BUILD]` remain in
+BACKLOG; the old "documentation update pass" was absorbed by CONSTRAINT-SEMANTICS Items 1/7
+and ELABORATE-FIRST Item 8's doc-repair scope.
 
 ---
