@@ -53,18 +53,41 @@ This is the last item before epic close. It documents what landed; it changes no
 The epic section's six checkboxes are the acceptance frame, adopted unchanged
 (`epic_constraint_semantics_contract.md:1118-1132`):
 
-- [ ] **[OWNER]** The coverage-truth promise is owner-stated, filed in a named home, and cited
+*Ticked 2026-08-14 against evidence. Every verdict cites
+`.project/active/constraint-docs-agent-sync/verification.md`, "Epic success criteria — evidence."*
+
+- [x] **[OWNER]** The coverage-truth promise is owner-stated, filed in a named home, and cited
       from the product-lens trail (closes Item 3 audit-F4).
+      → **MET.** `.project/product/P-001-design-search-free-variation.md`; owner-verbatim diff empty;
+      trail cited at the epic's Product-Lens header, reachable in one hop.
 - [ ] No shipped doc, skill, or agent prompt in the three repos teaches the superseded constraint
       semantics; the sweep record lists every hit and disposition (Item 1's three-sweep method).
-- [ ] `@inapplicable:`, the disposition vocabulary, the six states, and the TEAx opt-in are
+      → **NOT TICKED — one named residual.** The sweep record is complete (Tables 1 and 2, 136 raw
+      hits, every one dispositioned) and the authoring repos are corrected. But codegen's
+      `.claude/skills/` and `.claude/agents/` are symlinks resolving to `/home/reid/1cfe/agentic-mbse`
+      on `elaborate-first-salvage` — a checkout this item's boundaries forbid editing. A codegen
+      agent session therefore still reads the superseded skill example. The fix is committed on the
+      authorized worktree and lands when that branch reaches the symlink target. Owner call needed.
+- [x] `@inapplicable:`, the disposition vocabulary, the six states, and the TEAx opt-in are
       documented where their users (human and agent) will find them.
-- [ ] The authoring docs state when an in-model `@inapplicable:` marker works (bindings-form) and
+      → **MET** in the authoring repos (`modeling-assumptions.md` §8,
+      `reference/30-diagnostic-severity.md`, agentic-mbse `docs/patterns/constraints.md`, TEAx
+      `docs/evaluation-and-study.md`). Subject to the residual above for the symlinked skill.
+- [x] The authoring docs state when an in-model `@inapplicable:` marker works (bindings-form) and
       when PROVENANCE has to carry the disposition instead (inline-predicate form), with the
       B1–B5 worked case cited (Item 5 close obligation).
+      → **MET.** Stated as a decision table in both authoring repos plus the skill; B1–B5 and the
+      rule-3 detector cited, not rewritten.
 - [ ] Verification-matrix rows exist for the constraint-semantics gates landed in Items 2–5, filed
       in one reconciliation pass with the index recount done (Item 5 residual A-8).
-- [ ] Documentation checks and `git diff --check` pass in every touched repository.
+      → **NOT TICKED — partially met.** The recount is done and both count blocks were corrected
+      (the matrix summary and BACKLOG:464-466 were each falsified by it). The one tag-backed gap,
+      the REQ-DIAG family, is filed with every cited test run first. **Items 3, 5, 8 and 9 carry zero
+      REQ tags**, so their gates have nothing to file a row against without minting tags — a
+      requirements decision this item has no authority to make. Owner call needed.
+- [x] Documentation checks and `git diff --check` pass in every touched repository.
+      → **MET.** `git diff --check` clean in all three; licensed suite `2070 passed` with **zero**
+      `no live syside license` lines; collect clean at 2104/2183.
 
 ## Known Requirements
 

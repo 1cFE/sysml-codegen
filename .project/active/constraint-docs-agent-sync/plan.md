@@ -1,6 +1,6 @@
 # Implementation Plan: Item 7 — ADR, Product Promise, and Agent-Facing Documentation Sync
 
-**Status:** Draft
+**Status:** Complete (2 owner calls open — see Phase 4 and Phase 5 notes)
 **Created:** 2026-08-14
 **Last Updated:** 2026-08-14
 **Epic:** CONSTRAINT-SEMANTICS — `.project/backlog/epic_constraint_semantics_contract.md` (`:1041-1150`)
@@ -574,33 +574,33 @@ grep -c "no live syside license" /tmp/item7-licensed.log     # MUST be 0
 
 ### Changes required
 
-- [ ] **Post-edit sweep (Table 2).** Re-run S1–S5 in all three repos. Disposition any post-edit S4
+- [x] **Post-edit sweep (Table 2).** Re-run S1–S5 in all three repos. Disposition any post-edit S4
       hit inside an amendment note as "quoted supersession, correct as written" — the collision
       Item 1 resolved in advance (`design.md:1220-1222`)
-- [ ] **Licensed elaboration check.** Verify the agent-facing examples (the corrected `SKILL.md`
+- [x] **Licensed elaboration check.** Verify the agent-facing examples (the corrected `SKILL.md`
       constraint example and any `@inapplicable:` snippet added to the authoring docs) elaborate
       cleanly under the current profile, using **exactly** the license source, interpreter, and
       zero-skip-line proof above. **Zero `no live syside license` lines is the only proof of a
       licensed run** — a green run with those skips present does not discharge this
-  - [ ] **If the license is unavailable at implement time:** record the check as a **named residual**
+  - [x] **If the license is unavailable at implement time:** record the check as a **named residual**
         in `verification.md`. Never silently skipped, never ticked unverified
-- [ ] **`git diff --check`** in all three repos — codegen, agentic-mbse worktree, TEAx
-- [ ] **Collect sanity check** in codegen: `/home/reid/1cfe/item7-rebuild-venv/bin/python -m pytest
+- [x] **`git diff --check`** in all three repos — codegen, agentic-mbse worktree, TEAx
+- [x] **Collect sanity check** in codegen: `/home/reid/1cfe/item7-rebuild-venv/bin/python -m pytest
       tests/ --collect-only -q | tail -3` — archival and path breakage is a known failure mode at
       close, and this catches it
-- [ ] Confirm branch discipline: TEAx on `constraint-semantics-item3`, agentic-mbse on
+- [x] Confirm branch discipline: TEAx on `constraint-semantics-item3`, agentic-mbse on
       `item7-rebuild`, codegen on `item7-rebuild`, **no `main` touched anywhere, nothing pushed**
-- [ ] Tick the six epic success criteria in `spec.md` against evidence, each with its
+- [x] Tick the six epic success criteria in `spec.md` against evidence, each with its
       `verification.md` reference
-- [ ] Update `.project/CURRENT_WORK.md`
+- [x] Update `.project/CURRENT_WORK.md`
 
 ### Validation
 
-- [ ] Table 2 complete; every post-edit hit dispositioned
-- [ ] `grep -c "no live syside license"` → **0**, or a named residual recorded
-- [ ] `git diff --check` clean in three repos
-- [ ] Collect count unchanged from pre-item baseline
-- [ ] All six SC boxes ticked with evidence, or explicitly not ticked with the reason recorded
+- [x] Table 2 complete; every post-edit hit dispositioned
+- [x] `grep -c "no live syside license"` → **0**, or a named residual recorded
+- [x] `git diff --check` clean in three repos
+- [x] Collect count unchanged from pre-item baseline
+- [x] All six SC boxes ticked with evidence, or explicitly not ticked with the reason recorded
 
 **What we know after this phase:** the item is auditable end to end and safe to `close`.
 
@@ -921,7 +921,40 @@ the envelope started carrying severity again). Both gaps are named in their cell
 
 ### Phase 6 Completion
 
+**Completed:** 2026-08-14
+
+**Post-edit sweep (Table 2).** Codegen is **identical hit for hit** to pre-edit (0/13/7/20/5) — only
+line numbers moved, which is the expected result given the codegen sweep found zero fix-here rows.
+agentic-mbse S2 +4 / S5 +1, TEAx S4 +1. All six new hits dispositioned individually in
+`verification.md`; four are text this item authored and every one names a superseded token **in order
+to retire it** — exactly the quoted-supersession class Item 1 pre-authorized, which is why S4 ran
+pre-edit.
+
+**Licensed elaboration check — DISCHARGED, no residual needed.**
+`2070 passed, 34 skipped, 79 deselected` in 157s, and
+`grep -c "no live syside license"` → **0**. All 34 skips accounted for and none license-related
+(25 "no computed attributes in the golden", 9 "no calc output expressions in the golden").
+
+**Other mechanical checks.** `git diff --check` clean in all three repos. Collect sanity
+`2104/2183 tests collected (79 deselected)`, no collection errors — the archival/path-breakage
+failure mode did not occur. Branch discipline verified: codegen `item7-rebuild`, agentic-mbse
+worktree `item7-rebuild`, TEAx `constraint-semantics-item3`, agentic-mbse main checkout clean on
+`elaborate-first-salvage`. **`main` untouched everywhere, nothing pushed.**
+
+**Success criteria: 4 of 6 ticked.** SC1, SC3, SC4, SC6 met with evidence. SC2 and SC5 **explicitly
+not ticked, with the reason recorded** in `spec.md` and `verification.md` — the two surfaced premise
+conflicts from Phases 4 and 5. Both need an owner call; neither is more implementation work.
+
+**Issues:**
+
+- **One honest limit on the licensed check.** The suite proves the tree elaborates licensed. It does
+  not elaborate the new SKILL.md snippet directly, because that snippet is illustrative and is not a
+  fixture — making it one would be a fixture change the Non-Goals forbid. Recorded in
+  `verification.md` rather than left as an implied stronger claim.
+
+**Deviations:** none in this phase.
+
 ---
 
-**Status:** Draft → In Progress → Complete
-**Next:** `/_my_implement`
+**Status:** Draft → In Progress → **Complete** (phases 1–6 executed 2026-08-14)
+**Next:** owner decisions on the two surfaced conflicts, then `/_my_audit` → `/_my_close`

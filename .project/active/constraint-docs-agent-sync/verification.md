@@ -450,10 +450,90 @@ untraced. This needs an owner call — see the questions at the end of this run.
 
 ## Table 2 — Post-edit sweep
 
-*Filled in Phase 6.*
+Re-run 2026-08-14 after every edit, same five terms, same scopes (plus the `claude/` tree the Phase 4
+scope correction added).
+
+| Repo | S1 | S2 | S3 | S4 | S5 | vs pre-edit |
+|---|---|---|---|---|---|---|
+| codegen | 0 | 13 | 7 | 20 | 5 | **identical** |
+| agentic-mbse | 0 | 25 | 8 | 0 | 52 | S2 +4, S5 +1 |
+| TEAx | 0 | 0 | 0 | 10 | 0 | S4 +1 |
+
+**Codegen is unchanged, hit for hit.** Only line numbers moved. The edits introduced no new
+superseded teaching and removed no hit, which is the expected result: the codegen sweep found zero
+fix-here rows, so there was nothing for an edit to clear.
+
+### Every new hit, dispositioned
+
+| # | Term | File:line | Why it is new | Disposition |
+|---|------|-----------|---------------|-------------|
+| P1 | S2 | agentic-mbse `claude/agents/sysml-expert.md:124` | scope correction added the `claude/` tree | correct as written — Item 1's D5-a deviation |
+| P2 | S2 | agentic-mbse `claude/agents/sysml-expert.md:132` | same | correct as written — **is** Item 1's correction |
+| P3 | S2 | agentic-mbse `.claude/agents/sysml-expert.md:132` | **this item wrote it** — D5-a sentence added to the stale copy | correct as written — the corrected teaching |
+| P4 | S2 | agentic-mbse `claude/skills/sysml-conventions/SKILL.md:147` | **this item wrote it** — "A bare `constraint`, a `require constraint`, an…" | correct as written — names the never-executing forms in order to rule them out |
+| P5 | S5 | agentic-mbse `…/SKILL.md:147` | same line; S5 matches `assume constraint` in it | correct as written — same reason |
+| P6 | S4 | TEAx `docs/evaluation-and-study.md:113` | **this item wrote it** — "`all_satisfied` is retired, not renamed-in-place" | correct as written — **quoted supersession**, the exact class Item 1's S4 collision rule pre-authorized (`design.md:1220-1222`) |
+
+No post-edit hit is a defect. Four of the six are text this item authored, and every one names a
+superseded token in order to retire it — which is why S4 had to run pre-edit.
 
 ---
 
 ## Mechanical checks
 
-*Filled in Phase 6.*
+### The licensed elaboration check — **DISCHARGED**
+
+```
+set -a; source /home/reid/1cfe/agentic-mbse/.env; set +a
+/home/reid/1cfe/item7-rebuild-venv/bin/python -m pytest tests/ -q
+```
+
+**Result: `2070 passed, 34 skipped, 79 deselected, 1 warning in 156.97s`.**
+
+**Proof the run was licensed:** `grep -c "no live syside license" /tmp/item7-licensed.log` → **0**.
+Zero skip lines of that kind is the only proof the spec accepts, and it is met. The named-residual
+fallback was not needed.
+
+**All 34 skips accounted for**, none license-related — 25 `no computed attributes in the golden` and
+9 `no calc output expressions in the golden`, both fixture-shape skips in
+`test_computed_attribute_golden.py`.
+
+**One honest limit on what this discharges.** The suite proves the *tree* elaborates under a licensed
+toolchain. It does not elaborate the new SKILL.md snippet directly, because that snippet is
+illustrative and is not a fixture. Adding it as one would be a fixture change, which this item's
+Non-Goals forbid. What the check does establish is that nothing this item wrote broke elaboration,
+and that the blessed pattern the skill now teaches is the same bindings shape the passing
+constraint fixtures use.
+
+### Collect sanity — **PASS**
+
+`… -m pytest tests/ --collect-only -q | tail -3` → `2104/2183 tests collected (79 deselected)`.
+No collection errors, so no archival or path breakage — the known failure mode at close.
+
+### `git diff --check` — **CLEAN in all three repositories**
+
+codegen ✅ · agentic-mbse worktree ✅ · TEAx ✅. No whitespace damage.
+
+### Branch discipline — **VERIFIED**
+
+| Repo | Path | Branch | State |
+|---|---|---|---|
+| codegen | `/home/reid/1cfe/sysml-codegen-item7-rebuild` | `item7-rebuild` | committed, **not pushed** |
+| agentic-mbse | `/home/reid/1cfe/agentic-mbse-item7-rebuild` (worktree) | `item7-rebuild` | committed, **not pushed** |
+| TEAx | `/home/reid/1cfe/teax` | `constraint-semantics-item3` | committed, **not pushed** |
+| agentic-mbse | `/home/reid/1cfe/agentic-mbse` (main checkout) | `elaborate-first-salvage` | **clean, untouched** — one accidental edit reverted, see the Phase 4 record |
+
+**`main` was not touched in any repository. Nothing was pushed anywhere.**
+
+---
+
+## Epic success criteria — evidence
+
+| # | Criterion | Verdict |
+|---|---|---|
+| SC1 | The coverage-truth promise is owner-stated, filed in a named home, and cited from the product-lens trail (closes audit-F4) | **✅ MET.** `.project/product/P-001-…md`, verbatim diff empty; trail cited at the epic's Product-Lens header, one hop |
+| SC2 | No shipped doc, skill, or agent prompt in the three repos teaches the superseded semantics; the sweep record lists every hit and disposition | **⚠️ MET WITH ONE NAMED RESIDUAL.** Sweep record complete (Tables 1 and 2, 136 raw hits, every one dispositioned). The residual: codegen's `.claude/` symlinks resolve to a checkout this item may not edit, so a codegen agent session still reads the superseded skill example until `item7-rebuild` reaches that branch |
+| SC3 | `@inapplicable:`, the disposition vocabulary, the six states, and the TEAx opt-in are documented where their users will find them | **✅ MET** in the authoring repos — `modeling-assumptions.md` §8, `30-diagnostic-severity.md`, agentic-mbse `docs/patterns/constraints.md`, TEAx `docs/evaluation-and-study.md`. Subject to SC2's residual for the codegen-symlinked skill |
+| SC4 | The authoring docs state when an in-model marker works and when PROVENANCE carries it, with B1–B5 cited | **✅ MET.** Stated as a table in both authoring repos, plus the skill; B1–B5 and the rule-3 detector cited, not rewritten |
+| SC5 | Verification-matrix rows exist for the gates landed in Items 2–5, filed in one pass with the recount done | **⚠️ PARTIALLY MET.** Recount done and both count blocks corrected; the one tag-backed gap (REQ-DIAG) filed. **Not met** for Items 3/5/8/9, which carry zero REQ tags — filing rows for them requires minting tags, an owner call. Parked, not silently skipped |
+| SC6 | Documentation checks and `git diff --check` pass in every touched repository | **✅ MET.** `git diff --check` clean in three repos; licensed suite 2070 passed with zero license-skip lines; collect clean |

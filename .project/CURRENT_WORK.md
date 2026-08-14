@@ -1,6 +1,37 @@
 # Current Work
 
-**Last Updated**: 2026-08-13 (CONSTRAINT-SEMANTICS Items 1–6, 8 and 9 CLOSED and archived; Item 6 closed as a design delivery with its production implementation ruled out of this epic and filed as the unowned `[CALCDEF-GATE-IMPLEMENTATION]`; **Item 7 is now unblocked and is the last item** before epic close/pre_pr; pre_pr and any push remain with the owner)
+**Last Updated**: 2026-08-14 (**Item 7 implemented, phases 1–6 executed. Two owner calls block
+`close`** — see below. CONSTRAINT-SEMANTICS Items 1–6, 8 and 9 remain CLOSED and archived; epic
+close, `pre_pr` and any push remain with the owner)
+
+---
+
+## ⚠️ Item 7 — implemented, two owner calls open before `close`
+
+All six phases ran (`.project/active/constraint-docs-agent-sync/plan.md`, boxes checked, per-phase
+notes filled). Evidence: `.../verification.md`. Four of six epic success criteria are ticked. Two
+are not, each for a reason that needs an owner decision, not more work:
+
+**1. Codegen's agent surfaces are symlinks into an out-of-bounds checkout (blocks SC2/SC3).**
+Codegen `.claude/agents/*` and `.claude/skills/sysml-conventions` resolve to
+`/home/reid/1cfe/agentic-mbse/claude/…` — the **main** agentic-mbse checkout, on branch
+`elaborate-first-salvage`. The item's boundaries allow agentic-mbse edits only in the worktree
+`/home/reid/1cfe/agentic-mbse-item7-rebuild`. The corrected skill is committed there, so a codegen
+agent session keeps reading the superseded constraint example until `item7-rebuild` reaches the
+branch those symlinks resolve to. Also found: agentic-mbse tracks **two divergent copies** of the
+agent definitions (`claude/` 37 files, `.claude/` 23 files) and Item 1 corrected only `claude/`;
+this item brought `.claude/agents/sysml-expert.md` level.
+
+**2. Items 3, 5, 8 and 9 carry no REQ tags (blocks SC5).** The verification-matrix recount is done
+and both count blocks were corrected — each was falsified by it. The one tag-backed gap (the
+REQ-DIAG family, absent from the matrix but present in doc 30) is filed. Filing rows for the
+untagged gates would mean minting REQ tags first, which is a requirements decision, not a matrix
+reconciliation. Parked rather than invented.
+
+Everything else landed: the item3-F2 and design-F2 contract amendments, the first
+`.project/product/` ledger with P-001, the cross-repo `@inapplicable:` / disposition-vocabulary /
+six-states teaching, and a licensed suite run (`2070 passed`, **zero** `no live syside license`
+lines).
 
 ---
 
