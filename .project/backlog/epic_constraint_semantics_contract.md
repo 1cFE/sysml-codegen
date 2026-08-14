@@ -528,15 +528,22 @@ read. What remains is merge sequencing, owned by `pre_pr` and the owner.
   refuses the combination loudly at generation time, so nothing ships wrong; the advisory would
   catch it a step earlier. **Owner: re-homed to Item 7** at Item 1's close (2026-08-13), same
   reason; Item 7's scope items 2 and 4 execute it.
-- **item3-F2 [DEFERRED, surfaced not resolved]** — the inherited "a `BLOCK`ed asserted usage stays
-  in the denominator" clause is unreachable under invariant 1 as amended (a `BLOCK` on an asserted
-  usage halts the model, so no package and no report exist to carry it). Item 3 carried the clause
-  as one row of a total map over `DISPOSITION_REASONS` — a totality claim, not a reachability
-  claim — and correctly did **not** write the unbuildable "asserted + BLOCKed → partial coverage"
-  fixture. **Owner: re-homed to Item 7** at Item 1's close (2026-08-13) — the ruling (dead text, or
-  invariant 1 narrower than written) rides Item 7's scope-item-1 owner checkpoint. It stays a
-  surfaced premise conflict in both directions until then. Do not let a later agent read the clause
-  as a live requirement.
+- **item3-F2 [RESOLVED 2026-08-13, executed 2026-08-14 by Item 7]** — the inherited "a `BLOCK`ed
+  asserted usage stays in the denominator" clause was unreachable under invariant 1 as it then read
+  (a `BLOCK` on an asserted usage halts the model, so no package and no report existed to carry it).
+  Item 3 carried the clause as one row of a total map over `DISPOSITION_REASONS` — a totality claim,
+  not a reachability claim — and correctly did **not** write the unbuildable "asserted + BLOCKed →
+  partial coverage" fixture.
+  **The ruling: option (a), invariant 1 is narrower than written.** `[AGENT] (ratified by owner,
+  2026-08-13)`, recorded in full at
+  `.project/active/constraint-docs-agent-sync/owner-checkpoint-20260813.md:38-53`. BLOCK-halts is
+  scoped to asserted gates **that reach occurrences**; a non-reaching asserted usage is governed by
+  severity-by-cause and the coverage rules, never a model-wide halt. The denominator clause is
+  therefore live text, not dead: its reachable population is exactly the non-reaching case.
+  **Executed by Item 7, 2026-08-14** — contract invariant 1 (with amendment note), the "Headline
+  states and coverage truth" subsection, and Appendix C's "ADMIT + NON_NUMERICAL + BLOCK mix" cell;
+  the parked records at `.project/active/constraint-semantics-contract/spec.md` are flipped to match.
+  No longer a premise conflict in either direction.
 - **audit-F4 [no home available]** — this repo has no `.project/product/` index and no
   `product.sh`, so the coverage-truth promise has no product-promise entry; it exists as a concept
   subsection plus ADR-009 at `[AGENT] (ratified)`. No id was hand-minted. File a first-capture

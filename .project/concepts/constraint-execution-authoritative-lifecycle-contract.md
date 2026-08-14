@@ -127,12 +127,31 @@ non-executable/non-certifying.
 
 ### Meaning and visibility
 
-1. (amended 2026-08-12, CONSTRAINT-SEMANTICS Item 1) Every usage gets one profile disposition. A
-   `BLOCK` on an **asserted** usage halts the model. A non-asserted usage never halts generation:
-   the form gate runs before the predicate walk, so an unsupported predicate written inside a plain
-   `constraint` is never reached and the usage catalogs as unassessed. Descriptive constraints are
-   never load-bearing. After generation, every other usage has executable concrete representation or
-   a visible exclusion. After evaluation, every module yields evidence or a named execution failure.
+1. (amended 2026-08-12, CONSTRAINT-SEMANTICS Item 1; **BLOCK scope amended 2026-08-14,
+   CONSTRAINT-SEMANTICS Item 7** — see the amendment note below) Every usage gets one profile
+   disposition. A `BLOCK` on an **asserted** usage **that reaches occurrences** halts the model. An
+   asserted usage that reaches no occurrence never halts generation: it is governed by
+   severity-by-cause and the coverage rules — a `non_reaching` disposition with its reason, a
+   missing assessment, and a partial-coverage headline — never a model-wide halt. A non-asserted
+   usage never halts generation either: the form gate runs before the predicate walk, so an
+   unsupported predicate written inside a plain `constraint` is never reached and the usage catalogs
+   as unassessed. Descriptive constraints are never load-bearing. After generation, every other
+   usage has executable concrete representation or a visible exclusion. After evaluation, every
+   module yields evidence or a named execution failure.
+
+   > **Amendment note — item3-F2, 2026-08-14 (CONSTRAINT-SEMANTICS Item 7).**
+   > **The clause previously read:** "A `BLOCK` on an **asserted** usage halts the model."
+   > **It now reads:** "A `BLOCK` on an **asserted** usage **that reaches occurrences** halts the
+   > model," with the non-reaching case governed by severity-by-cause and the coverage rules.
+   > **Ruling grade:** `[AGENT] (ratified by owner, 2026-08-13)`. Recorded in full at
+   > `.project/active/constraint-docs-agent-sync/owner-checkpoint-20260813.md:38-53`.
+   > **Why.** The blanket clause made the "a `BLOCK`ed asserted usage stays in the denominator"
+   > rule unreachable — if any BLOCK on an asserted usage halts, no package and no report exist to
+   > carry it. The landed behavior depends on non-reaching-never-halts in three places: the
+   > non-raising mint, the vacuous-gate warning grade (invariant 61), and the derivative's
+   > held-intent rows. The alternative would flip a vacuous gate from warning to model-killing halt
+   > whenever its predicate happened to contain a BLOCKed construct. Ratification does not make
+   > this owner-originated; it is challengeable by re-deriving against the reasoning here.
 2. Neutral facts contain model semantics and provenance only. They contain no graph roles, Python
    names, generated identity, or study policy.
 3. `ExpressionIR` is the structural semantic representation. Reconstructed text is display only.
@@ -443,6 +462,13 @@ still an applicable asserted gate, and it stays in the feasibility denominator a
 A vacuous gate — one whose owner has zero occurrences — is still applicable. A usage stops being
 applicable only when it carries an explicit inapplicability disposition. Plain and requirement-side
 usages are never applicable asserted gates.
+
+**When the `BLOCK`ed-asserted case is reachable** (amended 2026-08-14, CONSTRAINT-SEMANTICS Item 7 —
+item3-F2; the amendment note lives with invariant 1). A `BLOCK`ed asserted usage stays in the
+denominator **when it reaches no occurrence**. That is the whole reachable population of this rule,
+and it is why the rule is not dead text: a `BLOCK`ed asserted usage that *does* reach occurrences
+halts the model under invariant 1, so no report exists to carry it. Read the two together — the halt
+is scoped to reaching gates, and the denominator rule covers what the halt does not reach.
 
 **Two totals, kept apart.** *Inventory totality* counts every authored usage of every form.
 *Feasibility coverage* counts applicable asserted gates only. Descriptive and requirement-side usages
@@ -790,8 +816,8 @@ coordinates and exempts nothing.
 |---|---|
 | Zero constraint usages | No constraint catalog/modules; bytes unchanged; the sealed package loads/evaluates in TEAx through both the prepared and file-backed evaluators with empty constraint evidence. |
 | Excluded-only usages | Portable exclusions with no silent omission; the sealed package evaluates in TEAx with a not-assessed report surface when every excluded usage is non-asserted, and a partial-coverage surface when any excluded usage is asserted. (amended 2026-08-12, CONSTRAINT-SEMANTICS Item 1) |
-| Asserted vacuous gate | An asserted usage whose owner has zero occurrences catalogs with a non-reaching-with-reason disposition at warning grade, authoring validation emits the advisory naming the usage and its detached owner, generation does not halt, and the report headline reads partial coverage; the same usage carrying an explicit inapplicability disposition drops out of the feasibility denominator and the headline reads full satisfaction when every remaining gate passed. |
-| ADMIT + NON_NUMERICAL + BLOCK mix | Warnings in order, then one halt before mutation; no compiler call. |
+| Asserted vacuous gate | An asserted usage whose owner has zero occurrences catalogs with a non-reaching-with-reason disposition at warning grade, authoring validation emits the advisory naming the usage and its detached owner, generation does not halt, and the report headline reads partial coverage; the same usage carrying an explicit inapplicability disposition drops out of the feasibility denominator **and at least one gate remains**, and the headline reads full satisfaction when every remaining gate passed. (amended 2026-08-14, CONSTRAINT-SEMANTICS Item 7 — design-F2; see note ‡ below) |
+| ADMIT + NON_NUMERICAL + BLOCK mix | Warnings in order, then one halt before mutation; no compiler call. The halt is the `BLOCK` on an asserted usage **that reaches occurrences** (invariant 1 as amended); a `BLOCK`ed asserted usage reaching no occurrence warns and catalogs `non_reaching` instead. (amended 2026-08-14, CONSTRAINT-SEMANTICS Item 7 — item3-F2) |
 | Positive/negated × inline/definition-typed | Source-authored forms, including live `assert not constraint`, preserve positive IR/raw value and complementary truth/status/margin. |
 | Shared definition × mixed polarity | One neutral compiled body; each source-authored usage retains its own polarity and margin sign independent of ordering. |
 | One definition × multiple occurrences | Distinct IDs/modules/results; legitimate shared producer recorded in the catalog. |
@@ -830,6 +856,22 @@ coordinates and exempts nothing.
 | Invalid explicit simkit path (test infrastructure) | The codegen test helper fails rather than falling through to sibling discovery. |
 | IFE grid | Exact final candidates, stock seams, 2,301 points, modeled `>=`, unchanged anchors. |
 | Stellarator design point (D-1/D-2) | Fully representable graph with WI-027 D7 passthroughs removed, no post-build mutation/private bridge, five verdicts, unchanged numerics, handwritten code sealed. |
+
+> **‡ Amendment note — design-F2, 2026-08-14 (CONSTRAINT-SEMANTICS Item 7).**
+> **The "Asserted vacuous gate" cell previously read:** "…the same usage carrying an explicit
+> inapplicability disposition drops out of the feasibility denominator and the headline reads full
+> satisfaction when every remaining gate passed."
+> **It now reads:** the same, with "**and at least one gate remains**" inserted before the headline
+> clause.
+> **Why.** The old wording over-permits the degenerate case. If the vacuous gate was the *only*
+> applicable asserted gate, dropping it out of the denominator leaves zero gates, and "every
+> remaining gate passed" is vacuously true — so the cell as written would license a full-satisfaction
+> headline over an empty denominator. That is exactly the coverage lie ADR-009 exists to stop.
+> **Behavior was already settled** by Item 3 design D4's published RULING: the empty-denominator case
+> reads **not assessed**, per state 5 above ("the model has constraint usages but no applicable
+> asserted gate at all"). Only the contract text was wrong. This amendment changes no behavior.
+> **Grade:** `[AGENT]`, executed under Item 7's re-homing of the Item 1 residual
+> (`.project/backlog/epic_constraint_semantics_contract.md:520-530`).
 
 ### Source-identity scenarios (SOURCE-IDENTITY Item 3)
 

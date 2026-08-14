@@ -448,7 +448,8 @@ For the full identifier taxonomy and naming rules, see [15-naming-conventions.md
 ## 8. Constraints Execute Under a Profile — Block List and Fallback
 
 > **A constraint predicate the executable profile ADMITs lowers into a real pipeline module and
-> executes; one it BLOCKs halts generation loudly, naming why; everything else catalogs unassessed.**
+> executes; one it BLOCKs on an asserted usage that reaches occurrences halts generation loudly,
+> naming why; everything else catalogs unassessed.**
 
 SysML lets a modeler attach `constraint` usages to calc defs, part defs, and part usages — for
 example a physical-consistency check like `outer_radius == inner_radius + thickness`, or a
@@ -465,6 +466,13 @@ swept `ConstraintUsage` (subtypes included) exactly one way:
   evaluation is a real output channel.
 - **BLOCK** — generation halts before any lowering, naming every offending usage and its reason. This
   is the one loud, hard-stop diagnostic (never a silent drop, never retried with a fallback).
+  **The halt is scoped to asserted usages that reach occurrences.** A BLOCKed asserted usage whose
+  owner produces no scope does not halt: it warns, catalogs a `non_reaching` disposition with its
+  reason, stays in the feasibility denominator as unassessed, and the report headline reads partial
+  coverage. Amended 2026-08-14 under the item3-F2 ruling — `[AGENT] (ratified by owner, 2026-08-13)`,
+  `.project/concepts/constraint-execution-authoritative-lifecycle-contract.md` invariant 1 and its
+  amendment note. A BLOCK on a non-asserted usage never happens at all: the form gate runs before the
+  predicate walk, so the predicate is never reached.
 - **NON_NUMERICAL** — the predicate is well-formed but not numerically executable (Boolean, string,
   or enum comparison). It warns with its identity, location, and profile diagnostics, then becomes a
   visible exclusion.

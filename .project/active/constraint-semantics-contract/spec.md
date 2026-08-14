@@ -192,9 +192,18 @@ reader must chase.
   constraint usages remains inert. The current projector early-return
   (`project.py:895`) violates this; the fix lands as part of this contract, not as an isolated
   patch (owner sequencing, handoff 2026-08-12).
-- **[HARD]** A profile BLOCK on an asserted constraint halts generation of the whole model
-  (existing ratified fail-closed behavior; verified `elaborate.py:488`). Model migration is
-  therefore atomic per model — plan accordingly; this spec does not change BLOCK semantics.
+- **[HARD]** **[item3-F2 — RESOLVED 2026-08-13, amended 2026-08-14 by CONSTRAINT-SEMANTICS Item 7.
+  Not a live blanket requirement; read the scoped form.]** A profile BLOCK on an asserted constraint
+  **that reaches occurrences** halts generation of the whole model (existing ratified fail-closed
+  behavior; verified `elaborate.py:488`). An asserted usage that reaches no occurrence never halts:
+  it is governed by severity-by-cause and the coverage rules (`non_reaching`, missing assessment,
+  partial coverage). Model migration is therefore atomic per model for reaching gates — plan
+  accordingly; this spec does not change BLOCK semantics.
+  **Resolution:** ruling `[AGENT] (ratified by owner, 2026-08-13)`, recorded at
+  `.project/active/constraint-docs-agent-sync/owner-checkpoint-20260813.md:38-53`. The contract
+  amendment lives at
+  `.project/concepts/constraint-execution-authoritative-lifecycle-contract.md` invariant 1, with its
+  amendment note.
 - **[NEED]** (owner-directed sequence, handoff 2026-08-12) Documentation and the test model are
   fixed to match the settled semantics — including capturing expected outputs — *before* tests
   are run to confirm; expectations are never reverse-engineered from current behavior.
@@ -291,7 +300,12 @@ reader must chase.
 - First-class tolerance semantics for `==` — deferred; the two-inequality band plus library defs
   covers the need until proven insufficient.
 - An evaluated-advisory tier for plain constraints — recorded as a possible future extension only.
-- Migrating the frozen CATF twins in place, or changing BLOCK-halts-generation semantics.
+- Migrating the frozen CATF twins in place, or changing BLOCK-halts-generation semantics. *(item3-F2
+  — RESOLVED 2026-08-13. This Non-Goal held for this spec's own work and still does. The blanket
+  clause it referred to was separately amended to reaching-gates scope on 2026-08-14 by
+  CONSTRAINT-SEMANTICS Item 7, under the ruling at
+  `.project/active/constraint-docs-agent-sync/owner-checkpoint-20260813.md:38-53`. Read the amended
+  form in the contract's invariant 1, not the blanket one.)*
 - Re-planning ELABORATE-FIRST Item 7 — its narrow-correction steps 4–10 remain the plan of
   record and resume after this contract work per the owner's sequencing.
 

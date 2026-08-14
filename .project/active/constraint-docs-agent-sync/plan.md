@@ -310,31 +310,33 @@ Amendment mechanics follow the conventions Item 1 set: **provenance preserved an
 recorded, not overwritten.** Referent:
 `.project/completed/20260813_constraint-semantics-contract-amendments/design.md:1202-1218`.
 
-- [ ] `.project/concepts/constraint-execution-authoritative-lifecycle-contract.md:131` — invariant 1,
+- [x] `.project/concepts/constraint-execution-authoritative-lifecycle-contract.md:131` — invariant 1,
       blanket BLOCK clause → **reaching-gates scope**
-- [ ] `…lifecycle-contract.md:441` — "Headline states and coverage truth", same amendment
-- [ ] `…lifecycle-contract.md:794` — Appendix C "ADMIT + NON_NUMERICAL + BLOCK mix", same amendment
-- [ ] `…lifecycle-contract.md:793` — **design-F2**: the vacuous-gate cell over-permits in the
+- [x] `…lifecycle-contract.md:441` — "Headline states and coverage truth", same amendment
+- [x] `…lifecycle-contract.md:794` — Appendix C "ADMIT + NON_NUMERICAL + BLOCK mix", same amendment
+- [x] `…lifecycle-contract.md:793` — **design-F2**: the vacuous-gate cell over-permits in the
       degenerate case; add "…and at least one gate remains". Behavior is already settled by Item 3
       design D4's published RULING (*not assessed*); only the contract text is being fixed
-- [ ] Amendment note records the ruling grade verbatim: `[AGENT] (ratified by owner, 2026-08-13)`,
+- [x] Amendment note records the ruling grade verbatim: `[AGENT] (ratified by owner, 2026-08-13)`,
       citing `owner-checkpoint-20260813.md:38-53`
-- [ ] `.project/active/constraint-semantics-contract/spec.md:195` — the `[HARD]` blanket clause →
+- [x] `.project/active/constraint-semantics-contract/spec.md:195` — the `[HARD]` blanket clause →
       RESOLVED-with-citation
-- [ ] `.project/active/constraint-semantics-contract/spec.md:294` — the Non-Goal "changing
+- [x] `.project/active/constraint-semantics-contract/spec.md:294` — the Non-Goal "changing
       BLOCK-halts-generation semantics" → RESOLVED-with-citation
-- [ ] `.project/backlog/epic_constraint_semantics_contract.md:531-539` — the residual entry ("It
+- [x] `.project/backlog/epic_constraint_semantics_contract.md:531-539` — the residual entry ("It
       stays a surfaced premise conflict in both directions until then") → RESOLVED-with-citation
-- [ ] Any fourth site Phase 1 surfaced → flipped, and named in `verification.md`
+- [x] Any fourth site Phase 1 surfaced → flipped, and named in `verification.md` — **none surfaced**
+- [x] *(pulled forward from Phase 4)* `docs/architecture/modeling-assumptions.md:451` and its §8
+      BLOCK bullet — the same blanket clause, reconciled here so Phase 2's own validation grep holds
 
 **Do not edit** `completed/20260813_constraint-coverage-policy/product-lens.md:58-66` — archived,
 cited only.
 
 ### Validation
 
-- [ ] `grep -rn "halts generation" .project/concepts/ docs/` returns no unqualified blanket statement
-- [ ] No live site still describes item3-F2 as an open or parked conflict
-- [ ] Each amended clause carries its original text in an amendment note
+- [x] `grep -rn "halts generation" .project/concepts/ docs/` returns no unqualified blanket statement
+- [x] No live site still describes item3-F2 as an open or parked conflict
+- [x] Each amended clause carries its original text in an amendment note
 
 **What we know after this phase:** the clauses the Phase 4 rewrites cite say what the rewrites will
 claim they say.
@@ -680,6 +682,51 @@ TEAx S1/S2/S3/S5→0 S4→9. Total 134 raw hits, all accounted for (70 rows + 64
   `:451`. Actual line numbers are used from here on.
 
 ### Phase 2 Completion
+
+**Completed:** 2026-08-14
+
+**Actual changes:**
+
+- `.project/concepts/constraint-execution-authoritative-lifecycle-contract.md` invariant 1
+  (`:130-153`) — BLOCK-halts scoped to asserted usages **that reach occurrences**, with a blockquote
+  amendment note carrying the original clause text verbatim, the ruling grade
+  `[AGENT] (ratified by owner, 2026-08-13)`, the checkpoint path-cite, and the three-way dependency
+  (non-raising mint, vacuous-gate warning grade, derivative held-intent rows).
+- Same file, "Headline states and coverage truth" (`:466-472`) — a new "When the `BLOCK`ed-asserted
+  case is reachable" paragraph. This is what turns the denominator clause from dead text into live
+  text: its reachable population is exactly the non-reaching case.
+- Same file, Appendix C "ADMIT + NON_NUMERICAL + BLOCK mix" (`:820`) — the halt scoped in the cell.
+- Same file, Appendix C "Asserted vacuous gate" (`:819`) — **design-F2**: "and at least one gate
+  remains" inserted, with a ‡ note below the table recording the previous wording, the degenerate
+  case it over-permitted (empty denominator → vacuously-true full satisfaction), and that Item 3
+  design D4's RULING already settled the behavior as *not assessed*. No behavior change.
+- `.project/active/constraint-semantics-contract/spec.md:195` — the `[HARD]` clause flipped to
+  RESOLVED-with-citation and restated in scoped form, tagged so no later agent reads the blanket
+  form as live.
+- Same file `:303` — the Non-Goal annotated: it held for that spec's own work and still does; the
+  clause it referred to was separately amended here.
+- `.project/backlog/epic_constraint_semantics_contract.md:531-544` — the residual flipped from
+  `[DEFERRED, surfaced not resolved]` to `[RESOLVED 2026-08-13, executed 2026-08-14 by Item 7]`,
+  naming the ruling, the executed sites, and that it is no longer a conflict in either direction.
+- `docs/architecture/modeling-assumptions.md:450-452` and the §8 BLOCK bullet — the same amendment
+  (pulled forward from Phase 4; see below).
+
+**Issues:**
+
+- **`modeling-assumptions.md:451` carried the blanket clause too**, and Phase 2's own validation grep
+  spans `docs/`. The plan filed that site under Phase 4. Reconciling it in Phase 2 was the only way
+  Phase 2's validation could pass honestly, and it is the identical amendment. Recorded here and
+  ticked in Phase 4's list rather than done twice.
+
+**Deviations:**
+
+- **Amendment notes are blockquotes attached to the clause, not a separate log.** Item 1's
+  convention is "provenance preserved and the original text recorded, not overwritten," which it
+  discharged by pairing an inline `(amended DATE, ITEM)` marker with the original text quoted in
+  ADR-009's "What the contract said" block. This item mints no ADR (plan D-1), so there is no
+  decision record to carry the original text. Attaching the note to the clause keeps the original
+  wording one line from the amended wording, which is where a reader challenging the ruling needs it.
+- **No fourth item3-F2 site.** The pre-authorized flip was not needed.
 
 ### Phase 3 Completion
 
