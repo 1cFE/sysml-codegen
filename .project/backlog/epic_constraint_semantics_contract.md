@@ -117,6 +117,13 @@ constraint remains visibly dispositioned.
 
 ## Product-Lens
 
+**Product ledger for this epic's promise: [`.project/product/INDEX.md`](../product/INDEX.md) →
+[P-001 — A design search where parameters vary freely and viability is assessed](../product/P-001-design-search-free-variation.md).**
+Filed 2026-08-14 by Item 7; carries the `[OWNER-VERBATIM, 2026-08-13]` promise, the epic's `[OWNER]`
+Critical Success Factor cited beside it, and the surfaced tension with the A5/A6/A7 basis rulings.
+A lens run for any item descended from this epic starts here and reaches the promise in one hop.
+This is the durable citation; the item ledgers below archive at close and are not it.
+
 ### epic-plan — 2026-08-12 — rev .project/backlog/epic_constraint_semantics_contract.md
 
 Point (re-derived): Constraint handling must enforce modeled physics and consistency so design

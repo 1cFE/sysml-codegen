@@ -188,3 +188,34 @@ resolved-by-amendment pointers into the body.
   never a criterion ticked unverified.
 
 Gate unchanged: **DISPOSED**. The findings are now discharged in the spec body rather than deferred.
+
+---
+
+## implement (Phase 3) — 2026-08-14 — rev `.project/product/INDEX.md` (new)
+
+**Run record, not the durable citation.** This block records that the lens trail was wired; the
+durable citation lives in the epic's product-lens block, which does not archive at close.
+
+**item7-F2 discharged.** SC1's second half — "cited from the product-lens trail" — is wired at three
+points, per plan D-1:
+
+1. **The home.** `.project/product/INDEX.md`, a live directory that is not archived, with the entry
+   body at `.project/product/P-001-design-search-free-variation.md`. ADR-009 is back-registered as a
+   row pointing at `docs/architecture/modeling-assumptions.md:588`; the ADR text does not move.
+2. **The trail node — this is the one that discharges the requirement.**
+   `.project/backlog/epic_constraint_semantics_contract.md`, Product-Lens section header. A lens run
+   for any item descended from this epic starts there and reaches P-001 in one hop.
+3. **This block.** The run record.
+
+`completed/20260813_constraint-coverage-policy/product-lens.md` (audit-F4's own ledger) is archived
+and was **cited, never edited**.
+
+**Payload check.** The two `[OWNER-VERBATIM, 2026-08-13]` bullets are reproduced byte-for-byte in
+P-001 from `owner-checkpoint-20260813.md:9-13`; the diff is recorded in `verification.md`.
+
+**Tension handling.** P-001 carries the promise-vs-basis tension in its own "surfaced, not resolved"
+section, carried from `owner-checkpoint-20260813.md:28-36` rather than re-derived, with
+`[ACAUSAL-RELATIONS-CAPABILITY]` (`BACKLOG.md:439`) named for the unbuilt half. It resolves nothing
+in either direction and is explicitly not open for re-resolution here.
+
+Gate: **CLEAR** — no new finding. item7-F2 moves from DISPOSED-in-spec to executed.

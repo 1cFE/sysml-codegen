@@ -134,6 +134,16 @@ Two rules govern the public keys, and both show up in the shipped JSON:
 
 A group is named after the file that **declares** the owner node, not the file that uses it.
 
+## Product Promises
+
+`.project/product/INDEX.md` is the product ledger — one line per implemented promise, entry bodies
+in sibling `P-NNN-*.md` files. Read it before work that touches what the product claims to do.
+`P-001` carries the design-search promise in the owner's own words.
+
+The ledger also back-registers this repo's ADRs as rows. **An ADR is a numbered section of
+`docs/architecture/modeling-assumptions.md`** titled `## N. Title (ADR-0NN)` — there is no
+`docs/adr/` directory. Next free id: ADR-010.
+
 ## Dependencies
 
 - `agentic-mbse`: SysIDE adapter and shared data models (installed from `../agentic-mbse`)

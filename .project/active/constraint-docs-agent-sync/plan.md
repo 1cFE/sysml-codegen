@@ -368,37 +368,37 @@ diff <(sed -n '9,13p' .project/active/constraint-docs-agent-sync/owner-checkpoin
 
 ### Changes required
 
-- [ ] Create `.project/product/INDEX.md` — ledger header + row for P-001 + back-registration row for
+- [x] Create `.project/product/INDEX.md` — ledger header + row for P-001 + back-registration row for
       ADR-009 pointing at `docs/architecture/modeling-assumptions.md:588`
-- [ ] Create `.project/product/P-001-design-search-free-variation.md`:
-  - [ ] The `[OWNER-VERBATIM, 2026-08-13]` two bullets as the **core**, reproduced exactly, at the
+- [x] Create `.project/product/P-001-design-search-free-variation.md`:
+  - [x] The `[OWNER-VERBATIM, 2026-08-13]` two bullets as the **core**, reproduced exactly, at the
         owner's emphasis, path-cited to `owner-checkpoint-20260813.md:9-13`. No rewording, no
         paraphrase, no "improved" version
-  - [ ] Supplementary material gleaned from the concepts, each marked `[INHERITED: <source>]` per
+  - [x] Supplementary material gleaned from the concepts, each marked `[INHERITED: <source>]` per
         source — start from `.project/concepts/constraint-execution-and-design-space-studies.md:15`
         (calculations compute a candidate state, constraints judge it, a study varies inputs and
         applies user-selected feasibility policy) and
         `.project/concepts/constraint-execution-authoritative-lifecycle-contract.md`. It supplements;
         it never rewrites the core
-  - [ ] The epic's `[OWNER]` Critical Success Factor cited **beside** the promise as its
+  - [x] The epic's `[OWNER]` Critical Success Factor cited **beside** the promise as its
         enforcement-side companion, not merged into it
-  - [ ] The promise stated as **directional intent**, with `[ACAUSAL-RELATIONS-CAPABILITY]`
+  - [x] The promise stated as **directional intent**, with `[ACAUSAL-RELATIONS-CAPABILITY]`
         (BACKLOG:439) named for the unbuilt half. The tension with the ratified A5/A6/A7 basis
         rulings is **surfaced in daylight in the entry itself** — carried from
         `owner-checkpoint-20260813.md:28-36`, not re-derived, and **not open for re-resolution here**
-- [ ] Wire citation point 2: a pointer in the epic's product-lens block,
+- [x] Wire citation point 2: a pointer in the epic's product-lens block,
       `.project/backlog/epic_constraint_semantics_contract.md:130-135`
-- [ ] Wire citation point 3: a close-stage block in
+- [x] Wire citation point 3: a close-stage block in
       `.project/active/constraint-docs-agent-sync/product-lens.md` recording that the trail was wired
-- [ ] Add a `.project/product/INDEX.md` pointer to codegen `CLAUDE.md` so the global context-loading
+- [x] Add a `.project/product/INDEX.md` pointer to codegen `CLAUDE.md` so the global context-loading
       rule resolves
 
 ### Validation
 
-- [ ] The verbatim diff above is empty
-- [ ] Every supplementary paragraph carries an `[INHERITED: <source>]` mark
-- [ ] The tension paragraph exists and resolves nothing in either direction
-- [ ] Starting from the epic ledger block, the promise is reachable in one hop
+- [x] The verbatim diff above is empty
+- [x] Every supplementary paragraph carries an `[INHERITED: <source>]` mark
+- [x] The tension paragraph exists and resolves nothing in either direction
+- [x] Starting from the epic ledger block, the promise is reachable in one hop
 
 **What we know after this phase:** audit-F4's condition — a promise with no entry a lens run can
 resolve against — no longer holds, and it does not hold one directory over either.
@@ -729,6 +729,48 @@ TEAx S1/S2/S3/S5→0 S4→9. Total 134 raw hits, all accounted for (70 rows + 64
 - **No fourth item3-F2 site.** The pre-authorized flip was not needed.
 
 ### Phase 3 Completion
+
+**Completed:** 2026-08-14
+
+**Actual changes:**
+
+- **New:** `.project/product/INDEX.md` — the ledger. Header states the `P-NNN` id rule and the ADR
+  convention (an ADR is a numbered section of `modeling-assumptions.md`; no `docs/adr/` directory;
+  next free id ADR-010). One promise row (P-001) and one back-registration row (ADR-009 → `:588`).
+- **New:** `.project/product/P-001-design-search-free-variation.md` — the owner's two bullets
+  verbatim as the core, the epic's `[OWNER]` CSF cited beside them under its own heading, five
+  `[INHERITED: <source>]` supplementary paragraphs, and a "surfaced, not resolved" tension section.
+- `.project/backlog/epic_constraint_semantics_contract.md` Product-Lens section header — citation
+  point 2, the durable trail node.
+- `.project/active/constraint-docs-agent-sync/product-lens.md` — an implement-stage block recording
+  the wiring. Gate CLEAR, no new finding.
+- `CLAUDE.md` — a "Product Promises" section pointing at the ledger, so the global context-loading
+  rule ("skim `.project/product/INDEX.md` if present") resolves for a future session. It also states
+  the ADR convention where an agent looking for `docs/adr/` will hit it.
+
+**Verification:**
+
+- Payload diff — `diff <(sed -n '9,13p' owner-checkpoint-20260813.md) <(… P-001 …)` → **empty**.
+  The two bullets are byte-identical.
+- `grep -c "^\*\*\[INHERITED:" P-001-…md` → **5**. Every supplementary paragraph is marked with its
+  source.
+- Trail — `.project/backlog/epic_constraint_semantics_contract.md:120` links `../product/INDEX.md`
+  and P-001 directly. One hop from where a lens run starts.
+
+**Issues:** none.
+
+**Deviations:**
+
+- **The CSF is a section, not a sentence in the promise section.** The plan said "cited beside, not
+  merged." Giving it its own heading with its own `[OWNER]` grade makes the separation structural
+  rather than a matter of paragraph order — a later editor cannot fold them together by accident.
+- **Five INHERITED paragraphs, not the two named starting sources.** The plan named
+  `constraint-execution-and-design-space-studies.md:15` and the lifecycle contract as *starting*
+  points. The glean pulled two paragraphs from the studies doc (`:15` three-responsibility split,
+  `:17` layer split), two from the lifecycle contract (headline coverage truth; the disposition
+  vocabulary from invariant 1 as amended in Phase 2), and one from ADR-009. Each carries its own
+  source mark. This is the owner's "you could probably glean more from the concept docs"
+  instruction (`owner-checkpoint-20260813.md:15-16`) executed, not scope creep.
 
 ### Phase 4 Completion
 
