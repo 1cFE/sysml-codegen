@@ -543,7 +543,7 @@ read. What remains is merge sequencing, owned by `pre_pr` and the owner.
   partial coverage" fixture.
   **The ruling: option (a), invariant 1 is narrower than written.** `[AGENT] (ratified by owner,
   2026-08-13)`, recorded in full at
-  `.project/active/constraint-docs-agent-sync/owner-checkpoint-20260813.md:38-53`. BLOCK-halts is
+  `.project/completed/20260814_constraint-docs-agent-sync/owner-checkpoint-20260813.md:38-53`. BLOCK-halts is
   scoped to asserted gates **that reach occurrences**; a non-reaching asserted usage is governed by
   severity-by-cause and the coverage rules, never a model-wide halt. The denominator clause is
   therefore live text, not dead: its reachable population is exactly the non-reaching case.
@@ -1054,6 +1054,11 @@ calculation definitions without building the capability inside this epic.
 
 ### Item 7: ADR, Product Promise, and Agent-Facing Documentation Sync (0.5–1 day)
 
+**Status (2026-08-14): CLOSED — implemented, audited CERTIFY-WITH-RESIDUALS, archived to
+`.project/completed/20260814_constraint-docs-agent-sync/`.** The heading carries no ✅: two of the
+six success criteria below stay unticked, each carrying a named owner-call residual rather than
+work left undone (see the close block).
+
 **Type**: Documentation / Contract
 
 **Boundary authority**: **[OWNER 2026-08-13]** "the ADR + documentation is critical. Including:
@@ -1089,7 +1094,7 @@ instead of the superseded one.
 
 1. **Owner checkpoint — DISCHARGED 2026-08-13, pre-captured.** Both inputs were given in
    session before item start and are recorded verbatim with provenance in
-   `.project/active/constraint-docs-agent-sync/owner-checkpoint-20260813.md`: the
+   `.project/completed/20260814_constraint-docs-agent-sync/owner-checkpoint-20260813.md`: the
    `[OWNER-VERBATIM]` coverage-truth promise (free-variation design search; no embedded
    engineering logic, differentiating from 1costingFE) with the glean-from-concept-docs
    instruction and a flagged tension to handle in daylight (promise bullet 2 vs the ratified
@@ -1157,7 +1162,7 @@ instead of the superseded one.
 
 **Estimated Effort**: 0.5–1 day (owner checkpoint 0.5h, sweep + edits 3–5h, verification 1h)
 
-**Location**: `.project/active/constraint-docs-agent-sync/`
+**Location**: `.project/completed/20260814_constraint-docs-agent-sync/`
 
 **Dependencies**: Items 4–6, 8, and 9 landed (documents the final state — Item 8 changes the
 unit-on-binding behavior `modeling-assumptions.md` §8 currently documents, and Item 9 changes
@@ -1172,6 +1177,60 @@ on unequal metadata. Item 9's landing fixes the worked example this item describ
 executing gates, the restated `65 = 56 + 9` identity, and the B1–B5 marker mechanism (still
 PROVENANCE-recorded, per `[INLINE-PREDICATE-MARKER-DROP]`) are the final state to document. The
 epic-level verification-matrix reconciliation rides this item.
+
+**Audited 2026-08-14: CERTIFY-WITH-RESIDUALS**
+(`completed/20260814_constraint-docs-agent-sync/audit.md`). Every probed claim reproduced under
+independent re-run rather than being read off the item's own record: the licensed suite (2070
+passed, zero `no live syside license` lines), the three-repo post-edit sweep hit-for-hit, the
+owner-verbatim payload diff (empty), the matrix recount (280/136/3/131/10/0, 33 families), and the
+boundary discipline (no code, fixture or schema path in any item commit; nothing pushed; the
+out-of-bounds checkout left clean). Four findings were raised. **A-3** — the new `@inapplicable:`
+"How to write it" example was refused by the shipped generator under its own D9 rule — was found by
+the auditor's probe, fixed by an implement resume via route (a), and **CLOSED at the auditor's
+re-verification pass**: the exact authored text now generates to completion and seal, and the
+marker's reason reaches the generated catalog (`inapplicability_reason` in `model_contract.json`;
+`inapplicable_gate_count: 1` with `coverage_state: 'none'`). **A-4** — an unreproducible kept-test-
+file count — was **CLOSED** by recording the counting method and reproducing **55** from it
+independently. A-1 and A-2 stand as residuals.
+
+**CLOSED 2026-08-14.** SC1, SC3, SC4 and SC6 are ticked against the audit's SC table; SC2 and SC5
+stay unticked with their residuals named inline above. Closing evidence:
+
+- **The promise has a durable home and a one-hop trail.** `.project/product/INDEX.md` →
+  `P-001-design-search-free-variation.md` carries the `[OWNER-VERBATIM, 2026-08-13]` coverage-truth
+  promise byte-for-byte (payload diff empty), with ADR-009 back-registered as a row and the
+  promise-vs-basis tension surfaced in daylight rather than resolved. This file's Product-Lens
+  header is the trail node; it does not archive, so the citation survives this close. Closes Item 3
+  `audit-F4`, which had no home available when it was filed.
+- **The teaching surfaces now match what shipped, in three repositories.** `@inapplicable:`
+  authoring and the eligible+inapplicable refusal (agentic-mbse `docs/patterns/constraints.md`),
+  the disposition vocabulary and severity-by-cause (codegen reference docs), the six report states
+  and the feed-strategy opt-in (TEAx docs), and the `modeling-assumptions.md` §8 unit-on-binding
+  rewrite Item 8's behavior change required. The B1–B5 marker mechanism is taught with its
+  condition named on both sides: a marker on a **bindings-form** constraint reaches the domain
+  (verified by a licensed elaboration probe), and on an **inline-predicate** constraint it is
+  silently dropped, so PROVENANCE carries the disposition until `[INLINE-PREDICATE-MARKER-DROP]`
+  closes.
+- **Two residuals carried past close, both owner calls, neither of them work left undone.**
+  **(1) The symlink residual (SC2/SC3)** — codegen's `.claude/agents/*` and
+  `.claude/skills/sysml-conventions` resolve into `/home/reid/1cfe/agentic-mbse/claude/…` on branch
+  `elaborate-first-salvage`, while the corrected teaching is committed on the `item7-rebuild`
+  worktree branch the item's boundaries confined it to. A codegen agent session keeps reading the
+  superseded example until the owner merges. The item also found that agentic-mbse tracks **two
+  divergent copies** of the agent definitions (`claude/` 37 files, `.claude/` 23 files) and brought
+  `.claude/agents/sysml-expert.md` level. **(2) The untagged-gates residual (SC5)** — Items 3, 5, 8
+  and 9 carry zero REQ tags, so filing their matrix rows would mean minting tags first, which is a
+  requirements decision, not a matrix reconciliation. Parked rather than invented; vehicle
+  `[CONSTRAINT-GATES-UNTAGGED]` in `BACKLOG.md`.
+- **The matrix half that did not need a ruling is done.** The recount reproduced
+  (280/136/3/131/10/0, 33 families) and **both** count blocks were corrected — each was falsified
+  by it — and the one tag-backed gap, the REQ-DIAG family present in doc 30 but absent from the
+  matrix, is filed.
+- **It documents what landed and changes nothing else.** The only Python touched is a module
+  docstring and comment citations; no code, fixture, schema, or generated path appears in any item
+  commit. Product-lens gate **CLEAR** at close, with no unresolved block anywhere in the ledger.
+  Collect check after archiving: `2104/2183 tests collected (79 deselected)`, matching the
+  verification baseline with no collection errors.
 
 ---
 
@@ -1518,8 +1577,23 @@ ruling; Item 8 may add one reviewed fixture recapture if churn fires)
 
 ---
 
-**Last Updated**: 2026-08-13
-**Next Action**: Items 1–6, **8 and 9** are CLOSED and archived (2026-08-13). Item 8 shipped
+**Last Updated**: 2026-08-14
+**Next Action**: **All nine items are CLOSED and archived.** Item 7 closed 2026-08-14
+(CERTIFY-WITH-RESIDUALS, `.project/completed/20260814_constraint-docs-agent-sync/`): the
+coverage-truth promise has its durable home at `.project/product/P-001-…`, the three repositories'
+docs, skills and agent prompts teach the landed semantics, and the matrix recount landed. Two
+residuals ride out of the epic, both owner calls: the codegen `.claude/` **symlink target**, which
+resolves when the owner merges the `item7-rebuild` agentic-mbse worktree branch into whatever
+branch those symlinks point at, and `[CONSTRAINT-GATES-UNTAGGED]`, which needs REQ tags minted
+before Items 3/5/8/9 can get matrix rows.
+
+**What remains is the owner's, and none of it is an item.** Epic close, the epic's Lessons Learned,
+and `pre_pr` are unrun by ruling **[OWNER 2026-08-14]** — Item 7's close archived the item only,
+and the umbrella folder `.project/active/constraint-semantics-contract/` stays active until epic
+close. Nothing is pushed and no `main` is touched in any repository; TEAx stays on
+`constraint-semantics-item3` at `5b70ae9`.
+
+For the record of how the epic got here: Item 8 shipped
 standalone as ruled, at freeze `62a07e5c870158672eb100f1cba73adfe4c9df28`, with zero v3 recapture
 (23/23 inventory, no stale rows) and no residuals. Item 6 closed as a design/planning delivery; its
 7–9 day production implementation is **not authorized in this epic** and now lives as the unowned
@@ -1527,8 +1601,3 @@ standalone as ruled, at freeze `62a07e5c870158672eb100f1cba73adfe4c9df28`, with 
 already-ruled held intent (A5/A6 basis, A9's 1% relative band) and closed
 Certify-with-residuals — three executing gates, `65 = 56 + 9` machine-proved, archive frozen — with
 its third success criterion left open by ruling as a conditional that did not fire.
-**Item 7 is next and is the last item in the epic.** It documents the final state: the
-`modeling-assumptions.md` §8 unit-on-binding rewrite (Item 8's behavior change), the B1–B5 marker
-mechanism (`[INLINE-PREDICATE-MARKER-DROP]` still open), and the epic-level verification-matrix
-reconciliation. Epic close and `pre_pr` follow it. `pre_pr` and any push remain with the owner;
-nothing is pushed and no `main` is touched.

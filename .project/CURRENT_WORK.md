@@ -1,84 +1,76 @@
 # Current Work
 
-**Last Updated**: 2026-08-14 (**Item 7 CERTIFIED-WITH-RESIDUALS at audit.** Four of six epic SCs
-ticked in the epic file; two carry owner-call residuals. Three audit findings, two cured. See below.
-CONSTRAINT-SEMANTICS Items 1–6, 8 and 9 remain CLOSED and archived; epic close, `pre_pr` and any push
-remain with the owner)
+**Last Updated**: 2026-08-14 (**Item 7 CLOSED and archived** to
+`.project/completed/20260814_constraint-docs-agent-sync/`, verdict CERTIFY-WITH-RESIDUALS. **All
+nine CONSTRAINT-SEMANTICS items are now closed.** Epic close, the epic's Lessons Learned, and
+`pre_pr` are unrun by ruling and remain with the owner; nothing is pushed and no `main` is touched)
 
 ---
 
-## ✅ Item 7 — certified with residuals (`audit.md`, 2026-08-14)
+## ✅ Item 7 — CLOSED and archived (2026-08-14)
 
-**Verdict: CERTIFY-WITH-RESIDUALS.** Every probed claim reproduced under re-run, including the
-licensed suite (`2070 passed`, zero license-skip lines), the post-edit sweep in all three repos
-(hit-for-hit), the owner-verbatim diff (empty), the matrix recount (280/136/3/131/10/0, 33 families),
-and the branch/boundary discipline (no code, fixture or schema path in any commit; nothing pushed;
-the out-of-bounds checkout clean).
+**Verdict: CERTIFY-WITH-RESIDUALS**, archived to
+`.project/completed/20260814_constraint-docs-agent-sync/`. Every probed claim reproduced under
+independent re-run, including the licensed suite (`2070 passed`, zero license-skip lines), the
+post-edit sweep in all three repos (hit-for-hit), the owner-verbatim diff (empty), the matrix
+recount (280/136/3/131/10/0, 33 families), and the branch/boundary discipline (no code, fixture or
+schema path in any commit; nothing pushed; the out-of-bounds checkout clean). Collect check after
+archiving: `2104/2183 tests collected (79 deselected)`, matching the verification baseline.
 
-Findings, all four now dispositioned. **A-1** the symlink residual's recorded evidence was falsified
-on re-run — the residual is real, the discriminator was not (**cured**). **A-2** the SC5 parked half
-had no named vehicle (**cured** — `[CONSTRAINT-GATES-UNTAGGED]` filed in BACKLOG). **A-3** the new
-`@inapplicable:` "How to write it" example was **refused by the shipped generator** (D9) — fixed by an
-implement resume via route (a) and **CLOSED at the auditor's re-verification pass**: the exact
-authored text now generates to completion and seal, the marker's reason reaches the generated catalog
+Four audit findings, all dispositioned. **A-3** — the new `@inapplicable:` "How to write it" example
+was refused by the shipped generator under its own D9 rule — was **CLOSED** at the auditor's
+re-verification pass after an implement resume took route (a): the exact authored text now generates
+to completion and seal, and the marker's reason reaches the generated catalog
 (`inapplicability_reason` in `model_contract.json`, `inapplicable_gate_count: 1` with
-`coverage_state: 'none'`), both cited fixtures behave as cited, and the post-cure sweep shows
-agentic-mbse unchanged hit-for-hit. **A-4** the "distinct kept test files" count — method now
-recorded and **55 reproduced** from it independently; **CLOSED**.
+`coverage_state: 'none'`). **A-4** — the "distinct kept test files" count — was **CLOSED**, method
+recorded and **55** reproduced from it independently. **A-1** and **A-2** stand as the two residuals
+below.
 
-**Two residuals remain, both owner calls:** the symlink merge (A-1) and `[CONSTRAINT-GATES-UNTAGGED]`
-(A-2). Neither is work left undone.
+What landed: the item3-F2 and design-F2 contract amendments, the first `.project/product/` ledger
+with P-001 carrying the owner's promise verbatim, the cross-repo `@inapplicable:` /
+disposition-vocabulary / six-states teaching, the `modeling-assumptions.md` §8 unit-on-binding
+rewrite, the B1–B5 marker rule stated with both its conditions, and the epic-level
+verification-matrix reconciliation. SC1/SC3/SC4/SC6 ticked; SC2/SC5 unticked, each naming its
+residual.
 
-## ⚠️ Item 7 — the two owner calls still open before `close`
+## ⚠️ The two residuals that ride out of the epic — both owner calls
 
-All six phases ran (`.project/active/constraint-docs-agent-sync/plan.md`, boxes checked, per-phase
-notes filled). Evidence: `.../verification.md`. Four of six epic success criteria are ticked. Two
-are not, each for a reason that needs an owner decision, not more work:
+Neither is work left undone.
 
-**1. Codegen's agent surfaces are symlinks into an out-of-bounds checkout (blocks SC2/SC3).**
+**1. Codegen's agent surfaces are symlinks into an out-of-bounds checkout (A-1, blocks SC2/SC3).**
 Codegen `.claude/agents/*` and `.claude/skills/sysml-conventions` resolve to
 `/home/reid/1cfe/agentic-mbse/claude/…` — the **main** agentic-mbse checkout, on branch
-`elaborate-first-salvage`. The item's boundaries allow agentic-mbse edits only in the worktree
+`elaborate-first-salvage`. The item's boundaries allowed agentic-mbse edits only in the worktree
 `/home/reid/1cfe/agentic-mbse-item7-rebuild`. The corrected skill is committed there, so a codegen
 agent session keeps reading the superseded constraint example until `item7-rebuild` reaches the
 branch those symlinks resolve to. Also found: agentic-mbse tracks **two divergent copies** of the
 agent definitions (`claude/` 37 files, `.claude/` 23 files) and Item 1 corrected only `claude/`;
 this item brought `.claude/agents/sysml-expert.md` level.
 
-**2. Items 3, 5, 8 and 9 carry no REQ tags (blocks SC5).** The verification-matrix recount is done
-and both count blocks were corrected — each was falsified by it. The one tag-backed gap (the
-REQ-DIAG family, absent from the matrix but present in doc 30) is filed. Filing rows for the
-untagged gates would mean minting REQ tags first, which is a requirements decision, not a matrix
-reconciliation. Parked rather than invented.
-
-Everything else landed: the item3-F2 and design-F2 contract amendments, the first
-`.project/product/` ledger with P-001, the cross-repo `@inapplicable:` / disposition-vocabulary /
-six-states teaching, and a licensed suite run (`2070 passed`, **zero** `no live syside license`
-lines).
+**2. Items 3, 5, 8 and 9 carry no REQ tags (A-2, blocks SC5).** The recount is done and both count
+blocks were corrected — each was falsified by it — and the one tag-backed gap (the REQ-DIAG family,
+absent from the matrix but present in doc 30) is filed. Filing rows for the untagged gates would
+mean minting REQ tags first, which is a requirements decision, not a matrix reconciliation. Parked
+rather than invented; vehicle `[CONSTRAINT-GATES-UNTAGGED]` in `BACKLOG.md`.
 
 ---
 
 ## Active Work
 
-### 2026-08-13: CONSTRAINT-SEMANTICS epic — Item 7 is the last item (Items 6, 8 and 9 closed)
+### 2026-08-14: CONSTRAINT-SEMANTICS epic — all nine items closed; the tail is the owner's
 
-Items 5, 6, 8, and 9 all closed and archived today (see Recently Completed). What is live now:
+Items 1–9 are all closed and archived (Item 7 today; the rest 2026-08-13 — see Recently Completed).
+What is live now:
 
-- **Item 7 spec drafted 2026-08-14** — `.project/active/constraint-docs-agent-sync/spec.md`
-  (epic CONSTRAINT-SEMANTICS). Product-lens **DISPOSED** (item7-F1..F3, nothing blocks), method
-  reconstructed from the in-tree ledgers because the canonical script is outside the sandbox. The
-  one to fix in design: **Item 1's sweep is five terms (S1–S5), not the "three-sweep method" the
-  epic's SC2 calls it** — three terms cannot discharge that criterion.
-
-- **Item 7 (ADR, product promise, and agent-facing documentation sync) is UNBLOCKED and is the
-  last item in the epic.** Item home `.project/active/constraint-docs-agent-sync/`. It documents
-  the final state and owes three things: the `modeling-assumptions.md` §8 unit-on-binding rewrite
-  (Item 8 changed that behavior — authored unit text on constraint-formal and computed-attribute
-  ports, fail-closed `SI_RENDERING_COLLISION` on unequal metadata), the B1–B5 marker-mechanism
-  documentation (the markers still live in PROVENANCE; `[INLINE-PREDICATE-MARKER-DROP]` is open),
-  and the epic-level verification-matrix reconciliation. Epic close and `pre_pr` follow it.
-- **Item 9's landing is what Item 7 now describes:** three executing gates (A2, A3, A9), the
-  restated `65 = 56 + 9` identity, and `blocked-by-defect` retired on the live surface.
+- **The epic itself is still open, by ruling `[OWNER 2026-08-14]`.** Item 7's close archived the
+  item only. Epic close, the epic's **Lessons Learned**, and `pre_pr` have not run and are the
+  owner's to schedule. The umbrella folder `.project/active/constraint-semantics-contract/` stays
+  active until epic close.
+- **Two residuals ride out of the epic, both owner calls** (detail in the Item 7 sections above):
+  the codegen `.claude/` **symlink target**, which resolves when the owner merges the
+  `item7-rebuild` agentic-mbse worktree branch into whatever branch those symlinks point at, and
+  **`[CONSTRAINT-GATES-UNTAGGED]`**, which needs REQ tags minted before Items 3/5/8/9 can get
+  verification-matrix rows.
 - **Item 6's production implementation is out of this epic `[OWNER 2026-08-13]`** and is now the
   unowned backlog entry `[CALCDEF-GATE-IMPLEMENTATION]` (P1, 7–9 days, graph v4 + catalog 4.0.0,
   codegen + TEAx), parked with the owner. It competes for the next slot with
@@ -552,6 +544,36 @@ surfaces as matrix-row candidates.
 ---
 
 ## Recently Completed
+
+### 2026-08-14: CONSTRAINT-SEMANTICS Item 7 — ADR, Product Promise, and Agent-Facing Documentation Sync (audited Certify-with-residuals + closed)
+- **The owner's promise finally has a durable home, and the trail to it survives archiving.**
+  `.project/product/INDEX.md` → `P-001-design-search-free-variation.md` carries the
+  `[OWNER-VERBATIM, 2026-08-13]` design-search promise byte-for-byte (payload diff empty), with the
+  epic's `[OWNER]` Critical Success Factor beside it, ADR-009 back-registered as a row under this
+  repo's ADR convention, and the promise-vs-basis tension surfaced rather than resolved
+  (`[ACAUSAL-RELATIONS-CAPABILITY]` names the unbuilt half). The durable citation lives in the epic
+  file's Product-Lens header and in `CLAUDE.md`, both outside the archived folder. Closes Item 3
+  `audit-F4`, which had no home available when it was filed.
+- **The teaching surfaces in three repositories now match what shipped.** `@inapplicable:`
+  authoring and the eligible+inapplicable refusal, the disposition vocabulary and severity-by-cause,
+  the six report states and the TEAx feed-strategy opt-in, the `modeling-assumptions.md` §8
+  unit-on-binding rewrite Item 8's behavior change required, and the corrected `sysml-conventions`
+  skill example. The B1–B5 marker rule is stated with **both** its conditions: a marker on a
+  bindings-form constraint reaches the domain (proved by a licensed elaboration probe), and on an
+  inline-predicate constraint SysIDE drops it silently, so PROVENANCE carries the disposition until
+  `[INLINE-PREDICATE-MARKER-DROP]` closes.
+- **The audit's own probe caught the one defect the item introduced, and it was fixed rather than
+  argued.** A-3: the new `@inapplicable:` "How to write it" example was refused by the shipped
+  generator under the same document's D9 rule. An implement resume took route (a) and the auditor
+  re-ran it end to end — the authored text generates, seals, and carries the marker's reason into
+  the catalog. A-4 (an unreproducible kept-test-file count) closed with its method recorded and 55
+  reproduced independently.
+- **Two residuals carried past close, both owner calls** — the codegen `.claude/` symlink target
+  (resolves on merge) and `[CONSTRAINT-GATES-UNTAGGED]` (REQ tags must be minted before Items
+  3/5/8/9 get matrix rows). Gates: licensed **2070 passed**, zero license-skip lines; `git diff
+  --check` clean in three repos; collect `2104/2183 (79 deselected)` after archiving. No code,
+  fixture, schema, or generated path in any item commit. Archived to
+  `.project/completed/20260814_constraint-docs-agent-sync/`.
 
 ### 2026-08-13: CONSTRAINT-SEMANTICS Item 9 — Derivative Upgrade Under Held Intent (audited Certify-with-residuals + closed)
 - **The worked example is now the shape the owner ruled, not the shape a defect allowed.** Three

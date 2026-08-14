@@ -4,6 +4,100 @@ Historical record of completed work.
 
 ---
 
+## [2026-08-14] - [CONSTRAINT-SEMANTICS Item 7] ADR, Product Promise, and Agent-Facing Documentation Sync
+
+**Type**: Item (documentation / contract; independently audited **CERTIFY-WITH-RESIDUALS**, two
+residuals, both owner calls)
+**Duration**: spec 2026-08-14 → closed 2026-08-14 (same day; owner checkpoint pre-captured
+2026-08-13)
+**Archived to**: `.project/completed/20260814_constraint-docs-agent-sync/`
+**Commits**: item commits `ec1fd10`, `3a8e08f`, `4d01b37`, `06c9340`, `f302029`, `ab7d0f1`,
+`95e7a6b`, `4df119a`; audit at `2ff7729`, A-3/A-4 cures at `f6393c9`, re-verification at `0a27e6d`
+(branch `item7-rebuild`, unpushed). Companion edits on the agentic-mbse worktree branch
+`item7-rebuild`; TEAx doc edits on `constraint-semantics-item3` @ `5b70ae9`. Nothing pushed, no
+`main` touched anywhere.
+
+### Summary
+The constraint-semantics behavior changed across Items 1–6, 8 and 9. Almost none of the
+documentation that teaches it changed with it, and that gap has a specific cost: the next authoring
+session — human or agent — reads a shipped skill, a pattern doc, or an expert-agent prompt, copies
+the superseded shape, and produces a model that generates no gate at all. The report then says
+something true about nothing. This item closed the gap in three repositories, gave the owner's
+coverage-truth promise its first durable home, and executed four obligations Item 1's archival had
+left with no vehicle. It documents what landed; it changes no behavior.
+
+### Deliverables
+- `.project/product/INDEX.md` and `P-001-design-search-free-variation.md` — the repo's first
+  product ledger. P-001 carries the `[OWNER-VERBATIM, 2026-08-13]` design-search promise
+  byte-for-byte (payload diff empty), the epic's `[OWNER]` Critical Success Factor cited beside it,
+  five `[INHERITED]` supplementary paragraphs, and the promise-vs-basis tension surfaced rather
+  than resolved, with `[ACAUSAL-RELATIONS-CAPABILITY]` named for the unbuilt half. Closes Item 3
+  `audit-F4`. ADR-009 is back-registered as a row under the repo's ADR convention (a numbered
+  section of `docs/architecture/modeling-assumptions.md`; no `docs/adr/` directory).
+- The lens trail: a durable citation in this epic's Product-Lens header, which does not archive,
+  plus a `.project/product/INDEX.md` pointer in `CLAUDE.md` so the global context-loading rule
+  resolves for a cold session.
+- Cross-repo teaching for the landed surfaces — `@inapplicable:` authoring and the
+  eligible+inapplicable refusal (agentic-mbse `docs/patterns/constraints.md`), the disposition
+  vocabulary, carriers, totality gate and severity-by-cause (codegen reference docs), the six
+  report states, coverage block, policy defaults and feed-strategy opt-in (TEAx docs), and the
+  `modeling-assumptions.md` §8 unit-on-binding rewrite Item 8's behavior change required.
+- The B1–B5 marker rule stated with both its conditions: a marker on a **bindings-form** constraint
+  reaches the domain; on an **inline-predicate** constraint SysIDE drops it silently, so PROVENANCE
+  carries the disposition until `[INLINE-PREDICATE-MARKER-DROP]` closes.
+- The agent-facing sweep: the `sysml-conventions` skill's constraint example and the expert-agent
+  definitions brought level with the blessed bindings-only pattern.
+- The epic-level verification-matrix reconciliation, filed in one pass — recount 280/136/3/131/10/0
+  across 33 families, both count blocks corrected, and the REQ-DIAG family (in doc 30, absent from
+  the matrix) filed.
+- `verification.md` — the S1–S5 pre-edit sweep across three repos (134 raw hits: 70 dispositioned
+  rows plus 64 vendored-corpora hits aggregated into 15), the licensed run, and the SC evidence
+  table.
+
+### Evidence
+Licensed suite **2070 passed / 34 skipped / 79 deselected**, zero `no live syside license` lines —
+the only valid proof a run was licensed. `git diff --check` clean in all three repositories. The
+owner-verbatim payload diff is empty. The post-edit sweep re-runs hit-for-hit. No code, fixture,
+schema, or generated path appears in any item commit; the only Python touched is a module docstring
+and comment citations. Collect check after archiving: `2104/2183 tests collected (79 deselected)`,
+matching the verification baseline with no collection errors.
+
+### Decisions and deviations
+- **D-1, the promise/ADR home.** A `.project/product/` ledger, plus back-registration of ADRs as
+  rows against the existing modeling-assumptions convention rather than a new `docs/adr/` tree. The
+  durable citation deliberately lives in the epic file and `INDEX.md`, both outside the item folder,
+  so the trail survives archiving.
+- **D-2/D-3/D-4** (single sweep record; one matrix row per REQ tag; TEAx sweep terms unchanged)
+  were made in-plan; the item ran with no separate design stage.
+- **A-3, found by the auditor's probe and fixed, not argued.** The new `@inapplicable:` "How to
+  write it" example was refused by the shipped generator under the same document's D9 rule — the
+  document contradicted itself between its example and its rule. An implement resume took route (a)
+  (the marked gate moved onto a `part def` the variant never instantiates); the auditor re-ran it
+  end to end and confirmed the authored text generates, seals, and carries the marker's reason into
+  the catalog.
+- **A-4.** The "distinct kept test files" count was unreproducible as written; the method is now
+  recorded and **55** was reproduced from it by an independently written implementation.
+- **Two divergent agent-definition trees found in agentic-mbse** (`claude/` 37 files, `.claude/` 23
+  files) — a real manual-synchronization smell, found and reduced by this item rather than
+  introduced by it, and recorded loudly rather than papered over.
+
+### Residuals
+Two, both owner calls, neither of them work left undone. **A-1, the symlink residual (SC2/SC3):**
+codegen's `.claude/agents/*` and `.claude/skills/sysml-conventions` resolve into
+`/home/reid/1cfe/agentic-mbse/claude/…` on branch `elaborate-first-salvage`, while the corrected
+teaching is committed on the `item7-rebuild` worktree branch the item's boundaries confined it to,
+so a codegen agent session keeps reading the superseded example until the owner merges. **A-2, the
+untagged-gates residual (SC5):** Items 3, 5, 8 and 9 carry zero REQ tags, so their matrix rows need
+tags minted first — a requirements decision, not a matrix reconciliation. Parked rather than
+invented; vehicle `[CONSTRAINT-GATES-UNTAGGED]` in `BACKLOG.md`. Both are named in the epic's Item 7
+close block and in `CURRENT_WORK.md`.
+
+### Lessons Learned
+[TODO: Add lessons learned — deferred to epic close by **[OWNER 2026-08-14]**, which archived the
+item only and left the epic, its Lessons Learned, and `pre_pr` open.]
+
+---
+
 ## [2026-08-13] - [CONSTRAINT-SEMANTICS Item 9] Derivative Upgrade Under Held Intent
 
 **Type**: Item (modeling follow-on; independently audited **Certify-with-residuals**, none blocking)

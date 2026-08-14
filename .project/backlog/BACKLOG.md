@@ -450,7 +450,7 @@ This is the named vehicle for the half of epic SC5 that Item 7 parked rather tha
 
 **What Item 7 did discharge.** The verification-matrix recount, both falsified count blocks
 corrected, and the one tag-backed gap filed — the REQ-DIAG family, every cited test run before it
-was cited (`.project/active/constraint-docs-agent-sync/verification.md`, "Verification-matrix
+was cited (`.project/completed/20260814_constraint-docs-agent-sync/verification.md`, "Verification-matrix
 reconciliation").
 
 **What is left, and why it was not done.** Items 3, 5, 8 and 9 carry **zero REQ tags** in their
@@ -492,7 +492,7 @@ families** after CONSTRAINT-SEMANTICS Item 7 filed the REQ-DIAG family (2026-08-
 *The previous line here read "276 rows / 275 PASS / 32 families." The row and family counts were
 right for their date; **"275 PASS" was never true** — the matrix's own summary read 133 at the time
 and its tables read 134. Corrected by recount, not by adopting either number
-(`.project/active/constraint-docs-agent-sync/verification.md`).*
+(`.project/completed/20260814_constraint-docs-agent-sync/verification.md`).*
 
 ### [STALE-BASELINE-CLASS] Four committed fixtures latently stale vs live extraction — P3 (owner: leave filed, 2026-07-24)
 

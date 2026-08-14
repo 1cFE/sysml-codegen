@@ -144,7 +144,7 @@ non-executable/non-certifying.
    > **It now reads:** "A `BLOCK` on an **asserted** usage **that reaches occurrences** halts the
    > model," with the non-reaching case governed by severity-by-cause and the coverage rules.
    > **Ruling grade:** `[AGENT] (ratified by owner, 2026-08-13)`. Recorded in full at
-   > `.project/active/constraint-docs-agent-sync/owner-checkpoint-20260813.md:38-53`.
+   > `.project/completed/20260814_constraint-docs-agent-sync/owner-checkpoint-20260813.md:38-53`.
    > **Why.** The blanket clause made the "a `BLOCK`ed asserted usage stays in the denominator"
    > rule unreachable — if any BLOCK on an asserted usage halts, no package and no report exist to
    > carry it. The landed behavior depends on non-reaching-never-halts in three places: the

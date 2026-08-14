@@ -269,3 +269,43 @@ generates to completion and seal, and the marker's reason reaches the generated 
 line carries `inapplicable_gate_count: 1` with `coverage_state: 'none'`). Both cited fixtures behave
 as cited; all surfaces carrying the shape are consistent, with the D9 refusal stated beside the
 example. **This block's gate moves DISPOSED → CLEAR.** No block in this ledger is unresolved.
+
+---
+
+## close — 2026-08-14 — rev item archive to `.project/completed/20260814_constraint-docs-agent-sync/`
+
+**Run record, not the durable citation.** This block closes the ledger. The durable citations that
+a future lens run resolves against both live **outside** the archived folder and do not move:
+
+1. `.project/product/INDEX.md` → `P-001-design-search-free-variation.md` (the promise home, plus
+   ADR-009 back-registered as a row).
+2. `.project/backlog/epic_constraint_semantics_contract.md`, Product-Lens section header — the
+   trail node. One hop from where a lens run for any CONSTRAINT-SEMANTICS item starts.
+
+Both were re-read at close and both resolve. Every citation inside them that pointed into this
+item's `active/` folder was repointed to the archive path in the same commit as the `git mv`, in
+both directions, and a repository-wide reader sweep for the old path shows no live hit outside
+`.project/completed/`.
+
+**Gate: CLEAR.** No new finding. No block anywhere in this ledger is unresolved — the spec block is
+DISPOSED with its findings discharged in the spec body, the implement block is CLEAR, and the audit
+block's A-3 disposition was resolved by citation at the auditor's re-verification pass.
+
+**Carried past close — two residuals, both owner calls, neither of them work left undone:**
+
+- **A-1, the symlink residual (SC2/SC3).** Codegen's `.claude/agents/*` and
+  `.claude/skills/sysml-conventions` resolve into `/home/reid/1cfe/agentic-mbse/claude/…` on branch
+  `elaborate-first-salvage`; the corrected teaching is committed on the `item7-rebuild` worktree
+  branch. A codegen agent session keeps reading the superseded constraint example until the owner
+  merges. No product statement is contradicted — the corrected text exists and is verified; the
+  delivery path is a branch topology the item's boundaries forbade it to change.
+- **A-2, the untagged-gates residual (SC5).** Filing verification-matrix rows for Items 3/5/8/9
+  requires minting REQ tags first, which is a requirements decision, not a matrix reconciliation.
+  Vehicle: `[CONSTRAINT-GATES-UNTAGGED]` in `BACKLOG.md`. Parked rather than invented.
+
+**Filing scan at close.** No new decision record and no new promise entry. The item changed no
+behavior — its only executable diff is a module docstring and comment citations — so nothing
+narrows, contradicts, or supersedes P-001 or ADR-009. The one promise this item was responsible for
+is P-001 itself, filed at implement and verified at audit (verbatim diff empty). Noted gap, not a
+blocker: this repo has no `.project/scripts/product.sh` or `adr.sh`, so the ledger and its id rule
+are hand-maintained under the convention recorded in `.project/product/INDEX.md` and `CLAUDE.md`.

@@ -21,7 +21,7 @@ Traceability matrix mapping every REQ-\* tag to its conformance test file and st
 > already held PASS 134 / PARTIAL 2 / 57 files. The drift was `REQ-CL-04`, upgraded PARTIAL → PASS
 > when audit-7 F2 closed without the summary following it, plus a test-file count that had not been
 > recomputed in some time. The remaining delta to the numbers above is this item's own four REQ-DIAG
-> rows. Method and raw output: `.project/active/constraint-docs-agent-sync/verification.md`.
+> rows. Method and raw output: `.project/completed/20260814_constraint-docs-agent-sync/verification.md`.
 
 **Status definitions:**
 - **PASS**: At least one test **that exists in the tree** proves this requirement and passes
@@ -290,7 +290,7 @@ indirectly via the emitted verifier.
 Filed 2026-08-14 by CONSTRAINT-SEMANTICS Item 7 (`[MATRIX-EPIC-SURFACE-ROWS]`, BACKLOG:447). These
 four requirements were traced in doc 30 and had **no rows here** — the family existed in prose and
 not in the matrix. Every cited test was run before its row was written; the run is recorded in
-`.project/active/constraint-docs-agent-sync/verification.md`.
+`.project/completed/20260814_constraint-docs-agent-sync/verification.md`.
 
 | REQ ID | Requirement | Test File | Status |
 |--------|-------------|-----------|--------|

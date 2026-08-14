@@ -200,7 +200,7 @@ reader must chase.
   partial coverage). Model migration is therefore atomic per model for reaching gates — plan
   accordingly; this spec does not change BLOCK semantics.
   **Resolution:** ruling `[AGENT] (ratified by owner, 2026-08-13)`, recorded at
-  `.project/active/constraint-docs-agent-sync/owner-checkpoint-20260813.md:38-53`. The contract
+  `.project/completed/20260814_constraint-docs-agent-sync/owner-checkpoint-20260813.md:38-53`. The contract
   amendment lives at
   `.project/concepts/constraint-execution-authoritative-lifecycle-contract.md` invariant 1, with its
   amendment note.
@@ -304,7 +304,7 @@ reader must chase.
   — RESOLVED 2026-08-13. This Non-Goal held for this spec's own work and still does. The blanket
   clause it referred to was separately amended to reaching-gates scope on 2026-08-14 by
   CONSTRAINT-SEMANTICS Item 7, under the ruling at
-  `.project/active/constraint-docs-agent-sync/owner-checkpoint-20260813.md:38-53`. Read the amended
+  `.project/completed/20260814_constraint-docs-agent-sync/owner-checkpoint-20260813.md:38-53`. Read the amended
   form in the contract's invariant 1, not the blanket one.)*
 - Re-planning ELABORATE-FIRST Item 7 — its narrow-correction steps 4–10 remain the plan of
   record and resume after this contract work per the owner's sequencing.
