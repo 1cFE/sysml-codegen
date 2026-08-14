@@ -29,7 +29,7 @@ Prioritized list of epics and features.
 
 | Epic | Status | Notes |
 |------|--------|-------|
-| [CONSTRAINT-SEMANTICS] Constraint Semantics and Design-Search Feasibility | In progress — Items 1–5 closed and archived 2026-08-13, Item 6 certified (design delivery); Items 8–9 filed 2026-08-13 under the Item 5 D-S1/D-S2 ruling; Item 7 runs last. Item 8 is safe to start now; Item 9 waits only on Item 8 | P0 owner-directed prerequisite for ELABORATE-FIRST Item 7 steps 4–10. Establishes assert-only authoring policy, canonical 65/65 usage totality, truthful report/TEAx coverage, CATF derivative acceptance, two predicate fixes, and the staged calculation-definition gate design. 8.5–9.5 working days over 2–3 weeks plus owner-checkpoint turnaround. See [epic](epic_constraint_semantics_contract.md). |
+| [CONSTRAINT-SEMANTICS] Constraint Semantics and Design-Search Feasibility | In progress — Items 1–5 and 8 closed and archived 2026-08-13, Item 6 certified (design delivery); Item 9 is next and unblocked (its Item 8 dependency is satisfied); Item 7 now waits only on Item 9 and runs last | P0 owner-directed prerequisite for ELABORATE-FIRST Item 7 steps 4–10. Establishes assert-only authoring policy, canonical 65/65 usage totality, truthful report/TEAx coverage, CATF derivative acceptance, two predicate fixes, and the staged calculation-definition gate design. 8.5–9.5 working days over 2–3 weeks plus owner-checkpoint turnaround. See [epic](epic_constraint_semantics_contract.md). |
 | ~~[SOURCE-IDENTITY] One Modeled Value, One Runtime Source~~ | Superseded (2026-08-07; archived 2026-08-10). Archived to: `.project/completed/20260810_epic_semantic_source_identity.md` | Items 1–3 complete and inherited unchanged as the semantic authority (29-cell matrix, dispositions, invariants); the Item-4/5 shadow-layer architecture was stopped after Item-4 Phases 1–2 (recovery assessment) and replaced by [ELABORATE-FIRST](epic_elaborate_first_architecture.md); Items 6–8 intent absorbed into ELABORATE-FIRST Items 7–8. Item-4 artifacts archived to `completed/20260810_source-identity-occurrence-foundation/`; stopped implementation preserved on `item4-phases12-forensic`. |
 | [GAP-CLOSE] Constraint-Expression Gap Closure | Local scope certified; external F1 leg now verified closed (2026-07-20) | The blocking `[GAP-CLOSE-F1-TEAX-NORMALIZATION]` leg is closed in merged teax main (see the closed entry below). Remaining before full certification: Item 5 closeout state and the independent audit's open full-suite wave-gate leg — a certification pass, not new code. See `epic_gap_close.md`. |
 | ~~[CONSTRAINT-LIFECYCLE-REMEDIATION] Constraint Execution Lifecycle Remediation~~ ✅ | Complete (2026-07-20). Archived to: `.project/completed/20260720_epic_constraint_execution_lifecycle_remediation.md` | All 14 items done; composed public proof 41/41 at the pinned set. Merged 2026-07-20: agentic-mbse #11 → sysml-codegen #9 → teax #3. Release record + 41/41 register in `completed/20260720_constraint-lifecycle-composed-proof/`. |
@@ -48,6 +48,12 @@ CONSTRAINT-SEMANTICS items (ready; decomposition owner-approved 2026-08-12):
       `completed/20260813_catf-constraint-policy-acceptance/`; audited Certify-with-residuals.
       Epic Items 8 and 9 were filed out of this item's D-S1/D-S2 ruling and remain open)*
 - [ ] Item 6 — Calculation-Definition Gate Capability Design
+- [ ] Item 7 — ADR, Product Promise, and Agent-Facing Documentation Sync *(runs last; now waits
+      only on Item 9)*
+- [x] Item 8 — Unit-Lane Port Metadata Defect *(closed + archived 2026-08-13 →
+      `completed/20260813_unit-lane-port-metadata/`; audited Certify, shipped standalone as ruled,
+      zero v3 recapture, no residuals)*
+- [ ] Item 9 — Derivative Upgrade Under Held Intent *(unblocked 2026-08-13 — Item 8 landed)*
 
 SOURCE-IDENTITY items (epic superseded 2026-08-07, archived 2026-08-10 — see epic row above):
 - [x] Item 1 — Binding semantics and authoring-form spike (complete 2026-08-05)

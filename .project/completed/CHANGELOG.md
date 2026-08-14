@@ -4,6 +4,86 @@ Historical record of completed work.
 
 ---
 
+## [2026-08-13] - [CONSTRAINT-SEMANTICS Item 8] Unit-Lane Port Metadata Defect
+
+**Type**: Item (implementation, defect fix; independently audited **Certify**)
+**Duration**: spec 2026-08-13 → closed 2026-08-13 (same day)
+**Archived to**: `.project/completed/20260813_unit-lane-port-metadata/`
+**Commits**: codegen freeze `62a07e5c870158672eb100f1cba73adfe4c9df28`, audit `bd4e67b` (branch
+`item7-rebuild`, unpushed) / companion untouched / TEAx untouched on `constraint-semantics-item3`
+@ `5b70ae9` (nothing pushed, no `main` touched anywhere)
+
+### Summary
+One modeled design attribute can supply more than one consumer, and projection treats those
+consumers as one public `DESIGN_ATTRIBUTE` entry point only when their metadata agrees. The
+elaborator made agreement impossible for two supported shapes: constraint-formal bindings and
+inputs to computed design attributes both carried `unit=None` by construction, while a calc-usage
+binding carried the real unit from its calculation-definition formal. Valid models therefore
+reached projection's correct fail-closed comparison with one real unit string and one manufactured
+`None`, and the whole model was refused with `SI_RENDERING_COLLISION` — measured on CATF as A9's
+assert-band and 26 of 27 radial-build radius derivations, which is why Item 5 had to hold A5/A6/A9
+as `blocked-by-defect`.
+
+This item made declaration identity own unit selection on all three lanes. Constraint ports use the
+selected effective constraint formal from `definition.usages` (a closed selector, no slot-root
+fallback), computed ports use the exact referenced declaration, and one shared extractor returns
+the authored text with no inference, conversion, or normalization. Projection's equality rule and
+refusal are unchanged: equal complete metadata deduplicates to one entry point, unequal metadata
+still refuses the whole projection. v6 envelope build and load now certify projectability before
+capture can write, so a non-projectable graph cannot reach a destination.
+
+Both kept customer characterizations flip: red against the parent production tree with
+`SI_RENDERING_COLLISION`, green at the freeze, with exact authored units (`m³/s`, `Dimensionless`
+on all four A9 formal lanes; `m` on the radius derivation and its `TorusMinorRadius` consumer).
+
+### Deliverables
+- `spec.md`, `spec-review.md`, `design.md`, `design-review.md`, `plan.md`, `verification.md`,
+  `audit.md`, `product-lens.md` (spec ×4 / design-review ×2 / audit blocks — gate CLEAR, two
+  design-review findings DISPOSED), plus the pre and final complete snapshot inventories
+  (`snapshot-inventory-pre.json`, `snapshot-inventory-final.json`).
+- Product surface: declaration-owned unit selection in `elaboration/elaborate.py`, the shared exact
+  extractor (`feature_metadata.py`), envelope build/load projectability certification
+  (`snapshot/envelope.py`, `capture.py`, CLI public refusal), and
+  `tests/conformance/test_unit_lane_port_metadata.py` (both customer shapes, four
+  agreement/disagreement proofs, three-route parity, alias and redefinition identity).
+- Churn control: `assess_v6_snapshot_churn.py` and `test_v6_snapshot_inventory.py`, deriving the
+  complete path set from Git's tracked set rather than the historical 15-path subset.
+- Gates at audit: focused **244 passed**; default licensed **2066 passed / 34 skipped / 79
+  deselected**; all-marker **2144 passed / 34 skipped / 1 known pre-existing failure**
+  (`test_the_lane_runs_the_real_simkit`, a collection-order artifact that passes in isolation);
+  zero license-skip lines; ruff 12 → 12 with touched files at 0; mypy 55 → 52 in the same 11 files;
+  `git diff --check` clean.
+
+### Decisions and deviations
+- **Delivery ruling executed as ruled: Item 8 shipped STANDALONE.** The Item 6 design's R5
+  joint-delivery option stayed declined; no joint delivery occurred and no agent revived it.
+- **The conditional recapture obligation did not fire.** The complete inventory assessed **23
+  tracked / 23 assessed / 0 stale / 0 missing / 0 extra / 0 duplicate / 0 added / 0 removed**, so
+  zero v3 recapture was allowed or performed and no tracked snapshot or manifest byte moved. The
+  epic's "+ one reviewed recapture if churn fires" effort caveat is marked **unfired**. Staleness
+  is triggered only by live graph payload or relevant unit movement — computation and
+  generated-entry-point digests are recorded as evidence but deliberately do not widen it.
+- **The Item 6 handoff is evidence-only**, and it carries a guard: Item 6's future graph-v4 record
+  must derive and prove equality against its own then-current tracked set, and may not reuse 23 or
+  the 15-path subset. Those numbers are dated evidence, not durable scope.
+- **A premise conflict was surfaced, not resolved silently**: the spec requires the default lane to
+  pass and the all-marker lane to be zero-new. Unconditional all-marker pass remains parked,
+  because one inherited collection-order failure pre-dates this item. The audit did not relabel it
+  as a pass.
+- **Residuals: none.** The audit records no blocking or minor finding and homes nothing. Its "Not
+  checked" list is scope boundaries and inherited state — unrecreatable command provenance for the
+  pre-production phase log (the contemporaneous `n_pumps`-first observation stays a recorded phase
+  artifact; the final fixture's slot ordering reaches `pumping_speed_total` first), the unexecuted
+  non-empty recapture branch, and the inherited all-marker failure, which stays unowned by Item 8.
+- ADR/product-ledger infra is still absent in this repo (no `.project/adr/`, no `.project/product/`,
+  no `adr.sh`/`product.sh`), so no decision or promise entry could be filed. The unit-lane behavior
+  change is a documentation obligation on epic Item 7 (`modeling-assumptions.md` §8).
+
+### Lessons Learned
+[TODO: Add lessons learned]
+
+---
+
 ## [2026-08-13] - [CONSTRAINT-SEMANTICS Item 5] CATF Derivative and End-to-End Acceptance
 
 **Type**: Item (orchestrated run; audited *Needs work* → two blocking findings cured same day →

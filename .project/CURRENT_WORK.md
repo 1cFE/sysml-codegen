@@ -1,28 +1,23 @@
 # Current Work
 
-**Last Updated**: 2026-08-13 (CONSTRAINT-SEMANTICS Items 1–5 CLOSED and archived; Item 6 certified as a design delivery; Item 8 certified but not closed; Item 9's dependency is satisfied; Item 7 runs last; pre_pr and any push remain with the owner)
+**Last Updated**: 2026-08-13 (CONSTRAINT-SEMANTICS Items 1–5 and 8 CLOSED and archived; Item 6 certified as a design delivery; Item 9 is next and unblocked; Item 7 waits only on Item 9 and runs last; pre_pr and any push remain with the owner)
 
 ---
 
 ## Active Work
 
-### 2026-08-13: CONSTRAINT-SEMANTICS epic — Item 8 certified, awaiting close
+### 2026-08-13: CONSTRAINT-SEMANTICS epic — Item 9 is next (Item 8 closed)
 
-Item 5 closed and archived today (see Recently Completed). Item 8 implementation and fresh audit
-are complete on this branch. Close and pre_pr have not run:
+Items 5 and 8 both closed and archived today (see Recently Completed). What is live now:
 
-- **Item 8 (unit-lane port metadata) is certified at the freeze
-  `62a07e5c870158672eb100f1cba73adfe4c9df28`.** Exact evidence is in
-  `.project/active/unit-lane-port-metadata/verification.md`; certification is in
-  `.project/active/unit-lane-port-metadata/audit.md`. The fresh audit reproduced the final
-  Git-derived inventory at 23/23 with no stale graph/unit rows, so no v3 recapture ran. Default
-  licensed tests pass 2066/34/79; all-marker remains 2144/34/1 known; focused is 244/244; ruff and
-  mypy are zero-new.
-- **Item 9's Item 8 dependency is satisfied**, and it executes already-ruled held intent (A5/A6
-  basis, A9's 1% relative band) from
-  `.project/completed/20260813_catf-constraint-policy-acceptance/owner-disposition.md`.
-- **Item 7 runs last**, before epic close/pre_pr; it now also owes the B1–B5 marker-mechanism
-  documentation and the epic-level verification-matrix reconciliation.
+- **Item 9 (derivative upgrade under held intent) is unblocked and next.** Its only remaining
+  dependency was Item 8, which landed. It executes already-ruled held intent (A5/A6 basis, A9's 1%
+  relative band) from
+  `.project/completed/20260813_catf-constraint-policy-acceptance/owner-disposition.md` — in-force
+  intent, no re-disposition authorized.
+- **Item 7 now waits only on Item 9**, runs last before epic close/pre_pr, and owes the B1–B5
+  marker-mechanism documentation, the `modeling-assumptions.md` §8 unit-on-binding rewrite (Item 8
+  changed that behavior), and the epic-level verification-matrix reconciliation.
 - **Item 6 remains a separately authorized future implementation** in
   `.project/active/calcdef-constraint-gate-design/`. Item 8 updated only its named dependency,
   ownership, and future complete-set recapture citations; no Item 6 production or
@@ -492,6 +487,26 @@ surfaces as matrix-row candidates.
 ---
 
 ## Recently Completed
+
+### 2026-08-13: CONSTRAINT-SEMANTICS Item 8 — Unit-Lane Port Metadata Defect (audited Certify + closed)
+- **The refusal is cured at its source.** Constraint-formal and computed-attribute entry-point
+  ports now carry the same authored unit text calc-usage bindings always carried, so one design
+  attribute read by a calc *and* a constraint (or a derivation) is one public entry point instead
+  of a whole-model `SI_RENDERING_COLLISION` refusal. Both kept customer characterizations — the A9
+  assert-band shape and the radius-derivation shape — are red against the parent tree and green at
+  the freeze `62a07e5c870158672eb100f1cba73adfe4c9df28`, with exact authored text (`m³/s`,
+  `Dimensionless`, `m`). Declaration identity owns unit selection: no inference, conversion, or
+  normalization, and unequal metadata still refuses fail-closed.
+- **Zero fixture churn — the conditional recapture never fired.** The complete Git-derived
+  inventory assessed **23 tracked / 23 assessed / 0 stale / 0 missing / 0 extra / 0 duplicate**, so
+  no v3 recapture was allowed or performed and no tracked snapshot or manifest byte moved. Three
+  routes (licensed live, in-place v6, relocated v6) mint identical port metadata.
+- **Gates and handoff.** Focused 244 passed; default licensed 2066/34/79; all-marker 2144/34/1
+  (the one inherited collection-order failure, which passes in isolation); ruff and mypy zero-new.
+  The Item 6 handoff is evidence-only: full freeze SHA, five proof-node IDs, both complete path
+  sets, the zero-recapture disposition, and a guard forbidding any future graph-v4 record from
+  reusing 23 or the 15-path subset instead of re-deriving its own tracked set. Shipped standalone
+  as ruled; no residuals. Archived to `.project/completed/20260813_unit-lane-port-metadata/`.
 
 ### 2026-08-13: CONSTRAINT-SEMANTICS Item 5 — CATF Derivative and End-to-End Acceptance (audited + cured + closed)
 - **The contract ran end to end on the richest model in the tree.** `catf_mfe_gated` landed: 47

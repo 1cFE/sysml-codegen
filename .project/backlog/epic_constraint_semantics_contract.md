@@ -1114,6 +1114,10 @@ unit-on-binding behavior `modeling-assumptions.md` §8 currently documents, and 
 the derivative this item's worked-example references describe); before epic close/pre_pr.
 (Edges amended 2026-08-13 when Items 8–9 were filed; numbering deliberately unchanged — item
 numbers are already cited by close records and rulings.)
+**Status 2026-08-13:** Items 4, 5, 6, and 8 are landed and closed, so **Item 7 now waits only on
+Item 9.** Item 8's landing is what makes the `modeling-assumptions.md` §8 unit-on-binding rewrite
+concrete: the sweep documents authored unit text on constraint-formal and computed-attribute ports,
+plus fail-closed `SI_RENDERING_COLLISION` on unequal metadata.
 
 ---
 
@@ -1164,14 +1168,52 @@ constraint (or a derivation) no longer refuses the model.
 are in `.project/active/unit-lane-port-metadata/verification.md`.
 
 **Audited 2026-08-13: Certify.** The fresh audit independently reproduced the customer-shape,
-inventory, route, refusal, licensed-suite, and zero-new static evidence. Item 8 remains open only
-for the separate close stage; no pre-PR, push, `main`, Item 6 implementation, Item 7/9 work, or
-TEAx change was performed. See `.project/active/unit-lane-port-metadata/audit.md`.
+inventory, route, refusal, licensed-suite, and zero-new static evidence. No pre-PR, push, `main`,
+Item 6 implementation, Item 7/9 work, or TEAx change was performed.
+
+**CLOSED 2026-08-13.** All five success criteria above are ticked against the audit's SC table
+(SC1–SC9, `completed/20260813_unit-lane-port-metadata/audit.md`), with SC9's final-gate criterion
+met **as qualified by the spec's surfaced premise conflict**: the all-marker lane carries exactly
+one inherited failing node (`tests/execution/test_fusion_tea_real_teax.py::test_the_lane_runs_the_real_simkit`,
+a collection-order artifact that passes in isolation), which the audit did not relabel as a pass.
+Closing evidence:
+
+- **Both kept characterizations flip.** A9 and the radius derivation are red against the parent
+  production tree with `SI_RENDERING_COLLISION` and green at the freeze, with the authored unit
+  text preserved on every minted port (`m³/s`, `Dimensionless`, `m`) — no inference, conversion,
+  or normalization.
+- **Churn assessment ran and the recapture never fired.** Complete Git-derived inventory:
+  **23 tracked / 23 assessed / 0 stale / 0 missing / 0 extra / 0 duplicate / 0 added / 0 removed**.
+  The stale set is empty, so **zero v3 recapture** was allowed or performed and no tracked snapshot
+  or manifest byte moved. The **Estimated Effort** caveat below (the conditional one-reviewed
+  recapture) is therefore **UNFIRED** — Item 8 cost the base estimate only.
+- **Gates.** Focused **244 passed**; default licensed lane **2066 passed / 34 skipped / 79
+  deselected**; all-marker **2144 passed / 34 skipped / 1 known-baseline failure**; ruff and mypy
+  zero-new (full ruff 12→12, mypy 55→52); `git diff --check` clean. Licensed execution was real
+  (zero license-skip lines).
+- **Item 6 handoff complete, evidence-only** (SC7/SC8): the Item 6 design and implementation item
+  carry the full freeze SHA `62a07e5c870158672eb100f1cba73adfe4c9df28`, the five proof-node IDs and
+  their exact claims, both complete path sets, and the zero-recapture disposition — plus the
+  future-set re-derivation guard, which forbids Item 6's future graph-v4 record from reusing 23 or
+  the 15-path subset and requires it to derive and prove equality against its own then-current
+  tracked set. No Item 6 authority or implementation moved.
+
+**Delivery ruling: EXECUTED AS RULED.** Item 8 shipped **standalone**. No joint delivery with the
+Item 6 calc-def gate implementation occurred, and no agent revived R5's declined option.
+
+**Audit residuals: NONE.** The audit records no blocking or minor implementation finding and no
+residual needing a home. Its "Not checked" list is scope boundaries and inherited state, not Item 8
+debt: the pre-production phase log's command provenance cannot be recreated from the squashed
+freeze (the contemporaneous `n_pumps`-first observation stays a recorded phase artifact while the
+final fixture's slot ordering reaches `pumping_speed_total` first); the non-empty recapture branch
+was not executed because the stale set is empty; and the inherited all-marker collection-order
+failure remains **pre-existing and unowned by this item**.
 
 **Estimated Effort**: 0.5–1 day, **plus** the one reviewed fixture recapture if the churn
 assessment shows minted units move on existing fixtures (Item 2 precedent: 21 fixtures).
+**Actual: base only — the conditional recapture did not fire** (zero stale rows).
 
-**Location**: `.project/active/unit-lane-port-metadata/` (to be created)
+**Location**: `.project/completed/20260813_unit-lane-port-metadata/` (closed + archived 2026-08-13)
 
 **Dependencies**: Item 5's probe evidence (landed). Runs independently; Item 9 consumes it;
 Item 7's documentation sweep depends on it (this item changes the behavior
@@ -1222,8 +1264,11 @@ chosen over absolute so the band scales under design-search resizing). The deriv
 `PROVENANCE.md` carries the same rows' `blocked-by-defect` markings that this item retires. These
 are in-force intent, not history: no re-disposition is authorized here.
 
-**Dependencies**: Items 5 (**closed 2026-08-13**) and 8. Item 5 no longer blocks — this item waits
-only on Item 8.
+**Dependencies**: Items 5 and 8 — **both closed 2026-08-13; this item is UNBLOCKED and ready to
+start.** Item 8's fix landed at `62a07e5c870158672eb100f1cba73adfe4c9df28`, so the unit-lane port
+defect that made A5/A6/A9's target forms unbuildable is cured: constraint-formal and
+computed-attribute ports now carry authored unit text, and a design attribute reached by a calc and
+a constraint no longer refuses the model. Nothing in the epic blocks Item 9.
 
 ---
 
@@ -1343,13 +1388,15 @@ ruling; Item 8 may add one reviewed fixture recapture if churn fires)
 ---
 
 **Last Updated**: 2026-08-13
-**Next Action**: Items 1–5 are CLOSED and archived (2026-08-13); Item 6 is CERTIFIED as a
-design/planning delivery. **Item 8 is fully safe to start now** — it is standalone by owner ruling,
-it depends only on Item 5's landed probe evidence, and no acceptance evidence is in flight for it
-to pollute (Item 5's fixture, expectations, and three-route gates are all committed and closed).
-**Item 9 waits only on Item 8**, and executes the already-ruled held intent recorded in
+**Next Action**: Items 1–5 and **Item 8** are CLOSED and archived (2026-08-13); Item 6 is CERTIFIED
+as a design/planning delivery. Item 8 shipped standalone as ruled, at freeze
+`62a07e5c870158672eb100f1cba73adfe4c9df28`, with zero v3 recapture (23/23 inventory, no stale rows)
+and no residuals.
+**Item 9 is next and is now unblocked** — its Item 8 dependency is satisfied. It executes the
+already-ruled held intent recorded in
 `.project/completed/20260813_catf-constraint-policy-acceptance/owner-disposition.md` (A5/A6 basis,
-A9's 1% relative band). Item 7 runs last, after Items 8–9, before epic close/pre_pr; it now also
+A9's 1% relative band). **Item 7 now waits only on Item 9** — it runs last, before epic
+close/pre_pr; it now also
 carries the B1–B5 marker-mechanism documentation obligation and the epic-level verification-matrix
 reconciliation. `pre_pr` and any push remain with the owner; nothing is pushed and no `main` is
 touched.
