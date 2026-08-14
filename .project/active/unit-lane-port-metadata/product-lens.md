@@ -104,3 +104,29 @@ Resolves:
   policy.
 
 Gate: DISPOSED (design-review-F2)
+
+## audit — 2026-08-13 — rev `62a07e5c870158672eb100f1cba73adfe4c9df28`
+Epic: CONSTRAINT-SEMANTICS
+
+Point (re-derived): One modeled design attribute has one public input identity even when several
+consumers read it; authored units remain exact documentation metadata rather than conversion
+behavior; and a v6 snapshot carries the already-decided, projectable instance graph without a
+source-tree or licensed-parser dependency. [source: `docs/architecture/modeling-assumptions.md`
+§2; `docs/architecture/reference/27-snapshot-generation.md` “Why”, “Three routes, one authority”,
+grade: INHERITED]
+
+Falsifier: A shared modeled attribute splits into consumer-specific public inputs, a supported
+consumer loses or converts its authored unit, unequal unit text is admitted, or live and relocated
+snapshot routes project different port metadata.
+
+Findings: none. The frozen implementation makes declaration identity own unit selection, retains
+the existing one-key projection/refusal law, and makes envelope build/load certify the same
+projectability rule before capture can write. The A9 and radius customer shapes, both repaired
+lanes' agreement/disagreement cases, and live/in-place/relocated routes exercise the falsifier.
+
+Smells: none of the audit code/test smells fired. There is one unit-extraction rule, no
+consumer-category exemption, snapshot replay consumes graph metadata without reconstructing it,
+the known all-marker baseline does not preserve contradictory product behavior, and the tests do
+not select among duplicate outputs or route interpretations.
+
+Gate: CLEAR

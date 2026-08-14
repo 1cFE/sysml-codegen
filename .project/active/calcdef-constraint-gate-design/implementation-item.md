@@ -1,6 +1,6 @@
 # Follow-on backlog item: implement calc-definition constraint gates
 
-**Status:** Proposed; blocked on Item 8 and owner authorization
+**Status:** Proposed; Item 8 gate satisfied, blocked on owner authorization
 
 **Type:** Cross-repository implementation
 
@@ -46,8 +46,13 @@ Calc-definition constraints currently end as `non_reaching / owner_kind_unattach
 
 - Evidence baseline: `cc14cf07630ed06c7f5cd16bff14cc055709138d` on `item7-rebuild`.
 - This commit predates Item 8 and is explicitly **not** a lawful Item 6 implementation start pin.
-- Before implementation begins, Item 8's kept characterizations and production behavior must exist in one reviewed immutable codegen descendant. Its full SHA must be recorded in the implementation notes. A branch name does not satisfy the gate.
-- No such reviewed SHA exists in the evidence inspected on 2026-08-13. Implementation remains blocked until it does.
+- Item 8's reviewed immutable codegen pin is
+  `62a07e5c870158672eb100f1cba73adfe4c9df28`. Its exact implementation, five kept consumer proofs,
+  three-route behavior, final 23-path tracked inventory, and zero-v3-recapture disposition are in
+  `.project/active/unit-lane-port-metadata/verification.md`. A branch name does not satisfy the
+  gate.
+- The Item 8 dependency gate is satisfied. Item 6 production remains blocked until separately
+  authorized by the owner.
 
 ### Other repositories
 
@@ -58,17 +63,20 @@ Calc-definition constraints currently end as `non_reaching / owner_kind_unattach
 ### Item 8 ownership gate
 
 - `[INHERITED: epic Item 8; source grade [AGENT] (ratified by owner, 2026-08-13)]` Item 8 owns `PortMetadata.unit`, its A9/radius characterizations, agreement/disagreement tests, and three-route unit parity.
-- `[INHERITED: epic Item 8]` Item 8 remains independently certifiable and owns the reviewed v3 recapture if its churn assessment fires.
-- `[AGENT]` A separately authorized Item 6 owns calc-input `formal_provenance`, preserves Item 8's unit lane, and owns its later graph-v4 21-fixture recapture.
+- `[INHERITED: epic Item 8]` Item 8 is independently certified at the frozen SHA. Its Git-derived
+  pre/final tracked sets are the same sorted 23 paths, every graph/unit row is identical, and its
+  v3 recapture count is zero with no receipt.
+- `[AGENT]` A separately authorized Item 6 owns calc-input `formal_provenance`, preserves Item 8's
+  unit lane, and owns its later graph-v4 recapture over Item 6's own exact Git-derived set.
 - `[AGENT]` Avoiding duplicate recapture requires an explicit amendment by the epic's owning authority that authorizes joint delivery and changes the dependency/certification boundaries. Item 6 does not assume that amendment.
 
-The Item 8 verification must give Item 6 the exact paths of these kept tests:
+The frozen Item 8 verification gives Item 6 these exact kept tests:
 
-1. constraint formal and calc usage unit agreement;
-2. constraint formal and calc usage disagreement refusal;
-3. computed attribute and calc usage unit agreement;
-4. computed attribute and calc usage disagreement refusal;
-5. live/in-place/relocated `PortMetadata` parity.
+1. `tests/conformance/test_unit_lane_port_metadata.py::test_constraint_and_calculation_unit_agreement_projects_one_entry` — exact `Dimensionless`, one entry source;
+2. `tests/conformance/test_unit_lane_port_metadata.py::test_constraint_and_calculation_unit_disagreement_refuses` — exact `cm` versus `m`, `ProjectionError` / `SI_RENDERING_COLLISION`, key `UnitLaneConstraintDisagreement__disagreement__shared_length`;
+3. `tests/conformance/test_unit_lane_port_metadata.py::test_computed_and_calculation_unit_agreement_projects_one_entry` — exact `m`, one entry source;
+4. `tests/conformance/test_unit_lane_port_metadata.py::test_computed_and_calculation_unit_disagreement_refuses` — exact `cm` versus `m`, `ProjectionError` / `SI_RENDERING_COLLISION`, key `UnitLaneComputedDisagreement__disagreement__shared_length`;
+5. `tests/conformance/test_unit_lane_port_metadata.py::test_live_in_place_and_relocated_routes_preserve_unit_metadata` — exact port records and projected unit text agree through graph v3 on all three routes.
 
 ## Scope and fixed contracts
 
@@ -376,7 +384,11 @@ Exit: live packages have exact ordered drill-down and no duplicate sources.
 ### Phase 4: graph v4 and Item 6 recapture
 
 - Freeze graph v4 and projector v2.
-- Recapture the 21-fixture batch at graph v4 under Item 6 ownership. This may follow Item 8's independently required v3 recapture; avoiding that second pass requires explicit epic-owner joint-delivery authorization.
+- At Item 6's immutable pre-recapture baseline, derive the exact tracked snapshot path set from Git.
+  Recapture every final tracked path at graph v4 under Item 6 ownership. Require disposition rows
+  to equal the union of Item 6's pre/final sets, reviewed graph-v4 rows to equal the final set, and
+  authority for every addition/removal. Do not substitute Item 8's measured 23 paths or the
+  historical 15-path accepted subset. Item 8 performed zero v3 recaptures.
 - Run live, in-place, relocated, version refusal, docs, and full codegen gates.
 - Create the immutable codegen producer candidate only after the baseline passes.
 

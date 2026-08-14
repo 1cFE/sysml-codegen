@@ -1117,7 +1117,7 @@ numbers are already cited by close records and rulings.)
 
 ---
 
-### Item 8: Unit-Lane Port Metadata Defect (0.5–1 day)
+### Item 8: Unit-Lane Port Metadata Defect (0.5–1 day) ✅
 
 **Type**: Implementation (defect fix)
 
@@ -1149,15 +1149,24 @@ constraint (or a derivation) no longer refuses the model.
 
 **Success Criteria**:
 
-- [ ] The two kept characterizations (A9 shape, radius-derivation shape) flip from REFUSE to
+- [x] The two kept characterizations (A9 shape, radius-derivation shape) flip from REFUSE to
       ADMIT with correct unit text on the minted ports.
-- [ ] No existing fixture's behavior changes silently: churn assessed, recapture (if any)
+- [x] No existing fixture's behavior changes silently: churn assessed, recapture (if any)
       reviewed once, byte gates re-baselined knowingly.
-- [ ] Live, in-place snapshot, and relocated snapshot routes mint identical port unit metadata
+- [x] Live, in-place snapshot, and relocated snapshot routes mint identical port unit metadata
       (three-route parity — minted units travel in the v3 graph).
-- [ ] Item 6's design cites this item's characterization of the constraint-formal unit lane.
-- [ ] Focused tests, full licensed suite, ruff zero-new, mypy zero-new, and `git diff --check`
+- [x] Item 6's design cites this item's characterization of the constraint-formal unit lane.
+- [x] Focused tests, full licensed suite, ruff zero-new, mypy zero-new, and `git diff --check`
       pass with exact counts recorded in `verification.md`.
+
+**Implemented 2026-08-13:** reviewed Item 8 freeze
+`62a07e5c870158672eb100f1cba73adfe4c9df28`; exact evidence and the zero-v3-recapture disposition
+are in `.project/active/unit-lane-port-metadata/verification.md`.
+
+**Audited 2026-08-13: Certify.** The fresh audit independently reproduced the customer-shape,
+inventory, route, refusal, licensed-suite, and zero-new static evidence. Item 8 remains open only
+for the separate close stage; no pre-PR, push, `main`, Item 6 implementation, Item 7/9 work, or
+TEAx change was performed. See `.project/active/unit-lane-port-metadata/audit.md`.
 
 **Estimated Effort**: 0.5–1 day, **plus** the one reviewed fixture recapture if the churn
 assessment shows minted units move on existing fixtures (Item 2 precedent: 21 fixtures).

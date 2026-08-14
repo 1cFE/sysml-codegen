@@ -1,25 +1,32 @@
 # Current Work
 
-**Last Updated**: 2026-08-13 (CONSTRAINT-SEMANTICS Items 1–5 CLOSED and archived; Item 6 certified as a design delivery; Item 8 is next and safe to start, Item 9 waits only on Item 8, Item 7 runs last; pre_pr and any push remain with the owner)
+**Last Updated**: 2026-08-13 (CONSTRAINT-SEMANTICS Items 1–5 CLOSED and archived; Item 6 certified as a design delivery; Item 8 certified but not closed; Item 9's dependency is satisfied; Item 7 runs last; pre_pr and any push remain with the owner)
 
 ---
 
 ## Active Work
 
-### 2026-08-13: CONSTRAINT-SEMANTICS epic — Items 1–5 closed, Item 6 certified; Item 8 is next
+### 2026-08-13: CONSTRAINT-SEMANTICS epic — Item 8 certified, awaiting close
 
-Item 5 closed and archived today (see Recently Completed). What is live on this branch now:
+Item 5 closed and archived today (see Recently Completed). Item 8 implementation and fresh audit
+are complete on this branch. Close and pre_pr have not run:
 
-- **Item 8 (unit-lane port metadata) is fully safe to start.** Standalone by owner ruling, depends
-  only on Item 5's landed probe evidence, and no acceptance evidence is in flight for it to
-  pollute — Item 5's fixture, expectations, and three-route gates are all committed.
-- **Item 9 waits only on Item 8**, and executes already-ruled held intent (A5/A6 basis, A9's 1%
-  relative band) from
+- **Item 8 (unit-lane port metadata) is certified at the freeze
+  `62a07e5c870158672eb100f1cba73adfe4c9df28`.** Exact evidence is in
+  `.project/active/unit-lane-port-metadata/verification.md`; certification is in
+  `.project/active/unit-lane-port-metadata/audit.md`. The fresh audit reproduced the final
+  Git-derived inventory at 23/23 with no stale graph/unit rows, so no v3 recapture ran. Default
+  licensed tests pass 2066/34/79; all-marker remains 2144/34/1 known; focused is 244/244; ruff and
+  mypy are zero-new.
+- **Item 9's Item 8 dependency is satisfied**, and it executes already-ruled held intent (A5/A6
+  basis, A9's 1% relative band) from
   `.project/completed/20260813_catf-constraint-policy-acceptance/owner-disposition.md`.
 - **Item 7 runs last**, before epic close/pre_pr; it now also owes the B1–B5 marker-mechanism
   documentation and the epic-level verification-matrix reconciliation.
-- **Item 6's design work runs in parallel** in `.project/active/calcdef-constraint-gate-design/` —
-  another session's working files; not closed here and not touched.
+- **Item 6 remains a separately authorized future implementation** in
+  `.project/active/calcdef-constraint-gate-design/`. Item 8 updated only its named dependency,
+  ownership, and future complete-set recapture citations; no Item 6 production or
+  `formal_provenance` work ran.
 - **Nothing pushed; no `main` touched anywhere; TEAx stays on `constraint-semantics-item3` @
   `5b70ae9`.** `pre_pr` remains with the owner.
 

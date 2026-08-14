@@ -189,25 +189,35 @@ This is one resolver authority with a calc-formal redirection case, not a calc-d
 
 `[INHERITED: epic_constraint_semantics_contract.md Item 8; source grade [AGENT] (ratified by owner, 2026-08-13)]` Item 8 fixes the constraint-formal and computed-attribute unit lane and names Item 6 as a consumer.
 
-The inspected codegen commit `cc14cf0…` predates Item 8. It is an evidence baseline, not an Item 6 implementation start pin. No lawful start SHA exists until Item 8's kept characterizations and production behavior are present in a reviewed codegen descendant.
+Item 8 is frozen in the reviewed codegen commit
+`62a07e5c870158672eb100f1cba73adfe4c9df28`. Its exact evidence bundle is
+`.project/active/unit-lane-port-metadata/verification.md`. This full SHA, not the branch name or the
+older `cc14cf0…` evidence baseline, satisfies Item 6's unit-lane dependency pin. Item 6 remains
+separately blocked on owner authorization.
 
 Ownership is split by field and gate:
 
 - **Item 8 owns `PortMetadata.unit`.** It owns the A9-shape and radius-derivation characterizations plus agreement/disagreement tests for calculation, constraint-formal, and computed-attribute ports.
 - **Item 6 owns calc-port `formal_provenance` completeness.** It may populate missing root-formal provenance, but it must preserve Item 8's unit text and refusal behavior.
 - **The instance graph remains the runtime authority** for the combined `PortMetadata`; item ownership is delivery ownership, not a second semantic source.
-- **Item 8 remains independently certifiable.** If its churn assessment fires, Item 8 owns and completes the reviewed v3 recapture required by its ratified delivery contract.
-- **A later authorized Item 6 owns its graph-v4 recapture.** That recapture may be a second pass over the 21-fixture batch because graph v4 is a separate, later contract change.
+- **Item 8 is independently certified.** Its final Git-derived inventory has 23 sorted tracked
+  snapshot paths and exactly 23 rows, with no missing, extra, duplicate, added, removed, or stale
+  path. Every graph payload and relevant unit map is identical, so Item 8 ran no capture command;
+  the v3 recapture count is zero and no receipt exists. The exact sorted set and per-path digests
+  are in the evidence bundle.
+- **A later authorized Item 6 owns its graph-v4 recapture.** It must derive its own tracked snapshot
+  set from Git at Item 6's immutable pre-recapture baseline. It must not reuse Item 8's count or the
+  historical accepted-batch subset.
 
 Avoiding duplicate recapture requires an explicit epic-owner amendment that authorizes a joint Item 8/Item 6 delivery and changes the dependency and certification boundaries. Item 6 does not assume that amendment. Without it, Item 8 lands and certifies independently, including its v3 recapture when churn fires; only then may a separately authorized Item 6 start and later own the v4 recapture.
 
-Item 6 consumes these Item 8-owned tests, whether their final file names are preserved or recorded by Item 8's verification:
+Item 6 consumes these exact Item 8-owned nodes from the frozen commit:
 
-- constraint formal and calculation usage agree on unit → one entry source;
-- constraint formal and calculation usage disagree → named refusal;
-- computed attribute and calculation usage agree on unit → one entry source;
-- computed attribute and calculation usage disagree → named refusal;
-- live, in-place snapshot, and relocated snapshot port metadata parity.
+- `tests/conformance/test_unit_lane_port_metadata.py::test_constraint_and_calculation_unit_agreement_projects_one_entry` — exact `Dimensionless` on both ports produces one public entry source.
+- `tests/conformance/test_unit_lane_port_metadata.py::test_constraint_and_calculation_unit_disagreement_refuses` — exact `cm` versus `m` raises `ProjectionError` / `SI_RENDERING_COLLISION` on `UnitLaneConstraintDisagreement__disagreement__shared_length`; no conversion.
+- `tests/conformance/test_unit_lane_port_metadata.py::test_computed_and_calculation_unit_agreement_projects_one_entry` — exact `m` on both ports produces one public entry source.
+- `tests/conformance/test_unit_lane_port_metadata.py::test_computed_and_calculation_unit_disagreement_refuses` — exact `cm` versus `m` raises `ProjectionError` / `SI_RENDERING_COLLISION` on `UnitLaneComputedDisagreement__disagreement__shared_length`; no normalization.
+- `tests/conformance/test_unit_lane_port_metadata.py::test_live_in_place_and_relocated_routes_preserve_unit_metadata` — exact selected port IDs, complete `PortMetadata`, graph-v3 units, and projected unit text agree on live, in-place v6, and relocated v6 routes.
 
 ### R6. Construction, attachment, disposition, and atomicity
 
@@ -291,7 +301,17 @@ Graph v4 is exact and has no v3 shim. An outer v6 snapshot naming v3, an unknown
 
 The projection receipt records projector v2 and its computation digest. Catalog value/version changes move the model-contract fingerprint. Wrapper/source changes move the executable fingerprint. Runtime 2.0.0 remains because report value schemas do not change. Snapshot relocation changes none of these semantic values.
 
-A separately authorized Item 6 recaptures all 21 committed snapshot-bearing fixtures at graph v4 through `tests/conformance/test_v6_recapture_batch.py` and `tests/fixtures/v6_recapture_batch/batch.json`. This does not replace Item 8's independently owned v3 recapture when its churn assessment fires. Avoiding the two passes requires the explicit epic-owner joint-delivery amendment described in R5. Old v3 expectations and calc-definition `owner_kind_unattachable` assertions are deleted from the Item 6 line rather than supported in parallel.
+A separately authorized Item 6 derives the then-current tracked
+`tests/fixtures/**/instance_graph_snapshot.json` set from Git at its own immutable pre-recapture
+baseline and recaptures every final tracked path at graph v4 through
+`tests/conformance/test_v6_recapture_batch.py` and
+`tests/fixtures/v6_recapture_batch/batch.json`. Its disposition rows must equal the union of its
+pre/final sets with no missing, extra, or duplicate row; its reviewed graph-v4 rows must equal its
+final set; and every addition/removal needs authority. Item 8's frozen evidence measured 23 paths,
+equal pre/final sets, and zero v3 recaptures, but neither that count nor the historical 15-path
+accepted subset is Item 6's future scope authority. Old v3 expectations and calc-definition
+`owner_kind_unattachable` assertions are deleted from the Item 6 line rather than supported in
+parallel.
 
 ## Component overview and exact file manifest
 
@@ -338,7 +358,11 @@ Version/sealing surfaces must be inspected and their tests updated even if their
 - `tests/conformance/test_runtime_contract_version.py`: catalog 4 with runtime still 2.0.0.
 - `tests/conformance/test_snapshot_v6_routes.py`: outer v6 / graph v4 live, in-place, relocated parity.
 - `tests/conformance/test_exact_route_constraint_portability.py`: receipt/catalog/package/result portability.
-- `tests/conformance/test_v6_recapture_batch.py`, `tests/fixtures/v6_recapture_batch/batch.json`, and its `README.md`: one reviewed final-schema 21-fixture recapture.
+- `tests/conformance/test_v6_recapture_batch.py`, `tests/fixtures/v6_recapture_batch/batch.json`, and
+  its `README.md`: one reviewed final-schema graph-v4 recapture over the exact Git-derived Item 6
+  final tracked set, with union/pre/final row equality and authorized path-set drift. Item 8's
+  measured 23-path set and historical 15-path accepted subset are evidence, not fixed Item 6
+  scope.
 - `tests/execution/test_calcdef_constraint_gate.py` (new): public source sharing, topology, polarity, failed sibling positions, drill-down, and `test_many_renders_expected_ids_in_node_sort_order`, which imports the generated aggregator and asserts its rendered `EXPECTED_IDS` tuple equals the public ordered catalog IDs.
 - `tests/execution/test_constraint_verdicts_exact_route.py`: unchanged Item 3 completeness/headline contract.
 

@@ -1,6 +1,6 @@
 # Verification: Unit-Lane Port Metadata (CONSTRAINT-SEMANTICS Item 8)
 
-**Status:** Implementation in progress
+**Status:** Complete
 **Date:** 2026-08-13
 **Scope:** Standalone Item 8 only
 
@@ -443,6 +443,36 @@ line-number movement leaves no added diagnostic; the removed findings are the ol
 extractor helper sites formerly at lines 608, 657, and 727. Ruff's full normalized diagnostic set
 is byte-for-byte the same 12 class/code/path findings.
 
+### Immutable freeze and Item 6 handoff
+
+The reviewed implementation/test/fixture/inventory/verification freeze is commit
+`62a07e5c870158672eb100f1cba73adfe4c9df28` (`Implement Item 8 unit-lane port metadata`). The
+staged review contained 31 Item 8 paths and excluded the pre-existing `CURRENT_WORK.md` edit, every
+tracked snapshot, the historical batch, Item 6 documentation, Item 7, Item 9, TEAx, graph/projector
+and codec owners, companion repositories, and `main`. `git diff --cached --check` and the unstaged
+`git diff --check` both passed immediately before the commit. Two trailing spaces found in the
+previously approved Item 8 design during that freeze review were removed before the commit.
+
+After the immutable SHA existed, the documentation-only handoff updated only:
+
+- `.project/active/calcdef-constraint-gate-design/design.md`: R5, R8, and the component-manifest
+  graph-v4 recapture entry;
+- `.project/active/calcdef-constraint-gate-design/implementation-item.md`: status/start gate and
+  exact dependency pin, Item 8 ownership gate, and Phase 4 recapture instruction.
+
+Those records cite the full SHA, all five exact proof nodes and claims, both exact non-null
+disagreement keys with `ProjectionError` / `SI_RENDERING_COLLISION`, the final sorted 23-path set
+through this evidence bundle, exact pre/final equality, and zero v3 recaptures with no receipt.
+They require Item 6 to re-derive its own pre/final tracked sets from Git and explicitly reject the
+Item 8 count and historical 15-path batch as future scope authority. The handoff authorizes no
+Item 6 production, calculation-input `formal_provenance`, graph-v4 capture, TEAx work, or commit.
+
+Final documentation/handoff command `git diff --check` exited 0 with zero whitespace errors. Final
+`git status --short --branch` showed only seven documentation paths: Item 8 plan/spec/verification,
+the two named Item 6 records, the epic Item 8 tracking record, and `CURRENT_WORK.md`. No source,
+test, fixture, snapshot, batch, Item 9 model, Item 7 documentation, TEAx, companion, or `main` path
+was present.
+
 ## Deviations and premise conflicts
 
 - The plan's isolated-node command inherited the default `not execution` marker and selected zero
@@ -453,3 +483,10 @@ is byte-for-byte the same 12 class/code/path findings.
   filesystem access had zero errors and reproduced the single recorded collection-order failure.
 - The approved spec's `captured_at` example is inapplicable to deterministic v6, as already surfaced
   in the approved design. No field or marker was added.
+- The first two final maintained-suite attempts exposed seven failures across two runs rather than
+  being treated as baseline noise. The corrections kept direct `_ExactElaborator` construction
+  compatible, limited definition-formal expansion to typed-definition constraints, added the three
+  required oracle records for the new constraint fixtures, and compared direction through its own
+  enum class without a direct SysIDE import or rendered-string selector. The focused regressions,
+  no-license snapshot generation node, import guard, semantic-boundary guard, final census, and all
+  repository gates were rerun after production settled.

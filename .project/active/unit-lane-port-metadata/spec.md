@@ -1,6 +1,6 @@
 # Spec: Unit-Lane Port Metadata Defect
 
-**Status:** Draft — revised after spec re-review
+**Status:** Complete
 **Owner:** Reid W
 **Created:** 2026-08-13
 **Complexity:** MEDIUM
@@ -45,48 +45,48 @@ does not revive joint delivery with Item 6.
 
 ## Success Criteria
 
-- [ ] **[INHERITED: epic Item 8 scope 1 and SC 1]** Two kept, licensed characterizations land red
+- [x] **[INHERITED: epic Item 8 scope 1 and SC 1]** Two kept, licensed characterizations land red
       before production code changes: the A9 constraint-formal shape and the radius-derivation
       computed-attribute shape. Each initially refuses for the named `SI_RENDERING_COLLISION`,
       then admits after the fix without changing the model shape being characterized.
-- [ ] **[INFERRED: Item 5 P3/P3b/P4a/P5 and the exact extracted formal metadata]** The admitted A9
+- [x] **[INFERRED: Item 5 P3/P3b/P4a/P5 and the exact extracted formal metadata]** The admitted A9
       characterization mints exact unit text `m³/s` for its volumetric-flow ports and
       `Dimensionless` for its count and relative-tolerance ports. The radius characterization
       mints exact unit text `m` for the design-attribute entry points read by the derivation and
       by `TorusMinorRadius`.
-- [ ] **[INHERITED: epic Item 8 scope 2; Item 6 R5]** Constraint-formal versus calculation-usage
+- [x] **[INHERITED: epic Item 8 scope 2; Item 6 R5]** Constraint-formal versus calculation-usage
       agreement, constraint-formal versus calculation-usage disagreement, computed-attribute
       versus calculation-usage agreement, and computed-attribute versus calculation-usage
       disagreement each have a kept test. Agreement produces one shared entry point;
       disagreement produces the precise fail-closed behavior in Known Requirements.
-- [ ] **[INHERITED: epic Item 8 SC 3]** Licensed live elaboration, an in-place v6 snapshot read,
+- [x] **[INHERITED: epic Item 8 SC 3]** Licensed live elaboration, an in-place v6 snapshot read,
       and a relocated v6 snapshot read carry identical `PortMetadata.unit` values at the exact
       consumer ports and project identical `EntryPoint.unit_text` values.
-- [ ] **[INFERRED: epic Item 8 scope 3, current tracked tree, and spec-review L3-1]** A
+- [x] **[INFERRED: epic Item 8 scope 3, current tracked tree, and spec-review L3-1]** A
       machine-checked pre-change inventory proves that its assessment rows are exactly equal to
       the version-controlled `tests/fixtures/**/instance_graph_snapshot.json` path set: no
       missing, extra, or duplicate row. That set measures 23 paths on 2026-08-13. The final
       inventory repeats the same set-equality check against the then-current tracked path set and
       records the final count and every path added or removed. The historical accepted-batch
       subset check does not substitute for this gate.
-- [ ] **[INHERITED: epic Item 8 scope 3 and SC 2]** Every tracked snapshot receives a
+- [x] **[INHERITED: epic Item 8 scope 3 and SC 2]** Every tracked snapshot receives a
       fingerprint/churn disposition. A tracked snapshot is stale when final live elaboration
       would change its exact instance-graph payload or any relevant `PortMetadata.unit` value.
       If at least one is stale, exactly one reviewed final-schema recapture covers all stale
       snapshots after implementation and tests are final. If none is stale, no existing snapshot
       is recaptured. Envelope byte movement, including `captured_at`, and projected population
       counts are evidence to record, not the recapture trigger.
-- [ ] **[INHERITED: epic Item 8 scope 4 and SC 4; Item 6 start gate]** Item 8's final
+- [x] **[INHERITED: epic Item 8 scope 4 and SC 4; Item 6 start gate]** Item 8's final
       `verification.md` first publishes the evidence bundle defined below. After the reviewed
       implementation commit exists, the Item 8 delivery makes a narrow documentation-only
       handoff into the named Item 6 R5/start-gate records. Those records cite the immutable full
       commit SHA, exact kept-test nodes and claims, and Item 8's v3 recapture disposition. The
       handoff does not authorize any Item 6 implementation.
-- [ ] **[INFERRED: spec re-review L3-1]** The handoff carries Item 8's sorted final tracked-
+- [x] **[INFERRED: spec re-review L3-1]** The handoff carries Item 8's sorted final tracked-
       snapshot path set and measured count. Item 6's future graph-v4 recapture evidence proves
       exact coverage of its own then-current tracked snapshot path set, not a reused numeric
       count or the historical accepted-batch subset.
-- [ ] **[INHERITED: epic Item 8 final SC; qualified by the surfaced baseline conflict below]**
+- [x] **[INHERITED: epic Item 8 final SC; qualified by the surfaced baseline conflict below]**
       Focused licensed tests and the default maintained `pytest tests/` lane pass. The all-marker
       licensed suite is run before and after the change and has zero new failures. Its
       unconditional-pass conclusion remains parked while the known collection-order failure is

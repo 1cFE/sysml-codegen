@@ -1,6 +1,6 @@
 # Implementation Plan: Unit-Lane Port Metadata (CONSTRAINT-SEMANTICS Item 8)
 
-**Status:** In Progress
+**Status:** Complete
 **Created:** 2026-08-13
 **Last Updated:** 2026-08-13
 **Branch:** `item7-rebuild`
@@ -120,12 +120,12 @@ filter and is the all-marker licensed suite.
 ### Progress discipline
 
 - [x] Change this plan's status to `In Progress` before Phase 1's first write.
-- [ ] Check each action or validation box immediately after it succeeds. Do not bulk-check a phase
+- [x] Check each action or validation box immediately after it succeeds. Do not bulk-check a phase
       later from memory.
-- [ ] Fill that phase's completion note immediately with timestamp, actual files, exact command
+- [x] Fill that phase's completion note immediately with timestamp, actual files, exact command
       results, issues, and deviations. A discovered premise conflict stays visible in the note.
-- [ ] Do not start the next phase while the current phase has an unchecked required validation.
-- [ ] Change status to `Complete` only after the Item 6 documentation handoff and final diff check.
+- [x] Do not start the next phase while the current phase has an unchecked required validation.
+- [x] Change status to `Complete` only after the Item 6 documentation handoff and final diff check.
 
 ### Stop conditions
 
@@ -806,22 +806,22 @@ See [`design.md#complete-inventory-and-conditional-recapture`](design.md#complet
 
 #### 5. Freeze Item 8 and update Item 6's evidence citations
 
-- [ ] Review the implementation/test/fixture/inventory/verification diff. Create one local reviewed
+- [x] Review the implementation/test/fixture/inventory/verification diff. Create one local reviewed
       Item 8 implementation-and-test commit after all preceding gates pass; record its full SHA with
       `git rev-parse HEAD`. This is not `close`, `pre_pr`, a push, or a main-branch operation.
-- [ ] Make a narrow documentation-only handoff into:
+- [x] Make a narrow documentation-only handoff into:
   - `.project/active/calcdef-constraint-gate-design/design.md` — R5, R8, and the component-manifest
     recapture entry;
   - `.project/active/calcdef-constraint-gate-design/implementation-item.md` — Start gate and exact
     dependency pins, Item 8 ownership gate, and Phase 4.
-- [ ] Cite the immutable full Item 8 SHA, exact kept node IDs and claims, exact disagreement
+- [x] Cite the immutable full Item 8 SHA, exact kept node IDs and claims, exact disagreement
       exception/code/key, sorted final tracked path set and count, set-equality result, and Item 8's
       v3 recapture disposition/receipt. Replace stale 21-fixture claims with the future rule, not
       with Item 8's current count: Item 6 must re-derive its own pre/final tracked sets and prove its
       graph-v4 rows cover the required union/final sets at its separately authorized baseline.
-- [ ] Confirm the documentation handoff does not authorize or implement Item 6 and does not cite the
+- [x] Confirm the documentation handoff does not authorize or implement Item 6 and does not cite the
       historical 15-path subset as complete coverage.
-- [ ] Finish the plan completion notes and checkboxes immediately, run `git diff --check` on the
+- [x] Finish the plan completion notes and checkboxes immediately, run `git diff --check` on the
       documentation-only handoff, and record the result in `verification.md`.
 
 ### Validation
@@ -841,10 +841,10 @@ See [`design.md#complete-inventory-and-conditional-recapture`](design.md#complet
 
 - [x] Review every snapshot and manifest byte diff, if any, against the final assessment before
       accepting it. Confirm no interim capture was promoted and all markers remain final v3/v6/v1.
-- [ ] Read the Item 6 edits as a fresh implementer. Confirm the exact Item 8 SHA/nodes/claims are
+- [x] Read the Item 6 edits as a fresh implementer. Confirm the exact Item 8 SHA/nodes/claims are
       sufficient to run its prerequisite gate and its future complete-set obligation cannot be
       mistaken for a fixed number or the accepted-batch subset.
-- [ ] Review `git status --short --branch` and confirm no Item 9 model, Item 7 documentation, TEAx,
+- [x] Review `git status --short --branch` and confirm no Item 9 model, Item 7 documentation, TEAx,
       `main`, push, close, or `pre_pr` work entered the item.
 
 **What we know works after this phase:** Item 8 is fully evidenced at one immutable implementation
@@ -992,19 +992,45 @@ generators and was not changed. Graph v3, snapshot v6, and projector v1 remain f
 
 ### Phase 5 completion
 
-**Completed:**
+**Completed:** 2026-08-13 16:50:34 PDT
 
-**Actual files and changes:**
+**Actual files and changes:** Added the five final inventory gates and published the complete final
+assessment. Added three constraint-population expectation records required by the new snapshot-free
+fixtures. Final-suite compatibility corrections preserved direct elaborator construction,
+definition-typed constraint selection, semantic-boundary rules, and license-free snapshot replay.
+Published exact final evidence, froze Item 8, and made only the named Item 6 documentation handoff.
 
-**Exact validation results:**
+**Exact validation results:** Authoritative final assessment 23 tracked / 23 assessed / zero stale,
+missing, extra, or duplicate, with empty additions/removals. No capture command ran and no receipt
+exists. Inventory plus historical batch passed 68/68. The plan-focused gate passed 244/244 and the
+expanded focused gate 273/273. Default licensed passed 2066 / 34 skipped / 79 deselected; all-marker
+was 2144 / 34 / exactly 1 known failure; the known node passed 1/1 with `-m ""`. All licensed runs
+had zero license-skip lines. Touched-file ruff was clean; full ruff retained the exact 12-finding
+baseline; mypy had zero added and three removed diagnostics (52 final versus 55 baseline);
+`git diff --check` passed. Exact commands and intermediate failed-gate counts are in
+`verification.md`.
 
-**Implementation-and-test SHA:**
+**Implementation-and-test SHA:** `62a07e5c870158672eb100f1cba73adfe4c9df28`.
 
-**Item 6 handoff result:**
+**Item 6 handoff result:** Updated only design R5, R8, and the recapture manifest entry plus
+implementation-item status/start pin, ownership gate, and Phase 4. The records cite the full SHA,
+five exact nodes/claims, both disagreement keys, this item's sorted 23-path evidence, exact set
+equality, and zero v3 recaptures. They require Item 6 to derive its future path sets from Git and do
+not authorize Item 6 production, graph v4, calc-input `formal_provenance`, or TEAx work.
 
-**Issues / premise conflicts:**
+**Issues / premise conflicts:** The first final assessment exposed false unit text `From` from
+provenance comments in `catf_mfe_gated`; this was surfaced, proved red, and corrected before any
+capture. The first two maintained final-suite attempts exposed five then two genuine compatibility
+failures; each was fixed in scope and all final gates/census were rerun. The known all-marker
+collection-order failure remains parked exactly as at baseline. The plan's literal isolated command
+remains marker-deselected; the marker-cleared isolated node passes.
 
-**Deviations and authority:**
+**Deviations and authority:** No semantic or scope deviation. Output piping only limited terminal
+capture; pytest arguments remained exact. The approved filesystem route was used where hard-coded
+fixture scratch paths required it and sandbox errors were never treated as behavior. Graph v3,
+envelope v6, projector v1, exact-text/no-conversion refusal, envelope-owned certification, and the
+graph-bytes/unit-only recapture trigger are preserved. No Item 9 derivative/model, Item 7
+documentation, Item 6 production, TEAx, `main`, push, close, or `pre_pr` work occurred.
 
 ---
 
