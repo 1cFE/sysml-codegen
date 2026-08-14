@@ -15,13 +15,19 @@ licensed suite (`2070 passed`, zero license-skip lines), the post-edit sweep in 
 and the branch/boundary discipline (no code, fixture or schema path in any commit; nothing pushed;
 the out-of-bounds checkout clean).
 
-Findings: **A-1** the symlink residual's recorded evidence was falsified on re-run — the residual is
-real, the discriminator was not (**cured**); **A-2** the SC5 parked half had no named vehicle
-(**cured** — `[CONSTRAINT-GATES-UNTAGGED]` filed in BACKLOG); **A-3** the new `@inapplicable:` "How to
-write it" example in agentic-mbse `docs/patterns/constraints.md:427-433` is **refused by the shipped
-generator** (D9), reproduced with a verified working alternative shape — **finding only, fix before
-epic close**; **A-4** the "distinct kept test files" count does not reproduce and its method is
-unrecorded (cosmetic).
+Findings, all four now dispositioned. **A-1** the symlink residual's recorded evidence was falsified
+on re-run — the residual is real, the discriminator was not (**cured**). **A-2** the SC5 parked half
+had no named vehicle (**cured** — `[CONSTRAINT-GATES-UNTAGGED]` filed in BACKLOG). **A-3** the new
+`@inapplicable:` "How to write it" example was **refused by the shipped generator** (D9) — fixed by an
+implement resume via route (a) and **CLOSED at the auditor's re-verification pass**: the exact
+authored text now generates to completion and seal, the marker's reason reaches the generated catalog
+(`inapplicability_reason` in `model_contract.json`, `inapplicable_gate_count: 1` with
+`coverage_state: 'none'`), both cited fixtures behave as cited, and the post-cure sweep shows
+agentic-mbse unchanged hit-for-hit. **A-4** the "distinct kept test files" count — method now
+recorded and **55 reproduced** from it independently; **CLOSED**.
+
+**Two residuals remain, both owner calls:** the symlink merge (A-1) and `[CONSTRAINT-GATES-UNTAGGED]`
+(A-2). Neither is work left undone.
 
 ## ⚠️ Item 7 — the two owner calls still open before `close`
 

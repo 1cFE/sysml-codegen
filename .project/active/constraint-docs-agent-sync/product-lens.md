@@ -260,3 +260,12 @@ with its reproduction and a verified working alternative shape. It is not an own
 `[HARD]` contradiction of a product statement, so it does not block certification; it is carried as
 a residual. All earlier blocks in this ledger: none — every prior run recorded DISPOSED or CLEAR.
 Epic gate: CLEAR.
+
+**Resolution by citation, 2026-08-14 (audit re-verification pass).** A-3 is **RESOLVED**. The
+implement resume took route (a) — the marked gate moved onto a `part def` the variant never
+instantiates — and the auditor re-ran it end to end under licensed terms: the exact authored text
+generates to completion and seal, and the marker's reason reaches the generated catalog
+(`contracts/model_contract.json:17` carries `inapplicability_reason`, the aggregator's `COVERAGE`
+line carries `inapplicable_gate_count: 1` with `coverage_state: 'none'`). Both cited fixtures behave
+as cited; all surfaces carrying the shape are consistent, with the D9 refusal stated beside the
+example. **This block's gate moves DISPOSED → CLEAR.** No block in this ledger is unresolved.
