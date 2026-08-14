@@ -1155,8 +1155,24 @@ completed rows were removed from this unresolved backlog.
   is bindings-form, so the gap was never exercised. Already named as rule 3 of
   `tests/conformance/test_constraint_population_oracle.py`, which fails loudly when it happens —
   this entry is for closing the gap, not for detecting it. Until it closes, an inapplicability
-  disposition on an inline-predicate usage has to be recorded in PROVENANCE instead of in source
-  (the Item 5 workaround that epic Item 9 retires).
+  disposition on an inline-predicate usage has to be recorded in PROVENANCE instead of in source.
+  **Closing this defect is what fires the B1–B5 marker migration** — move the five `@inapplicable:`
+  markers out of `tests/fixtures/catf_mfe_gated/PROVENANCE.md` §3b and into source, and retire the
+  workaround. Epic Item 9 ran on 2026-08-13 with that criterion recorded as a conditional that did
+  not fire, precisely because this entry is still open; it is not Item 9 that retires the
+  workaround.
+- **[CONSTRAINT-FORM-PER-DIMENSION-COST] A unit-carrying constraint definition is authored once
+  per dimension — P3 `[AGENT]`, unowned.** A constraint formal's port takes its unit text from the
+  formal's **own** declaration (`extraction/feature_metadata.py:57-65`, the trailing `//` comment
+  rule). A formal declared without readable unit text projects `unit_text=None`, and if a calc lane
+  already reads a real unit on the same design attribute, projection refuses the whole model with
+  `SI_RENDERING_COLLISION`. So a constraint definition that must agree with a calc lane cannot be
+  generic over dimensions: its formals carry a specific unit, and a band over a different dimension
+  needs its own definition. Measured in CONSTRAINT-SEMANTICS Item 9 while authoring
+  `ProductWithinBand` for the CATF derivative's A9 row — the form is m³/s-specific, unlike its two
+  dimensionless siblings in the same library file. Recorded as a platform cost the fixture absorbs;
+  nothing in the fixture is wrong. Whether the unit lane should let a formal defer its unit to the
+  binding, and what that would cost the collision check, is the open question.
 - **[CATALOG-FINGERPRINT-ROUTE-PORTABILITY] The constraint catalog fingerprint is not portable
   across the live and snapshot routes — P3 `[AGENT]`, unowned, pre-existing.**
   `ConstraintCatalog.recomputed_fingerprint` (`src/sysml_codegen/resolution/models.py:597-622`)
@@ -1190,7 +1206,7 @@ Source: the Item 5 audit's accepted residuals
 was missing was writing them down. Neither blocks the epic.
 
 Already filed above and **not duplicated here**: `[INLINE-PREDICATE-MARKER-DROP]` (the B1–B5
-marker mechanism; epic Item 7 documents it, epic Item 9 retires the PROVENANCE workaround) and
+marker mechanism; epic Item 7 documents it, and closing it retires the PROVENANCE workaround) and
 `[CATALOG-FINGERPRINT-ROUTE-PORTABILITY]` (pre-existing, reproduces on the untouched frozen twin).
 Residual A-7 (the satisfied leg's policy disposition is probe-asserted) is recorded in the item's
 close record only — SC-5's load-bearing reject leg goes through the real policy table, so there is
