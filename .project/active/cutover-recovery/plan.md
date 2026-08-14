@@ -6610,6 +6610,37 @@ Consequences for this sequence, recorded so resumption is honest:
   touched once rather than per item.
 - Nothing here changes step 10: final acceptance remains owner-grade, no push/tag/close/archive.
 
+#### RESUMED at step 4 (2026-08-14) — register walked, brief revised to rev 2
+
+**[OWNER 2026-08-14]** directed the resumption, worked directly in session. Two things happened
+before any step-4 execution: the Item 7 Evidence-Invalidation Register was walked row by row, and
+the step-4 brief was revised in place to rev 2
+(`briefs/correction-step4-matrix-replacements.md`; rev 1 is in git history). The one open ruling
+(REQ-CL-03, row 2 below) was resolved by the owner the same day. Step-4 execution has **not**
+started; it needs only the owner's go on execution mode.
+
+Register walk — each row verified against the current tree, routed as follows:
+
+| Register row | Routing at the walk |
+|---|---|
+| 1. Step-4 zero-input report + REQ-CL-04/REQ-EXT-09 closures | **Discharged by the rev-2 brief, verified**: both matrix rows read PASS on live tests (`test_constraint_catalog_totality.py`; `test_constraint_population_oracle.py` + `test_constraint_usage_domain_totality.py`). The old instructions are retired as decision records in the brief. |
+| 2. REQ-CL-03 pre-amendment check | **Re-derived and RULED.** The landed contract and umbrella spec are silent on `source_records` (verified by search 2026-08-14), so the divergence note's total-inventory question (`verification-matrix.md:226`) went to the owner: **usage domain is the totality boundary** **[AGENT] (ratified by owner, 2026-08-14)**. The rev-2 brief carries the ruling and the executable amendment instruction. The old pre-amendment proof is retired — its target behavior is now landed, tested contract. |
+| 3. gain=100 three-route proof | **Scheduled.** Instruction kept in rev 2 (harness verified present: `_harness`/`ROUTES` in `tests/execution/test_fusion_tea_mutation_teax.py`). Test lands at step 4; authoritative single-shot observation at the steps 7–8 final paired OIDs. |
+| 4. 37-fixture recapture | **Discharged as consume-only.** Item 2's one reviewed v3 recapture is the final bytes; the rev-2 evidence rules forbid recapture unless a step 4–6 code change alters snapshot bytes. |
+| 5. v2-byte observations (Invalid) | **Discharged as a standing prohibition**, carried into the rev-2 evidence rules — re-observe, never re-read. |
+| 6. Pre-recapture byte-identity comparisons (Invalid) | **Discharged as a standing prohibition**, carried into the rev-2 evidence rules — re-baseline against the recaptured v3 bytes. |
+| 7. `collect_constraint_manifest` citations (Invalid) | **Discharged, verified**: the matrix REQ-EXT-09 row is re-anchored to the population oracle; the rev-2 evidence rules name the oracle as the sole population authority. |
+| 8. Step-7 batteries | **Scheduled.** Run once at the final paired OIDs, after every substantive fix, unchanged. |
+| 9. Step-8 candidate record | **Scheduled.** Regenerated once from the post-epic batteries at the final paired OIDs, unchanged. |
+
+Rev-2 brief deltas from rev 1, for the record: REQ-CL-04 work retired (row now PASS); REQ-CL-03
+section rewritten around the open `source_records` question; the nine legacy UNTESTED rows and
+the REQ-EPC-01/REQ-GA-03 PARTIAL rows unchanged; two post-rev-1 rows handled (REQ-DIAG-04
+tripwire attempt with a leave-as-recorded escape hatch; REQ-DIAG-01 left as recorded); the
+REQ-tag minting for Items 3/5/8/9 added per the 2026-08-14 authorization; stale numeric pins
+replaced by preflight measurement with explained deltas; the register's three Invalid classes
+installed as binding evidence rules through step 10.
+
 **Completed:** 2026-08-12. **Implementation:**
 `057bf29a3209470cd6ccfd882b1d3e6dd6d76a45`. The legacy
 `CompilationResult`, `CalcDefCompilationResult`, and `compile_calc_def` definitions are absent;

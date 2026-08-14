@@ -81,6 +81,30 @@ rather than invented; vehicle `[CONSTRAINT-GATES-UNTAGGED]` in `BACKLOG.md`.
 
 ## Active Work
 
+### 2026-08-14: Phase B STARTED — cutover step 4 prepped (register walked, brief rev 2); execution awaits one owner ruling
+
+**[OWNER 2026-08-14]** triggered the phase-B resumption, worked directly in session. Done:
+
+- **The Item 7 Evidence-Invalidation Register is walked**, row by row, each row verified against
+  the current tree — full routing table in `.project/active/cutover-recovery/plan.md`
+  ("RESUMED at step 4"). Rows 1/4/5/6/7 discharged (verified or installed as standing evidence
+  rules); rows 3/8/9 scheduled (gain=100 at step 4, batteries + candidate record once at the
+  final paired OIDs); row 2 re-derived with one question left open (next bullet).
+- **The step-4 brief is revised in place to rev 2**
+  (`briefs/correction-step4-matrix-replacements.md`; rev 1 in git history): REQ-CL-04 work
+  retired (row now PASS via Item 2), REQ-tag minting for Items 3/5/8/9 added per the 2026-08-14
+  authorization, the two post-rev-1 REQ-DIAG rows handled (DIAG-04 tripwire attempt with a
+  leave-as-recorded escape hatch; DIAG-01 left as recorded), stale numeric pins replaced by
+  preflight measurement, the register's Invalid classes installed as binding evidence rules
+  through step 10.
+- **The REQ-CL-03 total-inventory question is RULED** (`verification-matrix.md:226`): the usage
+  domain is the totality boundary **[AGENT] (ratified by owner, 2026-08-14)**. The landed
+  contract is silent on `source_records` (verified by search); the definition-level total
+  inventory was the retired assembler's design, and the silent-absence failure mode is already
+  hard-gated by the totality oracle. The rev-2 brief carries the ruling and the amendment
+  instruction. **The brief is fully executable; the remaining owner call is execution mode**
+  (in-session vs orchestrated vs owner's own agents).
+
 ### 2026-08-14: CONSTRAINT-SEMANTICS epic — CLOSED and archived; next is phase B
 
 The epic is done. Nothing in it is live work any more. Where things stand:
