@@ -973,6 +973,15 @@ July-wave pattern, after step 10's owner acceptance:
    is never bumped first and fails closed until codegen lands; remote needs explicit HTTPS).
 3. Until then the TEAx checkout stays on its branch (codegen execution lane imports simkit
    from that working tree).
+4. **agentic-mbse branch fact, settled 2026-08-14 [verified by git]:** `elaborate-first-salvage`
+   is fully contained in `item7-rebuild` (main → +3 → salvage → +9 → item7-rebuild; one line, no
+   fork). The authoritative branch is `item7-rebuild`; the authoritative working tree is
+   `/home/reid/1cfe/agentic-mbse-item7-rebuild`. The main checkout is parked 9 commits behind on
+   the same line (legacy pre-rebuild environment + `.env` host only). At this phase's merge:
+   delete the `elaborate-first-salvage` label (subsumed), return the main checkout to `main`,
+   and **restore codegen's `.claude/skills/sysml-conventions` symlink to the main checkout**
+   (repointed to the worktree on 2026-08-14, owner-approved interim, commit pending in this
+   change).
 
 **E. Back to the original goals** (what triggered all of this — the demo, and the
 design-search *policy*):
