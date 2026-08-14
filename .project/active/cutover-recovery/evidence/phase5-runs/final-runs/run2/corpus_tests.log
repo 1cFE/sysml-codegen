@@ -1,0 +1,23 @@
+============================= test session starts ==============================
+platform linux -- Python 3.12.11, pytest-9.1.1, pluggy-1.6.0
+rootdir: /home/reid/1cfe/sysml-codegen-item7-rebuild
+configfile: pyproject.toml
+testpaths: tests
+plugins: cov-7.1.0
+collected 2208 items / 2199 deselected / 9 selected
+
+tests/conformance/test_elaboration_corpus_ledger.py .                    [ 11%]
+tests/conformance/test_silent_failure_family1.py ...                     [ 44%]
+tests/conformance/test_v6_recapture_batch.py ....                        [ 88%]
+tests/integration/test_costed_component_exact_route.py .                 [100%]
+
+=============================== warnings summary ===============================
+../item7-rebuild-venv/lib/python3.12/site-packages/_pytest/python.py:124
+  /home/reid/1cfe/item7-rebuild-venv/lib/python3.12/site-packages/_pytest/python.py:124: PytestRemovedIn10Warning: Passing a non-Collection iterable to parametrize is deprecated.
+  Test: tests/unit/test_constraint_name_safety.py::test_graph_diagnostic_is_invariant_under_all_input_permutations, argvalues type: product
+  Please convert to a list or tuple.
+  See https://docs.pytest.org/en/stable/deprecations.html#parametrize-iterators
+    metafunc.parametrize(*marker.args, **marker.kwargs, _param_mark=marker)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+================ 9 passed, 2199 deselected, 1 warning in 0.85s =================

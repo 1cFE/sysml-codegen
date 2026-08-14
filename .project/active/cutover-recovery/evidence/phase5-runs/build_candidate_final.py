@@ -44,11 +44,15 @@ RUNS = RECOVERY / "evidence/phase5-runs"
 ITEM6_CODEGEN = "1672c5766f67e7716f3c9f8f636c21e2ea444601"
 ITEM6_MBSE = "5088b417c9e5453271291d46cd5fb23fc0579b1e"
 
-# The content OIDs this record describes — the tree the owner ruled FINAL on 2026-08-14.
-# The record commit lands on top of them, so it cannot name its own OID; these are the
-# trees every number below was measured on. The three step-7 runs measured exactly these
-# OIDs (asserted per run in `final-runs/*/heads.tsv`).
-CONTENT_CODEGEN = "540ad598057d4b827382232f0d4cf293fecd4aba"
+# The content OIDs this record describes. The owner ruled the tree FINAL on 2026-08-14 at
+# 540ad59; the step-7 battery's own replacements checker then caught one stale ledger
+# citation (L-179, a step-5 rename miss), repaired in `2819501` — a bookkeeping commit whose
+# shipped-path diff vs 540ad59 is EMPTY (asserted below at build time). The record commit
+# lands on top, so it cannot name its own OID; these are the trees every number below was
+# measured on. The three step-7 runs measured exactly these OIDs (asserted per run in
+# `final-runs/*/heads.tsv`).
+OWNER_RULED_CODEGEN = "540ad598057d4b827382232f0d4cf293fecd4aba"
+CONTENT_CODEGEN = "2819501178370db230acefdbcd02dfa15b409ac4"
 CONTENT_MBSE = "6372ef7ba6ba4c869759fcf201c59aa128175c6f"
 CONTENT_TEAX = "75eecb3bcf4baa0306107a96aa78b74ee667e970"
 
@@ -432,7 +436,16 @@ def main() -> int:
             "candidate by the 2026-08-12 narrow-correction verdict; preserved as evidence"
         ),
         "status": "ASSEMBLED at the content OIDs — step-9 fresh narrow audit and owner final disposition PENDING",
-        "tree_final_ruling": "[OWNER 2026-08-14] no changes in flight; tree ruled final at the content OIDs",
+        "tree_final_ruling": (
+            f"[OWNER 2026-08-14] no changes in flight; tree ruled final at {OWNER_RULED_CODEGEN[:7]}. "
+            f"The battery then caught one stale ledger citation (L-179, step-5 rename miss), repaired "
+            f"in the bookkeeping commit {CONTENT_CODEGEN[:7]}; shipped-path diff vs the ruled OID "
+            f"verified empty by this builder"
+        ),
+        "shipped_diff_vs_owner_ruled_oid": git(
+            ROOT, "diff", "--stat", f"{OWNER_RULED_CODEGEN}..{CONTENT_CODEGEN}",
+            "--", "src", "tests", "scripts", "docs", "pyproject.toml",
+        ) or "empty — shipped content identical",
         "assembled_from": {
             "three_run_battery": "evidence/phase5-runs/final-runs/ (narrow-correction step 7, at the content OIDs)",
             "audit": "step 9 runs after this record and reports separately",
