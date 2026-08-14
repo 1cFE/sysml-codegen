@@ -243,3 +243,72 @@ findings are omissions against the point, not contradictions of it.
 - **"Changes who owns an invariant without saying so" — did not fire.** The prover's move from
   per-file-unique matching to per-occurrence anchoring strengthens the same owner-held
   obligation and is stated as such (D5).
+
+---
+
+## audit — 2026-08-13 — rev e92574d (item commits 28942ec…2633834, + cure 4155b4d)
+
+Epic: CONSTRAINT-SEMANTICS
+
+**Runner note.** `~/.claude/scripts/product-lens.md` was readable this session (it was refused at the
+spec and design stages) and the lens was applied against it directly by the audit session rather
+than by a spawned subagent, per this session's standing instruction not to spawn agents unless
+asked. SOURCES read: `CLAUDE.md`, `README.md`, `docs/architecture/`, `owner-disposition.md`, the
+fixture's `PROVENANCE.md`. `.project/adr/` and `.project/product/` still do not exist in this tree,
+so there is no promise index to read first. WORK: the delivered sources, prover, tests and
+expectations, plus two independent generation runs and a falsification sweep on a scratch fixture.
+
+Point (re-derived): carried unchanged from the spec-stage block, points 1–5 — the derivative is the
+worked example of the ruled policy; the owner decides dispositions, bases and tolerances; every
+accounting number is a mechanical consequence of the ruled table and never read off a run; a
+deletion is accepted only against outside evidence in source; surfacing beats absorbing.
+[source: `epic_constraint_semantics_contract.md:1254-1291` (agent/ratified), `owner-disposition.md`
+A5/A6 basis (agent/ratified) and A9 tolerance (**[OWNER 2026-08-13]**), `owner-disposition.md:37-41`
+(**[OWNER 2026-08-13]** structural amendment), capture-fidelity law 4 (rule)]
+
+Falsifier: a ruled row quietly re-shaped to fit the tooling; a deletion closing the identity on a
+citation alone because the prover cannot distinguish 27 near-identical derivations; or a record whose
+stated cause is gone left standing as if still true.
+
+Findings:
+- none new. The falsifier was exercised directly rather than reasoned about: four occurrence-scoped
+  mutations on a scratch fixture copy each produced a reported problem naming the layer (never a
+  skip, never a sibling-satisfied pass), the ruled A9 form matches its sketch verbatim, and the
+  `blocked-by-defect` records are retired on the live surface with the archive byte-identical.
+
+Resolves:
+- spec-F1: FIXED — authority: orchestrator ruling P-1 (`[AGENT]` 2026-08-13) — basis: archive
+  byte-untouched, verified by tree hash `1d5318b…` at `8942420` and at HEAD.
+- spec-F2: FIXED — authority: agent/ratified (design rev 2, D5) — basis: `DERIVATIONS` is
+  per-occurrence and all four failure modes fail closed per layer; probed live.
+- spec-F3: FIXED — authority: capture-fidelity law 3 — basis: `65 = 58 + 7`, "deliberately not
+  authored", "axis-region layer is not derived" all grep to zero live hits; amended, not annotated.
+- spec-F4: FIXED — basis: 26 leave / 16 arrive reproduced key-for-key by an independent generation
+  run on both lanes; nothing outside the sets.
+- spec-F5: FIXED — basis: A9's re-entry to the SC-5 candidate set is recorded as a record, not a
+  re-disposition; SC-5's anchor stays A2.
+- spec-F6: FIXED — basis: no `.project/active/catf-constraint…` citation survives in the manifest
+  expectation; the prover docstring states the restated identity.
+- spec-F7: FIXED — basis: `expected-coverage.md:358` carries the `complete` column, nine columns.
+- spec-F8: FIXED — authority: **[OWNER 2026-08-13, ruled at Align]** — basis: `BACKLOG.md:1148ff`
+  amended in place (C4 `52c6381`), and the duplicate stale cross-reference at `:1208` amended too.
+- design-D-F1: FIXED — basis: the predicate is carried into the design (`design.md:205`) and checked
+  against the ruled row there.
+- design-D-F2: FIXED — basis: both live-surface records exist (`PROVENANCE.md:260` float drift,
+  `:442` decision D3), not only in the archiving design.
+
+Smells (§4, the five code/test ones):
+- **1 — two representations manually kept synchronized: FIRED, escalated, disposed.** The prover's
+  `_LAYERS` tuple restates the fixture's 14 layers and their order. Disposed: fail-closed in the
+  direction that matters (rename → "not found", duplication → "is ambiguous", both probed), and the
+  four document representations are machine-joined by
+  `_refuse_disagreement_with_the_ruled_table`, not hand-synchronized. Residual R4 in `audit.md`.
+- **3 — a special category exempts a case whose user-visible meaning is unchanged: FIRED on
+  inherited code, escalated, disposed.** `DERIVATIONS` maps A1 and A4 to `None`. Disposed:
+  byte-identical at the pre-Item-9 parent `8942420`, reasoned in-line, neither widened nor narrowed
+  by this item. Residual R5 in `audit.md`.
+- 4, 5, 6 — did not fire. On 6 specifically: both generation lanes were measured independently and
+  agree, and the falsification cases are scoped by line range rather than an unbounded
+  `str.replace`, which is the anti-signature of the fusion-tea shape.
+
+Gate: DISPOSED (spec-F1…F8, design-D-F1, design-D-F2, smells 1 and 3)

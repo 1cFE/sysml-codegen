@@ -58,27 +58,27 @@ authorized here**. This item executes held intent and restates the arithmetic th
 
 ## Success Criteria
 
-- [ ] **Three executing gates.** A2 (`net_power_viable`), A3 (`parasitic_fraction_ok`) and A9
+- [x] **Three executing gates.** A2 (`net_power_viable`), A3 (`parasitic_fraction_ok`) and A9
       (`pumping_speed_agrees`) are asserted, bindings-form, and eligible in the catalog. A9 asserts
       `ProductWithinBand` in relative form at `rel_tol = 0.01`.
-- [ ] **A5 and A6 are deleted and replaced by derivations** on the ruled basis: `axis_region`'s
+- [x] **A5 and A6 are deleted and replaced by derivations** on the ruled basis: `axis_region`'s
       root radius and the 14 layer thicknesses stay free; the other 27 radii (13 `inner_radius`,
       14 `outer_radius`) are computed attributes.
-- [ ] **The `blocked-by-defect` markings are retired on the live surface** — the fixture's
+- [x] **The `blocked-by-defect` markings are retired on the live surface** — the fixture's
       `PROVENANCE.md` §3a and its disposition row — with the retirement citing Item 8's fix commit,
       and the archived `owner-disposition.md` verified byte-untouched (requirement P-1).
-- [ ] **Expectations are re-derived from the ruled table and committed before any confirmation run**
+- [x] **Expectations are re-derived from the ruled table and committed before any confirmation run**
       (Item 5's SC-6 discipline: expectations first, then run — the commit order is the evidence).
-- [ ] **The integrity manifest re-proves the restated identity.**
+- [x] **The integrity manifest re-proves the restated identity.**
       `scripts/check_gated_manifest.py --check` reports `65 = 56 carriers + 9 named deletions`, and
       ties each of the A5/A6 derivations to its in-source initializer and its relation +
       chosen-basis statements.
-- [ ] **Frozen twins and the archived ruling are byte-untouched.** `git diff --stat` names no file
+- [x] **Frozen twins and the archived ruling are byte-untouched.** `git diff --stat` names no file
       under `tests/fixtures/catf_mfe_model/`, `tests/fixtures/catf_mfe_d5/`, or
       `.project/completed/20260813_catf-constraint-policy-acceptance/`.
-- [ ] **The licensed suite is green with zero license-skip lines**, run on the correct interpreter
+- [x] **The licensed suite is green with zero license-skip lines**, run on the correct interpreter
       (see Known Requirements, environment).
-- [ ] **SC-3 is recorded on both sides as a not-fired conditional** (see requirement N-4).
+- [x] **SC-3 is recorded on both sides as a not-fired conditional** (see requirement N-4).
 
 ---
 

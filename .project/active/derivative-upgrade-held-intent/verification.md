@@ -63,7 +63,13 @@ snapshot certification, not only through generation.
 |---|---|---|
 | outcome | sealed | sealed |
 | modules | 62 | 62 |
-| implementation stencils | 58 | 58 |
+| implementation stencils | 34 | 34 |
+
+*Correction (audit R1, 2026-08-13): this row originally read 58/58 — a transcription of the
+carrier count into the stencil row, not a measurement. The audit generated from both the
+pre-Item-9 and HEAD snapshots and measured **34** stencils on each lane; corrected here with the
+error named rather than silently overwritten. The other three rows of this table reproduce as
+written.*
 | parameter-group schemas | 9 | 9 |
 | JSON input templates | 9 | 9 |
 | preflights | all five pass | all five pass |
