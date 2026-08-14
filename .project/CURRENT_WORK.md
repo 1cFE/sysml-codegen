@@ -1,10 +1,11 @@
 # Current Work
 
-**Last Updated**: 2026-08-14 (**phase-B cutover steps 4–8 EXECUTED** — owner ruled the tree
-final and directed steps 7–9; the three single-shot batteries ran at `2819501`/`6372ef7` with
-**51/51 fields identical**, and the final candidate record is regenerated
-(`evidence/candidate.{md,json}`). Step 9 (fresh narrow audit) is next, then step 10 owner
-acceptance. Earlier the same day the
+**Last Updated**: 2026-08-14 (**phase-B cutover steps 4–9 EXECUTED — the sequence now stops
+at step 10, the owner's final acceptance.** Batteries 51/51 identical at `2819501`/`6372ef7`;
+candidate record regenerated; independent step-9 audit verdict **CERTIFY-WITH-RESIDUALS**
+(0 blocking / 1 major / 3 minor, all record-accuracy or spec-text — `evidence/audit-9-final.md`).
+The owner's step-10 decision includes pricing the F1 fix (checker half touches `scripts/`,
+which would invalidate the spent batteries). Earlier the same day the
 CONSTRAINT-SEMANTICS EPIC was CLOSED and archived to
 `.project/completed/20260814_epic_constraint_semantics_contract.md` +
 `.project/completed/20260814_constraint-semantics-contract/`, all ten Success Criteria ticked as
@@ -86,7 +87,22 @@ rather than invented; vehicle `[CONSTRAINT-GATES-UNTAGGED]` in `BACKLOG.md`.
 
 ## Active Work
 
-### 2026-08-14: Phase B — cutover steps 7–8 EXECUTED (batteries + final candidate record); step 9 audit next
+### 2026-08-14: Phase B — cutover step 9 EXECUTED (independent audit, CERTIFY-WITH-RESIDUALS); step 10 is the owner's
+
+Independent audit agent, probes run itself: `evidence/audit-9-final.md`. **Verdict
+CERTIFY-WITH-RESIDUALS, 0 blocking / 1 major / 3 minor** — all six subjects verify on
+substance; findings are record-accuracy/spec-text only. Full record: plan.md
+"Narrow-correction step 9 completion". The owner's step-10 decision set:
+
+1. **Accept with residuals as-is**, or **direct record-only repairs** (repoint L-036/L-037
+   citations + candidate.md sweep wording — `.project/` only, batteries stay valid), or
+   **direct the full F1 fix** (checker disclosure in `scripts/` — invalidates the spent
+   batteries, steps 7–8 re-run).
+2. **F2 spec amendment** (R12 mypy numbers → measured 73-in-18 / 118-in-28; auditor ruled the
+   clause number stale-by-environment, gate not failing — same shape as the ratified ruff fix).
+3. Final acceptance itself. **No push, tag, promote, close, or archive from agents.**
+
+### 2026-08-14: Phase B — cutover steps 7–8 EXECUTED (batteries + final candidate record) — record
 
 **[OWNER 2026-08-14]** ruled the tree final ("no changes in flight") at `540ad59` and directed
 steps 7–9. Full record: plan.md "Narrow-correction steps 7 and 8 completion". Headlines:
