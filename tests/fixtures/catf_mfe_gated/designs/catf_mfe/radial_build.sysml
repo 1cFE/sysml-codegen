@@ -47,6 +47,14 @@ package CATFMFERadialBuild {
         **Last Updated**: 2025-11-09
         */
 
+        // BASIS FOR THE RADIAL BUILD — a CHOSEN BASIS, not physics.
+        // The free parameters are the axis root radius (`axis_region.inner_radius`) and the 14
+        // layer thicknesses; every other radius derives outward. Each layer's inner_radius is
+        // the layer below's outer_radius (adjacent layers abut), and each layer's outer_radius
+        // is its own inner_radius plus its own thickness. Both relations are undirected
+        // equalities; which side derives is an engineering decision carrying owner sign-off.
+        // Authority: owner-disposition.md Group A, A5 and A6 (derive-instead).
+
         // From PyFECONS line 72 - plasma elongation (vertical/horizontal aspect)
         attribute elongation : Real = 3.0;
 
@@ -68,7 +76,10 @@ package CATFMFERadialBuild {
             attribute name : String = "Axis to Plasma";
             attribute inner_radius : Real = 0.0 [m];
             attribute thickness : Real = 3.0 [m];  // From line 73
-            attribute outer_radius : Real = 3.0 [m];  // Calculated
+            // Relation (undirected): axis_region.outer_radius = axis_region.inner_radius + axis_region.thickness.
+            // CHOSEN BASIS, not physics: inner_radius and thickness are free; outer_radius derives.
+            // Authority: owner-disposition.md Group A, A6 (derive-instead).
+            attribute outer_radius : Real = inner_radius + thickness;  // m
             attribute material_primary : String = "None";  // Plasma region
         }
 
@@ -86,9 +97,15 @@ package CATFMFERadialBuild {
             */
 
             attribute name : String = "Plasma";
-            attribute inner_radius : Real = 3.0 [m];
+            // Relation (undirected): plasma_region.inner_radius = axis_region.outer_radius (adjacent layers abut).
+            // CHOSEN BASIS, not physics: the axis root radius and the 14 layer thicknesses are free; radii
+            // derive outward. Authority: owner-disposition.md Group A, A5 (derive-instead).
+            attribute inner_radius : Real = axis_region.outer_radius;  // m
             attribute thickness : Real = 1.1 [m];  // From line 74
-            attribute outer_radius : Real = 4.1 [m];
+            // Relation (undirected): plasma_region.outer_radius = plasma_region.inner_radius + plasma_region.thickness.
+            // CHOSEN BASIS, not physics: inner_radius and thickness are free; outer_radius derives.
+            // Authority: owner-disposition.md Group A, A6 (derive-instead).
+            attribute outer_radius : Real = inner_radius + thickness;  // m
             attribute material_primary : String = "DT Plasma";
             attribute elongation : Real = 3.0;  // Inherited from parent
 
@@ -123,9 +140,15 @@ package CATFMFERadialBuild {
             */
 
             attribute name : String = "Vacuum Gap";
-            attribute inner_radius : Real = 4.1 [m];
+            // Relation (undirected): vacuum_gap.inner_radius = plasma_region.outer_radius (adjacent layers abut).
+            // CHOSEN BASIS, not physics: the axis root radius and the 14 layer thicknesses are free; radii
+            // derive outward. Authority: owner-disposition.md Group A, A5 (derive-instead).
+            attribute inner_radius : Real = plasma_region.outer_radius;  // m
             attribute thickness : Real = 0.1 [m];  // From line 75
-            attribute outer_radius : Real = 4.2 [m];
+            // Relation (undirected): vacuum_gap.outer_radius = vacuum_gap.inner_radius + vacuum_gap.thickness.
+            // CHOSEN BASIS, not physics: inner_radius and thickness are free; outer_radius derives.
+            // Authority: owner-disposition.md Group A, A6 (derive-instead).
+            attribute outer_radius : Real = inner_radius + thickness;  // m
             attribute material_primary : String = "Vacuum";
 
             // Geometry calculations using library calc defs (ADR-002 compliant)
@@ -160,9 +183,15 @@ package CATFMFERadialBuild {
             */
 
             attribute name : String = "First Wall";
-            attribute inner_radius : Real = 4.2 [m];
+            // Relation (undirected): first_wall.inner_radius = vacuum_gap.outer_radius (adjacent layers abut).
+            // CHOSEN BASIS, not physics: the axis root radius and the 14 layer thicknesses are free; radii
+            // derive outward. Authority: owner-disposition.md Group A, A5 (derive-instead).
+            attribute inner_radius : Real = vacuum_gap.outer_radius;  // m
             attribute thickness : Real = 0.2 [m];  // From line 76
-            attribute outer_radius : Real = 4.4 [m];
+            // Relation (undirected): first_wall.outer_radius = first_wall.inner_radius + first_wall.thickness.
+            // CHOSEN BASIS, not physics: inner_radius and thickness are free; outer_radius derives.
+            // Authority: owner-disposition.md Group A, A6 (derive-instead).
+            attribute outer_radius : Real = inner_radius + thickness;  // m
             attribute material_primary : String = "Beryllium";
 
             // Geometry calculations using library calc defs (ADR-002 compliant)
@@ -205,9 +234,15 @@ package CATFMFERadialBuild {
             */
 
             attribute name : String = "Blanket";
-            attribute inner_radius : Real = 4.4 [m];
+            // Relation (undirected): blanket.inner_radius = first_wall.outer_radius (adjacent layers abut).
+            // CHOSEN BASIS, not physics: the axis root radius and the 14 layer thicknesses are free; radii
+            // derive outward. Authority: owner-disposition.md Group A, A5 (derive-instead).
+            attribute inner_radius : Real = first_wall.outer_radius;  // m
             attribute thickness : Real = 0.8 [m];  // From line 77
-            attribute outer_radius : Real = 5.2 [m];
+            // Relation (undirected): blanket.outer_radius = blanket.inner_radius + blanket.thickness.
+            // CHOSEN BASIS, not physics: inner_radius and thickness are free; outer_radius derives.
+            // Authority: owner-disposition.md Group A, A6 (derive-instead).
+            attribute outer_radius : Real = inner_radius + thickness;  // m
             attribute material_primary : String = "Li2TiO3";
 
             // Geometry calculations using library calc defs (ADR-002 compliant)
@@ -243,9 +278,15 @@ package CATFMFERadialBuild {
             */
 
             attribute name : String = "Reflector";
-            attribute inner_radius : Real = 5.2 [m];
+            // Relation (undirected): reflector.inner_radius = blanket.outer_radius (adjacent layers abut).
+            // CHOSEN BASIS, not physics: the axis root radius and the 14 layer thicknesses are free; radii
+            // derive outward. Authority: owner-disposition.md Group A, A5 (derive-instead).
+            attribute inner_radius : Real = blanket.outer_radius;  // m
             attribute thickness : Real = 0.2 [m];  // From line 78
-            attribute outer_radius : Real = 5.4 [m];
+            // Relation (undirected): reflector.outer_radius = reflector.inner_radius + reflector.thickness.
+            // CHOSEN BASIS, not physics: inner_radius and thickness are free; outer_radius derives.
+            // Authority: owner-disposition.md Group A, A6 (derive-instead).
+            attribute outer_radius : Real = inner_radius + thickness;  // m
             attribute material_primary : String = "Beryllium";
 
             // Geometry calculations using library calc defs (ADR-002 compliant)
@@ -282,9 +323,15 @@ package CATFMFERadialBuild {
             */
 
             attribute name : String = "HT Shield";
-            attribute inner_radius : Real = 5.4 [m];
+            // Relation (undirected): ht_shield.inner_radius = reflector.outer_radius (adjacent layers abut).
+            // CHOSEN BASIS, not physics: the axis root radius and the 14 layer thicknesses are free; radii
+            // derive outward. Authority: owner-disposition.md Group A, A5 (derive-instead).
+            attribute inner_radius : Real = reflector.outer_radius;  // m
             attribute thickness : Real = 0.2 [m];  // From line 79
-            attribute outer_radius : Real = 5.6 [m];
+            // Relation (undirected): ht_shield.outer_radius = ht_shield.inner_radius + ht_shield.thickness.
+            // CHOSEN BASIS, not physics: inner_radius and thickness are free; outer_radius derives.
+            // Authority: owner-disposition.md Group A, A6 (derive-instead).
+            attribute outer_radius : Real = inner_radius + thickness;  // m
             attribute material_primary : String = "BoratedSteel";
 
             // Geometry calculations using library calc defs (ADR-002 compliant)
@@ -318,9 +365,15 @@ package CATFMFERadialBuild {
             */
 
             attribute name : String = "Structure";
-            attribute inner_radius : Real = 5.6 [m];
+            // Relation (undirected): structure.inner_radius = ht_shield.outer_radius (adjacent layers abut).
+            // CHOSEN BASIS, not physics: the axis root radius and the 14 layer thicknesses are free; radii
+            // derive outward. Authority: owner-disposition.md Group A, A5 (derive-instead).
+            attribute inner_radius : Real = ht_shield.outer_radius;  // m
             attribute thickness : Real = 0.2 [m];  // From line 80
-            attribute outer_radius : Real = 5.8 [m];
+            // Relation (undirected): structure.outer_radius = structure.inner_radius + structure.thickness.
+            // CHOSEN BASIS, not physics: inner_radius and thickness are free; outer_radius derives.
+            // Authority: owner-disposition.md Group A, A6 (derive-instead).
+            attribute outer_radius : Real = inner_radius + thickness;  // m
             attribute material_primary : String = "SS316";
 
             // Geometry calculations using library calc defs (ADR-002 compliant)
@@ -354,9 +407,15 @@ package CATFMFERadialBuild {
             */
 
             attribute name : String = "Gap 1";
-            attribute inner_radius : Real = 5.8 [m];
+            // Relation (undirected): gap1.inner_radius = structure.outer_radius (adjacent layers abut).
+            // CHOSEN BASIS, not physics: the axis root radius and the 14 layer thicknesses are free; radii
+            // derive outward. Authority: owner-disposition.md Group A, A5 (derive-instead).
+            attribute inner_radius : Real = structure.outer_radius;  // m
             attribute thickness : Real = 0.5 [m];  // From line 81
-            attribute outer_radius : Real = 6.3 [m];
+            // Relation (undirected): gap1.outer_radius = gap1.inner_radius + gap1.thickness.
+            // CHOSEN BASIS, not physics: inner_radius and thickness are free; outer_radius derives.
+            // Authority: owner-disposition.md Group A, A6 (derive-instead).
+            attribute outer_radius : Real = inner_radius + thickness;  // m
             attribute material_primary : String = "Vacuum";
 
             // Geometry calculations using library calc defs (ADR-002 compliant)
@@ -395,9 +454,15 @@ package CATFMFERadialBuild {
             */
 
             attribute name : String = "Vacuum Vessel";
-            attribute inner_radius : Real = 6.3 [m];
+            // Relation (undirected): vessel.inner_radius = gap1.outer_radius (adjacent layers abut).
+            // CHOSEN BASIS, not physics: the axis root radius and the 14 layer thicknesses are free; radii
+            // derive outward. Authority: owner-disposition.md Group A, A5 (derive-instead).
+            attribute inner_radius : Real = gap1.outer_radius;  // m
             attribute thickness : Real = 0.2 [m];  // From line 82
-            attribute outer_radius : Real = 6.5 [m];
+            // Relation (undirected): vessel.outer_radius = vessel.inner_radius + vessel.thickness.
+            // CHOSEN BASIS, not physics: inner_radius and thickness are free; outer_radius derives.
+            // Authority: owner-disposition.md Group A, A6 (derive-instead).
+            attribute outer_radius : Real = inner_radius + thickness;  // m
             attribute material_primary : String = "SS316";
 
             // Geometry calculations using library calc defs (ADR-002 compliant)
@@ -435,9 +500,15 @@ package CATFMFERadialBuild {
             */
 
             attribute name : String = "TF Coil";
-            attribute inner_radius : Real = 6.5 [m];
-            attribute thickness : Real = 0.25 [m];  // From line 83 (= tf_dr)
-            attribute outer_radius : Real = 6.75 [m];
+            // Relation (undirected): tf_coil.inner_radius = vessel.outer_radius (adjacent layers abut).
+            // CHOSEN BASIS, not physics: the axis root radius and the 14 layer thicknesses are free; radii
+            // derive outward. Authority: owner-disposition.md Group A, A5 (derive-instead).
+            attribute inner_radius : Real = vessel.outer_radius;  // m
+            attribute thickness : Real = 0.25 [m];  // m - from line 83 (= tf_dr)
+            // Relation (undirected): tf_coil.outer_radius = tf_coil.inner_radius + tf_coil.thickness.
+            // CHOSEN BASIS, not physics: inner_radius and thickness are free; outer_radius derives.
+            // Authority: owner-disposition.md Group A, A6 (derive-instead).
+            attribute outer_radius : Real = inner_radius + thickness;  // m
             attribute material_primary : String = "HTS_CICC";
 
             // Geometry calculations using library calc defs (ADR-002 compliant)
@@ -471,9 +542,15 @@ package CATFMFERadialBuild {
             */
 
             attribute name : String = "Gap 2";
-            attribute inner_radius : Real = 6.75 [m];
+            // Relation (undirected): gap2.inner_radius = tf_coil.outer_radius (adjacent layers abut).
+            // CHOSEN BASIS, not physics: the axis root radius and the 14 layer thicknesses are free; radii
+            // derive outward. Authority: owner-disposition.md Group A, A5 (derive-instead).
+            attribute inner_radius : Real = tf_coil.outer_radius;  // m
             attribute thickness : Real = 0.5 [m];  // From line 84
-            attribute outer_radius : Real = 7.25 [m];
+            // Relation (undirected): gap2.outer_radius = gap2.inner_radius + gap2.thickness.
+            // CHOSEN BASIS, not physics: inner_radius and thickness are free; outer_radius derives.
+            // Authority: owner-disposition.md Group A, A6 (derive-instead).
+            attribute outer_radius : Real = inner_radius + thickness;  // m
             attribute material_primary : String = "Air";
 
             // Geometry calculations using library calc defs (ADR-002 compliant)
@@ -511,9 +588,15 @@ package CATFMFERadialBuild {
             */
 
             attribute name : String = "LT Shield";
-            attribute inner_radius : Real = 7.25 [m];
+            // Relation (undirected): lt_shield.inner_radius = gap2.outer_radius (adjacent layers abut).
+            // CHOSEN BASIS, not physics: the axis root radius and the 14 layer thicknesses are free; radii
+            // derive outward. Authority: owner-disposition.md Group A, A5 (derive-instead).
+            attribute inner_radius : Real = gap2.outer_radius;  // m
             attribute thickness : Real = 0.3 [m];  // From line 85
-            attribute outer_radius : Real = 7.55 [m];
+            // Relation (undirected): lt_shield.outer_radius = lt_shield.inner_radius + lt_shield.thickness.
+            // CHOSEN BASIS, not physics: inner_radius and thickness are free; outer_radius derives.
+            // Authority: owner-disposition.md Group A, A6 (derive-instead).
+            attribute outer_radius : Real = inner_radius + thickness;  // m
             attribute material_primary : String = "Aluminum";
 
             // Geometry calculations using library calc defs (ADR-002 compliant)
@@ -553,9 +636,15 @@ package CATFMFERadialBuild {
             */
 
             attribute name : String = "Biological Shield";
-            attribute inner_radius : Real = 7.55 [m];
+            // Relation (undirected): bioshield.inner_radius = lt_shield.outer_radius (adjacent layers abut).
+            // CHOSEN BASIS, not physics: the axis root radius and the 14 layer thicknesses are free; radii
+            // derive outward. Authority: owner-disposition.md Group A, A5 (derive-instead).
+            attribute inner_radius : Real = lt_shield.outer_radius;  // m
             attribute thickness : Real = 1.0 [m];  // From line 86
-            attribute outer_radius : Real = 8.55 [m];
+            // Relation (undirected): bioshield.outer_radius = bioshield.inner_radius + bioshield.thickness.
+            // CHOSEN BASIS, not physics: inner_radius and thickness are free; outer_radius derives.
+            // Authority: owner-disposition.md Group A, A6 (derive-instead).
+            attribute outer_radius : Real = inner_radius + thickness;  // m
             attribute material_primary : String = "Concrete";
 
             // Geometry calculations using library calc defs (ADR-002 compliant)
@@ -600,42 +689,5 @@ package CATFMFERadialBuild {
             // f_exposed uses default := 0.5
         }
         attribute magnet_surface_area : Real = magnet_surface_calc.area;  // [m^2]
-
-        constraint LayerContinuity {
-            doc /* Each layer must begin where the previous layer ends (no gaps or overlaps) */
-
-            plasma_region.inner_radius == axis_region.outer_radius and
-            vacuum_gap.inner_radius == plasma_region.outer_radius and
-            first_wall.inner_radius == vacuum_gap.outer_radius and
-            blanket.inner_radius == first_wall.outer_radius and
-            reflector.inner_radius == blanket.outer_radius and
-            ht_shield.inner_radius == reflector.outer_radius and
-            structure.inner_radius == ht_shield.outer_radius and
-            gap1.inner_radius == structure.outer_radius and
-            vessel.inner_radius == gap1.outer_radius and
-            tf_coil.inner_radius == vessel.outer_radius and
-            gap2.inner_radius == tf_coil.outer_radius and
-            lt_shield.inner_radius == gap2.outer_radius and
-            bioshield.inner_radius == lt_shield.outer_radius
-        }
-
-        constraint RadiusThicknessConsistency {
-            doc /* Each layer's outer radius must equal inner radius plus thickness */
-
-            axis_region.outer_radius == axis_region.inner_radius + axis_region.thickness and
-            plasma_region.outer_radius == plasma_region.inner_radius + plasma_region.thickness and
-            vacuum_gap.outer_radius == vacuum_gap.inner_radius + vacuum_gap.thickness and
-            first_wall.outer_radius == first_wall.inner_radius + first_wall.thickness and
-            blanket.outer_radius == blanket.inner_radius + blanket.thickness and
-            reflector.outer_radius == reflector.inner_radius + reflector.thickness and
-            ht_shield.outer_radius == ht_shield.inner_radius + ht_shield.thickness and
-            structure.outer_radius == structure.inner_radius + structure.thickness and
-            gap1.outer_radius == gap1.inner_radius + gap1.thickness and
-            vessel.outer_radius == vessel.inner_radius + vessel.thickness and
-            tf_coil.outer_radius == tf_coil.inner_radius + tf_coil.thickness and
-            gap2.outer_radius == gap2.inner_radius + gap2.thickness and
-            lt_shield.outer_radius == lt_shield.inner_radius + lt_shield.thickness and
-            bioshield.outer_radius == bioshield.inner_radius + bioshield.thickness
-        }
     }
 }

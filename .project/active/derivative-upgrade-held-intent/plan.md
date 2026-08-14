@@ -132,21 +132,21 @@ $V/sysml-codegen generate --from-snapshot /tmp/item9_probe/snap.json \
 **See `design.md` for the authored text:** the 27 derivations' concrete shape (`design.md#the-27-derivations--concrete-shape`),
 A9's definition and usage (`design.md#a9s-authored-form`), and decisions D1–D7.
 
-- [ ] `tests/fixtures/catf_mfe_gated/designs/catf_mfe/radial_build.sysml` — delete
+- [x] `tests/fixtures/catf_mfe_gated/designs/catf_mfe/radial_build.sysml` — delete
       `LayerContinuity` (A5) and `RadiusThicknessConsistency` (A6); author 27 derivations in place,
       in authored order, in the same declaration slots (D6); one full basis paragraph at the
       `catf_radial_build` level; each derivation carries its two statements in a `//` block within
       the 12-line comment window (D4); unit in a trailing `//` comment (D1); bare sibling spelling
       (D7).
-- [ ] Same file — **D3**, the one edit outside the 27: `tf_coil.thickness`'s trailing comment
+- [x] Same file — **D3**, the one edit outside the 27: `tf_coil.thickness`'s trailing comment
       becomes `// m - from line 83 (= tf_dr)`. Original provenance text preserved inside it.
-- [ ] `tests/fixtures/catf_mfe_gated/library/constraints/gate_forms.sysml` — add
+- [x] `tests/fixtures/catf_mfe_gated/library/constraints/gate_forms.sysml` — add
       `ProductWithinBand` with all four formals unit-annotated (D2).
-- [ ] `tests/fixtures/catf_mfe_gated/designs/catf_mfe/vacuum.sysml` — replace
+- [x] `tests/fixtures/catf_mfe_gated/designs/catf_mfe/vacuum.sysml` — replace
       `PumpingSpeedConsistency` in place with `assert constraint pumping_speed_agrees :
       ProductWithinBand { … rel_tol = 0.01; }`; add
       `private import CATFGateForms::ProductWithinBand;`.
-- [ ] `tests/fixtures/catf_mfe_gated/instance_graph_snapshot.json` — re-capture in place from the
+- [x] `tests/fixtures/catf_mfe_gated/instance_graph_snapshot.json` — re-capture in place from the
       edited sources.
 
 `probes/apply_item9_edits.py` already performs a version of these edits against a throwaway copy.
@@ -155,19 +155,19 @@ Reuse it as a reference for the exact text; do not run it blind against the live
 ### Validation
 
 **Automated:**
-- [ ] `snapshot` completes without refusal → envelope written
-- [ ] `generate --from-snapshot` seals the package
-- [ ] `generate --models tests/fixtures/catf_mfe_gated` also seals (re-confirm the probe's lane)
-- [ ] All five preflights pass on both routes
+- [x] `snapshot` completes without refusal → envelope written
+- [x] `generate --from-snapshot` seals the package
+- [x] `generate --models tests/fixtures/catf_mfe_gated` also seals (re-confirm the probe's lane)
+- [x] All five preflights pass on both routes
 
 **Manual:**
-- [ ] Record the **measured** module/stencil/parameter-group counts. The probe saw 62 modules —
+- [x] Record the **measured** module/stencil/parameter-group counts. The probe saw 62 modules —
       re-measure, do not copy it (`design.md#next-stage-handoff`).
-- [ ] Confirm the expected registry alias warning for the 15 `outer_radiusModule` collisions
+- [x] Confirm the expected registry alias warning for the 15 `outer_radiusModule` collisions
       appears and is **not** "fixed" (`design.md#implementation-notes`).
-- [ ] Diff the re-captured snapshot against the committed one and note whether anything beyond
+- [x] Diff the re-captured snapshot against the committed one and note whether anything beyond
       `captured_at` moved. Anything else is a finding, not churn.
-- [ ] Record the before/after public key movement and check it against the derived **26 leave /
+- [x] Record the before/after public key movement and check it against the derived **26 leave /
       16 arrive** sets (`design.md#expected-output-derivation-plan-sc-6`). A key moving that is not
       in those sets is a surfacing event.
 
@@ -485,10 +485,54 @@ spec's success criteria has a recorded count behind it.
 [TO BE FILLED DURING IMPLEMENTATION]
 
 ### Phase 1 Completion
-**Completed:**
+**Completed:** 2026-08-13
+
 **Actual Changes:**
+- `designs/catf_mfe/radial_build.sysml` — 27 derivations authored in place (14 `outer_radius`,
+  13 `inner_radius`), each with the design's three-line `//` block; the `catf_radial_build`-level
+  basis paragraph added above `attribute elongation`; `LayerContinuity` and
+  `RadiusThicknessConsistency` deleted; D3's `tf_coil.thickness` comment amended to
+  `// m - from line 83 (= tf_dr)`.
+- `library/constraints/gate_forms.sysml` — `ProductWithinBand` added, four formals unit-annotated,
+  with a block comment recording why the form is dimension-specific.
+- `designs/catf_mfe/vacuum.sysml` — `PumpingSpeedConsistency` replaced in place by
+  `assert constraint pumping_speed_agrees : ProductWithinBand` at `rel_tol = 0.01`; the
+  `private import CATFGateForms::ProductWithinBand;` added. **A9 now sits at
+  `designs/catf_mfe/vacuum.sysml:171`** (read from source; this is Phase 2's `source_line`).
+- `instance_graph_snapshot.json` — re-captured in place under license.
+
+**Measured (Phase 1 proof, both lanes, licensed):**
+- `sysml-codegen snapshot --models tests/fixtures/catf_mfe_gated` — completed, no refusal. **B3
+  holds through snapshot certification**; no `SnapshotCertifiabilityError`.
+- `generate --from-snapshot` — sealed. **62 modules, 58 stencils, 9 parameter-group schemas,
+  9 JSON templates.** All five preflights passed.
+- `generate --models` — sealed, same shape.
+- Registry alias warning present on both routes and left alone:
+  `Module class name collisions detected: ['outer_radiusModule']. Generating aliased imports for
+  15 modules.`
+- Public key movement: **65 → 55, 26 leave / 16 arrive**, matching the derived sets exactly.
+  The 26 leaving are the 13 layers' `inner_radius`+`outer_radius` pairs; the 16 arriving are 13
+  layer thicknesses + `axis_region.thickness`… measured precisely as 13 thickness keys +
+  `axis_region.inner_radius` + `pump_capacity_each` + `pumping_speed_agrees__rel_tol`. No key
+  moved that is outside those sets.
+
 **Issues:**
+- **Snapshot re-capture diff — the v6 envelope has no `captured_at` field at all.** The plan's
+  "anything beyond `captured_at`" test therefore reads differently than written: there is no
+  timestamp churn to filter. Every field that moved traces to the edited sources —
+  `sources.files` (exactly the three edited paths, by sha256 and size), `sources.fingerprint`,
+  `integrity.digest`, `instance_graph.fingerprint`, and the graph itself
+  (`attrs` 374→360, `calcs` 44→58, `constraint_usages` 58→56, `constraints` 5→3). Nothing
+  spurious moved. `constraints` 5→3 is the ruled movement, not a loss: the three inline
+  definition-less nodes (`LayerContinuity`, `RadiusThicknessConsistency`,
+  `PumpingSpeedConsistency`) are gone and `CATFGateForms::ProductWithinBand` has joined
+  `PositiveQuantity` and `FractionWithinBand` as a def-typed constraint.
+
 **Deviations:**
+- The derivation comment blocks use design.md's three-line concrete shape (D4), not the probe
+  script's two long lines. Same two statements, same authority citation.
+- `probes/apply_item9_edits.py` was used as reference text only, not run against the live
+  fixture, per the plan.
 
 ### Phase 2 Completion
 

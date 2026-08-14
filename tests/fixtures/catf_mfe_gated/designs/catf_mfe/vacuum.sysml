@@ -13,6 +13,7 @@ package CATFMFEVacuum {
     public import SI::*;
 
     // Import thermal load calc defs
+    private import CATFGateForms::ProductWithinBand;
     private import FusionAnalysesThermalLoads::VacuumPumpPower;
     private import FusionAnalysesThermalLoads::CryoPumpRefrigeration;
 
@@ -165,10 +166,13 @@ package CATFMFEVacuum {
         attribute pumpdown_time_initial : Real = 3600;  // s (1 hour)
         attribute base_pressure_achievable : Real = 1.0e-4;  // Pa
 
-        // Constraint: total pumping speed equals sum of all pumps
-        constraint PumpingSpeedConsistency {
-            doc /* Total pumping speed should match sum of pump capacities */
-            pumping_speed_total == n_pumps * pump_capacity_each
+        // A9, ruled assert-band at 1% relative (owner-disposition.md Group A, A9):
+        // band = n_pumps * pump_capacity_each +/- 1%. rel_tol is dimensionless.
+        assert constraint pumping_speed_agrees : ProductWithinBand {
+            in observed = pumping_speed_total;
+            in count = n_pumps;
+            in each_capacity = pump_capacity_each;
+            in rel_tol = 0.01;
         }
 
         // Vacuum pump power calculation (mechanical pumps)
