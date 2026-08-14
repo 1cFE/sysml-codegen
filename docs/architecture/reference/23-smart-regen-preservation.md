@@ -11,12 +11,12 @@ changed, and upgrades stubs to auto-implementations when possible.
 
 | ID | Requirement | Verified by |
 |----|-------------|-------------|
-| REQ-SR-01 | Signature comparison SHALL use two-level matching: type-level (required) then field-level (optional) | `FunctionSignature.matches()` in `generation/preservation.py` — the only copy |
-| REQ-SR-02 | Field comparison SHALL be order-independent (sorted) | `sorted(self.input_fields) == sorted(other.input_fields)` |
+| REQ-SR-01 | Signature comparison SHALL use two-level matching: type-level (required) then field-level (the existing impl's referenced input fields must be a **subset** of the graph-declared inputs; an out-of-set reference regenerates). *Amended from exact set equality, [AGENT] (ratified by owner, 2026-08-14): a body may leave declared inputs unused — the generator's own auto-implementations do, so equality made a freshly generated file fail its own check and churn on every smart regen (`PVModuleCostCalc`/`RackingCostCalc` in `solar_battery_d5`).* | `FunctionSignature.matches()` in `generation/preservation.py` — the only copy; behavior pinned by `tests/conformance/test_smart_regen_behavior.py` |
+| REQ-SR-02 | Field comparison SHALL be order-independent: reference order alone never counts as an interface change (set semantics) | `set(self.input_fields) <= set(other.input_fields)`; behavior pinned by `test_smart_regen_behavior.py::test_reference_order_alone_never_regenerates` |
 | REQ-SR-03 | `should_regenerate_stencil()` SHALL implement the [6-case decision tree](#the-6-case-decision-tree) | 6 return paths in `should_regenerate_stencil()` (`generation/preservation.py`) — Item 5 split the unparseable leaf into preserve-on-transient / preserve-non-empty / regenerate-empty |
 | REQ-SR-04 | Stub upgrade SHALL require all 3 conditions: signature match, `NotImplementedError` present, `auto_impl_context` available | `_generate_stencils()` in `cli/__init__.py` checks all three |
 | REQ-SR-05 | Backup SHALL be created before every regeneration or upgrade | `backup_implementation()` called before `write_text()` |
-| REQ-SR-06 | Aggregation and [computed-attribute](16-computed-attributes.md) modules are synthetic and always regenerated in practice | The unified `_generate_stencils()` processes all module types; synthetic modules lack handwritten content so the smart-regen path is a no-op |
+| REQ-SR-06 | Every stencil-bearing module kind (calculation, formula, aggregation) SHALL ride the same smart-regen preservation path. *Amended 2026-08-14: the old "synthetic modules lack handwritten content so the path is a no-op" claim is false at the exact route — formula and aggregation modules render auto-implemented bodies that smart regen preserves like any other impl.* | The unified `_generate_stencils()` processes all module types; behavior pinned by `test_smart_regen_behavior.py::test_every_stencil_bearing_module_kind_is_preserved` (marker planted in every `solar_battery_d5` impl survives a smart rerun) |
 | REQ-SR-07 | `--preserve-handwritten` SHALL skip ALL existing handwritten files without comparison | Blanket skip, no signature extraction |
 
 ---
@@ -48,15 +48,22 @@ def matches(self, other: "FunctionSignature") -> bool:
             and self.input_type == other.input_type
             and self.return_type == other.return_type):
         return False
-    # Level 2: Field-level (OPTIONAL -- only if both have fields)
+    # Level 2: Field-level (OPTIONAL -- only if both have fields).
+    # Subset, not equality: a body may leave declared inputs unused, but an
+    # out-of-set reference is an interface mismatch.
     if self.input_fields is not None and other.input_fields is not None:
-        return sorted(self.input_fields) == sorted(other.input_fields)
+        return set(self.input_fields) <= set(other.input_fields)
     return True  # Graceful fallback if either side has None
 ```
 
-Field comparison is **order-independent** (sorted). If either signature
-has `input_fields=None` (legacy files or unmodified stubs), field
-comparison is skipped and only type-level checks apply.
+Field comparison is a **subset test** — the existing file's referenced fields
+against the graph's declared inputs, in that direction — and therefore
+order-independent. It regenerates on a reference the graph does not declare
+(including a renamed or removed input, whose old name leaves the declared set),
+and preserves a body that ignores declared inputs, which the generator's own
+auto-implementations legitimately do. If either signature has
+`input_fields=None` (legacy files or unmodified stubs), field comparison is
+skipped and only type-level checks apply.
 
 ---
 
@@ -210,13 +217,13 @@ system. It simply skips generation for any existing `handwritten/*.py` file.
 | A: New file | impl doesn't exist | Generate (auto-impl or stub) |
 | B: Handwritten, unchanged | matches()=True, no NotImplementedError | **Preserve** |
 | C: Stub, compilable | matches()=True, has NotImplementedError, `auto_impl_context` present | Backup + upgrade |
-| D: Interface changed | matches()=False (return type or fields differ) | Backup + regenerate |
+| D: Interface changed | matches()=False (name/type-annotation change, or a body reference outside the declared input set) | Backup + regenerate |
 
-**Limitation**: Smart-regen is primarily meaningful for CalcUsage modules
-(which have user-editable handwritten files). [Aggregation](13-aggregation-scoping.md)
-and [computed attribute](16-computed-attributes.md) modules are synthetic --
-they pass through the same unified `_generate_stencils()` loop but in practice
-are always regenerated since they lack handwritten content (REQ-SR-06).
+Smart-regen applies uniformly: [aggregation](13-aggregation-scoping.md),
+formula, and [computed attribute](16-computed-attributes.md) modules render
+auto-implemented bodies through the same unified `_generate_stencils()` loop
+and are preserved under the same signature test as CalcUsage modules
+(REQ-SR-06, amended 2026-08-14).
 
 ---
 

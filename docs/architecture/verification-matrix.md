@@ -6,22 +6,25 @@ Traceability matrix mapping every REQ-\* tag to its conformance test file and st
 
 | Metric | Count |
 |--------|-------|
-| Total requirements | 280 |
-| PASS (a kept test proves it and passes) | 136 |
-| PARTIAL (a kept test covers part of the requirement; the gap is named in the cell) | 3 |
+| Total requirements | 288 |
+| PASS (a kept test proves it and passes) | 156 |
+| PARTIAL (a kept test covers part of the requirement; the gap is named in the cell) | 1 |
 | RETIRED (subject deleted with the legacy stack) | 131 |
-| UNTESTED (subject live, no test proves it) | 10 |
+| UNTESTED (subject live, no test proves it) | 0 |
 | DEFERRED | 0 |
-| REQ families | 33 |
-| Distinct kept test files cited | 55 |
+| REQ families | 34 |
+| Distinct kept test files cited | 64 |
 
-> **Recounted from the tables 2026-08-14** (CONSTRAINT-SEMANTICS Item 7), per the recount discipline
-> — index totals **and** per-family counts, never the summary block on trust. The recount **falsified
-> the previous block**, which read PASS 133 / PARTIAL 3 / distinct test files 50 against tables that
-> already held PASS 134 / PARTIAL 2 / 57 files. The drift was `REQ-CL-04`, upgraded PARTIAL → PASS
-> when audit-7 F2 closed without the summary following it, plus a test-file count that had not been
-> recomputed in some time. The remaining delta to the numbers above is this item's own four REQ-DIAG
-> rows. Method and raw output: `.project/completed/20260814_constraint-docs-agent-sync/verification.md`.
+> **Recounted from the tables 2026-08-14 at ELABORATE-FIRST cutover step 4**, per the recount
+> discipline — index totals **and** per-family counts, never the summary block on trust; test-file
+> count by the recorded A-4 method (Test File column, non-RETIRED rows, file exists on disk). Delta
+> from the previous block (280/136/3/131/10/0, 33 families, 55 files, recounted the same day at
+> CONSTRAINT-SEMANTICS Item 7): step 4 closed all ten UNTESTED rows (nine L-149/L-150/L-152
+> replacements plus the REQ-DIAG-04 tripwire), moved REQ-EPC-01 and REQ-GA-03 to PASS with their
+> missing failing arms, and filed the 8-row REQ-CS family under the owner-authorized
+> `[CONSTRAINT-GATES-UNTAGGED]` minting. The one remaining PARTIAL is REQ-DIAG-01, a recorded
+> deliberate grade (its gap is upstream-shaped). Item 7's recount record:
+> `.project/completed/20260814_constraint-docs-agent-sync/verification.md`.
 
 **Status definitions:**
 - **PASS**: At least one test **that exists in the tree** proves this requirement and passes
@@ -219,22 +222,18 @@ re-derives from scratch and is named here as a known gap, not silently covered.
 |--------|-------------|-----------|--------|
 | REQ-CL-01 | `resolve_actual`'s strict ladder SHALL resolve a bound actual through, in order: registry scoped/alias/scoped-alias lookup, occurrence-scoped design attribute, definition-scoped target QN, definition-scoped base-literal-default (Item 14 D2-twin) — before the shared terminal-disposition switch (`strict=True`, never synthesizes) | — *(subject deleted — ledger L-214)* | RETIRED |
 | REQ-CL-02 | Every concrete entry expanded from one `ConstraintUsageFact` SHALL share one compile-once predicate (grouped by `usage_qualified_name`), even across N owner-instance occurrences | `test_constraint_emission.py` | PASS |
-| REQ-CL-03 | `assemble_constraint_catalog` SHALL build `source_records` from every `ConstraintDefinition` in the model's facts (visible even with zero eligible entries) and `concrete_entries` from eligible concrete constraints only, fingerprinted deterministically | `test_constraint_emission.py` — but see the divergence note below: the subject is the **retired** assembler, not the shipped one | PASS |
+| REQ-CL-03 | The shipped catalog (`elaboration/project.py`, `_build_constraint_catalog`) SHALL derive `source_records` from the constraints it projects — definition qualified name plus sorted formal names, from eligible (`ADMIT`/`BLOCK`) nodes only, so a definition with no eligible entry yields no source record — and `concrete_entries` from eligible concrete constraints only, deterministically ordered and fingerprinted by the one shared rule the generation preflight recomputes. *(Amended at cutover step 4 from the retired assembler's total-inventory wording — see the resolved divergence record below.)* | `test_constraint_catalog_totality.py::test_a_usage_only_catalog_fingerprints_deterministically` (zero eligible → empty `source_records`, deterministic fingerprint — the shipped rule, pinned), `::test_the_catalog_carries_every_domain_member` (totality lives on the usage domain), `test_concrete_constraint_model.py` (catalog collection shape) | PASS |
 | REQ-CL-04 | The domain->catalog mapping SHALL be total and silent-drop-free: every member of `InstanceGraph.constraint_usages` has exactly one `usage_records` row, joined by `declaration_id` and never by qualified name, and every occurrence row joins exactly one member | `test_constraint_catalog_totality.py::test_the_catalog_carries_every_domain_member`, `::test_catf_mfe_d5_ships_all_sixty_five_rows`, the four preflight mutations (removed disposition, duplicated row, orphaned occurrence row, disagreeing counts) and the three graph-level mutations refused at `validate()` | PASS *(audit-7 F2 closed: the heir is no longer a 2-constraint specimen — the totality claim is asserted over the whole domain on every constraint-bearing fixture, and a dropped carrier fails by identity)* |
 | REQ-CL-05 | A constraint input resolved to a design attribute SHALL mint a deduped entry point (reused, not re-minted, if already present); a resolved module-output input SHALL wire the producer channel with no mint; a resolved modeled-default input SHALL mint a `LIBRARY_DEFAULT` entry point scoped to its constraint | `test_exact_constraint_route.py::test_identified_facts_gate_and_projected_constraints_agree_by_usage_id`, `test_exact_route_constraint_portability.py::test_the_predicate_module_and_pipeline_are_identical_on_every_route` | PASS |
 
-> **Divergence surfaced — REQ-CL-03 does not describe the shipped catalog** (Revise step 6d).
-> The total-inventory guarantee in this row — a `source_record` for *every* `ConstraintDefinition`
-> in the model's facts, visible with zero eligible entries — belongs to
-> `assemble_constraint_catalog`, which the legacy route called and which now lives in
-> `tests/helpers/retired_catalog_assembly.py` as a fixture builder. The shipped catalog is built
-> by the projector (`elaboration/project.py`, `_build_constraint_catalog`), which derives
-> `source_records` from the constraints it actually projected: a definition with no eligible
-> entry produces no source record. Exclusion records diverge the same way. The cited test still
-> passes, on the retired assembler. **Whether the shipped catalog should carry the
-> total-inventory guarantee is an open product question with no recorded authority** — surfaced,
-> parked, and deliberately not answered by re-citing the row onto a projector test that proves
-> something else.
+> **Divergence RESOLVED at cutover step 4 — the usage domain is the totality boundary**
+> **[AGENT] (ratified by owner, 2026-08-14)**. The total-inventory guarantee the old row carried
+> — a `source_record` for *every* `ConstraintDefinition`, visible with zero eligible entries —
+> was the retired assembler's design (now the fixture builder
+> `tests/helpers/retired_catalog_assembly.py`), not a promise anyone restated: a definition with
+> no usages participates in no coverage claim, and silent absence of a *usage* is already
+> hard-gated by the totality oracle. The row above now states the shipped projector rule and
+> cites live tests. If definition-level inventory ever matters, it gets its own filed item.
 
 > **Contract disposition — REQ-CL-05: `PARTIAL`** (SOURCE-IDENTITY Item 3). The dedup-mint
 > clause `stands`; the producer-wiring clause `stands` (cell C24 owns the computed-source
@@ -267,6 +266,43 @@ indirectly via the emitted verifier.
 | REQ-CON-09 | Re-sealing after a stencil edit SHALL recompute only the `PackageContract` (graph-free) | `test_exact_route_seal_step9.py` | PASS |
 | REQ-CON-10 | The `seal` subcommand SHALL require an already-sealed package (an existing `ModelContract`) | `test_exact_route_seal_step9.py` | PASS |
 
+### CS
+
+**Constraint-Semantics epic gates** — CONSTRAINT-SEMANTICS Items 3, 8, 9
+
+Filed 2026-08-14 at ELABORATE-FIRST cutover step 4, under the owner-authorized
+`[CONSTRAINT-GATES-UNTAGGED]` ruling (BACKLOG; minting assigned to this step so the matrix is
+touched once). Requirement texts are `[INHERITED]` distillations of the items' archived Success
+Criteria — `.project/completed/20260813_constraint-coverage-policy/` (Item 3),
+`.project/completed/20260813_unit-lane-port-metadata/` (Item 8),
+`.project/completed/20260813_derivative-upgrade-held-intent/` (Item 9). Every cited test was run
+before its row was filed (44 conformance/unit licensed with zero license-skip lines, 14 under the
+`execution` marker; the run is recorded in the recovery plan's step-4 completion record).
+
+Two deliberate scope notes, so absence reads as decision rather than drift:
+
+- **Item 5** mints no new rows: its population and witness gates are already traced by
+  REQ-CL-04 and REQ-EXT-09 (filed at Item 2's re-anchor — `catf_mfe_d5` ships all 65 rows, the
+  authored population is total by identity), its ruled all-65 table is an owner decision record
+  rather than a testable promise (`20260813_catf-constraint-policy-acceptance/owner-disposition.md`),
+  and the derivative obligations it seeded were restated by Item 9 and are rowed below.
+- **Item 3's canonical-runtime halves** (the six TEAx dispositions, keep-for-boundary vs the
+  feed-strategy opt-in, evidence durability) are pinned in the TEAx tree
+  (`teax/packages/teax-simkit` — `test_headline_vocabulary.py`, `test_partial_coverage_policy.py`,
+  `test_constraint_evidence_durability.py`) and are not rowed here: this matrix cites only tests
+  that exist in this repository. The codegen-side report halves are rowed.
+
+| REQ ID | Requirement | Test File | Status |
+|--------|-------------|-----------|--------|
+| REQ-CS-01 | The report SHALL distinguish the six coverage states, each pinned by an outcome no other state satisfies; the sixth state (unconstrained) is the absence of a report; the retired `all_satisfied` token refuses with a named error | `test_constraint_coverage_matrix.py::test_each_state_is_pinned_by_something_no_other_state_satisfies`, `::test_the_sixth_state_is_the_absence_of_a_report` (execution marker), `test_report_precedence.py::test_the_headline_literal_refuses_the_retired_token` | PASS |
+| REQ-CS-02 | An outranking headline SHALL never hide coverage: a `violation` report still states its coverage into the durable case record, `indeterminate` outranks `partial_coverage` end to end, and inconsistent coverage arithmetic refuses at construction | `test_constraint_coverage_matrix.py::test_violation_states_its_coverage_all_the_way_into_the_case_record`, `::test_indeterminate_outranks_partial_coverage_end_to_end` (execution marker), `test_report_precedence.py::test_a_violation_still_states_its_coverage`, `::test_coverage_account_rejects_inconsistent_arithmetic` | PASS |
+| REQ-CS-03 | Full satisfaction SHALL be unclaimable while any applicable asserted gate is unassessed; a descriptive-only model is not silent, and the two `not_assessed` shapes are told apart by the coverage account | `test_constraint_coverage_matrix.py::test_full_satisfaction_is_unclaimable_when_anything_was_unassessed`, `::test_a_descriptive_only_model_is_no_longer_silent`, `::test_the_two_not_assessed_models_are_still_told_apart_by_the_account`, `test_constraint_coverage_characterization.py::test_partial_assessment_does_not_read_as_full_satisfaction` (execution marker) | PASS |
+| REQ-CS-04 | Authored unit text SHALL reach ports and entry points exactly — the A9 constraint formals mint `m³/s` and `Dimensionless`, the radius-derivation design attributes mint `m` — never normalized, never dropped | `test_unit_lane_port_metadata.py::test_a9_constraint_formals_preserve_authored_units`, `::test_radius_derivation_inputs_preserve_authored_units` | PASS |
+| REQ-CS-05 | Unit agreement across a shared source's consumers SHALL project one entry point; unit disagreement SHALL fail closed — proven on all four arms (constraint-formal × calc usage, computed attribute × calc usage) | `test_unit_lane_port_metadata.py::test_constraint_and_calculation_unit_agreement_projects_one_entry`, `::test_constraint_and_calculation_unit_disagreement_refuses`, `::test_computed_and_calculation_unit_agreement_projects_one_entry`, `::test_computed_and_calculation_unit_disagreement_refuses` | PASS |
+| REQ-CS-06 | `PortMetadata.unit` and `EntryPoint.unit_text` SHALL be identical across the live, in-place-snapshot, and relocated-snapshot routes | `test_unit_lane_port_metadata.py::test_live_in_place_and_relocated_routes_preserve_unit_metadata` | PASS |
+| REQ-CS-07 | The gated derivative's accounting identity SHALL close machine-checkably — `65 = 56 carriers + 9 named deletions` — with an unmatched carrier, an unauthorized deletion, and a misused `renamed_from:` each failing closed | `test_gated_manifest_identity.py::test_the_identity_closes`, `::test_every_deletion_cites_an_authorizing_table_row`, `::test_an_unmatched_carrier_fails_closed`, `::test_a_deletion_without_an_authorizing_row_fails`, `::test_a_renamed_from_claimed_by_a_deletion_fails` | PASS |
+| REQ-CS-08 | Each of the 27 A5/A6 radius derivations SHALL resolve per-occurrence to its own in-source initializer and basis comment; a stripped or unfindable layer is named as a problem, never a skip and never satisfied by a sibling | `test_gated_manifest_identity.py::test_every_derive_instead_row_has_its_derivation_in_source`, `::test_stripping_one_layers_documentation_names_that_layer`, `::test_removing_one_layers_initializer_names_that_layer`, `::test_an_unfindable_owner_block_is_a_problem_not_a_skip`, `::test_an_ambiguous_owner_block_is_a_problem_not_a_skip`, `::test_a_derivation_missing_its_basis_comment_fails_closed`, `::test_a_missing_derivation_fails_closed` | PASS |
+
 ### DM
 
 **Data Models** — Component C01 — [reference/09-data-models.md](reference/09-data-models.md)
@@ -297,7 +333,7 @@ not in the matrix. Every cited test was run before its row was written; the run 
 | REQ-DIAG-01 | A diagnostic's severity is fixed at construction from the writer table and never recomputed by a reader-side `kind → severity` lookup | `test_upstream_pins.py` (pins the upstream schema string; the construction rule itself lives in `agentic-mbse constraint_facts.py:78-95,230-233`) | PARTIAL *(the kept codegen test pins the pinned-upstream contract, not the no-reader-side-table property. That property is proved by absence — no reader-side mapping exists in `src/` — which no codegen test asserts. A reader-side table reintroduced upstream would not fail this row's test.)* |
 | REQ-DIAG-02 | A blocking diagnostic halts generation before lowering, on both the live and snapshot routes, naming every blocking diagnostic | `test_extraction_diagnostic_screen.py` | PASS |
 | REQ-DIAG-03 | An advisory diagnostic is rendered and generation continues; advisory rendering cannot swallow the blocking halt | `test_extraction_diagnostic_screen.py` | PASS |
-| REQ-DIAG-04 | Severity skew fails closed in both directions | — *(discharged by construction — no **diagnostic** severity crosses a process boundary on disk; the v6 envelope carries no diagnostic `severity` field and `constraint_facts.parse` has no caller in `src/` or `tests/`. Corrected at Item 7's audit, 2026-08-14: the envelope *does* carry a **disposition** `severity` — `snapshot/instance_graph.py:724,759,803` — which is a different field with a different writer and is not what this row is about)* | UNTESTED *(the failure mode is impossible rather than guarded here, so there is nothing to assert. Recorded as UNTESTED rather than PASS because no kept test would fail if the v6 envelope started carrying diagnostic severity again.)* |
+| REQ-DIAG-04 | Severity skew fails closed in both directions | `test_envelope_severity_tripwire.py::test_the_only_severity_on_disk_is_the_disposition_severity` (across every committed v6 snapshot, the exact set of `severity`-keyed JSON paths is the **disposition** severity at `constraint_usages[].disposition.severity` — `snapshot/instance_graph.py:724,759,803`, a different field with a different writer; any diagnostic severity surfacing on disk adds a path and flips red) | PASS *(the failure mode was "impossible rather than guarded" at Item 7's audit — the missing tripwire was added at cutover step 4, converting the recorded UNTESTED into a guarded boundary. `constraint_facts.parse` still has no caller in `src/` or `tests/`; that half remains an absence, guarded upstream.)* |
 
 ### DRA
 
@@ -335,7 +371,7 @@ not in the matrix. Every cited test was run before its row was written; the run 
 
 | REQ ID | Requirement | Test File | Status |
 |--------|-------------|-----------|--------|
-| REQ-EPC-01 | Every entry point SHALL be classified as exactly one EntryPointType: {`DESIGN_ATTRIBUTE`,... | `test_exact_pipeline_context.py::test_the_live_and_v6_contexts_agree_on_the_public_entry_point_surface`, `test_exact_projection_aggregation.py::test_every_member_occurrence_is_its_own_entry_point` | PARTIAL *(audit-7 F2: the heirs prove route parity and per-occurrence minting, not that every entry point lands in exactly one of the three types; a misclassified-but-route-consistent type would not fail them)* |
+| REQ-EPC-01 | Every entry point SHALL be classified as exactly one EntryPointType: {`DESIGN_ATTRIBUTE`,... | `test_projection_wiring_contract.py::test_the_classification_is_a_closed_three_value_set`, `::test_every_emitted_entry_point_carries_exactly_one_classification` (membership totality over every committed snapshot), `::test_fusion_tea_classification_matches_the_authored_oracle_exactly` (authored 27-key oracle covering all three classes — closes the audit-7 F2 misclassification gap); route parity remains separately held by `test_exact_pipeline_context.py::test_the_live_and_v6_contexts_agree_on_the_public_entry_point_surface` | PASS |
 | REQ-EPC-02 | Classification SHALL follow strict precedence: `DESIGN_ATTRIBUTE` > `LIBRARY_DEFAULT` > `... | — *(subject deleted — ledger L-131)* | RETIRED |
 | REQ-EPC-03 | `default_value` SHALL be converted to `float` at classification time; if conversion fails... | — *(subject deleted — ledger L-131)* | RETIRED |
 | REQ-EPC-04 | Every classified entry point SHALL be assigned a `param_group` via ParameterGroupDeriver.... | — *(subject deleted — ledger L-131)* | RETIRED |
@@ -373,9 +409,9 @@ not in the matrix. Every cited test was run before its row was written; the run 
 |--------|-------------|-----------|--------|
 | REQ-GA-01 | `execution_order` SHALL be a valid topological sort: no module reads from a module that e... | `test_elaboration_projection.py::test_projection_is_topological_and_every_input_is_covered` | PASS |
 | REQ-GA-02 | If a cycle exists, `_unified_topological_sort` SHALL raise `CircularDependencyError` list... | — *(subject deleted — ledger L-152)* | RETIRED |
-| REQ-GA-03 | Every `module_output` `producer_channel` SHALL resolve to a declared output channel. | `test_elaboration_projection_one_way.py::test_graph_validation_rejects_missing_occurrence_and_typed_producer_cycle` | PARTIAL *(audit-7 F2: the cited arms exercise a missing occurrence and a typed producer cycle, not an unresolvable producer channel; the specific violation this row names has no failing arm)* |
+| REQ-GA-03 | Every `module_output` `producer_channel` SHALL resolve to a declared output channel. On the public route this holds by construction — the sealed context re-projects, and projection mints channels only from resolved producer edges — so enforcement lives at the semantic layer. | `test_projection_wiring_contract.py::test_an_absent_producer_is_refused_specifically_at_both_layers` (deleting a consumed producer is refused `SI_EDGE_DANGLING` by both `InstanceGraph.validate()` and `project()` — the failing arm audit-7 F2 named as missing), beside `test_elaboration_projection_one_way.py::test_graph_validation_rejects_missing_occurrence_and_typed_producer_cycle` | PASS |
 | REQ-GA-04 | A module SHALL NOT depend on itself, even if its own output channel name appears in its i... | `test_elaboration_projection_one_way.py::test_graph_validation_rejects_missing_occurrence_and_typed_producer_cycle` | PASS |
-| REQ-GA-05 | The returned `ComputationGraph` SHALL contain exactly the reviewed field set: sorted `modules`, `entry_point_groups`, `execution_order`, in-memory `fallback_entry_points` (REQ-GA-08), serialized `output_aliases` (REQ-DM-09); any field-set change is a deliberate reviewed rev (the exact-set test flips red) | — *(the exact-field-set pin retired with `test_graph_assembly.py` (ledger L-152) and has no recorded replacement; no kept node asserts the `ComputationGraph` field set)* | UNTESTED |
+| REQ-GA-05 | The returned `ComputationGraph` SHALL contain exactly the reviewed field set: `modules`, `entry_point_groups`, `execution_order`, serialized `output_aliases` (REQ-DM-09), and the two `exclude=True` in-memory artifacts `fallback_entry_points` (REQ-GA-08) and `constraint_catalog`; any field-set change is a deliberate reviewed rev (the exact-set test flips red). *Field list refreshed at step 4 — the old row predated `constraint_catalog`; the serialized/in-memory split is now pinned explicitly because committed baselines depend on it.* | `test_data_models.py::test_computation_graph_field_set_is_the_reviewed_boundary` | PASS |
 | REQ-GA-06 | `execution_order` list SHALL equal `[m.name for m in modules]` (names match module orderi... | `test_exact_target_selection.py::test_selection_renumbers_execution_order_without_gaps` | PASS |
 | REQ-GA-07 | Static: `_unified_topological_sort` source uses `deque`, `popleft()`, and Kahn-pattern identifiers (`in_degree`, `successors`); O(V + E) complexity is asserted structurally, not measured | — *(subject deleted — ledger L-152)* | RETIRED |
 | REQ-GA-08 | A two-layer params-coverage check SHALL exist: a pure collector `collect_uncovered_params(graph)` returning the wired fell-through-valueless violations (sibling to REQ-GA-03), and an always-strict generation boundary raising V11 on any violation. `ComputationGraph.fallback_entry_points` (in-memory, `exclude=True`) feeds it | `test_uncovered_params.py`, `test_data_models.py` | PASS |
@@ -388,7 +424,7 @@ not in the matrix. Every cited test was run before its row was written; the run 
 |--------|-------------|-----------|--------|
 | REQ-GEN-01 | Pipeline YAML generation SHALL consume only `ComputationGraph` -- no extraction models. | `test_generation_boundary.py` | PASS |
 | REQ-GEN-02 | Every CalcUsage `PipelineModule` renders non-empty wrapper code in memory (no filesystem or exactly-one-file check; FORMULA/aggregation modules excluded) | `test_elaboration_generation_boundary.py::test_exact_projection_renders_real_pipeline_and_registry`, `test_exact_route_generated_package.py::test_both_routes_generate_the_same_package_files` | PASS |
-| REQ-GEN-03 | Multi-output modules (2+ outputs) SHALL get a `MultiOutput` schema in `schemas/`; single-... | — *(the MultiOutput-vs-single-output schema rule retired with `test_gen_schemas.py` (ledger L-149, no recorded replacement); the rendered shape survives only inside the byte-identical package comparison)* | UNTESTED |
+| REQ-GEN-03 | Multi-output modules (2+ outputs) SHALL get a `MultiOutput` schema in `schemas/`; single-... | `test_output_schema_contract.py::test_multi_output_definitions_get_exactly_one_schema_and_single_output_get_none` (public `run_codegen` from the committed fusion_tea v6 snapshot; expected schema set derived from the same graph; replacement filed at step 4 for the L-149 retirement) | PASS |
 | REQ-GEN-04 | FULLY_COMPILABLE calc defs SHALL produce auto-implemented stencils; all others SHALL prod... | `test_generation_boundary.py`, `tests/unit/test_stencils.py` | PASS |
 | REQ-GEN-05 | Each ParameterGroup SHALL produce one JSON template (`inputs/`) and one Pydantic schema (... | `test_exact_group_identity.py`, `test_generated_schema_importable.py::test_each_params_schema_imports_and_validates_its_own_json` | PASS |
 | REQ-GEN-06 | SysML type mapping (`Real`->`float`, `Integer`->`int`, `Boolean`->`bool`, `String`->`str`... | `test_type_mapping_consolidation.py` | PASS |
@@ -543,10 +579,10 @@ read as shipped coverage with no disclosure, unlike its CA sibling.)
 | REQ ID | Requirement | Test File | Status |
 |--------|-------------|-----------|--------|
 | REQ-OSR-01 | Single-output modules SHALL use `RootModel[float]` with `field_name="root"` | `tests/integration/test_full_pipeline_exact_route.py`, `tests/unit/test_computed_attr_generation.py` | PASS |
-| REQ-OSR-02 | Multi-output modules (2+ outputs) SHALL generate a named `MultiOutput` subclass | — *(the MultiOutput subclass rule retired with `test_gen_schemas.py` (ledger L-149, no recorded replacement))* | UNTESTED |
-| REQ-OSR-03 | Generated MultiOutput schema field names SHALL match `PipelineModule.outputs[i].field_name` (template-fidelity; both sides are drawn from the same graph, not independently verified against the original SysML `output_attributes` names) | — *(the field-name fidelity check retired with `test_gen_schemas.py` (ledger L-149, no recorded replacement))* | UNTESTED |
+| REQ-OSR-02 | Multi-output modules (2+ outputs) SHALL generate a named `MultiOutput` subclass | `test_output_schema_contract.py::test_each_schema_is_a_named_multioutput_subclass_with_exact_required_fields` (imports the generated bytes as pydantic; asserts the `{CalcDefName}Output` class and its `MultiOutput` base) | PASS |
+| REQ-OSR-03 | Generated MultiOutput schema field names SHALL match `PipelineModule.outputs[i].field_name` (template-fidelity; both sides are drawn from the same graph, not independently verified against the original SysML `output_attributes` names) | `test_output_schema_contract.py::test_each_schema_is_a_named_multioutput_subclass_with_exact_required_fields` (exact ordered field-name comparison against the graph's declared outputs) | PASS |
 | REQ-OSR-04 | SysML types SHALL map to Python types per the type mapping table | `test_type_mapping_consolidation.py` | PASS |
-| REQ-OSR-05 | Output fields on `MultiOutput` MUST NOT have `default=...` values | — *(the no-defaults check retired with `test_gen_schemas.py` (ledger L-149, no recorded replacement))* | UNTESTED |
+| REQ-OSR-05 | Output fields on `MultiOutput` MUST NOT have `default=...` values | `test_output_schema_contract.py::test_each_schema_is_a_named_multioutput_subclass_with_exact_required_fields` (every generated output field must be pydantic-required) | PASS |
 | REQ-OSR-06 | Aggregation and computed-attribute modules SHALL always be single-output (`"root"`) | `tests/unit/test_computed_attr_generation.py`, `tests/unit/test_aggregation_generation.py` | PASS |
 | REQ-OSR-07 | Output channels SHALL use PQN format via `get_channel_name()` | `test_naming_conventions.py`, `test_elaboration_identity_collisions.py::test_output_and_expression_keys_do_not_collapse_on_rendered_name` | PASS |
 
@@ -691,13 +727,13 @@ read as shipped coverage with no disclosure, unlike its CA sibling.)
 
 | REQ ID | Requirement | Test File | Status |
 |--------|-------------|-----------|--------|
-| REQ-SR-01 | Signature comparison SHALL use two-level matching: type-level (required) then field-level... | — *(the two-level signature comparison retired with `test_gen_stencils.py` (ledger L-150, no recorded replacement))* | UNTESTED |
-| REQ-SR-02 | Field comparison SHALL be order-independent (sorted) | — *(the order-independent field comparison retired with `test_gen_stencils.py` (ledger L-150, no recorded replacement))* | UNTESTED |
+| REQ-SR-01 | Signature comparison SHALL use two-level matching: type-level (required) then field-level (referenced fields a **subset** of graph-declared inputs; amended from exact equality `[AGENT] (ratified by owner, 2026-08-14)` — equality made the generator's own output fail its own check and churn, doc 23) | `test_smart_regen_behavior.py::test_matching_interface_is_preserved_with_edits_intact`, `::test_return_type_change_regenerates_and_backs_up`, `::test_changed_input_field_set_regenerates` (behavioral, through public `run_codegen`; replaces the retired L-150 static tests) | PASS |
+| REQ-SR-02 | Field comparison SHALL be order-independent: reference order alone never counts as an interface change (set semantics) | `test_smart_regen_behavior.py::test_reference_order_alone_never_regenerates` | PASS |
 | REQ-SR-03 | `should_regenerate_stencil()` SHALL implement the 6-case decision tree (Item 5 split the unparseable leaf: preserve-on-transient / preserve-non-empty / regenerate-empty) | `tests/unit/test_stencils.py::TestSmartRegenStubUpgrade` (four of the six leaves: stub-upgrade, handwritten-preserved, auto-impl-preserved, stub-preserved-when-not-compilable) | PASS |
 | REQ-SR-04 | Stub upgrade SHALL require all 3 conditions: signature match, `NotImplementedError` prese... | `tests/unit/test_stencils.py::TestSmartRegenStubUpgrade::test_stub_upgraded_when_fully_compilable` | PASS |
 | REQ-SR-05 | Backup SHALL be created before every regeneration or upgrade | `tests/unit/test_stencils.py::TestSmartRegenStubUpgrade::test_backup_created_before_regen_through_real_stencil_path` | PASS |
-| REQ-SR-06 | All module types (including aggregation and FORMULA) SHALL route through the single unified `_generate_stencils()` smart-regen code path (static analysis; not a runtime proof that aggregation/FORMULA are always regenerated in practice) | — *(the single-unified-path static analysis retired with `test_gen_stencils.py` (ledger L-150, no recorded replacement))* | UNTESTED |
-| REQ-SR-07 | Static: `_generate_stencils` source contains a `preserve_handwritten` + `output_path.exists()` branch whose body does not call `should_regenerate_stencil` (the skip behavior is not executed) | — *(the preserve-branch static check retired with `test_gen_stencils.py` (ledger L-150, no recorded replacement))* | UNTESTED |
+| REQ-SR-06 | Every stencil-bearing module kind (calculation, formula, aggregation) SHALL ride the same smart-regen preservation path (amended 2026-08-14 from the static single-path wording; the old "synthetic modules are always regenerated in practice" claim is false at the exact route — doc 23) | `test_smart_regen_behavior.py::test_every_stencil_bearing_module_kind_is_preserved` (a marker planted in every `solar_battery_d5` impl survives a smart rerun; anti-vacuity pins all three kinds present) | PASS |
+| REQ-SR-07 | `--preserve-handwritten` SHALL skip ALL existing handwritten files without comparison (amended 2026-08-14 from the static source check to the behavior it guarded, matching doc 23's own wording) | `test_smart_regen_behavior.py::test_preserve_handwritten_is_a_blanket_skip_without_comparison` (a signature-garbled impl survives byte-identical, no backup written) | PASS |
 
 ### SVM
 
@@ -767,40 +803,24 @@ read as shipped coverage with no disclosure, unlike its CA sibling.)
 
 ## Untested Requirements
 
-Ten rows describe live behaviour that nothing in the tree proves. Nine of them got there the same
-way: the only pin was a conformance module the Item 7 retirement deleted, and the deletion ledger
-recorded no replacement. This is the retirement's real coverage debt, listed rather than papered over
-with a citation to a test that proves something else.
+**None.** The retirement's coverage debt — nine rows whose only pin was a module the Item 7
+retirement deleted with no recorded replacement (`test_gen_schemas.py` L-149 → REQ-GEN-03,
+REQ-OSR-02/03/05; `test_gen_stencils.py` L-150 → REQ-SR-01/02/06/07; `test_graph_assembly.py`
+L-152 → REQ-GA-05) — was closed at ELABORATE-FIRST cutover step 4 (2026-08-14) with behavioral
+replacements through the public route: `test_output_schema_contract.py`,
+`test_smart_regen_behavior.py`, and the `test_data_models.py` field-set pin. The tenth,
+REQ-DIAG-04's impossible-rather-than-guarded state, was converted into a guarded boundary by
+`test_envelope_severity_tripwire.py` the same day. Each row's cell carries its replacement.
 
-The tenth is a different kind and is recorded separately below.
+Closing the SR rows surfaced and cured a real defect: exact-set field comparison made the
+generator's own output fail its own preservation check on defs with declared-but-unused inputs
+(perpetual churn, handwritten edits stubbed over). The cure is the subset rule in
+`generation/preservation.py` — `[AGENT] (ratified by owner, 2026-08-14)`, recorded at REQ-SR-01
+and doc 23.
 
-All nine trace to two deleted modules:
-
-- **`test_gen_schemas.py`** (ledger L-149) — REQ-GEN-03, REQ-OSR-02, REQ-OSR-03, REQ-OSR-05.
-  The output-schema rules: when a module gets a named `MultiOutput` subclass rather than
-  `RootModel[float]`, that its field names track `ModuleOutput.field_name`, and that output
-  fields carry no defaults. The generator still applies all three; the rendered result is
-  compared byte-for-byte between routes (`test_exact_route_generated_package.py`), but no kept
-  node asserts the rule, so a rule change that moved both routes together would pass.
-- **`test_gen_stencils.py`** (ledger L-150) — REQ-SR-01, REQ-SR-02, REQ-SR-06, REQ-SR-07.
-  Smart-regen internals: two-level signature comparison, order-independent field comparison,
-  and the two static checks over `_generate_stencils`. The stub-upgrade and backup leaves did
-  survive, in `tests/unit/test_stencils.py::TestSmartRegenStubUpgrade` (REQ-SR-03/04/05).
-
-And one from the graph-assembly deletion:
-
-- **REQ-GA-05** — the exact-`ComputationGraph`-field-set pin retired with
-  `test_graph_assembly.py` (ledger L-152). A field added to or removed from the graph now
-  passes silently instead of flipping a test red.
-
-The tenth, filed 2026-08-14 and **not** retirement debt:
-
-- **REQ-DIAG-04** (severity skew fails closed) — the failure mode is impossible on this product
-  rather than guarded: no severity crosses a process boundary on disk, so there is nothing for a
-  test to assert. It is UNTESTED and not PASS because no kept test would fail if the v6 envelope
-  started carrying a `severity` field again. The upstream exact-equality guards still exist in
-  `agentic_mbse.sysml.constraint_facts` for callers that parse serialized facts; codegen does not
-  exercise them.
+The one remaining non-PASS live row is REQ-DIAG-01 (PARTIAL) — a recorded deliberate grade: its
+gap is a code-shape absence claim whose only codegen-side test would be the retired
+static-inspection style, and the construction rule is pinned upstream.
 
 REQ-PGD-06, previously the matrix's single UNTESTED row, is now RETIRED: the deriver it
 describes was deleted (ledger L-160).

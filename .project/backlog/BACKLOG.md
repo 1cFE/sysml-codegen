@@ -448,11 +448,18 @@ rulings (owner-disposition.md, ruling item 5, **[OWNER 2026-08-13]**) choose vis
 bases precisely because the alternative hides causality in study harness config. Recorded so the
 bet doesn't quietly die.
 
-### [CONSTRAINT-GATES-UNTAGGED] The Items 3/5/8/9 constraint-semantics gates have no REQ tags, so no matrix row can trace them — P2, **OWNER-RULED 2026-08-14: minting AUTHORIZED, assigned to ELABORATE-FIRST cutover step 4** (filed 2026-08-14 at CONSTRAINT-SEMANTICS Item 7's audit)
+### ~~[CONSTRAINT-GATES-UNTAGGED] The Items 3/5/8/9 constraint-semantics gates have no REQ tags~~ ✅ COMPLETE 2026-08-14 — REQ-CS family minted at ELABORATE-FIRST cutover step 4 (filed 2026-08-14 at CONSTRAINT-SEMANTICS Item 7's audit; owner-ruled same day)
+
+**Discharged 2026-08-14 at cutover step 4, per the ruling below:** the REQ-CS family (8 rows,
+Items 3/8/9, every cited test run before filing) is live in `verification-matrix.md` §CS. Item 5
+mints no rows by recorded decision — its gates are traced by REQ-CL-04/REQ-EXT-09 and its ruled
+table is an owner decision record; the TEAx-side pins are named in the family header as
+cross-repo evidence. The matrix-rows SC box is ticked in both the epic archive and the item
+archive with dated amendments. The symlink residual (SC2/SC3) is untouched — it resolves at the
+phase-D merge, not here.
 
 **Ruling [AGENT] (ratified by owner, 2026-08-14):** mint the REQ family during the cutover
 resumption's step-4 matrix work (one matrix pass, the new family lands with the revised rows).
-Item 7's SC2/SC5 unticked boxes close when the rows exist.
 
 This is the named vehicle for the half of epic SC5 that Item 7 parked rather than invented.
 
@@ -474,7 +481,8 @@ than by the matrix, and record that as the matrix's stated boundary. Do not leav
 untraced gate that nobody decided to leave untraced is how the matrix drifted the first time.
 
 Recount discipline applies to whichever route is taken (memory `verification-matrix-drift-modes`).
-Current baseline after Item 7: **280 rows / 136 PASS / 33 families**.
+Baseline after the step-4 pass (2026-08-14): **288 rows / 156 PASS / 1 PARTIAL / 0 UNTESTED /
+34 families / 64 kept test files**.
 
 ### [MATRIX-EPIC-SURFACE-ROWS] Add verification-matrix rows for the three uncovered lifecycle surfaces — P3 `[OWNER]` (ticketed 2026-07-24)
 
@@ -494,8 +502,9 @@ required portability pair (REQ-SNAP-21/22) and registered these three as candida
    (Item 7's tests).
 
 Discipline: matrix recount per memory `verification-matrix-drift-modes` (index totals +
-per-family counts, not just the summary block); current baseline **280 rows / 136 PASS / 33
-families** after CONSTRAINT-SEMANTICS Item 7 filed the REQ-DIAG family (2026-08-14).
+per-family counts, not just the summary block); current baseline **288 rows / 156 PASS / 34
+families** after the ELABORATE-FIRST step-4 pass closed all UNTESTED rows and filed the REQ-CS
+family (2026-08-14).
 
 *The previous line here read "276 rows / 275 PASS / 32 families." The row and family counts were
 right for their date; **"275 PASS" was never true** — the matrix's own summary read 133 at the time

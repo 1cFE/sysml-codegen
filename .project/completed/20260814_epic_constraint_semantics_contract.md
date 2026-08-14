@@ -1235,11 +1235,16 @@ instead of the superseded one.
       when PROVENANCE has to carry the disposition instead (inline-predicate form), with the
       B1–B5 worked case cited (Item 5 close obligation). *(verified at audit 2026-08-14, including
       by execution: a bindings-form marker reaches the domain under a licensed elaboration probe)*
-- [ ] Verification-matrix rows exist for the constraint-semantics gates landed in Items 2–5, filed
-      in one reconciliation pass with the index recount done (Item 5 residual A-8). *(**NOT TICKED
-      at audit 2026-08-14** — recount reproduced (280/136/3/131/10/0, 33 families) and both count
-      blocks corrected; REQ-DIAG filed. Items 3/5/8/9 carry zero REQ tags, so their rows need tags
-      minted first — owner call, vehicle `[CONSTRAINT-GATES-UNTAGGED]` in BACKLOG. `audit.md` A-2)*
+- [x] Verification-matrix rows exist for the constraint-semantics gates landed in Items 2–5, filed
+      in one reconciliation pass with the index recount done (Item 5 residual A-8). *(**TICKED
+      2026-08-14 at ELABORATE-FIRST cutover step 4** — the owner-authorized
+      `[CONSTRAINT-GATES-UNTAGGED]` minting landed the REQ-CS family (8 rows, Items 3/8/9, every
+      cited test run first) in `verification-matrix.md` §CS, with Item 5's mapping to
+      REQ-CL-04/REQ-EXT-09 and the TEAx-side pins recorded as deliberate scope notes in the family
+      header. Filed in the same step-4 matrix pass as the replacement-row closures; recount in the
+      step-4 completion record. The earlier NOT-TICKED state — recount reproduced
+      (280/136/3/131/10/0, 33 families), both count blocks corrected, REQ-DIAG filed, tags parked
+      as an owner call — is preserved in `audit.md` A-2 and this file's git history.)*
 - [x] Documentation checks and `git diff --check` pass in every touched repository. *(re-run at
       audit 2026-08-14: `2070 passed, 34 skipped, 79 deselected`, zero `no live syside license`
       lines; `git diff --check` clean in all three repos)*

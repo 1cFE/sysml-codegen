@@ -73,7 +73,12 @@ resolved graph through the public offline route. Sources: `.project/CURRENT_WORK
 - [x] **[INFERRED] C19 legacy deletion.** The supplied-value tripwire and its mechanism test are
   deleted with the cutover mechanism. Source: the agent-authored Item-7 deletion scope at
   `.project/backlog/epic_elaborate_first_architecture.md:427-466`.
-- [x] **[INFERRED] Closed API and deletion surface.** The public-API census in R3 and cutover census
+- [x] **[INFERRED] Closed API and deletion surface.** *(Unticked at step-4 start 2026-08-14 per
+  the rev-2 brief; RETICKED the same day at step-4 completion: every replacement row holds an
+  honest final disposition — nine L-149/L-150/L-152 rows PASS on behavioral replacements,
+  REQ-DIAG-04 guarded, REQ-EPC-01/REQ-GA-03 PASS with their failing arms, REQ-CL-03 amended per
+  the usage-domain ruling — and the recount closed at 288/156/1/131/0/0, 34 families, 64 kept
+  files with zero missing cited files.)* The public-API census in R3 and cutover census
   in R6 are closed with no undecided row. Every R4 responsibility and Item-6 transitional dual is
   deleted, migrated, or retained under one nonlegacy owner; every deleted behavioral oracle has an
   independent one-to-one replacement; static gates prove no residue.

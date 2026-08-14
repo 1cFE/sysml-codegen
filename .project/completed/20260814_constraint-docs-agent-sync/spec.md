@@ -78,13 +78,15 @@ The epic section's six checkboxes are the acceptance frame, adopted unchanged
       B1–B5 worked case cited (Item 5 close obligation).
       → **MET.** Stated as a decision table in both authoring repos plus the skill; B1–B5 and the
       rule-3 detector cited, not rewritten.
-- [ ] Verification-matrix rows exist for the constraint-semantics gates landed in Items 2–5, filed
+- [x] Verification-matrix rows exist for the constraint-semantics gates landed in Items 2–5, filed
       in one reconciliation pass with the index recount done (Item 5 residual A-8).
-      → **NOT TICKED — partially met.** The recount is done and both count blocks were corrected
-      (the matrix summary and BACKLOG:464-466 were each falsified by it). The one tag-backed gap,
-      the REQ-DIAG family, is filed with every cited test run first. **Items 3, 5, 8 and 9 carry zero
-      REQ tags**, so their gates have nothing to file a row against without minting tags — a
-      requirements decision this item has no authority to make. Owner call needed.
+      → **TICKED 2026-08-14 at ELABORATE-FIRST cutover step 4.** The owner authorized the tag
+      minting (`[CONSTRAINT-GATES-UNTAGGED]`, assigned to step 4) and the REQ-CS family landed —
+      8 rows for Items 3/8/9 with every cited test run first, Item 5 mapped to the existing
+      REQ-CL-04/REQ-EXT-09 rows, and the TEAx-side pins recorded as deliberate scope notes
+      (`verification-matrix.md` §CS). The prior partially-met state (recount done, both count
+      blocks corrected, REQ-DIAG filed, tags parked as an owner call) is preserved in this file's
+      git history and `audit.md` A-2.
 - [x] Documentation checks and `git diff --check` pass in every touched repository.
       → **MET.** `git diff --check` clean in all three; licensed suite `2070 passed` with **zero**
       `no live syside license` lines; collect clean at 2104/2183.

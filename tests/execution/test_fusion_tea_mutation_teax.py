@@ -265,6 +265,109 @@ def test_c2_mutating_thermal_efficiency_moves_exactly_lcoe_and_recirc(sealed) ->
 
 
 # ---------------------------------------------------------------------------
+# gain = 100 — the narrow-correction step-4 proof (rev-2 brief)
+#
+# The entry the original fan-out forensics was about: one shared plant `gain`
+# attribute feeding two calculations and the viability constraint. The channel
+# and its modelled default are discovered from the graph, not hardcoded; the
+# constraint's runtime consumption is proved through the report's observed
+# values and margin, and separately by driving the verdict across the
+# eta*G >= threshold knee. Vocabulary is the landed six-state contract —
+# `full_satisfaction` / `violation` on the report, never `all_satisfied`.
+# ---------------------------------------------------------------------------
+
+GAIN_ENTRY = "hif_plant_pkg__hif_plant__gain"
+VIABILITY_RESPONSE = "hif_plant_pkg__hif_plant__viability__81ddf10fb1d1749b"
+
+
+def _gain_entry_point(graph):
+    [entry] = [
+        ep
+        for group in graph.entry_point_groups
+        for ep in group.parameters
+        if ep.qualified_name == GAIN_ENTRY
+    ]
+    return entry
+
+
+def _viability_result(evidence):
+    [result] = [
+        row
+        for row in evidence.report["results"]
+        if row["constraint_id"] == VIABILITY_RESPONSE
+    ]
+    return result
+
+
+def test_gain_feeds_exactly_two_calcs_and_the_viability_constraint(sealed) -> None:
+    """Structural leg: the every-and-only consumer set, constraint included."""
+    graph = sealed["graph"]
+    fed = consumer_ports(graph, GAIN_ENTRY)
+
+    assert fed == {
+        ("hif_plant_pkg__hif_plant__lcoe_calc", "gain_in"),
+        ("hif_plant_pkg__hif_plant__recirc_calc", "gain_in"),
+        (VIABILITY_RESPONSE, "gain_in"),
+    }
+    assert len(all_ports(graph) - fed) == len(all_ports(graph)) - 3
+    assert not any(port[1] == "gain_in" for port in all_ports(graph) - fed)
+
+    entry = _gain_entry_point(graph)
+    assert entry.default_value == hand.GAIN, (
+        "the graph's modelled default for gain is the mutation baseline"
+    )
+
+
+def test_gain_100_moves_exactly_its_consumers_and_the_constraint_observes_it(
+    sealed,
+) -> None:
+    """Runtime leg at exactly 100: both calc outputs move by hand arithmetic,
+    everything else is byte-still, and the constraint demonstrably consumed
+    the injected value — its observed gain and margin move while its verdict
+    stays satisfied (0.35 * 100 = 35 clears the threshold of 10)."""
+    baseline = _evaluate(sealed, {})
+    mutated = _evaluate(sealed, {GAIN_ENTRY: 100.0})
+
+    assert _movers(baseline, mutated) == {LCOE_CHANNEL, RECIRC_CHANNEL}
+    assert mutated.outputs[LCOE_CHANNEL] == pytest.approx(hand.lcoe(gain=100.0), rel=REL)
+    assert mutated.outputs[RECIRC_CHANNEL] == pytest.approx(
+        hand.recirculating_fraction(gain=100.0), rel=REL
+    )
+
+    assert _viability_result(baseline)["observed"]["gain_in"] == hand.GAIN
+    result = _viability_result(mutated)
+    assert result["observed"]["gain_in"] == 100.0
+    assert result["margin"] == pytest.approx(
+        hand.DRIVER_EFFICIENCY * 100.0 - hand.VIABILITY_THRESHOLD, rel=REL
+    )
+    assert result["status"] == "satisfied"
+    assert mutated.report["headline"] == "full_satisfaction"
+
+
+def test_gain_below_the_viability_knee_flips_the_verdict_on_every_route(sealed) -> None:
+    """The constraint consumer proved by contradiction: below eta*G = threshold
+    the verdict flips, and the mover set gains exactly the constraint response
+    and the headline — nothing else."""
+    baseline = _evaluate(sealed, {})
+    mutated = _evaluate(sealed, {GAIN_ENTRY: 20.0})
+
+    assert _movers(baseline, mutated) == {
+        LCOE_CHANNEL,
+        RECIRC_CHANNEL,
+        VIABILITY_RESPONSE,
+        "headline",
+    }
+    assert mutated.responses[VIABILITY_RESPONSE] == "violated"
+    assert mutated.responses["headline"] == "violated"
+    assert mutated.report["headline"] == "violation"
+    result = _viability_result(mutated)
+    assert result["status"] == "violated"
+    assert result["margin"] == pytest.approx(
+        hand.DRIVER_EFFICIENCY * 20.0 - hand.VIABILITY_THRESHOLD, rel=REL
+    )
+
+
+# ---------------------------------------------------------------------------
 # The mutation protocol's own guarantees
 # ---------------------------------------------------------------------------
 

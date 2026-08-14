@@ -173,3 +173,41 @@ def test_pipeline_module_has_compilability_field():
         module_kind=ModuleKind.CALCULATION,
     )
     assert m.compilability == Compilability.UNKNOWN
+
+
+def test_computation_graph_field_set_is_the_reviewed_boundary():
+    """REQ-GA-05: the exact `ComputationGraph` field set is a reviewed rev.
+
+    Two promises, pinned at the serialization boundary (narrow-correction
+    step 4, replacing the pin that retired with `test_graph_assembly.py`,
+    ledger L-152):
+
+    - the declared field set is exactly the reviewed six — adding or removing
+      a field must flip this red and be reviewed as a graph rev;
+    - the serialized/in-memory split is exact: `fallback_entry_points` and
+      `constraint_catalog` are `exclude=True` analysis artifacts (committed
+      baselines must not churn), the other four serialize on every graph.
+    """
+    from sysml_codegen.resolution.models import ComputationGraph
+
+    reviewed = {
+        "modules",
+        "entry_point_groups",
+        "execution_order",
+        "fallback_entry_points",
+        "output_aliases",
+        "constraint_catalog",
+    }
+    assert set(ComputationGraph.model_fields) == reviewed
+
+    excluded = {
+        name
+        for name, field in ComputationGraph.model_fields.items()
+        if field.exclude
+    }
+    assert excluded == {"fallback_entry_points", "constraint_catalog"}
+
+    dumped = ComputationGraph(
+        modules=[], entry_point_groups=[], execution_order=[]
+    ).model_dump()
+    assert set(dumped) == reviewed - excluded
