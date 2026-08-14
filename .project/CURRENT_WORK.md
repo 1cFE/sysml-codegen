@@ -84,8 +84,10 @@ rather than invented; vehicle `[CONSTRAINT-GATES-UNTAGGED]` in `BACKLOG.md`.
 ### 2026-08-14: Phase B — cutover step 4 EXECUTED in-session; step 5 (portable provenance) is next
 
 **[OWNER 2026-08-14]** triggered the resumption, ruled the execution mode (in-session), and made
-two in-session rulings; step 4 then ran to completion. The full record is the plan's
-"Narrow-correction step 4 completion" (`.project/active/cutover-recovery/plan.md`). Headlines:
+two in-session rulings; step 4 then ran to completion. **Commits: `cc268d5` (rev-2 brief +
+register walk + REQ-CL-03 ruling), `7ebe447` (the bounded step-4 implementation).** The full
+record is the plan's "Narrow-correction step 4 completion"
+(`.project/active/cutover-recovery/plan.md`). Headlines:
 
 - **The matrix has zero UNTESTED rows for the first time since the retirement.** Recount:
   **288 rows / 156 PASS / 1 PARTIAL (REQ-DIAG-01, recorded deliberate) / 131 RETIRED /
