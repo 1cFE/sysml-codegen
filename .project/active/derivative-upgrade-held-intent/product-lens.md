@@ -184,3 +184,62 @@ All eight findings accepted and folded into `spec.md` in the same session; none 
 - **F7** → the ledger row is restated with its `complete` column; O6 is quoted as 27 exactly.
 - **F8** → N-4 side 2 is an **amendment** of `BACKLOG.md:1158-1159`'s now-false sentence, not an
   added line.
+
+---
+
+## design — 2026-08-13 — rev 2c624cc
+
+Epic: CONSTRAINT-SEMANTICS. Run at `design_review`, over `design.md` (WORK) against the durable
+product statements (SOURCES).
+
+**Runner note.** Same constraint as the spec-stage block above: `~/.claude/scripts/product-lens.md`
+and its pack source are outside this session's sandbox and were refused again on read
+(`ls` blocked, 2026-08-13). The lens was run from its stated purpose — an independent two-direction
+check (does the WORK contradict or narrow the product point; does it omit an obligation the point
+requires) — in this ledger's format. SOURCES read this session: `CLAUDE.md`, `owner-disposition.md`,
+the fixture's `PROVENANCE.md`, `scripts/check_gated_manifest.py`,
+`tests/conformance/test_gated_manifest_identity.py`,
+`tests/expectations/gated_manifest/catf_mfe_gated.json`, and the fixture `.sysml` sources.
+`.project/adr/` and `.project/product/` do not exist in this tree (verified), so there is no ledger
+index to read first.
+
+**Point** — carried unchanged from the spec-stage block (points 1–5). It was re-derived there from
+SOURCES and nothing in SOURCES has moved since; re-deriving it a second time would restate, not
+check.
+
+**Verdict: CONCERNS.** The design does not contradict or narrow the point. It executes held intent,
+adapts no ruled form, and strengthens point 4's deletion gate from per-row to per-occurrence. Two
+findings are omissions against the point, not contradictions of it.
+
+### Findings
+
+- **D-F1 [DO] — point 2 ("the owner decides… agents execute") is met in substance but not made
+  checkable for A9.** The design records that `ProductWithinBand`'s def-shape changed materially
+  (genericity lost) and states that *"the relative form and the 1% value are all exactly as ruled"*
+  (`design.md:205-206`), but the predicate that carries the relative form is written nowhere in the
+  design. A reader cannot check the ruled semantics — band scales under design-search resizing
+  (`owner-disposition.md:106`, **[OWNER 2026-08-13]**) — against an unwritten predicate. The probe
+  already authored one (`probes/apply_item9_edits.py:132-139`) and it does preserve the semantics.
+  — source: A9 row (owner) — **disposition:** carry the predicate into the design and check it
+  against the row there.
+
+- **D-F2 [DO] — point 5 ("surfacing beats absorbing") is honoured in the design doc but not on the
+  live surface.** The one-ULP float drift (`design.md:408-416`) and the out-of-27 `tf_coil.thickness`
+  comment edit (D3) are both recorded only in `design.md`, which archives with the item. The
+  fixture's `PROVENANCE.md` is the live record a later reader opens. — source: capture-fidelity
+  law 4 (rule); `PROVENANCE.md` as the live surface (agent, orchestrator-confirmed) —
+  **disposition:** fold both into the PROVENANCE edit pass the design already plans.
+
+### Structural smells (product-lens spec §4)
+
+- **"Consumer compensating for a platform guarantee" — FIRED, and disclosed.** A constraint
+  formal's port unit is read from the formal's own declaration, so a generic band cannot carry a
+  unit and `ProductWithinBand` must be authored per dimension. The fixture pays a
+  one-definition-per-dimension cost for a platform modeling limit. The design does not hide this —
+  it is the substance of its NOTE (`design.md:186-206`) and it names the cost explicitly. Escalated
+  to the judgment and dismissed there: disclosed, ruled-form-preserving, and correctly scoped out
+  of this item. Recommend one unowned backlog line so the cost is findable outside an archived
+  design doc.
+- **"Changes who owns an invariant without saying so" — did not fire.** The prover's move from
+  per-file-unique matching to per-occurrence anchoring strengthens the same owner-held
+  obligation and is stated as such (D5).
