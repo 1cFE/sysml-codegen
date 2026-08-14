@@ -11,9 +11,10 @@
 Items 5, 6, 8, and 9 all closed and archived today (see Recently Completed). What is live now:
 
 - **Item 7 spec drafted 2026-08-14** — `.project/active/constraint-docs-agent-sync/spec.md`
-  (epic CONSTRAINT-SEMANTICS). Its product-lens run is **owed**: the lens script is outside this
-  session's sandbox, dispositioned in
-  `.project/active/constraint-docs-agent-sync/product-lens.md`.
+  (epic CONSTRAINT-SEMANTICS). Product-lens **DISPOSED** (item7-F1..F3, nothing blocks), method
+  reconstructed from the in-tree ledgers because the canonical script is outside the sandbox. The
+  one to fix in design: **Item 1's sweep is five terms (S1–S5), not the "three-sweep method" the
+  epic's SC2 calls it** — three terms cannot discharge that criterion.
 
 - **Item 7 (ADR, product promise, and agent-facing documentation sync) is UNBLOCKED and is the
   last item in the epic.** Item home `.project/active/constraint-docs-agent-sync/`. It documents
