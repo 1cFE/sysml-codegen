@@ -951,6 +951,8 @@ the unmerged `item7-rebuild` line and ship with it; the branch gate runs once, a
    REQ-CL-03/04 closures are superseded by the landed contract) and discharge the epic's
    Item 7 Evidence-Invalidation Register row by row
    (`epic_constraint_semantics_contract.md` §register — each row names rerun vs absorbed).
+   Step 4 also **mints the REQ-tag family for the Items 3/5/8/9 gates** (owner-authorized
+   2026-08-14, `[CONSTRAINT-GATES-UNTAGGED]`) so the matrix is touched once.
 2. Execute steps 4–6, then 7–8 ONCE at the true final paired codegen/companion OIDs (three
    batteries + one regenerated candidate record), step 9 fresh narrow audit, step 10 **owner
    final acceptance** (owner-grade; no push/tag/close from agents).

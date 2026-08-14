@@ -444,7 +444,11 @@ rulings (owner-disposition.md, ruling item 5, **[OWNER 2026-08-13]**) choose vis
 bases precisely because the alternative hides causality in study harness config. Recorded so the
 bet doesn't quietly die.
 
-### [CONSTRAINT-GATES-UNTAGGED] The Items 3/5/8/9 constraint-semantics gates have no REQ tags, so no matrix row can trace them — P2, unowned, **needs an owner call** (filed 2026-08-14 at CONSTRAINT-SEMANTICS Item 7's audit)
+### [CONSTRAINT-GATES-UNTAGGED] The Items 3/5/8/9 constraint-semantics gates have no REQ tags, so no matrix row can trace them — P2, **OWNER-RULED 2026-08-14: minting AUTHORIZED, assigned to ELABORATE-FIRST cutover step 4** (filed 2026-08-14 at CONSTRAINT-SEMANTICS Item 7's audit)
+
+**Ruling [AGENT] (ratified by owner, 2026-08-14):** mint the REQ family during the cutover
+resumption's step-4 matrix work (one matrix pass, the new family lands with the revised rows).
+Item 7's SC2/SC5 unticked boxes close when the rows exist.
 
 This is the named vehicle for the half of epic SC5 that Item 7 parked rather than invented.
 
