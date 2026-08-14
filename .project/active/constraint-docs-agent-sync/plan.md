@@ -254,29 +254,29 @@ discharge the criterion.
 
 ### Changes required
 
-- [ ] Create `.project/active/constraint-docs-agent-sync/verification.md`, header shape copied from
+- [x] Create `.project/active/constraint-docs-agent-sync/verification.md`, header shape copied from
       `.project/completed/20260813_constraint-semantics-contract-amendments/verification.md:1-55`
-- [ ] Record the **DD5 scope and its exclusions** verbatim in reasoning: in `docs/`, `src/`, `tests/`,
+- [x] Record the **DD5 scope and its exclusions** verbatim in reasoning: in `docs/`, `src/`, `tests/`,
       `scripts/`, `README.md`, `CLAUDE.md`, `.project/concepts/`, `.project/backlog/`; excluded
       `.project/research/`, `.project/completed/`, `.project/active/` — dated records. Plus `.claude/`
       as a recorded scope addition (Item 1 added `claude/` in the companion for the same reason;
       adding is allowed).
-- [ ] Record the **TEAx scope per D-4**, with its exclusions and their reasons
-- [ ] Record the **vendored-corpora sub-exclusion per D-2**, flagged as an aggregation
-- [ ] Run S1–S5 in **codegen**; one row per raw hit. Sizing run 2026-08-14 (re-run, do not copy):
+- [x] Record the **TEAx scope per D-4**, with its exclusions and their reasons
+- [x] Record the **vendored-corpora sub-exclusion per D-2**, flagged as an aggregation
+- [x] Run S1–S5 in **codegen**; one row per raw hit. Sizing run 2026-08-14 (re-run, do not copy):
       S1→0, S2→13, S3→7, S4→20, S5→5
-- [ ] Run S1–S5 in **agentic-mbse** (`/home/reid/1cfe/agentic-mbse-item7-rebuild`); sizing:
+- [x] Run S1–S5 in **agentic-mbse** (`/home/reid/1cfe/agentic-mbse-item7-rebuild`); sizing:
       S1→0, S2→21, S3→8, S4→0, S5→51 — of which the vendored `docs/sysmlv2/` + `docs/syside/` trees
       carry roughly S2 15 / S3 4 / S5 33, aggregated per D-2
-- [ ] Run S1–S5 in **TEAx** (`/home/reid/1cfe/teax`); sizing: S1/S2/S3/S5→0, S4→9, all
+- [x] Run S1–S5 in **TEAx** (`/home/reid/1cfe/teax`); sizing: S1/S2/S3/S5→0, S4→9, all
       quoted-supersession
-- [ ] Table 1 complete: file:line, quoted hit, disposition, note
+- [x] Table 1 complete: file:line, quoted hit, disposition, note
 
 ### Validation
 
-- [ ] Row count in Table 1 ≥ the raw hit count minus the aggregated vendored hits; the aggregation
+- [x] Row count in Table 1 ≥ the raw hit count minus the aggregated vendored hits; the aggregation
       rows state their counts
-- [ ] `git status` in agentic-mbse and TEAx is clean (this phase writes only in codegen `.project/`)
+- [x] `git status` in agentic-mbse and TEAx is clean (this phase writes only in codegen `.project/`)
 
 **What we know after this phase:** exactly which surfaces teach the superseded semantics, and which
 hits are correct as written. Phases 2–4 edit only what Table 1 marks for correction.
@@ -642,10 +642,42 @@ grep -c "no live syside license" /tmp/item7-licensed.log     # MUST be 0
 [TO BE FILLED DURING IMPLEMENTATION]
 
 ### Phase 1 Completion
-**Completed:**
-**Actual changes:**
+
+**Completed:** 2026-08-14
+
+**Actual changes:** Created `.project/active/constraint-docs-agent-sync/verification.md` — scope and
+exclusions for all three repos, the five sweep terms, the raw-count table, and Table 1 with 70
+individual dispositioned rows plus 15 flagged aggregation rows covering the 64 vendored hits.
+Nothing outside `.project/` was touched, in any repo.
+
+**Raw counts (executed 2026-08-14, pre-edit).** codegen S1→0 S2→13 S3→7 S4→20 S5→5 (45);
+agentic-mbse S1→0 S2→21 S3→8 S4→0 S5→51 (80, of which 64 vendored / 16 project-authored);
+TEAx S1/S2/S3/S5→0 S4→9. Total 134 raw hits, all accounted for (70 rows + 64 aggregated).
+
 **Issues:**
+
+- **The sweep found zero fix-here hits in any of the three repos.** Item 1 corrected codegen and
+  agentic-mbse with these same five terms and Item 3 corrected TEAx; nothing regressed. This is
+  recorded explicitly in `verification.md` because it is easy to misread as "nothing needed
+  fixing." The Phase 2–4 work is (a) named obligations the sweep terms do not match
+  (`modeling-assumptions.md:530` unit-on-binding, `:451` blanket BLOCK) and (b) **absent** teaching,
+  which no sweep can surface. Both verified independently: `grep -c "inapplicable"` on agentic-mbse
+  `docs/patterns/constraints.md` → 0; `grep -cE "full_satisfaction|partial_coverage"` on TEAx
+  `docs/evaluation-and-study.md` → 0.
+- **No fourth item3-F2 site.** `grep -rn "halts generation" .project/concepts/ docs/` returns
+  lifecycle contract invariant 1 plus three unrelated statements (extraction diagnostics, INV-2).
+  The three named clause sites and three named parked-record sites stand as the complete set.
+
 **Deviations:**
+
+- **Vendored-hit sizing was low.** The plan estimated the vendored share of agentic-mbse at ~44
+  (S2 15 / S3 4 / S5 33). The executed run measures **64** (S2 15 / S3 4 / S5 **45**) — 35 of the S5
+  hits in `docs/sysmlv2/SysML_Spec_v2_Part1/full_document.md` alone. Recorded in `verification.md`.
+  The project-authored counts (6/4/6) are what the item acts on and are unchanged in character, so
+  this does not resize the item. Every other sizing number matched the executed run exactly.
+- **Line-number drift in plan citations.** `modeling-assumptions.md`'s unit-on-binding paragraph is
+  at `:530`, not the plan's `:448` (which is §8's heading); the §8 blanket-BLOCK headline is at
+  `:451`. Actual line numbers are used from here on.
 
 ### Phase 2 Completion
 
