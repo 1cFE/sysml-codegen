@@ -1,12 +1,29 @@
 # Current Work
 
-**Last Updated**: 2026-08-14 (**Item 7 implemented, phases 1–6 executed. Two owner calls block
-`close`** — see below. CONSTRAINT-SEMANTICS Items 1–6, 8 and 9 remain CLOSED and archived; epic
-close, `pre_pr` and any push remain with the owner)
+**Last Updated**: 2026-08-14 (**Item 7 CERTIFIED-WITH-RESIDUALS at audit.** Four of six epic SCs
+ticked in the epic file; two carry owner-call residuals. Three audit findings, two cured. See below.
+CONSTRAINT-SEMANTICS Items 1–6, 8 and 9 remain CLOSED and archived; epic close, `pre_pr` and any push
+remain with the owner)
 
 ---
 
-## ⚠️ Item 7 — implemented, two owner calls open before `close`
+## ✅ Item 7 — certified with residuals (`audit.md`, 2026-08-14)
+
+**Verdict: CERTIFY-WITH-RESIDUALS.** Every probed claim reproduced under re-run, including the
+licensed suite (`2070 passed`, zero license-skip lines), the post-edit sweep in all three repos
+(hit-for-hit), the owner-verbatim diff (empty), the matrix recount (280/136/3/131/10/0, 33 families),
+and the branch/boundary discipline (no code, fixture or schema path in any commit; nothing pushed;
+the out-of-bounds checkout clean).
+
+Findings: **A-1** the symlink residual's recorded evidence was falsified on re-run — the residual is
+real, the discriminator was not (**cured**); **A-2** the SC5 parked half had no named vehicle
+(**cured** — `[CONSTRAINT-GATES-UNTAGGED]` filed in BACKLOG); **A-3** the new `@inapplicable:` "How to
+write it" example in agentic-mbse `docs/patterns/constraints.md:427-433` is **refused by the shipped
+generator** (D9), reproduced with a verified working alternative shape — **finding only, fix before
+epic close**; **A-4** the "distinct kept test files" count does not reproduce and its method is
+unrecorded (cosmetic).
+
+## ⚠️ Item 7 — the two owner calls still open before `close`
 
 All six phases ran (`.project/active/constraint-docs-agent-sync/plan.md`, boxes checked, per-phase
 notes filled). Evidence: `.../verification.md`. Four of six epic success criteria are ticked. Two

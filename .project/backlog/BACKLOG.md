@@ -444,6 +444,30 @@ rulings (owner-disposition.md, ruling item 5, **[OWNER 2026-08-13]**) choose vis
 bases precisely because the alternative hides causality in study harness config. Recorded so the
 bet doesn't quietly die.
 
+### [CONSTRAINT-GATES-UNTAGGED] The Items 3/5/8/9 constraint-semantics gates have no REQ tags, so no matrix row can trace them — P2, unowned, **needs an owner call** (filed 2026-08-14 at CONSTRAINT-SEMANTICS Item 7's audit)
+
+This is the named vehicle for the half of epic SC5 that Item 7 parked rather than invented.
+
+**What Item 7 did discharge.** The verification-matrix recount, both falsified count blocks
+corrected, and the one tag-backed gap filed — the REQ-DIAG family, every cited test run before it
+was cited (`.project/active/constraint-docs-agent-sync/verification.md`, "Verification-matrix
+reconciliation").
+
+**What is left, and why it was not done.** Items 3, 5, 8 and 9 carry **zero REQ tags** in their
+records, so their landed gates have nothing for a matrix Status column to be about. Filing rows for
+them means **minting a new REQ tag family first**, which is a requirements decision, not a matrix
+reconciliation — an agent-minted requirement id in a document whose whole value is that its rows
+trace to stated requirements is worse than an honest gap. Item 7 had no authority to make that call
+and did not make it.
+
+**The owner call.** Either (a) authorize minting REQ tags for the Items 3/5/8/9 gates and filing
+their rows in one pass, or (b) rule that these gates are traced by their acceptance records rather
+than by the matrix, and record that as the matrix's stated boundary. Do not leave it implicit — an
+untraced gate that nobody decided to leave untraced is how the matrix drifted the first time.
+
+Recount discipline applies to whichever route is taken (memory `verification-matrix-drift-modes`).
+Current baseline after Item 7: **280 rows / 136 PASS / 33 families**.
+
 ### [MATRIX-EPIC-SURFACE-ROWS] Add verification-matrix rows for the three uncovered lifecycle surfaces — P3 `[OWNER]` (ticketed 2026-07-24)
 
 Owner directed filing this as a ticket at the docs-lifecycle-sync wrap. The lifecycle epic

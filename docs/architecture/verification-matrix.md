@@ -297,7 +297,7 @@ not in the matrix. Every cited test was run before its row was written; the run 
 | REQ-DIAG-01 | A diagnostic's severity is fixed at construction from the writer table and never recomputed by a reader-side `kind → severity` lookup | `test_upstream_pins.py` (pins the upstream schema string; the construction rule itself lives in `agentic-mbse constraint_facts.py:78-95,230-233`) | PARTIAL *(the kept codegen test pins the pinned-upstream contract, not the no-reader-side-table property. That property is proved by absence — no reader-side mapping exists in `src/` — which no codegen test asserts. A reader-side table reintroduced upstream would not fail this row's test.)* |
 | REQ-DIAG-02 | A blocking diagnostic halts generation before lowering, on both the live and snapshot routes, naming every blocking diagnostic | `test_extraction_diagnostic_screen.py` | PASS |
 | REQ-DIAG-03 | An advisory diagnostic is rendered and generation continues; advisory rendering cannot swallow the blocking halt | `test_extraction_diagnostic_screen.py` | PASS |
-| REQ-DIAG-04 | Severity skew fails closed in both directions | — *(discharged by construction — no severity crosses a process boundary on disk; the v6 envelope carries no `severity` field and `constraint_facts.parse` has no caller in `src/` or `tests/`)* | UNTESTED *(the failure mode is impossible rather than guarded here, so there is nothing to assert. Recorded as UNTESTED rather than PASS because no kept test would fail if the v6 envelope started carrying severity again.)* |
+| REQ-DIAG-04 | Severity skew fails closed in both directions | — *(discharged by construction — no **diagnostic** severity crosses a process boundary on disk; the v6 envelope carries no diagnostic `severity` field and `constraint_facts.parse` has no caller in `src/` or `tests/`. Corrected at Item 7's audit, 2026-08-14: the envelope *does* carry a **disposition** `severity` — `snapshot/instance_graph.py:724,759,803` — which is a different field with a different writer and is not what this row is about)* | UNTESTED *(the failure mode is impossible rather than guarded here, so there is nothing to assert. Recorded as UNTESTED rather than PASS because no kept test would fail if the v6 envelope started carrying diagnostic severity again.)* |
 
 ### DRA
 
@@ -814,4 +814,4 @@ describes was deleted (ledger L-160).
 - [Architecture Overview](overview.md)
 - [Modeling Assumptions](modeling-assumptions.md)
 - Design docs: [reference/](reference/) (28 documents)
-- Conformance tests: `tests/conformance/`, `tests/unit/`, `tests/integration/` (50 distinct kept test files cited by PASS rows)
+- Conformance tests: `tests/conformance/`, `tests/unit/`, `tests/integration/` (59 distinct kept test files cited by PASS rows — recounted 2026-08-14, CONSTRAINT-SEMANTICS Item 7; this line still read 50 and was corrected at Item 7's audit)

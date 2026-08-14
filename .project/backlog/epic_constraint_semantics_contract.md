@@ -1131,19 +1131,29 @@ instead of the superseded one.
 
 **Success Criteria**:
 
-- [ ] **[OWNER]** The coverage-truth promise is owner-stated, filed in a named home, and cited
-      from the product-lens trail (closes Item 3 audit-F4).
+- [x] **[OWNER]** The coverage-truth promise is owner-stated, filed in a named home, and cited
+      from the product-lens trail (closes Item 3 audit-F4). *(verified at audit 2026-08-14: verbatim diff empty; `.project/product/P-001-design-search-free-variation.md`; trail one hop from this file's Product-Lens header)*
 - [ ] No shipped doc, skill, or agent prompt in the three repos teaches the superseded
       constraint semantics; the sweep record lists every hit and disposition (Item 1's
-      three-sweep method).
-- [ ] `@inapplicable:`, the disposition vocabulary, the six states, and the TEAx opt-in are
-      documented where their users (human and agent) will find them.
-- [ ] The authoring docs state when an in-model `@inapplicable:` marker works (bindings-form) and
+      three-sweep method). *(**NOT TICKED at audit 2026-08-14** — sweep record complete and re-run
+      independently, all three repos matching; residual: codegen's `.claude/` symlinks resolve to
+      `/home/reid/1cfe/agentic-mbse` on `elaborate-first-salvage`, out of bounds. Resolves on owner
+      merge. `audit.md` A-1)*
+- [x] `@inapplicable:`, the disposition vocabulary, the six states, and the TEAx opt-in are
+      documented where their users (human and agent) will find them. *(verified at audit 2026-08-14
+      in the authoring repos; subject to SC2's symlink residual and to `audit.md` A-3)*
+- [x] The authoring docs state when an in-model `@inapplicable:` marker works (bindings-form) and
       when PROVENANCE has to carry the disposition instead (inline-predicate form), with the
-      B1–B5 worked case cited (Item 5 close obligation).
+      B1–B5 worked case cited (Item 5 close obligation). *(verified at audit 2026-08-14, including
+      by execution: a bindings-form marker reaches the domain under a licensed elaboration probe)*
 - [ ] Verification-matrix rows exist for the constraint-semantics gates landed in Items 2–5, filed
-      in one reconciliation pass with the index recount done (Item 5 residual A-8).
-- [ ] Documentation checks and `git diff --check` pass in every touched repository.
+      in one reconciliation pass with the index recount done (Item 5 residual A-8). *(**NOT TICKED
+      at audit 2026-08-14** — recount reproduced (280/136/3/131/10/0, 33 families) and both count
+      blocks corrected; REQ-DIAG filed. Items 3/5/8/9 carry zero REQ tags, so their rows need tags
+      minted first — owner call, vehicle `[CONSTRAINT-GATES-UNTAGGED]` in BACKLOG. `audit.md` A-2)*
+- [x] Documentation checks and `git diff --check` pass in every touched repository. *(re-run at
+      audit 2026-08-14: `2070 passed, 34 skipped, 79 deselected`, zero `no live syside license`
+      lines; `git diff --check` clean in all three repos)*
 
 **Estimated Effort**: 0.5–1 day (owner checkpoint 0.5h, sweep + edits 3–5h, verification 1h)
 

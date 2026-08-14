@@ -339,9 +339,24 @@ this item may not edit (hard boundary: agentic-mbse edits are worktree-only). Th
 therefore **open** on that one path until the `item7-rebuild` branch reaches the branch those
 symlinks resolve to.
 
-Evidence, run post-edit: `grep -c "assert constraint TempLimit" .claude/skills/sysml-conventions/SKILL.md`
-in codegen → **1** (expected 0 by the plan's Phase 4 check). The count is 1 because the file read is
-the out-of-bounds one; the in-bounds copy of the same file reads 0.
+Evidence, run post-edit — **corrected at audit, 2026-08-14 (audit finding A-1).** The originally
+recorded discriminator was `grep -c "assert constraint TempLimit" …/SKILL.md` → 1 in codegen, with
+"the in-bounds copy of the same file reads 0." **That is false.** The corrected in-bounds file also
+returns 1, because the corrected text *keeps* `assert constraint TempLimit { temperature < 1000 [K] }`
+at `:151` as a deliberately labelled **negative** example under rule 2 ("Bind formals; don't inline
+the predicate"). The count does not discriminate the two files at all.
+
+The residual itself is unchanged and independently reproduced. The discriminator that actually
+separates them is the corrected teaching's own text:
+
+| Probe | codegen `.claude/skills/sysml-conventions/SKILL.md` (symlink → out-of-bounds) | agentic-mbse worktree `claude/skills/sysml-conventions/SKILL.md` (in-bounds) |
+|---|---|---|
+| `grep -c 'blessed shape is bindings-only'` | **0** | **1** |
+| `grep -c '@inapplicable:'` | **0** | **3** |
+| `readlink -f` | `/home/reid/1cfe/agentic-mbse/claude/skills/sysml-conventions/SKILL.md` | n/a |
+
+The out-of-bounds copy still carries the stale example as the *blessed* shape at
+`/home/reid/1cfe/agentic-mbse/claude/skills/sysml-conventions/SKILL.md:136`. Verified at audit.
 
 **In-boundary excursion, caught and reverted.** Before the symlink topology was understood, one edit
 was written through the codegen path and therefore landed in `/home/reid/1cfe/agentic-mbse` on
@@ -445,6 +460,12 @@ document whose whole value is that its rows trace to stated requirements.
 **Parked, not resolved.** The Item 5 residual A-8 is therefore **partially** discharged: the recount
 is done and the one tag-backed gap is filed, but the untagged gates of Items 3, 5, 8 and 9 remain
 untraced. This needs an owner call — see the questions at the end of this run.
+
+**Named vehicle, added at audit 2026-08-14 (audit finding A-2).** At implement time the parked half
+was recorded in four narrative places and had **no execution vehicle** — no backlog entry, no
+close-stage obligation. It now has one: `[CONSTRAINT-GATES-UNTAGGED]`, `.project/backlog/BACKLOG.md`,
+P2 unowned, which states the two routes the owner can take and forbids leaving the gap implicit.
+Filing the ticket mints no REQ tags and makes no requirements decision.
 
 ---
 

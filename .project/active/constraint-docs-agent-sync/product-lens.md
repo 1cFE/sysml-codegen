@@ -219,3 +219,44 @@ section, carried from `owner-checkpoint-20260813.md:28-36` rather than re-derive
 in either direction and is explicitly not open for re-resolution here.
 
 Gate: **CLEAR** — no new finding. item7-F2 moves from DISPOSED-in-spec to executed.
+
+---
+
+## audit — 2026-08-14 — rev `5e2373f` + audit cures
+
+**SOURCES** (derived independently of the spec's framing): `CLAUDE.md`, `README.md`,
+`docs/architecture/modeling-assumptions.md` (the ADR register), `.project/product/INDEX.md` and
+`P-001`, plus the epic's `[OWNER]` Critical Success Factor.
+**WORK:** Item 7's three-repo documentation sync and the artifacts under
+`.project/active/constraint-docs-agent-sync/`.
+
+**The point, derived from the sources.** The product exists so a design search can vary engineering
+parameters freely and trust the feasibility answer it gets back (`P-001`, `[OWNER-VERBATIM]`). The
+CONSTRAINT-SEMANTICS epic built the trust half: a headline that cannot confuse "checked and passed"
+with "not checked," and a visible disposition on every authored constraint. Item 7's job is that the
+*next author* — human or agent — writes models that produce that evidence rather than models that
+silently produce none. Documentation is the delivery mechanism for a behavior change nobody can see
+from the code.
+
+**Judgment: this is the right piece of work, and one agent-facing example does not survive contact
+with the product it teaches.**
+
+- **DO (`[HARD]`-adjacent, agent-facing) — the `@inapplicable:` "How to write it" example is refused
+  by the shipped generator.** `agentic-mbse docs/patterns/constraints.md:427-433` presents a marked
+  gate whose predicate is eligible. Reproduced at audit: generation refuses it by name — *"marked
+  inapplicable but produced 1 executable entries."* This is D9, which the same document explains 30
+  lines later, so the document contradicts itself between its example and its rule. See audit finding
+  A-3.
+- **Product-drift tripwires:** none fired. No test passes by selecting one of two duplicate routes;
+  no special category exempts a case whose user-visible meaning is unchanged; the two divergent
+  agent-definition trees (`claude/` vs `.claude/`) are a real manual-synchronization smell but were
+  **found and reduced** by this item, not introduced by it, and the divergence is recorded loudly
+  rather than papered over.
+- **Owner-graded contradiction:** none. `P-001` carries the owner's words verbatim and surfaces the
+  promise-vs-basis tension without resolving it.
+
+**Gate: DISPOSED (A-3)** — A-3 is an agent-grade documentation defect in a companion repo, named
+with its reproduction and a verified working alternative shape. It is not an owner-graded or
+`[HARD]` contradiction of a product statement, so it does not block certification; it is carried as
+a residual. All earlier blocks in this ledger: none — every prior run recorded DISPOSED or CLEAR.
+Epic gate: CLEAR.
