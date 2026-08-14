@@ -1,6 +1,6 @@
 # Implementation Plan: Derivative Upgrade Under Held Intent (CONSTRAINT-SEMANTICS Item 9)
 
-**Status:** Draft
+**Status:** Complete
 **Created:** 2026-08-13
 **Last Updated:** 2026-08-13
 **Branch:** `item7-rebuild`
@@ -371,14 +371,14 @@ git status --porcelain .project/backlog/BACKLOG.md   # must be clean or ours-onl
 
 ### Changes Required
 
-- [ ] **Concurrency guard first.** If a foreign edit is present, defer both lines to Phase 5 and
+- [x] **Concurrency guard first.** If a foreign edit is present, defer both lines to Phase 5 and
       re-check; if still foreign at the end, record the deferral in `verification.md` rather than
       editing over another agent.
-- [ ] `.project/backlog/BACKLOG.md` `[INLINE-PREDICATE-MARKER-DROP]` (`:1148-1159`) — **amend**, do
+- [x] `.project/backlog/BACKLOG.md` `[INLINE-PREDICATE-MARKER-DROP]` (`:1148-1159`) — **amend**, do
       not add. The closing clause *"(the Item 5 workaround that epic Item 9 retires)"* is wrong;
       Item 9 does not retire the workaround — closing the defect does. One line replaced, saying
       that closing the defect fires the B1–B5 marker migration (spec N-4.2; design change-list row 8).
-- [ ] Same file — **new unowned entry** recording `ProductWithinBand`'s per-dimension cost: a
+- [x] Same file — **new unowned entry** recording `ProductWithinBand`'s per-dimension cost: a
       constraint port takes its unit from the formal's own declaration, so a unit-carrying
       constraint form is authored per dimension; `ProductWithinBand` is m³/s-specific and a product
       band over another dimension needs its own definition. Decision-record phrasing, never an
@@ -387,12 +387,12 @@ git status --porcelain .project/backlog/BACKLOG.md   # must be clean or ours-onl
 ### Validation
 
 **Automated:**
-- [ ] `grep -n "INLINE-PREDICATE-MARKER-DROP" .project/backlog/BACKLOG.md tests/fixtures/catf_mfe_gated/PROVENANCE.md`
+- [x] `grep -n "INLINE-PREDICATE-MARKER-DROP" .project/backlog/BACKLOG.md tests/fixtures/catf_mfe_gated/PROVENANCE.md`
       → **both** sides hit, and reading them shows a not-fired conditional on one side and the
       firing trigger on the other
 
 **Manual:**
-- [ ] Read both new/amended paragraphs for capture-fidelity law 3: no stacked contradicting sentence
+- [x] Read both new/amended paragraphs for capture-fidelity law 3: no stacked contradicting sentence
       beside a stale one, no "WE MUST NOT" phrasing
 
 **What we know works after this phase:** whoever picks up the defect inherits the obligation from
@@ -425,7 +425,7 @@ grep -c "SKIPPED.*license" /tmp/item9_full.log    # must be 0 — the only licen
 
 ### Changes Required
 
-- [ ] Create `.project/active/derivative-upgrade-held-intent/verification.md` with **exact counts**,
+- [x] Create `.project/active/derivative-upgrade-held-intent/verification.md` with **exact counts**,
       not adjectives: pass/fail/skip totals, the license-skip count (0), ruff and mypy counts against
       their baselines, the measured module/stencil/parameter-group counts, and the recorded 26/16 key
       movement.
@@ -433,20 +433,20 @@ grep -c "SKIPPED.*license" /tmp/item9_full.log    # must be 0 — the only licen
 ### Validation
 
 **Automated:**
-- [ ] Full licensed suite green, **zero license-skip lines**, on the item7-rebuild venv
-- [ ] `ruff check src/ scripts/ tests/` → **zero new** against baseline **12**
-- [ ] `mypy src/` → **zero new** against baseline **52**
-- [ ] `git diff --check` → clean (no whitespace errors)
-- [ ] `git diff --stat main...HEAD` names **no** file under `tests/fixtures/catf_mfe_model/`,
+- [x] Full licensed suite green, **zero license-skip lines**, on the item7-rebuild venv
+- [x] `ruff check src/ scripts/ tests/` → **zero new** against baseline **12**
+- [x] `mypy src/` → **zero new** against baseline **52**
+- [x] `git diff --check` → clean (no whitespace errors)
+- [x] `git diff --stat main...HEAD` names **no** file under `tests/fixtures/catf_mfe_model/`,
       `tests/fixtures/catf_mfe_d5/`, or
       `.project/completed/20260813_catf-constraint-policy-acceptance/`
-- [ ] `git status --porcelain` shows no staged file belonging to the concurrent agent
+- [x] `git status --porcelain` shows no staged file belonging to the concurrent agent
 
 **Manual:**
-- [ ] Walk design.md's Validation Approach items 1–7 and tick each in `verification.md`, including
+- [x] Walk design.md's Validation Approach items 1–7 and tick each in `verification.md`, including
       item 6 (SC-3 grepped on both sides) and item 7 (§5 A9 subsection + float-drift record present
       and findable)
-- [ ] If `test_the_lane_runs_the_real_simkit` fails on the whole-set run, re-run it in isolation,
+- [x] If `test_the_lane_runs_the_real_simkit` fails on the whole-set run, re-run it in isolation,
       confirm it passes, and record it as the known pre-existing artifact. Do not chase it.
 
 **What we know works after this phase:** the item is complete and auditable — every claim in the
@@ -631,9 +631,80 @@ commit" path was not needed.
   between the check and the test that falsifies it.
 
 ### Phase 4 Completion
+**Completed:** 2026-08-13
+
+**Concurrency guard:** `git status --porcelain .project/backlog/BACKLOG.md` was **clean** at edit
+time. No foreign edit, so nothing was deferred.
+
+**Actual Changes:**
+- `.project/backlog/BACKLOG.md` `[INLINE-PREDICATE-MARKER-DROP]` — **amended, not added.** The
+  closing clause *"(the Item 5 workaround that epic Item 9 retires)"* is replaced by a decision
+  record: closing this defect is what fires the B1–B5 marker migration out of PROVENANCE §3b and
+  into source; Item 9 ran with that criterion recorded as a conditional that did not fire,
+  precisely because this entry is still open.
+- Same file, `:1209` — the cross-reference in the close-record recap carried the same false claim
+  (*"epic Item 9 retires the PROVENANCE workaround"*). Amended to *"and closing it retires the
+  PROVENANCE workaround"* so the two places do not contradict each other.
+- Same file — **new unowned entry** `[CONSTRAINT-FORM-PER-DIMENSION-COST]`, phrased as a decision
+  record: a constraint formal's port takes its unit from the formal's own declaration, so a
+  unit-carrying constraint form is authored per dimension; `ProductWithinBand` is therefore
+  m³/s-specific and a product band over another dimension needs its own definition. Recorded as a
+  platform cost the fixture absorbs, with the open question named and nothing instructed.
+
+**Validation:**
+- `grep -n "INLINE-PREDICATE-MARKER-DROP" .project/backlog/BACKLOG.md tests/fixtures/catf_mfe_gated/PROVENANCE.md`
+  → **both sides hit**: PROVENANCE §3b carries the not-fired conditional and names the defect as
+  its trigger; the backlog entry carries the firing trigger. Read both; neither is missing.
+- Read both new/amended paragraphs against capture-fidelity law 3: the stale clause is *replaced*,
+  not stacked beside a correction, and no "WE MUST NOT" phrasing appears anywhere.
+
+**Issues:** none.
+
+**Deviations:**
+- One edit beyond the plan's two: the `:1209` cross-reference repeated the same now-false clause.
+  Leaving it would have left the backlog contradicting itself one screen apart.
 
 ### Phase 5 Completion
+**Completed:** 2026-08-13. Full detail and every count: `verification.md` beside this plan.
+
+**Actual Changes:**
+- Created `.project/active/derivative-upgrade-held-intent/verification.md` with exact counts.
+
+**Results:**
+- Full licensed suite: **7 failed, 2063 passed, 34 skipped, 79 deselected** in 158.79s.
+- **Zero license-skip lines.** The one `license` hit in the log is a test name
+  (`test_generation_from_a_v6_snapshot_needs_no_license PASSED`), not a skip.
+- `ruff check src/` → **12**, the baseline exactly. `mypy src/` → **52**, the baseline exactly.
+  The two Python files this item touched pass ruff clean, so the wider
+  `src/ scripts/ tests/` count (642) cannot have risen.
+- `git diff --check` over this item's twelve files: clean.
+- Frozen surfaces, git tree hashes at `8942420` vs HEAD: `catf_mfe_model`, `catf_mfe_d5` and
+  `.project/completed/20260813_catf-constraint-policy-acceptance/` all **IDENTICAL**.
+- Design.md Validation Approach items 1–7 all walked and ticked in `verification.md`, including
+  item 6 (SC-3 grepped and read on both sides) and item 7 (§5's A9 subsection at
+  `PROVENANCE.md:487`, the float-drift record at `:260`, Item 9's D3 record at `:442`).
+
+**Issues — one, and it is not this item's:**
+- **7 failures in `tests/conformance/test_v6_snapshot_inventory.py`**, all
+  `FileNotFoundError: .project/active/unit-lane-port-metadata/snapshot-inventory-pre.json`.
+  That is **Item 8's** conformance test reading **Item 8's** item folder by an `active/` path the
+  concurrent agent archived at `fbd3495`. Reproduced identically in a detached worktree at
+  `8942420`, the commit before C1 — 7 failed, 1 passed, byte for byte. Surfaced, not fixed:
+  repointing the constant would be an edit to another agent's in-flight item, which the spec
+  forbids. Recorded in `verification.md` for Item 8's close or the epic's next audit.
+- The plan's known pre-existing `test_the_lane_runs_the_real_simkit` **did not fail** on this
+  whole-set run, so nothing was re-run in isolation.
+
+**Deviations:**
+- The plan's frozen-surface check is written against `main...HEAD`. Taken literally it fails, but
+  for a reason that has nothing to do with Item 9: `catf_mfe_d5` and the archived acceptance item
+  were *created* on this branch by earlier items, and `catf_mfe_model`'s
+  `extraction_snapshot.json` was deleted by the cutover retirement. The freeze this item owes is
+  "Item 9 does not touch them", so it is measured against the pre-Item-9 commit instead. Both
+  readings are recorded in `verification.md` rather than one being quietly substituted.
+- Phase 5's gate is written as "full licensed suite green". It is not green. `verification.md`
+  says so plainly rather than claiming green with a footnote.
 
 ---
 
-**Status:** Draft → In Progress → Complete
+**Status:** Complete

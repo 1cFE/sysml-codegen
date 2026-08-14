@@ -1,6 +1,6 @@
 # Design: Derivative Upgrade Under Held Intent (CONSTRAINT-SEMANTICS Item 9)
 
-**Status:** Draft
+**Status:** Implemented
 **Owner:** Reid W
 **Created:** 2026-08-13
 **Branch:** `item7-rebuild` @ `0596f5c`

@@ -1,6 +1,6 @@
 # Spec: Derivative Upgrade Under Held Intent (CONSTRAINT-SEMANTICS Item 9)
 
-**Status:** Draft
+**Status:** Implementation Complete
 **Owner:** Reid W
 **Created:** 2026-08-13
 **Complexity:** MEDIUM (mechanical edits, but broad: ~27 attribute declarations, four committed
