@@ -2,7 +2,7 @@
 
 `catf_mfe_gated` deliberately differs from `catf_mfe_d5`, so the byte-reversal proof that pins
 the other d5 variants cannot transfer to it. `scripts/check_gated_manifest.py` replaces it with
-an accounting identity — ``65 = 58 carriers + 7 named deletions`` — joined from committed
+an accounting identity — ``65 = 56 carriers + 9 named deletions`` — joined from committed
 artifacts, license-free.
 
 **A check nobody has seen fail is not yet a check.** The identity would close vacuously if the
@@ -63,17 +63,17 @@ def mutated_provenance(provenance_text, monkeypatch, tmp_path):
 def test_the_identity_closes():
     result = check_gated_manifest.run()
     assert result.authored == 65
-    assert result.carriers == 58
-    assert result.deletions == 7
-    assert result.matched_by_name == 56
-    assert result.matched_by_renamed_from == 2
+    assert result.carriers == 56
+    assert result.deletions == 9
+    assert result.matched_by_name == 53
+    assert result.matched_by_renamed_from == 3
 
 
 def test_every_deletion_cites_an_authorizing_table_row(provenance_text):
     deletions = check_gated_manifest.parse_deletions(provenance_text)
-    assert len(deletions) == 7
+    assert len(deletions) == 9
     assert {record.table_row for record in deletions} == {
-        "A1", "A4", "A7", "A8", "C37", "C21", "C28"
+        "A1", "A4", "A5", "A6", "A7", "A8", "C37", "C21", "C28"
     }
     for record in deletions:
         assert "owner-disposition.md" in record.authorizing_row, record

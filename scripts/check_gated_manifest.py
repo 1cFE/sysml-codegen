@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Prove the CATF derivative's accounting identity closes: ``65 = 58 carriers + 7 deletions``.
+"""Prove the CATF derivative's accounting identity closes: ``65 = 56 carriers + 9 deletions``.
 
 `catf_mfe_gated` deliberately differs from `catf_mfe_d5`, so the byte-reversal check that pins
 the other d5 variants cannot transfer to it (`scripts/make_d5_variant.py`). This is its
@@ -10,7 +10,7 @@ The join, over committed artifacts and nothing else — **license-free by constr
 
 =================================================================  =============================
 `tests/expectations/constraint_population/catf_mfe_d5.json`        the 65 authored usages
-`tests/expectations/constraint_population/catf_mfe_gated.json`     the 58 carriers
+`tests/expectations/constraint_population/catf_mfe_gated.json`     the 56 carriers
 `tests/fixtures/catf_mfe_gated/PROVENANCE.md`                      renames + deletion records
 `tests/expectations/gated_manifest/catf_mfe_gated.json`            the ruled table's counts
 `tests/fixtures/catf_mfe_gated/**/*.sysml`                         the replacing derivations

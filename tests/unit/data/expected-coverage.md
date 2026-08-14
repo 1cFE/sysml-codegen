@@ -120,24 +120,29 @@ usages — not asserted — so all 65 land in bucket 1 and nothing reaches the d
 This is the shape that motivates the item: 65 authored checks, none assessed, and today the package
 emits no report at all.
 
-### `catf_mfe_gated` — the CATF derivative, two executing gates
+### `catf_mfe_gated` — the CATF derivative, three executing gates
 
 **Derived from the ruled disposition table, not from a run** (CONSTRAINT-SEMANTICS Item 5;
 `.project/completed/20260813_catf-constraint-policy-acceptance/owner-disposition.md`, RULED 2026-08-13).
 Committed before the fixture that produces it existed — that commit order is SC-6's evidence.
+Restated by Item 9, which executed the held intent for A5, A6 and A9 once Item 8 (`62a07e5`)
+cured the unit-lane defect that had parked them. Every number below is re-derived from the same
+ruled table and committed before the run that confirms it.
 
-**The population: 58 carriers.** `65 = 58 carriers + 7 named deletions` (5 derive-instead —
-A1, A4, A7, A8, C37; 2 O2 placeholder deletions — C21, C28). Every counted usage, by
+**The population: 56 carriers.** `65 = 56 carriers + 9 named deletions` (7 derive-instead —
+A1, A4, A5, A6, A7, A8, C37; 2 O2 placeholder deletions — C21, C28). Every counted usage, by
 `file:line` in the derivative:
 
-- **2 asserted, executing** — `designs/catf_mfe/physics.sysml:126`
-  (`catf_physics::net_power_viable`, A2, renamed from `ViabilityCheck`) and
+- **3 asserted, executing** — `designs/catf_mfe/physics.sysml:126`
+  (`catf_physics::net_power_viable`, A2, renamed from `ViabilityCheck`),
   `physics.sysml:134` (`catf_physics::parasitic_fraction_ok`, A3, renamed from
-  `ReasonableParasiticTotal`). Both are `assert constraint … : <def>` over
-  `library/constraints/gate_forms.sysml`, bindings-only, chains in binding position.
-- **3 plain, reaching** — `radial_build.sysml:604` (A5 `LayerContinuity`),
-  `radial_build.sysml:622` (A6 `RadiusThicknessConsistency`), `vacuum.sysml:169`
-  (A9 `PumpingSpeedConsistency`). Retained as visible plain usages under the D-S1/D-S2 ruling.
+  `ReasonableParasiticTotal`), and `designs/catf_mfe/vacuum.sysml:171`
+  (`catf_vacuum_pumping::pumping_speed_agrees`, A9, renamed from `PumpingSpeedConsistency`).
+  All three are `assert constraint … : <def>` over `library/constraints/gate_forms.sysml`,
+  bindings-only, chains in binding position.
+- **0 plain, reaching** — A5 and A6 left the population by deletion, their ruled derivations now
+  authored in `radial_build.sysml`, and A9 moved from this bucket to the asserted one. The
+  D-S1/D-S2 parking is retired.
 - **5 plain, part-definition-owned** — `library/components/divertor.sysml:216`,
   `first_wall.sysml:220`, `radial_build.sysml:55`, `shield.sysml:160`, `vacuum.sysml:155`
   (B1–B5). No design part is typed by any of these definitions, so they reach zero instances.
@@ -146,8 +151,8 @@ A1, A4, A7, A8, C37; 2 O2 placeholder deletions — C21, C28). Every counted usa
   neutronics,performance_metrics,power_balance,thermal}.sysml`. No calc-def attachment
   capability exists (Item 6), so they reach nothing structurally.
 
-**Why `applicable_gate_total` is 2 and not 58.** The feasibility denominator is applicable
-asserted gates only (rulings-20260812 L2-1). The 56 plain usages are bucket 1 — "not asserted
+**Why `applicable_gate_total` is 3 and not 56.** The feasibility denominator is applicable
+asserted gates only (rulings-20260812 L2-1). The 53 plain usages are bucket 1 — "not asserted
 → inventory only" — so they appear in `authored_usage_total` and never in the denominator.
 
 **Why `inapplicable_gate_count` is 0 and not 5.** This is the trap in this entry, and the
@@ -160,11 +165,17 @@ Phase 1: the marker cannot even reach the domain on their inline-predicate shape
 disposition is recorded in PROVENANCE. That finding does not change this number — the count
 is 0 with or without a marker.)
 
-**Why `assessed_entry_count` is 2.** Each of A2 and A3 hangs off `catf_physics`, which has one
-occurrence, so each eligible usage mints exactly one concrete entry: 1 + 1 = 2.
+**Why `assessed_entry_count` is 3.** A2 and A3 hang off `catf_physics` and A9 off
+`catf_vacuum_pumping`; each of those parts has one occurrence, so each eligible usage mints
+exactly one concrete entry: 1 + 1 + 1 = 3.
 
-**58 / 2 / 2 / 0 / 0 / `{}` / `complete`** → `headline = "violation"`,
-`assessed_entry_count = 2`.
+**56 / 3 / 3 / 0 / 0 / `{}` / `complete`** → `headline = "violation"`,
+`assessed_entry_count = 3`.
+
+**A9 does not move the headline.** Its band is satisfied at the authored design point —
+`pumping_speed_total = 200` against `n_pumps * pump_capacity_each = 48 × 4.17 = 200.16`, a
+0.08% disagreement inside the ruled 1% relative band — so it adds a satisfied gate. The
+`violation` headline stays A2's.
 
 **Amended 2026-08-13 under finding 6-D** (`[AGENT]`, ratified by owner). The headline cell was
 `full_satisfaction` when this entry was first committed, on the assumption that the model's own
@@ -344,7 +355,7 @@ gate_a_d5                             | 1 | 1 | 1 | 0 | 0 | {} | complete | full
 constraint_multi_instance             | 1 | 1 | 1 | 0 | 0 | {} | complete | full_satisfaction | 3
 constraint_def_owned_redefining       | 1 | 1 | 1 | 0 | 0 | {} | complete | full_satisfaction | 1
 constraint_domain_inapplicable        | 2 | 1 | 1 | 0 | 1 | {} | complete | full_satisfaction | 1
-catf_mfe_gated                        | 58 | 2 | 2 | 0 | 0 | {} | complete | violation | 2
+catf_mfe_gated                        | 56 | 3 | 3 | 0 | 0 | {} | complete | violation | 3
 catf_mfe_d5                           | 65 | 0 | 0 | 0 | 0 | {} | none | not_assessed | 0
 constraint_domain_plain_forms         | 2 | 0 | 0 | 0 | 0 | {} | none | not_assessed | 0
 constraint_domain_satisfy             | 2 | 0 | 0 | 0 | 0 | {} | none | not_assessed | 0

@@ -1,16 +1,18 @@
 {
   "_comment": [
-    "CONSTRAINT-SEMANTICS Item 5, SC-2/SC-3/SC-4. The expected accounting identity for the",
-    "catf_mfe_gated derivative, derived from the RULED table (.project/active/",
-    "catf-constraint-policy-acceptance/owner-disposition.md) and committed BEFORE the fixture",
-    "that produces it existed. scripts/check_gated_manifest.py reads this file; it is data,",
-    "not code, so the commit-order evidence for SC-6 is content-scoped and unambiguous.",
-    "Every number here comes from the ruled table, never from a run."
+    "CONSTRAINT-SEMANTICS Item 5, SC-2/SC-3/SC-4, restated by Item 9. The expected accounting",
+    "identity for the catf_mfe_gated derivative, derived from the RULED table",
+    "(.project/completed/20260813_catf-constraint-policy-acceptance/owner-disposition.md) and",
+    "committed BEFORE any run that could confirm it. scripts/check_gated_manifest.py reads this",
+    "file; it is data, not code, so the commit-order evidence for SC-6 is content-scoped and",
+    "unambiguous. Every number here comes from the ruled table, never from a run. Item 9 executes",
+    "the held intent for A5, A6 and A9, so the identity is now 65 = 56 carriers + 9 named",
+    "deletions."
   ],
-  "assessed_entry_count": 2,
-  "carrier_total": 58,
+  "assessed_entry_count": 3,
+  "carrier_total": 56,
   "d5_authored_total": 65,
-  "deletion_total": 7,
+  "deletion_total": 9,
   "deletions": [
     {
       "authority": "owner-disposition.md Group A, A1",
@@ -60,29 +62,44 @@
       "d5_source_line": 138,
       "reason": "Body is the literal `true`. Same ruling as C21.",
       "usage_qualified_name": "FusionPhysics_Neutronics::TritiumBreedingRatio::Phase2SelfSufficiency"
+    },
+    {
+      "authority": "owner-disposition.md Group A, A5",
+      "class": "derive-instead",
+      "d5_source_line": 612,
+      "reason": "Layer continuity (class 1) over the whole radial build. The ruled basis makes the axis root radius and the 14 layer thicknesses free and derives every other radius, so each layer's inner_radius := the layer below's outer_radius and the gate asserted what the model now computes. Item 8 (62a07e5) cured the unit-lane defect that had parked this row.",
+      "usage_qualified_name": "CATFMFERadialBuild::catf_radial_build::LayerContinuity"
+    },
+    {
+      "authority": "owner-disposition.md Group A, A6",
+      "class": "derive-instead",
+      "d5_source_line": 630,
+      "reason": "Structural identity (class 1) repeated per layer. outer_radius := inner_radius + thickness for all 14 layers under the same ruled basis, so the gate asserted arithmetic the model now performs. Item 8 (62a07e5) cured the unit-lane defect that had parked this row.",
+      "usage_qualified_name": "CATFMFERadialBuild::catf_radial_build::RadiusThicknessConsistency"
     }
   ],
   "disposition_histogram": {
-    "eligible": 2,
-    "excluded": 3,
+    "eligible": 3,
+    "excluded": 0,
     "non_reaching": 53
   },
   "expected_coverage_account": {
-    "applicable_gate_total": 2,
-    "assessed_gate_count": 2,
-    "authored_usage_total": 58,
+    "applicable_gate_total": 3,
+    "assessed_gate_count": 3,
+    "authored_usage_total": 56,
     "coverage_state": "complete",
     "inapplicable_gate_count": 0,
     "unassessed_gate_count": 0,
     "unassessed_reasons": {}
   },
   "expected_study_outcomes": {
-    "_basis": "Amended 2026-08-13 under finding 6-D ([AGENT], ratified by owner). Candidates are labeled gate-feasible / gate-infeasible UNDER THE MODEL AS AUTHORED. The basis is the source-derived Carnot computation in .project/active/catf-constraint-policy-acceptance/cryo_derivation.py, re-derived from model source and shown to reproduce the executed value bit-exactly \u2014 not transcribed from an observed run.",
+    "_basis": "Amended 2026-08-13 under finding 6-D ([AGENT], ratified by owner). Candidates are labeled gate-feasible / gate-infeasible UNDER THE MODEL AS AUTHORED. The basis is the source-derived Carnot computation in .project/completed/20260813_catf-constraint-policy-acceptance/cryo_derivation.py, re-derived from model source and shown to reproduce the executed value bit-exactly \u2014 not transcribed from an observed run.",
     "gate_feasible_candidate": {
-      "_note": "A MACHINERY EXEMPLAR, NOT A RECOMMENDED DESIGN. It exists to show the satisfied path executes; no one is proposing a 20 GW fusion plant. A2 alone turns satisfied at p_fusion >= 16000; both gates satisfy at 20000.",
+      "_note": "A MACHINERY EXEMPLAR, NOT A RECOMMENDED DESIGN. It exists to show the satisfied path executes; no one is proposing a 20 GW fusion plant. A2 alone turns satisfied at p_fusion >= 16000; all three gates satisfy at 20000. A9 is satisfied at the authored design point and on both legs: pumping_speed_total = 200 against n_pumps * pump_capacity_each = 48 * 4.17 = 200.16, a 0.08% disagreement inside the ruled 1% band, and the p_fusion mutation touches no pumping attribute.",
       "gates_satisfied": [
         "CATFMFEPhysics::catf_physics::net_power_viable",
-        "CATFMFEPhysics::catf_physics::parasitic_fraction_ok"
+        "CATFMFEPhysics::catf_physics::parasitic_fraction_ok",
+        "CATFMFEVacuum::catf_vacuum_pumping::pumping_speed_agrees"
       ],
       "headline": "full_satisfaction",
       "inputs": "CATFMFEPhysics__catf_physics__p_fusion = 20000.0, all else authored",
@@ -100,12 +117,12 @@
   },
   "fixture": "catf_mfe_gated",
   "histogram_rows": {
-    "eligible": "A2 (net_power_viable), A3 (parasitic_fraction_ok) \u2014 the two asserted, executing gates",
-    "excluded": "A5 (LayerContinuity), A6 (RadiusThicknessConsistency), A9 (PumpingSpeedConsistency) \u2014 reaching, unassessed form, exactly as in catf_mfe_d5 today. Nothing in the catalog distinguishes them from any other plain usage; their PROVENANCE parked-row record is where the blocked-by-defect disposition is visible.",
+    "eligible": "A2 (net_power_viable), A3 (parasitic_fraction_ok), A9 (pumping_speed_agrees) \u2014 the three asserted, executing gates. A9 joined them when Item 9 executed its held intent: an assert of ProductWithinBand at rel_tol = 0.01, replacing the exact == between two independently authored routes.",
+    "excluded": "None. A5 and A6 left the catalog by deletion (their ruled derivations are now authored in radial_build.sysml) and A9 moved excluded -> eligible, so no reaching usage carries an unassessed form.",
     "non_reaching": "B1-B5 (5 part-definition guards) + 48 awaits-capability Group C calc-def guards = 53"
   },
-  "matched_by_name": 56,
-  "matched_by_renamed_from": 2,
+  "matched_by_name": 53,
+  "matched_by_renamed_from": 3,
   "renamed_carriers": [
     {
       "authority": "owner-disposition.md Group A, A2 (assert-one-sided)",
@@ -116,6 +133,11 @@
       "authority": "owner-disposition.md Group A, A3 (assert-band)",
       "renamed_from": "CATFMFEPhysics::catf_physics::ReasonableParasiticTotal",
       "usage_qualified_name": "CATFMFEPhysics::catf_physics::parasitic_fraction_ok"
+    },
+    {
+      "authority": "owner-disposition.md Group A, A9 (assert-band, 1% relative [OWNER 2026-08-13])",
+      "renamed_from": "CATFMFEVacuum::catf_vacuum_pumping::PumpingSpeedConsistency",
+      "usage_qualified_name": "CATFMFEVacuum::catf_vacuum_pumping::pumping_speed_agrees"
     }
   ]
 }

@@ -223,23 +223,23 @@ grep -n "pumping_speed_agrees" tests/fixtures/catf_mfe_gated/designs/catf_mfe/va
 **See `design.md#expected-output-derivation-plan-sc-6` for the per-artifact change list (rows 1–6)
 and `design.md#potential-risks` for the ledger-format trap.**
 
-- [ ] `tests/expectations/constraint_population/catf_mfe_gated.json` — drop the A5/A6 rows; rename
+- [x] `tests/expectations/constraint_population/catf_mfe_gated.json` — drop the A5/A6 rows; rename
       A9 and set its `source_line` **read from the edited source** (row 1)
-- [ ] `tests/expectations/gated_manifest/catf_mfe_gated.json` — full field list in row 2:
+- [x] `tests/expectations/gated_manifest/catf_mfe_gated.json` — full field list in row 2:
       `56/9/53/3/3`, A5/A6 deletion records (d5 lines 612, 630), A9 into `renamed_carriers`,
       histogram `{eligible 3, excluded 0, non_reaching 53}`, coverage `56/3/3/0/0/{}`,
       `gates_satisfied` **and its stale `_note`**, rewritten `histogram_rows`, and the
       `.project/active/…` → `completed/` citation corrections
-- [ ] `tests/unit/data/expected-coverage.md` — ledger row
+- [x] `tests/unit/data/expected-coverage.md` — ledger row
       `catf_mfe_gated | 56 | 3 | 3 | 0 | 0 | {} | complete | violation | 3` (**nine columns
       exactly** — a malformed row fails the whole suite loudly) plus the re-derived prose section
       (3 asserted executing + 5 B-guards + 48 Group C = 56; "why `assessed_entry_count` is 2" → 3)
-- [ ] `tests/conformance/test_gated_manifest_identity.py` — literals `58/7/56/2` → `56/9/53/3`;
+- [x] `tests/conformance/test_gated_manifest_identity.py` — literals `58/7/56/2` → `56/9/53/3`;
       deletion-row set gains `A5`, `A6`. (The new per-occurrence falsification cases land in
       Phase 3 with the mechanism they exercise.)
-- [ ] `scripts/check_gated_manifest.py` — module docstring `65 = 58 + 7` → `65 = 56 + 9` only. The
+- [x] `scripts/check_gated_manifest.py` — module docstring `65 = 58 + 7` → `65 = 56 + 9` only. The
       `DERIVATIONS` extension is Phase 3.
-- [ ] `tests/fixtures/catf_mfe_gated/PROVENANCE.md` — **all of `design.md`'s PROVENANCE edit list in
+- [x] `tests/fixtures/catf_mfe_gated/PROVENANCE.md` — **all of `design.md`'s PROVENANCE edit list in
       one pass**, amending rather than annotating (capture-fidelity law 3). Do not skip these three,
       which are easy to lose:
       - **§5(b)** the new A9 subsection carrying the ruled unit-check cells, matching A2's and A3's
@@ -258,11 +258,11 @@ and `design.md#potential-risks` for the ledger-format trap.**
 **Automated:** none by design. Running a confirmation here would defeat the phase.
 
 **Manual:**
-- [ ] Re-derive `65 = 56 + 9` and `53 + 3 = 56` by hand against the spec's nine-row deletion table
-- [ ] Count the ledger row's columns: nine
-- [ ] Grep PROVENANCE for `blocked-by-defect` → only historical/retired framing remains, with the
+- [x] Re-derive `65 = 56 + 9` and `53 + 3 = 56` by hand against the spec's nine-row deletion table
+- [x] Count the ledger row's columns: nine
+- [x] Grep PROVENANCE for `blocked-by-defect` → only historical/retired framing remains, with the
       retirement citing `62a07e5`
-- [ ] Grep PROVENANCE for `65 = 58 + 7` → zero hits (including the Authority block, where the
+- [x] Grep PROVENANCE for `65 = 58 + 7` → zero hits (including the Authority block, where the
       `SC-3` reference is **Item 5's** SC-3 and stays as-is; only the number changes)
 
 **What we know works after this phase:** nothing yet — and that is the point. What we have is a
@@ -535,6 +535,57 @@ spec's success criteria has a recorded count behind it.
   fixture, per the plan.
 
 ### Phase 2 Completion
+**Completed:** 2026-08-13. **No confirmation run happened before this commit.**
+
+**Actual Changes:**
+- `tests/expectations/constraint_population/catf_mfe_gated.json` — 58 → 56 rows: A5's and A6's rows
+  dropped; A9 renamed to `…::pumping_speed_agrees` with `source_line` **171**, read from the edited
+  `vacuum.sysml`, not from any run.
+- `tests/expectations/gated_manifest/catf_mfe_gated.json` — `carrier_total` 56, `deletion_total` 9,
+  `matched_by_name` 53, `matched_by_renamed_from` 3, `assessed_entry_count` 3; A5/A6 deletion
+  records added at d5 lines 612 and 630; A9 added to `renamed_carriers`; histogram
+  `{eligible 3, excluded 0, non_reaching 53}`; coverage account `56/3/3/0/0/{}/complete`;
+  `gates_satisfied` gains A9 **and its `_note` rewritten** ("both gates satisfy at 20000" was stale
+  at three); `histogram_rows` rewritten on all three keys; `_comment` and `_basis` citations moved
+  from `.project/active/…` to `.project/completed/20260813_…`.
+- `tests/unit/data/expected-coverage.md` — ledger row
+  `catf_mfe_gated | 56 | 3 | 3 | 0 | 0 | {} | complete | violation | 3` (**nine columns, counted**);
+  prose section re-derived (3 asserted executing + 0 plain reaching + 5 B-guards + 48 Group C = 56),
+  "why `applicable_gate_total` is 2" → 3, "why `assessed_entry_count` is 2" → 3, plus a paragraph
+  recording that A9 is satisfied at the design point and does not move the headline.
+- `tests/conformance/test_gated_manifest_identity.py` — `58/7/56/2` → `56/9/53/3`; deletion-row set
+  gains `A5` and `A6`; module docstring identity restated.
+- `scripts/check_gated_manifest.py` — module docstring `65 = 58 + 7` → `65 = 56 + 9` and the source
+  table's "58 carriers" → "56 carriers". No `DERIVATIONS` change (that is Phase 3).
+- `tests/fixtures/catf_mfe_gated/PROVENANCE.md` — the whole edit list in one pass: header identity
+  and carrier split; measured-shape paragraph (62 modules, measured in Phase 1); §1's gate_forms
+  record; a new **A9 per-change record** carrying the third `renamed_from:`/`now:` pair the prover
+  joins on; the derivations table gains A5 and A6; "what was not edited" amended; §2 heading and
+  identity; **D8 (A5)** and **D9 (A6)** deletion records; the **float-drift record**; §3a rewritten
+  as a retirement citing `62a07e5`, with A9's SC-5 re-entry recorded and the archive's byte-freeze
+  stated; §3b's **SC-3 side 1** as a not-fired conditional naming `[INLINE-PREDICATE-MARKER-DROP]`;
+  B3's row tense; §5's three edits — the stale "both gates take the unit-blind band", the corrected
+  premise about constraint formals carrying unit text, **Item 9's D3 record**, and a new **A9
+  unit-check subsection** matching A2's and A3's shape; the Authority block's identity.
+
+**Manual checks:**
+- `65 = 56 + 9` and `53 + 3 = 56` re-derived by hand against the spec's nine-row deletion table.
+- Ledger row column count: nine.
+- `grep blocked-by-defect PROVENANCE.md` → 2 hits, both retirement framing; `62a07e5` cited 4×.
+- `grep "65 = 58 + 7"` / `"58 carriers"` in PROVENANCE → zero hits.
+- Deletion headings D1–D9 all match the prover's `### D\d+ — <row> \`<qn>\`` form; three
+  `renamed_from:` bullets, each with its `**now:**` partner.
+
+**Issues:**
+- The `_note` on the feasible candidate and the measured-shape paragraph's `full_satisfaction`
+  headline were **already stale before this item** (corrected under Item 5 finding 6-D in the ledger
+  and manifest but not in PROVENANCE). Both were amended in this pass rather than left, since the
+  paragraphs were being rewritten anyway.
+
+**Deviations:**
+- The new §5 subsection is headed *"Item 9's decision D3"*, not *"D3"*, so it cannot be confused
+  with §2's deletion record D3 or with §5's own heading, which carries **Item 5's** D3. It also
+  keeps the prover's deletion-heading regex from matching it.
 
 ### Phase 3 Completion
 

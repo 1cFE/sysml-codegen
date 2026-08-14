@@ -13,22 +13,10 @@
       "usage_qualified_name": "CATFMFEPhysics::catf_physics::parasitic_fraction_ok"
     },
     {
-      "owner_qualified_name": "CATFMFERadialBuild::catf_radial_build",
-      "source_file": "designs/catf_mfe/radial_build.sysml",
-      "source_line": 604,
-      "usage_qualified_name": "CATFMFERadialBuild::catf_radial_build::LayerContinuity"
-    },
-    {
-      "owner_qualified_name": "CATFMFERadialBuild::catf_radial_build",
-      "source_file": "designs/catf_mfe/radial_build.sysml",
-      "source_line": 622,
-      "usage_qualified_name": "CATFMFERadialBuild::catf_radial_build::RadiusThicknessConsistency"
-    },
-    {
       "owner_qualified_name": "CATFMFEVacuum::catf_vacuum_pumping",
       "source_file": "designs/catf_mfe/vacuum.sysml",
-      "source_line": 169,
-      "usage_qualified_name": "CATFMFEVacuum::catf_vacuum_pumping::PumpingSpeedConsistency"
+      "source_line": 171,
+      "usage_qualified_name": "CATFMFEVacuum::catf_vacuum_pumping::pumping_speed_agrees"
     },
     {
       "owner_qualified_name": "FusionAnalysesThermalLoads::MagnetCryogenicLoad",
