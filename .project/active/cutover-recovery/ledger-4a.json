@@ -4241,7 +4241,7 @@
    "unreachability": null,
    "replacement_proof_node": [
     "tests/conformance/test_exact_route_snapshot_generation.py",
-    "tests/conformance/test_exact_route_generated_package.py::test_the_two_packages_differ_only_in_provenance_comments"
+    "tests/conformance/test_exact_route_generated_package.py::test_the_two_packages_are_byte_identical"
    ],
    "required_suite": null,
    "blocked_by": [],
@@ -4253,7 +4253,7 @@
    "responsibility": "Conformance tests for the snapshot generation surface (Item 2, SC-9).",
    "breaks_on": "sysml_codegen.orchestration.snapshot_context (L-026, 4B-G2); tests.helpers.legacy_route (L-276, 4B-G4)",
    "breaks_a_free_group": true,
-   "disposition_4c_note": "Responsibility replaced by a green Gate 4C specimen: ['tests/conformance/test_exact_route_snapshot_generation.py', 'tests/conformance/test_exact_route_generated_package.py::test_the_two_packages_differ_only_in_provenance_comments']. Retires in the same commit as its owner.",
+   "disposition_4c_note": "Responsibility replaced by a green Gate 4C specimen: ['tests/conformance/test_exact_route_snapshot_generation.py', 'tests/conformance/test_exact_route_generated_package.py::test_the_two_packages_are_byte_identical']. Retires in the same commit as its owner. Citation re-pointed 2026-08-14 (step 7): step 5 renamed the differ-only-in-provenance pin to the byte-identity node and re-pointed L-007/L-010 but missed this row; caught by the step-7 battery's replacements checker (final-runs/run1).",
    "state": "executed",
    "executed_commit": "19072adf41dcfe3bf1385e843a52c414fac02969"
   },
