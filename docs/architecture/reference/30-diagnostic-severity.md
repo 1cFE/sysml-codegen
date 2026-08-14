@@ -148,6 +148,54 @@ exact equality rather than a `>=` range. Codegen does not exercise them, and pin
 string it was written against in `_upstream_pins.py` so an upstream bump fails loudly in
 `tests/conformance/test_upstream_pins.py` rather than silently.
 
+## Severity by cause — constraint dispositions
+
+Everything above is about **extraction** diagnostics, where severity is a value the writer sets.
+Constraint **dispositions** carry a severity too, and it works differently: it is **derived**, never
+authored, and it keys on the cause *and* the form together. Added here 2026-08-14
+(CONSTRAINT-SEMANTICS Item 7) documenting what Item 2 landed; the authority is
+`expected_severity` (`src/sysml_codegen/elaboration/graph.py:290-304`).
+
+**The rule in one sentence.** The same cause means something different depending on whether anyone
+asserted the constraint.
+
+| Reason | Asserted form | Any other form |
+|---|---|---|
+| `owner_absent` | **error** | info |
+| `owner_kind_unattachable` | **error** | info |
+| `owner_has_no_occurrences` | **warning** | info |
+| `classification_incomplete` | **error** | **error** (unconditional) |
+| everything else | info | info |
+
+**Why the split.** A non-reaching constraint nobody asserted is a fact about the model — the author
+wrote a description and it describes nothing right now. Nothing is broken. The *same* cause under an
+asserted form is one of two real problems, and they get different grades because they need different
+responses:
+
+- **error — the gate could never attach.** `owner_absent` and `owner_kind_unattachable` mean the
+  owner does not exist, or is a kind nothing can hang off. No model input fixes this; the authoring
+  is wrong.
+- **warning — the gate is vacuous.** `owner_has_no_occurrences` means the owner is fine but nothing
+  was instantiated to run the gate against. A different model configuration would make it run, so
+  this is visible and loud but not fatal. Contract invariant 61 pins it, and the advisory naming the
+  usage and its detached owner is `vacuous_asserted_gate` — the first real ADVISORY kind carried end
+  to end through the sink above.
+- **error, unconditionally — `classification_incomplete`.** This one never depends on form, because
+  it only ever arises for an asserted form in the first place. It means the classifier could not
+  decide, which is a codegen defect, not a modeling one.
+
+**What severity does *not* decide: the halt.** A warning-grade vacuous gate does not stop
+generation, and neither does an error-grade non-reaching disposition — the model-wide halt is the
+profile `BLOCK` on an asserted usage **that reaches occurrences** (lifecycle contract invariant 1,
+amended 2026-08-14, item3-F2). Severity-by-cause governs how loudly a disposition is reported. It
+does not govern whether a package is produced.
+
+**What it does not decide either: the denominator.** A warning-grade vacuous gate is still an
+applicable asserted gate and still sits in the feasibility denominator as unassessed, which is what
+puts the headline at partial coverage. The only way out of the denominator is an explicit
+`@inapplicable:` marker. See `docs/architecture/modeling-assumptions.md` §8, "The disposition
+vocabulary."
+
 ## Requirements traced here
 
 | Req | Statement | Evidence |

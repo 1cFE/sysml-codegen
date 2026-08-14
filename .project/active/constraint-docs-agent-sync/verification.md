@@ -277,6 +277,80 @@ absent: `grep -cE "full_satisfaction|partial_coverage" docs/evaluation-and-study
 
 ---
 
+## Scope correction and surfaced premise conflict (found in Phase 4, 2026-08-14)
+
+Phase 4 found that the plan's model of the agent surfaces is wrong, in a way that changes what SC2
+and SC3 can honestly claim. Recorded here rather than resolved silently (capture-fidelity law 4).
+
+### What is actually there
+
+**Codegen has no agent surfaces of its own.** Every file under codegen `.claude/agents/` and
+`.claude/skills/sysml-conventions/` is a **symlink**, and all of them resolve to
+`/home/reid/1cfe/agentic-mbse/claude/…` — the **main agentic-mbse checkout**, currently on branch
+`elaborate-first-salvage`. Not the authorized worktree. Verified by `readlink -f`.
+
+The plan's Phase 4 instruction "check the codegen equivalents the same way" rests on there being
+codegen equivalents. There are none — they are the same files, reached by a second path.
+
+**agentic-mbse tracks two divergent copies of the agent definitions.** `claude/` (37 tracked files)
+and `.claude/` (23 tracked files) both exist and `sysml-expert.md` **differs** between them:
+
+- `claude/agents/sysml-expert.md` carries Item 1's D5-a correction (the settled-semantics sentence
+  after the `require constraint` example) and portable `{SYSML_DOCS_PATH}` placeholders.
+- `.claude/agents/sysml-expert.md` carries **neither** — no D5-a sentence, and hardcoded absolute
+  paths. Item 1 corrected `claude/` only.
+
+**The checkout codegen actually reads is uncorrected.** In `/home/reid/1cfe/agentic-mbse` on
+`elaborate-first-salvage`: `claude/agents/sysml-expert.md` has no D5-a sentence, and
+`claude/skills/sysml-conventions/SKILL.md:136` still reads
+`assert constraint TempLimit { temperature < 1000 [K] }`. Item 1's and this item's corrections live
+on the `item7-rebuild` branch and have not reached that branch.
+
+### Sweep-scope defect this exposes in Table 1
+
+`grep -r` does not follow symlinked files. **Codegen's `.claude/` tree was therefore swept as empty**
+— the recorded codegen S1–S5 counts (45) exclude it. Had the symlinks been followed, S2 would have
+picked up `sysml-expert.md:124`. Table 1's codegen rows are correct for the files codegen *owns*;
+they were never a statement about the symlink targets.
+
+Correcting it: the agentic-mbse worktree's `claude/` tree was **not** in the Phase 1 agentic-mbse
+scope either (that run used `.claude`). Swept in Phase 4, results below. Both trees are now covered.
+
+| # | Term | File:line | Quoted hit | Disposition | Note |
+|---|------|-----------|------------|-------------|------|
+| 71 | S2 | agentic-mbse `claude/agents/sysml-expert.md:124` | "require constraint { system.flowRate >= requiredFlow }" | correct as written | Item 1's D5-a deviation, standing |
+| 72 | S2 | agentic-mbse `claude/agents/sysml-expert.md:132` | "`require constraint` inside a `requirement def` is the correct way to state a requirement's required constraint" | correct as written | **this is Item 1's correction itself** |
+
+S1, S3, S4, S5 return zero over `claude/`. Raw-hit total rises 134 → 136; rows 70 → 72.
+
+### What was fixed in bounds
+
+- agentic-mbse worktree `claude/skills/sysml-conventions/SKILL.md` — the stale example replaced.
+  This is the authored copy the codegen symlinks point at, so the fix propagates to codegen readers
+  when the branch merges.
+- agentic-mbse worktree `.claude/agents/sysml-expert.md` — brought level with `claude/` by adding
+  Item 1's D5-a sentence. It was a tracked, shipped surface still teaching the uncorrected shape.
+
+### Named residual — SC2/SC3 are not fully discharged for codegen agent readers
+
+**A Claude session in the codegen checkout today still reads the superseded constraint example**,
+because its symlinks resolve to `/home/reid/1cfe/agentic-mbse` on `elaborate-first-salvage`, which
+this item may not edit (hard boundary: agentic-mbse edits are worktree-only). The falsifier is
+therefore **open** on that one path until the `item7-rebuild` branch reaches the branch those
+symlinks resolve to.
+
+Evidence, run post-edit: `grep -c "assert constraint TempLimit" .claude/skills/sysml-conventions/SKILL.md`
+in codegen → **1** (expected 0 by the plan's Phase 4 check). The count is 1 because the file read is
+the out-of-bounds one; the in-bounds copy of the same file reads 0.
+
+**In-boundary excursion, caught and reverted.** Before the symlink topology was understood, one edit
+was written through the codegen path and therefore landed in `/home/reid/1cfe/agentic-mbse` on
+`elaborate-first-salvage`. It was reverted with `git checkout --` on discovery. That checkout is
+verified clean (`git status --short` → empty, branch unchanged). No commit was made there and
+nothing was pushed. Recorded because a silent revert is not a record.
+
+---
+
 ## Table 2 — Post-edit sweep
 
 *Filled in Phase 6.*

@@ -436,68 +436,68 @@ and whose rewrite is an explicitly separate authorship pass (CLAUDE.md, "Retired
 trusting a document"). Do not rewrite it. Doc 30 (`30-diagnostic-severity.md`) is Active and is the
 home for severity-by-cause.
 
-- [ ] `modeling-assumptions.md` §8 (`:448`) — rewrite the **unit-on-binding** account. The current
+- [x] `modeling-assumptions.md` §8 (`:448`) — rewrite the **unit-on-binding** account. The current
       text "A unit on a constraint *binding* is carried, not checked" describes pre-Item-8 behavior
       and is false as written. Item 8's landed behavior: authored unit text on constraint-formal and
       computed-attribute ports, fail-closed `SI_RENDERING_COLLISION` on unequal metadata
       (`completed/20260813_unit-lane-port-metadata/`)
-- [ ] `modeling-assumptions.md` §8 — reconcile the blanket BLOCK statement with the Phase 2
+- [x] `modeling-assumptions.md` §8 — reconcile the blanket BLOCK statement with the Phase 2
       amendment (reaching-gates scope)
-- [ ] `modeling-assumptions.md` §8/§9 — the **disposition vocabulary**: `eligible` / `excluded` /
+- [x] `modeling-assumptions.md` §8/§9 — the **disposition vocabulary**: `eligible` / `excluded` /
       `non_reaching`, the closed reason set per kind, precedence, carriers, and the totality gate.
       Citable source: `completed/20260813_constraint-catalog-totality/design.md`
-- [ ] `docs/architecture/reference/30-diagnostic-severity.md` — severity-by-cause
-- [ ] Every remaining codegen Table 1 row marked for correction
+- [x] `docs/architecture/reference/30-diagnostic-severity.md` — severity-by-cause
+- [x] Every remaining codegen Table 1 row marked for correction
 
 **Codegen agent surfaces**
 
-- [ ] `.claude/skills/sysml-conventions/SKILL.md:136` — replace the inline-assert-with-unit-literal
+- [x] `.claude/skills/sysml-conventions/SKILL.md:136` — replace the inline-assert-with-unit-literal
       example with the **bindings-only blessed pattern**; add a pointer to the equality-intent
       taxonomy and `@inapplicable:` usage
-- [ ] `CLAUDE.md` — swept for superseded constraint teaching
-- [ ] `.claude/agents/*.md` expert definitions — swept (agentic-mbse's `.claude/agents/sysml-expert.md`
+- [x] `CLAUDE.md` — swept for superseded constraint teaching
+- [x] `.claude/agents/*.md` expert definitions — swept (agentic-mbse's `.claude/agents/sysml-expert.md`
       carried an S2 hit in the sizing run; check the codegen equivalents the same way)
 
 **agentic-mbse — `/home/reid/1cfe/agentic-mbse-item7-rebuild`, branch `item7-rebuild`**
 
-- [ ] `docs/patterns/constraints.md` — `@inapplicable:` authoring; the eligible+inapplicable refusal
+- [x] `docs/patterns/constraints.md` — `@inapplicable:` authoring; the eligible+inapplicable refusal
       (D9); and the **D9 authoring-time advisory** (the re-homed orphan — D9 already refuses the
       combination loudly at generation time, so nothing ships wrong; the advisory catches it a step
       earlier)
-- [ ] `docs/patterns/constraints.md`, `syntax-reference.md`, `semantic-operators.md`,
+- [x] `docs/patterns/constraints.md`, `syntax-reference.md`, `semantic-operators.md`,
       `common-mistakes.md` — the project-authored S2/S3/S5 rows from Table 1
-- [ ] `CLAUDE.md` and `.claude/agents/sysml-expert.md` — swept
-- [ ] **Vendored `docs/sysmlv2/` and `docs/syside/` are not edited.** Aggregated and dispositioned
+- [x] `CLAUDE.md` and `.claude/agents/sysml-expert.md` — swept
+- [x] **Vendored `docs/sysmlv2/` and `docs/syside/` are not edited.** Aggregated and dispositioned
       out of class per D-2
 
 **TEAx — `/home/reid/1cfe/teax`, branch `constraint-semantics-item3`. Never `main`. Nothing is ever
 pushed.**
 
-- [ ] `docs/evaluation-and-study.md` — the **six report states**, the coverage block, the policy
+- [x] `docs/evaluation-and-study.md` — the **six report states**, the coverage block, the policy
       defaults, the **keep-for-boundary default with the feed-strategy opt-in config**, and the
       durable-record fields. `:77`'s three-state constraint map is the site to extend; `:115`
       already names the four dispositions and is the hook for the opt-in
-- [ ] TEAx `CLAUDE.md` — swept
-- [ ] TEAx's 9 S4 rows dispositioned as **correct as written** (quoted supersession) — a disposition
+- [x] TEAx `CLAUDE.md` — swept
+- [x] TEAx's 9 S4 rows dispositioned as **correct as written** (quoted supersession) — a disposition
       is a row, not an omission
 
 **Where an inapplicability marker actually works (Item 5 close obligation, both authoring repos)**
 
-- [ ] State plainly: an `@inapplicable:` marker on a **bindings-form** constraint reaches the domain;
+- [x] State plainly: an `@inapplicable:` marker on a **bindings-form** constraint reaches the domain;
       on an **inline-predicate** constraint SysIDE silently drops it, so until
       `[INLINE-PREDICATE-MARKER-DROP]` (BACKLOG:1152) closes, that disposition is recorded in the
       fixture's PROVENANCE instead of in source
-- [ ] Cite the worked case (`catf_mfe_gated` B1–B5: five markers written, zero carried) and the loud
+- [x] Cite the worked case (`catf_mfe_gated` B1–B5: five markers written, zero carried) and the loud
       detector (`tests/conformance/test_constraint_population_oracle.py` rule 3). Item 5 owns those
       files — **cite, do not rewrite**
-- [ ] The test the text has to pass: a modeler can tell, **before authoring**, which mechanism
+- [x] The test the text has to pass: a modeler can tell, **before authoring**, which mechanism
       carries their disposition
 
 ### Validation
 
-- [ ] The three post-phase greps above return the expected counts
-- [ ] Every Table 1 row marked for correction has a corresponding edit
-- [ ] `git status` in TEAx shows branch `constraint-semantics-item3`, no `main` involvement, nothing
+- [x] The three post-phase greps above return the expected counts
+- [x] Every Table 1 row marked for correction has a corresponding edit
+- [x] `git status` in TEAx shows branch `constraint-semantics-item3`, no `main` involvement, nothing
       pushed
 
 **What we know after this phase:** the falsifier is closed on the shipped surfaces — an authoring
@@ -773,6 +773,89 @@ TEAx S1/S2/S3/S5→0 S4→9. Total 134 raw hits, all accounted for (70 rows + 64
   instruction (`owner-checkpoint-20260813.md:15-16`) executed, not scope creep.
 
 ### Phase 4 Completion
+
+**Completed:** 2026-08-14
+
+**Actual changes — codegen**
+
+- `docs/architecture/modeling-assumptions.md` §8, unit-on-binding — **rewritten**. The old text
+  ("carried, not checked") described pre-Item-8 behavior. New text: authored unit reaches
+  `PortMetadata.unit` on constraint-formal and computed-attribute ports; two consumers of one shared
+  value that disagree fail closed with `SI_RENDERING_COLLISION`; no conversion anywhere; the
+  operand-category point is kept because it is still true.
+- Same file, new **"The disposition vocabulary"** subsection — the three kinds with their closed
+  reason sets as a table, the one-rule precedence, where each disposition sits relative to the
+  feasibility denominator, the carriers, and the totality gate. Cited to
+  `elaboration/graph.py:259-277` and `generation/coverage.py:57-71`, which is where the closed sets
+  actually live.
+- Same file, new **"Where an `@inapplicable:` marker actually works"** subsection — the
+  bindings-vs-inline table, `[INLINE-PREDICATE-MARKER-DROP]`, the B1–B5 worked case and the rule-3
+  detector (cited, not restated — Item 5 owns them), and D9.
+- `docs/architecture/reference/30-diagnostic-severity.md`, new **"Severity by cause"** section —
+  the reason × form severity table, why the same cause grades differently under an asserted form,
+  and two explicit non-consequences: severity does not decide the halt, and it does not decide the
+  denominator.
+
+**Actual changes — agentic-mbse worktree**
+
+- `docs/patterns/constraints.md`, new **"Marking a constraint inapplicable"** section — why the
+  denominator matters, how to write the marker, the bindings-vs-inline table with the silent-drop
+  warning, the worked case, and D9 with its authoring-time advisory framed as "D9 one step earlier."
+- `claude/skills/sysml-conventions/SKILL.md` — the stale inline-assert-with-unit-literal example
+  replaced with the bindings-only blessed pattern, three rules, the `@inapplicable:` block, and the
+  four-intent equality taxonomy as a table.
+- `.claude/agents/sysml-expert.md` — Item 1's D5-a settled-semantics sentence added. This copy had
+  never received it (see Issues).
+
+**Actual changes — TEAx (`constraint-semantics-item3`)**
+
+- `docs/evaluation-and-study.md`, new **"The headline is a coverage claim"** subsection — the
+  six states as a two-vocabulary table with the normalization seam, the unconstrained sixth state
+  carried by report *absence*, and the `all_satisfied` refuse-by-name note. Replaces the
+  three-state map at the old `:77`.
+- Same file, new **"The coverage block"** — what `_coverage_of` copies and why (query off the case
+  row without opening artifacts).
+- Same file, new **"Policy defaults"** — the headline → disposition table, the reasoning behind the
+  `keep-for-boundary` default for `partial_coverage`, the `feed-strategy` opt-in as a YAML line, and
+  its three safety properties (identical path, stays visible, starts a new lineage).
+- Same file, new **"What reaches the durable record"**.
+
+**Issues — a premise conflict, surfaced not resolved (recorded in full in `verification.md`)**
+
+- **Codegen has no agent surfaces of its own.** Every file under codegen `.claude/agents/` and
+  `.claude/skills/sysml-conventions/` is a symlink resolving to `/home/reid/1cfe/agentic-mbse/claude/…`
+  — the **main** agentic-mbse checkout, on branch `elaborate-first-salvage`. Not the authorized
+  worktree. The plan's "check the codegen equivalents the same way" has no referent: they are the
+  same files by a second path.
+- **agentic-mbse tracks two divergent copies** of the agent definitions, `claude/` (37 files) and
+  `.claude/` (23 files). `sysml-expert.md` differs: `claude/` has Item 1's D5-a correction, `.claude/`
+  does not. Item 1 corrected `claude/` only. Fixed `.claude/` here.
+- **Sweep-scope defect in Table 1.** `grep -r` does not follow symlinked files, so codegen's
+  `.claude/` was swept as empty in Phase 1, and the worktree's `claude/` tree was outside the Phase 1
+  agentic-mbse scope (that run used `.claude`). Both swept in Phase 4; two rows added (71, 72), both
+  "correct as written" — one of them *is* Item 1's correction. Raw total 134 → 136.
+- **Named residual: SC2/SC3 are not fully discharged for codegen agent readers.** A Claude session
+  in the codegen checkout still reads the superseded example, because its symlinks resolve to a
+  checkout this item may not edit. Post-edit evidence:
+  `grep -c "assert constraint TempLimit" .claude/skills/…/SKILL.md` in codegen → **1**, where the
+  plan's Phase 4 check expected 0. The in-bounds copy of the same file reads 0. The falsifier stays
+  open on that one path until `item7-rebuild` reaches the branch the symlinks resolve to.
+- **In-boundary excursion, caught and reverted.** Before the symlink topology was understood, one
+  SKILL.md edit was written through the codegen path and landed in `/home/reid/1cfe/agentic-mbse` on
+  `elaborate-first-salvage`. Reverted with `git checkout --` on discovery; that checkout verified
+  clean (`git status --short` empty, branch unchanged), no commit, nothing pushed. Recorded because
+  a silent revert is not a record.
+
+**Deviations:**
+
+- **The `modeling-assumptions.md` BLOCK reconciliation landed in Phase 2**, not here — see Phase 2's
+  notes. Its box is ticked in both lists rather than the work being done twice.
+- **The skill and agent edits went to the worktree copies**, not through the codegen symlink path
+  the plan named. This is the hard boundary applied literally, and it is why the codegen-side check
+  still reads 1.
+- **TEAx's `CLAUDE.md` needed no edit.** Swept: two `constraint` mentions, one a TypeVar remark and
+  one the `tracking_key` correlation rule, both correct. agentic-mbse `CLAUDE.md` likewise — one
+  mention, an L4 validator-level label. Recorded as dispositions, not skips.
 
 ### Phase 5 Completion
 

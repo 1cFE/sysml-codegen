@@ -535,11 +535,35 @@ Two spellings work, and a third does not:
   `ScalarValues::{Boolean,Integer,Real,String}` and refuses anything else with `SI_EDGE_DANGLING:
   … has unsupported exact type`.
 
-**A unit on a constraint *binding* is carried, not checked.** `in tol = 0.05 [m];` is admitted and
-contributes the number `0.05`, but a bound formal takes its operand category from the constraint
-definition's declared type, so the annotation never reaches the profile's dimension check. A band
-binding whose unit is wrong is admitted silently. If a gate must *check* units, put the comparison
-and both annotations in the predicate body.
+**A unit on a constraint *binding* is carried into port metadata, and collides loudly when two
+consumers disagree.** (Rewritten 2026-08-14; the previous text — "carried, not checked" — described
+pre-Item-8 behavior and was false as written once Item 8 landed,
+`.project/completed/20260813_unit-lane-port-metadata/`.)
+
+`in tol = 0.05 [m];` is admitted and contributes the number `0.05`. The authored unit text also
+reaches the port: since Item 8, a **constraint-formal** binding and an input to a **computed
+design attribute** both populate `PortMetadata.unit` from the authored declaration, the same way a
+calculation-usage binding always did.
+
+That matters because one modeled design attribute can supply more than one consumer, and projection
+treats those consumers as one public `DESIGN_ATTRIBUTE` entry point **only when their projected
+metadata agrees**. Before Item 8 the two shapes above contributed a manufactured `None` while a
+calculation formal contributed a real unit string, so valid models refused with
+`SI_RENDERING_COLLISION` on metadata the modeler never wrote. Now the comparison runs on what was
+actually authored:
+
+- **Both consumers annotate the same unit** — one entry point, as intended.
+- **They disagree** — projection **fails closed** with `SI_RENDERING_COLLISION`, naming the
+  conflicting public key. This is deliberate: two different units on one shared value is a modeling
+  defect, and generating a package that silently picks one would ship a lie.
+
+The unit text is carried exactly as authored. **No conversion happens anywhere** — codegen does not
+turn `[mm]` into `[m]`. A collision is resolved by making the model agree, not by trusting a
+converter that does not exist.
+
+**A bound formal's operand category still comes from the constraint definition's declared type**, so
+the annotation is not a dimension check on the predicate. If a gate must *check* units, put the
+comparison and both annotations in the predicate body.
 
 **Every authored usage has a carrier — and it is true by construction, not by check.**
 The domain is one `ConstraintUsageRecord` per authored `ConstraintUsage`, minted *before* owner-to-
@@ -556,6 +580,81 @@ outside it: a reviewed expected-population file per constraint-bearing fixture, 
 `tests/conformance/test_constraint_population_oracle.py`. A directory that declares a constraint
 and has no expectation file fails that suite by name, so a new fixture cannot become silent
 coverage.
+
+### The disposition vocabulary
+
+Three kinds, each with a **closed** reason set. Closed means what it says: a reason token outside
+these sets is refused by name at generation, not bucketed into a default. The authority is
+`DISPOSITION_REASONS` (`src/sysml_codegen/elaboration/graph.py:259-277`); the coverage ruling each
+token carries is `KNOWN_REASONS` (`src/sysml_codegen/generation/coverage.py:57-71`), and the two are
+compared at generation, so a reason added later refuses rather than slipping through silently.
+
+| Disposition | What it means | Reasons (closed set) |
+|---|---|---|
+| `eligible` | the predicate lowered and the gate runs | `admitted` |
+| `excluded` | the profile refused to execute it, or the form never executes | `out_of_scope_satisfy`, `out_of_profile_owner`, `non_numerical`, `unassessed_form`, `profile_blocked` |
+| `non_reaching` | nothing ever instantiated the usage's owner, so there was nothing to run it against | `owner_absent`, `owner_kind_unattachable`, `owner_has_no_occurrences`, `classification_incomplete` |
+
+**Precedence, stated as one rule.** Every authored usage gets exactly **one** disposition, decided
+in this order: does it reach an occurrence at all (`non_reaching` if not) → did the profile admit it
+(`eligible` if so) → otherwise `excluded`. There is no usage with two dispositions and none with
+zero. That is the totality claim.
+
+**Where each disposition sits relative to the feasibility denominator.** This is the part that
+decides what a headline may claim, and it is not the same question as which disposition a usage got:
+
+- **Only asserted forms enter the denominator at all.** A plain `constraint`, a `require`/`assume
+  constraint`, and a `satisfy` reference are inventory. They never enter the feasibility
+  denominator, whatever disposition they carry.
+- **An asserted, unmarked usage is in the denominator** — under every reason token above. `admitted`
+  is in and assessed. Every other token is in and **unassessed**, which is what forces a
+  partial-coverage headline instead of full satisfaction.
+- **An asserted usage carrying an explicit `@inapplicable:` marker drops out** of the denominator.
+  That is the only way out, and it is a visible, authored choice.
+
+**Carriers.** The domain is one `ConstraintUsageRecord` per authored `ConstraintUsage`, minted
+*before* owner-to-scope expansion. The catalog's `usage_records` renders the whole domain; the
+coverage account beside the headline is derived from it by
+`generation/coverage.py::coverage_account`. Nothing derives coverage from the set of generated
+modules, because that set is already filtered.
+
+**The totality gate.** A generation preflight refuses to write anything unless the catalog accounts
+for every authored constraint usage, and unless its rows still match the fingerprint projection
+sealed them with. Coverage is therefore not a report the generator writes about itself — it is a
+precondition of the generator producing output at all. Landed by CONSTRAINT-SEMANTICS Item 2;
+citable design at `.project/completed/20260813_constraint-catalog-totality/design.md`.
+
+**Severity is derived from cause *and* form together, never authored.** See
+[30-diagnostic-severity.md](reference/30-diagnostic-severity.md), "Severity by cause."
+
+### Where an `@inapplicable:` marker actually works
+
+An `@inapplicable:` marker in a constraint usage's doc comment is the only way a gate leaves the
+feasibility denominator. **Which constraint form you wrote decides whether the marker arrives at
+all**, and you have to know that before you author, not after:
+
+| Constraint form | Marker reaches the domain? | What carries the disposition |
+|---|---|---|
+| **Bindings form** — `assert constraint x : SomeDef { in a = …; in b = …; }` | **yes** | the marker, in source |
+| **Inline-predicate form** — `assert constraint x { a <= b }` | **no — silently dropped** | the fixture's `PROVENANCE.md` |
+
+On the inline-predicate form SysIDE drops the doc comment before extraction sees it. Nothing warns
+at authoring time: the marker is simply absent, the gate stays in the denominator, and the report
+reads partial coverage while the source says the constraint is inapplicable. This is
+`[INLINE-PREDICATE-MARKER-DROP]` (`.project/backlog/BACKLOG.md:1152`), **open**. Until it closes, an
+inline-form disposition is recorded in the fixture's `PROVENANCE.md` instead of in source.
+
+**The worked case:** `tests/fixtures/catf_mfe_gated`, B1–B5 — five markers written, zero carried.
+**The loud detector:** `tests/conformance/test_constraint_population_oracle.py`, rule 3. Item 5 owns
+both; they are cited here, not restated.
+
+**Practical rule:** if you intend to mark a constraint inapplicable, write it in the bindings form.
+That is the blessed shape anyway.
+
+**Eligible *and* inapplicable is refused (D9).** A usage cannot be both admitted-and-running and
+not-part-of-the-feasible-set. Generation refuses that combination loudly by name, so nothing ships
+wrong; agentic-mbse's authoring validation raises the same contradiction as an advisory a step
+earlier, while you are still in the model.
 
 **What a modeler needing an enforced gate should do.** Use the assert family. It is the only
 enforcement opt-in: a bare `constraint`, a `require constraint`, an `assume constraint`, and a
