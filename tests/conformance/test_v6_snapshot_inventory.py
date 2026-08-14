@@ -13,10 +13,13 @@ sys.path.insert(0, str(ROOT / "scripts"))
 
 import assess_v6_snapshot_churn as inventory  # noqa: E402
 
-ITEM_ROOT = ROOT / ".project" / "active" / "unit-lane-port-metadata"
-PRE_INVENTORY = ITEM_ROOT / "snapshot-inventory-pre.json"
-FINAL_INVENTORY = ITEM_ROOT / "snapshot-inventory-final.json"
-RECAPTURE_RECEIPT = ITEM_ROOT / "v3-recapture.json"
+# Durable home per the F5 ruling [OWNER 2026-08-13]: suite collection must not
+# depend on `.project/` archive layout (the item folder moved to
+# `.project/completed/20260813_unit-lane-port-metadata/` at close).
+DATA_ROOT = ROOT / "tests" / "unit" / "data"
+PRE_INVENTORY = DATA_ROOT / "item8-snapshot-inventory-pre.json"
+FINAL_INVENTORY = DATA_ROOT / "item8-snapshot-inventory-final.json"
+RECAPTURE_RECEIPT = DATA_ROOT / "item8-v3-recapture.json"
 
 
 def _load(path: Path) -> dict[str, object]:

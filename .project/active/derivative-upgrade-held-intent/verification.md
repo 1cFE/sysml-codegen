@@ -255,3 +255,21 @@ unit from the formal's own declaration. Recorded in the design's NOTE, in `PROVE
 **Nothing was re-dispositioned.** Every target form is the ruled one. The only source edit outside
 the ruled 27 is D3's `tf_coil.thickness` comment, ratified at design review and recorded at
 `PROVENANCE.md:442`.
+
+---
+
+## Orchestrator rider (2026-08-13, post-C5): the 7 suite failures are CURED at HEAD
+
+The 7 failures recorded above (`tests/conformance/test_v6_snapshot_inventory.py`, all
+`FileNotFoundError` on `.project/active/unit-lane-port-metadata/snapshot-inventory-pre.json`)
+were caused by Item 8's close archiving its item folder (`fbd3495`) while the test still read
+the `active/` path — pre-existing relative to Item 9's commits, reproduced at the pre-C1 parent.
+
+Cured by the orchestrator under the F5 ruling family **[OWNER 2026-08-13]** (suite collection
+must not depend on archive layout; durable home `tests/unit/data/`): both inventory JSONs moved
+bytes-unchanged (`git mv`) to `tests/unit/data/item8-snapshot-inventory-{pre,final}.json`, the
+test's path constants repointed (incl. the would-be recapture receipt), and a pointer stub left
+at the archived location. Result: **8/8 pass** in the file. This makes the whole-suite expected
+count `2070 passed` where the pre-rider record says `2063 passed / 7 failed`; the audit should
+re-run and record the green number. Not Item 9 scope-creep: the cure touches no Item 9 surface
+and is committed separately with its own provenance.
