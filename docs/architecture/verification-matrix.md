@@ -13,7 +13,7 @@ Traceability matrix mapping every REQ-\* tag to its conformance test file and st
 | UNTESTED (subject live, no test proves it) | 10 |
 | DEFERRED | 0 |
 | REQ families | 33 |
-| Distinct kept test files cited | 59 |
+| Distinct kept test files cited | 55 |
 
 > **Recounted from the tables 2026-08-14** (CONSTRAINT-SEMANTICS Item 7), per the recount discipline
 > — index totals **and** per-family counts, never the summary block on trust. The recount **falsified
@@ -814,4 +814,4 @@ describes was deleted (ledger L-160).
 - [Architecture Overview](overview.md)
 - [Modeling Assumptions](modeling-assumptions.md)
 - Design docs: [reference/](reference/) (28 documents)
-- Conformance tests: `tests/conformance/`, `tests/unit/`, `tests/integration/` (59 distinct kept test files cited by PASS rows — recounted 2026-08-14, CONSTRAINT-SEMANTICS Item 7; this line still read 50 and was corrected at Item 7's audit)
+- Conformance tests: `tests/conformance/`, `tests/unit/`, `tests/integration/` (55 distinct kept test files cited by non-RETIRED rows — recounted 2026-08-14, CONSTRAINT-SEMANTICS Item 7, method recorded in the item's verification.md; this line read 50 before, and an intermediate 59 was corrected at the audit resume)

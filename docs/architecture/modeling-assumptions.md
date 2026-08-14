@@ -648,13 +648,22 @@ inline-form disposition is recorded in the fixture's `PROVENANCE.md` instead of 
 **The loud detector:** `tests/conformance/test_constraint_population_oracle.py`, rule 3. Item 5 owns
 both; they are cited here, not restated.
 
-**Practical rule:** if you intend to mark a constraint inapplicable, write it in the bindings form.
-That is the blessed shape anyway.
+**Practical rule — two conditions, not one.** To mark a constraint inapplicable: write it in the
+bindings form (that is the blessed shape anyway), **and put it on a gate that does not run.** The
+form decides whether the marker *arrives*; whether the gate runs decides whether it is *accepted*.
 
 **Eligible *and* inapplicable is refused (D9).** A usage cannot be both admitted-and-running and
-not-part-of-the-feasible-set. Generation refuses that combination loudly by name, so nothing ships
-wrong; agentic-mbse's authoring validation raises the same contradiction as an advisory a step
-earlier, while you are still in the model.
+not-part-of-the-feasible-set. Generation refuses that combination loudly by name — *"marked
+inapplicable but produced N executable entries"* — so nothing ships wrong; agentic-mbse's authoring
+validation raises the same contradiction as an advisory a step earlier, while you are still in the
+model. A marker states a gate is outside the feasible set; it is not a switch that silences a live
+check.
+
+Both shapes are pinned as fixtures: `tests/fixtures/constraint_coverage_all_inapplicable` is the
+accepted one (the marked gate's owner is never instantiated, so it reaches nothing), and
+`tests/fixtures/constraint_coverage_eligible_inapplicable` is the refused one — its header states
+that generation **must** fail on it. The authoring-side worked example lives in agentic-mbse
+`docs/patterns/constraints.md`, "How to write it."
 
 **What a modeler needing an enforced gate should do.** Use the assert family. It is the only
 enforcement opt-in: a bare `constraint`, a `require constraint`, an `assume constraint`, and a

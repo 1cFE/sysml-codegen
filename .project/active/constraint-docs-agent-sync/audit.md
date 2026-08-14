@@ -109,6 +109,19 @@ call.
 
 ### A-3 — The `@inapplicable:` "How to write it" example is refused by the shipped generator *(FINDING ONLY — authoring judgment, not a mechanical fix)*
 
+> **CURED BY IMPLEMENT RESUME, 2026-08-14 — pending audit re-verification.** Option (a) taken: the
+> example now puts the marked gate on a `part def` the variant never instantiates, so it reaches no
+> occurrence and the marker stands, with a one-line comment saying why. The exact authored text was
+> elaborated **and** run through the real generator to completion and seal
+> (`sysml-codegen generate` → `Sealing package…` → `Code generation complete`), and the marker is
+> verified to have reached the domain: the generated catalog carries
+> `inapplicability_reason: "no vacuum system in the direct-drive variant"` and
+> `inapplicable_gate_count: 1`. All three surfaces swept and made consistent — two carried the code
+> example (`docs/patterns/constraints.md`, `claude/skills/sysml-conventions/SKILL.md`), and codegen's
+> `modeling-assumptions.md` §8 carried no code block but stated only the *form* condition, so its
+> practical rule now names both (bindings form **and** does-not-run). Full record and the probe
+> command: `verification.md`, "A-3 cure".
+
 `agentic-mbse docs/patterns/constraints.md:427-433` gives this as the canonical way to write the
 marker:
 
@@ -145,6 +158,14 @@ use. Not fixed here: choosing between (a) and (b) is authoring judgment across t
 the cure rules reserve that.
 
 ### A-4 — The "distinct kept test files" count does not reproduce, and its method is unrecorded *(residual, low)*
+
+> **CURED BY IMPLEMENT RESUME, 2026-08-14 — pending audit re-verification.** Method written down in
+> `verification.md`, "A-4 cure": non-RETIRED rows only, Test File column only, and the file must
+> **exist in the tree** — that last decision was the missing one. Three files cited by UNTESTED rows
+> (`test_gen_schemas.py`, `test_gen_stencils.py`, `test_graph_assembly.py`) are cited precisely *as
+> the deleted pin*; they are cited but not kept. The count is **55**, matching the auditor's
+> independent number, and all four readings are tabulated so it reproduces. Corrected in both places
+> it appeared: `verification-matrix.md:16` and `:817`.
 
 `verification.md`'s recount table records "Distinct kept test files 50 → 57 (tables) → 59 (post-filing)."
 Every other recount number reproduces exactly (below). This one does not: taking the last status

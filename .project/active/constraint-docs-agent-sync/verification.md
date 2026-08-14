@@ -426,8 +426,104 @@ because nothing would fail if the envelope started carrying severity again.
 ### Post-filing counts
 
 Total 280 · PASS 136 · PARTIAL 3 · RETIRED 131 · UNTESTED 10 · DEFERRED 0 · families 33 · distinct
-kept test files 59. Per-status counts sum to the total (136+3+131+10+0 = 280) ✅. Family count matches
-the distinct REQ-prefix count from the tables ✅.
+kept test files **55** (corrected from 59 at the audit resume — see "A-4 cure" below). Per-status
+counts sum to the total (136+3+131+10+0 = 280) ✅. Family count matches the distinct REQ-prefix count
+from the tables ✅.
+
+### A-4 cure — the "distinct kept test files" method, written down
+
+The number did not reproduce because the metric has three defensible readings and none was recorded.
+Stating the method first, then the count.
+
+**Method (authoritative).** The metric is *distinct **kept** test files cited*. Three decisions make
+it deterministic:
+
+1. **Which rows count.** Rows whose status is **not** `RETIRED`. A RETIRED row's cell names a deleted
+   module; counting it would inflate the number with files that do not exist.
+2. **Where in the row to look.** The **Test File column only** (field 3 of 4), not the whole line.
+   Requirement text and status notes both mention test filenames in prose, and those are references,
+   not citations.
+3. **What "kept" means.** The file **exists in the tree**. This is the decision that was missing.
+   Three files cited by non-RETIRED rows do *not* exist — `test_gen_schemas.py`,
+   `test_gen_stencils.py`, `test_graph_assembly.py`. They are cited by the UNTESTED rows precisely
+   *as the deleted pin*, which is the whole point of that section. They are cited; they are not kept.
+
+Reproduction:
+
+| Reading | Count |
+|---|---|
+| whole line, all rows | 60 |
+| whole line, non-RETIRED rows *(what produced the wrong 59)* | 59 |
+| Test File column, non-RETIRED rows | 58 |
+| **Test File column, non-RETIRED rows, file exists on disk** | **55** ✅ |
+
+**55 is the number**, and it matches the auditor's independent count. The earlier 59 came from
+reading 2 — non-RETIRED rows, but whole-line and without the exists-on-disk test, so it swept in
+prose mentions and the three deleted pins.
+
+**Corrected in both places it appears:** the matrix summary block (`:16`) and the Related Documents
+note (`:817`), the latter now pointing here for the method.
+
+---
+
+## A-3 cure — the `@inapplicable:` example now survives the shipped generator
+
+**The defect.** The "How to write it" example put the marker on a gate whose owner *is* instantiated.
+That gate runs, so D9 refuses the model by name: *"marked inapplicable but produced 1 executable
+entries."* The same document taught D9 correctly 30 lines later. The example is what a reader copies,
+so the document shipped a contradiction in the exact failure class this item exists to prevent.
+
+**The fix.** The example now puts the marked gate on a `part def` that the variant never
+instantiates, so it reaches no occurrence and the marker stands. The comment above it says *why* in
+one line, and a paragraph under the block states the rule the old example violated: a marker declares
+a gate outside the feasible set, it is not a switch that silences a live check.
+
+**Probe — the exact authored text, elaborated and generated to completion and seal.**
+
+Model: `/tmp/item7_a3_probe/models/model.sysml`, byte-for-byte the example now shipped in
+`docs/patterns/constraints.md` "How to write it" (plus a `Doubler` calc and an instantiated `Plant`,
+so the pipeline has content — the constraint text itself is identical).
+
+```
+set -a; source /home/reid/1cfe/agentic-mbse/.env; set +a
+/home/reid/1cfe/item7-rebuild-venv/bin/sysml-codegen generate \
+  --models /tmp/item7_a3_probe/models --output /tmp/item7_a3_probe/out \
+  --package-name item7_a3_probe
+```
+
+**Result: `INFO: Sealing package...` → `INFO: Code generation complete`.** No refusal. 2 TEAx module
+wrappers, 1 stencil, pipeline.yaml, registry, schemas, and the seal.
+
+**The teaching point is verified, not just the absence of a failure.** The marker reached the domain
+— the generated catalog carries:
+
+- `inapplicability_reason": "no vacuum system in the direct-drive variant"`
+- `inapplicable_gate_count': 1`
+
+So the example does the thing the surrounding prose claims it does.
+
+**Both shapes were already pinned in-tree**, which is what makes the new example safe to teach rather
+than merely observed to work once: `tests/fixtures/constraint_coverage_all_inapplicable` is the
+accepted shape (its header explains the empty-denominator ruling) and
+`tests/fixtures/constraint_coverage_eligible_inapplicable` is the refused one, whose header states
+that generation **must** fail on it. The corrected docs cite both.
+
+**Surfaces swept and made consistent — three, as the audit said, but only two carried the code
+example.** `grep -rn "vac_ok"` across all three repos returns exactly two sites; codegen's section is
+prose and a table, with no code block:
+
+| # | Surface | What it carried | Change |
+|---|---|---|---|
+| 1 | agentic-mbse `docs/patterns/constraints.md` "How to write it" | the refused example | replaced with the proven shape + the why + the D9 rule at the point of use |
+| 2 | agentic-mbse `claude/skills/sysml-conventions/SKILL.md` | the same shape, elided to `// ...` | replaced with the proven shape + a ⚠️ on marking a running gate |
+| 3 | codegen `docs/architecture/modeling-assumptions.md` §8 | **no code block**; its "Practical rule" named only the *form* condition | rule now names **two** conditions (bindings form **and** does-not-run), D9 quoted, both fixtures cited |
+
+The third surface was the subtler defect: it was not wrong, it was incomplete in a way that let a
+reader satisfy it and still be refused. Form decides whether the marker *arrives*; whether the gate
+runs decides whether it is *accepted*.
+
+**No new S1–S5 hits.** The rewrites add no superseded-teaching token; post-cure counts are unchanged
+from Table 2 (verified by re-running the five terms in both repos). No Table 2 row changes.
 
 ### ⚠️ Surfaced premise conflict — Phase 5 cannot be executed as written
 

@@ -889,7 +889,7 @@ summary following. **BACKLOG's "275 PASS" was false against every reading** — 
 the plan supposed. Both blocks corrected; neither adopted.
 
 Post-filing: **280 / PASS 136 / PARTIAL 3 / RETIRED 131 / UNTESTED 10 / DEFERRED 0 / 33 families /
-59 kept test files.** Statuses sum to the total ✅; family count matches the distinct REQ-prefix
+55 kept test files** (the file count was corrected from 59 at the audit resume; method in `verification.md`). Statuses sum to the total ✅; family count matches the distinct REQ-prefix
 count ✅.
 
 **No aspirational citations.** Every cited test was run first —
