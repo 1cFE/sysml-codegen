@@ -26,7 +26,7 @@ nothing below rewrites it.
 ## The enforcement-side companion — cited beside, not merged
 
 **[OWNER]** Critical Success Factor, CONSTRAINT-SEMANTICS epic
-(`.project/backlog/epic_constraint_semantics_contract.md:18-20`):
+(`.project/completed/20260814_epic_constraint_semantics_contract.md:22-24`):
 
 > A design search can trust the generated feasibility evidence to represent every applicable
 > asserted physics gate, while every other authored constraint remains visibly dispositioned.
@@ -110,7 +110,7 @@ causal toolchain with visible bases. The distance between the two has a name and
 ## Related
 
 - Owner checkpoint (payload source): `.project/completed/20260814_constraint-docs-agent-sync/owner-checkpoint-20260813.md`
-- Epic: `.project/backlog/epic_constraint_semantics_contract.md` (CONSTRAINT-SEMANTICS)
+- Epic: `.project/completed/20260814_epic_constraint_semantics_contract.md` (CONSTRAINT-SEMANTICS; closed and archived 2026-08-14)
 - ADR-009, coverage truth and headline semantics: `docs/architecture/modeling-assumptions.md:588`
 - Capability bet: `[ACAUSAL-RELATIONS-CAPABILITY]`, `.project/backlog/BACKLOG.md:439`
-- audit-F4, the filing this closes: `.project/backlog/epic_constraint_semantics_contract.md:540-543`
+- audit-F4, the filing this closes: `.project/completed/20260814_epic_constraint_semantics_contract.md:638-641`

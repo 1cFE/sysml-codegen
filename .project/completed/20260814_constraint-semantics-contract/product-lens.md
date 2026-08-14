@@ -3,7 +3,7 @@
 Append-only. Verdict blocks land verbatim; dispositions are recorded in the spec/design they
 amend.
 
-## spec — 2026-08-12 — rev 2ebf638 (+ untracked `.project/active/constraint-semantics-contract/spec.md`)
+## spec — 2026-08-12 — rev 2ebf638 (+ untracked `.project/completed/20260814_constraint-semantics-contract/spec.md`)
 Epic: none (spawned from ELABORATE-FIRST Item 7 correction; not a listed epic item)
 
 Point (re-derived, written before reading the WORK):

@@ -871,7 +871,7 @@ coordinates and exempts nothing.
 > reads **not assessed**, per state 5 above ("the model has constraint usages but no applicable
 > asserted gate at all"). Only the contract text was wrong. This amendment changes no behavior.
 > **Grade:** `[AGENT]`, executed under Item 7's re-homing of the Item 1 residual
-> (`.project/backlog/epic_constraint_semantics_contract.md:520-530`).
+> (`.project/completed/20260814_epic_constraint_semantics_contract.md:332-335` (epic archived 2026-08-14)).
 
 ### Source-identity scenarios (SOURCE-IDENTITY Item 3)
 

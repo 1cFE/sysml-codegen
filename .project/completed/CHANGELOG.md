@@ -4,6 +4,125 @@ Historical record of completed work.
 
 ---
 
+## [2026-08-14] - [CONSTRAINT-SEMANTICS] Constraint Semantics and Design-Search Feasibility (EPIC)
+
+**Type**: Epic (9 items, all closed and archived; epic doc + umbrella shaping folder archived
+together 2026-08-14)
+**Duration**: 2026-08-12 (epic filed, decomposition owner-approved) → 2026-08-14 (closed).
+Estimated 8.5–9.5 working days over 6 items; re-estimated to 10–12 days as scope grew to 9.
+**Archived to**: `.project/completed/20260814_epic_constraint_semantics_contract.md` and
+`.project/completed/20260814_constraint-semantics-contract/` (umbrella spec, `rulings-20260812.md`,
+`spec-review.md`, `product-lens.md` — preserved whole as the epic's decision record)
+**Branch**: `item7-rebuild`, unpushed. Companion work on the agentic-mbse worktree branch
+`item7-rebuild`; TEAx work on `constraint-semantics-item3` @ `5b70ae9`, complete and **unmerged**.
+Nothing pushed, no `main` touched in any repository. **`pre_pr` deliberately NOT run** — deferred to
+the phase-D branch gate by ruling.
+
+### Summary
+A model can author constraints that never execute, and nothing tells you. CATF authored **65**
+constraint usages, of which **9** received catalog dispositions and **0** ever ran; the other 56
+vanished before the catalog because there was no complete pre-expansion authored-usage domain. The
+generated report could say `all_satisfied` over an assessment of nothing, an excluded-only model
+emitted no report at all, and TEAx could not tell that model from a genuinely unconstrained one.
+Meanwhile the documentation taught a rule the code did not implement. This epic made modeled
+constraint meaning, catalog visibility, generated reports, TEAx study policy, and the authoring
+guidance agree on one design-search feasibility contract — and then proved it end to end on the
+richest model in the tree.
+
+### Deliverables
+- **One product rule, published before implementation** (Item 1): lifecycle-contract amendments
+  (invariants 1, 28, 48, 61 and their LC-E mirrors), ADR-009, the equality-intent taxonomy, and
+  D1–D7 corrections across two repositories.
+- **A canonical authored-usage domain with a totality gate** (Item 2): every authored usage gets
+  exactly one visible disposition before occurrence expansion, severity follows the cause, and a
+  missing disposition halts generation. Instance graph `v2` → `v3`, catalog schema `3.0.0`, one
+  reviewed 21-fixture recapture, and an independent license-free population oracle
+  (`tests/conformance/test_constraint_population_oracle.py`, 42 reviewed expectation files).
+- **Truthful coverage, in both vocabularies** (Item 3): the six report states with fail-closed
+  normalization at all three TEAx runtime seams, `all_satisfied` retired for `full_satisfaction`,
+  partial coverage defaulting to keep-for-boundary, an explicit feed-strategy opt-in, and coverage
+  persisted in durable case records.
+- **Two predicate-boundary defects cured, plus a third lane found at spec** (Item 4).
+- **The worked example** (Items 5 + 9): `catf_mfe_gated`, the all-65 owner disposition table, a
+  reusable constraint-definition library, machine-proved accounting (`65 = 56 + 9`), and both
+  feasibility legs run through real TEAx.
+- **The calc-def gate capability, designed and honestly parked** (Item 6): probe, spec, reviewed
+  design, and a file-level implementation item — with production implementation ruled out of this
+  epic and filed as `[CALCDEF-GATE-IMPLEMENTATION]`.
+- **The unit-lane port metadata defect cured at its source** (Item 8), with zero fixture churn.
+- **The teaching surfaces brought level in three repositories** (Item 7), plus the repo's first
+  product ledger: `.project/product/INDEX.md` → `P-001` carrying the owner's design-search promise
+  verbatim.
+
+### Evidence
+Licensed suite at the last item close: **2070 passed / 34 skipped / 0 failed**, zero `no live syside
+license` lines (the only valid licence proof). TEAx **337 / 0**. Ruff and mypy zero-new throughout;
+`git diff --check` clean in all three repos. Post-archive collect check at epic close:
+**2104/2183 tests collected (79 deselected)**, no collection errors — matching the Item 7
+verification baseline, so the archival broke no reader.
+
+### Decisions and deviations
+- **SC-3 amendment** (owner-authorized 2026-08-13): the derivative's accounting reads
+  `65 = 56 carriers + 9 named deletions`, not "65 carriers" — the original wording predated the
+  ruled `derive-instead` deletions. Frozen `catf_mfe_d5` keeps its literal 65/65 proof.
+- **D-S1/D-S2, option 3** ([AGENT] ratified by owner 2026-08-13): three ruled rows whose target
+  forms were unbuildable were **held, not withdrawn** — marked `blocked-by-defect` and visibly
+  outside the denominator. Items 8 and 9 were filed out of that ruling and executed the held intent
+  unchanged.
+- **Finding 6-D, option (a)** ([AGENT] ratified by owner 2026-08-13): candidates are labeled
+  gate-feasible/infeasible *under the model as authored*. The authored CATF point is the reject
+  candidate; the raised-`p_fusion` leg is a machinery exemplar, not a recommended design.
+- **Item 3 scope-4 correction against LC-E10**: the zero-input trigger is the absence of an
+  *applicable asserted gate*, not the absence of executable assertions.
+- **Item 6's production implementation ruled out of the epic** `[OWNER 2026-08-13]`; Item 8 shipped
+  **standalone** as ruled, with R5 joint delivery declined.
+- **One [AGENT] severity exception, orchestrator-ratified and not owner-ruled**: a *malformed*
+  `@inapplicable:` directive halts whatever the usage's form, overriding the inherited "plain forms
+  never halt" rule for that one cause (Item 2).
+
+### Residuals
+- **The codegen `.claude/` symlink target** — resolves when the owner merges the `item7-rebuild`
+  agentic-mbse worktree branch into whatever branch those symlinks point at (Item 7 A-1).
+- **`[CONSTRAINT-GATES-UNTAGGED]`** — Items 3/5/8/9 carry no REQ tags, so their verification-matrix
+  rows need tags minted first (a requirements decision, not a matrix reconciliation). **Assigned
+  2026-08-14 to cutover step 4**, so the matrix is touched once.
+- **The parked D-2 vs D-4/SRC-01 premise conflict** (umbrella `spec.md:325`) archives still open. No
+  item resolved it in either direction; it needs the owner.
+- **The Item 7 Evidence-Invalidation Register is HANDED, not discharged** — nine complete rows,
+  walked at phase B step 1 of the cutover resumption.
+- **Surfaced at close, unresolved:** `.project/product/INDEX.md` and `P-001` were filed naming the
+  epic file as a durable lens trail node "because it does not archive." The close falsifies that.
+  Paths were repointed so the trail resolves; no promise text or authority grade was touched. Where
+  the trail node should permanently live is the owner's call.
+- Carried from items and still unowned: `[CATF-CRYO-HEAT-LEAK-COEFFICIENT]` (P1),
+  `[CALCDEF-GATE-IMPLEMENTATION]` (P1, authorization parked), `[INLINE-PREDICATE-MARKER-DROP]`,
+  `[GOLDEN-BYPASSES-RUN-CODEGEN]`, `[CATF-ACCEPTANCE-LANE-MANUAL]`,
+  `[CATALOG-FINGERPRINT-ROUTE-PORTABILITY]`, `[CONSTRAINT-FORM-PER-DIMENSION-COST]`.
+
+### Lessons Learned
+Written in full in the archived epic doc's "Lessons Learned (Post-Completion)" section. The short
+form:
+- **The founding failure mode was demonstrated and closed by the same item.** The first execution of
+  these gates caught a model defect that had been invisible for CATF's entire life — the critical
+  success factor working on its first real outing.
+- **Two checkboxes were ticked without their evidence, and a green suite is exactly what that
+  produces.** Both were found by an auditor opening the cited test and reading it. Reproduce claims
+  independently; never read them off the item's own record.
+- **Stop-and-surface worked three times** (a fallback measured dead, a ruled form measured
+  unbuildable, a gate catching the design point), and each time what surfaced was load-bearing.
+- **O-1: an obligation spanning a repo boundary is the one most likely to be silently halved.** A
+  design's "the companion needs no change" narrowed invariant 61; reading the landed contract text
+  caught it, and the plan had already propagated the narrowing one stage further.
+- **Orchestration mechanics that cost real time:** `uv run` resolves the wrong companion checkout
+  (a correctness trap, not a convenience one); resumed subagents drop their permission mode;
+  archiving breaks any path a test reads, so run `--collect-only` after every move; and a
+  characterization that only elaborates does not characterize what generates.
+- **Honest cost:** planned 8.5–9.5 days over 6 items, delivered 9 items at 10–12. Two of the three
+  additions were filed mid-epic from findings the shaping stage could not have known. Budget ~20–25%
+  for that on any epic whose items start from reproduced failures.
+
+---
+
 ## [2026-08-14] - [CONSTRAINT-SEMANTICS Item 7] ADR, Product Promise, and Agent-Facing Documentation Sync
 
 **Type**: Item (documentation / contract; independently audited **CERTIFY-WITH-RESIDUALS**, two
@@ -571,14 +690,16 @@ test-docstring/comment citations of a retired test, verified line by line at aud
   advisory guidance, and item3-F2 (the unreachable `BLOCK`ed-asserted-usage clause, still a
   surfaced premise conflict in both directions).
 - **The parked D-2 vs D-4/SRC-01 premise conflict stays parked** at the umbrella level
-  (`.project/active/constraint-semantics-contract/spec.md:325`), verified byte-untouched across the
-  item range at close. It needs the owner.
+  (umbrella `spec.md:325`, archived 2026-08-14 to
+  `.project/completed/20260814_constraint-semantics-contract/spec.md`), verified byte-untouched
+  across the item range at close. **Still needs the owner** — it survives the epic close unresolved.
 - **No product-promise entry was filed and no id was hand-minted** — this repo still has no
   `.project/adr/` or `.project/product/` ledger and no `adr.sh`/`product.sh`. Item 1's decision
   record is ADR-009 itself. The coverage-truth promise needs an owner-originated statement, which
   is epic Item 7's first beat.
-- **The umbrella shaping folder `.project/active/constraint-semantics-contract/` stays active** —
-  it is cited by every item and archives at epic close.
+- **The umbrella shaping folder stays active** — it is cited by every item and archives at epic
+  close. *(Done: archived 2026-08-14 to `.project/completed/20260814_constraint-semantics-contract/`
+  at the epic close, preserved whole as the epic's decision record.)*
 
 ### Lessons Learned
 - **Documentation-first only works if the documentation is written from the settled rule, not from

@@ -29,13 +29,14 @@ Prioritized list of epics and features.
 
 | Epic | Status | Notes |
 |------|--------|-------|
-| [CONSTRAINT-SEMANTICS] Constraint Semantics and Design-Search Feasibility | In progress — Items 1–6, 8 and 9 closed and archived 2026-08-13 (Item 6 as a design delivery; its production follow-on is unauthorized in this epic and filed as `[CALCDEF-GATE-IMPLEMENTATION]`); **Item 7 is the last item** — unblocked, runs before epic close/pre_pr | P0 owner-directed prerequisite for ELABORATE-FIRST Item 7 steps 4–10. Establishes assert-only authoring policy, canonical 65/65 usage totality, truthful report/TEAx coverage, CATF derivative acceptance, two predicate fixes, and the staged calculation-definition gate design. 8.5–9.5 working days over 2–3 weeks plus owner-checkpoint turnaround. See [epic](epic_constraint_semantics_contract.md). |
+| ~~[CONSTRAINT-SEMANTICS] Constraint Semantics and Design-Search Feasibility~~ ✅ | Complete (2026-08-14). Archived to: `.project/completed/20260814_epic_constraint_semantics_contract.md` (umbrella shaping folder preserved at `.project/completed/20260814_constraint-semantics-contract/`) | All nine items closed and archived; all ten epic Success Criteria ticked against their amended forms, Lessons Learned written. Delivered assert-only authoring policy, canonical 65/65 usage totality with a hard gate, truthful report/TEAx coverage (six states, fail-closed), the `catf_mfe_gated` derivative at `65 = 56 + 9` with three executing gates, two predicate fixes, the unit-lane defect cure, the staged calc-def gate design, and the three-repo doc/agent-prompt sync. Planned 8.5–9.5 days over 6 items; delivered 9 items at 10–12. **`pre_pr` deferred to the phase-D branch gate by ruling — not run at close.** Three owner-call residuals ride out: the codegen `.claude/` symlink target, `[CONSTRAINT-GATES-UNTAGGED]` (assigned to cutover step 4), and the parked D-2 vs D-4/SRC-01 premise conflict. |
 | ~~[SOURCE-IDENTITY] One Modeled Value, One Runtime Source~~ | Superseded (2026-08-07; archived 2026-08-10). Archived to: `.project/completed/20260810_epic_semantic_source_identity.md` | Items 1–3 complete and inherited unchanged as the semantic authority (29-cell matrix, dispositions, invariants); the Item-4/5 shadow-layer architecture was stopped after Item-4 Phases 1–2 (recovery assessment) and replaced by [ELABORATE-FIRST](epic_elaborate_first_architecture.md); Items 6–8 intent absorbed into ELABORATE-FIRST Items 7–8. Item-4 artifacts archived to `completed/20260810_source-identity-occurrence-foundation/`; stopped implementation preserved on `item4-phases12-forensic`. |
 | [GAP-CLOSE] Constraint-Expression Gap Closure | Local scope certified; external F1 leg now verified closed (2026-07-20) | The blocking `[GAP-CLOSE-F1-TEAX-NORMALIZATION]` leg is closed in merged teax main (see the closed entry below). Remaining before full certification: Item 5 closeout state and the independent audit's open full-suite wave-gate leg — a certification pass, not new code. See `epic_gap_close.md`. |
 | ~~[CONSTRAINT-LIFECYCLE-REMEDIATION] Constraint Execution Lifecycle Remediation~~ ✅ | Complete (2026-07-20). Archived to: `.project/completed/20260720_epic_constraint_execution_lifecycle_remediation.md` | All 14 items done; composed public proof 41/41 at the pinned set. Merged 2026-07-20: agentic-mbse #11 → sysml-codegen #9 → teax #3. Release record + 41/41 register in `completed/20260720_constraint-lifecycle-composed-proof/`. |
 | ~~[CONSTRAINT-WAVE-REMEDIATION] Constraint PR-Wave Remediation~~ | Superseded — partially completed (2026-07-19). Archived to: `.project/completed/20260720_epic_constraint_pr_wave_remediation.md` | Items 1/2 complete and Items 4/6 certified; all unfinished work was mapped into CONSTRAINT-LIFECYCLE-REMEDIATION (now complete). Retained as history. |
 
-CONSTRAINT-SEMANTICS items (ready; decomposition owner-approved 2026-08-12):
+CONSTRAINT-SEMANTICS items (epic CLOSED and archived 2026-08-14 — see epic row above; decomposition
+owner-approved 2026-08-12, grown from 6 items to 9):
 
 - [x] Item 1 — Contract and Authoring Policy *(closed + archived 2026-08-13 →
       `completed/20260813_constraint-semantics-contract-amendments/`; ticked 2026-08-13 as a
@@ -55,8 +56,11 @@ CONSTRAINT-SEMANTICS items (ready; decomposition owner-approved 2026-08-12):
       `completed/20260813_calcdef-constraint-gate-design/`; audited Certify as a design/planning
       delivery. The 7–9 day production implementation is **not authorized in this epic** — filed as
       `[CALCDEF-GATE-IMPLEMENTATION]` below, unowned, parked with the owner)*
-- [ ] Item 7 — ADR, Product Promise, and Agent-Facing Documentation Sync *(runs last; UNBLOCKED
-      2026-08-13 — Item 9 closed. It is the epic's final item, before epic close/pre_pr)*
+- [x] Item 7 — ADR, Product Promise, and Agent-Facing Documentation Sync *(closed + archived
+      2026-08-14 → `completed/20260814_constraint-docs-agent-sync/`; audited
+      CERTIFY-WITH-RESIDUALS. Ran last, as the epic's final item. SC2 and SC5 stay unticked, each
+      naming an owner-call residual — the codegen `.claude/` symlink target and
+      `[CONSTRAINT-GATES-UNTAGGED]` — rather than work left undone)*
 - [x] Item 8 — Unit-Lane Port Metadata Defect *(closed + archived 2026-08-13 →
       `completed/20260813_unit-lane-port-metadata/`; audited Certify, shipped standalone as ruled,
       zero v3 recapture, no residuals)*

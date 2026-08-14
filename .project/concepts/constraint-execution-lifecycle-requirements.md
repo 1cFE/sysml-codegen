@@ -319,7 +319,7 @@ state are not restated here; the lifecycle contract's "Current conclusion" is th
   it. Source: original concept and generation spec — which is the source of the requirement's
   subject, not of the precedence below. Amended 2026-08-12 (CONSTRAINT-SEMANTICS Item 1),
   `[AGENT] (ratified by owner, 2026-08-12)`, sourced to
-  `.project/active/constraint-semantics-contract/spec.md` and ADR-009: the coverage-truthful
+  `.project/completed/20260814_constraint-semantics-contract/spec.md` and ADR-009: the coverage-truthful
   five-state precedence above **replaces** the inherited rule in full. Superseded: "Report headline
   precedence is: any violation → `violation`; else any indeterminate → `indeterminate`; else any
   assessed result → `all_satisfied`; else `not_assessed`." See contract invariant 33 (amended).

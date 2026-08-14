@@ -6581,7 +6581,7 @@ record-integrity corrections remain.
 The step-4 probe exposed that the constraint story is contractually unsettled (plain-vs-asserted
 semantics, 56-of-65 catalog absence, coverage-blind report headline); the owner redirected: settle
 the semantics, align docs and the test model, then test. The contract authority is
-`.project/active/constraint-semantics-contract/spec.md` (reviewed and revised 2026-08-12; ruling
+`.project/completed/20260814_constraint-semantics-contract/spec.md` (reviewed and revised 2026-08-12; ruling
 record `rulings-20260812.md`), decomposed via epic plan into child items.
 
 Consequences for this sequence, recorded so resumption is honest:
@@ -6596,6 +6596,18 @@ Consequences for this sequence, recorded so resumption is honest:
   **after** the contract work, at the true final tree state — not before and again after.
 - The contract epic owns the evidence-invalidation register (which step-4/7/8 evidence and
   whether the 37-fixture recapture repeats); see the spec's Open Questions.
+  **UPDATED at epic close, 2026-08-14 — the register is HANDED to this sequence.** The
+  CONSTRAINT-SEMANTICS epic closed with all nine items done. Its **Item 7 Evidence-Invalidation
+  Register** is complete as a record and **undischarged as an obligation**: nine rows, each naming
+  rerun-vs-absorbed, at
+  `.project/completed/20260814_epic_constraint_semantics_contract.md` §"Item 7
+  Evidence-Invalidation Register". **Discharging it row by row is part of step 4** and happens
+  before any paused step 4–10 evidence is reused. Every row marked *Invalid* is invalid: no
+  observation taken against `instance-graph/v2` bytes, against pre-recapture fixture bytes, or
+  citing `collect_constraint_manifest` may be re-read — re-observe instead.
+- **Step 4 also mints the REQ-tag family for the CONSTRAINT-SEMANTICS Items 3/5/8/9 gates**
+  (owner-authorized 2026-08-14, `[CONSTRAINT-GATES-UNTAGGED]`), so the verification matrix is
+  touched once rather than per item.
 - Nothing here changes step 10: final acceptance remains owner-grade, no push/tag/close/archive.
 
 **Completed:** 2026-08-12. **Implementation:**

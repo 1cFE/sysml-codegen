@@ -1,8 +1,8 @@
 # Spec Review: Constraint Semantics and Design-Search Feasibility Contract
 
-**Spec:** `.project/active/constraint-semantics-contract/spec.md`
+**Spec:** `.project/completed/20260814_constraint-semantics-contract/spec.md`
 **Contract:** `/home/reid/.agents/skills/my-spec/SKILL.md` (generated from `claude-pack/commands/_my_spec.md`)
-**Review File:** `.project/active/constraint-semantics-contract/spec-review.md`
+**Review File:** `.project/completed/20260814_constraint-semantics-contract/spec-review.md`
 **Date:** 2026-08-12
 
 ---

@@ -26,5 +26,6 @@ Next free id: **ADR-010**.
 ---
 
 **Cited from:** the epic's product-lens block
-(`.project/backlog/epic_constraint_semantics_contract.md`, Product-Lens section) — the durable trail
+(`.project/completed/20260814_epic_constraint_semantics_contract.md`, Product-Lens section; the epic
+closed and archived 2026-08-14 — path repointed, content unchanged) — the durable trail
 node a lens run for any CONSTRAINT-SEMANTICS item starts from.

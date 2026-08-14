@@ -2,7 +2,7 @@
 
 > **PARTIALLY SUPERSEDED — DO NOT EXECUTE AS WRITTEN (2026-08-12).** The owner paused steps
 > 4–10 pending the constraint-semantics contract
-> (`.project/active/constraint-semantics-contract/spec.md`). This brief's runtime-report
+> (`.project/completed/20260814_constraint-semantics-contract/spec.md`). This brief's runtime-report
 > instruction and its REQ-CL-03/REQ-CL-04 row closures are subordinate to that contract, which
 > also re-grades REQ-EXT-09. A revised brief is required at resumption; see the pause record in
 > `.project/active/cutover-recovery/plan.md` ("PAUSED at step 4").

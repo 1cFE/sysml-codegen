@@ -1,9 +1,10 @@
 # Current Work
 
-**Last Updated**: 2026-08-14 (**Item 7 CLOSED and archived** to
-`.project/completed/20260814_constraint-docs-agent-sync/`, verdict CERTIFY-WITH-RESIDUALS. **All
-nine CONSTRAINT-SEMANTICS items are now closed.** Epic close, the epic's Lessons Learned, and
-`pre_pr` are unrun by ruling and remain with the owner; nothing is pushed and no `main` is touched)
+**Last Updated**: 2026-08-14 (**the CONSTRAINT-SEMANTICS EPIC is CLOSED and archived** — epic file
+to `.project/completed/20260814_epic_constraint_semantics_contract.md`, umbrella shaping folder to
+`.project/completed/20260814_constraint-semantics-contract/`. All ten epic Success Criteria are
+ticked against their amended forms and Lessons Learned are written. **`pre_pr` was NOT run — it is
+deferred to the phase-D branch gate by ruling.** Nothing pushed, no `main` touched anywhere)
 
 ---
 
@@ -57,30 +58,41 @@ rather than invented; vehicle `[CONSTRAINT-GATES-UNTAGGED]` in `BACKLOG.md`.
 
 ## Active Work
 
-### 2026-08-14: CONSTRAINT-SEMANTICS epic — all nine items closed; the tail is the owner's
+### 2026-08-14: CONSTRAINT-SEMANTICS epic — CLOSED and archived; next is phase B
 
-Items 1–9 are all closed and archived (Item 7 today; the rest 2026-08-13 — see Recently Completed).
-What is live now:
+The epic is done. Nothing in it is live work any more. Where things stand:
 
-- **The epic itself is still open, by ruling `[OWNER 2026-08-14]`.** Item 7's close archived the
-  item only. Epic close, the epic's **Lessons Learned**, and `pre_pr` have not run and are the
-  owner's to schedule. The umbrella folder `.project/active/constraint-semantics-contract/` stays
-  active until epic close.
-- **Two residuals ride out of the epic, both owner calls** (detail in the Item 7 sections above):
-  the codegen `.claude/` **symlink target**, which resolves when the owner merges the
-  `item7-rebuild` agentic-mbse worktree branch into whatever branch those symlinks point at, and
-  **`[CONSTRAINT-GATES-UNTAGGED]`**, which needs REQ tags minted before Items 3/5/8/9 can get
-  verification-matrix rows.
+- **Epic closed and archived 2026-08-14** by owner ruling, after all nine items closed:
+  `.project/completed/20260814_epic_constraint_semantics_contract.md`, with the umbrella shaping
+  folder preserved whole beside it at
+  `.project/completed/20260814_constraint-semantics-contract/` (spec, rulings, spec-review,
+  product-lens) as the epic's decision record.
+- **`pre_pr` was NOT run, by ruling.** It is deferred to the **phase-D branch gate** below. The
+  epic's changes live on the unmerged `item7-rebuild` line and ship with it; the gate runs once over
+  the whole branch line.
+- **The Item 7 Evidence-Invalidation Register is HANDED, not discharged.** Its nine rows are
+  complete and archived with the epic; walking them row by row is **phase B step 1**. No paused
+  ELABORATE-FIRST Item 7 step 4–10 evidence may be reused without that walk — every row marked
+  *Invalid* really is.
+- **Three open decisions survive the epic, all the owner's:** the codegen `.claude/` **symlink
+  target** (resolves at merge); **`[CONSTRAINT-GATES-UNTAGGED]`** (REQ tags for Items 3/5/8/9 —
+  assigned 2026-08-14 to cutover step 4 so the matrix is touched once); and the **parked D-2 vs
+  D-4/SRC-01 premise conflict** at umbrella `spec.md:325`, which no item resolved in either
+  direction and which archived still open.
+- **Surfaced at close, unresolved:** `.project/product/INDEX.md` and `P-001` name the epic file as
+  the durable one-hop lens trail node, on the recorded reasoning that it does not archive. The close
+  falsifies that. The **paths** were repointed so the trail resolves; **no promise text or authority
+  grade was touched**. Whether a trail node in `completed/` is good enough, or whether it belongs
+  somewhere that never archives, is the owner's call.
 - **Item 6's production implementation is out of this epic `[OWNER 2026-08-13]`** and is now the
   unowned backlog entry `[CALCDEF-GATE-IMPLEMENTATION]` (P1, 7–9 days, graph v4 + catalog 4.0.0,
   codegen + TEAx), parked with the owner. It competes for the next slot with
-  `[CATF-CRYO-HEAT-LEAK-COEFFICIENT]` and the paused ELABORATE-FIRST Item 7 resumption. Its plan of
-  record is
+  `[CATF-CRYO-HEAT-LEAK-COEFFICIENT]` (P1). Its plan of record is
   `.project/completed/20260813_calcdef-constraint-gate-design/implementation-item.md`. The Item 8
   start gate is satisfied at `62a07e5`; the only remaining block is owner authorization. No agent
   starts it without a new ruling.
 - **Nothing pushed; no `main` touched anywhere; TEAx stays on `constraint-semantics-item3` @
-  `5b70ae9`.** `pre_pr` remains with the owner.
+  `5b70ae9`** until the phase-D merge (codegen first, TEAx second — never the reverse).
 
 ### 2026-08-12: Constraint-semantics contract — spec drafted (owner-directed priority)
 
@@ -94,7 +106,8 @@ standard; report can claim `all_satisfied` over partial coverage; TEAx sees such
 semantics ruled + staged; catalog totality hard-gated with severity by cause; bindings-only
 predicates + equality-usage instruction; coverage-true headline; boundary-default study policy;
 requirements-side non-executable; migration in a new CATF derivative).
-**Spec: `.project/active/constraint-semantics-contract/spec.md` — reviewed (verdict Revise) and
+**Spec: `.project/completed/20260814_constraint-semantics-contract/spec.md` (archived at epic close
+2026-08-14; was `.project/active/constraint-semantics-contract/`) — reviewed (verdict Revise) and
 revised same day; all findings resolved in `spec-review.md`, four owner-selected refinements
 recorded in `rulings-20260812.md` (asserted-gates denominator; vacuous = missing assessment until
 dispositioned; all-65 CATF disposition table; umbrella structure). Next: `/_my_epic_plan`
@@ -545,6 +558,34 @@ surfaces as matrix-row candidates.
 
 ## Recently Completed
 
+### 2026-08-14: CONSTRAINT-SEMANTICS EPIC — Constraint Semantics and Design-Search Feasibility (all nine items closed; epic closed + archived)
+- **The measured failure the epic was filed against is closed.** CATF authored 65 constraint usages
+  and produced 9 visible dispositions and **0 executed checks**. It now produces 65/65 dispositions
+  on the frozen witness and a derivative that closes `65 = 56 carriers + 9 named deletions` with
+  **three executing physics gates** and `{eligible 3, excluded 0, non_reaching 53}` — no
+  instance-reaching gate outside the coverage denominator. Reports and TEAx distinguish six states
+  instead of two, `all_satisfied` is gone as a token, and a missing disposition halts generation.
+- **The epic's founding failure mode was demonstrated by its own proof item.** The first execution
+  of these gates rejected CATF's **authored** design point on physics (cryo load 8396.05 MW vs
+  1546.72 MW gross) — a defect invisible for the model's whole life, because a model that executes
+  zero gates reports `not_assessed` and nothing ever contradicts it. Filed
+  `[CATF-CRYO-HEAT-LEAK-COEFFICIENT]` (P1).
+- **Ten Success Criteria ticked against their amended forms**, with each amendment named under its
+  box and its ruling dated — the SC-3 accounting identity, D-S1/D-S2 (A5/A6/A9 held, then EXECUTED
+  by Item 9), finding 6-D (the authored point *is* the reject candidate), and the scope-4 LC-E10
+  wording. The Evidence-Invalidation Register is **HANDED to the cutover resumption**, not
+  discharged: its record is complete, phase B step 1 walks it row by row.
+- **Lessons Learned written for real** from the nine close records — the 6-D story, the two unearned
+  checkboxes and the probe-don't-trust discipline that caught them, stop-and-surface working three
+  times, the O-1 cross-repo invariant narrowing, the orchestration-mechanics traps (`uv run`
+  interpreter, resume permission-mode drop, archival-breaks-readers, characterizations-first), and
+  honest cost accounting: planned 8.5–9.5 days over 6 items, delivered 9 items at 10–12, with two
+  of the three additions born from findings the shaping stage could not have known.
+- **`pre_pr` deferred to phase D by ruling; nothing pushed; no `main` touched.** Archived to
+  `.project/completed/20260814_epic_constraint_semantics_contract.md` with the umbrella shaping
+  folder preserved at `.project/completed/20260814_constraint-semantics-contract/`. Post-move
+  collect check `2104/2183 (79 deselected)`, no collection errors.
+
 ### 2026-08-14: CONSTRAINT-SEMANTICS Item 7 — ADR, Product Promise, and Agent-Facing Documentation Sync (audited Certify-with-residuals + closed)
 - **The owner's promise finally has a durable home, and the trail to it survives archiving.**
   `.project/product/INDEX.md` → `P-001-design-search-free-variation.md` carries the
@@ -941,18 +982,20 @@ surfaces as matrix-row candidates.
 The CONSTRAINT-SEMANTICS epic was a nested detour inside ELABORATE-FIRST Item 7's branch,
 triggered by the step-4 probe. The sequence back out, in order:
 
-**A. Finish CONSTRAINT-SEMANTICS (in flight).** Item 7 (docs/ADR/agent prompts) is running;
-then epic close with Lessons Learned. **No pre_pr at epic close** — the epic's changes live on
-the unmerged `item7-rebuild` line and ship with it; the branch gate runs once, at phase D.
+**A. Finish CONSTRAINT-SEMANTICS — ✅ DONE 2026-08-14.** Item 7 closed and archived; the epic
+closed and archived with all ten Success Criteria ticked against their amended forms and Lessons
+Learned written. **`pre_pr` was not run at epic close, by ruling** — the epic's changes live on the
+unmerged `item7-rebuild` line and ship with it; the branch gate runs once, at phase D.
 
-**B. Resume ELABORATE-FIRST Item 7 (cutover recovery steps 4–10),**
+**B. Resume ELABORATE-FIRST Item 7 (cutover recovery steps 4–10) — NEXT,**
 `.project/active/cutover-recovery/plan.md` ("PAUSED at step 4", now released):
 1. Revise the step-4 brief per the pause record (its zero-input-report instruction and
    REQ-CL-03/04 closures are superseded by the landed contract) and discharge the epic's
    Item 7 Evidence-Invalidation Register row by row
-   (`epic_constraint_semantics_contract.md` §register — each row names rerun vs absorbed).
-   Step 4 also **mints the REQ-tag family for the Items 3/5/8/9 gates** (owner-authorized
-   2026-08-14, `[CONSTRAINT-GATES-UNTAGGED]`) so the matrix is touched once.
+   (`.project/completed/20260814_epic_constraint_semantics_contract.md` §"Item 7
+   Evidence-Invalidation Register" — nine rows, each naming rerun vs absorbed; **HANDED at epic
+   close, undischarged**). Step 4 also **mints the REQ-tag family for the Items 3/5/8/9 gates**
+   (owner-authorized 2026-08-14, `[CONSTRAINT-GATES-UNTAGGED]`) so the matrix is touched once.
 2. Execute steps 4–6, then 7–8 ONCE at the true final paired codegen/companion OIDs (three
    batteries + one regenerated candidate record), step 9 fresh narrow audit, step 10 **owner
    final acceptance** (owner-grade; no push/tag/close from agents).

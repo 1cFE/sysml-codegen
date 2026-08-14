@@ -369,12 +369,12 @@ epic plan may adjust the cut lines, not the behavioral rulings.
   (forward amendments land in the companion per its header)
 - **Adjacent plan of record:** `.project/active/cutover-recovery/plan.md` (Item 7 narrow
   correction, steps 4–10 paused behind this item)
-- **Durable ruling record:** `.project/active/constraint-semantics-contract/rulings-20260812.md`
+- **Durable ruling record:** `.project/completed/20260814_constraint-semantics-contract/rulings-20260812.md`
   (the eight Q1–Q8 rulings, alternatives, and owner-verbatim payloads)
-- **Spec review:** `.project/active/constraint-semantics-contract/spec-review.md` (verdict
+- **Spec review:** `.project/completed/20260814_constraint-semantics-contract/spec-review.md` (verdict
   Revise; resolutions recorded there by finding ID)
-- **Product-lens ledger:** `.project/active/constraint-semantics-contract/product-lens.md`
-- **Design:** `.project/active/constraint-semantics-contract/design.md` (to be created)
+- **Product-lens ledger:** `.project/completed/20260814_constraint-semantics-contract/product-lens.md`
+- **Design:** `.project/completed/20260814_constraint-semantics-contract/design.md` (to be created)
 
 ---
 
