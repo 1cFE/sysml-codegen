@@ -10,7 +10,8 @@
 
 Items 5, 6, and 8 all closed and archived today (see Recently Completed). What is live now:
 
-- **Item 9 (derivative upgrade under held intent) is unblocked and next.** Its only remaining
+- **Item 9 (derivative upgrade under held intent) — spec in progress**, item home
+  `.project/active/derivative-upgrade-held-intent/`. Its only remaining
   dependency was Item 8, which landed. It executes already-ruled held intent (A5/A6 basis, A9's 1%
   relative band) from
   `.project/completed/20260813_catf-constraint-policy-acceptance/owner-disposition.md` — in-force
