@@ -6560,7 +6560,9 @@ record-integrity corrections remain.
       completion record below.)** Make provenance referents portable and amend invariant 35 to
       semantic equality plus generated-byte equality after defined normalization of permitted
       provenance metadata.
-- [ ] **6. Ruff R12 amendment.** **[AGENT] (ratified for execution by owner, 2026-08-12)** Set
+- [x] **6. Ruff R12 amendment.** **[AGENT] (ratified for execution by owner, 2026-08-12;
+      executed 2026-08-14 per `briefs/correction-step6-ruff-r12-amendment.md` — the ratified 14
+      was stale, the measured set of 12 is recorded; completion record below.)** Set
       the zero-new baseline to sysml-codegen `src` **14** and agentic-mbse `src` **1**: no new
       findings, changed files clean unless a recorded pre-existing finding is unchanged, totals
       no worse.
@@ -6643,6 +6645,47 @@ tripwire attempt with a leave-as-recorded escape hatch; REQ-DIAG-01 left as reco
 REQ-tag minting for Items 3/5/8/9 added per the 2026-08-14 authorization; stale numeric pins
 replaced by preflight measurement with explained deltas; the register's three Invalid classes
 installed as binding evidence rules through step 10.
+
+#### Narrow-correction step 6 completion
+
+**Completed:** 2026-08-14. Plan of record:
+`briefs/correction-step6-ruff-r12-amendment.md` (written at `0ded316` before any edit, path set
+declared; path-set delta: none). The step touched four project artifacts and no code, test,
+fixture, matrix, or ledger path.
+
+**The amendment.** Spec R12 (`.project/active/elaborator-cutover/spec.md`) no longer demands
+clean production Ruff. It now carries the zero-new baseline per disposition 2, with both finding
+**sets** recorded by name so the comparison stays mechanical: codegen `src` = **12** (all UP042,
+str+Enum, enumerated file by file; measured at `0ded316`) and agentic-mbse `src` = **1**
+(`extraction/index.py:146 N806`; measured at companion HEAD `6372ef7`, tree clean). Comparison
+is by finding set (`--output-format concise`), never count alone; changed files clean unless
+their only findings are recorded pre-existing ones, unchanged; totals no worse. The ratified
+sentence's codegen number (14) was stale — the set improved to 12 during the
+CONSTRAINT-SEMANTICS epic — and the measured number is recorded per the standing instruction in
+the step-4/5 records.
+
+**Two judgment calls, decided and recorded in the brief:**
+
+- **The R12 command list drops `uv run` and the `../agentic-mbse` pointer** (both dated in the
+  amendment): in the current topology they resolve the parked checkout and would measure the
+  wrong environment — and R12's command list is what the step 7–8 batteries execute. Commands
+  restate against `/home/reid/1cfe/item7-rebuild-venv/bin/python -m …`; the companion pointer
+  moves to `/home/reid/1cfe/agentic-mbse-item7-rebuild`. The venv form holds until the phase-D
+  merge and worktree cleanup.
+- **The "coordinated repository gates" SC box stays unticked.** Its recorded blocker (ruff 14
+  vs clean production, owner question 2) is discharged by this amendment, and the
+  tick-provenance note now says so, dated. But the box's substance is the *fresh exact-count*
+  gates — the single-shot step 7–8 batteries at the final paired OIDs — so the tick belongs to
+  that record. The mission-outcome half of the note is untouched (its tick was already recorded
+  as owner-grade).
+
+**Gates.** `ruff check src` **12** (codegen) / **1** (companion), measured before editing and
+identical after — the step edits no Python. `git diff --check` clean. No suite re-run: nothing
+executable changed; the step-5 gate baselines stand as the current-tree record. Matrix: zero
+row edits (no row cites R12's ruff clause). No premise conflict.
+
+**Step 6 is likely the last substantive change before the batteries.** Steps 7–8 run once at
+the final paired OIDs — the owner should confirm the tree is final before they start.
 
 #### Narrow-correction step 5 completion
 

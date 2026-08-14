@@ -108,6 +108,12 @@ and the green checker runs. Left unticked deliberately: **coordinated repository
 open. The orchestrator's probe P1 confirms the fix is there, but that confirmation comes from
 outside the independent audit, so the tick is the owner's to make.
 
+**Update 2026-08-14 (narrow-correction step 6).** The coordinated-gates blocker is discharged:
+disposition 2 answered owner question 2 and R12 now carries the zero-new baseline (measured sets
+recorded in R12 itself). The box stays unticked for its remaining substance only — the fresh
+exact-count batteries run once at steps 7–8 at the final paired OIDs, and the tick belongs to
+that record. The mission-outcome sentence above stands as written.
+
 ## Known Requirements
 
 - **[INFERRED] R1 — Atomic landing.** The authority switch, v6 envelope, public API migration,
@@ -308,14 +314,39 @@ outside the independent audit, so the tick is the owner's to make.
   declared every-and-only consumer changes. Evidence records the TEAx checkout/distribution path,
   commit or installed version, lock/package state, and dirty status. Generated packages and run
   outputs live under a temporary directory and are not committed.
-- **[INFERRED] R12 — Coordinated repository and quality gates.** The coordinated implementation
-  repositories are this `sysml-codegen` worktree and `../agentic-mbse`. Record fresh exact
-  passed/skipped/deselected counts after deletions and migrations; Item-6 counts (codegen
-  `3,358/47/18`, agentic `1,819/1/33`) are historical context only. Required commands in each repo
-  are `uv run pytest tests/`, `uv run ruff check src`, `uv run ruff check src tests`,
-  `uv run mypy src/`, and `git diff --check`.
+- **[INFERRED] R12 — Coordinated repository and quality gates.** *(Amended 2026-08-14 at
+  narrow-correction step 6, per disposition 2 — `[AGENT] (ratified for execution by owner,
+  2026-08-12)`, `owner-disposition-20260811.md`. Two changes: the clean-production Ruff clause is
+  replaced by the zero-new baseline below, and the command list is restated against the
+  environment truth. The disposition's recorded codegen number, 14, was stale at execution — the
+  measured `src` set is 12, it improved during the CONSTRAINT-SEMANTICS epic — so the amendment
+  records the measured set, per the standing instruction in the step-4/5 records. Full decision
+  record: `.project/active/cutover-recovery/briefs/correction-step6-ruff-r12-amendment.md`.)*
+  The coordinated implementation repositories are this `sysml-codegen` worktree and the
+  agentic-mbse `item7-rebuild` worktree at `/home/reid/1cfe/agentic-mbse-item7-rebuild`. Record
+  fresh exact passed/skipped/deselected counts after deletions and migrations; Item-6 counts
+  (codegen `3,358/47/18`, agentic `1,819/1/33`) are historical context only. Required commands
+  in each repo are `$PY -m pytest tests/`, `$PY -m ruff check src`, `$PY -m ruff check src
+  tests`, `$PY -m mypy src/`, and `git diff --check`, where `$PY` is
+  `/home/reid/1cfe/item7-rebuild-venv/bin/python`. *(The original `uv run …` spelling resolves
+  the parked `/home/reid/1cfe/agentic-mbse` checkout in the current worktree topology and would
+  measure the wrong environment; the venv form holds until the phase-D merge and worktree
+  cleanup.)*
 
-  - Production Ruff (`ruff check src`) and all changed-file Ruff selections are clean.
+  - Production Ruff (`ruff check src`, ruff 0.16.2) introduces **zero new findings** against the
+    recorded baseline sets below. Comparison is by finding **set** (`--output-format concise`,
+    file:line:code identity), never by count alone; totals are no worse than the baselines. A
+    changed file is clean unless its only findings are recorded pre-existing findings,
+    unchanged. All other changed-file Ruff selections are clean.
+  - The codegen `src` baseline is exactly these **12** findings (all UP042, str+Enum), measured
+    2026-08-14 at `0ded316`: `core/models.py:13` BindingResolutionType;
+    `elaboration/diagnostics.py:10` ElaborationCode; `elaboration/graph.py:66` ValueSite;
+    `elaboration/identity.py:139` NodeKind; `extraction/data_models.py:194`
+    ComputedAttributeClassification; `extraction/expression_compiler.py:28` Compilability;
+    `extraction/source_evidence.py:37/57/151` SourceForm / ValueSiteKind / ReadinessCode;
+    `resolution/models.py:48/203/284` EntryPointType / ModuleKind / ConstraintInputResolution.
+  - The agentic-mbse `src` baseline is exactly **one** finding, measured 2026-08-14 at
+    `6372ef7`: `src/agentic_mbse/extraction/index.py:146:5 N806` (`_UNNUMBERED_RE`).
   - Full-tree Ruff introduces zero new findings relative to the Item-6 baselines of 358 codegen and
     127 agentic findings; totals may fall when obsolete tests are deleted.
   - Mypy introduces zero new findings, reports no error in a changed file, and does not exceed the
