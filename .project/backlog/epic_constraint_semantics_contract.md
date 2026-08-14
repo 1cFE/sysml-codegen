@@ -1073,11 +1073,17 @@ instead of the superseded one.
 
 **Scope**:
 
-1. **Owner checkpoint (first):** capture the owner-originated coverage-truth product-promise
-   statement; decide the promise/ADR home (`.project/product/` first-capture ledger per the
-   global convention, plus per-repo ADR convention) and file it with correct provenance.
-   Includes the owner disposition for the parked item3-F2 premise conflict (the unreachable
-   BLOCK clause) if the owner chooses to rule it here.
+1. **Owner checkpoint — DISCHARGED 2026-08-13, pre-captured.** Both inputs were given in
+   session before item start and are recorded verbatim with provenance in
+   `.project/active/constraint-docs-agent-sync/owner-checkpoint-20260813.md`: the
+   `[OWNER-VERBATIM]` coverage-truth promise (free-variation design search; no embedded
+   engineering logic, differentiating from 1costingFE) with the glean-from-concept-docs
+   instruction and a flagged tension to handle in daylight (promise bullet 2 vs the ratified
+   A5/A6/A7 basis rulings — reconciliation and `[ACAUSAL-RELATIONS-CAPABILITY]` pointer in the
+   capture file); and the item3-F2 ruling, option (a) — the blanket BLOCK clause amends to
+   reaching-gates scope, executed as sweep work under the recorded ruling. Remaining scope-1
+   work for the item: decide the promise/ADR home (`.project/product/` first-capture ledger
+   plus per-repo ADR convention) and file with correct provenance.
 2. **Cross-repo doc sweep for the landed surfaces:** `@inapplicable:` authoring, the
    eligible+inapplicable refusal, and the D9 advisory guidance → agentic-mbse
    `docs/patterns/constraints.md`; disposition vocabulary, carriers, totality gate, severity
