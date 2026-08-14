@@ -29,7 +29,7 @@ Prioritized list of epics and features.
 
 | Epic | Status | Notes |
 |------|--------|-------|
-| [CONSTRAINT-SEMANTICS] Constraint Semantics and Design-Search Feasibility | In progress — Items 1–5 and 8 closed and archived 2026-08-13, Item 6 certified (design delivery); Item 9 is next and unblocked (its Item 8 dependency is satisfied); Item 7 now waits only on Item 9 and runs last | P0 owner-directed prerequisite for ELABORATE-FIRST Item 7 steps 4–10. Establishes assert-only authoring policy, canonical 65/65 usage totality, truthful report/TEAx coverage, CATF derivative acceptance, two predicate fixes, and the staged calculation-definition gate design. 8.5–9.5 working days over 2–3 weeks plus owner-checkpoint turnaround. See [epic](epic_constraint_semantics_contract.md). |
+| [CONSTRAINT-SEMANTICS] Constraint Semantics and Design-Search Feasibility | In progress — Items 1–6 and 8 closed and archived 2026-08-13 (Item 6 as a design delivery; its production follow-on is unauthorized in this epic and filed as `[CALCDEF-GATE-IMPLEMENTATION]`); Item 9 is next and unblocked (its Item 8 dependency is satisfied); Item 7 now waits only on Item 9 and runs last | P0 owner-directed prerequisite for ELABORATE-FIRST Item 7 steps 4–10. Establishes assert-only authoring policy, canonical 65/65 usage totality, truthful report/TEAx coverage, CATF derivative acceptance, two predicate fixes, and the staged calculation-definition gate design. 8.5–9.5 working days over 2–3 weeks plus owner-checkpoint turnaround. See [epic](epic_constraint_semantics_contract.md). |
 | ~~[SOURCE-IDENTITY] One Modeled Value, One Runtime Source~~ | Superseded (2026-08-07; archived 2026-08-10). Archived to: `.project/completed/20260810_epic_semantic_source_identity.md` | Items 1–3 complete and inherited unchanged as the semantic authority (29-cell matrix, dispositions, invariants); the Item-4/5 shadow-layer architecture was stopped after Item-4 Phases 1–2 (recovery assessment) and replaced by [ELABORATE-FIRST](epic_elaborate_first_architecture.md); Items 6–8 intent absorbed into ELABORATE-FIRST Items 7–8. Item-4 artifacts archived to `completed/20260810_source-identity-occurrence-foundation/`; stopped implementation preserved on `item4-phases12-forensic`. |
 | [GAP-CLOSE] Constraint-Expression Gap Closure | Local scope certified; external F1 leg now verified closed (2026-07-20) | The blocking `[GAP-CLOSE-F1-TEAX-NORMALIZATION]` leg is closed in merged teax main (see the closed entry below). Remaining before full certification: Item 5 closeout state and the independent audit's open full-suite wave-gate leg — a certification pass, not new code. See `epic_gap_close.md`. |
 | ~~[CONSTRAINT-LIFECYCLE-REMEDIATION] Constraint Execution Lifecycle Remediation~~ ✅ | Complete (2026-07-20). Archived to: `.project/completed/20260720_epic_constraint_execution_lifecycle_remediation.md` | All 14 items done; composed public proof 41/41 at the pinned set. Merged 2026-07-20: agentic-mbse #11 → sysml-codegen #9 → teax #3. Release record + 41/41 register in `completed/20260720_constraint-lifecycle-composed-proof/`. |
@@ -37,17 +37,24 @@ Prioritized list of epics and features.
 
 CONSTRAINT-SEMANTICS items (ready; decomposition owner-approved 2026-08-12):
 
-- [ ] Item 1 — Contract and Authoring Policy
+- [x] Item 1 — Contract and Authoring Policy *(closed + archived 2026-08-13 →
+      `completed/20260813_constraint-semantics-contract-amendments/`; ticked 2026-08-13 as a
+      bookkeeping catch-up at Item 6's close — the close itself happened earlier)*
 - [x] Item 2 — Canonical Usage Domain and Catalog Totality *(closed + archived 2026-08-13 →
       `completed/20260813_constraint-catalog-totality/`)*
 - [x] Item 3 — Coverage Report and TEAx Policy *(closed + archived 2026-08-13 →
       `completed/20260813_constraint-coverage-policy/`; coordinated TEAx branch
       `constraint-semantics-item3` complete but **unmerged**)*
-- [ ] Item 4 — Predicate Defect Hardening
+- [x] Item 4 — Predicate Defect Hardening *(closed + archived 2026-08-13 →
+      `completed/20260813_constraint-predicate-hardening/`; ticked 2026-08-13 as a bookkeeping
+      catch-up at Item 6's close — the close itself happened earlier)*
 - [x] Item 5 — CATF Derivative and End-to-End Acceptance *(closed + archived 2026-08-13 →
       `completed/20260813_catf-constraint-policy-acceptance/`; audited Certify-with-residuals.
       Epic Items 8 and 9 were filed out of this item's D-S1/D-S2 ruling and remain open)*
-- [ ] Item 6 — Calculation-Definition Gate Capability Design
+- [x] Item 6 — Calculation-Definition Gate Capability Design *(closed + archived 2026-08-13 →
+      `completed/20260813_calcdef-constraint-gate-design/`; audited Certify as a design/planning
+      delivery. The 7–9 day production implementation is **not authorized in this epic** — filed as
+      `[CALCDEF-GATE-IMPLEMENTATION]` below, unowned, parked with the owner)*
 - [ ] Item 7 — ADR, Product Promise, and Agent-Facing Documentation Sync *(runs last; now waits
       only on Item 9)*
 - [x] Item 8 — Unit-Lane Port Metadata Defect *(closed + archived 2026-08-13 →
@@ -197,6 +204,49 @@ epic lands, ahead of any real CATF study campaign.
 **Evidence home:** Item 5's verification record and the 6-D ruling
 (`.project/completed/20260813_catf-constraint-policy-acceptance/`); acceptance record states the authored
 point is gate-infeasible under the model as authored.
+
+---
+
+### [CALCDEF-GATE-IMPLEMENTATION] Implement calculation-definition constraint gates (graph v4 + catalog 4.0.0) — P1, unowned, awaiting owner authorization (filed at owner direction, 2026-08-13)
+
+**What it is:** the production implementation of the capability CONSTRAINT-SEMANTICS Item 6
+designed. One asserted constraint owned by a calculation definition expands into one concrete check
+per calculation occurrence, with usage-level coverage and occurrence-level results joined through
+exact graph identity. Today such a usage ends as `non_reaching / owner_kind_unattachable`; nothing
+executes.
+
+**Authorization status `[OWNER 2026-08-13]`:** **not authorized in the CONSTRAINT-SEMANTICS epic.**
+The owner ruled at Item 6's close that this is a separate, later decision. It is unowned and
+unscheduled. It competes for the next slot with `[CATF-CRYO-HEAT-LEAK-COEFFICIENT]` (P1) and the
+paused ELABORATE-FIRST Item 7 resumption. **No agent may start it without a new owner ruling.**
+
+**Estimate:** 7–9 working days, cross-repository (codegen + TEAx).
+
+**Plan of record:** `.project/completed/20260813_calcdef-constraint-gate-design/implementation-item.md`
+— file-level scope, dependency pins, phase order, and customer-shaped acceptance tests, revised
+against three rounds of independent design review (F1–F8). Its companions are `spec.md`,
+`design.md`, `design-review.md`, and `probes/findings.md` in the same archived folder. The spec's
+production-acceptance boxes are deliberately still open: they are this item's, not Item 6's.
+
+**Start gate — SATISFIED, and here is why it mattered:** no lawful start SHA existed until Item 8's
+unit-lane characterizations landed, because the constraint-formal and computed-attribute unit lanes
+carried `unit=None` by construction and would have refused valid models. They landed at
+**`62a07e5c870158672eb100f1cba73adfe4c9df28`**. The gate dissolves; the only remaining block is
+owner authorization. Evidence bundle:
+`.project/completed/20260813_unit-lane-port-metadata/verification.md`.
+
+**Carried guards and consequences:**
+
+- **SC8 — re-derive, never reuse.** The future graph-v4 snapshot record must derive its own
+  then-current tracked path set from Git and prove equality against that. It may **not** reuse Item
+  8's 23 paths or the older 15-path subset; those are dated evidence, not durable scope.
+- **TEAx re-vendor.** This work ships **catalog 4.0.0**, so TEAx must be re-vendored against a
+  catalog-4 producer candidate. TEAx stays on `constraint-semantics-item3` @ `5b70ae9` until one
+  exists.
+- **R5 joint delivery is declined.** Folding Item 8's unit-lane work into this implementation was
+  ruled out and executed as ruled — Item 8 shipped standalone. The option text survives in
+  `design.md` as a decision record only; **reviving it requires a new owner ruling**, not an agent
+  reading the recorded option.
 
 ---
 

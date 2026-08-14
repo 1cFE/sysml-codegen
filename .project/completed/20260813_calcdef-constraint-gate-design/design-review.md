@@ -1,9 +1,9 @@
 # Design Review: Calc-Definition Constraint Gates
 
-**Design:** `.project/active/calcdef-constraint-gate-design/design.md`
-**Spec:** `.project/active/calcdef-constraint-gate-design/spec.md`
-**Follow-on item:** `.project/active/calcdef-constraint-gate-design/implementation-item.md`
-**Review File:** `.project/active/calcdef-constraint-gate-design/design-review.md`
+**Design:** `.project/completed/20260813_calcdef-constraint-gate-design/design.md`
+**Spec:** `.project/completed/20260813_calcdef-constraint-gate-design/spec.md`
+**Follow-on item:** `.project/completed/20260813_calcdef-constraint-gate-design/implementation-item.md`
+**Review File:** `.project/completed/20260813_calcdef-constraint-gate-design/design-review.md`
 **Date:** 2026-08-13
 
 ---
@@ -231,7 +231,7 @@ Confirmed stale paths:
   `src/sysml_codegen/orchestration/exact_pipeline_context.py`.
 - `src/sysml_codegen/generation/seal.py` does not exist (`design.md:362`;
   `implementation-item.md:169`). The landed file is `src/sysml_codegen/contracts/seal.py`.
-- `.project/active/calcdef-constraint-gate-design/probes/scratch/` does not exist
+- `.project/completed/20260813_calcdef-constraint-gate-design/probes/scratch/` does not exist
   (`design.md:488`; `implementation-item.md:285`). The models are in `probes/models/`.
 - TEAx tests do not live at `packages/teax-simkit/tests/...` (`design.md:406-407`;
   `implementation-item.md:180-182`). The existing test root is

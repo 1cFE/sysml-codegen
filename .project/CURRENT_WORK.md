@@ -1,14 +1,14 @@
 # Current Work
 
-**Last Updated**: 2026-08-13 (CONSTRAINT-SEMANTICS Items 1–5 and 8 CLOSED and archived; Item 6 certified as a design delivery; Item 9 is next and unblocked; Item 7 waits only on Item 9 and runs last; pre_pr and any push remain with the owner)
+**Last Updated**: 2026-08-13 (CONSTRAINT-SEMANTICS Items 1–6 and 8 CLOSED and archived; Item 6 closed as a design delivery with its production implementation ruled out of this epic and filed as the unowned `[CALCDEF-GATE-IMPLEMENTATION]`; Item 9 is next and unblocked; Item 7 waits only on Item 9 and runs last; pre_pr and any push remain with the owner)
 
 ---
 
 ## Active Work
 
-### 2026-08-13: CONSTRAINT-SEMANTICS epic — Item 9 is next (Item 8 closed)
+### 2026-08-13: CONSTRAINT-SEMANTICS epic — Item 9 is next (Items 6 and 8 closed)
 
-Items 5 and 8 both closed and archived today (see Recently Completed). What is live now:
+Items 5, 6, and 8 all closed and archived today (see Recently Completed). What is live now:
 
 - **Item 9 (derivative upgrade under held intent) is unblocked and next.** Its only remaining
   dependency was Item 8, which landed. It executes already-ruled held intent (A5/A6 basis, A9's 1%
@@ -18,10 +18,14 @@ Items 5 and 8 both closed and archived today (see Recently Completed). What is l
 - **Item 7 now waits only on Item 9**, runs last before epic close/pre_pr, and owes the B1–B5
   marker-mechanism documentation, the `modeling-assumptions.md` §8 unit-on-binding rewrite (Item 8
   changed that behavior), and the epic-level verification-matrix reconciliation.
-- **Item 6 remains a separately authorized future implementation** in
-  `.project/active/calcdef-constraint-gate-design/`. Item 8 updated only its named dependency,
-  ownership, and future complete-set recapture citations; no Item 6 production or
-  `formal_provenance` work ran.
+- **Item 6's production implementation is out of this epic `[OWNER 2026-08-13]`** and is now the
+  unowned backlog entry `[CALCDEF-GATE-IMPLEMENTATION]` (P1, 7–9 days, graph v4 + catalog 4.0.0,
+  codegen + TEAx), parked with the owner. It competes for the next slot with
+  `[CATF-CRYO-HEAT-LEAK-COEFFICIENT]` and the paused ELABORATE-FIRST Item 7 resumption. Its plan of
+  record is
+  `.project/completed/20260813_calcdef-constraint-gate-design/implementation-item.md`. The Item 8
+  start gate is satisfied at `62a07e5`; the only remaining block is owner authorization. No agent
+  starts it without a new ruling.
 - **Nothing pushed; no `main` touched anywhere; TEAx stays on `constraint-semantics-item3` @
   `5b70ae9`.** `pre_pr` remains with the owner.
 
@@ -487,6 +491,31 @@ surfaces as matrix-row candidates.
 ---
 
 ## Recently Completed
+
+### 2026-08-13: CONSTRAINT-SEMANTICS Item 6 — Calculation-Definition Gate Capability Design (audited Certify + closed)
+- **A design/planning delivery, not a capability.** An executable probe attached one
+  calculation-definition constraint across zero, one, and two calculation occurrences by exact
+  identity — matching the constraint owner's `DeclarationId` to `CalcNode.calculation_definition_id`
+  — and recovered resolved attributes, literals, and modeled defaults with no rendered-name lookup.
+  It also proved that two sibling uses of one definition collide on the current constraint key, so
+  concrete identity must carry the calculation node. The repeated-use gap was closed inside the v4
+  wire grammar, with no second authority. Spec, revised design, three-round independent review, and
+  a file-level implementation item followed; all six epic criteria are ticked. Archived to
+  `.project/completed/20260813_calcdef-constraint-gate-design/`.
+- **The implementation is ruled out of this epic `[OWNER 2026-08-13]`.** The 7–9 day follow-on
+  (graph v4 + catalog 4.0.0, codegen + TEAx) is filed as the named, unowned backlog entry
+  `[CALCDEF-GATE-IMPLEMENTATION]`, with the archived `implementation-item.md` as its plan of
+  record. Authorization is parked with the owner. The production-acceptance boxes in the archived
+  spec stay open on purpose — they belong to that item.
+- **Item 8's start gate is satisfied and recorded.** No lawful start SHA existed until Item 8's
+  unit-lane characterizations landed; they landed at `62a07e5`, so the gate dissolves and only
+  owner authorization remains. Three things ride along: the SC8 guard (the future v4 record
+  re-derives its own tracked set, never reusing Item 8's 23 paths), the TEAx re-vendor consequence
+  of catalog 4.0.0, and R5 joint delivery staying declined until a new owner ruling.
+- **Bookkeeping done at this close:** the two `active/unit-lane-port-metadata/` citations in
+  `design.md` and `implementation-item.md` were repointed to the archive before the move, and
+  BACKLOG's CONSTRAINT-SEMANTICS list caught up on Items 1 and 4, which were closed and archived
+  earlier but never ticked.
 
 ### 2026-08-13: CONSTRAINT-SEMANTICS Item 8 — Unit-Lane Port Metadata Defect (audited Certify + closed)
 - **The refusal is cured at its source.** Constraint-formal and computed-attribute entry-point

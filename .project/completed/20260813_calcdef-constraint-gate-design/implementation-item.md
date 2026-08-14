@@ -49,7 +49,7 @@ Calc-definition constraints currently end as `non_reaching / owner_kind_unattach
 - Item 8's reviewed immutable codegen pin is
   `62a07e5c870158672eb100f1cba73adfe4c9df28`. Its exact implementation, five kept consumer proofs,
   three-route behavior, final 23-path tracked inventory, and zero-v3-recapture disposition are in
-  `.project/active/unit-lane-port-metadata/verification.md`. A branch name does not satisfy the
+  `.project/completed/20260813_unit-lane-port-metadata/verification.md`. A branch name does not satisfy the
   gate.
 - The Item 8 dependency gate is satisfied. Item 6 production remains blocked until separately
   authorized by the owner.
@@ -253,7 +253,7 @@ New public fixture directories:
 - `tests/fixtures/calcdef_constraint_gate_blocked/`
 - `tests/fixtures/calcdef_constraint_gate_excluded/`
 
-Promote from `.project/active/calcdef-constraint-gate-design/probes/models/`; no test reads active-project probe files.
+Promote from `.project/completed/20260813_calcdef-constraint-gate-design/probes/models/`; no test reads active-project probe files.
 
 ### Documentation
 
@@ -426,11 +426,11 @@ Implementation preserves both as a parked conflict. It tests build halt and crea
 
 ## Required reading
 
-1. `.project/active/calcdef-constraint-gate-design/spec.md`
-2. `.project/active/calcdef-constraint-gate-design/design.md`
-3. `.project/active/calcdef-constraint-gate-design/design-review.md`, F1–F8
-4. `.project/active/calcdef-constraint-gate-design/probes/findings.md`
-5. `.project/active/calcdef-constraint-gate-design/probes/models/`
+1. `.project/completed/20260813_calcdef-constraint-gate-design/spec.md`
+2. `.project/completed/20260813_calcdef-constraint-gate-design/design.md`
+3. `.project/completed/20260813_calcdef-constraint-gate-design/design-review.md`, F1–F8
+4. `.project/completed/20260813_calcdef-constraint-gate-design/probes/findings.md`
+5. `.project/completed/20260813_calcdef-constraint-gate-design/probes/models/`
 6. `.project/backlog/epic_constraint_semantics_contract.md`, Items 6 and 8
 7. Item 8's final design/verification and exact kept-test paths once filed
 8. `.project/active/constraint-semantics-contract/rulings-20260812.md`, Q2, Q3, Q5

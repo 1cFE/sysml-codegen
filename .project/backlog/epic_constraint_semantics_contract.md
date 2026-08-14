@@ -929,10 +929,30 @@ validate 8–12h)
 
 ### Item 6: Calculation-Definition Gate Capability Design (1 day) ✅
 
-**Status (2026-08-13): CERTIFIED — design/planning delivery.** The executable probe, spec, revised
-design, three-round independent review, and filed follow-on implementation item satisfy all Item 6
-criteria. Production implementation remains a separately authorized follow-on; its acceptance
-boxes remain open. Audit: `.project/active/calcdef-constraint-gate-design/audit.md`.
+**Status (2026-08-13): CLOSED and archived — audited Certify, design/planning delivery.** The
+executable probe (0/1/2 occurrences), spec, revised design, three-round independent review, and
+filed follow-on implementation item satisfy all six Item 6 criteria. The repeated-use identity gap
+was resolved inside the v4 wire grammar, with no second authority. Archived to
+`.project/completed/20260813_calcdef-constraint-gate-design/`; audit at
+`.project/completed/20260813_calcdef-constraint-gate-design/audit.md`.
+
+**Production implementation is NOT authorized in this epic** — `[OWNER 2026-08-13]`, ruled at this
+close. The 7–9 day follow-on (graph v4 + catalog 4.0.0, codegen + TEAx) is filed as the named,
+unowned backlog entry `[CALCDEF-GATE-IMPLEMENTATION]` (`BACKLOG.md`, P1), with the archived
+`implementation-item.md` as its plan of record. **Every production-acceptance box in the archived
+`spec.md` stays open on purpose: those boxes belong to that future implementation, not to Item 6's
+delivery.** (Item 6's own six success criteria below are all ticked.) Item 6 is complete with them open.
+
+- **Item 8 start gate: SATISFIED.** No lawful implementation start SHA existed until Item 8's
+  characterizations landed; they landed at `62a07e5c870158672eb100f1cba73adfe4c9df28`. The gate
+  dissolves — the remaining block is owner authorization alone.
+- **SC8 guard carried forward:** the future graph-v4 record must re-derive its own tracked path
+  set and prove equality against it. It may not reuse Item 8's 23 paths or the older 15-path
+  subset; those are dated evidence, not durable scope.
+- **Consequence for TEAx:** the follow-on ships catalog 4.0.0, so TEAx must be re-vendored against
+  a catalog-4 producer candidate. It stays on `5b70ae9` until one exists.
+- **R5 joint delivery stays declined** (ruled at Item 8's close, executed there). Reviving it needs
+  a new owner ruling; no agent may revive it from the recorded option text.
 
 **Type**: Design / Planning
 
@@ -952,7 +972,7 @@ calculation definitions without building the capability inside this epic.
   literal, and modeled-default inputs without name lookup. It also proved scope alone collides for
   two sibling uses of one definition, so the concrete constraint identity must carry the
   calculation node and attachment must precede serialization. See
-  `.project/active/calcdef-constraint-gate-design/probes/findings.md`.
+  `.project/completed/20260813_calcdef-constraint-gate-design/probes/findings.md`.
 - ⚠️ Calculation usages and exact calculation-definition identity already exist in the instance
   graph, but constraint scope expansion has no CalculationDefinition branch.
 - ✅ The exact attachment rule, occurrence/report-volume design, and separately authorized
@@ -994,7 +1014,7 @@ calculation definitions without building the capability inside this epic.
 
 **Estimated Effort**: 1 day (probe 2h, spec 1h, design and review 4h, follow-on plan 1h)
 
-**Location**: `.project/active/calcdef-constraint-gate-design/`
+**Location**: `.project/completed/20260813_calcdef-constraint-gate-design/`
 
 **Dependencies**: Items 1–2; can run alongside Items 3–5.
 
@@ -1010,11 +1030,11 @@ calculation definitions without building the capability inside this epic.
 
 **Deliverables**:
 
-- `.project/active/calcdef-constraint-gate-design/probes/findings.md`
-- `.project/active/calcdef-constraint-gate-design/spec.md`
-- `.project/active/calcdef-constraint-gate-design/design.md`
-- `.project/active/calcdef-constraint-gate-design/design-review.md`
-- `.project/active/calcdef-constraint-gate-design/implementation-item.md`
+- `.project/completed/20260813_calcdef-constraint-gate-design/probes/findings.md`
+- `.project/completed/20260813_calcdef-constraint-gate-design/spec.md`
+- `.project/completed/20260813_calcdef-constraint-gate-design/design.md`
+- `.project/completed/20260813_calcdef-constraint-gate-design/design-review.md`
+- `.project/completed/20260813_calcdef-constraint-gate-design/implementation-item.md`
 
 ---
 
@@ -1388,10 +1408,11 @@ ruling; Item 8 may add one reviewed fixture recapture if churn fires)
 ---
 
 **Last Updated**: 2026-08-13
-**Next Action**: Items 1–5 and **Item 8** are CLOSED and archived (2026-08-13); Item 6 is CERTIFIED
-as a design/planning delivery. Item 8 shipped standalone as ruled, at freeze
-`62a07e5c870158672eb100f1cba73adfe4c9df28`, with zero v3 recapture (23/23 inventory, no stale rows)
-and no residuals.
+**Next Action**: Items 1–6 and **Item 8** are CLOSED and archived (2026-08-13). Item 8 shipped
+standalone as ruled, at freeze `62a07e5c870158672eb100f1cba73adfe4c9df28`, with zero v3 recapture
+(23/23 inventory, no stale rows) and no residuals. Item 6 closed as a design/planning delivery; its
+7–9 day production implementation is **not authorized in this epic** and now lives as the unowned
+`[CALCDEF-GATE-IMPLEMENTATION]` backlog entry, parked with the owner.
 **Item 9 is next and is now unblocked** — its Item 8 dependency is satisfied. It executes the
 already-ruled held intent recorded in
 `.project/completed/20260813_catf-constraint-policy-acceptance/owner-disposition.md` (A5/A6 basis,

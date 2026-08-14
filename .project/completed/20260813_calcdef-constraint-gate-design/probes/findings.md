@@ -101,7 +101,7 @@ set -a
 source /home/reid/1cfe/agentic-mbse/.env
 set +a
 /home/reid/1cfe/item7-rebuild-venv/bin/python \
-  .project/active/calcdef-constraint-gate-design/probes/probe_calcdef_attachment.py
+  .project/completed/20260813_calcdef-constraint-gate-design/probes/probe_calcdef_attachment.py
 ```
 
 1. The first scratch model used `first` as a calculation usage name. SysIDE rejected it as a
@@ -195,7 +195,7 @@ zero-to-many concrete constraint occurrences for results, joined by the existing
 - v3 calculation/usage carriage and codec round trip:
   `src/sysml_codegen/snapshot/instance_graph.py:523`, `:568`, `:706`, `:1014`, `:1031`.
 - Probe script and authored cases:
-  `.project/active/calcdef-constraint-gate-design/probes/probe_calcdef_attachment.py` and
+  `.project/completed/20260813_calcdef-constraint-gate-design/probes/probe_calcdef_attachment.py` and
   `probes/models/{zero,one,multiple}/model.sysml`.
 
 ## Reproduction
@@ -207,7 +207,7 @@ set -a
 source /home/reid/1cfe/agentic-mbse/.env
 set +a
 /home/reid/1cfe/item7-rebuild-venv/bin/python \
-  .project/active/calcdef-constraint-gate-design/probes/probe_calcdef_attachment.py
+  .project/completed/20260813_calcdef-constraint-gate-design/probes/probe_calcdef_attachment.py
 ```
 
 Expected: the script exits zero, prints one JSON document, and ends with

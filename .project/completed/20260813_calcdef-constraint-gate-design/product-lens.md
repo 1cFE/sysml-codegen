@@ -1,6 +1,6 @@
 # Product-Lens Ledger: Calculation-Definition Gate Capability
 
-## spec — 2026-08-13 — rev .project/active/calcdef-constraint-gate-design/spec.md
+## spec — 2026-08-13 — rev .project/completed/20260813_calcdef-constraint-gate-design/spec.md
 Epic: CONSTRAINT-SEMANTICS
 
 Point (re-derived): Modeled physics constraints must make design search viable; for this
@@ -19,7 +19,7 @@ Findings:
 
 Gate: CLEAR
 
-## audit — 2026-08-13 — rev .project/active/calcdef-constraint-gate-design/design.md
+## audit — 2026-08-13 — rev .project/completed/20260813_calcdef-constraint-gate-design/design.md
 Epic: CONSTRAINT-SEMANTICS
 
 Point (re-derived): Modeled physics constraints must produce trustworthy design-search evidence;

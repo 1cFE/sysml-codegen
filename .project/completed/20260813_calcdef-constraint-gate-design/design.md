@@ -18,15 +18,15 @@ This revision keeps that architecture and closes review findings F1–F8. It fre
 
 ## Related artifacts
 
-- Primary contract: `.project/active/calcdef-constraint-gate-design/spec.md`
-- Independent review: `.project/active/calcdef-constraint-gate-design/design-review.md`
-- Probe findings and models: `.project/active/calcdef-constraint-gate-design/probes/findings.md` and `probes/models/`
+- Primary contract: `.project/completed/20260813_calcdef-constraint-gate-design/spec.md`
+- Independent review: `.project/completed/20260813_calcdef-constraint-gate-design/design-review.md`
+- Probe findings and models: `.project/completed/20260813_calcdef-constraint-gate-design/probes/findings.md` and `probes/models/`
 - Epic contract: `.project/backlog/epic_constraint_semantics_contract.md`, Items 6 and 8
 - Rulings: `.project/active/constraint-semantics-contract/rulings-20260812.md`, Q2, Q3, Q5
 - Landed catalog design: `.project/completed/20260813_constraint-catalog-totality/design.md`
 - Landed coverage design: `.project/completed/20260813_constraint-coverage-policy/design.md`
 - Inherited architecture: `.project/backlog/epic_elaborate_first_architecture.md`
-- Follow-on backlog item: `.project/active/calcdef-constraint-gate-design/implementation-item.md`
+- Follow-on backlog item: `.project/completed/20260813_calcdef-constraint-gate-design/implementation-item.md`
 
 ## The point
 
@@ -191,7 +191,7 @@ This is one resolver authority with a calc-formal redirection case, not a calc-d
 
 Item 8 is frozen in the reviewed codegen commit
 `62a07e5c870158672eb100f1cba73adfe4c9df28`. Its exact evidence bundle is
-`.project/active/unit-lane-port-metadata/verification.md`. This full SHA, not the branch name or the
+`.project/completed/20260813_unit-lane-port-metadata/verification.md`. This full SHA, not the branch name or the
 older `cc14cf0…` evidence baseline, satisfies Item 6's unit-lane dependency pin. Item 6 remains
 separately blocked on owner authorization.
 

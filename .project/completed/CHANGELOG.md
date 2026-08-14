@@ -4,6 +4,77 @@ Historical record of completed work.
 
 ---
 
+## [2026-08-13] - [CONSTRAINT-SEMANTICS Item 6] Calculation-Definition Gate Capability Design
+
+**Type**: Item (design / planning delivery; independently audited **Certify**)
+**Duration**: spec 2026-08-13 → closed 2026-08-13 (same day)
+**Archived to**: `.project/completed/20260813_calcdef-constraint-gate-design/`
+**Commits**: audit at `7369b3e` (branch `item7-rebuild`, unpushed); no production code, fixture, or
+cross-repository change was made by this item / companion untouched / TEAx untouched on
+`constraint-semantics-item3` @ `5b70ae9` (nothing pushed, no `main` touched anywhere)
+
+### Summary
+An asserted constraint owned by a calculation definition could not attach to any calculation
+occurrence. It ended as `non_reaching / owner_kind_unattachable / error` even when the graph held
+concrete calculations of its owning definition — so the owner-ratified rule of one asserted check
+per concrete calculation occurrence was visible in the contract but permanently unexecutable.
+
+Item 6 designed that capability rather than building it. A throwaway probe attached one such
+constraint across zero, one, and two occurrences using exact identity — the constraint owner's
+`DeclarationId` matched to `CalcNode.calculation_definition_id` — and recovered resolved attributes,
+literals, and modeled defaults without any rendered-name lookup. The probe also found the boundary
+that shaped the design: two sibling uses of one definition collide on the current constraint key,
+so concrete constraint identity must carry the calculation node and attachment must precede
+serialization. That repeated-use gap was resolved inside the v4 wire grammar, with no second
+authority and no second occurrence inventory.
+
+The delivery is the spec, the revised design, a three-round independent design review (F1–F8), and
+a file-level follow-on implementation item with dependency pins, phase order, effort estimate, and
+customer-shaped acceptance tests. All six epic Item 6 success criteria are ticked. No production
+symbol, diagnostic, or version bump was introduced, as expected for this delivery type.
+
+### Deliverables
+- `spec.md`, `design.md`, `design-review.md` (three rounds), `implementation-item.md`, `audit.md`,
+  `product-lens.md` (spec + audit blocks, gate CLEAR both, no findings), and `probes/` with
+  `findings.md` and the probe models.
+- No product surface. This item shipped design authority only.
+
+### Decisions and deviations
+- **Production implementation is NOT authorized in this epic — `[OWNER 2026-08-13]`, ruled at this
+  close.** The 7–9 day follow-on (graph v4 + catalog 4.0.0, codegen + TEAx) is filed as the named,
+  unowned backlog entry `[CALCDEF-GATE-IMPLEMENTATION]` (P1), with the archived
+  `implementation-item.md` as its plan of record. Authorization is parked with the owner and
+  competes for the next slot with `[CATF-CRYO-HEAT-LEAK-COEFFICIENT]` and the paused
+  ELABORATE-FIRST Item 7 resumption.
+- **The production-acceptance boxes in `spec.md` remain open, deliberately.** They belong to that
+  future implementation, not to Item 6's delivery. Item 6 is complete with them open.
+- **The Item 8 start gate is SATISFIED and the SHA is recorded.** No lawful implementation start
+  SHA existed until Item 8's unit-lane characterizations landed; they landed at
+  `62a07e5c870158672eb100f1cba73adfe4c9df28`. The gate dissolves; the only remaining block is owner
+  authorization.
+- **SC8 guard carried forward:** the future graph-v4 record must re-derive its own then-current
+  tracked path set and prove equality against it. Item 8's 23 paths and the older 15-path subset
+  are dated evidence, not durable scope, and may not be reused.
+- **Catalog 4.0.0 implies a TEAx re-vendor.** TEAx stays on `constraint-semantics-item3` @
+  `5b70ae9` until a catalog-4 producer candidate exists.
+- **R5 joint delivery stays declined.** Item 8 shipped standalone as ruled. The option text
+  survives in `design.md` as a decision record; reviving it needs a new owner ruling.
+- **Provenance correction during the item:** eleven unsupported `[NEED]` requirements were regraded
+  to source-qualified `[INFERRED]` with no substantive clause change, so no manufactured owner
+  grade remains in the delivery artifacts.
+- **Dead-pointer repair at close:** `design.md` and `implementation-item.md` cited
+  `.project/active/unit-lane-port-metadata/verification.md`, which moved at Item 8's close. Both
+  were repointed to `.project/completed/20260813_unit-lane-port-metadata/verification.md` before
+  the archival, and the folder's own self-citations were repointed to the archive path.
+- ADR/product-ledger infra is still absent in this repo (no `.project/adr/`, no `.project/product/`,
+  no `adr.sh`/`product.sh`), so no decision or promise entry could be filed. The product-lens
+  ledger records no finding to file in any case.
+
+### Lessons Learned
+[TODO: Add lessons learned]
+
+---
+
 ## [2026-08-13] - [CONSTRAINT-SEMANTICS Item 8] Unit-Lane Port Metadata Defect
 
 **Type**: Item (implementation, defect fix; independently audited **Certify**)

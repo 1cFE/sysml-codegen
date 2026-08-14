@@ -301,16 +301,16 @@ but internal graph construction alone does not satisfy a live or snapshot criter
   - `.project/active/constraint-semantics-contract/spec.md`
   - `.project/active/constraint-semantics-contract/rulings-20260812.md` — Q2, Q3, Q5 and
     post-ruling refinements
-  - `.project/active/calcdef-constraint-gate-design/probes/findings.md` — agent-grade executable
+  - `.project/completed/20260813_calcdef-constraint-gate-design/probes/findings.md` — agent-grade executable
     evidence
   - `.project/completed/20260813_constraint-catalog-totality/spec.md`
   - `.project/completed/20260813_constraint-catalog-totality/design.md`
   - `.project/completed/20260813_constraint-coverage-policy/spec.md`
   - `.project/completed/20260813_constraint-coverage-policy/design.md`
   - `.project/backlog/epic_elaborate_first_architecture.md`
-- **Product lens:** `.project/active/calcdef-constraint-gate-design/product-lens.md`
-- **Design:** `.project/active/calcdef-constraint-gate-design/design.md` (to be created)
-- **Design review:** `.project/active/calcdef-constraint-gate-design/design-review.md` (reserved for
+- **Product lens:** `.project/completed/20260813_calcdef-constraint-gate-design/product-lens.md`
+- **Design:** `.project/completed/20260813_calcdef-constraint-gate-design/design.md` (to be created)
+- **Design review:** `.project/completed/20260813_calcdef-constraint-gate-design/design-review.md` (reserved for
   the architecture and invariant-ownership risks)
 - **Stage selection:** Explicit `spec_review` is skipped. The approved umbrella spec already fixes
   the behavior and this child spec refines it; independent review is reserved for the design's
