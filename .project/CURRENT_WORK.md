@@ -8,6 +8,29 @@ deferred to the phase-D branch gate by ruling.** Nothing pushed, no `main` touch
 
 ---
 
+## Working trees and branches — read this first (valid until the phase-D merge + worktree cleanup)
+
+Settled by git 2026-08-14 [OWNER-directed placement]. One line of development per repo, no forks:
+
+| repo | authoritative branch | authoritative working tree | notes |
+|---|---|---|---|
+| sysml-codegen | `item7-rebuild` | `/home/reid/1cfe/sysml-codegen-item7-rebuild` | carries the Item-7 cutover + the whole closed CONSTRAINT-SEMANTICS epic |
+| agentic-mbse | `item7-rebuild` | `/home/reid/1cfe/agentic-mbse-item7-rebuild` | `elaborate-first-salvage` is FULLY CONTAINED in it (main → +3 → salvage → +9 → item7-rebuild); the label dies at merge |
+| teax | `constraint-semantics-item3` | `/home/reid/1cfe/teax` (checkout stays ON this branch) | codegen's execution lane imports simkit from this working tree; merges LAST, after codegen |
+
+- The main agentic-mbse checkout (`/home/reid/1cfe/agentic-mbse`) is parked 9 commits behind on
+  the same line — kept only as the pre-rebuild environment's read target and the license `.env`
+  host. **Do not develop there.**
+- Codegen's `.claude/skills/sysml-conventions` symlink points at the item7-rebuild worktree
+  (interim, owner-approved); restore to the main checkout at phase D.
+- Tests: `/home/reid/1cfe/item7-rebuild-venv/bin/python -m pytest`, never `uv run` (resolves the
+  companion to the parked checkout). License: `set -a; source /home/reid/1cfe/agentic-mbse/.env;
+  set +a`; licensed proof = zero `no live syside license` skip lines.
+- This whole block, the salvage label, and the extra worktrees get cleaned up at phase D
+  (PR wave + worktree cleanup); delete the block then.
+
+---
+
 ## ✅ Item 7 — CLOSED and archived (2026-08-14)
 
 **Verdict: CERTIFY-WITH-RESIDUALS**, archived to
