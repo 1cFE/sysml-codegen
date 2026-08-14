@@ -462,8 +462,13 @@ required portability pair (REQ-SNAP-21/22) and registered these three as candida
    (Item 7's tests).
 
 Discipline: matrix recount per memory `verification-matrix-drift-modes` (index totals +
-per-family counts, not just the summary block); current baseline 276 rows / 275 PASS / 32
-families after REQ-SNAP-21/22.
+per-family counts, not just the summary block); current baseline **280 rows / 136 PASS / 33
+families** after CONSTRAINT-SEMANTICS Item 7 filed the REQ-DIAG family (2026-08-14).
+
+*The previous line here read "276 rows / 275 PASS / 32 families." The row and family counts were
+right for their date; **"275 PASS" was never true** — the matrix's own summary read 133 at the time
+and its tables read 134. Corrected by recount, not by adopting either number
+(`.project/active/constraint-docs-agent-sync/verification.md`).*
 
 ### [STALE-BASELINE-CLASS] Four committed fixtures latently stale vs live extraction — P3 (owner: leave filed, 2026-07-24)
 

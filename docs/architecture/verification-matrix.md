@@ -6,14 +6,22 @@ Traceability matrix mapping every REQ-\* tag to its conformance test file and st
 
 | Metric | Count |
 |--------|-------|
-| Total requirements | 276 |
-| PASS (a kept test proves it and passes) | 133 |
+| Total requirements | 280 |
+| PASS (a kept test proves it and passes) | 136 |
 | PARTIAL (a kept test covers part of the requirement; the gap is named in the cell) | 3 |
 | RETIRED (subject deleted with the legacy stack) | 131 |
-| UNTESTED (subject live, no test proves it) | 9 |
+| UNTESTED (subject live, no test proves it) | 10 |
 | DEFERRED | 0 |
-| REQ families | 32 |
-| Distinct kept test files cited | 50 |
+| REQ families | 33 |
+| Distinct kept test files cited | 59 |
+
+> **Recounted from the tables 2026-08-14** (CONSTRAINT-SEMANTICS Item 7), per the recount discipline
+> — index totals **and** per-family counts, never the summary block on trust. The recount **falsified
+> the previous block**, which read PASS 133 / PARTIAL 3 / distinct test files 50 against tables that
+> already held PASS 134 / PARTIAL 2 / 57 files. The drift was `REQ-CL-04`, upgraded PARTIAL → PASS
+> when audit-7 F2 closed without the summary following it, plus a test-file count that had not been
+> recomputed in some time. The remaining delta to the numbers above is this item's own four REQ-DIAG
+> rows. Method and raw output: `.project/active/constraint-docs-agent-sync/verification.md`.
 
 **Status definitions:**
 - **PASS**: At least one test **that exists in the tree** proves this requirement and passes
@@ -70,6 +78,7 @@ Traceability matrix mapping every REQ-\* tag to its conformance test file and st
 - [CA — Computed Attributes](#ca) (9/9 pass, 3 retired)
 - [CL — Constraint Lowering & Catalog](#cl) (4/4 pass, 1 retired)
 - [CON — Contracts & Sealing](#con) (10/10 pass)
+- [DIAG — Diagnostic Severity](#diag) (2/4 pass, 1 partial, 1 untested)
 - [DM — Data Models](#dm) (9/9 pass)
 - [DRA — Resolution Architecture](#dra) (5 retired)
 - [EC — Expression Compiler](#ec) (7/7 pass)
@@ -273,6 +282,22 @@ indirectly via the emitted verifier.
 | REQ-DM-07 | Resolution-model field type annotations (`ComputationGraph`, `PipelineModule`, `ModuleInput`, `ParameterGroup`) match the documented containment hierarchy from doc 09 (no data-flow diagram is checked) | `test_data_models.py` | PASS |
 | REQ-DM-08 | The typed-registry **enforced surface** SHALL use NewType wrappers: the wrappers in `identifier_types.py` are genuine `NewType`s over their bases, the four `OutputRegistry` registry dicts are annotated `dict[NewType, NewType]`, and `make_scoped_key`/`make_canonical_channel` return their NewType. (The `resolution/models.py` field annotations remain bare `str` by design — documented in 09-data-models.md and filed `[DM08-MODEL-FIELD-TYPING]`; `register_alias`'s `\| str` unions are a designed boundary, not drift) | `test_dm08_enforced_surface.py` (AST-scan — PEP-526 `self.x` annotations never reach `__annotations__`) | PASS |
 | REQ-DM-09 | `ComputationGraph.output_aliases: list[OutputAlias]` SHALL be a serialized field (no `exclude`, contrast `fallback_entry_points`) carrying each EXPOSE_PURE modeler name, its canonical channel (validated to exist — INV-3), instance path, and `shape`; stable-sorted by `(instance_path, alias_name)` (INV-5) so regen yields no ordering-only diff | `test_data_models.py`, `test_exact_route_alias_aggregation.py::test_the_aggregation_and_its_chain_alias_both_reach_a_consumer` | PASS |
+
+### DIAG
+
+**Diagnostic Severity** — [reference/30-diagnostic-severity.md](reference/30-diagnostic-severity.md)
+
+Filed 2026-08-14 by CONSTRAINT-SEMANTICS Item 7 (`[MATRIX-EPIC-SURFACE-ROWS]`, BACKLOG:447). These
+four requirements were traced in doc 30 and had **no rows here** — the family existed in prose and
+not in the matrix. Every cited test was run before its row was written; the run is recorded in
+`.project/active/constraint-docs-agent-sync/verification.md`.
+
+| REQ ID | Requirement | Test File | Status |
+|--------|-------------|-----------|--------|
+| REQ-DIAG-01 | A diagnostic's severity is fixed at construction from the writer table and never recomputed by a reader-side `kind → severity` lookup | `test_upstream_pins.py` (pins the upstream schema string; the construction rule itself lives in `agentic-mbse constraint_facts.py:78-95,230-233`) | PARTIAL *(the kept codegen test pins the pinned-upstream contract, not the no-reader-side-table property. That property is proved by absence — no reader-side mapping exists in `src/` — which no codegen test asserts. A reader-side table reintroduced upstream would not fail this row's test.)* |
+| REQ-DIAG-02 | A blocking diagnostic halts generation before lowering, on both the live and snapshot routes, naming every blocking diagnostic | `test_extraction_diagnostic_screen.py` | PASS |
+| REQ-DIAG-03 | An advisory diagnostic is rendered and generation continues; advisory rendering cannot swallow the blocking halt | `test_extraction_diagnostic_screen.py` | PASS |
+| REQ-DIAG-04 | Severity skew fails closed in both directions | — *(discharged by construction — no severity crosses a process boundary on disk; the v6 envelope carries no `severity` field and `constraint_facts.parse` has no caller in `src/` or `tests/`)* | UNTESTED *(the failure mode is impossible rather than guarded here, so there is nothing to assert. Recorded as UNTESTED rather than PASS because no kept test would fail if the v6 envelope started carrying severity again.)* |
 
 ### DRA
 
@@ -742,10 +767,12 @@ read as shipped coverage with no disclosure, unlike its CA sibling.)
 
 ## Untested Requirements
 
-Nine rows describe live behaviour that nothing in the tree proves. Every one of them got
-there the same way: its only pin was a conformance module the Item 7 retirement deleted, and
-the deletion ledger recorded no replacement for it. This is the retirement's real coverage
-debt, listed rather than papered over with a citation to a test that proves something else.
+Ten rows describe live behaviour that nothing in the tree proves. Nine of them got there the same
+way: the only pin was a conformance module the Item 7 retirement deleted, and the deletion ledger
+recorded no replacement. This is the retirement's real coverage debt, listed rather than papered over
+with a citation to a test that proves something else.
+
+The tenth is a different kind and is recorded separately below.
 
 All nine trace to two deleted modules:
 
@@ -765,6 +792,15 @@ And one from the graph-assembly deletion:
 - **REQ-GA-05** — the exact-`ComputationGraph`-field-set pin retired with
   `test_graph_assembly.py` (ledger L-152). A field added to or removed from the graph now
   passes silently instead of flipping a test red.
+
+The tenth, filed 2026-08-14 and **not** retirement debt:
+
+- **REQ-DIAG-04** (severity skew fails closed) — the failure mode is impossible on this product
+  rather than guarded: no severity crosses a process boundary on disk, so there is nothing for a
+  test to assert. It is UNTESTED and not PASS because no kept test would fail if the v6 envelope
+  started carrying a `severity` field again. The upstream exact-equality guards still exist in
+  `agentic_mbse.sysml.constraint_facts` for callers that parse serialized facts; codegen does not
+  exercise them.
 
 REQ-PGD-06, previously the matrix's single UNTESTED row, is now RETIRED: the deriver it
 describes was deleted (ledger L-160).

@@ -530,21 +530,21 @@ grep -oE "\| (PASS|PARTIAL|RETIRED|UNTESTED|DEFERRED) " docs/architecture/verifi
 
 ### Changes required
 
-- [ ] Identify the REQ tags for the gates landed in Items 2–5 from their closed-item records under
+- [x] Identify the REQ tags for the gates landed in Items 2–5 from their closed-item records under
       `.project/completed/20260813_*`
-- [ ] File one row per REQ tag into the existing family tables (D-3)
-- [ ] Run each cited test before citing it; a row whose test does not pin its claim gets `UNTESTED`
+- [x] File one row per REQ tag into the existing family tables (D-3)
+- [x] Run each cited test before citing it; a row whose test does not pin its claim gets `UNTESTED`
       or `PARTIAL` with the gap named in the cell, not a PASS
-- [ ] Recount and correct the summary block: totals, per-status counts, family count, distinct test
+- [x] Recount and correct the summary block: totals, per-status counts, family count, distinct test
       files cited
-- [ ] Resolve the surfaced count conflict per D-3 and record the resolution in `verification.md`;
+- [x] Resolve the surfaced count conflict per D-3 and record the resolution in `verification.md`;
       correct BACKLOG:464-466 if the recount falsifies it
 
 ### Validation
 
-- [ ] Per-status counts sum to the total row count
-- [ ] Family count matches the distinct REQ-prefix count from the tables
-- [ ] Every newly cited test file exists and was run
+- [x] Per-status counts sum to the total row count
+- [x] Family count matches the distinct REQ-prefix count from the tables
+- [x] Every newly cited test file exists and was run
 
 **What we know after this phase:** the epic's landed gates are traceable, and the matrix's own
 numbers are true against its tables.
@@ -858,6 +858,66 @@ TEAx S1/S2/S3/S5→0 S4→9. Total 134 raw hits, all accounted for (70 rows + 64
   mention, an L4 validator-level label. Recorded as dispositions, not skips.
 
 ### Phase 5 Completion
+
+**Completed:** 2026-08-14 — **partially. Read the surfaced conflict below before treating A-8 as
+discharged.**
+
+**Actual changes:**
+
+- `docs/architecture/verification-matrix.md` — new **DIAG family**, four rows (REQ-DIAG-01..04), with
+  an index entry and the filing reason stated in the family header.
+- Same file, summary block **corrected by recount** and annotated with what the recount falsified.
+- Same file, "Untested Requirements" — REQ-DIAG-04 added as the tenth, explicitly *not* retirement
+  debt, with its own reason.
+- `.project/backlog/BACKLOG.md:464-466` — the stale baseline corrected, with the correction stated
+  rather than silently swapped.
+
+**The recount (D-3: recount, do not adopt either number on trust).** Counting method matters here —
+several cells carry a status word inside an explanatory note, and one row has an extra pipe, so a
+naive `grep -c` returns 281 against 276 rows. Correct method: per row, take the **last** field
+matching a status keyword.
+
+| Metric | Summary claimed | Tables held | Verdict |
+|---|---|---|---|
+| PASS | 133 | **134** | block stale |
+| PARTIAL | 3 | **2** | block stale |
+| Distinct kept test files | 50 | **57** | block stale |
+| Total / RETIRED / UNTESTED / families | 276 / 131 / 9 / 32 | same | agreed |
+
+The drift is one row: `REQ-CL-04`, upgraded PARTIAL → PASS when audit-7 F2 closed without the
+summary following. **BACKLOG's "275 PASS" was false against every reading** — not merely stale, as
+the plan supposed. Both blocks corrected; neither adopted.
+
+Post-filing: **280 / PASS 136 / PARTIAL 3 / RETIRED 131 / UNTESTED 10 / DEFERRED 0 / 33 families /
+59 kept test files.** Statuses sum to the total ✅; family count matches the distinct REQ-prefix
+count ✅.
+
+**No aspirational citations.** Every cited test was run first —
+`test_extraction_diagnostic_screen.py` + `test_upstream_pins.py` → **11 passed**. Two rows
+deliberately did not get a PASS: REQ-DIAG-01 is PARTIAL (the kept test pins the upstream schema
+string, not the no-reader-side-table property), and REQ-DIAG-04 is UNTESTED (nothing would fail if
+the envelope started carrying severity again). Both gaps are named in their cells.
+
+**Issues — second premise conflict, surfaced not resolved:**
+
+- **Phase 5's assumption under test is false.** It assumes the landed gates have REQ tags to file
+  rows against. Items 3, 5, 8 and 9 carry **zero** REQ tags in their closed records; Item 2 carries
+  four, and two of those (`REQ-CL-04`, `REQ-EXT-09`) were already filed. The only genuinely missing
+  tag-backed rows were `REQ-DIAG-01`/`-03` — a family that lived in doc 30's prose with no matrix
+  rows at all. Those are filed, plus `-02` and `-04` from the same table, since filing half a family
+  reproduces the gap one row over.
+- **Filing rows for the untagged gates would mean minting REQ tags first.** That is a requirements
+  decision, not a matrix reconciliation, and D-3 rules out the alternative explicitly ("a gate
+  without a REQ tag has nothing for the Status column to be about"). Minting an agent-authored tag
+  family inside this item would put invented requirement ids into the one document whose value is
+  that its rows trace to stated requirements. Parked for an owner call.
+- **Item 5 residual A-8 is therefore PARTIALLY discharged**, not fully: recount done, tag-backed gap
+  filed, untagged gates of Items 3/5/8/9 still untraced.
+
+**Deviations:**
+
+- **Four rows filed, not two.** The two missing tag-backed rows were `REQ-DIAG-01` and `-03`; `-02`
+  and `-04` were filed alongside them so the family is whole. Recorded rather than silently rounded.
 
 ### Phase 6 Completion
 

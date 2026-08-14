@@ -351,6 +351,103 @@ nothing was pushed. Recorded because a silent revert is not a record.
 
 ---
 
+## Verification-matrix reconciliation (Phase 5, 2026-08-14)
+
+### The recount, and what it falsified
+
+Counted from the tables, never from the summary block (project memory
+`verification-matrix-drift-modes`). Method: for each `^| REQ-` row, take the **last** field matching
+a status keyword — a plain column-position or `grep -c` count is wrong here, because several cells
+carry a status word inside an explanatory note and one row has an extra pipe. A naive
+`grep -oE "\| (PASS|…) "` returns 281 against 276 rows.
+
+| Metric | Summary block claimed | Tables actually held | Verdict |
+|---|---|---|---|
+| Total rows | 276 | 276 | agreed |
+| PASS | 133 | **134** | **block was stale** |
+| PARTIAL | 3 | **2** | **block was stale** |
+| RETIRED | 131 | 131 | agreed |
+| UNTESTED | 9 | 9 | agreed |
+| DEFERRED | 0 | 0 | agreed |
+| Families | 32 | 32 | agreed |
+| Distinct kept test files | 50 | **57** | **block was stale** |
+
+**The drift, named.** `REQ-CL-04` was upgraded PARTIAL → PASS when audit-7 F2 closed, and the summary
+block was never updated to follow. That is one row moving between two buckets, which is exactly why
+both numbers were off by one in opposite directions and the total still summed. The test-file count
+had simply not been recomputed in some time.
+
+### The surfaced count conflict, resolved by recount (plan D-3)
+
+The plan carried two conflicting baselines and forbade picking one on trust.
+
+- **BACKLOG:464-466** read "276 rows / 275 PASS / 32 families."
+- **The matrix summary** read Total 276 / PASS 133 / PARTIAL 3 / RETIRED 131 / UNTESTED 9 / 32
+  families.
+
+**The recount falsifies BACKLOG outright**, and falsifies the matrix block partially. "275 PASS" was
+true against no reading of the matrix at any point — the tables held 134 and the block claimed 133.
+The plan's own reasoning ("BACKLOG's 275 PASS is stale — it predates the Item 7 retirement re-cite")
+is close but not the whole story: 275 is not a stale PASS count, it is a wrong one. It looks like a
+row-count minus one that was labelled PASS by mistake.
+
+**Both blocks corrected**, neither adopted: `verification-matrix.md`'s summary (with a note naming
+the drift) and `BACKLOG.md:464-466` (with the correction and the reason stated).
+
+### Rows filed: the REQ-DIAG family
+
+| REQ tag | Status filed | Cited test | Run before citing? |
+|---|---|---|---|
+| REQ-DIAG-01 | PARTIAL (gap named in the cell) | `test_upstream_pins.py` | **yes — 4 passed** |
+| REQ-DIAG-02 | PASS | `test_extraction_diagnostic_screen.py` | **yes — 7 passed** |
+| REQ-DIAG-03 | PASS | `test_extraction_diagnostic_screen.py` | **yes — 7 passed** |
+| REQ-DIAG-04 | UNTESTED (reason named) | — (discharged by construction) | n/a |
+
+Run: `/home/reid/1cfe/item7-rebuild-venv/bin/python -m pytest tests/conformance/test_extraction_diagnostic_screen.py tests/conformance/test_upstream_pins.py -q` → **11 passed**. No aspirational
+citations: REQ-DIAG-01 is PARTIAL rather than PASS because the kept codegen test pins the upstream
+schema string, not the no-reader-side-table property, and REQ-DIAG-04 is UNTESTED rather than PASS
+because nothing would fail if the envelope started carrying severity again.
+
+### Post-filing counts
+
+Total 280 · PASS 136 · PARTIAL 3 · RETIRED 131 · UNTESTED 10 · DEFERRED 0 · families 33 · distinct
+kept test files 59. Per-status counts sum to the total (136+3+131+10+0 = 280) ✅. Family count matches
+the distinct REQ-prefix count from the tables ✅.
+
+### ⚠️ Surfaced premise conflict — Phase 5 cannot be executed as written
+
+**The plan's Phase 5 assumption under test is false.** It assumes "the landed gates have REQ tags to
+file rows against." Most of them do not:
+
+| Closed item | Distinct REQ tags in its record |
+|---|---|
+| Item 2 — `constraint-catalog-totality` | 4 (`REQ-CL-04`, `REQ-DIAG-01`, `REQ-DIAG-03`, `REQ-EXT-09`) |
+| Item 3 — `constraint-coverage-policy` | **0** |
+| Item 5 — `catf-constraint-policy-acceptance` | **0** |
+| Item 8 — `unit-lane-port-metadata` | **0** |
+| Item 9 — `derivative-upgrade-held-intent` | **0** |
+| `calcdef-constraint-gate-design` | **0** |
+| `constraint-predicate-hardening` | 1 |
+| Item 1 — `constraint-semantics-contract-amendments` | 2 |
+
+Of Item 2's four, `REQ-CL-04` and `REQ-EXT-09` were **already filed**. The genuinely missing rows
+were `REQ-DIAG-01` and `REQ-DIAG-03` — a family that existed in doc 30's prose and had zero rows in
+the matrix. Those are filed above, together with `-02` and `-04` from the same doc-30 table, since
+filing half a family would leave the same gap one row over.
+
+**What cannot be done here.** Filing matrix rows for the Item 3, 5, 8 and 9 gates would require
+**minting new REQ tags for them first**. That is a different act from "filing rows for landed gates,"
+and D-3 forbids the alternative in as many words: "a gate without a REQ tag has nothing for the
+Status column to be about." Minting a tag family is a requirements decision, not a matrix
+reconciliation, and doing it silently inside this item would put agent-minted requirement ids into a
+document whose whole value is that its rows trace to stated requirements.
+
+**Parked, not resolved.** The Item 5 residual A-8 is therefore **partially** discharged: the recount
+is done and the one tag-backed gap is filed, but the untagged gates of Items 3, 5, 8 and 9 remain
+untraced. This needs an owner call — see the questions at the end of this run.
+
+---
+
 ## Table 2 — Post-edit sweep
 
 *Filled in Phase 6.*
