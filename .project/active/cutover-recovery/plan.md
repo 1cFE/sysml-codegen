@@ -6555,10 +6555,11 @@ record-integrity corrections remain.
       the usage-domain ruling; completion record below.)** Add the required UNTESTED and
       PARTIAL-row coverage and the exact consumer/independent-output proof on live,
       in-place-snapshot, and relocated-snapshot routes.
-- [ ] **5. Portable provenance and invariant 35.** **[AGENT] (ratified for execution by owner,
-      2026-08-12)** Make provenance referents portable and amend invariant 35 to semantic
-      equality plus generated-byte equality after defined normalization of permitted provenance
-      metadata.
+- [x] **5. Portable provenance and invariant 35.** **[AGENT] (ratified for execution by owner,
+      2026-08-12; executed 2026-08-14 per `briefs/correction-step5-portable-provenance.md` —
+      completion record below.)** Make provenance referents portable and amend invariant 35 to
+      semantic equality plus generated-byte equality after defined normalization of permitted
+      provenance metadata.
 - [ ] **6. Ruff R12 amendment.** **[AGENT] (ratified for execution by owner, 2026-08-12)** Set
       the zero-new baseline to sysml-codegen `src` **14** and agentic-mbse `src` **1**: no new
       findings, changed files clean unless a recorded pre-existing finding is unchanged, totals
@@ -6642,6 +6643,89 @@ tripwire attempt with a leave-as-recorded escape hatch; REQ-DIAG-01 left as reco
 REQ-tag minting for Items 3/5/8/9 added per the 2026-08-14 authorization; stale numeric pins
 replaced by preflight measurement with explained deltas; the register's three Invalid classes
 installed as binding evidence rules through step 10.
+
+#### Narrow-correction step 5 completion
+
+**Completed:** 2026-08-14, executed in-session directly after step 4. Plan of record:
+`briefs/correction-step5-portable-provenance.md` (written at `98dc3ec` before any edit, path set
+declared; its "Path-set delta" section records the three surfaces discovered during execution).
+
+**The design decision (the "defined normalization").** The routes do not converge; the
+*rendering* does. `elaborate_model_paths` now rewrites every graph node's and every constraint
+usage record's `source_file` through `map_live_source_referent` — the exact mechanism the live
+route already used for `exclusion_location` — mirroring capture's `_rewrite_sources_as_referents`
+over the same node population (`orchestration/elaborated_pipeline.py`,
+`_rewrite_live_sources_as_referents`; `ValueError` surfaces as `SysMLParsingError` for parity
+with the capture arm). `_rewrite_exclusion_locations` lost its per-route callable: both routes
+re-render the location from the already-portable `source_file`. One real encoding gap closed
+with it: `_encode_relative_path` now NFC-normalizes segments exactly as
+`extraction/source_manifest.py` does, so a decomposed filename cannot split the routes
+(new unit test `test_segments_are_nfc_normalized_to_match_the_admission_encoding`; the `//`
+URI-prefix parser artifact was verified absorbed by the existing mapper). D3 stays un-converged
+and the arm-independence pin (`test_the_live_arm_does_not_share_the_capture_route`) stands
+un-inverted — design A1 carries a dated audit-F4-answered note, which also corrects the
+route-parity test's false recorded premise that portability required routing live through
+admission. **Invariant 35 amended** in the lifecycle contract per disposition 4, dated: the
+defined normalization is the shared portable referent rendering itself, no permitted
+route-dependent metadata remains, and generated-byte equality is literal. Invariant 34 is now
+true as written and was not reworded. A latent same-family leak died with the fix: an
+unassessed-form constraint's catalog `location` (`elaboration/project.py:1121`) was built from
+the raw path; it now renders portably on both routes.
+
+**Blast radius, measured not assumed.** Committed `baseline_outputs/` are snapshot-shaped
+already and no test regenerates them live — zero churn. Capture route untouched:
+`capture_v6_batch.py --verify` reads **15/22/0** and `git status tests/fixtures/` is empty
+afterward, so **no snapshot bytes moved and no recapture batch was triggered** (rev-2 evidence
+rule honored). The semantic fingerprint already excluded node `source_file`, so
+`model_contract.json` bytes did not move; the live *instance-graph* fingerprint moved toward
+the captured one and is now asserted equal
+(`test_snapshot_v6_routes.py::test_live_in_place_and_relocated_routes_have_one_graph`).
+
+**Pins flipped, stale claims amended in place** (each was a deliberate tripwire for this step):
+
+- `test_exact_route_generated_package.py`: the differ-only-in-provenance pin became
+  `test_the_two_packages_are_byte_identical` (empty differing set; anti-vacuity: portable
+  `SysML Source: root-0/` comments present, no checkout-absolute ones).
+- `test_exact_route_fingerprint_stability.py`: claim 3's executable-fingerprint divergence
+  assertion — built to fail with "the divergence claim is stale", and it did — now asserts
+  equality of both fingerprints and of every artifact hash.
+- `test_snapshot_v6_routes.py`: the masked payload comparison is unmasked; the divergence test
+  became `test_the_two_routes_agree_on_module_provenance`, asserting
+  `{None, "root-0/model.sysml"}` by value on both sides. The raw-elaborator arm keeps its
+  source-masked digest (it stops before the rewrite, deliberately).
+- `test_constraint_usage_domain_parity.py`: field-for-field comparison unmasked; the portable
+  referent asserted on all three routes.
+- `test_fusion_tea_real_teax.py` (execution lane): live-vs-relocated trees byte-equal after
+  import-name neutralization; the seal and executable fingerprint still differ, and the record
+  now attributes that to the distinct import names, not provenance.
+- `test_exact_route_snapshot_generation.py` docstring: claim 3 holds and cites the pin
+  (Gate 4C cite-don't-duplicate).
+- `scripts/capture_v6_batch.py --verify`: live-vs-sealed comparison unmasked — the batch gate
+  itself now proves full graph equality on all 15 capturable fixtures.
+- Ledger rows L-007/L-010 re-pointed at the renamed proof node via `scripts/_ledger_edit.py`;
+  `paths` **304/0** and both per-row `replacements` green. Doc 27 gained the route-parity
+  paragraph in its v6 half.
+
+**Matrix: zero row edits.** No matrix row cites any flipped test (the v6-envelope REQ family
+remains the parked disposition-9 backlog item), so the step-4 counts
+(288/156/1/131/0/0, 34 families, 64 kept files) stand without a recount. Spec SC9's claim
+(closed API and deletion surface) is untouched by this change.
+
+**Gates.** Full licensed suite **2086 passed / 34 skipped / 88 deselected**, **zero**
+`no live syside license` lines (delta from 2085 = the one new NFC unit test); collect
+**2120/2208 (88 deselected)**. Execution lane (`pytest tests/execution -m execution`)
+**88 passed**. `capture_v6_batch.py --verify` **15/22/0**, fixture tree clean; corpus selection
+**9 passed**. Ledger `paths` **304/0**, `surface` **0**, all six `groups` READY; proof integrity
+**0/0**; doc distinctness **31/0**; retirement worklist **0 problems**; gated manifest
+**65 = 56 + 9**. `ruff check src` **12** (zero-new held; the three findings in touched test
+files are the identical pre-existing set, verified against HEAD) and `mypy src` **52 errors in
+11 files**, both unchanged. `git diff --check` clean. One observation for the record, not a
+step-5 defect: the lane's stub-runner tripwire (`test_the_lane_runs_the_real_simkit`) fails
+under a broader-than-canonical invocation (`pytest tests/ -m execution`) because collecting
+`tests/runtime/test_fusion_tea_acceptance.py` imports the stub at module scope; the canonical
+`tests/execution` scope is unaffected and this predates step 5. No premise conflict occurred.
+Steps 7–8 remain single-shot at the final paired OIDs; step 6 (ruff amendment — measured
+baseline now 12, not the ratified text's stale 14) is next.
 
 #### Narrow-correction step 4 completion
 

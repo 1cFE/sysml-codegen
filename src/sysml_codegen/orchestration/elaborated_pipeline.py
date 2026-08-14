@@ -4,15 +4,18 @@ This is the shipped authority.  It was Item-5 dual-run evidence while the
 string-resolution builder was still in the tree; that builder is retired, so
 there is no other route left to compare against.
 
-``elaborate_admitted_sources`` is the front half of the route taken from an
-admitted source set rather than from raw caller paths.  It is what the live and
-the v6 capture routes share, so both see the same parsed documents and the same
-portable ``root-N/<relpath>`` source referents on every graph node.
+``elaborate_admitted_sources`` is the front half of the capture route, taken
+from an admitted source set rather than from raw caller paths.  The live route
+deliberately does not share it (the route-parity comparison needs independent
+arms; ``tests/conformance/test_snapshot_v6_routes.py`` pins the split), but both
+arms render ``source_file`` the same way: every graph node carries the portable
+``root-N/<relpath>`` referent, each route deriving it from the evidence it has —
+the caller's model roots live, the sealed admission manifest during capture.
 """
 
 from __future__ import annotations
 
-from collections.abc import Callable, Sequence
+from collections.abc import Sequence
 from pathlib import Path
 
 from sysml_codegen.analysis.source_referent import map_live_source_referent
@@ -69,13 +72,8 @@ def elaborate_model_paths(model_paths: list[Path]) -> InstanceGraph:
         model_paths=model_paths,
     )
     require_executable_content(graph, calc_defs)
-    # The live route keeps raw parser paths on ``source_file`` — they are the
-    # checkout, and the provenance comment says so on purpose. The excluded
-    # constraint location is different: it is sealed into the catalog and the
-    # model contract, so it is normalized here and nowhere else.
-    _rewrite_exclusion_locations(
-        graph, lambda node: map_live_source_referent(node.source_file, model_paths)
-    )
+    _rewrite_live_sources_as_referents(graph, model_paths)
+    _rewrite_exclusion_locations(graph)
     return graph
 
 
@@ -129,11 +127,34 @@ def elaborate_admitted_sources(admission: SourceAdmission) -> InstanceGraph:
     admission.verify_after_parse(extractor.model)
     require_executable_content(graph, calc_definitions)
     _rewrite_sources_as_referents(graph, admission)
-    # ``source_file`` is already the referent by the line above, so the excluded
-    # location is re-rendered from it rather than from the staged absolute path
-    # the elaborator saw.
-    _rewrite_exclusion_locations(graph, lambda node: node.source_file)
+    _rewrite_exclusion_locations(graph)
     return graph
+
+
+def _rewrite_live_sources_as_referents(graph: InstanceGraph, model_paths: list[Path]) -> None:
+    """Rewrite every live node's raw parser path to its portable referent.
+
+    The live mirror of ``_rewrite_sources_as_referents``: same node population,
+    but the mapping is derived from the caller's model roots rather than from an
+    admission manifest, so the two arms of the route-parity comparison stay
+    independent while rendering one ``source_file`` shape. Raw parser paths are
+    not canonical (the same file can arrive with a leftover ``//`` URI prefix);
+    the mapper absorbs that.
+    """
+
+    def referent(source_file: str) -> str:
+        try:
+            return map_live_source_referent(source_file, model_paths)
+        except ValueError as error:
+            raise SysMLParsingError(
+                f"elaborated source {source_file!r} is outside the supplied model roots"
+            ) from error
+
+    for nodes in (graph.attrs, graph.calcs, graph.constraints):
+        for node in nodes.values():
+            node.source_file = referent(node.source_file)
+    for record in graph.constraint_usages.values():
+        record.source_file = referent(record.source_file)
 
 
 def _rewrite_sources_as_referents(graph: InstanceGraph, admission: SourceAdmission) -> None:
@@ -148,23 +169,22 @@ def _rewrite_sources_as_referents(graph: InstanceGraph, admission: SourceAdmissi
         record.source_file = _referent_for(record, staged_to_referent)
 
 
-def _rewrite_exclusion_locations(
-    graph: InstanceGraph, referent_of: Callable[[ConstraintNode], str]
-) -> None:
+def _rewrite_exclusion_locations(graph: InstanceGraph) -> None:
     """Re-render every excluded constraint's location against a portable referent.
 
-    ``exclusion_location`` is the one field in the sealed constraint catalog that
-    carries a source path, and the elaborator builds it from the raw parser path
-    it happened to be handed — the checkout directory live, and the private
-    staging directory during a capture. Both are absolute, both reach the catalog
+    ``exclusion_location`` carries a source path into the sealed constraint
+    catalog, and the elaborator builds it from the raw parser path it happened
+    to be handed — the checkout directory live, and the private staging
+    directory during a capture. Both are absolute, both reach the catalog
     fingerprint and through it the model contract's semantic fingerprint, so a
-    package built at a different path authenticated as a different model. Each
-    route supplies the mapping it can prove; the rendering is one shape.
+    package built at a different path authenticated as a different model. Both
+    routes rewrite ``source_file`` to the portable referent first, so the
+    location is re-rendered from it here.
     """
     for node in graph.constraints.values():
         if node.exclusion_location is None:
             continue
-        node.exclusion_location = f"{referent_of(node)}:{node.source_line}"
+        node.exclusion_location = f"{node.source_file}:{node.source_line}"
 
 
 def _referent_for(

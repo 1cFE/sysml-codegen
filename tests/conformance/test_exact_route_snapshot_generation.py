@@ -14,18 +14,15 @@ The responsibility this replaces belonged to
 Claims 1 and 2 are authored here on the shipped v6 route, against the committed
 ``fusion_tea`` instance-graph snapshot.
 
-**Claim 3 does not hold on the exact route, and must not be asserted.** A v6
-snapshot records its sources under the portable ``root-0/`` staging referent,
-never the checkout path, so every generated file carrying a ``SysML Source:``
-comment differs between the two routes by construction — that portability is the
-point of the referent. What survives is that the difference is *only* the
-provenance comment and that the two routes agree semantically. Both are already
-pinned, so per Gate 4C's cite-don't-duplicate rule this module does not restate
-them:
+**Claim 3 holds on the exact route since step 5 of the Item-7 correction**
+(audit-F4): the live route renders the same portable ``root-0/`` source
+referent the snapshot records, so the two routes write identical bytes. It is
+already pinned, so per Gate 4C's cite-don't-duplicate rule this module does not
+restate it:
 
   * in ``test_exact_route_generated_package.py``,
-    ``test_the_two_packages_differ_only_in_provenance_comments`` names the whole
-    differing set and proves each difference is the source line;
+    ``test_the_two_packages_are_byte_identical`` asserts the empty differing
+    set across a live and a relocated-snapshot generation;
   * in ``test_exact_route_fingerprint_stability.py``,
     ``test_the_semantic_fingerprint_is_identical_live_and_from_a_snapshot``
     proves the model contract's semantic fingerprint is equal across the two.

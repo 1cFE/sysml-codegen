@@ -316,17 +316,19 @@ def test_live_and_relocated_packages_execute_to_equal_outputs(
     assert live_report.model_dump(mode="json") == relocated_report.model_dump(mode="json")
 
 
-def test_the_two_packages_carry_the_same_model_and_differ_only_in_provenance(
+def test_the_two_packages_carry_the_same_model_and_the_same_bytes(
     live_package, relocated_package
 ) -> None:
-    """Same model contract; different bytes, and only where provenance lives.
+    """Same model contract, and byte-equal trees once the import name is neutralised.
 
-    The ``executable_fingerprint`` is a hash of the whole covered tree, so it is
-    *not* equal: relocation changes each module's ``SysML Source:`` comment (the
-    live route knows the checkout path, a relocated snapshot knows only its
-    portable referent). That residual is the one carried to Slice 3E. What must
-    be equal is the semantic surface, which is what ``model_contract.json``'s
-    ``semantic_fingerprint`` covers.
+    Provenance was the last real route divergence: the live route used to write
+    each module's ``SysML Source:`` comment with the checkout path where a
+    relocated snapshot knows only its portable referent. Step 5 of the Item-7
+    correction (audit-F4) made the live route render the referent too, so the
+    neutralised trees are now asserted equal. Two differences remain and both
+    are the distinct import name the packages need to coexist in one
+    interpreter: the ``executable_fingerprint`` and the seal hash the real
+    bytes, name included, so they still differ.
     """
     live_dir: Path = live_package["package"]
     relocated_dir: Path = relocated_package["package"]
@@ -356,32 +358,24 @@ def test_the_two_packages_carry_the_same_model_and_differ_only_in_provenance(
     relocated_tree = tree(relocated_dir, str(relocated_package["name"]))
     assert set(live_tree) == set(relocated_tree)
 
-    # The seal is a hash manifest over the tree, so it restates every difference
-    # below as a changed digest and can carry no independent information. Excused
-    # by name, and only this one file: anything else differing must be a
-    # provenance comment.
+    # The seal is a hash manifest over the real bytes, import name included, so
+    # neutralising the name in its *text* cannot make its recorded digests
+    # agree. Excused by name, and only this one file.
     seal = "contracts/package_contract.json"
     assert seal in live_tree
     assert live_tree[seal] != relocated_tree[seal]
 
-    differing = {
+    differing = sorted(
         name
         for name in live_tree
         if name != seal and live_tree[name] != relocated_tree[name]
-    }
-    assert differing
-    for name in differing:
-        live_lines = set(live_tree[name].splitlines())
-        relocated_lines = set(relocated_tree[name].splitlines())
-        # Both directions: a line the relocated package has and the live one does
-        # not is just as much a divergence, and a one-sided check would let it
-        # through whenever a provenance line also differed.
-        only_one_side = (live_lines - relocated_lines) | (relocated_lines - live_lines)
-        assert only_one_side
-        assert all("SysML Source:" in line for line in only_one_side), (
-            f"{name} differs somewhere other than its provenance comment: "
-            f"{sorted(only_one_side)[:3]}"
-        )
+    )
+    assert differing == [], f"the two routes disagree beyond the import name: {differing}"
+
+    # Anti-vacuity: the provenance comments are present and portable, so the
+    # equality above is not two trees that simply dropped their source lines.
+    commented = [name for name in live_tree if "SysML Source: root-0/" in live_tree[name]]
+    assert commented
 
 
 def test_the_relocated_package_was_built_without_the_model_tree(

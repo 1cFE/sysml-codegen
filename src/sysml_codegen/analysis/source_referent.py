@@ -1,9 +1,17 @@
-"""Portable source referents for excluded constraints."""
+"""Portable source referents for the live route.
+
+``map_live_source_referent`` renders the same ``root-N/<relpath>`` shape the
+capture route's admission manifest produces, derived from the caller's model
+roots instead of a staged manifest — segments NFC-normalized, then
+percent-encoded, exactly as ``extraction/source_manifest.py`` encodes them, so
+the two routes cannot split on rendering.
+"""
 
 from __future__ import annotations
 
 import os
 import re
+import unicodedata
 from pathlib import Path
 from urllib.parse import quote, unquote_to_bytes
 
@@ -26,7 +34,10 @@ def _encode_relative_path(relative_path: str) -> str:
     segments = Path(relative_path).parts
     if not segments or any(segment in ("", ".", "..") for segment in segments):
         raise ValueError(f"source path has no canonical relative segments: {relative_path!r}")
-    return "/".join(quote(segment, safe=_SEGMENT_SAFE, encoding="utf-8") for segment in segments)
+    return "/".join(
+        quote(unicodedata.normalize("NFC", segment), safe=_SEGMENT_SAFE, encoding="utf-8")
+        for segment in segments
+    )
 
 
 def map_live_source_referent(raw_file: str, model_paths: list[Path]) -> str:

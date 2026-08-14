@@ -41,6 +41,16 @@ the output path is left untouched.
 **Capture is deterministic.** The same model in the same environment produces byte-identical
 snapshot files.
 
+**The routes agree byte-for-byte.** Every graph node's `source_file` is the portable
+`root-N/<relpath>` referent on both routes: capture rewrites it against the sealed admission
+manifest, and the live route rewrites it against the caller's model roots
+(`orchestration/elaborated_pipeline.py`, via `analysis/source_referent.py`) — same shape, each
+route deriving it from the evidence it has. Generation from a model tree and generation from a
+snapshot of that tree therefore write identical bytes, `SysML Source:` comments included
+(lifecycle-contract invariants 34–35; pinned by
+`test_exact_route_generated_package.py::test_the_two_packages_are_byte_identical` and
+`test_exact_route_fingerprint_stability.py`).
+
 ## What a sealed snapshot may claim
 
 This is the part to read before relying on a snapshot for anything but structure.

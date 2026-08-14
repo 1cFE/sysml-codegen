@@ -81,7 +81,34 @@ rather than invented; vehicle `[CONSTRAINT-GATES-UNTAGGED]` in `BACKLOG.md`.
 
 ## Active Work
 
-### 2026-08-14: Phase B — cutover step 4 EXECUTED in-session; step 5 (portable provenance) is next
+### 2026-08-14: Phase B — cutover step 5 EXECUTED (portable provenance); step 6 (ruff amendment) is next
+
+Step 5 ran in-session directly after step 4, per the ratified disposition 4 and the
+pre-declared plan `briefs/correction-step5-portable-provenance.md`. Full record: plan.md
+"Narrow-correction step 5 completion". Headlines:
+
+- **The live route now renders the portable `root-N/` source referent on every graph node**
+  (`_rewrite_live_sources_as_referents` in `orchestration/elaborated_pipeline.py`, plus NFC in
+  the shared encoding) — same shape as capture, derived from the caller's roots, routes NOT
+  converged (arm-independence pin stands). **Live and snapshot generation are byte-identical**;
+  invariant 35 amended (dated), invariant 34 now true as written; design A1 carries the
+  audit-F4-answered note.
+- **No snapshot bytes moved** (`--verify` 15/22/0, fixture tree clean — no recapture batch);
+  no baseline churn; **zero matrix row edits** (flipped tests are uncited; counts stand).
+- Every tripwire pinning the old divergence flipped to assert the new equality by value:
+  package byte-identity, fingerprint equality, v6-routes provenance agreement (renamed node —
+  ledger L-007/L-010 re-pointed, gate green), usage-domain parity unmasked, execution-lane tree
+  equality, `capture_v6_batch.py --verify` unmasked.
+- **Gates:** licensed suite **2086/34/88, zero license-skip lines** (+1 = the new NFC unit
+  test); collect 2120/2208; execution lane **88**; corpus 9; ledger 304/0, surface 0, groups
+  READY; proof integrity 0/0; distinctness 31/0; gated manifest 65 = 56 + 9; ruff src **12**
+  and mypy **52-in-11** (zero-new held); `git diff --check` clean. No premise conflict.
+
+**Next: step 6 — ruff R12 amendment** (note: measured src baseline is 12, the ratified text's
+14 is stale — set the amendment to the measured number), then steps 7–8 ONCE at the final
+paired OIDs, step 9 fresh narrow audit, step 10 owner final acceptance.
+
+### 2026-08-14: Phase B — cutover step 4 EXECUTED in-session (record)
 
 **[OWNER 2026-08-14]** triggered the resumption, ruled the execution mode (in-session), and made
 two in-session rulings; step 4 then ran to completion. **Commits: `cc268d5` (rev-2 brief +
@@ -112,8 +139,7 @@ record is the plan's "Narrow-correction step 4 completion"
   clean. Evidence-Invalidation Register rows 1–7 discharged; rows 3/8/9's single-shot
   obligations ride to steps 7–8.
 
-**Next: step 5 — portable provenance and invariant 35** (then step 6 ruff amendment, steps 7–8
-ONCE at the final paired OIDs, step 9 fresh narrow audit, step 10 owner final acceptance).
+Step 5 executed later the same day — see the entry above.
 
 ### 2026-08-14: CONSTRAINT-SEMANTICS epic — CLOSED and archived; next is phase B
 

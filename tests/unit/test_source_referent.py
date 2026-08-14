@@ -83,6 +83,23 @@ def test_utf8_segments_are_canonically_percent_encoded(tmp_path: Path):
     assert validate_snapshot_source_referent(referent) == referent
 
 
+def test_segments_are_nfc_normalized_to_match_the_admission_encoding(tmp_path: Path):
+    """A decomposed (NFD) filename renders the same referent the capture route seals.
+
+    ``extraction/source_manifest.py`` NFC-normalizes every segment before
+    percent-encoding; a live mapping that skipped that step would split the two
+    routes on any filesystem that hands back decomposed names.
+    """
+    nfd_name = "cafe\u0301.sysml"  # 'e' + combining acute, the decomposed spelling
+    root = tmp_path / "models"
+    root.mkdir()
+    source = root / nfd_name
+    source.write_text("")
+    referent = map_live_source_referent(str(source), [root])
+    assert referent == "root-0/caf%C3%A9.sysml"  # é precomposed: NFC applied
+    assert validate_snapshot_source_referent(referent) == referent
+
+
 @pytest.mark.parametrize(
     "referent",
     [

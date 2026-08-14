@@ -7,15 +7,13 @@ class before, where a multi-hop EXPOSE resolved live and mis-wired from a snapsh
 every seal passing. So the comparison here is field for field and record for record, not
 digest against digest.
 
-``source_file`` is the one deliberately route-dependent field: the live route records the
-caller's checkout path and the capture route records the portable referent. It is masked
-here for the same reason it is masked in ``test_snapshot_v6_routes``, and its portability
-is asserted separately below.
+``source_file`` was the one deliberately route-dependent field until step 5 of the Item-7
+correction (audit-F4) made the live route render the portable referent too. The comparison
+is unmasked, and portability is asserted on all three routes below.
 """
 
 from __future__ import annotations
 
-import dataclasses
 import shutil
 from pathlib import Path
 
@@ -35,11 +33,6 @@ pytestmark = requires_license
 FIXTURE = FIXTURES_DIR / "constraint_domain_inapplicable"
 
 
-def _comparable(domain: dict) -> dict:
-    return {
-        key: dataclasses.replace(record, source_file="<masked>")
-        for key, record in domain.items()
-    }
 
 
 @pytest.fixture(scope="module")
@@ -61,7 +54,7 @@ def routes(tmp_path_factory) -> tuple[dict, dict, dict]:
 
 def test_all_three_routes_agree_field_for_field(routes):
     live, in_place, relocated = routes
-    assert _comparable(live) == _comparable(in_place) == _comparable(relocated)
+    assert live == in_place == relocated
 
 
 def test_the_domain_is_not_empty_so_the_comparison_means_something(routes):
@@ -88,10 +81,9 @@ def test_the_live_only_annotation_read_survives_both_snapshot_routes(routes):
     assert next(iter(marked[0].values())).reason == "no build of this variant is planned"
 
 
-def test_the_sealed_routes_carry_a_portable_source_referent(routes):
-    """The capture route rewrites the usage tier's path, as it does every other tier."""
-    _, in_place, relocated = routes
-    for domain in (in_place, relocated):
+def test_all_three_routes_carry_a_portable_source_referent(routes):
+    """Both routes rewrite the usage tier's path, as they do every other tier."""
+    for domain in routes:
         for record in domain.values():
             assert record.source_file.startswith("root-")
             assert not Path(record.source_file).is_absolute()

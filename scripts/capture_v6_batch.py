@@ -17,8 +17,9 @@ script's choice: it is whatever the shipped public capture does.
 
 Every captured fixture is checked live against replay before it counts (``--verify``): the
 in-place and relocated reads must agree on the instance fingerprint and on the projected
-graph, and the projected graph must equal the live route's modulo the one module
-``source_file`` divergence Slice 3B pinned and 3E carried.
+graph, and the projected graph must equal the live route's exactly — the module
+``source_file`` divergence Slice 3B pinned was cured by Item-7 correction step 5, so no
+field is masked.
 
 Finally every outcome is compared against the amended Phase 2 corpus ledger. A fixture that
 captures differently from what the ledger says it does is a rule-10 stop, not a new baseline.
@@ -59,12 +60,6 @@ MANIFEST = BATCH / "batch.json"
 SNAPSHOT_NAME = "instance_graph_snapshot.json"
 CORPUS_LEDGER = ROOT / ".project/completed/20260809_elaborator-breadth/diff-ledger.md"
 
-#: The one field the live and v6 routes still disagree on, pinned at Slice 3B and carried
-#: to 3E: a module's recorded ``source_file``. Masked for the structural comparison so the
-#: divergence stays a named exception rather than a hash nobody can read.
-MASK = "<source-derived>"
-
-
 def _canonical(value: Any) -> bytes:
     return json.dumps(
         value, sort_keys=True, separators=(",", ":"), ensure_ascii=True, allow_nan=False
@@ -80,13 +75,6 @@ def _projected_payload(graph: Any) -> dict:
         else None
     )
     return payload
-
-
-def _masked(payload: dict) -> dict:
-    masked = json.loads(json.dumps(payload))
-    for module in masked["modules"]:
-        module["source_file"] = MASK
-    return masked
 
 
 def _instance_fingerprint(graph: Any) -> str:
@@ -162,11 +150,10 @@ def verify_live_matches_replay(fixture: Path, snapshot: Path) -> None:
     if replayed != _canonical(_projected_payload(project(relocated))):
         raise AssertionError(f"{fixture.name}: relocation changed the projected graph")
 
-    live = _masked(_projected_payload(build_elaborated_pipeline([fixture])))
-    if _canonical(live) != _canonical(_masked(_projected_payload(project(in_place)))):
+    live = _projected_payload(build_elaborated_pipeline([fixture]))
+    if _canonical(live) != _canonical(_projected_payload(project(in_place))):
         raise AssertionError(
-            f"{fixture.name}: the live route and the sealed snapshot disagree "
-            "beyond the pinned module source_file divergence"
+            f"{fixture.name}: the live route and the sealed snapshot disagree"
         )
 
 

@@ -12,13 +12,12 @@ the shipped v6 route:
    fingerprint, and nothing else;
 3. the model's own fingerprint survives the round trip through a snapshot.
 
-Claim 3 needed re-stating rather than repointing. The original asserted that the
-*executable* fingerprint is equal live and from a snapshot. On the exact route it
-is not, and should not be: a v6 snapshot records its sources under the portable
-``root-0/`` referent, so every file carrying a ``SysML Source:`` comment differs
-and its hash with it. What is genuinely route-independent is the **semantic**
-fingerprint in the model contract, and the executable fingerprints' divergence is
-asserted here too, so the difference is pinned rather than ignored.
+Claim 3 was re-stated when the exact route landed — the live route then wrote
+checkout-absolute ``SysML Source:`` comments, so only the **semantic**
+fingerprint was route-independent and the executable fingerprints' divergence
+was pinned by value. Step 5 of the Item-7 correction (audit-F4) removed that
+divergence: both routes render the portable ``root-0/`` referent, so the
+original claim holds again and both fingerprints are asserted equal.
 """
 
 from __future__ import annotations
@@ -172,11 +171,13 @@ def test_a_verifier_policy_change_moves_only_its_hash_and_the_derived_fingerprin
 def test_the_semantic_fingerprint_is_identical_live_and_from_a_snapshot(
     fixture: str, tmp_path: Path
 ) -> None:
-    """The model's own fingerprint survives capture and replay.
+    """Both fingerprints survive capture and replay.
 
-    The executable fingerprint does not, and that is asserted rather than
-    skipped: a v6 snapshot's sources are the portable ``root-0/`` referent, so
-    the ``SysML Source:`` comments — and their hashes — differ by construction.
+    The semantic fingerprint always did. The executable fingerprint follows
+    since step 5 (audit-F4): the live route renders the same portable
+    ``root-0/`` referent a snapshot records, so every artifact hash agrees.
+    The provenance comments must still be present — equality via two packages
+    that dropped their ``SysML Source:`` lines would prove nothing.
     """
     from sysml_codegen.snapshot.capture import capture_instance_graph_snapshot
 
@@ -200,14 +201,13 @@ def test_the_semantic_fingerprint_is_identical_live_and_from_a_snapshot(
     )
 
     assert _semantic_fingerprint(live) == _semantic_fingerprint(replayed)
-    assert _executable_fingerprint(live) != _executable_fingerprint(replayed)
+    assert _executable_fingerprint(live) == _executable_fingerprint(replayed)
 
     live_hashes = _seal(live)["artifact_hashes"]
     replay_hashes = _seal(replayed)["artifact_hashes"]
-    assert set(live_hashes) == set(replay_hashes)
-    differing = {path for path in live_hashes if live_hashes[path] != replay_hashes[path]}
-    assert differing, "the two routes' hashes agree everywhere — the divergence claim is stale"
-    for path in differing:
-        assert "SysML Source:" in (live / path).read_text(), (
-            f"{path} differs between the routes but carries no provenance comment"
-        )
+    assert live_hashes == replay_hashes
+
+    commented = [
+        path for path in live_hashes if "SysML Source: root-0/" in (live / path).read_text()
+    ]
+    assert commented, "no artifact carries a portable provenance comment"

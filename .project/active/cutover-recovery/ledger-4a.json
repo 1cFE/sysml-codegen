@@ -209,7 +209,7 @@
    "group": "4B-v5-family",
    "authority": "census PROD-09/10 via inventory INV-DISC-033 (disposition delete) [EVIDENCE]; plan Gate 4B; fresh reachability derivation at HEAD",
    "unreachability": "reachable from pipeline_context.py:26, pipeline_builder.py:39 and three G3 peers",
-   "replacement_proof_node": "tests/conformance/test_snapshot_v6_routes.py::test_the_two_routes_agree_on_group_identity_and_differ_only_on_module_provenance",
+   "replacement_proof_node": "tests/conformance/test_snapshot_v6_routes.py::test_the_two_routes_agree_on_module_provenance",
    "blocked_by": [
     "L-095",
     "L-101",
@@ -283,7 +283,7 @@
    "group": "4B-v5-family",
    "authority": "census PROD-09/10 via inventory INV-DISC-035 (disposition delete) [EVIDENCE]; plan Gate 4B; fresh reachability derivation at HEAD",
    "unreachability": "in the CLI closure via orchestration/__init__.py:7 and pipeline_builder.py:58; not in the construction closure",
-   "replacement_proof_node": "tests/conformance/test_snapshot_v6_routes.py::test_the_two_routes_agree_on_group_identity_and_differ_only_on_module_provenance",
+   "replacement_proof_node": "tests/conformance/test_snapshot_v6_routes.py::test_the_two_routes_agree_on_module_provenance",
    "blocked_by": [
     "L-101",
     "L-121",
