@@ -1140,10 +1140,14 @@ unit-on-binding behavior `modeling-assumptions.md` §8 currently documents, and 
 the derivative this item's worked-example references describe); before epic close/pre_pr.
 (Edges amended 2026-08-13 when Items 8–9 were filed; numbering deliberately unchanged — item
 numbers are already cited by close records and rulings.)
-**Status 2026-08-13:** Items 4, 5, 6, and 8 are landed and closed, so **Item 7 now waits only on
-Item 9.** Item 8's landing is what makes the `modeling-assumptions.md` §8 unit-on-binding rewrite
-concrete: the sweep documents authored unit text on constraint-formal and computed-attribute ports,
-plus fail-closed `SI_RENDERING_COLLISION` on unequal metadata.
+**Status 2026-08-13:** Items 4, 5, 6, 8, **and 9** are landed and closed, so **Item 7 is UNBLOCKED
+and is the last item** before epic close/pre_pr. Item 8's landing is what makes the
+`modeling-assumptions.md` §8 unit-on-binding rewrite concrete: the sweep documents authored unit
+text on constraint-formal and computed-attribute ports, plus fail-closed `SI_RENDERING_COLLISION`
+on unequal metadata. Item 9's landing fixes the worked example this item describes — three
+executing gates, the restated `65 = 56 + 9` identity, and the B1–B5 marker mechanism (still
+PROVENANCE-recorded, per `[INLINE-PREDICATE-MARKER-DROP]`) are the final state to document. The
+epic-level verification-matrix reconciliation rides this item.
 
 ---
 
@@ -1259,6 +1263,11 @@ may revive joint delivery without a new owner ruling.
 
 ### Item 9: Derivative Upgrade Under Held Intent (0.5 day)
 
+**Status (2026-08-13): CLOSED — implemented, audited Certify-with-residuals, archived to
+`.project/completed/20260813_derivative-upgrade-held-intent/`.** The heading carries no ✅: the
+third success criterion below is a conditional that did not fire and stays unticked by owner
+ruling (see the close block).
+
 **Type**: Modeling (follow-on)
 
 **Boundary authority**: **[AGENT] (ratified by owner, 2026-08-13)** — filed under the Item 5
@@ -1272,14 +1281,21 @@ ruled intent, and restate the accounting identity to `65 = 56 carriers + 9 named
 
 **Success Criteria**:
 
-- [ ] Three executing gates (A2, A3, A9); the `blocked-by-defect` markings retired from table
+- [x] Three executing gates (A2, A3, A9); the `blocked-by-defect` markings retired from table
       and PROVENANCE; expected outputs re-derived from the table before confirmation tests
       (same SC-6 discipline as Item 5).
-- [ ] Integrity manifest re-proves the restated identity; frozen twins untouched.
+- [x] Integrity manifest re-proves the restated identity; frozen twins untouched.
 - [ ] Retire the B1–B5 PROVENANCE workaround — author the five `@inapplicable:` markers — when
       the marker-read gap closes (backlog `[INLINE-PREDICATE-MARKER-DROP]`).
+      **UNTICKED BY RULING, 2026-08-13.** `[OWNER 2026-08-13, ruled at Align]` — this is a
+      conditional on a gap that has not closed, so it did not fire and Item 9 could not discharge
+      it. It is recorded on both sides, so no future reader has to reconstruct the trigger:
+      side 1 in the fixture's `PROVENANCE.md` §3b, side 2 in the amended
+      `[INLINE-PREDICATE-MARKER-DROP]` BACKLOG entry (`52c6381`). The box stays open with Item 9
+      closed; it closes when that backlog entry does, and Item 7 documents the mechanism meanwhile.
 
-**Location**: follows Item 5's item home conventions (new item folder at execution time)
+**Location**: `.project/completed/20260813_derivative-upgrade-held-intent/` (closed + archived
+2026-08-13; followed Item 5's item home conventions)
 
 **Where the held intent lives** (Item 5 closed and archived 2026-08-13): the ruled rows this item
 executes are in
@@ -1295,6 +1311,71 @@ start.** Item 8's fix landed at `62a07e5c870158672eb100f1cba73adfe4c9df28`, so t
 defect that made A5/A6/A9's target forms unbuildable is cured: constraint-formal and
 computed-attribute ports now carry authored unit text, and a design attribute reached by a calc and
 a constraint no longer refuses the model. Nothing in the epic blocks Item 9.
+
+**Audited 2026-08-13: Certify-with-residuals**, none blocking
+(`completed/20260813_derivative-upgrade-held-intent/audit.md`). Every spec success criterion was
+verified by independent re-measurement rather than by reading the item's own record. R1 — a wrong
+stencil count in `verification.md` (58 recorded, 34 measured) — was cured in place at `d713f21` as
+a named correction; nothing downstream depended on the number.
+
+**CLOSED 2026-08-13.** The first two success criteria above are ticked against the audit's SC
+table; the third stays open by ruling (note under it). Closing evidence:
+
+- **Three executing gates.** A2, A3 and A9 execute; A9 asserts `ProductWithinBand` at
+  `rel_tol = 0.01` in the ruled sketch's shape (`designs/catf_mfe/vacuum.sysml:171-176`), and the
+  disposition histogram is `{eligible 3, excluded 0, non_reaching 53}`. A5 and A6 left the catalog
+  by deletion and A9 moved `excluded → eligible`, so no instance-reaching physics gate sits outside
+  the coverage denominator — which discharges the epic-level lens obligation carried against this
+  item (`completed/20260813_catf-constraint-policy-acceptance/product-lens.md` audit-F5).
+- **The identity is restated and machine-proved.** `scripts/check_gated_manifest.py --check` prints
+  `identity closes: 65 = 56 carriers + 9 named deletions`, 53 by name and 3 by `renamed_from:`,
+  exit 0. The audit re-derived all of it from the ruled table without reading a run, and the SC-6
+  commit order holds: expectations landed at C2 `185dec7` and are byte-unchanged through HEAD, so
+  no expectation was touched after the run that confirmed it.
+- **`blocked-by-defect` retired on the live surface; the archive frozen.** The only live
+  occurrences are the retirement record in the fixture's `PROVENANCE.md`. Per orchestrator ruling
+  P-1 (`[AGENT]` 2026-08-13), `owner-disposition.md` stays byte-untouched — verified by tree hash
+  `1d5318b…` at the pre-Item-9 parent and at HEAD, as are both frozen twins.
+- **Gates.** Full licensed suite **2070 passed / 34 skipped / 0 failed**, zero license-skip lines;
+  ruff and mypy zero-new on both the `src/` and the wide scope; `git diff --check` clean.
+- **The prover gate is per-occurrence, not per-row.** Five occurrence-scoped mutations on a scratch
+  fixture each produced a reported problem naming the layer — never a skip, never a
+  sibling-satisfied pass. That closes the A-1 gap (two bare initializers past four gates) per
+  occurrence.
+
+**Decisions and surfacings recorded at this close:**
+
+- **D3 — `tf_coil.thickness` comment, ratified.** The one source edit outside the ruled 27 is a
+  trailing-comment amendment that prepends a readable unit and preserves the original provenance
+  text verbatim; ratified at `PROVENANCE.md:442-452`. Not a re-disposition.
+- **The A9 def-shape NOTE is filed, not absorbed.** A constraint formal's port unit is read from
+  the formal's own declaration, so a generic band cannot carry a unit and `ProductWithinBand` must
+  be authored per dimension. The cost is disclosed in the design's NOTE and filed unowned as
+  `[CONSTRAINT-FORM-PER-DIMENSION-COST]` (`BACKLOG.md`, C4), so it is findable outside an archived
+  design doc.
+- **Float drift is surfaced, not re-baselined.** Four layers' derived `outer_radius` drift by
+  −8.88e-16 m, visible only at execution. Recorded on the live surface (`PROVENANCE.md:260`). The
+  `execution` marker lane is deselected by default and was not run, so if an execution expectation
+  later moves, that is this named surfacing event — not a re-baseline.
+- **Rider, belonging to Item 8's record and not to Item 9's scope:** the orchestrator's F5-family
+  cure `4155b4d` moved Item 8's two v6 inventory JSONs bytes-unchanged to `tests/unit/data/` and
+  repointed the test, curing seven archival-path failures. Verified separately by this item's
+  audit (`test_v6_snapshot_inventory.py` 8/8); it touches no Item 9 surface.
+
+**Residuals: none needs a future owner.** R1 cured (`d713f21`). R2 (the frozen-surface checkbox
+ticked against a substituted-and-disclosed measurement, the correct measure re-run and passing) and
+R3 (this section's third checkbox, open by ruling) are **disposed here**. Two forward-looking
+observations are recorded for the next item that touches this fixture or prover, with no backlog
+entry because both are fail-closed and inherited:
+
+- **R4 — the prover gates the derivations it knows about, not the layers the file contains.**
+  `_LAYERS` (`scripts/check_gated_manifest.py:107-122`) is the authority for what gets checked. A
+  fifteenth layer with a derived radius and no `_LAYERS` row would carry no documentation
+  obligation. Nothing can drift silently today — rename, duplication, missing initializer and
+  stripped documentation all fail closed, probed live.
+- **R5 — `DERIVATIONS` exempts A1 and A4 from the outside-evidence gate by a hand-written `None`.**
+  Pre-existing and byte-identical at the pre-Item-9 parent, reasoned in-line, neither widened nor
+  narrowed here. Worth an owner eye only if the gate is generalized beyond this fixture.
 
 ---
 
@@ -1363,7 +1444,7 @@ ruling; Item 8 may add one reviewed fixture recapture if churn fires)
 | Item 6: Calculation-Definition Gate Capability Design | 1 day | Items 1–2 |
 | Item 7: ADR, Product Promise, and Agent-Facing Documentation Sync | 0.5–1 day | Items 4–6, 8, 9 landed; before epic close/pre_pr |
 | Item 8: Unit-Lane Port Metadata Defect | 0.5–1 day (+recapture if churn fires) | Item 5 probe evidence (filed 2026-08-13, D-S1/D-S2 ruling) |
-| Item 9: Derivative Upgrade Under Held Intent | 0.5 day | Items 5 and 8 |
+| Item 9: Derivative Upgrade Under Held Intent | 0.5 day | Items 5 and 8 (closed 2026-08-13) |
 
 ---
 
@@ -1414,16 +1495,16 @@ ruling; Item 8 may add one reviewed fixture recapture if churn fires)
 ---
 
 **Last Updated**: 2026-08-13
-**Next Action**: Items 1–6 and **Item 8** are CLOSED and archived (2026-08-13). Item 8 shipped
+**Next Action**: Items 1–6, **8 and 9** are CLOSED and archived (2026-08-13). Item 8 shipped
 standalone as ruled, at freeze `62a07e5c870158672eb100f1cba73adfe4c9df28`, with zero v3 recapture
 (23/23 inventory, no stale rows) and no residuals. Item 6 closed as a design/planning delivery; its
 7–9 day production implementation is **not authorized in this epic** and now lives as the unowned
-`[CALCDEF-GATE-IMPLEMENTATION]` backlog entry, parked with the owner.
-**Item 9 is next and is now unblocked** — its Item 8 dependency is satisfied. It executes the
-already-ruled held intent recorded in
-`.project/completed/20260813_catf-constraint-policy-acceptance/owner-disposition.md` (A5/A6 basis,
-A9's 1% relative band). **Item 7 now waits only on Item 9** — it runs last, before epic
-close/pre_pr; it now also
-carries the B1–B5 marker-mechanism documentation obligation and the epic-level verification-matrix
-reconciliation. `pre_pr` and any push remain with the owner; nothing is pushed and no `main` is
-touched.
+`[CALCDEF-GATE-IMPLEMENTATION]` backlog entry, parked with the owner. Item 9 executed the
+already-ruled held intent (A5/A6 basis, A9's 1% relative band) and closed
+Certify-with-residuals — three executing gates, `65 = 56 + 9` machine-proved, archive frozen — with
+its third success criterion left open by ruling as a conditional that did not fire.
+**Item 7 is next and is the last item in the epic.** It documents the final state: the
+`modeling-assumptions.md` §8 unit-on-binding rewrite (Item 8's behavior change), the B1–B5 marker
+mechanism (`[INLINE-PREDICATE-MARKER-DROP]` still open), and the epic-level verification-matrix
+reconciliation. Epic close and `pre_pr` follow it. `pre_pr` and any push remain with the owner;
+nothing is pushed and no `main` is touched.

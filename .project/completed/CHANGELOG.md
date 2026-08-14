@@ -4,6 +4,93 @@ Historical record of completed work.
 
 ---
 
+## [2026-08-13] - [CONSTRAINT-SEMANTICS Item 9] Derivative Upgrade Under Held Intent
+
+**Type**: Item (modeling follow-on; independently audited **Certify-with-residuals**, none blocking)
+**Duration**: spec 2026-08-13 → closed 2026-08-13 (same day)
+**Archived to**: `.project/completed/20260813_derivative-upgrade-held-intent/`
+**Commits**: item commits `28942ec`, `185dec7`, `da034ac`, `52c6381`, `2633834`; audit at `d713f21`
+(branch `item7-rebuild`, unpushed) / companion untouched / TEAx untouched on
+`constraint-semantics-item3` @ `5b70ae9` (nothing pushed, no `main` touched anywhere)
+
+### Summary
+`tests/fixtures/catf_mfe_gated` is the worked example of the ruled constraint policy, and three of
+its rows were not the shape the owner ruled — they were the shape a defect allowed. A5 and A6
+asserted by constraint what the ruled basis says should be computed, A9 compared two independently
+authored routes with an exact `==` where the owner ruled a 1% relative band, and the fixture's
+PROVENANCE still carried `blocked-by-defect` markings whose cause Item 8 had cured.
+
+Item 9 executed that held intent and decided nothing new. The 27 radius derivations were authored
+on the ruled basis (axis root radius plus 14 thicknesses free) and the A5/A6 usages deleted; A9
+asserts `ProductWithinBand` at `rel_tol = 0.01`; the `blocked-by-defect` records were retired on the
+live surface while the archived owner ruling stayed byte-untouched. The accounting identity was
+restated to `65 = 56 carriers + 9 named deletions` as a mechanical consequence, and the integrity
+manifest re-proves it. The fixture now has three executing gates and an empty `excluded` bucket, so
+no instance-reaching physics gate sits outside the coverage denominator.
+
+The prover was extended from per-row to per-occurrence anchoring, because 14 of the 27 derivations
+are byte-identical lines and a per-row check would have accepted 13 undocumented ones. Each
+derivation now resolves to its own declaration and comment block, verified by five occurrence-scoped
+mutations that each produced a reported problem naming the layer.
+
+### Deliverables
+- `spec.md`, `design.md`, `design-review.md`, `plan.md`, `verification.md`, `audit.md`,
+  `product-lens.md` (spec, design, and audit blocks; gate DISPOSED, no BLOCK), `briefs/`, `probes/`.
+- Fixture sources: `tests/fixtures/catf_mfe_gated/` (radial build derivations, A9 gate form,
+  `PROVENANCE.md` rewrite), the re-captured instance-graph snapshot.
+- `scripts/check_gated_manifest.py` — per-occurrence derivation gate; expectations in
+  `tests/expectations/` and `tests/unit/data/expected-coverage.md`.
+
+### Evidence
+- Identity closes: `65 = 56 carriers + 9 named deletions`, 53 by name and 3 by `renamed_from:`,
+  exit 0 — re-derived by the audit from the ruled table without reading a run.
+- SC-6 order holds: expectations landed at C2 `185dec7` and are byte-unchanged through HEAD.
+- Licensed suite **2070 passed / 34 skipped / 0 failed**, zero license-skip lines; ruff and mypy
+  zero-new on both `src/` and the wide scope; `git diff --check` clean.
+- Frozen twins and the archived `owner-disposition.md` byte-identical by tree hash against the
+  pre-Item-9 parent `8942420`.
+- Public input keys `65 → 55`: 26 leave (the 13 geometry-carrying layers' radius pairs), 16 arrive,
+  reproduced key-for-key by an independent generation run on both the live and snapshot lanes.
+
+### Decisions and deviations
+- **The archive is frozen (orchestrator ruling P-1, `[AGENT]` 2026-08-13).** The retirement of the
+  `blocked-by-defect` markings lands on the live surface and in this item's records;
+  `owner-disposition.md` stays byte-untouched.
+- **D3 `tf_coil.thickness` ratified.** The one source edit outside the ruled 27 prepends a readable
+  unit to a trailing comment and preserves the original provenance text verbatim.
+- **The A9 def-shape cost is filed, not absorbed.** A constraint formal's port unit comes from its
+  own declaration, so a generic band cannot carry a unit and `ProductWithinBand` must be authored
+  per dimension — filed unowned as `[CONSTRAINT-FORM-PER-DIMENSION-COST]`.
+- **Float drift surfaced, not re-baselined.** Four layers' derived `outer_radius` drift −8.88e-16 m,
+  visible only under the deselected `execution` marker. If an execution expectation later moves,
+  that is this named surfacing event.
+- **The epic's third Item 9 criterion stays unticked `[OWNER 2026-08-13, ruled at Align]`** — a
+  conditional on `[INLINE-PREDICATE-MARKER-DROP]`, which has not closed, so it never fired.
+  Recorded two-sided: fixture `PROVENANCE.md` §3b and the amended BACKLOG entry.
+- **Rider belonging to Item 8's record:** the F5-family cure `4155b4d` moved Item 8's two v6
+  inventory JSONs bytes-unchanged to `tests/unit/data/` and repointed the test, curing seven
+  archival-path failures. Verified separately; it touches no Item 9 surface.
+
+### Residuals
+R1 (a wrong stencil count in `verification.md`, 58 recorded against 34 measured) was cured in place
+at `d713f21` as a named correction. R2 (a checkbox ticked against a substituted-and-disclosed
+measurement, the correct measure re-run and passing) and R3 (the epic checkbox open by ruling) are
+disposed at close. R4 (`_LAYERS` is the authority for what the prover checks, so a fifteenth layer
+would carry no documentation obligation) and R5 (`DERIVATIONS` exempts A1 and A4 by a hand-written
+`None`, pre-existing and untouched) are forward-looking observations recorded in the epic's close
+block — both fail closed today, so neither is a live hole and neither took a backlog entry.
+
+### Lessons Learned
+- **A gate written per row can be blind per occurrence.** Fourteen of the 27 derivations are
+  byte-identical text; the existing check refused a non-unique initializer, so the requirement had
+  to move to per-occurrence anchoring before it could mean anything. The product lens caught this
+  at the spec, before implementation.
+- **Freezing the archive is cheaper than editing it.** The retirement obligation named a closed,
+  owner-graded artifact. Ruling the archive immutable and landing the retirement on the live
+  surface removed the question without touching an owner record.
+
+---
+
 ## [2026-08-13] - [CONSTRAINT-SEMANTICS Item 6] Calculation-Definition Gate Capability Design
 
 **Type**: Item (design / planning delivery; independently audited **Certify**)

@@ -1,24 +1,24 @@
 # Current Work
 
-**Last Updated**: 2026-08-13 (CONSTRAINT-SEMANTICS Items 1–6 and 8 CLOSED and archived; Item 6 closed as a design delivery with its production implementation ruled out of this epic and filed as the unowned `[CALCDEF-GATE-IMPLEMENTATION]`; Item 9 is next and unblocked; Item 7 waits only on Item 9 and runs last; pre_pr and any push remain with the owner)
+**Last Updated**: 2026-08-13 (CONSTRAINT-SEMANTICS Items 1–6, 8 and 9 CLOSED and archived; Item 6 closed as a design delivery with its production implementation ruled out of this epic and filed as the unowned `[CALCDEF-GATE-IMPLEMENTATION]`; **Item 7 is now unblocked and is the last item** before epic close/pre_pr; pre_pr and any push remain with the owner)
 
 ---
 
 ## Active Work
 
-### 2026-08-13: CONSTRAINT-SEMANTICS epic — Item 9 is next (Items 6 and 8 closed)
+### 2026-08-13: CONSTRAINT-SEMANTICS epic — Item 7 is the last item (Items 6, 8 and 9 closed)
 
-Items 5, 6, and 8 all closed and archived today (see Recently Completed). What is live now:
+Items 5, 6, 8, and 9 all closed and archived today (see Recently Completed). What is live now:
 
-- **Item 9 (derivative upgrade under held intent) — spec in progress**, item home
-  `.project/active/derivative-upgrade-held-intent/`. Its only remaining
-  dependency was Item 8, which landed. It executes already-ruled held intent (A5/A6 basis, A9's 1%
-  relative band) from
-  `.project/completed/20260813_catf-constraint-policy-acceptance/owner-disposition.md` — in-force
-  intent, no re-disposition authorized.
-- **Item 7 now waits only on Item 9**, runs last before epic close/pre_pr, and owes the B1–B5
-  marker-mechanism documentation, the `modeling-assumptions.md` §8 unit-on-binding rewrite (Item 8
-  changed that behavior), and the epic-level verification-matrix reconciliation.
+- **Item 7 (ADR, product promise, and agent-facing documentation sync) is UNBLOCKED and is the
+  last item in the epic.** Item home `.project/active/constraint-docs-agent-sync/`. It documents
+  the final state and owes three things: the `modeling-assumptions.md` §8 unit-on-binding rewrite
+  (Item 8 changed that behavior — authored unit text on constraint-formal and computed-attribute
+  ports, fail-closed `SI_RENDERING_COLLISION` on unequal metadata), the B1–B5 marker-mechanism
+  documentation (the markers still live in PROVENANCE; `[INLINE-PREDICATE-MARKER-DROP]` is open),
+  and the epic-level verification-matrix reconciliation. Epic close and `pre_pr` follow it.
+- **Item 9's landing is what Item 7 now describes:** three executing gates (A2, A3, A9), the
+  restated `65 = 56 + 9` identity, and `blocked-by-defect` retired on the live surface.
 - **Item 6's production implementation is out of this epic `[OWNER 2026-08-13]`** and is now the
   unowned backlog entry `[CALCDEF-GATE-IMPLEMENTATION]` (P1, 7–9 days, graph v4 + catalog 4.0.0,
   codegen + TEAx), parked with the owner. It competes for the next slot with
@@ -492,6 +492,40 @@ surfaces as matrix-row candidates.
 ---
 
 ## Recently Completed
+
+### 2026-08-13: CONSTRAINT-SEMANTICS Item 9 — Derivative Upgrade Under Held Intent (audited Certify-with-residuals + closed)
+- **The worked example is now the shape the owner ruled, not the shape a defect allowed.** Three
+  rows moved: A5 and A6's 27 radius derivations were authored on the ruled basis (axis root radius
+  + 14 thicknesses free) and their asserting usages deleted; A9 asserts `ProductWithinBand` at the
+  ruled 1% relative band. The disposition histogram is `{eligible 3, excluded 0, non_reaching 53}`,
+  so **no instance-reaching physics gate sits outside the coverage denominator** — which discharges
+  the epic-level lens obligation Item 5's close carried against this item. Nothing was
+  re-dispositioned; the item executed held intent.
+- **Every accounting number is a mechanical consequence, and the audit proved it that way.**
+  `65 = 56 carriers + 9 named deletions` (53 by name, 3 by `renamed_from:`) is machine-proved by
+  `scripts/check_gated_manifest.py --check`, and the audit re-derived it from the ruled table
+  without reading a run. SC-6 order holds: expectations landed at `185dec7` and are byte-unchanged
+  through HEAD. Licensed suite **2070 passed / 34 skipped / 0 failed**, zero license-skip lines;
+  ruff and mypy zero-new; the frozen twins and the archived owner ruling are byte-identical by tree
+  hash.
+- **The deletion gate is per-occurrence now.** Each of the 27 derivations must resolve to its own
+  declaration and comment block — five occurrence-scoped mutations on a scratch fixture each
+  produced a reported problem naming the layer, never a skip and never a sibling-satisfied pass.
+  That closes the A-1 gap (two bare initializers past four gates) per occurrence rather than per
+  row.
+- **Three things surfaced rather than absorbed**, all on the live surface (`PROVENANCE.md`), not
+  only in the archiving design: the D3 `tf_coil.thickness` comment amendment (the one edit outside
+  the ruled 27, ratified); the per-dimension cost of `ProductWithinBand` (a constraint formal's
+  port unit comes from its own declaration, so a generic band cannot carry a unit) filed unowned as
+  `[CONSTRAINT-FORM-PER-DIMENSION-COST]`; and a one-ULP float drift on four layers' derived
+  `outer_radius` (−8.88e-16 m), visible only under the `execution` marker, which is deselected by
+  default and was not run.
+- **The epic's third Item 9 criterion stays unticked by owner ruling** — retiring the B1–B5
+  PROVENANCE workaround is a conditional on `[INLINE-PREDICATE-MARKER-DROP]`, which has not closed,
+  so it never fired. Recorded on both sides (fixture `PROVENANCE.md` §3b and the amended BACKLOG
+  entry). Residuals R1 (a wrong stencil count, 58 → 34) cured at `d713f21`; R2/R3 disposed at
+  close; R4/R5 recorded as forward-looking notes for the next item touching this fixture or prover.
+  Archived to `.project/completed/20260813_derivative-upgrade-held-intent/`.
 
 ### 2026-08-13: CONSTRAINT-SEMANTICS Item 6 — Calculation-Definition Gate Capability Design (audited Certify + closed)
 - **A design/planning delivery, not a capability.** An executable probe attached one
