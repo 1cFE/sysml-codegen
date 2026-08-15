@@ -44,7 +44,31 @@ independent narrow audit (CERTIFY-WITH-RESIDUALS, 0 blocking), and owner accepta
   `evidence/audit-9-final.md`, all archived with the item.
 
 ### Lessons Learned
-[TODO: Add lessons learned]
+- **An atomic cutover is accepted or refused as a candidate, not as a diff.** The first
+  execution died at owner disposition: an uncommitted tree and 222 deletions with no
+  accounting. What made the second execution acceptable was the recovery's shape — certified
+  baseline, per-row deletion ledger, machine-checked replacement proof, a committed candidate
+  every number could be derived from. None of it was optional ceremony.
+- **The battery discipline paid for itself on the first pass.** Three consecutive identical
+  full batteries caught a stale ledger citation (L-179) that no single-run gate had flagged;
+  the cure was pinned by an empty shipped-path diff against the ruled tree, partial runs were
+  discarded, and all three recorded runs measure the repaired tree. Corollary: batteries are
+  spent evidence — any substantive shipped-path change after step 7 invalidates them, so the
+  owner rules the tree final first.
+- **Surface the discrepancy, even mid-acceptance.** The spec's R12 mypy clause (≤105-in-23)
+  disagreed with every recorded measurement (108-in-26); it was parked to the step-9 audit
+  and the owner rather than quietly patched, and the amendment landed dated and
+  owner-approved. Same pattern at close: the deletion ledger's archive-vs-living-gate-data
+  premise conflict got three explicit options and an owner ruling, not a silent default.
+- **A 0-blocking audit still earned its slot.** Step 9's findings were all record-accuracy —
+  the substance held while the paperwork drifted (a re-pointed citation, a mis-worded sweep
+  count, stale baseline numbers). Records drift toward their first draft; an independent
+  reader opening the cited evidence is the only instrument that catches it.
+- **Scope truth: the item contained an epic.** The cutover could not proceed until constraint
+  semantics was settled, so a 9-item epic ran as a nested detour (2026-08-12 → 08-14) inside
+  a 3–5 day item. When a cutover exposes an unsettled contract, stopping to settle it is the
+  correct move — and no estimate survives it, so say so in the record rather than backfitting
+  the plan.
 
 ---
 
