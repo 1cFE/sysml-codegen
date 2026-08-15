@@ -1,9 +1,9 @@
 # Spec: Self-Binding Replacement — Establish, Document, Migrate
 
-**Status:** Draft (rev 3 — incorporates final spec-review resolutions)
+**Status:** Draft (rev 4 — corrects qualified-reference semantics after F-6 attribution)
 **Owner:** Reid W
 **Created:** 2026-08-15 09:16 PDT
-**Revised:** 2026-08-15 (rev 3)
+**Revised:** 2026-08-15 (rev 4)
 **Complexity:** MEDIUM
 **Branch:** main (codegen `9ce5548`)
 
@@ -50,13 +50,13 @@ fusion-tea model remains blocked from regeneration until its authored bindings a
   is the rule for all 15 fusion-tea sites and matches the existing codegen fixture.
 - **Name the path (D-7).** When the value lives on a different part, name that occurrence path, for
   example `in driver_cost = driver.cost`. The reference lands on that occurrence's feature.
-- **Qualify by owner (D-6).** A qualified name resolves by the consumer's **position**: if the
-  consumer's own scope lineage owns the slot, that occurrence wins outright; otherwise the route
-  searches descendants innermost-first and refuses as ambiguous only when two candidates collide.
-  So it is safe from *inside* the part definition even with many occurrences, and unsafe from above
-  them. It also reaches sideways into a sibling subtree when exactly one occurrence lives there —
-  owner qualification does not mean "mine" (`spike/findings.md` F-1, F-4). The guidance states this
-  rule and its reach; it still does not recommend this shape for the fusion-tea migration.
+- **Qualify by owner (D-6).** SysIDE resolves a usage-qualified local redefinition to the exact
+  feature owned by that usage. The shipped elaborator currently loses that owner before occurrence
+  selection, which can produce a false missing/ambiguity or silently select a competing occurrence.
+  That is codegen defect F-6, not the meaning of `::`; it is owned by the separate
+  `qualified-reference-occurrence-anchoring` repair. This item must not teach the defect as a
+  modeling rule. It still does not recommend this shape for the fusion-tea migration: D-5 remains
+  the local migration form, and D-7 remains the advice for taking a value from another part.
 
 ## Success Criteria
 
@@ -64,16 +64,18 @@ fusion-tea model remains blocked from regeneration until its authored bindings a
       and only its bound consumers.** This observable public behavior proves that the intended
       value arrives; generation without a diagnostic is not enough.
 - [ ] **The behavior relied on by the situational rule is re-established by measurement on the
-      shipped exact route.** For each taught shape, the evidence identifies the feature the
-      reference lands on and demonstrates the concrete value or diagnostic that follows. The work
-      does not rely on specification text or reverted branches alone.
+      shipped exact route.** D-5 and D-7 are measured directly. Any D-6 explanation is checked
+      against the landed exact-owner repair, not today's positional defect. For each taught shape,
+      the evidence identifies the feature the reference lands on and demonstrates the concrete
+      value or diagnostic that follows.
 - [ ] **A different candidate pattern found to resolve silently and wrongly is either fixed when
       the repair is small and contained, or filed with a name, owner, and vehicle.** Documentation
       alone is not a disposition for an unsupported silent form.
 - [ ] **The guidance is organized by situation and teaches the applicable rule.** It tells authors
-      to make names differ for an attribute on the part that owns the calculation, name the path
-      for a value on another part, and treat owner qualification as safe only when its occurrence
-      is unambiguous.
+      to make names differ for an attribute on the part that owns the calculation and name the path
+      for a value on another part. If it explains owner qualification, it states that codegen honors
+      the exact usage owner SysIDE resolved after the separate repair; it never presents positional
+      slot search as the language semantics.
 - [ ] **The wrong self-named form is both explained and detected before generation.** The guidance
       states why `in R = R` binds the calculation input to itself, and the shipped codegen and
       agentic-mbse validation paths are confirmed to refuse it.
@@ -125,22 +127,15 @@ fusion-tea model remains blocked from regeneration until its authored bindings a
   calculation usage. After `redefines`, the name resolves through the owning type's supertypes with
   the owner's own namespace excluded (KerML §7.3.4.5 and §8.2.3.5.1), and the redefined feature
   must otherwise be inherited from a supertype of its owning type.
-- **[HARD]** *(re-established by measurement 2026-08-15 — and CORRECTED; the prior wording was
-  falsified)* An owner-qualified reference is refused with `SI_OCCURRENCE_AMBIGUOUS` when the
-  consumer **sits above more than one reachable leaf occurrence** of the qualifying definition and
-  is **not itself inside one of them**. It never guesses an occurrence — no measured row showed a
-  guess. The discriminator is the consumer's **position relative to the occurrences**, not the
-  occurrence count of the definition: the consumer's own scope lineage is walked outward first and
-  an owning scope wins outright, however many other occurrences exist; only when the lineage misses
-  does the innermost-first descendant search run, and only there can two candidates collide
-  (`spike/findings.md` F-1, rows 4a–4e; `elaboration/elaborate.py:2299-2348`).
-
-  **What the prior wording got wrong:** it predicted refusal from the occurrence count alone, so it
-  treated the inside-the-part-definition position — the position the earlier probe table never
-  covered — as unsafe. Measured, that position generates cleanly with two occurrences, each reading
-  its own value. D-6 is therefore **narrower in the spec than in the product**. This corrects the
-  guidance text; it does **not** reopen the migration form. D-5 remains the ratified shape for the
-  fusion-tea sites (`[NEED]`, 2026-08-05 ratification), and this item does not relitigate it.
+- **[HARD]** *(corrected after F-6 attribution and the semantic corpus scan, 2026-08-15)* SysIDE
+  resolves a usage-qualified local redefinition to a distinct usage-owned feature. Codegen retains
+  that exact declaration and owner, but the current one-segment resolver normalizes to a feature
+  slot before using the owner and then selects by consumer position. This can silently wire a
+  competing occurrence (`u6`) or report false missing/ambiguity (`u4`, `u5`, `u7`). The separate
+  `qualified-reference-occurrence-anchoring` item owns the broader invariant selected by the owner:
+  every one-segment usage-owned leaf anchors its exact owner across all resolver consumers.
+  Definition-owned inherited leaves remain on the definition route. This correction does **not**
+  reopen the fusion-tea migration form; D-5 remains the ratified local shape.
 - **[HARD]** SysML v2 Part 1 §7.17.2 is an action-parameter example. It does not state a shadowing
   rule or establish owner qualification as the normative repair for this calculation-binding
   collision. The rewritten guidance must not cite it as that authority.
@@ -192,6 +187,15 @@ reviewed evidence, never on the reverted branches' own assertions.
 
 ## Change Record
 
+### 2026-08-15 — qualified-reference semantics corrected; separate repair named `[OWNER 2026-08-15]`
+
+The F-6 attribution report and semantic corpus scan proved that the positional behavior previously
+described in this spec is a codegen defect, not the meaning of a usage qualifier. The owner selected
+the broader exact-owner invariant for the separate repair and directed this spec to be corrected.
+The D-5 local rename, D-7 cross-part path advice, and fusion-tea migration choice are unchanged.
+Implementation and regression ownership lives in
+`.project/active/qualified-reference-occurrence-anchoring/spec.md`.
+
 ### 2026-08-15 — work executed before this spec existed, then reverted in full `[OWNER 2026-08-15]`
 
 Implementation ran before written requirements existed: the guidance was rewritten, 15 fusion-tea
@@ -235,7 +239,15 @@ spelling used by ten sites in the reverted migration.
 - **Spec review:** `.project/active/self-binding-replacement/spec-review.md` — final Revise verdict;
   all recorded resolutions incorporated in rev 3.
 - **Product lens:** `.project/active/self-binding-replacement/product-lens.md` — append-only gate
-  ledger; rev 3 explicitly resolves `spec-F1` through `spec-F6` and records `Gate: CLEAR`.
+  ledger; rev 3 explicitly resolves `spec-F1` through `spec-F6`, and the rev-4
+  qualified-reference correction independently records `Gate: CLEAR`.
+- **Separate qualified-reference repair:**
+  `.project/active/qualified-reference-occurrence-anchoring/spec.md` — owns F-6 implementation,
+  promoted u4–u7 coverage, shared-caller regressions, and the broader exact-owner invariant selected
+  by the owner.
+- **Qualified-reference evidence:**
+  `.project/research/20260815-140630_qualified-binding-corpus-scan.md` — exact owner/edge census and
+  snapshot/baseline disposition.
 - **Post-approval stocktake:** a research report to be created after spec approval. It validates
   the two scope calls this spec depends on (the restated documentation obligation and the home for
   leftover regeneration work) and reconciles the epic's six-document repair list against the

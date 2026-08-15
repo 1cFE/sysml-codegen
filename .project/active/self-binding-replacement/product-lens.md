@@ -266,3 +266,30 @@ Smells (§4, all seven checked):
   opposite pattern); checks assert by diagnostic name and entry-point value, not by route selection.
 
 Gate: **BLOCKED** (design-F1) · DISPOSED (design-F2, design-F3, design-F4, design-F5, design-F6) · DON'T (design-F7)
+
+---
+
+## spec — 2026-08-15 — rev 4 / `.project/active/self-binding-replacement/spec.md`
+Epic: ELABORATE-FIRST
+
+Point (re-derived): A freely varied design parameter must reach its intended semantic source
+occurrence so viability evidence remains trustworthy; this item must establish, document, and
+migrate the right patterns, detect `in R = R`, and never reinterpret its self-referent as an outer
+value. [source: `.project/product/P-001-design-search-free-variation.md`;
+`.project/backlog/epic_elaborate_first_architecture.md` Item 8;
+`.project/concepts/constraint-execution-authoritative-lifecycle-contract.md` D-4; grade: owner;
+D-5–D-7 replacement semantics: agent/ratified]
+
+Falsifier: Guidance presents positional slot search as D-6 language semantics, or a taught
+replacement resolves to a competing occurrence or misses the exact usage owner, so an off-default
+mutation fails to reach every and only the intended consumers.
+
+Findings:
+
+- None. Rev 4 removes the positional implementation defect from the modeling rule, preserves D-5
+  and D-7 guidance, and requires any D-6 teaching to follow SysIDE's resolved owner after the
+  separately owned exact-owner repair.
+
+Smells: none.
+
+Gate: CLEAR

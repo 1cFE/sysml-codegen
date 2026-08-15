@@ -93,13 +93,23 @@ set with and without this item's changes; every affected file passes when run al
 reproduce as a full-suite run in this venv even at HEAD. Out of this item's scope (Non-Goals: no
 re-certification); needs an owner.
 
-### 2026-08-15: self-binding-replacement — SPEC REVISED; product lens CLEAR; awaiting approval
+### 2026-08-15: qualified-reference-occurrence-anchoring — SPEC DRAFTED; product lens CLEAR
+
+Separate bounded ELABORATE-FIRST repair discovered during Item-8 shaping. The owner selected the
+broader invariant: every one-segment usage-owned leaf anchors its exact owner across all resolver
+consumers, with u4–u7 promotion, qualified expression-side regressions, and correction of the
+self-binding spec's positional explanation. Draft:
+`.project/active/qualified-reference-occurrence-anchoring/spec.md`; product lens initially found one
+provenance overgrade (`spec-F1`), then recorded it FIXED and `Gate: CLEAR` after the five code/design
+facts were regraded from `[HARD]` to cited `[INHERITED]`/`[INFERRED]` constraints.
+
+### 2026-08-15: self-binding-replacement — SPEC REVISED (rev 4); product lens CLEAR; awaiting approval
 
 ELABORATE-FIRST Item 8, covering epic scope sub-item 4 and the model-migration half of sub-item 1.
-Spec rev 3: `.project/active/self-binding-replacement/spec.md`; review: `spec-review.md` (final
+Spec rev 4: `.project/active/self-binding-replacement/spec.md`; review: `spec-review.md` (rev-3
 Revise verdict incorporated); product lens: `product-lens.md` (`Gate: CLEAR`, with prior
-`spec-F1`–`spec-F6` explicitly resolved). Awaiting owner approval, then the bounded stocktake
-research and design.
+`spec-F1`–`spec-F6` explicitly resolved and the rev-4 qualified-reference correction independently
+cleared). Awaiting owner approval, then the bounded stocktake research and design.
 
 **Six owner rulings from the review, all `[OWNER 2026-08-15]`:**
 
