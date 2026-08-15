@@ -1142,8 +1142,11 @@ closed and archived with all ten Success Criteria ticked against their amended f
 Learned written. **`pre_pr` was not run at epic close, by ruling** — the epic's changes live on the
 unmerged `item7-rebuild` line and ship with it; the branch gate runs once, at phase D.
 
-**B. Resume ELABORATE-FIRST Item 7 (cutover recovery steps 4–10) — NEXT,**
-`.project/active/cutover-recovery/plan.md` ("PAUSED at step 4", now released):
+**B. Resume ELABORATE-FIRST Item 7 (cutover recovery steps 4–10) — ✅ DONE 2026-08-14.**
+Steps 4–10 all executed; **[OWNER 2026-08-14] ACCEPTED** the final candidate at Gate 3
+(plan.md "Gate 3 — final acceptance" + "Narrow-correction step 10 completion"; audit
+CERTIFY-WITH-RESIDUALS, 0 blocking). Item close/archive not yet run — owner-directed. The
+original sub-list, kept for the record:
 1. Revise the step-4 brief per the pause record (its zero-input-report instruction and
    REQ-CL-03/04 closures are superseded by the landed contract) and discharge the epic's
    Item 7 Evidence-Invalidation Register row by row
