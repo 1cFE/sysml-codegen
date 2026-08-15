@@ -214,3 +214,20 @@ Resolves:
 
 spec-F7 remains open with its recorded disposition (one backlog entry at plan or close, or a
 one-line deliberate-lapse note — owner's choice).
+
+---
+
+## audit — 2026-08-15 — rev 58bc6aa
+Point (re-derived): Gate evidence must distinguish verified success from absence: a missing
+checkout cannot prove retirement, and a pin must reject evidence from the wrong tree. [source:
+`.project/ledger/ledger-4a.md`, “What this ledger is, and what it fixes”;
+`docs/architecture/modeling-assumptions.md` §9, ADR-009; grade: **agent/ratified**]
+Falsifier: remove a configured checkout, restore a claimed-removed companion symbol, or resolve an
+imported package outside its pinned checkout; the corresponding gate still reports success.
+Findings:
+- None. The live work keeps all three falsifiers: missing-root `paths` abstains nonzero before
+  checking rows, companion removal claims are inspected against the main checkout, and the
+  acceptance fixture consumes the wrong-resolution predicate.
+Smells fired: none.
+Prior BLOCK scan: none unresolved; `spec-F7` is non-blocking.
+Gate: CLEAR

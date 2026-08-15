@@ -70,7 +70,7 @@ rather than invented; vehicle `[CONSTRAINT-GATES-UNTAGGED]` in `BACKLOG.md`.
 
 ## Active Work
 
-### 2026-08-15: dead-worktree-pins — AUDIT NEEDS WORK (4/5 criteria verified)
+### 2026-08-15: dead-worktree-pins — CERTIFIED, awaiting close confirmation
 
 Residue of the phase-D cleanup, not an epic item. Both gates the cleanup broke are repaired at the
 working tree (uncommitted): the execution-lane `environment` fixture now pins anchor-derived main
@@ -78,12 +78,12 @@ checkouts via a pure predicate (`tests/execution/environment_pins.py`, negative 
 default suite), and `check_ledger_4a.py` points its companion root at `../agentic-mbse` and
 abstains with exit 2 when a configured checkout is missing. Verified: execution lane **88 passed,
 0 errors** from the main checkouts (first main-checkout reproduction); `paths` gives
-`304 rows checked, 0 problems` with the two agentic rows (L-036/L-037) genuinely parsed. Product
-judgment is CLEAR, but certification is held because the kept companion falsification test uses
-synthetic row L-926 rather than required row L-036 or L-037. Add that exact regression and correct
-the stale “rebuild repo” docstring, then re-audit. Spec: `.project/active/dead-worktree-pins/spec.md`;
-audit: `audit.md`. `spec-F7` (durable home for the deferred coverage-split idea) is still owed its
-recorded disposition at close.
+`304 rows checked, 0 problems` with the two agentic rows (L-036/L-037) genuinely parsed. The audit
+follow-up at `14fe868` falsifies both real rows in a kept regression and corrects the stale checker
+docstring; both targeted files pass all **65** tests. Audit verdict is **Certify** and product
+judgment is **CLEAR**. Spec: `.project/active/dead-worktree-pins/spec.md`; audit: `audit.md`.
+`spec-F7` (durable home for the deferred coverage-split idea) still needs its recorded close-time
+disposition.
 
 **⚠ Surfaced while verifying, unowned:** the full default suite (licensed, project `.venv`) shows
 **17 pre-existing ordering-dependent failures at clean HEAD `9ce5548`** — byte-identical failure

@@ -1,6 +1,6 @@
 # Spec: Dead Worktree Pins — Repair the Gates the Phase-D Cleanup Broke
 
-**Status:** Audit Needs Work (2026-08-15) — 4/5 success criteria verified; SC4 regression open
+**Status:** Certified (2026-08-15) — all five success criteria verified
 **Owner:** Reid W
 **Created:** 2026-08-15 09:29 PDT
 **Complexity:** LOW
@@ -73,7 +73,7 @@ not either status narrative.
       merely that it now passes. A pin that can no longer fail is the same defect as the one being
       fixed. **Kept as a negative check in the suite, not a one-off demonstration** — this item exists
       because a pin that was once demonstrated working later stopped checking anything, silently.
-- [ ] **The `repo: agentic-mbse` rows (L-036/L-037) are parsed and checked, not skipped.** The
+- [x] **The `repo: agentic-mbse` rows (L-036/L-037) are parsed and checked, not skipped.** The
       companion root resolves to the main `agentic-mbse` checkout, where both row paths exist and
       all four claimed-removed symbols are in fact absent — verified 2026-08-15 — so the rows reach
       real verification. Acceptance is a **kept negative check**: a deliberately falsified removal
@@ -184,8 +184,7 @@ than that the ledger is wrong.
 
 ---
 
-**Next Steps:** Add the exact kept L-036/L-037 falsification regression identified by `audit.md`,
-correct the stale checker docstring, then re-run the audit.
+**Next Steps:** Close and archive this certified standalone item.
 
 ---
 
@@ -211,11 +210,11 @@ anchor-derived trees, not host paths.
   correct resolution passes; wrong simkit / site-packages sysml_codegen / dead-worktree
   agentic_mbse each rejected. (This file deliberately names the dead-worktree path *as a wrong
   input* — a rejection case, not a pin.)
-- `tests/unit/test_check_ledger_4a.py` (+4 tests) — companion root pinned to the main checkout;
+- `tests/unit/test_check_ledger_4a.py` — companion root pinned to the main checkout;
   configured roots exist on disk; `missing_repo_roots` names each absent checkout; `main(["paths"])`
-  exits 2 with the abstention message and no problems line. The pre-existing companion
-  falsification check constructs synthetic row L-926. Audit found that it does not meet SC4's
-  exact requirement for a kept falsification of L-036 or L-037, so SC4 remains open.
+  exits 2 with the abstention message and no problems line. The audit follow-up loads real rows
+  L-036/L-037, falsifies each removal claim with a live declared symbol, and asserts the check
+  fails; the older synthetic L-926 mechanism test remains as a separate unit case.
 
 **Verification:**
 
@@ -223,7 +222,7 @@ anchor-derived trees, not host paths.
   venv). First main-checkout reproduction of the full lane.
 - `check_ledger_4a.py paths`: `304 rows checked, 0 problems`, exit 0 — with the companion rows now
   genuinely parsed (the committed-ledger unit test exercises the same path).
-- Targeted unit files: 63 passed. Reference sweep: only the exempt archive probe, the two fixture
+- Targeted unit files after audit fixes: 65 passed. Reference sweep: only the exempt archive probe, the two fixture
   JSONs, and the new negative test's wrong-input literal remain.
 - Full default suite (licensed): **17 failed, 2078 passed, 34 skipped** — the 17 are byte-identical
   at clean HEAD (verified by stash + rerun) and ordering-dependent (each file passes alone):
@@ -232,10 +231,10 @@ anchor-derived trees, not host paths.
   no re-certification); surfaced in CURRENT_WORK as an unowned finding.
 - mypy not run: no `src/` changes. Two `F401` warnings in the execution test file pre-exist at HEAD.
 
-**Audit response (2026-08-15, audit.md verdict Needs Work):** both findings accepted, none
-disputed. SC4's kept falsification now targets the real rows: `tests/unit/test_check_ledger_4a.py::
+**Audit response (2026-08-15, reverified and certified):** both findings were accepted and fixed.
+SC4's kept falsification now targets the real rows: `tests/unit/test_check_ledger_4a.py::
 test_falsifying_a_real_companion_row_makes_the_gate_fail` loads L-036 and L-037 from the committed
 ledger, replaces each removal claim with a symbol the companion file still declares (picked from
 the live surface), and asserts the gate fails — proving the committed rows reach the check, not
 just a synthetic stand-in. The stale "either rebuild repo" contract wording in
-`check_removed_symbols` is corrected. Checker suite after: 60 passed.
+`check_removed_symbols` is corrected. Checker suite after: 60 passed; both targeted files: 65 passed.

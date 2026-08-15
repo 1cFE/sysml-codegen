@@ -41,6 +41,39 @@ measurement as informing implementation only. **But the spec should say which it
 recorded route back. Two clean options: mark the choice contingent on the measurement, or state
 plainly that it was made on architectural grounds and the measurement cannot reopen it.
 
+> **Evidence update, 2026-08-15 14:27 — the gating measurement has since returned**
+> (`.project/research/20260815-142743_bare-expression-side-measurement.md`). This is evidence, not
+> a resolution; L1-1 remains the owner's call.
+>
+> **Zero of the 126 change.** 91 join to an exact typed wire edge and all 91 compare equal; 35 are
+> unjoinable, each for a named structural reason. So the risk L1-1 raises did not materialize, and
+> the owner's choice is retrospectively safe.
+>
+> **But the equality is forced, not earned**, and that distinction should survive into the spec.
+> Every joined bare site has leaf-slot fan-out of one — a single occurrence in the whole model
+> carries the referenced slot — so the lineage walk and the owner-anchored walk *cannot* land
+> differently. The qualified corpus has discriminating topologies (4 sites at fan-out two, and they
+> are 4 of the 5 changed); the bare corpus has none. Zero changes here is a no-cost result, not a
+> certification of the broader predicate.
+>
+> **Two coverage holes survive, and they bear directly on L2-2 and SC 6.** The corpus contains **no**
+> usage-owned direct reference in a typed alias and **none** in an inline constraint predicate — the
+> two callers the shared repair is principally justified by. It also has no plural (`sum()`) bare
+> site and no discriminating bare topology. The measurement recommends authored probes; SC 6 already
+> requires exactly those four regression families, so the spec is doing the right work here — but SC
+> 6 should be read as the *only* evidence covering those callers, not as supplementary.
+>
+> **The measurement also corrects the corpus scan's composition of the 126**: only 76 are new caller
+> coverage (computed-attribute terms), 15 are constraint bindings sharing the same `_resolve_bindings`
+> caller as the calc bindings, and **zero are aliases or predicates**. The scan's 63-vs-62 calc
+> binding count is one `non_finite_literal` site whose root refuses elaboration, not a disagreement.
+>
+> **On narrow-vs-broad, the measurement recommends broad** — the narrow option is genuinely
+> available (authored text was recovered from CST byte spans for all 189 sites), but its whole
+> purpose is to shield bare sites from a change that measures at zero, at the cost of threading
+> authored-form evidence through three callers that share one resolver and know nothing about
+> spelling.
+
 **L1-2 · Direct claim:** The u4–u7 promotion requirement is tagged `[INFERRED]` while its own text
 says *"The owner explicitly authorized both as scope for this separate item (2026-08-15)."* Those
 contradict. Per the capture-fidelity absorb mapping, owner-stated → `[NEED]`; `[INFERRED]` is for

@@ -1,9 +1,9 @@
 # Audit: Dead Worktree Pins
 
-**Verdict:** Needs Work
+**Verdict:** Certify
 **Audited:** 2026-08-15
 **Branch:** main
-**Commit:** 58bc6aa
+**Commit:** 14fe868
 
 ---
 
@@ -18,8 +18,8 @@ or abstain loudly, never produce a green result by absence.
 
 The implementation is the right narrow repair and works on its live paths: the targeted unit suite
 passes, the ledger checks all 304 rows against the main companion checkout, and the licensed
-execution lane passes all 88 nodes. Certification is held on one exact acceptance gap: the kept
-companion-row negative test falsifies synthetic row L-926, not required row L-036 or L-037.
+execution lane passes all 88 nodes. The audit follow-up now falsifies the real L-036 and L-037 rows
+in a kept test, and the stale checker contract wording is corrected.
 
 ## Product Judgment
 
@@ -47,12 +47,11 @@ the spec.
   (`tests/execution/test_fusion_tea_real_teax.py:90-114`). Five kept default-suite tests prove the
   expected resolution passes and wrong SimKit, site-packages codegen, and dead-worktree agentic
   resolutions fail (`tests/unit/test_environment_pins.py:28-74`).
-- **SC4 — gap.** The live gate resolves L-036/L-037 against the main companion checkout and parses
-  their existing files (`scripts/check_ledger_4a.py:98-101`, `:195-229`), but the required kept
-  falsification of one of those two rows is absent. The only companion falsification test constructs
-  unrelated row L-926 (`tests/unit/test_check_ledger_4a.py:460-480`); no kept test names L-036 or
-  L-037. Add a kept test that loads and deliberately falsifies L-036 or L-037, then asserts the
-  removal check fails, as required by `spec.md:76-82`.
+- **SC4 — verified.** The live gate resolves L-036/L-037 against the main companion checkout and
+  parses their existing files (`scripts/check_ledger_4a.py:98-101`, `:195-229`). The kept
+  parameterized regression loads both committed rows, replaces each removal claim with a symbol the
+  live file still declares, and asserts the removal check fails
+  (`tests/unit/test_check_ledger_4a.py:854-881`).
 - **SC5 — verified.** `paths` checks configured roots before walking rows and returns 2 with an
   abstention message (`scripts/check_ledger_4a.py:821-836`); the missing-root regression pins the
   exit and message (`tests/unit/test_check_ledger_4a.py:818-851`).
@@ -89,9 +88,8 @@ resolved the spec's mechanism question with anchor-derived roots and a pure pred
 
 No abstraction slop, silent fallback, broad exception swallowing, compatibility shim, or
 product-drift smell was found. The new helpers each have one readable job and the failure paths are
-explicit. One minor wording defect remains: `check_removed_symbols` still says “either rebuild
-repo” after the roots moved to main checkouts (`scripts/check_ledger_4a.py:198`); update that
-contract wording with the SC4 test repair.
+explicit. The audit follow-up corrected the stale “either rebuild repo” wording to “either
+configured checkout” (`scripts/check_ledger_4a.py:198`).
 
 ---
 
@@ -100,14 +98,13 @@ contract wording with the SC4 test repair.
 Checked the spec, spec review, every product-lens ledger block, implementation diff, affected call
 paths, worktree/branch state, and the five audit-stage code smells. Ran:
 
-- targeted unit tests: **63 passed**;
+- targeted unit tests after the audit fixes: **65 passed**;
 - ledger `paths`: **304 rows checked, 0 problems**;
 - licensed execution lane from the main checkouts: **88 passed**;
 - Ruff on the new and directly changed checker/helper/unit files: passed;
 - `git diff --check`: passed.
 
-Marked SC1, SC2, SC3, and SC5 verified. SC4 is left open. No epic tracking applies to this cleanup
-residue.
+Marked all five success criteria verified. No epic tracking applies to this cleanup residue.
 
 **Not checked:** The full default/conformance suite; `replacements`, `surface`, and `groups` runtime
 modes; the historical byte-identical merge proof; remote branch state. Full-file Ruff on the
