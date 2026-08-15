@@ -1,45 +1,18 @@
 # Current Work
 
-**Last Updated**: 2026-08-14 (**ELABORATE-FIRST ITEM 7 CLOSED and archived
-[OWNER-authorized]; PHASE D IN PROGRESS.** The pre_pr branch gate ran in all three repos and
-every check is green at the acceptance OIDs: codegen 2086/34/88 zero license-skip, agentic
-1831/1/5 zero license-skip, TEAx 406 passed; ruff 12/1, mypy 52-in-11 / 108-in-26 — all
-exactly the recorded baselines. Item 7 archived to
-`.project/completed/20260814_cutover-recovery/` + `20260814_elaborator-cutover/` with its
-product-lens gate resolved to CLEAR by citation (F1–F4 dispositions recorded). The deletion
-ledger moved to its durable home `.project/ledger/ledger-4a.{json,md}`; the three checker
-constants repointed and the owner's F1 docstring disclosure folded into
-`scripts/check_ledger_4a.py` in the same touch (the PR-prep tree change the ruling
-anticipated); ledger gate re-verified 304/0, groups READY, 62 script tests green; the full
-licensed suite re-run at the post-close tree came back identical (2086/34/88, zero
-license-skip). **The close is STAGED and UNCOMMITTED on codegen `item7-rebuild`** — commit is
-the owner's first move. Remaining in phase D: owner-run merges — agentic-mbse → codegen →
-TEAx (agentic-mbse and TEAx trees need no changes; their checks are green as-is) — then the
-salvage-label delete, main-checkout return to `main`, symlink restore, worktree cleanup.
-Agents do not push/tag/merge. Nothing pushed, no `main` touched anywhere)
-
----
-
-## Working trees and branches — read this first (valid until the phase-D merge + worktree cleanup)
-
-Settled by git 2026-08-14 [OWNER-directed placement]. One line of development per repo, no forks:
-
-| repo | authoritative branch | authoritative working tree | notes |
-|---|---|---|---|
-| sysml-codegen | `item7-rebuild` | `/home/reid/1cfe/sysml-codegen-item7-rebuild` | carries the Item-7 cutover + the whole closed CONSTRAINT-SEMANTICS epic |
-| agentic-mbse | `item7-rebuild` | `/home/reid/1cfe/agentic-mbse-item7-rebuild` | `elaborate-first-salvage` is FULLY CONTAINED in it (main → +3 → salvage → +9 → item7-rebuild); the label dies at merge |
-| teax | `constraint-semantics-item3` | `/home/reid/1cfe/teax` (checkout stays ON this branch) | codegen's execution lane imports simkit from this working tree; merges LAST, after codegen |
-
-- The main agentic-mbse checkout (`/home/reid/1cfe/agentic-mbse`) is parked 9 commits behind on
-  the same line — kept only as the pre-rebuild environment's read target and the license `.env`
-  host. **Do not develop there.**
-- Codegen's `.claude/skills/sysml-conventions` symlink points at the item7-rebuild worktree
-  (interim, owner-approved); restore to the main checkout at phase D.
-- Tests: `/home/reid/1cfe/item7-rebuild-venv/bin/python -m pytest`, never `uv run` (resolves the
-  companion to the parked checkout). License: `set -a; source /home/reid/1cfe/agentic-mbse/.env;
-  set +a`; licensed proof = zero `no live syside license` skip lines.
-- This whole block, the salvage label, and the extra worktrees get cleaned up at phase D
-  (PR wave + worktree cleanup); delete the block then.
+**Last Updated**: 2026-08-14 (**PHASE D COMPLETE — the three-repo merge wave landed and is
+smoked.** Squash merges in the pin-enforced order: agentic-mbse#12 → `main` `1decd95`;
+codegen#10 → `main` `385e163` (the Item-7 cutover + the whole CONSTRAINT-SEMANTICS epic + the
+two contained 20260724 branches); teax#4 → `main` `744745f`. Each main tree verified
+byte-identical to its acceptance branch tip (empty diff). Post-merge licensed smoke on merged
+codegen `main`: **2086/34/88, zero license-skip lines** — the battery shape reproduced.
+Cleanup done: `elaborate-first-salvage` label deleted (content on main by tree identity), all
+three checkouts returned to `main` and pulled, the `sysml-conventions` symlink restored to the
+main agentic checkout (this commit). Remaining: delete the two item7-rebuild worktrees and
+`/home/reid/1cfe/item7-rebuild-venv` (owner timing; the venv's editable installs point at the
+worktrees, so develop from the main checkouts after deletion), and the CHANGELOG Item-7
+"Lessons Learned" TODO. Next: roadmap §C — ELABORATE-FIRST Item 8, starting with the mandated
+scope scrub.)
 
 ---
 
@@ -667,15 +640,15 @@ with this branch as a named deliverable; merge sequencing belongs to `pre_pr` an
   replaced, not extended — so a pre-item package fails at seal verification before any report is
   read.
 
-### Unmerged branches awaiting owner (both items CLOSED 2026-07-24, owner-directed)
+### 20260724 branches (both items CLOSED 2026-07-24; merged 2026-08-14 inside codegen#10)
 
 - **`docs-lifecycle-sync`** — docs + `.project/` only. Item archived to
   `completed/20260724_docs-lifecycle-sync/` (audit: no open findings).
 - **`nested-override-tripwire`** (stacked on it) — the only `src/` change. Item archived to
   `completed/20260724_nested-override-tripwire/`.
 
-Merge the first for bookkeeping+docs, the second on top for the tripwire. Both items were
-closed on-branch before merge (owner-directed); their CHANGELOG entries note merge pending.
+Both were verified ancestors of `item7-rebuild` and landed with the phase-D squash merge;
+nothing separate remains to merge.
 
 ### pipeline_explainer_v2.html — BUILT (2026-07-24, `[V2-HTML-BUILD]`)
 
@@ -1051,7 +1024,7 @@ surfaces as matrix-row candidates.
 - Archived to `.project/completed/20260809_elaborator-breadth/`; certification in `audit_v3.md`
   addendum; residues audit-F30/F31 + Item-6 obligations (F19/F26) recorded there and in the epic.
 
-### 2026-07-24: docs-lifecycle-sync + nested-override-tripwire (closed on-branch; merge pending)
+### 2026-07-24: docs-lifecycle-sync + nested-override-tripwire (closed on-branch; merged 2026-08-14 via codegen#10)
 - Docs reconciled to merged main `936315c`: new `04-producer-resolution.md` +
   `30-diagnostic-severity.md`, doc 24 rewritten, REQ-SNAP-21/22 (matrix 276), module_kind
   sweep, explainer prompt re-anchored. Final audit: no open findings.
@@ -1196,26 +1169,15 @@ reference docs 11/12/13/16/24/25), the `[OWNER-VERBATIM]` allowable-modeling-pat
 against what CONSTRAINT-SEMANTICS already delivered first** — Items 1/7 landed part of the
 guidance obligations; don't re-do them.
 
-**D. The PR wave (the answer to "PR into what").** One coordinated branch-level shipment,
-July-wave pattern, after step 10's owner acceptance. **IN PROGRESS 2026-08-14: Item 7 closed,
-pre_pr checks green in all three repos (see top block); merges remain owner-run.**
-1. Owner runs `pre_pr` once per repo over the whole branch line (ship-together rule).
-2. Merge order enforced by pins: **agentic-mbse first** (`agentic-mbse-item7-rebuild` → its
-   main; `test_upstream_pins` compares codegen against the installed companion), then
-   **codegen** (`item7-rebuild` → main — one PR carrying the Item-7 cutover + the whole
-   CONSTRAINT-SEMANTICS epic), then **TEAx last** (`constraint-semantics-item3` → main; TEAx
-   is never bumped first and fails closed until codegen lands; remote needs explicit HTTPS).
-3. Until then the TEAx checkout stays on its branch (codegen execution lane imports simkit
-   from that working tree).
-4. **agentic-mbse branch fact, settled 2026-08-14 [verified by git]:** `elaborate-first-salvage`
-   is fully contained in `item7-rebuild` (main → +3 → salvage → +9 → item7-rebuild; one line, no
-   fork). The authoritative branch is `item7-rebuild`; the authoritative working tree is
-   `/home/reid/1cfe/agentic-mbse-item7-rebuild`. The main checkout is parked 9 commits behind on
-   the same line (legacy pre-rebuild environment + `.env` host only). At this phase's merge:
-   delete the `elaborate-first-salvage` label (subsumed), return the main checkout to `main`,
-   and **restore codegen's `.claude/skills/sysml-conventions` symlink to the main checkout**
-   (repointed to the worktree on 2026-08-14, owner-approved interim, commit pending in this
-   change).
+**D. The PR wave — DONE 2026-08-14.** One coordinated branch-level shipment, July-wave
+pattern, after step 10's owner acceptance. Executed in the pin-enforced order as squash-merge
+PRs (owner bypassed the base-branch review policy to merge): agentic-mbse#12 (`1decd95`),
+codegen#10 (`385e163`), teax#4 (`744745f`); each main tree verified byte-identical to its
+acceptance branch tip. Post-merge licensed smoke on merged codegen `main`: 2086/34/88, zero
+license-skip. Cleanup executed the same day: `elaborate-first-salvage` label deleted, all
+three checkouts returned to `main`, the `sysml-conventions` symlink restored to the main
+agentic checkout (this commit). Worktree/venv deletion remains (owner timing — see top
+block).
 
 **E. Back to the original goals** (what triggered all of this — the demo, and the
 design-search *policy*):
