@@ -799,3 +799,53 @@ def test_the_paths_check_now_fails_on_either_axis(ledger: dict) -> None:
         "unrowed data breakage" in problem and "tests/conftest.py" in problem
         for problem in problems
     )
+
+
+def test_the_companion_root_is_the_main_agentic_mbse_checkout() -> None:
+    """The rebuild worktree is gone; the retirement content lives on the companion's main.
+
+    Pinned so the next relocation shows up here instead of silently blinding the two
+    ``repo: agentic-mbse`` rows again (the 2026-08-15 defect).
+    """
+    assert checker.REPO_ROOTS["agentic-mbse"] == checker.REPO_ROOT.parent / "agentic-mbse"
+
+
+def test_every_configured_checkout_exists_on_this_machine() -> None:
+    """Install-time premise, kept as a check: both configured roots are real directories."""
+    assert checker.missing_repo_roots(checker.REPO_ROOTS) == []
+
+
+def test_missing_repo_roots_names_each_absent_checkout(tmp_path: Path) -> None:
+    gone = tmp_path / "deleted-worktree"
+    problems = checker.missing_repo_roots(
+        {"agentic-mbse": gone, "sysml-codegen": tmp_path}
+    )
+    assert problems == [f"agentic-mbse: configured checkout does not exist: {gone}"]
+
+
+def test_a_paths_run_abstains_nonzero_when_a_configured_checkout_is_missing(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """A dead configured root stops the ``paths`` run before any row is walked.
+
+    The alternative is the 2026-08-15 incident: every row the dead root owned passed by
+    skip while the summary still printed ``304 rows checked, 0 problems``. The message
+    must say the gate abstained — a missing checkout is an environment problem, not a
+    ledger finding.
+    """
+    monkeypatch.setattr(
+        checker,
+        "REPO_ROOTS",
+        {
+            "sysml-codegen": checker.REPO_ROOT,
+            "agentic-mbse": tmp_path / "deleted-worktree",
+        },
+    )
+    rc = checker.main(["paths"])
+    out = capsys.readouterr().out
+    assert rc == 2
+    assert "ABSTAIN agentic-mbse: configured checkout does not exist" in out
+    assert "abstained: 0 rows checked" in out
+    assert "problems" not in out

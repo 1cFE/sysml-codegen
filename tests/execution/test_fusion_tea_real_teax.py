@@ -39,6 +39,7 @@ from sysml_codegen.orchestration.exact_pipeline_context import (
 )
 from sysml_codegen.snapshot.capture import capture_instance_graph_snapshot
 from tests.execution import fusion_tea_arithmetic as hand
+from tests.execution.environment_pins import environment_pin_problems
 from tests.execution.real_teax import (
     FUSION_TEA,
     LCOE_CHANNEL,
@@ -90,10 +91,12 @@ def _numeric_outputs(result) -> dict[str, float]:
 def environment() -> dict[str, str]:
     """The resolved environment this evidence was produced in.
 
-    Asserted rather than reported: the recovery plan requires the acceptance run
-    to resolve ``simkit`` from the pinned TEAx checkout and both project packages
-    from the rebuild worktrees, and a run that silently resolved elsewhere would
-    be measuring a different tree.
+    Asserted rather than reported: the acceptance run must resolve ``simkit`` from
+    the pinned TEAx checkout and both project packages from the main checkouts,
+    and a run that silently resolved elsewhere would be measuring a different
+    tree. The pinned roots live in ``environment_pins``, derived from the repo's
+    own location; ``tests/unit/test_environment_pins.py`` keeps proving the
+    predicate still rejects a wrong resolution.
     """
     import agentic_mbse
     import simkit
@@ -106,9 +109,8 @@ def environment() -> dict[str, str]:
         "sysml_codegen": str(Path(sysml_codegen.__file__).resolve()),
         "agentic_mbse": str(Path(agentic_mbse.__file__).resolve()),
     }
-    assert "/teax/packages/teax-simkit/" in resolved["simkit"], resolved
-    assert "-item7-rebuild/" in resolved["sysml_codegen"], resolved
-    assert "-item7-rebuild/" in resolved["agentic_mbse"], resolved
+    problems = environment_pin_problems(resolved)
+    assert not problems, problems
     return resolved
 
 

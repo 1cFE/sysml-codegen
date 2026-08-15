@@ -21,7 +21,8 @@ proof. The deleted node IDs stay machine-readable rather than being hidden in pr
 **Executed symbols.** Every symbol in an executed ``removes`` block must be absent from the
 declared module or class surface at the row's path. Deleted paths pass by absence; surviving
 paths are parsed and checked for definitions, imports, assignments, and declared class fields.
-Companion rows are checked in the paired rebuild checkout.
+Companion rows are checked in the configured companion checkout, and a ``paths`` run
+refuses to start when a configured checkout is missing entirely.
 
 **Surface coverage.** Gate 4C part 3. The path check above proves every path the candidate
 *touched* has a row. It says nothing about a file the candidate never touched that a future
@@ -96,8 +97,23 @@ CARRIED_ORIGINS = frozenset(
 
 REPO_ROOTS = {
     "sysml-codegen": REPO_ROOT,
-    "agentic-mbse": REPO_ROOT.parent / "agentic-mbse-item7-rebuild",
+    "agentic-mbse": REPO_ROOT.parent / "agentic-mbse",
 }
+
+
+def missing_repo_roots(roots: dict[str, Path]) -> list[str]:
+    """One line per configured checkout that does not exist on disk.
+
+    ``check_removed_symbols`` treats a missing row path as proof of removal, which is
+    correct only while the checkout it resolves against exists. A missing checkout would
+    make every row it owns pass by skip, so ``paths`` refuses to run at all rather than
+    print a green line it did not earn.
+    """
+    return [
+        f"{name}: configured checkout does not exist: {path}"
+        for name, path in sorted(roots.items())
+        if not path.is_dir()
+    ]
 
 
 def git(*args: str, repo: Path = REPO_ROOT) -> str:
@@ -803,6 +819,16 @@ def main(argv: list[str] | None = None) -> int:
         return 1 if problems else 0
 
     if args.mode == "paths":
+        missing = missing_repo_roots(REPO_ROOTS)
+        if missing:
+            for problem in missing:
+                print(f"ABSTAIN {problem}")
+            print(
+                "paths gate abstained: 0 rows checked. The ledger is not wrong — a "
+                "configured checkout is missing. Clone it beside this repo "
+                "(see CLAUDE.md, Commands) and rerun."
+            )
+            return 2
         problems = check_paths(ledger)
         for problem in problems:
             print(f"FAIL {problem}")
