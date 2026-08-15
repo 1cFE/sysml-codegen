@@ -1,6 +1,6 @@
 # Spec: Dead Worktree Pins — Repair the Gates the Phase-D Cleanup Broke
 
-**Status:** Implemented 2026-08-15 — pending audit (approved same day; owner skipped design/plan)
+**Status:** Audit Needs Work (2026-08-15) — 4/5 success criteria verified; SC4 regression open
 **Owner:** Reid W
 **Created:** 2026-08-15 09:29 PDT
 **Complexity:** LOW
@@ -73,7 +73,7 @@ not either status narrative.
       merely that it now passes. A pin that can no longer fail is the same defect as the one being
       fixed. **Kept as a negative check in the suite, not a one-off demonstration** — this item exists
       because a pin that was once demonstrated working later stopped checking anything, silently.
-- [x] **The `repo: agentic-mbse` rows (L-036/L-037) are parsed and checked, not skipped.** The
+- [ ] **The `repo: agentic-mbse` rows (L-036/L-037) are parsed and checked, not skipped.** The
       companion root resolves to the main `agentic-mbse` checkout, where both row paths exist and
       all four claimed-removed symbols are in fact absent — verified 2026-08-15 — so the rows reach
       real verification. Acceptance is a **kept negative check**: a deliberately falsified removal
@@ -179,13 +179,13 @@ than that the ledger is wrong.
   work in its Non-Goals and Change Record. The reverted repair attempt is preserved there as
   `reverted/codegen-gate-repairs.patch` and may be used as input, subject to review rather than
   inherited as correct.
-- **Design:** `.project/active/dead-worktree-pins/design.md` (to be created, if the design questions
-  above warrant it — this item may be small enough to plan directly)
+- **Design/plan:** intentionally skipped for this low-complexity repair at owner direction
+  `[OWNER 2026-08-15]`.
 
 ---
 
-**Next Steps:** After approval, `/_my_plan` or straight to `/_my_implement` if the open questions
-resolve trivially.
+**Next Steps:** Add the exact kept L-036/L-037 falsification regression identified by `audit.md`,
+correct the stale checker docstring, then re-run the audit.
 
 ---
 
@@ -213,9 +213,9 @@ anchor-derived trees, not host paths.
   input* — a rejection case, not a pin.)
 - `tests/unit/test_check_ledger_4a.py` (+4 tests) — companion root pinned to the main checkout;
   configured roots exist on disk; `missing_repo_roots` names each absent checkout; `main(["paths"])`
-  exits 2 with the abstention message and no problems line. The falsified-claim negative check
-  already existed (`test_removed_symbols_inspect_the_paired_companion_checkout`) and now runs
-  against the same injectable-roots surface the live gate uses.
+  exits 2 with the abstention message and no problems line. The pre-existing companion
+  falsification check constructs synthetic row L-926. Audit found that it does not meet SC4's
+  exact requirement for a kept falsification of L-036 or L-037, so SC4 remains open.
 
 **Verification:**
 
@@ -231,3 +231,11 @@ anchor-derived trees, not host paths.
   `test_output_schema_contract.py` (1). Pre-existing, not introduced or fixed here (Non-Goals:
   no re-certification); surfaced in CURRENT_WORK as an unowned finding.
 - mypy not run: no `src/` changes. Two `F401` warnings in the execution test file pre-exist at HEAD.
+
+**Audit response (2026-08-15, audit.md verdict Needs Work):** both findings accepted, none
+disputed. SC4's kept falsification now targets the real rows: `tests/unit/test_check_ledger_4a.py::
+test_falsifying_a_real_companion_row_makes_the_gate_fail` loads L-036 and L-037 from the committed
+ledger, replaces each removal claim with a symbol the companion file still declares (picked from
+the live surface), and asserts the gate fails — proving the committed rows reach the check, not
+just a synthetic stand-in. The stale "either rebuild repo" contract wording in
+`check_removed_symbols` is corrected. Checker suite after: 60 passed.

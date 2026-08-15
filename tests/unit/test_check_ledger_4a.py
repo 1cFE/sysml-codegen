@@ -849,3 +849,31 @@ def test_a_paths_run_abstains_nonzero_when_a_configured_checkout_is_missing(
     assert "ABSTAIN agentic-mbse: configured checkout does not exist" in out
     assert "abstained: 0 rows checked" in out
     assert "problems" not in out
+
+
+@pytest.mark.parametrize("row_id", ["L-036", "L-037"])
+def test_falsifying_a_real_companion_row_makes_the_gate_fail(
+    ledger: dict, row_id: str
+) -> None:
+    """The two rows the 2026-08-15 dead root blinded, proved checkable — not a stand-in.
+
+    The synthetic-row test above proves the mechanism; this one proves the *committed*
+    rows reach it: the real row is loaded from the ledger, its removal claim is replaced
+    with a symbol the companion file still declares (picked from the live surface, so the
+    test adapts as that file changes), and the gate must fail. A green ``paths`` run
+    cannot distinguish a verified row from a skipped one; this failure can.
+    """
+    row = next(r for r in ledger["rows"] if r["id"] == row_id)
+    assert row["repo"] == "agentic-mbse"
+    assert row["state"] == "executed" and row["removes"]
+
+    path = checker.REPO_ROOTS["agentic-mbse"] / row["path"]
+    declared = checker.declared_surface(path)
+    assert declared, f"{path} declares nothing — the row would pass vacuously"
+    still_declared = sorted(declared)[0]
+
+    falsified = dict(row, removes=[{**row["removes"][0], "symbols": [still_declared]}])
+    assert checker.check_removed_symbols([falsified], checker.REPO_ROOTS) == [
+        f"{row_id}: executed removes.symbols still declared at "
+        f"{row['path']}: {still_declared}"
+    ]

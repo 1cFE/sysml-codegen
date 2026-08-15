@@ -195,7 +195,7 @@ def declared_surface(path: Path) -> set[str]:
 def check_removed_symbols(
     rows: list[dict], repo_roots: dict[str, Path] | None = None
 ) -> list[str]:
-    """Fail when an executed ``removes.symbols`` claim is false in either rebuild repo."""
+    """Fail when an executed ``removes.symbols`` claim is false in either configured checkout."""
     roots = REPO_ROOTS if repo_roots is None else repo_roots
     problems: list[str] = []
     for row in rows:
