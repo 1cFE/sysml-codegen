@@ -14,17 +14,26 @@ code?"*
 
 | # | Option | Verdict |
 |---|---|---|
-| 1 | **SysIDE parses `::` correctly per KerML.** Trying to "correct" our interpretation would be wrong — it would re-legitimize the bad pattern the epic exists to delete. | **RULED OUT** by spec + measurement |
+| 1 | **SysIDE parses `::` correctly per KerML.** Trying to "correct" our interpretation would be wrong — it would re-legitimize the bad pattern the epic exists to delete. | **SPLIT: premise TRUE, conclusion FALSE** |
 | 2 | **`::` should work; SysIDE has a bug.** Any fix of ours would be a hacked patch around a vendor defect. | **RULED OUT** by measurement |
 | 3 | **`::` should work and *does* in SysIDE — our code breaks it.** | **CONFIRMED** |
 
 ### Conclusion
 
-**It is our code, at one line.** SysIDE resolves `comp_a::length` and `comp_b::length` to two
-distinct elements, exactly as KerML §7.3.4.5 requires. Our extraction preserves that distinction.
-Our elaborator then normalizes both to the same `FeatureSlotId` at `elaborate.py:2315`, and from
-that point the qualifier is unrecoverable, so occurrence selection falls back to a positional search
-that can silently pick a different part than the author named.
+**It is our code.** SysIDE resolves `comp_a::length` and `comp_b::length` to two distinct elements,
+exactly as KerML §7.3.4.5 requires. Our extraction preserves that distinction. Our elaborator then
+normalizes both to the same `FeatureSlotId` at `elaborate.py:2315` and selects an occurrence
+positionally from there, which can silently pick a different part than the author named.
+
+Two precisions, both corrections to this report's first revision:
+
+- **The defect is not the normalization.** Slot normalization is intentional and correct — it is what
+  makes a redefinition and the feature it redefines one slot. The defect is *normalizing before using
+  the exact leaf's owning usage to select an occurrence*. `elaborate.py:2315` is the first harmful
+  collapse on this route, not a wrong line in itself.
+- **The owner information is not "unrecoverable"**, as this report first said. `_resolve_leaf` still
+  holds the exact `DeclarationId`, and the elaborator retains the corresponding live element. The
+  information is present and simply unused. That is precisely why the repair is cheap.
 
 Two things follow that matter for how you weigh this:
 
@@ -36,17 +45,22 @@ Two things follow that matter for how you weigh this:
 
 ### Recommendation, in steps
 
-1. **Run a corpus scan first** (~1 hour, no code change). Count tracked models, fixtures, and
-   baselines carrying a `usage::feature` binding where the consumer sits *outside* the named usage.
-   This is the one number that decides the blast radius and it is currently **unmeasured**. Do not
-   authorize a code change before it exists.
-2. **Write the guidance now, independent of the fix.** Teach `.` for a value on another part and the
-   rename for a local attribute. Both are correct today and stay correct whether or not step 4
-   happens. Do **not** write that `::` "doesn't work" — see *Guidance* below for the accurate line.
+1. **Run a corpus scan first** (~1 hour, no code change). **A count is not enough.** For every
+   `usage::feature` binding, record: the exact referent owner, the consumer's position relative to
+   it, the current edge or diagnostic, the expected edge after repair, and the affected snapshots or
+   baselines. That schema — not a total — is what tells you whether the repair is a silent behavior
+   change anywhere currently green. Do not authorize a code change before it exists.
+2. **Write the guidance now, but know which half is stable.** The **stable** half is the advice
+   itself: rename a local calculation input, use a dot path for a value on another part. That is
+   correct today and after any repair. The **unstable** half is any sentence explaining that `::`
+   "does not select which part" — that describes the current defect and **will need revision once
+   step 4 lands**. Write it so the explanation can be revised without touching the advice.
 3. **Migrate fusion-tea on the rename form (D-5) as already planned.** Unaffected by this report.
-4. **Then fix it, via option (b)** in *Repair* below — emit a two-segment reference so
-   `comp_a::length` takes the route `comp_a.length` already takes. Scope it as its own bounded change
-   with the step-1 evidence attached, and re-run the affected baselines.
+4. **Then fix it at the shared elaboration boundary** (option (a) in *Repair* below): when a
+   one-segment leaf is owned by a real `PartUsage`, contextualize that owner's occurrence and resolve
+   the slot inside it; definition-owned leaves keep today's route. Scope it as its own bounded change
+   with the step-1 evidence attached, and re-run the affected baselines. **Not** at extraction —
+   see why below.
 
 **Why I recommend fixing rather than only documenting.** If we do not fix it, the guidance has to
 tell authors that our tool ignores a qualifier the standard says is meaningful. That is documenting a
@@ -74,10 +88,15 @@ uv run python .project/active/self-binding-replacement/spike/probe_referent_iden
 uv run python .project/active/self-binding-replacement/spike/run_addendum.py
 ```
 
-Fixtures are throwaway and untracked, under
-`.project/active/self-binding-replacement/spike/fixtures/`. The decisive one is
-`u7_both_spellings/` (both spellings authored as real bindings from a symmetric position) and
-`u6_usage_qual_crossnamed/` (the failing behavior).
+Fixtures and probe scripts **are tracked**, under
+`.project/active/self-binding-replacement/spike/`, so this report is reproducible from a clean
+checkout. The decisive fixtures are `u7_both_spellings/` (both spellings authored as real bindings
+from a symmetric position) and `u6_usage_qual_crossnamed/` (the failing behavior). Generated probe
+output under `spike/out/` is **not** tracked and is regenerated by the commands above.
+
+*(This report's first revision described the fixtures as untracked. They had in fact been committed —
+along with 250 files of generated output, since removed from the index. Corrected after the
+independent assessment caught it.)*
 
 **Without the license the licensed paths skip rather than fail** — a green run with no key is not a
 run. The probe prints `license key loaded (len 37)` on success; if it does not, stop.
@@ -198,13 +217,29 @@ usage, which is why the repair is possible at all.
 is a usage-owned redefinition and that usage is the occurrence anchor. Owner is a part *def* → today's
 positional search, unchanged. Both fields are present at extraction time (measured above).
 
-**Option (a)** — branch in `_resolve_leaf` (`elaborate.py:2299`) ahead of the lineage loop.
+**Option (a), PREFERRED — repair at the shared elaboration boundary.** When a one-segment leaf is
+owned by a real `PartUsage`, contextualize that owner's occurrence and resolve the slot inside it;
+definition-owned leaves keep their existing route. Covers every caller, preserves slot and wire
+identity, and adds no synthetic evidence.
 
-**Option (b), preferred** — emit a two-segment fact in `reference_evidence`
-(`binding_evidence.py:197-231`) when the referent's owner is a usage, so `comp_a::length` takes the
-route `comp_a.length` already takes. Reuses `_contextualize_root` / `_select_occurrences` wholesale,
-adds no new selection logic, and is what §7.3.4.5 + §7.3.4.6 imply — the two spellings denote the
-same feature here, so they should route the same way.
+**Option (b), REJECTED — emit a two-segment fact in `reference_evidence`**
+(`binding_evidence.py:197-231`). *This was the preferred option in the first revision of this report
+and it was wrong.* Two reasons, the first decisive:
+
+1. **It repairs one of four callers.** `_expression_references` (`elaborate.py:2543-2552`) builds a
+   one-segment `ResolvedSemanticReferenceFact(root=target, segments=(target,), leaf=target)` for any
+   `FeatureReferenceExpression`, independently of extraction. Verified callers of
+   `_resolve_semantic_reference`: `:2587` (calc-input bindings — the only one fed by
+   `binding_evidence`), `:2384` (alias expressions), `:2458` (aggregation and constraint terms),
+   `:1051` (redefinition chaining features). Option (b) fixes `:2587` only and leaves the identical
+   silent defect in aliases, constraints, and computed attributes — while *appearing* fixed, since
+   the natural regression fixtures for it are calc-binding fixtures.
+2. **It turns resolution policy into synthetic extraction evidence.** Extraction would fabricate a
+   path the author did not write, to steer a downstream policy decision.
+
+*(Attribution: both points are from the independent assessment,
+`.project/research/20260815-134615_qualified-binding-defect-assessment.md`. Point 1 was verified
+against the source before acceptance.)*
 
 **The normalization stays.** It is what makes a redefinition and the feature it redefines one slot,
 which `effective_declaration` (`occurrence.py:75-100`) depends on and which occurrence identity is
@@ -270,6 +305,20 @@ Recorded because earlier statements of mine are in the commit trail and should n
    intact. Single point of loss, not two.
 3. **The spike's first-pass headline "nothing resolves silently and wrongly."** Falsified by u6.
 4. **"`::` doesn't work."** Imprecise to the point of being false; see *Guidance*.
+
+Corrections from the independent assessment
+(`.project/research/20260815-134615_qualified-binding-defect-assessment.md`), all accepted, the
+first two verified against source before acceptance:
+
+5. **Option (b) was the preferred repair.** Wrong — it covers one of four callers of
+   `_resolve_semantic_reference`. Repair belongs at the shared elaboration boundary.
+6. **"The fixtures are untracked."** False; they were tracked, with 250 generated artifacts.
+7. **"The qualifier is unrecoverable" after `:2315`.** False — `_resolve_leaf` holds the exact
+   `DeclarationId`. Present but unused.
+8. **Option 1 ruled out wholesale.** Its premise (SysIDE is correct) is true; only its conclusion
+   (therefore keep our positional behavior) is false.
+9. **"Guidance written now needs no rewrite after."** Too strong. The advice is stable; the sentence
+   explaining `::` describes current behavior and will need revision after the repair.
 
 ## Related
 

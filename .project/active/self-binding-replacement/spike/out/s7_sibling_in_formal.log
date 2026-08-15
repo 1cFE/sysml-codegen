@@ -1,5 +1,0 @@
-INFO: Generating code from .project/active/self-binding-replacement/spike/fixtures/s7_sibling_in_formal
-INFO: Output to .project/active/self-binding-replacement/spike/out/s7_sibling_in_formal
-INFO: Package name: spike_pkg
-INFO: Building pipeline context...
-ERROR: Model failed exact-route validation: SI_OCCURRENCE_MISSING: S7SiblingInFormal__plant__revenue_calc: consumer context has no occurrence of leaf slot FeatureSlotId(root_declaration=DeclarationId(value=UUID('a784b41c-291f-55ae-bf5a-dd0bf7950786')))

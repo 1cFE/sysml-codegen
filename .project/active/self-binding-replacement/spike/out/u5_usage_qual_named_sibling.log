@@ -1,5 +1,0 @@
-INFO: Generating code from .project/active/self-binding-replacement/spike/fixtures/u5_usage_qual_named_sibling
-INFO: Output to .project/active/self-binding-replacement/spike/out/u5_usage_qual_named_sibling
-INFO: Package name: spike_pkg
-INFO: Building pipeline context...
-ERROR: Model failed exact-route validation: SI_OCCURRENCE_AMBIGUOUS: U5UsageQualNamedSibling__plant__area_calc: consumer context contains 2 leaf occurrences
