@@ -20,7 +20,7 @@
       "path": "/home/reid/1cfe/sysml-codegen-item7-rebuild",
       "branch": "item7-rebuild",
       "content_oid": "2819501178370db230acefdbcd02dfa15b409ac4",
-      "record_commit_parent": "2819501178370db230acefdbcd02dfa15b409ac4",
+      "record_commit_parent": "41b1687f0ef82451d76ff26d505d4d8dcef48426",
       "item6_base": "1672c5766f67e7716f3c9f8f636c21e2ea444601",
       "diff_stat_vs_item6_base": "1176 files changed, 295589 insertions(+), 106678 deletions(-)",
       "name_status_counts": {
@@ -118,7 +118,7 @@
   "path_inventory": {
     "method": "`git ls-files` in the working tree, which is the content OID plus the record commit's .project/ files only",
     "sysml-codegen": {
-      "tracked_files": 2270,
+      "tracked_files": 2363,
       "src_modules": 72,
       "test_modules": 158,
       "fixture_directories": 123,
@@ -496,8 +496,8 @@
     }
   },
   "evidence_hashes_sha256": {
-    ".project/active/cutover-recovery/plan.md": "29348bb9a70af78a24a052cbaaf6a6c366d143c09fee21bc21e44aae50759a01",
-    ".project/active/cutover-recovery/ledger-4a.json": "50fb9576991edadaf50305612febf3c619210caef5fa6eecc7606c0d948c2f16",
+    ".project/active/cutover-recovery/plan.md": "12a17033e9e8d52541f1112663c5f0b0daec2290339ff75b32fa47fff792c45c",
+    ".project/active/cutover-recovery/ledger-4a.json": "091b1ed2720f8bc33e93a15b0f6d041b0c2e17c25a21db3c7192f4cade4aaa34",
     ".project/active/cutover-recovery/ledger-4a.md": "7e5bfcfb69cf4aa7e74309afbc66f53d585285d2563e21cadb3bb285aa2cf067",
     ".project/active/cutover-recovery/doc-update-list-4d.md": "39c091d2a9a76ce587ec79fcd47da54ce7dccb96afad3ad45c439636507ed240",
     ".project/active/cutover-recovery/owner-disposition-20260811.md": "136dd089d786664cd15b643bda1e6fb984efc8268e02903e2016868a4a22443b",
@@ -513,6 +513,7 @@
     ".project/active/cutover-recovery/evidence/audit-4.md": "efb23e2a3c6205286636f683f386770162882d90e7f57814eab9eeac5968500c",
     ".project/active/cutover-recovery/evidence/audit-5-final.md": "6aaa3101140232bba52b9840a422409140b7c055b812140363081f0b7686ef75",
     ".project/active/cutover-recovery/evidence/audit-7-retired.md": "6b7b651fc5d7c0744cbe679c45c69fd82d112dc09534a5978dc39bb55f3f0e33",
+    ".project/active/cutover-recovery/evidence/audit-9-final.md": "b89ed0220003a2097d81f1bfe6e7f2736780b2f2f055ef96f37ecad0dca1f882",
     ".project/active/cutover-recovery/evidence/baseline.json": "8162966c0ede1b58bb4562def9e862c794d25b505b2753fb4e2a4e8ddd66aa55",
     ".project/active/cutover-recovery/evidence/dual-qualifier-drop-dryruns.txt": "00639b7224e7b91019f018a9b62a6f14b2045925796d1226cf9663f1518fe235",
     ".project/active/cutover-recovery/evidence/expression-compiler-qualifier-drop-dryrun.txt": "c9e69b25bd80f6082de8caf89fe78473fe695927612fc0f333d169ea00ed1952",
@@ -560,7 +561,7 @@
     ".project/active/cutover-recovery/briefs/revise-step7b-audit.md": "8eec0530b19a484ced0cea60733c78d9b0b6ffdc5f5905ec744d78f164ee9cbc",
     ".project/active/cutover-recovery/briefs/revise-step7c-candidate-record.md": "302d61465803674292a3040f09b064473ffd4db4b490e9c5fb9984bf0d3de8e8",
     ".project/active/cutover-recovery/evidence/phase5-runs/build_candidate.py": "29a82781d35afef406809695e6a257081b7fd4156b3c212c51c180710bd40fd2",
-    ".project/active/cutover-recovery/evidence/phase5-runs/build_candidate_final.py": "fa04a04e5d3381b410561edd8fef0bd2d30312ca6fb152702740add55890f2d6",
+    ".project/active/cutover-recovery/evidence/phase5-runs/build_candidate_final.py": "94bb850686018eefe07cde68ab4ae07dfd2a1909da17bf88f4255aab9f0d000a",
     ".project/active/cutover-recovery/evidence/phase5-runs/build_candidate_revise.py": "16e9f3c23e9d1c7ca76a5735f0aee2ff89bb2a9a9b073d6fac40eea2f4afe575",
     ".project/active/cutover-recovery/evidence/phase5-runs/compare_final_runs.py": "c0f363a5a6b683a983fa2f195b896dd5b908a63be25e4b1175d434d8b8ed09f9",
     ".project/active/cutover-recovery/evidence/phase5-runs/compare_revise_runs.py": "156df3f5ba3763f121865f6b54680438028c63a90da43c1eb7b75bd250895522",

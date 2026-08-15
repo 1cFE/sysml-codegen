@@ -1,11 +1,12 @@
 # Current Work
 
-**Last Updated**: 2026-08-14 (**phase-B cutover steps 4–9 EXECUTED — the sequence now stops
-at step 10, the owner's final acceptance.** Batteries 51/51 identical at `2819501`/`6372ef7`;
-candidate record regenerated; independent step-9 audit verdict **CERTIFY-WITH-RESIDUALS**
-(0 blocking / 1 major / 3 minor, all record-accuracy or spec-text — `evidence/audit-9-final.md`).
-The owner's step-10 decision includes pricing the F1 fix (checker half touches `scripts/`,
-which would invalidate the spent batteries). Earlier the same day the
+**Last Updated**: 2026-08-14 (**ITEM 7 NARROW-CORRECTION SEQUENCE COMPLETE, STEPS 1–10 —
+[OWNER 2026-08-14] ACCEPTED the final candidate** after dispositioning all four audit-9
+findings (F1 record-only option (b); F2 R12 mypy amendment to measured values; F3/F4 record
+fixes). Audit verdict CERTIFY-WITH-RESIDUALS, 0 blocking. Acceptance authorizes no
+push/tag/close/archive; item close and the phase-D merge wave (pre_pr, worktree cleanup,
+symlink restore, the optional checker-docstring line from F1) are separate owner-directed
+acts. Earlier the same day the
 CONSTRAINT-SEMANTICS EPIC was CLOSED and archived to
 `.project/completed/20260814_epic_constraint_semantics_contract.md` +
 `.project/completed/20260814_constraint-semantics-contract/`, all ten Success Criteria ticked as
@@ -87,20 +88,22 @@ rather than invented; vehicle `[CONSTRAINT-GATES-UNTAGGED]` in `BACKLOG.md`.
 
 ## Active Work
 
-### 2026-08-14: Phase B — cutover step 9 EXECUTED (independent audit, CERTIFY-WITH-RESIDUALS); step 10 is the owner's
+### 2026-08-14: Phase B — cutover COMPLETE: step 9 audit CERTIFY-WITH-RESIDUALS, step 10 OWNER ACCEPTED
 
-Independent audit agent, probes run itself: `evidence/audit-9-final.md`. **Verdict
-CERTIFY-WITH-RESIDUALS, 0 blocking / 1 major / 3 minor** — all six subjects verify on
-substance; findings are record-accuracy/spec-text only. Full record: plan.md
-"Narrow-correction step 9 completion". The owner's step-10 decision set:
+Independent audit (`evidence/audit-9-final.md`): **CERTIFY-WITH-RESIDUALS, 0 blocking /
+1 major / 3 minor** — all six subjects verify on substance; findings record-accuracy/spec-text
+only. **[OWNER 2026-08-14] dispositioned all four and ACCEPTED** (full rulings + verbatim
+acceptance basis: plan.md "Narrow-correction step 10 completion"; gate summary: plan.md
+"Gate 3 — final acceptance"). The disposition pass (same commit as the acceptance tick):
+L-036/L-037 re-pointed to `tests/test_sysml/` (65 passed, verified twice); the 302-of-304
+sweep wording corrected everywhere; R12 mypy amended to the measured 73-in-18 / 118-in-28
+(dated, owner-approved); the governed `src tests` ruff numbers added beside T4; T1 gains the
+18 renames (builder fixed, record rebuilt, tables re-verified verbatim).
 
-1. **Accept with residuals as-is**, or **direct record-only repairs** (repoint L-036/L-037
-   citations + candidate.md sweep wording — `.project/` only, batteries stay valid), or
-   **direct the full F1 fix** (checker disclosure in `scripts/` — invalidates the spent
-   batteries, steps 7–8 re-run).
-2. **F2 spec amendment** (R12 mypy numbers → measured 73-in-18 / 118-in-28; auditor ruled the
-   clause number stale-by-environment, gate not failing — same shape as the ratified ruff fix).
-3. Final acceptance itself. **No push, tag, promote, close, or archive from agents.**
+**Left for phase D, by the owner's F1 ruling:** the optional `check_ledger_4a.py` docstring
+line disclosing the cross-repo skip (touches `scripts/`; folds in when the tree changes for
+PR prep). **No push, tag, promote, close, or archive happened; item close and the phase-D
+merge wave remain owner-directed.**
 
 ### 2026-08-14: Phase B — cutover steps 7–8 EXECUTED (batteries + final candidate record) — record
 
@@ -112,7 +115,8 @@ steps 7–9. Full record: plan.md "Narrow-correction steps 7 and 8 completion". 
   Suite 2086/34/88 zero license-skip; agentic 1831/1/5; lane 88 (incl. the gain=100 three-route
   proof — register row-3 single-shot obligation discharged); verify 15/22/0, fixture churn 0;
   ruff 12/1 = the R12 baseline sets exactly; mypy 52-in-11; ledger 304/0, replacements
-  223/79/**0 FAIL** (first full sweep since REVISE); diff checks clean.
+  223/79/**0 FAIL** (302-of-304-row sweep, first since REVISE; the two skipped agentic rows
+  verified directly — audit-9 F1); diff checks clean.
 - **The battery caught one defect first pass**: L-179 still cited the step-5-renamed
   differ-only pin. Cured (`2819501`, ledger citation re-pointed, shipped-path diff vs the ruled
   `540ad59` empty), partial runs discarded, all three recorded runs measure the repaired tree.

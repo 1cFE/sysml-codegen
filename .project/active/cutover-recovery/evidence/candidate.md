@@ -38,7 +38,7 @@ sequence"; the ratified dispositions in `owner-disposition-20260811.md`.
 | Content OID | `2819501178370db230acefdbcd02dfa15b409ac4` | `6372ef7ba6ba4c869759fcf201c59aa128175c6f` |
 | Item 6 base | `1672c5766f67e7716f3c9f8f636c21e2ea444601` | `5088b417c9e5453271291d46cd5fb23fc0579b1e` |
 | Diff vs base | 1176 files changed, 295589 insertions(+), 106678 deletions(-) | 36 files changed, 1221 insertions(+), 374 deletions(-) |
-| Name-status vs base | 825 added / 137 modified / **196 deleted** | 6 added / 30 modified / **0 deleted** |
+| Name-status vs base | 825 added / 137 modified / 18 renamed / **196 deleted** | 6 added / 30 modified / 0 renamed / **0 deleted** |
 | Commits since base | 370 (`1672c5766f67e7716f3c9f8f636c21e2ea444601..2819501178370db230acefdbcd02dfa15b409ac4`) | 9 (`5088b417c9e5453271291d46cd5fb23fc0579b1e..6372ef7ba6ba4c869759fcf201c59aa128175c6f`) |
 | Shipped paths (`src`, `tests`, `scripts`, `docs`, `pyproject.toml`) | clean | clean |
 
@@ -65,7 +65,7 @@ epic executed mid-sequence during the recorded pause (plan.md, "PAUSED at step 4
 
 | | sysml-codegen | agentic-mbse |
 |---|---:|---:|
-| Tracked files | 2,270 | 1,840 |
+| Tracked files | 2,363 | 1,840 |
 | Production modules (`src/**.py`) | 72 | — |
 | Test modules | 158 | 68 |
 | Fixture directories | 123 | — |
@@ -147,9 +147,16 @@ measured the content tree itself.
 - Both suite counts match the step-5 record's baselines exactly (codegen +0; the agentic
   count's provenance is the paired worktree at its own HEAD, which the CONSTRAINT-SEMANTICS
   epic moved from the REVISE-era 1825 to 1831).
-- The **replacements checker ran the full 304-row sweep for the first time since the REVISE
-  battery** and reads 223 green / 79 not-required / **0 FAIL** — the 223 is the REVISE-era
-  222 plus the repaired L-179 (§6).
+- The **replacements checker swept 302 of the 304 ledger rows for the first time since the
+  REVISE battery** and reads 223 green / 79 not-required / **0 FAIL** — the 223 is the
+  REVISE-era 222 plus the repaired L-179 (§6). The two rows outside the sweep are the ledger's
+  only `agentic-mbse` rows (L-036/L-037), which the checker structurally skips; their coverage
+  was verified directly by the step-9 audit and re-verified at the disposition pass (65 passed),
+  and their citations were re-pointed per audit-9 F1, `[OWNER 2026-08-14]` option (b).
+  *(This sentence originally claimed a "full 304-row sweep"; corrected at the same pass.)*
+- The R12-governed changed-tree ruff arm (`ruff check src tests`) reads **143** codegen /
+  **121** agentic against baselines of 358 / 127 — passing with margin. T4's 642 is the
+  battery's wider `src tests scripts` scope, which R12 does not govern (audit-9 F3).
 - The execution lane's 88 include the `gain = 100` three-route mutation proof
   (`tests/execution/test_fusion_tea_mutation_teax.py`, visible in each run's
   `execution_lane.log`), discharging the Evidence-Invalidation Register row-3 single-shot
@@ -216,6 +223,10 @@ the T4 suites run them in each battery.
    105-in-23 number appears in no battery log this recovery produced. Disposition 2 ratified
    amending the **ruff** clause only, so this record surfaces the discrepancy rather than
    amending the spec: it goes to the step-9 audit ("final gate semantics") and the owner.
+   **Dispositioned:** audit-9 ruled the clause's number stale-by-environment (both Item-6
+   bases re-measured under the mandated venv: codegen 73-in-18, agentic 118-in-28; the
+   current agentic set is a strict subset — zero new, ten fixed), and `[OWNER 2026-08-14]`
+   approved amending R12 to the measured values. The amendment is in the spec, dated.
 3. **TEAx moved past the Item-3-close pin, docs-only.** T1's note: one file
    (`docs/evaluation-and-study.md`), from the closed CONSTRAINT-SEMANTICS epic; no simkit
    code. The lane imports simkit from this working tree; its 88 passed three times.

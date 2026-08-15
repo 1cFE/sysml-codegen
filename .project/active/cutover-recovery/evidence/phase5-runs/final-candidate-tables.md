@@ -10,7 +10,7 @@
 | Content OID | `2819501178370db230acefdbcd02dfa15b409ac4` | `6372ef7ba6ba4c869759fcf201c59aa128175c6f` |
 | Item 6 base | `1672c5766f67e7716f3c9f8f636c21e2ea444601` | `5088b417c9e5453271291d46cd5fb23fc0579b1e` |
 | Diff vs base | 1176 files changed, 295589 insertions(+), 106678 deletions(-) | 36 files changed, 1221 insertions(+), 374 deletions(-) |
-| Name-status vs base | 825 added / 137 modified / **196 deleted** | 6 added / 30 modified / **0 deleted** |
+| Name-status vs base | 825 added / 137 modified / 18 renamed / **196 deleted** | 6 added / 30 modified / 0 renamed / **0 deleted** |
 | Commits since base | 370 (`1672c5766f67e7716f3c9f8f636c21e2ea444601..2819501178370db230acefdbcd02dfa15b409ac4`) | 9 (`5088b417c9e5453271291d46cd5fb23fc0579b1e..6372ef7ba6ba4c869759fcf201c59aa128175c6f`) |
 | Shipped paths (`src`, `tests`, `scripts`, `docs`, `pyproject.toml`) | clean | clean |
 
@@ -33,7 +33,7 @@ TEAx (evidence-only): `75eecb3bcf4baa0306107a96aa78b74ee667e970` on `constraint-
 
 | | sysml-codegen | agentic-mbse |
 |---|---:|---:|
-| Tracked files | 2,270 | 1,840 |
+| Tracked files | 2,363 | 1,840 |
 | Production modules (`src/**.py`) | 72 | — |
 | Test modules | 158 | 68 |
 | Fixture directories | 123 | — |

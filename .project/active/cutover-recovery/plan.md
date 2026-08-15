@@ -1056,6 +1056,22 @@ post-REVISE checkpoint at the recorded content OIDs. The 2026-08-12 correction v
 Gate 2 as an acceptance candidate while preserving it as evidence; the narrow-correction sequence
 at the end of this plan now controls execution.
 
+#### Gate 3 — the final candidate (ACCEPTED, 2026-08-14)
+
+- Content OIDs: sysml-codegen `2819501178370db230acefdbcd02dfa15b409ac4`, agentic-mbse
+  `6372ef7ba6ba4c869759fcf201c59aa128175c6f`, TEAx (evidence-only)
+  `75eecb3bcf4baa0306107a96aa78b74ee667e970`. Shipped-path diff vs the owner-ruled-final
+  `540ad59`: empty (builder-asserted in the record).
+- Candidate record: `evidence/candidate.{md,json}` + `evidence/phase5-runs/final-candidate-tables.md`,
+  built by `build_candidate_final.py` from the three-run battery under
+  `evidence/phase5-runs/final-runs/` (51/51 fields identical).
+- Audit: `evidence/audit-9-final.md` — **CERTIFY-WITH-RESIDUALS**, 0 blocking / 1 major /
+  3 minor, all record-accuracy or spec-text; every substantive probe reproduced.
+- **[OWNER 2026-08-14] ACCEPTED** after dispositioning all four findings (F1 option (b)
+  record-only; F2 R12 amendment approved; F3/F4 record fixes) — full rulings and the
+  acceptance basis are in the step-10 completion record at the end of this plan. No push,
+  tag, promotion, close, or archive is authorized by the acceptance itself.
+
 #### Gate 2 — the post-REVISE candidate (SUPERSEDED CHECKPOINT; CORRECTION ACTIVE)
 
 - Content OIDs: sysml-codegen `6c35aa0` (branch `item7-rebuild`), agentic-mbse `3fbda2f`
@@ -6584,9 +6600,11 @@ record-integrity corrections remain.
       compiler convergence and symbol removal, replacement coverage for deleted tests, R8,
       portable provenance, final gate semantics, and evidence consistency. Do not re-review all
       195 deletions.
-- [ ] **10. Return to the owner for final acceptance.** Final acceptance remains owner-grade.
+- [x] **10. Return to the owner for final acceptance.** Final acceptance remains owner-grade.
       **[AGENT] (ratified for execution by owner, 2026-08-12)** authorizes no push, tag,
-      promotion, close, or archive.
+      promotion, close, or archive. **[OWNER 2026-08-14] ACCEPTED**, conditional on the
+      record-only disposition pass, which landed in the same commit as this tick — see "Gate 3 —
+      final acceptance" and the step-10 completion record.
 
 #### PAUSED at step 4 — constraint-semantics contract takes precedence (2026-08-12)
 
@@ -6654,6 +6672,34 @@ REQ-tag minting for Items 3/5/8/9 added per the 2026-08-14 authorization; stale 
 replaced by preflight measurement with explained deltas; the register's three Invalid classes
 installed as binding evidence rules through step 10.
 
+#### Narrow-correction step 10 completion — owner final acceptance
+
+**Completed:** 2026-08-14. The owner dispositioned all four audit-9 findings and accepted the
+candidate. The three rulings, each **[OWNER 2026-08-14]**:
+
+1. **F1 → option (b), record-only repairs.** L-036/L-037 citations re-pointed to
+   `tests/test_sysml/` (verified twice: auditor and orchestrator, 65 passed) and the
+   "full 304-row sweep" sentence corrected to 302-of-304 with the skip disclosed. Option (c)
+   — the checker-docstring disclosure — was refused because it touches `scripts/` and would
+   invalidate the spent batteries "for a one-line comment on scaffolding that retires after
+   merge"; the owner ruled the honesty preserved by the audit record's permanent disclosure of
+   the sixth ceiling plus the double-verified coverage. **If the docstring line is wanted, it
+   folds into phase D** when the tree changes for PR prep.
+2. **F2 → R12 mypy amendment approved**, to the auditor's measured values (codegen 73-in-18,
+   agentic 118-in-28), same shape as the ratified ruff amendment; the same pass picked up F3
+   (the governed `src tests` ruff numbers now shown beside T4's wider scope) and F4 (T1
+   name-status line now carries the 18 renames; builder fixed and record rebuilt).
+3. **Acceptance: YES**, once the record-only pass lands (it landed with this record). The
+   owner's stated basis, verbatim: "Zero blocking findings; all four findings are about the
+   record, not the tree; every gate value, byte-identity pin, and symbol removal reproduced
+   under independent re-measurement. This is as certified as this branch is ever going to get,
+   and materially more certified than the record that failed you on 08-10."
+
+**What acceptance does and does not do.** Item 7's narrow-correction sequence is complete,
+steps 1–10. Nothing is pushed, tagged, promoted, closed, or archived by this acceptance;
+close/archive of the item and the phase-D merge wave (pre_pr branch gate, worktree cleanup,
+symlink restore) remain separate owner-directed acts.
+
 #### Narrow-correction step 9 completion
 
 **Completed:** 2026-08-14, directly after steps 7–8, by an independent audit agent (probes run
@@ -6711,8 +6757,9 @@ canonical scope, including the gain=100 three-route mutation proof (register row
 obligation discharged at the final OIDs); corpus **9**; `capture_v6_batch --verify` **15/22/0**
 with **0** non-timestamp fixture diff lines; ruff src **12** codegen / **1** agentic (the R12
 amended baseline sets exactly); mypy **52-in-11** codegen / **108-in-26** agentic; ledger
-paths **304/0**, surface **0**, replacements **223 green / 79 not-required / 0 FAIL** (full
-304-row sweep, first since the REVISE battery); proof integrity **0/0**; distinctness
+paths **304/0**, surface **0**, replacements **223 green / 79 not-required / 0 FAIL**
+(302-of-304-row sweep — the checker skips the two agentic rows, audit-9 F1; first since the
+REVISE battery); proof integrity **0/0**; distinctness
 **31/0**; `git diff --check` clean in both repos.
 
 **The battery caught one defect on its first pass — stop, cure, re-run whole.** Ledger row

@@ -350,7 +350,13 @@ that record. The mission-outcome sentence above stands as written.
   - Full-tree Ruff introduces zero new findings relative to the Item-6 baselines of 358 codegen and
     127 agentic findings; totals may fall when obsolete tests are deleted.
   - Mypy introduces zero new findings, reports no error in a changed file, and does not exceed the
-    Item-6 baselines of 71 errors in 17 codegen files and 105 errors in 23 agentic files.
+    Item-6 baselines of 73 errors in 18 codegen files and 118 errors in 28 agentic files.
+    *(Numbers amended 2026-08-14 per audit-9 finding F2, approved `[OWNER 2026-08-14]`: the
+    previously recorded 71-in-17 / 105-in-23 do not reproduce under the environment this
+    requirement mandates — the auditor re-measured both Item-6 base OIDs with the venv mypy and
+    got 73-in-18 / 118-in-28; the drift traces to the pre-cutover `uv run` measurement
+    environment. The content tree measures 52-in-11 / 108-in-26, a strict subset of the agentic
+    base set — zero new, ten fixed. Same amendment shape as the ratified ruff correction above.)*
   - Intended licensed tests are collected, no acceptance is hidden by xfail, and outputs contain
     zero `no live syside license` skip lines.
 

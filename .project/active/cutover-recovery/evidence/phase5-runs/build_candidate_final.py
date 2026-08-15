@@ -316,8 +316,9 @@ def emit_tables(record: dict) -> str:
     ns, ns_mb = cg["name_status_counts"], mb["name_status_counts"]
     add(
         f"| Name-status vs base | {ns.get('A', 0)} added / {ns.get('M', 0)} modified / "
-        f"**{ns.get('D', 0)} deleted** | {ns_mb.get('A', 0)} added / {ns_mb.get('M', 0)} modified / "
-        f"**{ns_mb.get('D', 0)} deleted** |"
+        f"{ns.get('R', 0)} renamed / **{ns.get('D', 0)} deleted** | "
+        f"{ns_mb.get('A', 0)} added / {ns_mb.get('M', 0)} modified / "
+        f"{ns_mb.get('R', 0)} renamed / **{ns_mb.get('D', 0)} deleted** |"
     )
     add(
         f"| Commits since base | {counts['sysml-codegen']['count']} "
