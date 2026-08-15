@@ -1,0 +1,35 @@
+{
+  "artifact_hashes": {
+    "IMPLEMENTATION_BACKLOG.md": "5c5b2a40e5e2521a8800d78fb9e50809c5e645d8433a3de85d3620f1235627a7",
+    "__init__.py": "0d3264700b6de8e24d3986144f785adc0f884f12c4d3f1aa3911d3d4e006cef1",
+    "contracts/generation_manifest.json": "56eaf42e8821075da8d1480637ef48d1149972d9f4e36df30cf267f144bedd65",
+    "contracts/model_contract.json": "492ebe26be75dc8fee0299458240a85e3f51152ac054673776cfe22142aec144",
+    "contracts/verify.py": "ad0a855af17d18af5f3e8c36b1a6c500f492d88ec777b40f307c646306c67284",
+    "handwritten/__init__.py": "fdb87b916dfcceb58c446d8769dc3583722ec7cbc0206ceec05ecd830cbe440c",
+    "handwritten/s2namesdiffer/__init__.py": "200b1c90d646c8c58c2644945ee551dddc12adcfdab30b7ae4197891284a70c8",
+    "handwritten/s2namesdiffer/revenue_impl.py": "49a6d8210d288dab4339af801b3855a3687223f0dca974bd511c446313dcb03b",
+    "inputs/__init__.py": "fdb87b916dfcceb58c446d8769dc3583722ec7cbc0206ceec05ecd830cbe440c",
+    "inputs/s2_names_differ_params.json": "f3bad83dc13131f268f3c2aa92fb3ced13dbcf404e11f5df96803f6250a9803f",
+    "modules/__init__.py": "fdb87b916dfcceb58c446d8769dc3583722ec7cbc0206ceec05ecd830cbe440c",
+    "modules/s2namesdiffer/__init__.py": "0fc3fea2d8e92bff93b86e656a302cf2800727bd2c3f9ff8d264930dcc73c8e1",
+    "modules/s2namesdiffer/revenue.py": "9a7a2a63f3ba71ffc238db5fd88f5342540fcb47d03704a51585818cfae12c49",
+    "pipelines/__init__.py": "fdb87b916dfcceb58c446d8769dc3583722ec7cbc0206ceec05ecd830cbe440c",
+    "pipelines/pipeline.yaml": "c174861f6a735df7eb81e6f79be27066c0d8adf00b475b6d7a2953663e87b2c6",
+    "primitives.py": "1bc6be58e5290b102d762227c33f138ecc4f9feaa00fa2f4cfd02f87f5f71998",
+    "schemas/__init__.py": "fdb87b916dfcceb58c446d8769dc3583722ec7cbc0206ceec05ecd830cbe440c",
+    "schemas/s2_names_differ_params.py": "ae602b7c9325b893334bd16fe7c983af8a000afc11fc6cbd90cbb09b1f169895",
+    "tests/__init__.py": "fdb87b916dfcceb58c446d8769dc3583722ec7cbc0206ceec05ecd830cbe440c",
+    "tests/test_implementations_runnable.py": "f70e37f2af7e577f344dfc0be3cf4229726837e5694c52501426caa0ea0c4bef"
+  },
+  "coverage_policy": {
+    "exclude_globs": [
+      "contracts/package_contract.json",
+      "**/__pycache__/**"
+    ],
+    "runtime_output_globs": []
+  },
+  "executable_fingerprint": "fbcdfd381089f6263cc2f2d9fe7d71b78d360a13365992c5959d2a92f7659975",
+  "generator_version": "0.1.0",
+  "package_name": "spike_pkg",
+  "runtime_contract_version": "2.0.0"
+}

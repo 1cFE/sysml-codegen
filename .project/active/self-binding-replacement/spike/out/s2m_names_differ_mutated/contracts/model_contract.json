@@ -1,0 +1,22 @@
+{
+  "catalog_schema_version": "3.0.0",
+  "constraint_catalog": null,
+  "evaluation_semantics": "kleene-three-valued",
+  "outputs": [
+    {
+      "channel_name": "S2NamesDiffer__plant__revenue_calc__revenue",
+      "field_name": "root",
+      "python_type": "float"
+    }
+  ],
+  "parameters": [
+    {
+      "default_value": 0.42,
+      "entry_type": "design_attribute",
+      "param_group": "s2_names_differ_params",
+      "python_type": "float",
+      "qualified_name": "S2NamesDiffer__plant__availability"
+    }
+  ],
+  "semantic_fingerprint": "2d2f08bc0d400ef54b75e533ca6f43cb0aada304a052ba41733ade0c09fc82d6"
+}

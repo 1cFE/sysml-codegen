@@ -50,10 +50,13 @@ fusion-tea model remains blocked from regeneration until its authored bindings a
   is the rule for all 15 fusion-tea sites and matches the existing codegen fixture.
 - **Name the path (D-7).** When the value lives on a different part, name that occurrence path, for
   example `in driver_cost = driver.cost`. The reference lands on that occurrence's feature.
-- **Qualify by owner (D-6).** A qualified name lands on the definition-level feature. It works only
-  while the consumer's context contains one applicable occurrence of that definition; otherwise
-  the exact route refuses it as ambiguous. The guidance describes this limit but does not recommend
-  this shape for the fusion-tea migration.
+- **Qualify by owner (D-6).** A qualified name resolves by the consumer's **position**: if the
+  consumer's own scope lineage owns the slot, that occurrence wins outright; otherwise the route
+  searches descendants innermost-first and refuses as ambiguous only when two candidates collide.
+  So it is safe from *inside* the part definition even with many occurrences, and unsafe from above
+  them. It also reaches sideways into a sibling subtree when exactly one occurrence lives there —
+  owner qualification does not mean "mine" (`spike/findings.md` F-1, F-4). The guidance states this
+  rule and its reach; it still does not recommend this shape for the fusion-tea migration.
 
 ## Success Criteria
 
@@ -122,11 +125,22 @@ fusion-tea model remains blocked from regeneration until its authored bindings a
   calculation usage. After `redefines`, the name resolves through the owning type's supertypes with
   the owner's own namespace excluded (KerML §7.3.4.5 and §8.2.3.5.1), and the redefined feature
   must otherwise be inherited from a supertype of its owning type.
-- **[HARD]** *(measurement pending re-establishment — see Provenance note)* An owner-qualified
-  reference is refused with `SI_OCCURRENCE_AMBIGUOUS` when the consumer's context contains more
-  than one leaf occurrence of the qualifying definition. It never guesses an occurrence. The
-  reverted migration succeeded only while `'IFE Power Plant'` had one usage, and its inside-the-part-
-  definition authoring position was not independently covered by the earlier probe table.
+- **[HARD]** *(re-established by measurement 2026-08-15 — and CORRECTED; the prior wording was
+  falsified)* An owner-qualified reference is refused with `SI_OCCURRENCE_AMBIGUOUS` when the
+  consumer **sits above more than one reachable leaf occurrence** of the qualifying definition and
+  is **not itself inside one of them**. It never guesses an occurrence — no measured row showed a
+  guess. The discriminator is the consumer's **position relative to the occurrences**, not the
+  occurrence count of the definition: the consumer's own scope lineage is walked outward first and
+  an owning scope wins outright, however many other occurrences exist; only when the lineage misses
+  does the innermost-first descendant search run, and only there can two candidates collide
+  (`spike/findings.md` F-1, rows 4a–4e; `elaboration/elaborate.py:2299-2348`).
+
+  **What the prior wording got wrong:** it predicted refusal from the occurrence count alone, so it
+  treated the inside-the-part-definition position — the position the earlier probe table never
+  covered — as unsafe. Measured, that position generates cleanly with two occurrences, each reading
+  its own value. D-6 is therefore **narrower in the spec than in the product**. This corrects the
+  guidance text; it does **not** reopen the migration form. D-5 remains the ratified shape for the
+  fusion-tea sites (`[NEED]`, 2026-08-05 ratification), and this item does not relitigate it.
 - **[HARD]** SysML v2 Part 1 §7.17.2 is an action-parameter example. It does not state a shadowing
   rule or establish owner qualification as the normative repair for this calculation-binding
   collision. The rewritten guidance must not cite it as that authority.
@@ -211,6 +225,11 @@ spelling used by ten sites in the reverted migration.
 - **Required Reading:** none listed for Item 8 in the epic.
 - **Contract (semantic authority):**
   `.project/concepts/constraint-execution-authoritative-lifecycle-contract.md` — D-4 through D-7.
+- **Measured evidence (authority for the `[HARD]` binding-shape rows):**
+  `.project/active/self-binding-replacement/spike/findings.md` — 2026-08-15 re-establishment on the
+  shipped route at `6e3c18d`. Corrects the `SI_OCCURRENCE_AMBIGUOUS` row; records F-2 (agentic-mbse
+  validator false-positive on D-6), F-3 (unhandled traceback on the D-5 rename collision), F-4
+  (sideways reach), F-5 (chain source paths).
 - **Prior evidence:** `.project/active/source-identity-binding-semantics-spike/authoring-form-table.md`
   — the 2026-08-05 probe table of six authored forms and their observed referents.
 - **Spec review:** `.project/active/self-binding-replacement/spec-review.md` — final Revise verdict;

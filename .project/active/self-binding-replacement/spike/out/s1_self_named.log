@@ -1,0 +1,5 @@
+INFO: Generating code from .project/active/self-binding-replacement/spike/fixtures/s1_self_named
+INFO: Output to .project/active/self-binding-replacement/spike/out/s1_self_named
+INFO: Package name: spike_pkg
+INFO: Building pipeline context...
+ERROR: Model is not ready for the exact route: SI_SELF_BINDING: S1SelfNamed__Plant__revenue_calc.availability

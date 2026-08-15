@@ -1,0 +1,31 @@
+# Generated Pipeline Configuration for spike_pkg
+#
+# Auto-generated from SysML calc def dependency analysis
+# DO NOT EDIT - Regenerate using code generator
+
+metadata:
+  run_description: "Generated pipeline for spike_pkg"
+  output_folder: "spike_pkg_results"
+
+modules:
+  # Entry point - load inputs from JSON
+  entry_fusion:
+    module_type: EntryPoint
+    inputs:
+      s9_qual_outside_one_params: S9QualOutsideOneParams ../inputs/s9_qual_outside_one_params.json
+
+
+  # s9qualoutsideone.RevenueModule
+  s9qualoutsideone__fleet__revenue_calc:
+    module_type: s9qualoutsideone.RevenueModule
+    inputs:
+      availability: float s9_qual_outside_one_params.S9QualOutsideOne__fleet__plant_a__availability
+    outputs:
+      root: RootModel[float] S9QualOutsideOne__fleet__revenue_calc__revenue
+
+
+  # Exit point - capture all results
+  exit_point:
+    module_type: ExitPoint
+    outputs:
+      S9QualOutsideOne__fleet__revenue_calc__revenue: RootModel[float] S9QualOutsideOne__fleet__revenue_calc__revenue.json
