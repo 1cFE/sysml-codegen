@@ -39,7 +39,7 @@ from dataclasses import dataclass, replace
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-LEDGER = REPO_ROOT / ".project/active/cutover-recovery/ledger-4a.json"
+LEDGER = REPO_ROOT / ".project/ledger/ledger-4a.json"
 
 #: Deletion group -> step number in the runbook's sequence. The reader before the read.
 GROUP_STEP = {

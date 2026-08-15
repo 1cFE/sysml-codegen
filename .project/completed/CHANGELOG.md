@@ -4,6 +4,50 @@ Historical record of completed work.
 
 ---
 
+## [2026-08-14] - [ELABORATE-FIRST Item 7] Atomic Cutover — Switch, Delete, Snapshot, Recapture
+
+**Type**: Item (one atomic landing unit, executed via the owner-dispositioned REVISE path plus
+narrow-correction steps 1–10)
+**Duration**: 2026-08-10 (spec created) → 2026-08-14 (owner acceptance and close). Estimated
+3–5 days; the CONSTRAINT-SEMANTICS epic ran as a nested detour inside it (2026-08-12 → 08-14).
+**Archived to**: `.project/completed/20260814_cutover-recovery/` (recovery plan, owner
+dispositions, audits, batteries, acceptance record) and
+`.project/completed/20260814_elaborator-cutover/` (spec, design + four reviews, census;
+superseded original plan retained as shaping evidence)
+**Branch**: `item7-rebuild`, unpushed; companion agentic-mbse `item7-rebuild` @ `6372ef7`;
+TEAx `constraint-semantics-item3` @ `75eecb3`. Merge wave is phase D, owner-run.
+
+### Summary
+The instance-graph front end is now the only front end. The exact elaborate-then-project route
+serves the public CLI on both sources (`--models` live, `--from-snapshot` v6); the legacy
+string-resolution stack — pipeline builder, backtracker, producer resolution, v5 snapshot
+route, and their wrong-oracle tests — is deleted, not wrapped, with every removal carried by
+the 304-row deletion ledger and machine-checked replacement proof. The first cutover execution
+was refused at owner disposition (uncommitted candidate, 222 unexplained deletions); the
+recovery rebuilt it from the certified Item-6 baseline with forensic preservation, and the
+final candidate passed three consecutive identical gate batteries (51/51 fields), an
+independent narrow audit (CERTIFY-WITH-RESIDUALS, 0 blocking), and owner acceptance.
+
+### Deliverables
+- One generation authority: `run_codegen` constructs exactly one way; v6 instance-graph
+  snapshot envelope; v5 refused at load by name; absence pinned by
+  `tests/conformance/test_public_authority_switch.py`.
+- Executed deletion ledger at `.project/ledger/ledger-4a.{json,md}` (rehomed at close as
+  living gate data) with `check_ledger_4a.py` paths/replacements/surface/groups checkers and
+  their 62 tests.
+- Portable provenance on the live route (step 5): live and snapshot generation byte-identical;
+  invariants 34/35 reconciled.
+- The gain=100 three-route public mutation proof (`test_fusion_tea_mutation_teax.py`) and the
+  zero-UNTESTED verification matrix (288 rows recounted).
+- Environment-true spec R12 (venv commands, enumerated ruff/mypy baseline sets).
+- Evidence: `evidence/phase5-runs/` batteries + `evidence/candidate.{md,json}` +
+  `evidence/audit-9-final.md`, all archived with the item.
+
+### Lessons Learned
+[TODO: Add lessons learned]
+
+---
+
 ## [2026-08-14] - [CONSTRAINT-SEMANTICS] Constraint Semantics and Design-Search Feasibility (EPIC)
 
 **Type**: Epic (9 items, all closed and archived; epic doc + umbrella shaping folder archived

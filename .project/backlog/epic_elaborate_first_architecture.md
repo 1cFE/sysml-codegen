@@ -424,7 +424,7 @@ attachment, occurrence child selection, graph structure, and projection obey the
 
 ---
 
-#### Item 7: Atomic Cutover — Switch, Delete, Snapshot, Recapture (3–5 days)
+#### Item 7: Atomic Cutover — Switch, Delete, Snapshot, Recapture (3–5 days) ✅
 
 **Type**: Code / Integration (one landing unit)
 
@@ -454,16 +454,24 @@ atomic landing because old snapshots cannot feed the new front end.
 4. Delete the dual-run harness and parallel entry point in the same landing.
 
 **Success Criteria**:
-- [ ] Customer composition: one public input, off-default mutation reaching every bound
+- [x] Customer composition: one public input, off-default mutation reaching every bound
   consumer, proven live **and** relocated-snapshot.
-- [ ] C19 fixture applies 80.0 on both consumer paths; tripwire deleted with its mechanism.
-- [ ] Deletion ledger fully executed; no superseded route remains behind a flag or adapter.
-- [ ] A recorded scale budget and one real TEAx generation/seal/execute smoke pass on the new
+- [x] C19 fixture applies 80.0 on both consumer paths; tripwire deleted with its mechanism.
+- [x] Deletion ledger fully executed; no superseded route remains behind a flag or adapter.
+- [x] A recorded scale budget and one real TEAx generation/seal/execute smoke pass on the new
   authority without private compatibility APIs.
-- [ ] Full maintained unit/conformance/generation/type/lint gates green with exact counts and
+- [x] Full maintained unit/conformance/generation/type/lint gates green with exact counts and
   license evidence recorded; every committed output change appears in the classified ledger.
 
-**Location**: `.project/active/elaborator-cutover/`
+Ticked at close 2026-08-14 on the step-10 record: narrow-correction steps 1–10 executed, step-9
+independent audit CERTIFY-WITH-RESIDUALS (0 blocking), **[OWNER 2026-08-14] final acceptance**
+at Gate 3 (three consecutive batteries, 51/51 fields identical, at codegen `2819501` / agentic
+`6372ef7` / TEAx `75eecb3`).
+
+**Location**: `.project/completed/20260814_cutover-recovery/` (execution + acceptance record)
+and `.project/completed/20260814_elaborator-cutover/` (spec, design, census — superseded plan
+retained as shaping evidence). The deletion ledger lives on as live gate data at
+`.project/ledger/ledger-4a.{json,md}` (moved at close; checker constants repointed).
 
 **Dependencies**: Item 6.
 

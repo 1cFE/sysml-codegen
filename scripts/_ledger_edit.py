@@ -14,7 +14,7 @@ import json
 import sys
 from pathlib import Path
 
-LEDGER = Path(__file__).resolve().parent.parent / ".project/active/cutover-recovery/ledger-4a.json"
+LEDGER = Path(__file__).resolve().parent.parent / ".project/ledger/ledger-4a.json"
 
 
 def main(argv: list[str]) -> int:

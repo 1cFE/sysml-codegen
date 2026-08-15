@@ -61,6 +61,9 @@ defects: read a green run as "these five classes are unchecked", never as "the l
    deletion removes, hits neither the AST walk nor the textual scans. The class is handled by
    the runbook's ``PULLED_FORWARD`` table (scripts/retirement_worklist.py), whose entries were
    found by scratch-worktree execution — the only detector this class has.
+6. **``replacements`` silently skips ``repo: agentic-mbse`` rows** (L-036/L-037): their nodes
+   live in the companion checkout, so a full-ledger run proves 302 of 304 rows — verify those
+   two directly in the companion when they matter.
 
 Usage::
 
@@ -82,7 +85,7 @@ from enum import Enum
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-LEDGER_JSON = REPO_ROOT / ".project/active/cutover-recovery/ledger-4a.json"
+LEDGER_JSON = REPO_ROOT / ".project/ledger/ledger-4a.json"
 
 #: Row origins that must appear in the Git-derived candidate set.
 DIFF_ORIGINS = frozenset({"forensic-diff"})

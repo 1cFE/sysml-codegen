@@ -1,17 +1,22 @@
 # Current Work
 
-**Last Updated**: 2026-08-14 (**ITEM 7 NARROW-CORRECTION SEQUENCE COMPLETE, STEPS 1–10 —
-[OWNER 2026-08-14] ACCEPTED the final candidate** after dispositioning all four audit-9
-findings (F1 record-only option (b); F2 R12 mypy amendment to measured values; F3/F4 record
-fixes). Audit verdict CERTIFY-WITH-RESIDUALS, 0 blocking. Acceptance authorizes no
-push/tag/close/archive; item close and the phase-D merge wave (pre_pr, worktree cleanup,
-symlink restore, the optional checker-docstring line from F1) are separate owner-directed
-acts. Earlier the same day the
-CONSTRAINT-SEMANTICS EPIC was CLOSED and archived to
-`.project/completed/20260814_epic_constraint_semantics_contract.md` +
-`.project/completed/20260814_constraint-semantics-contract/`, all ten Success Criteria ticked as
-amended. **`pre_pr` was NOT run — deferred to the phase-D branch gate by ruling.** Nothing
-pushed, no `main` touched anywhere)
+**Last Updated**: 2026-08-14 (**ELABORATE-FIRST ITEM 7 CLOSED and archived
+[OWNER-authorized]; PHASE D IN PROGRESS.** The pre_pr branch gate ran in all three repos and
+every check is green at the acceptance OIDs: codegen 2086/34/88 zero license-skip, agentic
+1831/1/5 zero license-skip, TEAx 406 passed; ruff 12/1, mypy 52-in-11 / 108-in-26 — all
+exactly the recorded baselines. Item 7 archived to
+`.project/completed/20260814_cutover-recovery/` + `20260814_elaborator-cutover/` with its
+product-lens gate resolved to CLEAR by citation (F1–F4 dispositions recorded). The deletion
+ledger moved to its durable home `.project/ledger/ledger-4a.{json,md}`; the three checker
+constants repointed and the owner's F1 docstring disclosure folded into
+`scripts/check_ledger_4a.py` in the same touch (the PR-prep tree change the ruling
+anticipated); ledger gate re-verified 304/0, groups READY, 62 script tests green; the full
+licensed suite re-run at the post-close tree came back identical (2086/34/88, zero
+license-skip). **The close is STAGED and UNCOMMITTED on codegen `item7-rebuild`** — commit is
+the owner's first move. Remaining in phase D: owner-run merges — agentic-mbse → codegen →
+TEAx (agentic-mbse and TEAx trees need no changes; their checks are green as-is) — then the
+salvage-label delete, main-checkout return to `main`, symlink restore, worktree cleanup.
+Agents do not push/tag/merge. Nothing pushed, no `main` touched anywhere)
 
 ---
 
@@ -87,6 +92,30 @@ rather than invented; vehicle `[CONSTRAINT-GATES-UNTAGGED]` in `BACKLOG.md`.
 ---
 
 ## Active Work
+
+### 2026-08-14: ELABORATE-FIRST Item 7 — CLOSED and archived; phase-D pre_pr checks green
+
+- **Archived** (owner-authorized after step-10 acceptance): `cutover-recovery/` →
+  `.project/completed/20260814_cutover-recovery/`; `elaborator-cutover/` →
+  `.project/completed/20260814_elaborator-cutover/` (spec/design/census; superseded plan kept
+  as shaping evidence). Epic Item-7 success criteria ticked with dated provenance.
+- **Product-lens gate CLEAR**: the 2026-08-11 `BLOCKED (audit-F1, audit-F2)` state resolved by
+  citation in a dated close block — F1 (exemption deleted, pinned by `test_item12_checks.py`),
+  F2 (retirement executed, absence pinned), F3/F4 (three-route mutation proof; step-5 portable
+  provenance) — each citing the owner REVISE disposition, step-9 audit, and step-10 acceptance.
+- **Deletion ledger rehomed** `[OWNER 2026-08-14]`: `ledger-4a.{json,md}` →
+  `.project/ledger/` (living gate data — future test renames still sweep it); constants in
+  `check_ledger_4a.py` / `_ledger_edit.py` / `retirement_worklist.py` repointed; the F1
+  docstring disclosure (sixth ceiling: `replacements` skips the two `repo: agentic-mbse`
+  rows) added in the same touch per the phase-D ruling. Re-verified: paths 304/0, groups
+  READY, 62 ledger-script tests pass.
+- **pre_pr checks green in all three repos** at the acceptance OIDs (suite numbers in the top
+  block). Post-repoint full-suite re-run recorded below. One superseded-item residual noted:
+  `completed/20260810_source-identity-occurrence-foundation/` archives its lens BLOCKED — a
+  supersession record (that implementation never entered this branch), not a shipping blocker.
+- Remaining phase D is owner-run: merge agentic-mbse → codegen → TEAx, delete the
+  `elaborate-first-salvage` label, return the main agentic checkout to `main`, restore the
+  `sysml-conventions` symlink, clean up worktrees.
 
 ### 2026-08-14: Phase B — cutover COMPLETE: step 9 audit CERTIFY-WITH-RESIDUALS, step 10 OWNER ACCEPTED
 
@@ -1145,7 +1174,8 @@ unmerged `item7-rebuild` line and ship with it; the branch gate runs once, at ph
 **B. Resume ELABORATE-FIRST Item 7 (cutover recovery steps 4–10) — ✅ DONE 2026-08-14.**
 Steps 4–10 all executed; **[OWNER 2026-08-14] ACCEPTED** the final candidate at Gate 3
 (plan.md "Gate 3 — final acceptance" + "Narrow-correction step 10 completion"; audit
-CERTIFY-WITH-RESIDUALS, 0 blocking). Item close/archive not yet run — owner-directed. The
+CERTIFY-WITH-RESIDUALS, 0 blocking). Item closed and archived 2026-08-14, owner-authorized
+(`completed/20260814_cutover-recovery/` + `20260814_elaborator-cutover/`). The
 original sub-list, kept for the record:
 1. Revise the step-4 brief per the pause record (its zero-input-report instruction and
    REQ-CL-03/04 closures are superseded by the landed contract) and discharge the epic's
@@ -1167,7 +1197,8 @@ against what CONSTRAINT-SEMANTICS already delivered first** — Items 1/7 landed
 guidance obligations; don't re-do them.
 
 **D. The PR wave (the answer to "PR into what").** One coordinated branch-level shipment,
-July-wave pattern, after step 10's owner acceptance:
+July-wave pattern, after step 10's owner acceptance. **IN PROGRESS 2026-08-14: Item 7 closed,
+pre_pr checks green in all three repos (see top block); merges remain owner-run.**
 1. Owner runs `pre_pr` once per repo over the whole branch line (ship-together rule).
 2. Merge order enforced by pins: **agentic-mbse first** (`agentic-mbse-item7-rebuild` → its
    main; `test_upstream_pins` compares codegen against the installed companion), then

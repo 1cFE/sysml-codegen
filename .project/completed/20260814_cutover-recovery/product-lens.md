@@ -51,3 +51,44 @@ Fired smells:
 All five smells escalate unresolved into the audit's Product Judgment.
 
 Gate: BLOCKED (audit-F1, audit-F2)
+
+## close — 2026-08-14 — rev ec9dab7
+
+Epic: ELABORATE-FIRST
+
+Resolution by citation of every finding in the 2026-08-11 audit block, recorded at
+owner-authorized close (phase-D PR prep). The 2026-08-11 block assessed the pre-REVISE
+candidate; the owner dispositioned that candidate REVISE the same day
+(`owner-disposition-20260811.md`), the prescribed corrections were executed as
+narrow-correction steps 1–10, the step-9 independent audit certified the result
+(`evidence/audit-9-final.md`, CERTIFY-WITH-RESIDUALS, 0 blocking), and the owner accepted
+at step 10 (`plan.md` "Gate 3 — final acceptance", [OWNER 2026-08-14]).
+
+- Resolves: audit-F1: FIXED — the same-named-outer-feature exemption is deleted from
+  companion validation; every true self-binding is an unconditional ERROR per D-4.
+  Evidence at the shipping tree (agentic-mbse `6372ef7`):
+  `src/agentic_mbse/validation/level2_structure.py` (docstring records the removal) and
+  `tests/test_validation/test_item12_checks.py` — the `self_named_trap`,
+  `self_named_rescue`, and message-wording tests pin all three formerly-exempt shapes,
+  citing D-4 [OWNER-VERBATIM 2026-08-05]. Re-verified green this session (1831 passed).
+- Resolves: audit-F2: FIXED — the retirement steps (2026-08-12, codegen `19072ad` /
+  `82c7951` / `882fc8d` / `3071fba`) deleted the legacy builders, the v5 route, and the
+  CLI-shaped test shim; absence is pinned by
+  `tests/conformance/test_public_authority_switch.py` and
+  `tests/unit/test_elaboration_import_boundaries.py`. The exact route is the only
+  authority (CLAUDE.md "Retired" section).
+- Resolves: audit-F3: FIXED — public live and relocated off-default mutation evidence
+  landed via the REVISE path's all-route mutation tests and step 4's gain=100 three-route
+  proof (`test_fusion_tea_mutation_teax.py`, exact three-port consumer set, verdict-flip
+  leg), re-run in the steps 7–8 batteries (three consecutive runs, 51/51 fields
+  identical).
+- Resolves: audit-F4: FIXED — step 5 (`a4669af`) made the live route render the portable
+  `root-N/` referent; live and snapshot generation are byte-identical; invariant 35
+  amended, invariant 34 true as written; the step-9 audit's portable-provenance subject
+  verified it.
+
+All five fired smells from the 2026-08-11 block dissolve with F1/F2: the duplicate
+representations, the exemption, and the retained v5/legacy route no longer exist in the
+tree, and no test selects among duplicates.
+
+Gate: CLEAR
