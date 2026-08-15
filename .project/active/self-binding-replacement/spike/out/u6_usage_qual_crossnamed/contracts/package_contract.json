@@ -1,0 +1,35 @@
+{
+  "artifact_hashes": {
+    "IMPLEMENTATION_BACKLOG.md": "5c5b2a40e5e2521a8800d78fb9e50809c5e645d8433a3de85d3620f1235627a7",
+    "__init__.py": "29ceb0495fef67bf524060f74805e4d2d12bb5b2bd28e309f6edf2ca1b80002f",
+    "contracts/generation_manifest.json": "6ced7db50333f8e79e2049e51e20f2cd88ca29e6d027426b8d81037f25ca1403",
+    "contracts/model_contract.json": "1051d1a475eaf32748e46338d2a7e8bdec16f206e3c5d72cba95e69b28c15630",
+    "contracts/verify.py": "ad0a855af17d18af5f3e8c36b1a6c500f492d88ec777b40f307c646306c67284",
+    "handwritten/__init__.py": "fdb87b916dfcceb58c446d8769dc3583722ec7cbc0206ceec05ecd830cbe440c",
+    "handwritten/u6usagequalcrossnamed/__init__.py": "200b1c90d646c8c58c2644945ee551dddc12adcfdab30b7ae4197891284a70c8",
+    "handwritten/u6usagequalcrossnamed/areacalculation_impl.py": "6952f7826600b8feced2bc7af40a57b1a9c97f7e9198ee6f44f5684cdcd5b6bd",
+    "inputs/__init__.py": "fdb87b916dfcceb58c446d8769dc3583722ec7cbc0206ceec05ecd830cbe440c",
+    "inputs/u6_usage_qual_crossnamed_params.json": "89ba10469dff59778ccf0fd19a25fc06e4fc6c1d101894caa4804145eb18f655",
+    "modules/__init__.py": "fdb87b916dfcceb58c446d8769dc3583722ec7cbc0206ceec05ecd830cbe440c",
+    "modules/u6usagequalcrossnamed/__init__.py": "0fc3fea2d8e92bff93b86e656a302cf2800727bd2c3f9ff8d264930dcc73c8e1",
+    "modules/u6usagequalcrossnamed/areacalculation.py": "4d3552aa2511e73070c60c27ed622128fd2670aae36c3db003fbaf18da8be4be",
+    "pipelines/__init__.py": "fdb87b916dfcceb58c446d8769dc3583722ec7cbc0206ceec05ecd830cbe440c",
+    "pipelines/pipeline.yaml": "3a74bdace09b41aafb2a9639e14d9c6dfe761cf2326a1c913640bcb8bd1ad0ed",
+    "primitives.py": "1bc6be58e5290b102d762227c33f138ecc4f9feaa00fa2f4cfd02f87f5f71998",
+    "schemas/__init__.py": "fdb87b916dfcceb58c446d8769dc3583722ec7cbc0206ceec05ecd830cbe440c",
+    "schemas/u6_usage_qual_crossnamed_params.py": "12a49dfc39cacceb12d1399ff42bce8bdb2e0f8a4f8340bf080e830265d7e01c",
+    "tests/__init__.py": "fdb87b916dfcceb58c446d8769dc3583722ec7cbc0206ceec05ecd830cbe440c",
+    "tests/test_implementations_runnable.py": "aec7e6eb1977695d3da3a730965c473f5f3cbc7606ec8fc2521da2c433e2a144"
+  },
+  "coverage_policy": {
+    "exclude_globs": [
+      "contracts/package_contract.json",
+      "**/__pycache__/**"
+    ],
+    "runtime_output_globs": []
+  },
+  "executable_fingerprint": "214b9998f487d2949168a43320332c88a9532da1ca0d9fee86d11942a8d9d229",
+  "generator_version": "0.1.0",
+  "package_name": "spike_pkg",
+  "runtime_contract_version": "2.0.0"
+}

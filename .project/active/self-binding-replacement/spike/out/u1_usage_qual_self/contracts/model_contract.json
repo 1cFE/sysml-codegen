@@ -1,0 +1,29 @@
+{
+  "catalog_schema_version": "3.0.0",
+  "constraint_catalog": null,
+  "evaluation_semantics": "kleene-three-valued",
+  "outputs": [
+    {
+      "channel_name": "U1UsageQualSelf__component__area_calc__area",
+      "field_name": "root",
+      "python_type": "float"
+    }
+  ],
+  "parameters": [
+    {
+      "default_value": 3.0,
+      "entry_type": "design_attribute",
+      "param_group": "u1_usage_qual_self_params",
+      "python_type": "float",
+      "qualified_name": "U1UsageQualSelf__component__length"
+    },
+    {
+      "default_value": 4.0,
+      "entry_type": "design_attribute",
+      "param_group": "u1_usage_qual_self_params",
+      "python_type": "float",
+      "qualified_name": "U1UsageQualSelf__component__width"
+    }
+  ],
+  "semantic_fingerprint": "273ce5c21428ba0a54dd395935c407a6bd530cd1f4c1dea04f8a15446181a03f"
+}

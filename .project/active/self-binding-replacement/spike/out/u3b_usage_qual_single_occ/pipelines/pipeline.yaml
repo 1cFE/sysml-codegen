@@ -1,0 +1,31 @@
+# Generated Pipeline Configuration for spike_pkg
+#
+# Auto-generated from SysML calc def dependency analysis
+# DO NOT EDIT - Regenerate using code generator
+
+metadata:
+  run_description: "Generated pipeline for spike_pkg"
+  output_folder: "spike_pkg_results"
+
+modules:
+  # Entry point - load inputs from JSON
+  entry_fusion:
+    module_type: EntryPoint
+    inputs:
+      u3_b_usage_qual_single_occ_params: U3BUsageQualSingleOccParams ../inputs/u3_b_usage_qual_single_occ_params.json
+
+
+  # u3busagequalsingleocc.AreaCalculationModule
+  u3busagequalsingleocc__plant__area_calc:
+    module_type: u3busagequalsingleocc.AreaCalculationModule
+    inputs:
+      length: float u3_b_usage_qual_single_occ_params.U3BUsageQualSingleOcc__plant__component_0__length
+    outputs:
+      root: RootModel[float] U3BUsageQualSingleOcc__plant__area_calc__area
+
+
+  # Exit point - capture all results
+  exit_point:
+    module_type: ExitPoint
+    outputs:
+      U3BUsageQualSingleOcc__plant__area_calc__area: RootModel[float] U3BUsageQualSingleOcc__plant__area_calc__area.json
