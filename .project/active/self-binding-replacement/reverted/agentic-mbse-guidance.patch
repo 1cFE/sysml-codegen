@@ -1,0 +1,123 @@
+From e082f7e478ebd618255bd5847c810e08c7c50044 Mon Sep 17 00:00:00 2001
+From: Reid W <westwood.reid@gmail.com>
+Date: Sat, 15 Aug 2026 09:09:04 -0700
+Subject: [PATCH] plant-idiom: state the two self-binding replacement forms and
+ their meanings
+
+The section said "write the binding so the two names differ" and offered two
+renaming spellings. Both are correct, but they mean the same thing, so the
+guidance never told an author which form to reach for or why a model with
+repeated subsystems would be refused.
+
+State the actual rule. The two replacement forms are owner-qualified
+(`'Probe Plant'::R`) and feature chain (`plant_a.R`), and they differ in
+which feature the reference lands on -- definition-level versus
+concrete-occurrence. That difference decides whether the model elaborates
+once a part def has more than one occurrence: the qualified form is refused
+with SI_OCCURRENCE_AMBIGUOUS, the chain names which occurrence. Bare
+renaming is kept as the smallest edit when the consumer sits inside the def.
+
+Anchored two ways. Spec: KerML 7.4.6.2 states the qualified-name versus
+feature-chain distinction directly, and SysML v2 Part 1 7.17.2 uses the
+qualified form to fix this same collision in its own normative example.
+Measured: all four forms run through the shipped exact route 2026-08-15
+against a common probe model, results tabulated in the doc -- in every case
+that elaborates, both consumers wire to ONE entry point carrying the
+occurrence's override.
+
+Also record why `:>>` does not work here, since it is the intuitive guess:
+after `redefines` the name resolves through the owning type's supertypes with
+the owner's own namespace excluded (KerML 8.2.3.5.1), so a calc usage cannot
+reach the enclosing part's attribute, and the redefined feature must be one
+otherwise inherited (KerML 7.3.4.5). Its proper job here is the occurrence
+override the idiom already uses.
+
+One rationale is explicitly ruled out: redefinition does NOT fan a modelled
+value into per-consumer copies. KerML makes the redefining feature's values
+be the redefined feature's values over its domain, so that argument is not
+citable and is not used.
+
+Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>
+---
+ docs/patterns/plant-idiom.md | 65 ++++++++++++++++++++++++++++++++----
+ 1 file changed, 59 insertions(+), 6 deletions(-)
+
+diff --git a/docs/patterns/plant-idiom.md b/docs/patterns/plant-idiom.md
+index d4ba50c..94281b5 100644
+--- a/docs/patterns/plant-idiom.md
++++ b/docs/patterns/plant-idiom.md
+@@ -54,12 +54,65 @@ The check used to exempt a binding whose owner carried a same-named feature, and
+ section used to call that exemption a supported idiom. Both were wrong: the validator
+ stayed silent on a shape the generator refuses.
+ 
+-Write the binding so the two names differ. Two forms are in the accepted corpus:
+-
+-- suffix the parameter — `in radius_in = radius`, as `fusion_tea` does throughout;
+-- give the attribute the qualifying name — `in length = plant_length`, as `wi014_toy` does.
+-
+-For a value that lives on another part, name the path: `in driver_cost = driver.cost`.
++### What to write instead
++
++Two forms replace a self-binding, and **they do not mean the same thing.** The difference is
++which feature the reference lands on, and it decides whether the model elaborates at all once
++a part def has more than one occurrence.
++
++**Form 1 — owner-qualified: `in R = 'Probe Plant'::R`.** "The attribute as the *definition*
++declares it." The reference resolves statically to the def-level feature, so the occurrence has
++to be recovered from the consumer's context. **Only usable when exactly one occurrence of that
++part def is in the consumer's context.** With two, elaboration refuses:
++`SI_OCCURRENCE_AMBIGUOUS: consumer context contains 2 leaf occurrences`. It never guesses.
++
++**Form 2 — feature chain: `in R = plant_a.R`.** "The attribute on *this* occurrence." The path
++is part of the referent's identity, so the reference lands on the named occurrence and picks up
++whatever `:>>` override that occurrence carries. **This is the only form that can distinguish
++two occurrences of one part def**, and the only one that scales to a plant with repeated
++subsystems.
++
++KerML states the distinction directly (§7.4.6.2): "while the qualified name `axle::halfAxles`
++statically resolves to `Axle::halfAxles`, in the Feature chain `axle.halfAxles`, `halfAxles` is
++understood to be specifically the feature **as nested in** `axle`." SysML v2 Part 1 §7.17.2 uses
++the qualified form to fix this exact same-name collision in its own normative example.
++
++**A third option, when the collision is all you are fixing.** If the consumer sits *inside* the
++part def, just make the names differ and bind bare — `in radius_in = radius`, as `fusion_tea`
++does throughout, or `in length = plant_length`, as `wi014_toy` does. A calc nested in the def
++gets one instance per occurrence, so this scales to repeated subsystems without a chain. This is
++the smallest edit and the right default for in-place migration of a self-binding.
++
++**What does not work: `:>>` (redefinition).** Reassigning the parameter cannot reach the
++enclosing part's attribute. After `redefines`, the name is resolved through the *supertypes* of
++the owning type, with the owner's own namespace deliberately excluded (KerML §8.2.3.5.1), so
++inside a calc usage the search space is the calc definition — the enclosing part is unreachable.
++The redefined feature must also be one "that would otherwise be inherited from supertypes of its
++owning type" (KerML §7.3.4.5), which a sibling part attribute is not. Redefinition's proper job
++here is the one the plant idiom already uses: overriding an inherited *default* at an occurrence,
++`:>> R = 12.7`. (Writing it fully qualified as `:>> 'Probe Plant'::R` lands in genuine spec
++tension — the Subsetting prose requires the domains to conform and they do not, while the
++machine-checkable OCL only requires accessibility and would pass. Do not rely on it.)
++
++**Verified, not inferred.** All four forms were run through the shipped exact route on
++2026-08-15 against a common probe model (one attribute `R : Real default 3.0`, a concrete
++occurrence overriding `:>> R = 12.7`, two calc consumers):
++
++| written form | consumer sits | 2+ occurrences | outcome |
++|---|---|---|---|
++| `in R = R` | anywhere | — | refused, `SI_SELF_BINDING` |
++| `in r_in = R` | inside the part def | yes | one entry point per occurrence, override honored |
++| `in R = 'Probe Plant'::R` | outside the def | no | one entry point at the occurrence |
++| `in R = 'Probe Plant'::R` | outside the def | **yes** | refused, `SI_OCCURRENCE_AMBIGUOUS` |
++| `in R = plant_a.R` | outside the def | yes | one entry point per named occurrence |
++
++In every case that elaborates, both consumers wire to **one** entry point carrying the
++occurrence's `12.7` — not the definition's `3.0` default, and not a copy per consumer.
++
++One rationale to avoid, because it is not true: redefinition does **not** fan a modelled value
++out into per-consumer copies. KerML makes the redefining feature's values *be* the redefined
++feature's values over its domain. The reasons to avoid `:>>` here are the resolution and
++inheritance rules above, not copy semantics.
+ 
+ Reference: the agentic-mbse `item12` fixtures. `self_named_deadend` has no same-named
+ feature at all; `self_named_trap` (a literal attribute) and `self_named_rescue` (a
+-- 
+2.43.0
+

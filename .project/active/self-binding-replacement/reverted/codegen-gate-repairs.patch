@@ -1,0 +1,35 @@
+diff --git a/scripts/check_ledger_4a.py b/scripts/check_ledger_4a.py
+index 79d761d..0d119b4 100644
+--- a/scripts/check_ledger_4a.py
++++ b/scripts/check_ledger_4a.py
+@@ -96,7 +96,9 @@ CARRIED_ORIGINS = frozenset(
+ 
+ REPO_ROOTS = {
+     "sysml-codegen": REPO_ROOT,
+-    "agentic-mbse": REPO_ROOT.parent / "agentic-mbse-item7-rebuild",
++    # The agentic-mbse-item7-rebuild worktree was deleted at phase-D cleanup
++    # (2026-08-15); its content landed on the main checkout's `main`.
++    "agentic-mbse": REPO_ROOT.parent / "agentic-mbse",
+ }
+ 
+ 
+diff --git a/tests/execution/test_fusion_tea_real_teax.py b/tests/execution/test_fusion_tea_real_teax.py
+index 0a5859d..20b9c4c 100644
+--- a/tests/execution/test_fusion_tea_real_teax.py
++++ b/tests/execution/test_fusion_tea_real_teax.py
+@@ -106,9 +106,13 @@ def environment() -> dict[str, str]:
+         "sysml_codegen": str(Path(sysml_codegen.__file__).resolve()),
+         "agentic_mbse": str(Path(agentic_mbse.__file__).resolve()),
+     }
++    # Pin the imports to the checkouts under test, not a stray site-packages copy.
++    # Derived from this file's location rather than hardcoded: the item7-rebuild
++    # worktrees these once named were deleted at phase-D cleanup (2026-08-15).
++    repo_root = Path(__file__).resolve().parents[2]
+     assert "/teax/packages/teax-simkit/" in resolved["simkit"], resolved
+-    assert "-item7-rebuild/" in resolved["sysml_codegen"], resolved
+-    assert "-item7-rebuild/" in resolved["agentic_mbse"], resolved
++    assert resolved["sysml_codegen"].startswith(f"{repo_root}/"), resolved
++    assert "/agentic-mbse/" in resolved["agentic_mbse"], resolved
+     return resolved
+ 
+ 

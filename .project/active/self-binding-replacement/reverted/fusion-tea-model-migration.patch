@@ -1,0 +1,131 @@
+From 4a2e8982e15f7a65c701ec844b843f0bee2da0f8 Mon Sep 17 00:00:00 2001
+From: Reid W <westwood.reid@gmail.com>
+Date: Sat, 15 Aug 2026 09:08:09 -0700
+Subject: [PATCH] migrate 15 self-named bindings to qualified references
+
+The exact route refuses `in X = X` as SI_SELF_BINDING: the right-hand name
+resolves to the calc's own formal, so the plant attribute's value never
+reaches the calculation. Legal SysML, silently inert.
+
+Each of the 15 sites gains a qualifier on the right-hand side only; no calc
+def formal is renamed, so no generated schema field or entry-point key
+changes name:
+
+- ife_plant.sysml (10) + hif_driver.sysml (2): the declaring part def --
+  'IFE Power Plant'::attr, 'HIF Driver'::attr
+- hif_plant.sysml (3): the enclosing part usage -- hif_plant::attr
+
+Verified against sysml-codegen at 9ce5548 (licensed live extraction):
+
+- generates and seals with no diagnostic; snapshot capture succeeds
+- 23 entry points, 8 calc modules, 9 published channels
+- entry-point key set and every value are IDENTICAL to the ratified D-5
+  rename migration of the codegen fixture; the only delta is the 4
+  hif_driver_instance keys, the workaround this repo deleted in July
+- live and --from-snapshot packages are byte-identical
+
+The 9-channel count confirms what was previously only inferred from July's
+7->6 module delta on deleting hif_driver_instance.
+
+Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>
+---
+ models/designs/generic_ife/ife_plant.sysml | 20 ++++++++++----------
+ models/designs/hif_ife/hif_driver.sysml    |  4 ++--
+ models/designs/hif_ife/hif_plant.sysml     |  6 +++---
+ 3 files changed, 15 insertions(+), 15 deletions(-)
+
+diff --git a/models/designs/generic_ife/ife_plant.sysml b/models/designs/generic_ife/ife_plant.sysml
+index 5371e9bb..f5a603b4 100644
+--- a/models/designs/generic_ife/ife_plant.sysml
++++ b/models/designs/generic_ife/ife_plant.sysml
+@@ -111,19 +111,19 @@ package ife_plant {
+             **Basis**: Hawker 2020 parameter-to-subsystem mapping
+             */
+ 
+-            in availability = availability;
++            in availability = 'IFE Power Plant'::availability;
+             in blanket_energy_multiple = chamber.blanket_energy_multiple;
+-            in discount_rate = discount_rate;
++            in discount_rate = 'IFE Power Plant'::discount_rate;
+             in driver_cost_constant = driver.cost_per_joule;
+             in driver_efficiency = driver.efficiency;
+             in driver_energy = driver.energy;
+             in driver_lifetime_shots = driver.lifetime_shots;
+-            in frequency = frequency;
+-            in gain = gain;
+-            in om_cost_constant = om_cost_constant;
+-            in plant_cost_constant = plant_cost_constant;
++            in frequency = 'IFE Power Plant'::frequency;
++            in gain = 'IFE Power Plant'::gain;
++            in om_cost_constant = 'IFE Power Plant'::om_cost_constant;
++            in plant_cost_constant = 'IFE Power Plant'::plant_cost_constant;
+             in target_cost_constant = target_factory.cost_per_target;
+-            in thermal_efficiency = thermal_efficiency;
++            in thermal_efficiency = 'IFE Power Plant'::thermal_efficiency;
+             in yield_cost_constant = chamber.yield_cost_constant;
+         }
+ 
+@@ -143,9 +143,9 @@ package ife_plant {
+             */
+ 
+             in eta = driver.efficiency;
+-            in gain = gain;
++            in gain = 'IFE Power Plant'::gain;
+             in blanket_multiplier = chamber.blanket_energy_multiple;
+-            in thermal_efficiency = thermal_efficiency;
++            in thermal_efficiency = 'IFE Power Plant'::thermal_efficiency;
+         }
+ 
+         attribute recirculating_fraction : Real = recirc_calc.f_recirc;
+@@ -165,7 +165,7 @@ package ife_plant {
+             */
+ 
+             in eta = driver.efficiency;
+-            in gain = gain;
++            in gain = 'IFE Power Plant'::gain;
+         }
+     }
+ }
+diff --git a/models/designs/hif_ife/hif_driver.sysml b/models/designs/hif_ife/hif_driver.sysml
+index dc9c82e6..c891ca5d 100644
+--- a/models/designs/hif_ife/hif_driver.sysml
++++ b/models/designs/hif_ife/hif_driver.sysml
+@@ -70,9 +70,9 @@ package hif_driver {
+             **Basis**: Meier 1986 parametric driver cost formula
+             */
+ 
+-            in beam_energy_mj = beam_energy_mj;
++            in beam_energy_mj = 'HIF Driver'::beam_energy_mj;
+             in driver_efficiency = efficiency;
+-            in num_chambers = num_chambers;
++            in num_chambers = 'HIF Driver'::num_chambers;
+             in rep_rate = pulse_rate_ref;
+         }
+ 
+diff --git a/models/designs/hif_ife/hif_plant.sysml b/models/designs/hif_ife/hif_plant.sysml
+index ac6bfa27..9cb5372a 100644
+--- a/models/designs/hif_ife/hif_plant.sysml
++++ b/models/designs/hif_ife/hif_plant.sysml
+@@ -183,7 +183,7 @@ package hif_plant_pkg {
+             **Basis**: Meier 1986 reactor cost scaling
+             */
+ 
+-            in thermal_power_gw = thermal_power_gw;
++            in thermal_power_gw = hif_plant::thermal_power_gw;
+             in num_units = 1.0;
+         }
+ 
+@@ -212,8 +212,8 @@ package hif_plant_pkg {
+             */
+ 
+             in total_capital_billions = meier_capital_calc.total_capital_billions;
+-            in availability = availability;
+-            in net_electric_power_gw = net_electric_power_gw;
++            in availability = hif_plant::availability;
++            in net_electric_power_gw = hif_plant::net_electric_power_gw;
+         }
+ 
+         // === Exposed cost outputs ===
+-- 
+2.43.0
+

@@ -68,8 +68,14 @@ unsupported authored form fails loudly before generation.
   architecture must use them then, not reconstruct them later.
 - **[OWNER]** (2026-08-07) Snapshots are a serialization-format choice; the format is whatever
   representation the pipeline actually needs — here, the instance graph.
-- **[OWNER-VERBATIM]** "we MUST document allowable patterns in our `agentic-mbse` docs as
-  well…" (2026-08-05.) Item 8 keeps this obligation.
+- **[OWNER-VERBATIM]** (2026-08-15, restating and superseding the 2026-08-05 wording, which
+  the owner ruled was taken out of context) "all I care about is: We know what the RIGHT
+  pattern(s) are for the given situation / We document those right patterns / We fix the models
+  to use the right patterns. `in R = R` is the wrong pattern. I would like to detect the use of
+  it so we avoid it in the future. that's it, that's all I care about."
+  Item 8 keeps this obligation. The earlier 2026-08-05 quote ("we MUST document allowable
+  patterns in our `agentic-mbse` docs as well…") is the same obligation in its original wording;
+  it carries no count of replacement forms.
 
 ---
 
@@ -494,9 +500,15 @@ corrected architecture.
    family with public mutation evidence; contradictory acceptance claims corrected; README and
    architecture references (docs 11/12/13/16/24/25 rewritten or retired to match the new front
    end) state the library's purpose plainly.
-4. **[OWNER-VERBATIM obligation]** publish the allowable-modeling-pattern guidance in
-   `agentic-mbse` docs, including the `in R = R` diagnostic and its two valid replacement
-   forms with their distinct meanings.
+4. **[OWNER-VERBATIM obligation]** (restated by the owner 2026-08-15) establish which authoring
+   pattern is the right one for each situation, document those patterns in `agentic-mbse` docs,
+   and fix the models to use them. `in R = R` is the wrong pattern and its use is detected.
+   *Provenance correction 2026-08-15:* this sub-item previously read "publish the
+   allowable-modeling-pattern guidance … including the `in R = R` diagnostic and its **two**
+   valid replacement forms with their distinct meanings." No owner utterance enumerating two
+   forms exists; the count was agent-authored under an owner-verbatim stamp, and the owner ruled
+   the 2026-08-05 wording it derived from was taken out of context. Nothing downstream should
+   treat a form count as owner-given.
 5. One composed model→package→study proof thread as the epic's closing evidence.
 
 **Success Criteria**:
