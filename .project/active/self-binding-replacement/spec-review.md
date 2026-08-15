@@ -355,7 +355,7 @@ own recorded evidence.
     three lines plus detection. Indexed expressions and definition/redefinition teaching are not
     required by it.
   - **Owner asked for the epic to be updated; done 2026-08-15.** Both
-    `epic_elaborate_first_architecture.md:70-77` (source-documents quote) and `:495-503`
+    `epic_elaborate_first_architecture.md:71-78` (source-documents quote) and `:503-511`
     (scope sub-item 4) now carry the restated obligation with a provenance-correction note.
 
 - **[L1-3] — moot, withdrawn.** Whether CONSTRAINT-SEMANTICS Item 7 partially discharged the old
@@ -465,7 +465,7 @@ review's Resolutions section. The substantive rewrites it must make:
 Then a fresh product-lens run to clear the rev-1 `BLOCKED` gate, and `/_my_design`.
 
 **Upstream edits made during this review** (owner-directed, outside the spec):
-`.project/backlog/epic_elaborate_first_architecture.md` — the source-documents quote (`:70-77`) and
-scope sub-item 4 (`:495-503`) now carry the owner's 2026-08-15 restatement with a provenance
+`.project/backlog/epic_elaborate_first_architecture.md` — the source-documents quote (`:71-78`) and
+scope sub-item 4 (`:503-511`) now carry the owner's 2026-08-15 restatement with a provenance
 correction, per `[OWNER-VERBATIM]` "please update the epic as this continues to cause confusion."
 This reviewer did not edit `spec.md`.

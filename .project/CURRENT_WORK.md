@@ -1,18 +1,22 @@
 # Current Work
 
-**Last Updated**: 2026-08-14 (**PHASE D COMPLETE — the three-repo merge wave landed and is
-smoked.** Squash merges in the pin-enforced order: agentic-mbse#12 → `main` `1decd95`;
-codegen#10 → `main` `385e163` (the Item-7 cutover + the whole CONSTRAINT-SEMANTICS epic + the
-two contained 20260724 branches); teax#4 → `main` `744745f`. Each main tree verified
-byte-identical to its acceptance branch tip (empty diff). Post-merge licensed smoke on merged
-codegen `main`: **2086/34/88, zero license-skip lines** — the battery shape reproduced.
-Cleanup done: `elaborate-first-salvage` label deleted (content on main by tree identity), all
-three checkouts returned to `main` and pulled, the `sysml-conventions` symlink restored to the
-main agentic checkout (this commit). Remaining: delete the two item7-rebuild worktrees and
-`/home/reid/1cfe/item7-rebuild-venv` (owner timing; the venv's editable installs point at the
-worktrees, so develop from the main checkouts after deletion), and the CHANGELOG Item-7
-"Lessons Learned" TODO. Next: roadmap §C — ELABORATE-FIRST Item 8, starting with the mandated
-scope scrub.)
+**Last Updated**: 2026-08-15 (**PHASE D FULLY CLOSED; Item 8 sequencing decided.** The
+three-repo merge wave landed and is smoked — squash merges in the pin-enforced order:
+agentic-mbse#12 → `main` `1decd95`; codegen#10 → `main` `385e163` (the Item-7 cutover + the whole
+CONSTRAINT-SEMANTICS epic + the two contained 20260724 branches); teax#4 → `main` `744745f`. Each
+main tree verified byte-identical to its acceptance branch tip. Post-merge licensed smoke on
+merged codegen `main`: **2086/34/88, zero license-skip lines**. The CHANGELOG Item-7 "Lessons
+Learned" TODO is filled (#12). **Cleanup is now complete**: both item7-rebuild worktrees, both
+`item7-rebuild` branches, and `/home/reid/1cfe/item7-rebuild-venv` are deleted, and the CLAUDE.md
+`uv` route is verified as the working route from the main checkouts (licensed conformance
+1224/34, zero license-skip lines) — the old "never `uv run`" warning is dead. **Next**: roadmap
+§C ELABORATE-FIRST Item 8 in owner-decided order **A → B** — the bounded scope scrub first (its
+written scope is verified stale two ways), then fusion-tea whole-plant regeneration. See the
+2026-08-15 Active Work entry. Held for an owner call: merged remote-branch deletion. **The `in R = R` guidance
+obligation question is CLOSED as superseded** — `[OWNER 2026-08-15]` restated the obligation from
+scratch (know the right patterns / document them / fix the models / detect the wrong one), ruled the
+old epic wording out of context, and directed the epic be amended; so whether an earlier docs pass
+partly discharged the old wording no longer matters. Epic amended at `:71-78` and `:503-511`.)
 
 ---
 
@@ -65,6 +69,197 @@ rather than invented; vehicle `[CONSTRAINT-GATES-UNTAGGED]` in `BACKLOG.md`.
 ---
 
 ## Active Work
+
+### 2026-08-15: dead-worktree-pins — AUDIT NEEDS WORK (4/5 criteria verified)
+
+Residue of the phase-D cleanup, not an epic item. Both gates the cleanup broke are repaired at the
+working tree (uncommitted): the execution-lane `environment` fixture now pins anchor-derived main
+checkouts via a pure predicate (`tests/execution/environment_pins.py`, negative checks kept in the
+default suite), and `check_ledger_4a.py` points its companion root at `../agentic-mbse` and
+abstains with exit 2 when a configured checkout is missing. Verified: execution lane **88 passed,
+0 errors** from the main checkouts (first main-checkout reproduction); `paths` gives
+`304 rows checked, 0 problems` with the two agentic rows (L-036/L-037) genuinely parsed. Product
+judgment is CLEAR, but certification is held because the kept companion falsification test uses
+synthetic row L-926 rather than required row L-036 or L-037. Add that exact regression and correct
+the stale “rebuild repo” docstring, then re-audit. Spec: `.project/active/dead-worktree-pins/spec.md`;
+audit: `audit.md`. `spec-F7` (durable home for the deferred coverage-split idea) is still owed its
+recorded disposition at close.
+
+**⚠ Surfaced while verifying, unowned:** the full default suite (licensed, project `.venv`) shows
+**17 pre-existing ordering-dependent failures at clean HEAD `9ce5548`** — byte-identical failure
+set with and without this item's changes; every affected file passes when run alone
+(`tests/unit/test_report_precedence.py` 12, `tests/runtime/test_fusion_tea_acceptance.py` 4,
+`tests/conformance/test_output_schema_contract.py` 1). The phase-D `2086`-green figure does not
+reproduce as a full-suite run in this venv even at HEAD. Out of this item's scope (Non-Goals: no
+re-certification); needs an owner.
+
+### 2026-08-15: self-binding-replacement — SPEC REVISED; product lens CLEAR; awaiting approval
+
+ELABORATE-FIRST Item 8, covering epic scope sub-item 4 and the model-migration half of sub-item 1.
+Spec rev 3: `.project/active/self-binding-replacement/spec.md`; review: `spec-review.md` (final
+Revise verdict incorporated); product lens: `product-lens.md` (`Gate: CLEAR`, with prior
+`spec-F1`–`spec-F6` explicitly resolved). Awaiting owner approval, then the bounded stocktake
+research and design.
+
+**Six owner rulings from the review, all `[OWNER 2026-08-15]`:**
+
+1. **Narrow the Item-8 stocktake**, don't run it first. The spec makes only the two stocktake calls
+   it depends on; **the full stocktake runs as a research report after the spec is approved** and
+   checks those rows. The A → B ordering is satisfied in a cheaper form, not overridden.
+2. **The `[OWNER-VERBATIM]` guidance obligation is restated from scratch** and the old epic wording
+   ruled out of context: *know the right pattern(s) for the situation / document them / fix the
+   models to use them; `in R = R` is the wrong pattern and its use is detected.* The "two valid
+   replacement forms" count was **agent-authored under an owner-verbatim stamp** — no owner
+   utterance enumerating two exists. **Epic amended at owner instruction** (`:71-78`, `:503-511`),
+   both sites carrying a provenance-correction note.
+3. **The replacement rule is situational, not one winner.** Attribute on the owning part → make the
+   names differ (the 2026-08-05 ratified form; the codegen fixture already uses it, so model and
+   fixture stay the same shape). Value on another part → name the path. Qualifying by owner name
+   works but is only safe while that definition has exactly one instance — the guidance says so
+   plainly. This is why the reverted work's owner-qualified choice is not restored.
+4. **The guidance must reach the agentic-mbse *agents*, not just the docs.** Verified gap:
+   `claude/skills/sysml-conventions/SKILL.md` carries binding guidance and says nothing about
+   self-named bindings; no file under `claude/` or `.claude/` mentions `in R = R`. The Item-7
+   residual A-1 two-copies trap applies (`claude/` 10 skills vs `.claude/` 4; the skill exists only
+   in `claude/`).
+5. **The entry-point-key criterion is dropped** ("I don't care about this criterion"). The
+   mutation-reaches-every-and-only-its-consumers criterion is the real check.
+6. **Stellarator: triage only** — one pipeline run, record what breaks, fix nothing, July hold not
+   reversed. Sizing measured: of its 114 self-bindings, **15 are the fusion-tea files copied in**;
+   its own work is **99 sites in two files** (`generic_mfe/mfe_plant.sysml` ×94 incl. the literal
+   `in R = R` at `:117`, `stellarator_09/stellarator_plant.sysml` ×5).
+
+**Process note `[OWNER 2026-08-15]`: implementation ran before the spec existed, and was REVERTED IN
+FULL at owner instruction.** The guidance rewrite (`agentic-mbse` `e082f7e`), the 15-site fusion-tea
+migration (`4a2e8982`), and two uncommitted codegen gate repairs were all made, then reverted; both
+branches are deleted and both repos are clean. Nothing was ever pushed or merged. The three diffs are
+preserved as patches under `.project/active/self-binding-replacement/reverted/`, and the full
+rationale is in that spec's Change Record. Measurements taken by the reverted work are **evidence to
+review, not settled fact** — the spec marks which `[HARD]` rows need re-establishing.
+
+**Follow-up from the revert, now owned:** the two dead path pins restored by that revert were filed
+as `dead-worktree-pins` and repaired in the working tree. Its current audit state is recorded in the
+Active Work entry above; no part belongs to `self-binding-replacement`.
+
+### 2026-08-15: Item 8 sequencing — OWNER DECISION: scope scrub first, then fusion-tea regeneration
+
+**`[OWNER 2026-08-15]` Order is A → B**: run the mandated Item-8 scope scrub first, then put
+fusion-tea whole-plant regeneration at the front of the test half. Two options were declined:
+straight-to-regeneration (B first) and the clean-up sweep (C first).
+
+**Why the scrub is load-bearing, not ceremony** — Item 8's written scope was verified stale in
+two ways this session, so it cannot be executed against its own text:
+
+1. **The doc-repair list conflicts.** Epic §C item 3 names docs **11/12/13/16/24/25**; CLAUDE.md's
+   retiring banner names **03/04/05/07/10/11/12/13/17/24/25/28**. Twelve versus six, **five overlap**
+   (11, 12, 13, 24, 25) — an earlier revision of this line said four, which was wrong.
+   Reconciling them is scrub output.
+2. **Epic §C item 4 is an `[OWNER-VERBATIM]` obligation**, restated from scratch by the owner on
+   2026-08-15: know the right pattern(s) for the situation, document them, fix the models to use
+   them, and detect the wrong `in R = R` form. It carries **no count of replacement forms** — the
+   former "two valid replacement forms" wording was agent-authored under an owner-verbatim stamp
+   and is retracted at the source (`epic_elaborate_first_architecture.md:503-511`). The question of
+   whether an earlier docs pass discharged the old wording is **closed as superseded** by the same
+   restatement (see `:15-19` above); it is not an open owner question.
+
+**Scrub bounds `[OWNER 2026-08-15]`**: one scope table (each §C sub-item vs what Items 1/7 already
+delivered) plus the reconciled doc list. **Zero repairs performed**, ~half a day. Fold in the
+missing `.project/scripts/adr.sh` / `product.sh` (promise + ADR filing broken until the pack
+re-inits) since the scrub's output wants filing. The table splits Item 8 into "test now" and
+"repair later" halves.
+
+**Then B**: fusion-tea whole-plant regeneration on the exact route. **Two carried premises for B
+were falsified 2026-08-15 — do not plan against them:**
+
+- ❌ "stopped at 10 unresolved cross-part bindings" — **the 10 were resolved 2026-07-06** by
+  PIPELINE-TRUTH Item 2's supplied-value materializer, verified by toggling it
+  (`.project/active/whole-plant-resolution/audit.md:12-45`); the BACKLOG row is closed as
+  superseded (`BACKLOG.md:953-958`). The exact route resolves them *by construction* — the
+  materializer was deleted in retirement step 2 (`82c7951`) because supplied values are a
+  legacy-resolver concept (ledger L-014); the mechanism is now a typed `NodeRef` edge onto the
+  modelled `AttrNode` (`elaboration/project.py:436-470`).
+- ❌ "has never been regenerated since" — **the whole plant WAS regenerated on the exact route
+  2026-08-11**, cutover-recovery Slice 3D: loaded, elaborated, projected, generated, sealed,
+  verified by TEAx's own loader, discovered through the public SimKit registry builder, executed by
+  `simkit.core.pipeline.execute_pipeline`. 11 channels, LCOE `270.1211779380445`, live and
+  relocated legs equal, mutation every-and-only proved on two axes
+  (`.project/completed/20260814_cutover-recovery/plan.md:1944-2100`).
+
+**So B is not a codegen question — it is a customer-repo model migration**, and nobody had recorded
+it as such. The whole divergence between the codegen fixture and `/home/reid/1cfe/fusion-tea/models/`
+is two things (9 of 11 files are byte-identical after stripping the authorized `_in` suffixes):
+
+1. **15 self-named bindings still in the customer repo** — verified 2026-08-15 by direct count
+   (`grep -rnP '\bin (\w+) *= *\1\s*;'`; the codegen fixture is at **0**, which is F19 discharged).
+   The exact route refuses these as `SI_SELF_BINDING`. Sites: `designs/generic_ife/ife_plant.sysml`
+   ×10, `designs/hif_ife/hif_driver.sysml` ×2, `designs/hif_ife/hif_plant.sysml` ×3. Recipe is
+   mechanized and self-checking: `scripts/make_d5_variant.py` (proof is a strip check, so a stray
+   reformat cannot hide). **Editing the customer's model needs an owner ruling.**
+2. **`hif_driver_instance`** — present in the codegen fixture
+   (`tests/fixtures/fusion_tea/designs/hif_ife/hif_driver.sysml:100`), **deleted from the customer
+   repo** in July as workaround R-2. ⚠ **The Slice-3D proof depends on the workaround being
+   present**: two of its 11 pinned channels are `hif_driver__hif_driver_instance__meier_cost__*`
+   (`tests/execution/test_fusion_tea_real_teax.py:56-68`). So the certified evidence is of the
+   **pre-retirement** shape; the workaround-free shape the customer actually has is **unproven on
+   this route**. Expected 9 channels (July's legacy run went 7 modules → 6 on deletion) — inference,
+   not evidence. One capture run answers it. Needs an owner call: regenerate workaround-free and
+   re-anchor the pin to 9, or restore the instance and contradict R-2.
+
+**Branch question resolved**: `item8-fusion-embedded-catalog` is **fusion-tea's own** item numbering
+(its CONSTRAINT-EXEC epic, commits all 2026-07-20), **not** codegen ELABORATE-FIRST Item 8 — so it is
+not already-started Item 8 work. It is 6 ahead / 0 behind `main`, already did the TEAx-compat half of
+scope item 1 (stock multi-channel bridge, wrappers deleted, per-definition predicate API), and
+inherits the workaround-free model from `main` (PR #101, `91d03a7f`). **It is the right base.** Its
+working tree is dirty (modified `uv.lock` + ~20 untracked dirs) — clean or stash first.
+
+**Split the Stellarator out of scope item 1** `[recommended 2026-08-15]`: the model lives at
+`/home/reid/1cfe/fusion-tea-stellarator-mbse-demo` (branch `feat/stellarator-mbse-demo`) and carries
+**114 self-named bindings** (verified by the same count), including a literal `in R = R` at
+`models/designs/generic_mfe/mfe_plant.sysml:117`. That is ~99 renames beyond the IFE 15, on a model
+never elaborated on the exact route. It does not belong in the same item as fusion-tea.
+
+`SI_RENDERING_COLLISION` (the Item-10 cross-part blocker) **does not apply to the IFE plant** — grep
+for `sum(`/`collect`/`reduce` over the customer models returns zero hits, and the model demonstrably
+captures at HEAD.
+
+**Environment and cleanup, both closed this session:**
+
+- **The two item7-rebuild worktrees, both `item7-rebuild` branches, and
+  `/home/reid/1cfe/item7-rebuild-venv` are deleted.** Containment re-verified before deletion:
+  agentic's `main`-vs-tip diff empty; codegen's diff was three files with **`main` ahead** (the
+  restored symlink + the filled CHANGELOG TODO), nothing branch-only. `branch -D` was required —
+  squash merges hide ancestry. Left alone deliberately: the `wi029-pin` and `/tmp/*` detached
+  pins, `item7-recovery-archive`, and codegen's `source-identity-epic` label.
+- **The CLAUDE.md `uv` route is now the proven route** — the old "never `uv run`" warning is
+  dead, it existed only because `../agentic-mbse` was parked behind. Verified: `uv pip install -e
+  ../agentic-mbse` then both imports resolve into the **main** checkouts (no worktree paths), and
+  licensed `tests/conformance` gives **1224 passed / 34 skipped, zero license-skip lines** (all 34
+  skips the benign "no computed attributes in the golden" family). The `sysml-conventions` symlink
+  resolves into the main agentic checkout.
+- **The `uv` route does NOT cover the execution lane** — that lane needs teax-simkit's own deps
+  (`pandas`), which this project's `.venv` does not carry, exactly as the marker at
+  `pyproject.toml:50` says. The lane is excluded from the default run, so it must be selected
+  explicitly (`pytest -m execution`, or override `-m` entirely — `pyproject.toml:44-50`). The
+  working invocation, verified 2026-08-15:
+
+  ```bash
+  set -a; source /home/reid/1cfe/agentic-mbse/.env; set +a
+  PYTHONPATH=/home/reid/1cfe/teax/packages/teax-simkit:/home/reid/1cfe/sysml-codegen/src \
+    /home/reid/1cfe/agentic-mbse/.venv/bin/python -m pytest tests/execution -m execution -q
+  ```
+
+  ⚠ **CORRECTED 2026-08-15 — an earlier version of this block claimed both worktree-pin defects
+  were "repaired" and reported `88 passed` plus a re-verified `304 rows / 0 problems`. That was
+  written before the repairs were REVERTED at owner instruction, and was left stale for part of the
+  session.** At HEAD `9ce5548` **both defects are live**: the lane gives **76 passed, 12 errors**
+  (the `environment` fixture still asserts `-item7-rebuild/`), and `check_ledger_4a.py paths` still
+  prints `304 rows checked, 0 problems` while its companion root is absent — so the
+  `repo: agentic-mbse` rows pass by absence rather than by verification. The `88 passed` figure was
+  only ever reached **with** the reverted repair applied; do not cite it as a HEAD result. Both
+  defects are specified in `.project/active/dead-worktree-pins/spec.md`.
+- **Still awaiting an owner call** (held, not forgotten): deleting merged remote branches (codegen
+  `item7-rebuild`, `post-merge-wrapup`, `item7-lessons-learned`; agentic `item7-rebuild`; teax
+  `constraint-semantics-item3`) and the teax local `constraint-semantics-item3` label.
 
 ### 2026-08-14: ELABORATE-FIRST Item 7 — CLOSED and archived; phase-D pre_pr checks green
 
