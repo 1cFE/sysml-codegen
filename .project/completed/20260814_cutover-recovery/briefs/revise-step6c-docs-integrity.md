@@ -1,0 +1,103 @@
+# Stage brief — REVISE step 6c: the doc authorship pass + integrity cleanup + D3/R2
+
+**You are executing the named documentation pass and the pre-audit cleanup** so the step-7
+final audit reads a tree whose record and code tell the same truth.
+Plan: `/home/reid/1cfe/sysml-codegen-item7-rebuild/.project/active/cutover-recovery/plan.md`.
+Read first: `doc-update-list-4d.md` (the per-document verdict list — the stale claims are
+already named row by row), the retirement and 6b stage notes, `audit.md` "Code integrity"
+and "Design conformance", and `owner-disposition-20260811.md`.
+
+Work synchronously. Never pause for background agents; finish or stop with questions.
+
+## Part 1 — the reference-doc authorship pass
+
+Rewrite the documents the retirement made stale, per their rows in `doc-update-list-4d.md`:
+the retirement stage names 03/04/05/07/09/10/11/12/13/17/24/25 as the pending set; re-derive
+the set from the list's own verdicts at HEAD rather than trusting either enumeration. Two
+cautions:
+
+- The list's preamble ("legacy machinery present-but-unreachable, retirement gated") is
+  itself pre-retirement prose. The documents must describe the RETIRED tree: one authority,
+  legacy machinery gone, v6 snapshots the only offline source, typed refusals. Update the
+  preamble too.
+- Doc 30's severity-skew section sits under a dead-premise banner (6b note): REQ-DIAG-04
+  assumed a severity crosses a process boundary on disk; the v6 envelope carries no
+  severity, so skew is impossible by construction. Rewrite the section to state that — the
+  requirement's outcome is discharged by construction, with the banner removed and the
+  history in one line. [Orchestrator ruling: this joins the authorship pass; it is the
+  recorded correction procedure applied to a reference doc, not new design.]
+- The doc-distinctness check (`31 / 0` at Phase 5) must still pass; re-run it.
+
+## Part 2 — code-integrity items (audit, slotted for this wave)
+
+1. **Compatibility markers get one owner** (audit: duplicated snapshot pins):
+   `snapshot/envelope.py:98` repeats authority markers owned by `_upstream_pins.py:29`;
+   projector semantics is copied again at `orchestration/exact_pipeline_context.py:55`
+   (re-measure lines at HEAD). One owner per marker; the others import it.
+2. **`CONSTRAINT_FACTS_SCHEMA_VERSION`** (`_upstream_pins.py`) has no runtime consumer left
+   in `src/` (6b drift note). Decide with a measurement: if a test or checker still reads
+   it, say so and keep it with a comment naming the reader; if truly dead, delete it with a
+   one-line record in the plan note.
+3. **`generation/constraint_catalog.py:58`** cites deleted `pipeline_builder.py` as its
+   guarding call site and has no `src/` caller (6b drift note). Measure: if the module or
+   member is dead on the retired tree, disposition it (ledger row if `check_paths` wants
+   one); if alive via tests/generation, fix the stale citation.
+4. **Typed `auto_impl_context`** (audit: leaky protocol): replace the untyped dict flowing
+   `elaboration/graph.py:150` → `snapshot/instance_graph.py:587` →
+   `generation/stencils.py:176` with an exact typed record and named template inputs.
+   Behavior is pinned by existing tests — no template output may change (byte-identical
+   generation for the corpus fixtures; `--verify` proves it).
+5. **Unit-annotation normalization single-owner** (audit: manually synchronized semantics):
+   `elaboration/elaborate.py:723` and `extraction/modeled_defaults.py:37` duplicate the
+   rule ("one rule, both spellings" is settled semantics — `tests/fixtures/unit_annotation_lanes`
+   pins it). Normalize once, apply one policy; the pinned lanes must not move.
+
+## Part 3 — design reconciliation D3 / R2 (record or converge; audit-F4 is NOT yours)
+
+- **D3 (one staged source-admission owner):** live elaboration reads caller paths while
+  capture uses staged admission; `test_snapshot_v6_routes.py:201` pins the separation.
+  Re-derive against the design's recorded reasoning for staged admission. If convergence is
+  a small, safe change (live route passes through the same admission seam), do it and
+  invert the pin deliberately. If it is bigger than this stage, record a design AMENDMENT
+  in the design artifact the deviation cites: the current split, the re-derived reasoning,
+  marked `[AGENT amendment, re-derived 2026-08-12 — pending owner ratification at the
+  gate]`. Never leave it unrecorded.
+- **R2 (envelope capture/model provenance object):** the implementation deliberately omits
+  the designed `capture` object and documents a narrower guarantee
+  (`snapshot/envelope.py:1,:107`). The implementation is shipped and pinned; record the
+  design amendment the same way (narrower guarantee, the reasoning, the marker), unless
+  re-derivation shows the design's envelope is actually needed — then say why and stop for
+  a ruling rather than building it.
+- **audit-F4 (route-dependent generated bytes / portable live provenance)** is an OPEN
+  OWNER QUESTION (disposition record, question 5). Do not resolve it in either direction.
+  If Part 1's rewrites touch the affected docs, describe the present behavior factually
+  and cite the open question.
+
+## Boundaries
+
+- No R8/qualifier work. No changes to the accepted batch, corpus fixtures, sealed
+  snapshots, or the 3E/mutation/collision pins beyond what a named item above requires.
+- Part 2 items 4–5 are refactors under pinned behavior: `--verify` 15/22/0 and the full
+  battery are the proof, and any generated-byte delta is a rule-10 stop.
+- Rule 10 stands everywhere.
+
+## Environment
+
+As prior stages (venv assert, license, PATH; scratch beside repos). Clean start at codegen
+`dcb75ff` / agentic `3fbda2f`: licensed suite **1705 / 34 / 65**, exec lane **65**,
+`--verify` 15/22/0, corpus 9, ruff src **14** / tree 643, mypy **57 in 11**, paths 304/0,
+surface 0, groups all-affected-0, proof 0/0, replacements 221/81/0.
+
+## Battery before each commit
+
+Full licensed suite (delta named), exec lane if touched, `--verify`, doc-distinctness,
+ruff/mypy deltas explained, `git diff --check`, ledger paths/surface/groups +
+`check_proof_integrity.py`. Sensible commit split: docs pass, integrity items, design
+records. Plan stage note updated.
+
+## Report back
+
+Docs rewritten (list, with the one-line claim of what each now describes); doc 30's section;
+each integrity item's outcome with file:line; D3/R2 outcomes (converged or amendment text
+location); battery numbers; commit OIDs. Any rule-10 surfacing.
+`ARTIFACT:` the updated plan.

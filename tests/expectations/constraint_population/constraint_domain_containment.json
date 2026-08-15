@@ -1,0 +1,17 @@
+{
+  "constraint_usages": [
+    {
+      "owner_qualified_name": "constraint_domain_containment::Typed",
+      "source_file": "model.sysml",
+      "source_line": 16,
+      "usage_qualified_name": "constraint_domain_containment::Typed::nested_vacuous_gate"
+    },
+    {
+      "owner_qualified_name": "constraint_domain_containment::Live",
+      "source_file": "model.sysml",
+      "source_line": 27,
+      "usage_qualified_name": "constraint_domain_containment::Live::reached_gate"
+    }
+  ],
+  "fixture": "constraint_domain_containment"
+}

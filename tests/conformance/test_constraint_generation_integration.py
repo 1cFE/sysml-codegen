@@ -42,6 +42,7 @@ from sysml_codegen.resolution.models import (
     ComputationGraph,
     ConstraintCatalog,
     ConstraintCatalogEntry,
+    ConstraintCatalogUsageRecord,
     ConstraintFormalIdentity,
     InputSource,
     ModuleInput,
@@ -116,6 +117,7 @@ def _graph() -> ComputationGraph:
     catalog = ConstraintCatalog(
         concrete_entries=[
             ConstraintCatalogEntry(
+                declaration_id="decl-C1",
                 constraint_id="C1",
                 usage_qualified_name="ToyPlant::DemoPlant::affordable",
                 source_local_identity="affordable",
@@ -129,6 +131,29 @@ def _graph() -> ComputationGraph:
                 expected_value=True,
                 predicate_ir=_predicate_ir(),
                 evaluation_channel="c1__evaluation",
+            )
+        ],
+        # The usage row the entry joins by `declaration_id`. Item 2 mints one per authored
+        # usage; since Item 3 reads `usage_records` for "does this package ship constraint
+        # machinery", a catalog with an entry and no usage row is a shape no projection
+        # produces and would generate a package with no evidence schema.
+        usage_records=[
+            ConstraintCatalogUsageRecord(
+                declaration_id="decl-C1",
+                usage_qualified_name="ToyPlant::DemoPlant::affordable",
+                source_local_identity="affordable",
+                source_form="inline",
+                owner_kind="part_def",
+                owner_qualified_name="ToyPlant::DemoPlant",
+                definition_qualified_name=None,
+                membership_kind="assert",
+                is_negated=False,
+                expected_value=True,
+                disposition_kind="eligible",
+                disposition_reason="admitted",
+                disposition_severity="info",
+                disposition_detail="",
+                occurrence_count=1,
             )
         ],
         fingerprint="abc123",
@@ -152,17 +177,17 @@ def test_full_constraint_surface_generates_and_parses(tmp_path):
     template_env = _get_template_env()
     ctx = _Ctx(_graph())
 
-    _generate_schemas(ctx, config, template_env)
+    _generate_schemas(ctx.computation_graph, config, template_env)
     from sysml_codegen.generation.constraint_plan import build_constraint_generation_plan
 
-    plan = build_constraint_generation_plan(ctx, template_env, config.package_name)
-    _generate_modules(ctx, config, template_env, plan)
-    _generate_stencils(ctx, config, template_env)
-    _generate_pipeline(ctx, config, template_env)
-    _generate_registry(ctx, config, template_env)
-    _generate_entry_points(ctx, config, template_env)
-    _generate_backlog(ctx, config)
-    _generate_tests(ctx, config, template_env)
+    plan = build_constraint_generation_plan(ctx.computation_graph, template_env, config.package_name)
+    _generate_modules(ctx.computation_graph, config, template_env, plan)
+    _generate_stencils(ctx.computation_graph, config, template_env)
+    _generate_pipeline(ctx.computation_graph, config, template_env)
+    _generate_registry(ctx.computation_graph, config, template_env)
+    _generate_entry_points(ctx.computation_graph, config, template_env)
+    _generate_backlog(ctx.computation_graph, config)
+    _generate_tests(ctx.computation_graph, config, template_env)
 
     # Constraint evidence schemas (D4).
     constraint_types = tmp_path / "schemas" / "constraint_types.py"

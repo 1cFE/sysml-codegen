@@ -3,11 +3,8 @@
 import pytest
 
 import sysml_codegen.resolution.models as resolution_models
-from sysml_codegen.analysis.constraint_lowering import (
-    assert_unique_constraint_ids,
-    mint_constraint_id,
-)
-from sysml_codegen.orchestration.pipeline_context import CodeGenerationError
+from sysml_codegen.core.errors import CodeGenerationError
+from sysml_codegen.core.identifier_types import mint_constraint_id
 from sysml_codegen.resolution.models import (
     ConcreteConstraint,
     ConcreteConstraintInput,
@@ -100,40 +97,16 @@ def test_unassessed_shape_carries_kind_and_no_node():
     assert cc.inputs == []
 
 
-def test_assert_unique_constraint_ids_raises_on_duplicate():
-    a = _make_cc("dup_id", "Design__c__cell[0]")
-    b = _make_cc("dup_id", "Design__c__cell[1]")
-    with pytest.raises(CodeGenerationError, match="dup_id"):
-        assert_unique_constraint_ids([a, b])
-
-
-def test_genuine_duplicate_id_rejection_describes_both_records_truthfully():
-    first = _make_cc("forced_duplicate", "Design__first")
-    second = _make_cc("forced_duplicate", "Design__second").model_copy(
-        update={
-            "usage_qualified_name": "Design__other__check",
-            "source_local_identity": "other_check",
-            "owner_qualified_name": "Design__OtherOwner",
-        }
-    )
-    with pytest.raises(CodeGenerationError) as error:
-        assert_unique_constraint_ids([first, second])
-    message = str(error.value)
-    assert "forced_duplicate" in message
-    assert "Design__c__cell__nonneg" in message
-    assert "Design__other__check" in message
-    assert "Design__Cell" in message
-    assert "Design__OtherOwner" in message
-    assert "Design__first" in message
-    assert "Design__second" in message
-    assert "hash collision" not in message.lower()
-    assert "broken model" not in message.lower()
-
-
-def test_assert_unique_constraint_ids_passes_on_distinct():
-    a = _make_cc("id_0", "Design__c__cell[0]")
-    b = _make_cc("id_1", "Design__c__cell[1]")
-    assert_unique_constraint_ids([a, b])  # no raise
+# The three ``assert_unique_constraint_ids`` guard nodes that stood here retired with the
+# v5 family (retirement step 2): that helper lived in ``analysis/constraint_lowering.py``
+# (ledger L-001) and was called only from inside it, and ledger L-212 records the per-node
+# disposition. The property they guarded survives in a stronger form. The exact route mints
+# the same ids (``core/identifier_types.mint_constraint_id``) and claims
+# ``f"{constraint_id}__evaluation"`` as a public channel, so two constraints minting one id
+# now collide *at the seam*, with a typed ``SI_RENDERING_COLLISION`` refusal
+# (``elaboration/project.py:287``) instead of a post-hoc assertion. That refusal is pinned by
+# ``tests/conformance/test_elaboration_projection.py:156`` on constructed inputs and by
+# ``tests/conformance/test_d5_variants.py:273`` end to end.
 
 
 # --- invariant enforcement (code-quality remediation, 2026-07-14) ---------------
@@ -260,6 +233,7 @@ def test_expected_value_must_derive_from_polarity():
 
 def _catalog_entry(**changes) -> ConstraintCatalogEntry:
     values = {
+        "declaration_id": "decl_id_0",
         "constraint_id": "id_0",
         "usage_qualified_name": "Design__c__cell__nonneg",
         "source_local_identity": "nonneg",

@@ -9,7 +9,8 @@ Testing strategy:
 - Static analysis tests parse source files with Python ast module -- no mocks.
 - Behavioral tests use SysIDE adapter name-based fallback with dual-match mock
   classes (acceptable per Ground Rule 1).
-- Snapshot tests use real extraction snapshots from Phase 0.
+- Model-fact tests read live extraction (``tests/helpers/live_extraction.py``), not the
+  retiring v5 extraction snapshots; they are license-gated by the fixture.
 
 Requirements: REQ-AST-01 through REQ-AST-07.
 """
@@ -34,12 +35,11 @@ from tests.helpers.static_analysis import (
 
 SRC_ROOT = Path(__file__).parent.parent.parent / "src" / "sysml_codegen"
 EXTRACTION_DIR = SRC_ROOT / "extraction"
-ANALYSIS_DIR = SRC_ROOT / "analysis"
 
 HIERARCHY_RESOLVER_PATH = EXTRACTION_DIR / "hierarchy_resolver.py"
 USAGE_EXTRACTOR_PATH = EXTRACTION_DIR / "usage_extractor.py"
-PARAMETER_GROUPS_PATH = ANALYSIS_DIR / "parameter_groups.py"
 EXTRACTOR_PATH = EXTRACTION_DIR / "extractor.py"
+ELABORATOR_PATH = SRC_ROOT / "elaboration" / "elaborate.py"
 AGENTIC_HIERARCHY_PATH = (
     Path(__file__).parent.parent.parent.parent
     / "agentic-mbse"
@@ -79,13 +79,13 @@ EXPRESSION_TYPE_NAMES = frozenset(
 DUAL_CHECK_SITES = [
     (AGENTIC_AGGREGATION_PATH, "_decompose_node"),
     (USAGE_EXTRACTOR_PATH, "_extract_single_binding"),
-    (PARAMETER_GROUPS_PATH, "_extract_default_value"),
+    (ELABORATOR_PATH, "_expression_references"),
 ]
 
 DUAL_CHECK_IDS = [
     "agentic_aggregation._decompose_node",
     "_extract_single_binding",
-    "_extract_default_value",
+    "elaboration._expression_references",
 ]
 
 # Sites that use if/if/if chains (not elif) and must follow full canonical ordering
@@ -100,12 +100,10 @@ CANONICAL_IDS = [
 # Sites that use elif chains -- FCE < OE is sufficient, full canonical not required
 ELIF_SITES = [
     (USAGE_EXTRACTOR_PATH, "_extract_single_binding"),
-    (PARAMETER_GROUPS_PATH, "_extract_default_value"),
 ]
 
 ELIF_IDS = [
     "_extract_single_binding",
-    "_extract_default_value",
 ]
 
 
@@ -267,8 +265,12 @@ class TestReqAst04DispatchSiteGuardrail:
     def test_total_dual_check_site_count(self):
         """Exactly 3 audited functions have both FCE and OE is_instance() checks.
 
-        Was 4 (Item 13 dropped build_expression_ast: FCE+OE dispatch for calc expressions
-        now lives in agentic-mbse's extract_expression_ir, out of this repo's audited set)."""
+        The exact-ID reference collector checks OperatorExpression only to keep
+        operator syntax out of the explicit-invocation branch. It still belongs
+        in this critical FCE-before-OE inventory.
+
+        The fourth site was ``analysis/parameter_groups.py:_extract_default_value``; it
+        retired with the v5 family (retirement step 2)."""
         all_dispatch = find_all_dispatch_functions(SRC_ROOT, EXPRESSION_TYPE_NAMES)
         shared_aggregation_calls = find_is_instance_calls_in_function(
             AGENTIC_AGGREGATION_PATH,
@@ -295,10 +297,10 @@ class TestReqAst04DispatchSiteGuardrail:
         )
 
     def test_total_dispatch_function_count(self):
-        """Exactly 5 audited functions dispatch on 2+ expression types.
+        """Exactly 7 audited functions dispatch on 2+ expression types.
 
-        Was 6 (Item 13 dropped build_expression_ast: FCE+OE dispatch for calc expressions
-        now lives in agentic-mbse's extract_expression_ir, out of this repo's audited set)."""
+        The exact-ID elaborator contributes three FCE/FRE-only functions:
+        classification, binding evidence, and reference collection."""
         all_dispatch = find_all_dispatch_functions(SRC_ROOT, EXPRESSION_TYPE_NAMES)
         shared_classifier_calls = find_is_instance_calls_in_function(
             AGENTIC_HIERARCHY_PATH,
@@ -329,8 +331,8 @@ class TestReqAst04DispatchSiteGuardrail:
                 shared_aggregation_types
             )
         multi_type = {key: types for key, types in all_dispatch.items() if len(types) >= 2}
-        assert len(multi_type) == 5, (
-            f"Expected 5 audited multi-type dispatch functions, found {len(multi_type)}: "
+        assert len(multi_type) == 7, (
+            f"Expected 7 audited multi-type dispatch functions, found {len(multi_type)}: "
             f"{sorted(multi_type.keys())}"
         )
 
@@ -344,9 +346,9 @@ class TestReqAst04DispatchSiteGuardrail:
 class TestReqAst05SingletonTermClassification:
     """FCE nodes in aggregation AST must be classified as SingletonTerm, not LocalTerm."""
 
-    def test_fce_classified_as_singleton_term_solar_battery(self, solar_battery_snapshot):
+    def test_fce_classified_as_singleton_term_solar_battery(self, solar_battery_facts):
         """Every SingletonTerm in solar_battery has dotted source_path (from FCE)."""
-        hd = solar_battery_snapshot["hierarchy_data"]
+        hd = solar_battery_facts["hierarchy_data"]
         for agg in hd.aggregation_expressions:
             for st in agg.singleton_terms:
                 assert "." in st.source_path, (
@@ -354,9 +356,9 @@ class TestReqAst05SingletonTermClassification:
                     f"(expected dotted FCE path) in aggregation {agg.attribute_name}"
                 )
 
-    def test_no_singleton_term_in_local_terms(self, solar_battery_snapshot):
+    def test_no_singleton_term_in_local_terms(self, solar_battery_facts):
         """No LocalTerm has a dotted attribute_name (Bug A regression)."""
-        hd = solar_battery_snapshot["hierarchy_data"]
+        hd = solar_battery_facts["hierarchy_data"]
         for agg in hd.aggregation_expressions:
             for lt in agg.local_terms:
                 assert "." not in lt.attribute_name, (
@@ -400,7 +402,8 @@ class TestReqAst05SingletonTermClassification:
 # build_expression_ast's FCE diagnostic directly. That dispatch responsibility moved
 # cross-repo to agentic-mbse's extract_expression_ir; the calc-compat renderer's own
 # feature-chain rejection is covered by
-# tests/unit/test_expression_compiler.py::TestRenderCalcExpression::test_feature_chain_raises_compilation_error.
+# tests/unit/test_expression_compiler.py, in
+# TestRenderCalcExpression.test_feature_chain_raises_compilation_error.
 # ---------------------------------------------------------------------------
 
 
@@ -436,9 +439,9 @@ class TestReqAst07ReconstructExpressionFormat:
         result = reconstruct_expression(node)
         assert ".(" not in result, f"Bug A regression: result contains '.(' pattern: {result!r}"
 
-    def test_transformed_expressions_no_dot_paren_in_snapshots(self, solar_battery_snapshot):
+    def test_transformed_expressions_no_dot_paren_in_snapshots(self, solar_battery_facts):
         """No solar_battery transformed_expression contains the '.()' pattern."""
-        hd = solar_battery_snapshot["hierarchy_data"]
+        hd = solar_battery_facts["hierarchy_data"]
         for agg in hd.aggregation_expressions:
             assert ".(" not in agg.transformed_expression, (
                 f"Bug A regression: aggregation {agg.attribute_name} "

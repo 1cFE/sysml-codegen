@@ -53,8 +53,26 @@ def owning_part_leaf(owning_part_qn: str) -> str:
     return owning_part_qn.split("__")[-1]
 
 
+def params_field_name(entry_point_key: str) -> str:
+    """The Python attribute name a params key is carried by.
+
+    A modelled finite multiplicity mints keys carrying an occurrence index
+    (``…__caster[0]__load_rating``). The key is the JSON surface and does not
+    move, but a Python class body cannot declare a field by that name, so the
+    generated schema declares the sanitized name and keeps the exact key as the
+    field's alias. Everything that reads the field through the *package* — the
+    pipeline YAML's field path — must use this name; everything that reads the
+    *JSON* keeps using the key.
+
+    Keys without an index are already identifiers and pass through unchanged, so
+    every package that has no multiplicity is byte-identical to before.
+    """
+    return entry_point_key.replace("[", "_").replace("]", "")
+
+
 __all__ = [
     "sanitize_name",
+    "params_field_name",
     "build_element_qualified_name",
     "build_parameter_qualified_name",
     "get_module_name",

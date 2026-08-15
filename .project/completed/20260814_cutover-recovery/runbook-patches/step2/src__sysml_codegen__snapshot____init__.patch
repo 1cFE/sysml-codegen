@@ -1,0 +1,25 @@
+diff --git a/src/sysml_codegen/snapshot/__init__.py b/src/sysml_codegen/snapshot/__init__.py
+index 5f32d4e..dc8f5ba 100644
+--- a/src/sysml_codegen/snapshot/__init__.py
++++ b/src/sysml_codegen/snapshot/__init__.py
+@@ -77,12 +77,6 @@ def assert_snapshot_certifiable(constraint_lowering_mode: str, snapshot_path: Pa
+         )
+ 
+ 
+-from sysml_codegen.snapshot.capture import capture_snapshot  # noqa: E402
+-from sysml_codegen.snapshot.serializer import (  # noqa: E402
+-    serialize_extraction_snapshot,
+-    snapshot_to_json,
+-)
+-
+ __all__ = [
+     "CONSTRAINT_LOWERING_MODE_APPLIED",
+     "CONSTRAINT_LOWERING_MODE_GRANDFATHERED_OFF",
+@@ -91,7 +85,4 @@ __all__ = [
+     "SnapshotFormatError",
+     "GrandfatheredSnapshotError",
+     "assert_snapshot_certifiable",
+-    "capture_snapshot",
+-    "serialize_extraction_snapshot",
+-    "snapshot_to_json",
+ ]

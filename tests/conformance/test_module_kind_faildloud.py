@@ -31,6 +31,7 @@ from sysml_codegen.resolution.models import (
     ComputationGraph,
     ConstraintCatalog,
     ConstraintCatalogEntry,
+    ConstraintCatalogUsageRecord,
     ConstraintFormalIdentity,
     InputSource,
     ModuleInput,
@@ -68,6 +69,7 @@ def _predicate_ir() -> str:
 
 def _catalog() -> ConstraintCatalog:
     entry = ConstraintCatalogEntry(
+        declaration_id="decl-C1",
         constraint_id="C1",
         usage_qualified_name="Pkg::Def::assert1",
         source_local_identity="assert1",
@@ -82,7 +84,31 @@ def _catalog() -> ConstraintCatalog:
         predicate_ir=_predicate_ir(),
         evaluation_channel="c1__evaluation",
     )
-    return ConstraintCatalog(concrete_entries=[entry], fingerprint="deadbeef")
+    # The usage row the entry belongs to. Item 2 mints one per authored usage and every entry
+    # joins one by `declaration_id`, so a catalog carrying an entry without its usage row is a
+    # shape no projection produces — and since Item 3 reads `usage_records` for "does this
+    # package ship constraint machinery", omitting it here would test a package that cannot
+    # exist.
+    usage = ConstraintCatalogUsageRecord(
+        declaration_id="decl-C1",
+        usage_qualified_name="Pkg::Def::assert1",
+        source_local_identity="assert1",
+        source_form="definition_typed",
+        owner_kind="part_def",
+        owner_qualified_name="Pkg::Def",
+        definition_qualified_name="Pkg::Def",
+        membership_kind="assert",
+        is_negated=False,
+        expected_value=True,
+        disposition_kind="eligible",
+        disposition_reason="admitted",
+        disposition_severity="info",
+        disposition_detail="",
+        occurrence_count=1,
+    )
+    return ConstraintCatalog(
+        usage_records=[usage], concrete_entries=[entry], fingerprint="deadbeef"
+    )
 
 
 def _constraint_module() -> PipelineModule:
@@ -167,17 +193,46 @@ def test_module_wrapper_renders_constraint(template_env):
     assert "def run(self, a: float, b: float)" in code
 
 
-def test_module_wrapper_renders_report_aggregator(template_env):
-    catalog = _catalog()
-    code = generate_teax_module(
+def test_module_wrapper_refuses_the_report_aggregator_and_names_the_route(template_env):
+    """One derivation per run (Item 3, invariant 5), so this second route is closed.
+
+    The aggregator bakes a coverage account computed once from the sealed catalog. This
+    function only ever receives the catalog, so rendering here would mean either a second
+    derivation of a producer fact or an optional argument with a fallback default. Both are
+    the drift this item exists to remove, so the arm refuses and names the route that has
+    the account.
+    """
+    with pytest.raises(CodeGenerationError, match="build_constraint_generation_plan"):
+        generate_teax_module(
+            _aggregator_module(),
+            template_env=template_env,
+            output_path=Path("/tmp/test_agg.py"),
+            catalog=_catalog(),
+        )
+
+
+def test_the_plan_route_renders_the_report_aggregator_with_its_account(template_env):
+    """The route that does have the account renders the aggregator, baked constant and all."""
+    from sysml_codegen.generation.coverage import CoverageAccountData
+    from sysml_codegen.generation.modules import render_report_aggregator
+
+    code = render_report_aggregator(
         _aggregator_module(),
-        template_env=template_env,
-        output_path=Path("/tmp/test_agg.py"),
-        catalog=catalog,
+        _catalog(),
+        CoverageAccountData(
+            authored_usage_total=1,
+            applicable_gate_total=1,
+            assessed_gate_count=1,
+            unassessed_gate_count=0,
+            inapplicable_gate_count=0,
+        ),
+        template_env,
+        "pkg",
     )
     assert "class ConstraintReportAggregatorModule" in code
     assert 'CATALOG_FINGERPRINT = "deadbeef"' in code
     assert "C1: ConstraintEvaluation" in code
+    assert "'coverage_state': 'complete'" in code
 
 
 def test_module_wrapper_without_catalog_still_refuses(template_env):
@@ -271,6 +326,6 @@ def test_generate_stencils_skips_constraint(tmp_path):
     class _Ctx:
         computation_graph = _graph_with_constraint()
 
-    _generate_stencils(_Ctx(), config, _get_template_env())
+    _generate_stencils(_Ctx().computation_graph, config, _get_template_env())
     written = list((tmp_path / "handwritten").rglob("*.py"))
     assert written == []

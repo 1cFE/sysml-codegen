@@ -18,7 +18,6 @@ from typing import Any
 from agentic_mbse.sysml.helpers import (
     get_calc_def_name,
     get_document_url,
-    get_source_file,
     get_source_location,
 )
 from agentic_mbse.sysml.syside_adapter import SysideAdapter
@@ -31,6 +30,7 @@ from sysml_codegen.core.qualified_names import (
     build_element_qualified_name,
     sanitize_name,
 )
+from sysml_codegen.extraction import binding_evidence
 from sysml_codegen.extraction.expression_utils import (
     extract_feature_chain_segments,
 )
@@ -40,6 +40,7 @@ from sysml_codegen.extraction.expression_utils import (
 from sysml_codegen.extraction.expression_utils import (
     is_literal_expression as _is_literal_expression,
 )
+from sysml_codegen.extraction.source_evidence import SourceReferenceEvidence
 
 logger = logging.getLogger(__name__)
 
@@ -95,6 +96,16 @@ class BindingInfo:
     # CST byte span (audit F2). `None` for a bare leaf. This is the one thing
     # resolution destroys and no other field preserves.
     stored_source_written_qualifier: str | None = field(
+        default=None, metadata={"snapshot_exclude": True}
+    )
+    # Immutable semantic evidence (SOURCE-IDENTITY Item 4, Phase 1): the exact
+    # SysIDE-resolved referent, bound formal, and authored source form, captured
+    # before any rewrite runs. The frozen record is shared, never copied or
+    # replaced — VBR stamping and rescue reassign the legacy scalars above but
+    # cannot touch it (design I4). Excluded from the v5 wire format; the atomic
+    # v6 snapshot cut owns its serialization. None on snapshot-loaded v5 data
+    # and for the unhandled-expression arm.
+    reference_evidence: SourceReferenceEvidence | None = field(
         default=None, metadata={"snapshot_exclude": True}
     )
 
@@ -807,6 +818,7 @@ def _extract_single_binding(
         # source_instance_elem / source_attribute_elem / is_cross_file — the
         # backtracker consumes none of those for CHAIN resolution (only
         # source_path). Do NOT reach into _parse_chain_expression to populate them.
+        evidence = binding_evidence.chain_evidence(param_elem, expr)
         segments = extract_feature_chain_segments(expr)
         if len(segments) > 2:
             full_path = ".".join(segments)
@@ -815,6 +827,7 @@ def _extract_single_binding(
                 source_path=full_path,
                 binding_type=BindingType.CHAIN,
                 raw_expression=f"FeatureChainExpression -> {full_path}",
+                reference_evidence=evidence,
             )
         source_path, instance_elem, target_elem = _parse_chain_expression(expr)
         is_cross_file = _detect_cross_file_reference(usage_elem, instance_elem)
@@ -826,6 +839,7 @@ def _extract_single_binding(
             raw_expression=f"FeatureChainExpression -> {source_path}",
             source_instance_elem=instance_elem,
             source_attribute_elem=target_elem,
+            reference_evidence=evidence,
         )
 
     elif SysideAdapter.is_instance(expr, "FeatureReferenceExpression"):
@@ -838,7 +852,8 @@ def _extract_single_binding(
             is_cross_file=is_cross_file,
             raw_expression=f"FeatureReferenceExpression -> {source_path}",
             source_attribute_elem=referenced_elem,
-            stored_source_written_qualifier=_written_qualifier(expr),
+            stored_source_written_qualifier=binding_evidence.written_qualifier(expr),
+            reference_evidence=binding_evidence.reference_evidence(param_elem, expr),
         )
 
     elif _is_literal_expression(expr):
@@ -850,6 +865,7 @@ def _extract_single_binding(
             is_cross_file=False,
             raw_expression=f"LiteralExpression -> {literal_value}",
             literal_value=literal_value,
+            reference_evidence=binding_evidence.literal_evidence(param_elem, literal_value),
         )
 
     elif SysideAdapter.is_instance(expr, "OperatorExpression"):
@@ -859,6 +875,7 @@ def _extract_single_binding(
             binding_type=BindingType.EXPRESSION,
             raw_expression=f"OperatorExpression: {type(expr).__name__}",
             expression_ast=expr,
+            reference_evidence=binding_evidence.expression_evidence(param_elem, expr),
         )
 
     # INV-1 terminal arm (D3-1): the RHS is a binding expression of a type this
@@ -908,91 +925,6 @@ def _parse_chain_expression(
 
     source_path = ".".join(path_parts) if path_parts else None
     return source_path, instance_elem, target_elem
-
-
-# Source bytes, keyed by (path, mtime_ns). The mtime component means a file edited
-# between two extractions in one process cannot serve stale bytes — extraction reads
-# from disk within a single run today, but keying on mtime removes the single-run
-# assumption rather than only documenting it (audit N2).
-_SOURCE_BYTES_CACHE: dict[tuple[str, int], bytes] = {}
-
-# Sentinel: recovery of the written form failed, so we do not know whether the
-# reference was written qualified or bare. Callers must fail AWAY from the F2 defect
-# and treat this as qualified (row-16 safe-miss), never as a bare leaf.
-_WRITTEN_UNKNOWN = "\x00written-unknown"
-
-
-def _written_reference_text(expr: Any) -> str | None:
-    """The reference exactly as the model wrote it, from the concrete syntax tree.
-
-    Resolution discards how a reference was written: `source_path` and the referent
-    both hold the *resolved* qualified name, so `in kappa = catf_radial_build::elongation`
-    and a bare `in eta = efficiency` are indistinguishable downstream — which is the
-    ambiguity that let a scope-qualified reference be re-anchored onto an owner-local
-    shadow (audit F2/F2b).
-
-    The written form survives on the CST node as a byte span into the source document,
-    which is the same adapter surface extraction already uses for source locations.
-
-    Returns the written text, or ``_WRITTEN_UNKNOWN`` when the span cannot be recovered.
-    It never returns ``None`` for a failure: a failure is *unknown*, not *bare*, and the
-    caller must fail toward safe-miss rather than toward the F2 re-anchor (audit N2). The
-    exception handling is narrow on purpose — an ``AttributeError`` from a real adapter
-    change should raise here, not be silently absorbed as "unknown".
-    """
-    cst = getattr(expr, "cst_node", None)
-    if cst is None:
-        return _WRITTEN_UNKNOWN
-    start = getattr(cst, "start_byte", None)
-    end = getattr(cst, "end_byte", None)
-    if not isinstance(start, int) or not isinstance(end, int) or end <= start:
-        return _WRITTEN_UNKNOWN
-    source_file = get_source_file(expr)
-    if not source_file:
-        return _WRITTEN_UNKNOWN
-    path = Path(source_file)
-    try:
-        mtime = path.stat().st_mtime_ns
-    except OSError:
-        return _WRITTEN_UNKNOWN
-    cache_key = (str(source_file), mtime)
-    data = _SOURCE_BYTES_CACHE.get(cache_key)
-    if data is None:
-        try:
-            data = path.read_bytes()
-        except OSError:
-            return _WRITTEN_UNKNOWN
-        _SOURCE_BYTES_CACHE[cache_key] = data
-    if end > len(data):
-        return _WRITTEN_UNKNOWN
-    try:
-        text: str = data[start:end].decode("utf-8").strip()
-    except UnicodeDecodeError:
-        return _WRITTEN_UNKNOWN
-    return text
-
-
-def _written_qualifier(expr: Any) -> str | None:
-    """The scope qualifier the model wrote, or ``None`` for a bare leaf.
-
-    ``catf_radial_build::elongation`` -> ``catf_radial_build``; ``gain`` -> ``None``.
-    A qualifier means the reference names its own scope and is therefore **not**
-    owner-relative, which is what row 16 needs to know (audit F2).
-
-    Fails toward safe-miss (audit N2): if the written form could not be recovered we
-    do not know it was bare, so we return a non-empty marker that makes row 16 miss —
-    the reference falls through to exact-identity resolution, which is today's
-    behaviour and can never produce a wrong number. Only a written form we actually
-    read, with no ``::``, is reported as a bare leaf.
-    """
-    written = _written_reference_text(expr)
-    if written is _WRITTEN_UNKNOWN:
-        # Unknown -> treat as qualified. `_MISS` on row 16; row 17 resolves by identity.
-        return _WRITTEN_UNKNOWN
-    if written is None or "::" not in written:
-        return None
-    qualifier = written.rsplit("::", 1)[0].strip()
-    return qualifier or _WRITTEN_UNKNOWN
 
 
 def _parse_reference_expression(

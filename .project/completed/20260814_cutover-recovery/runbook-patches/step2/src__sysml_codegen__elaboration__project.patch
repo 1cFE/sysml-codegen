@@ -1,0 +1,13 @@
+diff --git a/src/sysml_codegen/elaboration/project.py b/src/sysml_codegen/elaboration/project.py
+index bc86fac..9f4874d 100644
+--- a/src/sysml_codegen/elaboration/project.py
++++ b/src/sysml_codegen/elaboration/project.py
+@@ -80,7 +80,7 @@ from sysml_codegen.resolution.models import (
+ 
+ __all__ = ["ProjectionError", "project"]
+ 
+-_CONSTRAINT_LOGGER = logging.getLogger("sysml_codegen.analysis.constraint_lowering")
++_CONSTRAINT_LOGGER = logging.getLogger("sysml_codegen.elaboration.project")
+ 
+ 
+ class ProjectionError(ValueError):

@@ -1,0 +1,17 @@
+{
+  "constraint_usages": [
+    {
+      "owner_qualified_name": "ConstraintNameCollision::the_host",
+      "source_file": "model.sysml",
+      "source_line": 87,
+      "usage_qualified_name": "ConstraintNameCollision::the_host::viability"
+    },
+    {
+      "owner_qualified_name": "ConstraintNameCollision::the_host",
+      "source_file": "model.sysml",
+      "source_line": 92,
+      "usage_qualified_name": "ConstraintNameCollision::the_host::backup_viability"
+    }
+  ],
+  "fixture": "constraint_name_collision_control"
+}

@@ -21,6 +21,7 @@ from sysml_codegen.core.identifier_types import PythonModulePath, SysMLQualified
 from sysml_codegen.core.qualified_names import sanitize_qualified_name
 
 if TYPE_CHECKING:
+    from sysml_codegen.generation.coverage import CoverageAccountData
     from sysml_codegen.resolution.models import ConstraintCatalog, PipelineModule
 
 
@@ -353,15 +354,19 @@ def render_constraint_module(
 def render_report_aggregator(
     module: PipelineModule,
     catalog: ConstraintCatalog,
+    coverage: CoverageAccountData,
     template_env: jinja2.Environment,
     package_name: str = "generated_code",
 ) -> str:
-    """Render the exact-schema report aggregator (D5, D11).
+    """Render the exact-schema report aggregator (D5, D11) with its baked coverage account.
 
     Field names come from ``module.inputs`` (already-sanitized ``param_name``s, the same
     identifiers the pipeline YAML wires evaluations to), not ``catalog.concrete_entries``'
     raw ``constraint_id``s directly — see the sanitization note in
     ``extend_graph_with_constraints``'s aggregator-input construction (Item 5/7 boundary).
+
+    The account is passed in rather than derived here so exactly one derivation exists per
+    generation run, shared with the coverage preflight (Item 3, invariant 5).
     """
     constraint_ids = [inp.param_name for inp in module.inputs]
     class_name = module.module_type.split(".")[-1]
@@ -372,6 +377,7 @@ def render_report_aggregator(
         "class_name": class_name,
         "module_name": module.name,
         "catalog_fingerprint": catalog.fingerprint,
+        "coverage": repr(coverage.as_mapping()),
     }
     template = template_env.get_template("report_aggregator.py.jinja2")
     code = template.render(**context)
@@ -426,12 +432,12 @@ def generate_teax_module(
             module, catalog, compiled_predicates, template_env, package_name
         )
     if module.module_kind is ModuleKind.REPORT_AGGREGATOR:
-        if catalog is None:
-            raise _generation_error(
-                f"module {module.name!r} (kind=report_aggregator) needs the graph's "
-                "ConstraintCatalog to render"
-            )
-        return render_report_aggregator(module, catalog, template_env, package_name)
+        raise _generation_error(
+            f"module {module.name!r} (kind=report_aggregator) cannot be rendered here: the "
+            "aggregator bakes a coverage account derived once per run from the sealed "
+            "catalog, and this function has no access to it. Render it through "
+            "build_constraint_generation_plan, which is what the CLI does."
+        )
 
     multi_output = len(module.outputs) > 1
 

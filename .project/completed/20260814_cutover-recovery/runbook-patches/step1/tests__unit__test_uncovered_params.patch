@@ -1,0 +1,238 @@
+diff --git a/tests/unit/test_uncovered_params.py b/tests/unit/test_uncovered_params.py
+index 4bd4c29..2615376 100644
+--- a/tests/unit/test_uncovered_params.py
++++ b/tests/unit/test_uncovered_params.py
+@@ -1,41 +1,26 @@
+ """Params-coverage collector + V11 strict boundary (Item 7 / REQ-GA-08, D4).
+ 
+-Covers the two-layer coverage check:
+-  - ``collect_uncovered_params`` (pure, wired half → V11) — INV-3, INV-4.
+-  - ``collect_unwired_fallthrough`` (pure, unwired half → reconciliation summary).
+-  - the always-strict generation boundary raising V11 (``_reconcile_params_coverage``).
+-
+-Real extraction snapshots — no mocks (R1). The unwired-summary partition has no
+-committed real-fixture that exercises it (every corpus V11 case is wired), so it
+-is covered by a constructed ``ComputationGraph`` of real Pydantic model objects.
+-
+-V11 corpus surface after Item 10 stage (a) (genuine fell-through ∩ valueless ∩ wired
+-gaps that remain — the plain-usage LITERAL class is pre-filled, and Item 10 wired the
+-two cross-part CHAIN pins, so both drop off this list):
+-  - chain_override_probe cost_model.sensitivity   (calc-output ref; A1 keeps it loud —
+-                                                   the sole remaining committed V11 proof)
+-
+-Item 10 wired the two former anchors:
+-  - catf_mfe            cryo_load.magnet_volume   (multi-hop EXPOSE, alias-terminal hop)
+-  - ife_plant shape-4   cryo_load.magnet_volume   (multi-hop EXPOSE, direct-calc-output)
+-so the dedicated committed V11 proof RE-ANCHORS to ``chain_override_probe`` — the one
+-full-graph-buildable fixture whose gap the leaf-unique restriction (A1) deliberately
+-keeps valueless-and-loud. (Verified: after Item 10 no other committed full-pipeline
+-fixture fires the collector.) catf_mfe retains one *valued* residual fallback EP
+-(``pump_load.pumping_speed_total``, USAGE_LITERAL 200.0) — fell-through but valued, so
+-NOT a V11 violation; tracked as a benign pre-existing catf gap (BACKLOG, not Item 10).
+-alias_agg_probe / issue22_model / unresolvable_attr_probe are pre-filled by Item 9's
+-plain-usage literal capture and now generate cleanly (their collector lists go empty).
++What is left here after retirement step 1 is the collector pair as pure functions:
++  - ``collect_uncovered_params`` (wired half → V11) — INV-3, INV-4.
++  - ``collect_unwired_fallthrough`` (unwired half → reconciliation summary).
++
++The fixture-driven half of this file — nine nodes that built a ``ComputationGraph`` from a
++committed v5 extraction snapshot, plus the V11 generation-boundary nodes that ran through
++``tests/helpers/legacy_route.py`` — read the v5 route and retired with it. **The V11
++boundary itself is not untested by that:** the raise lives on the exact route
++(``cli/__init__.py:277-287``) and is pinned by ``tests/conformance/test_gate_b_generation_gate.py``,
++which drives a real generation to the ``CodeGenerationError`` whose message carries V11.
++
++The surviving node covers the partition no committed fixture ever exercised — a
++fell-through, valueless, *unwired* entry point, which belongs to the summary list and not
++to V11 — on a constructed ``ComputationGraph`` of real Pydantic model objects (R1: real
++model objects, no mocks).
+ """
+ 
+ from __future__ import annotations
+ 
+-import json
+-import logging
+ from pathlib import Path
+ 
+-import pytest
+-
+ from sysml_codegen.resolution.graph_builder import (
+     collect_uncovered_params,
+     collect_unwired_fallthrough,
+@@ -50,176 +35,6 @@ from sysml_codegen.resolution.models import (
+     ParameterGroup,
+     PipelineModule,
+ )
+-from sysml_codegen.snapshot import build_full_graph_from_snapshot
+-from tests.conftest import snapshot_fixture
+-from tests.helpers.legacy_route import generate_via_legacy_route
+-
+-
+-def _graph(name: str) -> ComputationGraph:
+-    graph, _inputs = build_full_graph_from_snapshot(snapshot_fixture(name))
+-    return graph
+-
+-
+-# ---------------------------------------------------------------------------
+-# INV-3: the collector is pure — returns a list, raises nothing.
+-# ---------------------------------------------------------------------------
+-def test_collector_is_pure_on_clean_graph():
+-    """A clean fixture yields an empty list, no raise (INV-3).
+-
+-    solar_battery has 10 fell-through EPs, but every one is back-filled to a
+-    value by the deriver merge → valued, not valueless → not a V11 violation.
+-    """
+-    assert collect_uncovered_params(_graph("solar_battery_model")) == []
+-
+-
+-# ---------------------------------------------------------------------------
+-# INV-4: catf_mfe collector list is pinned exactly.
+-# ---------------------------------------------------------------------------
+-def test_catf_mfe_dangle_wired_after_item10():
+-    """catf_mfe collector returns ``[]`` — Item 10 wired the magnet_volume gap (INV-4).
+-
+-    Pre-Item-10 this pinned the single ``cryo_load.magnet_volume`` gap. Item 10 stage
+-    (a) wires it via the multi-hop EXPOSE confirm walk (``tf_coil.volume`` alias-terminal
+-    hop → the ``tf_coil__volume_calc__volume`` channel), so the collector list is now
+-    empty. Pinned to ``[]`` (not deleted) so a regression re-dropping the pin fails loudly.
+-    catf's one residual fallback EP (``pump_load.pumping_speed_total``) is USAGE_LITERAL
+-    200.0 — valued, so it is not a valueless V11 violation and the collector skips it.
+-    """
+-    result = collect_uncovered_params(_graph("catf_mfe_model"))
+-    assert result == []
+-
+-
+-def test_collector_pins_alias_agg_probe():
+-    """alias_agg_probe: no uncovered params — Item 9 pre-fills base_cost.
+-
+-    The plain-usage ``:>> widget.base_cost = 50.0`` override is now captured, and the
+-    virtual ``cost_model.base_cost`` binding is rewritten to LITERAL 50.0 before it can
+-    become a valueless entry point, so the collector list is empty (REQ-HR-08).
+-    """
+-    result = collect_uncovered_params(_graph("alias_agg_probe"))
+-    assert result == []
+-
+-
+-def test_collector_pins_issue22_model():
+-    """issue22_model: no uncovered params — same class as alias_agg_probe (100.0)."""
+-    result = collect_uncovered_params(_graph("issue22_model"))
+-    assert result == []
+-
+-
+-def test_collector_pins_unresolvable_attr_probe():
+-    """unresolvable_attr_probe: no uncovered params — Item 9 fills my_calc.x.
+-
+-    ``:>> local_val = 5.0`` on the plain ``design_derived_instance`` is captured and
+-    rewrites the ``my_calc.x = local_val`` binding to LITERAL 5.0. Its valueless-ness
+-    was itself the dropped-plain-usage-override bug Item 9 fixes, so the dedicated
+-    committed V11 proof moves to catf_mfe + ife_plant shape-4 (D5).
+-    """
+-    result = collect_uncovered_params(_graph("unresolvable_attr_probe"))
+-    assert result == []
+-
+-
+-def test_collector_pins_chain_override_probe():
+-    """chain_override_probe: exactly one sensitivity gap.
+-
+-    ``calibration.calibrated_factor`` is a calc-def OUTPUT attribute, which the
+-    Bug-B leaf-unique pool restriction (DEV-2 / A1) deliberately excludes, so the
+-    reference stays unresolved and LOUD rather than cross-wiring into a
+-    DESIGN_ATTRIBUTE. V11 firing here is the intended safety property.
+-    """
+-    result = collect_uncovered_params(_graph("chain_override_probe"))
+-    assert [(u.input, u.module.split("__")[-1]) for u in result] == [
+-        ("sensitivity", "cost_model")
+-    ]
+-
+-
+-# ---------------------------------------------------------------------------
+-# Strict boundary raises V11 (explicit raises-assertion, pins the behavior).
+-# ---------------------------------------------------------------------------
+-def test_reconcile_raises_v11_on_wired_gap():
+-    """The generation boundary raises V11 on a wired fell-through-valueless input.
+-
+-    Anchored on chain_override_probe's ``cost_model.sensitivity`` — a calc-output ref the
+-    leaf-unique restriction (A1 / DEV-2) deliberately keeps out of design_overrides, so it
+-    stays wired-valueless and trips V11 (the sole remaining committed real-fixture proof).
+-    Re-anchored off catf_mfe, which Item 10 stage (a) now wires (its magnet_volume gap is
+-    resolved, so it no longer trips V11).
+-    """
+-    from sysml_codegen.cli import _reconcile_params_coverage
+-    from sysml_codegen.generation import CodeGenerationError
+-
+-    graph = _graph("chain_override_probe")
+-    with pytest.raises(CodeGenerationError, match=r"V11"):
+-        _reconcile_params_coverage(graph)
+-
+-
+-def test_seeded_strict_generation_aborts_on_v11_gap(tmp_path, caplog):
+-    """Strict generation aborts (V11) end-to-end via ``run_codegen`` on a wired-valueless
+-    gap, proving the boundary fires on the full snapshot-driven path, not just at the
+-    pure collector.
+-
+-    Anchored on chain_override_probe's ``cost_model.sensitivity`` — a calc-output ref A1
+-    keeps valueless-and-loud (the sole remaining committed full-graph V11 proof). Item 10
+-    stage (a) wired the two former cross-part anchors (catf_mfe + ife_plant shape-4), so
+-    neither aborts anymore. ``run_codegen`` catches CodeGenerationError and returns False
+-    (the fail-fast idiom), so the abort is observed as ``False`` + a logged V11 line.
+-
+-    chain_override_probe is captured ``grandfathered_off`` (extraction-only, carries zero
+-    constraint usages), which Item 12's product gate now rejects *before* V11. To reach the
+-    V11 boundary end-to-end we present the same snapshot as ``applied`` in a tmp copy —
+-    immaterial for a zero-usage snapshot (no lowering runs either way), and it lets the gate
+-    pass so the reconciliation step is exercised. The un-flipped grandfathered form failing
+-    at the gate is covered by ``test_legacy_snapshot_closure``.
+-    """
+-    from sysml_codegen.cli import GenerationConfig
+-
+-    payload = json.loads(snapshot_fixture("chain_override_probe").read_text())
+-    assert not payload["constraint_facts"]["usages"], "flip is only immaterial with zero usages"
+-    payload["constraint_lowering_mode"] = "applied"
+-    snap = tmp_path / "extraction_snapshot.json"
+-    snap.write_text(json.dumps(payload))
+-
+-    config = GenerationConfig(
+-        output_path=tmp_path / "out",
+-        from_snapshot=snap,
+-        package_name="cop",
+-        overwrite=True,
+-    )
+-    with caplog.at_level(logging.ERROR):
+-        assert generate_via_legacy_route(config) is False
+-    assert any("V11" in r.message for r in caplog.records), (
+-        "strict generation must log the V11 diagnostic on abort"
+-    )
+-
+-
+-# ---------------------------------------------------------------------------
+-# DEV-4: fallback_entry_points is an in-memory artifact, not serialized — so
+-# committed baselines do not churn, yet the collector fires on the in-memory
+-# graph. This also verifies snapshot-driven generation regenerates the field in
+-# memory (build_full_graph_from_snapshot re-runs the backtracker), so V11 fires
+-# identically on the --from-snapshot path.
+-# ---------------------------------------------------------------------------
+-def test_fallback_entry_points_populated_in_memory_but_not_serialized():
+-    # Anchored on chain_override_probe: after Item 10 wired catf_mfe's magnet_volume,
+-    # catf's only residual fallback EP (pumping_speed_total) is VALUED, so its collector
+-    # goes empty and it can no longer demonstrate "collector fires". chain_override_probe's
+-    # sensitivity gap stays wired-valueless, so both the populated-field and collector-fires
+-    # halves hold on one fixture.
+-    graph = _graph("chain_override_probe")
+-    # In-memory: populated by the (snapshot-driven) backtracker run.
+-    assert graph.fallback_entry_points, "backtracker must populate the field in memory"
+-    assert collect_uncovered_params(graph), "collector fires on the in-memory graph"
+-
+-    # Serialized: excluded — the committed computation_graph.json contract is
+-    # unchanged, so baselines do not churn.
+-    dumped = graph.model_dump()
+-    assert "fallback_entry_points" not in dumped
+-    assert "fallback_entry_points" not in graph.model_dump_json()
+-
+-    # Round-trip: a graph rebuilt from the serialized form has an empty set (the
+-    # field is never read from a deserialized graph — the collector only runs at
+-    # the generation boundary on a freshly-built graph).
+-    reloaded = ComputationGraph.model_validate(dumped)
+-    assert reloaded.fallback_entry_points == set()
+ 
+ 
+ # ---------------------------------------------------------------------------

@@ -1,0 +1,89 @@
+"""Live, in-place snapshot, and relocated snapshot mint the same domain.
+
+The document fingerprint proves the snapshot bytes are internally coherent. It says
+nothing about whether the live route, re-elaborating the same model, produces the same
+domain — a different claim, and the one that can drift. This repo has been bitten by that
+class before, where a multi-hop EXPOSE resolved live and mis-wired from a snapshot with
+every seal passing. So the comparison here is field for field and record for record, not
+digest against digest.
+
+``source_file`` was the one deliberately route-dependent field until step 5 of the Item-7
+correction (audit-F4) made the live route render the portable referent too. The comparison
+is unmasked, and portability is asserted on all three routes below.
+"""
+
+from __future__ import annotations
+
+import shutil
+from pathlib import Path
+
+import pytest
+
+from sysml_codegen.orchestration.elaborated_pipeline import elaborate_model_paths
+from sysml_codegen.snapshot.capture import capture_instance_graph_snapshot
+from sysml_codegen.snapshot.envelope import load_instance_graph_snapshot
+from tests.conftest import FIXTURES_DIR, requires_license
+
+pytestmark = requires_license
+
+# Chosen because it carries a reaching gate, a vacuous one, and an ``@inapplicable:``
+# annotation. The annotation is the concrete drift risk: reading a doc comment is a
+# live-only elaboration step, so if it were re-read downstream instead of sealed, this is
+# the fixture on which live and snapshot would diverge while both sealed cleanly.
+FIXTURE = FIXTURES_DIR / "constraint_domain_inapplicable"
+
+
+
+
+@pytest.fixture(scope="module")
+def routes(tmp_path_factory) -> tuple[dict, dict, dict]:
+    tmp_path = tmp_path_factory.mktemp("parity")
+    live = elaborate_model_paths([FIXTURE])
+    captured = capture_instance_graph_snapshot([FIXTURE], tmp_path / "case.json")
+    in_place = load_instance_graph_snapshot(captured)
+    relocated_path = tmp_path / "moved" / "case.json"
+    relocated_path.parent.mkdir()
+    shutil.copyfile(captured, relocated_path)
+    relocated = load_instance_graph_snapshot(relocated_path)
+    return (
+        live.constraint_usages,
+        in_place.constraint_usages,
+        relocated.constraint_usages,
+    )
+
+
+def test_all_three_routes_agree_field_for_field(routes):
+    live, in_place, relocated = routes
+    assert live == in_place == relocated
+
+
+def test_the_domain_is_not_empty_so_the_comparison_means_something(routes):
+    live, _, _ = routes
+    assert len(live) == 2
+    assert {record.disposition.reason for record in live.values()} == {
+        "admitted",
+        "owner_has_no_occurrences",
+    }
+    assert len([record for record in live.values() if record.inapplicability]) == 1
+
+
+def test_the_live_only_annotation_read_survives_both_snapshot_routes(routes):
+    """The one field that could make live and snapshot disagree, asserted on all three."""
+    marked = [
+        {
+            record.usage_qualified_name: record.inapplicability
+            for record in domain.values()
+            if record.inapplicability is not None
+        }
+        for domain in routes
+    ]
+    assert marked[0] == marked[1] == marked[2]
+    assert next(iter(marked[0].values())).reason == "no build of this variant is planned"
+
+
+def test_all_three_routes_carry_a_portable_source_referent(routes):
+    """Both routes rewrite the usage tier's path, as they do every other tier."""
+    for domain in routes:
+        for record in domain.values():
+            assert record.source_file.startswith("root-")
+            assert not Path(record.source_file).is_absolute()

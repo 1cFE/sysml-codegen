@@ -193,6 +193,7 @@ def _permuted_collision_graph(
     )
     entries = [
         ConstraintCatalogEntry(
+            declaration_id="decl-C1",
             constraint_id="C1",
             usage_qualified_name="Pkg::C1",
             source_local_identity="C1",
@@ -208,6 +209,7 @@ def _permuted_collision_graph(
             evaluation_channel="c1__evaluation",
         ),
         ConstraintCatalogEntry(
+            declaration_id="decl-C2",
             constraint_id="C2",
             usage_qualified_name="Pkg::C2",
             source_local_identity="C2",

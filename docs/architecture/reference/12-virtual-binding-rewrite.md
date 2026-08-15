@@ -1,5 +1,18 @@
 # 12 - Virtual Binding Rewriting
 
+> **Status: historical.** Template expansion and `_rewrite_virtual_bindings()` lived in
+> `orchestration/pipeline_builder.py`, **deleted** by the Item 7 retirement (2026-08-12,
+> `19072ad` / `82c7951` / `882fc8d` / `3071fba`).
+>
+> **The shipped route has no virtual copies to rewrite.** A calc declared on a part def is
+> instantiated per occurrence by the elaborator, and each occurrence's values come from its own
+> value site. There is no template binding carrying a generic reference that a later pass has
+> to redirect, so there is no in-place mutation step and no ordering constraint around it.
+>
+> Everything below is retained as the record of the deleted design. It is accurate about the
+> code that was removed and is **not a description of what the product does**. For that, read
+> [00-pipeline-overview](00-pipeline-overview.md).
+
 ## What Are "Virtual" Calc Usages?
 
 A SysML library PartDef (e.g., `Solar_Array`) owns calculation usages that reference

@@ -1,0 +1,2241 @@
+I001 [*] Import block is un-sorted or un-formatted
+ --> tests/conftest.py:2:1
+  |
+1 |   """Shared pytest fixtures."""
+2 | / import pytest
+3 | | from pathlib import Path
+4 | |
+5 | | from dotenv import load_dotenv
+  | |______________________________^
+6 |
+7 |   # Load environment variables (for SYSIDE_LICENSE_KEY)
+  |
+help: Organize imports
+  |
+1 | """Shared pytest fixtures."""
+  - import pytest
+2 | from pathlib import Path
+3 |
+4 + import pytest
+5 | from dotenv import load_dotenv
+  |
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> tests/corpus/claude_extract_experiment.py:38:1
+   |
+36 |   sys.path.insert(0, str(Path(__file__).parent))
+37 |
+38 | / import pymupdf4llm  # type: ignore[import-untyped]
+39 | |
+40 | | from metrics import ExtractionMetrics, compare_metrics, compute_metrics
+   | |_______________________________________________________________________^
+41 |
+42 |   CORPUS_DIR = Path(__file__).parent
+   |
+help: Organize imports
+   |
+38 | import pymupdf4llm  # type: ignore[import-untyped]
+   -
+39 | from metrics import ExtractionMetrics, compare_metrics, compute_metrics
+   |
+
+F401 [*] `traceback` imported but unused
+  --> tests/corpus/experiment.py:41:8
+   |
+39 | import sys
+40 | import time
+41 | import traceback
+   |        ^^^^^^^^^
+42 | from pathlib import Path
+   |
+help: Remove unused import: `traceback`
+   |
+40 | import time
+   - import traceback
+41 | from pathlib import Path
+   |
+
+I001 [*] Import block is un-sorted or un-formatted
+   --> tests/corpus/experiment.py:210:9
+    |
+208 |       """Run Docling extraction in a child process (memory safety)."""
+209 |       try:
+210 | /         from docling.datamodel.base_models import InputFormat
+211 | |         from docling.datamodel.pipeline_options import (
+212 | |             EasyOcrOptions,
+213 | |             PdfPipelineOptions,
+214 | |             RapidOcrOptions,
+215 | |             TesseractCliOcrOptions,
+216 | |             TableStructureOptions,
+217 | |             TableFormerMode,
+218 | |         )
+219 | |         from docling.document_converter import DocumentConverter, PdfFormatOption
+    | |_________________________________________________________________________________^
+220 |
+221 |           # Build PdfPipelineOptions from params
+    |
+help: Organize imports
+    |
+214 |             RapidOcrOptions,
+215 +             TableFormerMode,
+216 +             TableStructureOptions,
+217 |             TesseractCliOcrOptions,
+    -             TableStructureOptions,
+    -             TableFormerMode,
+218 |         )
+    |
+
+I001 [*] Import block is un-sorted or un-formatted
+   --> tests/corpus/experiment.py:328:5
+    |
+326 |       contains detected tables organized by page.
+327 |       """
+328 | /     from gmft.auto import AutoTableDetector, AutoTableFormatter, AutoFormatConfig
+329 | |     from gmft.pdf_bindings.pdfium import PyPDFium2Document
+    | |__________________________________________________________^
+330 |
+331 |       # Build configs from params
+    |
+help: Organize imports
+    |
+327 |     """
+    -     from gmft.auto import AutoTableDetector, AutoTableFormatter, AutoFormatConfig
+328 +     from gmft.auto import AutoFormatConfig, AutoTableDetector, AutoTableFormatter
+329 |     from gmft.pdf_bindings.pdfium import PyPDFium2Document
+    |
+
+F841 Local variable `track1_data` is assigned to but never used
+   --> tests/corpus/pipelines/detection_v2_phase1.py:232:5
+    |
+231 |     # Load Track 1 for comparison
+232 |     track1_data = load_track1_results()
+    |     ^^^^^^^^^^^
+233 |
+234 |     print()
+    |
+help: Remove assignment to unused variable `track1_data`
+
+F541 [*] f-string without any placeholders
+   --> tests/corpus/pipelines/detection_v2_phase1.py:254:11
+    |
+252 |     new_tp = original_tp + recovered_tp
+253 |     new_rows = original_rows + recovered_rows
+254 |     print(f"  DETECTION RECALL COMPARISON:")
+    |           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+255 |     print(f"    Original (0.98):  {original_tp}/{gt_tables} tables = {original_tp/gt_tables*100:.0f}% recall")
+256 |     print(f"    New (no conf):    {new_tp}/{gt_tables} tables = {new_tp/gt_tables*100:.0f}% recall")
+    |
+help: Remove extraneous `f` prefix
+    |
+253 |     new_rows = original_rows + recovered_rows
+    -     print(f"  DETECTION RECALL COMPARISON:")
+254 +     print("  DETECTION RECALL COMPARISON:")
+255 |     print(f"    Original (0.98):  {original_tp}/{gt_tables} tables = {original_tp/gt_tables*100:.0f}% recall")
+    |
+
+F541 [*] f-string without any placeholders
+   --> tests/corpus/pipelines/detection_v2_phase1.py:259:11
+    |
+257 |     print(f"    Improvement:      +{recovered_tp} tables (+{recovered_tp/gt_tables*100:.0f}%)")
+258 |     print()
+259 |     print(f"  ROW COVERAGE COMPARISON:")
+    |           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+260 |     print(f"    Original rows:    {original_rows}/{gt_rows} = {original_rows/gt_rows*100:.0f}%")
+261 |     print(f"    New rows:         {new_rows}/{gt_rows} = {new_rows/gt_rows*100:.0f}%")
+    |
+help: Remove extraneous `f` prefix
+    |
+258 |     print()
+    -     print(f"  ROW COVERAGE COMPARISON:")
+259 +     print("  ROW COVERAGE COMPARISON:")
+260 |     print(f"    Original rows:    {original_rows}/{gt_rows} = {original_rows/gt_rows*100:.0f}%")
+    |
+
+F541 [*] f-string without any placeholders
+   --> tests/corpus/pipelines/detection_v2_phase1.py:264:11
+    |
+262 |     print(f"    Improvement:      +{recovered_rows} rows")
+263 |     print()
+264 |     print(f"  REMAINING GAP:")
+    |           ^^^^^^^^^^^^^^^^^^^
+265 |     print(f"    Undetected tables: {gt_tables - new_tp} (GMFT finds nothing at any confidence)")
+266 |     print(f"    Missing rows:      {gt_rows - new_rows}")
+    |
+help: Remove extraneous `f` prefix
+    |
+263 |     print()
+    -     print(f"  REMAINING GAP:")
+264 +     print("  REMAINING GAP:")
+265 |     print(f"    Undetected tables: {gt_tables - new_tp} (GMFT finds nothing at any confidence)")
+    |
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> tests/corpus/pipelines/h1_pymupdf_gmft.py:21:1
+   |
+19 |   sys.path.insert(0, str(Path(__file__).parent.parent))
+20 |
+21 | / from metrics import compute_metrics
+22 | | from shared import (
+23 | |     BEST_V1_PARAMS,
+24 | |     GmftTable,
+25 | |     PageDecision,
+26 | |     PageResult,
+27 | |     count_real_table_rows,
+28 | |     extract_gmft_pages,
+29 | |     extract_pymupdf_pages,
+30 | |     filter_gmft_tables,
+31 | |     get_pdf_path,
+32 | |     has_br_in_tables,
+33 | |     has_col_headers,
+34 | |     insert_tables_at_end,
+35 | |     load_papers,
+36 | |     replace_tables,
+37 | |     strip_pipe_tables,
+38 | |     save_config,
+39 | |     save_pipeline_result,
+40 | |     score_and_print,
+41 | | )
+   | |_^
+42 |
+43 |   # Default: 4-paper dev set
+   |
+help: Organize imports
+   |
+36 |     replace_tables,
+   -     strip_pipe_tables,
+37 |     save_config,
+38 |     save_pipeline_result,
+39 |     score_and_print,
+40 +     strip_pipe_tables,
+41 | )
+   |
+
+F401 [*] `shared.BEST_V1_PARAMS` imported but unused
+  --> tests/corpus/pipelines/h1_pymupdf_gmft.py:23:5
+   |
+21 | from metrics import compute_metrics
+22 | from shared import (
+23 |     BEST_V1_PARAMS,
+   |     ^^^^^^^^^^^^^^
+24 |     GmftTable,
+25 |     PageDecision,
+   |
+help: Remove unused import
+   |
+22 | from shared import (
+   -     BEST_V1_PARAMS,
+23 |     GmftTable,
+--------------------------------------------------------------------------------
+33 |     insert_tables_at_end,
+   -     load_papers,
+34 |     replace_tables,
+   |
+
+F401 [*] `shared.load_papers` imported but unused
+  --> tests/corpus/pipelines/h1_pymupdf_gmft.py:35:5
+   |
+33 |     has_col_headers,
+34 |     insert_tables_at_end,
+35 |     load_papers,
+   |     ^^^^^^^^^^^
+36 |     replace_tables,
+37 |     strip_pipe_tables,
+   |
+help: Remove unused import
+   |
+22 | from shared import (
+   -     BEST_V1_PARAMS,
+23 |     GmftTable,
+--------------------------------------------------------------------------------
+33 |     insert_tables_at_end,
+   -     load_papers,
+34 |     replace_tables,
+   |
+
+F541 [*] f-string without any placeholders
+   --> tests/corpus/pipelines/h1_pymupdf_gmft.py:181:11
+    |
+179 |     # Step 1: Extract with pymupdf4llm (per page)
+180 |     start = time.time()
+181 |     print(f"  pymupdf4llm extracting...", end=" ", flush=True)
+    |           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+182 |     pages = extract_pymupdf_pages(pdf_path)
+183 |     pymupdf_elapsed = time.time() - start
+    |
+help: Remove extraneous `f` prefix
+    |
+180 |     start = time.time()
+    -     print(f"  pymupdf4llm extracting...", end=" ", flush=True)
+181 +     print("  pymupdf4llm extracting...", end=" ", flush=True)
+182 |     pages = extract_pymupdf_pages(pdf_path)
+    |
+
+F541 [*] f-string without any placeholders
+   --> tests/corpus/pipelines/h1_pymupdf_gmft.py:187:11
+    |
+186 |     # Step 2: Extract tables with GMFT
+187 |     print(f"  GMFT extracting...", end=" ", flush=True)
+    |           ^^^^^^^^^^^^^^^^^^^^^^^
+188 |     gmft_start = time.time()
+189 |     gmft_pages = extract_gmft_pages(pdf_path)
+    |
+help: Remove extraneous `f` prefix
+    |
+186 |     # Step 2: Extract tables with GMFT
+    -     print(f"  GMFT extracting...", end=" ", flush=True)
+187 +     print("  GMFT extracting...", end=" ", flush=True)
+188 |     gmft_start = time.time()
+    |
+
+F541 [*] f-string without any placeholders
+   --> tests/corpus/pipelines/h1_pymupdf_gmft.py:195:11
+    |
+194 |     # Step 3: Per-page decision and merge
+195 |     print(f"  Merging...")
+    |           ^^^^^^^^^^^^^^^
+196 |     final_pages = []
+197 |     decisions = []
+    |
+help: Remove extraneous `f` prefix
+    |
+194 |     # Step 3: Per-page decision and merge
+    -     print(f"  Merging...")
+195 +     print("  Merging...")
+196 |     final_pages = []
+    |
+
+F841 Local variable `scores` is assigned to but never used
+   --> tests/corpus/pipelines/h1_pymupdf_gmft.py:220:5
+    |
+218 |           f"{total_elapsed:.1f}s")
+219 |
+220 |     scores = score_and_print(slug, metrics)
+    |     ^^^^^^
+221 |
+222 |     # Step 6: Save results
+    |
+help: Remove assignment to unused variable `scores`
+
+F541 [*] f-string without any placeholders
+   --> tests/corpus/pipelines/h1_pymupdf_gmft.py:252:11
+    |
+250 |     slugs = [s.strip() for s in args.slugs.split(",")]
+251 |
+252 |     print(f"H1 Pipeline: pymupdf4llm + GMFT table replacement")
+    |           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+253 |     print(f"Papers: {', '.join(slugs)}")
+    |
+help: Remove extraneous `f` prefix
+    |
+251 |
+    -     print(f"H1 Pipeline: pymupdf4llm + GMFT table replacement")
+252 +     print("H1 Pipeline: pymupdf4llm + GMFT table replacement")
+253 |     print(f"Papers: {', '.join(slugs)}")
+    |
+
+F541 [*] f-string without any placeholders
+   --> tests/corpus/pipelines/h1_pymupdf_gmft.py:269:11
+    |
+268 |     print(f"\n{'='*60}")
+269 |     print(f"  Done. Results in runs/pipeline_h1/")
+    |           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+270 |     print(f"{'='*60}")
+    |
+help: Remove extraneous `f` prefix
+    |
+268 |     print(f"\n{'='*60}")
+    -     print(f"  Done. Results in runs/pipeline_h1/")
+269 +     print("  Done. Results in runs/pipeline_h1/")
+270 |     print(f"{'='*60}")
+    |
+
+F401 [*] `shared.load_papers` imported but unused
+  --> tests/corpus/pipelines/h3_pymupdf_claude_eq.py:38:5
+   |
+36 |     extract_pymupdf_pages,
+37 |     get_pdf_path,
+38 |     load_papers,
+   |     ^^^^^^^^^^^
+39 |     save_config,
+40 |     save_pipeline_result,
+   |
+help: Remove unused import: `shared.load_papers`
+   |
+37 |     get_pdf_path,
+   -     load_papers,
+38 |     save_config,
+   |
+
+F541 [*] f-string without any placeholders
+   --> tests/corpus/pipelines/h3_pymupdf_claude_eq.py:206:11
+    |
+204 |     # Step 1: Extract with pymupdf4llm (per page)
+205 |     start = time.time()
+206 |     print(f"  pymupdf4llm extracting...", end=" ", flush=True)
+    |           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+207 |     pages = extract_pymupdf_pages(pdf_path)
+208 |     pymupdf_elapsed = time.time() - start
+    |
+help: Remove extraneous `f` prefix
+    |
+205 |     start = time.time()
+    -     print(f"  pymupdf4llm extracting...", end=" ", flush=True)
+206 +     print("  pymupdf4llm extracting...", end=" ", flush=True)
+207 |     pages = extract_pymupdf_pages(pdf_path)
+    |
+
+F541 [*] f-string without any placeholders
+   --> tests/corpus/pipelines/h3_pymupdf_claude_eq.py:212:11
+    |
+211 |     # Step 2: Run quality gate on each page
+212 |     print(f"  Quality gate assessing...")
+    |           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+213 |     assessments: list[PageAssessment] = []
+214 |     for page in pages:
+    |
+help: Remove extraneous `f` prefix
+    |
+211 |     # Step 2: Run quality gate on each page
+    -     print(f"  Quality gate assessing...")
+212 +     print("  Quality gate assessing...")
+213 |     assessments: list[PageAssessment] = []
+    |
+
+F541 [*] f-string without any placeholders
+   --> tests/corpus/pipelines/h3_pymupdf_claude_eq.py:245:15
+    |
+243 |         print(f"  Estimated cost: ${est_cost:.2f}")
+244 |     else:
+245 |         print(f"  No pages need Claude re-extraction")
+    |               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+246 |
+247 |     if dry_run:
+    |
+help: Remove extraneous `f` prefix
+    |
+244 |     else:
+    -         print(f"  No pages need Claude re-extraction")
+245 +         print("  No pages need Claude re-extraction")
+246 |
+    |
+
+F541 [*] f-string without any placeholders
+   --> tests/corpus/pipelines/h3_pymupdf_claude_eq.py:248:15
+    |
+247 |     if dry_run:
+248 |         print(f"\n  [DRY RUN] Skipping Claude extraction")
+    |               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+249 |         return
+    |
+help: Remove extraneous `f` prefix
+    |
+247 |     if dry_run:
+    -         print(f"\n  [DRY RUN] Skipping Claude extraction")
+248 +         print("\n  [DRY RUN] Skipping Claude extraction")
+249 |         return
+    |
+
+F541 [*] f-string without any placeholders
+   --> tests/corpus/pipelines/h3_pymupdf_claude_eq.py:278:11
+    |
+277 |     # Step 5: Merge — replace pymupdf4llm pages with Claude output where available
+278 |     print(f"\n  Merging...")
+    |           ^^^^^^^^^^^^^^^^^
+279 |     final_pages = []
+280 |     decisions = []
+    |
+help: Remove extraneous `f` prefix
+    |
+277 |     # Step 5: Merge — replace pymupdf4llm pages with Claude output where available
+    -     print(f"\n  Merging...")
+278 +     print("\n  Merging...")
+279 |     final_pages = []
+    |
+
+F541 [*] f-string without any placeholders
+   --> tests/corpus/pipelines/h3_pymupdf_claude_eq.py:292:21
+    |
+290 |                 action="claude_replace",
+291 |                 reasons=[
+292 |                     f"Claude vision re-extraction (full page replacement)",
+    |                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+293 |                     *[f"  {r}" for r in assessment.reasons],
+294 |                 ],
+    |
+help: Remove extraneous `f` prefix
+    |
+291 |                 reasons=[
+    -                     f"Claude vision re-extraction (full page replacement)",
+292 +                     "Claude vision re-extraction (full page replacement)",
+293 |                     *[f"  {r}" for r in assessment.reasons],
+    |
+
+F841 Local variable `scores` is assigned to but never used
+   --> tests/corpus/pipelines/h3_pymupdf_claude_eq.py:345:5
+    |
+343 |           f"{total_elapsed:.1f}s")
+344 |
+345 |     scores = score_and_print(slug, metrics)
+    |     ^^^^^^
+346 |
+347 |     # Step 9: Save results
+    |
+help: Remove assignment to unused variable `scores`
+
+F541 [*] f-string without any placeholders
+   --> tests/corpus/pipelines/h3_pymupdf_claude_eq.py:400:11
+    |
+398 |     slugs = [s.strip() for s in args.slugs.split(",")]
+399 |
+400 |     print(f"H3 Pipeline: pymupdf4llm + Claude vision (math-garbled pages)")
+    |           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+401 |     print(f"Papers: {', '.join(slugs)}")
+402 |     print(f"Budget: ${BUDGET_PER_DOC_USD:.2f}/doc ({MAX_CLAUDE_PAGES} pages max)")
+    |
+help: Remove extraneous `f` prefix
+    |
+399 |
+    -     print(f"H3 Pipeline: pymupdf4llm + Claude vision (math-garbled pages)")
+400 +     print("H3 Pipeline: pymupdf4llm + Claude vision (math-garbled pages)")
+401 |     print(f"Papers: {', '.join(slugs)}")
+    |
+
+F541 [*] f-string without any placeholders
+   --> tests/corpus/pipelines/h3_pymupdf_claude_eq.py:404:15
+    |
+402 |     print(f"Budget: ${BUDGET_PER_DOC_USD:.2f}/doc ({MAX_CLAUDE_PAGES} pages max)")
+403 |     if args.dry_run:
+404 |         print(f"MODE: DRY RUN (no Claude calls)")
+    |               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+405 |
+406 |     # Load extraction prompt
+    |
+help: Remove extraneous `f` prefix
+    |
+403 |     if args.dry_run:
+    -         print(f"MODE: DRY RUN (no Claude calls)")
+404 +         print("MODE: DRY RUN (no Claude calls)")
+405 |
+    |
+
+F541 [*] f-string without any placeholders
+   --> tests/corpus/pipelines/h3_pymupdf_claude_eq.py:433:11
+    |
+432 |     print(f"\n{'='*60}")
+433 |     print(f"  Done. Results in runs/pipeline_h3/")
+    |           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+434 |     print(f"{'='*60}")
+    |
+help: Remove extraneous `f` prefix
+    |
+432 |     print(f"\n{'='*60}")
+    -     print(f"  Done. Results in runs/pipeline_h3/")
+433 +     print("  Done. Results in runs/pipeline_h3/")
+434 |     print(f"{'='*60}")
+    |
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> tests/corpus/pipelines/h5_quality_gated.py:31:1
+   |
+29 |   sys.path.insert(0, str(Path(__file__).parent.parent))
+30 |
+31 | / from metrics import compute_metrics
+32 | | from quality_gate import (
+33 | |     PageAssessment,
+34 | |     assess_heading_anomaly,
+35 | |     assess_page_quality,
+36 | |     prioritize_pages,
+37 | | )
+38 | | from h1_pymupdf_gmft import decide_page as h1_decide_page
+39 | | from h3_pymupdf_claude_eq import (
+40 | |     BUDGET_PER_DOC_USD,
+41 | |     COST_PER_PAGE_USD,
+42 | |     MAX_CLAUDE_PAGES,
+43 | |     DEFAULT_PROMPT,
+44 | |     extract_page_with_claude,
+45 | | )
+46 | | from shared import (
+47 | |     CORPUS_DIR,
+48 | |     PageDecision,
+49 | |     extract_gmft_pages,
+50 | |     extract_pymupdf_pages,
+51 | |     filter_gmft_tables,
+52 | |     get_pdf_path,
+53 | |     load_papers,
+54 | |     replace_tables,
+55 | |     save_config,
+56 | |     save_pipeline_result,
+57 | |     score_and_print,
+58 | | )
+59 | |
+60 | | import json
+   | |___________^
+61 |
+62 |   # Default: 4-paper dev set
+   |
+help: Organize imports
+   |
+30 |
+31 + import json
+32 +
+33 + from h1_pymupdf_gmft import decide_page as h1_decide_page
+34 + from h3_pymupdf_claude_eq import (
+35 +     BUDGET_PER_DOC_USD,
+36 +     COST_PER_PAGE_USD,
+37 +     DEFAULT_PROMPT,
+38 +     MAX_CLAUDE_PAGES,
+39 +     extract_page_with_claude,
+40 + )
+41 | from metrics import compute_metrics
+--------------------------------------------------------------------------------
+47 | )
+   - from h1_pymupdf_gmft import decide_page as h1_decide_page
+   - from h3_pymupdf_claude_eq import (
+   -     BUDGET_PER_DOC_USD,
+   -     COST_PER_PAGE_USD,
+   -     MAX_CLAUDE_PAGES,
+   -     DEFAULT_PROMPT,
+   -     extract_page_with_claude,
+   - )
+48 | from shared import (
+--------------------------------------------------------------------------------
+60 | )
+   -
+   - import json
+61 |
+   |
+
+F401 [*] `shared.filter_gmft_tables` imported but unused
+  --> tests/corpus/pipelines/h5_quality_gated.py:51:5
+   |
+49 |     extract_gmft_pages,
+50 |     extract_pymupdf_pages,
+51 |     filter_gmft_tables,
+   |     ^^^^^^^^^^^^^^^^^^
+52 |     get_pdf_path,
+53 |     load_papers,
+   |
+help: Remove unused import
+   |
+50 |     extract_pymupdf_pages,
+   -     filter_gmft_tables,
+51 |     get_pdf_path,
+   -     load_papers,
+   -     replace_tables,
+52 |     save_config,
+   |
+
+F401 [*] `shared.load_papers` imported but unused
+  --> tests/corpus/pipelines/h5_quality_gated.py:53:5
+   |
+51 |     filter_gmft_tables,
+52 |     get_pdf_path,
+53 |     load_papers,
+   |     ^^^^^^^^^^^
+54 |     replace_tables,
+55 |     save_config,
+   |
+help: Remove unused import
+   |
+50 |     extract_pymupdf_pages,
+   -     filter_gmft_tables,
+51 |     get_pdf_path,
+   -     load_papers,
+   -     replace_tables,
+52 |     save_config,
+   |
+
+F401 [*] `shared.replace_tables` imported but unused
+  --> tests/corpus/pipelines/h5_quality_gated.py:54:5
+   |
+52 |     get_pdf_path,
+53 |     load_papers,
+54 |     replace_tables,
+   |     ^^^^^^^^^^^^^^
+55 |     save_config,
+56 |     save_pipeline_result,
+   |
+help: Remove unused import
+   |
+50 |     extract_pymupdf_pages,
+   -     filter_gmft_tables,
+51 |     get_pdf_path,
+   -     load_papers,
+   -     replace_tables,
+52 |     save_config,
+   |
+
+F541 [*] f-string without any placeholders
+  --> tests/corpus/pipelines/h5_quality_gated.py:85:11
+   |
+83 |     # Step 1: Extract with pymupdf4llm (per page)
+84 |     start = time.time()
+85 |     print(f"  pymupdf4llm extracting...", end=" ", flush=True)
+   |           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+86 |     pages = extract_pymupdf_pages(pdf_path)
+87 |     pymupdf_elapsed = time.time() - start
+   |
+help: Remove extraneous `f` prefix
+   |
+84 |     start = time.time()
+   -     print(f"  pymupdf4llm extracting...", end=" ", flush=True)
+85 +     print("  pymupdf4llm extracting...", end=" ", flush=True)
+86 |     pages = extract_pymupdf_pages(pdf_path)
+   |
+
+F541 [*] f-string without any placeholders
+  --> tests/corpus/pipelines/h5_quality_gated.py:91:11
+   |
+90 |     # Step 2: Extract tables with GMFT
+91 |     print(f"  GMFT extracting...", end=" ", flush=True)
+   |           ^^^^^^^^^^^^^^^^^^^^^^^
+92 |     gmft_start = time.time()
+93 |     gmft_pages = extract_gmft_pages(pdf_path)
+   |
+help: Remove extraneous `f` prefix
+   |
+90 |     # Step 2: Extract tables with GMFT
+   -     print(f"  GMFT extracting...", end=" ", flush=True)
+91 +     print("  GMFT extracting...", end=" ", flush=True)
+92 |     gmft_start = time.time()
+   |
+
+F541 [*] f-string without any placeholders
+   --> tests/corpus/pipelines/h5_quality_gated.py:99:11
+    |
+ 98 |     # Step 3: Run quality gate on each page
+ 99 |     print(f"  Quality gate assessing...")
+    |           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+100 |     assessments: list[PageAssessment] = []
+101 |     for page in pages:
+    |
+help: Remove extraneous `f` prefix
+    |
+98  |     # Step 3: Run quality gate on each page
+    -     print(f"  Quality gate assessing...")
+99  +     print("  Quality gate assessing...")
+100 |     assessments: list[PageAssessment] = []
+    |
+
+F541 [*] f-string without any placeholders
+   --> tests/corpus/pipelines/h5_quality_gated.py:132:11
+    |
+130 |     flagged_gmft = sum(1 for a in assessments if a.needs_gmft and not a.needs_claude)
+131 |
+132 |     print(f"\n  Routing summary:")
+    |           ^^^^^^^^^^^^^^^^^^^^^^^
+133 |     print(f"    GMFT-only pages: {flagged_gmft}")
+134 |     print(f"    Claude pages: {len(claude_pages_list)} (of {flagged_claude} flagged)")
+    |
+help: Remove extraneous `f` prefix
+    |
+131 |
+    -     print(f"\n  Routing summary:")
+132 +     print("\n  Routing summary:")
+133 |     print(f"    GMFT-only pages: {flagged_gmft}")
+    |
+
+F541 [*] f-string without any placeholders
+   --> tests/corpus/pipelines/h5_quality_gated.py:157:15
+    |
+156 |     if dry_run:
+157 |         print(f"\n  [DRY RUN] Skipping extraction")
+    |               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+158 |         return
+    |
+help: Remove extraneous `f` prefix
+    |
+156 |     if dry_run:
+    -         print(f"\n  [DRY RUN] Skipping extraction")
+157 +         print("\n  [DRY RUN] Skipping extraction")
+158 |         return
+    |
+
+F541 [*] f-string without any placeholders
+   --> tests/corpus/pipelines/h5_quality_gated.py:187:11
+    |
+186 |     # Step 6: Merge all enhancements
+187 |     print(f"\n  Merging...")
+    |           ^^^^^^^^^^^^^^^^^
+188 |     final_pages = []
+189 |     decisions = []
+    |
+help: Remove extraneous `f` prefix
+    |
+186 |     # Step 6: Merge all enhancements
+    -     print(f"\n  Merging...")
+187 +     print("\n  Merging...")
+188 |     final_pages = []
+    |
+
+F541 [*] f-string without any placeholders
+   --> tests/corpus/pipelines/h5_quality_gated.py:243:21
+    |
+241 |                 action=f"gmft_{h1_decision.action}",
+242 |                 reasons=[
+243 |                     f"Claude flagged but budget-skipped; GMFT table fix applied",
+    |                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+244 |                     *[f"  {r}" for r in assessment.reasons],
+245 |                     *h1_decision.reasons,
+    |
+help: Remove extraneous `f` prefix
+    |
+242 |                 reasons=[
+    -                     f"Claude flagged but budget-skipped; GMFT table fix applied",
+243 +                     "Claude flagged but budget-skipped; GMFT table fix applied",
+244 |                     *[f"  {r}" for r in assessment.reasons],
+    |
+
+F841 Local variable `scores` is assigned to but never used
+   --> tests/corpus/pipelines/h5_quality_gated.py:295:5
+    |
+293 |           f"{total_elapsed:.1f}s")
+294 |
+295 |     scores = score_and_print(slug, metrics)
+    |     ^^^^^^
+296 |
+297 |     # Step 10: Save results
+    |
+help: Remove assignment to unused variable `scores`
+
+F541 [*] f-string without any placeholders
+   --> tests/corpus/pipelines/h5_quality_gated.py:351:11
+    |
+349 |     slugs = [s.strip() for s in args.slugs.split(",")]
+350 |
+351 |     print(f"H5 Pipeline: Quality-gated multi-layer (GMFT + Claude)")
+    |           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+352 |     print(f"Papers: {', '.join(slugs)}")
+353 |     print(f"Budget: ${BUDGET_PER_DOC_USD:.2f}/doc ({MAX_CLAUDE_PAGES} pages max)")
+    |
+help: Remove extraneous `f` prefix
+    |
+350 |
+    -     print(f"H5 Pipeline: Quality-gated multi-layer (GMFT + Claude)")
+351 +     print("H5 Pipeline: Quality-gated multi-layer (GMFT + Claude)")
+352 |     print(f"Papers: {', '.join(slugs)}")
+    |
+
+F541 [*] f-string without any placeholders
+   --> tests/corpus/pipelines/h5_quality_gated.py:355:15
+    |
+353 |     print(f"Budget: ${BUDGET_PER_DOC_USD:.2f}/doc ({MAX_CLAUDE_PAGES} pages max)")
+354 |     if args.dry_run:
+355 |         print(f"MODE: DRY RUN (no Claude calls)")
+    |               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+356 |
+357 |     # Load extraction prompt
+    |
+help: Remove extraneous `f` prefix
+    |
+354 |     if args.dry_run:
+    -         print(f"MODE: DRY RUN (no Claude calls)")
+355 +         print("MODE: DRY RUN (no Claude calls)")
+356 |
+    |
+
+F541 [*] f-string without any placeholders
+   --> tests/corpus/pipelines/h5_quality_gated.py:382:11
+    |
+381 |     print(f"\n{'='*60}")
+382 |     print(f"  Done. Results in runs/pipeline_h5/")
+    |           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+383 |     print(f"{'='*60}")
+    |
+help: Remove extraneous `f` prefix
+    |
+381 |     print(f"\n{'='*60}")
+    -     print(f"  Done. Results in runs/pipeline_h5/")
+382 +     print("  Done. Results in runs/pipeline_h5/")
+383 |     print(f"{'='*60}")
+    |
+
+F401 [*] `json` imported but unused
+  --> tests/corpus/pipelines/h6_pandoc_shortcut.py:15:8
+   |
+14 | import argparse
+15 | import json
+   |        ^^^^
+16 | import re
+17 | import subprocess
+   |
+help: Remove unused import: `json`
+   |
+14 | import argparse
+   - import json
+15 | import re
+   |
+
+F401 [*] `shared.PAPERS_JSONL` imported but unused
+  --> tests/corpus/pipelines/h6_pandoc_shortcut.py:29:5
+   |
+27 | from shared import (
+28 |     CORPUS_DIR,
+29 |     PAPERS_JSONL,
+   |     ^^^^^^^^^^^^
+30 |     PageDecision,
+31 |     load_papers,
+   |
+help: Remove unused import: `shared.PAPERS_JSONL`
+   |
+28 |     CORPUS_DIR,
+   -     PAPERS_JSONL,
+29 |     PageDecision,
+   |
+
+F541 [*] f-string without any placeholders
+   --> tests/corpus/pipelines/h6_pandoc_shortcut.py:164:15
+    |
+163 |     if arxiv_id is None:
+164 |         print(f"  No arXiv ID — skipping (would fall back to H5 PDF pipeline)")
+    |               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+165 |         decision = PageDecision(
+166 |             page_num=-1,
+    |
+help: Remove extraneous `f` prefix
+    |
+163 |     if arxiv_id is None:
+    -         print(f"  No arXiv ID — skipping (would fall back to H5 PDF pipeline)")
+164 +         print("  No arXiv ID — skipping (would fall back to H5 PDF pipeline)")
+165 |         decision = PageDecision(
+    |
+
+F541 [*] f-string without any placeholders
+   --> tests/corpus/pipelines/h6_pandoc_shortcut.py:201:11
+    |
+200 |     # Step 2: Pre-process HTML
+201 |     print(f"  Pre-processing HTML...", end=" ", flush=True)
+    |           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+202 |     raw_html = html_path.read_text(encoding="utf-8")
+203 |     processed_html = preprocess_html(raw_html)
+    |
+help: Remove extraneous `f` prefix
+    |
+200 |     # Step 2: Pre-process HTML
+    -     print(f"  Pre-processing HTML...", end=" ", flush=True)
+201 +     print("  Pre-processing HTML...", end=" ", flush=True)
+202 |     raw_html = html_path.read_text(encoding="utf-8")
+    |
+
+F541 [*] f-string without any placeholders
+   --> tests/corpus/pipelines/h6_pandoc_shortcut.py:207:11
+    |
+206 |     # Step 3: Run Pandoc
+207 |     print(f"  Running Pandoc...", end=" ", flush=True)
+    |           ^^^^^^^^^^^^^^^^^^^^^^
+208 |     with tempfile.NamedTemporaryFile(mode="w", suffix=".html", delete=False) as f:
+209 |         f.write(processed_html)
+    |
+help: Remove extraneous `f` prefix
+    |
+206 |     # Step 3: Run Pandoc
+    -     print(f"  Running Pandoc...", end=" ", flush=True)
+207 +     print("  Running Pandoc...", end=" ", flush=True)
+208 |     with tempfile.NamedTemporaryFile(mode="w", suffix=".html", delete=False) as f:
+    |
+
+F841 Local variable `scores` is assigned to but never used
+   --> tests/corpus/pipelines/h6_pandoc_shortcut.py:230:5
+    |
+228 |           f"{metrics.char_count} chars")
+229 |
+230 |     scores = score_and_print(slug, metrics)
+    |     ^^^^^^
+231 |
+232 |     # Step 6: Save results
+    |
+help: Remove assignment to unused variable `scores`
+
+F541 [*] f-string without any placeholders
+   --> tests/corpus/pipelines/h6_pandoc_shortcut.py:238:13
+    |
+236 |         reasons=[
+237 |             f"arXiv HTML via Pandoc (ID: {arxiv_id})",
+238 |             f"Pre-processed: stripped <figure> tags and CSS transform wrappers",
+    |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+239 |             f"Post-processed: stripped \\hspace{{0pt}} and HTML comment artifacts",
+240 |         ],
+    |
+help: Remove extraneous `f` prefix
+    |
+237 |             f"arXiv HTML via Pandoc (ID: {arxiv_id})",
+    -             f"Pre-processed: stripped <figure> tags and CSS transform wrappers",
+238 +             "Pre-processed: stripped <figure> tags and CSS transform wrappers",
+239 |             f"Post-processed: stripped \\hspace{{0pt}} and HTML comment artifacts",
+    |
+
+F541 [*] f-string without any placeholders
+   --> tests/corpus/pipelines/h6_pandoc_shortcut.py:239:13
+    |
+237 |             f"arXiv HTML via Pandoc (ID: {arxiv_id})",
+238 |             f"Pre-processed: stripped <figure> tags and CSS transform wrappers",
+239 |             f"Post-processed: stripped \\hspace{{0pt}} and HTML comment artifacts",
+    |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+240 |         ],
+241 |         details={
+    |
+help: Remove extraneous `f` prefix
+    |
+238 |             f"Pre-processed: stripped <figure> tags and CSS transform wrappers",
+    -             f"Post-processed: stripped \\hspace{{0pt}} and HTML comment artifacts",
+239 +             "Post-processed: stripped \\hspace{0pt} and HTML comment artifacts",
+240 |         ],
+    |
+
+F541 [*] f-string without any placeholders
+   --> tests/corpus/pipelines/h6_pandoc_shortcut.py:279:11
+    |
+277 |     slugs = [s.strip() for s in args.slugs.split(",")]
+278 |
+279 |     print(f"H6 Pipeline: Pandoc shortcut for arXiv papers")
+    |           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+280 |     print(f"Papers: {', '.join(slugs)}")
+    |
+help: Remove extraneous `f` prefix
+    |
+278 |
+    -     print(f"H6 Pipeline: Pandoc shortcut for arXiv papers")
+279 +     print("H6 Pipeline: Pandoc shortcut for arXiv papers")
+280 |     print(f"Papers: {', '.join(slugs)}")
+    |
+
+F541 [*] f-string without any placeholders
+   --> tests/corpus/pipelines/h6_pandoc_shortcut.py:301:11
+    |
+300 |     print(f"\n{'='*60}")
+301 |     print(f"  Done. Results in runs/pipeline_h6/")
+    |           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+302 |     print(f"{'='*60}")
+    |
+help: Remove extraneous `f` prefix
+    |
+300 |     print(f"\n{'='*60}")
+    -     print(f"  Done. Results in runs/pipeline_h6/")
+301 +     print("  Done. Results in runs/pipeline_h6/")
+302 |     print(f"{'='*60}")
+    |
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> tests/corpus/pipelines/quality_gate.py:14:1
+   |
+12 |   """
+13 |
+14 | / import re
+15 | | from dataclasses import dataclass, field
+   | |________________________________________^
+help: Organize imports
+   |
+16 |
+   -
+17 | # ---------------------------------------------------------------------------
+   |
+
+F401 [*] `time` imported but unused
+  --> tests/corpus/pipelines/shared.py:10:8
+   |
+ 8 | import re
+ 9 | import sys
+10 | import time
+   |        ^^^^
+11 | from dataclasses import asdict, dataclass, field
+12 | from pathlib import Path
+   |
+help: Remove unused import: `time`
+   |
+9  | import sys
+   - import time
+10 | from dataclasses import asdict, dataclass, field
+   |
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> tests/corpus/pipelines/shared.py:17:1
+   |
+15 |   sys.path.insert(0, str(Path(__file__).parent.parent))
+16 |
+17 | / import pymupdf4llm  # type: ignore[import-untyped]
+18 | | from metrics import (
+19 | |     ExtractionMetrics,
+20 | |     AccuracyScore,
+21 | |     compute_metrics,
+22 | |     load_ground_truth,
+23 | |     score_against_ground_truth,
+24 | | )
+   | |_^
+25 |
+26 |   CORPUS_DIR = Path(__file__).parent.parent
+   |
+help: Organize imports
+   |
+18 | from metrics import (
+19 +     AccuracyScore,
+20 |     ExtractionMetrics,
+   -     AccuracyScore,
+21 |     compute_metrics,
+   |
+
+F401 [*] `dataclasses.field` imported but unused
+  --> tests/corpus/pipelines/track0_detection.py:17:44
+   |
+15 | import sys
+16 | import time
+17 | from dataclasses import asdict, dataclass, field
+   |                                            ^^^^^
+18 | from pathlib import Path
+   |
+help: Remove unused import: `dataclasses.field`
+   |
+16 | import time
+   - from dataclasses import asdict, dataclass, field
+17 + from dataclasses import asdict, dataclass
+18 | from pathlib import Path
+   |
+
+F401 [*] `shared.CORPUS_DIR` imported but unused
+  --> tests/corpus/pipelines/track0_detection.py:23:20
+   |
+21 | sys.path.insert(0, str(Path(__file__).parent.parent))
+22 |
+23 | from shared import CORPUS_DIR, RUNS_DIR, get_pdf_path, load_papers
+   |                    ^^^^^^^^^^
+24 |
+25 | # All 5 test papers for this spike
+   |
+help: Remove unused import
+   |
+22 |
+   - from shared import CORPUS_DIR, RUNS_DIR, get_pdf_path, load_papers
+23 + from shared import RUNS_DIR, get_pdf_path
+24 |
+   |
+
+F401 [*] `shared.load_papers` imported but unused
+  --> tests/corpus/pipelines/track0_detection.py:23:56
+   |
+21 | sys.path.insert(0, str(Path(__file__).parent.parent))
+22 |
+23 | from shared import CORPUS_DIR, RUNS_DIR, get_pdf_path, load_papers
+   |                                                        ^^^^^^^^^^^
+24 |
+25 | # All 5 test papers for this spike
+   |
+help: Remove unused import
+   |
+22 |
+   - from shared import CORPUS_DIR, RUNS_DIR, get_pdf_path, load_papers
+23 + from shared import RUNS_DIR, get_pdf_path
+24 |
+   |
+
+F541 [*] f-string without any placeholders
+   --> tests/corpus/pipelines/track0_detection.py:415:11
+    |
+414 |     # Step 1: GMFT detection
+415 |     print(f"  GMFT detecting...", end=" ", flush=True)
+    |           ^^^^^^^^^^^^^^^^^^^^^^
+416 |     gmft_start = time.time()
+417 |     gmft_tables = detect_gmft_tables(pdf_path, output_dir)
+    |
+help: Remove extraneous `f` prefix
+    |
+414 |     # Step 1: GMFT detection
+    -     print(f"  GMFT detecting...", end=" ", flush=True)
+415 +     print("  GMFT detecting...", end=" ", flush=True)
+416 |     gmft_start = time.time()
+    |
+
+F541 [*] f-string without any placeholders
+   --> tests/corpus/pipelines/track0_detection.py:429:11
+    |
+428 |     # Step 2: PyMuPDF detection
+429 |     print(f"  PyMuPDF detecting...", end=" ", flush=True)
+    |           ^^^^^^^^^^^^^^^^^^^^^^^^^
+430 |     pymupdf_start = time.time()
+431 |     pymupdf_tables = detect_pymupdf_tables(pdf_path, output_dir)
+    |
+help: Remove extraneous `f` prefix
+    |
+428 |     # Step 2: PyMuPDF detection
+    -     print(f"  PyMuPDF detecting...", end=" ", flush=True)
+429 +     print("  PyMuPDF detecting...", end=" ", flush=True)
+430 |     pymupdf_start = time.time()
+    |
+
+F541 [*] f-string without any placeholders
+   --> tests/corpus/pipelines/track0_detection.py:443:11
+    |
+442 |     # Step 3: Overlap detection
+443 |     print(f"  Computing overlaps...", end=" ", flush=True)
+    |           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+444 |     overlaps = find_overlaps(gmft_tables, pymupdf_tables)
+445 |     print(f"{len(overlaps)} overlapping detections (IoU > 0.5)")
+    |
+help: Remove extraneous `f` prefix
+    |
+442 |     # Step 3: Overlap detection
+    -     print(f"  Computing overlaps...", end=" ", flush=True)
+443 +     print("  Computing overlaps...", end=" ", flush=True)
+444 |     overlaps = find_overlaps(gmft_tables, pymupdf_tables)
+    |
+
+F541 [*] f-string without any placeholders
+   --> tests/corpus/pipelines/track0_detection.py:457:11
+    |
+456 |     # Print summary
+457 |     print(f"\n  Detection Summary:")
+    |           ^^^^^^^^^^^^^^^^^^^^^^^^^
+458 |     print(f"    GMFT:       {len(gmft_kept)} tables (post-filter)")
+459 |     print(f"    PyMuPDF:    {len(pymupdf_kept)} tables (post-filter)")
+    |
+help: Remove extraneous `f` prefix
+    |
+456 |     # Print summary
+    -     print(f"\n  Detection Summary:")
+457 +     print("\n  Detection Summary:")
+458 |     print(f"    GMFT:       {len(gmft_kept)} tables (post-filter)")
+    |
+
+F541 [*] f-string without any placeholders
+   --> tests/corpus/pipelines/track0_detection.py:552:11
+    |
+550 |     slugs = [s.strip() for s in args.slugs.split(",")]
+551 |
+552 |     print(f"Track 0: Table Detection Coverage")
+    |           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+553 |     print(f"Papers: {', '.join(slugs)}")
+554 |     print(f"Output: runs/{RUN_NAME}/")
+    |
+help: Remove extraneous `f` prefix
+    |
+551 |
+    -     print(f"Track 0: Table Detection Coverage")
+552 +     print("Track 0: Table Detection Coverage")
+553 |     print(f"Papers: {', '.join(slugs)}")
+    |
+
+F541 [*] f-string without any placeholders
+   --> tests/corpus/pipelines/track0_detection.py:565:15
+    |
+563 |     if summaries:
+564 |         print(f"\n{'='*60}")
+565 |         print(f"  Cross-Paper Summary")
+    |               ^^^^^^^^^^^^^^^^^^^^^^^^
+566 |         print(f"{'='*60}")
+567 |         print(f"  {'Slug':<25} {'GMFT':>5} {'PyMu':>5} {'Both':>5} {'G-only':>6} {'P-only':>6} {'Union':>5}")
+    |
+help: Remove extraneous `f` prefix
+    |
+564 |         print(f"\n{'='*60}")
+    -         print(f"  Cross-Paper Summary")
+565 +         print("  Cross-Paper Summary")
+566 |         print(f"{'='*60}")
+    |
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> tests/corpus/pipelines/track1_cropped_extraction.py:27:1
+   |
+25 |   sys.path.insert(0, str(Path(__file__).parent.parent))
+26 |
+27 | / from shared import CORPUS_DIR, RUNS_DIR, count_real_table_rows, load_papers
+28 | | from metrics import load_ground_truth
+   | |_____________________________________^
+29 |
+30 |   SPIKE_SET = [
+   |
+help: Organize imports
+   |
+26 |
+27 + from metrics import load_ground_truth
+28 | from shared import CORPUS_DIR, RUNS_DIR, count_real_table_rows, load_papers
+   - from metrics import load_ground_truth
+29 |
+   |
+
+F401 [*] `shared.load_papers` imported but unused
+  --> tests/corpus/pipelines/track1_cropped_extraction.py:27:65
+   |
+25 | sys.path.insert(0, str(Path(__file__).parent.parent))
+26 |
+27 | from shared import CORPUS_DIR, RUNS_DIR, count_real_table_rows, load_papers
+   |                                                                 ^^^^^^^^^^^
+28 | from metrics import load_ground_truth
+   |
+help: Remove unused import: `shared.load_papers`
+   |
+26 |
+   - from shared import CORPUS_DIR, RUNS_DIR, count_real_table_rows, load_papers
+27 + from shared import CORPUS_DIR, RUNS_DIR, count_real_table_rows
+28 | from metrics import load_ground_truth
+   |
+
+F541 [*] f-string without any placeholders
+   --> tests/corpus/pipelines/track1_cropped_extraction.py:145:28
+    |
+143 |     markdown = response.get("result", "")
+144 |     if not markdown:
+145 |         raise RuntimeError(f"claude -p returned empty result")
+    |                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+146 |
+147 |     cost_data = {
+    |
+help: Remove extraneous `f` prefix
+    |
+144 |     if not markdown:
+    -         raise RuntimeError(f"claude -p returned empty result")
+145 +         raise RuntimeError("claude -p returned empty result")
+146 |
+    |
+
+F541 [*] f-string without any placeholders
+   --> tests/corpus/pipelines/track1_cropped_extraction.py:434:11
+    |
+432 |     slugs = [s.strip() for s in args.slugs.split(",")]
+433 |
+434 |     print(f"Track 1: Claude Cropped-Image Table Extraction")
+    |           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+435 |     print(f"Papers: {', '.join(slugs)}")
+436 |     print(f"Detector: {args.detector}")
+    |
+help: Remove extraneous `f` prefix
+    |
+433 |
+    -     print(f"Track 1: Claude Cropped-Image Table Extraction")
+434 +     print("Track 1: Claude Cropped-Image Table Extraction")
+435 |     print(f"Papers: {', '.join(slugs)}")
+    |
+
+F541 [*] f-string without any placeholders
+   --> tests/corpus/pipelines/track1_cropped_extraction.py:439:15
+    |
+437 |     print(f"Model: {args.model}")
+438 |     if args.dry_run:
+439 |         print(f"MODE: DRY RUN (no Claude calls)")
+    |               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+440 |
+441 |     # Load prompt
+    |
+help: Remove extraneous `f` prefix
+    |
+438 |     if args.dry_run:
+    -         print(f"MODE: DRY RUN (no Claude calls)")
+439 +         print("MODE: DRY RUN (no Claude calls)")
+440 |
+    |
+
+F541 [*] f-string without any placeholders
+   --> tests/corpus/pipelines/track1_cropped_extraction.py:457:15
+    |
+455 |     if all_results and not args.dry_run:
+456 |         print(f"\n{'='*60}")
+457 |         print(f"  Cross-Paper Summary")
+    |               ^^^^^^^^^^^^^^^^^^^^^^^^
+458 |         print(f"{'='*60}")
+    |
+help: Remove extraneous `f` prefix
+    |
+456 |         print(f"\n{'='*60}")
+    -         print(f"  Cross-Paper Summary")
+457 +         print("  Cross-Paper Summary")
+458 |         print(f"{'='*60}")
+    |
+
+F401 [*] `dataclasses.asdict` imported but unused
+  --> tests/corpus/pipelines/track2_vote_resolve.py:19:25
+   |
+17 | import re
+18 | import sys
+19 | from dataclasses import asdict, dataclass
+   |                         ^^^^^^
+20 | from pathlib import Path
+   |
+help: Remove unused import
+   |
+18 | import sys
+   - from dataclasses import asdict, dataclass
+19 | from pathlib import Path
+   |
+
+F401 [*] `dataclasses.dataclass` imported but unused
+  --> tests/corpus/pipelines/track2_vote_resolve.py:19:33
+   |
+17 | import re
+18 | import sys
+19 | from dataclasses import asdict, dataclass
+   |                                 ^^^^^^^^^
+20 | from pathlib import Path
+   |
+help: Remove unused import
+   |
+18 | import sys
+   - from dataclasses import asdict, dataclass
+19 | from pathlib import Path
+   |
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> tests/corpus/pipelines/track2_vote_resolve.py:25:1
+   |
+23 |   sys.path.insert(0, str(Path(__file__).parent.parent))
+24 |
+25 | / from shared import RUNS_DIR, count_real_table_rows
+26 | | from metrics import load_ground_truth
+   | |_____________________________________^
+27 |
+28 |   SPIKE_SET = [
+   |
+help: Organize imports
+   |
+24 |
+25 + from metrics import load_ground_truth
+26 | from shared import RUNS_DIR, count_real_table_rows
+   - from metrics import load_ground_truth
+27 |
+   |
+
+F541 [*] f-string without any placeholders
+   --> tests/corpus/pipelines/track2_vote_resolve.py:265:15
+    |
+263 |     pairs = load_table_pairs(slug)
+264 |     if not pairs:
+265 |         print(f"  No matched table pairs found")
+    |               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+266 |         return None
+    |
+help: Remove extraneous `f` prefix
+    |
+264 |     if not pairs:
+    -         print(f"  No matched table pairs found")
+265 +         print("  No matched table pairs found")
+266 |         return None
+    |
+
+F541 [*] f-string without any placeholders
+   --> tests/corpus/pipelines/track2_vote_resolve.py:336:11
+    |
+334 |     }
+335 |
+336 |     print(f"\n  Summary:")
+    |           ^^^^^^^^^^^^^^^
+337 |     print(f"    GMFT total rows:       {totals['gmft_total_rows']}")
+338 |     print(f"    Claude total rows:     {totals['claude_total_rows']}")
+    |
+help: Remove extraneous `f` prefix
+    |
+335 |
+    -     print(f"\n  Summary:")
+336 +     print("\n  Summary:")
+337 |     print(f"    GMFT total rows:       {totals['gmft_total_rows']}")
+    |
+
+F541 [*] f-string without any placeholders
+   --> tests/corpus/pipelines/track2_vote_resolve.py:379:11
+    |
+377 |     slugs = [s.strip() for s in args.slugs.split(",")]
+378 |
+379 |     print(f"Track 2: Vote/Resolve (GMFT vs Claude)")
+    |           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+380 |     print(f"Papers: {', '.join(slugs)}")
+381 |     print(f"No Claude API calls — pure comparison logic")
+    |
+help: Remove extraneous `f` prefix
+    |
+378 |
+    -     print(f"Track 2: Vote/Resolve (GMFT vs Claude)")
+379 +     print("Track 2: Vote/Resolve (GMFT vs Claude)")
+380 |     print(f"Papers: {', '.join(slugs)}")
+    |
+
+F541 [*] f-string without any placeholders
+   --> tests/corpus/pipelines/track2_vote_resolve.py:381:11
+    |
+379 |     print(f"Track 2: Vote/Resolve (GMFT vs Claude)")
+380 |     print(f"Papers: {', '.join(slugs)}")
+381 |     print(f"No Claude API calls — pure comparison logic")
+    |           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+382 |
+383 |     all_totals = []
+    |
+help: Remove extraneous `f` prefix
+    |
+380 |     print(f"Papers: {', '.join(slugs)}")
+    -     print(f"No Claude API calls — pure comparison logic")
+381 +     print("No Claude API calls — pure comparison logic")
+382 |
+    |
+
+F541 [*] f-string without any placeholders
+   --> tests/corpus/pipelines/track2_vote_resolve.py:392:15
+    |
+390 |     if all_totals:
+391 |         print(f"\n{'='*60}")
+392 |         print(f"  Cross-Paper Summary")
+    |               ^^^^^^^^^^^^^^^^^^^^^^^^
+393 |         print(f"{'='*60}")
+394 |         print(f"  {'Slug':<25} {'Pairs':>5} {'GMFT':>5} {'Claude':>6} {'St.A':>5} {'St.B':>5} {'GT':>5}")
+    |
+help: Remove extraneous `f` prefix
+    |
+391 |         print(f"\n{'='*60}")
+    -         print(f"  Cross-Paper Summary")
+392 +         print("  Cross-Paper Summary")
+393 |         print(f"{'='*60}")
+    |
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> tests/corpus/pipelines/track3_sequential_review.py:27:1
+   |
+25 |   sys.path.insert(0, str(Path(__file__).parent.parent))
+26 |
+27 | / from shared import CORPUS_DIR, RUNS_DIR, count_real_table_rows
+28 | | from metrics import load_ground_truth
+   | |_____________________________________^
+29 |
+30 |   SPIKE_SET = [
+   |
+help: Organize imports
+   |
+26 |
+27 + from metrics import load_ground_truth
+28 | from shared import CORPUS_DIR, RUNS_DIR, count_real_table_rows
+   - from metrics import load_ground_truth
+29 |
+   |
+
+F541 [*] f-string without any placeholders
+   --> tests/corpus/pipelines/track3_sequential_review.py:263:15
+    |
+261 |     tables = load_reviewable_tables(slug)
+262 |     if not tables:
+263 |         print(f"  No reviewable tables found (need GMFT markdown + image)")
+    |               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+264 |         return []
+    |
+help: Remove extraneous `f` prefix
+    |
+262 |     if not tables:
+    -         print(f"  No reviewable tables found (need GMFT markdown + image)")
+263 +         print("  No reviewable tables found (need GMFT markdown + image)")
+264 |         return []
+    |
+
+F541 [*] f-string without any placeholders
+   --> tests/corpus/pipelines/track3_sequential_review.py:423:15
+    |
+422 |         # Print summary
+423 |         print(f"\n  Summary:")
+    |               ^^^^^^^^^^^^^^^
+424 |         print(f"    Tables reviewed:       {len(results)}")
+425 |         print(f"    GMFT total rows:       {total_gmft}")
+    |
+help: Remove extraneous `f` prefix
+    |
+422 |         # Print summary
+    -         print(f"\n  Summary:")
+423 +         print("\n  Summary:")
+424 |         print(f"    Tables reviewed:       {len(results)}")
+    |
+
+F541 [*] f-string without any placeholders
+   --> tests/corpus/pipelines/track3_sequential_review.py:460:11
+    |
+458 |     slugs = [s.strip() for s in args.slugs.split(",")]
+459 |
+460 |     print(f"Track 3: Sequential Review (Claude corrects GMFT)")
+    |           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+461 |     print(f"Papers: {', '.join(slugs)}")
+462 |     print(f"Model: {args.model}")
+    |
+help: Remove extraneous `f` prefix
+    |
+459 |
+    -     print(f"Track 3: Sequential Review (Claude corrects GMFT)")
+460 +     print("Track 3: Sequential Review (Claude corrects GMFT)")
+461 |     print(f"Papers: {', '.join(slugs)}")
+    |
+
+F541 [*] f-string without any placeholders
+   --> tests/corpus/pipelines/track3_sequential_review.py:464:15
+    |
+462 |     print(f"Model: {args.model}")
+463 |     if args.dry_run:
+464 |         print(f"MODE: DRY RUN (no Claude calls)")
+    |               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+465 |
+466 |     prompt_template = REVIEW_PROMPT_FILE.read_text().strip()
+    |
+help: Remove extraneous `f` prefix
+    |
+463 |     if args.dry_run:
+    -         print(f"MODE: DRY RUN (no Claude calls)")
+464 +         print("MODE: DRY RUN (no Claude calls)")
+465 |
+    |
+
+F541 [*] f-string without any placeholders
+   --> tests/corpus/pipelines/track3_sequential_review.py:480:15
+    |
+478 |     if all_results and not args.dry_run:
+479 |         print(f"\n{'='*60}")
+480 |         print(f"  Cross-Paper Summary")
+    |               ^^^^^^^^^^^^^^^^^^^^^^^^
+481 |         print(f"{'='*60}")
+482 |         print(f"  {'Slug':<25} {'Tbls':>4} {'GMFT':>5} {'Rev':>5} {'T1':>5} {'GT':>5} {'Cost':>8} {'Leak':>4}")
+    |
+help: Remove extraneous `f` prefix
+    |
+479 |         print(f"\n{'='*60}")
+    -         print(f"  Cross-Paper Summary")
+480 +         print("  Cross-Paper Summary")
+481 |         print(f"{'='*60}")
+    |
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> tests/test_claude_enhance.py:3:1
+   |
+ 1 |   """Tests for claude_enhance module."""
+ 2 |
+ 3 | / import json
+ 4 | | import subprocess
+ 5 | | from pathlib import Path
+ 6 | | from unittest.mock import patch
+ 7 | |
+ 8 | | import pytest
+ 9 | |
+10 | | from agentic_mbse.extraction.claude_enhance import (
+11 | |     _extract_result_event,
+12 | |     extract_page_with_claude,
+13 | |     invoke_claude,
+14 | |     validate_claude_output,
+15 | | )
+16 | | from agentic_mbse.extraction.types import CostRecord
+   | |____________________________________________________^
+help: Organize imports
+   |
+17 |
+   -
+18 | # ---------------------------------------------------------------------------
+   |
+
+I001 [*] Import block is un-sorted or un-formatted
+ --> tests/test_errors.py:2:1
+  |
+1 |   """Tests for error classes."""
+2 | / import pytest
+3 | | from agentic_mbse.errors import (
+4 | |     AgenticMBSEError,
+5 | |     ModelLoadError,
+6 | |     ValidationError,
+7 | |     ConfigurationError,
+8 | |     AdapterError,
+9 | | )
+  | |_^
+help: Organize imports
+   |
+2  | import pytest
+3  +
+4  | from agentic_mbse.errors import (
+5  +     AdapterError,
+6  |     AgenticMBSEError,
+7  +     ConfigurationError,
+8  |     ModelLoadError,
+9  |     ValidationError,
+   -     ConfigurationError,
+   -     AdapterError,
+10 | )
+   |
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> tests/test_helpers.py:2:1
+   |
+ 1 |   """Tests for helpers.py functions."""
+ 2 | / from pathlib import Path
+ 3 | |
+ 4 | | import pytest
+ 5 | |
+ 6 | | from agentic_mbse.sysml.helpers import (
+ 7 | |     get_calc_def_name,
+ 8 | |     get_document_url,
+ 9 | |     get_source_file,
+10 | |     get_source_location,
+11 | |     get_parent_part_name,
+12 | | )
+   | |_^
+help: Organize imports
+   |
+8  |     get_document_url,
+9  +     get_parent_part_name,
+10 |     get_source_file,
+11 |     get_source_location,
+   -     get_parent_part_name,
+12 | )
+   |
+
+F401 [*] `pytest` imported but unused
+ --> tests/test_helpers.py:4:8
+  |
+2 | from pathlib import Path
+3 |
+4 | import pytest
+  |        ^^^^^^
+5 |
+6 | from agentic_mbse.sysml.helpers import (
+  |
+help: Remove unused import: `pytest`
+  |
+3 |
+  - import pytest
+4 |
+  |
+
+W293 [*] Blank line contains whitespace
+  --> tests/test_helpers.py:37:1
+   |
+35 |         def __init__(self, line):
+36 |             self.line = line
+37 |     
+   | ^^^^
+38 |     def __init__(self, line=0):
+39 |         self.start_point = self.StartPoint(line)
+   |
+help: Remove whitespace from blank line
+   |
+36 |             self.line = line
+   -     
+37 +
+38 |     def __init__(self, line=0):
+   |
+
+W293 [*] Blank line contains whitespace
+  --> tests/test_helpers.py:61:1
+   |
+59 |         class MockTarget:
+60 |             name = "MyCalcDef"
+61 |         
+   | ^^^^^^^^
+62 |         class MockElement:
+63 |             heritage = [(MockFeatureTyping(), MockTarget())]
+   |
+help: Remove whitespace from blank line
+   |
+60 |             name = "MyCalcDef"
+   -         
+61 +
+62 |         class MockElement:
+   |
+
+W293 [*] Blank line contains whitespace
+  --> tests/test_helpers.py:64:1
+   |
+62 |         class MockElement:
+63 |             heritage = [(MockFeatureTyping(), MockTarget())]
+64 |         
+   | ^^^^^^^^
+65 |         assert get_calc_def_name(MockElement()) == "MyCalcDef"
+   |
+help: Remove whitespace from blank line
+   |
+63 |             heritage = [(MockFeatureTyping(), MockTarget())]
+   -         
+64 +
+65 |         assert get_calc_def_name(MockElement()) == "MyCalcDef"
+   |
+
+W293 [*] Blank line contains whitespace
+  --> tests/test_helpers.py:71:1
+   |
+69 |         class MockTarget:
+70 |             pass
+71 |         
+   | ^^^^^^^^
+72 |         class MockElement:
+73 |             heritage = [(MockFeatureTyping(), MockTarget())]
+   |
+help: Remove whitespace from blank line
+   |
+70 |             pass
+   -         
+71 +
+72 |         class MockElement:
+   |
+
+W293 [*] Blank line contains whitespace
+  --> tests/test_helpers.py:74:1
+   |
+72 |         class MockElement:
+73 |             heritage = [(MockFeatureTyping(), MockTarget())]
+74 |         
+   | ^^^^^^^^
+75 |         assert get_calc_def_name(MockElement()) is None
+   |
+help: Remove whitespace from blank line
+   |
+73 |             heritage = [(MockFeatureTyping(), MockTarget())]
+   -         
+74 +
+75 |         assert get_calc_def_name(MockElement()) is None
+   |
+
+W293 [*] Blank line contains whitespace
+  --> tests/test_helpers.py:85:1
+   |
+83 |         class MockElement:
+84 |             document = MockDocument("file:///path/to/file.sysml")
+85 |         
+   | ^^^^^^^^
+86 |         assert get_document_url(MockElement()) == "file:///path/to/file.sysml"
+   |
+help: Remove whitespace from blank line
+   |
+84 |             document = MockDocument("file:///path/to/file.sysml")
+   -         
+85 +
+86 |         assert get_document_url(MockElement()) == "file:///path/to/file.sysml"
+   |
+
+W293 [*] Blank line contains whitespace
+  --> tests/test_helpers.py:93:1
+   |
+91 |             document = None
+92 |             owner = None
+93 |         
+   | ^^^^^^^^
+94 |         assert get_document_url(MockElement()) is None
+   |
+help: Remove whitespace from blank line
+   |
+92 |             owner = None
+   -         
+93 +
+94 |         assert get_document_url(MockElement()) is None
+   |
+
+W293 [*] Blank line contains whitespace
+   --> tests/test_helpers.py:101:1
+    |
+ 99 |             document = MockDocument("file:///parent.sysml")
+100 |             owner = None
+101 |         
+    | ^^^^^^^^
+102 |         class MockElement:
+103 |             document = None
+    |
+help: Remove whitespace from blank line
+    |
+100 |             owner = None
+    -         
+101 +
+102 |         class MockElement:
+    |
+
+W293 [*] Blank line contains whitespace
+   --> tests/test_helpers.py:105:1
+    |
+103 |             document = None
+104 |             owner = MockOwner()
+105 |         
+    | ^^^^^^^^
+106 |         assert get_document_url(MockElement()) == "file:///parent.sysml"
+    |
+help: Remove whitespace from blank line
+    |
+104 |             owner = MockOwner()
+    -         
+105 +
+106 |         assert get_document_url(MockElement()) == "file:///parent.sysml"
+    |
+
+W293 [*] Blank line contains whitespace
+   --> tests/test_helpers.py:117:1
+    |
+115 |             document = MockDocument("file:///path/to/model.sysml")
+116 |             owner = None
+117 |         
+    | ^^^^^^^^
+118 |         result = get_source_file(MockElement())
+119 |         assert result == Path("/path/to/model.sysml")
+    |
+help: Remove whitespace from blank line
+    |
+116 |             owner = None
+    -         
+117 +
+118 |         result = get_source_file(MockElement())
+    |
+
+W293 [*] Blank line contains whitespace
+   --> tests/test_helpers.py:126:1
+    |
+124 |             document = None
+125 |             owner = None
+126 |         
+    | ^^^^^^^^
+127 |         assert get_source_file(MockElement()) == Path("unknown")
+    |
+help: Remove whitespace from blank line
+    |
+125 |             owner = None
+    -         
+126 +
+127 |         assert get_source_file(MockElement()) == Path("unknown")
+    |
+
+W293 [*] Blank line contains whitespace
+   --> tests/test_helpers.py:134:1
+    |
+132 |             document = MockDocument("file:models/test.sysml")
+133 |             owner = None
+134 |         
+    | ^^^^^^^^
+135 |         result = get_source_file(MockElement())
+136 |         assert "file:" not in str(result)
+    |
+help: Remove whitespace from blank line
+    |
+133 |             owner = None
+    -         
+134 +
+135 |         result = get_source_file(MockElement())
+    |
+
+W293 [*] Blank line contains whitespace
+   --> tests/test_helpers.py:148:1
+    |
+146 |             owner = None
+147 |             cst_node = MockCstNode(line=41)  # 0-indexed
+148 |         
+    | ^^^^^^^^
+149 |         path, line = get_source_location(MockElement())
+150 |         assert path == Path("/path/to/model.sysml")
+    |
+help: Remove whitespace from blank line
+    |
+147 |             cst_node = MockCstNode(line=41)  # 0-indexed
+    -         
+148 +
+149 |         path, line = get_source_location(MockElement())
+    |
+
+W293 [*] Blank line contains whitespace
+   --> tests/test_helpers.py:158:1
+    |
+156 |             document = MockDocument("file:///path.sysml")
+157 |             owner = None
+158 |         
+    | ^^^^^^^^
+159 |         path, line = get_source_location(MockElement())
+160 |         assert line == 0
+    |
+help: Remove whitespace from blank line
+    |
+157 |             owner = None
+    -         
+158 +
+159 |         path, line = get_source_location(MockElement())
+    |
+
+W293 [*] Blank line contains whitespace
+   --> tests/test_helpers.py:170:1
+    |
+168 |         class MockElement:
+169 |             owning_namespace = None
+170 |         
+    | ^^^^^^^^
+171 |         # Remove owner to avoid fallback
+172 |         elem = MockElement()
+    |
+help: Remove whitespace from blank line
+    |
+169 |             owning_namespace = None
+    -         
+170 +
+171 |         # Remove owner to avoid fallback
+    |
+
+W293 [*] Blank line contains whitespace
+   --> tests/test_helpers.py:179:1
+    |
+177 |         class MockElement:
+178 |             owning_namespace = MockPartUsage("my_part")
+179 |         
+    | ^^^^^^^^
+180 |         assert get_parent_part_name(MockElement()) == "my_part"
+    |
+help: Remove whitespace from blank line
+    |
+178 |             owning_namespace = MockPartUsage("my_part")
+    -         
+179 +
+180 |         assert get_parent_part_name(MockElement()) == "my_part"
+    |
+
+W293 [*] Blank line contains whitespace
+   --> tests/test_helpers.py:186:1
+    |
+184 |         class MockElement:
+185 |             owning_namespace = MockPartUsage(None)
+186 |         
+    | ^^^^^^^^
+187 |         elem = MockElement()
+188 |         assert get_parent_part_name(elem) == ""
+    |
+help: Remove whitespace from blank line
+    |
+185 |             owning_namespace = MockPartUsage(None)
+    -         
+186 +
+187 |         elem = MockElement()
+    |
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> tests/test_nested_package_syntax.py:24:1
+   |
+22 |   """
+23 |
+24 | / import pytest
+25 | | from pathlib import Path
+26 | | import tempfile
+27 | | import shutil
+   | |_____________^
+help: Organize imports
+   |
+23 |
+   - import pytest
+   - from pathlib import Path
+24 + import shutil
+25 | import tempfile
+   - import shutil
+26 + from pathlib import Path
+27 +
+28 + import pytest
+29 |
+   |
+
+F401 [*] `agentic_mbse.pm.dashboard._format_date` imported but unused
+  --> tests/test_pm_dashboard.py:8:5
+   |
+ 7 | from agentic_mbse.pm.dashboard import (
+ 8 |     _format_date,
+   |     ^^^^^^^^^^^^
+ 9 |     _format_item_line,
+10 |     _format_item_status,
+   |
+help: Remove unused import
+  |
+7 | from agentic_mbse.pm.dashboard import (
+  -     _format_date,
+  -     _format_item_line,
+  -     _format_item_status,
+  -     _has_file_not_found,
+8 |     _render_header,
+  |
+
+F401 [*] `agentic_mbse.pm.dashboard._format_item_line` imported but unused
+  --> tests/test_pm_dashboard.py:9:5
+   |
+ 7 | from agentic_mbse.pm.dashboard import (
+ 8 |     _format_date,
+ 9 |     _format_item_line,
+   |     ^^^^^^^^^^^^^^^^^
+10 |     _format_item_status,
+11 |     _has_file_not_found,
+   |
+help: Remove unused import
+  |
+7 | from agentic_mbse.pm.dashboard import (
+  -     _format_date,
+  -     _format_item_line,
+  -     _format_item_status,
+  -     _has_file_not_found,
+8 |     _render_header,
+  |
+
+F401 [*] `agentic_mbse.pm.dashboard._format_item_status` imported but unused
+  --> tests/test_pm_dashboard.py:10:5
+   |
+ 8 |     _format_date,
+ 9 |     _format_item_line,
+10 |     _format_item_status,
+   |     ^^^^^^^^^^^^^^^^^^^
+11 |     _has_file_not_found,
+12 |     _render_header,
+   |
+help: Remove unused import
+  |
+7 | from agentic_mbse.pm.dashboard import (
+  -     _format_date,
+  -     _format_item_line,
+  -     _format_item_status,
+  -     _has_file_not_found,
+8 |     _render_header,
+  |
+
+F401 [*] `agentic_mbse.pm.dashboard._has_file_not_found` imported but unused
+  --> tests/test_pm_dashboard.py:11:5
+   |
+ 9 |     _format_item_line,
+10 |     _format_item_status,
+11 |     _has_file_not_found,
+   |     ^^^^^^^^^^^^^^^^^^^
+12 |     _render_header,
+13 |     _render_requirements,
+   |
+help: Remove unused import
+  |
+7 | from agentic_mbse.pm.dashboard import (
+  -     _format_date,
+  -     _format_item_line,
+  -     _format_item_status,
+  -     _has_file_not_found,
+8 |     _render_header,
+  |
+
+F401 [*] `agentic_mbse.pm.types.ParseWarning` imported but unused
+  --> tests/test_pm_dashboard.py:23:5
+   |
+21 |     DerivedWorkItemState,
+22 |     EpicStatus,
+23 |     ParseWarning,
+   |     ^^^^^^^^^^^^
+24 |     Priority,
+25 |     ProjectState,
+   |
+help: Remove unused import: `agentic_mbse.pm.types.ParseWarning`
+   |
+22 |     EpicStatus,
+   -     ParseWarning,
+23 |     Priority,
+   |
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> tests/test_sysml/test_adr002.py:6:1
+   |
+ 4 |   using the test fixtures in tests/fixtures/adr002_violations/.
+ 5 |   """
+ 6 | / import pytest
+ 7 | | from pathlib import Path
+ 8 | |
+ 9 | | from agentic_mbse.sysml.syside_adapter import get_syside
+10 | |
+11 | | from agentic_mbse.sysml.types import Severity, ValidationCode
+12 | | from agentic_mbse.validation.adr002 import (
+13 | |     check_calc_def_locations,
+14 | |     check_supported_operators,
+15 | |     check_static_expressions,
+16 | |     _is_expose_pattern,
+17 | |     _build_calc_output_catalog,
+18 | | )
+   | |_^
+help: Organize imports
+   |
+5  | """
+   - import pytest
+6  | from pathlib import Path
+7  |
+8  + import pytest
+9  +
+10 | from agentic_mbse.sysml.syside_adapter import get_syside
+   -
+11 | from agentic_mbse.sysml.types import Severity, ValidationCode
+12 | from agentic_mbse.validation.adr002 import (
+13 +     _build_calc_output_catalog,
+14 +     _is_expose_pattern,
+15 |     check_calc_def_locations,
+   -     check_supported_operators,
+16 |     check_static_expressions,
+   -     _is_expose_pattern,
+   -     _build_calc_output_catalog,
+17 +     check_supported_operators,
+18 | )
+   -
+19 |
+   |
+
+E712 Avoid equality comparisons to `True`; use `result.success:` for truth checks
+  --> tests/test_sysml_quality_checks.py:94:16
+   |
+93 |         result = validate_syntax(str(valid_sysml_file.parent.parent))
+94 |         assert result.success == True
+   |                ^^^^^^^^^^^^^^^^^^^^^^
+95 |         assert result.level == 1
+96 |         assert len(result.issues) == 0
+   |
+help: Replace with `result.success`
+
+E712 Avoid equality comparisons to `False`; use `not result.success:` for false checks
+   --> tests/test_sysml_quality_checks.py:103:16
+    |
+102 |         result = validate_syntax(str(invalid_sysml_file.parent.parent))
+103 |         assert result.success == False
+    |                ^^^^^^^^^^^^^^^^^^^^^^^
+104 |         assert len(result.issues) > 0
+105 |         assert "bad.sysml" in result.issues[0]
+    |
+help: Replace with `not result.success`
+
+E712 Avoid equality comparisons to `True`; use `result.success:` for truth checks
+   --> tests/test_sysml_quality_checks.py:114:16
+    |
+112 |         empty_dir.mkdir()
+113 |         result = validate_syntax(str(empty_dir))
+114 |         assert result.success == True
+    |                ^^^^^^^^^^^^^^^^^^^^^^
+115 |         assert len(result.warnings) > 0
+    |
+help: Replace with `result.success`
+
+E712 Avoid equality comparisons to `True`; use `result.success:` for truth checks
+   --> tests/test_sysml_quality_checks.py:200:16
+    |
+199 |         result = validate_structure(str(temp_models_dir))
+200 |         assert result.success == True
+    |                ^^^^^^^^^^^^^^^^^^^^^^
+201 |         assert len(result.warnings) > 0  # Should warn about no files
+    |
+help: Replace with `result.success`
+
+I001 [*] Import block is un-sorted or un-formatted
+ --> tests/test_validation/test_quality_check_result.py:6:1
+  |
+4 |   """
+5 |
+6 | / from agentic_mbse.validation.common import QualityCheckResult
+7 | | from agentic_mbse.sysml.types import Severity, ValidationCode, ValidationIssue
+  | |______________________________________________________________________________^
+help: Organize imports
+  |
+5 |
+6 + from agentic_mbse.sysml.types import Severity, ValidationCode, ValidationIssue
+7 | from agentic_mbse.validation.common import QualityCheckResult
+  - from agentic_mbse.sysml.types import Severity, ValidationCode, ValidationIssue
+8 |
+  |
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> tests/test_validation/test_v2_false_positive.py:13:1
+   |
+11 |   """
+12 |
+13 | / from pathlib import Path
+14 | | from unittest.mock import MagicMock
+15 | |
+16 | | from agentic_mbse.sysml.syside_adapter import get_syside
+17 | |
+18 | | from agentic_mbse.validation.adr002 import (
+19 | |     _is_calc_output_reference,
+20 | |     check_static_expressions,
+21 | | )
+22 | | from agentic_mbse.sysml.types import ExpressionRef, ValidationCode
+   | |__________________________________________________________________^
+help: Organize imports
+   |
+16 | from agentic_mbse.sysml.syside_adapter import get_syside
+   -
+17 + from agentic_mbse.sysml.types import ExpressionRef, ValidationCode
+18 | from agentic_mbse.validation.adr002 import (
+19 |     _is_calc_output_reference,
+20 |     check_static_expressions,
+21 | )
+   - from agentic_mbse.sysml.types import ExpressionRef, ValidationCode
+22 |
+   |
+
+Found 120 errors.
+[*] 111 fixable with the `--fix` option (9 hidden fixes can be enabled with the `--unsafe-fixes` option).

@@ -14,200 +14,226 @@ These requirements span the entire pipeline. Each is verifiable.
 
 | ID | Requirement | Verified by |
 |----|-------------|-------------|
-| REQ-PIPE-01 | The pipeline SHALL produce exactly one [ComputationGraph](09-data-models.md#resolution-models) from a set of SysML model files. | `isinstance(result, ComputationGraph)` and single return value from `build_computation_graph()` |
+| REQ-PIPE-01 | The pipeline SHALL produce exactly one [ComputationGraph](09-data-models.md#resolution-models) from a set of SysML model files. | `project()` (`elaboration/project.py`) returns one graph per instance graph; `ExactPipelineContext.computation_graph` re-derives it and refuses a graph its receipt disagrees with |
 | REQ-PIPE-02 | Every [ModuleInput](09-data-models.md#resolution-models) SHALL be wired to exactly one source: `module_output` or `entry_point`. | `all(mi.source.source_type in {"module_output","entry_point"} for m in graph.modules for mi in m.inputs)` |
-| REQ-PIPE-03 | Every `module_output` reference SHALL resolve to a canonical channel in the [OutputRegistry](10-output-registry.md). | Step 8 validation: `_validate_channel_references()` asserts all `producer_channel` values exist |
+| REQ-PIPE-03 | Every `module_output` reference SHALL resolve to a declared output channel. | Projection claims each channel name exactly once (`_claim_channel`) and refuses a producer reference with no output (`SI_EDGE_DANGLING`, `elaboration/project.py:418-427`) |
 | REQ-PIPE-04 | `execution_order` SHALL be a valid topological sort -- no module reads from a module that executes later. | `for m in modules: for i in m.inputs: if i.source.source_type == "module_output": assert producer.execution_order < m.execution_order` |
-| REQ-PIPE-05 | Every [EntryPoint](06-entry-point-classifier.md) SHALL be classified as exactly one of {`LIBRARY_DEFAULT`, `DESIGN_ATTRIBUTE`, `USAGE_LITERAL`}. | `all(ep.entry_type in EntryPointType for g in graph.entry_point_groups for ep in g.parameters)` |
+| REQ-PIPE-05 | Every [EntryPoint](06-entry-point-classifier.md) SHALL be classified as exactly one of {`LIBRARY_DEFAULT`, `DESIGN_ATTRIBUTE`, `USAGE_LITERAL`}. | `all(ep.entry_type in EntryPointType for g in graph.entry_point_groups for ep in g.parameters)`. The type is decided where the entry point is minted (`elaboration/project.py`, `_source_for_edge` / `_unbound_source`), not by a later classification pass |
 | REQ-PIPE-06 | The graph SHALL tag each module with its `module_kind`; a calc-bearing model includes `CALCULATION`, `FORMULA`, and `AGGREGATION` modules. | `PipelineModule.module_kind` (`resolution/models.py`), checked per family. The two constraint-execution families `CONSTRAINT` / `REPORT_AGGREGATOR` appear when constraints are lowered (see [28](28-constraint-lowering-and-catalog.md)) |
 | REQ-PIPE-07 | Generation SHALL produce output exclusively from `ComputationGraph` -- no back-references to extraction models. Requires PipelineModule expansion (see [26](26-pipeline-module-migration.md)). | All templates receive only `ComputationGraph` fields |
 
-## The 7-step pipeline
+## The route
+
+There is one public route from a model to a package, and it constructs one way.
 
 ```
-SysML files
+SysML files                        v6 instance-graph snapshot
+    |                                        |
+    v                                        v
+[1] Parse            SysMLDataExtractor      load + validate envelope   --> 27
+    |                                        |
+    v                                        v
+[2] Elaborate        one attribute node per modelled value occurrence   --> (elaboration/)
     |
     v
-[Step 1] Extract         -- parse .sysml into data models        --> 01, 09
-[Step 2] Build registry   -- catalog outputs for O(1) lookup      --> 10, 15
-[Step 3] Trace deps       -- DFS + CalcUsage binding resolution   --> 11, 03, 24
-[Step 4] Classify entries -- tag entry point types               --> 06, 17
-[Step 5] Build modules    -- construct PipelineModules            --> 05, 04, 13, 16
-[Step 6] Sort modules     -- topological sort + validation        --> 07
-[Step 7] Render code      -- Jinja2 templates produce output      --> 08
+   InstanceGraph  ── sealed into an ExactPipelineContext with a receipt  --> 02
     |
     v
-Generated package (modules/, schemas/, inputs/, pipelines/, handwritten/)
+[3] Project          render public identifiers, classify already-resolved
+                     sources, order the modules                          --> 06, 07, 15
+    |
+    v
+   ComputationGraph  (resolution/models.py -- the generation seam)       --> 09
+    |
+    v
+[4] Render code      Jinja2 templates produce output                     --> 08
+    |
+    v
+[5] Seal             ModelContract + PackageContract over final bytes    --> 29
+    |
+    v
+Generated package (modules/, schemas/, inputs/, pipelines/, handwritten/, contracts/)
 ```
 
-*(Numbers reference document files in this directory, e.g., "01" = [01-extraction.md](01-extraction.md).)*
+*(Numbers in the right column reference document files in this directory, e.g., "01" =
+[01-extraction.md](01-extraction.md).)*
 
-**Snapshot path.** Step 1 can run offline: `sysml-codegen snapshot` captures a
-versioned extraction snapshot from live models (this capture needs the live
-syside license), and `generate --from-snapshot` (mutually exclusive with
-`--models`) rebuilds the same `PipelineContext` from that JSON, license-free --
-Steps 2-7 run unchanged. The same split holds for the capture scripts: only
-`scripts/capture_extraction_snapshots.py` needs the license;
-`scripts/capture_pipeline_baselines.py` and `scripts/capture_baseline_yaml.py`
-regenerate baselines from committed snapshots, license-free. See
-[27-snapshot-generation](27-snapshot-generation.md).
+**Semantics are complete before projection runs.** The elaborator resolves every reference
+against typed node identity — occurrence enumeration, never qualified-name string surgery — and
+hands projection a graph in which every consumer already points at the node that supplies it.
+Projection only renders names, classifies what elaboration already resolved, and orders the
+result (`elaboration/project.py:1-6`). That split is why a wiring question has exactly one place
+to be answered.
+
+**Two sources, one authority.** `--models` and `--from-snapshot` are two ways to obtain the
+instance graph, not two implementations of the pipeline. Both seal into an
+`ExactPipelineContext` whose receipt binds the sealed graph to what it projects to, and
+`run_codegen` (`cli/__init__.py:956`) is the single public entry point — there is no flag,
+environment variable, or config field that selects an authority. See
+[02-orchestration](02-orchestration.md).
+
+**The offline source is the v6 instance-graph snapshot.** `sysml-codegen snapshot` admits the
+sources, elaborates them once, and seals the graph into an envelope (this capture needs the live
+syside license); `generate --from-snapshot` loads that envelope license-free. A v5 extraction
+snapshot is refused by name at load. See [27-snapshot-generation](27-snapshot-generation.md).
+
+**What the legacy route is now: gone.** The string-resolution stack this document used to
+describe — `orchestration/pipeline_builder.py`, `analysis/`'s backtracker and parameter groups,
+`resolution/graph_builder.py`, `resolution/producer_resolution.py`, `core/output_registry.py`,
+and the v5 snapshot loader/serializer/rebuild — was deleted by the Item 7 retirement
+(2026-08-12, `19072ad` / `82c7951` / `882fc8d` / `3071fba`). Two conformance nodes now pin the
+**absence**: `test_public_authority_switch.py` checks that the construction closure reaches no
+legacy authority and that the modules do not exist, and
+`tests/unit/test_elaboration_import_boundaries.py` checks that the CLI names none of them.
+Documents 03, 04, 05, 07, 10, 11, 12, 13, 17, and 24 describe that deleted stack and open with
+a historical banner; 25 describes `extraction/hierarchy_resolver.py`, which survived the
+retirement but is off the shipped route.
 
 ## Running example: battery_pack cost_model
 
-Trace a single calculation through all 7 steps. The library defines
+Trace a single calculation through the route. The library defines
 `BatteryPackCostCalc` (5 inputs, 5 outputs). The design instantiates it:
 
 ```
 SolarBatteryDesign > solar_battery_plant > battery_system > battery_pack > cost_model
 ```
 
-### Step 1: Extract ([detail](01-extraction.md))
+### [1] Parse ([detail](01-extraction.md))
 
-Produces a [CalculationDefinitionData](09-data-models.md#extraction-models) for
-`BatteryPackCostCalc` and a [CalcUsageData](09-data-models.md#extraction-models)
-with `qualified_name = "SolarBatteryDesign__...battery_pack__cost_model"` and a
-[bindings](01-extraction.md#binding-types) list classifying each input.
+`SysMLDataExtractor` loads the model and extracts the calculation definitions
+(`orchestration/elaborated_pipeline.py:46-57`). This is the same extractor the
+tree has always used, and it is the only step that needs a syside licence.
 
-### Step 2: Build output registry ([detail](10-output-registry.md))
+### [2] Elaborate
 
-SysML bindings reference the same output using different string formats depending
-on AST node type and context. A `FeatureChainExpression` produces
-`"cost_model.total_cost"` (a scope-relative local path); a `:>>` redefinition
-target uses the hierarchy path `"solar_battery_plant...cost_model.total_cost"`.
-These are different strings for the **same output**.
+`elaborate()` (`elaboration/elaborate.py`) turns the loaded model into an
+`InstanceGraph`: **one attribute node per modelled value occurrence**, with consumers
+holding typed node references rather than strings. Three things follow that matter to a
+reader coming from the legacy description:
 
-The [OutputRegistry](10-output-registry.md) maps each output to a canonical
-channel name (`CanonicalChannel`) via three [typed registries](10-output-registry.md):
+- **Occurrences are enumerated, not multiplied.** A child declared `part cell [3]` produces
+  three occurrence nodes, each with its own attribute nodes, and an aggregation over them
+  expands into three terms. There is no `count * child.attribute` rewrite.
+- **There is no lookup table to miss.** Where the legacy route asked a registry "which
+  channel does the string `cost_model.total_cost` mean, read from here?", the elaborator
+  resolves the reference against the occurrence that declares it. A reference that cannot be
+  resolved is a typed refusal, not a fall-through to an entry point.
+- **A model that does not elaborate cleanly is refused**, with `ElaborationError` carrying
+  readiness findings and `ElaborationDiagnosticError` carrying validation diagnostics. The two
+  classes stay distinct all the way to the CLI log — collapsing them would lose which gate
+  refused.
 
-```
-Canonical (PQN):   "SolarBatteryDesign__...cost_model__total_cost"    (CanonicalChannel, unique by construction)
-Scoped (Key_C):    "solar_battery_plant.battery_system.battery_pack.cost_model.total_cost"
-                                                                      (ScopedKey, unique by SysML ownership)
-SysML QN:          "SolarBatteryLibrary::BatteryPackCostCalc::total_cost"
-                                                                      (SysMLQN, for REFERENCE bindings)
-```
+### [3] Project ([entry points](06-entry-point-classifier.md) | [assembly order](07-graph-assembly.md))
 
-**ScopedKey is the critical key.** It is both unique AND matchable from the
-consumer's scope. The [backtracker](11-analysis-backtracker.md) constructs
-`ScopedKey` lookups by prepending the consumer's scope to the `source_path`. See
-[The Scope Problem](03-resolution-overview.md#the-scope-problem).
+`project()` (`elaboration/project.py`) renders the resolved graph onto the
+[ComputationGraph](09-data-models.md#resolution-models) seam. For `cost_model`:
 
-Keys follow a [strict 4-phase protocol](10-output-registry.md#the-4-phase-registration-protocol).
-[CHAIN redefinitions](01-extraction.md#redefinitions-redefinitiondata) create
-Phase 2 aliases (e.g., `battery_pack.capital_cost` -> same canonical).
-Multi-hop EXPOSE aliases are registered tentatively and confirmed (or reverted
-to FORMULA) in a Phase 3b pass of registry build
-(`orchestration/output_registry_builder.py`).
+| Input | Wiring | Public key |
+|---|---|---|
+| `capacity_kwh` | entry point, `DESIGN_ATTRIBUTE` | the supplying attribute's display path, occurrence index included |
+| `chemistry_factor` | entry point, `DESIGN_ATTRIBUTE` | as above |
+| `cost_per_kwh` | entry point, `LIBRARY_DEFAULT` (150.0) | `{consumer}__cost_per_kwh` |
+| `fab_factor` | entry point, `LIBRARY_DEFAULT` (0.05) | `{consumer}__fab_factor` |
+| `install_factor` | entry point, `LIBRARY_DEFAULT` (0.10) | `{consumer}__install_factor` |
 
-### Step 3: Trace dependencies ([backtracker](11-analysis-backtracker.md) | [overview](03-resolution-overview.md))
+An input supplied by an upstream calculation wires to that module's output channel instead.
+Two consumers reading the *same* modelled attribute share one key — the key names the
+attribute that supplies the value, not the formal that consumes it. Groups are named after the
+file that **declares** the owner node. Both rules, with their measured consequences, are in
+[06-entry-point-classifier](06-entry-point-classifier.md).
 
-The [DependencyBacktracker](11-analysis-backtracker.md) performs DFS from root calc
-usages, resolving each binding via [type-directed dispatch](11-analysis-backtracker.md#type-directed-resolution-dispatch)
-against the [typed registries](10-output-registry.md). Each binding resolves to
-MODULE_OUTPUT (recurse into producer) or ENTRY_POINT (external input):
+Projection also orders the modules (REQ-PIPE-04), claims each channel name exactly once, and
+refuses on a rendering collision rather than letting two distinct things render as one name.
 
-| Input              | Resolution           | Source                           |
-|--------------------|----------------------|----------------------------------|
-| `capacity_kwh`     | ENTRY_POINT          | Design attribute (user provides) |
-| `chemistry_factor` | ENTRY_POINT          | Design attribute (user provides) |
-| `cost_per_kwh`     | ENTRY_POINT          | Library default = 150.0          |
-| `fab_factor`       | ENTRY_POINT          | Library default = 0.05           |
-| `install_factor`   | ENTRY_POINT          | Library default = 0.10           |
+**Constraints.** Eligible modelled assertions become `CONSTRAINT` modules and the
+`ConstraintCatalog` embedded on the graph. A `REPORT_AGGREGATOR` module is emitted **only when
+there is at least one constraint output** (`elaboration/project.py:887`); the legacy route
+emitted one whenever the constraint pathway ran at all, including for a model that asserts
+nothing. A constraint-free model produces neither family. See
+[28-constraint-lowering-and-catalog](28-constraint-lowering-and-catalog.md) for the catalog's
+shape, and read its lowering half as a description of `analysis/constraint_lowering.py`, which
+is not the public route.
 
-An input can also resolve to `MODULE_OUTPUT` (upstream channel). CalcUsage bindings
-are resolved here; FORMULA/Aggregation bindings are resolved during module building
-(Step 5). See [24-dual-resolution-architecture](24-dual-resolution-architecture.md).
-
-### Step 4: Classify entry points ([detail](06-entry-point-classifier.md))
-
-Each entry-point input gets one of [three entry point types](06-entry-point-classifier.md):
-`DESIGN_ATTRIBUTE`, `LIBRARY_DEFAULT`, or `USAGE_LITERAL`. This drives JSON file
-placement and default values. Entry points are grouped into
-[parameter groups](17-parameter-group-deriver.md). Classification runs BEFORE module
-building because CalcUsage modules need classified entry points as inputs.
-
-### Step 5: Build PipelineModules ([factory](05-module-factory.md) | [resolver](04-input-resolver.md))
-
-A [PipelineModule](09-data-models.md#resolution-models) is constructed as pure
-data -- no I/O, no side effects. The three calc [module kinds](05-module-factory.md)
-are CalcUsage (`CALCULATION`), FORMULA ([computed attributes](16-computed-attributes.md)),
-and Aggregation ([scoping rules](13-aggregation-scoping.md)). FORMULA and Aggregation
-factories call the [consolidated resolver](04-input-resolver.md) to wire their inputs.
-
-**Constraint lowering ([P1 RESOLVE], Step 5.7).** After the output registry and the
-supplied-value materializer are final, `lower_constraints`
-([`analysis/constraint_lowering.py`](28-constraint-lowering-and-catalog.md)) turns eligible
-modeled assertions into two further `module_kind` families — `CONSTRAINT` (a lowered
-predicate) and `REPORT_AGGREGATOR` (the run-report roll-up) — and assembles the
-`ConstraintCatalog` embedded on the graph. A constraint-free model produces neither family and
-a byte-identical graph. Lowering is default-on; the `lower_constraints_enabled` flag is landed
-history (its GRANDFATHERED carve-out is now empty), not a live drop path. See
-[28-constraint-lowering-and-catalog](28-constraint-lowering-and-catalog.md).
-
-### Step 6: Sort modules ([detail](07-graph-assembly.md))
-
-Kahn's algorithm topologically sorts all modules (REQ-PIPE-04). Battery_pack
-cost_model has no upstream dependencies, so it appears early.
-
-### Step 7: Render code ([detail](08-generation.md))
+### [4] Render code ([detail](08-generation.md))
 
 The [ComputationGraph](09-data-models.md#resolution-models) feeds Jinja2 templates
 to produce: `modules/*.py`, `handwritten/*_impl.py`, `pipelines/*.yaml`,
 `inputs/*.json`, and `schemas/*.py`.
 
-Rendering is gated by a params-coverage check (V11): `collect_uncovered_params`
-(`resolution/graph_builder.py`) runs at the generation boundary and aborts if a
-wired module input references a params key that no JSON input file will carry.
-Surfaced modeler names travel as `output_aliases` on the ComputationGraph and
-override exit-point output filenames in the pipeline YAML (`generation/pipeline.py`).
+Rendering is gated by four checks that all run **before** any output is written or cleared
+(`cli/__init__.py:1042-1060`): constraint name safety, duplicate output paths, params coverage
+(V11 — `collect_uncovered_params`, `resolution/uncovered_params.py`, aborts if a wired module
+input references a params key no JSON input file will carry), and registry class-name
+collisions. Fail-before-mutate is the point: a refusal leaves the target tree exactly as it was.
+Surfaced modeler names travel as `output_aliases` on the ComputationGraph and override
+exit-point output filenames in the pipeline YAML (`generation/pipeline.py`).
 
-## Package structure (post-refactor)
+### [5] Seal ([detail](29-contracts-and-sealing.md))
+
+Generation ends by sealing the package: a `ModelContract` over the graph's semantic identity
+and a `PackageContract` over the final on-disk bytes, on the live and from-snapshot paths
+alike.
+
+## Package structure
+
+The public route, in the order it runs:
 
 ```
 sysml_codegen/
-  extraction/       Step 1 -- Parse .sysml into structured dataclasses
+  extraction/       [1] Parse
     extractor.py              SysMLDataExtractor: load models, extract calc defs
-    usage_extractor.py        CalcUsages (CalcUsageData) and their bindings
-    hierarchy_resolver.py     Redefinitions, aggregation expressions, design overrides
-    data_models.py            CalculationDefinitionData, RedefinitionData, etc.
+    expression_compiler.py    SysIDE AST -> ExpressionIR -> Python string
+    source_manifest.py        admit_sources(): staged, verified source admission (capture)
 
-  orchestration/    Pipeline coordination: extract, resolve, generate
-    pipeline_builder.py       build_pipeline_context(): multi-step orchestration
-    output_registry_builder.py  build_output_registry(): 4-phase registration + Phase 3b confirm
-    snapshot_context.py       build_pipeline_context_from_snapshot(): offline path
-    pipeline_context.py       PipelineContext dataclass
+  elaboration/      [2] Elaborate, [3] Project
+    elaborate.py              elaborate(): loaded model -> InstanceGraph
+    graph.py / identity.py    InstanceGraph and the typed node identities
+    occurrence.py             occurrence enumeration
+    project.py                project(): InstanceGraph -> ComputationGraph
 
-  snapshot/         Extraction snapshot capture and offline rebuild
-    capture.py / serializer.py / loader.py / graph_rebuild.py
+  orchestration/
+    elaborated_pipeline.py    load + elaborate, live and from admitted sources
+    exact_pipeline_context.py ExactPipelineContext: sealed graph + projection receipt
 
-  analysis/         Step 3 -- Dependency backtracking and parameter group derivation
-    dependency_backtracker.py DependencyBacktracker: DFS + binding resolution
-    parameter_groups.py       ParameterGroupDeriver: entry point grouping
+  snapshot/
+    envelope.py               the v6 instance-graph snapshot: build, seal, load
+    instance_graph.py         the graph codec the envelope and the context share
+    capture.py                capture_instance_graph_snapshot(): admit, elaborate, seal
 
-  resolution/       Steps 4-6 -- Classify entries, build modules, sort
-    graph_builder.py          build_computation_graph(), _classify_entry_points()
+  resolution/
     models.py                 ComputationGraph, PipelineModule, EntryPoint
+    uncovered_params.py       the V11 params-coverage collector
 
-  generation/       Step 7 -- Render Python, YAML, JSON from the graph
-    pipeline.py / modules.py / schemas.py / stencils.py / entry_point.py
+  generation/       [4] Render Python, YAML, JSON from the graph
+    pipeline.py / modules.py / schemas.py / stencils.py / entry_point.py / registry.py
 
-  core/             Shared utilities (OutputRegistry, qualified_names, models)
+  contracts/        [5] Seal: ModelContract (semantic) + PackageContract (physical)
 
-  cli/              generate (--models | --from-snapshot) and snapshot subcommands
+  core/             Shared identifiers and utilities (qualified_names, identifier_types)
+
+  cli/              generate (--models | --from-snapshot), snapshot, seal subcommands
 ```
 
-See [02-orchestration.md](02-orchestration.md) for orchestration detail.
+Deleted by the Item 7 retirement and no longer in the tree:
+`orchestration/pipeline_builder.py`, `orchestration/snapshot_context.py`, `analysis/`'s
+backtracker, parameter groups and constraint lowering, `resolution/graph_builder.py`,
+`resolution/producer_resolution.py`, `core/output_registry.py`, and the v5 snapshot
+`loader.py` / `serializer.py` / `graph_rebuild.py`. `analysis/` now holds one module,
+`source_referent.py`; `orchestration/pipeline_context.py` survives as the
+`SysMLParsingError` / `CodeGenerationError` re-export point and carries no `PipelineContext`.
+
+See [02-orchestration.md](02-orchestration.md) for the public surface and its pins.
 
 ## Navigation index
 
-### Core pipeline (Steps 1-7)
+### Core pipeline
 
 | Doc | Topic | Key data models |
 |-----|-------|-----------------|
 | [01-extraction](01-extraction.md) | SysML model parsing: calc defs, usages, bindings, redefinitions | `CalculationDefinitionData`, `CalcUsageData`, `BindingInfo` |
-| [02-orchestration](02-orchestration.md) | Pipeline builder: coordinating extract, resolve, generate | `PipelineContext` |
+| [02-orchestration](02-orchestration.md) | The public surface: one entry point, two sources, one receipt | `ExactPipelineContext`, `ProjectionReceipt` |
 | [03-resolution-overview](03-resolution-overview.md) | Why input resolution is hard (270 combinations) | `BindingResolution` |
-| [04-input-resolver](04-input-resolver.md) | Unified 5-strategy resolver | `InputSource`, `ResolutionContext` |
+| [04-producer-resolution](04-producer-resolution.md) | Unified 5-strategy resolver | `InputSource`, `ResolutionContext` |
 | [05-module-factory](05-module-factory.md) | The three calc module kinds as pure data transformers (constraint kinds: [28](28-constraint-lowering-and-catalog.md)) | `PipelineModule`, `ModuleKind` |
 | [06-entry-point-classifier](06-entry-point-classifier.md) | Entry point classification: LIBRARY_DEFAULT, DESIGN_ATTRIBUTE, USAGE_LITERAL | `EntryPoint`, `EntryPointType` |
 | [07-graph-assembly](07-graph-assembly.md) | Topological sort, validation, ComputationGraph assembly | `ComputationGraph` |
@@ -228,4 +254,21 @@ See [02-orchestration.md](02-orchestration.md) for orchestration detail.
 | [17-parameter-group-deriver](17-parameter-group-deriver.md) | Grouping entry points into JSON input files |
 | [18-literal-value-propagation](18-literal-value-propagation.md) | Carrying `:>>` literal values into JSON templates |
 | [26-pipeline-module-migration](26-pipeline-module-migration.md) | REQ-PIPE-07 migration: PipelineModule field expansion |
-| [27-snapshot-generation](27-snapshot-generation.md) | License-free generation from captured extraction snapshots |
+| [19-ast-dispatch-invariant](19-ast-dispatch-invariant.md) | FCE-before-OE AST dispatch ordering, and the totality generalization |
+| [20-module-registry-generation](20-module-registry-generation.md) | Import paths and module-type derivation for the generated registry |
+| [21-pipeline-yaml-generation](21-pipeline-yaml-generation.md) | Channel formats, type rules, and the exit-point filename override |
+| [22-output-schema-rules](22-output-schema-rules.md) | `MultiOutput` versus `RootModel`, field names, type mapping |
+| [23-smart-regen-preservation](23-smart-regen-preservation.md) | Signature comparison and the six-case regeneration decision tree |
+| [24-dual-resolution-architecture](24-dual-resolution-architecture.md) | One resolution authority, called at two pipeline stages |
+| [25-hierarchy-resolver](25-hierarchy-resolver.md) | `:>>`, multiplicity, and `sum()` extraction into typed structures |
+| [27-snapshot-generation](27-snapshot-generation.md) | The v6 instance-graph snapshot: what it seals, what it can prove |
+| [28-constraint-lowering-and-catalog](28-constraint-lowering-and-catalog.md) | Lowering eligible modeled assertions to constraint modules and assembling the catalog |
+| [29-contracts-and-sealing](29-contracts-and-sealing.md) | Package integrity: semantic `ModelContract`, physical seal, emitted verifier |
+| [30-diagnostic-severity](30-diagnostic-severity.md) | Extraction-diagnostic severity: writer-set field, blocking vs advisory, fail-closed skew |
+
+**Reading the index after the retirement.** Documents 03, 04, 05, 07, 10, 11, 12, 13, 17, and
+24 describe the string-resolution stack that was deleted, and open with a historical banner
+saying so. They are accurate about the code that was removed; they are not descriptions of what
+the product does. Document 09 is mixed and carries a scoped banner naming which model rows are
+live and which are history. Document 25's subject, `extraction/hierarchy_resolver.py`, is still
+in the tree but is not on the shipped route.

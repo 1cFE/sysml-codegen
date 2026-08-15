@@ -10,6 +10,8 @@ Key Design Principles:
 3. Qualified names use __ separator per ADR-001
 """
 
+import hashlib
+import json
 from enum import Enum
 from pathlib import Path
 from typing import Literal
@@ -17,7 +19,11 @@ from typing import Literal
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 # Import shared types from core for re-export (backward compatibility)
-from sysml_codegen.core.models import BindingResolution, BindingResolutionType
+from sysml_codegen.core.models import (
+    AutoImplContext,
+    BindingResolution,
+    BindingResolutionType,
+)
 from sysml_codegen.extraction.expression_compiler import Compilability
 
 
@@ -228,7 +234,7 @@ class PipelineModule(BaseModel):
     compiled_expression: str | None = None
     module_kind: ModuleKind
     output_schema_type: str | None = None
-    auto_impl_context: dict | None = None
+    auto_impl_context: AutoImplContext | None = None
     # Metadata from CalcDef / ComputedAttributeData / AggregationExpressionData
     calc_def_name: str | None = None
     calc_def_qualified_name: str | None = None
@@ -468,21 +474,29 @@ class ConstraintCatalogSourceRecord(BaseModel):
 
 
 class ConstraintCatalogUsageRecord(BaseModel):
-    """One admitted (eligible) constraint usage's identity + definition join (Item 8).
+    """One authored constraint usage — the whole domain, not the admitted subset.
 
     The middle tier between per-definition :class:`ConstraintCatalogSourceRecord` and
-    per-occurrence :class:`ConstraintCatalogEntry`: one row per distinct admitted usage,
-    deduplicated across the usage's concrete occurrences. It is a direct enumeration surface
-    for a consumer (TEAx) — carrying source form, usage identity, owner QN, and the
-    definition→usage join — so the consumer never reconstructs those by QN-splitting or
-    predicate-text search. It carries **no** ``predicate_ir``: that authority stays on the
-    occurrence tier (D2a), guarded by ``assert_same_ir``.
+    per-occurrence :class:`ConstraintCatalogEntry`. It used to hold one row per *admitted*
+    usage, so a usage whose owner expanded to nothing had no row anywhere and simply
+    disappeared. It now holds one row per authored usage, each carrying the disposition
+    elaboration decided, so a consumer can see every check the model declares and why each
+    one stands where it does. A consumer that wanted the old, narrower set recovers it
+    exactly by filtering ``disposition_kind == "eligible"``.
 
-    Dedup identity is ``(usage_qualified_name, source_local_identity)``, not
-    ``usage_qualified_name`` alone — anonymous usages all share ``"<anonymous>"`` and are
-    distinguished by ``source_local_identity`` (F2).
+    It is a direct enumeration surface for a consumer (TEAx) — carrying source form, usage
+    identity, owner QN, and the definition→usage join — so the consumer never reconstructs
+    those by QN-splitting or predicate-text search. It carries **no** ``predicate_ir``:
+    that authority stays on the occurrence tier (D2a), guarded by ``assert_same_ir``.
+
+    Identity is ``declaration_id``. The old dedup key was
+    ``(usage_qualified_name, source_local_identity)``, which was sound only while the rows
+    were occurrences *of one usage*; once the rows are the domain, that pair is doing
+    identity *between distinct usages*, and two anonymous usages sharing a short name would
+    silently merge.
     """
 
+    declaration_id: str
     usage_qualified_name: str
     source_local_identity: str
     source_form: str
@@ -494,6 +508,17 @@ class ConstraintCatalogUsageRecord(BaseModel):
     membership_kind: str | None
     is_negated: bool
     expected_value: bool
+    #: The one disposition elaboration decided. Kind and reason are closed vocabularies and
+    #: severity is derived from them; nothing downstream re-derives any of the three.
+    disposition_kind: str
+    disposition_reason: str
+    disposition_severity: str
+    disposition_detail: str
+    #: The author's explicit "this was never meant to be in the set" reason, or None.
+    #: A coverage statement: it never rewrites the disposition beside it.
+    inapplicability_reason: str | None = None
+    #: How many concrete occurrences this usage expanded to. Zero is a real answer.
+    occurrence_count: int = 0
 
 
 class ConstraintCatalogEntry(_TransactionalAssignmentModel):
@@ -510,6 +535,9 @@ class ConstraintCatalogEntry(_TransactionalAssignmentModel):
 
     model_config = ConfigDict(validate_assignment=True)
 
+    #: The authored usage this occurrence belongs to. The join to
+    #: :class:`ConstraintCatalogUsageRecord` is by this, never by qualified name.
+    declaration_id: str
     constraint_id: str
     usage_qualified_name: str
     source_local_identity: str
@@ -539,6 +567,9 @@ class ConstraintCatalogEntry(_TransactionalAssignmentModel):
 class ConstraintCatalogExcludedRecord(BaseModel):
     """Catalog projection of one validated non-executed concrete record."""
 
+    #: The authored usage this occurrence belongs to. The join to
+    #: :class:`ConstraintCatalogUsageRecord` is by this, never by qualified name.
+    declaration_id: str
     constraint_id: str
     usage_qualified_name: str
     source_form: str
@@ -562,6 +593,55 @@ class ConstraintCatalog(BaseModel):
     concrete_entries: list[ConstraintCatalogEntry] = Field(default_factory=list)
     excluded_records: list[ConstraintCatalogExcludedRecord] = Field(default_factory=list)
     fingerprint: str
+
+    def recomputed_fingerprint(self) -> str:
+        """The fingerprint these four row lists imply, right now.
+
+        Projection seals ``fingerprint`` from the domain; this recomputes it from whatever
+        the catalog currently holds. The two disagreeing means the rows changed after they
+        were sealed — which is the only way a row can go missing without leaving the
+        catalog internally consistent. That is what makes this the check a removed
+        *non-reaching* row cannot slip past: it has no occurrence row to orphan and no
+        count to contradict, but it was inside the seal.
+        """
+        payload = {
+            "source_records": [item.model_dump(mode="json") for item in self.source_records],
+            "usage_records": [item.model_dump(mode="json") for item in self.usage_records],
+            "concrete_entries": [item.model_dump(mode="json") for item in self.concrete_entries],
+            "excluded_records": [
+                item.model_dump(mode="json") for item in self.excluded_records
+            ],
+        }
+        return hashlib.sha256(
+            json.dumps(
+                payload,
+                sort_keys=True,
+                separators=(",", ":"),
+                ensure_ascii=True,
+            ).encode()
+        ).hexdigest()
+
+
+def ships_constraint_machinery(graph: "ComputationGraph") -> bool:
+    """The one rule the three generation seams read, so they cannot drift apart.
+
+    Emission of ``schemas/constraint_types.py``, the registry's ``ConstraintEvaluation`` /
+    ``ConstraintReport`` imports, and the predicate-name preflight all used
+    ``constraint_catalog is not None`` as a proxy for "this package has executable
+    constraint content". Item 2 changed what that nullable means, so the proxy had to
+    become the question itself, in one place.
+
+    **Item 3 changed what it says, which is what Item 2's docstring anticipated.** The bar
+    was one concrete entry; it is now one authored usage. A package that declares constraints
+    and executes none of them still ships a report — one that states, in its coverage account,
+    that nothing was assessed. Silence is the answer a constraint-free model gives, and the
+    two must not be confused.
+
+    The name and the single home are unchanged: the rule still lives here, and the three
+    seams still read it rather than each deciding for itself.
+    """
+    catalog = graph.constraint_catalog
+    return catalog is not None and bool(catalog.usage_records)
 
 
 class ComputationGraph(BaseModel):

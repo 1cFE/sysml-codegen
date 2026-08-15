@@ -1,0 +1,26 @@
+diff --git a/scripts/make_d5_variant.py b/scripts/make_d5_variant.py
+index 6c31189..c6e789e 100644
+--- a/scripts/make_d5_variant.py
++++ b/scripts/make_d5_variant.py
+@@ -43,13 +43,14 @@ BATCH_MANIFEST = FIXTURES / "v6_recapture_batch/batch.json"
+ 
+ #: Files a variant does not inherit: a snapshot belongs to the fixture it was captured from,
+ #: and a variant's own graph differs from its original's by construction.
+-NOT_INHERITED = {"extraction_snapshot.json", "instance_graph_snapshot.json"}
+-
+-#: The file whose presence would make a variant look like a corpus fixture. Corpus membership
+-#: is the v5 snapshot: it is what the corpus was enumerated by, and what the 37 rows name. A
+-#: variant may carry its own *v6* snapshot — that is what lets a repointed test read it
+-#: without a licence — and doing so joins no ledger.
+-CORPUS_MARKER = "extraction_snapshot.json"
++NOT_INHERITED = {"instance_graph_snapshot.json"}
++
++#: The v5 extraction snapshot's filename. Corpus membership used to be exactly this file's
++#: presence — it is what the corpus was enumerated by, and what the 37 rows named. The file
++#: retired with the v5 family (retirement step 2), so the name is kept only as the tripwire
++#: ``test_d5_variants.py`` uses to say it has not come back. A variant may carry its own *v6*
++#: snapshot — that is what lets a repointed test read it without a licence.
++RETIRED_CORPUS_MARKER = "extraction_snapshot.json"
+ 
+ #: Files a variant carries that its original does not, and which the strip check therefore
+ #: ignores because neither is part of the model: the provenance record that says why the

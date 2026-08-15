@@ -1,1374 +1,1084 @@
 # Current Work
 
-**Last Updated**: 2026-07-20
+**Last Updated**: 2026-08-14 (**ELABORATE-FIRST ITEM 7 CLOSED and archived
+[OWNER-authorized]; PHASE D IN PROGRESS.** The pre_pr branch gate ran in all three repos and
+every check is green at the acceptance OIDs: codegen 2086/34/88 zero license-skip, agentic
+1831/1/5 zero license-skip, TEAx 406 passed; ruff 12/1, mypy 52-in-11 / 108-in-26 — all
+exactly the recorded baselines. Item 7 archived to
+`.project/completed/20260814_cutover-recovery/` + `20260814_elaborator-cutover/` with its
+product-lens gate resolved to CLEAR by citation (F1–F4 dispositions recorded). The deletion
+ledger moved to its durable home `.project/ledger/ledger-4a.{json,md}`; the three checker
+constants repointed and the owner's F1 docstring disclosure folded into
+`scripts/check_ledger_4a.py` in the same touch (the PR-prep tree change the ruling
+anticipated); ledger gate re-verified 304/0, groups READY, 62 script tests green; the full
+licensed suite re-run at the post-close tree came back identical (2086/34/88, zero
+license-skip). **The close is STAGED and UNCOMMITTED on codegen `item7-rebuild`** — commit is
+the owner's first move. Remaining in phase D: owner-run merges — agentic-mbse → codegen →
+TEAx (agentic-mbse and TEAx trees need no changes; their checks are green as-is) — then the
+salvage-label delete, main-checkout return to `main`, symlink restore, worktree cleanup.
+Agents do not push/tag/merge. Nothing pushed, no `main` touched anywhere)
+
+---
+
+## Working trees and branches — read this first (valid until the phase-D merge + worktree cleanup)
+
+Settled by git 2026-08-14 [OWNER-directed placement]. One line of development per repo, no forks:
+
+| repo | authoritative branch | authoritative working tree | notes |
+|---|---|---|---|
+| sysml-codegen | `item7-rebuild` | `/home/reid/1cfe/sysml-codegen-item7-rebuild` | carries the Item-7 cutover + the whole closed CONSTRAINT-SEMANTICS epic |
+| agentic-mbse | `item7-rebuild` | `/home/reid/1cfe/agentic-mbse-item7-rebuild` | `elaborate-first-salvage` is FULLY CONTAINED in it (main → +3 → salvage → +9 → item7-rebuild); the label dies at merge |
+| teax | `constraint-semantics-item3` | `/home/reid/1cfe/teax` (checkout stays ON this branch) | codegen's execution lane imports simkit from this working tree; merges LAST, after codegen |
+
+- The main agentic-mbse checkout (`/home/reid/1cfe/agentic-mbse`) is parked 9 commits behind on
+  the same line — kept only as the pre-rebuild environment's read target and the license `.env`
+  host. **Do not develop there.**
+- Codegen's `.claude/skills/sysml-conventions` symlink points at the item7-rebuild worktree
+  (interim, owner-approved); restore to the main checkout at phase D.
+- Tests: `/home/reid/1cfe/item7-rebuild-venv/bin/python -m pytest`, never `uv run` (resolves the
+  companion to the parked checkout). License: `set -a; source /home/reid/1cfe/agentic-mbse/.env;
+  set +a`; licensed proof = zero `no live syside license` skip lines.
+- This whole block, the salvage label, and the extra worktrees get cleaned up at phase D
+  (PR wave + worktree cleanup); delete the block then.
+
+---
+
+## ✅ Item 7 — CLOSED and archived (2026-08-14)
+
+**Verdict: CERTIFY-WITH-RESIDUALS**, archived to
+`.project/completed/20260814_constraint-docs-agent-sync/`. Every probed claim reproduced under
+independent re-run, including the licensed suite (`2070 passed`, zero license-skip lines), the
+post-edit sweep in all three repos (hit-for-hit), the owner-verbatim diff (empty), the matrix
+recount (280/136/3/131/10/0, 33 families), and the branch/boundary discipline (no code, fixture or
+schema path in any commit; nothing pushed; the out-of-bounds checkout clean). Collect check after
+archiving: `2104/2183 tests collected (79 deselected)`, matching the verification baseline.
+
+Four audit findings, all dispositioned. **A-3** — the new `@inapplicable:` "How to write it" example
+was refused by the shipped generator under its own D9 rule — was **CLOSED** at the auditor's
+re-verification pass after an implement resume took route (a): the exact authored text now generates
+to completion and seal, and the marker's reason reaches the generated catalog
+(`inapplicability_reason` in `model_contract.json`, `inapplicable_gate_count: 1` with
+`coverage_state: 'none'`). **A-4** — the "distinct kept test files" count — was **CLOSED**, method
+recorded and **55** reproduced from it independently. **A-1** and **A-2** stand as the two residuals
+below.
+
+What landed: the item3-F2 and design-F2 contract amendments, the first `.project/product/` ledger
+with P-001 carrying the owner's promise verbatim, the cross-repo `@inapplicable:` /
+disposition-vocabulary / six-states teaching, the `modeling-assumptions.md` §8 unit-on-binding
+rewrite, the B1–B5 marker rule stated with both its conditions, and the epic-level
+verification-matrix reconciliation. SC1/SC3/SC4/SC6 ticked; SC2/SC5 unticked, each naming its
+residual.
+
+## ⚠️ The two residuals that ride out of the epic — both owner calls
+
+Neither is work left undone.
+
+**1. Codegen's agent surfaces are symlinks into an out-of-bounds checkout (A-1, blocks SC2/SC3).**
+Codegen `.claude/agents/*` and `.claude/skills/sysml-conventions` resolve to
+`/home/reid/1cfe/agentic-mbse/claude/…` — the **main** agentic-mbse checkout, on branch
+`elaborate-first-salvage`. The item's boundaries allowed agentic-mbse edits only in the worktree
+`/home/reid/1cfe/agentic-mbse-item7-rebuild`. The corrected skill is committed there, so a codegen
+agent session keeps reading the superseded constraint example until `item7-rebuild` reaches the
+branch those symlinks resolve to. Also found: agentic-mbse tracks **two divergent copies** of the
+agent definitions (`claude/` 37 files, `.claude/` 23 files) and Item 1 corrected only `claude/`;
+this item brought `.claude/agents/sysml-expert.md` level.
+
+**2. Items 3, 5, 8 and 9 carry no REQ tags (A-2, blocks SC5).** The recount is done and both count
+blocks were corrected — each was falsified by it — and the one tag-backed gap (the REQ-DIAG family,
+absent from the matrix but present in doc 30) is filed. Filing rows for the untagged gates would
+mean minting REQ tags first, which is a requirements decision, not a matrix reconciliation. Parked
+rather than invented; vehicle `[CONSTRAINT-GATES-UNTAGGED]` in `BACKLOG.md`.
 
 ---
 
 ## Active Work
 
-### CONSTRAINT-LIFECYCLE EPIC — ✅ COMPLETE (all 14 items); composed proof 41/41; PRs pushed; merge pending human (2026-07-20)
-**Register row 17 reads 41/41** at the pinned set (rerun 22 / compose 19; 16 negative mutations at
-their boundaries; 6/6 byte checks; full quality-gate matrix). The sealed artifact thread
-(generate→seal→trusted-load→prepared+file-backed evaluate→persist→resume/query) was demonstrated
-end-to-end; IFE 2,301-point + stellarator five-constraint consumer acceptances pass. Cell 18 CLOSED
-by fixture-shape correction (commit `d7ad714`); underlying general gap `[NESTED-OCCURRENCE-OVERRIDE]`
-filed to the Item-10 occurrence-materialization family. **release-readiness.md** written at
-`.project/active/constraint-lifecycle-composed-proof/release-readiness.md`. **PRs pushed + updated
-2026-07-20** (all fast-forwards): agentic-mbse **#11 `4c18d61`** (merges FIRST; body + comment,
-`4ed2a07` orchestrator ancestry flagged per Item 0 owner direction), sysml-codegen **#9 `d7ad714`**
-(SECOND; body + comment), teax **#3 `c342b10`** (HTTPS; comment). **Merge order load-bearing** —
-codegen `test_upstream_pins` fails on `main` if #9 merges before #11. fusion-tea (`be1ee7c0`) +
-stellarator (`342cc799`) branches **stay local** (human delivery decision). Epic doc: all top-level
-success criteria checked, Lessons Learned filled, status = COMPLETE / merge handoff. **Next: human
-merges #11 → #9; teax #3 independent.** Pins: codegen `7526665` (src) / `d7ad714` (tip) · agentic-mbse
-`4c18d61` · teax `c342b10` · fusion-tea `2422e715` (harness `be1ee7c0`) · stellarator `342cc799`.
+### 2026-08-14: ELABORATE-FIRST Item 7 — CLOSED and archived; phase-D pre_pr checks green
 
-### CONSTRAINT-LIFECYCLE Item 13 — Composed Public Lifecycle Proof (register row 17) — COMPOSE COMPLETE (cell 18 later closed)
-**Compose 18/19 PASS · N1–N16 all fail-at-boundary · 6/6 byte checks · quality-gate matrix recorded ·
-1 OPEN cell (18 → Item 2)** (register "Stage 2 execution — COMPOSE completion" section, 2026-07-20).
-Resumed after owner rulings. **Case 40 RESOLVED to PASS**: migrated the stale IFE breadth harness to
-the per-def predicate API (test-infra, committed fusion-tea `be1ee7c0`); anchors A/B/C byte-exact
-($252.29996307/$68.69020165/$270.12117794, Meier COE 4.735), true 2,301-pt (39×59) grid runs ×5 freqs
-= 11,505 evals, anchor B $68.6902 exact. **Case 18 → PRODUCT FINDING to Item 2** (cell OPEN): fixture
-faithfully implements Appendix C row 18 (def-owned assert + `:>>`-redefining usage; row requires a
-verdict), but the product halts at generation (`:>>`-redefined constraint actual unresolved, strict
-INV-2) — fix dispatched separately. **N15** executed as a real source mutation (restored deleted Gate B
-V11 re-check → 5/14 gate-b tests flip red → reverted, tree clean); N1–N14/N16 via passing boundary
-tests. **Quality gates:** full licensed suite 3115 passed/47 skipped (byte check 4 incl.); optimized
-2 failed (Item-4 baseline)/3113 passed; ruff check clean; agentic-mbse 344; teax 310; stellarator +
-IFE PASS. **Surfaced:** `ruff format`/`mypy` show pre-existing pin baseline (22 format-diffs, 72 mypy
-errors — src byte-identical to pin, so zero-new; register's "src clean" overstates it). Row 17
-certification blocked ONLY by cell 18. No production code touched. Next: Item 2 fix, then rerun cell 18.
+- **Archived** (owner-authorized after step-10 acceptance): `cutover-recovery/` →
+  `.project/completed/20260814_cutover-recovery/`; `elaborator-cutover/` →
+  `.project/completed/20260814_elaborator-cutover/` (spec/design/census; superseded plan kept
+  as shaping evidence). Epic Item-7 success criteria ticked with dated provenance.
+- **Product-lens gate CLEAR**: the 2026-08-11 `BLOCKED (audit-F1, audit-F2)` state resolved by
+  citation in a dated close block — F1 (exemption deleted, pinned by `test_item12_checks.py`),
+  F2 (retirement executed, absence pinned), F3/F4 (three-route mutation proof; step-5 portable
+  provenance) — each citing the owner REVISE disposition, step-9 audit, and step-10 acceptance.
+- **Deletion ledger rehomed** `[OWNER 2026-08-14]`: `ledger-4a.{json,md}` →
+  `.project/ledger/` (living gate data — future test renames still sweep it); constants in
+  `check_ledger_4a.py` / `_ledger_edit.py` / `retirement_worklist.py` repointed; the F1
+  docstring disclosure (sixth ceiling: `replacements` skips the two `repo: agentic-mbse`
+  rows) added in the same touch per the phase-D ruling. Re-verified: paths 304/0, groups
+  READY, 62 ledger-script tests pass.
+- **pre_pr checks green in all three repos** at the acceptance OIDs (suite numbers in the top
+  block). Post-repoint full-suite re-run recorded below. One superseded-item residual noted:
+  `completed/20260810_source-identity-occurrence-foundation/` archives its lens BLOCKED — a
+  supersession record (that implementation never entered this branch), not a shipping blocker.
+- Remaining phase D is owner-run: merge agentic-mbse → codegen → TEAx, delete the
+  `elaborate-first-salvage` label, return the main agentic checkout to `main`, restore the
+  `sysml-conventions` symlink, clean up worktrees.
 
-### CONSTRAINT-LIFECYCLE Item 13 (prior) — Stage 2 COMPOSE first pass stopped at 2 findings
-**Compose group: 17/19 PASS · 2 findings → STAGE STOPPED** (register "Stage 2 execution — COMPOSE
-group" section, 2026-07-20). Per discipline (two findings stop the stage), N1–N16 mutations, byte
-check 4, and the final quality-gate matrix were **not** run. **Sealed artifact thread** demonstrated
-on `constraint_multi_instance`: live A/B two independent roots byte-identical (byte check 1) +
-absolute-path scan clean (byte check 3) + fingerprints identical A==B + seal verify strict PASS both
-+ relocated parity (case 21) + trusted-load→prepared+file-backed eval→persist (execution lane 17
-passed) + resume/query (teax 310 passed). **Case 41 stellarator PASS** (six anchors bit-exact, five
-verdicts satisfied, oracle reldev 0.00e+00, at pin 342cc799 — HEAD d115fbdb was 3 ahead, checked out
-detached + restored). **Case 40 IFE:** package regenerates byte-identical at pinned codegen (0 files
-changed, sealed), anchors A/B byte-exact ($252.29996307/$68.69020165) — but **FINDING #2 → fusion-tea/
-Item 10**: the 2,301-grid harness (`sweep_ife.py`, `run_anchors.py` Run C) is stale vs the pinned
-package (per-usage predicate + `.status` API + `ife_hif.yaml`; pin emits per-def predicate +
-`pipeline.yaml`); not a codegen defect. **FINDING #1 → Item 2 (case 18)**: `:>>`-redefined constraint
-actual unresolved at generation (strict INV-2). Exec-lane recipe: agentic-mbse venv python +
-PYTHONPATH=codegen src + `-m execution` (codegen uv lacks pandas). Owner ruling requested on both
-findings before resume. Compose PASS: 1,2,4,5,6,7,15,25,28,29,30,31,33,34,35,36,41.
+### 2026-08-14: Phase B — cutover COMPLETE: step 9 audit CERTIFY-WITH-RESIDUALS, step 10 OWNER ACCEPTED
 
-### CONSTRAINT-LIFECYCLE Item 13 (prior) — Stage 2 reruns done
-**Stage 2 of 3 — 22/22 RERUN cases executed: PASS 22 · findings 0 · unexpected skips 0** (register
-"Stage 2 execution" section, 2026-07-20). Codegen surface = pin `7526665` exactly
-(`git diff 7526665 HEAD -- src tests` empty; only `.project/` docs moved). Frozen version
-re-assertion: sysml-codegen `0.1.0`, agentic-mbse `0.1.2`, `executable-profile/v4` (matches Item 0).
-License-active, `-rs` clean. agentic-mbse at `4c18d61`; case 37 fact-consumer tests run there
-(21 passed). Case 38 structural sweep: named superseded paths absent (`tracking_key`, resolution
-ladders, D7 passthroughs, predicate-text reconstruction, fusion materializer). **Authored the two
-"author if absent" fixtures** (compose cases 5, 18): `constraint_shared_polarity` (generates clean,
-both polarities emit) and `constraint_def_owned_redefining` (parses + extracts the redefinition;
-**SURFACED**: full generation halts at constraint-actual resolution of a `:>>`-redefined attribute
-— intended compose-stage wiring vs. an Item-2 finding is for the compose stage to decide; not fixed
-here). Negative mutations (N1–N16) and the compose group **not** started (stopped before compose
-per brief). Stage 1 (manifest): all 41 cases classified inherit 0 / rerun 22 / compose 19.
-Pinned set: codegen `7526665` · agentic-mbse `4c18d61` · teax `c342b10` · fusion-tea `2422e715` ·
-stellarator `c4dcdf27`+`c2f10960`+`342cc799`. Open predecessors: NONE. Next: compose group +
-negative mutations + byte/quality gates (then `release-readiness.md`).
+Independent audit (`evidence/audit-9-final.md`): **CERTIFY-WITH-RESIDUALS, 0 blocking /
+1 major / 3 minor** — all six subjects verify on substance; findings record-accuracy/spec-text
+only. **[OWNER 2026-08-14] dispositioned all four and ACCEPTED** (full rulings + verbatim
+acceptance basis: plan.md "Narrow-correction step 10 completion"; gate summary: plan.md
+"Gate 3 — final acceptance"). The disposition pass (same commit as the acceptance tick):
+L-036/L-037 re-pointed to `tests/test_sysml/` (65 passed, verified twice); the 302-of-304
+sweep wording corrected everywhere; R12 mypy amended to the measured 73-in-18 / 118-in-28
+(dated, owner-approved); the governed `src tests` ruff numbers added beside T4; T1 gains the
+18 renames (builder fixed, record rebuilt, tables re-verified verbatim).
 
-### CONSTRAINT-LIFECYCLE Item 12 — Legacy Snapshot and Tracking Identity Closure — ✅ CERTIFIED 2026-07-20 (audit.md, commit 7526665)
-Combined spec+design + `evidence.md` at `.project/active/constraint-lifecycle-legacy-identity/`.
-Implemented RED-first across 6 coordinates: (D1) `generate` command fails closed on
-`grandfathered_off` via `assert_snapshot_certifiable` in `run_codegen` — before preflight,
-output, or seal — with a contextual recapture error (unconditional per owner ruling: a
-grandfathered probe must fail at the gate); (D2) deleted the `capture_snapshot`
-`lower_constraints_enabled` opt-out + the empty `GRANDFATHERED` set (mode retained as
-extraction-only inspection); (D3) deleted `tracking_key` (field/docstring/test) + amended the
-contract's cross-version-correlation non-goals; (D4) threaded the snapshot's real mode into the
-from-snapshot context (fixed the latent misreport). Two expected test interactions resolved
-(parity kwarg drop; V11 test uses an applied tmp copy of the 0-usage probe). Full licensed
-suite 3115 passed / 0 failed, ruff clean, mypy zero-new. No format bump, no re-capture.
-CANDIDATE committed — next: `/_my_audit`.
+**Left for phase D, by the owner's F1 ruling:** the optional `check_ledger_4a.py` docstring
+line disclosing the cross-repo skip (touches `scripts/`; folds in when the tree changes for
+PR prep). **No push, tag, promote, close, or archive happened; item close and the phase-D
+merge wave remain owner-directed.**
 
-### CONSTRAINT-LIFECYCLE Item 11 — TEAx Constraint Evidence Durability (TEAx-owned) — ✅ CERTIFIED 2026-07-20
-**Audit verdict: Certify** (`audit.md`). Reproduced independently (not trusted): C1 positive
-write-phase signal (set-before/clear-on-success, no `finally`; entry-load→MODULE_EXECUTION,
-unwritable output_dir→OUTPUT_WRITE, router-setup test flipped honestly); M1 six migrated sites
-faithful; M2 frozen tree reproduced defeating nested status/margin/results mutation AND emitting
-non-finite tags at depth (byte-identity crux) AND MF-3 firing inside the seal; M3 corruption raise
-+ catalog authority ground-truth (constraint_free/excluded_only→False, sealed_package→True).
-Teax **310 passed**; codegen source untouched vs `b987869` (docs-only diff); Items 8/9 surfaces
-green; ruff clean; mypy errors pre-existing/unrelated. Four **Minor** non-blocking findings: (F1)
-M3 catalog→corruption effect asserted only via forced flag, not end-to-end through cli.py; (F2)
-design's "two-fingerprint control" delivered as fingerprint-scoping + store-incompat rejection
-instead; (F3) INV-G "golden" is a round-trip proof, no captured pre-D2 byte golden; (F4) residual
-legacy `toy_plant_params.json` fallback in `_entry_artifact_path` (safe, fails loud, no fixture).
-All 7 spec SC marked met. **Candidate teax `c342b10`** on `constraint-exec-epic` (not pushed; Item 13
-owns push); artifacts at `.project/active/constraint-lifecycle-evidence-durability/`. Next:
-`/_my_pre_pr` / Item 13 push.
+### 2026-08-14: Phase B — cutover steps 7–8 EXECUTED (batteries + final candidate record) — record
 
-### CONSTRAINT-LIFECYCLE Item 10 — Producer Completeness + Stellarator Rollup — ✅ CERTIFIED + Major 1 CLOSED 2026-07-20
-**Audit Major 1 closed:** the completeness check's MODULE_OUTPUT exemption left channel-tier name-based
-rows (leaf_parent_scoped/leaf_consumer_scoped) uncaught for qualified terms — now flagged (check keys on
-name-based key_form + qualified ref, regardless of outcome; chain_redefinition_follow + exact rows exempt).
-2959 pass, corpus byte-clean. The revert-rationale loud guard is now airtight. WI-015 #4 root closed;
-stellarator bridge-free, six anchors bit-exact, five verdicts satisfied.
-**Audit verdict: Certify** (`audit.md`). Reproduced independently: 2956-test corpus green (licensed);
-`run_stellaris_single.py` reran in the exec env → six anchors bit-exact, five verdicts satisfied,
-single-pass, oracle reldev 0.00e+00; bridge/glue-2/handshake-rollup absence-checked; WI-027 D7
-supersession present; five `resolve_producer` sites covered by the centralized sink; resolver fix
-(per-child `:>>` capture + dual-scope row-13 follow + transitive instance-scoping) sound and byte-clean.
-**Surfaced Major (owner ruling requested):** the producer-completeness check's guarantee is NOT airtight
-— it exempts all `MODULE_OUTPUT`, so a qualifier-drop collapse via the channel-tier name-based rows
-14–15 (`leaf_parent_scoped`/`leaf_consumer_scoped`) is uncaught (the design-attribute `leaf_unique`
-path IS caught). Latent (no fixture trips it; the stellarator resolves at row 13), diagnostic not a hard
-gate — does not affect the delivered acceptance, but the "completeness check is the loud guard" rationale
-for the reverted global refusal holds only for the design-attribute tier. Spec SC2 marked met-as-mechanism
-with the documented gap; SC1/3/4/5/6 verified-met. Evidence stale note: `handshake_comparison.json` WAS
-refreshed (stellarator `342cc799`, the anticipated diagnostic-snapshot commit); evidence text not updated.
-Next: `/_my_pre_pr` then `/_my_close` (certification stays ordered behind Item 9 per the register).
+**[OWNER 2026-08-14]** ruled the tree final ("no changes in flight") at `540ad59` and directed
+steps 7–9. Full record: plan.md "Narrow-correction steps 7 and 8 completion". Headlines:
+
+- **Three consecutive complete batteries, 51/51 fields identical**, at codegen `2819501` /
+  agentic `6372ef7` / TEAx `75eecb3` (`evidence/phase5-runs/final-runs/`, comparator exit 0).
+  Suite 2086/34/88 zero license-skip; agentic 1831/1/5; lane 88 (incl. the gain=100 three-route
+  proof — register row-3 single-shot obligation discharged); verify 15/22/0, fixture churn 0;
+  ruff 12/1 = the R12 baseline sets exactly; mypy 52-in-11; ledger 304/0, replacements
+  223/79/**0 FAIL** (302-of-304-row sweep, first since REVISE; the two skipped agentic rows
+  verified directly — audit-9 F1); diff checks clean.
+- **The battery caught one defect first pass**: L-179 still cited the step-5-renamed
+  differ-only pin. Cured (`2819501`, ledger citation re-pointed, shipped-path diff vs the ruled
+  `540ad59` empty), partial runs discarded, all three recorded runs measure the repaired tree.
+- **Step 8**: `evidence/candidate.{md,json}` + `final-candidate-tables.md` regenerated by
+  `build_candidate_final.py` — every number derived from logs/git/bytes. Four things surfaced,
+  not silently resolved (candidate.md §6): the L-179 cure; **the R12 agentic-mypy clause
+  discrepancy** (spec ≤105-in-23 vs every recorded measurement 108-in-26 — parked to step-9
+  audit + owner); the TEAx docs-only pin move; the known pre-existing artifacts.
+- **Steps 7–8 are spent**: further substantive shipped-path change invalidates them.
+
+**Next: step 9 fresh narrow audit** (compiler convergence + symbol removal, replacement
+coverage, R8, portable provenance, final gate semantics, evidence consistency — not a
+re-review of the 195 deletions), **then step 10 owner final acceptance** (no
+push/tag/close/archive from agents).
+
+### 2026-08-14: Phase B — cutover step 6 EXECUTED (ruff R12 amendment) — record
+
+Step 6 ran per the pre-declared brief
+`.project/active/cutover-recovery/briefs/correction-step6-ruff-r12-amendment.md` (disposition 2,
+`[AGENT] (ratified for execution by owner, 2026-08-12)`). Full record: plan.md
+"Narrow-correction step 6 completion". Headlines:
+
+- **Spec R12 no longer demands clean production Ruff** — it carries the zero-new baseline with
+  both finding **sets** recorded by name (codegen `src` **12**, all UP042, enumerated; companion
+  `src` **1**, `extraction/index.py:146 N806` at `6372ef7`). Set comparison, not counts; changed
+  files clean unless their only findings are recorded pre-existing ones; totals no worse. The
+  ratified 14 was stale; the measured 12 is recorded per the standing instruction.
+- **Two recorded judgment calls:** the R12 command list drops `uv run` and `../agentic-mbse`
+  (both resolve the parked checkout — commands restate against the item7-rebuild venv until
+  phase D); the "coordinated repository gates" SC box **stays unticked** — its ruff blocker is
+  discharged (tick-provenance note updated, dated) but the tick belongs to the fresh
+  exact-count step 7–8 batteries at the final paired OIDs.
+- **No code, test, fixture, matrix, or ledger path touched.** Ruff measured identical before
+  and after; `git diff --check` clean; step-5 gate baselines stand as the current-tree record.
+
+Steps 7–8 executed later the same day on the owner's tree-final ruling — see the entry above.
+
+### 2026-08-14: Phase B — cutover step 5 EXECUTED (portable provenance) — record
+
+Step 5 ran in-session directly after step 4, per the ratified disposition 4 and the
+pre-declared plan `briefs/correction-step5-portable-provenance.md`. **Commit: `a4669af`
+(the one bounded step-5 change — brief, code, flipped pins, records; parent `98dc3ec`).**
+Full record: plan.md "Narrow-correction step 5 completion". Headlines:
+
+- **The live route now renders the portable `root-N/` source referent on every graph node**
+  (`_rewrite_live_sources_as_referents` in `orchestration/elaborated_pipeline.py`, plus NFC in
+  the shared encoding) — same shape as capture, derived from the caller's roots, routes NOT
+  converged (arm-independence pin stands). **Live and snapshot generation are byte-identical**;
+  invariant 35 amended (dated), invariant 34 now true as written; design A1 carries the
+  audit-F4-answered note.
+- **No snapshot bytes moved** (`--verify` 15/22/0, fixture tree clean — no recapture batch);
+  no baseline churn; **zero matrix row edits** (flipped tests are uncited; counts stand).
+- Every tripwire pinning the old divergence flipped to assert the new equality by value:
+  package byte-identity, fingerprint equality, v6-routes provenance agreement (renamed node —
+  ledger L-007/L-010 re-pointed, gate green), usage-domain parity unmasked, execution-lane tree
+  equality, `capture_v6_batch.py --verify` unmasked.
+- **Gates:** licensed suite **2086/34/88, zero license-skip lines** (+1 = the new NFC unit
+  test); collect 2120/2208; execution lane **88**; corpus 9; ledger 304/0, surface 0, groups
+  READY; proof integrity 0/0; distinctness 31/0; gated manifest 65 = 56 + 9; ruff src **12**
+  and mypy **52-in-11** (zero-new held); `git diff --check` clean. No premise conflict.
+
+Step 6 executed later the same day — see the entry above.
+
+### 2026-08-14: Phase B — cutover step 4 EXECUTED in-session (record)
+
+**[OWNER 2026-08-14]** triggered the resumption, ruled the execution mode (in-session), and made
+two in-session rulings; step 4 then ran to completion. **Commits: `cc268d5` (rev-2 brief +
+register walk + REQ-CL-03 ruling), `7ebe447` (the bounded step-4 implementation).** The full
+record is the plan's "Narrow-correction step 4 completion"
+(`.project/active/cutover-recovery/plan.md`). Headlines:
+
+- **The matrix has zero UNTESTED rows for the first time since the retirement.** Recount:
+  **288 rows / 156 PASS / 1 PARTIAL (REQ-DIAG-01, recorded deliberate) / 131 RETIRED /
+  0 UNTESTED / 34 families / 64 kept test files, none missing from disk.** The nine
+  L-149/L-150/L-152 replacement rows closed on behavioral tests through the public route; the
+  REQ-DIAG-04 tripwire, the REQ-EPC-01/REQ-GA-03 failing arms, and the REQ-CL-03 amendment
+  (usage-domain ruling) landed in the same pass; the REQ-CS family (8 rows, Items 3/8/9) is
+  minted per `[CONSTRAINT-GATES-UNTAGGED]` — that backlog entry is complete and the epic/item SC
+  boxes are ticked with dated amendments.
+- **One product defect surfaced and was cured under the stop-and-surface rule**: smart regen's
+  exact-set field comparison churned the generator's own output on defs with declared-but-unused
+  inputs. Cure **[AGENT] (ratified by owner, 2026-08-14)**: subset comparison in
+  `generation/preservation.py`; doc 23 and REQ-SR rows amended; no generated bytes changed.
+- **The gain=100 three-route proof is in** (`test_fusion_tea_mutation_teax.py`, 29 passed):
+  exact three-port consumer set including the viability constraint, hand-arithmetic movers at
+  100, constraint consumption proved via observed value + margin, and a verdict-flip leg at 20
+  in the six-state vocabulary. The single-shot authoritative observation re-runs at steps 7–8.
+- **Gates:** licensed suite **2085/34/88, zero license-skip lines** (delta = the 24 new tests);
+  execution lane **88**; capture verify **15/22/0**; corpus **9**; ledger 304/0, surface 0,
+  groups READY; proof integrity 0/0; distinctness 31/0; gated manifest 65 = 56 + 9; ruff src
+  **12** and mypy **52-in-11** (both improved over the epic, zero-new held); `git diff --check`
+  clean. Evidence-Invalidation Register rows 1–7 discharged; rows 3/8/9's single-shot
+  obligations ride to steps 7–8.
+
+Step 5 executed later the same day — see the entry above.
+
+### 2026-08-14: CONSTRAINT-SEMANTICS epic — CLOSED and archived; next is phase B
+
+The epic is done. Nothing in it is live work any more. Where things stand:
+
+- **Epic closed and archived 2026-08-14** by owner ruling, after all nine items closed:
+  `.project/completed/20260814_epic_constraint_semantics_contract.md`, with the umbrella shaping
+  folder preserved whole beside it at
+  `.project/completed/20260814_constraint-semantics-contract/` (spec, rulings, spec-review,
+  product-lens) as the epic's decision record.
+- **`pre_pr` was NOT run, by ruling.** It is deferred to the **phase-D branch gate** below. The
+  epic's changes live on the unmerged `item7-rebuild` line and ship with it; the gate runs once over
+  the whole branch line.
+- **The Item 7 Evidence-Invalidation Register is HANDED, not discharged.** Its nine rows are
+  complete and archived with the epic; walking them row by row is **phase B step 1**. No paused
+  ELABORATE-FIRST Item 7 step 4–10 evidence may be reused without that walk — every row marked
+  *Invalid* really is.
+- **Three open decisions survive the epic, all the owner's:** the codegen `.claude/` **symlink
+  target** (resolves at merge); **`[CONSTRAINT-GATES-UNTAGGED]`** (REQ tags for Items 3/5/8/9 —
+  assigned 2026-08-14 to cutover step 4 so the matrix is touched once); and the **parked D-2 vs
+  D-4/SRC-01 premise conflict** at umbrella `spec.md:325`, which no item resolved in either
+  direction and which archived still open.
+- **Surfaced at close, unresolved:** `.project/product/INDEX.md` and `P-001` name the epic file as
+  the durable one-hop lens trail node, on the recorded reasoning that it does not archive. The close
+  falsifies that. The **paths** were repointed so the trail resolves; **no promise text or authority
+  grade was touched**. Whether a trail node in `completed/` is good enough, or whether it belongs
+  somewhere that never archives, is the owner's call.
+- **Item 6's production implementation is out of this epic `[OWNER 2026-08-13]`** and is now the
+  unowned backlog entry `[CALCDEF-GATE-IMPLEMENTATION]` (P1, 7–9 days, graph v4 + catalog 4.0.0,
+  codegen + TEAx), parked with the owner. It competes for the next slot with
+  `[CATF-CRYO-HEAT-LEAK-COEFFICIENT]` (P1). Its plan of record is
+  `.project/completed/20260813_calcdef-constraint-gate-design/implementation-item.md`. The Item 8
+  start gate is satisfied at `62a07e5`; the only remaining block is owner authorization. No agent
+  starts it without a new ruling.
+- **Nothing pushed; no `main` touched anywhere; TEAx stays on `constraint-semantics-item3` @
+  `5b70ae9`** until the phase-D merge (codegen first, TEAx second — never the reverse).
+
+### 2026-08-12: Constraint-semantics contract — spec drafted (owner-directed priority)
+
+**[OWNER 2026-08-12]** redirected priority after the Item 7 step-4 probe: settle constraint
+semantics first ("get to the bottom of 'how do constraints work'"), fix docs and the test model to
+match, then test. Research:
+`.project/research/20260812-101200_constraint-semantics-end-to-end.md` (65 authored CATF checks →
+9 visible dispositions → 0 executed; 56 usages with no catalog carrier; docs contradict code and
+standard; report can claim `all_satisfied` over partial coverage; TEAx sees such models as
+`unconstrained`). Eight rulings recorded 2026-08-12 (assert-only enforcement; calc-def gate
+semantics ruled + staged; catalog totality hard-gated with severity by cause; bindings-only
+predicates + equality-usage instruction; coverage-true headline; boundary-default study policy;
+requirements-side non-executable; migration in a new CATF derivative).
+**Spec: `.project/completed/20260814_constraint-semantics-contract/spec.md` (archived at epic close
+2026-08-14; was `.project/active/constraint-semantics-contract/`) — reviewed (verdict Revise) and
+revised same day; all findings resolved in `spec-review.md`, four owner-selected refinements
+recorded in `rulings-20260812.md` (asserted-gates denominator; vacuous = missing assessment until
+dispositioned; all-65 CATF disposition table; umbrella structure). Next: `/_my_epic_plan`
+decomposition.** Item 7 narrow-correction steps 4–10 resume after this contract lands.
+
+### 2026-08-12: Item 7 cutover recovery — R8 complete; replacement coverage next
+
+**Where it stands.** Narrow-correction steps 1–3 are complete. The real compiler convergence and
+ledger-checker hardening landed in codegen commit
+`057bf29a3209470cd6ccfd882b1d3e6dd6d76a45`. R8 now keeps the shortest resolved qualifier only
+when distinct reference chains in one expression share a leaf name; unique chains keep their
+prior leaf-only public names, and repeated exact sources still deduplicate. **[AGENT] (ratified
+for execution by owner, 2026-08-12)** The recovered implementation stays in place. Item 7 remains
+open for narrow-correction steps 4–10.
+
+- **Correction authority:** all ten ratified dispositions are recorded question by question in
+  `.project/active/cutover-recovery/owner-disposition-20260811.md`; the persistent ten-step
+  execution sequence is in `.project/active/cutover-recovery/plan.md`.
+- **Progress:** narrow-correction steps 1–3 are complete. **[OWNER 2026-08-12] Steps 4–10 are
+  PAUSED until the constraint-semantics contract work (entry above) lands.** The pause record
+  with resumption consequences is in `plan.md` ("PAUSED at step 4"): the step-4 brief is
+  partially superseded and needs revision before execution; steps 7–8 (batteries + candidate
+  record) run once, after the contract work, at the true final tree; the contract epic owns the
+  evidence-invalidation register. Steps 1–3's committed work stands (orthogonal subjects).
+- **R8 result:** the direct two-term witness projects exact
+  `panel_capital_cost_{0,1}` and `caster_capital_cost_{0,1}` inputs to four distinct occurrence
+  channels and executes to **16.0**. A unique `panel.capital_cost` chain remains
+  `capital_cost_{0,1}`. The D-5-renamed stage-one solar model now preserves its PV-module,
+  inverter, and array-BOS same-leaf families. Named intermediates remain a useful authored
+  pattern, but are not required to avoid `SI_RENDERING_COLLISION`.
+- **Dependency conclusion:** fix-first succeeded within the elaboration name seam. Item 10 is not
+  an Item 7 dependency.
+- **Step-2 node account:** L-281 retired 10 exact legacy-shape nodes and L-284 retired 11; three
+  redundant extractor schema assertions also retired and six checker nodes were added. The
+  structured 21-node list and named replacements are in `ledger-4a.json`; the full collection
+  decreased by 18 nodes exactly.
+- **Step-3 gates:** focused suite **101 passed**; full licensed suite **1689 passed / 34 skipped /
+  65 deselected** from the unchanged 1,788-node collection, zero license-skip lines; v6 recapture
+  **15/22/0**; corpus **9**; execution **65**. Ledger `paths` **304/0**, `surface` **0**, all six
+  `groups` READY, proof integrity **0/0**, and doc distinctness **31/0**. Changed Python files are
+  ruff-clean; `ruff check src` remains **14** and mypy remains **57 errors in 11 files**.
+- **Superseded checkpoint OIDs:** codegen `6c35aa0`, agentic-mbse `3fbda2f`, TEAx pinned
+  `fa0e06a9`.
+- **Checkpoint gates:** codegen suite **1707 passed / 34 skipped / 65 deselected**, zero
+  `no live syside license` skip lines; ledger **304 rows / 0 problems**; `git diff --check` clean
+  in both repos. The three step-7a runs (at `c0ceb24`) agree field for field —
+  `evidence/phase5-runs/revise-runs/comparison.md`.
+- **Checkpoint audit:** `evidence/audit-7-retired.md`, verdict FINDINGS (10, none blocking). All eight
+  requested probes were executed and CONFIRM, so its own clause resolves to *Certify with the
+  residual list* now that F1–F3 are dispositioned. The narrow correction requires a fresh audit
+  after the substantive fixes; it is not a re-review of all 195 deletions.
+- **Final acceptance remains owner-grade.** The correction proposal authorizes no push, tag,
+  promotion, close, or archive.
+- **Do not** treat the numbers in the superseded 2026-08-11 record as current; that record
+  described the pre-retirement tree and lives at commit `013d6a1`.
+
+The pre-REVISE state, kept for context:
+
+### 2026-08-11: Item 7 cutover recovery — owner disposition REVISE (superseded by the entry above)
+
+**The Item 7 cutover execution recorded further down this file is superseded.** It produced no
+commit. Its uncommitted candidate mixed useful work with 222 tracked deletions, 22 corrupted
+architecture documents, a smaller test suite, and one unresolved corpus outcome, so it could not
+show that the cutover preserved the product. Nothing from it is authority.
+
+- **Plan of record:** `.project/active/cutover-recovery/plan.md` **[OWNER 2026-08-10 approved]**.
+  `.project/active/elaborator-cutover/` is retained as shaping and census evidence only, and its
+  plan carries a superseded banner.
+- **Phases 1–3 DONE.** The incident is preserved, the rebuild started from the certified Item 6
+  baseline, and the exact route now serves the public CLI. The pre-retirement checkpoint is
+  codegen `800ec84` with companion `cc6c7a7`.
+- **[OWNER 2026-08-11] Disposition: REVISE.** The candidate is a credible pre-retirement
+  checkpoint, not a completed Item 7. The prescribed path is
+  `.project/active/cutover-recovery/owner-disposition-20260811.md`: v6 batch accepted (done),
+  implement the seven formerly-gated migrations, all-route mutation tests, R8/R10, retirement
+  with no provisional trim, full gates + audit on the retired tree, one regenerated candidate
+  record. The R8, ruff, audit-F4, and related questions open at that checkpoint are now
+  dispositioned by **[AGENT] (ratified for execution by owner, 2026-08-12)** in the current
+  correction record.
+- **Phase 4 PARTIAL.** The retirement runbook is prepared, but owner-gated deletion of v5,
+  legacy builders, dual-run code, test shims, and wrong-oracle tests has not run.
+- **Phase 5 AUDITED — NEEDS WORK.** The independent audit is
+  `.project/active/cutover-recovery/audit.md`; its product-lens ledger is
+  `.project/active/cutover-recovery/product-lens.md`. Only the instance-graph snapshot success
+  criterion was certified.
+- **[AGENT] Blocking findings.** Companion validation still suppresses the owner-forbidden true
+  self-binding diagnostic when an outer same-named feature exists. The duplicate legacy authority
+  and CLI-shaped test shim remain executable. Public live/relocated mutation and generated-byte
+  parity evidence also remain incomplete. These findings block certification even though the
+  current suites are green.
+- **Fresh audit gates:** codegen **3862 passed / 47 skipped / 53 deselected**; companion **1825
+  passed / 1 skipped / 5 deselected**; real TEAx lane **53 passed**. `ruff check src` still reports
+  16 findings, and mypy remains at the recorded 69-error baseline.
+- **Next (as of 2026-08-11, now done):** revise-path steps 2–7. See the 2026-08-12 entry above
+  for the executed state; the gate numbers in this entry are pre-retirement and stale.
+- **Environment:** one task-specific venv at `/home/reid/1cfe/item7-rebuild-venv`. Re-assert
+  resolved import paths after any rebuild of it — uv's global cache silently produced an editable
+  install pointing at the original worktree (finding F2).
 
 ---
 
-### (prior) CONSTRAINT-LIFECYCLE Item 10 — WI-015 #4 CLOSED; public gen proven 2026-07-20
-Phases 0/1/2 done. The blocking finding (cross-part child.attr collapse) was ratified in-scope and
-FIXED (general resolver mechanism, no rollup arm): (a1) capture per-child :>> redefinitions, (a2)
-dual-scope channel follow, (a3) transitive instance-scoping for aggregation-composing sums. Global
-_leaf_unique refusal tried+reverted (moved relied-upon behavior). Stellarator: 13-term collapse → 0
-completeness violations, 0 V11 offenders; public generation (no bridge) EXIT 0 with constraint modules.
-Byte-clean: 2956 pass. Stellarator staged formulas restored + snapshot recaptured (v5) + WI-027 amended
-(D7 superseded by D-2). CANDIDATE_REVs: codegen ce09bb2, stellarator 0a8add96. **Remaining last-mile
-(teax exec env):** numeric run (6 anchors + 5 verdicts), physical bridge/glue deletion, single-pass
-runner cutover. Anchor movement = STOP. Evidence: evidence.md.
-Phases 0/2 landed earlier (capture sink, completeness check, RED coordinate). Phase 1 (this
-session, licensed): FORMULA→aggregation routing built (Step 4.7 `_route_crosspart_formula_aggregations`),
-byte-identity sweep CLEAN (2953 pass), A7 chained-aggregation PROVEN on the real stellarator
-(LocalTerms→module_output). Completeness check refined to qualified-ref-only leaf-guess (zero false
-positives). **BLOCKING FINDING (STOP):** cross-part `child.attr` SingletonTerms collapse — the resolver
-drops the part-usage qualifier and leaf-matches (`magnet.capital_cost`→one magnet EP; 13-way collapse).
-The design's Decision-1 premise ("aggregation path already resolves cross-part refs") is empirically
-false; the check catches it (13 leaf_name_guess violations). Phase 3 BLOCKED — needs a resolver
-enhancement to follow child-part redefinitions per instance. Surfaced, not worked around. Evidence:
-`evidence.md`.
-Design approved-with-revisions (four Majors applied, `design-review.md` + `design.md`).
-Implemented and verified: capture sink centralized in `resolve_producer` (covers all 5 call
-sites by construction — closes R2), `producer_completeness.py` check, and the RED-first
-ambiguous/defaulted acceptance (license-free, real resolver+check). 2952 pass / 0 fail / 44
-license-skip; ruff clean; no mypy added. **Remaining:** Phase 1 (cross-part aggregation routing
-+ 15-fixture byte-identity + gate wiring) and Phase 3 (stellarator cutover — license + teax env,
-bit-exact anchors, both-harness deletion, WI-027 amend). Evidence: `evidence.md`. Anchor
-movement is a STOP. Stopped for audit after Phases 0/2.
-Spec: `.project/active/constraint-lifecycle-producer-completeness/spec.md`. Two faces of one rule
-(producer completeness independent of V11): (1) ambiguous/defaulted producer acceptance, RED-first;
-(2) codegen compiles the stellarator cross-part capital aggregation as a real graph producer,
-retiring the private bridge/placeholder/two-pass glue and amending WI-027 (D7 superseded by D-2).
-Measured distance at today's chain: Gate A/B resolved (Items 2/3); the bridge's sole remaining job
-is the cross-part capital sum codegen still can't compile (`calc_compat_renderer.py:103`).
-
-### CONSTRAINT-LIFECYCLE Item 9 — Multi-Entry Candidate Bridge (TEAx-owned) — spec drafted 2026-07-20
-
-### CONSTRAINT-LIFECYCLE Item 9 — Multi-Entry Candidate Bridge (TEAx-owned) — CERTIFIED (independent audit 2026-07-20)
-
-**Audit verdict: Certify.** `.project/active/constraint-lifecycle-multi-entry/audit.md`. Every
-executable gate reproduced first-hand across all three repos at the audited commits (codegen
-`240d170`, teax `07eb0ac`, fusion-tea `2422e715`). The three design-review Majors verified: **R1**
-RED (uncaught `EvaluationFailed` with `bridge.build` outside the switch) → GREEN (`StudyBridgeDefect`),
-reproduced by relocating the call and reverting; **R2** both baseline arms (fully-defaulted builds;
-defaultless-unselected fails closed, never invented); **R3** `prove_catalog_seam.py` migrated off the
-config scalars and green. Coordinates: zero end-to-end (`zero_channel` fixture, constraint-BEARING per
-Item-11 firewall labeling), one, and the IFE 2301/2301 100%-agreement run all green through the stock
-bridge, no wrapper. Codegen production delta = template + `sample_model.yaml` ONLY (byte-identity
-airtight: `{% else %}` reachable only at zero channels); full licensed codegen suite **3084 passed /
-44 skipped**, license loaded; teax full suite **301 passed**. Deletion inventory verified: zero code
-survivors (`MultiChannelEvaluator`/`ThreeChannelEvaluator`/config scalars/bench usage all gone).
-
-Minor honesty note (non-blocking): evidence §7 and the line below cite codegen `5a72366`, but the
-actual audited HEAD is `240d170` — stale hash in the record, not a code defect. Full discrepancy list
-(counts, fingerprint wording, docstring residual) in audit.md.
-
-### CONSTRAINT-LIFECYCLE Item 9 — Multi-Entry Candidate Bridge (TEAx-owned) — IMPLEMENTED, stop for audit (2026-07-20)
-
-Epic row 11 / CE-F2. Stock TEAx bridge now builds complete typed mappings for zero/one/many entry
-channels; fusion's `MultiChannelEvaluator` (+ `ThreeChannelEvaluator`, `bench` usage) deleted.
-Spec/design/design-review/evidence + codegen-gap finding at
-`.project/active/constraint-lifecycle-multi-entry/`. Design-review R1–R5 applied before implementing.
-
-**Landed:** teax `CandidateBridge(entry_models)` (partition by `model_fields`, fail-closed
-unknown/malformed → `EvaluationFailed(ENTRY_VALIDATION)`, A2 ambiguity guard); **R1** `bridge.build`
-relocated inside the runner failure switch (RED captured: uncaught `EvaluationFailed` before the
-move); `StudyDefinition`/`StudyConfig` scalar `entry_channel`/`entry_model` deleted, fingerprint
-basis moved (R5 store no-silent-rebind gate green). fusion study green through the stock bridge:
-**2301/2301 IFE cases, 100% agreement, no wrapper**; Item-8 seam proof still green.
-
-**Codegen gap found + ROUTED, not shimmed (Phase-0 A3 falsified):** codegen omits the EntryPoint
-module at zero entry channels (`pipeline_yaml.jinja2:11`), so a zero-entry package is rejected by
-stock TEAx (`Pipeline must declare exactly one EntryPoint module`). Zero *bridge shape* proven at
-the unit level; zero *end-to-end package* parked on a codegen fix (owner TBD — Item 13 / codegen).
-See `codegen-gap-zero-entry.md`.
-
-**Gates:** teax full simkit `298 passed`; ruff clean; mypy zero-added; codegen source untouched.
-Candidate revs: **codegen `5a72366`** (supersedes source-pin `589c8c4` — zero-entry template fix), **teax `07eb0ac`** (fixture+test) / `96578a4` (bridge), fusion-tea `2422e715`. Zero-entry gap FIXED in codegen same landing unit; zero end-to-end coordinate now a committed real package (301 teax passed; codegen 3083 licensed). Nothing pushed (Item 13 owns push).
-
-### CONSTRAINT-LIFECYCLE Item 8 — Canonical Embedded Catalog and Store Transition — CERTIFIED (independent audit 2026-07-20, pass with notes; all notes now closed)
-
-**Audit verdict: Certify — pass with notes.** `.project/active/constraint-lifecycle-catalog-store/audit.md`.
-The item delivers its substance and every executable gate reproduced first-hand. Candidate revs:
-codegen `19b74ac` (Phase 1) / teax `a5594e1` (Phase 2) / fusion-tea `667136fa` (Phase 3, branch
-`item8-fusion-embedded-catalog`). Gates reproduced: codegen full suite **3080 passed / 44 skipped /
-17 deselected** (catalog conformance non-vacuous); catalog surface 12 passed; teax **286 passed** +
-skew 5 passed (both directions fail closed); fusion seam proof GREEN (schema 2.0.0, 1 eligible entry,
-def→usage join `fusion_cycle::'Viability Threshold'`, verdict satisfied) + 6 package tests. The
-alternate system (byte-hash stand-in, standalone `constraint_catalog.json`, fusion materializer) is
-genuinely gone across all three repos, no shim; the six design-review Majors (F1–F6) landed in code.
-
-The two moderate findings were missing regression guards (behaviour verified correct), now closed:
-**F-A** — the F1 named-inline FK branch was vacuous; `constraint_inline` added to the parametrization
-plus a dedicated named-inline test (codegen `82ad686`), branch now armed. **F-B** — the INV-6
-source-scan the spec/design name was missing; now landed both sides: teax consumer scan
-`tests/study/test_no_reconstruction.py` (`8286893`) and codegen producer scan
-`tests/conformance/test_catalog_no_reconstruction.py` (follow-up), and the surviving alternate-schema
-names `CatalogView`/`_Catalog` are renamed to `EmbeddedCatalogView`/`_EmbeddedCatalog` (no name
-survives the deletion table). Minor notes closed: **N1** — `prove_catalog_seam.py` now sweeps stale
-`.pytest_cache` before load so a reproducer starts clean; **N2** — Item-9 breadcrumb on the stale
-`MultiChannelEvaluator` inline in `run_viability_study.py` (fusion `d7f7492d`). Evidence:
-`.project/active/constraint-lifecycle-catalog-store/evidence.md` (audit-close section). Stellarator
-demo repo untouched. Nothing pushed (Item 13 owns the push).
-
-Epic `epic_constraint_execution_lifecycle_remediation.md` register row 10; operationalizes owner
-decision D-3 (settled: codegen's embedded catalog is the sole schema authority). Spec + design at
-`.project/active/constraint-lifecycle-catalog-store/`. Deletion inventory grounded across codegen +
-teax + fusion-tea. Orchestrator rulings recorded: fusion-tea (not `-stellarator-mbse-demo`) is the
-deletion target; no active store migration (pre-release stores; archival invariant + existing
-eight-field no-silent-rebind gate suffice). Design settles the parked questions with code evidence:
-three-tier catalog (add per-usage tier + 4 projected entry fields + `definition_qualified_name` FK
-recorded at lowering), skew guard via `contracts/versions.py` central pin + TEAx vendored accepted
-set (composes with Items 4/7, no new version machinery), phasing codegen→TEAx→fusion with the IFE
-study proven green on the real catalog before the materializer dies. Next: `/_my_design_review`.
-
-### CONSTRAINT-LIFECYCLE Item 7 — Trusted Package Bootstrap and Seal Provenance — CERTIFIED (independent audit 2026-07-20, candidate codegen `280a2bd` / teax `98a6d07`)
-
-**Audit verdict: Certify.** `.project/active/constraint-lifecycle-package-trust/audit.md`. Both
-attacks reproduced RED against pre-fix (loader reverted to `98a6d07^`; codegen src to `280a2bd^`),
-GREEN at HEAD; working trees restored clean. All four design-review Majors verified landed in
-code and design prose (no second review round needed): TOCTOU closed (compile+exec of read
-bytes, no `exec_module`); single-version policy, both skew directions named, bare literal zero
-survivors; manifest = tree-minus-globs with foreign-file-in-non-glob → hard fail, and the
-consumer-anchor-vs-producer-gate honesty prose + seal-signing Non-Goal present; churn claim holds
-(no `baseline_outputs`; teax diff = loader + test + enumerated re-seals). D3 fixtures at canonical
-`ad0a855`, version unchanged, nothing else moved. Battery reproduced: codegen **3068 passed / 44
-skipped / 0 license skips**, teax **281 passed**, certified Item-6 surface **59 passed**, mypy
-**72** (base 73, +0), ruff clean. Items 1–6 acceptance surfaces untouched (scope = contracts/CLI
-+ teax loader only). Epic Item 7 heading ✅; all 5 epic + 6 spec success criteria marked.
-**Not checked:** full `-O` suite tally (flagged file confirmed assert-strip artifact, Item-7
-code untouched); agentic-mbse not diffed (design claims no diff; scope consistent); the PR push
-(Item 13's). Evidence hygiene note: `evidence.md:165-166` still carries CANDIDATE_REV placeholders.
-
-Epic rows 8–9. Cross-repo (sysml-codegen + TEAx). Design + design-review (Approve-with-revisions,
-4 Majors applied) + evidence at `.project/active/constraint-lifecycle-package-trust/`.
-
-Both named attacks driven RED-first then GREEN:
-- **Attack (a)** unconditional-success verifier — TEAx loader now authenticates the package-local
-  `verify.py` bytes against a vendored `TRUSTED_VERIFIER_SHA256` and execs *the hashed bytes* (no
-  `exec_module` re-read; TOCTOU closed). Rejected before any package code runs.
-- **Attack (b)** foreign-file laundering — codegen emits `contracts/generation_manifest.json`
-  (tree-minus-globs codegen set); a CLI-level `cmd_seal` provenance gate hard-fails a foreign or
-  edited-generated file. Pure `seal_package` + both walkers untouched.
-- **Version skew** — bare `package_load.py:22` literal deleted; single-version
-  `ACCEPTED_RUNTIME_CONTRACT_VERSIONS` fails closed both directions with a named diagnostic.
-- **D3 drift** — the two stale TEAx fixtures re-sealed to the canonical verifier (enumerated).
-
-Battery green: codegen 3068 passed (0 license skips) + execution 17; teax 281; mypy/ruff no-new;
-`-O` 2 failures pre-existing (confirmed on base). Candidate commits: codegen
-`<CANDIDATE_REV_CODEGEN>`, teax `<CANDIDATE_REV_TEAX>` — **not pushed** (Item 13 owns the push).
-
-### CONSTRAINT-LIFECYCLE Item 6 — Public Documentation and F1 Evidence Reconciliation — CERTIFIED (independent audit 2026-07-20, candidate `f917787` / TEAx `db23719`)
-
-**Audit verdict: Certify (no findings).** `.project/active/constraint-lifecycle-docs-f1/audit.md`.
-Light reconciliation item; every one of the seven requested areas reproduced first-hand.
-
-- **S1–S8** — all eight STALE corrections now make a claim that is TRUE against landed code:
-  snapshot v5 (`snapshot/__init__.py:28`), profile v4 (`_upstream_pins.py:33`), mbse floor
-  0.1.2 (`pyproject.toml:24`), root-N portable referent (doc 27 §source_file), matrix
-  REQ-SNAP-09 "current: 5". S7/S8 single-sourced from `PROFILE_SEMANTIC_VERSION`; pinning test
-  regex-hardened (`r"executable-profile/v\d"`); `grep executable-profile/v3 src docs tests` empty.
-  ("package 0.1.2" = the mbse *dependency floor*; codegen's own package is 0.1.0, correctly
-  stated unchanged.)
-- **TEAX_SIMKIT_PATH** — genuinely RED-first. Reproduced RED against the parent helper
-  (`f917787^`: "DID NOT RAISE RuntimeError"), tree restored clean; GREEN at HEAD (6 passed);
-  explicit path authoritative with no sibling fallback; unset/default unchanged; tests-only scope.
-- **F1 at d545701** — `927a9e1` is docs-only (provably lacks the F1 change); `d545701` carries
-  `pipeline_executor.py`/`evaluator.py`/tests. TEAx `db23719` corrects `audit.md:6` (1 line);
-  `design.md:9` correctly left at 927a9e1. 15-test cluster GREEN. `OUTPUT_WRITE` honest —
-  defined at `failure.py:23`, never emitted (evaluator sets only MODULE_EXECUTION/PREPARATION);
-  Item 11's obligation, recorded not reimplemented.
-- **PR drafts** — accurate against the local chain, zero release-readiness claims, correct
-  merge order (agentic-mbse #11 first — the `_upstream_pins` guard). Item 13 owns the push.
-- **"Already accurate" spot-checks** — V11 settled branch (only invoking caller of
-  `collect_uncovered_params` is the final gate `cli/__init__.py:278`) and embedded catalog
-  (no `constraint_catalog.json` in `src/`) both hold.
-- **Surfaced gaps G1/G2** — recorded as decisions with ownership (Item 4 / Item 13), not
-  instructions to future agents. Correction law honored; no "used to say X" prose.
-- **Gates** — full suite **3064 passed / 44 skipped / 0 failed** (license sourced, no bare
-  license skips); mypy **72** (baseline); no fixture/`baseline_outputs` bytes touched.
-
-Epic Item 6 heading ✅; all 4 epic success criteria and spec §6 marked. **Not checked:** ruff
-not re-run (evidence claims clean; small touched surface); the actual PR push (Item 13's).
-
-### CONSTRAINT-LIFECYCLE Item 5 — Whole-Tree Snapshot Portability — CERTIFIED (independent audit 2026-07-20, candidate `4c6223c`)
-
-**Audit verdict: Certify (three non-blocking notes).** `.project/active/constraint-lifecycle-portability/audit.md`.
-Every priority reproduced first-hand. Two-root proof GREEN on two **fresh** fixtures the proof
-never used (solar_battery 0/115, fusion_tea 0/47) at genuinely different roots — zero diff, zero
-absolute-.sysml. Licensed A2 relocated anonymous leg (`OccurrenceDemandAnonymous__Admitted`)
-GREEN, not skipped — closes Item 1's named open leg; admitted 3.0 preserved. v5 shape gate
-rejects absolute + snapshot-relative + version skew loudly (closes Item 4 N1); anonymous
-constraint_id folds the referent with **zero** Item-4 impact (catf_mfe has 0 anonymous-located
-usages; manifest SHA unchanged, GREEN). Deletion real: `_reabsolutize`, Branch C `"models/"`
-strips, baseline `.replace()`, `os` import — all gone, no shim; three schemes → one `root-N/`.
-Re-capture: 36 snapshots all v5, field-classified deltas exactly {source_file, captured_at,
-location.file, version}. Deferred gates run: execution lane 17 passed, `-O` 58 passed on changed
-surface, ruff clean, mypy 72 (zero added). Premise corrections honest — design_attr keys still
-absolute in snapshots (surfaced) but **proven** not to reach output (grep empty across all
-baselines). D3 deferral sound (basename already portable). Epic row 5 ✅; all 4 epic + 6 spec
-criteria marked. **Notes (non-blocking):** N1 live `--models` docstring parity pinned only
-transitively (machinery fail-loud, can't silently leak); N2 graph_builder sentinel set diverges
-under a "kept in sync" comment (benign, graph-layer-only); N3 evidence says design_attr-key
-non-portability is "gated by the two-root diff" — strictly the diff cancels for snapshot-baked
-absolutes; the scan axis is the real gate (implementer understands this per finding #1).
-
-<details><summary>Spec+design record (pre-audit)</summary>
-
-Epic register row 5; deps Item 4 (closed). Combined spec+design at
-`.project/active/constraint-lifecycle-portability/spec-design.md`. Absolute-byte inventory
-**measured** license-free (two roots, `catf_mfe`): 40/81 generated files differ — the leak is
-`SysML Source: <abs>:<line>` docstrings in modules/stencils/output-schemas plus the seal's
-`package_contract.json`; `model_contract.json` is already portable (certified `root-0/` referent).
-Root cause: the loader re-absolutizes the portable snapshot-relative `source_file`
-(`_reabsolutize_source_files`) and docstrings render it. Recommended design (D1): generalize the
-certified `root-N/` referent to every `source_file`, delete the re-absolutization + the two
-`"models/"` hacks, bump snapshot v4→v5 with a shape gate (closes Item 4 N1). Open for owner:
-the v5 format-bump-vs-no-bump call. Completes Item 1's relocated `OccurrenceDemandAnonymous__Admitted` leg.
-
-</details>
-
-### CONSTRAINT-LIFECYCLE Item 4 — Diagnostic severity and modeled-default fidelity — PASS WITH NOTES (round-3 audit 2026-07-20, candidate `caa149c`)
-
-**Round-3 verdict: all four findings closed; two non-blocking notes.** F2 was closed at `caa149c`
-by moving the discriminator to the written scope qualifier captured from the CST byte span at
-extraction (`usage_extractor.py`), deleting both prior resolution-based guards
-(`producer_resolution.py` row 16). Verified across all three sentinel shapes — fusion_tea
-`driver_efficiency` instance-scoped, catf_mfe `kappa` and shadowed_reference `factor` at the outer
-key (2.0, not the 7.0 shadow) — and pinned on both routes by `test_written_qualifier_anchoring.py`
-(6 tests, none skipped) with a committed baseline. Gates at `caa149c`: **3056 passed / 0 license
-skips**, mypy 72 (zero added), ruff clean, `-O` clean but for the two pre-existing assert-stripped
-tests. Scope disciplined (5 source files, all F2; Item-2 seam byte-unchanged).
-
-**Two notes for the owner before merge (not blocking):**
-- **N1 — v4 amended in place.** `source_written_qualifier` was added to the snapshot without a
-  version bump. A field-less v4 snapshot loads with no error and reintroduces F2 (I reproduced it:
-  `shadowed_reference.factor` → 7.0 shadow). The ratified premise (no field-less v4 anywhere a gate
-  must catch) is verified today — the committed corpus is fully re-captured and the branch is
-  unmerged — but no test guards field presence, and this contravenes DD-R12's own "one version, one
-  payload" rationale. Merge (PR #11 before PR #9) is when the premise stops being free. Cheap close:
-  a test asserting every committed v4 snapshot with reference bindings carries the field.
-- **N2 — error-path degradation.** `_written_reference_text` returns `None` on any CST/file/decode
-  failure, and `None` is treated as a bare leaf → re-anchor → F2. The fix's correctness silently
-  depends on the byte span always being recoverable; failures fail toward the defect.
-
-Also: the superseded round-1 FD-1 table (`evidence.md:504-513`) still carries the false fusion_tea
-`.`-chain convergence row and "six fixtures," cured only by a later supersede note (`:659`) —
-correction-by-appendix, same pattern flagged for DD-A06.
-
-<details><summary>Round-2 record (candidate <code>765e8b8</code>) — F2 was open here</summary>
-
-**Round-2 verdict: three of four findings closed; F2 was not.** Gates at `765e8b8`: 3050 passed / 0
-failed, zero license skips, mypy 72 (zero added), ruff clean, agentic-mbse 1811 unchanged at
-`4c18d61`.
-
-- **F1 closed.** Sink moved above `build_full_graph_from_snapshot`; my call-order probe now returns
-  `['screen_extraction_diagnostics', 'lower_constraints']`, pinned by a test that records real call
-  order and cannot pass vacuously.
-- **F3 closed.** `diagnostic_screen.py` coverage 63% → **100%**; 8 tests, both routes, plus the
-  `non_finite_literal` end-to-end fixture. Both structural limits verified as facts — the serializer
-  really does refuse non-finite floats (reproduced: `ValueError ... inf`), and the advisory branch
-  really is unreachable with the one-entry table.
-- **F4 closed as Met-with-exception.** False claim deleted, honest boundary stated, disagreement
-  pinned by `test_default_lane_disagreement.py`, root cause recorded with a four-fixture blast
-  radius as an unowned open item. Criterion 4 correctly stays unchecked.
-- **F2 NOT closed → F2b.** The guard fires on `sanitize_qualified_name(req.reference) in
-  ctx.design_attr_by_qn` — resolution, not written form — so it also captures the bare-leaf shape
-  row 16 exists to serve. Verified across revisions: `fusion_tea`'s
-  `hif_plant__driver__meier_cost.driver_efficiency` moved from instance-scoped
-  `hif_plant_pkg__hif_plant__driver__efficiency` (`16dbaa7`) to definition-scoped
-  `hif_driver__HIF_Driver__efficiency` (`765e8b8`), collapsing two instances onto one parameter.
-  Masked by 0.35/0.35 and by fusion_tea having no committed baseline — the same pattern F2 was
-  raised about. Plus F2c (`shadowed_reference` fixture has no test) and F2d (FD-1's corrected table
-  mis-sums 24-as-23, says six fixtures where it is seven, and still claims the fusion_tea
-  convergence the fix removed).
-
-To clear: re-scope the guard by written form and re-check the corpus for guard-induced movement;
-attach a test to `shadowed_reference`; correct FD-1; amend DD-A06 in place rather than by appendix.
-Spec/epic criterion 1 re-checked by round 2; criterion 4 stays open; no ✅ on the epic heading.
-
-</details>
-
-<details><summary>Round-1 record (candidate <code>16dbaa7</code>)</summary>
-
-Epic register row 4. Artifacts at `.project/active/constraint-lifecycle-diagnostics-defaults/`
-(`spec.md`, `design.md` — which holds the phased plan, no separate `plan.md` — `design-review.md`,
-`evidence.md`, `audit.md`, `briefs/`).
-
-**Audit verdict: Needs Work.** Every gate reproduces exactly (3040 passed / 0 license skips, 72
-mypy, 1811 upstream, the pinned FD-1 set with no extras) and PC-3 — the certified-seam fingerprint
-rewrite the brief flagged as highest-risk — is sound in all three respects, guard verified to fire.
-Three findings block certification:
-
-1. **F1** — on the snapshot route the blocking-diagnostic sink runs **after** lowering
-   (`snapshot_context.py:34` lowers via `graph_rebuild.py:213`, sink at `:42`). Proven by a call-order
-   probe. PC-4, DD-R09, design D2, and the module docstring all claim before-lowering on both routes.
-2. **F2** — the carry re-anchored `catf_mfe`'s `plasma_region` kappa binding from the outer
-   `catf_radial_build::elongation` the model explicitly names onto an owner-local shadow, diverging
-   from its thirteen identical siblings. Masked because both hold 3.0. FD-1 records it as
-   "convergence onto correct scope." `::` qualifiers lose their qualifier the way `.` chains did
-   before PC-1.
-3. **F3** — DD-A03's "proven by unit surface" is false: `screen_extraction_diagnostics` has **zero**
-   test coverage on either route (raise, advisory log, and `_render` all uncovered), the advisory
-   branch is unreachable given the one-entry severity table, and the e2e fixture is ~20 lines, not
-   costly. Should read Fail, not Partial.
-
-Also: F4 (the retained string lane and the IR lane disagree on the same modeled default — 5.0 vs
-explicitly unresolved), plus notes on FD-4's unnamed seventh delta class (582 vs 594), the
-non-existent "retained v3" fixture, and the merge-order failure presenting as an ImportError at
-collection rather than the guard's message. Spec/epic criteria 1 and 4 unmarked; no ✅ on the epic
-heading.
-
-</details>
-
-**Audit round 1: Needs Work — all four findings closed.** F1 snapshot sink ran after lowering
-(fixed, ordering now pinned). F2 the carry re-anchored a `::`-qualified reference onto an
-owner-local shadow, masked because both attributes held 3.0 (fixed by "exact identity beats
-re-anchoring", scoped to the calc consumer so Item 2's certified precedence is untouched; a
-discriminating fixture with *different* values now exists). F3 DD-A03 was Fail not Partial — the
-sink had zero coverage (fixed, 8 tests + fixture). F4 the string lane's retention justification was
-falsified (corrected and pinned; root cause surfaced with its four-fixture blast radius, not fixed
-here). Detail in `evidence.md` under "Remediation".
-
-**CANDIDATE_REVs:** see `evidence.md` — `16dbaa7` was audit round 1; the remediated codegen rev is
-`4c18d616f77e26932a8e158cefc2637db47f9b07` (agentic-mbse), both on `constraint-exec-epic`.
-
-**This item MOVES the Item 0 agentic-mbse pin** `515e08bb` -> `4c18d61`. Merge order is
-load-bearing: **agentic-mbse PR #11 before sysml-codegen PR #9**. Merging #9 first leaves main
-pinning `constraint-facts/v2` against a v1 upstream and the `_upstream_pins` guard test fails on
-main.
-
-**Delivered.** Diagnostic severity as a versioned field (`constraint-facts/v2`, snapshot envelope
-v4, 35-snapshot licensed re-capture) with both skew directions failing closed on both routes and two
-load-bearing sinks. R-8 warning totality with zero Item-1 pinned bytes moved. The tier-2
-malformed-literal silence closed as a new log record. Signed and unit-annotated modeled defaults
-surviving to the generated JSON, with unsupported IR explicitly unresolved and diagnosed rather than
-silently omitted. The written-reference carry closing SR-A02 on real data.
-
-**Gates:** codegen 3040 passed / 0 failed, zero licence skips; agentic-mbse 1811 passed; `-O`
-identical except two pre-existing assert-stripped tests; mypy zero added in both repos; ruff clean.
-
-**Three things the audit should look at hardest** (evidence PC-1/PC-3, DD-A03):
-
-1. **PC-1 — a design bet was amended mid-implementation.** B2 said the written reference equals
-   `source_attribute_name`; that is false for CHAIN bindings, where the leaf alone re-anchors at the
-   wrong owner. `catf_mfe`'s `cryo_pumps.n_pumps` selected the outer `n_pumps` (48.0) instead of
-   32.0. Gate 2 caught it; the chain-aware form was ratified.
-2. **PC-3 — a certified-seam test mechanism was rewritten.** `test_fingerprint_stability`'s policy
-   test could not be repinned: no revision carries both the old verifier policy and the new
-   entry-point keys. It now takes only `verify.py` from the reviewed revision, with a new guard that
-   fails loudly if that revision ever stops differing.
-3. **DD-A03 is claimed partial.** Both sinks are load-bearing and proven at the unit surface, but no
-   fixture carries a real blocking extraction diagnostic end-to-end.
-
-**Carried forward, unowned:** bracketed-owner convergence (deliberately not claimed — row 16 safely
-misses for an occurrence-indexed `part_def` owner); the stale-baseline class (`plant_values`,
-`constraint_inline`, the `dropped_constraints` capture drift, joining the recorded
-`deep_cross_scope` case — all three reproduce at the parent commit); the tier-1 mirror of DD-R32.
-
-### CONSTRAINT-LIFECYCLE Item 3 — Gate B vacuity proof and deletion — CERTIFIED, pass with notes (independent audit 2026-07-19 at `3df2c34`)
-
-Epic register row 3. No spec/design pair by owner pace directive — the provenance-marked
-`decision.md` replaces them. Artifacts at `.project/active/constraint-lifecycle-gate-b/`
-(`decision.md`, `findings.md`, `upstream-filing.md`, `audit.md`, `briefs/`, `probes/`).
-
-**Delivered.** Extension-time whole-graph V11 coverage check deleted from
-`extend_graph_with_constraints` — the collector call, its raise, and its import name. Production
-diff is one file, 11+/10−. Justified by a closed enumeration showing extension cannot introduce a
-V11 offender. `collect_uncovered_params` retained for the generation gate (`cli/__init__.py:263`,
-`:278`); `_validate_channel_references`, strict actual resolution, and both call sites unchanged.
-No replacement wrapper. LC-E02 settled to its no-check branch, superseding lowering INV-6.
-
-**Audit.** Pass with notes — `.project/active/constraint-lifecycle-gate-b/audit.md`. The
-conclusion survives adversarial attack: no model-producible offender found, and the one in-memory
-offender reproduced is the hand-forged object-layer shape decision.md already excludes. All gates
-re-run and reproduced (suite 3009 passed / 38 skipped with license load verified by skip-reason
-grep, `PYTHONOPTIMIZE=1` 14 passed, mypy/ruff zero delta vs `27425c0`, byte-identity with every
-recorded snapshot source location unmoved). Kept evidence confirmed RED-able — restoring the 3
-deleted lines flips 5 tests. Seven notes, all documentation/hygiene, none a correctness defect:
-decision.md's claimed "duplicate names rejected at extraction" block is not in `src/` in that
-form (F1); the guards actually doing structural work for QN disjointness
-(`parameter_groups.py:407`, `:436`, `:460`) are uncited (F2); `upstream-filing.md` says
-`status: filed` but both fusion-repo files are written-but-uncommitted (F3); corpus counts are
-34/847 not 35/846 (F4); `shared_producer`'s snapshot `source_hash` is now stale, warning-only
-(F5); the MODELED_DEFAULT branch mints `LIBRARY_DEFAULT` against docstring and record (F6); the
-epic's Scope step 3 still reads as an open conditional (F7).
-
-**Premise correction, carried.** A deliberately license-less full-suite run produced byte-identical
-results on this machine, so "collected count looks full" is not a valid syside-license detector
-here — the valid check is grepping for zero `no live syside license` skips. This contradicts the
-recorded method in auto-memory `syside-license-key-explicit-env-needed`; that memory needs a
-look before the next gate run relies on it.
-
-### CONSTRAINT-LIFECYCLE Item 2 — Shared Producer Resolution and Gate A — CERTIFIED, pass with notes (independent audit 2026-07-19 at `039d66e`)
-
-Epic register row 2. Spec, design (rev 2 + implementation notes), and `evidence.md` at
-`.project/active/constraint-lifecycle-shared-resolution/`. RED coordinate `287afc4`. The design
-carries the phased plan — there is no separate `plan.md`.
-
-**Delivered.** One producer-resolution authority (`resolution/producer_resolution.py`): 21 declared
-key forms in two tiers, one self-reference guard applied at every tier-1 hit, one terminal fork.
-All three consumers — calculation, constraint, aggregation — build a request and read a result.
-`input_resolver.py` deleted outright. Gate A live GREEN: a literal owned by a concrete `PartUsage`
-resolves under its real QN and drives a real simkit verdict that flips with the literal.
-
-**Validation.** Full suite 3003 passed / 0 failed; execution lane 17 passed; byte-identity gate
-green with every pre-existing fixture byte-identical; **EP-key manifest zero-diff** across 34
-fixtures / 273 entry points / 484 module inputs (the F4-trap control); `ruff src/` clean; `mypy`
-72 errors, below the 76 baseline.
-
-**Audit.** Pass with notes — `.project/active/constraint-lifecycle-shared-resolution/audit.md`.
-Every gate re-run independently and reproduced (suite, `-O`, execution lane, byte identity, EP
-manifest 34/273/484/0-diff, Gate A RED→GREEN, Item 1 acceptance SHA). All four spec and five epic
-criteria verified. Eight findings, none a code defect: the recorded D2 residual names table rows
-that do not actually conflict and the shipped split satisfies **both** old orders (F1); forced
-difference 2 is claimed to have no corpus population and has 63 warnings across 17 of 34 fixtures
-(F2); the design's key-form table disagrees with shipped `KEY_FORMS` on numbering and on the
-chain-follow row's position (F3); `_resolve_binding_via_registry` survives SR-R41 unrecorded (F4);
-`test_baselines.py` is not the byte-identity gate it is cited as (F5); the parity-class replacement
-pin covers 1 key form of 21 and the "3037 → 3003" count does not reconcile (F6); plus two docstring
-fixes (F7, F8). All correctable in artifacts. None blocks Item 3.
-
-**Not delivered, referred.** SR-A02 / SR-R23 two-consumer convergence. The calculation consumer
-cannot express the reference as written — extraction discards it, and for a self-named binding the
-referent is the calc's own formal (design PC-4). I9 is falsified for that shape. Pinned
-known-incomplete by `tests/fixtures/shared_producer/` + its `PROVENANCE.md`; the written-reference
-carry is folded into **Item 4**'s coordinated agentic-mbse + codegen change set.
-
-**Audit: Pass with notes** — every gate reproduced independently; all eight findings were record
-corrections, now applied. The headline correction: D2 was **not** falsified. Both deleted ladders
-are order-consistent subsequences of the unified table, and the alias-rung split (rows 4-5 before
-the structured forms, row 10 after) reproduces both exactly. The original residual named the wrong
-row (bare alias is row 10, not 5), mixed 235 calculation with 14 constraint requests into one
-denominator of 249, and measured 44 hits where the rows it named yield 3. Rows 4/5/7/9 take zero
-corpus hits. The one genuine inversion is in the aggregation ladder (alias before scoped) and is
-also unexercised.
-
-**Still open.** V11 widening to aggregation entry points stays Item 3's (PC-3, I10 preserved and
-verified by a one-writer check). `param_group` on LocalTerm mints stays `None` — a classification
-question ruled out of scope, recorded as a design residual for Item 4/10. SR-R16's stated basis
-should be amended to order-dependence (PC-2) when the spec is next touched.
-
-### CONSTRAINT-LIFECYCLE Item 1 — CERTIFIED after independent audit + remediation (2026-07-19)
-
-**Candidate revision `287afc47ab06826de27c38e203ffffb45398f972`** (supersedes 28bc8b0 after audit remediation). Evidence:
-`.project/active/constraint-lifecycle-occurrence-demand/evidence.md`. Audit:
-`.project/active/constraint-lifecycle-occurrence-demand/audit.md`.
-
-**Independent audit verdict: Certify (with recorded deviations).** Pass 1 at `28bc8b0` returned
-Needs work on two blockers; both are closed at `287afc4` and re-verified first-hand.
-
-1. **Silent value-loss regression — fixed.** A malformed literal at one resolution tier exited the
-   whole tier loop, suppressing a valid literal on the tier below
-   (`resolution/supplied_values.py:281`). The one-line `continue` restores predecessor
-   fall-through: the auditor's reproduction now returns `42.0` at the candidate, matching
-   `ecdc7285`. The RED claim was verified independently against a `git archive` of the pre-fix
-   tree — the new regression test fails there and passes at the candidate.
-2. **OD-A10 deviation — accepted as recorded.** The design's live 3/2/1 shape is not delivered;
-   two structural obstacles were reproduced and are recorded in evidence deviation 9. The
-   warning-order observation is delivered at the enrichment seam by
-   `test_two_warnings_occur_in_order_within_one_batch`, and `plan.md:726` is relabelled `[~]` with
-   an accurate split note. The auditor weighed the unmodelability claim independently and found the
-   def-scoped/instance-scoped collision bind persuasive, with the limit on that judgement stated in
-   the audit.
-
-Deviation 6 is relabelled a design deviation; the `A -> B -> A` variant now has a public live node
-(`cycle_indirect/`). F7 applied. F4/F5/F6 declined with reasons the auditor confirmed accurate.
-
-**Anchor intact:** acceptance-file SHA-256 `aea7c821...eacb624b` verified from git bytes at
-`287afc4`, and the file still has exactly one commit in its history — the admitted touch-and-revert
-left no committed trace. New public nodes were added in a separate supplementary file.
-
-**Carried forward, all disclosed:** tier-2 malformed-literal disposition asymmetry (pre-existing);
-`source_location_mode=None` source-key path; the "referenced bindings" noun (blocked on the anchor);
-`_owner_source` ambiguity downgrade; OD-A05 output-bytes and declaration-reversed variants; OD-A10's
-live 3/2/1 shape.
-
-All six public acceptance nodes plus the supplementary indirect-cycle node are GREEN on the
-unchanged Phase 0 overlay (acceptance-file SHA-256 `aea7c821...eacb624b`), closing R-4, R-5, and
-R-7. Full suite **3,012 passed, 26 skipped, 0 failed**; focused normal and `-O` gates 66 each
-(all reproduced by the auditor at `287afc4`); affected regression union 162;
-TEAx execution 2 passed with sibling overrides producing 4.0/6.0 and violated/satisfied
-verdicts. Mypy holds at the 76-error baseline; Ruff clean; locks, snapshot v3, profile v4,
-and every existing fixture/baseline byte unchanged.
-
-What landed: verified usage/decision association replacing nullable-QN membership; one
-all-or-nothing prepared batch owning every occurrence query and its transcript; explicit
-part_def/calc_def/package dispatch with no default arm; structured `RecursiveContainmentError`
-with per-path cycle detection; and one logical demand per normalized target with
-post-resolution provenance. Deleted with no wrapper, flag, alias, or dead fallback:
-`materialize_supplied_values` + nested route `_demand`, `collect_bare_actual_demand`,
-`RecordingOccurrenceIndex`, the route-counted loop, and the `synth[target.qn]`
-last-write-wins overwrite.
-
-**Owner LOC ruling (2026-07-19, epic commit `a1435e1`)** retired every numeric LOC gate
-epic-wide; simplicity is judged qualitatively. The Stop #4 condition raised at the end of
-Phase 4 is dissolved. Final metrics are recorded informationally only (nine-file union
-3,552 -> 3,818, net +266) in evidence.md §1.
-
-**Deliberately still open, not claimed here:** R-8 unmappable warning locations (Item 4);
-relocated whole-tree proof (Item 5); sealed-artifact/composed-thread proof (Item 13); Item
-2's producer/exact-QN resolver, not absorbed. Same-checkout replay is regression-only and
-non-certifying throughout. Eight recorded deviations, a review-confirmed collision-guard
-defect and its fix, and a Phase 0 fixture-digest mis-recording correction are in evidence.md
-§5-§7. Items 2-13 implementation has not started.
-
-### CONSTRAINT-LIFECYCLE Item 0 — COMPLETE; LOCAL COMPATIBLE PIN (2026-07-19)
-
-The owner rejected the branch-purity work around agentic-mbse `4ed2a07`. The committed
-modeling-orchestrator work may remain in the PR #11 candidate. Item 0 now does only four things:
-combine the current local and remote PR lines without dropping work, make the pinned package set
-install together, record exact revisions/locks, and capture the production LOC baseline. It does
-not require patch replay, branch surgery, wheel-payload attestation, a negative-control matrix, a
-canonical `pin_id`, or another review cycle.
-
-The direct implementation is complete. Agentic-mbse `515e08b` merges local `205debd` and remote
-PR #11 tip `54a95d2` while retaining the modeling-orchestrator commit. The focused merge suite
-passed 323/323. The pinned sysml-codegen environment imports agentic-mbse `0.1.2`, executable
-profile v4, and codegen `0.1.0`; the actual teax-simkit `0.1.0` distribution builds and imports.
-Exact revisions, lock digests, commands, and the five-repository production LOC baseline are in
-`.project/active/constraint-lifecycle-candidate-pin/evidence.md`.
-
-### Constraint Execution Lifecycle — RATIFIED; NEW REMEDIATION EPIC READY (2026-07-19)
-
-The owner ratified the corrected lifecycle contract as the normative target architecture. The
-focused correction re-review found it ratifiable after bounded edits; all 24 edits were applied and
-mechanically verified. Ratification certifies no implementation. Candidate certification remains
-blocked until register row 0 pins a compatible committed revision set and row 17 passes every
-mandatory acceptance case on one artifact thread.
-
-The old PR-wave remediation epic is superseded and frozen as partially completed. Items 1/2 remain
-complete and Items 4/6 remain certified within their recorded scopes. Their evidence is inherited,
-not automatically re-audited. Unfinished and newly discovered work is mapped into the new 14-item,
-19–23 day P0 epic covering ratified register rows 0–17.
-
-For Items 2–13, simplification is structural: delete the named duplicate/workaround paths, keep one
-authority and one route, and do not replace removed machinery with a shim. Numeric line-count
-baselines, budgets, caps, close gates, and code-growth deviations are not requirements. Item 1 was
-already in flight when the owner made this correction; its artifacts remain untouched.
-
-Active artifacts:
-
-- `.project/concepts/constraint-execution-authoritative-lifecycle-contract.md`
-- `.project/active/constraint-execution-lifecycle-contract/spec.md`
-- `.project/research/20260719-134700_constraint-execution-lifecycle-contract-correction-rereview.md`
-- `.project/backlog/epic_constraint_execution_lifecycle_remediation.md`
-- `.project/backlog/epic_constraint_pr_wave_remediation.md` (superseded history)
-
-The owner confirmed that delivery means updating the existing open agentic-mbse PR #11 first and
-sysml-codegen PR #9 second, not opening a replacement upstream wave. The new epic now states that
-objective in its executive summary, success criteria, Item 0, Item 13, and dependencies.
-
-Pre-Item 0 preservation checkpoints requested by the owner:
-
-- agentic-mbse `205debd` preserves the profile-v4 implementation and evidence above the committed
-  modeling-orchestrator work at `4ed2a07`. Item 0 may merge that line directly with the PR #11
-  remote tip `54a95d2`.
-- stellarator `bceaf40a` preserves the WI-027 Gate-B capture blocker record.
-- sysml-codegen `e217119` preserves the constraint remediation, evidence, ratified contract, and
-  new epic.
-
-No commit was pushed and no PR was updated. Item 1 now has an approved implementation contract,
-approved technical design, and persistent implementation plan using the Item 0 revision set as its
-starting pin. Next: execute Item 1 with `my-implement`.
-
-### CONSTRAINT-WAVE Item 1 — Profile Semantics — COMPLETE; INHERITED BY NEW EPIC
-
-Implementation and fresh audit evidence verify the approved ordering and polarity semantics,
-source-identity rejection before mutation, four-route positive-IR continuity, compound diagnostic
-sentinels, one neutral body with per-usage polarity, TEAx execution, package/skew controls, and the
-shared Items 2/4/6 regression union in normal and optimized Python. After audit, the owner removed
-agent-authored clean-overlay and pre-edit-hash gates and requested no re-audit. The replacement
-lifecycle epic inherits this evidence and lands/pins it in Item 0. The absent provenance is recorded
-without retroactive claims. Artifacts:
-`../agentic-mbse/.project/active/constraint-wave-profile-semantics/`.
-
-### CONSTRAINT-WAVE Item 4 — Snapshot Portability and Shape Gates — CERTIFIED (2026-07-19)
-
-The fresh independent re-audit certifies Item 4. Every prior **Needs Work** finding remains closed:
-live and replay collectors use distinct routes; the licensed node is ordered
-live A, live B, replay A; the explicit loader matrix has 336 cases; the fixture transaction stages
-and verifies full fixture and baseline manifests with 11 reproducible recovery/failure tests; and
-BLOCK zero-call behavior plus exact canonical warning/excluded-record bytes are pinned. The
-production fixture delta remains exactly 65+1 location lines across two snapshots.
-
-Fresh licensed evidence: the complete relocation file passed 3/3, including live A/live B/replay A
-and moved replay; Item 4 plus transaction tests passed 407/407 in normal and optimized modes; and
-the independently run full suite passed 2,950 with 26 skips and 10 deselections. Fresh Ruff, format,
-and diff checks pass. Prior frozen-overlay, fixture, baseline, 30-snapshot inventory, Item 2/6
-overlap, and Item 3 isolation evidence remains preserved. The spec, Phase 5, epic criterion, and
-backlog item are closed. Audit and evidence:
-`.project/active/constraint-wave-snapshot-portability/{audit,evidence.md}`.
-
-### CONSTRAINT-WAVE Item 6 — Seal and Verify Symlink Symmetry — CERTIFIED (2026-07-18)
-
-Epic Item 6 (R-10) is independently certified in
-`.project/active/constraint-wave-seal-symmetry/audit.md`. Seal, canonical/emitted verification,
-generation, Step 9, and re-seal reject every symlink before target use. Fresh audit evidence
-reproduced 23 historical RED nodes and six controls, then passed the 29-node candidate overlay,
-76 focused tests and 22 audit probes in normal and optimized modes, and the 84-test package gate.
-Verifier/fingerprint, static, fixture, and scope checks passed; licensed live nodes remain
-unclaimed.
-
-### CONSTRAINT-WAVE Item 2 — Generated Constraint Name Safety — COMPLETE (execution gate closed 2026-07-19)
-
-The re-audit certified the license-free implementation. The missing-catalog fail-open is closed
-with a structured `catalog_module_join` before renderer, writer, or orchestration mutation. Fresh
-evidence passed the original validator/renderer/`run_codegen()` probe, 20 missing-catalog writer and
-orchestration cases, 16 ordering permutations with a safe-order control, and all four independent
-historical-impact nodes at `512786c`. Augmented focused normal and optimized gates passed 174/174;
-Item 6 overlap passed 122 with 2 licensed skips; patch, static, diff, fixture, and isolation checks
-passed.
-
-**Execution gate closed 2026-07-19.** The one criterion the audit left open (real TEAx execution,
-then blocked by missing `pandas`) was run green in the agentic-mbse venv (pandas 2.3.3, teax-simkit
-on `sys.path`), fresh subprocesses, not mocked: pinned node `1 passed, 14 deselected`; satisfied
-`(True, 'satisfied', 1.0, {'x': 2.0, 'limit': 3.0})`, violated `(False, 'violated', -1.0, {'x': 4.0,
-'limit': 3.0})` (`evidence/collision-free-execution-tuples.txt`). Spec SC-9 and all three epic Item 2
-success criteria are now met; the item is complete. Licensed Syside live/snapshot parity (design
-I11) stays out of scope, tracked under Item 8. Audit + post-audit addendum:
-`.project/active/constraint-wave-name-safety/audit.md`.
-
-### Independent GAP-CLOSE completion audit + PR-wave code review (2026-07-18, evening)
-
-Two deliverables, both agent-fan-out verified:
-
-1. **Independent audit of GAP-CLOSE completion** (`.project/backlog/epic_gap_close_audit_independent.md`):
-   the certified-partial status HOLDS. Items 1–4 re-confirmed against code with fresh test runs;
-   pushed companion `54a95d2` byte-identical to the local gap-close worktree, no orchestrator
-   contamination. Corrections: Item 5's "diff --check clean on both branch ranges" box was false of
-   the pushed companion range (one archived-plan EOF blank line; cure uncommitted) — annotated in the
-   epic; the partial pre-PR has in fact been EXECUTED (`512786c` pushed + both PRs commented
-   2026-07-19T00:59/01:10Z), so the epic's old Next Action was stale — corrected. Still genuinely
-   open: F1 external leg, and licensed full suites at the final commits (2,516-pass evidence is from
-   the pre-cure candidate; the companion "1,506 passed" run exists only in the PR comment).
-
-2. **PR-wave code review** (`.project/research/20260718-192048_constraint-exec-pr-wave-code-review.md`):
-   four NEW High findings, all reproduced, all outside prior review coverage — PR #11 profile:
-   ordering comparisons ADMIT string/boolean/enum operands (live-reproduced); `is_negated` never
-   consulted → negated asserts admit inverted semantics (live-reproduced). PR #9: model formals named
-   `value`/`status`/`verdict`/`self` shadow generated locals → silent margin corruption incl. sign
-   inversion / runtime TypeError / SyntaxError; nullable-QN ADMIT filter in
-   `collect_bare_actual_demand` crashes from-snapshot rebuild on a valid snapshot. Plus 8 Medium
-   (named-excluded path leak into fingerprints, recursive-part silent truncation, demand overwrite,
-   warning-pre-pass masking, seal/dangling-symlink gaps, loader raw KeyError, lost signed/unit
-   defaults, TEAX_SIMKIT_PATH silent fallback) and a Low/latent tail. Recommendation: fix the four
-   Highs before the wave merges (it is already held on F1); R-1/R-2 need an owner call on BLOCK vs
-   IR-fold semantics. Nothing committed or pushed this session.
-
-### GAP-CLOSE epic — LOCAL SCOPE CERTIFIED; PARTIAL PRE-PR MAY PROCEED (2026-07-18)
-
-The final focused re-audit certifies all local and in-scope GAP-CLOSE work. F2 through F9 remain
-certifiable, including exact warning bytes across repeated live, relocated live, and snapshot
-replay. The hash-identified rebuilt companion wheel contains the corrected BLOCK/L6 severity and
-asserted-outcome statements, and its guide is byte-identical to source.
-
-TEAx explicit-path expansion, resolution, and validation now share the route-aware normalization
-boundary; kept tests cover an injected `expanduser()` `RuntimeError` and a symlink loop. Fresh
-focused audit selections passed 132 codegen tests normally, 110 under optimized Python, and 143
-companion guide/profile tests. The rebuilt wheel hash is `160e7eb5…a8d4f`. External
-`[GAP-CLOSE-F1-TEAX-NORMALIZATION]` remains open, so the epic is not complete. `my-pre-pr` may now
-run only as an explicitly partial wave. No commit, push, PR comment, or close action occurred.
-Merge order remains agentic-mbse PR #11 before sysml-codegen PR #9.
-
-### GAP-CLOSE Item 3 — Model and seal boundary guards — CERTIFIED IN EPIC AUDIT (2026-07-18)
-
-All four phases in `.project/active/gap-boundary-guards/plan.md` are implemented. Every
-post-initialization declared-field assignment on the transactional Pydantic base now validates a
-complete candidate before changing the live model, including constructor-defaulted fields. The
-canonical and emitted package verifiers now reject internal and escaping directory symlinks with a
-fatal `INVALID_PATH` diagnostic at the link path.
-
-Pinned source-isolated evidence at exact HEAD `6db3212` is four independently defect-specific RED
-nodes, followed by 4/4 GREEN over a candidate containing only the two production files. Focused
-normal and optimized gates are 57 passed; broader is 53 passed. The unlicensed default full suite
-is 2,213 passed with 23 failures and 96 errors confined to the known license-dependent families.
-Ruff/format/diff checks pass, mypy remains at the 76-error baseline, and all 179 fixture hashes are
-unchanged. Item 1–2 and unrelated dirty files were preserved. The final GAP-CLOSE re-audit retains
-this certification; do not push or close outside the explicitly partial pre-PR wave.
-
-### GAP-CLOSE Item 2 — Lowering outcome integrity — CERTIFIED IN RE-AUDIT (2026-07-18)
-
-Epic: `.project/backlog/epic_gap_close.md`, Item 2. The stricter warning-byte route parity is now
-pinned at the real lowering logger: repeated live, relocated live, and snapshot replay produce the
-same two exact `root-0/model.sysml` warning strings. Lowering reports every
-NON_NUMERICAL sibling exactly once before a BLOCK halt, while the halt still precedes concrete
-records, catalog assembly, and package mutation. Anonymous excluded statements alone receive a
-portable root-slot/file/line/column identity and 128-bit suffix across live, relocated, and snapshot
-routes. Named IDs and eligible-anonymous bytes remain pinned to the coordinated baseline.
-
-Isolated evidence uses codegen `6db3212`, companion `4ed2a07`, profile v3, and a frozen overlay;
-four historical nodes are independently RED and the exact six-path candidate is 5/5 GREEN. Fixture
-bytes and the migration guard are unchanged. Focused gates are 102 passed/8 license skips; broader
-45/37; the default full suite is 2,206 passed with 23 failures and 96 errors confined to the known
-license-dependent families. Ruff is clean and mypy remains at the 76-error baseline. Licensed live
-shape/CLI atomicity legs are accurately unclaimed. `[ANON-ELIGIBLE-KEY]` remains open. The GAP-CLOSE
-re-audit independently certified the exact warning-byte route criterion; do not push or close from
-this item.
-
-### GAP-CLOSE Item 1 — Runtime evaluation contract — CODEGEN LEG COMPLETE (2026-07-18)
-
-Epic: `.project/backlog/epic_gap_close.md`, Item 1. All five phases in
-`.project/active/gap-runtime-contract/plan.md` are implemented. Codegen now rejects all verified
-case-fold, underscore-run, and quoted-hyphen predicate-name collisions deterministically before
-any output mutation, while direct compilation rechecks the same invariant. Saved isolated evidence
-at baseline `6db3212` reproduces each old `DID NOT RAISE` failure and the later-body overwrite.
-
-F1 remains deliberately split: codegen tests characterize unchanged native propagation for div-zero,
-zero-to-negative power, exponent overflow, nested connective, and the production-generated wrapper.
-The narrowed docstring promises only that an adverse verdict does not itself raise. Licensed
-`plant_values` live/snapshot trees were byte-identical; before/after changes were only that sentence
-and its derived package contract. Focused gates are green; the default full suite recorded 2,169
-passes with all failures/errors license-dependent, while licensed live/focused execution passed in
-the companion environment. The final GAP-CLOSE re-audit certifies the local codegen/F2 scope.
-`[GAP-CLOSE-F1-TEAX-NORMALIZATION]` remains an external open P0; do not claim evaluator
-normalization or end-to-end F1 closure.
-
-### Numerical constraint executable profile — ✅ COMPLETE: CERTIFIED, COMMITTED, PR WAVE UPDATED (2026-07-18)
-
-**Audit verdict: Certify** (`.project/active/numerical-constraint-profile/audit.md`). All 8 spec
-success criteria verified against code/tests, not just records: totality/execution, split-equality
-outcomes, both-tools warnings, catalog `excluded_records` with the eligible⇔exclusion validator
-(construction-probed unrepresentable), live/snapshot value parity, frozen golden untouched, v3 pin
-in both repos (companion `05cde35`). Parent-remediation booking (`096c29f`) for the mid-run licensed
-failure confirmed genuine.
-
-**Committed and pushed 2026-07-18** as `da3b495` (separable remediation cures + ledger),
-`9c0291c` (the v3 item + artifacts), `3f215ac` (touched-file formatting; the `constraint_inline`
-baseline deliberately left as generator-emitted bytes). Pre-PR gates green: licensed suite
-**2450 passed / 26 skipped / 8 deselected**; companion **1511 passed / 1 skipped**; ruff src
-clean; mypy at the 76 baseline; no debug artifacts/secrets. PR #9 and PR #11 updated with
-appended-commit comments. Only merge remains (see Up Next — the #11-first order is now
-load-bearing). After merge: `/_my_close` archives this item and the remediation.
-
-Dedicated CONSTRAINT-EXEC Item 3 contract correction:
-`.project/active/numerical-constraint-profile/{spec,spec-review,design,design-review,plan}.md`.
-Spec reviewed and revised in-session (owner resolved all findings; three-way rule: admitted
-numerical claims execute, malformed numerical claims error naming the fix, non-numerical
-statements warn in both tools and never block generation). Design approved after review — key
-owner-ratified calls: numerical-claim **containment** decides force (mixed `(x > 0) and flag`
-errors), one tagged exclusion payload on `ConcreteConstraint` projected into catalog
-`excluded_records`, single v3 pin at shared lowering, location-fallback rendering. Plan is 5
-phases, agentic-mbse first (profile v3 + answer key → L4/L6 → codegen re-pin → exclusion/catalog
-+ re-capture → end-to-end families + gates).
-
-All five phases are complete. Agentic-mbse profile v3 core landed as `b251e95`; L4/L6 consumers
-and the exact compatible companion state landed as `05cde35`. Codegen now pins v3, renders fixes
-on malformed numerical halts, warns once per non-numerical statement, validates a total exclusion
-payload, and projects excluded statements into the constraint catalog. New live families prove
-warn-and-continue with an admitted numerical sibling and error-force containment for
-`(value > 0.0) and flag`; the warning, graph, and complete catalog are identical live/offline.
-
-R4 proved the inherited-inline licensed failure predated Phase 3. Commit `096c29f` corrected the
-parent remediation's invalid empty-design-attributes regression harness, and `aaa579e` refreshed
-its stale inline baseline. Final licensed codegen evidence is **2450 passed, 26 skipped, 8
-deselected**; optimized focused evidence is **125 passed**. The exact `05cde35` companion archive
-passed **1491 tests, 1 skipped, 5 deselected**. Targeted mypy and touched-file Ruff/format passed.
-The independent audit (Certify) closed this item; see the header block above for the commit and
-PR-wave state.
-
-### CONSTRAINT-EXEC code-quality remediation — ✅ CURES COMMITTED; D5 DISCHARGED BY THE V3 ITEM (2026-07-18)
-
-All audit cures are now committed on `constraint-exec-epic`: the separable
-package-verification/occurrence-ordering cures in `da3b495`, the entangled cures (profile/compiler
-quantity parity, inline-leaf strict wiring, assignment validation) inside `9c0291c` with the v3
-work that shares those files, and the R4 test-defect correction in `096c29f`/`8cc20d4`/`aaa579e`
-(the inherited-inline "failure" was an invalid empty-`design_attrs` test harness, not a resolver
-bug). The addendum's D5 contract choice is discharged by the numerical-profile item. The full
-licensed suite (2450/26/8) is the first licensed whole-suite evidence over these cures. Ledgers
-closed in `.project/active/constraint-exec-code-quality-remediation/{audit,plan}.md`. Archive via
-`/_my_close` after the PR wave merges. The original in-progress record follows below.
-
-The four decision-independent audit cures are implemented in the dirty worktree. Profile-v2
-quantity references and the complete admitted arithmetic/ordering operator matrix now compile;
-the committed `constraint_inline` snapshot renders and executes with its owner feature wired as a
-module input; constraint/catalog assignment validation is transactional and catalog assembly
-revalidates before filtering/fingerprinting; and package verification validates digest/path/
-fingerprint semantics while normalizing artifact I/O failures. The active design addendum and
-amended execution record are in
-`.project/active/constraint-exec-code-quality-remediation/{design,plan}.md`.
-
-Focused validation passed **149 tests with 13 license skips** in both normal and optimized Python.
-The committed inline snapshot executed under the documented agentic-mbse/TEAx environment (**1
-passed**). The exact companion profile suite at `82fef09` passed **113 tests**. Targeted mypy passed
-on all five touched production files; touched-file Ruff/format, `git diff --check`, fixture
-preservation, and the production placeholder scan passed.
-
-The owner resolved the remaining contract choice on 2026-07-18: preserve the generated numerical
-data path and narrow executable admission. The dedicated numerical-profile item is now implemented
-and its final combined gates are green. The parent remediation still needs its independent audit
-and closeout; the numerical implementation record is not self-certification.
-
-#### Independent audit basis
-
-The independent audit verified the formal-target binding and total occurrence-ordering cures. It
-did not certify the full remediation. Exact companion profile v2 still admits quantity-reference
-predicates the compiler rejects, while newly admitted non-real equality has no typed generated
-input/evidence path. The committed inline-constraint fixture also lowers to a module whose
-predicate leaf has no matching input.
-
-Two local boundary gaps remain. Construction-time model validators can be bypassed by assignment,
-which can silently drop a mutated constraint during catalog or graph assembly. Package verification
-does not validate fingerprint derivation or artifact-path containment, and recorded artifact I/O
-can still escape as a raw exception. The affected plan checkboxes were reopened and the unresolved
-work is registered in `.project/backlog/BACKLOG.md`. Full evidence is in
-`.project/active/constraint-exec-code-quality-remediation/audit.md`.
-
-Independent focused validation passed in normal mode (**174 passed, 5 skipped, 7 deselected**).
-The same changed scope under `python -O` produced **173 passed, 5 skipped**, plus the one unrelated
-pre-existing assertion-dependent failure. Touched-file Ruff and formatting, `git diff --check`,
-fixture preservation, and the placeholder scan passed. Targeted mypy remains non-green on the
-imported project surface.
-
-The implementing agent's broader, carried evidence remains: exact companion compatibility **92
-passed**; combined remediation **189 passed, 18 skipped**; optimized remediation **138 passed, 18
-skipped**; and the unlicensed full suite **2,107 passed, 197 skipped, 7 deselected, 23 failed, 96
-errors**, with the failures/errors reported as license-dependent. The independent audit did not
-rerun the full suite or reproduce the exact 92-test command, so these results are implementation
-evidence rather than independent certification.
-
-The initial remediation pass completed on 2026-07-14 as follows.
-
-The independent code-quality review
-(`.project/research/20260713-213722_constraint-exec-pr-code-quality.md`) was verified
-finding-by-finding against the code (census numbers reproduced exactly; both "impossible"
-model states construction-probed; unary-plus reachability traced through the agentic-mbse IR
-builder). Verification disagreed with the review on two points only: graph-extension
-*validation* is shared, not duplicated, and its "ordering" is an append counter, not a
-reimplemented topo sort. Its pre-merge bar then landed as four commits on
-`constraint-exec-epic`:
-
-- `5785055` — ConcreteConstraint/Input model validators + rejection tests (tagged-union
-  resolution fields; eligible ⇒ predicate_ir + evaluation_channel; expected_value derives
-  from is_negated). Preserved pinned edge: MODELED_DEFAULT's `default_ir` may be None.
-- `baca960` — both IR renderers: one-operand render now requires operator `-` (a modeled
-  `+x` silently rendered as `(-x)` — reachable, not latent); arity + identifier validation
-  in the predicate compiler (raw IndexError → PredicateCompileError).
-- `c756fc7` — load-bearing asserts → explicit errors (version pins, same-IR, capture
-  presence, eligibility dereferences, most-specific-PartDef) so they survive `python -O`.
-- `05690f0` — resolver precedence-under-conflict pins (6 two-rungs-both-match tests) +
-  path-grammar characterization (brackets, empty segments, chain-vs-source_name).
-
-Reported gates at the remediation close: licensed suite **2364 passed / 23 skipped** (was 2330/23;
-+34 new tests), `tests/fixtures` byte-identical throughout, Ruff clean on the remediation scope,
-mypy at the 76 baseline. The independent audit verified touched production files as Ruff-clean; one
-touched test file retains five pre-existing whole-file violations. The architectural remainder is
-registered as `[CONSTRAINT-ARCH-UNIFY]` (P1) and
-`[EXIT-PIN-SEAM]` (P3) in `BACKLOG.md` — merging PR #9 does not bless the current parallel
-ladders / triple walker / mirrored live-offline phases as the permanent architecture.
-
-### docs-explainer-refresh — ✅ COMPLETE: audited Certify, pushed to the open PRs (2026-07-13)
-
-Post-CONSTRAINT-EXEC docs + explainer-brief refresh across four repos, run as a full
-orchestrated pipeline (spec_review → design → design_review → plan → implement → audit; all
-artifacts + stage briefs in `.project/active/docs-explainer-refresh/`). Audit
-PASS-WITH-NOTES cured to **Certify**: the three cross-repo legs probe-verified by the
-orchestrator (addendum in `audit.md`), Phase 5/7 notes reconstructed. Branches pushed
-(sysml-codegen/agentic-mbse full; teax already carried `4c96b99` via a concurrent owner push)
-with appended-commit comments on PRs #9 / #11 / teax#3; fusion-tea `bfff2b4f` stays local per
-the merge sequencing in Up Next. All 7 phases landed as one commit per phase per repo:
-- **sysml-codegen** (`constraint-exec-epic`): `0fad7bf` re-project stale surfaces onto HEAD
-  (snapshot v3, ExpressionIR, ModuleKind, lowering phase); `78a6a7d` new doc 29 contracts/sealing
-  + CON matrix family + recount to 32 families; `dbc60b8` `EXPLAINER_PROMPT.md` re-anchored + Gen-1
-  banner; Phase-7 close-out commit (this one).
-- **agentic-mbse** (`constraint-exec-epic`, PR #11): `9e24c93` decision-table reword + durable
-  ConstraintFacts/ExpressionIR page.
-- **teax** (`constraint-exec-epic`, PR #3): `4c96b99` document `PreparedEvaluator.entry_models`.
-- **fusion-tea** (`main`): `bfff2b4f` drop `ToyPlantParams` alias + walkthrough retirement note.
-
-Matrix recount landed at 32 families / 274 reqs / 73 test files (summary/Index/overview agree).
-Discoveries surfaced (registered in `.project/backlog/BACKLOG.md`): `[V2-HTML-BUILD]` (the actual
-v2 HTML build, [OWNER]: another agent), `[DOC19-DISPATCH-REAUDIT]`, `[MODULEKIND-DOC-SWEEP]`. See
-the plan's Implementation Notes for the full per-phase record + the `is_droppable_constraint`
-live-symbol deviation.
-
-### PUSH-DOWN epic — INDEPENDENTLY AUDITED + REMEDIATED: CERTIFIED (2026-07-10)
-
-Independent technical audit of PRs #8 (sysml-codegen) / #10 (agentic-mbse) found the code
-functionally sound but the certification record over-claiming (SC-D Q4/R8 falsely checked;
-Item 1's move not mechanical; mypy 97→98 misrecorded). All findings remediated same day —
-full audit + per-finding remediation record:
-`.project/backlog/epic_push_down_audit_independent.md`. Remediation highlights: Item 1
-expression bodies restored to the mechanical-move originals with the test mocks upgraded to
-the real syside shape; Q4 descoped with rationale (its live annotation bug in
-dependency_backtracker fixed — surfaced by mypy the moment `py.typed` landed); R8
-`# INTENTIONAL DIVERGENCE` marker added; `py.typed` added to agentic-mbse and the
-TYPE_CHECKING mirror dataclasses deleted (sysml-codegen mypy 98→77 vs main's 97); TYPE_MAP
-inventory tests de-self-certified; `**` added to shared SUPPORTED_OPERATORS; unary-minus
-render deviation recorded in Item 4's audit. Post-remediation gates: 2138/4 + 1290/1 green,
-ruff src clean, fixtures byte-identical. Epic and prior audit/pre_pr carry correction
-addenda. **Note for the PRs: the remediation commits are not yet made/pushed** — both repos
-have uncommitted working-tree changes on `push-down-item1-expression`.
-
-### PUSH-DOWN epic — CERTIFIED (superseded by the 2026-07-10 independent audit above)
-
-Epic: `.project/backlog/epic_push_down.md`. Epic audit:
-`.project/backlog/epic_push_down_audit.md`.
-
-All four PUSH-DOWN items are implemented and item-audited with `Certify` verdicts. The epic audit
-certifies the top-level success criteria SC-A through SC-G against the source concept-design,
-boundary research, TRUTH-DEBT sequencing ruling, and item audits. The reusable SysML semantic
-helpers now live in agentic-mbse; sysml-codegen keeps transformation policy, Python rendering,
-aliases, design overrides, scoping, pipeline assembly, and deferred template/virtual-binding work.
-No pre_pr or PR preparation was run during the audit stage. Next stage is whole-epic pre_pr/PR
-preparation only.
-
-### PUSH-DOWN Item 4 — Aggregation Decomposition and Compatibility Gates — CERTIFIED
-
-Epic: `.project/backlog/epic_push_down.md`. Artifacts:
-`.project/active/aggregation-decomposition/{spec,spec-review,design,design-review,plan,audit}.md`.
-Spec review and design review both reached Approved after revision. This item moves neutral
-aggregation AST decomposition into agentic-mbse; sysml-codegen keeps Python rewriting, local
-`AggregationExpressionData` assembly, pipeline-facing identifiers, alias handling, and downstream
-resolution policy. No item-level PR closeout is planned because the user wants the whole PUSH-DOWN
-epic implemented before PR.
-
-Implemented `agentic_mbse.sysml.aggregation` with neutral aggregation decomposition, wrapper facts,
-diagnostics, dispatch-order guardrails, and no sysml-codegen imports. `SumTerm`, `SingletonTerm`,
-and `LocalTerm` now live in agentic-mbse and are re-exported by sysml-codegen as the same runtime
-class objects. sysml-codegen's aggregation builder now delegates raw decomposition to the shared
-module and renders local `AggregationExpressionData` through a compatibility adapter. The
-aggregation-profile loop filed three future rows in agentic-mbse backlog:
-`PUSH-DOWN-AGG-PROFILE-SUM-SHAPE`, `PUSH-DOWN-AGG-PROFILE-WRAPPER-SHAPE`, and
-`PUSH-DOWN-AGG-PROFILE-LITERAL-SHAPE`.
-
-Validation: agentic-mbse aggregation suite `12 passed`; shared expression/hierarchy/aggregation
-suite `93 passed`; agentic-mbse full suite `1290 passed, 1 skipped, 33 deselected, 6 warnings`;
-sysml-codegen local model/builder suite `166 passed`; sysml-codegen downstream compatibility suite
-`202 passed, 1 skipped`; sysml-codegen full suite `2138 passed, 4 skipped`; sysml-codegen
-`ruff check src/` clean; touched-file ruff clean in both repos; `git diff -- tests/fixtures` empty.
-Audit: `.project/active/aggregation-decomposition/audit.md` certifies the item. Audit reran the
-focused high-risk gates: sysml-codegen builder/model/literal/dispatch subset `190 passed`, and
-agentic-mbse aggregation suite `12 passed`. Remaining caveat: project-wide mypy baselines are still
-dirty but unchanged after cleanup (agentic-mbse 107, sysml-codegen 98). No item-level PR closeout was
-performed; continue to the PUSH-DOWN epic audit and PR preparation only through the whole-epic flow.
-
-### PUSH-DOWN Item 3 — Hierarchy Primitives and Data Models — CERTIFIED
-
-Epic: `.project/backlog/epic_push_down.md`. Artifacts:
-`.project/active/hierarchy-primitives-models/{spec,spec-review,design,design-review,plan}.md`.
-Item 1 and Item 2 are implemented, audited, and committed in both repos. This item starts only
-the hierarchy primitive/model split; no item-level PR closeout is planned because the user wants
-the whole PUSH-DOWN epic implemented before PR.
-
-Implemented shared `agentic_mbse.sysml.hierarchy` with primitive redefinition and multiplicity
-extraction; moved `RedefinitionType`, `RedefinitionData`, and `MultiplicityData` into
-agentic-mbse as field-identical standard-library models; sysml-codegen now re-exports the same
-runtime class objects and delegates primitive extraction through compatibility wrappers. Design
-overrides, aggregation, usage-type indexing, hierarchy orchestration, and `HierarchyExtractionResult`
-remain local to sysml-codegen. Hierarchy-profile rows that require codegen policy were filed in
-agentic-mbse backlog; missing instantiations remain covered by existing `L6_CALC_DEF_NO_INSTANTIATION`.
-
-Validation: agentic-mbse hierarchy test `10 passed`; agentic-mbse full suite `1278 passed, 1 skipped,
-33 deselected`; sysml-codegen focused hierarchy/model/dispatch suite `156 passed`; sysml-codegen full
-suite `2127 passed, 4 skipped`; sysml-codegen `ruff check src/` clean; touched-file ruff clean in
-agentic-mbse; `git diff -- tests/fixtures` empty. Remaining caveat: project-wide mypy baselines are
-still dirty but unchanged for this item (agentic-mbse 107, sysml-codegen 98). Audit:
-`.project/active/hierarchy-primitives-models/audit.md` certifies the item. No item-level PR closeout;
-continue to PUSH-DOWN Item 4.
-
-### PUSH-DOWN Item 2 — Qualified-Name Utility Split — CERTIFIED
-
-Epic: `.project/backlog/epic_push_down.md`. Artifacts:
-`.project/active/qualified-name-utility-split/{spec,spec-review,design,design-review,plan}.md`.
-Spec review and design review are both Approved. Implementation is complete on the full
-PUSH-DOWN epic branch in both repos, with no item-level PR closeout.
-
-Moved pure qualified-name helpers into `agentic_mbse.sysml.qualified_names`; sysml-codegen now keeps
-`sysml_codegen.core.qualified_names` as a compatibility shim and retains codegen-owned module,
-channel, parameter, and owning-part builders locally. The `ITEM-SYNC-C8` backlog row was updated
-instead of duplicated: the shared sanitizer dependency is gone, while the sibling-scope Level-6
-collision collector remains filed.
-
-Validation: agentic-mbse targeted qualified-name suite `21 passed`; agentic-mbse full suite
-`1268 passed, 1 skipped, 33 deselected`; sysml-codegen targeted naming/shim suite `52 passed`;
-sysml-codegen full suite `2122 passed, 4 skipped`; touched-file ruff clean in both repos;
-sysml-codegen `ruff check src/` clean; `git diff -- tests/fixtures` empty. Remaining caveat:
-project-wide mypy baselines are still dirty outside this item (agentic-mbse 107, sysml-codegen 98).
-Audit: `.project/active/qualified-name-utility-split/audit.md` certifies the item. Next: continue
-PUSH-DOWN Item 3.
-
-### PUSH-DOWN Item 1 — Expression Reconstruction Push-Down — CERTIFIED
-
-Artifacts: `.project/active/expression-reconstruction-push-down/{spec,spec-review,design,design-review,plan}.md`.
-Spec review and design review are both Approved. Implementation is complete on
-`push-down-item1-expression` in both repos.
-
-Moved reusable expression reconstruction, feature-chain, chain-segment, and literal helpers into
-`agentic_mbse.sysml.expression`; sysml-codegen now keeps
-`sysml_codegen.extraction.expression_utils` as a compatibility shim. Level-6 C7 now uses shared
-`is_literal_node`, and the expression-profile close-out filed three follow-up rules in
-agentic-mbse backlog.
-
-Validation: agentic-mbse full suite `1247 passed, 1 skipped, 33 deselected`; sysml-codegen full
-suite `2119 passed, 4 skipped`; sysml-codegen snapshot-specific suite `87 passed`; touched-file
-ruff clean in both repos; sysml-codegen `ruff check src/` clean; `git diff -- tests/fixtures`
-empty. Remaining caveat: project-wide ruff/mypy baselines are still dirty outside this item
-(agentic mypy 104, sysml-codegen mypy 97, sysml-codegen full ruff 332).
-
-Audit: `.project/active/expression-reconstruction-push-down/audit.md` certifies the item. Next:
-run `$my-pre-pr` for PR preparation.
-
-### PIPELINE-TRUTH epic — ✅ COMPLETE (all 10 items landed and audited PASS, 2026-07-06)
-
-**The generated package is the truth.** fusion-tea's models generate, wire, and execute
-end-to-end from generated artifacts alone — TRUE ZERO V11 offenders (supplied-value
-materializer, Item 2), run-C lcoe bit-exact ($270.1211779380445) with every workaround
-deleted upstream (Item 3), constraint drop report subtype-aware incl. `assert` (Item 4),
-13 silent-failure findings fixed by family (Item 5), 25 self-referential tests re-anchored
-(Item 6), matrix 253 = 249 PASS + 4 UNTESTED-argued + 0 DEFERRED with F2/F4 resolved by
-decision (Item 7), dead code cleared + REQ-AST-10 (Item 8), agentic-mbse taught+checked
-(Item 9), docs + explainer prompt refreshed and caveats retired (Item 10). Gate:
-2069 passed / 4 skipped / 5 xfailed; ruff src 17; mypy src 104. Epic + Lessons Learned:
-`.project/backlog/epic_pipeline_truth.md`. Item-10 artifacts:
-`.project/active/epic-close-docs/{spec,plan}.md`.
-
-**Human actions outstanding (the only ones):**
-1. **agentic-mbse companion PR** — branch `pipeline-truth-item4` is pushed to origin; open
-   the PR from `.project/active/pipeline-truth-sync/COMPANION_PR_BODY.md` (base `upstream-findings-sync` while
-   PR #7 is open; retarget to `main` on its merge).
-2. **Merge PR #7** (the UPSTREAM-FINDINGS agentic-mbse companion, `upstream-findings-sync`) —
-   still pending; the Item-4 companion bases on it until it merges.
-3. **fusion-tea workaround-retirement PR** — open from
-   `chore/retire-pipeline-truth-workarounds` (Item 3 end state).
-
-### PIPELINE-TRUTH Item 9 — agentic-mbse Sync (Guidance, Validation, Companion Audit) — COMPLETE
-Phases 0–5 landed 2026-07-06. **C7** (the one unbuilt check) WARNs on `attribute :>> attr =
-<expr>` — the AttributeUsage redefinition codegen silently drops; test-first, cross-repo-clean.
-**D1–D4/I5** teaching surfaces synced (whole-plant value idiom, secondary shapes, shallow chains,
-subtype-aware asserts, Item-5 diagnostics). Prior-epic residue closed: R-F6 verified, R-C8 &
-S-F3/S-F4 keep-filed, R-VENDOR & S-F5 declined/discharged, PR #7 stays the human's. Companion
-audit (`extract_feature_refs`, `str(direction)`) — both COVERED/STABLE.
-- **agentic-mbse** `pipeline-truth-item4`: commits `fa3b706` / `1fab4d6` / `9cc7ab4` (over Item 4's
-  four). Suite **1240 passed / 1 skipped**; pushed to origin. Companion PR is the human's to open
-  (B1 base-then-retarget: base `upstream-findings-sync` while PR #7 open, retarget to `main` on merge).
-- **This repo:** 18-row traceability + acceptance in `.project/active/pipeline-truth-sync/close-out.md`;
-  companion-audit evidence, plan, and `COMPANION_PR_BODY.md` alongside; S-F3/F4/F5 dispositions in `BACKLOG.md`.
-
-### PIPELINE-TRUTH Item 3 — fusion-tea Acceptance & Workaround Retirement — CERTIFIED
-Audit PASS-WITH-NOTES (`.project/active/fusiontea-acceptance/audit.md`, 2026-07-06). Crux
-(runner multi-output completion) confirmed test-harness-only, zero `src/`. All 4 acceptance
-tests pass; anchor + perturbed-lcoe (216.55528392479388) arithmetic re-derived independently;
-retirement greps zero; both offender states zero with canonical Meier channels; SNAP-19 parity
-green over 6 fixtures + fusion_tea leg (license live). Gates 2066/4/5, ruff 17, mypy 104.
-Only note: fusion-tea teax executor not re-run in audit (needs their venv) — corroborated via
-byte-identical wiring + in-repo executor. Next: fusion-tea PR from
-`chore/retire-pipeline-truth-workarounds`.
-
-### PIPELINE-TRUTH Item 5 — Silent-Failure Hardening — SPEC IN PROGRESS
-Track B. Spec phase is a verification pass (R4): the D3 floor findings are static-read
-verdicts reproduced/refuted before design. Verification table + spec:
-`.project/active/silent-failure-hardening/spec.md`; live probes (python execution is
-sandbox-blocked, so verdicts rest on code-trace + committed tests):
-`.project/active/silent-failure-hardening/probes/`.
-
-### PIPELINE-TRUTH Item 1 — Plant-Value & Blind-Spot Fixtures — IMPLEMENTED (awaiting audit)
-Track A head (Items 2, 4, 5, 9 build on its fixtures). Fixtures + captures only, zero
-`src/` production code. Spec/plan: `.project/active/plant-value-fixtures/{spec,plan}.md`.
-Implemented across 6 commits on `pipeline-truth-epic` (Phases 0–5). Full suite: 2017
-passed; ruff src 21 / mypy 109 (baseline unchanged). `/_my_audit` suggested next.
-
-- **D6 gate (PASS):** `plant_values` trips V11 with 3 offenders on module
-  `plantvaluesdesign__plant__cost_calc`, covering all three value-provision mechanisms —
-  `driver_efficiency` (a, subtype-def literal via retype → redefinition 0.35),
-  `target_cost` (b, override BLOCK → design_override 10.0), `chamber_cost` (c, plain one-hop
-  cross-part attr with a usage-level DOTTED override → design_override 7.0). All three
-  offenders are valueless EPs TODAY **and each carries a captured literal Item 2 flips it TO**
-  (audit-F1 cure: (c) is no longer trip-only — the `:>> chamber.cost_per_unit = 7.0` override
-  lands in `hierarchy_data.design_overrides`, pinned by
-  `test_mechanism_c_plain_cross_part_attr_valueless_ep_with_flippable_literal`). This is the
-  SC-1 before-state Item 2 flips; hand-computed after: `plant_cost = (target_cost + chamber_cost)
-  / driver_efficiency = (10.0 + 7.0) / 0.35 = 48.571`, constraint `eta*gain>=threshold` →
-  `0.35*40.0=14.0>=10.0` holds. Every operand is reproducible from the fixture source (see the
-  plan's Phase-4 cure note for file:line).
-- **Per-shape labels:** `plant_value_shapes` — CORRECT (bare default, 5-deep chain, quoted
-  `'net cost'` output, Style-E, quoted return), DEGRADED (econ-param nested `:>>`,
-  inherited-redefined-below), DIAGNOSTIC (non-float enum EP / Item 5). No extractor crash →
-  no escape-hatch filings.
-- **Rider (own commit):** `quoted_owner_formula` `net_margin`/`total_payout` design-attr →
-  computed reclassification reviewed and CONFIRMED (prior-epic UPSTREAM-FINDINGS Item 7
-  behavior, not a forward dep). `wi014_toy`/`self_named_binding_trap` = timestamp/path canon.
-- **Capture surfaces:** `plant_values`, `plant_value_shapes`, `deep_cross_scope_probe` all
-  full-pipeline (extraction snapshot + pipeline baseline). `deep_cross_scope_probe` gained
-  its first committed snapshot (closed D1-F6 drift); un-broken by renaming `derived`→
-  `derived_calc` (reserved KerML modifier).
-- **Downstream handoffs:**
-  - **Item 2 before-pin:** `tests/conformance/test_plant_values.py::test_plant_values_trips_v11_all_three_mechanisms`
-    (the 3-offender set). Extended `spec_chain_twolevel` carries the value-carrying (c) +
-    fan-out for Item 2's SC-B tolerance test.
-  - **Item 4/5 substrate:** the `assert constraint viability` in `plant_values` is INVISIBLE
-    to extraction today (pinned in `test_plant_values.py`); the non-float enum EP is in
-    `plant_value_shapes` (`test_plant_value_shapes.py::test_shape9...`).
-  - **Item 9 impact list:** finalized in `spec.md` "agentic-mbse impact — Item 9 accumulation
-    list" (concrete fixture paths); deferred shapes in
-    `.project/active/plant-value-fixtures/fixture-gap-register.md`.
-- **Known degradation surfaced (filed):** multi-hop CHAIN `source_path` truncates to the
-  first segment (why (c) is one-hop; `deep_cross_scope_probe` Pattern A pins it).
-
-### PIPELINE-TRUTH Item 2 — Whole-Plant Cross-Part Value Resolution — CERTIFIED (PASS-WITH-NOTES, 2026-07-06)
-Audit: `.project/active/whole-plant-resolution/audit.md`. 10→0 offenders verified structurally
-(all clear by synthesis; 10 applied → 7 source-QN EPs via dedup, **zero** collision-defers).
-One doc correction owed before close: the Phase-7 close-out misattributes the clearing path as
-"collision guard defers, real wins" — no real-wins defer fired; fix the narrative (no code change).
-
-Track A headline (gates fusion-tea). Value-fill via the supplied-value materializer
-(`resolution/supplied_values.py`, REQ-SVM-01..04): a pre-pass synthesizes design
-attributes for cross-part/in-part supplied values, keyed by source QN, merged into
-`design_attributes` before the backtracker. Plan/design/spec:
-`.project/active/whole-plant-resolution/`. **All 8 phases landed** across commits
-2de8f60→(Phase 8), acceptance ladder held:
-- **SC-1**: `plant_values` zero offenders; a/b/c → 0.35/10.0/7.0 on source-QN EPs; anchor
-  `(10+7)/0.35=48.5714` hand-transcribed (INV-5).
-- **SC-1d**: `'Flow Sub'` flips DEGRADED→8.0 via tier-2b direct-owner leg.
-- **SC-4 (epic CSF)**: committed fusion-tea v2 snapshot (`tests/fixtures/fusion_tea`)
-  → **TRUE ZERO** V11 offenders (8 cross-part a/b/c + 2 in-part d), full YAML emits
-  license-free. Item 3 reuses this v2 capture + the SC-3 runner.
-- **SC-3**: `tests/runtime/pipeline_runner.py` (pinned signature) executes twolevel to
-  lcoe=100.0 within rel 1e-6.
-- **SC-5**: four cross-part baselines byte-identical (catf_mfe, ife_plant); V11 raise-proof
-  re-anchored to Shape 1 (`rated_cost.rate`).
-- Suite 2056 passed / 4 skipped / 5 xfailed; ruff 17, mypy 104 (baselines unchanged).
-- **Two documented deviations** (see plan Implementation Notes): materializer runs at the
-  caller seam (not inside `build_computation_graph`, which post-dates the backtracker);
-  precedence + renamed-consumer proven at the mechanism/real-fusion-tea level rather than
-  via bespoke captured fixtures. `/_my_audit` suggested next.
-
-### PIPELINE-TRUTH Item 4 — Subtype-Aware Enumeration & Constraint-Report Truth — AUDITED: PASS-WITH-NOTES (2026-07-06)
-Track B head (no deps). Coordinated pair with agentic-mbse (R2): one adapter choke
-point (`include_subtypes`), per-call-site decision table, constraint drop report fires
-on assert constraints, REQ-EXT-09 re-anchored independently, snapshot constraint
-serialization. Spec: `.project/active/subtype-enumeration/spec.md`. Audit:
-`.project/active/subtype-enumeration/audit.md`.
-- **Codegen side solid** — verified by artifact/source: collect/render split, REQ-EXT-09
-  re-anchor with executable mutation check, full serialize→replay chain (from-snapshot
-  report available), INV-B/D/E/G pins, dead-code deletions, docs rewrite, all 23 committed
-  snapshots at v2, wi014 assert manifest committed.
-- **Note 1 (gate disclosure):** the Phase-5 reviewed-diff gate under-itemized
-  `self_named_rescue` — its v2 diff carries a `binding_type` reference→chain reclassification
-  filed as "relativization." NOT Item-4-caused (Item 4 touches no binding code) but the
-  gate's itemization is inaccurate; re-itemize + pin/justify the reclassification.
-- **Note 2 (fusion-tea):** no committed fusion-tea snapshot exists in this repo, so the
-  "wi014 AND fusion-tea" SC is only half-met here; the v2 hard-gate now rejects any external
-  v1 fusion-tea snapshot until Item 2 re-captures it — carry to Item 2's SC-A/SC-4.
-- **Note 3 (limit):** sandbox blocked all code execution + all agentic-mbse access, so both
-  suites green, ruff/mypy (20/105 claimed), a live mutation run, and the entire agentic-mbse
-  half (rows 5–8, decision table, TYPE_MAP, Level-3 circular-FAILS) are plan-recorded only,
-  not re-executed. Needs a licensed/unsandboxed confirmation run before epic close.
-
-### PIPELINE-TRUTH Item 8 — Dead Code & Cleanup Debt — IMPLEMENTED (2026-07-06)
-**All 6 phases landed on `pipeline-truth-epic`** (`3314264`, `d5032c3`, `529dc74`, `3ec4efa`,
-`024028b`, `b1dece5`). Tree GREEN: **suite 2000 passed / 4 skipped / 5 xfailed; ruff src 19;
-mypy src 104** (both better than the 20/105 gate). SC-G clean: zero grep hits for all 12 deleted
-symbols. Row-D aggregation-literal bug fixed under a passing byte-identity gate (reproduced RED
-first on `agg_literal_probe`; REQ-AST-10 governs it). Count story: net **−5** passed (2005→2000) =
-−11 deleted dead-symbol self-tests + 6 new pins/probe. Every D1 residue dispositioned to FILE/NO-OP
-(`[SANITIZER-MERGE]`, `[SC11-IMPORT-REWRITE]`, `[GB-PARAMGROUPS-TYPING]`). Handoffs live:
-`[ITEM7-PGD06]` activated + REQ-AST-10 flagged for Item 7; doc-19/doc-25 caveats to Item 10.
-**Next: `/_my_audit`.** Full close-out in `.project/active/cleanup-debt/plan.md`.
-
-<details><summary>original spec-stage description</summary>
-
-Track B, no deps (schedule before PUSH-DOWN). One reviewed pass: delete two dead
-templates + verify-then-delete four dead functions (DOCS-SCRUB-F1), fix four stale
-docstrings (F3), fix the `_walk_aggregation_ast` literal-before-invocation dispatch bug
-(R4 reproduce + byte-identity gate + literal-bearing fixture; retires doc-19 hedge), pin
-the dotted-leaf alias edge (retires doc-25 hedge), disposition D1 residue F1–F5, assess
-SC-11 import rewrite, drop 4 vacuous skipifs. Handoffs: `_deserialize_constraint_info`/
-`extract_all_constraints` → Item 4; REQ-PGD-06 re-frame → Item 7; doc caveats → Item 10.
-Sequencing: agg-fixture capture runs entirely before OR after Item 4's snapshot v2 bump,
-not interleaved. Spec: `.project/active/cleanup-debt/spec.md`.
-
-</details>
-
-### PIPELINE-TRUTH Item 6 — Self-Referential Test Remediation — audited PASS-WITH-NOTES (2026-07-06)
-Track B, no deps. Re-anchor the 25 §D5 flagged tests (7 HIGH + 10 MEDIUM + 8 LOW) to
-hand-transcribed fixture literals; convert `test_localterm_sibling_agg_output` (MF-07)
-from pass-or-skip to pass-or-FAIL; re-anchor REQ-REG-02 to on-disk paths; add SC-6
-render pins + a tests/conformance anchoring note. EXT-09 handed off to Item 4. Matrix
-rows are Item 7's. Spec: `.project/active/test-truth/spec.md`.
-**Audit (`.project/active/test-truth/audit.md`):** anti-pattern gone (static sweep + 5
-spot-checks); 5 literals independently confirmed vs committed snapshots; −26 count = param
-reduction + 4 new fns, no fn deleted; all 25 dispositioned; EXT-09 handoff clean; doubling
-notes present; README accurate. **Open (1 note):** the mutation spot-check (SC-2) could not
-be reproduced at audit — pytest gated in the non-interactive stage context; corroborated
-statically + by the orchestrator's live gate (2005/4/5) + the close-out's 3 RED→revert→GREEN.
-Recommend one licensed reproduction to close SC-2.
-
-### PIPELINE-TRUTH epic — DEFINED (Draft, awaiting scope review)
-Shaped 2026-07-06 from `.project/active/NEXT_EPIC_PROMPT.md` via `/_my_epic_plan` with
-the mandated 8-agent discovery sweep. Mission: the generated package is the truth —
-fusion-tea generates/wires/executes end-to-end, zero bridges; every diagnostic fires on
-the shape it claims; zero self-referential tests; REQ/matrix truth. 10 items,
-~10.5–13.5 days, two tracks (headline: Items 1–3 fixtures → whole-plant resolution →
-fusion-tea acceptance; truth track: Items 4–8 parallel; 9–10 close).
-- Epic: `.project/backlog/epic_pipeline_truth.md`
-- Evidence base: `.project/research/20260706_pipeline-truth-discovery.md` (D1–D7 +
-  adversarial; 16 silent-failure sites, 25 tests-that-cannot-fail, the D6 fixture
-  recipe reproducing 9/10 V11 offenders, subtype-blind enumeration verdict table incl.
-  agentic-mbse's always-passing Level-3 validator)
-- BACKLOG updated: PIPELINE-TRUTH added (P1), whole-plant item promoted out of Ideas,
-  [CONSTRAINT-SILENCE] filed (P1, absorbed into Item 4), UPSTREAM-FINDINGS moved to
-  Completed, PUSH-DOWN sequencing ruling recorded (after Items 5+8).
-- Notable corrections made during discovery: the fusion-tea report's line-74
-  capture-path claim is wrong (capture DOES run the constraint report; the silence was
-  the assert bug itself), and constraints are NOT serialized into snapshots (the
-  NEXT_EPIC_PROMPT claim was wrong; `_deserialize_constraint_info` is dead code).
-- Next: user reviews scope/decomposition; then spec Item 1 (fixtures) and Item 4
-  (subtype enumeration) — the two no-dependency track heads.
-
-### docs-scrub — CERTIFIED and MERGED (PR #4, 2026-07-06)
-Post-epic coherence pass over `docs/architecture/` on branch `docs-scrub` (off
-`upstream-findings-epic`): 31 docs verified/corrected against HEAD; matrix now
-248 = 236 PASS + 12 UNTESTED (SNAP/NC/REG rows added); thin docs 07/10/11/17/24
-closed; 22/23 verified live, 26 marked Historical; gate byte-identical
-(1989/4/5, ruff 21, mypy 109). Independent audit: Certify (3 gaps found+cured).
-Follow-ups filed: BACKLOG DOCS-SCRUB-F1..F4 (F4 = resolve_input() has zero
-production callers while its REQs are marked PASS). Artifacts:
-`.project/active/docs-scrub/{spec,plan,fact-sheet,audit}.md`.
-
-### Next-epic definition — EXECUTED (2026-07-06)
-`.project/active/NEXT_EPIC_PROMPT.md` was executed; deliverables are the
-PIPELINE-TRUTH entry above. The prompt file is kept for provenance.
-
-### UPSTREAM-FINDINGS Epic — MERGED (PR #3, 2026-07-06)
-
-All 12 items landed and audited PASS on branch `upstream-findings-epic`
-(orchestrated run, 2026-07-05..06). PR: https://github.com/1cFE/sysml-codegen/pull/3
-
-**One action for the human**: the companion agentic-mbse PR. Branch
-`upstream-findings-sync` is pushed to origin (6 commits); the prepared PR body is
-committed at `.project/active/AGENTIC_MBSE_PR_BODY.md` — create with:
-`gh pr create --repo 1cFE/agentic-mbse --base main --head upstream-findings-sync --title "UPSTREAM-FINDINGS sync: validation checks + guidance for the newly supported subset" --body-file .project/active/AGENTIC_MBSE_PR_BODY.md`
-
-Post-merge follow-ups already filed: BACKLOG P1 (remaining 10 fusion-tea
-cross-part bindings), the stale-fixture drift chore, C7/C8/F6 in agentic-mbse's
-backlog, and the fusion-tea coordination notes in the three release-notes files.
-
+### 2026-08-07: ELABORATE-FIRST epic ratified — Item 1 (forensic freeze + transition) DONE
+
+**[OWNER 2026-08-07]** ruling: the string-resolution architecture itself is the defect home.
+`in R = R` is a modeling bug to reject, referents must be consumed at load time, and snapshots are
+a format choice. Direction ratified: replace the front end with elaborate-then-project (instance
+graph as the single IR and snapshot payload; projection onto the existing `ComputationGraph` seam;
+the ~3,450-line string-compensation machinery deleted at cutover, not wrapped).
+
+- Plan of record: `.project/backlog/epic_elaborate_first_architecture.md` (8 items,
+  spike/learning-test-first so failures are cheap; Item-3 elaborator spike is the go/no-go).
+- Direction evidence: `.project/research/20260807-145336_elaborate-first-instance-graph-architecture.md`
+  (diagnosis, deletion inventory, seam verification, 7-shape pressure test, SysIDE capability
+  survey) alongside the recovery assessment below.
+- SOURCE-IDENTITY epic amended: Items 4–5 superseded, Items 1–3 inherited as semantic authority
+  (29-cell matrix unchanged), Items 6–8 absorbed into ELABORATE-FIRST Items 7–8.
+- Item 1 executed: dirty trees frozen on `item4-phases12-forensic` (codegen `69eef3b`,
+  agentic-mbse `9724f1d`; agentic-mbse `main` clean again); working branch `source-identity-epic`
+  is clean at `224bfa6` plus plan-of-record docs. The Item-4 plan carries a do-not-resume banner.
+- **Item 2 (salvage landing) DONE 2026-08-07**: codegen `66a61f3` + agentic-mbse `65a35d7` (on
+  `elaborate-first-salvage` — merge decision with owner; codegen's editable install reads that
+  working tree, so keep it checked out there until merged). Landed: `ResolvedTargetFact` + the
+  5-tuple `feature_chain_facts` with both aggregation callers fixed, `source_evidence.py`
+  (evidence types + the three extraction-detectable readiness codes moved out of the retired
+  module), evidence capture in `usage_extractor`, chain-evidence threading through aggregation
+  terms, `PartInstanceIndex` exact reverse queries with `redefining_target_on` made
+  query-order-independent, four fixtures, and the falsifier tests. Not salvaged:
+  `analysis/source_identity.py` manifest/authority/recorder and its API tests. Gates: codegen
+  3153/47/18 licensed (zero license-skip lines), ruff clean, mypy 72-baseline, baselines
+  byte-identical; agentic-mbse 1811/1/33.
+- **Item 3 (elaborator spike) EXECUTED 2026-08-07 — assumption CONFIRMED, no kill criterion
+  triggered.** Findings: `.project/active/elaborator-spike/findings.md`. 381-line prototype:
+  C25 collapse to one input proven in real generated YAML; C8 twins distinct; C24 producer edge;
+  **C19 80.0 applied on both calc and constraint paths** (def-context remap rule); fusion_tea
+  `in gain = gain` → hard SI_SELF_BINDING; Bank sum terms on `cell[i]` nodes; stable node IDs;
+  generation layer accepted the projected graph unchanged. Discovery for Item-4 design: the
+  legacy extractor leaves def-nested-usage calcs definition-relative (`owner_def=None`).
+- **Owner GO recorded 2026-08-07** ("hell yeah. clean this fucker up."). **Item 4 design pair
+  landed same day**: `.project/active/elaborator-design/{spec,design}.md` — AST-walked consumer
+  population (extractor-consuming shortcut rejected, D10), one def-context remap rule (C19 fix),
+  innermost-wins value tiers driving EP classification, computed nodes for EXPRESSION
+  redefinitions, constraint lowering adapted to node edges, deletion ledger attached. The
+  multi-occurrence-default question is answered by the contract's ratified 2026-08-05 rule
+  (distinct occurrences = distinct sources) — cited, not re-asked.
+- **Item 5 (exact-identity elaborator breadth) CERTIFIED and CLOSED 2026-08-09** — archived to
+  `.project/completed/20260809_elaborator-breadth/` (plan, diff-ledger, product-lens ledger, and
+  all audit rounds; certification is the `audit_v3.md` addendum; CHANGELOG carries the summary).
+  The exact-ID route covers all 29 contract cells with public/named-diagnostic evidence, the
+  37-fixture dual-run ledger is live-run-verified (26 collapse / 11 fix / zero unresolved), and
+  invalid inherited/owned part conflicts block `SYSML_NAMESPACE_NOT_DISTINGUISHABLE` before
+  occurrence expansion. Open non-blocking residues carried forward: audit-F30 (AST guard covers
+  only `_resolve_leaf`), audit-F31 (plural-fallback reachability fixture unauthored), the leg-4
+  computed-attr `:>>` literal question, and attribute-level namespace conflicts not promoted
+  (surface at projection collision instead). **Next: Item 6 exact-identity completion; F30/F31
+  move there. Atomic cutover is Item 7; F26 legacy-oracle deletion and F19 customer-scale proof
+  remain cutover obligations.**
+
+- **Item 6 (exact-identity completion) CERTIFIED and CLOSED 2026-08-10** — archived to
+  `.project/completed/20260810_elaborator-identity-completion/` (spec, design authority map, plan,
+  three audit rounds, product-lens ledger; certification is the `audit_v3.md` re-audit addendum;
+  CHANGELOG carries the summary). Calculation payload/compilation/formals/outputs and constraint
+  usage decisions attach by exact UUID; SysIDE's native `Usage.usages` feeds exact concrete
+  occurrences (F31 closed with a scoped witness); the graph carries structured occurrences, typed
+  IR, formal provenance, and closed eligibility/compilability; projection is one-way with semantic
+  collision guards; profile `BLOCK` halts by `SI_CONSTRAINT_BLOCKED` on strict, lenient, and
+  round-tripped routes; the F30 guard is deny-by-default over all six boundary files with five
+  named exercised exemptions. Nine audit findings (F1–F9) across three rounds all verified fixed.
+  Shipped legacy route, snapshot v5, neutral facts, and generated baselines stayed byte-frozen.
+  Open non-blocking residue: `_constraint_module_type` public-spelling collision guard (rendering
+  policy). Coordinated agentic-mbse half (identified constraint extraction/evaluator) lives on
+  `elaborate-first-salvage`. **Next: Item 7 atomic cutover (unblocked). Item 7's deletion ledger
+  now also names the four Item-6 transitional duals; F26 legacy-oracle deletion and F19
+  customer-scale proof remain cutover obligations.**
+
+### 2026-08-07: SOURCE-IDENTITY Item 4 — SUPERSEDED (archived 2026-08-10)
+
+The Item-4 shadow-layer architecture (identity manifest beside the legacy resolver that ignored
+it by design) was stopped after Phases 1–2. The audit's owner-grade product lens was BLOCKED on
+C24 and the phases were never certified; the recovery assessment
+(`.project/research/20260807-143615_source-identity-recovery-assessment.md`) led to the owner
+ratifying the elaborate-first replacement — the "major pivot" the ELABORATE-FIRST epic executes.
+Artifacts (spec, design, plan, audit, reviews, product-lens) are archived with superseded
+markers at `.project/completed/20260810_source-identity-occurrence-foundation/`; the epic is
+archived at `.project/completed/20260810_epic_semantic_source_identity.md` (supersession record
+inside). The stopped implementation is preserved on `item4-phases12-forensic` (codegen
+`69eef3b`, agentic-mbse `9724f1d`); the salvage subset landed via ELABORATE-FIRST Item 2.
+Items 1–3 remain the inherited semantic authority (entries below).
+
+### 2026-08-07: SOURCE-IDENTITY Item 3 — COMPLETE
+
+Audit: `.project/active/source-identity-contract/audit.md` (2026-08-07, **Certify**). The owner
+declared the audited item finished on 2026-08-07, closing the final ratification checkpoint without
+changing provenance grades. All findings and final recheck findings were corrected the same day;
+full record in `design.md` A.8 + plan Correction Pass:
+
+- **audit-F1 resolved by citation** (`product-lens.md` correction entry): computed-source cell
+  **C24** (1 calc + 1 constraint + 1 agg through one producer channel; no minted public input)
+  published under an explicit D8 reopening.
+- **Customer context corrected**: mixed, not all usage-authored — `meier_coe_calc` usage-authored
+  (`hif_plant.sysml:205,215`); `lcoe_calc`/`recirc_calc` def-authored
+  (`generic_ife/ife_plant.sysml:98,114,126,134,148`). 01b re-derived; exact supported-form cell
+  **C25** owns availability's one usage-authored + one definition-authored consumer, while C2 owns
+  thermal-efficiency's two definition-authored consumers. C4 remains DCS referent evidence.
+  The exact topology split below moves the reopened counts to **29 cells / 35 coordinates**;
+  `epic:147-150` citations fixed.
+- **Aggregation topology corrected**: C17 now owns producer-backed
+  `permitting.capital_cost` (one producer channel, zero public inputs); C26 owns the three
+  literal-valued modeled `permitting` cost features (one public input per source). The committed
+  graph proves C17's producer wiring, while current parity evidence contradicts C26's target.
+  C24 now names one direct calculation-output declaration and 22a one exact kept expression binding.
+- **SI-23 exactness**: C7/C8/C9/C10/C15/C16/01g/C11–C13 keys now carry exact occurrence counts,
+  value states, and consumer counts/types (checker rejects parametric key values).
+- **SC4**: REQ-BT-13/IR-01 `PARTIAL`, REQ-PGD-06/VBR-03 `SUPERSEDED` annotated (11 total);
+  Status projection still byte-identical.
+- **Authority state reconciled**: contract Current conclusion is the single authority-state
+  statement (source-identity material ratified; runtime certification remains assigned to Items
+  4–8); stale closed-epic handoff removed; matrix legend/spec/design/epic handoffs aligned. VBR stamp citation fixed to
+  `orchestration/pipeline_builder.py:363-369`.
+
+Gates after corrections: all four phase checkers GREEN (29/35, exact keys, 11 annotations,
+projection byte-identical), archive SHA unchanged, `git diff --check` clean, 11/11 route tests.
+**Next: Item 4 specification.**
+
+Plan: `.project/active/source-identity-contract/plan.md` (per-phase completion notes + the Item
+4/5 derivability dry-run live there). Landed in the lifecycle contract
+(`constraint-execution-authoritative-lifecycle-contract.md`): the "Source identity" subsection
+(definitions, form × context referent table, invariants 54–60, validation/guidance obligations
+with the exact owner payloads — SI-01 quote at D-4, SI-15/16 request, SI-18 quote with the
+preserved "quesiton" typo); dispositions D-4..D-19 with the resolved checkpoint record; invariants
+19/20/22/26 amended in place; six new Appendix B correction rows; Appendix C "Source-identity
+scenarios" — originally 26 cells / 32 evidence coordinates, reopened by the audit correction to
+29/35, no PENDING_CHECKPOINT, every BLOCKED cell with a published target key; status reconciled to
+the 41/41 + 2026-07-20 merged state. New durable
+companion `.project/concepts/constraint-execution-lifecycle-requirements.md` (copy-and-freeze;
+25 graded LC-SI projections; archive byte-identical, SHA pinned in the plan; contract
+Requirements pointer moved). Verification matrix: 7 row-local contract-disposition annotations +
+1 legend line; Status projection/Summary/Index byte-identical. Epic Item 3 + spec footer
+reconciled. All four phase checkers GREEN (scratchpad `phase{1..4}_check.py`); 11 route tests
+pass; no code/fixture/snapshot/completed changes. Those mechanical results do not clear the audit
+findings above.
+
+### 2026-08-05: SOURCE-IDENTITY Item 3 — authoritative contract spec DRAFT
+
+Spec: `.project/active/source-identity-contract/spec.md`. Owner ruling: never reinterpret a
+self-binding as an outer reference. The contract supports owner-qualified references and
+occurrence-rooted feature chains under their distinct SysIDE/KerML meanings, classifies indexed
+value expressions as unsupported for source-bearing calculation bindings, and absorbs aggregation
+consumers into the same identity family. Required downstream work includes correcting the existing
+`agentic-mbse` L2 self-binding validator, which currently suppresses its error when a same-named
+outer feature exists; adding a distinct indexed-expression readiness diagnostic; keeping codegen
+independently fail-closed; and publishing allowable modeling patterns in `agentic-mbse` docs.
+Post-review revision now explicitly supports the bare-renamed definition-reference form, requires
+matrix evidence coordinates, and records the ratified rule that equal inherited defaults on
+distinct concrete occurrences remain distinct sources unless the model explicitly shares them.
+
+Design is at rev 5 (`design.md`) after four Revise reviews; the authority architecture (amend the
+lifecycle contract, no new normative doc) and the three-field/boundary-outcome schema are confirmed
+sound. Rev 5 repaired the v4 findings with a key semantic discovery, verified against fixtures:
+**binding-owner context changes the referent of the same written form** — the AFT probes author
+calcs inside the PartDef (def-level referent) while deep_cross_scope and the customer bindings sit
+inside concrete usages (occurrence-level referent, snapshot-verified). Semantic referent is now key
+material (referent table A.2); supported families dissolved into per-form cells; RM13 reclassified
+as a broken positive resolution (solar's `permitting` features are modeled), so the terminal-miss
+cell is BLOCKED on a constructed fixture; blocked cells publish full target coordinates (D8) so
+Item 4 realizes fixtures, never chooses semantics. The owner then agreed to all eight checkpoint
+recommendations (`[OWNER-VERBATIM]` “ok agreed with each one”). Their substance remains `[AGENT]`
+(ratified by owner, 2026-08-05): keep the decisions and matrix in the lifecycle contract; create a
+copy-and-freeze companion requirements artifact while leaving the archived spec untouched; model
+one independently overridable `LIBRARY_DEFAULT` per concrete calculation usage; defer expression
+source support while failing closed with a readiness diagnostic; assign blocked fixtures to Item
+4; file the aggregation finding into this epic; reconcile stale project status; and migrate the
+customer binding bare-renamed-in-place. The then-current enumeration was 26 cells / 32 evidence
+coordinates with no pending checkpoint classes; the audit later corrected the exact customer home
+to C25/C2 and reopened the population to 28/34; the later C17/C26 exact-topology split produces
+29/35. Next: see the current Item-3 audit-correction entry
+above.
+
+### 2026-08-05: SOURCE-IDENTITY Item 2 — COMPLETE
+
+Dedicated branch `source-identity-epic` was created from `nested-override-tripwire` at `fa9e0d0`
+after the Item-1/Item-2 evidence legs. Source-identity work continues there.
+
+Executed via `/_my_learning_test` (kept tests + findings; item's spec/design/plan skipped —
+noted in findings). Kept tests: `tests/conformance/test_source_identity_routes.py`
+(11 passing, license-free) — pin both fan-out paths, the authored-vs-reference-derived
+literal discriminator (`written_reference is None` ⇔ authored), and the cross-owner cell
+(solar `pack_count`) where owner-local reconstruction fails. Findings + identity trace +
+initial census + evidence-sufficiency verdict + adjacent-work register:
+`.project/research/20260805-054752_source-identity-route-evidence.md` (back-referenced in
+the epic's Item 2 Current State; Item-1 results cross-referenced).
+
+New load-bearing facts beyond the forensics: snapshot capture persists the post-VBR stamp
+(`snapshot/capture.py` runs the full pipeline; `graph_rebuild.py` has no VBR step — any
+evidence repair ⇒ recapture + rebuild change); written-form fields survive the stamp; a
+fourth value authority (group-deriver backfill, `graph_builder.py:620-630`) masks Path-B
+identity loss. Census: 277 corpus entry points, 75 model-derived per-consumer mints
+(37 Path A / 38 Path B). Joint synthesis with Item 1 makes the evidence-sufficiency verdict
+final: extraction must publish a semantic source ID from referent/redefinition evidence;
+owner-local reconstruction cannot cover 40/75 cross-owner/tail cases, and the surviving
+self-reference `source_path` is normatively the wrong element. Licensed live, snapshot, and
+relocated routes are identical on four representative fixtures; retained matrix/trace/parity
+artifacts live in `.project/active/source-identity-route-evidence-spike/`. All six Item-2 criteria
+are met. The queued aggregation-scoping finding is classified in the adjacent-work register and its
+absorption into the same terminal-mint family was ratified at the Item-3 checkpoint.
+
+### 2026-08-05: SOURCE-IDENTITY epic Item 1 — binding-semantics spike COMPLETE
+
+Executed via `/_my_spike` (probes + findings + table; item's spec/design/plan
+deliverables consciously skipped — noted in findings). Home:
+`.project/active/source-identity-binding-semantics-spike/`. Headlines: bare
+`in R = R` self-binding is normatively required (clause-cited KerML/SysML rulings
+retained in `standards/`); qualified vs chain forms denote def-level vs
+occurrence-level features and the spec doesn't pick one (Item-3 decision); `#(i)`
+parses value-only and the extractor silently drops the index segment (NEW
+identity-loss site → Item 2 route matrix); `[i]` fails to load; both indexed forms
+have zero corpus prevalence; bare self-named is ~47% of external usage bindings.
+Decision input for Item 3: `authoring-form-table.md`. Item 2 (route/evidence spike)
+completed the other pre-disposition leg.
+
+### 2026-08-03: Entry-surface fan-out forensics — COMPLETE, filing + rulings pending
+
+A customer (fusion-tea demo) found that calc-usage self-named rebindings (`in R = R` on a
+shared plant attribute) fan out into per-usage entry fields; sweeping one copy leaves the
+others frozen. Forensic report:
+`.project/research/20260803-203011_entry-surface-fanout-forensics.md`.
+
+- **Verdict: NEVER-BUILT and never specified** (per-usage minting is REQ-IR-06, present
+  since the initial commit; the two big refactor PRs were byte-identity preservation and
+  pinned the fan-out into baselines). Not a regression.
+- Mechanism: SysIDE resolves the bare RHS to the calc's own param (spec-conformant — the
+  idiom is degenerate per KerML scoping); Path A (instance `:>>` override literal-stamped
+  per-usage by name coincidence, `src/sysml_codegen/orchestration/pipeline_builder.py:363-369`)
+  is fully silent; Path B
+  (def-default, lenient-miss) warns. Constraints converge — hence the asymmetry.
+- **Resolved 2026-08-05:** never reinterpret the self-binding as an outer reference; honor
+  SysIDE/KerML referents, support qualified and chain forms under their actual meanings, and absorb
+  aggregation consumers into the same source-identity contract.
+- **Still pending:** filing this + the remaining queued Fusion Tea upstream findings; fix-first vs
+  workaround for demo Item 5; and whether anything consumed LCOE off the July IFE study rows.
+
+### Post-merge state — CONSTRAINT-LIFECYCLE epic MERGED and CLOSED (2026-07-20)
+
+The constraint-execution lifecycle wave is merged, in the load-bearing order:
+
+- agentic-mbse PR #11 → main `f4ebdce` (merged FIRST)
+- sysml-codegen PR #9 → main `936315c`
+- teax PR #3 → main `fa0e06a`
+
+All three repos are back on `main` and pulled. Post-merge smoke on codegen main:
+**3115 passed / 47 skipped, zero `no live syside license` skip lines** (the skip-line check is
+the only valid license proof; pass/skip counts do not discriminate).
+
+Epic archived: `.project/completed/20260720_epic_constraint_execution_lifecycle_remediation.md`
+plus all 15 item folders (`20260720_constraint-lifecycle-*`, `20260720_constraint-execution-lifecycle-contract`).
+The superseded PR-wave epic is archived alongside
+(`20260720_epic_constraint_pr_wave_remediation.md`). Key records, post-archive:
+
+- Release record: `.project/completed/20260720_constraint-lifecycle-composed-proof/release-readiness.md`
+- 41/41 register: `.project/completed/20260720_constraint-lifecycle-composed-proof/evidence-coordinate-register.md`
+- Ratified authority (unchanged home): `.project/concepts/constraint-execution-authoritative-lifecycle-contract.md`
+
+### Unmerged branch: TEAx `constraint-semantics-item3` (CONSTRAINT-SEMANTICS Item 3, closed 2026-08-13)
+
+`/home/reid/1cfe/teax`, branch `constraint-semantics-item3` at `5b70ae9` — four commits off pinned
+`main` `fa0e06a`, complete, **not merged**, nothing pushed. Item 3 closed in codegen bookkeeping
+with this branch as a named deliverable; merge sequencing belongs to `pre_pr` and the owner.
+
+- **Do not switch the TEAx checkout off this branch until merge.** codegen's execution lane imports
+  simkit from that working tree (D8's checkout inversion), so switching breaks codegen's own suite.
+- **Publication order is codegen first, TEAx second.** The reverse makes TEAx accept a runtime
+  contract no generator produces.
+- Item 2's hand-off is **discharged on this branch**: the accepted schema sets were re-vendored —
+  replaced, not extended — so a pre-item package fails at seal verification before any report is
+  read.
+
+### Unmerged branches awaiting owner (both items CLOSED 2026-07-24, owner-directed)
+
+- **`docs-lifecycle-sync`** — docs + `.project/` only. Item archived to
+  `completed/20260724_docs-lifecycle-sync/` (audit: no open findings).
+- **`nested-override-tripwire`** (stacked on it) — the only `src/` change. Item archived to
+  `completed/20260724_nested-override-tripwire/`.
+
+Merge the first for bookkeeping+docs, the second on top for the tripwire. Both items were
+closed on-branch before merge (owner-directed); their CHANGELOG entries note merge pending.
+
+### pipeline_explainer_v2.html — BUILT (2026-07-24, `[V2-HTML-BUILD]`)
+
+`.project/diagrams/pipeline_explainer_v2.html` (144KB, uncommitted on `docs-lifecycle-sync`)
+built from the re-anchored `EXPLAINER_PROMPT.md`. Self-contained vanilla HTML/SVG/JS,
+light/dark themed, L0–L4 progressive disclosure; interactive stage strip + module_kind-coloured
+solar-battery mini-DAG (13 real modules from the committed baseline YAML); all snippets verbatim
+from committed fixtures except the `attribute :>>` trap counter-example, which is a labeled
+minimal adaptation of `spec_chain_channel` (no committed fixture encodes that form — noted in
+the page). Every cited symbol grep-verified against src/ at merged main; §7 caveats preserved
+as hedged; Gen-1 explainer untouched. Not yet visually smoke-tested in a browser (no browser in
+this session) — open the file once before sharing.
+
+### Open decisions — owner rulings recorded 2026-07-24
+
+1. **fusion-tea + stellarator local branches — HOLD [OWNER 2026-07-24].** Stay local until
+   the owner says otherwise. Epic evidence pinned at immutable `342cc799`/`c2f10960`; the
+   stellarator tip moves from EXTERNAL processes — check `git log origin/<branch>..HEAD`
+   before touching.
+2. **Local `constraint-exec-epic` branches — DELETED [OWNER 2026-07-24]** in all three merged
+   repos (teax needed `-D`: PR #3 was squash-merged; tree verified byte-identical to main
+   before deletion).
+3. **Stale-baseline class — LEAVE FILED [OWNER 2026-07-24]**, now a proper backlog entry:
+   `[STALE-BASELINE-CLASS]` (P3, no assignee).
+4. **`[NESTED-OCCURRENCE-OVERRIDE]`** (BACKLOG P2) — **tripwire SHIPPED [OWNER 2026-07-24]**
+   on branch `nested-override-tripwire` (stacked on docs-lifecycle-sync): the calc path's
+   silent value loss now warns, naming captured vs demanded scopes
+   (`supplied_values.py` `_unmatched_override_scopes` + drain; probe-first, 0 false fires
+   across all 19 snapshot fixtures — `completed/20260724_nested-override-tripwire/probes/verdict.md`;
+   suite 3118/47, ruff clean, byte-identical outputs). The full occurrence→definition-bridge
+   fix is now an explicit filed-fix block in the `[NESTED-OCCURRENCE-OVERRIDE]` BACKLOG entry
+   (scope, acceptance, blast radius, sequencing vs `[CONSTRAINT-ARCH-UNIFY]` sub-scope 2);
+   scheduling still open.
+5. **Item-10 completeness-check MODULE_OUTPUT exemption — MOOT: already closed in code.**
+   Surfaced at the 2026-07-24 ruling pass: audit Major 1 (`b987869`, pre-merge) removed the
+   exemption — the check flags name-based key forms regardless of outcome
+   (`producer_completeness.py:141`, pinned by
+   `test_qualified_channel_tier_leaf_guess_is_flagged`). The "ruling pending" note in the
+   archived epic lessons/handoff was stale. The check remains a diagnostic, not a hard
+   generation gate — that part is unchanged and by design.
+6. **teax remote is SSH** (`git@github.com:rwestwood89/teax.git`) but sessions have no SSH key —
+   pulls/pushes need explicit HTTPS URLs. Consider switching the remote to HTTPS. (Still open.)
+7. **Archive stragglers in `active/`** — item dirs from already-closed epics remain; need a
+   mapping pass first (several are referenced by live BACKLOG entries, e.g.
+   `matrix-truth/probes/`, `hygiene-tail/probes/`). (Still open.)
+
+Also ticketed 2026-07-24: `[MATRIX-EPIC-SURFACE-ROWS]` (P3) — the three uncovered lifecycle
+surfaces as matrix-row candidates.
+
+### Pre-existing accepted baselines (unchanged)
+
+- `ruff format --check src` fails on 22 files and `mypy src` has 72 errors — accepted baselines;
+  the maintained gates are `ruff check` clean + mypy-zero-new.
+- Two `-O` failures in `test_expression_compiler` are pre-existing (assert-stripped).
+- **`tests/runtime/…::test_the_lane_runs_the_real_simkit` fails on a whole-set run and passes in
+  isolation** — a collection-order artifact, reproduced at the parent commit and therefore
+  pre-existing. Surfaced (and re-confirmed) by CONSTRAINT-SEMANTICS Item 3, which touched neither
+  `tests/runtime/` nor the guard; `tests/execution` alone is green. Recorded here so it is not
+  rediscovered as a regression. **Still needs an owner** — no item has claimed it.
+- The two known stale-baseline classes (`deep_cross_scope`, `plant_values`) remain pre-existing,
+  untouched, and still need an owner.
+
+---
 
 ## Recently Completed
+
+### 2026-08-14: CONSTRAINT-SEMANTICS EPIC — Constraint Semantics and Design-Search Feasibility (all nine items closed; epic closed + archived)
+- **The measured failure the epic was filed against is closed.** CATF authored 65 constraint usages
+  and produced 9 visible dispositions and **0 executed checks**. It now produces 65/65 dispositions
+  on the frozen witness and a derivative that closes `65 = 56 carriers + 9 named deletions` with
+  **three executing physics gates** and `{eligible 3, excluded 0, non_reaching 53}` — no
+  instance-reaching gate outside the coverage denominator. Reports and TEAx distinguish six states
+  instead of two, `all_satisfied` is gone as a token, and a missing disposition halts generation.
+- **The epic's founding failure mode was demonstrated by its own proof item.** The first execution
+  of these gates rejected CATF's **authored** design point on physics (cryo load 8396.05 MW vs
+  1546.72 MW gross) — a defect invisible for the model's whole life, because a model that executes
+  zero gates reports `not_assessed` and nothing ever contradicts it. Filed
+  `[CATF-CRYO-HEAT-LEAK-COEFFICIENT]` (P1).
+- **Ten Success Criteria ticked against their amended forms**, with each amendment named under its
+  box and its ruling dated — the SC-3 accounting identity, D-S1/D-S2 (A5/A6/A9 held, then EXECUTED
+  by Item 9), finding 6-D (the authored point *is* the reject candidate), and the scope-4 LC-E10
+  wording. The Evidence-Invalidation Register is **HANDED to the cutover resumption**, not
+  discharged: its record is complete, phase B step 1 walks it row by row.
+- **Lessons Learned written for real** from the nine close records — the 6-D story, the two unearned
+  checkboxes and the probe-don't-trust discipline that caught them, stop-and-surface working three
+  times, the O-1 cross-repo invariant narrowing, the orchestration-mechanics traps (`uv run`
+  interpreter, resume permission-mode drop, archival-breaks-readers, characterizations-first), and
+  honest cost accounting: planned 8.5–9.5 days over 6 items, delivered 9 items at 10–12, with two
+  of the three additions born from findings the shaping stage could not have known.
+- **`pre_pr` deferred to phase D by ruling; nothing pushed; no `main` touched.** Archived to
+  `.project/completed/20260814_epic_constraint_semantics_contract.md` with the umbrella shaping
+  folder preserved at `.project/completed/20260814_constraint-semantics-contract/`. Post-move
+  collect check `2104/2183 (79 deselected)`, no collection errors.
+
+### 2026-08-14: CONSTRAINT-SEMANTICS Item 7 — ADR, Product Promise, and Agent-Facing Documentation Sync (audited Certify-with-residuals + closed)
+- **The owner's promise finally has a durable home, and the trail to it survives archiving.**
+  `.project/product/INDEX.md` → `P-001-design-search-free-variation.md` carries the
+  `[OWNER-VERBATIM, 2026-08-13]` design-search promise byte-for-byte (payload diff empty), with the
+  epic's `[OWNER]` Critical Success Factor beside it, ADR-009 back-registered as a row under this
+  repo's ADR convention, and the promise-vs-basis tension surfaced rather than resolved
+  (`[ACAUSAL-RELATIONS-CAPABILITY]` names the unbuilt half). The durable citation lives in the epic
+  file's Product-Lens header and in `CLAUDE.md`, both outside the archived folder. Closes Item 3
+  `audit-F4`, which had no home available when it was filed.
+- **The teaching surfaces in three repositories now match what shipped.** `@inapplicable:`
+  authoring and the eligible+inapplicable refusal, the disposition vocabulary and severity-by-cause,
+  the six report states and the TEAx feed-strategy opt-in, the `modeling-assumptions.md` §8
+  unit-on-binding rewrite Item 8's behavior change required, and the corrected `sysml-conventions`
+  skill example. The B1–B5 marker rule is stated with **both** its conditions: a marker on a
+  bindings-form constraint reaches the domain (proved by a licensed elaboration probe), and on an
+  inline-predicate constraint SysIDE drops it silently, so PROVENANCE carries the disposition until
+  `[INLINE-PREDICATE-MARKER-DROP]` closes.
+- **The audit's own probe caught the one defect the item introduced, and it was fixed rather than
+  argued.** A-3: the new `@inapplicable:` "How to write it" example was refused by the shipped
+  generator under the same document's D9 rule. An implement resume took route (a) and the auditor
+  re-ran it end to end — the authored text generates, seals, and carries the marker's reason into
+  the catalog. A-4 (an unreproducible kept-test-file count) closed with its method recorded and 55
+  reproduced independently.
+- **Two residuals carried past close, both owner calls** — the codegen `.claude/` symlink target
+  (resolves on merge) and `[CONSTRAINT-GATES-UNTAGGED]` (REQ tags must be minted before Items
+  3/5/8/9 get matrix rows). Gates: licensed **2070 passed**, zero license-skip lines; `git diff
+  --check` clean in three repos; collect `2104/2183 (79 deselected)` after archiving. No code,
+  fixture, schema, or generated path in any item commit. Archived to
+  `.project/completed/20260814_constraint-docs-agent-sync/`.
+
+### 2026-08-13: CONSTRAINT-SEMANTICS Item 9 — Derivative Upgrade Under Held Intent (audited Certify-with-residuals + closed)
+- **The worked example is now the shape the owner ruled, not the shape a defect allowed.** Three
+  rows moved: A5 and A6's 27 radius derivations were authored on the ruled basis (axis root radius
+  + 14 thicknesses free) and their asserting usages deleted; A9 asserts `ProductWithinBand` at the
+  ruled 1% relative band. The disposition histogram is `{eligible 3, excluded 0, non_reaching 53}`,
+  so **no instance-reaching physics gate sits outside the coverage denominator** — which discharges
+  the epic-level lens obligation Item 5's close carried against this item. Nothing was
+  re-dispositioned; the item executed held intent.
+- **Every accounting number is a mechanical consequence, and the audit proved it that way.**
+  `65 = 56 carriers + 9 named deletions` (53 by name, 3 by `renamed_from:`) is machine-proved by
+  `scripts/check_gated_manifest.py --check`, and the audit re-derived it from the ruled table
+  without reading a run. SC-6 order holds: expectations landed at `185dec7` and are byte-unchanged
+  through HEAD. Licensed suite **2070 passed / 34 skipped / 0 failed**, zero license-skip lines;
+  ruff and mypy zero-new; the frozen twins and the archived owner ruling are byte-identical by tree
+  hash.
+- **The deletion gate is per-occurrence now.** Each of the 27 derivations must resolve to its own
+  declaration and comment block — five occurrence-scoped mutations on a scratch fixture each
+  produced a reported problem naming the layer, never a skip and never a sibling-satisfied pass.
+  That closes the A-1 gap (two bare initializers past four gates) per occurrence rather than per
+  row.
+- **Three things surfaced rather than absorbed**, all on the live surface (`PROVENANCE.md`), not
+  only in the archiving design: the D3 `tf_coil.thickness` comment amendment (the one edit outside
+  the ruled 27, ratified); the per-dimension cost of `ProductWithinBand` (a constraint formal's
+  port unit comes from its own declaration, so a generic band cannot carry a unit) filed unowned as
+  `[CONSTRAINT-FORM-PER-DIMENSION-COST]`; and a one-ULP float drift on four layers' derived
+  `outer_radius` (−8.88e-16 m), visible only under the `execution` marker, which is deselected by
+  default and was not run.
+- **The epic's third Item 9 criterion stays unticked by owner ruling** — retiring the B1–B5
+  PROVENANCE workaround is a conditional on `[INLINE-PREDICATE-MARKER-DROP]`, which has not closed,
+  so it never fired. Recorded on both sides (fixture `PROVENANCE.md` §3b and the amended BACKLOG
+  entry). Residuals R1 (a wrong stencil count, 58 → 34) cured at `d713f21`; R2/R3 disposed at
+  close; R4/R5 recorded as forward-looking notes for the next item touching this fixture or prover.
+  Archived to `.project/completed/20260813_derivative-upgrade-held-intent/`.
+
+### 2026-08-13: CONSTRAINT-SEMANTICS Item 6 — Calculation-Definition Gate Capability Design (audited Certify + closed)
+- **A design/planning delivery, not a capability.** An executable probe attached one
+  calculation-definition constraint across zero, one, and two calculation occurrences by exact
+  identity — matching the constraint owner's `DeclarationId` to `CalcNode.calculation_definition_id`
+  — and recovered resolved attributes, literals, and modeled defaults with no rendered-name lookup.
+  It also proved that two sibling uses of one definition collide on the current constraint key, so
+  concrete identity must carry the calculation node. The repeated-use gap was closed inside the v4
+  wire grammar, with no second authority. Spec, revised design, three-round independent review, and
+  a file-level implementation item followed; all six epic criteria are ticked. Archived to
+  `.project/completed/20260813_calcdef-constraint-gate-design/`.
+- **The implementation is ruled out of this epic `[OWNER 2026-08-13]`.** The 7–9 day follow-on
+  (graph v4 + catalog 4.0.0, codegen + TEAx) is filed as the named, unowned backlog entry
+  `[CALCDEF-GATE-IMPLEMENTATION]`, with the archived `implementation-item.md` as its plan of
+  record. Authorization is parked with the owner. The production-acceptance boxes in the archived
+  spec stay open on purpose — they belong to that item.
+- **Item 8's start gate is satisfied and recorded.** No lawful start SHA existed until Item 8's
+  unit-lane characterizations landed; they landed at `62a07e5`, so the gate dissolves and only
+  owner authorization remains. Three things ride along: the SC8 guard (the future v4 record
+  re-derives its own tracked set, never reusing Item 8's 23 paths), the TEAx re-vendor consequence
+  of catalog 4.0.0, and R5 joint delivery staying declined until a new owner ruling.
+- **Bookkeeping done at this close:** the two `active/unit-lane-port-metadata/` citations in
+  `design.md` and `implementation-item.md` were repointed to the archive before the move, and
+  BACKLOG's CONSTRAINT-SEMANTICS list caught up on Items 1 and 4, which were closed and archived
+  earlier but never ticked.
+
+### 2026-08-13: CONSTRAINT-SEMANTICS Item 8 — Unit-Lane Port Metadata Defect (audited Certify + closed)
+- **The refusal is cured at its source.** Constraint-formal and computed-attribute entry-point
+  ports now carry the same authored unit text calc-usage bindings always carried, so one design
+  attribute read by a calc *and* a constraint (or a derivation) is one public entry point instead
+  of a whole-model `SI_RENDERING_COLLISION` refusal. Both kept customer characterizations — the A9
+  assert-band shape and the radius-derivation shape — are red against the parent tree and green at
+  the freeze `62a07e5c870158672eb100f1cba73adfe4c9df28`, with exact authored text (`m³/s`,
+  `Dimensionless`, `m`). Declaration identity owns unit selection: no inference, conversion, or
+  normalization, and unequal metadata still refuses fail-closed.
+- **Zero fixture churn — the conditional recapture never fired.** The complete Git-derived
+  inventory assessed **23 tracked / 23 assessed / 0 stale / 0 missing / 0 extra / 0 duplicate**, so
+  no v3 recapture was allowed or performed and no tracked snapshot or manifest byte moved. Three
+  routes (licensed live, in-place v6, relocated v6) mint identical port metadata.
+- **Gates and handoff.** Focused 244 passed; default licensed 2066/34/79; all-marker 2144/34/1
+  (the one inherited collection-order failure, which passes in isolation); ruff and mypy zero-new.
+  The Item 6 handoff is evidence-only: full freeze SHA, five proof-node IDs, both complete path
+  sets, the zero-recapture disposition, and a guard forbidding any future graph-v4 record from
+  reusing 23 or the 15-path subset instead of re-deriving its own tracked set. Shipped standalone
+  as ruled; no residuals. Archived to `.project/completed/20260813_unit-lane-port-metadata/`.
+
+### 2026-08-13: CONSTRAINT-SEMANTICS Item 5 — CATF Derivative and End-to-End Acceptance (audited + cured + closed)
+- **The contract ran end to end on the richest model in the tree.** `catf_mfe_gated` landed: 47
+  modules, 58 usage rows, 2 executing gates (A2, A3), histogram `{eligible 2, excluded 3,
+  non_reaching 53}`, coverage `58/2/2/0/0/{}/complete`. The accounting identity **65 = 58 carriers
+  + 7 named deletions** (SC-3 amendment, owner-authorized) is machine-proved by
+  `scripts/check_gated_manifest.py --check`, which now also ties each `derive-instead` deletion to
+  its in-source derivation and chosen-basis statement. SC-6 proved by commit order (`1247a3b` →
+  `7369b3e`), three named post-fixture expectation edits, each value-free.
+- **The epic's founding failure mode was demonstrated and closed by the same item.** Finding 6-D:
+  the first execution of these gates caught that the **authored** CATF design point is
+  gate-infeasible under its own cryo model (8396.05 MW cryo load vs 1546.72 MW gross; `heat_leak =
+  magnet_volume * 0.05` at `thermal_loads.sysml:59`). Reproduces on untouched `catf_mfe_d5`, which
+  executes zero gates and so reported `not_assessed` for the model's whole life. Filed
+  **[CATF-CRYO-HEAT-LEAK-COEFFICIENT]** P1. Ruled option (a) **[AGENT] ratified by owner**:
+  candidates are labeled gate-feasible/infeasible under the model as authored; the authored point
+  is the reject candidate, the raised-`p_fusion` leg is a machinery exemplar, not a design.
+- Audited **Certify-with-residuals** (`2b490f8`) after two blocking PROVENANCE findings were cured
+  (`995a058`, `1869c29`) and A-3 gated the shape that let A-1 through (`b083c47`). Residuals homed
+  at close: A-4 → `[GOLDEN-BYPASSES-RUN-CODEGEN]`, A-5 → `[CATF-ACCEPTANCE-LANE-MANUAL]`, A-8 →
+  epic Item 7's matrix reconciliation, A-7 recorded as accepted. Gates: licensed **2106 / 34 /
+  1 known**, zero license-skip lines, ruff 12, mypy 55, frozen twins byte-untouched except d5's
+  corrected PROVENANCE paragraph.
+- Archived to `completed/20260813_catf-constraint-policy-acceptance/`. Epic Items 8 and 9 were
+  filed out of this item's D-S1/D-S2 ruling; A5/A6/A9's held intent lives in the archived
+  `owner-disposition.md` and is Item 9's input.
+
+### 2026-08-13: CONSTRAINT-SEMANTICS Item 4 — Predicate Defect Hardening (audited + cured + closed)
+- Both Q8 must-fix predicate-boundary defects cured under the one existing unit-annotation rule,
+  plus a fourth lane (`in tol = 0.05 [m];` bindings) found at spec and cured under the recorded
+  same-rule test; a blocked chain now names the joined written chain, location, and bindings
+  rewrite (companion `0a52942` + codegen render de-dup/order). End state pinned positively: an
+  admitted, catalogued, assessed inequality gate.
+- Audit Certify-with-residuals with all 7 requested probes run by the orchestrator (R6: deleting
+  the cure fails exactly the 7 item-fixture tests, nothing else); all findings cured; F5 resolved
+  **[OWNER 2026-08-13]** — the coverage ledger's durable home is `tests/unit/data/`.
+- Two limits parked for Item 5 in the epic's Item 5 section: binding units are dimensionally
+  inert to the profile; a blocked chain's location is the usage's line. Archived to
+  `completed/20260813_constraint-predicate-hardening/`; gates 2010/34/0 licensed, ruff 12,
+  mypy 55, companion 10 failures proven pre-existing.
+
+### 2026-08-13: CONSTRAINT-SEMANTICS Item 1 — Contract and Authoring Policy (audited + cured + closed)
+- **Every durable authority a modeler or an implementing agent reads now teaches the settled
+  rule.** Before this item, the ratified lifecycle contract, its frozen requirements companion,
+  and seven documentation statements across both repositories still taught that a bare
+  `constraint` or a `require constraint` is an enforced gate, and that any assessed pass means
+  satisfaction. Now assert-only enforcement, the applicable-asserted-gate membership test, the
+  inventory-versus-feasibility split, the six headline states and their precedence, and the
+  warning tier for a vacuous asserted gate are published — with **ADR-009**
+  (`docs/architecture/modeling-assumptions.md` §9) as the decision record, cited back into the
+  umbrella product-lens trail. This was the documentation half of the owner's sequence (settle →
+  fix docs → then test), and Items 2–4 built against it.
+- **Nothing executable changed, and that boundary was verified by reading the diff, not by
+  trusting the claim.** The only Python touched is a module docstring and two test-docstring/
+  comment citations of a retired test. The four `all_satisfied` assertions that carry the
+  superseded meaning were **handed to Item 3** rather than forced through.
+- **Both deliberate hand-offs are now DISCHARGED** — recorded at close: Item 3's token migration
+  corrected the four `all_satisfied` assertions (`full_satisfaction`, with `UnknownHeadlineToken`
+  failing closed), and Item 2 landed REQ-EXT-09's replacement totality proof
+  (`test_constraint_population_oracle.py` + 42 reviewed expected-population files) and performed
+  the REQ-EXT-09/REQ-CL-04 re-grade Item 1 deliberately did not.
+- Audited **Certify-with-residuals**; H-1, M-1 and M-2 cured in `76e3ab7`; all five requested live
+  probes run and matched, including the licensed companion run. **M-3 dispositioned at close: the
+  vendored-corpora aggregation is RATIFIED as final** — the 52 hits in the OMG spec, the standard
+  library, and generated SysIDE API docs stay aggregated per corpus with every file named and one
+  uniform out-of-class disposition; every project-authored hit is still one row each. Expanding to
+  52 rows would add rows, not information.
+- **The D5-a deviation stands and was judged sounder than the design's instruction:**
+  `require constraint` was kept inside its `requirement def` example in the companion's
+  `sysml-expert.md` and given a settled-semantics sentence, because swapping it to
+  `assert constraint` would have taught invalid requirement modeling and deleted the visible
+  requirement-side form ruling Q7 exists to preserve.
+- Archived to `.project/completed/20260813_constraint-semantics-contract-amendments/`. Companion
+  commit `dcb187b` in `/home/reid/1cfe/agentic-mbse-item7-rebuild`. Nothing pushed, no `main`
+  touched, TEAx untouched — **`pre_pr` remains with the owner.** Residuals other closes homed
+  against "Item 1's authoring guidance" (design-F2's Appendix C cell, the D9 advisory, item3-F2's
+  premise conflict) are **re-homed to epic Item 7**, not reabsorbed here. The parked D-2 vs
+  D-4/SRC-01 premise conflict stays parked at the umbrella level, verified byte-untouched.
+
+### 2026-08-13: CONSTRAINT-SEMANTICS Item 3 — Coverage Report and TEAx Policy (audited + cured + closed)
+- **A generated report can no longer claim more coverage than was assessed, and TEAx can no longer
+  read silence as freedom.** Before this item, two-of-nine assessed read `all_satisfied`, an
+  excluded-only model emitted no report at all, and TEAx labelled such a package `unconstrained` —
+  the same disposition a genuinely constraint-free model gets. Now every report carries a coverage
+  account derived in one direction from the sealed catalog, the vocabulary has a `partial_coverage`
+  state in both repos, and a constraint-bearing-but-unassessed package is distinguishable from a
+  constraint-free one at the study-policy seam.
+- **The load-bearing design resolution held all the way through: coverage is a second axis, not a
+  slot in the headline.** The headline stays one precedence-ordered token (violation →
+  indeterminate → full satisfaction → partial coverage → not assessed) while the coverage account
+  is always present and always reaches the durable case record — so a `violation` report still says
+  how much was checked. Partial coverage defaults to **keep-for-boundary**; `feed-strategy` needs an
+  explicit, fingerprint-bearing config line, and a typo in either the key or the value fails closed.
+- Audited **Certify-with-residuals**; **all six residuals (A-1..A-6) cured the same night** with
+  **+29 pinning tests** (+26 TEAx, +3 codegen). Every residual was the same shape — a mechanism
+  built correctly that no test pinned — so no cure fixed a defect and no production behaviour
+  changed. All twelve spec success criteria are now verified and marked. Final gates: codegen
+  **2050 passed / 34 skipped / zero licence-skip**, TEAx **337 / 0**, lint counters unchanged in
+  both, **zero baseline byte churn**, companion untouched at `5088b41`. Nothing pushed; no `main`
+  touched anywhere — **`pre_pr` remains with the owner.**
+- **The coordinated TEAx work is a named unmerged deliverable**, branch `constraint-semantics-item3`
+  at `5b70ae9`, four commits off pinned `main` `fa0e06a`. Keep the TEAx checkout on that branch
+  until merge — codegen's execution lane imports simkit from its working tree. Publication order is
+  codegen first. Item 2's re-vendor hand-off is discharged on that branch (accepted sets replaced,
+  not extended). Details in §Unmerged branch above.
+- **Two unearned checkboxes were found and corrected in this item's own records** — one ticked
+  against a test varying the wrong field, one over an unrun validation step. Both were caught by
+  looking, not by a failure, which is the point: an unearned `[x]` is what stops the next reader
+  looking.
+- Archived to `.project/completed/20260813_constraint-coverage-policy/`. Traveling residuals
+  (design-F2's Appendix C cell, D9's companion advisory, item3-F2's unreachable `BLOCK` clause) are
+  homed in the epic's Item 3 section with named owners; the epic's scope-4 wording correction was
+  **performed** at close.
+
+### 2026-08-13: CONSTRAINT-SEMANTICS Item 2 — Canonical Usage Domain and Catalog Totality (audited + closed)
+- **Every authored constraint usage now has exactly one visible disposition, minted before
+  occurrence expansion.** `catf_mfe_d5` was 65 authored usages → 9 carriers, with 56 simply
+  *absent*; it is now **65 members, 9 reaching, 0 eligible** (the "9 eligible" premise the spec
+  inherited was wrong — all 65 are bare `constraint`, so the 9 that expand grade
+  `excluded`/`unassessed_form`). The proof is independent of the thing it checks: the
+  `collect_constraint_manifest` sweep was **deleted** rather than kept in sync, and the oracle is 42
+  reviewed expected-population files plus a licence-free `.sysml` scanner sharing no code, adapter,
+  or parse with the elaborator.
+- **What Items 3, 5, 6 build against** (unchanged by close):
+  `InstanceGraph.constraint_usages: dict[DeclarationId, ConstraintUsageRecord]`;
+  `catalog.usage_records` is the whole domain keyed by `declaration_id`; schema pins moved
+  `instance-graph/v2`→`v3`, `CATALOG_SCHEMA_VERSION` `2.0.0`→`3.0.0`, companion
+  `constraint-facts/v2`→`v3`; all 21 snapshot-bearing fixtures recaptured once at the final schema.
+  A consumer wanting the old narrower set filters `disposition_kind == "eligible"`.
+  **TEAx must still re-vendor `ACCEPTED_CATALOG_SCHEMA_VERSIONS` with `3.0.0`** — hand-off filed in
+  the epic; until then TEAx fails closed on newly generated packages, which is the intended
+  direction.
+- Audited **Certify-with-residuals** after a Needs-work first pass; A1–A4 cured one commit per
+  family and re-probed at `77b4e3c`, R2/R4 record corrections landed (`014597b`, `35ee82f`). Final
+  gates: codegen **1860 passed / 34 skipped / 0 failed**, zero licence-skip; `ruff` 12, `mypy` 55
+  (both at/below baseline); `git diff --check` clean; companion untouched at `bc69f04`. Nothing
+  pushed, `main` untouched in both repos — **`pre_pr` remains with the owner.**
+- **Owner should read** the epic's Item 2 section: an **[AGENT]** severity exception now sits beside
+  an **[INHERITED]** line — a malformed `@inapplicable:` directive halts at `error` grade whatever
+  the usage's form, overriding "plain forms are never errors" for that one cause. Accepted at audit,
+  orchestrator-ratified, not owner-ruled. Traveling residuals **R1** (internal bare-`ComputationGraph`
+  seam is seal-only; no production caller) and **R3** (calc-def-only shape has no pre-item baseline)
+  are carried in that same section; **R5** (no plan/implement-stage product-lens entry) is
+  dispositioned as a recorded process gap in the ledger's close block, not backfilled.
+- Archived to `.project/completed/20260813_constraint-catalog-totality/`. Environment fact worth
+  keeping: **`uv run` is the wrong interpreter for this pair of worktrees** — it resolves
+  `agentic_mbse` to the main checkout and the suite does not collect; use
+  `/home/reid/1cfe/item7-rebuild-venv/bin/python -m pytest`.
+
+### 2026-08-10: ELABORATE-FIRST Item 6 — Exact-Identity Completion (certified + closed)
+- Exact declaration identity now covers the whole internal route: calc payload/compilation/
+  formals/outputs and constraint decisions attach by UUID; native `Usage.usages` child authority;
+  structured occurrences + typed IR + formal provenance in a fingerprinted `instance-graph/v2`;
+  one-way projection ordered from typed producer edges; profile `BLOCK` halts by
+  `SI_CONSTRAINT_BLOCKED`; deny-by-default F30 guard across all six boundary files.
+- Three audit rounds (F1–F9) all remediated and independently verified; certification in
+  `completed/20260810_elaborator-identity-completion/audit_v3.md` (re-audit addendum, lens CLEAR).
+- Shipped legacy route, snapshot v5, neutral constraint facts, and generated baselines
+  byte-frozen throughout; Item 7 atomic cutover unblocked, its deletion ledger extended with the
+  four Item-6 transitional duals.
+
+### 2026-08-09: ELABORATE-FIRST Item 5 — Exact-Identity Elaborator Breadth (certified + closed)
+- Complete exact-ID front end proven beside the frozen legacy route: identity kill probes,
+  cross-repo exact-UUID evidence, occurrence walker, typed graph, one resolver, projection to
+  `ComputationGraph`, `instance-graph/v1` round-trip, 29-cell contract matrix at public/
+  named-diagnostic evidence, live-verified 37-fixture dual-run ledger, and off-default public
+  mutations on live and rebuilt routes.
+- Five audit rounds drove out rendered-path selectors, fail-open branches, source-text evidence,
+  and finally the invalid-namespace silent admission (now blocks
+  `SYSML_NAMESPACE_NOT_DISTINGUISHABLE` pre-expansion; DCS witness repaired with explicit `:>>`).
+- Archived to `.project/completed/20260809_elaborator-breadth/`; certification in `audit_v3.md`
+  addendum; residues audit-F30/F31 + Item-6 obligations (F19/F26) recorded there and in the epic.
+
+### 2026-07-24: docs-lifecycle-sync + nested-override-tripwire (closed on-branch; merge pending)
+- Docs reconciled to merged main `936315c`: new `04-producer-resolution.md` +
+  `30-diagnostic-severity.md`, doc 24 rewritten, REQ-SNAP-21/22 (matrix 276), module_kind
+  sweep, explainer prompt re-anchored. Final audit: no open findings.
+- Tripwire: unmatched-override warning in the supplied-value materializer (0 false fires
+  across 19 fixtures; suite 3118/47). Full bridge fix filed in `[NESTED-OCCURRENCE-OVERRIDE]`.
+- Archived to `completed/20260724_*`; CHANGELOG entries carry the detail.
+
+### 2026-07-20: CONSTRAINT-LIFECYCLE Epic — Constraint Execution Lifecycle Remediation
+- All 14 items (0–13) done; composed public proof 41/41 at the pinned set (rerun 22 / compose 19;
+  16 negative mutations at boundary; 6/6 byte checks). Sealed artifact thread
+  (generate→seal→trusted-load→evaluate→persist→resume/query) demonstrated end-to-end; IFE
+  2,301-point + stellarator five-constraint acceptances pass.
+- Merged 2026-07-20: agentic-mbse #11 first (enforced by `test_upstream_pins`), then codegen #9,
+  then teax #3. Post-merge smoke green on main.
+- Epic + 15 item folders archived to `completed/20260720_*`; release-readiness and the 41/41
+  evidence-coordinate register live in `20260720_constraint-lifecycle-composed-proof/`.
+
+### 2026-07-19: CONSTRAINT-WAVE epic — superseded
+- Items 1 (profile semantics) and 2 (name safety) complete; Items 4 (snapshot portability) and
+  6 (seal symlink symmetry) certified. All unfinished work mapped into CONSTRAINT-LIFECYCLE.
+- Epic doc archived to `completed/20260720_epic_constraint_pr_wave_remediation.md`.
+
+### 2026-07-18: GAP-CLOSE epic — local scope certified
+- Items 2/3/4 certified; Item 1 codegen leg complete. External TEAx leg
+  `[GAP-CLOSE-F1-TEAX-NORMALIZATION]` remains open in BACKLOG; epic doc still in `backlog/`.
+- Same day: numerical-constraint-profile certified + committed; CONSTRAINT-EXEC code-quality
+  remediation cures committed (D5 discharged by the v3 item).
 
 ### 2026-07-13: CONSTRAINT-EXEC Epic — Constraint Execution and Design-Space Studies
 - All 15 items (0–14) implemented, adversarially reviewed, and audit-certified across four
@@ -1381,6 +1091,11 @@ backlog, and the fusion-tea coordination notes in the three release-notes files.
   deleted. CE-F3 fixed post-run (teax `0d606a4`); CE-F1/F2 registered follow-ons.
 - Gates at close: sysml-codegen 2330/23, mypy 76 baseline, ruff clean; agentic-mbse 1401/1;
   teax fully green 262 (pre-existing path bug also fixed, `1b63272`).
+- Also 2026-07-13: docs-explainer-refresh audited Certify and pushed to the open PRs.
+
+### 2026-07-10: PUSH-DOWN epic — independently audited and certified
+- Expression reconstruction, qualified-name split, hierarchy primitives/models, aggregation
+  decomposition moved to agentic-mbse (PRs #8 codegen / #10 agentic-mbse merged).
 
 ### 2026-07-08: TRUTH-DEBT Epic
 - Archived all six audited items plus the epic ledger to `.project/completed/`.
@@ -1388,6 +1103,10 @@ backlog, and the fusion-tea coordination notes in the three release-notes files.
   inherited-attr classifier fix, matrix sweep residue, and D3 hygiene tail.
 - Pre-PR gates: 2120 passed / 4 skipped / 0 xfailed; ruff src clean; mypy src 97;
   matrix 259 = 258 PASS + 1 UNTESTED.
+
+### 2026-07-06: PIPELINE-TRUTH epic complete; UPSTREAM-FINDINGS + docs-scrub merged
+- PIPELINE-TRUTH: all 10 items landed and audited PASS. UPSTREAM-FINDINGS merged (PR #3);
+  docs-scrub certified and merged (PR #4).
 
 ### 2026-02-17: Phase 5 — E2E Pipeline Validation (5.2) — Checkpoint 5
 - 16 conformance tests in `tests/conformance/test_pipeline_e2e.py`
@@ -1442,20 +1161,80 @@ backlog, and the fusion-tea coordination notes in the three release-notes files.
 
 ---
 
-## Up Next
+## Up Next — the road back from the detour (written 2026-08-14, orchestrator + owner)
 
-1. **Merge the CONSTRAINT-EXEC PR wave** (human): agentic-mbse #11 FIRST — **now load-bearing,
-   not just convention**: #9's codegen pins `executable-profile/v3` at runtime and refuses the
-   pre-v3 profile, so merging #9 before #11 (at `05cde35`) breaks main. Then sysml-codegen #9;
-   teax rwestwood89/teax#3 independent; after #11+#9 merge, push fusion-tea:
-   `git -C ~/1cfe/fusion-tea push origin main` (4 acceptance commits waiting). Note: agentic-mbse
-   local branch tip `4ed2a07` ("modeling workflow orchestrator", separate workstream) was
-   deliberately NOT pushed — PR #11 was updated by ref to `05cde35`; that commit awaits its own
-   owner. After the wave merges: `/_my_close` for numerical-constraint-profile + the remediation.
-2. **pipeline_explainer_v2.html build** (`[V2-HTML-BUILD]`, P2): the refreshed
-   `EXPLAINER_PROMPT.md` is landed and buildable — another agent picks this up.
-3. **CE-F1/F2 follow-ons** (BACKLOG): direct TEAx consumption of codegen's embedded catalog with the
-   alternate catalog schema/materializer removed, plus multi-channel CandidateBridge (teax). CE-F3
-   is fixed.
+The CONSTRAINT-SEMANTICS epic was a nested detour inside ELABORATE-FIRST Item 7's branch,
+triggered by the step-4 probe. The sequence back out, in order:
+
+**A. Finish CONSTRAINT-SEMANTICS — ✅ DONE 2026-08-14.** Item 7 closed and archived; the epic
+closed and archived with all ten Success Criteria ticked against their amended forms and Lessons
+Learned written. **`pre_pr` was not run at epic close, by ruling** — the epic's changes live on the
+unmerged `item7-rebuild` line and ship with it; the branch gate runs once, at phase D.
+
+**B. Resume ELABORATE-FIRST Item 7 (cutover recovery steps 4–10) — ✅ DONE 2026-08-14.**
+Steps 4–10 all executed; **[OWNER 2026-08-14] ACCEPTED** the final candidate at Gate 3
+(plan.md "Gate 3 — final acceptance" + "Narrow-correction step 10 completion"; audit
+CERTIFY-WITH-RESIDUALS, 0 blocking). Item closed and archived 2026-08-14, owner-authorized
+(`completed/20260814_cutover-recovery/` + `20260814_elaborator-cutover/`). The
+original sub-list, kept for the record:
+1. Revise the step-4 brief per the pause record (its zero-input-report instruction and
+   REQ-CL-03/04 closures are superseded by the landed contract) and discharge the epic's
+   Item 7 Evidence-Invalidation Register row by row
+   (`.project/completed/20260814_epic_constraint_semantics_contract.md` §"Item 7
+   Evidence-Invalidation Register" — nine rows, each naming rerun vs absorbed; **HANDED at epic
+   close, undischarged**). Step 4 also **mints the REQ-tag family for the Items 3/5/8/9 gates**
+   (owner-authorized 2026-08-14, `[CONSTRAINT-GATES-UNTAGGED]`) so the matrix is touched once.
+2. Execute steps 4–6, then 7–8 ONCE at the true final paired codegen/companion OIDs (three
+   batteries + one regenerated candidate record), step 9 fresh narrow audit, step 10 **owner
+   final acceptance** (owner-grade; no push/tag/close from agents).
+
+**C. ELABORATE-FIRST Item 8 — Downstream Remediation and Certification (3–5 days,**
+`epic_elaborate_first_architecture.md:472`): Fusion Tea + Stellarator regeneration on the
+corrected architecture, the July IFE impact audit, certification/doc repair (the retired
+reference docs 11/12/13/16/24/25), the `[OWNER-VERBATIM]` allowable-modeling-pattern guidance
+(`in R = R` diagnostic + replacement forms), one composed proof thread. **Scrub its scope
+against what CONSTRAINT-SEMANTICS already delivered first** — Items 1/7 landed part of the
+guidance obligations; don't re-do them.
+
+**D. The PR wave (the answer to "PR into what").** One coordinated branch-level shipment,
+July-wave pattern, after step 10's owner acceptance. **IN PROGRESS 2026-08-14: Item 7 closed,
+pre_pr checks green in all three repos (see top block); merges remain owner-run.**
+1. Owner runs `pre_pr` once per repo over the whole branch line (ship-together rule).
+2. Merge order enforced by pins: **agentic-mbse first** (`agentic-mbse-item7-rebuild` → its
+   main; `test_upstream_pins` compares codegen against the installed companion), then
+   **codegen** (`item7-rebuild` → main — one PR carrying the Item-7 cutover + the whole
+   CONSTRAINT-SEMANTICS epic), then **TEAx last** (`constraint-semantics-item3` → main; TEAx
+   is never bumped first and fails closed until codegen lands; remote needs explicit HTTPS).
+3. Until then the TEAx checkout stays on its branch (codegen execution lane imports simkit
+   from that working tree).
+4. **agentic-mbse branch fact, settled 2026-08-14 [verified by git]:** `elaborate-first-salvage`
+   is fully contained in `item7-rebuild` (main → +3 → salvage → +9 → item7-rebuild; one line, no
+   fork). The authoritative branch is `item7-rebuild`; the authoritative working tree is
+   `/home/reid/1cfe/agentic-mbse-item7-rebuild`. The main checkout is parked 9 commits behind on
+   the same line (legacy pre-rebuild environment + `.env` host only). At this phase's merge:
+   delete the `elaborate-first-salvage` label (subsumed), return the main checkout to `main`,
+   and **restore codegen's `.claude/skills/sysml-conventions` symlink to the main checkout**
+   (repointed to the worktree on 2026-08-14, owner-approved interim, commit pending in this
+   change).
+
+**E. Back to the original goals** (what triggered all of this — the demo, and the
+design-search *policy*):
+- The **policy substance is now landed**: assert-only enforcement, coverage-truth headlines,
+  study-policy defaults, the equality taxonomy, and the owner's coverage-truth product promise
+  (first-capture via CONSTRAINT-SEMANTICS Item 7). What was never written is a single
+  user-facing design-search policy narrative — candidate follow-on, owner's call whether the
+  product entry + guidance suffice.
+- The **demo** route back: fusion-tea regenerates in phase C (its `in R = R` fan-out cause is
+  structurally fixed by the exact route; the old workaround question dissolves into
+  migration); a real CATF design-search campaign additionally needs
+  `[CATF-CRYO-HEAT-LEAK-COEFFICIENT]` (P1 — without it the search rejects everything near the
+  authored regime).
+- **Next-slot competitors after D** (owner picks): the cryo fix (P1, small),
+  `[CALCDEF-GATE-IMPLEMENTATION]` (P1, 7–9 days, authorization parked), and a composed
+  design-search demo item that would close the loop on the original intent.
+
+Superseded Up Next items (pre-detour): CE-F1/F2 follow-ons and `[V2-HTML-BUILD]` remain in
+BACKLOG; the old "documentation update pass" was absorbed by CONSTRAINT-SEMANTICS Items 1/7
+and ELABORATE-FIRST Item 8's doc-repair scope.
 
 ---

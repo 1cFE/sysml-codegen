@@ -105,14 +105,18 @@ Units (e.g., `= 20 [K]`) are **metadata only**:
 
 ### Parameter Grouping
 
-Parameters are grouped by **design file** into JSON input files:
+Parameters are grouped by the file that **declares** them, into JSON input files:
 
-| Design File | JSON File |
+| Declaring File | JSON File |
 |-------------|-----------|
 | `magnets.sysml` | `magnets_params.json` |
 | `physics.sysml` | `physics_params.json` |
 
-All parameter types from a design file go in that file's group. Grouping is orthogonal to namespacing -- a parameter's namespace ensures uniqueness while its grouping determines which JSON file it lives in.
+**Declaration site, not use site.** A parameter declared in a library file and consumed from a design lands in the *library's* group, named after the library file. The one exception is a `model.sysml`, which carries no identity of its own: its group takes the name of the package that declares the owning root occurrence. See [17-parameter-group-deriver](reference/17-parameter-group-deriver.md).
+
+**A design attribute's key names the attribute, not the consumer.** Two calculations reading the same modelled attribute share one JSON key and one entry. A library default and a usage literal still key by the consuming calc usage and its formal, because there is no supplying attribute to name. See [06-entry-point-classifier](reference/06-entry-point-classifier.md).
+
+Grouping is orthogonal to namespacing -- a parameter's namespace ensures uniqueness while its grouping determines which JSON file it lives in.
 
 ---
 
@@ -247,13 +251,50 @@ PartDef attributes may use `:>>` redefinition with aggregation expressions combi
 
 **Conditions** (ALL must hold):
 - Expression uses only `sum()` calls on child PartUsage attributes and direct child attribute references
-- All array children are uniform (same parameters per instance)
 - Expression is on a PartDef in `library/` (not `designs/`)
+- **No two terms in one expression may read a same-named attribute off different children** — see the rule below
+
+### One named intermediate per child role
+
+> **An assembly cannot write `sum(a.capital_cost) + sum(b.capital_cost)`. Give each child's
+> contribution its own named attribute and add the names.**
 
 ```sysml
-// PERMITTED: aggregation redefinition on PartDef
-:>> capital_cost = sum(pv_module.capital_cost) + array_bos.capital_cost + misc_hardware_cost;
+// REFUSED: two terms, both reading `capital_cost`
+:>> capital_cost = sum(deck_panel.capital_cost) + sum(caster.capital_cost);
+
+// WORKS: one named intermediate per child role, added by the rollup
+attribute panel_capital  : Real = sum(deck_panel.capital_cost);
+attribute caster_capital : Real = sum(caster.capital_cost);
+:>> capital_cost = panel_capital + caster_capital;
 ```
+
+**Why.** An expression parameter is named after the **last member** of the reference, with the
+qualifier dropped (`fact.resolved_member_names[-1]`, `elaboration/elaborate.py:1937`). Two terms
+reading a same-named attribute off different children therefore both render `capital_cost`, and
+the projection refuses the model with `SI_RENDERING_COLLISION` rather than letting two distinct
+sources collapse onto one parameter (`elaboration/project.py:598-604`).
+
+**The refusal is correct, and is the point.** A silent collapse here is exactly the failure this
+architecture exists to prevent: two different children's costs quietly becoming one number. The
+refusal names the parameter and the owner, so the fix is mechanical.
+
+**This bites every costed assembly by construction.** A part hierarchy where children specialize
+a shared interface — the Costed Item pattern, where every child exposes `capital_cost`,
+`raw_material_cost`, `fabrication_cost` — has same-named attributes on every child by design.
+Any rollup over two or more such children needs the named-intermediate form.
+
+**Worked example:** `tests/fixtures/costed_cart_d5/library.sysml`. Its `Deck Assembly` names
+`panel_capital`, `caster_capital`, `panel_material`, `caster_material`, `panel_fabrication`,
+and `caster_fabrication`, then adds them in the four `:>>` rollups. Its `Frame Assembly` does
+the same for two singleton children (`rail_capital`, `brace_capital`). Refusal pinned by
+`tests/integration/test_costed_component_exact_route.py::test_a_two_term_same_name_rollup_is_refused`.
+
+**Cross-reference — the same class from the other side.** This is the filed Item 10 cross-part
+`child.attr` collapse class, where the resolver does not follow per-child `:>>` redefinitions.
+The deleted legacy route collapsed those terms through a qualifier-dropping name match; the exact
+route refuses instead. Recorded on recovery ledger row L-199 and carried to the Phase 5 owner
+packet.
 
 ---
 
@@ -351,31 +392,38 @@ the **source attribute's QN**, so two differently-named consumers of one source 
 onto one parameter. Only LITERAL values apply; a non-literal supplied value falls through
 to the uncovered-parameter diagnostic (V11) with a WARN, never silently.
 
+**Limitation — nested-occurrence overrides are not captured correctly
+(`[NESTED-OCCURRENCE-OVERRIDE]`, BACKLOG P2).** A `:>>` override on a usage nested inside an
+*instantiated* part def is captured **definition-relative** while demand resolves
+**occurrence-relative**, so the materializer never matches and the model literal is lost — the
+calc binding falls to a manual-required entry point (value dropped, with a WARN naming both the
+captured and the demanded scope — a tripwire added 2026-07-24, not a fix), and a constraint
+actual halts generation under strict INV-2. Shape (b) above is safe only in its flat,
+non-nested form; do not read this section as promising nested-occurrence override capture. Probe
+fixture: `tests/fixtures/nested_occurrence_override_probe/` (expected to halt; its flat sibling
+`constraint_def_owned_redefining/` resolves through the same machinery, isolating nesting as the
+sole trigger).
+
 ---
 
-## 6. Uniform-Array Assumption for Aggregation
+## 6. Arrayed Children Are Enumerated, Not Multiplied
 
-When a part contains arrayed children with multiplicity (e.g., `pv_module : 'PV Module' [20]`), the pipeline uses **parametric multiply**: compute once for one instance, multiply by count.
+When a part contains arrayed children with multiplicity (e.g., `pv_module : 'PV Module' [20]`), the elaborator **enumerates the occurrences**. Each one is a separate occurrence node with its own attribute nodes, and an aggregation over them expands into one term per occurrence.
 
-### The Transformation
+### The Consequences for a Modeller
 
-`sum(child.attribute)` transforms to `count * child.attribute` at compile time.
+- **Each occurrence is its own parameter.** A modelled attribute on an arrayed child mints one entry point per occurrence, and the key carries the index: `…__battery_pack[0]__capacity_kwh`, `…__battery_pack[1]__capacity_kwh`. Three modelled members do not collapse into one shared parameter (`test_exact_projection_aggregation.py::test_every_member_occurrence_is_its_own_entry_point`).
+- **Non-uniform arrays are expressible.** Different values per instance are a normal shape now, not an unsupported one, because each occurrence carries its own value site.
+- **The multiplicity must be modelled.** `part cell [count]` where `count` is a modelled attribute with a value produces that many occurrences; the count is read from the model rather than left as a user-supplied array size.
+- **The output grows with the array.** Enumeration means one node per member rather than one multiply. That is a real size change: `solar_battery`'s pipeline YAML grows from 526 to 1343 lines under enumeration.
 
-```
-sum(pv_module.capital_cost)  ->  module_count * pv_module__cost_model.total_cost
-```
+### Schema Field Names vs JSON Keys
 
-This produces one aggregation module per assembly attribute, not N modules per array element.
+An occurrence-indexed key (`…__battery_pack[0]__capacity_kwh`) is not a legal Python identifier, so it cannot be a schema field name. `core/qualified_names.params_field_name` sanitizes the field, and the generated schema keeps the exact key as the field's **alias**. The JSON key is the graph's entry-point name verbatim; the Python attribute is the sanitized form. See [22-output-schema-rules](reference/22-output-schema-rules.md).
 
-### Multiplicity as Entry Point
+### Parametric Multiply (retired)
 
-Multiplicity counts become Integer entry points in parameter schemas, defaulting to the PartDef-declared value. Users may override them to change array sizes without modifying SysML.
-
-### Uniform-Array Requirement
-
-**All instances in an array MUST share the same parameter bindings.** Design overrides apply uniformly -- `:>> pv_module.wattage = 400.0` applies to all instances in the array.
-
-**Non-uniform arrays** (different parameters per instance) are not supported by parametric multiply. Models requiring non-uniform arrays should use Approach E: create an explicit CalcDef with multiplicity as an input parameter and per-instance outputs.
+The deleted legacy route rewrote `sum(child.attribute)` to `count * child.attribute` at compile time and required every instance in an array to share the same parameter bindings. That transformation is gone with that route. If you are reading a model or a baseline that assumed it, the uniform-array requirement no longer applies and the per-instance keys are the expected shape.
 
 ---
 
@@ -400,7 +448,8 @@ For the full identifier taxonomy and naming rules, see [15-naming-conventions.md
 ## 8. Constraints Execute Under a Profile — Block List and Fallback
 
 > **A constraint predicate the executable profile ADMITs lowers into a real pipeline module and
-> executes; one it BLOCKs halts generation loudly, naming why; everything else catalogs unassessed.**
+> executes; one it BLOCKs on an asserted usage that reaches occurrences halts generation loudly,
+> naming why; everything else catalogs unassessed.**
 
 SysML lets a modeler attach `constraint` usages to calc defs, part defs, and part usages — for
 example a physical-consistency check like `outer_radius == inner_radius + thickness`, or a
@@ -409,7 +458,7 @@ for any of them and dropped every one, loudly. Items 5-9 built the real path (se
 [28-constraint-lowering-and-catalog.md](reference/28-constraint-lowering-and-catalog.md) for the
 mechanism); this section teaches what a modeler should now expect.
 
-**The three outcomes.** `agentic-mbse`'s executable profile (`evaluate_profile`) classifies every
+**The four outcomes.** `agentic-mbse`'s executable profile (`evaluate_profile`) classifies every
 swept `ConstraintUsage` (subtypes included) exactly one way:
 
 - **ADMIT** — the predicate lowers: every formal strictly resolves to a real producer channel, a
@@ -417,9 +466,24 @@ swept `ConstraintUsage` (subtypes included) exactly one way:
   evaluation is a real output channel.
 - **BLOCK** — generation halts before any lowering, naming every offending usage and its reason. This
   is the one loud, hard-stop diagnostic (never a silent drop, never retried with a fallback).
-- **unassessed** — a requirement-side usage (`RequirementUsage`/`SatisfyRequirementUsage`, excluded
-  from execution by design) or an out-of-profile owner (e.g. a `requirement_def` owner) is cataloged
-  defensively — one record, no expansion, no formal resolution, no node — never silently absent.
+  **The halt is scoped to asserted usages that reach occurrences.** A BLOCKed asserted usage whose
+  owner produces no scope does not halt: it warns, catalogs a `non_reaching` disposition with its
+  reason, stays in the feasibility denominator as unassessed, and the report headline reads partial
+  coverage. Amended 2026-08-14 under the item3-F2 ruling — `[AGENT] (ratified by owner, 2026-08-13)`,
+  `.project/concepts/constraint-execution-authoritative-lifecycle-contract.md` invariant 1 and its
+  amendment note. A BLOCK on a non-asserted usage never happens at all: the form gate runs before the
+  predicate walk, so the predicate is never reached.
+- **NON_NUMERICAL** — the predicate is well-formed but not numerically executable (Boolean, string,
+  or enum comparison). It warns with its identity, location, and profile diagnostics, then becomes a
+  visible exclusion.
+- **unassessed** — every usage outside the assert family is never executed: a plain `constraint`, a
+  `require constraint`, an `assume constraint`, and the requirement-side
+  `RequirementUsage`/`SatisfyRequirementUsage` all land here. So does an out-of-profile owner (e.g. a
+  `requirement_def` owner), which draws a named visible exclusion rather than an unreachable-assert
+  error. Each one gets a catalog record — no expansion, no formal resolution, no node — and none is
+  silently absent. A usage that reaches no instance is not an exception to this: it carries a
+  `non_reaching` disposition naming why its owner produced no scope — `owner_absent`,
+  `owner_kind_unattachable`, or `owner_has_no_occurrences` — at the severity its form earns.
 
 **The block list.** A predicate BLOCKs for an unsupported construct or operand shape, most commonly:
 an invocation expression (`block_invocation`), a feature-chain reference the profile cannot resolve
@@ -427,21 +491,256 @@ an invocation expression (`block_invocation`), a feature-chain reference the pro
 form (`block_assert_by_reference`), a real-valued or quantity-typed `==`/`!=` comparison with no
 tolerance band (`block_real_equality_requires_tolerance`), or a comparison across incompatible/unknown
 units (`block_unit_conversion_required`, `block_incompatible_dimensions`, `block_unknown_exact_unit`).
+
+**What a block tells you.** Every block reason names where it was decided —
+`… [model.sysml:43]`, by file basename and line, or no suffix at all when the payload carries no
+location. Repeated reasons collapse: a predicate that blocks the same chain thirteen times reports
+it once, and the order is a function of the payload rather than of the profile's walk.
+`block_feature_chain` goes further and names the offending reference and the rewrite:
+
+```
+block_feature_chain: feature chain 'bioshield.outer_radius' is not executable in a predicate
+body; bind it to a constraint formal in the usage (in outer_radius = bioshield.outer_radius;)
+and use the formal in the predicate [radial_build.sysml:605]
+```
+
+The other reasons name their construct and their place, not the offending sub-expression. The line
+is the constraint usage's, so a long predicate points you at the gate rather than at the term.
+
 **The real-equality idiom:** model a tolerance band explicitly as two inequalities
 (`x - tol <= y` and `y <= x + tol`) rather than `x == y` — the profile admits an inequality
 comparison on real/quantity operands, never a bare equality one.
 
-**Every manifest entry has a carrier — the migration invariant.** `collect_constraint_manifest()`
-still sweeps the model exactly as before (REQ-EXT-09) — it is the license-free proof surface a kept
-conformance test (`test_constraint_migration_mapping.py`) reads directly, not a generation-time
-report anymore. That test proves, for every constraint-bearing fixture, that each swept usage has a
-catalog carrier: an eligible concrete entry, an explicit unassessed record, or a named,
-justified requirement/satisfy exclusion — nothing silently absent.
+**Authoring a gate that carries units.** An ordering admits exactly two operand-category pairs:
+`real`/`real` and `quantity`/`quantity`. A bare `Real` feature reference is category `real`, and a
+unit-annotated literal is category `quantity`, so the natural-looking one-sided spelling is
+refused — not by a bug, by the rule:
 
-**What a modeler needing an enforced gate should do.** Author an `assert constraint` (or bare
-`constraint`/`require constraint`) against a defined `constraint def`, bind every formal to a real
-value in scope, and keep any equality check as an explicit two-inequality tolerance band. If the
-profile BLOCKs it, the generation error names the exact construct to fix.
+```
+gap_width >= 0.25 [m]
+→ block_ordering_category_pair: ordering '>=' requires Integer/Real operands or two
+  Quantity operands; got real/quantity. Rewrite both operands as one admitted numerical
+  pair. [model.sysml:53]
+```
+
+Two spellings work, and a third does not:
+
+- **Annotate both operands** — `gap_width [m] >= 0.25 [m]`. This is the supported way to write a
+  unit-carrying gate, and the units are then compared: mismatched dimensions block
+  (`block_incompatible_dimensions`).
+- **Annotate neither** — `gap_width >= 0.25`. A `real`/`real` comparison, admitted, with the unit
+  living in the attribute's own value and in the model's prose rather than in the gate.
+- **Not available: a declared quantity type on the attribute.** `attribute gap_width :
+  ISQ::LengthValue` is refused before the profile ever runs — codegen's exact typing admits only
+  `ScalarValues::{Boolean,Integer,Real,String}` and refuses anything else with `SI_EDGE_DANGLING:
+  … has unsupported exact type`.
+
+**A unit on a constraint *binding* is carried into port metadata, and collides loudly when two
+consumers disagree.** (Rewritten 2026-08-14; the previous text — "carried, not checked" — described
+pre-Item-8 behavior and was false as written once Item 8 landed,
+`.project/completed/20260813_unit-lane-port-metadata/`.)
+
+`in tol = 0.05 [m];` is admitted and contributes the number `0.05`. The authored unit text also
+reaches the port: since Item 8, a **constraint-formal** binding and an input to a **computed
+design attribute** both populate `PortMetadata.unit` from the authored declaration, the same way a
+calculation-usage binding always did.
+
+That matters because one modeled design attribute can supply more than one consumer, and projection
+treats those consumers as one public `DESIGN_ATTRIBUTE` entry point **only when their projected
+metadata agrees**. Before Item 8 the two shapes above contributed a manufactured `None` while a
+calculation formal contributed a real unit string, so valid models refused with
+`SI_RENDERING_COLLISION` on metadata the modeler never wrote. Now the comparison runs on what was
+actually authored:
+
+- **Both consumers annotate the same unit** — one entry point, as intended.
+- **They disagree** — projection **fails closed** with `SI_RENDERING_COLLISION`, naming the
+  conflicting public key. This is deliberate: two different units on one shared value is a modeling
+  defect, and generating a package that silently picks one would ship a lie.
+
+The unit text is carried exactly as authored. **No conversion happens anywhere** — codegen does not
+turn `[mm]` into `[m]`. A collision is resolved by making the model agree, not by trusting a
+converter that does not exist.
+
+**A bound formal's operand category still comes from the constraint definition's declared type**, so
+the annotation is not a dimension check on the predicate. If a gate must *check* units, put the
+comparison and both annotations in the predicate body.
+
+**Every authored usage has a carrier — and it is true by construction, not by check.**
+The domain is one `ConstraintUsageRecord` per authored `ConstraintUsage`, minted *before* owner-to-
+scope expansion, so a usage whose owner yields no scope still has a record. It used not to: records
+began after expansion, and on `catf_mfe_d5` that left 56 of 65 authored usages absent — not
+eligible, not excluded, nothing. Because every downstream artifact descended from that already
+truncated set, no check written against it could see what expansion had dropped.
+
+Each domain member carries exactly one disposition — `eligible`, `excluded`, or `non_reaching` —
+with a reason from that kind's closed set, and the catalog's `usage_records` is the whole domain
+rendered, keyed by `declaration_id`. The proof that the domain itself is complete comes from
+outside it: a reviewed expected-population file per constraint-bearing fixture, read from the
+`.sysml` source and asserted by identity list, in
+`tests/conformance/test_constraint_population_oracle.py`. A directory that declares a constraint
+and has no expectation file fails that suite by name, so a new fixture cannot become silent
+coverage.
+
+### The disposition vocabulary
+
+Three kinds, each with a **closed** reason set. Closed means what it says: a reason token outside
+these sets is refused by name at generation, not bucketed into a default. The authority is
+`DISPOSITION_REASONS` (`src/sysml_codegen/elaboration/graph.py:259-277`); the coverage ruling each
+token carries is `KNOWN_REASONS` (`src/sysml_codegen/generation/coverage.py:57-71`), and the two are
+compared at generation, so a reason added later refuses rather than slipping through silently.
+
+| Disposition | What it means | Reasons (closed set) |
+|---|---|---|
+| `eligible` | the predicate lowered and the gate runs | `admitted` |
+| `excluded` | the profile refused to execute it, or the form never executes | `out_of_scope_satisfy`, `out_of_profile_owner`, `non_numerical`, `unassessed_form`, `profile_blocked` |
+| `non_reaching` | nothing ever instantiated the usage's owner, so there was nothing to run it against | `owner_absent`, `owner_kind_unattachable`, `owner_has_no_occurrences`, `classification_incomplete` |
+
+**Precedence, stated as one rule.** Every authored usage gets exactly **one** disposition, decided
+in this order: does it reach an occurrence at all (`non_reaching` if not) → did the profile admit it
+(`eligible` if so) → otherwise `excluded`. There is no usage with two dispositions and none with
+zero. That is the totality claim.
+
+**Where each disposition sits relative to the feasibility denominator.** This is the part that
+decides what a headline may claim, and it is not the same question as which disposition a usage got:
+
+- **Only asserted forms enter the denominator at all.** A plain `constraint`, a `require`/`assume
+  constraint`, and a `satisfy` reference are inventory. They never enter the feasibility
+  denominator, whatever disposition they carry.
+- **An asserted, unmarked usage is in the denominator** — under every reason token above. `admitted`
+  is in and assessed. Every other token is in and **unassessed**, which is what forces a
+  partial-coverage headline instead of full satisfaction.
+- **An asserted usage carrying an explicit `@inapplicable:` marker drops out** of the denominator.
+  That is the only way out, and it is a visible, authored choice.
+
+**Carriers.** The domain is one `ConstraintUsageRecord` per authored `ConstraintUsage`, minted
+*before* owner-to-scope expansion. The catalog's `usage_records` renders the whole domain; the
+coverage account beside the headline is derived from it by
+`generation/coverage.py::coverage_account`. Nothing derives coverage from the set of generated
+modules, because that set is already filtered.
+
+**The totality gate.** A generation preflight refuses to write anything unless the catalog accounts
+for every authored constraint usage, and unless its rows still match the fingerprint projection
+sealed them with. Coverage is therefore not a report the generator writes about itself — it is a
+precondition of the generator producing output at all. Landed by CONSTRAINT-SEMANTICS Item 2;
+citable design at `.project/completed/20260813_constraint-catalog-totality/design.md`.
+
+**Severity is derived from cause *and* form together, never authored.** See
+[30-diagnostic-severity.md](reference/30-diagnostic-severity.md), "Severity by cause."
+
+### Where an `@inapplicable:` marker actually works
+
+An `@inapplicable:` marker in a constraint usage's doc comment is the only way a gate leaves the
+feasibility denominator. **Which constraint form you wrote decides whether the marker arrives at
+all**, and you have to know that before you author, not after:
+
+| Constraint form | Marker reaches the domain? | What carries the disposition |
+|---|---|---|
+| **Bindings form** — `assert constraint x : SomeDef { in a = …; in b = …; }` | **yes** | the marker, in source |
+| **Inline-predicate form** — `assert constraint x { a <= b }` | **no — silently dropped** | the fixture's `PROVENANCE.md` |
+
+On the inline-predicate form SysIDE drops the doc comment before extraction sees it. Nothing warns
+at authoring time: the marker is simply absent, the gate stays in the denominator, and the report
+reads partial coverage while the source says the constraint is inapplicable. This is
+`[INLINE-PREDICATE-MARKER-DROP]` (`.project/backlog/BACKLOG.md:1152`), **open**. Until it closes, an
+inline-form disposition is recorded in the fixture's `PROVENANCE.md` instead of in source.
+
+**The worked case:** `tests/fixtures/catf_mfe_gated`, B1–B5 — five markers written, zero carried.
+**The loud detector:** `tests/conformance/test_constraint_population_oracle.py`, rule 3. Item 5 owns
+both; they are cited here, not restated.
+
+**Practical rule — two conditions, not one.** To mark a constraint inapplicable: write it in the
+bindings form (that is the blessed shape anyway), **and put it on a gate that does not run.** The
+form decides whether the marker *arrives*; whether the gate runs decides whether it is *accepted*.
+
+**Eligible *and* inapplicable is refused (D9).** A usage cannot be both admitted-and-running and
+not-part-of-the-feasible-set. Generation refuses that combination loudly by name — *"marked
+inapplicable but produced N executable entries"* — so nothing ships wrong; agentic-mbse's authoring
+validation raises the same contradiction as an advisory a step earlier, while you are still in the
+model. A marker states a gate is outside the feasible set; it is not a switch that silences a live
+check.
+
+Both shapes are pinned as fixtures: `tests/fixtures/constraint_coverage_all_inapplicable` is the
+accepted one (the marked gate's owner is never instantiated, so it reaches nothing), and
+`tests/fixtures/constraint_coverage_eligible_inapplicable` is the refused one — its header states
+that generation **must** fail on it. The authoring-side worked example lives in agentic-mbse
+`docs/patterns/constraints.md`, "How to write it."
+
+**What a modeler needing an enforced gate should do.** Use the assert family. It is the only
+enforcement opt-in: a bare `constraint`, a `require constraint`, an `assume constraint`, and a
+`satisfy` are visible, cataloged descriptions that never execute. The blessed shape is a
+`constraint def` with formals, asserted with every formal bound to a real value in scope:
+
+```sysml
+constraint def MarginOk { in produced : Real; in required : Real; produced >= required }
+// ...
+assert constraint g : MarginOk { in produced = plant.net_power; in required = target_power; }
+```
+
+Three scope points that are easy to over-read. The restriction on what a predicate body may
+reference is **predicate-body-only**: the body works over formals. Feature chains in *binding*
+position stay supported, as the example shows. Inline asserted forms stay admitted — a definition is
+not required. Admitting feature chains inside the predicate body is a filed future capability
+candidate, not a closed door.
+
+**Tolerances are yours.** Where a check needs a band, the tolerance is a modeled value you choose and
+can override; the pipeline never invents one.
+
+**Before writing an equality at all**, check which of four intents you have. Structural identity:
+derive it, do not constrain it. A cross-check of two independently computed values: use a loose,
+physically motivated validity band. A feasibility gate: prefer a one-sided inequality, and if a
+quantity must equal a value, fix it as an input rather than search for it and then constrain it.
+Composition closure: derive the last term by construction, or fall back to a banded check. The
+reasoning behind these four, and the owner's reason for them, is in the lifecycle contract's
+"Equality intent and authoring policy" (this repository,
+`.project/concepts/constraint-execution-authoritative-lifecycle-contract.md`) — the authority copy.
+
+If the profile BLOCKs an asserted constraint, the generation error names the construct and where it
+was written. For a feature chain in a predicate body it also names the offending reference and the
+supported rewrite; for the other reasons it names the reason code and the location, and you read the
+construct off that line. See "What a block tells you" in §8 for the shape.
+
+---
+
+## 9. Coverage Truth and Headline Semantics (ADR-009)
+
+**Decision record.** Filed 2026-08-12 under CONSTRAINT-SEMANTICS Item 1.
+**Provenance:** `[AGENT] (ratified by owner, 2026-08-12)` — agent-proposed, owner-ratified.
+Ratification does not make it owner-originated, and it is challengeable by re-deriving against the
+reasoning below.
+
+**Context.** A constraint report headline is what a study reads to decide whether a design point is
+feasible. Two rules made that headline unreliable: a plain `constraint` was cataloged but never
+executed, and the headline claimed satisfaction whenever *any* assessed result passed. A model could
+therefore read fully satisfied while every gate a modeler wrote went unassessed.
+
+**What the contract said.** Lifecycle contract invariant 33: "Headline precedence is violation, then
+indeterminate, then all satisfied, then not assessed." Frozen companion LC-E11: "Report headline
+precedence is: any violation → `violation`; else any indeterminate → `indeterminate`; else any
+assessed result → `all_satisfied`; else `not_assessed`."
+
+**What it says now.** Precedence is violation → indeterminate → full satisfaction → partial coverage
+→ not assessed. Full satisfaction is a coverage claim: every applicable asserted gate was assessed
+and passed. A new partial-coverage state carries the case where an applicable asserted gate exists
+and went unassessed. The definitions live in the lifecycle contract's "Headline states and coverage
+truth" subsection
+(`.project/concepts/constraint-execution-authoritative-lifecycle-contract.md`), which is the one
+authority for both repositories' vocabularies.
+
+**Why.** A headline that cannot distinguish "checked and passed" from "not checked" is not evidence.
+The change makes the claim honest at the cost of one additional state, and the study layer keeps a
+design point at the boundary rather than accepting it on a coverage gap.
+
+**Scope.** This record governs the headline vocabulary's meaning. The concrete report and runtime
+token spellings, the report schema, and the normalization-seam code are CONSTRAINT-SEMANTICS Item
+3's, and they landed 2026-08-13. The five report tokens are `violation`, `indeterminate`,
+`full_satisfaction`, `partial_coverage`, `not_assessed` (`templates/constraint_types.py.jinja2`),
+each mapping to exactly one runtime token in TEAx's `CANONICAL_HEADLINE`. `all_satisfied` was
+renamed rather than redefined, so a stale reader refuses by name instead of misreading the
+strengthened claim; the coverage account beside the headline is derived by
+`generation/coverage.py::coverage_account`.
+
+**Consequences filed:** lifecycle contract invariants 1, 9, 28, 32, 33, 46/46a, 48, new 61, and
+Appendix B/C cells; companion LC-E05/E06/E10/E11/E12 and LC-G07.
 
 ---
 

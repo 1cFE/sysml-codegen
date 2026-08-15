@@ -1,0 +1,31 @@
+diff --git a/tests/conformance/test_exact_constraint_route.py b/tests/conformance/test_exact_constraint_route.py
+index 41ac881..89c544d 100644
+--- a/tests/conformance/test_exact_constraint_route.py
++++ b/tests/conformance/test_exact_constraint_route.py
+@@ -171,18 +171,20 @@ def test_the_legacy_import_check_does_not_flag_other_analysis_modules(
+     assert legacy_constraint_imports(statement, EXACT_ROUTE_PACKAGE) == set()
+ 
+ 
+-def test_the_shared_constraint_identity_and_default_helpers_stay_callable_on_both_routes() -> None:
+-    """The legacy module keeps serving both names, so nothing is retired ahead of Phase 4."""
+-    from sysml_codegen.analysis import constraint_lowering
++def test_the_shared_constraint_identity_and_default_helpers_are_callable() -> None:
++    """The two helpers the legacy module used to share are still the exact route's own.
++
++    Until retirement step 2 this node also asserted that ``analysis/constraint_lowering.py``
++    served the same objects, which is what "shared, not forked" meant while both routes
++    existed. That module retired with the v5 family; the helpers did not, and they keep
++    their home in modules the exact route owns.
++    """
+     from sysml_codegen.core.identifier_types import mint_constraint_id
+     from sysml_codegen.extraction.modeled_defaults import (
+         ModeledDefault,
+         resolve_modeled_default,
+     )
+ 
+-    assert constraint_lowering.mint_constraint_id is mint_constraint_id
+-    assert constraint_lowering.resolve_modeled_default is resolve_modeled_default
+-    assert constraint_lowering.ModeledDefault is ModeledDefault
+     assert mint_constraint_id(
+         instance_path="Design__c__cell", source_local="nonneg", tuple_=("a", 1)
+     ) == mint_constraint_id(

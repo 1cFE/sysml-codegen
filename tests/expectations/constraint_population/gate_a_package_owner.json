@@ -1,0 +1,11 @@
+{
+  "constraint_usages": [
+    {
+      "owner_qualified_name": "GateAPackageOwner",
+      "source_file": "model.sysml",
+      "source_line": 44,
+      "usage_qualified_name": "GateAPackageOwner::pkg_check"
+    }
+  ],
+  "fixture": "gate_a_package_owner"
+}

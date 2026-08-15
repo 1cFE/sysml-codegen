@@ -1,0 +1,580 @@
+{
+  "record": "Item 7 cutover recovery \u2014 the FINAL candidate: the corrected tree at the owner-ruled-final OIDs, its three identical gate runs, and what remains for the owner",
+  "supersedes": "the gate-2 post-REVISE record (content 6c35aa0/3fbda2f), superseded as an acceptance candidate by the 2026-08-12 narrow-correction verdict; preserved as evidence",
+  "status": "ASSEMBLED at the content OIDs \u2014 step-9 fresh narrow audit and owner final disposition PENDING",
+  "tree_final_ruling": "[OWNER 2026-08-14] no changes in flight; tree ruled final at 540ad59. The battery then caught one stale ledger citation (L-179, step-5 rename miss), repaired in the bookkeeping commit 2819501; shipped-path diff vs the ruled OID verified empty by this builder",
+  "shipped_diff_vs_owner_ruled_oid": "empty \u2014 shipped content identical",
+  "assembled_from": {
+    "three_run_battery": "evidence/phase5-runs/final-runs/ (narrow-correction step 7, at the content OIDs)",
+    "audit": "step 9 runs after this record and reports separately",
+    "tree": "git, run by this builder"
+  },
+  "content_oids": {
+    "sysml-codegen": "2819501178370db230acefdbcd02dfa15b409ac4",
+    "agentic-mbse": "6372ef7ba6ba4c869759fcf201c59aa128175c6f",
+    "teax_pinned": "75eecb3bcf4baa0306107a96aa78b74ee667e970",
+    "note": "the record commit lands on top of the codegen content OID, so it cannot contain its own OID"
+  },
+  "repositories": {
+    "sysml-codegen": {
+      "path": "/home/reid/1cfe/sysml-codegen-item7-rebuild",
+      "branch": "item7-rebuild",
+      "content_oid": "2819501178370db230acefdbcd02dfa15b409ac4",
+      "record_commit_parent": "41b1687f0ef82451d76ff26d505d4d8dcef48426",
+      "item6_base": "1672c5766f67e7716f3c9f8f636c21e2ea444601",
+      "diff_stat_vs_item6_base": "1176 files changed, 295589 insertions(+), 106678 deletions(-)",
+      "name_status_counts": {
+        "M": 137,
+        "A": 825,
+        "R": 18,
+        "D": 196
+      },
+      "shipped_worktree_state": "clean"
+    },
+    "agentic-mbse": {
+      "path": "/home/reid/1cfe/agentic-mbse-item7-rebuild",
+      "branch": "item7-rebuild",
+      "content_oid": "6372ef7ba6ba4c869759fcf201c59aa128175c6f",
+      "item6_base": "5088b417c9e5453271291d46cd5fb23fc0579b1e",
+      "diff_stat_vs_item6_base": "36 files changed, 1221 insertions(+), 374 deletions(-)",
+      "commits": [
+        "6372ef7 fix(Item 7 A-3): the @inapplicable: example now survives the generator \u2014 marked gate moved onto a zero-occurrence owner",
+        "a496aeb docs(Item 7 P4): @inapplicable authoring lands; skill teaches the bindings-only pattern",
+        "0a52942 feat(constraint profile): a blocked feature chain names the chain and the rewrite",
+        "bc69f04 feat(Item 2): vacuous_asserted_gate advisory \u2014 the authoring-time half of lifecycle invariant 61",
+        "dcb187b docs(Item 1): assert-only enforcement in authoring guidance, equality intent policy, ADR-009 cite",
+        "3fbda2f retire(item7): delete the neutral constraint route",
+        "ffb6628 refactor(validation): migrate every consumer onto the identified constraint route",
+        "cc6c7a7 fix(validation): a mis-encoded manifest warns instead of aborting the check",
+        "8b63393 feat(profile): an exact constraint gate beside the neutral one"
+      ],
+      "name_status_counts": {
+        "M": 30,
+        "A": 6
+      },
+      "shipped_worktree_state": "clean"
+    },
+    "teax_pinned": {
+      "path": "/home/reid/1cfe/teax",
+      "branch": "constraint-semantics-item3",
+      "head": "75eecb3bcf4baa0306107a96aa78b74ee667e970",
+      "expected": "75eecb3bcf4baa0306107a96aa78b74ee667e970",
+      "note": "moved from the Item-3-close pin fa0e06a9-descendant 5b70ae9 by docs-only commits of the closed CONSTRAINT-SEMANTICS epic (verified: one file, docs/evaluation-and-study.md); no simkit code changed"
+    }
+  },
+  "commit_counts": {
+    "definition": "`git rev-list --count <item6-base>..<content-OID>` \u2014 every commit reachable from the content OID and not from the Item 6 base this recovery branched from. The record commit itself lands on top of the content OID and is therefore not counted.",
+    "sysml-codegen": {
+      "range": "1672c5766f67e7716f3c9f8f636c21e2ea444601..2819501178370db230acefdbcd02dfa15b409ac4",
+      "count": 370
+    },
+    "agentic-mbse": {
+      "range": "5088b417c9e5453271291d46cd5fb23fc0579b1e..6372ef7ba6ba4c869759fcf201c59aa128175c6f",
+      "count": 9
+    }
+  },
+  "correction_commits": [
+    {
+      "step": "1",
+      "oid": "f424d7e",
+      "subject": "refactor(item7): one catalog authority, and the dead extraction surfaces dispositioned"
+    },
+    {
+      "step": "1",
+      "oid": "009a67a",
+      "subject": "docs(item7): re-cite the verification matrix against the retired tree"
+    },
+    {
+      "step": "2",
+      "oid": "057bf29",
+      "subject": "Complete exact compiler convergence"
+    },
+    {
+      "step": "3",
+      "oid": "8aa3b28",
+      "subject": "fix elaboration same-leaf rollup names"
+    },
+    {
+      "step": "4",
+      "oid": "cc268d5",
+      "subject": "brief(Item 7): step-4 brief revised to rev 2 at phase-B resumption \u2014 register walked and routed, REQ-CL-03 ruled (usage domain is the totality boundary)"
+    },
+    {
+      "step": "4",
+      "oid": "7ebe447",
+      "subject": "step4(Item 7): matrix replacement coverage closed \u2014 0 UNTESTED, REQ-CS family minted, gain=100 three-route proof, smart-regen subset cure"
+    },
+    {
+      "step": "5",
+      "oid": "a4669af",
+      "subject": "step5(Item 7): portable live provenance \u2014 routes render one referent, generated bytes equal"
+    },
+    {
+      "step": "6",
+      "oid": "540ad59",
+      "subject": "step6(Item 7): R12 amended to the zero-new ruff baseline \u2014 measured sets recorded, SC box honestly held"
+    }
+  ],
+  "path_inventory": {
+    "method": "`git ls-files` in the working tree, which is the content OID plus the record commit's .project/ files only",
+    "sysml-codegen": {
+      "tracked_files": 2363,
+      "src_modules": 72,
+      "test_modules": 158,
+      "fixture_directories": 123,
+      "reference_docs": 31,
+      "scripts": 45
+    },
+    "agentic-mbse": {
+      "tracked_files": 1840,
+      "test_modules": 68
+    }
+  },
+  "retirement_commits": {
+    "19072ad": {
+      "subject": "19072ad retire(step 1): G2' \u2014 the v5 read path",
+      "paths_touched": 99
+    },
+    "82c7951": {
+      "subject": "82c7951 retire(step 2): the v5 family",
+      "paths_touched": 167
+    },
+    "882fc8d": {
+      "subject": "882fc8d retire(step 3): G3' \u2014 resolution/producer_completeness.py",
+      "paths_touched": 1
+    },
+    "3071fba": {
+      "subject": "3071fba retire(step 4): G4' \u2014 the last reach at the legacy route, and the dead v5 surface",
+      "paths_touched": 4
+    }
+  },
+  "ledger": {
+    "row_count": 304,
+    "states": {
+      "executed": 271,
+      "?": 33
+    }
+  },
+  "verification_matrix": {
+    "source": "step-4 mechanical recount, plan.md 'Narrow-correction step 4 completion'; steps 5-6 edited zero rows",
+    "rows": 288,
+    "pass": 156,
+    "partial": 1,
+    "retired": 131,
+    "untested": 0,
+    "families": 34,
+    "kept_test_files": 64
+  },
+  "three_runs": {
+    "measured_at": {
+      "sysml-codegen": "2819501178370db230acefdbcd02dfa15b409ac4",
+      "agentic-mbse": "6372ef7ba6ba4c869759fcf201c59aa128175c6f",
+      "teax": "75eecb3bcf4baa0306107a96aa78b74ee667e970"
+    },
+    "fields": {
+      "env import-path gate": [
+        "PASS",
+        "PASS",
+        "PASS"
+      ],
+      "env license key present": [
+        "True",
+        "True",
+        "True"
+      ],
+      "env python": [
+        "3.12.11",
+        "3.12.11",
+        "3.12.11"
+      ],
+      "env ruff / mypy / pytest": [
+        "0.16.2 / 2.3.0 / 9.1.1",
+        "0.16.2 / 2.3.0 / 9.1.1",
+        "0.16.2 / 2.3.0 / 9.1.1"
+      ],
+      "env sysml_codegen": [
+        "/home/reid/1cfe/sysml-codegen-item7-rebuild/src/sysml_codegen/__init__.py",
+        "/home/reid/1cfe/sysml-codegen-item7-rebuild/src/sysml_codegen/__init__.py",
+        "/home/reid/1cfe/sysml-codegen-item7-rebuild/src/sysml_codegen/__init__.py"
+      ],
+      "env agentic_mbse": [
+        "/home/reid/1cfe/agentic-mbse-item7-rebuild/src/agentic_mbse/__init__.py",
+        "/home/reid/1cfe/agentic-mbse-item7-rebuild/src/agentic_mbse/__init__.py",
+        "/home/reid/1cfe/agentic-mbse-item7-rebuild/src/agentic_mbse/__init__.py"
+      ],
+      "env simkit": [
+        "/home/reid/1cfe/teax/packages/teax-simkit/simkit/__init__.py",
+        "/home/reid/1cfe/teax/packages/teax-simkit/simkit/__init__.py",
+        "/home/reid/1cfe/teax/packages/teax-simkit/simkit/__init__.py"
+      ],
+      "HEAD codegen": [
+        "2819501178370db230acefdbcd02dfa15b409ac4",
+        "2819501178370db230acefdbcd02dfa15b409ac4",
+        "2819501178370db230acefdbcd02dfa15b409ac4"
+      ],
+      "HEAD agentic": [
+        "6372ef7ba6ba4c869759fcf201c59aa128175c6f",
+        "6372ef7ba6ba4c869759fcf201c59aa128175c6f",
+        "6372ef7ba6ba4c869759fcf201c59aa128175c6f"
+      ],
+      "HEAD teax": [
+        "75eecb3bcf4baa0306107a96aa78b74ee667e970",
+        "75eecb3bcf4baa0306107a96aa78b74ee667e970",
+        "75eecb3bcf4baa0306107a96aa78b74ee667e970"
+      ],
+      "codegen suite": [
+        "2086 passed, 34 skipped, 88 deselected",
+        "2086 passed, 34 skipped, 88 deselected",
+        "2086 passed, 34 skipped, 88 deselected"
+      ],
+      "codegen suite license-skip lines": [
+        "0",
+        "0",
+        "0"
+      ],
+      "codegen suite rc": [
+        "0",
+        "0",
+        "0"
+      ],
+      "exec lane": [
+        "88 passed",
+        "88 passed",
+        "88 passed"
+      ],
+      "corpus -k corpus": [
+        "9 passed, 2199 deselected",
+        "9 passed, 2199 deselected",
+        "9 passed, 2199 deselected"
+      ],
+      "capture_v6_batch --verify": [
+        "15 captured, 22 refused, 0 deviations",
+        "15 captured, 22 refused, 0 deviations",
+        "15 captured, 22 refused, 0 deviations"
+      ],
+      "batch non-timestamp fixture diff lines": [
+        "0",
+        "0",
+        "0"
+      ],
+      "capture_v6_batch --check rc": [
+        "0",
+        "0",
+        "0"
+      ],
+      "capture_v6_batch --check tail": [
+        "15 captured, 22 refused, 0 deviations",
+        "15 captured, 22 refused, 0 deviations",
+        "15 captured, 22 refused, 0 deviations"
+      ],
+      "ruff check src": [
+        "Found 12 error",
+        "Found 12 error",
+        "Found 12 error"
+      ],
+      "ruff check src tests scripts": [
+        "Found 642 error",
+        "Found 642 error",
+        "Found 642 error"
+      ],
+      "mypy src": [
+        "Found 52 errors in 11 files",
+        "Found 52 errors in 11 files",
+        "Found 52 errors in 11 files"
+      ],
+      "agentic suite": [
+        "1831 passed, 1 skipped, 5 deselected",
+        "1831 passed, 1 skipped, 5 deselected",
+        "1831 passed, 1 skipped, 5 deselected"
+      ],
+      "agentic ruff check src": [
+        "Found 1 error",
+        "Found 1 error",
+        "Found 1 error"
+      ],
+      "agentic ruff check tests": [
+        "Found 120 error",
+        "Found 120 error",
+        "Found 120 error"
+      ],
+      "agentic mypy src": [
+        "Found 108 errors in 26 files",
+        "Found 108 errors in 26 files",
+        "Found 108 errors in 26 files"
+      ],
+      "ledger paths": [
+        "304 rows checked, 0 problems",
+        "304 rows checked, 0 problems",
+        "304 rows checked, 0 problems"
+      ],
+      "ledger surface": [
+        "0 unrowed breakages",
+        "0 unrowed breakages",
+        "0 unrowed breakages"
+      ],
+      "ledger group 4B-G0": [
+        "affected=0 READY",
+        "affected=0 READY",
+        "affected=0 READY"
+      ],
+      "ledger group 4B-G1": [
+        "affected=0 READY",
+        "affected=0 READY",
+        "affected=0 READY"
+      ],
+      "ledger group 4B-G2": [
+        "affected=0 READY",
+        "affected=0 READY",
+        "affected=0 READY"
+      ],
+      "ledger group 4B-G3": [
+        "affected=0 READY",
+        "affected=0 READY",
+        "affected=0 READY"
+      ],
+      "ledger group 4B-G4": [
+        "affected=0 READY",
+        "affected=0 READY",
+        "affected=0 READY"
+      ],
+      "ledger group 4B-v5-family": [
+        "affected=0 READY",
+        "affected=0 READY",
+        "affected=0 READY"
+      ],
+      "ledger replacements green": [
+        "223",
+        "223",
+        "223"
+      ],
+      "ledger replacements not-required": [
+        "79",
+        "79",
+        "79"
+      ],
+      "ledger replacements FAIL": [
+        "0",
+        "0",
+        "0"
+      ],
+      "ledger replacements rc": [
+        "0",
+        "0",
+        "0"
+      ],
+      "proof integrity": [
+        "proof integrity: 0 problems over 0 blocked files",
+        "proof integrity: 0 problems over 0 blocked files",
+        "proof integrity: 0 problems over 0 blocked files"
+      ],
+      "doc distinctness": [
+        "31 numbered reference documents checked, 0 identical-content groups",
+        "31 numbered reference documents checked, 0 identical-content groups",
+        "31 numbered reference documents checked, 0 identical-content groups"
+      ],
+      "git diff --check codegen": [
+        "rc=0 clean",
+        "rc=0 clean",
+        "rc=0 clean"
+      ],
+      "git diff --check agentic": [
+        "rc=0 clean",
+        "rc=0 clean",
+        "rc=0 clean"
+      ],
+      "git status codegen": [
+        "## item7-rebuild |  M .project/active/cutover-recovery/evidence/phase5-runs/build_candidate_final.py | ?? .project/active/cutover-recovery/evidence/phase5-runs/final-runs/",
+        "## item7-rebuild |  M .project/active/cutover-recovery/evidence/phase5-runs/build_candidate_final.py | ?? .project/active/cutover-recovery/evidence/phase5-runs/final-runs/",
+        "## item7-rebuild |  M .project/active/cutover-recovery/evidence/phase5-runs/build_candidate_final.py | ?? .project/active/cutover-recovery/evidence/phase5-runs/final-runs/"
+      ],
+      "git status agentic": [
+        "## item7-rebuild",
+        "## item7-rebuild",
+        "## item7-rebuild"
+      ],
+      "git status teax": [
+        "## constraint-semantics-item3",
+        "## constraint-semantics-item3",
+        "## constraint-semantics-item3"
+      ],
+      "scale fusion_tea counts": [
+        "{\"attrs\": 56, \"calcs\": 7, \"constraints\": 1, \"entry_points\": 27, \"modules\": 9, \"occurrences\": 8}",
+        "{\"attrs\": 56, \"calcs\": 7, \"constraints\": 1, \"entry_points\": 27, \"modules\": 9, \"occurrences\": 8}",
+        "{\"attrs\": 56, \"calcs\": 7, \"constraints\": 1, \"entry_points\": 27, \"modules\": 9, \"occurrences\": 8}"
+      ],
+      "scale fusion_tea envelope bytes": [
+        "112707",
+        "112707",
+        "112707"
+      ],
+      "scale solar_battery_d5 counts": [
+        "{\"attrs\": 350, \"calcs\": 77, \"constraints\": 0, \"entry_points\": 199, \"modules\": 77, \"occurrences\": 42}",
+        "{\"attrs\": 350, \"calcs\": 77, \"constraints\": 0, \"entry_points\": 199, \"modules\": 77, \"occurrences\": 42}",
+        "{\"attrs\": 350, \"calcs\": 77, \"constraints\": 0, \"entry_points\": 199, \"modules\": 77, \"occurrences\": 42}"
+      ],
+      "scale solar_battery_d5 envelope bytes": [
+        "1104468",
+        "1104468",
+        "1104468"
+      ],
+      "scale catf_mfe_d5 counts": [
+        "{\"attrs\": 376, \"calcs\": 42, \"constraints\": 9, \"entry_points\": 60, \"modules\": 43, \"occurrences\": 61}",
+        "{\"attrs\": 376, \"calcs\": 42, \"constraints\": 9, \"entry_points\": 60, \"modules\": 43, \"occurrences\": 61}",
+        "{\"attrs\": 376, \"calcs\": 42, \"constraints\": 9, \"entry_points\": 60, \"modules\": 43, \"occurrences\": 61}"
+      ],
+      "scale catf_mfe_d5 envelope bytes": [
+        "667339",
+        "667339",
+        "667339"
+      ]
+    },
+    "field_count": 51,
+    "identical_field_count": 51,
+    "differing_fields": [],
+    "all_identical": true,
+    "timings": {
+      "run1": {
+        "fusion_tea live_elaborate_s": "0.125\u20130.137",
+        "fusion_tea project_s": "0.003\u20130.003",
+        "fusion_tea capture_s": "0.174\u20130.176",
+        "fusion_tea generate_live_s": "0.201\u20130.204",
+        "fusion_tea generate_snapshot_s": "0.093\u20130.095",
+        "fusion_tea peak_rss_mib": "222.5\u2013243.9",
+        "solar_battery_d5 live_elaborate_s": "0.398\u20130.406",
+        "solar_battery_d5 project_s": "0.035\u20130.044",
+        "solar_battery_d5 capture_s": "0.729\u20130.740",
+        "solar_battery_d5 generate_live_s": "0.842\u20130.847",
+        "solar_battery_d5 generate_snapshot_s": "0.632\u20130.644",
+        "solar_battery_d5 peak_rss_mib": "267.6\u2013280.9",
+        "catf_mfe_d5 live_elaborate_s": "5.013\u20135.030",
+        "catf_mfe_d5 project_s": "0.014\u20130.015",
+        "catf_mfe_d5 capture_s": "5.198\u20135.214",
+        "catf_mfe_d5 generate_live_s": "5.234\u20135.263",
+        "catf_mfe_d5 generate_snapshot_s": "0.293\u20130.303",
+        "catf_mfe_d5 peak_rss_mib": "304.7\u2013321.0"
+      },
+      "run2": {
+        "fusion_tea live_elaborate_s": "0.127\u20130.140",
+        "fusion_tea project_s": "0.003\u20130.003",
+        "fusion_tea capture_s": "0.180\u20130.183",
+        "fusion_tea generate_live_s": "0.209\u20130.211",
+        "fusion_tea generate_snapshot_s": "0.096\u20130.098",
+        "fusion_tea peak_rss_mib": "222.2\u2013244.1",
+        "solar_battery_d5 live_elaborate_s": "0.412\u20130.423",
+        "solar_battery_d5 project_s": "0.037\u20130.046",
+        "solar_battery_d5 capture_s": "0.755\u20130.760",
+        "solar_battery_d5 generate_live_s": "0.866\u20130.874",
+        "solar_battery_d5 generate_snapshot_s": "0.650\u20130.679",
+        "solar_battery_d5 peak_rss_mib": "278.2\u2013292.5",
+        "catf_mfe_d5 live_elaborate_s": "5.204\u20135.218",
+        "catf_mfe_d5 project_s": "0.015\u20130.016",
+        "catf_mfe_d5 capture_s": "5.382\u20135.408",
+        "catf_mfe_d5 generate_live_s": "5.434\u20135.481",
+        "catf_mfe_d5 generate_snapshot_s": "0.301\u20130.314",
+        "catf_mfe_d5 peak_rss_mib": "324.3\u2013347.1"
+      },
+      "run3": {
+        "fusion_tea live_elaborate_s": "0.128\u20130.140",
+        "fusion_tea project_s": "0.003\u20130.003",
+        "fusion_tea capture_s": "0.183\u20130.191",
+        "fusion_tea generate_live_s": "0.210\u20130.221",
+        "fusion_tea generate_snapshot_s": "0.099\u20130.101",
+        "fusion_tea peak_rss_mib": "222.3\u2013243.1",
+        "solar_battery_d5 live_elaborate_s": "0.429\u20130.438",
+        "solar_battery_d5 project_s": "0.038\u20130.047",
+        "solar_battery_d5 capture_s": "0.779\u20130.781",
+        "solar_battery_d5 generate_live_s": "0.855\u20130.901",
+        "solar_battery_d5 generate_snapshot_s": "0.645\u20130.686",
+        "solar_battery_d5 peak_rss_mib": "270.3\u2013290.6",
+        "catf_mfe_d5 live_elaborate_s": "5.069\u20135.101",
+        "catf_mfe_d5 project_s": "0.015\u20130.015",
+        "catf_mfe_d5 capture_s": "5.222\u20135.290",
+        "catf_mfe_d5 generate_live_s": "5.283\u20135.294",
+        "catf_mfe_d5 generate_snapshot_s": "0.295\u20130.308",
+        "catf_mfe_d5 peak_rss_mib": "311.7\u2013339.4"
+      }
+    }
+  },
+  "evidence_hashes_sha256": {
+    ".project/active/cutover-recovery/plan.md": "12a17033e9e8d52541f1112663c5f0b0daec2290339ff75b32fa47fff792c45c",
+    ".project/active/cutover-recovery/ledger-4a.json": "091b1ed2720f8bc33e93a15b0f6d041b0c2e17c25a21db3c7192f4cade4aaa34",
+    ".project/active/cutover-recovery/ledger-4a.md": "7e5bfcfb69cf4aa7e74309afbc66f53d585285d2563e21cadb3bb285aa2cf067",
+    ".project/active/cutover-recovery/doc-update-list-4d.md": "39c091d2a9a76ce587ec79fcd47da54ce7dccb96afad3ad45c439636507ed240",
+    ".project/active/cutover-recovery/owner-disposition-20260811.md": "136dd089d786664cd15b643bda1e6fb984efc8268e02903e2016868a4a22443b",
+    ".project/active/cutover-recovery/handoff-20260811.md": "4743c5b9f382b4357f3da9d61a09afd75f70a705d62a0332faf12d98f43c1372",
+    "tests/fixtures/v6_recapture_batch/batch.json": "bd7bf245e3ca3923b9b5d41db97861c9fcdf64435e768d48a2d7027eb52d9288",
+    ".project/active/cutover-recovery/evidence/3b-old-new-comparison.md": "5a85c919f3166c7058174bde9ef525f8ac2c2e2bd015aaaf382343514fc2b520",
+    ".project/active/cutover-recovery/evidence/3e-package-comparison.md": "6653acb04f7b40160b650ad6e909092375cdf5dcd307fcdb2c291b961f278d97",
+    ".project/active/cutover-recovery/evidence/audit-3a.md": "61866d6d8724182c02a2923463286d0f6a5803ad1bc8adb577f337039dc19886",
+    ".project/active/cutover-recovery/evidence/audit-3b.md": "cf7987bb848488ecdad99e210a30e24f859f043da512d2dfbe27eefc6ef31c76",
+    ".project/active/cutover-recovery/evidence/audit-3c.md": "f846d8857ed7e577c66f2b745bd1ee1287d041228ec36256434593387f498053",
+    ".project/active/cutover-recovery/evidence/audit-3d.md": "7bb3ba2f024f41248e706f29d456ae35d9277b0b7b251f20f17f2146fc35c2ac",
+    ".project/active/cutover-recovery/evidence/audit-3e.md": "94aa3ce395ada12e3f024d0cdc7d72a619796d07e43d508794dc524dca881f72",
+    ".project/active/cutover-recovery/evidence/audit-4.md": "efb23e2a3c6205286636f683f386770162882d90e7f57814eab9eeac5968500c",
+    ".project/active/cutover-recovery/evidence/audit-5-final.md": "6aaa3101140232bba52b9840a422409140b7c055b812140363081f0b7686ef75",
+    ".project/active/cutover-recovery/evidence/audit-7-retired.md": "6b7b651fc5d7c0744cbe679c45c69fd82d112dc09534a5978dc39bb55f3f0e33",
+    ".project/active/cutover-recovery/evidence/audit-9-final.md": "b89ed0220003a2097d81f1bfe6e7f2736780b2f2f055ef96f37ecad0dca1f882",
+    ".project/active/cutover-recovery/evidence/baseline.json": "8162966c0ede1b58bb4562def9e862c794d25b505b2753fb4e2a4e8ddd66aa55",
+    ".project/active/cutover-recovery/evidence/dual-qualifier-drop-dryruns.txt": "00639b7224e7b91019f018a9b62a6f14b2045925796d1226cf9663f1518fe235",
+    ".project/active/cutover-recovery/evidence/expression-compiler-qualifier-drop-dryrun.txt": "c9e69b25bd80f6082de8caf89fe78473fe695927612fc0f333d169ea00ed1952",
+    ".project/active/cutover-recovery/briefs/correction-step1-dispositions.md": "c163ef411d0a857028135d0f097eea35b8d99742799a1d8d1de72fd9d2d86f2c",
+    ".project/active/cutover-recovery/briefs/correction-step2-compiler-convergence.md": "22f61c28bfe90b8d1e7ea98eabc802a24fb56990de2b034b0c32ad49c2ef950f",
+    ".project/active/cutover-recovery/briefs/correction-step3-r8-qualified-rollup.md": "c59b7926266f4334784127ddfa8a410fcb4a8b81ce1d2734fadb8d4192d070e2",
+    ".project/active/cutover-recovery/briefs/correction-step4-matrix-replacements.md": "273c301dc11a20f49a495209383c62ce7d3b442173d65ea63e6385221aca82a0",
+    ".project/active/cutover-recovery/briefs/correction-step5-portable-provenance.md": "98bdf449630bdc94f0e0449f8d02db8c7a880150b39a746efca18ddd3b5502fc",
+    ".project/active/cutover-recovery/briefs/correction-step6-ruff-r12-amendment.md": "a030e62a85dfd2ed7e043549c90d865e8c51ef997353a35b2a54b961374815d9",
+    ".project/active/cutover-recovery/briefs/phase1.md": "44e37d3c668768023b9a2840c2703a1c670d8135b42a8ddbc71d17f5e2740416",
+    ".project/active/cutover-recovery/briefs/phase2.md": "4bbbd6938bbc0a34a983555262a9d49532c5432c3da850b93575a8b25f9df5f5",
+    ".project/active/cutover-recovery/briefs/phase3a-audit.md": "f478ef928287ed21d9944659f9c425546865d09b407ef230c2153d63f1a5fd4f",
+    ".project/active/cutover-recovery/briefs/phase3a.md": "d8b0f13be50a493248211a0a63da6ab83d1f8f52ff979b9838b3747f0e5c24ad",
+    ".project/active/cutover-recovery/briefs/phase3b-audit.md": "fdca4239b36a9b4a98173861db8b1a5ce584ff1aa59189ec0bc7f6fdfcef42fb",
+    ".project/active/cutover-recovery/briefs/phase3b.md": "0dafb94b63737d7c6108508e1c28cdf63e2beefe46674e750d3817bc89e003ca",
+    ".project/active/cutover-recovery/briefs/phase3c-audit.md": "e84fc3fe34bb4e0ebd6f39e80e4383c73623f761c2dce89ed25c865e9c008f4e",
+    ".project/active/cutover-recovery/briefs/phase3c.md": "4948331fa74bf3898ff4e17e7c0ac49c7e1db0671965d5e0fae5f897230a4456",
+    ".project/active/cutover-recovery/briefs/phase3d-audit.md": "5b063d4277d2ae8f3c50404559dcf0799ceeedbf31f8ba91ca13536c10b9157e",
+    ".project/active/cutover-recovery/briefs/phase3d.md": "e80e3291ab61e87017101b48ad73e9a1abd2e1e3050936ced592cdc4c2e20754",
+    ".project/active/cutover-recovery/briefs/phase3e-audit.md": "f00543d198152db5772a0b76ada15d2df008a402d06d8cd2943c172cda706ee3",
+    ".project/active/cutover-recovery/briefs/phase3e.md": "14d2e169db49209f9e4ee73a543ba7b75ed77154dd90965870f2079ed5bab270",
+    ".project/active/cutover-recovery/briefs/phase4-audit-fixes.md": "e1f2bfe36d1e645a273c8e6436ccedabb4feac1fd73b317e3a8115cf7205d0ed",
+    ".project/active/cutover-recovery/briefs/phase4-audit.md": "f0cbfa8219129bed199a7375ff21867cc044f04fbedf4181bd5c8d7773d43ba2",
+    ".project/active/cutover-recovery/briefs/phase4-runbook-completion.md": "a321b14d80f22fd2f031e5e19c442c8971c20972b48eece068eae2d82e02a328",
+    ".project/active/cutover-recovery/briefs/phase4a.md": "2673c5dbb74ad9dc9d015f5c1f36b85cb3e46194f0c9dbcc904a62425f8e548c",
+    ".project/active/cutover-recovery/briefs/phase4b-g0g1.md": "273fbdf0b5b6f275543ad830f506b1871531e022f7ff0a72ce0dc3fdfa3d875b",
+    ".project/active/cutover-recovery/briefs/phase4b-g2.md": "26309fcc77da0c612fcd4c24fcfa18856121eed07d22d84e12e2712d9e47abde",
+    ".project/active/cutover-recovery/briefs/phase4b-retirement.md": "7c25bf98812466ed4b7eb9f5f7adbc1221cc105375f05b05e46e7bd9e98273d4",
+    ".project/active/cutover-recovery/briefs/phase4c-part6-completion.md": "a03bacb080b0381c40e5f58769d5c3bcb3669190dd30e0c857a301b1e1d698d6",
+    ".project/active/cutover-recovery/briefs/phase4c-part7-completion.md": "9312e02de5cc86d645c8f36c8e369efbe2f11aaa936228cb6a890a44f76f03ed",
+    ".project/active/cutover-recovery/briefs/phase4c-part7-final.md": "5ea9848d8b17aad049329c9ea33b08740b3d1711069b92d718fb2bfa21597117",
+    ".project/active/cutover-recovery/briefs/phase4c-specimens.md": "19b14583224f51b9bb1d903fbd0fac8b1ebafdd9ae3ef0a848257f998ab16a8f",
+    ".project/active/cutover-recovery/briefs/phase4d.md": "0d6ce021a007a6b4a56364ff8bcca9a32833b968d8d565609bacb6089240741f",
+    ".project/active/cutover-recovery/briefs/phase5-assembly.md": "7d30a87480dd31390a5bf486581eb230d4c70b945200b89713a550e8b542d4d6",
+    ".project/active/cutover-recovery/briefs/phase5-audit.md": "e5e8104e53aa3a39c44ddd571c5de97dadfd2ad2111f663b7bd47b15799a4df1",
+    ".project/active/cutover-recovery/briefs/revise-step2-dual-migrations.md": "243fe35569048a48acea1f4e5a4fd50c87dd37a413694c32a0188a928a9035a5",
+    ".project/active/cutover-recovery/briefs/revise-step3-test-replacements.md": "72f2dcde2aa1fd268998691cebe367627ffb0224213a8ec4fa1a8499b849d233",
+    ".project/active/cutover-recovery/briefs/revise-step4-mutation-matrix.md": "69f88104a2cdc316983e46d0ae0a025a9269f3692955735f8d32ebd0504f3673",
+    ".project/active/cutover-recovery/briefs/revise-step5-r10-collision.md": "74194d1b7e424d0861918bc1473aceccad84f196f6772bafec94dd4142395244",
+    ".project/active/cutover-recovery/briefs/revise-step6-retirement.md": "934a69da4b4c5f77056e0d7fa7b71b0bea83768619aa88d76bbef466ad80ff45",
+    ".project/active/cutover-recovery/briefs/revise-step6b-diagnostic-rehoming.md": "f759c174c9a3fc471a35b5c75410a21083c097bd63da903496a6b408cd431c20",
+    ".project/active/cutover-recovery/briefs/revise-step6c-docs-integrity.md": "d1db07c85fa25ff385786b91d965923e137355ed22c9cb2150cc68a5ebe37ad0",
+    ".project/active/cutover-recovery/briefs/revise-step6d-matrix-deadsurface.md": "a76b6c00c478ef146b9c27a2b2a0ac770a99289abc79b50e7c2b8058f4a7315a",
+    ".project/active/cutover-recovery/briefs/revise-step7a-gates.md": "af25d17eeed9ed34f86f36c534a4f904ce8560a348d4801404e5acfc0c5b9d69",
+    ".project/active/cutover-recovery/briefs/revise-step7b-audit.md": "8eec0530b19a484ced0cea60733c78d9b0b6ffdc5f5905ec744d78f164ee9cbc",
+    ".project/active/cutover-recovery/briefs/revise-step7c-candidate-record.md": "302d61465803674292a3040f09b064473ffd4db4b490e9c5fb9984bf0d3de8e8",
+    ".project/active/cutover-recovery/evidence/phase5-runs/build_candidate.py": "29a82781d35afef406809695e6a257081b7fd4156b3c212c51c180710bd40fd2",
+    ".project/active/cutover-recovery/evidence/phase5-runs/build_candidate_final.py": "94bb850686018eefe07cde68ab4ae07dfd2a1909da17bf88f4255aab9f0d000a",
+    ".project/active/cutover-recovery/evidence/phase5-runs/build_candidate_revise.py": "16e9f3c23e9d1c7ca76a5735f0aee2ff89bb2a9a9b073d6fac40eea2f4afe575",
+    ".project/active/cutover-recovery/evidence/phase5-runs/compare_final_runs.py": "c0f363a5a6b683a983fa2f195b896dd5b908a63be25e4b1175d434d8b8ed09f9",
+    ".project/active/cutover-recovery/evidence/phase5-runs/compare_revise_runs.py": "156df3f5ba3763f121865f6b54680438028c63a90da43c1eb7b75bd250895522",
+    ".project/active/cutover-recovery/evidence/phase5-runs/measure_scale.py": "2824127c18b8005e36adbc27ddb1df5e97d8f8337df8d4519cfa59c27fcf76ee",
+    ".project/active/cutover-recovery/evidence/phase5-runs/build_comparison.sh": "b34d731da4b5294f6eb94732f213f175b6544353ec08235f73322ff0c483a313",
+    ".project/active/cutover-recovery/evidence/phase5-runs/chain.sh": "04dbaa75a905bc9c6779397830bfe806c5b0ebdccb581b3af44fa12259785c5b",
+    ".project/active/cutover-recovery/evidence/phase5-runs/chain_final.sh": "d6aaa96fd65dabb01fecfea54daa5205a1eb235faf7bc621684546b69b15171f",
+    ".project/active/cutover-recovery/evidence/phase5-runs/chain_revise.sh": "34ea449a6784e00aaf9d820be9040cb300ef079d2f8deda4dd8bf2b57c9f5610",
+    ".project/active/cutover-recovery/evidence/phase5-runs/check_residue.sh": "138c8e59a4b2c1fd050ec5e32ac81a0e1db02d0732d37096932beba4cb0f58f6",
+    ".project/active/cutover-recovery/evidence/phase5-runs/run_candidate_battery.sh": "d03ab2954001a850cbe214b5b2d8121ee2100359b873d2e9c5c7f0b198acf858",
+    ".project/active/cutover-recovery/evidence/phase5-runs/run_final_battery.sh": "4bd8c58ebb39a0fd1f41e970dd71f92ac2450a06fcb4cb233ee7a50af56d0d0a",
+    ".project/active/cutover-recovery/evidence/phase5-runs/run_revise_battery.sh": "cde78bc0e6f1ef7142574220f45d7c19705ec1fec0d5a38c9f289748459c72b2",
+    ".project/active/cutover-recovery/evidence/phase5-runs/revise-runs/comparison.md": "372cfcd0335d374f2c646121d1617dc9c4b950e06cd777f427784a3b34e88299",
+    ".project/active/cutover-recovery/evidence/phase5-runs/final-runs/comparison.md": "a87694641280282fa43abe02a7be168ab6cd0355d333225544b39edccb1f6e57"
+  }
+}

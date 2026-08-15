@@ -176,7 +176,7 @@ full PQN format. These channels are registered in the [output registry](10-outpu
 | `CalculationDefinitionData` | `extraction/data_models.py` | CalcDef with outputs |
 | `AttributeInfo` | `agentic_mbse` | Output attribute with name, type, default |
 | `ModuleOutput` | `resolution/models.py` | Output with field_name and channel |
-| `PipelineModule` | `resolution/models.py` | Module with is_aggregation flag |
+| `PipelineModule` | `resolution/models.py` | Module tagged with `module_kind` (`ModuleKind.AGGREGATION` for aggregation) |
 | `MultiOutput` | TEAx (`simkit`) | Base class for multi-output schemas |
 | `RootModel[float]` | Pydantic | Single-output wrapper |
 

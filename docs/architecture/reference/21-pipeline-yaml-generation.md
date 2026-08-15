@@ -258,7 +258,7 @@ Comment lines above each pipeline module indicate origin type:
 ## Related Documents
 
 - **Upstream**: [07-graph-assembly](07-graph-assembly.md) -- builds ComputationGraph consumed here
-- **Upstream**: [04-input-resolver](04-input-resolver.md) -- resolves InputSource for each ModuleInput
+- **Upstream**: [04-producer-resolution](04-producer-resolution.md) -- resolves InputSource for each ModuleInput
 - **Upstream**: [06-entry-point-classifier](06-entry-point-classifier.md) -- assigns param_group (REQ-PY-02)
 - **Related**: [20-module-registry-generation](20-module-registry-generation.md) -- registry must use matching module_type strings
 - **Related**: [22-output-schema-rules](22-output-schema-rules.md) -- output schema rules for MultiOutput vs RootModel

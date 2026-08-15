@@ -1,0 +1,77 @@
+diff --git a/tests/conformance/test_source_identity_extraction.py b/tests/conformance/test_source_identity_extraction.py
+index 6b7aa68..51fca1a 100644
+--- a/tests/conformance/test_source_identity_extraction.py
++++ b/tests/conformance/test_source_identity_extraction.py
+@@ -306,17 +306,13 @@ def test_occurrence_override_value_sites_carry_exact_identity(mixed) -> None:
+     assert deep_override.member_qualified_name is None  # anonymous chained member
+ 
+ 
+-def test_definition_default_value_site_carries_raw_qn(mixed) -> None:
+-    from sysml_codegen.analysis.parameter_groups import extract_design_attributes
+-
+-    attrs_by_file = extract_design_attributes(mixed["model"])
+-    raw_qns = {
+-        attr.raw_qualified_name
+-        for attrs in attrs_by_file.values()
+-        for attr in attrs
+-    }
+-    assert f"{PKG}::'Avail Plant'::availability" in raw_qns
+-    assert f"{PKG}::Rig::gain_setting" in raw_qns
++# ``test_definition_default_value_site_carries_raw_qn`` stood here. It read
++# ``analysis/parameter_groups.extract_design_attributes`` and asserted the raw, unsanitized
++# QN was recorded on each design attribute. Both the function and the
++# ``raw_qualified_name`` field retired with the v5 family (retirement step 2), and no
++# ``raw_qualified_name`` remains anywhere in ``src/`` — the exact route keeps unsanitized
++# identity in the node's ``DeclarationId`` instead, which the elaboration tests pin. There
++# is nothing left here to make the old statement about.
+ 
+ 
+ def test_authored_literal_is_a_distinct_evidence_class(mixed) -> None:
+@@ -331,40 +327,13 @@ def test_authored_literal_is_a_distinct_evidence_class(mixed) -> None:
+ # ---------------------------------------------------------------------------
+ 
+ 
+-def test_stamp_cannot_mutate_reference_evidence(mixed) -> None:
+-    """Path A: the legacy VBR literal-stamps the binding, but the immutable
+-    evidence keeps the reference form — a stamped literal stays distinguishable
+-    from an authored one without reading names or values."""
+-    hierarchy = extract_hierarchy_data(mixed["model"])
+-    binding = _binding(mixed["usages"], "__stamp_plant__stamp_calc", "value_in")
+-    before = binding.reference_evidence
+-    assert before is not None
+-    assert before.source_form is SourceForm.BARE_REFERENCE
+-
+-    from sysml_codegen.orchestration.pipeline_builder import _rewrite_virtual_bindings
+-
+-    _rewrite_virtual_bindings(mixed["usages"], hierarchy)
+-
+-    stamped = _binding(mixed["usages"], "__stamp_plant__stamp_calc", "value_in")
+-    assert stamped.binding_type == BindingType.LITERAL  # the legacy stamp fired
+-    assert stamped.literal_value == 0.75
+-    assert stamped.reference_evidence == before  # field-for-field identical
+-    assert stamped.reference_evidence is before  # frozen: never replaced
+-    assert stamped.reference_evidence.is_reference_derived
+-
+-    lit = _binding(mixed["usages"], "__stamp_plant__lit_calc", "value_in")
+-    assert lit.reference_evidence is not None
+-    assert not lit.reference_evidence.is_reference_derived
+-
+-
+-def test_deep_chain_evidence_survives_rewrite(mixed) -> None:
+-    hierarchy = extract_hierarchy_data(mixed["model"])
+-    before = _evidence(mixed["usages"], "__computed_station__computed_calc", "value_in")
+-    from sysml_codegen.orchestration.pipeline_builder import _rewrite_virtual_bindings
+-
+-    _rewrite_virtual_bindings(mixed["usages"], hierarchy)
+-    after = _evidence(mixed["usages"], "__computed_station__computed_calc", "value_in")
+-    assert after == before
++# Both post-rewrite immutability nodes retired with the v5 family (retirement step 2).
++# What they asserted was that ``pipeline_builder._rewrite_virtual_bindings`` — the legacy
++# virtual-binding rewrite — could literal-stamp a binding without mutating or replacing its
++# frozen ``reference_evidence``. That rewrite is the mutator; with it deleted there is no
++# code path that can mutate the evidence, so the property has no counter-example left to
++# guard against. The evidence classes themselves (bare reference, authored literal, deep
++# chain) are pinned by the nodes above, which read them straight off extraction.
+ 
+ 
+ # ---------------------------------------------------------------------------

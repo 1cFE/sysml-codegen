@@ -1,0 +1,38 @@
+diff --git a/tests/conformance/test_generation_boundary.py b/tests/conformance/test_generation_boundary.py
+index bc33633..4f9eb6d 100644
+--- a/tests/conformance/test_generation_boundary.py
++++ b/tests/conformance/test_generation_boundary.py
+@@ -138,19 +138,20 @@ class TestStaticBoundary:
+         )
+ 
+     @pytest.mark.req("REQ-PIPE-07")
+-    def test_pipeline_context_not_in_generation(self):
+-        """PipelineContext is importable from orchestration, not generation."""
+-        # PipelineContext should be in orchestration
+-        from sysml_codegen.orchestration import PipelineContext as OrcPCtx
+-        assert OrcPCtx is not None
+-
+-        # PipelineContext should NOT be defined in generation/initialization.py
+-        init_path = GEN_DIR / "initialization.py"
+-        content = init_path.read_text()
+-        assert "class PipelineContext" not in content, (
+-            "PipelineContext is still defined in generation/initialization.py. "
+-            "It should be moved to orchestration/pipeline_context.py."
+-        )
++    def test_pipeline_context_is_not_in_generation(self):
++        """``PipelineContext`` is defined nowhere in generation/, and nowhere at all.
++
++        The class was moved out of ``generation/initialization.py`` to ``orchestration/``
++        at Step 7.6, and this node checked the move by importing it from its new home.
++        It retired with the v5 family (retirement step 2) — it carried the legacy string-
++        resolution route's state — so the node checks the boundary the move existed to
++        establish: generation/ holds no pipeline-context class, under any spelling.
++        """
++        for module in GEN_DIR.rglob("*.py"):
++            assert "class PipelineContext" not in module.read_text(), (
++                f"{module.name} defines PipelineContext; generation/ consumes only a "
++                f"ComputationGraph."
++            )
+ 
+     @pytest.mark.req("REQ-GEN-01")
+     def test_pipeline_yaml_still_graph_only(self):

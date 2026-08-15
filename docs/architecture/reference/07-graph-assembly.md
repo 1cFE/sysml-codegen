@@ -1,5 +1,19 @@
 # 07 -- Graph Assembly
 
+> **Status: historical.** `build_computation_graph()` and its helpers lived in
+> `resolution/graph_builder.py`, **deleted** by the Item 7 retirement (2026-08-12, `19072ad` /
+> `82c7951` / `882fc8d` / `3071fba`).
+>
+> **The subject survives; the owner does not.** The shipped route still topologically sorts the
+> modules, still refuses a producer reference with no output, and still packs one
+> `ComputationGraph` — projection does it (`elaboration/project.py`, `_topological_modules` and
+> `_claim_channel`). The V11 params-coverage check is unchanged and still runs at the generation
+> boundary, from `resolution/uncovered_params.py`, which is in the tree.
+>
+> Everything below is retained as the record of the deleted design. It is accurate about the
+> code that was removed and is **not a description of what the product does**. For that, read
+> [00-pipeline-overview](00-pipeline-overview.md).
+
 After [resolution](03-resolution-overview.md), [module construction](05-module-factory.md),
 and [entry point classification](06-entry-point-classifier.md), every piece of the
 pipeline exists as a separate data structure. Graph assembly is the final step: it
@@ -168,7 +182,7 @@ for module in modules:
 ```
 
 This catches wiring bugs -- misspelled channel names, missing modules,
-transitive [binding resolution](04-input-resolver.md) failures -- before any
+transitive [binding resolution](04-producer-resolution.md) failures -- before any
 code is generated. Without this, bad wiring would surface as mysterious
 runtime errors in TEAx.
 
@@ -363,10 +377,11 @@ The codebase currently has two Kahn's implementations:
 2. **`_unified_topological_sort`** (resolution layer) -- operates on
    `PipelineModule` objects, uses `deque` for O(1) popleft, O(V + E).
 
-Post-refactor, these converge into one canonical `topological_sort(nodes, edges)`
-in `core/graph_algorithms.py`. Both call sites adapt their data into the
-`(nodes, edges)` interface. One implementation, one set of tests, one place
-to fix bugs.
+The plan was to converge these into one canonical `topological_sort(nodes, edges)` in a
+`core/graph_algorithms.py`. **That module was never written**, and both call sites above
+were deleted with the legacy stack, so the convergence has no subject left. The shipped
+route has one topological sort, `_topological_modules` in `elaboration/project.py`, which
+is where the plan's "one implementation" ended up by a different road.
 
 ## Related Documents
 

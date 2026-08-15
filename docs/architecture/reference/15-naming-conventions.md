@@ -50,7 +50,7 @@ strip leading/trailing `_`). Segments are joined with `__`.
 Key insight: when a calc input binds to a design attribute at a *different* scope,
 the PQN is the design attribute's EQN, not `{usage_eqn}__{param_name}`. The
 `binding_resolutions` mapping is the single source of truth.
-See [input resolver](04-input-resolver.md) for how bindings determine PQN selection.
+See [input resolver](04-producer-resolution.md) for how bindings determine PQN selection.
 **Type wrapper**: `PQN` ([09-data-models](09-data-models.md#name-type-wrappers))
 
 ## 4. Module Name
@@ -236,7 +236,7 @@ Key_C to the canonical channel
 - **Pipeline context**: [00-pipeline-overview](00-pipeline-overview.md) — where naming applies across all 7 steps
 - **Extraction (origin)**: [01-extraction](01-extraction.md) — SysML QN is produced here
 - **Resolution (consumer)**: [03-resolution-overview](03-resolution-overview.md) — The Scope Problem relies on Key_C
-- **Input resolver**: [04-input-resolver](04-input-resolver.md) — strategies use typed registry lookups (ScopedKey, SysMLQN)
+- **Input resolver**: [04-producer-resolution](04-producer-resolution.md) — strategies use typed registry lookups (ScopedKey, SysMLQN)
 - **Module factory**: [05-module-factory](05-module-factory.md) — EQN → module name/type derivation
 - **Entry points**: [06-entry-point-classifier](06-entry-point-classifier.md) — PQN used for entry point QN
 - **Registry**: [10-output-registry](10-output-registry.md) — Key format details, 4-phase protocol

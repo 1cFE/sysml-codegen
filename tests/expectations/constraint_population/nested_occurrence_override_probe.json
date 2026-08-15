@@ -1,0 +1,11 @@
+{
+  "constraint_usages": [
+    {
+      "owner_qualified_name": "nested_occurrence_override_probe::Panel",
+      "source_file": "model.sysml",
+      "source_line": 24,
+      "usage_qualified_name": "nested_occurrence_override_probe::Panel::within"
+    }
+  ],
+  "fixture": "nested_occurrence_override_probe"
+}

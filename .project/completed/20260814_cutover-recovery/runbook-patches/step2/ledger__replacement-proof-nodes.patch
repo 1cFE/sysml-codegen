@@ -1,0 +1,53 @@
+--- a/.project/active/cutover-recovery/ledger-4a.json
++++ b/.project/active/cutover-recovery/ledger-4a.json
+@@ -178,7 +178,6 @@
+    "authority": "no census row for this path [EVIDENCE: forensic map Finding 2]; plan Gate 4B; fresh reachability derivation at HEAD",
+    "unreachability": "not reachable from sysml_codegen.cli at all; the only importer anywhere in src is the analysis package __init__ (:20 re-export), which no runtime caller goes through",
+    "replacement_proof_node": [
+-    "tests/conformance/test_gen_stencils.py",
+     "tests/conformance/test_generation_boundary.py",
+     "tests/unit/test_stencils.py"
+    ],
+@@ -704,7 +703,7 @@
+    "group": "4B-G2",
+    "authority": "census PROD-12/API-13 via inventory INV-RES-CG-022 (disposition migrate) [EVIDENCE]; Phase 3 completion notes / plan Gate 4A carried inputs",
+    "unreachability": "live",
+-   "replacement_proof_node": "tests/conformance/test_public_authority_switch.py::test_the_generation_half_still_reaches_v5_modules_and_that_residual_is_pinned",
++   "replacement_proof_node": "tests/conformance/test_public_authority_switch.py::test_no_legacy_construction_authority_has_come_back",
+    "blocked_by": [],
+    "reason": "Re-exports graph_rebuild (:81), loader (:85) and serializer (:86). This is the whole of the named v5 import residual carried from 3E; dropping these three lines is what empties that pin. Census API-13 says the same.",
+    "orphaned_after_step_2": {
+@@ -2428,7 +2427,7 @@
+    "unreachability": null,
+    "replacement_proof_node": [
+     "tests/conformance/test_exact_constraint_route.py::test_identified_facts_gate_and_projected_constraints_agree_by_usage_id",
+-    "tests/conformance/test_exact_constraint_route.py::test_the_shared_constraint_identity_and_default_helpers_stay_callable_on_both_routes"
++    "tests/conformance/test_exact_constraint_route.py::test_the_shared_constraint_identity_and_default_helpers_are_callable"
+    ],
+    "blocked_by": [],
+    "reason": "Integrated live/codec continuity for profile-v4 source identity and polarity. Imports legacy owners (constraint_lowering, pipeline_builder) directly, so 4B's deletion breaks it. Retain now; before the owning 4B group lands, this row needs either a public-behaviour rewrite or a recorded responsibility retirement.",
+@@ -3609,7 +3608,7 @@
+    "authority": "plan rule 6 \u2014 keep the Item 6 tests until after product proof; every removed or rewritten test needs a responsibility-level disposition first",
+    "unreachability": null,
+    "replacement_proof_node": [
+-    "tests/conformance/test_exact_group_identity.py::test_a_stem_named_group_keeps_the_name_the_legacy_route_ships",
++    "tests/conformance/test_exact_group_identity.py::test_group_identity_comes_from_the_declaring_file_or_package",
+     "tests/conformance/test_exact_route_alias_aggregation.py::test_every_derived_identifier_is_quote_and_space_free",
+     "tests/conformance/test_elaboration_identity_collisions.py::test_semantic_graph_keeps_same_rendered_names_distinct"
+    ],
+@@ -4445,7 +4444,6 @@
+    "authority": "plan rule 6 \u2014 keep the Item 6 tests until after product proof; every removed or rewritten test needs a responsibility-level disposition first",
+    "unreachability": null,
+    "replacement_proof_node": [
+-    "tests/conformance/test_gen_registry.py::TestImportPathsMatchFilesystem::test_req_reg_02_import_paths_match_filesystem[solar_battery]",
+     "tests/conformance/test_exact_route_registry.py"
+    ],
+    "blocked_by": [],
+@@ -5304,7 +5302,6 @@
+    "authority": "C1 ruling, orchestrator 2026-08-11 (plan, Gate 4A approval) \u2014 the recorded responsibility retirement plan rule 6 requires before a test may be deleted",
+    "unreachability": null,
+    "replacement_proof_node": [
+-    "tests/conformance/test_gen_stencils.py",
+     "tests/conformance/test_generation_boundary.py",
+     "tests/unit/test_stencils.py"
+    ],

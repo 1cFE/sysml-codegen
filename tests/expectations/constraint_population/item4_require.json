@@ -1,0 +1,11 @@
+{
+  "constraint_usages": [
+    {
+      "owner_qualified_name": "item4_require::BudgetReq",
+      "source_file": "model.sysml",
+      "source_line": 19,
+      "usage_qualified_name": "item4_require::BudgetReq::within_budget"
+    }
+  ],
+  "fixture": "item4_require"
+}

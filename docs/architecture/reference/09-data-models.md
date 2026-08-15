@@ -1,5 +1,34 @@
 # 09 -- Data Models Reference
 
+> **Status: mixed — read the model, then check which half it is in.** The exact route is the
+> only authority, and this document's model set straddles the line.
+>
+> **Live, on the shipped route:** `ComputationGraph`, `PipelineModule`, `ModuleInput`,
+> `ModuleOutput`, `InputSource`, `EntryPoint`, `EntryPointType`, `ParameterGroup`,
+> `ModuleKind`, `OutputAlias`, and the constraint-catalog models — all in
+> `resolution/models.py`, which projection produces and generation consumes. The extraction
+> models `CalculationDefinitionData` and its enums are live too: the exact route loads and
+> extracts through `extraction/extractor.py`. `BindingResolution` and `ChannelAlias` are in
+> `core/models.py` and are read by generation.
+>
+> **Deleted with their owners** by the Item 7 retirement (2026-08-12, `19072ad` / `82c7951` /
+> `882fc8d` / `3071fba`): `BacktrackingResult`, `DesignAttributeData`,
+> `DerivedParameterGroup`, `ParameterSource`, and the `OutputRegistry` types. Their owners
+> (`analysis/dependency_backtracker.py`, `analysis/parameter_groups.py`,
+> `resolution/graph_builder.py`, `core/output_registry.py`) are not in the tree, and neither
+> are the models. **The rows for them below describe types that no longer exist.**
+>
+> The hierarchy/aggregation extraction structures are the one survivor:
+> `extraction/hierarchy_resolver.py` is still in the tree with its own conformance coverage,
+> and is not on the exact route's construction closure.
+>
+> **The rows are kept, not removed.** The test that used to pin them,
+> `tests/conformance/test_data_models.py`, was repointed by the retirement itself (ledger row
+> **L-120**, executed at `82c7951`), so nothing now couples these rows to a test. They stay
+> because the historical documents link into them — a reader following
+> [11-analysis-backtracker](11-analysis-backtracker.md) to `BacktrackingResult` needs the
+> field list to make sense of what it reads. This banner is what tells them the type is gone.
+
 ## Why This Document Exists
 14 documents in this set link here as the canonical field reference. When a doc
 says "see [09-data-models](09-data-models.md#resolution-models)," the reader

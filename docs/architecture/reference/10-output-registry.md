@@ -1,5 +1,20 @@
 # 10 - Output Registry
 
+> **Status: historical.** `core/output_registry.py` and the 4-phase registration protocol in
+> `orchestration/output_registry_builder.py` were **deleted** by the Item 7 retirement
+> (2026-08-12, `19072ad` / `82c7951` / `882fc8d` / `3071fba`). Neither is in the tree.
+>
+> **The problem it solves does not arise on the shipped route.** The registry exists because
+> extraction produced `source_path` strings in several formats that might name the same output.
+> The elaborator resolves a reference against the node that declares it, so there is no string
+> to disambiguate; projection indexes output channels straight from the instance graph and
+> claims each channel name exactly once (`_index_output_channels`, `_claim_channel` in
+> `elaboration/project.py`).
+>
+> Everything below is retained as the record of the deleted design. It is accurate about the
+> code that was removed and is **not a description of what the product does**. For that, read
+> [00-pipeline-overview](00-pipeline-overview.md).
+
 ## What Problem It Solves
 
 SysML bindings reference upstream outputs using different string formats depending
@@ -49,7 +64,7 @@ a tuple key can never collapse into or collide with a flat string key — the
 scope carries the full instance path, making the key unique by construction.
 
 **The registry has no concept of scope.** It does not know which module is asking.
-Scope-awareness is the [resolver's](04-input-resolver.md) responsibility. The
+Scope-awareness is the [resolver's](04-producer-resolution.md) responsibility. The
 resolver [prepends the consumer's scope](03-resolution-overview.md#the-scope-problem)
 to produce a `ScopedKey` lookup that is unambiguous. The registry just needs to have
 the scoped key registered. The scoped-alias namespace follows the same rule: its
@@ -129,7 +144,7 @@ For each CalcUsage + each output attribute on its CalcDef, two registrations:
 Scoped key is derived by `make_scoped_key()` (REQ-OR-07): split the usage EQN on `__`,
 drop `segments[0]`, join with `.`, append `.{attr}`. This is the most critical key —
 it is the [scoped key](03-resolution-overview.md#the-scope-problem) that the
-[resolver](04-input-resolver.md) constructs to disambiguate cross-scope references.
+[resolver](04-producer-resolution.md) constructs to disambiguate cross-scope references.
 Empirically, ALL Phase 2 CHAIN aliases resolve exclusively via scoped keys.
 
 **Phase 1b: Aggregation outputs** (`build_output_registry`)
@@ -454,7 +469,7 @@ invariants and resolution dispatch design.
 ## Related Documents
 
 - **Upstream**: [02-orchestration](02-orchestration.md) — `build_pipeline_context()` calls `build_output_registry()`
-- **Downstream**: [04-input-resolver](04-input-resolver.md) — uses typed lookups for FORMULA/aggregation resolution
+- **Downstream**: [04-producer-resolution](04-producer-resolution.md) — uses typed lookups for FORMULA/aggregation resolution
 - **Downstream**: [11-analysis-backtracker](11-analysis-backtracker.md) — uses typed lookups for CalcUsage resolution
 - **Sub-processes**: [12-virtual-binding-rewrite](12-virtual-binding-rewrite.md) — produces `ChannelAlias` inputs for Phases 2-3
 - **Sub-processes**: [13-aggregation-scoping](13-aggregation-scoping.md) — produces `ScopedAggregationData` for Phase 1b

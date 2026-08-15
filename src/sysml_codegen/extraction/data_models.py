@@ -15,6 +15,7 @@ from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
 from typing import Any
+from uuid import UUID
 
 # Import shared types from agentic-mbse
 from agentic_mbse.sysml.data_models import (
@@ -85,6 +86,12 @@ class AttributeInfo(BaseAttributeInfo):
     unit: str | None = None
     source_line: int = 0
     is_optional: bool = False
+
+    # Live exact-route sidecar. Snapshot v5 deliberately omits parser UUIDs.
+    element_id: UUID | None = field(
+        default=None,
+        metadata={"snapshot_exclude": True},
+    )
 
 
 @dataclass
@@ -161,17 +168,27 @@ class CalculationDefinitionData:
     source_line: int = 0
     source_hash: str = ""
 
-    # Raw syside AST nodes for each output attribute's expression.
-    # Key: sanitized output attribute name. Value: raw syside AST node.
-    output_expression_asts: dict[str, Any] = field(default_factory=dict)
-
-    # All owned_member names from the raw CalcDef element.
-    # Needed by expression compiler for undeclared intermediate resolution.
-    all_member_names: set[str] = field(default_factory=set)
-
-    # Raw syside AST nodes for non-input/non-output members.
-    # Key: sanitized member name. Value: raw syside AST node.
-    member_expressions: dict[str, Any] = field(default_factory=dict)
+    # Exact declaration identity is the compiler payload. Names remain rendering metadata.
+    element_id: UUID | None = field(
+        default=None,
+        metadata={"snapshot_exclude": True},
+    )
+    output_expression_asts_by_id: dict[UUID, Any] = field(
+        default_factory=dict,
+        metadata={"snapshot_exclude": True},
+    )
+    all_member_ids: set[UUID] = field(
+        default_factory=set,
+        metadata={"snapshot_exclude": True},
+    )
+    member_expressions_by_id: dict[UUID, Any] = field(
+        default_factory=dict,
+        metadata={"snapshot_exclude": True},
+    )
+    member_names_by_id: dict[UUID, str] = field(
+        default_factory=dict,
+        metadata={"snapshot_exclude": True},
+    )
 
 
 class ComputedAttributeClassification(str, Enum):

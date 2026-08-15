@@ -1,0 +1,193 @@
+diff --git a/tests/conformance/test_exact_group_identity.py b/tests/conformance/test_exact_group_identity.py
+index 3fce4fb..9ca695e 100644
+--- a/tests/conformance/test_exact_group_identity.py
++++ b/tests/conformance/test_exact_group_identity.py
+@@ -49,16 +49,40 @@ def _identity(graph) -> set[tuple[str, str, str]]:
+             {("elab_matrix_c14_params", "ElabMatrixC14Params", "elab_matrix_c14")},
+             id="model.sysml -> PascalCase package read as snake_case",
+         ),
+-        pytest.param(
+-            "wi014_toy",
+-            {("toy_plant_params", "ToyPlantParams", "toy_plant")},
+-            id="stem -> toy_plant.sysml",
+-        ),
+         pytest.param(
+             "attr_expr_probe",
+             {("design_params", "DesignParams", "design")},
+             id="stem -> design.sysml, one package across two files",
+         ),
++        # The five fixtures below were pinned by comparison against the legacy route
++        # until that route retired with the v5 family (retirement step 2). They are
++        # pinned by value here instead, each expectation read out of the fixture's own
++        # SysML: the group is named after the file that DECLARES the owner of its entry
++        # points. `d316_crosspart_expose` and `quoted_owner_formula` declare their
++        # attributes in `design.sysml`; `wi014_toy` declares its plant in
++        # `toy_plant.sysml`; and `retype_model`'s `design.sysml` declares no attribute at
++        # all — only parts — so every entry point it ships is a calc-def formal owned by
++        # `library.sysml`, and the group is `library_params`.
++        pytest.param(
++            "d316_crosspart_expose",
++            {("design_params", "DesignParams", "design")},
++            id="stem -> design.sysml, cross-part expose",
++        ),
++        pytest.param(
++            "quoted_owner_formula",
++            {("design_params", "DesignParams", "design")},
++            id="stem -> design.sysml, quoted owner part",
++        ),
++        pytest.param(
++            "retype_model",
++            {("library_params", "LibraryParams", "library")},
++            id="stem -> library.sysml, the only file declaring an owner",
++        ),
++        pytest.param(
++            "wi014_toy",
++            {("toy_plant_params", "ToyPlantParams", "toy_plant")},
++            id="stem -> toy_plant.sysml",
++        ),
+     ],
+ )
+ def test_group_identity_comes_from_the_declaring_file_or_package(fixture, expected) -> None:
+@@ -84,44 +108,6 @@ def test_one_package_spanning_two_files_still_gets_one_group_per_file() -> None:
+     }
+ 
+ 
+-@pytest.mark.parametrize(
+-    "fixture",
+-    ["attr_expr_probe", "d316_crosspart_expose", "quoted_owner_formula", "retype_model",
+-     "wi014_toy"],
+-)
+-def test_a_stem_named_group_keeps_the_name_the_legacy_route_ships(fixture) -> None:
+-    """The stem rule is untouched, so these must still match the shipped route.
+-
+-    This is the compatibility guarantee ``test_elaboration_phase5_remediation.py``
+-    pins for one fixture, widened to every stem-named fixture where both routes
+-    agree. The legacy route additionally emits a ``system_design`` group built
+-    from hierarchy data, which the exact route has no equivalent for; it is
+-    excluded here and carried as a Slice 3E question.
+-
+-    Two stem-named fixtures are deliberately absent from this list because the
+-    routes genuinely diverge on them, both for reasons that predate Slice 3B.
+-    Each has its own by-value pin below: ``d38_caret`` and
+-    ``unresolvable_attr_probe``.
+-    """
+-    # Gate 4C part 7, per-node disposition (ledger L-133): this node's subject IS
+-    # the exact-versus-legacy comparison, so it retires with the legacy route
+-    # (ruling 3's shape). Local import so the three pure exact-route nodes in
+-    # this file keep collecting.
+-    from sysml_codegen.orchestration.pipeline_builder import build_pipeline_context
+-
+-    path = FIXTURES_DIR / fixture
+-    exact = {
+-        (group.name, group.class_name)
+-        for group in build_elaborated_pipeline([path]).entry_point_groups
+-    }
+-    legacy = {
+-        (group.name, group.class_name)
+-        for group in build_pipeline_context([path]).computation_graph.entry_point_groups
+-    }
+-
+-    assert exact == legacy - {("system_design", "SystemDesign")}
+-
+-
+ def _parameters(graph) -> set[str]:
+     return {
+         parameter.qualified_name
+@@ -130,8 +116,8 @@ def _parameters(graph) -> set[str]:
+     }
+ 
+ 
+-def test_the_known_exact_versus_legacy_divergence_on_d38_caret() -> None:
+-    """One fixture where the two routes disagree, pinned rather than absorbed.
++def test_the_d38_caret_entry_point_set_is_resolved_per_occurrence() -> None:
++    """The fixture the two routes used to disagree on, now pinned by value alone.
+ 
+     ``d38_caret`` has no ``model.sysml``, so Slice 3B's changed fallback never
+     runs on it and this divergence predates the slice — it is byte-identical at
+@@ -149,36 +135,31 @@ def test_the_known_exact_versus_legacy_divergence_on_d38_caret() -> None:
+     **Disposition made at Slice 3E: this is the expected state, not a defect.**
+     The orchestrator classified it expected-fix at the authority switch, on the
+     epic's ratified premise that string-era attribution is the defect home and
+-    declaration-site semantics are the right answer. The exact column below is
+-    now what the product ships. Diff-ledger row 12 carries the measured
+-    before/after package cells; both are flagged to the Phase 5 owner packet.
++    declaration-site semantics are the right answer. Diff-ledger row 12 carries the
++    measured before/after package cells; both are flagged to the Phase 5 owner packet.
++
++    The legacy column retired with the v5 family (retirement step 2). What it said is
++    kept in the sentences above, because a divergence nobody can still measure is a
++    decision record, not a check. The exact column is what the product ships, and it
++    is asserted here in full, read out of the fixture: ``library.sysml`` declares the
++    exponent and the four ``cell`` occurrences, ``design.sysml`` declares nothing, so
++    the single group is ``library_params`` and it carries six entry points.
+     """
+-    # Gate 4C part 7, per-node disposition (ledger L-133): this node's subject IS
+-    # the exact-versus-legacy comparison, so it retires with the legacy route
+-    # (ruling 3's shape). Local import so the three pure exact-route nodes in
+-    # this file keep collecting.
+-    from sysml_codegen.orchestration.pipeline_builder import build_pipeline_context
+-
+     path = FIXTURES_DIR / "d38_caret"
+     exact = build_elaborated_pipeline([path])
+-    legacy = build_pipeline_context([path]).computation_graph
+ 
+     assert {group.name for group in exact.entry_point_groups} == {"library_params"}
+-    assert {group.name for group in legacy.entry_point_groups} == {"design_params"}
+-
+-    shared = "D38Design__plant__noop__x"
+-    assert _parameters(legacy) == {shared}
+     assert _parameters(exact) == {
+-        shared,
++        "D38Design__plant__noop__x",
+         "D38Design__plant__pack__exponent",
+         *(f"D38Design__plant__pack__cell[{index}]__base_cost" for index in range(4)),
+     }
+ 
+ 
+-def test_the_known_exact_versus_legacy_divergence_on_unresolvable_attr_probe() -> None:
+-    """The second measured divergence, and it is not a naming difference at all.
++def test_the_unresolvable_attr_probe_scopes_inherited_attributes_per_instance() -> None:
++    """The second fixture the routes diverged on, now pinned by value alone.
+ 
+-    The two routes here share **no** entry point. The exact route resolves the
++    The two routes shared **no** entry point. The exact route resolves the
+     inherited design attributes onto three concrete instances — nine
+     ``design_attribute`` entries, which
+     ``test_elaboration_phase5_remediation.py::test_inherited_formulas_are_scoped_to_three_concrete_instances``
+@@ -201,27 +182,17 @@ def test_the_known_exact_versus_legacy_divergence_on_unresolvable_attr_probe() -
+     formulas alias to one class name. Diff-ledger row 36 carries both cells; the
+     fixture is a graph-level probe no test generates a package from, and both
+     halves are flagged to the Phase 5 owner packet.
+-    """
+-    # Gate 4C part 7, per-node disposition (ledger L-133): this node's subject IS
+-    # the exact-versus-legacy comparison, so it retires with the legacy route
+-    # (ruling 3's shape). Local import so the three pure exact-route nodes in
+-    # this file keep collecting.
+-    from sysml_codegen.orchestration.pipeline_builder import build_pipeline_context
+ 
++    The legacy column retired with the v5 family (retirement step 2); its measurement
++    is kept in the sentences above as a decision record. The exact column below is what
++    the product ships.
++    """
+     path = FIXTURES_DIR / "unresolvable_attr_probe"
+     exact = build_elaborated_pipeline([path])
+-    legacy = build_pipeline_context([path]).computation_graph
+ 
+     assert {(group.name, group.class_name) for group in exact.entry_point_groups} == {
+         ("design_params", "DesignParams")
+     }
+-    assert {(group.name, group.class_name) for group in legacy.entry_point_groups} == {
+-        ("system_design", "SystemDesign")
+-    }
+-
+-    assert _parameters(legacy) == {
+-        "UnresolvableAttrProbeDesign__design_derived_instance__my_calc__x"
+-    }
+     assert _parameters(exact) == {
+         f"UnresolvableAttrProbeDesign__{instance}__{attribute}"
+         for instance, attributes in (
+@@ -231,4 +202,3 @@ def test_the_known_exact_versus_legacy_divergence_on_unresolvable_attr_probe() -
+         )
+         for attribute in attributes
+     }
+-    assert not _parameters(exact) & _parameters(legacy), "the routes share no entry point at all"

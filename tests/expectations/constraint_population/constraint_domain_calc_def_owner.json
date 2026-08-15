@@ -1,0 +1,11 @@
+{
+  "constraint_usages": [
+    {
+      "owner_qualified_name": "constraint_domain_calc_def_owner::Sizer",
+      "source_file": "model.sysml",
+      "source_line": 12,
+      "usage_qualified_name": "constraint_domain_calc_def_owner::Sizer::demand_positive"
+    }
+  ],
+  "fixture": "constraint_domain_calc_def_owner"
+}

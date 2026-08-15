@@ -76,17 +76,21 @@ caveat sweep.)*
 
 ## Dispatch Sites
 
-The codebase has **8 multi-type dispatch functions across 6 files** that check
-two or more of FCE / OE / FRE via `is_instance()`.
-
 ### Dual-Check Sites (FCE + OE)
 
-These sites check both FCE and OE and include the invariant comment:
+The authoritative dual-check inventory is `DUAL_CHECK_SITES` in
+`tests/conformance/test_ast_dispatch_invariant.py`. As of merged main it has three
+entries (the display-dispatch site `reconstruct_expression` and the aggregation
+walk both moved cross-repo to agentic-mbse — see the note below):
 
-| File | Function | Invariant comment? |
-|------|----------|--------------------|
-| `expression_utils.py` | `reconstruct_expression` | Yes |
-| `hierarchy_resolver.py` | `_walk_aggregation_ast` | Yes |
+| File | Function | Chain style | Invariant comment? |
+|------|----------|-------------|--------------------|
+| `agentic-mbse` `sysml/aggregation.py` | `_decompose_node` | if/if/if (canonical) | Yes |
+| `usage_extractor.py` | `_extract_single_binding` | elif | Yes |
+| `parameter_groups.py` | `_extract_default_value` | elif | Yes |
+
+The `if/if/if` site must follow full canonical ordering (REQ-AST-03); the `elif`
+sites are safe by first-match-wins but still order FCE before OE.
 
 **The calc-side dispatch site (`build_expression_ast`) was dropped in
 CONSTRAINT-EXEC Item 13.** That responsibility moved cross-repo to agentic-mbse's
@@ -111,10 +115,11 @@ if SysideAdapter.is_instance(expr_node, "FeatureReferenceExpression"): # 3rd
 
 ### Other Sites
 
+These single-pair sites check FCE with FRE (never both FCE and OE), so they are
+not dual-check sites and cannot misclassify:
+
 | File | Function | Checks both FCE+OE? |
 |------|----------|----------------------|
-| `usage_extractor.py` | `_extract_single_binding` | Yes (elif) |
-| `parameter_groups.py` | `_extract_default_value` | Yes (elif) |
 | `hierarchy_resolver.py` | `_extract_single_redefinition` | No (FCE+FRE only) |
 | `hierarchy_resolver.py` | `_unwrap_invocation` | No (FCE+FRE only) |
 | `extractor.py` | `_parse_expression_to_path` | No (FCE+FRE only) |
@@ -123,7 +128,7 @@ Sites using `elif` chains (parameter_groups.py, usage_extractor.py) are safe
 because first-match-wins prevents misclassification. However, they should still
 follow canonical ordering for consistency (REQ-AST-03).
 
-In addition to the 8 multi-type dispatch functions above, single-type helper
+In addition to the dual-check sites above, single-type helper
 functions also call `is_instance()` on expression types (checking only FCE,
 only FRE, or only OE — e.g. `extract_feature_chain_segments` and `binary_op_of`
 in `expression_utils.py`). These are not dispatch sites -- they check a single

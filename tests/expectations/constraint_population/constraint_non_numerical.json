@@ -1,0 +1,17 @@
+{
+  "constraint_usages": [
+    {
+      "owner_qualified_name": "constraint_non_numerical::MixedPurposeHost",
+      "source_file": "model.sysml",
+      "source_line": 13,
+      "usage_qualified_name": "constraint_non_numerical::MixedPurposeHost::status_annotation"
+    },
+    {
+      "owner_qualified_name": "constraint_non_numerical::MixedPurposeHost",
+      "source_file": "model.sysml",
+      "source_line": 17,
+      "usage_qualified_name": "constraint_non_numerical::MixedPurposeHost::positive_value"
+    }
+  ],
+  "fixture": "constraint_non_numerical"
+}

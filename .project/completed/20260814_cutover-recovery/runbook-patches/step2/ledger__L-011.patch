@@ -1,0 +1,22 @@
+--- a/.project/active/cutover-recovery/ledger-4a.json
++++ b/.project/active/cutover-recovery/ledger-4a.json
+@@ -298,17 +298,16 @@
+    "path": "src/sysml_codegen/resolution/graph_builder.py",
+    "repo": "sysml-codegen",
+    "class": "production",
+-   "disposition": "migrate",
++   "disposition": "delete",
+    "origin": "forensic-diff",
+    "group": "4B-v5-family",
+    "authority": "census PROD-09/10 via inventory INV-DISC-038 (disposition delete) [EVIDENCE]; plan Gate 4B; fresh reachability derivation at HEAD",
+    "unreachability": "reachable from cli/__init__.py:262 for exactly two functions; the legacy build_computation_graph is reached only from pipeline_builder.py:64",
+    "replacement_proof_node": "tests/conformance/test_public_authority_switch.py::test_a_refusal_after_the_context_but_before_the_writer_also_leaves_the_tree",
+    "blocked_by": [],
+-   "reason": "Not a clean delete. collect_uncovered_params and collect_unwired_fallthrough are live public-route code inside an otherwise legacy module; they migrate in G0, the rest of the file is deleted in G3.",
++   "reason": "Not a clean delete in one go. collect_uncovered_params and collect_unwired_fallthrough are live public-route code inside an otherwise legacy module; they migrated to resolution/uncovered_params.py at Gate 4B-G0, and the residual module goes with the v5 family. `disposition` read `migrate` while the migration was the pending half; the census disposition recorded in `authority` was always `delete`, and the row carries it again now that the residual is deleted. Retirement step 2 correction: the old reason also said the residual went in G3, which its own `group` contradicts.",
+    "state": "partially-executed",
+    "executed_commit": "db00482",
+-   "remaining": "collect_uncovered_params and collect_unwired_fallthrough moved to resolution/uncovered_params.py and are re-exported here; the rest of the module is deleted in G3.",
+    "removes": [
+     {
+      "group": "4B-v5-family",

@@ -22,7 +22,6 @@ from sysml_codegen.generation.entry_point import (
 )
 from sysml_codegen.generation.initialization import (
     CodeGenerationError,
-    PipelineContext,
     SysMLParsingError,
 )
 from sysml_codegen.generation.modules import (
@@ -35,7 +34,6 @@ from sysml_codegen.generation.pipeline import (
 from sysml_codegen.generation.preservation import (
     backup_implementation,
     should_regenerate_stencil,
-    should_regenerate_stencil_from_graph,
 )
 from sysml_codegen.generation.registry import (
     generate_registry,
@@ -67,7 +65,6 @@ __all__ = [
     "generate_inputs_readme",
     # initialization
     "CodeGenerationError",
-    "PipelineContext",
     "SysMLParsingError",
     # modules
     "generate_teax_module",
@@ -77,7 +74,6 @@ __all__ = [
     # preservation
     "backup_implementation",
     "should_regenerate_stencil",
-    "should_regenerate_stencil_from_graph",
     # registry
     "generate_registry",
     "generate_registry_from_graph",

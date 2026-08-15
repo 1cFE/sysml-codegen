@@ -1,0 +1,17 @@
+{
+  "constraint_usages": [
+    {
+      "owner_qualified_name": "StrictBoundary::Host",
+      "source_file": "strict_boundary.sysml",
+      "source_line": 35,
+      "usage_qualified_name": "StrictBoundary::Host::pos_bound"
+    },
+    {
+      "owner_qualified_name": "StrictBoundary::Host",
+      "source_file": "strict_boundary.sysml",
+      "source_line": 39,
+      "usage_qualified_name": "StrictBoundary::Host::neg_bound"
+    }
+  ],
+  "fixture": "constraint_strict_boundary"
+}

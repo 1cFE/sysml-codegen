@@ -1,0 +1,11 @@
+{
+  "constraint_usages": [
+    {
+      "owner_qualified_name": "NonFiniteLiteral::the_rig",
+      "source_file": "model.sysml",
+      "source_line": 35,
+      "usage_qualified_name": "NonFiniteLiteral::the_rig::overflow_check"
+    }
+  ],
+  "fixture": "non_finite_literal"
+}

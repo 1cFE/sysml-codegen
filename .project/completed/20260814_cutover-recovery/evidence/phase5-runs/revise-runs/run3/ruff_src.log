@@ -1,0 +1,134 @@
+warning: The top-level linter settings are deprecated in favour of their counterparts in the `lint` section. Please update the following options in `pyproject.toml`:
+  - 'select' -> 'lint.select'
+UP042 Class BindingResolutionType inherits from both `str` and `enum.Enum`
+  --> src/sysml_codegen/core/models.py:13:7
+   |
+13 | class BindingResolutionType(str, Enum):
+   |       ^^^^^^^^^^^^^^^^^^^^^
+14 |     """Classification of how a calc input binding resolves.
+   |
+help: Inherit from `enum.StrEnum`
+
+UP042 Class ElaborationCode inherits from both `str` and `enum.Enum`
+  --> src/sysml_codegen/elaboration/diagnostics.py:10:7
+   |
+10 | class ElaborationCode(str, Enum):
+   |       ^^^^^^^^^^^^^^^
+11 |     SYSML_NAMESPACE_NOT_DISTINGUISHABLE = "SYSML_NAMESPACE_NOT_DISTINGUISHABLE"
+12 |     SI_OCCURRENCE_MISSING = "SI_OCCURRENCE_MISSING"
+   |
+help: Inherit from `enum.StrEnum`
+
+UP042 Class ValueSite inherits from both `str` and `enum.Enum`
+  --> src/sysml_codegen/elaboration/graph.py:59:7
+   |
+59 | class ValueSite(str, Enum):
+   |       ^^^^^^^^^
+60 |     NONE = "none"
+61 |     DEFINITION_DEFAULT = "definition_default"
+   |
+help: Inherit from `enum.StrEnum`
+
+UP042 Class NodeKind inherits from both `str` and `enum.Enum`
+   --> src/sysml_codegen/elaboration/identity.py:139:7
+    |
+139 | class NodeKind(str, Enum):
+    |       ^^^^^^^^
+140 |     ATTRIBUTE = "attribute"
+141 |     CALCULATION = "calculation"
+    |
+help: Inherit from `enum.StrEnum`
+
+UP042 Class ConstraintKind inherits from both `str` and `enum.Enum`
+  --> src/sysml_codegen/extraction/constraint_report.py:24:7
+   |
+24 | class ConstraintKind(str, Enum):
+   |       ^^^^^^^^^^^^^^
+25 |     """What a swept ``ConstraintUsage`` is, finest-grained for the report.
+   |
+help: Inherit from `enum.StrEnum`
+
+UP042 Class OwnerKind inherits from both `str` and `enum.Enum`
+  --> src/sysml_codegen/extraction/constraint_report.py:40:7
+   |
+40 | class OwnerKind(str, Enum):
+   |       ^^^^^^^^^
+41 |     """The kind of element that owns a constraint, for the diagnostic wording."""
+   |
+help: Inherit from `enum.StrEnum`
+
+UP042 Class ComputedAttributeClassification inherits from both `str` and `enum.Enum`
+   --> src/sysml_codegen/extraction/data_models.py:207:7
+    |
+207 | class ComputedAttributeClassification(str, Enum):
+    |       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+208 |     """Classification of a PartDef/PartUsage attribute expression.
+    |
+help: Inherit from `enum.StrEnum`
+
+UP042 Class Compilability inherits from both `str` and `enum.Enum`
+  --> src/sysml_codegen/extraction/expression_compiler.py:29:7
+   |
+29 | class Compilability(str, Enum):
+   |       ^^^^^^^^^^^^^
+30 |     """Compilability verdict for a CalcDef or individual output expression.
+   |
+help: Inherit from `enum.StrEnum`
+
+UP042 Class SourceForm inherits from both `str` and `enum.Enum`
+  --> src/sysml_codegen/extraction/source_evidence.py:37:7
+   |
+37 | class SourceForm(str, Enum):
+   |       ^^^^^^^^^^
+38 |     """The authored form of a binding's right-hand side.
+   |
+help: Inherit from `enum.StrEnum`
+
+UP042 Class ValueSiteKind inherits from both `str` and `enum.Enum`
+  --> src/sysml_codegen/extraction/source_evidence.py:57:7
+   |
+57 | class ValueSiteKind(str, Enum):
+   |       ^^^^^^^^^^^^^
+58 |     """The three modeled value-site kinds (design D2).
+   |
+help: Inherit from `enum.StrEnum`
+
+UP042 Class ReadinessCode inherits from both `str` and `enum.Enum`
+   --> src/sysml_codegen/extraction/source_evidence.py:151:7
+    |
+151 | class ReadinessCode(str, Enum):
+    |       ^^^^^^^^^^^^^
+152 |     """Machine-checkable source-readiness dispositions (contract D8).
+    |
+help: Inherit from `enum.StrEnum`
+
+UP042 Class EntryPointType inherits from both `str` and `enum.Enum`
+  --> src/sysml_codegen/resolution/models.py:46:7
+   |
+46 | class EntryPointType(str, Enum):
+   |       ^^^^^^^^^^^^^^
+47 |     """ADR-001 entry point types.
+   |
+help: Inherit from `enum.StrEnum`
+
+UP042 Class ModuleKind inherits from both `str` and `enum.Enum`
+   --> src/sysml_codegen/resolution/models.py:201:7
+    |
+201 | class ModuleKind(str, Enum):
+    |       ^^^^^^^^^^
+202 |     """Kind of a pipeline module — set once at construction, dispatched on at every
+203 |     generation seam. Replaces the two accreted Boolean flags PipelineModule carried
+    |
+help: Inherit from `enum.StrEnum`
+
+UP042 Class ConstraintInputResolution inherits from both `str` and `enum.Enum`
+   --> src/sysml_codegen/resolution/models.py:282:7
+    |
+282 | class ConstraintInputResolution(str, Enum):
+    |       ^^^^^^^^^^^^^^^^^^^^^^^^^
+283 |     """How one concrete constraint's formal was resolved (Item 5 / D1 terminal switch)."""
+    |
+help: Inherit from `enum.StrEnum`
+
+Found 14 errors.
+No fixes available (14 hidden fixes can be enabled with the `--unsafe-fixes` option).

@@ -1,0 +1,850 @@
+{
+  "fixture_count": 37,
+  "rows": [
+    {
+      "difference_sections": [],
+      "exact": {
+        "aliases": 0,
+        "constraints": 0,
+        "entry_points": 3,
+        "fingerprint": "32acd186e161db3489202cf8745268c8aa810b38e7d087a4b7263d637070ad7a",
+        "modules": 1,
+        "status": "graph"
+      },
+      "fixture": "agg_literal_probe",
+      "legacy": {
+        "codes": [],
+        "error_type": "CodeGenerationError",
+        "message": "No calculation definitions found in models. Ensure library models contain calc definitions.",
+        "status": "error"
+      }
+    },
+    {
+      "difference_sections": [],
+      "exact": {
+        "codes": [
+          "SI_SELF_BINDING"
+        ],
+        "error_type": "ElaborationError",
+        "message": "SI_SELF_BINDING: AggLocalTermProbe__Cell__cost_model.area",
+        "status": "error"
+      },
+      "fixture": "agg_localterm_probe",
+      "legacy": {
+        "aliases": 0,
+        "constraints": 0,
+        "entry_points": 2,
+        "fingerprint": "fadac766c6a1ec8bed32bafb805a38b561cbf5440d9757673f40e2f4af319d7b",
+        "modules": 2,
+        "status": "graph"
+      }
+    },
+    {
+      "difference_sections": [],
+      "exact": {
+        "codes": [
+          "SI_SELF_BINDING"
+        ],
+        "error_type": "ElaborationError",
+        "message": "SI_SELF_BINDING: AliasAggProbeLibrary__Widget__cost_model.base_cost",
+        "status": "error"
+      },
+      "fixture": "alias_agg_probe",
+      "legacy": {
+        "aliases": 0,
+        "constraints": 0,
+        "entry_points": 3,
+        "fingerprint": "8b26f59795683ddba51ae897c500b8603e9cc3060ccbb89d2893cb365018d34d",
+        "modules": 4,
+        "status": "graph"
+      }
+    },
+    {
+      "difference_sections": [
+        "modules",
+        "execution_order"
+      ],
+      "exact": {
+        "aliases": 3,
+        "constraints": 0,
+        "entry_points": 16,
+        "fingerprint": "cab59c4fc0289e42a06cf8e769f899d327cb3b5a7da13c50fb3dd1207b0a96c0",
+        "modules": 17,
+        "status": "graph"
+      },
+      "fixture": "attr_expr_probe",
+      "legacy": {
+        "aliases": 3,
+        "constraints": 0,
+        "entry_points": 16,
+        "fingerprint": "c58933b1e8bdb51180751ebe39a23cc2caeb80f5afa701caa7f76facbc6d9f19",
+        "modules": 16,
+        "status": "graph"
+      }
+    },
+    {
+      "difference_sections": [],
+      "exact": {
+        "codes": [
+          "SI_SELF_BINDING"
+        ],
+        "error_type": "ElaborationError",
+        "message": "SI_SELF_BINDING: CATFMFEVacuum__catf_vacuum_pumping__pump_load.pumping_speed_total",
+        "status": "error"
+      },
+      "fixture": "catf_mfe_model",
+      "legacy": {
+        "aliases": 44,
+        "constraints": 0,
+        "entry_points": 60,
+        "fingerprint": "959c2a29aa864ec2c3ca894d957dc7b507ce00290410988071fd98afff4669d7",
+        "modules": 43,
+        "status": "graph"
+      }
+    },
+    {
+      "difference_sections": [],
+      "exact": {
+        "codes": [
+          "SI_SELF_BINDING",
+          "SI_SELF_BINDING"
+        ],
+        "error_type": "ElaborationError",
+        "message": "SI_SELF_BINDING: ChainOverrideLibrary__Sensor__cost_model.base_cost; SI_SELF_BINDING: ChainOverrideLibrary__Sensor__cost_model.sensitivity",
+        "status": "error"
+      },
+      "fixture": "chain_override_probe",
+      "legacy": {
+        "aliases": 0,
+        "constraints": 0,
+        "entry_points": 3,
+        "fingerprint": "bfcb8811a8552861748f8f272dd4a7124c5e6136c02e053c685fcf169672a9a5",
+        "modules": 2,
+        "status": "graph"
+      }
+    },
+    {
+      "difference_sections": [],
+      "exact": {
+        "codes": [
+          "SI_SELF_BINDING",
+          "SI_SELF_BINDING",
+          "SI_SELF_BINDING"
+        ],
+        "error_type": "ElaborationError",
+        "message": "SI_SELF_BINDING: ChainSpikeDesign__spike_design__area_calc.length; SI_SELF_BINDING: ChainSpikeDesign__spike_design__area_calc.width; SI_SELF_BINDING: ChainSpikeDesign__spike_design__cost_calc.rate",
+        "status": "error"
+      },
+      "fixture": "chain_spike_model",
+      "legacy": {
+        "aliases": 0,
+        "constraints": 0,
+        "entry_points": 3,
+        "fingerprint": "d83a616e6ccfac9a1130122feca1d2c4f08a0caf07136fb292f34e5aeb6439c4",
+        "modules": 3,
+        "status": "graph"
+      }
+    },
+    {
+      "difference_sections": [
+        "modules",
+        "entry_points"
+      ],
+      "exact": {
+        "aliases": 0,
+        "constraints": 1,
+        "entry_points": 1,
+        "fingerprint": "1847a1c1b667ee54324278c957c3f7bebd1edab5f82517b0b380fdeb64766966",
+        "modules": 2,
+        "status": "graph"
+      },
+      "fixture": "constraint_inline",
+      "legacy": {
+        "aliases": 0,
+        "constraints": 1,
+        "entry_points": 1,
+        "fingerprint": "0b8005b9b9d2d141933d1df322ed14b1844ab5f1ed5dff2adc26f22c581c6fa1",
+        "modules": 2,
+        "status": "graph"
+      }
+    },
+    {
+      "difference_sections": [
+        "modules",
+        "entry_points",
+        "execution_order"
+      ],
+      "exact": {
+        "aliases": 0,
+        "constraints": 3,
+        "entry_points": 3,
+        "fingerprint": "2248b571b0c2530f2ef5361b1714a8566d5fb3975978cbaea38f5bdab3dec140",
+        "modules": 7,
+        "status": "graph"
+      },
+      "fixture": "constraint_multi_instance",
+      "legacy": {
+        "aliases": 0,
+        "constraints": 3,
+        "entry_points": 1,
+        "fingerprint": "f0d90ff3432d90b66c84d5fdc6faf45c50acdaa71b850b0b6f5009882b047e27",
+        "modules": 5,
+        "status": "graph"
+      }
+    },
+    {
+      "difference_sections": [
+        "modules",
+        "entry_points",
+        "constraint_catalog"
+      ],
+      "exact": {
+        "aliases": 0,
+        "constraints": 1,
+        "entry_points": 1,
+        "fingerprint": "4a77902409c51afb2eaa6ecae1e733d7e2ae5967fccc0e06df7046aa0d5c6364",
+        "modules": 2,
+        "status": "graph"
+      },
+      "fixture": "constraint_non_numerical",
+      "legacy": {
+        "aliases": 0,
+        "constraints": 1,
+        "entry_points": 1,
+        "fingerprint": "74539e2a3e2088d5ab07264f75df4c084956a63eb0520b4f5b4fedbf0fe7a1fb",
+        "modules": 2,
+        "status": "graph"
+      }
+    },
+    {
+      "difference_sections": [],
+      "exact": {
+        "codes": [
+          "SI_SELF_BINDING"
+        ],
+        "error_type": "ElaborationError",
+        "message": "SI_SELF_BINDING: CrossPartRollupLib__Subsystem__cost_calc.base",
+        "status": "error"
+      },
+      "fixture": "crosspart_rollup_twolevel",
+      "legacy": {
+        "aliases": 0,
+        "constraints": 0,
+        "entry_points": 2,
+        "fingerprint": "baa2c73358b64ef1fba6dd62237d7c899dfdc1eda805b9a0e956f9354fcb6195",
+        "modules": 4,
+        "status": "graph"
+      }
+    },
+    {
+      "difference_sections": [
+        "modules",
+        "entry_points",
+        "execution_order"
+      ],
+      "exact": {
+        "aliases": 0,
+        "constraints": 0,
+        "entry_points": 6,
+        "fingerprint": "77288b4b4048dd8a0930c48d56c12e3de024a3ff1ee4e4ab673998840066b589",
+        "modules": 2,
+        "status": "graph"
+      },
+      "fixture": "d38_caret",
+      "legacy": {
+        "aliases": 0,
+        "constraints": 0,
+        "entry_points": 1,
+        "fingerprint": "c1f9623ba68ca68439034905c12dda965fb54eca9facda0f54be1d4556e82be0",
+        "modules": 1,
+        "status": "graph"
+      }
+    },
+    {
+      "difference_sections": [
+        "modules",
+        "entry_points",
+        "execution_order",
+        "aliases"
+      ],
+      "exact": {
+        "aliases": 1,
+        "constraints": 0,
+        "entry_points": 4,
+        "fingerprint": "3fb0d3f0bd7fa45b9ae1e28d146034ba74844ae4da3ee3dbcae2ff3016f81316",
+        "modules": 5,
+        "status": "graph"
+      },
+      "fixture": "deep_cross_scope_probe",
+      "legacy": {
+        "aliases": 0,
+        "constraints": 0,
+        "entry_points": 7,
+        "fingerprint": "794f996578d9948943e68aa771ed300b268e45922d18f04ea8baefe14063219b",
+        "modules": 5,
+        "status": "graph"
+      }
+    },
+    {
+      "difference_sections": [],
+      "exact": {
+        "codes": [
+          "SI_EXPRESSION_SOURCE_UNSUPPORTED",
+          "SI_EXPRESSION_SOURCE_UNSUPPORTED",
+          "SI_EXPRESSION_SOURCE_UNSUPPORTED",
+          "SI_EXPRESSION_SOURCE_UNSUPPORTED",
+          "SI_EXPRESSION_SOURCE_UNSUPPORTED",
+          "SI_EXPRESSION_SOURCE_UNSUPPORTED",
+          "SI_SELF_BINDING",
+          "SI_SELF_BINDING",
+          "SI_SELF_BINDING"
+        ],
+        "error_type": "ElaborationError",
+        "message": "SI_EXPRESSION_SOURCE_UNSUPPORTED: ExpressionBindingDesign__expr_probe__adjusted_calc.combined_input; SI_SELF_BINDING: ExpressionBindingDesign__expr_probe__adjusted_calc.tax_rate; SI_EXPRESSION_SOURCE_UNSUPPORTED: ExpressionBindingDesign__expr_probe__cost_calc.combined_input; SI_SELF_BINDING: ExpressionBindingDesign__expr_probe__cost_calc.tax_rate; SI_EXPRESSION_SOURCE_UNSUPPORTED: ExpressionBindingDesign__expr_probe__delta_calc.value_a; SI_EXPRESSION_SOURCE_UNSUPPORTED: ExpressionBindingDesign__expr_probe__delta_calc.value_b; SI_EXPRESSION_SOURCE_UNSUPPORTED: ExpressionBindingDesign__expr_probe__full_cost_calc.combined_input; SI_SELF_BINDING: ExpressionBindingDesign__expr_probe__full_cost_calc.tax_rate; SI_EXPRESSION_SOURCE_UNSUPPORTED: ExpressionBindingDesign__expr_probe__net_calc.x",
+        "status": "error"
+      },
+      "fixture": "expression_binding_probe",
+      "legacy": {
+        "aliases": 0,
+        "constraints": 0,
+        "entry_points": 7,
+        "fingerprint": "140d9c18dccf4e522cc44b2f5bed60fc6595e6f1e355694746ad79963e7885c6",
+        "modules": 5,
+        "status": "graph"
+      }
+    },
+    {
+      "difference_sections": [
+        "modules",
+        "entry_points",
+        "execution_order",
+        "aliases"
+      ],
+      "exact": {
+        "aliases": 7,
+        "constraints": 1,
+        "entry_points": 27,
+        "fingerprint": "08055d006282b35914728584cdaa65598bd13099d5001d2eafe4f249c5cb2f25",
+        "modules": 9,
+        "status": "graph"
+      },
+      "fixture": "fusion_tea",
+      "legacy": {
+        "aliases": 5,
+        "constraints": 1,
+        "entry_points": 31,
+        "fingerprint": "041556a7fff2ed10e4c37f691a5ecf5ba7ef61ca279e06b45d1a150e6aba9e93",
+        "modules": 9,
+        "status": "graph"
+      }
+    },
+    {
+      "difference_sections": [],
+      "exact": {
+        "codes": [
+          "SI_SELF_BINDING",
+          "SI_SELF_BINDING"
+        ],
+        "error_type": "ElaborationError",
+        "message": "SI_SELF_BINDING: GateA__Unrelated__doubler.seed; SI_SELF_BINDING: GateA__the_host__viability.gain",
+        "status": "error"
+      },
+      "fixture": "gate_a",
+      "legacy": {
+        "aliases": 0,
+        "constraints": 1,
+        "entry_points": 3,
+        "fingerprint": "ee72f640dea13394ec1c59f6cc9c9ae806a7260bf33ea8ea6bdcb0e773e12263",
+        "modules": 3,
+        "status": "graph"
+      }
+    },
+    {
+      "difference_sections": [],
+      "exact": {
+        "codes": [
+          "SI_SELF_BINDING",
+          "SI_SELF_BINDING"
+        ],
+        "error_type": "ElaborationError",
+        "message": "SI_SELF_BINDING: GateAPackageOwner__Unrelated__doubler.seed; SI_SELF_BINDING: GateAPackageOwner__pkg_check.limit",
+        "status": "error"
+      },
+      "fixture": "gate_a_package_owner",
+      "legacy": {
+        "aliases": 0,
+        "constraints": 1,
+        "entry_points": 3,
+        "fingerprint": "39bf6e874dacacacd737def12ca9773836839f3a47c89440a468388c2e89de15",
+        "modules": 3,
+        "status": "graph"
+      }
+    },
+    {
+      "difference_sections": [],
+      "exact": {
+        "codes": [
+          "SI_SELF_BINDING",
+          "SI_SELF_BINDING",
+          "SI_SELF_BINDING",
+          "SI_SELF_BINDING",
+          "SI_SELF_BINDING",
+          "SI_SELF_BINDING",
+          "SI_SELF_BINDING",
+          "SI_SELF_BINDING",
+          "SI_SELF_BINDING",
+          "SI_SELF_BINDING",
+          "SI_SELF_BINDING",
+          "SI_SELF_BINDING",
+          "SI_SELF_BINDING",
+          "SI_SELF_BINDING",
+          "SI_SELF_BINDING",
+          "SI_SELF_BINDING",
+          "SI_SELF_BINDING",
+          "SI_SELF_BINDING",
+          "SI_SELF_BINDING",
+          "SI_SELF_BINDING",
+          "SI_SELF_BINDING"
+        ],
+        "error_type": "ElaborationError",
+        "message": "SI_SELF_BINDING: IfePlantLib__Base_Driver__base_power_calc.bank_energy; SI_SELF_BINDING: IfePlantLib__Base_Driver__base_power_calc.efficiency; SI_SELF_BINDING: IfePlantLib__Coil__volume_calc.radius; SI_SELF_BINDING: IfePlantLib__Hif_Driver__hif_cost_calc.bank_energy; SI_SELF_BINDING: IfePlantLib__Hif_Driver__hif_cost_calc.cost_per_joule; SI_SELF_BINDING: IfePlantLib__Ife_Power_Plant__lcoe_calc.availability; SI_SELF_BINDING: IfePlantLib__Ife_Power_Plant__lcoe_calc.blanket_energy_multiple; SI_SELF_BINDING: IfePlantLib__Ife_Power_Plant__lcoe_calc.discount_rate; SI_SELF_BINDING: IfePlantLib__Ife_Power_Plant__lcoe_calc.driver_cost_constant; SI_SELF_BINDING: IfePlantLib__Ife_Power_Plant__lcoe_calc.driver_efficiency; SI_SELF_BINDING: IfePlantLib__Ife_Power_Plant__lcoe_calc.driver_energy; SI_SELF_BINDING: IfePlantLib__Ife_Power_Plant__lcoe_calc.driver_lifetime_shots; SI_SELF_BINDING: IfePlantLib__Ife_Power_Plant__lcoe_calc.frequency; SI_SELF_BINDING: IfePlantLib__Ife_Power_Plant__lcoe_calc.gain; SI_SELF_BINDING: IfePlantLib__Ife_Power_Plant__lcoe_calc.om_cost_constant; SI_SELF_BINDING: IfePlantLib__Ife_Power_Plant__lcoe_calc.plant_cost_constant; SI_SELF_BINDING: IfePlantLib__Ife_Power_Plant__lcoe_calc.target_cost_constant; SI_SELF_BINDING: IfePlantLib__Ife_Power_Plant__lcoe_calc.thermal_efficiency; SI_SELF_BINDING: IfePlantLib__Ife_Power_Plant__lcoe_calc.yield_cost_constant; SI_SELF_BINDING: IfePlantLib__Reaction_Chamber__yield_calc.blanket_multiple; SI_SELF_BINDING: IfePlantLib__Reaction_Chamber__yield_calc.yield_constant",
+        "status": "error"
+      },
+      "fixture": "ife_plant",
+      "legacy": {
+        "aliases": 2,
+        "constraints": 0,
+        "entry_points": 25,
+        "fingerprint": "92871a682a1a681c4867804d959275ad0f72ae2b415393623e472e58bcee79a3",
+        "modules": 8,
+        "status": "graph"
+      }
+    },
+    {
+      "difference_sections": [],
+      "exact": {
+        "codes": [
+          "SI_EXPRESSION_SOURCE_UNSUPPORTED"
+        ],
+        "error_type": "ElaborationError",
+        "message": "SI_EXPRESSION_SOURCE_UNSUPPORTED: InvocationBindingDesign__probe__c.x",
+        "status": "error"
+      },
+      "fixture": "invocation_binding_probe",
+      "legacy": {
+        "aliases": 0,
+        "constraints": 0,
+        "entry_points": 1,
+        "fingerprint": "dbb028f59c495ae675f5072693ec1c8cb11fb568bee92b8a73837f3ab8ab94b5",
+        "modules": 1,
+        "status": "graph"
+      }
+    },
+    {
+      "difference_sections": [],
+      "exact": {
+        "codes": [
+          "SI_SELF_BINDING"
+        ],
+        "error_type": "ElaborationError",
+        "message": "SI_SELF_BINDING: Issue22Library__Widget__cost_model.base_cost",
+        "status": "error"
+      },
+      "fixture": "issue22_model",
+      "legacy": {
+        "aliases": 0,
+        "constraints": 0,
+        "entry_points": 3,
+        "fingerprint": "620ccadae06f32be6e131b8ef5b5135cd8452787be7d3a49b86a040d9d560594",
+        "modules": 3,
+        "status": "graph"
+      }
+    },
+    {
+      "difference_sections": [
+        "modules",
+        "entry_points",
+        "execution_order",
+        "constraint_catalog"
+      ],
+      "exact": {
+        "aliases": 0,
+        "constraints": 3,
+        "entry_points": 6,
+        "fingerprint": "2ad7f3e8361b700f855459de2a7fd01c88379f3790db9e6103e63c1bb9b31875",
+        "modules": 5,
+        "status": "graph"
+      },
+      "fixture": "modeled_default_fidelity",
+      "legacy": {
+        "aliases": 0,
+        "constraints": 3,
+        "entry_points": 6,
+        "fingerprint": "23ff7a36a2f73e4cb143ada797405a07d240fc21e52c90c13353451ca0c832b4",
+        "modules": 5,
+        "status": "graph"
+      }
+    },
+    {
+      "difference_sections": [],
+      "exact": {
+        "codes": [
+          "SI_SELF_BINDING",
+          "SI_SELF_BINDING"
+        ],
+        "error_type": "ElaborationError",
+        "message": "SI_SELF_BINDING: PlantValueShapesLib__Chamber_Unit__select.footprint; SI_SELF_BINDING: PlantValueShapesLib__Chamber_Unit__select.wall",
+        "status": "error"
+      },
+      "fixture": "plant_value_shapes",
+      "legacy": {
+        "aliases": 0,
+        "constraints": 0,
+        "entry_points": 7,
+        "fingerprint": "0fa81ae5a81e0b0dddfb325ffb8e5408156edf5ca0b7b4179a8d1918868b6982",
+        "modules": 6,
+        "status": "graph"
+      }
+    },
+    {
+      "difference_sections": [],
+      "exact": {
+        "codes": [
+          "SI_SELF_BINDING"
+        ],
+        "error_type": "ElaborationError",
+        "message": "SI_SELF_BINDING: PlantValuesLib__Power_Plant__viability.gain",
+        "status": "error"
+      },
+      "fixture": "plant_values",
+      "legacy": {
+        "aliases": 1,
+        "constraints": 1,
+        "entry_points": 5,
+        "fingerprint": "494d5999d60359701e0422bdf349f8d6aff9166e8990d2e37d014a5b627545cc",
+        "modules": 3,
+        "status": "graph"
+      }
+    },
+    {
+      "difference_sections": [],
+      "exact": {
+        "aliases": 0,
+        "constraints": 0,
+        "entry_points": 2,
+        "fingerprint": "d4932c97731f25624f494ecfd4bc4274bcc8eabb666934632431e840fd9b4d6b",
+        "modules": 2,
+        "status": "graph"
+      },
+      "fixture": "quoted_owner_formula",
+      "legacy": {
+        "aliases": 0,
+        "constraints": 0,
+        "entry_points": 2,
+        "fingerprint": "d4932c97731f25624f494ecfd4bc4274bcc8eabb666934632431e840fd9b4d6b",
+        "modules": 2,
+        "status": "graph"
+      }
+    },
+    {
+      "difference_sections": [],
+      "exact": {
+        "codes": [
+          "SI_SELF_BINDING",
+          "SI_SELF_BINDING",
+          "SI_SELF_BINDING"
+        ],
+        "error_type": "ElaborationError",
+        "message": "SI_SELF_BINDING: ReturnStylesDesign__rs_design__ca.a; SI_SELF_BINDING: ReturnStylesDesign__rs_design__cb.b; SI_SELF_BINDING: ReturnStylesDesign__rs_design__cd.d",
+        "status": "error"
+      },
+      "fixture": "return_styles",
+      "legacy": {
+        "aliases": 0,
+        "constraints": 0,
+        "entry_points": 4,
+        "fingerprint": "6c8f6983c62c08339fdd46de07ca7b7430423d706eed92299d9d7ba0c10a678c",
+        "modules": 4,
+        "status": "graph"
+      }
+    },
+    {
+      "difference_sections": [
+        "modules",
+        "entry_points",
+        "execution_order"
+      ],
+      "exact": {
+        "aliases": 0,
+        "constraints": 0,
+        "entry_points": 6,
+        "fingerprint": "cb96d52acdda42d25dc6232b2df1b1ed1507bccb933b571e7b0e1fe23915f057",
+        "modules": 6,
+        "status": "graph"
+      },
+      "fixture": "retype_model",
+      "legacy": {
+        "aliases": 0,
+        "constraints": 0,
+        "entry_points": 4,
+        "fingerprint": "c3aa52d5b6f906a46987d9c7d2dbdb1ab920f5f6eaa02a83194dec5ef4349a78",
+        "modules": 5,
+        "status": "graph"
+      }
+    },
+    {
+      "difference_sections": [],
+      "exact": {
+        "aliases": 0,
+        "constraints": 0,
+        "entry_points": 0,
+        "fingerprint": "625a922705864ad8a9a70713ee120904e664eabba411f3056026921acbc25194",
+        "modules": 0,
+        "status": "graph"
+      },
+      "fixture": "sample_model",
+      "legacy": {
+        "aliases": 0,
+        "constraints": 0,
+        "entry_points": 0,
+        "fingerprint": "625a922705864ad8a9a70713ee120904e664eabba411f3056026921acbc25194",
+        "modules": 0,
+        "status": "graph"
+      }
+    },
+    {
+      "difference_sections": [],
+      "exact": {
+        "codes": [
+          "SI_SELF_BINDING"
+        ],
+        "error_type": "ElaborationError",
+        "message": "SI_SELF_BINDING: TrapLib__Trap_Plant__avail_calc.availability",
+        "status": "error"
+      },
+      "fixture": "self_named_binding_trap",
+      "legacy": {
+        "aliases": 0,
+        "constraints": 0,
+        "entry_points": 1,
+        "fingerprint": "a9e04ce155d0032942a56d3c69025a458e2c5a5d469ca41f6a8ff6188e365d9c",
+        "modules": 1,
+        "status": "graph"
+      }
+    },
+    {
+      "difference_sections": [],
+      "exact": {
+        "codes": [
+          "SI_SELF_BINDING"
+        ],
+        "error_type": "ElaborationError",
+        "message": "SI_SELF_BINDING: RescueLib__Rescue_Plant__sink_calc.throughput",
+        "status": "error"
+      },
+      "fixture": "self_named_rescue",
+      "legacy": {
+        "aliases": 1,
+        "constraints": 0,
+        "entry_points": 1,
+        "fingerprint": "5454c94872c2c984c8cae8466897198062e27288a1b1935ad3f2c9cf2a784f97",
+        "modules": 2,
+        "status": "graph"
+      }
+    },
+    {
+      "difference_sections": [
+        "modules",
+        "entry_points"
+      ],
+      "exact": {
+        "aliases": 0,
+        "constraints": 0,
+        "entry_points": 1,
+        "fingerprint": "8c5b8559c6fbb374026f507846158cc1b114fb61e52ad8c23579eba2414156f5",
+        "modules": 1,
+        "status": "graph"
+      },
+      "fixture": "shadowed_reference",
+      "legacy": {
+        "aliases": 0,
+        "constraints": 0,
+        "entry_points": 1,
+        "fingerprint": "06a1964e66620abe0eca054d21813d6745ddca9e4c3d7e1891eb6d4d51c62b59",
+        "modules": 1,
+        "status": "graph"
+      }
+    },
+    {
+      "difference_sections": [],
+      "exact": {
+        "codes": [
+          "SI_SELF_BINDING",
+          "SI_SELF_BINDING"
+        ],
+        "error_type": "ElaborationError",
+        "message": "SI_SELF_BINDING: SharedProducer__the_rig__floor_check.gain; SI_SELF_BINDING: SharedProducer__the_rig__scaler.gain",
+        "status": "error"
+      },
+      "fixture": "shared_producer",
+      "legacy": {
+        "aliases": 0,
+        "constraints": 1,
+        "entry_points": 2,
+        "fingerprint": "64c51054d08c3ea7398ebbc16e48f7b5c2805af6f2b0bb19117bdc71c2d44511",
+        "modules": 3,
+        "status": "graph"
+      }
+    },
+    {
+      "difference_sections": [],
+      "exact": {
+        "codes": [
+          "SI_SELF_BINDING"
+        ],
+        "error_type": "ElaborationError",
+        "message": "SI_SELF_BINDING: SiblingLib__Chamber__power_calc.fuel",
+        "status": "error"
+      },
+      "fixture": "sibling_channel_ambiguity",
+      "legacy": {
+        "aliases": 2,
+        "constraints": 0,
+        "entry_points": 2,
+        "fingerprint": "c3208bda0dbb0824972c6f1c8985c5da7dad7026ea75c553ff280e51d029ecbc",
+        "modules": 3,
+        "status": "graph"
+      }
+    },
+    {
+      "difference_sections": [],
+      "exact": {
+        "codes": [
+          "SI_SELF_BINDING",
+          "SI_SELF_BINDING",
+          "SI_SELF_BINDING",
+          "SI_SELF_BINDING",
+          "SI_SELF_BINDING",
+          "SI_SELF_BINDING",
+          "SI_SELF_BINDING",
+          "SI_SELF_BINDING",
+          "SI_SELF_BINDING",
+          "SI_SELF_BINDING",
+          "SI_SELF_BINDING",
+          "SI_SELF_BINDING",
+          "SI_SELF_BINDING",
+          "SI_SELF_BINDING",
+          "SI_SELF_BINDING",
+          "SI_SELF_BINDING",
+          "SI_SELF_BINDING",
+          "SI_SELF_BINDING",
+          "SI_SELF_BINDING",
+          "SI_SELF_BINDING",
+          "SI_SELF_BINDING",
+          "SI_SELF_BINDING",
+          "SI_SELF_BINDING",
+          "SI_SELF_BINDING"
+        ],
+        "error_type": "ElaborationError",
+        "message": "SI_SELF_BINDING: SolarBatteryDesign__solar_battery_plant__annualized_financial.discount_rate; SI_SELF_BINDING: SolarBatteryDesign__solar_battery_plant__annualized_financial.plant_lifetime; SI_SELF_BINDING: SolarBatteryDesign__solar_battery_plant__annualized_fuel.fuel_consumption; SI_SELF_BINDING: SolarBatteryDesign__solar_battery_plant__annualized_fuel.fuel_unit_cost; SI_SELF_BINDING: SolarBatteryDesign__solar_battery_plant__annualized_om.om_rate_per_kw_year; SI_SELF_BINDING: SolarBatteryDesign__solar_battery_plant__annualized_om.p_net_kw; SI_SELF_BINDING: SolarBatteryDesign__solar_battery_plant__energy_production.n_mod; SI_SELF_BINDING: SolarBatteryDesign__solar_battery_plant__energy_production.p_net_mw; SI_SELF_BINDING: SolarBatteryDesign__solar_battery_plant__energy_production.plant_availability; SI_SELF_BINDING: SolarBatteryDesign__solar_battery_plant__lcoe.plant_lifetime; SI_SELF_BINDING: SolarBatteryDesign__solar_battery_plant__lcoe.yearly_inflation; SI_SELF_BINDING: SolarBatteryLibrary__Array_BOS__cost_model.panel_count; SI_SELF_BINDING: SolarBatteryLibrary__Array_BOS__cost_model.string_count; SI_SELF_BINDING: SolarBatteryLibrary__Battery_BOS__cost_model.pack_count; SI_SELF_BINDING: SolarBatteryLibrary__Battery_Pack__cost_model.capacity_kwh; SI_SELF_BINDING: SolarBatteryLibrary__Battery_Pack__cost_model.chemistry_factor; SI_SELF_BINDING: SolarBatteryLibrary__Electrical_Panel__cost_model.circuit_count; SI_SELF_BINDING: SolarBatteryLibrary__Hybrid_Inverter__cost_model.power_rating; SI_SELF_BINDING: SolarBatteryLibrary__PV_Module__cost_model.efficiency; SI_SELF_BINDING: SolarBatteryLibrary__PV_Module__cost_model.wattage; SI_SELF_BINDING: SolarBatteryLibrary__Permitting_Interconnect__cost_model.system_capacity_kw; SI_SELF_BINDING: SolarBatteryLibrary__Racking_Mounting__cost_model.panel_count; SI_SELF_BINDING: SolarBatteryLibrary__Racking_Mounting__cost_model.tilt_angle; SI_SELF_BINDING: SolarBatteryLibrary__String_Inverter__cost_model.power_rating",
+        "status": "error"
+      },
+      "fixture": "solar_battery_model",
+      "legacy": {
+        "aliases": 1,
+        "constraints": 0,
+        "entry_points": 60,
+        "fingerprint": "c9956d9d2c167bed84b54b141c87ad59e6d681c0b1c9dadd2fb8edb5ee14ee3a",
+        "modules": 36,
+        "status": "graph"
+      }
+    },
+    {
+      "difference_sections": [],
+      "exact": {
+        "codes": [
+          "SI_SELF_BINDING"
+        ],
+        "error_type": "ElaborationError",
+        "message": "SI_SELF_BINDING: SpecChainLib__IFE_Driver__meier_cost.drive_power",
+        "status": "error"
+      },
+      "fixture": "spec_chain_channel",
+      "legacy": {
+        "aliases": 0,
+        "constraints": 0,
+        "entry_points": 1,
+        "fingerprint": "4fe135b85d4307ca3627a3980f0522fcc5f6b6d7d8be4a1b14e7a74cb5403d48",
+        "modules": 2,
+        "status": "graph"
+      }
+    },
+    {
+      "difference_sections": [],
+      "exact": {
+        "codes": [
+          "SI_SELF_BINDING"
+        ],
+        "error_type": "ElaborationError",
+        "message": "SI_SELF_BINDING: TwoLevelLib__IFE_Driver__meier_cost.drive_power",
+        "status": "error"
+      },
+      "fixture": "spec_chain_twolevel",
+      "legacy": {
+        "aliases": 0,
+        "constraints": 0,
+        "entry_points": 3,
+        "fingerprint": "b5554164a3362afdcaf838184250c1e00ba5f3d1ea248f17c4f5d09cf11490e6",
+        "modules": 5,
+        "status": "graph"
+      }
+    },
+    {
+      "difference_sections": [
+        "modules",
+        "entry_points",
+        "execution_order"
+      ],
+      "exact": {
+        "aliases": 0,
+        "constraints": 0,
+        "entry_points": 9,
+        "fingerprint": "bb1ab1bfe547bb07dcdef1c361e52b697d38cc01bc1149110ac43bfa3f7c650b",
+        "modules": 10,
+        "status": "graph"
+      },
+      "fixture": "unresolvable_attr_probe",
+      "legacy": {
+        "aliases": 0,
+        "constraints": 0,
+        "entry_points": 1,
+        "fingerprint": "d2d85ed860aa40beea10c23c2f6e0b5fe1bd5ff0ec0dd54d573638ce5fcf969f",
+        "modules": 1,
+        "status": "graph"
+      }
+    },
+    {
+      "difference_sections": [
+        "modules",
+        "entry_points"
+      ],
+      "exact": {
+        "aliases": 1,
+        "constraints": 1,
+        "entry_points": 4,
+        "fingerprint": "ef54098b2e05eb469116e6408bfc58300d7b1b824d90db0f543cfbf9b616285f",
+        "modules": 4,
+        "status": "graph"
+      },
+      "fixture": "wi014_toy",
+      "legacy": {
+        "aliases": 1,
+        "constraints": 1,
+        "entry_points": 4,
+        "fingerprint": "11fdc0e035018a0a51d6f0802d46a85b2d9d0e12d1f20dd13c1267e4d167de8b",
+        "modules": 4,
+        "status": "graph"
+      }
+    }
+  ]
+}

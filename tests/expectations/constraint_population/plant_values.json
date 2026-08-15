@@ -1,0 +1,11 @@
+{
+  "constraint_usages": [
+    {
+      "owner_qualified_name": "PlantValuesLib::'Power Plant'",
+      "source_file": "library.sysml",
+      "source_line": 105,
+      "usage_qualified_name": "PlantValuesLib::'Power Plant'::viability"
+    }
+  ],
+  "fixture": "plant_values"
+}

@@ -575,7 +575,7 @@ class TestSmartRegenStubUpgrade:
         ctx = SimpleNamespace(computation_graph=graph)
 
         template_env = _get_template_env()
-        _generate_stencils(ctx, config, template_env)
+        _generate_stencils(ctx.computation_graph, config, template_env)
 
         return stencil_path
 

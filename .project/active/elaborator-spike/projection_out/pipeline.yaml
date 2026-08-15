@@ -1,0 +1,130 @@
+# Generated Pipeline Configuration for spike_pkg
+#
+# Auto-generated from SysML calc def dependency analysis
+# DO NOT EDIT - Regenerate using code generator
+
+metadata:
+  run_description: "Generated pipeline for spike_pkg"
+  output_folder: "spike_pkg_results"
+
+modules:
+  # Entry point - load inputs from JSON
+  entry_fusion:
+    module_type: EntryPoint
+    inputs:
+      design_params: DesignParams ../inputs/design_params.json
+
+
+  # Reading_ConsumerModule
+  source_identity_mixed_consumers__avail_ctx__avail_plant__def_authored_calc:
+    module_type: Reading_ConsumerModule
+    inputs:
+      value_in: float design_params.source_identity_mixed_consumers__avail_ctx__avail_plant__availability
+    outputs:
+      value_out: float source_identity_mixed_consumers__avail_ctx__avail_plant__def_authored_calc__value_out
+
+  # Reading_ConsumerModule
+  source_identity_mixed_consumers__avail_ctx__avail_plant__usage_authored_calc:
+    module_type: Reading_ConsumerModule
+    inputs:
+      value_in: float design_params.source_identity_mixed_consumers__avail_ctx__avail_plant__availability
+    outputs:
+      value_out: float source_identity_mixed_consumers__avail_ctx__avail_plant__usage_authored_calc__value_out
+
+  # Reading_ConsumerModule
+  source_identity_mixed_consumers__bare_station__bare_rig__bare_calc:
+    module_type: Reading_ConsumerModule
+    inputs:
+      value_in: float design_params.source_identity_mixed_consumers__bare_station__bare_rig__intensity
+    outputs:
+      value_out: float source_identity_mixed_consumers__bare_station__bare_rig__bare_calc__value_out
+
+  # Source_Identity_ProducerModule
+  source_identity_mixed_consumers__computed_station__source_identity_computed__producer_calc:
+    module_type: Source_Identity_ProducerModule
+    inputs:
+      base: float design_params.source_identity_mixed_consumers__computed_station__source_identity_computed__base_rate
+    outputs:
+      result: float source_identity_mixed_consumers__computed_station__source_identity_computed__producer_calc__result
+
+  # Reading_ConsumerModule
+  source_identity_mixed_consumers__parent_unit__child__child_calc:
+    module_type: Reading_ConsumerModule
+    inputs:
+      value_in: float design_params.source_identity_mixed_consumers__parent_unit__shared_rate
+    outputs:
+      value_out: float source_identity_mixed_consumers__parent_unit__child__child_calc__value_out
+
+  # Reading_ConsumerModule
+  source_identity_mixed_consumers__qual_station__qual_plant__qual_calc:
+    module_type: Reading_ConsumerModule
+    inputs:
+      value_in: float design_params.source_identity_mixed_consumers__qual_station__qual_plant__level
+    outputs:
+      value_out: float source_identity_mixed_consumers__qual_station__qual_plant__qual_calc__value_out
+
+  # Reading_ConsumerModule
+  source_identity_mixed_consumers__stamp_plant__lit_calc:
+    module_type: Reading_ConsumerModule
+    inputs:
+      value_in: float design_params.source_identity_mixed_consumers__stamp_plant__lit_calc__value_in
+    outputs:
+      value_out: float source_identity_mixed_consumers__stamp_plant__lit_calc__value_out
+
+  # Reading_ConsumerModule
+  source_identity_mixed_consumers__stamp_plant__stamp_calc:
+    module_type: Reading_ConsumerModule
+    inputs:
+      value_in: float design_params.source_identity_mixed_consumers__stamp_plant__efficiency
+    outputs:
+      value_out: float source_identity_mixed_consumers__stamp_plant__stamp_calc__value_out
+
+  # Reading_ConsumerModule
+  source_identity_mixed_consumers__station__chain_calc:
+    module_type: Reading_ConsumerModule
+    inputs:
+      value_in: float design_params.source_identity_mixed_consumers__station__rig__gain_setting
+    outputs:
+      value_out: float source_identity_mixed_consumers__station__chain_calc__value_out
+
+  # Reading_ConsumerModule
+  source_identity_mixed_consumers__twin_bay__calc_a:
+    module_type: Reading_ConsumerModule
+    inputs:
+      value_in: float design_params.source_identity_mixed_consumers__twin_bay__sensor_a__reading
+    outputs:
+      value_out: float source_identity_mixed_consumers__twin_bay__calc_a__value_out
+
+  # Reading_ConsumerModule
+  source_identity_mixed_consumers__twin_bay__calc_b:
+    module_type: Reading_ConsumerModule
+    inputs:
+      value_in: float design_params.source_identity_mixed_consumers__twin_bay__sensor_b__reading
+    outputs:
+      value_out: float source_identity_mixed_consumers__twin_bay__calc_b__value_out
+
+  # Reading_ConsumerModule
+  source_identity_mixed_consumers__computed_station__computed_calc:
+    module_type: Reading_ConsumerModule
+    inputs:
+      value_in: float source_identity_mixed_consumers__computed_station__source_identity_computed__producer_calc__result
+    outputs:
+      value_out: float source_identity_mixed_consumers__computed_station__computed_calc__value_out
+
+
+  # Exit point - capture all results
+  exit_point:
+    module_type: ExitPoint
+    outputs:
+      source_identity_mixed_consumers__avail_ctx__avail_plant__def_authored_calc__value_out: float source_identity_mixed_consumers__avail_ctx__avail_plant__def_authored_calc__value_out.json
+      source_identity_mixed_consumers__avail_ctx__avail_plant__usage_authored_calc__value_out: float source_identity_mixed_consumers__avail_ctx__avail_plant__usage_authored_calc__value_out.json
+      source_identity_mixed_consumers__bare_station__bare_rig__bare_calc__value_out: float source_identity_mixed_consumers__bare_station__bare_rig__bare_calc__value_out.json
+      source_identity_mixed_consumers__computed_station__source_identity_computed__producer_calc__result: float source_identity_mixed_consumers__computed_station__source_identity_computed__producer_calc__result.json
+      source_identity_mixed_consumers__parent_unit__child__child_calc__value_out: float source_identity_mixed_consumers__parent_unit__child__child_calc__value_out.json
+      source_identity_mixed_consumers__qual_station__qual_plant__qual_calc__value_out: float source_identity_mixed_consumers__qual_station__qual_plant__qual_calc__value_out.json
+      source_identity_mixed_consumers__stamp_plant__lit_calc__value_out: float source_identity_mixed_consumers__stamp_plant__lit_calc__value_out.json
+      source_identity_mixed_consumers__stamp_plant__stamp_calc__value_out: float source_identity_mixed_consumers__stamp_plant__stamp_calc__value_out.json
+      source_identity_mixed_consumers__station__chain_calc__value_out: float source_identity_mixed_consumers__station__chain_calc__value_out.json
+      source_identity_mixed_consumers__twin_bay__calc_a__value_out: float source_identity_mixed_consumers__twin_bay__calc_a__value_out.json
+      source_identity_mixed_consumers__twin_bay__calc_b__value_out: float source_identity_mixed_consumers__twin_bay__calc_b__value_out.json
+      source_identity_mixed_consumers__computed_station__computed_calc__value_out: float source_identity_mixed_consumers__computed_station__computed_calc__value_out.json

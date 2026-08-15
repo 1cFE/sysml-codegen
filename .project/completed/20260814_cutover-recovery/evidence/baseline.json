@@ -1,0 +1,1073 @@
+{
+  "phase": "Phase 2 - Establish Clean Recovery Authority and Baseline",
+  "measured": "2026-08-10",
+  "authority": ".project/active/cutover-recovery/plan.md",
+  "note": "Every count here was measured on the clean rebuild worktrees. Prior reported counts were treated as comparison data, not expected answers.",
+  "heads": {
+    "sysml-codegen-rebuild": {
+      "path": "/home/reid/1cfe/sysml-codegen-item7-rebuild",
+      "branch": "item7-rebuild",
+      "head": "1672c5766f67e7716f3c9f8f636c21e2ea444601",
+      "base_branch": "source-identity-epic"
+    },
+    "agentic-mbse-rebuild": {
+      "path": "/home/reid/1cfe/agentic-mbse-item7-rebuild",
+      "branch": "item7-rebuild",
+      "head": "5088b417c9e5453271291d46cd5fb23fc0579b1e",
+      "base_branch": "elaborate-first-salvage"
+    },
+    "teax_pinned": {
+      "path": "/home/reid/1cfe/teax",
+      "branch": "main",
+      "head": "fa0e06a99b070346e68a3b3c29cfec546f3ac728"
+    },
+    "forensic_do_not_merge": {
+      "sysml-codegen": "07531e64ed912d6046afce47ef0d958605e6ca08",
+      "agentic-mbse": "ed5b8b02a3064e767799cc6ee58e0119e9bfecba",
+      "branch": "item7-forensic-20260810"
+    },
+    "item6_bases": {
+      "source-identity-epic": "1672c5766f67e7716f3c9f8f636c21e2ea444601",
+      "elaborate-first-salvage": "5088b417c9e5453271291d46cd5fb23fc0579b1e"
+    }
+  },
+  "environment": {
+    "venv": "/home/reid/1cfe/item7-rebuild-venv",
+    "python": "3.12.11",
+    "created_with": "uv venv --python 3.12 (python3 -m venv is unusable on this host: ensurepip absent)",
+    "resolved_import_paths": {
+      "sysml_codegen": "/home/reid/1cfe/sysml-codegen-item7-rebuild/src/sysml_codegen/__init__.py",
+      "agentic_mbse": "/home/reid/1cfe/agentic-mbse-item7-rebuild/src/agentic_mbse/__init__.py",
+      "simkit": "/home/reid/1cfe/teax/packages/teax-simkit/simkit/__init__.py",
+      "jinja2": "/home/reid/1cfe/item7-rebuild-venv/lib/python3.12/site-packages/jinja2/__init__.py",
+      "syside": "/home/reid/1cfe/item7-rebuild-venv/lib/python3.12/site-packages/syside/__init__.py"
+    },
+    "import_path_gate": "PASS - no import resolves into /home/reid/1cfe/sysml-codegen, /home/reid/1cfe/agentic-mbse, or a forensic path",
+    "license": {
+      "env_file": "/home/reid/1cfe/agentic-mbse/.env",
+      "proof": "zero 'no live syside license' skip lines in both suite runs"
+    }
+  },
+  "suites": {
+    "sysml-codegen": {
+      "collected": 3423,
+      "deselected": 18,
+      "selected": 3405,
+      "passed": 3358,
+      "skipped": 47,
+      "failed": 0,
+      "license_skip_lines": 0,
+      "test_files": 218,
+      "deselect_marker": "-m 'not execution' (pyproject addopts)",
+      "comparison_item6": "~3358 passed / ~47 skipped; the same CURRENT_WORK.md Item 2 entry records codegen 3153/47/18, whose deselect count 18 matches this baseline exactly",
+      "delta": "exact match on passed and skipped"
+    },
+    "agentic-mbse": {
+      "collected": 1825,
+      "deselected": 5,
+      "selected": 1820,
+      "passed": 1819,
+      "skipped": 1,
+      "failed": 0,
+      "license_skip_lines": 0,
+      "test_files": 67,
+      "deselect_marker": "-m 'not slow' (pyproject addopts)",
+      "comparison_item6": "~1811 passed / 1 skipped / 33 deselected - traced to .project/CURRENT_WORK.md's Item 2 entry (2026-08-07), measured at agentic-mbse 65a35d7, NOT at this baseline 5088b417",
+      "delta": "passed +8: explained, tests were added after the Item-2 measurement. deselected -28: not reproducible at either commit; see finding F1."
+    },
+    "execution_lane": {
+      "command": "pytest tests/execution -m execution",
+      "collected": 18,
+      "passed": 18,
+      "note": "the 18 deselected codegen nodes; real-simkit constraint lane"
+    }
+  },
+  "test_inventory": {
+    "sysml-codegen_files": [
+      "tests/conformance/test_agg_key_forms.py",
+      "tests/conformance/test_agg_literal_dispatch.py",
+      "tests/conformance/test_agg_localterm_default.py",
+      "tests/conformance/test_aggregation_scoping.py",
+      "tests/conformance/test_alias_agg_probe_generation.py",
+      "tests/conformance/test_ast_dispatch_invariant.py",
+      "tests/conformance/test_backtracker.py",
+      "tests/conformance/test_baselines.py",
+      "tests/conformance/test_calc_compat_parity.py",
+      "tests/conformance/test_catalog_definition_join.py",
+      "tests/conformance/test_catalog_no_reconstruction.py",
+      "tests/conformance/test_catalog_schema_version.py",
+      "tests/conformance/test_compile_calc_def_golden.py",
+      "tests/conformance/test_computed_attribute_golden.py",
+      "tests/conformance/test_computed_attributes.py",
+      "tests/conformance/test_constraint_catalog_determinism.py",
+      "tests/conformance/test_constraint_generation_integration.py",
+      "tests/conformance/test_constraint_generation_live.py",
+      "tests/conformance/test_constraint_lowering.py",
+      "tests/conformance/test_constraint_lowering_integrity.py",
+      "tests/conformance/test_constraint_migration_mapping.py",
+      "tests/conformance/test_constraint_name_safety_routes.py",
+      "tests/conformance/test_constraint_non_numerical.py",
+      "tests/conformance/test_constraint_occurrence_demand_acceptance.py",
+      "tests/conformance/test_constraint_occurrence_demand_supplementary.py",
+      "tests/conformance/test_constraint_pipeline_threading.py",
+      "tests/conformance/test_constraint_profile_route_parity.py",
+      "tests/conformance/test_constraint_snapshot_identity.py",
+      "tests/conformance/test_constraint_snapshot_portability.py",
+      "tests/conformance/test_crosspart_rollup_twolevel.py",
+      "tests/conformance/test_data_models.py",
+      "tests/conformance/test_dead_code_removal.py",
+      "tests/conformance/test_deep_cross_scope_probe.py",
+      "tests/conformance/test_default_lane_disagreement.py",
+      "tests/conformance/test_diagnostic_screen.py",
+      "tests/conformance/test_dm08_enforced_surface.py",
+      "tests/conformance/test_dual_resolution.py",
+      "tests/conformance/test_elaboration_aggregations.py",
+      "tests/conformance/test_elaboration_computed_attrs.py",
+      "tests/conformance/test_elaboration_contract_matrix.py",
+      "tests/conformance/test_elaboration_corpus_ledger.py",
+      "tests/conformance/test_elaboration_dual_run.py",
+      "tests/conformance/test_elaboration_expose_shapes.py",
+      "tests/conformance/test_elaboration_fail_closed.py",
+      "tests/conformance/test_elaboration_generation_boundary.py",
+      "tests/conformance/test_elaboration_graph_roundtrip.py",
+      "tests/conformance/test_elaboration_identity_collisions.py",
+      "tests/conformance/test_elaboration_identity_foundation.py",
+      "tests/conformance/test_elaboration_identity_vertical.py",
+      "tests/conformance/test_elaboration_model_validation.py",
+      "tests/conformance/test_elaboration_payload_identity.py",
+      "tests/conformance/test_elaboration_phase5_remediation.py",
+      "tests/conformance/test_elaboration_plural_scope.py",
+      "tests/conformance/test_elaboration_projection.py",
+      "tests/conformance/test_elaboration_projection_one_way.py",
+      "tests/conformance/test_elaboration_public_mutation.py",
+      "tests/conformance/test_elaboration_shadowing.py",
+      "tests/conformance/test_elaboration_sibling_channels.py",
+      "tests/conformance/test_elaboration_specialization_retypes.py",
+      "tests/conformance/test_elaboration_spike_parity.py",
+      "tests/conformance/test_entry_point_classifier.py",
+      "tests/conformance/test_expression_compiler.py",
+      "tests/conformance/test_expression_reconstruction_fidelity.py",
+      "tests/conformance/test_extraction_snapshots.py",
+      "tests/conformance/test_extractor.py",
+      "tests/conformance/test_factory_aggregation.py",
+      "tests/conformance/test_factory_calc_usage.py",
+      "tests/conformance/test_factory_formula.py",
+      "tests/conformance/test_factory_purity.py",
+      "tests/conformance/test_fingerprint_stability.py",
+      "tests/conformance/test_formula_quoted_owner.py",
+      "tests/conformance/test_fusion_tea_snapshot.py",
+      "tests/conformance/test_gate_a_owner_classification.py",
+      "tests/conformance/test_gate_b_generation_gate.py",
+      "tests/conformance/test_gen_json_templates.py",
+      "tests/conformance/test_gen_module_wrappers.py",
+      "tests/conformance/test_gen_pipeline_yaml.py",
+      "tests/conformance/test_gen_registry.py",
+      "tests/conformance/test_gen_schemas.py",
+      "tests/conformance/test_gen_stencils.py",
+      "tests/conformance/test_generation_boundary.py",
+      "tests/conformance/test_grandfather_carveout.py",
+      "tests/conformance/test_graph_assembly.py",
+      "tests/conformance/test_hierarchy_resolver.py",
+      "tests/conformance/test_ife_plant.py",
+      "tests/conformance/test_legacy_snapshot_closure.py",
+      "tests/conformance/test_literal_totality.py",
+      "tests/conformance/test_matcher_reclassification.py",
+      "tests/conformance/test_modeled_default_fidelity.py",
+      "tests/conformance/test_module_kind_faildloud.py",
+      "tests/conformance/test_naming_conventions.py",
+      "tests/conformance/test_no_expression_ast.py",
+      "tests/conformance/test_orchestrator.py",
+      "tests/conformance/test_output_registry.py",
+      "tests/conformance/test_parameter_group_deriver.py",
+      "tests/conformance/test_part_instance_index.py",
+      "tests/conformance/test_pipeline_e2e.py",
+      "tests/conformance/test_pipeline_module_expansion.py",
+      "tests/conformance/test_plant_value_shapes.py",
+      "tests/conformance/test_plant_values.py",
+      "tests/conformance/test_producer_completeness_acceptance.py",
+      "tests/conformance/test_res08_consumer_scope_paths.py",
+      "tests/conformance/test_return_style_extraction.py",
+      "tests/conformance/test_sanitize_invariance.py",
+      "tests/conformance/test_seal_step9.py",
+      "tests/conformance/test_self_named_binding_trap.py",
+      "tests/conformance/test_self_named_rescue.py",
+      "tests/conformance/test_shared_producer_convergence.py",
+      "tests/conformance/test_sibling_channel_ambiguity.py",
+      "tests/conformance/test_silent_failure_d316.py",
+      "tests/conformance/test_silent_failure_family1.py",
+      "tests/conformance/test_silent_failure_sc4a1.py",
+      "tests/conformance/test_silent_failure_sc5.py",
+      "tests/conformance/test_snapshot_constraint_parity.py",
+      "tests/conformance/test_snapshot_contract.py",
+      "tests/conformance/test_snapshot_generation.py",
+      "tests/conformance/test_snapshot_v5_gate.py",
+      "tests/conformance/test_source_identity_extraction.py",
+      "tests/conformance/test_source_identity_routes.py",
+      "tests/conformance/test_spec_chain_channel.py",
+      "tests/conformance/test_spec_chain_twolevel.py",
+      "tests/conformance/test_type_indexing.py",
+      "tests/conformance/test_type_mapping_consolidation.py",
+      "tests/conformance/test_upstream_pins.py",
+      "tests/conformance/test_virtual_binding_rewrite.py",
+      "tests/conformance/test_whole_tree_portability.py",
+      "tests/conformance/test_wi014_toy.py",
+      "tests/conformance/test_written_qualifier_anchoring.py",
+      "tests/execution/test_constraint_def_owned_redefining_execution.py",
+      "tests/execution/test_constraint_execution.py",
+      "tests/execution/test_constraint_occurrence_demand_execution.py",
+      "tests/execution/test_gate_a_execution.py",
+      "tests/integration/test_bug2_regression.py",
+      "tests/integration/test_computed_attribute_pipeline.py",
+      "tests/integration/test_computed_attributes_e2e.py",
+      "tests/integration/test_costed_component_e2e.py",
+      "tests/integration/test_e2e_output_registry.py",
+      "tests/integration/test_expression_compilation_e2e.py",
+      "tests/integration/test_full_pipeline.py",
+      "tests/integration/test_hierarchy_e2e.py",
+      "tests/integration/test_output_registry_smoke.py",
+      "tests/integration/test_parallel_validation.py",
+      "tests/runtime/test_fusion_tea_acceptance.py",
+      "tests/runtime/test_pipeline_runner.py",
+      "tests/unit/test_aggregation_generation.py",
+      "tests/unit/test_alias_producers.py",
+      "tests/unit/test_backtracker_aggregation.py",
+      "tests/unit/test_backtracker_computed_attrs.py",
+      "tests/unit/test_capture_fixtures_filter.py",
+      "tests/unit/test_catalog_usage_tier.py",
+      "tests/unit/test_cli_generation.py",
+      "tests/unit/test_computed_attr_generation.py",
+      "tests/unit/test_computed_attribute_extraction.py",
+      "tests/unit/test_concrete_constraint_model.py",
+      "tests/unit/test_constraint_emission.py",
+      "tests/unit/test_constraint_graph_extension.py",
+      "tests/unit/test_constraint_name_safety.py",
+      "tests/unit/test_constraint_resolver.py",
+      "tests/unit/test_constraint_usage_preparation.py",
+      "tests/unit/test_contract_models.py",
+      "tests/unit/test_data_models.py",
+      "tests/unit/test_dependency_backtracker.py",
+      "tests/unit/test_design_overrides_threaded.py",
+      "tests/unit/test_duplicate_path_failfast.py",
+      "tests/unit/test_elaboration_identity.py",
+      "tests/unit/test_elaboration_import_boundaries.py",
+      "tests/unit/test_elaboration_occurrence.py",
+      "tests/unit/test_exit_pin.py",
+      "tests/unit/test_exit_point_aliases.py",
+      "tests/unit/test_expression_compiler.py",
+      "tests/unit/test_expression_paren_helper.py",
+      "tests/unit/test_expression_utils_shim.py",
+      "tests/unit/test_extractor.py",
+      "tests/unit/test_graph_builder.py",
+      "tests/unit/test_graph_builder_aggregation.py",
+      "tests/unit/test_graph_builder_computed_attrs.py",
+      "tests/unit/test_graph_builder_zero_default.py",
+      "tests/unit/test_hierarchy_pipeline.py",
+      "tests/unit/test_hierarchy_resolver.py",
+      "tests/unit/test_hygiene_tail_agg_compile.py",
+      "tests/unit/test_hygiene_tail_loader.py",
+      "tests/unit/test_hygiene_tail_registry.py",
+      "tests/unit/test_logical_demand_resolution.py",
+      "tests/unit/test_matcher_fixes_item7.py",
+      "tests/unit/test_occurrence_roundtrip_parity.py",
+      "tests/unit/test_output_aliases.py",
+      "tests/unit/test_output_registry.py",
+      "tests/unit/test_output_registry_construction.py",
+      "tests/unit/test_package_metadata.py",
+      "tests/unit/test_parameter_groups.py",
+      "tests/unit/test_part_instance_index.py",
+      "tests/unit/test_phase4_bugfix_regressions.py",
+      "tests/unit/test_predicate_compiler.py",
+      "tests/unit/test_producer_completeness.py",
+      "tests/unit/test_producer_qn_rule.py",
+      "tests/unit/test_producer_resolution_table.py",
+      "tests/unit/test_qualified_names.py",
+      "tests/unit/test_qualified_names_shim.py",
+      "tests/unit/test_registry_generation.py",
+      "tests/unit/test_rewrite_virtual_bindings.py",
+      "tests/unit/test_sc11_recheck.py",
+      "tests/unit/test_signature_extractor.py",
+      "tests/unit/test_silent_failure_family2.py",
+      "tests/unit/test_silent_failure_family2_family3_fires.py",
+      "tests/unit/test_silent_failure_family3.py",
+      "tests/unit/test_snapshot_envelope_gate.py",
+      "tests/unit/test_source_referent.py",
+      "tests/unit/test_source_referent_shape_gate.py",
+      "tests/unit/test_stencils.py",
+      "tests/unit/test_step_4_5.py",
+      "tests/unit/test_supplied_values.py",
+      "tests/unit/test_teax_discovery.py",
+      "tests/unit/test_template_detection.py",
+      "tests/unit/test_type_indexing_helpers.py",
+      "tests/unit/test_uncovered_params.py",
+      "tests/unit/test_verify_package.py",
+      "tests/unit/test_virtual_binding_rewrite.py",
+      "tests/unit/test_warning_reconciliation.py"
+    ],
+    "agentic-mbse_files": [
+      "tests/test_adapter.py",
+      "tests/test_check.py",
+      "tests/test_claude_enhance.py",
+      "tests/test_cli.py",
+      "tests/test_constraint_documentation.py",
+      "tests/test_corpus_integration.py",
+      "tests/test_equations.py",
+      "tests/test_errors.py",
+      "tests/test_extract_cli.py",
+      "tests/test_extraction.py",
+      "tests/test_extraction_metrics.py",
+      "tests/test_frontmatter.py",
+      "tests/test_helpers.py",
+      "tests/test_html_sanitize.py",
+      "tests/test_http.py",
+      "tests/test_index.py",
+      "tests/test_l8_extractability.py",
+      "tests/test_modeling_command_contracts.py",
+      "tests/test_nested_package_syntax.py",
+      "tests/test_package_version.py",
+      "tests/test_pandoc_convert.py",
+      "tests/test_pipeline.py",
+      "tests/test_pm_cli.py",
+      "tests/test_pm_dashboard.py",
+      "tests/test_pm_operations.py",
+      "tests/test_pm_parser.py",
+      "tests/test_pm_state.py",
+      "tests/test_postprocess.py",
+      "tests/test_profile.py",
+      "tests/test_quality_gate.py",
+      "tests/test_sysml/test_adr002.py",
+      "tests/test_sysml/test_aggregation.py",
+      "tests/test_sysml/test_binding.py",
+      "tests/test_sysml/test_constraint_extraction.py",
+      "tests/test_sysml/test_constraint_extraction_ordering.py",
+      "tests/test_sysml/test_constraint_fact_shapes.py",
+      "tests/test_sysml/test_constraint_facts_banned_heuristics.py",
+      "tests/test_sysml/test_constraint_facts_serialize.py",
+      "tests/test_sysml/test_constraint_facts_severity.py",
+      "tests/test_sysml/test_executable_profile.py",
+      "tests/test_sysml/test_executable_profile_arithmetic.py",
+      "tests/test_sysml/test_executable_profile_hygiene.py",
+      "tests/test_sysml/test_executable_profile_matrix.py",
+      "tests/test_sysml/test_executable_profile_v3.py",
+      "tests/test_sysml/test_executable_profile_v4.py",
+      "tests/test_sysml/test_expression.py",
+      "tests/test_sysml/test_expression_ir_extraction.py",
+      "tests/test_sysml/test_expression_ir_serialize.py",
+      "tests/test_sysml/test_graph.py",
+      "tests/test_sysml/test_hierarchy.py",
+      "tests/test_sysml/test_public_api_exports.py",
+      "tests/test_sysml/test_qualified_names.py",
+      "tests/test_sysml/test_syside_identity_contract.py",
+      "tests/test_sysml/test_types.py",
+      "tests/test_sysml_quality_checks.py",
+      "tests/test_tables.py",
+      "tests/test_validation/test_integration_regression.py",
+      "tests/test_validation/test_item12_checks.py",
+      "tests/test_validation/test_item4_subtype.py",
+      "tests/test_validation/test_item9_checks.py",
+      "tests/test_validation/test_level2_integration.py",
+      "tests/test_validation/test_level3_integration.py",
+      "tests/test_validation/test_level4_reconciliation.py",
+      "tests/test_validation/test_quality_check_result.py",
+      "tests/test_validation/test_v2_false_positive.py",
+      "tests/test_web_backend.py",
+      "tests/test_web_images.py"
+    ],
+    "node_counts": {
+      "sysml-codegen": 3423,
+      "agentic-mbse": 1825
+    }
+  },
+  "corpus_37_path": {
+    "driver": "scripts/run_elaboration_corpus.py",
+    "ledger": ".project/completed/20260809_elaborator-breadth/diff-ledger.md",
+    "fixtures": 37,
+    "outcomes_match_certified_ledger": true,
+    "mismatches": 0,
+    "legacy": {
+      "graphs": 36,
+      "errors_by_class": {
+        "CodeGenerationError": 1
+      }
+    },
+    "exact": {
+      "graphs": 13,
+      "errors_by_class": {
+        "CodeGenerationError": 1,
+        "ElaborationError": 23
+      }
+    },
+    "classification_rule_compliance": {
+      "requirement": "classify readiness ElaborationError.findings and validation ElaborationDiagnosticError.diagnostics separately; exact multisets",
+      "status": "SATISFIED",
+      "evidence": "The two classes are disjoint and neither inherits the other (elaboration/elaborate.py:87 and :100); each populates exactly one attribute. The driver records error_type alongside the code list (_error_outcome, run_elaboration_corpus.py:50-61) and never collapses either class into 'unexpected-error', so error_type + codes is lossless.",
+      "classes_exercised_at_this_baseline": {
+        "ElaborationError": 23,
+        "CodeGenerationError": 2,
+        "ElaborationDiagnosticError": 0
+      },
+      "note": "ElaborationDiagnosticError is not exercised by the clean baseline. The separate-classification rule still binds every future driver."
+    },
+    "error_detail_by_fixture": {
+      "agg_literal_probe": {
+        "legacy": {
+          "error_class": "CodeGenerationError",
+          "attribute": "none",
+          "code_multiset": []
+        },
+        "exact": {
+          "error_class": "CodeGenerationError",
+          "attribute": "none",
+          "code_multiset": []
+        }
+      },
+      "agg_localterm_probe": {
+        "exact": {
+          "error_class": "ElaborationError",
+          "attribute": "findings",
+          "code_multiset": [
+            "SI_SELF_BINDING"
+          ]
+        }
+      },
+      "alias_agg_probe": {
+        "exact": {
+          "error_class": "ElaborationError",
+          "attribute": "findings",
+          "code_multiset": [
+            "SI_SELF_BINDING"
+          ]
+        }
+      },
+      "catf_mfe_model": {
+        "exact": {
+          "error_class": "ElaborationError",
+          "attribute": "findings",
+          "code_multiset": [
+            "SI_SELF_BINDING"
+          ]
+        }
+      },
+      "chain_override_probe": {
+        "exact": {
+          "error_class": "ElaborationError",
+          "attribute": "findings",
+          "code_multiset": [
+            "SI_SELF_BINDING",
+            "SI_SELF_BINDING"
+          ]
+        }
+      },
+      "chain_spike_model": {
+        "exact": {
+          "error_class": "ElaborationError",
+          "attribute": "findings",
+          "code_multiset": [
+            "SI_SELF_BINDING",
+            "SI_SELF_BINDING",
+            "SI_SELF_BINDING"
+          ]
+        }
+      },
+      "crosspart_rollup_twolevel": {
+        "exact": {
+          "error_class": "ElaborationError",
+          "attribute": "findings",
+          "code_multiset": [
+            "SI_SELF_BINDING"
+          ]
+        }
+      },
+      "expression_binding_probe": {
+        "exact": {
+          "error_class": "ElaborationError",
+          "attribute": "findings",
+          "code_multiset": [
+            "SI_EXPRESSION_SOURCE_UNSUPPORTED",
+            "SI_EXPRESSION_SOURCE_UNSUPPORTED",
+            "SI_EXPRESSION_SOURCE_UNSUPPORTED",
+            "SI_EXPRESSION_SOURCE_UNSUPPORTED",
+            "SI_EXPRESSION_SOURCE_UNSUPPORTED",
+            "SI_EXPRESSION_SOURCE_UNSUPPORTED",
+            "SI_SELF_BINDING",
+            "SI_SELF_BINDING",
+            "SI_SELF_BINDING"
+          ]
+        }
+      },
+      "fusion_tea": {
+        "exact": {
+          "error_class": "ElaborationError",
+          "attribute": "findings",
+          "code_multiset": [
+            "SI_SELF_BINDING",
+            "SI_SELF_BINDING",
+            "SI_SELF_BINDING",
+            "SI_SELF_BINDING",
+            "SI_SELF_BINDING",
+            "SI_SELF_BINDING",
+            "SI_SELF_BINDING",
+            "SI_SELF_BINDING",
+            "SI_SELF_BINDING",
+            "SI_SELF_BINDING",
+            "SI_SELF_BINDING",
+            "SI_SELF_BINDING",
+            "SI_SELF_BINDING",
+            "SI_SELF_BINDING",
+            "SI_SELF_BINDING"
+          ]
+        }
+      },
+      "gate_a": {
+        "exact": {
+          "error_class": "ElaborationError",
+          "attribute": "findings",
+          "code_multiset": [
+            "SI_SELF_BINDING",
+            "SI_SELF_BINDING"
+          ]
+        }
+      },
+      "gate_a_package_owner": {
+        "exact": {
+          "error_class": "ElaborationError",
+          "attribute": "findings",
+          "code_multiset": [
+            "SI_SELF_BINDING",
+            "SI_SELF_BINDING"
+          ]
+        }
+      },
+      "ife_plant": {
+        "exact": {
+          "error_class": "ElaborationError",
+          "attribute": "findings",
+          "code_multiset": [
+            "SI_SELF_BINDING",
+            "SI_SELF_BINDING",
+            "SI_SELF_BINDING",
+            "SI_SELF_BINDING",
+            "SI_SELF_BINDING",
+            "SI_SELF_BINDING",
+            "SI_SELF_BINDING",
+            "SI_SELF_BINDING",
+            "SI_SELF_BINDING",
+            "SI_SELF_BINDING",
+            "SI_SELF_BINDING",
+            "SI_SELF_BINDING",
+            "SI_SELF_BINDING",
+            "SI_SELF_BINDING",
+            "SI_SELF_BINDING",
+            "SI_SELF_BINDING",
+            "SI_SELF_BINDING",
+            "SI_SELF_BINDING",
+            "SI_SELF_BINDING",
+            "SI_SELF_BINDING",
+            "SI_SELF_BINDING"
+          ]
+        }
+      },
+      "invocation_binding_probe": {
+        "exact": {
+          "error_class": "ElaborationError",
+          "attribute": "findings",
+          "code_multiset": [
+            "SI_EXPRESSION_SOURCE_UNSUPPORTED"
+          ]
+        }
+      },
+      "issue22_model": {
+        "exact": {
+          "error_class": "ElaborationError",
+          "attribute": "findings",
+          "code_multiset": [
+            "SI_SELF_BINDING"
+          ]
+        }
+      },
+      "plant_value_shapes": {
+        "exact": {
+          "error_class": "ElaborationError",
+          "attribute": "findings",
+          "code_multiset": [
+            "SI_SELF_BINDING",
+            "SI_SELF_BINDING"
+          ]
+        }
+      },
+      "plant_values": {
+        "exact": {
+          "error_class": "ElaborationError",
+          "attribute": "findings",
+          "code_multiset": [
+            "SI_SELF_BINDING"
+          ]
+        }
+      },
+      "return_styles": {
+        "exact": {
+          "error_class": "ElaborationError",
+          "attribute": "findings",
+          "code_multiset": [
+            "SI_SELF_BINDING",
+            "SI_SELF_BINDING",
+            "SI_SELF_BINDING"
+          ]
+        }
+      },
+      "self_named_binding_trap": {
+        "exact": {
+          "error_class": "ElaborationError",
+          "attribute": "findings",
+          "code_multiset": [
+            "SI_SELF_BINDING"
+          ]
+        }
+      },
+      "self_named_rescue": {
+        "exact": {
+          "error_class": "ElaborationError",
+          "attribute": "findings",
+          "code_multiset": [
+            "SI_SELF_BINDING"
+          ]
+        }
+      },
+      "shared_producer": {
+        "exact": {
+          "error_class": "ElaborationError",
+          "attribute": "findings",
+          "code_multiset": [
+            "SI_SELF_BINDING",
+            "SI_SELF_BINDING"
+          ]
+        }
+      },
+      "sibling_channel_ambiguity": {
+        "exact": {
+          "error_class": "ElaborationError",
+          "attribute": "findings",
+          "code_multiset": [
+            "SI_SELF_BINDING"
+          ]
+        }
+      },
+      "solar_battery_model": {
+        "exact": {
+          "error_class": "ElaborationError",
+          "attribute": "findings",
+          "code_multiset": [
+            "SI_SELF_BINDING",
+            "SI_SELF_BINDING",
+            "SI_SELF_BINDING",
+            "SI_SELF_BINDING",
+            "SI_SELF_BINDING",
+            "SI_SELF_BINDING",
+            "SI_SELF_BINDING",
+            "SI_SELF_BINDING",
+            "SI_SELF_BINDING",
+            "SI_SELF_BINDING",
+            "SI_SELF_BINDING",
+            "SI_SELF_BINDING",
+            "SI_SELF_BINDING",
+            "SI_SELF_BINDING",
+            "SI_SELF_BINDING",
+            "SI_SELF_BINDING",
+            "SI_SELF_BINDING",
+            "SI_SELF_BINDING",
+            "SI_SELF_BINDING",
+            "SI_SELF_BINDING",
+            "SI_SELF_BINDING",
+            "SI_SELF_BINDING",
+            "SI_SELF_BINDING",
+            "SI_SELF_BINDING"
+          ]
+        }
+      },
+      "spec_chain_channel": {
+        "exact": {
+          "error_class": "ElaborationError",
+          "attribute": "findings",
+          "code_multiset": [
+            "SI_SELF_BINDING"
+          ]
+        }
+      },
+      "spec_chain_twolevel": {
+        "exact": {
+          "error_class": "ElaborationError",
+          "attribute": "findings",
+          "code_multiset": [
+            "SI_SELF_BINDING"
+          ]
+        }
+      }
+    },
+    "outcomes": {
+      "agg_literal_probe": [
+        "error: CodeGenerationError",
+        "error: CodeGenerationError",
+        "\u2014"
+      ],
+      "agg_localterm_probe": [
+        "graph 2/2/0/0",
+        "error: SI_SELF_BINDING",
+        "\u2014"
+      ],
+      "alias_agg_probe": [
+        "graph 4/3/0/0",
+        "error: SI_SELF_BINDING",
+        "\u2014"
+      ],
+      "attr_expr_probe": [
+        "graph 16/16/0/3",
+        "graph 17/16/0/3",
+        "M/O"
+      ],
+      "catf_mfe_model": [
+        "graph 43/60/0/44",
+        "error: SI_SELF_BINDING",
+        "\u2014"
+      ],
+      "chain_override_probe": [
+        "graph 2/3/0/0",
+        "error: 2\u00d7 SI_SELF_BINDING",
+        "\u2014"
+      ],
+      "chain_spike_model": [
+        "graph 3/3/0/0",
+        "error: 3\u00d7 SI_SELF_BINDING",
+        "\u2014"
+      ],
+      "constraint_inline": [
+        "graph 2/1/1/0",
+        "graph 2/1/1/0",
+        "M/E"
+      ],
+      "constraint_multi_instance": [
+        "graph 5/1/3/0",
+        "graph 7/3/3/0",
+        "M/E/O"
+      ],
+      "constraint_non_numerical": [
+        "graph 2/1/1/0",
+        "graph 2/1/1/0",
+        "M/E/C"
+      ],
+      "crosspart_rollup_twolevel": [
+        "graph 4/2/0/0",
+        "error: SI_SELF_BINDING",
+        "\u2014"
+      ],
+      "d38_caret": [
+        "graph 1/1/0/0",
+        "graph 2/6/0/0",
+        "M/E/O"
+      ],
+      "deep_cross_scope_probe": [
+        "graph 5/7/0/0",
+        "graph 5/4/0/1",
+        "M/E/O/A"
+      ],
+      "expression_binding_probe": [
+        "graph 5/7/0/0",
+        "error: 6\u00d7 SI_EXPRESSION_SOURCE_UNSUPPORTED + 3\u00d7 SI_SELF_BINDING",
+        "\u2014"
+      ],
+      "fusion_tea": [
+        "graph 9/31/1/5",
+        "error: 15\u00d7 SI_SELF_BINDING",
+        "\u2014"
+      ],
+      "gate_a": [
+        "graph 3/3/1/0",
+        "error: 2\u00d7 SI_SELF_BINDING",
+        "\u2014"
+      ],
+      "gate_a_package_owner": [
+        "graph 3/3/1/0",
+        "error: 2\u00d7 SI_SELF_BINDING",
+        "\u2014"
+      ],
+      "ife_plant": [
+        "graph 8/25/0/2",
+        "error: 21\u00d7 SI_SELF_BINDING",
+        "\u2014"
+      ],
+      "invocation_binding_probe": [
+        "graph 1/1/0/0",
+        "error: SI_EXPRESSION_SOURCE_UNSUPPORTED",
+        "\u2014"
+      ],
+      "issue22_model": [
+        "graph 3/3/0/0",
+        "error: SI_SELF_BINDING",
+        "\u2014"
+      ],
+      "modeled_default_fidelity": [
+        "graph 5/6/3/0",
+        "graph 5/6/3/0",
+        "M/E/O/C"
+      ],
+      "plant_value_shapes": [
+        "graph 6/7/0/0",
+        "error: 2\u00d7 SI_SELF_BINDING",
+        "\u2014"
+      ],
+      "plant_values": [
+        "graph 3/5/1/1",
+        "error: SI_SELF_BINDING",
+        "\u2014"
+      ],
+      "quoted_owner_formula": [
+        "graph 2/2/0/0",
+        "graph 2/2/0/0",
+        "none"
+      ],
+      "return_styles": [
+        "graph 4/4/0/0",
+        "error: 3\u00d7 SI_SELF_BINDING",
+        "\u2014"
+      ],
+      "retype_model": [
+        "graph 5/4/0/0",
+        "graph 6/6/0/0",
+        "M/E/O"
+      ],
+      "sample_model": [
+        "graph 0/0/0/0",
+        "graph 0/0/0/0",
+        "none"
+      ],
+      "self_named_binding_trap": [
+        "graph 1/1/0/0",
+        "error: SI_SELF_BINDING",
+        "\u2014"
+      ],
+      "self_named_rescue": [
+        "graph 2/1/0/1",
+        "error: SI_SELF_BINDING",
+        "\u2014"
+      ],
+      "shadowed_reference": [
+        "graph 1/1/0/0",
+        "graph 1/1/0/0",
+        "M/E"
+      ],
+      "shared_producer": [
+        "graph 3/2/1/0",
+        "error: 2\u00d7 SI_SELF_BINDING",
+        "\u2014"
+      ],
+      "sibling_channel_ambiguity": [
+        "graph 3/2/0/2",
+        "error: SI_SELF_BINDING",
+        "\u2014"
+      ],
+      "solar_battery_model": [
+        "graph 36/60/0/1",
+        "error: 24\u00d7 SI_SELF_BINDING",
+        "\u2014"
+      ],
+      "spec_chain_channel": [
+        "graph 2/1/0/0",
+        "error: SI_SELF_BINDING",
+        "\u2014"
+      ],
+      "spec_chain_twolevel": [
+        "graph 5/3/0/0",
+        "error: SI_SELF_BINDING",
+        "\u2014"
+      ],
+      "unresolvable_attr_probe": [
+        "graph 1/1/0/0",
+        "graph 10/9/0/0",
+        "M/E/O"
+      ],
+      "wi014_toy": [
+        "graph 4/4/1/1",
+        "graph 4/4/1/1",
+        "M/E"
+      ]
+    }
+  },
+  "fusion_tea": {
+    "result": "PASS",
+    "tests": [
+      "tests/runtime/test_fusion_tea_acceptance.py (4 passed)",
+      "tests/conformance/test_fusion_tea_snapshot.py (3 passed)"
+    ],
+    "headline_lcoe": 270.1211779380445,
+    "lcoe_channel": "hif_plant_pkg__hif_plant__lcoe_calc__lcoe",
+    "consumption_proof": "test_gain_perturbation_is_consumed moves gain to 100.0 and lands the hand-computed 216.55528392479388",
+    "limits_at_item6": [
+      "Execution runs through the in-repo fixture runner tests/runtime/pipeline_runner.py, which installs a FAKE simkit (_install_simkit_stub). This is not real TEAx.",
+      "Its inputs={...} override has no counterpart in the real simkit.core.pipeline.execute_pipeline, which takes no overrides parameter.",
+      "Real TEAx generation/seal/discovery/execution is Slice 3D work and does not exist at the Item 6 baseline.",
+      "Package generation itself is real and license-free (from the committed v5 snapshot)."
+    ]
+  },
+  "b37_01": {
+    "ruling": "[OWNER 2026-08-10] modeled aggregation is accepted as executable",
+    "verdict": "EVIDENCE MATCHED - ruling applied",
+    "evidence_legs": {
+      "fixture_literal": {
+        "status": "CONFIRMED",
+        "detail": "tests/fixtures/agg_literal_probe/library.sysml:24 -> :>> total_cost = sum(module.cost) + 5.0;"
+      },
+      "item5_commit_483443e": {
+        "status": "CONFIRMED",
+        "detail": "feat: elaborator EXPRESSION-redefinition aggregations (Item 5 Phase 2 leg 5) - a :>> whose value is an expression converts the attribute into a computed calc node"
+      },
+      "fixture_header_intent": {
+        "status": "CONFIRMED",
+        "detail": "header calls it a Row-D / REQ-AST-10 probe whose literal operand must dispatch to the literal branch of _walk_aggregation_ast, and notes it is the sole fixture the byte-identity gate permits to change"
+      },
+      "ledger_row_provenance": {
+        "status": "CONFIRMED",
+        "detail": "diff-ledger.md row 1 recorded 'neither route finds a calculation definition'; reproduced live - BOTH routes raise the same pre-elaboration calc-def presence gate (legacy orchestration/pipeline_builder.py:885, exact orchestration/elaborated_pipeline.py:37), so the elaborator is never reached and the row measures a front-gate, not aggregation semantics"
+      }
+    },
+    "applied_amendments": [
+      ".project/completed/20260809_elaborator-breadth/diff-ledger.md - row 1 basis corrected; B37-01 ruling section added; measured outcome cells left untouched",
+      ".project/active/elaborator-cutover/spec.md - agg_literal_probe is no longer named a classified non-R7 control",
+      ".project/active/elaborator-cutover/cutover-census.md - B37-01 required outcome is now a V6 graph with the 5.0 literal observed; new B37-01c row holds the empty-control responsibility"
+    ],
+    "phase_3_4_obligations": [
+      "restore a literal-bearing aggregation test asserting the 5.0 operand is observed",
+      "create a genuinely empty control fixture for the no-calculation-definition responsibility",
+      "re-derive 14/22/1 vs 15/22/0 from the restored test and control, never by preferring the count already written down"
+    ],
+    "ledger_tests_after_amendment": "3 passed (tests/conformance/test_elaboration_corpus_ledger.py)"
+  },
+  "c25_c2_mutation_protocol": {
+    "decision": "runtime typed-entry injection through TEAx; never touch sealed bytes",
+    "owner_escalation_needed": false,
+    "seal_covers_inputs_json": true,
+    "invalid_route_blocked_in_code": "contracts/manifest.py:99-105 check_reseal_provenance raises ProvenanceError on a re-seal of any changed codegen-produced file; only handwritten/** may change",
+    "chosen_api": [
+      "simkit/evaluation/evaluator.py:171 PreparedEvaluator.evaluate(typed_inputs)",
+      "simkit/study/bridge.py:50 CandidateBridge.build(selected_fields)",
+      "simkit/study/config.py:47-59 teax-study --config grid/fixed"
+    ],
+    "secondary_route": "regeneration from a changed model/snapshot; honest fresh seal, but a different executable_fingerprint - a different package, not a mutated one",
+    "slice_3d_trap_closed": "tests/runtime/pipeline_runner.py inputs={...} rides a fake simkit stub and is a private runner; Slice 3D must use PreparedEvaluator"
+  },
+  "documentation": {
+    "architecture_docs_total": 34,
+    "reference_docs_total": 31,
+    "incident_modified_count": 22,
+    "incident_modified_paths": [
+      "docs/architecture/overview.md",
+      "docs/architecture/reference/00-pipeline-overview.md",
+      "docs/architecture/reference/02-orchestration.md",
+      "docs/architecture/reference/03-resolution-overview.md",
+      "docs/architecture/reference/04-producer-resolution.md",
+      "docs/architecture/reference/06-entry-point-classifier.md",
+      "docs/architecture/reference/07-graph-assembly.md",
+      "docs/architecture/reference/09-data-models.md",
+      "docs/architecture/reference/10-output-registry.md",
+      "docs/architecture/reference/11-analysis-backtracker.md",
+      "docs/architecture/reference/12-virtual-binding-rewrite.md",
+      "docs/architecture/reference/13-aggregation-scoping.md",
+      "docs/architecture/reference/15-naming-conventions.md",
+      "docs/architecture/reference/16-computed-attributes.md",
+      "docs/architecture/reference/17-parameter-group-deriver.md",
+      "docs/architecture/reference/18-literal-value-propagation.md",
+      "docs/architecture/reference/19-ast-dispatch-invariant.md",
+      "docs/architecture/reference/24-dual-resolution-architecture.md",
+      "docs/architecture/reference/25-hierarchy-resolver.md",
+      "docs/architecture/reference/27-snapshot-generation.md",
+      "docs/architecture/reference/30-diagnostic-severity.md",
+      "docs/architecture/verification-matrix.md"
+    ],
+    "baseline_identical_content_groups": {},
+    "baseline_verdict": "PASS - all 34 architecture docs have distinct content at Item 6",
+    "forensic_contrast": {
+      "collapsed_stub_sha256": "713ecf4cb42483f140258618b31aa24a0a80c017f08ced09d5545b92d6ff54ef",
+      "files_sharing_the_stub": 21,
+      "only_non_stub_modified_doc": "docs/architecture/reference/17-parameter-group-deriver.md",
+      "stub_touched_any_unmodified_doc": false
+    },
+    "baseline_hashes": {
+      "docs/architecture/modeling-assumptions.md": "e7e1252edd6f1649cd8543127c258868eb7aff42513723ca005e28223bb446ba",
+      "docs/architecture/overview.md": "34f563ee3794eeba4389b5358333dd04bcc77a0223ce811693433e9791482bd6",
+      "docs/architecture/reference/00-pipeline-overview.md": "ba979a2e9da0b3fc7548dc5d70b653c11dce7c9011aaf51416b74d3e7c738b32",
+      "docs/architecture/reference/01-extraction.md": "5eea4d7fcc3323eaf20a84139e16cc2dd05d5d4142e82beacbef80da3cf33daf",
+      "docs/architecture/reference/02-orchestration.md": "4885e29dc82478c1f99103371fe14035e036988e604d990050fe674ce6e7346e",
+      "docs/architecture/reference/03-resolution-overview.md": "984ad02cc78429965a91d18f743be84202581c003d49ecea4fb6b5c3dfb77710",
+      "docs/architecture/reference/04-producer-resolution.md": "7f9a7d1b204778bf566765c1f3239bf2bbf202af04bd43242a2db0e08f911865",
+      "docs/architecture/reference/05-module-factory.md": "6a07bb528c98901446d7ea8bf253e76227d2ade055e161ec50af0a503e1d5a39",
+      "docs/architecture/reference/06-entry-point-classifier.md": "1075f38d300304af1bc10b9f17c5e30fa26dcbfacfef697cbd128d920d26f812",
+      "docs/architecture/reference/07-graph-assembly.md": "9fbd4557521a0ef15015a216ceea3e6c0f8c1eb23efc94e5bf9dc719968f15f4",
+      "docs/architecture/reference/08-generation.md": "552348d99a32a48173cd196b69aac0677bc6ca151e1cbd2f69f30690b1b7e5ee",
+      "docs/architecture/reference/09-data-models.md": "4203e1fb36508332d8fb8084ff213ab2f6fbba574478cd0f601b17a4fdd4fe38",
+      "docs/architecture/reference/10-output-registry.md": "6adc7678eb2eeed614a349c5bb55932d3f7de4ff6249e134616b22c5470b3410",
+      "docs/architecture/reference/11-analysis-backtracker.md": "fa8b3454f99d53cdaa94751fbf0145ac454788603440f75f79dc4b08361df4e1",
+      "docs/architecture/reference/12-virtual-binding-rewrite.md": "0d0e90050c16bfe64b1e79cbd5f51e55d8a5badb9111d2744d5f6a375fe55b9c",
+      "docs/architecture/reference/13-aggregation-scoping.md": "0f8dc2d5f067ed242077d9ff0a3d8c656485e8c0d832911886bdb66e9c09b811",
+      "docs/architecture/reference/14-expression-compiler.md": "3e2aa06416a35aa200d83e8ff47767be1cd0eb318023f80220bc0cc956e521f6",
+      "docs/architecture/reference/15-naming-conventions.md": "578b25910d7a8a43ccad81a847f444aaac7a50f0c1efab4cffcfc973c169dc8f",
+      "docs/architecture/reference/16-computed-attributes.md": "ce9a0402eabc618db9278bdab546ed5833838375f790bd79ef03b07f085d28f2",
+      "docs/architecture/reference/17-parameter-group-deriver.md": "68b2dfe40c33e5b6fe7616cc69e2f3ba6e5c19f19e797ce53ef28a330e0c37f8",
+      "docs/architecture/reference/18-literal-value-propagation.md": "291365d13ca13969b60ce97c7a2497fa57e8e3d6257a8bc2f24de6f8801c4aa4",
+      "docs/architecture/reference/19-ast-dispatch-invariant.md": "b210cacbefc989717adbc0175944a75743b1a09174f69837b2f71ab3292a5478",
+      "docs/architecture/reference/20-module-registry-generation.md": "857389b0d1cb1ffadb420f5b791d43a4aa1369b8e8206416ad70daf4b26ab125",
+      "docs/architecture/reference/21-pipeline-yaml-generation.md": "a7a189108cacac16a9c4c9d5b5f8d50ba5761c815caed48fe0ba743a9f748ec4",
+      "docs/architecture/reference/22-output-schema-rules.md": "54607ddafc40edbe242d8050951cd04376f1b81c6b90028be9c27066620584bb",
+      "docs/architecture/reference/23-smart-regen-preservation.md": "8efca93096fc0c24703af2f275b1b8c4844af2345cf878938a1f3e61891dcd80",
+      "docs/architecture/reference/24-dual-resolution-architecture.md": "131b041f492019d87e9eed50e4dad9ef599747abb4d7b515c6635b57bf1f7998",
+      "docs/architecture/reference/25-hierarchy-resolver.md": "bd4265a9b9964a98679ebee013547d1234fce4b57c20ccbade96b68853fa0ee9",
+      "docs/architecture/reference/26-pipeline-module-migration.md": "fcae02652a3f7a7d1ca02dc842e72cfb7242893e0813ce764bbae9165c4e6c11",
+      "docs/architecture/reference/27-snapshot-generation.md": "761f57c85d115b7df25ab8b36393c4dc36eb4c21a5fa5674a3b9579d98577926",
+      "docs/architecture/reference/28-constraint-lowering-and-catalog.md": "d078b96cf4cd62a492bd930c2afa0adea5d1fa0a940c4432e817bbae207c467e",
+      "docs/architecture/reference/29-contracts-and-sealing.md": "72a1ed8feaf334d567393993ea4bd4b3b892dd04def52f5084660285432cfaf3",
+      "docs/architecture/reference/30-diagnostic-severity.md": "87cd844aef0e6f9afe09653e6b06b729072a25fcee447457b22a644a8750d900",
+      "docs/architecture/verification-matrix.md": "c46e771e88922aeb4a9f340b98ad126c989e248fcd52ebcbecb8e0e1e1ccd285"
+    }
+  },
+  "claude_md": {
+    "disposition": "RESTORE (keep the Item 6 content; the rebuild worktree already carries it)",
+    "rationale": "The forensic diff is coherent and targeted, not the generic-stub collapse, but every claim it makes is false at the Item 6 baseline: it names Elaboration and Projection as pipeline stages 2 and 3 while analysis/ (9 files) and resolution/ (6 files) are the live shipped route, and it describes 'strict v6 instance-graph envelopes' while SNAPSHOT_FORMAT_VERSION = 5 (snapshot/__init__.py:30).",
+    "reuse_note": "Its wording is a good starting point for Gate 4D once Phase 3E has made the claims true; adopt it then as narrow edits, not as a restore-time import."
+  },
+  "findings": [
+    {
+      "id": "F1",
+      "severity": "low",
+      "summary": "agentic-mbse comparison deselect count 33 is a recording artifact",
+      "detail": "Measured 1825 collected / 5 deselected / 1819 passed / 1 skipped, zero failures. The comparison figures ~1811/1/33 come from .project/CURRENT_WORK.md's Item 2 entry (2026-08-07), taken at agentic-mbse 65a35d7 rather than at this baseline 5088b417. PASSED DELTA EXPLAINED: 65a35d7..5088b417 adds 441 test insertions including the 188-line tests/test_sysml/test_syside_identity_contract.py, so the baseline legitimately has 8 more passing tests than the Item-2 measurement. DESELECT DELTA UNEXPLAINED: both commits carry exactly 4 @pytest.mark.slow functions and an identical pyproject addopts (-m 'not slow'; git diff of pyproject.toml across the range is empty), which yields the 5 deselections measured. 33 is not reproducible at either commit, and 1811+1+33=1845 exceeds this commit's total collection universe of 1825. It is most likely a transcription error carried forward in the status note. Recorded as a finding rather than resolved silently.",
+      "impact": "none on the baseline. The codegen suite - the actual cutover surface - matches its comparison data exactly on passed, skipped, and deselected."
+    },
+    {
+      "id": "F2",
+      "severity": "informational",
+      "summary": "uv's global cache silently produced a wrong editable install",
+      "detail": "uv pip install -e /home/reid/1cfe/agentic-mbse-item7-rebuild reused a cached editable wheel for agentic-mbse 0.1.2 built earlier from the ORIGINAL worktree, so agentic_mbse imported from /home/reid/1cfe/agentic-mbse. Caught by the plan's mandatory import-path assertion; fixed with --reinstall --no-cache. Any later phase that rebuilds this venv must re-assert import paths rather than trusting a successful install.",
+      "impact": "would have silently invalidated every paired-worktree measurement"
+    },
+    {
+      "id": "F3",
+      "severity": "informational",
+      "summary": "python3 -m venv is unusable on this host",
+      "detail": "ensurepip is absent (needs python3.12-venv). Use uv venv.",
+      "impact": "setup only"
+    },
+    {
+      "id": "F4",
+      "severity": "informational",
+      "summary": "agentic-mbse suite needs its own venv bin on PATH and the [web] extra",
+      "detail": "Without the web extra, 18 tests fail on missing trafilatura/PIL. Without the venv bin on PATH, 10 more fail because they shell out to 'agentic-mbse' and 'python'. Both are environment shape, not regressions; with both fixed the suite is fully green.",
+      "impact": "a naive rebuild reads as 28 failures"
+    }
+  ],
+  "planning_commit": {
+    "sysml-codegen": {
+      "oid": "4e6a1167d10a36288cc4bcbc051b5448445c9516",
+      "branch": "item7-rebuild",
+      "staged_paths": 25,
+      "path_gate": "PASS - all staged paths under .project/**",
+      "hooks": "passed; no --no-verify"
+    },
+    "agentic-mbse": "N/A - no project metadata changed in that repository during Phase 2"
+  }
+}

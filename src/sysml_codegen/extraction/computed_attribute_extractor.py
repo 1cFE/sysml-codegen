@@ -6,6 +6,22 @@ FORMULA patterns to Python via the Phase 1 expression compiler.
 
 This module is a leaf in the extraction layer — it does NOT import from
 analysis/, resolution/, or generation/.
+
+**Off the shipped route, retained, and here is the measurement (Revise step 6d).** Nothing
+in ``src/`` imports it. The shipped route lifts computed attributes in the elaborator, which
+resolves references against occurrence identity rather than by qualified-name matching, and
+projects each one as its own node (``tests/conformance/test_elaboration_computed_attrs.py``,
+``tests/integration/test_computed_attributes_exact_route.py``). Three test modules keep this
+classifier alive — ``test_computed_attribute_golden.py``, ``test_silent_failure_d316.py``,
+``test_silent_failure_family1.py`` — and what they pin is the *classification taxonomy*
+(FORMULA / EXPOSE_PURE / EXPOSE_COMPUTED / EXPOSE_CHAIN_TENTATIVE / LITERAL / UNRESOLVABLE)
+against a golden file, plus the silent-failure shapes that taxonomy was hardened against.
+The elaborator has no equivalent taxonomy surface to move that coverage onto, so deleting
+this module would delete the coverage rather than relocate it.
+
+Retained on that reason, not because anything ships it. Whether the taxonomy should be
+re-expressed against the elaborator, or retired with its classifier, is an open disposition
+with no recorded authority (Revise step 6d stage note).
 """
 
 from __future__ import annotations

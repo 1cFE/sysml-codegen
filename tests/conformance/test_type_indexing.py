@@ -18,15 +18,10 @@ The ``retype_model`` fixture carries the pinned shape matrix:
 - Shape 5: the plain ``plain_hif : 'HIF Driver'`` sibling is NOT reached by the
   IFE-owned template (the deferred supertype-chain walk is a Non-Goal).
 
-Two layers:
-
-- **Offline snapshot** (license-free) asserts the committed ``retype_model`` snapshot:
-  virtual instances, the collision winner, the plain-sibling negative, the
-  most-specific ``usage_type_map``, and the V10 incomparable warning (which lands in
-  ``hierarchy_data.warnings``).
-- **Live extractor** (skips without a license) asserts the index key set directly
-  (REQ-EXT-13) and the V9 collision warning, which is an extraction-report warning
-  not serialized into the snapshot.
+One layer: the live extractor (skips without a license) asserts the index key set
+directly (REQ-EXT-13) and the V9 collision warning, which is an extraction-report
+warning. The offline layer read the committed ``retype_model`` extraction snapshot and
+retired with the v5 family (retirement step 1).
 
 REQ-EXT-13: index each PartUsage under all its owned FeatureTyping targets and every
             user-model PartDefinition in ``usage.types``.
@@ -46,95 +41,11 @@ from sysml_codegen.extraction.usage_extractor import (
     _build_part_usage_index,
     extract_calculation_usages,
 )
-from sysml_codegen.snapshot import load_extraction_snapshot
-from tests.conftest import snapshot_fixture
 
 FIXTURES_DIR = Path(__file__).resolve().parents[1] / "fixtures"
 
 IFE = "RetypeLibrary__IFE_Driver"
 HIF = "RetypeLibrary__HIF_Driver"
-VARIANT_DRIVER = ("RetypeLibrary__Variant", "driver")
-FACILITY_DRIVER = ("RetypeLibrary__Facility", "driver")
-MULTI = ("RetypeLibrary__MultiHolder", "multi")
-
-
-# ---------------------------------------------------------------------------
-# Offline snapshot layer (license-free)
-# ---------------------------------------------------------------------------
-
-
-@pytest.fixture(scope="module")
-def retype_snapshot() -> dict:
-    """Load the committed retype_model extraction snapshot."""
-    return load_extraction_snapshot(snapshot_fixture("retype_model"))
-
-
-def _virtual_qns(snapshot: dict) -> set[str]:
-    return {cu.qualified_name for cu in snapshot["calc_usages"]}
-
-
-def _owner_of(snapshot: dict, qn_suffix: str) -> str | None:
-    """Owner of the single virtual whose QN ends with ``qn_suffix`` (None if absent)."""
-    matches = [
-        cu for cu in snapshot["calc_usages"] if cu.qualified_name.endswith(qn_suffix)
-    ]
-    assert len(matches) <= 1, [m.qualified_name for m in matches]
-    return matches[0].owning_part_def_qn if matches else None
-
-
-@pytest.mark.req(id="REQ-EXT-13")
-def test_subtype_and_supertype_templates_both_instantiate(retype_snapshot: dict) -> None:
-    """Shapes 1, 2, 4: the retyped driver instantiates both the HIF-owned and the
-    IFE-owned (preserved supertype) template, under differently-named virtual QNs."""
-    qns = _virtual_qns(retype_snapshot)
-    assert any(q.endswith("the_variant__driver__hif_calc") for q in qns)  # shape 1
-    assert any(q.endswith("the_variant__driver__ife_calc") for q in qns)  # shape 2
-    # Differently named -> both survive (shape 4).
-    assert _owner_of(retype_snapshot, "the_variant__driver__hif_calc") == HIF
-    assert _owner_of(retype_snapshot, "the_variant__driver__ife_calc") == IFE
-
-
-@pytest.mark.req(id="REQ-EXT-14")
-def test_same_named_collision_tiebreak(retype_snapshot: dict) -> None:
-    """Shape 3: the same-named shared_calc resolves to ONE virtual QN owned by the
-    most-specific type (HIF), not two, and not the supertype."""
-    shared = [
-        cu
-        for cu in retype_snapshot["calc_usages"]
-        if cu.qualified_name.endswith("the_variant__driver__shared_calc")
-    ]
-    assert len(shared) == 1, [c.qualified_name for c in shared]
-    assert shared[0].owning_part_def_qn == HIF
-
-
-@pytest.mark.req(id="REQ-EXT-13")
-def test_plain_sibling_not_reached_by_supertype_template(retype_snapshot: dict) -> None:
-    """Shape 5 (Non-Goal guard): the IFE-owned (supertype) template MUST NOT reach the
-    plain subtype-typed sibling; only its HIF-owned templates do."""
-    qns = _virtual_qns(retype_snapshot)
-    assert not any(q.endswith("plain_hif__ife_calc") for q in qns)
-    # The HIF-owned templates DO reach it (the plain usage is keyed under HIF).
-    assert any(q.endswith("plain_hif__hif_calc") for q in qns)
-
-
-@pytest.mark.req(id="REQ-LVP-08")
-def test_usage_type_map_resolves_retyped_to_declared(retype_snapshot: dict) -> None:
-    """FIX 2: the retyped usage's usage_type_map entry is its DECLARED (subtype) type,
-    while the plain Facility.driver stays on the supertype."""
-    utm = retype_snapshot["hierarchy_data"].usage_type_map
-    assert utm[VARIANT_DRIVER] == HIF
-    assert utm[FACILITY_DRIVER] == IFE
-
-
-@pytest.mark.req(id="REQ-LVP-08")
-def test_usage_type_map_incomparable_resolves_and_warns(retype_snapshot: dict) -> None:
-    """V10: two unrelated owned typings resolve to sorted-first + a warning."""
-    hd = retype_snapshot["hierarchy_data"]
-    assert hd.usage_type_map[MULTI] == IFE  # sorted-first of {IFE, Other}
-    assert any(
-        "incomparable owned types" in w and "MultiHolder.multi" in w
-        for w in hd.warnings
-    ), hd.warnings
 
 
 # ---------------------------------------------------------------------------

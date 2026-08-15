@@ -1,0 +1,11 @@
+{
+  "constraint_usages": [
+    {
+      "owner_qualified_name": "ife_plant::'IFE Power Plant'",
+      "source_file": "designs/generic_ife/ife_plant.sysml",
+      "source_line": 155,
+      "usage_qualified_name": "ife_plant::'IFE Power Plant'::viability"
+    }
+  ],
+  "fixture": "fusion_tea"
+}

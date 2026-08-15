@@ -21,13 +21,13 @@ from pathlib import Path
 import pytest
 from agentic_mbse.sysml.constraint_extraction import extract_expression_ir
 
-from scripts.capture_extraction_snapshots import EXTRACTION_ONLY_MODELS, MODELS
 from sysml_codegen.extraction.calc_compat_renderer import (
     collect_calc_refs,
     render_calc_expression,
 )
 from sysml_codegen.extraction.extractor import SysMLDataExtractor
 from tests.conftest import requires_license
+from tests.helpers.corpus import corpus_fixture_names
 
 FIXTURES_DIR = Path(__file__).resolve().parents[1] / "fixtures"
 GOLDEN_PATH = FIXTURES_DIR / "golden" / "calc_compat_parity_golden.json"
@@ -36,7 +36,7 @@ GOLDEN_PATH = FIXTURES_DIR / "golden" / "calc_compat_parity_golden.json"
 # EXTRACTION_ONLY_MODELS), reused rather than re-listed so this test's corpus can never
 # silently drift from the capture script's (N5: this set includes `return_styles`, whose
 # two integer-literal outputs gate the literal rule).
-CALC_CORPUS_FIXTURES = sorted({**MODELS, **EXTRACTION_ONLY_MODELS})
+CALC_CORPUS_FIXTURES = corpus_fixture_names()
 
 
 def _golden() -> dict[str, dict[str, dict]]:
@@ -67,13 +67,21 @@ def test_calc_compat_parity(fixture):
     for calc_def_name, expected_outputs in fixture_golden.items():
         calc_def = calc_defs[calc_def_name]
 
-        # N1: the sets compile_calc_def actually derives, not a re-derivation.
+        # N1: the sets compile_calc_def_exact actually derives, not a re-derivation.
+        # Taken off the exact-identity inventory (`member_names_by_id`, `all_member_ids`,
+        # `output_expression_asts_by_id`), which is what the surviving compiler reads;
+        # the name-keyed fields this used to index retire with L-034. The renderer's own
+        # signature is name-based, so the ids are resolved to names right here.
+        member_name_of = calc_def.member_names_by_id
         input_names = {a.name for a in calc_def.input_attributes}
         output_names = {a.name for a in calc_def.output_attributes}
-        member_names = output_names | (calc_def.all_member_names or set())
+        member_names = output_names | {member_name_of[i] for i in calc_def.all_member_ids}
+        output_id_of_name = {
+            a.name: a.element_id for a in calc_def.output_attributes if a.element_id
+        }
 
         for name, expected in expected_outputs.items():
-            node = calc_def.output_expression_asts[name]
+            node = calc_def.output_expression_asts_by_id[output_id_of_name[name]]
             ir = extract_expression_ir(node)
 
             new_expr = render_calc_expression(ir, input_names, member_names)

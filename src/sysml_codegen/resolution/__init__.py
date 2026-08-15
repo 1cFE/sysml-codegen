@@ -1,10 +1,8 @@
 """Resolution layer for SysML code generation.
 
-This layer resolves dependencies and builds the computation graph:
-- Pydantic models for pipeline configuration
-- Graph building from backtracking results
-Note: graph_builder is not imported at module level to avoid circular imports.
-Import it directly: `from sysml_codegen.resolution.graph_builder import build_computation_graph`
+This layer carries the Pydantic models for pipeline configuration, the params-coverage
+collectors and the producer-completeness check. The string-resolution graph builder
+retired with the v5 family (retirement step 2).
 """
 
 from sysml_codegen.resolution.models import (
@@ -19,9 +17,6 @@ from sysml_codegen.resolution.models import (
     ParameterGroup,
     PipelineModule,
 )
-
-# NOTE: graph_builder imports are deferred to avoid circular imports
-# Use: from sysml_codegen.resolution.graph_builder import build_computation_graph
 
 __all__ = [
     # models

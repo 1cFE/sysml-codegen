@@ -1,0 +1,17 @@
+{
+  "constraint_usages": [
+    {
+      "owner_qualified_name": "constraint_shared_polarity::Host",
+      "source_file": "model.sysml",
+      "source_line": 23,
+      "usage_qualified_name": "constraint_shared_polarity::Host::pos_bound"
+    },
+    {
+      "owner_qualified_name": "constraint_shared_polarity::Host",
+      "source_file": "model.sysml",
+      "source_line": 30,
+      "usage_qualified_name": "constraint_shared_polarity::Host::neg_bound"
+    }
+  ],
+  "fixture": "constraint_shared_polarity"
+}

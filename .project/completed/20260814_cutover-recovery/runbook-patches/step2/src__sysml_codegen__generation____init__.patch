@@ -1,0 +1,20 @@
+diff --git a/src/sysml_codegen/generation/__init__.py b/src/sysml_codegen/generation/__init__.py
+index 4baae2b..73904c6 100644
+--- a/src/sysml_codegen/generation/__init__.py
++++ b/src/sysml_codegen/generation/__init__.py
+@@ -22,7 +22,6 @@ from sysml_codegen.generation.entry_point import (
+ )
+ from sysml_codegen.generation.initialization import (
+     CodeGenerationError,
+-    PipelineContext,
+     SysMLParsingError,
+ )
+ from sysml_codegen.generation.modules import (
+@@ -66,7 +65,6 @@ __all__ = [
+     "generate_inputs_readme",
+     # initialization
+     "CodeGenerationError",
+-    "PipelineContext",
+     "SysMLParsingError",
+     # modules
+     "generate_teax_module",

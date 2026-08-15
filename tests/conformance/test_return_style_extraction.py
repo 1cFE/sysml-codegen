@@ -6,15 +6,11 @@ named ``return`` and bare ``in`` parameters (which syside models as
 member; an anonymous ``return`` (unnamed result) now gets its own diagnostic
 (V8) instead of the generic zero-output error (V7).
 
-Two test layers:
-
-- **Live extractor tests** (skip without a syside license) prove the raw
-  extraction shape end-to-end: auto-impl AST presence, the V8 raise, the
-  reworded V7, no double-ingestion. They mirror the ``_load_live_extractor``
-  convention in ``test_extractor.py``.
-- **Offline snapshot tests** (license-free) assert the committed
-  ``return_styles`` snapshot's I/O and its ``compilation_results`` keys, which
-  pin auto-impl (style B present, style D absent) without a live parser.
+One test layer: live extractor tests (skip without a syside license) prove the raw
+extraction shape end-to-end -- auto-impl AST presence, the V8 raise, the reworded V7,
+no double-ingestion. They mirror the ``_load_live_extractor`` convention in
+``test_extractor.py``. The offline layer read the committed ``return_styles``
+extraction snapshot and retired with the v5 family (retirement step 1).
 
 REQ-EXT-10: direction-carrying ReferenceUsage members (named return, bare in)
             are extracted; named inline return auto-implements.
@@ -31,8 +27,6 @@ import pytest
 
 from sysml_codegen.extraction.data_models import CalculationDefinitionData
 from sysml_codegen.extraction.extractor import SysMLDataExtractor
-from sysml_codegen.snapshot import load_extraction_snapshot
-from tests.conftest import snapshot_fixture
 
 FIXTURES_DIR = Path(__file__).resolve().parents[1] / "fixtures"
 
@@ -59,6 +53,17 @@ def _live_calc_defs(model_name: str) -> dict[str, CalculationDefinitionData]:
     return {cd.name: cd for cd in extractor.extract_calculation_definitions()}
 
 
+def _member_id(calc_def: CalculationDefinitionData, name: str):
+    """Return the sole exact declaration UUID rendered as ``name``."""
+    matches = [
+        member_id
+        for member_id, rendered in calc_def.member_names_by_id.items()
+        if rendered == name
+    ]
+    assert len(matches) == 1, f"expected one member named {name!r}, got {matches}"
+    return matches[0]
+
+
 # ---------------------------------------------------------------------------
 # Live extractor tests (REQ-EXT-10/11/12) -- license-gated
 # ---------------------------------------------------------------------------
@@ -73,7 +78,7 @@ class TestReqExt10DirectionCarryingReferenceUsage:
         (auto-impl, not a stencil) -- I5."""
         cd = _live_calc_defs("return_styles")["NamedReturnB"]
         assert "y" in {a.name for a in cd.output_attributes}
-        assert cd.output_expression_asts.get("y"), (
+        assert cd.output_expression_asts_by_id.get(_member_id(cd, "y")), (
             "named inline return must carry a captured expression AST"
         )
 
@@ -87,7 +92,15 @@ class TestReqExt10DirectionCarryingReferenceUsage:
         cd = _live_calc_defs("return_styles")["ControlA"]
         assert "a" in {a.name for a in cd.input_attributes}
         assert "y" in {a.name for a in cd.output_attributes}
-        assert cd.output_expression_asts.get("y")
+        assert cd.output_expression_asts_by_id.get(_member_id(cd, "y"))
+
+    def test_every_supported_return_style_carries_exact_member_ids(self) -> None:
+        """AttributeUsage and direction-carrying ReferenceUsage share the UUID boundary."""
+        for calc_def in _live_calc_defs("return_styles").values():
+            assert calc_def.element_id is not None
+            members = calc_def.input_attributes + calc_def.output_attributes
+            assert all(member.element_id is not None for member in members)
+            assert {member.element_id for member in members} <= calc_def.all_member_ids
 
 
 @pytest.mark.req(id="REQ-EXT-12")
@@ -102,10 +115,11 @@ class TestReqExt12NoDoubleIngestion:
         )
         # The direction-None body-assignment ReferenceUsage must not leak as a
         # phantom intermediate member.
-        assert "y" not in cd.member_expressions
+        output_id = _member_id(cd, "y")
+        assert output_id not in cd.member_expressions_by_id
         # Degraded: no auto-impl for the body-assignment form (expression capture
         # deferred -- see backlog note).
-        assert not cd.output_expression_asts.get("y")
+        assert not cd.output_expression_asts_by_id.get(output_id)
 
 
 @pytest.mark.req(id="REQ-EXT-11")
@@ -134,50 +148,3 @@ class TestV7Reworded:
         message = str(exc.value)
         assert "not yet extracted" not in message
         assert "Item 3" not in message
-
-
-# ---------------------------------------------------------------------------
-# Offline snapshot tests (REQ-EXT-10/12) -- license-free
-# ---------------------------------------------------------------------------
-
-
-def _snapshot_calc_defs() -> dict[str, CalculationDefinitionData]:
-    snap = load_extraction_snapshot(snapshot_fixture("return_styles"))
-    return {cd.name: cd for cd in snap["calc_defs"]}
-
-
-@pytest.mark.req(id="REQ-EXT-10")
-class TestReturnStylesSnapshotIO:
-    """Offline I/O assertions on the committed return_styles snapshot."""
-
-    def test_all_four_styles_present(self) -> None:
-        defs = _snapshot_calc_defs()
-        assert set(defs) == {"ControlA", "NamedReturnB", "BareInC", "StyleD"}
-
-    def test_named_return_output(self) -> None:
-        cd = _snapshot_calc_defs()["NamedReturnB"]
-        assert [a.name for a in cd.input_attributes] == ["b"]
-        assert [a.name for a in cd.output_attributes] == ["y"]
-
-    def test_bare_in_input(self) -> None:
-        cd = _snapshot_calc_defs()["BareInC"]
-        assert "x" in {a.name for a in cd.input_attributes}
-        assert [a.name for a in cd.output_attributes] == ["y"]
-
-    def test_style_d_single_output(self) -> None:
-        cd = _snapshot_calc_defs()["StyleD"]
-        assert [a.name for a in cd.output_attributes].count("y") == 1
-
-
-@pytest.mark.req(id="REQ-EXT-10")
-class TestReturnStylesCompilationResults:
-    """The snapshot's compilation_results block pins auto-impl offline (D4/M2)."""
-
-    def test_style_b_compiled_style_d_absent(self) -> None:
-        snap = load_extraction_snapshot(snapshot_fixture("return_styles"))
-        keys = snap["compilation_results"].keys()
-        # Style B's inline return expression compiled -> auto-impl.
-        assert "NamedReturnB" in keys
-        # Style D is EXPECTED degraded: no captured expression -> no compilation
-        # entry. See the body-assignment-capture backlog note.
-        assert "StyleD" not in keys

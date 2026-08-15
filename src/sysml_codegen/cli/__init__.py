@@ -21,9 +21,14 @@ from typing import TYPE_CHECKING
 import jinja2
 
 if TYPE_CHECKING:
-    from sysml_codegen.generation import PipelineContext
     from sysml_codegen.generation.constraint_plan import ConstraintGenerationPlan
-    from sysml_codegen.resolution.models import ComputationGraph, PipelineModule
+    from sysml_codegen.resolution.models import (
+        ComputationGraph,
+        ConstraintCatalogEntry,
+        ConstraintCatalogExcludedRecord,
+        ConstraintCatalogUsageRecord,
+        PipelineModule,
+    )
 
 # Note: Heavy imports moved inside run_codegen to avoid loading generation
 # module at CLI import time. This keeps CLI startup fast.
@@ -75,7 +80,6 @@ class GenerationConfig:
     overwrite: bool = False
     preserve_handwritten: bool = False
     smart_regen: bool = False
-    design_path_filter: str = ""
 
 
 def _clear_output_directory(config: GenerationConfig) -> None:
@@ -260,7 +264,7 @@ def _reconcile_params_coverage(graph: ComputationGraph) -> None:
     idiom (caught by ``run_codegen``, aborts the run).
     """
     from sysml_codegen.generation import CodeGenerationError
-    from sysml_codegen.resolution.graph_builder import (
+    from sysml_codegen.resolution.uncovered_params import (
         collect_uncovered_params,
         collect_unwired_fallthrough,
     )
@@ -291,32 +295,198 @@ def _reconcile_params_coverage(graph: ComputationGraph) -> None:
         )
 
 
-def _preflight_constraint_names(ctx: PipelineContext) -> None:
+def _preflight_registry_class_names(graph: ComputationGraph) -> None:
+    """Refuse a graph whose registry class names collide beyond aliasing (REQ-REG-08).
+
+    The check belonged to the registry pass alone, which runs after
+    ``_clear_output_directory``: a model that trips it left a half-written
+    package behind and reported "Unexpected error", because the raise was an
+    untyped ``ValueError``. Running the same pure detector here — beside
+    ``_check_duplicate_output_paths`` and ``_reconcile_params_coverage``, before
+    anything is written — is what makes it fail-before-mutate, and the error is
+    the package's own so the operator reads a refusal rather than a traceback.
+    """
+    from sysml_codegen.generation.errors import residual_class_name_collision_error
+    from sysml_codegen.generation.registry import residual_class_name_collisions
+
+    residual = residual_class_name_collisions(graph)
+    if residual:
+        raise residual_class_name_collision_error(residual)
+
+
+def _preflight_constraint_totality(graph: ComputationGraph) -> None:
+    """Refuse a catalog whose usage rows and occurrence rows do not account for each other.
+
+    The domain is complete by construction upstream — that is where the records are born —
+    and ``InstanceGraph.validate()`` already gates the domain against the occurrence nodes
+    on every route. What this owns is the *catalog* end of the same join, at the
+    fail-before-mutate boundary, because the catalog is what ships: a package whose
+    catalog lost a carrier would claim coverage it does not have, and nothing downstream
+    would notice.
+
+    It joins by ``declaration_id`` only, never by qualified name, and it refuses rather
+    than repairs.
+
+    **Two kinds of check, and the second is why removal of a non-reaching row is caught.**
+    The joins below are catalog-internal: they compare the row lists against each other,
+    which catches a duplicate, an orphaned occurrence row, and a disagreeing count. They
+    cannot catch a *removed* row whose ``occurrence_count`` is zero, because such a row has
+    no occurrence to orphan and no count to contradict — its removal leaves the catalog
+    perfectly self-consistent. That is 56 of ``catf_mfe_d5``'s 65 members, which is the
+    whole population this item exists to make visible. The seal check is the guard for
+    those: ``fingerprint`` was minted at projection from the domain, so it still knows the
+    removed row existed.
+    """
+    from sysml_codegen.elaboration.graph import DISPOSITION_REASONS
+    from sysml_codegen.generation import CodeGenerationError
+    from sysml_codegen.resolution.models import ModuleKind
+
+    catalog = graph.constraint_catalog
+    if catalog is None:
+        if any(module.module_kind is ModuleKind.CONSTRAINT for module in graph.modules):
+            raise CodeGenerationError(
+                "constraint usage domain incomplete: the graph generates constraint modules "
+                "but carries no catalog"
+            )
+        return
+
+    if catalog.recomputed_fingerprint() != catalog.fingerprint:
+        raise CodeGenerationError(
+            "constraint usage domain incomplete: the catalog's "
+            f"{len(catalog.usage_records)} usage rows no longer match the fingerprint "
+            "sealed at projection, so a row was added, removed, or altered after the "
+            "domain was rendered"
+        )
+
+    rows_by_id: dict[str, ConstraintCatalogUsageRecord] = {}
+    for row in catalog.usage_records:
+        if row.declaration_id in rows_by_id:
+            raise CodeGenerationError(
+                "constraint usage domain incomplete: duplicate usage record for "
+                f"{row.usage_qualified_name} ({row.declaration_id})"
+            )
+        reasons = DISPOSITION_REASONS.get(row.disposition_kind)
+        if reasons is None or row.disposition_reason not in reasons:
+            raise CodeGenerationError(
+                "constraint usage domain incomplete: no disposition for "
+                f"{row.usage_qualified_name} ({row.declaration_id})"
+            )
+        rows_by_id[row.declaration_id] = row
+
+    occurrence_rows: list[ConstraintCatalogEntry | ConstraintCatalogExcludedRecord] = [
+        *catalog.concrete_entries,
+        *catalog.excluded_records,
+    ]
+    occurrences: dict[str, int] = {}
+    for occurrence in occurrence_rows:
+        if occurrence.declaration_id not in rows_by_id:
+            raise CodeGenerationError(
+                "constraint usage domain incomplete: catalog row joins no domain member for "
+                f"{occurrence.usage_qualified_name} ({occurrence.declaration_id})"
+            )
+        occurrences[occurrence.declaration_id] = (
+            occurrences.get(occurrence.declaration_id, 0) + 1
+        )
+
+    for declaration_id, row in rows_by_id.items():
+        counted = occurrences.get(declaration_id, 0)
+        if row.occurrence_count != counted:
+            raise CodeGenerationError(
+                f"constraint usage domain incomplete: occurrence_count {row.occurrence_count} "
+                f"disagrees with {counted} nodes for {row.usage_qualified_name} "
+                f"({declaration_id})"
+            )
+
+
+def _preflight_coverage_account(
+    graph: ComputationGraph, constraint_plan: ConstraintGenerationPlan
+) -> None:
+    """Refuse a coverage account that disagrees with the catalog it summarizes (Item 3 / D3).
+
+    Four refusals, one function: they share the catalog read and the same failure class, and
+    each carries its own message because each has its own cure.
+
+    1. **Recomputation.** The account is derived once, at plan build, and rendered into the
+       aggregator as baked constants. Recomputing it here from the graph's catalog and
+       comparing is what makes "the numbers in the package describe this package's catalog" a
+       check rather than a convention (invariant 5).
+    2. **Aggregator iff usage rows.** D5's rule is read in two places — the instance graph's
+       ``constraint_usages`` when the module is minted, the catalog's ``usage_records`` at the
+       three generation seams. Two readings of one rule is the drift Item 2's A4 cure exists to
+       stop, so the disagreement is refused by name in both directions.
+    3. **The reason vocabulary** and 4. **D9's contradiction** raise from inside
+       :func:`coverage_account`, which the recomputation calls. They fire at plan build too —
+       earlier still — and are re-asserted here so this function is total over the four.
+
+    Runs after the plan is built and before ``_clear_output_directory``, so it is
+    fail-before-mutate. The only thing between the earlier preflight block and this call is
+    ``ensure_package_tree_is_link_free``, which inspects and raises and writes nothing.
+    """
+    from sysml_codegen.generation import CodeGenerationError
+    from sysml_codegen.generation.coverage import coverage_account
+    from sysml_codegen.resolution.models import ModuleKind, ships_constraint_machinery
+
+    catalog = graph.constraint_catalog
+    has_aggregator = any(
+        module.module_kind is ModuleKind.REPORT_AGGREGATOR for module in graph.modules
+    )
+
+    if catalog is None:
+        if has_aggregator:
+            raise CodeGenerationError(
+                "coverage account cannot be built: the graph carries a REPORT_AGGREGATOR "
+                "module but no constraint catalog, so the report it would ship could not "
+                "state its coverage"
+            )
+        return
+
+    if has_aggregator != ships_constraint_machinery(graph):
+        expected = "a REPORT_AGGREGATOR module" if not has_aggregator else "no aggregator"
+        raise CodeGenerationError(
+            "coverage account disagrees with the report-required rule: the catalog has "
+            f"{len(catalog.usage_records)} usage row(s), which requires {expected}. "
+            "A report is required iff the model authored at least one constraint usage; the "
+            "aggregator mint and the generation seams must read that one population."
+        )
+
+    recomputed = coverage_account(catalog)
+    if constraint_plan.coverage != recomputed:
+        raise CodeGenerationError(
+            "coverage account disagrees with its catalog: the plan holds "
+            f"{constraint_plan.coverage}, and the sealed catalog implies {recomputed}. The "
+            "account is a summary of that catalog and nothing else, so it was altered after "
+            "it was derived."
+        )
+
+
+def _preflight_constraint_names(graph: ComputationGraph) -> None:
     """Validate both generated constraint scopes before a graph-aware boundary acts."""
     from sysml_codegen.generation.errors import validate_constraint_graph_or_raise
+    from sysml_codegen.resolution.models import ships_constraint_machinery
 
-    validate_constraint_graph_or_raise(ctx.computation_graph)
-    catalog = ctx.computation_graph.constraint_catalog
-    if catalog is not None:
+    validate_constraint_graph_or_raise(graph)
+    if ships_constraint_machinery(graph):
         from sysml_codegen.generation.modules import assert_unique_predicate_function_names
 
+        catalog = graph.constraint_catalog
+        assert catalog is not None  # ships_constraint_machinery implies it; narrows the type
         assert_unique_predicate_function_names(catalog)
 
 
 def _generate_schemas(
-    ctx: PipelineContext,
+    graph: ComputationGraph,
     config: GenerationConfig,
     template_env: jinja2.Environment,
 ) -> None:
     """Generate Pydantic schemas for multi-output modules."""
-    _preflight_constraint_names(ctx)
+    _preflight_constraint_names(graph)
     from sysml_codegen.generation import generate_multioutput_model
     from sysml_codegen.resolution.models import ModuleKind
 
     schemas_dir = config.output_path / "schemas"
 
     multioutput_count = 0
-    for module in ctx.computation_graph.modules:
+    for module in graph.modules:
         if module.module_kind in (ModuleKind.CONSTRAINT, ModuleKind.REPORT_AGGREGATOR):
             continue
         if len(module.outputs) < 2:
@@ -335,10 +505,15 @@ def _generate_schemas(
 
     logger.info(f"Generated {multioutput_count} multi-output schemas")
 
-    # Item 7 / D4: per-package evidence schemas, gated on a constraint catalog existing
-    # on the graph. A constraint-free corpus writes nothing here (INV-7).
-    catalog = ctx.computation_graph.constraint_catalog
-    if catalog is not None:
+    # Item 7 / D4: per-package evidence schemas, gated on the package actually having
+    # constraint machinery that could run — one concrete entry. A corpus that declares no
+    # constraint writes nothing here (INV-7), and so does one that declares constraints
+    # none of which reach an instance: there would be nothing to populate the evidence
+    # with. See `ships_constraint_machinery` for why the catalog's existence stopped being
+    # the right question, and which item supersedes this rule.
+    from sysml_codegen.resolution.models import ships_constraint_machinery
+
+    if ships_constraint_machinery(graph):
         template = template_env.get_template("constraint_types.py.jinja2")
         code = template.render()
         if not code.endswith("\n"):
@@ -348,18 +523,18 @@ def _generate_schemas(
 
 
 def _generate_modules(
-    ctx: PipelineContext,
+    graph: ComputationGraph,
     config: GenerationConfig,
     template_env: jinja2.Environment,
     constraint_plan: ConstraintGenerationPlan,
 ) -> None:
     """Generate TEAx module wrappers for all module types (ADR-003 namespacing)."""
-    _preflight_constraint_names(ctx)
+    _preflight_constraint_names(graph)
     from sysml_codegen.generation import generate_teax_module
     from sysml_codegen.resolution.models import ModuleKind
 
     modules_dir = config.output_path / "modules"
-    catalog = ctx.computation_graph.constraint_catalog
+    catalog = graph.constraint_catalog
     staged: list[tuple[Path, str]] = []
 
     if constraint_plan.predicates_code is not None:
@@ -367,7 +542,7 @@ def _generate_modules(
             (modules_dir / "constraints" / "predicates.py", constraint_plan.predicates_code)
         )
 
-    for module in ctx.computation_graph.modules:
+    for module in graph.modules:
         python_path = _get_python_path(module)
         output_path = modules_dir / python_path.full_path
         if module.module_kind in (ModuleKind.CONSTRAINT, ModuleKind.REPORT_AGGREGATOR):
@@ -403,12 +578,12 @@ def _generate_modules(
 
 
 def _generate_stencils(
-    ctx: PipelineContext,
+    graph: ComputationGraph,
     config: GenerationConfig,
     template_env: jinja2.Environment,
 ) -> None:
     """Generate implementation stencils for all module types (ADR-003 namespacing)."""
-    _preflight_constraint_names(ctx)
+    _preflight_constraint_names(graph)
     from sysml_codegen.generation import (
         backup_implementation,
         generate_implementation,
@@ -421,7 +596,7 @@ def _generate_stencils(
 
     stats = {"new": 0, "preserved": 0, "regenerated": 0}
 
-    for module in ctx.computation_graph.modules:
+    for module in graph.modules:
         if module.module_kind in (ModuleKind.CONSTRAINT, ModuleKind.REPORT_AGGREGATOR):
             # D8: fully generated, no handwritten implementation to stencil.
             continue
@@ -500,19 +675,19 @@ def _generate_stencils(
 
 
 def _generate_pipeline(
-    ctx: PipelineContext,
+    graph: ComputationGraph,
     config: GenerationConfig,
     template_env: jinja2.Environment,
 ) -> None:
     """Generate pipeline YAML from computation graph."""
-    _preflight_constraint_names(ctx)
+    _preflight_constraint_names(graph)
     from sysml_codegen.generation import generate_pipeline_yaml
 
     pipelines_dir = config.output_path / "pipelines"
     output_path = pipelines_dir / f"{config.pipeline_name}.yaml"
 
     yaml_content = generate_pipeline_yaml(
-        graph=ctx.computation_graph,
+        graph=graph,
         package_name=config.package_name,
         template_env=template_env,
     )
@@ -524,21 +699,21 @@ def _generate_pipeline(
 
 
 def _generate_registry(
-    ctx: PipelineContext,
+    graph: ComputationGraph,
     config: GenerationConfig,
     template_env: jinja2.Environment,
 ) -> None:
     """Generate registry function in __init__.py."""
-    _preflight_constraint_names(ctx)
+    _preflight_constraint_names(graph)
     from sysml_codegen.generation import generate_registry
     from sysml_codegen.generation.registry import _collect_exit_point_primitive_types
 
     output_path = config.output_path / "__init__.py"
 
-    exit_point_types = _collect_exit_point_primitive_types(ctx.computation_graph.modules)
+    exit_point_types = _collect_exit_point_primitive_types(graph.modules)
 
     code = generate_registry(
-        graph=ctx.computation_graph,
+        graph=graph,
         package_name=config.package_name,
         template_env=template_env,
         output_path=output_path,
@@ -548,22 +723,22 @@ def _generate_registry(
         output_path.write_text(code)
         logger.debug(f"Generated registry: {output_path}")
 
-    logger.info(f"Generated module registry with {len(ctx.computation_graph.modules)} modules")
+    logger.info(f"Generated module registry with {len(graph.modules)} modules")
 
 
 def _generate_entry_points(
-    ctx: PipelineContext,
+    graph: ComputationGraph,
     config: GenerationConfig,
     template_env: jinja2.Environment,
 ) -> None:
     """Generate entry point parameter group schemas and JSON templates."""
-    _preflight_constraint_names(ctx)
+    _preflight_constraint_names(graph)
     from sysml_codegen.generation import (
         generate_all_derived_jsons_from_graph,
         generate_all_derived_schemas_from_graph,
     )
 
-    entry_point_groups = ctx.computation_graph.entry_point_groups
+    entry_point_groups = graph.entry_point_groups
 
     if entry_point_groups:
         schema_files = generate_all_derived_schemas_from_graph(
@@ -583,17 +758,17 @@ def _generate_entry_points(
 
 
 def _generate_backlog(
-    ctx: PipelineContext,
+    graph: ComputationGraph,
     config: GenerationConfig,
 ) -> None:
     """Generate implementation backlog report."""
-    _preflight_constraint_names(ctx)
+    _preflight_constraint_names(graph)
     from sysml_codegen.generation import generate_backlog_report
 
     output_path = config.output_path / "IMPLEMENTATION_BACKLOG.md"
 
     markdown = generate_backlog_report(
-        ctx.computation_graph,
+        graph,
         output_path,
         config.package_name,
     )
@@ -603,12 +778,12 @@ def _generate_backlog(
 
 
 def _generate_tests(
-    ctx: PipelineContext,
+    graph: ComputationGraph,
     config: GenerationConfig,
     template_env: jinja2.Environment,
 ) -> None:
     """Generate runnable test file for implementations."""
-    _preflight_constraint_names(ctx)
+    _preflight_constraint_names(graph)
     from sysml_codegen.generation import generate_test_implementations
 
     tests_dir = config.output_path / "tests"
@@ -617,7 +792,7 @@ def _generate_tests(
     output_path = tests_dir / "test_implementations_runnable.py"
 
     content = generate_test_implementations(
-        graph=ctx.computation_graph,
+        graph=graph,
         package_name=config.package_name,
         template_env=template_env,
         output_path=output_path,
@@ -627,7 +802,7 @@ def _generate_tests(
 
 
 def _seal_package(
-    ctx: PipelineContext,
+    graph: ComputationGraph,
     config: GenerationConfig,
 ) -> None:
     """Step 9: seal the generated package (D1).
@@ -636,7 +811,7 @@ def _seal_package(
     final on disk before ``seal_package`` runs, and ``package_contract.json`` is written
     last, never in its own coverage.
     """
-    _preflight_constraint_names(ctx)
+    _preflight_constraint_names(graph)
     from sysml_codegen.contracts import (
         DEFAULT_COVERAGE_POLICY,
         build_generation_manifest,
@@ -651,7 +826,7 @@ def _seal_package(
     contracts_dir.mkdir(parents=True, exist_ok=True)
 
     # (1) ModelContract — pure graph projection, written first.
-    model_contract = build_model_contract(ctx.computation_graph)
+    model_contract = build_model_contract(graph)
     write_contract_json(contracts_dir / "model_contract.json", model_contract)
 
     # (2) The canonical verifier, copied verbatim (INV-8 drift guard).
@@ -690,15 +865,6 @@ def cmd_generate(args: argparse.Namespace) -> int:
         logger.error("agentic-mbse is not installed. Please install it first.")
         return 1
 
-    # --design-path-filter is baked into the snapshot at capture, so re-applying
-    # it at generation is meaningless — reject rather than silently no-op (V6).
-    if args.from_snapshot is not None and args.design_path_filter:
-        logger.error(
-            "--design-path-filter cannot be combined with --from-snapshot "
-            "(the filter is baked into the snapshot at capture)."
-        )
-        return 1
-
     config = GenerationConfig(
         models_path=args.models,
         from_snapshot=args.from_snapshot,
@@ -709,7 +875,6 @@ def cmd_generate(args: argparse.Namespace) -> int:
         overwrite=args.overwrite,
         preserve_handwritten=args.preserve_handwritten,
         smart_regen=args.smart_regen,
-        design_path_filter=args.design_path_filter,
     )
 
     success = run_codegen(config)
@@ -717,7 +882,12 @@ def cmd_generate(args: argparse.Namespace) -> int:
 
 
 def cmd_snapshot(args: argparse.Namespace) -> int:
-    """Capture a versioned extraction snapshot from live models."""
+    """Capture one v6 instance-graph snapshot from live models.
+
+    This subcommand emits what this CLI's ``generate --from-snapshot`` accepts.
+    It is the only snapshot this tool writes: the v5 extraction snapshot retired
+    with the v5 family.
+    """
     level = logging.DEBUG if args.verbose else logging.INFO
     logging.basicConfig(level=level, format="%(levelname)s: %(message)s")
 
@@ -727,11 +897,45 @@ def cmd_snapshot(args: argparse.Namespace) -> int:
         logger.error("agentic-mbse is not installed. Please install it first.")
         return 1
 
-    from sysml_codegen.snapshot import capture_snapshot
+    from sysml_codegen.elaboration.elaborate import (
+        ElaborationDiagnosticError,
+        ElaborationError,
+    )
+    from sysml_codegen.generation import SysMLParsingError
+    from sysml_codegen.snapshot.capture import capture_instance_graph_snapshot
+    from sysml_codegen.snapshot.envelope import (
+        InstanceGraphSnapshotError,
+        SnapshotCertifiabilityError,
+    )
 
     models_path: Path = args.models
-    output_path: Path = args.output or (models_path / "extraction_snapshot.json")
-    out = capture_snapshot([models_path], output_path, design_path_filter=args.design_path_filter)
+    output_path: Path = args.output or (models_path / "instance_graph_snapshot.json")
+    # The same distinct refusal classes run_codegen keeps distinct: a model the
+    # exact route declines gets its typed message and exit 1, never a traceback.
+    try:
+        out = capture_instance_graph_snapshot([models_path], output_path)
+    except ElaborationError as error:
+        logger.error(f"Model is not ready for the exact route: {error}")
+        return 1
+    except ElaborationDiagnosticError as error:
+        logger.error(f"Model failed exact-route validation: {error}")
+        return 1
+    except SysMLParsingError as error:
+        logger.error(f"SysML parsing failed: {error}")
+        return 1
+    except InstanceGraphSnapshotError as error:
+        if isinstance(error, SnapshotCertifiabilityError):
+            detail = "; ".join(
+                f"{diagnostic.code.value}: {diagnostic.detail}"
+                for diagnostic in error.diagnostics
+            )
+            logger.error(f"Snapshot refused: {detail}")
+        else:
+            logger.error(f"Snapshot refused: {error}")
+        return 1
+    except OSError as error:
+        logger.error(f"Snapshot could not be written: {error}")
+        return 1
     logger.info(f"Wrote snapshot to {out}")
     return 0
 
@@ -886,12 +1090,6 @@ def main() -> None:
         "--smart-regen", action="store_true", help="Smart regeneration with signature comparison"
     )
     gen_parser.add_argument("--verbose", "-v", action="store_true", help="Enable verbose logging")
-    gen_parser.add_argument(
-        "--design-path-filter",
-        type=str,
-        default="",
-        help="Substring filter for design file paths (default: accept all files)",
-    )
     gen_parser.set_defaults(func=cmd_generate)
 
     # Snapshot subcommand — capture a versioned snapshot from live models (D5)
@@ -907,12 +1105,6 @@ def main() -> None:
         type=Path,
         default=None,
         help="Snapshot output path (default: <models>/extraction_snapshot.json)",
-    )
-    snap_parser.add_argument(
-        "--design-path-filter",
-        type=str,
-        default="",
-        help="Substring filter for design file paths (baked into the snapshot)",
     )
     snap_parser.add_argument("--verbose", "-v", action="store_true", help="Enable verbose logging")
     snap_parser.set_defaults(func=cmd_snapshot)
@@ -953,7 +1145,16 @@ def main() -> None:
 
 
 def run_codegen(config: GenerationConfig) -> bool:
-    """Run the code generation pipeline.
+    """Generate one package from the exact instance-graph authority.
+
+    This is the single public generation entry point, and it constructs exactly
+    one way. ``--models`` and ``--from-snapshot`` are two *sources* for the same
+    authority, not two implementations: both seal into an ``ExactPipelineContext``
+    whose receipt binds the instance graph to what it projects to. There is no
+    flag, environment variable, or config field that selects an implementation.
+
+    The legacy builders are gone from the tree entirely (retirement steps 1-4);
+    there is no other construction authority left to be reachable from here.
 
     Args:
         config: Generation configuration with paths and options.
@@ -961,57 +1162,98 @@ def run_codegen(config: GenerationConfig) -> bool:
     Returns:
         True if generation succeeded, False otherwise.
     """
-    from sysml_codegen.contracts import PackageSealError, ensure_package_tree_is_link_free
-    from sysml_codegen.generation import (
-        CodeGenerationError,
-        SysMLParsingError,
+    from sysml_codegen.elaboration.elaborate import (
+        ElaborationDiagnosticError,
+        ElaborationError,
     )
-    from sysml_codegen.generation.constraint_plan import build_constraint_generation_plan
-    from sysml_codegen.orchestration.pipeline_builder import build_pipeline_context
-    from sysml_codegen.snapshot import GrandfatheredSnapshotError
+    from sysml_codegen.generation import CodeGenerationError, SysMLParsingError
+    from sysml_codegen.orchestration.exact_pipeline_context import (
+        build_exact_pipeline_context,
+        build_exact_pipeline_context_from_snapshot,
+    )
+    from sysml_codegen.snapshot.envelope import InstanceGraphSnapshotError
 
     source = config.from_snapshot if config.from_snapshot is not None else config.models_path
     logger.info(f"Generating code from {source}")
     logger.info(f"Output to {config.output_path}")
     logger.info(f"Package name: {config.package_name}")
 
+    logger.info("Building pipeline context...")
     try:
-        # Step 1: Build pipeline context — from a snapshot (license-free) or from
-        # live extraction (7-step initialization). Both converge on PipelineContext.
-        logger.info("Building pipeline context...")
         if config.from_snapshot is not None:
-            from sysml_codegen.orchestration.snapshot_context import (
-                build_pipeline_context_from_snapshot,
-            )
-            from sysml_codegen.snapshot import assert_snapshot_certifiable
-
-            ctx = build_pipeline_context_from_snapshot(config.from_snapshot)
-            # Fail closed on a grandfathered snapshot before any output is written
-            # or sealed (Item 12): a snapshot captured without lowering carries no
-            # lowered constraints, so a package sealed from it would silently omit
-            # them. Inspection loads above are unaffected — only certifying
-            # generation is refused. Reads the context's now-honest mode (D4).
-            assert_snapshot_certifiable(ctx.constraint_lowering_mode, config.from_snapshot)
+            context = build_exact_pipeline_context_from_snapshot(config.from_snapshot)
         else:
             assert config.models_path is not None  # guaranteed by the CLI group
-            ctx = build_pipeline_context(
-                [config.models_path],
-                design_path_filter=config.design_path_filter,
-            )
-        logger.info(f"Extracted {len(ctx.calc_defs)} calculation definitions")
-        logger.info(f"Built computation graph with {len(ctx.computation_graph.modules)} modules")
+            context = build_exact_pipeline_context([config.models_path])
+        # One read, one projection. Every later step works from this object, so a
+        # package is never assembled out of several separately derived graphs.
+        graph = context.computation_graph
+    except InstanceGraphSnapshotError as error:
+        logger.error(f"Snapshot refused: {error}")
+        return False
+    # The two elaboration refusal classes stay distinct in the log the way the
+    # corpus driver keeps them distinct: readiness findings and validation
+    # diagnostics are different answers, and collapsing them loses which gate
+    # refused. Neither is a CodeGenerationError, so neither is caught below.
+    except ElaborationError as error:
+        logger.error(f"Model is not ready for the exact route: {error}")
+        return False
+    except ElaborationDiagnosticError as error:
+        logger.error(f"Model failed exact-route validation: {error}")
+        return False
+    except SysMLParsingError as error:
+        logger.error(f"SysML parsing failed: {error}")
+        return False
+    except CodeGenerationError as error:
+        logger.error(
+            f"Code generation failed: {error}",
+            extra={"constraint_name_safety": error.name_safety_violation},
+        )
+        return False
 
+    logger.info(f"Built computation graph with {len(graph.modules)} modules")
+    return _generate_package_from_graph(graph, config)
+
+
+def _generate_package_from_graph(graph: ComputationGraph, config: GenerationConfig) -> bool:
+    """Write and seal one package from an already-constructed computation graph.
+
+    Authority-neutral by construction: it takes a graph and chooses nothing. The
+    caller has already decided which authority produced it, which is why
+    ``run_codegen`` is the only thing that decides. Private on purpose — the
+    recovery's legacy-specimen tests drive it directly while their fixtures are
+    retired, and Phase 4 removes those callers with the legacy owners.
+    """
+    from sysml_codegen.contracts import PackageSealError, ensure_package_tree_is_link_free
+    from sysml_codegen.generation import (
+        CodeGenerationError,
+        SysMLParsingError,
+    )
+    from sysml_codegen.generation.constraint_plan import build_constraint_generation_plan
+
+    try:
         # Validate both generated constraint scopes before overwrite clearing or output creation.
-        _preflight_constraint_names(ctx)
+        _preflight_constraint_names(graph)
 
         # Step 1.5: Fail fast on a sanitize-collision BEFORE clearing output, so a
         # duplicate path never wipes or silently overwrites existing files.
-        _check_duplicate_output_paths(ctx.computation_graph.modules)
+        _check_duplicate_output_paths(graph.modules)
 
         # Step 1.6: Params-coverage reconciliation (Item 7 / D4, M1). Always
         # strict — logs the unwired-remainder summary, then raises V11 on any
         # wired fell-through-valueless input. Before output clear, like 1.5.
-        _reconcile_params_coverage(ctx.computation_graph)
+        _reconcile_params_coverage(graph)
+
+        # Step 1.7: registry class-name collisions the aliasing cannot resolve.
+        # The check itself lives at the registry pass, which runs after the tree
+        # is cleared; running it here is what makes the refusal fail-before-mutate.
+        _preflight_registry_class_names(graph)
+
+        # Step 1.8: the constraint catalog accounts for every authored usage, and
+        # every occurrence row joins one of them by identity. Before output clear,
+        # like 1.5-1.7: a package that shipped a catalog missing a carrier would
+        # claim coverage it does not have.
+        _preflight_constraint_totality(graph)
 
         try:
             ensure_package_tree_is_link_free(config.output_path)
@@ -1021,7 +1263,15 @@ def run_codegen(config: GenerationConfig) -> bool:
 
         # Build every constraint body and wrapper while the target tree is still untouched.
         template_env = _get_template_env()
-        constraint_plan = build_constraint_generation_plan(ctx, template_env, config.package_name)
+        constraint_plan = build_constraint_generation_plan(
+            graph, template_env, config.package_name
+        )
+
+        # Step 1.9: the coverage account the package is about to bake agrees with the catalog
+        # it claims to summarize, and the aggregator's existence agrees with the same
+        # population. Still before the clear, so a disagreement refuses without touching the
+        # tree.
+        _preflight_coverage_account(graph, constraint_plan)
 
         # Step 2: Clear and setup output directories
         if config.overwrite:
@@ -1036,37 +1286,37 @@ def run_codegen(config: GenerationConfig) -> bool:
 
         # Step 5: Generate schemas
         logger.info("Generating schemas...")
-        _generate_schemas(ctx, config, template_env)
+        _generate_schemas(graph, config, template_env)
 
         # Step 6: Generate modules and stencils (all types unified via graph)
         logger.info("Generating TEAx module wrappers...")
-        _generate_modules(ctx, config, template_env, constraint_plan)
+        _generate_modules(graph, config, template_env, constraint_plan)
 
         logger.info("Generating implementation stencils...")
-        _generate_stencils(ctx, config, template_env)
+        _generate_stencils(graph, config, template_env)
 
         # Step 7: Generate pipeline and registry
         logger.info("Generating pipeline configuration...")
-        _generate_pipeline(ctx, config, template_env)
+        _generate_pipeline(graph, config, template_env)
 
         logger.info("Generating module registry...")
-        _generate_registry(ctx, config, template_env)
+        _generate_registry(graph, config, template_env)
 
         # Step 8: Generate entry points and extras
         logger.info("Generating entry point schemas and JSON templates...")
-        _generate_entry_points(ctx, config, template_env)
+        _generate_entry_points(graph, config, template_env)
 
         logger.info("Generating implementation backlog...")
-        _generate_backlog(ctx, config)
+        _generate_backlog(graph, config)
 
         logger.info("Generating runnable tests...")
-        _generate_tests(ctx, config, template_env)
+        _generate_tests(graph, config, template_env)
 
         # Step 9: Seal the package (D1) — over final on-disk state, both live and
         # from-snapshot paths alike (D8).
         logger.info("Sealing package...")
         try:
-            _seal_package(ctx, config)
+            _seal_package(graph, config)
         except (PackageSealError, OSError) as error:
             logger.error(f"Package sealing failed: {error}")
             return False
@@ -1074,9 +1324,6 @@ def run_codegen(config: GenerationConfig) -> bool:
         logger.info("Code generation complete")
         return True
 
-    except GrandfatheredSnapshotError as e:
-        logger.error(str(e))
-        return False
     except SysMLParsingError as e:
         logger.error(f"SysML parsing failed: {e}")
         return False
@@ -1086,11 +1333,18 @@ def run_codegen(config: GenerationConfig) -> bool:
             extra={"constraint_name_safety": e.name_safety_violation},
         )
         return False
-    except Exception as e:
-        import traceback
-
-        logger.error(f"Unexpected error: {e}")
-        logger.debug(traceback.format_exc())
+    except OSError as e:
+        # The only unnamed failure this half can operationally hit is the
+        # filesystem: the output tree is created and written from step 2 onward.
+        # Everything else reaching here — a template defect, a graph field the
+        # renderer did not expect — is a programming defect, and it now propagates
+        # to the CLI boundary with its traceback instead of becoming a bare
+        # "generation failed" and exit 1.
+        #
+        # Measured, and deliberately not changed here: any failure after step 2
+        # leaves the partially written output tree on disk. That is true of the
+        # named refusals above as well, and has been since before this narrowing.
+        logger.error(f"Writing the generated package failed: {e}")
         return False
 
 

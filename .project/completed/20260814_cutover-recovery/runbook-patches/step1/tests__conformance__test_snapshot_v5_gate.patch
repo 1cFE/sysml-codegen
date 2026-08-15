@@ -1,0 +1,122 @@
+diff --git a/tests/conformance/test_snapshot_v5_gate.py b/tests/conformance/test_snapshot_v5_gate.py
+index 8898b13..471d992 100644
+--- a/tests/conformance/test_snapshot_v5_gate.py
++++ b/tests/conformance/test_snapshot_v5_gate.py
+@@ -5,17 +5,15 @@ DD-A06, DD-A20. An envelope version exists so that one version cannot describe t
+ handed a payload it does not own must refuse, *typed*, before it reads anything semantic, and
+ without producing a partial context. No migration and no grandfathering path.
+ 
+-**Two envelopes, and the file is organised by which retirement step each one dies at.**
+-
+-- The **v6 instance-graph envelope** is what the exact route reads. Those nodes are at the top
+-  and they are the ones that survive: `snapshot.envelope` is not in any deletion group, so this
+-  file keeps a live subject after G2' removes the v5 read path. The retirement runbook's
+-  post-step-4 battery — "the v5 typed refusal still typed" — checks *these*.
+-- The **v5 extraction envelope** nodes are below, and each one imports
+-  `orchestration.snapshot_context` inside its own body rather than at module scope. That is
+-  deliberate: it keeps the rest of this file collecting after G2' deletes that owner, and it
+-  makes the retirement of the v5 gate a per-node fact instead of a whole-file one. Those nodes
+-  retire with the v5 family, when the fixtures they read retire.
++**One envelope is left.** The **v6 instance-graph envelope** is what the exact route reads,
++and `snapshot.envelope` is in no deletion group, so this file keeps a live subject. The
++retirement runbook's post-step battery — "the v5 typed refusal is still typed" — checks these
++four nodes plus the two `test_public_authority_switch.py` refusal nodes.
++
++The **v5 extraction envelope** half retired at retirement step 1 with the reader it gated
++(`orchestration.snapshot_context`). Note that the by-name refusal of a v5 payload is *not*
++part of what retired: `test_a_v5_extraction_snapshot_is_refused_by_name_not_by_a_null_version`
++below is the surviving statement of it, and it runs against `snapshot/envelope.py`.
+ 
+ Gate 4C part 7 chunk 12 authored the split. See row L-180.
+ """
+@@ -26,7 +24,6 @@ import json
+ 
+ import pytest
+ 
+-from sysml_codegen.snapshot import SNAPSHOT_FORMAT_VERSION, SnapshotFormatError
+ from sysml_codegen.snapshot.envelope import SnapshotShapeError, load_instance_graph_snapshot
+ from tests.conftest import FIXTURES_DIR, snapshot_fixture
+ 
+@@ -119,82 +116,3 @@ def test_the_public_route_refuses_a_foreign_snapshot_and_writes_no_package(tmp_p
+     assert accepted is False
+     assert "v5 extraction snapshot" in caplog.text
+     assert not output.exists() or not any(output.rglob("*.py"))
+-
+-
+-# ---------------------------------------------------------------------------
+-# The v5 extraction envelope — retires with the v5 family
+-# ---------------------------------------------------------------------------
+-#
+-# Every node below imports `orchestration.snapshot_context` in its own body. Module-scope would
+-# make G2' break this whole file, including the four surviving nodes above.
+-
+-
+-def _v5_payload() -> dict:
+-    return json.loads(snapshot_fixture("wi014_toy").read_text())
+-
+-
+-def test_envelope_is_v5():
+-    assert SNAPSHOT_FORMAT_VERSION == 5
+-
+-
+-@pytest.mark.parametrize(
+-    "foreign", [4, 6], ids=["reader-newer-than-writer", "reader-older-than-writer"]
+-)
+-def test_both_envelope_skew_directions_fail_closed(tmp_path, foreign):
+-    from sysml_codegen.orchestration.snapshot_context import build_pipeline_context_from_snapshot
+-
+-    payload = _v5_payload()
+-    payload["snapshot_format_version"] = foreign
+-    with pytest.raises(SnapshotFormatError, match=f"format version {foreign}, tool expects 5"):
+-        build_pipeline_context_from_snapshot(_write(tmp_path, payload))
+-
+-
+-def test_retained_pre_v5_snapshot_fails_with_the_existing_recapture_message(tmp_path):
+-    """DD-A06: the pre-existing message, not a new mechanism, and no partial context."""
+-    from sysml_codegen.orchestration.snapshot_context import build_pipeline_context_from_snapshot
+-
+-    payload = _v5_payload()
+-    payload["snapshot_format_version"] = 4
+-    with pytest.raises(SnapshotFormatError, match="Recapture with"):
+-        build_pipeline_context_from_snapshot(_write(tmp_path, payload))
+-
+-
+-def test_envelope_gate_runs_before_the_lowering_mode_is_read(tmp_path):
+-    """DD-A20 / DD-R15: the version gate precedes any mode read.
+-
+-    If the mode were read first, a stale snapshot could take the `grandfathered_off`
+-    fail-open branch that Item 12 owns — which would be exactly the second
+-    grandfathering route this item must not introduce. Corrupting the mode to a value
+-    no reader accepts proves the ordering: the version error must win.
+-    """
+-    from sysml_codegen.orchestration.snapshot_context import build_pipeline_context_from_snapshot
+-
+-    payload = _v5_payload()
+-    payload["snapshot_format_version"] = 4
+-    payload["constraint_lowering_mode"] = "not_a_real_mode"
+-    with pytest.raises(SnapshotFormatError, match="format version 4, tool expects 5"):
+-        build_pipeline_context_from_snapshot(_write(tmp_path, payload))
+-
+-
+-def test_every_committed_snapshot_loads_at_v5():
+-    """DD-A06: every committed fixture loads at the new version."""
+-    snapshots = sorted(FIXTURES_DIR.glob("*/extraction_snapshot.json"))
+-    assert len(snapshots) >= 34
+-    stale = [
+-        path.parent.name
+-        for path in snapshots
+-        if json.loads(path.read_text())["snapshot_format_version"] != SNAPSHOT_FORMAT_VERSION
+-    ]
+-    assert stale == [], f"snapshots not re-captured at v{SNAPSHOT_FORMAT_VERSION}: {stale}"
+-
+-
+-def test_every_committed_snapshot_carries_facts_v2():
+-    from sysml_codegen import _upstream_pins
+-
+-    stale = [
+-        path.parent.name
+-        for path in sorted(FIXTURES_DIR.glob("*/extraction_snapshot.json"))
+-        if json.loads(path.read_text())["constraint_facts"]["schema_version"]
+-        != _upstream_pins.CONSTRAINT_FACTS_SCHEMA_VERSION
+-    ]
+-    assert stale == [], f"snapshots carrying stale facts schema: {stale}"

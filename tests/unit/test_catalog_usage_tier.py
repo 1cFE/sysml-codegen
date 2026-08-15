@@ -17,8 +17,8 @@ from agentic_mbse.sysml.expression_ir import (
     serialize_expression,
 )
 
-from sysml_codegen.generation.constraint_catalog import assemble_constraint_catalog
 from sysml_codegen.resolution.models import ConcreteConstraint
+from tests.helpers.retired_catalog_assembly import assemble_constraint_catalog
 
 
 def _empty_facts() -> ConstraintFacts:

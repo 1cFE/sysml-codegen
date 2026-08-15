@@ -1,0 +1,12 @@
+N806 Variable `_UNNUMBERED_RE` in function should be lowercase
+   --> src/agentic_mbse/extraction/index.py:146:5
+    |
+144 |     unchanged.
+145 |     """
+146 |     _UNNUMBERED_RE = re.compile(r"^(#{2,6})\s+(.+)$")
+    |     ^^^^^^^^^^^^^^
+147 |
+148 |     # counters[depth] tracks the current counter at each depth (1-indexed depth)
+    |
+
+Found 1 error.

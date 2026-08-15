@@ -5,12 +5,10 @@
 EXPOSE_PURE (shape A)** case — a derived attribute ``total_cost = cost_calc.cost``
 on ``part def 'Toy Plant'`` — the fixture that funds the deferred REQ-CA-09 test.
 
-Two layers, mirroring ``test_type_indexing.py``:
-
-- **Offline snapshot** (license-free): the committed ``extraction_snapshot.json``
-  loads and carries the shape-A EXPOSE_PURE computed attribute.
-- **Live extractor** (skips without a license): the model loads through
-  ``SysMLDataExtractor``.
+One layer: the live extractor (skips without a license) loads the model through
+``SysMLDataExtractor`` and asserts the shape-A resolution on it. The offline layer read
+the committed ``extraction_snapshot.json`` and retired with the v5 family (retirement
+step 1).
 
 REQ-CA-09 (shape-A EXPOSE_PURE resolution, deferred from Item 1 → 8 → 10) is now
 **DISCHARGED** by Item 10 #4/#1 — see ``test_wi014_toy_shape_a_resolves_via_scoped_alias``.
@@ -37,129 +35,17 @@ The deferral is now **fully discharged by Item 11 (SC-7)**: the shape-A branch o
 LITERAL and consults ``_scoped_alias`` to decide the warning. For ``total_cost`` a
 scoped alias is registered, so the case is **silent and the name surfaces** as an
 ``output_aliases`` entry. The historical deferral narrative above is kept for
-provenance; ``test_wi014_toy_shape_a_silent_and_surfaces`` pins the discharged
-behavior (name emitted, malformed-refs warning gone) offline and license-free.
+provenance; ``test_wi014_toy_shape_a_resolves_via_scoped_alias`` pins the discharged
+behavior (the alias tuple survives, the name is emitted) on the live model.
 """
 
 from __future__ import annotations
 
-import logging
 from pathlib import Path
 
-import pytest
-
-from sysml_codegen.extraction.data_models import ComputedAttributeClassification
-from sysml_codegen.snapshot import load_extraction_snapshot
-from tests.conftest import requires_license, snapshot_fixture
+from tests.conftest import requires_license
 
 FIXTURES_DIR = Path(__file__).resolve().parents[1] / "fixtures"
-
-
-# ---------------------------------------------------------------------------
-# Offline snapshot layer (license-free)
-# ---------------------------------------------------------------------------
-
-
-@pytest.fixture(scope="module")
-def wi014_snapshot() -> dict:
-    """Load the committed wi014_toy extraction snapshot."""
-    return load_extraction_snapshot(snapshot_fixture("wi014_toy"))
-
-
-def test_wi014_toy_snapshot_loads(wi014_snapshot: dict) -> None:
-    """The snapshot loads and carries the two chained calc usages and the shape-A
-    EXPOSE_PURE derived attribute (``total_cost``)."""
-    qns = {cu.qualified_name for cu in wi014_snapshot["calc_usages"]}
-    assert "toy_plant__demo_plant__area_calc" in qns
-    assert "toy_plant__demo_plant__cost_calc" in qns
-    # shape-A EXPOSE_PURE marker: a derived attribute on the part def.
-    assert wi014_snapshot["computed_attributes"], "no computed attributes captured"
-
-
-def test_wi014_toy_shape_a_is_expose_pure_on_part_def(wi014_snapshot: dict) -> None:
-    """The ``total_cost`` derived attribute is classified EXPOSE_PURE and sits on the
-    part *def* (shape A), distinct from the in-repo shape-B part-usage EXPOSE cases."""
-    total_cost = [
-        ca for ca in wi014_snapshot["computed_attributes"] if ca.name == "total_cost"
-    ]
-    assert len(total_cost) == 1, [ca.name for ca in wi014_snapshot["computed_attributes"]]
-    ca = total_cost[0]
-    assert ca.classification == ComputedAttributeClassification.EXPOSE_PURE
-    assert ca.is_on_part_definition  # shape A: derived attr on the part DEF
-    # Item 10 recapture: the snapshot now carries reference_chain so the offline
-    # path can expand the part-def EXPOSE per instance (the test below).
-    assert ca.reference_chain == ["cost_calc", "cost"]
-
-
-def test_wi014_toy_shape_a_resolves_offline_via_scoped_alias() -> None:
-    """REQ-CA-09 (offline, license-free): the shape-A part-def EXPOSE resolves from the
-    committed snapshot alone.
-
-    The Item 10 recapture put ``reference_chain`` on ``total_cost``, so the offline
-    registry build (``build_output_registry`` + the Step-5.55 part-def expansion, the
-    same helpers ``build_full_graph_from_snapshot`` runs) expands ``total_cost`` per
-    design instance into ``_scoped_alias``: ``("demo_plant", "total_cost")`` maps to the
-    ``demo_plant.cost_calc.cost`` channel. This is the license-free companion to
-    ``test_wi014_toy_shape_a_resolves_via_scoped_alias`` (live).
-    """
-    from sysml_codegen.core.identifier_types import ScopedAliasKey
-    from sysml_codegen.orchestration.output_registry_builder import build_output_registry
-    from sysml_codegen.orchestration.pipeline_builder import (
-        _register_partdef_expose_scoped_aliases,
-    )
-
-    snap = load_extraction_snapshot(snapshot_fixture("wi014_toy"))
-    registry = build_output_registry(
-        calc_usages=snap["calc_usages"],
-        calc_defs=snap["calc_defs"],
-        aggregation_data=snap["aggregation_expressions"],
-        computed_attributes=snap["computed_attributes"],
-        channel_aliases=snap.get("channel_aliases", []),
-        design_attributes=snap.get("design_attributes", {}),
-    )
-    _register_partdef_expose_scoped_aliases(
-        registry,
-        snap["computed_attributes"],
-        snap["calc_usages"],
-        snap.get("hierarchy_data"),
-    )
-
-    key = ScopedAliasKey(("demo_plant", "total_cost"))
-    # Inertness gate (C5), offline: #4 wrote a structured scoped alias from the snapshot.
-    assert key in registry._scoped_alias, dict(registry._scoped_alias)
-    channel = registry.scoped_alias_lookup(key)
-    assert channel is not None
-    assert channel.endswith("cost_calc__cost"), channel
-
-
-def test_wi014_toy_shape_a_silent_and_surfaces(
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """REQ-CA-11 / REQ-DM-09 (Item 11): the shape-A EXPOSE is silent and its name
-    surfaces — closing the Item 1 → 8 → "10/11" deferral this file recorded.
-
-    Built from the committed snapshot (license-free). Two assertions, the warning
-    case-matrix for the resolvable case (INV-6):
-    - ``total_cost`` appears in ``graph.output_aliases`` (the name is emitted); and
-    - the malformed-refs warning (``_resolve_expose_pure`` :796) does **not** fire —
-      shape A no longer reaches that function.
-    """
-    from sysml_codegen.snapshot import build_full_graph_from_snapshot
-
-    with caplog.at_level(
-        logging.WARNING, logger="sysml_codegen.resolution.graph_builder"
-    ):
-        graph, _ = build_full_graph_from_snapshot(snapshot_fixture("wi014_toy"))
-
-    total_cost = [a for a in graph.output_aliases if a.alias_name == "total_cost"]
-    assert len(total_cost) == 1, [a.alias_name for a in graph.output_aliases]
-    assert total_cost[0].shape == "part_def"
-    assert total_cost[0].instance_path == "demo_plant"
-    assert total_cost[0].canonical_channel.endswith("cost_calc__cost")
-
-    assert "could not identify instance/output" not in caplog.text
-    assert "derived-attribute name is dropped" not in caplog.text
-    assert "no scoped alias registered" not in caplog.text
 
 
 # ---------------------------------------------------------------------------
@@ -190,32 +76,40 @@ def test_wi014_toy_shape_a_resolves_via_scoped_alias() -> None:
 
     (The old recorded-deferral baseline pinned a benign ``_resolve_expose_pure``
     malformed-refs warning from the per-def resolution map, which cannot pick an
-    instance; resolution now flows through #1/_scoped_alias instead.)
+    instance; resolution flows per occurrence instead.)
+
+    Read off the exact route. Until retirement step 2 this node read the legacy
+    ``OutputRegistry._scoped_alias`` table directly; that registry retired with the v5
+    family. The discharge is a public fact, so it is asserted on the public artefact the
+    projection ships: the shape-A ``OutputAlias``, scoped to the ``demo_plant`` occurrence
+    and pointing at the calc-output channel.
     """
-    from sysml_codegen.core.identifier_types import ScopedAliasKey
-    from sysml_codegen.orchestration.pipeline_builder import build_pipeline_context
+    from sysml_codegen.orchestration.elaborated_pipeline import build_elaborated_pipeline
 
-    ctx = build_pipeline_context([FIXTURES_DIR / "wi014_toy"])
-    registry = ctx.output_registry
+    graph = build_elaborated_pipeline([FIXTURES_DIR / "wi014_toy"])
 
-    key = ScopedAliasKey(("demo_plant", "total_cost"))
-    # Inertness gate (C5): #4 actually wrote a structured scoped alias.
-    assert key in registry._scoped_alias, dict(registry._scoped_alias)
-    # Shape-A resolution: the consumer-scoped key reaches the calc-output channel.
-    channel = registry.scoped_alias_lookup(key)
-    assert channel is not None
-    assert channel.endswith("cost_calc__cost"), channel
+    (alias,) = [a for a in graph.output_aliases if a.alias_name == "total_cost"]
+    assert alias.shape == "part_def"
+    assert alias.instance_path == "demo_plant"
+    assert alias.canonical_channel.endswith("cost_calc__cost"), alias.canonical_channel
 
 
 @requires_license
 def test_wi014_toy_scoped_alias_tuple_no_collapse() -> None:
-    """C3: the structured key is a real ``(scope, leaf)`` tuple, stored unjoined, so
-    a mis-split ``("demo_plant.total", "cost")`` can never collide with the correct
-    ``("demo_plant", "total_cost")``. The leaf is always a single segment."""
-    from sysml_codegen.core.identifier_types import ScopedAliasKey
-    from sysml_codegen.orchestration.pipeline_builder import build_pipeline_context
+    """C3: scope and leaf stay separate fields, so a mis-split can never collide.
 
-    ctx = build_pipeline_context([FIXTURES_DIR / "wi014_toy"])
-    registry = ctx.output_registry
-    assert ScopedAliasKey(("demo_plant", "total_cost")) in registry._scoped_alias
-    assert ScopedAliasKey(("demo_plant.total", "cost")) not in registry._scoped_alias
+    The failure this guards against is one string ``"demo_plant.total_cost"`` split at the
+    wrong dot: ``("demo_plant.total", "cost")`` instead of ``("demo_plant", "total_cost")``.
+    It cannot happen while the two halves are never joined in the first place. The legacy
+    ``_scoped_alias`` tuple key that carried them retired with the v5 family (retirement
+    step 2); the exact route carries the same pair as two ``OutputAlias`` fields, and the
+    leaf is still a single segment.
+    """
+    from sysml_codegen.orchestration.elaborated_pipeline import build_elaborated_pipeline
+
+    graph = build_elaborated_pipeline([FIXTURES_DIR / "wi014_toy"])
+
+    (alias,) = [a for a in graph.output_aliases if a.alias_name == "total_cost"]
+    assert alias.instance_path == "demo_plant"
+    assert "." not in alias.alias_name
+    assert alias.alias_name != "cost"

@@ -1,0 +1,96 @@
+{
+  "phase": 7,
+  "date": "2026-08-10",
+  "full_tests": {
+    "codegen": {
+      "artifact": "/tmp/phase7-codegen-final.xml",
+      "tests": 953,
+      "passed": 953,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "time_seconds": 62.756
+    },
+    "agentic": {
+      "artifact": "/tmp/phase7-agentic-final.xml",
+      "tests": 1820,
+      "passed": 1819,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 1,
+      "deselected": 33,
+      "time_seconds": 19.369
+    }
+  },
+  "quality": {
+    "codegen": {
+      "production_ruff": "clean",
+      "repository_ruff_findings": 100,
+      "phase7_changed_file_ruff_findings": 0,
+      "phase5_repository_ruff_findings": 353,
+      "mypy_errors": 56,
+      "mypy_files": 11,
+      "phase7_changed_production_mypy_errors": 0,
+      "phase5_mypy_errors": 68,
+      "phase5_mypy_files": 16,
+      "diff_check": "clean"
+    },
+    "agentic": {
+      "production_ruff_findings": 1,
+      "repository_ruff_findings": 127,
+      "phase7_changed_file_ruff_findings": 0,
+      "mypy_errors": 95,
+      "mypy_files": 20,
+      "phase7_changed_production_mypy_errors": 0,
+      "phase5_repository_ruff_findings": 127,
+      "phase5_mypy_errors": 95,
+      "phase5_mypy_files": 20,
+      "diff_check": "clean"
+    }
+  },
+  "gates": {
+    "cut_abs": "8 passed",
+    "nr_01": "empty (rg exit 1)",
+    "nr_02": "empty (rg exit 1)",
+    "nr_03": "empty (rg exit 1)",
+    "nr_04": "empty (rg exit 1); zero stored capture files before Phase 8",
+    "nr_05": "empty (rg exit 1)",
+    "nr_06": "public export/import/context boundary focused tests green",
+    "nr_07": "empty (rg exit 1)",
+    "nr_08": "zero item6-dual-2 hits",
+    "nr_09": "CUT-FT-01 green; exactly 15 approved mappings",
+    "nr_12": "empty (rg exit 1)",
+    "all_residue": "zero hits"
+  },
+  "inventory": {
+    "rows": 231,
+    "result": "closed and sorted; zero discovered residue paths"
+  },
+  "repositories": {
+    "codegen": {
+      "head": "1672c5766f67e7716f3c9f8f636c21e2ea444601",
+      "status_entries": 364,
+      "status_counts": {
+        "modified": 105,
+        "deleted": 222,
+        "added": 0,
+        "untracked": 37,
+        "other": 0
+      },
+      "status_sha256": "491be466212cb1e47d65faba0c49338264ab21766ebe56fdbe2fd4df770f3c62"
+    },
+    "agentic": {
+      "head": "5088b417c9e5453271291d46cd5fb23fc0579b1e",
+      "status_entries": 87,
+      "status_counts": {
+        "modified": 15,
+        "deleted": 0,
+        "added": 0,
+        "untracked": 72,
+        "other": 0
+      },
+      "status_sha256": "e3b97a7c6067c60846eb1907339c081b4254b7747d6eb3ec9126f8785f94f65f"
+    }
+  },
+  "recapture_invocations": 0
+}

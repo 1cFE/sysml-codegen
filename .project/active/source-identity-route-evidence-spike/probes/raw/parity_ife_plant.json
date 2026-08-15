@@ -1,0 +1,356 @@
+{
+ "fixture": "ife_plant",
+ "verdict": "PARITY",
+ "topology": {
+  "live": {
+   "IfePlantDesign__baseline_plant__chamber_a__yield_calc__blanket_multiple": [
+    "EntryPointType.USAGE_LITERAL",
+    1.2
+   ],
+   "IfePlantDesign__baseline_plant__chamber_a__yield_calc__yield_constant": [
+    "EntryPointType.USAGE_LITERAL",
+    5000000.0
+   ],
+   "IfePlantDesign__baseline_plant__chamber_b__yield_calc__blanket_multiple": [
+    "EntryPointType.USAGE_LITERAL",
+    1.2
+   ],
+   "IfePlantDesign__baseline_plant__chamber_b__yield_calc__yield_constant": [
+    "EntryPointType.USAGE_LITERAL",
+    5000000.0
+   ],
+   "IfePlantDesign__baseline_plant__driver__base_power_calc__bank_energy": [
+    "EntryPointType.USAGE_LITERAL",
+    10000000.0
+   ],
+   "IfePlantDesign__baseline_plant__driver__base_power_calc__efficiency": [
+    "EntryPointType.USAGE_LITERAL",
+    0.1
+   ],
+   "IfePlantDesign__baseline_plant__lcoe_calc__availability": [
+    "EntryPointType.USAGE_LITERAL",
+    0.7
+   ],
+   "IfePlantDesign__baseline_plant__lcoe_calc__blanket_energy_multiple": [
+    "EntryPointType.USAGE_LITERAL",
+    1.2
+   ],
+   "IfePlantDesign__baseline_plant__lcoe_calc__discount_rate": [
+    "EntryPointType.USAGE_LITERAL",
+    0.08
+   ],
+   "IfePlantDesign__baseline_plant__lcoe_calc__driver_cost_constant": [
+    "EntryPointType.USAGE_LITERAL",
+    5.0
+   ],
+   "IfePlantDesign__baseline_plant__lcoe_calc__driver_efficiency": [
+    "EntryPointType.USAGE_LITERAL",
+    0.1
+   ],
+   "IfePlantDesign__baseline_plant__lcoe_calc__driver_energy": [
+    "EntryPointType.USAGE_LITERAL",
+    10000000.0
+   ],
+   "IfePlantDesign__baseline_plant__lcoe_calc__driver_lifetime_shots": [
+    "EntryPointType.USAGE_LITERAL",
+    50000000.0
+   ],
+   "IfePlantDesign__baseline_plant__lcoe_calc__frequency": [
+    "EntryPointType.USAGE_LITERAL",
+    0.2
+   ],
+   "IfePlantDesign__baseline_plant__lcoe_calc__gain": [
+    "EntryPointType.USAGE_LITERAL",
+    500.0
+   ],
+   "IfePlantDesign__baseline_plant__lcoe_calc__om_cost_constant": [
+    "EntryPointType.USAGE_LITERAL",
+    30.0
+   ],
+   "IfePlantDesign__baseline_plant__lcoe_calc__plant_cost_constant": [
+    "EntryPointType.USAGE_LITERAL",
+    3000.0
+   ],
+   "IfePlantDesign__baseline_plant__lcoe_calc__target_cost_constant": [
+    "EntryPointType.USAGE_LITERAL",
+    10.0
+   ],
+   "IfePlantDesign__baseline_plant__lcoe_calc__thermal_efficiency": [
+    "EntryPointType.USAGE_LITERAL",
+    0.4
+   ],
+   "IfePlantDesign__baseline_plant__lcoe_calc__yield_cost_constant": [
+    "EntryPointType.USAGE_LITERAL",
+    5000000.0
+   ],
+   "IfePlantDesign__hif_plant__driver__base_power_calc__bank_energy": [
+    "EntryPointType.USAGE_LITERAL",
+    10000000.0
+   ],
+   "IfePlantDesign__hif_plant__driver__base_power_calc__efficiency": [
+    "EntryPointType.USAGE_LITERAL",
+    0.1
+   ],
+   "IfePlantDesign__hif_plant__driver__hif_cost_calc__bank_energy": [
+    "EntryPointType.USAGE_LITERAL",
+    10000000.0
+   ],
+   "IfePlantDesign__hif_plant__driver__hif_cost_calc__cost_per_joule": [
+    "EntryPointType.USAGE_LITERAL",
+    5.0
+   ],
+   "IfePlantSubsystems__radial_build__tf_coil__volume_calc__radius": [
+    "EntryPointType.USAGE_LITERAL",
+    4.0
+   ]
+  },
+  "snapshot": {
+   "IfePlantDesign__baseline_plant__chamber_a__yield_calc__blanket_multiple": [
+    "EntryPointType.USAGE_LITERAL",
+    1.2
+   ],
+   "IfePlantDesign__baseline_plant__chamber_a__yield_calc__yield_constant": [
+    "EntryPointType.USAGE_LITERAL",
+    5000000.0
+   ],
+   "IfePlantDesign__baseline_plant__chamber_b__yield_calc__blanket_multiple": [
+    "EntryPointType.USAGE_LITERAL",
+    1.2
+   ],
+   "IfePlantDesign__baseline_plant__chamber_b__yield_calc__yield_constant": [
+    "EntryPointType.USAGE_LITERAL",
+    5000000.0
+   ],
+   "IfePlantDesign__baseline_plant__driver__base_power_calc__bank_energy": [
+    "EntryPointType.USAGE_LITERAL",
+    10000000.0
+   ],
+   "IfePlantDesign__baseline_plant__driver__base_power_calc__efficiency": [
+    "EntryPointType.USAGE_LITERAL",
+    0.1
+   ],
+   "IfePlantDesign__baseline_plant__lcoe_calc__availability": [
+    "EntryPointType.USAGE_LITERAL",
+    0.7
+   ],
+   "IfePlantDesign__baseline_plant__lcoe_calc__blanket_energy_multiple": [
+    "EntryPointType.USAGE_LITERAL",
+    1.2
+   ],
+   "IfePlantDesign__baseline_plant__lcoe_calc__discount_rate": [
+    "EntryPointType.USAGE_LITERAL",
+    0.08
+   ],
+   "IfePlantDesign__baseline_plant__lcoe_calc__driver_cost_constant": [
+    "EntryPointType.USAGE_LITERAL",
+    5.0
+   ],
+   "IfePlantDesign__baseline_plant__lcoe_calc__driver_efficiency": [
+    "EntryPointType.USAGE_LITERAL",
+    0.1
+   ],
+   "IfePlantDesign__baseline_plant__lcoe_calc__driver_energy": [
+    "EntryPointType.USAGE_LITERAL",
+    10000000.0
+   ],
+   "IfePlantDesign__baseline_plant__lcoe_calc__driver_lifetime_shots": [
+    "EntryPointType.USAGE_LITERAL",
+    50000000.0
+   ],
+   "IfePlantDesign__baseline_plant__lcoe_calc__frequency": [
+    "EntryPointType.USAGE_LITERAL",
+    0.2
+   ],
+   "IfePlantDesign__baseline_plant__lcoe_calc__gain": [
+    "EntryPointType.USAGE_LITERAL",
+    500.0
+   ],
+   "IfePlantDesign__baseline_plant__lcoe_calc__om_cost_constant": [
+    "EntryPointType.USAGE_LITERAL",
+    30.0
+   ],
+   "IfePlantDesign__baseline_plant__lcoe_calc__plant_cost_constant": [
+    "EntryPointType.USAGE_LITERAL",
+    3000.0
+   ],
+   "IfePlantDesign__baseline_plant__lcoe_calc__target_cost_constant": [
+    "EntryPointType.USAGE_LITERAL",
+    10.0
+   ],
+   "IfePlantDesign__baseline_plant__lcoe_calc__thermal_efficiency": [
+    "EntryPointType.USAGE_LITERAL",
+    0.4
+   ],
+   "IfePlantDesign__baseline_plant__lcoe_calc__yield_cost_constant": [
+    "EntryPointType.USAGE_LITERAL",
+    5000000.0
+   ],
+   "IfePlantDesign__hif_plant__driver__base_power_calc__bank_energy": [
+    "EntryPointType.USAGE_LITERAL",
+    10000000.0
+   ],
+   "IfePlantDesign__hif_plant__driver__base_power_calc__efficiency": [
+    "EntryPointType.USAGE_LITERAL",
+    0.1
+   ],
+   "IfePlantDesign__hif_plant__driver__hif_cost_calc__bank_energy": [
+    "EntryPointType.USAGE_LITERAL",
+    10000000.0
+   ],
+   "IfePlantDesign__hif_plant__driver__hif_cost_calc__cost_per_joule": [
+    "EntryPointType.USAGE_LITERAL",
+    5.0
+   ],
+   "IfePlantSubsystems__radial_build__tf_coil__volume_calc__radius": [
+    "EntryPointType.USAGE_LITERAL",
+    4.0
+   ]
+  },
+  "relocated": {
+   "IfePlantDesign__baseline_plant__chamber_a__yield_calc__blanket_multiple": [
+    "EntryPointType.USAGE_LITERAL",
+    1.2
+   ],
+   "IfePlantDesign__baseline_plant__chamber_a__yield_calc__yield_constant": [
+    "EntryPointType.USAGE_LITERAL",
+    5000000.0
+   ],
+   "IfePlantDesign__baseline_plant__chamber_b__yield_calc__blanket_multiple": [
+    "EntryPointType.USAGE_LITERAL",
+    1.2
+   ],
+   "IfePlantDesign__baseline_plant__chamber_b__yield_calc__yield_constant": [
+    "EntryPointType.USAGE_LITERAL",
+    5000000.0
+   ],
+   "IfePlantDesign__baseline_plant__driver__base_power_calc__bank_energy": [
+    "EntryPointType.USAGE_LITERAL",
+    10000000.0
+   ],
+   "IfePlantDesign__baseline_plant__driver__base_power_calc__efficiency": [
+    "EntryPointType.USAGE_LITERAL",
+    0.1
+   ],
+   "IfePlantDesign__baseline_plant__lcoe_calc__availability": [
+    "EntryPointType.USAGE_LITERAL",
+    0.7
+   ],
+   "IfePlantDesign__baseline_plant__lcoe_calc__blanket_energy_multiple": [
+    "EntryPointType.USAGE_LITERAL",
+    1.2
+   ],
+   "IfePlantDesign__baseline_plant__lcoe_calc__discount_rate": [
+    "EntryPointType.USAGE_LITERAL",
+    0.08
+   ],
+   "IfePlantDesign__baseline_plant__lcoe_calc__driver_cost_constant": [
+    "EntryPointType.USAGE_LITERAL",
+    5.0
+   ],
+   "IfePlantDesign__baseline_plant__lcoe_calc__driver_efficiency": [
+    "EntryPointType.USAGE_LITERAL",
+    0.1
+   ],
+   "IfePlantDesign__baseline_plant__lcoe_calc__driver_energy": [
+    "EntryPointType.USAGE_LITERAL",
+    10000000.0
+   ],
+   "IfePlantDesign__baseline_plant__lcoe_calc__driver_lifetime_shots": [
+    "EntryPointType.USAGE_LITERAL",
+    50000000.0
+   ],
+   "IfePlantDesign__baseline_plant__lcoe_calc__frequency": [
+    "EntryPointType.USAGE_LITERAL",
+    0.2
+   ],
+   "IfePlantDesign__baseline_plant__lcoe_calc__gain": [
+    "EntryPointType.USAGE_LITERAL",
+    500.0
+   ],
+   "IfePlantDesign__baseline_plant__lcoe_calc__om_cost_constant": [
+    "EntryPointType.USAGE_LITERAL",
+    30.0
+   ],
+   "IfePlantDesign__baseline_plant__lcoe_calc__plant_cost_constant": [
+    "EntryPointType.USAGE_LITERAL",
+    3000.0
+   ],
+   "IfePlantDesign__baseline_plant__lcoe_calc__target_cost_constant": [
+    "EntryPointType.USAGE_LITERAL",
+    10.0
+   ],
+   "IfePlantDesign__baseline_plant__lcoe_calc__thermal_efficiency": [
+    "EntryPointType.USAGE_LITERAL",
+    0.4
+   ],
+   "IfePlantDesign__baseline_plant__lcoe_calc__yield_cost_constant": [
+    "EntryPointType.USAGE_LITERAL",
+    5000000.0
+   ],
+   "IfePlantDesign__hif_plant__driver__base_power_calc__bank_energy": [
+    "EntryPointType.USAGE_LITERAL",
+    10000000.0
+   ],
+   "IfePlantDesign__hif_plant__driver__base_power_calc__efficiency": [
+    "EntryPointType.USAGE_LITERAL",
+    0.1
+   ],
+   "IfePlantDesign__hif_plant__driver__hif_cost_calc__bank_energy": [
+    "EntryPointType.USAGE_LITERAL",
+    10000000.0
+   ],
+   "IfePlantDesign__hif_plant__driver__hif_cost_calc__cost_per_joule": [
+    "EntryPointType.USAGE_LITERAL",
+    5.0
+   ],
+   "IfePlantSubsystems__radial_build__tf_coil__volume_calc__radius": [
+    "EntryPointType.USAGE_LITERAL",
+    4.0
+   ]
+  }
+ },
+ "bindings": {
+  "live": {
+   "IfePlantDesign__baseline_plant__lcoe_calc|gain": {
+    "binding_type": "BindingType.REFERENCE",
+    "source_path": "IfePlantLib::'Ife Power Plant'::lcoe_calc::gain",
+    "literal_value": null,
+    "written_reference": "gain"
+   },
+   "IfePlantDesign__hif_plant__driver__base_power_calc|bank_energy": {
+    "binding_type": "BindingType.REFERENCE",
+    "source_path": "IfePlantLib::'Base Driver'::base_power_calc::bank_energy",
+    "literal_value": null,
+    "written_reference": "bank_energy"
+   }
+  },
+  "snapshot": {
+   "IfePlantDesign__baseline_plant__lcoe_calc|gain": {
+    "binding_type": "BindingType.REFERENCE",
+    "source_path": "IfePlantLib::'Ife Power Plant'::lcoe_calc::gain",
+    "literal_value": null,
+    "written_reference": "gain"
+   },
+   "IfePlantDesign__hif_plant__driver__base_power_calc|bank_energy": {
+    "binding_type": "BindingType.REFERENCE",
+    "source_path": "IfePlantLib::'Base Driver'::base_power_calc::bank_energy",
+    "literal_value": null,
+    "written_reference": "bank_energy"
+   }
+  },
+  "relocated": {
+   "IfePlantDesign__baseline_plant__lcoe_calc|gain": {
+    "binding_type": "BindingType.REFERENCE",
+    "source_path": "IfePlantLib::'Ife Power Plant'::lcoe_calc::gain",
+    "literal_value": null,
+    "written_reference": "gain"
+   },
+   "IfePlantDesign__hif_plant__driver__base_power_calc|bank_energy": {
+    "binding_type": "BindingType.REFERENCE",
+    "source_path": "IfePlantLib::'Base Driver'::base_power_calc::bank_energy",
+    "literal_value": null,
+    "written_reference": "bank_energy"
+   }
+  }
+ }
+}

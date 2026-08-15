@@ -1,5 +1,78 @@
 # 16 -- Computed Attributes: FORMULA, EXPOSE, and Classification
 
+> **Status: mixed, and the resolution half is historical.** The classification taxonomy below
+> is extraction-level and still true: `extraction/computed_attribute_extractor.py` is in the
+> tree and classifies FORMULA / EXPOSE_PURE / EXPOSE_COMPUTED as described. Everything about
+> the **attribute resolution map**, Phase 3b confirmation, and the `AttributeResolutionKind`
+> enum describes `resolution/graph_builder.py`, `orchestration/pipeline_builder.py` and
+> `orchestration/output_registry_builder.py`, all **deleted** by the Item 7 retirement
+> (2026-08-12, `19072ad` / `82c7951` / `882fc8d` / `3071fba`), together with
+> `snapshot/graph_rebuild.py`. REQ-CA-06 and REQ-CA-11 are that deleted code's requirements.
+>
+> The shipped route reaches these shapes through the elaborator instead. That mechanism is
+> described in the next section; the classification taxonomy and everything after it is the
+> extraction-level record.
+
+## What the shipped route does instead
+
+**The short version: there is no classification pass.** The five-way taxonomy below exists
+because the legacy route had to label an attribute first and decide what to do with it later,
+across three modules. The elaborator decides once, at the point it reads the value, and the
+label is the node it creates.
+
+The mental model is **one branch, three outcomes**. Elaboration walks occurrences; for each
+attribute slot it resolves the single declaration that writes a value (see
+[18-literal-value-propagation](18-literal-value-propagation.md) for that resolution), then
+looks at the expression that writer carries (`elaboration/elaborate.py`,
+`_create_value_node`):
+
+| The value expression is | The elaborator creates | Legacy name for it |
+|---|---|---|
+| a literal, an enumeration value reference, or absent | an `AttrNode` carrying the value | LITERAL |
+| a reference — `FeatureChainExpression` or `FeatureReferenceExpression` | an `AttrNode` with `is_alias=True`, queued for the alias walk | EXPOSE_PURE |
+| anything else | a `CalcNode` with `is_computed=True` and a compiled `expression_ir` | FORMULA |
+
+Three things follow from that shape, and they are the substance of the difference:
+
+- **There is no EXPOSE_COMPUTED and no tentative state.** The legacy classifier had to guess,
+  from qualified-name prefixes, whether a reference pointed at a sibling attribute or a calc
+  output, and it tagged multi-hop chains `EXPOSE_CHAIN_TENTATIVE` pending a later confirm
+  pass. The elaborator does not guess: an alias node is queued (`_pending_aliases`) and the
+  walk follows it to a real occurrence. It either lands on a node or the graph refuses
+  (`SI_OCCURRENCE_MISSING`). Whether the target turns out to be an attribute or a calc output
+  is a fact discovered by walking, not a classification decided in advance.
+- **There is no `AttributeResolutionKind` and no resolution map.** A FORMULA's inputs are the
+  edges its expression compiled to (`_pending_expressions`), typed node references like every
+  other consumer's. Nothing pre-computes a per-input kind table for a later reader to consult.
+- **Compilability is not a spectrum here.** A computed node that cannot produce representable
+  expression IR raises `SI_REDEFINITION_INVALID` at elaboration rather than surviving as a
+  `MANUAL_REQUIRED` module with no implementation. Every computed node the elaborator emits is
+  `FULLY_COMPILABLE` by construction, so the silent-no-op failure mode the CA family's notes
+  describe cannot occur — the model is refused instead.
+
+**On the alias shapes.** An alias node records whether its writer sits on a part usage or a
+part definition (`alias_shape`), because a part-def EXPOSE expands to one alias per occurrence
+of that definition while a part-usage EXPOSE is one alias. That distinction is the honest
+successor to the legacy "shape A / shape B" split and to the `_scoped_alias` registry: the
+scoping is occurrence identity, not a scope-prefixed string key. What ships publicly is
+`ComputationGraph.output_aliases`, each carrying its instance path, canonical channel, and
+shape.
+
+**Evidence.** `tests/conformance/test_elaboration_computed_attrs.py` (all fifteen computed
+attributes lift; a simple expression becomes a computed node; a formula-to-formula chain; a
+pure EXPOSE stays an alias and mints no module of its own),
+`tests/conformance/test_elaboration_expose_shapes.py` (multi-hop EXPOSE reaches the producer
+cross-package; a part-def EXPOSE attribute aliases the producer),
+`tests/conformance/test_elaboration_fail_closed.py` (an alias cycle and an unsupported formula
+are blocking diagnostics, not degraded output), and
+`tests/integration/test_computed_attributes_exact_route.py` (every FORMULA computed attribute
+becomes an auto-implemented module, and its arithmetic matches the model).
+
+**The classifier below is still in the tree and is off the shipped route.**
+`extraction/computed_attribute_extractor.py` is imported by nothing in `src/`; it is held by
+`tests/conformance/test_computed_attribute_golden.py`, a whole-corpus golden over its output.
+The disposition and the reason are recorded in the module's own docstring.
+
 ## What This Module Does
 
 Some PartDef/PartUsage attributes have inline expressions rather than literal

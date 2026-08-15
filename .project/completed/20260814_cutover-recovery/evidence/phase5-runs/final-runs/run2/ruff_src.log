@@ -1,0 +1,116 @@
+warning: The top-level linter settings are deprecated in favour of their counterparts in the `lint` section. Please update the following options in `pyproject.toml`:
+  - 'select' -> 'lint.select'
+UP042 Class BindingResolutionType inherits from both `str` and `enum.Enum`
+  --> src/sysml_codegen/core/models.py:13:7
+   |
+13 | class BindingResolutionType(str, Enum):
+   |       ^^^^^^^^^^^^^^^^^^^^^
+14 |     """Classification of how a calc input binding resolves.
+   |
+help: Inherit from `enum.StrEnum`
+
+UP042 Class ElaborationCode inherits from both `str` and `enum.Enum`
+  --> src/sysml_codegen/elaboration/diagnostics.py:10:7
+   |
+10 | class ElaborationCode(str, Enum):
+   |       ^^^^^^^^^^^^^^^
+11 |     SYSML_NAMESPACE_NOT_DISTINGUISHABLE = "SYSML_NAMESPACE_NOT_DISTINGUISHABLE"
+12 |     SI_OCCURRENCE_MISSING = "SI_OCCURRENCE_MISSING"
+   |
+help: Inherit from `enum.StrEnum`
+
+UP042 Class ValueSite inherits from both `str` and `enum.Enum`
+  --> src/sysml_codegen/elaboration/graph.py:66:7
+   |
+66 | class ValueSite(str, Enum):
+   |       ^^^^^^^^^
+67 |     NONE = "none"
+68 |     DEFINITION_DEFAULT = "definition_default"
+   |
+help: Inherit from `enum.StrEnum`
+
+UP042 Class NodeKind inherits from both `str` and `enum.Enum`
+   --> src/sysml_codegen/elaboration/identity.py:139:7
+    |
+139 | class NodeKind(str, Enum):
+    |       ^^^^^^^^
+140 |     ATTRIBUTE = "attribute"
+141 |     CALCULATION = "calculation"
+    |
+help: Inherit from `enum.StrEnum`
+
+UP042 Class ComputedAttributeClassification inherits from both `str` and `enum.Enum`
+   --> src/sysml_codegen/extraction/data_models.py:194:7
+    |
+194 | class ComputedAttributeClassification(str, Enum):
+    |       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+195 |     """Classification of a PartDef/PartUsage attribute expression.
+    |
+help: Inherit from `enum.StrEnum`
+
+UP042 Class Compilability inherits from both `str` and `enum.Enum`
+  --> src/sysml_codegen/extraction/expression_compiler.py:28:7
+   |
+28 | class Compilability(str, Enum):
+   |       ^^^^^^^^^^^^^
+29 |     """Compilability verdict for a CalcDef or individual output expression.
+   |
+help: Inherit from `enum.StrEnum`
+
+UP042 Class SourceForm inherits from both `str` and `enum.Enum`
+  --> src/sysml_codegen/extraction/source_evidence.py:37:7
+   |
+37 | class SourceForm(str, Enum):
+   |       ^^^^^^^^^^
+38 |     """The authored form of a binding's right-hand side.
+   |
+help: Inherit from `enum.StrEnum`
+
+UP042 Class ValueSiteKind inherits from both `str` and `enum.Enum`
+  --> src/sysml_codegen/extraction/source_evidence.py:57:7
+   |
+57 | class ValueSiteKind(str, Enum):
+   |       ^^^^^^^^^^^^^
+58 |     """The three modeled value-site kinds (design D2).
+   |
+help: Inherit from `enum.StrEnum`
+
+UP042 Class ReadinessCode inherits from both `str` and `enum.Enum`
+   --> src/sysml_codegen/extraction/source_evidence.py:151:7
+    |
+151 | class ReadinessCode(str, Enum):
+    |       ^^^^^^^^^^^^^
+152 |     """Machine-checkable source-readiness dispositions (contract D8).
+    |
+help: Inherit from `enum.StrEnum`
+
+UP042 Class EntryPointType inherits from both `str` and `enum.Enum`
+  --> src/sysml_codegen/resolution/models.py:48:7
+   |
+48 | class EntryPointType(str, Enum):
+   |       ^^^^^^^^^^^^^^
+49 |     """ADR-001 entry point types.
+   |
+help: Inherit from `enum.StrEnum`
+
+UP042 Class ModuleKind inherits from both `str` and `enum.Enum`
+   --> src/sysml_codegen/resolution/models.py:203:7
+    |
+203 | class ModuleKind(str, Enum):
+    |       ^^^^^^^^^^
+204 |     """Kind of a pipeline module — set once at construction, dispatched on at every
+205 |     generation seam. Replaces the two accreted Boolean flags PipelineModule carried
+    |
+help: Inherit from `enum.StrEnum`
+
+UP042 Class ConstraintInputResolution inherits from both `str` and `enum.Enum`
+   --> src/sysml_codegen/resolution/models.py:284:7
+    |
+284 | class ConstraintInputResolution(str, Enum):
+    |       ^^^^^^^^^^^^^^^^^^^^^^^^^
+285 |     """How one concrete constraint's formal was resolved (Item 5 / D1 terminal switch)."""
+    |
+help: Inherit from `enum.StrEnum`
+
+Found 12 errors.
+No fixes available (12 hidden fixes can be enabled with the `--unsafe-fixes` option).

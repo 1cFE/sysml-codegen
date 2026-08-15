@@ -1,0 +1,11 @@
+{
+  "constraint_usages": [
+    {
+      "owner_qualified_name": "constraint_multi_instance::Cell",
+      "source_file": "model.sysml",
+      "source_line": 24,
+      "usage_qualified_name": "constraint_multi_instance::Cell::nonneg"
+    }
+  ],
+  "fixture": "constraint_multi_instance"
+}

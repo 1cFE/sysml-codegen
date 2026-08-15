@@ -29,7 +29,16 @@ class FunctionSignature:
     input_fields: list[str] | None = None
 
     def matches(self, other: "FunctionSignature") -> bool:
-        """Check if signatures are compatible."""
+        """Check whether an existing implementation is compatible with the expected signature.
+
+        Directional: ``self`` is extracted from the existing file, ``other`` is
+        derived from the graph. Field-level compatibility is a subset test — a
+        body is free to leave declared inputs unused (the generator's own
+        auto-implementations do, so exact equality made a freshly generated
+        file fail its own check and churn on every smart regen), but a
+        reference to a field the graph does not declare is an interface
+        mismatch and regenerates.
+        """
         if not (
             self.function_name == other.function_name
             and self.input_type == other.input_type
@@ -38,7 +47,7 @@ class FunctionSignature:
             return False
 
         if self.input_fields is not None and other.input_fields is not None:
-            return sorted(self.input_fields) == sorted(other.input_fields)
+            return set(self.input_fields) <= set(other.input_fields)
 
         return True
 
@@ -163,10 +172,6 @@ def should_regenerate_stencil(
         return True, "Signature changed (interface differs)"
 
 
-# Keep old name as alias for backward compatibility during transition
-should_regenerate_stencil_from_graph = should_regenerate_stencil
-
-
 def _generate_expected_signature_from_module(module) -> FunctionSignature:
     """Generate expected function signature from PipelineModule."""
     func_name = f"run_{module.calc_def_name.lower()}"
@@ -221,5 +226,4 @@ def backup_implementation(
 __all__ = [
     "backup_implementation",
     "should_regenerate_stencil",
-    "should_regenerate_stencil_from_graph",
 ]

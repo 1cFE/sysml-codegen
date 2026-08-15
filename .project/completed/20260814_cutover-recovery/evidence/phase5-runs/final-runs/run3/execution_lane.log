@@ -1,0 +1,16 @@
+============================= test session starts ==============================
+platform linux -- Python 3.12.11, pytest-9.1.1, pluggy-1.6.0
+rootdir: /home/reid/1cfe/sysml-codegen-item7-rebuild
+configfile: pyproject.toml
+plugins: cov-7.1.0
+collected 88 items
+
+tests/execution/test_c19_nested_occurrence_teax.py ..................    [ 20%]
+tests/execution/test_constraint_coverage_characterization.py ..          [ 22%]
+tests/execution/test_constraint_coverage_matrix.py ............          [ 36%]
+tests/execution/test_constraint_verdicts_exact_route.py ...............  [ 53%]
+tests/execution/test_fusion_tea_mutation_teax.py ....................... [ 79%]
+......                                                                   [ 86%]
+tests/execution/test_fusion_tea_real_teax.py ............                [100%]
+
+============================= 88 passed in 15.16s ==============================

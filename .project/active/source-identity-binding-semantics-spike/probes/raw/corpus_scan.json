@@ -1,0 +1,166 @@
+{
+  "sysml-codegen fixtures": {
+    "root": "/home/reid/1cfe/sysml-codegen/tests/fixtures",
+    "usage_binding_counts": {
+      "bare_renamed": 45,
+      "bare_selfnamed": 91,
+      "chain": 85,
+      "expression": 7,
+      "literal": 16,
+      "qualified": 85
+    },
+    "typed_param_defaults_skipped": 46,
+    "examples": {
+      "bare_selfnamed": [
+        "agg_localterm_probe/model.sysml:38: in area = area;",
+        "alias_agg_probe/library.sysml:41: in base_cost = base_cost;",
+        "catf_mfe_model/designs/catf_mfe/vacuum.sysml:176: in pumping_speed_total = pumping_speed_total;",
+        "chain_override_probe/library.sysml:27: in sensitivity = sensitivity;",
+        "chain_override_probe/library.sysml:28: in base_cost = base_cost;",
+        "chain_spike_model/design.sysml:13: in length = length;",
+        "chain_spike_model/design.sysml:14: in width = width;",
+        "chain_spike_model/design.sysml:20: in rate = rate;"
+      ],
+      "bare_renamed": [
+        "alias_agg_probe/library.sysml:68: in cost_basis = total_cost;",
+        "alias_agg_probe/library.sysml:75: in cost_input = reported_cost;",
+        "attr_expr_probe/design.sysml:99: in value = area;       // <-- 'area' is a computed attribute!",
+        "attr_expr_probe/design.sysml:100: in factor = markup;",
+        "attr_expr_probe/design.sysml:111: in total = volume;     // <-- 'volume' is a computed attribute!",
+        "catf_mfe_model/designs/catf_mfe/magnets.sysml:91: in b_field = field_at_coil;",
+        "catf_mfe_model/designs/catf_mfe/magnets.sysml:92: in operating_temp = temperature_operating;",
+        "catf_mfe_model/designs/catf_mfe/vacuum.sysml:177: in base_pressure = base_pressure_achievable;"
+      ],
+      "literal": [
+        "alias_agg_probe/library.sysml:69: in margin_rate = 0.15;",
+        "catf_mfe_model/designs/catf_mfe/blanket.sysml:204: in p_thermal_electric = 1104.22;  // MW - Temporary, will be cross-reference in Phase 5",
+        "catf_mfe_model/designs/catf_mfe/magnets.sysml:90: in p_neutron = 2079.41;  // MW - Temporary, will be cross-reference in Phase 5",
+        "catf_mfe_model/designs/catf_mfe/system.sysml:200: in gross_electric = 1546.72;  // MW - Temporary, will be cross-reference in Phase 5",
+        "chain_override_probe/library.sysml:38: in raw_factor = 1.0;",
+        "constraint_occurrence_demand/anonymous/model.sysml:36: in x = 1.0;",
+        "constraint_occurrence_demand/cycle_indirect/model.sysml:29: in x = 1.0;",
+        "constraint_occurrence_demand/overrides/model.sysml:22: in x = 1.0;"
+      ],
+      "qualified": [
+        "catf_mfe_model/designs/catf_mfe/heating.sysml:31: in delivered_power = catf_heating::delivered_power;",
+        "catf_mfe_model/designs/catf_mfe/physics.sysml:64: in p_fusion = catf_physics::p_fusion;",
+        "catf_mfe_model/designs/catf_mfe/physics.sysml:69: in p_input = catf_physics::p_input;",
+        "catf_mfe_model/designs/catf_mfe/physics.sysml:70: in m_neutron = catf_physics::m_neutron;",
+        "catf_mfe_model/designs/catf_mfe/physics.sysml:71: in eta_thermal = catf_physics::eta_thermal;",
+        "catf_mfe_model/designs/catf_mfe/physics.sysml:72: in f_pump = catf_physics::f_pump;",
+        "catf_mfe_model/designs/catf_mfe/physics.sysml:73: in eta_pump = catf_physics::eta_pump;",
+        "catf_mfe_model/designs/catf_mfe/physics.sysml:74: in f_subsystem = catf_physics::f_subsystem;"
+      ],
+      "chain": [
+        "catf_mfe_model/designs/catf_mfe/magnets.sysml:87: in magnet_volume = catf_radial_build.magnet_volume_total;",
+        "catf_mfe_model/designs/catf_mfe/magnets.sysml:88: in magnet_surface_area = catf_radial_build.magnet_surface_area;",
+        "catf_mfe_model/designs/catf_mfe/magnets.sysml:89: in first_wall_area = catf_radial_build.first_wall_area;",
+        "catf_mfe_model/designs/catf_mfe/physics.sysml:68: in p_neutron = alpha_neutron_split.p_neutron;",
+        "catf_mfe_model/designs/catf_mfe/physics.sysml:78: in p_thermal = blanket_thermal.p_thermal;",
+        "catf_mfe_model/designs/catf_mfe/physics.sysml:79: in p_alpha = alpha_neutron_split.p_alpha;",
+        "catf_mfe_model/designs/catf_mfe/physics.sysml:85: in p_electric_gross = gross_electric.p_electric_gross;",
+        "catf_mfe_model/designs/catf_mfe/physics.sysml:89: in p_coils = catf_tf_system.cooling_power;          // From magnets.sysml (~15 MW)"
+      ],
+      "expression": [
+        "expression_binding_probe/design.sysml:19: in combined_input = material_cost + labor_cost;",
+        "expression_binding_probe/design.sysml:29: in combined_input = material_cost * 1.2;",
+        "expression_binding_probe/design.sysml:39: in combined_input = material_cost + labor_cost + overhead;",
+        "expression_binding_probe/design.sysml:50: in value_a = material_cost + labor_cost;",
+        "expression_binding_probe/design.sysml:51: in value_b = overhead * 2.0;",
+        "expression_binding_probe/design.sysml:60: in x = material_cost - overhead;",
+        "invocation_binding_probe/design.sysml:19: in x = Doubler(v = a);"
+      ]
+    }
+  },
+  "fusion-tea models/": {
+    "root": "/home/reid/1cfe/fusion-tea/models",
+    "usage_binding_counts": {
+      "bare_renamed": 2,
+      "bare_selfnamed": 15,
+      "chain": 13,
+      "literal": 2
+    },
+    "typed_param_defaults_skipped": 0,
+    "examples": {
+      "bare_selfnamed": [
+        "designs/generic_ife/ife_plant.sysml:114: in availability = availability;",
+        "designs/generic_ife/ife_plant.sysml:116: in discount_rate = discount_rate;",
+        "designs/generic_ife/ife_plant.sysml:121: in frequency = frequency;",
+        "designs/generic_ife/ife_plant.sysml:122: in gain = gain;",
+        "designs/generic_ife/ife_plant.sysml:123: in om_cost_constant = om_cost_constant;",
+        "designs/generic_ife/ife_plant.sysml:124: in plant_cost_constant = plant_cost_constant;",
+        "designs/generic_ife/ife_plant.sysml:126: in thermal_efficiency = thermal_efficiency;",
+        "designs/generic_ife/ife_plant.sysml:146: in gain = gain;"
+      ],
+      "chain": [
+        "designs/generic_ife/ife_plant.sysml:115: in blanket_energy_multiple = chamber.blanket_energy_multiple;",
+        "designs/generic_ife/ife_plant.sysml:117: in driver_cost_constant = driver.cost_per_joule;",
+        "designs/generic_ife/ife_plant.sysml:118: in driver_efficiency = driver.efficiency;",
+        "designs/generic_ife/ife_plant.sysml:119: in driver_energy = driver.energy;",
+        "designs/generic_ife/ife_plant.sysml:120: in driver_lifetime_shots = driver.lifetime_shots;",
+        "designs/generic_ife/ife_plant.sysml:125: in target_cost_constant = target_factory.cost_per_target;",
+        "designs/generic_ife/ife_plant.sysml:127: in yield_cost_constant = chamber.yield_cost_constant;",
+        "designs/generic_ife/ife_plant.sysml:145: in eta = driver.efficiency;"
+      ],
+      "bare_renamed": [
+        "designs/hif_ife/hif_driver.sysml:74: in driver_efficiency = efficiency;",
+        "designs/hif_ife/hif_driver.sysml:76: in rep_rate = pulse_rate_ref;"
+      ],
+      "literal": [
+        "designs/hif_ife/hif_plant.sysml:187: in num_units = 1.0;",
+        "designs/hif_ife/hif_plant.sysml:202: in target_factory_cost = 0.1;"
+      ]
+    }
+  },
+  "stellarator-demo models/": {
+    "root": "/home/reid/1cfe/fusion-tea-stellarator-mbse-demo/models",
+    "usage_binding_counts": {
+      "bare_renamed": 56,
+      "bare_selfnamed": 109,
+      "chain": 64,
+      "literal": 7
+    },
+    "typed_param_defaults_skipped": 0,
+    "examples": {
+      "bare_selfnamed": [
+        "designs/generic_ife/ife_plant.sysml:114: in availability = availability;",
+        "designs/generic_ife/ife_plant.sysml:116: in discount_rate = discount_rate;",
+        "designs/generic_ife/ife_plant.sysml:121: in frequency = frequency;",
+        "designs/generic_ife/ife_plant.sysml:122: in gain = gain;",
+        "designs/generic_ife/ife_plant.sysml:123: in om_cost_constant = om_cost_constant;",
+        "designs/generic_ife/ife_plant.sysml:124: in plant_cost_constant = plant_cost_constant;",
+        "designs/generic_ife/ife_plant.sysml:126: in thermal_efficiency = thermal_efficiency;",
+        "designs/generic_ife/ife_plant.sysml:146: in gain = gain;"
+      ],
+      "chain": [
+        "designs/generic_ife/ife_plant.sysml:115: in blanket_energy_multiple = chamber.blanket_energy_multiple;",
+        "designs/generic_ife/ife_plant.sysml:117: in driver_cost_constant = driver.cost_per_joule;",
+        "designs/generic_ife/ife_plant.sysml:118: in driver_efficiency = driver.efficiency;",
+        "designs/generic_ife/ife_plant.sysml:119: in driver_energy = driver.energy;",
+        "designs/generic_ife/ife_plant.sysml:120: in driver_lifetime_shots = driver.lifetime_shots;",
+        "designs/generic_ife/ife_plant.sysml:125: in target_cost_constant = target_factory.cost_per_target;",
+        "designs/generic_ife/ife_plant.sysml:127: in yield_cost_constant = chamber.yield_cost_constant;",
+        "designs/generic_ife/ife_plant.sysml:145: in eta = driver.efficiency;"
+      ],
+      "bare_renamed": [
+        "designs/generic_mfe/mfe_plant.sysml:213: in q_nuc = q_nuc_cryo;",
+        "designs/generic_mfe/mfe_plant.sysml:214: in vol_cold = vol_cold_cryo;",
+        "designs/generic_mfe/mfe_plant.sysml:215: in p_fixed = p_fixed_cryo;",
+        "designs/generic_mfe/mfe_plant.sysml:216: in f_uplift = f_uplift_cryo;",
+        "designs/generic_mfe/mfe_plant.sysml:217: in T_cold = T_cold_cryo;",
+        "designs/generic_mfe/mfe_plant.sysml:218: in T_amb = T_amb_cryo;",
+        "designs/generic_mfe/mfe_plant.sysml:219: in f_carnot = f_carnot_cryo;",
+        "designs/generic_mfe/mfe_plant.sysml:220: in p_direct = p_cryo;"
+      ],
+      "literal": [
+        "designs/generic_mfe/mfe_plant.sysml:448: in ref_power = 1000.0; in alpha = 1.0;",
+        "designs/generic_mfe/mfe_plant.sysml:453: in ref_power = 1000.0; in alpha = 0.7;",
+        "designs/generic_mfe/mfe_plant.sysml:458: in ref_power = 1000.0; in alpha = 0.8;",
+        "designs/generic_mfe/mfe_plant.sysml:463: in ref_power = 3500.0; in alpha = 0.65;",
+        "designs/generic_mfe/mfe_plant.sysml:524: in ref_power = 1000.0; in alpha = 0.5;",
+        "designs/hif_ife/hif_plant.sysml:187: in num_units = 1.0;",
+        "designs/hif_ife/hif_plant.sysml:202: in target_factory_cost = 0.1;"
+      ]
+    }
+  }
+}

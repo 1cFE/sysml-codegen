@@ -1,0 +1,17 @@
+{
+  "constraint_usages": [
+    {
+      "owner_qualified_name": "constraint_domain_satisfy_calc_def::MassBudget",
+      "source_file": "model.sysml",
+      "source_line": 11,
+      "usage_qualified_name": "constraint_domain_satisfy_calc_def::MassBudget::within"
+    },
+    {
+      "owner_qualified_name": "constraint_domain_satisfy_calc_def::Sizer",
+      "source_file": "model.sysml",
+      "source_line": 24,
+      "usage_qualified_name": "constraint_domain_satisfy_calc_def::Sizer::budget_met"
+    }
+  ],
+  "fixture": "constraint_domain_satisfy_calc_def"
+}

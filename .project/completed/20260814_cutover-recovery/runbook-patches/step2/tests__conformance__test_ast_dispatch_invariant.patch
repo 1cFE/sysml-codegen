@@ -1,0 +1,89 @@
+diff --git a/tests/conformance/test_ast_dispatch_invariant.py b/tests/conformance/test_ast_dispatch_invariant.py
+index adfe8c4..e0a7443 100644
+--- a/tests/conformance/test_ast_dispatch_invariant.py
++++ b/tests/conformance/test_ast_dispatch_invariant.py
+@@ -34,11 +34,9 @@ from tests.helpers.static_analysis import (
+ 
+ SRC_ROOT = Path(__file__).parent.parent.parent / "src" / "sysml_codegen"
+ EXTRACTION_DIR = SRC_ROOT / "extraction"
+-ANALYSIS_DIR = SRC_ROOT / "analysis"
+ 
+ HIERARCHY_RESOLVER_PATH = EXTRACTION_DIR / "hierarchy_resolver.py"
+ USAGE_EXTRACTOR_PATH = EXTRACTION_DIR / "usage_extractor.py"
+-PARAMETER_GROUPS_PATH = ANALYSIS_DIR / "parameter_groups.py"
+ EXTRACTOR_PATH = EXTRACTION_DIR / "extractor.py"
+ ELABORATOR_PATH = SRC_ROOT / "elaboration" / "elaborate.py"
+ AGENTIC_HIERARCHY_PATH = (
+@@ -80,14 +78,12 @@ EXPRESSION_TYPE_NAMES = frozenset(
+ DUAL_CHECK_SITES = [
+     (AGENTIC_AGGREGATION_PATH, "_decompose_node"),
+     (USAGE_EXTRACTOR_PATH, "_extract_single_binding"),
+-    (PARAMETER_GROUPS_PATH, "_extract_default_value"),
+     (ELABORATOR_PATH, "_expression_references"),
+ ]
+ 
+ DUAL_CHECK_IDS = [
+     "agentic_aggregation._decompose_node",
+     "_extract_single_binding",
+-    "_extract_default_value",
+     "elaboration._expression_references",
+ ]
+ 
+@@ -103,12 +99,10 @@ CANONICAL_IDS = [
+ # Sites that use elif chains -- FCE < OE is sufficient, full canonical not required
+ ELIF_SITES = [
+     (USAGE_EXTRACTOR_PATH, "_extract_single_binding"),
+-    (PARAMETER_GROUPS_PATH, "_extract_default_value"),
+ ]
+ 
+ ELIF_IDS = [
+     "_extract_single_binding",
+-    "_extract_default_value",
+ ]
+ 
+ 
+@@ -268,11 +262,14 @@ class TestReqAst04DispatchSiteGuardrail:
+     """Guard against new unaudited dispatch sites appearing in the codebase."""
+ 
+     def test_total_dual_check_site_count(self):
+-        """Exactly 4 audited functions have both FCE and OE is_instance() checks.
++        """Exactly 3 audited functions have both FCE and OE is_instance() checks.
+ 
+         The exact-ID reference collector checks OperatorExpression only to keep
+         operator syntax out of the explicit-invocation branch. It still belongs
+-        in this critical FCE-before-OE inventory."""
++        in this critical FCE-before-OE inventory.
++
++        The fourth site was ``analysis/parameter_groups.py:_extract_default_value``; it
++        retired with the v5 family (retirement step 2)."""
+         all_dispatch = find_all_dispatch_functions(SRC_ROOT, EXPRESSION_TYPE_NAMES)
+         shared_aggregation_calls = find_is_instance_calls_in_function(
+             AGENTIC_AGGREGATION_PATH,
+@@ -293,13 +290,13 @@ class TestReqAst04DispatchSiteGuardrail:
+             for key, types in all_dispatch.items()
+             if "FeatureChainExpression" in types and "OperatorExpression" in types
+         }
+-        assert len(dual_check) == 4, (
+-            f"Expected 4 dual-check sites (FCE+OE), found {len(dual_check)}: "
++        assert len(dual_check) == 3, (
++            f"Expected 3 dual-check sites (FCE+OE), found {len(dual_check)}: "
+             f"{sorted(dual_check.keys())}"
+         )
+ 
+     def test_total_dispatch_function_count(self):
+-        """Exactly 8 audited functions dispatch on 2+ expression types.
++        """Exactly 7 audited functions dispatch on 2+ expression types.
+ 
+         The exact-ID elaborator contributes three FCE/FRE-only functions:
+         classification, binding evidence, and reference collection."""
+@@ -333,8 +330,8 @@ class TestReqAst04DispatchSiteGuardrail:
+                 shared_aggregation_types
+             )
+         multi_type = {key: types for key, types in all_dispatch.items() if len(types) >= 2}
+-        assert len(multi_type) == 8, (
+-            f"Expected 8 audited multi-type dispatch functions, found {len(multi_type)}: "
++        assert len(multi_type) == 7, (
++            f"Expected 7 audited multi-type dispatch functions, found {len(multi_type)}: "
+             f"{sorted(multi_type.keys())}"
+         )
+ 

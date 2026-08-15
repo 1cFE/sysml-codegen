@@ -1,0 +1,143 @@
+{
+  "_comment": [
+    "CONSTRAINT-SEMANTICS Item 5, SC-2/SC-3/SC-4, restated by Item 9. The expected accounting",
+    "identity for the catf_mfe_gated derivative, derived from the RULED table",
+    "(.project/completed/20260813_catf-constraint-policy-acceptance/owner-disposition.md) and",
+    "committed BEFORE any run that could confirm it. scripts/check_gated_manifest.py reads this",
+    "file; it is data, not code, so the commit-order evidence for SC-6 is content-scoped and",
+    "unambiguous. Every number here comes from the ruled table, never from a run. Item 9 executes",
+    "the held intent for A5, A6 and A9, so the identity is now 65 = 56 carriers + 9 named",
+    "deletions."
+  ],
+  "assessed_entry_count": 3,
+  "carrier_total": 56,
+  "d5_authored_total": 65,
+  "deletion_total": 9,
+  "deletions": [
+    {
+      "authority": "owner-disposition.md Group A, A1",
+      "class": "derive-instead",
+      "d5_source_line": 125,
+      "reason": "Structural identity (class 1). AlphaNeutronSplit splits p_fusion by branching ratios summing to exactly 1, so conservation holds by construction. Replaced by the C37 derivation.",
+      "usage_qualified_name": "CATFMFEPhysics::catf_physics::PowerBalanceConsistency"
+    },
+    {
+      "authority": "owner-disposition.md Group A, A4",
+      "class": "derive-instead",
+      "d5_source_line": 605,
+      "reason": "Class 3's own rule: a quantity that must equal a value is fixed as an input, not searched for and then constrained. bioshield.outer_radius is already the literal 8.55 [m], so the gate asserted a literal against itself.",
+      "usage_qualified_name": "CATFMFERadialBuild::catf_radial_build::TotalRadiusConsistency"
+    },
+    {
+      "authority": "owner-disposition.md Group A, A7",
+      "class": "derive-instead",
+      "d5_source_line": 171,
+      "reason": "Composition closure (class 4) over two terms; the last term is derived. gamma_shield.fraction_volume := 1.0 - neutron_shield.fraction_volume.",
+      "usage_qualified_name": "CATFMFEShield::catf_shield::CompositionConsistency"
+    },
+    {
+      "authority": "owner-disposition.md Group A, A8",
+      "class": "derive-instead",
+      "d5_source_line": 87,
+      "reason": "Structural identity (class 1). outer_radius := inner_radius + wall_thickness; the source comment already recorded that the literal came from that sum.",
+      "usage_qualified_name": "CATFMFEVacuum::catf_vacuum_vessel::ThicknessConsistency"
+    },
+    {
+      "authority": "owner-disposition.md Group C, C37",
+      "class": "derive-instead",
+      "d5_source_line": 69,
+      "reason": "The only derivable row in Group C. p_neutron := p_fusion - p_alpha; the band checked arithmetic the generator already guarantees. Pairs with A1, the same identity re-asserted at instance level.",
+      "usage_qualified_name": "FusionPhysics_PowerBalance::AlphaNeutronSplit::EnergyConservation"
+    },
+    {
+      "authority": "owner-disposition.md open point O2, [OWNER 2026-08-13]",
+      "class": "delete-placeholder",
+      "d5_source_line": 133,
+      "reason": "Body is the literal `true` \u2014 a vacuous always-pass gate waiting for Item 6's capability. The derivative is the worked example of the policy and does not carry it; the frozen twins keep it for history.",
+      "usage_qualified_name": "FusionPhysics_Confinement::PlasmaConfinement::Phase2PlasmaParametersPhysical"
+    },
+    {
+      "authority": "owner-disposition.md open point O2, [OWNER 2026-08-13]",
+      "class": "delete-placeholder",
+      "d5_source_line": 138,
+      "reason": "Body is the literal `true`. Same ruling as C21.",
+      "usage_qualified_name": "FusionPhysics_Neutronics::TritiumBreedingRatio::Phase2SelfSufficiency"
+    },
+    {
+      "authority": "owner-disposition.md Group A, A5",
+      "class": "derive-instead",
+      "d5_source_line": 612,
+      "reason": "Layer continuity (class 1) over the whole radial build. The ruled basis makes the axis root radius and the 14 layer thicknesses free and derives every other radius, so each layer's inner_radius := the layer below's outer_radius and the gate asserted what the model now computes. Item 8 (62a07e5) cured the unit-lane defect that had parked this row.",
+      "usage_qualified_name": "CATFMFERadialBuild::catf_radial_build::LayerContinuity"
+    },
+    {
+      "authority": "owner-disposition.md Group A, A6",
+      "class": "derive-instead",
+      "d5_source_line": 630,
+      "reason": "Structural identity (class 1) repeated per layer. outer_radius := inner_radius + thickness for all 14 layers under the same ruled basis, so the gate asserted arithmetic the model now performs. Item 8 (62a07e5) cured the unit-lane defect that had parked this row.",
+      "usage_qualified_name": "CATFMFERadialBuild::catf_radial_build::RadiusThicknessConsistency"
+    }
+  ],
+  "disposition_histogram": {
+    "eligible": 3,
+    "excluded": 0,
+    "non_reaching": 53
+  },
+  "expected_coverage_account": {
+    "applicable_gate_total": 3,
+    "assessed_gate_count": 3,
+    "authored_usage_total": 56,
+    "coverage_state": "complete",
+    "inapplicable_gate_count": 0,
+    "unassessed_gate_count": 0,
+    "unassessed_reasons": {}
+  },
+  "expected_study_outcomes": {
+    "_basis": "Amended 2026-08-13 under finding 6-D ([AGENT], ratified by owner). Candidates are labeled gate-feasible / gate-infeasible UNDER THE MODEL AS AUTHORED. The basis is the source-derived Carnot computation in .project/completed/20260813_catf-constraint-policy-acceptance/cryo_derivation.py, re-derived from model source and shown to reproduce the executed value bit-exactly \u2014 not transcribed from an observed run.",
+    "gate_feasible_candidate": {
+      "_note": "A MACHINERY EXEMPLAR, NOT A RECOMMENDED DESIGN. It exists to show the satisfied path executes; no one is proposing a 20 GW fusion plant. A2 alone turns satisfied at p_fusion >= 16000; all three gates satisfy at 20000. A9 is satisfied at the authored design point and on both legs: pumping_speed_total = 200 against n_pumps * pump_capacity_each = 48 * 4.17 = 200.16, a 0.08% disagreement inside the ruled 1% band, and the p_fusion mutation touches no pumping attribute.",
+      "gates_satisfied": [
+        "CATFMFEPhysics::catf_physics::net_power_viable",
+        "CATFMFEPhysics::catf_physics::parasitic_fraction_ok",
+        "CATFMFEVacuum::catf_vacuum_pumping::pumping_speed_agrees"
+      ],
+      "headline": "full_satisfaction",
+      "inputs": "CATFMFEPhysics__catf_physics__p_fusion = 20000.0, all else authored",
+      "study_default": "feed-strategy/penalize",
+      "teax_runtime_token": "satisfied"
+    },
+    "gate_infeasible_candidate": {
+      "_note": "This is the model's OWN authored design point, and it is the rejected candidate. MagnetCryogenicLoad.cooling_power = 8396.054399837172 MW against p_electric_gross = 1546.723690193402 MW (5.43x), so p_electric_net_out is negative before any mutation. Cause: heat_leak = magnet_volume * 0.05 // MW (library/analyses/thermal_loads.sysml:59) contributes 116.72 MW of the 167.92 MW cryogenic load, amplified 300/(20*0.3) = 50x. Filed as backlog [CATF-CRYO-HEAT-LEAK-COEFFICIENT]; reproduces on the untouched catf_mfe_d5.",
+      "gate_reporting_violation": "CATFMFEPhysics::catf_physics::net_power_viable",
+      "headline": "violation",
+      "inputs": "the authored defaults; CATFMFEPhysics__catf_physics__p_fusion = 2600.0",
+      "study_default": "reject",
+      "teax_runtime_token": "violated"
+    }
+  },
+  "fixture": "catf_mfe_gated",
+  "histogram_rows": {
+    "eligible": "A2 (net_power_viable), A3 (parasitic_fraction_ok), A9 (pumping_speed_agrees) \u2014 the three asserted, executing gates. A9 joined them when Item 9 executed its held intent: an assert of ProductWithinBand at rel_tol = 0.01, replacing the exact == between two independently authored routes.",
+    "excluded": "None. A5 and A6 left the catalog by deletion (their ruled derivations are now authored in radial_build.sysml) and A9 moved excluded -> eligible, so no reaching usage carries an unassessed form.",
+    "non_reaching": "B1-B5 (5 part-definition guards) + 48 awaits-capability Group C calc-def guards = 53"
+  },
+  "matched_by_name": 53,
+  "matched_by_renamed_from": 3,
+  "renamed_carriers": [
+    {
+      "authority": "owner-disposition.md Group A, A2 (assert-one-sided)",
+      "renamed_from": "CATFMFEPhysics::catf_physics::ViabilityCheck",
+      "usage_qualified_name": "CATFMFEPhysics::catf_physics::net_power_viable"
+    },
+    {
+      "authority": "owner-disposition.md Group A, A3 (assert-band)",
+      "renamed_from": "CATFMFEPhysics::catf_physics::ReasonableParasiticTotal",
+      "usage_qualified_name": "CATFMFEPhysics::catf_physics::parasitic_fraction_ok"
+    },
+    {
+      "authority": "owner-disposition.md Group A, A9 (assert-band, 1% relative [OWNER 2026-08-13])",
+      "renamed_from": "CATFMFEVacuum::catf_vacuum_pumping::PumpingSpeedConsistency",
+      "usage_qualified_name": "CATFMFEVacuum::catf_vacuum_pumping::pumping_speed_agrees"
+    }
+  ]
+}

@@ -31,7 +31,6 @@ import textwrap
 import pytest
 
 from sysml_codegen.core import identifier_types
-from sysml_codegen.core.output_registry import OutputRegistry
 
 # Hand-authored expectation: wrapper name -> base type it must wrap.
 # (Enumerated from ADR/27-typed-registry-refactor.md, not read off the code.)
@@ -76,13 +75,14 @@ class TestDM08EnforcedSurface:
             "ScopedAliasKey is not a NewType over tuple[str, str]"
         )
 
-    @pytest.mark.req("REQ-DM-08")
-    def test_registry_dict_annotations_name_newtypes(self):
-        """(b) The four registry dicts are annotated dict[NewType, NewType].
+    # (b) — the AST scan asserting the four ``OutputRegistry.__init__`` dicts are
+    # annotated ``dict[NewType, NewType]`` — retired with the v5 family (retirement
+    # step 2) together with ``core/output_registry.py`` (L-007), per the per-node
+    # disposition on ledger L-125. (a) and (c), the NewType wrappers themselves in the
+    # retained ``core/identifier_types.py``, are unaffected.
+    def _retired_registry_dict_annotations(self):
+        from sysml_codegen.core.output_registry import OutputRegistry
 
-        AST scan of OutputRegistry.__init__ (PEP-526 self.x annotations never
-        reach __annotations__, so this is the only honest static check).
-        """
         src = textwrap.dedent(inspect.getsource(OutputRegistry.__init__))
         tree = ast.parse(src)
 

@@ -5,6 +5,13 @@ Verifies that every data model, enum, and field referenced in doc 09
 documented location, has the correct fields and types, and can be
 constructed with real data.
 
+Doc 09 is the mixed reference document: part of it describes the retired string-
+resolution stack. The eleven nodes that covered that part — the analysis-layer
+importables, ``OutputRegistry``, ``PhantomDetectionReport``, ``BacktrackingResult``'s
+field set, and their four documented-source-file rows — retired with the v5 family
+(retirement step 2), together with the doc-09 rows they checked. What is left covers
+only models the product still ships.
+
 Requirements: REQ-DM-01 through REQ-DM-07.
 """
 
@@ -86,32 +93,6 @@ class TestExtractionModelsImportable:
 
 
 @pytest.mark.req("REQ-DM-01")
-class TestAnalysisModelsImportable:
-    """Every analysis-layer model is importable from its documented module."""
-
-    def test_backtracking_result(self):
-        from sysml_codegen.analysis.dependency_backtracker import BacktrackingResult
-
-        assert BacktrackingResult is not None
-
-    def test_design_attribute_data(self):
-        from sysml_codegen.analysis.parameter_groups import DesignAttributeData
-
-        assert DesignAttributeData is not None
-
-    def test_derived_parameter_group(self):
-        from sysml_codegen.analysis.parameter_groups import DerivedParameterGroup
-
-        assert DerivedParameterGroup is not None
-
-    def test_parameter_source(self):
-        """ParameterSource not in doc 09 but used by DerivedParameterGroup.parameters."""
-        from sysml_codegen.analysis.parameter_groups import ParameterSource
-
-        assert ParameterSource is not None
-
-
-@pytest.mark.req("REQ-DM-01")
 class TestCoreModelsImportable:
     """Every core-layer model is importable from its documented module."""
 
@@ -129,12 +110,6 @@ class TestCoreModelsImportable:
         from sysml_codegen.core.models import ChannelAlias
 
         assert ChannelAlias is not None
-
-    def test_output_registry(self):
-        from sysml_codegen.core.output_registry import OutputRegistry
-
-        assert OutputRegistry is not None
-
 
 @pytest.mark.req("REQ-DM-01")
 class TestResolutionModelsImportable:
@@ -277,9 +252,11 @@ def test_req_dm_03_fields_calculation_definition_data():
         "source_file",
         "source_line",
         "source_hash",
-        "output_expression_asts",
-        "all_member_names",
-        "member_expressions",
+        "element_id",
+        "output_expression_asts_by_id",
+        "all_member_ids",
+        "member_expressions_by_id",
+        "member_names_by_id",
     }
     actual = _dataclass_field_names(CalculationDefinitionData)
     assert actual == expected
@@ -337,6 +314,10 @@ def test_req_dm_03_fields_binding_info():
         # only field that can tell an owner-relative reference from a scope-qualified
         # one. Row 16 keys on that distinction.
         "stored_source_written_qualifier",
+        # Immutable semantic evidence (SOURCE-IDENTITY Item 4): exact resolved
+        # referent + bound formal + authored form, snapshot_exclude until the
+        # v6 cut owns serialization.
+        "reference_evidence",
     }
     actual = _dataclass_field_names(BindingInfo)
     assert actual == expected
@@ -377,10 +358,13 @@ def test_req_dm_03_fields_redefinition_data():
         "is_deep_path",
         "source_file",
         "source_line",
+        # Exact value-site identity (SOURCE-IDENTITY Item 4), snapshot_exclude.
+        "member_qualified_name",
+        "redefined_target_qns",
     }
     actual = _dataclass_field_names(RedefinitionData)
     assert actual == expected
-    assert len(actual) == 11
+    assert len(actual) == 13
 
 
 @pytest.mark.req("REQ-DM-03")
@@ -424,6 +408,8 @@ def test_hierarchy_model_ordered_field_contracts():
         "is_deep_path",
         "source_file",
         "source_line",
+        "member_qualified_name",
+        "redefined_target_qns",
     ]
     assert [field.name for field in dataclasses.fields(MultiplicityData)] == [
         "part_usage_name",
@@ -453,9 +439,23 @@ def test_aggregation_term_ordered_field_contracts():
         "attribute_name",
         "multiplicity_attr",
         "multiplicity_count",
+        # Exact resolved-target/chain evidence (ELABORATE-FIRST Item 2), snapshot_exclude.
+        "resolved_target",
+        "chain_root",
+        "resolved_member_names",
     ]
-    assert [field.name for field in dataclasses.fields(SingletonTerm)] == ["source_path"]
-    assert [field.name for field in dataclasses.fields(LocalTerm)] == ["attribute_name"]
+    assert [field.name for field in dataclasses.fields(SingletonTerm)] == [
+        "source_path",
+        "resolved_target",
+        "chain_root",
+        "resolved_member_names",
+    ]
+    assert [field.name for field in dataclasses.fields(LocalTerm)] == [
+        "attribute_name",
+        "resolved_target",
+        "chain_root",
+        "resolved_member_names",
+    ]
 
 
 @pytest.mark.req("REQ-DM-03")
@@ -501,25 +501,6 @@ def test_req_dm_03_fields_hierarchy_extraction_result():
     actual = _dataclass_field_names(HierarchyExtractionResult)
     assert actual == expected
     assert len(actual) == 7
-
-
-@pytest.mark.req("REQ-DM-03")
-def test_req_dm_03_fields_backtracking_result():
-    from sysml_codegen.analysis.dependency_backtracker import BacktrackingResult
-
-    expected = {
-        "required_usages",
-        "dependency_graph",
-        "entry_points",
-        "entry_point_sources",
-        "binding_resolutions",
-        "phantom_report",
-        "trace_log",
-        # Item 7 (REQ-GA-08 / D4): Step-4 fall-through set for the V11 collector.
-        "fallback_entry_points",
-    }
-    actual = _pydantic_field_names(BacktrackingResult)
-    assert actual == expected
 
 
 @pytest.mark.req("REQ-DM-03")
@@ -687,8 +668,6 @@ _UE = "sysml_codegen.extraction.usage_extractor"
 _EC = "sysml_codegen.extraction.expression_compiler"
 _CM = "sysml_codegen.core.models"
 _RM = "sysml_codegen.resolution.models"
-_BT = "sysml_codegen.analysis.dependency_backtracker"
-_PG = "sysml_codegen.analysis.parameter_groups"
 
 # (module_path, class_name, expected_file_suffix)
 SOURCE_FILE_SPECS = [
@@ -720,10 +699,6 @@ SOURCE_FILE_SPECS = [
     (_RM, "EntryPoint", "resolution/models.py"),
     (_RM, "EntryPointType", "resolution/models.py"),
     (_RM, "ParameterGroup", "resolution/models.py"),
-    (_BT, "BacktrackingResult", "analysis/dependency_backtracker.py"),
-    (_PG, "DesignAttributeData", "analysis/parameter_groups.py"),
-    (_PG, "DerivedParameterGroup", "analysis/parameter_groups.py"),
-    (_PG, "ParameterSource", "analysis/parameter_groups.py"),
 ]
 
 
@@ -946,12 +921,6 @@ class TestDelegatedModelsImportable:
         from agentic_mbse.sysml.types import ExpressionRef
 
         assert ExpressionRef is not None
-
-    def test_phantom_detection_report(self):
-        from sysml_codegen.analysis.phantom_detector import PhantomDetectionReport
-
-        assert PhantomDetectionReport is not None
-
 
 # ---------------------------------------------------------------------------
 # REQ-DM-07: Containment hierarchy conformance

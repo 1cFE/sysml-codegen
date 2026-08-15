@@ -14,9 +14,10 @@ from sysml_codegen.contracts.versions import CATALOG_SCHEMA_VERSION
 
 def test_catalog_schema_version_is_the_reviewed_pin():
     # Bumping this is a deliberate act: it means the embedded-catalog schema shape changed and
-    # the TEAx-vendored accepted set has been updated in lockstep. 2.0.0 is the Item-8 shape
-    # (admitted-usage tier + five projected entry fields).
-    assert CATALOG_SCHEMA_VERSION == "2.0.0"
+    # the TEAx-vendored accepted set has been updated in lockstep. 3.0.0 widened
+    # `usage_records` from admitted-only to the whole authored domain and re-keyed every
+    # catalog row on `declaration_id`.
+    assert CATALOG_SCHEMA_VERSION == "3.0.0"
 
 
 def test_catalog_schema_version_rides_the_model_contract_payload():

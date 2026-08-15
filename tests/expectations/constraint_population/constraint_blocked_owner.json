@@ -1,0 +1,11 @@
+{
+  "constraint_usages": [
+    {
+      "owner_qualified_name": "constraint_blocked_owner::BlockedLeaf",
+      "source_file": "model.sysml",
+      "source_line": 24,
+      "usage_qualified_name": "constraint_blocked_owner::BlockedLeaf::nonneg"
+    }
+  ],
+  "fixture": "constraint_blocked_owner"
+}

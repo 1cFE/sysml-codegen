@@ -1,0 +1,71 @@
+{
+  "constraint_usages": [
+    {
+      "owner_qualified_name": "OccurrenceDemandAnonymous::Admitted",
+      "source_file": "anonymous/model.sysml",
+      "source_line": 16,
+      "usage_qualified_name": "<anonymous>"
+    },
+    {
+      "owner_qualified_name": "OccurrenceDemandAnonymous::Excluded",
+      "source_file": "anonymous/model.sysml",
+      "source_line": 23,
+      "usage_qualified_name": "<anonymous>"
+    },
+    {
+      "owner_qualified_name": "OccurrenceDemandAnonymous::Unsupported",
+      "source_file": "anonymous/model.sysml",
+      "source_line": 30,
+      "usage_qualified_name": "OccurrenceDemandAnonymous::Unsupported::unsupported_check"
+    },
+    {
+      "owner_qualified_name": "DemandConstraintOnly::Plant",
+      "source_file": "constraint_only/constraint_route.sysml",
+      "source_line": 21,
+      "usage_qualified_name": "DemandConstraintOnly::Plant::constraint_only_check"
+    },
+    {
+      "owner_qualified_name": "OccurrenceDemandCycle::Node",
+      "source_file": "cycle/model.sysml",
+      "source_line": 25,
+      "usage_qualified_name": "OccurrenceDemandCycle::Node::cycle_check"
+    },
+    {
+      "owner_qualified_name": "OccurrenceDemandCycleIndirect::A",
+      "source_file": "cycle_indirect/model.sysml",
+      "source_line": 19,
+      "usage_qualified_name": "OccurrenceDemandCycleIndirect::A::a_check"
+    },
+    {
+      "owner_qualified_name": "DemandOrder::Plant",
+      "source_file": "order/model.sysml",
+      "source_line": 29,
+      "usage_qualified_name": "DemandOrder::Plant::a_check"
+    },
+    {
+      "owner_qualified_name": "DemandOrder::Plant",
+      "source_file": "order/model.sysml",
+      "source_line": 32,
+      "usage_qualified_name": "DemandOrder::Plant::b_check"
+    },
+    {
+      "owner_qualified_name": "DemandOrder::Plant",
+      "source_file": "order/model.sysml",
+      "source_line": 35,
+      "usage_qualified_name": "DemandOrder::Plant::c_check"
+    },
+    {
+      "owner_qualified_name": "OccurrenceOverride::Cell",
+      "source_file": "overrides/model.sysml",
+      "source_line": 16,
+      "usage_qualified_name": "OccurrenceOverride::Cell::threshold"
+    },
+    {
+      "owner_qualified_name": "DemandSharedLibrary::Plant",
+      "source_file": "shared/calc_route.sysml",
+      "source_line": 23,
+      "usage_qualified_name": "DemandSharedLibrary::Plant::shared_check"
+    }
+  ],
+  "fixture": "constraint_occurrence_demand"
+}

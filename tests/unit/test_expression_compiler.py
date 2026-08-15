@@ -1,6 +1,7 @@
 """Unit tests for the expression compiler module."""
 
 from types import SimpleNamespace
+from uuid import UUID
 
 import pytest
 
@@ -381,41 +382,38 @@ class TestClassifyCompilability:
     def test_all_fully_returns_fully(self):
         from sysml_codegen.extraction.expression_compiler import (
             Compilability,
-            CompilationResult,
             classify_compilability,
         )
 
-        results = [
-            CompilationResult("a", Compilability.FULLY_COMPILABLE, "expr_a"),
-            CompilationResult("b", Compilability.FULLY_COMPILABLE, "expr_b"),
+        verdicts = [
+            Compilability.FULLY_COMPILABLE,
+            Compilability.FULLY_COMPILABLE,
         ]
-        assert classify_compilability(results) == Compilability.FULLY_COMPILABLE
+        assert classify_compilability(verdicts) == Compilability.FULLY_COMPILABLE
 
     def test_any_manual_returns_manual(self):
         from sysml_codegen.extraction.expression_compiler import (
             Compilability,
-            CompilationResult,
             classify_compilability,
         )
 
-        results = [
-            CompilationResult("a", Compilability.FULLY_COMPILABLE, "expr_a"),
-            CompilationResult("b", Compilability.MANUAL_REQUIRED),
+        verdicts = [
+            Compilability.FULLY_COMPILABLE,
+            Compilability.MANUAL_REQUIRED,
         ]
-        assert classify_compilability(results) == Compilability.MANUAL_REQUIRED
+        assert classify_compilability(verdicts) == Compilability.MANUAL_REQUIRED
 
     def test_mix_fully_and_partial_returns_partial(self):
         from sysml_codegen.extraction.expression_compiler import (
             Compilability,
-            CompilationResult,
             classify_compilability,
         )
 
-        results = [
-            CompilationResult("a", Compilability.FULLY_COMPILABLE, "expr_a"),
-            CompilationResult("b", Compilability.PARTIALLY_COMPILABLE, "expr_b"),
+        verdicts = [
+            Compilability.FULLY_COMPILABLE,
+            Compilability.PARTIALLY_COMPILABLE,
         ]
-        assert classify_compilability(results) == Compilability.PARTIALLY_COMPILABLE
+        assert classify_compilability(verdicts) == Compilability.PARTIALLY_COMPILABLE
 
     def test_empty_list_returns_manual(self):
         from sysml_codegen.extraction.expression_compiler import (
@@ -428,19 +426,18 @@ class TestClassifyCompilability:
     def test_unknown_in_results_raises_assertion(self):
         from sysml_codegen.extraction.expression_compiler import (
             Compilability,
-            CompilationResult,
             classify_compilability,
         )
 
-        results = [
-            CompilationResult("a", Compilability.UNKNOWN),
+        verdicts = [
+            Compilability.UNKNOWN,
         ]
         with pytest.raises(AssertionError, match="UNKNOWN"):
-            classify_compilability(results)
+            classify_compilability(verdicts)
 
 
 # ---------------------------------------------------------------------------
-# Syside mock infrastructure (compile_calc_def orchestration tests below)
+# SysIDE mock infrastructure for the exact compiler boundary
 # ---------------------------------------------------------------------------
 
 
@@ -459,27 +456,12 @@ class MockFeatureReferenceExpression:
         self.referent = SimpleNamespace(name=name)
 
 
-class MockLiteralRational:
-    """Mock syside LiteralRational node."""
-
-    def __init__(self, value: float):
-        self.value = value
-
-
-class MockFeatureChainExpression:
-    """Mock syside FeatureChainExpression node."""
-
-    pass
-
-
 @pytest.fixture
 def mock_syside_adapter(monkeypatch):
     """Monkeypatch SysideAdapter.is_instance to work with mock nodes."""
     type_map = {
         "MockOperatorExpression": "OperatorExpression",
         "MockFeatureReferenceExpression": "FeatureReferenceExpression",
-        "MockLiteralRational": "LiteralRational",
-        "MockFeatureChainExpression": "FeatureChainExpression",
     }
 
     def mock_is_instance(node, type_name):
@@ -492,545 +474,71 @@ def mock_syside_adapter(monkeypatch):
 
 
 # ---------------------------------------------------------------------------
-# Phase 4: compile_calc_def() orchestrator + edge cases
+# Exact compiler boundary
 # ---------------------------------------------------------------------------
 
 
-def _make_calc_def(name, input_names, output_names):
-    """Helper to construct a CalculationDefinitionData for testing."""
+def test_exact_compiler_keeps_colliding_reference_ids_distinct(
+    mock_syside_adapter, monkeypatch
+):
+    """Rendered-name collisions cannot collapse exact compiler dependencies."""
     from pathlib import Path
+    from types import SimpleNamespace
 
-    from sysml_codegen.extraction.data_models import (
-        AttributeInfo,
-        CalculationDefinitionData,
+    from sysml_codegen.extraction.data_models import AttributeInfo, CalculationDefinitionData
+    from sysml_codegen.extraction.expression_compiler import compile_calc_def_exact
+
+    definition_id = UUID("00000000-0000-5000-8000-000000000100")
+    first_id = UUID("00000000-0000-5000-8000-000000000101")
+    second_id = UUID("00000000-0000-5000-8000-000000000102")
+    output_id = UUID("00000000-0000-5000-8000-000000000103")
+    expression = MockOperatorExpression(
+        "+",
+        [
+            MockFeatureReferenceExpression("same_name"),
+            MockFeatureReferenceExpression("same_name"),
+        ],
     )
-
-    return CalculationDefinitionData(
-        name=name,
-        qualified_name=f"Test::{name}",
-        doc_comment="",
-        calc_expressions=[],
-        input_attributes=[AttributeInfo(name=n) for n in input_names],
-        output_attributes=[AttributeInfo(name=n) for n in output_names],
-        references=[],
-        source_file=Path("test.sysml"),
-    )
-
-
-@pytest.fixture
-def mock_extract_feature_refs(monkeypatch):
-    """Monkeypatch extract_feature_refs to return pre-computed refs.
-
-    Usage: set ref_map[id(mock_ast_node)] = ["ref_name_1", "ref_name_2"]
-    before calling compile_calc_def.
-    """
-    ref_map: dict[int, list[str]] = {}
-
-    def mock_efr(expr, ignore_std_lib=True):
-        names = ref_map.get(id(expr), [])
-        return [SimpleNamespace(name=n, qualified_name=n, element=None) for n in names]
-
+    references = [
+        SimpleNamespace(
+            name="same_name",
+            qualified_name="A::same_name",
+            element=SimpleNamespace(element_id=first_id),
+        ),
+        SimpleNamespace(
+            name="same_name",
+            qualified_name="B::same_name",
+            element=SimpleNamespace(element_id=second_id),
+        ),
+    ]
     monkeypatch.setattr(
         "sysml_codegen.extraction.expression_compiler.extract_feature_refs",
-        mock_efr,
+        lambda _expression, ignore_std_lib=True: references,
     )
-    return ref_map
-
-
-class TestCompileCalcDef:
-    """Tests for compile_calc_def() orchestrator.
-
-    Uses both mock_syside_adapter (for extract_expression_ir's dispatch) and
-    mock_extract_feature_refs (for dependency graph construction).
-    """
-
-    def test_pattern_b_multi_step_topological_order(
-        self, mock_syside_adapter, mock_extract_feature_refs
-    ):
-        """Pattern B: material_cost → fab_cost → total_cost."""
-        from sysml_codegen.extraction.expression_compiler import (
-            Compilability,
-            compile_calc_def,
-        )
-
-        calc_def = _make_calc_def(
-            "CostCalc",
-            input_names=["unit_cost", "quantity", "margin"],
-            output_names=["material_cost", "fab_cost", "total_cost"],
-        )
-
-        # Build mock ASTs
-        material_ast = MockOperatorExpression(
-            "*",
-            [
-                MockFeatureReferenceExpression("unit_cost"),
-                MockFeatureReferenceExpression("quantity"),
-            ],
-        )
-        fab_ast = MockOperatorExpression(
-            "*",
-            [
-                MockFeatureReferenceExpression("material_cost"),
-                MockLiteralRational(1.2),
-            ],
-        )
-        total_ast = MockOperatorExpression(
-            "+",
-            [
-                MockFeatureReferenceExpression("fab_cost"),
-                MockOperatorExpression(
-                    "*",
-                    [
-                        MockFeatureReferenceExpression("fab_cost"),
-                        MockFeatureReferenceExpression("margin"),
-                    ],
-                ),
-            ],
-        )
-
-        expression_asts = {
-            "material_cost": material_ast,
-            "fab_cost": fab_ast,
-            "total_cost": total_ast,
-        }
-
-        # Set up dependency graph refs
-        ref_map = mock_extract_feature_refs
-        ref_map[id(material_ast)] = ["unit_cost", "quantity"]
-        ref_map[id(fab_ast)] = ["material_cost"]
-        ref_map[id(total_ast)] = ["fab_cost", "margin"]
-
-        result = compile_calc_def(calc_def, expression_asts)
-
-        assert result.overall_compilability == Compilability.FULLY_COMPILABLE
-        assert result.execution_order == [
-            "material_cost",
-            "fab_cost",
-            "total_cost",
-        ]
-        assert len(result.output_results) == 3
-
-        # Verify individual expressions
-        by_name = {r.output_name: r for r in result.output_results}
-        assert by_name["material_cost"].python_expression == "(inputs.unit_cost * inputs.quantity)"
-        assert by_name["fab_cost"].python_expression == "(material_cost * 1.2)"
-        assert by_name["total_cost"].python_expression == "(fab_cost + (fab_cost * inputs.margin))"
-
-    def test_pattern_e_pi_as_repeated_literal(self, mock_syside_adapter, mock_extract_feature_refs):
-        """Pattern E: pi faithfully reproduced as literal, no math.pi."""
-        from sysml_codegen.extraction.expression_compiler import (
-            Compilability,
-            compile_calc_def,
-        )
-
-        calc_def = _make_calc_def("CircleCalc", input_names=["radius"], output_names=["area"])
-
-        # area = 3.14159265 * radius * radius (3-operand left-fold)
-        area_ast = MockOperatorExpression(
-            "*",
-            [
-                MockLiteralRational(3.14159265),
-                MockFeatureReferenceExpression("radius"),
-                MockFeatureReferenceExpression("radius"),
-            ],
-        )
-        expression_asts = {"area": area_ast}
-
-        ref_map = mock_extract_feature_refs
-        ref_map[id(area_ast)] = ["radius"]
-
-        result = compile_calc_def(calc_def, expression_asts)
-
-        assert result.overall_compilability == Compilability.FULLY_COMPILABLE
-        by_name = {r.output_name: r for r in result.output_results}
-        assert by_name["area"].python_expression == "((3.14159265 * inputs.radius) * inputs.radius)"
-
-    def test_edge1_unresolved_reference_verdict_escalation(
-        self, mock_syside_adapter, mock_extract_feature_refs
-    ):
-        """Edge 1: unresolved ref → MANUAL_REQUIRED, escalates overall."""
-        from sysml_codegen.extraction.expression_compiler import (
-            Compilability,
-            compile_calc_def,
-        )
-
-        calc_def = _make_calc_def(
-            "MixedCalc",
-            input_names=["a", "b"],
-            output_names=["good", "bad"],
-        )
-
-        good_ast = MockOperatorExpression(
-            "*",
-            [
-                MockFeatureReferenceExpression("a"),
-                MockFeatureReferenceExpression("b"),
-            ],
-        )
-        # "ghost" is not in inputs, outputs, or members → UNSUPPORTED
-        bad_ast = MockOperatorExpression(
-            "+",
-            [
-                MockFeatureReferenceExpression("a"),
-                MockFeatureReferenceExpression("ghost"),
-            ],
-        )
-
-        expression_asts = {"good": good_ast, "bad": bad_ast}
-
-        ref_map = mock_extract_feature_refs
-        ref_map[id(good_ast)] = ["a", "b"]
-        ref_map[id(bad_ast)] = ["a", "ghost"]
-
-        result = compile_calc_def(calc_def, expression_asts)
-
-        assert result.overall_compilability == Compilability.MANUAL_REQUIRED
-        by_name = {r.output_name: r for r in result.output_results}
-        assert by_name["good"].compilability == Compilability.FULLY_COMPILABLE
-        assert by_name["bad"].compilability == Compilability.MANUAL_REQUIRED
-        assert "unresolved reference" in by_name["bad"].unsupported_reason
-
-    def test_edge2_circular_dependency_returns_manual(
-        self, mock_syside_adapter, mock_extract_feature_refs
-    ):
-        """Edge 2: circular dependency → MANUAL_REQUIRED."""
-        from sysml_codegen.extraction.expression_compiler import (
-            Compilability,
-            compile_calc_def,
-        )
-
-        calc_def = _make_calc_def(
-            "CircularCalc",
-            input_names=["x"],
-            output_names=["a", "b"],
-        )
-
-        a_ast = MockOperatorExpression(
-            "+",
-            [
-                MockFeatureReferenceExpression("b"),
-                MockFeatureReferenceExpression("x"),
-            ],
-        )
-        b_ast = MockOperatorExpression(
-            "+",
-            [
-                MockFeatureReferenceExpression("a"),
-                MockFeatureReferenceExpression("x"),
-            ],
-        )
-
-        expression_asts = {"a": a_ast, "b": b_ast}
-
-        ref_map = mock_extract_feature_refs
-        ref_map[id(a_ast)] = ["b", "x"]
-        ref_map[id(b_ast)] = ["a", "x"]
-
-        result = compile_calc_def(calc_def, expression_asts)
-
-        assert result.overall_compilability == Compilability.MANUAL_REQUIRED
-        assert all(r.compilability == Compilability.MANUAL_REQUIRED for r in result.output_results)
-        assert any("circular" in (r.unsupported_reason or "") for r in result.output_results)
-
-    def test_edge3_missing_ast_partial_compilability(
-        self, mock_syside_adapter, mock_extract_feature_refs
-    ):
-        """Edge 3: missing AST for one output → that output MANUAL."""
-        from sysml_codegen.extraction.expression_compiler import (
-            Compilability,
-            compile_calc_def,
-        )
-
-        calc_def = _make_calc_def(
-            "PartialCalc",
-            input_names=["x"],
-            output_names=["compiled", "missing"],
-        )
-
-        compiled_ast = MockOperatorExpression(
-            "*",
-            [
-                MockFeatureReferenceExpression("x"),
-                MockLiteralRational(2.0),
-            ],
-        )
-
-        # missing has no AST (None)
-        expression_asts = {"compiled": compiled_ast, "missing": None}
-
-        ref_map = mock_extract_feature_refs
-        ref_map[id(compiled_ast)] = ["x"]
-
-        result = compile_calc_def(calc_def, expression_asts)
-
-        assert result.overall_compilability == Compilability.MANUAL_REQUIRED
-        by_name = {r.output_name: r for r in result.output_results}
-        assert by_name["compiled"].compilability == Compilability.FULLY_COMPILABLE
-        assert by_name["missing"].compilability == Compilability.MANUAL_REQUIRED
-        assert "no expression AST" in by_name["missing"].unsupported_reason
-
-    def test_edge4_unsupported_operator_verdict_escalation(
-        self, mock_syside_adapter, mock_extract_feature_refs
-    ):
-        """Edge 4: unsupported operator → MANUAL_REQUIRED."""
-        from sysml_codegen.extraction.expression_compiler import (
-            Compilability,
-            compile_calc_def,
-        )
-
-        calc_def = _make_calc_def(
-            "BadOpCalc",
-            input_names=["x", "y"],
-            output_names=["result"],
-        )
-
-        result_ast = MockOperatorExpression(
-            "??",
-            [
-                MockFeatureReferenceExpression("x"),
-                MockFeatureReferenceExpression("y"),
-            ],
-        )
-
-        expression_asts = {"result": result_ast}
-
-        ref_map = mock_extract_feature_refs
-        ref_map[id(result_ast)] = ["x", "y"]
-
-        result = compile_calc_def(calc_def, expression_asts)
-
-        assert result.overall_compilability == Compilability.MANUAL_REQUIRED
-        assert result.output_results[0].compilability == Compilability.MANUAL_REQUIRED
-        assert "unsupported" in result.output_results[0].unsupported_reason
-
-    def test_edge5_feature_chain_returns_manual(
-        self, mock_syside_adapter, mock_extract_feature_refs
-    ):
-        """Edge 5: FeatureChainExpression → MANUAL_REQUIRED."""
-        from sysml_codegen.extraction.expression_compiler import (
-            Compilability,
-            compile_calc_def,
-        )
-
-        calc_def = _make_calc_def(
-            "ChainCalc",
-            input_names=["x"],
-            output_names=["result"],
-        )
-
-        result_ast = MockFeatureChainExpression()
-        # A real FeatureChainExpression always carries >=1 operand (the dotted-path
-        # segments); give the mock one so agentic-mbse's extractor populates
-        # chain_segments the way it would for a live node, not an empty-class stand-in.
-        result_ast.operands = [MockFeatureReferenceExpression("sensor")]
-        expression_asts = {"result": result_ast}
-
-        ref_map = mock_extract_feature_refs
-        ref_map[id(result_ast)] = []
-
-        result = compile_calc_def(calc_def, expression_asts)
-
-        assert result.overall_compilability == Compilability.MANUAL_REQUIRED
-        assert "feature chain" in (result.output_results[0].unsupported_reason or "")
-
-    def test_undeclared_intermediates_4_chain(self, mock_syside_adapter, mock_extract_feature_refs):
-        """Undeclared intermediates: 4-chain (MagnetCryogenicLoad pattern)."""
-        from sysml_codegen.extraction.expression_compiler import (
-            Compilability,
-            compile_calc_def,
-        )
-
-        calc_def = _make_calc_def(
-            "MagnetCryoLoad",
-            input_names=["i1", "i2"],
-            output_names=["final_result"],
-        )
-
-        # Build mock ASTs for each node
-        inter_a_ast = MockOperatorExpression(
-            "*",
-            [
-                MockFeatureReferenceExpression("i1"),
-                MockLiteralRational(2.0),
-            ],
-        )
-        inter_b_ast = MockOperatorExpression(
-            "+",
-            [
-                MockFeatureReferenceExpression("inter_a"),
-                MockFeatureReferenceExpression("i2"),
-            ],
-        )
-        inter_c_ast = MockOperatorExpression(
-            "*",
-            [
-                MockFeatureReferenceExpression("inter_b"),
-                MockLiteralRational(1.5),
-            ],
-        )
-        inter_d_ast = MockOperatorExpression(
-            "+",
-            [
-                MockFeatureReferenceExpression("inter_c"),
-                MockLiteralRational(100.0),
-            ],
-        )
-        final_ast = MockOperatorExpression(
-            "*",
-            [
-                MockFeatureReferenceExpression("inter_d"),
-                MockLiteralRational(0.5),
-            ],
-        )
-
-        expression_asts = {"final_result": final_ast}
-        all_member_names = {
-            "i1",
-            "i2",
-            "final_result",
-            "inter_a",
-            "inter_b",
-            "inter_c",
-            "inter_d",
-        }
-        member_expressions = {
-            "inter_a": inter_a_ast,
-            "inter_b": inter_b_ast,
-            "inter_c": inter_c_ast,
-            "inter_d": inter_d_ast,
-        }
-
-        ref_map = mock_extract_feature_refs
-        ref_map[id(final_ast)] = ["inter_d"]
-        ref_map[id(inter_d_ast)] = ["inter_c"]
-        ref_map[id(inter_c_ast)] = ["inter_b"]
-        ref_map[id(inter_b_ast)] = ["inter_a", "i2"]
-        ref_map[id(inter_a_ast)] = ["i1"]
-
-        result = compile_calc_def(
-            calc_def,
-            expression_asts,
-            all_member_names=all_member_names,
-            member_expressions=member_expressions,
-        )
-
-        assert result.overall_compilability == Compilability.FULLY_COMPILABLE
-        assert result.execution_order == [
-            "inter_a",
-            "inter_b",
-            "inter_c",
-            "inter_d",
-            "final_result",
-        ]
-
-        # Verify undeclared flag
-        by_name = {r.output_name: r for r in result.output_results}
-        assert by_name["inter_a"].is_undeclared_intermediate is True
-        assert by_name["inter_b"].is_undeclared_intermediate is True
-        assert by_name["inter_c"].is_undeclared_intermediate is True
-        assert by_name["inter_d"].is_undeclared_intermediate is True
-        assert by_name["final_result"].is_undeclared_intermediate is False
-
-        # Verify compiled expressions
-        assert by_name["inter_a"].python_expression == "(inputs.i1 * 2.0)"
-        assert by_name["inter_b"].python_expression == "(inter_a + inputs.i2)"
-        assert by_name["final_result"].python_expression == "(inter_d * 0.5)"
-
-    def test_overall_compilability_is_worst_case(
-        self, mock_syside_adapter, mock_extract_feature_refs
-    ):
-        """Overall compilability is worst-case across all outputs."""
-        from sysml_codegen.extraction.expression_compiler import (
-            Compilability,
-            compile_calc_def,
-        )
-
-        calc_def = _make_calc_def(
-            "WorstCase",
-            input_names=["x"],
-            output_names=["good", "bad"],
-        )
-
-        good_ast = MockOperatorExpression(
-            "*",
-            [
-                MockFeatureReferenceExpression("x"),
-                MockLiteralRational(1.0),
-            ],
-        )
-
-        expression_asts = {"good": good_ast, "bad": None}
-
-        ref_map = mock_extract_feature_refs
-        ref_map[id(good_ast)] = ["x"]
-
-        result = compile_calc_def(calc_def, expression_asts)
-
-        # One FULLY + one MANUAL → overall MANUAL
-        assert result.overall_compilability == Compilability.MANUAL_REQUIRED
-
-    def test_single_output_fully_compilable(self, mock_syside_adapter, mock_extract_feature_refs):
-        """Simple single-output CalcDef compiles to FULLY_COMPILABLE."""
-        from sysml_codegen.extraction.expression_compiler import (
-            Compilability,
-            compile_calc_def,
-        )
-
-        calc_def = _make_calc_def("SimpleCalc", input_names=["a", "b"], output_names=["result"])
-
-        result_ast = MockOperatorExpression(
-            "+",
-            [
-                MockFeatureReferenceExpression("a"),
-                MockFeatureReferenceExpression("b"),
-            ],
-        )
-        expression_asts = {"result": result_ast}
-
-        ref_map = mock_extract_feature_refs
-        ref_map[id(result_ast)] = ["a", "b"]
-
-        result = compile_calc_def(calc_def, expression_asts)
-
-        assert result.overall_compilability == Compilability.FULLY_COMPILABLE
-        assert result.calc_def_name == "SimpleCalc"
-        assert result.execution_order == ["result"]
-        assert result.output_results[0].python_expression == "(inputs.a + inputs.b)"
-        assert result.output_results[0].input_refs == ["a", "b"]
-
-
-class TestCompileCalcDefEdge6:
-    """Tests for EXPOSE-with-operators (Edge 6).
-
-    An expression that has operators is a computed value, not a passthrough.
-    The compiler should handle it as a normal expression and produce
-    FULLY_COMPILABLE, not misclassify it as a passthrough or MANUAL_REQUIRED.
-    """
-
-    def test_expression_with_operators_compiles_normally(
-        self, mock_syside_adapter, mock_extract_feature_refs
-    ):
-        """Expression with operators (a * 2.0) → FULLY_COMPILABLE."""
-        from sysml_codegen.extraction.expression_compiler import (
-            Compilability,
-            compile_calc_def,
-        )
-
-        calc_def = _make_calc_def("ExposeCalc", input_names=["a"], output_names=["result"])
-
-        result_ast = MockOperatorExpression(
-            "*",
-            [
-                MockFeatureReferenceExpression("a"),
-                MockLiteralRational(2.0),
-            ],
-        )
-        expression_asts = {"result": result_ast}
-
-        ref_map = mock_extract_feature_refs
-        ref_map[id(result_ast)] = ["a"]
-
-        result = compile_calc_def(calc_def, expression_asts)
-
-        assert result.overall_compilability == Compilability.FULLY_COMPILABLE
-        assert result.output_results[0].python_expression == "(inputs.a * 2.0)"
+    calc_def = CalculationDefinitionData(
+        name="Collision",
+        qualified_name="Test::Collision",
+        doc_comment="",
+        calc_expressions=[],
+        input_attributes=[
+            AttributeInfo(name="same_name", element_id=first_id),
+            AttributeInfo(name="same_name", element_id=second_id),
+        ],
+        output_attributes=[AttributeInfo(name="result", element_id=output_id)],
+        references=[],
+        source_file=Path("test.sysml"),
+        element_id=definition_id,
+        output_expression_asts_by_id={output_id: expression},
+        all_member_ids={first_id, second_id, output_id},
+        member_names_by_id={
+            first_id: "same_name",
+            second_id: "same_name",
+            output_id: "result",
+        },
+    )
+
+    result = compile_calc_def_exact(calc_def)
+
+    output = result.output_results[0]
+    assert output.output_id == output_id
+    assert output.input_ids == (first_id, second_id)

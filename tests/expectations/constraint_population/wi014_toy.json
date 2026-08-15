@@ -1,0 +1,11 @@
+{
+  "constraint_usages": [
+    {
+      "owner_qualified_name": "toy_plant::'Toy Plant'",
+      "source_file": "toy_plant.sysml",
+      "source_line": 51,
+      "usage_qualified_name": "toy_plant::'Toy Plant'::affordable"
+    }
+  ],
+  "fixture": "wi014_toy"
+}

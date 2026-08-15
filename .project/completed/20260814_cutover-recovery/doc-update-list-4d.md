@@ -1,0 +1,243 @@
+# Gate 4D — the subject-by-subject documentation update list
+
+**Scope:** the 34 documents under `docs/architecture/` (31 numbered reference docs, plus
+`overview.md`, `modeling-assumptions.md`, `verification-matrix.md`) and `CLAUDE.md`.
+
+**What this list is for.** Gate 4D's restore step is already satisfied — Gate 4A measured all
+22 incident-modified documents byte-identical to the Item 6 base at rebuild HEAD (ledger rows
+L-252..L-274). What remains is the rewrite, and the plan requires the stale claims to be named
+before any of them is rewritten. Each row below says which claims stopped being true and which
+public behaviour replaces them, or says "no stale claims" with the basis for that.
+
+## The state the documents must describe
+
+**Amended 2026-08-12 (REVISE step 6c).** The paragraphs this section used to carry described a
+tree where the legacy machinery was present-but-unreachable and its retirement was gated. That
+state is over. The retirement executed on the real tree (Revise step 6, `19072ad` / `82c7951` /
+`882fc8d` / `3071fba`), and the documents must describe what shipped, not what was pending.
+
+The **exact route is the only authority**: source admission → strict elaboration →
+`InstanceGraph` → one-way projection → generation, with **v6 instance-graph snapshots as the
+only offline source**. `run_codegen` (`src/sysml_codegen/cli/__init__.py`) constructs one way;
+`--models` and `--from-snapshot` are two *sources* for that one authority, not two
+implementations. A model the route cannot elaborate is a **typed refusal**, never a
+fall-through.
+
+The legacy string-resolution machinery is **gone from the tree**:
+`orchestration/pipeline_builder.py`, `orchestration/snapshot_context.py`, `analysis/`'s
+backtracker, parameter groups and constraint lowering, `resolution/graph_builder.py`,
+`resolution/producer_resolution.py`, `resolution/producer_completeness.py`,
+`core/output_registry.py`, the v5 `snapshot/{loader,serializer,graph_rebuild}.py`,
+`elaboration/diff.py`, both v5 capture scripts, and every committed
+`extraction_snapshot.json` fixture. `snapshot/__init__.py` re-exports nothing.
+
+Two checks now pin the **absence** rather than a residual:
+`tests/conformance/test_public_authority_switch.py` (the modules do not exist and the
+construction closure reaches no legacy authority) and
+`tests/unit/test_elaboration_import_boundaries.py` (the CLI names none of them).
+
+So a document must not describe the legacy route as live, and must not describe it as merely
+unreachable. Where its subject was deleted, the document says so and is retained as the record
+of the deleted design.
+
+**Two survivors, named so they are not miscounted as retired.**
+`extraction/hierarchy_resolver.py` and `extraction/computed_attribute_extractor.py` are still
+in the tree with their own conformance coverage; neither is on the exact route's construction
+closure. Their long-term disposition is unrecorded and needs an owner.
+
+## Content sources this gate treats as authoritative
+
+The 3E and 4C mechanism records in `plan.md`, each re-verified against the tree at HEAD:
+
+| Mechanism | What it says | Verified at |
+|---|---|---|
+| Consumer collapse | A design-attribute entry point is keyed by the **supplying attribute's** display path, so every consumer of one modelled attribute shares one JSON key. Legacy minted one key per consuming formal. | `elaboration/project.py:430-457` (`_source_for_edge`, `NodeRef` branch) |
+| Declaration-site groups (option C) | A group is named after the file that **declares** the owner node, not the file that uses it. `model.sysml` — the one stem carrying no identity — falls back to the declaring package of the root occurrence. | `elaboration/project.py:308-355` (`_group_base`, `_declaring_package`) |
+| Per-occurrence expansion | An arrayed child is enumerated: one attribute node and one entry point per occurrence, keys carrying the index (`…__battery_pack[0]__capacity_kwh`). There is no parametric multiply. | `tests/conformance/test_elaboration_aggregations.py:135`, `test_exact_projection_aggregation.py::test_every_member_occurrence_is_its_own_entry_point` |
+| Zero-constraint early return | The exact route emits no `constraint_report_aggregator` when there are no constraint outputs; legacy emitted one unconditionally. | `elaboration/project.py:887` |
+| Units annotation rule | A unit annotation is unwrapped to the expression it annotates, once, up front — a unit is not a data dependency. | `_ExactElaborator._without_unit_annotation` in `elaboration/elaborate.py`; pins in `tests/conformance/test_unit_annotation_values.py` |
+| Envelope identity model | Constants, environment facts, and the graph are anchored; `sources` is a self-declared manifest checked for canonical form, never against the files, unless the caller passes `source_roots`. What no offline check can prove is that the sealed graph is the elaboration of the sealed sources. | `snapshot/envelope.py:1-53` (module docstring), `orchestration/exact_pipeline_context.py:236-249` |
+| S4 rendering collision | An expression parameter is named after the reference's **last member**, qualifier dropped, so two aggregation terms reading a same-named attribute off different children both render `capital_cost` and the model is refused `SI_RENDERING_COLLISION`. | `elaboration/elaborate.py:1937` (`fact.resolved_member_names[-1]`), `elaboration/project.py:598-604`; pinned by `tests/integration/test_costed_component_exact_route.py::test_a_two_term_same_name_rollup_is_refused` |
+
+## Review method, stated so the record is honest
+
+- **Rewritten documents** (00, `overview.md`, 27, 02, `modeling-assumptions.md`, 06, 17, 23,
+  `verification-matrix.md`, `CLAUDE.md`) were read in full before the edit and re-read after.
+- **Banner-only documents** got their subject, requirement set, and every code reference they
+  make reviewed; the body is unchanged and remains an accurate description of the component it
+  documents, which is the whole basis for a banner rather than a rewrite. They were not re-read
+  line by line. This is a deliberate narrowing of the plan's "read every changed document in
+  full", recorded here rather than glossed.
+
+## The per-document verdicts
+
+### Rewritten this gate
+
+| Doc | Stale claims | Replacing public behaviour |
+|---|---|---|
+| `reference/00-pipeline-overview.md` | The whole "7-step pipeline" diagram and its step-by-step trace describe `build_pipeline_context`; the snapshot paragraph describes v5 and `PipelineContext`; the package-structure block lists `analysis/`, `resolution/`, and the v5 snapshot modules as live pipeline stages; REQ-PIPE-01's verifier names `build_computation_graph()`. | The exact route's five stages, the v6 snapshot source, and the retirement state. Requirement text kept; verifiers re-pointed at the projector where they named a legacy function. |
+| `overview.md` | Same route description in prose and diagram; the second, license-free path is described as `build_pipeline_context_from_snapshot` rebuilding a `PipelineContext`; the package-structure block and Component Index attribute live components to `pipeline_builder.py` / `graph_builder.py`; "Typed Registries" and "Producer Resolution Architecture" are presented as current architecture. | Same as 00, at overview altitude. The registry and producer-resolution sections are re-framed as the retiring implementation with a pointer, not deleted — their subjects are real and their docs survive. |
+| `reference/27-snapshot-generation.md` | Every claim is about the **v5 extraction** snapshot: `snapshot_format_version: 5`, the V1–V7 policy table, `PipelineContext` rebuild, the capture-script split, REQ-SNAP-08..20. `generate --from-snapshot` no longer accepts any of it. | The v6 instance-graph envelope: what it seals, what is anchored, the `source_roots` provenance step, the documented offline limit, and the v5 refusal by name. The v5 section is retained under a retiring heading because the format still exists in the tree and 14 runtime snapshots still depend on it. |
+| `reference/02-orchestration.md` | `build_pipeline_context()`'s 7-step sequence, the step-ordering requirements REQ-ORCH-01..07, the 4-phase registry protocol, virtual-binding rewriting, and aggregation scoping are all the retiring orchestrator's. | The public surface: one construction entry point, two sources, a receipt-bound context, and the named single-authority pins. The legacy sequence is retained under a retiring heading — it is still the accurate description of `pipeline_builder.py`. |
+| `modeling-assumptions.md` | §4 "Aggregation via Redefinition" permits `sum(pv_module.capital_cost) + array_bos.capital_cost` — the exact route refuses two same-named terms. §6 "Uniform-Array Assumption" documents parametric multiply (`sum(child.attr)` → `count * child.attr`) and one aggregation module per assembly attribute. §2 "Parameter Grouping" describes grouping by design file without the declaration-site rule. | The S4 modelling requirement (one named intermediate per child role, `costed_cart_d5` as the worked example, the Item 10 cross-reference), per-occurrence expansion, and the declaration-site grouping rule. |
+| `reference/06-entry-point-classifier.md` | The three types survive, but every mechanism claim is the retiring classifier's: `_classify_entry_points()`, the `design_attr_by_qname` / `unbound_lookup` / `entry_point_sources` indexes, the two creation paths, the `system_design` orphan fallback, REQ-EPC-02..08. | The projection's rule: a design attribute keys by the supplying attribute's display path (consumer collapse); a library default and a usage literal key by `{consumer}__{formal}`; there are no orphans because a group is chosen at mint time. |
+| `reference/17-parameter-group-deriver.md` | The whole document describes `analysis/parameter_groups.py`: four indexes, precedence, `derive_groups_filtered`, the Step-5.7 construction site, and grouping by the *using* file. | Banner plus the live rule: declaration-site identity (option C), the `model.sysml` package fallback, and the normalized label that reaches generated bytes. |
+| `reference/23-smart-regen-preservation.md` | Cites `analysis/signature_extractor.py` in four places as a parallel copy. **That module was deleted by this recovery** (Gate 4B-G1, `6ba346e` — "retire the dead signature extractor"). | The single copy in `generation/preservation.py`. Everything else in the document is unchanged and true. |
+| `verification-matrix.md` | Every row's status claim is still true as *test-state* — the named tests exist and pass, including for the retiring stack — so almost nothing here is stale in the ordinary sense. What is false is what a reader infers: that a PASS row against a retiring component is evidence about the public route. Two rows also carry product-state claims that are now false: REQ-SNAP-09's "current: 5" reads as the product's snapshot version, and REQ-SNAP-16's `--design-path-filter` clause reads as though the flag exists (Gate 4B-G0 removed it). *(The matrix's `resolution/input_resolver.py` mention needs no fix: it already reads "was deleted", which is accurate.)* | Two pointers, no row edits: a reading note in the header naming which families own the retiring stack, and a SNAP family note saying these rows are the v5 format and where the v6 evidence lives. No wholesale rewrite — the matrix is subject-specific by plan rule 8, and its REQ-to-test traceability is intact. |
+| `CLAUDE.md` | Install line names `~/agentic-mbse`, which does not exist (the wired checkout is `../agentic-mbse`). `uv run pytest tests/` does not run — `dev` is an optional extra, so the command needs `--extra dev`. The Processing Pipeline section describes extraction → analysis → resolution → generation with `build_computation_graph()` as the graph source. The Snapshot bullet describes v5 (`snapshot_format_version`, `compilation_results`). ADR-001's classification description is the retiring classifier's. | The exact route, the v6 snapshot flag semantics, the corrected commands, and the pending-retirement note. Own disposition, own commit (plan rule 8). |
+
+### Status banner — the document's sole subject is a legacy component
+
+Each is accurate about the component it describes. None is stubbed, none is deleted.
+
+**Amended 2026-08-12 (REVISE step 6c): their disposition has now shipped.** The retirement
+deleted every owner in this table except `extraction/hierarchy_resolver.py`, so each of these
+documents was re-bannered from "retiring / present in the tree / gated on owner acceptance" to
+**historical**: the code is gone, the body is retained as the record of the deleted design, and
+it is not a description of what the product does. Doc 25's banner says the opposite and is the
+one to read carefully — its subject survived. Doc 09's scoped banner now names which model rows
+describe deleted types, and records that L-120 already repointed the test that used to pin
+them, so nothing couples those rows to a test any more.
+
+| Doc | Subject | Owner module | Basis |
+|---|---|---|---|
+| `reference/03-resolution-overview.md` | The scope problem and the 270-combination resolution space | `resolution/`, `analysis/dependency_backtracker.py` | Not in the construction closure. Also cites `resolution/input_resolver.py`, deleted at `936315c`. |
+| `reference/04-producer-resolution.md` | `resolve_producer()`, the 21 key forms, the strict/lenient fork | `resolution/producer_resolution.py` | Not in the construction closure; reached only from `generation/initialization.py`, which the public route does not call. |
+| `reference/05-module-factory.md` | The three legacy factory functions | `resolution/graph_builder.py` | Not in the construction closure. The *subject* (three calc module kinds) survives — projection builds them — which the banner points at. |
+| `reference/07-graph-assembly.md` | Legacy toposort, channel validation, graph packing | `resolution/graph_builder.py` | Not in the construction closure. Subject survives in `elaboration/project.py` (`_topological_modules`). Separately, this doc cites `core/graph_algorithms.py`, which has never existed in this tree — recorded, not fixed here (rule 10). |
+| `reference/09-data-models.md` | All data models | mixed | **Scoped banner, no rows removed.** `ComputationGraph`/`PipelineModule`/`EntryPoint`/`ParameterGroup` are live; the extraction models, `BacktrackingResult`, `DesignAttributeData`, `DerivedParameterGroup`, and `ParameterSource` describe retiring owners. Removing those rows is ledger row **L-120**, which the plan couples to a `tests/conformance/test_data_models.py` edit in the same commit — a test change this gate's brief forbids. The banner adds information and removes nothing, so it forces no test change; the row deletions ship with L-120. |
+| `reference/10-output-registry.md` | The 4-phase typed registry | `core/output_registry.py`, `orchestration/output_registry_builder.py` | Not in the construction closure. The exact route indexes output channels directly from the instance graph. |
+| `reference/11-analysis-backtracker.md` | DFS dependency backtracking | `analysis/dependency_backtracker.py` | Not in the construction closure. |
+| `reference/12-virtual-binding-rewrite.md` | Template expansion and binding rewrite | `orchestration/pipeline_builder.py` | Not in the construction closure. The elaborator does occurrence enumeration instead. |
+| `reference/13-aggregation-scoping.md` | PartDef-level aggregation scoped to instances | `orchestration/pipeline_builder.py` | Not in the construction closure. Banner also carries the pointer to the S4 modelling requirement, which is the aggregation subject a modeller now needs. |
+| `reference/24-dual-resolution-architecture.md` | Why the calc consumer resolves during DFS | `analysis/` + `resolution/` | Not in the construction closure. Also cites `resolution/input_resolver.py`, deleted at `936315c`. |
+| `reference/25-hierarchy-resolver.md` | `:>>`, multiplicity, and `sum()` extraction | `extraction/hierarchy_resolver.py` | Not in the exact construction closure (measured: the closure reaches `extraction/extractor.py` and `expression_compiler.py`, not `hierarchy_resolver.py`). |
+
+### No stale claims
+
+| Doc | Basis |
+|---|---|
+| `reference/01-extraction.md` | Its subject — what `SysMLDataExtractor` extracts from a loaded model — is live: the exact route loads and extracts calculation definitions through it (`orchestration/elaborated_pipeline.py:46,57`). Its binding-type and redefinition taxonomies are extraction facts, not resolution claims. |
+| `reference/08-generation.md` | The generation layer is unchanged and is the exact route's back half. Every claim is about `generation/*.py` reading a `ComputationGraph`, which is what projection hands it. |
+| `reference/14-expression-compiler.md` | `extraction/expression_compiler.py` is in the exact construction closure and is called by the projector (`elaboration/project.py` imports `Compilability`). |
+| `reference/15-naming-conventions.md` | EQN/PQN/module-name/channel-name rules are `core/qualified_names.py` and `core/identifier_types.py`, both live and both used by projection (`get_channel_name`, `derive_module_type`, `sanitize_name`). §7 "Output Registry Key Formats" describes a retiring structure but states no false claim about the public route; folded into the registry subject's disposition at the retirement rather than split across two gates. |
+| `reference/16-computed-attributes.md` | **Recorded as stale-minor, not fixed here.** Its classification taxonomy is extraction-level and true; its resolution-map and Phase-3b claims are the retiring route's. The document's replacement content is the elaborator's computed-attribute handling, which has no settled written form yet — writing one is content authorship, not a repair, and belongs with the Item 8 doc pass. Rule 10: recorded rather than guessed. |
+| `reference/18-literal-value-propagation.md` | **Recorded as stale-minor, not fixed here.** Same shape as 16: subject is real, owner (`resolution/graph_builder.py::_find_literal_redefinition`) is retiring, and the exact route's equivalent is `ValueSite` on the attribute node. Ships with the retirement. |
+| `reference/19-ast-dispatch-invariant.md` | The FCE-before-OE invariant is an AST-dispatch fact about SysIDE's type system, enforced at extraction sites that remain live. |
+| `reference/20-module-registry-generation.md` | `generation/registry.py` is unchanged and live. The Gate 4C part 7 re-derivation confirmed the load-bearing rule (design-scoped import paths from the module's own EQN) holds identically on the exact route. |
+| `reference/21-pipeline-yaml-generation.md` | `generation/pipeline.py`, unchanged, graph-fed. |
+| `reference/22-output-schema-rules.md` | `generation/schemas.py`, unchanged, graph-fed. |
+| `reference/26-pipeline-module-migration.md` | Already carries a "Status: Historical" banner, and the end state it documents (no generator imports `CalculationDefinitionData`) still holds on the exact route. |
+| `reference/28-constraint-lowering-and-catalog.md` | Split subject that stays true: the lowering half names `analysis/constraint_lowering.py` explicitly in its own heading, so it reads as a description of that module rather than of the public route; the catalog half (`generation/constraint_catalog.py`) is live and the exact route assembles the same `ConstraintCatalog`. One behavioural delta is recorded on the pipeline-overview subject instead of here: the zero-constraint report aggregator. |
+| `reference/29-contracts-and-sealing.md` | `contracts/` is unchanged and is Step 9 of the public route. |
+| `reference/30-diagnostic-severity.md` | The severity contract (writer-set field, blocking vs advisory, fail-closed skew) is an extraction-diagnostic fact and its sinks run before any route choice. |
+
+## Surfaced, not resolved (rule 10)
+
+1. **`reference/07-graph-assembly.md` cites `core/graph_algorithms.py`, which has never existed
+   in this tree** (no creating and no deleting commit). Pre-existing, unrelated to the incident,
+   and outside this gate's subject set. Needs an owner.
+2. **Two production docstrings are stale in the same way the documents were**, and this gate is
+   forbidden to touch production code: `orchestration/exact_pipeline_context.py:3-6` still says
+   the legacy `PipelineContext` and its builders "remain the shipped authority", and
+   `elaboration/__init__.py:5-7` still says projection "never becomes a shipped flag" until the
+   Item-6 cutover. Both were true when written and are false at HEAD. They belong to the
+   retirement commit that touches those files.
+3. **The full-suite battery could not be measured against the recorded 3790-node baseline.** The
+   wired companion checkout (`/home/reid/1cfe/agentic-mbse`, branch `elaborate-first-salvage`,
+   `5088b41`) does not export `preflight_identified`, so
+   `tests/conformance/test_exact_constraint_route.py` fails to import and pytest interrupts
+   collection. Reproduced on a clean tree before any Gate 4D edit — pre-existing environment
+   divergence, not caused by this gate. Batteries below are measured with that one module
+   ignored, and both the before and after numbers are measured the same way so the delta stays
+   meaningful.
+
+
+## REVISE step 6c — what the authorship pass changed (2026-08-12)
+
+The set was re-derived at HEAD from the verdicts above rather than from either enumeration, and
+it came out **larger than the retirement's 03/04/05/07/09/10/11/12/13/17/24/25**. The extra
+documents are the ones this list had classified as *rewritten* or *no stale claims* while the
+retirement was still pending: their bodies are fine, but each carried a paragraph asserting the
+legacy stack was present-but-unreachable with removal gated. That paragraph is false at HEAD.
+
+| Doc | What it now claims |
+|---|---|
+| `reference/03` `04` `05` `07` `10` `11` `12` `13` `24` | Historical: the module named is deleted, the body is the record of the deleted design, not a description of the product. |
+| `reference/09` | Which model rows are live (`resolution/models.py`, `core/models.py`, the extraction models) and which describe types deleted with their owners; the rows are kept because the historical documents link into them. |
+| `reference/17` | Half live, half historical — the declaration-site grouping rule is the product; the deriver below it is deleted code. |
+| `reference/25` | The one survivor: `extraction/hierarchy_resolver.py` is still in the tree with its own coverage, and is off the shipped route. *(Step 6d recorded the disposition in the module docstring.)* |
+| `reference/00` | The legacy stack is deleted, not pinned-as-residual; the package block lists what went; the index note points at historical banners. |
+| `reference/02` | Single-authority section states deletion and the two absence checks; the builder half is headed "Historical: the deleted pipeline builder"; the `PipelineContext` note says the type no longer exists. |
+| `reference/06` | The classifier half is headed "Historical: the deleted classifier"; REQ-EPC-02..08 are that code's, unanswered by anything shipped. |
+| `reference/16` | New banner: the classification taxonomy is live, the resolution-map half is deleted code. *(Step 6d wrote the elaborator's equivalent — see below.)* |
+| `reference/18` | New banner: `_find_literal_redefinition` is deleted; the shipped equivalent is `ValueSite` on the attribute node. *(Step 6d wrote it — see below.)* |
+| `reference/27` | The v5 section is headed historical: its code and every committed `extraction_snapshot.json` fixture are gone (measured: **0** in the tree). The batch is recorded as owner-accepted. |
+| `reference/30` | The severity-skew section is rewritten — see below. |
+| `overview.md` | Same corrections at overview altitude: deleted not unreachable, the component index re-framed, the two survivors named. |
+| `modeling-assumptions.md` | Two "retiring route" references re-worded to "deleted legacy route". |
+| `verification-matrix.md` | The reading note now carries a measurement instead of a caveat: of the **81** test modules the matrix cites, **56 no longer exist**, so a PASS beside one records what passed before the retirement. Where the replacement lives is named (the ledger's `replacement_proof_node`, 221 green / 81 not-required / 0 fail). Re-deriving the matrix against that map needs an owner. |
+
+**Doc 30's severity-skew section (REQ-DIAG-04).** The dead-premise banner is removed and the
+section rewritten to the fact it was surfacing: no severity crosses a process boundary on disk,
+because the v6 envelope carries no `ConstraintFacts` and no `severity` field, so skew is
+impossible by construction rather than guarded. The three-guard v5 prose is deleted, not
+annotated; the history is one line; the upstream guards are noted in two sentences for a caller
+that does parse serialized facts. The requirements table's REQ-DIAG-04 row now reads
+"discharged by construction" with that evidence.
+
+**Doc distinctness re-run: 31 documents, 0 identical-content groups.**
+
+### Rule-10 items this pass surfaced rather than resolved
+
+1. **The verification matrix cites 56 test modules that no longer exist.** Re-deriving it
+   row by row against the ledger's replacement map is authorship with no recorded authority.
+   Named in the matrix's own header note. Needs an owner.
+2. **Docs 16 and 18 describe deleted mechanisms whose shipped equivalents are unwritten.**
+   Bannered, not rewritten — writing the elaborator's computed-attribute and value-site
+   descriptions is content authorship, not repair.
+3. **`extraction/hierarchy_resolver.py` and `extraction/computed_attribute_extractor.py`
+   survived the retirement** with live conformance coverage and no public caller. No record
+   says whether they stay. Named in docs 25 and 16 and in this list's preamble.
+4. **`reference/07` still cites `core/graph_algorithms.py`, which has never existed.**
+   Carried forward from the Gate 4D surfacing; unchanged, still needs an owner.
+
+---
+
+## Revise step 6d — the five surfacings above, closed
+
+Each numbered rule-10 item from step 6c got an ending. Nothing on that list is still open in
+the same form; what remains open is named as an owner question, not as a stale artifact.
+
+| 6c item | Ending |
+|---|---|
+| 1 — the matrix cites 56 modules that no longer exist | **Re-cited.** 205 rows re-read against their requirement text: 136 PASS (citing kept nodes, every file present, every explicit node collecting), 131 RETIRED (subject deleted, ledger row named), 9 UNTESTED (subject live, proof ended, gap named). The measurement banner is replaced by a record of what the pass did and did not do. |
+| 2 — docs 16 and 18 have unwritten shipped equivalents | **Written.** Both subjects are live shipped mechanisms, so both got a "What the shipped route does instead" section derived from the code, each with verified evidence nodes. See below. |
+| 3 — two extraction modules with no public caller | **Retained, with the reason recorded in each module's docstring** where a reader meets it. Neither is imported from `src/`. Deleting either is a retirement step whose replacement is not proved; recorded and left to an owner rather than taken silently. Doc 25's "disposition unrecorded" line is answered by the docstring it points at. |
+| 4 — `assemble_constraint_catalog`, a second assembler | **Re-homed out of `src/`.** Measured first: it is not a synchronized duplicate of the projector's assembler — it derives `source_records` from `facts.definitions` where the projector derives them from the constraints it projected. So it is the retired route's assembler being used as a fixture builder, and it now lives at `tests/helpers/retired_catalog_assembly.py`. The divergence it exposed is surfaced on REQ-CL-03, not resolved. |
+| 5 — `reference/07` cites `core/graph_algorithms.py` | **Stated in place.** The module was never written; both call sites it would have merged are deleted, so the plan has no subject. The shipped route's one topological sort is `_topological_modules` in `elaboration/project.py`. The rule-10 line comes off doc 07's banner. |
+
+**Docs 16 and 18, what was actually written.** Neither is filler and neither restates the
+historical body. Each leads with the shape difference, because that is the thing a reader
+carrying the old model gets wrong:
+
+- **18** — there is no propagation. Elaboration resolves exactly one value writer per attribute
+  slot per occurrence and refuses ambiguity (`SI_REDEFINITION_INVALID`); `ValueSite` records
+  *where* that writer was, and is a record rather than a switch — all four sites project as
+  `DESIGN_ATTRIBUTE`. The deleted design ran a two-strategy search after wiring failed; this
+  one never reaches that position.
+- **16** — there is no classification pass. One branch on the value expression yields three
+  outcomes (literal → `AttrNode`, reference → alias node queued for the walk, anything else →
+  computed `CalcNode`). No EXPOSE_COMPUTED, no tentative state, no `AttributeResolutionKind`
+  map, and compilability is not a spectrum: an unrepresentable expression is refused at
+  elaboration rather than shipped as a module with no implementation.
+
+**What is still open after this step** — all owner questions, none of them stale artifacts:
+
+1. Whether the shipped constraint catalog should carry the retired assembler's total-inventory
+   guarantee (surfaced on REQ-CL-03).
+2. Whether `extraction/hierarchy_resolver.py` and `extraction/computed_attribute_extractor.py`
+   stay, given neither ships.
+3. The nine UNTESTED matrix rows — real coverage the retirement removed with no replacement.
+4. REQ families for the elaborator's own mechanisms (v6 envelope, occurrence identity,
+   projection receipt), which the legacy stack never had and which are still unwritten.

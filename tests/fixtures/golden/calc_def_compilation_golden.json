@@ -1090,25 +1090,25 @@
         {
           "compilability": "fully_compilable",
           "input_refs": [
-            "discount_rate",
+            "discount_rate_in",
             "construction_years"
           ],
           "intermediate_refs": [],
           "is_undeclared_intermediate": true,
           "output_name": "discount_factor_con",
-          "python_expression": "((1.0 + inputs.discount_rate) ** inputs.construction_years)",
+          "python_expression": "((1.0 + inputs.discount_rate_in) ** inputs.construction_years)",
           "unsupported_reason": null
         },
         {
           "compilability": "fully_compilable",
           "input_refs": [
-            "discount_rate",
+            "discount_rate_in",
             "operational_years"
           ],
           "intermediate_refs": [],
           "is_undeclared_intermediate": true,
           "output_name": "discount_factor_op",
-          "python_expression": "((1.0 + inputs.discount_rate) ** inputs.operational_years)",
+          "python_expression": "((1.0 + inputs.discount_rate_in) ** inputs.operational_years)",
           "unsupported_reason": null
         },
         {
@@ -1126,30 +1126,30 @@
         {
           "compilability": "fully_compilable",
           "input_refs": [
-            "gain"
+            "gain_in"
           ],
           "intermediate_refs": [
             "energy_on_target"
           ],
           "is_undeclared_intermediate": true,
           "output_name": "fusion_energy_per_shot",
-          "python_expression": "(inputs.gain * energy_on_target)",
+          "python_expression": "(inputs.gain_in * energy_on_target)",
           "unsupported_reason": null
         },
         {
           "compilability": "fully_compilable",
           "input_refs": [
             "driver_energy",
-            "frequency",
-            "thermal_efficiency",
+            "frequency_in",
+            "thermal_efficiency_in",
             "blanket_energy_multiple",
-            "gain",
+            "gain_in",
             "driver_efficiency"
           ],
           "intermediate_refs": [],
           "is_undeclared_intermediate": true,
           "output_name": "net_electric_power",
-          "python_expression": "((inputs.driver_energy * inputs.frequency) * ((((inputs.thermal_efficiency * inputs.blanket_energy_multiple) * inputs.gain) * inputs.driver_efficiency) - 2.0))",
+          "python_expression": "((inputs.driver_energy * inputs.frequency_in) * ((((inputs.thermal_efficiency_in * inputs.blanket_energy_multiple) * inputs.gain_in) * inputs.driver_efficiency) - 2.0))",
           "unsupported_reason": null
         },
         {
@@ -1166,7 +1166,7 @@
         {
           "compilability": "fully_compilable",
           "input_refs": [
-            "plant_cost_constant",
+            "plant_cost_constant_in",
             "yield_cost_constant",
             "driver_cost_constant",
             "driver_energy",
@@ -1178,39 +1178,39 @@
           ],
           "is_undeclared_intermediate": true,
           "output_name": "annual_capital_cost",
-          "python_expression": "((((inputs.plant_cost_constant * net_electric_kw) + ((inputs.yield_cost_constant * fusion_energy_per_shot) / 1000000000.0)) + (inputs.driver_cost_constant * inputs.driver_energy)) / inputs.construction_years)",
+          "python_expression": "((((inputs.plant_cost_constant_in * net_electric_kw) + ((inputs.yield_cost_constant * fusion_energy_per_shot) / 1000000000.0)) + (inputs.driver_cost_constant * inputs.driver_energy)) / inputs.construction_years)",
           "unsupported_reason": null
         },
         {
           "compilability": "fully_compilable",
           "input_refs": [
-            "availability"
+            "availability_in"
           ],
           "intermediate_refs": [
             "net_electric_kw"
           ],
           "is_undeclared_intermediate": true,
           "output_name": "annual_energy",
-          "python_expression": "(((8760.0 * net_electric_kw) * inputs.availability) / 1000.0)",
+          "python_expression": "(((8760.0 * net_electric_kw) * inputs.availability_in) / 1000.0)",
           "unsupported_reason": null
         },
         {
           "compilability": "fully_compilable",
           "input_refs": [
-            "discount_rate"
+            "discount_rate_in"
           ],
           "intermediate_refs": [
             "discount_factor_con"
           ],
           "is_undeclared_intermediate": true,
           "output_name": "pvf_construction",
-          "python_expression": "((1.0 - (1.0 / discount_factor_con)) / inputs.discount_rate)",
+          "python_expression": "((1.0 - (1.0 / discount_factor_con)) / inputs.discount_rate_in)",
           "unsupported_reason": null
         },
         {
           "compilability": "fully_compilable",
           "input_refs": [
-            "discount_rate"
+            "discount_rate_in"
           ],
           "intermediate_refs": [
             "discount_factor_con",
@@ -1218,19 +1218,19 @@
           ],
           "is_undeclared_intermediate": true,
           "output_name": "pvf_operation",
-          "python_expression": "(((1.0 / discount_factor_con) * (1.0 - (1.0 / discount_factor_op))) / inputs.discount_rate)",
+          "python_expression": "(((1.0 / discount_factor_con) * (1.0 - (1.0 / discount_factor_op))) / inputs.discount_rate_in)",
           "unsupported_reason": null
         },
         {
           "compilability": "fully_compilable",
           "input_refs": [
-            "frequency",
-            "availability"
+            "frequency_in",
+            "availability_in"
           ],
           "intermediate_refs": [],
           "is_undeclared_intermediate": true,
           "output_name": "shots_per_year",
-          "python_expression": "((31557600.0 * inputs.frequency) * inputs.availability)",
+          "python_expression": "((31557600.0 * inputs.frequency_in) * inputs.availability_in)",
           "unsupported_reason": null
         },
         {
@@ -1250,7 +1250,7 @@
           "compilability": "fully_compilable",
           "input_refs": [
             "target_cost_constant",
-            "om_cost_constant",
+            "om_cost_constant_in",
             "driver_cost_constant",
             "driver_energy"
           ],
@@ -1261,7 +1261,7 @@
           ],
           "is_undeclared_intermediate": true,
           "output_name": "annual_operating_cost",
-          "python_expression": "(((inputs.target_cost_constant * shots_per_year) + (inputs.om_cost_constant * net_electric_kw)) + ((inputs.driver_cost_constant * inputs.driver_energy) / driver_lifetime_years))",
+          "python_expression": "(((inputs.target_cost_constant * shots_per_year) + (inputs.om_cost_constant_in * net_electric_kw)) + ((inputs.driver_cost_constant * inputs.driver_energy) / driver_lifetime_years))",
           "unsupported_reason": null
         },
         {
@@ -1292,13 +1292,13 @@
           "compilability": "fully_compilable",
           "input_refs": [
             "total_capital_billions",
-            "availability",
-            "net_electric_power_gw"
+            "availability_in",
+            "net_electric_power_gw_in"
           ],
           "intermediate_refs": [],
           "is_undeclared_intermediate": false,
           "output_name": "coe_cents_kwh",
-          "python_expression": "((0.113 * inputs.total_capital_billions) / ((0.0876 * inputs.availability) * inputs.net_electric_power_gw))",
+          "python_expression": "((0.113 * inputs.total_capital_billions) / ((0.0876 * inputs.availability_in) * inputs.net_electric_power_gw_in))",
           "unsupported_reason": null
         }
       ],
@@ -1315,26 +1315,26 @@
         {
           "compilability": "fully_compilable",
           "input_refs": [
-            "beam_energy_mj",
+            "beam_energy_mj_in",
             "driver_efficiency"
           ],
           "intermediate_refs": [],
           "is_undeclared_intermediate": true,
           "output_name": "bank_energy_joules",
-          "python_expression": "((inputs.beam_energy_mj * 1000000.0) / inputs.driver_efficiency)",
+          "python_expression": "((inputs.beam_energy_mj_in * 1000000.0) / inputs.driver_efficiency)",
           "unsupported_reason": null
         },
         {
           "compilability": "fully_compilable",
           "input_refs": [
-            "beam_energy_mj",
-            "num_chambers",
+            "beam_energy_mj_in",
+            "num_chambers_in",
             "rep_rate"
           ],
           "intermediate_refs": [],
           "is_undeclared_intermediate": false,
           "output_name": "cost_billions",
-          "python_expression": "(((0.32 + (0.088 * inputs.beam_energy_mj)) * (1.25 + (0.05 * inputs.num_chambers))) * (1.0 + (0.0088 * (inputs.rep_rate - 5.0))))",
+          "python_expression": "(((0.32 + (0.088 * inputs.beam_energy_mj_in)) * (1.25 + (0.05 * inputs.num_chambers_in))) * (1.0 + (0.0088 * (inputs.rep_rate - 5.0))))",
           "unsupported_reason": null
         },
         {
@@ -1361,13 +1361,13 @@
         {
           "compilability": "fully_compilable",
           "input_refs": [
-            "thermal_power_gw",
+            "thermal_power_gw_in",
             "num_units"
           ],
           "intermediate_refs": [],
           "is_undeclared_intermediate": false,
           "output_name": "reactor_cost_billions",
-          "python_expression": "((0.66 * ((inputs.thermal_power_gw / 1.67) ** 0.49)) * ((0.72 * inputs.num_units) + 0.28))",
+          "python_expression": "((0.66 * ((inputs.thermal_power_gw_in / 1.67) ** 0.49)) * ((0.72 * inputs.num_units) + 0.28))",
           "unsupported_reason": null
         }
       ],
@@ -1406,14 +1406,14 @@
           "compilability": "fully_compilable",
           "input_refs": [
             "eta",
-            "gain",
+            "gain_in",
             "blanket_multiplier",
-            "thermal_efficiency"
+            "thermal_efficiency_in"
           ],
           "intermediate_refs": [],
           "is_undeclared_intermediate": true,
           "output_name": "fusion_cycle_gain",
-          "python_expression": "(((inputs.eta * inputs.gain) * inputs.blanket_multiplier) * inputs.thermal_efficiency)",
+          "python_expression": "(((inputs.eta * inputs.gain_in) * inputs.blanket_multiplier) * inputs.thermal_efficiency_in)",
           "unsupported_reason": null
         },
         {

@@ -1,5 +1,27 @@
 # 25 - Hierarchy Resolver
 
+> **Status: still in the tree, off the shipped route.** `extraction/hierarchy_resolver.py`
+> survived the Item 7 retirement (2026-08-12, `19072ad` / `82c7951` / `882fc8d` / `3071fba`) —
+> unlike every other module in this document set, it was not deleted, and it keeps its own
+> conformance coverage (`tests/conformance/test_hierarchy_resolver.py`,
+> `test_ast_dispatch_invariant.py`). What is true is that no public caller reaches it:
+> measured, the exact route's construction closure reaches `extraction/extractor.py` and
+> `extraction/expression_compiler.py`, and not this module. **The disposition is now
+> recorded, in the module's own docstring** (Revise step 6d): it is retained because
+> `tests/helpers/live_extraction.py` — the shared live-extraction harness six conformance
+> modules read, one of which pins shipped code on its other legs — depends on it, and the
+> elaborator's equivalents are not shown to be equivalent. Deleting it is a retirement step
+> whose replacement is unproved, so it waits on an owner rather than on a rediscovery.
+>
+> **The structural patterns are still read — by the elaborator, from the model.** `:>>`
+> redefinitions become value sites on attribute nodes, multiplicity becomes enumerated
+> occurrences, and `sum()` becomes one term per member occurrence. What is gone is the typed
+> intermediate structures this module produced for a later resolution pass to match against.
+>
+> Everything below is accurate about the hierarchy resolver as it stands, and is **not a
+> description of what the shipped route does**. For that, read
+> [00-pipeline-overview](00-pipeline-overview.md).
+
 ## What Problem It Solves
 
 SysML v2 models express structural patterns — `:>>` redefinitions, child

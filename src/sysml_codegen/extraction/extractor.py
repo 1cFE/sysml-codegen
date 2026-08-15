@@ -6,20 +6,15 @@ Uses SysideAdapter for all syside interactions (centralizes syside dependency).
 
 import hashlib
 import logging
-import re
 from collections.abc import Iterable
 from pathlib import Path
 from typing import Any
+from uuid import UUID
 
 # CRITICAL: Import syside adapter from agentic-mbse, NOT direct syside import
 from agentic_mbse.sysml.syside_adapter import SysideAdapter
 
 from sysml_codegen.core.qualified_names import sanitize_name
-from sysml_codegen.extraction.constraint_report import (
-    ConstraintKind,
-    ConstraintManifestEntry,
-    OwnerKind,
-)
 from sysml_codegen.extraction.data_models import (
     AttributeInfo,
     CalculationDefinitionData,
@@ -27,6 +22,7 @@ from sysml_codegen.extraction.data_models import (
     PartDefinitionData,
 )
 from sysml_codegen.extraction.expression_utils import reconstruct_expression
+from sysml_codegen.extraction.feature_metadata import extract_feature_unit
 
 # Setup logging
 logger = logging.getLogger(__name__)
@@ -94,77 +90,6 @@ class SysMLDataExtractor:
 
         return calc_defs
 
-    def collect_constraint_manifest(
-        self, *, include_subtypes: bool = True
-    ) -> list[ConstraintManifestEntry]:
-        """Sweep the model for constraint usages and tag each by kind (INV-C/INV-G).
-
-        The manifest holds the entire ``ConstraintUsage`` subtree — including the
-        requirement-side usages that are not dropped — so the report's scanned /
-        excluded counts reproduce offline. Each entry is classified by an ordered
-        is_instance ladder (assert -> satisfy -> requirement -> plain; satisfy
-        before requirement because ``SatisfyRequirementUsage`` is a
-        ``RequirementUsage``).
-
-        ``include_subtypes`` is the injectable policy the mutation check flips to
-        ``False`` (MF5): an exact-type sweep sees zero ``assert`` constraints, so
-        the assert pin then fails, proving the test discriminates.
-
-        Entries are stable-sorted by ``(owner_qualified_name, constraint_name)``
-        (INV-G) so serialized bytes and rendered order are deterministic.
-        """
-        if not self.model:
-            return []
-
-        entries: list[ConstraintManifestEntry] = []
-        for constraint in self.adapter.elements_of_type(
-            self.model, "ConstraintUsage", include_subtypes=include_subtypes
-        ):
-            owner = getattr(constraint, "owner", None)
-            entries.append(
-                ConstraintManifestEntry(
-                    owner_kind=self._constraint_owner_kind(owner),
-                    owner_name=sanitize_name(getattr(owner, "name", None) or "")
-                    or "<unknown>",
-                    owner_qualified_name=str(
-                        getattr(owner, "qualified_name", None) or ""
-                    ),
-                    constraint_name=sanitize_name(constraint.name) or "<anonymous>",
-                    constraint_kind=self._classify_constraint_kind(constraint),
-                    source_line=self._get_source_location(constraint)[1],
-                )
-            )
-        entries.sort(key=lambda e: (e.owner_qualified_name, e.constraint_name))
-        return entries
-
-    def _classify_constraint_kind(self, constraint) -> ConstraintKind:
-        """Classify a swept ConstraintUsage by an ordered is_instance ladder.
-
-        Satisfy before requirement: ``SatisfyRequirementUsage`` is a
-        ``RequirementUsage`` subtype, so the broader check must come second or it
-        would shadow satisfy. Assert first, plain (``require``/bare constraint)
-        last.
-        """
-        if self.adapter.is_instance(constraint, "AssertConstraintUsage"):
-            return ConstraintKind.ASSERT
-        if self.adapter.is_instance(constraint, "SatisfyRequirementUsage"):
-            return ConstraintKind.SATISFY
-        if self.adapter.is_instance(constraint, "RequirementUsage"):
-            return ConstraintKind.REQUIREMENT
-        return ConstraintKind.PLAIN
-
-    def _constraint_owner_kind(self, owner) -> OwnerKind:
-        """Owner-kind token for a constraint usage diagnostic (render maps to text)."""
-        if owner is None:
-            return OwnerKind.MODEL
-        if self.adapter.is_instance(owner, "CalculationDefinition"):
-            return OwnerKind.CALC_DEF
-        if self.adapter.is_instance(owner, "PartDefinition"):
-            return OwnerKind.PART_DEF
-        if self.adapter.is_instance(owner, "PartUsage"):
-            return OwnerKind.PART_USAGE
-        return OwnerKind.ELEMENT
-
     def _extract_part_definition(self, elem) -> PartDefinitionData | None:
         """Extract data from single part definition element."""
         name = sanitize_name(elem.name)
@@ -217,31 +142,39 @@ class SysMLDataExtractor:
         # Also capture AST data for expression compilation
         input_attributes = []
         output_attributes = []
-        input_names: set[str] = set()
-        output_names: set[str] = set()
-        all_member_names: set[str] = set()
-        output_expression_asts: dict[str, Any] = {}
-        member_expressions: dict[str, Any] = {}
+        input_ids: set[UUID] = set()
+        output_ids: set[UUID] = set()
+        output_expression_asts_by_id: dict[UUID, Any] = {}
+        all_member_ids: set[UUID] = set()
+        member_expressions_by_id: dict[UUID, Any] = {}
+        member_names_by_id: dict[UUID, str] = {}
         calc_expressions: list[str] = []
+
+        calc_definition_id = self._stable_declaration_id(elem)
 
         for member in elem.owned_members:
             if not self._is_parameter_member(member):
                 continue
 
-            attr_info = self._extract_attribute(member)
+            attr_info = self._extract_attribute(member, capture_element_id=True)
             member_name = sanitize_name(member.name)
+            member_id = self._stable_declaration_id(member)
             if member_name:
-                all_member_names.add(member_name)
+                if member_id is not None:
+                    all_member_ids.add(member_id)
+                    member_names_by_id[member_id] = member_name
 
             is_input, is_output = self._get_direction(member)
 
             if attr_info:
                 if is_output:
                     output_attributes.append(attr_info)
-                    output_names.add(member_name)
+                    if member_id is not None:
+                        output_ids.add(member_id)
                 elif is_input:
                     input_attributes.append(attr_info)
-                    input_names.add(member_name)
+                    if member_id is not None:
+                        input_ids.add(member_id)
 
             # Capture ASTs and expression text
             if hasattr(member, "feature_value_expression") and member.feature_value_expression:
@@ -249,7 +182,8 @@ class SysMLDataExtractor:
 
                 # Store raw AST for output attributes
                 if is_output and member_name:
-                    output_expression_asts[member_name] = expr
+                    if member_id is not None:
+                        output_expression_asts_by_id[member_id] = expr
 
                 # Reconstruct expression text for calc_expressions
                 expr_text = reconstruct_expression(expr)
@@ -266,10 +200,16 @@ class SysMLDataExtractor:
             if not self._is_parameter_member(member):
                 continue
             member_name = sanitize_name(member.name)
-            if not member_name or member_name in input_names or member_name in output_names:
+            member_id = self._stable_declaration_id(member)
+            if (
+                not member_name
+                or member_id is None
+                or member_id in input_ids
+                or member_id in output_ids
+            ):
                 continue
             if hasattr(member, "feature_value_expression") and member.feature_value_expression:
-                member_expressions[member_name] = member.feature_value_expression
+                member_expressions_by_id[member_id] = member.feature_value_expression
 
         # Always append doc comment as additional context
         if doc_comment:
@@ -335,9 +275,11 @@ class SysMLDataExtractor:
             source_file=source_file,
             source_line=source_line,
             source_hash=source_hash,
-            output_expression_asts=output_expression_asts,
-            all_member_names=all_member_names,
-            member_expressions=member_expressions,
+            element_id=calc_definition_id,
+            output_expression_asts_by_id=output_expression_asts_by_id,
+            all_member_ids=all_member_ids,
+            member_expressions_by_id=member_expressions_by_id,
+            member_names_by_id=member_names_by_id,
         )
 
     def _is_parameter_member(self, member: Any) -> bool:
@@ -467,7 +409,9 @@ class SysMLDataExtractor:
 
         return ".".join(parts) if parts else elem.name if hasattr(elem, 'name') else ""
 
-    def _extract_attribute(self, attr_elem) -> AttributeInfo | None:
+    def _extract_attribute(
+        self, attr_elem: Any, *, capture_element_id: bool = False
+    ) -> AttributeInfo | None:
         """Extract attribute information from attribute usage element."""
         name = sanitize_name(attr_elem.name)
         if not name:
@@ -489,6 +433,11 @@ class SysMLDataExtractor:
         default_value = self._extract_default_value(attr_elem)
         is_optional = default_value is not None
         unit = self._extract_unit(attr_elem, sysml_type, description)
+        element_id = (
+            self._stable_declaration_id(attr_elem)
+            if capture_element_id
+            else None
+        )
 
         return AttributeInfo(
             name=name,
@@ -499,7 +448,18 @@ class SysMLDataExtractor:
             is_optional=is_optional,
             source_line=0,
             unit=unit,
+            element_id=element_id,
         )
+
+    def _stable_declaration_id(self, element: Any) -> UUID | None:
+        """Capture a stable UUID sidecar without narrowing shared extraction."""
+        qualified_name = getattr(element, "qualified_name", None)
+        if qualified_name is None:
+            return None
+        element_id = self.adapter.element_id(element)
+        if element_id.version != 5:
+            return None
+        return element_id
 
     def _extract_default_value(self, feature) -> str | None:
         """Extract default value from AttributeUsage if present."""
@@ -589,170 +549,8 @@ class SysMLDataExtractor:
         return ""
 
     def _extract_unit(self, attr_elem, sysml_type: str, description: str) -> str | None:
-        """Extract unit annotation from attribute using multiple sources."""
-        unit = self._extract_unit_from_type(attr_elem, sysml_type)
-        if unit:
-            return unit
-
-        unit = self._extract_unit_from_cst(attr_elem)
-        if unit:
-            return unit
-
-        unit = self._extract_unit_from_description(description)
-        if unit:
-            return unit
-
-        return None
-
-    def _extract_unit_from_type(self, attr_elem, sysml_type: str) -> str | None:
-        """Extract unit from ISQ/SI type heritage."""
-        isq_to_unit = {
-            "Length": "m", "Mass": "kg", "Time": "s", "ElectricCurrent": "A",
-            "ThermodynamicTemperature": "K", "AmountOfSubstance": "mol",
-            "LuminousIntensity": "cd", "Power": "W", "Energy": "J", "Force": "N",
-            "Pressure": "Pa", "Frequency": "Hz", "Voltage": "V",
-            "ElectricResistance": "Ω", "MagneticFluxDensity": "T", "Area": "m²",
-            "Volume": "m³", "Velocity": "m/s", "Acceleration": "m/s²",
-            "Density": "kg/m³", "HeatFlux": "W/m²",
-        }
-
-        si_to_unit = {
-            "Metre": "m", "Kilogram": "kg", "Second": "s", "Ampere": "A",
-            "Kelvin": "K", "Mole": "mol", "Candela": "cd", "Watt": "W",
-            "Joule": "J", "Newton": "N", "Pascal": "Pa", "Hertz": "Hz",
-            "Volt": "V", "Ohm": "Ω", "Tesla": "T",
-        }
-
-        if sysml_type in isq_to_unit:
-            return isq_to_unit[sysml_type]
-        if sysml_type in si_to_unit:
-            return si_to_unit[sysml_type]
-
-        if hasattr(attr_elem, 'heritage') and attr_elem.heritage:
-            for relationship, target in attr_elem.heritage:
-                if self.adapter.is_instance(relationship, "FeatureTyping"):
-                    if hasattr(target, 'qualified_name'):
-                        qname = target.qualified_name
-                        if qname and '::' in qname:
-                            parts = qname.split('::')
-                            if len(parts) >= 2:
-                                namespace = parts[-2]
-                                type_name = parts[-1]
-                                if namespace == "ISQ" and type_name in isq_to_unit:
-                                    return isq_to_unit[type_name]
-                                if namespace == "SI" and type_name in si_to_unit:
-                                    return si_to_unit[type_name]
-
-        return None
-
-    def _extract_unit_from_cst(self, attr_elem) -> str | None:
-        """Extract unit from inline comment in original source."""
-        if not hasattr(attr_elem, 'cst_node') or not attr_elem.cst_node:
-            return None
-
-        cst_node = attr_elem.cst_node
-        if not hasattr(cst_node, 'start_byte'):
-            return None
-
-        start_byte = cst_node.start_byte
-        source_file = self._get_source_file_for_element(attr_elem)
-        if not source_file or not source_file.exists():
-            return None
-
-        try:
-            source_content = source_file.read_text(encoding='utf-8')
-        except Exception:
-            return None
-
-        lines = source_content.split('\n')
-        cumulative = 0
-        source_line = None
-        for line in lines:
-            if cumulative <= start_byte < cumulative + len(line) + 1:
-                source_line = line
-                break
-            cumulative += len(line) + 1
-
-        if not source_line:
-            return None
-
-        match = re.search(r'//\s*(\[?[A-Za-z°Ω²³/·⋅\-]+\]?)\s*(?:-|$|\s)', source_line)
-        if match:
-            unit = match.group(1).strip('[]')
-            non_units = {
-                "the",
-                "this",
-                "that",
-                "todo",
-                "note",
-                "fixme",
-                "energy",
-                "power",
-            }
-            if unit.lower() not in non_units:
-                return unit
-
-        return None
-
-    def _get_source_file_for_element(self, elem) -> Path | None:
-        """Get the source file Path for an element."""
-        current = elem
-        while current:
-            if hasattr(current, 'document'):
-                doc = current.document
-                if doc and hasattr(doc, 'url'):
-                    url = doc.url
-                    if hasattr(url, 'path'):
-                        return Path(url.path)
-                    url_str = str(url)
-                    if url_str.startswith('file:'):
-                        return Path(url_str[5:])
-                    return Path(url_str)
-            if hasattr(current, 'source_file'):
-                return Path(current.source_file) if current.source_file else None
-            if hasattr(current, 'owning_document'):
-                doc = current.owning_document
-                if doc and hasattr(doc, 'uri'):
-                    return Path(doc.uri) if doc.uri else None
-            if hasattr(current, 'owner'):
-                current = current.owner
-            else:
-                break
-
-        if hasattr(self, 'model_paths') and self.model_paths:
-            files = []
-            for path in self.model_paths:
-                if path.is_file():
-                    files.append(path)
-                elif path.is_dir():
-                    files.extend(path.glob('**/*.sysml'))
-            if len(files) == 1:
-                return files[0]
-
-        return None
-
-    def _extract_unit_from_description(self, description: str) -> str | None:
-        """Extract unit from description/doc comment."""
-        if not description:
-            return None
-
-        match = re.search(r'\[([A-Za-z°Ω²³/·⋅\-]+)\]', description)
-        if match:
-            return match.group(1)
-
-        match = re.match(r'^([A-Za-z°Ω²³/·⋅]+)\s*[-–—]', description)
-        if match:
-            unit = match.group(1)
-            if unit.lower() not in ['the', 'this', 'that', 'total', 'maximum', 'minimum']:
-                return unit
-
-        match = re.search(r'\(([A-Za-z°Ω²³/·⋅\-]+)\)', description)
-        if match:
-            unit = match.group(1)
-            if len(unit) <= 10 and not unit.lower().startswith(('e.g', 'i.e', 'typ', 'def')):
-                return unit
-
-        return None
+        """Delegate exact unit extraction to the declaration-owned helper."""
+        return extract_feature_unit(attr_elem, model_paths=self.model_paths)
 
     def _map_sysml_to_python_type(self, sysml_type: str) -> str:
         """Map SysML type to Python type."""

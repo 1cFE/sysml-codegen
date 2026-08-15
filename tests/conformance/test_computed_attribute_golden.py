@@ -14,14 +14,14 @@ from pathlib import Path
 import pytest
 from agentic_mbse.sysml.syside_adapter import SysideAdapter
 
-from scripts.capture_extraction_snapshots import EXTRACTION_ONLY_MODELS, MODELS
 from sysml_codegen.extraction.computed_attribute_extractor import extract_computed_attributes
 from sysml_codegen.extraction.extractor import SysMLDataExtractor
 from tests.conftest import requires_license
+from tests.helpers.corpus import corpus_fixture_names
 
 FIXTURES_DIR = Path(__file__).resolve().parents[1] / "fixtures"
 GOLDEN_PATH = FIXTURES_DIR / "golden" / "computed_attribute_golden.json"
-CALC_CORPUS_FIXTURES = sorted({**MODELS, **EXTRACTION_ONLY_MODELS})
+CALC_CORPUS_FIXTURES = corpus_fixture_names()
 
 
 def _golden() -> dict[str, dict[str, dict]]:

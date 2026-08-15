@@ -1,0 +1,11 @@
+{
+  "constraint_usages": [
+    {
+      "owner_qualified_name": "ConstraintFormalIdentity::Host",
+      "source_file": "model.sysml",
+      "source_line": 12,
+      "usage_qualified_name": "ConstraintFormalIdentity::Host::check"
+    }
+  ],
+  "fixture": "elab_constraint_formal_identity"
+}

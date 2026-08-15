@@ -2,7 +2,7 @@
 
 Prioritized list of epics and features.
 
-**Last Updated**: 2026-07-19
+**Last Updated**: 2026-08-13
 
 ---
 
@@ -29,25 +29,72 @@ Prioritized list of epics and features.
 
 | Epic | Status | Notes |
 |------|--------|-------|
-| [GAP-CLOSE] Constraint-Expression Gap Closure | Local scope certified; external F1 open | **Partial pre-PR may proceed for the local #9/#11 wave.** Full epic certification remains blocked by `[GAP-CLOSE-F1-TEAX-NORMALIZATION]`. See `epic_gap_close.md`. |
-| [CONSTRAINT-LIFECYCLE-REMEDIATION] Constraint Execution Lifecycle Remediation | In progress (Item 1) | Owner-ratified architecture; implements register rows 0–17 and ends with one 41-case public artifact thread. Items 2–13 require structural simplification and deletion of superseded paths; LOC metrics are not gates. See `epic_constraint_execution_lifecycle_remediation.md`. |
-| ~~[CONSTRAINT-WAVE-REMEDIATION] Constraint PR-Wave Remediation~~ | Superseded — partially completed (2026-07-19) | Items 1/2 complete and Items 4/6 certified; all unfinished work is mapped into CONSTRAINT-LIFECYCLE-REMEDIATION. Retained as history; no new work executes here. See `epic_constraint_pr_wave_remediation.md`. |
+| ~~[CONSTRAINT-SEMANTICS] Constraint Semantics and Design-Search Feasibility~~ ✅ | Complete (2026-08-14). Archived to: `.project/completed/20260814_epic_constraint_semantics_contract.md` (umbrella shaping folder preserved at `.project/completed/20260814_constraint-semantics-contract/`) | All nine items closed and archived; all ten epic Success Criteria ticked against their amended forms, Lessons Learned written. Delivered assert-only authoring policy, canonical 65/65 usage totality with a hard gate, truthful report/TEAx coverage (six states, fail-closed), the `catf_mfe_gated` derivative at `65 = 56 + 9` with three executing gates, two predicate fixes, the unit-lane defect cure, the staged calc-def gate design, and the three-repo doc/agent-prompt sync. Planned 8.5–9.5 days over 6 items; delivered 9 items at 10–12. **`pre_pr` deferred to the phase-D branch gate by ruling — not run at close.** Three owner-call residuals ride out: the codegen `.claude/` symlink target, `[CONSTRAINT-GATES-UNTAGGED]` (assigned to cutover step 4), and the parked D-2 vs D-4/SRC-01 premise conflict. |
+| ~~[SOURCE-IDENTITY] One Modeled Value, One Runtime Source~~ | Superseded (2026-08-07; archived 2026-08-10). Archived to: `.project/completed/20260810_epic_semantic_source_identity.md` | Items 1–3 complete and inherited unchanged as the semantic authority (29-cell matrix, dispositions, invariants); the Item-4/5 shadow-layer architecture was stopped after Item-4 Phases 1–2 (recovery assessment) and replaced by [ELABORATE-FIRST](epic_elaborate_first_architecture.md); Items 6–8 intent absorbed into ELABORATE-FIRST Items 7–8. Item-4 artifacts archived to `completed/20260810_source-identity-occurrence-foundation/`; stopped implementation preserved on `item4-phases12-forensic`. |
+| [GAP-CLOSE] Constraint-Expression Gap Closure | Local scope certified; external F1 leg now verified closed (2026-07-20) | The blocking `[GAP-CLOSE-F1-TEAX-NORMALIZATION]` leg is closed in merged teax main (see the closed entry below). Remaining before full certification: Item 5 closeout state and the independent audit's open full-suite wave-gate leg — a certification pass, not new code. See `epic_gap_close.md`. |
+| ~~[CONSTRAINT-LIFECYCLE-REMEDIATION] Constraint Execution Lifecycle Remediation~~ ✅ | Complete (2026-07-20). Archived to: `.project/completed/20260720_epic_constraint_execution_lifecycle_remediation.md` | All 14 items done; composed public proof 41/41 at the pinned set. Merged 2026-07-20: agentic-mbse #11 → sysml-codegen #9 → teax #3. Release record + 41/41 register in `completed/20260720_constraint-lifecycle-composed-proof/`. |
+| ~~[CONSTRAINT-WAVE-REMEDIATION] Constraint PR-Wave Remediation~~ | Superseded — partially completed (2026-07-19). Archived to: `.project/completed/20260720_epic_constraint_pr_wave_remediation.md` | Items 1/2 complete and Items 4/6 certified; all unfinished work was mapped into CONSTRAINT-LIFECYCLE-REMEDIATION (now complete). Retained as history. |
 
-CONSTRAINT-LIFECYCLE-REMEDIATION items:
+CONSTRAINT-SEMANTICS items (epic CLOSED and archived 2026-08-14 — see epic row above; decomposition
+owner-approved 2026-08-12, grown from 6 items to 9):
+
+- [x] Item 1 — Contract and Authoring Policy *(closed + archived 2026-08-13 →
+      `completed/20260813_constraint-semantics-contract-amendments/`; ticked 2026-08-13 as a
+      bookkeeping catch-up at Item 6's close — the close itself happened earlier)*
+- [x] Item 2 — Canonical Usage Domain and Catalog Totality *(closed + archived 2026-08-13 →
+      `completed/20260813_constraint-catalog-totality/`)*
+- [x] Item 3 — Coverage Report and TEAx Policy *(closed + archived 2026-08-13 →
+      `completed/20260813_constraint-coverage-policy/`; coordinated TEAx branch
+      `constraint-semantics-item3` complete but **unmerged**)*
+- [x] Item 4 — Predicate Defect Hardening *(closed + archived 2026-08-13 →
+      `completed/20260813_constraint-predicate-hardening/`; ticked 2026-08-13 as a bookkeeping
+      catch-up at Item 6's close — the close itself happened earlier)*
+- [x] Item 5 — CATF Derivative and End-to-End Acceptance *(closed + archived 2026-08-13 →
+      `completed/20260813_catf-constraint-policy-acceptance/`; audited Certify-with-residuals.
+      Epic Items 8 and 9 were filed out of this item's D-S1/D-S2 ruling and remain open)*
+- [x] Item 6 — Calculation-Definition Gate Capability Design *(closed + archived 2026-08-13 →
+      `completed/20260813_calcdef-constraint-gate-design/`; audited Certify as a design/planning
+      delivery. The 7–9 day production implementation is **not authorized in this epic** — filed as
+      `[CALCDEF-GATE-IMPLEMENTATION]` below, unowned, parked with the owner)*
+- [x] Item 7 — ADR, Product Promise, and Agent-Facing Documentation Sync *(closed + archived
+      2026-08-14 → `completed/20260814_constraint-docs-agent-sync/`; audited
+      CERTIFY-WITH-RESIDUALS. Ran last, as the epic's final item. SC2 and SC5 stay unticked, each
+      naming an owner-call residual — the codegen `.claude/` symlink target and
+      `[CONSTRAINT-GATES-UNTAGGED]` — rather than work left undone)*
+- [x] Item 8 — Unit-Lane Port Metadata Defect *(closed + archived 2026-08-13 →
+      `completed/20260813_unit-lane-port-metadata/`; audited Certify, shipped standalone as ruled,
+      zero v3 recapture, no residuals)*
+- [x] Item 9 — Derivative Upgrade Under Held Intent *(closed + archived 2026-08-13 →
+      `completed/20260813_derivative-upgrade-held-intent/`; audited Certify-with-residuals, R1
+      cured in place. The epic item's third criterion — retiring the B1–B5 PROVENANCE workaround —
+      stays unticked by owner ruling: it is a conditional on `[INLINE-PREDICATE-MARKER-DROP]`,
+      which has not closed, so it never fired)*
+
+SOURCE-IDENTITY items (epic superseded 2026-08-07, archived 2026-08-10 — see epic row above):
+- [x] Item 1 — Binding semantics and authoring-form spike (complete 2026-08-05)
+- [x] Item 2 — Source-identity routes and evidence-sufficiency spike (complete 2026-08-05;
+      aggregation-family disposition ratified at the Item-3 checkpoint)
+- [x] Item 3 — Authoritative source-identity contract (complete + certified 2026-08-07; remains
+      the inherited semantic authority)
+- Items 4–5 — superseded by ELABORATE-FIRST (Item-4 archive:
+  `completed/20260810_source-identity-occurrence-foundation/`)
+- Items 6–8 — intent absorbed into ELABORATE-FIRST Items 7–8
+
+CONSTRAINT-LIFECYCLE-REMEDIATION items (all complete 2026-07-20):
 - [x] Item 0 — Compatible candidate landing and pin (register row 0)
-- [ ] Item 1 — Occurrence and demand integrity (row 1)
-- [ ] Item 2 — Shared producer resolution and Gate A (row 2)
-- [ ] Item 3 — Gate B coverage-scope proof and correction (row 3)
-- [ ] Item 4 — Diagnostic severity and modeled-default fidelity (row 4)
-- [ ] Item 5 — Whole-tree snapshot portability (row 5)
-- [ ] Item 6 — Public documentation and F1 evidence reconciliation (rows 6–7)
-- [ ] Item 7 — Trusted package bootstrap and seal provenance (rows 8–9)
-- [ ] Item 8 — Canonical embedded catalog and store transition (row 10)
-- [ ] Item 9 — Multi-entry candidate bridge (row 11)
-- [ ] Item 10 — Producer completeness and stellarator rollup (row 12)
-- [ ] Item 11 — TEAx constraint evidence durability (rows 13–15)
+- [x] Item 1 — Occurrence and demand integrity (row 1)
+- [x] Item 2 — Shared producer resolution and Gate A (row 2)
+- [x] Item 3 — Gate B coverage-scope proof and correction (row 3)
+- [x] Item 4 — Diagnostic severity and modeled-default fidelity (row 4)
+- [x] Item 5 — Whole-tree snapshot portability (row 5)
+- [x] Item 6 — Public documentation and F1 evidence reconciliation (rows 6–7)
+- [x] Item 7 — Trusted package bootstrap and seal provenance (rows 8–9)
+- [x] Item 8 — Canonical embedded catalog and store transition (row 10)
+- [x] Item 9 — Multi-entry candidate bridge (row 11)
+- [x] Item 10 — Producer completeness and stellarator rollup (row 12)
+- [x] Item 11 — TEAx constraint evidence durability (rows 13–15)
 - [x] Item 12 — Legacy snapshot and tracking identity closure (row 16)
-- [ ] Item 13 — Composed public lifecycle proof and release readiness (row 17)
+- [x] Item 13 — Composed public lifecycle proof and release readiness (row 17)
 
 Superseded CONSTRAINT-WAVE-REMEDIATION items:
 - [x] Item 1 — Profile semantics and wrong-verdict closure (R-1, R-2) — complete
@@ -62,19 +109,23 @@ Superseded CONSTRAINT-WAVE-REMEDIATION items:
 - [ ] Item 8 — Cross-repo compatibility and release-readiness evidence (no PR interaction)
 
 GAP-CLOSE items:
-- [ ] Item 1 — Runtime evaluation contract: exceptional arithmetic + predicate naming (F1, F2)
+- [x] Item 1 — Runtime evaluation contract: exceptional arithmetic + predicate naming (F1, F2)
+      — codegen leg complete 2026-07-18; TEAx normalization leg verified closed in merged main
+      2026-07-20 (see the closed F1 entry below)
 - [x] Item 2 — Lowering outcome integrity: warning order + excluded identity (F4, F5)
 - [x] Item 3 — Model and seal boundary guards (F6, F9)
 - [x] Item 4 — Profile default-deny totalization (F7, F8, promoted diagnostics) — agentic-mbse
 - [ ] Item 5 — Packaging, docs, hygiene closeout + wave gates (F3, F10, hygiene)
 
-- **[GAP-CLOSE-F1-TEAX-NORMALIZATION] Attach failed module identity to normalized evaluator
-  failures — P0 `[AGENT]` (booked 2026-07-18 from GAP-CLOSE Item 1 seam review).** This is a
-  separate TEAx leg, not sysml-codegen Item 1. At the serial-executor seam that still knows the
-  `module_key`, preserve the original exception and make both evaluators expose the failed generated
-  constraint module through `EvaluationFailure.module_or_channel`. The normalized record and causal
-  chain must match `.project/active/gap-runtime-contract/spec.md`. GAP-CLOSE F1 is not closed until
-  Item 1's unmangled-raise boundary and this TEAx leg are both green.
+- **~~[GAP-CLOSE-F1-TEAX-NORMALIZATION]~~ ✅ CLOSED in merged teax main** (verified 2026-07-20
+  against `fa0e06a`). The seam stamps `context.failed_module_key`
+  (`packages/teax-simkit/simkit/core/pipeline_executor.py:146-150`), both evaluators route
+  through `_normalize_run_failure` which sets `EvaluationFailure.module_or_channel` and raises
+  `from error` (`simkit/evaluation/evaluator.py:54-76,174-177,258-263`); pinned cross-backend by
+  `simkit/tests/evaluation/test_f1_arithmetic_normalization.py::test_both_backends_normalize_native_arithmetic_failure`.
+  Closed by teax `d545701`, phase-stamp refinement by lifecycle Item 11 (`c342b10`). One
+  certification-record item not re-verified: the spec's saved pre-fix RED evidence artifact
+  (`gap-runtime-contract/spec.md:57`) — confirm on file before ticking that spec box.
 
 - **[ANON-ELIGIBLE-KEY] Anonymous executable assertions share one catalog compile key — P3
   `[AGENT]` (filed 2026-07-18, GAP-CLOSE Item 2 non-goal).** Eligible anonymous assertions all
@@ -90,7 +141,7 @@ GAP-CLOSE items:
 | Epic | Status | Notes |
 |------|--------|-------|
 | ~~[CONSTRAINT-EXEC] Constraint Execution and Design-Space Studies~~ ✅ | Complete (2026-07-13). Archived to: `.project/completed/20260713_epic_constraint_execution.md` (independent findings audit alongside) | Modeled assertions execute as graph modules + exact-schema report aggregator; graph-owned catalog, sealed contracts, crash-safe study layer (lists/grids). De-risked by spikes S1–S6 (all passed, verified re-runs; results + carry-forwards inline in the concept). Acceptance: IFE sweep's hand-coded viability rule replaced by the generated assertion, grid classifications match. All 15 items certified; IFE acceptance ratified [OWNER] (2294/2301 + 7 model-favoring boundary rows); CE-F1/F2 follow-ons registered below, CE-F3 fixed. |
-| [PUSH-DOWN] agentic-mbse Push-Down | Ready (4 items, 6–8 days) | Expression reconstruction; qualified-name split; hierarchy primitives/models; aggregation decomposition/gates. Design overrides, usage-type indexing, Python rewriting, aliases, scoping, and module construction stay in sysml-codegen. See `epic_push_down.md`. |
+| ~~[PUSH-DOWN] agentic-mbse Push-Down~~ ✅ | Complete (2026-07-10). Archived to: `.project/completed/20260720_epic_push_down.md` (+ audit, independent audit, pre-PR reports alongside) | All 4 items certified; independently audited Certify after 2026-07-10 remediation; merged as sysml-codegen PR #8 + agentic-mbse PR #10. Expression reconstruction, qualified-name split, hierarchy primitives/models, aggregation decomposition pushed down; design overrides, usage-type indexing, Python rewriting, aliases, scoping, module construction stayed in sysml-codegen. |
 
 CONSTRAINT-EXEC items:
 - [x] Item 0 — End-to-end integration spike (S6 lifecycle × S5 evaluator × S4 sealed package)
@@ -109,17 +160,107 @@ CONSTRAINT-EXEC items:
 - [x] Item 13 — Calc-seam cutover: retire ExpressionAST (byte-identity gated)
 - [x] Item 14 — Migration, docs, and IFE acceptance
 
-PUSH-DOWN items:
-- [ ] Item 1 — Expression reconstruction push-down
-- [ ] Item 2 — Qualified-name utility split
-- [ ] Item 3 — Hierarchy primitives and data models
-- [ ] Item 4 — Aggregation decomposition and compatibility gates
+PUSH-DOWN items (all certified; archived to `completed/20260720_*`):
+- [x] Item 1 — Expression reconstruction push-down
+- [x] Item 2 — Qualified-name utility split
+- [x] Item 3 — Hierarchy primitives and data models
+- [x] Item 4 — Aggregation decomposition and compatibility gates
+
+---
+
+### [CATF-CRYO-HEAT-LEAK-COEFFICIENT] Magnet static heat-leak coefficient ~3–6 orders high; authored CATF design point is gate-infeasible — P1, unowned (filed at owner direction, 2026-08-13)
+
+**The defect (measured, Item 5 finding 6-D; figures corrected 2026-08-13 — see below):**
+`heat_leak = magnet_volume * 0.05 // MW` (`library/analyses/thermal_loads.sysml:59`) puts
+**116.72 MW** of static heat leak into a **20 K** system — `magnet_volume = 2334.47 m³ × 0.05`.
+That is **69.5%** of the **167.92 MW** cryogenic-temperature load, which the refrigeration term
+then amplifies by **`300/(20 × 0.3)` = 50×** into `cooling_power = 8396.054399837172 MW`,
+**5.43× the plant's gross electric output of 1546.723690193402 MW**. Net electric power is
+therefore negative at the authored inputs. Real cryostats see kilowatt-scale static leak, so
+the coefficient reads as W/m³ or kW/m³ written as MW/m³.
+
+> **Correction, recorded.** This entry was filed carrying "~38 MW into a 4.5 K system, ~×220
+> amplification". Those figures came from a hand estimate in Item 5's STOP report that assumed
+> a 4.5 K magnet system. The model says `operating_temp = 20 [K]`
+> (`designs/catf_mfe/magnets.sysml:66`). The corrected figures above are **re-derived from
+> model source and shown to reproduce the executed value bit-exactly** by
+> `.project/completed/20260813_catf-constraint-policy-acceptance/cryo_derivation.py`, which is runnable and
+> self-checking. The conclusion is unchanged and the headline numbers (8396 MW vs 1547 MW,
+> 5.43×) were always right; only the internal breakdown moved.
+
+The identical number reproduces on untouched `catf_mfe_d5` —
+it was always true and always invisible, because d5 executes zero gates. The first execution
+of the derivative's asserted gates (CONSTRAINT-SEMANTICS Item 5) caught it: the epic's
+founding failure mode, demonstrated and closed by the same item.
+
+**Why P1, not P3 — the prioritization insight [AGENT] (ratified by owner, 2026-08-13):** a
+design search run against the uncorrected cryo model rejects essentially everything near the
+authored regime. The corrected coefficient is a **prerequisite for design search being
+useful**, not merely honest — so this should be scheduled soon after the CONSTRAINT-SEMANTICS
+epic lands, ahead of any real CATF study campaign.
+
+**Scope of the fix (separately authorized per the 6-D ruling; NOT inside Item 5):**
+- First decision is the fix's **home**, made in daylight with its own provenance: the
+  derivative's copy of the library (frozen twins untouched; physics diverges deliberately;
+  PROVENANCE records it) vs the upstream shared library (frozen-twin territory; needs its own
+  ruling).
+- A physically defensible replacement coefficient is a **modeling decision** — owner or
+  domain-source signed, never agent-invented (same rule as tolerances).
+- Re-run of the Item 5 Phase 6 acceptance under the corrected model (coverage unaffected;
+  headline flips back; the SC-5 candidate labeling reverts to the natural direction).
+
+**Evidence home:** Item 5's verification record and the 6-D ruling
+(`.project/completed/20260813_catf-constraint-policy-acceptance/`); acceptance record states the authored
+point is gate-infeasible under the model as authored.
+
+---
+
+### [CALCDEF-GATE-IMPLEMENTATION] Implement calculation-definition constraint gates (graph v4 + catalog 4.0.0) — P1, unowned, awaiting owner authorization (filed at owner direction, 2026-08-13)
+
+**What it is:** the production implementation of the capability CONSTRAINT-SEMANTICS Item 6
+designed. One asserted constraint owned by a calculation definition expands into one concrete check
+per calculation occurrence, with usage-level coverage and occurrence-level results joined through
+exact graph identity. Today such a usage ends as `non_reaching / owner_kind_unattachable`; nothing
+executes.
+
+**Authorization status `[OWNER 2026-08-13]`:** **not authorized in the CONSTRAINT-SEMANTICS epic.**
+The owner ruled at Item 6's close that this is a separate, later decision. It is unowned and
+unscheduled. It competes for the next slot with `[CATF-CRYO-HEAT-LEAK-COEFFICIENT]` (P1) and the
+paused ELABORATE-FIRST Item 7 resumption. **No agent may start it without a new owner ruling.**
+
+**Estimate:** 7–9 working days, cross-repository (codegen + TEAx).
+
+**Plan of record:** `.project/completed/20260813_calcdef-constraint-gate-design/implementation-item.md`
+— file-level scope, dependency pins, phase order, and customer-shaped acceptance tests, revised
+against three rounds of independent design review (F1–F8). Its companions are `spec.md`,
+`design.md`, `design-review.md`, and `probes/findings.md` in the same archived folder. The spec's
+production-acceptance boxes are deliberately still open: they are this item's, not Item 6's.
+
+**Start gate — SATISFIED, and here is why it mattered:** no lawful start SHA existed until Item 8's
+unit-lane characterizations landed, because the constraint-formal and computed-attribute unit lanes
+carried `unit=None` by construction and would have refused valid models. They landed at
+**`62a07e5c870158672eb100f1cba73adfe4c9df28`**. The gate dissolves; the only remaining block is
+owner authorization. Evidence bundle:
+`.project/completed/20260813_unit-lane-port-metadata/verification.md`.
+
+**Carried guards and consequences:**
+
+- **SC8 — re-derive, never reuse.** The future graph-v4 snapshot record must derive its own
+  then-current tracked path set from Git and prove equality against that. It may **not** reuse Item
+  8's 23 paths or the older 15-path subset; those are dated evidence, not durable scope.
+- **TEAx re-vendor.** This work ships **catalog 4.0.0**, so TEAx must be re-vendored against a
+  catalog-4 producer candidate. TEAx stays on `constraint-semantics-item3` @ `5b70ae9` until one
+  exists.
+- **R5 joint delivery is declined.** Folding Item 8's unit-lane work into this implementation was
+  ruled out and executed as ruled — Item 8 shipped standalone. The option text survives in
+  `design.md` as a decision record only; **reviving it requires a new owner ruling**, not an agent
+  reading the recorded option.
 
 ---
 
 ### [CONSTRAINT-SILENCE] `assert constraint` invisible to the drop report — RESOLVED (PIPELINE-TRUTH Item 4)
 
-**RESOLVED by PIPELINE-TRUTH Item 4** (`epic_pipeline_truth.md`), 2026-07-06. The drop report now
+**RESOLVED by PIPELINE-TRUTH Item 4** (`.project/completed/20260720_epic_pipeline_truth.md`), 2026-07-06. The drop report now
 sweeps `ConstraintUsage` subtype-aware (`include_subtypes=True`), so `assert constraint`
 (`AssertConstraintUsage`) is reported; the summary is a scanned/reported/excluded sentinel that never
 goes fully silent. Pinned by the re-anchored REQ-EXT-09 (`tests/conformance/test_extractor.py`, wi014
@@ -161,7 +302,11 @@ Compounding factors the fix must address, not just the query:
 
 ## P2 - Medium Priority
 
-### [NESTED-OCCURRENCE-OVERRIDE] `:>>` override on a usage nested in an instantiated part def is lost (calc + constraint)
+### [NESTED-OCCURRENCE-OVERRIDE] `:>>` override on a usage nested in an instantiated part def is lost (calc + constraint) — ABSORBED into SOURCE-IDENTITY Item 4 (2026-08-04)
+
+**Scheduling status:** the remaining fix is no longer scheduled independently. SOURCE-IDENTITY
+Item 2 must revalidate its evidence and overlap; Item 4 owns the one implementation, reusing the
+tripwire and fixture and sequencing against `[CONSTRAINT-ARCH-UNIFY]` sub-scope 2.
 
 **Owner: the Item-10 occurrence-materialization family** (CONSTRAINT-LIFECYCLE-REMEDIATION
 Item 10 / producer-completeness + occurrence rollup). **Filed 2026-07-20** by Item 13 composed
@@ -191,6 +336,27 @@ occurrence → definition bridge available to the materializer. Fixing it requir
 occurrence-type resolution (the occurrence index) into `enrich_graph_design_attributes` — an
 Item-10-scope change with a calc-path blast radius, deliberately NOT forced into the byte-clean
 Item-2 case-18 addendum. Contract row 18 does not mandate this shape (the flat form satisfies it).
+
+**Tripwire shipped 2026-07-24 (interim, not the fix).** The calc-path silent loss now WARNs:
+`enrich_graph_design_attributes` reports a dotted demand that fell through silently while a
+capture carries an override for that attribute of that part usage, naming both the captured and
+the demanded scope. Corpus scan recorded 0 false fires across all 19 `SNAPSHOT_MODELS` fixtures
+(`.project/completed/20260724_nested-override-tripwire/probes/verdict.md`). The warning changes
+no resolution outcome or output byte.
+
+**The filed fix (the remaining work of this entry).** Build the occurrence → definition bridge:
+thread occurrence-type resolution (the occurrence index, `analysis/part_instance_index.py`) into
+`enrich_graph_design_attributes` so a definition-relative captured override
+(`owning_part_qn = ...__Design__panel`) matches an occurrence-relative demand
+(`instance_scope = ...__the_design__panel`) for the instantiating occurrence(s). Both paths must
+benefit: the calc binding applies the literal (no manual-required fallback), and the constraint
+actual resolves instead of halting under strict INV-2. Acceptance: the probe fixture resolves
+`80.0` on both paths, the tripwire warning goes silent on it (and its RED unit test flips —
+update it deliberately), the flat sibling stays byte-identical, and the corpus byte-identity
+gates stay green. Blast radius is the calc path broadly — schedule as a deliberate item
+(Item-10-family scope), not an opportunistic edit. Overlaps `[CONSTRAINT-ARCH-UNIFY]`
+sub-scope 2 (one part-structure index): doing that consolidation first would hand this fix its
+bridge for free — sequence them consciously.
 
 Related: [SYNC-F4] (design-override name surfacing) and the "Two-level specialization —
 `attribute :>>` extraction gap" note under Ideas / Future Considerations.
@@ -255,6 +421,106 @@ silent-on-clean leg is covered by `tests/unit/test_silent_failure_family2.py`
 ---
 
 ## P3 - Low Priority
+
+### [CATF-DIVERTOR-GATE] Divertor addition + HeatLoadBalance gating, CATF derivative — P3, unowned (filed at owner direction, 2026-08-13)
+
+`FusionComponents::Divertor::HeatLoadBalance` is a genuine one-sided power-exhaust gate with no
+divertor part anywhere in the CATF design, so Item 5's ruled disposition table leaves it
+`inapplicable` (owner-disposition.md B1/O5, **[OWNER 2026-08-13]**). Gating divertor physics
+means adding a divertor to the model — a modeling-scope decision to make in daylight. This entry
+records the option; priority is the owner's-later.
+
+### [CATF-SHIELD-MODEL-DEBT] d5 shield closure/thickness inconsistencies carried into the derivative as recorded debt — P3, unowned (filed per O3 ruling, 2026-08-13)
+
+Two pre-existing d5 modeling-debt items, ruled "record, don't bake silently" (Item 5
+owner-disposition.md O3, **[OWNER 2026-08-13]**): the shield volume-fraction closure covers 2 of
+4 layers (`thermal_shield`/`biological_shield` have no `fraction_volume`), and
+`'Shield Assembly'::TotalThicknessConsistency` sums four layer thicknesses while the design's
+`thickness_total` is `0.4 [m]` ("HT shield + structure layers") — not the same set; the guard
+would fail if attached. Named model-debt entries live in the derivative's PROVENANCE; this is the
+one backlog note the ruling requires.
+
+### [ACAUSAL-RELATIONS-CAPABILITY] Relation-style parametrics with study-selectable causality — P3, unowned capability bet (filed at owner direction, 2026-08-13)
+
+"Don't force independent vs dependent": acausal constraint relations whose solve direction is
+study-selectable are a capability this toolchain cannot currently express — Item 5's derive
+rulings (owner-disposition.md, ruling item 5, **[OWNER 2026-08-13]**) choose visible in-model
+bases precisely because the alternative hides causality in study harness config. Recorded so the
+bet doesn't quietly die.
+
+### ~~[CONSTRAINT-GATES-UNTAGGED] The Items 3/5/8/9 constraint-semantics gates have no REQ tags~~ ✅ COMPLETE 2026-08-14 — REQ-CS family minted at ELABORATE-FIRST cutover step 4 (filed 2026-08-14 at CONSTRAINT-SEMANTICS Item 7's audit; owner-ruled same day)
+
+**Discharged 2026-08-14 at cutover step 4, per the ruling below:** the REQ-CS family (8 rows,
+Items 3/8/9, every cited test run before filing) is live in `verification-matrix.md` §CS. Item 5
+mints no rows by recorded decision — its gates are traced by REQ-CL-04/REQ-EXT-09 and its ruled
+table is an owner decision record; the TEAx-side pins are named in the family header as
+cross-repo evidence. The matrix-rows SC box is ticked in both the epic archive and the item
+archive with dated amendments. The symlink residual (SC2/SC3) is untouched — it resolves at the
+phase-D merge, not here.
+
+**Ruling [AGENT] (ratified by owner, 2026-08-14):** mint the REQ family during the cutover
+resumption's step-4 matrix work (one matrix pass, the new family lands with the revised rows).
+
+This is the named vehicle for the half of epic SC5 that Item 7 parked rather than invented.
+
+**What Item 7 did discharge.** The verification-matrix recount, both falsified count blocks
+corrected, and the one tag-backed gap filed — the REQ-DIAG family, every cited test run before it
+was cited (`.project/completed/20260814_constraint-docs-agent-sync/verification.md`, "Verification-matrix
+reconciliation").
+
+**What is left, and why it was not done.** Items 3, 5, 8 and 9 carry **zero REQ tags** in their
+records, so their landed gates have nothing for a matrix Status column to be about. Filing rows for
+them means **minting a new REQ tag family first**, which is a requirements decision, not a matrix
+reconciliation — an agent-minted requirement id in a document whose whole value is that its rows
+trace to stated requirements is worse than an honest gap. Item 7 had no authority to make that call
+and did not make it.
+
+**The owner call.** Either (a) authorize minting REQ tags for the Items 3/5/8/9 gates and filing
+their rows in one pass, or (b) rule that these gates are traced by their acceptance records rather
+than by the matrix, and record that as the matrix's stated boundary. Do not leave it implicit — an
+untraced gate that nobody decided to leave untraced is how the matrix drifted the first time.
+
+Recount discipline applies to whichever route is taken (memory `verification-matrix-drift-modes`).
+Baseline after the step-4 pass (2026-08-14): **288 rows / 156 PASS / 1 PARTIAL / 0 UNTESTED /
+34 families / 64 kept test files**.
+
+### [MATRIX-EPIC-SURFACE-ROWS] Add verification-matrix rows for the three uncovered lifecycle surfaces — P3 `[OWNER]` (ticketed 2026-07-24)
+
+Owner directed filing this as a ticket at the docs-lifecycle-sync wrap. The lifecycle epic
+added tested behaviors with no matrix rows; docs-lifecycle-sync Phase 4 added only the
+required portability pair (REQ-SNAP-21/22) and registered these three as candidates
+(`.project/completed/20260724_docs-lifecycle-sync/inventory.md`, MG1–MG3):
+
+1. **Producer resolution / completeness** — the unified ladder (`resolution/producer_resolution.py`,
+   `resolve_producer`, KEY_FORMS, TerminalPolicy) and `producer_completeness.py`. Reference
+   doc exists (`04-producer-resolution.md`); pinning tests exist (Item 2's suite, e.g.
+   `test_producer_completeness_acceptance.py`) — verify which tests pin which claim before
+   citing (no aspirational citations).
+2. **Catalog schema 2.0.0** — `CATALOG_SCHEMA_VERSION` (`contracts/versions.py:18`) and the
+   catalog contract (`test_catalog_schema_version.py`, `test_catalog_definition_join.py`).
+3. **Trust manifest / bootstrap** — `contracts/manifest.py` and the trust-anchor behavior
+   (Item 7's tests).
+
+Discipline: matrix recount per memory `verification-matrix-drift-modes` (index totals +
+per-family counts, not just the summary block); current baseline **288 rows / 156 PASS / 34
+families** after the ELABORATE-FIRST step-4 pass closed all UNTESTED rows and filed the REQ-CS
+family (2026-08-14).
+
+*The previous line here read "276 rows / 275 PASS / 32 families." The row and family counts were
+right for their date; **"275 PASS" was never true** — the matrix's own summary read 133 at the time
+and its tables read 134. Corrected by recount, not by adopting either number
+(`.project/completed/20260814_constraint-docs-agent-sync/verification.md`).*
+
+### [STALE-BASELINE-CLASS] Four committed fixtures latently stale vs live extraction — P3 (owner: leave filed, 2026-07-24)
+
+Owner ruling 2026-07-24: leave filed; no assignee. The class (documented in project memory
+`deep-cross-scope-stale-baseline`, verified during the lifecycle epic): `deep_cross_scope`,
+`plant_values`, `constraint_inline`, plus the `dropped_constraints` capture drift. All
+pre-existing (reproduce on parent commits); suites stay green because tests read the
+committed bytes; a future re-capture surfaces the diffs. Never block a byte-identity gate on
+this class. Scope when picked up: re-capture each, review the diff deliberately (classifier
+shifts included), land as a reviewed R3-style diff. Related (single-fixture precursor):
+`[TRUTH-DEBT-IFE-PLANT-CHAIN-STALE]` below.
 
 ### [DOCS-SCRUB-F1] Delete the two dead templates (+ dead-code candidates nearby)
 
@@ -622,8 +888,8 @@ the new row and does not treat it as an orphan.
 
 | Epic | Completed | Duration | Notes |
 |------|-----------|----------|-------|
-| [PIPELINE-TRUTH] The Generated Package Is the Truth | 2026-07-06 | ~2 days (orchestrated) | All 10 items landed and audited PASS. **The generated package is the truth**: fusion-tea generates/wires/executes end-to-end at TRUE ZERO V11 offenders (SVM value-fill, Item 2); run-C lcoe reproduces bit-exact ($270.1211779380445) and every workaround deleted upstream (Item 3); constraint drop report subtype-aware incl. `assert` (Item 4); 13 silent-failure findings fixed by family (Item 5); 25 self-referential tests re-anchored (Item 6); matrix 253 = 249 PASS + 4 UNTESTED-argued + 0 DEFERRED, F2/F4 resolved by decision (Item 7); dead code cleared + REQ-AST-10 (Item 8); agentic-mbse taught+checked (Item 9); docs+explainer refreshed (Item 10). Follow-on filings kept below (outlive the epic): `[ITEM7-F4-CUTOVER]`, `[ITEM7-MATRIX-TEST-GAPS]`, `[ITEM7-CLASSIFIER-FIX]`, `[ITEM7-MATRIX-SWEEP-RESIDUE]`, `[SANITIZER-MERGE]`, `[SC11-IMPORT-REWRITE]`, `[GB-PARAMGROUPS-TYPING]`, `[DOTTED-LEAF-PART-BLIND]`, SYNC-F3/F4. See `epic_pipeline_truth.md` (Lessons Learned). |
-| [UPSTREAM-FINDINGS] Upstream Findings Remediation & Plant-Idiom Support | 2026-07-06 | ~2 days (orchestrated) | All 12 items landed and audited PASS; merged as PR #3. Fixed SC-1–SC-11 + 6 research defects; staged cross-part wiring; snapshot CLI; agentic-mbse sync. Residue (10 V11 offenders, assert-constraint silence, F2/F4) shaped into — and now closed by — PIPELINE-TRUTH. See `epic_upstream_findings.md`. |
+| [PIPELINE-TRUTH] The Generated Package Is the Truth | 2026-07-06 | ~2 days (orchestrated) | All 10 items landed and audited PASS. **The generated package is the truth**: fusion-tea generates/wires/executes end-to-end at TRUE ZERO V11 offenders (SVM value-fill, Item 2); run-C lcoe reproduces bit-exact ($270.1211779380445) and every workaround deleted upstream (Item 3); constraint drop report subtype-aware incl. `assert` (Item 4); 13 silent-failure findings fixed by family (Item 5); 25 self-referential tests re-anchored (Item 6); matrix 253 = 249 PASS + 4 UNTESTED-argued + 0 DEFERRED, F2/F4 resolved by decision (Item 7); dead code cleared + REQ-AST-10 (Item 8); agentic-mbse taught+checked (Item 9); docs+explainer refreshed (Item 10). Follow-on filings kept below (outlive the epic): `[ITEM7-F4-CUTOVER]`, `[ITEM7-MATRIX-TEST-GAPS]`, `[ITEM7-CLASSIFIER-FIX]`, `[ITEM7-MATRIX-SWEEP-RESIDUE]`, `[SANITIZER-MERGE]`, `[SC11-IMPORT-REWRITE]`, `[GB-PARAMGROUPS-TYPING]`, `[DOTTED-LEAF-PART-BLIND]`, SYNC-F3/F4. See `.project/completed/20260720_epic_pipeline_truth.md` (Lessons Learned). |
+| [UPSTREAM-FINDINGS] Upstream Findings Remediation & Plant-Idiom Support | 2026-07-06 | ~2 days (orchestrated) | All 12 items landed and audited PASS; merged as PR #3. Fixed SC-1–SC-11 + 6 research defects; staged cross-part wiring; snapshot CLI; agentic-mbse sync. Residue (10 V11 offenders, assert-constraint silence, F2/F4) shaped into — and now closed by — PIPELINE-TRUTH. See `.project/completed/20260720_epic_upstream_findings.md`. |
 | [COST-PATTERN] Costed Component Pattern Support | 2026-02-22 | ~12 days | 41 items completed: full conformance test suite (C01-C27, X01-X02), Phase 7 structural refactors, bug fixes (7, 11), docs consolidation. |
 | [ATTR-EXPR] Attribute Expression Capture | 2026-02-09 | ~2 days (Items 1-5) | FORMULA computed attributes generate synthetic pipeline modules. 5-way classification scheme. ADR-004/005 formalized. 285 tests, 0 failures. |
 | [EXPR-CODEGEN] Expression-Aware Code Generation | 2026-02-08 | ~8.5 days | 15/15 solar_battery, 19/21 CATF auto-implemented. 167 tests, 0 xfail. |
@@ -632,6 +898,15 @@ the new row and does not treat it as an orphan.
 
 ## Ideas / Future Considerations
 
+- **In-predicate feature-chain admission (CONSTRAINT-SEMANTICS Item 1, filed 2026-08-12).** The
+  blessed gate shape restricts predicate bodies to formals; feature chains stay supported in
+  binding position. Admitting them inside the predicate body was left open as a candidate rather
+  than decided against — the published contract calls it a filed future capability, and this is
+  the filing.
+- **Evaluated advisory tier for plain constraints (CONSTRAINT-SEMANTICS Item 1, filed
+  2026-08-12).** A plain `constraint` is a visible, cataloged, never-executed description. Whether
+  a plain constraint could additionally be *evaluated* and surfaced as a non-gating advisory was
+  left open as a candidate; this is the filing.
 - ~~**Aggregation-literal dispatch bug (from UPSTREAM-FINDINGS Item 6, SC-6).**~~
   **✅ RESOLVED by PIPELINE-TRUTH Item 8 (Row D), 2026-07-06.** `_walk_aggregation_ast`'s
   literal branch was hoisted above the invocation catch-all (the executable-path twin of the
@@ -676,7 +951,7 @@ the new row and does not treat it as an orphan.
 - Non-uniform array instances (flat expansion strategy for arrays with per-element parameters)
 - Body-assignment expression capture (P3, M-lift; deferred from UPSTREAM-FINDINGS Item 3 / SC-2). For the `return attribute y : Real; y = expr;` form, wire the direction-None `member_expressions[y]` (the body assignment) into `output_expression_asts[y]` so `y` auto-implements instead of degrading to a `NotImplementedError` stencil. Inline `return y : Real = expr` already auto-implements, and the A-2 stencil fix steers modelers to the inline form, so this is low value — it restores auto-impl only for the deprecated body-assignment pattern.
 - **fusion-tea whole-plant cross-part wiring — PROMOTED (2026-07-06).** This P1 item was
-  mis-shelved under Ideas; it is now **PIPELINE-TRUTH Items 1–3** (`epic_pipeline_truth.md`):
+  mis-shelved under Ideas; it is now **PIPELINE-TRUTH Items 1–3** (`.project/completed/20260720_epic_pipeline_truth.md`):
   the 10 remaining V11 offenders, the extended `spec_chain_twolevel` acceptance fixture,
   zero-offender fusion-tea generation, and the run-C ($270.12/MWh) reproduction + workaround
   retirement. Mechanism evidence (offenders reconciled 1:1, bridge reproduction bit-exact):
@@ -805,14 +1080,17 @@ registered three follow-ons:
   `.project/diagrams/pipeline_explainer_v2.html` (do not overwrite the deprecated Gen-1
   `new_pipeline_explainer.html`). Not built by the refresh item ([OWNER] 2026-07-13: "update the
   EXPLAINER_PROMPT.md. I will have another agent pick this up.").
-- **[DOC19-DISPATCH-REAUDIT] Re-audit doc 19's dispatch-site inventory — P3.** The refresh fixed
+- **[DOC19-DISPATCH-REAUDIT] Re-audit doc 19's dispatch-site inventory — ABSORBED into
+  `docs-lifecycle-sync` (spec R7, plan Phase 2) and DELIVERED ✅ (item closed 2026-07-24 to
+  `completed/20260724_docs-lifecycle-sync/`).** The refresh fixed
   the surveyed `build_expression_ast` cite but found the wider `19-ast-dispatch-invariant.md`
   prose table (`reconstruct_expression` now in agentic-mbse `sysml/expression.py`; the audited
   aggregation dispatch is now agentic `_decompose_node`) and the "8 functions / 6 files" claim
   drifted vs the test's current `DUAL_CHECK_SITES`. Out of the refresh's surveyed scope; the table
   now points at the authoritative test inventory. A full doc-19 re-audit reconciles the prose.
 - **[MODULEKIND-DOC-SWEEP] Sweep the retired `is_computed_attribute`/`is_aggregation` → `module_kind`
-  migration through the MF family — P3.** The refresh corrected doc 09 + doc 16, but the retired
+  migration through the MF family — ABSORBED into `docs-lifecycle-sync` (spec R7, plan
+  Phase 2) and DELIVERED ✅ (item closed 2026-07-24).** The refresh corrected doc 09 + doc 16, but the retired
   bool flags survive as live claims in `05-module-factory.md` (pervasive), `22-output-schema-rules.md:179`,
   and `verification-matrix.md` REQ-MF-03 (its cited `test_factory_formula.py` now pins
   `module_kind==ModuleKind.FORMULA`). Out of the refresh's surveyed inventory (a partial fix would
@@ -829,44 +1107,48 @@ path-grammar pins — commits `5785055`, `baca960`, `c756fc7`, `05690f0`). The a
 below is the recorded, owned remainder — merging the PR does not bless it as the permanent
 constraint architecture.
 
-- **[CONSTRAINT-ARCH-UNIFY] Unified path/instance/resolution infrastructure — P1 `[AGENT]`
-  (ratified for filing by owner 2026-07-14; priority is agent-graded).** *Complexity evidence
-  (added 2026-07-18, GAP-CLOSE decision 1):* the final gap review measured the semantic center
-  over C901 thresholds — `lower_constraints` 18, `resolve_actual` 19,
-  `extend_graph_with_constraints` 12 (codegen) and four profile walkers 11–19 (agentic-mbse) —
-  and judged that "a mechanical file split would not help; typed walk results and separate
-  preflight/report/lower phases would." See
-  `.project/research/20260718-123558_constraint-expression-final-gap-review.md` (Code Quality
-  and Hygiene Notes) and `.project/research/20260718_gap-review-verification.md` (hygiene item
-  1: numbers confirmed; C901 is in neither repo's configured gate). GAP-CLOSE deliberately
-  excluded these refactors; this row owns them. One refactor design,
-  staged behind the existing byte-identity and parity gates, with these explicitly in scope:
-  1. *Canonical typed paths and resolution requests.* `InstancePath`/`ReferencePath`/
-     `ConstraintDemand` (named type replacing the `(instance_scope, source_path, source_file)`
-     tuples in `supplied_values.py:206-269`) with validated conversions to EQN / dotted scope /
-     de-indexed scope / SysML QN. The `NewType` identifiers validate nothing today
-     (`identifier_types.py`); every consumer does raw string surgery.
-  2. *One resolver ladder.* `resolve_actual` (`constraint_lowering.py:117-276`) and the calc
-     ladder (`dependency_backtracker.py:480-838`) are independently ordered algorithms sharing
-     only `terminal_disposition`; the design-review-predicted drift already happened (climb,
-     self-reference rejection, and SysML-QN rungs exist on one side only). Normalize both into
-     one registry-owned ordered strategy; `strict`/`lenient` differ only at terminal disposition.
-     Precedence pins now exist (`test_constraint_resolver.py`) to protect the migration.
-  3. *One part-structure index.* Collapse the three concrete-instance walkers
-     (`usage_extractor._find_instantiation_paths`, `part_instance_index._structured_paths`
-     — hand-synced by docstring decree — and `pipeline_builder.find_instance_paths_for_partdef`
-     with its first-wins multi-design heuristic) into one index built once per pipeline; project
-     legacy strings at the edges until byte-identity gates permit deleting the old walkers.
-     Also split the snapshot transport adapters out of `part_instance_index.py:363-442`. Before
-     collapsing the walkers, add differential singleton parity and edge characterizations for
-     cycles, diamonds, zero/multiple blocked definitions, and multi-digit occurrence indices.
-  4. *Shared live/offline phases.* `pipeline_builder.py` and `snapshot/graph_rebuild.py`
-     mirror the demand→materialize→lower→extend→catalog sequence by convention and import each
-     other's private helpers; all live-vs-snapshot parity legs are license-gated, so the default
-     environment cannot see drift. Extract callable phase objects both orchestrators consume.
-  5. *Graph extension folded into assembly.* `extend_graph_with_constraints` re-implements
-     entry-point grouping/minting/module construction after the main build (validation it
-     already shares); move constraint module/EP factories into graph assembly and run one
+- **[CONSTRAINT-ARCH-UNIFY] Unified path/instance infrastructure — P2 `[AGENT]`
+  (filed P1 2026-07-14, owner-ratified for filing; re-assessed and re-graded P2 at 2026-07-20
+  against merged main `936315c` — the resolver-ladder sub-scope, which carried the P1 drift
+  risk, was delivered by CONSTRAINT-LIFECYCLE Item 2).** The original five sub-scopes are now
+  four; the resolver unification is recorded as satisfied by
+  `.project/completed/20260720_constraint-lifecycle-shared-resolution/` (one registry-owned
+  ordered table `KEY_FORMS` in `resolution/producer_resolution.py:527`, single entry point
+  `resolve_producer:616`, consumed by constraint/calc/aggregation paths; strict vs lenient
+  differ only at `TerminalPolicy`; old `input_resolver.py` deleted; `resolve_actual` reduced
+  to a ~59-line adapter). Remaining scope, one refactor design staged behind the existing
+  byte-identity and parity gates:
+  1. *Canonical typed paths (re-scoped).* The resolution-request half landed as frozen
+     `ProducerRequest`/`ProducerResolution` (`producer_resolution.py:100-146`). Still open:
+     named path types (`InstancePath`/`ReferencePath`/`ConstraintDemand`) over the raw
+     `(instance_scope, source_path, source_file)` tuples and string surgery in
+     `supplied_values.py:102-119,191-277,397-464`, with validated conversions to EQN / dotted
+     scope / de-indexed scope / SysML QN; the `NewType` identifiers
+     (`core/identifier_types.py:24-46`) still validate nothing — give them validating
+     constructors or drop the claim.
+  2. *One part-structure index.* Collapse the three concrete-instance walkers — still all
+     present: `usage_extractor._find_instantiation_paths` (`extraction/usage_extractor.py:393`),
+     `part_instance_index._structured_paths` (`analysis/part_instance_index.py:190`, hand-synced
+     by docstring decree), `pipeline_builder.find_instance_paths_for_partdef`
+     (`orchestration/pipeline_builder.py:382`) — into one index built once per pipeline;
+     project legacy strings at the edges until byte-identity gates permit deleting the old
+     walkers. Split the snapshot transport adapters (`FrozenOccurrenceIndex:447`,
+     `deserialize_part_occurrences:463`) out of `part_instance_index.py`. Before collapsing,
+     add differential singleton parity and edge characterizations for cycles, diamonds,
+     zero/multiple blocked definitions, multi-digit occurrence indices.
+     **SOURCE-IDENTITY sequencing (2026-08-04):** Items 2 and 4 own the source-identity
+     characterization and any occurrence-index work required by the absorbed nested-override fix.
+     Do not implement this sub-scope independently across that seam or introduce a second
+     occurrence→definition authority; the remainder beyond source identity stays filed here.
+  3. *Shared live/offline phases.* `snapshot/graph_rebuild.py:65-68` still imports
+     `pipeline_builder` private helpers (`_register_partdef_expose_scoped_aliases`,
+     `_rescue_self_named_bindings`); the demand→lower→extend→catalog sequence is mirrored by
+     convention (`graph_rebuild.py:204-227`). Extract callable phase objects both orchestrators
+     consume. Hazard intact: all live-vs-snapshot parity legs are license-gated, so the default
+     environment cannot see drift between the two orchestrators.
+  4. *Graph extension folded into assembly.* `extend_graph_with_constraints`
+     (`analysis/constraint_lowering.py:1456`) still runs as a distinct post-build phase in both
+     orchestrators; move constraint module/EP factories into graph assembly and run one
      grouping, topological sort, and validation pass across every module kind.
 - **[EXIT-PIN-SEAM] Decide the exit-selection seam — P3.** `generation/pipeline.py:233-288`
   carries `selected_channels`/`pin_report_channels` used only by `test_exit_pin.py` (production
@@ -913,3 +1195,91 @@ completed rows were removed from this unresolved backlog.
   artifact read errors can still raise raw `OSError`. Validate digest syntax, path containment and
   normalization, and the fingerprint derivation rule before integrity checks. Normalize artifact
   walk/read errors into path-specific fatal diagnostics and retain stdlib-only coverage.
+- **[INLINE-PREDICATE-MARKER-DROP] `@inapplicable:` markers on inline-predicate constraints never
+  reach the domain — P3 `[AGENT]`, unowned.** SysIDE drops a `doc` comment inside an
+  inline-predicate constraint body (`constraint X { doc /* … */ <predicate> }`), so an
+  `@inapplicable:` marker written on that shape is silently discarded. Measured in
+  CONSTRAINT-SEMANTICS Item 5 Phase 1 on the CATF derivative's five part-definition guards:
+  **5 markers written in source, 0 carried on the domain**, with the markers in the exact form and
+  first-line placement the Item 2 fixtures pin. Every Item 2 fixture that carries a working marker
+  is bindings-form, so the gap was never exercised. Already named as rule 3 of
+  `tests/conformance/test_constraint_population_oracle.py`, which fails loudly when it happens —
+  this entry is for closing the gap, not for detecting it. Until it closes, an inapplicability
+  disposition on an inline-predicate usage has to be recorded in PROVENANCE instead of in source.
+  **Closing this defect is what fires the B1–B5 marker migration** — move the five `@inapplicable:`
+  markers out of `tests/fixtures/catf_mfe_gated/PROVENANCE.md` §3b and into source, and retire the
+  workaround. Epic Item 9 ran on 2026-08-13 with that criterion recorded as a conditional that did
+  not fire, precisely because this entry is still open; it is not Item 9 that retires the
+  workaround.
+- **[CONSTRAINT-FORM-PER-DIMENSION-COST] A unit-carrying constraint definition is authored once
+  per dimension — P3 `[AGENT]`, unowned.** A constraint formal's port takes its unit text from the
+  formal's **own** declaration (`extraction/feature_metadata.py:57-65`, the trailing `//` comment
+  rule). A formal declared without readable unit text projects `unit_text=None`, and if a calc lane
+  already reads a real unit on the same design attribute, projection refuses the whole model with
+  `SI_RENDERING_COLLISION`. So a constraint definition that must agree with a calc lane cannot be
+  generic over dimensions: its formals carry a specific unit, and a band over a different dimension
+  needs its own definition. Measured in CONSTRAINT-SEMANTICS Item 9 while authoring
+  `ProductWithinBand` for the CATF derivative's A9 row — the form is m³/s-specific, unlike its two
+  dimensionless siblings in the same library file. Recorded as a platform cost the fixture absorbs;
+  nothing in the fixture is wrong. Whether the unit lane should let a formal defer its unit to the
+  binding, and what that would cost the collision check, is the open question.
+- **[CATALOG-FINGERPRINT-ROUTE-PORTABILITY] The constraint catalog fingerprint is not portable
+  across the live and snapshot routes — P3 `[AGENT]`, unowned, pre-existing.**
+  `ConstraintCatalog.recomputed_fingerprint` (`src/sysml_codegen/resolution/models.py:597-622`)
+  hashes the full model dump of `usage_records`, and those rows carry `source_file`. The live
+  route records paths relative to the invocation root (`tests/fixtures/catf_mfe_gated/…`); the
+  snapshot route records `root-0/…`. Same sealed graph, same semantics, different paths,
+  **different fingerprint** — and the generated aggregator bakes it in as
+  `CATALOG_FINGERPRINT`, a runtime coherence check, so two packages generated from one graph via
+  different routes ship different values. It also propagates into the model contract's
+  `semantic_fingerprint`.
+  **Measured** (CONSTRAINT-SEMANTICS Item 5 Phase 6). On `catf_mfe_gated`, live
+  `4edaf85e8c6737e5fb55a7c07cf2beabf8a3112ec5539d1267a3648bda7c022c` versus snapshot
+  `65083fb7e1350f6862974428c7bf1f6b960bc6b76011583b42d62c7848f33b25`; normalising the source-root
+  prefix in every provenance comment leaves this as the **only** substantive difference between
+  the two packages. **Reproduces on the untouched frozen twin `catf_mfe_d5`** (live
+  `39d02855…027f`, snapshot `beaaa339…c91ca`), so it is pre-existing and not caused by Item 5.
+  It does **not** reproduce on `constraint_domain_satisfy_calc_def`, whose model is a single flat
+  `model.sysml` — both routes agree there (`9b93a157…5254`). That is why no existing fixture caught
+  it: the split needs a nested source layout. In-place and relocated snapshot reads agree with each
+  other exactly, so only the live-versus-snapshot pair diverges. Fix direction: make the hashed
+  identity route-independent (relative-to-model-root paths, or exclude `source_file` from the
+  fingerprint and pin it elsewhere).
+
+---
+
+## CONSTRAINT-SEMANTICS Item 5 close-time filings (registered 2026-08-13)
+
+Source: the Item 5 audit's accepted residuals
+(`.project/completed/20260813_catf-constraint-policy-acceptance/audit.md` §Residuals). Both are
+`[AGENT]` findings recorded as **stated limits** at close — the scope calls were defensible; what
+was missing was writing them down. Neither blocks the epic.
+
+Already filed above and **not duplicated here**: `[INLINE-PREDICATE-MARKER-DROP]` (the B1–B5
+marker mechanism; epic Item 7 documents it, and closing it retires the PROVENANCE workaround) and
+`[CATALOG-FINGERPRINT-ROUTE-PORTABILITY]` (pre-existing, reproduces on the untouched frozen twin).
+Residual A-7 (the satisfied leg's policy disposition is probe-asserted) is recorded in the item's
+close record only — SC-5's load-bearing reject leg goes through the real policy table, so there is
+nothing to execute. Residual A-8 (verification-matrix rows) is carried by epic Item 7's
+reconciliation pass, not by a backlog entry.
+
+- **[GOLDEN-BYPASSES-RUN-CODEGEN] The zero-entry committed-bytes golden drives private generation
+  seams, not the shipping route — P3 `[AGENT]`, unowned.**
+  `tests/conformance/test_zero_entry_package_golden.py:69-87` hand-rolls the generation sequence
+  from seven private `_generate_*` calls, omitting the preflight block, `_generate_primitives`,
+  `_generate_backlog` and `_generate_tests` that `run_codegen` actually runs
+  (`src/sysml_codegen/cli/__init__.py:1204-1299`). So the tree's first committed-bytes gate pins a
+  route kept in sync with the shipping route **by hand** — against `CLAUDE.md`'s stated rule that
+  `run_codegen` is the single public entry point and constructs exactly one way. Measured and
+  dispositioned in CONSTRAINT-SEMANTICS Item 5 (audit finding A-4, Smell 1). Fix direction: drive
+  the golden through `run_codegen` with a zero-entry model, or record in the test why the private
+  seams are deliberately the subject.
+- **[CATF-ACCEPTANCE-LANE-MANUAL] The CATF end-to-end feasibility-rejection lane is a reproduced
+  run, not a committed test — P3 `[AGENT]`, unowned.** Item 5's SC-5 has two halves. The coverage
+  half is durably gated (population oracle by scan; `tests/unit/data/expected-coverage.md` drives
+  `tests/unit/test_coverage_ledger_agreement.py`). The feasibility half — the authored CATF design
+  point reaching `reject` through generate → seal → load → execute → policy → durable record — is
+  recorded evidence reproducible from `probes/acceptance_run.py` in the archived item home, and
+  nothing fails if it regresses. Deliberate at the time (the lane needs the TEAx checkout on
+  `constraint-semantics-item3`, which is unmerged). Fix direction: mark the lane as intentionally
+  manual in a named place, or file it as a licensed/marked test once the TEAx branch lands.

@@ -5,13 +5,10 @@ and REQ-AST-01 from design intent docs 14-expression-compiler.md and
 19-ast-dispatch-invariant.md.
 
 Testing strategy:
-- Pure renderer functions (render_calc_expression, collect_calc_refs,
-  classify_compilability) tested with constructed ExpressionIR trees -- no mocks needed
-  (CONSTRAINT-EXEC Item 13 re-anchored these from the retired ExpressionAST suite).
-- SysIDE-dependent functions (compile_calc_def) tested with mock SysIDE adapter --
-  acceptable per Ground Rule 1.
-- Cross-model validation uses real calc def metadata (names, attributes) from
-  extraction snapshots with mock ASTs.
+- Pure renderer functions and ``classify_compilability`` use constructed ExpressionIR trees.
+- Cross-model validation uses real calculation metadata from live extraction; those nodes are
+  license-gated by the fixture.
+- The sole compiler core is covered by ``test_exact_compiler_core.py``.
 
 Requirements: REQ-EC-01 through REQ-EC-07, REQ-AST-01.
 """
@@ -19,23 +16,18 @@ Requirements: REQ-EC-01 through REQ-EC-07, REQ-AST-01.
 from __future__ import annotations
 
 import ast as python_ast
-from pathlib import Path
-from types import SimpleNamespace
 
 import pytest
 from agentic_mbse.sysml import expression as shared_expression
 
 from sysml_codegen.extraction import expression_utils as expression_utils_shim
 from sysml_codegen.extraction.calc_compat_renderer import (
-    collect_calc_refs,
     render_calc_expression,
 )
 from sysml_codegen.extraction.expression_compiler import (
     Compilability,
     CompilationError,
-    CompilationResult,
     classify_compilability,
-    compile_calc_def,
 )
 
 # ---------------------------------------------------------------------------
@@ -104,101 +96,11 @@ def _ir_unsupported(source_text: str, diagnostic: str):
     return UnsupportedNode(node_kind="Mock", diagnostic=diagnostic, source_text=source_text)
 
 
-# ---------------------------------------------------------------------------
-# Mock infrastructure (SysIDE adapter boundary stubs -- Ground Rule 1)
-# ---------------------------------------------------------------------------
-
-
-class MockOperatorExpression:
-    """Mock syside OperatorExpression node."""
-
-    def __init__(self, operator: str, operands: list):
-        self.operator = operator
-        self.operands = operands
-
-
-class MockFeatureReferenceExpression:
-    """Mock syside FeatureReferenceExpression node."""
-
-    def __init__(self, name: str):
-        self.referent = SimpleNamespace(name=name)
-
-
-class MockLiteralRational:
-    """Mock syside LiteralRational node."""
-
-    def __init__(self, value: float):
-        self.value = value
-
-
-class MockFeatureChainExpression:
-    """Mock syside FeatureChainExpression node."""
-
-    pass
-
-
-@pytest.fixture
-def mock_syside_adapter(monkeypatch):
-    """Monkeypatch SysideAdapter.is_instance to work with mock nodes."""
-    type_map = {
-        "MockOperatorExpression": "OperatorExpression",
-        "MockFeatureReferenceExpression": "FeatureReferenceExpression",
-        "MockLiteralRational": "LiteralRational",
-        "MockFeatureChainExpression": "FeatureChainExpression",
-    }
-
-    def mock_is_instance(node, type_name):
-        return type_map.get(type(node).__name__) == type_name
-
-    monkeypatch.setattr(
-        "agentic_mbse.sysml.syside_adapter.SysideAdapter.is_instance",
-        staticmethod(mock_is_instance),
-    )
-
-
-@pytest.fixture
-def mock_extract_feature_refs(monkeypatch):
-    """Monkeypatch extract_feature_refs to return pre-computed refs."""
-    ref_map: dict[int, list[str]] = {}
-
-    def mock_efr(expr, ignore_std_lib=True):
-        names = ref_map.get(id(expr), [])
-        return [SimpleNamespace(name=n, qualified_name=n, element=None) for n in names]
-
-    monkeypatch.setattr(
-        "sysml_codegen.extraction.expression_compiler.extract_feature_refs",
-        mock_efr,
-    )
-    return ref_map
-
-
-def _make_calc_def(name, input_names, output_names, all_member_names=None):
-    """Helper to construct a CalculationDefinitionData for testing."""
-    from sysml_codegen.extraction.data_models import (
-        AttributeInfo,
-        CalculationDefinitionData,
-    )
-
-    return CalculationDefinitionData(
-        name=name,
-        qualified_name=f"Test::{name}",
-        doc_comment="",
-        calc_expressions=[],
-        input_attributes=[AttributeInfo(name=n) for n in input_names],
-        output_attributes=[AttributeInfo(name=n) for n in output_names],
-        references=[],
-        source_file=Path("test.sysml"),
-        all_member_names=set(all_member_names) if all_member_names else set(),
-    )
-
-
 def _extract_name_sets(calc_def):
     """Derive input/output attribute name sets from a snapshot CalculationDefinitionData."""
     input_names = {a.name for a in calc_def.input_attributes}
     output_names = {a.name for a in calc_def.output_attributes}
     return input_names, output_names
-
-
 # ---------------------------------------------------------------------------
 # REQ-EC-01 retired (CONSTRAINT-EXEC Item 13): its FCE-before-OE dispatch tests exercised
 # build_expression_ast directly. That raw-node dispatch responsibility moved cross-repo to
@@ -219,7 +121,9 @@ class TestReqEc02NaryLeftFold:
     def test_3_operand_left_fold_structure(self):
         """3 operands → ((a + b) + c)."""
         ir = _ir_nary("+", "a", "b", "c")
-        assert render_calc_expression(ir, {"a", "b", "c"}, set()) == "((inputs.a + inputs.b) + inputs.c)"
+        assert render_calc_expression(ir, {"a", "b", "c"}, set()) == (
+            "((inputs.a + inputs.b) + inputs.c)"
+        )
 
     def test_7_operand_left_fold_structure(self):
         """7 operands → 6 levels of nesting, all left-associated."""
@@ -312,60 +216,6 @@ class TestReqEc04AstParseValidation:
 
 
 # ---------------------------------------------------------------------------
-# REQ-EC-05: Cycle detection
-# ---------------------------------------------------------------------------
-
-
-@pytest.mark.req("REQ-EC-05")
-class TestReqEc05CycleDetection:
-    """Circular dependencies must mark all outputs MANUAL_REQUIRED."""
-
-    def _make_cycle(self, mock_extract_feature_refs):
-        """Helper: create a calc def with mutual dependency (a→b, b→a)."""
-        calc_def = _make_calc_def("CycleCalc", input_names=["x"], output_names=["a", "b"])
-        a_ast = MockOperatorExpression(
-            "+",
-            [MockFeatureReferenceExpression("b"), MockFeatureReferenceExpression("x")],
-        )
-        b_ast = MockOperatorExpression(
-            "+",
-            [MockFeatureReferenceExpression("a"), MockFeatureReferenceExpression("x")],
-        )
-        ref_map = mock_extract_feature_refs
-        ref_map[id(a_ast)] = ["b", "x"]
-        ref_map[id(b_ast)] = ["a", "x"]
-        return calc_def, {"a": a_ast, "b": b_ast}
-
-    def test_cycle_marks_all_outputs_manual_required(
-        self, mock_syside_adapter, mock_extract_feature_refs
-    ):
-        """Mutual dependency (a→b, b→a) → all outputs MANUAL_REQUIRED."""
-        calc_def, expr_asts = self._make_cycle(mock_extract_feature_refs)
-        result = compile_calc_def(calc_def, expr_asts)
-        assert result.overall_compilability == Compilability.MANUAL_REQUIRED
-        assert all(r.compilability == Compilability.MANUAL_REQUIRED for r in result.output_results)
-
-    def test_cycle_produces_empty_execution_order(
-        self, mock_syside_adapter, mock_extract_feature_refs
-    ):
-        """Cycle → CalcDefCompilationResult.execution_order == []."""
-        calc_def, expr_asts = self._make_cycle(mock_extract_feature_refs)
-        result = compile_calc_def(calc_def, expr_asts)
-        assert result.execution_order == []
-
-    def test_cycle_unsupported_reason_mentions_circular(
-        self, mock_syside_adapter, mock_extract_feature_refs
-    ):
-        """Each MANUAL output from a cycle has 'circular' in unsupported_reason."""
-        calc_def, expr_asts = self._make_cycle(mock_extract_feature_refs)
-        result = compile_calc_def(calc_def, expr_asts)
-        for r in result.output_results:
-            assert "circular" in (r.unsupported_reason or ""), (
-                f"Output {r.output_name} missing 'circular' in reason: {r.unsupported_reason}"
-            )
-
-
-# ---------------------------------------------------------------------------
 # REQ-EC-06: Worst-case roll-up
 # ---------------------------------------------------------------------------
 
@@ -376,27 +226,27 @@ class TestReqEc06WorstCaseRollup:
 
     def test_rollup_all_fully_returns_fully(self):
         """[FULLY, FULLY] → FULLY."""
-        results = [
-            CompilationResult("a", Compilability.FULLY_COMPILABLE, "expr_a"),
-            CompilationResult("b", Compilability.FULLY_COMPILABLE, "expr_b"),
+        verdicts = [
+            Compilability.FULLY_COMPILABLE,
+            Compilability.FULLY_COMPILABLE,
         ]
-        assert classify_compilability(results) == Compilability.FULLY_COMPILABLE
+        assert classify_compilability(verdicts) == Compilability.FULLY_COMPILABLE
 
     def test_rollup_any_manual_returns_manual(self):
         """[FULLY, MANUAL] → MANUAL."""
-        results = [
-            CompilationResult("a", Compilability.FULLY_COMPILABLE, "expr_a"),
-            CompilationResult("b", Compilability.MANUAL_REQUIRED),
+        verdicts = [
+            Compilability.FULLY_COMPILABLE,
+            Compilability.MANUAL_REQUIRED,
         ]
-        assert classify_compilability(results) == Compilability.MANUAL_REQUIRED
+        assert classify_compilability(verdicts) == Compilability.MANUAL_REQUIRED
 
     def test_rollup_mixed_returns_partially(self):
         """[FULLY, PARTIALLY] → PARTIALLY."""
-        results = [
-            CompilationResult("a", Compilability.FULLY_COMPILABLE, "expr_a"),
-            CompilationResult("b", Compilability.PARTIALLY_COMPILABLE, "expr_b"),
+        verdicts = [
+            Compilability.FULLY_COMPILABLE,
+            Compilability.PARTIALLY_COMPILABLE,
         ]
-        assert classify_compilability(results) == Compilability.PARTIALLY_COMPILABLE
+        assert classify_compilability(verdicts) == Compilability.PARTIALLY_COMPILABLE
 
     def test_rollup_empty_returns_manual(self):
         """[] → MANUAL."""
@@ -404,190 +254,9 @@ class TestReqEc06WorstCaseRollup:
 
     def test_rollup_unknown_raises_assertion(self):
         """[UNKNOWN] → AssertionError (UNKNOWN is sentinel, not valid result)."""
-        results = [CompilationResult("a", Compilability.UNKNOWN)]
+        verdicts = [Compilability.UNKNOWN]
         with pytest.raises(AssertionError, match="UNKNOWN"):
-            classify_compilability(results)
-
-
-# ---------------------------------------------------------------------------
-# REQ-EC-07: Undeclared intermediates
-# ---------------------------------------------------------------------------
-
-
-@pytest.mark.req("REQ-EC-07")
-class TestReqEc07UndeclaredIntermediates:
-    """Undeclared intermediates must be discovered iteratively from member_expressions."""
-
-    def test_undeclared_intermediate_discovered_from_members(
-        self, mock_syside_adapter, mock_extract_feature_refs
-    ):
-        """Output references member not in inputs/outputs → discovered as intermediate."""
-        calc_def = _make_calc_def(
-            "IntermCalc",
-            input_names=["x"],
-            output_names=["result"],
-            all_member_names=["x", "result", "hidden"],
-        )
-
-        hidden_ast = MockOperatorExpression(
-            "*",
-            [MockFeatureReferenceExpression("x"), MockLiteralRational(2.0)],
-        )
-        result_ast = MockOperatorExpression(
-            "+",
-            [MockFeatureReferenceExpression("hidden"), MockLiteralRational(1.0)],
-        )
-
-        ref_map = mock_extract_feature_refs
-        ref_map[id(result_ast)] = ["hidden"]
-        ref_map[id(hidden_ast)] = ["x"]
-
-        result = compile_calc_def(
-            calc_def,
-            {"result": result_ast},
-            all_member_names={"x", "result", "hidden"},
-            member_expressions={"hidden": hidden_ast},
-        )
-
-        by_name = {r.output_name: r for r in result.output_results}
-        assert "hidden" in by_name
-        assert by_name["hidden"].is_undeclared_intermediate is True
-        assert by_name["hidden"].compilability == Compilability.FULLY_COMPILABLE
-
-    def test_iterative_chain_discovery(self, mock_syside_adapter, mock_extract_feature_refs):
-        """4-deep chain: inter_a → inter_b → inter_c → inter_d → final_result."""
-        calc_def = _make_calc_def(
-            "ChainCalc",
-            input_names=["i1", "i2"],
-            output_names=["final_result"],
-            all_member_names=[
-                "i1",
-                "i2",
-                "final_result",
-                "inter_a",
-                "inter_b",
-                "inter_c",
-                "inter_d",
-            ],
-        )
-
-        inter_a_ast = MockOperatorExpression(
-            "*",
-            [MockFeatureReferenceExpression("i1"), MockLiteralRational(2.0)],
-        )
-        inter_b_ast = MockOperatorExpression(
-            "+",
-            [
-                MockFeatureReferenceExpression("inter_a"),
-                MockFeatureReferenceExpression("i2"),
-            ],
-        )
-        inter_c_ast = MockOperatorExpression(
-            "*",
-            [MockFeatureReferenceExpression("inter_b"), MockLiteralRational(1.5)],
-        )
-        inter_d_ast = MockOperatorExpression(
-            "+",
-            [MockFeatureReferenceExpression("inter_c"), MockLiteralRational(100.0)],
-        )
-        final_ast = MockOperatorExpression(
-            "*",
-            [MockFeatureReferenceExpression("inter_d"), MockLiteralRational(0.5)],
-        )
-
-        all_members = {"i1", "i2", "final_result", "inter_a", "inter_b", "inter_c", "inter_d"}
-        member_exprs = {
-            "inter_a": inter_a_ast,
-            "inter_b": inter_b_ast,
-            "inter_c": inter_c_ast,
-            "inter_d": inter_d_ast,
-        }
-
-        ref_map = mock_extract_feature_refs
-        ref_map[id(final_ast)] = ["inter_d"]
-        ref_map[id(inter_d_ast)] = ["inter_c"]
-        ref_map[id(inter_c_ast)] = ["inter_b"]
-        ref_map[id(inter_b_ast)] = ["inter_a", "i2"]
-        ref_map[id(inter_a_ast)] = ["i1"]
-
-        result = compile_calc_def(
-            calc_def,
-            {"final_result": final_ast},
-            all_member_names=all_members,
-            member_expressions=member_exprs,
-        )
-
-        assert result.execution_order == [
-            "inter_a",
-            "inter_b",
-            "inter_c",
-            "inter_d",
-            "final_result",
-        ]
-        assert result.overall_compilability == Compilability.FULLY_COMPILABLE
-
-    def test_undeclared_flag_set_correctly(self, mock_syside_adapter, mock_extract_feature_refs):
-        """is_undeclared_intermediate=True for discovered members, False for declared outputs."""
-        calc_def = _make_calc_def(
-            "FlagCalc",
-            input_names=["x"],
-            output_names=["result"],
-            all_member_names=["x", "result", "hidden"],
-        )
-
-        hidden_ast = MockOperatorExpression(
-            "*",
-            [MockFeatureReferenceExpression("x"), MockLiteralRational(2.0)],
-        )
-        result_ast = MockOperatorExpression(
-            "+",
-            [MockFeatureReferenceExpression("hidden"), MockLiteralRational(1.0)],
-        )
-
-        ref_map = mock_extract_feature_refs
-        ref_map[id(result_ast)] = ["hidden"]
-        ref_map[id(hidden_ast)] = ["x"]
-
-        result = compile_calc_def(
-            calc_def,
-            {"result": result_ast},
-            all_member_names={"x", "result", "hidden"},
-            member_expressions={"hidden": hidden_ast},
-        )
-
-        by_name = {r.output_name: r for r in result.output_results}
-        assert by_name["hidden"].is_undeclared_intermediate is True
-        assert by_name["result"].is_undeclared_intermediate is False
-
-    def test_undeclared_without_member_expression_gets_manual(
-        self, mock_syside_adapter, mock_extract_feature_refs
-    ):
-        """Undeclared intermediate with no member_expressions entry → MANUAL_REQUIRED."""
-        calc_def = _make_calc_def(
-            "NoExprCalc",
-            input_names=["x"],
-            output_names=["result"],
-            all_member_names=["x", "result", "missing_inter"],
-        )
-
-        result_ast = MockOperatorExpression(
-            "+",
-            [MockFeatureReferenceExpression("missing_inter"), MockLiteralRational(1.0)],
-        )
-
-        ref_map = mock_extract_feature_refs
-        ref_map[id(result_ast)] = ["missing_inter"]
-
-        result = compile_calc_def(
-            calc_def,
-            {"result": result_ast},
-            all_member_names={"x", "result", "missing_inter"},
-            member_expressions={},
-        )
-
-        by_name = {r.output_name: r for r in result.output_results}
-        assert by_name["missing_inter"].compilability == Compilability.MANUAL_REQUIRED
-        assert "no expression AST" in by_name["missing_inter"].unsupported_reason
+            classify_compilability(verdicts)
 
 
 # ---------------------------------------------------------------------------
@@ -620,7 +289,7 @@ CROSS_MODEL_IDS = ["solar_battery_model", "catf_mfe_model", "chain_spike_model"]
 
 
 class TestCrossModelValidation:
-    """Verify compiler behavior against real model metadata from snapshots."""
+    """Verify rendering behavior against real model metadata from live extraction."""
 
     @pytest.mark.req("REQ-EC-04")
     @pytest.mark.parametrize(
@@ -629,12 +298,12 @@ class TestCrossModelValidation:
         ids=["solar_battery", "catf_mfe", "chain_spike"],
     )
     def test_reference_resolution_with_real_attribute_names(
-        self, extraction_snapshots, model_name
+        self, live_extraction_facts, model_name
     ):
         """Build IR FRE nodes using real attribute names → verify correct classification
         (re-anchored onto render_calc_expression -- CONSTRAINT-EXEC Item 13; classification
         is now a render-time policy over caller-supplied name sets, not baked into the tree)."""
-        snapshot = extraction_snapshots[model_name]
+        snapshot = live_extraction_facts[model_name]
         for cd in snapshot["calc_defs"]:
             input_names, output_names = _extract_name_sets(cd)
 
@@ -653,57 +322,3 @@ class TestCrossModelValidation:
                     f"{model_name}/{cd.name}: output '{name}' rendered as {rendered!r}, "
                     f"expected bare {name!r}"
                 )
-
-    @pytest.mark.req("REQ-EC-06")
-    @pytest.mark.parametrize(
-        "model_name",
-        ["solar_battery_model", "catf_mfe_model"],
-        ids=["solar_battery", "catf_mfe"],
-    )
-    def test_compile_calc_def_with_real_metadata(
-        self,
-        extraction_snapshots,
-        model_name,
-        mock_syside_adapter,
-        mock_extract_feature_refs,
-    ):
-        """compile_calc_def with real calc def metadata → valid compilation result."""
-        snapshot = extraction_snapshots[model_name]
-        ref_map = mock_extract_feature_refs
-
-        for cd in snapshot["calc_defs"]:
-            input_names, output_names = _extract_name_sets(cd)
-            if not output_names:
-                continue
-
-            expression_asts = {}
-            for out_name in output_names:
-                if input_names:
-                    first_input = sorted(input_names)[0]
-                    ast_node = MockOperatorExpression(
-                        "*",
-                        [
-                            MockFeatureReferenceExpression(first_input),
-                            MockLiteralRational(1.0),
-                        ],
-                    )
-                    ref_map[id(ast_node)] = [first_input]
-                else:
-                    ast_node = MockLiteralRational(1.0)
-                    ref_map[id(ast_node)] = []
-                expression_asts[out_name] = ast_node
-
-            result = compile_calc_def(cd, expression_asts)
-
-            assert result.calc_def_name == cd.name, (
-                f"{model_name}/{cd.name}: calc_def_name mismatch"
-            )
-            assert result.overall_compilability in (
-                Compilability.FULLY_COMPILABLE,
-                Compilability.MANUAL_REQUIRED,
-            ), f"{model_name}/{cd.name}: unexpected compilability {result.overall_compilability}"
-            assert len(result.execution_order) > 0, f"{model_name}/{cd.name}: empty execution_order"
-            assert len(result.output_results) == len(output_names), (
-                f"{model_name}/{cd.name}: expected {len(output_names)} output_results, "
-                f"got {len(result.output_results)}"
-            )

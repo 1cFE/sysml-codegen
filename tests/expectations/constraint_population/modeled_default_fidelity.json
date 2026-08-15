@@ -1,0 +1,23 @@
+{
+  "constraint_usages": [
+    {
+      "owner_qualified_name": "ModeledDefaultFidelity::the_rig",
+      "source_file": "model.sysml",
+      "source_line": 62,
+      "usage_qualified_name": "ModeledDefaultFidelity::the_rig::drift_check"
+    },
+    {
+      "owner_qualified_name": "ModeledDefaultFidelity::the_rig",
+      "source_file": "model.sysml",
+      "source_line": 66,
+      "usage_qualified_name": "ModeledDefaultFidelity::the_rig::power_check"
+    },
+    {
+      "owner_qualified_name": "ModeledDefaultFidelity::the_rig",
+      "source_file": "model.sysml",
+      "source_line": 70,
+      "usage_qualified_name": "ModeledDefaultFidelity::the_rig::derived_check"
+    }
+  ],
+  "fixture": "modeled_default_fidelity"
+}

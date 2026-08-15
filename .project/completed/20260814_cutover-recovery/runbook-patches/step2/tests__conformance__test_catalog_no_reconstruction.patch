@@ -1,0 +1,28 @@
+diff --git a/tests/conformance/test_catalog_no_reconstruction.py b/tests/conformance/test_catalog_no_reconstruction.py
+index 14f8523..a5aa326 100644
+--- a/tests/conformance/test_catalog_no_reconstruction.py
++++ b/tests/conformance/test_catalog_no_reconstruction.py
+@@ -24,9 +24,14 @@ SRC_DIR = Path(__file__).resolve().parents[2] / "src" / "sysml_codegen"
+ 
+ # The modules that assemble the catalog and record its identity fields. A reconstruction
+ # workaround would live here — this is where the recorded fields are read and projected.
++# The lowering module that used to hold the minting half retired with the v5 family
++# (retirement step 2); the exact route mints its ``ConcreteConstraint``s in
++# ``elaboration/project.py``, off the ``ConstraintNode`` fields ``elaboration/graph.py``
++# records, so those two files take its place in the scan set.
+ CATALOG_PRODUCER_FILES = [
+     SRC_DIR / "generation" / "constraint_catalog.py",
+-    SRC_DIR / "analysis" / "constraint_lowering.py",
++    SRC_DIR / "elaboration" / "project.py",
++    SRC_DIR / "elaboration" / "graph.py",
+     SRC_DIR / "resolution" / "models.py",
+ ]
+ 
+@@ -76,3 +81,7 @@ def test_scan_actually_covers_the_catalog_producer():
+         assert path.is_file(), f"catalog producer file missing from scan set: {path}"
+     assembly = (SRC_DIR / "generation" / "constraint_catalog.py").read_text()
+     assert "source_form=" in assembly, "scan set no longer covers catalog entry projection"
++    minting = (SRC_DIR / "elaboration" / "project.py").read_text()
++    assert "source_form=node.source_form" in minting, (
++        "scan set no longer covers the exact route's ConcreteConstraint minting"
++    )

@@ -1,0 +1,17 @@
+{
+  "constraint_usages": [
+    {
+      "owner_qualified_name": "constraint_domain_detached_owner::Detached",
+      "source_file": "model.sysml",
+      "source_line": 14,
+      "usage_qualified_name": "constraint_domain_detached_owner::Detached::vacuous_gate"
+    },
+    {
+      "owner_qualified_name": "constraint_domain_detached_owner::Live",
+      "source_file": "model.sysml",
+      "source_line": 21,
+      "usage_qualified_name": "constraint_domain_detached_owner::Live::reached_gate"
+    }
+  ],
+  "fixture": "constraint_domain_detached_owner"
+}

@@ -1,0 +1,41 @@
+diff --git a/tests/conformance/test_silent_failure_family1.py b/tests/conformance/test_silent_failure_family1.py
+index 873178f..86fe808 100644
+--- a/tests/conformance/test_silent_failure_family1.py
++++ b/tests/conformance/test_silent_failure_family1.py
+@@ -18,13 +18,13 @@ import pytest
+ 
+ from sysml_codegen.extraction.extractor import SysMLDataExtractor
+ from sysml_codegen.extraction.usage_extractor import extract_calculation_usages
+-from tests.conftest import requires_license, snapshot_fixture
++from tests.conftest import FIXTURES_DIR, requires_license
+ 
+ CLEAN_CORPUS = ["attr_expr_probe", "sample_model", "chain_spike_model"]
+ 
+ 
+ def _extract_live(fixture: str):
+-    fixture_dir = snapshot_fixture(fixture).parent
++    fixture_dir = FIXTURES_DIR / fixture
+     extractor = SysMLDataExtractor([fixture_dir])
+     assert extractor.load_models(), f"failed to load {fixture}"
+     calc_defs = extractor.extract_calculation_definitions()
+@@ -61,11 +61,15 @@ def test_d38_caret_aggregation_compiles_to_power_not_xor():
+     """`total_cost = sum(cell.total_cost) ^ exponent`: `^` is exponentiation and
+     must translate to Python ` ** `, never ` ^ ` (bitwise XOR). All operands are
+     known, so has_unsupported_nodes stays False."""
+-    from sysml_codegen.orchestration.pipeline_builder import build_pipeline_context
+-
+-    fixture_dir = snapshot_fixture("d38_caret").parent
+-    ctx = build_pipeline_context([fixture_dir])
+-    aggs = ctx.hierarchy_data.aggregation_expressions if ctx.hierarchy_data else []
++    from sysml_codegen.extraction.hierarchy_resolver import extract_hierarchy_data
++
++    # Read the aggregation walk from its own owner. This node used to reach it through
++    # ``build_pipeline_context``, which retired with the v5 family (retirement step 2);
++    # the walk itself is in ``extraction/hierarchy_resolver.py`` and is what the
++    # assertions are about, so the legacy builder was only ever a courier.
++    extractor = SysMLDataExtractor([FIXTURES_DIR / "d38_caret"])
++    assert extractor.load_models(), "failed to load d38_caret"
++    aggs = extract_hierarchy_data(extractor.model).aggregation_expressions
+     caret = [a for a in aggs if a.attribute_name == "total_cost"]
+     assert caret, f"no total_cost aggregation extracted: {[a.attribute_name for a in aggs]}"
+     for a in caret:

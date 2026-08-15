@@ -1,0 +1,39 @@
+diff --git a/tests/conformance/test_d5_variants.py b/tests/conformance/test_d5_variants.py
+index fc76fde..ce2840a 100644
+--- a/tests/conformance/test_d5_variants.py
++++ b/tests/conformance/test_d5_variants.py
+@@ -97,12 +97,16 @@ def test_the_variant_renames_every_formal_the_route_refused(
+ 
+ @pytest.mark.parametrize(("original", "variant"), VARIANTS)
+ def test_a_variant_carries_no_v5_snapshot(original: str, variant: str) -> None:
+-    """A variant is not a corpus fixture. The v5 snapshot is what corpus membership means.
++    """The v5 snapshot has not come back, here or anywhere under fixtures.
+ 
+-    Its own v6 snapshot is fine and in fact wanted: that is what lets a repointed test read
+-    the variant's graph without a licence. It joins no ledger either way.
++    Corpus membership used to mean exactly this file's presence, and a variant is not a
++    corpus fixture. The file retired with the v5 family (retirement step 2), so the node
++    now says the stronger and still-checkable thing: no fixture carries one. Its own v6
++    snapshot is fine and in fact wanted — that is what lets a repointed test read the
++    variant's graph without a licence.
+     """
+-    assert not (d5.FIXTURES / variant / d5.CORPUS_MARKER).exists()
++    assert not (d5.FIXTURES / variant / d5.RETIRED_CORPUS_MARKER).exists()
++    assert list(d5.FIXTURES.rglob(d5.RETIRED_CORPUS_MARKER)) == []
+ 
+ 
+ @pytest.mark.parametrize(("original", "variant"), VARIANTS)
+@@ -113,7 +117,12 @@ def test_the_original_is_untouched_by_its_variant(original: str, variant: str) -
+     )
+     for formal in d5.refused_formals(original):
+         assert f"{formal}_in" not in text, f"{original} was edited in place"
+-    assert (d5.FIXTURES / original / "extraction_snapshot.json").is_file()
++    # The original's committed `extraction_snapshot.json` used to be asserted here as the
++    # second half of "untouched" — the variant copier excludes it by name, so its presence
++    # in the original proved the copy had not moved it. It retired with the v5 family
++    # (retirement step 2), and these three originals carry no v6 capture of their own, so
++    # there is no file left to make that statement about. The SysML text above is the whole
++    # check now.
+ 
+ 
+ #: The occurrence-overrides variant, which the parametrized set above cannot carry: it has no

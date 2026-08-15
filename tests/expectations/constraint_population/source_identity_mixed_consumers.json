@@ -1,0 +1,35 @@
+{
+  "constraint_usages": [
+    {
+      "owner_qualified_name": "source_identity_mixed_consumers::Station",
+      "source_file": "model.sysml",
+      "source_line": 65,
+      "usage_qualified_name": "source_identity_mixed_consumers::Station::chain_guard"
+    },
+    {
+      "owner_qualified_name": "source_identity_mixed_consumers::'Qual Plant'",
+      "source_file": "model.sysml",
+      "source_line": 77,
+      "usage_qualified_name": "source_identity_mixed_consumers::'Qual Plant'::qual_guard"
+    },
+    {
+      "owner_qualified_name": "source_identity_mixed_consumers::'Bare Station'::bare_rig",
+      "source_file": "model.sysml",
+      "source_line": 108,
+      "usage_qualified_name": "source_identity_mixed_consumers::'Bare Station'::bare_rig::bare_guard"
+    },
+    {
+      "owner_qualified_name": "source_identity_mixed_consumers::'Parent Unit'",
+      "source_file": "model.sysml",
+      "source_line": 132,
+      "usage_qualified_name": "source_identity_mixed_consumers::'Parent Unit'::parent_guard"
+    },
+    {
+      "owner_qualified_name": "source_identity_mixed_consumers::'Computed Station'",
+      "source_file": "model.sysml",
+      "source_line": 156,
+      "usage_qualified_name": "source_identity_mixed_consumers::'Computed Station'::computed_guard"
+    }
+  ],
+  "fixture": "source_identity_mixed_consumers"
+}

@@ -1,0 +1,67 @@
+diff --git a/tests/conformance/test_wi014_toy.py b/tests/conformance/test_wi014_toy.py
+index fc9e0a6..8daf8bf 100644
+--- a/tests/conformance/test_wi014_toy.py
++++ b/tests/conformance/test_wi014_toy.py
+@@ -76,32 +76,40 @@ def test_wi014_toy_shape_a_resolves_via_scoped_alias() -> None:
+ 
+     (The old recorded-deferral baseline pinned a benign ``_resolve_expose_pure``
+     malformed-refs warning from the per-def resolution map, which cannot pick an
+-    instance; resolution now flows through #1/_scoped_alias instead.)
++    instance; resolution flows per occurrence instead.)
++
++    Read off the exact route. Until retirement step 2 this node read the legacy
++    ``OutputRegistry._scoped_alias`` table directly; that registry retired with the v5
++    family. The discharge is a public fact, so it is asserted on the public artefact the
++    projection ships: the shape-A ``OutputAlias``, scoped to the ``demo_plant`` occurrence
++    and pointing at the calc-output channel.
+     """
+-    from sysml_codegen.core.identifier_types import ScopedAliasKey
+-    from sysml_codegen.orchestration.pipeline_builder import build_pipeline_context
++    from sysml_codegen.orchestration.elaborated_pipeline import build_elaborated_pipeline
+ 
+-    ctx = build_pipeline_context([FIXTURES_DIR / "wi014_toy"])
+-    registry = ctx.output_registry
++    graph = build_elaborated_pipeline([FIXTURES_DIR / "wi014_toy"])
+ 
+-    key = ScopedAliasKey(("demo_plant", "total_cost"))
+-    # Inertness gate (C5): #4 actually wrote a structured scoped alias.
+-    assert key in registry._scoped_alias, dict(registry._scoped_alias)
+-    # Shape-A resolution: the consumer-scoped key reaches the calc-output channel.
+-    channel = registry.scoped_alias_lookup(key)
+-    assert channel is not None
+-    assert channel.endswith("cost_calc__cost"), channel
++    (alias,) = [a for a in graph.output_aliases if a.alias_name == "total_cost"]
++    assert alias.shape == "part_def"
++    assert alias.instance_path == "demo_plant"
++    assert alias.canonical_channel.endswith("cost_calc__cost"), alias.canonical_channel
+ 
+ 
+ @requires_license
+ def test_wi014_toy_scoped_alias_tuple_no_collapse() -> None:
+-    """C3: the structured key is a real ``(scope, leaf)`` tuple, stored unjoined, so
+-    a mis-split ``("demo_plant.total", "cost")`` can never collide with the correct
+-    ``("demo_plant", "total_cost")``. The leaf is always a single segment."""
+-    from sysml_codegen.core.identifier_types import ScopedAliasKey
+-    from sysml_codegen.orchestration.pipeline_builder import build_pipeline_context
+-
+-    ctx = build_pipeline_context([FIXTURES_DIR / "wi014_toy"])
+-    registry = ctx.output_registry
+-    assert ScopedAliasKey(("demo_plant", "total_cost")) in registry._scoped_alias
+-    assert ScopedAliasKey(("demo_plant.total", "cost")) not in registry._scoped_alias
++    """C3: scope and leaf stay separate fields, so a mis-split can never collide.
++
++    The failure this guards against is one string ``"demo_plant.total_cost"`` split at the
++    wrong dot: ``("demo_plant.total", "cost")`` instead of ``("demo_plant", "total_cost")``.
++    It cannot happen while the two halves are never joined in the first place. The legacy
++    ``_scoped_alias`` tuple key that carried them retired with the v5 family (retirement
++    step 2); the exact route carries the same pair as two ``OutputAlias`` fields, and the
++    leaf is still a single segment.
++    """
++    from sysml_codegen.orchestration.elaborated_pipeline import build_elaborated_pipeline
++
++    graph = build_elaborated_pipeline([FIXTURES_DIR / "wi014_toy"])
++
++    (alias,) = [a for a in graph.output_aliases if a.alias_name == "total_cost"]
++    assert alias.instance_path == "demo_plant"
++    assert "." not in alias.alias_name
++    assert alias.alias_name != "cost"

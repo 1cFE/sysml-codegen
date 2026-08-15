@@ -1,0 +1,35 @@
+diff --git a/tests/unit/test_retirement_worklist.py b/tests/unit/test_retirement_worklist.py
+index 8047be7..cf06a58 100644
+--- a/tests/unit/test_retirement_worklist.py
++++ b/tests/unit/test_retirement_worklist.py
+@@ -8,6 +8,8 @@ on, that every actionable row is named by exactly one step.
+ 
+ from __future__ import annotations
+ 
++import json
++
+ import importlib.util
+ import sys
+ from pathlib import Path
+@@ -114,6 +116,19 @@ def test_a_dispositioned_row_that_cannot_be_placed_refuses_rather_than_defaults(
+ 
+ 
+ def test_the_v5_family_step_names_the_thirty_seven_fixtures() -> None:
+-    step1 = {item.path for item in worklist.load_items() if item.step == 2}
+-    fixtures = {p for p in step1 if p.endswith("/extraction_snapshot.json")}
++    """The 37 committed v5 fixtures are the v5-family step's, one row each.
++
++    Read from the ledger rather than from ``load_items()``: placement skips rows that are
++    already executed, so a version of this that asked the work-list would go red the moment
++    the step it describes actually ran, which is the opposite of what it means to check a
++    placement rule. The rule itself is checked on the same rows, one by one, below.
++    """
++    rows = json.loads(worklist.LEDGER.read_text())["rows"]
++    fixtures = [
++        row for row in rows if row["path"].endswith("/extraction_snapshot.json")
++    ]
+     assert len(fixtures) == 37
++    assert {row["group"] for row in fixtures} == {"4B-v5-family"}
++    for row in fixtures:
++        placed = worklist.place({**row, "state": "proposed"})
++        assert placed is not None and placed.step == 2, row["id"]

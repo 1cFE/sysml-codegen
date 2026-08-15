@@ -45,8 +45,9 @@ def test_attribute_info_extends_base():
 
 def test_binding_type_from_agentic_mbse():
     """Verify BindingType is imported from agentic-mbse."""
-    from sysml_codegen.extraction.usage_extractor import BindingType
     from agentic_mbse.sysml.types import BindingType as AgenticBindingType
+
+    from sysml_codegen.extraction.usage_extractor import BindingType
 
     # Should be the same enum (imported, not redefined)
     assert BindingType is AgenticBindingType
@@ -54,7 +55,7 @@ def test_binding_type_from_agentic_mbse():
 
 def test_calculation_definition_data_uses_attribute_info():
     """Verify CalculationDefinitionData uses shared AttributeInfo."""
-    from sysml_codegen.extraction.data_models import CalculationDefinitionData, AttributeInfo
+    from sysml_codegen.extraction.data_models import AttributeInfo, CalculationDefinitionData
 
     attr = AttributeInfo(
         name="p_fusion",
@@ -131,8 +132,8 @@ def test_calculation_definition_data_fields():
     assert calc_def.output_attributes == []
 
 
-def test_calculation_definition_data_has_expression_ast_fields():
-    """New fields exist with correct defaults (backward compat)."""
+def test_calculation_definition_data_has_exact_expression_identity_fields():
+    """Exact compiler payload fields have empty defaults."""
     from sysml_codegen.extraction.data_models import CalculationDefinitionData
 
     cd = CalculationDefinitionData(
@@ -145,15 +146,18 @@ def test_calculation_definition_data_has_expression_ast_fields():
         references=[],
         source_file=Path("test.sysml"),
     )
-    assert cd.output_expression_asts == {}
-    assert cd.all_member_names == set()
-    assert cd.member_expressions == {}
+    assert cd.element_id is None
+    assert cd.output_expression_asts_by_id == {}
+    assert cd.all_member_ids == set()
+    assert cd.member_expressions_by_id == {}
+    assert cd.member_names_by_id == {}
 
 
 def test_binding_info_has_expression_ast_field():
     """BindingInfo.expression_ast defaults to None (backward compat)."""
-    from sysml_codegen.extraction.usage_extractor import BindingInfo
     from agentic_mbse.sysml.types import BindingType
+
+    from sysml_codegen.extraction.usage_extractor import BindingInfo
 
     bi = BindingInfo(param_name="x", source_path=None, binding_type=BindingType.UNBOUND)
     assert bi.expression_ast is None
@@ -161,11 +165,49 @@ def test_binding_info_has_expression_ast_field():
 
 def test_pipeline_module_has_compilability_field():
     """PipelineModule.compilability defaults to UNKNOWN (backward compat)."""
-    from sysml_codegen.resolution.models import ModuleKind, PipelineModule
     from sysml_codegen.extraction.expression_compiler import Compilability
+    from sysml_codegen.resolution.models import ModuleKind, PipelineModule
 
     m = PipelineModule(
         name="t", module_type="T", inputs=[], outputs=[], execution_order=0,
         module_kind=ModuleKind.CALCULATION,
     )
     assert m.compilability == Compilability.UNKNOWN
+
+
+def test_computation_graph_field_set_is_the_reviewed_boundary():
+    """REQ-GA-05: the exact `ComputationGraph` field set is a reviewed rev.
+
+    Two promises, pinned at the serialization boundary (narrow-correction
+    step 4, replacing the pin that retired with `test_graph_assembly.py`,
+    ledger L-152):
+
+    - the declared field set is exactly the reviewed six — adding or removing
+      a field must flip this red and be reviewed as a graph rev;
+    - the serialized/in-memory split is exact: `fallback_entry_points` and
+      `constraint_catalog` are `exclude=True` analysis artifacts (committed
+      baselines must not churn), the other four serialize on every graph.
+    """
+    from sysml_codegen.resolution.models import ComputationGraph
+
+    reviewed = {
+        "modules",
+        "entry_point_groups",
+        "execution_order",
+        "fallback_entry_points",
+        "output_aliases",
+        "constraint_catalog",
+    }
+    assert set(ComputationGraph.model_fields) == reviewed
+
+    excluded = {
+        name
+        for name, field in ComputationGraph.model_fields.items()
+        if field.exclude
+    }
+    assert excluded == {"fallback_entry_points", "constraint_catalog"}
+
+    dumped = ComputationGraph(
+        modules=[], entry_point_groups=[], execution_order=[]
+    ).model_dump()
+    assert set(dumped) == reviewed - excluded
