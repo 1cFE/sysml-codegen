@@ -1,0 +1,600 @@
+## candidates
+=== c10_attr_root loaded=True validation_diagnostics=0
+    deep-literal lane sites: 1
+    site[0] writer={'id': '930991a6-3659-4b37-8df9-7a67feba5aa5', 'metatype': 'ReferenceUsage', 'name': 'None', 'qn': 'None'}
+      writer_owner={'id': 'a3b3a802-13e0-5507-86d1-f2eeb7272ec2', 'metatype': 'PartUsage', 'name': 'plant', 'qn': 'DeepOverrideAttrRoot::plant'}
+      redefined={'id': 'd748a015-9b1a-424a-bbc2-e1f95900a46d', 'metatype': 'Feature', 'name': 'None', 'qn': 'None'}
+      chain[0]={'id': '5750feff-7271-59e1-9cc9-cd77d617893f', 'metatype': 'AttributeUsage', 'name': 'dims', 'qn': 'DeepOverrideAttrRoot::Plant::dims'}
+        live_owner={'id': '92621d31-6a40-512b-9444-82a0745425c3', 'metatype': 'PartDefinition', 'name': 'Plant', 'qn': 'DeepOverrideAttrRoot::Plant'}
+      chain[1]={'id': '7e29ec57-a018-5e87-8a89-e82c4dc78abe', 'metatype': 'AttributeUsage', 'name': 'length', 'qn': 'DeepOverrideAttrRoot::Dimensions::length'}
+        live_owner={'id': '366b3c64-75ee-5614-a8d9-78955da9e5c5', 'metatype': 'AttributeDefinition', 'name': 'Dimensions', 'qn': 'DeepOverrideAttrRoot::Dimensions'}
+      fact[0] element_id=5750feff-7271-59e1-9cc9-cd77d617893f owner_element_id=92621d31-6a40-512b-9444-82a0745425c3 owner_is_definition=True
+      fact[1] element_id=7e29ec57-a018-5e87-8a89-e82c4dc78abe owner_element_id=366b3c64-75ee-5614-a8d9-78955da9e5c5 owner_is_definition=True
+      VERDICT: NOT AFFECTED — 2 segments, one-segment branch not reached
+    elaborate diagnostics=['OVERRIDE_TARGET_MISSING']
+    attr declaration=5750feff-7271-59e1-9cc9-cd77d617893f value=None value_site=none
+=== c11_inline_def loaded=True validation_diagnostics=0
+    deep-literal lane sites: 1
+    site[0] writer={'id': '92a65edc-0809-4d13-bb1d-34ddf74cff11', 'metatype': 'ReferenceUsage', 'name': 'None', 'qn': 'None'}
+      writer_owner={'id': 'e4a3366d-6c5d-51db-9127-398f7c9e6c51', 'metatype': 'PartUsage', 'name': 'plant', 'qn': 'DeepOverrideInlineDef::plant'}
+      redefined={'id': '0f6e0e3d-ba08-42df-abce-f555ac25bb11', 'metatype': 'Feature', 'name': 'None', 'qn': 'None'}
+      chain[0]={'id': '6b7b5fb3-3bbd-5be2-b562-6e79cc8d20eb', 'metatype': 'PartUsage', 'name': 'comp_a', 'qn': 'DeepOverrideInlineDef::Plant::comp_a'}
+        live_owner={'id': 'ee420b04-f819-5e38-8c41-2ca30c0bdd7d', 'metatype': 'PartDefinition', 'name': 'Plant', 'qn': 'DeepOverrideInlineDef::Plant'}
+      chain[1]={'id': '46ebd45e-5dcd-500a-b41c-bee27be031c2', 'metatype': 'AttributeUsage', 'name': 'length', 'qn': 'DeepOverrideInlineDef::Plant::comp_a::length'}
+        live_owner={'id': '6b7b5fb3-3bbd-5be2-b562-6e79cc8d20eb', 'metatype': 'PartUsage', 'name': 'comp_a', 'qn': 'DeepOverrideInlineDef::Plant::comp_a'}
+      fact[0] element_id=6b7b5fb3-3bbd-5be2-b562-6e79cc8d20eb owner_element_id=ee420b04-f819-5e38-8c41-2ca30c0bdd7d owner_is_definition=True
+      fact[1] element_id=46ebd45e-5dcd-500a-b41c-bee27be031c2 owner_element_id=6b7b5fb3-3bbd-5be2-b562-6e79cc8d20eb owner_is_definition=False
+      VERDICT: NOT AFFECTED — 2 segments, one-segment branch not reached
+    elaborate diagnostics=[]
+    attr declaration=46ebd45e-5dcd-500a-b41c-bee27be031c2 value=43.0 value_site=occurrence_override
+[ERROR] /home/reid/1cfe/sysml-codegen/.project/active/qualified-reference-occurrence-anchoring/spike/deep-override-authorability/c12_named_chain_alias/model.sysml:14:13: error (reference-error): No Feature named 'alias_length' found.
+=== c12_named_chain_alias loaded=False validation_diagnostics=0
+[ERROR] /home/reid/1cfe/sysml-codegen/.project/active/qualified-reference-occurrence-anchoring/spike/deep-override-authorability/c13_self_chain/model.sysml:14:22: error (reference-error): No Feature named 'length' found.
+=== c13_self_chain loaded=False validation_diagnostics=0
+[ERROR] /home/reid/1cfe/sysml-codegen/.project/active/qualified-reference-occurrence-anchoring/spike/deep-override-authorability/c14_self_chain_usage_owned/model.sysml:12:22: error (reference-error): No Feature named 'length' found.
+=== c14_self_chain_usage_owned loaded=False validation_diagnostics=0
+[ERROR] /home/reid/1cfe/sysml-codegen/.project/active/qualified-reference-occurrence-anchoring/spike/deep-override-authorability/c15_self_direct_member/model.sysml:9:18: error (reference-error): No Feature named 'length' found.
+=== c15_self_direct_member loaded=False validation_diagnostics=0
+=== c1_dot_chain_baseline loaded=True validation_diagnostics=0
+    deep-literal lane sites: 1
+    site[0] writer={'id': 'd94f20bc-eb28-41a0-b014-1aea70564c64', 'metatype': 'ReferenceUsage', 'name': 'None', 'qn': 'None'}
+      writer_owner={'id': 'a8ca2973-018b-5bba-8977-cad32b77ad63', 'metatype': 'PartUsage', 'name': 'plant', 'qn': 'DeepOverrideDotChain::plant'}
+      redefined={'id': '90f2b12e-9e02-4a86-ac89-706a9bd0bce2', 'metatype': 'Feature', 'name': 'None', 'qn': 'None'}
+      chain[0]={'id': '26c32de0-cdfd-5a39-b938-a6389bda7acc', 'metatype': 'PartUsage', 'name': 'comp_a', 'qn': 'DeepOverrideDotChain::Plant::comp_a'}
+        live_owner={'id': 'e31c94da-3501-5bc4-9368-0129ef77e537', 'metatype': 'PartDefinition', 'name': 'Plant', 'qn': 'DeepOverrideDotChain::Plant'}
+      chain[1]={'id': 'c42f07f2-905a-54ae-9c20-c1bc799125ad', 'metatype': 'AttributeUsage', 'name': 'length', 'qn': 'DeepOverrideDotChain::Component::length'}
+        live_owner={'id': '07849796-74fa-5141-bc41-e764aedf0f66', 'metatype': 'PartDefinition', 'name': 'Component', 'qn': 'DeepOverrideDotChain::Component'}
+      fact[0] element_id=26c32de0-cdfd-5a39-b938-a6389bda7acc owner_element_id=e31c94da-3501-5bc4-9368-0129ef77e537 owner_is_definition=True
+      fact[1] element_id=c42f07f2-905a-54ae-9c20-c1bc799125ad owner_element_id=07849796-74fa-5141-bc41-e764aedf0f66 owner_is_definition=True
+      VERDICT: NOT AFFECTED — 2 segments, one-segment branch not reached
+    elaborate diagnostics=[]
+    attr declaration=c42f07f2-905a-54ae-9c20-c1bc799125ad value=43.0 value_site=occurrence_override
+    attr declaration=c42f07f2-905a-54ae-9c20-c1bc799125ad value=1.0 value_site=definition_default
+=== c2_plain_redef loaded=True validation_diagnostics=0
+    deep-literal lane sites: 0
+    elaborate diagnostics=[]
+    attr declaration=78e05fe6-1a01-5dc5-b51f-6e674ec1d505 value=43.0 value_site=occurrence_override
+=== c3_pkg_qualified loaded=True validation_diagnostics=1
+    diagnostic: /home/reid/1cfe/sysml-codegen/.project/active/qualified-reference-occurrence-anchoring/spike/deep-override-authorability/c3_pkg_qualified/model.sysml:13:13: warning (subsetting-featuring-types): Subsetted feature must be accessible from the subsetting feature (use dot notation for nesting)
+    deep-literal lane sites: 0
+    elaborate diagnostics=[]
+    attr declaration=9818e69a-1277-5554-b1c7-9eb685494da3 value=1.0 value_site=definition_default
+=== c4_usage_qualified loaded=True validation_diagnostics=1
+    diagnostic: /home/reid/1cfe/sysml-codegen/.project/active/qualified-reference-occurrence-anchoring/spike/deep-override-authorability/c4_usage_qualified/model.sysml:14:13: warning (subsetting-featuring-types): Subsetted feature must be accessible from the subsetting feature (use dot notation for nesting)
+    deep-literal lane sites: 0
+    elaborate diagnostics=[]
+    attr declaration=2002a236-7d3e-5103-9c5f-6751f5f5a493 value=1.0 value_site=definition_default
+    attr declaration=2002a236-7d3e-5103-9c5f-6751f5f5a493 value=1.0 value_site=definition_default
+=== c5_anon_leaf loaded=True validation_diagnostics=0
+    deep-literal lane sites: 1
+    site[0] writer={'id': '69195049-54cd-4f58-b873-eb71d2bc36ec', 'metatype': 'ReferenceUsage', 'name': 'None', 'qn': 'None'}
+      writer_owner={'id': '12bb3fb6-a81c-5019-ab69-4671d44013fc', 'metatype': 'PartUsage', 'name': 'plant', 'qn': 'DeepOverrideAnonLeaf::plant'}
+      redefined={'id': 'd4743bf9-d130-4a53-a261-276d9fa50f0a', 'metatype': 'Feature', 'name': 'None', 'qn': 'None'}
+      chain[0]={'id': '3589537c-b4cc-57c1-92bd-1313e54660cb', 'metatype': 'PartUsage', 'name': 'comp_a', 'qn': 'DeepOverrideAnonLeaf::Plant::comp_a'}
+        live_owner={'id': '6f9cd646-7d59-54f6-89fd-5894476d07db', 'metatype': 'PartDefinition', 'name': 'Plant', 'qn': 'DeepOverrideAnonLeaf::Plant'}
+      chain[1]={'id': '95824030-2095-5c94-a2ed-5bee221af637', 'metatype': 'ReferenceUsage', 'name': 'length', 'qn': 'DeepOverrideAnonLeaf::Plant::comp_a::length'}
+        live_owner={'id': '3589537c-b4cc-57c1-92bd-1313e54660cb', 'metatype': 'PartUsage', 'name': 'comp_a', 'qn': 'DeepOverrideAnonLeaf::Plant::comp_a'}
+      fact[0] element_id=3589537c-b4cc-57c1-92bd-1313e54660cb owner_element_id=6f9cd646-7d59-54f6-89fd-5894476d07db owner_is_definition=True
+      fact[1] element_id=95824030-2095-5c94-a2ed-5bee221af637 owner_element_id=3589537c-b4cc-57c1-92bd-1313e54660cb owner_is_definition=False
+      VERDICT: NOT AFFECTED — 2 segments, one-segment branch not reached
+    elaborate diagnostics=[]
+    attr declaration=5b154159-ef2f-5cad-b608-55629105d74a value=43.0 value_site=occurrence_override
+    attr declaration=5b154159-ef2f-5cad-b608-55629105d74a value=1.0 value_site=definition_default
+=== c6_anon_root loaded=True validation_diagnostics=0
+    deep-literal lane sites: 1
+    site[0] writer={'id': '8c2f90f9-c691-465e-87e2-47ef6413a95a', 'metatype': 'ReferenceUsage', 'name': 'None', 'qn': 'None'}
+      writer_owner={'id': '33ae8625-b425-5aef-b00b-8fe2159bf218', 'metatype': 'ReferenceUsage', 'name': 'plant', 'qn': 'DeepOverrideAnonRoot::site::plant'}
+      redefined={'id': 'd1ff45cb-8c25-4099-9cf3-692ab390cf66', 'metatype': 'Feature', 'name': 'None', 'qn': 'None'}
+      chain[0]={'id': 'c69d6772-b604-53be-ae1e-7639917edd45', 'metatype': 'PartUsage', 'name': 'comp_a', 'qn': 'DeepOverrideAnonRoot::Plant::comp_a'}
+        live_owner={'id': 'aaad678c-c062-58df-bdb4-c35ecae19fab', 'metatype': 'PartDefinition', 'name': 'Plant', 'qn': 'DeepOverrideAnonRoot::Plant'}
+      chain[1]={'id': 'c6e43dba-e77a-556a-9f60-71aa08acc054', 'metatype': 'AttributeUsage', 'name': 'length', 'qn': 'DeepOverrideAnonRoot::Component::length'}
+        live_owner={'id': '9ec53f3b-0ea2-5a6f-af15-97ad2439cd22', 'metatype': 'PartDefinition', 'name': 'Component', 'qn': 'DeepOverrideAnonRoot::Component'}
+      fact[0] element_id=c69d6772-b604-53be-ae1e-7639917edd45 owner_element_id=aaad678c-c062-58df-bdb4-c35ecae19fab owner_is_definition=True
+      fact[1] element_id=c6e43dba-e77a-556a-9f60-71aa08acc054 owner_element_id=9ec53f3b-0ea2-5a6f-af15-97ad2439cd22 owner_is_definition=True
+      VERDICT: NOT AFFECTED — 2 segments, one-segment branch not reached
+    elaborate diagnostics=[]
+=== c7_three_segment loaded=True validation_diagnostics=0
+    deep-literal lane sites: 1
+    site[0] writer={'id': 'ee506f83-707a-4631-abb6-9417550e85b9', 'metatype': 'ReferenceUsage', 'name': 'None', 'qn': 'None'}
+      writer_owner={'id': 'd07d6abd-e82a-5dfc-a3ef-510900f26a26', 'metatype': 'PartUsage', 'name': 'plant', 'qn': 'DeepOverrideThreeSegment::plant'}
+      redefined={'id': '11967733-5156-4fae-b710-e779ad511451', 'metatype': 'Feature', 'name': 'None', 'qn': 'None'}
+      chain[0]={'id': '4118f9b2-f7d7-5145-9c3c-4d13be9ca7f9', 'metatype': 'PartUsage', 'name': 'asm', 'qn': 'DeepOverrideThreeSegment::Plant::asm'}
+        live_owner={'id': '4b727505-625b-5c25-bdc5-1f38dce29710', 'metatype': 'PartDefinition', 'name': 'Plant', 'qn': 'DeepOverrideThreeSegment::Plant'}
+      chain[1]={'id': '1965f38f-5060-5347-aa61-e77171392fe0', 'metatype': 'PartUsage', 'name': 'comp_a', 'qn': 'DeepOverrideThreeSegment::Assembly::comp_a'}
+        live_owner={'id': 'c884bf64-c42e-5961-88aa-c4bc9e39c14e', 'metatype': 'PartDefinition', 'name': 'Assembly', 'qn': 'DeepOverrideThreeSegment::Assembly'}
+      chain[2]={'id': '98fb8231-c4e7-513b-9de4-419f78bb825b', 'metatype': 'AttributeUsage', 'name': 'length', 'qn': 'DeepOverrideThreeSegment::Component::length'}
+        live_owner={'id': '937f0c75-9343-5ea9-9194-afdec4bc660f', 'metatype': 'PartDefinition', 'name': 'Component', 'qn': 'DeepOverrideThreeSegment::Component'}
+      fact[0] element_id=4118f9b2-f7d7-5145-9c3c-4d13be9ca7f9 owner_element_id=4b727505-625b-5c25-bdc5-1f38dce29710 owner_is_definition=True
+      fact[1] element_id=1965f38f-5060-5347-aa61-e77171392fe0 owner_element_id=c884bf64-c42e-5961-88aa-c4bc9e39c14e owner_is_definition=True
+      fact[2] element_id=98fb8231-c4e7-513b-9de4-419f78bb825b owner_element_id=937f0c75-9343-5ea9-9194-afdec4bc660f owner_is_definition=True
+      VERDICT: NOT AFFECTED — 3 segments, one-segment branch not reached
+    elaborate diagnostics=[]
+    attr declaration=98fb8231-c4e7-513b-9de4-419f78bb825b value=43.0 value_site=occurrence_override
+[ERROR] /home/reid/1cfe/sysml-codegen/.project/active/qualified-reference-occurrence-anchoring/spike/deep-override-authorability/c8_unresolved_leaf/model.sysml:13:20: error (reference-error): No Feature named 'no_such_member' found.
+=== c8_unresolved_leaf loaded=False validation_diagnostics=0
+=== c9_arrayed_child loaded=True validation_diagnostics=0
+    deep-literal lane sites: 1
+    site[0] writer={'id': 'd4c96c92-a410-4adf-a300-7a6fb0388657', 'metatype': 'ReferenceUsage', 'name': 'None', 'qn': 'None'}
+      writer_owner={'id': 'b2a354c1-7a70-5188-a5f6-5978ccac4f9b', 'metatype': 'PartUsage', 'name': 'plant', 'qn': 'DeepOverrideArrayedChild::plant'}
+      redefined={'id': '3a338eea-9635-4cac-b6fc-67d6214ab7db', 'metatype': 'Feature', 'name': 'None', 'qn': 'None'}
+      chain[0]={'id': '872507ac-f080-596b-b7ec-a186fa9fba86', 'metatype': 'PartUsage', 'name': 'comp_a', 'qn': 'DeepOverrideArrayedChild::Plant::comp_a'}
+        live_owner={'id': 'f8ee13be-7668-52c2-8f7c-87c5ea92e19c', 'metatype': 'PartDefinition', 'name': 'Plant', 'qn': 'DeepOverrideArrayedChild::Plant'}
+      chain[1]={'id': '719996f2-5beb-502a-b8e3-0c06db3a8268', 'metatype': 'AttributeUsage', 'name': 'length', 'qn': 'DeepOverrideArrayedChild::Component::length'}
+        live_owner={'id': '67f353e9-eafc-50cf-a856-6e541d9083e3', 'metatype': 'PartDefinition', 'name': 'Component', 'qn': 'DeepOverrideArrayedChild::Component'}
+      fact[0] element_id=872507ac-f080-596b-b7ec-a186fa9fba86 owner_element_id=f8ee13be-7668-52c2-8f7c-87c5ea92e19c owner_is_definition=True
+      fact[1] element_id=719996f2-5beb-502a-b8e3-0c06db3a8268 owner_element_id=67f353e9-eafc-50cf-a856-6e541d9083e3 owner_is_definition=True
+      VERDICT: NOT AFFECTED — 2 segments, one-segment branch not reached
+    elaborate diagnostics=[]
+    attr declaration=719996f2-5beb-502a-b8e3-0c06db3a8268 value=43.0 value_site=occurrence_override
+    attr declaration=719996f2-5beb-502a-b8e3-0c06db3a8268 value=43.0 value_site=occurrence_override
+## census
+census roots with a chained redefinition: 13
+=== fixture:agg_literal_probe loaded=True validation_diagnostics=0
+    deep-literal lane sites: 1
+    site[0] writer={'id': '2d3f582b-1330-45aa-99a0-dd8b952da838', 'metatype': 'ReferenceUsage', 'name': 'None', 'qn': 'None'}
+      writer_owner={'id': '599da0d6-10ce-51fa-a4db-9600b9a93977', 'metatype': 'PartUsage', 'name': 'assembly', 'qn': 'AggLiteralProbeDesign::plant::assembly'}
+      redefined={'id': 'b7fb6d58-9e2f-4cf1-91c7-4ad9bf8f319f', 'metatype': 'Feature', 'name': 'None', 'qn': 'None'}
+      chain[0]={'id': 'd52e4179-0e15-5100-a4e1-db2458aa4cb6', 'metatype': 'PartUsage', 'name': 'module', 'qn': 'AggLiteralProbeLibrary::Assembly::module'}
+        live_owner={'id': 'c608250f-8639-5535-b0a1-0e0521f388e2', 'metatype': 'PartDefinition', 'name': 'Assembly', 'qn': 'AggLiteralProbeLibrary::Assembly'}
+      chain[1]={'id': '92c61087-9821-5b45-b5b8-104da49c0f3e', 'metatype': 'AttributeUsage', 'name': 'cost', 'qn': 'AggLiteralProbeLibrary::Module::cost'}
+        live_owner={'id': '38caa23b-174c-5593-836a-8488f92d0e4c', 'metatype': 'PartDefinition', 'name': 'Module', 'qn': 'AggLiteralProbeLibrary::Module'}
+      fact[0] element_id=d52e4179-0e15-5100-a4e1-db2458aa4cb6 owner_element_id=c608250f-8639-5535-b0a1-0e0521f388e2 owner_is_definition=True
+      fact[1] element_id=92c61087-9821-5b45-b5b8-104da49c0f3e owner_element_id=38caa23b-174c-5593-836a-8488f92d0e4c owner_is_definition=True
+      VERDICT: NOT AFFECTED — 2 segments, one-segment branch not reached
+=== fixture:alias_agg_d5 loaded=True validation_diagnostics=0
+    deep-literal lane sites: 1
+    site[0] writer={'id': 'dae7e145-d61c-4945-a7ab-5007607dc880', 'metatype': 'ReferenceUsage', 'name': 'None', 'qn': 'None'}
+      writer_owner={'id': 'fd436a12-4587-5bb7-bac6-dfa1c813b57e', 'metatype': 'PartUsage', 'name': 'assembly', 'qn': 'AliasAggD5Design::plant::assembly'}
+      redefined={'id': 'd47ccb04-8764-4db1-8048-bdfae2c68eb2', 'metatype': 'Feature', 'name': 'None', 'qn': 'None'}
+      chain[0]={'id': '5e4b6463-8330-5d25-b710-9265e7de4a13', 'metatype': 'PartUsage', 'name': 'widget', 'qn': "AliasAggD5Library::'Widget Assembly'::widget"}
+        live_owner={'id': 'f9c5b702-c12e-55d1-a8da-6311bdae742e', 'metatype': 'PartDefinition', 'name': 'Widget Assembly', 'qn': "AliasAggD5Library::'Widget Assembly'"}
+      chain[1]={'id': 'd7fa12af-a648-5f32-88f4-2680ed3967b2', 'metatype': 'AttributeUsage', 'name': 'base_cost', 'qn': 'AliasAggD5Library::Widget::base_cost'}
+        live_owner={'id': 'ae53da7d-51b3-50b1-a8b4-36175aed8b80', 'metatype': 'PartDefinition', 'name': 'Widget', 'qn': 'AliasAggD5Library::Widget'}
+      fact[0] element_id=5e4b6463-8330-5d25-b710-9265e7de4a13 owner_element_id=f9c5b702-c12e-55d1-a8da-6311bdae742e owner_is_definition=True
+      fact[1] element_id=d7fa12af-a648-5f32-88f4-2680ed3967b2 owner_element_id=ae53da7d-51b3-50b1-a8b4-36175aed8b80 owner_is_definition=True
+      VERDICT: NOT AFFECTED — 2 segments, one-segment branch not reached
+=== fixture:alias_agg_probe loaded=True validation_diagnostics=0
+    deep-literal lane sites: 1
+    site[0] writer={'id': '6c44645e-b366-4ddc-b5c3-c8404e7ae5c1', 'metatype': 'ReferenceUsage', 'name': 'None', 'qn': 'None'}
+      writer_owner={'id': 'b2dbca9f-4761-5b60-acab-613685a0f9e6', 'metatype': 'PartUsage', 'name': 'assembly', 'qn': 'AliasAggProbeDesign::plant::assembly'}
+      redefined={'id': '7a9b43c2-7ad7-43ee-be5d-06514bc69cc6', 'metatype': 'Feature', 'name': 'None', 'qn': 'None'}
+      chain[0]={'id': 'd9abc24b-d63c-5a9a-a644-d9e31465c9df', 'metatype': 'PartUsage', 'name': 'widget', 'qn': "AliasAggProbeLibrary::'Widget Assembly'::widget"}
+        live_owner={'id': 'f891c16c-e64e-5ed9-a38f-828fe581e2dd', 'metatype': 'PartDefinition', 'name': 'Widget Assembly', 'qn': "AliasAggProbeLibrary::'Widget Assembly'"}
+      chain[1]={'id': '4911769b-a943-56f5-a548-2ee154a38160', 'metatype': 'AttributeUsage', 'name': 'base_cost', 'qn': 'AliasAggProbeLibrary::Widget::base_cost'}
+        live_owner={'id': '5380382c-995f-5868-895c-b16013142a4f', 'metatype': 'PartDefinition', 'name': 'Widget', 'qn': 'AliasAggProbeLibrary::Widget'}
+      fact[0] element_id=d9abc24b-d63c-5a9a-a644-d9e31465c9df owner_element_id=f891c16c-e64e-5ed9-a38f-828fe581e2dd owner_is_definition=True
+      fact[1] element_id=4911769b-a943-56f5-a548-2ee154a38160 owner_element_id=5380382c-995f-5868-895c-b16013142a4f owner_is_definition=True
+      VERDICT: NOT AFFECTED — 2 segments, one-segment branch not reached
+=== fixture:constraint_def_owned_redefining loaded=True validation_diagnostics=0
+    deep-literal lane sites: 1
+    site[0] writer={'id': 'ddc7304e-aa0d-4984-b719-d49d3c94b0b7', 'metatype': 'ReferenceUsage', 'name': 'None', 'qn': 'None'}
+      writer_owner={'id': '0e31f2ae-87c4-5f5f-9925-e85ff5a26161', 'metatype': 'PartUsage', 'name': 'panel', 'qn': 'constraint_def_owned_redefining::panel'}
+      redefined={'id': '5947d834-22da-418f-b651-5d1ef88a58c5', 'metatype': 'Feature', 'name': 'None', 'qn': 'None'}
+      chain[0]={'id': '9d776826-0130-5055-80e9-cde3b93b382e', 'metatype': 'PartUsage', 'name': 'source', 'qn': 'constraint_def_owned_redefining::Panel::source'}
+        live_owner={'id': '1044fa97-8c1d-56ae-a43c-ab45a309e750', 'metatype': 'PartDefinition', 'name': 'Panel', 'qn': 'constraint_def_owned_redefining::Panel'}
+      chain[1]={'id': '2e700526-3d10-5588-8f7a-bb4b9b83d56c', 'metatype': 'AttributeUsage', 'name': 'reading', 'qn': 'constraint_def_owned_redefining::Source::reading'}
+        live_owner={'id': 'bf141c1f-434b-5cd5-a0ba-0aa28690bfd6', 'metatype': 'PartDefinition', 'name': 'Source', 'qn': 'constraint_def_owned_redefining::Source'}
+      fact[0] element_id=9d776826-0130-5055-80e9-cde3b93b382e owner_element_id=1044fa97-8c1d-56ae-a43c-ab45a309e750 owner_is_definition=True
+      fact[1] element_id=2e700526-3d10-5588-8f7a-bb4b9b83d56c owner_element_id=bf141c1f-434b-5cd5-a0ba-0aa28690bfd6 owner_is_definition=True
+      VERDICT: NOT AFFECTED — 2 segments, one-segment branch not reached
+=== fixture:constraint_occurrence_demand loaded=True validation_diagnostics=1
+    diagnostic: /home/reid/1cfe/sysml-codegen/tests/fixtures/constraint_occurrence_demand/cycle_indirect/model.sysml:24:14: warning (namespace-distinguishability): Member name 'B' shadows OccurrenceDemandCycleIndirect::B
+    deep-literal lane sites: 5
+    site[0] writer={'id': 'f8a93d55-e97d-4699-beb1-3a0c799163bb', 'metatype': 'ReferenceUsage', 'name': 'None', 'qn': 'None'}
+      writer_owner={'id': '60298b5d-53f1-5bdd-b420-732960594a0c', 'metatype': 'PartUsage', 'name': 'plant', 'qn': 'DemandOrder::plant'}
+      redefined={'id': 'd8b8ee9c-d31d-4417-bb88-d7489a99669a', 'metatype': 'Feature', 'name': 'None', 'qn': 'None'}
+      chain[0]={'id': 'f0771481-ac34-523f-8fe2-89f8f284275f', 'metatype': 'PartUsage', 'name': 'source', 'qn': 'DemandOrder::Plant::source'}
+        live_owner={'id': '6b9ed001-2f35-54e9-bd4c-8870179499b2', 'metatype': 'PartDefinition', 'name': 'Plant', 'qn': 'DemandOrder::Plant'}
+      chain[1]={'id': 'bc537c2f-2683-56e7-822c-804d0936db92', 'metatype': 'AttributeUsage', 'name': 'a_collision', 'qn': 'DemandOrder::Source::a_collision'}
+        live_owner={'id': '5936654b-02c9-5ccc-9a89-780d2e1775f6', 'metatype': 'PartDefinition', 'name': 'Source', 'qn': 'DemandOrder::Source'}
+      fact[0] element_id=f0771481-ac34-523f-8fe2-89f8f284275f owner_element_id=6b9ed001-2f35-54e9-bd4c-8870179499b2 owner_is_definition=True
+      fact[1] element_id=bc537c2f-2683-56e7-822c-804d0936db92 owner_element_id=5936654b-02c9-5ccc-9a89-780d2e1775f6 owner_is_definition=True
+      VERDICT: NOT AFFECTED — 2 segments, one-segment branch not reached
+    site[1] writer={'id': '6659ce39-7d55-4b1f-900c-991516c6dd28', 'metatype': 'ReferenceUsage', 'name': 'None', 'qn': 'None'}
+      writer_owner={'id': '60298b5d-53f1-5bdd-b420-732960594a0c', 'metatype': 'PartUsage', 'name': 'plant', 'qn': 'DemandOrder::plant'}
+      redefined={'id': 'e159ec40-8f4d-4283-a81b-5671e3701e1a', 'metatype': 'Feature', 'name': 'None', 'qn': 'None'}
+      chain[0]={'id': 'f0771481-ac34-523f-8fe2-89f8f284275f', 'metatype': 'PartUsage', 'name': 'source', 'qn': 'DemandOrder::Plant::source'}
+        live_owner={'id': '6b9ed001-2f35-54e9-bd4c-8870179499b2', 'metatype': 'PartDefinition', 'name': 'Plant', 'qn': 'DemandOrder::Plant'}
+      chain[1]={'id': 'a486179f-d77c-5b71-8d11-935b3e56a1f0', 'metatype': 'AttributeUsage', 'name': 'b_nonliteral', 'qn': 'DemandOrder::Source::b_nonliteral'}
+        live_owner={'id': '5936654b-02c9-5ccc-9a89-780d2e1775f6', 'metatype': 'PartDefinition', 'name': 'Source', 'qn': 'DemandOrder::Source'}
+      fact[0] element_id=f0771481-ac34-523f-8fe2-89f8f284275f owner_element_id=6b9ed001-2f35-54e9-bd4c-8870179499b2 owner_is_definition=True
+      fact[1] element_id=a486179f-d77c-5b71-8d11-935b3e56a1f0 owner_element_id=5936654b-02c9-5ccc-9a89-780d2e1775f6 owner_is_definition=True
+      VERDICT: NOT AFFECTED — 2 segments, one-segment branch not reached
+    site[2] writer={'id': 'ef331c1d-2dde-4932-9e08-c30f9d9a91d5', 'metatype': 'ReferenceUsage', 'name': 'None', 'qn': 'None'}
+      writer_owner={'id': '60298b5d-53f1-5bdd-b420-732960594a0c', 'metatype': 'PartUsage', 'name': 'plant', 'qn': 'DemandOrder::plant'}
+      redefined={'id': '167e8252-4572-4388-a39a-43867b58139d', 'metatype': 'Feature', 'name': 'None', 'qn': 'None'}
+      chain[0]={'id': 'f0771481-ac34-523f-8fe2-89f8f284275f', 'metatype': 'PartUsage', 'name': 'source', 'qn': 'DemandOrder::Plant::source'}
+        live_owner={'id': '6b9ed001-2f35-54e9-bd4c-8870179499b2', 'metatype': 'PartDefinition', 'name': 'Plant', 'qn': 'DemandOrder::Plant'}
+      chain[1]={'id': '8d374b04-752a-5799-b203-b32f29b1886d', 'metatype': 'AttributeUsage', 'name': 'c_clean', 'qn': 'DemandOrder::Source::c_clean'}
+        live_owner={'id': '5936654b-02c9-5ccc-9a89-780d2e1775f6', 'metatype': 'PartDefinition', 'name': 'Source', 'qn': 'DemandOrder::Source'}
+      fact[0] element_id=f0771481-ac34-523f-8fe2-89f8f284275f owner_element_id=6b9ed001-2f35-54e9-bd4c-8870179499b2 owner_is_definition=True
+      fact[1] element_id=8d374b04-752a-5799-b203-b32f29b1886d owner_element_id=5936654b-02c9-5ccc-9a89-780d2e1775f6 owner_is_definition=True
+      VERDICT: NOT AFFECTED — 2 segments, one-segment branch not reached
+    site[3] writer={'id': '0f044685-3f64-465d-8a44-51ef4398b2a7', 'metatype': 'ReferenceUsage', 'name': 'None', 'qn': 'None'}
+      writer_owner={'id': 'c4b37ae0-1a29-5060-9320-94eb0d04456c', 'metatype': 'PartUsage', 'name': 'plant', 'qn': 'DemandShared::plant'}
+      redefined={'id': 'afef71cb-6159-4394-91f9-395d2cec4ece', 'metatype': 'Feature', 'name': 'None', 'qn': 'None'}
+      chain[0]={'id': 'ee271a24-7ace-5883-be05-105fc9389921', 'metatype': 'PartUsage', 'name': 'source', 'qn': 'DemandSharedLibrary::Plant::source'}
+        live_owner={'id': '68570161-4db8-53c9-b2d1-42bda880d3df', 'metatype': 'PartDefinition', 'name': 'Plant', 'qn': 'DemandSharedLibrary::Plant'}
+      chain[1]={'id': '2ab28484-a7ba-5c34-a038-3e686ca228b2', 'metatype': 'AttributeUsage', 'name': 'value', 'qn': 'DemandSharedLibrary::Source::value'}
+        live_owner={'id': '568626fa-ef17-53f5-af81-ac20416d6e43', 'metatype': 'PartDefinition', 'name': 'Source', 'qn': 'DemandSharedLibrary::Source'}
+      fact[0] element_id=ee271a24-7ace-5883-be05-105fc9389921 owner_element_id=68570161-4db8-53c9-b2d1-42bda880d3df owner_is_definition=True
+      fact[1] element_id=2ab28484-a7ba-5c34-a038-3e686ca228b2 owner_element_id=568626fa-ef17-53f5-af81-ac20416d6e43 owner_is_definition=True
+      VERDICT: NOT AFFECTED — 2 segments, one-segment branch not reached
+    site[4] writer={'id': '566ebdb7-26aa-432f-97c5-17488d9d2095', 'metatype': 'ReferenceUsage', 'name': 'None', 'qn': 'None'}
+      writer_owner={'id': 'fa68a318-67f3-5484-92ce-29b0b21b532d', 'metatype': 'PartUsage', 'name': 'plant', 'qn': 'DemandConstraintOnly::plant'}
+      redefined={'id': 'a3b187dd-5e40-4e5d-8762-a3b3d7ca7f20', 'metatype': 'Feature', 'name': 'None', 'qn': 'None'}
+      chain[0]={'id': 'd6179f98-5e6d-5f82-aff2-fa30b5473eef', 'metatype': 'PartUsage', 'name': 'source', 'qn': 'DemandConstraintOnly::Plant::source'}
+        live_owner={'id': '4a0675f0-e4fd-51c6-83aa-7d5c9cee54c8', 'metatype': 'PartDefinition', 'name': 'Plant', 'qn': 'DemandConstraintOnly::Plant'}
+      chain[1]={'id': '77bab936-6084-5e46-945e-10e98ee63f85', 'metatype': 'AttributeUsage', 'name': 'value', 'qn': 'DemandConstraintOnly::Source::value'}
+        live_owner={'id': 'b9c73439-ae31-5a50-ad37-fe87ce0ccbe1', 'metatype': 'PartDefinition', 'name': 'Source', 'qn': 'DemandConstraintOnly::Source'}
+      fact[0] element_id=d6179f98-5e6d-5f82-aff2-fa30b5473eef owner_element_id=4a0675f0-e4fd-51c6-83aa-7d5c9cee54c8 owner_is_definition=True
+      fact[1] element_id=77bab936-6084-5e46-945e-10e98ee63f85 owner_element_id=b9c73439-ae31-5a50-ad37-fe87ce0ccbe1 owner_is_definition=True
+      VERDICT: NOT AFFECTED — 2 segments, one-segment branch not reached
+=== fixture:costed_cart_d5 loaded=True validation_diagnostics=0
+    deep-literal lane sites: 4
+    site[0] writer={'id': '03512573-c9c4-4336-a31c-4700bf8abefb', 'metatype': 'ReferenceUsage', 'name': 'None', 'qn': 'None'}
+      writer_owner={'id': '25091969-d885-5d96-8df2-2255dcadd697', 'metatype': 'PartUsage', 'name': 'deck_assembly', 'qn': 'CostedCartDesign::cart_plant::deck_assembly'}
+      redefined={'id': '18094e8a-22d1-4514-b780-82e509678678', 'metatype': 'Feature', 'name': 'None', 'qn': 'None'}
+      chain[0]={'id': '0ca401be-20be-5cd5-a3c7-28b5ffe1e19e', 'metatype': 'PartUsage', 'name': 'deck_panel', 'qn': "CostedCartLibrary::'Deck Assembly'::deck_panel"}
+        live_owner={'id': '1f658f9a-312a-51e7-b4c0-0e1e3da44f1f', 'metatype': 'PartDefinition', 'name': 'Deck Assembly', 'qn': "CostedCartLibrary::'Deck Assembly'"}
+      chain[1]={'id': 'd49387e6-35aa-5ed7-a6a1-1c81b504d537', 'metatype': 'AttributeUsage', 'name': 'area', 'qn': "CostedCartLibrary::'Deck Panel'::area"}
+        live_owner={'id': '1b3a5837-244d-5195-91a2-f4b42782d6f1', 'metatype': 'PartDefinition', 'name': 'Deck Panel', 'qn': "CostedCartLibrary::'Deck Panel'"}
+      fact[0] element_id=0ca401be-20be-5cd5-a3c7-28b5ffe1e19e owner_element_id=1f658f9a-312a-51e7-b4c0-0e1e3da44f1f owner_is_definition=True
+      fact[1] element_id=d49387e6-35aa-5ed7-a6a1-1c81b504d537 owner_element_id=1b3a5837-244d-5195-91a2-f4b42782d6f1 owner_is_definition=True
+      VERDICT: NOT AFFECTED — 2 segments, one-segment branch not reached
+    site[1] writer={'id': '331d2fc2-8d3f-4243-9007-dc0756c6bf11', 'metatype': 'ReferenceUsage', 'name': 'None', 'qn': 'None'}
+      writer_owner={'id': '25091969-d885-5d96-8df2-2255dcadd697', 'metatype': 'PartUsage', 'name': 'deck_assembly', 'qn': 'CostedCartDesign::cart_plant::deck_assembly'}
+      redefined={'id': '50e3d42e-f5d7-4b33-a382-c027425f7be6', 'metatype': 'Feature', 'name': 'None', 'qn': 'None'}
+      chain[0]={'id': 'a45d4f0d-6097-5bb4-903b-b9d4b7a15ccd', 'metatype': 'PartUsage', 'name': 'caster', 'qn': "CostedCartLibrary::'Deck Assembly'::caster"}
+        live_owner={'id': '1f658f9a-312a-51e7-b4c0-0e1e3da44f1f', 'metatype': 'PartDefinition', 'name': 'Deck Assembly', 'qn': "CostedCartLibrary::'Deck Assembly'"}
+      chain[1]={'id': '83491f34-36e0-50a4-bd2f-155c2153014c', 'metatype': 'AttributeUsage', 'name': 'load_rating', 'qn': 'CostedCartLibrary::Caster::load_rating'}
+        live_owner={'id': 'cfecd412-397e-514e-ac15-6f2cb3556ab1', 'metatype': 'PartDefinition', 'name': 'Caster', 'qn': 'CostedCartLibrary::Caster'}
+      fact[0] element_id=a45d4f0d-6097-5bb4-903b-b9d4b7a15ccd owner_element_id=1f658f9a-312a-51e7-b4c0-0e1e3da44f1f owner_is_definition=True
+      fact[1] element_id=83491f34-36e0-50a4-bd2f-155c2153014c owner_element_id=cfecd412-397e-514e-ac15-6f2cb3556ab1 owner_is_definition=True
+      VERDICT: NOT AFFECTED — 2 segments, one-segment branch not reached
+    site[2] writer={'id': 'f3612ba8-978c-4766-9f84-c11496401812', 'metatype': 'ReferenceUsage', 'name': 'None', 'qn': 'None'}
+      writer_owner={'id': 'f8b0d71b-c2ba-5cf6-858a-82e28b172d88', 'metatype': 'PartUsage', 'name': 'frame_assembly', 'qn': 'CostedCartDesign::cart_plant::frame_assembly'}
+      redefined={'id': '0050b6bd-8539-4520-9203-877767b1d90d', 'metatype': 'Feature', 'name': 'None', 'qn': 'None'}
+      chain[0]={'id': 'bceace3f-427a-5eb6-93bc-4d765798c862', 'metatype': 'PartUsage', 'name': 'frame_rail', 'qn': "CostedCartLibrary::'Frame Assembly'::frame_rail"}
+        live_owner={'id': 'dedf9744-8824-5e5b-aabd-1d1a678a7f2e', 'metatype': 'PartDefinition', 'name': 'Frame Assembly', 'qn': "CostedCartLibrary::'Frame Assembly'"}
+      chain[1]={'id': 'e0d9237a-649f-5070-b488-7b9657327b65', 'metatype': 'AttributeUsage', 'name': 'length', 'qn': "CostedCartLibrary::'Frame Rail Set'::length"}
+        live_owner={'id': '6976ecc9-fdf6-5da2-847b-f1d0ec3e4222', 'metatype': 'PartDefinition', 'name': 'Frame Rail Set', 'qn': "CostedCartLibrary::'Frame Rail Set'"}
+      fact[0] element_id=bceace3f-427a-5eb6-93bc-4d765798c862 owner_element_id=dedf9744-8824-5e5b-aabd-1d1a678a7f2e owner_is_definition=True
+      fact[1] element_id=e0d9237a-649f-5070-b488-7b9657327b65 owner_element_id=6976ecc9-fdf6-5da2-847b-f1d0ec3e4222 owner_is_definition=True
+      VERDICT: NOT AFFECTED — 2 segments, one-segment branch not reached
+    site[3] writer={'id': '495e3ceb-54e4-4073-bc6a-6c95d62662e1', 'metatype': 'ReferenceUsage', 'name': 'None', 'qn': 'None'}
+      writer_owner={'id': 'f8b0d71b-c2ba-5cf6-858a-82e28b172d88', 'metatype': 'PartUsage', 'name': 'frame_assembly', 'qn': 'CostedCartDesign::cart_plant::frame_assembly'}
+      redefined={'id': '677a0cce-513d-444f-8597-76f2e6057133', 'metatype': 'Feature', 'name': 'None', 'qn': 'None'}
+      chain[0]={'id': 'e25cf1b6-464d-5176-a9ee-c51529473010', 'metatype': 'PartUsage', 'name': 'cross_brace', 'qn': "CostedCartLibrary::'Frame Assembly'::cross_brace"}
+        live_owner={'id': 'dedf9744-8824-5e5b-aabd-1d1a678a7f2e', 'metatype': 'PartDefinition', 'name': 'Frame Assembly', 'qn': "CostedCartLibrary::'Frame Assembly'"}
+      chain[1]={'id': '9e593bf8-9e7a-57bb-9715-2efe52fbee16', 'metatype': 'AttributeUsage', 'name': 'brace_count', 'qn': "CostedCartLibrary::'Cross Brace Set'::brace_count"}
+        live_owner={'id': '1baccffe-fb6f-5d31-8444-afd2b6788b76', 'metatype': 'PartDefinition', 'name': 'Cross Brace Set', 'qn': "CostedCartLibrary::'Cross Brace Set'"}
+      fact[0] element_id=e25cf1b6-464d-5176-a9ee-c51529473010 owner_element_id=dedf9744-8824-5e5b-aabd-1d1a678a7f2e owner_is_definition=True
+      fact[1] element_id=9e593bf8-9e7a-57bb-9715-2efe52fbee16 owner_element_id=1baccffe-fb6f-5d31-8444-afd2b6788b76 owner_is_definition=True
+      VERDICT: NOT AFFECTED — 2 segments, one-segment branch not reached
+=== fixture:d38_caret loaded=True validation_diagnostics=1
+    diagnostic: /home/reid/1cfe/sysml-codegen/tests/fixtures/d38_caret/library.sysml:34:23: warning (namespace-distinguishability): Member name 'result' shadows Performances::Evaluation::result
+    deep-literal lane sites: 1
+    site[0] writer={'id': '43b98eac-90ba-4667-b458-a35a6c2bf460', 'metatype': 'ReferenceUsage', 'name': 'None', 'qn': 'None'}
+      writer_owner={'id': '2a820161-9930-5b5e-9670-f6776b9686f5', 'metatype': 'PartUsage', 'name': 'pack', 'qn': 'D38Design::plant::pack'}
+      redefined={'id': '4956262c-3f7c-4192-bf6f-493a2cd7a83d', 'metatype': 'Feature', 'name': 'None', 'qn': 'None'}
+      chain[0]={'id': '5d5512fa-fb83-50bd-bd69-93ec689d59c2', 'metatype': 'PartUsage', 'name': 'cell', 'qn': 'D38Lib::Pack::cell'}
+        live_owner={'id': 'c3dddc04-d9cb-595a-bfc3-6763ef1cba04', 'metatype': 'PartDefinition', 'name': 'Pack', 'qn': 'D38Lib::Pack'}
+      chain[1]={'id': '78571ed3-7792-59be-be52-4c50de2bb5f2', 'metatype': 'AttributeUsage', 'name': 'base_cost', 'qn': 'D38Lib::Cell::base_cost'}
+        live_owner={'id': '86742d78-a4cd-52b5-be59-a26fe51c9d35', 'metatype': 'PartDefinition', 'name': 'Cell', 'qn': 'D38Lib::Cell'}
+      fact[0] element_id=5d5512fa-fb83-50bd-bd69-93ec689d59c2 owner_element_id=c3dddc04-d9cb-595a-bfc3-6763ef1cba04 owner_is_definition=True
+      fact[1] element_id=78571ed3-7792-59be-be52-4c50de2bb5f2 owner_element_id=86742d78-a4cd-52b5-be59-a26fe51c9d35 owner_is_definition=True
+      VERDICT: NOT AFFECTED — 2 segments, one-segment branch not reached
+=== fixture:issue22_model loaded=True validation_diagnostics=0
+    deep-literal lane sites: 1
+    site[0] writer={'id': '357c8ec3-c274-4a8f-9271-6363d2582c33', 'metatype': 'ReferenceUsage', 'name': 'None', 'qn': 'None'}
+      writer_owner={'id': '89f1ec2d-e031-5124-aa74-0c4a647c39d0', 'metatype': 'PartUsage', 'name': 'assembly', 'qn': 'Issue22Design::plant::assembly'}
+      redefined={'id': 'b1abeba3-139e-4a06-8df6-c4ab161b53fa', 'metatype': 'Feature', 'name': 'None', 'qn': 'None'}
+      chain[0]={'id': '23b2b6f1-882d-537a-b57b-462f7bcefff0', 'metatype': 'PartUsage', 'name': 'widget', 'qn': 'Issue22Library::WidgetAssembly::widget'}
+        live_owner={'id': '470fc691-1c65-521c-ad02-f3efdb7ebaf9', 'metatype': 'PartDefinition', 'name': 'WidgetAssembly', 'qn': 'Issue22Library::WidgetAssembly'}
+      chain[1]={'id': '0f3c5c4c-f730-567a-8942-944c9856fb20', 'metatype': 'AttributeUsage', 'name': 'base_cost', 'qn': 'Issue22Library::Widget::base_cost'}
+        live_owner={'id': 'ae971585-00f2-5ea0-9ea5-8b4f7e6f61c9', 'metatype': 'PartDefinition', 'name': 'Widget', 'qn': 'Issue22Library::Widget'}
+      fact[0] element_id=23b2b6f1-882d-537a-b57b-462f7bcefff0 owner_element_id=470fc691-1c65-521c-ad02-f3efdb7ebaf9 owner_is_definition=True
+      fact[1] element_id=0f3c5c4c-f730-567a-8942-944c9856fb20 owner_element_id=ae971585-00f2-5ea0-9ea5-8b4f7e6f61c9 owner_is_definition=True
+      VERDICT: NOT AFFECTED — 2 segments, one-segment branch not reached
+=== fixture:nested_occurrence_override_probe loaded=True validation_diagnostics=0
+    deep-literal lane sites: 1
+    site[0] writer={'id': '62fef560-41f9-4786-8f83-b6ae9fe2fda2', 'metatype': 'ReferenceUsage', 'name': 'None', 'qn': 'None'}
+      writer_owner={'id': '53c6df3f-133f-5694-82f7-a30d66976f12', 'metatype': 'PartUsage', 'name': 'panel', 'qn': 'nested_occurrence_override_probe::Design::panel'}
+      redefined={'id': 'e15c3d51-3895-44cb-abcf-37b3325b3e11', 'metatype': 'Feature', 'name': 'None', 'qn': 'None'}
+      chain[0]={'id': 'a9317e3a-cdb7-5774-ae1a-8a9e28dd9ea9', 'metatype': 'PartUsage', 'name': 'source', 'qn': 'nested_occurrence_override_probe::Panel::source'}
+        live_owner={'id': '1963efc6-938b-588c-84e9-0f38a53e3419', 'metatype': 'PartDefinition', 'name': 'Panel', 'qn': 'nested_occurrence_override_probe::Panel'}
+      chain[1]={'id': '667a23a2-56c9-5449-aa81-5e738d17b609', 'metatype': 'AttributeUsage', 'name': 'reading', 'qn': 'nested_occurrence_override_probe::Source::reading'}
+        live_owner={'id': 'c6081021-005c-5e3f-8de6-c38fea12a0dc', 'metatype': 'PartDefinition', 'name': 'Source', 'qn': 'nested_occurrence_override_probe::Source'}
+      fact[0] element_id=a9317e3a-cdb7-5774-ae1a-8a9e28dd9ea9 owner_element_id=1963efc6-938b-588c-84e9-0f38a53e3419 owner_is_definition=True
+      fact[1] element_id=667a23a2-56c9-5449-aa81-5e738d17b609 owner_element_id=c6081021-005c-5e3f-8de6-c38fea12a0dc owner_is_definition=True
+      VERDICT: NOT AFFECTED — 2 segments, one-segment branch not reached
+=== fixture:plant_values loaded=True validation_diagnostics=0
+    deep-literal lane sites: 1
+    site[0] writer={'id': '52862724-298e-4e23-92ce-d5c26b9514e9', 'metatype': 'ReferenceUsage', 'name': 'None', 'qn': 'None'}
+      writer_owner={'id': '09de4c20-c3c7-5ee6-9059-471f36b29f3d', 'metatype': 'PartUsage', 'name': 'plant', 'qn': 'PlantValuesDesign::plant'}
+      redefined={'id': 'd133af70-c1f4-47a4-8ed4-3b9dff17403d', 'metatype': 'Feature', 'name': 'None', 'qn': 'None'}
+      chain[0]={'id': '686c4be3-7d70-580c-a5a1-04f1b3970a68', 'metatype': 'PartUsage', 'name': 'chamber', 'qn': "PlantValuesLib::'Power Plant'::chamber"}
+        live_owner={'id': 'c160e2c0-d056-5a85-8bd3-1ba5ab0ac592', 'metatype': 'PartDefinition', 'name': 'Power Plant', 'qn': "PlantValuesLib::'Power Plant'"}
+      chain[1]={'id': '80622448-0268-556c-b9a7-56af1253a672', 'metatype': 'AttributeUsage', 'name': 'cost_per_unit', 'qn': "PlantValuesLib::'Reaction Chamber'::cost_per_unit"}
+        live_owner={'id': '3bc739e1-4422-5ec5-87d0-787e20fde84b', 'metatype': 'PartDefinition', 'name': 'Reaction Chamber', 'qn': "PlantValuesLib::'Reaction Chamber'"}
+      fact[0] element_id=686c4be3-7d70-580c-a5a1-04f1b3970a68 owner_element_id=c160e2c0-d056-5a85-8bd3-1ba5ab0ac592 owner_is_definition=True
+      fact[1] element_id=80622448-0268-556c-b9a7-56af1253a672 owner_element_id=3bc739e1-4422-5ec5-87d0-787e20fde84b owner_is_definition=True
+      VERDICT: NOT AFFECTED — 2 segments, one-segment branch not reached
+=== fixture:solar_battery_d5 loaded=True validation_diagnostics=0
+    deep-literal lane sites: 13
+    site[0] writer={'id': '403ba61d-42c7-40be-94d6-39e20da6c776', 'metatype': 'ReferenceUsage', 'name': 'None', 'qn': 'None'}
+      writer_owner={'id': '3feb386d-5557-5008-8e7e-f0fb44a1896a', 'metatype': 'PartUsage', 'name': 'solar_array', 'qn': 'SolarBatteryDesign::solar_battery_plant::solar_array'}
+      redefined={'id': '11c389f5-0f1f-437c-a745-2e8807746fb1', 'metatype': 'Feature', 'name': 'None', 'qn': 'None'}
+      chain[0]={'id': '7262839c-52ec-5df9-9bc5-ffa28b4150ea', 'metatype': 'PartUsage', 'name': 'pv_module', 'qn': "SolarBatteryLibrary::'Solar Array'::pv_module"}
+        live_owner={'id': '33f46fdc-8770-54ed-a087-b57b3f1475ad', 'metatype': 'PartDefinition', 'name': 'Solar Array', 'qn': "SolarBatteryLibrary::'Solar Array'"}
+      chain[1]={'id': '232f9b56-8dd9-5190-9591-83b44234094f', 'metatype': 'AttributeUsage', 'name': 'wattage', 'qn': "SolarBatteryLibrary::'PV Module'::wattage"}
+        live_owner={'id': '4f8d7986-1fa4-586f-bd24-03450a05d9ed', 'metatype': 'PartDefinition', 'name': 'PV Module', 'qn': "SolarBatteryLibrary::'PV Module'"}
+      fact[0] element_id=7262839c-52ec-5df9-9bc5-ffa28b4150ea owner_element_id=33f46fdc-8770-54ed-a087-b57b3f1475ad owner_is_definition=True
+      fact[1] element_id=232f9b56-8dd9-5190-9591-83b44234094f owner_element_id=4f8d7986-1fa4-586f-bd24-03450a05d9ed owner_is_definition=True
+      VERDICT: NOT AFFECTED — 2 segments, one-segment branch not reached
+    site[1] writer={'id': '2e081ad4-2c4c-4333-be64-26f138545673', 'metatype': 'ReferenceUsage', 'name': 'None', 'qn': 'None'}
+      writer_owner={'id': '3feb386d-5557-5008-8e7e-f0fb44a1896a', 'metatype': 'PartUsage', 'name': 'solar_array', 'qn': 'SolarBatteryDesign::solar_battery_plant::solar_array'}
+      redefined={'id': '44245c5b-7efc-4957-9cb3-6cfdd52566d6', 'metatype': 'Feature', 'name': 'None', 'qn': 'None'}
+      chain[0]={'id': '7262839c-52ec-5df9-9bc5-ffa28b4150ea', 'metatype': 'PartUsage', 'name': 'pv_module', 'qn': "SolarBatteryLibrary::'Solar Array'::pv_module"}
+        live_owner={'id': '33f46fdc-8770-54ed-a087-b57b3f1475ad', 'metatype': 'PartDefinition', 'name': 'Solar Array', 'qn': "SolarBatteryLibrary::'Solar Array'"}
+      chain[1]={'id': '22365a2d-9c43-50ea-a244-78cd09d5bf36', 'metatype': 'AttributeUsage', 'name': 'efficiency', 'qn': "SolarBatteryLibrary::'PV Module'::efficiency"}
+        live_owner={'id': '4f8d7986-1fa4-586f-bd24-03450a05d9ed', 'metatype': 'PartDefinition', 'name': 'PV Module', 'qn': "SolarBatteryLibrary::'PV Module'"}
+      fact[0] element_id=7262839c-52ec-5df9-9bc5-ffa28b4150ea owner_element_id=33f46fdc-8770-54ed-a087-b57b3f1475ad owner_is_definition=True
+      fact[1] element_id=22365a2d-9c43-50ea-a244-78cd09d5bf36 owner_element_id=4f8d7986-1fa4-586f-bd24-03450a05d9ed owner_is_definition=True
+      VERDICT: NOT AFFECTED — 2 segments, one-segment branch not reached
+    site[2] writer={'id': '2a52bdef-1f88-4a8f-b334-0498ae675663', 'metatype': 'ReferenceUsage', 'name': 'None', 'qn': 'None'}
+      writer_owner={'id': '3feb386d-5557-5008-8e7e-f0fb44a1896a', 'metatype': 'PartUsage', 'name': 'solar_array', 'qn': 'SolarBatteryDesign::solar_battery_plant::solar_array'}
+      redefined={'id': '4a630c7e-2935-406b-991a-07c2a69b3acd', 'metatype': 'Feature', 'name': 'None', 'qn': 'None'}
+      chain[0]={'id': '952ed7bc-b957-5121-8a4a-d8b3773905fa', 'metatype': 'PartUsage', 'name': 'inverter', 'qn': "SolarBatteryLibrary::'Solar Array'::inverter"}
+        live_owner={'id': '33f46fdc-8770-54ed-a087-b57b3f1475ad', 'metatype': 'PartDefinition', 'name': 'Solar Array', 'qn': "SolarBatteryLibrary::'Solar Array'"}
+      chain[1]={'id': 'e0408d72-12ca-5f1c-88ed-19388d3a77e6', 'metatype': 'AttributeUsage', 'name': 'power_rating', 'qn': "SolarBatteryLibrary::'String Inverter'::power_rating"}
+        live_owner={'id': 'e2da1373-6ed5-5324-a38f-7355f77531a3', 'metatype': 'PartDefinition', 'name': 'String Inverter', 'qn': "SolarBatteryLibrary::'String Inverter'"}
+      fact[0] element_id=952ed7bc-b957-5121-8a4a-d8b3773905fa owner_element_id=33f46fdc-8770-54ed-a087-b57b3f1475ad owner_is_definition=True
+      fact[1] element_id=e0408d72-12ca-5f1c-88ed-19388d3a77e6 owner_element_id=e2da1373-6ed5-5324-a38f-7355f77531a3 owner_is_definition=True
+      VERDICT: NOT AFFECTED — 2 segments, one-segment branch not reached
+    site[3] writer={'id': '40991439-42f6-4cfb-8800-1b915b0b887c', 'metatype': 'ReferenceUsage', 'name': 'None', 'qn': 'None'}
+      writer_owner={'id': '3feb386d-5557-5008-8e7e-f0fb44a1896a', 'metatype': 'PartUsage', 'name': 'solar_array', 'qn': 'SolarBatteryDesign::solar_battery_plant::solar_array'}
+      redefined={'id': '25226586-0815-47e6-a548-8d8d6853e870', 'metatype': 'Feature', 'name': 'None', 'qn': 'None'}
+      chain[0]={'id': '5aac0b40-bccc-5231-8788-466ed2ed84c1', 'metatype': 'PartUsage', 'name': 'array_bos', 'qn': "SolarBatteryLibrary::'Solar Array'::array_bos"}
+        live_owner={'id': '33f46fdc-8770-54ed-a087-b57b3f1475ad', 'metatype': 'PartDefinition', 'name': 'Solar Array', 'qn': "SolarBatteryLibrary::'Solar Array'"}
+      chain[1]={'id': '74891c62-cf02-572f-a274-fe3192eb5615', 'metatype': 'AttributeUsage', 'name': 'string_count', 'qn': "SolarBatteryLibrary::'Array BOS'::string_count"}
+        live_owner={'id': 'd4ef4feb-dd20-5253-9155-9cc83b42e745', 'metatype': 'PartDefinition', 'name': 'Array BOS', 'qn': "SolarBatteryLibrary::'Array BOS'"}
+      fact[0] element_id=5aac0b40-bccc-5231-8788-466ed2ed84c1 owner_element_id=33f46fdc-8770-54ed-a087-b57b3f1475ad owner_is_definition=True
+      fact[1] element_id=74891c62-cf02-572f-a274-fe3192eb5615 owner_element_id=d4ef4feb-dd20-5253-9155-9cc83b42e745 owner_is_definition=True
+      VERDICT: NOT AFFECTED — 2 segments, one-segment branch not reached
+    site[4] writer={'id': 'd2d677d5-60b4-4afa-9fe6-d9fb3973f4c7', 'metatype': 'ReferenceUsage', 'name': 'None', 'qn': 'None'}
+      writer_owner={'id': '3feb386d-5557-5008-8e7e-f0fb44a1896a', 'metatype': 'PartUsage', 'name': 'solar_array', 'qn': 'SolarBatteryDesign::solar_battery_plant::solar_array'}
+      redefined={'id': 'd5b1fc19-d851-4051-b757-c9311ff5af24', 'metatype': 'Feature', 'name': 'None', 'qn': 'None'}
+      chain[0]={'id': '5aac0b40-bccc-5231-8788-466ed2ed84c1', 'metatype': 'PartUsage', 'name': 'array_bos', 'qn': "SolarBatteryLibrary::'Solar Array'::array_bos"}
+        live_owner={'id': '33f46fdc-8770-54ed-a087-b57b3f1475ad', 'metatype': 'PartDefinition', 'name': 'Solar Array', 'qn': "SolarBatteryLibrary::'Solar Array'"}
+      chain[1]={'id': '962fef56-1b50-50b2-a00d-509ae0a8a8fd', 'metatype': 'AttributeUsage', 'name': 'panel_count', 'qn': "SolarBatteryLibrary::'Array BOS'::panel_count"}
+        live_owner={'id': 'd4ef4feb-dd20-5253-9155-9cc83b42e745', 'metatype': 'PartDefinition', 'name': 'Array BOS', 'qn': "SolarBatteryLibrary::'Array BOS'"}
+      fact[0] element_id=5aac0b40-bccc-5231-8788-466ed2ed84c1 owner_element_id=33f46fdc-8770-54ed-a087-b57b3f1475ad owner_is_definition=True
+      fact[1] element_id=962fef56-1b50-50b2-a00d-509ae0a8a8fd owner_element_id=d4ef4feb-dd20-5253-9155-9cc83b42e745 owner_is_definition=True
+      VERDICT: NOT AFFECTED — 2 segments, one-segment branch not reached
+    site[5] writer={'id': '8a696c32-71d8-410a-9b0b-a5549a4a5aed', 'metatype': 'ReferenceUsage', 'name': 'None', 'qn': 'None'}
+      writer_owner={'id': 'bf76e556-a543-5b7d-a058-3c2d69c8e5f2', 'metatype': 'PartUsage', 'name': 'battery_system', 'qn': 'SolarBatteryDesign::solar_battery_plant::battery_system'}
+      redefined={'id': 'd1d08501-115c-41e0-a68c-9932b3dc4ea1', 'metatype': 'Feature', 'name': 'None', 'qn': 'None'}
+      chain[0]={'id': '291fb8e1-1a8b-5cd2-abc5-141442a6db35', 'metatype': 'PartUsage', 'name': 'battery_pack', 'qn': "SolarBatteryLibrary::'Battery System'::battery_pack"}
+        live_owner={'id': 'bfb1e2a9-bf94-5c62-b65d-19b077b560db', 'metatype': 'PartDefinition', 'name': 'Battery System', 'qn': "SolarBatteryLibrary::'Battery System'"}
+      chain[1]={'id': 'ae4698f6-67a9-53bb-b360-85d1b88ebe33', 'metatype': 'AttributeUsage', 'name': 'capacity_kwh', 'qn': "SolarBatteryLibrary::'Battery Pack'::capacity_kwh"}
+        live_owner={'id': '005303f8-9b44-5d0a-a349-2f70138cb536', 'metatype': 'PartDefinition', 'name': 'Battery Pack', 'qn': "SolarBatteryLibrary::'Battery Pack'"}
+      fact[0] element_id=291fb8e1-1a8b-5cd2-abc5-141442a6db35 owner_element_id=bfb1e2a9-bf94-5c62-b65d-19b077b560db owner_is_definition=True
+      fact[1] element_id=ae4698f6-67a9-53bb-b360-85d1b88ebe33 owner_element_id=005303f8-9b44-5d0a-a349-2f70138cb536 owner_is_definition=True
+      VERDICT: NOT AFFECTED — 2 segments, one-segment branch not reached
+    site[6] writer={'id': '93accb50-56bc-4667-9edd-530030a7a8b5', 'metatype': 'ReferenceUsage', 'name': 'None', 'qn': 'None'}
+      writer_owner={'id': 'bf76e556-a543-5b7d-a058-3c2d69c8e5f2', 'metatype': 'PartUsage', 'name': 'battery_system', 'qn': 'SolarBatteryDesign::solar_battery_plant::battery_system'}
+      redefined={'id': 'e9bf6dbf-edcc-40f0-9fee-4c110fa5b56a', 'metatype': 'Feature', 'name': 'None', 'qn': 'None'}
+      chain[0]={'id': '291fb8e1-1a8b-5cd2-abc5-141442a6db35', 'metatype': 'PartUsage', 'name': 'battery_pack', 'qn': "SolarBatteryLibrary::'Battery System'::battery_pack"}
+        live_owner={'id': 'bfb1e2a9-bf94-5c62-b65d-19b077b560db', 'metatype': 'PartDefinition', 'name': 'Battery System', 'qn': "SolarBatteryLibrary::'Battery System'"}
+      chain[1]={'id': 'ee6c94c1-fe32-5a30-982d-de8d96b0513e', 'metatype': 'AttributeUsage', 'name': 'chemistry_factor', 'qn': "SolarBatteryLibrary::'Battery Pack'::chemistry_factor"}
+        live_owner={'id': '005303f8-9b44-5d0a-a349-2f70138cb536', 'metatype': 'PartDefinition', 'name': 'Battery Pack', 'qn': "SolarBatteryLibrary::'Battery Pack'"}
+      fact[0] element_id=291fb8e1-1a8b-5cd2-abc5-141442a6db35 owner_element_id=bfb1e2a9-bf94-5c62-b65d-19b077b560db owner_is_definition=True
+      fact[1] element_id=ee6c94c1-fe32-5a30-982d-de8d96b0513e owner_element_id=005303f8-9b44-5d0a-a349-2f70138cb536 owner_is_definition=True
+      VERDICT: NOT AFFECTED — 2 segments, one-segment branch not reached
+    site[7] writer={'id': '6e7b1997-f306-4fa0-8238-8023b8e06355', 'metatype': 'ReferenceUsage', 'name': 'None', 'qn': 'None'}
+      writer_owner={'id': 'bf76e556-a543-5b7d-a058-3c2d69c8e5f2', 'metatype': 'PartUsage', 'name': 'battery_system', 'qn': 'SolarBatteryDesign::solar_battery_plant::battery_system'}
+      redefined={'id': '1884588d-fb64-4485-b28c-6f377fbeffda', 'metatype': 'Feature', 'name': 'None', 'qn': 'None'}
+      chain[0]={'id': '74c6f729-2555-59dd-b62b-f164562e4949', 'metatype': 'PartUsage', 'name': 'hybrid_inverter', 'qn': "SolarBatteryLibrary::'Battery System'::hybrid_inverter"}
+        live_owner={'id': 'bfb1e2a9-bf94-5c62-b65d-19b077b560db', 'metatype': 'PartDefinition', 'name': 'Battery System', 'qn': "SolarBatteryLibrary::'Battery System'"}
+      chain[1]={'id': '6a4ebbf8-ef81-56ac-be24-0568781cf28c', 'metatype': 'AttributeUsage', 'name': 'power_rating', 'qn': "SolarBatteryLibrary::'Hybrid Inverter'::power_rating"}
+        live_owner={'id': '21e93760-4bf1-5386-b2d6-bab9ec8a8de7', 'metatype': 'PartDefinition', 'name': 'Hybrid Inverter', 'qn': "SolarBatteryLibrary::'Hybrid Inverter'"}
+      fact[0] element_id=74c6f729-2555-59dd-b62b-f164562e4949 owner_element_id=bfb1e2a9-bf94-5c62-b65d-19b077b560db owner_is_definition=True
+      fact[1] element_id=6a4ebbf8-ef81-56ac-be24-0568781cf28c owner_element_id=21e93760-4bf1-5386-b2d6-bab9ec8a8de7 owner_is_definition=True
+      VERDICT: NOT AFFECTED — 2 segments, one-segment branch not reached
+    site[8] writer={'id': '73683b39-be9f-4cd4-8529-826aa42fe137', 'metatype': 'ReferenceUsage', 'name': 'None', 'qn': 'None'}
+      writer_owner={'id': 'bf76e556-a543-5b7d-a058-3c2d69c8e5f2', 'metatype': 'PartUsage', 'name': 'battery_system', 'qn': 'SolarBatteryDesign::solar_battery_plant::battery_system'}
+      redefined={'id': '6bc25c74-7c30-41fa-a833-c5cf4d774837', 'metatype': 'Feature', 'name': 'None', 'qn': 'None'}
+      chain[0]={'id': '907b76a4-4692-50ec-a41e-d6449aaa4f56', 'metatype': 'PartUsage', 'name': 'battery_bos', 'qn': "SolarBatteryLibrary::'Battery System'::battery_bos"}
+        live_owner={'id': 'bfb1e2a9-bf94-5c62-b65d-19b077b560db', 'metatype': 'PartDefinition', 'name': 'Battery System', 'qn': "SolarBatteryLibrary::'Battery System'"}
+      chain[1]={'id': 'baa096e7-e760-5cb9-8b48-1c370adb3219', 'metatype': 'AttributeUsage', 'name': 'pack_count', 'qn': "SolarBatteryLibrary::'Battery BOS'::pack_count"}
+        live_owner={'id': '6a126e31-e260-51d4-ab14-839fe2291659', 'metatype': 'PartDefinition', 'name': 'Battery BOS', 'qn': "SolarBatteryLibrary::'Battery BOS'"}
+      fact[0] element_id=907b76a4-4692-50ec-a41e-d6449aaa4f56 owner_element_id=bfb1e2a9-bf94-5c62-b65d-19b077b560db owner_is_definition=True
+      fact[1] element_id=baa096e7-e760-5cb9-8b48-1c370adb3219 owner_element_id=6a126e31-e260-51d4-ab14-839fe2291659 owner_is_definition=True
+      VERDICT: NOT AFFECTED — 2 segments, one-segment branch not reached
+    site[9] writer={'id': '2fc739ac-01e6-4bac-acf7-00fd8b91da10', 'metatype': 'ReferenceUsage', 'name': 'None', 'qn': 'None'}
+      writer_owner={'id': '5737eaff-838c-5821-910e-df5fbf060afd', 'metatype': 'PartUsage', 'name': 'site_infra', 'qn': 'SolarBatteryDesign::solar_battery_plant::site_infra'}
+      redefined={'id': 'a992685b-c931-4bb4-ad59-7ceb55666da6', 'metatype': 'Feature', 'name': 'None', 'qn': 'None'}
+      chain[0]={'id': 'f08c27be-e46e-5796-97e5-7ec2780379cf', 'metatype': 'PartUsage', 'name': 'racking', 'qn': "SolarBatteryLibrary::'Site Infrastructure'::racking"}
+        live_owner={'id': '070344a5-e2b2-5c3c-bced-a2b0ce8ed465', 'metatype': 'PartDefinition', 'name': 'Site Infrastructure', 'qn': "SolarBatteryLibrary::'Site Infrastructure'"}
+      chain[1]={'id': 'fa13235f-aaa9-5fb2-8f67-c89c43e46dc9', 'metatype': 'AttributeUsage', 'name': 'panel_count', 'qn': "SolarBatteryLibrary::'Racking & Mounting'::panel_count"}
+        live_owner={'id': '0442e4e5-76fa-5cb2-aad1-7b2da728e635', 'metatype': 'PartDefinition', 'name': 'Racking & Mounting', 'qn': "SolarBatteryLibrary::'Racking & Mounting'"}
+      fact[0] element_id=f08c27be-e46e-5796-97e5-7ec2780379cf owner_element_id=070344a5-e2b2-5c3c-bced-a2b0ce8ed465 owner_is_definition=True
+      fact[1] element_id=fa13235f-aaa9-5fb2-8f67-c89c43e46dc9 owner_element_id=0442e4e5-76fa-5cb2-aad1-7b2da728e635 owner_is_definition=True
+      VERDICT: NOT AFFECTED — 2 segments, one-segment branch not reached
+    site[10] writer={'id': '40b59e91-38a0-4618-9ebc-c6d1850089f3', 'metatype': 'ReferenceUsage', 'name': 'None', 'qn': 'None'}
+      writer_owner={'id': '5737eaff-838c-5821-910e-df5fbf060afd', 'metatype': 'PartUsage', 'name': 'site_infra', 'qn': 'SolarBatteryDesign::solar_battery_plant::site_infra'}
+      redefined={'id': 'cbaf0bdb-4c6f-4592-b919-dbb51f754ced', 'metatype': 'Feature', 'name': 'None', 'qn': 'None'}
+      chain[0]={'id': 'f08c27be-e46e-5796-97e5-7ec2780379cf', 'metatype': 'PartUsage', 'name': 'racking', 'qn': "SolarBatteryLibrary::'Site Infrastructure'::racking"}
+        live_owner={'id': '070344a5-e2b2-5c3c-bced-a2b0ce8ed465', 'metatype': 'PartDefinition', 'name': 'Site Infrastructure', 'qn': "SolarBatteryLibrary::'Site Infrastructure'"}
+      chain[1]={'id': '37613430-d7bf-590d-bc88-abe4f43985b4', 'metatype': 'AttributeUsage', 'name': 'tilt_angle', 'qn': "SolarBatteryLibrary::'Racking & Mounting'::tilt_angle"}
+        live_owner={'id': '0442e4e5-76fa-5cb2-aad1-7b2da728e635', 'metatype': 'PartDefinition', 'name': 'Racking & Mounting', 'qn': "SolarBatteryLibrary::'Racking & Mounting'"}
+      fact[0] element_id=f08c27be-e46e-5796-97e5-7ec2780379cf owner_element_id=070344a5-e2b2-5c3c-bced-a2b0ce8ed465 owner_is_definition=True
+      fact[1] element_id=37613430-d7bf-590d-bc88-abe4f43985b4 owner_element_id=0442e4e5-76fa-5cb2-aad1-7b2da728e635 owner_is_definition=True
+      VERDICT: NOT AFFECTED — 2 segments, one-segment branch not reached
+    site[11] writer={'id': 'fe8e5ebb-1a56-492e-9f9f-d64c26487b99', 'metatype': 'ReferenceUsage', 'name': 'None', 'qn': 'None'}
+      writer_owner={'id': '5737eaff-838c-5821-910e-df5fbf060afd', 'metatype': 'PartUsage', 'name': 'site_infra', 'qn': 'SolarBatteryDesign::solar_battery_plant::site_infra'}
+      redefined={'id': 'eba45319-65d2-4b39-a9ce-a433ba1e698f', 'metatype': 'Feature', 'name': 'None', 'qn': 'None'}
+      chain[0]={'id': 'b11a9821-2dcb-5fc8-91b8-c2b31c01c34a', 'metatype': 'PartUsage', 'name': 'electrical_panel', 'qn': "SolarBatteryLibrary::'Site Infrastructure'::electrical_panel"}
+        live_owner={'id': '070344a5-e2b2-5c3c-bced-a2b0ce8ed465', 'metatype': 'PartDefinition', 'name': 'Site Infrastructure', 'qn': "SolarBatteryLibrary::'Site Infrastructure'"}
+      chain[1]={'id': 'af196cfb-b906-522e-9291-6d7315b61a0c', 'metatype': 'AttributeUsage', 'name': 'circuit_count', 'qn': "SolarBatteryLibrary::'Electrical Panel'::circuit_count"}
+        live_owner={'id': 'd5f53b8b-b697-59df-a42a-1d49d2f82923', 'metatype': 'PartDefinition', 'name': 'Electrical Panel', 'qn': "SolarBatteryLibrary::'Electrical Panel'"}
+      fact[0] element_id=b11a9821-2dcb-5fc8-91b8-c2b31c01c34a owner_element_id=070344a5-e2b2-5c3c-bced-a2b0ce8ed465 owner_is_definition=True
+      fact[1] element_id=af196cfb-b906-522e-9291-6d7315b61a0c owner_element_id=d5f53b8b-b697-59df-a42a-1d49d2f82923 owner_is_definition=True
+      VERDICT: NOT AFFECTED — 2 segments, one-segment branch not reached
+    site[12] writer={'id': 'a51dec91-d626-42c4-8ac2-c55cfe1134cb', 'metatype': 'ReferenceUsage', 'name': 'None', 'qn': 'None'}
+      writer_owner={'id': '5737eaff-838c-5821-910e-df5fbf060afd', 'metatype': 'PartUsage', 'name': 'site_infra', 'qn': 'SolarBatteryDesign::solar_battery_plant::site_infra'}
+      redefined={'id': '18bcec39-5767-4a8b-8188-e1bac0e535b6', 'metatype': 'Feature', 'name': 'None', 'qn': 'None'}
+      chain[0]={'id': '6a2bf869-68a5-5d4d-a856-a3bdd9bed71e', 'metatype': 'PartUsage', 'name': 'permitting', 'qn': "SolarBatteryLibrary::'Site Infrastructure'::permitting"}
+        live_owner={'id': '070344a5-e2b2-5c3c-bced-a2b0ce8ed465', 'metatype': 'PartDefinition', 'name': 'Site Infrastructure', 'qn': "SolarBatteryLibrary::'Site Infrastructure'"}
+      chain[1]={'id': '6307be8a-973a-571c-a7e1-4d761b9af328', 'metatype': 'AttributeUsage', 'name': 'system_capacity_kw', 'qn': "SolarBatteryLibrary::'Permitting & Interconnect'::system_capacity_kw"}
+        live_owner={'id': '99b36679-e56e-5b7a-a3b9-0f51c77f7f15', 'metatype': 'PartDefinition', 'name': 'Permitting & Interconnect', 'qn': "SolarBatteryLibrary::'Permitting & Interconnect'"}
+      fact[0] element_id=6a2bf869-68a5-5d4d-a856-a3bdd9bed71e owner_element_id=070344a5-e2b2-5c3c-bced-a2b0ce8ed465 owner_is_definition=True
+      fact[1] element_id=6307be8a-973a-571c-a7e1-4d761b9af328 owner_element_id=99b36679-e56e-5b7a-a3b9-0f51c77f7f15 owner_is_definition=True
+      VERDICT: NOT AFFECTED — 2 segments, one-segment branch not reached
+=== fixture:solar_battery_model loaded=True validation_diagnostics=0
+    deep-literal lane sites: 13
+    site[0] writer={'id': '1ab6dbc4-de82-4b8e-9863-d8ad8a5bd595', 'metatype': 'ReferenceUsage', 'name': 'None', 'qn': 'None'}
+      writer_owner={'id': '3feb386d-5557-5008-8e7e-f0fb44a1896a', 'metatype': 'PartUsage', 'name': 'solar_array', 'qn': 'SolarBatteryDesign::solar_battery_plant::solar_array'}
+      redefined={'id': 'd896bb2b-520a-41c8-9323-450ef06327ff', 'metatype': 'Feature', 'name': 'None', 'qn': 'None'}
+      chain[0]={'id': '7262839c-52ec-5df9-9bc5-ffa28b4150ea', 'metatype': 'PartUsage', 'name': 'pv_module', 'qn': "SolarBatteryLibrary::'Solar Array'::pv_module"}
+        live_owner={'id': '33f46fdc-8770-54ed-a087-b57b3f1475ad', 'metatype': 'PartDefinition', 'name': 'Solar Array', 'qn': "SolarBatteryLibrary::'Solar Array'"}
+      chain[1]={'id': '232f9b56-8dd9-5190-9591-83b44234094f', 'metatype': 'AttributeUsage', 'name': 'wattage', 'qn': "SolarBatteryLibrary::'PV Module'::wattage"}
+        live_owner={'id': '4f8d7986-1fa4-586f-bd24-03450a05d9ed', 'metatype': 'PartDefinition', 'name': 'PV Module', 'qn': "SolarBatteryLibrary::'PV Module'"}
+      fact[0] element_id=7262839c-52ec-5df9-9bc5-ffa28b4150ea owner_element_id=33f46fdc-8770-54ed-a087-b57b3f1475ad owner_is_definition=True
+      fact[1] element_id=232f9b56-8dd9-5190-9591-83b44234094f owner_element_id=4f8d7986-1fa4-586f-bd24-03450a05d9ed owner_is_definition=True
+      VERDICT: NOT AFFECTED — 2 segments, one-segment branch not reached
+    site[1] writer={'id': 'b129bc99-43f3-430f-b982-d80af068066a', 'metatype': 'ReferenceUsage', 'name': 'None', 'qn': 'None'}
+      writer_owner={'id': '3feb386d-5557-5008-8e7e-f0fb44a1896a', 'metatype': 'PartUsage', 'name': 'solar_array', 'qn': 'SolarBatteryDesign::solar_battery_plant::solar_array'}
+      redefined={'id': '8cc26b20-c547-4c3a-96dc-a2c50e6b7eb9', 'metatype': 'Feature', 'name': 'None', 'qn': 'None'}
+      chain[0]={'id': '7262839c-52ec-5df9-9bc5-ffa28b4150ea', 'metatype': 'PartUsage', 'name': 'pv_module', 'qn': "SolarBatteryLibrary::'Solar Array'::pv_module"}
+        live_owner={'id': '33f46fdc-8770-54ed-a087-b57b3f1475ad', 'metatype': 'PartDefinition', 'name': 'Solar Array', 'qn': "SolarBatteryLibrary::'Solar Array'"}
+      chain[1]={'id': '22365a2d-9c43-50ea-a244-78cd09d5bf36', 'metatype': 'AttributeUsage', 'name': 'efficiency', 'qn': "SolarBatteryLibrary::'PV Module'::efficiency"}
+        live_owner={'id': '4f8d7986-1fa4-586f-bd24-03450a05d9ed', 'metatype': 'PartDefinition', 'name': 'PV Module', 'qn': "SolarBatteryLibrary::'PV Module'"}
+      fact[0] element_id=7262839c-52ec-5df9-9bc5-ffa28b4150ea owner_element_id=33f46fdc-8770-54ed-a087-b57b3f1475ad owner_is_definition=True
+      fact[1] element_id=22365a2d-9c43-50ea-a244-78cd09d5bf36 owner_element_id=4f8d7986-1fa4-586f-bd24-03450a05d9ed owner_is_definition=True
+      VERDICT: NOT AFFECTED — 2 segments, one-segment branch not reached
+    site[2] writer={'id': '9d24a721-0117-4256-8aa0-2c5a449ef929', 'metatype': 'ReferenceUsage', 'name': 'None', 'qn': 'None'}
+      writer_owner={'id': '3feb386d-5557-5008-8e7e-f0fb44a1896a', 'metatype': 'PartUsage', 'name': 'solar_array', 'qn': 'SolarBatteryDesign::solar_battery_plant::solar_array'}
+      redefined={'id': 'cc5d43b2-8472-44a9-b593-1382b95b80d8', 'metatype': 'Feature', 'name': 'None', 'qn': 'None'}
+      chain[0]={'id': '952ed7bc-b957-5121-8a4a-d8b3773905fa', 'metatype': 'PartUsage', 'name': 'inverter', 'qn': "SolarBatteryLibrary::'Solar Array'::inverter"}
+        live_owner={'id': '33f46fdc-8770-54ed-a087-b57b3f1475ad', 'metatype': 'PartDefinition', 'name': 'Solar Array', 'qn': "SolarBatteryLibrary::'Solar Array'"}
+      chain[1]={'id': 'e0408d72-12ca-5f1c-88ed-19388d3a77e6', 'metatype': 'AttributeUsage', 'name': 'power_rating', 'qn': "SolarBatteryLibrary::'String Inverter'::power_rating"}
+        live_owner={'id': 'e2da1373-6ed5-5324-a38f-7355f77531a3', 'metatype': 'PartDefinition', 'name': 'String Inverter', 'qn': "SolarBatteryLibrary::'String Inverter'"}
+      fact[0] element_id=952ed7bc-b957-5121-8a4a-d8b3773905fa owner_element_id=33f46fdc-8770-54ed-a087-b57b3f1475ad owner_is_definition=True
+      fact[1] element_id=e0408d72-12ca-5f1c-88ed-19388d3a77e6 owner_element_id=e2da1373-6ed5-5324-a38f-7355f77531a3 owner_is_definition=True
+      VERDICT: NOT AFFECTED — 2 segments, one-segment branch not reached
+    site[3] writer={'id': '90ff4598-3ec1-4030-9541-cde11759bc5a', 'metatype': 'ReferenceUsage', 'name': 'None', 'qn': 'None'}
+      writer_owner={'id': '3feb386d-5557-5008-8e7e-f0fb44a1896a', 'metatype': 'PartUsage', 'name': 'solar_array', 'qn': 'SolarBatteryDesign::solar_battery_plant::solar_array'}
+      redefined={'id': '920f225f-9205-4224-9d86-e51690153d8f', 'metatype': 'Feature', 'name': 'None', 'qn': 'None'}
+      chain[0]={'id': '5aac0b40-bccc-5231-8788-466ed2ed84c1', 'metatype': 'PartUsage', 'name': 'array_bos', 'qn': "SolarBatteryLibrary::'Solar Array'::array_bos"}
+        live_owner={'id': '33f46fdc-8770-54ed-a087-b57b3f1475ad', 'metatype': 'PartDefinition', 'name': 'Solar Array', 'qn': "SolarBatteryLibrary::'Solar Array'"}
+      chain[1]={'id': '74891c62-cf02-572f-a274-fe3192eb5615', 'metatype': 'AttributeUsage', 'name': 'string_count', 'qn': "SolarBatteryLibrary::'Array BOS'::string_count"}
+        live_owner={'id': 'd4ef4feb-dd20-5253-9155-9cc83b42e745', 'metatype': 'PartDefinition', 'name': 'Array BOS', 'qn': "SolarBatteryLibrary::'Array BOS'"}
+      fact[0] element_id=5aac0b40-bccc-5231-8788-466ed2ed84c1 owner_element_id=33f46fdc-8770-54ed-a087-b57b3f1475ad owner_is_definition=True
+      fact[1] element_id=74891c62-cf02-572f-a274-fe3192eb5615 owner_element_id=d4ef4feb-dd20-5253-9155-9cc83b42e745 owner_is_definition=True
+      VERDICT: NOT AFFECTED — 2 segments, one-segment branch not reached
+    site[4] writer={'id': 'ab8c5785-f34d-4d31-baae-e6f705c55176', 'metatype': 'ReferenceUsage', 'name': 'None', 'qn': 'None'}
+      writer_owner={'id': '3feb386d-5557-5008-8e7e-f0fb44a1896a', 'metatype': 'PartUsage', 'name': 'solar_array', 'qn': 'SolarBatteryDesign::solar_battery_plant::solar_array'}
+      redefined={'id': 'e8dcdad0-3bc6-4351-ae8e-fe1a87310c7b', 'metatype': 'Feature', 'name': 'None', 'qn': 'None'}
+      chain[0]={'id': '5aac0b40-bccc-5231-8788-466ed2ed84c1', 'metatype': 'PartUsage', 'name': 'array_bos', 'qn': "SolarBatteryLibrary::'Solar Array'::array_bos"}
+        live_owner={'id': '33f46fdc-8770-54ed-a087-b57b3f1475ad', 'metatype': 'PartDefinition', 'name': 'Solar Array', 'qn': "SolarBatteryLibrary::'Solar Array'"}
+      chain[1]={'id': '962fef56-1b50-50b2-a00d-509ae0a8a8fd', 'metatype': 'AttributeUsage', 'name': 'panel_count', 'qn': "SolarBatteryLibrary::'Array BOS'::panel_count"}
+        live_owner={'id': 'd4ef4feb-dd20-5253-9155-9cc83b42e745', 'metatype': 'PartDefinition', 'name': 'Array BOS', 'qn': "SolarBatteryLibrary::'Array BOS'"}
+      fact[0] element_id=5aac0b40-bccc-5231-8788-466ed2ed84c1 owner_element_id=33f46fdc-8770-54ed-a087-b57b3f1475ad owner_is_definition=True
+      fact[1] element_id=962fef56-1b50-50b2-a00d-509ae0a8a8fd owner_element_id=d4ef4feb-dd20-5253-9155-9cc83b42e745 owner_is_definition=True
+      VERDICT: NOT AFFECTED — 2 segments, one-segment branch not reached
+    site[5] writer={'id': '0a79d3b6-21a5-44e2-a0e8-2c45d19daf98', 'metatype': 'ReferenceUsage', 'name': 'None', 'qn': 'None'}
+      writer_owner={'id': 'bf76e556-a543-5b7d-a058-3c2d69c8e5f2', 'metatype': 'PartUsage', 'name': 'battery_system', 'qn': 'SolarBatteryDesign::solar_battery_plant::battery_system'}
+      redefined={'id': '481f49d4-0a45-4a7c-bcc8-1e9f8264f14b', 'metatype': 'Feature', 'name': 'None', 'qn': 'None'}
+      chain[0]={'id': '291fb8e1-1a8b-5cd2-abc5-141442a6db35', 'metatype': 'PartUsage', 'name': 'battery_pack', 'qn': "SolarBatteryLibrary::'Battery System'::battery_pack"}
+        live_owner={'id': 'bfb1e2a9-bf94-5c62-b65d-19b077b560db', 'metatype': 'PartDefinition', 'name': 'Battery System', 'qn': "SolarBatteryLibrary::'Battery System'"}
+      chain[1]={'id': 'ae4698f6-67a9-53bb-b360-85d1b88ebe33', 'metatype': 'AttributeUsage', 'name': 'capacity_kwh', 'qn': "SolarBatteryLibrary::'Battery Pack'::capacity_kwh"}
+        live_owner={'id': '005303f8-9b44-5d0a-a349-2f70138cb536', 'metatype': 'PartDefinition', 'name': 'Battery Pack', 'qn': "SolarBatteryLibrary::'Battery Pack'"}
+      fact[0] element_id=291fb8e1-1a8b-5cd2-abc5-141442a6db35 owner_element_id=bfb1e2a9-bf94-5c62-b65d-19b077b560db owner_is_definition=True
+      fact[1] element_id=ae4698f6-67a9-53bb-b360-85d1b88ebe33 owner_element_id=005303f8-9b44-5d0a-a349-2f70138cb536 owner_is_definition=True
+      VERDICT: NOT AFFECTED — 2 segments, one-segment branch not reached
+    site[6] writer={'id': '62d5bac4-821f-41f8-89e3-fdc80126139f', 'metatype': 'ReferenceUsage', 'name': 'None', 'qn': 'None'}
+      writer_owner={'id': 'bf76e556-a543-5b7d-a058-3c2d69c8e5f2', 'metatype': 'PartUsage', 'name': 'battery_system', 'qn': 'SolarBatteryDesign::solar_battery_plant::battery_system'}
+      redefined={'id': '3d7d86cc-9a0c-4c3a-851b-0d4d187de715', 'metatype': 'Feature', 'name': 'None', 'qn': 'None'}
+      chain[0]={'id': '291fb8e1-1a8b-5cd2-abc5-141442a6db35', 'metatype': 'PartUsage', 'name': 'battery_pack', 'qn': "SolarBatteryLibrary::'Battery System'::battery_pack"}
+        live_owner={'id': 'bfb1e2a9-bf94-5c62-b65d-19b077b560db', 'metatype': 'PartDefinition', 'name': 'Battery System', 'qn': "SolarBatteryLibrary::'Battery System'"}
+      chain[1]={'id': 'ee6c94c1-fe32-5a30-982d-de8d96b0513e', 'metatype': 'AttributeUsage', 'name': 'chemistry_factor', 'qn': "SolarBatteryLibrary::'Battery Pack'::chemistry_factor"}
+        live_owner={'id': '005303f8-9b44-5d0a-a349-2f70138cb536', 'metatype': 'PartDefinition', 'name': 'Battery Pack', 'qn': "SolarBatteryLibrary::'Battery Pack'"}
+      fact[0] element_id=291fb8e1-1a8b-5cd2-abc5-141442a6db35 owner_element_id=bfb1e2a9-bf94-5c62-b65d-19b077b560db owner_is_definition=True
+      fact[1] element_id=ee6c94c1-fe32-5a30-982d-de8d96b0513e owner_element_id=005303f8-9b44-5d0a-a349-2f70138cb536 owner_is_definition=True
+      VERDICT: NOT AFFECTED — 2 segments, one-segment branch not reached
+    site[7] writer={'id': 'f0e4eb49-700e-48d5-ba43-6fc8f44aff51', 'metatype': 'ReferenceUsage', 'name': 'None', 'qn': 'None'}
+      writer_owner={'id': 'bf76e556-a543-5b7d-a058-3c2d69c8e5f2', 'metatype': 'PartUsage', 'name': 'battery_system', 'qn': 'SolarBatteryDesign::solar_battery_plant::battery_system'}
+      redefined={'id': '20c079fb-1606-416f-b59a-a04b70a8d856', 'metatype': 'Feature', 'name': 'None', 'qn': 'None'}
+      chain[0]={'id': '74c6f729-2555-59dd-b62b-f164562e4949', 'metatype': 'PartUsage', 'name': 'hybrid_inverter', 'qn': "SolarBatteryLibrary::'Battery System'::hybrid_inverter"}
+        live_owner={'id': 'bfb1e2a9-bf94-5c62-b65d-19b077b560db', 'metatype': 'PartDefinition', 'name': 'Battery System', 'qn': "SolarBatteryLibrary::'Battery System'"}
+      chain[1]={'id': '6a4ebbf8-ef81-56ac-be24-0568781cf28c', 'metatype': 'AttributeUsage', 'name': 'power_rating', 'qn': "SolarBatteryLibrary::'Hybrid Inverter'::power_rating"}
+        live_owner={'id': '21e93760-4bf1-5386-b2d6-bab9ec8a8de7', 'metatype': 'PartDefinition', 'name': 'Hybrid Inverter', 'qn': "SolarBatteryLibrary::'Hybrid Inverter'"}
+      fact[0] element_id=74c6f729-2555-59dd-b62b-f164562e4949 owner_element_id=bfb1e2a9-bf94-5c62-b65d-19b077b560db owner_is_definition=True
+      fact[1] element_id=6a4ebbf8-ef81-56ac-be24-0568781cf28c owner_element_id=21e93760-4bf1-5386-b2d6-bab9ec8a8de7 owner_is_definition=True
+      VERDICT: NOT AFFECTED — 2 segments, one-segment branch not reached
+    site[8] writer={'id': 'a7895ab9-f8d2-4e4a-9515-5a68dfdd9e83', 'metatype': 'ReferenceUsage', 'name': 'None', 'qn': 'None'}
+      writer_owner={'id': 'bf76e556-a543-5b7d-a058-3c2d69c8e5f2', 'metatype': 'PartUsage', 'name': 'battery_system', 'qn': 'SolarBatteryDesign::solar_battery_plant::battery_system'}
+      redefined={'id': 'c2e19102-9b99-421a-9ef8-995521d2ecca', 'metatype': 'Feature', 'name': 'None', 'qn': 'None'}
+      chain[0]={'id': '907b76a4-4692-50ec-a41e-d6449aaa4f56', 'metatype': 'PartUsage', 'name': 'battery_bos', 'qn': "SolarBatteryLibrary::'Battery System'::battery_bos"}
+        live_owner={'id': 'bfb1e2a9-bf94-5c62-b65d-19b077b560db', 'metatype': 'PartDefinition', 'name': 'Battery System', 'qn': "SolarBatteryLibrary::'Battery System'"}
+      chain[1]={'id': 'baa096e7-e760-5cb9-8b48-1c370adb3219', 'metatype': 'AttributeUsage', 'name': 'pack_count', 'qn': "SolarBatteryLibrary::'Battery BOS'::pack_count"}
+        live_owner={'id': '6a126e31-e260-51d4-ab14-839fe2291659', 'metatype': 'PartDefinition', 'name': 'Battery BOS', 'qn': "SolarBatteryLibrary::'Battery BOS'"}
+      fact[0] element_id=907b76a4-4692-50ec-a41e-d6449aaa4f56 owner_element_id=bfb1e2a9-bf94-5c62-b65d-19b077b560db owner_is_definition=True
+      fact[1] element_id=baa096e7-e760-5cb9-8b48-1c370adb3219 owner_element_id=6a126e31-e260-51d4-ab14-839fe2291659 owner_is_definition=True
+      VERDICT: NOT AFFECTED — 2 segments, one-segment branch not reached
+    site[9] writer={'id': '4d171981-da40-4599-afff-756f73b51222', 'metatype': 'ReferenceUsage', 'name': 'None', 'qn': 'None'}
+      writer_owner={'id': '5737eaff-838c-5821-910e-df5fbf060afd', 'metatype': 'PartUsage', 'name': 'site_infra', 'qn': 'SolarBatteryDesign::solar_battery_plant::site_infra'}
+      redefined={'id': '3c5e6666-9f6b-44f8-92be-67fee351a40c', 'metatype': 'Feature', 'name': 'None', 'qn': 'None'}
+      chain[0]={'id': 'f08c27be-e46e-5796-97e5-7ec2780379cf', 'metatype': 'PartUsage', 'name': 'racking', 'qn': "SolarBatteryLibrary::'Site Infrastructure'::racking"}
+        live_owner={'id': '070344a5-e2b2-5c3c-bced-a2b0ce8ed465', 'metatype': 'PartDefinition', 'name': 'Site Infrastructure', 'qn': "SolarBatteryLibrary::'Site Infrastructure'"}
+      chain[1]={'id': 'fa13235f-aaa9-5fb2-8f67-c89c43e46dc9', 'metatype': 'AttributeUsage', 'name': 'panel_count', 'qn': "SolarBatteryLibrary::'Racking & Mounting'::panel_count"}
+        live_owner={'id': '0442e4e5-76fa-5cb2-aad1-7b2da728e635', 'metatype': 'PartDefinition', 'name': 'Racking & Mounting', 'qn': "SolarBatteryLibrary::'Racking & Mounting'"}
+      fact[0] element_id=f08c27be-e46e-5796-97e5-7ec2780379cf owner_element_id=070344a5-e2b2-5c3c-bced-a2b0ce8ed465 owner_is_definition=True
+      fact[1] element_id=fa13235f-aaa9-5fb2-8f67-c89c43e46dc9 owner_element_id=0442e4e5-76fa-5cb2-aad1-7b2da728e635 owner_is_definition=True
+      VERDICT: NOT AFFECTED — 2 segments, one-segment branch not reached
+    site[10] writer={'id': '366d6a56-e357-4dfc-a340-8372a9b12831', 'metatype': 'ReferenceUsage', 'name': 'None', 'qn': 'None'}
+      writer_owner={'id': '5737eaff-838c-5821-910e-df5fbf060afd', 'metatype': 'PartUsage', 'name': 'site_infra', 'qn': 'SolarBatteryDesign::solar_battery_plant::site_infra'}
+      redefined={'id': 'ec356a3e-50f0-4752-9325-c18cbff486a1', 'metatype': 'Feature', 'name': 'None', 'qn': 'None'}
+      chain[0]={'id': 'f08c27be-e46e-5796-97e5-7ec2780379cf', 'metatype': 'PartUsage', 'name': 'racking', 'qn': "SolarBatteryLibrary::'Site Infrastructure'::racking"}
+        live_owner={'id': '070344a5-e2b2-5c3c-bced-a2b0ce8ed465', 'metatype': 'PartDefinition', 'name': 'Site Infrastructure', 'qn': "SolarBatteryLibrary::'Site Infrastructure'"}
+      chain[1]={'id': '37613430-d7bf-590d-bc88-abe4f43985b4', 'metatype': 'AttributeUsage', 'name': 'tilt_angle', 'qn': "SolarBatteryLibrary::'Racking & Mounting'::tilt_angle"}
+        live_owner={'id': '0442e4e5-76fa-5cb2-aad1-7b2da728e635', 'metatype': 'PartDefinition', 'name': 'Racking & Mounting', 'qn': "SolarBatteryLibrary::'Racking & Mounting'"}
+      fact[0] element_id=f08c27be-e46e-5796-97e5-7ec2780379cf owner_element_id=070344a5-e2b2-5c3c-bced-a2b0ce8ed465 owner_is_definition=True
+      fact[1] element_id=37613430-d7bf-590d-bc88-abe4f43985b4 owner_element_id=0442e4e5-76fa-5cb2-aad1-7b2da728e635 owner_is_definition=True
+      VERDICT: NOT AFFECTED — 2 segments, one-segment branch not reached
+    site[11] writer={'id': 'dcd93bfc-8fec-4244-9a9e-0225db5e344d', 'metatype': 'ReferenceUsage', 'name': 'None', 'qn': 'None'}
+      writer_owner={'id': '5737eaff-838c-5821-910e-df5fbf060afd', 'metatype': 'PartUsage', 'name': 'site_infra', 'qn': 'SolarBatteryDesign::solar_battery_plant::site_infra'}
+      redefined={'id': '412d7bc9-9f4f-41e6-9cd8-3e320bc3ba29', 'metatype': 'Feature', 'name': 'None', 'qn': 'None'}
+      chain[0]={'id': 'b11a9821-2dcb-5fc8-91b8-c2b31c01c34a', 'metatype': 'PartUsage', 'name': 'electrical_panel', 'qn': "SolarBatteryLibrary::'Site Infrastructure'::electrical_panel"}
+        live_owner={'id': '070344a5-e2b2-5c3c-bced-a2b0ce8ed465', 'metatype': 'PartDefinition', 'name': 'Site Infrastructure', 'qn': "SolarBatteryLibrary::'Site Infrastructure'"}
+      chain[1]={'id': 'af196cfb-b906-522e-9291-6d7315b61a0c', 'metatype': 'AttributeUsage', 'name': 'circuit_count', 'qn': "SolarBatteryLibrary::'Electrical Panel'::circuit_count"}
+        live_owner={'id': 'd5f53b8b-b697-59df-a42a-1d49d2f82923', 'metatype': 'PartDefinition', 'name': 'Electrical Panel', 'qn': "SolarBatteryLibrary::'Electrical Panel'"}
+      fact[0] element_id=b11a9821-2dcb-5fc8-91b8-c2b31c01c34a owner_element_id=070344a5-e2b2-5c3c-bced-a2b0ce8ed465 owner_is_definition=True
+      fact[1] element_id=af196cfb-b906-522e-9291-6d7315b61a0c owner_element_id=d5f53b8b-b697-59df-a42a-1d49d2f82923 owner_is_definition=True
+      VERDICT: NOT AFFECTED — 2 segments, one-segment branch not reached
+    site[12] writer={'id': '21ba3ff1-864f-44af-96b4-67960237c3e8', 'metatype': 'ReferenceUsage', 'name': 'None', 'qn': 'None'}
+      writer_owner={'id': '5737eaff-838c-5821-910e-df5fbf060afd', 'metatype': 'PartUsage', 'name': 'site_infra', 'qn': 'SolarBatteryDesign::solar_battery_plant::site_infra'}
+      redefined={'id': '9368b6af-ad77-4bbd-82fa-9d4a7b3bc0ad', 'metatype': 'Feature', 'name': 'None', 'qn': 'None'}
+      chain[0]={'id': '6a2bf869-68a5-5d4d-a856-a3bdd9bed71e', 'metatype': 'PartUsage', 'name': 'permitting', 'qn': "SolarBatteryLibrary::'Site Infrastructure'::permitting"}
+        live_owner={'id': '070344a5-e2b2-5c3c-bced-a2b0ce8ed465', 'metatype': 'PartDefinition', 'name': 'Site Infrastructure', 'qn': "SolarBatteryLibrary::'Site Infrastructure'"}
+      chain[1]={'id': '6307be8a-973a-571c-a7e1-4d761b9af328', 'metatype': 'AttributeUsage', 'name': 'system_capacity_kw', 'qn': "SolarBatteryLibrary::'Permitting & Interconnect'::system_capacity_kw"}
+        live_owner={'id': '99b36679-e56e-5b7a-a3b9-0f51c77f7f15', 'metatype': 'PartDefinition', 'name': 'Permitting & Interconnect', 'qn': "SolarBatteryLibrary::'Permitting & Interconnect'"}
+      fact[0] element_id=6a2bf869-68a5-5d4d-a856-a3bdd9bed71e owner_element_id=070344a5-e2b2-5c3c-bced-a2b0ce8ed465 owner_is_definition=True
+      fact[1] element_id=6307be8a-973a-571c-a7e1-4d761b9af328 owner_element_id=99b36679-e56e-5b7a-a3b9-0f51c77f7f15 owner_is_definition=True
+      VERDICT: NOT AFFECTED — 2 segments, one-segment branch not reached
+=== fixture:source_identity_mixed_consumers loaded=True validation_diagnostics=1
+    diagnostic: /home/reid/1cfe/sysml-codegen/tests/fixtures/source_identity_mixed_consumers/model.sysml:20:23: warning (namespace-distinguishability): Member name 'result' shadows Performances::Evaluation::result
+    deep-literal lane sites: 1
+    site[0] writer={'id': 'f7e2f915-ee24-42d2-adbe-466263c9085f', 'metatype': 'ReferenceUsage', 'name': 'None', 'qn': 'None'}
+      writer_owner={'id': '1a3c23d4-bf7a-5ea6-a1c4-4ed0bdaeb086', 'metatype': 'PartUsage', 'name': 'panel_two', 'qn': "source_identity_mixed_consumers::'Deep Design'::panel_two"}
+      redefined={'id': 'c73207ba-819b-47f6-80ee-87e7b2858cd8', 'metatype': 'Feature', 'name': 'None', 'qn': 'None'}
+      chain[0]={'id': 'df123ed3-fb48-5529-b5c9-bbe5f41a275f', 'metatype': 'PartUsage', 'name': 'deep_rig', 'qn': "source_identity_mixed_consumers::'Deep Panel'::deep_rig"}
+        live_owner={'id': 'cb0db84d-1421-5d69-b977-11bb8602b2c1', 'metatype': 'PartDefinition', 'name': 'Deep Panel', 'qn': "source_identity_mixed_consumers::'Deep Panel'"}
+      chain[1]={'id': '3e58b84d-c0a3-541c-adfc-43eaf06d153c', 'metatype': 'AttributeUsage', 'name': 'gain_setting', 'qn': 'source_identity_mixed_consumers::Rig::gain_setting'}
+        live_owner={'id': '6a3d54e4-07c5-5ec3-8408-c05ba4c83b31', 'metatype': 'PartDefinition', 'name': 'Rig', 'qn': 'source_identity_mixed_consumers::Rig'}
+      fact[0] element_id=df123ed3-fb48-5529-b5c9-bbe5f41a275f owner_element_id=cb0db84d-1421-5d69-b977-11bb8602b2c1 owner_is_definition=True
+      fact[1] element_id=3e58b84d-c0a3-541c-adfc-43eaf06d153c owner_element_id=6a3d54e4-07c5-5ec3-8408-c05ba4c83b31 owner_is_definition=True
+      VERDICT: NOT AFFECTED — 2 segments, one-segment branch not reached

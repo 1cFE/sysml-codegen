@@ -106,6 +106,14 @@ for candidate in authored_candidates:
   `.project/active/qualified-reference-occurrence-anchoring/spike/deep-override-authorability/`
   with the same evidence shape for one-segment deep literal redefinitions. Include the resolver's
   `plural=True` call but judge the direct reference against the scalar policy.
+  **Result (2026-08-15):** no affected shape found. The probe searched 15 authored candidates plus
+  all 13 tracked fixture roots containing a chained redefinition — 51 live lane sites, every one
+  two or three segments, so the one-segment branch is never reached. The lane's `plural=True` call
+  is genuinely plural (an arrayed child writes both occurrences) but returns before `plural` is
+  read on the one-segment path, so D4's scalar policy is untestable from this lane. Conclusion
+  `authorability unproven`; dated gap `deep override affected-shape coverage unproven` recorded in
+  `spike/deep-override-authorability/findings.md`. No fixture is promoted to Phase 2; the close
+  disposition stays with the owner.
 - [ ] If either search finds an authored affected shape, promote that exact model for Phase 2. If it
   does not, stop and obtain the owner disposition required by D10/D11; update `spec.md`, `design.md`,
   and the standing gap record only as that disposition authorizes.
