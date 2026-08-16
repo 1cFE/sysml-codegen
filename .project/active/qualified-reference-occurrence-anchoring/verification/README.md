@@ -139,3 +139,49 @@ This file is the retained evidence that the assessment ran first and came back c
 
 Same command as `before-full-suite.txt`. Phase 5 owns the formal comparison; this is Phase 4's own
 check that the shared test helper it added broke nothing.
+
+## Certification — Phase 5
+
+Captured at `a3b46dc` from the shipped tree. **`adjudication.md` is the document to read**; the
+files below are its inputs.
+
+### `after.json` — the shipped resolver's ledger
+
+Same command as `before.json`. Two consecutive runs are byte-identical, and it is also
+byte-identical to `after-phase3.json` — expected, because Phases 4 and 5 changed no production
+file, so a difference would have been the finding rather than the reassurance.
+
+### `adjudicate.py` + `adjudication-diff.txt` — the raw difference list
+
+```bash
+uv run python .project/active/qualified-reference-occurrence-anchoring/verification/adjudicate.py \
+  .project/active/qualified-reference-occurrence-anchoring/verification/before.json \
+  .project/active/qualified-reference-occurrence-anchoring/verification/after.json \
+  > .project/active/qualified-reference-occurrence-anchoring/verification/adjudication-diff.txt
+```
+
+It decides nothing — it diffs two captured ledgers and prints what a human must rule on: changed
+site keys, changed outcomes, changed refusals, changed identity blocks, and any other changed root
+field. No license needed. **19 changed rows, 0 structural problems.**
+
+### `adjudication.md` — the adjudication itself
+
+Every one of the 19 changed rows ruled on with topology, exact before/after identity, and reasoning;
+the full Validation section as run; all 14 spec success criteria reconciled; and the bounded
+self-binding documentation check with its one correction. **Zero unadjudicated rows. No regression.**
+The arrayed-owner row — a silent answer replaced by an `SI_OCCURRENCE_AMBIGUOUS` refusal — is
+adjudicated explicitly, and it is a fix: the answer it replaced was the enclosing sibling's value,
+not either arrayed occurrence.
+
+### `phase5-snapshot-assessment.json` — snapshots at the shipped commit
+
+Same command as `before-snapshot-inventory.json`. **23 tracked, 23 assessed, 0 stale.** Compared
+field by field with the pre-repair inventory, the two differ in exactly two keys, `baseline_commit`
+and `git_status`, both describing the run. Every payload digest is byte-identical; no snapshot was
+recaptured.
+
+### `after-phase5-full-suite.txt` — the certification full suite
+
+**17 failed, 2143 passed, 34 skipped, 88 deselected.** The failing node set is identical to
+`before-full-suite.txt`'s, name for name; all 17 are the environmental missing-`pandas` failures.
+Passing nodes 2080 → 2143, fully accounted as 37 + 15 + 11. Zero license-related skips.

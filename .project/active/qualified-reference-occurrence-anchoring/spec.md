@@ -1,7 +1,9 @@
 # Spec: Exact Owner Anchoring for Usage-Owned One-Segment References
 
-**Status:** Implementation In Progress (approved rev 2; plan Phase 3 of 5 complete — the resolver
-repair has landed, Phases 4-5 remain)
+**Status:** Implementation Complete (approved rev 2; all 5 plan phases done — the resolver repair
+landed at `98970c9` and is certified against a fully adjudicated corpus in
+`verification/adjudication.md`. Next: `/_my_audit`, then `/_my_close`, which owns the final bounded
+self-binding documentation verification and the standing D11 gap disposition)
 **Owner:** Reid W
 **Created:** 2026-08-15 14:15 PDT
 **Revised:** 2026-08-15 rev 2 (spec-review incorporation complete — see revision record)

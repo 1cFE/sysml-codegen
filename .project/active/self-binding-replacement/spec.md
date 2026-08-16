@@ -51,10 +51,12 @@ fusion-tea model remains blocked from regeneration until its authored bindings a
 - **Name the path (D-7).** When the value lives on a different part, name that occurrence path, for
   example `in driver_cost = driver.cost`. The reference lands on that occurrence's feature.
 - **Qualify by owner (D-6).** SysIDE resolves a usage-qualified local redefinition to the exact
-  feature owned by that usage. The shipped elaborator currently loses that owner before occurrence
-  selection, which can produce a false missing/ambiguity or silently select a competing occurrence.
-  That is codegen defect F-6, not the meaning of `::`; it is owned by the separate
-  `qualified-reference-occurrence-anchoring` repair. This item must not teach the defect as a
+  feature owned by that usage. The elaborator used to lose that owner before occurrence selection,
+  which produced a false missing/ambiguity or silently selected a competing occurrence.
+  That is codegen defect F-6, not the meaning of `::`; it was owned and repaired by the separate
+  `qualified-reference-occurrence-anchoring` item, which landed exact usage-owner anchoring in
+  `src/sysml_codegen/elaboration/elaborate.py` on 2026-08-15 (`98970c9`). The shipped elaborator now
+  honors the exact usage owner SysIDE resolved. This item must not teach the defect as a
   modeling rule. It still does not recommend this shape for the fusion-tea migration: D-5 remains
   the local migration form, and D-7 remains the advice for taking a value from another part.
 

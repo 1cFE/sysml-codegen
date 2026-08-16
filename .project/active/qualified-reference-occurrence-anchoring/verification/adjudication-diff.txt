@@ -1,0 +1,179 @@
+
+=== corpus: 409 before sites, 409 after sites ===
+site keys only in before: 0
+site keys only in after: 0
+after rows with no edge / diagnostic / structural reason: 0
+changed outcomes: 5
+
+  CHANGED ('.project/active/self-binding-replacement/spike/fixtures/u4_usage_qual_pkg_sibling', 'calc_binding', '["calculation",["occurrence","[[\\"82e5d05a-9df8-58b3-b2ef-4ef97fbbaf1b\\",null]]"],["declaration","4c92b3d4-a0d1-5ebc-be50-2c2f3adfce73"]]', '0', '2e2ca4e8-9d5b-5ea3-bf38-01fa968cabe9')
+    written : shared_component::length
+    owner   : ae393bfa-ea4e-5606-bf4a-1e6fcd266492 (PartUsage)
+    plural  : False
+    before  : {"diagnostics": [["SI_OCCURRENCE_MISSING", "length", "consumer context has no occurrence of leaf slot FeatureSlotId(root_declaration=DeclarationId(value=UUID('16177638-ee7c-532d-8f5b-59f65d7428cc')))"]], "kind": "diagnostic"}
+    after   : {"edges": ["node:[\"attribute\",[\"occurrence\",\"[[\\\"ae393bfa-ea4e-5606-bf4a-1e6fcd266492\\\",null]]\"],[\"slot\",\"16177638-ee7c-532d-8f5b-59f65d7428cc\"]]"], "kind": "edge"}
+
+  CHANGED ('.project/active/self-binding-replacement/spike/fixtures/u5_usage_qual_named_sibling', 'calc_binding', '["calculation",["occurrence","[[\\"bcf90c24-672b-58c2-adfa-094539152e10\\",null]]"],["declaration","d3d22a40-0a46-5afc-8b07-33d6e91eaead"]]', '0', '80824f65-353e-5399-8049-f3240490971b')
+    written : comp_a::length
+    owner   : eecdcddf-fa9c-5f4a-9006-3d4a3958f123 (PartUsage)
+    plural  : False
+    before  : {"diagnostics": [["SI_OCCURRENCE_AMBIGUOUS", "length_in", "consumer context contains 2 leaf occurrences"]], "kind": "diagnostic"}
+    after   : {"edges": ["node:[\"attribute\",[\"occurrence\",\"[[\\\"bcf90c24-672b-58c2-adfa-094539152e10\\\",null],[\\\"eecdcddf-fa9c-5f4a-9006-3d4a3958f123\\\",null]]\"],[\"slot\",\"98d8d9f1-3138-5e26-9689-6845e559cf06\"]]"], "kind": "edge"}
+
+  CHANGED ('.project/active/self-binding-replacement/spike/fixtures/u6_usage_qual_crossnamed', 'calc_binding', '["calculation",["occurrence","[[\\"554effb3-bc42-5ac1-9d6e-cbe5e0524352\\",null],[\\"87f9e6f2-ad4f-5290-a45e-8131d1399f56\\",null]]"],["declaration","384c13f6-7eb7-51cd-9bb8-c045e6293c0a"]]', '0', '7114fafa-d5dc-58cf-879a-2f84cbc6bd73')
+    written : comp_a::length
+    owner   : dd373162-bf97-5062-ada3-07d5f3244ba4 (PartUsage)
+    plural  : False
+    before  : {"edges": ["node:[\"attribute\",[\"occurrence\",\"[[\\\"554effb3-bc42-5ac1-9d6e-cbe5e0524352\\\",null],[\\\"87f9e6f2-ad4f-5290-a45e-8131d1399f56\\\",null]]\"],[\"slot\",\"5be4d227-95c4-5d7b-b450-30e5247fb692\"]]"], "kind": "edge"}
+    after   : {"edges": ["node:[\"attribute\",[\"occurrence\",\"[[\\\"554effb3-bc42-5ac1-9d6e-cbe5e0524352\\\",null],[\\\"dd373162-bf97-5062-ada3-07d5f3244ba4\\\",null]]\"],[\"slot\",\"5be4d227-95c4-5d7b-b450-30e5247fb692\"]]"], "kind": "edge"}
+
+  CHANGED ('.project/active/self-binding-replacement/spike/fixtures/u7_both_spellings', 'calc_binding', '["calculation",["occurrence","[[\\"6145ed3c-8e0c-5ddc-96d9-ad6ed024f07b\\",null]]"],["declaration","7cffc000-a3ad-5cd1-9bf5-5cfd2e054d2f"]]', '0', '936d7879-82e1-5bcf-92b8-773d6f67b37d')
+    written : comp_a::length
+    owner   : 95d32d62-574d-55ec-9515-4a8ee144a508 (PartUsage)
+    plural  : False
+    before  : {"diagnostics": [["SI_OCCURRENCE_AMBIGUOUS", "a_len", "consumer context contains 2 leaf occurrences"]], "kind": "diagnostic"}
+    after   : {"edges": ["node:[\"attribute\",[\"occurrence\",\"[[\\\"6145ed3c-8e0c-5ddc-96d9-ad6ed024f07b\\\",null],[\\\"95d32d62-574d-55ec-9515-4a8ee144a508\\\",null]]\"],[\"slot\",\"6093ae42-e366-5c66-b26a-5b4194b42f8a\"]]"], "kind": "edge"}
+
+  CHANGED ('.project/active/self-binding-replacement/spike/fixtures/u7_both_spellings', 'calc_binding', '["calculation",["occurrence","[[\\"6145ed3c-8e0c-5ddc-96d9-ad6ed024f07b\\",null]]"],["declaration","7cffc000-a3ad-5cd1-9bf5-5cfd2e054d2f"]]', '0', 'd7d38390-79be-56a3-876f-3c1a7f4d41e7')
+    written : comp_b::length
+    owner   : 869ecad0-edef-5fe4-ae9e-441aa5e724fb (PartUsage)
+    plural  : False
+    before  : {"diagnostics": [["SI_OCCURRENCE_AMBIGUOUS", "b_len", "consumer context contains 2 leaf occurrences"]], "kind": "diagnostic"}
+    after   : {"edges": ["node:[\"attribute\",[\"occurrence\",\"[[\\\"6145ed3c-8e0c-5ddc-96d9-ad6ed024f07b\\\",null],[\\\"869ecad0-edef-5fe4-ae9e-441aa5e724fb\\\",null]]\"],[\"slot\",\"6093ae42-e366-5c66-b26a-5b4194b42f8a\"]]"], "kind": "edge"}
+
+changed refusals: 0
+roots with a changed identity block: 0 of 140
+roots with any other changed field: 3
+  ? .project/active/self-binding-replacement/spike/fixtures/u4_usage_qual_pkg_sibling: ['diagnostics'] [paired with a changed site]
+      before: [["SI_OCCURRENCE_MISSING", "U4UsageQualPkgSibling__plant__area_calc", "length", "consumer context has no occurrence of leaf slot FeatureSlotId(root_declaration=DeclarationId(value=UUID('16177638-ee7c-532d-8f5b-59f65d7428cc')))"]]
+      after : []
+  ? .project/active/self-binding-replacement/spike/fixtures/u5_usage_qual_named_sibling: ['diagnostics'] [paired with a changed site]
+      before: [["SI_OCCURRENCE_AMBIGUOUS", "U5UsageQualNamedSibling__plant__area_calc", "length_in", "consumer context contains 2 leaf occurrences"]]
+      after : []
+  ? .project/active/self-binding-replacement/spike/fixtures/u7_both_spellings: ['diagnostics'] [paired with a changed site]
+      before: [["SI_OCCURRENCE_AMBIGUOUS", "U7BothSpellings__plant__pair_calc", "a_len", "consumer context contains 2 leaf occurrences"], ["SI_OCCURRENCE_AMBIGUOUS", "U7BothSpellings__plant__pair_calc", "b_len", "consumer context contains 2 leaf occurrences"]]
+      after : []
+
+=== promoted: 16 before sites, 16 after sites ===
+site keys only in before: 0
+site keys only in after: 0
+after rows with no edge / diagnostic / structural reason: 0
+changed outcomes: 14
+
+  CHANGED ('tests/fixtures/u4_usage_qual_pkg_sibling', 'calc_binding', '["calculation",["occurrence","[[\\"82e5d05a-9df8-58b3-b2ef-4ef97fbbaf1b\\",null]]"],["declaration","4c92b3d4-a0d1-5ebc-be50-2c2f3adfce73"]]', '0', '2e2ca4e8-9d5b-5ea3-bf38-01fa968cabe9')
+    written : shared_component::length
+    owner   : ae393bfa-ea4e-5606-bf4a-1e6fcd266492 (PartUsage)
+    plural  : False
+    before  : {"diagnostics": [["SI_OCCURRENCE_MISSING", "length", "consumer context has no occurrence of leaf slot FeatureSlotId(root_declaration=DeclarationId(value=UUID('16177638-ee7c-532d-8f5b-59f65d7428cc')))"]], "kind": "diagnostic"}
+    after   : {"edges": ["node:[\"attribute\",[\"occurrence\",\"[[\\\"ae393bfa-ea4e-5606-bf4a-1e6fcd266492\\\",null]]\"],[\"slot\",\"16177638-ee7c-532d-8f5b-59f65d7428cc\"]]"], "kind": "edge"}
+
+  CHANGED ('tests/fixtures/u5_usage_qual_named_sibling', 'calc_binding', '["calculation",["occurrence","[[\\"bcf90c24-672b-58c2-adfa-094539152e10\\",null]]"],["declaration","d3d22a40-0a46-5afc-8b07-33d6e91eaead"]]', '0', '80824f65-353e-5399-8049-f3240490971b')
+    written : comp_a::length
+    owner   : eecdcddf-fa9c-5f4a-9006-3d4a3958f123 (PartUsage)
+    plural  : False
+    before  : {"diagnostics": [["SI_OCCURRENCE_AMBIGUOUS", "length_in", "consumer context contains 2 leaf occurrences"]], "kind": "diagnostic"}
+    after   : {"edges": ["node:[\"attribute\",[\"occurrence\",\"[[\\\"bcf90c24-672b-58c2-adfa-094539152e10\\\",null],[\\\"eecdcddf-fa9c-5f4a-9006-3d4a3958f123\\\",null]]\"],[\"slot\",\"98d8d9f1-3138-5e26-9689-6845e559cf06\"]]"], "kind": "edge"}
+
+  CHANGED ('tests/fixtures/u6_usage_qual_crossnamed', 'calc_binding', '["calculation",["occurrence","[[\\"554effb3-bc42-5ac1-9d6e-cbe5e0524352\\",null],[\\"87f9e6f2-ad4f-5290-a45e-8131d1399f56\\",null]]"],["declaration","384c13f6-7eb7-51cd-9bb8-c045e6293c0a"]]', '0', '7114fafa-d5dc-58cf-879a-2f84cbc6bd73')
+    written : comp_a::length
+    owner   : dd373162-bf97-5062-ada3-07d5f3244ba4 (PartUsage)
+    plural  : False
+    before  : {"edges": ["node:[\"attribute\",[\"occurrence\",\"[[\\\"554effb3-bc42-5ac1-9d6e-cbe5e0524352\\\",null],[\\\"87f9e6f2-ad4f-5290-a45e-8131d1399f56\\\",null]]\"],[\"slot\",\"5be4d227-95c4-5d7b-b450-30e5247fb692\"]]"], "kind": "edge"}
+    after   : {"edges": ["node:[\"attribute\",[\"occurrence\",\"[[\\\"554effb3-bc42-5ac1-9d6e-cbe5e0524352\\\",null],[\\\"dd373162-bf97-5062-ada3-07d5f3244ba4\\\",null]]\"],[\"slot\",\"5be4d227-95c4-5d7b-b450-30e5247fb692\"]]"], "kind": "edge"}
+
+  CHANGED ('tests/fixtures/u7_both_spellings', 'calc_binding', '["calculation",["occurrence","[[\\"6145ed3c-8e0c-5ddc-96d9-ad6ed024f07b\\",null]]"],["declaration","7cffc000-a3ad-5cd1-9bf5-5cfd2e054d2f"]]', '0', '936d7879-82e1-5bcf-92b8-773d6f67b37d')
+    written : comp_a::length
+    owner   : 95d32d62-574d-55ec-9515-4a8ee144a508 (PartUsage)
+    plural  : False
+    before  : {"diagnostics": [["SI_OCCURRENCE_AMBIGUOUS", "a_len", "consumer context contains 2 leaf occurrences"]], "kind": "diagnostic"}
+    after   : {"edges": ["node:[\"attribute\",[\"occurrence\",\"[[\\\"6145ed3c-8e0c-5ddc-96d9-ad6ed024f07b\\\",null],[\\\"95d32d62-574d-55ec-9515-4a8ee144a508\\\",null]]\"],[\"slot\",\"6093ae42-e366-5c66-b26a-5b4194b42f8a\"]]"], "kind": "edge"}
+
+  CHANGED ('tests/fixtures/u7_both_spellings', 'calc_binding', '["calculation",["occurrence","[[\\"6145ed3c-8e0c-5ddc-96d9-ad6ed024f07b\\",null]]"],["declaration","7cffc000-a3ad-5cd1-9bf5-5cfd2e054d2f"]]', '0', 'd7d38390-79be-56a3-876f-3c1a7f4d41e7')
+    written : comp_b::length
+    owner   : 869ecad0-edef-5fe4-ae9e-441aa5e724fb (PartUsage)
+    plural  : False
+    before  : {"diagnostics": [["SI_OCCURRENCE_AMBIGUOUS", "b_len", "consumer context contains 2 leaf occurrences"]], "kind": "diagnostic"}
+    after   : {"edges": ["node:[\"attribute\",[\"occurrence\",\"[[\\\"6145ed3c-8e0c-5ddc-96d9-ad6ed024f07b\\\",null],[\\\"869ecad0-edef-5fe4-ae9e-441aa5e724fb\\\",null]]\"],[\"slot\",\"6093ae42-e366-5c66-b26a-5b4194b42f8a\"]]"], "kind": "edge"}
+
+  CHANGED ('tests/fixtures/usage_owned_reference_consumers', 'alias', '["attribute",["occurrence","[[\\"51d938e3-3cfb-52cf-a533-06dfc35e7569\\",null],[\\"fd0e7f52-3ad4-5ec2-a202-b07faffd4517\\",null]]"],["slot","3a188a2e-a6e2-565a-87be-9f8cd4d29ff6"]]', '0', '2aaaed20-4721-511a-8b5e-cc5893451ea6')
+    written : comp_a::length
+    owner   : e078eb54-3013-562b-bce7-a1ad2b08dec1 (PartUsage)
+    plural  : False
+    before  : {"edges": ["node:[\"attribute\",[\"occurrence\",\"[[\\\"51d938e3-3cfb-52cf-a533-06dfc35e7569\\\",null],[\\\"fd0e7f52-3ad4-5ec2-a202-b07faffd4517\\\",null]]\"],[\"slot\",\"518b2191-2aa0-542d-b462-83c147d82267\"]]"], "kind": "edge"}
+    after   : {"edges": ["node:[\"attribute\",[\"occurrence\",\"[[\\\"51d938e3-3cfb-52cf-a533-06dfc35e7569\\\",null],[\\\"e078eb54-3013-562b-bce7-a1ad2b08dec1\\\",null]]\"],[\"slot\",\"518b2191-2aa0-542d-b462-83c147d82267\"]]"], "kind": "edge"}
+
+  CHANGED ('tests/fixtures/usage_owned_reference_consumers', 'calc_binding', '["calculation",["occurrence","[[\\"51d938e3-3cfb-52cf-a533-06dfc35e7569\\",null],[\\"fd0e7f52-3ad4-5ec2-a202-b07faffd4517\\",null]]"],["declaration","41a2ee03-0c4c-5a53-bf8b-5f955e4555e2"]]', '0', '2aaaed20-4721-511a-8b5e-cc5893451ea6')
+    written : comp_a::length
+    owner   : e078eb54-3013-562b-bce7-a1ad2b08dec1 (PartUsage)
+    plural  : False
+    before  : {"edges": ["node:[\"attribute\",[\"occurrence\",\"[[\\\"51d938e3-3cfb-52cf-a533-06dfc35e7569\\\",null],[\\\"fd0e7f52-3ad4-5ec2-a202-b07faffd4517\\\",null]]\"],[\"slot\",\"518b2191-2aa0-542d-b462-83c147d82267\"]]"], "kind": "edge"}
+    after   : {"edges": ["node:[\"attribute\",[\"occurrence\",\"[[\\\"51d938e3-3cfb-52cf-a533-06dfc35e7569\\\",null],[\\\"e078eb54-3013-562b-bce7-a1ad2b08dec1\\\",null]]\"],[\"slot\",\"518b2191-2aa0-542d-b462-83c147d82267\"]]"], "kind": "edge"}
+
+  CHANGED ('tests/fixtures/usage_owned_reference_consumers', 'calc_binding', '["calculation",["occurrence","[[\\"51d938e3-3cfb-52cf-a533-06dfc35e7569\\",null],[\\"fd0e7f52-3ad4-5ec2-a202-b07faffd4517\\",null]]"],["declaration","e3507545-5ace-5ce2-9aab-af2164218877"]]', '0', '3a188a2e-a6e2-565a-87be-9f8cd4d29ff6')
+    written : aliased_length
+    owner   : fd0e7f52-3ad4-5ec2-a202-b07faffd4517 (PartUsage)
+    plural  : False
+    before  : {"edges": ["node:[\"attribute\",[\"occurrence\",\"[[\\\"51d938e3-3cfb-52cf-a533-06dfc35e7569\\\",null],[\\\"fd0e7f52-3ad4-5ec2-a202-b07faffd4517\\\",null]]\"],[\"slot\",\"518b2191-2aa0-542d-b462-83c147d82267\"]]"], "kind": "edge"}
+    after   : {"edges": ["node:[\"attribute\",[\"occurrence\",\"[[\\\"51d938e3-3cfb-52cf-a533-06dfc35e7569\\\",null],[\\\"e078eb54-3013-562b-bce7-a1ad2b08dec1\\\",null]]\"],[\"slot\",\"518b2191-2aa0-542d-b462-83c147d82267\"]]"], "kind": "edge"}
+
+  CHANGED ('tests/fixtures/usage_owned_reference_consumers', 'computed_expression', '["calculation",["occurrence","[[\\"51d938e3-3cfb-52cf-a533-06dfc35e7569\\",null],[\\"fd0e7f52-3ad4-5ec2-a202-b07faffd4517\\",null]]"],["slot","14d7743a-cc96-5f4b-b871-8749ce411140"]]', '0', '2aaaed20-4721-511a-8b5e-cc5893451ea6')
+    written : comp_a::length * 2.0
+    owner   : e078eb54-3013-562b-bce7-a1ad2b08dec1 (PartUsage)
+    plural  : False
+    before  : {"edges": ["node:[\"attribute\",[\"occurrence\",\"[[\\\"51d938e3-3cfb-52cf-a533-06dfc35e7569\\\",null],[\\\"fd0e7f52-3ad4-5ec2-a202-b07faffd4517\\\",null]]\"],[\"slot\",\"518b2191-2aa0-542d-b462-83c147d82267\"]]"], "kind": "edge"}
+    after   : {"edges": ["node:[\"attribute\",[\"occurrence\",\"[[\\\"51d938e3-3cfb-52cf-a533-06dfc35e7569\\\",null],[\\\"e078eb54-3013-562b-bce7-a1ad2b08dec1\\\",null]]\"],[\"slot\",\"518b2191-2aa0-542d-b462-83c147d82267\"]]"], "kind": "edge"}
+
+  CHANGED ('tests/fixtures/usage_owned_reference_consumers', 'computed_expression', '["calculation",["occurrence","[[\\"51d938e3-3cfb-52cf-a533-06dfc35e7569\\",null],[\\"fd0e7f52-3ad4-5ec2-a202-b07faffd4517\\",null]]"],["slot","9dcb0777-a044-5f9e-929d-583eade52458"]]', '0', '2aaaed20-4721-511a-8b5e-cc5893451ea6')
+    written : sum(comp_a::length)
+    owner   : e078eb54-3013-562b-bce7-a1ad2b08dec1 (PartUsage)
+    plural  : True
+    before  : {"edges": ["node:[\"attribute\",[\"occurrence\",\"[[\\\"51d938e3-3cfb-52cf-a533-06dfc35e7569\\\",null],[\\\"fd0e7f52-3ad4-5ec2-a202-b07faffd4517\\\",null]]\"],[\"slot\",\"518b2191-2aa0-542d-b462-83c147d82267\"]]"], "kind": "edge"}
+    after   : {"edges": ["node:[\"attribute\",[\"occurrence\",\"[[\\\"51d938e3-3cfb-52cf-a533-06dfc35e7569\\\",null],[\\\"e078eb54-3013-562b-bce7-a1ad2b08dec1\\\",null]]\"],[\"slot\",\"518b2191-2aa0-542d-b462-83c147d82267\"]]"], "kind": "edge"}
+
+  CHANGED ('tests/fixtures/usage_owned_reference_consumers', 'constraint_binding', '["constraint",["occurrence","[[\\"51d938e3-3cfb-52cf-a533-06dfc35e7569\\",null],[\\"fd0e7f52-3ad4-5ec2-a202-b07faffd4517\\",null]]"],["declaration","2356c3e9-3ff3-57b6-9a99-ffd9be1930c8"]]', '0', '2aaaed20-4721-511a-8b5e-cc5893451ea6')
+    written : comp_a::length
+    owner   : e078eb54-3013-562b-bce7-a1ad2b08dec1 (PartUsage)
+    plural  : False
+    before  : {"edges": ["node:[\"attribute\",[\"occurrence\",\"[[\\\"51d938e3-3cfb-52cf-a533-06dfc35e7569\\\",null],[\\\"fd0e7f52-3ad4-5ec2-a202-b07faffd4517\\\",null]]\"],[\"slot\",\"518b2191-2aa0-542d-b462-83c147d82267\"]]"], "kind": "edge"}
+    after   : {"edges": ["node:[\"attribute\",[\"occurrence\",\"[[\\\"51d938e3-3cfb-52cf-a533-06dfc35e7569\\\",null],[\\\"e078eb54-3013-562b-bce7-a1ad2b08dec1\\\",null]]\"],[\"slot\",\"518b2191-2aa0-542d-b462-83c147d82267\"]]"], "kind": "edge"}
+
+  CHANGED ('tests/fixtures/usage_owned_reference_consumers', 'constraint_predicate', '["constraint",["occurrence","[[\\"51d938e3-3cfb-52cf-a533-06dfc35e7569\\",null],[\\"fd0e7f52-3ad4-5ec2-a202-b07faffd4517\\",null]]"],["declaration","f8f63a0b-3995-51ab-936b-f53abcc2e1d8"]]', '0', '2aaaed20-4721-511a-8b5e-cc5893451ea6')
+    written : comp_a::length > 0.0
+    owner   : e078eb54-3013-562b-bce7-a1ad2b08dec1 (PartUsage)
+    plural  : False
+    before  : {"edges": ["node:[\"attribute\",[\"occurrence\",\"[[\\\"51d938e3-3cfb-52cf-a533-06dfc35e7569\\\",null],[\\\"fd0e7f52-3ad4-5ec2-a202-b07faffd4517\\\",null]]\"],[\"slot\",\"518b2191-2aa0-542d-b462-83c147d82267\"]]"], "kind": "edge"}
+    after   : {"edges": ["node:[\"attribute\",[\"occurrence\",\"[[\\\"51d938e3-3cfb-52cf-a533-06dfc35e7569\\\",null],[\\\"e078eb54-3013-562b-bce7-a1ad2b08dec1\\\",null]]\"],[\"slot\",\"518b2191-2aa0-542d-b462-83c147d82267\"]]"], "kind": "edge"}
+
+  CHANGED ('tests/fixtures/usage_owner_bare_alias', 'computed_expression', '["calculation",["occurrence","[[\\"fe2a9616-e72e-5673-91f0-ea6c227f857e\\",null],[\\"7479b60a-4fd0-58bd-bd22-68d75e910cae\\",null]]"],["slot","28ec053d-13f3-5d46-8e63-ce29267797cd"]]', '0', 'c301fa9c-5227-5578-bb3d-877d5d91b6ab')
+    written : a_len * 2.0
+    owner   : 5c33d1dc-653f-5906-b9f4-412646528ca8 (PartUsage)
+    plural  : False
+    before  : {"edges": ["node:[\"attribute\",[\"occurrence\",\"[[\\\"fe2a9616-e72e-5673-91f0-ea6c227f857e\\\",null],[\\\"7479b60a-4fd0-58bd-bd22-68d75e910cae\\\",null]]\"],[\"slot\",\"b0ca505c-a767-5098-96e1-c6d96abb1b28\"]]"], "kind": "edge"}
+    after   : {"edges": ["node:[\"attribute\",[\"occurrence\",\"[[\\\"fe2a9616-e72e-5673-91f0-ea6c227f857e\\\",null],[\\\"5c33d1dc-653f-5906-b9f4-412646528ca8\\\",null]]\"],[\"slot\",\"b0ca505c-a767-5098-96e1-c6d96abb1b28\"]]"], "kind": "edge"}
+
+  CHANGED ('tests/fixtures/usage_owner_bare_alias_arrayed', 'computed_expression', '["calculation",["occurrence","[[\\"a3e01fc1-14ec-50da-850e-82c5f837bb4d\\",null],[\\"e559a865-3b2b-533f-a4da-5c74c8b3efc2\\",null]]"],["slot","f02dd10a-6150-53b8-b269-255840e87990"]]', '0', '0520afdc-4f58-5f8e-9d6c-2cef7ff2a999')
+    written : a_len * 2.0
+    owner   : 8c0e1673-af68-5697-9cc9-d8a1c696ff64 (PartUsage)
+    plural  : False
+    before  : {"edges": ["node:[\"attribute\",[\"occurrence\",\"[[\\\"a3e01fc1-14ec-50da-850e-82c5f837bb4d\\\",null],[\\\"e559a865-3b2b-533f-a4da-5c74c8b3efc2\\\",null]]\"],[\"slot\",\"b7e6e28c-f151-5dd5-8772-e45c8f265c88\"]]"], "kind": "edge"}
+    after   : {"diagnostics": [["SI_OCCURRENCE_AMBIGUOUS", null, "consumer context contains 2 candidate occurrences"]], "kind": "diagnostic"}
+
+changed refusals: 0
+roots with a changed identity block: 0 of 13
+roots with any other changed field: 4
+  ? tests/fixtures/u4_usage_qual_pkg_sibling: ['diagnostics'] [paired with a changed site]
+      before: [["SI_OCCURRENCE_MISSING", "U4UsageQualPkgSibling__plant__area_calc", "length", "consumer context has no occurrence of leaf slot FeatureSlotId(root_declaration=DeclarationId(value=UUID('16177638-ee7c-532d-8f5b-59f65d7428cc')))"]]
+      after : []
+  ? tests/fixtures/u5_usage_qual_named_sibling: ['diagnostics'] [paired with a changed site]
+      before: [["SI_OCCURRENCE_AMBIGUOUS", "U5UsageQualNamedSibling__plant__area_calc", "length_in", "consumer context contains 2 leaf occurrences"]]
+      after : []
+  ? tests/fixtures/u7_both_spellings: ['diagnostics'] [paired with a changed site]
+      before: [["SI_OCCURRENCE_AMBIGUOUS", "U7BothSpellings__plant__pair_calc", "a_len", "consumer context contains 2 leaf occurrences"], ["SI_OCCURRENCE_AMBIGUOUS", "U7BothSpellings__plant__pair_calc", "b_len", "consumer context contains 2 leaf occurrences"]]
+      after : []
+  ? tests/fixtures/usage_owner_bare_alias_arrayed: ['diagnostics'] [paired with a changed site]
+      before: []
+      after : [["SI_OCCURRENCE_AMBIGUOUS", "BareAliasArrayedOwner__plant__comp_b__doubled", null, "consumer context contains 2 candidate occurrences"]]
+
+totals before: {"corpus": {"by_lane": {"calc_binding": 318, "computed_expression": 76, "constraint_binding": 15}, "by_outcome": {"diagnostic": 4, "edge": 405}, "deep_override_one_segment_sites": 0, "roots": 140, "roots_refused": 15, "sites": 409}, "promoted": {"by_lane": {"alias": 1, "calc_binding": 9, "computed_expression": 4, "constraint_binding": 1, "constraint_predicate": 1}, "by_outcome": {"diagnostic": 4, "edge": 12}, "deep_override_one_segment_sites": 0, "roots": 13, "roots_refused": 0, "sites": 16}}
+totals after : {"corpus": {"by_lane": {"calc_binding": 318, "computed_expression": 76, "constraint_binding": 15}, "by_outcome": {"edge": 409}, "deep_override_one_segment_sites": 0, "roots": 140, "roots_refused": 15, "sites": 409}, "promoted": {"by_lane": {"alias": 1, "calc_binding": 9, "computed_expression": 4, "constraint_binding": 1, "constraint_predicate": 1}, "by_outcome": {"diagnostic": 1, "edge": 15}, "deep_override_one_segment_sites": 0, "roots": 13, "roots_refused": 0, "sites": 16}}
+
+structural problems (missing keys, uncovered rows, refusal or identity drift): 0

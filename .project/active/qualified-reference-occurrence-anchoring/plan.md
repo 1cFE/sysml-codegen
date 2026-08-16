@@ -372,32 +372,32 @@ assert unadjudicated_differences(before, after) == []
 [Validation Approach](design.md#validation-approach), and
 [spec Success Criteria](spec.md#success-criteria).
 
-- [ ] Produce canonical `verification/after.json` from the shipped resolver and
+- [x] Produce canonical `verification/after.json` from the shipped resolver and
   `verification/adjudication.md`. For every changed edge or diagnostic, record fix/regression,
   topology, exact before/after identity, and reasoning. Leave zero unadjudicated rows.
-- [ ] Compare occurrence records, slot-derived node IDs, snapshot digests, and unaffected edges with
+- [x] Compare occurrence records, slot-derived node IDs, snapshot digests, and unaffected edges with
   the Phase-2 artifacts. Update only a snapshot already classified in Phase 4.
-- [ ] Check `.project/active/self-binding-replacement/spec.md:56,66-70,74-78` against landed
+- [x] Check `.project/active/self-binding-replacement/spec.md:56,66-70,74-78` against landed
   behavior. Correct a mismatch only within the spec's bounded instruction; do not change D-5/D-7
   guidance or fusion-tea migration. Record that the final verifier remains `/_my_close`.
-- [ ] Update this plan's completion notes and checkboxes with actual commands, counts, deviations,
+- [x] Update this plan's completion notes and checkboxes with actual commands, counts, deviations,
   standing gaps, and snapshot dispositions.
 
 ### Validation
 
 **Automated:**
 
-- [ ] With `SYSIDE_LICENSE_KEY` loaded, run the focused owner-anchoring, extraction, public mutation,
+- [x] With `SYSIDE_LICENSE_KEY` loaded, run the focused owner-anchoring, extraction, public mutation,
   graph-roundtrip, snapshot-v6, fail-closed, and import-boundary files; all pass independently.
-- [ ] Run `uv run --extra dev ruff check src/ tests/` and `uv run --extra dev mypy src/`.
-- [ ] Run `uv run --extra dev pytest tests/ -rs`. Compare with the Phase-2 full-suite baseline:
+- [x] Run `uv run --extra dev ruff check src/ tests/` and `uv run --extra dev mypy src/`.
+- [x] Run `uv run --extra dev pytest tests/ -rs`. Compare with the Phase-2 full-suite baseline:
   zero new failures, every touched/affected file green independently, and no license-related skip.
 
 **Manual:**
 
-- [ ] Reconcile every spec success criterion with one retained test or evidence row. Do not check SC8
+- [x] Reconcile every spec success criterion with one retained test or evidence row. Do not check SC8
   or the deep-override lane as fully evidenced if its standing gap remains open.
-- [ ] Confirm only `elaborate.py` changed in production and no evidence, occurrence, slot, graph,
+- [x] Confirm only `elaborate.py` changed in production and no evidence, occurrence, slot, graph,
   projection, or codec schema was widened.
 
 **What We Know Works After This Phase:** The shipped resolver is certified against durable focused
@@ -810,10 +810,104 @@ three drifting copies.
 
 ### Phase 5 Completion
 
-**Completed:**
+**Completed:** 2026-08-15, licensed environment (`set -a; source ../agentic-mbse/.env; set +a`),
+branch `main` at `a3b46dc`. **No production file changed** — `git diff --stat 2768c68..HEAD -- src/`
+is `elaborate.py` alone, 51 insertions and 6 deletions, which is exactly what Phase 3 landed. No
+evidence, occurrence, slot, graph, projection, or codec schema was widened; the diff adds one private
+helper and rewires one call.
+
 **Actual Changes:**
+
+*Verification (`verification/`)*
+
+- `after.json` — the shipped resolver's ledger, from the same `corpus_compare.py` command as
+  `before.json`.
+- `adjudicate.py` + `adjudication-diff.txt` — a ledger differ and its output. It decides nothing: it
+  keys both ledgers by typed identity and prints changed site keys, changed outcomes, changed
+  refusals, changed identity blocks, and any other changed root field. Needs no license.
+- **`adjudication.md` — the deliverable.** All 19 changed rows ruled on, the Validation section as
+  run, all 14 spec success criteria reconciled, and the bounded documentation check.
+- `phase5-snapshot-assessment.json`, `after-phase5-full-suite.txt` — the snapshot inventory and full
+  suite at this commit.
+- `README.md` gained a "Certification — Phase 5" section describing all five.
+
+*Documentation (bounded, one file)*
+
+- `.project/active/self-binding-replacement/spec.md:53-61` — the D-6 bullet said the shipped
+  elaborator "currently loses that owner". Corrected to past tense, naming the landing commit
+  (`98970c9`) and file, and stating that the shipped elaborator now honors the exact usage owner. It
+  still names the behavior as codegen defect F-6 rather than the meaning of `::`. **D-5, D-7, and the
+  fusion-tea migration sentences are untouched.** The final verifier remains `/_my_close`.
+
+**Results:**
+
+- **Ledger determinism and provenance.** Two consecutive `corpus_compare.py` runs at this commit are
+  byte-identical, and the result is also byte-identical to `after-phase3.json` — the expected
+  outcome, since Phases 4 and 5 changed no production file; a difference would have been the finding.
+- **Structural checks all hold.** Site keys equal (corpus 409 = 409, promoted 16 = 16, zero one-sided
+  keys); zero after rows without an edge, diagnostic, or named structural reason; **zero roots with a
+  changed identity block, out of 153**; the same 15 refused corpus roots with the same reason
+  strings. `adjudicate.py` reports **0 structural problems**.
+- **19 changed rows, every one a fix, zero unadjudicated.** Corpus 405 edge / 4 diagnostic → **409
+  edge / 0 diagnostic** (rows 1–5: u4, u5, u7×2 repaired from diagnostic to typed edge; u6's silent
+  `comp_b` edge moved to `comp_a` at the same slot). Promoted 12 edge / 4 diagnostic → **15 edge / 1
+  diagnostic** (rows 6–10 the same five in their maintained copies; rows 11–17 the combined fixture's
+  seven consumer lanes; row 18 the bare discriminator; row 19 the arrayed-owner refusal). 404 of 409
+  corpus sites are untouched, and **no corpus row is a bare reference**, so there was no unclassified
+  bare change.
+- **The arrayed-owner call, made explicitly.** `usage_owner_bare_alias_arrayed` moved from a silent
+  answer to `SI_OCCURRENCE_AMBIGUOUS`. Adjudicated **fix**, and the decisive fact was measured rather
+  than assumed: the answer it used to give was occurrence `e559a865`, which is **`comp_b`** — the
+  enclosing sibling, not either arrayed `comp_a` occurrence. It replaced a confidently wrong number
+  with a named refusal for a reference that has no single right answer. Blast radius measured at
+  zero: no corpus site gained a diagnostic, no snapshot went stale, no suite failure appeared. The
+  compatibility cost is recorded in full in `adjudication.md`, including what an affected author
+  sees.
+- **Focused files:** 114 passed / 0 skipped together under the license, and independently 48, 14, 3,
+  14, 6, 15, 14 — all green. Zero license-related skips.
+- **Full suite:** **17 failed, 2143 passed, 34 skipped, 88 deselected, 170.81s.** The failing node set
+  is identical to the Phase-2 baseline's, name for name; all 17 are the environmental missing-`pandas`
+  failures. Passing nodes 2080 → 2143, fully accounted as 37 (Phase 2) + 15 (Phase 3) + 11 (Phase 4).
+  Zero license-related skips.
+- **Snapshots:** 23 tracked, 23 assessed, **0 stale**, 0 missing, 0 extra, 0 duplicate. Field-by-field
+  against the pre-repair inventory the two documents differ in exactly two keys, `baseline_commit`
+  and `git_status`, both describing the run. **No recapture, none warranted** — D9's trigger never
+  fired.
+- **Standing gaps.** D11's `deep override affected-shape coverage unproven` remains **open** and is
+  named as not-evidenced in `adjudication.md`; the lane again measured **0** one-segment sites across
+  every root that elaborated. D10 took route 1 on evidence, so SC8 is evidenced by the authored
+  discriminator (`usage_owner_bare_alias`, row 18) and carries no gap record.
+
 **Issues:**
+
+- **`ruff check src/ tests/` reports 131 findings and `mypy src/` reports 52 errors. Neither gate is
+  clean project-wide and neither ever was.** The plan asks for these commands to be run, so this is
+  reported as it is rather than as "clean". Both finding sets were re-captured at the item's start
+  commit `2768c68` in a scratch worktree and diffed: **identical, line for line, in both tools**, and
+  **zero** mypy errors are in `src/sysml_codegen/elaboration/`. This item therefore contributes no new
+  finding from either its production edit or its thirteen fixtures and five test files. The
+  pre-existing backlog was not touched — absorbing it is exactly what the phase's risk note forbids.
+- **No premise conflict surfaced.** Nothing contradicted the plan, the design, or the spec, and no
+  row looked like a regression.
+
 **Deviations:**
+
+- **`adjudicate.py` was added; the plan did not name it.** The phase requires zero unadjudicated rows
+  across 425 sites and 153 identity blocks. Eyeballing two 500 KB JSON documents is not a check, so
+  the differ is the mechanism and `adjudication.md` is the judgment. It is deliberately inert — it
+  never reads the model, never re-resolves anything, and needs no license — which keeps it from
+  becoming a second resolver the way the plan's risk note warns.
+- **A scratch git worktree at `2768c68` was used for the ruff/mypy baseline**, then removed. Without
+  it, "131 findings" could not be shown to be pre-existing rather than newly introduced.
+- **`phase5-snapshot-assessment.json` is a third near-identical 3.7 MB inventory.** Phase 4 already
+  has one and it is unchanged. It is kept anyway because this is the certification phase and the
+  claim "no snapshot is stale at the shipped commit" should rest on a capture at that commit, not on
+  an earlier one plus an argument.
+- **One out-of-bounds mismatch was surfaced, not fixed.**
+  `.project/active/self-binding-replacement/spec.md:132-139` carries the same stale present tense
+  ("the current one-segment resolver normalizes to a feature slot…") in a `[HARD]` requirement. It
+  sits outside the inventory this item was given, and that inventory was drawn deliberately, so it is
+  flagged in `adjudication.md` for close or the owner rather than edited here.
 
 ---
 

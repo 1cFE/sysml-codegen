@@ -145,6 +145,45 @@ nodes. Ruff clean; mypy reports no new error.
 
 **Next**: Phase 5 — corpus adjudication (`after.json`, `adjudication.md`) and certification.
 
+### 2026-08-15: qualified-reference-occurrence-anchoring — PHASE 5 COMPLETE (implementation certified)
+
+All five plan phases are done. The affected surface was re-derived **from the shipped resolver** at
+`a3b46dc` (not carried over from Phase 3's notes), and every difference against the frozen
+before-state is adjudicated in
+`.project/active/qualified-reference-occurrence-anchoring/verification/adjudication.md`.
+
+**19 changed rows, every one a fix, zero unadjudicated. No regression found.** Corpus 405 edge / 4
+diagnostic → **409 edge / 0 diagnostic** over the same 409 site keys; promoted 12/4 → 15/1. Site
+keys, refusal strings, and **all 153 identity blocks** compare equal — no occurrence or wire identity
+moved. 404 of 409 corpus sites are untouched, and no corpus row is a bare reference, so there was no
+unclassified bare change.
+
+**The arrayed-owner refusal is adjudicated a fix, on a measured fact.** `usage_owner_bare_alias_arrayed`
+went from a silent answer to `SI_OCCURRENCE_AMBIGUOUS`, and the answer it lost was occurrence
+`e559a865` = **`comp_b`**, the enclosing sibling — not either arrayed `comp_a` occurrence. It traded a
+confidently wrong number for a named refusal on a reference that has no single right answer. Blast
+radius measured at zero: no corpus site gained a diagnostic, no snapshot went stale, no suite failure
+appeared. The compatibility cost is recorded rather than glossed.
+
+Focused files: **114 passed / 0 skipped** together, and green independently (48/14/3/14/6/15/14).
+Full suite **17 failed / 2143 passed / 34 skipped / 88 deselected** — the same 17 missing-`pandas`
+failures node for node, +63 passing fully accounted (37+15+11), zero license skips. Snapshots 23
+tracked / **0 stale**, no recapture.
+
+**⚠ Reported as-is, not fixed:** `ruff check src/ tests/` = **131 findings** and `mypy src/` = **52
+errors** project-wide. Both were re-captured at the item's start commit `2768c68` and are
+**identical, line for line**, with zero mypy errors in `elaboration/` — pre-existing backlog, no new
+finding from this item, and out of its scope to absorb.
+
+**Standing gaps carried to close:** D11's `deep override affected-shape coverage unproven` remains
+**open** (the lane again measured 0 one-segment sites corpus-wide). The bounded self-binding
+documentation check was performed and its one mismatch corrected at
+`.project/active/self-binding-replacement/spec.md:53-61` (D-5/D-7 and fusion-tea untouched); the same
+stale claim at `:132-139` is **out of that item's bounded inventory** and is surfaced for close or the
+owner rather than edited. The final verifier for the documentation tail remains `/_my_close`.
+
+**Next**: `/_my_audit`, then `/_my_close`.
+
 ### 2026-08-15: qualified-reference-occurrence-anchoring — PHASE 2 COMPLETE (red set + before ledger)
 
 Phases 1 and 2 of `.project/active/qualified-reference-occurrence-anchoring/plan.md` are done; no
