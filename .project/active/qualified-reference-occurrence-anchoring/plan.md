@@ -1,6 +1,6 @@
 # Implementation Plan: Exact Owner Anchoring for Usage-Owned One-Segment References
 
-**Status:** Draft
+**Status:** Complete — certified 2026-08-15 (`audit.md`, verdict Certify)
 **Owner:** Reid W
 **Created:** 2026-08-15 19:03 PDT
 **Last Updated:** 2026-08-15 19:03 PDT
@@ -98,11 +98,11 @@ for candidate in authored_candidates:
 **See:** [the open premise](design.md#one-spec-premise-is-not-yet-established),
 [Key Bets](design.md#key-bets), and [Potential Risks](design.md#potential-risks).
 
-- [ ] Extend
+- [x] Extend
   `.project/active/qualified-reference-occurrence-anchoring/spike/bare-discriminator-authorability/`
   into a bounded learning test over the legal scoping/redefinition candidates it names; preserve
   every model, command, load result, exact leaf/owner ID, and conclusion.
-- [ ] Create
+- [x] Create
   `.project/active/qualified-reference-occurrence-anchoring/spike/deep-override-authorability/`
   with the same evidence shape for one-segment deep literal redefinitions. Include the resolver's
   `plural=True` call but judge the direct reference against the scalar policy.
@@ -114,7 +114,7 @@ for candidate in authored_candidates:
   `authorability unproven`; dated gap `deep override affected-shape coverage unproven` recorded in
   `spike/deep-override-authorability/findings.md`. No fixture is promoted to Phase 2; the close
   disposition stays with the owner.
-- [ ] If either search finds an authored affected shape, promote that exact model for Phase 2. If it
+- [x] If either search finds an authored affected shape, promote that exact model for Phase 2. If it
   does not, stop and obtain the owner disposition required by D10/D11; update `spec.md`, `design.md`,
   and the standing gap record only as that disposition authorizes.
 
@@ -122,16 +122,16 @@ for candidate in authored_candidates:
 
 **Automated:**
 
-- [ ] Run both retained probe drivers under the licensed environment; both exit normally and write
+- [x] Run both retained probe drivers under the licensed environment; both exit normally and write
   no generated package or production file.
-- [ ] Run `uv run --extra dev ruff check` on retained Python probe code.
-- [ ] Confirm `git diff -- src/ tests/` is empty at the phase gate.
+- [x] Run `uv run --extra dev ruff check` on retained Python probe code.
+- [x] Confirm `git diff -- src/ tests/` is empty at the phase gate.
 
 **Manual:**
 
-- [ ] Verify each conclusion distinguishes “candidate falsified,” “affected shape found,” and
+- [x] Verify each conclusion distinguishes “candidate falsified,” “affected shape found,” and
   “authorability unproven.”
-- [ ] Verify a route-2 D10 disposition retains `authored bare discrimination unproven`, and a D11
+- [x] Verify a route-2 D10 disposition retains `authored bare discrimination unproven`, and a D11
   gap retains `deep override affected-shape coverage unproven`, through close.
 
 **What We Know Works After This Phase:** The implementation has an owner-approved, reproducible
@@ -444,10 +444,34 @@ See [Potential Risks](design.md#potential-risks) for the full analysis.
 
 ### Phase 1 Completion
 
-**Completed:**
+**Completed:** 2026-08-15, licensed environment, commits `7673bf9` (D11) and `d78c42e` (D10). The
+narrative below was reconstructed at audit time from the retained evidence — the implementing
+session left this block a stencil while filling every other phase's. The work itself was verified,
+not assumed: `/_my_audit` re-ran both probe drivers under the license (exit 0 each, `git status`
+clean afterwards), re-ran `ruff check` on the retained probe code (passes), and confirmed
+`git diff --stat 2768c68 d78c42e -- src/ tests/` is empty, so the phase gate held.
+
 **Actual Changes:**
-**Issues:**
-**Deviations:**
+
+- `spike/bare-discriminator-authorability/` — extended into a 14-candidate bounded sweep
+  (`sweep.py`) over legal scoping and redefinition shapes, with `findings.md` recording each
+  model, load result, exact leaf/owner ID, and conclusion. **Result: affected shape found.** Nine
+  of fourteen candidates discriminate, across two independent legal families (`alias` and
+  `import`) and four consumer lanes. D10 route 1 is therefore available on evidence and SC8 is
+  authorable as written; bet B3 is confirmed. `c01-alias-parent-scope` was recommended and later
+  promoted as `tests/fixtures/usage_owner_bare_alias`.
+- `spike/deep-override-authorability/` — `probe.py`, `probe-output.txt`, `findings.md`, and 15
+  authored candidates. **Result: no affected shape found**, over 15 candidates plus all 13 tracked
+  fixture roots carrying a chained redefinition (51 live lane sites, every one two or three
+  segments). Dated gap `deep override affected-shape coverage unproven` recorded; no fixture
+  promoted; the close disposition stays with the owner.
+
+**Issues:** None. Neither probe touched `src/` or `tests/`, and neither search was labelled an
+impossibility proof — the D11 conclusion is `authorability unproven`, which is what the risk note
+requires.
+
+**Deviations:** None from the phase as planned. The one substantive outcome the plan allowed for —
+a search that finds nothing — occurred on the D11 side and took the disposition route D11 names.
 
 ### Phase 2 Completion
 
@@ -911,6 +935,6 @@ helper and rewires one call.
 
 ---
 
-**Status:** Draft → In Progress → Complete
+**Status:** Draft → In Progress → Complete → **Certified** (`audit.md`, 2026-08-15)
 **Next Step:** After plan approval, run `/_my_implement` from Phase 1. Use `/_my_audit` after all
 phases pass; the bounded self-binding verification completes in `/_my_close`.

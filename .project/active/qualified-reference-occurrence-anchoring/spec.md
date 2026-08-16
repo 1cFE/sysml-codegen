@@ -1,9 +1,11 @@
 # Spec: Exact Owner Anchoring for Usage-Owned One-Segment References
 
-**Status:** Implementation Complete (approved rev 2; all 5 plan phases done — the resolver repair
-landed at `98970c9` and is certified against a fully adjudicated corpus in
-`verification/adjudication.md`. Next: `/_my_audit`, then `/_my_close`, which owns the final bounded
-self-binding documentation verification and the standing D11 gap disposition)
+**Status:** Certified (approved rev 2; all 5 plan phases done — the resolver repair landed at
+`98970c9` and is certified against a fully adjudicated corpus in `verification/adjudication.md`.
+`/_my_audit` returned **Certify** on 2026-08-15 (`audit.md`), independently re-running the red/green
+split, both corpus ledgers, and the full suite; SC1–13 are marked met and SC14 stays open by its own
+text. Next: `/_my_close`, which owns the final bounded self-binding documentation verification, the
+standing D11 gap disposition, and the three carry-forward items named in `audit.md`)
 **Owner:** Reid W
 **Created:** 2026-08-15 14:15 PDT
 **Revised:** 2026-08-15 rev 2 (spec-review incorporation complete — see revision record)
@@ -100,23 +102,23 @@ local-rename advice, the D-7 dot-path advice, or the chosen fusion-tea migration
 
 ## Success Criteria
 
-- [ ] A one-segment reference to a `PartUsage`-owned leaf resolves through an occurrence of that
+- [x] A one-segment reference to a `PartUsage`-owned leaf resolves through an occurrence of that
       exact owner before selecting the leaf's feature slot, across every shared resolver consumer.
-- [ ] The promoted u4 package-sibling case resolves `shared_component::length` to the
+- [x] The promoted u4 package-sibling case resolves `shared_component::length` to the
       package-scoped `PartUsage` occurrence `shared_component.length`, with no occurrence
       diagnostic.
-- [ ] The promoted u5 named-sibling case resolves `comp_a::length` to `plant.comp_a.length`, rather
+- [x] The promoted u5 named-sibling case resolves `comp_a::length` to `plant.comp_a.length`, rather
       than reporting an ambiguity between the sibling `comp_a` and `comp_b` occurrences.
-- [ ] The promoted u6 cross-owner case, authored inside `comp_b`, resolves `comp_a::length` to
+- [x] The promoted u6 cross-owner case, authored inside `comp_b`, resolves `comp_a::length` to
       `plant.comp_a.length`, never the competing enclosing `plant.comp_b.length`, with no silent or
       fallback edge.
-- [ ] The promoted u7 paired-spelling case resolves its two qualified bindings to the distinct
+- [x] The promoted u7 paired-spelling case resolves its two qualified bindings to the distinct
       `comp_a.length` and `comp_b.length` nodes, and those edges agree with the corresponding
       occurrence-rooted dot-path controls.
-- [ ] The u1–u3b cases and definition-owned, package-owned, enumeration, and feature-chain controls
+- [x] The u1–u3b cases and definition-owned, package-owned, enumeration, and feature-chain controls
       retain their existing exact edges or named diagnostics. Inherited leaves that resolve to a
       definition-owned declaration do not acquire an occurrence from qualifier text.
-- [ ] Kept qualified usage-owned regressions cover an alias, a computed attribute, a typed
+- [x] Kept qualified usage-owned regressions cover an alias, a computed attribute, a typed
       constraint binding, and a constraint predicate. Each places the consumer where exact owner
       selection is load-bearing and pins the typed target edge. **For the alias and predicate
       callers these authored regressions are the sole evidence, not supplementary coverage.** The
@@ -128,23 +130,23 @@ local-rename advice, the D-7 dot-path advice, or the chosen fusion-tea migration
       callers are a principal justification for repairing the shared resolver rather than one call
       site, so if this criterion is dropped or weakened, that justification loses all of its
       evidence.
-- [ ] A kept bare-reference regression uses a discriminating topology where consumer-lineage and
+- [x] A kept bare-reference regression uses a discriminating topology where consumer-lineage and
       exact-owner selection can land on different occurrences. It pins the expected typed edge and
       fails if the implementation merely preserves the corpus's accidental fan-out-of-one equality.
-- [ ] The broader bare-reference surface is re-derived from the tracked corpus. Every usage-owned
+- [x] The broader bare-reference surface is re-derived from the tracked corpus. Every usage-owned
       direct reference has an exact before/after typed-edge comparison or a named structural reason
       why no edge exists. Every change is adjudicated as a fix or a regression with recorded
       reasoning; there are zero unadjudicated semantic differences.
-- [ ] At least one public off-default mutation of a named source occurrence reaches every and only
+- [x] At least one public off-default mutation of a named source occurrence reaches every and only
       its calculation, alias/computed, constraint, and aggregation consumers on the live graph and
       snapshot round-trip routes.
-- [ ] Strict and lenient elaboration agree on semantic identity. Lenient mode records the exact
+- [x] Strict and lenient elaboration agree on semantic identity. Lenient mode records the exact
       diagnostic multiset; strict mode either produces the same complete graph or rejects those same
       blocking diagnostics.
-- [ ] Feature-slot families, occurrence records, and serialized occurrence IDs remain unchanged.
+- [x] Feature-slot families, occurrence records, and serialized occurrence IDs remain unchanged.
       The repair may change a consumer edge or its resolution diagnostic, never occurrence or wire
       identity.
-- [ ] Every live-versus-snapshot and stored-baseline difference is classified. If the implemented
+- [x] Every live-versus-snapshot and stored-baseline difference is classified. If the implemented
       repair changes an edge stored in a committed snapshot, a typed-edge comparison exposes the
       stale replay before recapture; that snapshot is then recaptured and live/snapshot parity is
       restored. Snapshots with no changed final edge remain byte-unchanged.

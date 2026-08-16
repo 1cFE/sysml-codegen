@@ -1,6 +1,6 @@
 # Current Work
 
-**Last Updated**: 2026-08-15 (**PHASE D FULLY CLOSED; Item 8 sequencing decided.** The
+**Last Updated**: 2026-08-15 (**qualified-reference-occurrence-anchoring AUDITED: Certify** — the exact-owner anchoring repair is certified against an independently re-run red/green split, byte-identical regenerated corpus ledgers, and the full suite; SC1–13 met, SC14 and the D11 gap carried to `/_my_close`. See the 2026-08-15 audit entry below. Prior context: **PHASE D FULLY CLOSED; Item 8 sequencing decided.** The
 three-repo merge wave landed and is smoked — squash merges in the pin-enforced order:
 agentic-mbse#12 → `main` `1decd95`; codegen#10 → `main` `385e163` (the Item-7 cutover + the whole
 CONSTRAINT-SEMANTICS epic + the two contained 20260724 branches); teax#4 → `main` `744745f`. Each
@@ -144,6 +144,56 @@ passed / 34 skipped / 88 deselected — the same 17 missing-`pandas` failures, a
 nodes. Ruff clean; mypy reports no new error.
 
 **Next**: Phase 5 — corpus adjudication (`after.json`, `adjudication.md`) and certification.
+
+### 2026-08-15: qualified-reference-occurrence-anchoring — **AUDITED: CERTIFY** (ready for `/_my_close`)
+
+`/_my_audit` returned **Certify** (`.project/active/qualified-reference-occurrence-anchoring/audit.md`).
+The audit re-ran every load-bearing claim rather than reading the implementers' logs, and all of them
+held:
+
+- **Red/green split reproduced.** With `elaborate.py` reverted to its pre-repair content in the
+  working tree: the anchoring file is **15 failed / 33 passed** with the 15 names matching the
+  claimed set one for one, and the Phase-4 nodes are **7 failed / 4 passed**. The three
+  strict/lenient parity nodes that stay green are honestly explained — the pre-repair defect was a
+  silent wrong edge produced identically in both modes, so a parity comparison is structurally blind
+  to it; the readiness node is a different fixture and a different exit. Failures inspected
+  individually are target-identity mismatches (u6 differs only in the occurrence step at an
+  unchanged slot), not load errors. Tree restored and verified clean.
+- **Both corpus ledgers regenerate byte-identical.** `corpus_compare.py` at HEAD reproduces
+  `after.json` byte for byte; run against the pre-repair file it reproduces `before.json` byte for
+  byte; `adjudicate.py` over those captures reproduces `adjudication-diff.txt` exactly — 19 changed
+  outcomes, 0 identity-block changes over 153 roots, **0 structural problems**.
+- **Full suite:** 17 failed / 2143 passed / 34 skipped / 88 deselected, failing node set identical
+  to the pre-change baseline name for name, all 17 environmental missing-`pandas`, zero
+  license-related skips.
+- **ruff/mypy delta verified in a scratch worktree at `2768c68`:** 131 = 131 and 52 = 52, identical
+  line for line, zero mypy errors in `elaboration/`. Leaving the backlog alone was the right call —
+  91 of the 131 ruff findings are in generator-owned baseline/golden bytes that byte-identity gates
+  depend on.
+- **The arrayed-owner fix-vs-regression call is sound, measured not inherited:** on the pre-repair
+  resolver that consumer bound the *enclosing sibling's* `comp_b.length` with zero diagnostics — not
+  either arrayed occurrence — so the refusal replaces a confidently wrong number, never a working
+  answer.
+
+Spec **SC1–13 marked met**; SC14 stays open because it is a close-stage criterion by its own text.
+Plan Phases 1–5 marked complete, and Phase 1's Completion block — left an empty stencil by the
+implementing session — is now filled from its retained evidence.
+
+**Three carry-forward items for `/_my_close`, none blocking:**
+
+1. `.project/active/self-binding-replacement/spec.md:132-139` still carries a landed-false `[HARD]`
+   line ("the current one-segment resolver … selects by consumer position"). Phase 5 surfaced it
+   rather than editing it because it sits outside the owner-drawn bounded inventory — the right
+   capture-fidelity call — but it is now false.
+2. The arrayed-owner refusal has a wider authored surface than its fixture implies: *any* unindexed
+   one-segment reference to an arrayed owner's leaf now refuses, `sum(comp_a::length)` included. The
+   audit verified pre-repair that shape silently summed the sibling's value, so it is the same fix —
+   but the author-facing likelihood is higher than "one fixture" conveys, and the diagnostic names
+   neither the candidates nor the index syntax.
+3. D11's `deep override affected-shape coverage unproven` gap remains open and needs its owner
+   disposition.
+
+**Next**: `/_my_close`, then `/_my_pre_pr`.
 
 ### 2026-08-15: qualified-reference-occurrence-anchoring — PHASE 5 COMPLETE (implementation certified)
 
