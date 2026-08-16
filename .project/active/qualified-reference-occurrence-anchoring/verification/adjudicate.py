@@ -6,6 +6,10 @@ and prints the exact set of differences a human must rule on in ``adjudication.m
 changed site keys, changed outcomes, changed refusals, and any change to the per-root
 identity block (occurrence wire IDs and slot-derived node IDs).
 
+It refuses rather than reports when a root that elaborated carries no identity block.
+An absence is not agreement, and a comparison it never made is not a comparison it
+passed.
+
 Usage::
 
     uv run python .project/active/qualified-reference-occurrence-anchoring/\
@@ -50,8 +54,35 @@ def refusals(ledger: dict[str, Any], section: str) -> dict[str, str]:
     }
 
 
-def identity(ledger: dict[str, Any], section: str) -> dict[str, Any]:
-    return {root["root"]: root.get("identity") for root in ledger[section]}
+class MissingIdentityBlockError(Exception):
+    """A ledger row that should carry an identity block does not."""
+
+
+def identity(ledger: dict[str, Any], section: str, side: str) -> dict[str, Any]:
+    """Per-root identity blocks, refusing a ledger that omits one.
+
+    An absent block is not agreement. Mapping two absences to ``None`` and comparing
+    them equal is how a 13-root identity proof was once reported as covering 153: the
+    roots were counted as compared while nothing about them was measured. A root that
+    elaborated therefore *must* carry a block, and this refuses the whole run when one
+    does not, rather than returning a verdict over evidence it does not have.
+
+    A refused root is the one legitimate absence: it produced no graph, so there are no
+    occurrence records or node IDs to freeze. Its refusal string is compared instead,
+    and a root that starts or stops refusing shows up there.
+    """
+    blocks: dict[str, Any] = {}
+    for root in ledger[section]:
+        if root.get("refused") is not None:
+            continue
+        block = root.get("identity")
+        if block is None:
+            raise MissingIdentityBlockError(
+                f"{side} ledger: root {root['root']!r} in section {section!r} elaborated "
+                "but carries no identity block, so its identities cannot be compared"
+            )
+        blocks[root["root"]] = block
+    return blocks
 
 
 def report(before: dict[str, Any], after: dict[str, Any]) -> int:
@@ -95,13 +126,20 @@ def report(before: dict[str, Any], after: dict[str, Any]) -> int:
             print(f"  {root}: {pair[0]!r} -> {pair[1]!r}")
         problems += len(refusal_diff)
 
-        ib, ia = identity(before, section), identity(after, section)
-        identity_diff = [root for root in sorted(set(ib) | set(ia)) if ib.get(root) != ia.get(root)]
-        roots_compared = len(set(ib) | set(ia))
-        print(f"roots with a changed identity block: {len(identity_diff)} of {roots_compared}")
+        ib, ia = identity(before, section, "before"), identity(after, section, "after")
+        both = set(ib) & set(ia)
+        identity_diff = [root for root in sorted(both) if ib[root] != ia[root]]
+        one_sided = sorted(set(ib) ^ set(ia))
+        print(
+            f"roots with a changed identity block: {len(identity_diff)} of {len(both)} "
+            f"compared ({len(set(rb) | set(ra))} refused on one side or both, so they "
+            "have no identity to compare)"
+        )
         for root in identity_diff:
             print("  !", root)
-        problems += len(identity_diff)
+        for root in one_sided:
+            print(f"  ! {root}: identity present on exactly one side")
+        problems += len(identity_diff) + len(one_sided)
 
         # Catch-all: any field of a root record that the checks above do not cover
         # (graph diagnostics, deep-override lane counts, unsupported-expression consumers).

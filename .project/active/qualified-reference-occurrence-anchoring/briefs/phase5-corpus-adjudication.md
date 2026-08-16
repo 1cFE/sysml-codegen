@@ -26,7 +26,8 @@ the project quality checks, and prepare the bounded documentation obligation for
 - Corpus moved at exactly **5** sites (u4, u5, u7's two inputs repaired from diagnostic to typed
   edge; u6's silent edge moved to `comp_a`'s occurrence at the same slot). Ledger went 405 edge + 4
   diagnostic → 409 edge + 0 diagnostic.
-- Occurrence records and node IDs compare **equal across all 153 roots**.
+- Occurrence records and node IDs compare equal for the 13 promoted roots captured with identity.
+  The 140 frozen corpus roots omitted identity, so the original 153-root claim is not evidenced.
 - Snapshots: 23 tracked, **0 stale**, no recapture performed. D9's trigger never fired.
 - Full-suite baseline: 17 failures, **all** a missing `pandas`, environmental and pre-existing.
   Zero license skips. Post-Phase-4: 17 failed / 2143 passed.

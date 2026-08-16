@@ -2310,9 +2310,24 @@ class _ExactElaborator:
         Only a ``PartUsage`` owner names an occurrence. A leaf owned by a definition,
         package, enumeration, or calculation has none of its own, so it keeps the
         existing leaf route unchanged.
+
+        A leaf the element index does not know is refused rather than routed. The index
+        holds every declaration that carries a reload-stable qualified name, which is
+        every declaration an author can write a reference to; a leaf missing from it
+        means the resolved fact and the index disagree about what the model contains.
+        Owner classification is then unanswerable, and the definition-owned route would
+        answer from the consumer's own lineage — a positional guess dressed as the
+        deliberate exemption above. This site therefore refuses by name.
         """
         leaf = self._elements.get(leaf_id)
-        owner = self._semantic_owner(leaf) if leaf is not None else None
+        if leaf is None:
+            raise _ReferenceResolutionError(
+                ElaborationCode.SI_OCCURRENCE_MISSING,
+                f"leaf declaration {leaf_id.to_wire()} is absent from the element index, "
+                "so its owner cannot be classified",
+            )
+
+        owner = self._semantic_owner(leaf)
         if not SysideAdapter.is_instance(owner, "PartUsage"):
             return self._resolve_leaf(leaf_id, consumer_scope)
 

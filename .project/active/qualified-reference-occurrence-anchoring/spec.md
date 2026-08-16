@@ -1,14 +1,13 @@
 # Spec: Exact Owner Anchoring for Usage-Owned One-Segment References
 
-**Status:** Certified (approved rev 2; all 5 plan phases done — the resolver repair landed at
-`98970c9` and is certified against a fully adjudicated corpus in `verification/adjudication.md`.
-`/_my_audit` returned **Certify** on 2026-08-15 (`audit.md`), independently re-running the red/green
-split, both corpus ledgers, and the full suite; SC1–13 are marked met and SC14 stays open by its own
-text. Next: `/_my_close`, which owns the final bounded self-binding documentation verification, the
-standing D11 gap disposition, and the three carry-forward items named in `audit.md`)
+**Status:** Needs Work after independent re-audit (2026-08-16). The resolver repair landed at
+`98970c9` and its exercised runtime behavior remains green, but the certification overstated two
+evidence claims: the identity ledger captured 13 promoted roots rather than all 153 roots, and the
+deep-override caller remains an owner-dispositioned coverage gap. SC1 and SC12 are reopened; SC14
+remains a close-stage obligation. See `audit.md` and the latest `product-lens.md` block.
 **Owner:** Reid W
 **Created:** 2026-08-15 14:15 PDT
-**Revised:** 2026-08-15 rev 2 (spec-review incorporation complete — see revision record)
+**Revised:** 2026-08-16 (independent implementation audit)
 **Complexity:** MEDIUM
 **Branch:** main (`c615eb4` at revision)
 
@@ -102,7 +101,7 @@ local-rename advice, the D-7 dot-path advice, or the chosen fusion-tea migration
 
 ## Success Criteria
 
-- [x] A one-segment reference to a `PartUsage`-owned leaf resolves through an occurrence of that
+- [ ] A one-segment reference to a `PartUsage`-owned leaf resolves through an occurrence of that
       exact owner before selecting the leaf's feature slot, across every shared resolver consumer.
 - [x] The promoted u4 package-sibling case resolves `shared_component::length` to the
       package-scoped `PartUsage` occurrence `shared_component.length`, with no occurrence
@@ -143,7 +142,7 @@ local-rename advice, the D-7 dot-path advice, or the chosen fusion-tea migration
 - [x] Strict and lenient elaboration agree on semantic identity. Lenient mode records the exact
       diagnostic multiset; strict mode either produces the same complete graph or rejects those same
       blocking diagnostics.
-- [x] Feature-slot families, occurrence records, and serialized occurrence IDs remain unchanged.
+- [ ] Feature-slot families, occurrence records, and serialized occurrence IDs remain unchanged.
       The repair may change a consumer edge or its resolution diagnostic, never occurrence or wire
       identity.
 - [x] Every live-versus-snapshot and stored-baseline difference is classified. If the implemented
@@ -285,8 +284,8 @@ local-rename advice, the D-7 dot-path advice, or the chosen fusion-tea migration
 - **Related active spec:** `.project/active/self-binding-replacement/spec.md`
 - **Product promise:** `.project/product/P-001-design-search-free-variation.md`
 - **Product lens:** `.project/active/qualified-reference-occurrence-anchoring/product-lens.md`
-  — latest revision verdict `Gate: CLEAR` with no findings; the earlier `spec-F1` provenance
-  finding remains explicitly resolved.
+  — latest verdict `Gate: DISPOSED (independent-audit-F1)` for the arrayed aggregation cardinality
+  split; the earlier `spec-F1` provenance finding remains explicitly resolved.
 - **Design:** `.project/active/qualified-reference-occurrence-anchoring/design.md` (to be created)
 
 ---

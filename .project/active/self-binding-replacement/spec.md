@@ -1,9 +1,9 @@
 # Spec: Self-Binding Replacement — Establish, Document, Migrate
 
-**Status:** Draft (rev 4 — corrects qualified-reference semantics after F-6 attribution)
+**Status:** Draft (rev 5 — updated for the landed anchoring repair and its 2026-08-16 re-audit)
 **Owner:** Reid W
 **Created:** 2026-08-15 09:16 PDT
-**Revised:** 2026-08-15 (rev 4)
+**Revised:** 2026-08-16 (rev 5)
 **Complexity:** MEDIUM
 **Branch:** main (codegen `9ce5548`)
 
@@ -67,7 +67,7 @@ fusion-tea model remains blocked from regeneration until its authored bindings a
       value arrives; generation without a diagnostic is not enough.
 - [ ] **The behavior relied on by the situational rule is re-established by measurement on the
       shipped exact route.** D-5 and D-7 are measured directly. Any D-6 explanation is checked
-      against the landed exact-owner repair, not today's positional defect. For each taught shape,
+      against the landed exact-owner repair, not the repaired positional defect. For each taught shape,
       the evidence identifies the feature the reference lands on and demonstrates the concrete
       value or diagnostic that follows.
 - [ ] **A different candidate pattern found to resolve silently and wrongly is either fixed when
@@ -106,10 +106,10 @@ fusion-tea model remains blocked from regeneration until its authored bindings a
   use the right patterns. `in R = R` is the wrong pattern. I would like to detect the use of it so
   we avoid it in the future.”* The earlier form count does not carry into this requirement.
 - **[NEED]** The rule is situational, and the agentic-mbse agents must know and understand the
-  difference (`.project/active/self-binding-replacement/spec-review.md`, resolution
+  difference (`.project/active/self-binding-replacement/spec-review-20260815-rev3.md`, resolution
   L1-2/L2-2/L3-3, owner-verbatim agreement, 2026-08-15).
 - **[NEED]** Stellarator receives triage only: one pipeline run, a record of what breaks, no fixes,
-  and no reversal of the July hold (`.project/active/self-binding-replacement/spec-review.md`,
+  and no reversal of the July hold (`.project/active/self-binding-replacement/spec-review-20260815-rev3.md`,
   resolution L3-4; owner-verbatim “triage is good,” 2026-08-15).
 - **[INHERITED]** The epic's critical success factor, owner grade
   (`.project/backlog/epic_elaborate_first_architecture.md:31-33`): every consumed modelled value
@@ -129,15 +129,24 @@ fusion-tea model remains blocked from regeneration until its authored bindings a
   calculation usage. After `redefines`, the name resolves through the owning type's supertypes with
   the owner's own namespace excluded (KerML §7.3.4.5 and §8.2.3.5.1), and the redefined feature
   must otherwise be inherited from a supertype of its owning type.
-- **[HARD]** *(corrected after F-6 attribution and the semantic corpus scan, 2026-08-15)* SysIDE
-  resolves a usage-qualified local redefinition to a distinct usage-owned feature. Codegen retains
-  that exact declaration and owner, but the current one-segment resolver normalizes to a feature
-  slot before using the owner and then selects by consumer position. This can silently wire a
-  competing occurrence (`u6`) or report false missing/ambiguity (`u4`, `u5`, `u7`). The separate
-  `qualified-reference-occurrence-anchoring` item owns the broader invariant selected by the owner:
-  every one-segment usage-owned leaf anchors its exact owner across all resolver consumers.
-  Definition-owned inherited leaves remain on the definition route. This correction does **not**
-  reopen the fusion-tea migration form; D-5 remains the ratified local shape.
+- **[HARD]** *(updated 2026-08-16 after the anchoring repair landed)* SysIDE resolves a
+  usage-qualified local redefinition to a distinct usage-owned feature, and the shipped elaborator
+  now anchors every one-segment usage-owned leaf on its exact owner across all resolver consumers
+  (`qualified-reference-occurrence-anchoring`, repair `98970c9`; the 2026-08-16 independent
+  re-audit verified the repair and its runtime behavior sound while reopening two
+  certification-evidence criteria — see that item's `audit.md`). The former positional slot
+  search — which silently wired a competing occurrence (`u6`) or reported false missing/ambiguity
+  (`u4`, `u5`, `u7`) — no longer exists; the pre-repair measurements of those qualified rows in
+  this item's spike findings are superseded, and post-repair behavior is pinned by
+  `tests/conformance/test_usage_owned_reference_anchoring.py`. Three post-repair facts bear on the
+  guidance this item writes: definition-owned inherited leaves still resolve on the definition
+  route; an unindexed scalar reference to an **arrayed** owner's leaf now refuses with
+  `SI_OCCURRENCE_AMBIGUOUS` where the pre-repair route could silently bind a sibling's value, and
+  the diagnostic names neither the candidate occurrences nor the index syntax; and the two arrayed
+  aggregation spellings now split — `sum(comp_a::length)` refuses while `sum(comp_a.length)`
+  aggregates both occurrences with no diagnostic (carried as `independent-audit-F1` toward that
+  item's close). This update does **not** reopen the fusion-tea migration form; D-5 remains the
+  ratified local shape.
 - **[HARD]** SysML v2 Part 1 §7.17.2 is an action-parameter example. It does not state a shadowing
   rule or establish owner qualification as the normative repair for this calculation-binding
   collision. The rewritten guidance must not cite it as that authority.
@@ -147,7 +156,7 @@ fusion-tea model remains blocked from regeneration until its authored bindings a
 - **[INFERRED]** A different silently wrong pattern is filed rather than expanding this
   docs-and-models item into production generator work, unless its fix is small and contained. This
   is the review's `[AGENT]` recommendation, not an owner-originated decision, and remains
-  challengeable on evidence (`.project/active/self-binding-replacement/spec-review.md`, resolution
+  challengeable on evidence (`.project/active/self-binding-replacement/spec-review-20260815-rev3.md`, resolution
   L3-2).
 
 ### Provenance note on measured requirements
@@ -188,6 +197,19 @@ reviewed evidence, never on the reverted branches' own assertions.
 ---
 
 ## Change Record
+
+### 2026-08-16 — rev 5: the anchoring repair is landed; stale rows amended `[OWNER 2026-08-16 directed the accuracy pass]`
+
+The `qualified-reference-occurrence-anchoring` repair landed at `98970c9` and was audited Certify on
+2026-08-15; a 2026-08-16 independent re-audit verified the repair and its runtime behavior sound
+while reopening two certification-evidence criteria (SC12, SC1), so that item is in evidence repair
+ahead of its close. This spec's `[HARD]` qualified-reference row still described the positional
+defect as current behavior; it now records the repaired state, the supersession of the spike's
+pre-repair u4–u7/arrayed measurements, the arrayed-owner `SI_OCCURRENCE_AMBIGUOUS` refusal, and the
+arrayed `::`-vs-`.` aggregation split the guidance must account for. The Related Artifacts rows for
+the stocktake (complete since 2026-08-15) and the design (rev 2 exists, predates the repair) were
+corrected from their "to be created" placeholders. No requirement was added or removed; D-5 remains
+the ratified migration form.
 
 ### 2026-08-15 — qualified-reference semantics corrected; separate repair named `[OWNER 2026-08-15]`
 
@@ -235,28 +257,36 @@ spelling used by ten sites in the reverted migration.
   `.project/active/self-binding-replacement/spike/findings.md` — 2026-08-15 re-establishment on the
   shipped route at `6e3c18d`. Corrects the `SI_OCCURRENCE_AMBIGUOUS` row; records F-2 (agentic-mbse
   validator false-positive on D-6), F-3 (unhandled traceback on the D-5 rename collision), F-4
-  (sideways reach), F-5 (chain source paths).
+  (sideways reach), F-5 (chain source paths). **Superseded in part (2026-08-16):** the
+  usage-qualified rows (u4–u7 and the arrayed-owner row) were measured on the pre-repair resolver;
+  the landed anchoring repair changed their outcomes. Post-repair authority is
+  `tests/conformance/test_usage_owned_reference_anchoring.py` and the anchoring item's audit.
 - **Prior evidence:** `.project/active/source-identity-binding-semantics-spike/authoring-form-table.md`
   — the 2026-08-05 probe table of six authored forms and their observed referents.
-- **Spec review:** `.project/active/self-binding-replacement/spec-review.md` — final Revise verdict;
-  all recorded resolutions incorporated in rev 3.
+- **Spec review (rev 3, archived):**
+  `.project/active/self-binding-replacement/spec-review-20260815-rev3.md` — final Revise verdict;
+  all recorded resolutions incorporated in rev 3. The fresh rev-5 review is `spec-review.md`.
 - **Product lens:** `.project/active/self-binding-replacement/product-lens.md` — append-only gate
   ledger; rev 3 explicitly resolves `spec-F1` through `spec-F6`, and the rev-4
   qualified-reference correction independently records `Gate: CLEAR`.
 - **Separate qualified-reference repair:**
-  `.project/active/qualified-reference-occurrence-anchoring/spec.md` — owns F-6 implementation,
+  `.project/active/qualified-reference-occurrence-anchoring/spec.md` — owned F-6 implementation,
   promoted u4–u7 coverage, shared-caller regressions, and the broader exact-owner invariant selected
-  by the owner.
+  by the owner. **Repair landed** (`98970c9`) and verified sound by the 2026-08-16 independent
+  re-audit; two certification-evidence criteria (SC12 identity capture, SC1 deep-override lane) were
+  reopened by that re-audit, so the item is back in evidence repair ahead of its close.
 - **Qualified-reference evidence:**
   `.project/research/20260815-140630_qualified-binding-corpus-scan.md` — exact owner/edge census and
   snapshot/baseline disposition.
-- **Post-approval stocktake:** a research report to be created after spec approval. It validates
-  the two scope calls this spec depends on (the restated documentation obligation and the home for
-  leftover regeneration work) and reconciles the epic's six-document repair list against the
-  twelve retired-reference documents named by `CLAUDE.md`.
-- **Design:** `.project/active/self-binding-replacement/design.md` (to be created)
+- **Stocktake (complete):** `.project/research/20260815-103905_item8-bounded-stocktake.md` —
+  validated the two scope calls this spec depends on; Item-8 scope holds, and the retracted
+  form-count was purged from its last live site.
+- **Design:** `.project/active/self-binding-replacement/design.md` — rev 2, written at `7e95285`,
+  **before** the anchoring repair landed; its D-6 material is parameterised on a position rule that
+  no longer exists. Design review: `design-review.md` (rev-1 verdict Revise; rev-2 resolutions in
+  the design's Revision Record).
 
 ---
 
-**Next Steps:** After approval, run the bounded Item-8 stocktake research, then proceed to
-`/_my_design`.
+**Next Steps:** Stocktake complete. The design (rev 2) predates the landed anchoring repair —
+re-review spec and design against the repaired resolver before implementation.

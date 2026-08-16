@@ -97,6 +97,18 @@ def frozen_roots() -> dict[str, Any]:
     return payload
 
 
+def promoted_roots() -> list[str]:
+    """Fixture roots this item added, which the frozen corpus set deliberately excludes."""
+    frozen = set(frozen_roots()["roots"])
+    return sorted(
+        {
+            str(path.parent.relative_to(REPO))
+            for path in (REPO / "tests/fixtures").glob("*/*.sysml")
+            if str(path.parent.relative_to(REPO)) not in frozen
+        }
+    )
+
+
 # --------------------------------------------------------------------------- helpers
 
 
@@ -208,7 +220,24 @@ def site_key(row: dict[str, Any]) -> tuple:
 # ------------------------------------------------------------------- site discovery
 
 
-def usage_owned_one_segment(elaborator: Any, fact: Any) -> tuple[Any, Any] | None:
+def live_features(model: Any) -> dict[DeclarationId, Any]:
+    """Every live ``Feature`` keyed by its parser element ID.
+
+    Deliberately wider than the elaborator's own ``_elements`` index, which drops any
+    Feature without a ``qualified_name``. Looking a leaf up here rather than there is
+    what keeps this ledger from sharing the resolver's blind spot: a leaf the elaborator
+    cannot see is still measured, and its shipped outcome recorded, instead of silently
+    leaving the population.
+    """
+    return {
+        DeclarationId(SysideAdapter.element_id(element)): element
+        for element in SysideAdapter.elements_of_type(model, "Feature", include_subtypes=True)
+    }
+
+
+def usage_owned_one_segment(
+    elements: dict[DeclarationId, Any], fact: Any
+) -> tuple[Any, Any] | None:
     """``(leaf declaration, live owner)`` when the site is in the branch's population.
 
     The population is exactly what the repaired branch will act on: a reference of one
@@ -218,7 +247,7 @@ def usage_owned_one_segment(elaborator: Any, fact: Any) -> tuple[Any, Any] | Non
     if fact.leaf is None or len(fact.segment_element_ids) != 1:
         return None
     leaf = DeclarationId(fact.leaf.element_id)
-    element = elaborator._elements.get(leaf)
+    element = elements.get(leaf)
     if element is None:
         return None
     owner = semantic_owner(element)
@@ -232,10 +261,14 @@ def written_text(expression: Any) -> str | None:
     return None if written is WRITTEN_UNKNOWN else str(written)
 
 
-def alias_sites(elaborator: Any, graph: InstanceGraph, root: str) -> list[dict[str, Any]]:
+def alias_sites(
+    elaborator: Any, graph: InstanceGraph, root: str, elements: dict[DeclarationId, Any]
+) -> list[dict[str, Any]]:
     rows: list[dict[str, Any]] = []
     for pending in elaborator._pending_aliases:
-        for ordinal, leaf, owner, plural in _reference_terms(elaborator, pending.expression):
+        for ordinal, leaf, owner, plural in _reference_terms(
+            elaborator, pending.expression, elements
+        ):
             target = pending.node.alias_target
             rows.append(
                 site_row(
@@ -259,12 +292,16 @@ def alias_sites(elaborator: Any, graph: InstanceGraph, root: str) -> list[dict[s
     return rows
 
 
-def expression_sites(elaborator: Any, graph: InstanceGraph, root: str) -> list[dict[str, Any]]:
+def expression_sites(
+    elaborator: Any, graph: InstanceGraph, root: str, elements: dict[DeclarationId, Any]
+) -> list[dict[str, Any]]:
     rows: list[dict[str, Any]] = []
     for pending in elaborator._pending_expressions:
         consumer = pending.consumer
         is_predicate = isinstance(consumer, ConstraintNode)
-        for ordinal, leaf, owner, plural in _reference_terms(elaborator, pending.expression):
+        for ordinal, leaf, owner, plural in _reference_terms(
+            elaborator, pending.expression, elements
+        ):
             if is_predicate:
                 port = ConsumerPortId(consumer.node_id, leaf)
                 edges = [consumer.inputs[port]] if port in consumer.inputs else []
@@ -293,13 +330,15 @@ def expression_sites(elaborator: Any, graph: InstanceGraph, root: str) -> list[d
     return rows
 
 
-def binding_sites(elaborator: Any, graph: InstanceGraph, root: str) -> list[dict[str, Any]]:
+def binding_sites(
+    elaborator: Any, graph: InstanceGraph, root: str, elements: dict[DeclarationId, Any]
+) -> list[dict[str, Any]]:
     rows: list[dict[str, Any]] = []
     for pending in elaborator._pending_bindings:
         fact = pending.evidence.semantic_reference
         if fact is None:
             continue
-        found = usage_owned_one_segment(elaborator, fact)
+        found = usage_owned_one_segment(elements, fact)
         if found is None:
             continue
         leaf, owner = found
@@ -327,7 +366,9 @@ def binding_sites(elaborator: Any, graph: InstanceGraph, root: str) -> list[dict
     return rows
 
 
-def _reference_terms(elaborator: Any, expression: Any) -> list[tuple[int, Any, Any, bool]]:
+def _reference_terms(
+    elaborator: Any, expression: Any, elements: dict[DeclarationId, Any]
+) -> list[tuple[int, Any, Any, bool]]:
     """In-population reference terms of one authored expression, with their ordinals.
 
     The ordinal comes from the shipped fact walk, which is the same walk the resolver
@@ -340,7 +381,7 @@ def _reference_terms(elaborator: Any, expression: Any) -> list[tuple[int, Any, A
         return []
     terms: list[tuple[int, Any, Any, bool]] = []
     for ordinal, (fact, plural) in enumerate(facts):
-        found = usage_owned_one_segment(elaborator, fact)
+        found = usage_owned_one_segment(elements, fact)
         if found is None:
             continue
         leaf, owner = found
@@ -390,7 +431,7 @@ def deep_override_accounting(elaborator: Any) -> dict[str, Any]:
 # --------------------------------------------------------------------------- capture
 
 
-def capture_root(root: str, *, with_identity: bool) -> dict[str, Any]:
+def capture_root(root: str) -> dict[str, Any]:
     """Everything one model root contributes to the ledger, or why it contributes nothing."""
     result: dict[str, Any] = {"root": root}
     path = REPO / root
@@ -421,10 +462,11 @@ def capture_root(root: str, *, with_identity: bool) -> dict[str, Any]:
         result["refused"] = f"elaboration raised {type(error).__name__}: {error}"
         return result
 
+    elements = live_features(extractor.model)
     rows = [
-        *alias_sites(elaborator, graph, root),
-        *expression_sites(elaborator, graph, root),
-        *binding_sites(elaborator, graph, root),
+        *alias_sites(elaborator, graph, root, elements),
+        *expression_sites(elaborator, graph, root, elements),
+        *binding_sites(elaborator, graph, root, elements),
     ]
     result["sites"] = sorted(rows, key=site_key)
     result["diagnostics"] = sorted(
@@ -434,8 +476,7 @@ def capture_root(root: str, *, with_identity: bool) -> dict[str, Any]:
     )
     result["unsupported_expression_consumers"] = unsupported_expression_consumers(elaborator)
     result["deep_override_lane"] = deep_override_accounting(elaborator)
-    if with_identity:
-        result["identity"] = identity_records(graph)
+    result["identity"] = identity_records(graph)
     return result
 
 
@@ -496,16 +537,8 @@ def main() -> None:
     arguments = parser.parse_args()
 
     roots = frozen_roots()
-    frozen = set(roots["roots"])
-    promoted = sorted(
-        {
-            str(path.parent.relative_to(REPO))
-            for path in (REPO / "tests/fixtures").glob("*/*.sysml")
-            if str(path.parent.relative_to(REPO)) not in frozen
-        }
-    )
-    corpus = [capture_root(root, with_identity=False) for root in roots["roots"]]
-    added = [capture_root(root, with_identity=True) for root in promoted]
+    corpus = [capture_root(root) for root in roots["roots"]]
+    added = [capture_root(root) for root in promoted_roots()]
 
     payload = {
         "corpus_roots": roots,

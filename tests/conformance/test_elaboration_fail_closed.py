@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections import Counter
 
 import pytest
+from agentic_mbse.sysml.syside_adapter import SysideAdapter
 
 from sysml_codegen.elaboration import (
     ElaborationCode,
@@ -13,6 +14,7 @@ from sysml_codegen.elaboration import (
     InstanceGraph,
     elaborate,
 )
+from sysml_codegen.elaboration.identity import declaration_id_for
 from sysml_codegen.extraction.extractor import SysMLDataExtractor
 from sysml_codegen.extraction.source_evidence import ReadinessCode
 from tests.conftest import FIXTURES_DIR, requires_license
@@ -208,21 +210,68 @@ def test_ambiguous_exact_owner_is_lenient_diagnostic_and_strict_refusal() -> Non
     Scalar owner selection cannot choose between an arrayed owner's two occurrences,
     and there is no positional route left to fall back to — so the consumer stays
     unbound rather than silently binding the enclosing occurrence.
+
+    The whole diagnostic is pinned, not its code: the consumer it is attributed to, the
+    parameter it names, and the detail that says why. A code-only assertion would stay
+    green if the finding moved to another consumer or lost its explanation.
     """
     lenient = _elaborate_lenient("usage_owner_bare_alias_arrayed")
     consumer = calc(lenient, "BareAliasArrayedOwner__plant__comp_b__doubled")
 
-    assert Counter(diagnostic.code for diagnostic in lenient.diagnostics) == Counter(
-        {ElaborationCode.SI_OCCURRENCE_AMBIGUOUS: 1}
-    )
+    [diagnostic] = lenient.diagnostics
+    assert diagnostic.code == ElaborationCode.SI_OCCURRENCE_AMBIGUOUS
+    assert diagnostic.consumer == consumer.node_id
+    assert diagnostic.param_name is None
+    assert diagnostic.detail == "consumer context contains 2 candidate occurrences"
     assert consumer.inputs == {}
 
     with pytest.raises(ElaborationDiagnosticError) as excinfo:
         _elaborate_strict("usage_owner_bare_alias_arrayed")
 
-    assert Counter(diagnostic.code for diagnostic in excinfo.value.diagnostics) == Counter(
-        diagnostic.code for diagnostic in lenient.diagnostics
+    assert list(excinfo.value.diagnostics) == lenient.diagnostics
+
+
+def _declaration_wire(model: object, type_name: str, qualified_name: str) -> str:
+    """The exact declaration wire of one named element, located by name and asserted by ID."""
+    for element in SysideAdapter.elements_of_type(model, type_name, include_subtypes=True):
+        if str(getattr(element, "qualified_name", None)) == qualified_name:
+            return declaration_id_for(element).to_wire()
+    raise AssertionError(f"no {type_name} named {qualified_name!r}")
+
+
+def test_selected_owner_without_a_leaf_target_refuses_by_name() -> None:
+    """An authored reference to a `PartUsage`-owned calculation usage, not to its output.
+
+    `comp_a::twice` resolves to the exact `twice` declaration, and `comp_a` is a live
+    `PartUsage`, so exact-owner anchoring selects `comp_a`'s occurrence. That occurrence
+    carries an attribute and a calculation node, but no attribute or computed target for
+    a calculation-usage leaf — the last step of the owner route has nothing to return.
+
+    This is the reachable authored shape for that refusal. It refuses rather than picking
+    one of `twice`'s outputs on the author's behalf, and the detail names the exact owner
+    and leaf declarations so the reader can see which two the resolver held.
+    """
+    extractor = _load("usage_owner_calc_usage_leaf")
+    graph = elaborate(
+        extractor.model,
+        extractor.extract_calculation_definitions(),
+        validation_diagnostics=extractor.diagnostics.validation,
+        strict=False,
     )
+    consumer = calc(graph, "CalcUsageLeafOwner__plant__comp_b__doubled")
+    owner = _declaration_wire(extractor.model, "PartUsage", "CalcUsageLeafOwner::Plant::comp_a")
+    leaf = _declaration_wire(
+        extractor.model, "CalculationUsage", "CalcUsageLeafOwner::Plant::comp_a::twice"
+    )
+
+    [diagnostic] = graph.diagnostics
+    assert diagnostic.code == ElaborationCode.SI_OCCURRENCE_MISSING
+    assert diagnostic.consumer == consumer.node_id
+    assert diagnostic.param_name is None
+    assert diagnostic.detail == (
+        f"exact owner {owner} has no target for leaf {leaf} at its selected occurrence"
+    )
+    assert consumer.inputs == {}
 
 
 def test_strict_readiness_halt_precedes_graph_diagnostic_rejection() -> None:

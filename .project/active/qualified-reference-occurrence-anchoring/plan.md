@@ -1,9 +1,9 @@
 # Implementation Plan: Exact Owner Anchoring for Usage-Owned One-Segment References
 
-**Status:** Complete — certified 2026-08-15 (`audit.md`, verdict Certify)
+**Status:** Needs Work — independent re-audit reopened Phase-5 certification evidence (2026-08-16)
 **Owner:** Reid W
 **Created:** 2026-08-15 19:03 PDT
-**Last Updated:** 2026-08-15 19:03 PDT
+**Last Updated:** 2026-08-16 (independent audit)
 **Branch:** main (`2768c68` at plan start)
 **Complexity:** MEDIUM
 
@@ -375,7 +375,7 @@ assert unadjudicated_differences(before, after) == []
 - [x] Produce canonical `verification/after.json` from the shipped resolver and
   `verification/adjudication.md`. For every changed edge or diagnostic, record fix/regression,
   topology, exact before/after identity, and reasoning. Leave zero unadjudicated rows.
-- [x] Compare occurrence records, slot-derived node IDs, snapshot digests, and unaffected edges with
+- [ ] Compare occurrence records, slot-derived node IDs, snapshot digests, and unaffected edges with
   the Phase-2 artifacts. Update only a snapshot already classified in Phase 4.
 - [x] Check `.project/active/self-binding-replacement/spec.md:56,66-70,74-78` against landed
   behavior. Correct a mismatch only within the spec's bounded instruction; do not change D-5/D-7
@@ -395,14 +395,14 @@ assert unadjudicated_differences(before, after) == []
 
 **Manual:**
 
-- [x] Reconcile every spec success criterion with one retained test or evidence row. Do not check SC8
+- [ ] Reconcile every spec success criterion with one retained test or evidence row. Do not check SC8
   or the deep-override lane as fully evidenced if its standing gap remains open.
 - [x] Confirm only `elaborate.py` changed in production and no evidence, occurrence, slot, graph,
   projection, or codec schema was widened.
 
-**What We Know Works After This Phase:** The shipped resolver is certified against durable focused
-tests, public/snapshot behavior, a fully adjudicated corpus, stable identities, and the bounded
-documentation obligation.
+**What We Know Works After This Phase:** The exercised resolver behavior and edge/refusal
+adjudication pass. Certification remains open until corpus identity capture is repaired and the
+deep-override evidence gap receives its reserved close disposition.
 
 ---
 
@@ -660,9 +660,13 @@ stands exactly as written.
   `usage_owner_bare_alias_arrayed` moving from a **silent answer to
   `SI_OCCURRENCE_AMBIGUOUS` ("consumer context contains 2 candidate occurrences")** with the
   consumer left unbound. That last one is the phase's own no-hidden-recovery proof.
-- **Identity is untouched.** The `identity` block — every occurrence wire ID, attribute node ID,
-  calculation node ID, and constraint node ID — compares **equal for all 153 roots** (140 corpus +
-  13 promoted) between `before.json` and `after-phase3.json`. Zero differences.
+- **Identity evidence was overstated, then measured (2026-08-16).** The Phase-3 ledger captured
+  `identity` blocks for the 13 promoted roots only; it passed `with_identity=False` for all 140
+  frozen corpus roots, so the differ compared two absences and reported them as agreement.
+  `after-phase3.json` still carries that hole and its identity claim should not be read. Phase 6
+  regenerated both ledgers with identity for every root — `before.json` under the pre-repair
+  resolver — and the measured result is **139 roots compared, 0 changed**; the other 15 refuse to
+  elaborate and have no graph. See `verification/README.md`, "Remediation — Phase 6".
 - **Manual u4–u7 inspection** (typed edges and full diagnostics printed directly from the live
   graphs): u4 binds the package-scoped `shared_component` occurrence; u5 binds the named `comp_a`
   occurrence; u6 binds occurrence `dd373162…` (`comp_a`) where it previously bound `87f9e6f2…`
@@ -868,11 +872,15 @@ helper and rewires one call.
 - **Ledger determinism and provenance.** Two consecutive `corpus_compare.py` runs at this commit are
   byte-identical, and the result is also byte-identical to `after-phase3.json` — the expected
   outcome, since Phases 4 and 5 changed no production file; a difference would have been the finding.
-- **Structural checks all hold.** Site keys equal (corpus 409 = 409, promoted 16 = 16, zero one-sided
-  keys); zero after rows without an edge, diagnostic, or named structural reason; **zero roots with a
-  changed identity block, out of 153**; the same 15 refused corpus roots with the same reason
-  strings. `adjudicate.py` reports **0 structural problems**.
-- **19 changed rows, every one a fix, zero unadjudicated.** Corpus 405 edge / 4 diagnostic → **409
+- **Structural edge checks hold; the identity total was misleading, and is now measured
+  (2026-08-16).** Site keys equal (corpus 409 = 409, promoted 18 = 18 after remediation, zero
+  one-sided keys); zero after rows lack an edge, diagnostic, or named structural reason; the same 15
+  corpus roots refuse for the same reasons. The Phase-5 differ reported `0 of 153` by comparing
+  absent blocks to absent blocks — missing evidence, not 153 comparisons. Phase 6 captured identity
+  for every root and re-ran it: **139 roots compared, 0 changed**, and the differ now refuses a
+  ledger that omits a block rather than reporting it as agreement.
+- **19 changed rows, every one a fix, zero unadjudicated** (20 after Phase 6 added one fixture; the
+  new row refuses on both sides and changes no edge). Corpus 405 edge / 4 diagnostic → **409
   edge / 0 diagnostic** (rows 1–5: u4, u5, u7×2 repaired from diagnostic to typed edge; u6's silent
   `comp_b` edge moved to `comp_a` at the same slot). Promoted 12 edge / 4 diagnostic → **15 edge / 1
   diagnostic** (rows 6–10 the same five in their maintained copies; rows 11–17 the combined fixture's
@@ -917,8 +925,11 @@ helper and rewires one call.
 **Deviations:**
 
 - **`adjudicate.py` was added; the plan did not name it.** The phase requires zero unadjudicated rows
-  across 425 sites and 153 identity blocks. Eyeballing two 500 KB JSON documents is not a check, so
-  the differ is the mechanism and `adjudication.md` is the judgment. It is deliberately inert — it
+  across 425 sites and identity evidence for every root. Eyeballing two 500 KB JSON documents is not a check, so
+  the differ was added as the mechanism and `adjudication.md` as the judgment. The independent audit
+  found that this mechanism omitted identity for 140 corpus roots; Phase 6 captured them and made the
+  differ refuse an absent block, so that part is now closed. It
+  is deliberately inert — it
   never reads the model, never re-resolves anything, and needs no license — which keeps it from
   becoming a second resolver the way the plan's risk note warns.
 - **A scratch git worktree at `2768c68` was used for the ruff/mypy baseline**, then removed. Without
@@ -931,10 +942,56 @@ helper and rewires one call.
   `.project/active/self-binding-replacement/spec.md:132-139` carries the same stale present tense
   ("the current one-segment resolver normalizes to a feature slot…") in a `[HARD]` requirement. It
   sits outside the inventory this item was given, and that inventory was drawn deliberately, so it is
-  flagged in `adjudication.md` for close or the owner rather than edited here.
+  flagged in `adjudication.md` for close or the owner rather than edited here. **Resolved
+  2026-08-16:** the owner directed an accuracy pass on that spec; rev 5 amends the row to the
+  post-repair state (see its Change Record). Close need not edit it again.
+
+### Phase 6 Completion — audit remediation (findings 1, 5, 6)
+
+**Completed:** 2026-08-16, branch `main`, licensed environment.
+
+**Actual changes:**
+
+- `src/sysml_codegen/elaboration/elaborate.py` — `_resolve_direct_reference` refuses a leaf its
+  element index does not hold (`SI_OCCURRENCE_MISSING`) instead of falling through to the
+  consumer-positional leaf route. One branch, no schema, index, projection, or codec touched.
+- `verification/corpus_compare.py` — identity captured for every root that elaborates
+  (`with_identity` removed, not defaulted); leaves looked up in a full live `Feature` index so the
+  ledger no longer shares the resolver's blind spot.
+- `verification/adjudicate.py` — refuses a ledger whose elaborated root carries no identity block.
+- `verification/absent_leaf_census.py` + `absent-leaf-census.json` — the retained measurement of the
+  new refusal's population.
+- `verification/before.json`, `after.json`, `adjudication-diff.txt` — regenerated; `before.json`
+  under `elaborate.py` at `98970c9^`, restored afterwards with `git diff -- src/` empty.
+- `tests/fixtures/usage_owner_calc_usage_leaf/model.sysml` + two tests
+  (`test_selected_owner_without_a_leaf_target_refuses_by_name`,
+  `test_direct_reference_refuses_a_leaf_absent_from_the_element_index`), and the arrayed
+  strict/lenient node strengthened from a code `Counter` to the full consumer/parameter/detail tuple.
+
+**Results:** 139 roots compared on identity, 0 changed. 769 one-segment leaves censused, 0 absent
+from the element index. 20 changed ledger rows, all adjudicated, 0 structural problems. Full suite
+**17 failed / 2145 passed / 34 skipped / 88 deselected**, failing node set identical by name to
+Phase 5's. Focused ruff and mypy clean.
+
+**Issues:** none. No existing assertion was weakened; the one that changed was strengthened.
+
+**Deviations:** the missing-leaf-target refusal turned out to be reachable from an authored model —
+a one-segment reference naming a `PartUsage`-owned calculation usage rather than one of its outputs
+— so it is pinned by a real fixture rather than recorded as unreachable. That fixture adds one root
+and two sites to the promoted section of both ledgers, which is why the changed-row count moves
+19 → 20. The absent-leaf refusal has no authored shape (census: zero across 154 roots) and is
+therefore reached at the resolver boundary in a unit test, with the census retained as the evidence
+for that choice.
 
 ---
 
-**Status:** Draft → In Progress → Complete → **Certified** (`audit.md`, 2026-08-15)
-**Next Step:** After plan approval, run `/_my_implement` from Phase 1. Use `/_my_audit` after all
-phases pass; the bounded self-binding verification completes in `/_my_close`.
+**Status:** Draft → In Progress → Complete → Certified (2026-08-15) → **Needs Work** after
+independent re-audit (2026-08-16) → re-audit findings **1, 5, 6 remediated** (2026-08-16, Phase 6).
+**Next Step:** Owner disposition on re-audit findings 2, 3, 4, and 7 at close, then rerun
+`/_my_audit`. The bounded self-binding verification remains a `/_my_close` obligation.
+
+**`[OWNER 2026-08-16]` D11 deep-override coverage gap: ACCEPTED.** The owner accepts the gap as-is:
+no deep-override shape reaching the one-segment branch could be authored, and the corpus scan found
+zero such sites, so the unexercised path is treated as unreachable in practice. No further authoring
+attempts or follow-on item required. This is the reserved owner disposition the 2026-08-16 re-audit's
+finding 2 (SC1) asks close to obtain — record it there when re-adjudicating SC1.

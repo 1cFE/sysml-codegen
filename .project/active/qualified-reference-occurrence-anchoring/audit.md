@@ -1,13 +1,186 @@
 # Audit: Exact Owner Anchoring for Usage-Owned One-Segment References
 
-**Verdict:** Certify
-**Audited:** 2026-08-15
+**Verdict:** Needs Work — independent re-audit reopened the certification evidence. Findings **1, 5,
+and 6 are remediated** (2026-08-16); findings 2, 3, 4, and 7 are reserved to the owner for close. See
+[Remediation](#remediation--2026-08-16-findings-1-5-6).
+**Audited:** 2026-08-15; independently re-audited 2026-08-16; remediated 2026-08-16
 **Branch:** main
-**Commit:** `2d2162e` (diff audited: `2768c68..HEAD`)
-**Auditor evidence:** every runtime claim below was re-run by this audit under the licensed
-environment, not read from the implementers' logs. Where a number appears, this pass produced it.
+**Commit:** `8bea4b8` (implementation diff: `2768c68..98970c9`)
+**Verification note:** the independent pass re-ran the current focused/full suites, corpus ledger,
+focused quality checks, snapshot assessment, and targeted censuses under the licensed environment.
+The superseded body retains the 2026-08-15 audit's historical pre-repair experiments.
+
+**Supersession note:** the 2026-08-15 audit record is retained below for traceability, but its
+Certify verdict and its claims of 153-root identity coverage and complete shared-lane evidence are
+superseded by the independent re-audit in the next section.
 
 ---
+
+## Independent re-audit — 2026-08-16
+
+### Outcome
+
+**Needs Work for certification evidence.** The production resolver repair matches the design and
+the exercised runtime behavior is sound. The certification does not hold as written because two
+success criteria were checked using evidence that does not cover what the artifacts claim.
+
+The independent product-lens gate is **DISPOSED**, not CLEAR. Its finding is lower than owner grade,
+so it does not block the repair. It does need an explicit close disposition or a bounded follow-up.
+See `product-lens.md`, `independent-audit-F1`.
+
+### Findings
+
+1. **High — SC12's 153-root identity proof only captured 13 roots.**
+   `verification/corpus_compare.py:507` calls `capture_root(..., with_identity=False)` for all 140
+   frozen corpus roots and enables identity only for the 13 promoted roots at `:508`.
+   `verification/adjudicate.py:53-54,98-104` maps each missing block to `None`, compares
+   `None == None`, and reports those roots as compared. The ledgers contain 13 `identity` blocks,
+   not 153. This falsifies the byte-exact claims in `plan.md`, `verification/README.md`,
+   `verification/adjudication.md`, and the original audit. SC12 is reopened until before/after
+   identities are captured for the 140 frozen roots and compared without treating absence as
+   evidence.
+
+2. **High — SC1 was marked met while one shared resolver lane remains unevidenced.** Deep literal
+   overrides call the shared resolver at `src/sysml_codegen/elaboration/elaborate.py:1032-1052`.
+   D11 found no authorable one-segment affected shape, and the retained verifier measures zero such
+   sites. The owner explicitly allowed the run to continue with that named gap; that disposition did
+   not create acceptance evidence for the lane. The original audit nevertheless says the combined
+   fixture covers all six lanes and checks SC1. It does not cover deep override. SC1 is reopened;
+   close must either obtain the reserved owner disposition or add discriminating evidence.
+
+3. **Medium — arrayed aggregation exposes a user-visible cardinality split.** The repair forces
+   `plural=False` in `elaborate.py:2320-2331`. A licensed paired probe found that, for
+   `comp_a : Component[2]`, `sum(comp_a::length)` refuses with `SI_OCCURRENCE_AMBIGUOUS` and no
+   inputs, while `sum(comp_a.length)` yields two exact-owner inputs and no diagnostic. The kept sum
+   test uses a scalar owner, so forwarding `plural=True` would still return one edge and the test
+   would stay green. Preserving scalar direct-reference policy was an explicit design decision, so
+   this is not an unapproved implementation deviation. It is still a product inconsistency and
+   fires product-lens smells 3 and 6. Carry `independent-audit-F1` to close and give it a named
+   disposition or bounded follow-up.
+
+4. **Medium — the close documentation obligation is still open and internally contradictory.**
+   `.project/active/self-binding-replacement/spec.md:53-59` says the shipped resolver honors the
+   exact owner; its `[HARD]` requirement at `:132-139` says the current resolver still selects by
+   consumer position. The anchoring spec's SC14 remains unchecked. This does not invalidate the
+   runtime repair, but the item is not close-ready.
+
+5. **Low — an absent live leaf fails open, and the verifier shares the blind spot.**
+   `_resolve_direct_reference` falls back to `_resolve_leaf` when `_elements` lacks the exact leaf
+   (`elaborate.py:2314-2317`). The corpus verifier excludes the same shape at
+   `verification/corpus_compare.py:220-223`. A fresh scan of 138 loadable retained roots found zero
+   such one-segment facts, so this is latent rather than demonstrated. Make the absence explicit or
+   keep a test if a legal authored shape is found.
+
+6. **Low — two fail-closed edges are weakly pinned.** The arrayed strict/lenient test compares only
+   diagnostic codes (`test_elaboration_fail_closed.py:215-225`), although the design asks for the
+   full consumer/parameter/detail tuple. The selected-owner-but-missing-leaf-target error at
+   `elaborate.py:2335-2341` has no kept test.
+
+7. **Low — retained captures omit the editable companion revision.** The run depends on the sibling
+   `agentic-mbse` checkout, but the ledger does not record its commit. Reproduction today used the
+   clean checkout at `1decd9525888`; historical provenance is incomplete.
+
+### Independent verification
+
+- Focused licensed suite: **114 passed**.
+- Full licensed suite: **17 failed, 2143 passed, 34 skipped, 88 deselected**. Re-running the 17
+  failures confirmed the exact three files and the same missing-`pandas` cause.
+- Fresh `after.json`: byte-identical to the retained file. Adjudication still reports 19 changed
+  outcomes and zero edge/refusal drift; its identity total is the evidence bug described above.
+- Fresh absent-leaf census: 138 loadable roots, zero one-segment facts absent from `_elements`.
+- Focused Ruff: clean. Focused mypy on `elaborate.py`: clean.
+- Fresh snapshot assessment from the broad verification pass: 23/23 assessed, zero stale.
+
+### Not checked
+
+- The historical pre-repair source-revert mutation experiment was not repeated.
+- `before.json` was not regenerated under the historical resolver during this pass.
+- The project-wide Ruff/mypy baseline was not rebuilt in a historical worktree.
+- SysIDE's own choice of exact leaf remains upstream authority; this audit checked codegen's use of
+  that answer.
+
+---
+
+## Remediation — 2026-08-16 (findings 1, 5, 6)
+
+The owner authorized findings **1, 5, and 6**. Findings 2, 3, 4, and 7 are untouched and reserved
+for close. Everything below was re-run in the licensed environment, and no existing assertion was
+weakened to make anything pass — the one assertion that changed was strengthened.
+
+### Finding 1 — closed. Identity is now measured, and absence can no longer pass as agreement.
+
+`corpus_compare.py` captures an identity block for every root that elaborates; the `with_identity`
+switch is gone rather than defaulted. `before.json` was regenerated under the **pre-repair**
+resolver — `git checkout 98970c9^ -- src/sysml_codegen/elaboration/elaborate.py`, capture, restore,
+`git diff -- src/` empty — so it measures the old resolver rather than reconstructing it. Apart from
+the added identity blocks and the one fixture finding 6 required, the regenerated `before.json` is
+identical to the committed one, field for field. Two consecutive `after.json` runs are
+byte-identical.
+
+The comparator bug is fixed at the root: `adjudicate.py` raises `MissingIdentityBlockError` when a
+root that elaborated carries no identity block, naming ledger, section, and root. Only a refused
+root may lack one — it produced no graph — and its refusal string is compared instead. Verified by
+deleting a block from a ledger and re-running.
+
+**The measured result: 139 roots compared, 0 with a changed identity block** (125 corpus + 14
+promoted; 15 corpus roots refuse to elaborate). The four spike-fixture roots the re-audit flagged as
+having actually changed sites are inside that compared set, and their identities did not move.
+Changed rows are 20, not 19: the extra row is the new fixture, refusing on both sides with no edge
+either way, adjudicated in `verification/adjudication.md`. `plan.md`,
+`verification/README.md`, and `verification/adjudication.md` now state these numbers; SC12 is met on
+that evidence.
+
+### Finding 5 — closed. The absent leaf refuses, and the verifier no longer shares the blind spot.
+
+`_resolve_direct_reference` now refuses a leaf its element index does not hold, rather than falling
+through to `_resolve_leaf`. The reasoning is recorded in the function's docstring and is the item's
+own intent applied to itself: that index holds every declaration carrying a reload-stable qualified
+name, so a missing leaf means the resolved fact and the index disagree about what the model
+contains. Owner classification is then unanswerable, and the definition-owned route answers from the
+*consumer's* lineage — the positional guess this item exists to delete, taken in the one case nobody
+could see. It refuses by name instead (`SI_OCCURRENCE_MISSING`).
+
+Proof that nothing regresses: `verification/absent_leaf_census.py` and its retained
+`absent-leaf-census.json` measure the whole population of the new refusal — **154 roots, 769
+one-segment reference leaves, 0 absent from the element index.** The ledger's changed-row set is
+unchanged apart from the new fixture, and no corpus row moved.
+
+The path is kept under test at the resolver boundary
+(`tests/unit/test_direct_reference_unknown_leaf.py`), which is the honest place for it: the census
+says no authored model reaches this, and inventing a fixture that pretends otherwise would be worse
+evidence than none. `corpus_compare.py` resolves its leaves against a full live `Feature` index
+rather than the elaborator's, so a leaf the elaborator cannot see is rowed and measured instead of
+dropped.
+
+### Finding 6 — closed. Both edges pinned, and the second one turned out to be authorable.
+
+`test_ambiguous_exact_owner_is_lenient_diagnostic_and_strict_refusal` now pins the whole diagnostic
+the design names — consumer node ID, parameter, and detail text — and compares the strict and
+lenient diagnostic lists by value rather than by code counter.
+
+The selected-owner-but-missing-leaf-target raise **is** reachable from an authored model, contrary
+to the expectation that it might not be. A one-segment reference naming a `PartUsage`-owned
+*calculation usage* rather than one of its outputs (`comp_a::twice * 2.0`) loads cleanly, resolves
+to the exact `twice` declaration, selects `comp_a`'s occurrence, and finds no attribute or computed
+target there. `tests/fixtures/usage_owner_calc_usage_leaf` is that model and
+`test_selected_owner_without_a_leaf_target_refuses_by_name` pins the refusal on the full tuple,
+with the owner and leaf wires derived from the model rather than pasted in.
+
+### Verification of the remediation
+
+- Full suite: **17 failed, 2145 passed, 34 skipped, 88 deselected.** Failing node set identical by
+  name to `after-phase5-full-suite.txt`; all 17 are the environmental missing-`pandas` failures. The
+  two added passes are the two tests above. All 34 skips are golden-fixture skips; zero
+  license-related skips.
+- `adjudicate.py` on the regenerated ledgers: **0 structural problems**, 0 changed refusals, 0
+  changed identity blocks, 20 changed outcomes, no unpaired root-field change.
+- Focused Ruff on the changed production, test, and verification files: clean. Focused mypy on
+  `elaborate.py`: clean. The pre-existing project-wide backlog was not touched.
+- The production edit is confined to `elaborate.py`. No schema, index, projection, or codec widened.
+
+---
+
+## Original 2026-08-15 audit record (superseded where noted above)
 
 ## The Point
 
@@ -50,7 +223,7 @@ position) rather than adding a mechanism. Where the repaired route cannot choose
 name instead of guessing — the loud-failure half of the ELABORATE-FIRST mission, applied to its
 own hardest case.
 
-**Product-lens ledger gate: CLEAR.** I scanned every block in
+**Historical product-lens ledger gate: CLEAR (superseded 2026-08-16).** I scanned every block in
 `product-lens.md`, not just the latest. `spec-F1` is resolved by citation in the second block.
 `design-F1`, `design-F2`, and `design-F3` are `DISPOSED`, and I verified each disposition was
 actually carried out rather than merely promised: D11 now records a dated coverage gap instead of
@@ -138,15 +311,16 @@ Every criterion below was checked against a test I ran or an evidence row I rege
   `after.json`**. I installed the pre-repair file and re-ran it: **byte-identical to `before.json`**.
   I re-ran `adjudicate.py` over my own captures: output **identical** to the committed
   `adjudication-diff.txt` — 409/409 and 16/16 site keys, 5 + 14 = 19 changed outcomes, 0 rows
-  without an edge/diagnostic/named reason, 0 identity-block changes over 153 roots, **0 structural
-  problems**. The corpus population is also genuinely complete: `corpus_roots.json`'s 140 roots
+  without an edge/diagnostic/named reason and **0 structural problems**. This pass reported 0
+  identity-block changes over 153 roots; the independent re-audit proved only 13 blocks existed.
+  The corpus population is otherwise genuinely complete: `corpus_roots.json`'s 140 roots
   cover every `tests/fixtures/` directory except `golden`, `baseline_outputs`, `baseline_yaml`, and
   `v6_recapture_batch`, and `find` confirms none of those four contains a `.sysml` file.
 - **SC10 — public off-default mutation, live and round-trip.** Met; node passes at HEAD and fails
   pre-repair.
 - **SC11 — strict/lenient semantic parity.** Met; 6 parity parameters plus both negatives pass.
-- **SC12 — feature slots, occurrence records, serialized IDs unchanged.** Met. Zero identity-block
-  differences across all 153 roots in my regenerated ledgers.
+- **SC12 — feature slots, occurrence records, serialized IDs unchanged.** The 2026-08-15 pass marked
+  this met. **Superseded:** only 13 promoted identity blocks were captured; SC12 is reopened.
 - **SC13 — every live-vs-snapshot difference classified; unaffected bytes unchanged.** Met, and
   provable without trusting the assessment file: no changed ledger row touches a pre-existing
   fixture root, so no committed snapshot can be stale. No snapshot bytes appear anywhere in
@@ -272,7 +446,7 @@ is exactly what the plan's own risk note forbids.
 
 ## Certification
 
-**Certify.** The product-lens ledger gate is CLEAR with no unresolved owner or `[HARD]`
+**2026-08-15 verdict: Certify (superseded 2026-08-16).** The product-lens ledger gate was CLEAR with no unresolved owner or `[HARD]`
 contradiction; the one structural smell that fired (design-F2's split representation) is resolved
 in the Product Judgment above on evidence I checked rather than inherited.
 

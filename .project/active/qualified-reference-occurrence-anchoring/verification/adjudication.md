@@ -10,6 +10,14 @@ change that can make a model which loads today start failing; it is adjudicated 
 Everything below is what the shipped resolver actually did when re-run at the commit above. No row
 is carried over from a Phase-3 note or a research prediction.
 
+**Re-adjudicated 2026-08-16 (re-audit finding 1).** Both ledgers were regenerated with identity
+captured for **every** root, the `before` side under the pre-repair resolver
+(`src/sysml_codegen/elaboration/elaborate.py` at `98970c9^`, restored afterwards with
+`git diff -- src/` empty). Apart from the added identity blocks and one fixture this remediation
+added, the regenerated `before.json` is identical to the committed one. The identity claim below is
+now a measurement; the row count moves 19 → 20 because of the new fixture. Everything else stands as
+written.
+
 ## How this was produced
 
 ```bash
@@ -38,21 +46,27 @@ prints what a human must rule on.
 
 | Stencil assertion | Result |
 |---|---|
-| `site_keys(after) == site_keys(before)` | **holds.** corpus 409 = 409, promoted 16 = 16; zero keys only in one side |
+| `site_keys(after) == site_keys(before)` | **holds.** corpus 409 = 409, promoted 18 = 18; zero keys only in one side |
 | every after row has an edge, a diagnostic, or a named structural reason | **holds.** 0 uncovered rows in either section |
-| `occurrence_records(after) == occurrence_records(before)` | **holds.** 0 roots with a changed `identity` block, out of 140 corpus + 13 promoted = **153** |
+| `occurrence_records(after) == occurrence_records(before)` | **holds.** 0 roots with a changed `identity` block, out of **139 compared** — 125 corpus + 14 promoted. The other 15 corpus roots refuse to elaborate, so they have no graph and no identity; their refusal strings are compared instead |
 | refusal strings unchanged | **holds.** 15 refused corpus roots, same roots, same reason strings |
-| `unadjudicated_differences(before, after) == []` | **holds.** all 19 changed rows are ruled on below |
+| `unadjudicated_differences(before, after) == []` | **holds.** all 20 changed rows are ruled on below |
 
 Corpus totals move **405 edge / 4 diagnostic → 409 edge / 0 diagnostic** over the same 409 sites and
 the same lane split (318 calc binding, 76 computed expression, 15 constraint binding). Promoted
-totals move **12 edge / 4 diagnostic → 15 edge / 1 diagnostic** over the same 16 sites.
+totals move **13 edge / 5 diagnostic → 16 edge / 2 diagnostic** over the same 18 sites.
+
+**Absence is no longer counted as agreement.** `adjudicate.py` now refuses outright when a root that
+elaborated carries no `identity` block, instead of mapping it to `None` and comparing two absences
+equal. That mapping is what let a 13-root capture report as a 153-root comparison. The refusal is
+exercised: deleting one block from a ledger and re-running raises `MissingIdentityBlockError` naming
+the ledger, the section, and the root.
 
 Four root-level `diagnostics` lists also changed (u4, u5, u7 in both sections, and the arrayed
 negative). Each pairs with one of its own changed sites below — the same event seen at the graph
 level — and `adjudicate.py` labels them `paired with a changed site`. None is unpaired.
 
-## The 19 changed rows
+## The 20 changed rows
 
 Occurrence steps are abbreviated to their first 8 hex digits and named. Full wire IDs are in
 `adjudication-diff.txt`; the ledgers hold the exact strings.
@@ -191,12 +205,34 @@ or suggest the index syntax that resolves it. Improving it would be an author-ex
 no semantic content, and this item's design forbids new diagnostic codes, so it is left alone and
 noted here.
 
+### Row 20 — the missing-leaf-target fixture (added 2026-08-16)
+
+| # | Root | Lane | Written | Before | After | Verdict |
+|---|---|---|---|---|---|---|
+| 20 | `tests/fixtures/usage_owner_calc_usage_leaf` | computed expression | `comp_a::twice * 2.0` | `SI_OCCURRENCE_MISSING` — "consumer context has no occurrence of leaf slot …" | `SI_OCCURRENCE_MISSING` — "exact owner `b4044402` has no target for leaf `e88397a6` at its selected occurrence" | **no semantic change** |
+
+This fixture is a remediation artifact, not a corpus finding: re-audit finding 6 asked for a kept
+test on the selected-owner-but-missing-leaf-target refusal, and this is the authored shape that
+reaches it. `comp_a::twice` names a `PartUsage`-owned *calculation usage* rather than one of its
+outputs. SysIDE accepts the expression and resolves the exact `twice` declaration; `comp_a` is a live
+`PartUsage`, so owner anchoring selects its occurrence, and that occurrence carries no attribute or
+computed target for a calculation-usage leaf.
+
+Both sides refuse with the same code and leave the consumer unbound. Only the detail moves, from the
+old route's slot-not-in-my-lineage wording to the owner route's naming of the exact owner and leaf
+the resolver held. No edge exists on either side, so nothing about the graph changed. The row appears
+here because the fixture is new to both ledgers, and it is ruled on rather than waved through.
+
+Its second site — `in v = length` inside `comp_a` — is a plain usage-owned binding and produces the
+same typed edge before and after, which is why it is not a changed row.
+
 ## What did not change
 
-- **Identity.** Every occurrence wire ID, attribute node ID, calculation node ID, and constraint node
-  ID compares equal across all **153** roots. Zero identity blocks differ. Feature slots are stable
-  in the changed rows too: in all 19, only the occupancy step moved or a diagnostic became an edge —
-  no slot changed.
+- **Identity, re-measured 2026-08-16.** Every root that elaborates now carries an `identity` block on
+  both sides — occurrence records, attribute, calculation, and constraint node IDs. **139 roots
+  compared, 0 changed.** The earlier `0 of 153` was not a comparison: 140 corpus roots had no block
+  on either side, and the differ read two absences as agreement. The 15 corpus roots with no block
+  are the 15 that refuse to elaborate; their refusal strings are compared instead, and none moved.
 - **Unaffected edges.** 404 of the 409 corpus sites are untouched.
 - **Refused roots.** The same 15 corpus roots refuse for the same recorded reasons; none started or
   stopped refusing.
@@ -244,7 +280,7 @@ five test files it added. The pre-existing backlog is out of scope and was not t
 
 | # | `spec.md` criterion | Evidence | State |
 |---|---|---|---|
-| 1 | Owner occurrence precedes leaf slot, across every shared resolver consumer | The seven combined-fixture lane nodes (`test_combined_*`) cover alias, alias-following calc input, computed attribute, calc input, constraint actual, inline predicate, and scalar `sum()`; `test_combined_named_source_reaches_every_and_only_its_consumers` pins the fan-out | met |
+| 1 | Owner occurrence precedes leaf slot, across every shared resolver consumer | The combined fixture covers the listed expression and binding lanes; the deep-override caller has no affected one-segment witness and remains the D11 gap | reopened |
 | 2 | u4 package sibling → `shared_component.length`, no diagnostic | `test_u4_package_sibling_binds_the_package_scoped_occurrence`; rows 1/6 | met |
 | 3 | u5 named sibling → `plant.comp_a.length`, no ambiguity | `test_u5_named_sibling_binds_the_named_occurrence`; rows 2/7 | met |
 | 4 | u6 cross-owner → `comp_a`, never `comp_b`, no fallback edge | `test_u6_cross_owner_consumer_binds_the_named_sibling`; row 3/8. Phase 3 also proved `_resolve_leaf` is invoked 0 times in u6's elaboration | met |
@@ -255,7 +291,7 @@ five test files it added. The pre-existing backlog is out of scope and was not t
 | 9 | Broader surface re-derived; every difference adjudicated | This document. 409 corpus + 16 promoted sites, 19 changed rows, zero unadjudicated | met |
 | 10 | Public off-default mutation reaches every and only its consumers, live and round-trip | `test_usage_owned_public_mutation_reaches_every_and_only_its_consumers`, `test_usage_owned_anchoring_survives_the_codec_including_raw_alias_targets`, `test_usage_owned_anchoring_survives_capture_and_relocation` | met |
 | 11 | Strict and lenient agree on semantic identity | `test_owner_anchoring_resolves_identically_in_strict_and_lenient` (6 fixtures), `test_ambiguous_exact_owner_is_lenient_diagnostic_and_strict_refusal`, `test_strict_readiness_halt_precedes_graph_diagnostic_rejection` | met |
-| 12 | Feature slots, occurrence records, serialized occurrence IDs unchanged | Identity blocks equal across 153 roots; `test_attribute_node_ids_stay_derived_from_occurrence_and_slot` and `test_occurrence_records_stay_anchored_to_their_containment_slot`, parametrized over all 13 promoted roots | met |
+| 12 | Feature slots, occurrence records, serialized occurrence IDs unchanged | Identity blocks captured for every root that elaborates and compared before/after: **139 compared, 0 changed** (the other 15 refuse to elaborate; their refusal strings are compared instead). The differ now refuses an absent block rather than reading it as agreement | met (2026-08-16) |
 | 13 | Every live-vs-snapshot difference classified; unaffected bytes unchanged | `phase4-snapshot-assessment.json` and `phase5-snapshot-assessment.json`: 0 stale, payloads byte-identical to the pre-repair inventory. No recapture, because D9's trigger never fired | met |
 | 14 | Close-time check of the bounded self-binding spec locations | Checked and corrected below; **the final verifier remains `/_my_close`** | prepared, verified at close |
 

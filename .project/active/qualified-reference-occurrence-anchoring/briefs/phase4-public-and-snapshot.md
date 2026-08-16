@@ -27,8 +27,9 @@ stale committed snapshot before recapture.
 - `tests/fixtures/usage_owned_reference_consumers` carries one named source `plant.comp_a.length`
   (3.0) read by **seven** consumers inside the sibling `comp_b` (7.0), across all six lanes. After
   the repair all seven anchor on `comp_a`.
-- Occurrence wire IDs and every node ID compare equal across all 153 roots pre- and post-repair.
-  Snapshot inventory at Phase 2: **23 tracked, 0 stale**.
+- Occurrence wire IDs and every node ID compare equal for the 13 promoted roots captured with
+  identity. The 140 frozen corpus roots omitted identity and therefore do not support the original
+  153-root claim. Snapshot inventory at Phase 2: **23 tracked, 0 stale**.
 - The corpus changed at exactly 5 sites, all predicted.
 - The arrayed-owner negative now refuses with `SI_OCCURRENCE_AMBIGUOUS`.
 

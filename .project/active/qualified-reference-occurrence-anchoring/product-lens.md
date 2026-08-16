@@ -161,3 +161,42 @@ position to the leaf's declared owner is stated explicitly (Core Concept, Branch
 D2), and the snapshot route's reliance on recapture discipline is stated (invariant 13, D9).
 
 Gate: DISPOSED (design-F1, design-F2, design-F3)
+
+---
+
+## independent-audit — 2026-08-16 — rev `8bea4b8`
+
+Point (re-derived): Every supported one-segment reference whose exact leaf is owned by a real
+`PartUsage` must preserve that owner's concrete source occurrence, so varying one source changes
+every and only its consumers. Aggregation over an arrayed child remains one term per occurrence.
+[sources: `.project/product/P-001-design-search-free-variation.md:11-17` (owner-verbatim);
+`.project/concepts/constraint-execution-authoritative-lifecycle-contract.md:394-410,661-668`
+(agent/ratified); `docs/architecture/modeling-assumptions.md:409-418` (INHERITED)]
+
+Falsifier: In a model with `comp_a : Component[2]`, `sum(comp_a::length)` produces anything other
+than two edges to `comp_a[0].length` and `comp_a[1].length`, or it reads/refuses based on the
+enclosing `comp_b` occurrence while the equivalent `sum(comp_a.length)` enumerates both members.
+
+Findings:
+
+- independent-audit-F1 [DO] The direct-reference repair discards the aggregation caller's
+  `plural=True` at `elaborate.py:2320-2331`, so an arrayed exact owner is refused instead of
+  enumerated. A licensed customer-shaped probe at HEAD produced `SI_OCCURRENCE_AMBIGUOUS` and zero
+  inputs for `sum(comp_a::length)`, while changing only `::` to `.` produced two exact-owner inputs
+  and no diagnostic. The retained sum test uses a scalar owner and therefore freezes the special
+  case without exercising the product's array-enumeration meaning (`test_usage_owned_reference_anchoring.py:288-299`).
+  — `.project/concepts/constraint-execution-authoritative-lifecycle-contract.md:405-410,661-668`
+  (agent/ratified); `docs/architecture/modeling-assumptions.md:409-418` (INHERITED) — falsifier:
+  the paired arrayed-owner probe above — disposition: DISPOSE — carry this as a named close
+  residual and repair it in a bounded follow-up with a paired kept test proving both spellings
+  enumerate the exact owner's two occurrences and never bind the sibling.
+
+Smells: **Smell 3 — special category exempts unchanged user-visible meaning** and **Smell 6 — test
+passes only because it selects one interpretation** fire in independent-audit-F1 and escalate the
+gate. The one-segment branch treats an arrayed sum differently from the equivalent feature-chain
+sum, and the retained sum test passes because its chosen owner has one occurrence. Smell 1 remains
+mechanically present but is already disposed by design-F2 and verified here: the live leaf-owner
+metatype is the only deciding authority, the frozen owner fields only corroborate it, and the
+executing extraction guard pins agreement. Smells 4 and 5 did not fire.
+
+Gate: DISPOSED (independent-audit-F1)

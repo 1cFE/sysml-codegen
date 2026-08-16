@@ -41,7 +41,7 @@ changed outcomes: 5
     after   : {"edges": ["node:[\"attribute\",[\"occurrence\",\"[[\\\"6145ed3c-8e0c-5ddc-96d9-ad6ed024f07b\\\",null],[\\\"869ecad0-edef-5fe4-ae9e-441aa5e724fb\\\",null]]\"],[\"slot\",\"6093ae42-e366-5c66-b26a-5b4194b42f8a\"]]"], "kind": "edge"}
 
 changed refusals: 0
-roots with a changed identity block: 0 of 140
+roots with a changed identity block: 0 of 125 compared (15 refused on one side or both, so they have no identity to compare)
 roots with any other changed field: 3
   ? .project/active/self-binding-replacement/spike/fixtures/u4_usage_qual_pkg_sibling: ['diagnostics'] [paired with a changed site]
       before: [["SI_OCCURRENCE_MISSING", "U4UsageQualPkgSibling__plant__area_calc", "length", "consumer context has no occurrence of leaf slot FeatureSlotId(root_declaration=DeclarationId(value=UUID('16177638-ee7c-532d-8f5b-59f65d7428cc')))"]]
@@ -53,11 +53,11 @@ roots with any other changed field: 3
       before: [["SI_OCCURRENCE_AMBIGUOUS", "U7BothSpellings__plant__pair_calc", "a_len", "consumer context contains 2 leaf occurrences"], ["SI_OCCURRENCE_AMBIGUOUS", "U7BothSpellings__plant__pair_calc", "b_len", "consumer context contains 2 leaf occurrences"]]
       after : []
 
-=== promoted: 16 before sites, 16 after sites ===
+=== promoted: 18 before sites, 18 after sites ===
 site keys only in before: 0
 site keys only in after: 0
 after rows with no edge / diagnostic / structural reason: 0
-changed outcomes: 14
+changed outcomes: 15
 
   CHANGED ('tests/fixtures/u4_usage_qual_pkg_sibling', 'calc_binding', '["calculation",["occurrence","[[\\"82e5d05a-9df8-58b3-b2ef-4ef97fbbaf1b\\",null]]"],["declaration","4c92b3d4-a0d1-5ebc-be50-2c2f3adfce73"]]', '0', '2e2ca4e8-9d5b-5ea3-bf38-01fa968cabe9')
     written : shared_component::length
@@ -157,9 +157,16 @@ changed outcomes: 14
     before  : {"edges": ["node:[\"attribute\",[\"occurrence\",\"[[\\\"a3e01fc1-14ec-50da-850e-82c5f837bb4d\\\",null],[\\\"e559a865-3b2b-533f-a4da-5c74c8b3efc2\\\",null]]\"],[\"slot\",\"b7e6e28c-f151-5dd5-8772-e45c8f265c88\"]]"], "kind": "edge"}
     after   : {"diagnostics": [["SI_OCCURRENCE_AMBIGUOUS", null, "consumer context contains 2 candidate occurrences"]], "kind": "diagnostic"}
 
+  CHANGED ('tests/fixtures/usage_owner_calc_usage_leaf', 'computed_expression', '["calculation",["occurrence","[[\\"c0ca41e4-e03a-5e24-87a0-082c4d4b6c6c\\",null],[\\"68182774-c3c5-5fae-8e4d-0952fe11dab5\\",null]]"],["slot","0b65803c-48ad-55ba-bf32-fb069d344a7d"]]', '0', 'e88397a6-1143-56fe-bd5c-dc1b6b39f85c')
+    written : comp_a::twice * 2.0
+    owner   : b4044402-7a2b-5bf5-bf09-d49740936f76 (PartUsage)
+    plural  : False
+    before  : {"diagnostics": [["SI_OCCURRENCE_MISSING", null, "consumer context has no occurrence of leaf slot FeatureSlotId(root_declaration=DeclarationId(value=UUID('e88397a6-1143-56fe-bd5c-dc1b6b39f85c')))"]], "kind": "diagnostic"}
+    after   : {"diagnostics": [["SI_OCCURRENCE_MISSING", null, "exact owner b4044402-7a2b-5bf5-bf09-d49740936f76 has no target for leaf e88397a6-1143-56fe-bd5c-dc1b6b39f85c at its selected occurrence"]], "kind": "diagnostic"}
+
 changed refusals: 0
-roots with a changed identity block: 0 of 13
-roots with any other changed field: 4
+roots with a changed identity block: 0 of 14 compared (0 refused on one side or both, so they have no identity to compare)
+roots with any other changed field: 5
   ? tests/fixtures/u4_usage_qual_pkg_sibling: ['diagnostics'] [paired with a changed site]
       before: [["SI_OCCURRENCE_MISSING", "U4UsageQualPkgSibling__plant__area_calc", "length", "consumer context has no occurrence of leaf slot FeatureSlotId(root_declaration=DeclarationId(value=UUID('16177638-ee7c-532d-8f5b-59f65d7428cc')))"]]
       after : []
@@ -172,8 +179,11 @@ roots with any other changed field: 4
   ? tests/fixtures/usage_owner_bare_alias_arrayed: ['diagnostics'] [paired with a changed site]
       before: []
       after : [["SI_OCCURRENCE_AMBIGUOUS", "BareAliasArrayedOwner__plant__comp_b__doubled", null, "consumer context contains 2 candidate occurrences"]]
+  ? tests/fixtures/usage_owner_calc_usage_leaf: ['diagnostics'] [paired with a changed site]
+      before: [["SI_OCCURRENCE_MISSING", "CalcUsageLeafOwner__plant__comp_b__doubled", null, "consumer context has no occurrence of leaf slot FeatureSlotId(root_declaration=DeclarationId(value=UUID('e88397a6-1143-56fe-bd5c-dc1b6b39f85c')))"]]
+      after : [["SI_OCCURRENCE_MISSING", "CalcUsageLeafOwner__plant__comp_b__doubled", null, "exact owner b4044402-7a2b-5bf5-bf09-d49740936f76 has no target for leaf e88397a6-1143-56fe-bd5c-dc1b6b39f85c at its selected occurrence"]]
 
-totals before: {"corpus": {"by_lane": {"calc_binding": 318, "computed_expression": 76, "constraint_binding": 15}, "by_outcome": {"diagnostic": 4, "edge": 405}, "deep_override_one_segment_sites": 0, "roots": 140, "roots_refused": 15, "sites": 409}, "promoted": {"by_lane": {"alias": 1, "calc_binding": 9, "computed_expression": 4, "constraint_binding": 1, "constraint_predicate": 1}, "by_outcome": {"diagnostic": 4, "edge": 12}, "deep_override_one_segment_sites": 0, "roots": 13, "roots_refused": 0, "sites": 16}}
-totals after : {"corpus": {"by_lane": {"calc_binding": 318, "computed_expression": 76, "constraint_binding": 15}, "by_outcome": {"edge": 409}, "deep_override_one_segment_sites": 0, "roots": 140, "roots_refused": 15, "sites": 409}, "promoted": {"by_lane": {"alias": 1, "calc_binding": 9, "computed_expression": 4, "constraint_binding": 1, "constraint_predicate": 1}, "by_outcome": {"diagnostic": 1, "edge": 15}, "deep_override_one_segment_sites": 0, "roots": 13, "roots_refused": 0, "sites": 16}}
+totals before: {"corpus": {"by_lane": {"calc_binding": 318, "computed_expression": 76, "constraint_binding": 15}, "by_outcome": {"diagnostic": 4, "edge": 405}, "deep_override_one_segment_sites": 0, "roots": 140, "roots_refused": 15, "sites": 409}, "promoted": {"by_lane": {"alias": 1, "calc_binding": 10, "computed_expression": 5, "constraint_binding": 1, "constraint_predicate": 1}, "by_outcome": {"diagnostic": 5, "edge": 13}, "deep_override_one_segment_sites": 0, "roots": 14, "roots_refused": 0, "sites": 18}}
+totals after : {"corpus": {"by_lane": {"calc_binding": 318, "computed_expression": 76, "constraint_binding": 15}, "by_outcome": {"edge": 409}, "deep_override_one_segment_sites": 0, "roots": 140, "roots_refused": 15, "sites": 409}, "promoted": {"by_lane": {"alias": 1, "calc_binding": 10, "computed_expression": 5, "constraint_binding": 1, "constraint_predicate": 1}, "by_outcome": {"diagnostic": 2, "edge": 16}, "deep_override_one_segment_sites": 0, "roots": 14, "roots_refused": 0, "sites": 18}}
 
 structural problems (missing keys, uncovered rows, refusal or identity drift): 0
