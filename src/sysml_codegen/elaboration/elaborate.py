@@ -42,6 +42,7 @@ from sysml_codegen.elaboration.graph import (
     Diagnostic,
     ElaborationCode,
     FormalProvenance,
+    GraphValidationError,
     Inapplicability,
     InputRef,
     InstanceGraph,
@@ -628,7 +629,13 @@ class _ExactElaborator:
         self._resolve_computed_expressions()
         self._resolve_bindings()
         self._finish_readiness()
-        self._graph.validate()
+        # Final graph validation is a refusal of the elaborated model, so it
+        # surfaces in the same diagnostic class as every other refusal instead
+        # of escaping as a raw GraphValidationError traceback (F-3).
+        try:
+            self._graph.validate()
+        except GraphValidationError as error:
+            raise ElaborationDiagnosticError(error.diagnostics) from error
         if self._strict and self._graph.diagnostics:
             raise ElaborationDiagnosticError(self._graph.diagnostics)
         return self._graph

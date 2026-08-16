@@ -874,22 +874,47 @@ class InstanceGraph:
                     dependencies.setdefault(consumer_id, set()).add(
                         edge.target.calculation
                     )
+
+        def display(node_id: NodeId) -> str:
+            node = self.calcs.get(node_id) or self.constraints.get(node_id)
+            return node.display_path if node is not None else node_id.to_wire()
+
+        # The DFS retains its active stack so a detected cycle can name every
+        # participant; display-ordered visits keep the report deterministic
+        # regardless of graph insertion order.
+        stack: list[NodeId] = []
         active: set[NodeId] = set()
         complete: set[NodeId] = set()
+        cycles: list[tuple[NodeId, ...]] = []
 
-        def visit(node_id: NodeId) -> bool:
+        def visit(node_id: NodeId) -> None:
             if node_id in active:
-                return True
+                cycles.append(tuple(stack[stack.index(node_id) :]))
+                return
             if node_id in complete:
-                return False
+                return
             active.add(node_id)
-            cyclic = any(visit(dependency) for dependency in dependencies.get(node_id, ()))
+            stack.append(node_id)
+            for dependency in sorted(dependencies.get(node_id, ()), key=display):
+                visit(dependency)
+            stack.pop()
             active.remove(node_id)
             complete.add(node_id)
-            return cyclic
 
-        if any(visit(node_id) for node_id in tuple(dependencies)):
-            failures.append(self._graph_failure("typed producer dependency cycle"))
+        for node_id in sorted(dependencies, key=display):
+            visit(node_id)
+
+        for cycle in cycles:
+            participants = " -> ".join(display(node_id) for node_id in cycle)
+            failures.append(
+                Diagnostic(
+                    code=ElaborationCode.SI_EDGE_DANGLING,
+                    consumer=cycle[0],
+                    consumer_display=display(cycle[0]),
+                    param_name=None,
+                    detail=f"typed producer dependency cycle: {participants}",
+                )
+            )
 
     def require_projectable(self) -> None:
         """Reject partial lenient graphs before projection or generation."""

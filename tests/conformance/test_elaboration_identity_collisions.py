@@ -25,6 +25,7 @@ from sysml_codegen.elaboration import (
     OutputPortId,
     PackageScopeId,
     PortMetadata,
+    ProducerRef,
 )
 from sysml_codegen.extraction.expression_compiler import Compilability
 
@@ -146,3 +147,83 @@ def test_output_and_expression_keys_do_not_collapse_on_rendered_name() -> None:
     graph.validate()
     assert len(calculation.inputs) == 2
     assert len(calculation.outputs) == 2
+
+
+def _cycle_calc(
+    package: PackageScopeId,
+    node_id: NodeId,
+    declaration: DeclarationId,
+    display_path: str,
+    output: DeclarationId,
+    port: ConsumerPortId,
+    upstream: OutputPortId,
+) -> CalcNode:
+    """One structurally valid calc whose single input feeds on another's output."""
+    return CalcNode(
+        node_id=node_id,
+        scope=package,
+        declaration_id=declaration,
+        display_path=display_path,
+        display_name=display_path.rsplit("__", 1)[-1],
+        calc_def_name="Cycle",
+        calc_def_qualified_name="pkg::Cycle",
+        inputs={port: ProducerRef(upstream)},
+        input_names={port: "value_in"},
+        input_metadata={port: PortMetadata()},
+        outputs={output: OutputPortId(node_id, output)},
+        output_names={output: "result"},
+        output_metadata={output: PortMetadata()},
+        compilability=Compilability.FULLY_COMPILABLE,
+    )
+
+
+def test_producer_cycle_diagnostic_names_each_participant_once_in_stable_order() -> None:
+    """F-3: a producer cycle is refused with a diagnostic that carries every
+    cycle participant exactly once, in a stable order independent of graph
+    insertion order — never the anonymous ``<instance-graph>`` display."""
+    package = PackageScopeId(_declaration(30))
+    alpha_id = NodeId(NodeKind.CALCULATION, package, _declaration(31))
+    beta_id = NodeId(NodeKind.CALCULATION, package, _declaration(32))
+    alpha_out = _declaration(33)
+    beta_out = _declaration(34)
+    alpha = _cycle_calc(
+        package,
+        alpha_id,
+        _declaration(31),
+        "pkg__alpha_calc",
+        alpha_out,
+        ConsumerPortId(alpha_id, _declaration(35)),
+        OutputPortId(beta_id, beta_out),
+    )
+    beta = _cycle_calc(
+        package,
+        beta_id,
+        _declaration(32),
+        "pkg__beta_calc",
+        beta_out,
+        ConsumerPortId(beta_id, _declaration(36)),
+        OutputPortId(alpha_id, alpha_out),
+    )
+
+    with pytest.raises(GraphValidationError) as excinfo:
+        InstanceGraph(calcs={alpha_id: alpha, beta_id: beta}).validate()
+
+    cycles = [
+        diagnostic
+        for diagnostic in excinfo.value.diagnostics
+        if "typed producer dependency cycle" in diagnostic.detail
+    ]
+    assert len(cycles) == 1, excinfo.value.diagnostics
+    diagnostic = cycles[0]
+    assert diagnostic.detail == "typed producer dependency cycle: pkg__alpha_calc -> pkg__beta_calc"
+    assert diagnostic.detail.count("pkg__alpha_calc") == 1
+    assert diagnostic.detail.count("pkg__beta_calc") == 1
+    assert diagnostic.consumer == alpha_id
+    assert diagnostic.consumer_display == "pkg__alpha_calc"
+
+    with pytest.raises(GraphValidationError) as reordered:
+        InstanceGraph(calcs={beta_id: beta, alpha_id: alpha}).validate()
+
+    assert [item.detail for item in reordered.value.diagnostics] == [
+        item.detail for item in excinfo.value.diagnostics
+    ]
