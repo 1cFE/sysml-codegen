@@ -68,3 +68,30 @@ Resolves:
 Smells: none.
 
 Gate: CLEAR
+
+---
+
+## spec — 2026-08-15 — rev `.project/active/qualified-reference-occurrence-anchoring/spec.md`
+Epic: ELABORATE-FIRST
+
+Point (re-derived): A design search must preserve the semantic referent resolved at model load and
+anchor it to the exact concrete occurrence, so one source occurrence reaches every and only its
+bound consumers. Usage-owned bare and qualified references retain that occurrence identity;
+definition-qualified references bridge only through a unique occurrence context. [sources:
+`.project/product/P-001-design-search-free-variation.md` (owner-verbatim);
+`.project/backlog/epic_elaborate_first_architecture.md:31-33,67-68,84-86` (owner);
+`.project/concepts/constraint-execution-authoritative-lifecycle-contract.md:394-409,613-626`
+(agent/ratified)]
+
+Falsifier: In a discriminating `comp_a`/`comp_b` topology, a direct reference whose resolved leaf
+belongs to `comp_a` targets `comp_b`, guesses among occurrences, or an off-default `comp_a`
+mutation fails to reach every and only its calculation, alias/computed, constraint, and aggregation
+consumers on live and snapshot routes.
+
+Findings:
+
+- None.
+
+Smells: none.
+
+Gate: CLEAR

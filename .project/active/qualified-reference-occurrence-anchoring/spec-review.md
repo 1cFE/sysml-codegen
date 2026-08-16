@@ -219,7 +219,70 @@ comprehension gap around the term the whole document rests on.
 
 ## Resolutions
 
-*(To be filled in as findings are resolved. Keyed by finding ID.)*
+`[OWNER 2026-08-15]` **"All changes should be made."** Every finding is accepted for incorporation.
+Recorded per finding below, with the two decision-shaped items ruled by the orchestrator under the
+standing no-reserved-gates ruling and marked `[AGENT]` so they stay challengeable.
+
+- **[L1-1]** Accepted. The gating measurement returned before resolution
+  (`.project/research/20260815-142743_bare-expression-side-measurement.md`): **zero of 126 change**,
+  so the broader invariant is retrospectively safe and stays `[NEED]`. The spec must cite the
+  measurement as its basis **and carry the caveat that the equality is forced, not earned** — every
+  joined bare site has leaf-slot fan-out of one, so the two walks could not have differed. The zero
+  is a no-cost result, never evidence of correctness. Both halves are required; citing the count
+  without the caveat is the failure mode this resolution exists to prevent.
+- **[L1-2]** Accepted. Regrade the u4–u7 promotion row `[INFERRED]` → `[NEED]` (owner-stated), or
+  soften the sentence if the owner did not in fact state it. Prefer the regrade.
+- **[L1-3]** Accepted. `self-binding-replacement/spec.md` is at rev 4 and already carries the
+  corrected D-6 description. Restate the requirement and its success criterion as **what remains**,
+  so the criterion is falsifiable at approval instead of vacuous.
+- **[L1-4]** Accepted. Reframe the Problem section around contract `:618-626` — D-6 ratified
+  "usage qualifier → occurrence-level feature" on 2026-08-05, so this item **restores conformance to
+  a ratified disposition** rather than introducing an invariant.
+- **[L1-5]** Accepted. Verify the `[OWNER-VERBATIM]` quote character-for-character. Keep the typo if
+  genuine; drop the verbatim stamp if transcribed.
+- **[L2-1]** Accepted. Record the *reasoning* behind the broad-over-narrow choice, not just the
+  choice: the narrow option is genuinely available (authored text is recoverable from CST byte spans
+  for all 189 sites) but exists to shield bare sites from a change measuring at zero, at the cost of
+  threading spelling evidence through three callers that share one resolver and know nothing about
+  spelling.
+- **[L2-2]** Accepted. SC 7 must require each change **adjudicated fix-or-regression with reasoning**,
+  not merely attributed to the invariant. Note also that the bare surface classification SC 7 asks
+  for has now been performed once; the `[INFERRED]` re-derivation row still governs at implementation
+  time, so state SC 7 as re-derive-and-confirm rather than as first-time work.
+- **[L2-3]** `[AGENT]` **Ruled: the documentation tail stays in this item, and the spec names its
+  verifier.** L1-3 shrank the tail to the guidance-surface inventory alone, since the self-binding
+  spec is already corrected. A tail that small, split out, becomes an orphan nobody re-opens — and
+  the stale explanation it removes is the exact hazard this item exists to end. Keeping it costs one
+  named owner; splitting it risks the correction never landing.
+- **[L3-1]** Accepted. Resolve the SC 2 / Non-Goal 5 conflict explicitly. A package-level `part` is a
+  `PartUsage`, so the carve-out is believed to govern and u4's change is in scope — but the spec must
+  say so rather than leave two adjacent readings that disagree.
+- **[L3-2]** Accepted. Give SC 9 (strict/lenient parity) a backing requirement, or cite the existing
+  invariant it inherits from.
+- **[L3-3]** Accepted. State what happens if the no-recapture prediction proves wrong — specifically
+  whether a stale snapshot carrying a mis-anchored edge is **detectable** after the repair or replays
+  silently with the old wiring. A silent replay would displace this item's own failure mode into the
+  snapshot route and needs a criterion, not an assumption.
+- **[L3-4]** Accepted. The "how are the 126 joined" open question is answered by the measurement.
+  Remove it or restate whatever genuinely remains open.
+- **[L4-1]** Accepted. `$my-design` → `/_my_design`.
+- **[L5-1]** Accepted. Explain what a "one-segment reference" is, and why one versus two segments
+  decides the outcome, before the `comp_a::length` example.
+- **[L5-2]** Accepted. Gloss `u4`–`u7` in the success criteria so they are readable without the spike
+  findings open.
+
+### Two additions from the measurement, to incorporate alongside the findings
+
+- **[M-1]** The corpus contains **no** usage-owned direct reference in a typed alias and **none** in
+  an inline constraint predicate — the two callers the shared repair is principally justified by —
+  plus no plural (`sum()`) bare site and no discriminating bare topology. SC 6 already requires those
+  regression families; the spec must state that SC 6 is therefore the **sole** evidence covering
+  those callers, not one source among several.
+- **[M-2]** The measurement corrects the corpus scan's composition of the 126: 76 are new caller
+  coverage (computed-attribute terms), 15 are constraint bindings sharing the `_resolve_bindings`
+  caller with the calc bindings, and zero are aliases or predicates. The scan's 63-vs-62 calc-binding
+  count is one `non_finite_literal` site whose root refuses elaboration, not a disagreement. Any spec
+  text inheriting the scan's numbers should inherit the corrected ones.
 
 ---
 
