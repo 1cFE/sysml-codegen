@@ -95,3 +95,69 @@ Findings:
 Smells: none.
 
 Gate: CLEAR
+
+---
+
+## design_review — 2026-08-15 — rev `.project/active/qualified-reference-occurrence-anchoring/design.md`
+Epic: ELABORATE-FIRST
+
+Point (re-derived): One semantic source occurrence must become exactly one runtime source across
+every calculation, constraint, alias/computed, and aggregation consumer — that source being the
+referent SysIDE resolved while the model was loaded, never one reconstructed from the consumer's
+position — and an unsupported form must fail loudly before generation rather than pick a candidate.
+[sources: `.project/product/P-001-design-search-free-variation.md:11-18` (owner-verbatim);
+`.project/backlog/epic_elaborate_first_architecture.md:31-33,67-68,84-86` (owner);
+supplement — coverage truth, `P-001…:57-64` + ADR-009 `docs/architecture/modeling-assumptions.md:588`
+(agent/ratified); `.project/concepts/constraint-execution-authoritative-lifecycle-contract.md:618-626`
+D-6 (agent/ratified)]
+
+Falsifier (design-level observable): the design would show a one-segment reference whose exact
+resolved leaf is owned by occurrence A yielding an edge to occurrence B — or a silent/fallback
+candidate — with no loud failure; or it would claim the repaired behavior holds on a lane where the
+only evidence offered cannot distinguish "checked and passed" from "not checked."
+
+Note (D10 / SC8 deferral, assessed both directions): the deferral HONORS the point. The owner
+graded the broad invariant itself (`spec.md:44` `[OWNER]`) and the design implements it (B1, D2,
+Core Concept) — it defers the *evidence*, not the behavior, after a targeted probe falsified the
+named fixture topology, refuses to substitute a mock while calling it authored evidence (Risks
+row 1), and parks production edits behind the owner's choice (Next-Stage Handoff). Capture-fidelity
+law 4 done correctly.
+
+Findings:
+
+- design-F1 [DO] The deep-literal-override lane may ship with "a reproducible census proving the
+  affected fact shape is not authorable" in place of a regression (`design.md:196-198,357,409`) —
+  absence-of-evidence recorded as acceptance evidence; a census shows no instance was found, not
+  that none is authorable. — `P-001…:57-64` / ADR-009 (agent/ratified) — falsifier: the validation
+  table's Deep override row passes with a census and no named, standing coverage gap. disposition:
+  DISPOSE — reword the census option as a declared coverage gap in the same register as D10
+  (named, dated, reproducible, visible at close), not as an alternative form of proof.
+
+- design-F2 [DON'T] Smell 2 fires. The producer contract (`ResolvedTargetFact.owner_element_id` +
+  `owner_is_definition`, `../agentic-mbse/src/agentic_mbse/sysml/data_models.py:55-89`) exists to
+  let downstream distinguish definition- from occurrence-level referents; D2 finds it too coarse,
+  freezes it ("schema and extraction behavior do not change", `design.md:306-308`), and compensates
+  in the consumer with a live metatype lookup — two representations of one fact kept in agreement
+  by test discipline (the design's own risk row admits they can disagree). Reviewer assessment
+  tempering the finding: the branch DECISION uses one authority only (live leaf → live owner →
+  live metatype); the frozen owner fields corroborate, they do not decide. — producer contract
+  ([INHERITED]) + derivation ([INFERRED]) — falsifier: extraction changes owner metatype semantics
+  and the resolver branch activates on a declaration the frozen evidence does not agree with, with
+  no failure. disposition: DISPOSE — record in the design why the split-source cost is accepted
+  for this item and name the extraction/conformance pinning test as the standing guard, or file
+  extending the fact with owner metatype as the follow-up that retires the split.
+
+- design-F3 [DO] D10 route 2 would prove the resolver predicate on a constructed fact while
+  leaving unproven that any legal authored model reaches the discriminating case; the design does
+  not require that outcome to carry a standing "authored bare discrimination is unproven" record,
+  so a later reader sees SC8 satisfied. — `P-001…:57-64` / ADR-009 (agent/ratified) — falsifier:
+  SC8 marked met under route 2 with no standing record that the authored end is untested.
+  disposition: DISPOSE — make the named coverage gap a required output of route 2, carried to
+  close.
+
+Smells: smell 2 fired (see design-F2; escalated into the stage judgment, disposed there, verdict
+Revise). Smell 7 checked, did not fire: the shift of occurrence authority from consumer lexical
+position to the leaf's declared owner is stated explicitly (Core Concept, Branch behavior, B1,
+D2), and the snapshot route's reliance on recapture discipline is stated (invariant 13, D9).
+
+Gate: DISPOSED (design-F1, design-F2, design-F3)
