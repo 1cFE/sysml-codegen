@@ -293,3 +293,144 @@ Findings:
 Smells: none.
 
 Gate: CLEAR
+
+## design — 2026-08-16 — rev 2 / `.project/active/self-binding-replacement/design.md`, re-run against codegen HEAD `8bea4b8`
+Epic: ELABORATE-FIRST
+
+**Why a second design block.** The rev-2 design was written at `7e95285`, before the
+`qualified-reference-occurrence-anchoring` repair (`98970c9`, 2026-08-15) landed. This run re-derives
+the point from SOURCES and reads the same design against the shipped route at HEAD. Nothing here
+re-litigates rev 2's answers to the first design block; the earlier findings are resolved by citation
+below.
+
+Point (re-derived), owner grade: for each authoring situation the **right** pattern is known,
+documented in the `agentic-mbse` docs, applied to the models, and `in R = R` is detected
+[`.project/backlog/epic_elaborate_first_architecture.md:71-78`, `[OWNER-VERBATIM 2026-08-15]`,
+carrying no form count]. Bounded by the Critical Success Factor — every consumed modelled value
+resolves to exactly one runtime source across all bound consumers, and an unsupported authored form
+fails loudly before generation [`:31-33`, inherited owner grade] — with the `[OWNER]` mission
+invariant supplying the observable: public mutation reaches **every and only** the bound consumers
+[`:84-86`]. Referent semantics fixed by D-4 `[OWNER-VERBATIM]`, D-5/D-6/D-7 `[AGENT] (ratified by
+owner, 2026-08-05)` [`.project/concepts/constraint-execution-authoritative-lifecycle-contract.md:604-627`].
+Serving promise `P-001` `[OWNER-VERBATIM, 2026-08-13]`: parameters vary freely and viability is
+assessed. A binding whose value never arrives is its direct negation.
+
+Falsifier (described observable): the guidance ships stating a resolution behavior that is not the
+behavior of the shipped route at the landing commit; **or** an authoring situation an author can
+reach is left without a right pattern; **or** the migration completes with no evidence a mutated
+design attribute reaches every and only its bound consumers.
+
+Findings:
+
+- design-F8 [DON'T] **The design's Core Concept teaches, as the rule for owner qualification, a
+  positional two-step search the shipped route no longer performs for the spelling every published
+  example uses.** Core Concept: "You reach by owner qualification (D-6) → it resolves by position, in
+  two steps"; "The teaching, organized by situation" item 3 repeats it and calls out the sideways
+  reach. That rule is `_resolve_leaf` (`src/sysml_codegen/elaboration/elaborate.py:2359`, lineage
+  walk then descendant search). After `98970c9`, `_resolve_direct_reference` (`:2294-2345`) anchors a
+  one-segment reference on its leaf's **exact** owner whenever `SysideAdapter.is_instance(owner,
+  "PartUsage")`, and only a definition-, package-, enumeration- or calculation-owned leaf still falls
+  through to `_resolve_leaf` (`:2330-2332`). All 13 published D-6 examples the design inventories are
+  **usage**-qualified (`in length = geometry::input_length`), so for exactly those sites the taught
+  rule is false at HEAD. Publishing it would be a document teaching what the product does not do —
+  the failure this item exists to end, one level up. Spec rev 5 records the repaired state at
+  `spec.md:53-61` and `:132-149`; the design does not — epic `:71-78` (**owner-verbatim**) + CSF
+  `:31-33` (**owner**) — disposition: **BLOCK** (clears on a design revision that states the D-6
+  behavior at the landing commit: exact usage-owner anchoring for usage-owned leaves, `_resolve_leaf`
+  for definition-owned leaves, with the sideways-reach sentence scoped to the definition-owned route)
+- design-F9 [DO] **D11 parks publication on evidence that no longer exists, and both of its
+  pre-decided branches presuppose the deleted rule.** D11 makes the D-6 section conditional on "the
+  pending spike addendum" measuring the usage-qualified spelling, with branch 1 = "the position rule
+  holds for the usage qualifier too, no rewrites" and branch 2 = "the qualifier kind alters the
+  resolution path". The question was answered outside this item, by a production change, not a
+  measurement: the position rule was adjudicated a codegen defect and removed for usage-owned leaves.
+  Neither branch describes that. Following D11 as written either waits on an addendum that cannot
+  land as framed, or takes branch 1's caveat-only path and republishes the false rule. The
+  consequence D11 itself reserved for branch 2 now fires as fact: `MODELING_PROCESS.md.template:349`
+  (`in volume = my_component::volume`, taught as the fix for this very defect) needs rewriting, not a
+  caveat. The design's "Measured authority" pointer (`spike/findings.md`) is superseded for these
+  rows by `spec.md:256-263`; post-repair authority is
+  `tests/conformance/test_usage_owned_reference_anchoring.py` — epic `:71-78` (**owner-verbatim**);
+  capture-fidelity law 4 (premise conflict surfaced, not smoothed) — disposition: **BLOCK** (clears
+  with design-F8: replace D11 with the landed fact and repoint D-6 authority at the conformance test)
+- design-F10 [DO] **The situational teaching has no pattern for the arrayed-owner situation, where
+  two spellings of one intent now split.** The design's rule answers one question — where does the
+  value live? — with three answers (own part → D-5, other part → D-7, owner qualification → D-6).
+  The 2026-08-16 re-audit measured a fourth situation it does not cover: for `comp_a : Component[2]`,
+  `sum(comp_a::length)` refuses `SI_OCCURRENCE_AMBIGUOUS` with no inputs, while `sum(comp_a.length)`
+  aggregates both occurrences with no diagnostic
+  (`.project/active/qualified-reference-occurrence-anchoring/audit.md:49-56`; carried
+  there as `independent-audit-F1`, and the diagnostic names neither the candidate occurrences nor the
+  index syntax). Spec rev 5's `[HARD]` row says explicitly that this split is a fact "the guidance
+  this item writes" must account for; the design is silent and Appendix B has no arrayed row. Whether
+  the owner counts arrayed aggregation as one of "the given situations" is my inference, so this is
+  not owner-grade — spec `[HARD]` (measured) + epic `:71-78` read forward (**`[INFERRED]`**) —
+  disposition: **DISPOSE** — the revised design either teaches the arrayed situation (which
+  spelling, and how to write the indexed form) or states the exclusion in words and cites
+  `independent-audit-F1` as its named owner. **Flagged forward:** if the disposition becomes "tell
+  authors to use the dotted spelling to get aggregation", that is smell 2 (a document compensating
+  for a producer inconsistency) and must escalate then.
+- design-F11 [DO] **The promoted-fixture evidence set is now owner-class-specific and is not labelled
+  as such.** D3 and Required Invariant 3 promote three D-6 fixtures (inside-the-def two-occurrence
+  `s4b`, above-the-def `s8`, sideways reach `s6`) and Appendix B's qualified rows are all
+  definition-qualified (`'Plant'::availability`, `'Unit'::cost`). Those rows survive the repair —
+  verified: a definition-owned leaf keeps the `_resolve_leaf` route (`elaborate.py:2330-2332`) — but
+  nothing in the design says the fixtures pin the **definition-owned** route only, and Invariant 3's
+  "usage-qualified D-6 spelling pending D11" line is the only trace. An implementer reading Invariant
+  3 would take three green fixtures as pinning owner qualification generally, which is exactly the
+  overclaim Invariant 3 was narrowed to prevent — disposition: **DISPOSE** — label each promoted
+  fixture with the owner class it pins, and add an arrayed/usage-owned row to Appendix B sourced
+  from the conformance test
+- design-F12 [DON'T] **Verified holdings, recorded so the gate is not misread as general.** The D-5
+  teaching and the whole migration spine are unaffected by the repair: the corpus ledger over 140
+  frozen roots / 409 sites moved 405 edge + 4 diagnostic → 409 edge + 0 diagnostic with occurrence
+  wire IDs and node IDs equal (`98970c9` message, independently reproduced at `audit.md:120-128`).
+  D-7's two-segment form is not on the changed branch. `hif_plant.sysml:87` remains the correct
+  mutation site — disposition: **no action**
+
+Smells (§4):
+
+- **Smell 7 — a solution changes who owns an invariant without saying so: FIRES.** Who decides which
+  occurrence a one-segment usage-owned reference lands on moved from the reader (predicting a
+  positional search, per the design's own two-step teaching) to the elaborator (honoring the exact
+  owner SysIDE resolved). The design as written still assigns it to the reader and would publish the
+  reader's rule. The design cannot be faulted for not foreseeing `98970c9`, but at HEAD the silence
+  is real and it is the same silence smell 7 names. Escalated: the design-stage judgment must dispose
+  of it, and design-F8/design-F9 are its two concrete faces. The prior spec block flagged smell 7
+  forward on exactly this axis; it has now landed, from the other direction.
+- **Smell 2 — a consumer compensates for a producer/platform guarantee: DOES NOT FIRE.** Checked, not
+  assumed. D7 still moves compensation the right way (repair the producer's name-based check rather
+  than tolerate its flag), and the landed repair *deletes* codegen's positional inference in favour
+  of SysIDE's resolved owner — the opposite of compensation. The one candidate is the D-6 teaching,
+  and its defect is a false rule (design-F8), not compensation. The live smell-2 risk is the arrayed
+  disposition, flagged in design-F10.
+- Smells 1, 3, 4, 5, 6: unchanged from the prior design block. Smell 1's two instances (`claude/` ↔
+  `.claude/` pointer, codegen ↔ agentic-mbse self-named checks) stay disposed, not blocking. Smells 3
+  and 6 fired at the *anchoring* item on the arrayed split; against this design that surfaces as the
+  omission in design-F10, not as a code/test smell here.
+
+Resolves:
+- design-F1: FIXED (with a correction) — authority: agent/ratified (epic `:84-86` product-behavior
+  gate) under the `[OWNER]` mission invariant — basis: The Spine now enumerates all 11 renamed
+  formals' supplying attributes as `DESIGN_ATTRIBUTE` entry points against the authored oracle
+  (`test_projection_wiring_contract.py:41-66`) and mutates at two occurrence depths (`gain`,
+  `beam_energy_mj`). **Correction to the recorded disagreement:** the design's reason for dropping
+  MF-7's second-file mutation — "`ife_plant.sysml` and `hif_driver.sysml` both declare definitions,
+  not usages" — is false for the fixture, which still declares `part hif_driver_instance` at
+  `designs/hif_ife/hif_driver.sysml:100` (the design's own D8 says so). It is true for the customer
+  model after the July R-2 deletion, which is the migration target, so the substitution stands on the
+  customer tree; the stated reason overstates and should be scoped to it.
+- design-F2: FIXED — authority: agent/ratified — basis: Architecture names `claude/` authoritative on
+  symlink evidence, and the residual hand-duplicated pointer is stated rather than hidden pending the
+  `.claude/` inventory.
+- design-F3: FIXED — authority: agent/ratified — basis: Potential Risks states plainly that a fixture
+  pins resolution and not intent, and that the residue stays with the reader. The spec-criterion-3
+  half is superseded by design-F10's disposition.
+- design-F4: FIXED — authority: agent/ratified — basis: the Non-Goal is split; D-4 settled (owner),
+  D-5-for-these-sites recorded as a challengeable decision with its reasoning.
+- design-F5: FIXED — authority: agent/ratified — basis: The Spine names the constraint consumer
+  individually with its module and `formal_identity`.
+- design-F6: FIXED — authority: agent/ratified — basis: Required Invariant 7 names codegen as owner,
+  agentic-mbse as mirror, and states that nothing catches drift.
+
+Gate: **BLOCKED** (design-F8, design-F9) · DISPOSED (design-F10, design-F11) · DON'T (design-F12)

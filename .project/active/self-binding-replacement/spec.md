@@ -131,7 +131,9 @@ fusion-tea model remains blocked from regeneration until its authored bindings a
   must otherwise be inherited from a supertype of its owning type.
 - **[HARD]** *(updated 2026-08-16 after the anchoring repair landed)* SysIDE resolves a
   usage-qualified local redefinition to a distinct usage-owned feature, and the shipped elaborator
-  now anchors every one-segment usage-owned leaf on its exact owner across all resolver consumers
+  now anchors every one-segment usage-owned leaf on its exact owner across every resolver consumer
+  that can reach the one-segment branch — the deep literal override lane is a named, unevidenced
+  exception, structurally unable to reach it (see that item's SC1 and `P-002`)
   (`qualified-reference-occurrence-anchoring`, repair `98970c9`; the 2026-08-16 independent
   re-audit verified the repair and its runtime behavior sound while reopening two
   certification-evidence criteria — see that item's `audit.md`). The former positional slot

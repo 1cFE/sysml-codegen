@@ -422,6 +422,24 @@ silent-on-clean leg is covered by `tests/unit/test_silent_failure_family2.py`
 
 ## P3 - Low Priority
 
+### [ANCHORING-ARRAYED-DIAGNOSTIC] Arrayed-owner aggregation: reconcile the two spellings — P3, unowned (filed at owner direction, 2026-08-16)
+
+For an arrayed owner `comp_a : Component[2]`, `sum(comp_a::length)` refuses with
+`SI_OCCURRENCE_AMBIGUOUS` while `sum(comp_a.length)` resolves to one input per occurrence. Direct
+one-segment references are deliberately scalar (design D4 of
+`qualified-reference-occurrence-anchoring`): a direct reference names one owner, so fanning it out
+would invent a cardinality the model never authored. **[OWNER 2026-08-16]** accepted that policy for
+the delivering item and filed this instead of reversing it.
+
+Nothing that worked was lost — pre-repair, `sum(comp_a::length)` silently summed the *sibling's*
+value, so this is the same fix rather than a new break. What remains is author-facing: the
+diagnostic names neither the candidate occurrences nor the index syntax that would resolve it.
+
+**Scope the diagnostic message first** — that may be the whole fix. Reversing D4 would reopen a
+ratified design decision and its review, and risks the cardinality drift that item's risk register
+was written to prevent. Bound recorded at
+[P-002](../product/P-002-exact-owner-anchoring.md).
+
 ### [CATF-DIVERTOR-GATE] Divertor addition + HeatLoadBalance gating, CATF derivative — P3, unowned (filed at owner direction, 2026-08-13)
 
 `FusionComponents::Divertor::HeatLoadBalance` is a genuine one-sided power-exhaust gate with no

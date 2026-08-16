@@ -102,7 +102,17 @@ local-rename advice, the D-7 dot-path advice, or the chosen fusion-tea migration
 ## Success Criteria
 
 - [ ] A one-segment reference to a `PartUsage`-owned leaf resolves through an occurrence of that
-      exact owner before selecting the leaf's feature slot, across every shared resolver consumer.
+      exact owner before selecting the leaf's feature slot, across every shared resolver consumer
+      **that can reach the one-segment branch**. **[OWNER, 2026-08-16]** Named exception: the deep
+      literal override lane calls the shared resolver
+      (`src/sysml_codegen/elaboration/elaborate.py:1050`) but is structurally unable to reach that
+      branch — the lane fires only on a chain, and a chain carries two or more segments. D11's
+      bounded search measured 51 live sites across 15 authored candidates and a census of every
+      tracked chained-redefinition root, and found zero one-segment sites
+      (`spike/deep-override-authorability/findings.md`). That lane is therefore **not evidenced**
+      and is not claimed as covered; its dated `deep override affected-shape coverage unproven`
+      gap stands, and the bound is carried in the product ledger as
+      [P-002](../../product/P-002-exact-owner-anchoring.md) so it survives this item's archival.
 - [x] The promoted u4 package-sibling case resolves `shared_component::length` to the
       package-scoped `PartUsage` occurrence `shared_component.length`, with no occurrence
       diagnostic.
