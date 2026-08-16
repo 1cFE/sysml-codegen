@@ -93,6 +93,28 @@ set with and without this item's changes; every affected file passes when run al
 reproduce as a full-suite run in this venv even at HEAD. Out of this item's scope (Non-Goals: no
 re-certification); needs an owner.
 
+### 2026-08-15: qualified-reference-occurrence-anchoring — PHASE 2 COMPLETE (red set + before ledger)
+
+Phases 1 and 2 of `.project/active/qualified-reference-occurrence-anchoring/plan.md` are done; no
+`src/` file has been touched yet. Phase 1 settled both evidence gates: D10 found an authored bare
+discriminator (route 1, SC8 kept, B3 confirmed) and D11 found no deep-override affected shape, so
+its dated coverage gap stands and no deep-override fixture exists.
+
+Phase 2 promoted thirteen fixture roots into `tests/fixtures/` (u1–u7 plus u3b copied byte-for-byte,
+four bare-lane roots from the Phase-1 learning test, and the authored combined fixture
+`usage_owned_reference_consumers`), and added
+`tests/conformance/test_usage_owned_reference_anchoring.py` — 48 nodes, **15 intentionally red**,
+33 controls green. Full suite: 32 failed / 2117 passed / 34 skipped / 88 deselected, where the
+failure delta against the pre-change baseline (17 failed / 2080 passed, all 17 a missing `pandas`)
+is exactly those 15 and nothing else. Zero license-related skips in both runs.
+
+The pre-repair state is frozen under
+`.project/active/qualified-reference-occurrence-anchoring/verification/` — read its `README.md`
+first. It holds the full-suite baseline, the 140 frozen corpus roots, the ledger (`corpus_compare.py`
++ `before.json`, 409 corpus sites and 16 promoted sites, byte-identical across three runs), and the
+snapshot inventory (23 tracked, 0 stale). **Next**: Phase 3, the single production edit at
+`src/sysml_codegen/elaboration/elaborate.py:2062-2076`.
+
 ### 2026-08-15: qualified-reference-occurrence-anchoring — SPEC DRAFTED; product lens CLEAR
 
 Separate bounded ELABORATE-FIRST repair discovered during Item-8 shaping. The owner selected the

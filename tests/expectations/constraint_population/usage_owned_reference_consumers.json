@@ -1,0 +1,17 @@
+{
+  "constraint_usages": [
+    {
+      "owner_qualified_name": "UsageOwnedReferenceConsumers::Plant::comp_b",
+      "source_file": "model.sysml",
+      "source_line": 39,
+      "usage_qualified_name": "UsageOwnedReferenceConsumers::Plant::comp_b::bound_check"
+    },
+    {
+      "owner_qualified_name": "UsageOwnedReferenceConsumers::Plant::comp_b",
+      "source_file": "model.sysml",
+      "source_line": 43,
+      "usage_qualified_name": "UsageOwnedReferenceConsumers::Plant::comp_b::inline_check"
+    }
+  ],
+  "fixture": "usage_owned_reference_consumers"
+}

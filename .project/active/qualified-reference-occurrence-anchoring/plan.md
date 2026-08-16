@@ -169,22 +169,22 @@ assert exact_diagnostics(graph) == ()
 [Evidence and Snapshot Flow](design.md#evidence-and-snapshot-flow), and
 [Validation Approach](design.md#validation-approach).
 
-- [ ] Before adding red tests, run and record the licensed full-suite baseline, including exact
+- [x] Before adding red tests, run and record the licensed full-suite baseline, including exact
   failures and `-rs` skip reasons. Keep this result separate from the intentional red set below.
-- [ ] Copy the tracked u1–u7 models, including u3b, from
+- [x] Copy the tracked u1–u7 models, including u3b, from
   `.project/active/self-binding-replacement/spike/fixtures/` to same-named roots under
   `tests/fixtures/`. Preserve their bytes at copy time; the kept copies become the conformance
   authority.
-- [ ] Add `tests/fixtures/usage_owned_reference_consumers/` for the combined qualified lanes and
+- [x] Add `tests/fixtures/usage_owned_reference_consumers/` for the combined qualified lanes and
   scalar `sum()` term. Add the Phase-1 bare/deep fixture only if that phase authorized one.
-- [ ] Create `tests/conformance/test_usage_owned_reference_anchoring.py`. Pin u4–u7's exact typed
+- [x] Create `tests/conformance/test_usage_owned_reference_anchoring.py`. Pin u4–u7's exact typed
   outcomes, u1–u3b controls, unaffected owner/form controls, full diagnostics, plural singularity,
   occurrence records, and slot-derived node IDs. Use `tests/helpers/elaboration_graph.py:19-52` for
   readable lookup only; typed IDs remain the assertions.
-- [ ] Extend `tests/conformance/test_source_identity_extraction.py:151-193` with
+- [x] Extend `tests/conformance/test_source_identity_extraction.py:151-193` with
   `test_usage_owned_fact_owner_matches_live_part_usage`, asserting the frozen owner ID agrees with
   the exact live leaf owner and that the live owner is a `PartUsage`.
-- [ ] Create
+- [x] Create
   `.project/active/qualified-reference-occurrence-anchoring/verification/corpus_compare.py` and a
   versioned `before.json`. Adapt the gitignored seed at
   `.project/active/self-binding-replacement/spike/out/bare_expression_side_scan.py` only for site
@@ -193,24 +193,24 @@ assert exact_diagnostics(graph) == ()
   self-contained; if the seed is absent, reconstruct from the two cited research reports rather
   than blocking. Freeze the preexisting tracked-root set so newly copied regression fixtures do not
   inflate the corpus comparison.
-- [ ] Record the tracked snapshot inventory and byte digests before repair using
+- [x] Record the tracked snapshot inventory and byte digests before repair using
   `scripts/assess_v6_snapshot_churn.py:57-81,234-357`; write the result under `verification/`.
 
 ### Validation
 
 **Automated:**
 
-- [ ] Run the new conformance file and record the exact expected red set: u4 missing, u5/u7
+- [x] Run the new conformance file and record the exact expected red set: u4 missing, u5/u7
   ambiguous, u6 silently wrong, plus affected combined-fixture assertions. Controls must pass.
-- [ ] Run the extraction guard; it passes before repair because it checks authority agreement, not
+- [x] Run the extraction guard; it passes before repair because it checks authority agreement, not
   the defective edge.
-- [ ] Run the before-state verifier twice; canonical output is byte-identical and every tracked site
+- [x] Run the before-state verifier twice; canonical output is byte-identical and every tracked site
   has a typed edge, full diagnostic, or named structural no-edge reason.
 
 **Manual:**
 
-- [ ] Inspect the u6 failure to confirm it is the wrong typed target, not a load or fixture failure.
-- [ ] Confirm `before.json` stores exact IDs and diagnostics; source spelling is classification
+- [x] Inspect the u6 failure to confirm it is the wrong typed target, not a load or fixture failure.
+- [x] Confirm `before.json` stores exact IDs and diagnostics; source spelling is classification
   metadata only.
 
 **What We Know Works After This Phase:** The defect is reproduced on durable tests, every control
@@ -451,10 +451,116 @@ See [Potential Risks](design.md#potential-risks) for the full analysis.
 
 ### Phase 2 Completion
 
-**Completed:**
+**Completed:** 2026-08-15, licensed environment (`set -a; source ../agentic-mbse/.env; set +a`),
+branch `main` at `d78c42e`. No file under `src/` was touched — `git diff -- src/` is empty.
+
 **Actual Changes:**
+
+*Fixtures (13 new roots under `tests/fixtures/`)*
+
+- Copied byte-for-byte from `.project/active/self-binding-replacement/spike/fixtures/` to
+  same-named roots: `u1_usage_qual_self`, `u2_usage_qual_two_owner_occ`,
+  `u3_usage_qual_multi_occ`, `u3b_usage_qual_single_occ`, `u4_usage_qual_pkg_sibling`,
+  `u5_usage_qual_named_sibling`, `u6_usage_qual_crossnamed`, `u7_both_spellings`. Verified with
+  `diff` against their sources.
+- Copied byte-for-byte from the Phase-1 bare-discriminator learning test: `usage_owner_bare_alias`
+  (from `c01-alias-parent-scope`, the authorized bare discriminator), `usage_owner_bare_alias_def_owned`
+  (`c06`) and `usage_owner_bare_subset_def_owned` (`c08`) as definition-owned guard controls, and
+  `usage_owner_bare_alias_arrayed` (`c12`) as the no-hidden-recovery negative. **No deep-override
+  fixture was added** — D11 found no affected shape and its dated gap record stands.
+- Authored `tests/fixtures/usage_owned_reference_consumers/model.sysml`: one named source
+  (`plant.comp_a.length`, 3.0) read from seven consumers authored inside the sibling
+  `plant.comp_b` (7.0) — typed alias, alias-following calculation input, computed attribute,
+  calculation input, typed constraint actual, asserted inline predicate, and a direct scalar
+  `sum()` term. It loads with zero errors and zero warnings and elaborates with zero diagnostics.
+- `tests/fixtures/usage_owned_reference_consumers/PROVENANCE.md` records where each of the
+  thirteen roots came from and what it is for, because the two research paths are archived at
+  close (D6).
+- `tests/expectations/constraint_population/usage_owned_reference_consumers.json` — required by
+  the constraint-population oracle's rule 1 for any constraint-bearing fixture. Both its rows were
+  checked against the model source, and the oracle's own domain comparison passes.
+
+*Tests*
+
+- `tests/conformance/test_usage_owned_reference_anchoring.py` (48 nodes): affected qualified lanes
+  (u4–u7), the affected bare lane, the seven combined-fixture consumer lanes plus the fan-out
+  obligation, controls (u1–u3b and the two definition-owned guards), the arrayed-owner negative,
+  and identity-derivation nodes parametrized over all thirteen roots.
+- `tests/conformance/test_source_identity_extraction.py::test_usage_owned_fact_owner_matches_live_part_usage`
+  — the D2 authority guard. Green before the repair, as predicted: it compares frozen owner
+  identity with the exact live leaf's owner, not the defective edge.
+
+*Verification (`verification/`)*
+
+- `before-full-suite.txt` + `README.md` — the pre-change baseline and how to reproduce every
+  artifact.
+- `corpus_roots.json` — 140 frozen roots.
+- `corpus_compare.py` + `before.json` — the pre-repair ledger.
+- `before-snapshot-inventory.json` — 23 tracked snapshots, 0 stale.
+
+**Results:**
+
+- **Full-suite baseline (before any fixture):** 17 failed, 2080 passed, 34 skipped, 88 deselected,
+  170.09s. All 17 failures are `ModuleNotFoundError: No module named 'pandas'` — environmental and
+  untouched by this item. All 34 skips are golden-fixture skips; **zero license-related skips**.
+- **Full suite after this phase:** 32 failed, 2117 passed, 34 skipped, 88 deselected, 169.46s. The
+  failure delta is exactly the 15 intentional red nodes and nothing else; no baseline failure
+  disappeared. 37 new passing nodes (33 controls in the new file, the extraction guard, 3
+  constraint-oracle rows for the new fixture).
+- **The intentional red set (15), each red for the target identity:**
+  `test_u4_package_sibling_binds_the_package_scoped_occurrence` (today `SI_OCCURRENCE_MISSING`),
+  `test_u5_named_sibling_binds_the_named_occurrence` (today `SI_OCCURRENCE_AMBIGUOUS`),
+  `test_u6_cross_owner_consumer_binds_the_named_sibling` (today a silent edge to
+  `comp_b.length`), `test_u7_paired_spellings_bind_distinct_nodes` and
+  `test_u7_qualified_edges_equal_their_dot_path_controls` (today both inputs ambiguous),
+  `test_bare_alias_discriminator_binds_the_aliased_owner` (today a silent edge to
+  `comp_b.length`), the seven `test_combined_*` lane nodes and
+  `test_combined_named_source_reaches_every_and_only_its_consumers` (today all seven edges land on
+  `comp_b.length`), and `test_arrayed_exact_owner_refuses_rather_than_answering` (today a silent
+  answer where scalar owner selection must refuse).
+- **Not a fixture failure.** `test_combined_fixture_loads_and_elaborates_cleanly` passes, all six
+  control nodes pass, and the ledger records a typed edge for every combined-fixture site — so
+  each red node above is a wrong or missing typed target, not a load or syntax problem. u6's
+  failure was inspected directly: two `NodeRef`s differing in the occurrence step, no diagnostic.
+- **Ledger determinism:** three consecutive runs byte-identical.
+- **Quality:** `ruff check` clean on every file added or edited. `mypy` on the new test file and
+  the verifier reports only `import-untyped` for `sysml_codegen.*` — the package ships no
+  `py.typed`, so every module outside `src/` gets these, including the pre-existing
+  `tests/conftest.py` and `tests/helpers/elaboration_graph.py`. No other mypy error remains.
+
 **Issues:**
+
+- The combined fixture declares constraints, which enrolls it in the constraint-population
+  oracle's all-fixtures sweep. Missing that would have produced a red test for a bookkeeping
+  reason rather than for the defect, which the phase forbids. Resolved by adding the expectation
+  file; the oracle's three rows for the fixture pass.
+- No premise conflict was found. Nothing contradicted the plan or the design.
+
 **Deviations:**
+
+- **Ledger rows carry a `promoted` section alongside `corpus`.** The brief requires freezing the
+  pre-existing root set so new fixtures do not inflate the comparison, and it separately requires
+  capturing c12's current silent answer. Both hold: the 140 frozen roots are the comparison, and
+  the 13 promoted roots are captured in their own section, which is also where the pre-repair
+  occurrence records and slot-derived node IDs are frozen.
+- **Byte-exact identity freezing lives in the ledger, not in the conformance file.** Pinning
+  occurrence-record and node-ID wire strings inline would have put a page of UUIDs in a file whose
+  job is to be read. The conformance file pins the *derivation* — every attribute node ID equals
+  `NodeId(ATTRIBUTE, scope, slot)` and every occurrence record agrees with its own containment slot
+  — over all thirteen roots; `before.json` holds the exact strings Phase 3 and Phase 5 compare.
+- **Two extra promoted fixtures beyond the plan's text.** The plan named the u-family and one
+  Phase-1 fixture. The Phase-1 findings identified `c06`/`c08` as definition-owned guard controls
+  and `c12` as the no-hidden-recovery negative, and the orchestrator's brief carried all three into
+  this phase; they are promoted so the guard survives the archival of the research path.
+- **u2, u3 and u3b turn out to be definition-owned-leaf controls.** Their qualifier names a usage,
+  but the leaf it resolves to is declared on the part definition, so the repaired branch never
+  activates for them and the ledger records zero in-population sites for those roots. Their
+  conformance nodes and docstrings say so. This sharpens the plan's description rather than
+  contradicting it — they remain exactly the "retain their existing exact edges or named
+  diagnostics" controls the spec asks for.
+- **Three ledger counts independently corroborate the 2026-08-15 measurement** (76 computed
+  expression sites, 15 constraint bindings, zero alias and zero inline-predicate sites in the
+  tracked corpus). Nothing required correcting.
 
 ### Phase 3 Completion
 

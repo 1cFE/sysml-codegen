@@ -21,6 +21,7 @@ from typing import Any
 
 import pytest
 from agentic_mbse.sysml.expression_facts import FeatureReferenceFact
+from agentic_mbse.sysml.syside_adapter import SysideAdapter
 from agentic_mbse.sysml.types import BindingType
 
 from sysml_codegen.extraction.extractor import SysMLDataExtractor
@@ -191,6 +192,39 @@ def test_written_form_separates_qualified_from_bare(mixed) -> None:
         == f"{PKG}::'Bare Station'::bare_rig::intensity"
     )
     assert not bare.referent.owner_is_definition
+
+
+def test_usage_owned_fact_owner_matches_live_part_usage(extracted_cache) -> None:
+    """The frozen owner ID still names the exact live leaf's own owner.
+
+    Exact owner anchoring decides its branch from the *live* model: it looks the exact
+    leaf up and asks whether that leaf's semantic owner is a ``PartUsage``. Frozen
+    ``owner_element_id`` / ``owner_is_definition`` corroborate that decision and never
+    make it. This node is what keeps the two authorities in agreement — if extraction
+    ever froze an owner the live model disagrees with, the resolver would be branching on
+    one story while the evidence told another.
+
+    ``owner_is_definition == False`` is asserted here as corroboration only. It is not a
+    usable branch predicate: a package-owned leaf satisfies it too.
+    """
+    combined = extracted_cache("usage_owned_reference_consumers")
+    evidence = _evidence(combined["usages"], "__comp_b__area_calc", "length_in")
+
+    assert evidence.referent is not None
+    assert evidence.referent.owner_element_id is not None
+
+    live_by_id = {
+        SysideAdapter.element_id(element): element
+        for element in SysideAdapter.elements_of_type(
+            combined["model"], "Feature", include_subtypes=True
+        )
+    }
+    live_leaf = live_by_id[evidence.referent.element_id]
+    live_owner = live_leaf.owning_type
+
+    assert SysideAdapter.element_id(live_owner) == evidence.referent.owner_element_id
+    assert SysideAdapter.is_instance(live_owner, "PartUsage")
+    assert not evidence.referent.owner_is_definition
 
 
 def test_cross_owner_consumers_share_one_exact_referent(mixed) -> None:
