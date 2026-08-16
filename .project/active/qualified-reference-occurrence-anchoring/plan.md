@@ -3,7 +3,7 @@
 **Status:** Needs Work — independent re-audit reopened Phase-5 certification evidence (2026-08-16)
 **Owner:** Reid W
 **Created:** 2026-08-15 19:03 PDT
-**Last Updated:** 2026-08-16 (independent audit)
+**Last Updated:** 2026-08-16 (scoped remediation re-verification)
 **Branch:** main (`2768c68` at plan start)
 **Complexity:** MEDIUM
 
@@ -968,27 +968,69 @@ helper and rewires one call.
   `test_direct_reference_refuses_a_leaf_absent_from_the_element_index`), and the arrayed
   strict/lenient node strengthened from a code `Counter` to the full consumer/parameter/detail tuple.
 
-**Results:** 139 roots compared on identity, 0 changed. 769 one-segment leaves censused, 0 absent
-from the element index. 20 changed ledger rows, all adjudicated, 0 structural problems. Full suite
+**Results:** 139 roots compared on identity, 0 changed. The census now reports **154 roots — 139
+measured complete, 1 partial, 14 unmeasured; 770 one-segment leaves observed, 0 absent from the
+element index** (see Phase 7 below; the earlier 769 / "whole population" figure was wrong). 20
+changed ledger rows, all adjudicated, 0 structural problems. Full suite
 **17 failed / 2145 passed / 34 skipped / 88 deselected**, failing node set identical by name to
 Phase 5's. Focused ruff and mypy clean.
 
-**Issues:** none. No existing assertion was weakened; the one that changed was strengthened.
+**Issues:** finding 5 was left open on census completeness — `absent_leaf_census.py` returned before
+collecting leaves when a root later refused, then totalled the missing count as zero. Repaired in
+Phase 7. No existing assertion was weakened; the one that changed was strengthened.
 
 **Deviations:** the missing-leaf-target refusal turned out to be reachable from an authored model —
 a one-segment reference naming a `PartUsage`-owned calculation usage rather than one of its outputs
 — so it is pinned by a real fixture rather than recorded as unreachable. That fixture adds one root
 and two sites to the promoted section of both ledgers, which is why the changed-row count moves
-19 → 20. The absent-leaf refusal has no authored shape (census: zero across 154 roots) and is
-therefore reached at the resolver boundary in a unit test, with the census retained as the evidence
-for that choice.
+19 → 20. The absent-leaf refusal is reached at the resolver boundary in a unit test. The retained
+census did not establish that no authored shape reaches it because refused roots were not counted.
+Phase 7 repairs that evidence; the corrected census still finds zero absent leaves, so the
+boundary-only test stands on a measurement that says what it covers.
+
+---
+
+### Phase 7 — Finding 5: census corrected at the resolver boundary (2026-08-16)
+
+**Completed:** 2026-08-16
+
+**Changes made:**
+
+- `verification/absent_leaf_census.py` — leaves are counted where the branch runs, not
+  reconstructed afterwards. `LeafObservations.observe` wraps `_resolve_direct_reference` on the
+  elaborator instance and records each leaf handed to it, plus whether `_elements` held it at that
+  moment, before delegating unchanged. The post-run `one_segment_leaves` reconstruction is deleted.
+- Every root now carries a `measurement` of `complete` (run returned), `partial` (run raised after
+  the branch had already run), or `none` (elaboration never started), each non-complete row keeping
+  its reason. Totals carry `residual_unmeasured_roots` and a `population_claim` string, so nothing
+  reads a refused root as zero leaves and zero absent.
+- `verification/absent-leaf-census.json` regenerated; `audit.md`, `verification/README.md`,
+  `spec.md`, and this plan corrected off the old numbers.
+
+**Results:** **154 roots — 139 complete, 1 partial, 14 unmeasured. 770 one-segment leaves observed,
+0 absent from the element index.** `s5_sibling_formal` resolves one one-segment leaf before its
+producer-cycle refusal — it is the 770th, exactly as the re-verification predicted. The other 14
+refused roots refuse before the resolver runs at all, so they observe nothing and are recorded as
+unmeasured rather than zero. **The zero absent count is stated on this new measurement, not the old
+one.** 15 roots hold residual unmeasured population, and the census says so in its own output.
+
+Full suite **17 failed / 2145 passed / 34 skipped / 88 deselected**
+(`verification/after-finding5-full-suite.txt`), failing node set identical by name to Phase 6's.
+Focused ruff and `ruff format` clean. No production, test, or assertion change.
+
+**Issues:** the defect was finding 1's defect in a third costume — absence of measurement read as a
+measurement of agreement. The fix is the class, not the instance: the census cannot produce a row
+whose numbers come from a run that did not happen, because the numbers are now recorded by the run
+itself and the row states how far that run got.
 
 ---
 
 **Status:** Draft → In Progress → Complete → Certified (2026-08-15) → **Needs Work** after
-independent re-audit (2026-08-16) → re-audit findings **1, 5, 6 remediated** (2026-08-16, Phase 6).
-**Next Step:** Owner disposition on re-audit findings 2, 3, 4, and 7 at close, then rerun
-`/_my_audit`. The bounded self-binding verification remains a `/_my_close` obligation.
+independent re-audit (2026-08-16) → remediation landed (2026-08-16, Phase 6) → scoped
+re-verification closes findings **1 and 6** and reopens **5** on census evidence → census repaired
+(2026-08-16, Phase 7), awaiting re-verification.
+**Next Step:** Re-verify the Phase 7 census repair. Findings 2, 3, 4, and 7 remain outside this
+pass.
 
 **`[OWNER 2026-08-16]` D11 deep-override coverage gap: ACCEPTED.** The owner accepts the gap as-is:
 no deep-override shape reaching the one-segment branch could be authored, and the corpus scan found

@@ -1,10 +1,10 @@
 # Design: Self-Binding Replacement — Establish, Document, Migrate
 
-**Status:** Draft (rev 2 — rewritten against re-run discovery after `design-review.md`, verdict Revise)
+**Status:** Draft (rev 3 — revised against the landed exact-owner repair and current reviews)
 **Owner:** Reid W
-**Stage:** `design` (orchestrated run; briefs `04-design.md`, `05-design-revision.md`)
-**Created:** 2026-08-15 · **Revised:** 2026-08-15 (rev 2)
-**Repo state:** codegen `main` @ `7e95285`; working tree carries the uncommitted `dead-worktree-pins` edits
+**Stage:** `design` (orchestrated run; briefs `04-design.md`, `05-design-review.md`)
+**Created:** 2026-08-15 · **Revised:** 2026-08-16 (rev 3)
+**Repo state:** codegen `main` @ `0f89673`
 **Complexity:** MEDIUM
 
 ---
@@ -18,13 +18,15 @@ changed, and prove the value now arrives by mutation across every renamed formal
 
 ## Related Artifacts
 
-- **Spec:** `.project/active/self-binding-replacement/spec.md` (rev 3)
-- **Measured authority:** `.project/active/self-binding-replacement/spike/findings.md`
-  — plus the pending usage-qualified addendum (see D11)
+- **Spec:** `.project/active/self-binding-replacement/spec.md` (rev 6)
+- **Measured authority:** `.project/active/self-binding-replacement/spike/findings.md` for the
+  unchanged D-5/D-7 and definition-owned rows;
+  `tests/conformance/test_usage_owned_reference_anchoring.py` for usage-owned exact anchoring; and
+  `verification/post-repair-spike-recheck.md` for the current F-2 through F-5 results
 - **Dispositions:** `.project/active/self-binding-replacement/briefs/03-spike-dispositions.md`
 - **Align record:** `.project/active/self-binding-replacement/briefs/00-align.md`
-- **Design review:** `.project/active/self-binding-replacement/design-review.md` — verdict Revise,
-  six must-fix; resolutions in the Revision Record at the end of this document
+- **Design review:** `.project/active/self-binding-replacement/design-review.md` — the current
+  post-repair review; the rev-1 review is archived as `design-review-20260815-rev1.md`
 - **Scope context:** `.project/research/20260815-103905_item8-bounded-stocktake.md`
 - **Contract (D-4…D-7):** `.project/concepts/constraint-execution-authoritative-lifecycle-contract.md:604-627`
 - **Product lens:** `.project/active/self-binding-replacement/product-lens.md`
@@ -110,8 +112,8 @@ finding about the refused form was right; only the wider inventory around it was
 
 **What did not survive:** rev 1's conclusion that the guidance edit is "a bounded edit, not a sweep"
 was drawn from auditing one of the three forms. The rule being published governs three, and the
-owner-qualified form is taught **13 times across 5 files with no statement of the position rule
-anywhere**:
+owner-qualified form is taught **13 times across 5 files with no statement of its resolved-owner
+behavior anywhere**:
 
 | file | lines | qualifier |
 |---|---|---|
@@ -125,7 +127,7 @@ Three further sites (`syntax-reference.md:308`, `cross-file-binding.md:198`,
 `common-mistakes.md:309`) already teach a qualified form as a **negative** ("Won't resolve!") and
 need no correction.
 
-### All 13 qualified examples are one shape, and it is the shape nobody measured
+### All 13 qualified examples are usage-owned, and that route is now pinned
 
 Reading the enclosing context of every one of the 13: each sits inside `part <usage> { ... }` and
 qualifies by **that enclosing usage's own name** —
@@ -138,21 +140,21 @@ part geometry {
 }
 ```
 
-The spike measured **definition**-qualified references throughout: `'Plant'::availability`,
-`'Unit'::cost` (`findings.md` rows 4a–4e, 6). Not one measured row used a usage qualifier. The
-spec's own Change Record flags the distinction as live: *"The SysML action example's qualifier points
-toward an enclosing usage name, not the definition-qualified spelling used by ten sites in the
-reverted migration"* (`spec.md:218-219`).
+The original spike measured **definition**-qualified references throughout:
+`'Plant'::availability`, `'Unit'::cost` (`findings.md` rows 4a–4e, 6). The later addendum measured
+usage-qualified references, exposed the positional behavior as a codegen defect, and led to repair
+`98970c9`. The shipped route now anchors a one-segment usage-owned leaf on the exact owner SysIDE
+resolved. `tests/conformance/test_usage_owned_reference_anchoring.py` is the durable authority.
 
-⚠ **Surfaced, dependent conclusion parked.** Whether the measured position rule covers the
-usage-qualified spelling is **unknown**. It is uniform across all 13 sites, so one measurement
-settles all of them, and the orchestrator has the spike re-running now. Until that addendum lands,
-this design states what it will teach under each outcome and publishes neither (D11).
+The distinction remains important. Definition-owned leaves still use `_resolve_leaf` and its
+consumer-relative positional search. Usage-owned leaves do not. The guidance must label evidence by
+owner class and must not present the definition-owned fallback as the semantics of `::` generally.
 
 One site deserves separate note because it is the most consequential in the tree:
 `MODELING_PROCESS.md.template:349` is `in volume = my_component::volume` — a qualifier used
-specifically to resolve a self-name collision. The project template that seeds every new project
-teaches an **unmeasured spelling as the fix for the exact defect this item exists to end**.
+specifically to resolve a self-name collision. The spelling is now measured and supported. The site
+still needs editorial review: D-5 is the recommended local pattern, while this D-6 form is an exact
+usage-owner alternative. The review does not have authority to ban the supported spelling.
 
 ### The migration target is already worked, in this repo
 
@@ -202,24 +204,29 @@ published module — `_regular_inputs` accepts `CalcNode | ConstraintNode`
 as `hif_plant_pkg__hif_plant__viability__81ddf10fb1d1749b__evaluation`
 (`test_fusion_tea_real_teax.py:68`).
 
-### The authored oracle already enumerates all 11 supplying attributes
+### The 11 supplying attributes are a named subset of the authored oracle
 
-`test_projection_wiring_contract.py:41-66` lists every one of the 11 renamed formals' supplying
-attributes as a `DESIGN_ATTRIBUTE` entry point: nine keyed `hif_plant_pkg__hif_plant__*`
-(availability, discount_rate, frequency, gain, net_electric_power_gw, om_cost_constant,
-plant_cost_constant, thermal_efficiency, thermal_power_gw), two keyed
-`hif_plant_pkg__hif_plant__driver__*` (beam_energy_mj, num_chambers), and two fixture-only
-`hif_driver__hif_driver_instance__*` copies that the customer repo deleted in July as R-2.
+`test_projection_wiring_contract.py:40-70` is a 27-key classification oracle: 22
+`DESIGN_ATTRIBUTE`, 2 `USAGE_LITERAL`, and 3 `LIBRARY_DEFAULT`. It is not itself the spine oracle.
+The migration's 11 supplying attributes form this exact `DESIGN_ATTRIBUTE` subset after customer
+R-2:
 
-This turns the widened spine (MF-7) from a proposal into a mechanical enumeration with a known
-expected answer.
+- plant: availability, discount_rate, frequency, gain, net_electric_power_gw, om_cost_constant,
+  plant_cost_constant, thermal_efficiency, thermal_power_gw;
+- nested driver: beam_energy_mj, num_chambers.
+
+The fixture also carries two relevant copies under the standalone
+`hif_driver__hif_driver_instance__*` occurrence, plus two unrelated design attributes in that same
+family. Customer R-2 deletes the whole standalone occurrence. The spine therefore derives and
+compares the exact 11-key migrated-supplier subset; it does not subtract an assumed pair from the
+27-key mixed-class oracle.
 
 ### The migration tool does more than rename
 
 `build_variant` calls `apply_aggregation_split(text)` unconditionally
-(`scripts/make_d5_variant.py:224`), which introduces named intermediate attributes and restructures a
+(`scripts/make_d5_variant.py:225`), which introduces named intermediate attributes and restructures a
 rollup expression (`:153-187`). `strip_check` computes the rewrites from the source and undoes them
-from the variant **before** the byte comparison (`:261-262`). By construction the strip check cannot
+from the variant **before** the byte comparison (`:265/:268`). By construction the strip check cannot
 see an aggregation split. The repo says so: *"A shape change cannot be proved by stripping a
 suffix"* (`tests/conformance/test_d5_variants.py:174-179`).
 
@@ -239,19 +246,18 @@ the Validation Rules table (`:747-762`) lists V1–V11 without mentioning `SI_SE
 
 **One rule, one copy, three legs of machine-owned enforcement.**
 
-The rule is situational and short: *a calculation input binds to the modelled value you name, and the
-name is resolved from where the consumer sits.* Three situations follow from where the value lives.
-The value is an attribute on the part owning the calculation → make the two names differ and bind
-bare (D-5). The value lives on another part → name the occurrence path (D-7). You reach by owner
-qualification (D-6) → it resolves by position, in two steps the spike wrote down:
+The rule is situational and short: *a calculation input binds to the modelled value its resolved
+reference names.* Three common authoring situations follow. The value is an attribute on the part
+owning the calculation → make the two names differ and bind bare (D-5). The value lives on another
+part → name the occurrence path (D-7). The reference names a feature owned by a part usage → codegen
+honors that exact usage owner (D-6), matching the owner SysIDE resolved.
 
-1. Walk the consumer's own scope lineage outward. If any scope in that lineage owns the slot, that
-   occurrence wins — however many other occurrences exist elsewhere.
-2. Only if the lineage misses, search descendants of each lineage anchor, innermost first. One
-   match is selected silently; two collide and refuse as `SI_OCCURRENCE_AMBIGUOUS`.
-
-Step 2 is why owner qualification reaches *sideways* into a sibling subtree when exactly one
-occurrence lives there. Owner qualification does not mean "mine."
+A different, explicitly scoped route remains for a leaf not owned by a `PartUsage`: it delegates to
+`_resolve_leaf`. For a definition-owned feature leaf, that helper walks the consumer's scope
+lineage, then searches descendants and refuses multiple matches; calculation outputs may instead
+select a producing calculation node. The feature-slot fallback can reach sideways into a sibling
+subtree. It is implementation behavior for that owner class, not the language meaning of `::` and
+not the rule attached to the 13 published usage-qualified examples.
 
 That rule lives in exactly one document, `agentic-mbse/docs/patterns/plant-idiom.md`, reorganized by
 situation. Everything else points at it. The two-copies trap that Item 7 left as residual A-1 is not
@@ -294,8 +300,9 @@ for fewer copies, not more.
   a renamed formal (an `out`, or a second `in`). *If false → after the rename the bare right-hand
   side lands on that sibling formal, producing spike row 5's cycle or row 7's
   `SI_OCCURRENCE_MISSING`, and that site needs D-7 instead of D-5.*
-- **B4.** The measured resolution rule is the behavior of the route at the commit this item lands on.
-  *If false → the guidance teaches a rule the shipped route does not implement.*
+- **B4.** The owner-class split remains the behavior of the route at the commit this item lands on:
+  exact anchoring for usage-owned leaves, `_resolve_leaf` for non-usage-owned leaves. *If false →
+  the guidance teaches a rule the shipped route does not implement.*
 - **B5.** A `DESIGN_ATTRIBUTE` entry point keys by the supplying attribute's display path, so N
   consumers of one modelled value share one key. *If false → the "every and only" check cannot be
   read off the entry-point set.* Confirmed against the authored oracle.
@@ -327,8 +334,9 @@ for fewer copies, not more.
   naming the three situations, one reference line each. *Rejected: pointer only* — the skill is what
   loads when an agent writes SysML and the templates are what a new project starts from; neither
   reader has a reason to go look. *Rejected: full teaching inline* — that mints three more copies.
-- **D3. Examples are validated by fixture provenance plus a drift-check conformance test.** Every
-  taught shape cites a tracked codegen fixture whose exact-route outcome a conformance test pins,
+- **D3. Examples are validated by owner-labelled provenance plus a drift-check conformance test.**
+  Every taught shape cites a tracked codegen fixture or test whose exact-route outcome is pinned,
+  and the citation states whether the resolved leaf is usage-owned or definition-owned,
   **and** a codegen test reads the packaged `agentic_mbse_data/docs/patterns/plant-idiom.md`,
   extracts each fenced block carrying a provenance marker, and asserts verbatim containment in the
   cited fixture file. *Rejected: provenance citation alone (rev 1)* — a citation is a pointer, not a
@@ -346,7 +354,8 @@ for fewer copies, not more.
   `aggregation_rewrites()` return anything for any customer file. Any yes stops the run.
   *Rejected: discover these by running the route* — (a)–(c) surface as spike row 5's cycle, whose
   current report names nothing, and (d) does not surface at all.
-- **D6. F-3 is fixed in codegen, in two contained places.** Wrap `elaborate.py:631` so
+- **D6. F-3 is fixed in codegen, in two contained places.** The post-repair recheck at `0f89673`
+  reproduces the raw traceback. Wrap `elaborate.py:631` so
   `GraphValidationError` becomes `ElaborationDiagnosticError`, and make `_validate_producer_cycles`
   report the participants. **Sized honestly:** the traversal changes shape — `visit()` is a boolean
   DFS whose `complete` memo returns `False` for an already-visited node and which discards the active
@@ -354,7 +363,8 @@ for fewer copies, not more.
   detection (`graph.py:862-892`). Still one method, so the disposition's "file it if it needs
   graph-layer restructuring" bar is not met — but the plan budgets for a traversal change, not a
   payload tweak, and covers it with a test on the `s5_sibling_formal` shape. *Rejected: filing it.*
-- **D7. F-2 is fixed in agentic-mbse only**, by comparing the referent element of the member's
+- **D7. F-2 is fixed in agentic-mbse only.** The post-repair validation probe reproduces the false
+  positive. Fix it by comparing the referent element of the member's
   `feature_value_expression` to the member itself instead of comparing `binding.source_path` to
   `binding.param_name` (`level2_structure.py:350`). *Rejected: special-casing qualified spellings by
   string* — the same name-based class of check that produced the false positive.
@@ -363,28 +373,23 @@ for fewer copies, not more.
   `part hif_driver_instance` at `designs/hif_ife/hif_driver.sysml:100`, is already D-5, and is not a
   migration target. The 9-vs-11 channel question belongs to the customer-repo regeneration remainder,
   an explicit Non-Goal. Smaller call, does not contradict R-2. *(Verified independently by review.)*
-- **D9. ADR-010 is filed** as `## 10. Calculation Input Bindings Resolve by Identity, Not by Name
-  (ADR-010)` in `docs/architecture/modeling-assumptions.md`, decision-and-consequence only, naming
-  plant-idiom.md as the one home for worked examples, **and the Validation Rules table gains a row
-  for `SI_SELF_BINDING`** — a reader asking "which rule refuses this?" reads that table.
-  *Rejected: not filing it* — the refusal is a shipped behavior constraining every customer model and
-  no ADR or validation row covers it. *Rejected: putting the teaching text in the ADR* — second copy.
+- **D9. Add `SI_SELF_BINDING` to the Validation Rules table; do not presume ADR-010.** A reader
+  asking "which rule refuses this?" should find the shipped rule in the existing table. The spec
+  reserves ADR promotion as an owner call, so this design does not file or plan ADR-010. If the
+  owner later promotes it, the ADR is decision-and-consequence only and points to `plant-idiom.md`
+  for examples. *Rejected: silently treating the ADR as approved* — it manufactures a decision.
+  *Rejected: putting teaching text in a future ADR* — that would create a second copy.
 - **D10. Stellarator gets one pipeline run, a written record, and a filed follow-on. Nothing is
   fixed.** *Rejected: migrating its 15 copied-in fusion-tea files while we are in there* — the July
   owner hold is not reversed by this item.
-- **D11. *(new)* The D-6 section is parameterised on the pending spike addendum, and neither branch
-  is published before it lands.** All 13 published qualified examples use one uniform spelling —
-  qualification by the enclosing part **usage** — which the spike never measured. Two outcomes, both
-  pre-decided so the addendum lands as a fact rather than a new decision:
-  - **If the position rule holds for the usage qualifier too:** the D-6 section teaches one rule for
-    both spellings, and the 13 sites each gain a one-line position caveat with a pointer. No
-    rewrites.
-  - **If the qualifier kind alters the resolution path:** the D-6 section teaches the two spellings
-    separately with their measured behaviors, `MODELING_PROCESS.md.template:349-350` is **rewritten**
-    rather than caveated — it teaches the qualifier as a self-collision fix and would be teaching a
-    wrong one — and any spelling still unmeasured is stated as unmeasured rather than given a rule.
-  *Rejected: publishing the definition-qualified rule as if it covered both* — that is the exact
-  defect this item exists to end, one level up.
+- **D11. The 13 published usage-qualified examples are reviewed against the landed exact-owner
+  behavior.** The pending addendum is over; repair `98970c9` and
+  `test_usage_owned_reference_anchoring.py` are the authority. Retain an example only when its
+  intended referent is the exact feature owned by the named usage, and describe that behavior
+  without a positional caveat. `MODELING_PROCESS.md.template:349-350` must recommend D-5 for the
+  local-collision situation. Its supported D-6 spelling may remain as an explicitly labelled
+  alternative if the exact-owner referent is pinned; the review did not establish authority to ban
+  it. *Rejected: publishing the definition-owned position rule as if it covered both owner classes.*
 - **D12. *(new)* The migration site list is produced by discovery over the whole customer repo, not
   by the path list in this design.** Two greps — the self-named pattern, and a declaration-side
   search for the 11 formals — run over `/home/reid/1cfe/fusion-tea` including
@@ -392,6 +397,10 @@ for fewer copies, not more.
   what the greps return is recorded. *Rejected: the fixed six-file list* — this repo records a second
   synced model tree, neither this session nor rev 1's could read the customer repo, and rev 1's own
   headline finding was that an assumed list was undersized.
+- **D13. Arrayed-owner aggregation stays with its named follow-up.** The owner accepted scalar
+  direct-reference policy for the anchoring item and filed
+  `[ANCHORING-ARRAYED-DIAGNOSTIC]`. This item records the boundary and does not teach the dotted
+  spelling as a workaround, invent indexed syntax, or reopen cardinality policy.
 
 ---
 
@@ -401,8 +410,8 @@ for fewer copies, not more.
 
 | repo | change |
 |---|---|
-| **agentic-mbse** | `docs/patterns/plant-idiom.md` rewritten by situation, four refused examples corrected; **the 13 qualified sites across `expose-pattern.md`, `cross-file-binding.md`, `adr002-calculations.md`, `syntax-reference.md`, `MODELING_PROCESS.md.template` caveated or rewritten per D11**; `claude/skills/sysml-conventions/SKILL.md`, `project_templates/MODELING_PROCESS.md.template`, `project_templates/MODELING_GUIDE.md.template` gain the rule + pointer; `.claude/`'s counterparts per the inventory; F-2 identity comparison in `validation/level2_structure.py` (+ `binding.py` if the referent must be exposed) with a test per direction |
-| **sysml-codegen** (here) | F-3 repair in `elaboration/elaborate.py` and `elaboration/graph.py` + tests; three promoted D-6 fixtures + one conformance test; the D3 doc-drift conformance test; `scripts/make_d5_variant.py` gains `--root` and the aggregation guard (docstring updated — its "originals are never touched" contract is inverted by D4); ADR-010 + product-ledger row + the `SI_SELF_BINDING` validation-rule row; the stellarator triage record |
+| **agentic-mbse** | `docs/patterns/plant-idiom.md` rewritten by situation, four refused examples corrected; **the 13 usage-qualified sites across `expose-pattern.md`, `cross-file-binding.md`, `adr002-calculations.md`, `syntax-reference.md`, `MODELING_PROCESS.md.template` reviewed against exact-owner behavior per D11**; `claude/skills/sysml-conventions/SKILL.md`, `project_templates/MODELING_PROCESS.md.template`, `project_templates/MODELING_GUIDE.md.template` gain the rule + pointer; `.claude/`'s counterparts per the inventory; F-2 identity comparison in `validation/level2_structure.py` (+ `binding.py` if the referent must be exposed) with a test per direction |
+| **sysml-codegen** (here) | F-3 repair in `elaboration/elaborate.py` and `elaboration/graph.py` + tests; three promoted **definition-owned** D-6 fixtures plus the existing usage-owned anchoring conformance test; the D3 doc-drift conformance test; `scripts/make_d5_variant.py` gains `--root` and the aggregation guard (docstring updated — its "originals are never touched" contract is inverted by D4); the `SI_SELF_BINDING` validation-rule row; the stellarator triage record. ADR-010 is excluded pending the owner call. |
 | **fusion-tea** | whatever D12's discovery returns — expected: 3 design files (15 binding left sides) + 3 library files (15 declaration lines, 5 definitions), plus any `exploration/ife_e2e/models/` copy, on a branch off `item8-fusion-embedded-catalog` |
 | **fusion-tea-stellarator-mbse-demo** | nothing. One run, recorded in codegen. |
 
@@ -426,9 +435,13 @@ back one form:
    proved at row 2m).
 2. **On a different part → D-7.** Name the occurrence path: `in driver_cost = driver.cost`. Pinned by
    `tests/fixtures/fusion_tea` (`in driver_cost_constant = driver.cost_per_joule`; spike row 3).
-3. **By owner qualification → D-6, with the two-step position rule stated as two steps**, and its
-   sideways reach called out. Definition-qualified behavior is measured (rows 4a–4e, 6);
-   usage-qualified behavior is pending and governed by D11.
+3. **By owner qualification → D-6, split by resolved owner class.** A usage-owned leaf anchors on
+   the exact usage SysIDE resolved. A definition-owned leaf keeps `_resolve_leaf`'s positional
+   fallback; only that route carries the sideways-reach caution. The 13 published examples are
+   usage-owned and are governed by D11.
+
+Arrayed aggregation is not a fourth teaching branch here. Its scalar direct-reference behavior and
+diagnostic work live under `[ANCHORING-ARRAYED-DIAGNOSTIC]` (D13).
 
 Plus the negative, kept and sharpened: `in x = x` binds the calculation's input to itself, is refused
 by both paths, and is never reinterpreted as an outer reference (D-4, `[OWNER-VERBATIM]`).
@@ -480,8 +493,9 @@ The criterion that decides the item, specified concretely because it is the step
 | `recirc_calc` | `ife_plant.sysml:134` | `:146` | calc module |
 | `assert constraint viability : 'Viability Threshold'` | `ife_plant.sysml:155` | `:168` | **constraint module**, published as `…__viability__81ddf10fb1d1749b__evaluation` |
 
-The constraint consumer additionally carries `formal_identity` (`project.py:543`) that the calc
-consumers do not. "All three consumer modules" written flat is easy to implement as "the three calc
+The constraint consumer additionally carries `formal_identity` (populated at `project.py:536`;
+the helper starts at `:543`) that the calc consumers do not. "All three consumer modules" written
+flat is easy to implement as "the three calc
 modules", silently dropping the one consumer class where every-and-only has historically been
 hardest. It is enumerated here so it cannot be.
 
@@ -489,9 +503,9 @@ hardest. It is enumerated here so it cannot be.
 
 1. **Enumeration (all 11 formals).** After the one planned regeneration, assert that every one of the
    11 renamed formals' supplying attributes appears as a `DESIGN_ATTRIBUTE` entry point keyed on its
-   display path. The expected set is the authored oracle's, minus the two
-   `hif_driver__hif_driver_instance__*` keys the customer deleted in July. This is B5 applied as an
-   enumeration rather than a spot check, and it costs no extra run.
+   display path. The expected set is the explicit nine plant-level plus two nested-driver keys above,
+   derived again from D12's customer discovery. This supporting enumeration is not the deciding
+   gate; the public mutations below are the spine.
 2. **Arrival, plant-level.** Mutate `gain` off default; the one key carries the new value, and all
    three consumers above — two calc modules and the constraint module — wire to it. No other entry
    point's value moves.
@@ -499,11 +513,13 @@ hardest. It is enumerated here so it cannot be.
    `hif_plant_pkg__hif_plant__driver__beam_energy_mj` carries the new value and its consumers wire to
    it. This exercises a different occurrence depth from assertion 2.
 
-**Where this design disagrees with the review, and why.** MF-7's prescription was "add one off-default
+**Where this design disagrees with the rev-1 review, and why.** MF-7's prescription was "add one off-default
 mutation in a **second design file** so `hif_plant.sysml` carries an arrival check". That framing does
-not fit this model: `ife_plant.sysml` and `hif_driver.sysml` both declare definitions, not usages, so
-**every** design-attribute entry point roots at the single `hif_plant` usage. There is no second design
-file to mutate in. The finding is accepted in full — one formal of eleven was not enough — but the
+not fit the post-R-2 customer model: its standalone `hif_driver_instance` usage was deleted, so
+**every** migrated design-attribute entry point roots at the single `hif_plant` usage. The vendored
+fixture still declares `hif_driver_instance`; this claim does not cover it. There is no second
+customer design file to mutate in. The finding is accepted in full — one formal of eleven was not
+enough — but the
 widening is by **formal and occurrence depth**, not by file. Assertion 1 covers all 11; assertions 2
 and 3 cover two different depths. The residual failure mode MF-7 names — a renamed formal whose bare
 right-hand side resolves to a same-named attribute in an *enclosing* scope, silently — is caught by
@@ -525,11 +541,12 @@ require TEAx execution, which is what the spike established as sufficient at row
    because they are prose, and the semicolon is what separates a worked example from a warning. A
    later author who sharpens the warning into a fenced code block breaks the gate unless they add the
    marker. Stated so that is a choice, not an accident.
-3. **Every taught shape is either pinned by a tracked fixture, or explicitly labelled as taught on
-   measurement without a fixture.** *(Narrowed from rev 1, which claimed all were pinned.)* Pinned:
-   plain D-5, D-7, and three D-6 positions. **Not pinned, and labelled:** the inherited-attribute
+3. **Every taught shape is either pinned by owner-labelled evidence, or explicitly labelled as
+   taught on measurement without a fixture.** *(Narrowed from rev 1, which claimed all were pinned.)*
+   Pinned: plain D-5, D-7, three **definition-owned** D-6 positions, and usage-owned D-6 exact
+   anchoring in `test_usage_owned_reference_anchoring.py`. **Not pinned, and labelled:** the inherited-attribute
    D-5 case (`plant-idiom.md:85`), the EXPOSE + D-5 case (`:200`), the attribute-rename D-5 spelling
-   (`:59-61`, "as `wi014_toy` does"), and the usage-qualified D-6 spelling pending D11. The invariant
+   (`:59-61`, "as `wi014_toy` does"). Arrayed usage-owner aggregation is excluded under D13. The invariant
    must not claim more than CI holds — that is the failure mode this item exists to end.
 4. **The migration's only edit is the rename, and the check that proves it is scoped to what it can
    see.** Stripping `_in` reproduces the originals byte for byte. The strip check does **not** cover
@@ -552,9 +569,10 @@ require TEAx execution, which is what the spike established as sufficient at row
 **agentic-mbse**
 
 - `docs/patterns/plant-idiom.md` — the authoritative copy. Self-binding section reorganized by
-  situation; the four refused examples at `:79`, `:84`, `:85`, `:200` corrected; the position rule
-  written as two steps; F-4's sideways reach given its sentence.
-- The 13 qualified sites (table in Research Findings) — caveated or rewritten per D11.
+  situation; the four refused examples at `:79`, `:84`, `:85`, `:200` corrected; exact usage-owner
+  anchoring stated; the definition-owned fallback and F-4 sideways reach scoped to that owner class.
+- The 13 usage-qualified sites (table in Research Findings) — reviewed against exact-owner behavior
+  per D11.
 - `claude/skills/sysml-conventions/SKILL.md` — one Common-Pitfalls row, one short subsection, one
   reference line. Note `:210` duplicates `MODELING_GUIDE.md.template:145` verbatim.
 - `project_templates/MODELING_PROCESS.md.template`, `MODELING_GUIDE.md.template` — same treatment;
@@ -568,14 +586,14 @@ require TEAx execution, which is what the spike established as sufficient at row
 - `elaboration/elaborate.py:631` — guard the `validate()` call.
 - `elaboration/graph.py::_validate_producer_cycles` — retain the traversal stack at closure and
   report the participants.
-- `tests/fixtures/` — three promoted spike fixtures pinning D-6, each with a `PROVENANCE.md`:
+- `tests/fixtures/` — three promoted spike fixtures pinning the **definition-owned** D-6 route, each with a `PROVENANCE.md`:
   inside-the-def two-occurrence (generates, spike `s4b`), above-the-def two-occurrence (refused,
   `s8`), sideways reach (`s6`). None declares a constraint, so no expectation-file obligation
   attaches (`test_constraint_population_oracle.py:81-110`).
 - One conformance test for those fixtures; one for D3's doc-drift check.
 - `scripts/make_d5_variant.py` — `--root`, the D5(d) aggregation guard, docstring corrected.
-- `docs/architecture/modeling-assumptions.md` — ADR-010 + the `SI_SELF_BINDING` validation row; the
-  back-registered row in `.project/product/INDEX.md`.
+- `docs/architecture/modeling-assumptions.md` — the `SI_SELF_BINDING` validation row. ADR-010 and a
+  corresponding product-ledger row are conditional on the open owner call, not plan inputs.
 - `.project/active/self-binding-replacement/stellarator-triage.md`.
 
 **fusion-tea** — per D12's discovery; expected six files plus any `exploration/ife_e2e/models/` copy.
@@ -600,6 +618,7 @@ require TEAx execution, which is what the spike established as sufficient at row
   `.project/active/elaborator-downstream/`, deliberately not created here.
 - Migrating or repairing stellarator, including its 15 copied-in fusion-tea files.
 - Building any new detector, lint, or authoring-time check.
+- Arrayed-owner cardinality or diagnostic work, owned by `[ANCHORING-ARRAYED-DIAGNOSTIC]`.
 - Merging the two self-binding checks into one implementation (Invariant 7).
 - The second half of F-3 (`SI_OCCURRENCE_MISSING`'s bare `FeatureSlotId`) and F-5 (chain source
   paths). Both filed, not fixed.
@@ -623,8 +642,6 @@ require TEAx execution, which is what the spike established as sufficient at row
   original"; the customer migration is in-place and the proof must run while both sides exist.
 - **fusion-tea's tree is dirty** on `item8-fusion-embedded-catalog` (6 ahead / 0 behind main). Clean
   or stash first, and record which.
-- **Codegen's working tree carries uncommitted `dead-worktree-pins` edits.** Another item's; do not
-  sweep them in.
 - **The F-3 re-raise widens what reads as a model refusal.** `validate()` raises on the whole failure
   set, and most of `graph.py:400-448` checks codegen's own referential integrity, not authored model
   shape. After the change a codegen bug surfaces as "Model failed exact-route validation" with exit 1
@@ -651,8 +668,9 @@ if self._strict and self._graph.diagnostics:
 - **`.claude/` remains unread.** 23 files, 4 skills, unpackaged and unreachable from this sandbox.
   *Mitigation:* it is D12's sibling — an inventory step at plan time, with the corrected patterns, and
   the rollout follows what it returns.
-- **The usage-qualified spelling may behave differently (D11).** *Mitigation:* nothing is published
-  for it until measured; both branches are pre-decided so the addendum lands as a fact.
+- **Guidance may conflate owner classes.** *Mitigation:* every D-6 example is labelled by resolved
+  owner class; usage-owned claims cite the exact-owner conformance test, while definition-owned
+  position claims cite the promoted fixtures.
 - **A rename collides, or the file-wide rewrite over-reaches (B3, B7).** *Mitigation:* D5(a)–(c) stop
   the run; and after D6 the failure that would follow reports itself by name instead of as a traceback.
 - **The customer tree has drifted from the fixture (B2), or has sites the six-file list misses (B8).**
@@ -691,9 +709,9 @@ agentic-mbse `L2_SELF_NAMED_BINDING`, `success=False`; **and post-F-2** both acc
 makes "confirmed to refuse" an honest claim about *what* is refused.
 
 **The teaching is falsifiable:** the self-named pattern returns zero unmarked hits across both trees;
-the qualified-form audit is recorded site by site with its disposition; each promoted D-6 fixture's
-conformance assertion passes by diagnostic name or entry-point value; the D3 drift test passes; the
-full codegen suite green with the license loaded.
+the qualified-form audit is recorded site by site with its owner class and disposition; the
+usage-owned anchoring test and each promoted definition-owned fixture pass by diagnostic name or
+entry-point value; the D3 drift test passes; the full codegen suite is green with the license loaded.
 
 **The migration is bounded:** D5(a)–(d) all clear, and the strip check reports zero problems.
 
@@ -705,22 +723,22 @@ follow-on. No fix, no reversal of the July hold.
 ## Next-Stage Handoff
 
 **Fixed.** D-4 settled. D-5 as the recorded decision for the fusion-tea sites, with its reasoning.
-One authoritative copy (D1). No push, no PR. R-2 pin stays (D8). ADR-010 filed decision-only (D9).
-Stellarator triage-only (D10).
+One authoritative copy (D1). No push, no PR. R-2 pin stays (D8). The `SI_SELF_BINDING` validation
+row lands; ADR-010 does not without the open owner call (D9). Stellarator triage-only (D10).
 
-**Open, and named.** The usage-qualified measurement (D11 — the addendum is in flight). The `.claude/`
-inventory and which tree is authoritative for agent instructions. The customer repo's actual site
-list (D12). Whether F-2 needs `binding.py` changed.
+**Open, and named.** The ADR-010 owner call. The `.claude/` inventory and which tree is authoritative
+for agent instructions. The customer repo's actual site list (D12). Whether F-2 needs `binding.py`
+changed.
 
 **De-risk first, in this order.** (1) Re-verify B1 and re-run the corrected patterns over the whole
 agentic-mbse tree — cheapest, license-free, and it sizes the rollout. (2) D12's customer-repo
 discovery and D5's four preconditions — license-free, and the ones that can invalidate the mechanized
-migration. (3) The D11 addendum — one fixture, one licensed run. (4) The F-3 repair, before the
-renames run rather than after, so every later migration failure is legible.
+migration. (3) The F-3 repair, before the renames run rather than after, so every later migration
+failure is legible. F-2 through F-5 already have a post-repair recheck.
 
-**Surfaced, dependent conclusions parked.** The usage-qualified spelling behind all 13 published D-6
-examples is unmeasured (D11). The `exploration/ife_e2e/models/` copy may carry self-bindings the
-migration would leave behind (B8/D12). Neither is resolved here.
+**Surfaced, dependent conclusions parked.** The `exploration/ife_e2e/models/` copy may carry
+self-bindings the migration would leave behind (B8/D12). ADR-010 remains an owner call. Neither is
+resolved here.
 
 ---
 
@@ -752,25 +770,52 @@ in Research Findings). `availability`, `gain` and `thermal_efficiency` each appe
 
 ## Appendix B — Measured behavior the guidance is written from
 
-Condensed from `spike/findings.md`; that file, plus the pending D11 addendum, is the authority.
+Condensed from the original spike, the post-repair recheck, and
+`tests/conformance/test_usage_owned_reference_anchoring.py`. Owner class is explicit because it
+selects the shipped route.
 
 | shape | position | outcome |
 |---|---|---|
 | `in availability = availability` | anywhere | refused, `SI_SELF_BINDING` (both paths) |
 | `in availability_in = availability` | inside the def | generates; entry point on the outer attribute; mutation moves it |
 | `in driver_cost = driver.cost` | any | generates; entry point on that occurrence's feature |
-| `in availability = 'Plant'::availability` (**definition**-qualified) | inside the def, 1 or 2 occurrences | generates; each occurrence reads its own value |
-| `in unit_cost = 'Unit'::cost` | inside the def, 2 leaf occurrences below | refused, `SI_OCCURRENCE_AMBIGUOUS` |
-| `in availability = 'Plant'::availability` | above the def, 1 occurrence | generates |
-| `in availability = 'Plant'::availability` | above the def, 2 occurrences | refused, `SI_OCCURRENCE_AMBIGUOUS` |
-| `in unit_cost = 'Unit'::cost` | no local occurrence, 1 in a sibling subtree | generates — resolves sideways (F-4) |
-| `in length = geometry::input_length` (**usage**-qualified) | inside the usage | **UNMEASURED** — all 13 published examples, D11 |
+| `in availability = 'Plant'::availability` (**definition-owned leaf**) | inside the def, 1 or 2 occurrences | generates on `_resolve_leaf`; each occurrence reads its own value |
+| `in unit_cost = 'Unit'::cost` (**definition-owned leaf**) | inside the def, 2 leaf occurrences below | refused, `SI_OCCURRENCE_AMBIGUOUS` |
+| `in availability = 'Plant'::availability` (**definition-owned leaf**) | above the def, 1 occurrence | generates |
+| `in availability = 'Plant'::availability` (**definition-owned leaf**) | above the def, 2 occurrences | refused, `SI_OCCURRENCE_AMBIGUOUS` |
+| `in unit_cost = 'Unit'::cost` (**definition-owned leaf**) | no local occurrence, 1 in a sibling subtree | generates — resolves sideways (F-4, reproduced at `0f89673`) |
+| `in length = geometry::input_length` (**usage-owned leaf**) | inside the usage | exact usage owner; pinned by the anchoring conformance test — all 13 published examples use this owner class |
+| `sum(comp_a::length)` (**arrayed usage owner**) | two owner occurrences | refuses `SI_OCCURRENCE_AMBIGUOUS`; diagnostic follow-up is `[ANCHORING-ARRAYED-DIAGNOSTIC]`, not guidance in this item |
 | D-5 rename colliding with an `out` formal | — | traceback today; named diagnostic after D6 |
 | D-5 rename colliding with a second `in` formal | — | `SI_OCCURRENCE_MISSING`, detail unreadable (filed) |
 
 ---
 
+## Revision Record — rev 3
+
+The 2026-08-16 reviews were checked against codegen `0f89673`, the post-repair probes, the
+projection oracle, and the owner-dispositioned arrayed follow-up.
+
+| review issue | disposition |
+|---|---|
+| Stale D-6 teaching / D11 | **Accepted.** Core Concept, D11, teaching, evidence, risks, handoff, and Appendix B now distinguish exact usage-owner anchoring from the surviving definition-owned fallback. |
+| Spine arithmetic | **Accepted with correction.** The full oracle is 27 mixed-class keys. The spine now lists the exact 11 migrated-supplier keys and treats their enumeration as support for the two public mutations, not as the deciding gate. The review's 4-key and 6-key family counts are true of the full oracle but not all belong to the 11-formal subset. |
+| Arrayed aggregation | **Question already resolved.** `[OWNER 2026-08-16]` accepted scalar policy and filed `[ANCHORING-ARRAYED-DIAGNOSTIC]`. D13 excludes it here; no dotted-spelling workaround or indexed form is invented. |
+| ADR-010 | **Accepted.** D9 keeps the validation-table row and removes the unratified ADR commitment. The owner call stays open. |
+| F-2/F-3 evidence | **Review premise rejected; evidence refreshed anyway.** The anchoring repair did not invalidate F-2 through F-5: they use agentic, validation, definition-owned, or chain paths outside the changed branch. All four were nevertheless rerun and reproduced at `0f89673`. |
+| Mandatory rewrite of `MODELING_PROCESS.md.template:349` | **Partly rejected.** The local recommendation becomes D-5. The supported usage-qualified syntax need not be deleted if retained as a labelled, pinned D-6 alternative. |
+| Smell 7 | **Rejected.** Extraction and elaboration already owned referent and occurrence identity. Repair `98970c9` restored that ownership; the design was stale but did not propose an ownership transfer. |
+| Evidence labels, stale pointers, line drift, MF-7 scope | **Accepted.** Owner classes are explicit; current paths and lines replace stale ones; the no-second-usage claim is scoped to the post-R-2 customer tree. |
+
+The architecture, D-5 migration choice, one-copy teaching structure, mechanized bounded diff,
+F-2/F-3 repairs, and stellarator triage remain unchanged.
+
+---
+
 ## Revision Record — rev 2
+
+Historical record of the rev-1 findings as incorporated into rev 2. Rev 3 above supersedes its D9,
+D11, usage-qualified, oracle, and MF-7 statements.
 
 Six must-fix from `design-review.md`, plus the should-fixes and observations. Discovery was re-run
 before any prose was amended, per the review's own instruction to gather evidence first.
@@ -806,4 +851,4 @@ and Appendix A.
 
 ---
 
-**Next Step:** the D11 addendum, then `/_my_plan`.
+**Next Step:** `/_my_plan`, with ADR-010 excluded unless the owner resolves the open call first.

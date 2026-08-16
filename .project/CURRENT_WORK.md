@@ -1,6 +1,6 @@
 # Current Work
 
-**Last Updated**: 2026-08-16 (**qualified-reference-occurrence-anchoring independent audit: Needs Work; findings 1, 5, 6 remediated** — the production repair remains green. Identity is now measured for every root that elaborates (139 compared, 0 changed) and the differ refuses an absent block, so SC12 is met; SC1 and findings 2, 3, 4, 7 stay reserved to the owner for close. The latest product-lens gate is DISPOSED for the arrayed aggregation cardinality split. See the 2026-08-16 entry below. Prior context: **PHASE D FULLY CLOSED; Item 8 sequencing decided.** The
+**Last Updated**: 2026-08-16 (**qualified-reference-occurrence-anchoring scoped re-verification: Needs Work; findings 1 and 6 closed, finding 5 reopened** — identity is now measured for every root that elaborates (139 compared, 0 changed) and the differ refuses an absent block, so SC12 is met. The absent-leaf runtime refusal is correct; its census treated refused roots as zero observed leaves and was **repaired 2026-08-16** — it now counts at the resolver boundary and reports 154 roots (139 complete, 1 partial, 14 unmeasured), 770 leaves observed, 0 absent, with 15 roots named as residual unmeasured population. Awaiting re-verification. Findings 2, 3, 4, and 7 were outside this pass. See the 2026-08-16 entry below. Prior context: **PHASE D FULLY CLOSED; Item 8 sequencing decided.** The
 three-repo merge wave landed and is smoked — squash merges in the pin-enforced order:
 agentic-mbse#12 → `main` `1decd95`; codegen#10 → `main` `385e163` (the Item-7 cutover + the whole
 CONSTRAINT-SEMANTICS epic + the two contained 20260724 branches); teax#4 → `main` `744745f`. Each
@@ -69,6 +69,27 @@ rather than invented; vehicle `[CONSTRAINT-GATES-UNTAGGED]` in `BACKLOG.md`.
 ---
 
 ## Active Work
+
+### 2026-08-16: self-binding-replacement — SPEC REV 6 + DESIGN REV 3 APPROVED BY CURRENT REVIEWS
+
+The post-anchoring spec/design reviews are dispositioned. The real blockers were stale D-6 teaching
+and D11: design rev 3 now separates exact usage-owner anchoring from the surviving definition-owned
+fallback and points each claim at owner-labelled evidence. Spec rev 6 restores the owner's full
+scope-limiting quote, splits the overloaded `[HARD]` row, and carries the current baseline
+`0f89673`. Both current review verdicts are **Approve** and both appended product-lens gates are
+**CLEAR**.
+
+Independent pushbacks are recorded in the review files. Repair `98970c9` did not invalidate F-2
+through F-5; all four nevertheless reproduced at `0f89673`. The full projection oracle is 27 mixed-
+class keys, while the migration spine uses an explicit 11-key supplier subset and keeps the two
+public mutations as the deciding gate. Arrayed aggregation is not added to self-binding guidance:
+`[OWNER 2026-08-16]` already assigned it to `[ANCHORING-ARRAYED-DIAGNOSTIC]`. The review's smell-7
+ownership-transfer claim and mandatory deletion of the supported D-6 template spelling are rejected
+for lack of source authority.
+
+Evidence: `self-binding-replacement/verification/post-repair-spike-recheck.md`; focused exact-owner
+suite **48 passed**. **Next:** `/_my_plan`. ADR-010 remains an explicit owner call and is excluded
+unless the owner resolves it first.
 
 ### 2026-08-15: dead-worktree-pins — CERTIFIED, awaiting close confirmation
 
@@ -172,7 +193,7 @@ Current verdict and full findings: `.project/active/qualified-reference-occurren
 Next: repair the Phase-5 identity capture/differ, disposition D11 and the product-lens residual,
 then rerun `/_my_audit`. Do not close yet.
 
-### 2026-08-16: qualified-reference-occurrence-anchoring — RE-AUDIT FINDINGS 1, 5, 6 REMEDIATED
+### 2026-08-16: qualified-reference-occurrence-anchoring — REMEDIATION REVERIFIED: 1/6 CLOSED, 5 REOPENED
 
 The owner authorized findings **1, 5, and 6** only. Findings 2, 3, 4, and 7 are untouched and
 reserved for close.
@@ -184,9 +205,16 @@ reserved for close.
   raises rather than reading an absent block as agreement. **Measured: 139 roots compared, 0
   changed.** SC12 met on that evidence.
 - **Finding 5 (absent leaf failed open).** `_resolve_direct_reference` refuses a leaf its element
-  index does not hold instead of falling through to the consumer-positional route. Retained census
-  (`verification/absent_leaf_census.py`, `absent-leaf-census.json`): 154 roots, 769 one-segment
-  leaves, **0 absent** — no corpus site regresses. The verifier no longer shares the blind spot.
+  index does not hold instead of falling through to the consumer-positional route, and its boundary
+  test passes. **Reopened on evidence:** the retained census returned before collecting leaves from
+  any refused root and totalled those missing counts as zero. A reproduced refused root had already
+  processed one one-segment leaf, so 769 was not the whole-population count it claimed.
+  **Census repaired 2026-08-16 (plan Phase 7).** It now counts at the resolver boundary — wrapping
+  `_resolve_direct_reference` so a partial run still reports what it saw — and every root carries an
+  explicit complete / partial / unmeasured measurement with its reason. **Re-derived: 154 roots —
+  139 complete, 1 partial, 14 unmeasured; 770 one-segment leaves observed, 0 absent from the element
+  index.** The zero is stated on the new measurement. 15 roots hold residual unmeasured population
+  and the census says so, so no artifact claims whole-population coverage. Awaiting re-verification.
 - **Finding 6 (weakly pinned edges).** The arrayed strict/lenient node now pins the full
   consumer/parameter/detail tuple. The missing-leaf-target raise turned out to be **authorable** —
   a one-segment reference naming a `PartUsage`-owned calculation usage rather than one of its
@@ -197,7 +225,8 @@ name to Phase 5's; the two added passes are the two new tests. Ledger adjudicati
 0 structural problems. Detail: `.project/active/qualified-reference-occurrence-anchoring/audit.md`,
 "Remediation — 2026-08-16".
 
-Next: owner disposition on findings 2, 3, 4, 7, then rerun `/_my_audit`. Still do not close.
+Next: re-verify the Phase 7 census repair. Findings 2, 3, 4, and 7 were outside this pass. Still do
+not close.
 
 ### 2026-08-15: qualified-reference-occurrence-anchoring — AUDITED: CERTIFY (superseded 2026-08-16)
 
@@ -322,7 +351,7 @@ self-binding spec's positional explanation. Draft:
 provenance overgrade (`spec-F1`), then recorded it FIXED and `Gate: CLEAR` after the five code/design
 facts were regraded from `[HARD]` to cited `[INHERITED]`/`[INFERRED]` constraints.
 
-### 2026-08-15: self-binding-replacement — SPEC REVISED (rev 4); product lens CLEAR; awaiting approval
+### 2026-08-15: self-binding-replacement — SPEC REVISED (rev 4); superseded by rev 6
 
 ELABORATE-FIRST Item 8, covering epic scope sub-item 4 and the model-migration half of sub-item 1.
 Spec rev 4: `.project/active/self-binding-replacement/spec.md`; review: `spec-review.md` (rev-3

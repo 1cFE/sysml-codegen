@@ -1,6 +1,7 @@
-# Spec Review: Self-Binding Replacement (rev 5)
+# Spec Review: Self-Binding Replacement (rev 5 → rev 6 disposition)
 
-**Spec:** `.project/active/self-binding-replacement/spec.md` (rev 5, 2026-08-16)
+**Spec:** `.project/active/self-binding-replacement/spec.md` (rev 6, 2026-08-16; findings below were
+raised against rev 5)
 **Contract:** `claude-pack/commands/_my_spec.md`
 **Review File:** `.project/active/self-binding-replacement/spec-review.md`
 **Date:** 2026-08-16
@@ -145,12 +146,40 @@ sitting undecided while the design has silently pre-answered one of them.
 
 ## Resolutions
 
-*(Filled in as the owner resolves findings; keyed by ID.)*
+- **[L1-1] `[AGENT]` Partly accepted; pushback ratified `[OWNER 2026-08-16]`.** Rev 5 blurred the
+  evidence boundary and needed the requested
+  owner-class split. Pushback: repair `98970c9` did not make every spike result suspect. It changed
+  the `PartUsage`-owned one-segment branch only. Rev 6 points usage-owned rows at the conformance
+  test, retains definition-owned and D-5/D-7 evidence on their unchanged routes, and records a fresh
+  F-2 through F-5 recheck.
+- **[L1-2] `[AGENT]` Accepted as capture fidelity, not a new owner decision.** Rev 6 restores the
+  full quote, including both scope-limiting bookends.
+- **[L2-1] `[AGENT]` Accepted.** Design rev 3 derives D-6 guidance from exact usage-owner behavior
+  and scopes sideways reach to the definition-owned fallback. It does not use the old silent failure
+  as the reason to prefer D-5.
+- **[L2-2] Superseded by an existing owner disposition.** `[OWNER 2026-08-16]` accepted scalar
+  direct-reference policy for the anchoring item and filed `[ANCHORING-ARRAYED-DIAGNOSTIC]`.
+  Spec rev 6 records that boundary; self-binding guidance does not teach `.` as a workaround or
+  invent an indexed form.
+- **[L3-1] `[AGENT]` Accepted.** Design rev 3 removes the claim that ADR-010 is filed. The validation
+  table row remains designed; ADR-010 stays an explicit owner call and is excluded from planning.
+- **[L3-2] `[AGENT]` Partly accepted; pushback ratified `[OWNER 2026-08-16]` ("the anchoring repair
+  did not invalidate F-2 through F-5; their relevant paths were unchanged; all four rerun and
+  reproduce").** Fresh evidence was prudent, but the causal claim was too
+  broad: F-2/F-5 are agentic paths, F-4 is definition-owned, and F-3's validation boundary is
+  unchanged. All four nevertheless reproduced at `0f89673`; evidence is recorded in
+  `verification/post-repair-spike-recheck.md`.
+- **[L3-3] `[AGENT]` Accepted.** The provenance note now states the actual rule: a pre-repair result
+  is usable only when its route is proven unchanged or a post-repair run reproduces it.
+- **[L4-1] `[AGENT]` Accepted.** The spec baseline is `0f89673`.
+- **[L5-1] `[AGENT]` Accepted.** The nineteen-line `[HARD]` row is split into usage-owned,
+  non-usage-owned, and arrayed-policy rows.
+- **[L5-2] `[AGENT]` Accepted.** SC2 now says directly that evidence uses shipped post-repair
+  behavior and may not rely on superseded usage-owner behavior.
 
 ---
 
-**Verdict:** Revise
-**Next Steps:** Record resolutions here, then fold them into the spec (rev 6) and re-run the
-product lens — rev 5 has not had a lens pass. The design review that follows this review already
-evaluates the design against the landed repair; its findings supersede the design-facing halves of
-L2-1 and L3-1.
+**Verdict:** Approve (rev 6). The rev-5 findings are incorporated or dispositioned above, and the
+rev-6 product-lens gate is CLEAR.
+**Next Steps:** Use spec rev 6 as the design contract. ADR-010 remains an owner call; no downstream
+artifact may assume it.

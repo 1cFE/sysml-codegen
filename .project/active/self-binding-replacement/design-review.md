@@ -1,7 +1,8 @@
-# Design Review: Self-Binding Replacement (rev 2, re-reviewed against HEAD)
+# Design Review: Self-Binding Replacement (rev 2 → rev 3 disposition)
 
-**Design:** `.project/active/self-binding-replacement/design.md` (rev 2, written at `7e95285`)
-**Spec:** `.project/active/self-binding-replacement/spec.md` (rev 5, 2026-08-16)
+**Design:** `.project/active/self-binding-replacement/design.md` (rev 3, revised at `0f89673`;
+findings below were raised against rev 2)
+**Spec:** `.project/active/self-binding-replacement/spec.md` (rev 6, 2026-08-16)
 **Review File:** `.project/active/self-binding-replacement/design-review.md`
 **Date:** 2026-08-16
 **Prior review:** `design-review-20260815-rev1.md` (rev-1 Revise verdict, six must-fix; its
@@ -43,10 +44,11 @@ as the `qualified-reference-occurrence-anchoring` item, and the repair shipped (
 - A one-segment reference whose leaf is **usage-owned** anchors its exact owner
   (`_resolve_direct_reference`, `elaborate.py:2294-2357`). The positional rule no longer runs for
   that lane — which is the lane all 13 published D-6 examples use.
-- The positional two-step rule **survives** for definition-, package-, enum- and calc-owned leaves
-  (`_resolve_leaf`, `elaborate.py:2359-2407`) — so the design's definition-qualified measurements
-  and its three promoted fixtures (`s4b`, `s8`, `s6`) remain meaningful, but only for that lane,
-  and nothing in the design says so.
+- A non-`PartUsage` leaf still delegates to `_resolve_leaf` (`elaborate.py:2359-2407`). Its
+  positional feature-slot branch **survives** for the definition-owned leaves used by the design's
+  three promoted fixtures (`s4b`, `s8`, `s6`); calculation outputs may instead take its producing-
+  calculation selection branch. The fixtures remain meaningful, but only for their labelled owner
+  class, and rev 2 says nothing about that boundary.
 - A new authoring situation exists that the design's three-situation rule does not cover: for an
   arrayed owner, `sum(comp_a::length)` refuses `SI_OCCURRENCE_AMBIGUOUS` while `sum(comp_a.length)`
   silently aggregates both occurrences (anchoring re-audit, 2026-08-16, `independent-audit-F1`).
@@ -151,13 +153,40 @@ and the boolean-DFS cycle checker at `graph.py:862-892` are both unchanged), the
 
 ## Resolutions
 
-*(Filled in as the owner resolves issues; keyed by number.)*
+- **[1 / design-F8] `[AGENT]` Accepted.** Rev 3 replaces the blanket position rule with exact
+  usage-owner anchoring and scopes `_resolve_leaf`'s positional fallback to non-usage-owned leaves.
+- **[2 / design-F9] `[AGENT]` Accepted with narrower wording.** D11 is overtaken and has been
+  replaced by landed behavior and the conformance test. Pushback: its second branch did anticipate
+  a qualifier-specific route; it was underspecified and obsolete, not logically incapable of
+  describing the repair.
+- **[3] `[AGENT]` Accepted with arithmetic correction.** The full oracle is 27 keys: 22 design
+  attributes, 2 usage literals, 3 defaults. The four-key standalone and six-key nested-driver
+  families are real, but not all ten belong to the migrated-formal subset. Rev 3 lists the exact
+  nine plant plus two nested-driver supplier keys and keeps the two public mutations as the deciding
+  spine.
+- **[4 / design-F10] Existing owner disposition applied.** Arrayed aggregation belongs to
+  `[ANCHORING-ARRAYED-DIAGNOSTIC]`. Rev 3 records the boundary. Pushback: the review had no authority
+  to require a dotted-spelling workaround or indexed syntax, and no source proves the two spellings
+  promise identical aggregation semantics.
+- **[5 / design-F11] `[AGENT]` Accepted.** Fixture and test evidence is labelled by resolved owner
+  class throughout D3, Invariant 3, the component map, and Appendix B.
+- **[6] `[AGENT]` Accepted.** D9 no longer presumes ADR-010. The validation table row remains; the
+  ADR is excluded unless the owner resolves the open call.
+- **[7] Premise rejected `[OWNER 2026-08-16]`; evidence refreshed.** F-2 through F-5 were not
+  invalidated by the anchoring repair because their relevant paths bypass its changed branch. All
+  four were rerun anyway and reproduced at `0f89673`.
+- **[8, 9, 10] `[AGENT]` Accepted.** Stale pointers and line numbers are corrected. The MF-7 reason
+  is scoped to the post-R-2 customer model; the vendored fixture still has `hif_driver_instance`.
+- **[Mandatory template rewrite] Partly rejected `[OWNER 2026-08-16]`.** The review lacked authority
+  to require deleting the supported D-6 template spelling. `my_component::volume` may remain as a
+  labelled, pinned D-6 alternative while D-5 stays the recommendation.
+- **[Smell 7] Rejected `[OWNER 2026-08-16]`.** Extraction and elaboration already owned referent and
+  occurrence identity. The repair restored that ownership. Rev 2 was stale, but the design did not
+  propose a transfer from reader to elaborator.
 
 ---
 
-**Overall:** Rework — mandated by the product-lens BLOCK (owner-grade) and the fired smell 7, and
-honest about its shape: the architecture is endorsed; the rework is the D-6/D11 axis plus the
-falsified spine arithmetic, one revision's worth of work with two owner rulings as inputs.
-**Next Steps:** Record resolutions here (and the two owner answers in the spec review), then re-run
-`/_my_design` pointed at this review, the product-lens design block of 2026-08-16, and spec rev 5.
-The reviewer does not edit the design.
+**Overall:** Approve (rev 3). The owner-grade D-6/D11 block is fixed, the arrayed issue is routed to
+its existing owner-directed follow-up, and the rev-3 product-lens gate is CLEAR. The prior smell-7
+rationale is withdrawn.
+**Next Steps:** Proceed to `/_my_plan`. Exclude ADR-010 unless the owner resolves that open call.

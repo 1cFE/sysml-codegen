@@ -434,3 +434,60 @@ Resolves:
   agentic-mbse as mirror, and states that nothing catches drift.
 
 Gate: **BLOCKED** (design-F8, design-F9) · DISPOSED (design-F10, design-F11) · DON'T (design-F12)
+
+## spec — 2026-08-16 — rev 6 / `.project/active/self-binding-replacement/spec.md`, codegen `0f89673`
+
+Point (re-derived): For each calculation-binding situation, authors and agents must know the right
+referent-preserving pattern, apply it to the customer models, and detect `in R = R`; a public
+mutation must reach every and only the intended consumers. [sources: epic `:71-78`
+`[OWNER-VERBATIM]`, `:31-33`/`:84-86` owner grade; D-4 owner-verbatim; D-5–D-7 agent/ratified]
+
+Falsifier: the spec treats definition-owned positional fallback as usage-qualified semantics,
+requires guidance for a cardinality issue the owner assigned elsewhere, or lets migration success
+stand without the public mutation.
+
+Findings:
+
+- None. Rev 6 separates usage-owned exact anchoring from the definition-owned fallback, restores
+  the owner's scope-limiting quote, keeps the public mutation as the spine, and assigns arrayed
+  diagnostics to the owner-directed `[ANCHORING-ARRAYED-DIAGNOSTIC]` follow-up. ADR-010 remains an
+  explicit owner call rather than an assumed deliverable.
+
+Smells: none.
+
+Gate: CLEAR
+
+## design — 2026-08-16 — rev 3 / `.project/active/self-binding-replacement/design.md`, codegen `0f89673`
+
+Point (re-derived): For each calculation-binding situation, the published rule must match the
+shipped referent and occurrence semantics; the migrated customer value must reach every and only
+its bound consumers. [sources: epic `:71-78` `[OWNER-VERBATIM]`, `:31-33`/`:84-86` owner grade;
+D-4 owner-verbatim; D-5–D-7 agent/ratified]
+
+Falsifier: guidance describes usage qualification as a positional search, or the migration's
+public mutation fails to move every and only the intended consumers.
+
+Findings:
+
+- None. Rev 3 teaches exact usage-owner anchoring, scopes `_resolve_leaf`'s positional fallback to
+  non-usage-owned leaves, labels evidence by owner class, names the exact 11-key migrated-supplier
+  subset without turning the 27-key classification oracle into the product gate, and keeps both
+  public mutations as the spine.
+
+Resolves:
+
+- design-F8: FIXED — authority: owner — basis: Core Concept and teaching now match the shipped
+  exact-owner route and scope sideways reach to the definition-owned fallback.
+- design-F9: FIXED — authority: owner — basis: D11 is rewritten from landed behavior and the
+  exact-owner conformance test; no pending addendum or positional branch remains.
+- design-F10: DEFERRED — authority: owner — basis: `[OWNER 2026-08-16]` accepted scalar policy for
+  the anchoring item and filed `[ANCHORING-ARRAYED-DIAGNOSTIC]`; D13 records the boundary without
+  inventing guidance.
+- design-F11: FIXED — authority: agent/ratified — basis: D3, Invariant 3, the component map, and
+  Appendix B label evidence by resolved owner class and cite the usage-owned conformance test.
+
+Smells: design smell 2 does not fire. Design smell 7 also does not fire: extraction and elaboration
+already owned referent and occurrence identity; repair `98970c9` restored that recorded ownership.
+The rev-2 artifact was stale, but rev 3 proposes no ownership transfer.
+
+Gate: CLEAR

@@ -200,3 +200,29 @@ metatype is the only deciding authority, the frozen owner fields only corroborat
 executing extraction guard pins agreement. Smells 4 and 5 did not fire.
 
 Gate: DISPOSED (independent-audit-F1)
+
+---
+
+## remediation-audit — 2026-08-16 — rev `c2fa657`
+
+Point (re-derived): A resolved one-segment leaf must either preserve its exact occurrence owner or
+refuse before codegen can silently substitute another source. Verification must not turn missing
+evidence into agreement. [sources: `.project/product/P-001-design-search-free-variation.md`,
+`.project/product/P-002-exact-owner-anchoring.md`, and
+`docs/architecture/modeling-assumptions.md:588` (ADR-009); grades: owner-verbatim and
+agent/ratified]
+
+Falsifier: an absent leaf falls through to consumer-position resolution, or verification accepts a
+missing identity block as unchanged.
+
+Findings:
+
+- None at the product boundary for remediation findings 1, 5, and 6. The comparator now rejects a
+  missing identity block, the absent-leaf route refuses instead of guessing, and both diagnostic
+  branches have discriminating kept tests. The audit separately found an incomplete census claim;
+  that is an evidence-integrity gap, not a contradiction in the shipped product behavior.
+
+Smells: smells 1, 3, 4, 5, and 6 do not fire within this bounded remediation. The earlier
+`independent-audit-F1` arrayed-aggregation disposition remains untouched.
+
+Gate: CLEAR

@@ -1,10 +1,14 @@
 # Spec: Exact Owner Anchoring for Usage-Owned One-Segment References
 
-**Status:** Needs Work after independent re-audit (2026-08-16). The resolver repair landed at
-`98970c9` and its exercised runtime behavior remains green, but the certification overstated two
-evidence claims: the identity ledger captured 13 promoted roots rather than all 153 roots, and the
-deep-override caller remains an owner-dispositioned coverage gap. SC1 and SC12 are reopened; SC14
-remains a close-stage obligation. See `audit.md` and the latest `product-lens.md` block.
+**Status:** Needs Work after scoped re-verification (2026-08-16). SC12 is now verified: 139
+elaborated roots carry unchanged identity blocks, 15 refused roots carry no graph identity, and the
+comparator rejects an absent block. Finding 5's census was repaired on 2026-08-16: it now counts at
+the resolver boundary, so a root that later refuses still reports the leaves it saw, and every root
+carries an explicit complete / partial / unmeasured measurement. Re-derived totals: **154 roots —
+139 complete, 1 partial, 14 unmeasured; 770 one-segment leaves observed, 0 absent from the element
+index.** 15 roots hold residual unmeasured population, so no artifact claims whole-population
+coverage. Awaiting re-verification of that repair. SC1 and SC14 remain outside this pass. See
+`audit.md` and the latest `product-lens.md` block.
 **Owner:** Reid W
 **Created:** 2026-08-15 14:15 PDT
 **Revised:** 2026-08-16 (independent implementation audit)
@@ -152,7 +156,7 @@ local-rename advice, the D-7 dot-path advice, or the chosen fusion-tea migration
 - [x] Strict and lenient elaboration agree on semantic identity. Lenient mode records the exact
       diagnostic multiset; strict mode either produces the same complete graph or rejects those same
       blocking diagnostics.
-- [ ] Feature-slot families, occurrence records, and serialized occurrence IDs remain unchanged.
+- [x] Feature-slot families, occurrence records, and serialized occurrence IDs remain unchanged.
       The repair may change a consumer edge or its resolution diagnostic, never occurrence or wire
       identity.
 - [x] Every live-versus-snapshot and stored-baseline difference is classified. If the implemented

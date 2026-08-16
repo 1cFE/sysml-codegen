@@ -1,11 +1,11 @@
 # Spec: Self-Binding Replacement — Establish, Document, Migrate
 
-**Status:** Draft (rev 5 — updated for the landed anchoring repair and its 2026-08-16 re-audit)
+**Status:** Draft (rev 6 — review findings incorporated against the landed anchoring repair)
 **Owner:** Reid W
 **Created:** 2026-08-15 09:16 PDT
-**Revised:** 2026-08-16 (rev 5)
+**Revised:** 2026-08-16 (rev 6)
 **Complexity:** MEDIUM
-**Branch:** main (codegen `9ce5548`)
+**Branch:** main (codegen `0f89673`)
 
 ---
 
@@ -67,9 +67,9 @@ fusion-tea model remains blocked from regeneration until its authored bindings a
       value arrives; generation without a diagnostic is not enough.
 - [ ] **The behavior relied on by the situational rule is re-established by measurement on the
       shipped exact route.** D-5 and D-7 are measured directly. Any D-6 explanation is checked
-      against the landed exact-owner repair, not the repaired positional defect. For each taught shape,
-      the evidence identifies the feature the reference lands on and demonstrates the concrete
-      value or diagnostic that follows.
+      against shipped post-repair behavior; no conclusion may rely on the superseded positional
+      behavior for a usage-owned leaf. For each taught shape, the evidence identifies the feature
+      the reference lands on and demonstrates the concrete value or diagnostic that follows.
 - [ ] **A different candidate pattern found to resolve silently and wrongly is either fixed when
       the repair is small and contained, or filed with a name, owner, and vehicle.** Documentation
       alone is not a disposition for an unsupported silent form.
@@ -101,10 +101,11 @@ fusion-tea model remains blocked from regeneration until its authored bindings a
 
 ## Known Requirements
 
-- **[NEED]** The owner restated the outcome verbatim on 2026-08-15: *“We know what the RIGHT
-  pattern(s) are for the given situation / We document those right patterns / We fix the models to
-  use the right patterns. `in R = R` is the wrong pattern. I would like to detect the use of it so
-  we avoid it in the future.”* The earlier form count does not carry into this requirement.
+- **[NEED]** The owner restated the outcome verbatim on 2026-08-15: *“all I care about is: We know
+  what the RIGHT pattern(s) are for the given situation / We document those right patterns / We fix
+  the models to use the right patterns. `in R = R` is the wrong pattern. I would like to detect the
+  use of it so we avoid it in the future. that's it, that's all I care about.”* The bookends are the
+  scope ceiling. The earlier form count does not carry into this requirement.
 - **[NEED]** The rule is situational, and the agentic-mbse agents must know and understand the
   difference (`.project/active/self-binding-replacement/spec-review-20260815-rev3.md`, resolution
   L1-2/L2-2/L3-3, owner-verbatim agreement, 2026-08-15).
@@ -129,26 +130,26 @@ fusion-tea model remains blocked from regeneration until its authored bindings a
   calculation usage. After `redefines`, the name resolves through the owning type's supertypes with
   the owner's own namespace excluded (KerML §7.3.4.5 and §8.2.3.5.1), and the redefined feature
   must otherwise be inherited from a supertype of its owning type.
-- **[HARD]** *(updated 2026-08-16 after the anchoring repair landed)* SysIDE resolves a
-  usage-qualified local redefinition to a distinct usage-owned feature, and the shipped elaborator
-  now anchors every one-segment usage-owned leaf on its exact owner across every resolver consumer
-  that can reach the one-segment branch — the deep literal override lane is a named, unevidenced
-  exception, structurally unable to reach it (see that item's SC1 and `P-002`)
-  (`qualified-reference-occurrence-anchoring`, repair `98970c9`; the 2026-08-16 independent
-  re-audit verified the repair and its runtime behavior sound while reopening two
-  certification-evidence criteria — see that item's `audit.md`). The former positional slot
-  search — which silently wired a competing occurrence (`u6`) or reported false missing/ambiguity
-  (`u4`, `u5`, `u7`) — no longer exists; the pre-repair measurements of those qualified rows in
-  this item's spike findings are superseded, and post-repair behavior is pinned by
-  `tests/conformance/test_usage_owned_reference_anchoring.py`. Three post-repair facts bear on the
-  guidance this item writes: definition-owned inherited leaves still resolve on the definition
-  route; an unindexed scalar reference to an **arrayed** owner's leaf now refuses with
-  `SI_OCCURRENCE_AMBIGUOUS` where the pre-repair route could silently bind a sibling's value, and
-  the diagnostic names neither the candidate occurrences nor the index syntax; and the two arrayed
-  aggregation spellings now split — `sum(comp_a::length)` refuses while `sum(comp_a.length)`
-  aggregates both occurrences with no diagnostic (carried as `independent-audit-F1` toward that
-  item's close). This update does **not** reopen the fusion-tea migration form; D-5 remains the
-  ratified local shape.
+- **[HARD]** SysIDE resolves a usage-qualified local redefinition to a distinct usage-owned feature.
+  Since repair `98970c9`, the shipped elaborator anchors a one-segment usage-owned leaf on that exact
+  owner across every resolver consumer that can reach the one-segment branch. The deep-literal-
+  override lane cannot currently reach the branch and remains a named evidence gap under `P-002`.
+  The pre-repair usage-qualified rows u4–u7 are superseded; post-repair authority is
+  `tests/conformance/test_usage_owned_reference_anchoring.py` and the anchoring item's audit.
+- **[HARD]** A leaf not owned by a `PartUsage` still delegates to `_resolve_leaf`. Definition-owned
+  feature leaves retain its positional feature-slot search; calculation outputs may instead select
+  a producing calculation node. The definition-qualified spike rows therefore remain relevant, and
+  F-4's sideways reach was reproduced at `0f89673`. D-5 and D-7 also remain outside the changed
+  one-segment usage-owner branch. The corpus adjudication supplies the broad unchanged-route
+  evidence; `verification/post-repair-spike-recheck.md` supplies the focused F-2 through F-5 recheck.
+- **[HARD]** An unindexed reference to an arrayed usage owner's leaf is deliberately scalar and
+  refuses with `SI_OCCURRENCE_AMBIGUOUS`; `sum(comp_a::length)` therefore refuses while
+  `sum(comp_a.length)` enumerates both occurrences. Before the repair, the first spelling silently
+  selected a sibling, not either array element. **[OWNER 2026-08-16]** accepted that policy for the
+  anchoring item and filed the author-facing diagnostic work as
+  `[ANCHORING-ARRAYED-DIAGNOSTIC]` in `.project/backlog/BACKLOG.md`. This item records that boundary;
+  it does not teach the dotted spelling as a workaround or expand self-binding guidance into
+  arrayed-expression semantics.
 - **[HARD]** SysML v2 Part 1 §7.17.2 is an action-parameter example. It does not state a shadowing
   rule or establish owner qualification as the normative repair for this calculation-binding
   collision. The rewritten guidance must not cite it as that authority.
@@ -163,10 +164,11 @@ fusion-tea model remains blocked from regeneration until its authored bindings a
 
 ### Provenance note on measured requirements
 
-Measurements taken by the reverted 2026-08-15 work survive as evidence, not as settled fact. Any
-`[HARD]` row marked “measurement pending re-establishment” must be reproduced under the approved
-plan before design or implementation relies on it. Guidance and migration criteria gate on that
-reviewed evidence, never on the reverted branches' own assertions.
+Measurements taken by the reverted 2026-08-15 work survive as evidence, not as settled fact. A
+pre-repair result may be used only when current code proves its route unchanged or a post-repair run
+reproduces it. The usage-owned rows u4–u7 are superseded by the exact-owner conformance test. The
+definition-owned and D-5/D-7 routes survive on the anchoring corpus evidence. F-2 through F-5 were
+reproduced at `0f89673`; see `verification/post-repair-spike-recheck.md`.
 
 ## Non-Goals
 
@@ -183,6 +185,8 @@ reviewed evidence, never on the reverted branches' own assertions.
 - **Codegen fixtures authored to pin the refused shape.** Fixtures that exist precisely to prove
   the route refuses a self-binding keep carrying it.
 - **Any change to arithmetic, physical values, or model physics.**
+- **Arrayed-owner aggregation diagnostics or cardinality policy.** The owner accepted the shipped
+  scalar policy and filed `[ANCHORING-ARRAYED-DIAGNOSTIC]` as the follow-up.
 
 ## Open Questions / Deferred to design
 
@@ -199,6 +203,15 @@ reviewed evidence, never on the reverted branches' own assertions.
 ---
 
 ## Change Record
+
+### 2026-08-16 — rev 6: review findings incorporated `[AGENT]`
+
+The qualified-reference requirement is split by owner class. Usage-owned rows point to the landed
+exact-owner conformance test; definition-owned and D-5/D-7 rows carry their unchanged-route
+evidence; F-2 through F-5 were rerun against `0f89673`. The owner quote's scope-limiting bookends
+are restored, the stale baseline is corrected, and the arrayed aggregation split is assigned to the
+owner-directed `[ANCHORING-ARRAYED-DIAGNOSTIC]` follow-up rather than expanded into this guidance.
+No owner decision was invented: ADR-010 remains an open owner call.
 
 ### 2026-08-16 — rev 5: the anchoring repair is landed; stale rows amended `[OWNER 2026-08-16 directed the accuracy pass]`
 
@@ -263,14 +276,19 @@ spelling used by ten sites in the reverted migration.
   usage-qualified rows (u4–u7 and the arrayed-owner row) were measured on the pre-repair resolver;
   the landed anchoring repair changed their outcomes. Post-repair authority is
   `tests/conformance/test_usage_owned_reference_anchoring.py` and the anchoring item's audit.
+- **Post-repair spike recheck:**
+  `.project/active/self-binding-replacement/verification/post-repair-spike-recheck.md` — F-2 through
+  F-5 reproduced at codegen `0f89673`; separates usage-owned exact-owner behavior from the surviving
+  definition-owned positional route.
 - **Prior evidence:** `.project/active/source-identity-binding-semantics-spike/authoring-form-table.md`
   — the 2026-08-05 probe table of six authored forms and their observed referents.
 - **Spec review (rev 3, archived):**
   `.project/active/self-binding-replacement/spec-review-20260815-rev3.md` — final Revise verdict;
-  all recorded resolutions incorporated in rev 3. The fresh rev-5 review is `spec-review.md`.
+  all recorded resolutions incorporated in rev 3. The current rev-5 findings and rev-6 dispositions
+  are in `spec-review.md`.
 - **Product lens:** `.project/active/self-binding-replacement/product-lens.md` — append-only gate
-  ledger; rev 3 explicitly resolves `spec-F1` through `spec-F6`, and the rev-4
-  qualified-reference correction independently records `Gate: CLEAR`.
+  ledger; rev 3 explicitly resolves `spec-F1` through `spec-F6`, and the rev-6 spec plus rev-3
+  design blocks both record `Gate: CLEAR`.
 - **Separate qualified-reference repair:**
   `.project/active/qualified-reference-occurrence-anchoring/spec.md` — owned F-6 implementation,
   promoted u4–u7 coverage, shared-caller regressions, and the broader exact-owner invariant selected
@@ -283,12 +301,10 @@ spelling used by ten sites in the reverted migration.
 - **Stocktake (complete):** `.project/research/20260815-103905_item8-bounded-stocktake.md` —
   validated the two scope calls this spec depends on; Item-8 scope holds, and the retracted
   form-count was purged from its last live site.
-- **Design:** `.project/active/self-binding-replacement/design.md` — rev 2, written at `7e95285`,
-  **before** the anchoring repair landed; its D-6 material is parameterised on a position rule that
-  no longer exists. Design review: `design-review.md` (rev-1 verdict Revise; rev-2 resolutions in
-  the design's Revision Record).
+- **Design:** `.project/active/self-binding-replacement/design.md` — rev 3, revised against the
+  landed exact-owner repair and the current reviews. Design review: `design-review.md`.
 
 ---
 
-**Next Steps:** Stocktake complete. The design (rev 2) predates the landed anchoring repair —
-re-review spec and design against the repaired resolver before implementation.
+**Next Steps:** Rev 6 is ready to serve as the design contract. ADR-010 remains an explicit owner
+call and is not assumed by the design.

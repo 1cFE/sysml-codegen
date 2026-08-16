@@ -15,6 +15,23 @@ compared.
 So the failure was never a missing capture. It was **a comparator that read absence as agreement**.
 That is the shape of defect to hunt for, here and anywhere else in this tooling.
 
+**It has now appeared three times, each in a different costume.** Treat it as the standing hazard of
+this item's verification tooling rather than as three unlucky bugs:
+
+1. `adjudicate.py` mapped a missing identity block to `None` and compared `None == None` — 140 roots
+   counted as compared while nothing about them was measured (`c2fa657`).
+2. A refused root risked being compared as agreement rather than on its refusal string — caught in
+   the same fix.
+3. `absent_leaf_census.py` scored a root that refused mid-run as **zero leaves, zero absent**,
+   because it reconstructed leaves from the elaborator's pending lists after `run()` returned. One
+   such root had already resolved a leaf, so the claimed population of 769 was really 770. Fixed by
+   observing the resolver boundary as elaboration proceeds, and by giving every root an explicit
+   `complete` / `partial` / `none` measurement so nothing can be zero-by-absence (`<census fix>`).
+
+Each instance was written by a pass that had just fixed the previous one. **The general test: for
+every zero this tooling reports, ask whether it means "measured and found none" or "never
+measured."** If an artifact cannot tell you which, that is the finding.
+
 ## What is in scope
 
 Exactly three findings from `audit.md`'s "Independent re-audit — 2026-08-16" section.
@@ -64,7 +81,7 @@ Regenerate rather than read. The committed ledgers are the artifact under test, 
    refuse to elaborate and that a refused root is compared on its refusal string rather than waved
    through — that is the same "absence as agreement" trap in a second costume.
 4. **Finding 5 is a real behavior change, not a comment.** The site now raises. Confirm the retained
-   census (154 roots, 769 one-segment leaves, 0 absent) is the whole population and that
+   census is honest about what it did **not** measure and that
    `corpus_compare.py` no longer excludes the shape.
 5. **Changed rows moved 19 → 20**, from the new finding-6 fixture. Confirm row 20 is adjudicated,
    and that it refuses on both sides with only the diagnostic detail sharpening.

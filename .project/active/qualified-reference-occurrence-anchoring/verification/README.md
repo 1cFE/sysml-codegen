@@ -224,13 +224,30 @@ absent_leaf_census.py --output .project/active/qualified-reference-occurrence-an
 verification/absent-leaf-census.json
 ```
 
-**154 roots, 15 refused, 769 one-segment reference leaves, 0 absent from the element index.**
+**154 roots — 139 measured to completion, 1 measured partially, 14 unmeasured. 770 one-segment
+reference leaves observed, 0 absent from the element index.**
 
 `_resolve_direct_reference` used to fall through to the consumer-positional leaf route when its own
 element index did not hold the leaf. It now refuses by name. This census is the evidence that no
-authored site regresses: it measures the whole population of that refusal across the frozen corpus
-and the promoted fixtures — wider than the ledger's population, because the refusal fires before an
-owner can be classified at all, so owner kind cannot be part of the question.
+authored site regresses across the frozen corpus and the promoted fixtures — a wider population than
+the ledger's, because the refusal fires before an owner can be classified at all, so owner kind
+cannot be part of the question.
+
+**It is not a whole-population measurement, and it no longer claims to be.** The census counts at
+the resolver boundary: it wraps `_resolve_direct_reference` and records each leaf the branch was
+handed, and whether `_elements` held it, at the moment the call ran. So a root whose elaboration
+later refuses still reports the leaves it saw — `s5_sibling_formal` refuses on a producer cycle
+after one one-segment leaf has already resolved, and that leaf is now counted. Every root carries an
+explicit `measurement` of `complete`, `partial`, or `none`, and the totals block names the residual:
+15 roots hold an unmeasured or partially measured population. A refused root is never scored as zero
+leaves and zero absent.
+
+The earlier version of this script reconstructed leaves from the elaborator's pending lists *after*
+`run()` returned, so a refusing root contributed no leaves and no `one_segment_leaves` key at all —
+reading absence of measurement as a measurement of zero. That is the same defect the `adjudicate.py`
+repair above fixed, in a second costume. Its count of 769 was one short, and its "whole population"
+claim was false. Both are corrected here. Two consecutive runs of the corrected census are
+byte-identical.
 
 `corpus_compare.py` also no longer shares the blind spot. It looks its leaves up in a full live
 `Feature` index rather than the elaborator's, so a leaf the elaborator cannot see is still rowed and

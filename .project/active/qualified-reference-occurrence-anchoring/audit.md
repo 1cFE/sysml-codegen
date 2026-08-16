@@ -1,14 +1,18 @@
 # Audit: Exact Owner Anchoring for Usage-Owned One-Segment References
 
-**Verdict:** Needs Work — independent re-audit reopened the certification evidence. Findings **1, 5,
-and 6 are remediated** (2026-08-16); findings 2, 3, 4, and 7 are reserved to the owner for close. See
-[Remediation](#remediation--2026-08-16-findings-1-5-6).
-**Audited:** 2026-08-15; independently re-audited 2026-08-16; remediated 2026-08-16
+**Verdict:** Needs Work — scoped re-verification closes findings **1 and 6** and reopened finding
+**5** on incomplete census evidence. That census was repaired on 2026-08-16 and now reports 770
+observed leaves, 0 absent, with 15 roots named as residual unmeasured population; the repair awaits
+re-verification. Findings 2, 3, 4, and 7 were outside this pass. See
+[Scoped re-verification](#scoped-re-verification--2026-08-16-remediation-c2fa657) and
+[Finding 5 repair](#finding-5-repair--2026-08-16-census-corrected-at-the-resolver-boundary).
+**Audited:** 2026-08-15; independently re-audited, remediated, and scoped-reverified 2026-08-16
 **Branch:** main
-**Commit:** `8bea4b8` (implementation diff: `2768c68..98970c9`)
-**Verification note:** the independent pass re-ran the current focused/full suites, corpus ledger,
-focused quality checks, snapshot assessment, and targeted censuses under the licensed environment.
-The superseded body retains the 2026-08-15 audit's historical pre-repair experiments.
+**Commit:** remediation `c2fa657` (core repair `98970c9`)
+**Verification note:** the scoped pass re-ran the focused/full suites, current and historical corpus
+captures, destructive comparator controls, focused quality checks, and the retained census under
+the licensed environment. Snapshot reassessment was outside this pass. The superseded body retains
+the 2026-08-15 audit's earlier experiments.
 
 **Supersession note:** the 2026-08-15 audit record is retained below for traceability, but its
 Certify verdict and its claims of 153-root identity coverage and complete shared-lane evidence are
@@ -141,9 +145,12 @@ contains. Owner classification is then unanswerable, and the definition-owned ro
 could see. It refuses by name instead (`SI_OCCURRENCE_MISSING`).
 
 Proof that nothing regresses: `verification/absent_leaf_census.py` and its retained
-`absent-leaf-census.json` measure the whole population of the new refusal — **154 roots, 769
-one-segment reference leaves, 0 absent from the element index.** The ledger's changed-row set is
-unchanged apart from the new fixture, and no corpus row moved.
+`absent-leaf-census.json` measure the new refusal across 154 roots — **139 measured to completion,
+1 partially, 14 unmeasured; 770 one-segment reference leaves observed, 0 absent from the element
+index.** The ledger's changed-row set is unchanged apart from the new fixture, and no corpus row
+moved. This paragraph originally read "the whole population … 769 leaves"; the scoped
+re-verification found that claim false and the census was repaired. See
+[Finding 5 repair](#finding-5-repair--2026-08-16-census-corrected-at-the-resolver-boundary).
 
 The path is kept under test at the resolver boundary
 (`tests/unit/test_direct_reference_unknown_leaf.py`), which is the honest place for it: the census
@@ -177,6 +184,130 @@ with the owner and leaf wires derived from the model rather than pasted in.
 - Focused Ruff on the changed production, test, and verification files: clean. Focused mypy on
   `elaborate.py`: clean. The pre-existing project-wide backlog was not touched.
 - The production edit is confined to `elaborate.py`. No schema, index, projection, or codec widened.
+
+---
+
+## Scoped re-verification — 2026-08-16 (remediation `c2fa657`)
+
+### Outcome
+
+**Needs Work within the requested scope.** Findings 1 and 6 close on independently regenerated
+evidence. Finding 5's production fail-closed change is correct, but the retained census does not
+measure the whole population it claims. Findings 2, 3, 4, and 7 were not re-adjudicated.
+
+The bounded product-lens pass found no new product contradiction or structural smell in findings
+1, 5, and 6. Its gate is CLEAR for this remediation. The earlier arrayed-aggregation finding and
+its DISPOSED status remain untouched and outside this pass.
+
+### Finding status
+
+1. **Closed — identity coverage and absence handling now hold.** Fresh current and historical
+   captures reproduce the retained ledgers. There are 154 roots: 139 elaborate and carry identity,
+   while 15 refuse and carry no graph identity. All 139 before/after identity blocks compare equal.
+   Removing one identity block raises `MissingIdentityBlockError` with side, section, and root
+   (`verification/adjudicate.py:61-85`). Altering a refusal string produces a structural problem.
+   After removing the new identity blocks and finding-6 fixture, the historical capture matches the
+   pre-remediation ledger. SC12 is verified.
+
+5. **Reopened — the runtime fix holds, but the “whole population” census is incomplete.** The
+   resolver now refuses an unknown leaf instead of taking the positional fallback
+   (`src/sysml_codegen/elaboration/elaborate.py:2322-2328`), and its boundary test passes
+   (`tests/unit/test_direct_reference_unknown_leaf.py:45-60`). However,
+   `verification/absent_leaf_census.py:72-88` returns as soon as `elaborator.run()` raises. Leaf
+   collection happens only afterward at `:90-93`, and totals at `:107-112` convert every refused
+   row's absent count to zero. The retained `s5_sibling_formal` row therefore records only its later
+   graph-validation refusal (`verification/absent-leaf-census.json:38-41`). Catching that same
+   refusal and inspecting the already-populated elaborator found one processed one-segment leaf,
+   with zero absent. The claimed total at `:759-763` is therefore at least 770, not 769. The census
+   must either inspect safely available pending references on refused roots or state that those
+   roots are unmeasured; it cannot call 769 the whole population. **Repaired 2026-08-16 — see
+   [Finding 5 repair](#finding-5-repair--2026-08-16-census-corrected-at-the-resolver-boundary)
+   below.** The re-verification's arithmetic is confirmed exactly: the true observed count is 770.
+
+6. **Closed — both weak edges are now pinned.** The arrayed strict/lenient test asserts the full
+   consumer, parameter, detail, empty-input, and cross-mode diagnostic value
+   (`tests/conformance/test_elaboration_fail_closed.py:207-231`). The authored calculation-usage
+   leaf fixture reaches the missing-target branch, and its kept test pins the full refusal tuple
+   (`:242-274`). Ledger row 20 records the same refusal code before and after with only its detail
+   sharpened. The test diff strengthens one assertion and adds tests; it weakens none.
+
+### Independent verification
+
+- Focused licensed suite: **116 passed**.
+- Full licensed suite: **17 failed, 2145 passed, 34 skipped, 88 deselected**, matching the retained
+  count; the scoped code reviewer confirmed the exact 17-node baseline.
+- Fresh `after.json` and `absent-leaf-census.json`: byte-identical to the retained files.
+- Historical `before.json`: regenerated with the pre-repair resolver and semantically identical to
+  the retained file after normalizing only the temporary checkout path.
+- Clean adjudication: 20 changed outcomes, 139 identity blocks compared, 15 unchanged refusals,
+  zero structural problems. Missing-identity and changed-refusal controls both fired.
+- Focused Ruff and mypy: clean. `git diff -- src/` remained empty after the historical capture.
+
+### Not checked
+
+- Findings 2, 3, 4, and 7, per `briefs/reverification-scope.md`.
+- The remaining 14 refused roots were not post-failure-enumerated; the census must be repaired
+  before it can supply that evidence. The repair below shows all 14 refuse before the resolver runs
+  at all, so their populations stay unmeasured and are now reported as such.
+- Snapshot reassessment, the repo-wide Ruff/mypy backlog, the 88 deselected tests, and a historical
+  full-suite run under the pre-repair resolver.
+
+---
+
+## Finding 5 repair — 2026-08-16 (census corrected at the resolver boundary)
+
+### What was wrong
+
+`census_root` reconstructed one-segment leaves from the elaborator's pending lists *after*
+`elaborator.run()` returned. A root that refused mid-run returned early with a `refused` string and
+no leaf key at all, so `main`'s `row.get(..., 0)` scored it as zero leaves and zero absent. That is
+absence of measurement read as a measurement of zero — the same defect as finding 1's comparator,
+which mapped a missing identity block to `None` and read `None == None` as agreement. Finding 1's
+own fix was written by the pass that then wrote this census, so the blind spot travelled.
+
+### The repair
+
+The census now counts where the branch actually runs. `LeafObservations.observe` wraps
+`_resolve_direct_reference` on the elaborator instance; every call records the leaf it was handed
+and whether `_elements` held it *at that moment*, then delegates to the shipped implementation
+unchanged. A partial run therefore still reports what it saw. Each root carries an explicit
+`measurement`:
+
+- `complete` — `run()` returned; the root's whole one-segment population was observed.
+- `partial` — `run()` raised after the branch had already run; the observations are real, the
+  remainder is unknown. The refusal reason is recorded.
+- `none` — elaboration never started (load, extraction, or validation refusal); nothing is known.
+
+No row can be zero-by-absence: `partial` and `none` rows are counted as residual unmeasured
+population in the totals block, and the JSON states the claim it is entitled to make in a
+`population_claim` field rather than leaving a reader to infer "whole population."
+
+### The re-derived numbers
+
+**154 roots — 139 complete, 1 partial, 14 unmeasured. 770 one-segment reference leaves observed,
+0 absent from the element index.**
+
+- The re-verification's arithmetic is exact. `s5_sibling_formal` resolves one one-segment leaf
+  before its producer-cycle refusal; that leaf is the 770th. The old count of 769 was one short.
+- The other 14 refused roots refuse before the resolver runs — load failure, extraction refusal,
+  blocking validation, or an elaboration invariant that fires ahead of any reference resolution —
+  so they observe nothing and are recorded as `none`, not as zero.
+- **The absent count is zero on this new measurement, not on the old one.** No observed leaf, on
+  any root including the partially measured one, was missing from the element index. The runtime
+  refusal remains unreached by any authored model in the corpus, which is why it stays pinned at
+  the resolver boundary in `tests/unit/test_direct_reference_unknown_leaf.py` rather than by a
+  fixture pretending otherwise.
+- 15 roots hold residual unmeasured population. The census, `verification/README.md`, `plan.md`,
+  and this audit no longer claim whole-population coverage.
+
+### Verification of the repair
+
+- Full suite: **17 failed, 2145 passed, 34 skipped, 88 deselected**
+  (`verification/after-finding5-full-suite.txt`); failing node set identical by name to
+  `after-phase6-full-suite.txt`. No assertion was weakened; no test or production file changed.
+- Focused Ruff and `ruff format` on the census script: clean.
+- The change is confined to `verification/absent_leaf_census.py` and the artifacts carrying the
+  corrected numbers. `src/` is untouched.
 
 ---
 

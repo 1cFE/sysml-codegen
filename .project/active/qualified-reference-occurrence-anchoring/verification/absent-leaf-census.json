@@ -2,764 +2,1106 @@
   "roots": [
     {
       "absent_from_element_index": [],
-      "one_segment_leaves": 0,
+      "distinct_leaves_observed": 0,
+      "measurement": "complete",
+      "one_segment_leaves_observed": 0,
       "root": ".project/active/self-binding-replacement/spike/fixtures/s1_self_named"
     },
     {
       "absent_from_element_index": [],
-      "one_segment_leaves": 1,
+      "distinct_leaves_observed": 1,
+      "measurement": "complete",
+      "one_segment_leaves_observed": 1,
       "root": ".project/active/self-binding-replacement/spike/fixtures/s2_names_differ"
     },
     {
       "absent_from_element_index": [],
-      "one_segment_leaves": 1,
+      "distinct_leaves_observed": 1,
+      "measurement": "complete",
+      "one_segment_leaves_observed": 1,
       "root": ".project/active/self-binding-replacement/spike/fixtures/s2m_names_differ_mutated"
     },
     {
       "absent_from_element_index": [],
-      "one_segment_leaves": 0,
+      "distinct_leaves_observed": 0,
+      "measurement": "complete",
+      "one_segment_leaves_observed": 0,
       "root": ".project/active/self-binding-replacement/spike/fixtures/s3_path_named"
     },
     {
       "absent_from_element_index": [],
-      "one_segment_leaves": 1,
+      "distinct_leaves_observed": 1,
+      "measurement": "complete",
+      "one_segment_leaves_observed": 1,
       "root": ".project/active/self-binding-replacement/spike/fixtures/s4a_qual_one_occ"
     },
     {
       "absent_from_element_index": [],
-      "one_segment_leaves": 2,
+      "distinct_leaves_observed": 1,
+      "measurement": "complete",
+      "one_segment_leaves_observed": 2,
       "root": ".project/active/self-binding-replacement/spike/fixtures/s4b_qual_two_occ"
     },
     {
       "absent_from_element_index": [],
-      "one_segment_leaves": 1,
+      "distinct_leaves_observed": 1,
+      "measurement": "complete",
+      "one_segment_leaves_observed": 1,
       "root": ".project/active/self-binding-replacement/spike/fixtures/s4c_qual_multi_leaf"
     },
     {
+      "absent_from_element_index": [],
+      "distinct_leaves_observed": 1,
+      "measurement": "partial",
+      "one_segment_leaves_observed": 1,
       "refused": "GraphValidationError: SI_EDGE_DANGLING: typed producer dependency cycle",
       "root": ".project/active/self-binding-replacement/spike/fixtures/s5_sibling_formal"
     },
     {
       "absent_from_element_index": [],
-      "one_segment_leaves": 1,
+      "distinct_leaves_observed": 1,
+      "measurement": "complete",
+      "one_segment_leaves_observed": 1,
       "root": ".project/active/self-binding-replacement/spike/fixtures/s6_qual_sibling_scope"
     },
     {
       "absent_from_element_index": [],
-      "one_segment_leaves": 1,
+      "distinct_leaves_observed": 1,
+      "measurement": "complete",
+      "one_segment_leaves_observed": 1,
       "root": ".project/active/self-binding-replacement/spike/fixtures/s7_sibling_in_formal"
     },
     {
       "absent_from_element_index": [],
-      "one_segment_leaves": 1,
+      "distinct_leaves_observed": 1,
+      "measurement": "complete",
+      "one_segment_leaves_observed": 1,
       "root": ".project/active/self-binding-replacement/spike/fixtures/s8_qual_outside_two"
     },
     {
       "absent_from_element_index": [],
-      "one_segment_leaves": 1,
+      "distinct_leaves_observed": 1,
+      "measurement": "complete",
+      "one_segment_leaves_observed": 1,
       "root": ".project/active/self-binding-replacement/spike/fixtures/s9_qual_outside_one"
     },
     {
       "absent_from_element_index": [],
-      "one_segment_leaves": 2,
+      "distinct_leaves_observed": 2,
+      "measurement": "complete",
+      "one_segment_leaves_observed": 2,
       "root": ".project/active/self-binding-replacement/spike/fixtures/u1_usage_qual_self"
     },
     {
       "absent_from_element_index": [],
-      "one_segment_leaves": 2,
+      "distinct_leaves_observed": 1,
+      "measurement": "complete",
+      "one_segment_leaves_observed": 2,
       "root": ".project/active/self-binding-replacement/spike/fixtures/u2_usage_qual_two_owner_occ"
     },
     {
       "absent_from_element_index": [],
-      "one_segment_leaves": 1,
+      "distinct_leaves_observed": 1,
+      "measurement": "complete",
+      "one_segment_leaves_observed": 1,
       "root": ".project/active/self-binding-replacement/spike/fixtures/u3_usage_qual_multi_occ"
     },
     {
       "absent_from_element_index": [],
-      "one_segment_leaves": 1,
+      "distinct_leaves_observed": 1,
+      "measurement": "complete",
+      "one_segment_leaves_observed": 1,
       "root": ".project/active/self-binding-replacement/spike/fixtures/u3b_usage_qual_single_occ"
     },
     {
       "absent_from_element_index": [],
-      "one_segment_leaves": 1,
+      "distinct_leaves_observed": 1,
+      "measurement": "complete",
+      "one_segment_leaves_observed": 1,
       "root": ".project/active/self-binding-replacement/spike/fixtures/u4_usage_qual_pkg_sibling"
     },
     {
       "absent_from_element_index": [],
-      "one_segment_leaves": 1,
+      "distinct_leaves_observed": 1,
+      "measurement": "complete",
+      "one_segment_leaves_observed": 1,
       "root": ".project/active/self-binding-replacement/spike/fixtures/u5_usage_qual_named_sibling"
     },
     {
       "absent_from_element_index": [],
-      "one_segment_leaves": 1,
+      "distinct_leaves_observed": 1,
+      "measurement": "complete",
+      "one_segment_leaves_observed": 1,
       "root": ".project/active/self-binding-replacement/spike/fixtures/u6_usage_qual_crossnamed"
     },
     {
       "absent_from_element_index": [],
-      "one_segment_leaves": 2,
+      "distinct_leaves_observed": 2,
+      "measurement": "complete",
+      "one_segment_leaves_observed": 2,
       "root": ".project/active/self-binding-replacement/spike/fixtures/u7_both_spellings"
     },
     {
+      "absent_from_element_index": [],
+      "distinct_leaves_observed": 0,
+      "measurement": "none",
+      "one_segment_leaves_observed": 0,
       "refused": "load_models returned false",
       "root": ".project/active/source-identity-binding-semantics-spike/probes/models"
     },
     {
       "absent_from_element_index": [],
-      "one_segment_leaves": 0,
+      "distinct_leaves_observed": 0,
+      "measurement": "complete",
+      "one_segment_leaves_observed": 0,
       "root": "tests/fixtures/agg_literal_probe"
     },
     {
       "absent_from_element_index": [],
-      "one_segment_leaves": 1,
+      "distinct_leaves_observed": 1,
+      "measurement": "complete",
+      "one_segment_leaves_observed": 1,
       "root": "tests/fixtures/agg_localterm_probe"
     },
     {
       "absent_from_element_index": [],
-      "one_segment_leaves": 6,
+      "distinct_leaves_observed": 3,
+      "measurement": "complete",
+      "one_segment_leaves_observed": 6,
       "root": "tests/fixtures/alias_agg_d5"
     },
     {
       "absent_from_element_index": [],
-      "one_segment_leaves": 3,
+      "distinct_leaves_observed": 2,
+      "measurement": "complete",
+      "one_segment_leaves_observed": 3,
       "root": "tests/fixtures/alias_agg_probe"
     },
     {
+      "absent_from_element_index": [],
+      "distinct_leaves_observed": 0,
+      "measurement": "none",
+      "one_segment_leaves_observed": 0,
       "refused": "ValueError: Calc def 'AnonReturn' has an anonymous `return` (a result with no name), so no output channel can be built. Give the result a name, e.g. `return result : Real = <expr>`.",
       "root": "tests/fixtures/anonymous_return"
     },
     {
       "absent_from_element_index": [],
-      "one_segment_leaves": 39,
+      "distinct_leaves_observed": 19,
+      "measurement": "complete",
+      "one_segment_leaves_observed": 39,
       "root": "tests/fixtures/attr_expr_probe"
     },
     {
       "absent_from_element_index": [],
-      "one_segment_leaves": 87,
+      "distinct_leaves_observed": 43,
+      "measurement": "complete",
+      "one_segment_leaves_observed": 87,
       "root": "tests/fixtures/catf_mfe_d5"
     },
     {
       "absent_from_element_index": [],
-      "one_segment_leaves": 121,
+      "distinct_leaves_observed": 62,
+      "measurement": "complete",
+      "one_segment_leaves_observed": 121,
       "root": "tests/fixtures/catf_mfe_gated"
     },
     {
       "absent_from_element_index": [],
-      "one_segment_leaves": 86,
+      "distinct_leaves_observed": 42,
+      "measurement": "complete",
+      "one_segment_leaves_observed": 86,
       "root": "tests/fixtures/catf_mfe_model"
     },
     {
       "absent_from_element_index": [],
-      "one_segment_leaves": 0,
+      "distinct_leaves_observed": 0,
+      "measurement": "complete",
+      "one_segment_leaves_observed": 0,
       "root": "tests/fixtures/chain_override_probe"
     },
     {
       "absent_from_element_index": [],
-      "one_segment_leaves": 3,
+      "distinct_leaves_observed": 3,
+      "measurement": "complete",
+      "one_segment_leaves_observed": 3,
       "root": "tests/fixtures/chain_spike_d5"
     },
     {
       "absent_from_element_index": [],
-      "one_segment_leaves": 0,
+      "distinct_leaves_observed": 0,
+      "measurement": "complete",
+      "one_segment_leaves_observed": 0,
       "root": "tests/fixtures/chain_spike_model"
     },
     {
       "absent_from_element_index": [],
-      "one_segment_leaves": 3,
+      "distinct_leaves_observed": 2,
+      "measurement": "complete",
+      "one_segment_leaves_observed": 3,
       "root": "tests/fixtures/constraint_arithmetic_raise"
     },
     {
       "absent_from_element_index": [],
-      "one_segment_leaves": 3,
+      "distinct_leaves_observed": 1,
+      "measurement": "complete",
+      "one_segment_leaves_observed": 3,
       "root": "tests/fixtures/constraint_binding_unit_annotation"
     },
     {
       "absent_from_element_index": [],
-      "one_segment_leaves": 0,
+      "distinct_leaves_observed": 0,
+      "measurement": "complete",
+      "one_segment_leaves_observed": 0,
       "root": "tests/fixtures/constraint_blocked_chain_multi"
     },
     {
+      "absent_from_element_index": [],
+      "distinct_leaves_observed": 0,
+      "measurement": "none",
+      "one_segment_leaves_observed": 0,
       "refused": "MultiplicityExpansionError: SI_MULTIPLICITY_UNRESOLVED: upper multiplicity on 'star_member' is not a known finite integer",
       "root": "tests/fixtures/constraint_blocked_owner"
     },
     {
       "absent_from_element_index": [],
-      "one_segment_leaves": 1,
+      "distinct_leaves_observed": 1,
+      "measurement": "complete",
+      "one_segment_leaves_observed": 1,
       "root": "tests/fixtures/constraint_blocked_profile"
     },
     {
       "absent_from_element_index": [],
-      "one_segment_leaves": 1,
+      "distinct_leaves_observed": 1,
+      "measurement": "complete",
+      "one_segment_leaves_observed": 1,
       "root": "tests/fixtures/constraint_coverage_all_inapplicable"
     },
     {
       "absent_from_element_index": [],
-      "one_segment_leaves": 1,
+      "distinct_leaves_observed": 1,
+      "measurement": "complete",
+      "one_segment_leaves_observed": 1,
       "root": "tests/fixtures/constraint_coverage_eligible_inapplicable"
     },
     {
       "absent_from_element_index": [],
-      "one_segment_leaves": 1,
+      "distinct_leaves_observed": 1,
+      "measurement": "complete",
+      "one_segment_leaves_observed": 1,
       "root": "tests/fixtures/constraint_coverage_violation_partial"
     },
     {
       "absent_from_element_index": [],
-      "one_segment_leaves": 1,
+      "distinct_leaves_observed": 1,
+      "measurement": "complete",
+      "one_segment_leaves_observed": 1,
       "root": "tests/fixtures/constraint_coverage_zero_eligible"
     },
     {
       "absent_from_element_index": [],
-      "one_segment_leaves": 0,
+      "distinct_leaves_observed": 0,
+      "measurement": "complete",
+      "one_segment_leaves_observed": 0,
       "root": "tests/fixtures/constraint_def_owned_redefining"
     },
     {
       "absent_from_element_index": [],
-      "one_segment_leaves": 1,
+      "distinct_leaves_observed": 1,
+      "measurement": "complete",
+      "one_segment_leaves_observed": 1,
       "root": "tests/fixtures/constraint_domain_block_non_reaching"
     },
     {
       "absent_from_element_index": [],
-      "one_segment_leaves": 1,
+      "distinct_leaves_observed": 1,
+      "measurement": "complete",
+      "one_segment_leaves_observed": 1,
       "root": "tests/fixtures/constraint_domain_calc_def_owner"
     },
     {
       "absent_from_element_index": [],
-      "one_segment_leaves": 1,
+      "distinct_leaves_observed": 1,
+      "measurement": "complete",
+      "one_segment_leaves_observed": 1,
       "root": "tests/fixtures/constraint_domain_containment"
     },
     {
       "absent_from_element_index": [],
-      "one_segment_leaves": 1,
+      "distinct_leaves_observed": 1,
+      "measurement": "complete",
+      "one_segment_leaves_observed": 1,
       "root": "tests/fixtures/constraint_domain_detached_owner"
     },
     {
       "absent_from_element_index": [],
-      "one_segment_leaves": 1,
+      "distinct_leaves_observed": 1,
+      "measurement": "complete",
+      "one_segment_leaves_observed": 1,
       "root": "tests/fixtures/constraint_domain_inapplicable"
     },
     {
       "absent_from_element_index": [],
-      "one_segment_leaves": 1,
+      "distinct_leaves_observed": 1,
+      "measurement": "complete",
+      "one_segment_leaves_observed": 1,
       "root": "tests/fixtures/constraint_domain_inapplicable_late_marker"
     },
     {
       "absent_from_element_index": [],
-      "one_segment_leaves": 1,
+      "distinct_leaves_observed": 1,
+      "measurement": "complete",
+      "one_segment_leaves_observed": 1,
       "root": "tests/fixtures/constraint_domain_inapplicable_malformed"
     },
     {
       "absent_from_element_index": [],
-      "one_segment_leaves": 1,
+      "distinct_leaves_observed": 1,
+      "measurement": "complete",
+      "one_segment_leaves_observed": 1,
       "root": "tests/fixtures/constraint_domain_inapplicable_plain_form"
     },
     {
       "absent_from_element_index": [],
-      "one_segment_leaves": 1,
+      "distinct_leaves_observed": 1,
+      "measurement": "complete",
+      "one_segment_leaves_observed": 1,
       "root": "tests/fixtures/constraint_domain_inapplicable_unattachable"
     },
     {
       "absent_from_element_index": [],
-      "one_segment_leaves": 0,
+      "distinct_leaves_observed": 0,
+      "measurement": "complete",
+      "one_segment_leaves_observed": 0,
       "root": "tests/fixtures/constraint_domain_plain_forms"
     },
     {
       "absent_from_element_index": [],
-      "one_segment_leaves": 0,
+      "distinct_leaves_observed": 0,
+      "measurement": "complete",
+      "one_segment_leaves_observed": 0,
       "root": "tests/fixtures/constraint_domain_satisfy"
     },
     {
       "absent_from_element_index": [],
-      "one_segment_leaves": 1,
+      "distinct_leaves_observed": 1,
+      "measurement": "complete",
+      "one_segment_leaves_observed": 1,
       "root": "tests/fixtures/constraint_domain_satisfy_calc_def"
     },
     {
       "absent_from_element_index": [],
-      "one_segment_leaves": 1,
+      "distinct_leaves_observed": 1,
+      "measurement": "complete",
+      "one_segment_leaves_observed": 1,
       "root": "tests/fixtures/constraint_inline"
     },
     {
       "absent_from_element_index": [],
-      "one_segment_leaves": 2,
+      "distinct_leaves_observed": 2,
+      "measurement": "complete",
+      "one_segment_leaves_observed": 2,
       "root": "tests/fixtures/constraint_malformed_mixed"
     },
     {
       "absent_from_element_index": [],
-      "one_segment_leaves": 3,
+      "distinct_leaves_observed": 1,
+      "measurement": "complete",
+      "one_segment_leaves_observed": 3,
       "root": "tests/fixtures/constraint_multi_instance"
     },
     {
       "absent_from_element_index": [],
-      "one_segment_leaves": 3,
+      "distinct_leaves_observed": 3,
+      "measurement": "complete",
+      "one_segment_leaves_observed": 3,
       "root": "tests/fixtures/constraint_name_collision_control"
     },
     {
+      "absent_from_element_index": [],
+      "distinct_leaves_observed": 0,
+      "measurement": "none",
+      "one_segment_leaves_observed": 0,
       "refused": "IdentityBoundaryError: SI_ID_UNSTABLE: AssertConstraintUsage has no reload-stable qualified declaration identity",
       "root": "tests/fixtures/constraint_name_collision_probe"
     },
     {
       "absent_from_element_index": [],
-      "one_segment_leaves": 2,
+      "distinct_leaves_observed": 2,
+      "measurement": "complete",
+      "one_segment_leaves_observed": 2,
       "root": "tests/fixtures/constraint_non_numerical"
     },
     {
+      "absent_from_element_index": [],
+      "distinct_leaves_observed": 0,
+      "measurement": "none",
+      "one_segment_leaves_observed": 0,
       "refused": "IdentityBoundaryError: SI_ID_UNSTABLE: ConstraintUsage has no reload-stable qualified declaration identity",
       "root": "tests/fixtures/constraint_occurrence_demand"
     },
     {
       "absent_from_element_index": [],
-      "one_segment_leaves": 2,
+      "distinct_leaves_observed": 1,
+      "measurement": "complete",
+      "one_segment_leaves_observed": 2,
       "root": "tests/fixtures/constraint_occurrence_demand_overrides_d5"
     },
     {
       "absent_from_element_index": [],
-      "one_segment_leaves": 1,
+      "distinct_leaves_observed": 1,
+      "measurement": "complete",
+      "one_segment_leaves_observed": 1,
       "root": "tests/fixtures/constraint_shared_polarity"
     },
     {
       "absent_from_element_index": [],
-      "one_segment_leaves": 1,
+      "distinct_leaves_observed": 1,
+      "measurement": "complete",
+      "one_segment_leaves_observed": 1,
       "root": "tests/fixtures/constraint_strict_boundary"
     },
     {
       "absent_from_element_index": [],
-      "one_segment_leaves": 42,
+      "distinct_leaves_observed": 35,
+      "measurement": "complete",
+      "one_segment_leaves_observed": 42,
       "root": "tests/fixtures/costed_cart_d5"
     },
     {
       "absent_from_element_index": [],
-      "one_segment_leaves": 1,
+      "distinct_leaves_observed": 1,
+      "measurement": "complete",
+      "one_segment_leaves_observed": 1,
       "root": "tests/fixtures/crosspart_rollup_twolevel"
     },
     {
       "absent_from_element_index": [],
-      "one_segment_leaves": 2,
+      "distinct_leaves_observed": 2,
+      "measurement": "complete",
+      "one_segment_leaves_observed": 2,
       "root": "tests/fixtures/d316_crosspart_expose"
     },
     {
       "absent_from_element_index": [],
-      "one_segment_leaves": 5,
+      "distinct_leaves_observed": 2,
+      "measurement": "complete",
+      "one_segment_leaves_observed": 5,
       "root": "tests/fixtures/d38_caret"
     },
     {
       "absent_from_element_index": [],
-      "one_segment_leaves": 5,
+      "distinct_leaves_observed": 3,
+      "measurement": "complete",
+      "one_segment_leaves_observed": 5,
       "root": "tests/fixtures/deep_cross_scope_probe"
     },
     {
       "absent_from_element_index": [],
-      "one_segment_leaves": 1,
+      "distinct_leaves_observed": 1,
+      "measurement": "complete",
+      "one_segment_leaves_observed": 1,
       "root": "tests/fixtures/elab_constraint_formal_identity"
     },
     {
       "absent_from_element_index": [],
-      "one_segment_leaves": 2,
+      "distinct_leaves_observed": 2,
+      "measurement": "complete",
+      "one_segment_leaves_observed": 2,
       "root": "tests/fixtures/elab_fail_closed_probe"
     },
     {
       "absent_from_element_index": [],
-      "one_segment_leaves": 0,
+      "distinct_leaves_observed": 0,
+      "measurement": "complete",
+      "one_segment_leaves_observed": 0,
       "root": "tests/fixtures/elab_finite_expression_multiplicity"
     },
     {
+      "absent_from_element_index": [],
+      "distinct_leaves_observed": 0,
+      "measurement": "none",
+      "one_segment_leaves_observed": 0,
       "refused": "IdentityBoundaryError: SI_ID_UNSTABLE: PartUsage has no reload-stable qualified declaration identity",
       "root": "tests/fixtures/elab_identity_collision_probe"
     },
     {
       "absent_from_element_index": [],
-      "one_segment_leaves": 1,
+      "distinct_leaves_observed": 1,
+      "measurement": "complete",
+      "one_segment_leaves_observed": 1,
       "root": "tests/fixtures/elab_matrix_aggregations"
     },
     {
       "absent_from_element_index": [],
-      "one_segment_leaves": 0,
+      "distinct_leaves_observed": 0,
+      "measurement": "complete",
+      "one_segment_leaves_observed": 0,
       "root": "tests/fixtures/elab_matrix_c14"
     },
     {
       "absent_from_element_index": [],
-      "one_segment_leaves": 0,
+      "distinct_leaves_observed": 0,
+      "measurement": "complete",
+      "one_segment_leaves_observed": 0,
       "root": "tests/fixtures/elab_matrix_c16"
     },
     {
       "absent_from_element_index": [],
-      "one_segment_leaves": 2,
+      "distinct_leaves_observed": 1,
+      "measurement": "complete",
+      "one_segment_leaves_observed": 2,
       "root": "tests/fixtures/elab_matrix_c2"
     },
     {
       "absent_from_element_index": [],
-      "one_segment_leaves": 0,
+      "distinct_leaves_observed": 0,
+      "measurement": "complete",
+      "one_segment_leaves_observed": 0,
       "root": "tests/fixtures/elab_matrix_c21"
     },
     {
       "absent_from_element_index": [],
-      "one_segment_leaves": 0,
+      "distinct_leaves_observed": 0,
+      "measurement": "complete",
+      "one_segment_leaves_observed": 0,
       "root": "tests/fixtures/elab_matrix_c23"
     },
     {
       "absent_from_element_index": [],
-      "one_segment_leaves": 2,
+      "distinct_leaves_observed": 1,
+      "measurement": "complete",
+      "one_segment_leaves_observed": 2,
       "root": "tests/fixtures/elab_matrix_c3"
     },
     {
       "absent_from_element_index": [],
-      "one_segment_leaves": 2,
+      "distinct_leaves_observed": 1,
+      "measurement": "complete",
+      "one_segment_leaves_observed": 2,
       "root": "tests/fixtures/elab_matrix_c4"
     },
     {
       "absent_from_element_index": [],
-      "one_segment_leaves": 1,
+      "distinct_leaves_observed": 1,
+      "measurement": "complete",
+      "one_segment_leaves_observed": 1,
       "root": "tests/fixtures/elab_matrix_c5"
     },
     {
       "absent_from_element_index": [],
-      "one_segment_leaves": 0,
+      "distinct_leaves_observed": 0,
+      "measurement": "complete",
+      "one_segment_leaves_observed": 0,
       "root": "tests/fixtures/elab_matrix_c6"
     },
     {
       "absent_from_element_index": [],
-      "one_segment_leaves": 0,
+      "distinct_leaves_observed": 0,
+      "measurement": "complete",
+      "one_segment_leaves_observed": 0,
       "root": "tests/fixtures/elab_matrix_c7"
     },
     {
+      "absent_from_element_index": [],
+      "distinct_leaves_observed": 0,
+      "measurement": "none",
+      "one_segment_leaves_observed": 0,
       "refused": "model validation blocked",
       "root": "tests/fixtures/elab_namespace_distinguishability_probe"
     },
     {
       "absent_from_element_index": [],
-      "one_segment_leaves": 4,
+      "distinct_leaves_observed": 1,
+      "measurement": "complete",
+      "one_segment_leaves_observed": 4,
       "root": "tests/fixtures/elab_native_plural_scope"
     },
     {
       "absent_from_element_index": [],
-      "one_segment_leaves": 5,
+      "distinct_leaves_observed": 3,
+      "measurement": "complete",
+      "one_segment_leaves_observed": 5,
       "root": "tests/fixtures/elab_payload_identity"
     },
     {
       "absent_from_element_index": [],
-      "one_segment_leaves": 4,
+      "distinct_leaves_observed": 2,
+      "measurement": "complete",
+      "one_segment_leaves_observed": 4,
       "root": "tests/fixtures/elab_shadowing_probe"
     },
     {
+      "absent_from_element_index": [],
+      "distinct_leaves_observed": 0,
+      "measurement": "none",
+      "one_segment_leaves_observed": 0,
       "refused": "MultiplicityExpansionError: SI_MULTIPLICITY_UNRESOLVED: upper multiplicity on 'cell' is not a known finite integer",
       "root": "tests/fixtures/elab_unresolved_multiplicity"
     },
     {
       "absent_from_element_index": [],
-      "one_segment_leaves": 1,
+      "distinct_leaves_observed": 1,
+      "measurement": "complete",
+      "one_segment_leaves_observed": 1,
       "root": "tests/fixtures/ep_key_collision_probe"
     },
     {
       "absent_from_element_index": [],
-      "one_segment_leaves": 0,
+      "distinct_leaves_observed": 0,
+      "measurement": "complete",
+      "one_segment_leaves_observed": 0,
       "root": "tests/fixtures/exact_calc_ordering"
     },
     {
       "absent_from_element_index": [],
-      "one_segment_leaves": 7,
+      "distinct_leaves_observed": 7,
+      "measurement": "complete",
+      "one_segment_leaves_observed": 7,
       "root": "tests/fixtures/expr_compile_d5"
     },
     {
       "absent_from_element_index": [],
-      "one_segment_leaves": 0,
+      "distinct_leaves_observed": 0,
+      "measurement": "complete",
+      "one_segment_leaves_observed": 0,
       "root": "tests/fixtures/expr_paren_probe"
     },
     {
       "absent_from_element_index": [],
-      "one_segment_leaves": 0,
+      "distinct_leaves_observed": 0,
+      "measurement": "complete",
+      "one_segment_leaves_observed": 0,
       "root": "tests/fixtures/expression_binding_probe"
     },
     {
       "absent_from_element_index": [],
-      "one_segment_leaves": 21,
+      "distinct_leaves_observed": 14,
+      "measurement": "complete",
+      "one_segment_leaves_observed": 21,
       "root": "tests/fixtures/fusion_tea"
     },
     {
       "absent_from_element_index": [],
-      "one_segment_leaves": 0,
+      "distinct_leaves_observed": 0,
+      "measurement": "complete",
+      "one_segment_leaves_observed": 0,
       "root": "tests/fixtures/gate_a"
     },
     {
       "absent_from_element_index": [],
-      "one_segment_leaves": 2,
+      "distinct_leaves_observed": 2,
+      "measurement": "complete",
+      "one_segment_leaves_observed": 2,
       "root": "tests/fixtures/gate_a_d5"
     },
     {
       "absent_from_element_index": [],
-      "one_segment_leaves": 0,
+      "distinct_leaves_observed": 0,
+      "measurement": "complete",
+      "one_segment_leaves_observed": 0,
       "root": "tests/fixtures/gate_a_package_owner"
     },
     {
       "absent_from_element_index": [],
-      "one_segment_leaves": 0,
+      "distinct_leaves_observed": 0,
+      "measurement": "complete",
+      "one_segment_leaves_observed": 0,
       "root": "tests/fixtures/ife_plant"
     },
     {
+      "absent_from_element_index": [],
+      "distinct_leaves_observed": 0,
+      "measurement": "none",
+      "one_segment_leaves_observed": 0,
       "refused": "MultiplicityExpansionError: SI_MULTIPLICITY_UNSUPPORTED: range multiplicity on 'range_member' is outside the supported occurrence model",
       "root": "tests/fixtures/instance_index_probe"
     },
     {
       "absent_from_element_index": [],
-      "one_segment_leaves": 0,
+      "distinct_leaves_observed": 0,
+      "measurement": "complete",
+      "one_segment_leaves_observed": 0,
       "root": "tests/fixtures/invocation_binding_probe"
     },
     {
       "absent_from_element_index": [],
-      "one_segment_leaves": 1,
+      "distinct_leaves_observed": 1,
+      "measurement": "complete",
+      "one_segment_leaves_observed": 1,
       "root": "tests/fixtures/issue22_model"
     },
     {
+      "absent_from_element_index": [],
+      "distinct_leaves_observed": 0,
+      "measurement": "none",
+      "one_segment_leaves_observed": 0,
       "refused": "ElaborationInvariantError: SI_EDGE_DANGLING: feature dcfd8195-70ca-5d3b-9d5c-2293fe0cdc65 has no exact live declaration",
       "root": "tests/fixtures/item4_require"
     },
     {
       "absent_from_element_index": [],
-      "one_segment_leaves": 4,
+      "distinct_leaves_observed": 3,
+      "measurement": "complete",
+      "one_segment_leaves_observed": 4,
       "root": "tests/fixtures/modeled_default_fidelity"
     },
     {
       "absent_from_element_index": [],
-      "one_segment_leaves": 0,
+      "distinct_leaves_observed": 0,
+      "measurement": "complete",
+      "one_segment_leaves_observed": 0,
       "root": "tests/fixtures/nested_occurrence_override_probe"
     },
     {
+      "absent_from_element_index": [],
+      "distinct_leaves_observed": 0,
+      "measurement": "none",
+      "one_segment_leaves_observed": 0,
       "refused": "ElaborationInvariantError: EXTRACTION_DIAGNOSTIC_BLOCKING: extraction raised blocking diagnostics: [blocking/non_finite_literal] ///home/reid/1cfe/sysml-codegen/tests/fixtures/non_finite_literal/model.sysml:36:24: Non-finite literal operand encountered during extraction: inf",
       "root": "tests/fixtures/non_finite_literal"
     },
     {
       "absent_from_element_index": [],
-      "one_segment_leaves": 1,
+      "distinct_leaves_observed": 1,
+      "measurement": "complete",
+      "one_segment_leaves_observed": 1,
       "root": "tests/fixtures/plant_value_shapes"
     },
     {
       "absent_from_element_index": [],
-      "one_segment_leaves": 0,
+      "distinct_leaves_observed": 0,
+      "measurement": "complete",
+      "one_segment_leaves_observed": 0,
       "root": "tests/fixtures/plant_values"
     },
     {
       "absent_from_element_index": [],
-      "one_segment_leaves": 1,
+      "distinct_leaves_observed": 1,
+      "measurement": "complete",
+      "one_segment_leaves_observed": 1,
       "root": "tests/fixtures/predicate_unit_annotation"
     },
     {
       "absent_from_element_index": [],
-      "one_segment_leaves": 1,
+      "distinct_leaves_observed": 1,
+      "measurement": "complete",
+      "one_segment_leaves_observed": 1,
       "root": "tests/fixtures/predicate_unit_annotation_bare"
     },
     {
       "absent_from_element_index": [],
-      "one_segment_leaves": 1,
+      "distinct_leaves_observed": 1,
+      "measurement": "complete",
+      "one_segment_leaves_observed": 1,
       "root": "tests/fixtures/predicate_unit_annotation_incompatible"
     },
     {
       "absent_from_element_index": [],
-      "one_segment_leaves": 3,
+      "distinct_leaves_observed": 3,
+      "measurement": "complete",
+      "one_segment_leaves_observed": 3,
       "root": "tests/fixtures/quoted_owner_formula"
     },
     {
       "absent_from_element_index": [],
-      "one_segment_leaves": 1,
+      "distinct_leaves_observed": 1,
+      "measurement": "complete",
+      "one_segment_leaves_observed": 1,
       "root": "tests/fixtures/return_styles"
     },
     {
       "absent_from_element_index": [],
-      "one_segment_leaves": 4,
+      "distinct_leaves_observed": 2,
+      "measurement": "complete",
+      "one_segment_leaves_observed": 4,
       "root": "tests/fixtures/retype_model"
     },
     {
       "absent_from_element_index": [],
-      "one_segment_leaves": 0,
+      "distinct_leaves_observed": 0,
+      "measurement": "complete",
+      "one_segment_leaves_observed": 0,
       "root": "tests/fixtures/sample_model"
     },
     {
       "absent_from_element_index": [],
-      "one_segment_leaves": 0,
+      "distinct_leaves_observed": 0,
+      "measurement": "complete",
+      "one_segment_leaves_observed": 0,
       "root": "tests/fixtures/self_named_binding_trap"
     },
     {
       "absent_from_element_index": [],
-      "one_segment_leaves": 1,
+      "distinct_leaves_observed": 1,
+      "measurement": "complete",
+      "one_segment_leaves_observed": 1,
       "root": "tests/fixtures/self_named_rescue"
     },
     {
       "absent_from_element_index": [],
-      "one_segment_leaves": 1,
+      "distinct_leaves_observed": 1,
+      "measurement": "complete",
+      "one_segment_leaves_observed": 1,
       "root": "tests/fixtures/shadowed_reference"
     },
     {
       "absent_from_element_index": [],
-      "one_segment_leaves": 0,
+      "distinct_leaves_observed": 0,
+      "measurement": "complete",
+      "one_segment_leaves_observed": 0,
       "root": "tests/fixtures/shared_producer"
     },
     {
       "absent_from_element_index": [],
-      "one_segment_leaves": 0,
+      "distinct_leaves_observed": 0,
+      "measurement": "complete",
+      "one_segment_leaves_observed": 0,
       "root": "tests/fixtures/sibling_channel_ambiguity"
     },
     {
       "absent_from_element_index": [],
-      "one_segment_leaves": 139,
+      "distinct_leaves_observed": 81,
+      "measurement": "complete",
+      "one_segment_leaves_observed": 139,
       "root": "tests/fixtures/solar_battery_d5"
     },
     {
       "absent_from_element_index": [],
-      "one_segment_leaves": 11,
+      "distinct_leaves_observed": 10,
+      "measurement": "complete",
+      "one_segment_leaves_observed": 11,
       "root": "tests/fixtures/solar_battery_model"
     },
     {
+      "absent_from_element_index": [],
+      "distinct_leaves_observed": 0,
+      "measurement": "none",
+      "one_segment_leaves_observed": 0,
       "refused": "load_models returned false",
       "root": "tests/fixtures/source_identity_absent_referent"
     },
     {
       "absent_from_element_index": [],
-      "one_segment_leaves": 0,
+      "distinct_leaves_observed": 0,
+      "measurement": "complete",
+      "one_segment_leaves_observed": 0,
       "root": "tests/fixtures/source_identity_indexed_source"
     },
     {
       "absent_from_element_index": [],
-      "one_segment_leaves": 12,
+      "distinct_leaves_observed": 7,
+      "measurement": "complete",
+      "one_segment_leaves_observed": 12,
       "root": "tests/fixtures/source_identity_mixed_consumers"
     },
     {
       "absent_from_element_index": [],
-      "one_segment_leaves": 2,
+      "distinct_leaves_observed": 1,
+      "measurement": "complete",
+      "one_segment_leaves_observed": 2,
       "root": "tests/fixtures/source_identity_occurrence_ambiguity"
     },
     {
       "absent_from_element_index": [],
-      "one_segment_leaves": 0,
+      "distinct_leaves_observed": 0,
+      "measurement": "complete",
+      "one_segment_leaves_observed": 0,
       "root": "tests/fixtures/spec_chain_channel"
     },
     {
       "absent_from_element_index": [],
-      "one_segment_leaves": 2,
+      "distinct_leaves_observed": 1,
+      "measurement": "complete",
+      "one_segment_leaves_observed": 2,
       "root": "tests/fixtures/spec_chain_twolevel"
     },
     {
+      "absent_from_element_index": [],
+      "distinct_leaves_observed": 0,
+      "measurement": "none",
+      "one_segment_leaves_observed": 0,
       "refused": "load_models returned false",
       "root": "tests/fixtures/two_same_leaf_producers"
     },
     {
       "absent_from_element_index": [],
-      "one_segment_leaves": 1,
+      "distinct_leaves_observed": 1,
+      "measurement": "complete",
+      "one_segment_leaves_observed": 1,
       "root": "tests/fixtures/unit_annotation_lanes"
     },
     {
       "absent_from_element_index": [],
-      "one_segment_leaves": 1,
+      "distinct_leaves_observed": 1,
+      "measurement": "complete",
+      "one_segment_leaves_observed": 1,
       "root": "tests/fixtures/unit_annotation_lanes_bare"
     },
     {
       "absent_from_element_index": [],
-      "one_segment_leaves": 6,
+      "distinct_leaves_observed": 3,
+      "measurement": "complete",
+      "one_segment_leaves_observed": 6,
       "root": "tests/fixtures/unit_lane_a9"
     },
     {
       "absent_from_element_index": [],
-      "one_segment_leaves": 2,
+      "distinct_leaves_observed": 1,
+      "measurement": "complete",
+      "one_segment_leaves_observed": 2,
       "root": "tests/fixtures/unit_lane_computed_disagreement"
     },
     {
       "absent_from_element_index": [],
-      "one_segment_leaves": 2,
+      "distinct_leaves_observed": 1,
+      "measurement": "complete",
+      "one_segment_leaves_observed": 2,
       "root": "tests/fixtures/unit_lane_constraint_disagreement"
     },
     {
       "absent_from_element_index": [],
-      "one_segment_leaves": 5,
+      "distinct_leaves_observed": 4,
+      "measurement": "complete",
+      "one_segment_leaves_observed": 5,
       "root": "tests/fixtures/unit_lane_radius"
     },
     {
       "absent_from_element_index": [],
-      "one_segment_leaves": 7,
+      "distinct_leaves_observed": 4,
+      "measurement": "complete",
+      "one_segment_leaves_observed": 7,
       "root": "tests/fixtures/unit_lane_source_identity"
     },
     {
       "absent_from_element_index": [],
-      "one_segment_leaves": 19,
+      "distinct_leaves_observed": 4,
+      "measurement": "complete",
+      "one_segment_leaves_observed": 19,
       "root": "tests/fixtures/unresolvable_attr_probe"
     },
     {
       "absent_from_element_index": [],
-      "one_segment_leaves": 4,
+      "distinct_leaves_observed": 4,
+      "measurement": "complete",
+      "one_segment_leaves_observed": 4,
       "root": "tests/fixtures/wi014_toy"
     },
     {
+      "absent_from_element_index": [],
+      "distinct_leaves_observed": 0,
+      "measurement": "none",
+      "one_segment_leaves_observed": 0,
       "refused": "ValueError: Calc def 'NoOutputCalc' extracted with zero output attributes. A pipeline module needs at least one output channel. Likely cause: the calc def declares no result \u2014 add one, e.g. 'out attribute y : Real = <expr>' or 'return y : Real = <expr>'. (An anonymous 'return' is reported separately.)",
       "root": "tests/fixtures/zero_output_calc"
     },
     {
       "absent_from_element_index": [],
-      "one_segment_leaves": 2,
+      "distinct_leaves_observed": 2,
+      "measurement": "complete",
+      "one_segment_leaves_observed": 2,
       "root": "tests/fixtures/u1_usage_qual_self"
     },
     {
       "absent_from_element_index": [],
-      "one_segment_leaves": 2,
+      "distinct_leaves_observed": 1,
+      "measurement": "complete",
+      "one_segment_leaves_observed": 2,
       "root": "tests/fixtures/u2_usage_qual_two_owner_occ"
     },
     {
       "absent_from_element_index": [],
-      "one_segment_leaves": 1,
+      "distinct_leaves_observed": 1,
+      "measurement": "complete",
+      "one_segment_leaves_observed": 1,
       "root": "tests/fixtures/u3_usage_qual_multi_occ"
     },
     {
       "absent_from_element_index": [],
-      "one_segment_leaves": 1,
+      "distinct_leaves_observed": 1,
+      "measurement": "complete",
+      "one_segment_leaves_observed": 1,
       "root": "tests/fixtures/u3b_usage_qual_single_occ"
     },
     {
       "absent_from_element_index": [],
-      "one_segment_leaves": 1,
+      "distinct_leaves_observed": 1,
+      "measurement": "complete",
+      "one_segment_leaves_observed": 1,
       "root": "tests/fixtures/u4_usage_qual_pkg_sibling"
     },
     {
       "absent_from_element_index": [],
-      "one_segment_leaves": 1,
+      "distinct_leaves_observed": 1,
+      "measurement": "complete",
+      "one_segment_leaves_observed": 1,
       "root": "tests/fixtures/u5_usage_qual_named_sibling"
     },
     {
       "absent_from_element_index": [],
-      "one_segment_leaves": 1,
+      "distinct_leaves_observed": 1,
+      "measurement": "complete",
+      "one_segment_leaves_observed": 1,
       "root": "tests/fixtures/u6_usage_qual_crossnamed"
     },
     {
       "absent_from_element_index": [],
-      "one_segment_leaves": 2,
+      "distinct_leaves_observed": 2,
+      "measurement": "complete",
+      "one_segment_leaves_observed": 2,
       "root": "tests/fixtures/u7_both_spellings"
     },
     {
       "absent_from_element_index": [],
-      "one_segment_leaves": 7,
+      "distinct_leaves_observed": 2,
+      "measurement": "complete",
+      "one_segment_leaves_observed": 7,
       "root": "tests/fixtures/usage_owned_reference_consumers"
     },
     {
       "absent_from_element_index": [],
-      "one_segment_leaves": 1,
+      "distinct_leaves_observed": 1,
+      "measurement": "complete",
+      "one_segment_leaves_observed": 1,
       "root": "tests/fixtures/usage_owner_bare_alias"
     },
     {
       "absent_from_element_index": [],
-      "one_segment_leaves": 1,
+      "distinct_leaves_observed": 1,
+      "measurement": "complete",
+      "one_segment_leaves_observed": 1,
       "root": "tests/fixtures/usage_owner_bare_alias_arrayed"
     },
     {
       "absent_from_element_index": [],
-      "one_segment_leaves": 1,
+      "distinct_leaves_observed": 1,
+      "measurement": "complete",
+      "one_segment_leaves_observed": 1,
       "root": "tests/fixtures/usage_owner_bare_alias_def_owned"
     },
     {
       "absent_from_element_index": [],
-      "one_segment_leaves": 1,
+      "distinct_leaves_observed": 1,
+      "measurement": "complete",
+      "one_segment_leaves_observed": 1,
       "root": "tests/fixtures/usage_owner_bare_subset_def_owned"
     },
     {
       "absent_from_element_index": [],
-      "one_segment_leaves": 2,
+      "distinct_leaves_observed": 2,
+      "measurement": "complete",
+      "one_segment_leaves_observed": 2,
       "root": "tests/fixtures/usage_owner_calc_usage_leaf"
     }
   ],
   "totals": {
     "absent_from_element_index": 0,
-    "one_segment_leaves": 769,
+    "one_segment_leaves_observed": 770,
+    "population_claim": "observed only; 15 root(s) hold an unmeasured or partially measured population",
+    "residual_unmeasured_roots": 15,
     "roots": 154,
-    "roots_refused": 15
+    "roots_measured_complete": 139,
+    "roots_measured_partial": 1,
+    "roots_unmeasured": 14
   }
 }
