@@ -286,11 +286,76 @@ standing no-reserved-gates ruling and marked `[AGENT]` so they stay challengeabl
 
 ---
 
-**Verdict:** **Revise** — the underlying work item is sound, and one finding (L1-4) makes it stronger
-than the spec currently argues. The edits are corrections plus one sequencing decision that only the
-owner can make.
+**Verdict (rev 1):** **Revise** — superseded by the re-review below.
 
-**Next Steps:** Record resolutions above, then re-run `/_my_spec` (or return to the spec-agent
-session) pointed at this review to incorporate. The reviewer does not edit the spec. Note that
-**L1-1 should be resolved after the 126-site measurement returns**, since its result may itself be
-the answer.
+---
+
+# Re-review — spec rev 2 (2026-08-15)
+
+**Subject:** `spec.md` rev 2, at codegen `c615eb4`. **Verdict: Approve.**
+
+## Method
+
+I verified the edits against the spec and against source, not against the revision record. The
+revision summary accounted for 15 of 17 IDs, so I checked the two it omitted (**L2-2**, **L3-3**)
+directly: both did land — the summary was incomplete, the work was not. Independent checks:
+
+- **L1-4's D-6 citation** — `constraint-execution-authoritative-lifecycle-contract.md:618-626` reads
+  as quoted, ratified 2026-08-05. Confirmed independently in the rev-1 audit and again here.
+- **L3-2's new citation** — `elaborator-design/design.md:320-324` and invariants 10–12 at `:374-376`
+  do say strict/lenient may change halt-versus-report behavior and never identity. The criterion now
+  traces to a real inherited invariant.
+- **L3-1's fix** — Non-Goal 5 now states that a `PartUsage` declared at package scope is still
+  usage-owned and remains in scope, naming the u4 shape. The contradiction with SC 2 is gone.
+- **Provenance census** — 3 `[NEED]`, 9 `[INHERITED]`, 4 `[INFERRED]`, **zero `[HARD]`**. No
+  mechanism is dressed as a constraint, which was the tag failure most worth watching for here.
+
+## What the revision did better than asked
+
+**A criterion nobody requested, and it is the best edit in the pass.** The measurement's
+forced-not-earned caveat could have been absorbed as a disclaimer and forgotten. Instead the spec
+adds a criterion requiring a kept bare-reference regression with a *discriminating topology* — one
+where consumer-lineage and exact-owner selection can land on different occurrences — that "fails if
+the implementation merely preserves the corpus's accidental fan-out-of-one equality." That converts
+a caveat into a tripwire. It is the difference between recording that the evidence was weak and
+refusing to let the weakness pass silently into implementation.
+
+**M-1 landed with its numbers.** The alias/predicate criterion carries the specific counts (9 direct
+alias leaves, 17 direct predicate leaves, all definition-owned; 18 usage-owned predicate references
+on unasserted constraints reaching no node) with a line-cited source, and states outright that
+dropping the criterion "strips the shared-resolver justification of all its evidence." A reader can
+now see why that criterion is load-bearing rather than taking it on faith.
+
+**L1-5 was flagged, not resolved away.** No second in-repo source for the `[OWNER-VERBATIM]` quote
+exists, so the spec says the grade rests on the preserved misspelling alone and names the downgrade
+path. That is the correct handling of an unverifiable provenance claim: surface it, do not launder it.
+
+## Findings
+
+None blocking. Two residuals, neither a spec defect:
+
+**R-1 · Owner item — the only thing an agent cannot close.** The `[OWNER-VERBATIM]` grade on *"also
+repair the self-biding spec"* has no corroborating record anywhere in the repository. `[OWNER-VERBATIM]`
+is the strongest grade in the vocabulary, and it currently rests on a preserved typo. One confirmation
+from Reid closes it; absent that, the spec's own named downgrade to `[OWNER]` applies. Nothing
+downstream depends on the distinction, which is why this is a residual and not a finding.
+
+**R-2 · Process gap — the product-lens pass did not run.** The spec agent could not read
+`~/.claude/scripts/product-lens.md` (outside the session's allowed directory) and correctly declined
+to write a lens verdict it had not derived. `product-lens.md` still carries `Gate: CLEAR` from rev 1.
+The rev-2 changes add citations, evidence, and two strengthened criteria and narrow nothing, so the
+prior gate is unlikely to move — but that is judgment, not a lens result, and the lens should be run
+before design starts.
+
+## Verdict
+
+**Approve.** I would bet the design on this spec as written.
+
+The item is now better argued than when it was drafted: the qualified half is conformance restoration
+to a disposition ratified 2026-08-05 rather than new semantics; the broader half rests on returned
+evidence rather than on a choice made ahead of it; and the weakness in that evidence is pinned by a
+criterion that fails if implementation exploits it. The two callers with no corpus coverage are named
+as such, with the consequence of dropping their regressions stated in the criterion itself.
+
+**Next Steps:** Run the product-lens pass (R-2), confirm or downgrade the verbatim grade (R-1), then
+proceed to `/_my_design`. Neither residual blocks design from starting.

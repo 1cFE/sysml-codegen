@@ -3,7 +3,7 @@
 **Status:** Draft
 **Owner:** Reid W
 **Created:** 2026-08-15 14:15 PDT
-**Revised:** 2026-08-15 (spec-review incorporation)
+**Revised:** 2026-08-15 rev 2 (spec-review incorporation complete — see revision record)
 **Complexity:** MEDIUM
 **Branch:** main (`c615eb4` at revision)
 
@@ -29,10 +29,17 @@ redefining feature, while the current graph silently wires `comp_b.length`. A de
 therefore move the named value without moving its supposed consumer, producing a confident wrong
 answer. That contradicts the ELABORATE-FIRST mission and the product's design-search promise.
 
-For usage-qualified references, this is also a conformance defect against D-6. That ratified
-disposition says “usage qualifier → occurrence-level feature”; it does not authorize codegen to
-replace the exact usage owner with the consumer's position. The qualified half of this item restores
-that existing contract rather than inventing new `::` semantics.
+**For usage-qualified references this is a conformance defect, not a new invariant.** D-6 already
+ratified the target behavior on 2026-08-05: “owner-qualified references are SUPPORTED at their
+resolved referent — definition qualifier → def-level feature; usage qualifier → occurrence-level
+feature,” with “no unique occurrence in context is an ambiguity diagnostic, never a guess”
+(`.project/concepts/constraint-execution-authoritative-lifecycle-contract.md:618-626`, verified at
+revision). Nothing in that disposition authorizes codegen to substitute the consumer's position for
+the exact usage owner SysIDE resolved. The qualified half of this item therefore restores
+conformance to a disposition ratified ten days earlier; it does not invent occurrence
+semantics for `::`. That question — “are we inventing occurrence semantics for `::`?” — dominated
+the investigation that produced this item, and the contract answers it: the semantics were settled
+first, and the shipped route deviates from them.
 
 `[OWNER, 2026-08-15]` After being presented the qualified-only and broader alternatives, the owner
 selected the “broader invariant”: every one-segment reference whose exact resolved leaf is owned by
@@ -40,19 +47,51 @@ a real `PartUsage` honors that owner, whether the author wrote a qualified or ba
 outcome applies consistently to calculation bindings, aliases, computed attributes, constraint
 bindings and predicates, and the other callers of the shared exact resolver.
 
-`[AGENT]` The completed bare-reference measurement supports that choice but does not certify it. It
-found zero edge changes: 91 of the 126 expression- and constraint-side subjects joined to exact
-typed edges and compared equal, while the other 35 had named no-edge reasons. Equality was forced
-by the corpus topology: every joined bare leaf slot appears on exactly one occurrence. The narrow
-alternative would therefore carry authored-spelling evidence through three shared resolver callers
-to protect no observed behavior. The measurement is acceptance evidence, not the source of the
-owner-grade requirement; it does not silently narrow or reopen that requirement. A discriminating
-authored bare regression remains the proof where the two routes can differ, and contrary evidence
+`[AGENT]` **The gating measurement returned before this revision, and it removes the regression
+objection without certifying the predicate.** Zero of the 126 bare expression- and constraint-side
+subjects change: 91 join to an exact typed wire edge and all 91 compare equal, and the other 35
+reach no edge, each for a named structural reason
+(`.project/research/20260815-142743_bare-expression-side-measurement.md:92-124`). Across all 189
+bare usage-owned sites the figure is the same — zero changed edges, zero changed diagnostics.
+
+**The equality is forced, not earned.** Every joined bare site has leaf-slot fan-out of exactly
+one: a single occurrence in the whole model carries the referenced feature slot, so the old
+consumer-lineage walk and the owner-anchored walk had one place to land and could not have landed
+differently (`:130-145`). The qualified corpus does contain discriminating topologies — four sites
+at fan-out two, and they are four of the five changed sites — while the bare corpus contains none.
+Zero changes here is a no-cost result, not a certification that the broader predicate is right. A
+reader who takes the count without this caveat will over-trust it.
+
+`[AGENT]` **Why broad rather than narrow.** The narrow option is genuinely available: the
+measurement recovered exact authored text from CST byte spans for all 189 sites, so the
+qualified-versus-bare spelling *is* recoverable at the resolver boundary, and the earlier
+impossibility argument against the narrow option was falsified. It is available and not worth
+buying. Its entire purpose is to shield bare sites from a behavior change that measures at zero,
+and its price is threading authored-spelling evidence into `_resolve_aliases`,
+`_resolve_computed_expressions` and `_resolve_bindings` — three callers that today share one
+resolver and know nothing about spelling — and keeping it there as those callers change
+(`:263-284`). The measurement is acceptance evidence, not the source of the owner-grade
+requirement; it does not narrow or reopen that requirement. A discriminating authored bare
+regression remains the only proof available where the two routes can differ, and contrary evidence
 must be surfaced for disposition rather than classified away.
 
-`[OWNER-VERBATIM, 2026-08-15]` The work must “also repair the self-biding spec.” That direction is
-already substantially discharged: rev 4 of the active self-binding spec names the positional
-behavior as codegen defect F-6 and delegates the repair here. What remains is a close-time check
+`[INHERITED]` **The corrected composition of the 126.** The measurement supersedes the corpus
+scan's account of what those sites are: 76 are computed-attribute expression terms and are the only
+genuinely new resolver-caller coverage, 15 are constraint bindings running the same
+`_resolve_bindings` caller as the 63 calc bindings, and **zero are typed aliases or inline
+constraint predicates**; the remaining 35 reach no edge. The scan's 63-versus-62 calc-binding count
+is not a disagreement — the 63rd site is in `non_finite_literal`, a root that refuses elaboration,
+so it has no edge to compare (`:92-124,158-196`). Any number in this spec inherited from the
+2026-08-15 corpus scan is the corrected one.
+
+`[OWNER-VERBATIM, 2026-08-15]` The work must “also repair the self-biding spec.” The typo is the
+owner's and is kept. Note the limit on that stamp: the quote's only record in the repository is
+this spec, so the grade rests on the preserved misspelling rather than on a second source. If the
+owner's transcript says otherwise, downgrade it to `[OWNER]` — the substance does not change.
+
+That direction is already substantially discharged: rev 4 of the active self-binding spec names the
+positional behavior as codegen defect F-6 and delegates the repair here
+(`.project/active/self-binding-replacement/spec.md:56`). What remains is a close-time check
 that the landed semantics and that explanation still agree. This item does not change the D-5
 local-rename advice, the D-7 dot-path advice, or the chosen fusion-tea migration form.
 
@@ -76,7 +115,16 @@ local-rename advice, the D-7 dot-path advice, or the chosen fusion-tea migration
       definition-owned declaration do not acquire an occurrence from qualifier text.
 - [ ] Kept qualified usage-owned regressions cover an alias, a computed attribute, a typed
       constraint binding, and a constraint predicate. Each places the consumer where exact owner
-      selection is load-bearing and pins the typed target edge.
+      selection is load-bearing and pins the typed target edge. **For the alias and predicate
+      callers these authored regressions are the sole evidence, not supplementary coverage.** The
+      tracked corpus contains zero usage-owned direct references in a typed alias and zero in an
+      inline constraint predicate — all 9 direct alias leaves and all 17 direct predicate leaves are
+      definition-owned, and the 18 usage-owned predicate references that exist sit on unasserted
+      constraints and reach no node
+      (`.project/research/20260815-142743_bare-expression-side-measurement.md:214-249`). Those two
+      callers are a principal justification for repairing the shared resolver rather than one call
+      site, so if this criterion is dropped or weakened, that justification loses all of its
+      evidence.
 - [ ] A kept bare-reference regression uses a discriminating topology where consumer-lineage and
       exact-owner selection can land on different occurrences. It pins the expected typed edge and
       fails if the implementation merely preserves the corpus's accidental fan-out-of-one equality.
@@ -100,7 +148,15 @@ local-rename advice, the D-7 dot-path advice, or the chosen fusion-tea migration
 - [ ] At close, the active self-binding spec is checked against the landed behavior and still names
       positional selection as defect F-6 rather than the meaning of `::`. Any mismatch is corrected
       there without changing the D-5 local rename advice, D-7 dot-path advice, or fusion-tea
-      migration choice.
+      migration choice. `[AGENT]` **This documentation tail stays in this item, and its verifier is
+      this item's `/_my_close` stage** — a tail this small, split into its own item, becomes an
+      orphan nobody reopens, and the stale explanation it removes is the exact hazard this item
+      exists to end. The inventory the close stage inspects is bounded and named:
+      `.project/active/self-binding-replacement/spec.md:56` (the F-6 bullet) and its Success
+      Criteria at `:66-70,74-78`. No other live guidance surface teaches positional `::` selection
+      as a modeling rule; `docs/architecture/modeling-assumptions.md` was checked at revision and
+      carries no such rule. Anything the self-binding item later ships as author-facing guidance
+      inherits the same check there, not here.
 
 ## Known Requirements
 
@@ -218,8 +274,9 @@ local-rename advice, the D-7 dot-path advice, or the chosen fusion-tea migration
 - **Bare expression-side measurement:**
   `.project/research/20260815-142743_bare-expression-side-measurement.md`
 - **Spec review:**
-  `.project/active/qualified-reference-occurrence-anchoring/spec-review.md` — `Revise`; findings
-  substantively incorporated in this revision.
+  `.project/active/qualified-reference-occurrence-anchoring/spec-review.md` — `Revise`; all fifteen
+  findings plus the two measurement additions are incorporated. See the revision record at the end
+  of this file for the per-finding disposition.
 - **Related active spec:** `.project/active/self-binding-replacement/spec.md`
 - **Product promise:** `.project/product/P-001-design-search-free-variation.md`
 - **Product lens:** `.project/active/qualified-reference-occurrence-anchoring/product-lens.md`
@@ -229,4 +286,36 @@ local-rename advice, the D-7 dot-path advice, or the chosen fusion-tea migration
 
 ---
 
-**Next Steps:** After approval, proceed to `$my-design`.
+**Next Steps:** After approval, proceed to `/_my_design`.
+
+---
+
+## Revision Record — spec-review incorporation (2026-08-15)
+
+`[OWNER 2026-08-15]` ruled “all changes should be made.” Every finding in
+`.project/active/qualified-reference-occurrence-anchoring/spec-review.md` is accepted. How each was
+resolved:
+
+| ID | Resolution |
+|---|---|
+| **L1-1** | Both halves landed in Problem. The measurement is cited as the basis (zero of 126 change; 91 join and compare equal, 35 reach no edge for named reasons) **and** the forced-not-earned caveat is stated in its own paragraph: every joined bare site has leaf-slot fan-out of one, so the two walks could not have differed. The broader invariant stays `[NEED]` — owner-originated — now resting on returned evidence rather than preceding it. |
+| **L1-2** | Regraded. The u4–u7 promotion row is `[NEED]` (owner-stated), matching its own text. |
+| **L1-3** | Restated as what remains. The self-binding spec is already corrected at rev 4 (`:56` names codegen defect F-6 and delegates the repair here); the `[NEED]` and its criterion now require a close-time check of the landed behavior against that explanation, which is falsifiable at approval. |
+| **L1-4** | Reframed with real estate. The Problem now leads the qualified half with D-6's ratified text quoted and cited (`constraint-execution-authoritative-lifecycle-contract.md:618-626`, verified at revision, ratified 2026-08-05): this item restores conformance to a settled disposition and does not invent `::` occurrence semantics. |
+| **L1-5** | Verified as far as the repository allows, and flagged. The typo is kept. The quote's only in-repo record is this spec, so the `[OWNER-VERBATIM]` grade rests on the preserved misspelling and not on a second source; the spec says so and names the downgrade to `[OWNER]` if the owner's transcript disagrees. |
+| **L2-1** | Reasoning recorded, not just the choice. The narrow option is genuinely available (authored text recovered from CST byte spans for all 189 sites, falsifying the earlier impossibility argument) and costs threading spelling evidence through three callers that share one resolver, to protect a measured difference of zero. |
+| **L2-2** | The broader-surface criterion now requires each difference **adjudicated fix-or-regression with recorded reasoning**, with zero unadjudicated differences — explanation by the invariant is no longer sufficient. It is stated as re-derive-and-confirm, since the bare classification has been performed once. |
+| **L2-3** | `[AGENT]` ruling recorded at that grade, and challengeable. The documentation tail stays; its verifier is this item's `/_my_close` stage; the inventory is bounded and named (`self-binding-replacement/spec.md:56,66-70,74-78`), and `docs/architecture/modeling-assumptions.md` was checked at revision and teaches no positional `::` rule. |
+| **L3-1** | Conflict resolved in text. Non-Goal 5 now says a `PartUsage` declared at package scope is still usage-owned and remains in scope — the u4 shape — so no adjacent reading forbids what SC 2 mandates. |
+| **L3-2** | The strict/lenient parity criterion now traces to an `[INHERITED]` row citing `elaborator-design/design.md:320-324,374-376`. |
+| **L3-3** | Answered with a criterion, not an assumption. The snapshot criterion requires a stale snapshot carrying a mis-anchored edge to be **exposed** by an exact typed-edge live/snapshot comparison before recapture; a backing `[INFERRED]` row states that snapshot loading cannot re-resolve the semantic owner. |
+| **L3-4** | The answered “how are the 126 joined” question is removed. What genuinely remains open — plural (`sum()`) behavior of the owner-aware branch, which the corpus does not exercise — replaces it. |
+| **L4-1** | `$my-design` → `/_my_design`. |
+| **L5-1** | “One segment” is explained in plain words before the `comp_a::length` example, including why a two-segment chain (`driver.cost`) fixes an occurrence first and a one-segment reference does not. |
+| **L5-2** | SC 2–5 gloss u4–u7 by shape (package sibling, named sibling, cross-owner, paired spelling), readable without the spike findings open. |
+| **M-1** | The four-family qualified-regression criterion rewritten. It now states that for the typed-alias and inline-predicate callers the authored regressions are the **sole** evidence — the corpus has zero usage-owned examples of either — and that dropping the criterion strips the shared-resolver justification of all its evidence. |
+| **M-2** | The measurement's corrected composition replaces the scan's in Problem (76 computed-attribute terms, 15 constraint bindings on the same `_resolve_bindings` caller, zero aliases or predicates, 35 no-edge), with the 63-versus-62 count explained as one `non_finite_literal` site rather than a disagreement. The spec states that inherited scan numbers are the corrected ones. |
+
+**Nothing was found wrong on evidence.** The D-6 citation behind L1-4 was checked line by line and
+says what the review reports. The one place the spec now flags rather than asserts is L1-5's
+verbatim grade, which no repository artifact can corroborate.
