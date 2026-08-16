@@ -95,3 +95,19 @@ uv run python scripts/assess_v6_snapshot_churn.py \
 
 **23 tracked, 23 assessed, 0 stale.** Every committed snapshot agrees with live elaboration
 today, so any staleness Phase 4 finds is caused by this repair and by nothing else.
+
+## After the repair — Phase 3
+
+Two files were added on 2026-08-15 after the single resolver change landed. Both come from the
+same commands as their `before` counterparts, so the comparison is file to file.
+
+* `after-phase3.json` — the post-repair ledger. Against `before.json`: the corpus moves from
+  405 edge / 4 diagnostic to **409 edge / 0 diagnostic** over the same 409 site keys, exactly 5
+  sites change (u4, u5, u7's two inputs, and u6's moved edge), and the per-root `identity`
+  blocks — occurrence wire IDs and every attribute/calculation/constraint node ID — compare
+  **equal across all 153 roots**.
+* `after-phase3-full-suite.txt` — 17 failed, 2132 passed, 34 skipped, 88 deselected. The failing
+  node set is identical to `before-full-suite.txt`'s 17 missing-pandas failures.
+
+Phase 5 re-runs the ledger against the shipped tree and adjudicates the corpus formally; these
+two files are Phase 3's own evidence, not that adjudication.

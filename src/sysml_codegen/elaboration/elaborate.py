@@ -2068,12 +2068,7 @@ class _ExactElaborator:
     ) -> list[NodeRef | ProducerRef]:
         reference = self._exact_reference(fact)
         if len(reference.segment_ids) == 1:
-            return [
-                self._resolve_leaf(
-                    reference.leaf_id,
-                    consumer_scope,
-                )
-            ]
+            return [self._resolve_direct_reference(reference.leaf_id, consumer_scope)]
         states: list[OccurrenceId | CalcNode] = self._contextualize_root(
             reference.root_id, consumer_scope, plural=plural
         )
@@ -2295,6 +2290,56 @@ class _ExactElaborator:
             return [node] if node is not None else []
         edge = self._target_at(state, segment_id)
         return [edge] if edge is not None else []
+
+    def _resolve_direct_reference(
+        self,
+        leaf_id: DeclarationId,
+        consumer_scope: ScopeId,
+    ) -> NodeRef | ProducerRef:
+        """Resolve a one-segment reference, anchored on its leaf's exact owner.
+
+        SysIDE has already resolved the written text to one exact leaf declaration, and
+        when a ``PartUsage`` owns that declaration the owner *is* the occurrence the
+        author named. Feature slots are shared across a whole redefinition family, so
+        re-finding the slot from the consumer's own lineage — what ``_resolve_leaf``
+        does — can land on a sibling occurrence that merely carries the same slot. This
+        route keeps the author's occurrence by running the sequence in the order the
+        model states it: owner declaration, then owner occurrence, then leaf slot at
+        that occurrence.
+
+        Only a ``PartUsage`` owner names an occurrence. A leaf owned by a definition,
+        package, enumeration, or calculation has none of its own, so it keeps the
+        existing leaf route unchanged.
+        """
+        leaf = self._elements.get(leaf_id)
+        owner = self._semantic_owner(leaf) if leaf is not None else None
+        if not SysideAdapter.is_instance(owner, "PartUsage"):
+            return self._resolve_leaf(leaf_id, consumer_scope)
+
+        owner_id = declaration_id_for(owner)
+        # Scalar regardless of the caller's ``plural``: that flag describes the
+        # aggregation the caller is expanding, not this reference. A direct term names
+        # one owner, so honoring the flag here would fan the term out across sibling
+        # occurrences and invent a cardinality the model never authored.
+        [owner_occurrence] = self._select_occurrences(
+            [
+                occurrence.occurrence_id
+                for occurrence in self._occurrences.occurrences_for_declaration(owner_id)
+            ],
+            consumer_scope,
+            plural=False,
+        )
+        # An owner that cannot be selected, or that carries no target for the leaf, is
+        # final. Consumer position decided the wrong occurrence in the first place; it is
+        # not a recovery authority, so there is no retry of the leaf route from here.
+        edge = self._target_at(owner_occurrence, leaf_id)
+        if edge is None:
+            raise _ReferenceResolutionError(
+                ElaborationCode.SI_OCCURRENCE_MISSING,
+                f"exact owner {owner_id.to_wire()} has no target for leaf "
+                f"{leaf_id.to_wire()} at its selected occurrence",
+            )
+        return edge
 
     def _resolve_leaf(
         self,

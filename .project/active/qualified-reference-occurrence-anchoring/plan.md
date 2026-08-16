@@ -246,14 +246,14 @@ assert no_positional_fallback_diagnostic(graph)
 [Required Invariants](design.md#required-invariants), and
 [Implementation Notes](design.md#implementation-notes).
 
-- [ ] Add the plural-caller/raw-alias stencil above to
+- [x] Add the plural-caller/raw-alias stencil above to
   `tests/conformance/test_usage_owned_reference_anchoring.py` and confirm it is red for the target
   identity rather than for fixture syntax.
-- [ ] Modify the one-segment branch at
+- [x] Modify the one-segment branch at
   `src/sysml_codegen/elaboration/elaborate.py:2062-2076`: recover the exact live leaf and semantic
   owner, guard on live `PartUsage`, contextualize that owner with scalar cardinality, select the
   exact leaf slot at the selected occurrence, and require one typed target.
-- [ ] Reuse `elaborate.py:2119-2219` and `elaborate.py:2350-2366`. Preserve the existing
+- [x] Reuse `elaborate.py:2119-2219` and `elaborate.py:2350-2366`. Preserve the existing
   `_resolve_leaf` route for all other owner kinds. Do not add fallback, resolver-level alias
   following, or a new diagnostic code.
 
@@ -261,17 +261,17 @@ assert no_positional_fallback_diagnostic(graph)
 
 **Automated:**
 
-- [ ] Run `test_usage_owned_reference_anchoring.py` and
+- [x] Run `test_usage_owned_reference_anchoring.py` and
   `test_source_identity_extraction.py`; all Phase-2 red tests are green and controls remain green.
-- [ ] Run `tests/unit/test_elaboration_import_boundaries.py:189-215`; the new branch introduces no
+- [x] Run `tests/unit/test_elaboration_import_boundaries.py:189-215`; the new branch introduces no
   name, qualified-name, path-prefix, or first-match authority.
-- [ ] Run Ruff on `elaborate.py` and the touched tests; run focused mypy on `elaborate.py`.
+- [x] Run Ruff on `elaborate.py` and the touched tests; run focused mypy on `elaborate.py`.
 
 **Manual:**
 
-- [ ] Inspect u4–u7 typed edges and full diagnostics. Confirm u6 has no residual edge to
+- [x] Inspect u4–u7 typed edges and full diagnostics. Confirm u6 has no residual edge to
   `comp_b.length` and no recovery path was invoked.
-- [ ] Compare Phase-2 occurrence records and node IDs byte-for-byte with the repaired graphs.
+- [x] Compare Phase-2 occurrence records and node IDs byte-for-byte with the repaired graphs.
 
 **What We Know Works After This Phase:** Every shared resolver caller inherits exact usage-owner
 anchoring through one production seam, while identity construction and unaffected forms are stable.
@@ -564,10 +564,113 @@ branch `main` at `d78c42e`. No file under `src/` was touched — `git diff -- sr
 
 ### Phase 3 Completion
 
-**Completed:**
+**Completed:** 2026-08-15, licensed environment (`set -a; source ../agentic-mbse/.env; set +a`),
+branch `main` at `85f598a`. One production file changed and nothing else: `git diff --stat` is
+`src/sysml_codegen/elaboration/elaborate.py` alone. No test file was edited — the Phase-2 oracle
+stands exactly as written.
+
 **Actual Changes:**
+
+*The one seam (`src/sysml_codegen/elaboration/elaborate.py`)*
+
+- `_resolve_semantic_reference`'s one-segment arm now calls `_resolve_direct_reference` instead of
+  `_resolve_leaf` directly. That is the whole call-site change; the multi-segment arm, the plural
+  handling, and every caller are untouched.
+- New `_resolve_direct_reference(leaf_id, consumer_scope)`, placed immediately above `_resolve_leaf`
+  so the two one-segment routes read together:
+  1. Look up the exact leaf in the live element index and take its live semantic owner through the
+     existing `_semantic_owner`.
+  2. Guard on `SysideAdapter.is_instance(owner, "PartUsage")`. Not `owner_is_definition`, not source
+     spelling, not qualified-name text (D2). Any other owner kind — definition, package,
+     enumeration, calculation, or none — returns `self._resolve_leaf(...)` unchanged.
+  3. Contextualize the owner declaration through the existing `_select_occurrences` over
+     `occurrences_for_declaration(owner_id)`, with `plural=False` hard-coded and a comment naming
+     why: the caller's flag describes the aggregation the caller is expanding, not this reference
+     (D4).
+  4. Take the leaf's target at that one occurrence through the existing `_target_at`, which is the
+     established slot → `NodeRef`/`ProducerRef` lookup.
+  5. Raise the existing `SI_OCCURRENCE_MISSING` if that occurrence carries no target for the leaf.
+- The scalar selection is unpacked as `[owner_occurrence] = ...`, matching `_resolve_leaf`'s own
+  `[producer] = self._select_calc_nodes(...)` idiom: `_select_occurrences(plural=False)` guarantees
+  exactly one, so a violation is a loud invariant failure rather than a silently handled case.
+- **No fallback exists to invoke.** Once the owner guard passes there is no `except`, no retry, and
+  no second route out of the function — a missing or ambiguous owner propagates the existing
+  `_ReferenceResolutionError` to the caller that already knows how to translate it. No new
+  diagnostic code, no resolver-level alias following, no caller change (D5).
+
+*Verification artifacts added*
+
+- `verification/after-phase3.json` — the post-repair ledger from the same `corpus_compare.py`, so
+  the before/after comparison below is file-to-file rather than remembered.
+- `verification/after-phase3-full-suite.txt` — the post-repair full-suite run.
+
+**Results:**
+
+- **The 15 red nodes are green and nothing beside them moved.**
+  `test_usage_owned_reference_anchoring.py`: 48 passed (15 failed / 33 passed immediately before the
+  edit, verified by stashing the change and re-running — the red/green split is caused by this
+  branch and by nothing else). `test_source_identity_extraction.py`: 14 passed, including the D2
+  authority guard.
+- **Import-boundary guard:** `tests/unit/test_elaboration_import_boundaries.py` 14 passed. The new
+  helper is inspected automatically by the AST guard and needed no exemption — it selects on
+  declaration identity and metatype only.
+- **Full suite:** 17 failed, 2132 passed, 34 skipped, 88 deselected, 172.37s. The failing *node set*
+  is byte-identical to `before-full-suite.txt`'s — all 17 are the environmental
+  `ModuleNotFoundError: No module named 'pandas'`. Passing nodes went 2080 → 2132: the 37 Phase-2
+  additions plus the 15 repaired nodes. All 34 skips are golden-fixture skips; zero license skips,
+  so this is a real licensed run.
+- **Quality:** `ruff check` clean; `mypy` reports no issue in `elaborate.py`. `ruff format --diff`
+  shows 9 hunks in the file, all pre-existing (identical on the unmodified file at `85f598a`) and
+  none inside the new code.
+- **Corpus, before → after** (`before.json` vs `after-phase3.json`, 140 frozen roots, 409 sites):
+  outcomes move from 405 edge / 4 diagnostic to **409 edge / 0 diagnostic**. Exactly 5 sites change
+  and each is a predicted repair: u4's `SI_OCCURRENCE_MISSING` and u5's, u7's `a_len` and u7's
+  `b_len` `SI_OCCURRENCE_AMBIGUOUS` all become typed edges, and u6's silent edge moves from the
+  `comp_b` occurrence to the `comp_a` occurrence at the same slot. No site anywhere in the corpus
+  gained a diagnostic. Site keys, lanes, and the 15 refused-root strings are unchanged.
+- **Promoted fixtures, before → after** (16 sites): 12 edge / 4 diagnostic becomes 15 edge /
+  1 diagnostic. The 14 changed sites are the u4/u5/u7 repairs, u6's moved edge, the combined
+  fixture's seven consumer lanes (alias raw target, alias-following calc input, computed attribute,
+  calc input, constraint actual, inline predicate, and the scalar `sum()` term) all moving from the
+  `comp_b` occurrence to `comp_a`'s, the bare alias discriminator moving the same way, and
+  `usage_owner_bare_alias_arrayed` moving from a **silent answer to
+  `SI_OCCURRENCE_AMBIGUOUS` ("consumer context contains 2 candidate occurrences")** with the
+  consumer left unbound. That last one is the phase's own no-hidden-recovery proof.
+- **Identity is untouched.** The `identity` block — every occurrence wire ID, attribute node ID,
+  calculation node ID, and constraint node ID — compares **equal for all 153 roots** (140 corpus +
+  13 promoted) between `before.json` and `after-phase3.json`. Zero differences.
+- **Manual u4–u7 inspection** (typed edges and full diagnostics printed directly from the live
+  graphs): u4 binds the package-scoped `shared_component` occurrence; u5 binds the named `comp_a`
+  occurrence; u6 binds occurrence `dd373162…` (`comp_a`) where it previously bound `87f9e6f2…`
+  (`comp_b`); u7's `a_len`/`b_len` bind distinct occurrences that equal their dot-path control edges
+  byte for byte. All four graphs carry **zero diagnostics**.
+- **u6 has no residual edge and no recovery path ran.** `comp_b.length` has an empty consumer list,
+  and a call counter on `_resolve_leaf` records **0 invocations across u6's entire elaboration** —
+  the repaired branch answered without the positional route being reached at all.
+
 **Issues:**
+
+- None. No premise conflict surfaced: no caller, evidence schema, occurrence index, slot index,
+  graph model, projection path, or snapshot codec needed to change, and no Phase-2 assertion needed
+  weakening. Every one of the 15 red nodes went green on the branch as designed.
+
 **Deviations:**
+
+- **The Phase-3 test stencil was already landed by Phase 2, so no test was written here.** Its four
+  assertions exist node-for-node in the oracle file: the scalar `sum()` term under a `plural=True`
+  caller (`test_combined_direct_sum_term_is_scalar_and_reaches_the_named_source`), the raw alias
+  target (`test_combined_alias_raw_target_is_the_named_source`), the qualified-equals-dot-path edge
+  comparison (`test_u7_qualified_edges_equal_their_dot_path_controls`), and the no-fallback
+  diagnostic check (`graph.diagnostics == []` on every affected node). All four were confirmed red
+  for target identity in Phase 2 and are green now. Adding a duplicate stencil would have added a
+  second oracle for the same obligation.
+- **The owner is contextualized through `_select_occurrences` rather than `_contextualize_root`.**
+  Both are in the range the plan names for reuse. `_contextualize_root` re-dispatches on owner
+  metatype and returns `OccurrenceId | CalcNode`, but the branch has already established
+  `PartUsage`, so calling it would mean testing the same metatype twice and then narrowing a union
+  that cannot occur. Calling the occurrence selector directly mirrors `_contextualize_root`'s own
+  `PartUsage` arm exactly — same candidates, same package/lineage/descendant/ambiguity policy — with
+  nothing duplicated but the two-line candidate list.
 
 ### Phase 4 Completion
 

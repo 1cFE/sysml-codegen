@@ -93,6 +93,27 @@ set with and without this item's changes; every affected file passes when run al
 reproduce as a full-suite run in this venv even at HEAD. Out of this item's scope (Non-Goals: no
 re-certification); needs an owner.
 
+### 2026-08-15: qualified-reference-occurrence-anchoring — PHASE 3 COMPLETE (the resolver is repaired)
+
+The item's single production edit has landed:
+`src/sysml_codegen/elaboration/elaborate.py`, one new `_resolve_direct_reference` helper called
+from the one-segment arm of the shared semantic resolver. It takes the exact leaf's live semantic
+owner, activates only when that owner is a `PartUsage`, contextualizes it through the existing
+occurrence selector with scalar cardinality, and reads the leaf's slot at that one occurrence. Every
+other owner kind still goes through `_resolve_leaf` untouched. No fallback, no new diagnostic code,
+no caller/schema/index/projection/codec change.
+
+All **15 red nodes are green**, all 33 controls stay green, and the full suite is 17 failed / 2132
+passed / 34 skipped / 88 deselected — the same 17 missing-`pandas` failures as the pre-change
+baseline, node for node. The corpus ledger moves from 405 edge / 4 diagnostic to **409 edge / 0
+diagnostic** with exactly 5 changed sites (u4, u5, u7×2 repaired; u6's edge moved from `comp_b` to
+`comp_a`), and every occurrence wire ID and node ID compares **equal across all 153 roots**. The
+arrayed-owner negative now refuses with `SI_OCCURRENCE_AMBIGUOUS` instead of silently answering, and
+a call counter proves `_resolve_leaf` is never reached during u6's elaboration. Evidence:
+`verification/after-phase3.json` and `after-phase3-full-suite.txt`.
+
+**Next**: Phase 4 — public mutation, strict/lenient parity, and the snapshot routes.
+
 ### 2026-08-15: qualified-reference-occurrence-anchoring — PHASE 2 COMPLETE (red set + before ledger)
 
 Phases 1 and 2 of `.project/active/qualified-reference-occurrence-anchoring/plan.md` are done; no

@@ -1,6 +1,7 @@
 # Spec: Exact Owner Anchoring for Usage-Owned One-Segment References
 
-**Status:** Draft
+**Status:** Implementation In Progress (approved rev 2; plan Phase 3 of 5 complete — the resolver
+repair has landed, Phases 4-5 remain)
 **Owner:** Reid W
 **Created:** 2026-08-15 14:15 PDT
 **Revised:** 2026-08-15 rev 2 (spec-review incorporation complete — see revision record)
