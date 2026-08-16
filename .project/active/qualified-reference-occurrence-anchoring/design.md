@@ -145,6 +145,21 @@ exact outputs are retained at
 This does not prove that no legal discriminating bare topology exists. It proves only that the named
 candidate is not one, so the criterion cannot be treated as routine fixture authoring.
 
+**Evidence update, 2026-08-15 (learning test; no status changed here).** The Phase-1 bounded sweep
+extended that probe to fourteen candidates and **found affected shapes**: nine legal topologies make
+the two routes land on different occurrences, across the computed-attribute, calc-actual, and
+constraint-predicate lanes. Two independent families work — an `alias` to the sibling's leaf, and a
+`private import` of it that leaves the written reference literally one bare segment. Smallest clean
+case: `alias a_len for comp_a::length;` at parent scope, consumed inside `comp_b`, which wires to
+`comp_b.length` (7.0) where the model says `comp_a.length` (3.0). Evidence, per-candidate element
+IDs, and the recommended fixture are in
+[`spike/bare-discriminator-authorability/findings.md`](spike/bare-discriminator-authorability/findings.md).
+
+**Disposition (orchestrated run, 2026-08-15).** D10 route 1 applies on its own terms: the learning
+test found an authored discriminator, so the spec criterion SC8 is kept as written and B3 is
+confirmed. No route-2 amendment and no `authored bare discrimination unproven` gap record are
+created. The owner reserved only the null-result branch of D10, which did not occur.
+
 ## Core Concept
 
 Occurrence anchoring is a transient step in one shared resolver, not a new graph object. For a
