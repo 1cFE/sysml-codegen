@@ -16,7 +16,7 @@ from sysml_codegen.elaboration import (
 from sysml_codegen.extraction.extractor import SysMLDataExtractor
 from sysml_codegen.extraction.source_evidence import ReadinessCode
 from tests.conftest import FIXTURES_DIR, requires_license
-from tests.helpers.elaboration_graph import calc
+from tests.helpers.elaboration_graph import calc, every_alias_target, every_typed_edge
 
 pytestmark = requires_license
 
@@ -34,6 +34,15 @@ def _elaborate_lenient(name: str) -> InstanceGraph:
         extractor.extract_calculation_definitions(),
         validation_diagnostics=extractor.diagnostics.validation,
         strict=False,
+    )
+
+
+def _elaborate_strict(name: str) -> InstanceGraph:
+    extractor = _load(name)
+    return elaborate(
+        extractor.model,
+        extractor.extract_calculation_definitions(),
+        validation_diagnostics=extractor.diagnostics.validation,
     )
 
 
@@ -162,3 +171,77 @@ def test_standard_sum_is_classified_by_exact_declaration_id() -> None:
     bank_total = calc(graph, "source_identity_mixed_consumers__bank__bank_total")
     assert len(bank_total.inputs) == 3
     assert graph.diagnostics == []
+
+
+#: Owner-anchoring fixtures that elaborate cleanly, so a strict/lenient difference
+#: here could only come from reference resolution — no readiness finding intervenes.
+OWNER_ANCHORING_PARITY = (
+    "usage_owned_reference_consumers",
+    "u4_usage_qual_pkg_sibling",
+    "u5_usage_qual_named_sibling",
+    "u6_usage_qual_crossnamed",
+    "u7_both_spellings",
+    "usage_owner_bare_alias",
+)
+
+
+@pytest.mark.parametrize("fixture", OWNER_ANCHORING_PARITY)
+def test_owner_anchoring_resolves_identically_in_strict_and_lenient(fixture: str) -> None:
+    """Both modes run the same reference resolution, so the graphs are equal by value.
+
+    Equality of the whole graph covers the typed edges *and* the raw alias targets that
+    ``semantic_edges()`` leaves out. The empty diagnostic set is asserted too, because
+    two graphs that both failed the same way would also compare equal.
+    """
+    lenient = _elaborate_lenient(fixture)
+    strict = _elaborate_strict(fixture)
+
+    assert lenient.diagnostics == []
+    assert every_typed_edge(strict) == every_typed_edge(lenient)
+    assert every_alias_target(strict) == every_alias_target(lenient)
+    assert strict == lenient
+
+
+def test_ambiguous_exact_owner_is_lenient_diagnostic_and_strict_refusal() -> None:
+    """The arrayed-owner negative: same finding, one mode reports it, one refuses.
+
+    Scalar owner selection cannot choose between an arrayed owner's two occurrences,
+    and there is no positional route left to fall back to — so the consumer stays
+    unbound rather than silently binding the enclosing occurrence.
+    """
+    lenient = _elaborate_lenient("usage_owner_bare_alias_arrayed")
+    consumer = calc(lenient, "BareAliasArrayedOwner__plant__comp_b__doubled")
+
+    assert Counter(diagnostic.code for diagnostic in lenient.diagnostics) == Counter(
+        {ElaborationCode.SI_OCCURRENCE_AMBIGUOUS: 1}
+    )
+    assert consumer.inputs == {}
+
+    with pytest.raises(ElaborationDiagnosticError) as excinfo:
+        _elaborate_strict("usage_owner_bare_alias_arrayed")
+
+    assert Counter(diagnostic.code for diagnostic in excinfo.value.diagnostics) == Counter(
+        diagnostic.code for diagnostic in lenient.diagnostics
+    )
+
+
+def test_strict_readiness_halt_precedes_graph_diagnostic_rejection() -> None:
+    """The two strict exits are distinct, and readiness is the earlier one.
+
+    ``_finish_readiness`` raises ``ElaborationError`` before ``graph.validate()`` ever
+    runs, so a readiness fixture never reaches the ``ElaborationDiagnosticError`` path
+    the owner-resolution controls above use. The two error types are unrelated classes,
+    which is what makes this distinguishable rather than a matter of message text.
+    """
+    assert not issubclass(ElaborationDiagnosticError, ElaborationError)
+
+    with pytest.raises(ElaborationError) as excinfo:
+        _elaborate_strict("source_identity_indexed_source")
+
+    assert Counter(finding.code for finding in excinfo.value.findings) == Counter(
+        {ReadinessCode.SI_INDEXED_SOURCE_UNSUPPORTED: 2}
+    )
+    lenient = _elaborate_lenient("source_identity_indexed_source")
+    assert Counter(diagnostic.code for diagnostic in lenient.diagnostics) == Counter(
+        {ReadinessCode.SI_INDEXED_SOURCE_UNSUPPORTED: 2}
+    )

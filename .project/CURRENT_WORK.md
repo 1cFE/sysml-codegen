@@ -114,6 +114,37 @@ a call counter proves `_resolve_leaf` is never reached during u6's elaboration. 
 
 **Next**: Phase 4 — public mutation, strict/lenient parity, and the snapshot routes.
 
+### 2026-08-15: qualified-reference-occurrence-anchoring — PHASE 4 COMPLETE (public + snapshot routes)
+
+The repaired internal edge is the one public generation and the snapshot routes actually see. **No
+production file changed** — `git status --porcelain src/` is empty — and nothing in projection or
+either codec needed to.
+
+11 new test nodes, all green, across four files: a public-mutation node that varies `comp_a`'s
+modelled value and proves the six consumers move *and that they are every input port in the graph*
+(so an unintended seventh fails wherever it binds), a round-trip node that compares the full decoded
+graph and the raw alias targets `semantic_edges()` omits, a v6 capture/relocation node using a
+temporary path (the fixture is deliberately **not** enrolled in the committed batch, per D9), and
+six strict/lenient parity parameters plus two negatives — the arrayed-owner refusal and the earlier
+`_finish_readiness` halt, tested separately. The two whole-graph typed helpers they share live in
+`tests/helpers/elaboration_graph.py`.
+
+**The new nodes were shown to be able to fail.** Reverting `elaborate.py` in the working tree to its
+pre-repair content makes 7 of the 11 red; the 4 that stay green are the parity nodes whose fixtures
+were *silently and symmetrically* wrong in both modes, plus the readiness node. The file was
+restored and `src/` verified clean.
+
+**Snapshot: nothing was recaptured, and that is the finding.** The live-versus-committed assessment
+ran first and returned **23 tracked, 23 assessed, 0 stale** — every row byte-identical to Phase 2's,
+differing only in `baseline_commit` and `git_status`. D9's recapture trigger never fired. Evidence:
+`verification/phase4-snapshot-assessment.json`.
+
+Focused files together under the license: **100 passed, zero skips**. Full suite: 17 failed / 2143
+passed / 34 skipped / 88 deselected — the same 17 missing-`pandas` failures, and exactly +11 passing
+nodes. Ruff clean; mypy reports no new error.
+
+**Next**: Phase 5 — corpus adjudication (`after.json`, `adjudication.md`) and certification.
+
 ### 2026-08-15: qualified-reference-occurrence-anchoring — PHASE 2 COMPLETE (red set + before ledger)
 
 Phases 1 and 2 of `.project/active/qualified-reference-occurrence-anchoring/plan.md` are done; no

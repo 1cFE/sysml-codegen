@@ -23,7 +23,7 @@ import json
 import shutil
 from pathlib import Path
 
-from sysml_codegen.elaboration import elaborate, project
+from sysml_codegen.elaboration import NodeRef, elaborate, project
 from sysml_codegen.extraction.extractor import SysMLDataExtractor
 from sysml_codegen.extraction.source_manifest import admit_sources
 from sysml_codegen.orchestration.elaborated_pipeline import (
@@ -35,6 +35,7 @@ from sysml_codegen.snapshot.capture import capture_instance_graph_snapshot
 from sysml_codegen.snapshot.envelope import load_instance_graph_snapshot
 from sysml_codegen.snapshot.instance_graph import encode_instance_graph
 from tests.conftest import FIXTURES_DIR, requires_license
+from tests.helpers.elaboration_graph import every_alias_target, every_typed_edge
 
 pytestmark = requires_license
 
@@ -218,3 +219,45 @@ def test_relocated_snapshot_needs_no_source_tree(tmp_path: Path) -> None:
 
     shutil.rmtree(staging)
     assert _instance_fingerprint(load_instance_graph_snapshot(captured)) == expected
+
+
+def test_usage_owned_anchoring_survives_capture_and_relocation(tmp_path: Path) -> None:
+    """The exact-owner edge is what the snapshot routes carry, not just the live one.
+
+    The combined anchoring fixture is captured to a temporary path and never enrolled
+    in the committed v6 batch (design D9): a round-trip proof is not a reason to add
+    stored bytes. Typed identity is the oracle here — the alias lane is asserted on its
+    raw ``alias_target``, which ``semantic_edges()`` does not carry.
+    """
+    fixture = FIXTURES_DIR / "usage_owned_reference_consumers"
+    live = build_elaborated_pipeline([fixture])
+
+    captured = capture_instance_graph_snapshot([fixture], tmp_path / "anchoring.json")
+    in_place = load_instance_graph_snapshot(captured)
+    relocated_path = tmp_path / "moved" / "anchoring.json"
+    relocated_path.parent.mkdir()
+    shutil.copyfile(captured, relocated_path)
+    relocated = load_instance_graph_snapshot(relocated_path)
+
+    assert _instance_fingerprint(in_place) == _instance_fingerprint(relocated)
+    assert _instance_fingerprint(elaborate_model_paths([fixture])) == _instance_fingerprint(
+        in_place
+    )
+    assert _payload(live) == _payload(project(in_place)) == _payload(project(relocated))
+
+    for graph in (in_place, relocated):
+        source = graph.attr_by_display_path(
+            "UsageOwnedReferenceConsumers__plant__comp_a__length"
+        )
+        sibling = graph.attr_by_display_path(
+            "UsageOwnedReferenceConsumers__plant__comp_b__length"
+        )
+        alias = graph.attr_by_display_path(
+            "UsageOwnedReferenceConsumers__plant__comp_b__aliased_length"
+        )
+        edges = every_typed_edge(graph)
+        assert len(edges) == 6
+        assert set(edges.values()) == {NodeRef(source.node_id)}
+        assert every_alias_target(graph) == {alias.node_id: NodeRef(source.node_id)}
+        assert NodeRef(sibling.node_id) not in edges.values()
+        assert not graph.diagnostics

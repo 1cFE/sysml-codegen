@@ -7,7 +7,7 @@ import json
 
 import pytest
 
-from sysml_codegen.elaboration import ProjectionError, elaborate, project
+from sysml_codegen.elaboration import NodeRef, ProjectionError, elaborate, project
 from sysml_codegen.extraction.extractor import SysMLDataExtractor
 from sysml_codegen.snapshot.instance_graph import (
     InstanceGraphCodecError,
@@ -15,6 +15,7 @@ from sysml_codegen.snapshot.instance_graph import (
     encode_instance_graph,
 )
 from tests.conftest import FIXTURES_DIR, requires_license
+from tests.helpers.elaboration_graph import every_alias_target, every_typed_edge
 
 pytestmark = requires_license
 
@@ -215,4 +216,42 @@ def test_live_and_v2_round_trip_projection_match_across_graph_shapes(fixture: st
     rebuilt = decode_instance_graph(encode_instance_graph(live))
 
     assert rebuilt.semantic_edges() == live.semantic_edges()
+    assert project(rebuilt) == project(live)
+
+
+def test_usage_owned_anchoring_survives_the_codec_including_raw_alias_targets() -> None:
+    """The decoded graph, not ``semantic_edges()``, is the round-trip oracle here.
+
+    ``semantic_edges()`` reads consumer input ports only, so an attribute's raw
+    ``alias_target`` — the qualified typed-alias lane of the combined fixture — is
+    invisible to it. The first assertion below pins that omission, which is why the
+    rest compares the whole decoded graph and the alias map by value.
+    """
+    extractor = SysMLDataExtractor([FIXTURES_DIR / "usage_owned_reference_consumers"])
+    assert extractor.load_models()
+    live = elaborate(
+        extractor.model,
+        extractor.extract_calculation_definitions(),
+        validation_diagnostics=extractor.diagnostics.validation,
+    )
+    source = live.attr_by_display_path("UsageOwnedReferenceConsumers__plant__comp_a__length")
+    alias = live.attr_by_display_path(
+        "UsageOwnedReferenceConsumers__plant__comp_b__aliased_length"
+    )
+    assert every_alias_target(live) == {alias.node_id: NodeRef(source.node_id)}
+    assert set(every_typed_edge(live).values()) == {NodeRef(source.node_id)}
+    assert all(str(alias.node_id) not in edge for edge in live.semantic_edges()), (
+        "semantic_edges() unexpectedly carries the alias lane; the comparison below "
+        "was written because it does not"
+    )
+
+    encoded = encode_instance_graph(live)
+    rebuilt = decode_instance_graph(encoded)
+
+    assert rebuilt == live
+    assert encode_instance_graph(rebuilt) == encoded
+    assert every_alias_target(rebuilt) == every_alias_target(live)
+    assert every_typed_edge(rebuilt) == every_typed_edge(live)
+    assert rebuilt.semantic_edges() == live.semantic_edges()
+    assert len(live.semantic_edges()) == 6
     assert project(rebuilt) == project(live)

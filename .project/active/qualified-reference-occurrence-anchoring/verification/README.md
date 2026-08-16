@@ -111,3 +111,31 @@ same commands as their `before` counterparts, so the comparison is file to file.
 
 Phase 5 re-runs the ledger against the shipped tree and adjudicates the corpus formally; these
 two files are Phase 3's own evidence, not that adjudication.
+
+## After the repair — Phase 4
+
+### `phase4-snapshot-assessment.json` — the live-versus-committed assessment
+
+Run **before** any snapshot was touched, from the same command as its `before` counterpart:
+
+```bash
+uv run python scripts/assess_v6_snapshot_churn.py \
+  --output .project/active/qualified-reference-occurrence-anchoring/verification/phase4-snapshot-assessment.json
+```
+
+**23 tracked, 23 assessed, 0 stale, 0 missing, 0 extra, 0 duplicate** — identical to
+`before-snapshot-inventory.json`. Compared field by field against that file, the two documents
+differ in exactly two keys, `baseline_commit` and `git_status`, both of which describe the run
+rather than a snapshot. Every one of the 23 rows — instance-graph payload digest, port-unit map,
+and all the review-evidence digests — is byte-identical.
+
+**No committed snapshot was recaptured, because none is stale.** The repaired branch acts only on
+one-segment references whose exact leaf is owned by a live `PartUsage`, and no tracked snapshot
+fixture contains one whose edge moved. D9's condition for recapture — an exposed and classified
+live/stored edge difference — was never met, so changing bytes would have been unclassified churn.
+This file is the retained evidence that the assessment ran first and came back clean.
+
+### `after-phase4-full-suite.txt` — the full suite with Phase 4's tests added
+
+Same command as `before-full-suite.txt`. Phase 5 owns the formal comparison; this is Phase 4's own
+check that the shared test helper it added broke nothing.

@@ -20,6 +20,7 @@ from sysml_codegen.snapshot.instance_graph import (
     encode_instance_graph,
 )
 from tests.conftest import FIXTURES_DIR, requires_license
+from tests.helpers.elaboration_graph import every_alias_target, every_typed_edge
 
 pytestmark = requires_license
 
@@ -33,6 +34,23 @@ EXPECTED_CONSUMERS = {
 SHADOWED_OUTER_QN = "ShadowedReference__the_outer__scale"
 SHADOWED_CALC = "shadowedreference__the_outer__inner__shadowed_calc"
 
+COMBINED_PREFIX = "UsageOwnedReferenceConsumers__plant"
+#: The one modelled source every consumer of the combined fixture names.
+COMBINED_SOURCE_QN = f"{COMBINED_PREFIX}__comp_a__length"
+#: The enclosing sibling's same-slot attribute — where the pre-repair defect landed.
+COMBINED_SIBLING_QN = f"{COMBINED_PREFIX}__comp_b__length"
+COMBINED_ALIAS_QN = f"{COMBINED_PREFIX}__comp_b__aliased_length"
+#: Public rendering of the six consumers, one per lane. Names are compatibility
+#: output only; the typed assertions below decide whether the set is right.
+COMBINED_CONSUMERS = {
+    (f"{COMBINED_PREFIX}__comp_b__alias_calc".lower(), ModuleKind.CALCULATION),
+    (f"{COMBINED_PREFIX}__comp_b__area_calc".lower(), ModuleKind.CALCULATION),
+    (f"{COMBINED_PREFIX}__comp_b__doubled_length".lower(), ModuleKind.FORMULA),
+    (f"{COMBINED_PREFIX}__comp_b__summed_length".lower(), ModuleKind.AGGREGATION),
+    (f"{COMBINED_PREFIX}__comp_b__bound_check".lower(), ModuleKind.CONSTRAINT),
+    (f"{COMBINED_PREFIX}__comp_b__inline_check".lower(), ModuleKind.CONSTRAINT),
+}
+
 
 def _load_graph(model_path: Path):
     extractor = SysMLDataExtractor([model_path])
@@ -44,7 +62,7 @@ def _load_graph(model_path: Path):
     )
 
 
-def _source_consumers(graph) -> set[tuple[str, ModuleKind]]:
+def _source_consumers(graph, source_qn: str) -> set[tuple[str, ModuleKind]]:
     return {
         (
             module.name.rsplit("__", 1)[0]
@@ -54,7 +72,7 @@ def _source_consumers(graph) -> set[tuple[str, ModuleKind]]:
         )
         for module in graph.modules
         for input_ in module.inputs
-        if input_.source.qualified_name == SOURCE_QN
+        if input_.source.qualified_name == source_qn
     }
 
 
@@ -163,8 +181,8 @@ def test_public_mutation_reaches_exactly_one_source_fanout(tmp_path: Path) -> No
     assert _typed_source_consumers(changed_internal, SOURCE_QN) == typed_consumers
 
     for baseline, changed in routes:
-        assert _source_consumers(baseline) == EXPECTED_CONSUMERS
-        assert _source_consumers(changed) == EXPECTED_CONSUMERS
+        assert _source_consumers(baseline, SOURCE_QN) == EXPECTED_CONSUMERS
+        assert _source_consumers(changed, SOURCE_QN) == EXPECTED_CONSUMERS
         assert _source_default(baseline) == 42.0
         assert _source_default(changed) == 47.0
 
@@ -226,3 +244,70 @@ def test_public_shadow_mutation_keeps_the_resolved_outer_referent(tmp_path: Path
     assert _generated_source_consumers(routes[0][1], SHADOWED_OUTER_QN) == {
         (SHADOWED_CALC, ModuleKind.CALCULATION)
     }
+
+
+def test_usage_owned_public_mutation_reaches_every_and_only_its_consumers(tmp_path: Path) -> None:
+    """One usage-owned source, seven lanes, on the live and rebuilt public routes.
+
+    Six consumer ports plus the typed alias's own raw target. Before the Phase-3 repair
+    all seven read ``comp_b.length`` instead, so varying ``comp_a``'s modelled value
+    moved nothing a customer could see. The assertions are *every and only* in the
+    strict sense: the six ports that reach the named source are pinned to be **every**
+    input port in the whole graph, so an unintended seventh consumer fails the test
+    wherever it binds — including one that binds the enclosing sibling and would be
+    invisible to a source-keyed query.
+
+    Typed identity decides. The generated names at the end are checked as public
+    compatibility output, never as the oracle.
+    """
+    baseline_path = FIXTURES_DIR / "usage_owned_reference_consumers"
+    changed_path = tmp_path / "usage_owned_reference_consumers"
+    shutil.copytree(baseline_path, changed_path)
+    model_path = changed_path / "model.sysml"
+    model_path.write_text(
+        model_path.read_text().replace(":>> length = 3.0;", ":>> length = 5.0;", 1)
+    )
+
+    internal, *routes = _projected_routes(baseline_path, changed_path)
+    baseline_internal, changed_internal = internal
+
+    typed_consumers = _typed_source_consumers(baseline_internal, COMBINED_SOURCE_QN)
+    assert len(typed_consumers) == 6
+    assert set(every_typed_edge(baseline_internal)) == typed_consumers, (
+        "an input port exists that does not read the named source"
+    )
+    assert _typed_consumer_surface(baseline_internal, typed_consumers) == COMBINED_CONSUMERS
+    assert _typed_source_consumers(baseline_internal, COMBINED_SIBLING_QN) == set()
+
+    # Raw alias targets are not in ``semantic_edges()``; assert them across the whole
+    # graph so the alias lane cannot regress silently.
+    assert every_alias_target(baseline_internal) == {
+        baseline_internal.attr_by_display_path(COMBINED_ALIAS_QN).node_id: NodeRef(
+            baseline_internal.attr_by_display_path(COMBINED_SOURCE_QN).node_id
+        )
+    }
+
+    # A value change moves the value and nothing else, on the live graph and after a
+    # codec round trip.
+    decoded = decode_instance_graph(encode_instance_graph(changed_internal))
+    for other in (changed_internal, decoded):
+        assert every_typed_edge(other) == every_typed_edge(baseline_internal)
+        assert every_alias_target(other) == every_alias_target(baseline_internal)
+
+    for baseline, changed in routes:
+        assert _source_consumers(baseline, COMBINED_SOURCE_QN) == COMBINED_CONSUMERS
+        assert _source_consumers(changed, COMBINED_SOURCE_QN) == COMBINED_CONSUMERS
+        assert _source_consumers(baseline, COMBINED_SIBLING_QN) == set()
+        assert _source_consumers(changed, COMBINED_SIBLING_QN) == set()
+        # The full public default surface, not a lookup: the enclosing sibling is not a
+        # public parameter at all, so "only" holds for the shipped JSON too.
+        assert _defaults(baseline) == {COMBINED_SOURCE_QN: 3.0}
+        assert _defaults(changed) == {COMBINED_SOURCE_QN: 5.0}
+
+    assert _generated_source_consumers(routes[0][1], COMBINED_SOURCE_QN) == COMBINED_CONSUMERS
+
+    generated = generate_all_derived_jsons(routes[0][1].entry_point_groups, tmp_path / "public")
+    public_payload = {
+        key: value for output in generated for key, value in json.loads(output.read_text()).items()
+    }
+    assert public_payload == {COMBINED_SOURCE_QN: 5.0}

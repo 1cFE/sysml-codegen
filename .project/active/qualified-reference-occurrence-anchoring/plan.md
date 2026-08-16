@@ -307,35 +307,35 @@ assert unchanged_sources(baseline, changed)
 [Failure Behavior](design.md#failure-behavior), and
 [Validation Approach](design.md#validation-approach).
 
-- [ ] Extend `tests/conformance/test_elaboration_public_mutation.py:136-184` with the combined
+- [x] Extend `tests/conformance/test_elaboration_public_mutation.py:136-184` with the combined
   fixture. Assert every and only calculation, alias/computed, constraint, predicate, and aggregation
   consumer, plus the single changed public default.
-- [ ] Extend `tests/conformance/test_elaboration_graph_roundtrip.py:32-47,202-218` or the focused
+- [x] Extend `tests/conformance/test_elaboration_graph_roundtrip.py:32-47,202-218` or the focused
   conformance file to compare the full decoded graph and raw alias targets, not only
   `semantic_edges()`.
-- [ ] Add temporary capture/relocation coverage following
+- [x] Add temporary capture/relocation coverage following
   `tests/conformance/test_snapshot_v6_routes.py:52-87,118-143`; do not enroll new fixtures in the
   committed v6 batch solely for this test.
-- [ ] Add strict/lenient parity cases following
+- [x] Add strict/lenient parity cases following
   `tests/conformance/test_elaboration_fail_closed.py:24-92`. Keep owner-resolution controls free of
   unrelated readiness findings; test `_finish_readiness`'s earlier strict halt separately.
-- [ ] Run live-versus-committed assessment before touching snapshots. If a changed stored edge is
+- [x] Run live-versus-committed assessment before touching snapshots. If a changed stored edge is
   found, retain the exact stale typed-edge comparison, then recapture only that classified fixture.
 
 ### Validation
 
 **Automated:**
 
-- [ ] Run the public mutation, graph round-trip, v6 route, fail-closed, and owner-anchoring files
+- [x] Run the public mutation, graph round-trip, v6 route, fail-closed, and owner-anchoring files
   together under the license; all pass with no license-related skip.
-- [ ] Run `scripts/assess_v6_snapshot_churn.py` and compare its tracked set and unchanged fixture
+- [x] Run `scripts/assess_v6_snapshot_churn.py` and compare its tracked set and unchanged fixture
   payloads with Phase 2.
 
 **Manual:**
 
-- [ ] Confirm the projected/generated source names are checked only as public compatibility output;
+- [x] Confirm the projected/generated source names are checked only as public compatibility output;
   typed graph identity made every semantic decision.
-- [ ] If recapture occurred, verify the retained pre-recapture diff names the changed consumer edge
+- [x] If recapture occurred, verify the retained pre-recapture diff names the changed consumer edge
   and that unrelated snapshot bytes remain identical.
 
 **What We Know Works After This Phase:** A mutation of the named source reaches exactly the intended
@@ -674,10 +674,139 @@ stands exactly as written.
 
 ### Phase 4 Completion
 
-**Completed:**
+**Completed:** 2026-08-15, licensed environment (`set -a; source ../agentic-mbse/.env; set +a`),
+branch `main` at `98970c9`. **No production file changed** — `git status --porcelain src/` is empty
+at the phase gate, and no public or codec route needed one.
+
 **Actual Changes:**
+
+*Shared test helper (`tests/helpers/elaboration_graph.py`)*
+
+- `every_typed_edge(graph)` — every consumer input port in the whole graph, keyed and valued by
+  typed ID. A source-keyed query answers "who reads this"; this answers "what does anything read
+  at all", which is the only form that can see a consumer binding somewhere unintended.
+- `every_alias_target(graph)` — raw `alias_target` across the whole graph, the edges
+  `InstanceGraph.semantic_edges()` does not carry (D8).
+
+Both are used by all four test files below, so the typed oracle has one definition rather than
+three drifting copies.
+
+*Public mutation (`tests/conformance/test_elaboration_public_mutation.py`)*
+
+- `test_usage_owned_public_mutation_reaches_every_and_only_its_consumers` — copies the combined
+  fixture, changes `comp_a`'s `:>> length = 3.0;` to `5.0`, and runs the live, projected, and
+  encode/decode-then-project routes.
+- The **only** bar is structural, not enumerated: the six ports that reach the named source are
+  asserted to be *every* input port in the graph
+  (`set(every_typed_edge(graph)) == typed_source_consumers(...)`). An unintended seventh consumer
+  fails the test wherever it binds — including one binding the enclosing sibling, which a
+  source-keyed query cannot see. The whole-graph alias map is pinned the same way.
+- `_source_consumers` gained a `source_qn` parameter; it previously closed over the module-level
+  `SOURCE_QN`, and two existing call sites were updated.
+
+*Round trip (`tests/conformance/test_elaboration_graph_roundtrip.py`)*
+
+- `test_usage_owned_anchoring_survives_the_codec_including_raw_alias_targets` — first asserts the
+  omission the plan names, that the alias node's ID appears nowhere in `live.semantic_edges()`,
+  then compares the **full decoded graph** (`rebuilt == live`), the re-encoded bytes, the whole
+  alias map, the whole typed-edge map, and `project(rebuilt) == project(live)`.
+
+*Snapshot routes (`tests/conformance/test_snapshot_v6_routes.py`)*
+
+- `test_usage_owned_anchoring_survives_capture_and_relocation` — captures the combined fixture to
+  `tmp_path`, loads it in place and from a relocated copy, and compares instance fingerprints, the
+  full projected payload against the independent live arm, and the typed edges and alias target on
+  both loaded graphs. **The fixture is not enrolled in the committed v6 batch** (D9).
+
+*Strict/lenient (`tests/conformance/test_elaboration_fail_closed.py`)*
+
+- `test_owner_anchoring_resolves_identically_in_strict_and_lenient`, parametrized over the six
+  owner-anchoring fixtures that elaborate cleanly (combined, u4, u5, u6, u7, bare alias). Each
+  asserts an empty lenient diagnostic set first, so two graphs failing the same way cannot pass by
+  comparing equal.
+- `test_ambiguous_exact_owner_is_lenient_diagnostic_and_strict_refusal` — the arrayed-owner
+  negative: one `SI_OCCURRENCE_AMBIGUOUS` and an unbound consumer in lenient mode, the same code
+  raised as `ElaborationDiagnosticError` in strict.
+- `test_strict_readiness_halt_precedes_graph_diagnostic_rejection` — the earlier `_finish_readiness`
+  halt, tested separately on `source_identity_indexed_source`. It pins that
+  `ElaborationDiagnosticError` is **not** a subclass of `ElaborationError`, which is what makes the
+  two strict exits distinguishable by type rather than by message text.
+
+*Verification artifacts*
+
+- `verification/phase4-snapshot-assessment.json` — the live-versus-committed assessment, run before
+  any snapshot was touched.
+- `verification/after-phase4-full-suite.txt` and a new `verification/README.md` section describing
+  both.
+
+**Results:**
+
+- **Focused files together under the license:** `test_elaboration_public_mutation.py`,
+  `test_elaboration_graph_roundtrip.py`, `test_snapshot_v6_routes.py`,
+  `test_elaboration_fail_closed.py`, `test_usage_owned_reference_anchoring.py`, and
+  `test_source_identity_extraction.py` — **100 passed, 0 skipped**. No license-related skip; a
+  skipped licensed test would have made the result worthless.
+- **11 new test nodes**, all green: 1 public mutation, 1 round trip, 1 snapshot route, and 8 in the
+  fail-closed file (6 parity parameters plus the two negatives).
+- **Negative control — the new nodes are not vacuous.** The working tree's `elaborate.py` was
+  temporarily replaced with its pre-repair content from `85f598a`, the new nodes were run, and the
+  file was restored (`git status --porcelain src/` empty afterwards, verified). **7 of the 11 fail
+  on the pre-repair resolver**: the public-mutation node, the round-trip node, the snapshot-route
+  node, parity for u4/u5/u7, and the arrayed negative. The 4 that still pass are exactly the ones
+  that should: parity for the combined fixture, u6, and the bare alias, because the pre-repair
+  defect was *silent and symmetric across both modes* — a parity claim cannot see it, which is why
+  the anchoring claim lives in the other three files — plus the readiness-halt node, which is about
+  a different fixture and a different exit.
+- **Snapshot assessment, run first (D9): 23 tracked, 23 assessed, 0 stale, 0 missing, 0 extra, 0
+  duplicate.** Compared field by field with Phase 2's `before-snapshot-inventory.json`, the two
+  documents differ in exactly two keys — `baseline_commit` and `git_status` — both describing the
+  run rather than a snapshot. All 23 rows, instance-graph payload digests and port-unit maps
+  included, are byte-identical. **No recapture occurred and none was warranted:** D9's trigger is an
+  exposed and classified live/stored edge difference, and there is none.
+- **Full suite:** 17 failed, 2143 passed, 34 skipped, 88 deselected, 172.50s. All 17 failures are
+  the same environmental `ModuleNotFoundError: No module named 'pandas'` as the Phase-2 baseline —
+  confirmed by count and cause, not by memory. Passing nodes went 2132 → 2143, exactly the 11 nodes
+  this phase adds. All 34 skips are golden-fixture skips; zero license skips.
+- **Quality:** `ruff check` clean on all five touched files. `mypy` on them reports **no new error**
+  — every message is the pre-existing pattern Phase 2 recorded (`import-untyped` because the
+  package ships no `py.typed`, plus unannotated `graph` parameters in functions that predate this
+  phase). None points at a line this phase wrote.
+
+**Manual checks:**
+
+- **Names are compatibility output, not the oracle.** Every semantic assertion compares `NodeRef`,
+  `NodeId`, or typed port IDs. Display paths appear only as lookup keys, so a rename breaks a lookup
+  loudly but can never make a wrong edge look right. The one rendered set, `COMBINED_CONSUMERS`, is
+  produced by `_typed_consumer_surface` *from* the typed consumer node IDs — it renders a typed
+  answer rather than deciding one. The pipeline YAML and generated JSON checks run last and are
+  labelled in the docstring as what they are.
+- **Recapture check: not applicable, and that is the recorded outcome.** No snapshot bytes changed.
+  `phase4-snapshot-assessment.json` is the retained evidence that the assessment ran before any
+  snapshot work and came back with zero stale rows and byte-identical payloads.
+
 **Issues:**
+
+- None. No premise conflict surfaced. Projection and both codecs consumed the repaired typed edges
+  mechanically, exactly as the phase's assumption predicted; nothing in `src/` needed to change.
+
 **Deviations:**
+
+- **The two typed-oracle helpers live in `tests/helpers/elaboration_graph.py`, not in each test
+  file.** Four files need the same whole-graph enumeration, and three copies would drift. The
+  module's docstring frames it as display-metadata lookup; these two are typed-identity queries, so
+  they are the first of their kind there. That is the smaller cost than duplication.
+- **`_source_consumers` gained a parameter.** It hardcoded the mixed-consumers source qualified
+  name, which the new test cannot use. Parameterizing it was preferable to a second near-identical
+  helper; the two existing call sites pass `SOURCE_QN` explicitly and their assertions are
+  unchanged.
+- **A temporary working-tree revert of `elaborate.py` was used for the negative control**, the same
+  technique Phase 3 used to establish its red/green split. It is a read of the pre-repair behavior,
+  not a production change: the file was restored immediately and the clean `git status` on `src/` is
+  recorded above. Without it, "these tests pass" would not establish that they *can* fail.
+- **The plan's stencil line `assert typed_consumers(changed, ...) == EXPECTED_CONSUMERS` is
+  implemented as a stronger whole-graph comparison.** Comparing the changed graph's full typed-edge
+  and alias maps against the baseline's proves the same thing and also catches an edge that moved
+  anywhere else in the graph, which an expected-set comparison against a fixed list would not.
 
 ### Phase 5 Completion
 

@@ -1,0 +1,60 @@
+tests/unit/test_package_metadata.py ..                                   [ 87%]
+tests/unit/test_predicate_compiler.py .................................. [ 88%]
+..............                                                           [ 89%]
+tests/unit/test_qualified_names.py .............                         [ 89%]
+tests/unit/test_qualified_names_shim.py ...                              [ 89%]
+tests/unit/test_registry_generation.py .....                             [ 90%]
+tests/unit/test_render_block_reasons.py ........                         [ 90%]
+tests/unit/test_report_precedence.py FFFFFFFFFFFF.....                   [ 91%]
+tests/unit/test_report_required_trigger.py ......                        [ 91%]
+tests/unit/test_retirement_worklist.py ........                          [ 91%]
+tests/unit/test_sc11_recheck.py ..                                       [ 92%]
+tests/unit/test_source_admission.py ...............................      [ 93%]
+tests/unit/test_source_referent.py ....................                  [ 94%]
+tests/unit/test_stencils.py .....................                        [ 95%]
+tests/unit/test_teax_discovery.py ......                                 [ 95%]
+tests/unit/test_template_detection.py ..........................         [ 96%]
+tests/unit/test_type_indexing_helpers.py ......                          [ 97%]
+tests/unit/test_uncovered_params.py .                                    [ 97%]
+tests/unit/test_verify_package.py ...................................... [ 98%]
+                                                                         [ 98%]
+tests/unit/test_warning_reconciliation_exact_route.py .................. [ 99%]
+....                                                                     [ 99%]
+tests/unit/test_zero_default_exact_route.py ...                          [100%]
+
+=========================== short test summary info ============================
+SKIPPED [1] tests/conformance/test_calc_compat_parity.py:63: agg_literal_probe: no calc output expressions in the golden
+SKIPPED [1] tests/conformance/test_calc_compat_parity.py:63: agg_localterm_probe: no calc output expressions in the golden
+SKIPPED [1] tests/conformance/test_calc_compat_parity.py:63: constraint_non_numerical: no calc output expressions in the golden
+SKIPPED [1] tests/conformance/test_calc_compat_parity.py:63: crosspart_rollup_twolevel: no calc output expressions in the golden
+SKIPPED [1] tests/conformance/test_calc_compat_parity.py:63: gate_a: no calc output expressions in the golden
+SKIPPED [1] tests/conformance/test_calc_compat_parity.py:63: gate_a_package_owner: no calc output expressions in the golden
+SKIPPED [1] tests/conformance/test_calc_compat_parity.py:63: modeled_default_fidelity: no calc output expressions in the golden
+SKIPPED [1] tests/conformance/test_calc_compat_parity.py:63: shadowed_reference: no calc output expressions in the golden
+SKIPPED [1] tests/conformance/test_calc_compat_parity.py:63: shared_producer: no calc output expressions in the golden
+SKIPPED [1] tests/conformance/test_computed_attribute_golden.py:48: agg_literal_probe: no computed attributes in the golden
+SKIPPED [1] tests/conformance/test_computed_attribute_golden.py:48: agg_localterm_probe: no computed attributes in the golden
+SKIPPED [1] tests/conformance/test_computed_attribute_golden.py:48: alias_agg_probe: no computed attributes in the golden
+SKIPPED [1] tests/conformance/test_computed_attribute_golden.py:48: chain_override_probe: no computed attributes in the golden
+SKIPPED [1] tests/conformance/test_computed_attribute_golden.py:48: chain_spike_model: no computed attributes in the golden
+SKIPPED [1] tests/conformance/test_computed_attribute_golden.py:48: constraint_inline: no computed attributes in the golden
+SKIPPED [1] tests/conformance/test_computed_attribute_golden.py:48: constraint_multi_instance: no computed attributes in the golden
+SKIPPED [1] tests/conformance/test_computed_attribute_golden.py:48: constraint_non_numerical: no computed attributes in the golden
+SKIPPED [1] tests/conformance/test_computed_attribute_golden.py:48: crosspart_rollup_twolevel: no computed attributes in the golden
+SKIPPED [1] tests/conformance/test_computed_attribute_golden.py:48: d38_caret: no computed attributes in the golden
+SKIPPED [1] tests/conformance/test_computed_attribute_golden.py:48: expression_binding_probe: no computed attributes in the golden
+SKIPPED [1] tests/conformance/test_computed_attribute_golden.py:48: gate_a: no computed attributes in the golden
+SKIPPED [1] tests/conformance/test_computed_attribute_golden.py:48: gate_a_package_owner: no computed attributes in the golden
+SKIPPED [1] tests/conformance/test_computed_attribute_golden.py:48: invocation_binding_probe: no computed attributes in the golden
+SKIPPED [1] tests/conformance/test_computed_attribute_golden.py:48: issue22_model: no computed attributes in the golden
+SKIPPED [1] tests/conformance/test_computed_attribute_golden.py:48: modeled_default_fidelity: no computed attributes in the golden
+SKIPPED [1] tests/conformance/test_computed_attribute_golden.py:48: plant_value_shapes: no computed attributes in the golden
+SKIPPED [1] tests/conformance/test_computed_attribute_golden.py:48: return_styles: no computed attributes in the golden
+SKIPPED [1] tests/conformance/test_computed_attribute_golden.py:48: retype_model: no computed attributes in the golden
+SKIPPED [1] tests/conformance/test_computed_attribute_golden.py:48: sample_model: no computed attributes in the golden
+SKIPPED [1] tests/conformance/test_computed_attribute_golden.py:48: self_named_binding_trap: no computed attributes in the golden
+SKIPPED [1] tests/conformance/test_computed_attribute_golden.py:48: shadowed_reference: no computed attributes in the golden
+SKIPPED [1] tests/conformance/test_computed_attribute_golden.py:48: shared_producer: no computed attributes in the golden
+SKIPPED [1] tests/conformance/test_computed_attribute_golden.py:48: spec_chain_channel: no computed attributes in the golden
+SKIPPED [1] tests/conformance/test_computed_attribute_golden.py:48: spec_chain_twolevel: no computed attributes in the golden
+==== 17 failed, 2143 passed, 34 skipped, 88 deselected in 172.50s (0:02:52) ====
