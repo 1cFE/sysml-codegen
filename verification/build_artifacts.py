@@ -182,10 +182,11 @@ def _excluded_unsafe_links(archive: Path, prefix: str) -> list[dict[str, str]]:
                     {
                         "kind": "symlink" if member.issym() else "hardlink",
                         "path": member.name,
-                        "target": member.linkname,
+                        "target_kind": "absolute" if target.is_absolute() else "escape",
+                        "target_sha256": hashlib.sha256(member.linkname.encode()).hexdigest(),
                     }
                 )
-    return sorted(excluded, key=lambda row: (row["path"], row["target"]))
+    return sorted(excluded, key=lambda row: row["path"])
 
 
 def _extract_archive(

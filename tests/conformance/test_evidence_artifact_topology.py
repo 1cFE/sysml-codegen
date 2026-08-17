@@ -508,7 +508,10 @@ def test_builder_cli_creates_five_closed_source_artifacts(
         {
             "kind": "symlink",
             "path": "agentic-0.1.0/workspace-only-link",
-            "target": "/private/workspace/agentic-only",
+            "target_kind": "absolute",
+            "target_sha256": hashlib.sha256(
+                b"/private/workspace/agentic-only"
+            ).hexdigest(),
         }
     ]
     assert not (
