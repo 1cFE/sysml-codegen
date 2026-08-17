@@ -14,6 +14,7 @@ License-free by construction — it is a text comparison of committed fixtures.
 
 from __future__ import annotations
 
+import re
 import sys
 from pathlib import Path
 
@@ -350,3 +351,315 @@ def test_each_rollup_reads_one_named_intermediate_per_child(solar_graph) -> None
             # `:>> raw_material_cost = 0.0;` on Permitting is a literal, so it is an
             # entry point rather than a produced channel. That is the model, not a gap.
             assert source.producer_channel is None
+
+
+# --- Phase 2 (self-binding-replacement): external-root customer mode ----------
+#
+# The customer migration operates on an external tree that keeps TWO synchronized
+# model sets. The vendored `fusion_tea` fixture is the already-migrated worked
+# target, so the simulation is a closed loop: strip the `_in` renames to
+# reconstruct the pre-migration customer shape, duplicate it into both sets, run
+# the tool, and require the result to reproduce the vendored fixture byte for
+# byte. Nothing here reads /home/reid/1cfe/fusion-tea.
+
+#: The 11 renamed formals, per Appendix A of the design.
+EXPECTED_FORMALS = sorted(
+    [
+        "availability",
+        "beam_energy_mj",
+        "discount_rate",
+        "frequency",
+        "gain",
+        "net_electric_power_gw",
+        "num_chambers",
+        "om_cost_constant",
+        "plant_cost_constant",
+        "thermal_efficiency",
+        "thermal_power_gw",
+    ]
+)
+
+#: The six logical model files that carry the 30 rewritten rows per set.
+MIGRATED_FILES = [
+    "designs/generic_ife/ife_plant.sysml",
+    "designs/hif_ife/hif_driver.sysml",
+    "designs/hif_ife/hif_plant.sysml",
+    "library/analyses/fusion_cycle.sysml",
+    "library/analyses/hif_economics.sysml",
+    "library/analyses/ife_lcoe.sysml",
+]
+
+#: The two synchronized customer model sets (design D12 / bet B8).
+MODEL_SETS = ["models", "exploration/ife_e2e/models"]
+
+
+def _stripped(text: str) -> str:
+    """The pre-migration customer shape: every D-5 rename undone."""
+    for name in EXPECTED_FORMALS:
+        text = re.sub(rf"\b{re.escape(name)}_in\b", name, text)
+    return text
+
+
+def _customer_tree(destination: Path) -> Path:
+    """A dual-set pre-migration customer simulation built from the vendored fixture."""
+    root = destination / "customer"
+    sources = sorted((d5.FIXTURES / "fusion_tea").rglob("*.sysml"))
+    assert sources, "the vendored fusion_tea fixture has no model files"
+    for prefix in MODEL_SETS:
+        for source in sources:
+            relative = source.relative_to(d5.FIXTURES / "fusion_tea")
+            target = root / prefix / relative
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_text(_stripped(source.read_text()))
+    return root
+
+
+def _tree_digest(root: Path) -> dict[str, bytes]:
+    return {
+        str(path.relative_to(root)): path.read_bytes()
+        for path in sorted(root.rglob("*"))
+        if path.is_file()
+    }
+
+
+def test_external_dual_tree_migration_reproduces_the_vendored_fixture(
+    tmp_path: Path,
+) -> None:
+    """The closed loop: preconditions clear, the strip check is reversible, both
+    sets receive the identical migration, and every migrated file equals the
+    already-migrated vendored fixture byte for byte. The originals never move."""
+    root = _customer_tree(tmp_path)
+    before = _tree_digest(root)
+    scratch = tmp_path / "scratch"
+
+    assert d5.precondition_findings(root, EXPECTED_FORMALS) == []
+    d5.build_variant_tree(root, scratch, EXPECTED_FORMALS)
+    assert d5.strip_check_tree(root, scratch, EXPECTED_FORMALS) == []
+
+    for prefix in MODEL_SETS:
+        for relative in MIGRATED_FILES:
+            variant = (scratch / prefix / relative).read_bytes()
+            vendored = (d5.FIXTURES / "fusion_tea" / relative).read_bytes()
+            assert variant == vendored, f"{prefix}/{relative} diverges from the fixture"
+
+    first, second = MODEL_SETS
+    for relative in sorted(
+        path.relative_to(scratch / first)
+        for path in (scratch / first).rglob("*.sysml")
+    ):
+        assert (scratch / first / relative).read_bytes() == (
+            scratch / second / relative
+        ).read_bytes(), f"the two migrated sets diverge at {relative}"
+
+    assert _tree_digest(root) == before, "the customer originals were touched"
+
+
+def test_migration_rewrites_the_thirty_census_rows_per_model_set(tmp_path: Path) -> None:
+    """The D12 census rows: 15 binding left sides + 15 formal declarations per
+    set. Expression uses inside the declaring blocks rename with their formal
+    (the recipe renames every code use), so the per-line guarantee is reversal:
+    every changed line differs from its original by `_in` insertions alone."""
+    root = _customer_tree(tmp_path)
+    scratch = tmp_path / "scratch"
+    d5.build_variant_tree(root, scratch, EXPECTED_FORMALS)
+
+    for prefix in MODEL_SETS:
+        changed = []
+        binding_rows = declaration_rows = 0
+        for relative in MIGRATED_FILES:
+            original_lines = (root / prefix / relative).read_text().splitlines()
+            variant_lines = (scratch / prefix / relative).read_text().splitlines()
+            assert len(original_lines) == len(variant_lines), relative
+            changed.extend(
+                (before_line, line)
+                for before_line, line in zip(original_lines, variant_lines)
+                if before_line != line
+            )
+        for before_line, line in changed:
+            assert _stripped(line) == before_line, (
+                f"{prefix}: changed line is not rename-only: {line!r}"
+            )
+            if re.search(r"\bin\s+\w+_in\s*=", line):
+                binding_rows += 1
+            if re.search(r"\battribute\s+\w+_in\b", line):
+                declaration_rows += 1
+        assert binding_rows == 15, f"{prefix}: {binding_rows} binding rows"
+        assert declaration_rows == 15, f"{prefix}: {declaration_rows} declaration rows"
+
+
+def test_discovery_enumerates_every_customer_site(tmp_path: Path) -> None:
+    """The census is explicit output, not a side effect: 30 binding sites and 30
+    declaration blocks across the two sets, each named by file and line."""
+    root = _customer_tree(tmp_path)
+    sites = d5.discover_sites(root, EXPECTED_FORMALS)
+    assert set(sites) == set(EXPECTED_FORMALS)
+    bindings = [site for record in sites.values() for site in record["bindings"]]
+    declarations = [site for record in sites.values() for site in record["declarations"]]
+    assert len(bindings) == 30
+    assert len(declarations) == 30
+    for site in bindings + declarations:
+        path, _, line = site.rpartition(":")
+        assert line.isdigit(), site
+        assert (root / path).is_file(), site
+
+
+def _hazard_tree(destination: Path, library: str, design: str | None = None) -> Path:
+    root = destination / "hazard"
+    (root / "library").mkdir(parents=True)
+    (root / "library" / "model.sysml").write_text(library)
+    if design is not None:
+        (root / "designs").mkdir(parents=True)
+        (root / "designs" / "design.sysml").write_text(design)
+    return root
+
+
+def _refuses_without_writing(root: Path, formals: list[str], tag: str, tmp_path: Path) -> None:
+    """Every hazard refuses at precondition time, exits 1, and writes nothing."""
+    before = _tree_digest(root)
+    findings = d5.precondition_findings(root, formals)
+    assert any(finding.startswith(tag) for finding in findings), findings
+
+    scratch = tmp_path / "hazard_scratch"
+    rc = d5.main(
+        ["--root", str(root), "--scratch", str(scratch), "--formals", ",".join(formals)]
+    )
+    assert rc == 1
+    assert not scratch.exists(), "a refused run must not create the scratch tree"
+    assert _tree_digest(root) == before, "a refused run must leave the tree unchanged"
+
+
+def test_precondition_a_sibling_member_of_the_bare_name_stops(tmp_path: Path) -> None:
+    """D5(a): the declaring definition carries another member of the bare name,
+    so the block-wide rename would mint duplicate `<name>_in` members — the
+    s5/s7 collision family — instead of freeing the bare reference."""
+    root = _hazard_tree(
+        tmp_path,
+        """package HazardSibling {
+    private import ScalarValues::*;
+
+    calc def Revenue {
+        in attribute gain : Real;
+        out attribute gain : Real = gain * 2.0;
+    }
+
+    part def Plant {
+        attribute gain : Real = 1.0;
+        calc revenue_calc : Revenue { in gain = gain; }
+    }
+
+    part plant : Plant;
+}
+""",
+    )
+    _refuses_without_writing(root, ["gain"], "(a)", tmp_path)
+
+
+def test_precondition_b_existing_target_name_stops(tmp_path: Path) -> None:
+    """D5(b): `<name>_in` already exists in the tree, so the rename would
+    collide with (or silently capture) an existing member."""
+    root = _hazard_tree(
+        tmp_path,
+        """package HazardTaken {
+    private import ScalarValues::*;
+
+    calc def Revenue {
+        in attribute gain : Real;
+        out attribute revenue : Real = gain * 2.0;
+    }
+
+    part def Plant {
+        attribute gain : Real = 1.0;
+        attribute gain_in : Real = 3.0;
+        calc revenue_calc : Revenue { in gain = gain; }
+    }
+
+    part plant : Plant;
+}
+""",
+    )
+    _refuses_without_writing(root, ["gain"], "(b)", tmp_path)
+
+
+def test_precondition_c_unrelated_same_named_left_side_stops(tmp_path: Path) -> None:
+    """D5(c) / B7: an `in gain =` left side belongs to a usage whose type is not
+    a definition being renamed (here: not declared anywhere in the tree), so the
+    file-wide left-side rewrite would break a binding outside the migration."""
+    root = _hazard_tree(
+        tmp_path,
+        """package HazardForeign {
+    private import ScalarValues::*;
+
+    calc def Revenue {
+        in attribute gain : Real;
+        out attribute revenue : Real = gain * 2.0;
+    }
+
+    part def Plant {
+        attribute gain : Real = 1.0;
+        calc revenue_calc : Revenue { in gain = gain; }
+        calc foreign_calc : 'External Model' { in gain = gain; }
+    }
+
+    part plant : Plant;
+}
+""",
+    )
+    _refuses_without_writing(root, ["gain"], "(c)", tmp_path)
+
+
+def test_precondition_d_live_rollup_stops(tmp_path: Path) -> None:
+    """D5(d) / B6: `aggregation_rewrites` matches a rollup, so the tool's second
+    transformation would fire — a shape change the strip check cannot see. The
+    run refuses instead of rewriting customer physics."""
+    root = _hazard_tree(
+        tmp_path,
+        """package HazardRollup {
+    private import ScalarValues::*;
+
+    calc def Revenue {
+        in attribute gain : Real;
+        out attribute revenue : Real = gain * 2.0;
+    }
+
+    part def Assembly {
+        attribute total : Real;
+        attribute gain : Real = 1.0;
+        calc revenue_calc : Revenue { in gain = gain; }
+    }
+
+    part asm : Assembly {
+        :>> total =
+            sum(pv.cost) + sum(inverter.cost);
+    }
+}
+""",
+    )
+    _refuses_without_writing(root, ["gain"], "(d)", tmp_path)
+
+
+def test_cli_root_mode_runs_the_whole_customer_pipeline(
+    tmp_path: Path, capsys
+) -> None:
+    """One command: discovery output, clear preconditions, scratch build, strip
+    check — exit 0 and the printed census names the counts an operator reviews."""
+    root = _customer_tree(tmp_path)
+    scratch = tmp_path / "scratch"
+
+    rc = d5.main(
+        ["--root", str(root), "--scratch", str(scratch), "--formals", ",".join(EXPECTED_FORMALS)]
+    )
+    captured = capsys.readouterr().out
+    assert rc == 0
+    assert scratch.is_dir()
+    assert "30 binding sites" in captured
+    assert "30 declaration blocks" in captured
+    assert "preconditions: clear" in captured
+    assert "strip check: 0 problems" in captured
+
+
+def test_cli_root_mode_requires_explicit_formals(tmp_path: Path) -> None:
+    """An external tree has no batch record, so the formals must be a stated
+    caller decision — never guessed."""
+    root = _customer_tree(tmp_path)
+    with pytest.raises(SystemExit):
+        d5.main(["--root", str(root), "--scratch", str(tmp_path / "scratch")])

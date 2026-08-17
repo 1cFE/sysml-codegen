@@ -6,9 +6,27 @@ The exact route refuses a binding whose right-hand side resolves to its own form
 The ratified migration for a real model is renaming — the fifteen-rename D-5 migration Slice
 3D ran on the customer model — and this applies the same recipe mechanically.
 
-**The originals are never touched.** A variant is a new fixture beside the original, so a
-fixture written to pin the refused shape keeps pinning it, and the ratified corpus rows keep
-their subjects. Variants join no corpus ledger.
+**Two modes.** Fixture mode (positional ``source target``) authors a variant beside the
+original inside ``tests/fixtures/``; the original fixture is never touched, so a fixture
+written to pin the refused shape keeps pinning it, and the ratified corpus rows keep their
+subjects. Variants join no corpus ledger. Customer mode (``--root``) operates on an external
+model tree: it prints the full site census, refuses on any D5 precondition, builds the
+variant into a **scratch** destination, and strip-checks it against the originals while both
+still exist. The final customer operation then replaces the originals with the checked
+variant — customer mode does not promise the originals are never touched; it promises they
+are replaced only after the strip check has passed.
+
+**Customer mode refuses before it writes.** Four license-free preconditions run over the
+model text, and any finding stops the run with nothing written:
+
+- (a) a renamed formal's declaring definition carries another member of the same bare name,
+  so the block-wide rename would mint duplicate ``<name>_in`` members (the s5/s7 collision
+  family);
+- (b) ``<name>_in`` already exists somewhere in the tree;
+- (c) an ``in <name> =`` binding left side belongs to a usage whose type is not a definition
+  being renamed, so the file-wide left-side rewrite would break an unrelated binding;
+- (d) ``aggregation_rewrites`` matches a rollup, so the tool's second transformation would
+  fire — a shape change the strip check cannot see.
 
 The recipe, applied per refused formal:
 
@@ -27,6 +45,8 @@ Usage::
 
     python scripts/make_d5_variant.py catf_mfe_model catf_mfe_d5
     python scripts/make_d5_variant.py --check catf_mfe_model catf_mfe_d5
+    python scripts/make_d5_variant.py --root /path/to/customer --scratch /tmp/d5_variant \
+        --formals availability,gain,thermal_efficiency
 """
 
 from __future__ import annotations
@@ -100,9 +120,33 @@ def _definition_blocks(text: str) -> dict[str, tuple[int, int]]:
     return blocks
 
 
+#: Comment regions — `//` to end of line and `/* … */` blocks (`doc` bodies included).
+_COMMENTS = re.compile(r"//[^\n]*|/\*.*?\*/", re.S)
+
+
+def _comment_spans(text: str) -> list[tuple[int, int]]:
+    return [match.span() for match in _COMMENTS.finditer(text)]
+
+
 def _rename_in_span(text: str, span: tuple[int, int], name: str) -> str:
+    """Rename every code use of ``name`` in the block; prose in comments stays prose.
+
+    The recipe renames identifiers. A formal's name mentioned in a doc comment
+    ("fusion cycle gain below ~4") is not an identifier, and the ratified customer
+    migration is forbidden from editing comments — the closed-loop conformance test
+    compares the result against the already-migrated fixture byte for byte.
+    """
     start, end = span
-    body = re.sub(rf"\b{re.escape(name)}\b", f"{name}_in", text[start:end])
+    comments = _comment_spans(text)
+
+    def in_comment(offset: int) -> bool:
+        return any(comment_start <= offset < comment_end for comment_start, comment_end in comments)
+
+    body = re.sub(
+        rf"\b{re.escape(name)}\b",
+        lambda match: match.group(0) if in_comment(start + match.start()) else f"{name}_in",
+        text[start:end],
+    )
     return text[:start] + body + text[end:]
 
 
@@ -200,8 +244,8 @@ def undo_aggregation_split(text: str, rewrites: list[dict]) -> str:
     return text
 
 
-def build_variant(source: str, target: str, formals: list[str]) -> list[Path]:
-    source_dir, target_dir = FIXTURES / source, FIXTURES / target
+def build_variant_tree(source_dir: Path, target_dir: Path, formals: list[str]) -> list[Path]:
+    """Copy one model tree and apply the D-5 rename recipe to every ``.sysml`` file."""
     if target_dir.exists():
         shutil.rmtree(target_dir)
     shutil.copytree(
@@ -225,13 +269,16 @@ def build_variant(source: str, target: str, formals: list[str]) -> list[Path]:
         text = apply_aggregation_split(text)
         if text != original:
             file.write_text(text)
-            written.append(file.relative_to(ROOT))
+            written.append(file.relative_to(target_dir))
     return written
 
 
-def strip_check(source: str, target: str, formals: list[str]) -> list[str]:
+def build_variant(source: str, target: str, formals: list[str]) -> list[Path]:
+    return build_variant_tree(FIXTURES / source, FIXTURES / target, formals)
+
+
+def strip_check_tree(source_dir: Path, target_dir: Path, formals: list[str]) -> list[str]:
     """Removing the suffix must reproduce the original byte for byte, file for file."""
-    source_dir, target_dir = FIXTURES / source, FIXTURES / target
     problems = []
 
     # VARIANT_ONLY is excluded from BOTH sides. A provenance record belongs to the fixture it
@@ -270,10 +317,189 @@ def strip_check(source: str, target: str, formals: list[str]) -> list[str]:
     return problems
 
 
+def strip_check(source: str, target: str, formals: list[str]) -> list[str]:
+    return strip_check_tree(FIXTURES / source, FIXTURES / target, formals)
+
+
+# --- Customer mode: discovery and the D5 preconditions ------------------------
+
+#: A typed ``calc``/``constraint`` usage opening: optional usage name, then the type.
+_USAGE_BLOCK = re.compile(
+    r"\b(?:calc|constraint)\s+(?:(?:'[^']+'|\w+)\s+)?:\s*((?:'[^']+'|[\w:]+)(?:::(?:'[^']+'|\w+))*)\s*\{"
+)
+
+
+def _line(text: str, offset: int) -> int:
+    return text.count("\n", 0, offset) + 1
+
+
+def _brace_span(text: str, open_hint: int) -> int:
+    """Index one past the matching close brace for the block opening at ``open_hint``."""
+    depth, index = 0, open_hint
+    while index < len(text):
+        if text[index] == "{":
+            depth += 1
+        elif text[index] == "}":
+            depth -= 1
+            if depth == 0:
+                break
+        index += 1
+    return index + 1
+
+
+def _usage_blocks(text: str) -> list[tuple[int, int, str]]:
+    """``(start, end, type_name)`` for every typed calc/constraint usage block."""
+    return [
+        (match.start(), _brace_span(text, match.end() - 1), match.group(1))
+        for match in _USAGE_BLOCK.finditer(text)
+    ]
+
+
+def _enclosing_usage_type(blocks: list[tuple[int, int, str]], offset: int) -> str | None:
+    """The innermost typed usage block containing ``offset``, or None."""
+    best: tuple[int, str] | None = None
+    for start, end, type_name in blocks:
+        if start <= offset < end and (best is None or start > best[0]):
+            best = (start, type_name)
+    return best[1] if best else None
+
+
+def _normalize_type(name: str) -> str:
+    """The definition lookup key for a usage's written type: last segment, unquoted."""
+    return name.strip().rsplit("::", 1)[-1].strip().strip("'")
+
+
+def _model_files(root: Path) -> list[Path]:
+    return sorted(root.rglob("*.sysml"))
+
+
+def discover_sites(root: Path, formals: list[str]) -> dict[str, dict[str, list[str]]]:
+    """Every binding left side and declaring definition per formal, as ``path:line``.
+
+    This is the census an operator reviews before a customer run: the rename's
+    whole write surface, derived from the tree rather than from a path list.
+    """
+    sites: dict[str, dict[str, list[str]]] = {
+        name: {"bindings": [], "declarations": []} for name in formals
+    }
+    for file in _model_files(root):
+        text = file.read_text()
+        relative = file.relative_to(root)
+        blocks = _definition_blocks(text)
+        for name in formals:
+            for match in re.finditer(rf"\bin\s+{re.escape(name)}\s*=", text):
+                sites[name]["bindings"].append(f"{relative}:{_line(text, match.start())}")
+            for span in blocks.values():
+                declared = re.search(
+                    rf"\bin\s+attribute\s+{re.escape(name)}\b", text[span[0] : span[1]]
+                )
+                if declared:
+                    sites[name]["declarations"].append(
+                        f"{relative}:{_line(text, span[0] + declared.start())}"
+                    )
+    return sites
+
+
+def precondition_findings(root: Path, formals: list[str]) -> list[str]:
+    """The four D5 preconditions, license-free, over model text. Any finding stops a run."""
+    findings: list[str] = []
+    texts = {file: file.read_text() for file in _model_files(root)}
+
+    definitions: dict[str, str] = {}
+    for text in texts.values():
+        for block_name, span in _definition_blocks(text).items():
+            definitions[_normalize_type(block_name)] = text[span[0] : span[1]]
+
+    for file, text in texts.items():
+        relative = file.relative_to(root)
+
+        for rewrite in aggregation_rewrites(text):
+            findings.append(
+                f"(d) {relative}: rollup {rewrite['metric']!r} would be restructured by "
+                f"the aggregation split, an edit the strip check cannot see"
+            )
+
+        blocks = _definition_blocks(text)
+        usages = _usage_blocks(text)
+        for name in formals:
+            taken = re.search(rf"\b{re.escape(name)}_in\b", text)
+            if taken:
+                findings.append(
+                    f"(b) {relative}:{_line(text, taken.start())}: "
+                    f"{name}_in already exists in the tree"
+                )
+
+            for block_name, span in blocks.items():
+                block = text[span[0] : span[1]]
+                if not re.search(rf"\bin\s+attribute\s+{re.escape(name)}\b", block):
+                    continue
+                members = re.findall(rf"\battribute\s+{re.escape(name)}\s*[:;=]", block)
+                if len(members) > 1:
+                    findings.append(
+                        f"(a) {relative}: definition {block_name} declares another member "
+                        f"named {name!r}; the rename would mint duplicate {name}_in members"
+                    )
+
+            for match in re.finditer(rf"\bin\s+{re.escape(name)}\s*=", text):
+                usage_type = _enclosing_usage_type(usages, match.start())
+                where = f"{relative}:{_line(text, match.start())}"
+                if usage_type is None:
+                    findings.append(
+                        f"(c) {where}: 'in {name} =' has no enclosing typed "
+                        f"calc/constraint usage to attribute the rename to"
+                    )
+                    continue
+                definition = definitions.get(_normalize_type(usage_type))
+                if definition is None or not re.search(
+                    rf"\bin\s+attribute\s+{re.escape(name)}\b", definition
+                ):
+                    findings.append(
+                        f"(c) {where}: 'in {name} =' belongs to usage type {usage_type} "
+                        f"whose formal {name!r} is not being renamed"
+                    )
+    return sorted(findings)
+
+
+def _run_customer_mode(root: Path, scratch: Path, formals: list[str], check_only: bool) -> int:
+    sites = discover_sites(root, formals)
+    binding_count = sum(len(record["bindings"]) for record in sites.values())
+    declaration_count = sum(len(record["declarations"]) for record in sites.values())
+    print(
+        f"discovery: {binding_count} binding sites, {declaration_count} declaration blocks "
+        f"across {len(formals)} formals"
+    )
+    for name in formals:
+        record = sites[name]
+        for site in record["bindings"]:
+            print(f"   binding     {name}  {site}")
+        for site in record["declarations"]:
+            print(f"   declaration {name}  {site}")
+
+    findings = precondition_findings(root, formals)
+    if findings:
+        for finding in findings:
+            print(f"FAIL {finding}")
+        print(f"preconditions: {len(findings)} findings; nothing written")
+        return 1
+    print("preconditions: clear")
+
+    if not check_only:
+        written = build_variant_tree(root, scratch, formals)
+        print(f"{scratch}: {len(formals)} formals renamed across {len(written)} files")
+        for path in written:
+            print(f"   {path}")
+
+    problems = strip_check_tree(root, scratch, formals)
+    for problem in problems:
+        print(f"FAIL {problem}")
+    print(f"strip check: {len(problems)} problems")
+    return 1 if problems else 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("source")
-    parser.add_argument("target")
+    parser.add_argument("source", nargs="?")
+    parser.add_argument("target", nargs="?")
     parser.add_argument("--check", action="store_true", help="strip-check only; write nothing")
     parser.add_argument(
         "--formals",
@@ -285,8 +511,35 @@ def main(argv: list[str] | None = None) -> int:
             "from — the manifest stays the only automatic source."
         ),
     )
+    parser.add_argument(
+        "--root",
+        type=Path,
+        help=(
+            "customer mode: operate on this external model tree instead of a fixture. "
+            "Prints the site census, refuses on any D5 precondition, and builds into "
+            "--scratch. Requires --formals."
+        ),
+    )
+    parser.add_argument(
+        "--scratch",
+        type=Path,
+        help="customer mode: scratch destination the variant is built into",
+    )
     args = parser.parse_args(argv)
 
+    if args.root is not None:
+        if args.scratch is None:
+            parser.error("--root requires --scratch")
+        if not args.formals:
+            parser.error(
+                "--root requires --formals: an external tree has no batch record, so the "
+                "formals are a stated caller decision"
+            )
+        formals = sorted({name.strip() for name in args.formals.split(",")})
+        return _run_customer_mode(args.root, args.scratch, formals, check_only=args.check)
+
+    if not args.source or not args.target:
+        parser.error("source and target are required outside --root mode")
     formals = (
         sorted({name.strip() for name in args.formals.split(",")})
         if args.formals
