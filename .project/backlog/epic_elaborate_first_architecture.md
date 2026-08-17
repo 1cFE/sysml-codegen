@@ -541,8 +541,10 @@ L2-1.
 
 **Dependencies**: Item 7 complete; `self-binding-replacement` closed on 2026-08-16 with all
 functional criteria independently verified and its testing/developer-tooling edge accepted as risk
-by the owner; `stop-reinventing-the-parser` implemented, audited, and closed. Item 8 downstream
-design and implementation perform none of either predecessor's remediation.
+by the owner. **[AGENT] (ratified by owner, 2026-08-16):** `stop-reinventing-the-parser` is
+implemented, audited, and closed before Item 8 downstream design or implementation; downstream
+performs none of either predecessor's remediation. Source: the active item's `spec-review.md` L4-1
+and the owner's direction to apply the review fixes.
 
 **Bounded predecessor active 2026-08-16:**
 `.project/active/stop-reinventing-the-parser/` owns exact occurrence derivation and evidence

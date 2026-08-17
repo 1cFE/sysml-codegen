@@ -4,7 +4,9 @@
 functional criteria were independently verified. `[OWNER 2026-08-16]` The dangling-symlink
 behavior in the migration/fixture helper is a testing/developer-tooling edge case and accepted
 risk; closure was directed without another remediation cycle. Record:
-`completed/20260816_self-binding-replacement/audit.md`. Prior context: **PHASE D FULLY CLOSED; Item 8 sequencing
+`completed/20260816_self-binding-replacement/audit.md`. Prior item:
+**qualified-reference-occurrence-anchoring certified and archived**. Prior context:
+**PHASE D FULLY CLOSED; Item 8 sequencing
 decided.** The
 three-repo merge wave landed and is smoked — squash merges in the pin-enforced order:
 agentic-mbse#12 → `main` `1decd95`; codegen#10 → `main` `385e163` (the Item-7 cutover + the whole
@@ -74,6 +76,37 @@ rather than invented; vehicle `[CONSTRAINT-GATES-UNTAGGED]` in `BACKLOG.md`.
 ---
 
 ## Active Work
+
+### 2026-08-16: stop-reinventing-the-parser — SPEC REV 4
+
+`.project/active/stop-reinventing-the-parser/spec.md`. The corrected contract preserves P-002 and
+targets two bounded problems: occurrence election that is not derivable from the model, and evidence
+loss between SysIDE and generation. Each scoped site now names its own proof; forced failures are
+used only where failure swallowing is the defect, while semantic rows use real models through
+SysIDE. The dirty worktree is excluded from the baseline. The closed predecessor changes must land
+on named commits before design. The P-004-aware product lens is `CLEAR`; the fresh adversarial spec
+review verdict is `Approve`.
+
+**[AGENT] (ratified by owner, 2026-08-16):** this item is the explicit gate for
+`elaborator-downstream`; it must be implemented, audited, and closed before downstream design or
+implementation starts. The premise audit at
+`.project/research/20260816-205035_premise-audit-fallback-census.md` is the primary research input.
+The older census is superseded and is not a contract.
+
+### 2026-08-16: elaborator-downstream — SPEC REVISED AFTER REVIEW (Item 8 remainder)
+
+Draft: `.project/active/elaborator-downstream/spec.md`. Scope is the post-self-binding Fusion Tea
+package/contract regeneration, stock-API TEAx execution and new lineage, July IFE impact audit,
+an independently anchored `REQ-SI` family, README/reference-doc repair, and one closing composed
+proof. The codegen fixture now converges on the customer's measured post-R-2 shape; document 25 is
+retained and bounded as test-only/off-route. **[AGENT] (ratified by owner, 2026-08-16):** Stellarator
+migration stays in `[STELLARATOR-D5-MIGRATION]`, and the July impact claim uses named repository and
+project roots plus owner attestation. The self-binding sibling is closed at
+`completed/20260816_self-binding-replacement/`: all functional criteria are independently verified,
+and the owner accepted the remaining testing/developer-tooling edge risk. This item performs none
+of that sibling's remediation. The adversarial review's resolutions are incorporated; the revised
+product-lens rerun is `CLEAR` and explicitly resolves prior `spec-F1`. Its contract is ready, but
+design and implementation wait for `stop-reinventing-the-parser` to close.
 
 ### 2026-08-15: dead-worktree-pins — CERTIFIED, awaiting close confirmation
 
