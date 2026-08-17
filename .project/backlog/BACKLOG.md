@@ -302,6 +302,20 @@ Compounding factors the fix must address, not just the query:
 
 ## P2 - Medium Priority
 
+### [DEF-OWNED-SIDEWAYS-REACH] F-4: a definition-owned qualified reference silently resolves into a sibling subtree — P2, unowned, needs an owner ruling (filed at self-binding-replacement audit direction, 2026-08-16)
+
+`in unit_cost = 'Unit'::cost` written in a part with **no** local `'Unit'` occurrence resolves
+to the single occurrence under a *sibling* subtree — silently, crossing a containment boundary
+the author never named. Measured at spike row 6 / F-4, reproduced at `0f89673`, retained as
+`tests/fixtures/def_qual_sibling_scope` + `test_definition_owned_reference_positions.py` (the
+7.0 positional-fallback pin), and disclosed in the authoritative guidance ("owner qualification
+does not mean 'mine'"). The route cannot check author intent here; documentation alone is not a
+disposition for a silently-resolving candidate (spec SC3). **The follow-up work:** an owner
+ruling on whether the lineage-miss descendant fallback should refuse loudly (a new diagnostic,
+mirroring the two-occurrence `SI_OCCURRENCE_AMBIGUOUS` refusal) or remain supported positional
+behavior, and the bounded implementation of whichever is ruled. Sibling item:
+`[ANCHORING-ARRAYED-DIAGNOSTIC]` covers the loud arrayed refusal, not this silent case.
+
 ### [STELLARATOR-D5-MIGRATION] Migrate the stellarator demo's 114 self-named bindings — P2, unowned (filed from self-binding-replacement Phase 5 triage, 2026-08-16)
 
 The one-run triage (self-binding-replacement `stellarator-triage.md`) confirms the exact route

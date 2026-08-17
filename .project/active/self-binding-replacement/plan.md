@@ -1,6 +1,6 @@
 # Implementation Plan: Self-Binding Replacement
 
-**Status:** Complete (all five phases, 2026-08-16) — awaiting `/_my_audit`
+**Status:** Audit Needs Work (2026-08-16 — four verification tasks reopened)
 **Created:** 2026-08-16
 **Last Updated:** 2026-08-16
 **Home Repo:** `/home/reid/1cfe/sysml-codegen`
@@ -216,7 +216,12 @@ def test_aggregation_or_sibling_formal_stops_before_write(tmp_path):
 **Migration tool — test first**
 
 - [x] Extend `tests/conformance/test_d5_variants.py` with external-root, no-write-on-failure, and
-  duplicated-tree tests.
+  duplicated-tree tests. *(Audit 2026-08-16: current tests omit equal, overlapping, and pre-existing
+  source/scratch targets and package-qualified duplicate definition names.)*
+  *(Remediated same day: six new tests — scratch==root, scratch inside root, root inside scratch,
+  pre-existing scratch (sentinel preserved), `--check` requires an existing scratch, and the
+  two-package same-named-definition (c) refusal — each proving exit 1 with the tree digest
+  unchanged. 35 passed.)*
 - [x] Add one test for each D5 precondition: a sibling member of the old bare name, an existing
   `<name>_in`, an unrelated calc usage with the same left-side name, and any
   `aggregation_rewrites()` match.
@@ -227,6 +232,14 @@ def test_aggregation_or_sibling_formal_stops_before_write(tmp_path):
   every changed line must revert by stripping `_in` alone.)*
 - [x] Extend `scripts/make_d5_variant.py` with `--root`, explicit discovery/precondition output, a
   scratch destination, and the aggregation guard. Keep `--formals` explicit for non-corpus roots.
+  *(Audit 2026-08-16: customer mode accepts destructive path relationships and collapses qualified
+  definition identity.)*
+  *(Remediated same day: customer mode resolves both paths and refuses equal/overlapping pairs and
+  any pre-existing scratch before any deletion (`--check` instead requires the scratch to exist);
+  definitions are collected as a non-collapsing multimap via the new `_definition_entries`, and
+  D5(c) refuses when any same-named candidate lacks the formal — a text lookup cannot
+  disambiguate a qualified type. The rename/strip paths use the same entries walk; the
+  closed-loop byte-identity test confirms behavior unchanged on the happy path.)*
 - [x] Update the script docstring: customer mode builds a scratch variant and later replaces
   originals only after the strip check; it does not promise that the final customer operation never
   touches originals.
@@ -439,11 +452,27 @@ def test_migrated_hif_public_spine(tmp_path):
   `yield_cost_constant`; target factory `cost_per_target`.
 - [x] For gain, assert the one key changes, no other input value changes, and exactly the two calc
   modules plus the viability constraint module wire to it. Assert the constraint's
-  `formal_identity`, not only its rendered module name. *(The catalog entry's `predicate_ir`
-  carries `fusion_cycle::'Viability Threshold'::gain_in`; the module input formal is `gain_in`.)*
+  `formal_identity`, not only its rendered module name. *(Audit 2026-08-16: group/key and
+  module/port identities are collapsed, and the constraint assertion searches serialized
+  `predicate_ir` instead of a structured `formal_identity`.)*
+  *(Remediated same day: `_entry_sources` keys every value by its complete `(group, key)`
+  identity and asserts uniqueness both ways; `_consumers_of` matches the exact serialized
+  source token and returns the full `(module, formal)` port set; the constraint check parses
+  `predicate_ir` as JSON and asserts exactly one structural `feature_ref` whose target is
+  `fusion_cycle::'Viability Threshold'::gain_in` (AttributeUsage, `source_name` `gain_in`).
+  The typed `formal_identity` field itself is deliberately not added to public serialization —
+  that would churn every generated baseline the byte-identity gates depend on; the parsed-IR
+  relationship is the structured public equivalent, recorded here as the judgment call for the
+  re-audit. The tightened oracle immediately caught one wrong constant: the beam source's real
+  group is `hif_plant_params`.)*
 - [x] For nested `beam_energy_mj`, assert only the nested key changes and enumerate every bound
   consumer. Do not weaken this to “the package still generates.”
-  *(Exactly `hif_plant_pkg__hif_plant__driver__meier_cost` via `beam_energy_mj_in`.)*
+  *(Audit 2026-08-16: the suffix match and `{module: formal}` reduction do not enumerate complete
+  consumer identities.)*
+  *(Remediated same day with the same exact-identity helpers; and the new retained
+  `test_the_two_maintained_model_trees_cannot_diverge` closes the second-tree gap — every
+  `.sysml` file across both sets must pair up under the layout mapping and match byte for byte,
+  so the `models/`-rooted spine stays honest for both trees. 9 passed.)*
 
 **Exact 11 renamed-supplier keys**
 
@@ -910,7 +939,8 @@ codegen docs commit recorded in CURRENT_WORK.
 - `verification/phase4-d5-{models,exploration}.log` — the saved D5 discovery/precondition/strip
   output for both customer sets.
 
-**Validation:** all cross-repo boxes above ticked with their counts.
+**Validation:** implementation-time cross-repo checks ran with the recorded counts. The 2026-08-16
+audit reopened four proof/safety boxes above.
 
 **Issues / Deviations:**
 
@@ -925,4 +955,4 @@ codegen docs commit recorded in CURRENT_WORK.
 
 ---
 
-**Status:** Draft → In Progress → Complete
+**Status:** Draft → In Progress → Implementation Complete → Audit Needs Work

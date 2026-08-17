@@ -103,9 +103,13 @@ def refused_formals(fixture: str) -> list[str]:
 _DEFINITION_BLOCK = re.compile(r"\b(?:calc|constraint)\s+def\s+('[^']+'|\w+)\s*\{")
 
 
-def _definition_blocks(text: str) -> dict[str, tuple[int, int]]:
-    """Span of every ``calc def`` / ``constraint def`` block, by brace depth."""
-    blocks = {}
+def _definition_entries(text: str) -> list[tuple[str, tuple[int, int]]]:
+    """``(name, span)`` for every ``calc def`` / ``constraint def`` block, in order.
+
+    A list, not a dict: two same-named definitions (one file, two packages) must
+    stay distinct — a name-keyed map silently drops all but the last (audit F3).
+    """
+    entries = []
     for match in _DEFINITION_BLOCK.finditer(text):
         depth, index = 0, match.end() - 1
         while index < len(text):
@@ -116,8 +120,13 @@ def _definition_blocks(text: str) -> dict[str, tuple[int, int]]:
                 if depth == 0:
                     break
             index += 1
-        blocks[match.group(1)] = (match.start(), index + 1)
-    return blocks
+        entries.append((match.group(1), (match.start(), index + 1)))
+    return entries
+
+
+def _definition_blocks(text: str) -> dict[str, tuple[int, int]]:
+    """Span of every ``calc def`` / ``constraint def`` block, by written name."""
+    return dict(_definition_entries(text))
 
 
 #: Comment regions — `//` to end of line and `/* … */` blocks (`doc` bodies included).
@@ -260,7 +269,7 @@ def build_variant_tree(source_dir: Path, target_dir: Path, formals: list[str]) -
         for name in formals:
             # Late blocks first: renaming shifts offsets, so earlier spans stay valid.
             for span in sorted(
-                (span for span in _definition_blocks(text).values()), reverse=True
+                (span for _name, span in _definition_entries(text)), reverse=True
             ):
                 declares = rf"\bin\s+attribute\s+{re.escape(name)}\b"
                 if re.search(declares, text[span[0] : span[1]]):
@@ -305,7 +314,9 @@ def strip_check_tree(source_dir: Path, target_dir: Path, formals: list[str]) -> 
         # enumeration does not name survives this and fails the byte comparison below.
         renamed = (source_dir / relative).read_text()
         for name in formals:
-            for span in sorted(_definition_blocks(renamed).values(), reverse=True):
+            for span in sorted(
+                (span for _name, span in _definition_entries(renamed)), reverse=True
+            ):
                 if re.search(rf"\bin\s+attribute\s+{re.escape(name)}\b", renamed[span[0]:span[1]]):
                     renamed = _rename_in_span(renamed, span, name)
             renamed = _rename_binding_left_sides(renamed, name)
@@ -385,11 +396,11 @@ def discover_sites(root: Path, formals: list[str]) -> dict[str, dict[str, list[s
     for file in _model_files(root):
         text = file.read_text()
         relative = file.relative_to(root)
-        blocks = _definition_blocks(text)
+        entries = _definition_entries(text)
         for name in formals:
             for match in re.finditer(rf"\bin\s+{re.escape(name)}\s*=", text):
                 sites[name]["bindings"].append(f"{relative}:{_line(text, match.start())}")
-            for span in blocks.values():
+            for _block_name, span in entries:
                 declared = re.search(
                     rf"\bin\s+attribute\s+{re.escape(name)}\b", text[span[0] : span[1]]
                 )
@@ -405,10 +416,16 @@ def precondition_findings(root: Path, formals: list[str]) -> list[str]:
     findings: list[str] = []
     texts = {file: file.read_text() for file in _model_files(root)}
 
-    definitions: dict[str, str] = {}
+    # A multimap, never a name-keyed overwrite: two packages may each declare a
+    # definition of the same simple name, and neither may stand in for the other
+    # (audit F3). A text-level lookup cannot disambiguate a qualified usage type,
+    # so (c) requires EVERY same-named candidate to declare the renamed formal.
+    definitions: dict[str, list[str]] = {}
     for text in texts.values():
-        for block_name, span in _definition_blocks(text).items():
-            definitions[_normalize_type(block_name)] = text[span[0] : span[1]]
+        for block_name, span in _definition_entries(text):
+            definitions.setdefault(_normalize_type(block_name), []).append(
+                text[span[0] : span[1]]
+            )
 
     for file, text in texts.items():
         relative = file.relative_to(root)
@@ -419,7 +436,7 @@ def precondition_findings(root: Path, formals: list[str]) -> list[str]:
                 f"the aggregation split, an edit the strip check cannot see"
             )
 
-        blocks = _definition_blocks(text)
+        entries = _definition_entries(text)
         usages = _usage_blocks(text)
         for name in formals:
             taken = re.search(rf"\b{re.escape(name)}_in\b", text)
@@ -429,7 +446,7 @@ def precondition_findings(root: Path, formals: list[str]) -> list[str]:
                     f"{name}_in already exists in the tree"
                 )
 
-            for block_name, span in blocks.items():
+            for block_name, span in entries:
                 block = text[span[0] : span[1]]
                 if not re.search(rf"\bin\s+attribute\s+{re.escape(name)}\b", block):
                     continue
@@ -449,18 +466,47 @@ def precondition_findings(root: Path, formals: list[str]) -> list[str]:
                         f"calc/constraint usage to attribute the rename to"
                     )
                     continue
-                definition = definitions.get(_normalize_type(usage_type))
-                if definition is None or not re.search(
-                    rf"\bin\s+attribute\s+{re.escape(name)}\b", definition
-                ):
+                candidates = definitions.get(_normalize_type(usage_type), [])
+                if not candidates:
                     findings.append(
                         f"(c) {where}: 'in {name} =' belongs to usage type {usage_type} "
                         f"whose formal {name!r} is not being renamed"
+                    )
+                elif not all(
+                    re.search(rf"\bin\s+attribute\s+{re.escape(name)}\b", candidate)
+                    for candidate in candidates
+                ):
+                    findings.append(
+                        f"(c) {where}: usage type {usage_type} matches "
+                        f"{len(candidates)} definitions and not all declare formal "
+                        f"{name!r}; a simple-name lookup cannot disambiguate them"
                     )
     return sorted(findings)
 
 
 def _run_customer_mode(root: Path, scratch: Path, formals: list[str], check_only: bool) -> int:
+    # Destructive-path guards run before anything else: build mode deletes the
+    # scratch destination, so an aliased or overlapping pair would destroy the
+    # customer tree, and a pre-existing directory is not this run's output
+    # (audit F3). Nothing below runs until the pair is proven safe.
+    root, scratch = root.resolve(), scratch.resolve()
+    if not root.is_dir():
+        print(f"FAIL --root {root} is not a directory; nothing written")
+        return 1
+    if scratch == root or scratch in root.parents or root in scratch.parents:
+        print(f"FAIL --scratch {scratch} overlaps --root {root}; nothing written")
+        return 1
+    if check_only:
+        if not scratch.is_dir():
+            print(f"FAIL --check requires an existing scratch variant at {scratch}")
+            return 1
+    elif scratch.exists():
+        print(
+            f"FAIL --scratch {scratch} already exists; refusing to delete a "
+            f"pre-existing target. Point --scratch at a fresh path"
+        )
+        return 1
+
     sites = discover_sites(root, formals)
     binding_count = sum(len(record["bindings"]) for record in sites.values())
     declaration_count = sum(len(record["declarations"]) for record in sites.values())

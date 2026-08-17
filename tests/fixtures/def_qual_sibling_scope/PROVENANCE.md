@@ -22,4 +22,10 @@ This fixture pins **what the route does**, not that the author meant the sibling
 qualification does not mean "mine", and no route checks intent here. The guidance must carry
 that caution for the definition-owned fallback (design D11 / Required Invariant 3).
 
+**Durable disposition:** this silently-resolving candidate is owned by
+`[DEF-OWNED-SIDEWAYS-REACH]` in `.project/backlog/BACKLOG.md` (filed 2026-08-16 at the
+self-binding-replacement audit's direction) — an owner ruling on loud-refusal versus supported
+fallback, then the bounded implementation. If that ruling lands on refusal, this fixture's
+expected outcome changes with it.
+
 Kept test: `tests/conformance/test_definition_owned_reference_positions.py`.

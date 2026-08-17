@@ -663,3 +663,104 @@ def test_cli_root_mode_requires_explicit_formals(tmp_path: Path) -> None:
     root = _customer_tree(tmp_path)
     with pytest.raises(SystemExit):
         d5.main(["--root", str(root), "--scratch", str(tmp_path / "scratch")])
+
+
+# --- Audit F3 (self-binding-replacement): destructive-path and lookup guards ---
+#
+# Customer mode deletes its scratch destination before building. An aliased or
+# overlapping source/scratch pair would therefore destroy the input tree, and a
+# pre-existing scratch directory would be deleted without ever having been this
+# run's output. Every unsafe relationship must refuse before any deletion, with
+# the customer tree byte-identical afterward.
+
+
+def _refused_path_pair(root: Path, scratch: str | Path) -> None:
+    before = _tree_digest(root)
+    rc = d5.main(
+        ["--root", str(root), "--scratch", str(scratch), "--formals", "gain"]
+    )
+    assert rc == 1
+    assert _tree_digest(root) == before, "a refused run must leave the tree unchanged"
+
+
+def test_customer_mode_refuses_scratch_equal_to_root(tmp_path: Path) -> None:
+    root = _customer_tree(tmp_path)
+    _refused_path_pair(root, root)
+
+
+def test_customer_mode_refuses_scratch_inside_root(tmp_path: Path) -> None:
+    root = _customer_tree(tmp_path)
+    _refused_path_pair(root, root / "models" / "scratch")
+
+
+def test_customer_mode_refuses_root_inside_scratch(tmp_path: Path) -> None:
+    """The reverse nesting: deleting the scratch would recurse into the root."""
+    root = _customer_tree(tmp_path)
+    _refused_path_pair(root, tmp_path)
+
+
+def test_customer_mode_refuses_a_pre_existing_scratch_target(tmp_path: Path) -> None:
+    """A directory that already exists is not this run's output; deleting it would
+    destroy someone else's bytes. Build mode refuses; --check requires it instead."""
+    root = _customer_tree(tmp_path)
+    scratch = tmp_path / "already_there"
+    scratch.mkdir()
+    sentinel = scratch / "keep.txt"
+    sentinel.write_bytes(b"not yours to delete\n")
+
+    _refused_path_pair(root, scratch)
+    assert sentinel.read_bytes() == b"not yours to delete\n"
+
+
+def test_check_mode_requires_an_existing_scratch(tmp_path: Path) -> None:
+    root = _customer_tree(tmp_path)
+    rc = d5.main(
+        [
+            "--root",
+            str(root),
+            "--scratch",
+            str(tmp_path / "never_built"),
+            "--formals",
+            "gain",
+            "--check",
+        ]
+    )
+    assert rc == 1
+
+
+def test_precondition_c_keeps_same_named_definitions_distinct(tmp_path: Path) -> None:
+    """Audit F3: two packages each declare `calc def Revenue`; only one declares
+    the formal being renamed. A lookup that collapses them to one simple-name key
+    could let either definition stand in for the other, so the precondition must
+    refuse when any same-named candidate lacks the formal."""
+    root = _hazard_tree(
+        tmp_path,
+        """package LibA {
+    private import ScalarValues::*;
+
+    calc def Revenue {
+        in attribute gain : Real;
+        out attribute revenue : Real = gain * 2.0;
+    }
+}
+package LibB {
+    private import ScalarValues::*;
+
+    calc def Revenue {
+        in attribute other : Real;
+        out attribute revenue : Real = other * 3.0;
+    }
+}
+package Design {
+    private import LibA::*;
+
+    part def Plant {
+        attribute gain : Real = 1.0;
+        calc revenue_calc : Revenue { in gain = gain; }
+    }
+
+    part plant : Plant;
+}
+""",
+    )
+    _refuses_without_writing(root, ["gain"], "(c)", tmp_path)
