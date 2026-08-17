@@ -16,7 +16,7 @@ import subprocess
 import tempfile
 from collections import Counter
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from sysml_codegen.cli import _get_template_env
 from sysml_codegen.elaboration import project
@@ -34,8 +34,10 @@ from sysml_codegen.snapshot.envelope import (
     load_instance_graph_snapshot,
 )
 from sysml_codegen.snapshot.instance_graph import decode_instance_graph, encode_instance_graph
+from verification.artifact_sources import codegen_history_root
 
 ROOT = Path(__file__).resolve().parent.parent
+HISTORY_ROOT = codegen_history_root(ROOT)
 TRACKED_PATHSPEC = "tests/fixtures/**/instance_graph_snapshot.json"
 
 
@@ -46,7 +48,7 @@ class InventorySetError(ValueError):
 def _run_git(*arguments: str) -> str:
     result = subprocess.run(
         ["git", *arguments],
-        cwd=ROOT,
+        cwd=HISTORY_ROOT,
         check=True,
         capture_output=True,
         text=True,
@@ -56,9 +58,10 @@ def _run_git(*arguments: str) -> str:
 
 def tracked_snapshot_paths(root: Path = ROOT) -> list[str]:
     """Return Git's exact tracked snapshot set using one literal pathspec argument."""
+    git_root = HISTORY_ROOT if root.resolve() == ROOT.resolve() else root
     result = subprocess.run(
         ["git", "ls-files", "-z", TRACKED_PATHSPEC],
-        cwd=root,
+        cwd=git_root,
         check=True,
         capture_output=True,
     )
@@ -86,7 +89,7 @@ def _sha256(payload: bytes) -> str:
 
 
 def _projected_payload(computation_graph: Any) -> dict[str, object]:
-    payload = computation_graph.model_dump(mode="json")
+    payload = cast(dict[str, object], computation_graph.model_dump(mode="json"))
     payload["fallback_entry_points"] = sorted(computation_graph.fallback_entry_points)
     payload["constraint_catalog"] = (
         computation_graph.constraint_catalog.model_dump(mode="json")
@@ -367,7 +370,7 @@ def main() -> int:
     if args.baseline is not None:
         baseline = json.loads(args.baseline.read_text())
         pre_paths = set(baseline["tracked_paths"])
-        final_paths = set(inventory["tracked_paths"])
+        final_paths = set(cast(list[str], inventory["tracked_paths"]))
         inventory["path_additions"] = sorted(final_paths - pre_paths)
         inventory["path_removals"] = sorted(pre_paths - final_paths)
     else:
@@ -378,7 +381,8 @@ def main() -> int:
     args.output.write_text(json.dumps(inventory, indent=2, sort_keys=True) + "\n")
     print(
         f"{inventory['tracked_count']} tracked, {inventory['row_count']} assessed, "
-        f"{len(inventory['stale_paths'])} stale, 0 missing, 0 extra, 0 duplicate"
+        f"{len(cast(list[str], inventory['stale_paths']))} stale, "
+        "0 missing, 0 extra, 0 duplicate"
     )
     return 0
 

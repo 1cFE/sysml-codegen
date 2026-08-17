@@ -1,38 +1,151 @@
-"""Where the acceptance evidence must resolve from, as a checkable predicate.
-
-The execution lane pins its import resolution so acceptance evidence cannot be silently
-produced against the wrong tree: ``simkit`` from the pinned TEAx checkout, and both
-project packages from the main checkouts — this repo and the ``agentic-mbse`` checkout
-beside it. The expected roots are derived from this file's own location, never written
-as host paths: hardcoded absolute paths are what broke this pin when the rebuild
-worktrees were deleted (2026-08-15).
-
-The predicate is pure and stdlib-only so the default (non-execution) suite can feed it
-wrong resolutions and prove it still rejects them. A pin that can no longer fail is the
-defect, not a repair.
-"""
+"""Validate execution imports against the immutable artifact provenance file."""
 
 from __future__ import annotations
 
+import hashlib
+import json
+import re
+from collections.abc import Mapping
+from dataclasses import dataclass
 from pathlib import Path
+from typing import Any
 
-#: This repo's ``src`` tree — the only place ``sysml_codegen`` may resolve from. A copy
-#: installed into a venv's site-packages is a stale tree, not this one.
-CODEGEN_SRC = Path(__file__).resolve().parents[2] / "src"
-
-#: The companion checkout beside this repo. Its ``main`` carries the retirement content;
-#: no other resolution is the tree under test.
-COMPANION_SRC = Path(__file__).resolve().parents[3] / "agentic-mbse" / "src"
+CODEGEN_EXECUTION_PROVENANCE = "CODEGEN_EXECUTION_PROVENANCE"
+SCHEMA_VERSION = "stop-parser-execution-provenance/v1"
+_FULL_COMMIT = re.compile(r"[0-9a-f]{40}")
+_SHA256 = re.compile(r"[0-9a-f]{64}")
 
 
-def environment_pin_problems(resolved: dict[str, str]) -> list[str]:
-    """One problem per import that resolved outside its pinned tree."""
-    problems: list[str] = []
-    if "/teax/packages/teax-simkit/" not in resolved["simkit"]:
-        problems.append(
-            f"simkit resolved outside the pinned TEAx checkout: {resolved['simkit']}"
+class ExecutionProvenanceError(RuntimeError):
+    """The execution lane was not bound to a complete immutable artifact set."""
+
+
+@dataclass(frozen=True)
+class ExecutionProvenance:
+    """The four exact roots and interpreter admitted by the execution lane."""
+
+    manifest_path: Path
+    manifest_sha256: str
+    python_executable: Path
+    codegen_source_root: Path
+    agentic_install_root: Path
+    teax_source_root: Path
+    teax_simkit_root: Path
+
+
+def _object(value: object, *, label: str) -> dict[str, Any]:
+    if not isinstance(value, dict):
+        raise ExecutionProvenanceError(f"{label} must be an object")
+    return value
+
+
+def _identity_root(
+    roots: dict[str, Any],
+    name: str,
+    *,
+    hash_field: str,
+    package: str | None = None,
+) -> tuple[Path, str, str]:
+    row = _object(roots.get(name), label=f"roots.{name}")
+    commit = row.get("commit")
+    digest = row.get(hash_field)
+    if not isinstance(commit, str) or _FULL_COMMIT.fullmatch(commit) is None:
+        raise ExecutionProvenanceError(f"roots.{name}.commit must be a full commit SHA")
+    if not isinstance(digest, str) or _SHA256.fullmatch(digest) is None:
+        raise ExecutionProvenanceError(f"roots.{name}.{hash_field} must be a SHA-256")
+    raw_path = row.get("path")
+    if not isinstance(raw_path, str) or not raw_path:
+        raise ExecutionProvenanceError(f"roots.{name}.path must be a non-empty path")
+    root = Path(raw_path).expanduser().resolve()
+    if not root.is_dir():
+        raise ExecutionProvenanceError(f"roots.{name}.path is not a directory: {root}")
+    if package is not None and not (root / package / "__init__.py").is_file():
+        raise ExecutionProvenanceError(
+            f"roots.{name}.path does not contain {package}/__init__.py: {root}"
         )
-    for name, root in (("sysml_codegen", CODEGEN_SRC), ("agentic_mbse", COMPANION_SRC)):
-        if not Path(resolved[name]).resolve().is_relative_to(root):
-            problems.append(f"{name} resolved outside {root}: {resolved[name]}")
+    return root, commit, digest
+
+
+def load_execution_provenance(
+    environment: Mapping[str, str],
+) -> ExecutionProvenance:
+    """Load and close the one manifest named by the execution environment."""
+    raw_manifest = environment.get(CODEGEN_EXECUTION_PROVENANCE)
+    if not raw_manifest:
+        raise ExecutionProvenanceError(
+            f"{CODEGEN_EXECUTION_PROVENANCE} must name the artifact provenance file"
+        )
+    manifest = Path(raw_manifest).expanduser().resolve()
+    try:
+        payload_bytes = manifest.read_bytes()
+        payload = json.loads(payload_bytes)
+    except (OSError, json.JSONDecodeError) as error:
+        raise ExecutionProvenanceError(f"cannot read provenance {manifest}: {error}") from error
+    record = _object(payload, label="execution provenance")
+    if record.get("schema_version") != SCHEMA_VERSION:
+        raise ExecutionProvenanceError(
+            f"execution provenance schema must be {SCHEMA_VERSION}"
+        )
+    python = _object(record.get("python"), label="python")
+    executable = python.get("executable")
+    version = python.get("version")
+    if not isinstance(executable, str) or not executable:
+        raise ExecutionProvenanceError("python.executable must be a non-empty path")
+    if not isinstance(version, str) or not version:
+        raise ExecutionProvenanceError("python.version must be recorded")
+
+    roots = _object(record.get("roots"), label="roots")
+    if set(roots) != {
+        "codegen_source",
+        "agentic_install",
+        "teax_source",
+        "teax_simkit",
+    }:
+        raise ExecutionProvenanceError("roots must contain the four closed artifact roots")
+    codegen, _codegen_commit, _codegen_hash = _identity_root(
+        roots, "codegen_source", hash_field="archive_sha256", package="sysml_codegen"
+    )
+    agentic, _agentic_commit, _agentic_hash = _identity_root(
+        roots, "agentic_install", hash_field="wheel_sha256", package="agentic_mbse"
+    )
+    teax, teax_commit, teax_hash = _identity_root(
+        roots, "teax_source", hash_field="archive_sha256"
+    )
+    simkit, simkit_commit, simkit_hash = _identity_root(
+        roots, "teax_simkit", hash_field="archive_sha256", package="simkit"
+    )
+    if not simkit.is_relative_to(teax):
+        raise ExecutionProvenanceError("the simkit root is outside the recorded TEAx source")
+    if (simkit_commit, simkit_hash) != (teax_commit, teax_hash):
+        raise ExecutionProvenanceError("the simkit and TEAx identities differ")
+    return ExecutionProvenance(
+        manifest_path=manifest,
+        manifest_sha256=hashlib.sha256(payload_bytes).hexdigest(),
+        python_executable=Path(executable).expanduser().resolve(),
+        codegen_source_root=codegen,
+        agentic_install_root=agentic,
+        teax_source_root=teax,
+        teax_simkit_root=simkit,
+    )
+
+
+def environment_pin_problems(
+    resolved: Mapping[str, str], provenance: ExecutionProvenance
+) -> list[str]:
+    """Return one problem for every interpreter or import outside its recorded root."""
+    expected = {
+        "sysml_codegen": provenance.codegen_source_root,
+        "agentic_mbse": provenance.agentic_install_root,
+        "simkit": provenance.teax_simkit_root,
+    }
+    problems: list[str] = []
+    python = resolved.get("python")
+    if python is None or Path(python).resolve() != provenance.python_executable:
+        problems.append(
+            f"python resolved outside the recorded executable: {python!r}"
+        )
+    for name, root in expected.items():
+        imported = resolved.get(name)
+        if imported is None or not Path(imported).resolve().is_relative_to(root):
+            problems.append(f"{name} resolved outside {root}: {imported!r}")
     return problems

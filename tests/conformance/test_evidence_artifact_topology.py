@@ -16,7 +16,7 @@ from pathlib import Path
 
 import pytest
 
-from verification import audit_evidence, build_artifacts, run_independent_green
+from verification import artifact_sources, audit_evidence, build_artifacts, run_independent_green
 
 EVIDENCE_PATHS = (
     "verification/dependencies.json",
@@ -457,6 +457,16 @@ def test_builder_cli_creates_five_closed_source_artifacts(
         )
         (repository / "source.txt").write_text(f"{name}\n")
         if name == "agentic":
+            for relative in (
+                "src/agentic_mbse",
+                "claude",
+                ".claude",
+                "docs",
+                "project_templates",
+            ):
+                directory = repository / relative
+                directory.mkdir(parents=True)
+                (directory / "artifact-contract.txt").write_text(relative + "\n")
             (repository / "source-link.txt").symlink_to("source.txt")
             (repository / "workspace-only-link").symlink_to(
                 "/private/workspace/agentic-only"
@@ -504,6 +514,21 @@ def test_builder_cli_creates_five_closed_source_artifacts(
         name: row["commit"] for name, row in manifest["inputs"].items()
     } == identities
     assert len(list((output / "sources").glob("*.tar"))) == 5
+    history = manifest["inputs"]["codegen"]["history"]
+    assert history["commit"] == identities["codegen"]
+    assert hashlib.sha256((output / history["filename"]).read_bytes()).hexdigest() == history[
+        "sha256"
+    ]
+    source_inputs = artifact_sources.load_artifact_source_inputs(
+        {
+            artifact_sources.ARTIFACT_SOURCE_INPUTS: str(
+                output / "artifact-source-inputs.json"
+            )
+        }
+    )
+    assert source_inputs.codegen_commit == identities["codegen"]
+    assert source_inputs.agentic_commit == identities["agentic"]
+    assert source_inputs.codegen_history == output / "history-extracted/codegen"
     assert manifest["inputs"]["agentic"]["archive"]["excluded_unsafe_links"] == [
         {
             "kind": "symlink",

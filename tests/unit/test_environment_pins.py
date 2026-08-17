@@ -1,74 +1,149 @@
-"""The execution lane's environment pin must still be able to fail.
-
-This pin once asserted paths inside the ``item7-rebuild`` worktrees; when those were
-deleted (2026-08-15) it went from checking the tree to erroring 12 nodes at setup — and
-the repair risk is the opposite failure, a pin that goes green for any resolution. These
-tests run in the default suite and feed the predicate wrong resolutions, so the pin's
-ability to reject them is proved on every run, not once in a review.
-"""
+"""The execution lane accepts only roots named by the artifact provenance file."""
 
 from __future__ import annotations
 
+import json
+from pathlib import Path
+
+import pytest
+
 from tests.execution.environment_pins import (
-    CODEGEN_SRC,
-    COMPANION_SRC,
+    CODEGEN_EXECUTION_PROVENANCE,
+    ExecutionProvenanceError,
     environment_pin_problems,
+    load_execution_provenance,
 )
 
 
-def _pinned_resolution() -> dict[str, str]:
-    return {
-        "python": "/anywhere/bin/python",
-        "simkit": "/home/x/teax/packages/teax-simkit/src/simkit/__init__.py",
-        "sysml_codegen": str(CODEGEN_SRC / "sysml_codegen" / "__init__.py"),
-        "agentic_mbse": str(COMPANION_SRC / "agentic_mbse" / "__init__.py"),
+def _package(root: Path, name: str) -> Path:
+    package = root / name
+    package.mkdir(parents=True)
+    init = package / "__init__.py"
+    init.write_text("")
+    return init
+
+
+def _manifest(tmp_path: Path) -> tuple[Path, dict[str, str]]:
+    codegen = tmp_path / "extracted/codegen/src"
+    agentic = tmp_path / "installed/site-packages"
+    teax = tmp_path / "extracted/teax"
+    simkit = teax / "packages/teax-simkit"
+    resolved = {
+        "python": str(tmp_path / "venv/bin/python"),
+        "sysml_codegen": str(_package(codegen, "sysml_codegen")),
+        "agentic_mbse": str(_package(agentic, "agentic_mbse")),
+        "simkit": str(_package(simkit, "simkit")),
     }
-
-
-def test_the_pinned_resolution_passes() -> None:
-    assert environment_pin_problems(_pinned_resolution()) == []
-
-
-def test_the_pinned_roots_are_the_main_checkouts() -> None:
-    """Anchor-derived, and pointing where the content actually lives now."""
-    repo_root = CODEGEN_SRC.parent
-    assert CODEGEN_SRC == repo_root / "src"
-    assert COMPANION_SRC == repo_root.parent / "agentic-mbse" / "src"
-    assert CODEGEN_SRC.is_dir()
-    assert COMPANION_SRC.is_dir()
-
-
-def test_simkit_outside_the_teax_checkout_is_rejected() -> None:
-    resolved = _pinned_resolution() | {
-        "simkit": "/home/x/.venv/lib/python3.12/site-packages/simkit/__init__.py"
-    }
-    problems = environment_pin_problems(resolved)
-    assert len(problems) == 1
-    assert "simkit resolved outside the pinned TEAx checkout" in problems[0]
-
-
-def test_sysml_codegen_from_site_packages_is_rejected() -> None:
-    """A copy under this repo's own ``.venv`` is a stale tree, not ``src``."""
-    repo_root = CODEGEN_SRC.parent
-    resolved = _pinned_resolution() | {
-        "sysml_codegen": str(
-            repo_root / ".venv/lib/python3.12/site-packages/sysml_codegen/__init__.py"
+    manifest = tmp_path / "execution-provenance.json"
+    manifest.write_text(
+        json.dumps(
+            {
+                "schema_version": "stop-parser-execution-provenance/v1",
+                "python": {
+                    "executable": resolved["python"],
+                    "version": "3.12.3",
+                },
+                "roots": {
+                    "codegen_source": {
+                        "path": str(codegen),
+                        "commit": "a" * 40,
+                        "archive_sha256": "1" * 64,
+                    },
+                    "agentic_install": {
+                        "path": str(agentic),
+                        "commit": "b" * 40,
+                        "wheel_sha256": "2" * 64,
+                    },
+                    "teax_source": {
+                        "path": str(teax),
+                        "commit": "c" * 40,
+                        "archive_sha256": "3" * 64,
+                    },
+                    "teax_simkit": {
+                        "path": str(simkit),
+                        "commit": "c" * 40,
+                        "archive_sha256": "3" * 64,
+                    },
+                },
+            },
+            sort_keys=True,
         )
-    }
-    problems = environment_pin_problems(resolved)
-    assert len(problems) == 1
-    assert problems[0].startswith("sysml_codegen resolved outside")
+        + "\n"
+    )
+    return manifest, resolved
 
 
-def test_agentic_mbse_from_a_dead_worktree_is_rejected() -> None:
-    """The exact 2026-08-15 shape: a sibling directory that is not the main checkout."""
-    repo_root = CODEGEN_SRC.parent
-    resolved = _pinned_resolution() | {
-        "agentic_mbse": str(
-            repo_root.parent
-            / "agentic-mbse-item7-rebuild/src/agentic_mbse/__init__.py"
-        )
-    }
-    problems = environment_pin_problems(resolved)
+def test_the_recorded_artifact_roots_pass(tmp_path: Path) -> None:
+    manifest, resolved = _manifest(tmp_path)
+    provenance = load_execution_provenance(
+        {CODEGEN_EXECUTION_PROVENANCE: str(manifest)}
+    )
+
+    assert environment_pin_problems(resolved, provenance) == []
+    assert provenance.manifest_path == manifest.resolve()
+    assert len(provenance.manifest_sha256) == 64
+
+
+def test_manifest_is_required(tmp_path: Path) -> None:
+    with pytest.raises(ExecutionProvenanceError, match=CODEGEN_EXECUTION_PROVENANCE):
+        load_execution_provenance({})
+
+
+def test_wrong_schema_is_refused(tmp_path: Path) -> None:
+    manifest, _resolved = _manifest(tmp_path)
+    payload = json.loads(manifest.read_text())
+    payload["schema_version"] = "wrong"
+    manifest.write_text(json.dumps(payload))
+
+    with pytest.raises(ExecutionProvenanceError, match="schema"):
+        load_execution_provenance({CODEGEN_EXECUTION_PROVENANCE: str(manifest)})
+
+
+@pytest.mark.parametrize(
+    ("name", "wrong"),
+    [
+        ("python", "/other/bin/python"),
+        ("simkit", "/other/simkit/__init__.py"),
+        ("sysml_codegen", "/other/sysml_codegen/__init__.py"),
+        ("agentic_mbse", "/other/agentic_mbse/__init__.py"),
+    ],
+)
+def test_every_wrong_resolution_is_rejected(
+    tmp_path: Path, name: str, wrong: str
+) -> None:
+    manifest, resolved = _manifest(tmp_path)
+    provenance = load_execution_provenance(
+        {CODEGEN_EXECUTION_PROVENANCE: str(manifest)}
+    )
+
+    problems = environment_pin_problems(resolved | {name: wrong}, provenance)
+
     assert len(problems) == 1
-    assert problems[0].startswith("agentic_mbse resolved outside")
+    assert name in problems[0]
+
+
+def test_old_checkout_relative_shape_is_rejected(tmp_path: Path) -> None:
+    manifest, resolved = _manifest(tmp_path)
+    provenance = load_execution_provenance(
+        {CODEGEN_EXECUTION_PROVENANCE: str(manifest)}
+    )
+    old_sibling = tmp_path / "agentic-mbse/src/agentic_mbse/__init__.py"
+    old_sibling.parent.mkdir(parents=True)
+    old_sibling.write_text("")
+
+    problems = environment_pin_problems(
+        resolved | {"agentic_mbse": str(old_sibling)}, provenance
+    )
+
+    assert len(problems) == 1
+    assert "agentic_mbse" in problems[0]
+
+
+def test_manifest_rejects_non_hash_artifact_identity(tmp_path: Path) -> None:
+    manifest, _resolved = _manifest(tmp_path)
+    payload = json.loads(manifest.read_text())
+    payload["roots"]["codegen_source"]["archive_sha256"] = "short"
+    manifest.write_text(json.dumps(payload))
+
+    with pytest.raises(ExecutionProvenanceError, match="archive_sha256"):
+        load_execution_provenance({CODEGEN_EXECUTION_PROVENANCE: str(manifest)})

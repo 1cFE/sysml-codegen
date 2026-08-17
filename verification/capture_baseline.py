@@ -21,8 +21,10 @@ from sysml_codegen.orchestration.elaborated_pipeline import elaborate_model_path
 from sysml_codegen.snapshot.capture import capture_instance_graph_snapshot
 from sysml_codegen.snapshot.envelope import load_instance_graph_snapshot
 from sysml_codegen.snapshot.instance_graph import encode_instance_graph
+from verification.artifact_sources import codegen_history_root
 
 ROOT = Path(__file__).resolve().parent.parent
+HISTORY_ROOT = codegen_history_root(ROOT)
 BATCH_PATH = Path("tests/fixtures/v6_recapture_batch/batch.json")
 P_SEED = "52a03cd2d0a9fdd340b60b16cea79a5b72234b08"
 FOUR_A = "09fdae1986c81c2a5738e1401bdc78e0ea5fa607"
@@ -63,7 +65,7 @@ def _source_rows(root: Path) -> list[dict[str, str]]:
 def _git_bytes(commit: str, path: Path) -> bytes:
     try:
         return subprocess.run(
-            ["git", "-C", str(ROOT), "show", f"{commit}:{path}"],
+            ["git", "-C", str(HISTORY_ROOT), "show", f"{commit}:{path}"],
             check=True,
             capture_output=True,
         ).stdout
@@ -242,7 +244,7 @@ def validate_output_transitions() -> dict[str, Any]:
         [
             "git",
             "-C",
-            str(ROOT),
+            str(HISTORY_ROOT),
             "diff",
             "--name-only",
             P_SEED,

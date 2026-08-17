@@ -15,7 +15,7 @@ import zipfile
 from pathlib import Path
 from typing import Any
 
-from verification import build_artifacts, run_independent_green
+from verification import artifact_sources, build_artifacts, run_independent_green
 
 EXACT_EVIDENCE_PATHS = frozenset(
     {
@@ -188,6 +188,21 @@ def _verify_dependencies(
         )
         if archive.get("excluded_unsafe_links") != excluded_links:
             raise EvidenceAuditError(f"{name} excluded unsafe-link inventory mismatch")
+        history = row.get("history")
+        if name == "codegen":
+            if not isinstance(history, dict):
+                raise EvidenceAuditError("codegen dependency row omits its history input")
+            if history.get("commit") != commit:
+                raise EvidenceAuditError("codegen history does not name C_prod")
+            bundle = _artifact_path(
+                artifact_root,
+                history.get("filename"),
+                label="codegen history bundle",
+            )
+            if _sha256(bundle) != history.get("sha256"):
+                raise EvidenceAuditError("codegen history bundle hash mismatch")
+        elif history is not None:
+            raise EvidenceAuditError(f"{name} dependency row has an unexpected history input")
         wheel = row.get("wheel")
         if wheel is not None:
             if not isinstance(wheel, dict):
@@ -202,6 +217,57 @@ def _verify_dependencies(
                 distribution=str(wheel.get("distribution")),
                 version=str(wheel.get("version")),
                 sha256=str(wheel.get("sha256")),
+            )
+    source_manifest = artifact_root / "artifact-source-inputs.json"
+    try:
+        source_inputs = artifact_sources.load_artifact_source_inputs(
+            {artifact_sources.ARTIFACT_SOURCE_INPUTS: str(source_manifest)}
+        )
+    except artifact_sources.ArtifactSourceInputError as error:
+        raise EvidenceAuditError(f"artifact source inputs are invalid: {error}") from error
+    if source_inputs.codegen_commit != c_prod:
+        raise EvidenceAuditError("artifact source inputs do not name C_prod")
+    if source_inputs.agentic_commit != inputs["agentic"].get("commit"):
+        raise EvidenceAuditError("artifact source inputs do not name A_final")
+    source_payload = _load_json(source_manifest)
+    expected_source_payload = {
+        "schema_version": artifact_sources.SCHEMA_VERSION,
+        "agentic_source": {
+            "root": inputs["agentic"]["extracted_root"],
+            "commit": inputs["agentic"]["commit"],
+            "archive": inputs["agentic"]["archive"]["filename"],
+            "archive_sha256": inputs["agentic"]["archive"]["sha256"],
+        },
+        "codegen_source": {
+            "root": inputs["codegen"]["extracted_root"],
+            "commit": inputs["codegen"]["commit"],
+            "archive": inputs["codegen"]["archive"]["filename"],
+            "archive_sha256": inputs["codegen"]["archive"]["sha256"],
+        },
+        "codegen_history": {
+            "root": inputs["codegen"]["history"]["extracted_root"],
+            "commit": inputs["codegen"]["history"]["commit"],
+            "bundle": inputs["codegen"]["history"]["filename"],
+            "bundle_sha256": inputs["codegen"]["history"]["sha256"],
+        },
+    }
+    if source_payload != expected_source_payload:
+        raise EvidenceAuditError("artifact source inputs differ from dependencies.json")
+    expected_roots = {
+        "agentic source": artifact_root / str(inputs["agentic"].get("extracted_root")),
+        "codegen source": artifact_root / str(inputs["codegen"].get("extracted_root")),
+        "codegen history": artifact_root
+        / str(inputs["codegen"]["history"].get("extracted_root")),
+    }
+    actual_roots = {
+        "agentic source": source_inputs.agentic_source,
+        "codegen source": source_inputs.codegen_source,
+        "codegen history": source_inputs.codegen_history,
+    }
+    for label, expected in expected_roots.items():
+        if actual_roots[label] != expected.resolve():
+            raise EvidenceAuditError(
+                f"artifact source manifest {label} differs from dependencies.json"
             )
     return inputs
 
@@ -224,6 +290,31 @@ def _rebuild_codegen(
         )
         if _sha256(rebuilt_archive) != archive_record["sha256"]:
             raise EvidenceAuditError("rebuilt C_prod source archive hash mismatch")
+        history_record = codegen.get("history")
+        if not isinstance(history_record, dict):
+            raise EvidenceAuditError("C_prod dependency row has no history input")
+        rebuilt_bundle = root / Path(str(history_record["filename"])).name
+        try:
+            rebuilt_history = build_artifacts._deterministic_history_bundle(
+                repository, c_prod, rebuilt_bundle
+            )
+            build_artifacts._extract_history_bundle(
+                rebuilt_bundle, root / "history-extracted", c_prod
+            )
+        except build_artifacts.ArtifactContractError as error:
+            raise EvidenceAuditError(f"C_prod history rebuild failed: {error}") from error
+        if (
+            rebuilt_history["filename"] != history_record["filename"]
+            or rebuilt_history["sha256"] != history_record["sha256"]
+        ):
+            raise EvidenceAuditError("rebuilt C_prod history identity/hash mismatch")
+        recorded_bundle = _artifact_path(
+            artifact_root,
+            history_record["filename"],
+            label="certified C_prod history bundle",
+        )
+        if _sha256(recorded_bundle) != rebuilt_history["sha256"]:
+            raise EvidenceAuditError("certified C_prod history differs from reconstruction")
         extracted = build_artifacts._extract_archive(
             rebuilt_archive,
             root / "extracted",

@@ -15,10 +15,11 @@ published teaching falsifiable instead of trusted (D3):
   sites recorded as rewritten to D-5 (owner ruling D11) and the three deliberate
   negatives still present.
 
-The agentic tree is resolved through the public ``get_docs_dir()`` resolver, so in
-editable development this reads the live source checkout and in an installed
-distribution the bundled copy. A separate agentic-mbse test proves a built wheel
-carries the authoritative document byte for byte. License-free: text only.
+The agentic tree comes from the explicit artifact-source manifest. The manifest
+hashes the source archive and pairs it with the exact codegen extraction, so this
+test never consults an editable sibling checkout. A separate agentic-mbse test
+proves a built wheel carries the authoritative document byte for byte. License-free:
+text only.
 
 Marker grammar (parsed here, authored in the doc)::
 
@@ -36,7 +37,7 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
-from agentic_mbse.cli import get_docs_dir
+from tests.helpers.artifact_sources import agentic_source_root
 
 CODEGEN_ROOT = Path(__file__).resolve().parents[2]
 
@@ -85,13 +86,8 @@ POINTER_SURFACES = (
 
 
 def agentic_root() -> Path:
-    """The agentic-mbse tree, resolved through the public docs resolver.
-
-    In editable development this is the source checkout; the contract requires
-    the instruction trees beside ``docs/``, which is the environment the drift
-    check exists to police.
-    """
-    root = get_docs_dir().parent
+    """Return the explicit hash-identified agentic source tree."""
+    root = agentic_source_root(CODEGEN_ROOT)
     missing = [tree for tree in INSTRUCTION_TREES if not (root / tree).is_dir()]
     assert not missing, f"agentic tree at {root} lacks {missing}"
     return root

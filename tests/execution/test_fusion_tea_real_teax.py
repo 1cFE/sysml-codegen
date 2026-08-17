@@ -33,10 +33,6 @@ from pathlib import Path
 
 import pytest
 
-from sysml_codegen.orchestration.exact_pipeline_context import (
-    build_exact_pipeline_context,
-    build_exact_pipeline_context_from_snapshot,
-)
 from sysml_codegen.snapshot.capture import capture_instance_graph_snapshot
 from tests.execution import fusion_tea_arithmetic as hand
 from tests.execution.environment_pins import environment_pin_problems
@@ -88,7 +84,7 @@ def _numeric_outputs(result) -> dict[str, float]:
 
 
 @pytest.fixture(scope="module")
-def environment() -> dict[str, str]:
+def environment(execution_provenance) -> dict[str, str]:
     """The resolved environment this evidence was produced in.
 
     Asserted rather than reported: the acceptance run must resolve ``simkit`` from
@@ -109,8 +105,10 @@ def environment() -> dict[str, str]:
         "sysml_codegen": str(Path(sysml_codegen.__file__).resolve()),
         "agentic_mbse": str(Path(agentic_mbse.__file__).resolve()),
     }
-    problems = environment_pin_problems(resolved)
+    problems = environment_pin_problems(resolved, execution_provenance)
     assert not problems, problems
+    resolved["manifest"] = str(execution_provenance.manifest_path)
+    resolved["manifest_sha256"] = execution_provenance.manifest_sha256
     return resolved
 
 

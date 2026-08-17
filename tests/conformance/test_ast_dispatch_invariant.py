@@ -22,6 +22,7 @@ from types import SimpleNamespace
 
 import pytest
 
+from tests.helpers.artifact_sources import agentic_source_root
 from tests.helpers.static_analysis import (
     find_all_dispatch_functions,
     find_comment_near_line,
@@ -34,6 +35,8 @@ from tests.helpers.static_analysis import (
 # ---------------------------------------------------------------------------
 
 SRC_ROOT = Path(__file__).parent.parent.parent / "src" / "sysml_codegen"
+CODEGEN_ROOT = SRC_ROOT.parent.parent
+AGENTIC_ROOT = agentic_source_root(CODEGEN_ROOT)
 EXTRACTION_DIR = SRC_ROOT / "extraction"
 
 HIERARCHY_RESOLVER_PATH = EXTRACTION_DIR / "hierarchy_resolver.py"
@@ -41,16 +44,14 @@ USAGE_EXTRACTOR_PATH = EXTRACTION_DIR / "usage_extractor.py"
 EXTRACTOR_PATH = EXTRACTION_DIR / "extractor.py"
 ELABORATOR_PATH = SRC_ROOT / "elaboration" / "elaborate.py"
 AGENTIC_HIERARCHY_PATH = (
-    Path(__file__).parent.parent.parent.parent
-    / "agentic-mbse"
+    AGENTIC_ROOT
     / "src"
     / "agentic_mbse"
     / "sysml"
     / "hierarchy.py"
 )
 AGENTIC_AGGREGATION_PATH = (
-    Path(__file__).parent.parent.parent.parent
-    / "agentic-mbse"
+    AGENTIC_ROOT
     / "src"
     / "agentic_mbse"
     / "sysml"
