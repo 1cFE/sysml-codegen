@@ -44,7 +44,9 @@ EXTRACTION_FACT_MODELS = [
     "ife_plant",
     "self_named_binding_trap",
     "plant_values",
-    "plant_value_shapes",
+    # B6: PlantValueShapesLib::ChamberSelectCalc::wall has the user-defined
+    # PlantValueShapesLib::'Wall Kind' typing. It is a named SI_TYPE_INVALID
+    # refusal, proved separately instead of poisoning every eager sweep row.
     "gate_a",
     "gate_a_package_owner",
     "agg_localterm_probe",

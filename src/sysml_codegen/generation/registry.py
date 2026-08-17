@@ -30,6 +30,18 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
+_EXIT_POINT_WRAPPERS = {
+    "float": "Float",
+    "int": "Int",
+    "str": "String",
+    "bool": "Bool",
+}
+
+
+def exit_point_wrapper_type(python_type: str) -> str | None:
+    """Return the supported root-output wrapper, or ``None`` for a refusal."""
+    return _EXIT_POINT_WRAPPERS.get(python_type)
+
 
 def _collect_exit_point_primitive_types(
     modules: list,
@@ -42,28 +54,17 @@ def _collect_exit_point_primitive_types(
     Multi-output modules use BaseModel schemas which are already registered
     via entry_point_groups or schema generation.
     """
-    type_map = {
-        "float": "Float",
-        "int": "Int",
-        "str": "String",
-        "bool": "Bool",
-    }
     types = set()
     for module in modules:
         for out in module.outputs:
             if out.field_name == "root":
-                wrapper = type_map.get(out.python_type)
-                if wrapper:
-                    types.add(wrapper)
-                else:
-                    logger.warning(
-                        "Module '%s' exit point has unmapped python_type %r — no "
-                        "primitive wrapper registered for it; the exit point's "
-                        "type is not one of %s.",
-                        module.name,
-                        out.python_type,
-                        sorted(type_map),
+                wrapper = exit_point_wrapper_type(out.python_type)
+                if wrapper is None:
+                    raise RuntimeError(
+                        "registry reached an unsupported root output after the "
+                        "exit-point type preflight"
                     )
+                types.add(wrapper)
     return sorted(types)
 
 
@@ -235,7 +236,7 @@ def _generate_schema_imports_from_entry_points(
 
 
 def generate_registry(
-    graph,
+    graph: ComputationGraph,
     package_name: str,
     template_env: jinja2.Environment,
     output_path: Path,
@@ -294,6 +295,8 @@ def generate_registry(
     seen_names: set[str] = set()
     calcusage_imports: list[str] = []
     for module in calcusage_modules:
+        assert module.calc_def_name is not None
+        assert module.calc_def_qualified_name is not None
         if module.calc_def_name not in seen_names:
             class_name = f"{module.calc_def_name}Module"
             sqn = SysMLQualifiedName(module.calc_def_qualified_name)
@@ -400,6 +403,7 @@ generate_registry_function = generate_registry
 
 __all__ = [
     "_collect_exit_point_primitive_types",
+    "exit_point_wrapper_type",
     "generate_registry",
     "residual_class_name_collisions",
     "generate_registry_from_graph",

@@ -136,6 +136,8 @@ def test_shared_extractor_leaves_unstable_live_identity_sidecar_empty():
     from sysml_codegen.extraction.extractor import SysMLDataExtractor
 
     extractor = SysMLDataExtractor([])
+    feature_typing = type("FeatureTyping", (), {})()
+    scalar_real = SimpleNamespace(name="Real", qualified_name="ScalarValues::Real")
     cases = (
         (None, UUID("00000000-0000-4000-8000-000000000001")),
         ("Pkg::Calc::unstable", UUID("00000000-0000-4000-8000-000000000002")),
@@ -145,7 +147,7 @@ def test_shared_extractor_leaves_unstable_live_identity_sidecar_empty():
             name="unstable_member",
             qualified_name=qualified_name,
             element_id=element_id,
-            heritage=(),
+            heritage=((feature_typing, scalar_real),),
             documentation=(),
             feature_value_expression=None,
             owned_memberships=(),

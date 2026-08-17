@@ -21,6 +21,7 @@ from typing import TYPE_CHECKING
 import jinja2
 
 if TYPE_CHECKING:
+    from sysml_codegen.core.identifier_types import PythonModulePath
     from sysml_codegen.generation.constraint_plan import ConstraintGenerationPlan
     from sysml_codegen.resolution.models import (
         ComputationGraph,
@@ -154,7 +155,7 @@ def _get_template_env() -> jinja2.Environment:
     )
 
 
-def _get_python_path(module):
+def _get_python_path(module: PipelineModule) -> PythonModulePath:
     """Get PythonModulePath from PipelineModule (all module types)."""
     from sysml_codegen.core.identifier_types import PythonModulePath, SysMLQualifiedName
     from sysml_codegen.generation.errors import unrenderable_module_kind_error
@@ -171,6 +172,7 @@ def _get_python_path(module):
     elif module.module_kind == ModuleKind.AGGREGATION:
         sysml_qn = module.name.replace("__", "::")
     elif module.module_kind == ModuleKind.CALCULATION:
+        assert module.calc_def_qualified_name is not None
         sysml_qn = module.calc_def_qualified_name
     else:
         raise unrenderable_module_kind_error(module, "python-path")
@@ -312,6 +314,28 @@ def _preflight_registry_class_names(graph: ComputationGraph) -> None:
     residual = residual_class_name_collisions(graph)
     if residual:
         raise residual_class_name_collision_error(residual)
+
+
+def _preflight_exit_point_types(graph: ComputationGraph) -> None:
+    """Refuse an unsupported root-output wrapper before touching the output tree."""
+    from sysml_codegen.generation import CodeGenerationError
+    from sysml_codegen.generation.registry import exit_point_wrapper_type
+
+    for module in graph.modules:
+        for output in module.outputs:
+            if output.field_name != "root":
+                continue
+            if exit_point_wrapper_type(output.python_type) is not None:
+                continue
+            source_file = module.source_file or "unknown"
+            source_line = module.source_line if module.source_line is not None else 0
+            raise CodeGenerationError(
+                "EXIT_POINT_TYPE_UNSUPPORTED: "
+                f"module={module.name!r} "
+                f"output={f'{output.field_name}/{output.channel_name}'!r} "
+                f"python_type={output.python_type!r} "
+                f"source={f'{source_file}:{source_line}'!r}"
+            )
 
 
 def _preflight_constraint_totality(graph: ComputationGraph) -> None:
@@ -491,6 +515,7 @@ def _generate_schemas(
             continue
         if len(module.outputs) < 2:
             continue
+        assert module.calc_def_name is not None
         output_path = schemas_dir / f"{module.calc_def_name.lower()}_output.py"
         code = generate_multioutput_model(
             module,
@@ -1232,6 +1257,11 @@ def _generate_package_from_graph(graph: ComputationGraph, config: GenerationConf
     from sysml_codegen.generation.constraint_plan import build_constraint_generation_plan
 
     try:
+        # Unsupported root-output wrappers are a public model refusal, before
+        # link inspection, plan rendering, output clearing, directory creation,
+        # or any write. Registry collection shares the same total validator.
+        _preflight_exit_point_types(graph)
+
         # Validate both generated constraint scopes before overwrite clearing or output creation.
         _preflight_constraint_names(graph)
 

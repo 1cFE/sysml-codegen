@@ -40,6 +40,7 @@ from sysml_codegen.elaboration.graph import (
     ConstraintUsageRecord,
     InstanceGraph,
 )
+from sysml_codegen.extraction.errors import ExactTypeError
 from sysml_codegen.extraction.extractor import SysMLDataExtractor
 from sysml_codegen.extraction.source_manifest import SourceAdmission
 from sysml_codegen.resolution.models import ComputationGraph
@@ -161,6 +162,22 @@ def elaborate_loaded_extractor(
         require_executable_content(graph, calc_definitions)
     except SemanticEvidenceError as error:
         diagnostics = (_semantic_evidence_diagnostic(error, source_referents),)
+        raise ElaborationDiagnosticError(diagnostics) from error
+    except ExactTypeError as error:
+        location = ""
+        if error.location is not None:
+            raw_source, line = error.location
+            referent = _lookup_referent(raw_source, source_referents)
+            location = f" [{referent}:{line}]"
+        diagnostics = (
+            Diagnostic(
+                code=error.code,
+                consumer=None,
+                consumer_display=error.reference,
+                param_name=None,
+                detail=f"{error.operation}: {error.detail}{location}",
+            ),
+        )
         raise ElaborationDiagnosticError(diagnostics) from error
     except ElaborationInvariantError as error:
         diagnostics = (

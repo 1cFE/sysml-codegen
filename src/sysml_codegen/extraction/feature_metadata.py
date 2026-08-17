@@ -143,13 +143,7 @@ def _source_file(feature: Any, *, model_paths: Sequence[Path]) -> Path | None:
             return Path(uri)
         current = getattr(current, "owner", None)
 
-    files: list[Path] = []
-    for path in model_paths:
-        if path.is_file():
-            files.append(path)
-        elif path.is_dir():
-            files.extend(path.glob("**/*.sysml"))
-    return files[0] if len(files) == 1 else None
+    return None
 
 
 def _description(feature: Any) -> str:

@@ -15,12 +15,14 @@ from uuid import UUID
 from agentic_mbse.sysml.syside_adapter import SysideAdapter
 
 from sysml_codegen.core.qualified_names import sanitize_name
+from sysml_codegen.core.type_mapping import SYSML_TO_PYTHON
 from sysml_codegen.extraction.data_models import (
     AttributeInfo,
     CalculationDefinitionData,
     ConstraintInfo,
     PartDefinitionData,
 )
+from sysml_codegen.extraction.errors import ExactTypeError
 from sysml_codegen.extraction.expression_utils import reconstruct_expression
 from sysml_codegen.extraction.feature_metadata import extract_feature_unit
 
@@ -46,8 +48,8 @@ class SysMLDataExtractor:
         """Initialize with SysML model file paths."""
         self.model_paths = model_paths
         self.adapter = SysideAdapter()
-        self.model = None
-        self.diagnostics = None
+        self.model: Any | None = None
+        self.diagnostics: Any | None = None
 
     def load_models(self) -> bool:
         """Load SysML models using SysIDE via adapter.
@@ -56,6 +58,8 @@ class SysMLDataExtractor:
             bool: True if loaded successfully (even with warnings)
         """
         self.model, self.diagnostics = self.adapter.load_model(self.model_paths)
+        if self.diagnostics is None:
+            raise RuntimeError("SysIDE returned no diagnostic collection")
 
         # Check for errors (warnings OK)
         if self.diagnostics.contains_errors():
@@ -90,7 +94,7 @@ class SysMLDataExtractor:
 
         return calc_defs
 
-    def _extract_part_definition(self, elem) -> PartDefinitionData | None:
+    def _extract_part_definition(self, elem: Any) -> PartDefinitionData | None:
         """Extract data from single part definition element."""
         name = sanitize_name(elem.name)
         if not name:
@@ -105,7 +109,7 @@ class SysMLDataExtractor:
                     attributes.append(attr_info)
 
         # Extract constraints (stub for now)
-        constraints = []
+        constraints: list[ConstraintInfo] = []
 
         # Get documentation
         doc_comment = self._extract_documentation(elem)
@@ -128,7 +132,7 @@ class SysMLDataExtractor:
         )
 
     def _extract_calculation_definition(
-        self, elem
+        self, elem: Any
     ) -> CalculationDefinitionData | None:
         """Extract data from calculation definition element."""
         name = sanitize_name(elem.name)
@@ -300,7 +304,7 @@ class SysMLDataExtractor:
             return is_input or is_output
         return False
 
-    def _get_direction(self, member) -> tuple[bool, bool]:
+    def _get_direction(self, member: Any) -> tuple[bool, bool]:
         """Get input/output direction from member."""
         is_input = False
         is_output = False
@@ -312,7 +316,7 @@ class SysMLDataExtractor:
                 is_output = True
         return is_input, is_output
 
-    def _get_source_location(self, elem) -> tuple[Path | None, int]:
+    def _get_source_location(self, elem: Any) -> tuple[Path | None, int]:
         """Get source file path and line number from element."""
         result = self.adapter.get_source_location(elem)
         if result:
@@ -320,7 +324,7 @@ class SysMLDataExtractor:
             return Path(file_path), line
         return None, 0
 
-    def _get_calc_def_name(self, elem) -> str | None:
+    def _get_calc_def_name(self, elem: Any) -> str | None:
         """Get calculation definition name from a calculation usage element."""
         if not hasattr(elem, 'heritage'):
             return None
@@ -332,7 +336,7 @@ class SysMLDataExtractor:
 
         return None
 
-    def _extract_binding_source(self, param_elem) -> str | None:
+    def _extract_binding_source(self, param_elem: Any) -> str | None:
         """Extract binding source from a parameter element."""
         if not hasattr(param_elem, 'feature_value_expression'):
             return None
@@ -343,7 +347,7 @@ class SysMLDataExtractor:
 
         return self._parse_expression_to_path(expr)
 
-    def _parse_expression_to_path(self, expr) -> str | None:
+    def _parse_expression_to_path(self, expr: Any) -> str | None:
         """Parse SysML expression to extract binding path."""
         if self.adapter.is_instance(expr, "FeatureChainExpression"):
             path_parts = []
@@ -369,7 +373,7 @@ class SysMLDataExtractor:
 
         return None
 
-    def _extract_simple_reference(self, expr) -> str | None:
+    def _extract_simple_reference(self, expr: Any) -> str | None:
         """Extract simple reference from FeatureReferenceExpression."""
         if not self.adapter.is_instance(expr, "FeatureReferenceExpression"):
             return None
@@ -384,7 +388,7 @@ class SysMLDataExtractor:
 
         return None
 
-    def _build_reference_path(self, elem) -> str:
+    def _build_reference_path(self, elem: Any) -> str:
         """Build full reference path for an element."""
         parts = []
 
@@ -407,7 +411,7 @@ class SysMLDataExtractor:
                 break
             current = owner
 
-        return ".".join(parts) if parts else elem.name if hasattr(elem, 'name') else ""
+        return ".".join(parts) if parts else str(elem.name) if hasattr(elem, 'name') else ""
 
     def _extract_attribute(
         self, attr_elem: Any, *, capture_element_id: bool = False
@@ -417,17 +421,34 @@ class SysMLDataExtractor:
         if not name:
             return None
 
-        sysml_type = "Any"
-        python_type = "Any"
-
-        if attr_elem.heritage:
-            for relationship, target in attr_elem.heritage:
-                if self.adapter.is_instance(relationship, "FeatureTyping"):
-                    type_name = target.name if hasattr(target, "name") else None
-                    if type_name:
-                        sysml_type = type_name
-                        python_type = self._map_sysml_to_python_type(type_name)
-                        break
+        typing_targets = [
+            target
+            for relationship, target in (getattr(attr_elem, "heritage", None) or ())
+            if self.adapter.is_instance(relationship, "FeatureTyping") and target is not None
+        ]
+        reference = str(getattr(attr_elem, "qualified_name", None) or attr_elem.name)
+        location = self.adapter.get_source_location(attr_elem)
+        if len(typing_targets) != 1:
+            raise ExactTypeError(
+                f"feature has {len(typing_targets)} typings; expected exactly one qualified typing",
+                reference=reference,
+                location=location,
+            )
+        (typing_target,) = typing_targets
+        qualified_type = getattr(typing_target, "qualified_name", None)
+        python_type = (
+            SYSML_TO_PYTHON.get(str(qualified_type)) if qualified_type is not None else None
+        )
+        if python_type is None:
+            rendered_type = str(qualified_type or "<unqualified>")
+            raise ExactTypeError(
+                f"typing target {rendered_type!r} is unsupported; expected one of "
+                "ScalarValues::Boolean, ScalarValues::Integer, ScalarValues::Real, "
+                "or ScalarValues::String",
+                reference=reference,
+                location=location,
+            )
+        sysml_type = str(getattr(typing_target, "name", None) or qualified_type)
 
         description = self._extract_attribute_documentation(attr_elem)
         default_value = self._extract_default_value(attr_elem)
@@ -461,7 +482,7 @@ class SysMLDataExtractor:
             return None
         return element_id
 
-    def _extract_default_value(self, feature) -> str | None:
+    def _extract_default_value(self, feature: Any) -> str | None:
         """Extract default value from AttributeUsage if present."""
         if hasattr(feature, 'feature_value_expression') and feature.feature_value_expression:
             expr = feature.feature_value_expression
@@ -484,7 +505,7 @@ class SysMLDataExtractor:
 
         return None
 
-    def _extract_literal_value(self, expr) -> Any | None:
+    def _extract_literal_value(self, expr: Any) -> Any | None:
         """Extract Python value from a literal expression."""
         if expr is None:
             return None
@@ -500,7 +521,7 @@ class SysMLDataExtractor:
         else:
             return None
 
-    def _extract_calc_documentation(self, calc_def) -> str:
+    def _extract_calc_documentation(self, calc_def: Any) -> str:
         """Extract calculation-level documentation from Comment elements."""
         if hasattr(calc_def, 'documentation'):
             docs = list(calc_def.documentation)
@@ -533,7 +554,7 @@ class SysMLDataExtractor:
 
         return ""
 
-    def _extract_attribute_documentation(self, attr) -> str:
+    def _extract_attribute_documentation(self, attr: Any) -> str:
         """Extract attribute-level documentation from Comment elements."""
         if not hasattr(attr, 'documentation'):
             return ""
@@ -544,25 +565,17 @@ class SysMLDataExtractor:
 
         for doc in docs:
             if hasattr(doc, 'body') and doc.body:
-                return doc.body.strip()
+                return str(doc.body).strip()
 
         return ""
 
-    def _extract_unit(self, attr_elem, sysml_type: str, description: str) -> str | None:
+    def _extract_unit(
+        self, attr_elem: Any, sysml_type: str, description: str
+    ) -> str | None:
         """Delegate exact unit extraction to the declaration-owned helper."""
         return extract_feature_unit(attr_elem, model_paths=self.model_paths)
 
-    def _map_sysml_to_python_type(self, sysml_type: str) -> str:
-        """Map SysML type to Python type."""
-        type_map = {
-            "Real": "float",
-            "Integer": "int",
-            "String": "str",
-            "Boolean": "bool",
-        }
-        return type_map.get(sysml_type, sysml_type)
-
-    def _extract_documentation(self, elem) -> str:
+    def _extract_documentation(self, elem: Any) -> str:
         """Extract documentation string from element."""
         docs = []
         if hasattr(elem, "owned_members"):
@@ -575,7 +588,7 @@ class SysMLDataExtractor:
 
         return "\n".join(docs) if docs else ""
 
-    def _report_diagnostics(self, diagnostics: Iterable) -> None:
+    def _report_diagnostics(self, diagnostics: Iterable[Any]) -> None:
         """Report diagnostics to console."""
         for diag in diagnostics:
             print(f"[ERROR] {diag}")
