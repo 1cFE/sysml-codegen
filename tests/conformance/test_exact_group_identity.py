@@ -99,9 +99,9 @@ def test_the_package_fallback_is_spelled_the_way_the_model_declares_it() -> None
     assert identity[1] == "ElabMatrixC14Params"
 
 
-def test_one_package_spanning_two_files_still_gets_one_group_per_file() -> None:
-    """The stem rule is per file, so a two-file package keeps two groups."""
-    graph = build_elaborated_pipeline([FIXTURES_DIR / "deep_cross_scope_probe"])
+def test_two_file_model_gets_one_group_per_declaring_file() -> None:
+    """The stem rule is per declaring file, independent of package boundaries."""
+    graph = build_elaborated_pipeline([FIXTURES_DIR / "multifile_group_identity"])
     assert {group.name for group in graph.entry_point_groups} == {
         "design_params",
         "library_params",

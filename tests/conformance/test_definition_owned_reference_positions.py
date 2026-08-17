@@ -78,7 +78,7 @@ def test_definition_owned_lineage_miss_refuses_without_descendant_search(
     assert codes == Counter({ElaborationCode.SI_OCCURRENCE_MISSING: 1})
     [diagnostic] = excinfo.value.diagnostics
     assert diagnostic.detail.startswith(
-        "consumer lineage has no occurrence of definition-owned leaf slot"
+        "consumer domain has no part_definition anchor"
     )
 
     lenient = _elaborate_fixture(fixture, strict=False)

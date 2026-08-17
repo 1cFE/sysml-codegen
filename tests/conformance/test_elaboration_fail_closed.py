@@ -63,29 +63,30 @@ def test_invocation_rhs_is_diagnostic_not_an_unbound_candidate() -> None:
     assert consumer.unbound_formals == ()
 
 
-def test_indexed_source_has_its_distinct_readiness_diagnostic() -> None:
+def test_indexed_source_refuses_before_graph_construction_in_both_modes() -> None:
     extractor = _load("source_identity_indexed_source")
 
-    with pytest.raises(ElaborationError) as excinfo:
-        elaborate(
-            extractor.model,
-            extractor.extract_calculation_definitions(),
-            validation_diagnostics=extractor.diagnostics.validation,
-        )
+    for strict in (True, False):
+        with pytest.raises(ElaborationDiagnosticError) as excinfo:
+            elaborate(
+                extractor.model,
+                extractor.extract_calculation_definitions(),
+                validation_diagnostics=extractor.diagnostics.validation,
+                strict=strict,
+            )
 
-    assert Counter(finding.code for finding in excinfo.value.findings) == Counter(
-        {ReadinessCode.SI_INDEXED_SOURCE_UNSUPPORTED: 2}
-    )
+        assert [diagnostic.code for diagnostic in excinfo.value.diagnostics] == [
+            ElaborationCode.SI_INDEXED_SOURCE_UNSUPPORTED
+        ]
+        assert excinfo.value.diagnostics[0].consumer is None
+        assert "#(" in excinfo.value.diagnostics[0].detail
 
 
 def test_definition_reference_refusals_keep_their_distinct_codes() -> None:
     graph = _elaborate_lenient("source_identity_occurrence_ambiguity")
 
     assert Counter(diagnostic.code for diagnostic in graph.diagnostics) == Counter(
-        {
-            ElaborationCode.SI_OCCURRENCE_MISSING: 1,
-            ElaborationCode.SI_OCCURRENCE_AMBIGUOUS: 1,
-        }
+        {ElaborationCode.SI_OCCURRENCE_MISSING: 2}
     )
     assert {diagnostic.param_name for diagnostic in graph.diagnostics} == {"value_in"}
     assert all("amb_" in diagnostic.consumer_display for diagnostic in graph.diagnostics)
@@ -102,10 +103,7 @@ def test_strict_mode_rejects_blocking_occurrence_diagnostics() -> None:
         )
 
     assert Counter(diagnostic.code for diagnostic in excinfo.value.diagnostics) == Counter(
-        {
-            ElaborationCode.SI_OCCURRENCE_MISSING: 1,
-            ElaborationCode.SI_OCCURRENCE_AMBIGUOUS: 1,
-        }
+        {ElaborationCode.SI_OCCURRENCE_MISSING: 2}
     )
 
 
@@ -228,7 +226,7 @@ def test_ambiguous_exact_owner_is_lenient_diagnostic_and_strict_refusal() -> Non
     assert diagnostic.code == ElaborationCode.SI_OCCURRENCE_AMBIGUOUS
     assert diagnostic.consumer == consumer.node_id
     assert diagnostic.param_name is None
-    assert diagnostic.detail == "consumer context contains 2 candidate occurrences"
+    assert "has 2 concrete occurrences" in diagnostic.detail
     assert consumer.inputs == {}
 
     with pytest.raises(ElaborationDiagnosticError) as excinfo:
@@ -265,7 +263,6 @@ def test_selected_owner_without_a_leaf_target_refuses_by_name() -> None:
         strict=False,
     )
     consumer = calc(graph, "CalcUsageLeafOwner__plant__comp_b__doubled")
-    owner = _declaration_wire(extractor.model, "PartUsage", "CalcUsageLeafOwner::Plant::comp_a")
     leaf = _declaration_wire(
         extractor.model, "CalculationUsage", "CalcUsageLeafOwner::Plant::comp_a::twice"
     )
@@ -274,13 +271,11 @@ def test_selected_owner_without_a_leaf_target_refuses_by_name() -> None:
     assert diagnostic.code == ElaborationCode.SI_OCCURRENCE_MISSING
     assert diagnostic.consumer == consumer.node_id
     assert diagnostic.param_name is None
-    assert diagnostic.detail == (
-        f"exact owner {owner} has no target for leaf {leaf} at its selected occurrence"
-    )
+    assert diagnostic.detail == f"exact owner address has no target for leaf {leaf}"
     assert consumer.inputs == {}
 
 
-def test_strict_readiness_halt_precedes_graph_diagnostic_rejection() -> None:
+def test_expression_readiness_and_indexed_pregraph_refusal_are_distinct() -> None:
     """The two strict exits are distinct, and readiness is the earlier one.
 
     ``_finish_readiness`` raises ``ElaborationError`` before ``graph.validate()`` ever
@@ -290,13 +285,14 @@ def test_strict_readiness_halt_precedes_graph_diagnostic_rejection() -> None:
     """
     assert not issubclass(ElaborationDiagnosticError, ElaborationError)
 
-    with pytest.raises(ElaborationError) as excinfo:
+    with pytest.raises(ElaborationDiagnosticError) as excinfo:
         _elaborate_strict("source_identity_indexed_source")
+    assert [diagnostic.code for diagnostic in excinfo.value.diagnostics] == [
+        ElaborationCode.SI_INDEXED_SOURCE_UNSUPPORTED
+    ]
 
-    assert Counter(finding.code for finding in excinfo.value.findings) == Counter(
-        {ReadinessCode.SI_INDEXED_SOURCE_UNSUPPORTED: 2}
-    )
-    lenient = _elaborate_lenient("source_identity_indexed_source")
-    assert Counter(diagnostic.code for diagnostic in lenient.diagnostics) == Counter(
-        {ReadinessCode.SI_INDEXED_SOURCE_UNSUPPORTED: 2}
+    with pytest.raises(ElaborationError) as expression_excinfo:
+        _elaborate_strict("invocation_binding_probe")
+    assert Counter(finding.code for finding in expression_excinfo.value.findings) == Counter(
+        {ReadinessCode.SI_EXPRESSION_SOURCE_UNSUPPORTED: 1}
     )

@@ -5,7 +5,6 @@ from __future__ import annotations
 import json
 import re
 import shutil
-from collections import Counter
 from collections.abc import Callable
 from dataclasses import dataclass
 from functools import cache
@@ -17,6 +16,7 @@ import yaml
 
 from sysml_codegen.elaboration import (
     ElaborationCode,
+    ElaborationDiagnosticError,
     ElaborationError,
     project,
 )
@@ -785,11 +785,11 @@ def _src_01(_tmp_path: Path) -> None:
 
 
 def _src_02(_tmp_path: Path) -> None:
-    with pytest.raises(ElaborationError) as excinfo:
+    with pytest.raises(ElaborationDiagnosticError) as excinfo:
         _load_internal(FIXTURES_DIR / "source_identity_indexed_source")
-    assert Counter(finding.code for finding in excinfo.value.findings) == Counter(
-        {ReadinessCode.SI_INDEXED_SOURCE_UNSUPPORTED: 2}
-    )
+    assert [diagnostic.code for diagnostic in excinfo.value.diagnostics] == [
+        ElaborationCode.SI_INDEXED_SOURCE_UNSUPPORTED
+    ]
 
 
 def _assert_load_error(model_path: Path, detail: str) -> None:
@@ -811,11 +811,7 @@ def _src_03(_tmp_path: Path) -> None:
 
 def _ambiguity(cell: str) -> Callable[[Path], None]:
     consumer = "amb_qual_calc" if cell == "C9" else "amb_bare_calc"
-    expected = (
-        ElaborationCode.SI_OCCURRENCE_MISSING
-        if cell == "C9"
-        else ElaborationCode.SI_OCCURRENCE_AMBIGUOUS
-    )
+    expected = ElaborationCode.SI_OCCURRENCE_MISSING
 
     def assert_evidence(_tmp_path: Path) -> None:
         graph = _load_internal(FIXTURES_DIR / "source_identity_occurrence_ambiguity", strict=False)

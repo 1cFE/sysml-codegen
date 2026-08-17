@@ -15,6 +15,7 @@ from agentic_mbse.sysml.syside_adapter import SysideAdapter
 
 from sysml_codegen.elaboration.diagnostics import ElaborationCode, ElaborationInvariantError
 from sysml_codegen.elaboration.elaborate import _ExactElaborator
+from sysml_codegen.elaboration.occurrence import semantic_owner
 from sysml_codegen.extraction.extractor import SysMLDataExtractor
 from tests.conftest import FIXTURES_DIR, requires_license
 
@@ -40,6 +41,30 @@ class _UnmappedOwner:
     """Stands in for an owner metaclass nobody has graded yet."""
 
     qualified_name = "Somewhere::exotic"
+
+
+class _FalseyCalculationDefinition:
+    def __bool__(self) -> bool:
+        return False
+
+
+class _OwnedFeature:
+    owning_type = _FalseyCalculationDefinition()
+    owner = object()
+
+
+class _DetachedFeature:
+    owning_type = None
+    owner = None
+
+
+def test_semantic_owner_uses_presence_not_truthiness() -> None:
+    feature = _OwnedFeature()
+    assert semantic_owner(feature) is feature.owning_type
+
+
+def test_semantic_owner_accepts_a_missing_owner() -> None:
+    assert semantic_owner(_DetachedFeature()) is None
 
 
 @requires_license

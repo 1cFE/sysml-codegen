@@ -212,6 +212,23 @@ def test_exact_semantic_boundary_has_no_string_or_legacy_identity_route() -> Non
     assert _boundary_violations(sources) == set()
 
 
+def test_occurrence_resolution_has_no_retired_election_routes() -> None:
+    elaborate_source = BOUNDARY_FILES["elaborate.py"].read_text()
+    assert "definition_owner_requires_lineage" not in elaborate_source
+    assert "_select_occurrences" not in elaborate_source
+    assert "_select_calc_nodes" not in elaborate_source
+    assert "_resolve_leaf" not in elaborate_source
+    assert "_resolve_direct_reference" not in elaborate_source
+    assert "is_descendant(" not in elaborate_source
+    assert "self._graph.calcs.values()" not in elaborate_source
+
+
+def test_semantic_owner_selection_exists_only_in_its_general_helper() -> None:
+    occurrence_source = BOUNDARY_FILES["occurrence.py"].read_text()
+    assert occurrence_source.count('getattr(element, "owning_type", None)') == 1
+    assert occurrence_source.count('getattr(element, "owner", None)') == 1
+
+
 def test_new_boundary_function_is_guarded_by_default() -> None:
     sources = (
         "def newly_added_selector(node, by_name): return by_name[node.name]\n",

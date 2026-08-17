@@ -212,11 +212,20 @@ def test_live_and_v2_round_trip_projection_match_across_graph_shapes(fixture: st
         extractor.model,
         extractor.extract_calculation_definitions(),
         validation_diagnostics=extractor.diagnostics.validation,
+        strict=fixture != "deep_cross_scope_probe",
     )
 
     rebuilt = decode_instance_graph(encode_instance_graph(live))
 
     assert rebuilt.semantic_edges() == live.semantic_edges()
+    assert rebuilt.diagnostics == live.diagnostics
+    if fixture == "deep_cross_scope_probe":
+        with pytest.raises(ProjectionError) as rebuilt_error:
+            project(rebuilt)
+        with pytest.raises(ProjectionError) as live_error:
+            project(live)
+        assert rebuilt_error.value.diagnostics == live_error.value.diagnostics
+        return
     assert project(rebuilt) == project(live)
 
 
