@@ -3,8 +3,9 @@ package U3UsageQualMultiOcc {
 
     // SPIKE THROWAWAY — USAGE-qualified reference whose qualifying usage has TWO leaf
     // occurrences below the consumer (multiplicity 2). The consumer is a sibling of the
-    // qualifying usage, so its own lineage does not own the slot. The F-1 position rule
-    // predicts SI_OCCURRENCE_AMBIGUOUS here.
+    // qualifying usage, so its own lineage does not own the slot. The leaf is
+    // definition-owned, and the lineage miss refuses SI_OCCURRENCE_MISSING without
+    // counting the two descendants.
     calc def AreaCalculation {
         in attribute length : Real;
         out attribute area : Real = length * 2.0;

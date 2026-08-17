@@ -10,22 +10,17 @@ and F-4, reproduced at `0f89673`). Package renamed `S6QualSiblingScope` →
 **Definition-owned.** `'Unit'::cost` resolves to a feature owned by `part def 'Unit'`, so the
 reference takes `_resolve_leaf`'s route, not the exact usage-owner anchoring.
 
-## Measured behavior (spike row 6 / F-4, reconfirmed on the shipped route)
+## Historical finding (spike row 6 / F-4)
 
 `'Unit'::cost` is written inside `part def 'Power Block'`, which contains no `'Unit'`. The
-**positional fallback** — lineage miss, then a descendant search from each lineage anchor —
-finds the single occurrence under the *sibling* subtree and resolves to
-`plant.bop.the_unit.cost` = 7.0, silently. Adding a second `'Unit'` anywhere under `plant`
-converts this into a loud `SI_OCCURRENCE_AMBIGUOUS`.
+old route searched descendants and selected `plant.bop.the_unit.cost` = 7.0 from the sibling
+subtree. That fallback was removed by the owner ruling below.
 
-This fixture pins **what the route does**, not that the author meant the sibling: owner
-qualification does not mean "mine", and no route checks intent here. The guidance must carry
-that caution for the definition-owned fallback (design D11 / Required Invariant 3).
-
-**Durable disposition:** this silently-resolving candidate is owned by
-`[DEF-OWNED-SIDEWAYS-REACH]` in `.project/backlog/BACKLOG.md` (filed 2026-08-16 at the
-self-binding-replacement audit's direction) — an owner ruling on loud-refusal versus supported
-fallback, then the bounded implementation. If that ruling lands on refusal, this fixture's
-expected outcome changes with it.
+**Owner ruling and durable disposition:** `[OWNER 2026-08-16]` rejected the lineage-miss
+descendant fallback. SysIDE's resolved structure is authoritative; codegen must refuse rather than
+invent an occurrence through positional search. `[DEF-OWNED-SIDEWAYS-REACH]` in
+`.project/backlog/BACKLOG.md` records the owner-verbatim source, owner Reid W, the exact bound, and
+the `_resolve_leaf`/tests/guidance implementation vehicle. This fixture now expects
+`SI_OCCURRENCE_MISSING`; an explicit occurrence path remains supported for another subtree.
 
 Kept test: `tests/conformance/test_definition_owned_reference_positions.py`.

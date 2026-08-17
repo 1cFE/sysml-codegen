@@ -324,7 +324,7 @@ def test_combined_named_source_reaches_every_and_only_its_consumers() -> None:
 
 
 # ---------------------------------------------------------------------------
-# Controls — usage-owned forms that already resolve, and must not move
+# Controls — usage-owned self-reference, then definition-owned lineage misses
 # ---------------------------------------------------------------------------
 
 
@@ -342,54 +342,38 @@ def test_u1_self_qualified_control_is_unchanged() -> None:
     assert graph.diagnostics == []
 
 
-def test_u2_two_owner_occurrences_control_is_unchanged() -> None:
-    """Two occurrences of one qualifying usage: each consumer keeps its own.
+# These qualifiers name usages, but the leaf SysIDE resolves is still owned by
+# the part definition because the usages add no redefinition.
+def test_u2_definition_owned_descendants_refuse_for_each_consumer() -> None:
+    """The usage qualifier does not make its definition-owned leaf usage-owned.
 
-    The qualifier names a usage, but the leaf it resolves to is declared on the part
-    *definition* — the usage adds no redefinition — so the owner branch never activates
-    here and the existing leaf route keeps deciding. The ledger records this root as
-    carrying zero in-population sites, which is what makes that claim checkable rather
-    than asserted.
+    Each area calculation sits above its nested ``component`` occurrence. Neither
+    occurrence is on the consumer's lineage, so both references refuse rather than
+    selecting the sole descendant below each plant.
     """
     graph = elaborated("u2_usage_qual_two_owner_occ")
-
-    assert calc(graph, "U2UsageQualTwoOwnerOcc__plant_a__area_calc").input_by_name(
-        "length"
-    ) == NodeRef(attr(graph, "U2UsageQualTwoOwnerOcc__plant_a__component__length").node_id)
-    assert calc(graph, "U2UsageQualTwoOwnerOcc__plant_b__area_calc").input_by_name(
-        "length"
-    ) == NodeRef(attr(graph, "U2UsageQualTwoOwnerOcc__plant_b__component__length").node_id)
-    assert graph.diagnostics == []
+    assert diagnostic_codes(graph) == Counter({ElaborationCode.SI_OCCURRENCE_MISSING: 2})
+    for occurrence in ("plant_a", "plant_b"):
+        consumer = calc(graph, f"U2UsageQualTwoOwnerOcc__{occurrence}__area_calc")
+        assert bound_formal_names(consumer) == frozenset()
 
 
-def test_u3_arrayed_qualifier_remains_ambiguous() -> None:
-    """An arrayed qualifying usage has no one occurrence, under either route.
-
-    The leaf here is definition-owned as well, so the refusal comes from the unchanged
-    leaf route: two occurrences carry the slot beneath the consumer's anchor. The repair
-    must keep refusing this, and must keep refusing it with the existing code rather than
-    a new one.
-    """
+def test_u3_definition_owned_array_descendants_refuse_as_missing() -> None:
+    """Array cardinality is irrelevant when neither occurrence is on the lineage."""
     graph = elaborated("u3_usage_qual_multi_occ")
     consumer = calc(graph, "U3UsageQualMultiOcc__plant__area_calc")
 
-    assert diagnostic_codes(graph) == Counter({ElaborationCode.SI_OCCURRENCE_AMBIGUOUS: 1})
+    assert diagnostic_codes(graph) == Counter({ElaborationCode.SI_OCCURRENCE_MISSING: 1})
     assert bound_formal_names(consumer) == frozenset()
 
 
-def test_u3b_single_occurrence_control_is_unchanged() -> None:
-    """u3's multiplicity-1 counterpart resolves, and keeps resolving.
-
-    Definition-owned leaf again, so this pins the unchanged route's behavior on the
-    shape whose only difference from u3 is occurrence count.
-    """
+def test_u3b_single_definition_owned_descendant_also_refuses() -> None:
+    """One descendant is not an occurrence on the consumer's lineage."""
     graph = elaborated("u3b_usage_qual_single_occ")
     consumer = calc(graph, "U3BUsageQualSingleOcc__plant__area_calc")
 
-    assert consumer.input_by_name("length") == NodeRef(
-        attr(graph, "U3BUsageQualSingleOcc__plant__component[0]__length").node_id
-    )
-    assert graph.diagnostics == []
+    assert diagnostic_codes(graph) == Counter({ElaborationCode.SI_OCCURRENCE_MISSING: 1})
+    assert bound_formal_names(consumer) == frozenset()
 
 
 def test_definition_owned_alias_leaf_keeps_the_consumer_local_edge() -> None:

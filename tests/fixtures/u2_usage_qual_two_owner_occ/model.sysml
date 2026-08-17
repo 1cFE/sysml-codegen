@@ -3,7 +3,8 @@ package U2UsageQualTwoOwnerOcc {
 
     // SPIKE THROWAWAY — the published USAGE-qualified spelling authored inside a part
     // DEFINITION that has TWO occurrences, so two occurrences of the qualifying usage
-    // `component` exist. Analogue of s4b for the usage-qualified spelling.
+    // `component` exist. The resolved leaf remains definition-owned. Each consumer is
+    // above its component occurrence, so both references refuse SI_OCCURRENCE_MISSING.
     calc def AreaCalculation {
         in attribute length : Real;
         out attribute area : Real = length * 2.0;

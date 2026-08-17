@@ -255,6 +255,17 @@ def undo_aggregation_split(text: str, rewrites: list[dict]) -> str:
 
 def build_variant_tree(source_dir: Path, target_dir: Path, formals: list[str]) -> list[Path]:
     """Copy one model tree and apply the D-5 rename recipe to every ``.sysml`` file."""
+    resolved_source, resolved_target = source_dir.resolve(), target_dir.resolve()
+    if (
+        resolved_target == resolved_source
+        or resolved_target in resolved_source.parents
+        or resolved_source in resolved_target.parents
+    ):
+        # An operation invariant, not caller policy: the target is deleted before
+        # the copy, so an aliased or nested pair would destroy the source.
+        raise ValueError(
+            f"variant target {resolved_target} overlaps source {resolved_source}"
+        )
     if target_dir.exists():
         shutil.rmtree(target_dir)
     shutil.copytree(
@@ -284,6 +295,18 @@ def build_variant_tree(source_dir: Path, target_dir: Path, formals: list[str]) -
 
 def build_variant(source: str, target: str, formals: list[str]) -> list[Path]:
     return build_variant_tree(FIXTURES / source, FIXTURES / target, formals)
+
+
+def _fixture_directory(operand: str) -> Path:
+    """Resolve one plain fixture name without allowing it to escape ``FIXTURES``."""
+    value = Path(operand)
+    if value.is_absolute() or len(value.parts) != 1 or operand in (".", ".."):
+        raise ValueError(f"fixture operand must be a plain directory name, got {operand!r}")
+    fixture_root = FIXTURES.resolve()
+    directory = (fixture_root / value).resolve()
+    if directory.parent != fixture_root:
+        raise ValueError(f"fixture operand {operand!r} resolves outside {fixture_root}")
+    return directory
 
 
 def strip_check_tree(source_dir: Path, target_dir: Path, formals: list[str]) -> list[str]:
@@ -586,18 +609,40 @@ def main(argv: list[str] | None = None) -> int:
 
     if not args.source or not args.target:
         parser.error("source and target are required outside --root mode")
+    try:
+        source_dir = _fixture_directory(args.source)
+        target_dir = _fixture_directory(args.target)
+    except ValueError as error:
+        print(f"FAIL {error}; nothing written")
+        return 1
+    if source_dir == target_dir:
+        print("FAIL source and target resolve to the same fixture; nothing written")
+        return 1
+    if not source_dir.is_dir():
+        print(f"FAIL source fixture {args.source!r} does not exist; nothing written")
+        return 1
+    if args.check:
+        if not target_dir.is_dir():
+            print(f"FAIL --check target fixture {args.target!r} does not exist")
+            return 1
+    elif target_dir.exists() or target_dir.is_symlink():
+        print(
+            f"FAIL target fixture {args.target!r} already exists; refusing to delete a "
+            "pre-existing target. Use --check to inspect it"
+        )
+        return 1
     formals = (
         sorted({name.strip() for name in args.formals.split(",")})
         if args.formals
         else refused_formals(args.source)
     )
     if not args.check:
-        written = build_variant(args.source, args.target, formals)
+        written = build_variant_tree(source_dir, target_dir, formals)
         print(f"{args.target}: {len(formals)} formals renamed across {len(written)} files")
         for path in written:
             print(f"   {path}")
 
-    problems = strip_check(args.source, args.target, formals)
+    problems = strip_check_tree(source_dir, target_dir, formals)
     for problem in problems:
         print(f"FAIL {problem}")
     print(f"strip check: {len(problems)} problems")

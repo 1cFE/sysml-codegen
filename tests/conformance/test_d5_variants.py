@@ -728,6 +728,78 @@ def test_check_mode_requires_an_existing_scratch(tmp_path: Path) -> None:
     assert rc == 1
 
 
+def _fixture_mode_sandbox(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
+    fixtures = tmp_path / "fixtures"
+    source = fixtures / "source"
+    source.mkdir(parents=True)
+    (source / "model.sysml").write_text("package p {}\n")
+    monkeypatch.setattr(d5, "FIXTURES", fixtures)
+    return fixtures
+
+
+def test_fixture_mode_refuses_escaped_operands_with_exit_one_and_no_mutation(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Absolute, traversal, aliased, and missing operands all refuse before write."""
+    fixtures = _fixture_mode_sandbox(tmp_path, monkeypatch)
+    external = tmp_path / "external"
+    external.mkdir()
+    (external / "keep.txt").write_bytes(b"not a fixture\n")
+    (fixtures / "escaped").symlink_to(external, target_is_directory=True)
+    (fixtures / "alias").symlink_to(fixtures / "source", target_is_directory=True)
+
+    for argv in (
+        ["source", str(external)],
+        [str(external), "fresh"],
+        ["source", "../escape"],
+        ["../source", "fresh"],
+        ["source", "source"],
+        ["source", "alias"],
+        ["source", "escaped"],
+        ["missing", "fresh"],
+    ):
+        before = _tree_digest(tmp_path)
+        assert d5.main([*argv, "--formals", "gain"]) == 1
+        assert _tree_digest(tmp_path) == before
+
+
+def test_fixture_mode_refuses_a_pre_existing_target_with_no_mutation(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    fixtures = _fixture_mode_sandbox(tmp_path, monkeypatch)
+    target = fixtures / "target"
+    target.mkdir()
+    (target / "keep.txt").write_bytes(b"not yours to delete\n")
+
+    before = _tree_digest(fixtures)
+    assert d5.main(["source", "target", "--formals", "gain"]) == 1
+    assert _tree_digest(fixtures) == before
+
+
+def test_fixture_mode_builds_a_new_target_inside_the_fixture_root(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    fixtures = _fixture_mode_sandbox(tmp_path, monkeypatch)
+
+    assert d5.main(["source", "target", "--formals", "gain"]) == 0
+    assert _tree_digest(fixtures / "target") == _tree_digest(fixtures / "source")
+
+
+def test_build_variant_tree_refuses_overlapping_source_and_target(
+    tmp_path: Path,
+) -> None:
+    """The mechanism-level invariant: the target is deleted before the copy, so
+    an aliased or nested pair must raise instead of destroying the source."""
+    source = tmp_path / "source"
+    (source / "sub").mkdir(parents=True)
+    (source / "model.sysml").write_text("package p {}\n")
+
+    for target in (source, source / "sub", tmp_path):
+        with pytest.raises(ValueError, match="overlaps"):
+            d5.build_variant_tree(source, target, ["gain"])
+    assert (source / "model.sysml").read_text() == "package p {}\n"
+
+
 def test_precondition_c_keeps_same_named_definitions_distinct(tmp_path: Path) -> None:
     """Audit F3: two packages each declare `calc def Revenue`; only one declares
     the formal being renamed. A lookup that collapses them to one simple-name key

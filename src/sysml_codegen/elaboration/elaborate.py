@@ -196,7 +196,7 @@ class _PendingAlias:
 
 
 def _computed_expression_input_names(
-    facts: Sequence[tuple[ResolvedSemanticReferenceFact, bool]],
+    facts: Sequence[tuple[ResolvedSemanticReferenceFact, bool, bool]],
 ) -> dict[int, str]:
     """Render the narrowest names that distinguish same-leaf semantic chains.
 
@@ -211,7 +211,9 @@ def _computed_expression_input_names(
         dict[tuple[UUID, ...], tuple[str, ...]],
     ] = defaultdict(dict)
 
-    for reference_ordinal, (fact, _plural) in enumerate(facts):
+    for reference_ordinal, (fact, _plural, _definition_owner_requires_lineage) in enumerate(
+        facts
+    ):
         leaf = fact.leaf
         if leaf is None:
             continue
@@ -241,7 +243,11 @@ def _computed_expression_input_names(
                 break
         if rendered_by_chain is None:
             continue
-        for reference_ordinal, (fact, _plural) in enumerate(facts):
+        for reference_ordinal, (
+            fact,
+            _plural,
+            _definition_owner_requires_lineage,
+        ) in enumerate(facts):
             if names_by_ordinal.get(reference_ordinal) != leaf_name or fact.leaf is None:
                 continue
             chain_identity = fact.segment_element_ids or (fact.leaf.element_id,)
@@ -1055,7 +1061,12 @@ class _ExactElaborator:
                 chain_fact = self._reference_from_elements(chain)
                 for scope in self._scopes_for_owner(owner):
                     try:
-                        edges = self._resolve_semantic_reference(chain_fact, scope, plural=True)
+                        edges = self._resolve_semantic_reference(
+                            chain_fact,
+                            scope,
+                            plural=True,
+                            definition_owner_requires_lineage=False,
+                        )
                     except _ReferenceResolutionError as error:
                         self._diagnose(
                             ElaborationCode.OVERRIDE_TARGET_MISSING,
@@ -2072,10 +2083,17 @@ class _ExactElaborator:
         consumer_scope: ScopeId,
         *,
         plural: bool,
+        definition_owner_requires_lineage: bool,
     ) -> list[NodeRef | ProducerRef]:
         reference = self._exact_reference(fact)
         if len(reference.segment_ids) == 1:
-            return [self._resolve_direct_reference(reference.leaf_id, consumer_scope)]
+            return [
+                self._resolve_direct_reference(
+                    reference.leaf_id,
+                    consumer_scope,
+                    definition_owner_requires_lineage=definition_owner_requires_lineage,
+                )
+            ]
         states: list[OccurrenceId | CalcNode] = self._contextualize_root(
             reference.root_id, consumer_scope, plural=plural
         )
@@ -2302,6 +2320,8 @@ class _ExactElaborator:
         self,
         leaf_id: DeclarationId,
         consumer_scope: ScopeId,
+        *,
+        definition_owner_requires_lineage: bool,
     ) -> NodeRef | ProducerRef:
         """Resolve a one-segment reference, anchored on its leaf's exact owner.
 
@@ -2315,16 +2335,17 @@ class _ExactElaborator:
         that occurrence.
 
         Only a ``PartUsage`` owner names an occurrence. A leaf owned by a definition,
-        package, enumeration, or calculation has none of its own, so it keeps the
-        existing leaf route unchanged.
+        package, enumeration, or calculation has none of its own, so it uses the leaf
+        route. For a qualified definition-owned leaf, that route is bounded to the
+        consumer's occurrence lineage and refuses when the lineage has no matching slot.
+        Bare references retain the existing descendant lookup because they do not make
+        the unsupported owner-qualified occurrence claim.
 
         A leaf the element index does not know is refused rather than routed. The index
         holds every declaration that carries a reload-stable qualified name, which is
         every declaration an author can write a reference to; a leaf missing from it
         means the resolved fact and the index disagree about what the model contains.
-        Owner classification is then unanswerable, and the definition-owned route would
-        answer from the consumer's own lineage — a positional guess dressed as the
-        deliberate exemption above. This site therefore refuses by name.
+        Owner classification is then unanswerable, so this site refuses by name.
         """
         leaf = self._elements.get(leaf_id)
         if leaf is None:
@@ -2336,7 +2357,11 @@ class _ExactElaborator:
 
         owner = self._semantic_owner(leaf)
         if not SysideAdapter.is_instance(owner, "PartUsage"):
-            return self._resolve_leaf(leaf_id, consumer_scope)
+            return self._resolve_leaf(
+                leaf_id,
+                consumer_scope,
+                definition_owner_requires_lineage=definition_owner_requires_lineage,
+            )
 
         owner_id = declaration_id_for(owner)
         # Scalar regardless of the caller's ``plural``: that flag describes the
@@ -2367,6 +2392,8 @@ class _ExactElaborator:
         self,
         declaration_id: DeclarationId,
         consumer_scope: ScopeId,
+        *,
+        definition_owner_requires_lineage: bool,
     ) -> NodeRef | ProducerRef:
         producing_calcs = [
             node for node in self._graph.calcs.values() if declaration_id in node.outputs
@@ -2385,11 +2412,21 @@ class _ExactElaborator:
                 ElaborationCode.SI_OCCURRENCE_MISSING,
                 f"leaf declaration {declaration_id.to_wire()} has no feature slot",
             ) from None
+        leaf = self._elements[declaration_id]
+        definition_owned = SysideAdapter.is_instance(
+            self._semantic_owner(leaf), "PartDefinition"
+        )
         if isinstance(consumer_scope, OccurrenceId):
             for scope in self._scope_lineage(consumer_scope):
                 edge = self._target_for_slot(scope, slot)
                 if edge is not None:
                     return edge
+            if definition_owned and definition_owner_requires_lineage:
+                raise _ReferenceResolutionError(
+                    ElaborationCode.SI_OCCURRENCE_MISSING,
+                    "consumer lineage has no occurrence of definition-owned leaf slot "
+                    f"{slot!r}",
+                )
             for anchor in self._scope_lineage(consumer_scope):
                 descendants = [
                     occurrence.occurrence_id
@@ -2446,9 +2483,14 @@ class _ExactElaborator:
                     "alias expression does not contain one exact reference",
                 )
                 continue
-            fact, plural = facts[0]
+            fact, plural, definition_owner_requires_lineage = facts[0]
             try:
-                edges = self._resolve_semantic_reference(fact, pending.node.scope, plural=plural)
+                edges = self._resolve_semantic_reference(
+                    fact,
+                    pending.node.scope,
+                    plural=plural,
+                    definition_owner_requires_lineage=definition_owner_requires_lineage,
+                )
             except _ReferenceResolutionError as error:
                 self._diagnose(
                     error.code,
@@ -2518,12 +2560,19 @@ class _ExactElaborator:
                 else {}
             )
             aggregation_ordinals: list[int] = []
-            for reference_ordinal, (fact, plural) in enumerate(facts):
+            for reference_ordinal, (
+                fact,
+                plural,
+                definition_owner_requires_lineage,
+            ) in enumerate(facts):
                 if plural:
                     aggregation_ordinals.append(reference_ordinal)
                 try:
                     edges = self._resolve_semantic_reference(
-                        fact, pending.consumer.scope, plural=plural
+                        fact,
+                        pending.consumer.scope,
+                        plural=plural,
+                        definition_owner_requires_lineage=definition_owner_requires_lineage,
                     )
                 except _ReferenceResolutionError as error:
                     self._diagnose(
@@ -2590,7 +2639,7 @@ class _ExactElaborator:
 
     def _expression_references(
         self, expression: Any, *, plural: bool
-    ) -> list[tuple[ResolvedSemanticReferenceFact, bool]]:
+    ) -> list[tuple[ResolvedSemanticReferenceFact, bool, bool]]:
         # A unit annotation contributes its value and never a reference, and the walk is
         # where the predicate lane learns that. It has to be the head, before any
         # structural dispatch, and it has to be here rather than at the predicate entry:
@@ -2602,7 +2651,7 @@ class _ExactElaborator:
         # FeatureChainExpression MUST be before OperatorExpression: SysIDE
         # models the former as an operator subtype.
         if SysideAdapter.is_instance(expression, "FeatureChainExpression"):
-            return [(feature_chain_facts(expression), plural)]
+            return [(feature_chain_facts(expression), plural, False)]
         if SysideAdapter.is_instance(expression, "FeatureReferenceExpression"):
             target = resolved_target_fact(getattr(expression, "referent", None))
             if target is None:
@@ -2617,6 +2666,7 @@ class _ExactElaborator:
                         has_index_segment=False,
                     ),
                     plural,
+                    binding_evidence.written_qualifier(expression) is not None,
                 )
             ]
         child_plural = plural
@@ -2634,7 +2684,7 @@ class _ExactElaborator:
                     f"unsupported invocation function {function_id.to_wire()}"
                 )
             child_plural = True
-        result: list[tuple[ResolvedSemanticReferenceFact, bool]] = []
+        result: list[tuple[ResolvedSemanticReferenceFact, bool, bool]] = []
         for operand in getattr(expression, "operands", None) or ():
             result.extend(self._expression_references(operand, plural=child_plural))
         return result
@@ -2655,6 +2705,10 @@ class _ExactElaborator:
                     fact,
                     pending.consumer.scope,
                     plural=False,
+                    definition_owner_requires_lineage=(
+                        evidence.source_form
+                        in {SourceForm.QUALIFIED_REFERENCE, SourceForm.REFERENCE_FORM_UNKNOWN}
+                    ),
                 )
                 edge = self._follow_alias(edges[0], set())
             except _ReferenceResolutionError as error:

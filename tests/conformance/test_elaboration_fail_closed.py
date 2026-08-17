@@ -78,11 +78,14 @@ def test_indexed_source_has_its_distinct_readiness_diagnostic() -> None:
     )
 
 
-def test_non_unique_definition_reference_has_named_ambiguity() -> None:
+def test_definition_reference_refusals_keep_their_distinct_codes() -> None:
     graph = _elaborate_lenient("source_identity_occurrence_ambiguity")
 
     assert Counter(diagnostic.code for diagnostic in graph.diagnostics) == Counter(
-        {ElaborationCode.SI_OCCURRENCE_AMBIGUOUS: 2}
+        {
+            ElaborationCode.SI_OCCURRENCE_MISSING: 1,
+            ElaborationCode.SI_OCCURRENCE_AMBIGUOUS: 1,
+        }
     )
     assert {diagnostic.param_name for diagnostic in graph.diagnostics} == {"value_in"}
     assert all("amb_" in diagnostic.consumer_display for diagnostic in graph.diagnostics)
@@ -99,7 +102,10 @@ def test_strict_mode_rejects_blocking_occurrence_diagnostics() -> None:
         )
 
     assert Counter(diagnostic.code for diagnostic in excinfo.value.diagnostics) == Counter(
-        {ElaborationCode.SI_OCCURRENCE_AMBIGUOUS: 2}
+        {
+            ElaborationCode.SI_OCCURRENCE_MISSING: 1,
+            ElaborationCode.SI_OCCURRENCE_AMBIGUOUS: 1,
+        }
     )
 
 

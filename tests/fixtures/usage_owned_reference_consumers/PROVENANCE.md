@@ -21,17 +21,17 @@ Every lane names `comp_a::length`, so every lane must reach `comp_a`'s node. Bef
 resolver repair all seven edges reach `comp_b.length` instead — one fixture, seven wrong edges,
 no diagnostic.
 
-## Copied from `.project/active/self-binding-replacement/spike/fixtures/` (bytes preserved)
+## Promoted from `.project/active/self-binding-replacement/spike/fixtures/`
 
-Qualified (`::`) one-segment references. Their `SPIKE THROWAWAY` headers are part of the
-preserved bytes and are stale on that point.
+Qualified (`::`) one-segment references. Their authored model shapes are retained; the u2, u3,
+and u3b teaching comments were updated after the F-4 owner ruling changed their expected outcome.
 
 | Root | Shape | Role |
 |---|---|---|
 | `u1_usage_qual_self` | qualifier names the consumer's own enclosing usage | control — edge is already correct |
-| `u2_usage_qual_two_owner_occ` | two occurrences of the qualifying usage, one per plant | control — each consumer already reaches its own occurrence |
-| `u3_usage_qual_multi_occ` | qualifying usage arrayed `[2]` | control — ambiguity is correct and survives the repair |
-| `u3b_usage_qual_single_occ` | the `[1]` counterpart of u3 | control — single occurrence already resolves |
+| `u2_usage_qual_two_owner_occ` | two occurrences of the qualifying usage, one per plant | definition-owned lineage miss — both consumers refuse `SI_OCCURRENCE_MISSING` after the F-4 ruling |
+| `u3_usage_qual_multi_occ` | qualifying usage arrayed `[2]` | definition-owned lineage miss — refuses `SI_OCCURRENCE_MISSING`; descendant count is not consulted |
+| `u3b_usage_qual_single_occ` | the `[1]` counterpart of u3 | definition-owned lineage miss — the sole descendant is not selected |
 | `u4_usage_qual_pkg_sibling` | package-scoped usage named from inside a part def | **affected** — `SI_OCCURRENCE_MISSING` today |
 | `u5_usage_qual_named_sibling` | one of two named sibling usages | **affected** — `SI_OCCURRENCE_AMBIGUOUS` today |
 | `u6_usage_qual_crossnamed` | consumer inside `comp_b` names `comp_a::length` | **affected** — silently wired to `comp_b.length` today |

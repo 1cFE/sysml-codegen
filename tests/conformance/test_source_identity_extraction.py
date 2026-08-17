@@ -298,10 +298,14 @@ def test_aggregation_terms_retain_exact_targets(mixed) -> None:
     assert sum_term.resolved_target.qualified_name == f"{PKG}::'Bank Cell'::cell_cost"
 
     qual = by_attr["qual_total"]
-    (qual_term,) = qual.local_terms
+    (qual_term,) = qual.singleton_terms
+    assert qual_term.source_path == "qual_plant.level"
     assert qual_term.resolved_target is not None
-    assert qual_term.resolved_target.qualified_name == f"{PKG}::'Qual Plant'::level"
-    assert qual_term.resolved_target.owner_is_definition
+    assert (
+        qual_term.resolved_target.qualified_name
+        == f"{PKG}::'Qual Station'::qual_plant::level"
+    )
+    assert not qual_term.resolved_target.owner_is_definition
 
     parent = by_attr["parent_total"]
     (parent_term,) = parent.local_terms

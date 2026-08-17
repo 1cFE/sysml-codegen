@@ -32,7 +32,7 @@ package UnitAnnotationLanes {
     part the_stack : Stack {
         part layer_a : Layer;
         calc rated_calc : Rated {
-            in thickness = layer_a::thickness;
+            in thickness = layer_a.thickness;
         }
     }
 }

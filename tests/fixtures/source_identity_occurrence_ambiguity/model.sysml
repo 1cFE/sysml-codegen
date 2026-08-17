@@ -3,9 +3,9 @@ package source_identity_occurrence_ambiguity {
 
     // SOURCE-IDENTITY Item 4 focused ambiguity fixture (see PROVENANCE.md).
     // C9/C10: a definition-level referent consumed from a context that
-    // contains TWO concrete occurrences of the definition — neither uniquely
-    // selected. The contextual projection must return the named ambiguity
-    // outcome, never a first-pick.
+    // contains TWO concrete occurrences of the definition. C9 is owner-qualified
+    // and refuses a lineage miss without inspecting descendants. C10 is bare and
+    // retains the named ambiguity outcome. Neither can first-pick.
 
     calc def 'Reading Consumer' {
         in attribute value_in : Real;

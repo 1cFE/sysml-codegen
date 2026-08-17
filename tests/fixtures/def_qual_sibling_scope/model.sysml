@@ -3,10 +3,8 @@ package def_qual_sibling_scope {
 
     // D-6, definition-owned leaf: the qualifying definition has NO occurrence
     // in the consumer's own containment, but exactly one occurrence under a
-    // SIBLING subtree. Expected: generates — the positional fallback searches
-    // descendants of each lineage anchor and selects the single sibling
-    // occurrence, silently crossing a containment boundary the author never
-    // named (spike F-4). This is fallback behavior, not checked author intent.
+    // SIBLING subtree. Expected: refused, SI_OCCURRENCE_MISSING. The author did
+    // not name an occurrence path, so the elaborator does not search the sibling.
     calc def UnitCost {
         in attribute unit_cost : Real;
         out attribute total_cost : Real = unit_cost * 2.0;

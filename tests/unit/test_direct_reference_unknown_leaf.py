@@ -53,7 +53,11 @@ def test_direct_reference_refuses_a_leaf_absent_from_the_element_index() -> None
     assert UNKNOWN_LEAF not in elaborator._elements
 
     with pytest.raises(_ReferenceResolutionError) as excinfo:
-        elaborator._resolve_direct_reference(UNKNOWN_LEAF, scope)
+        elaborator._resolve_direct_reference(
+            UNKNOWN_LEAF,
+            scope,
+            definition_owner_requires_lineage=True,
+        )
 
     assert excinfo.value.code == ElaborationCode.SI_OCCURRENCE_MISSING
     assert UNKNOWN_LEAF.to_wire() in excinfo.value.detail

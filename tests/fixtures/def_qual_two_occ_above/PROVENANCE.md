@@ -9,12 +9,14 @@ Package renamed `S8QualOutsideTwo` → `def_qual_two_occ_above`; the shape is ot
 **Definition-owned.** `'Plant'::availability` resolves to a feature owned by `part def 'Plant'`,
 so the reference takes `_resolve_leaf`'s route, not the exact usage-owner anchoring.
 
-## Measured behavior (spike row 4d, reconfirmed on the shipped route)
+## Expected behavior after the owner ruling
 
 The consumer sits in the enclosing `'Fleet'`, **outside** every `'Plant'` occurrence, and two
-occurrences are reachable below its anchor. The route refuses:
-`SI_OCCURRENCE_AMBIGUOUS: … consumer context contains 2 leaf occurrences`. Together with
-`def_qual_two_occ_inside` this pins that the discriminator is the consumer's **position
-relative to the occurrences**, not the occurrence count of the qualifying definition.
+occurrences are reachable below its anchor. Neither is on the consumer's lineage, so the route
+refuses with `SI_OCCURRENCE_MISSING`. It does not count or select descendants.
+
+This is the two-descendant counterpart to `def_qual_one_occ_above`; both outcomes are identical
+because SysIDE's resolved structure is authoritative. The owner source and exact bound live at
+`[DEF-OWNED-SIDEWAYS-REACH]` in `.project/backlog/BACKLOG.md`.
 
 Kept test: `tests/conformance/test_definition_owned_reference_positions.py`.

@@ -13,7 +13,7 @@ isolated fixtures (`source_identity_indexed_source`, `expression_binding_probe`,
 |---|---|---|
 | `'Twin Bay'`: `sensor_a`/`sensor_b` (`:>> reading = 11.0 / 22.0`), `calc_a`/`calc_b` chains | C8 | one definition (`'Twin Sensor'::reading`), two concrete occurrences, distinct occurrence `:>>` overrides, one chain calculation per occurrence |
 | `'Station'`: `rig` (`:>> gain_setting = 42.0`), `chain_calc` + `chain_guard` + `:>> station_total` | C11 | feature chain × 1 calc + 1 constraint + 1 aggregation, single occurrence override |
-| `'Qual Plant'` / `'Qual Station'`: `'Qual Plant'::level` bindings, `qual_plant` (`:>> level = 70.0`) | C12 | owner-qualified (definition qualifier) × mixed consumers; def-level referent, occurrence bridge required |
+| `'Qual Plant'` / `'Qual Station'`: on-lineage `'Qual Plant'::level` calc/constraint bindings, plus explicit `qual_plant.level` for the station rollup (`:>> level = 70.0`) | C12 | definition-owned qualification maps through the consumer's own occurrence; the cross-part consumer names the occurrence path |
 | `'Bare Station'`: bindings authored inside concrete usage `bare_rig` (`:>> intensity = 30.0`) | C13 | bare renamed (usage context) × mixed consumers |
 | `'Parent Unit'`: `shared_rate`, child-part `child.child_calc`, parent-owned `parent_guard` + `:>> parent_total` | C15 | cross-owner parent attribute; parent-owned aggregation + constraint + child-part calculation |
 | `'Computed Station'`: `source_identity_computed.producer_calc.result` chains (calc + constraint + aggregation) | C24 | feature chain to computed output `'Source Identity Producer'::result` on concrete calc usage `source_identity_computed.producer_calc` — the contract's published names, verbatim |

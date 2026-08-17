@@ -68,7 +68,7 @@ package source_identity_mixed_consumers {
         :>> station_total = rig.gain_setting + 100.0;
     }
 
-    // ---- C12: owner-qualified (definition qualifier) x mixed consumers ------
+    // ---- C12: definition-owned qualification on-lineage x mixed consumers ---
     part def 'Qual Plant' {
         attribute level : Real default 7.0;
         calc qual_calc : 'Reading Consumer' {
@@ -87,7 +87,7 @@ package source_identity_mixed_consumers {
         part qual_plant : 'Qual Plant' {
             :>> level = 70.0;
         }
-        :>> qual_total = 'Qual Plant'::level + 1.0;
+        :>> qual_total = qual_plant.level + 1.0;
     }
 
     // ---- C13: bare renamed (usage context) x mixed consumers ----------------

@@ -811,11 +811,16 @@ def _src_03(_tmp_path: Path) -> None:
 
 def _ambiguity(cell: str) -> Callable[[Path], None]:
     consumer = "amb_qual_calc" if cell == "C9" else "amb_bare_calc"
+    expected = (
+        ElaborationCode.SI_OCCURRENCE_MISSING
+        if cell == "C9"
+        else ElaborationCode.SI_OCCURRENCE_AMBIGUOUS
+    )
 
     def assert_evidence(_tmp_path: Path) -> None:
         graph = _load_internal(FIXTURES_DIR / "source_identity_occurrence_ambiguity", strict=False)
         [diagnostic] = [item for item in graph.diagnostics if consumer in item.consumer_display]
-        assert diagnostic.code is ElaborationCode.SI_OCCURRENCE_AMBIGUOUS
+        assert diagnostic.code is expected
         assert diagnostic.param_name == "value_in"
 
     return assert_evidence

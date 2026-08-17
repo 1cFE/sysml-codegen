@@ -490,16 +490,34 @@ retained as shaping evidence). The deletion ledger lives on as live gate data at
 **Objective**: Move real consumers, studies, guidance, and the assurance record onto the
 corrected architecture.
 
+**[OWNER 2026-08-16] Item boundary:** regeneration/proof, the July impact audit, and
+certification/documentation repair remain one work item. They may be phased but do not split into
+separate completion authorities. Source: `.project/active/elaborator-downstream/spec-review.md`, Resolution
+L2-1.
+
 **Scope**:
-1. Regenerate Fusion Tea and Stellarator packages/contracts; remove duplicate-field
-   workarounds; new study lineage where identity changed; TEAx compatibility through stock
-   APIs.
-2. July IFE impact audit: rerun or explicitly correct decision-relevant outputs that consumed
-   frozen-design-point cost values.
-3. Certification repair: verification matrix gains an independently anchored source-identity
-   family with public mutation evidence; contradictory acceptance claims corrected; README and
-   architecture references (docs 11/12/13/16/24/25 rewritten or retired to match the new front
-   end) state the library's purpose plainly.
+1. Converge the codegen fixture and migrated Fusion Tea customer model by deleting the fixture's
+   inert `hif_driver_instance` workaround; regenerate the customer package/contracts; start a new,
+   linked study lineage where identity changed; and prove TEAx compatibility through stock APIs.
+   **[AGENT] (ratified by owner, 2026-08-16):** Stellarator migration is excluded. The completed
+   read-only triage plus separately filed P2 `[STELLARATOR-D5-MIGRATION]` discharges this item's
+   Stellarator boundary without reversing the July hold. Source:
+   `.project/active/elaborator-downstream/spec-review.md`, Resolutions L1-1/L1-2 and L2-2.
+2. July IFE impact audit: rerun or explicitly correct decision-relevant outputs affected by frozen
+   design-point values, including cost/LCOE and recirculation.
+3. Certification repair: the verification matrix gains an independently anchored `REQ-SI` family
+   derived from the durable Item-3 authority and backed by public mutation evidence; contradictory
+   acceptance claims are corrected; README states the library's purpose plainly. The reconciled
+   authorship pass covers reference documents 03, 04, 05, 07, 09, 10, 11, 12, 13, 16, 17, 18, 24,
+   and 28. Document 25 is retained as a test-only, off-shipped-route legacy surface.
+
+   *Provenance correction 2026-08-16:* this sub-item previously named documents 11, 12, 13, 16, 24,
+   and 25 as one rewrite-or-retire set. The bounded Item 8 stocktake found that nine actual repair
+   candidates were omitted and document 25 belonged to a separate owner-disposition class. The
+   reconciled fourteen-document list comes from
+   `.project/research/20260815-103905_item8-bounded-stocktake.md`; the owner ratified the correction and the
+   agent recommendation to retain document 25 on 2026-08-16. The old six-document list is not
+   authority for downstream scope.
 4. **[OWNER-VERBATIM obligation]** (restated by the owner 2026-08-15) establish which authoring
    pattern is the right one for each situation, document those patterns in `agentic-mbse` docs,
    and fix the models to use them. `in R = R` is the wrong pattern and its use is detected.
@@ -508,19 +526,28 @@ corrected architecture.
    valid replacement forms with their distinct meanings." No owner utterance enumerating two
    forms exists; the count was agent-authored under an owner-verbatim stamp, and the owner ruled
    the 2026-08-05 wording it derived from was taken out of context. Nothing downstream should
-   treat a form count as owner-given.
+   treat a form count as owner-given. Item 8 also reconciles the full Item-3 guidance projection,
+   including the valid-but-unsupported indexed-expression limitation and accurate example force.
 5. One composed model→package→study proof thread as the epic's closing evidence.
 
 **Success Criteria**:
-- [ ] Downstream packages regenerate/seal/execute with corrected topology and no identity
-  workarounds; IFE impact report names every affected consumer with rerun/correction status.
+- [ ] The converged Fusion Tea fixture and migrated customer package regenerate/seal/execute with
+  one corrected topology and no identity workarounds; the IFE impact report names every affected consumer with
+  rerun/correction/bounded-unknown status. Stellarator's completed triage and separate P2 filing
+  satisfy the ratified boundary above; its migration is not an Item 8 completion gate.
 - [ ] Certification and guidance obligations from the Item-3 contract discharged.
 
 **Location**: `.project/active/elaborator-downstream/`
 
 **Dependencies**: Item 7 complete; `self-binding-replacement` closed on 2026-08-16 with all
 functional criteria independently verified and its testing/developer-tooling edge accepted as risk
-by the owner. This item performs none of that sibling's remediation.
+by the owner; `stop-reinventing-the-parser` implemented, audited, and closed. Item 8 downstream
+design and implementation perform none of either predecessor's remediation.
+
+**Bounded predecessor active 2026-08-16:**
+`.project/active/stop-reinventing-the-parser/` owns exact occurrence derivation and evidence
+integrity. It closes before `.project/active/elaborator-downstream/` starts so downstream
+regeneration and certification measure the final semantic-authority rules.
 
 **Bounded child closed 2026-08-16:** exact occurrence-owner anchoring for usage-owned one-segment
 references is certified and archived at
@@ -529,14 +556,16 @@ promise, the deep-override evidence bound, and the owner-disposed arrayed diagno
 This closes that repair only; Item 8's two broader success criteria remain open.
 
 **Bounded child closed 2026-08-16 — owner-accepted testing/tooling edge risk:**
-`.project/completed/20260816_self-binding-replacement/` discharges the owner-restated authoring
-obligation and implements the Fusion Tea source-model migration half of sub-item 1. The re-audit
-verified the injective source/consumer proof, failure-honest validation, and the owner-ruled
-definition-owned lineage-miss refusal. **[OWNER 2026-08-16]** The dangling-symlink behavior in the
-migration/fixture helper is a testing/developer-tooling edge case and accepted risk; the owner
-directed closure without another remediation/audit cycle. The public-oracle and runtime functional
-claims are independently verified. The temporary live/snapshot proof stops before committed
-downstream regeneration and TEAx study execution; those remain at
+`.project/completed/20260816_self-binding-replacement/` discharges the owner-restated authoring obligation and
+implements the Fusion Tea source-model migration half of sub-item 1. The re-audit verified the
+injective source/consumer proof, failure-honest validation, and the owner-ruled definition-owned
+lineage-miss refusal. It also found that both migration-tool CLI modes write through a dangling
+pre-existing target symlink, and that the final three-repository repair set remains uncommitted.
+**[OWNER 2026-08-16]** The symlink behavior is a testing/developer-tooling edge case and accepted
+risk; the owner directed closure without another remediation/audit cycle. The public-oracle and
+runtime functional claims are independently verified. Its temporary
+live/snapshot proof stops before committed
+downstream regeneration and TEAx study execution; those remain here at
 `.project/active/elaborator-downstream/`.
 
 ---
