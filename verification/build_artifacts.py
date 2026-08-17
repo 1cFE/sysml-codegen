@@ -151,36 +151,34 @@ def _git_archive(repository: Path, commit: str, prefix: str, output: Path) -> No
 
 
 def _git_history_bundle(repository: Path, commit: str, output: Path) -> None:
-    """Write the history reachable from one commit under a stable private ref."""
-    with tempfile.TemporaryDirectory(prefix="stop-parser-history-bare-") as temporary:
-        bare = Path(temporary) / "history.git"
-        _run("git", "init", "--bare", "--quiet", str(bare))
-        _run(
-            "git",
-            "-C",
-            str(bare),
-            "fetch",
-            "--quiet",
-            "--no-tags",
-            str(repository),
-            commit,
-        )
-        _run(
-            "git",
-            "-C",
-            str(bare),
-            "update-ref",
-            "refs/heads/artifact",
-            commit,
-        )
-        _run(
-            "git",
-            "-C",
-            str(bare),
-            "bundle",
-            "create",
-            str(output),
-            "refs/heads/artifact",
+    """Write a deterministic v2 bundle for all objects reachable from ``commit``."""
+    header = f"# v2 git bundle\n{commit} refs/heads/artifact\n\n".encode()
+    try:
+        with output.open("wb") as stream:
+            stream.write(header)
+            stream.flush()
+            result = subprocess.run(
+                [
+                    "git",
+                    "-c",
+                    "pack.threads=1",
+                    "-C",
+                    str(repository),
+                    "pack-objects",
+                    "--stdout",
+                    "--revs",
+                ],
+                input=f"{commit}\n".encode(),
+                stdout=stream,
+                stderr=subprocess.PIPE,
+                check=False,
+            )
+    except OSError as error:
+        raise ArtifactContractError(f"cannot write codegen history bundle: {error}") from error
+    if result.returncode != 0:
+        detail = result.stderr.decode(errors="replace").strip()
+        raise ArtifactContractError(
+            f"codegen history pack failed: {detail or result.returncode}"
         )
 
 
