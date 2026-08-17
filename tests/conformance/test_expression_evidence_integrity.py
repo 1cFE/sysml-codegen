@@ -14,6 +14,7 @@ from agentic_mbse import SemanticEvidenceCode, SemanticEvidenceError
 from sysml_codegen.elaboration import ElaborationCode, ElaborationDiagnosticError
 from sysml_codegen.orchestration import elaborated_pipeline
 from sysml_codegen.snapshot.capture import capture_instance_graph_snapshot
+from tests.conftest import FIXTURES_DIR, requires_license
 
 RAW_SOURCE = str(Path("/stage/model.sysml").resolve())
 REFERENT = "root-0/model.sysml"
@@ -193,3 +194,25 @@ def test_raw_builder_is_private_and_has_one_production_caller() -> None:
         ):
             callers.append(source_path.relative_to(package_root).as_posix())
     assert callers == ["orchestration/elaborated_pipeline.py"]
+
+
+@requires_license
+@pytest.mark.parametrize("strict", [True, False])
+def test_valid_indexed_source_refuses_before_graph_with_exact_capability_diagnostic(
+    strict: bool,
+) -> None:
+    fixture = FIXTURES_DIR / "indexed_expression_source"
+
+    with pytest.raises(ElaborationDiagnosticError) as caught:
+        elaborated_pipeline.elaborate_model_paths([fixture], strict=strict)
+
+    [diagnostic] = caught.value.diagnostics
+    assert diagnostic.code is ElaborationCode.SI_INDEXED_SOURCE_UNSUPPORTED
+    assert diagnostic.consumer is None
+    assert diagnostic.consumer_display == "<model>"
+    assert diagnostic.param_name is None
+    assert diagnostic.detail.endswith(
+        "tests/fixtures/indexed_expression_source/model.sysml:17: "
+        "indexed source '#(...)' is recognized but not implemented"
+    )
+    assert str(caught.value).count("SI_INDEXED_SOURCE_UNSUPPORTED") == 1

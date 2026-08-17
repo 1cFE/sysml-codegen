@@ -22,4 +22,4 @@ class {{ class_name }}(BaseModel):
 {% endif %}
 {% endfor %}
 
-    model_config = {"frozen": True, "extra": "forbid"}
+    model_config = {"frozen": True, "extra": "forbid", "populate_by_name": True}
