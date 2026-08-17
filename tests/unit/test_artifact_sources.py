@@ -82,6 +82,7 @@ def _artifact_inputs(tmp_path: Path) -> tuple[Path, Path, Path]:
             "commit": commit,
             "bundle": "history/codegen.bundle",
             "bundle_sha256": hashlib.sha256(bundle.read_bytes()).hexdigest(),
+            "required_commits": {"c_prod": commit},
         },
     }
     manifest = tmp_path / "artifact-source-inputs.json"

@@ -26,6 +26,15 @@ SCHEMA_VERSION = "stop-parser-artifact-build/v1"
 SOURCE_SCHEMA_VERSION = "stop-parser-source-roots/v1"
 ARTIFACT_SOURCE_INPUT_SCHEMA_VERSION = "stop-parser-artifact-source-inputs/v1"
 REPOSITORY_NAMES = ("agentic", "codegen", "teax", "costingfe", "fusion")
+CODEGEN_HISTORY_INPUT_NAMES = frozenset(
+    {
+        "fingerprint_policy",
+        "ledger_base",
+        "ledger_candidate",
+        "phase1_seed",
+        "phase4a_boundary",
+    }
+)
 _FULL_SHA = re.compile(r"[0-9a-f]{40}")
 
 
@@ -125,6 +134,20 @@ def load_source_manifest(path: Path) -> dict[str, dict[str, Any]]:
             raise ArtifactContractError(
                 f"source manifest wheel_distribution for {name!r} must be a string or null"
             )
+        if name == "codegen":
+            history_commits = raw.get("history_commits")
+            if not isinstance(history_commits, dict) or set(history_commits) != set(
+                CODEGEN_HISTORY_INPUT_NAMES
+            ):
+                raise ArtifactContractError(
+                    "codegen source row history_commits must contain the closed retained inputs"
+                )
+            for label, value in history_commits.items():
+                _full_sha(str(value), label=f"codegen history commit {label}")
+        elif "history_commits" in raw:
+            raise ArtifactContractError(
+                f"source manifest row {name!r} cannot declare codegen history"
+            )
         result[name] = dict(raw, path=str(source.resolve()))
     return result
 
@@ -150,9 +173,15 @@ def _git_archive(repository: Path, commit: str, prefix: str, output: Path) -> No
     )
 
 
-def _git_history_bundle(repository: Path, commit: str, output: Path) -> None:
-    """Write a deterministic v2 bundle for all objects reachable from ``commit``."""
-    header = f"# v2 git bundle\n{commit} refs/heads/artifact\n\n".encode()
+def _git_history_bundle(
+    repository: Path, commits: dict[str, str], output: Path
+) -> None:
+    """Write a deterministic v2 bundle for the closed retained commit inventory."""
+    header_rows = ["# v2 git bundle"]
+    for name, commit in sorted(commits.items()):
+        reference = "refs/heads/artifact" if name == "c_prod" else f"refs/heads/retained/{name}"
+        header_rows.append(f"{commit} {reference}")
+    header = ("\n".join(header_rows) + "\n\n").encode()
     try:
         with output.open("wb") as stream:
             stream.write(header)
@@ -168,7 +197,7 @@ def _git_history_bundle(repository: Path, commit: str, output: Path) -> None:
                     "--stdout",
                     "--revs",
                 ],
-                input=f"{commit}\n".encode(),
+                input=("\n".join(sorted(set(commits.values()))) + "\n").encode(),
                 stdout=stream,
                 stderr=subprocess.PIPE,
                 check=False,
@@ -183,30 +212,32 @@ def _git_history_bundle(repository: Path, commit: str, output: Path) -> None:
 
 
 def _deterministic_history_bundle(
-    repository: Path, commit: str, output: Path
-) -> dict[str, str]:
+    repository: Path, commits: dict[str, str], output: Path
+) -> dict[str, Any]:
     """Build the codegen history input twice and retain only byte-identical output."""
     with tempfile.TemporaryDirectory(prefix="stop-parser-history-repeat-") as temporary:
         repeated = Path(temporary) / output.name
-        _git_history_bundle(repository, commit, output)
-        _git_history_bundle(repository, commit, repeated)
+        _git_history_bundle(repository, commits, output)
+        _git_history_bundle(repository, commits, repeated)
         if output.read_bytes() != repeated.read_bytes():
             raise ArtifactContractError("codegen history bundle is not deterministic")
-    return {"filename": f"history/{output.name}", "sha256": _sha256(output)}
+    return {
+        "filename": f"history/{output.name}",
+        "sha256": _sha256(output),
+        "required_commits": dict(sorted(commits.items())),
+    }
 
 
-def _extract_history_bundle(bundle: Path, destination: Path, commit: str) -> Path:
+def _extract_history_bundle(
+    bundle: Path, destination: Path, commits: dict[str, str]
+) -> Path:
     """Create a no-checkout history root that cannot expose workspace link targets."""
     _run("git", "init", "--quiet", str(destination))
     _run("git", "-C", str(destination), "bundle", "unbundle", str(bundle))
-    _run(
-        "git",
-        "-C",
-        str(destination),
-        "update-ref",
-        "refs/heads/artifact",
-        commit,
-    )
+    commit = commits["c_prod"]
+    for name, retained_commit in sorted(commits.items()):
+        reference = "refs/heads/artifact" if name == "c_prod" else f"refs/heads/retained/{name}"
+        _run("git", "-C", str(destination), "update-ref", reference, retained_commit)
     _run(
         "git",
         "-C",
@@ -221,6 +252,14 @@ def _extract_history_bundle(bundle: Path, destination: Path, commit: str) -> Pat
             f"history bundle resolved {actual}, expected exact commit {commit}"
         )
     _run("git", "-C", str(destination), "read-tree", commit)
+    for name, retained_commit in sorted(commits.items()):
+        actual_retained = _run(
+            "git", "-C", str(destination), "rev-parse", f"{retained_commit}^{{commit}}"
+        )
+        if actual_retained != retained_commit:
+            raise ArtifactContractError(
+                f"history bundle omitted {name}={retained_commit}"
+            )
     return destination
 
 
@@ -482,14 +521,15 @@ def build_artifacts(
                 version=row["version"],
                 source_date_epoch=timestamp,
             )
-        history_record: dict[str, str] | None = None
+        history_record: dict[str, Any] | None = None
         if name == "codegen":
+            history_commits = {"c_prod": commit, **row["history_commits"]}
             history_bundle = history / f"codegen-{commit}.bundle"
             history_record = _deterministic_history_bundle(
-                repository, commit, history_bundle
+                repository, history_commits, history_bundle
             )
             history_root = _extract_history_bundle(
-                history_bundle, history_extracts / "codegen", commit
+                history_bundle, history_extracts / "codegen", history_commits
             )
             history_record.update(
                 {
@@ -540,6 +580,7 @@ def build_artifacts(
             "commit": codegen["history"]["commit"],
             "bundle": codegen["history"]["filename"],
             "bundle_sha256": codegen["history"]["sha256"],
+            "required_commits": codegen["history"]["required_commits"],
         },
     }
     (output / "artifact-source-inputs.json").write_text(_canonical_json(source_inputs))

@@ -427,6 +427,9 @@ def test_source_manifest_is_closed_and_absolute(tmp_path: Path) -> None:
         }
         for name in build_artifacts.REPOSITORY_NAMES
     }
+    rows["codegen"]["history_commits"] = {
+        name: "f" * 40 for name in build_artifacts.CODEGEN_HISTORY_INPUT_NAMES
+    }
     manifest.write_text(
         json.dumps({"schema_version": "stop-parser-source-roots/v1", "repositories": rows})
     )
@@ -479,6 +482,10 @@ def test_builder_cli_creates_five_closed_source_artifacts(
             "wheel_distribution": None,
         }
     source_manifest = tmp_path / "source-manifest.json"
+    rows["codegen"]["history_commits"] = {
+        name: identities["codegen"]
+        for name in build_artifacts.CODEGEN_HISTORY_INPUT_NAMES
+    }
     source_manifest.write_text(
         json.dumps(
             {
@@ -516,6 +523,10 @@ def test_builder_cli_creates_five_closed_source_artifacts(
     assert len(list((output / "sources").glob("*.tar"))) == 5
     history = manifest["inputs"]["codegen"]["history"]
     assert history["commit"] == identities["codegen"]
+    assert history["required_commits"] == {
+        "c_prod": identities["codegen"],
+        **rows["codegen"]["history_commits"],
+    }
     assert hashlib.sha256((output / history["filename"]).read_bytes()).hexdigest() == history[
         "sha256"
     ]

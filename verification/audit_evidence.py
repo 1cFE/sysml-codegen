@@ -194,6 +194,12 @@ def _verify_dependencies(
                 raise EvidenceAuditError("codegen dependency row omits its history input")
             if history.get("commit") != commit:
                 raise EvidenceAuditError("codegen history does not name C_prod")
+            required_commits = history.get("required_commits")
+            if (
+                not isinstance(required_commits, dict)
+                or required_commits.get("c_prod") != commit
+            ):
+                raise EvidenceAuditError("codegen history omits its closed commit inventory")
             bundle = _artifact_path(
                 artifact_root,
                 history.get("filename"),
@@ -249,6 +255,7 @@ def _verify_dependencies(
             "commit": inputs["codegen"]["history"]["commit"],
             "bundle": inputs["codegen"]["history"]["filename"],
             "bundle_sha256": inputs["codegen"]["history"]["sha256"],
+            "required_commits": inputs["codegen"]["history"]["required_commits"],
         },
     }
     if source_payload != expected_source_payload:
@@ -294,12 +301,15 @@ def _rebuild_codegen(
         if not isinstance(history_record, dict):
             raise EvidenceAuditError("C_prod dependency row has no history input")
         rebuilt_bundle = root / Path(str(history_record["filename"])).name
+        required_commits = history_record.get("required_commits")
+        if not isinstance(required_commits, dict):
+            raise EvidenceAuditError("C_prod history has no required commit inventory")
         try:
             rebuilt_history = build_artifacts._deterministic_history_bundle(
-                repository, c_prod, rebuilt_bundle
+                repository, required_commits, rebuilt_bundle
             )
             build_artifacts._extract_history_bundle(
-                rebuilt_bundle, root / "history-extracted", c_prod
+                rebuilt_bundle, root / "history-extracted", required_commits
             )
         except build_artifacts.ArtifactContractError as error:
             raise EvidenceAuditError(f"C_prod history rebuild failed: {error}") from error

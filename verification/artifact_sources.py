@@ -33,6 +33,7 @@ class ArtifactSourceInputs:
     codegen_source: Path
     codegen_commit: str
     codegen_history: Path
+    codegen_history_commits: tuple[tuple[str, str], ...]
 
 
 def _object(value: object, label: str) -> dict[str, Any]:
@@ -102,9 +103,17 @@ def _source_row(root: Path, payload: dict[str, Any], name: str) -> tuple[Path, s
     return source, commit
 
 
-def _history_row(root: Path, payload: dict[str, Any]) -> tuple[Path, str]:
+def _history_row(
+    root: Path, payload: dict[str, Any]
+) -> tuple[Path, str, tuple[tuple[str, str], ...]]:
     row = _object(payload.get("codegen_history"), "codegen_history")
-    if set(row) != {"root", "commit", "bundle", "bundle_sha256"}:
+    if set(row) != {
+        "root",
+        "commit",
+        "bundle",
+        "bundle_sha256",
+        "required_commits",
+    }:
         raise ArtifactSourceInputError(
             "codegen_history must contain the closed history fields"
         )
@@ -143,7 +152,27 @@ def _history_row(root: Path, payload: dict[str, Any]) -> tuple[Path, str]:
         raise ArtifactSourceInputError(
             f"codegen_history.root is {head}, expected exact commit {commit}"
         )
-    return history, commit
+    required = _object(row.get("required_commits"), "codegen_history.required_commits")
+    if not required or required.get("c_prod") != commit:
+        raise ArtifactSourceInputError(
+            "codegen_history.required_commits must bind c_prod to the source commit"
+        )
+    commits = tuple(
+        (name, _commit(value, f"codegen_history.required_commits.{name}"))
+        for name, value in sorted(required.items())
+    )
+    for name, required_commit in commits:
+        try:
+            subprocess.run(
+                ["git", "-C", str(history), "cat-file", "-e", f"{required_commit}^{{commit}}"],
+                check=True,
+                capture_output=True,
+            )
+        except subprocess.CalledProcessError as error:
+            raise ArtifactSourceInputError(
+                f"codegen history omits required commit {name}={required_commit}"
+            ) from error
+    return history, commit, commits
 
 
 @lru_cache(maxsize=4)
@@ -165,7 +194,7 @@ def _load(manifest: Path) -> ArtifactSourceInputs:
     root = manifest.parent.resolve()
     agentic, agentic_commit = _source_row(root, record, "agentic_source")
     codegen, codegen_commit = _source_row(root, record, "codegen_source")
-    history, history_commit = _history_row(root, record)
+    history, history_commit, history_commits = _history_row(root, record)
     if history_commit != codegen_commit:
         raise ArtifactSourceInputError("codegen source and history commits differ")
     required = ("src/agentic_mbse", "claude", ".claude", "docs", "project_templates")
@@ -179,6 +208,7 @@ def _load(manifest: Path) -> ArtifactSourceInputs:
         codegen_source=codegen,
         codegen_commit=codegen_commit,
         codegen_history=history,
+        codegen_history_commits=history_commits,
     )
 
 
