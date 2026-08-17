@@ -128,7 +128,7 @@ def test_a_verifier_policy_change_moves_only_its_hash_and_the_derived_fingerprin
     reviewed_verify = subprocess.run(
         ["git", "show", f"{REVIEWED_REVISION}:src/sysml_codegen/contracts/verify.py"],
         check=True,
-        cwd=REPO_ROOT,
+        cwd=HISTORY_ROOT,
         capture_output=True,
     ).stdout
     canonical = (REPO_ROOT / "src/sysml_codegen/contracts/verify.py").read_bytes()

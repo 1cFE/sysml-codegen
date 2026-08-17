@@ -151,7 +151,7 @@ def git_candidate_set(base: str, candidate: str) -> set[str]:
     return paths
 
 
-def path_at_head(path: str, repo: Path = REPO_ROOT) -> bool:
+def path_at_head(path: str, repo: Path = CODEGEN_HISTORY_ROOT) -> bool:
     return (
         subprocess.run(
             ["git", "-C", str(repo), "cat-file", "-e", f"HEAD:{path}"],
