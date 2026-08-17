@@ -428,3 +428,143 @@ Smells:
 
 Gate: **CLEAR**. The prior rev-4 CLEAR remains valid; P-004 makes explicit the same product
 obligation rev 4 enforces.
+
+---
+
+## design — 2026-08-16 — rev `7b29d8b` / `.project/active/stop-reinventing-the-parser/design.md` (worktree)
+
+Point (re-derived): The product must consume the semantic classifications SysIDE already
+establishes, preserve them through the AST walk, and emit the resulting math through TEAx. A
+downstream reconstruction of parser-owned meaning is not an exact-evidence implementation.
+[source: `.project/product/P-004-product-identity-parse-walk-emit.md`, grade: **owner**]
+
+Falsifier: the design derives whether a reference belongs to the standard library from paths,
+names, normalized origins, or another downstream comparison when SysIDE already provides that
+classification.
+
+Findings:
+
+- design-F1 [DON'T] D6 recreates standard-library classification by comparing normalized document
+  origins even though SysIDE assigns each loaded document `DocumentTier.StandardLibrary` or
+  `DocumentTier.Project`. Because this classification decides whether an AST reference is
+  discarded, the consumer would reconstruct parser-owned meaning and could drop or retain the wrong
+  dependency. Revise D6/B5 to consume `DocumentTier` directly and treat missing or unknown tier as
+  `SemanticEvidenceError`; keep document-origin handling only for source-location metadata such as
+  B10. — source: `.project/product/P-004-product-identity-parse-walk-emit.md` (**owner**) and
+  `.venv/lib/python3.12/site-packages/syside/_loading.py:63-68,499-502` (`[HARD]` platform behavior)
+  — disposition: **BLOCK**
+
+Smells:
+
+- **Smell 2 — a consumer compensates for something the producer or platform claims to guarantee:**
+  fires at design-F1. SysIDE already supplies the classification D6 proposes to reproduce.
+- **Smell 7 — the proposed solution changes who owns an invariant without saying so:** fires at the
+  same site. D6 assigns standard-library classification to an agentic origin predicate without
+  acknowledging that SysIDE owns it through `DocumentTier`.
+
+Gate: **BLOCKED (design-F1)**
+
+---
+
+## design — 2026-08-16 — rev 2 / `.project/active/stop-reinventing-the-parser/design.md` (worktree; baseline `7b29d8b`)
+
+Point (re-derived): SysIDE's resolved semantic classifications are authoritative through the AST
+walk; missing evidence must cause named refusal rather than downstream reconstruction or fallback.
+[source: `.project/product/P-004-product-identity-parse-walk-emit.md` and
+`.project/product/P-003-no-workarounds-for-bad-models.md`, grade: **owner**]
+
+Falsifier: a project document named `SI` is discarded by name/path/origin, or a reference with
+missing document-tier evidence reaches generated TEAx output instead of refusing.
+
+Findings: none.
+
+Smells:
+
+- **Smell 2 — a consumer compensates for something the producer or platform claims to guarantee:**
+  clear. D6 consumes `element.document.document_tier` directly, retains Project and External
+  references, and removes every QN/path/origin classifier (`design.md:314-336`); SysIDE exposes the
+  element document, `BasicDocument.document_tier`, and the closed `DocumentTier` enum
+  (`.venv/lib/python3.12/site-packages/syside/core/__init__.pyi:1300,1420,5676-5690`).
+- **Smell 7 — the proposed solution changes who owns an invariant without saying so:** clear. The
+  responsibility table explicitly leaves metatype truth and `DocumentTier` with SysIDE,
+  semantic-evidence preservation with agentic, and concrete-occurrence materialization with
+  codegen (`design.md:476-490`).
+
+Gate: **CLEAR**
+
+Resolves:
+
+- design-F1: **FIXED** — authority: owner (P-004) — basis: Revision 2 consumes SysIDE's public
+  `DocumentTier` directly, fails on missing or unknown tier, and confines document origin to
+  source-location evidence (`design.md:42-54,314-336,460-471`).
+
+---
+
+## design (REVISION 3 FINAL REVIEW) — 2026-08-16 — rev 3 / `.project/active/stop-reinventing-the-parser/design.md`
+
+Point (re-derived): The product uses SysIDE to parse models, walks its resolved semantic tree to
+reconstruct the modeled math, and emits that math through TEAx. Missing identity or classification
+must cause named refusal, never downstream reconstruction, guessing, or manual fallback. [source:
+`.project/product/P-004-product-identity-parse-walk-emit.md` and
+`.project/product/P-003-no-workarounds-for-bad-models.md`, grade: **owner**]
+
+Falsifier: the design derives a referent, metatype, document tier, owner occurrence, or calculation
+producer from names, paths, proximity, candidate count, or declaration order; or incomplete
+semantic evidence reaches an `InstanceGraph`, snapshot, or generated package.
+
+Findings: none.
+
+Smells:
+
+- **Smell 2 — a consumer compensates for something the producer or platform claims to guarantee:**
+  clear. D5/D6 consume SysIDE's resolved targets, mapped metatypes, and `DocumentTier` directly. D2
+  materializes concrete occurrence identities that SysIDE does not provide, rather than
+  reconstructing evidence SysIDE claims to provide.
+- **Smell 7 — the proposed solution changes who owns an invariant without saying so:** clear. The
+  responsibility table explicitly leaves metatype truth and document classification with SysIDE,
+  semantic-evidence preservation with agentic-mbse, and concrete-occurrence materialization with
+  codegen. Revision 3 also confines closed owner-kind validation to containment-address
+  construction while preserving existing attachment and formal-domain ownership.
+
+Gate: **CLEAR**
+
+Resolves:
+
+- design-F1: **FIXED (remains fixed)** — authority: owner (`P-004`) — basis: Revision 3 retains
+  direct use of SysIDE's public `DocumentTier`, refuses missing or unknown tier evidence, and
+  forbids qualified-name, path, origin, or package-name classification.
+
+---
+
+## design-r4-final — 2026-08-16 — rev `.project/active/stop-reinventing-the-parser/design.md` (Revision 4 worktree)
+
+Point (re-derived): The product uses SysIDE to parse models, walks its resolved semantic tree to
+reconstruct the modeled math, and emits that math through TEAx. Missing identity or classification
+causes named refusal, never downstream reconstruction, guessing, or manual fallback. [source:
+`.project/product/P-004-product-identity-parse-walk-emit.md` and
+`.project/product/P-003-no-workarounds-for-bad-models.md`, grade: **owner**]
+
+Falsifier: the design derives a referent, metatype, document tier, owner occurrence, or calculation
+producer from names, paths, proximity, candidate count, or declaration order; or incomplete
+semantic evidence reaches an `InstanceGraph`, snapshot, or generated package.
+
+Findings: none.
+
+Smells:
+
+- **Smell 2 — a consumer compensates for something the producer or platform claims to guarantee:**
+  clear. D5/D6 consume SysIDE's resolved targets, mapped metatypes, and `DocumentTier` directly. D2
+  materializes concrete occurrence identities that SysIDE does not supply. B10 permits deletion of
+  the sole-glob compensation only after the retained probe proves direct document origin total.
+- **Smell 7 — the proposed solution changes who owns an invariant without saying so:** clear. The
+  responsibility table explicitly assigns parser truth to SysIDE, evidence preservation to
+  agentic-mbse, occurrence materialization to codegen, and artifact provenance to the verification
+  records. Revision 4 also names the new `C_prod` → `F_final` → `C_evidence` ownership boundary.
+
+Gate: **CLEAR**
+
+Resolves:
+
+- design-F1: **FIXED (remains fixed)** — authority: owner — basis: Revision 4 retains direct
+  `DocumentTier` use, named refusal for missing or unknown tier evidence, and the prohibition on
+  name/path/origin classification.
