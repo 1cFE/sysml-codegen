@@ -442,6 +442,7 @@ def _deterministic_wheel(
             raise ArtifactContractError(
                 f"wheel version mismatch: expected {version}, found {actual_version}"
             )
+        output.mkdir(parents=True, exist_ok=True)
         destination = output / first.name
         shutil.copyfile(first, destination)
     return {

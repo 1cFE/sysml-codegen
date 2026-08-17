@@ -190,6 +190,44 @@ def test_wheel_identity_refuses_wrong_version_or_hash(
         )
 
 
+def test_deterministic_wheel_creates_its_missing_output_directory(tmp_path: Path) -> None:
+    source = tmp_path / "source"
+    package = source / "src/audit_wheel_probe"
+    package.mkdir(parents=True)
+    (package / "__init__.py").write_text('__version__ = "1.0.0"\n')
+    (source / "pyproject.toml").write_text(
+        "[build-system]\n"
+        'requires = ["hatchling"]\n'
+        'build-backend = "hatchling.build"\n'
+        "\n"
+        "[project]\n"
+        'name = "audit-wheel-probe"\n'
+        'version = "1.0.0"\n'
+        "\n"
+        "[tool.hatch.build.targets.wheel]\n"
+        'packages = ["src/audit_wheel_probe"]\n'
+    )
+    output = tmp_path / "wheels"
+
+    result = build_artifacts._deterministic_wheel(
+        source,
+        output,
+        distribution="audit-wheel-probe",
+        version="1.0.0",
+        source_date_epoch="1700000000",
+    )
+
+    wheel = output / result["filename"]
+    assert output.is_dir()
+    assert wheel.is_file()
+    audit_evidence.verify_wheel(
+        wheel,
+        distribution="audit-wheel-probe",
+        version="1.0.0",
+        sha256=result["sha256"],
+    )
+
+
 def test_run_record_refuses_sibling_import(tmp_path: Path) -> None:
     extracted = tmp_path / "extracted/codegen"
     sibling = tmp_path / "sibling/sysml_codegen/__init__.py"
