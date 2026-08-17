@@ -1,9 +1,9 @@
 # Design: Self-Binding Replacement — Establish, Document, Migrate
 
-**Status:** Draft (rev 3 — revised against the landed exact-owner repair and current reviews)
+**Status:** Draft (rev 4 — plan-time repository facts corrected after owner approval)
 **Owner:** Reid W
 **Stage:** `design` (orchestrated run; briefs `04-design.md`, `05-design-review.md`)
-**Created:** 2026-08-15 · **Revised:** 2026-08-16 (rev 3)
+**Created:** 2026-08-15 · **Revised:** 2026-08-16 (rev 4)
 **Repo state:** codegen `main` @ `0f89673`
 **Complexity:** MEDIUM
 
@@ -284,13 +284,16 @@ for fewer copies, not more.
 
 ## Key Bets
 
-- **B1.** The packaged `agentic_mbse_data` tree was byte-identical to the agentic-mbse working tree
-  **as of install, 2026-08-15 08:17** (hardlink, link count 2, mtime `1786807058`, re-verified this
-  session on `plant-idiom.md`, the skill, and `expose-pattern.md`). *If false, or if the link is
-  later broken by a checkout or an editor that writes a new inode → every surface measurement in this
-  document is stale.* This is point-in-time evidence, not a standing property: implement re-checks
-  the link counts as its first act and re-runs the three patterns over the **whole** agentic-mbse
-  tree, not just `.claude/`.
+- **B1.** The editable agentic-mbse install exposes Python through
+  `_editable_impl_agentic_mbse.pth`, while `agentic_mbse_data` is a copied wheel payload: the source
+  and installed documents are byte-identical at plan time but have different inodes and link count
+  1. Agentic-mbse's public `get_docs_dir()` resolver deliberately returns the source checkout in
+  editable development and `agentic_mbse_data/docs` in an installed distribution. *If a codegen
+  test hard-codes the current venv copy → it reads a stale install after a source edit and can pass
+  or fail for the wrong tree.* D3 therefore uses the public resolver, and a separate package-data
+  check proves that a built wheel contains the marked authoritative document with the same bytes.
+  Implement re-runs the three patterns over the **whole** source tree first. No inode or link-count
+  property is part of the contract.
 - **B2.** The customer `fusion-tea` library definitions are the same definitions as
   `tests/fixtures/fusion_tea/library/analyses/*.sysml`, so the fixture is the worked target for the
   same sites. *If false → the 11-name / 15-line rename set is wrong and must be re-derived from the
@@ -310,14 +313,15 @@ for fewer copies, not more.
   *If false → `apply_aggregation_split` restructures a rollup expression and the strip check, which
   undoes aggregation rewrites before comparing, cannot see it — a silent physics change inside a
   "bounded diff".* Closed by an explicit guard, not by hope (D5).
-- **B7.** *(was hidden — H2)* Every `in <name> =` left side in the six files belongs to a usage typed
+- **B7.** *(was hidden — H2)* Every `in <name> =` left side in each six-file model set belongs to a usage typed
   to a definition whose formal is being renamed. *If false → `_rename_binding_left_sides` rewrites
   file-wide and silently breaks a usage of a different calc def that happens to declare a same-named
-  formal.* Eleven names across six files is enough surface for this to bite.
-- **B8.** *(was hidden — H3)* The customer model's binding sites live only under `models/`. *If false
-  → `exploration/ife_e2e/models/` is left behind and the two synced trees drift on binding form.*
-  This repo's own record says the copy exists (`fusiontea-acceptance/plan.md:365-368`), so B8 is
-  treated as probably false and answered by discovery (D12).
+  formal.* Eleven names across six logical files per tree is enough surface for this to bite.
+- **B8.** *(was hidden — H3)* The customer carries two synchronized model sets, under `models/` and
+  `exploration/ife_e2e/models/`. Plan-time discovery found the same 15 binding and 15 declaration
+  rows in each and verified all six corresponding file pairs byte-identical. *If only one set is
+  migrated, or the pairs differ before writing → the customer trees drift on binding form.* D12 and
+  the migration checks therefore treat pair identity as a precondition and postcondition.
 
 ## Key Decisions
 
@@ -337,12 +341,15 @@ for fewer copies, not more.
 - **D3. Examples are validated by owner-labelled provenance plus a drift-check conformance test.**
   Every taught shape cites a tracked codegen fixture or test whose exact-route outcome is pinned,
   and the citation states whether the resolved leaf is usage-owned or definition-owned,
-  **and** a codegen test reads the packaged `agentic_mbse_data/docs/patterns/plant-idiom.md`,
-  extracts each fenced block carrying a provenance marker, and asserts verbatim containment in the
-  cited fixture file. *Rejected: provenance citation alone (rev 1)* — a citation is a pointer, not a
-  comparison, and nothing failed when doc and fixture drifted in either direction. *Rejected: parse
-  each fenced snippet* — parsing proves the fragment is legal SysML, which is exactly what the four
-  refused examples already are.
+  **and** a codegen test reads `plant-idiom.md` through agentic-mbse's public `get_docs_dir()`
+  resolver, extracts each fenced block carrying a provenance marker, and asserts verbatim
+  containment in the cited fixture file. In editable development that is the authoritative source;
+  in an installed distribution it is the bundled copy. A separate agentic-mbse package-data test
+  proves a built wheel carries the same marked document bytes. *Rejected: provenance citation alone
+  (rev 1)* — a citation is a pointer, not a comparison, and nothing failed when doc and fixture
+  drifted in either direction. *Rejected: a direct venv path or inode assertion* — editable package
+  data is a copied install snapshot, not a live link. *Rejected: parse each fenced snippet* — parsing
+  proves the fragment is legal SysML, which is exactly what the four refused examples already are.
 - **D4. The migration is mechanized by `scripts/make_d5_variant.py`, extended with a `--root`.**
   Build into a scratch directory, strip-check against the customer originals, then replace.
   *Rejected: hand edits reviewed as a diff* — B3's collision family and a stray reformat are what a
@@ -393,10 +400,10 @@ for fewer copies, not more.
 - **D12. *(new)* The migration site list is produced by discovery over the whole customer repo, not
   by the path list in this design.** Two greps — the self-named pattern, and a declaration-side
   search for the 11 formals — run over `/home/reid/1cfe/fusion-tea` including
-  `exploration/ife_e2e/models/`. The six files are the **expected result**, not the definition, and
-  what the greps return is recorded. *Rejected: the fixed six-file list* — this repo records a second
-  synced model tree, neither this session nor rev 1's could read the customer repo, and rev 1's own
-  headline finding was that an assumed list was undersized.
+  `exploration/ife_e2e/models/`. Plan-time discovery returned 12 tracked files: the same six logical
+  files in both model sets, with 30 binding/declaration rows per set. The census, not a fixed path
+  list, remains authoritative and is rerun before writing. *Rejected: the fixed six-file list* — it
+  would leave the synchronized exploration copy behind.
 - **D13. Arrayed-owner aggregation stays with its named follow-up.** The owner accepted scalar
   direct-reference policy for the anchoring item and filed
   `[ANCHORING-ARRAYED-DIAGNOSTIC]`. This item records the boundary and does not teach the dotted
@@ -410,9 +417,9 @@ for fewer copies, not more.
 
 | repo | change |
 |---|---|
-| **agentic-mbse** | `docs/patterns/plant-idiom.md` rewritten by situation, four refused examples corrected; **the 13 usage-qualified sites across `expose-pattern.md`, `cross-file-binding.md`, `adr002-calculations.md`, `syntax-reference.md`, `MODELING_PROCESS.md.template` reviewed against exact-owner behavior per D11**; `claude/skills/sysml-conventions/SKILL.md`, `project_templates/MODELING_PROCESS.md.template`, `project_templates/MODELING_GUIDE.md.template` gain the rule + pointer; `.claude/`'s counterparts per the inventory; F-2 identity comparison in `validation/level2_structure.py` (+ `binding.py` if the referent must be exposed) with a test per direction |
+| **agentic-mbse** | `docs/patterns/plant-idiom.md` rewritten by situation, four refused examples corrected; **the 13 usage-qualified sites across `expose-pattern.md`, `cross-file-binding.md`, `adr002-calculations.md`, `syntax-reference.md`, `MODELING_PROCESS.md.template` reviewed against exact-owner behavior per D11**; `claude/skills/sysml-conventions/SKILL.md`, `project_templates/MODELING_PROCESS.md.template`, `project_templates/MODELING_GUIDE.md.template` gain the rule + pointer; the inventoried `.claude/` tree has no calculation-binding instruction counterpart and needs no edit; F-2 identity comparison in `validation/level2_structure.py` (+ `binding.py` if the referent must be exposed) with a test per direction; package-data contract test for D3 |
 | **sysml-codegen** (here) | F-3 repair in `elaboration/elaborate.py` and `elaboration/graph.py` + tests; three promoted **definition-owned** D-6 fixtures plus the existing usage-owned anchoring conformance test; the D3 doc-drift conformance test; `scripts/make_d5_variant.py` gains `--root` and the aggregation guard (docstring updated — its "originals are never touched" contract is inverted by D4); the `SI_SELF_BINDING` validation-rule row; the stellarator triage record. ADR-010 is excluded pending the owner call. |
-| **fusion-tea** | whatever D12's discovery returns — expected: 3 design files (15 binding left sides) + 3 library files (15 declaration lines, 5 definitions), plus any `exploration/ife_e2e/models/` copy, on a branch off `item8-fusion-embedded-catalog` |
+| **fusion-tea** | D12 discovery returned 12 tracked files: 3 design files (15 binding left sides) + 3 library files (15 declaration lines, 5 definitions) in each of `models/` and `exploration/ife_e2e/models/`; 60 line rewrites total, on a branch off `item8-fusion-embedded-catalog` |
 | **fusion-tea-stellarator-mbse-demo** | nothing. One run, recorded in codegen. |
 
 Local commits only in every repo. No push, no PR (`briefs/00-align.md`).
@@ -420,10 +427,10 @@ Local commits only in every repo. No push, no PR (`briefs/00-align.md`).
 **Which agent tree is authoritative.** Codegen's `.claude/agents/*.md` and
 `.claude/skills/sysml-conventions` are symlinks into `agentic-mbse/claude/`, not into `.claude/`. So
 D2's edit to `claude/skills/sysml-conventions/SKILL.md` reaches this repo's agents automatically,
-and `claude/` is the tree to treat as authoritative. `.claude/` remains unread from this sandbox; the
-plan inventories it and records whether its pointer is duplicated deliberately or generated from
-`claude/`. Until that is settled the pointer is duplicated by hand in two trees — a smaller version
-of the same trap, named rather than hidden.
+and `claude/` is the tree to treat as authoritative. The plan-time inventory could read both trees:
+`claude/` has the live binding skill and `.claude/` has no calculation-binding examples or
+instruction counterpart. The success criterion is satisfied by recording that zero-edit result;
+duplicating a pointer into `.claude/` would create a new surface rather than update a live one.
 
 ### The teaching, organized by situation
 
@@ -577,9 +584,11 @@ require TEAx execution, which is what the spike established as sufficient at row
   reference line. Note `:210` duplicates `MODELING_GUIDE.md.template:145` verbatim.
 - `project_templates/MODELING_PROCESS.md.template`, `MODELING_GUIDE.md.template` — same treatment;
   `MODELING_PROCESS.md.template:349-350` is the highest-priority site in the tree.
-- `.claude/` counterparts — inventory first, then the same treatment.
+- `.claude/` — plan-time inventory found no calculation-binding instruction counterpart; record the
+  zero-edit result and keep the sweep as a regression guard.
 - `validation/level2_structure.py::check_self_named_bindings` (+ `binding.py`) — D7, one test per
   direction.
+- Package-data contract test — prove a built wheel contains the authoritative marked doc bytes.
 
 **sysml-codegen (here)**
 
@@ -596,7 +605,8 @@ require TEAx execution, which is what the spike established as sufficient at row
   corresponding product-ledger row are conditional on the open owner call, not plan inputs.
 - `.project/active/self-binding-replacement/stellarator-triage.md`.
 
-**fusion-tea** — per D12's discovery; expected six files plus any `exploration/ife_e2e/models/` copy.
+**fusion-tea** — the 12 D12 files: six under `models/`, with byte-identical counterparts under
+`exploration/ife_e2e/models/`.
 
 ---
 
@@ -628,20 +638,22 @@ require TEAx execution, which is what the spike established as sufficient at row
 
 ## Implementation Notes
 
-- **Do not edit through the venv path.** `agentic_mbse_data/...` files are hardlinks to the
-  agentic-mbse source. An in-place editor would silently mutate the source repo; one that writes a
-  new file breaks the link and leaves a stale package. Read there, write in `/home/reid/1cfe/agentic-mbse/`.
-  The D3 drift test reads that snapshot and must fail loudly if the link count is not 2.
-- **Re-verify B1 first.** Check link counts, then re-run the three patterns over the whole
-  agentic-mbse tree. Everything in Research Findings is point-in-time.
+- **Do not edit through the venv path.** `agentic_mbse_data/...` is a copied install payload and is
+  stale as soon as the source changes. Write only in `/home/reid/1cfe/agentic-mbse/`. The D3 drift
+  test resolves docs through `agentic_mbse.cli.get_docs_dir()`; the package-data test builds and
+  inspects the distribution separately. Neither test asserts an inode or link count.
+- **Re-verify B1 first.** Assert what the public resolver selects in editable mode, then re-run the
+  three patterns over the whole agentic-mbse source tree. Everything in Research Findings is
+  point-in-time.
 - **The license is required** for generate/seal/snapshot:
   `set -a; source /home/reid/1cfe/agentic-mbse/.env; set +a`. A green run without it is not a run.
 - **`make_d5_variant.py` needs `--formals` supplied** for a tree with no batch record, with a stated
   source — D5's precheck output.
 - **Build into scratch, strip-check, then replace.** The script's contract is "a variant beside the
   original"; the customer migration is in-place and the proof must run while both sides exist.
-- **fusion-tea's tree is dirty** on `item8-fusion-embedded-catalog` (6 ahead / 0 behind main). Clean
-  or stash first, and record which.
+- **fusion-tea's tree is dirty** on `item8-fusion-embedded-catalog` (6 ahead / 0 behind main). Do not
+  stash, reset, or absorb those user changes. Create an isolated worktree/branch from its current
+  HEAD for the 12 migration files.
 - **The F-3 re-raise widens what reads as a model refusal.** `validate()` raises on the whole failure
   set, and most of `graph.py:400-448` checks codegen's own referential integrity, not authored model
   shape. After the change a codegen bug surfaces as "Model failed exact-route validation" with exit 1
@@ -663,19 +675,20 @@ if self._strict and self._graph.diagnostics:
 
 ## Potential Risks
 
-- **B1 is point-in-time.** *Mitigation:* re-verify link counts and re-run all three patterns over the
-  whole tree as implement's first act — not just `.claude/`, and not just the self-named pattern.
-- **`.claude/` remains unread.** 23 files, 4 skills, unpackaged and unreachable from this sandbox.
-  *Mitigation:* it is D12's sibling — an inventory step at plan time, with the corrected patterns, and
-  the rollout follows what it returns.
+- **B1 is point-in-time.** *Mitigation:* verify the public resolver, build-check the packaged data,
+  and re-run all three patterns over the whole source tree — not only the self-named pattern.
+- **A future `.claude/` binding surface could bypass the authoritative tree.** *Mitigation:* the
+  plan-time inventory records zero current counterparts, and the zero-unmarked-example sweep covers
+  both trees so a later duplicate becomes visible.
 - **Guidance may conflate owner classes.** *Mitigation:* every D-6 example is labelled by resolved
   owner class; usage-owned claims cite the exact-owner conformance test, while definition-owned
   position claims cite the promoted fixtures.
 - **A rename collides, or the file-wide rewrite over-reaches (B3, B7).** *Mitigation:* D5(a)–(c) stop
   the run; and after D6 the failure that would follow reports itself by name instead of as a traceback.
-- **The customer tree has drifted from the fixture (B2), or has sites the six-file list misses (B8).**
-  *Mitigation:* D12 discovers rather than assumes. If the discovered set differs materially from the
-  expected six, stop and surface it.
+- **The customer tree has drifted from the fixture (B2), or the two six-file copies differ (B8).**
+  *Mitigation:* D12 found 12 tracked files and verified each corresponding pair byte-identical before
+  migration. Recheck the census and pair hashes immediately before writing; any difference stops the
+  run and is surfaced.
 - **F-2 or F-3 turns out not to be contained.** The disposition is explicit: stop and file with a
   name, owner, and vehicle rather than growing the item.
 - **Where the reader still owns something.** A fixture can pin that `'Unit'::cost` *resolves* into a
@@ -726,23 +739,27 @@ follow-on. No fix, no reversal of the July hold.
 One authoritative copy (D1). No push, no PR. R-2 pin stays (D8). The `SI_SELF_BINDING` validation
 row lands; ADR-010 does not without the open owner call (D9). Stellarator triage-only (D10).
 
-**Open, and named.** The ADR-010 owner call. The `.claude/` inventory and which tree is authoritative
-for agent instructions. The customer repo's actual site list (D12). Whether F-2 needs `binding.py`
-changed.
+**Open, and named.** The ADR-010 owner call. Whether F-2 needs `binding.py` changed.
 
-**De-risk first, in this order.** (1) Re-verify B1 and re-run the corrected patterns over the whole
-agentic-mbse tree — cheapest, license-free, and it sizes the rollout. (2) D12's customer-repo
-discovery and D5's four preconditions — license-free, and the ones that can invalidate the mechanized
-migration. (3) The F-3 repair, before the renames run rather than after, so every later migration
-failure is legible. F-2 through F-5 already have a post-repair recheck.
+**Resolved at plan time.** `claude/` is the authoritative live agent tree; `.claude/` has no binding
+instruction counterpart. D12 found two byte-identical six-file model sets: 30 binding/declaration
+rewrites per set, 60 total. The installed package data is a copy, not a hardlink; D3 now uses the
+public data resolver plus a built-package check.
 
-**Surfaced, dependent conclusions parked.** The `exploration/ife_e2e/models/` copy may carry
-self-bindings the migration would leave behind (B8/D12). ADR-010 remains an owner call. Neither is
-resolved here.
+**De-risk first, in this order.** (1) Re-verify the public docs resolver and re-run the corrected
+patterns over the whole agentic-mbse tree. (2) Land F-2 and F-3 before migration so both validators
+agree and every migration failure is legible. (3) Re-run D12's census, pair hashes, and D5's four
+preconditions immediately before the mechanized migration.
+
+**Surfaced, dependent conclusion parked.** ADR-010 remains an owner call and is not a plan input.
 
 ---
 
-## Appendix A — The 15 customer binding sites and their D-5 targets
+## Appendix A — The 15 logical customer binding sites and their D-5 targets
+
+Each row occurs once under `models/` and once under `exploration/ife_e2e/models/`: 30 binding-side
+rewrites total. The corresponding 15 declaration-side rows also occur in both trees, for 60 line
+rewrites across 12 tracked files.
 
 From `reverted/fusion-tea-model-migration.patch` against `tests/fixtures/fusion_tea/`. Verified
 line-for-line by the review; the customer's line numbers match the fixture's.
@@ -790,6 +807,18 @@ selects the shipped route.
 | D-5 rename colliding with a second `in` formal | — | `SI_OCCURRENCE_MISSING`, detail unreadable (filed) |
 
 ---
+
+## Revision Record — rev 4
+
+Plan-time discovery corrected two mechanisms after owner approval on 2026-08-16. The installed
+`agentic_mbse_data` documents are copied wheel payload, not hardlinks to the agentic-mbse source;
+B1, D3, the implementation notes, and risks now use the public data resolver plus a built-package
+check instead of an inode contract. Both agent trees are readable: `claude/` owns the live binding
+skill and `.claude/` has no calculation-binding instruction counterpart, so no duplicate pointer is
+created. D12's live customer census found two byte-identical six-file sets, making the implementation
+scope 12 tracked files and 60 line rewrites. These corrections change evidence and rollout sizing,
+not the architecture or migration choice. Per the pipeline rule for objectively verifiable fixes,
+the approved rev-3 review is not rerun.
 
 ## Revision Record — rev 3
 

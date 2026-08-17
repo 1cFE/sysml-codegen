@@ -302,6 +302,17 @@ Compounding factors the fix must address, not just the query:
 
 ## P2 - Medium Priority
 
+### [STELLARATOR-D5-MIGRATION] Migrate the stellarator demo's 114 self-named bindings — P2, unowned (filed from self-binding-replacement Phase 5 triage, 2026-08-16)
+
+The one-run triage (self-binding-replacement `stellarator-triage.md`) confirms the exact route
+refuses `/home/reid/1cfe/fusion-tea-stellarator-mbse-demo/models` with exit 1 and exactly **114
+`SI_SELF_BINDING`** findings — the only diagnostic class, no traceback, no output. Per the
+2026-08-15 sizing: 15 are copied-in fusion-tea files (now migrated at the source by Phase 4) and
+99 are the stellarator's own sites in two files (`generic_mfe/mfe_plant.sysml` ×94,
+`stellarator_09/stellarator_plant.sysml` ×5). Vehicle: the D-5 recipe and
+`make_d5_variant.py --root` customer mode are proven on fusion-tea; the July owner hold on the
+stellarator repo stands and is not reversed by this row. Needs an owner before any edit.
+
 ### [NESTED-OCCURRENCE-OVERRIDE] `:>>` override on a usage nested in an instantiated part def is lost (calc + constraint) — ABSORBED into SOURCE-IDENTITY Item 4 (2026-08-04)
 
 **Scheduling status:** the remaining fix is no longer scheduled independently. SOURCE-IDENTITY

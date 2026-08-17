@@ -1,0 +1,40 @@
+discovery: 15 binding sites, 15 declaration blocks across 11 formals
+   binding     availability  designs/generic_ife/ife_plant.sysml:114
+   binding     availability  designs/hif_ife/hif_plant.sysml:215
+   declaration availability  library/analyses/hif_economics.sysml:100
+   declaration availability  library/analyses/ife_lcoe.sysml:31
+   binding     beam_energy_mj  designs/hif_ife/hif_driver.sysml:73
+   declaration beam_energy_mj  library/analyses/hif_economics.sysml:25
+   binding     discount_rate  designs/generic_ife/ife_plant.sysml:116
+   declaration discount_rate  library/analyses/ife_lcoe.sysml:33
+   binding     frequency  designs/generic_ife/ife_plant.sysml:121
+   declaration frequency  library/analyses/ife_lcoe.sysml:38
+   binding     gain  designs/generic_ife/ife_plant.sysml:122
+   binding     gain  designs/generic_ife/ife_plant.sysml:146
+   binding     gain  designs/generic_ife/ife_plant.sysml:168
+   declaration gain  library/analyses/fusion_cycle.sysml:20
+   declaration gain  library/analyses/fusion_cycle.sysml:47
+   declaration gain  library/analyses/ife_lcoe.sysml:39
+   binding     net_electric_power_gw  designs/hif_ife/hif_plant.sysml:216
+   declaration net_electric_power_gw  library/analyses/hif_economics.sysml:101
+   binding     num_chambers  designs/hif_ife/hif_driver.sysml:75
+   declaration num_chambers  library/analyses/hif_economics.sysml:27
+   binding     om_cost_constant  designs/generic_ife/ife_plant.sysml:123
+   declaration om_cost_constant  library/analyses/ife_lcoe.sysml:40
+   binding     plant_cost_constant  designs/generic_ife/ife_plant.sysml:124
+   declaration plant_cost_constant  library/analyses/ife_lcoe.sysml:41
+   binding     thermal_efficiency  designs/generic_ife/ife_plant.sysml:126
+   binding     thermal_efficiency  designs/generic_ife/ife_plant.sysml:148
+   declaration thermal_efficiency  library/analyses/fusion_cycle.sysml:22
+   declaration thermal_efficiency  library/analyses/ife_lcoe.sysml:43
+   binding     thermal_power_gw  designs/hif_ife/hif_plant.sysml:186
+   declaration thermal_power_gw  library/analyses/hif_economics.sysml:57
+preconditions: clear
+/tmp/claude-1000/-home-reid-1cfe-sysml-codegen-item7-rebuild/fcd97009-4c77-4836-9195-317405e7b191/scratchpad/d5_customer/models: 11 formals renamed across 6 files
+   designs/generic_ife/ife_plant.sysml
+   designs/hif_ife/hif_driver.sysml
+   designs/hif_ife/hif_plant.sysml
+   library/analyses/fusion_cycle.sysml
+   library/analyses/hif_economics.sysml
+   library/analyses/ife_lcoe.sysml
+strip check: 0 problems
