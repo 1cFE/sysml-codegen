@@ -456,6 +456,11 @@ def test_builder_cli_creates_five_closed_source_artifacts(
             f'[project]\nname = "{name}"\nversion = "0.1.0"\n'
         )
         (repository / "source.txt").write_text(f"{name}\n")
+        if name == "agentic":
+            (repository / "source-link.txt").symlink_to("source.txt")
+            (repository / "workspace-only-link").symlink_to(
+                "/private/workspace/agentic-only"
+            )
         identities[name] = _commit(repository, f"freeze {name}")
         rows[name] = {
             "path": str(repository.resolve()),
@@ -499,6 +504,21 @@ def test_builder_cli_creates_five_closed_source_artifacts(
         name: row["commit"] for name, row in manifest["inputs"].items()
     } == identities
     assert len(list((output / "sources").glob("*.tar"))) == 5
+    assert manifest["inputs"]["agentic"]["archive"]["excluded_unsafe_links"] == [
+        {
+            "kind": "symlink",
+            "path": "agentic-0.1.0/workspace-only-link",
+            "target": "/private/workspace/agentic-only",
+        }
+    ]
+    assert not (
+        output / "extracted/agentic/agentic-0.1.0/workspace-only-link"
+    ).is_symlink()
+    extracted_internal_link = (
+        output / "extracted/agentic/agentic-0.1.0/source-link.txt"
+    )
+    assert extracted_internal_link.is_symlink()
+    assert extracted_internal_link.read_text() == "agentic\n"
 
 
 def test_independent_green_cli_stages_exact_six_files(tmp_path: Path) -> None:

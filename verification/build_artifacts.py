@@ -19,7 +19,7 @@ import tarfile
 import tempfile
 import tomllib
 import zipfile
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import Any
 
 SCHEMA_VERSION = "stop-parser-artifact-build/v1"
@@ -149,8 +149,62 @@ def _git_archive(repository: Path, commit: str, prefix: str, output: Path) -> No
     )
 
 
-def _extract_archive(archive: Path, destination: Path, prefix: str) -> Path:
+def _normalized_archive_path(path: PurePosixPath) -> PurePosixPath | None:
+    parts: list[str] = []
+    for part in path.parts:
+        if part in ("", "."):
+            continue
+        if part == "..":
+            if not parts:
+                return None
+            parts.pop()
+            continue
+        parts.append(part)
+    return PurePosixPath(*parts)
+
+
+def _excluded_unsafe_links(archive: Path, prefix: str) -> list[dict[str, str]]:
+    """Describe links that cannot be materialized inside the extracted source root."""
+    excluded: list[dict[str, str]] = []
+    with tarfile.open(archive, "r:") as bundle:
+        for member in bundle.getmembers():
+            if not (member.issym() or member.islnk()):
+                continue
+            target = PurePosixPath(member.linkname)
+            if target.is_absolute():
+                safe = False
+            else:
+                base = PurePosixPath(member.name).parent if member.issym() else PurePosixPath()
+                normalized = _normalized_archive_path(base / target)
+                safe = normalized is not None and normalized.parts[:1] == (prefix,)
+            if not safe:
+                excluded.append(
+                    {
+                        "kind": "symlink" if member.issym() else "hardlink",
+                        "path": member.name,
+                        "target": member.linkname,
+                    }
+                )
+    return sorted(excluded, key=lambda row: (row["path"], row["target"]))
+
+
+def _extract_archive(
+    archive: Path,
+    destination: Path,
+    prefix: str,
+    excluded_unsafe_links: list[dict[str, str]] | None = None,
+) -> Path:
     destination.mkdir(parents=True, exist_ok=False)
+    excluded = excluded_unsafe_links
+    if excluded is None:
+        excluded = _excluded_unsafe_links(archive, prefix)
+    excluded_paths = {row["path"] for row in excluded}
+
+    def safe_member(member: tarfile.TarInfo, destination_path: str) -> tarfile.TarInfo | None:
+        if member.name in excluded_paths:
+            return None
+        return tarfile.data_filter(member, destination_path)
+
     with tarfile.open(archive, "r:") as bundle:
         names = bundle.getnames()
         if not names or any(
@@ -160,7 +214,7 @@ def _extract_archive(archive: Path, destination: Path, prefix: str) -> Path:
             for name in names
         ):
             raise ArtifactContractError(f"source archive has an unsafe or wrong prefix: {archive}")
-        bundle.extractall(destination, filter="data")
+        bundle.extractall(destination, filter=safe_member)
     root = destination / prefix
     if not root.is_dir():
         raise ArtifactContractError(f"source archive did not create {prefix}/")
@@ -325,7 +379,13 @@ def build_artifacts(
                 f"expected {pinned_archive_hash}, found {archive_hash}"
             )
         extracted_parent = extracts / name
-        extracted = _extract_archive(archive, extracted_parent, prefix)
+        excluded_unsafe_links = _excluded_unsafe_links(archive, prefix)
+        extracted = _extract_archive(
+            archive,
+            extracted_parent,
+            prefix,
+            excluded_unsafe_links,
+        )
         declared = _declared_project_version(extracted)
         if declared is not None and declared != row["version"]:
             raise ArtifactContractError(
@@ -350,6 +410,7 @@ def build_artifacts(
                 "filename": f"sources/{archive.name}",
                 "prefix": prefix,
                 "sha256": archive_hash,
+                "excluded_unsafe_links": excluded_unsafe_links,
             },
             "extracted_root": f"extracted/{name}/{prefix}",
             "wheel": wheel_record,

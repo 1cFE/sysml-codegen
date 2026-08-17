@@ -183,6 +183,11 @@ def _verify_dependencies(
         )
         if _sha256(archive_path) != archive.get("sha256"):
             raise EvidenceAuditError(f"{name} source archive hash mismatch")
+        excluded_links = build_artifacts._excluded_unsafe_links(
+            archive_path, str(archive.get("prefix"))
+        )
+        if archive.get("excluded_unsafe_links") != excluded_links:
+            raise EvidenceAuditError(f"{name} excluded unsafe-link inventory mismatch")
         wheel = row.get("wheel")
         if wheel is not None:
             if not isinstance(wheel, dict):
