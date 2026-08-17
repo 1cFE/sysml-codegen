@@ -20,7 +20,10 @@ from sysml_codegen.extraction.data_models import (
 )
 from sysml_codegen.extraction.expression_compiler import Compilability
 from sysml_codegen.generation.pipeline import _module_to_context
-from sysml_codegen.generation.registry import generate_registry
+from sysml_codegen.generation.registry import (
+    _collect_exit_point_primitive_types,
+    generate_registry,
+)
 from sysml_codegen.generation.stencils import generate_backlog_report
 from sysml_codegen.resolution.models import (
     ComputationGraph,
@@ -31,7 +34,6 @@ from sysml_codegen.resolution.models import (
     ParameterGroup,
     PipelineModule,
 )
-
 
 # ---------------------------------------------------------------------------
 # Test helpers
@@ -259,6 +261,7 @@ class TestRegistryAggregation:
             package_name="test_pkg",
             template_env=env,
             output_path=Path("test_init.py"),
+            exit_point_primitive_types=_collect_exit_point_primitive_types(graph.modules),
         )
 
         assert "capital_costModule" in code
@@ -274,6 +277,7 @@ class TestRegistryAggregation:
             package_name="test_pkg",
             template_env=env,
             output_path=Path("test_init.py"),
+            exit_point_primitive_types=_collect_exit_point_primitive_types(graph.modules),
         )
 
         # Only standard imports, no aggregation
@@ -300,6 +304,7 @@ class TestRegistryAggregation:
             package_name="test_pkg",
             template_env=env,
             output_path=Path("test_init.py"),
+            exit_point_primitive_types=_collect_exit_point_primitive_types(graph.modules),
         )
 
         assert "capital_costModule" in code

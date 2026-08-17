@@ -24,7 +24,10 @@ from sysml_codegen.contracts.model_contract import build_model_contract
 from sysml_codegen.generation import CodeGenerationError
 from sysml_codegen.generation.modules import compile_shared_predicates, generate_teax_module
 from sysml_codegen.generation.pipeline import generate_pipeline_yaml
-from sysml_codegen.generation.registry import generate_registry
+from sysml_codegen.generation.registry import (
+    _collect_exit_point_primitive_types,
+    generate_registry,
+)
 from sysml_codegen.generation.stencils import generate_backlog_report
 from sysml_codegen.generation.test_gen import generate_test_implementations
 from sysml_codegen.resolution.models import (
@@ -258,10 +261,23 @@ def test_registry_seam_renders_constraint(template_env):
         package_name="pkg",
         template_env=template_env,
         output_path=Path("/tmp/test_registry.py"),
+        exit_point_primitive_types=_collect_exit_point_primitive_types(
+            _graph_with_constraint().modules
+        ),
     )
     assert "C1ConstraintModule" in code
     assert "ConstraintReportAggregatorModule" in code
     assert "ConstraintEvaluation" in code and "ConstraintReport" in code
+
+
+def test_registry_direct_call_cannot_omit_preflight_exit_types(template_env):
+    with pytest.raises(TypeError, match="exit_point_primitive_types"):
+        generate_registry(
+            graph=_graph_with_constraint(),
+            package_name="pkg",
+            template_env=template_env,
+            output_path=Path("/tmp/missing_exit_types.py"),
+        )
 
 
 @pytest.mark.parametrize("renderer", ["pipeline", "registry", "model_contract"])
@@ -276,6 +292,7 @@ def test_graph_renderers_reject_constraint_module_without_catalog(renderer, temp
                 package_name="pkg",
                 template_env=template_env,
                 output_path=Path("/tmp/missing_catalog_registry.py"),
+                exit_point_primitive_types=_collect_exit_point_primitive_types(graph.modules),
             )
         else:
             build_model_contract(graph)

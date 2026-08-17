@@ -23,7 +23,9 @@ from agentic_mbse.sysml.executable_profile import (
 )
 from agentic_mbse.sysml.expression import (
     feature_chain_facts,
+    feature_reference_facts,
     is_literal_node,
+    materialize_operands,
     resolved_target_fact,
 )
 from agentic_mbse.sysml.expression_ir import serialize_expression
@@ -2564,18 +2566,9 @@ class _ExactElaborator:
                 )
             ]
         if SysideAdapter.is_instance(expression, "FeatureReferenceExpression"):
-            target = resolved_target_fact(getattr(expression, "referent", None))
-            if target is None:
-                return []
             return [
                 _ExpressionReference(
-                    ResolvedSemanticReferenceFact(
-                        root=target,
-                        segments=(target,),
-                        leaf=target,
-                        resolved_member_names=(),
-                        has_index_segment=False,
-                    ),
+                    feature_reference_facts(expression),
                     plural,
                     binding_evidence.written_qualifier(expression) is None,
                     reference,
@@ -2598,7 +2591,11 @@ class _ExactElaborator:
                 )
             child_plural = True
         result: list[_ExpressionReference] = []
-        for operand in getattr(expression, "operands", None) or ():
+        owns_operands = SysideAdapter.is_instance(
+            expression, "OperatorExpression"
+        ) or SysideAdapter.is_instance(expression, "InvocationExpression")
+        operands = materialize_operands(expression) if owns_operands else ()
+        for operand in operands:
             result.extend(self._expression_references(operand, plural=child_plural))
         return result
 

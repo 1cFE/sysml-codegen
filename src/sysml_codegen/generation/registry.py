@@ -7,7 +7,9 @@ TEAx introspection handles both single-output (RootModel[T]) and multi-output
 Usage:
     from sysml_codegen.generation.registry import generate_registry
 
-    code = generate_registry(graph, "package_name", template_env, output_path)
+    code = generate_registry(
+        graph, "package_name", template_env, output_path, exit_point_types
+    )
 """
 
 from __future__ import annotations
@@ -240,7 +242,7 @@ def generate_registry(
     package_name: str,
     template_env: jinja2.Environment,
     output_path: Path,
-    exit_point_primitive_types: list[str] | None = None,
+    exit_point_primitive_types: list[str],
 ) -> str:
     """Generate registry from ComputationGraph.
 
@@ -384,7 +386,7 @@ def generate_registry(
         "schema_imports": schema_imports,
         "parameter_groups": group_names,
         "package_name": package_name,
-        "exit_point_types": exit_point_primitive_types or [],
+        "exit_point_types": exit_point_primitive_types,
     }
 
     template = template_env.get_template("registry_function.py.jinja2")

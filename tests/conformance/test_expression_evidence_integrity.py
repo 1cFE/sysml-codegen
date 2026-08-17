@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import ast
+import importlib
 from contextlib import contextmanager
 from pathlib import Path
 from types import SimpleNamespace
@@ -41,6 +42,74 @@ class _EvidenceFailingExtractor:
         raise semantic_error from parser_cause
 
 
+class _BoundaryExtractor:
+    def __init__(self, _model_paths: list[Path] | None = None) -> None:
+        self.model = object()
+        self.diagnostics = SimpleNamespace(validation=())
+
+    def load_models(self) -> bool:
+        return True
+
+    def extract_calculation_definitions(self) -> list[Any]:
+        return []
+
+
+class MockOperatorExpression:
+    qualified_name = "Probe::broken_operands"
+    document = SimpleNamespace(url=f"file:{RAW_SOURCE}")
+    cst_node = SimpleNamespace(start_point=SimpleNamespace(line=10))
+
+    @property
+    def operands(self):
+        raise RuntimeError("operand stream failed")
+
+
+class MockFeatureReferenceExpression:
+    qualified_name = "Probe::missing_reference"
+    document = SimpleNamespace(url=f"file:{RAW_SOURCE}")
+    cst_node = SimpleNamespace(start_point=SimpleNamespace(line=20))
+    referent = None
+
+
+def _force_exact_expression_failure(
+    monkeypatch: pytest.MonkeyPatch,
+    expression: object,
+) -> None:
+    exact = importlib.import_module("sysml_codegen.elaboration.elaborate")
+    elaborator = object.__new__(exact._ExactElaborator)
+
+    def fail_in_exact_route(*_args: object, **_kwargs: object) -> object:
+        elaborator._expression_references(expression, plural=False)
+        raise AssertionError("forced evidence failure returned a graph")
+
+    monkeypatch.setattr(elaborated_pipeline, "_build_instance_graph", fail_in_exact_route)
+
+
+def _assert_forced_expression_diagnostic(
+    error: ElaborationDiagnosticError,
+    *,
+    code: SemanticEvidenceCode,
+    reference: str,
+    line: int,
+) -> None:
+    [diagnostic] = error.diagnostics
+    assert diagnostic.code is ElaborationCode.SI_EVIDENCE_INCOMPLETE
+    assert diagnostic.reference == reference
+    assert diagnostic.consumer_display == reference
+    assert diagnostic.source_file == REFERENT
+    assert diagnostic.source_line == line
+    assert str(error).count("SI_EVIDENCE_INCOMPLETE") == 1
+    semantic_error = error.__cause__
+    assert isinstance(semantic_error, SemanticEvidenceError)
+    assert semantic_error.code is code
+    if code is SemanticEvidenceCode.OPERAND_ITERATION_FAILED:
+        assert isinstance(semantic_error.cause, RuntimeError)
+        assert semantic_error.__cause__ is semantic_error.cause
+    else:
+        assert semantic_error.cause is None
+        assert semantic_error.__cause__ is None
+
+
 @pytest.mark.parametrize("strict", [True, False])
 def test_loaded_extractor_converts_semantic_evidence_once(strict: bool) -> None:
     extractor = _EvidenceFailingExtractor()
@@ -76,7 +145,7 @@ def test_live_and_admitted_routes_delegate_to_one_boundary(monkeypatch: pytest.M
     calls: list[tuple[tuple[Path, ...], dict[str, str], bool]] = []
     marker = object()
 
-    monkeypatch.setattr(elaborated_pipeline, "SysMLDataExtractor", _EvidenceFailingExtractor)
+    monkeypatch.setattr(elaborated_pipeline, "SysMLDataExtractor", _BoundaryExtractor)
     monkeypatch.setattr(
         elaborated_pipeline,
         "_live_source_referents",
@@ -178,6 +247,95 @@ def test_snapshot_capture_uses_the_admitted_route() -> None:
         Path(elaborated_pipeline.__file__).resolve().parents[1] / "snapshot" / "capture.py"
     ).read_text(encoding="utf-8")
     assert "elaborate_admitted_sources(admission)" in capture_source
+
+
+@pytest.mark.parametrize(
+    ("expression", "code", "reference", "line"),
+    [
+        (
+            MockOperatorExpression(),
+            SemanticEvidenceCode.OPERAND_ITERATION_FAILED,
+            "Probe::broken_operands",
+            11,
+        ),
+        (
+            MockFeatureReferenceExpression(),
+            SemanticEvidenceCode.RESOLVED_TARGET_MISSING,
+            "Probe::missing_reference",
+            21,
+        ),
+    ],
+)
+@pytest.mark.parametrize("source_arm", ["live", "admitted"])
+def test_public_exact_expression_failures_return_no_graph(
+    monkeypatch: pytest.MonkeyPatch,
+    expression: object,
+    code: SemanticEvidenceCode,
+    reference: str,
+    line: int,
+    source_arm: str,
+) -> None:
+    _force_exact_expression_failure(monkeypatch, expression)
+    monkeypatch.setattr(elaborated_pipeline, "SysMLDataExtractor", _BoundaryExtractor)
+    monkeypatch.setattr(
+        elaborated_pipeline,
+        "_live_source_referents",
+        lambda _model, _paths: {RAW_SOURCE: REFERENT},
+    )
+    admitted = SimpleNamespace(
+        staged_files=(Path(RAW_SOURCE),),
+        staged_to_referent={RAW_SOURCE: REFERENT},
+        files=(SimpleNamespace(referent=REFERENT),),
+        verify_after_parse=lambda _model: None,
+    )
+
+    with pytest.raises(ElaborationDiagnosticError) as caught:
+        if source_arm == "live":
+            elaborated_pipeline.elaborate_model_paths([Path(RAW_SOURCE)], strict=True)
+        else:
+            elaborated_pipeline.elaborate_admitted_sources(admitted, strict=True)
+
+    _assert_forced_expression_diagnostic(
+        caught.value,
+        code=code,
+        reference=reference,
+        line=line,
+    )
+
+
+@pytest.mark.parametrize(
+    "expression",
+    [MockOperatorExpression(), MockFeatureReferenceExpression()],
+)
+def test_forced_expression_failure_preserves_existing_snapshot(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+    expression: object,
+) -> None:
+    from sysml_codegen.extraction import source_manifest
+
+    _force_exact_expression_failure(monkeypatch, expression)
+    admitted = SimpleNamespace(
+        staged_files=(Path(RAW_SOURCE),),
+        staged_to_referent={RAW_SOURCE: REFERENT},
+        files=(SimpleNamespace(referent=REFERENT),),
+        verify_after_parse=lambda _model: None,
+    )
+
+    @contextmanager
+    def fake_admission(_model_paths: list[Path]):
+        yield admitted
+
+    monkeypatch.setattr(source_manifest, "admit_sources", fake_admission)
+    monkeypatch.setattr(elaborated_pipeline, "SysMLDataExtractor", _BoundaryExtractor)
+    output = tmp_path / "snapshot.json"
+    output.write_bytes(b"existing snapshot")
+
+    with pytest.raises(ElaborationDiagnosticError):
+        capture_instance_graph_snapshot([Path(RAW_SOURCE)], output)
+
+    assert output.read_bytes() == b"existing snapshot"
+    assert list(tmp_path.iterdir()) == [output]
 
 
 def test_raw_builder_is_private_and_has_one_production_caller() -> None:
