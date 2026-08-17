@@ -1,7 +1,7 @@
 # Provenance: the usage-owned reference anchoring fixture family
 
 These thirteen fixture roots are the durable conformance authority for exact owner anchoring
-of one-segment references (`.project/active/qualified-reference-occurrence-anchoring/`). They
+of one-segment references (`.project/completed/20260816_qualified-reference-occurrence-anchoring/`). They
 are read by `tests/conformance/test_usage_owned_reference_anchoring.py`.
 
 The research paths they came from are archived once that item closes (design decision D6), so
@@ -39,7 +39,7 @@ preserved bytes and are stale on that point.
 
 ## Copied from the Phase-1 bare-discriminator learning test (bytes preserved)
 
-Source: `.project/active/qualified-reference-occurrence-anchoring/spike/bare-discriminator-authorability/`,
+Source: `.project/completed/20260816_qualified-reference-occurrence-anchoring/spike/bare-discriminator-authorability/`,
 2026-08-15. The written reference in each is one bare segment; an `alias` or a subsetting
 declaration is what makes SysIDE resolve it to the sibling's leaf.
 

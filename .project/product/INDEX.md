@@ -19,6 +19,7 @@ Next free id: **ADR-010**.
 
 - [P-001 — A design search where parameters vary freely and viability is assessed](P-001-design-search-free-variation.md) — the owner-stated promise, with the causal-toolchain tension surfaced and its unbuilt half filed as `[ACAUSAL-RELATIONS-CAPABILITY]`
 - [P-002 — One modeled source occurrence becomes exactly one runtime source](P-002-exact-owner-anchoring.md) — `[AGENT] (ratified by owner, 2026-08-16)`. Serves [P-001](P-001-design-search-free-variation.md). Carries a named bound: the deep literal override lane cannot reach the repaired branch and is **not evidenced**
+- [P-003 — No workarounds to accept bad models](P-003-no-workarounds-for-bad-models.md) — `[OWNER-VERBATIM, 2026-08-16]`. Ill-formed model text is refused with a diagnostic, never resolved by invented behavior; we follow what KerML, SysML v2, and SysIDE support. First application: `[DEF-OWNED-SIDEWAYS-REACH]`
 
 ## Decision records (ADRs, back-registered)
 

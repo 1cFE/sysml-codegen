@@ -1,0 +1,18 @@
+{
+  "roots": [
+    "tests/fixtures/u1_usage_qual_self",
+    "tests/fixtures/u2_usage_qual_two_owner_occ",
+    "tests/fixtures/u3_usage_qual_multi_occ",
+    "tests/fixtures/u3b_usage_qual_single_occ",
+    "tests/fixtures/u4_usage_qual_pkg_sibling",
+    "tests/fixtures/u5_usage_qual_named_sibling",
+    "tests/fixtures/u6_usage_qual_crossnamed",
+    "tests/fixtures/u7_both_spellings",
+    "tests/fixtures/usage_owned_reference_consumers",
+    "tests/fixtures/usage_owner_bare_alias",
+    "tests/fixtures/usage_owner_bare_alias_arrayed",
+    "tests/fixtures/usage_owner_bare_alias_def_owned",
+    "tests/fixtures/usage_owner_bare_subset_def_owned",
+    "tests/fixtures/usage_owner_calc_usage_leaf"
+  ]
+}

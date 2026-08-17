@@ -12,13 +12,12 @@ from the *consumer's* own occurrence lineage, which is exactly the positional gu
 item removed; taking it because owner classification was impossible would have re-created
 the defect in the one case nobody could see.
 
-**No authored model reaches this.** The retained census
-(`.project/active/qualified-reference-occurrence-anchoring/verification/absent_leaf_census.py`
-and its JSON result) measures every one-segment reference leaf across the frozen corpus
-and the promoted fixtures and finds zero absent from the index. The branch is therefore
-reached here at the resolver boundary with a declaration ID the index does not hold —
-which is precisely the state the branch exists to refuse — rather than through a fixture
-that pretends to be an authored shape it is not.
+**Observed corpus boundary.** The retained census
+(`.project/completed/20260816_qualified-reference-occurrence-anchoring/verification/absent_leaf_census.py`
+and its JSON result) finds zero absent leaves among 770 observed resolver calls. Fifteen
+roots retain unmeasured population, so that result does not establish authored reachability
+for the whole corpus. This test therefore reaches the state directly at the resolver
+boundary. It proves the state refuses instead of guessing; it makes no authorability claim.
 """
 
 from __future__ import annotations

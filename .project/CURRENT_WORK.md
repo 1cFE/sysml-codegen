@@ -1,6 +1,10 @@
 # Current Work
 
-**Last Updated**: 2026-08-16 (**qualified-reference-occurrence-anchoring scoped re-verification: Needs Work; findings 1 and 6 closed, finding 5 reopened** — identity is now measured for every root that elaborates (139 compared, 0 changed) and the differ refuses an absent block, so SC12 is met. The absent-leaf runtime refusal is correct; its census treated refused roots as zero observed leaves and was **repaired 2026-08-16** — it now counts at the resolver boundary and reports 154 roots (139 complete, 1 partial, 14 unmeasured), 770 leaves observed, 0 absent, with 15 roots named as residual unmeasured population. Awaiting re-verification. Findings 2, 3, 4, and 7 were outside this pass. See the 2026-08-16 entry below. Prior context: **PHASE D FULLY CLOSED; Item 8 sequencing decided.** The
+**Last Updated**: 2026-08-16 (**qualified-reference-occurrence-anchoring certified and archived** —
+all seven audit findings are closed, owner-disposed, or retained as a named nonblocking provenance
+residual; 116 focused licensed tests pass and the final product-lens gate permits close. Active work
+resumes with self-binding-replacement. Prior context: **PHASE D FULLY CLOSED; Item 8 sequencing
+decided.** The
 three-repo merge wave landed and is smoked — squash merges in the pin-enforced order:
 agentic-mbse#12 → `main` `1decd95`; codegen#10 → `main` `385e163` (the Item-7 cutover + the whole
 CONSTRAINT-SEMANTICS epic + the two contained 20260724 branches); teax#4 → `main` `744745f`. Each
@@ -113,243 +117,6 @@ set with and without this item's changes; every affected file passes when run al
 `tests/conformance/test_output_schema_contract.py` 1). The phase-D `2086`-green figure does not
 reproduce as a full-suite run in this venv even at HEAD. Out of this item's scope (Non-Goals: no
 re-certification); needs an owner.
-
-### 2026-08-15: qualified-reference-occurrence-anchoring — PHASE 3 COMPLETE (the resolver is repaired)
-
-The item's single production edit has landed:
-`src/sysml_codegen/elaboration/elaborate.py`, one new `_resolve_direct_reference` helper called
-from the one-segment arm of the shared semantic resolver. It takes the exact leaf's live semantic
-owner, activates only when that owner is a `PartUsage`, contextualizes it through the existing
-occurrence selector with scalar cardinality, and reads the leaf's slot at that one occurrence. Every
-other owner kind still goes through `_resolve_leaf` untouched. No fallback, no new diagnostic code,
-no caller/schema/index/projection/codec change.
-
-All **15 red nodes are green**, all 33 controls stay green, and the full suite is 17 failed / 2132
-passed / 34 skipped / 88 deselected — the same 17 missing-`pandas` failures as the pre-change
-baseline, node for node. The corpus ledger moves from 405 edge / 4 diagnostic to **409 edge / 0
-diagnostic** with exactly 5 changed sites (u4, u5, u7×2 repaired; u6's edge moved from `comp_b` to
-`comp_a`). **Correction, 2026-08-16:** identity blocks compare for 13 promoted roots. The 140 frozen
-corpus roots were not captured with identity enabled. The
-arrayed-owner negative now refuses with `SI_OCCURRENCE_AMBIGUOUS` instead of silently answering, and
-a call counter proves `_resolve_leaf` is never reached during u6's elaboration. Evidence:
-`verification/after-phase3.json` and `after-phase3-full-suite.txt`.
-
-**Next**: Phase 4 — public mutation, strict/lenient parity, and the snapshot routes.
-
-### 2026-08-15: qualified-reference-occurrence-anchoring — PHASE 4 COMPLETE (public + snapshot routes)
-
-The repaired internal edge is the one public generation and the snapshot routes actually see. **No
-production file changed** — `git status --porcelain src/` is empty — and nothing in projection or
-either codec needed to.
-
-11 new test nodes, all green, across four files: a public-mutation node that varies `comp_a`'s
-modelled value and proves the six consumers move *and that they are every input port in the graph*
-(so an unintended seventh fails wherever it binds), a round-trip node that compares the full decoded
-graph and the raw alias targets `semantic_edges()` omits, a v6 capture/relocation node using a
-temporary path (the fixture is deliberately **not** enrolled in the committed batch, per D9), and
-six strict/lenient parity parameters plus two negatives — the arrayed-owner refusal and the earlier
-`_finish_readiness` halt, tested separately. The two whole-graph typed helpers they share live in
-`tests/helpers/elaboration_graph.py`.
-
-**The new nodes were shown to be able to fail.** Reverting `elaborate.py` in the working tree to its
-pre-repair content makes 7 of the 11 red; the 4 that stay green are the parity nodes whose fixtures
-were *silently and symmetrically* wrong in both modes, plus the readiness node. The file was
-restored and `src/` verified clean.
-
-**Snapshot: nothing was recaptured, and that is the finding.** The live-versus-committed assessment
-ran first and returned **23 tracked, 23 assessed, 0 stale** — every row byte-identical to Phase 2's,
-differing only in `baseline_commit` and `git_status`. D9's recapture trigger never fired. Evidence:
-`verification/phase4-snapshot-assessment.json`.
-
-Focused files together under the license: **100 passed, zero skips**. Full suite: 17 failed / 2143
-passed / 34 skipped / 88 deselected — the same 17 missing-`pandas` failures, and exactly +11 passing
-nodes. Ruff clean; mypy reports no new error.
-
-**Next**: Phase 5 — corpus adjudication (`after.json`, `adjudication.md`) and certification.
-
-### 2026-08-16: qualified-reference-occurrence-anchoring — INDEPENDENT AUDIT: NEEDS WORK
-
-The runtime repair still holds: 114 focused licensed tests pass; the full suite reproduces 17
-missing-`pandas` failures / 2143 passed / 34 skipped / 88 deselected; focused Ruff and production
-mypy pass; the regenerated corpus ledger is byte-identical and still has 19 classified outcome
-changes with no edge/refusal drift.
-
-Certification evidence does not hold as written:
-
-1. `corpus_compare.py` captures identity for 13 promoted roots but disables it for all 140 frozen
-   corpus roots. `adjudicate.py` compares the missing blocks as `None == None` and reports them as
-   roots compared. The 153-root identity claim is false; SC12 is reopened.
-2. SC1 was checked as “every shared consumer” although the deep-override caller remains the D11
-   affected-shape gap. The owner authorized continuing with the gap, not treating it as evidence.
-   SC1 is reopened pending the reserved disposition or a discriminating witness.
-3. The fresh product lens is `DISPOSED (independent-audit-F1)`: over an arrayed owner,
-   `sum(comp_a::length)` refuses while `sum(comp_a.length)` enumerates both exact occurrences. The
-   scalar kept test uses a one-occurrence owner and cannot distinguish the policy. This is a named
-   close residual or bounded follow-up, not an owner-grade block.
-4. The self-binding spec still contradicts itself at `:53-59` versus `[HARD] :132-139`; SC14 remains
-   open.
-
-Current verdict and full findings: `.project/active/qualified-reference-occurrence-anchoring/audit.md`.
-Next: repair the Phase-5 identity capture/differ, disposition D11 and the product-lens residual,
-then rerun `/_my_audit`. Do not close yet.
-
-### 2026-08-16: qualified-reference-occurrence-anchoring — REMEDIATION REVERIFIED: 1/6 CLOSED, 5 REOPENED
-
-The owner authorized findings **1, 5, and 6** only. Findings 2, 3, 4, and 7 are untouched and
-reserved for close.
-
-- **Finding 1 (identity coverage).** `corpus_compare.py` captures identity for every root that
-  elaborates; the switch is deleted, not defaulted. Both ledgers regenerated, `before.json` under
-  the pre-repair `elaborate.py` at `98970c9^` (restored, `git diff -- src/` empty) and otherwise
-  identical to the committed capture. The comparator bug is fixed at the root: `adjudicate.py`
-  raises rather than reading an absent block as agreement. **Measured: 139 roots compared, 0
-  changed.** SC12 met on that evidence.
-- **Finding 5 (absent leaf failed open).** `_resolve_direct_reference` refuses a leaf its element
-  index does not hold instead of falling through to the consumer-positional route, and its boundary
-  test passes. **Reopened on evidence:** the retained census returned before collecting leaves from
-  any refused root and totalled those missing counts as zero. A reproduced refused root had already
-  processed one one-segment leaf, so 769 was not the whole-population count it claimed.
-  **Census repaired 2026-08-16 (plan Phase 7).** It now counts at the resolver boundary — wrapping
-  `_resolve_direct_reference` so a partial run still reports what it saw — and every root carries an
-  explicit complete / partial / unmeasured measurement with its reason. **Re-derived: 154 roots —
-  139 complete, 1 partial, 14 unmeasured; 770 one-segment leaves observed, 0 absent from the element
-  index.** The zero is stated on the new measurement. 15 roots hold residual unmeasured population
-  and the census says so, so no artifact claims whole-population coverage. Awaiting re-verification.
-- **Finding 6 (weakly pinned edges).** The arrayed strict/lenient node now pins the full
-  consumer/parameter/detail tuple. The missing-leaf-target raise turned out to be **authorable** —
-  a one-segment reference naming a `PartUsage`-owned calculation usage rather than one of its
-  outputs — so it has a real fixture (`tests/fixtures/usage_owner_calc_usage_leaf`) and a kept test.
-
-Full suite **17 failed / 2145 passed / 34 skipped / 88 deselected**, failing node set identical by
-name to Phase 5's; the two added passes are the two new tests. Ledger adjudication: 20 changed rows,
-0 structural problems. Detail: `.project/active/qualified-reference-occurrence-anchoring/audit.md`,
-"Remediation — 2026-08-16".
-
-Next: re-verify the Phase 7 census repair. Findings 2, 3, 4, and 7 were outside this pass. Still do
-not close.
-
-### 2026-08-15: qualified-reference-occurrence-anchoring — AUDITED: CERTIFY (superseded 2026-08-16)
-
-`/_my_audit` returned **Certify** (`.project/active/qualified-reference-occurrence-anchoring/audit.md`).
-The audit re-ran every load-bearing claim rather than reading the implementers' logs, and all of them
-held:
-
-- **Red/green split reproduced.** With `elaborate.py` reverted to its pre-repair content in the
-  working tree: the anchoring file is **15 failed / 33 passed** with the 15 names matching the
-  claimed set one for one, and the Phase-4 nodes are **7 failed / 4 passed**. The three
-  strict/lenient parity nodes that stay green are honestly explained — the pre-repair defect was a
-  silent wrong edge produced identically in both modes, so a parity comparison is structurally blind
-  to it; the readiness node is a different fixture and a different exit. Failures inspected
-  individually are target-identity mismatches (u6 differs only in the occurrence step at an
-  unchanged slot), not load errors. Tree restored and verified clean.
-- **Both corpus ledgers regenerate byte-identical.** `corpus_compare.py` at HEAD reproduces
-  `after.json` byte for byte; run against the pre-repair file it reproduces `before.json` byte for
-  byte; `adjudicate.py` over those captures reproduces `adjudication-diff.txt` exactly. That report
-  claimed 0 identity-block changes over 153 roots, but the independent audit found that only 13
-  roots contained identity blocks; the other 140 were compared as absent values.
-- **Full suite:** 17 failed / 2143 passed / 34 skipped / 88 deselected, failing node set identical
-  to the pre-change baseline name for name, all 17 environmental missing-`pandas`, zero
-  license-related skips.
-- **ruff/mypy delta verified in a scratch worktree at `2768c68`:** 131 = 131 and 52 = 52, identical
-  line for line, zero mypy errors in `elaboration/`. Leaving the backlog alone was the right call —
-  91 of the 131 ruff findings are in generator-owned baseline/golden bytes that byte-identity gates
-  depend on.
-- **The arrayed-owner fix-vs-regression call is sound, measured not inherited:** on the pre-repair
-  resolver that consumer bound the *enclosing sibling's* `comp_b.length` with zero diagnostics — not
-  either arrayed occurrence — so the refusal replaces a confidently wrong number, never a working
-  answer.
-
-The 2026-08-15 audit marked **SC1–13 met**. The 2026-08-16 independent audit reopens SC1 and SC12;
-SC14 remains open because it is a close-stage criterion by its own text.
-Plan Phases 1–5 marked complete, and Phase 1's Completion block — left an empty stencil by the
-implementing session — is now filled from its retained evidence.
-
-**Three carry-forward items for `/_my_close`, none blocking:**
-
-1. `.project/active/self-binding-replacement/spec.md:132-139` still carries a landed-false `[HARD]`
-   line ("the current one-segment resolver … selects by consumer position"). Phase 5 surfaced it
-   rather than editing it because it sits outside the owner-drawn bounded inventory — the right
-   capture-fidelity call — but it is now false.
-2. The arrayed-owner refusal has a wider authored surface than its fixture implies: *any* unindexed
-   one-segment reference to an arrayed owner's leaf now refuses, `sum(comp_a::length)` included. The
-   audit verified pre-repair that shape silently summed the sibling's value, so it is the same fix —
-   but the author-facing likelihood is higher than "one fixture" conveys, and the diagnostic names
-   neither the candidates nor the index syntax.
-3. D11's `deep override affected-shape coverage unproven` gap remains open and needs its owner
-   disposition.
-
-**Next**: `/_my_close`, then `/_my_pre_pr`.
-
-### 2026-08-15: qualified-reference-occurrence-anchoring — PHASE 5 COMPLETE (implementation certified)
-
-All five plan phases are done. The affected surface was re-derived **from the shipped resolver** at
-`a3b46dc` (not carried over from Phase 3's notes), and every difference against the frozen
-before-state is adjudicated in
-`.project/active/qualified-reference-occurrence-anchoring/verification/adjudication.md`.
-
-**19 changed rows, every one a fix, zero unadjudicated. No regression found.** Corpus 405 edge / 4
-diagnostic → **409 edge / 0 diagnostic** over the same 409 site keys; promoted 12/4 → 15/1. Site
-keys and refusal strings compare equal. Identity blocks compare equal for 13 promoted roots; the 140
-corpus blocks were never captured. 404 of 409 corpus sites are untouched, and no corpus row is a bare reference, so there was no
-unclassified bare change.
-
-**The arrayed-owner refusal is adjudicated a fix, on a measured fact.** `usage_owner_bare_alias_arrayed`
-went from a silent answer to `SI_OCCURRENCE_AMBIGUOUS`, and the answer it lost was occurrence
-`e559a865` = **`comp_b`**, the enclosing sibling — not either arrayed `comp_a` occurrence. It traded a
-confidently wrong number for a named refusal on a reference that has no single right answer. Blast
-radius measured at zero: no corpus site gained a diagnostic, no snapshot went stale, no suite failure
-appeared. The compatibility cost is recorded rather than glossed.
-
-Focused files: **114 passed / 0 skipped** together, and green independently (48/14/3/14/6/15/14).
-Full suite **17 failed / 2143 passed / 34 skipped / 88 deselected** — the same 17 missing-`pandas`
-failures node for node, +63 passing fully accounted (37+15+11), zero license skips. Snapshots 23
-tracked / **0 stale**, no recapture.
-
-**⚠ Reported as-is, not fixed:** `ruff check src/ tests/` = **131 findings** and `mypy src/` = **52
-errors** project-wide. Both were re-captured at the item's start commit `2768c68` and are
-**identical, line for line**, with zero mypy errors in `elaboration/` — pre-existing backlog, no new
-finding from this item, and out of its scope to absorb.
-
-**Standing gaps carried to close:** D11's `deep override affected-shape coverage unproven` remains
-**open** (the lane again measured 0 one-segment sites corpus-wide). The bounded self-binding
-documentation check was performed and its one mismatch corrected at
-`.project/active/self-binding-replacement/spec.md:53-61` (D-5/D-7 and fusion-tea untouched); the same
-stale claim at `:132-139` is **out of that item's bounded inventory** and is surfaced for close or the
-owner rather than edited. The final verifier for the documentation tail remains `/_my_close`.
-
-**Next**: `/_my_audit`, then `/_my_close`.
-
-### 2026-08-15: qualified-reference-occurrence-anchoring — PHASE 2 COMPLETE (red set + before ledger)
-
-Phases 1 and 2 of `.project/active/qualified-reference-occurrence-anchoring/plan.md` are done; no
-`src/` file has been touched yet. Phase 1 settled both evidence gates: D10 found an authored bare
-discriminator (route 1, SC8 kept, B3 confirmed) and D11 found no deep-override affected shape, so
-its dated coverage gap stands and no deep-override fixture exists.
-
-Phase 2 promoted thirteen fixture roots into `tests/fixtures/` (u1–u7 plus u3b copied byte-for-byte,
-four bare-lane roots from the Phase-1 learning test, and the authored combined fixture
-`usage_owned_reference_consumers`), and added
-`tests/conformance/test_usage_owned_reference_anchoring.py` — 48 nodes, **15 intentionally red**,
-33 controls green. Full suite: 32 failed / 2117 passed / 34 skipped / 88 deselected, where the
-failure delta against the pre-change baseline (17 failed / 2080 passed, all 17 a missing `pandas`)
-is exactly those 15 and nothing else. Zero license-related skips in both runs.
-
-The pre-repair state is frozen under
-`.project/active/qualified-reference-occurrence-anchoring/verification/` — read its `README.md`
-first. It holds the full-suite baseline, the 140 frozen corpus roots, the ledger (`corpus_compare.py`
-+ `before.json`, 409 corpus sites and 16 promoted sites, byte-identical across three runs), and the
-snapshot inventory (23 tracked, 0 stale). **Next**: Phase 3, the single production edit at
-`src/sysml_codegen/elaboration/elaborate.py:2062-2076`.
-
-### 2026-08-15: qualified-reference-occurrence-anchoring — SPEC DRAFTED; product lens CLEAR
-
-Separate bounded ELABORATE-FIRST repair discovered during Item-8 shaping. The owner selected the
-broader invariant: every one-segment usage-owned leaf anchors its exact owner across all resolver
-consumers, with u4–u7 promotion, qualified expression-side regressions, and correction of the
-self-binding spec's positional explanation. Draft:
-`.project/active/qualified-reference-occurrence-anchoring/spec.md`; product lens initially found one
-provenance overgrade (`spec-F1`), then recorded it FIXED and `Gate: CLEAR` after the five code/design
-facts were regraded from `[HARD]` to cited `[INHERITED]`/`[INFERRED]` constraints.
 
 ### 2026-08-15: self-binding-replacement — SPEC REVISED (rev 4); superseded by rev 6
 
@@ -1167,6 +934,20 @@ surfaces as matrix-row candidates.
 ---
 
 ## Recently Completed
+
+### 2026-08-16: qualified-reference-occurrence-anchoring — CERTIFIED AND CLOSED
+
+- The shared one-segment resolver now honors the exact `PartUsage` owner before selecting the leaf
+  slot. The cross-owner silent wrong-edge case is gone, and missing/ambiguous exact-owner states
+  refuse by name instead of falling back to consumer position.
+- Final audit verdict: **Certify**. Findings 1, 2, 4, 5, and 6 are closed; the arrayed aggregation
+  split is owner-disposed to `[ANCHORING-ARRAYED-DIAGNOSTIC]`; historical companion-revision
+  provenance remains an explicit nonblocking residual. Product lens: **DISPOSED (passing)**, no
+  BLOCK. Focused licensed suite: **116 passed**.
+- Evidence: 20 changed outcomes adjudicated, 139 identity blocks unchanged, 0 structural problems;
+  bounded census 154 roots / 770 observed calls / 0 observed absent leaves / 15 residual roots.
+  Archived to `.project/completed/20260816_qualified-reference-occurrence-anchoring/`; P-002 keeps
+  the product promise and evidence bounds live.
 
 ### 2026-08-14: CONSTRAINT-SEMANTICS EPIC — Constraint Semantics and Design-Search Feasibility (all nine items closed; epic closed + archived)
 - **The measured failure the epic was filed against is closed.** CATF authored 65 constraint usages

@@ -4,6 +4,64 @@ Historical record of completed work.
 
 ---
 
+## [2026-08-16] - [ELABORATE-FIRST bounded child] Self-Binding Replacement
+
+**Type**: Item (bounded child of ELABORATE-FIRST Item 8)
+**Duration**: 2026-08-15 → 2026-08-16 (1 day)
+**Archived to**: `.project/completed/20260816_self-binding-replacement/`
+**Branches**: codegen `main`; agentic-mbse `self-binding-replacement`; fusion-tea
+`self-binding-replacement`
+
+### Summary
+Self-named calculation bindings now refuse before generation instead of silently reading their own
+inputs. The situational authoring rule is published, Fusion Tea's affected bindings are migrated
+without changing model physics, and public off-default mutations prove that intended source values
+reach every and only their bound consumers.
+
+### Deliverables
+- Exact-route `SI_SELF_BINDING` detection, named cycle failures, and the owner-directed refusal of
+  definition-owned qualified lineage misses instead of positional descendant search.
+- One authoritative agentic-mbse guidance surface with validator and packaged-wheel drift checks.
+- Mechanical D-5 migration of both Fusion Tea model trees, injective cross-tree equality proof,
+  two-source public mutation spine, and bounded Stellarator triage.
+- Archived spec, design and reviews, plan, audit, Product-Lens ledger, spikes, provenance fixtures,
+  migration logs, and post-repair evidence.
+- Independent verification of all ten functional success criteria. `[OWNER 2026-08-16]` The
+  dangling-symlink behavior in the migration/fixture helper is a testing/developer-tooling edge
+  case and accepted risk; closure was directed without another remediation/audit cycle.
+
+### Lessons Learned
+[TODO: Add lessons learned]
+
+## [2026-08-16] - [ELABORATE-FIRST bounded child] Exact Owner Anchoring for Usage-Owned One-Segment References
+
+**Type**: Item (bounded child of ELABORATE-FIRST Item 8)
+**Duration**: 2026-08-15 → 2026-08-16 (1 day)
+**Archived to**: `.project/completed/20260816_qualified-reference-occurrence-anchoring/`
+**Branch**: `main`
+
+### Summary
+One-segment references whose exact leaf is owned by a `PartUsage` now select that owner's
+occurrence before selecting the shared feature slot. The repair removes the silent case where a
+consumer under `comp_b` could name `comp_a::length` and read `comp_b.length`. Unsupported or
+unclassifiable exact-owner states refuse by name instead of falling back to consumer position.
+
+### Deliverables
+- Shared exact-owner resolution at the one-segment resolver seam, with no occurrence, slot, graph,
+  projection, codec, or schema widening.
+- Kept coverage for qualified and bare references across calculation, alias, computed, constraint,
+  aggregation, public-mutation, strict/lenient, codec, and snapshot routes.
+- Before/after evidence with 20 adjudicated outcomes, 139 unchanged identity blocks, and zero
+  structural problems; a bounded census records 770 observed calls, 0 observed absent leaves, and
+  15 roots with residual unmeasured population.
+- Durable product promise P-002, the retained deep-override evidence bound, and the owner-directed
+  `[ANCHORING-ARRAYED-DIAGNOSTIC]` follow-up.
+
+### Lessons Learned
+[TODO: Add lessons learned]
+
+---
+
 ## [2026-08-14] - [ELABORATE-FIRST Item 7] Atomic Cutover — Switch, Delete, Snapshot, Recapture
 
 **Type**: Item (one atomic landing unit, executed via the owner-dispositioned REVISE path plus

@@ -1,0 +1,633 @@
+# Product Lens — self-binding-replacement
+
+Append-only ledger. One block per run, per `~/.claude/scripts/product-lens.md` §3. Never edit a
+prior block; a changed gate is a new dated block. Gate consumers scan **every** block — any `BLOCK`
+finding not later resolved by citation is still blocking.
+
+---
+
+## spec — 2026-08-15 — rev `9ce5548` / `.project/active/self-binding-replacement/spec.md`
+Epic: ELABORATE-FIRST
+
+Point (re-derived), three strands, all owner-grade:
+1. **Publish the guidance, with two distinct-meaning replacements.** "publish the
+   allowable-modeling-pattern guidance in `agentic-mbse` docs, including the `in R = R` diagnostic
+   and its **two valid replacement forms with their distinct meanings**"
+   [source: `.project/backlog/epic_elaborate_first_architecture.md:497-499` (`[OWNER-VERBATIM
+   obligation]`), rooted in the 2026-08-05 `[OWNER-VERBATIM]` quote at `:71-72`; grade: **owner**]
+2. **Mission invariant / Critical Success Factor.** "every consumed modeled value resolves to
+   exactly one runtime source across all bound consumers; an unsupported authored form fails loudly
+   before generation" [source: same file `:31-33` (inherited, owner grade) and Success Criteria
+   `:78-80` (`[OWNER]` mission invariant): "public mutation reaches every and only the bound
+   consumers"; grade: **owner**]
+3. **Never reinterpret a self-binding as an outer reference; the replacement follows D-5/D-6/D-7
+   referent semantics for the model's intended topology** [source:
+   `.project/concepts/constraint-execution-authoritative-lifecycle-contract.md` D-4
+   (`[OWNER-VERBATIM]`, 2026-08-05); grade: **owner**]
+Serving promise: `P-001` (`[OWNER-VERBATIM, 2026-08-13]`) — parameters vary freely and viability is
+assessed. A self-binding is the direct negation of it: the varied design parameter never reaches the
+calculation and the viability number is confidently wrong. This item is squarely in service of
+`P-001`; the findings below are about whether its criteria prove the service, not about direction.
+
+Falsifier (described observable, non-code work): the guidance ships naming fewer than two
+replacement forms, or names two without stating referents that differ; **or** the item completes with
+the customer model generating clean while no evidence exists that a mutated design attribute now
+reaches every bound consumer — i.e. the loud failure was removed without the value arriving.
+
+Findings:
+- spec-F1 [DON'T] Success criterion "the migration provably changes only the binding form: no
+  arithmetic, no physical value, and **no semantic referent is altered**" (`spec.md:60-62`)
+  contradicts D-4 on the literal reading: the self-binding's referent *is* the calculation's own
+  formal (context-invariant, inert), so the replacement necessarily lands on a different feature —
+  changing the referent is the fix, not a defect. Only a no-op migration satisfies the criterion as
+  written, and a mechanical check built against it checks the wrong invariant. The intended reading
+  ("the modelled value the author meant is unchanged") is a different claim and must be the one
+  written down — `.project/concepts/constraint-execution-authoritative-lifecycle-contract.md` D-4
+  (**owner-verbatim**) — disposition: **BLOCK** (clears on pinning the criterion's wording to the
+  intended invariant, owner-visible because it restates an owner-verbatim ruling)
+- spec-F2 [DO] The spec quotes the "two valid replacement forms with their distinct meanings"
+  obligation (`spec.md:37-40`, `:74-76`) and claims sub-item 4 is covered **in full**
+  (`spec.md:150-151`), but no success criterion carries the count or the distinctness: "states the
+  supported replacement forms, what each one *means*" (`spec.md:53-55`) is satisfied by guidance
+  documenting a single form. Separately, the obligation says **two** while D-4's migration note
+  routes the replacement through **three** dispositions (D-5 bare-renamed, D-6 owner-qualified, D-7
+  occurrence-rooted chain), which the spec lists at `:77-83` without reconciling the count. Under
+  capture-fidelity law 4 that premise mismatch is surfaced, never smoothed into an unnumbered
+  plural — epic `:497-499` (**owner-verbatim**) + contract D-4/D-5/D-6/D-7 — disposition: **BLOCK**
+  (clears on a criterion that requires at least two supported forms whose referents provably differ,
+  plus one line reconciling two-vs-three, owner-visible)
+- spec-F3 [DO] Nothing obliges a newly measured form that resolves *not* as intended to fail loudly.
+  Criterion 1 (`spec.md:48-52`) is record-only ("it is known and recorded whether it resolves as
+  intended"), and the Non-Goal "Changing which forms are supported" (`spec.md:111-112`) can be read
+  to foreclose adding a diagnostic. The epic exists because exactly such a form was legal, silent
+  and inert; discovering a second one and only writing it in a doc repeats the defect the CSF
+  forbids. Recording in guidance is not "fails loudly before generation" — epic `:31-33`
+  (**owner**, inherited) — disposition: **BLOCK** (clears on a criterion routing any measured
+  silently-mis-resolving form to a readiness diagnostic or a filed, owned gap)
+- spec-F4 [DO] No criterion proves the migration delivers the point. The fusion-tea gate is
+  "generates, seals, and captures a snapshot ... with zero readiness diagnostics"
+  (`spec.md:58-59`) — an absence-of-diagnostic gate, i.e. proof the loud refusal is gone, not proof
+  the modelled value now arrives. The `[OWNER]` mission invariant asks for "public mutation reaches
+  every and only the bound consumers", and the epic's own gate rule (`:84-86`) requires an
+  observable public behaviour, "never artifact-to-artifact fidelity". Criterion 1's
+  reaches-every-consumer language is scoped to the per-form probe table, not to the migrated
+  customer model — epic `:78-80` (**owner** mission invariant), `:84-86` (`[AGENT]` ratified) —
+  disposition: **BLOCK** (clears on a mutation-propagation gate on the migrated model; pairs with
+  spec-F1, which is the same missing model of what the migration does, seen from the other side)
+- spec-F5 [DON'T] The parked keep-versus-revert decision (`spec.md:120-127`) is **acceptable as
+  parking** — it is surfaced in daylight, the decision is named as the owner's, nothing is pushed or
+  merged, and capture-fidelity law 4 asks for exactly that rather than a silent resolution. It is
+  **not neutral**, though, and the spec's claim that "the outcomes above are the same either way"
+  overstates: the executed `fusion-tea` branch is `self-binding-migration-qualified-refs`, i.e. it
+  has already committed to the D-6 owner-qualified form — which is the form the spec's own `[HARD]`
+  row (`:87-89`) says is refused with `SI_OCCURRENCE_AMBIGUOUS` under repeated subsystems — while
+  "which replacement form should be the recommended default" is still listed as open
+  (`spec.md:132-134`). Keeping the work therefore pre-decides a deferred mechanism choice. Also
+  note the spec's `[HARD]` rows are measurements taken by that same unreviewed work — evidence
+  survives a revert, but it must be reviewed as evidence, not inherited as settled —
+  `claude-pack/rules/workflow-accountability.md` + capture-fidelity law 4 (**owner**-authored
+  process rules) — disposition: **DISPOSE** — record that keeping the work reopens the default-form
+  question for explicit design ruling, and that criteria 2 and 4 gate on review, never on the
+  branches' own assertion. No BLOCK: the process fact already occurred and the spec discloses it.
+- spec-F6 [DO] The Item-8 split leaves part of sub-item 1 unowned. The spec claims "the
+  model-migration half of sub-item 1" (`spec.md:150-151`), but sub-item 1 as written
+  (epic `:488-491`) is regeneration: packages/contracts regenerated, duplicate-field workarounds
+  removed, "new study lineage where identity changed", TEAx compatibility through stock APIs. Its
+  Non-Goals carve out sub-items 2, 3 and 5 only — the remaining half of sub-item 1 is attributed to
+  a "regeneration item" (`spec.md:135-138`) with no path, while Item 8's declared home
+  `.project/active/elaborator-downstream/` does not exist. The concrete orphan is the acceptance pin
+  re-anchoring (9 channels published against a certified pin expecting 11), parked as open. Nothing
+  currently owns "the identity changed, so the study lineage changes" — epic `:488-491`, `:502-506`
+  (`[AGENT]` ratified epic scope) — disposition: **DISPOSE** — name the owning item (create it, or
+  state in the spec that the remainder stays with Item 8 at its declared home) before design.
+
+Smells: none of the seven fire — this is a spec, and the two design smells (2, 7) have no mechanism
+to bite yet. Flagging forward for `_my_design_review`: smell 7 (ownership of an invariant moving
+without saying so) is the live risk in spec-F3 — if the design settles on "the guidance teaches it"
+for a form the route cannot resolve, the loud-failure invariant has silently moved from the
+generator to the reader.
+
+Gate: **BLOCKED** (spec-F1, spec-F2, spec-F3, spec-F4) · DISPOSED (spec-F5, spec-F6)
+
+## spec — 2026-08-15 — rev 3 / .project/active/self-binding-replacement/spec.md
+Epic: ELABORATE-FIRST
+Point (re-derived): Establish and document the right binding pattern for each situation, migrate affected models, detect `in R = R`, and never reinterpret its self-referent as an outer value. [source: `.project/backlog/epic_elaborate_first_architecture.md` Item 8 and owner ruling; `.project/concepts/constraint-execution-authoritative-lifecycle-contract.md` D-4; grade: owner]
+Falsifier: Guidance leaves a situation without a correct positive pattern, or a migrated model generates without an off-default mutation reaching every and only the intended consumers.
+Findings:
+- None. DON'T: rev 3 preserves D-4 referent semantics and does not retain the false replacement-form count. DO: its situational guidance, dual-path detection, measured-form disposition, bounded migration, and fusion-tea mutation spine carry the owner obligation.
+Resolves:
+- spec-F1: FIXED — authority: owner — basis: the migration criterion now explicitly changes the referent from the self-input to the intended modeled value while preserving model meaning.
+- spec-F2: FIXED — authority: owner — basis: the epic records the owner's 2026-08-15 provenance correction; no fixed form count governs, and the spec distinguishes D-5, D-6, and D-7 by situation.
+- spec-F3: FIXED — authority: owner — basis: any newly measured silently wrong form must receive a contained repair or a named, owned follow-on; documentation alone cannot dispose it.
+- spec-F4: FIXED — authority: owner — basis: the leading criterion requires off-default mutation on migrated fusion-tea data to reach every and only its bound consumers.
+- spec-F5: FIXED — authority: owner — basis: the owner ordered `REVERT ALL`; the branches were deleted and their measurements are explicitly non-settled evidence pending re-establishment.
+- spec-F6: FIXED — authority: agent/ratified — basis: the spec names the regeneration remainder, its contents, and its owner/home under ELABORATE-FIRST Item 8.
+Gate: CLEAR
+
+## design — 2026-08-15 — `.project/active/self-binding-replacement/design.md`
+Epic: ELABORATE-FIRST
+
+**Process caveat, surfaced not smoothed.** The lens run could not read
+`~/.claude/scripts/product-lens.md` — the session sandbox denies both `Read` and `Bash` outside
+`/home/reid/1cfe/sysml-codegen`. It reconstructed the §3 ledger format and the §4 seven-smell set
+from the ~20 prior ledger blocks in `.project/`, recovering the set as: 1 two-representations,
+2 consumer-compensates-for-producer, 3 special-category-exempts, 4 downstream-knows-internal-
+representation, 5 baseline-preserves-contradiction, 6 test-selects-one-route, 7 invariant-ownership-
+moves-silently. If §4's wording differs, the smell judgments below need a re-read, not the findings.
+*Reviewer note:* `/_my_design_review` Stage 0 step 5 independently names the two design-level smells
+as "a consumer compensating for a producer or platform guarantee" and "a solution that changes who
+owns an invariant without saying so" — smells 2 and 7 as reconstructed. The reconstruction is
+corroborated on the part that carries the gate.
+
+Point (re-derived), four clauses, owner grade: know which authoring pattern is right **for each
+situation**, document those patterns in `agentic-mbse` docs, fix the models to use them, and detect
+`in R = R` as the wrong pattern [source: `.project/backlog/epic_elaborate_first_architecture.md`
+`[OWNER-VERBATIM 2026-08-15]`, superseding the 2026-08-05 wording and carrying **no** form count;
+grade: **owner**]. Bounded by the inherited Critical Success Factor: every consumed modelled value
+resolves to exactly one runtime source across all bound consumers, and an unsupported authored form
+fails loudly before generation [`:31-33`, inherited owner grade], with the `[OWNER]` mission
+invariant adding the observable — public mutation reaches **every and only** the bound consumers
+[`:84-86`]. Referent semantics fixed by D-4 `[OWNER-VERBATIM]` with D-5/D-6/D-7 `[AGENT] (ratified
+by owner, 2026-08-05)` [`.project/concepts/constraint-execution-authoritative-lifecycle-contract.md:604-627`].
+*Reviewer note on citations:* the lens cited `epic:59-66`, `:499-505`, `:78-80`; the reviewer
+verified the same statements at `:31-33`, `:71-78`, `:84-86`. Same statements, drifted ranges — the
+Item-8 stocktake already named epic line-range drift as a recurring failure mode
+(`.project/research/20260815-103905_item8-bounded-stocktake.md:313-315`).
+
+Serving promise: `P-001` `[OWNER-VERBATIM, 2026-08-13]` — parameters vary freely, viability is
+assessed. A self-binding is its direct negation. The design is squarely on this point; every finding
+is about whether its evidence proves the service, not about direction.
+
+Falsifier (observable): the item completes with fusion-tea generating clean while no evidence exists
+that a mutated design attribute reaches its bound consumers for the formals the spine does not
+touch; **or** the published guidance leaves a situation without a correct positive pattern; **or** a
+taught shape's stated behavior is not the behavior of the shipped route at the landing commit.
+
+Findings:
+
+- design-F1 [DO] **The spine proves arrival for 1 of 11 renamed formals and 1 of 3 migrated design
+  files.** The mutation check is `gain` in `designs/generic_ife/ife_plant.sysml` (Validation
+  Approach; "The spine mutation check"). The migration renames 11 distinct formals across 15 sites
+  in three design files (Appendix A). For the other ten — including everything in
+  `designs/hif_ife/hif_plant.sysml` and `hif_driver.sysml` — the only evidence is "generates, seals,
+  snapshots with zero readiness diagnostics", which the design itself correctly labels "necessary
+  evidence, not sufficient". That is the absence-of-diagnostic gate the epic's product-behavior rule
+  forbids (`epic:84-86`, "never artifact-to-artifact fidelity") and that this ledger's own `spec-F4`
+  blocked once at spec scope. It reappears one level down: closed for `gain`, open for the rest. The
+  residual silent failure mode is real — a renamed formal whose bare right-hand side resolves to a
+  same-named attribute in an *enclosing* scope produces no diagnostic and a wrong value, and D5's
+  precheck inspects the **declaring def** for member collisions, not the usage-side resolved
+  referent. Cheap to close: one regeneration, then assert all 11 supplying attributes appear as
+  entry points keyed on the supplying attribute's display path (B5's rule), plus one off-default
+  mutation outside `ife_plant.sysml` — `epic:84-86` (**owner** mission invariant) — disposition:
+  **BLOCK** (clears on an arrival check enumerating all 11 renamed formals plus one mutation in a
+  second design file)
+- design-F2 [DO] **D1 dissolves duplicate teaching but not the duplicate pointer, in the exact pair
+  it cites as drifting.** One authoritative copy removes the teaching from both `claude/` and
+  `.claude/`, but the pointer plus D2's one-paragraph inline summary must now be planted in both,
+  and Component Overview treats `.claude/` as "the same treatment for whatever it finds". The
+  mechanism that produced Item 7's A-1 residual is left in place at reduced size, and no decision
+  says which agent tree is authoritative or whether one is generated from the other. **Smell 1**,
+  escalated. The design's own inventory could not reach `.claude/`, so the size of the duplication
+  is unknown as well as unowned — disposition: **DISPOSE** — the plan states, after the `.claude/`
+  inventory, which tree is authoritative and whether the pointer is duplicated deliberately or
+  generated
+- design-F3 [DO] **What CI holds for F-4 is not what the design says it holds.** Potential Risks
+  answers the forward-flagged smell 7 with "the sideways shape gets a tracked fixture and a
+  conformance assertion, so the sentence in the guidance describes something CI holds". A fixture
+  pins that `'Unit'::cost` **resolves** into a sibling subtree. It cannot pin that the author meant
+  the sibling. The gap between resolution and intent stays with the reader — the honest position,
+  and it should be stated as such. The upstream "characterised, not a defect" call is `[AGENT]`
+  (`spike/findings.md:171-177`) and rests on "it is the only occurrence in the model", a property of
+  the probed fixture, not of the rule. The design does **not** smuggle this — it names the risk in
+  daylight, which is why smell 7 does not fire — disposition: **DISPOSE** — state plainly what the
+  fixture asserts (resolution) and what the reader still owns (intent), and record why spec
+  criterion 3 does not bind F-4 (D-6 is a *supported* form per contract)
+- design-F4 [DO] **A Non-Goal hardens an agent-grade ratified choice into do-not-relitigate.**
+  "Reopening D-4 through D-7, or the choice of D-5 for the fusion-tea sites." D-4 is
+  `[OWNER-VERBATIM]` and correctly settled. D-5/D-6/D-7 and the D-5-for-fusion-tea recommendation
+  are `[AGENT] (ratified by owner, 2026-08-05)`, which capture-fidelity §1 makes challengeable by
+  re-deriving against recorded reasoning — and the reasoning **did** change: the `[HARD]` row was
+  re-measured and corrected on 2026-08-15. The choice of D-5 still looks right on its merits, so
+  this is wording, not direction. As written it is the "WE MUST NOT ⟨suggestion⟩" shape
+  capture-fidelity §3 names — disposition: **DISPOSE** — split the Non-Goal: D-4 settled (owner),
+  D-5-for-these-sites recorded as a decision with its reasoning, challengeable on evidence
+- design-F5 [DO] **The third `gain` consumer is a constraint, and the wording invites a check that
+  drops it.** `tests/fixtures/fusion_tea/designs/generic_ife/ife_plant.sysml:168` is inside
+  `assert constraint viability : 'Viability Threshold'`; `:122` is `lcoe_calc` and `:146` is
+  `recirc_calc`. The mechanism holds — `ConstraintNode` runs the same `_regular_inputs` /
+  `_source_for_edge` path as a `CalcNode` (`elaboration/project.py:503-539`) and
+  `_build_constraint_modules` (`:845`) emits it as a module. But "three consumer modules" written
+  flat is easy to implement as "the three calc modules", dropping the one consumer class where
+  "every and only" has historically been hardest; the constraint consumer additionally carries
+  `formal_identity` (`project.py:543`) that the calc consumers do not — disposition: **DISPOSE** —
+  name the constraint consumer explicitly in the spine check
+- design-F6 [DO] **Required Invariant 7 asserts an agreement no mechanism in this repo can fail
+  on.** D7 fixes agentic-mbse's `level2_structure.py:350` by mirroring codegen's identity
+  comparison, with "one test per direction" — in agentic-mbse. Nothing in sysml-codegen fails if
+  `extraction/source_evidence.py` later drifts from that mirror. Two independent implementations of
+  one owner-verbatim rule (D-4) across two repos, agreement asserted as an invariant, neither side
+  deriving from the other. **Smell 1**, second instance, escalated. Merging them is out of scope and
+  should stay out; the fix is naming the invariant's owner — disposition: **DISPOSE** — state which
+  repo owns the rule, which mirrors it, and where drift would be caught
+- design-F7 [DON'T] **Verified holdings, recorded so the gate is not misread as a general
+  negative.** F-3's diagnosis is exact and D6's scope is exactly right, not too narrow:
+  `elaborate.py:631` is the *only* unguarded `validate()`/`require_projectable()` call site — the
+  others all convert `GraphValidationError` into a CLI-caught class
+  (`orchestration/exact_pipeline_context.py:248-253`, `elaboration/project.py:218-221`,
+  `snapshot/envelope.py:307-313`, `snapshot/instance_graph.py:1015-1021`, `:1106-1110`). Opened as a
+  suspected hole in Required Invariant 6; it closed. `GraphValidationError` carries `.diagnostics`
+  (`graph.py:82-87`), so the Implementation Notes re-raise compiles as written. `_graph_failure`'s
+  nameless payload is at `graph.py:945-952` as described. D8 is correct —
+  `designs/hif_ife/hif_driver.sysml:100` still declares `part hif_driver_instance`, so R-2's subject
+  is untouched. Appendix A/B check out against the migrated fixture. B5 is confirmed. D3's three
+  promoted D-6 fixtures are not gold-plating: the in-repo corpus uses the D-6 form 85 times, and
+  teaching its position rule while leaving it unpinned would reproduce the defect the item exists to
+  end — disposition: **no action**
+
+Smells (§4, all seven checked):
+
+- **Smell 2 — consumer compensates for a producer/platform guarantee: DOES NOT FIRE.** Checked, not
+  assumed. D7 moves compensation the correct direction: the name-based check that produced the F-2
+  false positive is replaced in the *producer*, rather than by codegen tolerating a wrong flag.
+  `make_d5_variant.py --root` widens addressing, not compensation.
+- **Smell 7 — ownership of an invariant moves without saying so: DOES NOT FIRE.** The prior spec
+  block flagged it forward on F-4's sideways reach. The design meets it head-on in a named "Where
+  smell 7 could bite" subsection. The smell's hinge is *without saying so*, and this is said. The
+  answer it gives is weaker than its own summary claims — that is design-F3 at DISPOSE, not a fired
+  smell. Separately checked: confirm-only detection scope is **not** an ownership move, because it
+  is `[OWNER 2026-08-15]` (`briefs/00-align.md:13-18`).
+- **Smell 1 — two representations manually kept synchronized: FIRES twice, escalated.** design-F2
+  (the `claude/` ↔ `.claude/` pointer pair) and design-F6 (codegen ↔ agentic-mbse self-named checks).
+  Both disposed, neither blocking.
+- **Smells 3, 4, 5, 6 — do not fire.** No special category exempts a case whose meaning is
+  unchanged; the spine reads public generated artifacts rather than `InstanceGraph` internals;
+  nothing preserves a contradicting baseline (byte-identity-after-strip against the originals is the
+  opposite pattern); checks assert by diagnostic name and entry-point value, not by route selection.
+
+Gate: **BLOCKED** (design-F1) · DISPOSED (design-F2, design-F3, design-F4, design-F5, design-F6) · DON'T (design-F7)
+
+---
+
+## spec — 2026-08-15 — rev 4 / `.project/active/self-binding-replacement/spec.md`
+Epic: ELABORATE-FIRST
+
+Point (re-derived): A freely varied design parameter must reach its intended semantic source
+occurrence so viability evidence remains trustworthy; this item must establish, document, and
+migrate the right patterns, detect `in R = R`, and never reinterpret its self-referent as an outer
+value. [source: `.project/product/P-001-design-search-free-variation.md`;
+`.project/backlog/epic_elaborate_first_architecture.md` Item 8;
+`.project/concepts/constraint-execution-authoritative-lifecycle-contract.md` D-4; grade: owner;
+D-5–D-7 replacement semantics: agent/ratified]
+
+Falsifier: Guidance presents positional slot search as D-6 language semantics, or a taught
+replacement resolves to a competing occurrence or misses the exact usage owner, so an off-default
+mutation fails to reach every and only the intended consumers.
+
+Findings:
+
+- None. Rev 4 removes the positional implementation defect from the modeling rule, preserves D-5
+  and D-7 guidance, and requires any D-6 teaching to follow SysIDE's resolved owner after the
+  separately owned exact-owner repair.
+
+Smells: none.
+
+Gate: CLEAR
+
+## design — 2026-08-16 — rev 2 / `.project/active/self-binding-replacement/design.md`, re-run against codegen HEAD `8bea4b8`
+Epic: ELABORATE-FIRST
+
+**Why a second design block.** The rev-2 design was written at `7e95285`, before the
+`qualified-reference-occurrence-anchoring` repair (`98970c9`, 2026-08-15) landed. This run re-derives
+the point from SOURCES and reads the same design against the shipped route at HEAD. Nothing here
+re-litigates rev 2's answers to the first design block; the earlier findings are resolved by citation
+below.
+
+Point (re-derived), owner grade: for each authoring situation the **right** pattern is known,
+documented in the `agentic-mbse` docs, applied to the models, and `in R = R` is detected
+[`.project/backlog/epic_elaborate_first_architecture.md:71-78`, `[OWNER-VERBATIM 2026-08-15]`,
+carrying no form count]. Bounded by the Critical Success Factor — every consumed modelled value
+resolves to exactly one runtime source across all bound consumers, and an unsupported authored form
+fails loudly before generation [`:31-33`, inherited owner grade] — with the `[OWNER]` mission
+invariant supplying the observable: public mutation reaches **every and only** the bound consumers
+[`:84-86`]. Referent semantics fixed by D-4 `[OWNER-VERBATIM]`, D-5/D-6/D-7 `[AGENT] (ratified by
+owner, 2026-08-05)` [`.project/concepts/constraint-execution-authoritative-lifecycle-contract.md:604-627`].
+Serving promise `P-001` `[OWNER-VERBATIM, 2026-08-13]`: parameters vary freely and viability is
+assessed. A binding whose value never arrives is its direct negation.
+
+Falsifier (described observable): the guidance ships stating a resolution behavior that is not the
+behavior of the shipped route at the landing commit; **or** an authoring situation an author can
+reach is left without a right pattern; **or** the migration completes with no evidence a mutated
+design attribute reaches every and only its bound consumers.
+
+Findings:
+
+- design-F8 [DON'T] **The design's Core Concept teaches, as the rule for owner qualification, a
+  positional two-step search the shipped route no longer performs for the spelling every published
+  example uses.** Core Concept: "You reach by owner qualification (D-6) → it resolves by position, in
+  two steps"; "The teaching, organized by situation" item 3 repeats it and calls out the sideways
+  reach. That rule is `_resolve_leaf` (`src/sysml_codegen/elaboration/elaborate.py:2359`, lineage
+  walk then descendant search). After `98970c9`, `_resolve_direct_reference` (`:2294-2345`) anchors a
+  one-segment reference on its leaf's **exact** owner whenever `SysideAdapter.is_instance(owner,
+  "PartUsage")`, and only a definition-, package-, enumeration- or calculation-owned leaf still falls
+  through to `_resolve_leaf` (`:2330-2332`). All 13 published D-6 examples the design inventories are
+  **usage**-qualified (`in length = geometry::input_length`), so for exactly those sites the taught
+  rule is false at HEAD. Publishing it would be a document teaching what the product does not do —
+  the failure this item exists to end, one level up. Spec rev 5 records the repaired state at
+  `spec.md:53-61` and `:132-149`; the design does not — epic `:71-78` (**owner-verbatim**) + CSF
+  `:31-33` (**owner**) — disposition: **BLOCK** (clears on a design revision that states the D-6
+  behavior at the landing commit: exact usage-owner anchoring for usage-owned leaves, `_resolve_leaf`
+  for definition-owned leaves, with the sideways-reach sentence scoped to the definition-owned route)
+- design-F9 [DO] **D11 parks publication on evidence that no longer exists, and both of its
+  pre-decided branches presuppose the deleted rule.** D11 makes the D-6 section conditional on "the
+  pending spike addendum" measuring the usage-qualified spelling, with branch 1 = "the position rule
+  holds for the usage qualifier too, no rewrites" and branch 2 = "the qualifier kind alters the
+  resolution path". The question was answered outside this item, by a production change, not a
+  measurement: the position rule was adjudicated a codegen defect and removed for usage-owned leaves.
+  Neither branch describes that. Following D11 as written either waits on an addendum that cannot
+  land as framed, or takes branch 1's caveat-only path and republishes the false rule. The
+  consequence D11 itself reserved for branch 2 now fires as fact: `MODELING_PROCESS.md.template:349`
+  (`in volume = my_component::volume`, taught as the fix for this very defect) needs rewriting, not a
+  caveat. The design's "Measured authority" pointer (`spike/findings.md`) is superseded for these
+  rows by `spec.md:256-263`; post-repair authority is
+  `tests/conformance/test_usage_owned_reference_anchoring.py` — epic `:71-78` (**owner-verbatim**);
+  capture-fidelity law 4 (premise conflict surfaced, not smoothed) — disposition: **BLOCK** (clears
+  with design-F8: replace D11 with the landed fact and repoint D-6 authority at the conformance test)
+- design-F10 [DO] **The situational teaching has no pattern for the arrayed-owner situation, where
+  two spellings of one intent now split.** The design's rule answers one question — where does the
+  value live? — with three answers (own part → D-5, other part → D-7, owner qualification → D-6).
+  The 2026-08-16 re-audit measured a fourth situation it does not cover: for `comp_a : Component[2]`,
+  `sum(comp_a::length)` refuses `SI_OCCURRENCE_AMBIGUOUS` with no inputs, while `sum(comp_a.length)`
+  aggregates both occurrences with no diagnostic
+  (`.project/completed/20260816_qualified-reference-occurrence-anchoring/audit.md:49-56`; carried
+  there as `independent-audit-F1`, and the diagnostic names neither the candidate occurrences nor the
+  index syntax). Spec rev 5's `[HARD]` row says explicitly that this split is a fact "the guidance
+  this item writes" must account for; the design is silent and Appendix B has no arrayed row. Whether
+  the owner counts arrayed aggregation as one of "the given situations" is my inference, so this is
+  not owner-grade — spec `[HARD]` (measured) + epic `:71-78` read forward (**`[INFERRED]`**) —
+  disposition: **DISPOSE** — the revised design either teaches the arrayed situation (which
+  spelling, and how to write the indexed form) or states the exclusion in words and cites
+  `independent-audit-F1` as its named owner. **Flagged forward:** if the disposition becomes "tell
+  authors to use the dotted spelling to get aggregation", that is smell 2 (a document compensating
+  for a producer inconsistency) and must escalate then.
+- design-F11 [DO] **The promoted-fixture evidence set is now owner-class-specific and is not labelled
+  as such.** D3 and Required Invariant 3 promote three D-6 fixtures (inside-the-def two-occurrence
+  `s4b`, above-the-def `s8`, sideways reach `s6`) and Appendix B's qualified rows are all
+  definition-qualified (`'Plant'::availability`, `'Unit'::cost`). Those rows survive the repair —
+  verified: a definition-owned leaf keeps the `_resolve_leaf` route (`elaborate.py:2330-2332`) — but
+  nothing in the design says the fixtures pin the **definition-owned** route only, and Invariant 3's
+  "usage-qualified D-6 spelling pending D11" line is the only trace. An implementer reading Invariant
+  3 would take three green fixtures as pinning owner qualification generally, which is exactly the
+  overclaim Invariant 3 was narrowed to prevent — disposition: **DISPOSE** — label each promoted
+  fixture with the owner class it pins, and add an arrayed/usage-owned row to Appendix B sourced
+  from the conformance test
+- design-F12 [DON'T] **Verified holdings, recorded so the gate is not misread as general.** The D-5
+  teaching and the whole migration spine are unaffected by the repair: the corpus ledger over 140
+  frozen roots / 409 sites moved 405 edge + 4 diagnostic → 409 edge + 0 diagnostic with occurrence
+  wire IDs and node IDs equal (`98970c9` message, independently reproduced at `audit.md:120-128`).
+  D-7's two-segment form is not on the changed branch. `hif_plant.sysml:87` remains the correct
+  mutation site — disposition: **no action**
+
+Smells (§4):
+
+- **Smell 7 — a solution changes who owns an invariant without saying so: FIRES.** Who decides which
+  occurrence a one-segment usage-owned reference lands on moved from the reader (predicting a
+  positional search, per the design's own two-step teaching) to the elaborator (honoring the exact
+  owner SysIDE resolved). The design as written still assigns it to the reader and would publish the
+  reader's rule. The design cannot be faulted for not foreseeing `98970c9`, but at HEAD the silence
+  is real and it is the same silence smell 7 names. Escalated: the design-stage judgment must dispose
+  of it, and design-F8/design-F9 are its two concrete faces. The prior spec block flagged smell 7
+  forward on exactly this axis; it has now landed, from the other direction.
+- **Smell 2 — a consumer compensates for a producer/platform guarantee: DOES NOT FIRE.** Checked, not
+  assumed. D7 still moves compensation the right way (repair the producer's name-based check rather
+  than tolerate its flag), and the landed repair *deletes* codegen's positional inference in favour
+  of SysIDE's resolved owner — the opposite of compensation. The one candidate is the D-6 teaching,
+  and its defect is a false rule (design-F8), not compensation. The live smell-2 risk is the arrayed
+  disposition, flagged in design-F10.
+- Smells 1, 3, 4, 5, 6: unchanged from the prior design block. Smell 1's two instances (`claude/` ↔
+  `.claude/` pointer, codegen ↔ agentic-mbse self-named checks) stay disposed, not blocking. Smells 3
+  and 6 fired at the *anchoring* item on the arrayed split; against this design that surfaces as the
+  omission in design-F10, not as a code/test smell here.
+
+Resolves:
+- design-F1: FIXED (with a correction) — authority: agent/ratified (epic `:84-86` product-behavior
+  gate) under the `[OWNER]` mission invariant — basis: The Spine now enumerates all 11 renamed
+  formals' supplying attributes as `DESIGN_ATTRIBUTE` entry points against the authored oracle
+  (`test_projection_wiring_contract.py:41-66`) and mutates at two occurrence depths (`gain`,
+  `beam_energy_mj`). **Correction to the recorded disagreement:** the design's reason for dropping
+  MF-7's second-file mutation — "`ife_plant.sysml` and `hif_driver.sysml` both declare definitions,
+  not usages" — is false for the fixture, which still declares `part hif_driver_instance` at
+  `designs/hif_ife/hif_driver.sysml:100` (the design's own D8 says so). It is true for the customer
+  model after the July R-2 deletion, which is the migration target, so the substitution stands on the
+  customer tree; the stated reason overstates and should be scoped to it.
+- design-F2: FIXED — authority: agent/ratified — basis: Architecture names `claude/` authoritative on
+  symlink evidence, and the residual hand-duplicated pointer is stated rather than hidden pending the
+  `.claude/` inventory.
+- design-F3: FIXED — authority: agent/ratified — basis: Potential Risks states plainly that a fixture
+  pins resolution and not intent, and that the residue stays with the reader. The spec-criterion-3
+  half is superseded by design-F10's disposition.
+- design-F4: FIXED — authority: agent/ratified — basis: the Non-Goal is split; D-4 settled (owner),
+  D-5-for-these-sites recorded as a challengeable decision with its reasoning.
+- design-F5: FIXED — authority: agent/ratified — basis: The Spine names the constraint consumer
+  individually with its module and `formal_identity`.
+- design-F6: FIXED — authority: agent/ratified — basis: Required Invariant 7 names codegen as owner,
+  agentic-mbse as mirror, and states that nothing catches drift.
+
+Gate: **BLOCKED** (design-F8, design-F9) · DISPOSED (design-F10, design-F11) · DON'T (design-F12)
+
+## spec — 2026-08-16 — rev 6 / `.project/active/self-binding-replacement/spec.md`, codegen `0f89673`
+
+Point (re-derived): For each calculation-binding situation, authors and agents must know the right
+referent-preserving pattern, apply it to the customer models, and detect `in R = R`; a public
+mutation must reach every and only the intended consumers. [sources: epic `:71-78`
+`[OWNER-VERBATIM]`, `:31-33`/`:84-86` owner grade; D-4 owner-verbatim; D-5–D-7 agent/ratified]
+
+Falsifier: the spec treats definition-owned positional fallback as usage-qualified semantics,
+requires guidance for a cardinality issue the owner assigned elsewhere, or lets migration success
+stand without the public mutation.
+
+Findings:
+
+- None. Rev 6 separates usage-owned exact anchoring from the definition-owned fallback, restores
+  the owner's scope-limiting quote, keeps the public mutation as the spine, and assigns arrayed
+  diagnostics to the owner-directed `[ANCHORING-ARRAYED-DIAGNOSTIC]` follow-up. ADR-010 remains an
+  explicit owner call rather than an assumed deliverable.
+
+Smells: none.
+
+Gate: CLEAR
+
+## design — 2026-08-16 — rev 3 / `.project/active/self-binding-replacement/design.md`, codegen `0f89673`
+
+Point (re-derived): For each calculation-binding situation, the published rule must match the
+shipped referent and occurrence semantics; the migrated customer value must reach every and only
+its bound consumers. [sources: epic `:71-78` `[OWNER-VERBATIM]`, `:31-33`/`:84-86` owner grade;
+D-4 owner-verbatim; D-5–D-7 agent/ratified]
+
+Falsifier: guidance describes usage qualification as a positional search, or the migration's
+public mutation fails to move every and only the intended consumers.
+
+Findings:
+
+- None. Rev 3 teaches exact usage-owner anchoring, scopes `_resolve_leaf`'s positional fallback to
+  non-usage-owned leaves, labels evidence by owner class, names the exact 11-key migrated-supplier
+  subset without turning the 27-key classification oracle into the product gate, and keeps both
+  public mutations as the spine.
+
+Resolves:
+
+- design-F8: FIXED — authority: owner — basis: Core Concept and teaching now match the shipped
+  exact-owner route and scope sideways reach to the definition-owned fallback.
+- design-F9: FIXED — authority: owner — basis: D11 is rewritten from landed behavior and the
+  exact-owner conformance test; no pending addendum or positional branch remains.
+- design-F10: DEFERRED — authority: owner — basis: `[OWNER 2026-08-16]` accepted scalar policy for
+  the anchoring item and filed `[ANCHORING-ARRAYED-DIAGNOSTIC]`; D13 records the boundary without
+  inventing guidance.
+- design-F11: FIXED — authority: agent/ratified — basis: D3, Invariant 3, the component map, and
+  Appendix B label evidence by resolved owner class and cite the usage-owned conformance test.
+
+Smells: design smell 2 does not fire. Design smell 7 also does not fire: extraction and elaboration
+already owned referent and occurrence identity; repair `98970c9` restored that recorded ownership.
+The rev-2 artifact was stale, but rev 3 proposes no ownership transfer.
+
+Gate: CLEAR
+
+## audit — 2026-08-16 — rev codegen `f25afc0`; agentic-mbse `3e9734b`; fusion-tea `9e1ff87b`
+
+Point (re-derived): `in R = R` must be refused before generation; the right situational patterns
+must be documented and applied so each migrated modelled occurrence reaches every and only its
+bound consumers. [source: `.project/backlog/epic_elaborate_first_architecture.md:63-78,84-86,503-511`;
+grade: owner]
+Falsifier: a self-binding generates output, a taught form resolves differently from the guidance,
+or mutating an intended fusion-tea source fails to change every and only its bound consumers in
+either maintained customer model tree.
+Findings:
+- audit-F1 [DO] The kept fusion-tea spine proves classification and mutation behavior only through
+  `models/`: `_copy_set()` defaults to that root for the live/snapshot and both mutation tests,
+  while `exploration/ife_e2e/models/` is checked only for successful generation. The six migrated
+  file pairs are byte-identical today, but the fusion-tea test does not pin that equality, so it can
+  pass after the selected duplicate and the exploration model diverge — derived from the epic's
+  public-mutation obligation (`.project/backlog/epic_elaborate_first_architecture.md:84-86`;
+  **AGENT/INFERRED**) — disposition: **DISPOSE-and-proceed** — current pair bytes were independently
+  rechecked equal and both roots generate; retain a kept cross-pair identity assertion (or run the
+  full spine for both roots) as the audit remediation.
+
+Smells (§4, all five audit smells inspected):
+- **Smell 1 — two representations must be manually kept synchronized: FIRES.** Fusion-tea carries
+  two byte-identical model trees and the delivered live test has no cross-tree equality guard.
+  Escalated into audit-F1.
+- **Smell 3 — a special category exempts unchanged user-visible meaning: does not fire.** The
+  usage-owned versus definition-owned split follows language-visible owner semantics and neither
+  class exempts a genuine self-binding from refusal.
+- **Smell 4 — correctness depends on downstream knowledge of an internal representation: does not
+  fire.** The deciding spine reads shipped input JSON, pipeline YAML, and the model contract; the
+  validators compare resolved element identity at the owning boundary.
+- **Smell 5 — a baseline preserves behavior that contradicts the product point: does not fire.**
+  The strip check preserves model physics while the public mutations prove the self-binding's inert
+  referent was replaced rather than retained.
+- **Smell 6 — a test passes only because it selects one duplicate, route, or interpretation:
+  FIRES.** The full behavioral spine selects `models/`; the exploration duplicate receives only the
+  weaker generation-success arm. Escalated into audit-F1.
+
+Gate: DISPOSED (audit-F1)
+
+## audit re-audit — 2026-08-16 — rev codegen `26e19f9`; agentic-mbse `8b105b3`; fusion-tea `7703ba1e`
+
+Point (re-derived): For each situation, the right calculation-binding pattern must be known,
+documented, and applied; `in R = R` must be detected, and each migrated modelled source occurrence
+must reach every and only its bound consumers. [source:
+`.project/backlog/epic_elaborate_first_architecture.md:31-33,63-78,84-86`; grade: owner]
+Falsifier: a self-binding generates output, a taught pattern resolves differently from the guide,
+or the kept fusion-tea proof passes while either maintained customer tree contains an unpaired or
+different `.sysml` source under the two layouts.
+
+Findings:
+- audit-F1 [DO] **REMAINS UNRESOLVED.** The remediation preserves full `(group, key)` source and
+  `(module, formal)` consumer identities and structurally checks the viability formal, but its
+  cross-tree guard first normalizes `models/library/<path>` to `<path>` and then builds a dict
+  (`fusion-tea/tests/models/test_self_binding_replacement.py:358-390`). Two primary files at
+  `models/library/x.sysml` and `models/x.sysml` therefore collapse to one key before set and byte
+  comparison. A temporary falsifier with those two distinct files and one matching secondary
+  `x.sysml` passed the kept test, leaving one primary source unpaired. The current trees have no
+  such collision, all 11 current logical pairs are byte-equal, both roots generate, and the focused
+  spine is 9/9 green; this is still a false-green hole in the retained proof derived from the
+  public-mutation obligation (`.project/backlog/epic_elaborate_first_architecture.md:84-86`;
+  **AGENT/INFERRED**) — disposition: **DISPOSE-and-proceed** — make each logical mapping injective
+  before dict construction (or compare a multimap / run the full spine for both roots), then cite
+  `audit-F1` as `FIXED` in a later block.
+
+Product judgment on F-4: `[DEF-OWNED-SIDEWAYS-REACH]` is a valid filed disposition, not an
+unresolved product gate. It names the measured behavior and vehicle and honestly records that no
+implementation owner exists before the required semantic ruling
+(`.project/backlog/BACKLOG.md:305-317`). D-6 remains agent-originated/owner-ratified, and no
+owner-grade source decides whether this definition-owned fallback must refuse or remain supported.
+The open owner call stays visible in the backlog; it does not create a Product-Lens `BLOCK` for this
+item.
+
+Smells (§4, all five audit smells inspected):
+- **Smell 1 — two representations must be manually kept synchronized: FIRES.** The retained equality
+  guard is the right disposition mechanism, but its non-injective mapping leaves `audit-F1` open.
+- **Smell 3 — a special category exempts unchanged user-visible meaning: does not fire.** The
+  usage-owned/definition-owned split follows the resolved owner's language-visible semantics; no
+  genuine self-binding is exempted from refusal.
+- **Smell 4 — correctness depends on downstream knowledge of an internal representation: does not
+  fire.** The spine reads shipped inputs, pipeline YAML, and parsed public predicate IR; validator
+  identity checks remain at the owning boundaries.
+- **Smell 5 — a baseline preserves behavior that contradicts the product point: does not fire.** The
+  strip gate preserves physics, while exact public mutations prove the inert self-referent changed.
+- **Smell 6 — a test passes only because it selects one duplicate, route, or interpretation: FIRES.**
+  The logical-path dict selects one of colliding primary representations; escalated into
+  `audit-F1`.
+
+Ledger scan: every earlier owner-grade `BLOCK` is resolved by structured citation; `audit-F1` is the
+only unresolved product-lens finding and was already graded `AGENT/INFERRED`.
+Gate: DISPOSED (audit-F1)
+
+## owner ruling amendment — 2026-08-16 — F-4 definition-owned lineage miss
+
+Owner source: `[OWNER-VERBATIM]` “I really, truly hate fallbacks, especially to accomodate
+something not explicitly supported in KerML / SysMLv2 and the parse”, completed in the next owner
+message as `[OWNER-VERBATIM]` “the parser (SysIDE).” The owner asked that the derived ruling be
+captured.
+
+Decision: SysIDE's resolved structure is authoritative. For a definition-owned qualified leaf,
+codegen may map through the consumer's own occurrence lineage; if that mapping misses, it must
+refuse by a named diagnostic rather than search descendants to invent a runtime occurrence.
+Explicit occurrence paths and exact usage-owner anchoring are unchanged. The ruling is owned by
+Reid W and carried by `[DEF-OWNED-SIDEWAYS-REACH]`, whose vehicle is the bounded `_resolve_leaf`
+change plus the definition-owned tests and authoritative guidance after implementation.
+
+Effect on the preceding re-audit block: its statement that no owner-grade source decided F-4 is
+superseded. The owned filing satisfies spec SC3 without claiming that the authorized code change is
+already implemented. Product finding `audit-F1` and its disposition are unchanged.
+
+Gate: DISPOSED (audit-F1)
+
+## audit — 2026-08-16 — rev `.project/active/self-binding-replacement/plan.md`
+
+Point (re-derived): Self-bindings and unsupported authored forms must refuse before generation;
+right patterns must preserve exact source occurrence identity across every bound consumer, and a
+qualified definition-owned lineage miss must not invent an occurrence by positional search.
+[source: `.project/backlog/epic_elaborate_first_architecture.md:31-33,63-78,84-86`;
+`.project/product/P-003-no-workarounds-for-bad-models.md`; grade: owner]
+
+Falsifier: `in R = R` generates; a source mutation misses or reaches an unintended consumer;
+colliding cross-tree logical paths false-green; fixture mode mutates an escaped, overlapping,
+missing, or pre-existing target; or a qualified definition-owned lineage miss binds a descendant
+or sibling instead of emitting `SI_OCCURRENCE_MISSING`.
+
+Findings:
+- None.
+
+Smells (§4):
+- **Smell 1 — two representations must be manually kept synchronized: FIRES, disposed.** Fusion
+  Tea retains two model trees, but the guard now proves each logical-path mapping injective before
+  dictionary insertion, then checks exact key-set and byte equality; the retained
+  `library/x.sysml` plus `x.sysml` falsifier refuses. Smell 6 no longer fires.
+
+Resolves:
+- audit-F1: FIXED — authority: AGENT/INFERRED — basis: injectivity is asserted before cross-tree
+  map insertion, the original collision falsifier now fails closed, and the retained Fusion spine
+  passes 10/10.
+
+Gate: CLEAR
