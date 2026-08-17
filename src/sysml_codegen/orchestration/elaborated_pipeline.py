@@ -160,48 +160,51 @@ def elaborate_loaded_extractor(
         )
         require_executable_content(graph, calc_definitions)
     except SemanticEvidenceError as error:
-        diagnostics = (_semantic_evidence_diagnostic(error, source_referents),)
-        raise ElaborationDiagnosticError(diagnostics) from error
+        raise ElaborationDiagnosticError(
+            (_semantic_evidence_diagnostic(error, source_referents),)
+        ) from error
     except ExactTypeError as error:
-        diagnostics = (
-            _diagnostic_with_referent(
-                Diagnostic(
-                    code=error.code,
-                    consumer=None,
-                    consumer_display=error.reference,
-                    param_name=None,
-                    detail=f"{error.operation}: {error.detail}",
-                    reference=error.reference,
-                    source_file=(error.location[0] if error.location is not None else None),
-                    source_line=(error.location[1] if error.location is not None else None),
+        raise ElaborationDiagnosticError(
+            (
+                _diagnostic_with_referent(
+                    Diagnostic(
+                        code=error.code,
+                        consumer=None,
+                        consumer_display=error.reference or "<model>",
+                        param_name=None,
+                        detail=f"{error.operation}: {error.detail}",
+                        reference=error.reference,
+                        source_file=(error.location[0] if error.location is not None else None),
+                        source_line=(error.location[1] if error.location is not None else None),
+                    ),
+                    source_referents,
                 ),
-                source_referents,
-            ),
-        )
-        raise ElaborationDiagnosticError(diagnostics) from error
+            )
+        ) from error
     except ElaborationInvariantError as error:
-        diagnostics = (
-            _diagnostic_with_referent(
-                Diagnostic(
-                    code=error.code,
-                    consumer=None,
-                    consumer_display="<model>",
-                    param_name=None,
-                    detail=error.detail,
-                    reference=error.reference,
-                    source_file=(error.location[0] if error.location is not None else None),
-                    source_line=(error.location[1] if error.location is not None else None),
+        raise ElaborationDiagnosticError(
+            (
+                _diagnostic_with_referent(
+                    Diagnostic(
+                        code=error.code,
+                        consumer=None,
+                        consumer_display="<model>",
+                        param_name=None,
+                        detail=error.detail,
+                        reference=error.reference,
+                        source_file=(error.location[0] if error.location is not None else None),
+                        source_line=(error.location[1] if error.location is not None else None),
+                    ),
+                    source_referents,
                 ),
-                source_referents,
-            ),
-        )
-        raise ElaborationDiagnosticError(diagnostics) from error
+            )
+        ) from error
     except GraphValidationError as error:
-        diagnostics = tuple(
+        graph_diagnostics = tuple(
             _diagnostic_with_referent(diagnostic, source_referents)
             for diagnostic in error.diagnostics
         )
-        raise ElaborationDiagnosticError(diagnostics) from error
+        raise ElaborationDiagnosticError(graph_diagnostics) from error
 
     _rewrite_sources_as_referents(graph, source_referents)
     _rewrite_exclusion_locations(graph)
