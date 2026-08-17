@@ -16,9 +16,10 @@ import argparse
 import pytest
 
 from sysml_codegen.cli import cmd_generate
-from sysml_codegen.elaboration import ElaborationDiagnosticError, InstanceGraph, elaborate
+from sysml_codegen.elaboration import ElaborationDiagnosticError, InstanceGraph
 from sysml_codegen.extraction.extractor import SysMLDataExtractor
 from tests.conftest import FIXTURES_DIR, requires_license
+from tests.helpers.raw_elaboration import elaborate
 
 pytestmark = requires_license
 

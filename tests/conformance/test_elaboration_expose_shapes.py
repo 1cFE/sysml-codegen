@@ -28,7 +28,6 @@ from sysml_codegen.elaboration import (
     ElaborationError,
     InstanceGraph,
     ValueSite,
-    elaborate,
 )
 from sysml_codegen.extraction.extractor import SysMLDataExtractor
 from sysml_codegen.extraction.source_evidence import ReadinessCode
@@ -45,6 +44,7 @@ from tests.helpers.elaboration_graph import (
     node_ref,
     producer_ref,
 )
+from tests.helpers.raw_elaboration import elaborate
 
 pytestmark = requires_license
 

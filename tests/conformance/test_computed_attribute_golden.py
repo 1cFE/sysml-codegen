@@ -1,9 +1,11 @@
-"""Stage-2 golden: `extract_computed_attributes` is byte-identical after the seam flip.
+"""Computed-attribute classifications against exact agentic evidence.
 
 `tests/fixtures/golden/computed_attribute_golden.json` was captured live, over the whole
 corpus, from `extract_computed_attributes` **before** its FORMULA branch was flipped onto
 `extract_expression_ir`/`render_calc_expression` (the F4 rule). This test asserts the
 post-flip `compiled_expression` and `compilability` reproduce exactly, per part+attribute.
+The 0.1.3 evidence contract additionally refuses to infer a tentative chain when
+SysIDE supplied no exact resolved target; those rows are recorded as unresolvable.
 """
 
 from __future__ import annotations

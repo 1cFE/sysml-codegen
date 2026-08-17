@@ -25,10 +25,11 @@ from agentic_mbse.sysml.executable_profile import (
 )
 from agentic_mbse.sysml.syside_adapter import SysideAdapter
 
-from sysml_codegen.elaboration import DeclarationId, elaborate, project
+from sysml_codegen.elaboration import DeclarationId, project
 from sysml_codegen.extraction.extractor import SysMLDataExtractor
 from sysml_codegen.resolution.models import ModuleKind
 from tests.conftest import FIXTURES_DIR, requires_license
+from tests.helpers.raw_elaboration import elaborate
 
 pytestmark = requires_license
 

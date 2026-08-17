@@ -7,7 +7,7 @@ import json
 
 import pytest
 
-from sysml_codegen.elaboration import NodeRef, ProjectionError, elaborate, project
+from sysml_codegen.elaboration import NodeRef, ProjectionError, project
 from sysml_codegen.extraction.extractor import SysMLDataExtractor
 from sysml_codegen.snapshot.instance_graph import (
     InstanceGraphCodecError,
@@ -16,6 +16,7 @@ from sysml_codegen.snapshot.instance_graph import (
 )
 from tests.conftest import FIXTURES_DIR, requires_license
 from tests.helpers.elaboration_graph import every_alias_target, every_typed_edge
+from tests.helpers.raw_elaboration import elaborate
 
 pytestmark = requires_license
 

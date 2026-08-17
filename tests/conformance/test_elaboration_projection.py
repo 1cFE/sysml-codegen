@@ -22,13 +22,13 @@ from sysml_codegen.elaboration import (
     PortMetadata,
     ProjectionError,
     ValueSite,
-    elaborate,
     project,
 )
 from sysml_codegen.extraction.expression_compiler import Compilability
 from sysml_codegen.extraction.extractor import SysMLDataExtractor
 from sysml_codegen.resolution.models import EntryPointType, ModuleKind
 from tests.conftest import FIXTURES_DIR, requires_license
+from tests.helpers.raw_elaboration import elaborate
 
 pytestmark = requires_license
 

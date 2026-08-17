@@ -20,11 +20,11 @@ import re
 
 import pytest
 
-from sysml_codegen.elaboration import elaborate
 from sysml_codegen.elaboration.elaborate import ElaborationDiagnosticError
 from sysml_codegen.elaboration.graph import InstanceGraph
 from sysml_codegen.extraction.extractor import SysMLDataExtractor
 from tests.conftest import FIXTURES_DIR, requires_license
+from tests.helpers.raw_elaboration import elaborate
 
 pytestmark = requires_license
 

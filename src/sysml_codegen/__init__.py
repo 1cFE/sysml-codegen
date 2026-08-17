@@ -6,4 +6,4 @@ for TEAx-style simulation frameworks.
 Imports shared types from agentic-mbse for common data models.
 """
 
-__version__ = "0.1.0"
+__version__ = "0.1.1"

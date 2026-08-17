@@ -16,7 +16,6 @@ from sysml_codegen.elaboration import (
     ElaborationDiagnosticError,
     InstanceGraph,
     ProjectionError,
-    elaborate,
     project,
 )
 from sysml_codegen.elaboration.identity import declaration_id_for
@@ -29,6 +28,7 @@ from sysml_codegen.snapshot.instance_graph import (
 )
 from tests.conftest import FIXTURES_DIR, requires_license
 from tests.helpers.elaboration_graph import calc
+from tests.helpers.raw_elaboration import elaborate
 
 pytestmark = requires_license
 

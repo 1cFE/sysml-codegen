@@ -15,18 +15,30 @@ def test_declared_metadata_requires_compatible_companion() -> None:
         requirement for requirement in requirements if requirement.name == "agentic-mbse"
     )
 
-    assert Version("0.1.1") not in companion.specifier
-    assert Version("0.1.2") in companion.specifier
+    assert Version("0.1.2") not in companion.specifier
+    assert Version("0.1.3") in companion.specifier
+    assert Version("0.2.0") not in companion.specifier
 
 
-def test_lock_and_runtime_use_profile_v4_companion() -> None:
+def test_lock_and_runtime_use_semantic_evidence_companion() -> None:
     import agentic_mbse
+    from agentic_mbse import SEMANTIC_EVIDENCE_API_VERSION
     from agentic_mbse.sysml.executable_profile import PROFILE_SEMANTIC_VERSION
 
     lock = (Path(__file__).resolve().parents[2] / "uv.lock").read_text(encoding="utf-8")
     companion = lock.split('name = "agentic-mbse"', maxsplit=1)[1].split("[[package]]", maxsplit=1)[
         0
     ]
-    assert 'version = "0.1.2"' in companion
-    assert agentic_mbse.__version__ == "0.1.2"
+    assert 'version = "0.1.3"' in companion
+    assert agentic_mbse.__version__ == "0.1.3"
+    assert SEMANTIC_EVIDENCE_API_VERSION == "semantic-evidence/v1"
     assert PROFILE_SEMANTIC_VERSION == "executable-profile/v4"
+
+
+def test_codegen_distribution_version_is_0_1_1() -> None:
+    import sysml_codegen
+
+    project_file = Path(__file__).resolve().parents[2] / "pyproject.toml"
+    project = tomllib.loads(project_file.read_text(encoding="utf-8"))
+    assert project["project"]["version"] == "0.1.1"
+    assert sysml_codegen.__version__ == "0.1.1"

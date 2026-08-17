@@ -46,12 +46,12 @@ from sysml_codegen.elaboration import (
     ElaborationCode,
     InstanceGraph,
     NodeRef,
-    elaborate,
 )
 from sysml_codegen.elaboration.identity import NodeId, NodeKind
 from sysml_codegen.extraction.extractor import SysMLDataExtractor
 from tests.conftest import FIXTURES_DIR, requires_license
 from tests.helpers.elaboration_graph import attr, calc, constraint
+from tests.helpers.raw_elaboration import elaborate
 
 pytestmark = requires_license
 

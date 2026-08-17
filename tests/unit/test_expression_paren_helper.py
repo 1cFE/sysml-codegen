@@ -5,10 +5,8 @@ These pin the C2 polarity convention and C3 unary handling of
 hand-traces (design.md:334-340) are the acceptance test for the helper: if a
 trace fails here, the HELPER is wrong, not the test.
 
-The stub classes carry their type in the class *name* so
-`SysideAdapter.is_instance`'s name-based fallback fires (the pattern
-`MockFeatureChainExpressionOperatorExpression` uses in
-test_ast_dispatch_invariant.py). Atomic operands are plain strings, which
+The stub class carries the exact mapped test-double name in its MRO, matching
+`SysideAdapter.is_instance`'s explicit non-live contract. Atomic operands are plain strings, which
 `reconstruct_expression` passes through unchanged — keeping only the precedence
 branches under test, not dispatch.
 """
@@ -21,8 +19,12 @@ from sysml_codegen.extraction.expression_utils import (
 )
 
 
-class StubOperatorExpression:
-    """Name carries the type → is_instance name fallback treats it as an OE."""
+class MockOperatorExpression:
+    """Exact mapped adapter test-double base for an operator expression."""
+
+
+class StubOperatorExpression(MockOperatorExpression):
+    """Concrete operator-expression stub used by the hand traces."""
 
     def __init__(self, operator: str, operands: list) -> None:
         self.operator = operator
@@ -40,7 +42,7 @@ def op(operator: str, *operands: object) -> StubOperatorExpression:
 
 
 def test_residual_stub_drives_binary_op_check() -> None:
-    """A name-fallback stub with 2 operands and a ranked operator is seen."""
+    """An exact-MRO stub with 2 operands and a ranked operator is seen."""
     child = op("/", "b", "c")
     assert binary_op_of(child) == "/"
     # ...and end to end: a * (b / c) must wrap (equal-prec, unfavored right).

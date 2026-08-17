@@ -1,8 +1,7 @@
 """Unit tests for hierarchy resolver: redefinition extraction, multiplicity, aggregation.
 
-Tests use mock AST elements — no real SysML models required. Mock class names
-include the SysML type name so SysideAdapter.is_instance() fallback works
-(type_name in type(elem).__name__).
+Tests use mock AST elements — no real SysML models required. Mock classes carry
+the exact mapped test-double names in their MRO, matching the adapter contract.
 
 Test Suites:
 Phase 1:
@@ -86,12 +85,14 @@ class MockNamedUsage:
         self.owned_redefinitions = owned_redefinitions
 
 
-class MockFeatureChainExpressionOperatorExpression:
+class MockFeatureChainExpressionOperatorExpression(
+    MockFeatureChainExpression,
+    MockOperatorExpression,
+):
     """Mock that dual-matches both FeatureChainExpression and OperatorExpression.
 
     Reproduces the SysIDE subtype relationship where FCE is a subtype of OE,
-    causing SysideAdapter.is_instance()'s name-based fallback to return True
-    for both type checks on the same node.
+    so the adapter returns True for both exact-MRO checks on the same node.
     """
 
     def __init__(self, parts: list[str], operator: str = "."):
@@ -824,10 +825,14 @@ class MockMultiplicityRange:
         self.upper_bound = upper_bound
 
 
-class MockPartUsageForMultiplicity:
+class MockPartUsage:
+    """Exact mapped adapter test-double base for a part usage."""
+
+
+class MockPartUsageForMultiplicity(MockPartUsage):
     """Mock PartUsage with optional multiplicity.
 
-    Class name contains 'PartUsage' for is_instance fallback.
+    The MRO contains the adapter's exact ``MockPartUsage`` name.
     """
 
     def __init__(

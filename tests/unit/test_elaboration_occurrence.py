@@ -8,7 +8,7 @@ from uuid import UUID
 import pytest
 from agentic_mbse.sysml.syside_adapter import SysideAdapter
 
-from sysml_codegen.elaboration import ElaborationCode, ElaborationDiagnosticError, elaborate
+from sysml_codegen.elaboration import ElaborationCode, ElaborationDiagnosticError
 from sysml_codegen.elaboration.identity import DeclarationId, OccurrenceId
 from sysml_codegen.elaboration.occurrence import (
     FeatureSlotIndex,
@@ -19,6 +19,7 @@ from sysml_codegen.elaboration.occurrence import (
 )
 from sysml_codegen.extraction.extractor import SysMLDataExtractor
 from tests.conftest import FIXTURES_DIR, requires_license
+from tests.helpers.raw_elaboration import elaborate
 
 pytestmark = requires_license
 

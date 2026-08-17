@@ -7,8 +7,8 @@ first misclassifies FCE nodes. This was the root cause of Bug A (commit 20b720e)
 
 Testing strategy:
 - Static analysis tests parse source files with Python ast module -- no mocks.
-- Behavioral tests use SysIDE adapter name-based fallback with dual-match mock
-  classes (acceptable per Ground Rule 1).
+- Behavioral tests use the adapter's exact-MRO test-double contract with a
+  dual-match mock class (acceptable per Ground Rule 1).
 - Model-fact tests read live extraction (``tests/helpers/live_extraction.py``), not the
   retiring v5 extraction snapshots; they are license-gated by the fixture.
 
@@ -119,12 +119,22 @@ class MockFeatureReferenceExpression:
         self.referent = SimpleNamespace(name=name)
 
 
-class MockFeatureChainExpressionOperatorExpression:
+class MockFeatureChainExpression:
+    """Exact-MRO adapter test double for a feature-chain expression."""
+
+
+class MockOperatorExpression:
+    """Exact-MRO adapter test double for an operator expression."""
+
+
+class MockFeatureChainExpressionOperatorExpression(
+    MockFeatureChainExpression,
+    MockOperatorExpression,
+):
     """Mock that dual-matches both FeatureChainExpression and OperatorExpression.
 
-    Class name contains both type names, triggering SysideAdapter.is_instance()'s
-    name-based fallback for both type checks. Used to verify that FCE handler fires
-    first when both would match.
+    Its MRO carries both exact mapped test-double names. Used to verify that the
+    FCE handler fires first when both metatype checks match.
     """
 
     def __init__(self, operands: list | None = None, target_feature=None):
@@ -370,7 +380,7 @@ class TestReqAst05SingletonTermClassification:
     def test_walk_aggregation_ast_fce_produces_singleton_behavioral(self):
         """Behavioral: dual-match FCE+OE mock node -> SingletonTerm in _AggregationContext.
 
-        Uses SysideAdapter name-based fallback (no monkeypatch needed).
+        Uses the SysideAdapter exact-MRO test-double contract.
         """
         from sysml_codegen.extraction.hierarchy_resolver import (
             _AggregationContext,

@@ -12,13 +12,13 @@ from sysml_codegen.elaboration import (
     ElaborationDiagnosticError,
     ElaborationError,
     InstanceGraph,
-    elaborate,
 )
 from sysml_codegen.elaboration.identity import declaration_id_for
 from sysml_codegen.extraction.extractor import SysMLDataExtractor
 from sysml_codegen.extraction.source_evidence import ReadinessCode
 from tests.conftest import FIXTURES_DIR, requires_license
 from tests.helpers.elaboration_graph import calc, every_alias_target, every_typed_edge
+from tests.helpers.raw_elaboration import elaborate
 
 pytestmark = requires_license
 

@@ -6,11 +6,12 @@ from pathlib import Path
 
 import jinja2
 
-from sysml_codegen.elaboration import elaborate, project
+from sysml_codegen.elaboration import project
 from sysml_codegen.extraction.extractor import SysMLDataExtractor
 from sysml_codegen.generation.pipeline import generate_pipeline_yaml
 from sysml_codegen.generation.registry import generate_registry
 from tests.conftest import FIXTURES_DIR, requires_license
+from tests.helpers.raw_elaboration import elaborate
 
 pytestmark = requires_license
 

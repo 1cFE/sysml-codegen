@@ -325,7 +325,7 @@
   },
   "deep_cross_scope_probe": {
     "DeepCrossScopeProducer::'Monitoring Station'::station_output": {
-      "classification": "expose_chain_tentative",
+      "classification": "unresolvable",
       "compilability": "manual_required",
       "compiled_expression": null
     }
@@ -364,7 +364,7 @@
       "compiled_expression": null
     },
     "IfePlantSubsystems::radial_build::magnet_volume_total": {
-      "classification": "expose_chain_tentative",
+      "classification": "unresolvable",
       "compilability": "manual_required",
       "compiled_expression": null
     }

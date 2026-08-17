@@ -1,15 +1,12 @@
 """Elaborate-then-project front end (ELABORATE-FIRST epic).
 
-``elaborate()`` turns a loaded SysIDE model into an :class:`InstanceGraph` —
-one attribute node per modeled value occurrence, consumers holding typed node
-references. Projection onto the existing ``ComputationGraph`` seam remains an
-internal Item-5 route; until the Item-6 cutover it never becomes a shipped flag.
+The public source routes own model loading and error conversion. This package
+exports the graph vocabulary and projector; its raw graph builder is private.
 """
 
 from sysml_codegen.elaboration.elaborate import (
     ElaborationDiagnosticError,
     ElaborationError,
-    elaborate,
 )
 from sysml_codegen.elaboration.graph import (
     ASSERTED_SOURCE_FORMS,
@@ -83,6 +80,5 @@ __all__ = [
     "ResolvedSemanticReference",
     "ScopeId",
     "ValueSite",
-    "elaborate",
     "project",
 ]

@@ -18,7 +18,6 @@ import yaml
 from sysml_codegen.elaboration import (
     ElaborationCode,
     ElaborationError,
-    elaborate,
     project,
 )
 from sysml_codegen.elaboration.graph import LiteralInput, NodeRef, ProducerRef
@@ -32,6 +31,7 @@ from sysml_codegen.snapshot.instance_graph import (
     encode_instance_graph,
 )
 from tests.conftest import FIXTURES_DIR, requires_license
+from tests.helpers.raw_elaboration import elaborate
 
 pytestmark = requires_license
 

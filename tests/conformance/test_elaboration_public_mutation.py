@@ -9,7 +9,7 @@ from pathlib import Path
 import jinja2
 import yaml
 
-from sysml_codegen.elaboration import elaborate, project
+from sysml_codegen.elaboration import project
 from sysml_codegen.elaboration.graph import NodeRef
 from sysml_codegen.extraction.extractor import SysMLDataExtractor
 from sysml_codegen.generation.entry_point import generate_all_derived_jsons
@@ -21,6 +21,7 @@ from sysml_codegen.snapshot.instance_graph import (
 )
 from tests.conftest import FIXTURES_DIR, requires_license
 from tests.helpers.elaboration_graph import every_alias_target, every_typed_edge
+from tests.helpers.raw_elaboration import elaborate
 
 pytestmark = requires_license
 

@@ -30,6 +30,7 @@ import subprocess
 import sys
 from pathlib import Path
 
+import agentic_mbse
 import pytest
 
 from sysml_codegen.cli import GenerationConfig, run_codegen
@@ -38,6 +39,7 @@ from tests.conftest import FIXTURES_DIR, requires_license
 REPO_ROOT = Path(__file__).resolve().parents[2]
 V6_SNAPSHOT = FIXTURES_DIR / "fusion_tea" / "instance_graph_snapshot.json"
 PACKAGE = "fusion_tea"
+AGENTIC_SOURCE_ROOT = Path(agentic_mbse.__file__).resolve().parents[1]
 
 # The revision supplying the previous verifier policy. Carried unchanged from
 # tests/conformance/test_fingerprint_stability.py: the policy last changed at
@@ -104,7 +106,9 @@ def _generate_with_source_tree(source_root: Path, output: Path) -> None:
         {
             "PYTHONNOUSERSITE": "1",
             "PYTHONDONTWRITEBYTECODE": "1",
-            "PYTHONPATH": os.pathsep.join([str(source_root / "src"), str(REPO_ROOT)]),
+            "PYTHONPATH": os.pathsep.join(
+                [str(source_root / "src"), str(AGENTIC_SOURCE_ROOT), str(REPO_ROOT)]
+            ),
         }
     )
     subprocess.run(

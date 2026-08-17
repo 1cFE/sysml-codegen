@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
-from enum import Enum
+from enum import StrEnum
 
 __all__ = ["ElaborationCode", "ElaborationInvariantError"]
 
 
-class ElaborationCode(str, Enum):
+class ElaborationCode(StrEnum):
+    SI_EVIDENCE_INCOMPLETE = "SI_EVIDENCE_INCOMPLETE"
     SYSML_NAMESPACE_NOT_DISTINGUISHABLE = "SYSML_NAMESPACE_NOT_DISTINGUISHABLE"
     SI_OCCURRENCE_MISSING = "SI_OCCURRENCE_MISSING"
     SI_OCCURRENCE_AMBIGUOUS = "SI_OCCURRENCE_AMBIGUOUS"

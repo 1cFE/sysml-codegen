@@ -4,11 +4,12 @@ from __future__ import annotations
 
 from collections import Counter
 
-from sysml_codegen.elaboration import NodeRef, ProducerRef, elaborate, project
+from sysml_codegen.elaboration import NodeRef, ProducerRef, project
 from sysml_codegen.extraction.extractor import SysMLDataExtractor
 from sysml_codegen.extraction.source_evidence import ReadinessCode
 from sysml_codegen.resolution.models import EntryPointType, ModuleKind
 from tests.conftest import FIXTURES_DIR, requires_license
+from tests.helpers.raw_elaboration import elaborate
 
 pytestmark = requires_license
 

@@ -21,7 +21,7 @@ from uuid import UUID
 
 import pytest
 
-from sysml_codegen.elaboration import elaborate, project
+from sysml_codegen.elaboration import project
 from sysml_codegen.extraction import expression_compiler
 from sysml_codegen.extraction.data_models import (
     AttributeInfo,
@@ -33,6 +33,7 @@ from sysml_codegen.extraction.expression_compiler import (
 )
 from sysml_codegen.extraction.extractor import SysMLDataExtractor
 from tests.conftest import FIXTURES_DIR, requires_license
+from tests.helpers.raw_elaboration import elaborate
 
 pytestmark = requires_license
 

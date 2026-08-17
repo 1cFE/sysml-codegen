@@ -15,12 +15,24 @@ the caller's model roots live, the sealed admission manifest during capture.
 
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from pathlib import Path
+from typing import Any
+
+from agentic_mbse import SemanticEvidenceError
+from agentic_mbse.sysml.syside_adapter import get_syside
 
 from sysml_codegen.analysis.source_referent import map_live_source_referent
 from sysml_codegen.core.errors import CodeGenerationError, SysMLParsingError
-from sysml_codegen.elaboration import elaborate, project
+from sysml_codegen.elaboration import (
+    Diagnostic,
+    ElaborationCode,
+    ElaborationDiagnosticError,
+    GraphValidationError,
+    project,
+)
+from sysml_codegen.elaboration.diagnostics import ElaborationInvariantError
+from sysml_codegen.elaboration.elaborate import _build_instance_graph
 from sysml_codegen.elaboration.graph import (
     AttrNode,
     CalcNode,
@@ -35,6 +47,7 @@ from sysml_codegen.resolution.models import ComputationGraph
 __all__ = [
     "build_elaborated_pipeline",
     "elaborate_admitted_sources",
+    "elaborate_loaded_extractor",
     "elaborate_model_paths",
     "require_executable_content",
 ]
@@ -45,7 +58,7 @@ def build_elaborated_pipeline(model_paths: list[Path]) -> ComputationGraph:
     return project(elaborate_model_paths(model_paths))
 
 
-def elaborate_model_paths(model_paths: list[Path]) -> InstanceGraph:
+def elaborate_model_paths(model_paths: list[Path], *, strict: bool = True) -> InstanceGraph:
     """Load and elaborate live models, stopping at the exact instance graph.
 
     The projection half is deliberately not here: a caller that seals the graph
@@ -64,17 +77,12 @@ def elaborate_model_paths(model_paths: list[Path]) -> InstanceGraph:
     if extractor.diagnostics is None:
         raise SysMLParsingError("SysML validation diagnostics are unavailable after model loading")
 
-    calc_defs = extractor.extract_calculation_definitions()
-    graph = elaborate(
-        extractor.model,
-        calc_defs,
-        validation_diagnostics=extractor.diagnostics.validation,
-        model_paths=model_paths,
+    return elaborate_loaded_extractor(
+        extractor,
+        model_paths=tuple(model_paths),
+        source_referents=_live_source_referents(extractor.model, tuple(model_paths)),
+        strict=strict,
     )
-    require_executable_content(graph, calc_defs)
-    _rewrite_live_sources_as_referents(graph, model_paths)
-    _rewrite_exclusion_locations(graph)
-    return graph
 
 
 def require_executable_content(graph: InstanceGraph, calc_definitions: Sequence[object]) -> None:
@@ -96,7 +104,11 @@ def require_executable_content(graph: InstanceGraph, calc_definitions: Sequence[
         )
 
 
-def elaborate_admitted_sources(admission: SourceAdmission) -> InstanceGraph:
+def elaborate_admitted_sources(
+    admission: SourceAdmission,
+    *,
+    strict: bool = True,
+) -> InstanceGraph:
     """Parse one admitted staged source set and return its exact instance graph.
 
     SysIDE only ever sees the private staged copies, so a source edited during
@@ -117,56 +129,105 @@ def elaborate_admitted_sources(admission: SourceAdmission) -> InstanceGraph:
     if extractor.diagnostics is None:
         raise SysMLParsingError("SysML validation diagnostics are unavailable after model loading")
 
-    calc_definitions = extractor.extract_calculation_definitions()
-    graph = elaborate(
-        extractor.model,
-        calc_definitions,
-        validation_diagnostics=extractor.diagnostics.validation,
+    graph = elaborate_loaded_extractor(
+        extractor,
         model_paths=admission.staged_files,
+        source_referents=admission.staged_to_referent,
+        strict=strict,
     )
     admission.verify_after_parse(extractor.model)
-    require_executable_content(graph, calc_definitions)
-    _rewrite_sources_as_referents(graph, admission)
+    return graph
+
+
+def elaborate_loaded_extractor(
+    extractor: SysMLDataExtractor,
+    *,
+    model_paths: Sequence[Path],
+    source_referents: Mapping[str, str],
+    strict: bool,
+) -> InstanceGraph:
+    """Extract and elaborate one loaded model through the sole evidence bridge."""
+    if extractor.diagnostics is None:
+        raise SysMLParsingError("SysML validation diagnostics are unavailable after model loading")
+    try:
+        calc_definitions = extractor.extract_calculation_definitions()
+        graph = _build_instance_graph(
+            extractor.model,
+            calc_definitions,
+            validation_diagnostics=extractor.diagnostics.validation,
+            model_paths=model_paths,
+            strict=strict,
+        )
+        require_executable_content(graph, calc_definitions)
+    except SemanticEvidenceError as error:
+        diagnostics = (_semantic_evidence_diagnostic(error, source_referents),)
+        raise ElaborationDiagnosticError(diagnostics) from error
+    except ElaborationInvariantError as error:
+        diagnostics = (
+            Diagnostic(
+                code=error.code,
+                consumer=None,
+                consumer_display="<model>",
+                param_name=None,
+                detail=error.detail,
+            ),
+        )
+        raise ElaborationDiagnosticError(diagnostics) from error
+    except GraphValidationError as error:
+        raise ElaborationDiagnosticError(error.diagnostics) from error
+
+    _rewrite_sources_as_referents(graph, source_referents)
     _rewrite_exclusion_locations(graph)
     return graph
 
 
-def _rewrite_live_sources_as_referents(graph: InstanceGraph, model_paths: list[Path]) -> None:
-    """Rewrite every live node's raw parser path to its portable referent.
-
-    The live mirror of ``_rewrite_sources_as_referents``: same node population,
-    but the mapping is derived from the caller's model roots rather than from an
-    admission manifest, so the two arms of the route-parity comparison stay
-    independent while rendering one ``source_file`` shape. Raw parser paths are
-    not canonical (the same file can arrive with a leftover ``//`` URI prefix);
-    the mapper absorbs that.
-    """
-
-    def referent(source_file: str) -> str:
+def _live_source_referents(model: Any, model_paths: Sequence[Path]) -> dict[str, str]:
+    """Bind every loaded live document path to its portable caller-root referent."""
+    syside = get_syside()
+    referents: dict[str, str] = {}
+    for raw_source in model.uris(syside.DocumentKind.MODEL):
+        raw_text = str(raw_source)
         try:
-            return map_live_source_referent(source_file, model_paths)
+            referent = map_live_source_referent(raw_text, list(model_paths))
         except ValueError as error:
             raise SysMLParsingError(
-                f"elaborated source {source_file!r} is outside the supplied model roots"
+                f"elaborated source {raw_text!r} is outside the supplied model roots"
             ) from error
+        referents[raw_text] = referent
+        referents[str(Path(raw_text).resolve())] = referent
+    return referents
 
+
+def _semantic_evidence_diagnostic(
+    error: SemanticEvidenceError,
+    source_referents: Mapping[str, str],
+) -> Diagnostic:
+    location = ""
+    if error.location is not None:
+        raw_source, line = error.location
+        referent = _lookup_referent(raw_source, source_referents)
+        location = f" [{referent}:{line}]"
+    return Diagnostic(
+        code=ElaborationCode.SI_EVIDENCE_INCOMPLETE,
+        consumer=None,
+        consumer_display=error.reference or "<model>",
+        param_name=None,
+        detail=f"{error.operation}: {error.detail}{location}",
+    )
+
+
+def _rewrite_sources_as_referents(
+    graph: InstanceGraph,
+    source_referents: Mapping[str, str],
+) -> None:
     for nodes in (graph.attrs, graph.calcs, graph.constraints):
         for node in nodes.values():
-            node.source_file = referent(node.source_file)
-    for record in graph.constraint_usages.values():
-        record.source_file = referent(record.source_file)
-
-
-def _rewrite_sources_as_referents(graph: InstanceGraph, admission: SourceAdmission) -> None:
-    staged_to_referent = admission.staged_to_referent
-    for nodes in (graph.attrs, graph.calcs, graph.constraints):
-        for node in nodes.values():
-            node.source_file = _referent_for(node, staged_to_referent)
+            node.source_file = _referent_for(node, source_referents)
     # The usage tier carries a source location too, and it is sealed into the snapshot
     # and the catalog. Left as the staged absolute path it would make the captured bytes
     # vary by capture machine and disagree with the live route on the same model.
     for record in graph.constraint_usages.values():
-        record.source_file = _referent_for(record, staged_to_referent)
+        record.source_file = _referent_for(record, source_referents)
 
 
 def _rewrite_exclusion_locations(graph: InstanceGraph) -> None:
@@ -189,11 +250,17 @@ def _rewrite_exclusion_locations(graph: InstanceGraph) -> None:
 
 def _referent_for(
     node: AttrNode | CalcNode | ConstraintNode | ConstraintUsageRecord,
-    staged_to_referent: dict[str, str],
+    source_referents: Mapping[str, str],
 ) -> str:
-    referent = staged_to_referent.get(str(Path(node.source_file).resolve()))
+    return _lookup_referent(node.source_file, source_referents)
+
+
+def _lookup_referent(raw_source: str, source_referents: Mapping[str, str]) -> str:
+    referent = source_referents.get(raw_source)
+    if referent is None:
+        referent = source_referents.get(str(Path(raw_source).resolve()))
     if referent is None:
         raise SysMLParsingError(
-            f"elaborated source {node.source_file!r} is outside the admitted document set"
+            f"elaborated source {raw_source!r} is outside the declared source set"
         )
     return referent

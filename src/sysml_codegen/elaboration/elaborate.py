@@ -94,7 +94,7 @@ from sysml_codegen.extraction.source_evidence import (
 )
 from sysml_codegen.extraction.unit_annotation import annotated_ast_value
 
-__all__ = ["ElaborationDiagnosticError", "ElaborationError", "elaborate"]
+__all__ = ["ElaborationDiagnosticError", "ElaborationError"]
 
 
 class ElaborationError(Exception):
@@ -256,7 +256,7 @@ def _computed_expression_input_names(
     return names_by_ordinal
 
 
-def elaborate(
+def _build_instance_graph(
     model: Any,
     calc_defs: Sequence[CalculationDefinitionData],
     *,
@@ -264,7 +264,7 @@ def elaborate(
     model_paths: Sequence[Path] = (),
     strict: bool = True,
 ) -> InstanceGraph:
-    """Resolve a live model into one typed instance graph.
+    """Resolve a live model into one typed instance graph without public conversion.
 
     ``calc_defs`` remains the verified integration argument until projection
     replaces the current call sites. Semantic construction reads exact live
@@ -273,28 +273,15 @@ def elaborate(
     model_diagnostics = _blocking_model_validation_diagnostics(model, validation_diagnostics)
     if model_diagnostics:
         if strict:
-            raise ElaborationDiagnosticError(model_diagnostics)
+            raise GraphValidationError(list(model_diagnostics))
         return InstanceGraph(diagnostics=list(model_diagnostics))
 
-    try:
-        return _ExactElaborator(
-            model,
-            calc_defs,
-            model_paths=model_paths,
-            strict=strict,
-        ).run()
-    except ElaborationInvariantError as error:
-        raise ElaborationDiagnosticError(
-            (
-                Diagnostic(
-                    code=error.code,
-                    consumer=None,
-                    consumer_display="<model>",
-                    param_name=None,
-                    detail=error.detail,
-                ),
-            )
-        ) from error
+    return _ExactElaborator(
+        model,
+        calc_defs,
+        model_paths=model_paths,
+        strict=strict,
+    ).run()
 
 
 def _blocking_model_validation_diagnostics(
@@ -635,15 +622,9 @@ class _ExactElaborator:
         self._resolve_computed_expressions()
         self._resolve_bindings()
         self._finish_readiness()
-        # Final graph validation is a refusal of the elaborated model, so it
-        # surfaces in the same diagnostic class as every other refusal instead
-        # of escaping as a raw GraphValidationError traceback (F-3).
-        try:
-            self._graph.validate()
-        except GraphValidationError as error:
-            raise ElaborationDiagnosticError(error.diagnostics) from error
+        self._graph.validate()
         if self._strict and self._graph.diagnostics:
-            raise ElaborationDiagnosticError(self._graph.diagnostics)
+            raise GraphValidationError(list(self._graph.diagnostics))
         return self._graph
 
     def _stable_elements(self) -> dict[DeclarationId, Any]:
