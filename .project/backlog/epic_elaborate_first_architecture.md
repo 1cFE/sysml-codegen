@@ -518,13 +518,26 @@ corrected architecture.
 
 **Location**: `.project/active/elaborator-downstream/`
 
-**Dependencies**: Item 7.
+**Dependencies**: Item 7 complete; `self-binding-replacement` closed on 2026-08-16 with all
+functional criteria independently verified and its testing/developer-tooling edge accepted as risk
+by the owner. This item performs none of that sibling's remediation.
 
 **Bounded child closed 2026-08-16:** exact occurrence-owner anchoring for usage-owned one-segment
 references is certified and archived at
 `.project/completed/20260816_qualified-reference-occurrence-anchoring/`. P-002 carries the shipped
 promise, the deep-override evidence bound, and the owner-disposed arrayed diagnostic follow-up.
 This closes that repair only; Item 8's two broader success criteria remain open.
+
+**Bounded child closed 2026-08-16 — owner-accepted testing/tooling edge risk:**
+`.project/completed/20260816_self-binding-replacement/` discharges the owner-restated authoring
+obligation and implements the Fusion Tea source-model migration half of sub-item 1. The re-audit
+verified the injective source/consumer proof, failure-honest validation, and the owner-ruled
+definition-owned lineage-miss refusal. **[OWNER 2026-08-16]** The dangling-symlink behavior in the
+migration/fixture helper is a testing/developer-tooling edge case and accepted risk; the owner
+directed closure without another remediation/audit cycle. The public-oracle and runtime functional
+claims are independently verified. The temporary live/snapshot proof stops before committed
+downstream regeneration and TEAx study execution; those remain at
+`.project/active/elaborator-downstream/`.
 
 ---
 

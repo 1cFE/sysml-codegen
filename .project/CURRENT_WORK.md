@@ -1,9 +1,10 @@
 # Current Work
 
-**Last Updated**: 2026-08-16 (**qualified-reference-occurrence-anchoring certified and archived** —
-all seven audit findings are closed, owner-disposed, or retained as a named nonblocking provenance
-residual; 116 focused licensed tests pass and the final product-lens gate permits close. Active work
-resumes with self-binding-replacement. Prior context: **PHASE D FULLY CLOSED; Item 8 sequencing
+**Last Updated**: 2026-08-16 (**self-binding-replacement closed and archived** — all ten
+functional criteria were independently verified. `[OWNER 2026-08-16]` The dangling-symlink
+behavior in the migration/fixture helper is a testing/developer-tooling edge case and accepted
+risk; closure was directed without another remediation cycle. Record:
+`completed/20260816_self-binding-replacement/audit.md`. Prior context: **PHASE D FULLY CLOSED; Item 8 sequencing
 decided.** The
 three-repo merge wave landed and is smoked — squash merges in the pin-enforced order:
 agentic-mbse#12 → `main` `1decd95`; codegen#10 → `main` `385e163` (the Item-7 cutover + the whole
@@ -74,27 +75,6 @@ rather than invented; vehicle `[CONSTRAINT-GATES-UNTAGGED]` in `BACKLOG.md`.
 
 ## Active Work
 
-### 2026-08-16: self-binding-replacement — SPEC REV 6 + DESIGN REV 3 APPROVED BY CURRENT REVIEWS
-
-The post-anchoring spec/design reviews are dispositioned. The real blockers were stale D-6 teaching
-and D11: design rev 3 now separates exact usage-owner anchoring from the surviving definition-owned
-fallback and points each claim at owner-labelled evidence. Spec rev 6 restores the owner's full
-scope-limiting quote, splits the overloaded `[HARD]` row, and carries the current baseline
-`0f89673`. Both current review verdicts are **Approve** and both appended product-lens gates are
-**CLEAR**.
-
-Independent pushbacks are recorded in the review files. Repair `98970c9` did not invalidate F-2
-through F-5; all four nevertheless reproduced at `0f89673`. The full projection oracle is 27 mixed-
-class keys, while the migration spine uses an explicit 11-key supplier subset and keeps the two
-public mutations as the deciding gate. Arrayed aggregation is not added to self-binding guidance:
-`[OWNER 2026-08-16]` already assigned it to `[ANCHORING-ARRAYED-DIAGNOSTIC]`. The review's smell-7
-ownership-transfer claim and mandatory deletion of the supported D-6 template spelling are rejected
-for lack of source authority.
-
-Evidence: `self-binding-replacement/verification/post-repair-spike-recheck.md`; focused exact-owner
-suite **48 passed**. **Next:** `/_my_plan`. ADR-010 remains an explicit owner call and is excluded
-unless the owner resolves it first.
-
 ### 2026-08-15: dead-worktree-pins — CERTIFIED, awaiting close confirmation
 
 Residue of the phase-D cleanup, not an epic item. Both gates the cleanup broke are repaired at the
@@ -117,54 +97,6 @@ set with and without this item's changes; every affected file passes when run al
 `tests/conformance/test_output_schema_contract.py` 1). The phase-D `2086`-green figure does not
 reproduce as a full-suite run in this venv even at HEAD. Out of this item's scope (Non-Goals: no
 re-certification); needs an owner.
-
-### 2026-08-15: self-binding-replacement — SPEC REVISED (rev 4); superseded by rev 6
-
-ELABORATE-FIRST Item 8, covering epic scope sub-item 4 and the model-migration half of sub-item 1.
-Spec rev 4: `.project/active/self-binding-replacement/spec.md`; review: `spec-review.md` (rev-3
-Revise verdict incorporated); product lens: `product-lens.md` (`Gate: CLEAR`, with prior
-`spec-F1`–`spec-F6` explicitly resolved and the rev-4 qualified-reference correction independently
-cleared). Awaiting owner approval, then the bounded stocktake research and design.
-
-**Six owner rulings from the review, all `[OWNER 2026-08-15]`:**
-
-1. **Narrow the Item-8 stocktake**, don't run it first. The spec makes only the two stocktake calls
-   it depends on; **the full stocktake runs as a research report after the spec is approved** and
-   checks those rows. The A → B ordering is satisfied in a cheaper form, not overridden.
-2. **The `[OWNER-VERBATIM]` guidance obligation is restated from scratch** and the old epic wording
-   ruled out of context: *know the right pattern(s) for the situation / document them / fix the
-   models to use them; `in R = R` is the wrong pattern and its use is detected.* The "two valid
-   replacement forms" count was **agent-authored under an owner-verbatim stamp** — no owner
-   utterance enumerating two exists. **Epic amended at owner instruction** (`:71-78`, `:503-511`),
-   both sites carrying a provenance-correction note.
-3. **The replacement rule is situational, not one winner.** Attribute on the owning part → make the
-   names differ (the 2026-08-05 ratified form; the codegen fixture already uses it, so model and
-   fixture stay the same shape). Value on another part → name the path. Qualifying by owner name
-   works but is only safe while that definition has exactly one instance — the guidance says so
-   plainly. This is why the reverted work's owner-qualified choice is not restored.
-4. **The guidance must reach the agentic-mbse *agents*, not just the docs.** Verified gap:
-   `claude/skills/sysml-conventions/SKILL.md` carries binding guidance and says nothing about
-   self-named bindings; no file under `claude/` or `.claude/` mentions `in R = R`. The Item-7
-   residual A-1 two-copies trap applies (`claude/` 10 skills vs `.claude/` 4; the skill exists only
-   in `claude/`).
-5. **The entry-point-key criterion is dropped** ("I don't care about this criterion"). The
-   mutation-reaches-every-and-only-its-consumers criterion is the real check.
-6. **Stellarator: triage only** — one pipeline run, record what breaks, fix nothing, July hold not
-   reversed. Sizing measured: of its 114 self-bindings, **15 are the fusion-tea files copied in**;
-   its own work is **99 sites in two files** (`generic_mfe/mfe_plant.sysml` ×94 incl. the literal
-   `in R = R` at `:117`, `stellarator_09/stellarator_plant.sysml` ×5).
-
-**Process note `[OWNER 2026-08-15]`: implementation ran before the spec existed, and was REVERTED IN
-FULL at owner instruction.** The guidance rewrite (`agentic-mbse` `e082f7e`), the 15-site fusion-tea
-migration (`4a2e8982`), and two uncommitted codegen gate repairs were all made, then reverted; both
-branches are deleted and both repos are clean. Nothing was ever pushed or merged. The three diffs are
-preserved as patches under `.project/active/self-binding-replacement/reverted/`, and the full
-rationale is in that spec's Change Record. Measurements taken by the reverted work are **evidence to
-review, not settled fact** — the spec marks which `[HARD]` rows need re-establishing.
-
-**Follow-up from the revert, now owned:** the two dead path pins restored by that revert were filed
-as `dead-worktree-pins` and repaired in the working tree. Its current audit state is recorded in the
-Active Work entry above; no part belongs to `self-binding-replacement`.
 
 ### 2026-08-15: Item 8 sequencing — OWNER DECISION: scope scrub first, then fusion-tea regeneration
 
@@ -934,6 +866,12 @@ surfaces as matrix-row candidates.
 ---
 
 ## Recently Completed
+
+### 2026-08-16: self-binding-replacement — CLOSED WITH OWNER-ACCEPTED RISK
+
+- Self-named calculation bindings now refuse before generation; the situational D-5/D-6/D-7 guidance, Fusion Tea D-5 migration, agentic validation, and definition-owned lineage-miss refusal are delivered.
+- Independent audit verified all ten functional criteria and the Product-Lens gate is CLEAR. **[OWNER 2026-08-16]** The remaining dangling-symlink behavior in the migration/fixture helper is a testing/developer-tooling edge case and accepted risk; closure was directed without another remediation cycle.
+- Archived to `.project/completed/20260816_self-binding-replacement/`; the audit evidence and unchecked accepted-risk plan boxes remain in the archive.
 
 ### 2026-08-16: qualified-reference-occurrence-anchoring — CERTIFIED AND CLOSED
 
