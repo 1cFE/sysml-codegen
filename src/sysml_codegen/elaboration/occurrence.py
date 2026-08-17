@@ -18,11 +18,16 @@ from sysml_codegen.elaboration.display import display_name, display_qualified_na
 from sysml_codegen.elaboration.identity import (
     DeclarationId,
     FeatureSlotId,
+    IdentityBoundaryError,
     OccurrenceId,
     OccurrenceStep,
     PackageScopeId,
     ScopeId,
     declaration_id_for,
+)
+from sysml_codegen.extraction.binding_evidence import (
+    WRITTEN_UNKNOWN,
+    written_reference_text,
 )
 
 __all__ = [
@@ -40,15 +45,33 @@ __all__ = [
 class InvalidRedefinitionFamilyError(ElaborationInvariantError):
     """Redefinition endpoints do not form one acyclic rooted slot family."""
 
-    def __init__(self, detail: str) -> None:
-        super().__init__(ElaborationCode.SI_REDEFINITION_INVALID, detail)
+    def __init__(
+        self,
+        detail: str,
+        *,
+        reference: str | None = None,
+        location: tuple[str, int] | None = None,
+    ) -> None:
+        super().__init__(
+            ElaborationCode.SI_REDEFINITION_INVALID,
+            detail,
+            reference=reference,
+            location=location,
+        )
 
 
 class MultiplicityExpansionError(ElaborationInvariantError):
     """A containment declaration cannot expand into supported occurrences."""
 
-    def __init__(self, code: ElaborationCode, detail: str) -> None:
-        super().__init__(code, detail)
+    def __init__(
+        self,
+        code: ElaborationCode,
+        detail: str,
+        *,
+        reference: str | None = None,
+        location: tuple[str, int] | None = None,
+    ) -> None:
+        super().__init__(code, detail, reference=reference, location=location)
 
 
 class RecursiveContainmentError(ElaborationInvariantError):
@@ -132,10 +155,10 @@ def build_containment_address(
             )
         try:
             current_id = declaration_id_for(current)
-        except Exception as error:
+        except IdentityBoundaryError as error:
             raise OccurrenceResolutionError(
-                ElaborationCode.SI_OCCURRENCE_MISSING,
-                f"containment hop {type(current).__name__!r} has no stable identity",
+                error.code,
+                error.detail,
             ) from error
         if current_id in visited:
             raise OccurrenceResolutionError(
@@ -586,13 +609,23 @@ def _modeled_integer_bound(
             and declaration_id_for(semantic_owner(candidate)) in parent.type_closure
         ]
         if definition_writers:
-            selected_owner = _most_specific_definition(
-                {
-                    declaration_id_for(semantic_owner(candidate))
-                    for candidate in definition_writers
-                },
-                closures,
-            )
+            try:
+                selected_owner = _most_specific_definition(
+                    {
+                        declaration_id_for(semantic_owner(candidate))
+                        for candidate in definition_writers
+                    },
+                    closures,
+                )
+            except InvalidRedefinitionFamilyError as error:
+                reference, location = _multiplicity_diagnostic_context(
+                    multiplicity_owner, bound
+                )
+                raise InvalidRedefinitionFamilyError(
+                    error.detail,
+                    reference=reference,
+                    location=location,
+                ) from error
             candidates = [
                 candidate
                 for candidate in definition_writers
@@ -627,6 +660,27 @@ def _constant_integer_value(expression: Any) -> int | None:
     return int(value)
 
 
+def _multiplicity_diagnostic_context(
+    usage: Any, bound: Any
+) -> tuple[str, tuple[str, int] | None]:
+    """Return the authored bound reference and its exact source location."""
+    reference: str | None = None
+    if SysideAdapter.is_instance(bound, "FeatureReferenceExpression"):
+        written = written_reference_text(bound)
+        if written != WRITTEN_UNKNOWN:
+            reference = written
+    if reference is None:
+        reference = str(
+            getattr(usage, "qualified_name", None)
+            or getattr(usage, "name", None)
+            or "<anonymous-part-usage>"
+        )
+    location = SysideAdapter.get_source_location(bound)
+    if location is None:
+        location = SysideAdapter.get_source_location(usage)
+    return reference, location
+
+
 def _multiplicity_indices(
     usage: Any,
     *,
@@ -640,14 +694,20 @@ def _multiplicity_indices(
         return (None,)
     name = str(getattr(usage, "name", None) or "<anonymous>")
     if getattr(usage, "is_ordered", False):
+        reference, location = _multiplicity_diagnostic_context(usage, multiplicity)
         raise MultiplicityExpansionError(
             ElaborationCode.SI_MULTIPLICITY_UNSUPPORTED,
             f"ordered multiplicity on {name!r} is outside the supported occurrence model",
+            reference=reference,
+            location=location,
         )
     if getattr(usage, "is_nonunique", False):
+        reference, location = _multiplicity_diagnostic_context(usage, multiplicity)
         raise MultiplicityExpansionError(
             ElaborationCode.SI_MULTIPLICITY_UNSUPPORTED,
             f"nonunique multiplicity on {name!r} is outside the supported occurrence model",
+            reference=reference,
+            location=location,
         )
     upper = getattr(multiplicity, "upper_bound", None)
     lower = getattr(multiplicity, "lower_bound", None)
@@ -664,14 +724,24 @@ def _multiplicity_indices(
         else None
     )
     if count is None:
+        reference, location = _multiplicity_diagnostic_context(
+            usage, upper if upper is not None else usage
+        )
         raise MultiplicityExpansionError(
             ElaborationCode.SI_MULTIPLICITY_UNRESOLVED,
             f"upper multiplicity on {name!r} is not a known finite integer",
+            reference=reference,
+            location=location,
         )
     if count < 0:
+        reference, location = _multiplicity_diagnostic_context(
+            usage, upper if upper is not None else usage
+        )
         raise MultiplicityExpansionError(
             ElaborationCode.SI_MULTIPLICITY_INVALID,
             f"negative multiplicity on {name!r}",
+            reference=reference,
+            location=location,
         )
     if lower is not None:
         lower_count = _modeled_integer_bound(
@@ -683,14 +753,20 @@ def _multiplicity_indices(
             closures=closures,
         )
         if lower_count is None:
+            reference, location = _multiplicity_diagnostic_context(usage, lower)
             raise MultiplicityExpansionError(
                 ElaborationCode.SI_MULTIPLICITY_UNRESOLVED,
                 f"lower multiplicity on {name!r} is not a known finite integer",
+                reference=reference,
+                location=location,
             )
         if lower_count != count:
+            reference, location = _multiplicity_diagnostic_context(usage, multiplicity)
             raise MultiplicityExpansionError(
                 ElaborationCode.SI_MULTIPLICITY_UNSUPPORTED,
                 f"range multiplicity on {name!r} is outside the supported occurrence model",
+                reference=reference,
+                location=location,
             )
     return tuple(range(count))
 

@@ -65,19 +65,19 @@ def test_shared_feature_unit_precedence_and_exact_text(tmp_path: Path) -> None:
         owner = None
 
     feature = Feature()
-    assert extract_feature_unit(feature, model_paths=[source]) == "m³/s"
+    assert extract_feature_unit(feature) == "m³/s"
 
     source.write_text(
         "attribute flow : Real; // From an external source\n", encoding="utf-8"
     )
-    assert extract_feature_unit(feature, model_paths=[source]) is None
+    assert extract_feature_unit(feature) is None
 
     feature.cst_node = None
     feature.documentation = [type("Doc", (), {"body": "[kg/m³] - exact"})()]
-    assert extract_feature_unit(feature, model_paths=[source]) == "kg/m³"
+    assert extract_feature_unit(feature) == "kg/m³"
 
     feature.documentation = []
-    assert extract_feature_unit(feature, model_paths=[source]) is None
+    assert extract_feature_unit(feature) is None
 
 
 def test_shared_feature_unit_type_precedes_authored_text() -> None:

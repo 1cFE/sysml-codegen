@@ -6,7 +6,7 @@ from collections import defaultdict
 from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 from uuid import UUID
 
 from agentic_mbse.sysml.constraint_extraction import (
@@ -30,6 +30,7 @@ from agentic_mbse.sysml.expression_ir import serialize_expression
 from agentic_mbse.sysml.syside_adapter import SysideAdapter
 
 from sysml_codegen.core.models import AutoImplContext, AutoImplOutput, AutoImplStep
+from sysml_codegen.core.type_mapping import QUALIFIED_SYSML_TO_PYTHON
 from sysml_codegen.elaboration.diagnostics import ElaborationInvariantError
 from sysml_codegen.elaboration.display import display_name, display_qualified_name
 from sysml_codegen.elaboration.extraction_screen import screen_extraction_diagnostics
@@ -122,10 +123,26 @@ class ElaborationDiagnosticError(Exception):
         self.diagnostics = tuple(diagnostics)
         super().__init__(
             "; ".join(
-                f"{diagnostic.code.value}: {diagnostic.consumer_display}: {diagnostic.detail}"
+                _render_public_diagnostic(diagnostic)
                 for diagnostic in diagnostics
             )
         )
+
+
+def _render_public_diagnostic(diagnostic: Diagnostic) -> str:
+    """Render one refusal once, including exact authored context when present."""
+    reference = (
+        f": reference={diagnostic.reference!r}" if diagnostic.reference is not None else ""
+    )
+    location = (
+        f" [{diagnostic.source_file}:{diagnostic.source_line}]"
+        if diagnostic.source_file is not None and diagnostic.source_line is not None
+        else ""
+    )
+    return (
+        f"{diagnostic.code.value}: {diagnostic.consumer_display}{reference}: "
+        f"{diagnostic.detail}{location}"
+    )
 
 
 class _ReferenceResolutionError(Exception):
@@ -151,12 +168,22 @@ class _PendingBinding:
     port: ConsumerPortId
     evidence: SourceReferenceEvidence
     literal_value: float | int | str | bool | None
+    location: tuple[str, int] | None
 
 
 @dataclass(frozen=True)
 class _PendingExpression:
     consumer: CalcNode | ConstraintNode
     expression: Any
+
+
+@dataclass(frozen=True)
+class _ExpressionReference:
+    fact: ResolvedSemanticReferenceFact
+    plural: bool
+    no_prefix: bool
+    reference: str | None
+    location: tuple[str, int] | None
 
 
 @dataclass(frozen=True)
@@ -213,7 +240,7 @@ class _PendingAlias:
 
 
 def _computed_expression_input_names(
-    facts: Sequence[tuple[ResolvedSemanticReferenceFact, bool, bool]],
+    references: Sequence[_ExpressionReference],
 ) -> dict[int, str]:
     """Render the narrowest names that distinguish same-leaf semantic chains.
 
@@ -228,7 +255,8 @@ def _computed_expression_input_names(
         dict[tuple[UUID, ...], tuple[str, ...]],
     ] = defaultdict(dict)
 
-    for reference_ordinal, (fact, _plural, _no_prefix) in enumerate(facts):
+    for reference_ordinal, resolved in enumerate(references):
+        fact = resolved.fact
         leaf = fact.leaf
         if leaf is None:
             continue
@@ -258,11 +286,8 @@ def _computed_expression_input_names(
                 break
         if rendered_by_chain is None:
             continue
-        for reference_ordinal, (
-            fact,
-            _plural,
-            _no_prefix,
-        ) in enumerate(facts):
+        for reference_ordinal, resolved in enumerate(references):
+            fact = resolved.fact
             if names_by_ordinal.get(reference_ordinal) != leaf_name or fact.leaf is None:
                 continue
             chain_identity = fact.segment_element_ids or (fact.leaf.element_id,)
@@ -276,7 +301,6 @@ def _build_instance_graph(
     calc_defs: Sequence[CalculationDefinitionData],
     *,
     validation_diagnostics: Sequence[Any],
-    model_paths: Sequence[Path] = (),
     strict: bool = True,
 ) -> InstanceGraph:
     """Resolve a live model into one typed instance graph without public conversion.
@@ -296,7 +320,6 @@ def _build_instance_graph(
     return _ExactElaborator(
         model,
         calc_defs,
-        model_paths=model_paths,
         strict=strict,
     ).run()
 
@@ -464,10 +487,8 @@ class _ExactElaborator:
         calc_defs: Sequence[CalculationDefinitionData],
         *,
         strict: bool,
-        model_paths: Sequence[Path] = (),
     ) -> None:
         self._model = model
-        self._model_paths = tuple(model_paths)
         self._strict = strict
         self._calc_defs = self._index_calculation_payloads(calc_defs)
         self._compilation_results = self._compile_calculation_payloads()
@@ -1858,7 +1879,15 @@ class _ExactElaborator:
             if unsupported is not None:
                 self._record_readiness(consumer, port, unsupported, evidence)
                 continue
-            self._pending_bindings.append(_PendingBinding(consumer, port, evidence, literal))
+            self._pending_bindings.append(
+                _PendingBinding(
+                    consumer,
+                    port,
+                    evidence,
+                    literal,
+                    SysideAdapter.get_source_location(expression),
+                )
+            )
         consumer.unbound_formals = tuple(unbound)
 
     def _collect_unbound_constraint_formals(
@@ -1985,18 +2014,13 @@ class _ExactElaborator:
                 f"feature {root_id.to_wire()} has {len(type_targets)} exact typings",
             )
         type_name = str(getattr(type_targets[0], "qualified_name", None) or "")
-        python_type = {
-            "ScalarValues::Boolean": "bool",
-            "ScalarValues::Integer": "int",
-            "ScalarValues::Real": "float",
-            "ScalarValues::String": "str",
-        }.get(type_name)
+        python_type = QUALIFIED_SYSML_TO_PYTHON.get(type_name)
         if python_type is None:
             raise ElaborationInvariantError(
                 ElaborationCode.SI_EDGE_DANGLING,
                 f"feature {root_id.to_wire()} has unsupported exact type {type_name!r}",
             )
-        return python_type
+        return cast(str, python_type)
 
     def _effective_input_formals(
         self, definition: Any
@@ -2031,10 +2055,7 @@ class _ExactElaborator:
         return feature
 
     def _unit_for_declaration(self, declaration_id: DeclarationId) -> str | None:
-        return extract_feature_unit(
-            self._feature(declaration_id),
-            model_paths=self._model_paths,
-        )
+        return extract_feature_unit(self._feature(declaration_id))
 
     def _formal_provenance(self, declaration_id: DeclarationId) -> FormalProvenance:
         formal = self._elements.get(declaration_id)
@@ -2346,23 +2367,26 @@ class _ExactElaborator:
 
     def _resolve_aliases(self) -> None:
         for pending in self._pending_aliases:
-            facts = self._expression_references(pending.expression, plural=False)
-            if len(facts) != 1:
+            references = self._expression_references(pending.expression, plural=False)
+            if len(references) != 1:
+                reference, location = self._diagnostic_context(pending.expression)
                 self._diagnose(
                     ElaborationCode.SI_OCCURRENCE_MISSING,
                     pending.node.node_id,
                     pending.node.display_path,
                     pending.node.display_name,
                     "alias expression does not contain one exact reference",
+                    reference=reference,
+                    location=location,
                 )
                 continue
-            fact, plural, no_prefix = facts[0]
+            resolved = references[0]
             try:
                 edges = self._resolve_semantic_reference(
-                    fact,
+                    resolved.fact,
                     pending.node.scope,
-                    plural=plural,
-                    no_prefix=no_prefix,
+                    plural=resolved.plural,
+                    no_prefix=resolved.no_prefix,
                 )
             except _ReferenceResolutionError as error:
                 self._diagnose(
@@ -2371,6 +2395,8 @@ class _ExactElaborator:
                     pending.node.display_path,
                     pending.node.display_name,
                     error.detail,
+                    reference=resolved.reference,
+                    location=resolved.location,
                 )
                 continue
             pending.node.alias_target = edges[0]
@@ -2385,12 +2411,15 @@ class _ExactElaborator:
                 )
             except _ReferenceResolutionError as error:
                 resolved_aliases[pending.node.node_id] = None
+                reference, location = self._diagnostic_context(pending.expression)
                 self._diagnose(
                     error.code,
                     pending.node.node_id,
                     pending.node.display_path,
                     pending.node.display_name,
                     error.detail,
+                    reference=reference,
+                    location=location,
                 )
         for pending in self._pending_aliases:
             if pending.node.node_id in resolved_aliases:
@@ -2417,35 +2446,35 @@ class _ExactElaborator:
     def _resolve_computed_expressions(self) -> None:
         for pending in self._pending_expressions:
             try:
-                facts = self._expression_references(pending.expression, plural=False)
+                references = self._expression_references(pending.expression, plural=False)
             except _UnsupportedExpressionError as error:
+                reference, location = self._diagnostic_context(pending.expression)
                 self._diagnose(
                     ReadinessCode.SI_EXPRESSION_SOURCE_UNSUPPORTED,
                     pending.consumer.node_id,
                     pending.consumer.display_path,
                     None,
                     error.detail,
+                    reference=reference,
+                    location=location,
                 )
                 continue
             input_names = (
-                _computed_expression_input_names(facts)
+                _computed_expression_input_names(references)
                 if isinstance(pending.consumer, CalcNode)
                 else {}
             )
             aggregation_ordinals: list[int] = []
-            for reference_ordinal, (
-                fact,
-                plural,
-                no_prefix,
-            ) in enumerate(facts):
-                if plural:
+            for reference_ordinal, resolved in enumerate(references):
+                fact = resolved.fact
+                if resolved.plural:
                     aggregation_ordinals.append(reference_ordinal)
                 try:
                     edges = self._resolve_semantic_reference(
                         fact,
                         pending.consumer.scope,
-                        plural=plural,
-                        no_prefix=no_prefix,
+                        plural=resolved.plural,
+                        no_prefix=resolved.no_prefix,
                     )
                 except _ReferenceResolutionError as error:
                     self._diagnose(
@@ -2454,6 +2483,8 @@ class _ExactElaborator:
                         pending.consumer.display_path,
                         None,
                         error.detail,
+                        reference=resolved.reference,
+                        location=resolved.location,
                     )
                     continue
                 leaf_fact = fact.leaf
@@ -2505,6 +2536,8 @@ class _ExactElaborator:
                             pending.consumer.display_path,
                             pending.consumer.input_names.get(port),
                             error.detail,
+                            reference=resolved.reference,
+                            location=resolved.location,
                         )
                         continue
             if isinstance(pending.consumer, CalcNode):
@@ -2512,7 +2545,7 @@ class _ExactElaborator:
 
     def _expression_references(
         self, expression: Any, *, plural: bool
-    ) -> list[tuple[ResolvedSemanticReferenceFact, bool, bool]]:
+    ) -> list[_ExpressionReference]:
         # A unit annotation contributes its value and never a reference, and the walk is
         # where the predicate lane learns that. It has to be the head, before any
         # structural dispatch, and it has to be here rather than at the predicate entry:
@@ -2521,16 +2554,21 @@ class _ExactElaborator:
         # below because `annotated_ast_value` returns the expression unchanged unless its
         # operator is `[`, and a FeatureChainExpression's is not.
         expression = self._without_unit_annotation(expression)
+        reference, location = self._diagnostic_context(expression)
         # FeatureChainExpression MUST be before OperatorExpression: SysIDE
         # models the former as an operator subtype.
         if SysideAdapter.is_instance(expression, "FeatureChainExpression"):
-            return [(feature_chain_facts(expression), plural, False)]
+            return [
+                _ExpressionReference(
+                    feature_chain_facts(expression), plural, False, reference, location
+                )
+            ]
         if SysideAdapter.is_instance(expression, "FeatureReferenceExpression"):
             target = resolved_target_fact(getattr(expression, "referent", None))
             if target is None:
                 return []
             return [
-                (
+                _ExpressionReference(
                     ResolvedSemanticReferenceFact(
                         root=target,
                         segments=(target,),
@@ -2540,6 +2578,8 @@ class _ExactElaborator:
                     ),
                     plural,
                     binding_evidence.written_qualifier(expression) is None,
+                    reference,
+                    location,
                 )
             ]
         child_plural = plural
@@ -2557,10 +2597,18 @@ class _ExactElaborator:
                     f"unsupported invocation function {function_id.to_wire()}"
                 )
             child_plural = True
-        result: list[tuple[ResolvedSemanticReferenceFact, bool, bool]] = []
+        result: list[_ExpressionReference] = []
         for operand in getattr(expression, "operands", None) or ():
             result.extend(self._expression_references(operand, plural=child_plural))
         return result
+
+    @staticmethod
+    def _diagnostic_context(expression: Any) -> tuple[str | None, tuple[str, int] | None]:
+        written = binding_evidence.written_reference_text(expression)
+        reference = (
+            None if written == binding_evidence.WRITTEN_UNKNOWN else written
+        )
+        return reference, SysideAdapter.get_source_location(expression)
 
     def _resolve_bindings(self) -> None:
         for pending in self._pending_bindings:
@@ -2588,6 +2636,8 @@ class _ExactElaborator:
                     pending.consumer.display_path,
                     pending.consumer.input_names[pending.port],
                     error.detail,
+                    reference=evidence.written_text,
+                    location=pending.location,
                 )
                 continue
             pending.consumer.inputs[pending.port] = edge
@@ -2610,6 +2660,9 @@ class _ExactElaborator:
         consumer_display: str,
         param_name: str | None,
         detail: str,
+        *,
+        reference: str | None = None,
+        location: tuple[str, int] | None = None,
     ) -> None:
         diagnostic = Diagnostic(
             code=code,
@@ -2617,6 +2670,9 @@ class _ExactElaborator:
             consumer_display=consumer_display,
             param_name=param_name,
             detail=detail,
+            reference=reference,
+            source_file=location[0] if location is not None else None,
+            source_line=location[1] if location is not None else None,
         )
         if diagnostic not in self._graph.diagnostics:
             self._graph.diagnostics.append(diagnostic)

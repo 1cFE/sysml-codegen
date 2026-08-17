@@ -185,4 +185,15 @@ def test_unrelated_globally_sole_output_refuses_instead_of_crossing_domains() ->
 
     with pytest.raises(ElaborationDiagnosticError) as caught:
         elaborate_model_paths([fixture])
-    assert caught.value.diagnostics == (diagnostic,)
+    [public] = caught.value.diagnostics
+    assert public.code is diagnostic.code
+    assert public.detail == diagnostic.detail
+    assert public.reference == (
+        "measurement_system::station::array::sensor::core::metric_value"
+    )
+    assert public.source_file == "root-0/design.sysml"
+    assert public.source_line == 77
+    rendered = str(caught.value)
+    assert public.reference in rendered
+    assert "root-0/design.sysml:77" in rendered
+    assert rendered.count("SI_OCCURRENCE_MISSING") == 1

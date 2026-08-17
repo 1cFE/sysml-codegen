@@ -7,7 +7,6 @@ remain about graph semantics rather than the orchestration layer.
 """
 
 from collections.abc import Sequence
-from pathlib import Path
 from typing import Any
 
 from sysml_codegen.elaboration import Diagnostic, ElaborationDiagnosticError, GraphValidationError
@@ -21,7 +20,6 @@ def elaborate(
     calc_defs: Sequence[Any],
     *,
     validation_diagnostics: Sequence[Any] = (),
-    model_paths: Sequence[Path] = (),
     strict: bool = True,
 ) -> InstanceGraph:
     try:
@@ -29,7 +27,6 @@ def elaborate(
             model,
             calc_defs,
             validation_diagnostics=validation_diagnostics,
-            model_paths=model_paths,
             strict=strict,
         )
     except ElaborationInvariantError as error:
@@ -39,6 +36,9 @@ def elaborate(
             consumer_display="<model>",
             param_name=None,
             detail=error.detail,
+            reference=error.reference,
+            source_file=(error.location[0] if error.location is not None else None),
+            source_line=(error.location[1] if error.location is not None else None),
         )
         raise ElaborationDiagnosticError((diagnostic,)) from error
     except GraphValidationError as error:

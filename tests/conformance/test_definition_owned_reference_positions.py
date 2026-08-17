@@ -27,6 +27,7 @@ from sysml_codegen.elaboration import (
     InstanceGraph,
 )
 from sysml_codegen.extraction.extractor import SysMLDataExtractor
+from sysml_codegen.orchestration.elaborated_pipeline import elaborate_model_paths
 from tests.conftest import FIXTURES_DIR, requires_license
 from tests.helpers.elaboration_graph import attr, calc, inputs_by_name, node_ref
 from tests.helpers.raw_elaboration import elaborate
@@ -73,13 +74,28 @@ def test_definition_owned_lineage_miss_refuses_without_descendant_search(
 ) -> None:
     """Descendant count and position cannot invent an occurrence for the leaf."""
     with pytest.raises(ElaborationDiagnosticError) as excinfo:
-        _elaborate_fixture(fixture)
+        elaborate_model_paths([FIXTURES_DIR / fixture])
     codes = Counter(diagnostic.code for diagnostic in excinfo.value.diagnostics)
     assert codes == Counter({ElaborationCode.SI_OCCURRENCE_MISSING: 1})
     [diagnostic] = excinfo.value.diagnostics
     assert diagnostic.detail.startswith(
         "consumer domain has no part_definition anchor"
     )
+    expected_reference = (
+        "'Unit'::cost" if fixture == "def_qual_sibling_scope" else "'Plant'::availability"
+    )
+    expected_line = {
+        "def_qual_one_occ_above": 20,
+        "def_qual_two_occ_above": 22,
+        "def_qual_sibling_scope": 26,
+    }[fixture]
+    assert diagnostic.reference == expected_reference
+    assert diagnostic.source_file == "root-0/model.sysml"
+    assert diagnostic.source_line == expected_line
+    rendered = str(excinfo.value)
+    assert expected_reference in rendered
+    assert f"root-0/model.sysml:{expected_line}" in rendered
+    assert rendered.count("SI_OCCURRENCE_MISSING") == 1
 
     lenient = _elaborate_fixture(fixture, strict=False)
     consumer = calc(lenient, consumer_qn)

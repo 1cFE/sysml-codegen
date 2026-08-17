@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import ast
+import inspect
 from pathlib import Path
 from types import SimpleNamespace
 from typing import Any
@@ -10,6 +11,7 @@ from typing import Any
 import pytest
 from agentic_mbse.sysml.syside_adapter import SysideAdapter
 
+from sysml_codegen.core.type_mapping import QUALIFIED_SYSML_TO_PYTHON, SYSML_TO_PYTHON
 from sysml_codegen.elaboration import ElaborationCode, ElaborationDiagnosticError
 from sysml_codegen.extraction.errors import ExactTypeError
 from sysml_codegen.extraction.extractor import SysMLDataExtractor
@@ -135,9 +137,12 @@ def test_exact_type_refusal_uses_the_one_public_bridge(strict: bool) -> None:
     assert diagnostic.code is ElaborationCode.SI_TYPE_INVALID
     assert diagnostic.consumer_display == error.reference
     assert diagnostic.detail == (
-        "extract_type: typing target 'FeatureTypingUserTypes::Real' is unsupported "
-        "[root-0/model.sysml:23]"
+        "extract_type: typing target 'FeatureTypingUserTypes::Real' is unsupported"
     )
+    assert diagnostic.reference == error.reference
+    assert diagnostic.source_file == "root-0/model.sysml"
+    assert diagnostic.source_line == 23
+    assert "root-0/model.sysml:23" in str(public)
     assert str(public).count("SI_TYPE_INVALID") == 1
     assert public.__cause__ is error
 
@@ -149,13 +154,10 @@ def test_document_origin_is_exact_for_each_file_without_path_election() -> None:
     for feature in SysideAdapter.elements_of_type(
         extractor.model, "AttributeUsage", include_subtypes=True
     ):
-        source = _source_file(
-            feature,
-            model_paths=(Path("deliberately/not/a/source.sysml"),),
-        )
+        source = _source_file(feature)
         if source is None or source.resolve() not in expected_files:
             continue
-        if extract_feature_unit(feature, model_paths=(source,)) is not None:
+        if extract_feature_unit(feature) is not None:
             witnessed.add(source.resolve())
 
     assert witnessed == expected_files
@@ -179,3 +181,22 @@ def test_document_origin_has_no_glob_or_model_path_fallback() -> None:
     names = {node.id for node in ast.walk(source_function) if isinstance(node, ast.Name)}
     assert calls.isdisjoint({"glob", "rglob", "is_file", "is_dir"})
     assert "model_paths" not in names
+    assert "model_paths" not in inspect.signature(extract_feature_unit).parameters
+    assert "model_paths" not in inspect.signature(_source_file).parameters
+
+
+def test_exact_scalar_view_is_the_canonical_qualified_only_mapping() -> None:
+    assert dict(QUALIFIED_SYSML_TO_PYTHON) == {
+        name: python_type
+        for name, python_type in SYSML_TO_PYTHON.items()
+        if name.startswith("ScalarValues::")
+    }
+    assert all("::" in name for name in QUALIFIED_SYSML_TO_PYTHON)
+
+
+def test_exact_elaborator_does_not_own_a_second_scalar_mapping() -> None:
+    import sysml_codegen.elaboration.elaborate as elaborate_module
+
+    source = inspect.getsource(elaborate_module._ExactElaborator._feature_python_type)
+    assert "QUALIFIED_SYSML_TO_PYTHON" in source
+    assert "ScalarValues::Real" not in source

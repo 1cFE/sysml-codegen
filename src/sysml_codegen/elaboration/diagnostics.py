@@ -35,7 +35,16 @@ class ElaborationCode(StrEnum):
 class ElaborationInvariantError(ValueError):
     """An exact-ID invariant failed before a usable graph could be built."""
 
-    def __init__(self, code: ElaborationCode, detail: str) -> None:
+    def __init__(
+        self,
+        code: ElaborationCode,
+        detail: str,
+        *,
+        reference: str | None = None,
+        location: tuple[str, int] | None = None,
+    ) -> None:
         self.code = code
         self.detail = detail
+        self.reference = reference
+        self.location = location
         super().__init__(f"{code.value}: {detail}")

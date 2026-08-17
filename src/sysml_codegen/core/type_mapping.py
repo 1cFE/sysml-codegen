@@ -3,6 +3,9 @@
 from __future__ import annotations
 
 import logging
+from collections.abc import Mapping
+from types import MappingProxyType
+from typing import Final
 
 log = logging.getLogger(__name__)
 
@@ -16,6 +19,17 @@ SYSML_TO_PYTHON: dict[str, str] = {
     "Boolean": "bool",
     "ScalarValues::Boolean": "bool",
 }
+
+# Exact elaboration accepts only the qualified entries from the canonical table.
+# This view is derived, not copied, so adding or changing a canonical qualified
+# scalar cannot silently leave the exact route with a second answer.
+QUALIFIED_SYSML_TO_PYTHON: Final[Mapping[str, str]] = MappingProxyType(
+    {
+        name: python_type
+        for name, python_type in SYSML_TO_PYTHON.items()
+        if name.startswith("ScalarValues::")
+    }
+)
 
 
 def map_sysml_type_to_python(sysml_type: str) -> str:
@@ -31,4 +45,8 @@ def map_sysml_type_to_python(sysml_type: str) -> str:
     return sysml_type
 
 
-__all__ = ["SYSML_TO_PYTHON", "map_sysml_type_to_python"]
+__all__ = [
+    "QUALIFIED_SYSML_TO_PYTHON",
+    "SYSML_TO_PYTHON",
+    "map_sysml_type_to_python",
+]

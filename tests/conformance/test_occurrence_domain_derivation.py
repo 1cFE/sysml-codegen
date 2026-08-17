@@ -160,7 +160,14 @@ def test_definition_owned_unrelated_target_refuses_strict_and_stays_unbound_leni
     [diagnostic] = excinfo.value.diagnostics
     assert diagnostic.code is ElaborationCode.SI_OCCURRENCE_MISSING
     assert diagnostic.consumer_display == "OccurrenceDomainDerivation__definition_only_reader"
+    assert diagnostic.reference == "Sensor::reading"
+    assert diagnostic.source_file == "root-0/model.sysml"
+    assert diagnostic.source_line == 52
     assert diagnostic.detail.startswith("consumer domain has no part_definition anchor")
+    rendered = str(excinfo.value)
+    assert "Sensor::reading" in rendered
+    assert "root-0/model.sysml:52" in rendered
+    assert rendered.count("SI_OCCURRENCE_MISSING") == 1
 
     graph = _lenient_graph()
     assert graph.calc_by_display_path(

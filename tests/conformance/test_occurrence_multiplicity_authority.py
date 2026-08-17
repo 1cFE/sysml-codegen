@@ -76,22 +76,28 @@ def test_redefinition_uses_the_most_specific_writer_in_one_owner_domain() -> Non
 
 
 @pytest.mark.parametrize(
-    ("fixture", "code", "detail"),
+    ("fixture", "code", "detail", "reference", "line"),
     [
         (
             "multiplicity_writer_authority",
             ElaborationCode.SI_MULTIPLICITY_UNRESOLVED,
             "upper multiplicity on 'cell' is not a known finite integer",
+            "unrelated_count",
+            25,
         ),
         (
             "elab_unresolved_multiplicity",
             ElaborationCode.SI_MULTIPLICITY_UNRESOLVED,
             "upper multiplicity on 'cell' is not a known finite integer",
+            "count",
+            8,
         ),
         (
             "instance_index_probe",
             ElaborationCode.SI_MULTIPLICITY_UNSUPPORTED,
             "range multiplicity on 'range_member' is outside the supported occurrence model",
+            "InstanceIndexProbe::BlockHost::range_member",
+            94,
         ),
     ],
 )
@@ -99,14 +105,22 @@ def test_unrelated_unresolved_and_unsupported_shapes_refuse_publicly(
     fixture: str,
     code: ElaborationCode,
     detail: str,
+    reference: str,
+    line: int,
 ) -> None:
     with pytest.raises(ElaborationDiagnosticError) as excinfo:
         elaborate_model_paths([FIXTURES_DIR / fixture])
 
     [diagnostic] = excinfo.value.diagnostics
     assert diagnostic.code is code
-    assert diagnostic.consumer_display == "<model>"
+    assert diagnostic.reference == reference
+    assert diagnostic.source_file == "root-0/model.sysml"
+    assert diagnostic.source_line == line
     assert diagnostic.detail == detail
+    rendered = str(excinfo.value)
+    assert reference in rendered
+    assert f"root-0/model.sysml:{line}" in rendered
+    assert rendered.count(code.value) == 1
 
 
 def test_incomparable_definition_writers_refuse_without_electing_one() -> None:
@@ -125,6 +139,10 @@ def test_incomparable_definition_writers_refuse_without_electing_one() -> None:
     [diagnostic] = public.value.diagnostics
     assert diagnostic.code is ElaborationCode.SI_REDEFINITION_INVALID
     assert diagnostic.detail == caught.value.detail
+    assert diagnostic.reference == "count"
+    assert diagnostic.source_file == "root-0/runtime.sysml"
+    assert diagnostic.source_line == 8
+    assert str(public.value).count("SI_REDEFINITION_INVALID") == 1
 
 
 def test_multiple_exact_writers_in_one_owner_domain_refuse(

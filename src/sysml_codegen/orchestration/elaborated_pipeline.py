@@ -156,7 +156,6 @@ def elaborate_loaded_extractor(
             extractor.model,
             calc_definitions,
             validation_diagnostics=extractor.diagnostics.validation,
-            model_paths=model_paths,
             strict=strict,
         )
         require_executable_content(graph, calc_definitions)
@@ -164,34 +163,45 @@ def elaborate_loaded_extractor(
         diagnostics = (_semantic_evidence_diagnostic(error, source_referents),)
         raise ElaborationDiagnosticError(diagnostics) from error
     except ExactTypeError as error:
-        location = ""
-        if error.location is not None:
-            raw_source, line = error.location
-            referent = _lookup_referent(raw_source, source_referents)
-            location = f" [{referent}:{line}]"
         diagnostics = (
-            Diagnostic(
-                code=error.code,
-                consumer=None,
-                consumer_display=error.reference,
-                param_name=None,
-                detail=f"{error.operation}: {error.detail}{location}",
+            _diagnostic_with_referent(
+                Diagnostic(
+                    code=error.code,
+                    consumer=None,
+                    consumer_display=error.reference,
+                    param_name=None,
+                    detail=f"{error.operation}: {error.detail}",
+                    reference=error.reference,
+                    source_file=(error.location[0] if error.location is not None else None),
+                    source_line=(error.location[1] if error.location is not None else None),
+                ),
+                source_referents,
             ),
         )
         raise ElaborationDiagnosticError(diagnostics) from error
     except ElaborationInvariantError as error:
         diagnostics = (
-            Diagnostic(
-                code=error.code,
-                consumer=None,
-                consumer_display="<model>",
-                param_name=None,
-                detail=error.detail,
+            _diagnostic_with_referent(
+                Diagnostic(
+                    code=error.code,
+                    consumer=None,
+                    consumer_display="<model>",
+                    param_name=None,
+                    detail=error.detail,
+                    reference=error.reference,
+                    source_file=(error.location[0] if error.location is not None else None),
+                    source_line=(error.location[1] if error.location is not None else None),
+                ),
+                source_referents,
             ),
         )
         raise ElaborationDiagnosticError(diagnostics) from error
     except GraphValidationError as error:
-        raise ElaborationDiagnosticError(error.diagnostics) from error
+        diagnostics = tuple(
+            _diagnostic_with_referent(diagnostic, source_referents)
+            for diagnostic in error.diagnostics
+        )
+        raise ElaborationDiagnosticError(diagnostics) from error
 
     _rewrite_sources_as_referents(graph, source_referents)
     _rewrite_exclusion_locations(graph)
@@ -219,17 +229,38 @@ def _semantic_evidence_diagnostic(
     error: SemanticEvidenceError,
     source_referents: Mapping[str, str],
 ) -> Diagnostic:
-    location = ""
-    if error.location is not None:
-        raw_source, line = error.location
-        referent = _lookup_referent(raw_source, source_referents)
-        location = f" [{referent}:{line}]"
+    return _diagnostic_with_referent(
+        Diagnostic(
+            code=ElaborationCode.SI_EVIDENCE_INCOMPLETE,
+            consumer=None,
+            consumer_display=error.reference or "<model>",
+            param_name=None,
+            detail=f"{error.operation}: {error.detail}",
+            reference=error.reference,
+            source_file=(error.location[0] if error.location is not None else None),
+            source_line=(error.location[1] if error.location is not None else None),
+        ),
+        source_referents,
+    )
+
+
+def _diagnostic_with_referent(
+    diagnostic: Diagnostic,
+    source_referents: Mapping[str, str],
+) -> Diagnostic:
+    """Return one diagnostic with a portable source referent, failing closed."""
+    source_file = diagnostic.source_file
+    if source_file is not None:
+        source_file = _lookup_referent(source_file, source_referents)
     return Diagnostic(
-        code=ElaborationCode.SI_EVIDENCE_INCOMPLETE,
-        consumer=None,
-        consumer_display=error.reference or "<model>",
-        param_name=None,
-        detail=f"{error.operation}: {error.detail}{location}",
+        code=diagnostic.code,
+        consumer=diagnostic.consumer,
+        consumer_display=diagnostic.consumer_display,
+        param_name=diagnostic.param_name,
+        detail=diagnostic.detail,
+        reference=diagnostic.reference,
+        source_file=source_file,
+        source_line=diagnostic.source_line,
     )
 
 
@@ -245,6 +276,10 @@ def _rewrite_sources_as_referents(
     # vary by capture machine and disagree with the live route on the same model.
     for record in graph.constraint_usages.values():
         record.source_file = _referent_for(record, source_referents)
+    graph.diagnostics = [
+        _diagnostic_with_referent(diagnostic, source_referents)
+        for diagnostic in graph.diagnostics
+    ]
 
 
 def _rewrite_exclusion_locations(graph: InstanceGraph) -> None:

@@ -951,6 +951,9 @@ def _diagnostic_to_data(item: Diagnostic) -> dict[str, object]:
         "consumer_display": item.consumer_display,
         "param_name": item.param_name,
         "detail": item.detail,
+        "reference": item.reference,
+        "source_file": item.source_file,
+        "source_line": item.source_line,
     }
 
 
@@ -958,7 +961,16 @@ def _diagnostic_from_data(data: object) -> Diagnostic:
     value = _mapping(
         data,
         "diagnostic",
-        {"code", "consumer", "consumer_display", "param_name", "detail"},
+        {
+            "code",
+            "consumer",
+            "consumer_display",
+            "param_name",
+            "detail",
+            "reference",
+            "source_file",
+            "source_line",
+        },
     )
     code_value = _string(value.get("code"), "diagnostic.code")
     try:
@@ -976,6 +988,13 @@ def _diagnostic_from_data(data: object) -> Diagnostic:
         consumer_display=_string(value.get("consumer_display"), "diagnostic.consumer_display"),
         param_name=_optional_string(value.get("param_name"), "diagnostic.param_name"),
         detail=_string(value.get("detail"), "diagnostic.detail"),
+        reference=_optional_string(value.get("reference"), "diagnostic.reference"),
+        source_file=_optional_string(value.get("source_file"), "diagnostic.source_file"),
+        source_line=(
+            _integer(value.get("source_line"), "diagnostic.source_line")
+            if value.get("source_line") is not None
+            else None
+        ),
     )
 
 

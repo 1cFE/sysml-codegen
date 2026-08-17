@@ -59,9 +59,12 @@ def test_loaded_extractor_converts_semantic_evidence_once(strict: bool) -> None:
     assert diagnostic.code is ElaborationCode.SI_EVIDENCE_INCOMPLETE
     assert diagnostic.consumer_display == "plant::source"
     assert diagnostic.detail == (
-        "is_instance: the installed parser rejected the metatype query "
-        "[root-0/model.sysml:7]"
+        "is_instance: the installed parser rejected the metatype query"
     )
+    assert diagnostic.reference == "plant::source"
+    assert diagnostic.source_file == "root-0/model.sysml"
+    assert diagnostic.source_line == 7
+    assert "root-0/model.sysml:7" in str(public_error)
     assert str(public_error).count("SI_EVIDENCE_INCOMPLETE") == 1
     assert isinstance(public_error.__cause__, SemanticEvidenceError)
     semantic_error = public_error.__cause__

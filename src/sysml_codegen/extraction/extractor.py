@@ -573,7 +573,7 @@ class SysMLDataExtractor:
         self, attr_elem: Any, sysml_type: str, description: str
     ) -> str | None:
         """Delegate exact unit extraction to the declaration-owned helper."""
-        return extract_feature_unit(attr_elem, model_paths=self.model_paths)
+        return extract_feature_unit(attr_elem)
 
     def _extract_documentation(self, elem: Any) -> str:
         """Extract documentation string from element."""
