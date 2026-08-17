@@ -35,10 +35,11 @@ CAPTURED: list[str] = MANIFEST["captured"]
 REFUSED: list[str] = MANIFEST["refused"]
 
 
-def test_the_batch_is_marked_accepted() -> None:
-    """Owner accepted the 15/22 batch at the 2026-08-11 REVISE disposition."""
-    assert MANIFEST["status"].startswith("ACCEPTED")
-    assert "owner ruling 2026-08-11" in MANIFEST["status"]
+def test_the_batch_names_its_current_transition_authority() -> None:
+    """The 4A/API and final A/B recaptures do not inherit the old owner's acceptance."""
+    assert MANIFEST["status"] == (
+        "TRANSITIONED — stop-reinventing-the-parser A/B contract, 2026-08-17"
+    )
 
 
 def test_the_batch_claims_every_corpus_fixture_exactly_once() -> None:
@@ -50,12 +51,17 @@ def test_the_batch_claims_every_corpus_fixture_exactly_once() -> None:
 
 
 def test_the_batch_splits_the_corpus_the_way_the_ledger_does() -> None:
-    assert len(CAPTURED) == 15
-    assert len(REFUSED) == 22
+    assert len(CAPTURED) == 14
+    assert len(REFUSED) == 23
 
 
-def test_every_recorded_outcome_still_agrees_with_the_corpus_ledger() -> None:
-    assert batch.compare_to_ledger(RECORDS) == []
+def test_only_the_two_named_a_b_outcomes_move_from_the_historical_corpus_ledger() -> None:
+    assert batch.compare_to_ledger(RECORDS) == [
+        "deep_cross_scope_probe: ledger says 'graph 5/4/0/1', capture says "
+        "'error: SI_OCCURRENCE_MISSING'",
+        "plant_value_shapes: ledger says 'error: 2× SI_SELF_BINDING', capture says "
+        "'error: SI_TYPE_INVALID'",
+    ]
 
 
 @pytest.mark.parametrize("name", CAPTURED)

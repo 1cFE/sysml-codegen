@@ -1,10 +1,30 @@
 # Current Work
 
-**Last Updated**: 2026-08-16 (**self-binding-replacement closed and archived** — all ten
+**Last Updated**: 2026-08-17
+
+## Active: stop-reinventing-the-parser implementation
+
+The implementation is in Phase 6 on the dedicated codegen descendant
+`c22c269a57fbd1d3a20d6e7fcd7604a659232da3`. Its independently committed agentic input is
+`1804827cb2cc877b3c0bc74309bd3470fb2ee90b`. Phases 1–5 are complete: the named frozen probe chain
+and kill-gate verdicts are preserved, the public semantic-evidence boundary is landed, exact
+occurrence and calculation-output ownership is implemented, and the real SysIDE/TEAx proof matrix
+is green. Phase 6 is reconciling docs, output transitions, and production-side evidence tooling.
+The item is not audited or closed yet.
+
+`elaborator-downstream` remains blocked on this item. It starts only after the final immutable
+codegen/Fusion evidence chain lands and a fresh audit certifies this implementation. Do not use the
+older downstream premise that the parser item is already closed.
+
+## Historical status retained below
+
+**2026-08-16**: **self-binding-replacement closed and archived** — all ten
 functional criteria were independently verified. `[OWNER 2026-08-16]` The dangling-symlink
 behavior in the migration/fixture helper is a testing/developer-tooling edge case and accepted
 risk; closure was directed without another remediation cycle. Record:
-`completed/20260816_self-binding-replacement/audit.md`. Prior context: **PHASE D FULLY CLOSED; Item 8 sequencing
+`completed/20260816_self-binding-replacement/audit.md`. Prior item:
+**qualified-reference-occurrence-anchoring certified and archived**. Prior context:
+**PHASE D FULLY CLOSED; Item 8 sequencing
 decided.** The
 three-repo merge wave landed and is smoked — squash merges in the pin-enforced order:
 agentic-mbse#12 → `main` `1decd95`; codegen#10 → `main` `385e163` (the Item-7 cutover + the whole
@@ -74,6 +94,37 @@ rather than invented; vehicle `[CONSTRAINT-GATES-UNTAGGED]` in `BACKLOG.md`.
 ---
 
 ## Active Work
+
+### 2026-08-16: stop-reinventing-the-parser — SPEC REV 4
+
+`.project/active/stop-reinventing-the-parser/spec.md`. The corrected contract preserves P-002 and
+targets two bounded problems: occurrence election that is not derivable from the model, and evidence
+loss between SysIDE and generation. Each scoped site now names its own proof; forced failures are
+used only where failure swallowing is the defect, while semantic rows use real models through
+SysIDE. The dirty worktree is excluded from the baseline. The closed predecessor changes must land
+on named commits before design. The P-004-aware product lens is `CLEAR`; the fresh adversarial spec
+review verdict is `Approve`.
+
+**[AGENT] (ratified by owner, 2026-08-16):** this item is the explicit gate for
+`elaborator-downstream`; it must be implemented, audited, and closed before downstream design or
+implementation starts. The premise audit at
+`.project/research/20260816-205035_premise-audit-fallback-census.md` is the primary research input.
+The older census is superseded and is not a contract.
+
+### 2026-08-16: elaborator-downstream — SPEC REVISED AFTER REVIEW (Item 8 remainder)
+
+Draft: `.project/active/elaborator-downstream/spec.md`. Scope is the post-self-binding Fusion Tea
+package/contract regeneration, stock-API TEAx execution and new lineage, July IFE impact audit,
+an independently anchored `REQ-SI` family, README/reference-doc repair, and one closing composed
+proof. The codegen fixture now converges on the customer's measured post-R-2 shape; document 25 is
+retained and bounded as test-only/off-route. **[AGENT] (ratified by owner, 2026-08-16):** Stellarator
+migration stays in `[STELLARATOR-D5-MIGRATION]`, and the July impact claim uses named repository and
+project roots plus owner attestation. The self-binding sibling is closed at
+`completed/20260816_self-binding-replacement/`: all functional criteria are independently verified,
+and the owner accepted the remaining testing/developer-tooling edge risk. This item performs none
+of that sibling's remediation. The adversarial review's resolutions are incorporated; the revised
+product-lens rerun is `CLEAR` and explicitly resolves prior `spec-F1`. Its contract is ready, but
+design and implementation wait for `stop-reinventing-the-parser` to close.
 
 ### 2026-08-15: dead-worktree-pins — CERTIFIED, awaiting close confirmation
 

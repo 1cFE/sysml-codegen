@@ -664,7 +664,7 @@ read as shipped coverage with no disclosure, unlike its CA sibling.)
 | REQ-REG-06 | `CUSTOM_SCHEMA_TYPES` SHALL include all exit point primitive types used by any module | `tests/unit/test_registry_generation.py` | PASS |
 | REQ-REG-07 | Registry generation SHALL detect and report name collisions before rendering | `tests/unit/test_sc11_recheck.py` | PASS |
 | REQ-REG-08 | After parent-segment aliasing, registry SHALL re-check class-name uniqueness and fail fast on any residual collision | `test_sc11_recheck.py` | PASS |
-| REQ-REG-09 | `_collect_exit_point_primitive_types` SHALL warn (not silently skip) on a single-output (`field_name="root"`) exit point whose `python_type` is outside `{float,int,str,bool}` — notably `"Any"` (latent on the current corpus, reachable live via `extractor.py:492`; TRUTH-DEBT Item 6, Site 3) | `test_hygiene_tail_registry.py` | PASS |
+| REQ-REG-09 | An unsupported root exit type SHALL refuse as `EXIT_POINT_TYPE_UNSUPPORTED` before output mutation, naming token, module/output identity, file:line, and public status 1 while preserving the sentinel tree byte-for-byte | `tests/conformance/test_generation_exit_type_preflight.py` | PASS |
 
 ### RES
 

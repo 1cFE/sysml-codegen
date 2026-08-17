@@ -6,7 +6,6 @@
   "constraint_multi_instance",
   "constraint_non_numerical",
   "d38_caret",
-  "deep_cross_scope_probe",
   "fusion_tea",
   "modeled_default_fidelity",
   "quoted_owner_formula",
@@ -162,13 +161,12 @@
    "status": "graph"
   },
   "deep_cross_scope_probe": {
-   "aliases": 1,
-   "constraints": 0,
-   "entry_points": 4,
-   "modules": 5,
-   "sha256": "e8927d0ebb9b28aafcd7410bbc5122354edc4213468f0b2cb2dfc99aedecc46c",
-   "snapshot": "tests/fixtures/deep_cross_scope_probe/instance_graph_snapshot.json",
-   "status": "graph"
+   "codes": [
+    "SI_OCCURRENCE_MISSING"
+   ],
+   "error_type": "ElaborationDiagnosticError",
+   "message": "SI_OCCURRENCE_MISSING: DeepCrossScopeDesign__measurement_system__analyzer__ref_analysis: exact output 0b877fee-e8c8-5472-a0b2-24aebac57e50 has no producer in the consumer domain",
+   "status": "refused"
   },
   "expression_binding_probe": {
    "codes": [
@@ -268,11 +266,10 @@
   },
   "plant_value_shapes": {
    "codes": [
-    "SI_SELF_BINDING",
-    "SI_SELF_BINDING"
+    "SI_TYPE_INVALID"
    ],
-   "error_type": "ElaborationError",
-   "message": "SI_SELF_BINDING: PlantValueShapesLib__Chamber_Unit__select.footprint; SI_SELF_BINDING: PlantValueShapesLib__Chamber_Unit__select.wall",
+   "error_type": "ElaborationDiagnosticError",
+   "message": "SI_TYPE_INVALID: PlantValueShapesLib::ChamberSelectCalc::wall: extract_type: typing target \"PlantValueShapesLib::'Wall Kind'\" is unsupported; expected one of ScalarValues::Boolean, ScalarValues::Integer, ScalarValues::Real, or ScalarValues::String [root-0/library.sysml:92]",
    "status": "refused"
   },
   "plant_values": {
@@ -435,6 +432,7 @@
   "chain_override_probe",
   "chain_spike_model",
   "crosspart_rollup_twolevel",
+  "deep_cross_scope_probe",
   "expression_binding_probe",
   "gate_a",
   "gate_a_package_owner",
@@ -452,5 +450,5 @@
   "spec_chain_channel",
   "spec_chain_twolevel"
  ],
- "status": "ACCEPTED \u2014 owner ruling 2026-08-11 (REVISE disposition, step 1)"
+ "status": "TRANSITIONED \u2014 stop-reinventing-the-parser A/B contract, 2026-08-17"
 }

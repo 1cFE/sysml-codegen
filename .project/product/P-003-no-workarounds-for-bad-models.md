@@ -38,9 +38,11 @@ This is the product-level generalization of rules the codebase already enforces 
 
 The definition-owned lineage-miss fallback (spike F-4 family): KerML makes that configuration
 ill-formed (`checkConnectorTypeFeaturing`, KerML §8.3.4:5807; Part 1 §8.4.1 — a model violating a
-semantic constraint has no defined semantics), so the resolver's descendant/sibling occurrence
-search is a workaround this promise forbids. Removal is owned by `[DEF-OWNED-SIDEWAYS-REACH]`
-(`.project/backlog/BACKLOG.md`). The bounded removal landed on 2026-08-16: a qualified
-definition-owned lineage miss now refuses with `SI_OCCURRENCE_MISSING`; independent audit verified
-the bounded removal on 2026-08-16. Exact usage-owner anchoring, local definition-owned lineage
-mapping, bare references, and explicit occurrence paths remain unchanged.
+semantic constraint has no defined semantics), so descendant or sibling occurrence search is a
+workaround this promise forbids. The first bounded removal landed on 2026-08-16. The exact-address
+implementation now covers the whole route: every definition-owned lineage miss refuses with
+`SI_OCCURRENCE_MISSING`; no descendant, sibling, model-root, or sole-candidate retry remains.
+Definition-owned references that map through the consumer's own occurrence lineage remain the
+positive form. Exact usage-owner anchoring and explicit occurrence paths remain unchanged. The
+complete current proof is `tests/conformance/test_definition_owned_reference_positions.py` plus
+`tests/conformance/test_occurrence_domain_derivation.py`.

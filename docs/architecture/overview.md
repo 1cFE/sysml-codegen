@@ -73,6 +73,29 @@ Two consequences a reader should carry into the reference documents:
 
 The four-typed-registry design and the one-authority `resolve_producer()` ladder that this section used to describe were deleted with the legacy stack. They are documented, accurately, in [10-output-registry](reference/10-output-registry.md), [04-producer-resolution](reference/04-producer-resolution.md), [03-resolution-overview](reference/03-resolution-overview.md), and [24-dual-resolution-architecture](reference/24-dual-resolution-architecture.md), each of which now opens with a banner.
 
+### One semantic-owner walk, then exact indexes
+
+The live elaborator asks SysIDE for a feature's semantic owner once. Formal parameters and
+attachments keep their valid owner domains. Occurrence lookup is stricter: the owner and authored
+containment steps become an immutable `ContainmentAddress`, and `OccurrenceIndex` instantiates only
+that address in the consumer domain. A direct package member is one explicit package step. A nested
+package-owned member without its prefix refuses. There is no nearest ancestor, descendant, model
+root, or sole-candidate retry. The real topology matrix is
+`tests/conformance/test_occurrence_domain_derivation.py`.
+
+Calculation outputs use a separate calculation-output producer index. Its key includes the output
+declaration, usage declaration, exact owner scope, calculation node, and output port. A consumer
+can therefore select the producer in its own repeated or package domain without a model-wide
+"sole producer" guess. See `tests/conformance/test_occurrence_calc_domain_derivation.py`.
+
+Expression and type evidence cross one public boundary in
+`orchestration/elaborated_pipeline.py`: `elaborate_loaded_extractor` converts the upstream
+`SemanticEvidenceError` once to `SI_EVIDENCE_INCOMPLETE` for both live and admitted/snapshot
+capture. The graph builder remains private and never converts that public error. Exact typing
+requires one qualified supported primitive, and valid indexed references currently refuse before
+graph construction as `SI_INDEXED_SOURCE_UNSUPPORTED`. The kept evidence proof is
+`tests/conformance/test_expression_evidence_integrity.py`.
+
 ### Test-First with Real SysML Data
 
 Conformance tests use real SysML fixture models (parsed via SysIDE) and verify pipeline behavior against committed snapshots and hand-derived expectations. No mock adapters or synthetic data. This ensures tests exercise the same code paths as production. Every tracked requirement maps to its conformance tests in [verification-matrix.md](verification-matrix.md), which carries the authoritative counts.

@@ -4,12 +4,14 @@
 from __future__ import annotations
 
 import argparse
+import copy
 import hashlib
 import json
 import platform
+import subprocess
 import tempfile
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 import syside
 
@@ -22,6 +24,13 @@ from sysml_codegen.snapshot.instance_graph import encode_instance_graph
 
 ROOT = Path(__file__).resolve().parent.parent
 BATCH_PATH = Path("tests/fixtures/v6_recapture_batch/batch.json")
+P_SEED = "52a03cd2d0a9fdd340b60b16cea79a5b72234b08"
+FOUR_A = "09fdae1986c81c2a5738e1401bdc78e0ea5fa607"
+FROZEN_BATCH_SHA256 = "bd7bf245e3ca3923b9b5d41db97861c9fcdf64435e768d48a2d7027eb52d9288"
+FOUR_A_BATCH_SHA256 = "79a0ea9f712652a4665deb8304fbb7d4c4529d76d72dbb1097e712aafaddc1b4"
+CURRENT_BATCH_SHA256 = "7f9269781a8938308715229c5be00855490e82b7e54f9cb90939195e3aeefa40"
+MANIFEST_PATH = Path("verification/fixture-manifest.json")
+TRANSITIONS_PATH = Path("verification/expected-transitions.md")
 ADDED_ROOTS = (
     "feature_metadata_multifile",
     "feature_typing_integrity",
@@ -51,8 +60,34 @@ def _source_rows(root: Path) -> list[dict[str, str]]:
     return [{"path": str(path.relative_to(ROOT)), "sha256": _sha(path)} for path in files]
 
 
+def _git_bytes(commit: str, path: Path) -> bytes:
+    try:
+        return subprocess.run(
+            ["git", "-C", str(ROOT), "show", f"{commit}:{path}"],
+            check=True,
+            capture_output=True,
+        ).stdout
+    except subprocess.CalledProcessError as error:
+        raise ValueError(f"cannot load {path} from named commit {commit}") from error
+
+
+def _frozen_batch() -> dict[str, Any]:
+    raw = _git_bytes(P_SEED, BATCH_PATH)
+    if hashlib.sha256(raw).hexdigest() != FROZEN_BATCH_SHA256:
+        raise ValueError("named P_seed does not contain the frozen batch-manifest bytes")
+    value = json.loads(raw)
+    if not isinstance(value, dict):
+        raise ValueError("frozen batch manifest is not a JSON object")
+    return cast(dict[str, Any], value)
+
+
 def build_manifest() -> dict[str, object]:
-    batch = json.loads((ROOT / BATCH_PATH).read_text())
+    """Reconstruct the Phase 1 source inventory from its named frozen P_seed.
+
+    The live batch file is an output expectation and transitioned in 4A.  It is deliberately not
+    an input here: probe identity is the frozen roots and SysML/KerML source bytes.
+    """
+    batch = _frozen_batch()
     roots: list[dict[str, object]] = []
     for name in batch["fixtures"]:
         record = batch["records"][name]
@@ -77,14 +112,16 @@ def build_manifest() -> dict[str, object]:
         )
     return {
         "schema_version": "stop-parser-fixture-inventory/v1",
-        "canonical_batch": {"path": str(BATCH_PATH), "sha256": _sha(ROOT / BATCH_PATH)},
+        "canonical_batch": {"path": str(BATCH_PATH), "sha256": FROZEN_BATCH_SHA256},
         "counts": {
             "canonical_roots": 37,
             "canonical_graph_records": len(batch["captured"]),
             "canonical_refusal_records": len(batch["refused"]),
             "added_roots": len(ADDED_ROOTS),
             "added_source_files": sum(
-                len(row["sources"]) for row in roots if row["kind"] == "added"
+                len(cast(list[object], row["sources"]))
+                for row in roots
+                if row["kind"] == "added"
             ),
             "total_roots": len(roots),
         },
@@ -93,9 +130,12 @@ def build_manifest() -> dict[str, object]:
 
 
 def validate_manifest(manifest: dict[str, Any]) -> None:
+    frozen_manifest = _git_bytes(P_SEED, MANIFEST_PATH)
+    if hashlib.sha256(frozen_manifest).hexdigest() != _sha(ROOT / MANIFEST_PATH):
+        raise ValueError("fixture manifest differs from its named P_seed bytes")
     expected = build_manifest()
     if manifest != expected:
-        raise ValueError("fixture manifest differs from the closed on-disk inventory")
+        raise ValueError("fixture manifest differs from the frozen P_seed source inventory")
     roots = manifest["roots"]
     if len({row["root"] for row in roots}) != len(roots):
         raise ValueError("fixture manifest contains duplicate roots")
@@ -119,6 +159,200 @@ def validate_manifest(manifest: dict[str, Any]) -> None:
             listed.add(source["path"])
             if _sha(ROOT / path) != source["sha256"]:
                 raise ValueError(f"source hash mismatch: {path}")
+
+
+def validate_current_batch() -> dict[str, Any]:
+    """Validate the transitioned output expectations independently of the probe lock."""
+    path = ROOT / BATCH_PATH
+    current_hash = _sha(path)
+    if current_hash != CURRENT_BATCH_SHA256:
+        raise ValueError(
+            "current batch-manifest output expectation moved: "
+            f"expected {CURRENT_BATCH_SHA256}, found {current_hash}"
+        )
+    batch = json.loads(path.read_text())
+    fixtures = batch.get("fixtures")
+    records = batch.get("records")
+    captured = batch.get("captured")
+    refused = batch.get("refused")
+    if (
+        not isinstance(fixtures, list)
+        or len(fixtures) != 37
+        or not isinstance(records, dict)
+        or set(fixtures) != set(records)
+        or not isinstance(captured, list)
+        or not isinstance(refused, list)
+        or set(captured) | set(refused) != set(fixtures)
+        or set(captured) & set(refused)
+    ):
+        raise ValueError("current batch-manifest record inventory is not closed")
+    for name in fixtures:
+        record = records[name]
+        if record.get("status") == "graph":
+            snapshot = Path(str(record.get("snapshot", "")))
+            if snapshot.is_absolute() or ".." in snapshot.parts or not (ROOT / snapshot).is_file():
+                raise ValueError(f"current batch snapshot path is invalid: {name}")
+            if _sha(ROOT / snapshot) != record.get("sha256"):
+                raise ValueError(f"current batch snapshot hash moved: {name}")
+        elif record.get("status") != "refused":
+            raise ValueError(f"current batch outcome is unnamed: {name}")
+    return {
+        "path": str(BATCH_PATH),
+        "frozen_p_seed": P_SEED,
+        "frozen_sha256": FROZEN_BATCH_SHA256,
+        "current_sha256": current_hash,
+        "captured": len(captured),
+        "refused": len(refused),
+    }
+
+
+def _snapshot_semantics(payload: bytes) -> dict[str, Any]:
+    document = json.loads(payload)
+    normalized = copy.deepcopy(document)
+    authority = normalized.get("authority")
+    integrity = normalized.get("integrity")
+    if not isinstance(authority, dict) or not isinstance(integrity, dict):
+        raise ValueError("transitioned snapshot omits authority or integrity")
+    for field in ("agentic_mbse_version", "sysml_codegen_version"):
+        if field not in authority:
+            raise ValueError(f"transitioned snapshot omits authority.{field}")
+        del authority[field]
+    if "digest" not in integrity:
+        raise ValueError("transitioned snapshot omits integrity.digest")
+    del integrity["digest"]
+    return cast(dict[str, Any], normalized)
+
+
+def _json_leaf_differences(
+    before: Any, after: Any, path: tuple[str, ...] = ()
+) -> dict[str, tuple[Any, Any]]:
+    if isinstance(before, dict) and isinstance(after, dict) and set(before) == set(after):
+        result: dict[str, tuple[Any, Any]] = {}
+        for key in sorted(before):
+            result.update(_json_leaf_differences(before[key], after[key], (*path, key)))
+        return result
+    if before == after:
+        return {}
+    return {"::".join(path): (before, after)}
+
+
+def validate_output_transitions() -> dict[str, Any]:
+    """Prove every post-P_seed output byte is metadata-only or owned by a named A/B row."""
+    result = subprocess.run(
+        [
+            "git",
+            "-C",
+            str(ROOT),
+            "diff",
+            "--name-only",
+            P_SEED,
+            FOUR_A,
+            "--",
+            "tests/fixtures",
+        ],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    changed = {Path(line) for line in result.stdout.splitlines() if line}
+    snapshot_paths = {
+        path for path in changed if path.name == "instance_graph_snapshot.json"
+    }
+    expected_non_snapshots = {
+        BATCH_PATH,
+        Path("tests/fixtures/golden/computed_attribute_golden.json"),
+    }
+    if len(snapshot_paths) != 23 or changed != snapshot_paths | expected_non_snapshots:
+        raise ValueError(
+            "4A fixture transition set is not 23 snapshots plus batch and golden outputs"
+        )
+
+    ledger = (ROOT / TRANSITIONS_PATH).read_text()
+    for path in sorted(snapshot_paths):
+        before = _git_bytes(P_SEED, path)
+        after = _git_bytes(FOUR_A, path)
+        before_hash = hashlib.sha256(before).hexdigest()
+        after_hash = hashlib.sha256(after).hexdigest()
+        if _snapshot_semantics(before) != _snapshot_semantics(after):
+            raise ValueError(f"unowned 4A snapshot semantic difference: {path}")
+        if str(path) not in ledger or before_hash not in ledger or after_hash not in ledger:
+            raise ValueError(f"transition ledger omits exact 4A snapshot hashes: {path}")
+        current = ROOT / path
+        if path.parts[-2] == "deep_cross_scope_probe":
+            if current.exists():
+                raise ValueError("stale deep_cross_scope_probe snapshot remains after A2 refusal")
+        elif not current.is_file() or current.read_bytes() != after:
+            raise ValueError(f"maintained snapshot moved after its 4A recapture: {path}")
+
+    golden_path = Path("tests/fixtures/golden/computed_attribute_golden.json")
+    before_golden = json.loads(_git_bytes(P_SEED, golden_path))
+    after_golden = json.loads(_git_bytes(FOUR_A, golden_path))
+    differences = _json_leaf_differences(before_golden, after_golden)
+    deep_classification = (
+        "deep_cross_scope_probe::DeepCrossScopeProducer::'Monitoring Station'::"
+        "station_output::classification"
+    )
+    expected_golden = {
+        deep_classification: (
+            "expose_chain_tentative",
+            "unresolvable",
+        ),
+        "ife_plant::IfePlantSubsystems::radial_build::magnet_volume_total::classification": (
+            "expose_chain_tentative",
+            "unresolvable",
+        ),
+    }
+    if differences != expected_golden:
+        raise ValueError(f"unowned golden-output differences: {differences}")
+    current_golden = (ROOT / golden_path).read_bytes()
+    after_golden_bytes = _git_bytes(FOUR_A, golden_path)
+    if current_golden != after_golden_bytes:
+        raise ValueError("computed-attribute golden output moved after 4A")
+    for digest in (
+        hashlib.sha256(_git_bytes(P_SEED, golden_path)).hexdigest(),
+        hashlib.sha256(after_golden_bytes).hexdigest(),
+    ):
+        if digest not in ledger:
+            raise ValueError("transition ledger omits a computed-attribute golden hash")
+
+    before_batch_raw = _git_bytes(FOUR_A, BATCH_PATH)
+    if hashlib.sha256(before_batch_raw).hexdigest() != FOUR_A_BATCH_SHA256:
+        raise ValueError("named 4A does not contain its recorded batch-manifest bytes")
+    before_batch = json.loads(before_batch_raw)
+    current_batch = json.loads((ROOT / BATCH_PATH).read_text())
+    moved_records = sorted(
+        name
+        for name in before_batch["fixtures"]
+        if before_batch["records"][name] != current_batch["records"][name]
+    )
+    if moved_records != ["deep_cross_scope_probe", "plant_value_shapes"]:
+        raise ValueError(f"unowned current batch record transitions: {moved_records}")
+    if before_batch["fixtures"] != current_batch["fixtures"]:
+        raise ValueError("current batch fixture inventory moved")
+    if set(before_batch) != set(current_batch):
+        raise ValueError("current batch top-level schema moved")
+    expected_captured = [
+        name for name in before_batch["captured"] if name != "deep_cross_scope_probe"
+    ]
+    expected_refused = sorted([*before_batch["refused"], "deep_cross_scope_probe"])
+    if (
+        current_batch["captured"] != expected_captured
+        or current_batch["refused"] != expected_refused
+    ):
+        raise ValueError("current batch captured/refused transition is not the exact A2 move")
+    for digest in (FOUR_A_BATCH_SHA256, CURRENT_BATCH_SHA256):
+        if digest not in ledger:
+            raise ValueError("transition ledger omits a batch-manifest hash")
+
+    return {
+        "metadata_only_snapshots": len(snapshot_paths),
+        "golden_rows": [
+            "deep_cross_scope_probe::DeepCrossScopeProducer::'Monitoring Station'::station_output",
+            "ife_plant::IfePlantSubsystems::radial_build::magnet_volume_total",
+        ],
+        "batch_record_transitions": moved_records,
+        "maintained_current_snapshots": len(snapshot_paths) - 1,
+    }
 
 
 def _tree_hashes(root: Path) -> dict[str, str]:
@@ -348,6 +582,7 @@ def capture(
         },
         "versions": {"python": platform.python_version(), "syside": syside.__version__},
         "manifest_sha256": _sha(ROOT / "verification/fixture-manifest.json"),
+        "batch_transition": validate_current_batch(),
         "records": records,
     }
 
@@ -357,6 +592,8 @@ def main() -> int:
     parser.add_argument("--write-fixture-manifest", action="store_true")
     parser.add_argument("--capture", action="store_true")
     parser.add_argument("--check", action="store_true")
+    parser.add_argument("--check-current-batch", action="store_true")
+    parser.add_argument("--check-output-transitions", action="store_true")
     parser.add_argument(
         "--output", type=Path, default=ROOT / "verification/pre-change-baseline.json"
     )
@@ -370,6 +607,8 @@ def main() -> int:
         manifest_path.write_bytes(_canonical(build_manifest()) + b"\n")
     manifest = json.loads(manifest_path.read_text())
     validate_manifest(manifest)
+    current_batch = validate_current_batch()
+    output_transitions = validate_output_transitions()
     if args.capture:
         if not args.codegen_commit or not args.agentic_commit or args.teax_root is None:
             parser.error(
@@ -428,6 +667,10 @@ def main() -> int:
                     raise ValueError(f"execution hash is incomplete: {inventory['root']}")
         if outcome_counts["graph"] + outcome_counts["refused"] != 43:
             raise ValueError("baseline outcome count changed")
+    if args.check_current_batch:
+        print(json.dumps(current_batch, sort_keys=True))
+    if args.check_output_transitions:
+        print(json.dumps(output_transitions, sort_keys=True))
     return 0
 
 

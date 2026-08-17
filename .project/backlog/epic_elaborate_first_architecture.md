@@ -541,13 +541,20 @@ L2-1.
 
 **Dependencies**: Item 7 complete; `self-binding-replacement` closed on 2026-08-16 with all
 functional criteria independently verified and its testing/developer-tooling edge accepted as risk
-by the owner; `stop-reinventing-the-parser` implemented, audited, and closed. Item 8 downstream
-design and implementation perform none of either predecessor's remediation.
+by the owner. **[AGENT] (ratified by owner, 2026-08-16):** `stop-reinventing-the-parser` is
+implemented, audited, and closed before Item 8 downstream design or implementation; downstream
+performs none of either predecessor's remediation. Source: the active item's `spec-review.md` L4-1
+and the owner's direction to apply the review fixes. The implementation is active: agentic descendant
+`1804827cb2cc877b3c0bc74309bd3470fb2ee90b` and the completed Phase-5 codegen descendant
+`c22c269a57fbd1d3a20d6e7fcd7604a659232da3` are its current production inputs. It still requires
+the final immutable codegen/Fusion evidence chain and a fresh audit. Item 8 downstream design and
+implementation perform none of either predecessor's remediation.
 
 **Bounded predecessor active 2026-08-16:**
 `.project/active/stop-reinventing-the-parser/` owns exact occurrence derivation and evidence
-integrity. It closes before `.project/active/elaborator-downstream/` starts so downstream
-regeneration and certification measure the final semantic-authority rules.
+integrity. `elaborator-downstream` remains blocked until this predecessor lands its final evidence
+commit, passes a fresh audit, and closes, so downstream regeneration and certification measure the
+final semantic-authority rules.
 
 **Bounded child closed 2026-08-16:** exact occurrence-owner anchoring for usage-owned one-segment
 references is certified and archived at

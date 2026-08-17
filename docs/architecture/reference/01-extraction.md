@@ -5,6 +5,24 @@ walks the parsed AST, and produces structured Python dataclasses. No analysis,
 resolution, or generation happens here -- it is a pure data-harvesting step.
 Source: `src/sysml_codegen/extraction/`
 
+## The semantic-evidence boundary
+
+Raw SysIDE nodes are not a license for downstream guessing. Agentic-mbse supplies mapped metatype,
+exact referent/target, operand, origin, and `DocumentTier` evidence. Codegen consumes that evidence
+through one public boundary: `elaborate_loaded_extractor` in
+`orchestration/elaborated_pipeline.py`. It catches `SemanticEvidenceError` for both live and
+admitted-source extraction and emits one `SI_EVIDENCE_INCOMPLETE` diagnostic with the operation,
+reference, portable source referent, and line. The private graph builder does not expose or convert
+the upstream exception.
+
+Feature typing is exact too. A feature must have one qualified supported primitive type; zero,
+multiple, user-defined lookalike, or unsupported primitive outcomes refuse as `SI_TYPE_INVALID`.
+An otherwise valid indexed element expression currently refuses before graph construction as
+`SI_INDEXED_SOURCE_UNSUPPORTED`; indexing is a filed capability, not a silently dropped operand.
+The strict/lenient, live/admitted, typing, and indexed cases are pinned by
+`tests/conformance/test_expression_evidence_integrity.py` and
+`tests/conformance/test_feature_typing_integrity.py`.
+
 ## Requirements
 
 | ID | Requirement | Verified by |
@@ -15,7 +33,7 @@ Source: `src/sysml_codegen/extraction/`
 | REQ-EXT-04 | Every aggregation expression SHALL be decomposed into typed terms: [SumTerm, SingletonTerm, LocalTerm](#aggregation-data-sumterm-singletonterm-localterm). | `all(len(a.sum_terms) + len(a.singleton_terms) + len(a.local_terms) > 0 for a in agg_exprs)` |
 | REQ-EXT-05 | Template calc usages (`is_template=True`) SHALL produce one virtual [CalcUsageData](09-data-models.md#extraction-models) per PartUsage that instantiates the owning PartDef. | Count virtual usages == count of design-level PartUsage instances of that PartDef |
 | REQ-EXT-06 | Extraction SHALL NOT import from `analysis/`, `resolution/`, or `generation/`. | Static import analysis of `extraction/` package |
-| REQ-EXT-07 | `output_expression_asts` SHALL preserve raw SysIDE AST nodes for downstream [expression compilation](14-expression-compiler.md). | Nodes are stored as `Any` and passed unchanged to `compile_calc_def()` |
+| REQ-EXT-07 | Expression extraction SHALL preserve exact mapped metatype, operand, target, origin, and type evidence for downstream compilation; incomplete evidence refuses at the one public conversion boundary. | `tests/conformance/test_expression_evidence_integrity.py` |
 | REQ-EXT-08 | A `calc def` that extracts with zero output attributes SHALL raise a `ValueError` at extraction (V7), never reaching generation. | `extract_calculation_definitions()` on the `zero_output_calc` fixture raises before the Jinja module template runs |
 | REQ-EXT-09 | Every `ConstraintUsage` — **including** its `assert` (`AssertConstraintUsage`), `require`/plain subtypes, **and** `RequirementUsage` with its `satisfy` subtype — SHALL be a member of the constraint usage domain (`InstanceGraph.constraint_usages`, minted before owner-to-scope expansion) and SHALL carry exactly one disposition: `eligible`, `excluded`, or `non_reaching`. The requirement-side exclusion is a disposition *inside* the domain (`out_of_scope_satisfy`, `out_of_profile_owner`), not a boundary that removes the usage from it — a form outside the domain could not carry a named visible exclusion. Nothing is silently absent. | `test_constraint_population_oracle.py` — a reviewed expected-population file per constraint-bearing fixture directory, read from the `.sysml` source and asserted against the domain **by identity list**, plus the rule that a constraint-bearing directory with no expectation file fails by name. `test_constraint_usage_domain_totality.py` pins the headline: `catf_mfe_d5` authors 65 usages and the domain holds 65, where the pre-Item-2 catalog held 9. `test_constraint_catalog_totality.py` pins that the shipped catalog carries every member and that generation refuses a broken join before writing. See the [subtype-enumeration decision table](../../../../agentic-mbse/docs/subtype-enumeration-decision-table.md) (adapter docs, D4 home) for the per-call-site policy. |
 | REQ-EXT-10 | A calc-def member that is a direction-carrying `ReferenceUsage` — a named `return y` (Out) or a bare `in x` (In) — SHALL be extracted as a parameter; a named inline `return y : Real = expr` SHALL populate `output_expression_asts` so the output auto-implements. | `test_return_style_extraction.py` — `NamedReturnB` yields output `y` with a captured AST; `BareInC` yields input `x`; offline snapshot I/O confirms both |

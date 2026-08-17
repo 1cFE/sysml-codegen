@@ -57,7 +57,13 @@ filed follow-up.
 | REQ-REG-06 | `CUSTOM_SCHEMA_TYPES` SHALL include all exit point primitive types used by any module | TEAx integration | Schema type registration covers all output types |
 | REQ-REG-07 | Registry generation SHALL detect and report name collisions before rendering | Fail-fast diagnostics | Warning emitted when two modules produce same class name |
 | REQ-REG-08 | After parent-segment aliasing, registry SHALL re-check class-name uniqueness and fail fast on any residual collision | Fail-fast diagnostics | `_resolve_class_name_collisions()` raises when two modules alias identically (same class + parent, different grandparents); conformance: `test_sc11_recheck` |
-| REQ-REG-09 | `_collect_exit_point_primitive_types` SHALL warn (not silently skip) when a single-output (`field_name="root"`) exit point carries a `python_type` outside `{float,int,str,bool}` — notably `"Any"` | Fail-fast diagnostics | An unmapped `python_type` registers no wrapper and previously logged nothing; now warns naming the module and the unmapped type. Latent on the current corpus (Phase-0 reachability scan: 0 non-`float` exit points), `"Any"` reachable live via `extractor.py:492`; TRUTH-DEBT Item 6, Site 3; conformance: `test_hygiene_tail_registry.py` |
+| REQ-REG-09 | A root exit whose type token is outside `{float,int,str,bool}` SHALL refuse before output mutation as `EXIT_POINT_TYPE_UNSUPPORTED`, naming the token, module identity, output identity, file:line, and public status 1 | Fail-before-mutate diagnostic | `tests/conformance/test_generation_exit_type_preflight.py` proves the complete sentinel tree stays byte-identical and the total shared wrapper validator has no second type map or late warn/omit branch |
+
+`_preflight_exit_point_types` runs on the complete graph before the output directory is cleared.
+The registry then calls the same `exit_point_wrapper_type` validator while rendering; reaching an
+unsupported token there is an internal invariant failure, not a second public policy. This keeps
+the public diagnostic early and total while preventing the registry from silently omitting a
+wrapper.
 
 ---
 

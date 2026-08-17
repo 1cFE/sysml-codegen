@@ -498,6 +498,27 @@ owner-disposition.md O3, **[OWNER 2026-08-13]**): the shield volume-fraction clo
 would fail if attached. Named model-debt entries live in the derivative's PROVENANCE; this is the
 one backlog note the ruling requires.
 
+### [INDEXED-ELEMENT-EXPRESSION-SUPPORT] Execute valid indexed element references — P3, unowned `[AGENT, 2026-08-17]`
+
+**Serves:** P-001's requirement that a modeled study vary and assess the values the author named.
+
+Agentic-mbse and SysIDE can identify a valid indexed element expression and preserve its index.
+Codegen does not yet have index execution semantics. The shipped route therefore refuses before
+graph construction as `SI_INDEXED_SOURCE_UNSUPPORTED`; it does not discard the index or bind the
+base feature. This is an agent-filed capability candidate. Its semantics and priority remain open.
+
+Evidence: `tests/fixtures/indexed_expression_source/model.sysml` and
+`tests/conformance/test_expression_evidence_integrity.py`.
+
+### [OUTPUT-ALIAS-DUPLICATE-SOURCE-SILENCE] Diagnose a second alias authored for one source — P3, unowned `[AGENT, 2026-08-17]`
+
+**Serves:** P-001's need for trustworthy study outputs.
+
+When a model authors a second output alias for a source that already has one, current extraction
+produces neither a second output file nor a diagnostic for that second alias. The first alias remains
+the output. This separate agent-filed row records the silent authored-source case without choosing
+whether duplicate aliases should be supported or refused.
+
 ### [ACAUSAL-RELATIONS-CAPABILITY] Relation-style parametrics with study-selectable causality — P3, unowned capability bet (filed at owner direction, 2026-08-13)
 
 "Don't force independent vs dependent": acausal constraint relations whose solve direction is
