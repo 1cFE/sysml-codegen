@@ -593,6 +593,9 @@ def test_a_graph_carrying_diagnostics_is_not_certifiable(
             "consumer_display": "<test>",
             "param_name": None,
             "detail": "not certifiable",
+            "reference": None,
+            "source_file": None,
+            "source_line": None,
         }
     ]
     _reseal_graph(document)
