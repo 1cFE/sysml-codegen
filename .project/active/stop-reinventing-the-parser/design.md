@@ -5,7 +5,9 @@
 **Date:** 2026-08-17
 **Branch:** `stop-reinventing-the-parser`
 **Contract:** `spec.md`, approved revision 4
-**Prior review:** `design-review.md`, Revision 6 `Approve`; Revision-5 owner resolutions finalized 2026-08-17
+**Prior review:** `design-review.md`, Revision 6 `Approve`; Revision-7 targeted amendment review
+`Revise` — must-fix set applied and orchestrator-verified 2026-08-17 (verification note in
+`design-review.md`)
 **Product lens:** `BLOCKED` at `audit3-F1` until the indexed-consumer proof passes
 **Revision input:**
 `.project/research/20260817-164828_expression-evidence-boundary-convergence-assessment.md`;
@@ -103,23 +105,21 @@ These facts describe the audited failed candidate, not this documentation checko
   calculation and constraint bindings, aliases, computed attributes, and predicates. Some walks
   consume Agentic facts; others reconstruct references or dependencies from raw expression nodes.
 - The indexed-source preflight screens **only calc-usage in-direction bindings**. `screen_source_readiness`
-  iterates `usage.bindings` (`extraction/source_evidence.py:173`), and the elaborator's binding
+  iterates `usage.bindings` (`extraction/source_evidence.py:195`), and the elaborator's binding
   classification serves consumer ports the same way. A bare computed-attribute initializer never
   enters that population: it becomes a **typed alias** (the refusal text names it as such), and alias
   resolution carries the indexed fact into semantic resolution, where the index has no representable
   role — the index's role is dropped, not screened. This is the verified mechanism
-  [`run-records/phase1-stop-report.md`, Finding 3, verified in source at `C_base`]. Revision 6's
-  earlier account — "the computed attribute route reads a fact that retains `has_index_segment`,
-  ignores that field" — named the wrong trigger and is deleted.
+  [`run-records/phase1-stop-report.md`, Finding 3, verified in source at `C_base`].
 
   The measured behavior at `C_base` follows directly from that mechanism:
 
-  | Authored shape | Result at `C_base` |
-  |---|---|
-  | `picked = cells#(2).mass`, `cells : Cell[3]` (Revision-6 plan stencil) | REFUSED — `SI_OCCURRENCE_AMBIGUOUS`; wrong name, incidental to the plural slot |
-  | `picked = cells#(2).mass * 1.0` (any operator wrapper) | REFUSED — `SI_INDEXED_SOURCE_UNSUPPORTED`; correct code |
-  | `picked = cells#(1).mass`, `Cell[1]` | zero-diagnostic graph, silently `cells[0].mass` |
-  | `picked = cells#(2).mass`, `Cell[1]` — index out of range | zero-diagnostic graph, silently `cells[0].mass` |
+  | Authored shape | Result at `C_base` | Provenance |
+  |---|---|---|
+  | `picked = cells#(2).mass`, `cells : Cell[3]` (Revision-6 plan stencil) | REFUSED — `SI_OCCURRENCE_AMBIGUOUS`; wrong name, incidental to the plural slot | [verified] orchestrator |
+  | `picked = cells#(2).mass * 1.0` (any operator wrapper) | REFUSED — `SI_INDEXED_SOURCE_UNSUPPORTED`; correct code | [AGENT] retained probe |
+  | `picked = cells#(1).mass`, `Cell[1]` | zero-diagnostic graph, silently `cells[0].mass` | [AGENT] retained probe |
+  | `picked = cells#(2).mass`, `Cell[1]` — index out of range | zero-diagnostic graph, silently `cells[0].mass` | [verified] orchestrator |
 
   A **singular** slot silently binds occurrence zero for any authored index, in range or not. A
   **plural** slot refuses incidentally as ambiguous, on a name that describes occurrence selection
@@ -148,7 +148,7 @@ checkout is not an implementation base. D1-D4, the retained probes, and the comm
 harness in `C_base` are preserved; gate 6 assigns fresh target identities `A_final`, `C_prod`,
 `F_final`, and `C_evidence`.
 
-**[OWNER-ratified 2026-08-17, ruling 1]** `C_base` and `A_base` are unchanged by Revision 7. The
+**[AGENT] (ratified by owner, 2026-08-17)** — ruling 1. `C_base` and `A_base` are unchanged. The
 Phase-1 stop did not disqualify the base: the lock is intact and the tree is coherent
 (`run-records/phase1-stop-report.md`, Finding 1). Do not re-root.
 
@@ -607,6 +607,24 @@ layers keep the same public diagnostic, so tests distinguish them by control flo
 
 Both proofs must stay green. An end-to-end refusal by itself cannot show which layer caught the
 index and cannot close an omitted preflight category.
+
+#### Inventory refusal precedes occurrence resolution
+
+The inventory refuses an `IndexedReferenceUse` **before** any occurrence-domain resolution runs, so an
+indexed use can never be diagnosed as an occurrence problem. The public refusal for an authored index
+is always `SI_INDEXED_SOURCE_UNSUPPORTED`, never `SI_OCCURRENCE_MISSING` or
+`SI_OCCURRENCE_AMBIGUOUS`, regardless of the consumer slot's multiplicity.
+
+*Rejected: letting whichever check fires first name the failure.* That is `C_base`'s behavior, and it
+makes the public diagnostic depend on the declared multiplicity of the consumer's slot rather than on
+the defect. A user who wrote an index gets told their occurrence is ambiguous, which points at the
+wrong thing to fix and hides an unimplemented capability behind a resolution error.
+
+This is a named clause of D7, not a new decision: step 2 above already refuses every
+`IndexedReferenceUse` before extraction, `_ExactElaborator`, or `InstanceGraph` allocation. It is
+called out because it now carries a required diagnostic transition (A5b) and an explicit test
+obligation ([the indexed red set](#the-indexed-red-set--both-cases-are-required-kept-tests)). It adds
+no mechanism.
 
 #### Binding and deep-path values are valid by construction
 
@@ -1107,62 +1125,111 @@ The retained probe/fixture commit already exists at
 `43edf9bde4db44e7973458ada732d2cd75e764f6`. Both are ancestors of `C_base` and are preserved in
 place; Revision 6 does not recreate them or call a new commit the pre-change probe boundary.
 
-At gate 1, the committed runner requires `probe_fixture_commit` to equal that locked 40-character
-SHA, requires its recorded parent relationship, and recomputes every probe/fixture hash **against the
-lock commit's own tree**, not against the working tree. The recorded verdicts must name the same probe
-and lock commits. A dirty implementation worktree, a mismatch in the lock leg, or an unowned
-current-output difference stops the plan. The probes rerun only under D10's locked-input rule, where
-"locked input" means a change to the frozen historical bytes, not a ledger-owned current-output
-transition.
+At gate 1, the committed runner requires `probe_fixture_commit` to equal `20f9e60a`, requires its
+recorded parent relationship, and recomputes every probe/fixture hash **against that commit's tree**,
+not against the working tree. The recorded verdicts must name the same probe and lock commits. A dirty
+implementation worktree, or a failure in any of the three legs below, stops the plan.
 
-The lock stores SHA-256 for every probe, every source fixture file in the 37 canonical roots, every
-added fixture file, the item fixture manifest, and the canonical batch manifest.
+**When the probes rerun (D10's locked-input trigger).** Two conditions, and only these:
+
+1. **A lock-vs-historical-tree mismatch** — a locked hash no longer recomputes against `20f9e60a`.
+   That means evidence tampering or a history rewrite, not ordinary work.
+2. **An unowned current-byte change to a locked verification or probe file** — one of the six
+   non-fixture rows moved without a named ledger row.
+
+A ledger-owned current-output transition is not a trigger; that is the system working. Neither is a
+ledger-owned change to a verification file. The trigger is stated in terms of the current tree
+precisely so it can fire: the historical bytes live in Git and nothing in this item writes them, so a
+trigger phrased against those bytes alone would be inert.
+
+The lock stores SHA-256 for 118 rows in two classes:
+
+- **Fixture inputs** — every source fixture file in the 37 canonical roots, every added fixture file,
+  the item fixture manifest, and the canonical batch manifest.
+- **Verification and probe code** — the five probe scripts under
+  `.project/active/stop-reinventing-the-parser/probes/` and `verification/capture_baseline.py`.
+
+The two classes are verified differently, because one is frozen history and the other is live code
+the item still runs. Both are pinned.
 
 #### What the lock is verified against
 
-**[OWNER-ratified 2026-08-17, rulings 2-3]** Revision 6 required that "any changed byte invalidates
-the verdicts." That rule is **deleted**. It demanded byte identity in the *current* tree, which the
-implemented evidence contract at `C_base` deliberately does not provide, and executing it was what
-tripped the Phase-1 stop (`run-records/phase1-stop-report.md`, Finding 1). The rule below replaces it
-and is not weaker: it checks strictly more, because it checks the lock *and* the transitions.
+**[AGENT] (ratified by owner, 2026-08-17)** — rulings 2-3, `run-records/phase1-stop-report.md`.
+Verification runs on three legs. Leg 1 verifies the lock against the historical tree it names, leg 2
+verifies current outputs through the transition ledger, and leg 3 pins the live verification and probe
+code at current bytes. Every locked byte is covered by exactly one leg.
 
-The lock is a **historical** artifact and is verified against its own historical tree:
+**Which commit the hashes are authoritative against.** The lock file's own `probe_fixture_commit`
+field is `20f9e60a19b30bc1ec9a27aacb08380f4bc45602`, with `probe_fixture_parent`
+`7b29d8b636e284364a4fdce9079f153c51c867ea`. `43edf9bde4db44e7973458ada732d2cd75e764f6` is the
+manifest-only lock **child**: its entire diff is adding `verification/probe-fixture-lock.json`, one
+file, one insertion [verified]. Because the child adds only the lock file, the two trees are identical
+in every path the lock names — so hashes recompute against either tree, and they do so **by
+construction, not by coincidence**. The authoritative tree is the one the lock itself names,
+`20f9e60a`; `43edf9bd` is where the lock file lives.
 
-1. **Lock leg.** Every one of the 118 hashes in `verification/probe-fixture-lock.json` must recompute
-   against the lock commit's own tree, `43edf9bde4db44e7973458ada732d2cd75e764f6`, read from Git. All
-   118 recompute there today with zero mismatches [verified]. **The lock is preserved unchanged and is
-   never re-derived.** Re-locking against `C_base` would erase the provenance the lock exists to
-   preserve, so a mismatch here returns the item to design; it never authorizes a replacement lock.
+1. **Lock leg — fixture inputs against the named historical tree.** Every one of the 118 hashes in
+   `verification/probe-fixture-lock.json` must recompute against `20f9e60a`'s tree, read from Git. All
+   118 recompute with zero mismatches [verified]. **The lock is preserved unchanged and is never
+   re-derived.** Re-locking against `C_base` would erase the provenance the lock exists to preserve,
+   so a mismatch here returns the item to design; it never authorizes a replacement lock.
 2. **Current-output leg.** Current outputs are *not* checked against the lock. They are validated
    through the transition-ledger machinery already committed in `verification/capture_baseline.py`:
-   - `build_manifest` / `validate_manifest` reconstruct the frozen source inventory **from Git at the
-     named `P_seed` commit** `52a03cd2d0a9fdd340b60b16cea79a5b72234b08` and check it against
-     `FROZEN_BATCH_SHA256` (`capture_baseline.py:76`). The manifest's `canonical_batch` pin names
-     those frozen bytes by construction, never the working-tree file.
-   - `validate_current_batch` (`capture_baseline.py:166`) validates the current batch separately, at
-     its own pinned hash, and requires its record inventory to be closed.
-   - `validate_output_transitions` proves every post-`P_seed` output byte is either metadata-only —
-     `_snapshot_semantics` strips two version fields plus `integrity.digest` and requires
-     byte-identical structures otherwise — or owned by a named A/B row in
-     `verification/expected-transitions.md`.
+   - `_frozen_batch` (`capture_baseline.py:76`) loads the batch manifest **from Git at the named
+     `P_seed` commit** `52a03cd2d0a9fdd340b60b16cea79a5b72234b08` and checks it against
+     `FROZEN_BATCH_SHA256`. `build_manifest` (`:86`) reconstructs the frozen source inventory from
+     that, and `validate_manifest` (`:134`) requires the on-disk manifest to equal both the frozen
+     `P_seed` manifest bytes and that reconstruction. The manifest's `canonical_batch` pin names the
+     frozen bytes by construction, never the working-tree file.
+   - `validate_current_batch` (`:166`) validates the current batch separately, at its own pinned hash,
+     and requires its record inventory to be closed.
+   - `validate_output_transitions` (`:241`) covers the generated outputs under `tests/fixtures` — that
+     is the path scope it diffs. Within that scope it proves every post-`P_seed` byte is either
+     metadata-only — `_snapshot_semantics` strips two version fields plus `integrity.digest` and
+     requires byte-identical structures otherwise — or owned by a named A/B row in
+     `verification/expected-transitions.md`. It does not cover `verification/`; leg 3 does.
 
    `verification/expected-transitions.md` states the same semantics outright: "The Phase 1 probe lock
    is authoritative only at `P_seed`," and the current batch "must not be presented as a current
    member of the frozen `P_seed` byte inventory."
+3. **Verification-code leg — locked probe/verification files pinned at current bytes.** The six
+   non-fixture rows in the lock are live code, not frozen evidence, so neither leg above pins them.
+   The Phase-1 kept test pins each at its **current** SHA-256 in the implementation tree. Any
+   difference between a file's lock-time bytes and its current bytes must be **ledger-owned**: a named
+   row in `verification/expected-transitions.md` giving the file, both hashes, the owning commits, and
+   the reason.
 
-A failure in **either** leg stops the plan and returns the item to design. An unowned current-output
-difference is exactly as fatal as a lock mismatch; the difference is only which authority names it.
+   One such difference exists today. `verification/capture_baseline.py` moved from its lock-time bytes
+   in `da4aa78` ("docs: reconcile parser evidence contract") and `46694e2` ("fix verification artifact
+   source inputs") [verified]. That change gets its named row, citing both commits. The five probe
+   scripts are unchanged from lock-time bytes and are pinned there.
+
+   A future change to any of these six files requires a new named row in the same landing unit. An
+   unowned byte change is a hard failure.
+
+A failure in **any** leg stops the plan and returns the item to design. An unowned current-byte change
+to locked verification code is exactly as fatal as a lock mismatch; the difference is only which
+authority names it.
 
 #### The missing committed check — Phase 1 adds it
 
-Today the lock leg exists only as a hand-run: no committed test verifies `43edf9bd` against its
+Today the lock leg exists only as a hand-run: no committed test verifies the lock against its named
 historical tree. That is the one real residual gap in `C_base`'s evidence contract.
 
-**Phase 1 must add that check as a kept test.** It reads each locked path's bytes from Git at the lock
-commit (the same `git show` route `_git_bytes` already uses), recomputes SHA-256, and requires an
-exact match for all 118 rows, with an anti-vacuity assertion that the row count is 118 and every row
-was actually read. It must not read the working tree for those bytes, and it must not rewrite the
-lock on mismatch. It lands in `C_prod` beside the other verification tests.
+**Phase 1 must add that check as a kept test.** It must:
+
+- read `probe_fixture_commit` **from the lock file itself** and assert it equals
+  `20f9e60a19b30bc1ec9a27aacb08380f4bc45602`, then recompute against *that* tree. It must not hard-code
+  `43edf9bd` as the tree to check — that is the lock file's home commit, not the tree its hashes
+  describe;
+- read each locked path's bytes from Git at that commit (the same `git show` route `_git_bytes`
+  already uses), recompute SHA-256, and require an exact match for all 118 rows;
+- assert anti-vacuity: the row count is 118 and every row was actually read;
+- separately assert leg 3 — each of the six verification/probe rows matches its current on-disk bytes,
+  and any file differing from its lock-time bytes has a named ledger row;
+- never read the working tree for the historical bytes, and never rewrite the lock on mismatch.
+
+It lands in `C_prod` beside the other verification tests.
 
 ### Closed fixture inventory
 
@@ -1170,9 +1237,7 @@ lock on mismatch. It lands in `C_prod` beside the other verification tests.
 canonical `tests/fixtures/v6_recapture_batch/batch.json` and requires exactly 37 fixture roots and 37
 records.
 
-The batch manifest has **two states, and each count must be labeled with its state.** Revision 6
-printed the frozen counts and called the frozen hash "that file's current SHA-256." That was false at
-`C_base` and is corrected here.
+The batch manifest has **two states, and each count must be labeled with its state.**
 
 | State | Batch SHA-256 | Records | What it is |
 |---|---|---|---|
@@ -1240,12 +1305,12 @@ byte-identical.
 
 ### `deep_cross_scope_probe` — graph to refusal is intended tightening
 
-**[OWNER-ratified 2026-08-17, rulings 4-5]** The `deep_cross_scope_probe` record moved from graph to
+**[AGENT] (ratified by owner, 2026-08-17)** — rulings 4-5. The `deep_cross_scope_probe` record moved from graph to
 refusal between `P_seed` and `C_base`. That move is **correct and is never reverted.**
 
 The evidence [verified, `run-records/phase1-stop-report.md`, Finding 2]: the fixture's Pattern B
 authors an input aimed at the one concrete produced output
-(`tests/fixtures/deep_cross_scope_probe/design.sysml:75`). The pre-transition baseline graph did not
+(`tests/fixtures/deep_cross_scope_probe/design.sysml:77`). The pre-transition baseline graph did not
 wire that consumer to the concrete producer channel — a sibling consumer in the same fixture,
 `derived_calc`, did receive it. It wired the consumer instead to
 `DeepCrossScopeProducer__Core_Metric__metric_value`, a definition-scoped name surfaced as a
@@ -1304,10 +1369,10 @@ tests that prove them.
 
 ### The indexed red set — both cases are required kept tests
 
-**[OWNER-ratified 2026-08-17, ruling 6]** Revision 6's red proof used a single indexed stencil on a
-`Cell[3]` slot. Measured at `C_base`, that stencil goes red for the **wrong reason**: it refuses
-already, as `SI_OCCURRENCE_AMBIGUOUS`. A red that comes from the wrong diagnostic is not the proof
-point. The red set is therefore two cases, and both are kept tests, not throwaway probes.
+**[AGENT] (ratified by owner, 2026-08-17)** — ruling 6. A single indexed stencil on a `Cell[3]` slot
+does not establish the red. Measured at `C_base`, that shape already refuses, as
+`SI_OCCURRENCE_AMBIGUOUS`; a red that comes from the wrong diagnostic is not the proof point. The red
+set is therefore two cases, and both are kept tests, not throwaway probes.
 
 **Case 1 — `Cell[1]` bare chain, index out of range.** `picked = cells#(2).mass` against a singular
 `cells : Cell[1]`. At `C_base` this produces a **zero-diagnostic graph** in which the authored index
@@ -1333,22 +1398,8 @@ Operator-wrapped forms (`cells#(2).mass * 1.0`) are **not** red-set members. The
 `C_base` with the right code. They stay in the matrix as positive regression coverage, and a test that
 treats them as the escape is measuring the wrong thing.
 
-#### D11. Inventory refusal precedes occurrence resolution
-
-The pre-graph expression-evidence inventory (D7) refuses an `IndexedReferenceUse` **before** any
-occurrence-domain resolution runs, so an indexed use can never be diagnosed as an occurrence problem.
-The public refusal for an authored index is always `SI_INDEXED_SOURCE_UNSUPPORTED`, never
-`SI_OCCURRENCE_MISSING` or `SI_OCCURRENCE_AMBIGUOUS`, regardless of the slot's multiplicity.
-
-*Rejected: letting whichever check fires first name the failure* — that is `C_base`'s behavior, and it
-makes the public diagnostic depend on the declared multiplicity of the consumer's slot rather than on
-the defect. A user who wrote an index gets told their occurrence is ambiguous, which points at the
-wrong thing to fix and hides an unimplemented capability behind a resolution error.
-
-This ordering is already implied by D7's "refuse every `IndexedReferenceUse` before
-calculation-definition extraction, `_ExactElaborator`, or `InstanceGraph` allocation." D11 states it
-as a decision because it now carries a required diagnostic transition (A5b) and an explicit test
-obligation. It adds no mechanism.
+Both cases assert the ordering D7 fixes under
+[inventory refusal precedes occurrence resolution](#inventory-refusal-precedes-occurrence-resolution).
 
 ### Occurrence and producer matrix
 
@@ -1538,10 +1589,11 @@ targeted confirmation and a replacement plan. That plan uses these gates:
    old `C_prod`, `78a9beb956f9b5a517c08836b067f0cb0dc4ccc6`, and use Agentic input
    `2171016d3e3e0805525aa4cf787c55c6293dd00c`. Do not branch from this documentation checkout or
    from a parent of the failed candidate. Preserve D1-D4, the probes, and the verification harness.
-   Verify the lock through both legs above: the `43edf9bd` lock against its own historical tree, and
-   current outputs through the transition-ledger validators. Add the missing committed historical-tree
-   lock check as a kept test. Add failing natural-route tests — including **both** indexed red cases —
-   and the initial local ownership manifests before production edits.
+   Verify the lock through all three legs above: fixture inputs against the tree the lock names
+   (`20f9e60a`), current outputs through the transition-ledger validators, and the six
+   verification/probe rows pinned at current bytes with any difference ledger-owned. Add the missing
+   committed historical-tree lock check as a kept test. Add failing natural-route tests — including
+   **both** indexed red cases — and the initial local ownership manifests before production edits.
 2. **Close Agentic's evidence surface.** Land semantic-evidence/v2 with one provenance-complete
    reference inspector, mapped index retention, shared traversal budget, exact targets, and exact
    manifest equality. Delete the permissive helpers/facts, bool marker, aliases, and exports. Migrate
@@ -1682,9 +1734,20 @@ approved stays approved; the review scope is the amendment. The current product-
 `BLOCKED` until the indexed-consumer architecture and its three-leg closure proof are proven green in
 production.
 
-After confirmation, Plan Revision 3 consumes this document. It must carry: the two-leg lock rule and
-the new committed historical-tree check in Phase 1; both indexed red cases with their recorded
-`C_base` diagnostics; and the A5a/A5b rows in Phase 4's reconciliation expectations. The replacement
+After confirmation, Plan Revision 3 consumes this document. It must carry:
+
+- the three-leg lock rule and the new committed historical-tree check in Phase 1, asserting
+  `probe_fixture_commit == 20f9e60a` from the lock file's own field;
+- the D10 rerun trigger in its firing form — lock-vs-historical mismatch, or an unowned current-byte
+  change to a locked verification/probe file;
+- both indexed red cases with their recorded `C_base` diagnostics;
+- the A5a/A5b rows in Phase 4's reconciliation expectations;
+- the `deep_cross_scope_probe` never-restore stop condition — a change returning that fixture to a
+  captured graph fails the item;
+- the fixture-comment obligation at `tests/fixtures/deep_cross_scope_probe/design.sysml:75` and the
+  `[DEEP-QUALIFIED-OUTPUT-WIRING]` backlog row, both before close.
+
+The replacement
 plan must keep both local ownership manifests, the scoped strict
 gates, full natural-route matrices, probe/fixture lock, and `C_prod`, `F_final`, and `C_evidence`
 boundaries as checked deliverables. Implementation is followed by an independent `my-audit`; the

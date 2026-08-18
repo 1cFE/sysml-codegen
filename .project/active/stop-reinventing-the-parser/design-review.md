@@ -722,3 +722,34 @@ Minors 4-9 are recommended but do not block. Minor 7 is worth taking with the mu
 costs one line and closes a plausible Phase-4 failure.
 
 Nothing here reopens Revision 6. The Approve above stands.
+
+---
+
+## Orchestrator verification — Revision-7 must-fix set (2026-08-17)
+
+The authoring session applied all eight findings; the orchestrator verified each against the
+artifacts rather than rerunning the reviewer (pipeline rule: record the verification for
+objectively verifiable fixes).
+
+- **Major 1:** verified from the lock file itself — `probe_fixture_commit = 20f9e60a…`,
+  `probe_fixture_parent = 7b29d8b6…`, and `git diff 20f9e60a 43edf9bd` is one file, one insertion
+  (the lock file). The design now names `20f9e60a` as the authoritative tree, states the
+  by-construction equivalence, and the kept test reads the field from the lock file and forbids
+  hard-coding `43edf9bd`.
+- **Major 2:** leg 3 added, pinning the five probe scripts and `capture_baseline.py` at current
+  bytes with ledger-owned differences (the existing `capture_baseline.py` move cites `da4aa78` and
+  `46694e2`, both confirmed in git log). D10's trigger rewritten to two conditions that can fire.
+  Count nuance recorded: by path prefix there are seven non-`tests/fixtures` lock rows; the seventh,
+  `verification/fixture-manifest.json`, is classed as a fixture input and is already pinned at
+  current bytes by leg 2's `validate_manifest` (must equal frozen `P_seed` bytes) — every locked
+  byte is covered, and the six-row verification-code class is exactly enumerated in the text.
+- **Minors 3-8:** citations spot-checked (`source_evidence.py:195` is the `for binding in
+  usage.bindings:` line; `_frozen_batch` at `:76`; `design.sysml:77` authored input / `:75` comment),
+  provenance markers now use the agent-grade-ratified form with the behavior table's per-row grades
+  restored, output-transition scope corrected to `tests/fixtures` and interlocked with leg 3, the
+  handoff carry-list gained the never-restore and fixture-comment obligations, D11 demoted to a
+  named D7 clause under `#### Inventory refusal precedes occurrence resolution` with two-way
+  anchors, and all inline re-quotes of deleted Revision-6 text removed.
+
+**Disposition: the Revision-7 amendment stands as reviewed-and-corrected; the `Revise` verdict's
+must-fix set is closed.** Revision 6's `Approve` is untouched.
