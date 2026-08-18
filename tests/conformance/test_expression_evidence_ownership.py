@@ -43,22 +43,20 @@ RAW_SYSIDE_ADAPTER = "agentic_mbse.sysml.syside_adapter"
 #: so a module cannot drift in or out unnoticed.
 RAW_SYSIDE_MODULES = (
     "elaboration/elaborate.py",
+    "elaboration/expression_evidence.py",
     "elaboration/graph.py",
     "elaboration/identity.py",
     "elaboration/occurrence.py",
     "elaboration/project.py",
-    "extraction/binding_evidence.py",
+    "extraction/binding_source.py",
     "extraction/calc_compat_renderer.py",
     "extraction/computed_attribute_extractor.py",
-    "extraction/expression_compiler.py",
     "extraction/expression_utils.py",
     "extraction/extractor.py",
     "extraction/feature_metadata.py",
     "extraction/hierarchy_resolver.py",
     "extraction/modeled_defaults.py",
-    "extraction/source_evidence.py",
     "extraction/source_manifest.py",
-    "extraction/unit_annotation.py",
     "extraction/usage_extractor.py",
     "generation/constraint_name_safety.py",
     "generation/predicate_compiler.py",
@@ -109,7 +107,7 @@ OFF_ROUTE_PROOF = (
 REVIEWED_ROWS: tuple[ReviewedRow, ...] = (
     ReviewedRow(
         module="extraction/binding_source.py",
-        function="exact_path_from_relationship",
+        function="_relationship_segments",
         selector="chaining_features",
         form="getattr",
         semantic_owner="codegen: total deep-relationship-path factory",

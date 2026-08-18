@@ -16,6 +16,7 @@ from typing import NoReturn
 
 from agentic_mbse.sysml.executable_profile import Eligibility
 from agentic_mbse.sysml.expression_ir import (
+    ExpressionIR,
     FeatureReferenceNode,
     InvocationNode,
     LiteralNode,
@@ -648,7 +649,7 @@ class _Projection:
             by_reference[port.reference_ordinal].append(port)
         reference_ordinal = 0
 
-        def render(expression: object) -> str:
+        def render(expression: ExpressionIR) -> str:
             nonlocal reference_ordinal
             if isinstance(expression, LiteralNode):
                 return repr(expression.literal.value)
@@ -1046,9 +1047,7 @@ class _Projection:
                     f"typed module {semantic_item!r} has a self dependency",
                 )
 
-        successors: dict[NodeId | str, set[NodeId | str]] = {
-            item: set() for item in dependencies
-        }
+        successors: dict[NodeId | str, set[NodeId | str]] = {item: set() for item in dependencies}
         for semantic_item, required in dependencies.items():
             for dependency in required:
                 successors[dependency].add(semantic_item)
@@ -1060,9 +1059,7 @@ class _Projection:
         while ready:
             current = ready.pop(0)
             ordered.append(current)
-            for successor in sorted(
-                successors[current], key=self._semantic_module_key
-            ):
+            for successor in sorted(successors[current], key=self._semantic_module_key):
                 dependencies[successor].discard(current)
                 if (
                     not dependencies[successor]
@@ -1072,9 +1069,7 @@ class _Projection:
                     ready.append(successor)
                     ready.sort(key=self._semantic_module_key)
         if len(ordered) != len(dependencies):
-            cycle = sorted(
-                set(dependencies) - set(ordered), key=self._semantic_module_key
-            )
+            cycle = sorted(set(dependencies) - set(ordered), key=self._semantic_module_key)
             _fail(
                 ElaborationCode.SI_EDGE_DANGLING,
                 f"typed module dependency cycle: {cycle}",
@@ -1176,9 +1171,7 @@ class _Projection:
                 disposition_severity=record.disposition.severity,
                 disposition_detail=record.disposition.detail,
                 inapplicability_reason=(
-                    record.inapplicability.reason
-                    if record.inapplicability is not None
-                    else None
+                    record.inapplicability.reason if record.inapplicability is not None else None
                 ),
                 occurrence_count=record.occurrence_count,
             )
@@ -1275,9 +1268,7 @@ def _selection_closure(projection: _Projection, targets: tuple[str, ...]) -> set
         if node_id in selected:
             continue
         node = (
-            graph.calcs.get(node_id)
-            or graph.constraints.get(node_id)
-            or graph.attrs.get(node_id)
+            graph.calcs.get(node_id) or graph.constraints.get(node_id) or graph.attrs.get(node_id)
         )
         if node is None:
             _fail(

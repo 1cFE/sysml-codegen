@@ -25,8 +25,8 @@ from agentic_mbse.sysml.expression_ir import serialize_expression
 from agentic_mbse.sysml.reference_use import (
     ExactReferenceUse,
     ExactSemanticPath,
+    IndexedReferenceUse,
     is_standard_library_use,
-    resolved_chaining_features,
 )
 from agentic_mbse.sysml.syside_adapter import SysideAdapter
 
@@ -36,9 +36,9 @@ from sysml_codegen.elaboration.diagnostics import ElaborationInvariantError
 from sysml_codegen.elaboration.display import display_name, display_qualified_name
 from sysml_codegen.elaboration.expression_evidence import (
     ExpressionEvidenceInventory,
+    ExpressionInventoryError,
     ExpressionSite,
     ExpressionSiteRole,
-    require_exact_use,
     unit_annotated_value,
 )
 from sysml_codegen.elaboration.extraction_screen import screen_extraction_diagnostics
@@ -95,8 +95,11 @@ from sysml_codegen.extraction.binding_source import (
     ExpressionBindingSource,
     IndexedBindingSource,
     LiteralBindingSource,
+    binding_source_kind,
     bound_formal,
     exact_path_from_relationship,
+    relationship_has_path,
+    require_exact_binding_use,
 )
 from sysml_codegen.extraction.data_models import CalculationDefinitionData
 from sysml_codegen.extraction.expression_compiler import (
@@ -135,18 +138,13 @@ class ElaborationDiagnosticError(Exception):
     def __init__(self, diagnostics: Sequence[Diagnostic]) -> None:
         self.diagnostics = tuple(diagnostics)
         super().__init__(
-            "; ".join(
-                _render_public_diagnostic(diagnostic)
-                for diagnostic in diagnostics
-            )
+            "; ".join(_render_public_diagnostic(diagnostic) for diagnostic in diagnostics)
         )
 
 
 def _render_public_diagnostic(diagnostic: Diagnostic) -> str:
     """Render one refusal once, including exact authored context when present."""
-    reference = (
-        f": reference={diagnostic.reference!r}" if diagnostic.reference is not None else ""
-    )
+    reference = f": reference={diagnostic.reference!r}" if diagnostic.reference is not None else ""
     location = (
         f" [{diagnostic.source_file}:{diagnostic.source_line}]"
         if diagnostic.source_file is not None and diagnostic.source_line is not None
@@ -165,15 +163,6 @@ class _ReferenceResolutionError(Exception):
         super().__init__(detail)
 
 
-#: The authored source-form names the readiness vocabulary has always used.  Kept as a
-#: rendering of the closed union rather than a field on it: the variant is the fact, and
-#: the string is only how a finding reads.
-_SOURCE_FORM_NAMES = {
-    ExactBindingSource: "reference",
-    IndexedBindingSource: "indexed_source",
-    ExpressionBindingSource: "expression_source",
-    LiteralBindingSource: "authored_literal",
-}
 _NAMESPACE_DISTINGUISHABILITY_CODE = "namespace-distinguishability"
 
 
@@ -266,9 +255,7 @@ def _computed_expression_input_names(
     for reference_ordinal, use in enumerate(references):
         path = use.path
         leaf_name = (
-            path.resolved_member_names[-1]
-            if path.resolved_member_names
-            else path.leaf.element_name
+            path.resolved_member_names[-1] if path.resolved_member_names else path.leaf.element_name
         )
         names_by_ordinal[reference_ordinal] = leaf_name
         chain_identity = path.segment_element_ids
@@ -294,9 +281,7 @@ def _computed_expression_input_names(
         for reference_ordinal, use in enumerate(references):
             if names_by_ordinal.get(reference_ordinal) != leaf_name:
                 continue
-            names_by_ordinal[reference_ordinal] = rendered_by_chain[
-                use.path.segment_element_ids
-            ]
+            names_by_ordinal[reference_ordinal] = rendered_by_chain[use.path.segment_element_ids]
 
     return names_by_ordinal
 
@@ -418,16 +403,11 @@ class _EffectiveInputFormalSelector:
         self._slots = slots
         self._loaded_user_inputs = {
             declaration_id_for(feature): feature
-            for feature in SysideAdapter.elements_of_type(
-                model, "Feature", include_subtypes=True
-            )
-            if getattr(feature, "qualified_name", None) is not None
-            and self._is_input(feature)
+            for feature in SysideAdapter.elements_of_type(model, "Feature", include_subtypes=True)
+            if getattr(feature, "qualified_name", None) is not None and self._is_input(feature)
         }
 
-    def effective_input_formals(
-        self, definition: Any
-    ) -> dict[FeatureSlotId, DeclarationId]:
+    def effective_input_formals(self, definition: Any) -> dict[FeatureSlotId, DeclarationId]:
         native: dict[DeclarationId, Any] = {}
         for candidate in getattr(definition, "usages", ()) or ():
             if not SysideAdapter.is_instance(candidate, "Feature"):
@@ -493,12 +473,8 @@ class _ExactElaborator:
                 occurrence.occurrence_id: OccurrenceRecord(
                     occurrence_id=occurrence.occurrence_id,
                     parent_id=occurrence.parent_id,
-                    containment_slot=(
-                        occurrence.occurrence_id.steps[-1].containment_slot
-                    ),
-                    occurrence_index=(
-                        occurrence.occurrence_id.steps[-1].occurrence_index
-                    ),
+                    containment_slot=(occurrence.occurrence_id.steps[-1].containment_slot),
+                    occurrence_index=(occurrence.occurrence_id.steps[-1].occurrence_index),
                     effective_usage_id=occurrence.effective_usage_id,
                     effective_type_ids=tuple(
                         sorted(occurrence.type_closure, key=lambda item: item.to_wire())
@@ -564,9 +540,7 @@ class _ExactElaborator:
                 f"constraint profile decision inventory is invalid: {error}",
             ) from error
         if missing_profile_ids:
-            missing_ids = ", ".join(
-                str(item) for item in sorted(missing_profile_ids, key=str)
-            )
+            missing_ids = ", ".join(str(item) for item in sorted(missing_profile_ids, key=str))
             raise ElaborationInvariantError(
                 ElaborationCode.SI_EDGE_DANGLING,
                 f"constraint profile omitted usage UUIDs: {missing_ids}",
@@ -852,8 +826,7 @@ class _ExactElaborator:
             exact_usage_writers = [
                 candidate
                 for candidate in usage_writers
-                if declaration_id_for(semantic_owner(candidate))
-                == occurrence.effective_usage_id
+                if declaration_id_for(semantic_owner(candidate)) == occurrence.effective_usage_id
             ]
             if exact_usage_writers:
                 return self._require_one_writer(exact_usage_writers, scope)
@@ -867,10 +840,7 @@ class _ExactElaborator:
         ]
         if definition_writers:
             owner = self._occurrences.most_specific_definition(
-                {
-                    declaration_id_for(semantic_owner(candidate))
-                    for candidate in definition_writers
-                }
+                {declaration_id_for(semantic_owner(candidate)) for candidate in definition_writers}
             )
             return self._require_one_writer(
                 [
@@ -1009,9 +979,7 @@ class _ExactElaborator:
             value_site=value_site if expression is not None else ValueSite.NONE,
             source_file=source_file,
             source_line=source_line,
-            owner_qualified_name=str(
-                getattr(semantic_owner(base), "qualified_name", None) or ""
-            ),
+            owner_qualified_name=str(getattr(semantic_owner(base), "qualified_name", None) or ""),
         )
         self._register_attr(attr_node)
 
@@ -1079,7 +1047,7 @@ class _ExactElaborator:
             owner = semantic_owner(feature)
             for relationship in getattr(feature, "owned_redefinitions", ()) or ():
                 redefined = getattr(relationship, "redefined_feature", None)
-                if redefined is None or not resolved_chaining_features(redefined):
+                if redefined is None or not relationship_has_path(redefined):
                     continue
                 # Total by construction: the factory raises on the first segment it
                 # cannot materialize rather than returning the steps that happened to
@@ -1534,8 +1502,7 @@ class _ExactElaborator:
             if record.disposition.severity != "error":
                 continue
             where = (
-                f"{record.declaration_id.to_wire()}) at "
-                f"{record.source_file}:{record.source_line}"
+                f"{record.declaration_id.to_wire()}) at {record.source_file}:{record.source_line}"
             )
             if record.disposition.reason == "classification_incomplete":
                 self._diagnose(
@@ -1652,9 +1619,7 @@ class _ExactElaborator:
                 AutoImplOutput(
                     name=result.output_name,
                     expression=(
-                        result.output_name
-                        if output_id in stepped_ids
-                        else result.python_expression
+                        result.output_name if output_id in stepped_ids else result.python_expression
                     ),
                 )
             )
@@ -1824,9 +1789,7 @@ class _ExactElaborator:
             consumer.input_names[port] = display_name(name)
             extracted = None
             if isinstance(consumer, CalcNode):
-                extracted = self._calculation_input_attribute(
-                    consumer, effective_formal_id
-                )
+                extracted = self._calculation_input_attribute(consumer, effective_formal_id)
             consumer.input_metadata[port] = PortMetadata(
                 python_type=(
                     extracted.python_type
@@ -1935,9 +1898,7 @@ class _ExactElaborator:
                 python_type=extracted.python_type,
                 description=extracted.description,
                 default_value=(
-                    resolved_default.value
-                    if expression is not None
-                    else extracted.default_value
+                    resolved_default.value if expression is not None else extracted.default_value
                 ),
                 unit=resolved_default.unit_text
                 or extracted.unit
@@ -2006,9 +1967,7 @@ class _ExactElaborator:
             )
         return cast(str, python_type)
 
-    def _effective_input_formals(
-        self, definition: Any
-    ) -> dict[FeatureSlotId, DeclarationId]:
+    def _effective_input_formals(self, definition: Any) -> dict[FeatureSlotId, DeclarationId]:
         definition_id = declaration_id_for(definition)
         selected = self._effective_formals_by_definition.get(definition_id)
         if selected is None:
@@ -2082,7 +2041,11 @@ class _ExactElaborator:
         use = uses[0]
         if isinstance(use, ExactReferenceUse):
             return ExactBindingSource(formal, use)
-        return IndexedBindingSource(formal, use)
+        if isinstance(use, IndexedReferenceUse):
+            return IndexedBindingSource(formal, use)
+        raise ExpressionInventoryError(
+            f"binding site {site.declaration_id} contains an unknown reference-use variant"
+        )
 
     @staticmethod
     def _unsupported_code(evidence: BindingSourceEvidence) -> ReadinessCode | None:
@@ -2115,7 +2078,7 @@ class _ExactElaborator:
                 usage_qualified_name=usage_display,
                 param_name=param_name,
                 detail=(
-                    f"unsupported exact source form {_SOURCE_FORM_NAMES[type(evidence)]} "
+                    f"unsupported exact source form {binding_source_kind(evidence)} "
                     f"({evidence.written_text or ''!r})"
                 ),
             )
@@ -2217,9 +2180,7 @@ class _ExactElaborator:
                 f"leaf declaration {reference.leaf_id.to_wire()} has no feature slot",
             ) from None
         edges = [
-            edge
-            for scope in scopes
-            if (edge := self._target_for_slot(scope, slot)) is not None
+            edge for scope in scopes if (edge := self._target_for_slot(scope, slot)) is not None
         ]
         if not edges:
             raise _ReferenceResolutionError(
@@ -2554,14 +2515,19 @@ class _ExactElaborator:
                     )
                 pending.consumer.inputs[pending.port] = LiteralInput(evidence.value)
                 continue
-            if isinstance(evidence, (IndexedBindingSource, ExpressionBindingSource)):
+            if isinstance(evidence, IndexedBindingSource):
+                require_exact_binding_use(evidence)
+                raise AssertionError("indexed binding backstop returned an exact use")
+            if isinstance(evidence, ExpressionBindingSource):
                 raise ElaborationInvariantError(
                     ElaborationCode.SI_EDGE_DANGLING,
                     f"unsupported binding source {type(evidence).__name__} for "
                     f"{evidence.formal.qualified_name!r} reached wiring; readiness "
                     "screening should have refused it",
                 )
-            use = require_exact_use(evidence.use)
+            if not isinstance(evidence, ExactBindingSource):
+                raise TypeError(f"value is not BindingSourceEvidence: {type(evidence).__name__}")
+            use = require_exact_binding_use(evidence)
             try:
                 edges = self._resolve_semantic_reference(
                     use.path,

@@ -35,7 +35,6 @@ from agentic_mbse.sysml.reference_use import (
     ExactSemanticPath,
     IndexedReferenceUse,
     evidence_error,
-    resolved_chaining_features,
     resolved_target_fact,
 )
 from agentic_mbse.sysml.syside_adapter import SysideAdapter
@@ -48,7 +47,10 @@ __all__ = [
     "IndexedBindingSource",
     "LiteralBindingSource",
     "bound_formal",
+    "binding_source_kind",
     "exact_path_from_relationship",
+    "relationship_has_path",
+    "require_exact_binding_use",
 ]
 
 
@@ -74,6 +76,10 @@ class ExactBindingSource:
     formal: BoundFormal
     use: ExactReferenceUse
 
+    def __post_init__(self) -> None:
+        if not isinstance(self.use, ExactReferenceUse):
+            raise TypeError("ExactBindingSource requires an ExactReferenceUse")
+
     @property
     def written_text(self) -> str:
         return self.use.authored_text
@@ -93,6 +99,10 @@ class IndexedBindingSource:
 
     formal: BoundFormal
     use: IndexedReferenceUse
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.use, IndexedReferenceUse):
+            raise TypeError("IndexedBindingSource requires an IndexedReferenceUse")
 
     @property
     def written_text(self) -> str:
@@ -137,6 +147,39 @@ type BindingSourceEvidence = (
 )
 
 
+def binding_source_kind(evidence: object) -> str:
+    """Render one closed binding variant, failing on any value outside the union."""
+    if isinstance(evidence, ExactBindingSource):
+        return "reference"
+    if isinstance(evidence, IndexedBindingSource):
+        return "indexed_source"
+    if isinstance(evidence, ExpressionBindingSource):
+        return "expression_source"
+    if isinstance(evidence, LiteralBindingSource):
+        return "authored_literal"
+    raise TypeError(f"value is not BindingSourceEvidence: {type(evidence).__name__}")
+
+
+def require_exact_binding_use(evidence: object) -> ExactReferenceUse:
+    """Return an exact binding use; name an index even when inventory was bypassed."""
+    if isinstance(evidence, ExactBindingSource):
+        return evidence.use
+    if isinstance(evidence, IndexedBindingSource):
+        raise SemanticEvidenceError(
+            SemanticEvidenceCode.INDEXED_REFERENCE_UNSUPPORTED,
+            operation="binding_source",
+            detail=(
+                "indexed element reference is valid SysML but not implemented by this "
+                "executable subset; the index cannot form an exact binding source"
+            ),
+            location=evidence.use.location,
+            reference=evidence.use.reference,
+        )
+    if isinstance(evidence, (ExpressionBindingSource, LiteralBindingSource)):
+        raise TypeError(f"{type(evidence).__name__} is not an exact binding source")
+    raise TypeError(f"value is not BindingSourceEvidence: {type(evidence).__name__}")
+
+
 def bound_formal(param_elem: Any) -> BoundFormal:
     """Capture the bound formal's own identity and the calc-def formals it redefines."""
     redefined_names: list[str] = []
@@ -171,7 +214,7 @@ def exact_path_from_relationship(redefined_feature: Any) -> ExactSemanticPath:
     ``RESOLVED_TARGET_MISSING``.  Nothing here filters a segment out, so a shortened path
     is not a reachable result.
     """
-    segments = resolved_chaining_features(redefined_feature)
+    segments = _relationship_segments(redefined_feature)
     if not segments:
         raise evidence_error(
             SemanticEvidenceCode.RESOLVED_TARGET_MISSING,
@@ -213,6 +256,16 @@ def exact_path_from_relationship(redefined_feature: Any) -> ExactSemanticPath:
         leaf=materialized[-1],
         resolved_member_names=tuple(fact.element_name for fact in materialized[1:]),
     )
+
+
+def _relationship_segments(redefined_feature: Any) -> tuple[Any, ...]:
+    """The one Codegen-owned read of a relationship's authored feature sequence."""
+    return tuple(getattr(redefined_feature, "chaining_features", None) or ())
+
+
+def relationship_has_path(redefined_feature: Any) -> bool:
+    """Whether a redefinition endpoint names a deep relationship path."""
+    return bool(_relationship_segments(redefined_feature))
 
 
 def _segment_error(

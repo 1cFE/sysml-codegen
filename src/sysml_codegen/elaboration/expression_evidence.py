@@ -42,9 +42,10 @@ from agentic_mbse.sysml.reference_use import (
     ExactReferenceUse,
     IndexedReferenceUse,
     ReferenceUse,
-    evidence_error,
     inspect_reference_uses,
-    materialize_operands,
+)
+from agentic_mbse.sysml.reference_use import (
+    unit_annotation_value as agentic_unit_annotation_value,
 )
 from agentic_mbse.sysml.syside_adapter import SysideAdapter
 
@@ -183,8 +184,7 @@ def build_expression_evidence_inventory(model: Any) -> ExpressionEvidenceInvento
     for site, expression in _enumerate_sites(model):
         if site in rows:
             raise ExpressionInventoryError(
-                f"expression site {site.role.value} {site.declaration_id} "
-                "was enumerated twice"
+                f"expression site {site.role.value} {site.declaration_id} was enumerated twice"
             )
         rows[site] = _acquire(expression)
     return ExpressionEvidenceInventory(rows)
@@ -217,9 +217,7 @@ def _enumerate_sites(model: Any) -> list[tuple[ExpressionSite, Any]]:
         role = _role_for_owner(feature, expression)
         sites.append((ExpressionSite(SysideAdapter.element_id(feature), role), expression))
 
-    for usage in SysideAdapter.elements_of_type(
-        model, "ConstraintUsage", include_subtypes=True
-    ):
+    for usage in SysideAdapter.elements_of_type(model, "ConstraintUsage", include_subtypes=True):
         predicate = getattr(usage, "result_expression", None)
         if predicate is None:
             continue
@@ -257,27 +255,17 @@ def _is_plain_reference(expression: Any) -> bool:
 
 
 def unit_annotated_value(expression: Any) -> Any:
-    """What a SysIDE unit-annotation node annotates; other expressions pass through.
+    """Apply Codegen's value-site policy over Agentic's structural primitive.
 
     ``= 0.2 [m]`` means the number ``0.2``; ``[m]`` says how to read it.  The unit is not a
     data dependency, so the elaborator's value-shape decision looks past it — otherwise a
     unit-annotated literal reads as general math and mints a computed node instead of a
     value.
 
-    The operand read is Agentic's :func:`materialize_operands`, not a raw selector: this
-    module holds no ownership of the parser's operand sequence, only of the rule that a
-    unit annotation contributes its value and never its unit.
+    Agentic owns every structural question: mapped metatype, operator, arity, and which
+    operand is the value.  ``None`` from that primitive means the expression is not an
+    annotation, so Codegen passes it through.  A malformed annotation raises upstream and
+    reaches the one public conversion boundary; this policy never catches it.
     """
-    if expression is None or not SysideAdapter.is_instance(expression, "OperatorExpression"):
-        return expression
-    if str(getattr(expression, "operator", "")) != "[":
-        return expression
-    operands = materialize_operands(expression)
-    if not operands:
-        raise evidence_error(
-            SemanticEvidenceCode.EXPRESSION_KIND_UNSUPPORTED,
-            "unit_annotated_value",
-            "unit annotation carries no annotated value",
-            expression,
-        )
-    return operands[0]
+    annotated_value = agentic_unit_annotation_value(expression)
+    return expression if annotated_value is None else annotated_value

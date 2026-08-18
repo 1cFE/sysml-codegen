@@ -36,7 +36,7 @@ from __future__ import annotations
 AGENTIC_MBSE_PACKAGE_VERSION = "0.1.3"
 
 #: `agentic_mbse.SEMANTIC_EVIDENCE_API_VERSION`.
-SEMANTIC_EVIDENCE_API_VERSION = "semantic-evidence/v1"
+SEMANTIC_EVIDENCE_API_VERSION = "semantic-evidence/v2"
 
 #: `agentic_mbse.sysml.constraint_facts.CONSTRAINT_FACTS_SCHEMA_VERSION`.
 #: v1 -> v2 at Item 4: `ExtractionDiagnosticFact` gained a severity field and a

@@ -31,7 +31,7 @@ def test_lock_and_runtime_use_semantic_evidence_companion() -> None:
     ]
     assert 'version = "0.1.3"' in companion
     assert agentic_mbse.__version__ == "0.1.3"
-    assert SEMANTIC_EVIDENCE_API_VERSION == "semantic-evidence/v1"
+    assert SEMANTIC_EVIDENCE_API_VERSION == "semantic-evidence/v2"
     assert PROFILE_SEMANTIC_VERSION == "executable-profile/v4"
 
 
