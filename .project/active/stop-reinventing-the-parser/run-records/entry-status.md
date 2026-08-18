@@ -25,6 +25,18 @@ HEAD advances with those commits; the digest rule applies to tracked-work status
 
 Both verified clean (`status --porcelain` empty) immediately after creation.
 
+## Phase 4 boundary (2026-08-18)
+
+Codegen implementation advanced from the Phase 3 close `1451615` to production candidate
+`e5f73e6cff653f5b6a0c3861c0d3d5cd5b2544da`. Agentic stayed read-only at
+`3f8bd587af40f05b929dd56645901dada7daea37`. Both dedicated worktrees were clean at the boundary.
+The docs checkout advanced only through Phase 4 briefs and project records.
+
+Phase 4's fresh source extraction is `/tmp/stop-parser-rev2/phase4-extraction-r2/`; its declared
+source identities and archive hashes live in `artifact-source-inputs.json`. Phase 5 artifact
+construction has not started. The parser-work PDF/HTML suite remained retired under the owner's
+2026-08-17 instruction.
+
 Prior-attempt worktrees under `/tmp/stop-parser.QVJIIP/` are historical evidence of the failed
 candidate. This run never modifies, reuses, or imports from them.
 

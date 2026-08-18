@@ -1,9 +1,10 @@
 # Spec: Exact occurrence derivation and evidence integrity
 
-**Status:** Approved — rev 4; product lens `CLEAR`; spec review `Approve`
+**Status:** Implementation in progress — rev 4; Phases 1–3 closed; Phase 4 implemented, audit
+pending; Phase 5 not started; product lens `CLEAR`; spec review `Approve`
 **Owner:** Reid W
 **Created:** 2026-08-16 20:42
-**Updated:** 2026-08-16
+**Updated:** 2026-08-18
 **Complexity:** HIGH
 **Branches:** codegen `main`; agentic-mbse `self-binding-replacement`
 

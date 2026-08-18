@@ -40,7 +40,9 @@ The definition-owned lineage-miss fallback (spike F-4 family): KerML makes that 
 ill-formed (`checkConnectorTypeFeaturing`, KerML §8.3.4:5807; Part 1 §8.4.1 — a model violating a
 semantic constraint has no defined semantics), so the resolver's descendant/sibling occurrence
 search is a workaround this promise forbids. Removal is owned by `[DEF-OWNED-SIDEWAYS-REACH]`
-(`.project/backlog/BACKLOG.md`). The bounded removal landed on 2026-08-16: a qualified
-definition-owned lineage miss now refuses with `SI_OCCURRENCE_MISSING`; independent audit verified
-the bounded removal on 2026-08-16. Exact usage-owner anchoring, local definition-owned lineage
-mapping, bare references, and explicit occurrence paths remain unchanged.
+(`.project/backlog/BACKLOG.md`). After transition A3, **every** definition-owned lineage miss is
+final and refuses with `SI_OCCURRENCE_MISSING`; the resolver never searches descendants or siblings
+for a substitute. Exact usage-owner anchoring, local definition-owned lineage mapping, bare
+references, and explicit occurrence paths remain unchanged. This agent-written application status
+describes the Phase 4 production candidate; independent audit is still pending. The
+owner-verbatim promise above is unchanged.

@@ -1,18 +1,16 @@
 # Current Work
 
-**Last Updated**: 2026-08-18 (**stop-reinventing-the-parser: Phases 1, 2, 2b closed; Phase 3
-re-audited Pass with findings, with N1/N2 closure implemented. Codegen `stop-parser-impl-r2` at `1451615`,
-Agentic `3f8bd58` (0.1.3 / `semantic-evidence/v2`). M1–M4 and all 15 Minors / 9 Informationals have
-implementation or record corrections. The unit-annotated alias regression is fixed by one
-inventory-owned role; public inventory failures now carry diagnostic provenance; real adapter
-bypass and exhaustive-union tests kill the audit's weakenings; ownership keys include the receiver.
-Closure validation: focused **290 passed, 1 deselected**; prior full archive **1 failed, 2,388 passed, 34
-skipped, 94 deselected**, with the sole failure the declared Phase 4 consumer-cell proof table.
-Remediation record:
-`.project/active/stop-reinventing-the-parser/run-records/phase3-remediation.md`. The original audit
-remains historical **Needs Work**; the dedicated re-audit is **Pass with findings**, and the two
-follow-up findings now have direct closure evidence. Phases 4 and 5 are not started. Do not close,
-do not run pre-PR, and `elaborator-downstream` stays blocked.**).
+**Last Updated**: 2026-08-18 (**stop-reinventing-the-parser: Phase 4 implementation complete;
+independent audit pending. Codegen production candidate `stop-parser-impl-r2` is `e5f73e6`; Agentic
+remains read-only at `3f8bd58` (0.1.3 / `semantic-evidence/v2`). Registry wrapper authority is now
+graph-derived on every exported route, the natural expression-consumer matrix and dual-layer
+backstops are closed, and A5a/A5b are ledger-owned. Fresh-extraction validation: **2,492 passed, 34
+skipped, 94 deselected**; focused Phase 4 routes **204 passed**; D1–D4 **163 passed**; TEAx mutation
+proof **6 passed**; Agentic ownership/reference-use **58 passed**; Codegen static closure **68
+passed**. `deep_cross_scope_probe` remains `SI_OCCURRENCE_MISSING` with no snapshot, and
+`occurrence.py` is byte-identical to `C_base`. Phase 5 has not started. Do not close, do not run
+pre-PR, and `elaborator-downstream` stays blocked until this item is independently audited and
+closed. Record: `.project/active/stop-reinventing-the-parser/run-records/phase4-implementation.md`.**).
 Prior status: 2026-08-17 (**Phase 1 complete and audited — plan
 Revision 3 executing design Revision 7; three-leg lock verification green (118/118 against the
 tree the lock names); 25-node red set across live/admitted/capture × strict on implementation
@@ -102,6 +100,30 @@ rather than invented; vehicle `[CONSTRAINT-GATES-UNTAGGED]` in `BACKLOG.md`.
 ---
 
 ## Active Work
+
+### 2026-08-18: stop-reinventing-the-parser — PHASE 4 IMPLEMENTED; AUDIT PENDING
+
+[AGENT] Phase 4 is implemented on `stop-parser-impl-r2` at **`e5f73e6`**. The registry derives its
+exit wrappers from the immutable graph before mutation on the CLI, direct generator, and exported
+aliases. The full public expression-consumer matrix now covers live, admitted, and capture routes,
+with strict and lenient arms where available, and pairs each inventory-first refusal with its real
+consumer backstop. A5a and A5b record the indexed bare-chain transitions explicitly.
+
+Fresh-extraction validation is green: full Codegen **2,492 passed, 34 skipped, 94 deselected**;
+focused Phase 4 routes **204 passed**; D1–D4 **163 passed**; public TEAx mutation **6 passed**;
+Agentic ownership/reference-use **58 passed**; Codegen static closure **68 passed**. Scoped strict
+mypy is green. Repository-wide Codegen mypy remains the Phase 3 baseline of 30 errors in 8 files;
+Ruff remains a non-green 608-error baseline, with every Phase 4 Python change clean under targeted
+Ruff. The owner-retired PDF/HTML suite was not run.
+
+The run discovered that the historical fixture validator compared locked sources with working-tree
+bytes even though the lock names `P_seed`; it now reads those bytes from Git history. It also found
+that three backlog rows required by the binding design had not actually been filed. They are now
+recorded as agent-grade follow-ups. Neither discovery changes product semantics.
+
+Implementation is not certification. Run an independent `$my-audit` for Phase 4 next. Phase 5 and
+close remain blocked, and `elaborator-downstream` remains blocked until the whole predecessor is
+implemented, audited, and closed.
 
 ### 2026-08-18: stop-reinventing-the-parser — PHASE 3 RE-AUDITED; N1/N2 CLOSED
 
