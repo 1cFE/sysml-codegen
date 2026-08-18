@@ -211,6 +211,9 @@ condition in every phase, not a reconciliation to negotiate. See
 
 Phase 1 completes and the run halts to the owner before Phase 2 begins.
 
+*Served 2026-08-17: the pause was taken, the owner reviewed Phase 1, and the run was resumed by
+the owner for Phases 2-5 (owner-present edit).*
+
 ### Preserved and prohibited changes
 
 - D1-D4 are preserved. Production changes to
