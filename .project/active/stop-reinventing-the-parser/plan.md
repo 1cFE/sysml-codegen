@@ -1108,6 +1108,92 @@ licensed tests ran live.
    (`sysml/data_models.py:89`), so Codegen's deleted-symbol list names it but finds nothing —
    correctly. Codegen's red names the five weak identifiers that do live there.
 
+#### Audit-fix pass (2026-08-17)
+
+The dedicated Phase 1 audit returned **Pass with findings**
+([run-records/phase1-audit.md](run-records/phase1-audit.md), `d21406b`). Its four Major findings
+are fixed in the kept tests. Tests only; no production bytes moved, and `occurrence.py` is still
+the *same Git blob* as `C_base` (`af721562512d5684ce3dd1c96624fbe3355a536d` at both commits).
+
+**Commits:** `stop-parser-impl-r2` `e4e2693` → **`d257ef109065832f629ea5c90c8faa11b7c47fa7`**;
+`stop-parser-evidence-r2` `85c7758` → **`8d27fb3`**.
+
+**Finding 1 — the green contract is now asserted as exact fields.** Both red tests assert
+`reference == "cells#(2).mass"`, `source_file == "root-0/model.sysml"` and `source_line == 15`
+as separate field equalities, plus no absolute or staged path in the rendered message. Measured
+first, per arm: **all three arms report the same root-relative `source_file`**, whether the caller
+passes a relative or an absolute model path, so one constant is correct for all three and there is
+**no design conflict** — every arm can express a root-relative referent, and the
+`SI_OCCURRENCE_AMBIGUOUS` diagnostic already does. What is broken is only the
+`SI_INDEXED_SOURCE_UNSUPPORTED` shape: `reference=None`, `source_file=None`, `source_line=None`,
+with a raw path in `detail` (live: the caller's absolute path; admitted/capture: the private
+staged temp dir). The audit's demonstrated escape is closed — the old `endswith` matched all
+three of those.
+
+**Finding 4 — both cases now run all three public arms**, parameterized `arm × strict`. Case 1's
+separate snapshot test is folded into its capture arm rather than duplicated. Each arm is red for
+the same reason it will be green for.
+
+**Finding 3 — the dynamic-`getattr` gate is scoped, measured first as instructed.** Rule: a module
+is raw-SysIDE if it imports the SysIDE adapter or reads a reviewed selector. **Measured surprise,
+surfaced not accepted:** the rule as first stated keyed on `import syside`, and *no production
+module imports `syside` directly* — that is deliberate and stated at `extraction/extractor.py:14`;
+Codegen reaches SysIDE only through `agentic_mbse.sysml.syside_adapter`. Keyed on `syside` the
+clause is inert, and two modules that handle raw parser nodes without reading a reviewed selector —
+`extraction/computed_attribute_extractor.py` (an audited off-route module) and
+`extraction/feature_metadata.py` — would fall outside the gate. The import clause is therefore
+keyed on the adapter, which is the same intent measured against how this repo actually reaches
+SysIDE. Set size 16 → **21 modules**, recorded as `RAW_SYSIDE_MODULES` and pinned by
+`test_the_raw_syside_module_set_is_the_recorded_one`; a companion test asserts no module imports
+`syside` directly, so the premise cannot rot. `resolution/models.py` falls outside and its
+unrelated red is gone. **Guardrail (b) re-verified:** every evasion mutant now carries the adapter
+import, so each is inside the scoped gate, and **all five still die**; two anti-vacuity guards
+prove the scope admits neither everything nor nothing.
+
+**Finding 2 — the Agentic marker test survives its own deletion.** It resolves
+`ResolvedSemanticReferenceFact` by `getattr` and reads absent annotations as empty. Verified
+against all three states: class deleted → pass, class present without the marker → pass, today →
+fail.
+
+Also tightened: the operator-wrapped regression pins today's shape exactly rather than by suffix,
+including the three fields the refusal does *not* carry, so Phase 3 cannot tighten that path
+silently. Audit Minors 5-11 and Informational 12-14 are **not** addressed here; they are Phase 2-4
+work per the audit's own placement.
+
+**Updated red set — 25 nodes (was 19): Codegen 15 (was 9), Agentic 10 (unchanged).**
+
+```
+# Codegen, stop-parser-impl-r2 @ d257ef1 — 12 red-set + 3 manifest/table
+tests/conformance/test_expression_evidence_integrity.py::test_indexed_bare_chain_singular_slot_refuses_before_consumers[{True,False}-{live,admitted,capture}]
+tests/conformance/test_expression_evidence_integrity.py::test_indexed_bare_chain_plural_slot_refuses_before_occurrence_resolution[{True,False}-{live,admitted,capture}]
+tests/conformance/test_expression_evidence_integrity.py::test_every_consumer_cell_names_a_proof
+tests/conformance/test_expression_evidence_ownership.py::test_discovered_raw_selectors_equal_the_reviewed_manifest
+tests/conformance/test_expression_evidence_ownership.py::test_deleted_symbols_are_absent
+
+# Agentic, stop-parser-evidence-r2 @ 8d27fb3 — unchanged 10 nodes; only
+# test_the_permissive_boolean_index_marker_is_gone was restructured.
+```
+
+`test_no_dynamic_getattr_survives_in_the_raw_syside_module_set` (renamed from
+`…_survives_in_production`) is now **green**, which is correct: it is an anti-evasion gate, not a
+red-set member, and its former red was the unrelated Pydantic validator.
+
+**Re-verification at `d257ef1`.** All three lock legs green (118/118 against `20f9e60a`,
+`capture_baseline.py` exit 0, the 12-test lock check green). Full Codegen suite from a fresh
+extraction: **15 failed, 2340 passed, 34 skipped, 0 collection errors** — the 15 are exactly the
+red set. Agentic fast suite: **28 failed, 1846 passed** — 10 recorded reds plus the same 18
+`A_base` baseline failures (missing optional `PIL`/web-backend deps). `ruff check` clean on every
+changed file. D1-D4 and the retained harness: **162 passed** — this run records the exact paths, so
+the figure is traceable (audit Informational 13): `tests/conformance/`
+`test_occurrence_domain_derivation.py`, `test_occurrence_calc_domain_derivation.py`,
+`test_definition_owned_reference_positions.py`, `test_occurrence_multiplicity_authority.py`,
+`test_feature_typing_integrity.py`, `test_usage_owned_reference_anchoring.py`,
+`test_elaboration_plural_scope.py`, `test_exact_group_identity.py`, `test_baselines.py`,
+`test_evidence_artifact_topology.py`; `tests/unit/` `test_elaboration_occurrence.py`,
+`test_elaboration_containment_address.py`, `test_elaboration_identity.py`,
+`test_occurrence_identity_boundary.py`, `test_coverage_probes.py` — 125 D1-D4 plus 37 retained
+harness.
+
 ### Phase 2 completion
 
 **Completed:**
