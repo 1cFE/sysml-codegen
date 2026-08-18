@@ -1,23 +1,29 @@
 # Implementation Plan: Stop Reinventing the Parser
 
-**Status:** In Progress — Phases 1-2 complete
-**Revision:** 3
+**Status:** In Progress — Phases 1-2 complete; Phase 3 halted at `b4e97dd` and restructured here
+**Revision:** 4
 **Created:** 2026-08-17
-**Last Updated:** 2026-08-17
+**Last Updated:** 2026-08-18
 **Phase Strategy Approved:** 2026-08-17
 **Complexity:** HIGH
 
 ## Source Documents
 
 - **Spec:** [spec.md](spec.md) — approved Revision 4
-- **Design:** [design.md](design.md) — Revision 7, the targeted amendment of the approved
-  Revision 6
-- **Design review:** [design-review.md](design-review.md) — Revision-6 verdict `Approve`;
-  targeted Revision-7 verdict `Revise`, whose must-fix set was applied and orchestrator-verified
-  on 2026-08-17
+- **Design:** [design.md](design.md) — Revision 8, the targeted amendment of Revision 7, itself the
+  targeted amendment of the approved Revision 6
+- **Design review:** [design-review.md](design-review.md) — Revision-6 verdict `Approve`; targeted
+  Revision-7 verdict `Revise`, must-fix set applied and orchestrator-verified 2026-08-17; targeted
+  Revision-8 verdict `Revise`, must-fix set applied and orchestrator-verified 2026-08-18
+  ("Design Revision 8 is approved for consumption by the plan revision")
+- **Phase 3 stop report:**
+  [run-records/phase3-stop-report.md](run-records/phase3-stop-report.md) — rulings 1-4 owner-ruled
+  2026-08-18; the cause of **this** revision
+- **Phase 2 audit:** [run-records/phase2-audit.md](run-records/phase2-audit.md) — `Pass with
+  findings`; its m3 disposition is re-based by Phase 2b below
 - **Phase 1 stop report:**
   [run-records/phase1-stop-report.md](run-records/phase1-stop-report.md) — rulings 1-7
-  owner-ratified 2026-08-17; the cause of this revision
+  owner-ratified 2026-08-17; the cause of Revision 3
 - **Audit:** [audit.md](audit.md) — failed-candidate verdict `Needs Work`
 - **Product lens:** [product-lens.md](product-lens.md) — `audit3-F1` remains blocked until the
   production indexed-consumer proof is green
@@ -25,6 +31,44 @@
   [expression-evidence boundary convergence assessment](../../research/20260817-164828_expression-evidence-boundary-convergence-assessment.md)
 - **Failed candidate:** [plan.failed-candidate.md](plan.failed-candidate.md) — historical record;
   never resume its checklist
+
+### Revision 4 note
+
+Phase 3's first run tripped the stop rule and halted to the owner
+([run-records/phase3-stop-report.md](run-records/phase3-stop-report.md)). The cause was a design
+premise, not an implementation defect: Revision 7 required the unit operand of a `[` annotation to
+be a feature reference, and that is false for every compound unit — `[kg/m^3]` is an
+`OperatorExpression`. `inspect_reference_uses` therefore refused every compound-unit model on the
+real corpus, and compound units are pervasive in exactly the models this product serves. Two
+further premise conflicts were surfaced beside it: the raw-selector manifest cannot go green by
+deletion for 11 of its rows, and `annotated_ast_value`'s deletion removed a value-site rule with no
+upstream replacement. The owner ruled on all four; design Revision 8 encodes the rulings and its
+targeted review is closed.
+
+This revision consumes that amendment and restructures the remaining run:
+
+- **New [Phase 2b](#phase-2b-land-the-shared-unit-primitive)** — the two rulings that fix the
+  blocker land in **Agentic**, which Phase 3 treated as read-only. Phase 2b reopens that tree under
+  its own gate, tests first, and closes with a **Phase 2 audit addendum** re-establishing the audit's
+  m3 disposition on the non-emission mechanism. Codegen's dependency pin then targets that landing.
+- **[Phase 3](#phase-3-make-codegen-accept-only-closed-evidence) resumes from `b4e97dd`, not from a
+  rollback** **[OWNER, 2026-08-18]**. What landed there holds; the phase finishes the responsibility
+  migration on top of it. The falsified "removes the ~26 unowned reads" item is restated as
+  repository-wide discovery with collision-aware rows against the measured 20-row failure; the
+  interim Codegen unit walk is re-implemented as policy over the shared Agentic primitive; the
+  kept tests the deviation deferred are explicit checklist items; and
+  `test_source_identity_extraction.py` gets its 14-row disposition table. The phase ends with a
+  dedicated adversarial audit whose weak-variant obligations are recorded in its validation.
+- **[Phase 4](#phase-4-close-public-routes-and-registry-authority)** is touched in one place: the
+  A5b ledger row now carries **both** measured starting arms, per ruling 4. Everything else in
+  Phases 4-5 stands.
+
+Phases 1 and 2 are complete, audited, and closed. Their contract text and completion records are
+history and are not rewritten here — Phase 2b re-bases one audited disposition (m3) rather than
+re-opening the audit, and the strategy section's first-proof-point account of the `Cell[3]` case
+describes the **strict** arm measured in Phase 1; ruling 4's lenient arm is carried in design
+Revision 8's behavior matrix and in Phase 4's A5b row, which is where the reconciliation gate reads
+it. Every gate not named above is unchanged.
 
 ### Revision 3 note
 
@@ -63,8 +107,9 @@ The plan starts from the audited failed-candidate trees because they already con
 D1-D4 occurrence work, retained probes, and artifact harness. Phase 1 first proves that exact base — verifying the
 lock on its three legs and adding the missing committed historical-tree check — and reproduces the
 indexed escape with two kept red closure tests, one per measured `C_base` behavior. Phase 2 closes Agentic's evidence
-contract before Codegen depends on it. Phase 3 removes Codegen's weaker representations and raw
-walks. Phase 4 proves the complete public route and graph-derived registry authority. Phase 5 names
+contract before Codegen depends on it. Phase 2b lands the shared unit primitive that contract turned
+out to need, under its own gate, because reopening Agentic reopens an audited surface. Phase 3
+removes Codegen's weaker representations and raw walks. Phase 4 proves the complete public route and graph-derived registry authority. Phase 5 names
 and verifies fresh immutable artifacts only after production behavior is green.
 
 ### Critical path
@@ -73,6 +118,7 @@ and verifies fresh immutable artifacts only after production behavior is green.
 C_base + A_base + three-leg lock verification
   -> red audit3-F1 natural-route proof (both indexed cases)
   -> Agentic semantic-evidence/v2
+  -> Agentic shared unit primitive (Phase 2b; unblocks compound units)
   -> Codegen closed evidence boundary
   -> public route + registry closure
   -> A_final -> C_prod -> F_final -> C_evidence
@@ -132,6 +178,33 @@ and compare it at every phase boundary.
 
 The retained probe and lock commits must remain ancestors of `C_base`, and their recorded parent
 relationship must hold. Do not recreate the probes from historical comparison baseline `7b29d8b`.
+
+### Live implementation trees and the Agentic reopening
+
+Phases 1-3 work from dedicated worktrees under `/tmp/stop-parser-rev2/worktrees/`. Their current
+state:
+
+| Repository | Branch | Worktree | State entering Phase 2b |
+|---|---|---|---|
+| Agentic | `stop-parser-evidence-r2` | `/tmp/stop-parser-rev2/worktrees/agentic-mbse` | `68bca37` — Phase 2 landing plus its audit-fix pass, independently audited |
+| Codegen | `stop-parser-impl-r2` | `/tmp/stop-parser-rev2/worktrees/sysml-codegen` | `b4e97dd` — one commit on top of `d257ef1`, clean, Phase 3 halted here |
+| Docs | `stop-reinventing-the-parser` | `/home/reid/1cfe/sysml-codegen` | this checkout; completion records only, never implementation |
+
+**The Agentic worktree's read-only rule is superseded, for Phase 2b only.** Phase 3 treated the
+Agentic tree as a read-only upstream, which is why the compound-unit blocker could not be resolved
+in place. Design Revision 8's rulings 1 and 2 land *there*, so the phase boundary must allow it
+([design.md#next-stage-handoff](design.md#next-stage-handoff), consequence 1). Reopening it reopens
+Phase 2's audited surface, so Phase 2b is separately gated: it re-applies every Phase-2 audited
+obligation to the new bytes, and it closes with a Phase 2 audit addendum. Outside Phase 2b the
+Agentic tree is read-only again, and Phase 3 consumes the Phase-2b commit as its upstream.
+
+The reopening lands under the **same** package contract — Agentic `0.1.3`,
+`SEMANTIC_EVIDENCE_API_VERSION = "semantic-evidence/v2"`. Design Revision 8 keeps that contract
+because the artifact was never released
+([design.md#agentic-semantic-contract](design.md#agentic-semantic-contract);
+[design.md#next-stage-handoff](design.md#next-stage-handoff)). No new version is minted, and
+Codegen's pin is unchanged in value — only the bytes it is verified against move from `68bca37` to
+the Phase-2b commit.
 
 ### Lock verification — three legs, not one recompute
 
@@ -521,6 +594,150 @@ design conflict. Stop rather than add a wrapper, compatibility alias, or manifes
 
 ---
 
+## Phase 2b: Land the shared unit primitive
+
+### Goal
+
+Unblock compound units and give the annotation's parser shape one owner. Reopen the Agentic tree at
+`68bca37`, retire the two shape assertions design Revision 8 supersedes, add
+`unit_annotation_value` as the one structural reading of a `[` annotation, and make
+`inspect_reference_uses` call it while still never emitting the unit operand. See
+[design.md#one-total-inspection-operation](design.md#one-total-inspection-operation) — rulings 1 and
+2 — and [design.md#agentic-semantic-contract](design.md#agentic-semantic-contract).
+
+This is a separately gated phase because it reopens an audited surface. It is the entire Agentic
+change authorized after Phase 2; nothing else in that tree moves.
+
+### Why now
+
+Phase 3 halted here. `[kg/m^3]` is an `OperatorExpression`, so the Revision-7 requirement that the
+unit operand be a feature reference refused every compound-unit model on the real corpus — and
+compound units are pervasive across `catf_mfe_model`, `catf_mfe_d5`, `catf_mfe_gated`, `fusion_tea`,
+and `feature_metadata_multifile`. No Codegen-side accommodation is legal: catching the refusal,
+pre-unwrapping the annotation, or restoring a raw AST unit walk are all the compatibility surface
+this plan forbids. The fix is upstream, so the upstream reopens.
+
+### Assumption under test
+
+One shared primitive can own the annotation's parser shape for both callers — Agentic's reference
+walk and Codegen's value-site policy — while the unit operand stays opaque, never traversed and
+never emitted.
+
+### Test stencils — write these first
+
+```python
+@pytest.mark.parametrize("annotation", ["[m]", "[kg/m^3]", "[W/(m·K)]"])
+def test_a_unit_annotation_returns_its_value_operand_and_never_the_unit(annotation, model):
+    expression = value_expression_for(model, annotation)
+    assert unit_annotation_value(expression) is value_operand_of(expression)
+    uses = inspect_reference_uses(expression)
+    assert all(use.path.leaf.qualified_name != unit_name_of(annotation) for use in uses)
+
+def test_wrong_arity_raises_and_never_returns_none(synthetic_three_operand_annotation):
+    with pytest.raises(SemanticEvidenceError) as caught:
+        unit_annotation_value(synthetic_three_operand_annotation)
+    assert caught.value.code is SemanticEvidenceCode.EXPRESSION_KIND_UNSUPPORTED
+
+def test_a_reference_in_the_value_operand_is_still_visited(model):
+    uses = inspect_reference_uses(value_expression_for(model, "scale [m]"))
+    assert [use.authored_text for use in uses] == ["scale"]
+```
+
+### Changes required
+
+**See:** [design.md#one-total-inspection-operation](design.md#one-total-inspection-operation),
+[design.md#d5-public-agentic-evidence-contract](design.md#d5-public-agentic-evidence-contract), and
+[design.md#agentic-semantic-contract](design.md#agentic-semantic-contract).
+
+- [ ] **Reopen the tree.** Verify `/tmp/stop-parser-rev2/worktrees/agentic-mbse` is clean at
+  `68bca37` and both user checkouts report an empty `status --porcelain`. Rollback point for this
+  phase: reset `stop-parser-evidence-r2` to `68bca37`.
+- [ ] **Tests first**, in their own commit, red for their stated reasons before any production edit.
+  The owner's four required coverage cases, per
+  [design.md#evidence-and-public-boundary-matrix](design.md#evidence-and-public-boundary-matrix):
+  - a simple `[m]`;
+  - representative compound forms `[kg/m^3]` and `[W/(m·K)]`, which must **elaborate rather than
+    refuse** — these are the cases that are red today;
+  - a wrong-arity annotation through a synthetic node, which must raise
+    `SemanticEvidenceError(EXPRESSION_KIND_UNSUPPORTED)` and never return `None`;
+  - a reference in the **value** operand, proving the value side is still visited while the unit
+    side is never emitted.
+- [ ] **Retire the two superseded assertions.** At the audited `68bca37`, `_unit_annotation_value`
+  (`src/agentic_mbse/sysml/reference_use.py:316`) refuses a non-feature-reference unit operand with
+  `EXPRESSION_KIND_UNSUPPORTED` and an unresolved unit referent with `RESOLVED_TARGET_MISSING`, and
+  kept tests in `tests/test_sysml/test_reference_use.py` pin both. **Both refusals and both
+  assertions go** — they encode exactly the requirements ruling 1 drops. This is a deletion, not a
+  weakening: what replaces them is the stronger non-emission fact below. The **arity** refusal
+  survives and becomes the primitive's.
+- [ ] **Add the primitive.** `unit_annotation_value(expression) -> Any | None` in the Agentic
+  boundary: recognize `[` by **mapped metatype and operator, never a runtime class name**; enforce
+  exactly two operands; return the value operand; leave the unit operand opaque. Wrong arity
+  **raises** `SemanticEvidenceError(EXPRESSION_KIND_UNSUPPORTED)`. `None` means strictly one thing —
+  the expression is not a `[` annotation at all — so a malformed annotation can never fall through
+  and be walked as general math ([AGENT ruling 2026-08-18], design.md:577-585).
+- [ ] **One caller inside Agentic.** `inspect_reference_uses` traverses only what the primitive
+  returns. The never-emit rule is unchanged and is now the whole of m3's closure: the unit operand is
+  never reached and never emitted, so a project-scoped unit cannot arrive at a consumer as a design
+  dependency.
+- [ ] **Export it.** Add `unit_annotation_value` to the public surface alongside the existing
+  `semantic-evidence/v2` names, per
+  [design.md#agentic-semantic-contract](design.md#agentic-semantic-contract). The package version
+  stays `0.1.3` and the API marker stays `semantic-evidence/v2`; no other export changes.
+
+### Validation
+
+The Phase-2 audited obligations apply again to these bytes — the audit's evidence is dated to
+`68bca37` and cannot certify a different tree.
+
+**Automated:**
+
+- [ ] Focused suites from the worktree: `tests/test_sysml/test_reference_use.py` and
+  `tests/test_sysml/test_semantic_selector_ownership.py`. Record collected/passed counts and state
+  the delta against the Phase-2 fix-pass figures (**32 passed / 20 passed** at `68bca37`), including
+  the nodes removed by the two retired assertions.
+- [ ] `uv run mypy --strict src/agentic_mbse/errors.py src/agentic_mbse/sysml/reference_use.py` →
+  **zero errors**, from the worktree and from a clean extraction.
+- [ ] Fast Agentic suite, licensed, `-m "not slow"`. Baseline at `68bca37` is **18 failed / 1893
+  passed / 1 skipped**, the 18 being the declared `A_base` optional-dependency failures. Zero
+  item-caused failures. **[OWNER-VERBATIM, 2026-08-17]** "do not rerun the PDF suite anymore" — the
+  slow PDF/HTML corpus and the 15 paid/network cases stay unrun.
+- [ ] Repository-wide baselines non-regressed: `mypy src/` **101 errors in 21 files**,
+  `ruff check src/ tests/` **119 errors**; targeted Ruff clean on every changed file. Neither
+  baseline is green and neither may be described as green.
+- [ ] Artifact-isolated run from a fresh `git archive` of the phase commit, extracted under a path
+  containing the `agentic-mbse` string the baseline path test requires. Reproduce the named set
+  `pytest tests/test_sysml/ tests/test_validation/ tests/test_errors.py` and the fast-suite figure,
+  and return Success from the scoped strict gate.
+- [ ] `uv build --wheel`; install into a fresh venv and verify dist version `0.1.3`,
+  `__version__` `0.1.3`, `SEMANTIC_EVIDENCE_API_VERSION` `semantic-evidence/v2`,
+  `unit_annotation_value` importable from the public surface, and every previously deleted symbol
+  still absent.
+
+**Manual:**
+
+- [ ] Against a live licensed model carrying a compound unit, confirm the reference uses for an
+  annotated value contain the value operand's references and **nothing** from the unit operand.
+- [ ] Confirm recognition of `[` comes from the mapped metatype and operator, with no runtime
+  class-name comparison in the primitive.
+
+**Phase 2 audit addendum (closes this phase):** record, in
+[run-records/phase2-audit.md](run-records/phase2-audit.md), that m3's disposition is re-established
+on the **non-emission** mechanism at the new commit. The Phase-2 closure rested partly on shape
+validation, which ruling 1 deletes; the addendum states the replacement fact and the evidence for it
+at these bytes, and names the two retired assertions. m3 is not inherited from the Phase-2 audit,
+whose evidence is dated to the retired mechanism
+([design.md#one-total-inspection-operation](design.md#one-total-inspection-operation)).
+
+**What we know works after this phase:** compound-unit models elaborate again; one owner reads the
+annotation's parser shape; the unit operand is never emitted; and the Agentic artifact Codegen pins
+is green on its own gates at bytes an audit record actually covers.
+
+**Rollback/stop rule:** if the primitive cannot be recognized without a runtime class name, or if
+making compound units elaborate requires relaxing the never-emit rule, that is a design conflict.
+Stop and report; do not add a Codegen-side accommodation.
+
+---
+
 ## Phase 3: Make Codegen accept only closed evidence
 
 ### Goal
@@ -531,6 +748,41 @@ leaving D1-D4 source and behavior intact. See
 [design.md#d7-one-codegen-conversion-boundary](design.md#d7-one-codegen-conversion-boundary),
 [design.md#binding-and-deep-path-values-are-valid-by-construction](design.md#binding-and-deep-path-values-are-valid-by-construction),
 and [design.md#scoped-strict-type-boundary](design.md#scoped-strict-type-boundary).
+
+### Starting state — resume from `b4e97dd`, no rollback
+
+**[OWNER, 2026-08-18]** The phase resumes on `stop-parser-impl-r2` at **`b4e97dd`**, one commit on
+top of `d257ef1`. The stop report's rollback point is **not** taken; what landed there holds and the
+phase finishes the responsibility migration on top of it. Verify the worktree is clean at `b4e97dd`
+before starting, then re-pin the upstream to the Phase-2b Agentic commit.
+
+Landed and holding at `b4e97dd`
+([run-records/phase3-stop-report.md](run-records/phase3-stop-report.md)):
+
+- the 12 indexed bare-chain red nodes are green — both cases, all three public arms, strict and
+  lenient, asserting `code == SI_INDEXED_SOURCE_UNSUPPORTED`, `reference == "cells#(2).mass"`,
+  `source_file == "root-0/model.sysml"`, `source_line == 15`, refusal before consumers and before
+  `OccurrenceIndex.resolve_address`, and no graph or snapshot bytes. Not one assertion was weakened;
+- `elaboration/expression_evidence.py` and `extraction/binding_source.py` exist and the scoped strict
+  gate returns zero on both;
+- the deletions with no compatibility surface: `SourceReferenceEvidence`, `SourceForm`,
+  `screen_source_readiness`, the four `binding_evidence` builders, `annotated_ast_value`,
+  `_reject_indexed_sources`, `_expression_references`, `_reference_from_elements`,
+  `_UnsupportedExpressionError`, and the dead `SysMLDataExtractor` reconstruction cluster;
+- `git diff C_base -- src/sysml_codegen/elaboration/occurrence.py` is empty, and
+  `deep_cross_scope_probe` was never restored to a captured graph.
+
+Still open, and the content of the resumed phase: the ownership-manifest closure, the Codegen
+value-site policy over the shared primitive, the missing kept tests, the disposition table, the
+carried Phase-1 audit findings, the dependency pin, the D1-D4 rerun, and the extraction-based full
+suite.
+
+**Tests-after deviation, conditionally accepted** **[OWNER, 2026-08-18]**. The first run wrote some
+production before its focused tests. There is **no history rewrite**. The conditions are binding and
+appear as checklist items below: the missing constructor / inventory / deep-path / manifest kept
+tests are added before Phase 3 closes; important boundaries are mutation-tested; the closing audit is
+adversarial and tries the weak variants listed in this phase's validation. **The audit does not
+substitute for a missing kept test.**
 
 ### Assumption under test
 
@@ -557,13 +809,26 @@ def test_inventory_and_consumer_backstop_are_independent(indexed_site):
 [design.md#checked-consumer-and-ownership-manifests](design.md#checked-consumer-and-ownership-manifests),
 and [design.md#diagnostic-ownership](design.md#d8-diagnostic-ownership).
 
-- [ ] **Tests first:** turn the Phase-1 Codegen consumer and ownership tables into focused unit and
-  integration tests. Add direct constructor/exhaustiveness tests, inventory-missing/duplicate tests,
-  targeted inventory-bypass tests for every consumer adapter, and deep-path totality tests.
-- [ ] **Closed boundary modules:** add
+Items already satisfied at `b4e97dd` are verified against the tree and checked off, not redone. An
+item whose evidence is not reproducible at that commit is unfinished.
+
+- [ ] **The missing kept tests — write these before anything else in this resumption.** The
+  tests-after deviation is accepted on the condition that these land before the phase closes
+  **[OWNER, 2026-08-18]**. Each is a kept test, not a probe:
+  - [ ] direct **constructor / exhaustiveness** tests on the closed variants — an index marker cannot
+    be represented as an exact reference, and the union is handled exhaustively at every switch;
+  - [ ] **inventory missing** and **inventory duplicate** tests;
+  - [ ] **per-consumer inventory-bypass** tests, one per consumer adapter, proving the closed-union
+    backstop independently of the inventory refusal;
+  - [ ] **deep-path totality** tests, including the missing middle segment;
+  - [ ] **manifest** tests for the ownership rows added below.
+  Mutation-test the important boundaries: for each, introduce the weakening a regression would
+  actually make and require the test to die. A test that passes against its own weakened
+  implementation is not coverage.
+- [x] **Closed boundary modules:** add
   `src/sysml_codegen/extraction/binding_source.py` and
   `src/sysml_codegen/elaboration/expression_evidence.py` with the narrow strict surfaces described
-  in the design.
+  in the design. *(Landed at `b4e97dd`; scoped strict returns zero on both. Verify, do not redo.)*
 - [ ] **One inventory and exact resolver:** update
   `src/sysml_codegen/elaboration/elaborate.py:2372`, `elaborate.py:2451`, and
   `elaborate.py:2548`; update `extraction/expression_compiler.py:165` so calculation dependencies,
@@ -577,21 +842,104 @@ and [design.md#diagnostic-ownership](design.md#d8-diagnostic-ownership).
   `src/sysml_codegen/elaboration/elaborate.py:1082` with the sole total relationship-path factory.
   Add the real `Feature`-only proof and forced mapped-`IndexExpression` refusal without treating the
   relationship selector as an expression tree.
-- [ ] **Shared traversal:** delete and de-export `annotated_ast_value` from
+- [x] **Shared traversal:** delete and de-export `annotated_ast_value` from
   `src/sysml_codegen/extraction/unit_annotation.py:37`; keep IR-only unit unwrapping. Delete the dead
   `SysMLDataExtractor` name/path reconstruction cluster identified in
   [design.md#binding-and-deep-path-values-are-valid-by-construction](design.md#binding-and-deep-path-values-are-valid-by-construction).
+  *(Landed at `b4e97dd`. The value-site rule it carried is re-homed by the next item.)*
+- [ ] **The value-site policy sits over the shared primitive.** `annotated_ast_value`'s deletion
+  removed a rule with no upstream replacement: the elaborator's *value-shape* decision used it too,
+  and without the unwrap `= 0.2 [m]` reads as general math and mints a computed node instead of a
+  literal value site. `b4e97dd` resolved that with an interim
+  `expression_evidence.unit_annotated_value` implemented over Agentic's `materialize_operands` — the
+  behavior is right and the owner **ratified it in substance**, but it is still a Codegen-owned AST
+  unit walk. Re-implement it as **policy only** over Phase 2b's `unit_annotation_value`
+  ([ruling 2](design.md#one-total-inspection-operation)): Codegen keeps the decision that `0.2 [m]`
+  is a literal value site and delegates **all** structural interpretation — metatype, operator, and
+  operand shape — to the primitive. It performs no operand indexing, no arity check, and no metatype
+  test of its own. It does **not** catch the primitive's arity refusal; that error reaches the D7
+  boundary and converts once to `SI_EVIDENCE_INCOMPLETE`. When this lands, no Codegen-owned unit walk
+  survives.
 - [ ] **Single public conversion:** modify the existing
   `src/sysml_codegen/orchestration/elaborated_pipeline.py:143` so live and admitted/capture arms
   build and consume the same inventory and convert owned failures once with exact reference,
   root-relative location, cause chain, and one code token.
-- [ ] **Codegen ownership closure:** finish
-  `tests/conformance/test_expression_evidence_ownership.py`; require exact manifest equality,
-  evasion kills, live/off-route reachability reconciliation, and no exact-route import of the
-  math-only optional Agentic IR target.
-- [ ] **Dependency contract:** pin Agentic `0.1.3` and `semantic-evidence/v2`, bump Codegen to `0.1.1`,
-  and update `_upstream_pins.py`, `pyproject.toml`, package version tests, and `uv.lock` per
+- [ ] **Codegen ownership closure — repository-wide, collision-aware, not by deletion.** Revision 3
+  carried Phase 1's premise that this phase "removes the ~26 unowned reads". **That premise is
+  false** for 11 of them and is replaced by [ruling
+  3](design.md#the-codegen-gate-keeps-repository-wide-scope). Finish
+  `tests/conformance/test_expression_evidence_ownership.py` to this target instead:
+  - [ ] **Keep repository-wide discovery.** Adapter-import scoping is rejected for the Codegen gate.
+    Phase 2 used it on the Agentic side (audited deviation 2) and the Phase-2 audit recorded the hole
+    it leaves — a helper can receive a live SysIDE node as an argument and read a raw selector off it
+    without importing the adapter (m2, still open). Making that scope load-bearing here would turn a
+    known residual into a legal escape. **A red count that shrinks because the scan narrowed is not
+    progress.**
+  - [ ] **Add collision-aware reviewed rows** for the two name collisions: `.operands` on the neutral
+    `ExpressionIR` dataclasses (`elaboration/graph.py`, `elaboration/project.py`,
+    `extraction/calc_compat_renderer.py`, `extraction/modeled_defaults.py`,
+    `generation/predicate_compiler.py`, `generation/constraint_name_safety.py`) and `.referent` on
+    Codegen's own `SourceFile` dataclass (`extraction/source_manifest.py` ×4,
+    `orchestration/elaborated_pipeline.py` ×1). These are not raw parser reads;
+    `SourceFile.referent` is a **serialized snapshot key**, so renaming it changes sealed bytes.
+  - [ ] **Give each collision row its defined proof artifact**, per
+    [design.md#the-codegen-gate-keeps-repository-wide-scope](design.md#the-codegen-gate-keeps-repository-wide-scope):
+    the declaring type must be **provable at the read site** from a type annotation on the receiving
+    parameter or attribute, or from module-local construction of the value read; and the row's proof
+    is a **kept test that fails if that annotation or declaring type changes**. A prose or docstring
+    claim is not a proof. An **unannotated receiver can never qualify** — it stays an unowned raw
+    read and stays red. For `SourceFile.referent`, that test doubles as the rename guard.
+  - [ ] **Add the adapter-free evasion mutant** — a module importing nothing, receiving the node as
+    an argument, such as `def consume(node): return node.referent`. Its kill criterion is stated in
+    the gate's own terms: the mutant's `(module, function, selector)` tuple must appear in the
+    discovered set **and fail the manifest equality gate**. Discovery alone is not a kill. This
+    mutant is what stops ruling 3's own mechanism from becoming the escape it exists to close.
+  - [ ] **Close the remainder by migration or mechanical exclusion**, measured against the owner's
+    **20-row** current manifest failure. Neutral-IR plus `referent` is not the whole closure.
+    `usage_extractor`'s genuine raw reads and any unresolved off-route module **stay red** until one
+    of those lands.
+  - [ ] Keep the rest of the gate's contract: exact manifest equality, the five evasion kills,
+    live/off-route reachability reconciliation, and no exact-route import of the math-only optional
+    Agentic IR target.
+- [ ] **Disposition table for `tests/conformance/test_source_identity_extraction.py`.** The file
+  imports deleted legacy owners (`parameter_groups`, `pipeline_builder`) and **blocks collection
+  today**; Phase 3 cannot close while it stands unchanged. **[OWNER, 2026-08-18]** it may be removed
+  **only** with a **14-row disposition table** — one row per test function in the file, each giving
+  either a replacement test ID or a precise retirement reason, judged against the responsibilities
+  recorded at [`ledger-4a.md:628`](../../ledger/ledger-4a.md) (row `L-181`). **Replacements land in
+  the same commit that deletes the file.** The 14 rows:
+  `test_chain_target_is_the_redefining_feature`, `test_deep_chain_retains_exact_leaf_target`,
+  `test_def_and_usage_context_referent_classes`, `test_written_form_separates_qualified_from_bare`,
+  `test_usage_owned_fact_owner_matches_live_part_usage`,
+  `test_cross_owner_consumers_share_one_exact_referent`, `test_bound_formal_identity_is_exact`,
+  `test_aggregation_terms_retain_exact_targets`,
+  `test_occurrence_override_value_sites_carry_exact_identity`,
+  `test_authored_literal_is_a_distinct_evidence_class`,
+  `test_indexed_source_is_evidence_not_flattened`,
+  `test_self_binding_detected_despite_same_named_outer`,
+  `test_shadowed_reference_is_not_a_self_binding`, `test_expression_source_disposition`. Record the
+  table in the Phase 3 completion section and update the ledger row.
+- [ ] **Carried Phase-1 audit findings — close them and cite the closure.**
+  - [ ] **Minor 6:** all four `REVIEWED_ROWS` in `test_expression_evidence_ownership.py` name
+    closure-proof tests that did not exist. When this phase's tests land, make
+    `test_every_reviewed_row_names_a_closure_proof` **resolve** each named proof to a real test — the
+    sibling `test_every_named_proof_in_the_consumer_table_resolves` is the model — not merely check
+    for non-empty strings.
+  - [ ] **Minor 7:** off-route reachability is proved by direct imports only (`_imports_of` parses
+    one file). Make it **transitive** from the public roots. Required before Phase 4's closure gate;
+    the ownership file is this phase's.
+  - [ ] **Minor 8:** `tests/conformance/test_probe_fixture_lock.py:140-158` leg-3 ledger-ownership
+    check substring-matches the whole ledger file. Parse the row for the path and check **both**
+    hashes within that row.
+  - [ ] **Informational 12:** the lock's row classifier counts `verification/fixture-manifest.json`
+    as a fixture input via the `or path.startswith("verification/")` clause, which would absorb a
+    future verification-code row into the wrong class. Decide fixture inputs and verification-code
+    rows **structurally**, without changing what the lock covers.
+- [ ] **Dependency contract:** pin Agentic `0.1.3` and `semantic-evidence/v2` — **at the Phase-2b
+  commit's bytes**, not `68bca37` — bump Codegen to `0.1.1`, and update `_upstream_pins.py`,
+  `pyproject.toml`, package version tests, and `uv.lock` per
   [design.md#codegen-pin-and-dependency-contract](design.md#codegen-pin-and-dependency-contract).
+  The pin *values* are unchanged by Phase 2b; the artifact they are verified against moves.
 
 ### Validation
 
@@ -611,8 +959,21 @@ and [design.md#diagnostic-ownership](design.md#d8-diagnostic-ownership).
   refusal and no graph or snapshot for the focused failure set.
 - [ ] Prove the sealed from-snapshot route cannot import or call the raw site enumerator or reference
   inspector.
+- [ ] **Compound-unit elaboration proof — the stop's own falsifier.** The models that refused at the
+  stop must elaborate again. Run the `catf_mfe_*` fixtures (`catf_mfe_model`, `catf_mfe_d5`,
+  `catf_mfe_gated`) plus `fusion_tea` and `feature_metadata_multifile`, and require no
+  `SI_EVIDENCE_INCOMPLETE` from a unit annotation. The five
+  `tests/unit/test_elaboration_expose_shapes.py` tests that failed at the stop must be green.
+  Record the distinct compound forms exercised — `[$/MWh]`, `[10^19 m^-3]`, `[kg/m^3]`, `[m³/s]`,
+  `[MW·yr/m²]`, `[Pa·m³/s]`, `[W/(m·K)]`, and the rest of the stop report's list.
 - [ ] Prove `git diff C_base -- src/sysml_codegen/elaboration/occurrence.py` remains empty and rerun
   the focused D1-D4 tests.
+- [ ] Confirm `deep_cross_scope_probe` is still at typed refusal and was never restored to a captured
+  graph — the global stop condition.
+- [ ] Run the **extraction-based** full Codegen suite. From a plain worktree the default suite does
+  not fully run (pre-existing at `C_base`: 6 modules fail collection, 10 further tests fail with
+  `ArtifactSourceInputError`), so build a fresh extraction the way Phases 1-2 did and report the
+  authoritative numbers from there. Focused suites may run from the worktree.
 
 **Manual:**
 
@@ -622,12 +983,33 @@ and [design.md#diagnostic-ownership](design.md#d8-diagnostic-ownership).
 - [ ] Inspect off-route rows and verify their exclusions are mechanically reachable from the public
   roots rather than prose assertions.
 
+**Closing gate — a dedicated adversarial Phase 3 audit** **[OWNER, 2026-08-18]**. The phase does not
+self-certify. The audit's obligations, stated as the weak variants it must **try** and fail to make
+work:
+
+- [ ] **Skipped inventory** — reach a consumer without the pre-graph inventory having run.
+- [ ] **Indexed-to-exact conversion** — get an `IndexedReferenceUse` accepted anywhere an
+  `ExactReferenceUse` is required.
+- [ ] **Shortened deep paths** — get a relationship path with a missing middle segment to resolve.
+- [ ] **Adapter-free selector reads** — read a raw selector from a module that imports nothing, and
+  survive the manifest equality gate.
+- [ ] **Malformed unit arity** — get a wrong-arity `[` annotation to return `None` and be walked as
+  general math rather than raising.
+- [ ] **Missing diagnostic provenance** — produce a public refusal lacking the authored reference,
+  root-relative `file:line`, cause chain, or one-code-token rendering.
+
+Each variant must be refused by name. **The audit does not substitute for a missing kept test** — a
+weak variant the audit fails to exploit is not evidence that the corresponding checklist test exists.
+
 **What we know works after this phase:** weak evidence cannot be represented at Codegen's exact
-boundary, every consumer has an observable backstop, and D1-D4 remain the unchanged occurrence core.
+boundary, every consumer has an observable backstop, compound-unit models elaborate through the
+shared primitive, every raw selector has a reviewed owner with a real proof artifact, and D1-D4
+remain the unchanged occurrence core.
 
 **Rollback/stop rule:** if a production consumer still needs a raw expression for dependency
 resolution, return to the owning Agentic or Codegen design boundary. Do not add a compatibility
-default or optional inventory lookup.
+default or optional inventory lookup. Rollback point for the resumed work: reset
+`stop-parser-impl-r2` to `b4e97dd`.
 
 ---
 
@@ -698,9 +1080,14 @@ and [design.md#documentation-and-backlog-obligations](design.md#documentation-an
     silently rewritten to occurrence zero, in range or not. Required: pre-graph
     `SI_INDEXED_SOURCE_UNSUPPORTED` naming the authored reference. Proof: the `Cell[1]`
     out-of-range case in `test_expression_evidence_integrity.py`.
-  - **A5b — indexed bare chain, plural slot.** Old: incidental `SI_OCCURRENCE_AMBIGUOUS`. Required:
-    the `SI_OCCURRENCE_AMBIGUOUS → SI_INDEXED_SOURCE_UNSUPPORTED` transition, with the inventory
-    refusing before occurrence resolution runs. Proof: the `Cell[3]` case in the same file.
+  - **A5b — indexed bare chain, plural slot.** The row carries **two** measured starting states, per
+    [ruling 4](design.md#transition-ledger-seed): **strict** refuses with an incidental
+    `SI_OCCURRENCE_AMBIGUOUS` — a name about occurrence selection, for an index defect; **lenient**
+    returns a graph carrying `SI_OCCURRENCE_AMBIGUOUS` + `SI_OCCURRENCE_MISSING`. Required: both arms
+    refuse pre-graph with `SI_INDEXED_SOURCE_UNSUPPORTED`, and because the inventory refuses before
+    occurrence resolution runs, the lenient graph disappears too. Proof: the parameterized `Cell[3]`
+    case in the same file, which pins both starting states explicitly. The reconciliation gate must
+    expect the lenient graph's disappearance as well as the diagnostic rename.
 
   The reconciliation gate must **expect** that diagnostic transition rather than flag it as unlisted
   drift. A5a proves the silent rewrite exists at all; A5b proves the name of the refusal changes.
@@ -894,6 +1281,16 @@ dependent identity chain. Never repair it only in `C_evidence`.
   case names its exact expected `C_base` behavior — Case 1 a zero-diagnostic graph, Case 2
   `SI_OCCURRENCE_AMBIGUOUS` — and Phase 1's stop rule fires on any other failure, including the
   right code arriving from the wrong path.
+- **A green manifest is bought by narrowing the scan:** the Codegen gate keeps repository-wide
+  discovery; collision rows need a provable declaring type plus a kept proof test, an unannotated
+  receiver can never qualify, and the adapter-free evasion mutant must fail the equality gate. The
+  20-row measurement is the denominator.
+- **Reopening Agentic lands a change on a tree whose audit is dated to different bytes:** Phase 2b
+  re-runs every Phase-2 audited obligation against its own commit and closes with an audit addendum
+  re-establishing m3 on non-emission.
+- **The tests-after deviation is quietly absorbed:** the missing kept tests are explicit checklist
+  items with a mutation-testing obligation, and the closing adversarial audit is recorded as an
+  addition to them, never a substitute.
 - **The lock is re-derived instead of verified:** the three legs read the historical tree from Git
   and the lock's own `probe_fixture_commit` field; a mismatch returns the item to design and never
   authorizes a replacement lock.
@@ -1378,6 +1775,18 @@ and verified from the installed wheel rather than re-performed.
    posture: a chain rooted in arbitrary math is not a reference the toolchain can honor. No test
    or fixture in the tree exercises that shape, so nothing regressed.
 
+### Phase 2b completion
+
+**Completed:**
+
+**Commits / identities:**
+
+**Actual changes and test results:**
+
+**Phase 2 audit addendum — m3 re-established on non-emission:**
+
+**Issues / deviations / rollback point:**
+
 ### Phase 3 completion
 
 **Completed:**
@@ -1385,6 +1794,8 @@ and verified from the installed wheel rather than re-performed.
 **Commits / identities:**
 
 **Actual changes and test results:**
+
+**14-row disposition table — `tests/conformance/test_source_identity_extraction.py`:**
 
 **Issues / deviations / rollback point:**
 
