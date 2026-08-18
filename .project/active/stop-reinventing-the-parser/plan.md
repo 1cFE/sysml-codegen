@@ -1,6 +1,6 @@
 # Implementation Plan: Stop Reinventing the Parser
 
-**Status:** Draft
+**Status:** In Progress — Phase 1 complete, paused for owner
 **Revision:** 3
 **Created:** 2026-08-17
 **Last Updated:** 2026-08-17
@@ -342,7 +342,7 @@ escape is measuring the wrong thing.
 [design.md#load-bearing-bets](design.md#load-bearing-bets), and
 [design.md#test-design](design.md#test-design).
 
-- [ ] **Base and lock verification:** record clean implementation-worktree status; prove the two
+- [x] **Base and lock verification:** record clean implementation-worktree status; prove the two
   retained commits are ancestors of `C_base` with their recorded parent relationship; run the three
   legs of [lock verification](#lock-verification--three-legs-not-one-recompute) — fixture inputs
   against `20f9e60a` read from the lock's own `probe_fixture_commit` field, current outputs through
@@ -351,7 +351,7 @@ escape is measuring the wrong thing.
   topology checks in `tests/unit/test_coverage_probes.py:1`,
   `tests/conformance/test_baselines.py:1`, and
   `tests/conformance/test_evidence_artifact_topology.py:1`.
-- [ ] **Committed historical-tree lock check (new kept test):** today the lock leg exists only as a
+- [x] **Committed historical-tree lock check (new kept test):** today the lock leg exists only as a
   hand-run; no committed test verifies the lock against its named historical tree, and that is the
   one real residual gap in `C_base`'s evidence contract. Add it as a kept test that lands in
   `C_prod` beside the other verification tests
@@ -366,7 +366,7 @@ escape is measuring the wrong thing.
   - separately assert leg 3 — each of the six verification/probe rows matches its current on-disk
     bytes, and any file differing from its lock-time bytes has a named ledger row;
   - never read the working tree for the historical bytes, and never rewrite the lock on mismatch.
-- [ ] **Codegen tests first:** extend
+- [x] **Codegen tests first:** extend
   `tests/conformance/test_expression_evidence_integrity.py:1` with **both** indexed red cases —
   the `Cell[1]` out-of-range singular-slot case and the `Cell[3]` plural-slot case — through the
   licensed live/admitted/capture seed, with exact diagnostic fields, downstream-entry and
@@ -374,40 +374,40 @@ escape is measuring the wrong thing.
   operator-wrapped form as positive regression coverage, not as a red-set member. Add the initial
   consumer table for calculation dependencies, bindings, aliases, computed attributes, predicates,
   and deep overrides.
-- [ ] **Codegen ownership harness:** add
+- [x] **Codegen ownership harness:** add
   `tests/conformance/test_expression_evidence_ownership.py` with the initial reviewed selector rows,
   public-root reachability checks, deleted-symbol inventory, and the five AST evasion mutations from
   [design.md#checked-consumer-and-ownership-manifests](design.md#checked-consumer-and-ownership-manifests).
-- [ ] **Agentic tests first:** add `tests/test_sysml/test_reference_use.py` and
+- [x] **Agentic tests first:** add `tests/test_sysml/test_reference_use.py` and
   `tests/test_sysml/test_semantic_selector_ownership.py` with the closed-variant, consumer, selector,
   and symbol-absence expectations. They must expose the current permissive helpers and boolean marker
   rather than grandfathering them.
-- [ ] Commit only tests/manifests and phase records on the two implementation branches. Record the
+- [x] Commit only tests/manifests and phase records on the two implementation branches. Record the
   exact expected-red node IDs; no production source changes in this phase.
 
 ### Validation
 
 **Automated:**
 
-- [ ] Run the retained Codegen probe/baseline/topology tests and require green results.
-- [ ] Run all D1-D4 occurrence and mutation tests named under
+- [x] Run the retained Codegen probe/baseline/topology tests and require green results.
+- [x] Run all D1-D4 occurrence and mutation tests named under
   [design.md#occurrence-and-producer-matrix](design.md#occurrence-and-producer-matrix); require no
   regression.
-- [ ] Run the new focused Agentic and Codegen tests. Require failures to equal the recorded red set:
+- [x] Run the new focused Agentic and Codegen tests. Require failures to equal the recorded red set:
   **both** indexed natural-route cases with their stated reasons — Case 1 a zero-diagnostic graph,
   Case 2 `SI_OCCURRENCE_AMBIGUOUS` — plus weak representation/symbol closure and ownership-manifest
   differences.
-- [ ] Run the new committed historical-tree lock check; require it green.
-- [ ] Prove `git diff C_base -- src/sysml_codegen/elaboration/occurrence.py` is empty.
-- [ ] Rerun the three lock legs at the end of the phase as well as the start.
+- [x] Run the new committed historical-tree lock check; require it green.
+- [x] Prove `git diff C_base -- src/sysml_codegen/elaboration/occurrence.py` is empty.
+- [x] Rerun the three lock legs at the end of the phase as well as the start.
 
 **Manual:**
 
-- [ ] Inspect the Case 1 trace and confirm the graph is produced with zero diagnostics and the
+- [x] Inspect the Case 1 trace and confirm the graph is produced with zero diagnostics and the
   authored reference collapsed to `cells[0].mass`, matching `audit3-F1`. Inspect the Case 2 trace
   and confirm the refusal is `SI_OCCURRENCE_AMBIGUOUS`, on the plural slot rather than the authored
   index. Do not accept a fixture, license, import, or harness failure as either red.
-- [ ] Confirm no command imported production code from the documentation checkout or an unrecorded
+- [x] Confirm no command imported production code from the documentation checkout or an unrecorded
   sibling.
 
 **What we know works after this phase:** the replacement starts from the intended audited tree, the
@@ -915,13 +915,198 @@ than reconstructing progress later.
 
 ### Phase 1 completion
 
-**Completed:**
+**Completed:** 2026-08-17. Every Phase 1 checklist item and every validation box. No stop rule
+tripped. The run halts here for the owner, per the Global Execution Contract's owner-directed
+pause.
 
 **Commits / identities:**
 
+| Branch | Worktree | Base | Phase 1 commit |
+|---|---|---|---|
+| `stop-parser-impl-r2` | `/tmp/stop-parser-rev2/worktrees/sysml-codegen` | `C_base` `78a9beb9…` | `e4e26932729a49e4497c89842adf2d79b92deecb` |
+| `stop-parser-evidence-r2` | `/tmp/stop-parser-rev2/worktrees/agentic-mbse` | `A_base` `2171016d…` | `85c7758` |
+
+Both worktrees were verified clean at their pinned SHAs before any work and carry exactly one
+commit each. `git diff C_base -- src/` is **empty**, and so is
+`git diff C_base -- src/sysml_codegen/elaboration/occurrence.py`. `git diff A_base -- src/` is
+empty. The changed-path set is tests, fixtures, and the transition ledger only:
+
+```
+tests/conformance/test_expression_evidence_integrity.py
+tests/conformance/test_expression_evidence_ownership.py
+tests/conformance/test_probe_fixture_lock.py
+tests/fixtures/indexed_bare_chain_{singular,plural,operator}/model.sysml
+verification/expected-transitions.md
+tests/test_sysml/test_reference_use.py                    (agentic)
+tests/test_sysml/test_semantic_selector_ownership.py      (agentic)
+```
+
+Rollback point: reset either branch to its base SHA. Nothing outside the two worktrees was
+written; both original user checkouts retain their entry digests (`status --porcelain` empty).
+
 **Actual changes and test results:**
 
+*Base and ancestry.* `20f9e60a` and `43edf9bd` are both ancestors of `C_base`. `20f9e60a`'s parent
+is `7b29d8b6` and `43edf9bd`'s parent is `20f9e60a`, matching the recorded relationship.
+`43edf9bd`'s entire diff is one file, one insertion — `verification/probe-fixture-lock.json` —
+confirming it is the lock file's home commit, not the tree its hashes describe.
+
+*Three-leg lock verification.* Run at phase start and again at phase end; identical results.
+
+- **Leg 1 — fixture inputs against the tree the lock names.** `probe_fixture_commit` read from the
+  lock file equals `20f9e60a19b30bc1ec9a27aacb08380f4bc45602`. All **118** rows recompute against
+  that tree, read from Git: **0 mismatches**. The lock was not re-derived and not rewritten.
+- **Leg 2 — current outputs through the committed transition-ledger validators.**
+  `verification/capture_baseline.py --check --check-current-batch --check-output-transitions`
+  exits 0. `validate_current_batch` reports current `7f926978…`, 14 captured / 23 refused, against
+  frozen `bd7bf245…` at `P_seed` `52a03cd`. `validate_output_transitions` reports 23 metadata-only
+  snapshots, 22 maintained current snapshots, and the two named record transitions
+  (`deep_cross_scope_probe`, `plant_value_shapes`) with their two golden rows. The committed caller
+  `tests/conformance/test_stop_parser_documentation_contract.py` is green (9 passed).
+- **Leg 3 — the six verification/probe rows at current bytes.** The five probe scripts are
+  byte-identical to their lock-time hashes. `verification/capture_baseline.py` differs
+  (lock-time `6aef97af…`, current `c8a7de07…`), exactly the one known difference, and it is now
+  ledger-owned: a named row in `verification/expected-transitions.md` under a new
+  "Verification-code transitions" section citing `da4aa78` and `46694e2`. Git confirms those are
+  the only two commits that touched the file after `20f9e60a`.
+
+*Committed historical-tree lock check (new kept test).* `tests/conformance/test_probe_fixture_lock.py`,
+12 tests, all green. It reads `probe_fixture_commit` from the lock file and then asserts it (never
+hard-codes `43edf9bd` as the tree), reads every locked path's bytes through the same `git show`
+route `capture_baseline._git_bytes` uses, recomputes SHA-256 for all 118 rows, asserts anti-vacuity
+on the count and on paths actually read, separately asserts leg 3's current-byte pins with the
+ledger-ownership requirement, and asserts the lock file is unchanged after reading. It never reads
+the working tree for historical bytes and never writes the lock.
+
+*Retained harness.* `tests/unit/test_coverage_probes.py`, `tests/conformance/test_baselines.py`,
+`tests/conformance/test_evidence_artifact_topology.py`: **37 passed**.
+
+*D1-D4 occurrence and mutation matrix.* The occurrence, calc-domain, definition-owned-position,
+multiplicity-authority, feature-typing, containment-address, identity, identity-boundary,
+usage-owned-anchoring, plural-scope, and exact-group-identity modules: **125 passed, 0 failed**. No
+regression.
+
+*`deep_cross_scope_probe`.* Reads as the typed refusal `SI_OCCURRENCE_MISSING` ("exact output
+`0b877fee-e8c8-5472-a0b2-24aebac57e50` has no producer in the consumer domain") and its captured
+snapshot is absent. The never-restore condition holds.
+
+*Full Codegen suite, from a fresh extraction of the Phase 1 commit with the declared
+artifact-source manifest:* **9 failed, 2336 passed, 34 skipped, 0 collection errors**. The 9
+failures are exactly the recorded red set below.
+
+*Agentic fast suite* (`pytest tests/ -m "not slow"`): **28 failed, 1846 passed, 1 skipped**. 10 are
+the recorded red set below. The other 18 are the `A_base` baseline and are unrelated to this item:
+17 in `tests/test_web_backend.py` and 1 in `tests/test_equations.py`, all `ModuleNotFoundError` for
+optional extraction dependencies (`PIL`, the web backend modules) that this plan may not install.
+The owner-directed exclusion was honored: the slow PDF/HTML corpus suite was not invoked, and the
+15 paid/network cases were not run.
+
+*Baseline static checks.* `ruff check` is clean on every file this phase added or modified;
+`ruff check tests/` reports the pre-existing 127-error `C_base` baseline, to which this phase adds
+nothing. `mypy src/` reports the pre-existing baselines unchanged (Codegen 30 errors in 8 files,
+Agentic 101 errors in 21 files); no item-caused diagnostic exists, by construction, because no
+`src/` file changed. The scoped strict command is not runnable in Phase 1: its targets
+(`extraction/binding_source.py`, `elaboration/expression_evidence.py`,
+`sysml/reference_use.py`) are created in Phases 2-3.
+
+**Recorded expected-red node IDs.**
+
+Codegen (9), on `stop-parser-impl-r2` at `e4e2693`:
+
+```
+tests/conformance/test_expression_evidence_integrity.py::test_indexed_bare_chain_singular_slot_refuses_before_consumers[True]
+tests/conformance/test_expression_evidence_integrity.py::test_indexed_bare_chain_singular_slot_refuses_before_consumers[False]
+tests/conformance/test_expression_evidence_integrity.py::test_indexed_bare_chain_singular_slot_writes_no_snapshot
+tests/conformance/test_expression_evidence_integrity.py::test_indexed_bare_chain_plural_slot_refuses_before_occurrence_resolution[True]
+tests/conformance/test_expression_evidence_integrity.py::test_indexed_bare_chain_plural_slot_refuses_before_occurrence_resolution[False]
+tests/conformance/test_expression_evidence_integrity.py::test_every_consumer_cell_names_a_proof
+tests/conformance/test_expression_evidence_ownership.py::test_discovered_raw_selectors_equal_the_reviewed_manifest
+tests/conformance/test_expression_evidence_ownership.py::test_no_dynamic_getattr_survives_in_production
+tests/conformance/test_expression_evidence_ownership.py::test_deleted_symbols_are_absent
+```
+
+Agentic (10), on `stop-parser-evidence-r2` at `85c7758`:
+
+```
+tests/test_sysml/test_reference_use.py::test_the_closed_reference_use_boundary_module_exists
+tests/test_sysml/test_reference_use.py::test_evidence_vocabulary_names_the_indexed_refusal
+tests/test_sysml/test_reference_use.py::test_indexed_reference_use_has_no_path_attribute
+tests/test_sysml/test_reference_use.py::test_exact_reference_use_carries_the_path_and_no_index_marker
+tests/test_sysml/test_reference_use.py::test_the_permissive_boolean_index_marker_is_gone
+tests/test_sysml/test_reference_use.py::test_an_indexed_use_cannot_form_an_aggregation_term
+tests/test_sysml/test_semantic_selector_ownership.py::test_raw_selector_reads_stay_inside_the_owned_boundary
+tests/test_sysml/test_semantic_selector_ownership.py::test_the_reviewed_boundary_modules_exist
+tests/test_sysml/test_semantic_selector_ownership.py::test_permissive_symbols_are_absent
+tests/test_sysml/test_semantic_selector_ownership.py::test_no_permissive_symbol_is_publicly_exported
+```
+
+**Each red is red for its stated reason** — verified by inspecting the measured `C_base` result,
+not just the failure count.
+
+- **Case 1**, `tests/fixtures/indexed_bare_chain_singular` (`cells : Cell[1]`, authored
+  `picked = cells#(2).mass` at `model.sysml:15`). The route raises nothing. It returns an
+  `InstanceGraph` whose `diagnostics` is `[]` and whose attribute inventory is
+  `['IndexedBareChainSingular__array__cells[0]__mass',
+  'IndexedBareChainSingular__array__picked']` — occurrence index 0, minted for an authored `#(2)`
+  the singular slot cannot honor. Identical in strict and lenient modes. The capture arm seals a
+  snapshot from that graph. This is the escape, and it matches `audit3-F1` and the design's
+  behavior-matrix row exactly.
+- **Case 2**, `tests/fixtures/indexed_bare_chain_plural` (`cells : Cell[3]`, same authored chain).
+  Strict mode refuses with two diagnostics: `SI_OCCURRENCE_AMBIGUOUS` ("exact containment step
+  `FeatureSlotId(...ea89dec6...)` has 3 concrete occurrences") then `SI_OCCURRENCE_MISSING`
+  ("typed alias `IndexedBareChainPlural__array__picked` has no resolved target"). Both are
+  occurrence-selection names raised for an index defect, and `OccurrenceIndex.resolve_address` has
+  already run. That is the design's recorded starting diagnostic, pinned by the test.
+- **Positive regression, not a red-set member.** `tests/fixtures/indexed_bare_chain_operator`
+  (`cells#(2).mass * 1.0`) refuses correctly today with `SI_INDEXED_SOURCE_UNSUPPORTED` at
+  `model.sysml:15`, in strict and lenient modes. Its test passes and stays.
+
+No red is a fixture, license, import, or harness failure. All three fixtures parse and load; the
+licensed tests ran live.
+
 **Issues / deviations / rollback point:**
+
+1. **Leg 2 required building a throwaway artifact root, because `capture_baseline.py` cannot run
+   from a plain worktree.** At `C_base`, `verification/capture_baseline.py` resolves its Git history
+   at import time through `verification/artifact_sources.py`, which demands the
+   `STOP_PARSER_ARTIFACT_SOURCE_INPUTS` manifest and requires the running codegen root to be a
+   declared `extracted/codegen/…` extraction. No committed script builds that manifest. To execute
+   leg 2 as the plan specifies — *through the committed validators*, not a reimplementation — a
+   disposable artifact root was built under `/tmp/stop-parser-rev2/` from `git archive`/`git bundle`
+   of the two worktrees, and the validators ran from that extraction. Nothing was written into
+   either worktree. Phase 5 builds the real artifact set; this is scaffolding, not a substitute.
+2. **The default Codegen suite at `C_base` is only fully runnable from a declared extraction.**
+   Run from an ordinary worktree with no manifest, 6 conformance/unit modules fail to *collect*
+   (`test_ast_dispatch_invariant`, `test_exact_route_fingerprint_stability`,
+   `test_hierarchy_resolver`, `test_stop_parser_documentation_contract`,
+   `test_v6_snapshot_inventory`, `test_check_ledger_4a`) and 10 further tests fail in
+   `test_self_binding_guidance_contract.py` and `test_check_proof_integrity.py`, all with the same
+   `ArtifactSourceInputError`. Confirmed pre-existing: they all pass from an extraction of
+   `C_base` itself. This is a property of the audited base, not a regression, and it is why the
+   authoritative suite numbers above were taken from the extraction. The new lock check follows the
+   same convention as its six sibling verification tests.
+3. **Design-matrix gap, surfaced not resolved: the lenient arm of Case 2.** The design's behavior
+   matrix records the `Cell[3]` bare chain as "REFUSED — `SI_OCCURRENCE_AMBIGUOUS`". Measured, that
+   is the **strict** arm. Under `strict=False` the same fixture **returns a graph** carrying those
+   two diagnostics rather than refusing, and that graph contains all three `cells[i]__mass`
+   attributes with `picked` unresolved. The diagnostic identity is unchanged, so this is the
+   documented strict/lenient delivery contract rather than a contradiction — the operator-wrapped
+   form refuses in both arms because its refusal is pre-graph, which is exactly the ordering this
+   item installs. It is recorded here because the design's matrix does not state the lenient row,
+   and Phase 4's reconciliation gate will otherwise flag it as unlisted. **Not resolved in the
+   test:** both arms are parameterized and both are red. Design should add the lenient row.
+4. **Case 1 has a third red beyond the design's two.** The design names Case 1 as one kept test;
+   the capture arm was written as a separate kept test
+   (`test_indexed_bare_chain_singular_slot_writes_no_snapshot`) because the snapshot
+   byte-preservation assertion needs its own `tmp_path` and refusal shape. Same case, same stated
+   reason, split for legibility.
+5. **The ownership manifests are target manifests, not `C_base` inventories.** `REVIEWED_ROWS`
+   holds only the four contextual exceptions the design leaves in Codegen, so the red lists the
+   ~26 unowned reads Phase 3 removes. The same applies to Agentic's `REVIEWED_MODULES`. Both
+   scanners carry anti-vacuity tests that pass now, so an empty scan cannot make the gate green.
+6. **`has_index_segment` appears only in the Agentic inventory.** It is Agentic's field
+   (`sysml/data_models.py:89`), so Codegen's deleted-symbol list names it but finds nothing —
+   correctly. Codegen's red names the five weak identifiers that do live there.
 
 ### Phase 2 completion
 
