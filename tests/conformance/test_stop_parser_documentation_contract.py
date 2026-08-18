@@ -10,7 +10,21 @@ from pathlib import Path
 from verification import capture_baseline
 
 ROOT = Path(__file__).resolve().parents[2]
-TRANSITIONS = {"A1", "A2", "A3", "A4", "A5", "A6", "B1-B5", "B6/B7", "B8", "B9", "B10"}
+TRANSITIONS = {
+    "A1",
+    "A2",
+    "A3",
+    "A4",
+    "A5",
+    "A5a",
+    "A5b",
+    "A6",
+    "B1-B5",
+    "B6/B7",
+    "B8",
+    "B9",
+    "B10",
+}
 DIAGNOSTICS = {
     "SI_EVIDENCE_INCOMPLETE",
     "SI_TYPE_INVALID",
@@ -74,7 +88,7 @@ def test_transition_record_is_total_and_hashed() -> None:
     rows = {
         match.group("id"): match.groupdict()
         for match in re.finditer(
-            r"^\| (?P<id>A[1-6]|B1-B5|B6/B7|B8|B9|B10) "
+            r"^\| (?P<id>A5[ab]|A[1-6]|B1-B5|B6/B7|B8|B9|B10) "
             r"\| `(?P<old>[0-9a-f]{64})` \| `(?P<new>[0-9a-f]{64})` "
             r"\| (?P<difference>[^|]+) \| `(?P<test>[^`]+)` "
             r"\| `(?P<commit>[0-9a-f]{40})` \|$",

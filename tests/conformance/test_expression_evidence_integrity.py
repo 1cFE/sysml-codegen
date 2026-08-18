@@ -13,15 +13,35 @@ from typing import Any
 import pytest
 from agentic_mbse import SemanticEvidenceCode, SemanticEvidenceError
 
-from sysml_codegen.elaboration import ElaborationCode, ElaborationDiagnosticError
-from sysml_codegen.elaboration.expression_evidence import ExpressionInventoryError
+from sysml_codegen.elaboration import (
+    ElaborationCode,
+    ElaborationDiagnosticError,
+    InstanceGraph,
+    NodeRef,
+    ValueSite,
+)
+from sysml_codegen.elaboration.expression_evidence import (
+    ExpressionInventoryError,
+    ExpressionSite,
+    ExpressionSiteRole,
+)
 from sysml_codegen.orchestration import elaborated_pipeline
 from sysml_codegen.snapshot.capture import capture_instance_graph_snapshot
+from sysml_codegen.snapshot.envelope import load_instance_graph_snapshot
 from tests.conftest import FIXTURES_DIR, requires_license
-from tests.helpers.elaboration_graph import attr
+from tests.helpers.elaboration_graph import attr, calc, constraint
 
 RAW_SOURCE = str(Path("/stage/model.sysml").resolve())
 REFERENT = "root-0/model.sysml"
+
+# Capture has one fixed strict route. Live and admitted elaboration expose both modes.
+PUBLIC_ROUTE_CASES = (
+    pytest.param("live", True, id="live-strict"),
+    pytest.param("live", False, id="live-lenient"),
+    pytest.param("admitted", True, id="admitted-strict"),
+    pytest.param("admitted", False, id="admitted-lenient"),
+    pytest.param("capture", True, id="capture"),
+)
 
 
 class _EmptyModel:
@@ -328,9 +348,10 @@ def test_public_exact_expression_failures_return_no_graph(
 
 
 @requires_license
-@pytest.mark.parametrize("strict", [True, False])
+@pytest.mark.parametrize(("arm", "strict"), PUBLIC_ROUTE_CASES)
 def test_unit_annotated_alias_survives_the_public_conversion_boundary(
     tmp_path: Path,
+    arm: str,
     strict: bool,
 ) -> None:
     """A valid ``= reference [unit]`` value is an alias, not a missing computed row."""
@@ -360,7 +381,12 @@ def test_unit_annotated_alias_survives_the_public_conversion_boundary(
         encoding="utf-8",
     )
 
-    graph = elaborated_pipeline.elaborate_model_paths([source], strict=strict)
+    graph = _public_graph(
+        arm,
+        source,
+        strict=strict,
+        output=tmp_path / "instance_graph_snapshot.json",
+    )
     base = attr(graph, "UnitAnnotatedAlias__host__base_len")
     mirror = attr(graph, "UnitAnnotatedAlias__host__mirror_len")
     width = attr(graph, "UnitAnnotatedAlias__host__inner__width")
@@ -614,7 +640,12 @@ def _elaborate_through_arm(arm: str, fixture: Path, *, strict: bool, output: Pat
     raise AssertionError(f"unknown public arm: {arm}")
 
 
-def _assert_named_indexed_refusal(error: ElaborationDiagnosticError) -> None:
+def _assert_named_indexed_refusal(
+    error: ElaborationDiagnosticError,
+    *,
+    reference: str = AUTHORED_INDEXED_REFERENCE,
+    line: int = AUTHORED_INDEXED_LINE,
+) -> None:
     """The full green contract: one named refusal carrying the authored reference and place.
 
     Every field is compared for exact equality, never by suffix or substring.  That is the
@@ -628,15 +659,444 @@ def _assert_named_indexed_refusal(error: ElaborationDiagnosticError) -> None:
         ElaborationCode.SI_INDEXED_SOURCE_UNSUPPORTED
     ]
     [diagnostic] = error.diagnostics
-    assert diagnostic.reference == AUTHORED_INDEXED_REFERENCE
+    assert diagnostic.reference == reference
     assert diagnostic.source_file == ROOT_RELATIVE_REFERENT
-    assert diagnostic.source_line == AUTHORED_INDEXED_LINE
+    assert diagnostic.source_line == line
     rendered = str(error)
     assert rendered.count("SI_INDEXED_SOURCE_UNSUPPORTED") == 1
     # The place must be root-relative in the rendered message too, never absolute and never
     # the private staged copy the admitted and capture arms parse from.
     assert "/tmp/" not in rendered
     assert not diagnostic.detail.startswith("/")
+    semantic_error = error.__cause__
+    assert isinstance(semantic_error, SemanticEvidenceError)
+    assert semantic_error.code is SemanticEvidenceCode.INDEXED_REFERENCE_UNSUPPORTED
+    assert semantic_error.cause is None
+    assert semantic_error.__cause__ is None
+
+
+def _public_graph(
+    arm: str,
+    fixture: Path,
+    *,
+    strict: bool,
+    output: Path,
+) -> InstanceGraph:
+    result = _elaborate_through_arm(arm, fixture, strict=strict, output=output)
+    if arm == "capture":
+        assert isinstance(result, Path)
+        return load_instance_graph_snapshot(result)
+    assert isinstance(result, InstanceGraph)
+    return result
+
+
+def _preserved_capture_output(arm: str, output: Path) -> bytes | None:
+    if arm != "capture":
+        return None
+    original = b"pre-existing snapshot bytes"
+    output.write_bytes(original)
+    return original
+
+
+def _assert_capture_output_preserved(
+    arm: str,
+    output: Path,
+    original: bytes | None,
+) -> None:
+    if arm == "capture":
+        assert original is not None
+        assert output.read_bytes() == original
+        assert not list(output.parent.glob(f".{output.name}.*.tmp"))
+    else:
+        assert original is None
+        assert not output.exists()
+
+
+def _spy_on_adapter(
+    monkeypatch: pytest.MonkeyPatch,
+    method_name: str,
+) -> _CallSpy:
+    from sysml_codegen.elaboration.elaborate import _ExactElaborator
+
+    spy = _CallSpy()
+    original = getattr(_ExactElaborator, method_name)
+
+    def record(self: object, *args: object, **kwargs: object) -> Any:
+        spy.calls += 1
+        return original(self, *args, **kwargs)
+
+    monkeypatch.setattr(_ExactElaborator, method_name, record)
+    return spy
+
+
+EXPRESSION_ADAPTER_BY_ROLE = {
+    ExpressionSiteRole.CALC_DEFINITION_DEPENDENCY: "_calc_dependencies",
+    ExpressionSiteRole.BINDING: "_resolve_bindings",
+    ExpressionSiteRole.ALIAS: "_resolve_aliases",
+    ExpressionSiteRole.COMPUTED_ATTRIBUTE: "_resolve_computed_expressions",
+    ExpressionSiteRole.CONSTRAINT_PREDICATE: "_resolve_computed_expressions",
+}
+
+
+@requires_license
+@pytest.mark.parametrize(("arm", "strict"), PUBLIC_ROUTE_CASES)
+def test_public_exact_expression_consumers_preserve_edges(
+    arm: str,
+    strict: bool,
+    tmp_path: Path,
+) -> None:
+    """One exact model reaches all five expression consumers through every public arm."""
+    fixture = FIXTURES_DIR / "usage_owned_reference_consumers"
+    graph = _public_graph(
+        arm,
+        fixture,
+        strict=strict,
+        output=tmp_path / "instance_graph_snapshot.json",
+    )
+    source = NodeRef(
+        attr(
+            graph,
+            "UsageOwnedReferenceConsumers__plant__comp_a__length",
+        ).node_id
+    )
+
+    compiled = calc(
+        graph,
+        "UsageOwnedReferenceConsumers__plant__comp_b__area_calc",
+    )
+    assert compiled.calc_expressions == ("area = length_in * 2.0",)
+    assert len(compiled.compiled_output_ids) == 1
+    assert compiled.input_by_name("length_in") == source
+    bound = constraint(
+        graph,
+        "UsageOwnedReferenceConsumers__plant__comp_b__bound_check",
+    )
+    assert bound.input_by_name("length_in") == source
+
+    alias = attr(
+        graph,
+        "UsageOwnedReferenceConsumers__plant__comp_b__aliased_length",
+    )
+    assert alias.is_alias
+    assert alias.alias_target == source
+
+    computed = calc(
+        graph,
+        "UsageOwnedReferenceConsumers__plant__comp_b__doubled_length",
+    )
+    assert computed.is_computed
+    assert list(computed.inputs.values()) == [source]
+
+    predicate = constraint(
+        graph,
+        "UsageOwnedReferenceConsumers__plant__comp_b__inline_check",
+    )
+    assert list(predicate.inputs.values()) == [source]
+    assert graph.diagnostics == []
+
+
+@requires_license
+@pytest.mark.parametrize(("arm", "strict"), PUBLIC_ROUTE_CASES)
+def test_public_deep_literal_override_preserves_exact_path(
+    arm: str,
+    strict: bool,
+    tmp_path: Path,
+) -> None:
+    fixture = FIXTURES_DIR / "source_identity_mixed_consumers"
+    graph = _public_graph(
+        arm,
+        fixture,
+        strict=strict,
+        output=tmp_path / "instance_graph_snapshot.json",
+    )
+    node = attr(
+        graph,
+        "source_identity_mixed_consumers__deep_design__panel_two__deep_rig__gain_setting",
+    )
+    assert node.value == 43.0
+    assert node.value_site is ValueSite.OCCURRENCE_OVERRIDE
+    assert graph.diagnostics == []
+
+
+@dataclass(frozen=True)
+class IndexedConsumerCase:
+    role: ExpressionSiteRole
+    fixture: str | None
+    source: str | None
+    indexed_reference: str
+    site_reference: str
+    line: int
+
+
+INDEXED_CALC_DEPENDENCY_SOURCE = """package IndexedCalcDependency {
+    private import ScalarValues::*;
+
+    part def Cell { attribute mass : Real = 3.0; }
+
+    calc def PickCell {
+        in part cells : Cell[3];
+        out attribute result : Real = cells#(2).mass;
+    }
+}
+"""
+
+INDEXED_PREDICATE_SOURCE = """package IndexedConstraintDefinition {
+    private import ScalarValues::*;
+
+    part def Cell { attribute mass : Real = 3.0; }
+    part def Host { part cells : Cell[3]; }
+
+    constraint def IndexedGuard {
+        in part h : Host;
+        h.cells#(2).mass > 0.0
+    }
+}
+"""
+
+INDEXED_CONSUMER_CASES = (
+    IndexedConsumerCase(
+        ExpressionSiteRole.CALC_DEFINITION_DEPENDENCY,
+        None,
+        INDEXED_CALC_DEPENDENCY_SOURCE,
+        "cells#(2).mass",
+        "cells#(2).mass",
+        8,
+    ),
+    IndexedConsumerCase(
+        ExpressionSiteRole.BINDING,
+        "indexed_expression_source",
+        None,
+        "cells#(2).mass",
+        "cells#(2).mass",
+        17,
+    ),
+    IndexedConsumerCase(
+        ExpressionSiteRole.ALIAS,
+        "indexed_bare_chain_singular",
+        None,
+        "cells#(2).mass",
+        "cells#(2).mass",
+        15,
+    ),
+    IndexedConsumerCase(
+        ExpressionSiteRole.COMPUTED_ATTRIBUTE,
+        "indexed_bare_chain_operator",
+        None,
+        "cells#(2).mass",
+        "cells#(2).mass * 1.0",
+        15,
+    ),
+    IndexedConsumerCase(
+        ExpressionSiteRole.CONSTRAINT_PREDICATE,
+        None,
+        INDEXED_PREDICATE_SOURCE,
+        "h.cells#(2).mass",
+        "h.cells#(2).mass > 0.0",
+        9,
+    ),
+)
+
+
+def _indexed_fixture(case: IndexedConsumerCase, tmp_path: Path) -> Path:
+    if case.fixture is not None:
+        return FIXTURES_DIR / case.fixture
+    assert case.source is not None
+    fixture = tmp_path / case.role.value / "model.sysml"
+    fixture.parent.mkdir()
+    fixture.write_text(case.source, encoding="utf-8")
+    return fixture
+
+
+@requires_license
+@pytest.mark.parametrize("case", INDEXED_CONSUMER_CASES, ids=lambda item: item.role.value)
+@pytest.mark.parametrize(("arm", "strict"), PUBLIC_ROUTE_CASES)
+def test_public_indexed_expression_consumer_refuses_before_its_adapter(
+    case: IndexedConsumerCase,
+    arm: str,
+    strict: bool,
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    """Each natural indexed route is identified and refused before its real adapter."""
+    import sysml_codegen.elaboration.expression_evidence as evidence
+
+    fixture = _indexed_fixture(case, tmp_path)
+    output = tmp_path / "instance_graph_snapshot.json"
+    original_output = _preserved_capture_output(arm, output)
+    downstream = _spy_on_adapter(monkeypatch, EXPRESSION_ADAPTER_BY_ROLE[case.role])
+    acquired: list[ExpressionSite] = []
+    original_acquire = evidence._acquire
+
+    def record_acquisition(
+        expression: object,
+        *,
+        site: ExpressionSite | None = None,
+    ) -> object:
+        assert site is not None
+        acquired.append(site)
+        return original_acquire(expression, site=site)
+
+    monkeypatch.setattr(evidence, "_acquire", record_acquisition)
+
+    with pytest.raises(ElaborationDiagnosticError) as caught:
+        _elaborate_through_arm(arm, fixture, strict=strict, output=output)
+
+    _assert_named_indexed_refusal(
+        caught.value,
+        reference=case.indexed_reference,
+        line=case.line,
+    )
+    assert acquired[-1].role is case.role
+    assert acquired[-1].reference == case.site_reference
+    assert acquired[-1].location is not None
+    assert acquired[-1].location[1] == case.line
+    assert not downstream.called
+    _assert_capture_output_preserved(arm, output, original_output)
+
+
+def _forced_site_expression(
+    failure: SemanticEvidenceCode,
+    site: ExpressionSite,
+) -> object:
+    assert site.location is not None
+    source_file, source_line = site.location
+    if failure is SemanticEvidenceCode.OPERAND_ITERATION_FAILED:
+        expression = MockOperatorExpression()
+    else:
+        assert failure is SemanticEvidenceCode.RESOLVED_TARGET_MISSING
+        expression = MockFeatureReferenceExpression()
+    expression.qualified_name = site.reference
+    expression.document = SimpleNamespace(url=f"file:{Path(source_file).resolve()}")
+    expression.cst_node = SimpleNamespace(
+        start_point=SimpleNamespace(line=source_line - 1)
+    )
+    return expression
+
+
+def _assert_site_failure(
+    error: ElaborationDiagnosticError,
+    *,
+    site: ExpressionSite,
+    failure: SemanticEvidenceCode,
+) -> None:
+    assert site.location is not None
+    [diagnostic] = error.diagnostics
+    assert diagnostic.code is ElaborationCode.SI_EVIDENCE_INCOMPLETE
+    assert diagnostic.reference == site.reference
+    assert diagnostic.consumer_display == site.reference
+    assert diagnostic.source_file == ROOT_RELATIVE_REFERENT
+    assert diagnostic.source_line == site.location[1]
+    assert str(error).count("SI_EVIDENCE_INCOMPLETE") == 1
+    semantic_error = error.__cause__
+    assert isinstance(semantic_error, SemanticEvidenceError)
+    assert semantic_error.code is failure
+    if failure is SemanticEvidenceCode.OPERAND_ITERATION_FAILED:
+        assert isinstance(semantic_error.cause, RuntimeError)
+        assert semantic_error.__cause__ is semantic_error.cause
+    else:
+        assert semantic_error.cause is None
+        assert semantic_error.__cause__ is None
+
+
+@requires_license
+@pytest.mark.parametrize("role", tuple(ExpressionSiteRole), ids=lambda item: item.value)
+@pytest.mark.parametrize(
+    "failure",
+    (
+        SemanticEvidenceCode.OPERAND_ITERATION_FAILED,
+        SemanticEvidenceCode.RESOLVED_TARGET_MISSING,
+    ),
+    ids=lambda item: item.value.lower(),
+)
+@pytest.mark.parametrize(("arm", "strict"), PUBLIC_ROUTE_CASES)
+def test_public_expression_consumer_evidence_failure_returns_no_graph(
+    role: ExpressionSiteRole,
+    failure: SemanticEvidenceCode,
+    arm: str,
+    strict: bool,
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    """Every enumerated role carries an Agentic failure through the public bridge."""
+    import sysml_codegen.elaboration.expression_evidence as evidence
+
+    fixture = FIXTURES_DIR / "usage_owned_reference_consumers"
+    output = tmp_path / "instance_graph_snapshot.json"
+    original_output = _preserved_capture_output(arm, output)
+    downstream = _spy_on_adapter(monkeypatch, EXPRESSION_ADAPTER_BY_ROLE[role])
+    original_acquire = evidence._acquire
+    targeted: list[ExpressionSite] = []
+
+    def fail_target_role(
+        expression: object,
+        *,
+        site: ExpressionSite | None = None,
+    ) -> object:
+        assert site is not None
+        if site.role is role:
+            targeted.append(site)
+            forced = _forced_site_expression(failure, site)
+            return original_acquire(forced, site=site)
+        return original_acquire(expression, site=site)
+
+    monkeypatch.setattr(evidence, "_acquire", fail_target_role)
+
+    with pytest.raises(ElaborationDiagnosticError) as caught:
+        _elaborate_through_arm(arm, fixture, strict=strict, output=output)
+
+    assert len(targeted) == 1
+    _assert_site_failure(caught.value, site=targeted[0], failure=failure)
+    assert not downstream.called
+    _assert_capture_output_preserved(arm, output, original_output)
+
+
+@requires_license
+@pytest.mark.parametrize(("arm", "strict"), PUBLIC_ROUTE_CASES)
+def test_public_deep_literal_override_refuses_a_missing_segment(
+    arm: str,
+    strict: bool,
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    """The deep-override factory's missing segment reaches every public boundary."""
+    import sysml_codegen.elaboration.elaborate as elaborate_module
+
+    fixture = FIXTURES_DIR / "source_identity_mixed_consumers"
+    output = tmp_path / "instance_graph_snapshot.json"
+    original_output = _preserved_capture_output(arm, output)
+    original_factory = elaborate_module.exact_path_from_relationship
+
+    def refuse_deep_path(redefined: object) -> object:
+        from agentic_mbse.sysml.syside_adapter import SysideAdapter
+
+        reference = SysideAdapter.authored_text(redefined)
+        if reference != "deep_rig.gain_setting":
+            return original_factory(redefined)
+        raise SemanticEvidenceError(
+            SemanticEvidenceCode.RESOLVED_TARGET_MISSING,
+            operation="exact_path_from_relationship",
+            detail="deep relationship segment 1 has no exact target fact",
+            location=SysideAdapter.get_source_location(redefined),
+            reference=reference,
+        )
+
+    monkeypatch.setattr(elaborate_module, "exact_path_from_relationship", refuse_deep_path)
+
+    with pytest.raises(ElaborationDiagnosticError) as caught:
+        _elaborate_through_arm(arm, fixture, strict=strict, output=output)
+
+    [diagnostic] = caught.value.diagnostics
+    assert diagnostic.code is ElaborationCode.SI_EVIDENCE_INCOMPLETE
+    assert diagnostic.reference == "deep_rig.gain_setting"
+    assert diagnostic.source_file == ROOT_RELATIVE_REFERENT
+    assert diagnostic.source_line == 217
+    assert str(caught.value).count("SI_EVIDENCE_INCOMPLETE") == 1
+    semantic_error = caught.value.__cause__
+    assert isinstance(semantic_error, SemanticEvidenceError)
+    assert semantic_error.code is SemanticEvidenceCode.RESOLVED_TARGET_MISSING
+    assert semantic_error.cause is None
+    assert semantic_error.__cause__ is None
+    _assert_capture_output_preserved(arm, output, original_output)
 
 
 @requires_license
@@ -725,10 +1185,8 @@ def test_operator_wrapped_indexed_source_still_refuses_correctly(strict: bool) -
 # things through its natural public route, not through a directly called helper.  See
 # `.project/active/stop-reinventing-the-parser/design.md#evidence-and-public-boundary-matrix`.
 #
-# A cell holds the `module::function` of the test that proves it, or an empty string
-# while it is uncovered.  At `C_base` only the computed-attribute indexed-refusal cells
-# are filled, by the two red-set tests above, so `test_every_consumer_cell_names_a_proof`
-# is a recorded red listing every gap.  Phases 2-4 fill it.
+# A cell holds the `module::function` of the test that proves it. Phase 4 closes every
+# cell; the table test prevents a later consumer proof from silently disappearing.
 
 
 @dataclass(frozen=True)
@@ -746,59 +1204,119 @@ class ConsumerRow:
 CONSUMER_CLOSURE_TABLE: tuple[ConsumerRow, ...] = (
     ConsumerRow(
         consumer="calculation-definition dependency compiler",
-        exact_positive="",
-        indexed_refusal="",
-        operand_or_depth_failure="",
-        missing_exact_target="",
+        exact_positive=(
+            "tests/conformance/test_expression_evidence_integrity.py"
+            "::test_public_exact_expression_consumers_preserve_edges"
+        ),
+        indexed_refusal=(
+            "tests/conformance/test_expression_evidence_integrity.py"
+            "::test_public_indexed_expression_consumer_refuses_before_its_adapter"
+        ),
+        operand_or_depth_failure=(
+            "tests/conformance/test_expression_evidence_integrity.py"
+            "::test_public_expression_consumer_evidence_failure_returns_no_graph"
+        ),
+        missing_exact_target=(
+            "tests/conformance/test_expression_evidence_integrity.py"
+            "::test_public_expression_consumer_evidence_failure_returns_no_graph"
+        ),
         public_arms=("live", "admitted/capture"),
     ),
     ConsumerRow(
         consumer="calculation and constraint binding",
-        exact_positive="",
+        exact_positive=(
+            "tests/conformance/test_expression_evidence_integrity.py"
+            "::test_public_exact_expression_consumers_preserve_edges"
+        ),
         indexed_refusal=(
             "tests/conformance/test_expression_evidence_integrity.py"
             "::test_valid_indexed_source_refuses_before_graph_with_exact_capability_diagnostic"
         ),
-        operand_or_depth_failure="",
-        missing_exact_target="",
+        operand_or_depth_failure=(
+            "tests/conformance/test_expression_evidence_integrity.py"
+            "::test_public_expression_consumer_evidence_failure_returns_no_graph"
+        ),
+        missing_exact_target=(
+            "tests/conformance/test_expression_evidence_integrity.py"
+            "::test_public_expression_consumer_evidence_failure_returns_no_graph"
+        ),
         public_arms=("live", "admitted/capture"),
     ),
     ConsumerRow(
         consumer="alias",
-        exact_positive="",
-        indexed_refusal="",
-        operand_or_depth_failure="",
-        missing_exact_target="",
+        exact_positive=(
+            "tests/conformance/test_expression_evidence_integrity.py"
+            "::test_public_exact_expression_consumers_preserve_edges"
+        ),
+        indexed_refusal=(
+            "tests/conformance/test_expression_evidence_integrity.py"
+            "::test_public_indexed_expression_consumer_refuses_before_its_adapter"
+        ),
+        operand_or_depth_failure=(
+            "tests/conformance/test_expression_evidence_integrity.py"
+            "::test_public_expression_consumer_evidence_failure_returns_no_graph"
+        ),
+        missing_exact_target=(
+            "tests/conformance/test_expression_evidence_integrity.py"
+            "::test_public_expression_consumer_evidence_failure_returns_no_graph"
+        ),
         public_arms=("live", "admitted/capture"),
     ),
     ConsumerRow(
         consumer="computed attribute",
-        exact_positive="",
+        exact_positive=(
+            "tests/conformance/test_expression_evidence_integrity.py"
+            "::test_public_exact_expression_consumers_preserve_edges"
+        ),
         indexed_refusal=(
             "tests/conformance/test_expression_evidence_integrity.py"
-            "::test_indexed_bare_chain_singular_slot_refuses_before_consumers"
+            "::test_public_indexed_expression_consumer_refuses_before_its_adapter"
         ),
         operand_or_depth_failure=(
             "tests/conformance/test_expression_evidence_integrity.py"
             "::test_public_exact_expression_failures_return_no_graph"
         ),
-        missing_exact_target="",
+        missing_exact_target=(
+            "tests/conformance/test_expression_evidence_integrity.py"
+            "::test_public_expression_consumer_evidence_failure_returns_no_graph"
+        ),
         public_arms=("live", "admitted/capture"),
     ),
     ConsumerRow(
         consumer="constraint predicate",
-        exact_positive="",
-        indexed_refusal="",
-        operand_or_depth_failure="",
-        missing_exact_target="",
+        exact_positive=(
+            "tests/conformance/test_expression_evidence_integrity.py"
+            "::test_public_exact_expression_consumers_preserve_edges"
+        ),
+        indexed_refusal=(
+            "tests/conformance/test_expression_evidence_integrity.py"
+            "::test_public_indexed_expression_consumer_refuses_before_its_adapter"
+        ),
+        operand_or_depth_failure=(
+            "tests/conformance/test_expression_evidence_integrity.py"
+            "::test_public_expression_consumer_evidence_failure_returns_no_graph"
+        ),
+        missing_exact_target=(
+            "tests/conformance/test_expression_evidence_integrity.py"
+            "::test_public_expression_consumer_evidence_failure_returns_no_graph"
+        ),
         public_arms=("live", "admitted/capture"),
     ),
     ConsumerRow(
         consumer="deep literal override",
-        exact_positive="",
-        indexed_refusal="",
+        exact_positive=(
+            "tests/conformance/test_expression_evidence_integrity.py"
+            "::test_public_deep_literal_override_preserves_exact_path"
+        ),
+        indexed_refusal=(
+            "tests/unit/test_expression_evidence_boundary.py"
+            "::test_deep_override_mapped_index_refuses_at_the_path_factory"
+        ),
         operand_or_depth_failure="not an expression route",
-        missing_exact_target="",
+        missing_exact_target=(
+            "tests/conformance/test_expression_evidence_integrity.py"
+            "::test_public_deep_literal_override_refuses_a_missing_segment"
+        ),
         public_arms=("live", "admitted/capture"),
     ),
 )
@@ -843,7 +1361,7 @@ def test_every_named_proof_in_the_consumer_table_resolves() -> None:
 
 
 def test_every_consumer_cell_names_a_proof() -> None:
-    """Recorded red at `C_base`: most of the natural-route matrix is still uncovered."""
+    """Every consumer and failure shape names its durable proof."""
     uncovered = [
         f"{row.consumer}/{name}"
         for row in CONSUMER_CLOSURE_TABLE
