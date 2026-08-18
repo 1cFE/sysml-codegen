@@ -1,7 +1,7 @@
 # Phase 3 audit remediation
 
 **Date:** 2026-08-18  
-**Status:** [AGENT] Implemented; independent re-audit required  
+**Status:** [AGENT] Implemented; independent re-audit passed with findings; N1/N2 closure applied
 **Codegen:** `stop-parser-impl-r2` at `3377cd0263ff9ad5699b84537bae03f55d11932a`  
 **Agentic:** `3f8bd587af40f05b929dd56645901dada7daea37` (`semantic-evidence/v2`)
 
@@ -114,5 +114,38 @@ The audit's weakenings were applied to a disposable extraction, not to the imple
     tests/unit/test_check_ledger_4a.py -q
   ```
 
-The independent Phase 3 re-audit is next. Phase 4 and Phase 5 remain unstarted; close and pre-PR
-remain blocked.
+The independent Phase 3 re-audit that followed is recorded in `phase3-audit.md` as **Pass with
+findings**. Phase 4 and Phase 5 remain unstarted; close and pre-PR remain blocked.
+
+## N1/N2 closure — 2026-08-18
+
+**N1 — route (b), one refusal owner.** Codegen follow-up
+`1451615609e29b1f511c6b8e69fe425d8afe355e` removes `_resolve_bindings`' redundant unknown-value
+guard. There is no separate elaborator behavior to preserve: the next call already delegates to
+`require_exact_binding_use`, the closed union's owner, and scoped mypy remains clean. The kept wiring
+proof now requires that delegation, while the helper's own exhaustive-switch proof pins the public
+`TypeError` identity.
+
+The acceptance mutation was run in a throwaway extraction of `1451615`: delete the final
+unknown-value `raise TypeError` from `require_exact_binding_use`, then run
+
+```bash
+python -m pytest \
+  tests/unit/test_expression_evidence_boundary.py::test_require_exact_binding_use_switch_is_exhaustive \
+  -q
+```
+
+The kept node fails exactly at its unknown-value assertion:
+
+```text
+FAILED tests/unit/test_expression_evidence_boundary.py::test_require_exact_binding_use_switch_is_exhaustive
+E   Failed: DID NOT RAISE <class 'TypeError'>
+1 failed
+```
+
+**N2 — commands and counts are explicit.** The two opaque figures are replaced above by the exact
+13-file command (**290 passed, 1 deselected**) and the exact four-module command (**83 passed**).
+No other validation figure changed in this closure round.
+
+**Commits:** Codegen `1451615609e29b1f511c6b8e69fe425d8afe355e`; documentation corrections
+`cd9f3b9bc0d8682ee09a93c1a1a579d8faa86e82`.

@@ -1,17 +1,18 @@
 # Current Work
 
-**Last Updated**: 2026-08-18 (**stop-reinventing-the-parser: Phases 1, 2, 2b closed; Phase 3 audit
-remediation implemented, pending independent re-audit. Codegen `stop-parser-impl-r2` at `3377cd0`,
+**Last Updated**: 2026-08-18 (**stop-reinventing-the-parser: Phases 1, 2, 2b closed; Phase 3
+re-audited Pass with findings, with N1/N2 closure implemented. Codegen `stop-parser-impl-r2` at `1451615`,
 Agentic `3f8bd58` (0.1.3 / `semantic-evidence/v2`). M1–M4 and all 15 Minors / 9 Informationals have
 implementation or record corrections. The unit-annotated alias regression is fixed by one
 inventory-owned role; public inventory failures now carry diagnostic provenance; real adapter
 bypass and exhaustive-union tests kill the audit's weakenings; ownership keys include the receiver.
-Fresh archive validation: focused **285 passed, 1 deselected**; full **1 failed, 2,388 passed, 34
+Closure validation: focused **290 passed, 1 deselected**; prior full archive **1 failed, 2,388 passed, 34
 skipped, 94 deselected**, with the sole failure the declared Phase 4 consumer-cell proof table.
 Remediation record:
 `.project/active/stop-reinventing-the-parser/run-records/phase3-remediation.md`. The original audit
-remains **Needs Work** until an independent auditor re-runs its attacks. Phases 4 and 5 are not
-started. Do not close, do not run pre-PR, and `elaborator-downstream` stays blocked.**).
+remains historical **Needs Work**; the dedicated re-audit is **Pass with findings**, and the two
+follow-up findings now have direct closure evidence. Phases 4 and 5 are not started. Do not close,
+do not run pre-PR, and `elaborator-downstream` stays blocked.**).
 Prior status: 2026-08-17 (**Phase 1 complete and audited — plan
 Revision 3 executing design Revision 7; three-leg lock verification green (118/118 against the
 tree the lock names); 25-node red set across live/admitted/capture × strict on implementation
@@ -102,10 +103,12 @@ rather than invented; vehicle `[CONSTRAINT-GATES-UNTAGGED]` in `BACKLOG.md`.
 
 ## Active Work
 
-### 2026-08-18: stop-reinventing-the-parser — PHASE 3 REMEDIATED, RE-AUDIT NEXT
+### 2026-08-18: stop-reinventing-the-parser — PHASE 3 RE-AUDITED; N1/N2 CLOSED
 
-[AGENT] The Phase 3 audit findings are addressed on `stop-parser-impl-r2` at **`3377cd0`** in three
-commits: `c604165`, `41181bd`, and `3377cd0`. The implementation response and exact source hashes
+[AGENT] The Phase 3 audit findings were addressed at `3377cd0` and independently re-audited **Pass
+with findings**. The two follow-ups are closed at **`1451615`**: N1 took route (b), deleting the
+redundant elaborator refusal so `require_exact_binding_use` owns it once, and N2 records exact suite
+commands. The implementation response, mutation kill, source hashes, and record-correction commit
 are in `active/stop-reinventing-the-parser/run-records/phase3-remediation.md`.
 
 The four blockers now have direct closure evidence. Role assignment is inventory-owned and unit
@@ -120,9 +123,9 @@ weakenings now kill their proofs: five consumer nodes fail when the backstops ar
 binding switches fail when their arms are weakened; and the non-`Feature` deep-path test fails when
 the refusal becomes a silent `continue`. L-181's replacement gate is green.
 
-Fresh `git archive` validation at `3377cd0`: exact 13-file battery **285 passed, 1 deselected**;
-aggregate suite **1 failed, 2,388 passed, 34 skipped, 94 deselected**. The sole failure is the
-owner-declared Phase 4 consumer-cell proof table. The history topology subset is **61 passed**;
+Closure validation: exact 13-file battery **290 passed, 1 deselected**; prior `3377cd0` aggregate
+suite **1 failed, 2,388 passed, 34 skipped, 94 deselected**. The sole failure is the owner-declared
+Phase 4 consumer-cell proof table. The recorded ledger/fingerprint topology subset is **83 passed**;
 scoped strict mypy is zero and targeted Ruff is clean.
 
 The historical audit below remains **Needs Work**. This pass does not self-certify. Run an
