@@ -1,6 +1,8 @@
 # Phase 1 Audit — Stop Reinventing the Parser
 
-**Verdict:** Pass with findings
+**Verdict:** Pass with findings — **all four Majors confirmed closed 2026-08-17**
+at Codegen `d257ef1` / Agentic `8d27fb3` (see the confirmation addendum at the end).
+Minors 5-11 and Informational 12/14 remain open and carry to Phases 2-4; Informational 13 is closed.
 **Audited:** 2026-08-17
 **Auditor:** independent stage agent, dedicated fresh run
 **Codegen:** `stop-parser-impl-r2` @ `e4e26932729a49e4497c89842adf2d79b92deecb`, base `C_base` `78a9beb956f9b5a517c08836b067f0cb0dc4ccc6`
@@ -380,3 +382,180 @@ execution lane. I did not audit the correctness of the reviewed-selector manifes
 checking that its four rows name proofs and that the discovered set is non-empty — whether those four are
 the right four is a Phase-3 design question. The product-lens ledger was not re-run for this phase; the
 `audit3-F1` block remains open by design until Phase 5.
+
+---
+
+# Addendum — Targeted confirmation of the four Major closures
+
+**Dated:** 2026-08-17
+**Scope:** the four Major findings only. This is not a re-audit of the phase.
+**Codegen:** `d257ef1` (was `e4e2693`) · **Agentic:** `8d27fb3` (was `85c7758`) · plan note `1d8a5c6`
+**Independent extraction:** `/tmp/stop-parser-rev2/audit-extraction2/`, built fresh from the new commits
+(`git archive` + `git bundle --all`); the original `audit-extraction/` is untouched.
+
+**Result: all four Majors closed.** Each was verified by execution, not by reading the diff. Two bounded
+residuals are recorded below as Informational; neither reopens a finding.
+
+## Scope re-check at the new commits
+
+| Check | Result |
+|---|---|
+| `git diff --stat 78a9beb9 d257ef1 -- src/` | **empty** |
+| `occurrence.py` blob at `78a9beb9` and `d257ef1` | both `af721562512d5684ce3dd1c96624fbe3355a536d` |
+| `git diff --stat 2171016d 8d27fb3 -- src/` | **empty** |
+| `git diff --stat e4e2693 d257ef1` | 2 files: the integrity and ownership test modules only |
+| `git diff --stat e4e2693 d257ef1 -- verification/ tests/fixtures/` | **empty** |
+
+No production byte moved. The lock file, the ledger and all three fixtures are byte-identical to the
+commit whose three legs I verified in the main audit, so that verification carries forward unchanged;
+`test_probe_fixture_lock.py`'s 12 tests are green in the full suite below.
+
+## Major 1 — exact-field assertions: **closed**
+
+The two red tests now route every arm through one helper,
+`_assert_named_indexed_refusal` (`tests/conformance/test_expression_evidence_integrity.py:477-499`), which
+compares `reference`, `source_file` and `source_line` for **exact equality** and adds two guards against a
+path leaking into the rendered message.
+
+**I re-ran my demonstrated escape against that helper** by constructing diagnostics directly and calling it:
+
+| Shape fed to the gate | Outcome |
+|---|---|
+| Today's weak shape — `reference=None`, `source_file=None`, absolute path in `detail` | **rejected** |
+| Right code and reference, still no place, absolute `detail` | **rejected** |
+| All three fields right, staged absolute path still leaking into `detail` | **rejected** |
+| Full named contract (`cells#(2).mass`, `root-0/model.sysml`, 15, root-relative detail) | passes |
+
+All twelve arm-parameterized red nodes route through this helper; the remaining three Codegen reds
+(consumer table, selector manifest, deleted symbols) do not concern the diagnostic shape. **A Phase-3
+implementation emitting `reference=None` plus an absolute path cannot go green anywhere in the red set.**
+
+**Spot-verification of the shared-referent claim — measured, and it holds.** The implementer asserts one
+`ROOT_RELATIVE_REFERENT` constant is correct for all three arms. I measured it on the plural fixture, which
+refuses today in every arm:
+
+```
+live    strict=True : source_file='root-0/model.sysml' line=15 ref='cells#(2).mass'
+admitted strict=True: source_file='root-0/model.sysml' line=15 ref='cells#(2).mass'
+capture             : source_file='root-0/model.sysml' line=15 ref='cells#(2).mass'
+rendered message contains '/tmp/' : False, in all three arms
+```
+
+The admitted and capture arms do map their private staged copy back through `staged_to_referent`. One
+constant is correct for all three; the claim is measured, not assumed.
+
+Also tightened, and I confirm it: `test_operator_wrapped_indexed_source_still_refuses_correctly` now pins
+today's shape *exactly* — `reference is None`, `source_file is None`, `source_line is None`, and the literal
+`//`-prefixed absolute `detail` — instead of the old `endswith`. That converts the weakness I flagged on
+that test into a tripwire: Phase 3 cannot tighten this path silently.
+
+## Major 2 — deletion-safety: **closed**
+
+`test_the_permissive_boolean_index_marker_is_gone` (`tests/test_sysml/test_reference_use.py:66-83`) now
+resolves the class by `getattr(data_models, "ResolvedSemanticReferenceFact", None)` and reads absent
+annotations as empty. I verified all three states by mutating a copy of
+`src/agentic_mbse/sysml/data_models.py` and restoring it (restored SHA-256 `090d79df78afe1d8…` verified
+against `8d27fb3`'s blob):
+
+| State | Result |
+|---|---|
+| Today — class present, marker present | **1 failed** (the recorded red) |
+| Class present, `has_index_segment` field removed | **1 passed** |
+| Class deleted outright, per Phase 2 | **1 passed** |
+
+The test can now be satisfied by the deletion the design orders, and only today's state fails.
+
+## Major 3 — re-keyed scoping rule: **closed, and the deviation is sound**
+
+My instruction said "restrict the dynamic-`getattr` rejection to the raw-SysIDE module set". Taken
+literally — keying on a direct `syside` import — that set would have been **empty**, because Codegen
+reaches SysIDE only through `agentic_mbse.sysml.syside_adapter`. The implementer re-keyed on
+"imports the adapter **or** reads a reviewed selector" and added
+`test_no_production_module_imports_syside_directly` to prove the premise. That is the right call: it
+preserves the rule's intent (bound the gate to modules that handle raw parser nodes) where the literal
+instruction would have produced a vacuous scope. The deviation is measured and companion-tested.
+
+Verified by executing the module's own scope function:
+
+- computed set size **21**, and `raw_syside_modules() == RAW_SYSIDE_MODULES` is **True** — the recorded set
+  is the measured set, not a hand-list;
+- **21 of 74** production modules are in scope, so the rule is selective, not "everything";
+- `resolution/models.py` is **out** of scope (`adapter_import=False`, no reviewed selector), so the spurious
+  red I flagged is gone — `discovered_reads()` now yields **zero** dynamic-`getattr` entries;
+- the two modules the brief asked about are in scope for a real reason, and it is the adapter clause doing
+  the work rather than a selector read: `extraction/computed_attribute_extractor.py` and
+  `extraction/feature_metadata.py` both show `adapter_import=True` with an empty selector set. Keying on
+  selectors alone would have missed both. Contrast `usage_extractor.py`
+  (`selectors=['operands','referent','target_feature']`) and `hierarchy_resolver.py` (`['operands']`), which
+  qualify either way. The 21-module set is right.
+
+The five evasion mutants each now carry `_ADAPTER_IMPORT`, and
+`test_every_ast_evasion_mutation_is_discovered` asserts `is_raw_syside_module(source)` before scanning — so
+the mutants are tested *inside* the scope the gate was narrowed to, which is exactly the trap a scoped gate
+must avoid. All five still die; the whole ownership module is green in the suite below. Both anti-vacuity
+guards are present and meaningful: `test_a_clean_module_produces_no_selector_reads` (scope admits nothing
+spurious) and `test_a_clean_module_is_not_in_the_raw_syside_set` (scope does not admit everything).
+
+`test_no_dynamic_getattr_survives_in_the_raw_syside_module_set` correctly leaves the red set — it is an
+anti-evasion gate, not a red-set member, and its former red was the unrelated Pydantic validator.
+
+## Major 4 — three-arm coverage: **closed**
+
+Both cases are now parameterized `("live", "admitted", "capture") × strict ∈ {True, False}` through
+`_elaborate_through_arm` (`:459-473`), which uses the real `admit_sources` context manager for the admitted
+arm and the real `capture_instance_graph_snapshot` for capture. Case 1's snapshot assertion is preserved
+and strengthened: `assert not output.exists()` now runs in **every** parameter of the main test rather than
+in a separate single-arm test, and Case 2 gained the same assertion.
+
+Every arm is red for its stated reason — measured, not assumed:
+
+| Node | Observed failure |
+|---|---|
+| singular, all 6 (`{True,False}-{live,admitted,capture}`) | `DID NOT RAISE` — the zero-diagnostic graph, and the sealed snapshot in the capture arm |
+| plural `True-{live,admitted,capture}` | got `[SI_OCCURRENCE_AMBIGUOUS, SI_OCCURRENCE_MISSING]`, expected `[SI_INDEXED_SOURCE_UNSUPPORTED]` |
+| plural `False-{live,admitted}` | `DID NOT RAISE` — the documented lenient-delivery gap (audit Minor 9) |
+| plural `False-capture` | `AMBIGUOUS…` — correct: the capture arm seals through the admitted route, which the design fixes at strict, so `strict=False` is a duplicate strict run |
+
+No arm fails for a fixture, license, import or harness reason.
+
+## Spot-check of the updated completion-record figures
+
+Every figure reproduces exactly from my own extraction of the new commits:
+
+| Claim | Measured |
+|---|---|
+| 25 red nodes — 15 Codegen / 10 Agentic | **confirmed**, node IDs match the recorded list exactly |
+| Codegen suite `15 failed, 2340 passed, 34 skipped` | **15 failed, 2340 passed, 34 skipped, 94 deselected** |
+| Agentic fast suite `28 failed, 1846 passed` | **28 failed, 1846 passed, 1 skipped** (run from an `agentic-mbse`-named path, per the main audit's note) |
+| D1-D4 + retained harness `162 passed`, paths recorded | **162 passed**, running the 15 paths the record now names |
+
+Informational 13 is closed: the module paths are recorded and the figure is now reproducible.
+
+## New informational notes (neither reopens a finding)
+
+**I-15. The rendered-message path guards are literal, and one bounded gap remains.**
+`_assert_named_indexed_refusal:498-499` guards with `"/tmp/" not in rendered` and
+`not diagnostic.detail.startswith("/")`. I probed the edge: a `detail` embedding a **non-leading**,
+**non-`/tmp`** absolute path (e.g. `"… at /scratch/stage9/model.sysml:15 …"`) **passes** the helper, while
+the realistic `/var/tmp/` variant is rejected. The three structured fields are still exactly asserted, and
+`admit_sources` stages under the system temp directory, so the realistic staged-path leak is caught. Closing
+the gap properly would mean asserting the rendered message *contains the root-relative referent and no
+absolute segment* rather than blacklisting two prefixes. Worth doing when Phase 3 rewrites the diagnostic.
+
+**I-16. The scope rule's second clause is partly self-referential.**
+`is_raw_syside_module` admits a module that reads a reviewed selector, so a module that receives raw parser
+nodes as arguments, imports no adapter and uses only dynamic `getattr` would sit outside the dynamic-`getattr`
+gate. No such module exists today — I checked all 53 out-of-scope modules and the only dynamic `getattr`
+among them is `resolution/models.py`, which reads its own declared field names. `test_the_raw_syside_module_set_is_the_recorded_one`
+makes any drift visible at review time, which is the right mitigation for a bounded hole.
+
+**Still open and carried forward:** audit Minors 5-11 and Informational 12 and 14, unchanged and correctly
+placed as Phase 2-4 work by the implementer's note. Minor 9 and surfaced item 3 (the lenient arm of Case 2)
+still need a design amendment before Phase 4's reconciliation gate.
+
+**Not checked in this addendum:** everything outside the four closures. I did not re-verify the three lock
+legs by hand (their inputs are byte-identical to the commit where I did), did not re-run the lock mutation
+suite, did not re-examine `deep_cross_scope_probe`, the static baselines, or any Phase 2-5 surface.
+
+**Fit for Phase 2: yes.** The two closures that had to land before Phase 3 (Majors 1 and 4) are in the kept
+tests now rather than promised, and Major 2's fix is in the file Phase 2 will edit first.
