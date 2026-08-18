@@ -7,6 +7,7 @@ inventory could catch the index while a weakened constructor or consumer still a
 
 from __future__ import annotations
 
+from dataclasses import replace
 from types import SimpleNamespace
 from uuid import UUID
 
@@ -105,6 +106,36 @@ def test_binding_variant_switch_is_exhaustive() -> None:
     assert classify(LiteralBindingSource(_formal(), 1.0)) == "authored_literal"
     with pytest.raises(TypeError, match="BindingSourceEvidence"):
         classify(SimpleNamespace(formal=_formal(), use=_exact_use()))
+
+
+def test_closed_bindings_preserve_source_spelling_and_formal_identity() -> None:
+    """The closed value carries both identities; Codegen never reconstructs either."""
+    exact = _exact_use()
+    formal = BoundFormal(
+        element_id=exact.path.leaf.element_id,
+        qualified_name="Probe::calc::value_in",
+        redefined_element_ids=(UUID(int=11),),
+        redefined_qualified_names=("Probe::Consumer::value_in",),
+    )
+    qualified = replace(
+        exact,
+        form="qualified",
+        authored_text="Probe::root::leaf",
+        authored_segments=("Probe", "root", "leaf"),
+        authored_qualifier="Probe::root",
+    )
+    source = ExactBindingSource(formal, qualified)
+
+    assert source.formal is formal
+    assert source.formal.redefined_element_ids == (UUID(int=11),)
+    assert source.use is qualified
+    assert source.written_text == "Probe::root::leaf"
+    assert source.is_self_binding
+
+    literal = LiteralBindingSource(formal, 3.0)
+    expression = ExpressionBindingSource(formal, "a + b", None)
+    assert not hasattr(literal, "use")
+    assert not hasattr(expression, "use")
 
 
 def test_inventory_missing_row_is_an_invariant_failure() -> None:
