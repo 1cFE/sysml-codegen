@@ -154,5 +154,9 @@ concurs after independent verification of every claim):
 7. Targeted Revision 7 design amendment → targeted design review → Plan Revision 3 → relaunch
    Phase 1.
 
-Awaiting owner ratification. Probe evidence: `/tmp/stop-parser-rev2/scratch/`. Stage log:
-`/tmp/stop-parser-rev2/logs/`.
+**[OWNER, 2026-08-17] Rulings 1-7 ratified: "ok ratified. Proceed. but pause AFTER Phase 1."**
+Origin of the rulings remains agent-grade (external review + orchestrator verification), ratified
+by owner; challenge them by re-deriving against the recorded evidence above. The run resumes with
+the targeted Revision 7 amendment and pauses after Phase 1 completes.
+
+Probe evidence: `/tmp/stop-parser-rev2/scratch/`. Stage log: `/tmp/stop-parser-rev2/logs/`.
