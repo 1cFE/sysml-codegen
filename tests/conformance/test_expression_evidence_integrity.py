@@ -5,6 +5,7 @@ from __future__ import annotations
 import ast
 import importlib
 from contextlib import contextmanager
+from dataclasses import dataclass
 from pathlib import Path
 from types import SimpleNamespace
 from typing import Any
@@ -377,3 +378,292 @@ def test_valid_indexed_source_refuses_before_graph_with_exact_capability_diagnos
         "indexed source '#(...)' is recognized but not implemented"
     )
     assert str(caught.value).count("SI_INDEXED_SOURCE_UNSUPPORTED") == 1
+
+
+# --- Indexed bare-chain red set (Phase 1) ------------------------------------
+#
+# Two kept tests, each red at C_base for its own stated reason.  See design.md's
+# section "The indexed red set - both cases are required kept tests".
+#
+# Case 1 (`indexed_bare_chain_singular`, `cells : Cell[1]`, authored `cells#(2).mass`):
+#   at C_base this produces a graph carrying ZERO diagnostics, in which the authored
+#   index is silently rewritten to `cells[0].mass`.  That collapse is the escape.
+# Case 2 (`indexed_bare_chain_plural`, `cells : Cell[3]`, same authored chain):
+#   at C_base this refuses as SI_OCCURRENCE_AMBIGUOUS — a name about occurrence
+#   selection raised for an index defect — followed by SI_OCCURRENCE_MISSING on the
+#   typed alias.  The refusal must become SI_INDEXED_SOURCE_UNSUPPORTED, raised by the
+#   inventory before any occurrence resolution runs.
+#
+# Operator-wrapped forms are NOT red-set members: they already refuse correctly and
+# are kept below as positive regression coverage.
+
+SINGULAR_SLOT_FIXTURE = "indexed_bare_chain_singular"
+PLURAL_SLOT_FIXTURE = "indexed_bare_chain_plural"
+OPERATOR_WRAPPED_FIXTURE = "indexed_bare_chain_operator"
+AUTHORED_INDEXED_LINE = 15
+
+
+class _CallSpy:
+    """Record every call through one production seam without replacing its behavior."""
+
+    def __init__(self) -> None:
+        self.calls = 0
+
+    @property
+    def called(self) -> bool:
+        return self.calls > 0
+
+
+def _spy_on_expression_consumers(monkeypatch: pytest.MonkeyPatch) -> _CallSpy:
+    """Spy the first downstream expression consumer after source admission."""
+    from sysml_codegen.extraction.extractor import SysMLDataExtractor
+
+    spy = _CallSpy()
+    original = SysMLDataExtractor.extract_calculation_definitions
+
+    def record(self: SysMLDataExtractor) -> Any:
+        spy.calls += 1
+        return original(self)
+
+    monkeypatch.setattr(SysMLDataExtractor, "extract_calculation_definitions", record)
+    return spy
+
+
+def _spy_on_occurrence_resolution(monkeypatch: pytest.MonkeyPatch) -> _CallSpy:
+    """Spy the occurrence-domain resolver that names SI_OCCURRENCE_* today."""
+    from sysml_codegen.elaboration.occurrence import OccurrenceIndex
+
+    spy = _CallSpy()
+    original = OccurrenceIndex.resolve_address
+
+    def record(self: OccurrenceIndex, *args: object, **kwargs: object) -> Any:
+        spy.calls += 1
+        return original(self, *args, **kwargs)
+
+    monkeypatch.setattr(OccurrenceIndex, "resolve_address", record)
+    return spy
+
+
+def _indexed_capability_detail(fixture_name: str) -> str:
+    return (
+        f"tests/fixtures/{fixture_name}/model.sysml:{AUTHORED_INDEXED_LINE}: "
+        "indexed source '#(...)' is recognized but not implemented"
+    )
+
+
+@requires_license
+@pytest.mark.parametrize("strict", [True, False])
+def test_indexed_bare_chain_singular_slot_refuses_before_consumers(
+    strict: bool,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Case 1: an out-of-range index on a singular slot must refuse, not collapse.
+
+    Recorded red at C_base: no exception is raised at all.  The route returns an
+    InstanceGraph whose ``diagnostics`` is empty and whose attribute inventory holds
+    ``IndexedBareChainSingular__array__cells[0]__mass`` — occurrence zero, minted for
+    an authored ``#(2)`` that the model's ``Cell[1]`` slot cannot honor.
+    """
+    fixture = FIXTURES_DIR / SINGULAR_SLOT_FIXTURE
+    consumers = _spy_on_expression_consumers(monkeypatch)
+
+    with pytest.raises(ElaborationDiagnosticError) as caught:
+        elaborated_pipeline.elaborate_model_paths([fixture], strict=strict)
+
+    assert [item.code for item in caught.value.diagnostics] == [
+        ElaborationCode.SI_INDEXED_SOURCE_UNSUPPORTED
+    ]
+    [diagnostic] = caught.value.diagnostics
+    assert diagnostic.detail.endswith(_indexed_capability_detail(SINGULAR_SLOT_FIXTURE))
+    assert str(caught.value).count("SI_INDEXED_SOURCE_UNSUPPORTED") == 1
+    assert not consumers.called
+
+
+@requires_license
+def test_indexed_bare_chain_singular_slot_writes_no_snapshot(tmp_path: Path) -> None:
+    """Case 1, capture arm: the escape must not reach a sealed snapshot."""
+    fixture = FIXTURES_DIR / SINGULAR_SLOT_FIXTURE
+    output = tmp_path / "instance_graph_snapshot.json"
+
+    with pytest.raises(ElaborationDiagnosticError):
+        capture_instance_graph_snapshot([fixture], output)
+
+    assert not output.exists()
+
+
+@requires_license
+@pytest.mark.parametrize("strict", [True, False])
+def test_indexed_bare_chain_plural_slot_refuses_before_occurrence_resolution(
+    strict: bool,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Case 2: the index defect must be named, and named before occurrence resolution.
+
+    Recorded red at C_base: the route refuses with two diagnostics, the first
+    ``SI_OCCURRENCE_AMBIGUOUS`` ("exact containment step ... has 3 concrete
+    occurrences") and the second ``SI_OCCURRENCE_MISSING`` ("typed alias
+    'IndexedBareChainPlural__array__picked' has no resolved target").  Both are
+    occurrence-selection names raised for an unsupported authored index, and
+    ``OccurrenceIndex.resolve_address`` has already run by the time either is built.
+    """
+    fixture = FIXTURES_DIR / PLURAL_SLOT_FIXTURE
+    occurrence_resolution = _spy_on_occurrence_resolution(monkeypatch)
+
+    with pytest.raises(ElaborationDiagnosticError) as caught:
+        elaborated_pipeline.elaborate_model_paths([fixture], strict=strict)
+
+    assert [item.code for item in caught.value.diagnostics] == [
+        ElaborationCode.SI_INDEXED_SOURCE_UNSUPPORTED
+    ]
+    [diagnostic] = caught.value.diagnostics
+    assert diagnostic.detail.endswith(_indexed_capability_detail(PLURAL_SLOT_FIXTURE))
+    assert not occurrence_resolution.called
+
+
+@requires_license
+@pytest.mark.parametrize("strict", [True, False])
+def test_operator_wrapped_indexed_source_still_refuses_correctly(strict: bool) -> None:
+    """Positive regression, not a red-set member: this shape already refuses correctly."""
+    fixture = FIXTURES_DIR / OPERATOR_WRAPPED_FIXTURE
+
+    with pytest.raises(ElaborationDiagnosticError) as caught:
+        elaborated_pipeline.elaborate_model_paths([fixture], strict=strict)
+
+    [diagnostic] = caught.value.diagnostics
+    assert diagnostic.code is ElaborationCode.SI_INDEXED_SOURCE_UNSUPPORTED
+    assert diagnostic.detail.endswith(_indexed_capability_detail(OPERATOR_WRAPPED_FIXTURE))
+    assert str(caught.value).count("SI_INDEXED_SOURCE_UNSUPPORTED") == 1
+
+
+# --- Natural-route consumer closure table (Phase 1 seed) ---------------------
+#
+# Leg 3 of closure — routes.  Every consumer that reads an expression must prove four
+# things through its natural public route, not through a directly called helper.  See
+# `.project/active/stop-reinventing-the-parser/design.md#evidence-and-public-boundary-matrix`.
+#
+# A cell holds the `module::function` of the test that proves it, or an empty string
+# while it is uncovered.  At `C_base` only the computed-attribute indexed-refusal cells
+# are filled, by the two red-set tests above, so `test_every_consumer_cell_names_a_proof`
+# is a recorded red listing every gap.  Phases 2-4 fill it.
+
+
+@dataclass(frozen=True)
+class ConsumerRow:
+    """One consumer's four required proofs and the public arms they run through."""
+
+    consumer: str
+    exact_positive: str
+    indexed_refusal: str
+    operand_or_depth_failure: str
+    missing_exact_target: str
+    public_arms: tuple[str, ...]
+
+
+CONSUMER_CLOSURE_TABLE: tuple[ConsumerRow, ...] = (
+    ConsumerRow(
+        consumer="calculation-definition dependency compiler",
+        exact_positive="",
+        indexed_refusal="",
+        operand_or_depth_failure="",
+        missing_exact_target="",
+        public_arms=("live", "admitted/capture"),
+    ),
+    ConsumerRow(
+        consumer="calculation and constraint binding",
+        exact_positive="",
+        indexed_refusal=(
+            "tests/conformance/test_expression_evidence_integrity.py"
+            "::test_valid_indexed_source_refuses_before_graph_with_exact_capability_diagnostic"
+        ),
+        operand_or_depth_failure="",
+        missing_exact_target="",
+        public_arms=("live", "admitted/capture"),
+    ),
+    ConsumerRow(
+        consumer="alias",
+        exact_positive="",
+        indexed_refusal="",
+        operand_or_depth_failure="",
+        missing_exact_target="",
+        public_arms=("live", "admitted/capture"),
+    ),
+    ConsumerRow(
+        consumer="computed attribute",
+        exact_positive="",
+        indexed_refusal=(
+            "tests/conformance/test_expression_evidence_integrity.py"
+            "::test_indexed_bare_chain_singular_slot_refuses_before_consumers"
+        ),
+        operand_or_depth_failure=(
+            "tests/conformance/test_expression_evidence_integrity.py"
+            "::test_public_exact_expression_failures_return_no_graph"
+        ),
+        missing_exact_target="",
+        public_arms=("live", "admitted/capture"),
+    ),
+    ConsumerRow(
+        consumer="constraint predicate",
+        exact_positive="",
+        indexed_refusal="",
+        operand_or_depth_failure="",
+        missing_exact_target="",
+        public_arms=("live", "admitted/capture"),
+    ),
+    ConsumerRow(
+        consumer="deep literal override",
+        exact_positive="",
+        indexed_refusal="",
+        operand_or_depth_failure="not an expression route",
+        missing_exact_target="",
+        public_arms=("live", "admitted/capture"),
+    ),
+)
+
+_CELL_NAMES = (
+    "exact_positive",
+    "indexed_refusal",
+    "operand_or_depth_failure",
+    "missing_exact_target",
+)
+
+
+def _named_proof_exists(cell: str) -> bool:
+    module_path, _, function = cell.partition("::")
+    module_name = Path(module_path).with_suffix("").as_posix().replace("/", ".")
+    return hasattr(importlib.import_module(module_name), function)
+
+
+def test_the_consumer_closure_table_covers_every_reviewed_consumer() -> None:
+    """The six consumers of the design's matrix, and no fewer."""
+    assert [row.consumer for row in CONSUMER_CLOSURE_TABLE] == [
+        "calculation-definition dependency compiler",
+        "calculation and constraint binding",
+        "alias",
+        "computed attribute",
+        "constraint predicate",
+        "deep literal override",
+    ]
+    for row in CONSUMER_CLOSURE_TABLE:
+        assert row.public_arms == ("live", "admitted/capture")
+
+
+def test_every_named_proof_in_the_consumer_table_resolves() -> None:
+    """A cell that names a test which does not exist is worse than an empty cell."""
+    unresolved: list[str] = []
+    for row in CONSUMER_CLOSURE_TABLE:
+        for name in _CELL_NAMES:
+            cell = getattr(row, name)
+            if "::" in cell and not _named_proof_exists(cell):
+                unresolved.append(f"{row.consumer}/{name}: {cell}")
+    assert not unresolved, f"consumer table names tests that do not exist: {unresolved}"
+
+
+def test_every_consumer_cell_names_a_proof() -> None:
+    """Recorded red at `C_base`: most of the natural-route matrix is still uncovered."""
+    uncovered = [
+        f"{row.consumer}/{name}"
+        for row in CONSUMER_CLOSURE_TABLE
+        for name in _CELL_NAMES
+        if not getattr(row, name)
+    ]
+    assert not uncovered, f"consumer closure cells with no proof: {uncovered}"

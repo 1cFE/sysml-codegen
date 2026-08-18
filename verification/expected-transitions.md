@@ -99,3 +99,19 @@ current HEAD is exactly this A2 deletion and that the current batch carries the 
 
 Maintained-output result: byte-identical after excluding the exact rows above. No unexplained
 snapshot, golden-output, or batch-record byte remains.
+
+## Verification-code transitions
+
+The probe lock pins six non-fixture rows — five probe scripts and
+`verification/capture_baseline.py`. Those are live code, not frozen evidence, so neither the
+historical-tree leg nor the current-output leg pins them. They are pinned at their **current**
+bytes in the implementation tree, and any difference from their lock-time bytes must be owned by a
+named row here. An unowned byte change is a hard failure, and it is the second of D10's two
+probe-rerun triggers.
+
+| File | Lock-time SHA-256 | Current SHA-256 | Owning commits | Reason |
+|---|---|---|---|---|
+| `verification/capture_baseline.py` | `6aef97af31d0d3c644c7a5edbf27540b1aca037a7b146090ea430846f29b6cc3` | `c8a7de0749f7f94db8830be135ead3312a546c9bb2afe1acf9838bc6c656b6a5` | `da4aa78` ("docs: reconcile parser evidence contract"), `46694e2` ("fix verification artifact source inputs") | The validator evolved with the contract it checks. `da4aa78` reconciled the batch inventory against the exact A2 and B6/B7 outcomes recorded above; `46694e2` moved its history and source roots onto the explicit hash-identified artifact-source manifest instead of a named sibling checkout. Both are deliberate changes to the checking machinery, not to the evidence it checks. |
+
+The five probe scripts under `.project/active/stop-reinventing-the-parser/probes/` are unchanged
+from their lock-time bytes and are pinned there; they have no row because they have no difference.
