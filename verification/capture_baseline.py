@@ -53,13 +53,39 @@ def _sha(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
-def _source_rows(root: Path) -> list[dict[str, str]]:
-    files = sorted(
-        path for path in root.rglob("*") if path.is_file() and path.suffix in {".sysml", ".kerml"}
+def _historical_source_rows(root: Path, commit: str) -> list[dict[str, str]]:
+    """Read one fixture root's source inventory from the named historical tree."""
+    relative_root = root.relative_to(ROOT)
+    result = subprocess.run(
+        [
+            "git",
+            "-C",
+            str(HISTORY_ROOT),
+            "ls-tree",
+            "-r",
+            "--name-only",
+            commit,
+            "--",
+            str(relative_root),
+        ],
+        check=True,
+        capture_output=True,
+        text=True,
     )
-    if not files:
-        raise ValueError(f"fixture root has no source: {root.relative_to(ROOT)}")
-    return [{"path": str(path.relative_to(ROOT)), "sha256": _sha(path)} for path in files]
+    paths = sorted(
+        Path(line)
+        for line in result.stdout.splitlines()
+        if Path(line).suffix in {".sysml", ".kerml"}
+    )
+    if not paths:
+        raise ValueError(f"fixture root has no source at {commit}: {relative_root}")
+    return [
+        {
+            "path": str(path),
+            "sha256": hashlib.sha256(_git_bytes(commit, path)).hexdigest(),
+        }
+        for path in paths
+    ]
 
 
 def _git_bytes(commit: str, path: Path) -> bytes:
@@ -99,7 +125,10 @@ def build_manifest() -> dict[str, object]:
                 "name": name,
                 "root": f"tests/fixtures/{name}",
                 "outcome": record["status"],
-                "sources": _source_rows(ROOT / "tests/fixtures" / name),
+                "sources": _historical_source_rows(
+                    ROOT / "tests/fixtures" / name,
+                    P_SEED,
+                ),
             }
         )
     for name in ADDED_ROOTS:
@@ -109,7 +138,10 @@ def build_manifest() -> dict[str, object]:
                 "name": name,
                 "root": f"tests/fixtures/{name}",
                 "outcome": "measure",
-                "sources": _source_rows(ROOT / "tests/fixtures" / name),
+                "sources": _historical_source_rows(
+                    ROOT / "tests/fixtures" / name,
+                    P_SEED,
+                ),
             }
         )
     return {
@@ -159,8 +191,6 @@ def validate_manifest(manifest: dict[str, Any]) -> None:
             if path.is_absolute() or ".." in path.parts or source["path"] in listed:
                 raise ValueError(f"duplicate or non-portable source: {path}")
             listed.add(source["path"])
-            if _sha(ROOT / path) != source["sha256"]:
-                raise ValueError(f"source hash mismatch: {path}")
 
 
 def validate_current_batch() -> dict[str, Any]:
