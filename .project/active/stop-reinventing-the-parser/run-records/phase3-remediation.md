@@ -22,10 +22,13 @@ record. It does not certify the remediation.
   injected behind the inventory preflight. Each adapter's own backstop refuses it. Replacing all
   three `require_exact` calls with `require`, plus bypassing binding wiring, makes all five proof
   nodes fail.
-- **M3 — every closed-union switch is pinned.** Direct tests enumerate the classifier, readiness,
-  wiring, and `require_exact_binding_use` arms, including unknown objects. The four weakenings from
-  the audit now each kill a kept proof. The last helper-arm proof was added in `3377cd0` after a
-  disposable mutation run showed that the first remediation pass still missed it.
+- **M3 — each distinct closed-union decision is pinned.** Direct tests enumerate the classifier,
+  readiness, and `require_exact_binding_use` arms, including unknown objects. The re-audit showed
+  that `_resolve_bindings` repeated the helper's unknown-object refusal with the same identity, so
+  that local arm was not a distinct decision and could not be proved independently. Follow-up
+  `1451615` deletes the redundant arm, pins wiring's delegation to the helper, and leaves the helper
+  as the single owner. Deleting the helper's surviving unknown-object refusal now kills
+  `test_require_exact_binding_use_switch_is_exhaustive`.
 - **M4 — ownership identity includes the receiver.** A discovered read is keyed by module, function,
   selector, form, and receiver expression. Adding an unannotated second receiver inside a rowed
   function now leaves an extra discovered row and fails manifest equality.
@@ -41,7 +44,7 @@ record. It does not certify the remediation.
 | m12–m14 | Expression errors gain authored context; the complete role/site set has a direct test; `ConstraintDefinition.result_expression` is inventoried and an indexed definition body refuses at preflight. |
 | m15 | Added a licensed public generation test proving a qualified predicate binds the exact target's safe local Python name. |
 | m16–m17 | Reachability starts mechanically from the installed CLI and proves both public arms are reached. Every local `SourceFile.referent` receiver is tied to its annotated collection. |
-| m18–m19 | Recorded an exact focused selection; moved `predicate_reference_name` to a module-level import. |
+| m18–m19 | The N1/N2 closure section records the exact focused and topology selections; `predicate_reference_name` moved to a module-level import. |
 | i20–i21 | Corrected the serialized-key claim and described the gate as production-package-wide. |
 | i22–i23 | Proof names must resolve to callable collected-looking tests; fixture metadata is described honestly as one explicit exception. |
 | i24–i26 | Named both mypy baselines, added `[μSv/hr]`, and removed the anonymous-only filter from the real deep-override proof. |
@@ -55,7 +58,9 @@ The product-lens response is recorded in `product-lens.md` as a candidate resolu
 The audit's weakenings were applied to a disposable extraction, not to the implementation worktree.
 
 - Consumer backstop deletion: **5/5 proof nodes failed**.
-- Binding union weakenings: classifier, readiness, wiring, and exact-use helper proofs all failed.
+- Binding union weakenings: the classifier, readiness, and exact-use helper proofs all fail. Wiring
+  delegates unknown values to that helper, and its kept proof fails if a local duplicate intercepts
+  the delegation.
 - Non-`Feature` deep-segment `raise` → `continue`: the totality proof failed.
 - Second unannotated receiver in a reviewed function: the synthetic manifest-equality proof reports
   the added receiver as unreviewed.
@@ -69,15 +74,45 @@ The audit's weakenings were applied to a disposable extraction, not to the imple
 
 ## Validation
 
-- Exact 13-file evidence/binding/ownership/compiler/unit battery: **285 passed, 1 deselected**. The
-  deselected node is the declared Phase 4 consumer-cell proof table.
+- Exact 13-file evidence/binding/ownership/compiler/unit battery: **290 passed, 1 deselected**. The
+  deselected node is the declared Phase 4 consumer-cell proof table. Exact invocation:
+
+  ```bash
+  uv run --offline --extra dev pytest \
+    tests/conformance/test_expression_evidence_integrity.py \
+    tests/conformance/test_expression_evidence_ownership.py \
+    tests/conformance/test_elaboration_aggregations.py \
+    tests/conformance/test_usage_owned_reference_anchoring.py \
+    tests/conformance/test_constraint_binding_unit_annotation.py \
+    tests/conformance/test_predicate_unit_annotation.py \
+    tests/conformance/test_unit_annotation_values.py \
+    tests/conformance/test_expression_compiler.py \
+    tests/conformance/test_exact_compiler_core.py \
+    tests/unit/test_expression_evidence_boundary.py \
+    tests/unit/test_expression_compiler.py \
+    tests/unit/test_predicate_compiler.py \
+    tests/conformance/test_upstream_pins.py \
+    -k "not test_every_consumer_cell_names_a_proof"
+  ```
 - L-181 replacement gate: every named replacement proof is green.
 - Targeted Ruff over changed Python: clean. Strict mypy over the two boundary modules: **0 errors**.
 - `compileall` and `git diff --check`: clean.
 - Full clean-extraction suite: **1 failed, 2,388 passed, 34 skipped, 94 deselected**. The sole
   failure is the declared Phase 4 consumer-cell proof table. There are no collection errors and no
-  other failures. The run used the prepared offline wheel cache and an all-ref history bundle; the
-  ledger/fingerprint topology subset is independently green (**61 passed**).
+  other failures. The run used the prepared offline wheel cache and an all-ref history bundle.
+- Ledger/fingerprint topology subset: **83 passed**. Run from
+  `/tmp/stop-parser-rev2/phase3-remediation-extraction-r3/extracted/codegen/sysml-codegen` against
+  the source manifest and history root recorded above. Exact invocation:
+
+  ```bash
+  STOP_PARSER_ARTIFACT_SOURCE_INPUTS=/tmp/stop-parser-rev2/phase3-remediation-extraction-r3/artifact-source-inputs.json \
+  PYTHONPATH=/tmp/stop-parser-rev2/phase3-remediation-extraction-r3/extracted/codegen/sysml-codegen/src \
+  /tmp/stop-parser-rev2/worktrees/sysml-codegen/.venv/bin/python -m pytest \
+    tests/conformance/test_elaboration_corpus_ledger.py \
+    tests/conformance/test_exact_route_fingerprint_stability.py \
+    tests/conformance/test_evidence_artifact_topology.py \
+    tests/unit/test_check_ledger_4a.py -q
+  ```
 
 The independent Phase 3 re-audit is next. Phase 4 and Phase 5 remain unstarted; close and pre-PR
 remain blocked.
