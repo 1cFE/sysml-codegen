@@ -513,3 +513,339 @@ in Phase 4's closure table than fixed here.
   otherwise.
 - **Generated-package runtime execution.** No generated package was executed against a real simkit;
   correctness claims here are about elaboration, projection, and rendering, not runtime behaviour.
+
+---
+
+# Re-audit of the remediation — 2026-08-18
+
+**Ruling:** the Phase 3 verdict moves from **Needs Work** to **Pass with findings**. The phase is
+fit for Phase 4.
+
+**Re-audited:** Codegen `stop-parser-impl-r2` at `3377cd0` (`c604165` → `41181bd` → `3377cd0` on
+top of the audited `e3e1a39`). Agentic `3f8bd58` verified untouched and clean, read-only.
+**Re-auditor:** independent, fresh context. Every figure below was recomputed from this
+re-auditor's own `git archive` extractions under `/tmp/stop-parser-rev2/p3reaudit2/`,
+`/tmp/stop-parser-rev2/p3mut/`, and `/tmp/stop-parser-rev2/p3mut4/`. Nothing was committed; no
+worktree or user checkout was modified.
+
+**Source inputs independently reproduced.** `git archive 3377cd0` and `git archive 3f8bd58` from
+the two worktrees hash to `a0b9e138…defd0d1` and `c2924387…41347afb2` — byte-identical to the two
+SHA-256 values the remediation record declares. The extracted trees differ from the implementer's
+only by build artefacts (`__pycache__`, `.pytest_cache`).
+
+## Summary
+
+The remediation is real work, not a re-wording. The M1 crash class is fixed at the ownership
+boundary rather than patched at the symptom; the audit's own mutation experiments — which produced
+**zero** new failures across 2206 tests — now kill nine of the ten proof nodes they were supposed
+to protect. M4's escape is closed at both gates. Of the 15 Minors and 9 Informationals, one is not
+closed and the rest verify.
+
+Two findings survive, both Minor and neither a product defect. One switch arm in the M3 set is
+still not pinned, and the remediation's claim that all four now kill a proof is inaccurate. And the
+focused-battery figure is still untraceable — the same defect m18 named.
+
+## Blocking findings
+
+### M1 — **Confirmed closed**, by live execution on four independent crash shapes
+
+**Before-state anchored.** Built a second venv over an extraction of `e3e1a39` and ran the public
+`sysml-codegen generate` route. Three of four probe models die with the bare
+`ExpressionInventoryError` traceback the audit recorded — no code, no reference, no `file:line`,
+no cause:
+
+- `attribute mirror_len : Real = base_len [m];` (the audit's exact shape)
+- the feature-chain form `= inner.w [m]`
+- the compound-unit form `= rho [kg/m^3]`
+- and a fourth the audit did not have: a deep override `:>> len = src [m];`
+
+**After-state.** At `3377cd0` all four generate correctly, and the alias is *honored*, not dropped.
+Against a no-annotation control model the emitted pipeline is identical in shape: the annotated
+`mirror_len` wires the consumer to `…__rig__base_len`, exactly as the control does. The deep
+override wires to `ROverride__rig__d__src`. A two-hop annotated alias chain (`c = b [m]`,
+`b = a [m]`) collapses correctly to `a`.
+
+**Probed around the fix.** Calculation-definition dependency, constraint predicate, and calc-usage
+binding roles were each authored with a unit annotation and each generates. The operator-wrapped
+variant `(base_len * 2.0) [m]` generated at both commits — it is a genuine computed attribute in
+both predicates, which is why it never crashed.
+
+**One owner, verified two ways.** By inspection: role assignment exists once, in
+`_role_for_owner` (`elaboration/expression_evidence.py:330-347`), which now unwraps the annotation
+through Agentic's `unit_annotated_value` *before* testing for a plain reference. Consumers no
+longer decide — they retrieve, via `_site_for_expression` → `ExpressionEvidenceInventory.site_for`,
+and compare (`elaborate.py:894`, `:926`, `:2054`, `:2151`). A grep over `src/` finds no second role
+predicate. `_is_reference_expression` (`elaborate.py:1023`) survives but answers a different
+question — reference-vs-expression *binding kind*, not the alias/computed role — and fails safe to
+`ExpressionBindingSource` when it and the inventory disagree. `ExpressionEvidenceInventory.__init__`
+now refuses outright if one declaration ever carries two roles, so a future second owner cannot
+disagree silently.
+
+**Containment proved live.** Forcing the invariant (dropping one enumerated ALIAS site behind the
+inventory) and running the real CLI yields a full public diagnostic and no traceback:
+
+```
+ERROR: Model failed exact-route validation: SI_EVIDENCE_INCOMPLETE: base_len [m]:
+reference='base_len [m]': expression_evidence: expression declaration cc9c79cf-… has no
+assigned evidence site [root-0/model.sysml:12]
+```
+
+All four required elements are present and the line is correct. This matches D8's row for
+incomplete evidence. Kept coverage exists for both halves:
+`test_unit_annotated_alias_survives_the_public_conversion_boundary` (licensed, parametrized over
+strict and lenient, over a real model with both the bare-reference and the feature-chain form) and
+`test_inventory_invariant_is_contained_with_authored_provenance`.
+
+### M2 — **Confirmed closed.** The audit's zero-failure mutation now kills five proof nodes
+
+The new per-consumer tests are structurally real: each builds an actual `_ExactElaborator` and
+calls the real adapter (`_calc_dependencies`, `_resolve_aliases`, `_resolve_computed_expressions`,
+`_resolve_bindings`) with an `IndexedReferenceUse` injected behind the inventory preflight. None is
+a library call wearing a role label. Every deletion was rerun against the full 2388-test suite in a
+throwaway copy; see the kill table.
+
+### M3 — **Closed for three of four arms; arm 3 is not pinned.** See finding N1
+
+Arms 1, 2, and 4 each kill exactly their own proof, including the alarming
+authored-index-reclassification arm. Arm 3 does not. Details in the kill table and N1.
+
+### M4 — **Confirmed closed**, at both gates
+
+`SelectorRead` now keys on `(module, function, selector, form, receiver)`, and all 24 `ReviewedRow`
+entries carry a receiver (four by keyword, twenty positionally). Three escapes were written to
+disk in a throwaway copy and run against the real gate:
+
+1. A second unannotated receiver in a **live** rowed function (`_compile_boolean(n, sneaky=None)`
+   returning `str(sneaky.operands)`) — the audit's own first demonstration, which used to pass all
+   17 ownership tests. It now fails `test_discovered_raw_selectors_equal_the_reviewed_manifest`,
+   naming `receiver='sneaky'`.
+2. The same, in an **off-route** rowed function (`other.referent` in
+   `usage_extractor._parse_reference_expression`) — also caught.
+3. The harder variant the brief asks for: the evader adds a matching `ReviewedRow` to make equality
+   pass. The failure then moves to the second gate,
+   `test_collision_rows_have_provable_receiver_contracts`, which rejects the row because the
+   receiver has no annotation resolving to `agentic_mbse.sysml.expression_ir`. Both gates go red.
+
+Existing rows still carry their design-required proof artifacts:
+`test_every_reviewed_row_names_a_closure_proof` passes and now requires each proof name to resolve
+to a real `test_`-prefixed function (i22).
+
+## The M2/M3 kill table
+
+Each row is a single mutation applied to a pristine copy of `3377cd0`, followed by the complete
+suite (baseline: 1 failed / 2388 passed / 34 skipped / 94 deselected; the one failure is the
+declared Phase 4 deferral, excluded from "new failures").
+
+| # | Mutation | At audit | Now | Proof node killed |
+|---|---|---|---|---|
+| M2a | `_calc_dependencies` `require_exact` → `require` (`elaborate.py:2154`) | 0 | **1** | `test_calc_dependency_adapter_refuses_an_inventory_bypassed_index` |
+| M2b | `_resolve_aliases` `require_exact` → `require` (`:2386`) | 0 | **1** | `test_alias_adapter_refuses_an_inventory_bypassed_index` |
+| M2c | `_resolve_computed_expressions` `require_exact` → `require` (`:2460`) | 0 | **2** | `test_expression_adapter_refuses_an_inventory_bypassed_index[computed_attribute]` and `[constraint_predicate]` |
+| M2d | binding wiring: drop the indexed arm and `require_exact_binding_use` → `evidence.use` (`:2562`, `:2573`) | 0 | **1** | `test_binding_wiring_adapter_refuses_an_inventory_bypassed_index` |
+| M2* | **all five at once — the audit's exact experiment** | **0 new failures / 2206** | **5 new failures / 2388** | all five nodes above |
+| M3-1 | unknown-reference-use-variant raise → `return ExpressionBindingSource(formal, None, None)` (`:2073`) | 0 | **1** | `test_elaborator_binding_classifier_switch_is_exhaustive` |
+| M3-2 | delete `_unsupported_code`'s indexed arm (`:2098-2099`) — the authored-index reclassification | 0 | **1** | `test_elaborator_readiness_switch_names_each_binding_variant` |
+| M3-3 | delete `_resolve_bindings`' closing `isinstance` raise (`:2571-2572`) | 0 | **0 — NOT KILLED** | — (finding N1) |
+| M3-4 | `require_exact_binding_use`'s Expression/Literal and unknown-value raises → `return None` (`binding_source.py:178,180`) | 0 | **1** | `test_require_exact_binding_use_switch_is_exhaustive` |
+| m5 | non-`Feature` deep-segment `raise` → `continue` (`binding_source.py:242-248`) | survives | **1** | `test_deep_path_non_feature_segment_refuses_instead_of_shortening` |
+
+## New findings
+
+### Minor
+
+**N1 — One M3 switch arm is still unpinned, and the remediation overstates the result as 4/4.**
+
+Deleting `_resolve_bindings`' closing guard —
+
+```python
+if not isinstance(evidence, ExactBindingSource):
+    raise TypeError(f"value is not BindingSourceEvidence: {type(evidence).__name__}")
+```
+
+at `src/sysml_codegen/elaboration/elaborate.py:2571-2572` — produces **0 new failures across all
+2388 tests**, exactly as at the audit. The intended proof,
+`test_binding_wiring_switch_refuses_expression_and_unknown_variants`
+(`tests/unit/test_expression_evidence_boundary.py`), still passes.
+
+Mechanism, confirmed by executing the mutant directly: with the arm gone, control reaches
+`use = require_exact_binding_use(evidence)` on the next line, and that function raises the
+*identical* message from `extraction/binding_source.py:180`. The test asserts
+`pytest.raises(TypeError, match="BindingSourceEvidence")`, which both raises satisfy, so it cannot
+tell the two apart.
+
+**Not a product defect.** The behaviour is preserved — an unknown evidence object is still refused
+by name, one line later. But the arm is unproven, and
+`run-records/phase3-remediation.md` states "The four weakenings from the audit now each kill a kept
+proof." Measured, that is three of four.
+
+**What should change:** distinguish the two raises so the test can tell them apart — assert on the
+raising location, or give the wiring guard its own message — or state plainly in the record that
+this arm is redundant with the `binding_source.py:180` backstop and is deliberately not
+separately pinned.
+
+**N2 — m18 is not closed: the "exact 13-file selection" is recorded nowhere.**
+
+`run-records/phase3-remediation.md:72` reports "Exact 13-file evidence/binding/ownership/compiler/
+unit battery: **285 passed, 1 deselected**", and its disposition for m18 reads "Recorded an exact
+focused selection". No such selection appears in `phase3-remediation.md`, `plan.md`, or any run
+record — grep for the 13 paths returns nothing. The figure is exactly as untraceable as the
+"126 passed" it replaced, which is the defect m18 named.
+
+Independent evidence that the substance is green: a 13-file selection this re-auditor assembled
+over the same named areas gives **303 passed, 1 failed** (the declared Phase 4 deferral, which the
+implementer deselected). The same applies to the "ledger/fingerprint topology subset … 61 passed"
+claim — a four-module selection over those areas gives 94 passed, all green, and 61 names no
+selection.
+
+Phase 1 solved this by recording the 15 D1-D4 paths in `plan.md:1588-1596`, which is why that
+figure reproduced. The habit still has not carried forward.
+
+**What should change:** record the 13 paths and the deselect argument verbatim, next to the number,
+as Phase 1 did.
+
+### Informational
+
+- **i29 — the audit's second M4 demonstration still passes, and correctly so.** Adding
+  `_sneak = expr.referent` to `usage_extractor._parse_reference_expression` leaves all 23 ownership
+  tests green. This is a second read of the same selector on the **already-rowed** receiver `expr`,
+  not a new unannotated receiver, and that function already reads `expr.referent` twice under one
+  row. The key is read *identity*, not read count, which is the collision contract's design: an
+  annotated (or, here, off-route-excluded) receiver is proved once for every read on it. Recorded
+  so the residual stays visible.
+- **i30 — the D1-D4 + retained-harness figure is now 163, not 162.** The extra node is m15's new
+  `test_public_generation_renders_qualified_predicate_by_exact_local_name`, added to
+  `tests/conformance/test_usage_owned_reference_anchoring.py`. Expected, not a regression.
+- **i31 — "targeted Ruff: clean" is version-dependent.** Under the lockfile-pinned `ruff 0.14.10`
+  the changed files report "All checks passed". Under a freshly resolved `ruff 0.16.3` (the
+  `>=0.1` specifier admits it) one `UP042` fires on `ExpressionSiteRole(str, Enum)`
+  (`expression_evidence.py:63`). It fires identically at the audited `e3e1a39`, so it is neither
+  Phase-3-introduced by the remediation nor a regression — but the `>=0.1` specifier means the
+  claim is not reproducible over time.
+
+## Minor and Informational dispositions from the original audit
+
+| Finding | Disposition | Verdict | Evidence |
+|---|---|---|---|
+| m5 | non-`Feature` middle-segment test added | **Confirmed closed** | mutation kills `test_deep_path_non_feature_segment_refuses_instead_of_shortening` (kill table) |
+| m6 | record corrected to "13 pre-existed" | **Confirmed closed** | `plan.md:2034-2037` states it exactly, matching the audit's measurement; no history rewrite |
+| m7 | three rows repointed to stronger tests | **Confirmed closed** | row 8 now names all four aggregation shapes (`test_elaboration_aggregations.py:54,67,77,122` — the audit's exact cites); row 12 → `[SRC-01]`; row 13 → `test_elaboration_shadowing.py:91` |
+| m8 | L-181 timing recorded honestly | **Confirmed closed** | `plan.md:2037`: "L-181's machine row landed one commit later in `3a85831`. History was not rewritten." |
+| m9 | collision proof resolves names, not substrings | **Confirmed closed** | a local decoy type `ExpressionIRDecoyOperatorNode` — which satisfied the old substring test — now fails `test_collision_rows_have_provable_receiver_contracts` with "does not prove n comes from agentic_mbse.sysml.expression_ir.ExpressionIR" |
+| m10 | evasion mutants assert exact rows | **Confirmed closed** | `test_every_ast_evasion_mutation_is_discovered` now asserts full `SelectorRead` equality including selector, form, and receiver; no longer just non-empty |
+| m11 | four extra evasion forms detected; scope stated | **Confirmed closed** | executed: `attrgetter`→`attrgetter`, `__getattribute__`→`dunder-getattribute`, `vars()[…]`→`vars-subscript`, alias-`getattr`→`alias-getattr`, each with exact selector and receiver. Module docstring now says "the complete production-package manifest **for the four reviewed selector names**" |
+| m12 | expression errors gain authored context | **Confirmed closed** | `_contextualize` / `_expression_context` (`expression_evidence.py:352-372`) plus kept test `test_expression_keyed_evidence_failure_gains_authored_site_context`, which asserts reference, location, and `cause` chain |
+| m13 | complete role/site set has a direct test | **Confirmed closed** | `test_complete_role_and_site_set` (`:802`) enumerates all five roles including both constraint-def and constraint-usage predicate sites and asserts declaration-id disjointness; `_role_for_owner` has its own test |
+| m14 | `ConstraintDefinition.result_expression` inventoried | **Confirmed closed** | live: an indexed constraint-*definition* body refused `SI_EDGE_DANGLING: <model>: feature 7e45f134-… has unsupported exact type` at `e3e1a39`; at `3377cd0` it refuses `SI_INDEXED_SOURCE_UNSUPPORTED: h.cells#(2).mass … [root-0/model.sysml:8]`. Kept test `test_constraint_definition_index_refuses_at_pregraph_inventory` |
+| m15 | licensed public generation pin added | **Confirmed closed** | `test_public_generation_renders_qualified_predicate_by_exact_local_name` calls the real `run_codegen` over the real fixture and asserts the emitted Python binds `length` and contains no `comp_a::length`. The inaccurate deviation-2 claim is corrected at `plan.md:2062-2068` |
+| m16 | reachability root is the installed CLI | **Confirmed closed** | `PUBLIC_RAW_SOURCE_ROOTS = ("cli/__init__.py",)` replaces the prose arm tuple; `test_cli_root_reaches_both_public_raw_source_arms` proves both public arms are reached from it |
+| m17 | `SourceFile.referent` receivers tied to their collection | **Confirmed closed** | `test_collision_rows_have_provable_receiver_contracts` now asserts `_receiver_iterables(...) == {"self.files"}` for `_verify_staged_files` and `staged_to_referent`, and `{"admission.files"}` for `elaborate_admitted_sources` |
+| m18 | "recorded an exact focused selection" | **NOT CLOSED** | finding N2 |
+| m19 | module-level import | **Confirmed closed** | `predicate_compiler.py:37` is the sole import; no function-local one remains. Kept test `test_name_safety_dependency_is_declared_at_module_scope` asserts both directions |
+| i20 | serialized-key claim corrected | **Confirmed closed** | `plan.md:885-886`: "Renaming the field alone does not change that literal key; the proof guards the typed read-site-to-schema linkage instead." |
+| i21 | scope described as production-package-wide | **Confirmed closed** | `plan.md:867` and the gate's own comment both say production-package-wide |
+| i22 | proof names resolve to real tests | **Confirmed closed** | `_named_proof_exists` (`:793-803`) requires `inspect.isfunction`, a `test_` prefix, and `__test__ is not False`; a module constant no longer passes |
+| i23 | fixture allowlist described honestly | **Confirmed closed** | renamed `FIXTURE_METADATA_ROWS` → `FIXTURE_METADATA_EXCEPTIONS` with a comment saying "This is an allowlist, not a general structural classifier" |
+| i24 | both mypy baselines named | **Confirmed closed** | `plan.md:2001-2003` names 30/8 against `b4e97dd` and 49/15 against `78a9beb`, and says the reduction landed pre-Phase-3 |
+| i25 | `[μSv/hr]` added | **Confirmed closed** | `plan.md:2017` lists it |
+| i26 | anonymous-only filter removed | **Confirmed closed** | the `if getattr(feature, "qualified_name", None) is not None: continue` line is gone from `test_real_deep_override_relationships_contain_only_features`; the test carries an explicit anti-vacuity guard, `assert deep_paths, "fixture contains no parsed deep override relationship"` |
+| i27 | bound formal with no qualified identity refuses by name | **Confirmed closed** | `binding_source.py:195-201` raises `RESOLVED_TARGET_MISSING` instead of substituting `""`; kept test `test_bound_formal_refuses_missing_qualified_identity` |
+| i28 | dynamic-`getattr` residual has a kept test | **Confirmed closed** | `test_adapter_free_dynamic_getattr_remains_outside_the_declared_scope` asserts the exact `<unreviewable>` / `dynamic-getattr` row |
+
+No disposition was found to re-word a finding instead of closing it, except m18 (N2).
+
+## Vacuity sweep of the remediation-added tests
+
+Every added test has a demonstrated way to fail. Ten are proven non-vacuous by mutation (kill
+table). The rest:
+
+- `test_unit_annotated_alias_survives_the_public_conversion_boundary`,
+  `test_constraint_definition_index_refuses_at_pregraph_inventory` — both fail at `e3e1a39`, proven
+  by running the same models there.
+- `test_inventory_invariant_is_contained_with_authored_provenance` — without the boundary `except`
+  arm the same forcing yields a bare traceback, proven by the live forcing probe.
+- `test_unit_annotated_plain_reference_is_an_alias_site` — monkeypatches so that the role is ALIAS
+  only if `_role_for_owner` reads the *unwrapped* value; reading the wrapper returns
+  COMPUTED_ATTRIBUTE and the test fails.
+- `test_second_receiver_inside_a_reviewed_function_fails_manifest_equality` — non-vacuous
+  (a receiver-blind key collapses `found` to one element and empties the difference), but it is
+  **synthetic**: it builds its `reviewed` set by hand rather than from `REVIEWED_ROWS`. The real
+  gate is separately proven by the three on-disk escapes under M4.
+- `test_real_deep_override_relationships_contain_only_features` — carries an explicit
+  `assert deep_paths` anti-vacuity guard, so removing the filter did not make it vacuous.
+- `test_name_safety_dependency_is_declared_at_module_scope`,
+  `test_inventory_rejects_two_roles_for_one_declaration`,
+  `test_public_generation_renders_qualified_predicate_by_exact_local_name`,
+  `test_bound_formal_refuses_missing_qualified_identity`, the four evasion-form cases — each
+  asserts a specific value that the pre-remediation code does not produce.
+
+`test_inventory_returns_the_authoritative_site_for_a_declaration` is weak — an identity assertion
+on a two-line accessor — but not vacuous, and the load-bearing behaviour is covered by the five
+consumer-adapter tests.
+
+## No regression
+
+| Gate | Claimed | Measured | Verdict |
+|---|---|---|---|
+| Fresh-extraction full suite | 1 failed / 2388 passed / 34 skipped / 94 deselected | identical | CONFIRMED |
+| Sole failure is the Phase 4 deferral | yes | `test_every_consumer_cell_names_a_proof`, and nothing else; no collection errors | CONFIRMED |
+| Focused battery | 285 passed, 1 deselected | not traceable; a 13-file selection over the named areas gives 303 passed, 1 failed (the Phase 4 node), nothing else red | Substance green; **N2** |
+| Scoped strict mypy, two boundary modules | Success, 0 issues | "Success: no issues found in 2 source files" | CONFIRMED |
+| Repo-wide mypy baseline | 30 errors in 8 files, unchanged | 30 errors in 8 files (76 checked) | CONFIRMED |
+| Repo-wide Ruff `tests/` baseline | 127 pre-existing | 127 | CONFIRMED |
+| Targeted Ruff over changed Python | clean | clean under the pinned `ruff 0.14.10` | CONFIRMED (**i31**) |
+| D1-D4 + retained harness, 15 Phase-1 paths | 162 passed | 163 passed, 0 failed | CONFIRMED (**i30**) |
+| `git diff 78a9beb -- elaboration/occurrence.py` | empty | 0 lines | CONFIRMED |
+| `deep_cross_scope_probe` | `SI_OCCURRENCE_MISSING`, snapshot absent | strict refuses with that code and detail; fixture dir holds only `design.sysml` and `library.sysml` | CONFIRMED |
+| Ledger/fingerprint topology | 61 passed | not traceable; a four-module selection over those areas gives 94 passed, all green | Substance green; **N2** |
+| Agentic worktree untouched | `3f8bd58` | `3f8bd58`, `status --porcelain` empty | CONFIRMED |
+| Both user checkouts vs `entry-status.md` | empty porcelain | both `e3b0c442…7852b855` (empty); agentic HEAD `fcee56d6` unchanged; codegen HEAD advanced to `4298602` by orchestration commits, which the record permits | CONFIRMED |
+
+The owner-excluded suites — the Agentic slow PDF/HTML corpus and the 15 paid/network cases — were
+not invoked.
+
+## Design conformance
+
+- **D7, one conversion boundary.** Unchanged and still holds; the inventory is the first statement
+  inside `elaborate_loaded_extractor` (`orchestration/elaborated_pipeline.py:163`).
+- **D8, diagnostic ownership.** The new `except ExpressionInventoryError` arm
+  (`elaborated_pipeline.py:178-198`) maps to `SI_EVIDENCE_INCOMPLETE`, which is D8's row for
+  incomplete evidence, and carries reference, root-relative `file:line`, and cause. Verified live.
+- **The Codegen-gate manifest rule**, "an unannotated receiver never qualifies", is now enforced
+  rather than asserted — proven by three on-disk escapes.
+- **One total inspection operation.** `_role_for_owner` delegates the structural question to
+  Agentic's `unit_annotated_value` and does not catch its refusal; Codegen still performs no second
+  structural unit walk (`test_value_site_policy_contains_no_second_structural_unit_walk` passes).
+
+## Certification
+
+**Verdict: Pass with findings.** The two grounds that forbade Certify at the audit are resolved.
+The product-lens `audit-phase3-F4` block was an owner-grade contradiction — a language-defined form
+that had become unauthorable with no diagnostic; that form now generates correctly on four
+independent shapes, so the contradiction is gone and the block is dischargeable. The structural
+smell — two representations manually kept synchronized — is resolved at the root, not escalated:
+the role is computed once, by the inventory, and a second role for one declaration is now a refusal
+rather than a silent disagreement. The two unmet owner conditions on the tests-after deviation are
+met, with the one arm-3 exception recorded as N1.
+
+**Fit for Phase 4: yes.** N1 and N2 are record-and-coverage debt, not defects in shipped behaviour,
+and neither touches the exact-evidence boundary Phase 4 builds on. N2 should be fixed before the
+phase's numbers are cited anywhere downstream.
+
+**Not checked:**
+
+- **Phases 4 and 5.** Still unstarted. `test_every_consumer_cell_names_a_proof` remains the declared
+  deferral and the sole substantive suite failure; the consumer closure table was not evaluated as
+  coverage.
+- **Item-level spec conformance.** This is a phase re-audit. Lane A/B rows, the A1-A6 occurrence
+  contract, the U-1/U-2 census ledger, and the item's success criteria were not assessed.
+- **The Agentic upstream** was verified untouched at `3f8bd58` and read, but not re-audited.
+- **The owner-excluded suites** were not invoked, per the standing instruction.
+- **Generated-package runtime execution.** No generated package was run against a real simkit. The
+  M1 correctness claims are about elaboration, projection, and the emitted pipeline wiring, not
+  runtime behaviour.
+- **`ruff format`** was not run as a gate.
+- **Minors verified by reading rather than execution:** m6, m7, m8, m16, m17, i20, i21, i23, i24,
+  i25. Their subject matter is record text or test structure, where reading is the measurement.
+- **Only the mutations named in the kill table were run.** A switch arm the original audit did not
+  name could still be unpinned; this pass reran the audit's own experiments plus m5, not an
+  exhaustive mutation sweep.
