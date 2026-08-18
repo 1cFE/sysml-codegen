@@ -20,7 +20,6 @@ from pathlib import Path
 from typing import Any
 
 import pytest
-
 from agentic_mbse.errors import SemanticEvidenceCode, SemanticEvidenceError
 
 from sysml_codegen.elaboration.expression_evidence import unit_annotated_value
@@ -36,6 +35,7 @@ pytestmark = requires_license
 ANNOTATED = FIXTURES_DIR / "predicate_unit_annotation"
 BARE = FIXTURES_DIR / "predicate_unit_annotation_bare"
 INCOMPATIBLE = FIXTURES_DIR / "predicate_unit_annotation_incompatible"
+
 
 def _gap_guard_row(fixture: Path) -> Any:
     catalog = build_elaborated_pipeline([fixture]).constraint_catalog
@@ -167,4 +167,5 @@ def test_the_unit_rule_refuses_a_malformed_annotation_by_name() -> None:
     with pytest.raises(SemanticEvidenceError) as refusal:
         unit_annotated_value(_MalformedUnitAnnotation())
     assert refusal.value.code is SemanticEvidenceCode.EXPRESSION_KIND_UNSUPPORTED
-    assert "unit annotation carries no annotated value" in refusal.value.detail
+    assert "unit annotation carries 0 operands" in refusal.value.detail
+    assert "expected a value and a unit" in refusal.value.detail

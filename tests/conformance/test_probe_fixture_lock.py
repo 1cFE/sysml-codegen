@@ -54,6 +54,11 @@ NON_FIXTURE_ROWS = (
     "verification/capture_baseline.py",
 )
 
+#: Fixture metadata is an input to the retained probes, not executable verification code.
+#: Name it structurally so a future ``verification/*.py`` row cannot be absorbed into the
+#: fixture class merely because it shares the directory.
+FIXTURE_METADATA_ROWS = ("verification/fixture-manifest.json",)
+
 
 @pytest.fixture(scope="module")
 def lock() -> dict:
@@ -131,9 +136,22 @@ def test_locked_rows_split_into_fixture_inputs_and_verification_code(lock: dict)
     fixture_inputs = paths - set(NON_FIXTURE_ROWS)
     assert len(fixture_inputs) == LOCKED_ROW_COUNT - len(NON_FIXTURE_ROWS)
     assert all(
-        path.startswith("tests/fixtures/") or path.startswith("verification/")
+        path.startswith("tests/fixtures/") or path in FIXTURE_METADATA_ROWS
         for path in fixture_inputs
     )
+    assert set(FIXTURE_METADATA_ROWS) <= fixture_inputs
+
+
+def _ledger_row_for_path(path: str) -> tuple[str, ...]:
+    matches: list[tuple[str, ...]] = []
+    for line in LEDGER_PATH.read_text().splitlines():
+        if not line.startswith("|"):
+            continue
+        cells = tuple(cell.strip().strip("`") for cell in line.strip().strip("|").split("|"))
+        if cells and cells[0] == path:
+            matches.append(cells)
+    assert len(matches) == 1, f"expected one ledger row for {path}, found {matches}"
+    return matches[0]
 
 
 @pytest.mark.parametrize("locked_path", NON_FIXTURE_ROWS)
@@ -152,10 +170,9 @@ def test_locked_verification_code_is_pinned_at_current_bytes(
     if current == row["sha256"]:
         return
 
-    ledger = LEDGER_PATH.read_text()
-    assert locked_path in ledger, f"unowned current-byte change: {locked_path}"
-    assert row["sha256"] in ledger, f"ledger row for {locked_path} omits its lock-time hash"
-    assert current in ledger, f"ledger row for {locked_path} omits its current hash {current}"
+    ledger_row = _ledger_row_for_path(locked_path)
+    assert row["sha256"] in ledger_row, f"ledger row for {locked_path} omits its lock-time hash"
+    assert current in ledger_row, f"ledger row for {locked_path} omits its current hash {current}"
 
 
 def test_the_lock_file_is_never_rewritten_by_this_check(lock: dict) -> None:

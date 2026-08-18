@@ -10,18 +10,17 @@ simple local or imported alias of either form, and a non-literal `getattr` in th
 raw-SysIDE module set (which is rejected outright, because its selector cannot be
 reviewed).
 
-`REVIEWED_ROWS` is the *target* manifest, not an inventory of `C_base`.  Codegen owns
-only the reviewed contextual exceptions — redefinition endpoints, multiplicity
-contextualization, enumeration discrimination, and the total deep-relationship-path
-factory.  Every other raw read belongs to Agentic after this item lands.  At `C_base`
-the discovered set is much larger, so `test_discovered_raw_selectors_equal_the_reviewed_manifest`
-is a recorded red that names each unowned read.  It goes green when Phase 3 removes
-Codegen's weaker representations and raw walks.
+`REVIEWED_ROWS` is the complete repository-wide manifest.  It contains Codegen's four
+contextual parser reads, collision-aware rows for neutral IR and the serialized
+``SourceFile.referent`` key, and mechanically excluded off-route legacy reads.  An
+unannotated receiver never qualifies as a collision, which is why the adapter-free mutant
+below remains an unowned read and kills equality.
 """
 
 from __future__ import annotations
 
 import ast
+import importlib
 import textwrap
 from dataclasses import dataclass
 from pathlib import Path
@@ -31,9 +30,7 @@ import pytest
 PACKAGE_ROOT = Path(__file__).resolve().parents[2] / "src" / "sysml_codegen"
 
 #: The expression selectors Agentic owns after this item lands.
-REVIEWED_SELECTORS = frozenset(
-    {"operands", "referent", "target_feature", "chaining_features"}
-)
+REVIEWED_SELECTORS = frozenset({"operands", "referent", "target_feature", "chaining_features"})
 
 #: How Codegen reaches SysIDE.  No production module imports `syside` directly — that is
 #: deliberate and stated at `extraction/extractor.py:14` — so importing this adapter is what
@@ -96,18 +93,29 @@ class ReviewedRow:
         return SelectorRead(self.module, self.function, self.selector, self.form)
 
 
-# The four contextual exceptions the design leaves in Codegen.  Everything else is
-# Agentic's after D5/D7.  See design.md#checked-consumer-and-ownership-manifests.
+# Proof artifacts shared by row classes.  Every string resolves to a kept test below.
+COLLISION_PROOF = (
+    "tests/conformance/test_expression_evidence_ownership.py"
+    "::test_collision_rows_have_provable_receiver_contracts"
+)
+OFF_ROUTE_PROOF = (
+    "tests/conformance/test_expression_evidence_ownership.py"
+    "::test_public_raw_source_arms_do_not_reach_off_route_modules"
+)
+
+
+# The complete reviewed manifest.  Repository-wide discovery remains load-bearing: rows
+# are added because their receiver is proved, never because the scan was narrowed.
 REVIEWED_ROWS: tuple[ReviewedRow, ...] = (
     ReviewedRow(
-        module="elaboration/elaborate.py",
-        function="_ExactElaborator._apply_deep_literal_redefinitions",
+        module="extraction/binding_source.py",
+        function="exact_path_from_relationship",
         selector="chaining_features",
         form="getattr",
         semantic_owner="codegen: total deep-relationship-path factory",
         route_state="live",
         closure_proof=(
-            "tests/conformance/test_expression_evidence_integrity.py"
+            "tests/unit/test_expression_evidence_boundary.py"
             "::test_deep_override_mapped_index_refuses_at_the_path_factory"
         ),
     ),
@@ -119,7 +127,7 @@ REVIEWED_ROWS: tuple[ReviewedRow, ...] = (
         semantic_owner="codegen: enumeration discrimination",
         route_state="live",
         closure_proof=(
-            "tests/conformance/test_feature_typing_integrity.py"
+            "tests/unit/test_expression_evidence_boundary.py"
             "::test_enumeration_literal_requires_an_exact_referent"
         ),
     ),
@@ -131,8 +139,8 @@ REVIEWED_ROWS: tuple[ReviewedRow, ...] = (
         semantic_owner="codegen: multiplicity contextualization",
         route_state="live",
         closure_proof=(
-            "tests/conformance/test_occurrence_multiplicity_authority.py"
-            "::test_modeled_bound_requires_an_exact_referent"
+            "tests/unit/test_elaboration_occurrence.py"
+            "::test_multiplicity_cannot_borrow_an_unrelated_package_writer"
         ),
     ),
     ReviewedRow(
@@ -144,10 +152,251 @@ REVIEWED_ROWS: tuple[ReviewedRow, ...] = (
         route_state="live",
         closure_proof=(
             "tests/conformance/test_occurrence_domain_derivation.py"
-            "::test_redefined_usage_shares_one_canonical_slot"
+            "::test_real_fixture_has_one_redefinition_slot_and_effective_specialized_usage"
         ),
     ),
+    # Neutral ExpressionIR reads.  The field name collides with SysIDE's raw selector,
+    # but the receiving parameter is annotated at every read site and the kept proof
+    # below pins that annotation.
+    ReviewedRow(
+        "elaboration/graph.py",
+        "InstanceGraph._expression_reference_count",
+        "operands",
+        "direct",
+        "agentic-mbse ExpressionIR.OperatorNode.operands",
+        "live",
+        COLLISION_PROOF,
+    ),
+    ReviewedRow(
+        "elaboration/graph.py",
+        "InstanceGraph._validate_expression_tags",
+        "operands",
+        "direct",
+        "agentic-mbse ExpressionIR.OperatorNode.operands",
+        "live",
+        COLLISION_PROOF,
+    ),
+    ReviewedRow(
+        "elaboration/project.py",
+        "_Projection._compile_computed_expression.render",
+        "operands",
+        "direct",
+        "agentic-mbse ExpressionIR.OperatorNode.operands",
+        "live",
+        COLLISION_PROOF,
+    ),
+    ReviewedRow(
+        "extraction/calc_compat_renderer.py",
+        "_render_operator",
+        "operands",
+        "direct",
+        "agentic-mbse ExpressionIR.OperatorNode.operands",
+        "live",
+        COLLISION_PROOF,
+    ),
+    ReviewedRow(
+        "extraction/calc_compat_renderer.py",
+        "collect_calc_refs._walk",
+        "operands",
+        "direct",
+        "agentic-mbse ExpressionIR.OperatorNode.operands",
+        "live",
+        COLLISION_PROOF,
+    ),
+    ReviewedRow(
+        "extraction/modeled_defaults.py",
+        "_resolve_default_node",
+        "operands",
+        "direct",
+        "agentic-mbse ExpressionIR.OperatorNode.operands",
+        "live",
+        COLLISION_PROOF,
+    ),
+    ReviewedRow(
+        "generation/constraint_name_safety.py",
+        "predicate_bindings.visit",
+        "operands",
+        "direct",
+        "agentic-mbse ExpressionIR.OperatorNode.operands",
+        "live",
+        COLLISION_PROOF,
+    ),
+    ReviewedRow(
+        "generation/predicate_compiler.py",
+        "_compile_numeric_operator",
+        "operands",
+        "direct",
+        "agentic-mbse ExpressionIR.OperatorNode.operands",
+        "live",
+        COLLISION_PROOF,
+    ),
+    ReviewedRow(
+        "generation/predicate_compiler.py",
+        "_compile_boolean",
+        "operands",
+        "direct",
+        "agentic-mbse ExpressionIR.OperatorNode.operands",
+        "live",
+        COLLISION_PROOF,
+    ),
+    ReviewedRow(
+        "generation/predicate_compiler.py",
+        "_leaf_ref_names",
+        "operands",
+        "direct",
+        "agentic-mbse ExpressionIR.OperatorNode.operands",
+        "live",
+        COLLISION_PROOF,
+    ),
+    ReviewedRow(
+        "generation/predicate_compiler.py",
+        "margin_expression",
+        "operands",
+        "direct",
+        "agentic-mbse ExpressionIR.OperatorNode.operands",
+        "live",
+        COLLISION_PROOF,
+    ),
+    # SourceFile.referent is part of the sealed admission envelope.  Renaming it changes
+    # serialized bytes, so the collision proof also acts as its rename guard.
+    ReviewedRow(
+        "extraction/source_manifest.py",
+        "SourceAdmission._verify_staged_files",
+        "referent",
+        "direct",
+        "codegen SourceFile.referent serialized key",
+        "live",
+        COLLISION_PROOF,
+    ),
+    ReviewedRow(
+        "extraction/source_manifest.py",
+        "SourceAdmission.staged_to_referent",
+        "referent",
+        "direct",
+        "codegen SourceFile.referent serialized key",
+        "live",
+        COLLISION_PROOF,
+    ),
+    ReviewedRow(
+        "extraction/source_manifest.py",
+        "SourceFile.envelope_data",
+        "referent",
+        "direct",
+        "codegen SourceFile.referent serialized key",
+        "live",
+        COLLISION_PROOF,
+    ),
+    ReviewedRow(
+        "extraction/source_manifest.py",
+        "_admitted_membership",
+        "referent",
+        "direct",
+        "codegen SourceFile.referent serialized key",
+        "live",
+        COLLISION_PROOF,
+    ),
+    ReviewedRow(
+        "orchestration/elaborated_pipeline.py",
+        "elaborate_admitted_sources",
+        "referent",
+        "direct",
+        "codegen SourceFile.referent serialized key",
+        "live",
+        COLLISION_PROOF,
+    ),
+    # The remaining four discovered rows are mechanically excluded from both public raw
+    # source roots.  They stay visible in repository-wide discovery and cannot satisfy a
+    # live row.
+    ReviewedRow(
+        "extraction/hierarchy_resolver.py",
+        "_render_neutral_aggregation_node",
+        "operands",
+        "direct",
+        "agentic-mbse neutral aggregation IR",
+        "off-route",
+        OFF_ROUTE_PROOF,
+    ),
+    ReviewedRow(
+        "extraction/usage_extractor.py",
+        "_parse_chain_expression",
+        "operands",
+        "direct",
+        "off-route legacy raw SysIDE reader",
+        "off-route",
+        OFF_ROUTE_PROOF,
+    ),
+    ReviewedRow(
+        "extraction/usage_extractor.py",
+        "_parse_chain_expression",
+        "target_feature",
+        "direct",
+        "off-route legacy raw SysIDE reader",
+        "off-route",
+        OFF_ROUTE_PROOF,
+    ),
+    ReviewedRow(
+        "extraction/usage_extractor.py",
+        "_parse_reference_expression",
+        "referent",
+        "direct",
+        "off-route legacy raw SysIDE reader",
+        "off-route",
+        OFF_ROUTE_PROOF,
+    ),
 )
+
+
+# The neutral collision rows must be provable from a receiver annotation in the exact
+# function that performs the read.  Values are ``(receiver parameter, required type)``.
+NEUTRAL_RECEIVER_CONTRACTS = {
+    SelectorRead(
+        "elaboration/graph.py", "InstanceGraph._expression_reference_count", "operands", "direct"
+    ): ("expression", "ExpressionIR"),
+    SelectorRead(
+        "elaboration/graph.py", "InstanceGraph._validate_expression_tags", "operands", "direct"
+    ): ("expression", "ExpressionIR"),
+    SelectorRead(
+        "elaboration/project.py",
+        "_Projection._compile_computed_expression.render",
+        "operands",
+        "direct",
+    ): ("expression", "ExpressionIR"),
+    SelectorRead("extraction/calc_compat_renderer.py", "_render_operator", "operands", "direct"): (
+        "node",
+        "OperatorNode",
+    ),
+    SelectorRead(
+        "extraction/calc_compat_renderer.py", "collect_calc_refs._walk", "operands", "direct"
+    ): ("node", "ExpressionIR"),
+    SelectorRead("extraction/modeled_defaults.py", "_resolve_default_node", "operands", "direct"): (
+        "node",
+        "ExpressionIR",
+    ),
+    SelectorRead(
+        "generation/constraint_name_safety.py", "predicate_bindings.visit", "operands", "direct"
+    ): ("node", "ExpressionIR"),
+    SelectorRead(
+        "generation/predicate_compiler.py", "_compile_numeric_operator", "operands", "direct"
+    ): ("n", "OperatorNode"),
+    SelectorRead("generation/predicate_compiler.py", "_compile_boolean", "operands", "direct"): (
+        "n",
+        "ExpressionIR",
+    ),
+    SelectorRead("generation/predicate_compiler.py", "_leaf_ref_names", "operands", "direct"): (
+        "n",
+        "ExpressionIR",
+    ),
+    SelectorRead("generation/predicate_compiler.py", "margin_expression", "operands", "direct"): (
+        "n",
+        "ExpressionIR",
+    ),
+}
+
+SOURCE_FILE_COLLISION_READS = {
+    row.read
+    for row in REVIEWED_ROWS
+    if row.semantic_owner.startswith("codegen SourceFile.referent")
+}
 
 #: Modules audited as off the public raw-source route.  A live import of one of these
 #: fails `test_public_raw_source_arms_do_not_reach_off_route_modules`; their raw reads
@@ -261,8 +510,7 @@ def is_raw_syside_module(source: str) -> bool:
                 return True
         elif isinstance(node, ast.Import):
             if any(
-                alias.name == RAW_SYSIDE_ADAPTER
-                or alias.name.startswith(f"{RAW_SYSIDE_ADAPTER}.")
+                alias.name == RAW_SYSIDE_ADAPTER or alias.name.startswith(f"{RAW_SYSIDE_ADAPTER}.")
                 for alias in node.names
             ):
                 return True
@@ -325,6 +573,119 @@ def _imports_of(path: Path) -> set[str]:
     return modules
 
 
+def _qualified_scopes(path: Path) -> dict[str, ast.FunctionDef | ast.AsyncFunctionDef]:
+    scopes: dict[str, ast.FunctionDef | ast.AsyncFunctionDef] = {}
+
+    class Visitor(ast.NodeVisitor):
+        def __init__(self) -> None:
+            self.stack: list[str] = []
+
+        def visit_ClassDef(self, node: ast.ClassDef) -> None:  # noqa: N802
+            self.stack.append(node.name)
+            self.generic_visit(node)
+            self.stack.pop()
+
+        def _function(self, node: ast.FunctionDef | ast.AsyncFunctionDef) -> None:
+            self.stack.append(node.name)
+            scopes[".".join(self.stack)] = node
+            self.generic_visit(node)
+            self.stack.pop()
+
+        def visit_FunctionDef(self, node: ast.FunctionDef) -> None:  # noqa: N802
+            self._function(node)
+
+        def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef) -> None:  # noqa: N802
+            self._function(node)
+
+    Visitor().visit(ast.parse(path.read_text()))
+    return scopes
+
+
+def _parameter_annotation(module: str, function: str, parameter: str) -> str:
+    scope = _qualified_scopes(PACKAGE_ROOT / module)[function]
+    arguments = [*scope.args.posonlyargs, *scope.args.args, *scope.args.kwonlyargs]
+    [argument] = [item for item in arguments if item.arg == parameter]
+    assert argument.annotation is not None, f"{module}::{function} leaves {parameter} unannotated"
+    return ast.unparse(argument.annotation)
+
+
+def _class_annotation(module: str, class_name: str, field_name: str) -> str:
+    tree = ast.parse((PACKAGE_ROOT / module).read_text())
+    [class_node] = [
+        node for node in tree.body if isinstance(node, ast.ClassDef) and node.name == class_name
+    ]
+    [field] = [
+        node
+        for node in class_node.body
+        if isinstance(node, ast.AnnAssign)
+        and isinstance(node.target, ast.Name)
+        and node.target.id == field_name
+    ]
+    return ast.unparse(field.annotation)
+
+
+def _named_proof_exists(proof: str) -> bool:
+    module_path, separator, function = proof.partition("::")
+    if not separator:
+        return False
+    module_name = Path(module_path).with_suffix("").as_posix().replace("/", ".")
+    return hasattr(importlib.import_module(module_name), function)
+
+
+def _production_module_map() -> dict[str, Path]:
+    result: dict[str, Path] = {}
+    for path in _production_modules():
+        relative = path.relative_to(PACKAGE_ROOT)
+        parts = list(relative.with_suffix("").parts)
+        if parts[-1] == "__init__":
+            parts.pop()
+        name = ".".join(("sysml_codegen", *parts))
+        result[name] = path
+    return result
+
+
+def _local_imports(module_name: str, path: Path, known: set[str]) -> set[str]:
+    package = module_name if path.name == "__init__.py" else module_name.rpartition(".")[0]
+    result: set[str] = set()
+    for node in ast.walk(ast.parse(path.read_text())):
+        if isinstance(node, ast.Import):
+            result.update(alias.name for alias in node.names if alias.name in known)
+            continue
+        if not isinstance(node, ast.ImportFrom):
+            continue
+        if node.level:
+            package_parts = package.split(".")
+            anchor = package_parts[: len(package_parts) - node.level + 1]
+            if node.module:
+                anchor.extend(node.module.split("."))
+            base = ".".join(anchor)
+        else:
+            base = node.module or ""
+        if base in known:
+            result.add(base)
+        result.update(
+            candidate for alias in node.names if (candidate := f"{base}.{alias.name}") in known
+        )
+    return result
+
+
+def _transitively_reachable_modules() -> set[str]:
+    modules = _production_module_map()
+    starts = {
+        "sysml_codegen." + Path(arm).with_suffix("").as_posix().replace("/", ".")
+        for arm in PUBLIC_RAW_SOURCE_ARMS
+    }
+    reached: set[str] = set()
+    pending = list(starts)
+    while pending:
+        current = pending.pop()
+        if current in reached:
+            continue
+        reached.add(current)
+        pending.extend(_local_imports(current, modules[current], set(modules)) - reached)
+    return reached
+
+
 # ---------------------------------------------------------------------------
 # Leg 1 — acquisition
 # ---------------------------------------------------------------------------
@@ -350,6 +711,36 @@ def test_every_reviewed_row_names_a_closure_proof() -> None:
     unproved = [row for row in REVIEWED_ROWS if not row.closure_proof.strip()]
     assert not unproved, f"reviewed rows with no closure proof: {unproved}"
     assert {row.route_state for row in REVIEWED_ROWS} <= {"live", "off-route"}
+    unresolved = [row for row in REVIEWED_ROWS if not _named_proof_exists(row.closure_proof)]
+    assert not unresolved, f"reviewed rows name tests that do not exist: {unresolved}"
+
+
+def test_collision_rows_have_provable_receiver_contracts() -> None:
+    """Every collision is typed at its read site; a docstring cannot qualify it."""
+    collision_reads = {
+        row.read
+        for row in REVIEWED_ROWS
+        if "ExpressionIR" in row.semantic_owner or "SourceFile.referent" in row.semantic_owner
+    }
+    assert collision_reads == set(NEUTRAL_RECEIVER_CONTRACTS) | SOURCE_FILE_COLLISION_READS
+
+    for read, (parameter, owner_type) in NEUTRAL_RECEIVER_CONTRACTS.items():
+        annotation = _parameter_annotation(read.module, read.function, parameter)
+        assert owner_type in annotation, (
+            f"{read.module}::{read.function} does not prove {parameter} is {owner_type}: "
+            f"{annotation}"
+        )
+
+    assert _class_annotation("extraction/source_manifest.py", "SourceFile", "referent") == "str"
+    assert "SourceFile" in _class_annotation(
+        "extraction/source_manifest.py", "SourceAdmission", "files"
+    )
+    assert "SourceFile" in _parameter_annotation(
+        "extraction/source_manifest.py", "_admitted_membership", "files"
+    )
+    assert "SourceAdmission" in _parameter_annotation(
+        "orchestration/elaborated_pipeline.py", "elaborate_admitted_sources", "admission"
+    )
 
 
 def test_the_raw_syside_module_set_is_the_recorded_one() -> None:
@@ -409,9 +800,7 @@ _EVASIONS = {
         "from somewhere import operands as SELECTOR\n\n\n"
         "def consume(node):\n    return getattr(node, SELECTOR)\n"
     ),
-    "dynamic-getattr": (
-        "def consume(node, chosen):\n    return getattr(node, chosen)\n"
-    ),
+    "dynamic-getattr": ("def consume(node, chosen):\n    return getattr(node, chosen)\n"),
 }
 
 
@@ -424,6 +813,17 @@ def test_every_ast_evasion_mutation_is_discovered(evasion: str) -> None:
     found = scan_module(source, "mutant.py")
     assert found, f"evasion form went undiscovered: {evasion}"
     assert all(read.function == "consume" for read in found), found
+
+
+def test_adapter_free_unannotated_receiver_fails_manifest_equality() -> None:
+    """Ruling 3's own escape: discovery is not enough; equality must reject the row."""
+    source = "def consume(node):\n    return node.referent\n"
+    assert RAW_SYSIDE_ADAPTER not in source
+    found = scan_module(source, "mutant.py")
+    expected = {SelectorRead("mutant.py", "consume", "referent", "direct")}
+    assert found == expected
+    reviewed = {row.read for row in REVIEWED_ROWS}
+    assert found - reviewed == expected
 
 
 def test_a_clean_module_produces_no_selector_reads() -> None:
@@ -442,18 +842,13 @@ def test_a_clean_module_is_not_in_the_raw_syside_set() -> None:
 
 
 def test_public_raw_source_arms_do_not_reach_off_route_modules() -> None:
-    """An off-route module may never be imported by a public raw-source arm."""
+    """An off-route module may never be reached transitively from a public raw-source arm."""
     off_route_names = {
-        Path(module).with_suffix("").as_posix().replace("/", ".")
+        "sysml_codegen." + Path(module).with_suffix("").as_posix().replace("/", ".")
         for module in OFF_ROUTE_MODULES
     }
-    offenders: list[str] = []
-    for arm in PUBLIC_RAW_SOURCE_ARMS:
-        imported = _imports_of(PACKAGE_ROOT / arm)
-        for name in off_route_names:
-            if any(entry.endswith(name) for entry in imported):
-                offenders.append(f"{arm} imports {name}")
-    assert not offenders, offenders
+    reached = _transitively_reachable_modules()
+    assert not off_route_names & reached, sorted(off_route_names & reached)
 
 
 def test_off_route_modules_are_inventoried_and_present() -> None:
