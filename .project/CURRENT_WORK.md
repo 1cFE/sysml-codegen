@@ -1,6 +1,18 @@
 # Current Work
 
-**Last Updated**: 2026-08-17 (**stop-reinventing-the-parser: Phase 1 complete and audited — plan
+**Last Updated**: 2026-08-18 (**stop-reinventing-the-parser: Phases 1, 2, 2b closed; Phase 3 audit
+remediation implemented, pending independent re-audit. Codegen `stop-parser-impl-r2` at `3377cd0`,
+Agentic `3f8bd58` (0.1.3 / `semantic-evidence/v2`). M1–M4 and all 15 Minors / 9 Informationals have
+implementation or record corrections. The unit-annotated alias regression is fixed by one
+inventory-owned role; public inventory failures now carry diagnostic provenance; real adapter
+bypass and exhaustive-union tests kill the audit's weakenings; ownership keys include the receiver.
+Fresh archive validation: focused **285 passed, 1 deselected**; full **1 failed, 2,388 passed, 34
+skipped, 94 deselected**, with the sole failure the declared Phase 4 consumer-cell proof table.
+Remediation record:
+`.project/active/stop-reinventing-the-parser/run-records/phase3-remediation.md`. The original audit
+remains **Needs Work** until an independent auditor re-runs its attacks. Phases 4 and 5 are not
+started. Do not close, do not run pre-PR, and `elaborator-downstream` stays blocked.**).
+Prior status: 2026-08-17 (**Phase 1 complete and audited — plan
 Revision 3 executing design Revision 7; three-leg lock verification green (118/118 against the
 tree the lock names); 25-node red set across live/admitted/capture × strict on implementation
 branches `stop-parser-impl-r2` `d257ef1` / `stop-parser-evidence-r2` `8d27fb3`; D1-D4 plus
@@ -89,6 +101,75 @@ rather than invented; vehicle `[CONSTRAINT-GATES-UNTAGGED]` in `BACKLOG.md`.
 ---
 
 ## Active Work
+
+### 2026-08-18: stop-reinventing-the-parser — PHASE 3 REMEDIATED, RE-AUDIT NEXT
+
+[AGENT] The Phase 3 audit findings are addressed on `stop-parser-impl-r2` at **`3377cd0`** in three
+commits: `c604165`, `41181bd`, and `3377cd0`. The implementation response and exact source hashes
+are in `active/stop-reinventing-the-parser/run-records/phase3-remediation.md`.
+
+The four blockers now have direct closure evidence. Role assignment is inventory-owned and unit
+normalized. Consumers retrieve the authoritative site. `ExpressionInventoryError` converts at the
+public boundary with authored reference, root-relative location, and cause. Each consumer adapter
+has a real inventory-bypass test. Every binding-union switch is pinned, including the helper arm
+found missing during the remediation's own mutation pass. Ownership rows include the receiver, so a
+second unannotated receiver inside a reviewed function fails equality.
+
+All 15 Minors and 9 Informationals have code, test, or record dispositions. The audit's exact
+weakenings now kill their proofs: five consumer nodes fail when the backstops are removed; the four
+binding switches fail when their arms are weakened; and the non-`Feature` deep-path test fails when
+the refusal becomes a silent `continue`. L-181's replacement gate is green.
+
+Fresh `git archive` validation at `3377cd0`: exact 13-file battery **285 passed, 1 deselected**;
+aggregate suite **1 failed, 2,388 passed, 34 skipped, 94 deselected**. The sole failure is the
+owner-declared Phase 4 consumer-cell proof table. The history topology subset is **61 passed**;
+scoped strict mypy is zero and targeted Ruff is clean.
+
+The historical audit below remains **Needs Work**. This pass does not self-certify. Run an
+independent Phase 3 re-audit next. Phase 4 and Phase 5 remain unstarted; close and pre-PR remain
+blocked.
+
+### 2026-08-18: stop-reinventing-the-parser — PHASE 3 AUDITED, NEEDS WORK
+
+Phase 3 ("make Codegen accept only closed evidence") is implemented on `stop-parser-impl-r2` at
+**`e3e1a39`** against Agentic `3f8bd58`. The dedicated adversarial audit plan rev 4 requires is at
+`active/stop-reinventing-the-parser/run-records/phase3-audit.md`. **Verdict: Needs Work.**
+
+What holds. The architecture is real: one pre-graph inventory is genuinely first in the conversion
+boundary, an `IndexedReferenceUse` cannot be converted to an exact one by any route found, the
+deep-relationship path factory is total in production, the value-site unit policy delegates every
+structural question to Agentic's primitive, and the ownership closure is repository-wide rather than
+a narrowed scan. Every number in the completion record reproduces from an independent extraction,
+including the declared archive SHA-256, matched byte for byte. The product-lens block `audit3-F1`,
+standing since 2026-08-17, is recorded **FIXED** with measured evidence across six authored shapes.
+
+What blocks.
+
+- **M1 (also product-lens BLOCK `audit-phase3-F4`, owner-grade).** A valid, diagnostic-free model —
+  `attribute mirror_len : Real = base_len [m];`, and the feature-chain form — crashes
+  `sysml-codegen generate` with a raw `ExpressionInventoryError` carrying no code, no authored
+  reference, no `file:line`, no cause. The ALIAS-vs-COMPUTED_ATTRIBUTE role is decided twice by two
+  identical predicates on different inputs (`expression_evidence.py:245` raw,
+  `elaborate.py:871,894` unit-unwrapped). Phase-3-introduced; invisible to the suite because the
+  only `= ref [unit]` fixtures use the binding role, which is keyed by owner.
+- **M2, M3 — two unmet owner conditions on the accepted tests-after deviation.** The per-consumer
+  inventory-bypass tests do not exist (the test carrying that name calls one library function five
+  times with a different label); deleting the backstop from all five consumer adapters gives 0 new
+  failures across 2206 tests. The closed union is not pinned exhaustively at every switch; four arms
+  removed at once — including the one that reclassifies an authored index as *supported* — also give
+  0 new failures.
+- **M4.** The ownership manifest keys on `(module, function, selector, form)`, so a second
+  unannotated receiver inside an already-rowed function is invisible to both gates — bypassing the
+  design's own "an unannotated receiver can never qualify" rule in 20 rowed functions.
+
+Fifteen Minors and nine Informationals are recorded. Carried Phase-1 Minors 6, 7, 8 and
+Informational 12 are verified closed by mutation. Note for the record: the ownership closure moved
+zero reads — it is 16 typed reclassifications plus 4 mechanical exclusions, both permitted, but the
+completion record's phrasing reads as though reads were removed.
+
+Recommended order: M1 first (a live regression, and fixing the duplicated role decision also closes
+the site-set/role coverage gap), then M2 and M3, then M4. Phases 4 and 5 are not started. Do not
+close, do not run pre-PR; `elaborator-downstream` stays blocked.
 
 ### 2026-08-17: stop-reinventing-the-parser — NEEDS WORK AFTER FRESH AUDIT
 

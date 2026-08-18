@@ -84,8 +84,9 @@ fail on it today; the full-suite figure is not yet measured because the phase ha
    `extraction/modeled_defaults.py`, `generation/predicate_compiler.py`,
    `generation/constraint_name_safety.py`), and five read `.referent` on Codegen's own
    `SourceFile` dataclass (`extraction/source_manifest.py` ×4,
-   `orchestration/elaborated_pipeline.py` ×1) — where `referent` is a **serialized snapshot
-   key**, so renaming it changes sealed bytes. Phase 2 hit the identical thing on the
+   `orchestration/elaborated_pipeline.py` ×1) — where `referent` supplies the value stored under
+   the explicitly sealed `"referent"` key. Renaming the field alone does not change that literal;
+   the typed read-site-to-schema linkage is still worth guarding. Phase 2 hit the identical thing on the
    Agentic side and resolved it by scoping the gate to adapter-importing modules
    (deviation 2, audited). That precedent clears the six IR readers; it does **not** clear
    the five `.referent` reads, which sit inside adapter-importing modules.

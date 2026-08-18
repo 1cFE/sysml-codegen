@@ -843,8 +843,10 @@ The Codegen requirements, verbatim:
 
 So a collision-aware row is the mechanism, not a narrowed scan. `.operands` on a neutral
 `ExpressionIR` dataclass and `.referent` on Codegen's own `SourceFile` dataclass are name collisions
-with SysIDE selectors, not raw parser reads: `SourceFile.referent` is a **serialized snapshot key**,
-so renaming it changes sealed bytes. Each such row names the declaring type as the field owner, or
+with SysIDE selectors, not raw parser reads. In this gate, the owner's “repository-wide” requirement
+means every Python module under the shipping `src/sysml_codegen` package; scripts and probes are not
+inside the scanner root. `SourceFile.referent` supplies the value stored under the explicitly sealed
+`"referent"` key; renaming the field alone does not change that literal. Each such row names the declaring type as the field owner, or
 the receiver contract that establishes the argument is never a live SysIDE element, plus its closure
 proof — the same proof obligation every other row carries. A row asserting an owner it cannot prove
 fails like any stale row.
@@ -858,8 +860,8 @@ class needs one too, or "receiver contract" is satisfiable by a docstring. The p
   docstring claim is not a proof, and an **unannotated receiver can never qualify for a
   receiver-contract row** — it falls back to being an unowned raw read and stays red.
 - The row's proof artifact is a kept test that fails if that annotation or declaring type changes.
-  For `SourceFile.referent`, whose serialized-snapshot-key status makes renaming it a sealed-bytes
-  change, that test is cheap and is also the row's rename guard.
+  For `SourceFile.referent`, the test also guards the typed link between the field read and the
+  explicit `"referent"` serialization key. The field name does not itself choose that key.
 
 Implementer and auditor arbitrate a disputed row against those two facts, not against the row's
 wording.

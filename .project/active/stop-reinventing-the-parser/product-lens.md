@@ -747,3 +747,210 @@ Resolves:
   change). A design is a plan, not a code change: the defect is still live at `C_prod`, so the block
   clears only when that named live-and-capture computed-attribute test is green on the production
   commit — not on this revision.
+
+---
+
+## audit-phase3 — 2026-08-18 — rev `e3e1a39` (Codegen `stop-parser-impl-r2`; upstream Agentic `3f8bd58`, 0.1.3 / `semantic-evidence/v2`)
+
+Point (re-derived): The product is three steps and nothing else — parse the models with a SysMLv2
+parser, walk the parser's resolved tree to reconstruct the math, write that math into TEAx Python.
+Every decision on the way is read from the parser's own resolved evidence. An authored form the
+toolchain cannot honor has exactly two honest outcomes: resolve it through the parser, or refuse by
+name before anything is built. One modeled source occurrence becomes exactly one runtime source.
+[source: `.project/product/P-004-product-identity-parse-walk-emit.md` and
+`.project/product/P-003-no-workarounds-for-bad-models.md`, grade: **owner**
+(`[OWNER-VERBATIM, 2026-08-16]`); exact-occurrence companion
+`.project/product/P-002-exact-owner-anchoring.md`, grade: agent/ratified]
+
+Falsifier: an authored form the toolchain cannot honor reaches a graph, snapshot, or generated
+package with its meaning silently changed; or a decision rule reads something other than the
+parser's resolved evidence (Python class names, qualified-name prefixes, positional or
+sole-candidate election); or two distinct modeled sources collapse onto one runtime source without a
+refusal.
+
+Findings:
+
+- audit-phase3-F1 [DO] The consumer closure table is 20 of 24 cells empty and its gate test is
+  committed **red** (`tests/conformance/test_expression_evidence_integrity.py::test_every_consumer_cell_names_a_proof`,
+  the sole substantive failure in a 2206-passed run). Four of the six consumer rows —
+  calc-definition dependency, alias, constraint predicate, deep literal override — carry **no
+  committed indexed-refusal proof**, and the deep-override row still reads "not an expression
+  route", the same asserted-not-proved shape that produced `audit3-F1`. Behavior was measured on six
+  independently authored shapes (computed attribute, constraint-usage predicate, nested operator,
+  postfix `cells.mass#(2)`, calc-definition body, deep literal override `:>> pick = cells#(2).mass`):
+  **all six refuse with one `SI_INDEXED_SOURCE_UNSUPPORTED` carrying the authored reference and a
+  root-relative `file:line`**. So this is a proof gap, not a contract violation. Falsifier: fill the
+  four rows with public-route cases, and assert which layer refused (pre-graph inventory vs
+  per-consumer backstop) so an omitted preflight row cannot yield an identical passing test. —
+  `.project/product/P-003`/`P-004` (owner) applied via agent inference about closure scope
+  (`[AGENT]`/`[INFERRED]`) — disposition: DISPOSE — declared Phase 4 deferral, recorded
+  `[INHERITED: plan Revision 4]` in plan.md#phase-3-completion; carries design-rev5-F2 forward.
+
+- audit-phase3-F2 [DO] The new qualified-predicate rendering seam is a **positive capability
+  change** admitted on hand-built-IR unit tests only. `predicate_reference_name`
+  (`src/sysml_codegen/generation/constraint_name_safety.py:97`) now binds Python by the exact
+  target's local name, so `comp_a::length > 0.0` — which at `b4e97dd` died as "leaf reference is not
+  a safe Python identifier" — now generates. Its two named pins build
+  `FeatureReferenceFact`/`IdentityFact` by hand; the plan's claim that "the public six-consumer
+  mutation test … pin[s] the result" (plan.md, deviation 2) is inaccurate —
+  `test_combined_named_source_reaches_every_and_only_its_consumers` asserts on the `InstanceGraph`
+  and never renders Python. The shipped package generated from
+  `tests/fixtures/usage_owned_reference_consumers` binds `length` correctly, and the P-002 collapse
+  risk fails closed: two distinct qualified targets sharing one local name in one predicate refuse
+  at projection with `SI_RENDERING_COLLISION` before generation. Correct, under-evidenced.
+  Falsifier: a licensed public-route generation test on that fixture asserting the emitted predicate
+  source and its arg names, plus a real-model collision case. — `.project/product/P-002`
+  (agent/ratified) and the spec's own "positive shapes need real-model + public proof" criterion —
+  disposition: DISPOSE — add the public-route pin; correct the plan's evidence claim.
+
+- audit-phase3-F3 [DO] The closed site set does not include a `ConstraintDefinition` body.
+  `_enumerate_sites` (`src/sysml_codegen/elaboration/expression_evidence.py:200`) enumerates
+  features carrying `feature_value_expression` plus `ConstraintUsage.result_expression`; a
+  constraint **definition** body is neither. A model whose def body carries `h.cells#(2).mass` is
+  not refused by the inventory — it dies later at `SI_EDGE_DANGLING` naming the wrong thing, which
+  is the exact "named after whichever check fired first" failure the inventory exists to remove.
+  Measured bound: the same model refuses identically with the index replaced by a literal, so
+  part-typed constraint-definition inputs are independently unsupported and no wrong output can ship
+  through this hole today. Falsifier: an authored constraint-definition body reaching a plural
+  through supported inputs and producing anything other than `SI_INDEXED_SOURCE_UNSUPPORTED`. —
+  `.project/product/P-003` (owner) applied via agent inference (`[AGENT]`/`[INFERRED]`) —
+  disposition: DISPOSE — record the site-set boundary and its unreachability reason in Phase 4's
+  closure table rather than leaving it unstated.
+
+Smells:
+
+- **Smell 3 — a special category exempts a case whose user-visible meaning is unchanged: cleared.**
+  This was half of `audit3-F1`. `ExpressionSiteRole` is contextual routing only; the refusal is
+  uniform across binding, computed attribute, alias, predicate, calc-definition dependency, and deep
+  literal override, measured on all six.
+- **Smell 4 — correctness depends on downstream knowledge of an internal representation: cleared.**
+  This was the other half. `type(...).__name__` dispatch is gone from the detection path;
+  `IndexExpression` is identified by `SysideAdapter.is_instance` against the installed metatype map,
+  which raises `ValueError` on an unmapped name rather than answering False
+  (`agentic-mbse/src/agentic_mbse/sysml/reference_use.py:294,467,513`; adapter at
+  `syside_adapter.py:414`). Codegen's remaining `type(...).__name__` uses are error-message text,
+  not decisions.
+- **Smell 1 — two representations manually kept synchronized: fires weakly, disposed.**
+  `extraction/computed_attribute_extractor.py` gained a hand-written fail-closed policy for
+  three-segment part-rooted chains — a second, divergent classifier of a shape the elaborator owns
+  positively. It is proved unreachable from both public raw-source arms by transitive import
+  analysis (`test_public_raw_source_arms_do_not_reach_off_route_modules`), and the spec explicitly
+  dispositions the three off-route modules out of scope with deletion tracked as a coverage problem.
+  Hardening dead code instead of deleting it is the weaker move; not drift.
+- **Smells 5 and 6 — clear.** The one committed red is a deliberate Phase-4 marker, not a baseline
+  preserving contradicting behavior; the indexed tests are parametrized over live/admitted/capture
+  and both strict modes, and independent probes reproduced the refusal on six shapes none of those
+  tests use.
+
+Gate: **DISPOSED (audit-phase3-F1, audit-phase3-F2, audit-phase3-F3)**
+
+Resolves:
+
+- audit3-F1: **FIXED** — authority: owner-grade source unchanged (`P-003`/`P-004`); resolved against
+  the recorded falsifier by measurement, not by recency. Basis: (a) the computed-attribute route
+  specifically — `tests/fixtures/indexed_bare_chain_singular` is
+  `attribute picked : Real = cells#(2).mass` under `part cells : Cell[1]`, the exact audited shape,
+  and `test_indexed_bare_chain_singular_slot_refuses_before_consumers` is licensed and green across
+  all three public arms (`live`, `admitted`, `capture`) and both strict modes, asserting one
+  `SI_INDEXED_SOURCE_UNSUPPORTED`, `reference == "cells#(2).mass"`,
+  `source_file == "root-0/model.sysml"`, `source_line == 15`, no downstream consumer call, and no
+  snapshot written; (b) reproduced independently outside the fixture set on a fresh model — live and
+  capture both refuse with that one diagnostic before any graph exists; (c) refusal is pre-graph by
+  construction — `build_expression_evidence_inventory` is the first call in
+  `elaborate_loaded_extractor` (`orchestration/elaborated_pipeline.py:163`), ahead of extraction,
+  elaboration, and graph allocation, and `_acquire` raises on the first `IndexedReferenceUse`;
+  (d) metatype identification now goes through the mapped adapter, not `type(...).__name__`, per
+  Smell 4 above; (e) the escape class the finding named — the same reference changing meaning by
+  feature category — does not reproduce on any of six authored routes probed, including the deep
+  literal override row the design left as an assumption.
+
+---
+
+## audit-phase3 (AUDITOR ADDENDUM) — 2026-08-18 — rev `e3e1a39`
+
+Appended by the Phase 3 audit after the lens run above. The lens agent did not probe the
+unit-annotated value-site shape; two independent audit lanes did, and both reproduced the same
+defect. This addendum records it against the same Point and Falsifier as the block above.
+
+Findings:
+
+- audit-phase3-F4 [DON'T] **A valid, diagnostic-free model crashes the public generation route with
+  an internal invariant exception and no diagnostic at all.** A unit-annotated reference at an
+  attribute value site — `attribute mirror_len : Real = base_len [m];`, and the feature-chain form
+  `= inner.w [m]` — loads with `extractor.diagnostics.validation == []` and then raises
+  `ExpressionInventoryError: expression site alias <uuid> is absent from the evidence inventory`
+  out of `sysml-codegen generate`, in both strict and lenient arms. The refusal carries **none** of
+  the four required elements: no code token, no authored reference, no root-relative `file:line`, no
+  cause chain. The message names a UUID the modeller cannot map to anything they wrote.
+
+  Cause: the ALIAS-vs-COMPUTED_ATTRIBUTE role is decided **twice, on two different inputs**. The
+  enumerator applies `_is_plain_reference` to the **raw** `feature_value_expression`
+  (`src/sysml_codegen/elaboration/expression_evidence.py:245,250-254`), where a `[` annotation is an
+  `OperatorExpression`, so the site is filed `COMPUTED_ATTRIBUTE`. The consumer applies the textually
+  identical `_is_reference_expression` to the **unit-unwrapped** expression
+  (`src/sysml_codegen/elaboration/elaborate.py:871,894,1017-1019`), so it looks up `ALIAS`. The row
+  is absent, `require` raises (`expression_evidence.py:111`, via `elaborate.py:2343`), and
+  `ExpressionInventoryError` appears in no `except` clause at the D7 boundary
+  (`orchestration/elaborated_pipeline.py:171-218`).
+
+  Phase-3-introduced, not pre-existing: `expression_evidence.py` is born at `b4e97dd`, and at
+  `C_base` (`78a9beb`) `_PendingAlias` carried the expression object itself, so there was no site key
+  and no role to disagree about. The shape is a supported capability the phase removed without a
+  refusal.
+
+  Not caught by the suite because the only fixtures exercising `= ref [unit]`
+  (`tests/fixtures/constraint_binding_unit_annotation/model.sysml:62,77`) use the **binding** role,
+  which `_role_for_owner` keys by `owning_type` and which therefore never takes the expression-shape
+  branch (`expression_evidence.py:241-244`). No kept test pins that the enumerator's role decision
+  and each consumer's role decision agree over a real model.
+
+  Falsifier: compute the role once — enumerate on the unwrapped expression, or key the consumer off
+  the raw one — and add a licensed public-route test over a real model carrying a unit-annotated
+  reference at an attribute value site and at a feature-chain value site, asserting a graph (or a
+  named diagnostic), never an `ExpressionInventoryError`. Independently, contain
+  `ExpressionInventoryError` at the D7 boundary so an internal-defect class can never reach a user as
+  a bare traceback.
+
+  — `.project/product/P-003-no-workarounds-for-bad-models.md` and
+  `.project/product/P-004-product-identity-parse-walk-emit.md` (**OWNER**), bounded by
+  `.project/product/P-001-design-search-free-variation.md` (a form the language defines becoming
+  unauthorable with no stated replacement spelling) — disposition: **BLOCK**
+
+Smells:
+
+- **Smell 1 — two representations manually kept synchronized: FIRES, unresolved.** The alias/computed
+  role split is implemented twice, in two modules, by two identical predicates applied to different
+  nodes, with no static check or kept test pinning their agreement. Only a runtime invariant crash
+  reveals divergence. This is the structural cause of F4, and it is escalated into the audit's
+  Product Judgment rather than resolved here.
+
+Gate: **BLOCKED (audit-phase3-F4)**
+
+The prior `audit-phase3` block's `DISPOSED` gate and its `audit3-F1: FIXED` resolution both stand —
+F4 is a distinct defect on a different shape and does not reopen the indexed-source finding.
+
+---
+
+## audit-phase3-remediation — 2026-08-18 — rev `3377cd0`
+
+[AGENT] Implementation response to the auditor's owner-grade `audit-phase3-F4` block. This entry
+records the candidate fix and its evidence. It does not replace the auditor's verdict.
+
+The role split now has one owner. The inventory normalizes a unit annotation before assigning the
+site role, stores that authoritative site by declaration, and each consumer retrieves the stored
+site instead of re-running an alias/computed predicate. A unit-annotated bare reference and a
+unit-annotated feature chain both complete the public conversion route in strict and lenient modes.
+
+`ExpressionInventoryError` is also contained at the public boundary. The diagnostic is
+`SI_EVIDENCE_INCOMPLETE` and carries the authored expression, root-relative `file:line`, and the
+inventory exception as its cause. An expression-keyed upstream semantic error receives the same
+authored site context before conversion.
+
+The falsifier named by F4 is pinned directly by:
+
+- `tests/unit/test_expression_evidence_boundary.py::test_unit_annotated_plain_reference_is_an_alias_site`;
+- `tests/conformance/test_expression_evidence_integrity.py::test_unit_annotated_alias_survives_the_public_conversion_boundary`;
+- `tests/conformance/test_expression_evidence_integrity.py::test_inventory_invariant_is_contained_with_authored_provenance`.
+
+Gate: **PENDING INDEPENDENT RE-AUDIT**. The implementation evidence satisfies F4's recorded
+falsifier, but only the independent audit may change the historical **BLOCKED** verdict.

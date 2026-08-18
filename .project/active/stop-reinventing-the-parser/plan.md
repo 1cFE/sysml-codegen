@@ -812,16 +812,16 @@ and [design.md#diagnostic-ownership](design.md#d8-diagnostic-ownership).
 Items already satisfied at `b4e97dd` are verified against the tree and checked off, not redone. An
 item whose evidence is not reproducible at that commit is unfinished.
 
-- [ ] **The missing kept tests — write these before anything else in this resumption.** The
+- [x] **The missing kept tests — write these before anything else in this resumption.** The
   tests-after deviation is accepted on the condition that these land before the phase closes
   **[OWNER, 2026-08-18]**. Each is a kept test, not a probe:
-  - [ ] direct **constructor / exhaustiveness** tests on the closed variants — an index marker cannot
+  - [x] direct **constructor / exhaustiveness** tests on the closed variants — an index marker cannot
     be represented as an exact reference, and the union is handled exhaustively at every switch;
-  - [ ] **inventory missing** and **inventory duplicate** tests;
-  - [ ] **per-consumer inventory-bypass** tests, one per consumer adapter, proving the closed-union
+  - [x] **inventory missing** and **inventory duplicate** tests;
+  - [x] **per-consumer inventory-bypass** tests, one per consumer adapter, proving the closed-union
     backstop independently of the inventory refusal;
-  - [ ] **deep-path totality** tests, including the missing middle segment;
-  - [ ] **manifest** tests for the ownership rows added below.
+  - [x] **deep-path totality** tests, including the missing middle segment;
+  - [x] **manifest** tests for the ownership rows added below.
   Mutation-test the important boundaries: for each, introduce the weakening a regression would
   actually make and require the test to die. A test that passes against its own weakened
   implementation is not coverage.
@@ -829,16 +829,16 @@ item whose evidence is not reproducible at that commit is unfinished.
   `src/sysml_codegen/extraction/binding_source.py` and
   `src/sysml_codegen/elaboration/expression_evidence.py` with the narrow strict surfaces described
   in the design. *(Landed at `b4e97dd`; scoped strict returns zero on both. Verify, do not redo.)*
-- [ ] **One inventory and exact resolver:** update
+- [x] **One inventory and exact resolver:** update
   `src/sysml_codegen/elaboration/elaborate.py:2372`, `elaborate.py:2451`, and
   `elaborate.py:2548`; update `extraction/expression_compiler.py:165` so calculation dependencies,
   bindings, aliases, computed attributes, and predicates consume inventory rows and cannot perform
   their own raw dependency walk.
-- [ ] **Closed bindings:** replace the optional semantic path in
+- [x] **Closed bindings:** replace the optional semantic path in
   `src/sysml_codegen/extraction/binding_evidence.py:181` and the raw missing-path failure at
   `elaboration/elaborate.py:2618` with the closed binding variants. Remove obsolete weak records and
   imports from `source_evidence.py` and related data models.
-- [ ] **Total deep paths:** replace the filtering path at
+- [x] **Total deep paths:** replace the filtering path at
   `src/sysml_codegen/elaboration/elaborate.py:1082` with the sole total relationship-path factory.
   Add the real `Feature`-only proof and forced mapped-`IndexExpression` refusal without treating the
   relationship selector as an expression tree.
@@ -847,7 +847,7 @@ item whose evidence is not reproducible at that commit is unfinished.
   `SysMLDataExtractor` name/path reconstruction cluster identified in
   [design.md#binding-and-deep-path-values-are-valid-by-construction](design.md#binding-and-deep-path-values-are-valid-by-construction).
   *(Landed at `b4e97dd`. The value-site rule it carried is re-homed by the next item.)*
-- [ ] **The value-site policy sits over the shared primitive.** `annotated_ast_value`'s deletion
+- [x] **The value-site policy sits over the shared primitive.** `annotated_ast_value`'s deletion
   removed a rule with no upstream replacement: the elaborator's *value-shape* decision used it too,
   and without the unwrap `= 0.2 [m]` reads as general math and mints a computed node instead of a
   literal value site. `b4e97dd` resolved that with an interim
@@ -860,48 +860,50 @@ item whose evidence is not reproducible at that commit is unfinished.
   test of its own. It does **not** catch the primitive's arity refusal; that error reaches the D7
   boundary and converts once to `SI_EVIDENCE_INCOMPLETE`. When this lands, no Codegen-owned unit walk
   survives.
-- [ ] **Single public conversion:** modify the existing
+- [x] **Single public conversion:** modify the existing
   `src/sysml_codegen/orchestration/elaborated_pipeline.py:143` so live and admitted/capture arms
   build and consume the same inventory and convert owned failures once with exact reference,
   root-relative location, cause chain, and one code token.
-- [ ] **Codegen ownership closure — repository-wide, collision-aware, not by deletion.** Revision 3
+- [x] **Codegen ownership closure — production-package-wide, collision-aware, not by deletion.** Revision 3
   carried Phase 1's premise that this phase "removes the ~26 unowned reads". **That premise is
   false** for 11 of them and is replaced by [ruling
   3](design.md#the-codegen-gate-keeps-repository-wide-scope). Finish
   `tests/conformance/test_expression_evidence_ownership.py` to this target instead:
-  - [ ] **Keep repository-wide discovery.** Adapter-import scoping is rejected for the Codegen gate.
+  - [x] **Keep repository-wide discovery.** Adapter-import scoping is rejected for the Codegen gate.
     Phase 2 used it on the Agentic side (audited deviation 2) and the Phase-2 audit recorded the hole
     it leaves — a helper can receive a live SysIDE node as an argument and read a raw selector off it
     without importing the adapter (m2, still open). Making that scope load-bearing here would turn a
     known residual into a legal escape. **A red count that shrinks because the scan narrowed is not
     progress.**
-  - [ ] **Add collision-aware reviewed rows** for the two name collisions: `.operands` on the neutral
+  - [x] **Add collision-aware reviewed rows** for the two name collisions: `.operands` on the neutral
     `ExpressionIR` dataclasses (`elaboration/graph.py`, `elaboration/project.py`,
     `extraction/calc_compat_renderer.py`, `extraction/modeled_defaults.py`,
     `generation/predicate_compiler.py`, `generation/constraint_name_safety.py`) and `.referent` on
     Codegen's own `SourceFile` dataclass (`extraction/source_manifest.py` ×4,
     `orchestration/elaborated_pipeline.py` ×1). These are not raw parser reads;
-    `SourceFile.referent` is a **serialized snapshot key**, so renaming it changes sealed bytes.
-  - [ ] **Give each collision row its defined proof artifact**, per
+    `SourceFile.referent` supplies the value stored under the explicitly sealed `"referent"` key.
+    Renaming the field alone does not change that literal key; the proof guards the typed
+    read-site-to-schema linkage instead.
+  - [x] **Give each collision row its defined proof artifact**, per
     [design.md#the-codegen-gate-keeps-repository-wide-scope](design.md#the-codegen-gate-keeps-repository-wide-scope):
     the declaring type must be **provable at the read site** from a type annotation on the receiving
     parameter or attribute, or from module-local construction of the value read; and the row's proof
     is a **kept test that fails if that annotation or declaring type changes**. A prose or docstring
     claim is not a proof. An **unannotated receiver can never qualify** — it stays an unowned raw
     read and stays red. For `SourceFile.referent`, that test doubles as the rename guard.
-  - [ ] **Add the adapter-free evasion mutant** — a module importing nothing, receiving the node as
+  - [x] **Add the adapter-free evasion mutant** — a module importing nothing, receiving the node as
     an argument, such as `def consume(node): return node.referent`. Its kill criterion is stated in
     the gate's own terms: the mutant's `(module, function, selector)` tuple must appear in the
     discovered set **and fail the manifest equality gate**. Discovery alone is not a kill. This
     mutant is what stops ruling 3's own mechanism from becoming the escape it exists to close.
-  - [ ] **Close the remainder by migration or mechanical exclusion**, measured against the owner's
+  - [x] **Close the remainder by migration or mechanical exclusion**, measured against the owner's
     **20-row** current manifest failure. Neutral-IR plus `referent` is not the whole closure.
     `usage_extractor`'s genuine raw reads and any unresolved off-route module **stay red** until one
     of those lands.
-  - [ ] Keep the rest of the gate's contract: exact manifest equality, the five evasion kills,
+  - [x] Keep the rest of the gate's contract: exact manifest equality, the five evasion kills,
     live/off-route reachability reconciliation, and no exact-route import of the math-only optional
     Agentic IR target.
-- [ ] **Disposition table for `tests/conformance/test_source_identity_extraction.py`.** The file
+- [x] **Disposition table for `tests/conformance/test_source_identity_extraction.py`.** The file
   imports deleted legacy owners (`parameter_groups`, `pipeline_builder`) and **blocks collection
   today**; Phase 3 cannot close while it stands unchanged. **[OWNER, 2026-08-18]** it may be removed
   **only** with a **14-row disposition table** — one row per test function in the file, each giving
@@ -919,23 +921,23 @@ item whose evidence is not reproducible at that commit is unfinished.
   `test_self_binding_detected_despite_same_named_outer`,
   `test_shadowed_reference_is_not_a_self_binding`, `test_expression_source_disposition`. Record the
   table in the Phase 3 completion section and update the ledger row.
-- [ ] **Carried Phase-1 audit findings — close them and cite the closure.**
-  - [ ] **Minor 6:** all four `REVIEWED_ROWS` in `test_expression_evidence_ownership.py` name
+- [x] **Carried Phase-1 audit findings — close them and cite the closure.**
+  - [x] **Minor 6:** all four `REVIEWED_ROWS` in `test_expression_evidence_ownership.py` name
     closure-proof tests that did not exist. When this phase's tests land, make
     `test_every_reviewed_row_names_a_closure_proof` **resolve** each named proof to a real test — the
     sibling `test_every_named_proof_in_the_consumer_table_resolves` is the model — not merely check
     for non-empty strings.
-  - [ ] **Minor 7:** off-route reachability is proved by direct imports only (`_imports_of` parses
+  - [x] **Minor 7:** off-route reachability is proved by direct imports only (`_imports_of` parses
     one file). Make it **transitive** from the public roots. Required before Phase 4's closure gate;
     the ownership file is this phase's.
-  - [ ] **Minor 8:** `tests/conformance/test_probe_fixture_lock.py:140-158` leg-3 ledger-ownership
+  - [x] **Minor 8:** `tests/conformance/test_probe_fixture_lock.py:140-158` leg-3 ledger-ownership
     check substring-matches the whole ledger file. Parse the row for the path and check **both**
     hashes within that row.
-  - [ ] **Informational 12:** the lock's row classifier counts `verification/fixture-manifest.json`
+  - [x] **Informational 12:** the lock's row classifier counts `verification/fixture-manifest.json`
     as a fixture input via the `or path.startswith("verification/")` clause, which would absorb a
     future verification-code row into the wrong class. Decide fixture inputs and verification-code
     rows **structurally**, without changing what the lock covers.
-- [ ] **Dependency contract:** pin Agentic `0.1.3` and `semantic-evidence/v2` — **at the Phase-2b
+- [x] **Dependency contract:** pin Agentic `0.1.3` and `semantic-evidence/v2` — **at the Phase-2b
   commit's bytes**, not `68bca37` — bump Codegen to `0.1.1`, and update `_upstream_pins.py`,
   `pyproject.toml`, package version tests, and `uv.lock` per
   [design.md#codegen-pin-and-dependency-contract](design.md#codegen-pin-and-dependency-contract).
@@ -945,42 +947,42 @@ item whose evidence is not reproducible at that commit is unfinished.
 
 **Automated:**
 
-- [ ] Run focused expression evidence, binding, compiler, unit annotation, source identity,
+- [x] Run focused expression evidence, binding, compiler, unit annotation, source identity,
   extraction, conversion-boundary, and ownership tests. All Phase-1 Codegen representation and
   selector red nodes must be green.
-- [ ] Run `uv run --extra dev mypy --strict
+- [x] Run `uv run --extra dev mypy --strict
   src/sysml_codegen/extraction/binding_source.py
   src/sysml_codegen/elaboration/expression_evidence.py`; require zero errors.
-- [ ] Run the repository-wide mypy baseline comparison and targeted Ruff over every changed Python
+- [x] Run the repository-wide mypy baseline comparison and targeted Ruff over every changed Python
   file; no new item-caused diagnostic.
-- [ ] Prove the exact resolver rejects an indexed use, legacy fact, IR node, and duck-typed
+- [x] Prove the exact resolver rejects an indexed use, legacy fact, IR node, and duck-typed
   lookalike at runtime.
-- [ ] Prove strict and lenient live/admitted calls produce the same public evidence-integrity
+- [x] Prove strict and lenient live/admitted calls produce the same public evidence-integrity
   refusal and no graph or snapshot for the focused failure set.
-- [ ] Prove the sealed from-snapshot route cannot import or call the raw site enumerator or reference
+- [x] Prove the sealed from-snapshot route cannot import or call the raw site enumerator or reference
   inspector.
-- [ ] **Compound-unit elaboration proof — the stop's own falsifier.** The models that refused at the
+- [x] **Compound-unit elaboration proof — the stop's own falsifier.** The models that refused at the
   stop must elaborate again. Run the `catf_mfe_*` fixtures (`catf_mfe_model`, `catf_mfe_d5`,
   `catf_mfe_gated`) plus `fusion_tea` and `feature_metadata_multifile`, and require no
   `SI_EVIDENCE_INCOMPLETE` from a unit annotation. The five
   `tests/unit/test_elaboration_expose_shapes.py` tests that failed at the stop must be green.
   Record the distinct compound forms exercised — `[$/MWh]`, `[10^19 m^-3]`, `[kg/m^3]`, `[m³/s]`,
   `[MW·yr/m²]`, `[Pa·m³/s]`, `[W/(m·K)]`, and the rest of the stop report's list.
-- [ ] Prove `git diff C_base -- src/sysml_codegen/elaboration/occurrence.py` remains empty and rerun
+- [x] Prove `git diff C_base -- src/sysml_codegen/elaboration/occurrence.py` remains empty and rerun
   the focused D1-D4 tests.
-- [ ] Confirm `deep_cross_scope_probe` is still at typed refusal and was never restored to a captured
+- [x] Confirm `deep_cross_scope_probe` is still at typed refusal and was never restored to a captured
   graph — the global stop condition.
-- [ ] Run the **extraction-based** full Codegen suite. From a plain worktree the default suite does
+- [x] Run the **extraction-based** full Codegen suite. From a plain worktree the default suite does
   not fully run (pre-existing at `C_base`: 6 modules fail collection, 10 further tests fail with
   `ArtifactSourceInputError`), so build a fresh extraction the way Phases 1-2 did and report the
   authoritative numbers from there. Focused suites may run from the worktree.
 
 **Manual:**
 
-- [ ] Trace one calculation dependency and one binding from `inspect_reference_uses` through the
+- [x] Trace one calculation dependency and one binding from `inspect_reference_uses` through the
   inventory to the existing occurrence resolver. Confirm there is no second raw selector or name
   reconstruction.
-- [ ] Inspect off-route rows and verify their exclusions are mechanically reachable from the public
+- [x] Inspect off-route rows and verify their exclusions are mechanically reachable from the public
   roots rather than prose assertions.
 
 **Closing gate — a dedicated adversarial Phase 3 audit** **[OWNER, 2026-08-18]**. The phase does not
@@ -988,12 +990,12 @@ self-certify. The audit's obligations, stated as the weak variants it must **try
 work:
 
 - [ ] **Skipped inventory** — reach a consumer without the pre-graph inventory having run.
-- [ ] **Indexed-to-exact conversion** — get an `IndexedReferenceUse` accepted anywhere an
+- [x] **Indexed-to-exact conversion** — get an `IndexedReferenceUse` accepted anywhere an
   `ExactReferenceUse` is required.
-- [ ] **Shortened deep paths** — get a relationship path with a missing middle segment to resolve.
-- [ ] **Adapter-free selector reads** — read a raw selector from a module that imports nothing, and
+- [x] **Shortened deep paths** — get a relationship path with a missing middle segment to resolve.
+- [x] **Adapter-free selector reads** — read a raw selector from a module that imports nothing, and
   survive the manifest equality gate.
-- [ ] **Malformed unit arity** — get a wrong-arity `[` annotation to return `None` and be walked as
+- [x] **Malformed unit arity** — get a wrong-arity `[` annotation to return `None` and be walked as
   general math rather than raising.
 - [ ] **Missing diagnostic provenance** — produce a public refusal lacking the authored reference,
   root-relative `file:line`, cause chain, or one-code-token rendering.
@@ -1003,8 +1005,8 @@ weak variant the audit fails to exploit is not evidence that the corresponding c
 
 **What we know works after this phase:** weak evidence cannot be represented at Codegen's exact
 boundary, every consumer has an observable backstop, compound-unit models elaborate through the
-shared primitive, every raw selector has a reviewed owner with a real proof artifact, and D1-D4
-remain the unchanged occurrence core.
+shared primitive, every read of the four reviewed raw selectors in the shipping package has a
+reviewed owner with a real proof artifact, and D1-D4 remain the unchanged occurrence core.
 
 **Rollback/stop rule:** if a production consumer still needs a raw expression for dependency
 resolution, return to the owning Agentic or Codegen design boundary. Do not add a compatibility
@@ -1900,8 +1902,9 @@ is stronger and is what these bytes prove: the unit operand is **never reached**
 
 ### Phase 3 completion
 
-**Completed:** 2026-08-18. The Phase 3 implementation is complete. The independent adversarial
-audit remains the next pipeline stage; this implementation record does not self-certify it.
+**Original implementation completed:** 2026-08-18. The independent audit returned **Needs Work**.
+Audit remediation began the same day; its record below supersedes inaccurate proof claims in this
+original completion account without rewriting the implementation history.
 
 **Commits / identities:**
 
@@ -1912,9 +1915,10 @@ audit remains the next pipeline stage; this implementation record does not self-
   runtime-shape, total-deep-path, ownership, mutation, and carried-audit tests.
 - `18597c3` — one pre-graph inventory, exact resolver consumption, closed binding variants, total
   deep paths, Agentic-owned unit traversal, public conversion, and the v2 pin.
-- `b316e3a` — the replacement proof for the final legacy-evidence responsibility and deletion of
-  `test_source_identity_extraction.py` in the same commit.
-- `3a85831` — migrated stale compiler/elaborator callers, recorded the machine-readable L-181
+- `b316e3a` — one new replacement proof and deletion of
+  `test_source_identity_extraction.py`; 13 table entries pointed to tests that already existed. The
+  machine-readable ledger was not updated in this commit.
+- `3a85831` — migrated stale compiler/elaborator callers, corrected and recorded the machine-readable L-181
   disposition, and made qualified predicate spelling render through the exact target's local Python
   binding without changing occurrence authority.
 - `e3e1a39` — final clean-suite fixes: exact semantic facts on aggregation test doubles and a
@@ -1938,14 +1942,16 @@ lookalike at runtime. `unit_annotated_value` contains value-site policy only and
 node to Agentic's `unit_annotation_value`; it has no metatype, operator, operand, or arity walk.
 Live and admitted/capture routes convert owned failures once in `elaborated_pipeline.py`.
 
-*Ownership closure against the 20-row measurement.* Repository-wide discovery was not narrowed.
+*Ownership closure against the 20-row measurement.* Discovery across the production
+`src/sysml_codegen` package was not narrowed. Scripts and unshipped probes are outside this gate.
 The starting failure contained 20 unowned reads. The final discovered set equals a 24-row reviewed
 manifest with no unowned read:
 
 - 4 live contextual owners: the total deep-relationship factory, enumeration discrimination,
   multiplicity contextualization, and redefinition endpoints;
 - 16 collision rows: 11 typed neutral-`ExpressionIR.operands` readers and 5 typed
-  `SourceFile.referent` serialized-key readers, each pinned by a real receiver/declaring-type test;
+  `SourceFile.referent` readers, each pinned by a receiver-specific, semantically resolved
+  declaring-type test;
 - 4 visible off-route rows, mechanically excluded by transitive reachability from both public
   raw-source arms.
 
@@ -1982,8 +1988,9 @@ The remaining three nodes are:
 *Validation.* All commands used the licensed SysIDE environment. The owner-directed PDF/HTML and
 paid/network suites were not invoked.
 
-- Focused evidence, binding, compiler, unit, conversion, and ownership battery: **126 passed, 1
-  deselected** (the named Phase 4 table).
+- The original focused evidence, binding, compiler, unit, conversion, and ownership result was
+  reported as **126 passed, 1 deselected**, but no exact selection was recorded. It is not a
+  traceable validation result. The remediation record below gives the exact replacement command.
 - Former clean-suite failure set after correction: **167 passed, 25 skipped**.
 - D1-D4 plus retained harness, using the 15 paths recorded in Phase 1: **162 passed**.
   `git diff 78a9beb -- src/sysml_codegen/elaboration/occurrence.py` is empty.
@@ -1991,7 +1998,9 @@ paid/network suites were not invoked.
   collected / 2396 selected. The one failure is exactly the named Phase 4 deferral above; there are
   no collection errors or other failures.
 - Scoped strict type check on `binding_source.py` and `expression_evidence.py`: **Success, 0
-  issues**. Repository baseline: **30 errors in 8 files**, unchanged. Targeted Ruff over every
+  issues**. Repository baseline against the Phase-3 start `b4e97dd`: **30 errors in 8 files**,
+  unchanged. The item-level `C_base` (`78a9beb`) was **49 errors in 15 files**; that reduction landed
+  before Phase 3. Targeted Ruff over every
   Python file changed after `b4e97dd`: clean.
 - Artifact topology/history battery: **21 passed** inside the full run. Deterministic wheels built
   offline as `agentic_mbse-0.1.3-py3-none-any.whl` and
@@ -2005,7 +2014,7 @@ paid/network suites were not invoked.
   retained the recorded form list `[$/MWh]`, `[$/year]`, `[10^19 m^-3]`,
   `[cm^-1]`, `[kg/m^3]`, `[kg/m³]`, `[kg/s]`, `[m^2]`, `[m^3]`, `[m³/s]`, `[mm/year]`,
   `[MWh/year]`, `[MW/m²]`, `[MW·yr/m²]`, `[neutrons/cm²/s]`, `[Pa·m³/s]`, `[particles/s]`,
-  `[USD/kg]`, and `[W/(m·K)]`; parsed annotations in those models reached the shared primitive with
+  `[USD/kg]`, `[W/(m·K)]`, and `[μSv/hr]`; parsed annotations in those models reached the shared primitive with
   no evidence-integrity refusal. As recorded in Phase 2b, `[W/(m·K)]` itself is doc-comment-only at
   SysIDE 0.8.4 and its authorable `[W/(m*K)]` structural equivalent carries the executable proof.
   The exact stop case
@@ -2022,25 +2031,26 @@ paid/network suites were not invoked.
 **14-row disposition table — `tests/conformance/test_source_identity_extraction.py`:**
 
 [INHERITED: plan Revision 4] The owner allowed deletion only after every surviving test
-responsibility received a replacement ID or precise retirement reason. `b316e3a` paired the final
-replacement with the deletion; L-181's machine row records all deleted nodes and replacement proof
-nodes.
+responsibility received a replacement ID or precise retirement reason. At deletion, 13 replacement
+IDs named pre-existing tests and one replacement landed in `b316e3a`. Four of those pre-existing
+tests did not fully carry the deleted responsibility; remediation replaces them below. L-181's
+machine row landed one commit later in `3a85831`. History was not rewritten.
 
 | Deleted node | [AGENT] Replacement / retirement disposition |
 |---|---|
-| `test_chain_target_is_the_redefining_feature` | `tests/conformance/test_elaboration_expose_shapes.py::test_fact_expose_attribute_carries_complete_chain_facts` |
+| `test_chain_target_is_the_redefining_feature` | `tests/unit/test_expression_evidence_boundary.py::test_chain_evidence_names_the_redefining_usage_feature` |
 | `test_deep_chain_retains_exact_leaf_target` | `tests/unit/test_expression_evidence_boundary.py::test_complete_deep_path_retains_every_segment` |
 | `test_def_and_usage_context_referent_classes` | `tests/conformance/test_definition_owned_reference_positions.py::test_inside_the_definition_each_occurrence_reads_its_own_value` |
 | `test_written_form_separates_qualified_from_bare` | `tests/unit/test_expression_evidence_boundary.py::test_closed_bindings_preserve_source_spelling_and_formal_identity` |
-| `test_usage_owned_fact_owner_matches_live_part_usage` | `tests/conformance/test_usage_owned_reference_anchoring.py::test_combined_alias_raw_target_is_the_named_source` |
+| `test_usage_owned_fact_owner_matches_live_part_usage` | `tests/unit/test_expression_evidence_boundary.py::test_frozen_usage_owner_matches_the_exact_live_part_usage` |
 | `test_cross_owner_consumers_share_one_exact_referent` | `tests/conformance/test_usage_owned_reference_anchoring.py::test_combined_named_source_reaches_every_and_only_its_consumers` |
-| `test_bound_formal_identity_is_exact` | `tests/conformance/test_elaboration_projection_one_way.py::test_constraint_formal_provenance_comes_from_exact_port` |
-| `test_aggregation_terms_retain_exact_targets` | `tests/conformance/test_usage_owned_reference_anchoring.py::test_combined_direct_sum_term_is_scalar_and_reaches_the_named_source` |
-| `test_occurrence_override_value_sites_carry_exact_identity` | `tests/conformance/test_occurrence_domain_derivation.py::test_real_fixture_has_one_redefinition_slot_and_effective_specialized_usage` |
+| `test_bound_formal_identity_is_exact` | `tests/unit/test_expression_evidence_boundary.py::test_bound_formal_keeps_its_exact_declaration_and_redefinition_identity` |
+| `test_aggregation_terms_retain_exact_targets` | `tests/conformance/test_elaboration_aggregations.py::{test_expression_redefinition_becomes_a_computed_node,test_sum_expands_to_one_edge_per_instance,test_qualified_aggregation_term_reaches_the_contained_occurrence,test_local_term_and_per_instance_producers_mix}` |
+| `test_occurrence_override_value_sites_carry_exact_identity` | `tests/unit/test_expression_evidence_boundary.py::test_occurrence_override_node_keeps_the_exact_writer_identity` |
 | `test_authored_literal_is_a_distinct_evidence_class` | `tests/unit/test_expression_evidence_boundary.py::test_binding_variant_switch_is_exhaustive` |
 | `test_indexed_source_is_evidence_not_flattened` | `tests/conformance/test_expression_evidence_integrity.py::test_valid_indexed_source_refuses_before_graph_with_exact_capability_diagnostic` |
-| `test_self_binding_detected_despite_same_named_outer` | `tests/conformance/test_elaboration_expose_shapes.py::test_catf_strict_elaboration_rejects_its_real_self_binding` |
-| `test_shadowed_reference_is_not_a_self_binding` | `tests/conformance/test_usage_owned_reference_anchoring.py::test_bare_alias_discriminator_binds_the_aliased_owner` |
+| `test_self_binding_detected_despite_same_named_outer` | `tests/conformance/test_elaboration_contract_matrix.py::test_cell_executes_its_required_public_or_diagnostic_evidence[SRC-01]` |
+| `test_shadowed_reference_is_not_a_self_binding` | `tests/conformance/test_elaboration_shadowing.py::test_qualified_reference_never_selects_the_scope_shadow` |
 | `test_expression_source_disposition` | `tests/conformance/test_elaboration_fail_closed.py::test_invocation_rhs_is_diagnostic_not_an_unbound_candidate` |
 
 **Issues / deviations / rollback point:**
@@ -2051,7 +2061,9 @@ nodes.
    authored `comp_a::length` in neutral IR. Python must bind the exact target's local name
    `length`. `predicate_reference_name` now derives that rendering name from the exact target fact;
    qualified identity remains on `ConstraintFormalIdentity` for collision/correspondence checks.
-   The public six-consumer mutation test and two focused unit tests pin the result. This does not
+   A public-route generation test over `usage_owned_reference_consumers` and two focused unit tests
+   pin the result. The generation proof checks that emitted Python binds `length` and contains no
+   executable `comp_a::length` spelling. This does not
    create occurrence authority or a second resolution mode.
 3. **[AGENT] The retained off-route computed-attribute taxonomy gained exact leaf facts upstream.**
    A three-segment part-rooted leaf is still not proof of an executable occurrence in that
@@ -2066,6 +2078,55 @@ nodes.
    Run `$my-audit` next; the implementing agent may not self-certify.
 
 **Rollback point:** `b4e97dd` on `stop-parser-impl-r2`, as specified by plan Revision 4.
+
+#### Phase 3 audit (2026-08-18) — **Needs Work**
+
+The independent adversarial Phase 3 audit is recorded at
+[run-records/phase3-audit.md](run-records/phase3-audit.md). Verdict **Needs Work**. All six weak
+variants were attacked; two were exploited. Every number in the completion record above reproduces
+from the auditor's own extraction, including the declared archive SHA-256.
+
+Blocking:
+
+- **M1** — a valid, diagnostic-free model crashes the public route. `attribute mirror_len : Real =
+  base_len [m];` raises a bare `ExpressionInventoryError` out of `sysml-codegen generate` with none
+  of the four required provenance elements. The ALIAS-vs-COMPUTED_ATTRIBUTE role is decided twice on
+  different inputs — `expression_evidence.py:245` on the raw expression, `elaborate.py:871,894` on
+  the unit-unwrapped one. Phase-3-introduced. Recorded as product-lens `audit-phase3-F4`
+  (**BLOCK**, owner-grade against P-003/P-004).
+- **M2** — the per-consumer inventory-bypass coverage does not exist.
+  `test_expression_evidence_boundary.py:161` calls one library function five times with a different
+  label and never reaches a consumer adapter. Deleting the backstop from all five call sites gives
+  **0 new failures** across 2206 tests. This is an unmet owner condition on the tests-after
+  deviation.
+- **M3** — the closed union is not pinned exhaustively at every switch. Four arms removed at once —
+  including `_unsupported_code`'s indexed arm, which silently reclassifies an authored index as
+  supported — give **0 new failures**. Also an unmet owner condition.
+- **M4** — the ownership manifest keys on `(module, function, selector, form)`, so a second
+  unannotated receiver inside an already-rowed function is invisible to both gates, bypassing the
+  design's own "an unannotated receiver can never qualify" rule in 20 rowed functions.
+
+Cleared: the product-lens `audit3-F1` block that had stood since 2026-08-17 is recorded **FIXED**
+with measured evidence. The 20-row ownership measurement reproduces exactly and the closure is real,
+not a narrowed scan — though no read was migrated; it is 16 typed reclassifications plus 4 mechanical
+exclusions. Carried Phase-1 Minors 6, 7, 8 and Informational 12 are all verified closed by mutation.
+
+Fifteen Minors and nine Informationals are recorded in the audit. At the audit verdict, the
+missing-kept-tests box, the ownership-closure parent, and its proof-artifact sub-box were left
+unchecked. The remediation record below supersedes that status without changing the historical
+verdict.
+
+#### Phase 3 audit remediation (2026-08-18) — **implemented; independent re-audit required**
+
+[AGENT] All findings in the Phase 3 audit were addressed on `stop-parser-impl-r2` in `c604165`,
+`41181bd`, and `3377cd0`. The exact changes and reproducible validation record are in
+[run-records/phase3-remediation.md](run-records/phase3-remediation.md). The original audit remains
+**Needs Work** as a historical verdict. This implementation pass does not self-certify its fixes;
+the next stage is an independent re-audit.
+
+The two audit weak variants that succeeded — skipped inventory and missing diagnostic provenance —
+now have direct kept regression coverage. Their closing-gate boxes remain unchecked until the
+independent auditor attacks the remediated tree.
 
 ### Phase 4 completion
 
