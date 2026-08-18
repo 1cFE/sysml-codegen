@@ -649,10 +649,10 @@ def test_a_reference_in_the_value_operand_is_still_visited(model):
 [design.md#d5-public-agentic-evidence-contract](design.md#d5-public-agentic-evidence-contract), and
 [design.md#agentic-semantic-contract](design.md#agentic-semantic-contract).
 
-- [ ] **Reopen the tree.** Verify `/tmp/stop-parser-rev2/worktrees/agentic-mbse` is clean at
+- [x] **Reopen the tree.** Verify `/tmp/stop-parser-rev2/worktrees/agentic-mbse` is clean at
   `68bca37` and both user checkouts report an empty `status --porcelain`. Rollback point for this
   phase: reset `stop-parser-evidence-r2` to `68bca37`.
-- [ ] **Tests first**, in their own commit, red for their stated reasons before any production edit.
+- [x] **Tests first**, in their own commit, red for their stated reasons before any production edit.
   The owner's four required coverage cases, per
   [design.md#evidence-and-public-boundary-matrix](design.md#evidence-and-public-boundary-matrix):
   - a simple `[m]`;
@@ -662,24 +662,24 @@ def test_a_reference_in_the_value_operand_is_still_visited(model):
     `SemanticEvidenceError(EXPRESSION_KIND_UNSUPPORTED)` and never return `None`;
   - a reference in the **value** operand, proving the value side is still visited while the unit
     side is never emitted.
-- [ ] **Retire the two superseded assertions.** At the audited `68bca37`, `_unit_annotation_value`
+- [x] **Retire the two superseded assertions.** At the audited `68bca37`, `_unit_annotation_value`
   (`src/agentic_mbse/sysml/reference_use.py:316`) refuses a non-feature-reference unit operand with
   `EXPRESSION_KIND_UNSUPPORTED` and an unresolved unit referent with `RESOLVED_TARGET_MISSING`, and
   kept tests in `tests/test_sysml/test_reference_use.py` pin both. **Both refusals and both
   assertions go** — they encode exactly the requirements ruling 1 drops. This is a deletion, not a
   weakening: what replaces them is the stronger non-emission fact below. The **arity** refusal
   survives and becomes the primitive's.
-- [ ] **Add the primitive.** `unit_annotation_value(expression) -> Any | None` in the Agentic
+- [x] **Add the primitive.** `unit_annotation_value(expression) -> Any | None` in the Agentic
   boundary: recognize `[` by **mapped metatype and operator, never a runtime class name**; enforce
   exactly two operands; return the value operand; leave the unit operand opaque. Wrong arity
   **raises** `SemanticEvidenceError(EXPRESSION_KIND_UNSUPPORTED)`. `None` means strictly one thing —
   the expression is not a `[` annotation at all — so a malformed annotation can never fall through
   and be walked as general math ([AGENT ruling 2026-08-18], design.md:577-585).
-- [ ] **One caller inside Agentic.** `inspect_reference_uses` traverses only what the primitive
+- [x] **One caller inside Agentic.** `inspect_reference_uses` traverses only what the primitive
   returns. The never-emit rule is unchanged and is now the whole of m3's closure: the unit operand is
   never reached and never emitted, so a project-scoped unit cannot arrive at a consumer as a design
   dependency.
-- [ ] **Export it.** Add `unit_annotation_value` to the public surface alongside the existing
+- [x] **Export it.** Add `unit_annotation_value` to the public surface alongside the existing
   `semantic-evidence/v2` names, per
   [design.md#agentic-semantic-contract](design.md#agentic-semantic-contract). The package version
   stays `0.1.3` and the API marker stays `semantic-evidence/v2`; no other export changes.
@@ -691,33 +691,33 @@ The Phase-2 audited obligations apply again to these bytes — the audit's evide
 
 **Automated:**
 
-- [ ] Focused suites from the worktree: `tests/test_sysml/test_reference_use.py` and
+- [x] Focused suites from the worktree: `tests/test_sysml/test_reference_use.py` and
   `tests/test_sysml/test_semantic_selector_ownership.py`. Record collected/passed counts and state
   the delta against the Phase-2 fix-pass figures (**32 passed / 20 passed** at `68bca37`), including
   the nodes removed by the two retired assertions.
-- [ ] `uv run mypy --strict src/agentic_mbse/errors.py src/agentic_mbse/sysml/reference_use.py` →
+- [x] `uv run mypy --strict src/agentic_mbse/errors.py src/agentic_mbse/sysml/reference_use.py` →
   **zero errors**, from the worktree and from a clean extraction.
-- [ ] Fast Agentic suite, licensed, `-m "not slow"`. Baseline at `68bca37` is **18 failed / 1893
+- [x] Fast Agentic suite, licensed, `-m "not slow"`. Baseline at `68bca37` is **18 failed / 1893
   passed / 1 skipped**, the 18 being the declared `A_base` optional-dependency failures. Zero
   item-caused failures. **[OWNER-VERBATIM, 2026-08-17]** "do not rerun the PDF suite anymore" — the
   slow PDF/HTML corpus and the 15 paid/network cases stay unrun.
-- [ ] Repository-wide baselines non-regressed: `mypy src/` **101 errors in 21 files**,
+- [x] Repository-wide baselines non-regressed: `mypy src/` **101 errors in 21 files**,
   `ruff check src/ tests/` **119 errors**; targeted Ruff clean on every changed file. Neither
   baseline is green and neither may be described as green.
-- [ ] Artifact-isolated run from a fresh `git archive` of the phase commit, extracted under a path
+- [x] Artifact-isolated run from a fresh `git archive` of the phase commit, extracted under a path
   containing the `agentic-mbse` string the baseline path test requires. Reproduce the named set
   `pytest tests/test_sysml/ tests/test_validation/ tests/test_errors.py` and the fast-suite figure,
   and return Success from the scoped strict gate.
-- [ ] `uv build --wheel`; install into a fresh venv and verify dist version `0.1.3`,
+- [x] `uv build --wheel`; install into a fresh venv and verify dist version `0.1.3`,
   `__version__` `0.1.3`, `SEMANTIC_EVIDENCE_API_VERSION` `semantic-evidence/v2`,
   `unit_annotation_value` importable from the public surface, and every previously deleted symbol
   still absent.
 
 **Manual:**
 
-- [ ] Against a live licensed model carrying a compound unit, confirm the reference uses for an
+- [x] Against a live licensed model carrying a compound unit, confirm the reference uses for an
   annotated value contain the value operand's references and **nothing** from the unit operand.
-- [ ] Confirm recognition of `[` comes from the mapped metatype and operator, with no runtime
+- [x] Confirm recognition of `[` comes from the mapped metatype and operator, with no runtime
   class-name comparison in the primitive.
 
 **Phase 2 audit addendum (closes this phase):** record, in
@@ -1777,15 +1777,126 @@ and verified from the installed wheel rather than re-performed.
 
 ### Phase 2b completion
 
-**Completed:**
+**Completed:** 2026-08-18.
 
 **Commits / identities:**
 
+- Branch `stop-parser-evidence-r2`, worktree `/tmp/stop-parser-rev2/worktrees/agentic-mbse`,
+  verified clean at `68bca37` before any edit.
+- `efc235a` — tests first, red for their stated reasons at `68bca37`.
+- `3f8bd58` — the primitive, the retirement, the caller, and the export.
+- Package contract unchanged: `0.1.3`, `SEMANTIC_EVIDENCE_API_VERSION = "semantic-evidence/v2"`.
+- Codegen worktree untouched at `b4e97dd`; both user checkouts report an empty
+  `status --porcelain` at the phase boundary.
+- Rollback point: `git reset --hard 68bca37` on `stop-parser-evidence-r2`.
+
 **Actual changes and test results:**
+
+Retired in `src/agentic_mbse/sysml/reference_use.py` — the two refusals design Revision 8
+supersedes, both formerly at `:316`ff: the unit operand must be a `FeatureReferenceExpression`
+(`EXPRESSION_KIND_UNSUPPORTED`) and must carry an exact referent (`RESOLVED_TARGET_MISSING`).
+The arity refusal survives and is now the primitive's, raised under its own operation name
+`unit_annotation_value`.
+
+Landed: `unit_annotation_value(expression) -> Any | None`, public on
+`agentic_mbse.sysml.reference_use.__all__` and the `agentic_mbse.sysml` barrel (registry plus
+the `TYPE_CHECKING` import, so `test_type_checking_imports_match_lazy_registry` stays green).
+It recognizes `[` from `SysideAdapter.is_instance(expression, "OperatorExpression")` and the
+mapped `operator` value, enforces exactly two operands, returns the value operand, and never
+touches the unit operand. `inspect_reference_uses` is its only Agentic caller and walks only
+what it returns.
+
+The owner's four coverage cases, all green (`tests/test_sysml/test_reference_use.py`):
+
+| Case | Node | Result |
+|---|---|---|
+| `[m]` simple | `test_a_simple_unit_annotation_is_accepted_and_its_value_operand_is_returned` | PASS — primitive returns the value operand; `inspect_reference_uses` returns `()` |
+| compound `[kg/m^3]`, `[W/(m*K)]` | `test_a_compound_unit_annotation_elaborates_rather_than_refusing` (2 params) | PASS — accepted rather than refused; unit operand not emitted. Also `test_the_unit_operand_is_never_traversed_not_merely_filtered` PASS — a unit operand that raises when read is never read |
+| wrong arity | `test_a_wrong_arity_annotation_raises_and_never_returns_none` | PASS — three-operand and one-operand both raise `SemanticEvidenceError(EXPRESSION_KIND_UNSUPPORTED)`; `None` only for a non-annotation |
+| reference in the value operand | `test_a_reference_in_the_value_operand_of_a_compound_annotation_is_still_visited` | PASS — `local_scale [kg/m^3]` yields exactly `["local_scale"]` |
+
+Validation, every box executed from the worktree with the license sourced from
+`/home/reid/1cfe/agentic-mbse/.env`:
+
+- Focused suites: `test_reference_use.py` **38 passed** (was 32 at `68bca37`; +6 nodes, **0
+  removed** — see deviation 2), `test_semantic_selector_ownership.py` **20 passed**
+  (unchanged), `test_public_api_exports.py` **8 passed**.
+- `uv run mypy --strict src/agentic_mbse/errors.py src/agentic_mbse/sysml/reference_use.py` →
+  **Success, 0 issues**, from the worktree and from the clean extraction.
+- Fast suite licensed, `-m "not slow"`: **18 failed / 1899 passed / 1 skipped / 5 deselected**.
+  The 18 are exactly the declared `A_base` optional-dependency failures (`ModuleNotFoundError`
+  / `ImportError` in `test_web_backend.py` and `test_equations.py`); zero item-caused failures.
+  Passed count is baseline 1893 + the 6 new nodes.
+- Repository-wide baselines non-regressed and still not green: `mypy src/` **101 errors in 21
+  files**, `ruff check src/ tests/` **119 errors** — both identical to `68bca37`. Targeted
+  `ruff check` on the three changed files: clean.
+- Artifact-isolated run from `git archive 3f8bd58` extracted to
+  `/tmp/p2b-extract/agentic-mbse-phase2b` (path contains `agentic-mbse`):
+  `pytest tests/test_sysml/ tests/test_validation/ tests/test_errors.py` → **840 passed / 1
+  skipped**; fast suite → **18 failed / 1899 passed / 1 skipped**; scoped strict → Success.
+- `uv build --wheel` → `agentic_mbse-0.1.3-py3-none-any.whl`, installed into a fresh venv:
+  dist version `0.1.3`, `__version__` `0.1.3`, `SEMANTIC_EVIDENCE_API_VERSION`
+  `semantic-evidence/v2`, `unit_annotation_value` importable from `agentic_mbse.sysml` and in
+  `__all__`, and `extract_feature_refs`, `feature_reference_facts`, `feature_chain_facts`,
+  `ResolvedSemanticReferenceFact`, `ExpressionRef`, and `BindingInfo.references` all still
+  absent.
+- **[OWNER-VERBATIM]** "do not rerun the PDF suite anymore" — honored. The slow PDF/HTML corpus
+  and the 15 paid/network cases were never invoked.
+- Manual 1 — live licensed `tests/fixtures/catf_mfe_model` loads with zero error diagnostics;
+  the stop report's exact case `CATFMFEShield::catf_shield::gamma_shield::density = 9400
+  [kg/m^3]` now has `unit_annotation_value` return its value operand and
+  `inspect_reference_uses` return `()`. Both compound-unit annotations in the model behave the
+  same way.
+- Manual 2 — the primitive's body contains only `SysideAdapter.is_instance(...)` and the
+  `operator` value test. No `type(...)`, `__class__`, or `__name__` comparison.
 
 **Phase 2 audit addendum — m3 re-established on non-emission:**
 
+The addendum's own write into
+[run-records/phase2-audit.md](run-records/phase2-audit.md) is **not** part of this stage; the
+Phase-2b brief assigns it to a separate stage. The evidence it needs is recorded here.
+
+m3 asked whether a project-scoped unit can arrive at a consumer as a design dependency. The
+Phase-2 closure rested partly on shape validation, which ruling 1 deletes. The replacement fact
+is stronger and is what these bytes prove: the unit operand is **never reached**.
+
+- Non-emission, live: every unit annotation probed on `catf_mfe_model` and on the licensed probe
+  model returns `()` or only the value operand's own references, for simple and compound units
+  alike (`test_a_simple_unit_annotation_is_accepted_and_its_value_operand_is_returned`,
+  `test_a_compound_unit_annotation_elaborates_rather_than_refusing`).
+- Non-traversal, directly: `test_the_unit_operand_is_never_traversed_not_merely_filtered` puts a
+  unit operand that raises `AssertionError` on any operand read into the annotation. The call
+  returns the value operand's one use, so nothing read it. This is the assertion non-emission
+  alone cannot make.
+- Tier-independence survives from Phase 2 unchanged:
+  `test_a_project_scoped_unit_is_not_emitted_either` still asserts the double's tier really is
+  `Project` and that nothing is emitted.
+- The two retired refusals are named in the `3f8bd58` commit message and in the deviation below.
+
 **Issues / deviations / rollback point:**
+
+1. **`[W/(m·K)]` is not authorable at SysIDE 0.8.4; `[W/(m*K)]` stands in.** The design names
+   `[kg/m^3]` and `[W/(m·K)]` as *representative* compound forms ("such as"), so their force is
+   example, not referent. Measured: the middle-dot spelling fails to parse — `Unexpected token
+   '·'` — and a grep of the Codegen corpus shows `[W/(m·K)]` occurs **only inside doc comments**
+   (`catf_mfe_*/library/types.sysml:31`, `.../components/first_wall.sysml:85`), never as an
+   annotation. The stop report's list of "distinct forms found under `tests/fixtures/`" swept
+   comments as well as annotations. The test uses `[W/(m*K)]`, which is the same structural kind
+   — a parenthesized compound denominator, unit operand `OperatorExpression` — and does parse.
+   Recorded, not resolved silently.
+2. **No test node was removed.** Design Revision 8 says "kept tests pin both" retired refusals.
+   At `68bca37` they were pinned in production only: a grep of `tests/` for
+   `EXPRESSION_KIND_UNSUPPORTED` and `RESOLVED_TARGET_MISSING` finds no node asserting either
+   unit-operand refusal. `test_a_malformed_unit_annotation_is_refused_by_name` pins **arity**,
+   which survives; its docstring was corrected from "shape validation still happens" to name
+   arity as the one surviving rule. So the focused-suite delta is +6 and not +6−N.
+3. **The probe model's import was placed on an existing line.** `private import SI::*;` shares a
+   line with the `NumericalFunctions::sum` import so `PROBE_MODEL`'s line numbering does not
+   shift. Two kept Phase-1/2 nodes assert exact `source_line` values (13 and 11) against that
+   fixture; moving them to accommodate a new import line would have been a fixture-coordinate
+   edit to recorded red-set assertions, and was avoided.
+
+**Rollback point:** `git reset --hard 68bca37` on `stop-parser-evidence-r2`.
 
 ### Phase 3 completion
 
