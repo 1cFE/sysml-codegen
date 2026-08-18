@@ -1216,7 +1216,8 @@ worktree is untouched at `d257ef1`, and both user checkouts report an empty
 **Actual changes and test results:**
 
 *The 10 Phase-1 Agentic red nodes are green, each for its stated reason.* `test_reference_use.py`
-28 passed, `test_semantic_selector_ownership.py` 12 passed. The six reference-use nodes went
+28 passed, `test_semantic_selector_ownership.py` **14 passed** (audit m5: this line first read 12,
+which was the count before the Minor-5 additions and did not match the file). The six reference-use nodes went
 green because `agentic_mbse/sysml/reference_use.py` now exists with the closed union,
 `INDEXED_REFERENCE_UNSUPPORTED` is in the vocabulary, `IndexedReferenceUse` has no `path`
 attribute or annotation, `ExactReferenceUse` has `path` and no index marker,
@@ -1275,9 +1276,11 @@ never run.
 
 *Artifact-isolated validation.* `git archive` of `144ae02` extracted to
 `/tmp/stop-parser-rev2/agentic-mbse-phase2/agentic-mbse` (the path keeps the `agentic-mbse`
-string the baseline path test requires). From that extraction: the focused gates are **221
-passed, 1 skipped**, the fast suite reproduces **18 failed / 1883 passed / 1 skipped**, and the
-scoped strict gate returns Success. `uv build --wheel` produced
+string the baseline path test requires). From that extraction the fast suite
+reproduced **18 failed / 1883 passed / 1 skipped** and the scoped strict gate returned Success.
+(Audit m5: this line also carried a "focused gates: 221 passed" figure over an ad-hoc list of ten
+files that the record never named, so nobody could reproduce it. It is replaced by the whole-suite
+figure above and, in the audit-fix pass below, by a named directory-level set.) `uv build --wheel` produced
 `agentic_mbse-0.1.3-py3-none-any.whl`; installed into a fresh venv it reports dist version
 `0.1.3`, `__version__` `0.1.3`, `SEMANTIC_EVIDENCE_API_VERSION` `semantic-evidence/v2`, both new
 codes present, all four boundary names importable, and every deleted symbol absent.
@@ -1410,3 +1413,95 @@ and verified from the installed wheel rather than re-performed.
 **Status progression:** Draft → In Progress → Complete
 
 **Next stage after plan approval:** `$my-implement`, followed by an independent `$my-audit`.
+
+#### Audit-fix pass (2026-08-18)
+
+The independent Phase 2 audit returned **Pass with findings**
+([run-records/phase2-audit.md](run-records/phase2-audit.md)). Its Major and every minor assigned to
+this phase are closed in one commit: `stop-parser-evidence-r2` `144ae02` →
+**`68bca37`**. i8 is left as-is and i11 is carried to close, per the audit.
+
+**M1 (Major) — the shared budget now covers all three entries the design names.**
+`inspect_reference_uses` had it; `extract_expression_ir` and `reconstruct_expression` raised a bare
+`RecursionError` on self-nesting input, which a caller cannot tell from an interpreter limit it
+caused some other way. Both now exhaust into `EXPRESSION_DEPTH_EXHAUSTED` with the operation named.
+The IR counter lives on `_ExtractionContext` because the dispatch recurses through several helpers
+that already thread it, and the dispatch split out as `_expression_ir_node` so the guard and the
+dispatch stay one job each; reconstruction carries a private `_depth` through
+`reconstruct_operator_expression`. Four kept tests in `test_reference_use.py` — one per entry, plus
+`test_no_recursive_production_entry_reports_a_bare_recursion_error`, which states the set, because
+M1's defect was that two of the three were never wired up at all rather than wired up wrongly.
+`test_the_depth_budget_is_not_caller_selectable` now also asserts neither new entry exposes a public
+depth parameter.
+
+**m3 — the unit operand is no longer emitted, and the fix is at the boundary.**
+`_unit_annotation_value` in `reference_use.py` recognises a structural `[` annotation, validates its
+shape, walks only its value operand, and never emits the unit as a data reference. The old route
+emitted it and relied on the downstream tier filter, which is the wrong place and the wrong rule: a
+project-scoped unit is tier `Project` and would have arrived at a consumer as a design dependency.
+A malformed annotation is refused by name (`EXPRESSION_KIND_UNSUPPORTED`), so shape validation did
+not go away with the emission.
+
+**Measured while closing m3, and worth carrying forward:** at SysIDE 0.8.4 a user-declared unit is
+**not accepted in a quantity expression at all**. Every form tried — `attribute def U :>
+UnitsAndScales::{Simple,Derived,Measurement}Unit` with a usage, and each of those typings applied
+directly to the usage — fails to parse with "Invalid quantity expression, expected a measurement
+unit as the second argument". So the authored shape the audit names, `3.0 [MyUnits::widget]`, cannot
+be reached through a real model today, and `test_a_project_scoped_unit_is_not_emitted_either` proves
+the project-tier case through the same code path with a test double instead. The test records the
+measurement and why the double is the only route. The live `SI::metre` case is still covered against
+a real model.
+
+**m2 — the ownership gate's scope is structural.** `_reaches_the_parser` reads the adapter import
+off parsed `Import`/`ImportFrom` nodes rather than `ADAPTER_IMPORT in path.read_text()`, so a
+docstring or comment naming the adapter no longer pulls a module into scope and an aliased import no
+longer escapes it. Both anti-vacuity tests still fire, and
+`test_the_import_scope_is_structural_not_a_substring_match` covers both directions.
+
+**m4 — the two probe-load sites assert a clean parse.** `except Exception: pytest.skip` would have
+gone quiet on a genuine loader regression in a licensed lane. `_require_a_clean_load` asserts the
+model produced no error diagnostics; a parse error in probe source is now a failing test, which is
+what it is.
+
+**m6 — `_has_defined_value` is deleted.** Its only caller read `ExpressionRef.element` to reach a
+live node, and the closed route carries `ResolvedTargetFact.declares_value` instead. Nothing called
+it afterwards, and the `hasattr` assertion in `test_level2_integration.py` that kept it alive was
+not a caller; that assertion now pins its absence and says why.
+
+**m7 — the scanner's `getattr` branch is exercised.** It has two detection branches and only the
+attribute one had anti-vacuity mutants, so a regression in the dynamic-read branch would have gone
+unnoticed while the gate stayed green. Both a positive mutant per reviewed selector and a negative
+case are added.
+
+**i10 — `_document_tier_name` drops its `or ""` fallback**, so a tier-less target propagates the
+named adapter failure its docstring already promised instead of recording an empty tier a consumer
+could read as "not standard library".
+
+**m5 — the two record corrections are applied above:** the ownership file's count is 14, not 12,
+and the unreproducible "221 passed" figure is replaced.
+
+**Re-verification at `68bca37`.**
+
+- Focused, from the worktree: `test_reference_use.py` **32 passed** (32 collected),
+  `test_semantic_selector_ownership.py` **20 passed** (20 collected) — 52 together.
+- Fast Agentic suite: **18 failed, 1893 passed, 1 skipped**. The 18 are the same declared `A_base`
+  optional-dependency baseline; the pass count rises from 1883 by the 10 nodes this pass added.
+- `mypy --strict src/agentic_mbse/errors.py src/agentic_mbse/sysml/reference_use.py` → **Success**,
+  from the worktree and from the clean extraction.
+- Baselines non-regressed: `mypy src/` **101 errors in 21 files** (unchanged), `ruff check src/
+  tests/` **119 errors** (unchanged), `ruff check` clean on every changed file. Neither baseline is
+  green and neither is described as green.
+- Artifact-isolated, from a fresh `git archive` of `68bca37` extracted under
+  `/tmp/stop-parser-rev2/agentic-mbse-phase2fix/agentic-mbse` (the path keeps the `agentic-mbse`
+  string the baseline path test requires). **Named, reproducible set** — `pytest tests/test_sysml/
+  tests/test_validation/ tests/test_errors.py`: **834 passed, 1 skipped**. Fast suite reproduces
+  **18 failed / 1893 passed / 1 skipped**; scoped strict returns Success.
+- Wheel: `uv build --wheel` → `agentic_mbse-0.1.3-py3-none-any.whl`. Installed into a fresh venv it
+  reports dist version `0.1.3`, `__version__` `0.1.3`, API `semantic-evidence/v2`, both new codes,
+  the complete boundary surface including `MAX_EXPRESSION_DEPTH`, every deleted symbol absent
+  (`ExpressionRef`, `ResolvedSemanticReferenceFact`, `_has_defined_value`), and no public depth
+  parameter on either newly-budgeted entry.
+
+**Rollback point for this pass:** reset `stop-parser-evidence-r2` to `144ae02`. The Codegen
+worktree is still untouched at `d257ef1` and both user checkouts report an empty
+`status --porcelain`.
