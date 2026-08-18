@@ -208,6 +208,29 @@ def test_binding_consumer_backstop_refuses_an_inventory_bypassed_index() -> None
     assert caught.value.reference == "cells#(2).mass"
 
 
+def test_require_exact_binding_use_switch_is_exhaustive() -> None:
+    exact_use = _exact_use()
+    assert binding_source.require_exact_binding_use(
+        ExactBindingSource(_formal(), exact_use)
+    ) is exact_use
+
+    with pytest.raises(SemanticEvidenceError) as caught:
+        binding_source.require_exact_binding_use(
+            IndexedBindingSource(_formal(), _indexed_use())
+        )
+    assert caught.value.code is SemanticEvidenceCode.INDEXED_REFERENCE_UNSUPPORTED
+
+    for evidence in (
+        ExpressionBindingSource(_formal(), "a + b", None),
+        LiteralBindingSource(_formal(), 1.0),
+    ):
+        with pytest.raises(TypeError, match="not an exact binding source"):
+            binding_source.require_exact_binding_use(evidence)
+
+    with pytest.raises(TypeError, match="BindingSourceEvidence"):
+        binding_source.require_exact_binding_use(object())
+
+
 def _consumer_with_inventory(
     site: ExpressionSite,
     use: object,
