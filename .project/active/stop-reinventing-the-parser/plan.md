@@ -1051,30 +1051,30 @@ def test_public_evidence_matrix(consumer, live_and_capture_routes, preserved_out
 [design.md#public-every-and-only-mutation-proofs](design.md#public-every-and-only-mutation-proofs),
 and [design.md#documentation-and-backlog-obligations](design.md#documentation-and-backlog-obligations).
 
-- [ ] **Tests first — registry:** extend
+- [x] **Tests first — registry:** extend
   `tests/conformance/test_generation_exit_type_preflight.py:1`,
   `tests/conformance/test_module_kind_faildloud.py:264`, and
   `tests/unit/test_registry_generation.py:1` for no-root, one, repeated, multiple, and unsupported
   root types through CLI, direct generator, and every exported alias. Assert byte-identical output
   preservation and the absence of a caller type-set parameter.
-- [ ] **Graph-derived registry:** replace the untyped failure in
+- [x] **Graph-derived registry:** replace the untyped failure in
   `src/sysml_codegen/generation/registry.py:48`; remove the fifth parameter at `registry.py:245` and
   the caller account at `cli/__init__.py:734`. Derive and validate wrappers from the immutable graph
   inside every exported generation seam before output mutation.
-- [ ] **Full natural-route matrix:** complete
+- [x] **Full natural-route matrix:** complete
   `tests/conformance/test_expression_evidence_integrity.py` for calculation-definition dependencies,
   calculation/constraint bindings, aliases, computed attributes, predicates, and deep overrides.
   Cover exact positive, indexed, operand/depth, and missing-target cases through live and
   admitted/capture arms, strict and lenient modes where offered.
-- [ ] **Dual-layer index proof:** for each expression consumer, retain the normal public test proving
+- [x] **Dual-layer index proof:** for each expression consumer, retain the normal public test proving
   inventory-before-consumer refusal and the internal test bypassing only inventory to prove the
   consumer backstop. For deep override, pair the real `Feature`-only structural proof with forced
   mapped-index refusal.
-- [ ] **Preservation and transitions:** rerun the full occurrence/producer matrix and
+- [x] **Preservation and transitions:** rerun the full occurrence/producer matrix and
   `tests/execution/test_occurrence_derivation_mutation_teax.py:1`; reconcile every changed graph,
   diagnostic, package byte, and execution result against `verification/expected-transitions.md`.
   Any unlisted difference fails.
-- [ ] **Ledger rows A5a and A5b:** add both to `verification/expected-transitions.md` in the same
+- [x] **Ledger rows A5a and A5b:** add both to `verification/expected-transitions.md` in the same
   landing unit as the tests that prove them
   ([design.md#transition-ledger-seed](design.md#transition-ledger-seed)). They are the two measured
   `C_base` behaviors of the bare indexed chain, split because they fail differently:
@@ -1093,25 +1093,25 @@ and [design.md#documentation-and-backlog-obligations](design.md#documentation-an
 
   The reconciliation gate must **expect** that diagnostic transition rather than flag it as unlisted
   drift. A5a proves the silent rewrite exists at all; A5b proves the name of the refusal changes.
-- [ ] **`deep_cross_scope_probe` stays refused:** confirm reconciliation shows the record still at
+- [x] **`deep_cross_scope_probe` stays refused:** confirm reconciliation shows the record still at
   typed refusal (`SI_OCCURRENCE_MISSING`, authored reference preserved) under its named A2 row. A
   result that returns it to a captured graph is the global stop condition, not a reconciliation
   outcome.
-- [ ] **Static closure:** require both ownership manifests, five evasion mutations, deleted symbols,
+- [x] **Static closure:** require both ownership manifests, five evasion mutations, deleted symbols,
   off-route reachability exclusions, no dead extraction helper cluster, and no caller-supplied
   registry authority to be green together.
-- [ ] **Documentation and filing:** update the architecture overview, reference documents 00/01/19,
+- [x] **Documentation and filing:** update the architecture overview, reference documents 00/01/19,
   registry reference 20, verification matrix, diagnostic reference, Agentic plant idiom, P-003
   application status, reconciliation ledger seed, current work, and the epic status as specified in
   [design.md#documentation-and-backlog-obligations](design.md#documentation-and-backlog-obligations).
   Verify the indexed-element and output-alias follow-ups remain separately owned; do not duplicate
   them if the existing rows are correct.
-- [ ] **File `[DEEP-QUALIFIED-OUTPUT-WIRING]`** as a separate agent-grade backlog row before close.
+- [x] **File `[DEEP-QUALIFIED-OUTPUT-WIRING]`** as a separate agent-grade backlog row before close.
   Exact wiring for a deep qualified reference to a concrete calculation output is a real, separately
   owned capability; this item refuses it by name and does not implement it. The row names the
   authored shape in `tests/fixtures/deep_cross_scope_probe/design.sysml`, the current
   `SI_OCCURRENCE_MISSING` contract, and the A2 transition record.
-- [ ] **Fix the stale fixture comment** at
+- [x] **Fix the stale fixture comment** at
   `tests/fixtures/deep_cross_scope_probe/design.sysml:75`. It currently reads "Exact projection
   wires this input to the one concrete core output," which contradicts the recorded refusal and
   describes the substitution defect that was removed. Replace it with the current contract — this
@@ -1124,27 +1124,27 @@ and [design.md#documentation-and-backlog-obligations](design.md#documentation-an
 
 **Automated:**
 
-- [ ] Run the complete focused natural-route and registry suites with the SysIDE license; every row
+- [x] Run the complete focused natural-route and registry suites with the SysIDE license; every row
   must assert code, authored reference, root-relative `file:line`, cause chain, one rendered code
   token, and no graph/snapshot/output mutation.
-- [ ] Run the full Codegen default suite, scoped strict gate, repository-wide mypy comparison, and
+- [x] Run the full Codegen default suite, scoped strict gate, repository-wide mypy comparison, and
   Ruff. No required licensed test or route may skip.
-- [ ] Run the existing occurrence matrix and public every-and-only TEAx mutation suite through live
+- [x] Run the existing occurrence matrix and public every-and-only TEAx mutation suite through live
   and snapshot generation; require parity and D1-D4 behavior.
-- [ ] Run baseline/transition reconciliation; all maintained outputs outside named transitions must
+- [x] Run baseline/transition reconciliation; all maintained outputs outside named transitions must
   remain byte-identical.
-- [ ] Run exact static-set equality and symbol-absence checks in both repositories.
-- [ ] Run `git diff --check` in both production repositories.
+- [x] Run exact static-set equality and symbol-absence checks in both repositories.
+- [x] Run `git diff --check` in both production repositories.
 
 **Manual:**
 
-- [ ] Review both indexed bare-chain results first. The `Cell[1]` out-of-range case must now refuse
+- [x] Review both indexed bare-chain results first. The `Cell[1]` out-of-range case must now refuse
   before graph construction through live and capture instead of producing a zero-diagnostic graph;
   the `Cell[3]` case must now refuse as `SI_INDEXED_SOURCE_UNSUPPORTED` rather than
   `SI_OCCURRENCE_AMBIGUOUS`. Together they match the product-lens falsifier exactly.
-- [ ] Review registry failure through the real public command and confirm the output directory's
+- [x] Review registry failure through the real public command and confirm the output directory's
   complete relative-path-to-bytes map is unchanged.
-- [ ] Confirm no documentation claims Phase-5 artifact evidence before those artifacts exist.
+- [x] Confirm no documentation claims Phase-5 artifact evidence before those artifacts exist.
 
 **What we know works after this phase:** the three closure legs are green on a production candidate,
 the audited semantic and registry bypasses are closed through natural routes, and the occurrence
@@ -2159,13 +2159,67 @@ Phase 4 may start.**
 
 ### Phase 4 completion
 
-**Completed:**
+**Completed:** 2026-08-18. Every Phase 4 implementation and validation box is complete. This is an
+implementation close, not certification; the required independent audit has not run. Phase 5 is
+untouched.
 
 **Commits / identities:**
 
+| Branch / record | Starting identity | Final identity |
+|---|---|---|
+| Codegen `stop-parser-impl-r2` | `1451615609e29b1f511c6b8e69fe425d8afe355e` | `e5f73e6cff653f5b6a0c3861c0d3d5cd5b2544da` |
+| Agentic `stop-parser-evidence-r2` (read-only) | `3f8bd587af40f05b929dd56645901dada7daea37` | unchanged |
+| Phase 4 project record | — | `ae847b8d00947a46f86dd62df0cef50522a4cf35` |
+
+The Codegen landing units are `47f2f56` (registry tests), `348a02e` (registry implementation),
+`68c1ffe` (natural-route matrix and A5a/A5b), `1ce8638` (architecture documentation and fixture
+comment), `8919232` (historical-tree fixture verification), and `e5f73e6` (verification-code
+transition). The declared fresh extraction and archive hashes are recorded in
+[run-records/phase4-implementation.md](run-records/phase4-implementation.md).
+
 **Actual changes and test results:**
 
+- Registry wrapper types are derived, deduplicated, and validated from the immutable graph on the
+  CLI, direct generator, and every exported alias. Unsupported roots raise
+  `EXIT_POINT_TYPE_UNSUPPORTED` before output mutation; the fifth parameter and CLI collector are
+  absent. The public preservation review confirmed the complete output path-to-bytes map is
+  unchanged on failure.
+- The public natural-route matrix covers every expression consumer across live, admitted, and
+  capture routes, with strict and lenient arms where offered. Every consumer has an
+  inventory-before-adapter proof and a real adapter backstop proof. The deferred
+  `test_every_consumer_cell_names_a_proof` node is green.
+- A5a changes the silently rewritten `Cell[1]` graph to a pre-graph indexed refusal. A5b changes
+  both the strict wrong-name refusal and the lenient diagnostic-bearing graph for `Cell[3]` to
+  pre-graph `SI_INDEXED_SOURCE_UNSUPPORTED`; the lenient graph disappears as required.
+- Focused Phase 4 selection: **204 passed**, no skips. D1–D4 and retained harness: **163 passed**.
+  Public live/snapshot TEAx mutation: **6 passed**. Agentic ownership/reference-use: **58 passed**.
+  Codegen static closure: **68 passed**. Historical lock/docs/snapshot inventory: **30 passed**.
+- Final default suite from the declared extraction: **2,492 passed, 34 skipped, 94 deselected**,
+  zero failures. Scoped strict mypy is green. Repository-wide mypy remains the Phase 3 baseline,
+  **30 errors in 8 files**. Repository-wide Ruff remains a non-green **608-error** baseline;
+  targeted Ruff is clean on every changed Python file.
+- Reconciliation is green at 14 captured / 23 refused, with 23 metadata-only snapshots, 22
+  maintained snapshots, and only the two named record transitions. `deep_cross_scope_probe`
+  remains `SI_OCCURRENCE_MISSING` with its authored reference and no snapshot. `occurrence.py` is
+  byte-identical to `C_base`. Both production worktrees and `git diff --check` are clean.
+- Architecture, registry, diagnostic, verification, product, current-work, epic, fixture-comment,
+  and backlog records are reconciled. `[INDEXED-ELEMENT-EXPRESSION-SUPPORT]`,
+  `[OUTPUT-ALIAS-DUPLICATE-SOURCE-SILENCE]`, and `[DEEP-QUALIFIED-OUTPUT-WIRING]` are separate
+  agent-grade rows. No record claims Phase 5 evidence.
+
 **Issues / deviations / rollback point:**
+
+The first full extraction at `1ce8638` had one failure because the frozen fixture validator read
+current bytes instead of the historical tree named by the lock. `8919232` corrected the validator
+to read `P_seed`; `e5f73e6` ledger-owns that verification-code change. The rebuilt extraction is
+fully green. The TEAx run had two setup-only attempts before passing: missing declared provenance,
+then missing `pandas` in the extracted environment. The passing run used checked provenance and
+third-party dependencies from existing venvs; no dependency or source was changed.
+
+The brief assumed two required backlog rows already existed. They did not. The binding design
+required them before close, so they were filed as `[AGENT]` rows and the premise mismatch was
+surfaced. There was no product-semantic deviation. The owner-retired PDF/HTML suite was not run.
+Rollback point: `1451615609e29b1f511c6b8e69fe425d8afe355e`.
 
 ### Phase 5 completion
 
