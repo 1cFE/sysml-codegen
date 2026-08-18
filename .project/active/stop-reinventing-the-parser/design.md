@@ -1,14 +1,29 @@
 # Technical Design: Stop Reinventing the Parser
 
-**Status:** Draft — Revision 6; Revision-5 review resolutions incorporated, targeted confirmation required
-**Revision:** 6
+**Status:** Draft — Revision 7; targeted amendment of the approved Revision 6, targeted confirmation required
+**Revision:** 7
 **Date:** 2026-08-17
 **Branch:** `stop-reinventing-the-parser`
 **Contract:** `spec.md`, approved revision 4
-**Prior review:** `design-review.md`, Revision 5 `Revise`; all owner resolutions finalized 2026-08-17
-**Product lens:** `BLOCKED` at `audit3-F1` until the Revision-6 indexed-consumer proof passes
+**Prior review:** `design-review.md`, Revision 6 `Approve`; Revision-5 owner resolutions finalized 2026-08-17
+**Product lens:** `BLOCKED` at `audit3-F1` until the indexed-consumer proof passes
 **Revision input:**
-`.project/research/20260817-164828_expression-evidence-boundary-convergence-assessment.md`
+`.project/research/20260817-164828_expression-evidence-boundary-convergence-assessment.md`;
+`run-records/phase1-stop-report.md` (revision 3, rulings 1-7 owner-ratified 2026-08-17)
+
+## Revision history
+
+- **Revision 7 (2026-08-17) — targeted amendment.** Evidence source:
+  `run-records/phase1-stop-report.md`, whose `[verified]` claims were reproduced by the orchestrator
+  in a clean worktree at `C_base`, and whose seven rulings the owner ratified on 2026-08-17. The
+  amendment corrects false factual claims in Revision 6 and records the ratified rulings. It changes
+  exactly five areas: the lock and inventory semantics, the current-code account of the indexed
+  escape, the test design for the indexed red set, the `deep_cross_scope` graph→refusal ruling, and
+  the revision-base prose. **No approved mechanism changes.** D1-D10, the closed-variant
+  architecture, the artifact chain, the acyclic topology, and the consumer/ownership manifests are
+  untouched, and no Revision-6 closure requirement is weakened.
+- **Revision 6 (2026-08-17).** Review verdict `Approve`. Superseded Revision 4's D5, D7, D9, and
+  evidence matrix; added the three-leg closure condition.
 
 ## Outcome
 
@@ -26,6 +41,10 @@ were closed. It also corrects the route inventory and adds a mechanical closure 
 D6, the general `ExpressionIR`, the occurrence mutation proof, and the acyclic
 `C_prod -> F_final -> C_evidence` topology remain intact. The committed runner remains the only
 producer of final run evidence; the failed candidate's externally staged report is not reusable.
+
+Revision 7 changes nothing in that mechanism. It corrects factual claims about the base tree and the
+escape's trigger, splits the indexed red set into the two cases that actually go red for the right
+reason, and records the ratified `deep_cross_scope_probe` ruling. See the revision history above.
 
 Shaping and the spec are not rerun. The fresh research found that A5 and B3/B4/B9 still state the
 right required behavior; the defect is that the approved mechanisms did not make alternate weaker
@@ -83,9 +102,29 @@ These facts describe the audited failed candidate, not this documentation checko
 - Codegen still walks expressions independently for calculation-definition dependencies,
   calculation and constraint bindings, aliases, computed attributes, and predicates. Some walks
   consume Agentic facts; others reconstruct references or dependencies from raw expression nodes.
-- The indexed-source preflight covers direction-`In` top-level feature chains. The computed
-  attribute route reads a fact that retains `has_index_segment`, ignores that field, and resolves
-  the remaining path. The licensed probe therefore maps `cells#(2).mass` to `cells[0].mass`.
+- The indexed-source preflight screens **only calc-usage in-direction bindings**. `screen_source_readiness`
+  iterates `usage.bindings` (`extraction/source_evidence.py:173`), and the elaborator's binding
+  classification serves consumer ports the same way. A bare computed-attribute initializer never
+  enters that population: it becomes a **typed alias** (the refusal text names it as such), and alias
+  resolution carries the indexed fact into semantic resolution, where the index has no representable
+  role — the index's role is dropped, not screened. This is the verified mechanism
+  [`run-records/phase1-stop-report.md`, Finding 3, verified in source at `C_base`]. Revision 6's
+  earlier account — "the computed attribute route reads a fact that retains `has_index_segment`,
+  ignores that field" — named the wrong trigger and is deleted.
+
+  The measured behavior at `C_base` follows directly from that mechanism:
+
+  | Authored shape | Result at `C_base` |
+  |---|---|
+  | `picked = cells#(2).mass`, `cells : Cell[3]` (Revision-6 plan stencil) | REFUSED — `SI_OCCURRENCE_AMBIGUOUS`; wrong name, incidental to the plural slot |
+  | `picked = cells#(2).mass * 1.0` (any operator wrapper) | REFUSED — `SI_INDEXED_SOURCE_UNSUPPORTED`; correct code |
+  | `picked = cells#(1).mass`, `Cell[1]` | zero-diagnostic graph, silently `cells[0].mass` |
+  | `picked = cells#(2).mass`, `Cell[1]` — index out of range | zero-diagnostic graph, silently `cells[0].mass` |
+
+  A **singular** slot silently binds occurrence zero for any authored index, in range or not. A
+  **plural** slot refuses incidentally as ambiguous, on a name that describes occurrence selection
+  rather than the unsupported index. **Operator-wrapped forms are real expressions, enter the screen,
+  and refuse correctly today** — they are not part of the escape. The escape is the bare chain.
 - Agentic owns typed operand materialization, exact reference facts, and the general ExpressionIR.
   Codegen nevertheless retains a raw-AST unit unwrapping helper, a recursive dependency walk with
   its own depth behavior, and a bare-binding constructor whose semantic path may be `None`.
@@ -108,6 +147,17 @@ Agentic input is `A_base = 2171016d3e3e0805525aa4cf787c55c6293dd00c`. The curren
 checkout is not an implementation base. D1-D4, the retained probes, and the committed verification
 harness in `C_base` are preserved; gate 6 assigns fresh target identities `A_final`, `C_prod`,
 `F_final`, and `C_evidence`.
+
+**[OWNER-ratified 2026-08-17, ruling 1]** `C_base` and `A_base` are unchanged by Revision 7. The
+Phase-1 stop did not disqualify the base: the lock is intact and the tree is coherent
+(`run-records/phase1-stop-report.md`, Finding 1). Do not re-root.
+
+`C_base` is a **descendant** of the frozen evidence commits, not a byte copy of them. Nothing in this
+design requires the current tree to byte-match the `P_seed` evidence state. Historical evidence,
+generated output expectations, and the evolving validator are **versioned states**; every difference
+between `P_seed` and `C_base` is either metadata-only or owned by a named transition row, and the
+committed validators prove that. See [Probe/fixture commit lock](#probefixture-commit-lock) for the
+rule that replaces byte identity.
 
 ### Load-bearing bets
 
@@ -1057,21 +1107,84 @@ The retained probe/fixture commit already exists at
 `43edf9bde4db44e7973458ada732d2cd75e764f6`. Both are ancestors of `C_base` and are preserved in
 place; Revision 6 does not recreate them or call a new commit the pre-change probe boundary.
 
-At Revision-6 gate 1, the committed runner requires `probe_fixture_commit` to equal that locked
-40-character SHA, requires its recorded parent relationship, and recomputes every probe/fixture
-hash. The recorded verdicts must name the same probe and lock commits. A dirty tree or mismatch
-stops the plan. The probes rerun only under D10's locked-input rule.
+At gate 1, the committed runner requires `probe_fixture_commit` to equal that locked 40-character
+SHA, requires its recorded parent relationship, and recomputes every probe/fixture hash **against the
+lock commit's own tree**, not against the working tree. The recorded verdicts must name the same probe
+and lock commits. A dirty implementation worktree, a mismatch in the lock leg, or an unowned
+current-output difference stops the plan. The probes rerun only under D10's locked-input rule, where
+"locked input" means a change to the frozen historical bytes, not a ledger-owned current-output
+transition.
 
 The lock stores SHA-256 for every probe, every source fixture file in the 37 canonical roots, every
-added fixture file, the item fixture manifest, and the canonical batch manifest. Any changed byte
-invalidates the verdicts and returns the item to design before any replacement lock or rerun.
+added fixture file, the item fixture manifest, and the canonical batch manifest.
+
+#### What the lock is verified against
+
+**[OWNER-ratified 2026-08-17, rulings 2-3]** Revision 6 required that "any changed byte invalidates
+the verdicts." That rule is **deleted**. It demanded byte identity in the *current* tree, which the
+implemented evidence contract at `C_base` deliberately does not provide, and executing it was what
+tripped the Phase-1 stop (`run-records/phase1-stop-report.md`, Finding 1). The rule below replaces it
+and is not weaker: it checks strictly more, because it checks the lock *and* the transitions.
+
+The lock is a **historical** artifact and is verified against its own historical tree:
+
+1. **Lock leg.** Every one of the 118 hashes in `verification/probe-fixture-lock.json` must recompute
+   against the lock commit's own tree, `43edf9bde4db44e7973458ada732d2cd75e764f6`, read from Git. All
+   118 recompute there today with zero mismatches [verified]. **The lock is preserved unchanged and is
+   never re-derived.** Re-locking against `C_base` would erase the provenance the lock exists to
+   preserve, so a mismatch here returns the item to design; it never authorizes a replacement lock.
+2. **Current-output leg.** Current outputs are *not* checked against the lock. They are validated
+   through the transition-ledger machinery already committed in `verification/capture_baseline.py`:
+   - `build_manifest` / `validate_manifest` reconstruct the frozen source inventory **from Git at the
+     named `P_seed` commit** `52a03cd2d0a9fdd340b60b16cea79a5b72234b08` and check it against
+     `FROZEN_BATCH_SHA256` (`capture_baseline.py:76`). The manifest's `canonical_batch` pin names
+     those frozen bytes by construction, never the working-tree file.
+   - `validate_current_batch` (`capture_baseline.py:166`) validates the current batch separately, at
+     its own pinned hash, and requires its record inventory to be closed.
+   - `validate_output_transitions` proves every post-`P_seed` output byte is either metadata-only —
+     `_snapshot_semantics` strips two version fields plus `integrity.digest` and requires
+     byte-identical structures otherwise — or owned by a named A/B row in
+     `verification/expected-transitions.md`.
+
+   `verification/expected-transitions.md` states the same semantics outright: "The Phase 1 probe lock
+   is authoritative only at `P_seed`," and the current batch "must not be presented as a current
+   member of the frozen `P_seed` byte inventory."
+
+A failure in **either** leg stops the plan and returns the item to design. An unowned current-output
+difference is exactly as fatal as a lock mismatch; the difference is only which authority names it.
+
+#### The missing committed check — Phase 1 adds it
+
+Today the lock leg exists only as a hand-run: no committed test verifies `43edf9bd` against its
+historical tree. That is the one real residual gap in `C_base`'s evidence contract.
+
+**Phase 1 must add that check as a kept test.** It reads each locked path's bytes from Git at the lock
+commit (the same `git show` route `_git_bytes` already uses), recomputes SHA-256, and requires an
+exact match for all 118 rows, with an anti-vacuity assertion that the row count is 118 and every row
+was actually read. It must not read the working tree for those bytes, and it must not rewrite the
+lock on mismatch. It lands in `C_prod` beside the other verification tests.
 
 ### Closed fixture inventory
 
 `verification/fixture-manifest.json` is the only input inventory for this item. It expands the
-existing canonical `tests/fixtures/v6_recapture_batch/batch.json`, requires exactly 37 fixture roots
-and 37 records (15 graph records and 22 typed refusals), and pins that file's current SHA-256:
-`bd7bf245e3ca3923b9b5d41db97861c9fcdf64435e768d48a2d7027eb52d9288`.
+canonical `tests/fixtures/v6_recapture_batch/batch.json` and requires exactly 37 fixture roots and 37
+records.
+
+The batch manifest has **two states, and each count must be labeled with its state.** Revision 6
+printed the frozen counts and called the frozen hash "that file's current SHA-256." That was false at
+`C_base` and is corrected here.
+
+| State | Batch SHA-256 | Records | What it is |
+|---|---|---|---|
+| **Frozen, at `P_seed` `52a03cd`** | `bd7bf245e3ca3923b9b5d41db97861c9fcdf64435e768d48a2d7027eb52d9288` | 15 graph / 22 typed refusals | The input inventory. Reconstructed from Git, never read from the working tree. This is what `canonical_batch` pins. |
+| **Current, at `C_base` `78a9beb9`** | `7f9269781a8938308715229c5be00855490e82b7e54f9cb90939195e3aeefa40` | 14 graph / 23 typed refusals | The output expectation. Validated by `validate_current_batch` at its own pinned hash. |
+
+The 15/22 → 14/23 move is one record, `deep_cross_scope_probe`, going graph → refusal. It is a named,
+ledger-owned A2 transition, ruled on below. `plant_value_shapes` also moved in the same
+reconciliation without changing the graph/refusal totals.
+
+Neither state may be presented as the other. A frozen count quoted as current, or the current batch
+quoted as a member of the frozen `P_seed` byte inventory, is a defect in the document that states it.
 
 For those 37 roots, the item manifest explicitly enumerates every `.sysml` and `.kerml` source by
 repository-root-relative path and SHA-256. The batch manifest's snapshot hashes do not substitute
@@ -1101,7 +1214,8 @@ Explicit exclusions are:
   version and document tier rather than copied into project fixtures;
 - every pre-existing dirty, staged, or untracked worktree artifact outside the manifest.
 
-Anti-vacuity checks require: 37 canonical roots; 15 graph and 22 typed-refusal baseline records; at
+Anti-vacuity checks require: 37 canonical roots; 15 graph and 22 typed-refusal records **in the frozen
+`P_seed` state**, and 14 graph and 23 typed-refusal records **in the current state**; at
 least one enumerated source file per canonical root; six added roots; seven added source files; seven B2
 topology rows; at least one real feature-reference and one real feature-chain fact in B8a; at least
 two parser documents and one unit-bearing feature from each in B10; and at least one graph or named
@@ -1112,7 +1226,7 @@ refusal record for every inventory root. All evidence paths are repository-root-
 
 The retained baseline record captured the 37 canonical roots at the comparison baseline and the
 six added roots at the probe/fixture commit while production source was byte-identical to the
-baseline parent. Revision 6 preserves that record. It stores:
+baseline parent. That record is preserved unchanged. It stores:
 
 - source commit, fixture path/hash, Python/SysIDE/agentic versions;
 - graph codec bytes and semantic node/edge identity rows;
@@ -1124,6 +1238,35 @@ baseline parent. Revision 6 preserves that record. It stores:
 generated byte must name a transition row and proving test. All other maintained outputs stay
 byte-identical.
 
+### `deep_cross_scope_probe` — graph to refusal is intended tightening
+
+**[OWNER-ratified 2026-08-17, rulings 4-5]** The `deep_cross_scope_probe` record moved from graph to
+refusal between `P_seed` and `C_base`. That move is **correct and is never reverted.**
+
+The evidence [verified, `run-records/phase1-stop-report.md`, Finding 2]: the fixture's Pattern B
+authors an input aimed at the one concrete produced output
+(`tests/fixtures/deep_cross_scope_probe/design.sysml:75`). The pre-transition baseline graph did not
+wire that consumer to the concrete producer channel — a sibling consumer in the same fixture,
+`derived_calc`, did receive it. It wired the consumer instead to
+`DeepCrossScopeProducer__Core_Metric__metric_value`, a definition-scoped name surfaced as a
+**caller-supplied entry-point parameter with `default_value: null`**.
+
+That is this item's forbidden class verbatim: a reference the toolchain could not honor was silently
+changed into another expression through a caller-supplied substitute. The old capture was not a
+capability being lost; it was the defect this item exists to remove. At `C_base` the fixture refuses
+with the named, fail-closed `SI_OCCURRENCE_MISSING` diagnostic and the authored reference preserved,
+which is the contract.
+
+Two consequences bind implementation:
+
+- **Never restore the old graph.** A change that returns `deep_cross_scope_probe` to a captured graph
+  restores the substitution defect and fails the item, regardless of what the batch counts look like.
+  This is a stop condition, not a reconciliation to negotiate.
+- **The exact deep qualified-output shape is a separately owned capability, not a silent gap.** The
+  authored shape is legitimate; the product simply does not implement exact wiring for it yet.
+  Refusing it by name is the correct behavior in this item. The follow-up is filed as its own row in
+  the documentation and backlog obligations below.
+
 ### Transition ledger seed
 
 | Transition | Old behavior | Required result | Proof owner |
@@ -1133,6 +1276,8 @@ byte-identical.
 | A3 lineage miss | one descendant may answer | lineage-local result or `SI_OCCURRENCE_MISSING` | expanded `test_definition_owned_reference_positions.py` |
 | A4 package/model root | model root may answer a consumer miss | direct one-step package-owned no-prefix result; nested no-prefix refusal | B2 probe and `test_occurrence_domain_derivation.py` |
 | A5 indexed expression | one input route refuses while computed/alias/predicate routes may erase the index | every expression site returns `IndexedReferenceUse` and refuses pre-graph; consumer backstop also refuses | consumer matrix in `test_expression_evidence_integrity.py` |
+| A5a indexed bare chain, singular slot | zero-diagnostic graph; authored index silently rewritten to occurrence zero, in range or not | pre-graph `SI_INDEXED_SOURCE_UNSUPPORTED` naming the authored reference | `test_expression_evidence_integrity.py`, `Cell[1]` out-of-range case |
+| A5b indexed bare chain, plural slot | incidental `SI_OCCURRENCE_AMBIGUOUS` — a name about occurrence selection, for an index defect | `SI_OCCURRENCE_AMBIGUOUS` → `SI_INDEXED_SOURCE_UNSUPPORTED`; the inventory refuses before occurrence resolution runs | `test_expression_evidence_integrity.py`, `Cell[3]` case |
 | A6 multiplicity writer | unrelated sole writer may answer | owner-address writer or `SI_MULTIPLICITY_UNRESOLVED` | `test_occurrence_multiplicity_authority.py`; public mutation test |
 | B1-B5 evidence | fallback, partial traversal, raw unit/depth walk, optional target, or QN filter continues | exact evidence/DocumentTier or `SI_EVIDENCE_INCOMPLETE`; no alternate raw route | agentic owner tests; codegen consumer/ownership matrix |
 | Deep relationship path | missing middle segment is filtered | total exact path or `SI_EVIDENCE_INCOMPLETE` at that segment | public deep-override regression |
@@ -1144,7 +1289,66 @@ byte-identical.
 A4 has its own row because package anchoring and consumer-root fallback are separate behavior from
 A1/A2 contextual selection.
 
+A5a and A5b are new in Revision 7. They are the two measured `C_base` behaviors of the bare indexed
+chain, split because they fail differently and prove different things: A5a proves the silent rewrite
+exists at all, A5b proves the *name* of the refusal changes. Phase 4's reconciliation gate must expect
+both, and specifically must expect the `SI_OCCURRENCE_AMBIGUOUS → SI_INDEXED_SOURCE_UNSUPPORTED`
+diagnostic transition rather than flagging it as an unlisted change. The pre-existing A5 row already
+anticipated the direction ("an element index is ignored → pre-graph `SI_INDEXED_SOURCE_UNSUPPORTED`");
+A5a/A5b make the two starting states explicit so neither reads as unowned drift.
+
+`verification/expected-transitions.md` gains the corresponding rows in the same landing unit as the
+tests that prove them.
+
 ## Test design
+
+### The indexed red set — both cases are required kept tests
+
+**[OWNER-ratified 2026-08-17, ruling 6]** Revision 6's red proof used a single indexed stencil on a
+`Cell[3]` slot. Measured at `C_base`, that stencil goes red for the **wrong reason**: it refuses
+already, as `SI_OCCURRENCE_AMBIGUOUS`. A red that comes from the wrong diagnostic is not the proof
+point. The red set is therefore two cases, and both are kept tests, not throwaway probes.
+
+**Case 1 — `Cell[1]` bare chain, index out of range.** `picked = cells#(2).mass` against a singular
+`cells : Cell[1]`. At `C_base` this produces a **zero-diagnostic graph** in which the authored index
+is silently rewritten to `cells[0].mass`. This is the escape itself, and the out-of-range index makes
+the rewrite unarguable: no reading of the model makes occurrence zero the authored intent. The test
+asserts, at `C_base`, that the graph is produced and carries zero diagnostics — that is the recorded
+red. After the item lands, it asserts pre-graph `SI_INDEXED_SOURCE_UNSUPPORTED` with the authored
+reference and root-relative `file:line`, through the live, admitted, and capture arms, with no graph
+and no snapshot byte written.
+
+**Case 2 — `Cell[3]` bare chain.** `picked = cells#(2).mass` against a plural `cells : Cell[3]`. At
+`C_base` this refuses as `SI_OCCURRENCE_AMBIGUOUS`. The test pins that starting diagnostic explicitly
+and requires it to become `SI_INDEXED_SOURCE_UNSUPPORTED`. Its job is to prove the **ordering**, not
+merely that something refuses: an end-to-end "it refused" assertion passes at `C_base` and proves
+nothing.
+
+Neither case substitutes for the other. Case 1 alone cannot show that the inventory runs before
+occurrence resolution, because nothing refuses on that path today. Case 2 alone cannot show the silent
+rewrite, because that path already refuses. Both must be red at `C_base` for their stated reason, and
+both must be green at close.
+
+Operator-wrapped forms (`cells#(2).mass * 1.0`) are **not** red-set members. They refuse correctly at
+`C_base` with the right code. They stay in the matrix as positive regression coverage, and a test that
+treats them as the escape is measuring the wrong thing.
+
+#### D11. Inventory refusal precedes occurrence resolution
+
+The pre-graph expression-evidence inventory (D7) refuses an `IndexedReferenceUse` **before** any
+occurrence-domain resolution runs, so an indexed use can never be diagnosed as an occurrence problem.
+The public refusal for an authored index is always `SI_INDEXED_SOURCE_UNSUPPORTED`, never
+`SI_OCCURRENCE_MISSING` or `SI_OCCURRENCE_AMBIGUOUS`, regardless of the slot's multiplicity.
+
+*Rejected: letting whichever check fires first name the failure* — that is `C_base`'s behavior, and it
+makes the public diagnostic depend on the declared multiplicity of the consumer's slot rather than on
+the defect. A user who wrote an index gets told their occurrence is ambiguous, which points at the
+wrong thing to fix and hides an unimplemented capability behind a resolution error.
+
+This ordering is already implied by D7's "refuse every `IndexedReferenceUse` before
+calculation-definition extraction, `_ExactElaborator`, or `InstanceGraph` allocation." D11 states it
+as a decision because it now carries a required diagnostic transition (A5b) and an explicit test
+obligation. It adds no mechanism.
 
 ### Occurrence and producer matrix
 
@@ -1308,6 +1512,18 @@ The same landing unit updates:
   as valid but not implemented.
 - `[INDEXED-ELEMENT-EXPRESSION-SUPPORT]` under P-001 and
   `[OUTPUT-ALIAS-DUPLICATE-SOURCE-SILENCE]` as separate agent-grade backlog rows before close.
+- **`[DEEP-QUALIFIED-OUTPUT-WIRING]` as a separate agent-grade backlog row before close.** Exact
+  wiring for a deep qualified reference to a concrete calculation output is a real, separately owned
+  capability. This item refuses it by name; it does not implement it. The row names the authored shape
+  in `tests/fixtures/deep_cross_scope_probe/design.sysml`, the current `SI_OCCURRENCE_MISSING`
+  contract, and the A2 transition record.
+- **Fix the stale fixture comment at
+  `tests/fixtures/deep_cross_scope_probe/design.sysml:75`.** It currently reads "Exact projection
+  wires this input to the one concrete core output," which contradicts the recorded refusal and
+  describes the substitution defect that was removed. Replace it with the current contract — this
+  reference refuses with `SI_OCCURRENCE_MISSING` because no producer exists in the consumer's domain —
+  and point at `[DEEP-QUALIFIED-OUTPUT-WIRING]`. The comment is documentation, not a fixture-behavior
+  change; the fixture's authored reference and its refusal are unchanged.
 - P-003's agent-written first-application status so every definition-owned lineage miss is described
   as refusing after A3. Its owner-verbatim promise is unchanged.
 - The epic's stale predecessor wording, `.project/CURRENT_WORK.md`, product index/status, and the
@@ -1315,15 +1531,17 @@ The same landing unit updates:
 
 ## Sequencing and landing gates
 
-Revision 6 does not resume the current implementation checklist. It needs the review's targeted
-confirmation and a replacement plan. That plan uses these gates:
+This design does not resume the failed candidate's implementation checklist. It needs the review's
+targeted confirmation and a replacement plan. That plan uses these gates:
 
 1. **Branch from the audited production tree.** Create the implementation branch directly from the
    old `C_prod`, `78a9beb956f9b5a517c08836b067f0cb0dc4ccc6`, and use Agentic input
    `2171016d3e3e0805525aa4cf787c55c6293dd00c`. Do not branch from this documentation checkout or
    from a parent of the failed candidate. Preserve D1-D4, the probes, and the verification harness.
-   Add failing natural-route tests and the initial local ownership manifests before production
-   edits.
+   Verify the lock through both legs above: the `43edf9bd` lock against its own historical tree, and
+   current outputs through the transition-ledger validators. Add the missing committed historical-tree
+   lock check as a kept test. Add failing natural-route tests — including **both** indexed red cases —
+   and the initial local ownership manifests before production edits.
 2. **Close Agentic's evidence surface.** Land semantic-evidence/v2 with one provenance-complete
    reference inspector, mapped index retention, shared traversal budget, exact targets, and exact
    manifest equality. Delete the permissive helpers/facts, bool marker, aliases, and exports. Migrate
@@ -1458,11 +1676,16 @@ The finalized Revision-5 review resolutions close in Revision 6 as follows:
 
 ## Next-stage handoff
 
-Revision 6 is draft and needs targeted `my-design-review` confirmation that the finalized findings
-are incorporated without reopening D1-D4. The current product-lens gate stays `BLOCKED` until that
-confirmation accepts the indexed-consumer architecture and its three-leg closure proof. After
-approval, `my-plan` replaces the existing checklist; it does not append remediation tasks to the
-Revision-4 plan. The replacement plan must keep both local ownership manifests, the scoped strict
+Revision 7 needs targeted `my-design-review` confirmation that the five amended areas are corrected
+without reopening D1-D10 or the closed-variant architecture. Everything Revision 6's review already
+approved stays approved; the review scope is the amendment. The current product-lens gate stays
+`BLOCKED` until the indexed-consumer architecture and its three-leg closure proof are proven green in
+production.
+
+After confirmation, Plan Revision 3 consumes this document. It must carry: the two-leg lock rule and
+the new committed historical-tree check in Phase 1; both indexed red cases with their recorded
+`C_base` diagnostics; and the A5a/A5b rows in Phase 4's reconciliation expectations. The replacement
+plan must keep both local ownership manifests, the scoped strict
 gates, full natural-route matrices, probe/fixture lock, and `C_prod`, `F_final`, and `C_evidence`
 boundaries as checked deliverables. Implementation is followed by an independent `my-audit`; the
 implementing agent does not self-certify.
