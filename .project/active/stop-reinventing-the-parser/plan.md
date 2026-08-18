@@ -1900,15 +1900,172 @@ is stronger and is what these bytes prove: the unit operand is **never reached**
 
 ### Phase 3 completion
 
-**Completed:**
+**Completed:** 2026-08-18. The Phase 3 implementation is complete. The independent adversarial
+audit remains the next pipeline stage; this implementation record does not self-certify it.
 
 **Commits / identities:**
 
+- Codegen starting point: `b4e97dd` on `stop-parser-impl-r2`.
+- Agentic input, read-only: `3f8bd587af40f05b929dd56645901dada7daea37`, package `0.1.3`,
+  `semantic-evidence/v2`.
+- `8cc1ef5` — kept constructor, exhaustiveness, missing/duplicate inventory, per-role bypass,
+  runtime-shape, total-deep-path, ownership, mutation, and carried-audit tests.
+- `18597c3` — one pre-graph inventory, exact resolver consumption, closed binding variants, total
+  deep paths, Agentic-owned unit traversal, public conversion, and the v2 pin.
+- `b316e3a` — the replacement proof for the final legacy-evidence responsibility and deletion of
+  `test_source_identity_extraction.py` in the same commit.
+- `3a85831` — migrated stale compiler/elaborator callers, recorded the machine-readable L-181
+  disposition, and made qualified predicate spelling render through the exact target's local Python
+  binding without changing occurrence authority.
+- `e3e1a39` — final clean-suite fixes: exact semantic facts on aggregation test doubles and a
+  fail-closed policy for three-segment part-rooted paths in the retained off-route classifier.
+- Final implementation identity: `e3e1a39e597a5529e4090d3fcea00964f6045a9b`; worktree clean.
+- Fresh declared extraction: `/tmp/stop-parser-rev2/phase3-extraction-r3`, with Codegen archive
+  SHA-256 `269d74da8c6f1aa2b81fbc4f22da1f5b8297ef9c0a1144f7a64cc5f53a9e0bf3`,
+  Agentic archive SHA-256
+  `c2924387d6d91360b951d5c9e17386b192148e2d719628feaec38fd41347afb2`, and
+  all-ref history-bundle SHA-256
+  `60348ba9820f5ba31e24ad6c1d101b21395fb675eba38d0f689a75fea1cd151b`.
+
 **Actual changes and test results:**
+
+*Closed evidence and single conversion.* `ExpressionEvidenceInventory` is built before extraction
+or graph allocation. Calculation dependencies, calculation/constraint bindings, aliases, computed
+attributes, and predicates consume its rows. Missing/duplicate rows are invariant failures. Every
+consumer backstop accepts only the closed `ExactReferenceUse` / `IndexedReferenceUse` union.
+`require_exact_use` rejects an indexed use, a legacy-shaped fact, an IR node, and a duck-typed
+lookalike at runtime. `unit_annotated_value` contains value-site policy only and delegates the whole
+node to Agentic's `unit_annotation_value`; it has no metatype, operator, operand, or arity walk.
+Live and admitted/capture routes convert owned failures once in `elaborated_pipeline.py`.
+
+*Ownership closure against the 20-row measurement.* Repository-wide discovery was not narrowed.
+The starting failure contained 20 unowned reads. The final discovered set equals a 24-row reviewed
+manifest with no unowned read:
+
+- 4 live contextual owners: the total deep-relationship factory, enumeration discrimination,
+  multiplicity contextualization, and redefinition endpoints;
+- 16 collision rows: 11 typed neutral-`ExpressionIR.operands` readers and 5 typed
+  `SourceFile.referent` serialized-key readers, each pinned by a real receiver/declaring-type test;
+- 4 visible off-route rows, mechanically excluded by transitive reachability from both public
+  raw-source arms.
+
+The adapter-free `return node.referent` mutant is discovered and fails manifest equality. All
+closure-proof names resolve to collected tests. The leg-3 lock parses the exact ledger row and both
+hashes. Fixture-input and verification-code rows are classified structurally. The five other
+evasion mutants and the exact manifest-equality gate remain green.
+
+*Phase 1 Codegen red-to-green account — all 15 nodes named.* These twelve indexed nodes are green,
+with exact public code, authored reference, root-relative location, cause, no downstream consumer
+or occurrence call, and no graph/snapshot:
+
+- `test_indexed_bare_chain_singular_slot_refuses_before_consumers[True-live]`
+- `test_indexed_bare_chain_singular_slot_refuses_before_consumers[True-admitted]`
+- `test_indexed_bare_chain_singular_slot_refuses_before_consumers[True-capture]`
+- `test_indexed_bare_chain_singular_slot_refuses_before_consumers[False-live]`
+- `test_indexed_bare_chain_singular_slot_refuses_before_consumers[False-admitted]`
+- `test_indexed_bare_chain_singular_slot_refuses_before_consumers[False-capture]`
+- `test_indexed_bare_chain_plural_slot_refuses_before_occurrence_resolution[True-live]`
+- `test_indexed_bare_chain_plural_slot_refuses_before_occurrence_resolution[True-admitted]`
+- `test_indexed_bare_chain_plural_slot_refuses_before_occurrence_resolution[True-capture]`
+- `test_indexed_bare_chain_plural_slot_refuses_before_occurrence_resolution[False-live]`
+- `test_indexed_bare_chain_plural_slot_refuses_before_occurrence_resolution[False-admitted]`
+- `test_indexed_bare_chain_plural_slot_refuses_before_occurrence_resolution[False-capture]`
+
+The remaining three nodes are:
+
+- `test_discovered_raw_selectors_equal_the_reviewed_manifest` — green at 24/24 rows;
+- `test_deleted_symbols_are_absent` — green; no weak compatibility symbol survives;
+- `test_every_consumer_cell_names_a_proof` — the sole full-suite failure, explicitly deferred by
+  [INHERITED: plan Revision 4] to Phase 4's natural-route consumer table. Phase 3 did not fill or
+  weaken that table.
+
+*Validation.* All commands used the licensed SysIDE environment. The owner-directed PDF/HTML and
+paid/network suites were not invoked.
+
+- Focused evidence, binding, compiler, unit, conversion, and ownership battery: **126 passed, 1
+  deselected** (the named Phase 4 table).
+- Former clean-suite failure set after correction: **167 passed, 25 skipped**.
+- D1-D4 plus retained harness, using the 15 paths recorded in Phase 1: **162 passed**.
+  `git diff 78a9beb -- src/sysml_codegen/elaboration/occurrence.py` is empty.
+- Fresh-extraction full Codegen suite: **1 failed, 2361 passed, 34 skipped, 94 deselected**, 2490
+  collected / 2396 selected. The one failure is exactly the named Phase 4 deferral above; there are
+  no collection errors or other failures.
+- Scoped strict type check on `binding_source.py` and `expression_evidence.py`: **Success, 0
+  issues**. Repository baseline: **30 errors in 8 files**, unchanged. Targeted Ruff over every
+  Python file changed after `b4e97dd`: clean.
+- Artifact topology/history battery: **21 passed** inside the full run. Deterministic wheels built
+  offline as `agentic_mbse-0.1.3-py3-none-any.whl` and
+  `sysml_codegen-0.1.1-py3-none-any.whl`. A fresh no-dependency install loaded both packages from
+  that venv and reported distribution/runtime versions `0.1.3` / `0.1.1`,
+  `semantic-evidence/v2`, and an importable `unit_annotation_value`.
+- Compound-unit falsifier: lenient elaboration produced no `SI_EVIDENCE_INCOMPLETE` for
+  `catf_mfe_model`, `catf_mfe_d5`, `catf_mfe_gated`, `fusion_tea`, or
+  `feature_metadata_multifile`. Results were respectively `42/9/[SI_SELF_BINDING]`, `42/9/[]`,
+  `58/3/[]`, `7/1/[]`, and `1/0/[]` for calculations/constraints/diagnostic codes. The corpus sweep
+  retained the recorded form list `[$/MWh]`, `[$/year]`, `[10^19 m^-3]`,
+  `[cm^-1]`, `[kg/m^3]`, `[kg/m³]`, `[kg/s]`, `[m^2]`, `[m^3]`, `[m³/s]`, `[mm/year]`,
+  `[MWh/year]`, `[MW/m²]`, `[MW·yr/m²]`, `[neutrons/cm²/s]`, `[Pa·m³/s]`, `[particles/s]`,
+  `[USD/kg]`, and `[W/(m·K)]`; parsed annotations in those models reached the shared primitive with
+  no evidence-integrity refusal. As recorded in Phase 2b, `[W/(m·K)]` itself is doc-comment-only at
+  SysIDE 0.8.4 and its authorable `[W/(m*K)]` structural equivalent carries the executable proof.
+  The exact stop case
+  `CATFMFEShield::catf_shield::gamma_shield::density = 9400 [kg/m^3]` no longer refuses.
+- `deep_cross_scope_probe` remains `SI_OCCURRENCE_MISSING` for an exact output with no producer in
+  the consumer domain; its snapshot remains absent.
+- Manual trace: calculation dependencies flow
+  `inspect_reference_uses` → `ExpressionEvidenceInventory.require_exact` →
+  `_calc_dependencies` → `compile_calc_def_exact`. Bindings flow through the same inventory row →
+  closed `BindingSourceEvidence` → the existing exact occurrence resolver. Neither trace contains a
+  second raw dependency walk or name reconstruction. Static inspection also finds no import or call
+  of the inventory enumerator/reference inspector on the sealed from-snapshot route.
 
 **14-row disposition table — `tests/conformance/test_source_identity_extraction.py`:**
 
+[INHERITED: plan Revision 4] The owner allowed deletion only after every surviving test
+responsibility received a replacement ID or precise retirement reason. `b316e3a` paired the final
+replacement with the deletion; L-181's machine row records all deleted nodes and replacement proof
+nodes.
+
+| Deleted node | [AGENT] Replacement / retirement disposition |
+|---|---|
+| `test_chain_target_is_the_redefining_feature` | `tests/conformance/test_elaboration_expose_shapes.py::test_fact_expose_attribute_carries_complete_chain_facts` |
+| `test_deep_chain_retains_exact_leaf_target` | `tests/unit/test_expression_evidence_boundary.py::test_complete_deep_path_retains_every_segment` |
+| `test_def_and_usage_context_referent_classes` | `tests/conformance/test_definition_owned_reference_positions.py::test_inside_the_definition_each_occurrence_reads_its_own_value` |
+| `test_written_form_separates_qualified_from_bare` | `tests/unit/test_expression_evidence_boundary.py::test_closed_bindings_preserve_source_spelling_and_formal_identity` |
+| `test_usage_owned_fact_owner_matches_live_part_usage` | `tests/conformance/test_usage_owned_reference_anchoring.py::test_combined_alias_raw_target_is_the_named_source` |
+| `test_cross_owner_consumers_share_one_exact_referent` | `tests/conformance/test_usage_owned_reference_anchoring.py::test_combined_named_source_reaches_every_and_only_its_consumers` |
+| `test_bound_formal_identity_is_exact` | `tests/conformance/test_elaboration_projection_one_way.py::test_constraint_formal_provenance_comes_from_exact_port` |
+| `test_aggregation_terms_retain_exact_targets` | `tests/conformance/test_usage_owned_reference_anchoring.py::test_combined_direct_sum_term_is_scalar_and_reaches_the_named_source` |
+| `test_occurrence_override_value_sites_carry_exact_identity` | `tests/conformance/test_occurrence_domain_derivation.py::test_real_fixture_has_one_redefinition_slot_and_effective_specialized_usage` |
+| `test_authored_literal_is_a_distinct_evidence_class` | `tests/unit/test_expression_evidence_boundary.py::test_binding_variant_switch_is_exhaustive` |
+| `test_indexed_source_is_evidence_not_flattened` | `tests/conformance/test_expression_evidence_integrity.py::test_valid_indexed_source_refuses_before_graph_with_exact_capability_diagnostic` |
+| `test_self_binding_detected_despite_same_named_outer` | `tests/conformance/test_elaboration_expose_shapes.py::test_catf_strict_elaboration_rejects_its_real_self_binding` |
+| `test_shadowed_reference_is_not_a_self_binding` | `tests/conformance/test_usage_owned_reference_anchoring.py::test_bare_alias_discriminator_binds_the_aliased_owner` |
+| `test_expression_source_disposition` | `tests/conformance/test_elaboration_fail_closed.py::test_invocation_rhs_is_diagnostic_not_an_unbound_candidate` |
+
 **Issues / deviations / rollback point:**
+
+1. **[INHERITED: plan Revision 4] Phase 4 proof table remains red by design.** The sole failing node
+   is named above. No Phase 4 registry, matrix, ledger, or documentation work was started.
+2. **[AGENT] Exact qualified predicate spelling needed a rendering seam.** Agentic correctly keeps
+   authored `comp_a::length` in neutral IR. Python must bind the exact target's local name
+   `length`. `predicate_reference_name` now derives that rendering name from the exact target fact;
+   qualified identity remains on `ConstraintFormalIdentity` for collision/correspondence checks.
+   The public six-consumer mutation test and two focused unit tests pin the result. This does not
+   create occurrence authority or a second resolution mode.
+3. **[AGENT] The retained off-route computed-attribute taxonomy gained exact leaf facts upstream.**
+   A three-segment part-rooted leaf is still not proof of an executable occurrence in that
+   classifier, which has no occurrence graph. It now stays `UNRESOLVABLE`; the shipped elaborator
+   owns the positive exact route. The 4A golden and output-transition lock remain byte-identical.
+4. **[AGENT] Offline fresh-wheel dependency resolution could not find `syside` in the uv cache.**
+   Both wheels were installed with `--no-deps` into a fresh venv; verification appended the existing
+   third-party dependency site only after the fresh wheel site, and printed both imported package
+   paths from the fresh venv. The authoritative test run imported Codegen and Agentic source from
+   the hash-declared extraction while using the existing venv only for third-party dependencies.
+5. The independent six-variant adversarial Phase 3 audit is intentionally not recorded as passed.
+   Run `$my-audit` next; the implementing agent may not self-certify.
+
+**Rollback point:** `b4e97dd` on `stop-parser-impl-r2`, as specified by plan Revision 4.
 
 ### Phase 4 completion
 
