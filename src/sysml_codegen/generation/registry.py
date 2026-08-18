@@ -8,7 +8,7 @@ Usage:
     from sysml_codegen.generation.registry import generate_registry
 
     code = generate_registry(
-        graph, "package_name", template_env, output_path, exit_point_types
+        graph, "package_name", template_env, output_path
     )
 """
 
@@ -45,10 +45,10 @@ def exit_point_wrapper_type(python_type: str) -> str | None:
     return _EXIT_POINT_WRAPPERS.get(python_type)
 
 
-def _collect_exit_point_primitive_types(
-    modules: list,
-) -> list[str]:
-    """Collect unique primitive wrapper type names needed for exit points.
+def required_exit_point_wrapper_types(
+    graph: ComputationGraph,
+) -> tuple[str, ...]:
+    """Derive and validate the root-output wrappers required by one graph.
 
     For single-output modules (field_name="root"), returns the wrapper type
     name from primitives.py (e.g., "Float" for python_type="float").
@@ -56,18 +56,17 @@ def _collect_exit_point_primitive_types(
     Multi-output modules use BaseModel schemas which are already registered
     via entry_point_groups or schema generation.
     """
-    types = set()
-    for module in modules:
+    from sysml_codegen.generation.errors import unsupported_exit_point_type_error
+
+    types: set[str] = set()
+    for module in graph.modules:
         for out in module.outputs:
             if out.field_name == "root":
                 wrapper = exit_point_wrapper_type(out.python_type)
                 if wrapper is None:
-                    raise RuntimeError(
-                        "registry reached an unsupported root output after the "
-                        "exit-point type preflight"
-                    )
+                    raise unsupported_exit_point_type_error(module, out)
                 types.add(wrapper)
-    return sorted(types)
+    return tuple(sorted(types))
 
 
 def _resolve_class_name_collisions(
@@ -242,7 +241,6 @@ def generate_registry(
     package_name: str,
     template_env: jinja2.Environment,
     output_path: Path,
-    exit_point_primitive_types: list[str],
 ) -> str:
     """Generate registry from ComputationGraph.
 
@@ -255,8 +253,6 @@ def generate_registry(
         package_name: Package name
         template_env: Jinja2 environment
         output_path: Where to write __init__.py
-        exit_point_primitive_types: Primitive types for exit point registration.
-
     Returns:
         Generated Python code
     """
@@ -265,6 +261,7 @@ def generate_registry(
         validate_constraint_graph_or_raise,
     )
 
+    exit_point_types = required_exit_point_wrapper_types(graph)
     validate_constraint_graph_or_raise(graph)
 
     schema_imports = _generate_schema_imports_from_entry_points(
@@ -386,7 +383,7 @@ def generate_registry(
         "schema_imports": schema_imports,
         "parameter_groups": group_names,
         "package_name": package_name,
-        "exit_point_types": exit_point_primitive_types,
+        "exit_point_types": exit_point_types,
     }
 
     template = template_env.get_template("registry_function.py.jinja2")
@@ -398,15 +395,15 @@ def generate_registry(
     return code
 
 
-# Keep old names as aliases for backward compatibility during transition
+# Every exported name is the same four-argument graph-derived seam.
 generate_registry_from_graph = generate_registry
 generate_registry_function = generate_registry
 
 
 __all__ = [
-    "_collect_exit_point_primitive_types",
     "exit_point_wrapper_type",
     "generate_registry",
+    "required_exit_point_wrapper_types",
     "residual_class_name_collisions",
     "generate_registry_from_graph",
     "generate_registry_function",

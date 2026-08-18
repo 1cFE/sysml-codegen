@@ -318,24 +318,9 @@ def _preflight_registry_class_names(graph: ComputationGraph) -> None:
 
 def _preflight_exit_point_types(graph: ComputationGraph) -> None:
     """Refuse an unsupported root-output wrapper before touching the output tree."""
-    from sysml_codegen.generation import CodeGenerationError
-    from sysml_codegen.generation.registry import exit_point_wrapper_type
+    from sysml_codegen.generation.registry import required_exit_point_wrapper_types
 
-    for module in graph.modules:
-        for output in module.outputs:
-            if output.field_name != "root":
-                continue
-            if exit_point_wrapper_type(output.python_type) is not None:
-                continue
-            source_file = module.source_file or "unknown"
-            source_line = module.source_line if module.source_line is not None else 0
-            raise CodeGenerationError(
-                "EXIT_POINT_TYPE_UNSUPPORTED: "
-                f"module={module.name!r} "
-                f"output={f'{output.field_name}/{output.channel_name}'!r} "
-                f"python_type={output.python_type!r} "
-                f"source={f'{source_file}:{source_line}'!r}"
-            )
+    required_exit_point_wrapper_types(graph)
 
 
 def _preflight_constraint_totality(graph: ComputationGraph) -> None:
@@ -731,18 +716,14 @@ def _generate_registry(
     """Generate registry function in __init__.py."""
     _preflight_constraint_names(graph)
     from sysml_codegen.generation import generate_registry
-    from sysml_codegen.generation.registry import _collect_exit_point_primitive_types
 
     output_path = config.output_path / "__init__.py"
-
-    exit_point_types = _collect_exit_point_primitive_types(graph.modules)
 
     code = generate_registry(
         graph=graph,
         package_name=config.package_name,
         template_env=template_env,
         output_path=output_path,
-        exit_point_primitive_types=exit_point_types,
     )
     if code:
         output_path.write_text(code)

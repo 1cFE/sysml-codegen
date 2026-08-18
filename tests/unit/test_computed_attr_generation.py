@@ -10,7 +10,6 @@ from __future__ import annotations
 from pathlib import Path
 
 import jinja2
-import pytest
 
 from sysml_codegen.extraction.data_models import (
     ComputedAttributeClassification,
@@ -18,18 +17,12 @@ from sysml_codegen.extraction.data_models import (
 )
 from sysml_codegen.extraction.expression_compiler import Compilability
 from sysml_codegen.generation.pipeline import _module_to_context
-from sysml_codegen.generation.registry import (
-    _collect_exit_point_primitive_types,
-    generate_registry,
-)
+from sysml_codegen.generation.registry import generate_registry
 from sysml_codegen.generation.stencils import generate_backlog_report
 from sysml_codegen.resolution.models import (
     ComputationGraph,
-    InputSource,
-    ModuleInput,
     ModuleKind,
     ModuleOutput,
-    ParameterGroup,
     PipelineModule,
 )
 
@@ -71,10 +64,13 @@ def _make_pipeline_module(
         name=name,
         module_type=module_type,
         inputs=[],
-        outputs=[ModuleOutput(
-            field_name="root", python_type="float",
-            channel_name=f"{name}__out",
-        )],
+        outputs=[
+            ModuleOutput(
+                field_name="root",
+                python_type="float",
+                channel_name=f"{name}__out",
+            )
+        ],
         execution_order=0,
         module_kind=module_kind,
     )
@@ -101,7 +97,21 @@ def _make_formula_module(
         module_kind=ModuleKind.FORMULA,
         calc_def_name=attr_name,
         calc_def_qualified_name=owning_part_qn.replace("::", "__"),
-        auto_impl_context={"execution_steps": [], "output_expressions": [{"name": attr_name, "expression": f"(inputs.{attr_name}_input)"}], "output_count": 1, "single_output_expression": f"(inputs.{attr_name}_input)"} if auto_impl else None,
+        auto_impl_context=(
+            {
+                "execution_steps": [],
+                "output_expressions": [
+                    {
+                        "name": attr_name,
+                        "expression": f"(inputs.{attr_name}_input)",
+                    }
+                ],
+                "output_count": 1,
+                "single_output_expression": f"(inputs.{attr_name}_input)",
+            }
+            if auto_impl
+            else None
+        ),
     )
 
 
@@ -341,7 +351,10 @@ class TestComputedAttrAutoImpl:
             "package_name": "test_pkg",
             "sysml_source": "unknown:0",
             "sysml_expressions": ["area = length * width"],
-            "docstring": "Execute area computed attribute.\n\nSysML Expression: area = length * width",
+            "docstring": (
+                "Execute area computed attribute.\n\n"
+                "SysML Expression: area = length * width"
+            ),
         }
 
         rendered = template.render(**context)
@@ -402,7 +415,6 @@ class TestRegistryInclusion:
             package_name="test_pkg",
             template_env=env,
             output_path=Path("test_init.py"),
-            exit_point_primitive_types=_collect_exit_point_primitive_types(graph.modules),
         )
 
         assert "areaModule" in code
@@ -424,7 +436,6 @@ class TestRegistryInclusion:
             package_name="test_pkg",
             template_env=env,
             output_path=Path("test_init.py"),
-            exit_point_primitive_types=_collect_exit_point_primitive_types(graph.modules),
         )
 
         # FORMULA modules are always in the graph and thus always in the registry
@@ -445,7 +456,6 @@ class TestRegistryInclusion:
             package_name="test_pkg",
             template_env=env,
             output_path=Path("test_init.py"),
-            exit_point_primitive_types=_collect_exit_point_primitive_types(graph.modules),
         )
 
         assert "PAlphaOutModule" not in code

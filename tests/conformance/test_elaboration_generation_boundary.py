@@ -9,10 +9,7 @@ import jinja2
 from sysml_codegen.elaboration import project
 from sysml_codegen.extraction.extractor import SysMLDataExtractor
 from sysml_codegen.generation.pipeline import generate_pipeline_yaml
-from sysml_codegen.generation.registry import (
-    _collect_exit_point_primitive_types,
-    generate_registry,
-)
+from sysml_codegen.generation.registry import generate_registry
 from tests.conftest import FIXTURES_DIR, requires_license
 from tests.helpers.raw_elaboration import elaborate
 
@@ -39,7 +36,6 @@ def test_exact_projection_renders_real_pipeline_and_registry(tmp_path: Path) -> 
         "exact_probe",
         environment,
         tmp_path / "__init__.py",
-        _collect_exit_point_primitive_types(graph.modules),
     )
 
     assert "source_identity_mixed_consumers__station__chain_calc" in pipeline

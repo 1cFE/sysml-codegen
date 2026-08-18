@@ -1,9 +1,8 @@
 """D3 Hygiene Tail Site 3 — `type_map` "Any" exit-point skip
 (TRUTH-DEBT Item 6).
 
-The public generation boundary now refuses an unsupported root output before
-mutation. If a direct registry caller bypasses that preflight, collection raises
-as a programming invariant instead of warning and omitting the wrapper.
+The public generation boundary and direct registry seam derive from the same graph
+and refuse an unsupported root output before mutation.
 """
 
 from __future__ import annotations
@@ -12,9 +11,11 @@ import logging
 
 import pytest
 
-from sysml_codegen.generation.registry import _collect_exit_point_primitive_types
+from sysml_codegen.generation import CodeGenerationError
+from sysml_codegen.generation.registry import required_exit_point_wrapper_types
 from sysml_codegen.resolution.models import (
     Compilability,
+    ComputationGraph,
     ModuleKind,
     ModuleOutput,
     PipelineModule,
@@ -43,17 +44,24 @@ def _module_with_root_output(python_type: str) -> PipelineModule:
     )
 
 
+def _graph_with_root_output(python_type: str) -> ComputationGraph:
+    module = _module_with_root_output(python_type)
+    return ComputationGraph(
+        modules=[module],
+        entry_point_groups=[],
+        execution_order=[module.name],
+    )
+
+
 def test_any_exit_point_cannot_be_omitted_by_a_direct_registry_caller(caplog):
-    mods = [_module_with_root_output(python_type="Any")]
     with caplog.at_level(logging.WARNING):
-        with pytest.raises(RuntimeError, match="exit-point type preflight"):
-            _collect_exit_point_primitive_types(mods)
+        with pytest.raises(CodeGenerationError, match="EXIT_POINT_TYPE_UNSUPPORTED"):
+            required_exit_point_wrapper_types(_graph_with_root_output("Any"))
     assert _warns(caplog) == []
 
 
 def test_float_exit_point_no_warn(caplog):
-    mods = [_module_with_root_output(python_type="float")]
     with caplog.at_level(logging.WARNING):
-        result = _collect_exit_point_primitive_types(mods)
-    assert result == ["Float"]
+        result = required_exit_point_wrapper_types(_graph_with_root_output("float"))
+    assert result == ("Float",)
     assert _warns(caplog) == []

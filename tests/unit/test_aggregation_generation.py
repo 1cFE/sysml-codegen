@@ -10,20 +10,14 @@ from __future__ import annotations
 from pathlib import Path
 
 import jinja2
-import pytest
 
 from sysml_codegen.core.qualified_names import get_module_name
 from sysml_codegen.extraction.data_models import (
     AggregationExpressionData,
-    CalculationDefinitionData,
     ScopedAggregationData,
 )
-from sysml_codegen.extraction.expression_compiler import Compilability
 from sysml_codegen.generation.pipeline import _module_to_context
-from sysml_codegen.generation.registry import (
-    _collect_exit_point_primitive_types,
-    generate_registry,
-)
+from sysml_codegen.generation.registry import generate_registry
 from sysml_codegen.generation.stencils import generate_backlog_report
 from sysml_codegen.resolution.models import (
     ComputationGraph,
@@ -31,7 +25,6 @@ from sysml_codegen.resolution.models import (
     ModuleInput,
     ModuleKind,
     ModuleOutput,
-    ParameterGroup,
     PipelineModule,
 )
 
@@ -74,10 +67,13 @@ def _make_pipeline_module(
         name=name,
         module_type=module_type,
         inputs=[],
-        outputs=[ModuleOutput(
-            field_name="root", python_type="float",
-            channel_name=f"{name}__out",
-        )],
+        outputs=[
+            ModuleOutput(
+                field_name="root",
+                python_type="float",
+                channel_name=f"{name}__out",
+            )
+        ],
         execution_order=0,
         module_kind=module_kind,
     )
@@ -104,7 +100,18 @@ def _make_aggregation_module(
         module_kind=ModuleKind.AGGREGATION,
         calc_def_name=attribute_name,
         calc_def_qualified_name=owning_part_qn,
-        auto_impl_context={"execution_steps": [], "output_expressions": [{"name": attribute_name, "expression": "sum(...)"}], "output_count": 1, "single_output_expression": "sum(...)"} if auto_impl else None,
+        auto_impl_context=(
+            {
+                "execution_steps": [],
+                "output_expressions": [
+                    {"name": attribute_name, "expression": "sum(...)"}
+                ],
+                "output_count": 1,
+                "single_output_expression": "sum(...)",
+            }
+            if auto_impl
+            else None
+        ),
     )
 
 
@@ -261,7 +268,6 @@ class TestRegistryAggregation:
             package_name="test_pkg",
             template_env=env,
             output_path=Path("test_init.py"),
-            exit_point_primitive_types=_collect_exit_point_primitive_types(graph.modules),
         )
 
         assert "capital_costModule" in code
@@ -277,7 +283,6 @@ class TestRegistryAggregation:
             package_name="test_pkg",
             template_env=env,
             output_path=Path("test_init.py"),
-            exit_point_primitive_types=_collect_exit_point_primitive_types(graph.modules),
         )
 
         # Only standard imports, no aggregation
@@ -304,7 +309,6 @@ class TestRegistryAggregation:
             package_name="test_pkg",
             template_env=env,
             output_path=Path("test_init.py"),
-            exit_point_primitive_types=_collect_exit_point_primitive_types(graph.modules),
         )
 
         assert "capital_costModule" in code
@@ -338,7 +342,11 @@ class TestAggregationModuleGeneration:
             "package_name": "test_pkg",
             "is_multioutput": False,
             "input_attributes": [
-                {"name": "child_capital_cost", "type_hint": "float", "description": "Input child_capital_cost"},
+                {
+                    "name": "child_capital_cost",
+                    "type_hint": "float",
+                    "description": "Input child_capital_cost",
+                },
                 {"name": "child_count", "type_hint": "float", "description": "Input child_count"},
             ],
             "output_attributes": [
