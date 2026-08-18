@@ -661,10 +661,10 @@ read as shipped coverage with no disclosure, unlike its CA sibling.)
 | REQ-REG-03 | Class names in `module_type_override` dict SHALL be globally unique | `test_exact_route_registry.py`, `tests/unit/test_sc11_recheck.py` | PASS |
 | REQ-REG-04 | When class names collide, registry SHALL use aliased imports (`import X as Assembly_X`) | `tests/unit/test_registry_generation.py`, `tests/unit/test_sc11_recheck.py` | PASS |
 | REQ-REG-05 | CalcUsage, computed attribute, and aggregation modules SHALL all derive paths from design... | `test_exact_route_registry.py` | PASS |
-| REQ-REG-06 | `CUSTOM_SCHEMA_TYPES` SHALL include all exit point primitive types used by any module | `tests/unit/test_registry_generation.py` | PASS |
+| REQ-REG-06 | `CUSTOM_SCHEMA_TYPES` SHALL use the stable wrapper set derived inside every exported registry seam from all root outputs; no caller type-set parameter exists | `tests/unit/test_registry_generation.py`, `tests/conformance/test_module_kind_faildloud.py` | PASS |
 | REQ-REG-07 | Registry generation SHALL detect and report name collisions before rendering | `tests/unit/test_sc11_recheck.py` | PASS |
 | REQ-REG-08 | After parent-segment aliasing, registry SHALL re-check class-name uniqueness and fail fast on any residual collision | `test_sc11_recheck.py` | PASS |
-| REQ-REG-09 | An unsupported root exit type SHALL refuse as `EXIT_POINT_TYPE_UNSUPPORTED` before output mutation, naming token, module/output identity, file:line, and public status 1 while preserving the sentinel tree byte-for-byte | `tests/conformance/test_generation_exit_type_preflight.py` | PASS |
+| REQ-REG-09 | An unsupported root exit type SHALL refuse as graph-derived `CodeGenerationError` code `EXIT_POINT_TYPE_UNSUPPORTED` before output mutation, naming token, module/output identity, file:line, and public status 1 while preserving the sentinel tree byte-for-byte | `tests/conformance/test_generation_exit_type_preflight.py` | PASS |
 
 ### RES
 

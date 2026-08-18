@@ -208,7 +208,7 @@ Each row names its owner and the stage at which it stops the route.
 | `SI_EVIDENCE_INCOMPLETE` | Owner: the public evidence conversion in `elaborate_loaded_extractor` | Stage: extraction/elaboration boundary, before a graph is returned | `tests/conformance/test_expression_evidence_integrity.py` |
 | `SI_TYPE_INVALID` | Owner: exact feature typing in `extraction/feature_metadata.py` | Stage: extraction before graph construction | `tests/conformance/test_feature_typing_integrity.py` |
 | `SI_INDEXED_SOURCE_UNSUPPORTED` | Owner: the exact elaborator's source-reference gate | Stage: pre-graph reference materialization | `tests/conformance/test_expression_evidence_integrity.py` |
-| `EXIT_POINT_TYPE_UNSUPPORTED` | Owner: generation preflight in `cli/__init__.py` | Stage: public generation before output mutation, status 1 | `tests/conformance/test_generation_exit_type_preflight.py` |
+| `EXIT_POINT_TYPE_UNSUPPORTED` | Owner: graph-derived wrapper validation in `generation/registry.py` | Stage: every registry entry, including public generation before output mutation, status 1 | `tests/conformance/test_generation_exit_type_preflight.py` |
 
 | Req | Statement | Evidence |
 |---|---|---|

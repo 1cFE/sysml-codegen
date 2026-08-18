@@ -80,6 +80,11 @@ finish before an `InstanceGraph` is admitted. See
 `tests/conformance/test_expression_evidence_integrity.py` and
 `tests/conformance/test_feature_typing_integrity.py`.
 
+Generation keeps the sealed graph authoritative too. The registry's exported seams accept the graph,
+derive the complete root-output wrapper set themselves, and reject an unsupported token as
+`EXIT_POINT_TYPE_UNSUPPORTED` before output mutation. No caller-supplied wrapper set exists. See
+[20-module-registry-generation](20-module-registry-generation.md).
+
 **Two sources, one authority.** `--models` and `--from-snapshot` are two ways to obtain the
 instance graph, not two implementations of the pipeline. Both seal into an
 `ExactPipelineContext` whose receipt binds the sealed graph to what it projects to, and

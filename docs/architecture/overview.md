@@ -62,6 +62,12 @@ Reference documents 03, 04, 05, 07, 10, 11, 12, 13, 17, and 24 describe that del
 
 The `ComputationGraph` (a Pydantic model in `resolution/models.py`) is the sole data structure that code generation consumes. It contains all pipeline modules, their inputs wired to upstream outputs or entry points, execution order, parameter group schemas, and surfaced output aliases (`output_aliases`, serialized with the graph). Generation templates receive only `ComputationGraph` fields -- no back-references to extraction models (REQ-PIPE-07). Generation is also gated by a params-coverage check (V11): `collect_uncovered_params` (`resolution/uncovered_params.py`) runs at the generation boundary and aborts if a wired module input references a params key that no JSON input file will carry. See [09-data-models](reference/09-data-models.md).
 
+The module registry follows the same authority rule. Every exported registry generator derives its
+required exit-point wrappers from the graph; callers cannot supply a second type set. An unsupported
+root output raises `EXIT_POINT_TYPE_UNSUPPORTED` as a typed `CodeGenerationError` before the public
+generator mutates its output tree. See
+[20-module-registry-generation](reference/20-module-registry-generation.md).
+
 ### Identity, Not Strings
 
 The elaborator resolves every reference against typed node identity — occurrence enumeration and declared members — and never by reconstructing or matching a qualified-name string. An `InstanceGraph` consumer holds a typed reference to the node that supplies it, so "which thing produces this value?" is answered once, where the model says it, rather than by a lookup table asked with a key built from the consumer's scope.
