@@ -176,6 +176,19 @@ def _classify_attribute_expression(
             )
         return ComputedAttributeClassification.LITERAL
 
+    # This retained classifier has no occurrence graph, so an exact leaf target does not
+    # prove that a part-rooted multi-hop chain reaches an executable producer occurrence.
+    # Keep that shape fail-closed.  The shipped elaborator resolves the same authored path
+    # by exact occurrence identity and owns the positive capability.
+    if (
+        reference_chain is not None
+        and len(reference_chain) >= 3
+        and _is_wellformed_multihop_chain(
+            expression_ast, reference_chain, calc_usage_names
+        )
+    ):
+        return ComputedAttributeClassification.UNRESOLVABLE
+
     sibling_refs: list[str] = []
     calc_refs: list[str] = []
     unresolvable_refs: list[str] = []

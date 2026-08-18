@@ -14,9 +14,12 @@ Phase 2:
 
 from __future__ import annotations
 
+from types import SimpleNamespace
 from unittest.mock import patch
+from uuid import NAMESPACE_URL, uuid5
 
 from agentic_mbse.sysml import hierarchy as shared_hierarchy
+from agentic_mbse.sysml.syside_adapter import SysideAdapter
 
 from sysml_codegen.extraction.data_models import (
     AggregationExpressionData,
@@ -48,7 +51,22 @@ class MockFeatureReferenceExpression:
     """Mock FeatureReferenceExpression — is_instance fallback matches."""
 
     def __init__(self, name: str):
-        self.referent = type("Referent", (), {"name": name})()
+        self.referent = _semantic_feature(name)
+
+
+def _semantic_feature(name: str) -> SimpleNamespace:
+    """An exact Project-tier semantic target for the adapter's mock path."""
+    return SimpleNamespace(
+        name=name,
+        qualified_name=f"Mock::{name}",
+        element_id=uuid5(NAMESPACE_URL, f"https://sysml-codegen.test/hierarchy/{name}"),
+        owned_redefinitions=(),
+        owning_type=None,
+        document=SimpleNamespace(
+            url="file:///mock.sysml",
+            document_tier=SysideAdapter.document_tier_type().Project,
+        ),
+    )
 
 
 class MockFeatureChainExpression:
@@ -56,7 +74,7 @@ class MockFeatureChainExpression:
 
     def __init__(self, parts: list[str]):
         self.operands = [MockFeatureReferenceExpression(parts[0])] if parts else []
-        self.target_feature = type("Target", (), {"name": parts[-1]})() if len(parts) > 1 else None
+        self.target_feature = _semantic_feature(parts[-1]) if len(parts) > 1 else None
         self.memberships = []
 
 
@@ -97,7 +115,7 @@ class MockFeatureChainExpressionOperatorExpression(
 
     def __init__(self, parts: list[str], operator: str = "."):
         self.operands = [MockFeatureReferenceExpression(parts[0])] if parts else []
-        self.target_feature = type("Target", (), {"name": parts[-1]})() if len(parts) > 1 else None
+        self.target_feature = _semantic_feature(parts[-1]) if len(parts) > 1 else None
         self.memberships = []
         self.operator = operator
 
@@ -1060,7 +1078,14 @@ class TestSumTransformation:
 
         assert result is not None
         assert result.transformed_expression == "pv_module.capital_cost"
-        assert result.sum_terms == [SumTerm("pv_module", "capital_cost", None, None)]
+        [term] = result.sum_terms
+        assert (term.part_usage_name, term.attribute_name) == (
+            "pv_module",
+            "capital_cost",
+        )
+        assert (term.multiplicity_attr, term.multiplicity_count) == (None, None)
+        assert term.resolved_target is not None
+        assert term.resolved_target.element_name == "capital_cost"
         assert result.input_channels == ["pv_module.capital_cost"]
         assert result.entry_points == []
 
@@ -1126,7 +1151,10 @@ class TestSumTransformation:
         assert result is not None
         assert result.has_unsupported_nodes is True
         assert result.transformed_expression == "filter(pv_module.capital_cost)"
-        assert result.singleton_terms == [SingletonTerm("pv_module.capital_cost")]
+        [term] = result.singleton_terms
+        assert term.source_path == "pv_module.capital_cost"
+        assert term.resolved_target is not None
+        assert term.resolved_target.element_name == "capital_cost"
         assert result.input_channels == ["pv_module.capital_cost"]
 
     def test_unsupported_operator_rendering_and_flag(self):
@@ -1150,7 +1178,11 @@ class TestSumTransformation:
         assert result is not None
         assert result.has_unsupported_nodes is True
         assert result.transformed_expression == "(left ?? right)"
-        assert result.local_terms == [LocalTerm("left"), LocalTerm("right")]
+        assert [term.attribute_name for term in result.local_terms] == ["left", "right"]
+        assert [term.resolved_target.element_name for term in result.local_terms] == [
+            "left",
+            "right",
+        ]
 
 
 # ---------------------------------------------------------------------------
@@ -1383,7 +1415,15 @@ class TestWalkAggregationAstEvaluationUnwrap:
 
         assert result is not None
         assert result.has_unsupported_nodes is False
-        assert result.sum_terms == [SumTerm("pv_module", "capital_cost", "module_count", 20)]
+        [term] = result.sum_terms
+        assert (
+            term.part_usage_name,
+            term.attribute_name,
+            term.multiplicity_attr,
+            term.multiplicity_count,
+        ) == ("pv_module", "capital_cost", "module_count", 20)
+        assert term.resolved_target is not None
+        assert term.resolved_target.element_name == "capital_cost"
         assert result.transformed_expression == "(module_count * pv_module.capital_cost)"
 
     def test_non_sum_evaluation_wrapper_unwrapped_not_marked_unsupported(self):

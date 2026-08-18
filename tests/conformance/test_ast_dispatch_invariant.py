@@ -22,6 +22,7 @@ from types import SimpleNamespace
 from uuid import NAMESPACE_URL, uuid5
 
 import pytest
+from agentic_mbse.sysml.syside_adapter import SysideAdapter
 
 from tests.helpers.artifact_sources import agentic_source_root
 from tests.helpers.static_analysis import (
@@ -151,6 +152,10 @@ def _semantic_feature(name: str) -> SimpleNamespace:
         element_id=uuid5(NAMESPACE_URL, f"https://sysml-codegen.test/mock/{name}"),
         owned_redefinitions=(),
         owning_type=None,
+        document=SimpleNamespace(
+            url="file:///mock.sysml",
+            document_tier=SysideAdapter.document_tier_type().Project,
+        ),
     )
 
 
