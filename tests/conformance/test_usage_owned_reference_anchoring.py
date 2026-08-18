@@ -37,9 +37,11 @@ from __future__ import annotations
 
 import functools
 from collections import Counter
+from pathlib import Path
 
 import pytest
 
+from sysml_codegen.cli import GenerationConfig, run_codegen
 from sysml_codegen.elaboration import (
     CalcNode,
     ConstraintNode,
@@ -103,6 +105,26 @@ def consumers_of(graph: InstanceGraph, source: NodeRef) -> Counter[object]:
         for edge in node.inputs.values()
         if edge == source
     )
+
+
+def test_public_generation_renders_qualified_predicate_by_exact_local_name(
+    tmp_path: Path,
+) -> None:
+    """The real model's ``comp_a::length`` predicate becomes executable Python."""
+    output = tmp_path / "out"
+    assert run_codegen(
+        GenerationConfig(
+            models_path=FIXTURES_DIR / COMBINED,
+            output_path=output,
+            package_name="qualified_predicate",
+            pipeline_name="pipeline",
+        )
+    )
+
+    python_sources = [path.read_text() for path in output.rglob("*.py")]
+    assert python_sources
+    assert any("_cmp('>', length, 0.0)" in source for source in python_sources)
+    assert all("comp_a::length" not in source for source in python_sources)
 
 
 # ---------------------------------------------------------------------------

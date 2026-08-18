@@ -54,10 +54,10 @@ NON_FIXTURE_ROWS = (
     "verification/capture_baseline.py",
 )
 
-#: Fixture metadata is an input to the retained probes, not executable verification code.
-#: Name it structurally so a future ``verification/*.py`` row cannot be absorbed into the
-#: fixture class merely because it shares the directory.
-FIXTURE_METADATA_ROWS = ("verification/fixture-manifest.json",)
+#: One explicit non-fixture metadata input used by the retained probes.  This is an
+#: allowlist, not a general structural classifier; any future ``verification/*`` row is
+#: rejected until its responsibility is reviewed and added deliberately.
+FIXTURE_METADATA_EXCEPTIONS = ("verification/fixture-manifest.json",)
 
 
 @pytest.fixture(scope="module")
@@ -136,10 +136,10 @@ def test_locked_rows_split_into_fixture_inputs_and_verification_code(lock: dict)
     fixture_inputs = paths - set(NON_FIXTURE_ROWS)
     assert len(fixture_inputs) == LOCKED_ROW_COUNT - len(NON_FIXTURE_ROWS)
     assert all(
-        path.startswith("tests/fixtures/") or path in FIXTURE_METADATA_ROWS
+        path.startswith("tests/fixtures/") or path in FIXTURE_METADATA_EXCEPTIONS
         for path in fixture_inputs
     )
-    assert set(FIXTURE_METADATA_ROWS) <= fixture_inputs
+    assert set(FIXTURE_METADATA_EXCEPTIONS) <= fixture_inputs
 
 
 def _ledger_row_for_path(path: str) -> tuple[str, ...]:

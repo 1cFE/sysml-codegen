@@ -192,9 +192,16 @@ def bound_formal(param_elem: Any) -> BoundFormal:
         if redefined_feature is not None:
             redefined_ids.append(SysideAdapter.element_id(redefined_feature))
     qualified_name = getattr(param_elem, "qualified_name", None)
+    if qualified_name is None:
+        raise evidence_error(
+            SemanticEvidenceCode.RESOLVED_TARGET_MISSING,
+            "bound_formal",
+            "binding formal has no qualified declaration identity",
+            param_elem,
+        )
     return BoundFormal(
         element_id=SysideAdapter.element_id(param_elem),
-        qualified_name=str(qualified_name) if qualified_name is not None else "",
+        qualified_name=str(qualified_name),
         redefined_element_ids=tuple(redefined_ids),
         redefined_qualified_names=tuple(redefined_names),
     )

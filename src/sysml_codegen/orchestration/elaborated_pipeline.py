@@ -34,6 +34,7 @@ from sysml_codegen.elaboration import (
 from sysml_codegen.elaboration.diagnostics import ElaborationInvariantError
 from sysml_codegen.elaboration.elaborate import _build_instance_graph
 from sysml_codegen.elaboration.expression_evidence import (
+    ExpressionInventoryError,
     build_expression_evidence_inventory,
 )
 from sysml_codegen.elaboration.graph import (
@@ -173,6 +174,28 @@ def elaborate_loaded_extractor(
     except SemanticEvidenceError as error:
         raise ElaborationDiagnosticError(
             (_semantic_evidence_diagnostic(error, source_referents),)
+        ) from error
+    except ExpressionInventoryError as error:
+        raise ElaborationDiagnosticError(
+            (
+                _diagnostic_with_referent(
+                    Diagnostic(
+                        code=ElaborationCode.SI_EVIDENCE_INCOMPLETE,
+                        consumer=None,
+                        consumer_display=error.reference or "<model>",
+                        param_name=None,
+                        detail=f"expression_evidence: {error.detail}",
+                        reference=error.reference,
+                        source_file=(
+                            error.location[0] if error.location is not None else None
+                        ),
+                        source_line=(
+                            error.location[1] if error.location is not None else None
+                        ),
+                    ),
+                    source_referents,
+                ),
+            )
         ) from error
     except ExactTypeError as error:
         raise ElaborationDiagnosticError(

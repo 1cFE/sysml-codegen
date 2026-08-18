@@ -14,9 +14,11 @@ import pytest
 from agentic_mbse import SemanticEvidenceCode, SemanticEvidenceError
 
 from sysml_codegen.elaboration import ElaborationCode, ElaborationDiagnosticError
+from sysml_codegen.elaboration.expression_evidence import ExpressionInventoryError
 from sysml_codegen.orchestration import elaborated_pipeline
 from sysml_codegen.snapshot.capture import capture_instance_graph_snapshot
 from tests.conftest import FIXTURES_DIR, requires_license
+from tests.helpers.elaboration_graph import attr
 
 RAW_SOURCE = str(Path("/stage/model.sysml").resolve())
 REFERENT = "root-0/model.sysml"
@@ -323,6 +325,112 @@ def test_public_exact_expression_failures_return_no_graph(
         reference=reference,
         line=line,
     )
+
+
+@requires_license
+@pytest.mark.parametrize("strict", [True, False])
+def test_unit_annotated_alias_survives_the_public_conversion_boundary(
+    tmp_path: Path,
+    strict: bool,
+) -> None:
+    """A valid ``= reference [unit]`` value is an alias, not a missing computed row."""
+    source = tmp_path / "model.sysml"
+    source.write_text(
+        """package UnitAnnotatedAlias {
+    private import ScalarValues::*;
+    private import SI::*;
+
+    part def Inner {
+        attribute width : Real = 2.0 [m];
+    }
+    part def Host {
+        attribute base_len : Real = 1.0 [m];
+        attribute mirror_len : Real = base_len [m];
+        part inner : Inner;
+        attribute mirror_width : Real = inner.width [m];
+    }
+    part host : Host;
+}
+""",
+        encoding="utf-8",
+    )
+
+    graph = elaborated_pipeline.elaborate_model_paths([source], strict=strict)
+    base = attr(graph, "UnitAnnotatedAlias__host__base_len")
+    mirror = attr(graph, "UnitAnnotatedAlias__host__mirror_len")
+    width = attr(graph, "UnitAnnotatedAlias__host__inner__width")
+    mirror_width = attr(graph, "UnitAnnotatedAlias__host__mirror_width")
+    assert mirror.is_alias
+    assert mirror.alias_target is not None
+    assert mirror.alias_target.target == base.node_id
+    assert mirror_width.is_alias
+    assert mirror_width.alias_target is not None
+    assert mirror_width.alias_target.target == width.node_id
+    assert graph.diagnostics == []
+
+
+def test_inventory_invariant_is_contained_with_authored_provenance(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """An inventory/consumer defect still becomes one useful public diagnostic."""
+    error = ExpressionInventoryError(
+        "assigned site disappeared",
+        reference="base_len [m]",
+        location=(RAW_SOURCE, 6),
+    )
+    monkeypatch.setattr(
+        elaborated_pipeline,
+        "build_expression_evidence_inventory",
+        lambda _model: (_ for _ in ()).throw(error),
+    )
+
+    with pytest.raises(ElaborationDiagnosticError) as caught:
+        elaborated_pipeline.elaborate_loaded_extractor(
+            _BoundaryExtractor(),
+            model_paths=(Path(RAW_SOURCE),),
+            source_referents={RAW_SOURCE: REFERENT},
+            strict=True,
+        )
+
+    [diagnostic] = caught.value.diagnostics
+    assert diagnostic.code is ElaborationCode.SI_EVIDENCE_INCOMPLETE
+    assert diagnostic.reference == "base_len [m]"
+    assert diagnostic.consumer_display == "base_len [m]"
+    assert diagnostic.source_file == REFERENT
+    assert diagnostic.source_line == 6
+    assert caught.value.__cause__ is error
+
+
+@requires_license
+def test_constraint_definition_index_refuses_at_pregraph_inventory(
+    tmp_path: Path,
+) -> None:
+    """A definition body is a predicate site even before any usage can be lowered."""
+    source = tmp_path / "model.sysml"
+    source.write_text(
+        """package IndexedConstraintDefinition {
+    private import ScalarValues::*;
+
+    part def Cell { attribute mass : Real = 3.0; }
+    part def Host { part cells : Cell[3]; }
+
+    constraint def IndexedGuard {
+        in part h : Host;
+        h.cells#(2).mass > 0.0
+    }
+}
+""",
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ElaborationDiagnosticError) as caught:
+        elaborated_pipeline.elaborate_model_paths([source], strict=True)
+
+    [diagnostic] = caught.value.diagnostics
+    assert diagnostic.code is ElaborationCode.SI_INDEXED_SOURCE_UNSUPPORTED
+    assert diagnostic.reference == "h.cells#(2).mass"
+    assert diagnostic.source_file == "root-0/model.sysml"
+    assert diagnostic.source_line == 9
 
 
 @pytest.mark.parametrize(

@@ -868,9 +868,8 @@ class _ExactElaborator:
         writer_id = declaration_id_for(writer)
         name = str(getattr(base, "name", None) or getattr(writer, "name", None) or "value")
         display_path = self._display_path(scope, name)
-        expression = self._without_unit_annotation(
-            getattr(writer, "feature_value_expression", None)
-        )
+        raw_expression = getattr(writer, "feature_value_expression", None)
+        expression = self._without_unit_annotation(raw_expression)
         value_site = self._value_site(base, writer, scope)
         # An enumeration value reference names a value, not another feature:
         # `:>> scope = 'CAS Scope'::shared;` has no occurrence to resolve against.
@@ -891,7 +890,8 @@ class _ExactElaborator:
             and enumeration_literal is None
             and not is_literal_node(expression)
         ):
-            if self._is_reference_expression(expression):
+            site = self._site_for_expression(writer_id.value, raw_expression)
+            if site.role is ExpressionSiteRole.ALIAS:
                 node_id = NodeId(NodeKind.ATTRIBUTE, scope, slot)
                 alias_node = AttrNode(
                     node_id=node_id,
@@ -918,11 +918,18 @@ class _ExactElaborator:
                 self._pending_aliases.append(
                     _PendingAlias(
                         alias_node,
-                        ExpressionSite(writer_id.value, ExpressionSiteRole.ALIAS),
+                        site,
                         SysideAdapter.get_source_location(expression),
                     )
                 )
                 return
+            if site.role is not ExpressionSiteRole.COMPUTED_ATTRIBUTE:
+                raise ExpressionInventoryError(
+                    f"value declaration {writer_id.value} was assigned consumer role "
+                    f"{site.role.value}",
+                    reference=site.reference,
+                    location=site.location,
+                )
             node_id = NodeId(NodeKind.CALCULATION, scope, slot)
             output = OutputPortId(node_id, writer_id)
             neutral_expression = extract_expression_ir(expression)
@@ -960,7 +967,7 @@ class _ExactElaborator:
             self._pending_expressions.append(
                 _PendingExpression(
                     computed_node,
-                    ExpressionSite(writer_id.value, ExpressionSiteRole.COMPUTED_ATTRIBUTE),
+                    site,
                     SysideAdapter.get_source_location(expression),
                 )
             )
@@ -1259,9 +1266,9 @@ class _ExactElaborator:
                         self._pending_expressions.append(
                             _PendingExpression(
                                 node,
-                                ExpressionSite(
+                                self._site_for_expression(
                                     declaration_id_for(usage).value,
-                                    ExpressionSiteRole.CONSTRAINT_PREDICATE,
+                                    predicate_expression,
                                 ),
                                 SysideAdapter.get_source_location(predicate_expression),
                             )
@@ -1814,13 +1821,19 @@ class _ExactElaborator:
             # Unwrapped once here rather than inside `_binding_evidence`, because the
             # literal read below wants the same expression the classifier saw — and
             # because a second application site is a second place the rule could drift.
-            expression = self._without_unit_annotation(
-                getattr(member, "feature_value_expression", None)
-            )
+            raw_expression = getattr(member, "feature_value_expression", None)
+            expression = self._without_unit_annotation(raw_expression)
             if expression is None:
                 unbound.append(structural_formal_id)
                 continue
-            evidence = self._binding_evidence(member, expression)
+            evidence = self._binding_evidence(
+                member,
+                expression,
+                site=self._site_for_expression(
+                    declaration_id_for(member).value,
+                    raw_expression,
+                ),
+            )
             literal = extract_literal_value(expression)
             unsupported = self._unsupported_code(evidence)
             if unsupported is not None:
@@ -2020,7 +2033,13 @@ class _ExactElaborator:
             qualified_name=qualified_name,
         )
 
-    def _binding_evidence(self, member: Any, expression: Any) -> BindingSourceEvidence:
+    def _binding_evidence(
+        self,
+        member: Any,
+        expression: Any,
+        *,
+        site: ExpressionSite | None = None,
+    ) -> BindingSourceEvidence:
         """Classify one binding's right-hand side into the closed source union.
 
         The literal test comes first because a unit-annotated literal (``= 0.05 [m]``) is
@@ -2030,7 +2049,15 @@ class _ExactElaborator:
         formal = bound_formal(member)
         if is_literal_node(expression):
             return LiteralBindingSource(formal, extract_literal_value(expression))
-        site = ExpressionSite(declaration_id_for(member).value, ExpressionSiteRole.BINDING)
+        if site is None:
+            site = self._site_for_expression(declaration_id_for(member).value, expression)
+        if site.role is not ExpressionSiteRole.BINDING:
+            raise ExpressionInventoryError(
+                f"binding declaration {site.declaration_id} was assigned consumer role "
+                f"{site.role.value}",
+                reference=site.reference,
+                location=site.location,
+            )
         uses = self._inventory.require(site)
         if len(uses) != 1 or not self._is_reference_expression(expression):
             return ExpressionBindingSource(
@@ -2044,7 +2071,23 @@ class _ExactElaborator:
         if isinstance(use, IndexedReferenceUse):
             return IndexedBindingSource(formal, use)
         raise ExpressionInventoryError(
-            f"binding site {site.declaration_id} contains an unknown reference-use variant"
+            f"binding site {site.declaration_id} contains an unknown reference-use variant",
+            reference=site.reference,
+            location=site.location,
+        )
+
+    def _site_for_expression(self, declaration_id: UUID, expression: Any) -> ExpressionSite:
+        """Retrieve the assigned role, carrying authored context into invariant failures."""
+        try:
+            return self._inventory.site_for(declaration_id)
+        except ExpressionInventoryError:
+            pass
+        reference = SysideAdapter.authored_text(expression) if expression is not None else None
+        location = SysideAdapter.get_source_location(expression) if expression is not None else None
+        return self._inventory.site_for(
+            declaration_id,
+            reference=reference,
+            location=location,
         )
 
     @staticmethod

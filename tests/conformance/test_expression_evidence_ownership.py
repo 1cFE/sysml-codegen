@@ -10,7 +10,8 @@ simple local or imported alias of either form, and a non-literal `getattr` in th
 raw-SysIDE module set (which is rejected outright, because its selector cannot be
 reviewed).
 
-`REVIEWED_ROWS` is the complete repository-wide manifest.  It contains Codegen's four
+`REVIEWED_ROWS` is the complete production-package manifest for the four reviewed selector
+names.  It contains Codegen's four
 contextual parser reads, collision-aware rows for neutral IR and the serialized
 ``SourceFile.referent`` key, and mechanically excluded off-route legacy reads.  An
 unannotated receiver never qualifies as a collision, which is why the adapter-free mutant
@@ -21,6 +22,7 @@ from __future__ import annotations
 
 import ast
 import importlib
+import inspect
 import textwrap
 from dataclasses import dataclass
 from pathlib import Path
@@ -72,6 +74,7 @@ class SelectorRead:
     function: str
     selector: str
     form: str
+    receiver: str
 
 
 @dataclass(frozen=True)
@@ -85,10 +88,17 @@ class ReviewedRow:
     semantic_owner: str
     route_state: str
     closure_proof: str
+    receiver: str = ""
 
     @property
     def read(self) -> SelectorRead:
-        return SelectorRead(self.module, self.function, self.selector, self.form)
+        return SelectorRead(
+            self.module,
+            self.function,
+            self.selector,
+            self.form,
+            self.receiver,
+        )
 
 
 # Proof artifacts shared by row classes.  Every string resolves to a kept test below.
@@ -102,7 +112,7 @@ OFF_ROUTE_PROOF = (
 )
 
 
-# The complete reviewed manifest.  Repository-wide discovery remains load-bearing: rows
+# The complete reviewed manifest.  Production-package-wide discovery remains load-bearing: rows
 # are added because their receiver is proved, never because the scan was narrowed.
 REVIEWED_ROWS: tuple[ReviewedRow, ...] = (
     ReviewedRow(
@@ -116,6 +126,7 @@ REVIEWED_ROWS: tuple[ReviewedRow, ...] = (
             "tests/unit/test_expression_evidence_boundary.py"
             "::test_deep_override_mapped_index_refuses_at_the_path_factory"
         ),
+        receiver="redefined_feature",
     ),
     ReviewedRow(
         module="elaboration/elaborate.py",
@@ -128,6 +139,7 @@ REVIEWED_ROWS: tuple[ReviewedRow, ...] = (
             "tests/unit/test_expression_evidence_boundary.py"
             "::test_enumeration_literal_requires_an_exact_referent"
         ),
+        receiver="expression",
     ),
     ReviewedRow(
         module="elaboration/occurrence.py",
@@ -140,6 +152,7 @@ REVIEWED_ROWS: tuple[ReviewedRow, ...] = (
             "tests/unit/test_elaboration_occurrence.py"
             "::test_multiplicity_cannot_borrow_an_unrelated_package_writer"
         ),
+        receiver="bound",
     ),
     ReviewedRow(
         module="elaboration/occurrence.py",
@@ -152,6 +165,7 @@ REVIEWED_ROWS: tuple[ReviewedRow, ...] = (
             "tests/conformance/test_occurrence_domain_derivation.py"
             "::test_real_fixture_has_one_redefinition_slot_and_effective_specialized_usage"
         ),
+        receiver="redefined",
     ),
     # Neutral ExpressionIR reads.  The field name collides with SysIDE's raw selector,
     # but the receiving parameter is annotated at every read site and the kept proof
@@ -164,6 +178,7 @@ REVIEWED_ROWS: tuple[ReviewedRow, ...] = (
         "agentic-mbse ExpressionIR.OperatorNode.operands",
         "live",
         COLLISION_PROOF,
+        "expression",
     ),
     ReviewedRow(
         "elaboration/graph.py",
@@ -173,6 +188,7 @@ REVIEWED_ROWS: tuple[ReviewedRow, ...] = (
         "agentic-mbse ExpressionIR.OperatorNode.operands",
         "live",
         COLLISION_PROOF,
+        "expression",
     ),
     ReviewedRow(
         "elaboration/project.py",
@@ -182,6 +198,7 @@ REVIEWED_ROWS: tuple[ReviewedRow, ...] = (
         "agentic-mbse ExpressionIR.OperatorNode.operands",
         "live",
         COLLISION_PROOF,
+        "expression",
     ),
     ReviewedRow(
         "extraction/calc_compat_renderer.py",
@@ -191,6 +208,7 @@ REVIEWED_ROWS: tuple[ReviewedRow, ...] = (
         "agentic-mbse ExpressionIR.OperatorNode.operands",
         "live",
         COLLISION_PROOF,
+        "node",
     ),
     ReviewedRow(
         "extraction/calc_compat_renderer.py",
@@ -200,6 +218,7 @@ REVIEWED_ROWS: tuple[ReviewedRow, ...] = (
         "agentic-mbse ExpressionIR.OperatorNode.operands",
         "live",
         COLLISION_PROOF,
+        "node",
     ),
     ReviewedRow(
         "extraction/modeled_defaults.py",
@@ -209,6 +228,7 @@ REVIEWED_ROWS: tuple[ReviewedRow, ...] = (
         "agentic-mbse ExpressionIR.OperatorNode.operands",
         "live",
         COLLISION_PROOF,
+        "node",
     ),
     ReviewedRow(
         "generation/constraint_name_safety.py",
@@ -218,6 +238,7 @@ REVIEWED_ROWS: tuple[ReviewedRow, ...] = (
         "agentic-mbse ExpressionIR.OperatorNode.operands",
         "live",
         COLLISION_PROOF,
+        "node",
     ),
     ReviewedRow(
         "generation/predicate_compiler.py",
@@ -227,6 +248,7 @@ REVIEWED_ROWS: tuple[ReviewedRow, ...] = (
         "agentic-mbse ExpressionIR.OperatorNode.operands",
         "live",
         COLLISION_PROOF,
+        "n",
     ),
     ReviewedRow(
         "generation/predicate_compiler.py",
@@ -236,6 +258,7 @@ REVIEWED_ROWS: tuple[ReviewedRow, ...] = (
         "agentic-mbse ExpressionIR.OperatorNode.operands",
         "live",
         COLLISION_PROOF,
+        "n",
     ),
     ReviewedRow(
         "generation/predicate_compiler.py",
@@ -245,6 +268,7 @@ REVIEWED_ROWS: tuple[ReviewedRow, ...] = (
         "agentic-mbse ExpressionIR.OperatorNode.operands",
         "live",
         COLLISION_PROOF,
+        "n",
     ),
     ReviewedRow(
         "generation/predicate_compiler.py",
@@ -254,9 +278,11 @@ REVIEWED_ROWS: tuple[ReviewedRow, ...] = (
         "agentic-mbse ExpressionIR.OperatorNode.operands",
         "live",
         COLLISION_PROOF,
+        "n",
     ),
-    # SourceFile.referent is part of the sealed admission envelope.  Renaming it changes
-    # serialized bytes, so the collision proof also acts as its rename guard.
+    # SourceFile.referent supplies the value stored under the explicitly sealed
+    # ``"referent"`` key.  The field name itself does not choose that serialized key; the
+    # collision proof guards the typed code/schema linkage at each read site.
     ReviewedRow(
         "extraction/source_manifest.py",
         "SourceAdmission._verify_staged_files",
@@ -265,6 +291,7 @@ REVIEWED_ROWS: tuple[ReviewedRow, ...] = (
         "codegen SourceFile.referent serialized key",
         "live",
         COLLISION_PROOF,
+        "item",
     ),
     ReviewedRow(
         "extraction/source_manifest.py",
@@ -274,6 +301,7 @@ REVIEWED_ROWS: tuple[ReviewedRow, ...] = (
         "codegen SourceFile.referent serialized key",
         "live",
         COLLISION_PROOF,
+        "item",
     ),
     ReviewedRow(
         "extraction/source_manifest.py",
@@ -283,6 +311,7 @@ REVIEWED_ROWS: tuple[ReviewedRow, ...] = (
         "codegen SourceFile.referent serialized key",
         "live",
         COLLISION_PROOF,
+        "self",
     ),
     ReviewedRow(
         "extraction/source_manifest.py",
@@ -292,6 +321,7 @@ REVIEWED_ROWS: tuple[ReviewedRow, ...] = (
         "codegen SourceFile.referent serialized key",
         "live",
         COLLISION_PROOF,
+        "item",
     ),
     ReviewedRow(
         "orchestration/elaborated_pipeline.py",
@@ -301,6 +331,7 @@ REVIEWED_ROWS: tuple[ReviewedRow, ...] = (
         "codegen SourceFile.referent serialized key",
         "live",
         COLLISION_PROOF,
+        "item",
     ),
     # The remaining four discovered rows are mechanically excluded from both public raw
     # source roots.  They stay visible in repository-wide discovery and cannot satisfy a
@@ -313,6 +344,7 @@ REVIEWED_ROWS: tuple[ReviewedRow, ...] = (
         "agentic-mbse neutral aggregation IR",
         "off-route",
         OFF_ROUTE_PROOF,
+        "node",
     ),
     ReviewedRow(
         "extraction/usage_extractor.py",
@@ -322,6 +354,7 @@ REVIEWED_ROWS: tuple[ReviewedRow, ...] = (
         "off-route legacy raw SysIDE reader",
         "off-route",
         OFF_ROUTE_PROOF,
+        "expr",
     ),
     ReviewedRow(
         "extraction/usage_extractor.py",
@@ -331,6 +364,7 @@ REVIEWED_ROWS: tuple[ReviewedRow, ...] = (
         "off-route legacy raw SysIDE reader",
         "off-route",
         OFF_ROUTE_PROOF,
+        "expr",
     ),
     ReviewedRow(
         "extraction/usage_extractor.py",
@@ -340,6 +374,7 @@ REVIEWED_ROWS: tuple[ReviewedRow, ...] = (
         "off-route legacy raw SysIDE reader",
         "off-route",
         OFF_ROUTE_PROOF,
+        "expr",
     ),
 )
 
@@ -348,43 +383,94 @@ REVIEWED_ROWS: tuple[ReviewedRow, ...] = (
 # function that performs the read.  Values are ``(receiver parameter, required type)``.
 NEUTRAL_RECEIVER_CONTRACTS = {
     SelectorRead(
-        "elaboration/graph.py", "InstanceGraph._expression_reference_count", "operands", "direct"
+        "elaboration/graph.py",
+        "InstanceGraph._expression_reference_count",
+        "operands",
+        "direct",
+        "expression",
     ): ("expression", "ExpressionIR"),
     SelectorRead(
-        "elaboration/graph.py", "InstanceGraph._validate_expression_tags", "operands", "direct"
+        "elaboration/graph.py",
+        "InstanceGraph._validate_expression_tags",
+        "operands",
+        "direct",
+        "expression",
     ): ("expression", "ExpressionIR"),
     SelectorRead(
         "elaboration/project.py",
         "_Projection._compile_computed_expression.render",
         "operands",
         "direct",
+        "expression",
     ): ("expression", "ExpressionIR"),
-    SelectorRead("extraction/calc_compat_renderer.py", "_render_operator", "operands", "direct"): (
+    SelectorRead(
+        "extraction/calc_compat_renderer.py",
+        "_render_operator",
+        "operands",
+        "direct",
+        "node",
+    ): (
         "node",
         "OperatorNode",
     ),
     SelectorRead(
-        "extraction/calc_compat_renderer.py", "collect_calc_refs._walk", "operands", "direct"
+        "extraction/calc_compat_renderer.py",
+        "collect_calc_refs._walk",
+        "operands",
+        "direct",
+        "node",
     ): ("node", "ExpressionIR"),
-    SelectorRead("extraction/modeled_defaults.py", "_resolve_default_node", "operands", "direct"): (
+    SelectorRead(
+        "extraction/modeled_defaults.py",
+        "_resolve_default_node",
+        "operands",
+        "direct",
+        "node",
+    ): (
         "node",
         "ExpressionIR",
     ),
     SelectorRead(
-        "generation/constraint_name_safety.py", "predicate_bindings.visit", "operands", "direct"
+        "generation/constraint_name_safety.py",
+        "predicate_bindings.visit",
+        "operands",
+        "direct",
+        "node",
     ): ("node", "ExpressionIR"),
     SelectorRead(
-        "generation/predicate_compiler.py", "_compile_numeric_operator", "operands", "direct"
+        "generation/predicate_compiler.py",
+        "_compile_numeric_operator",
+        "operands",
+        "direct",
+        "n",
     ): ("n", "OperatorNode"),
-    SelectorRead("generation/predicate_compiler.py", "_compile_boolean", "operands", "direct"): (
+    SelectorRead(
+        "generation/predicate_compiler.py",
+        "_compile_boolean",
+        "operands",
+        "direct",
+        "n",
+    ): (
         "n",
         "ExpressionIR",
     ),
-    SelectorRead("generation/predicate_compiler.py", "_leaf_ref_names", "operands", "direct"): (
+    SelectorRead(
+        "generation/predicate_compiler.py",
+        "_leaf_ref_names",
+        "operands",
+        "direct",
+        "n",
+    ): (
         "n",
         "ExpressionIR",
     ),
-    SelectorRead("generation/predicate_compiler.py", "margin_expression", "operands", "direct"): (
+    SelectorRead(
+        "generation/predicate_compiler.py",
+        "margin_expression",
+        "operands",
+        "direct",
+        "n",
+    ): (
         "n",
         "ExpressionIR",
     ),
@@ -405,11 +491,10 @@ OFF_ROUTE_MODULES = (
     "extraction/hierarchy_resolver.py",
 )
 
-#: The two public raw-source arms.  B1 says this set is finite; these are its members.
-PUBLIC_RAW_SOURCE_ARMS = (
-    "orchestration/elaborated_pipeline.py",
-    "snapshot/capture.py",
-)
+#: The installed command surface is the mechanically checked root.  Both the live
+#: elaboration arm and snapshot-capture arm are reachable from this module; a companion
+#: assertion below pins that relationship instead of declaring those arms only in prose.
+PUBLIC_RAW_SOURCE_ROOTS = ("cli/__init__.py",)
 
 #: Weak identifiers that must not survive the item.  Present at `C_base`, so
 #: `test_deleted_symbols_are_absent` is a recorded red until Phases 2-3 remove them.
@@ -435,8 +520,16 @@ class _SelectorScanner(ast.NodeVisitor):
     def _qualified(self) -> str:
         return ".".join(self._scope) or "<module>"
 
-    def _record(self, selector: str, form: str) -> None:
-        self.reads.add(SelectorRead(self.module, self._qualified(), selector, form))
+    def _record(self, selector: str, form: str, receiver: ast.AST) -> None:
+        self.reads.add(
+            SelectorRead(
+                self.module,
+                self._qualified(),
+                selector,
+                form,
+                ast.unparse(receiver),
+            )
+        )
 
     def _visit_scope(self, node: ast.AST) -> None:
         self._scope.append(getattr(node, "name", "<anonymous>"))
@@ -469,7 +562,7 @@ class _SelectorScanner(ast.NodeVisitor):
 
     def visit_Attribute(self, node: ast.Attribute) -> None:
         if node.attr in REVIEWED_SELECTORS:
-            self._record(node.attr, "direct")
+            self._record(node.attr, "direct", node.value)
         self.generic_visit(node)
 
     def visit_Call(self, node: ast.Call) -> None:
@@ -477,11 +570,41 @@ class _SelectorScanner(ast.NodeVisitor):
             selector = node.args[1]
             if isinstance(selector, ast.Constant):
                 if selector.value in REVIEWED_SELECTORS:
-                    self._record(str(selector.value), "getattr")
+                    self._record(str(selector.value), "getattr", node.args[0])
             elif isinstance(selector, ast.Name) and selector.id in self._aliases:
-                self._record(self._aliases[selector.id], "alias-getattr")
+                self._record(self._aliases[selector.id], "alias-getattr", node.args[0])
             else:
-                self._record("<unreviewable>", "dynamic-getattr")
+                self._record("<unreviewable>", "dynamic-getattr", node.args[0])
+        elif (
+            isinstance(node.func, ast.Attribute)
+            and node.func.attr == "__getattribute__"
+            and node.args
+            and isinstance(node.args[0], ast.Constant)
+            and node.args[0].value in REVIEWED_SELECTORS
+        ):
+            self._record(str(node.args[0].value), "dunder-getattribute", node.func.value)
+        elif (
+            isinstance(node.func, ast.Call)
+            and isinstance(node.func.func, ast.Attribute)
+            and node.func.func.attr == "attrgetter"
+            and node.func.args
+            and isinstance(node.func.args[0], ast.Constant)
+            and node.func.args[0].value in REVIEWED_SELECTORS
+            and node.args
+        ):
+            self._record(str(node.func.args[0].value), "attrgetter", node.args[0])
+        self.generic_visit(node)
+
+    def visit_Subscript(self, node: ast.Subscript) -> None:  # noqa: N802
+        if (
+            isinstance(node.value, ast.Call)
+            and isinstance(node.value.func, ast.Name)
+            and node.value.func.id == "vars"
+            and node.value.args
+            and isinstance(node.slice, ast.Constant)
+            and node.slice.value in REVIEWED_SELECTORS
+        ):
+            self._record(str(node.slice.value), "vars-subscript", node.value.args[0])
         self.generic_visit(node)
 
 
@@ -523,6 +646,8 @@ def is_raw_syside_module(source: str) -> bool:
             and node.args[1].value in REVIEWED_SELECTORS
         ):
             return True
+    if any(read.form != "dynamic-getattr" for read in scan_module(source, "<probe>")):
+        return True
     return False
 
 
@@ -542,8 +667,9 @@ def raw_syside_modules() -> tuple[str, ...]:
 def discovered_reads() -> set[SelectorRead]:
     """The raw-selector inventory of the production package.
 
-    Selector reads are collected everywhere — a read of `.operands` is a selector read
-    wherever it sits.  The unreviewable dynamic-`getattr` form is collected only inside the
+    Selector reads are collected throughout ``src/sysml_codegen`` — a read of `.operands`
+    is a selector read wherever it sits in that package.  Scripts and probes are outside this
+    shipping-code gate.  The unreviewable dynamic-`getattr` form is collected only inside the
     raw-SysIDE module set, because that is the scope in which a hidden selector is the
     hazard.  Outside it, a `getattr` over a module's own field names is ordinary Python.
     """
@@ -599,15 +725,15 @@ def _qualified_scopes(path: Path) -> dict[str, ast.FunctionDef | ast.AsyncFuncti
     return scopes
 
 
-def _parameter_annotation(module: str, function: str, parameter: str) -> str:
+def _parameter_annotation_node(module: str, function: str, parameter: str) -> ast.expr:
     scope = _qualified_scopes(PACKAGE_ROOT / module)[function]
     arguments = [*scope.args.posonlyargs, *scope.args.args, *scope.args.kwonlyargs]
     [argument] = [item for item in arguments if item.arg == parameter]
     assert argument.annotation is not None, f"{module}::{function} leaves {parameter} unannotated"
-    return ast.unparse(argument.annotation)
+    return argument.annotation
 
 
-def _class_annotation(module: str, class_name: str, field_name: str) -> str:
+def _class_annotation_node(module: str, class_name: str, field_name: str) -> ast.expr:
     tree = ast.parse((PACKAGE_ROOT / module).read_text())
     [class_node] = [
         node for node in tree.body if isinstance(node, ast.ClassDef) and node.name == class_name
@@ -619,7 +745,49 @@ def _class_annotation(module: str, class_name: str, field_name: str) -> str:
         and isinstance(node.target, ast.Name)
         and node.target.id == field_name
     ]
-    return ast.unparse(field.annotation)
+    return field.annotation
+
+
+def _annotation_origins(module: str, annotation: ast.expr) -> set[str]:
+    """Resolve annotation names to their declared import or module origin."""
+    path = PACKAGE_ROOT / module
+    imports: dict[str, str] = {}
+    for node in ast.walk(ast.parse(path.read_text())):
+        if isinstance(node, ast.ImportFrom) and node.module:
+            for name in node.names:
+                imports[name.asname or name.name] = f"{node.module}.{name.name}"
+        elif isinstance(node, ast.Import):
+            for name in node.names:
+                imports[name.asname or name.name.split(".")[0]] = name.name
+
+    local_module = "sysml_codegen." + Path(module).with_suffix("").as_posix().replace("/", ".")
+    local_classes = {
+        node.name
+        for node in ast.parse(path.read_text()).body
+        if isinstance(node, ast.ClassDef)
+    }
+    origins: set[str] = set()
+    for node in ast.walk(annotation):
+        if isinstance(node, ast.Name):
+            if node.id in imports:
+                origins.add(imports[node.id])
+            elif node.id in local_classes:
+                origins.add(f"{local_module}.{node.id}")
+            else:
+                origins.add(node.id)
+    return origins
+
+
+def _receiver_iterables(module: str, function: str, receiver: str) -> set[str]:
+    """The exact iterables that bind a local receiver used at a selector read."""
+    scope = _qualified_scopes(PACKAGE_ROOT / module)[function]
+    result: set[str] = set()
+    for node in ast.walk(scope):
+        if isinstance(node, (ast.For, ast.comprehension)):
+            target = node.target
+            if isinstance(target, ast.Name) and target.id == receiver:
+                result.add(ast.unparse(node.iter))
+    return result
 
 
 def _named_proof_exists(proof: str) -> bool:
@@ -627,7 +795,12 @@ def _named_proof_exists(proof: str) -> bool:
     if not separator:
         return False
     module_name = Path(module_path).with_suffix("").as_posix().replace("/", ".")
-    return hasattr(importlib.import_module(module_name), function)
+    candidate = getattr(importlib.import_module(module_name), function, None)
+    return (
+        inspect.isfunction(candidate)
+        and function.startswith("test_")
+        and getattr(candidate, "__test__", True) is not False
+    )
 
 
 def _production_module_map() -> dict[str, Path]:
@@ -670,9 +843,11 @@ def _local_imports(module_name: str, path: Path, known: set[str]) -> set[str]:
 def _transitively_reachable_modules() -> set[str]:
     modules = _production_module_map()
     starts = {
-        "sysml_codegen." + Path(arm).with_suffix("").as_posix().replace("/", ".")
-        for arm in PUBLIC_RAW_SOURCE_ARMS
+        module_name
+        for module_name, path in modules.items()
+        if path.relative_to(PACKAGE_ROOT).as_posix() in PUBLIC_RAW_SOURCE_ROOTS
     }
+    assert len(starts) == len(PUBLIC_RAW_SOURCE_ROOTS)
     reached: set[str] = set()
     pending = list(starts)
     while pending:
@@ -723,22 +898,52 @@ def test_collision_rows_have_provable_receiver_contracts() -> None:
     assert collision_reads == set(NEUTRAL_RECEIVER_CONTRACTS) | SOURCE_FILE_COLLISION_READS
 
     for read, (parameter, owner_type) in NEUTRAL_RECEIVER_CONTRACTS.items():
-        annotation = _parameter_annotation(read.module, read.function, parameter)
-        assert owner_type in annotation, (
-            f"{read.module}::{read.function} does not prove {parameter} is {owner_type}: "
-            f"{annotation}"
+        expected_origin = f"agentic_mbse.sysml.expression_ir.{owner_type}"
+        origins = _annotation_origins(
+            read.module,
+            _parameter_annotation_node(read.module, read.function, parameter),
+        )
+        assert read.receiver == parameter
+        assert expected_origin in origins, (
+            f"{read.module}::{read.function} does not prove {parameter} comes from "
+            f"{expected_origin}: {sorted(origins)}"
         )
 
-    assert _class_annotation("extraction/source_manifest.py", "SourceFile", "referent") == "str"
-    assert "SourceFile" in _class_annotation(
-        "extraction/source_manifest.py", "SourceAdmission", "files"
+    source_module = "extraction/source_manifest.py"
+    assert _annotation_origins(
+        source_module,
+        _class_annotation_node(source_module, "SourceFile", "referent"),
+    ) == {"str"}
+    source_file_origin = "sysml_codegen.extraction.source_manifest.SourceFile"
+    source_admission_origin = "sysml_codegen.extraction.source_manifest.SourceAdmission"
+    assert source_file_origin in _annotation_origins(
+        source_module,
+        _class_annotation_node(source_module, "SourceAdmission", "files"),
     )
-    assert "SourceFile" in _parameter_annotation(
-        "extraction/source_manifest.py", "_admitted_membership", "files"
+    assert source_file_origin in _annotation_origins(
+        source_module,
+        _parameter_annotation_node(source_module, "_admitted_membership", "files"),
     )
-    assert "SourceAdmission" in _parameter_annotation(
-        "orchestration/elaborated_pipeline.py", "elaborate_admitted_sources", "admission"
+    assert source_admission_origin in _annotation_origins(
+        "orchestration/elaborated_pipeline.py",
+        _parameter_annotation_node(
+            "orchestration/elaborated_pipeline.py",
+            "elaborate_admitted_sources",
+            "admission",
+        ),
     )
+
+    # Each local ``item.referent`` receiver is tied to the annotated collection above.
+    assert _receiver_iterables(
+        source_module, "SourceAdmission._verify_staged_files", "item"
+    ) == {"self.files"}
+    assert _receiver_iterables(
+        source_module, "SourceAdmission.staged_to_referent", "item"
+    ) == {"self.files"}
+    assert _receiver_iterables(source_module, "_admitted_membership", "item") == {"files"}
+    assert _receiver_iterables(
+        "orchestration/elaborated_pipeline.py", "elaborate_admitted_sources", "item"
+    ) == {"admission.files"}
 
 
 def test_the_raw_syside_module_set_is_the_recorded_one() -> None:
@@ -799,6 +1004,25 @@ _EVASIONS = {
         "def consume(node):\n    return getattr(node, SELECTOR)\n"
     ),
     "dynamic-getattr": ("def consume(node, chosen):\n    return getattr(node, chosen)\n"),
+    "attrgetter": (
+        "import operator\n\n\n"
+        'def consume(node):\n    return operator.attrgetter("operands")(node)\n'
+    ),
+    "dunder-getattribute": (
+        'def consume(node):\n    return node.__getattribute__("referent")\n'
+    ),
+    "vars-subscript": 'def consume(node):\n    return vars(node)["referent"]\n',
+}
+
+_EVASION_RESULTS = {
+    "direct-read": ("operands", "direct"),
+    "literal-getattr": ("operands", "getattr"),
+    "local-alias": ("operands", "alias-getattr"),
+    "imported-alias": ("operands", "alias-getattr"),
+    "dynamic-getattr": ("<unreviewable>", "dynamic-getattr"),
+    "attrgetter": ("operands", "attrgetter"),
+    "dunder-getattribute": ("referent", "dunder-getattribute"),
+    "vars-subscript": ("referent", "vars-subscript"),
 }
 
 
@@ -809,8 +1033,8 @@ def test_every_ast_evasion_mutation_is_discovered(evasion: str) -> None:
 
     assert is_raw_syside_module(source), "mutant fell outside the scoped gate"
     found = scan_module(source, "mutant.py")
-    assert found, f"evasion form went undiscovered: {evasion}"
-    assert all(read.function == "consume" for read in found), found
+    selector, form = _EVASION_RESULTS[evasion]
+    assert found == {SelectorRead("mutant.py", "consume", selector, form, "node")}
 
 
 def test_adapter_free_unannotated_receiver_fails_manifest_equality() -> None:
@@ -818,7 +1042,7 @@ def test_adapter_free_unannotated_receiver_fails_manifest_equality() -> None:
     source = "def consume(node):\n    return node.referent\n"
     assert RAW_SYSIDE_ADAPTER not in source
     found = scan_module(source, "mutant.py")
-    expected = {SelectorRead("mutant.py", "consume", "referent", "direct")}
+    expected = {SelectorRead("mutant.py", "consume", "referent", "direct", "node")}
     assert found == expected
     reviewed = {row.read for row in REVIEWED_ROWS}
     assert found - reviewed == expected
@@ -834,6 +1058,34 @@ def test_a_clean_module_is_not_in_the_raw_syside_set() -> None:
     assert not is_raw_syside_module("def consume(node):\n    return getattr(node, node.name)\n")
 
 
+def test_adapter_free_dynamic_getattr_remains_outside_the_declared_scope() -> None:
+    """Record the residual: no finite selector manifest can classify a dynamic name."""
+    source = "def consume(node, chosen):\n    return getattr(node, chosen)\n"
+    assert scan_module(source, "residual.py") == {
+        SelectorRead(
+            "residual.py",
+            "consume",
+            "<unreviewable>",
+            "dynamic-getattr",
+            "node",
+        )
+    }
+    assert not is_raw_syside_module(source)
+
+
+def test_second_receiver_inside_a_reviewed_function_fails_manifest_equality() -> None:
+    """A row proves one receiver; another receiver in that function needs its own row."""
+    source = "def consume(node, untyped):\n    return node.operands, untyped.operands\n"
+    found = scan_module(source, "mutant.py")
+    reviewed = {
+        SelectorRead("mutant.py", "consume", "operands", "direct", "node")
+    }
+
+    assert found - reviewed == {
+        SelectorRead("mutant.py", "consume", "operands", "direct", "untyped")
+    }
+
+
 # ---------------------------------------------------------------------------
 # Off-route reachability and deleted-symbol inventory
 # ---------------------------------------------------------------------------
@@ -847,6 +1099,15 @@ def test_public_raw_source_arms_do_not_reach_off_route_modules() -> None:
     }
     reached = _transitively_reachable_modules()
     assert not off_route_names & reached, sorted(off_route_names & reached)
+
+
+def test_cli_root_reaches_both_public_raw_source_arms() -> None:
+    """The reachability root covers live conversion and sealed snapshot capture."""
+    reached = _transitively_reachable_modules()
+    assert {
+        "sysml_codegen.orchestration.elaborated_pipeline",
+        "sysml_codegen.snapshot.capture",
+    } <= reached
 
 
 def test_off_route_modules_are_inventoried_and_present() -> None:

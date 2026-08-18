@@ -9,6 +9,9 @@ reconstructs canonical JSON, not SysML source text, so hand-built trees are the 
 
 from __future__ import annotations
 
+import ast
+from pathlib import Path
+
 import pytest
 from agentic_mbse.sysml.expression_facts import (
     FeatureReferenceFact,
@@ -32,6 +35,32 @@ from sysml_codegen.generation.predicate_compiler import (
     load_predicate,
     margin_expression,
 )
+
+
+def test_name_safety_dependency_is_declared_at_module_scope() -> None:
+    import sysml_codegen.generation.predicate_compiler as compiler_module
+
+    tree = ast.parse(Path(compiler_module.__file__).read_text())
+    top_level_imports = [
+        node
+        for node in tree.body
+        if isinstance(node, ast.ImportFrom)
+        and node.module == "sysml_codegen.generation.constraint_name_safety"
+    ]
+    assert len(top_level_imports) == 1
+    assert [name.name for name in top_level_imports[0].names] == [
+        "predicate_reference_name"
+    ]
+    assert not [
+        name
+        for function in ast.walk(tree)
+        if isinstance(function, (ast.FunctionDef, ast.AsyncFunctionDef))
+        for node in ast.walk(function)
+        if isinstance(node, ast.ImportFrom)
+        and node.module == "sysml_codegen.generation.constraint_name_safety"
+        for name in node.names
+        if name.name == "predicate_reference_name"
+    ]
 
 
 @pytest.mark.parametrize(

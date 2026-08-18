@@ -32,7 +32,7 @@ same on purpose.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any
 from uuid import UUID
@@ -76,10 +76,12 @@ class ExpressionSiteRole(str, Enum):
 
 @dataclass(frozen=True)
 class ExpressionSite:
-    """One expression site's exact identity: who declares it, in what role."""
+    """One expression site's exact identity, plus non-identifying public provenance."""
 
     declaration_id: UUID
     role: ExpressionSiteRole
+    reference: str | None = field(default=None, compare=False, hash=False)
+    location: tuple[str, int] | None = field(default=None, compare=False, hash=False)
 
 
 class ExpressionEvidenceInventory:
@@ -93,6 +95,17 @@ class ExpressionEvidenceInventory:
 
     def __init__(self, rows: dict[ExpressionSite, tuple[ReferenceUse, ...]]) -> None:
         self._rows = dict(rows)
+        self._sites_by_declaration: dict[UUID, ExpressionSite] = {}
+        for site in self._rows:
+            existing = self._sites_by_declaration.get(site.declaration_id)
+            if existing is not None and existing.role is not site.role:
+                raise ExpressionInventoryError(
+                    f"expression declaration {site.declaration_id} has multiple assigned roles: "
+                    f"{existing.role.value} and {site.role.value}",
+                    reference=site.reference or existing.reference,
+                    location=site.location or existing.location,
+                )
+            self._sites_by_declaration[site.declaration_id] = site
 
     def __len__(self) -> int:
         return len(self._rows)
@@ -103,6 +116,23 @@ class ExpressionEvidenceInventory:
     def sites(self) -> tuple[ExpressionSite, ...]:
         return tuple(self._rows)
 
+    def site_for(
+        self,
+        declaration_id: UUID,
+        *,
+        reference: str | None = None,
+        location: tuple[str, int] | None = None,
+    ) -> ExpressionSite:
+        """Return the one role assigned to a declaration at the conversion boundary."""
+        try:
+            return self._sites_by_declaration[declaration_id]
+        except KeyError:
+            raise ExpressionInventoryError(
+                f"expression declaration {declaration_id} has no assigned evidence site",
+                reference=reference,
+                location=location,
+            ) from None
+
     def require(self, site: ExpressionSite) -> tuple[ReferenceUse, ...]:
         """The acquired references for one site, or an invariant failure."""
         try:
@@ -110,12 +140,26 @@ class ExpressionEvidenceInventory:
         except KeyError:
             raise ExpressionInventoryError(
                 f"expression site {site.role.value} "
-                f"{site.declaration_id} is absent from the evidence inventory"
+                f"{site.declaration_id} is absent from the evidence inventory",
+                reference=site.reference,
+                location=site.location,
             ) from None
 
     def require_exact(self, site: ExpressionSite) -> tuple[ExactReferenceUse, ...]:
         """One site's references, every one of them proven exact."""
-        return tuple(require_exact_use(use) for use in self.require(site))
+        exact: list[ExactReferenceUse] = []
+        for use in self.require(site):
+            try:
+                exact.append(require_exact_use(use))
+            except ExpressionInventoryError as error:
+                contextual = ExpressionInventoryError(
+                    error.detail,
+                    reference=error.reference or site.reference,
+                    location=error.location or site.location,
+                    cause=error,
+                )
+                raise contextual from error
+        return tuple(exact)
 
 
 class ExpressionInventoryError(Exception):
@@ -125,6 +169,20 @@ class ExpressionInventoryError(Exception):
     the site enumerator disagree about the closed site set, which is a defect in this
     package.
     """
+
+    def __init__(
+        self,
+        detail: str,
+        *,
+        reference: str | None = None,
+        location: tuple[str, int] | None = None,
+        cause: BaseException | None = None,
+    ) -> None:
+        self.detail = detail
+        self.reference = reference
+        self.location = location
+        self.cause = cause
+        super().__init__(detail)
 
 
 def require_exact_use(value: object) -> ExactReferenceUse:
@@ -184,15 +242,35 @@ def build_expression_evidence_inventory(model: Any) -> ExpressionEvidenceInvento
     for site, expression in _enumerate_sites(model):
         if site in rows:
             raise ExpressionInventoryError(
-                f"expression site {site.role.value} {site.declaration_id} was enumerated twice"
+                f"expression site {site.role.value} {site.declaration_id} was enumerated twice",
+                reference=site.reference,
+                location=site.location,
             )
-        rows[site] = _acquire(expression)
+        rows[site] = _acquire(expression, site=site)
     return ExpressionEvidenceInventory(rows)
 
 
-def _acquire(expression: Any) -> tuple[ReferenceUse, ...]:
+def _acquire(
+    expression: Any,
+    *,
+    site: ExpressionSite | None = None,
+) -> tuple[ReferenceUse, ...]:
     """One site's references, with every authored index refused by name."""
-    uses = inspect_reference_uses(expression)
+    try:
+        uses = inspect_reference_uses(expression)
+    except SemanticEvidenceError as error:
+        if error.reference is not None:
+            raise
+        reference, location = _expression_context(expression)
+        contextual = SemanticEvidenceError(
+            error.code,
+            operation=error.operation,
+            detail=error.detail,
+            location=error.location or (site.location if site is not None else location),
+            reference=(site.reference if site is not None else None) or reference,
+            cause=error,
+        )
+        raise contextual from error
     for use in uses:
         if isinstance(use, IndexedReferenceUse):
             raise _indexed_refusal(use)
@@ -215,16 +293,34 @@ def _enumerate_sites(model: Any) -> list[tuple[ExpressionSite, Any]]:
         if expression is None:
             continue
         role = _role_for_owner(feature, expression)
-        sites.append((ExpressionSite(SysideAdapter.element_id(feature), role), expression))
-
-    for usage in SysideAdapter.elements_of_type(model, "ConstraintUsage", include_subtypes=True):
-        predicate = getattr(usage, "result_expression", None)
-        if predicate is None:
-            continue
-        site = ExpressionSite(
-            SysideAdapter.element_id(usage), ExpressionSiteRole.CONSTRAINT_PREDICATE
+        reference, location = _expression_context(expression)
+        sites.append(
+            (
+                ExpressionSite(
+                    SysideAdapter.element_id(feature),
+                    role,
+                    reference=reference,
+                    location=location,
+                ),
+                expression,
+            )
         )
-        sites.append((site, predicate))
+
+    for type_name in ("ConstraintDefinition", "ConstraintUsage"):
+        for declaration in SysideAdapter.elements_of_type(
+            model, type_name, include_subtypes=True
+        ):
+            predicate = getattr(declaration, "result_expression", None)
+            if predicate is None:
+                continue
+            reference, location = _expression_context(predicate)
+            site = ExpressionSite(
+                SysideAdapter.element_id(declaration),
+                ExpressionSiteRole.CONSTRAINT_PREDICATE,
+                reference=reference,
+                location=location,
+            )
+            sites.append((site, predicate))
     return sites
 
 
@@ -242,9 +338,38 @@ def _role_for_owner(feature: Any, expression: Any) -> ExpressionSiteRole:
             return ExpressionSiteRole.CALC_DEFINITION_DEPENDENCY
         if any(SysideAdapter.is_instance(owner, name) for name in _BINDING_OWNERS):
             return ExpressionSiteRole.BINDING
-    if _is_plain_reference(expression):
+    try:
+        value_expression = unit_annotated_value(expression)
+    except SemanticEvidenceError as error:
+        raise _contextualize(error, expression) from error
+    if _is_plain_reference(value_expression):
         return ExpressionSiteRole.ALIAS
     return ExpressionSiteRole.COMPUTED_ATTRIBUTE
+
+
+def _expression_context(expression: Any) -> tuple[str | None, tuple[str, int] | None]:
+    """Best available authored spelling and source location for a public failure."""
+    location = SysideAdapter.get_source_location(expression)
+    try:
+        return SysideAdapter.authored_text(expression), location
+    except SemanticEvidenceError:
+        qualified_name = getattr(expression, "qualified_name", None)
+        return (str(qualified_name) if qualified_name else None), location
+
+
+def _contextualize(error: SemanticEvidenceError, expression: Any) -> SemanticEvidenceError:
+    """Attach site-level authored context when a structural primitive has none."""
+    if error.reference is not None:
+        return error
+    reference, location = _expression_context(expression)
+    return SemanticEvidenceError(
+        error.code,
+        operation=error.operation,
+        detail=error.detail,
+        location=error.location or location,
+        reference=reference,
+        cause=error,
+    )
 
 
 def _is_plain_reference(expression: Any) -> bool:
