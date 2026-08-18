@@ -1,6 +1,6 @@
 # Implementation Plan: Stop Reinventing the Parser
 
-**Status:** In Progress — Phase 1 complete, paused for owner
+**Status:** In Progress — Phases 1-2 complete
 **Revision:** 3
 **Created:** 2026-08-17
 **Last Updated:** 2026-08-17
@@ -463,28 +463,28 @@ def test_indexed_use_has_no_exact_path_and_cannot_form_a_term(indexed_expression
 [design.md#one-total-inspection-operation](design.md#one-total-inspection-operation), and
 [design.md#delete-the-permissive-production-surface](design.md#delete-the-permissive-production-surface).
 
-- [ ] **Tests first:** complete `tests/test_sysml/test_reference_use.py`; extend the existing
+- [x] **Tests first:** complete `tests/test_sysml/test_reference_use.py`; extend the existing
   expression, aggregation, binding, ADR002, adapter, error, type, and public-export tests. Cover exact
   positive evidence, mapped `IndexExpression`, operand failure, depth exhaustion, missing target and
   leaf, document tiers, aggregation refusal, ordered binding evidence, and ADR002 dynamic handling.
-- [ ] **Closed boundary:** update `src/agentic_mbse/errors.py:5` and add
+- [x] **Closed boundary:** update `src/agentic_mbse/errors.py:5` and add
   `src/agentic_mbse/sysml/reference_use.py` with the error/value/inspector boundary specified in the
   design. Keep the neutral `ExpressionIR` separate.
-- [ ] **Owned acquisition:** update `src/agentic_mbse/sysml/syside_adapter.py` and
+- [x] **Owned acquisition:** update `src/agentic_mbse/sysml/syside_adapter.py` and
   `src/agentic_mbse/sysml/expression.py:589` so mapped metatypes, total operand materialization,
   shared depth, exact targets, authored form, and `DocumentTier` are the sole evidence owners.
-- [ ] **Natural Agentic consumers:** migrate
+- [x] **Natural Agentic consumers:** migrate
   `src/agentic_mbse/sysml/aggregation.py:251`, `aggregation.py:426`,
   `sysml/binding.py:164`, and `validation/adr002.py:641`; update
   `constraint_extraction.py` to share the exact document-tier operation.
-- [ ] **Atomic deletion:** remove `extract_feature_refs`, `feature_reference_facts`,
+- [x] **Atomic deletion:** remove `extract_feature_refs`, `feature_reference_facts`,
   `feature_chain_facts`, `ResolvedSemanticReferenceFact`, `has_index_segment`, `ExpressionRef`, and
   `BindingInfo.references`, including `src/agentic_mbse/sysml/__init__.py:67`, top-level exports,
   lazy aliases, tests, and docs. Do not retain a deprecation path.
-- [ ] **Ownership closure:** finish `tests/test_sysml/test_semantic_selector_ownership.py` so the
+- [x] **Ownership closure:** finish `tests/test_sysml/test_semantic_selector_ownership.py` so the
   discovered selector set equals the reviewed Agentic manifest, all five evasion mutations die, and
   the math-only optional IR target remains explicitly non-authoritative.
-- [ ] **Package contract:** bump Agentic to `0.1.3`, update `pyproject.toml`, package version,
+- [x] **Package contract:** bump Agentic to `0.1.3`, update `pyproject.toml`, package version,
   `uv.lock`, public API assertions, and `docs/patterns/plant-idiom.md` as required by
   [design.md#documentation-and-backlog-obligations](design.md#documentation-and-backlog-obligations).
 
@@ -492,25 +492,25 @@ def test_indexed_use_has_no_exact_path_and_cannot_form_a_term(indexed_expression
 
 **Automated:**
 
-- [ ] Run the focused Agentic reference-use, adapter, expression, aggregation, binding, ADR002,
+- [x] Run the focused Agentic reference-use, adapter, expression, aggregation, binding, ADR002,
   export, and ownership tests; all Phase-1 Agentic red nodes must be green.
-- [ ] Run `uv run mypy --strict src/agentic_mbse/errors.py
+- [x] Run `uv run mypy --strict src/agentic_mbse/errors.py
   src/agentic_mbse/sysml/reference_use.py`; require zero errors.
-- [ ] Run the fast Agentic suite with the SysIDE license and `-m "not slow"`; enforce the declared
+- [x] Run the fast Agentic suite with the SysIDE license and `-m "not slow"`; enforce the declared
   skip set and do not run the retired PDF or paid/network cases.
-- [ ] Run repository-wide mypy and Ruff as baseline comparisons; require no new item-caused result
+- [x] Run repository-wide mypy and Ruff as baseline comparisons; require no new item-caused result
   and targeted Ruff success for every changed Python file.
-- [ ] Run static symbol/import searches and public-export tests; every deleted identifier and alias
+- [x] Run static symbol/import searches and public-export tests; every deleted identifier and alias
   must be absent from production and public barrels.
-- [ ] Build a clean Agentic source archive and wheel from the phase commit; run the same focused and
+- [x] Build a clean Agentic source archive and wheel from the phase commit; run the same focused and
   fast gates from the extracted archive and verify installed version/API markers.
 
 **Manual:**
 
-- [ ] Inspect one exact reference payload from each natural consumer and confirm it retains root,
+- [x] Inspect one exact reference payload from each natural consumer and confirm it retains root,
   members, leaf, owner, document, authored form, order, and location without carrying operator or
   literal structure.
-- [ ] Confirm `IndexExpression` dispatch comes from the mapped SysIDE metatype and never from a
+- [x] Confirm `IndexExpression` dispatch comes from the mapped SysIDE metatype and never from a
   runtime class-name comparison.
 
 **What we know works after this phase:** Agentic exposes one closed evidence contract, every
@@ -1199,13 +1199,181 @@ harness.
 
 ### Phase 2 completion
 
-**Completed:**
+**Completed:** 2026-08-17. Every Phase 2 checklist item and every validation box. No stop rule
+tripped; no consumer needed the weak route to migrate.
 
 **Commits / identities:**
 
+| Branch | Worktree | Base | Phase 2 commits |
+|---|---|---|---|
+| `stop-parser-evidence-r2` | `/tmp/stop-parser-rev2/worktrees/agentic-mbse` | Phase 1 `8d27fb3` | `40dee5c` (tests) → `4a3ec46` (implementation) → `144ae02` (docstring) |
+
+Tests-first, as the contract requires: `40dee5c` lands the completed test file and the extended
+ownership gate and is red for its stated reasons; `4a3ec46` lands production. The Codegen
+worktree is untouched at `d257ef1`, and both user checkouts report an empty
+`status --porcelain`. Rollback point: reset `stop-parser-evidence-r2` to `8d27fb3`.
+
 **Actual changes and test results:**
 
+*The 10 Phase-1 Agentic red nodes are green, each for its stated reason.* `test_reference_use.py`
+28 passed, `test_semantic_selector_ownership.py` 12 passed. The six reference-use nodes went
+green because `agentic_mbse/sysml/reference_use.py` now exists with the closed union,
+`INDEXED_REFERENCE_UNSUPPORTED` is in the vocabulary, `IndexedReferenceUse` has no `path`
+attribute or annotation, `ExactReferenceUse` has `path` and no index marker,
+`ResolvedSemanticReferenceFact` is deleted outright, and `build_aggregation_term` refuses an
+indexed use by name. The four ownership nodes went green because every raw selector read now sits
+inside `reference_use.py` or `syside_adapter.py`, both reviewed modules exist, and no permissive
+symbol survives in the tree or the barrels.
+
+*The closed boundary.* `inspect_reference_uses` owns the complete reference walk and returns
+`ExactReferenceUse | IndexedReferenceUse` in first-seen order. `ExactSemanticPath` enforces its
+invariants in `__post_init__` — non-empty segments, `segments[0] is root`, `segments[-1] is leaf`
+— so there is no public optional-root or optional-leaf state. `require_exact_reference_use` is
+exhaustive over the union and checks the concrete value at runtime, because the repository's full
+static type lane is not a green gate. One shared `MAX_EXPRESSION_DEPTH` serves the inspector and
+`traverse_expression`, and `inspect_reference_uses` takes no depth parameter.
+
+*Authored evidence turned out to be real evidence, not a rendering.* `cst_node.text(source)`
+against the owning document's locked text yields the exact authored span — measured
+`'cells#(2).mass'` for the indexed fixture shape. `SysideAdapter.authored_text` acquires it once,
+so authored form (`bare` / `qualified` / `chain`), text, segments, and qualifier travel on the
+value and Codegen never rereads the CST to decide no-prefix semantics.
+
+*Mapped index dispatch.* `IndexExpression` is in the adapter's closed type map and resolves to
+`syside.core.IndexExpression`; `reference_use.py` contains zero `__name__ ==` comparisons. The old
+route compared `type(first).__name__` against the string `"IndexExpression"`.
+
+*Atomic deletion, no compatibility path.* All seven ordered deletions are gone from production,
+exports, lazy aliases, tests, and docs — `extract_feature_refs`, `feature_reference_facts`,
+`feature_chain_facts`, `ResolvedSemanticReferenceFact`, `has_index_segment`, `ExpressionRef`,
+`BindingInfo.references` — along with `extract_feature_chain_name`,
+`extract_feature_chain_segments`, and `extract_feature_reference_name`. A symbol sweep over
+`src/`, `docs/`, and `tests/` finds zero live uses; the only surviving mentions are prose in
+tests and one comment describing what was removed. The public barrels leak none of them and now
+export `ExactSemanticPath`, `ExactReferenceUse`, `IndexedReferenceUse`, and
+`inspect_reference_uses`. No wrapper, alias, or manifest exemption was added.
+
+*Migrated consumers.* `aggregation.py` (both executable sites), `binding.py`, `validation/adr002.py`,
+`expression.py`, `constraint_extraction.py`, plus three the static gate rediscovered beyond the
+plan's measured list — `hierarchy.py`, `validation/level2_structure.py`,
+`validation/level6_architecture.py`. Nothing needed to reconstruct the weak route.
+
+*Static gates.* `mypy --strict src/agentic_mbse/errors.py src/agentic_mbse/sysml/reference_use.py`
+→ **Success, no issues**, both from the worktree and from the clean extraction. Repository-wide
+`mypy src/` is **101 errors in 21 files at `A_base` and 101 errors in 21 files now**; the only
+diff is line-number drift on pre-existing diagnostics. Two item-caused diagnostics appeared
+mid-work in `aggregation.py` and were fixed before commit, not accepted. `ruff check src/ tests/`
+is **119 errors at `A_base` and 119 now**, and `ruff check` on every changed file passes.
+Neither baseline is green and neither is described as green.
+
+*Fast Agentic suite* (`pytest tests/ -m "not slow"`, licensed): **18 failed, 1883 passed,
+1 skipped**. The 18 are exactly the declared `A_base` baseline — 17 in `tests/test_web_backend.py`
+and 1 in `tests/test_equations.py`, all `ModuleNotFoundError` for optional extraction
+dependencies this plan may not install. Zero item-caused failures. The owner-directed exclusion
+was honored: the slow PDF/HTML corpus suite was never invoked and the 15 paid/network cases were
+never run.
+
+*Artifact-isolated validation.* `git archive` of `144ae02` extracted to
+`/tmp/stop-parser-rev2/agentic-mbse-phase2/agentic-mbse` (the path keeps the `agentic-mbse`
+string the baseline path test requires). From that extraction: the focused gates are **221
+passed, 1 skipped**, the fast suite reproduces **18 failed / 1883 passed / 1 skipped**, and the
+scoped strict gate returns Success. `uv build --wheel` produced
+`agentic_mbse-0.1.3-py3-none-any.whl`; installed into a fresh venv it reports dist version
+`0.1.3`, `__version__` `0.1.3`, `SEMANTIC_EVIDENCE_API_VERSION` `semantic-evidence/v2`, both new
+codes present, all four boundary names importable, and every deleted symbol absent.
+
+*Manual inspection 1 — one exact payload per natural consumer.* Against a live licensed model,
+each payload retains root, members, leaf, owner, document, authored form, order, and location,
+and carries no operator or literal structure:
+
+- *expression traversal / aggregation* — `sum(cells.mass)` → one `ExactReferenceUse`,
+  `form=chain`, `authored_text='cells.mass'`, `segments=('cells','mass')`, `plural=True`,
+  root `Probe::Rack::cells` (owner `Probe::Rack`, kind `PartDefinition`, tier `Project`), leaf
+  `Probe::Cell::mass` with its document URL and `source_location`, `resolved_member_names=('mass',)`.
+  The `SumTerm` built from it keeps the same leaf, root, and members.
+- *binding* — `in a = Rack::scale + Rack::bias` → an ordered two-element tuple, both
+  `form=qualified` with `authored_qualifier='Rack'`, each carrying its exact leaf, owner,
+  owner kind, tier, document, and line.
+- *ADR002* — `reference_is_dynamic` returns `True` for both variants, and the indexed variant is
+  counted without being flattened into an exact path or an empty list.
+
+*Manual inspection 2 — mapped `IndexExpression` dispatch.* `SysideAdapter.get_type("IndexExpression")
+is syside.IndexExpression` holds, the live index node answers the mapped `is_instance` query, and
+the boundary source contains no runtime class-name comparison.
+
+*Audit findings closed.*
+
+- **Minor 5** — `PERMISSIVE_SYMBOLS` now names all seven ordered deletions plus the three helper
+  names Phase 1 already had. `BindingInfo.references` gets a class-scoped scanner
+  (`test_no_permissive_class_attribute_survives`) because a bare `references` is too common an
+  identifier to scan for, with an anti-vacuity guard proving the scanner finds the field in
+  `BindingInfo` and nowhere else. `test_every_ordered_deletion_is_covered_by_a_gate` pins that
+  the two scanners together cover all seven, so the list cannot drift again — which was the
+  finding's root cause, not just its symptom.
+- **Minor 11** — `test_an_indexed_use_cannot_form_an_aggregation_term` now constructs a real
+  `IndexedReferenceUse`, requires `pytest.raises(SemanticEvidenceError)` with
+  `INDEXED_REFERENCE_UNSUPPORTED`, and asserts the carried reference and location. It proves the
+  refusal precedes term construction by showing the same call over an equivalent *exact* use does
+  return a term, so the refusal is the index being named rather than the call failing generally.
+
+*Documentation.* `docs/patterns/plant-idiom.md` already carried the seven supported shapes; Phase 2
+adds "The indexed form is valid SysML, and not implemented" — the authored shape, both diagnostic
+names, why the refusal is structural rather than a check that could be forgotten, and the
+name-the-occurrence alternative.
+
+*Package contract.* Agentic was **already at `0.1.3`** at `A_base` — `pyproject.toml`,
+`agentic_mbse.__version__`, `uv.lock`, and `tests/test_package_version.py` all agreed before this
+phase, and no dependency changed, so `uv.lock` needed no edit. The version obligation is satisfied
+and verified from the installed wheel rather than re-performed.
+
 **Issues / deviations / rollback point:**
+
+1. **Three consumers beyond the plan's measured list.** The plan named `aggregation.py` ×2,
+   `binding.py`, `adr002.py`, and `constraint_extraction.py`, while noting the counts are sizing
+   evidence and "the static gates must rediscover the final set before deletion." They did:
+   `hierarchy.py`, `level2_structure.py`, and `level6_architecture.py` also read reviewed
+   selectors and were migrated onto owned accessors. Working as designed, recorded because the
+   set is larger than the plan's estimate.
+
+2. **The ownership gate is scoped to modules that reach the parser through the adapter.** The
+   name-based AST scan also flagged `node.operands` in `sysml/executable_profile.py` — but that
+   is a field on the neutral `ExpressionIR` dataclasses, not a SysIDE selector, and the module is
+   pinned license-free by `test_executable_profile_imports_no_syside`. Routing it through the
+   boundary would have imported syside and broken that pin. The gate is therefore keyed on the
+   adapter import, which is exactly the scoping the Phase-1 audit required on the Codegen side
+   (Finding 3). Two anti-vacuity tests were added: the scanned set admits neither everything nor
+   nothing and still contains both reviewed modules, and no production module imports `syside`
+   directly, so the scope premise cannot rot silently. This is a scope rule, not an exemption —
+   no module is excused from a selector it actually reads.
+
+3. **Two recorded behavior changes, both tightenings the design asks for.**
+   - A referent with no qualified name is now `RESOLVED_TARGET_MISSING` (B4). The old route
+     returned an `ExpressionRef` with an empty qualified name that no consumer could classify or
+     resolve. `test_empty_qualified_name_is_refused_not_passed_through` pins the new contract.
+   - `tests/fixtures/constraint_fact_shapes/production_facts.json` was re-anchored on **8 changed
+     lines**, all `source_name`: `"red"` → `"Color::red"`, `"on"` → `"Mode::on"`, and
+     `"<placeholder Feature>"` → `"missing_value"`. Verified against the fixture source
+     (`type_units.sysml:13,14,39`): the model authors `Color::red`, `Mode::on`, and
+     `missing_value`, so the new values are the authored truth and the old ones were rendered
+     from the resolved terminal name or a placeholder. Every other byte of the golden is
+     unchanged, and the round-trip test stays green.
+
+4. **`BindingType` moved from `types.py` to `data_models.py`.** `BindingInfo.reference_uses` needs
+   the closed union, so `types.py` must import `reference_use.py`, which imports `data_models.py`,
+   which imported `types.py` for `BindingType` alone. Reversing that one edge makes the layering
+   acyclic: `types` → `reference_use` → `data_models`. Same enum, same name, still exported; this
+   is a layering fix, not a compatibility shim.
+
+5. **Test doubles gained the shape they were missing.** Mocks in `tests/test_sysml/conftest.py`
+   now carry `element_id` and a qualified name, because the closed route captures both as
+   evidence. A double without them was under-specified rather than modelling a nameless
+   reference; the genuinely-nameless case is now constructed explicitly where a test wants it.
+
+6. **A feature chain rooted in an unsupported expression kind is refused by name**
+   (`EXPRESSION_KIND_UNSUPPORTED`) rather than rendered through the general math renderer. This
+   keeps `reference_use.py` free of a dependency on `expression.py` and matches the item's
+   posture: a chain rooted in arbitrary math is not a reference the toolchain can honor. No test
+   or fixture in the tree exercises that shape, so nothing regressed.
 
 ### Phase 3 completion
 
