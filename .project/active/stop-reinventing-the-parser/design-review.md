@@ -753,3 +753,287 @@ objectively verifiable fixes).
 
 **Disposition: the Revision-7 amendment stands as reviewed-and-corrected; the `Revise` verdict's
 must-fix set is closed.** Revision 6's `Approve` is untouched.
+
+---
+
+# Revision 8 targeted review (2026-08-18)
+
+**Design:** `design.md` Revision 8 — targeted amendment of Revision 7, written after the Phase 3
+stop-rule halt
+**Scope:** the amendment and its integration only. Revision 6's `Approve` and the closed Revision-7
+amendment are not reopened. D1-D10, the closed-variant architecture, the artifact chain, the acyclic
+topology, and the probe/fixture lock were not re-reviewed.
+**Inputs read:** `design.md` (rev 8); `briefs/design-rev8-amendment.md` (the four owner rulings, the
+input contract); `run-records/phase3-stop-report.md`; `run-records/phase2-audit.md` (m2, m3, and
+their confirmation-addendum closures); `run-records/phase1-audit.md` Minor 9 context;
+plan.md Phase 1 completion and its "Issues / deviations" item 3.
+**Verification limit — stated plainly:** the implementation worktrees at
+`/tmp/stop-parser-rev2/worktrees/{sysml-codegen,agentic-mbse}` are outside this session's sandbox and
+could not be read or grepped; `git` on the documentation checkout was likewise unavailable. Every
+implementation fact below is taken from the run records (which do carry file:line citations), not
+re-measured against the trees. Findings that depend on a tree fact are marked.
+
+**Verdict: `Revise`.**
+
+The amendment is right in substance. All four rulings are present with their verbatim blocks quoted
+and their grades carried, the falsified premise is deleted rather than softened, and nothing in the
+approved mechanism moved. The reason for `Revise` is that the amendment repeats, in one new place,
+the exact failure mode that caused the Phase 3 halt — a structural obligation stated in a word whose
+reading the implementer has to choose ("enforce exactly two operands" now carries the weight that
+"validates its shape" carried before) — and that its downstream handoff still addresses Revision 7
+and a plan revision that has already been consumed.
+
+## What checks out
+
+- **Ruling 1** lands at design.md:507-526. The owner's replacement contract is quoted verbatim
+  (:510-512). The distinction the brief singles out survives intact and in the owner's terms: "This
+  boundary does not validate unit grammar at all — which is not the same as saying any unit shape
+  passes validation; a shape SysIDE rejects never reaches here" (:515-516). The feature-reference and
+  exact-referent requirements are named as **dropped** (:514-515), not quietly omitted. The falsified
+  premise is explained with its measured cause and cited to the stop report (:520-526).
+- **The four required coverage cases** appear in all three places they need to, consistently:
+  design.md:524-526 (ruling text), :1572-1576 (evidence and public-boundary matrix), :1861-1862
+  (handoff). Each carries `[m]`, representative compound forms (`[kg/m^3]`, `[W/(m·K)]`), wrong arity
+  through a synthetic node, and the value operand's references still visited. The matrix adds "which
+  must elaborate rather than refuse" for the compound forms — a faithful consequence of the ruling,
+  not a new requirement.
+- **Ruling 2** lands at design.md:538-558, quotes the primitive's contract verbatim (:543-545), and
+  is carried into the export list (:1036-1037) and the ownership table as two separate rows that
+  split parser shape from value-site policy (:1008-1009). The delegation clause is specific enough to
+  be checkable: Codegen's helper "performs no operand indexing, no arity check, and no metatype test
+  of its own" (:554). `annotated_ast_value`'s deletion squares with it — the deletion stands (:517,
+  :556-558), and the clause explicitly names the Phase-3 surfaced residual (premise conflict 2) as
+  what the primitive resolves.
+- **Ruling 3** lands as a new subsection, design.md:779-810, with the five requirements quoted
+  verbatim (:791-797). The Agentic gate's audited scoping is left untouched and said so twice
+  (:781-782, :787). The account of the m2 residual matches the Phase-2 audit exactly — including that
+  m2's mechanism closed while the argument-passed reader remains open
+  (`run-records/phase2-audit.md`:474-487). The owner's 20-row figure and the "a red count that
+  shrinks because the scan narrowed is not progress" rule are both recorded (:807-810), and the
+  three-leg closure condition below it is unweakened.
+- **Ruling 4** lands in both places. The matrix row (design.md:150) and the prose under it
+  (:160-169) match the measured record term for term: graph returned, `SI_OCCURRENCE_AMBIGUOUS` +
+  `SI_OCCURRENCE_MISSING`, all three `cells[i]__mass` attributes present, `picked` unresolved
+  (plan.md:1091-1100). The red-set Case 2 text is updated in step (:1506-1512).
+- **The A5b ledger row (design.md:1465) does expect both starting states.** Its "old behavior" cell
+  names the strict incidental `SI_OCCURRENCE_AMBIGUOUS` *and* the lenient graph carrying both
+  diagnostics, and the paragraph at :1477-1483 tells Phase 4's reconciliation gate to expect the
+  transition rather than flag it. Obligation 4 is satisfied.
+- **Amendment discipline holds on the parts that matter most.** D1-D10 are unrenumbered; no heading
+  was removed (the amendment adds exactly one, `#### The Codegen gate keeps repository-wide scope`,
+  and both references to it resolve); every `design.md#…` anchor plan.md rev 3 links still resolves
+  except a set that was already dangling before this amendment (see Minor 3).
+
+## Must-fix
+
+**Must-fix 1 — the wrong-arity behavior of `unit_annotation_value` is undefined, and it is the same
+class of gap that halted Phase 3.** design.md:543-547.
+
+The primitive's signature is `-> Any | None`, and the only stated meaning for `None` is "not a unit
+annotation" (:547). The contract also says it must "enforce exactly two operands" (:543). What
+"enforce" produces is never said, and the two readings diverge in behavior an implementer will ship:
+
+- *Raise* `SemanticEvidenceError(EXPRESSION_KIND_UNSUPPORTED)` — a malformed annotation refuses by
+  name, and Codegen's value-site policy call now has a raising path it did not have before, which
+  D7 converts to `SI_EVIDENCE_INCOMPLETE`.
+- *Return `None`* — the annotation is treated as "not an annotation", so `inspect_reference_uses`
+  walks it as general math and **emits the unit operand as a reference use**, which is precisely the
+  m3 defect the ruling exists to prevent; and Codegen mints a computed node instead of a literal
+  value site.
+
+The required test case "wrong arity through a synthetic node" (:525) has no stated expected outcome,
+so the test cannot arbitrate either. The Phase-2 tree chose the raising reading
+(`test_a_malformed_unit_annotation_is_refused_by_name`, per `run-records/phase2-audit.md`:451-456
+— tree fact, from the record), but the design must state it rather than leave it to be inherited.
+
+*What correct looks like:* one sentence under the ruling-2 quote — a recognized `[` annotation with
+an operand count other than two raises `SemanticEvidenceError(EXPRESSION_KIND_UNSUPPORTED)`; `None`
+is returned only when the expression is not a `[` annotation at all; Codegen's value-site policy does
+not catch that error, so it reaches the D7 boundary as `SI_EVIDENCE_INCOMPLETE`. Then give the
+wrong-arity coverage case its expected outcome in the matrix at :1572-1576.
+
+**Must-fix 2 — the amendment adds coverage but never retires the Phase-2 assertions that pin the
+falsified premise.** design.md:508-526.
+
+Per `run-records/phase2-audit.md`:451-456 (tree fact, from the record), Agentic's
+`_unit_annotation_value` at `reference_use.py:316` refuses a non-feature-reference unit operand with
+`EXPRESSION_KIND_UNSUPPORTED` and an unresolved unit referent with `RESOLVED_TARGET_MISSING`, and
+those refusals are pinned by kept tests. Ruling 1 drops both requirements. Those assertions are now
+wrong, and the audited m3 closure — which the audit accepted partly *because* shape validation
+survived (:451, "Shape validation survives") — now rests on a different mechanism: never emitting the
+unit operand at all, rather than validating its referent.
+
+The design says the requirements are dropped but says nothing about the assertions that encode them,
+so an implementer resuming Phase 3 meets green tests asserting a rule the design deleted.
+
+*What correct looks like:* one clause under ruling 1 naming what goes — the non-feature-reference and
+unresolved-unit-referent refusals and their assertions — and one sentence stating that m3's closure
+now rests on non-emission, so the Phase-2 audit's m3 disposition is re-established on the new
+mechanism rather than silently inherited.
+
+**Must-fix 3 — the next-stage handoff still addresses Revision 7 and Plan Revision 3.**
+design.md:1873-1890.
+
+The rev-8 carry-list at :1858-1871 is good, and it does the one thing the brief singled out: it names
+the phase-boundary consequence, that ruling 2 lands in Agentic, which Phase 3 treated as read-only,
+under the same `0.1.3` / `semantic-evidence/v2` contract (:1863-1866). The problem is everything
+immediately below it. ":1873" still reads "Revision 7 needs targeted `my-design-review` confirmation
+that the five amended areas are corrected", and ":1879" still reads "After confirmation, Plan
+Revision 3 consumes this document", followed by rev-7's carry list (the three-leg lock rule "in Phase
+1", the committed historical-tree check, both indexed red cases). Phases 1-2 are complete and plan
+rev 3 already consumed all of it. A plan agent reading the handoff top-down is instructed to build
+Phase 1 again.
+
+*What correct looks like:* retarget the block — this review confirms Revision 8's four areas; the
+consuming artifact is the next plan revision (rev 4), which resumes at Phase 3 from the stop
+report's rollback point; keep the rev-7 bullets only if marked as already consumed by plan rev 3.
+
+**Must-fix 4 — two things the plan revision needs are missing from the handoff.** design.md:1858-1871.
+
+1. *Reopening Agentic reopens Phase 2's audited surface.* The handoff says the phase boundary "has to
+   allow" the Agentic change but not what that costs. `#agentic-semantic-contract` (:1042) already
+   requires the scoped strict lane, standalone tests, and lint to pass from the committed Agentic
+   tree before Codegen consumes it. Say that this applies again to the ruling-2 landing, and that
+   the Phase-2 audit's m3 disposition is re-established there (ties to Must-fix 2). Without it, the
+   plan can land an Agentic change on a tree whose audit is dated to different bytes.
+2. *Plan Phase 3's manifest premise is falsified and the handoff doesn't say so.* Phase 1 recorded
+   that Phase 3 "removes" the ~26 unowned reads (plan.md:1106-1109); the stop report's premise
+   conflict 1 falsifies that for 11 of them, and ruling 3 replaces removal with collision-aware rows
+   plus migration or mechanical exclusion. The handoff carries ruling 3's content but never tells the
+   plan revision that its own recorded premise has to change. Add that sentence — it is the
+   difference between a plan that revises Phase 3 and a plan that re-states a false target.
+
+## Should-fix
+
+**Should-fix 1 — a collision-aware row has no defined proof form, so "field owner or receiver
+contract" is not yet arbitrable.** design.md:799-805.
+
+Every other row class has a named proof: a live row's proof is its public failure test, an off-route
+row's is the reachability exclusion (:754-755). The collision row is required to carry "a real
+closure proof" (:793, owner-verbatim) and the design's own gloss is "the same proof obligation every
+other row carries" (:803-804) — but neither says what the artifact *is* for this class. An
+implementer can satisfy "receiver contract" with a docstring assertion; an auditor will want
+something the scan can re-derive. The design anticipates the failure ("A row asserting an owner it
+cannot prove fails like any stale row", :804-805) without saying how proving works.
+
+*What correct looks like:* name the artifact. For example: the declaring type must be provable at the
+read site from a type annotation or module-local construction, and the row's proof is a test that
+fails if the annotation or the declaring type changes. `SourceFile.referent`'s serialized-key status
+(:801-802) makes this concrete and cheap.
+
+**Should-fix 2 — the evasion mutant's kill criterion is stated as discovery, not as gate failure.**
+design.md:772-775.
+
+The text requires the adapter-free mutant "must still be discovered". Discovery alone is not a kill:
+the gate fails on set inequality against the reviewed manifest (:776-777). As written the mutant is
+in fact killed — a new `(module, function, selector)` tuple is not in the manifest — but the stated
+criterion is weaker than the mechanism, and the collision rule above it is exactly the place a future
+row could swallow it. Say it in the strong form: the mutant's tuple must appear in the discovered set
+and fail the equality gate, and an unannotated receiver can never qualify for a receiver-contract
+row. That last clause is what keeps ruling 3's own mechanism from becoming the escape ruling 3
+exists to close.
+
+**Should-fix 3 — the changed-section list at the top undercounts the sections actually edited.**
+design.md:24-36.
+
+The list is organized by ruling, and the rulings reach further than four sections. Edited but
+unlisted: Outcome (:76-79), Data and responsibility ownership (:1008-1009), Transition ledger seed's
+A5b row (:1465), Evidence and public-boundary matrix (:1572-1576), File-level implementation map
+(:1655), and Next-stage handoff (:1858-1871). The brief requires the amendment to list its changed
+sections; an auditor diffing section by section currently finds six edits the header does not
+account for. Add them as a second line ("also touched, mechanically, by the four rulings: …").
+
+**Should-fix 4 — the file-level map names a different home for the value-site rule than D5 and the
+ownership table do.** design.md:1655 versus :552-555 and :1009.
+
+The row's file list is `extraction/binding_source.py`, `elaboration/binding_evidence.py`,
+`source_evidence.py`, `unit_annotation.py`, while its Change text (rewritten by this amendment) says
+the value-site rule is "kept as Codegen policy over Agentic's `unit_annotation_value` primitive". D5
+and the ownership table put that rule in `elaboration/expression_evidence.unit_annotated_value`. Per
+the stop report, `annotated_ast_value` and the four `binding_evidence` builders are already deleted
+and the rule already moved to `expression_evidence` (tree fact, from the record). An implementer
+reading the map has two candidate homes.
+
+*What correct looks like:* name `elaboration/expression_evidence.py` in that row and mark
+`unit_annotation.py` / `binding_evidence.py` as deleted, or drop them from the row.
+
+**Should-fix 5 — "D1-D10 … are untouched" reads literally false.** design.md:40-42. Ruling 2 amends
+D5's text. The intended claim is that no D1-D10 *mechanism* changed. Say that: "no D1-D10 mechanism
+changes; D5 gains the shared primitive." One clause, and it stops a reconciliation pass from
+recording a contradiction between the header and the diff.
+
+**Should-fix 6 — CI-2's "including a unit wrapper" proof now points at an operand that is never
+traversed.** design.md:1837. With the unit operand opaque, a unit-wrapper proof of operand
+materialization and the shared depth budget has to run against the annotation-level materialization
+and the value operand. The row still reads as it did when the unit operand was walked. One clause
+prevents a Phase-4 proof written against untraversed structure.
+
+**Should-fix 7 — "a shape SysIDE rejects never reaches here" is the load-bearing half of ruling 1's
+distinction and is asserted without its evidence.** design.md:515-516. The Phase-2 audit measured
+exactly this at SysIDE 0.8.4 — two project-scoped unit spellings, both parser-refused
+(`run-records/phase2-audit.md`:458-463). Cite it. The sentence is doing the work of keeping "does not
+validate unit grammar" from reading as "anything passes", and it should not rest on assertion.
+
+## Minor
+
+1. **Ruling 2's verbatim uses "should"; the design converts it to a requirement** (:543-545 quoted,
+   then :548-555 as consequences). This is the right call for an owner ruling and the quote is
+   preserved intact, so provenance is not damaged — noting it only so the conversion is visible if
+   the owner meant the softer reading.
+2. **The 20-row figure is recorded without reconciliation to the plan's ~26.** design.md:807. The
+   design itself carries no competing number, so there is no internal contradiction; the plan does
+   (plan.md:1106-1109), which is why Must-fix 4(2) puts the reconciliation in the handoff rather than
+   here.
+3. **Pre-existing dangling anchors, plan-side, not caused by this amendment.** plan.md links
+   `design.md#natural-route-closure-matrix`, `#commit-boundary-is-closed`,
+   `#one-codegen-conversion-boundary`, `#diagnostic-ownership`, and a truncated `design.md#deep`;
+   none of these resolve against design.md's headings, and none were removed by Revision 8 (the last
+   two are almost certainly meant to be `#d7-one-codegen-conversion-boundary` and
+   `#d8-diagnostic-ownership`). Recorded here so the plan revision fixes them on its own side. Every
+   other plan-cited anchor resolves.
+
+## Verdict and minimal must-fix set
+
+**`Revise`.** Nothing here reopens Revision 6 or the closed Revision-7 amendment, and none of the
+four rulings needs to be re-decided — they are encoded faithfully. The must-fix set is four items:
+
+1. **Must-fix 1** — state what "enforce exactly two operands" produces (raise vs `None`), and give
+   the wrong-arity coverage case an expected outcome. design.md:543-547, :1572-1576.
+2. **Must-fix 2** — name the Phase-2 assertions that ruling 1 retires, and re-establish m3's closure
+   on non-emission. design.md:508-526.
+3. **Must-fix 3** — retarget the handoff from Revision 7 / Plan Revision 3 to Revision 8 and the plan
+   revision that resumes Phase 3. design.md:1873-1890.
+4. **Must-fix 4** — add the two missing handoff items: the Agentic re-verification obligation that
+   comes with reopening that tree, and the falsified "Phase 3 removes the ~26 unowned reads" premise.
+   design.md:1858-1871.
+
+Should-fix 1 and 2 are worth taking with the must-fix set: together they cost a short paragraph and
+they close the one place where ruling 3's own mechanism could become the escape it was written to
+prevent.
+
+## Resolutions — Revision 8
+
+*(empty; to be filled when the owner engages with this section)*
+
+---
+
+## Orchestrator verification — Revision 8 must-fix set closed (2026-08-18)
+
+Verified directly in `design.md` after the design session's review-incorporation pass; the
+review's verdict stands as `Revise` → closed, per the rev-7 precedent (minor, objectively
+verifiable fixes recorded rather than re-reviewed).
+
+- Must-fix 1: wrong-arity outcome ruled and stated — raises the named refusal; `None` never
+  describes a malformed annotation (design.md:581, :1632). [AGENT ruling, derived from the
+  owner's verbatim "enforce exactly two operands".]
+- Must-fix 2: "What this retires in the Phase-2 tree" names the superseded assertions and
+  re-bases m3's closure on non-emission (design.md:545).
+- Must-fix 3: stale "confirm Revision 7"/"Plan Revision 3 Phase 1" handoff instructions gone
+  (grep-clean); handoff targets the next plan revision resuming Phase 3 from `d257ef1`.
+- Must-fix 4: both consequences present — Agentic reopening re-applies the Phase-2 audited
+  obligations (design.md:1933) and the "~26 unowned reads" premise restatement (design.md:1941).
+- Should-fixes 1-2: collision-row proof artifact defined with the unannotated-receiver
+  exclusion (design.md:815, :854) and the mutant criterion stated as failing the manifest
+  equality gate (design.md:814).
+
+Design Revision 8 is approved for consumption by the plan revision.

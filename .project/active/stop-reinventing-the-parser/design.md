@@ -35,11 +35,25 @@
      [`Cell[3]` red-set case](#the-indexed-red-set--both-cases-are-required-kept-tests) — the
      measured **lenient** arm of the plural bare chain is stated (ruling 4).
 
+  Also touched, mechanically, by those four rulings: Outcome, Data and responsibility ownership,
+  the transition ledger's A5b row, the evidence and public-boundary matrix, the file-level
+  implementation map, and Next-stage handoff.
+
   Where a ruling contradicts Revision-7 text, the ruling wins: ruling 1 **deletes** the
   "validates its shape" requirement on the unit operand, and ruling 3 **rejects** extending Phase
-  2's adapter-import gate scope to Codegen. **No other mechanism changes.** D1-D10, the
-  closed-variant architecture, the artifact chain, the acyclic topology, the three-leg closure
-  condition, and the probe/fixture lock are untouched, and no closure requirement is weakened.
+  2's adapter-import gate scope to Codegen. **No D1-D10 mechanism changes**; D5 gains the shared
+  primitive as new text. The closed-variant architecture, the artifact chain, the acyclic topology,
+  the three-leg closure condition, and the probe/fixture lock are untouched, and no closure
+  requirement is weakened.
+
+  **Review incorporation (2026-08-18).** The targeted review of this amendment returned `Revise`.
+  Its four must-fixes are applied here — the arity behavior of `unit_annotation_value` is stated as
+  an [AGENT ruling] rather than left to the implementer, the retired Phase-2 assertions are named
+  with m3's closure re-established on non-emission, and the handoff is retargeted and given its two
+  missing items. Should-fixes 1-2 (the collision row's proof artifact; the evasion mutant's kill
+  criterion) are taken with them, and should-fixes 3-7 are taken as well: each was a one-clause
+  correction of something an implementer or auditor would otherwise have to guess at. This is
+  review incorporation, so the document stays Revision 8.
 - **Revision 7 (2026-08-17) — targeted amendment.** Evidence source:
   `run-records/phase1-stop-report.md`, whose `[verified]` claims were reproduced by the orchestrator
   in a clean worktree at `C_base`, and whose seven rulings the owner ratified on 2026-08-17. The
@@ -513,9 +527,12 @@ resolver entry. Its optional state can describe undecoded math; it cannot create
 
   **[OWNER 2026-08-18]** The feature-reference and exact-referent requirements on the unit operand
   are **dropped**. This boundary does not validate unit grammar at all — which is not the same as
-  saying any unit shape passes validation; a shape SysIDE rejects never reaches here. Codegen's
-  raw-AST `annotated_ast_value` entry is still deleted and de-exported; IR consumers keep
-  `annotated_ir_value`.
+  saying any unit shape passes validation; a shape SysIDE rejects never reaches here. That last
+  clause is measured, not assumed: the Phase-2 audit probed two project-scoped unit spellings at
+  SysIDE 0.8.4 and the parser refused both (`run-records/phase2-audit.md`, m3 confirmation,
+  "Referent must be a feature but is AttributeDefinition" / "Invalid quantity expression, expected a
+  measurement unit as the second argument"). Codegen's raw-AST `annotated_ast_value` entry is still
+  deleted and de-exported; IR consumers keep `annotated_ir_value`.
 
   This replaces Revision 7's "visits its value operand and validates its shape" text, whose premise
   is false: Phase 2 read "its shape" as "the unit operand is a feature reference", which holds for
@@ -524,6 +541,19 @@ resolver entry. Its optional state can describe undecoded math; it cannot create
   (`run-records/phase3-stop-report.md`). Required coverage, per the owner: `[m]`; representative
   compound forms such as `[kg/m^3]` and `[W/(m·K)]`; wrong arity through a synthetic node; and
   confirmation that references in the **value** operand are still visited.
+
+  **What this retires in the Phase-2 tree.** Agentic's `_unit_annotation_value`
+  (`reference_use.py:316` at the audited `68bca37`) refuses a non-feature-reference unit operand with
+  `EXPRESSION_KIND_UNSUPPORTED` and an unresolved unit referent with `RESOLVED_TARGET_MISSING`, and
+  kept tests pin both. **Those two refusals and their assertions are superseded by this contract and
+  go.** They encode exactly the dropped requirements. What survives is the arity refusal below.
+
+  **m3's closure moves to non-emission.** The Phase-2 audit accepted the m3 closure partly because
+  shape validation survived. It no longer does, so the closure now rests on the single stronger fact
+  that the unit operand is never traversed and never emitted at all — a project-scoped unit cannot
+  appear as a design dependency because nothing on this route ever looks at it. The Agentic landing
+  of ruling 1 re-establishes m3's disposition on that mechanism; it is not inherited from the
+  Phase-2 audit, whose evidence is dated to the retired one.
 - A supported `sum` invocation marks its contained reference uses plural. Other existing supported
   scalar contexts remain scalar. The operation preserves the current aggregation semantics without
   choosing concrete occurrences.
@@ -544,8 +574,15 @@ one shared primitive:
 > operands, return the value operand, and leave the unit operand opaque. Both
 > `inspect_reference_uses` and Codegen should call it.
 
-`None` means "not a unit annotation". Recognition is by mapped metatype and operator, never a runtime
-class name. Consequences:
+**What "enforce" produces** — **[AGENT ruling 2026-08-18]**, derived from the owner's verbatim
+"enforce exactly two operands", recorded so the reading is not left to the implementer. A recognized
+`[` annotation whose operand count is not exactly two **raises**
+`SemanticEvidenceError(EXPRESSION_KIND_UNSUPPORTED)`. `None` means strictly one thing: the expression
+is not a `[` annotation at all. `None` never describes a malformed annotation, so a malformed one can
+never fall through and be walked as general math — which is what would re-emit the unit operand and
+undo the m3 closure. Codegen's value-site policy does not catch that error; it reaches the D7
+boundary and converts once to `SI_EVIDENCE_INCOMPLETE`. Recognition is by mapped metatype and
+operator, never a runtime class name. Consequences:
 
 - `inspect_reference_uses` traverses only what the primitive returns, so the unit operand is never
   reached and never emitted.
@@ -771,8 +808,12 @@ set. Every non-literal `getattr` in that module set is rejected because its sele
 reviewed. Mutation tests introduce one direct read, one string-literal `getattr`, one local alias,
 one imported alias, and one dynamic `getattr`; every mutation must kill the gate. Codegen adds one
 **adapter-free evasion mutant** — a module importing nothing, receiving the node as an argument, such
-as `def consume(node): return node.referent` — which must still be discovered
-([ruling 3](#the-codegen-gate-keeps-repository-wide-scope)). The discovered
+as `def consume(node): return node.referent` ([ruling
+3](#the-codegen-gate-keeps-repository-wide-scope)). Its kill criterion is stated in the gate's own
+terms, not as discovery: the mutant's `(module, function, selector)` tuple must appear in the
+discovered set **and fail the manifest equality gate**. Discovery alone is not a kill, and an
+unannotated receiver like this one can never qualify for a collision-aware receiver-contract row —
+that is what stops ruling 3's own mechanism from becoming the escape it exists to close. The discovered
 tuple set must equal the reviewed manifests exactly. A new selector, missing manifest row, stale
 row, unexercised exemption, or live import of an off-route module fails.
 
@@ -803,6 +844,21 @@ so renaming it changes sealed bytes. Each such row names the declaring type as t
 the receiver contract that establishes the argument is never a live SysIDE element, plus its closure
 proof — the same proof obligation every other row carries. A row asserting an owner it cannot prove
 fails like any stale row.
+
+**What the collision row's closure proof is.** Every other row class names its artifact — a live
+row's proof is its public failure test, an off-route row's is the reachability exclusion — so this
+class needs one too, or "receiver contract" is satisfiable by a docstring. The proof is:
+
+- The declaring type must be **provable at the read site**, from a type annotation on the receiving
+  parameter or attribute, or from module-local construction of the value being read. A prose or
+  docstring claim is not a proof, and an **unannotated receiver can never qualify for a
+  receiver-contract row** — it falls back to being an unowned raw read and stays red.
+- The row's proof artifact is a kept test that fails if that annotation or declaring type changes.
+  For `SourceFile.referent`, whose serialized-snapshot-key status makes renaming it a sealed-bytes
+  change, that test is cheap and is also the row's rename guard.
+
+Implementer and auditor arbitrate a disputed row against those two facts, not against the row's
+wording.
 
 **[OWNER 2026-08-18]** The current manifest failure contains 20 rows, so neutral-IR plus `referent`
 is **not** the whole closure. The remaining rows are closed by migration or by mechanical exclusion,
@@ -1571,7 +1627,9 @@ leg.
   leaf, and middle segment cases raise `SemanticEvidenceError` with reference and location.
 - Unit annotations are covered at the required shapes ([ruling 1](#one-total-inspection-operation)):
   a simple `[m]`; representative compound forms such as `[kg/m^3]` and `[W/(m·K)]`, which must
-  elaborate rather than refuse; a wrong-arity annotation through a synthetic node; and a value
+  elaborate rather than refuse; a wrong-arity annotation through a synthetic node, which must raise
+  `SemanticEvidenceError(EXPRESSION_KIND_UNSUPPORTED)` and reach the public boundary as
+  `SI_EVIDENCE_INCOMPLETE` — never return `None` and never be walked as general math; and a value
   operand carrying a reference, proving the value side is still visited while the unit side is
   never emitted.
 - Real StandardLibrary, Project, and External document tiers prove B5. A project document whose
@@ -1652,7 +1710,7 @@ closed-variant exhaustiveness, and a strict type result cannot substitute for ro
 | agentic `pyproject.toml`, `uv.lock`, tests, test ownership manifest, `docs/patterns/plant-idiom.md` | 0.1.3 package contract, semantic-evidence/v2 proofs, selector closure, and supported/refused modeling shapes |
 | codegen `elaboration/occurrence.py` | General owner selector; containment-local kind/identity validation; address resolver; exact multiplicity owner; strict redefinition identities |
 | codegen `elaboration/elaborate.py`, `elaboration/expression_evidence.py`, `expression_compiler.py`, `elaboration/__init__.py` | Producer index, strict expression-evidence inventory/adapter, exact-reference-only resolution, total deep-relationship path factory, and raw private graph builder |
-| codegen `extraction/binding_source.py`, `elaboration/binding_evidence.py`, `source_evidence.py`, `unit_annotation.py` | Strict closed binding-source variants, removal of optional semantic paths, and the value-site rule kept as Codegen policy over Agentic's `unit_annotation_value` primitive |
+| codegen `extraction/binding_source.py`, `elaboration/expression_evidence.py`, `source_evidence.py` (`elaboration/binding_evidence.py` and `extraction/unit_annotation.py` are deleted) | Strict closed binding-source variants, removal of optional semantic paths, and the value-site rule kept as Codegen policy in `expression_evidence.unit_annotated_value` over Agentic's `unit_annotation_value` primitive |
 | codegen `orchestration/elaborated_pipeline.py` | Single evidence conversion boundary for live/admitted extraction and elaboration |
 | codegen `extraction/extractor.py`, `feature_metadata.py` | Delete dead reference reconstruction helpers; exact typing; B10 fallback deletion after verdict |
 | codegen `cli/__init__.py`, `generation/registry.py` | Graph-derived exit-wrapper authority on every exported route and replacement of the untyped collector failure with fail-before-mutate `CodeGenerationError` |
@@ -1834,7 +1892,7 @@ The fresh-audit findings map to concrete design owners:
 | Fresh finding | Revision-6 owner | Required closure proof |
 |---|---|---|
 | `audit3-F1` / CI-1: discarded index marker | D5/D7 | Indexed computed attribute, alias, predicate, calculation dependency, and binding all refuse through live and capture arms before graph construction |
-| CI-2: raw operand and depth bypass | D5/D7 | One shared budget and total operand materialization fail through each natural consumer, including a unit wrapper |
+| CI-2: raw operand and depth bypass | D5/D7 | One shared budget and total operand materialization fail through each natural consumer, including a unit wrapper — whose proof runs against the annotation-level materialization and the **value** operand, since ruling 1 leaves the unit operand untraversed |
 | CI-3: weaker bare-binding interpretation | D7 | Closed binding-source union and exact-reference-only resolver; no optional semantic path or raw pending-binding fallback |
 | CI-4: shortened deep relationship path | D7/D8 | Real `Feature`-only path proof plus forced mapped-`IndexExpression` refusal; the total factory also fails on the first missing middle target and preserves the authored path and location |
 | CI-5: caller-provided registry invariant | D9 | Caller type-set parameter is absent; no-root, one-type, repeated-type, and multiple-type graphs derive their own wrappers, while unsupported types refuse through direct and CLI routes |
@@ -1861,36 +1919,46 @@ resumes Phase 3 must carry:
 - the opaque unit operand and its required coverage — `[m]`, compound forms, wrong arity, and the
   value operand's references still visited (ruling 1);
 - the shared `unit_annotation_value` primitive landing in Agentic, with Codegen's
-  `expression_evidence.unit_annotated_value` reduced to value-site policy over it (ruling 2). Phase
-  3 treated the Agentic tree as read-only; this correction lands in Agentic, so the phase boundary
-  has to allow it under the same `0.1.3` / `semantic-evidence/v2` contract;
+  `expression_evidence.unit_annotated_value` reduced to value-site policy over it, and the arity
+  refusal stated above (ruling 2 plus the [AGENT ruling] on what "enforce" produces);
 - the Codegen selector gate's repository-wide scope, its collision-aware rows for neutral
-  `ExpressionIR.operands` and `SourceFile.referent`, the adapter-free evasion mutant, and the
-  remaining rows staying red until migrated or mechanically excluded (ruling 3);
+  `ExpressionIR.operands` and `SourceFile.referent` with their stated proof artifact, the
+  adapter-free evasion mutant and its equality-gate kill criterion, and the remaining rows staying
+  red until migrated or mechanically excluded (ruling 3);
 - both arms of the plural `Cell[3]` case in the behavior matrix and in Phase 4's reconciliation
   expectations (ruling 4).
 
-Revision 7 needs targeted `my-design-review` confirmation that the five amended areas are corrected
-without reopening D1-D10 or the closed-variant architecture. Everything Revision 6's review already
-approved stays approved; the review scope is the amendment. The current product-lens gate stays
-`BLOCKED` until the indexed-consumer architecture and its three-leg closure proof are proven green in
-production.
+Two consequences the plan revision has to act on, not merely carry:
 
-After confirmation, Plan Revision 3 consumes this document. It must carry:
+1. **Reopening Agentic reopens Phase 2's audited surface.** Phase 3 treated the Agentic tree as
+   read-only; rulings 1 and 2 land there, so the phase boundary must allow it — under the same
+   `0.1.3` / `semantic-evidence/v2` contract, since that artifact was never released.
+   [Agentic semantic contract](#agentic-semantic-contract) already requires the scoped strict lane,
+   standalone tests, and lint to pass from the committed Agentic tree before Codegen consumes it;
+   **that requirement applies again to this landing**, and the Phase-2 audit's m3 disposition is
+   re-established there on the non-emission mechanism (see ruling 1 above). Otherwise the plan lands
+   an Agentic change on a tree whose audit is dated to different bytes.
+2. **Plan Phase 3's "removes the ~26 unowned reads" premise is falsified — restate that checklist
+   item.** Phase 1 recorded removal as the route to a green manifest (plan.md, Phase 1 deviations
+   item 5). The stop report's premise conflict 1 falsifies it for 11 of those reads, and ruling 3
+   replaces removal with collision-aware rows plus migration or mechanical exclusion, against the
+   owner's measured 20-row failure. The plan revision must rewrite the item to that target rather
+   than restate the old one.
 
-- the three-leg lock rule and the new committed historical-tree check in Phase 1, asserting
-  `probe_fixture_commit == 20f9e60a` from the lock file's own field;
-- the D10 rerun trigger in its firing form — lock-vs-historical mismatch, or an unowned current-byte
-  change to a locked verification/probe file;
-- both indexed red cases with their recorded `C_base` diagnostics;
-- the A5a/A5b rows in Phase 4's reconciliation expectations;
-- the `deep_cross_scope_probe` never-restore stop condition — a change returning that fixture to a
-  captured graph fails the item;
-- the fixture-comment obligation at `tests/fixtures/deep_cross_scope_probe/design.sysml:75` and the
-  `[DEEP-QUALIFIED-OUTPUT-WIRING]` backlog row, both before close.
+This document's own review scope is Revision 8's four areas. Everything Revision 6's review approved
+stays approved, and the closed Revision-7 amendment is not reopened. The current product-lens gate
+stays `BLOCKED` until the indexed-consumer architecture and its three-leg closure proof are proven
+green in production.
 
-The replacement
-plan must keep both local ownership manifests, the scoped strict
-gates, full natural-route matrices, probe/fixture lock, and `C_prod`, `F_final`, and `C_evidence`
-boundaries as checked deliverables. Implementation is followed by an independent `my-audit`; the
-implementing agent does not self-certify.
+The consuming artifact is the **next plan revision**, which resumes at **Phase 3** from the stop
+report's rollback point (`git reset --hard d257ef1` on `stop-parser-impl-r2`). Phases 1 and 2 are
+complete and audited; plan rev 3 already consumed Revision 7's carry-list — the three-leg lock rule
+and committed historical-tree check in Phase 1, the D10 rerun trigger, both indexed red cases, the
+A5a/A5b reconciliation rows, the `deep_cross_scope_probe` never-restore stop condition, and the
+fixture-comment plus `[DEEP-QUALIFIED-OUTPUT-WIRING]` obligations. Those stay in force; none is
+rebuilt.
+
+The plan must keep both local ownership manifests, the scoped strict gates, full natural-route
+matrices, probe/fixture lock, and `C_prod`, `F_final`, and `C_evidence` boundaries as checked
+deliverables. Implementation is followed by an independent `my-audit`; the implementing agent does
+not self-certify.
