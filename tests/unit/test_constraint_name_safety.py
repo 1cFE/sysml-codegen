@@ -65,6 +65,33 @@ def test_distinct_predicate_identities_cannot_share_one_binding():
     assert [identity.qualified_name for identity in violation.identities] == ["A::x", "B::x"]
 
 
+def test_qualified_authored_spelling_uses_exact_target_name_as_the_binding():
+    node = FeatureReferenceNode(
+        reference=FeatureReferenceFact(
+            source_name="comp_a::length",
+            target=IdentityFact(
+                kind="Feature",
+                name="length",
+                qualified_name="Plant::comp_a::length",
+            ),
+            target_types=[],
+            chain_segments=[],
+        ),
+        operand_type=OperandTypeFact(category="real", enumeration=None, unit=None),
+    )
+
+    assert predicate_bindings(node) == [
+        ConstraintBinding(
+            scope="predicate",
+            final_binding="length",
+            identity=ConstraintFormalIdentity(
+                raw_name="length",
+                qualified_name="Plant::comp_a::length",
+            ),
+        )
+    ]
+
+
 @pytest.mark.parametrize(
     ("policy", "source", "model_names"),
     [

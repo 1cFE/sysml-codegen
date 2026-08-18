@@ -41,6 +41,7 @@ def test_d316_crosspart_expose_warns_not_silent(caplog):
                 continue
             extract_computed_attributes(SysideAdapter(), part, _calc_usage_names(part))
     warned = any(
-        "D3-16" in r.message and "exposed" in r.message for r in caplog.records
+        "EXPOSE_PURE 'exposed' on 'consumer' has fewer than 2 references" in r.message
+        for r in caplog.records
     )
     assert warned, [r.message for r in caplog.records]

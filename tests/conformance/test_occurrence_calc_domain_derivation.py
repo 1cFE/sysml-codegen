@@ -13,6 +13,7 @@ from sysml_codegen.elaboration.elaborate import (
     _ExactElaborator,
     _ReferenceResolutionError,
 )
+from sysml_codegen.elaboration.expression_evidence import build_expression_evidence_inventory
 from sysml_codegen.elaboration.identity import ResolvedSemanticReference
 from sysml_codegen.extraction.extractor import SysMLDataExtractor
 from sysml_codegen.orchestration.elaborated_pipeline import elaborate_model_paths
@@ -29,6 +30,7 @@ def _elaborator() -> tuple[_ExactElaborator, object]:
     elaborator = _ExactElaborator(
         extractor.model,
         extractor.extract_calculation_definitions(),
+        inventory=build_expression_evidence_inventory(extractor.model),
         strict=True,
     )
     return elaborator, elaborator.run()
@@ -131,6 +133,7 @@ def test_bare_sibling_output_keeps_both_producers_and_refuses_scalar_election() 
     elaborator = _ExactElaborator(
         extractor.model,
         extractor.extract_calculation_definitions(),
+        inventory=build_expression_evidence_inventory(extractor.model),
         strict=False,
     )
     graph = elaborator.run()
@@ -168,6 +171,7 @@ def test_unrelated_globally_sole_output_refuses_instead_of_crossing_domains() ->
     elaborator = _ExactElaborator(
         extractor.model,
         extractor.extract_calculation_definitions(),
+        inventory=build_expression_evidence_inventory(extractor.model),
         strict=False,
     )
     graph = elaborator.run()

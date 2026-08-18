@@ -79,7 +79,7 @@ def test_indexed_source_refuses_before_graph_construction_in_both_modes() -> Non
             ElaborationCode.SI_INDEXED_SOURCE_UNSUPPORTED
         ]
         assert excinfo.value.diagnostics[0].consumer is None
-        assert "#(" in excinfo.value.diagnostics[0].detail
+        assert "#(" in excinfo.value.diagnostics[0].reference
 
 
 def test_definition_reference_refusals_keep_their_distinct_codes() -> None:
@@ -158,16 +158,11 @@ def test_customer_fixture_lenient_diagnostics_are_accounted_for() -> None:
     }
 
 
-def test_alias_cycle_and_unsupported_formula_are_blocking_diagnostics() -> None:
+def test_alias_cycle_is_a_blocking_diagnostic() -> None:
     graph = _elaborate_lenient("elab_fail_closed_probe")
 
     codes = Counter(diagnostic.code for diagnostic in graph.diagnostics)
-    assert codes == Counter(
-        {
-            ElaborationCode.SI_ALIAS_CYCLE: 2,
-            ReadinessCode.SI_EXPRESSION_SOURCE_UNSUPPORTED: 1,
-        }
-    )
+    assert codes == Counter({ElaborationCode.SI_ALIAS_CYCLE: 2})
     assert not graph.is_projectable
     assert all(node.alias_target is None for node in graph.attrs.values() if node.is_alias)
 

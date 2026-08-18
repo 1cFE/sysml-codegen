@@ -12,6 +12,7 @@ from __future__ import annotations
 import pytest
 from agentic_mbse.sysml.expression_facts import (
     FeatureReferenceFact,
+    IdentityFact,
     LiteralFact,
     OperandTypeFact,
     UnitFact,
@@ -81,6 +82,35 @@ def _ref(name: str, category: str = "real", enumeration: str | None = None) -> F
         ),
         operand_type=OperandTypeFact(category=category, enumeration=enumeration, unit=None),
     )
+
+
+def _qualified_ref(authored: str, name: str, qualified_name: str) -> FeatureReferenceNode:
+    return FeatureReferenceNode(
+        reference=FeatureReferenceFact(
+            source_name=authored,
+            target=IdentityFact(kind="Feature", name=name, qualified_name=qualified_name),
+            target_types=[],
+            chain_segments=[],
+        ),
+        operand_type=OperandTypeFact(category="real", enumeration=None, unit=None),
+    )
+
+
+def test_qualified_authored_reference_compiles_with_its_exact_target_name() -> None:
+    ir = OperatorNode(
+        operator=">",
+        operands=[
+            _qualified_ref("comp_a::length", "length", "Plant::comp_a::length"),
+            _lit_real(0.0),
+        ],
+        operand_type=None,
+    )
+
+    source, args = compile_predicate_body(ir, "qualified")
+    result = load_predicate(source, "qualified")(length=3.0)
+
+    assert args == ["length"]
+    assert result.actual_value is True
 
 
 def _chain_ref(name: str) -> FeatureReferenceNode:

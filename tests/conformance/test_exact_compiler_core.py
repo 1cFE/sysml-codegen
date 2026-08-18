@@ -16,7 +16,6 @@ Three properties, all about identity rather than spelling:
 from __future__ import annotations
 
 from pathlib import Path
-from types import SimpleNamespace
 from uuid import UUID
 
 import pytest
@@ -33,16 +32,17 @@ from sysml_codegen.extraction.expression_compiler import (
 )
 from sysml_codegen.extraction.extractor import SysMLDataExtractor
 from tests.conftest import FIXTURES_DIR, requires_license
+from tests.helpers.expression_evidence import calculation_dependencies
 from tests.helpers.raw_elaboration import elaborate
 
 pytestmark = requires_license
 
 
 @pytest.fixture(scope="module")
-def collision_calc_defs() -> list[CalculationDefinitionData]:
+def collision_calc_defs() -> tuple[object, list[CalculationDefinitionData]]:
     extractor = SysMLDataExtractor([FIXTURES_DIR / "elab_payload_identity"])
     assert extractor.load_models()
-    return extractor.extract_calculation_definitions()
+    return extractor.model, extractor.extract_calculation_definitions()
 
 
 @pytest.fixture(scope="module")
@@ -62,13 +62,15 @@ def ordering_module():
 
 
 def test_colliding_rendered_names_stay_distinct_by_definition_and_member_id(
-    collision_calc_defs: list[CalculationDefinitionData],
+    collision_calc_defs: tuple[object, list[CalculationDefinitionData]],
 ) -> None:
     """Two definitions rendering `same_output` compile to two results, not one."""
-    results = [compile_calc_def_exact(calc_def) for calc_def in collision_calc_defs]
+    model, calc_defs = collision_calc_defs
+    dependencies = calculation_dependencies(model)
+    results = [compile_calc_def_exact(calc_def, dependencies) for calc_def in calc_defs]
 
     assert {result.definition_id for result in results} == {
-        calc_def.element_id for calc_def in collision_calc_defs
+        calc_def.element_id for calc_def in calc_defs
     }
     assert len({result.definition_id for result in results}) == 2
 
@@ -86,7 +88,7 @@ def test_colliding_rendered_names_stay_distinct_by_definition_and_member_id(
     }
 
     by_definition = {result.definition_id: result for result in results}
-    for calc_def in collision_calc_defs:
+    for calc_def in calc_defs:
         result = by_definition[calc_def.element_id]
         assert result.declared_output_ids == tuple(
             member.element_id for member in calc_def.output_attributes
@@ -99,26 +101,13 @@ def test_colliding_rendered_names_stay_distinct_by_definition_and_member_id(
         )
 
 
-def test_an_exact_dependency_cycle_is_total_and_manual(monkeypatch) -> None:
+def test_an_exact_dependency_cycle_is_total_and_manual() -> None:
     """A cycle refuses every declared output by UUID and orders none of them."""
     definition_id = UUID("00000000-0000-5000-8000-000000000200")
     first_id = UUID("00000000-0000-5000-8000-000000000201")
     second_id = UUID("00000000-0000-5000-8000-000000000202")
     first_expression = object()
     second_expression = object()
-    refs = {
-        id(first_expression): [
-            SimpleNamespace(name="second", element=SimpleNamespace(element_id=second_id))
-        ],
-        id(second_expression): [
-            SimpleNamespace(name="first", element=SimpleNamespace(element_id=first_id))
-        ],
-    }
-    monkeypatch.setattr(
-        expression_compiler,
-        "extract_feature_refs",
-        lambda expression, ignore_std_lib=True: refs[id(expression)],
-    )
     calc_def = CalculationDefinitionData(
         name="Cycle",
         qualified_name="Exact::Cycle",
@@ -140,7 +129,10 @@ def test_an_exact_dependency_cycle_is_total_and_manual(monkeypatch) -> None:
         member_names_by_id={first_id: "first", second_id: "second"},
     )
 
-    result = compile_calc_def_exact(calc_def)
+    result = compile_calc_def_exact(
+        calc_def,
+        {first_id: (second_id,), second_id: (first_id,)},
+    )
 
     assert result.definition_id == definition_id
     assert result.execution_order == ()
@@ -151,14 +143,13 @@ def test_an_exact_dependency_cycle_is_total_and_manual(monkeypatch) -> None:
     }
 
 
-def test_a_reference_with_no_resolved_declaration_is_refused_not_degraded(monkeypatch) -> None:
-    """An unresolvable reference stops the compile; it does not become a MANUAL verdict.
+def test_a_member_without_an_evidence_row_is_refused_not_degraded() -> None:
+    """An absent inventory row stops the compile; it does not become a MANUAL verdict.
 
     The legacy compiler answered an unresolved reference with a `MANUAL_REQUIRED` result and
     carried on, so a calculation whose dependency graph could not be built still produced a
-    result object. The exact compiler has no such answer: a reference the parser did not
-    resolve has no declaration UUID, so there is no edge to draw and nothing to key the
-    result on. It raises instead — fail-closed, at the point the identity is missing.
+    result object. The exact compiler has no fallback walk: if the conversion boundary did
+    not supply the member's evidence row, there is no dependency answer. It raises instead.
 
     Named replacement for `test_expression_compiler.py`'s
     `test_edge1_unresolved_reference_verdict_escalation`, whose subject (verdict escalation
@@ -168,14 +159,6 @@ def test_a_reference_with_no_resolved_declaration_is_refused_not_degraded(monkey
     input_id = UUID("00000000-0000-5000-8000-000000000301")
     output_id = UUID("00000000-0000-5000-8000-000000000302")
     expression = object()
-    monkeypatch.setattr(
-        expression_compiler,
-        "extract_feature_refs",
-        # The parser found the name and resolved nothing behind it.
-        lambda _expression, ignore_std_lib=True: [
-            SimpleNamespace(name="nowhere", element=None)
-        ],
-    )
     calc_def = CalculationDefinitionData(
         name="Unresolved",
         qualified_name="Exact::Unresolved",
@@ -192,9 +175,9 @@ def test_a_reference_with_no_resolved_declaration_is_refused_not_degraded(monkey
     )
 
     with pytest.raises(
-        expression_compiler.CompilationError, match="no resolved declaration element"
+        expression_compiler.CompilationError, match="no evidence row"
     ):
-        compile_calc_def_exact(calc_def)
+        compile_calc_def_exact(calc_def, {})
 
 
 def test_an_undeclared_intermediate_is_assigned_before_the_output_that_uses_it(

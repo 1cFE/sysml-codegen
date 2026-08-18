@@ -246,10 +246,6 @@ def test_deep_chain_without_exact_target_refuses_semantic_evidence():
             "sysml_codegen.extraction.usage_extractor.SysideAdapter.is_instance",
             side_effect=mock_is_instance,
         ),
-        patch(
-            "sysml_codegen.extraction.usage_extractor.extract_feature_chain_segments",
-            return_value=["station", "array", "derived_calc", "derived_value"],
-        ),
     ):
         with pytest.raises(SemanticEvidenceError) as caught:
             _extract_single_binding(usage_elem, param_elem, "data_point", [])

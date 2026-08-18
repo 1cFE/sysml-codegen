@@ -13,6 +13,7 @@ from agentic_mbse.sysml.syside_adapter import SysideAdapter
 
 from sysml_codegen.core.type_mapping import QUALIFIED_SYSML_TO_PYTHON, SYSML_TO_PYTHON
 from sysml_codegen.elaboration import ElaborationCode, ElaborationDiagnosticError
+from sysml_codegen.elaboration.expression_evidence import ExpressionEvidenceInventory
 from sysml_codegen.extraction.errors import ExactTypeError
 from sysml_codegen.extraction.extractor import SysMLDataExtractor
 from sysml_codegen.extraction.feature_metadata import _source_file, extract_feature_unit
@@ -107,7 +108,9 @@ def test_corpus_user_defined_enumeration_is_a_named_type_refusal() -> None:
 
 
 @pytest.mark.parametrize("strict", [True, False])
-def test_exact_type_refusal_uses_the_one_public_bridge(strict: bool) -> None:
+def test_exact_type_refusal_uses_the_one_public_bridge(
+    strict: bool, monkeypatch: pytest.MonkeyPatch
+) -> None:
     raw_source = str((TYPING_FIXTURE / "model.sysml").resolve())
     error = ExactTypeError(
         "typing target 'FeatureTypingUserTypes::Real' is unsupported",
@@ -122,6 +125,11 @@ def test_exact_type_refusal_uses_the_one_public_bridge(strict: bool) -> None:
         @staticmethod
         def extract_calculation_definitions() -> list[Any]:
             raise error
+
+    monkeypatch.setattr(
+        "sysml_codegen.orchestration.elaborated_pipeline.build_expression_evidence_inventory",
+        lambda _model: ExpressionEvidenceInventory({}),
+    )
 
     with pytest.raises(ElaborationDiagnosticError) as caught:
         elaborate_loaded_extractor(

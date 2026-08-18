@@ -15,6 +15,7 @@ from agentic_mbse.sysml.syside_adapter import SysideAdapter
 
 from sysml_codegen.elaboration.diagnostics import ElaborationCode, ElaborationInvariantError
 from sysml_codegen.elaboration.elaborate import _ExactElaborator
+from sysml_codegen.elaboration.expression_evidence import build_expression_evidence_inventory
 from sysml_codegen.elaboration.occurrence import semantic_owner
 from sysml_codegen.extraction.extractor import SysMLDataExtractor
 from tests.conftest import FIXTURES_DIR, requires_license
@@ -24,7 +25,10 @@ def _elaborator(fixture: str) -> _ExactElaborator:
     extractor = SysMLDataExtractor([Path(FIXTURES_DIR / fixture)])
     assert extractor.load_models()
     return _ExactElaborator(
-        extractor.model, extractor.extract_calculation_definitions(), strict=True
+        extractor.model,
+        extractor.extract_calculation_definitions(),
+        inventory=build_expression_evidence_inventory(extractor.model),
+        strict=True,
     )
 
 

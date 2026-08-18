@@ -148,11 +148,14 @@ def _required_operand_type(n: ExpressionIR) -> OperandTypeFact:
 
 
 def _compile_reference(n: FeatureReferenceNode) -> str:
+    from sysml_codegen.generation.constraint_name_safety import predicate_reference_name
+
     if n.reference.chain_segments:
         raise PredicateCompileError(f"feature chain not supported in {PROFILE_SEMANTIC_VERSION}")
-    if not n.reference.source_name:
+    name = predicate_reference_name(n)
+    if not name:
         raise PredicateCompileError("nameless feature reference")
-    return n.reference.source_name
+    return name
 
 
 def _compile_numeric_operator(n: OperatorNode) -> str:
@@ -240,7 +243,9 @@ def _compile_boolean(n: ExpressionIR) -> str:
 def _leaf_ref_names(n: ExpressionIR, acc: list[str]) -> None:
     """Collect ``FeatureReferenceNode`` source names, first-occurrence order, deduped."""
     if isinstance(n, FeatureReferenceNode):
-        name = n.reference.source_name
+        from sysml_codegen.generation.constraint_name_safety import predicate_reference_name
+
+        name = predicate_reference_name(n)
         if name and name not in acc:
             acc.append(name)
         return

@@ -28,6 +28,7 @@ from sysml_codegen.snapshot.instance_graph import (
 )
 from tests.conftest import FIXTURES_DIR, requires_license
 from tests.helpers.elaboration_graph import calc
+from tests.helpers.expression_evidence import calculation_dependencies
 from tests.helpers.raw_elaboration import elaborate
 
 pytestmark = requires_license
@@ -86,9 +87,10 @@ def test_live_extraction_carries_total_calc_declaration_identity(
 def test_exact_compiler_keys_definition_outputs_and_dependencies_by_uuid(
     extracted: tuple[SysMLDataExtractor, list[CalculationDefinitionData]],
 ) -> None:
-    _extractor, calc_defs = extracted
+    extractor, calc_defs = extracted
+    dependencies = calculation_dependencies(extractor.model)
     for calc_def in calc_defs:
-        result = expression_compiler.compile_calc_def_exact(calc_def)
+        result = expression_compiler.compile_calc_def_exact(calc_def, dependencies)
         assert result.definition_id == calc_def.element_id
         assert result.declared_output_ids == tuple(
             member.element_id for member in calc_def.output_attributes
