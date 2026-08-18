@@ -1185,20 +1185,33 @@ def test_operator_wrapped_indexed_source_still_refuses_correctly(strict: bool) -
 # things through its natural public route, not through a directly called helper.  See
 # `.project/active/stop-reinventing-the-parser/design.md#evidence-and-public-boundary-matrix`.
 #
-# A cell holds the `module::function` of the test that proves it. Phase 4 closes every
-# cell; the table test prevents a later consumer proof from silently disappearing.
+# A cell holds the `module::function` of the test that proves it. Public arms are recorded
+# per cell: the deep-override grammar makes two failure shapes unavailable before public
+# elaboration, so those cells name the measured parser/structure proofs instead.
+
+
+_CELL_NAMES = (
+    "exact_positive",
+    "indexed_refusal",
+    "operand_or_depth_failure",
+    "missing_exact_target",
+)
+_ALL_PUBLIC_CELL_ARMS = tuple(
+    (cell, ("live", "admitted/capture")) for cell in _CELL_NAMES
+)
 
 
 @dataclass(frozen=True)
 class ConsumerRow:
-    """One consumer's four required proofs and the public arms they run through."""
+    """One consumer's four proofs, with route strength stated for every cell."""
 
     consumer: str
     exact_positive: str
     indexed_refusal: str
     operand_or_depth_failure: str
     missing_exact_target: str
-    public_arms: tuple[str, ...]
+    cell_public_arms: tuple[tuple[str, tuple[str, ...]], ...]
+    unavailable_reasons: tuple[tuple[str, str], ...] = ()
 
 
 CONSUMER_CLOSURE_TABLE: tuple[ConsumerRow, ...] = (
@@ -1220,7 +1233,7 @@ CONSUMER_CLOSURE_TABLE: tuple[ConsumerRow, ...] = (
             "tests/conformance/test_expression_evidence_integrity.py"
             "::test_public_expression_consumer_evidence_failure_returns_no_graph"
         ),
-        public_arms=("live", "admitted/capture"),
+        cell_public_arms=_ALL_PUBLIC_CELL_ARMS,
     ),
     ConsumerRow(
         consumer="calculation and constraint binding",
@@ -1240,7 +1253,7 @@ CONSUMER_CLOSURE_TABLE: tuple[ConsumerRow, ...] = (
             "tests/conformance/test_expression_evidence_integrity.py"
             "::test_public_expression_consumer_evidence_failure_returns_no_graph"
         ),
-        public_arms=("live", "admitted/capture"),
+        cell_public_arms=_ALL_PUBLIC_CELL_ARMS,
     ),
     ConsumerRow(
         consumer="alias",
@@ -1260,7 +1273,7 @@ CONSUMER_CLOSURE_TABLE: tuple[ConsumerRow, ...] = (
             "tests/conformance/test_expression_evidence_integrity.py"
             "::test_public_expression_consumer_evidence_failure_returns_no_graph"
         ),
-        public_arms=("live", "admitted/capture"),
+        cell_public_arms=_ALL_PUBLIC_CELL_ARMS,
     ),
     ConsumerRow(
         consumer="computed attribute",
@@ -1280,7 +1293,7 @@ CONSUMER_CLOSURE_TABLE: tuple[ConsumerRow, ...] = (
             "tests/conformance/test_expression_evidence_integrity.py"
             "::test_public_expression_consumer_evidence_failure_returns_no_graph"
         ),
-        public_arms=("live", "admitted/capture"),
+        cell_public_arms=_ALL_PUBLIC_CELL_ARMS,
     ),
     ConsumerRow(
         consumer="constraint predicate",
@@ -1300,7 +1313,7 @@ CONSUMER_CLOSURE_TABLE: tuple[ConsumerRow, ...] = (
             "tests/conformance/test_expression_evidence_integrity.py"
             "::test_public_expression_consumer_evidence_failure_returns_no_graph"
         ),
-        public_arms=("live", "admitted/capture"),
+        cell_public_arms=_ALL_PUBLIC_CELL_ARMS,
     ),
     ConsumerRow(
         consumer="deep literal override",
@@ -1310,22 +1323,34 @@ CONSUMER_CLOSURE_TABLE: tuple[ConsumerRow, ...] = (
         ),
         indexed_refusal=(
             "tests/unit/test_expression_evidence_boundary.py"
-            "::test_deep_override_mapped_index_refuses_at_the_path_factory"
+            "::test_indexed_deep_override_is_rejected_by_the_parser"
         ),
-        operand_or_depth_failure="not an expression route",
+        operand_or_depth_failure=(
+            "tests/unit/test_expression_evidence_boundary.py"
+            "::test_real_deep_override_relationships_contain_only_features"
+        ),
         missing_exact_target=(
             "tests/conformance/test_expression_evidence_integrity.py"
             "::test_public_deep_literal_override_refuses_a_missing_segment"
         ),
-        public_arms=("live", "admitted/capture"),
+        cell_public_arms=(
+            ("exact_positive", ("live", "admitted/capture")),
+            ("indexed_refusal", ()),
+            ("operand_or_depth_failure", ()),
+            ("missing_exact_target", ("live", "admitted/capture")),
+        ),
+        unavailable_reasons=(
+            (
+                "indexed_refusal",
+                "SysIDE rejects an indexed deep override at parse before public elaboration",
+            ),
+            (
+                "operand_or_depth_failure",
+                "parsed deep-override paths contain only Features and never enter "
+                "expression acquisition",
+            ),
+        ),
     ),
-)
-
-_CELL_NAMES = (
-    "exact_positive",
-    "indexed_refusal",
-    "operand_or_depth_failure",
-    "missing_exact_target",
 )
 
 
@@ -1346,7 +1371,15 @@ def test_the_consumer_closure_table_covers_every_reviewed_consumer() -> None:
         "deep literal override",
     ]
     for row in CONSUMER_CLOSURE_TABLE:
-        assert row.public_arms == ("live", "admitted/capture")
+        arms = dict(row.cell_public_arms)
+        reasons = dict(row.unavailable_reasons)
+        assert set(arms) == set(_CELL_NAMES)
+        assert set(reasons) == {cell for cell, public_arms in arms.items() if not public_arms}
+        for cell, public_arms in arms.items():
+            if public_arms:
+                assert public_arms == ("live", "admitted/capture")
+            else:
+                assert reasons[cell]
 
 
 def test_every_named_proof_in_the_consumer_table_resolves() -> None:

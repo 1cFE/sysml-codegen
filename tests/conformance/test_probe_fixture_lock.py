@@ -33,9 +33,12 @@ from pathlib import Path
 
 import pytest
 
+from verification.capture_baseline import validate_current_fixture_sources
+
 REPOSITORY_ROOT = Path(__file__).resolve().parents[2]
 LOCK_PATH = REPOSITORY_ROOT / "verification" / "probe-fixture-lock.json"
 LEDGER_PATH = REPOSITORY_ROOT / "verification" / "expected-transitions.md"
+MANIFEST_PATH = REPOSITORY_ROOT / "verification" / "fixture-manifest.json"
 
 #: The tree the lock's hashes describe.  Asserted against the lock's own field below and
 #: never used to *find* that field.  `43edf9bd…` is the lock file's home commit — the commit
@@ -71,6 +74,11 @@ def history_root() -> Path:
     from verification.artifact_sources import codegen_history_root
 
     return codegen_history_root(REPOSITORY_ROOT)
+
+
+@pytest.fixture(scope="module")
+def manifest() -> dict:
+    return json.loads(MANIFEST_PATH.read_text())
 
 
 def _git_bytes(history: Path, commit: str, path: str) -> bytes:
@@ -140,6 +148,52 @@ def test_locked_rows_split_into_fixture_inputs_and_verification_code(lock: dict)
         for path in fixture_inputs
     )
     assert set(FIXTURE_METADATA_EXCEPTIONS) <= fixture_inputs
+
+
+def test_every_current_fixture_source_is_pinned_or_ledger_owned(manifest: dict) -> None:
+    """The frozen inventory also guards the bytes the kept proofs read today."""
+    report = validate_current_fixture_sources(manifest)
+
+    assert report == {
+        "checked_source_files": 110,
+        "added_source_files": 6,
+        "transitioned_sources": ("tests/fixtures/deep_cross_scope_probe/design.sysml",),
+    }
+
+
+def test_an_unowned_current_fixture_edit_fails_the_lock(tmp_path: Path) -> None:
+    """A current-byte mutation cannot be hidden by rebuilding only from P_seed."""
+    source = tmp_path / "tests/fixtures/probe/model.sysml"
+    source.parent.mkdir(parents=True)
+    source.write_bytes(b"package Probe {}\n")
+    frozen_hash = hashlib.sha256(source.read_bytes()).hexdigest()
+    manifest = {
+        "roots": [
+            {
+                "kind": "added",
+                "name": "probe",
+                "root": "tests/fixtures/probe",
+                "sources": [{"path": "tests/fixtures/probe/model.sysml", "sha256": frozen_hash}],
+            }
+        ]
+    }
+    ledger = tmp_path / "verification/expected-transitions.md"
+    ledger.parent.mkdir(parents=True)
+    ledger.write_text("# No transitions\n", encoding="utf-8")
+
+    assert validate_current_fixture_sources(
+        manifest,
+        repository_root=tmp_path,
+        transitions_path=ledger,
+    )["checked_source_files"] == 1
+
+    source.write_bytes(b"package Probe { // changed\n}\n")
+    with pytest.raises(ValueError, match="unowned current fixture source transition"):
+        validate_current_fixture_sources(
+            manifest,
+            repository_root=tmp_path,
+            transitions_path=ledger,
+        )
 
 
 def _ledger_row_for_path(path: str) -> tuple[str, ...]:

@@ -180,7 +180,11 @@ def test_every_exported_registry_seam_refuses_an_unsupported_graph_without_writi
     assert "python_type='Decimal'" in str(caught.value)
     assert "source='root-0/model.sysml:17'" in str(caught.value)
     assert output.read_bytes() == b"sentinel\x00"
+
+
+@pytest.mark.parametrize("source_arm", ("models", "from-snapshot"))
 def test_public_exit_type_refusal_is_status_one_and_byte_preserving(
+    source_arm: str,
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
     caplog: pytest.LogCaptureFixture,
@@ -193,15 +197,41 @@ def test_public_exit_type_refusal_is_status_one_and_byte_preserving(
     (output / "nested" / "record.txt").write_bytes(b"before\n")
     before = _tree(output)
     graph = _unsupported_graph()
-    monkeypatch.setattr(
-        exact_pipeline_context,
-        "build_exact_pipeline_context",
-        lambda _paths: SimpleNamespace(computation_graph=graph),
-    )
+    called: list[Path] = []
+
+    if source_arm == "models":
+
+        def build_from_models(paths: list[Path]) -> SimpleNamespace:
+            called.extend(paths)
+            return SimpleNamespace(computation_graph=graph)
+
+        monkeypatch.setattr(
+            exact_pipeline_context,
+            "build_exact_pipeline_context",
+            build_from_models,
+        )
+        models = tmp_path / "model.sysml"
+        snapshot = None
+        expected_source = models
+    else:
+
+        def build_from_snapshot(path: Path) -> SimpleNamespace:
+            called.append(path)
+            return SimpleNamespace(computation_graph=graph)
+
+        monkeypatch.setattr(
+            exact_pipeline_context,
+            "build_exact_pipeline_context_from_snapshot",
+            build_from_snapshot,
+        )
+        models = None
+        snapshot = tmp_path / "instance_graph_snapshot.json"
+        expected_source = snapshot
+
     args = argparse.Namespace(
         verbose=False,
-        models=tmp_path / "model.sysml",
-        from_snapshot=None,
+        models=models,
+        from_snapshot=snapshot,
         output=output,
         package_name="invalid_exit",
         schema_class="Params",
@@ -215,6 +245,7 @@ def test_public_exit_type_refusal_is_status_one_and_byte_preserving(
         status = cmd_generate(args)
 
     assert status == 1
+    assert called == [expected_source]
     assert _tree(output) == before
     message = "\n".join(record.message for record in caplog.records)
     assert message.count("EXIT_POINT_TYPE_UNSUPPORTED") == 1

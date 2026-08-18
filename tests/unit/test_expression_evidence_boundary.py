@@ -8,6 +8,7 @@ inventory could catch the index while a weakened constructor or consumer still a
 from __future__ import annotations
 
 from dataclasses import replace
+from pathlib import Path
 from types import SimpleNamespace
 from uuid import UUID
 
@@ -626,6 +627,25 @@ def test_real_deep_override_relationships_contain_only_features() -> None:
             for segment in segments
         )
         assert len(exact_path_from_relationship(redefined).segments) == len(segments)
+
+
+@requires_license
+def test_indexed_deep_override_is_rejected_by_the_parser(tmp_path: Path) -> None:
+    """The indexed deep-override matrix cell has no authorable public route."""
+    original = (FIXTURES_DIR / "source_identity_mixed_consumers" / "model.sysml").read_text()
+    indexed = original.replace(
+        ":>> deep_rig.gain_setting = 43.0;",
+        ":>> deep_rig.cells#(2).mass = 7.0;",
+    )
+    assert indexed != original
+    model = tmp_path / "model.sysml"
+    model.write_text(indexed, encoding="utf-8")
+
+    extractor = SysMLDataExtractor([model])
+    assert not extractor.load_models()
+    errors = [str(error) for error in extractor.diagnostics.errors]
+    assert errors
+    assert any("Unexpected 'DECIMAL_VALUE'" in error for error in errors), errors
 
 
 def _live_feature(model: object, qualified_name: str) -> object:
