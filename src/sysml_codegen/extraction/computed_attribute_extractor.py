@@ -30,17 +30,24 @@ import logging
 from typing import Any
 
 from agentic_mbse.sysml.constraint_extraction import extract_expression_ir
-from agentic_mbse.sysml.expression import extract_feature_refs
+from agentic_mbse.sysml.reference_use import (
+    ExactReferenceUse,
+    inspect_reference_uses,
+    is_standard_library_use,
+)
 from agentic_mbse.sysml.syside_adapter import SysideAdapter
-from agentic_mbse.sysml.types import ExpressionRef
 
 from sysml_codegen.core.models import ChannelAlias
 
 from .calc_compat_renderer import render_calc_expression
-from .data_models import ComputedAttributeClassification, ComputedAttributeData
+from .data_models import (
+    AttributeRef,
+    ComputedAttributeClassification,
+    ComputedAttributeData,
+)
 from .expression_compiler import Compilability, CompilationError, _sanitize_name
 from .expression_utils import (
-    extract_feature_chain_segments,
+    authored_chain_segments,
     is_literal_expression,
     reconstruct_expression,
 )
@@ -104,8 +111,21 @@ def _ancestor_part_qns(part_element: Any) -> set[str]:
     return result
 
 
+def attribute_refs(expression: Any) -> list[AttributeRef]:
+    """Name every exact reference in one attribute expression.
+
+    Standard-library references are filtered here because that is this consumer's policy;
+    an indexed use contributes no name because it resolves to no target.
+    """
+    return [
+        AttributeRef(use.path.leaf.element_name, use.path.leaf.qualified_name)
+        for use in inspect_reference_uses(expression)
+        if isinstance(use, ExactReferenceUse) and not is_standard_library_use(use)
+    ]
+
+
 def _classify_attribute_expression(
-    refs: list[ExpressionRef],
+    refs: list[AttributeRef],
     owning_part_qualified_name: str,
     calc_usage_names: set[str],
     sibling_attr_names: set[str],
@@ -124,7 +144,7 @@ def _classify_attribute_expression(
     - Step 2d: empty QN fallback to simple name matching
 
     Args:
-        refs: Feature references from extract_feature_refs().
+        refs: The attribute expression's exact reference uses, named.
         owning_part_qualified_name: QN of the owning PartDef/PartUsage.
         calc_usage_names: CalcUsage instance names on this part.
         sibling_attr_names: All AttributeUsage names on this part.
@@ -144,7 +164,7 @@ def _classify_attribute_expression(
     # Step 1: no refs → LITERAL (the documented, intended behavior, REQ-CA-04).
     if not refs:
         # D3-9 tripwire: a genuine literal has a literal AST root. A *non*-literal
-        # root with zero extracted refs is suspicious — it means extract_feature_refs
+        # root with zero extracted refs is suspicious — it means the inspector
         # under-reported, and a real computed attribute is about to be silently
         # dropped as a constant. Warn (does not change the classification).
         if expression_ast is not None and not is_literal_expression(expression_ast):
@@ -272,12 +292,12 @@ def extract_computed_attributes(
         attr_name = member.name
 
         # Extract refs
-        refs = extract_feature_refs(expr, ignore_std_lib=True)
+        refs = attribute_refs(expr)
 
         # Full chain segments for a FeatureChainExpression (Item 10, D9). The
         # multi-hop EXPOSE confirm walk reads this; None for non-chain exprs.
         # Computed before classification because the INV-E tentative gate reads it.
-        reference_chain = extract_feature_chain_segments(expr) or None
+        reference_chain = authored_chain_segments(expr) or None
 
         # Classify
         classification = _classify_attribute_expression(

@@ -23,13 +23,14 @@ from pathlib import Path
 from uuid import NAMESPACE_URL, uuid5
 
 import pytest
-from agentic_mbse.sysml.data_models import (
-    ResolvedSemanticReferenceFact,
-    ResolvedTargetFact,
-)
+from agentic_mbse.sysml.data_models import ResolvedTargetFact
+from agentic_mbse.sysml.reference_use import ExactSemanticPath
 
 from sysml_codegen.elaboration.diagnostics import ElaborationCode
 from sysml_codegen.elaboration.elaborate import _ExactElaborator, _ReferenceResolutionError
+from sysml_codegen.elaboration.expression_evidence import (
+    build_expression_evidence_inventory,
+)
 from sysml_codegen.elaboration.identity import DeclarationId
 from sysml_codegen.extraction.extractor import SysMLDataExtractor
 from tests.conftest import FIXTURES_DIR, requires_license
@@ -47,7 +48,10 @@ def test_direct_reference_refuses_a_leaf_absent_from_the_element_index() -> None
     extractor = SysMLDataExtractor([Path(FIXTURES_DIR / FIXTURE)])
     assert extractor.load_models(), f"fixture {FIXTURE} failed to load"
     elaborator = _ExactElaborator(
-        extractor.model, extractor.extract_calculation_definitions(), strict=False
+        extractor.model,
+        extractor.extract_calculation_definitions(),
+        inventory=build_expression_evidence_inventory(extractor.model),
+        strict=False,
     )
     graph = elaborator.run()
     scope = next(iter(graph.occurrences))
@@ -63,12 +67,11 @@ def test_direct_reference_refuses_a_leaf_absent_from_the_element_index() -> None
             element_name="leaf",
         )
         elaborator._resolve_semantic_reference(
-            ResolvedSemanticReferenceFact(
+            ExactSemanticPath(
                 root=target,
                 segments=(target,),
                 leaf=target,
                 resolved_member_names=(),
-                has_index_segment=False,
             ),
             scope,
             plural=False,

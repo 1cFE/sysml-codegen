@@ -32,7 +32,7 @@ from sysml_codegen.core.qualified_names import (
 )
 from sysml_codegen.extraction import binding_evidence
 from sysml_codegen.extraction.expression_utils import (
-    extract_feature_chain_segments,
+    authored_chain_segments,
 )
 from sysml_codegen.extraction.expression_utils import (
     extract_literal_value as _extract_literal_value,
@@ -40,7 +40,6 @@ from sysml_codegen.extraction.expression_utils import (
 from sysml_codegen.extraction.expression_utils import (
     is_literal_expression as _is_literal_expression,
 )
-from sysml_codegen.extraction.source_evidence import SourceReferenceEvidence
 
 logger = logging.getLogger(__name__)
 
@@ -98,17 +97,6 @@ class BindingInfo:
     stored_source_written_qualifier: str | None = field(
         default=None, metadata={"snapshot_exclude": True}
     )
-    # Immutable semantic evidence (SOURCE-IDENTITY Item 4, Phase 1): the exact
-    # SysIDE-resolved referent, bound formal, and authored source form, captured
-    # before any rewrite runs. The frozen record is shared, never copied or
-    # replaced — VBR stamping and rescue reassign the legacy scalars above but
-    # cannot touch it (design I4). Excluded from the v5 wire format; the atomic
-    # v6 snapshot cut owns its serialization. None on snapshot-loaded v5 data
-    # and for the unhandled-expression arm.
-    reference_evidence: SourceReferenceEvidence | None = field(
-        default=None, metadata={"snapshot_exclude": True}
-    )
-
     @property
     def source_written_qualifier(self) -> str | None:
         """The scope qualifier as written, or ``None`` for a bare leaf.
@@ -818,8 +806,7 @@ def _extract_single_binding(
         # source_instance_elem / source_attribute_elem / is_cross_file — the
         # backtracker consumes none of those for CHAIN resolution (only
         # source_path). Do NOT reach into _parse_chain_expression to populate them.
-        evidence = binding_evidence.chain_evidence(param_elem, expr)
-        segments = extract_feature_chain_segments(expr)
+        segments = authored_chain_segments(expr)
         if len(segments) > 2:
             full_path = ".".join(segments)
             return BindingInfo(
@@ -827,7 +814,6 @@ def _extract_single_binding(
                 source_path=full_path,
                 binding_type=BindingType.CHAIN,
                 raw_expression=f"FeatureChainExpression -> {full_path}",
-                reference_evidence=evidence,
             )
         source_path, instance_elem, target_elem = _parse_chain_expression(expr)
         is_cross_file = _detect_cross_file_reference(usage_elem, instance_elem)
@@ -839,7 +825,6 @@ def _extract_single_binding(
             raw_expression=f"FeatureChainExpression -> {source_path}",
             source_instance_elem=instance_elem,
             source_attribute_elem=target_elem,
-            reference_evidence=evidence,
         )
 
     elif SysideAdapter.is_instance(expr, "FeatureReferenceExpression"):
@@ -853,7 +838,6 @@ def _extract_single_binding(
             raw_expression=f"FeatureReferenceExpression -> {source_path}",
             source_attribute_elem=referenced_elem,
             stored_source_written_qualifier=binding_evidence.written_qualifier(expr),
-            reference_evidence=binding_evidence.reference_evidence(param_elem, expr),
         )
 
     elif _is_literal_expression(expr):
@@ -865,7 +849,6 @@ def _extract_single_binding(
             is_cross_file=False,
             raw_expression=f"LiteralExpression -> {literal_value}",
             literal_value=literal_value,
-            reference_evidence=binding_evidence.literal_evidence(param_elem, literal_value),
         )
 
     elif SysideAdapter.is_instance(expr, "OperatorExpression"):
@@ -875,7 +858,6 @@ def _extract_single_binding(
             binding_type=BindingType.EXPRESSION,
             raw_expression=f"OperatorExpression: {type(expr).__name__}",
             expression_ast=expr,
-            reference_evidence=binding_evidence.expression_evidence(param_elem, expr),
         )
 
     # INV-1 terminal arm (D3-1): the RHS is a binding expression of a type this

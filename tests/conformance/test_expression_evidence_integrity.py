@@ -22,9 +22,22 @@ RAW_SOURCE = str(Path("/stage/model.sysml").resolve())
 REFERENT = "root-0/model.sysml"
 
 
+class _EmptyModel:
+    """A model the inventory can enumerate and find no expression site in.
+
+    The conversion boundary builds the evidence inventory before it extracts anything,
+    so a double that stands in for a loaded model has to answer the enumeration.  An
+    empty answer is the right one here: these tests force their failure at a later
+    consumer, and an inventory that refused first would hide which stage converted.
+    """
+
+    def elements(self, _type: object, include_subtypes: bool = False) -> list[Any]:
+        return []
+
+
 class _EvidenceFailingExtractor:
     def __init__(self, _model_paths: list[Path] | None = None) -> None:
-        self.model = object()
+        self.model = _EmptyModel()
         self.diagnostics = SimpleNamespace(validation=())
 
     def load_models(self) -> bool:
@@ -45,7 +58,7 @@ class _EvidenceFailingExtractor:
 
 class _BoundaryExtractor:
     def __init__(self, _model_paths: list[Path] | None = None) -> None:
-        self.model = object()
+        self.model = _EmptyModel()
         self.diagnostics = SimpleNamespace(validation=())
 
     def load_models(self) -> bool:
@@ -76,14 +89,22 @@ def _force_exact_expression_failure(
     monkeypatch: pytest.MonkeyPatch,
     expression: object,
 ) -> None:
-    exact = importlib.import_module("sysml_codegen.elaboration.elaborate")
-    elaborator = object.__new__(exact._ExactElaborator)
+    """Make the pre-graph inventory acquire one expression that cannot be acquired.
 
-    def fail_in_exact_route(*_args: object, **_kwargs: object) -> object:
-        elaborator._expression_references(expression, plural=False)
-        raise AssertionError("forced evidence failure returned a graph")
+    The acquisition step is the real one — the same call every site goes through — so
+    what is forced is which expression reaches it, not how it fails.
+    """
+    evidence = importlib.import_module("sysml_codegen.elaboration.expression_evidence")
 
-    monkeypatch.setattr(elaborated_pipeline, "_build_instance_graph", fail_in_exact_route)
+    def acquire_the_forced_expression(_model: object) -> object:
+        evidence._acquire(expression)
+        raise AssertionError("forced evidence failure produced an inventory")
+
+    monkeypatch.setattr(
+        elaborated_pipeline,
+        "build_expression_evidence_inventory",
+        acquire_the_forced_expression,
+    )
 
 
 def _assert_forced_expression_diagnostic(
@@ -363,6 +384,12 @@ def test_raw_builder_is_private_and_has_one_production_caller() -> None:
 def test_valid_indexed_source_refuses_before_graph_with_exact_capability_diagnostic(
     strict: bool,
 ) -> None:
+    """A binding whose right-hand side is an authored index, refused by name.
+
+    Tightened in this landing unit, as the Phase-1 record said it would be: the refusal
+    now carries the authored reference and a root-relative place, where before it carried
+    neither and hid the caller's absolute path inside ``detail``.
+    """
     fixture = FIXTURES_DIR / "indexed_expression_source"
 
     with pytest.raises(ElaborationDiagnosticError) as caught:
@@ -371,13 +398,13 @@ def test_valid_indexed_source_refuses_before_graph_with_exact_capability_diagnos
     [diagnostic] = caught.value.diagnostics
     assert diagnostic.code is ElaborationCode.SI_INDEXED_SOURCE_UNSUPPORTED
     assert diagnostic.consumer is None
-    assert diagnostic.consumer_display == "<model>"
     assert diagnostic.param_name is None
-    assert diagnostic.detail.endswith(
-        "tests/fixtures/indexed_expression_source/model.sysml:17: "
-        "indexed source '#(...)' is recognized but not implemented"
-    )
+    assert diagnostic.reference == "cells#(2).mass"
+    assert diagnostic.source_file == "root-0/model.sysml"
+    assert diagnostic.source_line == 17
     assert str(caught.value).count("SI_INDEXED_SOURCE_UNSUPPORTED") == 1
+    assert not diagnostic.detail.startswith("/")
+    assert "/tmp/" not in str(caught.value)
 
 
 # --- Indexed bare-chain red set (Phase 1) ------------------------------------
@@ -562,36 +589,21 @@ def test_indexed_bare_chain_plural_slot_refuses_before_occurrence_resolution(
 @requires_license
 @pytest.mark.parametrize("strict", [True, False])
 def test_operator_wrapped_indexed_source_still_refuses_correctly(strict: bool) -> None:
-    """Positive regression, not a red-set member: this shape already refuses correctly.
+    """The operator-wrapped form was always refused; now it is refused by the same name.
 
-    It pins today's live-arm behavior exactly, including the fields the refusal does *not*
-    yet carry.  Phase 3 tightens this diagnostic to the same named contract the red set
-    demands, and this test is updated in that landing unit rather than being written now
-    against a contract no arm delivers.
+    It was never a red-set member — it already produced
+    ``SI_INDEXED_SOURCE_UNSUPPORTED`` at `C_base`.  What changed here is the shape: it
+    now carries the authored reference and a root-relative place like every other
+    indexed refusal, instead of three empty fields and an absolute path in ``detail``.
+    The Phase-1 record pinned the old shape exactly so this tightening could not happen
+    silently, and this is the landing unit it named.
     """
     fixture = FIXTURES_DIR / OPERATOR_WRAPPED_FIXTURE
 
     with pytest.raises(ElaborationDiagnosticError) as caught:
         elaborated_pipeline.elaborate_model_paths([fixture], strict=strict)
 
-    assert [item.code for item in caught.value.diagnostics] == [
-        ElaborationCode.SI_INDEXED_SOURCE_UNSUPPORTED
-    ]
-    [diagnostic] = caught.value.diagnostics
-    assert str(caught.value).count("SI_INDEXED_SOURCE_UNSUPPORTED") == 1
-
-    # Today's shape, pinned exactly so Phase 3 cannot tighten it silently. The refusal
-    # carries none of the three structured fields, and its detail holds the caller's own
-    # absolute path rather than the root-relative referent the red set demands. The
-    # `//` prefix is the `file:` URL remnant this diagnostic never strips.
-    assert diagnostic.reference is None
-    assert diagnostic.source_file is None
-    assert diagnostic.source_line is None
-    assert diagnostic.detail == (
-        f"//{FIXTURES_DIR / OPERATOR_WRAPPED_FIXTURE}/model.sysml:{AUTHORED_INDEXED_LINE}: "
-        "indexed source '#(...)' is recognized but not implemented"
-    )
-
+    _assert_named_indexed_refusal(caught.value)
 
 
 # --- Natural-route consumer closure table (Phase 1 seed) ---------------------

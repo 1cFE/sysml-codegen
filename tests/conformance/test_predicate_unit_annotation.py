@@ -21,11 +21,9 @@ from typing import Any
 
 import pytest
 
-from sysml_codegen.elaboration.diagnostics import ElaborationCode, ElaborationInvariantError
-from sysml_codegen.elaboration.elaborate import (
-    _ExactElaborator,
-    _UnsupportedExpressionError,
-)
+from agentic_mbse.errors import SemanticEvidenceCode, SemanticEvidenceError
+
+from sysml_codegen.elaboration.expression_evidence import unit_annotated_value
 from sysml_codegen.generation.coverage import coverage_account
 from sysml_codegen.orchestration.elaborated_pipeline import (
     build_elaborated_pipeline,
@@ -142,7 +140,7 @@ def test_an_incompatible_annotation_still_blocks_on_a_dimension_reason() -> None
 
 
 class _MalformedUnitAnnotation:
-    """A `[` node carrying no annotated value — the shape `annotated_ast_value` refuses."""
+    """A `[` node carrying no annotated value — the shape the unit rule refuses."""
 
     operator = "["
     operands: tuple[Any, ...] = ()
@@ -153,25 +151,20 @@ class _MalformedUnitAnnotation:
 _MalformedUnitAnnotation.__name__ = "OperatorExpression"
 
 
-def test_the_walk_refuses_a_malformed_annotation_and_the_refusal_is_not_downgradable() -> None:
-    """M7, decided deliberately: one rule, one refusal — pinned in its two checkable halves.
+def test_the_unit_rule_refuses_a_malformed_annotation_by_name() -> None:
+    """M7, decided deliberately: one rule, one refusal.
 
-    Half one, driven: the walk itself refuses. `_without_unit_annotation` turns a malformed
-    annotation's `ValueError` into `ElaborationInvariantError(SI_EDGE_DANGLING)`, the same
-    way `_create_value_node` already refuses it.
+    A `[` node carrying no annotated value is refused where the rule lives, as a named
+    evidence failure that the public boundary converts once. It is not a readiness
+    finding and it is not downgradable: no consumer catches
+    `SemanticEvidenceError`, so the refusal escapes to the boundary rather than being
+    collected beside ordinary reference diagnostics.
 
-    Half two, typed: that error is not an `_UnsupportedExpressionError`, which is the only
-    thing the computed/predicate caller catches (`_resolve_computed_expressions`), so the
-    refusal escapes and becomes a hard elaboration failure rather than a readiness finding.
-
-    The name says "the walk" rather than "a predicate" because no predicate is loaded here.
     An end-to-end fixture is not available: a `[` node carrying no annotated value is not
-    authorable SysML — the parser will not produce one — so the malformed shape can only be
-    reached by handing the walk a synthetic node. The route from the walk to a hard refusal
-    is the type relationship asserted below, not a third thing left unchecked.
+    authorable SysML — the parser will not produce one — so the malformed shape can only
+    be reached by handing the rule a synthetic node.
     """
-    elaborator = _ExactElaborator.__new__(_ExactElaborator)
-    with pytest.raises(ElaborationInvariantError) as refusal:
-        elaborator._expression_references(_MalformedUnitAnnotation(), plural=False)
-    assert refusal.value.code is ElaborationCode.SI_EDGE_DANGLING
-    assert not isinstance(refusal.value, _UnsupportedExpressionError)
+    with pytest.raises(SemanticEvidenceError) as refusal:
+        unit_annotated_value(_MalformedUnitAnnotation())
+    assert refusal.value.code is SemanticEvidenceCode.EXPRESSION_KIND_UNSUPPORTED
+    assert "unit annotation carries no annotated value" in refusal.value.detail

@@ -5,14 +5,16 @@ from __future__ import annotations
 from typing import Any
 
 import pytest
-from agentic_mbse.sysml.data_models import ResolvedSemanticReferenceFact
-from agentic_mbse.sysml.expression import resolved_target_fact
+from agentic_mbse.sysml.reference_use import ExactSemanticPath, resolved_target_fact
 from agentic_mbse.sysml.syside_adapter import SysideAdapter
 
 from sysml_codegen.elaboration.diagnostics import ElaborationCode
 from sysml_codegen.elaboration.elaborate import (
     _ExactElaborator,
     _ReferenceResolutionError,
+)
+from sysml_codegen.elaboration.expression_evidence import (
+    build_expression_evidence_inventory,
 )
 from sysml_codegen.elaboration.identity import (
     ResolvedSemanticReference,
@@ -99,6 +101,7 @@ def test_calculation_output_index_filters_exact_usage_and_refuses_bare_tie() -> 
     elaborator = _ExactElaborator(
         extractor.model,
         extractor.extract_calculation_definitions(),
+        inventory=build_expression_evidence_inventory(extractor.model),
         strict=False,
     )
     graph = elaborator.run()
@@ -144,6 +147,7 @@ def test_no_prefix_nested_package_target_refuses_but_explicit_prefix_resolves() 
     elaborator = _ExactElaborator(
         extractor.model,
         extractor.extract_calculation_definitions(),
+        inventory=build_expression_evidence_inventory(extractor.model),
         strict=False,
     )
     graph = elaborator.run()
@@ -157,12 +161,11 @@ def test_no_prefix_nested_package_target_refuses_but_explicit_prefix_resolves() 
     )
     target = resolved_target_fact(leaf)
     assert target is not None
-    fact = ResolvedSemanticReferenceFact(
+    fact = ExactSemanticPath(
         root=target,
         segments=(target,),
         leaf=target,
         resolved_member_names=(),
-        has_index_segment=False,
     )
 
     with pytest.raises(_ReferenceResolutionError) as excinfo:

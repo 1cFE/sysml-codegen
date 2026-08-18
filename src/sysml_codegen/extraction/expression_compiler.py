@@ -11,15 +11,13 @@ analysis/, resolution/, or generation/.
 from __future__ import annotations
 
 import re
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from enum import Enum
 from typing import Any
 from uuid import UUID
 
 from agentic_mbse.sysml.constraint_extraction import extract_expression_ir
-from agentic_mbse.sysml.expression import extract_feature_refs
-from agentic_mbse.sysml.syside_adapter import SysideAdapter
 
 # NOTE: calc_compat_renderer imports CompilationError/_sanitize_name from this module, so
 # render_calc_expression is imported inside compile_calc_def_exact to avoid a circular import.
@@ -159,21 +157,27 @@ def _required_attribute_ids(attributes: list[Any], role: str) -> tuple[UUID, ...
     return tuple(result)
 
 
-def _exact_reference_ids(expression: Any) -> tuple[UUID, ...]:
-    """Return exact referenced declaration UUIDs in expression order."""
-    result: list[UUID] = []
-    for reference in extract_feature_refs(expression, ignore_std_lib=True):
-        if reference.element is None:
-            raise CompilationError(
-                f"reference {reference.name!r} has no resolved declaration element"
-            )
-        element_id = SysideAdapter.element_id(reference.element)
-        if element_id not in result:
-            result.append(element_id)
-    return tuple(result)
+def _exact_reference_ids(
+    dependencies_by_member: Mapping[UUID, tuple[UUID, ...]], member_id: UUID
+) -> tuple[UUID, ...]:
+    """One calculation member's dependency declarations, in authored order.
+
+    Read from the caller's pre-graph evidence, never walked here. A member with an
+    expression but no row is an invariant failure rather than an empty answer: a
+    compiler that reported "no dependencies" to a question it could not answer would
+    silently drop every edge the expression declares.
+    """
+    try:
+        return dependencies_by_member[member_id]
+    except KeyError:
+        raise CompilationError(
+            f"calculation member {member_id} has an expression but no evidence row"
+        ) from None
 
 
-def compile_calc_def_exact(calc_def: Any) -> ExactCalcDefCompilationResult:
+def compile_calc_def_exact(
+    calc_def: Any, dependencies_by_member: Mapping[UUID, tuple[UUID, ...]]
+) -> ExactCalcDefCompilationResult:
     """Compile one live calculation definition using only exact member UUIDs.
 
     Names remain renderer metadata. They never classify a reference, select an
@@ -210,7 +214,7 @@ def compile_calc_def_exact(calc_def: Any) -> ExactCalcDefCompilationResult:
         dependencies: set[UUID] = set()
         expression = expression_for(member_id, declared_output)
         if expression is not None:
-            for reference_id in _exact_reference_ids(expression):
+            for reference_id in _exact_reference_ids(dependencies_by_member, member_id):
                 if reference_id == member_id or reference_id in input_id_set:
                     continue
                 if reference_id not in all_member_ids:
@@ -275,7 +279,7 @@ def compile_calc_def_exact(calc_def: Any) -> ExactCalcDefCompilationResult:
             raise CompilationError(
                 f"extract_expression_ir returned None for exact member {member_id}"
             )
-        referenced_ids = _exact_reference_ids(expression)
+        referenced_ids = _exact_reference_ids(dependencies_by_member, member_id)
         exact_inputs = tuple(item for item in referenced_ids if item in input_id_set)
         dependencies = tuple(item for item in referenced_ids if item in dep_graph)
         try:

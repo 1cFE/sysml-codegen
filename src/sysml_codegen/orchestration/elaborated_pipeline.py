@@ -19,7 +19,7 @@ from collections.abc import Mapping, Sequence
 from pathlib import Path
 from typing import Any
 
-from agentic_mbse import SemanticEvidenceError
+from agentic_mbse import SemanticEvidenceCode, SemanticEvidenceError
 from agentic_mbse.sysml.syside_adapter import get_syside
 
 from sysml_codegen.analysis.source_referent import map_live_source_referent
@@ -33,6 +33,9 @@ from sysml_codegen.elaboration import (
 )
 from sysml_codegen.elaboration.diagnostics import ElaborationInvariantError
 from sysml_codegen.elaboration.elaborate import _build_instance_graph
+from sysml_codegen.elaboration.expression_evidence import (
+    build_expression_evidence_inventory,
+)
 from sysml_codegen.elaboration.graph import (
     AttrNode,
     CalcNode,
@@ -151,10 +154,18 @@ def elaborate_loaded_extractor(
     if extractor.diagnostics is None:
         raise SysMLParsingError("SysML validation diagnostics are unavailable after model loading")
     try:
+        # The inventory is first, and it is the whole point of the ordering. It acquires
+        # every production expression site's references and refuses an authored index
+        # here — before extraction, before the elaborator, before an instance graph
+        # exists. Refusing later would name the defect after whichever check happened to
+        # fire first, which is how an unimplemented capability came to be reported as an
+        # occurrence problem.
+        inventory = build_expression_evidence_inventory(extractor.model)
         calc_definitions = extractor.extract_calculation_definitions()
         graph = _build_instance_graph(
             extractor.model,
             calc_definitions,
+            inventory=inventory,
             validation_diagnostics=extractor.diagnostics.validation,
             strict=strict,
         )
@@ -228,13 +239,23 @@ def _live_source_referents(model: Any, model_paths: Sequence[Path]) -> dict[str,
     return referents
 
 
+#: The closed code mapping. Evidence that could not be acquired is incomplete evidence;
+#: an authored index is complete evidence for a capability this subset does not have, and
+#: it keeps the existing valid-but-unimplemented name (design D8).
+_EVIDENCE_CODES = {
+    SemanticEvidenceCode.INDEXED_REFERENCE_UNSUPPORTED: (
+        ElaborationCode.SI_INDEXED_SOURCE_UNSUPPORTED
+    ),
+}
+
+
 def _semantic_evidence_diagnostic(
     error: SemanticEvidenceError,
     source_referents: Mapping[str, str],
 ) -> Diagnostic:
     return _diagnostic_with_referent(
         Diagnostic(
-            code=ElaborationCode.SI_EVIDENCE_INCOMPLETE,
+            code=_EVIDENCE_CODES.get(error.code, ElaborationCode.SI_EVIDENCE_INCOMPLETE),
             consumer=None,
             consumer_display=error.reference or "<model>",
             param_name=None,

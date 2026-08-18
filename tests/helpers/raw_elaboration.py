@@ -9,9 +9,19 @@ remain about graph semantics rather than the orchestration layer.
 from collections.abc import Sequence
 from typing import Any
 
-from sysml_codegen.elaboration import Diagnostic, ElaborationDiagnosticError, GraphValidationError
+from agentic_mbse import SemanticEvidenceError
+
+from sysml_codegen.elaboration import (
+    Diagnostic,
+    ElaborationCode,
+    ElaborationDiagnosticError,
+    GraphValidationError,
+)
 from sysml_codegen.elaboration.diagnostics import ElaborationInvariantError
 from sysml_codegen.elaboration.elaborate import _build_instance_graph
+from sysml_codegen.elaboration.expression_evidence import (
+    build_expression_evidence_inventory,
+)
 from sysml_codegen.elaboration.graph import InstanceGraph
 
 
@@ -26,6 +36,7 @@ def elaborate(
         return _build_instance_graph(
             model,
             calc_defs,
+            inventory=build_expression_evidence_inventory(model),
             validation_diagnostics=validation_diagnostics,
             strict=strict,
         )
@@ -36,6 +47,25 @@ def elaborate(
             consumer_display="<model>",
             param_name=None,
             detail=error.detail,
+            reference=error.reference,
+            source_file=(error.location[0] if error.location is not None else None),
+            source_line=(error.location[1] if error.location is not None else None),
+        )
+        raise ElaborationDiagnosticError((diagnostic,)) from error
+    except SemanticEvidenceError as error:
+        # The public boundary owns this mapping; the helper mirrors it so an internal
+        # test sees the same refusal a caller would.
+        code = (
+            ElaborationCode.SI_INDEXED_SOURCE_UNSUPPORTED
+            if error.code.name == "INDEXED_REFERENCE_UNSUPPORTED"
+            else ElaborationCode.SI_EVIDENCE_INCOMPLETE
+        )
+        diagnostic = Diagnostic(
+            code=code,
+            consumer=None,
+            consumer_display=error.reference or "<model>",
+            param_name=None,
+            detail=f"{error.operation}: {error.detail}",
             reference=error.reference,
             source_file=(error.location[0] if error.location is not None else None),
             source_line=(error.location[1] if error.location is not None else None),

@@ -13,49 +13,28 @@ unit. That is the same category error Slice 3D fixed for enumeration members: a
 reference naming something other than a data source has no occurrence to
 resolve against.
 
-The rule has to be applied to two different representations, and they cannot
-share one implementation because they are not the same data:
+This module owns the **parsed `ExpressionIR`** spelling, which modeled defaults
+and the predicate compiler read — the `default 40.0 [W]` lane.
 
-- **the syside AST** (`annotated_ast_value`), which the elaborator walks before
-  anything is parsed into IR — the `= 0.2 [m]` lane;
-- **a parsed `ExpressionIR`** (`annotated_ir_value`), which modeled defaults and
-  the predicate compiler read — the `default 40.0 [W]` lane.
-
-Both spellings live here so the rule has one owner: changing what a unit
-annotation means is an edit to this file, not to two files that have to be kept
-saying the same thing. Neither function decides what to do about a malformed
-annotation — that policy belongs to the caller, which knows how it refuses.
+The raw-AST spelling is gone from here. It read the parser's operand sequence
+directly, which is Agentic's to own after this item: the reference walk applies
+the rule inside `inspect_reference_uses`, and the one place that still needs the
+structural unwrap for a value-shape decision gets it from
+`elaboration/expression_evidence.py`, over Agentic's owned operand materializer.
+This function decides nothing about a malformed annotation — that policy belongs
+to the caller, which knows how it refuses.
 """
 
 from __future__ import annotations
 
-from typing import Any
-
 from agentic_mbse.sysml.expression_ir import ExpressionIR, UnitAnnotationNode
-from agentic_mbse.sysml.syside_adapter import SysideAdapter
 
-__all__ = ["UNIT_ANNOTATION_OPERATOR", "annotated_ast_value", "annotated_ir_value"]
+__all__ = ["UNIT_ANNOTATION_OPERATOR", "annotated_ir_value"]
 
 #: A unit annotation parses as an ``OperatorExpression`` whose operator is ``[``,
 #: with the annotated value first and the unit second. Structural throughout: no
 #: name is read.
 UNIT_ANNOTATION_OPERATOR = "["
-
-
-def annotated_ast_value(expression: Any) -> Any:
-    """Return what a syside unit-annotation node annotates; other expressions pass through.
-
-    Raises ``ValueError`` when the annotation carries no annotated value at all.
-    The caller decides how that refuses.
-    """
-    if expression is None or not SysideAdapter.is_instance(expression, "OperatorExpression"):
-        return expression
-    if str(getattr(expression, "operator", "")) != UNIT_ANNOTATION_OPERATOR:
-        return expression
-    operands = list(getattr(expression, "operands", ()) or ())
-    if not operands:
-        raise ValueError("unit annotation carries no annotated value")
-    return operands[0]
 
 
 def annotated_ir_value(node: ExpressionIR) -> tuple[ExpressionIR, str | None]:
