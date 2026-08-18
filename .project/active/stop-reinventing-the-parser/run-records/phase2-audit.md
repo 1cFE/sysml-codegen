@@ -551,3 +551,201 @@ Phase-3 blocker.
 
 **Not checked in this pass:** anything outside the eight findings and the regression table. This is
 a confirmation pass, not a re-audit; the Phase 2 verdict above stands on its own evidence.
+
+---
+
+# Phase 2b addendum — the reopened landing
+
+**Audited:** 2026-08-18
+**Target:** `stop-parser-evidence-r2` `68bca37` → `efc235a` (tests) → **`3f8bd58`** (production).
+**Basis:** design.md **Revision 8** `#one-total-inspection-operation` (owner ruling 1, the shared
+`unit_annotation_value` primitive, the arity ruling, and "What this retires in the Phase-2 tree");
+plan Revision 4 "Phase 2b"; `run-records/phase3-stop-report.md`.
+**Scope:** the reopening only. Not a re-audit of Phase 2. Required by design Revision 8, which
+states m3's disposition "is not inherited from the Phase-2 audit, whose evidence is dated to the
+retired one."
+**Method:** own `git archive` of `3f8bd58` → `/tmp/stop-parser-rev2/p2b-audit-agentic-mbse`, own
+`uv sync`, license sourced. Mutations in a separate extraction with its own environment and the
+loaded module path asserted before each run.
+
+**Verdict: Confirmed on every item. No findings. Phase 3 may consume `3f8bd58` as its upstream.**
+
+---
+
+## 1. The falsified premise is gone — **Confirmed**
+
+I reproduced the stop report's exact case on the real corpus, at both commits.
+
+**At `68bca37` (what Phase 3 hit):**
+
+```
+first refusal: CATFMFEShield::catf_shield::gamma_shield::density
+  -> EXPRESSION_KIND_UNSUPPORTED | "unit annotation's unit operand is not a feature reference"
+refusals across the corpus: 2
+```
+
+**At `3f8bd58`:**
+
+```
+corpus: catf_mfe_model | error diagnostics: 0
+CATFMFEShield::catf_shield::gamma_shield::density -> value operand LiteralInteger, uses=[]
+unit-annotated attributes found: 144 | refusals: []
+```
+
+The exact attribute the stop report names now elaborates. All 144 unit-annotated attributes in
+the corpus pass, none refuses, and the model loads with zero error diagnostics.
+
+**The three required forms**, on a licensed probe model that loads with no diagnostics:
+
+| Authored | Unit operand metatype | Value operand | `inspect_reference_uses` |
+|---|---|---|---|
+| `3.0 [m]` | `FeatureReferenceExpression` | `LiteralRational` | `[]` |
+| `9400 [kg/m^3]` | `OperatorExpression` | `LiteralInteger` | `[]` |
+| `12.0 [W/(m*K)]` | `OperatorExpression` | `LiteralRational` | `[]` |
+| `local_scale [kg/m^3]` | `OperatorExpression` | `FeatureReferenceExpression` | `['local_scale']` |
+
+Accepted rather than refused; unit operand never emitted; a reference in the **value** operand
+still visited. That last row is the one that proves this is a boundary rule and not a mute.
+
+**The non-traversal proof is real.** `test_the_unit_operand_is_never_traversed_not_merely_filtered`
+puts a unit operand that raises `AssertionError` on any operand read into the annotation. I killed
+it: mutating `_walk` to also walk `materialize_operands(node)[1:]` after the value operand makes
+**six** tests fail, including that one — and it fails for exactly the right reason:
+
+```
+raise AssertionError("the unit operand was traversed")
+E   agentic_mbse.errors.SemanticEvidenceError: iterate_operands: SysIDE could not materialize the expression operands
+```
+
+Failing nodes under that mutation: `test_the_unit_operand_is_never_traversed_not_merely_filtered`,
+`test_a_unit_annotation_never_emits_its_unit_operand`,
+`test_a_project_scoped_unit_is_not_emitted_either`,
+`test_a_simple_unit_annotation_is_accepted_and_its_value_operand_is_returned`, and both
+parametrizations of `test_a_compound_unit_annotation_elaborates_rather_than_refusing`.
+
+## 2. m3 re-established on non-emission — **Confirmed; non-emission alone closes it**
+
+**Stated explicitly, as design Revision 8 requires.** My original m3 was: *a project-scoped unit
+would survive the tier filter and appear at a consumer as a design dependency.* My Phase-2
+confirmation rested partly on shape validation, which ruling 1 retires. **Non-emission plus the
+arity refusal closes m3's substance, and closes it more completely than the retired mechanism
+did.** The reasoning:
+
+- m3's harm required the unit operand to *reach* a consumer. The unit operand is now never
+  traversed and never emitted, for any unit shape, at any tier. There is no filter to escape
+  because nothing on the route looks at the unit at all — a strictly stronger fact than "it is
+  emitted and then dropped by a tier rule."
+- The one route by which a unit operand could still be emitted is a malformed annotation falling
+  through to the general-math walk. The arity refusal forecloses it: a recognised `[` annotation
+  with the wrong operand count raises rather than returning `None`. I mutated that raise to
+  `return None` and two tests failed (`test_a_wrong_arity_annotation_raises_and_never_returns_none`
+  and `test_a_malformed_unit_annotation_is_refused_by_name`), so the fall-through is genuinely
+  gated.
+- Nothing else in the retired refusals bore on m3. They constrained the unit operand's *grammar*,
+  which was never m3's concern and was the false premise the stop report measured.
+
+**The project-scoped-unit double still holds, with one honest change in what it proves.**
+`test_a_project_scoped_unit_is_not_emitted_either` passes at `3f8bd58` and fails under the
+traverse-the-unit mutation, so it still discriminates. But under the new mechanism its tier
+assertion is no longer the load-bearing part — nothing on this route consults a tier — and its unit
+operand is a `FeatureReferenceExpression`, a shape that is no longer required or checked. It is now
+a *case* of the general non-emission rule rather than the argument for it. That is fine because the
+general rule is separately proved by the raise-on-read double, which covers every unit shape
+including the compound ones the double does not model. No change needed; recording the shift so a
+later reader does not mistake the tier assertion for the mechanism.
+
+## 3. The primitive's contract — **Confirmed on all four points**
+
+- **Exactly-two-operands raises the named refusal.** `reference_use.py:344-351` raises
+  `SemanticEvidenceError(EXPRESSION_KIND_UNSUPPORTED)` under its own operation name
+  `unit_annotation_value`. Verified for both three-operand and one-operand annotations.
+- **`None` strictly means "not a `[` annotation".** The only `return None` paths are the metatype
+  test and the operator test. Proved discriminating by the mutation above.
+- **Recognition from mapped metatype plus operator, no runtime class names.** The body is
+  `SysideAdapter.is_instance(expression, "OperatorExpression")` and a comparison of the mapped
+  `operator` value to `"["`. The three `type(...).__name__` occurrences in the module are all
+  outside the primitive (`:229`, `:232` fact capture; `:574` a `TypeError` message).
+- **Sole caller, walks only the returned value operand.** `grep -rn unit_annotation_value src/`
+  finds one call site, `reference_use.py:304` inside `_walk`, which recurses on `unit_value` alone.
+  The other hits are the two export registrations and the definition.
+
+## 4. No collateral movement — **Confirmed; every record figure verified**
+
+| Gate | Record claims | Measured | |
+|---|---|---|---|
+| `test_reference_use.py` | 38 | **38 passed** | ✓ |
+| `test_semantic_selector_ownership.py` | 20 | **20 passed** | ✓ |
+| `test_public_api_exports.py` | 8 | **8 passed** | ✓ |
+| Isolated set (`test_sysml/`, `test_validation/`, `test_errors.py`) | 840 / 1 | **840 passed, 1 skipped** | ✓ |
+| Fast suite (licensed, `-m "not slow"`) | 18 / 1899 / 1 | **18 failed, 1899 passed, 1 skipped** | ✓ |
+| Fast-suite failure set | the declared 18 | `diff` against my recorded `A_base` list: **identical, 18 nodes** | ✓ |
+| `mypy --strict errors.py reference_use.py` | Success | **Success, no issues** | ✓ |
+| `mypy src/` | 101 in 21 files | **101 errors in 21 files** | ✓ |
+| `ruff check src/ tests/` | 119 | **119 errors** | ✓ |
+| Wheel | `0.1.3`, `semantic-evidence/v2` | dist `0.1.3`, `__version__` `0.1.3`, `semantic-evidence/v2` | ✓ |
+| `unit_annotation_value` on the barrel | exported | present and in `sysml.__all__` | ✓ |
+| Deleted symbols | still absent | `[]` surviving; `BindingInfo.references` absent | ✓ |
+
+The pass count rises 1893 → 1899 by exactly the six nodes this landing added, with none removed.
+The one skip is the pre-existing `test_adr002.py:289` external-model skip. The PDF/HTML corpus and
+the paid/network cases were never invoked.
+
+Tree state at the boundary: Agentic worktree `3f8bd58` clean, Codegen worktree `b4e97dd` clean,
+`/home/reid/1cfe/agentic-mbse` at `fcee56d` clean, `/home/reid/1cfe/sysml-codegen` on
+`stop-reinventing-the-parser` clean.
+
+## 5. The implementer's two flags
+
+**(a) "kept tests pin both" — the design's factual claim is wrong; a correction note is warranted.
+Confirmed by my own sweep.** I parsed every test node at `68bca37` in the four files that mention
+either code and cross-referenced unit context. Exactly one node touched a unit-annotation refusal:
+
+```
+tests/test_sysml/test_reference_use.py::test_a_malformed_unit_annotation_is_refused_by_name
+```
+
+and at `68bca37` its body passed a **one-operand** annotation — it pinned **arity**, which
+survives. A direct grep for the two retired detail strings (`"unit annotation's unit operand is not
+a feature reference"`, `"no exact referent"`) across `tests/` at `68bca37` returns nothing. So
+design Revision 8's sentence *"and kept tests pin both"* is false as written: the two retired
+refusals were pinned in production only. The implementer's flag is accurate, the +6/−0 delta is
+right, and the surviving node's docstring has been correctly rewritten to name arity as the one
+remaining rule. **Recommend a correction note on design Revision 8** — the sentence overstates the
+test coverage that existed, which matters because a later reader would otherwise look for retired
+assertions that were never there.
+
+**(b) `[W/(m·K)]` → `[W/(m*K)]` — Confirmed, and the substitution preserves the named kind.**
+The middle-dot form does not parse at SysIDE 0.8.4:
+
+```
+error (parsing-error): Unexpected token '·'
+```
+
+Every occurrence of `W/(m·K)` under the Codegen fixtures is inside a `doc /* ... */` block or a
+`//` comment — never an annotation. My grep found more occurrences than the record's two cites
+(also `catf_mfe_d5` and `catf_mfe_gated`), but all are comments, so the conclusion is unchanged and
+the stop report's form list did sweep comment text. The substitute is structurally faithful to what
+the owner named: I measured `[W/(m*K)]` and its unit operand is an `OperatorExpression` with a
+parenthesized compound denominator — the same structural kind as `[W/(m·K)]` would be, and distinct
+from the flat ratio `[kg/m^3]`, so the two parametrizations still cover two different compound
+shapes. The design names these forms with "such as", making their force example rather than
+referent, so the substitution is within what the ruling permits. Recorded, not resolved silently.
+
+---
+
+## Fit for Phase 3
+
+**Yes — Phase 3 may consume `3f8bd58` as its upstream.** The premise Phase 3 halted on is measurably
+gone at the exact attribute that halted it, the whole corpus elaborates, and the replacement
+mechanism is stronger than the one it retires: the unit operand is not merely filtered but never
+read, proved by a raise-on-read double that I killed to confirm it discriminates. m3 is
+re-established on that mechanism and does not depend on the retired shape validation. Nothing else
+in the boundary moved — every focused, isolated, static, and packaging figure is unchanged or
+accounted for by the six added nodes.
+
+One documentation item is outstanding and is not a Phase-3 blocker: design Revision 8's "kept tests
+pin both" needs a correction note (item 5a). i11 from the Phase-2 audit remains carried to close.
+
+**Not checked in this pass:** anything outside the five brief items and the regression table. The
+Phase 2 verdict and its addendum stand on their own evidence; this pass neither revisits nor
+extends them.

@@ -544,9 +544,13 @@ resolver entry. Its optional state can describe undecoded math; it cannot create
 
   **What this retires in the Phase-2 tree.** Agentic's `_unit_annotation_value`
   (`reference_use.py:316` at the audited `68bca37`) refuses a non-feature-reference unit operand with
-  `EXPRESSION_KIND_UNSUPPORTED` and an unresolved unit referent with `RESOLVED_TARGET_MISSING`, and
-  kept tests pin both. **Those two refusals and their assertions are superseded by this contract and
-  go.** They encode exactly the dropped requirements. What survives is the arity refusal below.
+  `EXPRESSION_KIND_UNSUPPORTED` and an unresolved unit referent with `RESOLVED_TARGET_MISSING`.
+  **Those two refusals are superseded by this contract and go.** They encode exactly the dropped
+  requirements. What survives is the arity refusal below. *(Correction, 2026-08-18, Phase 2b:
+  this section originally claimed "kept tests pin both." Measured at `68bca37` by the implementer
+  and independently by the Phase-2 auditor's AST sweep, the two refusals were pinned in
+  production only — the sole unit-refusal test node pins arity, which survives. Nothing was
+  retired from the test suite.)*
 
   **m3's closure moves to non-emission.** The Phase-2 audit accepted the m3 closure partly because
   shape validation survived. It no longer does, so the closure now rests on the single stronger fact
