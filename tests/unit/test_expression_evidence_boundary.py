@@ -637,7 +637,7 @@ def test_frozen_usage_owner_matches_the_exact_live_part_usage() -> None:
     assert extractor.load_models()
     member = _live_feature(
         extractor.model,
-        "UsageOwnedReferenceConsumers::'Plant'::comp_b::area_calc::length_in",
+        "UsageOwnedReferenceConsumers::Plant::comp_b::area_calc::length_in",
     )
     inventory = expression_evidence.build_expression_evidence_inventory(extractor.model)
     [use] = inventory.require_exact(

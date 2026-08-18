@@ -340,6 +340,10 @@ def test_unit_annotated_alias_survives_the_public_conversion_boundary(
     private import ScalarValues::*;
     private import SI::*;
 
+    calc def Identity {
+        in attribute x : Real;
+        out attribute y : Real = x;
+    }
     part def Inner {
         attribute width : Real = 2.0 [m];
     }
@@ -348,6 +352,7 @@ def test_unit_annotated_alias_survives_the_public_conversion_boundary(
         attribute mirror_len : Real = base_len [m];
         part inner : Inner;
         attribute mirror_width : Real = inner.width [m];
+        calc identity : Identity { in x = mirror_width; }
     }
     part host : Host;
 }
