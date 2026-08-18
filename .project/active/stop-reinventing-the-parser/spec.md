@@ -133,24 +133,24 @@ generator cannot honor its index and must say so rather than compute a different
       exercises its failure branch.
 - [ ] P-002 still holds: one modeled source occurrence becomes exactly one runtime source, including
       usage-owned qualified references and nested modeled containment paths.
-- [ ] Every positive A1-A4/A6 occurrence shape has an off-default public mutation proof: changing
+- [x] Every positive A1-A4/A6 occurrence shape has an off-default public mutation proof: changing
       one modeled source changes every and only the generated runtime consumers bound to that
       source. Internal occurrence or graph assertions alone do not certify the result.
 - [ ] A checked reconciliation ledger maps every historical census row L-01–L-14 and U-1–U-2 to an
       A/B row, an explicit disposition above, or a separately filed follow-up. Nothing disappears by
       omission.
-- [ ] The implementation captures a pre-change output baseline from the named implementation SHAs.
+- [x] The implementation captures a pre-change output baseline from the named implementation SHAs.
       Every maintained model outside an explicit expected-transition ledger remains byte-identical.
       Each transition row names its old behavior, required new result, and proving test.
 - [ ] Ill-formed models receive diagnostics naming the reference, source file and line, and missing
       modeled authority. Valid but unimplemented forms receive a distinct unsupported-capability
       diagnostic that does not blame the model.
-- [ ] The indexed-expression capability and output-alias silence each have a separately owned
+- [x] The indexed-expression capability and output-alias silence each have a separately owned
       backlog row before this item closes.
-- [ ] Agentic-mbse guidance states the supported reference shapes, the context each requires, and
+- [x] Agentic-mbse guidance states the supported reference shapes, the context each requires, and
       the refusal or limitation for unsupported shapes. Owner class is described as one input to
       derivation, not as the sole decision.
-- [ ] Fusion Tea models are verified against the final rules. They are edited only if a real
+- [x] Fusion Tea models are verified against the final rules. They are edited only if a real
       violation is found.
 - [ ] P-003's agent-written application status is reconciled with the final A3 behavior at close;
       its owner-verbatim promise is unchanged.

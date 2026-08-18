@@ -568,3 +568,182 @@ Resolves:
 - design-F1: **FIXED (remains fixed)** — authority: owner — basis: Revision 4 retains direct
   `DocumentTier` use, named refusal for missing or unknown tier evidence, and the prohibition on
   name/path/origin classification.
+
+---
+
+## audit — 2026-08-17 — rev A_final `1804827cb2cc877b3c0bc74309bd3470fb2ee90b` / C_prod `afb766af80ddc28c405b0dd58a7b14b2cc09bc7e` / F_final `4fdd78f53334e5a9bcd695259b27afeb0b347f62` / C_evidence `58495607bdf140f1f716aafb95f7122228a4bf52` / artifacts `/tmp/stop-parser.QVJIIP/artifacts/final-identities-v5`
+
+Point (re-derived): Use SysIDE's resolved semantic tree as the model interpretation, preserve exact source-occurrence identity through TEAx Python emission, and refuse unresolved or ambiguous references instead of reconstructing or choosing them. [source: `.project/product/P-004-product-identity-parse-walk-emit.md` and `P-003-no-workarounds-for-bad-models.md`, grade: owner; exact-occurrence outcome bounded by `P-002-exact-owner-anchoring.md`, grade: agent/ratified]
+
+Falsifier: On licensed live and relocated-snapshot routes, mutating one modeled source does not change every and only its bound TEAx consumers, or incomplete semantic evidence reaches a graph, snapshot, or package instead of a named diagnostic.
+
+Findings:
+
+- audit-F1 [DON'T] C_prod declares one canonical scalar type map in `core/type_mapping.py`, but exact elaboration retains a second four-entry literal map in `_feature_python_type`; extraction and graph materialization therefore require manual synchronization. Falsifier: add or change one supported scalar in the canonical table and elaborate a feature of that type; extraction accepts it while exact elaboration rejects or types it differently. — `P-004-product-identity-parse-walk-emit.md` (AGENT/INFERRED) — disposition: use the canonical map in exact elaboration and extend the no-copy guard to that path.
+- audit-F2 [DON'T] Fusion retains two manually synchronized model trees and compensates with a test that strips one tree's `library/` prefix before byte comparison, while the new live/snapshot TEAx and mutation proofs select only `models/`. Falsifier: change only the corresponding binding under `exploration/ife_e2e/models`; the selected acceptance tests remain green while the compensating cross-tree gate alone detects the split. — `P-002-exact-owner-anchoring.md` and `P-004-product-identity-parse-walk-emit.md` (AGENT/INFERRED) — disposition: designate one canonical model tree and derive the other, or run the customer-shaped proof against both without layout normalization.
+
+Fired smells:
+
+- Smell 1, **two representations must be manually kept synchronized** — both the scalar type maps and Fusion model trees.
+- Smell 3, **a special category exempts unchanged user-visible meaning** — `strip_library=True` normalizes one duplicate's special layout.
+- Smell 4, **correctness depends on downstream knowledge of an internal representation** — the divergence gate knows and rewrites the two trees' directory layouts.
+- Smell 6, **a test passes only because it selects one duplicate, one route, or one interpretation** — Fusion's new acceptance tests hard-select `models/`.
+
+Gate: DISPOSED (audit-F1, audit-F2; no owner/HARD contradiction found)
+
+---
+
+## audit2 — 2026-08-17 — rev f4d7351 / 1af5705 / 2228c60
+
+Point (re-derived): Use SysIDE's resolved semantic tree as the model interpretation, preserve exact
+modeled-occurrence identity through emitted TEAx Python, and refuse incomplete or ambiguous evidence
+instead of selecting by names, order, proximity, or uniqueness. [source:
+`.project/product/P-004-product-identity-parse-walk-emit.md` and
+`.project/product/P-003-no-workarounds-for-bad-models.md`, grade: owner; exact-occurrence companion
+`.project/product/P-002-exact-owner-anchoring.md`, grade: agent/ratified]
+
+Falsifier: On either maintained Fusion model root, a licensed live or v6-snapshot run binds a modeled
+source to different consumers, a source mutation fails to move every and only its bound TEAx results,
+or incomplete evidence reaches a package instead of an exact reference-and-location diagnostic.
+
+Findings: none.
+
+Smells:
+
+- Smell 1, **two representations must be manually kept synchronized**, still fires mechanically on
+  Fusion's two byte-identical model roots. It is disposed for this judgment by independently parsing,
+  generating, snapshot-roundtripping, TEAx-executing, and mutation-proving both roots in their actual
+  layouts.
+- Smell 3, **a special category exempts unchanged user-visible meaning**, remains only in the
+  redundant cross-tree byte-sync guard's `library/` layout mapping. No semantic or runtime verdict
+  consumes that normalization; both layouts are exercised directly.
+- Smell 4, **correctness depends on downstream knowledge of an internal representation**, is clear.
+  The customer proofs use each real root, public graphs, generated packages, and TEAx results; the
+  normalized sync view is not their oracle.
+- Smell 5, **a baseline or compatibility requirement preserves contradictory behavior**, fires on
+  retained L-13 output-alias silence. It is visibly disposed outside this item at
+  `[OUTPUT-ALIAS-DUPLICATE-SOURCE-SILENCE]`; the evidence ledger does not relabel it as correct.
+  Nonzero project baselines are exact-hash-locked and explicitly recorded as non-green.
+- Smell 6, **a test passes only because it selects one duplicate, route, or interpretation**, is
+  clear for the audited claim. Both Fusion roots and both live/snapshot routes execute, and the
+  focused 23-test Fusion battery has zero skips.
+
+Gate: CLEAR
+
+Resolves:
+
+- audit-F1: FIXED — authority: AGENT/INFERRED — basis: exact elaboration now consumes
+  `QUALIFIED_SYSML_TO_PYTHON`, a derived view of the canonical map, with a kept no-second-map guard.
+- audit-F2: FIXED — authority: AGENT/INFERRED — basis: both maintained Fusion roots now run the
+  customer-shaped live/snapshot TEAx and every-and-only mutation proofs directly, without layout
+  normalization; the pinned artifact audit reports all four evidence groups PASS.
+
+---
+
+## audit3 — 2026-08-17 — rev A `2171016d3e3e0805525aa4cf787c55c6293dd00c` / C `78a9beb956f9b5a517c08836b067f0cb0dc4ccc6` / E `588d5f7c9013d98c838a376ab9c69c95ef444649` / F `028f98741a2aea7c238beed961402857af82d15f`
+
+Point (re-derived): Resolve every modeled reference from SysIDE's exact semantic tree to its concrete source occurrence, carry that identity unchanged through live and snapshot TEAx generation, and refuse unsupported or incomplete evidence by name before graph, snapshot, or output. [source: `.project/product/P-003-no-workarounds-for-bad-models.md` and `.project/product/P-004-product-identity-parse-walk-emit.md`, grade: owner; exact-occurrence companion `.project/product/P-002-exact-owner-anchoring.md`, grade: agent/ratified]
+
+Falsifier: A valid public SysML model can move the same `#(...)` reference into another expression-bearing feature and thereby reach a graph, snapshot, or package with the index erased, or live and snapshot routes bind it differently.
+
+Findings:
+
+- audit3-F1 [DON'T] Indexed-source refusal is limited to input-directed `FeatureChainExpression` features. In a licensed public-route probe, moving `cells#(2).mass` into a computed attribute under `cells : Cell[1]` bypassed the refusal, built a zero-diagnostic graph, and aliased the out-of-range reference to `cells[0].mass`. The two detection sites also identify SysIDE's exported `IndexExpression` through `type(...).__name__` instead of the exact metatype adapter. The same user-visible reference therefore changes meaning by feature category and depends on downstream knowledge of SysIDE's runtime representation. Falsifier: keep a licensed live-and-snapshot test for an indexed reference through a computed attribute; both routes must stop before graph construction with one `SI_INDEXED_SOURCE_UNSUPPORTED` diagnostic carrying the authored reference and location. — `.project/product/P-003-no-workarounds-for-bad-models.md` and `.project/product/P-004-product-identity-parse-walk-emit.md` (OWNER) — disposition: BLOCK
+
+Smell search: Smells 3 and 4 fire in audit3-F1. Smell 1 has no product-source synchronization obligation: both maintained Fusion trees are independently parsed, generated, snapshot-roundtripped, TEAx-executed, and mutation-proved. Smell 5's recorded nonzero baselines are explicitly non-green and do not preserve the indexed-reference behavior. Smell 6 is clear because both model roots and both public routes run, with exact channel and every-and-only mutation assertions.
+
+Gate: BLOCKED (audit3-F1)
+
+---
+
+## design-rev5 — 2026-08-17 — design.md Revision 5 draft (code facts at C_prod `78a9beb956f9b5a517c08836b067f0cb0dc4ccc6` / A_final `2171016d3e3e0805525aa4cf787c55c6293dd00c`)
+
+Point (re-derived): The product is three steps and nothing else — parse the models with a SysMLv2
+parser, walk the parser's resolved tree to reconstruct the math, write that math into TEAx Python.
+Every modeled reference arrives in generated math meaning what the model wrote, decided from the
+parser's own resolved evidence. A reference the toolchain cannot honor is refused by name; it is
+never quietly turned into a different expression and never patched by a manual fallback. [source:
+`.project/product/P-004-product-identity-parse-walk-emit.md` and
+`.project/product/P-003-no-workarounds-for-bad-models.md`, grade: **owner**; exact-occurrence
+companion `.project/product/P-002-exact-owner-anchoring.md`, grade: agent/ratified]
+
+Falsifier: the design shows a route where a parser-resolved reference reaches the graph, snapshot,
+or package with its meaning changed and no diagnostic; or a decision rule reading something other
+than resolved parser evidence (Python class names, qualified-name prefixes, positional /
+sole-candidate / nearest-ancestor election); or a closure argument with a hole, so a newly authored
+expression-bearing site carries an unhonorable reference past the refusal.
+
+Findings:
+
+- design-rev5-F1 [DO] The mechanical closure condition cannot observe the `audit3-F1` defect class.
+  Its AST discovery set is raw *reads* — `.operands`, `.referent`, `.target_feature`,
+  `.chaining_features`, and runtime metatype-name dispatch. The audited defect was not a read; it
+  was a consumer receiving a permissive fact and **ignoring** its `has_index_segment` field
+  (design.md:78). A dropped field is invisible to a selector scan. The real closure for that class
+  is the unrepresentable-state design (`IndexedReferenceUse` carries no path; the resolver signature
+  admits only `ExactReferenceUse`), and D5 explicitly leaves an opening beside it: the permissive
+  `ResolvedSemanticReferenceFact` survives, and `extract_feature_refs` / `feature_reference_facts` /
+  `feature_chain_facts` "may remain for non-codegen compatibility" (design.md:381-384). Agentic's own
+  live consumers of those index-flag-bearing facts —
+  `agentic-mbse/src/agentic_mbse/sysml/aggregation.py:251-271` (a `FeatureChainNode` /
+  `SingletonTerm` pair carrying `has_index_segment` that a consumer may drop) and
+  `sysml/binding.py:164` — are named nowhere in the design, and the closure matrix's consumer list
+  omits aggregation entirely. Verified at A_final: they are held off codegen's public route today
+  only by the `hierarchy_resolver.py` reachability exclusion, which is a route fact, not a shape
+  guarantee. Falsifier: an agentic-side proof that a permissive chain fact with an index cannot
+  produce an index-free path on any route the design counts as live, or deletion of the permissive
+  index-bearing fact API from the production surface. — `.project/product/P-004` (owner) applied via
+  my inference about closure scope (`[AGENT]/[INFERRED]`) — disposition: DISPOSE — record the two
+  agentic modules with their route state and proof in agentic's ownership manifest, or delete the
+  permissive fact API on the production route; not a blocker at the current route boundary.
+
+- design-rev5-F2 [DO] The consumer backstop's stated benefit has no observable, so the layer it
+  guards degrades untested. D7 claims the per-consumer exhaustive branch "makes an omitted preflight
+  category a failing test rather than a silent de-indexing route" (design.md:475-478). But the
+  backstop raises the same `SI_INDEXED_SOURCE_UNSUPPORTED` the pre-graph inventory raises, and the
+  closure matrix asserts only "the exact public diagnostic" (design.md:1080). An omitted preflight
+  row therefore yields an identical **passing** test. The same asserted-not-proved pattern appears in
+  the matrix's deep-literal-override row, where indexed refusal is marked "not an expression route"
+  (design.md:1078) with no case showing a redefinition relationship path cannot carry an index — the
+  exact form of assumption that produced `audit3-F1`. Product outcome stays correct (both layers
+  refuse), so this is closure-argument integrity, not a contract violation. Falsifier: a test that
+  distinguishes which layer refused (e.g. asserting the pre-graph inventory refused before any
+  consumer ran), plus one case fixing the deep-override index claim. —
+  `.project/product/P-003` (owner) applied via my inference (`[AGENT]/[INFERRED]`) —
+  disposition: DISPOSE — add the layer-distinguishing assertion and the deep-override case to the
+  closure matrix in the replacement plan.
+
+Smells:
+
+- **Smell 2 — a consumer compensates for something the producer or platform claims to guarantee:**
+  **fires, disclosed.** Two compensations are stated in the open with their reasons. The resolver's
+  runtime concrete-value check exists "because the repository's full static type lane is not
+  currently a green gate" (design.md:346-348) — an honest compensation for a platform guarantee that
+  is not enforced here, and correct while mypy is not a gate. The per-consumer index backstop
+  compensates for the pre-graph inventory's completeness guarantee (design.md:475-478); it is
+  justified after `audit3-F1`, but see design-rev5-F2 — the compensation is indistinguishable from
+  the thing it backs up, so the producer guarantee cannot be seen failing. Escalate F2 into the
+  design review's judgment; the smell does not otherwise indicate drift.
+- **Smell 7 — the proposed solution changes who owns an invariant without saying so:** **clear.**
+  Index classification, authored reference form, operand materialization, exact targets, and the
+  depth budget move from codegen into agentic `inspect_reference_uses`, and the move is stated three
+  times over: the ownership table (design.md:690-708), the cross-repository
+  `semantic-evidence/v2` API marker with a version bump, and the per-repository ownership manifests.
+  D8 separately records that agentic owns detection while codegen owns the
+  `SI_INDEXED_SOURCE_UNSUPPORTED` refusal. Nothing changes hands quietly.
+
+Gate: **BLOCKED (audit3-F1)** — new findings design-rev5-F1 and design-rev5-F2 are DISPOSED
+
+Resolves:
+
+- audit3-F1: **DEFERRED** — authority: owner-grade source unchanged (`P-003`/`P-004`) — basis:
+  Revision 5 specifies a mechanism that would fix it (closed `ExactReferenceUse | IndexedReferenceUse`
+  with no path on the indexed variant; `IndexExpression` in the mapped metatype table so runtime
+  class names never identify it; indexed refusal returned "regardless of whether the enclosing site
+  is a binding, alias, computed attribute, predicate, or calculation-definition expression",
+  design.md:378-379) and names a proof matching the recorded falsifier exactly (closure matrix,
+  computed-attribute row, indexed refusal required on live + admitted/capture, asserting one public
+  diagnostic token, authored reference, root-relative `file:line`, and no graph or snapshot byte
+  change). A design is a plan, not a code change: the defect is still live at `C_prod`, so the block
+  clears only when that named live-and-capture computed-attribute test is green on the production
+  commit — not on this revision.

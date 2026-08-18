@@ -546,10 +546,19 @@ implemented, audited, and closed before Item 8 downstream design or implementati
 performs none of either predecessor's remediation. Source: the active item's `spec-review.md` L4-1
 and the owner's direction to apply the review fixes.
 
-**Bounded predecessor active 2026-08-16:**
+**Bounded predecessor active — fresh audit Needs Work 2026-08-17:**
 `.project/active/stop-reinventing-the-parser/` owns exact occurrence derivation and evidence
 integrity. It closes before `.project/active/elaborator-downstream/` starts so downstream
 regeneration and certification measure the final semantic-authority rules.
+
+The exact replacement topology and the six first-audit findings verify, but the latest independent
+audit remains Needs Work. A5 can erase an index and bind the wrong occurrence; B3/B4 retain public
+typed-owner bypasses; deep-reference construction can silently shorten a target; and the B9 registry
+seam accepts empty or wrong invariant evidence. The final run report was also assembled outside the
+committed runner, and the approved evidence contract does not permit the historical Agentic PDF
+result to substitute for the required replacement-producer run. Product-lens gate `audit3-F1` is
+BLOCKED. The predecessor remains active; no epic completion checkbox is marked, and downstream
+design and implementation remain blocked.
 
 **Bounded child closed 2026-08-16:** exact occurrence-owner anchoring for usage-owned one-segment
 references is certified and archived at

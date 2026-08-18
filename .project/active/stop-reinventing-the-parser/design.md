@@ -1,29 +1,45 @@
 # Technical Design: Stop Reinventing the Parser
 
-**Status:** Approved — final design review, Revision 4
-**Revision:** 4
-**Date:** 2026-08-16
+**Status:** Draft — Revision 6; Revision-5 review resolutions incorporated, targeted confirmation required
+**Revision:** 6
+**Date:** 2026-08-17
 **Branch:** `stop-reinventing-the-parser`
 **Contract:** `spec.md`, approved revision 4
-**Final review:** `design-review.md`, Approve, Revision 4
-**Product lens:** `CLEAR`; the Revision-4 final rerun keeps design-F1 `FIXED`
+**Prior review:** `design-review.md`, Revision 5 `Revise`; all owner resolutions finalized 2026-08-17
+**Product lens:** `BLOCKED` at `audit3-F1` until the Revision-6 indexed-consumer proof passes
+**Revision input:**
+`.project/research/20260817-164828_expression-evidence-boundary-convergence-assessment.md`
 
 ## Outcome
 
-The exact route will resolve occurrences from parser identities, semantic ownership, modeled
-containment, and the consumer's occurrence domain. It will stop choosing candidates by distance,
-descendant count, model-wide uniqueness, or declaration order. The agentic extraction boundary will
-either return complete parser evidence or raise one public typed error. Codegen will convert that
-error, and its own exact-evidence failures, at one boundary shared by live generation and snapshot
-capture.
+The occurrence core remains unchanged: the exact route resolves occurrences from parser identities,
+semantic ownership, modeled containment, and the consumer's occurrence domain. D1-D4 stay intact.
+The correction is at the evidence edges feeding that core. Every production expression consumer
+that derives dependency or occurrence identity must receive exact reference evidence from one
+Agentic inspection operation. Indexed shapes become non-resolvable values, incomplete paths fail
+before a value exists, and every raw semantic selector has one reviewed owner.
+Codegen converts owned failures once at the bridge shared by live generation and snapshot capture.
+Registry generation derives its own wrapper set from the graph and accepts no caller-supplied copy.
 
-Revision 4 changes only F5's cross-repository evidence topology and the exact agentic full-suite
-command. The final review confirms that F5 is resolved. The review's resolved F1-F4 and F6-F8
-decisions remain unchanged.
+Revision 6 supersedes Revision 4's D5, D7, D9, evidence matrix, and the review claims that F4 and F7
+were closed. It also corrects the route inventory and adds a mechanical closure condition. D1-D4,
+D6, the general `ExpressionIR`, the occurrence mutation proof, and the acyclic
+`C_prod -> F_final -> C_evidence` topology remain intact. The committed runner remains the only
+producer of final run evidence; the failed candidate's externally staged report is not reusable.
 
-Shaping and spec reruns are intentionally skipped. The approved revision-4 contract is already
-clear, the owner requires no further gates, and this revision changes implementation decisions
-rather than requirements.
+Shaping and the spec are not rerun. The fresh research found that A5 and B3/B4/B9 still state the
+right required behavior; the defect is that the approved mechanisms did not make alternate weaker
+routes illegal. Revision 6 incorporates every finalized Revision-5 review resolution. It still
+needs the review's targeted confirmation and a replacement plan before any production edit.
+
+## The Point
+
+**[INHERITED: P-003 and P-004]** The product parses the models, walks the parser's resolved tree to
+reconstruct the authored math, and writes that math into TEAx Python. A reference the toolchain
+cannot honor is refused by name. It is never silently changed into another expression and never
+recovered through a manual fallback. This revision makes that obligation structural: there is one
+closed path from parser evidence to occurrence resolution, and completion requires proof that no
+weaker sibling path remains.
 
 ## Product and authority frame
 
@@ -54,52 +70,89 @@ This answers the finding recorded at `product-lens.md:447-455` and follows SysID
 `BasicDocument.document_tier` property and `DocumentTier` enum
 (`.venv/lib/python3.12/site-packages/syside/core/__init__.pyi:1420,5676-5690`). The Revision-3 final
 product-lens rerun records `Gate: CLEAR` and design-F1 `FIXED (remains fixed)` at
-`product-lens.md:503-535`. F5 is an engineering-evidence finding and does not alter that
-product-lens result.
+`product-lens.md:503-535`. That is the historical result for D6. The latest product-lens gate is
+`BLOCKED` for `audit3-F1`; it does not reopen the `DocumentTier` correction.
 
 ## Current code facts
 
-- `occurrence.py` already owns stable feature slots, occurrence IDs, type closures, and modeled
-  multiplicity. It also contains the model-wide sole multiplicity-writer branch that A6 removes.
-- `elaborate.py` builds value and calculation nodes, then resolves references. Its
-  `_select_occurrences`, `_select_calc_nodes`, and `_resolve_leaf` methods still perform the
-  candidate elections prohibited by A1-A4.
-- `_resolve_leaf` currently scans every calculation node for a matching output declaration. That is
-  the A2 producer-selection hole.
-- `elaborated_pipeline.py` extracts calculation definitions before it calls `elaborate()`, so an
-  upstream evidence exception can currently miss the elaboration diagnostic conversion.
-- Agentic `SysideAdapter.is_instance` catches a live SysIDE exception and then uses a class-name
-  answer. `expression.py` also uses class-name dispatch, partial traversal, staged name recovery,
-  and QN-prefix library filtering.
-- `feature_metadata.py::_source_file` has a final sole-glob fallback after exact document-origin
-  attempts.
-- Registry generation warns and omits an unsupported root wrapper. The output tree may later be
-  unusable even though generation reported success.
+These facts describe the audited failed candidate, not this documentation checkout:
+
+- `occurrence.py` now owns stable feature slots, occurrence IDs, containment addresses, type
+  closures, and exact multiplicity/redefinition behavior. The fresh audit reproduced D1-D4 on
+  their intended routes.
+- Codegen still walks expressions independently for calculation-definition dependencies,
+  calculation and constraint bindings, aliases, computed attributes, and predicates. Some walks
+  consume Agentic facts; others reconstruct references or dependencies from raw expression nodes.
+- The indexed-source preflight covers direction-`In` top-level feature chains. The computed
+  attribute route reads a fact that retains `has_index_segment`, ignores that field, and resolves
+  the remaining path. The licensed probe therefore maps `cells#(2).mass` to `cells[0].mass`.
+- Agentic owns typed operand materialization, exact reference facts, and the general ExpressionIR.
+  Codegen nevertheless retains a raw-AST unit unwrapping helper, a recursive dependency walk with
+  its own depth behavior, and a bare-binding constructor whose semantic path may be `None`.
+- Deep literal overrides build relationship paths separately and filter missing target segments,
+  so a valid/missing/valid path can silently shorten.
+- CLI generation derives and validates exit-point wrapper types before mutation, but the exported
+  registry generator accepts a caller-provided type list. An empty or incorrect second account can
+  bypass the invariant. The existing collector raises an untyped `RuntimeError` on an unsupported
+  root; there is no warning-and-omit branch at the audited commit.
+- `usage_extractor.py`, `computed_attribute_extractor.py`, and `hierarchy_resolver.py` are off the
+  audited public route. Their raw selectors still prevent a repository-wide ownership claim unless
+  reachability is proved or they enter the manifest.
+
+### Revision-6 implementation base
+
+**[OWNER 2026-08-17]** Implementation branches from the audited failed-candidate Codegen tree, the
+old `C_prod` (called `C_base` in this revision),
+`78a9beb956f9b5a517c08836b067f0cb0dc4ccc6`, and corrects it in place. The corresponding
+Agentic input is `A_base = 2171016d3e3e0805525aa4cf787c55c6293dd00c`. The current documentation
+checkout is not an implementation base. D1-D4, the retained probes, and the committed verification
+harness in `C_base` are preserved; gate 6 assigns fresh target identities `A_final`, `C_prod`,
+`F_final`, and `C_evidence`.
+
+### Load-bearing bets
+
+- **B1 — the raw-source route set is finite.** The reviewed live and admitted/capture arms plus the
+  sealed from-snapshot exclusion account for every public entry. *If false → the closure matrix can
+  certify a subset while another public route still loses evidence.*
+- **B2 — the reviewed selector vocabulary covers raw expression evidence acquisition.** SysIDE's
+  expression API exposes operands, referents, target features, feature chaining, and mapped
+  metatypes at these seams. The AST gate also covers literal/dynamic `getattr` and local aliases.
+  *If false → the selector manifest can be exactly green while an unscanned raw read survives.*
+- **B3 — SysIDE 0.8.4 exposes `IndexExpression` as a mappable metatype.** The installed stub defines
+  it as an `OperatorExpression` (`syside/core/__init__.pyi:10897-10920`). *If false → Agentic cannot
+  own index classification and implementation stops before semantic-evidence/v2 lands.*
 
 ## One architecture
 
-There is one resolution architecture:
+There is one resolution architecture and one evidence-acquisition route per semantic fact:
 
 ```text
 SysIDE document + AST
         |
         | exact IDs, DocumentTier, resolved targets, semantic owners
         v
-agentic evidence extraction -- SemanticEvidenceError on incomplete evidence
+Agentic reference inspection + existing ExpressionIR extraction
+        |                         |
+        | closed ReferenceUse     | neutral math/predicate IR
+        v                         v
+codegen pre-graph evidence inventory -- indexed/incomplete use refuses here
         |
         v
-codegen extract-and-elaborate boundary -- ElaborationDiagnosticError on refusal
+exact resolver (accepts ExactReferenceUse only)
         |
         v
 ContainmentAddress + OccurrenceIndex + calculation-output producer index
         |
         v
-InstanceGraph -> projection -> generation preflights -> TEAx package
+InstanceGraph -> projection -> graph-derived generation preflights -> TEAx package
 ```
 
 `ContainmentAddress` is a private immutable value. The producer index is a private dictionary of
 immutable records. Neither is a strategy object, a selectable resolver, or a compatibility layer.
-The existing exact route is changed in place. No flag or fallback can select the retired behavior.
+`ReferenceUse` is a small closed evidence union beside the existing `ExpressionIR`; it is not a
+replacement expression tree. Deep redefinition paths use a separate total factory because they are
+relationship paths, not expressions. The existing exact route is changed in place. No flag or
+fallback can select the retired behavior.
 
 ## Detailed decisions
 
@@ -279,11 +332,11 @@ domain remains missing even when it is the only producer in the model.
 
 ### D5. Public agentic evidence contract
 
-Agentic adds the following public API in `agentic_mbse.errors`, re-exported from
-`agentic_mbse.__init__`:
+Agentic keeps the public `SemanticEvidenceError` contract in `agentic_mbse.errors`, re-exported from
+`agentic_mbse.__init__`, and advances its API marker before codegen consumes the revision:
 
 ```python
-SEMANTIC_EVIDENCE_API_VERSION = "semantic-evidence/v1"
+SEMANTIC_EVIDENCE_API_VERSION = "semantic-evidence/v2"
 
 class SemanticEvidenceError(AgenticMBSEError):
     code: SemanticEvidenceCode
@@ -296,11 +349,115 @@ class SemanticEvidenceError(AgenticMBSEError):
 
 `SemanticEvidenceCode` is the closed string enum
 `METATYPE_CHECK_FAILED`, `EXPRESSION_KIND_UNSUPPORTED`, `OPERAND_ITERATION_FAILED`,
-`RESOLVED_TARGET_MISSING`, `DOCUMENT_TIER_MISSING`, `DOCUMENT_TIER_UNKNOWN`, and
-`RESOLVED_LEAF_MISSING`. The exception's `detail` never embeds its code. When wrapping a parser
-exception, construction stores it in `cause` and the raise site uses `raise ... from cause`.
+`EXPRESSION_DEPTH_EXHAUSTED`, `RESOLVED_TARGET_MISSING`, `DOCUMENT_TIER_MISSING`,
+`DOCUMENT_TIER_UNKNOWN`, `RESOLVED_LEAF_MISSING`, and `INDEXED_REFERENCE_UNSUPPORTED`. The last code
+is for Agentic consumers that require an exact use; Codegen's public bridge maps it to the existing
+valid-but-unimplemented `SI_INDEXED_SOURCE_UNSUPPORTED` diagnostic. The exception's `detail` never
+embeds its code. When wrapping a parser exception, construction stores it in `cause` and the raise
+site uses `raise ... from cause`.
 
-The operations are:
+#### Closed reference-use values
+
+Agentic adds frozen, valid-by-construction values beside the existing general `ExpressionIR`:
+
+```python
+ReferenceUse = ExactReferenceUse | IndexedReferenceUse
+
+def inspect_reference_uses(expression: Any) -> tuple[ReferenceUse, ...]: ...
+```
+
+`ExactReferenceUse` contains one non-empty `ExactSemanticPath`, the authored reference form
+(`bare`, `qualified`, or `chain`), authored text, authored segments and qualifier, scalar/plural
+consumption context, and source location. The returned tuple preserves first-seen expression order.
+Each root, member, and leaf target record carries its stable declaration identity, resolved member
+name, qualified name, owner identity and kind, document URL and tier, and target source location.
+That is the one provenance-complete payload used by calculation dependency ordering, cross-file
+binding checks, aggregation terms, and ADR002; those consumers do not reconstruct an
+`ExpressionRef` from names or a live element.
+
+`ExactSemanticPath` requires a non-null root and leaf, one fact for every segment,
+`segments[0] == root`, and `segments[-1] == leaf`. Its constructor enforces those invariants; there
+is no public optional-root or optional-leaf state.
+
+`IndexedReferenceUse` contains only the authored reference and location needed for the existing
+unsupported-capability diagnostic. It carries no `ExactSemanticPath`. The exact resolver's type
+signature accepts `ExactReferenceUse`, never the union and never the permissive
+`ResolvedSemanticReferenceFact`. Accidentally dropping an index therefore requires an explicit,
+review-visible conversion that the static ownership gate forbids.
+
+The resolver also checks the concrete value at runtime and performs no duck-typed coercion. Passing
+an `IndexedReferenceUse`, legacy fact, IR node, or arbitrary lookalike is an invariant failure. This
+backstop matters because the repository's full static type lane is not currently a green gate.
+
+The existing `ExpressionIR` remains the neutral math/predicate representation. Its optional
+reference metadata is not occurrence authority. Codegen may consume an IR for rendering or
+compilation and the strict reference uses for dependencies, but it cannot resolve a producer from
+the IR. A new universal expression tree or an aggregate that duplicates the IR is rejected: the
+problem needs a strict reference view, not a second math representation.
+
+`FeatureReferenceFact.target: IdentityFact | None` remains only as an IR leaf for neutral math
+reconstruction. Agentic's ownership manifest records it as a non-authoritative typed surface, and
+the exact-route import/type gate forbids it in the inspector, inventory, binding-source factory, or
+resolver entry. Its optional state can describe undecoded math; it cannot create a dependency edge.
+
+#### One total inspection operation
+
+`inspect_reference_uses` owns the complete production reference walk:
+
+- `SysideAdapter` adds `IndexExpression` to its mapped metatype table. Runtime class names never
+  identify it. A kept adapter test pins the SysIDE 0.8.4 stub/runtime mapping before any consumer
+  migration.
+- Operand sequences are materialized only through `materialize_operands`; getter or iteration
+  failure raises `OPERAND_ITERATION_FAILED`.
+- One non-caller-selectable depth limit is shared by `inspect_reference_uses`,
+  `extract_expression_ir`, expression reconstruction reached by extraction, and every other
+  recursive production expression entry. Exhaustion raises `EXPRESSION_DEPTH_EXHAUSTED`.
+- A structural unit annotation visits its value operand and validates its shape but never emits the
+  unit operand as a data reference. Codegen's raw-AST `annotated_ast_value` entry is deleted and
+  de-exported; IR consumers keep `annotated_ir_value`.
+- A supported `sum` invocation marks its contained reference uses plural. Other existing supported
+  scalar contexts remain scalar. The operation preserves the current aggregation semantics without
+  choosing concrete occurrences.
+- A feature reference uses only its exact `referent`. A feature chain uses only its exact root,
+  every `target_feature.chaining_features` segment, and leaf. The first missing fact raises
+  `RESOLVED_TARGET_MISSING` or `RESOLVED_LEAF_MISSING`; partial paths never return.
+- Authored bare/qualified/chain form, reference text, and location are acquired here once. Codegen
+  does not reread the CST to decide no-prefix semantics.
+- An index at any supported depth returns `IndexedReferenceUse`, regardless of whether the enclosing
+  site is a binding, alias, computed attribute, predicate, or calculation-definition expression.
+
+#### Delete the permissive production surface
+
+**[OWNER 2026-08-17]** Agentic deletes `extract_feature_refs`, `feature_reference_facts`,
+`feature_chain_facts`, `ResolvedSemanticReferenceFact`, and their lazy/barrel exports. The
+index-bearing `has_index_segment: bool` state disappears from production data models. No deprecated
+alias, compatibility wrapper, or manifest exemption keeps that surface alive. `ExpressionRef` and
+`BindingInfo.references: list[ExpressionRef]` are also removed; the reviewed tree has no unrelated
+consumer. The rejected alternative was to keep the permissive API and manifest its consumers,
+which would preserve the second interpretation this item is removing.
+
+All production consumers migrate to `inspect_reference_uses`:
+
+- `aggregation.py` stores an `ExactReferenceUse` in exact reference/chain nodes. It calls a private
+  exhaustive `require_exact_reference_use` guard before appending a `SingletonTerm`; an indexed use
+  raises `INDEXED_REFERENCE_UNSUPPORTED`, so neither aggregation site can manufacture an index-free
+  term.
+- `binding.py` stores the ordered `ReferenceUse` tuple. Cross-file checks read the exact target's
+  document URL; an indexed use cannot be projected into path metadata.
+- `validation/adr002.py` treats both variants as a present dynamic reference, uses exact document,
+  qualified-name, and owner-kind evidence only for the exact variant, and never converts the
+  indexed variant into an exact path or an empty reference list.
+- `expression.py` rebuilds its internal reference consumers over the same tuple. Codegen's
+  calculation compiler, binding lane, and elaborator migrate in D7.
+
+The measured migration at the pinned trees is five direct on-route Codegen helper calls, four
+external Agentic runtime calls (`aggregation.py` twice, `binding.py`, and `validation/adr002.py`),
+plus three internal `expression.py` calls. Counts are sizing evidence, not a closure oracle; the
+static gates must rediscover the final set before deletion.
+
+#### Existing B1-B5/B8 behavior retained
+
+The prior typed operations remain, with the exclusivity correction above:
 
 - B1: a live SysIDE element is recognized by the installed SysIDE `Element` base. Its mapped
   `.isinstance()` result is authoritative. If that call raises, the adapter raises
@@ -310,13 +467,12 @@ The operations are:
 - B2: operator, feature-reference, and feature-chain dispatch use mapped SysIDE metatypes. The
   explicit non-live test-double path uses the same closed mapped names. No production class-name
   substring selects a branch.
-- B3: operands are materialized once with `tuple(expression.operands)`. Failure raises
-  `SemanticEvidenceError(OPERAND_ITERATION_FAILED)` with the expression location. Successful
-  traversal visits every materialized operand.
+- B3: operands are materialized once per visit. Failure and depth exhaustion are distinct typed
+  outcomes with the expression location. Successful traversal visits every materialized operand.
 - B4: `FeatureReferenceExpression.referent` and `FeatureChainExpression.target_feature` are the only
-  identity authorities. The exact element and ID are retained in the evidence record. Membership,
-  node-name, qualified-name, and empty-result ladders are removed. A missing resolved target is
-  `SemanticEvidenceError(RESOLVED_TARGET_MISSING)`.
+  identity authorities. The exact element and ID are retained in `ExactSemanticPath`. Membership,
+  node-name, qualified-name, optional-target, and empty-result ladders are removed. A missing
+  resolved target is `SemanticEvidenceError(RESOLVED_TARGET_MISSING)`.
 - B8: a fact marked resolved but lacking its exact leaf raises
   `SemanticEvidenceError(RESOLVED_LEAF_MISSING)`. It can never be skipped.
 
@@ -333,8 +489,8 @@ The operations are:
 `expression.py` filters a reference only when the exact resolved element's tier is
 `DocumentTier.StandardLibrary`. `DocumentTier.Project` and `DocumentTier.External` are retained.
 `constraint_extraction.py` uses the same adapter operation for its inherited-context filter so the
-repository has no second standard-library classifier. `ExpressionRef.document_path`, document URL,
-source-file path, package name, and qualified name have no classification role.
+repository has no second standard-library classifier. The exact target's document URL, source-file
+path, package name, and qualified name have no classification role.
 
 Removing `STANDARD_LIBRARY_PREFIXES` also removes its lazy barrel/export entry in
 `agentic_mbse.sysml.__init__` and updates the public-export assertion. No dead compatibility export
@@ -346,11 +502,16 @@ unit reference is filtered because its document tier says StandardLibrary.
 
 ### D7. One codegen conversion boundary
 
-`orchestration/elaborated_pipeline.py` gains one function,
-`elaborate_loaded_extractor(extractor, *, model_paths, source_referents, strict)`. Both
+The existing exported `orchestration/elaborated_pipeline.py` function
+`elaborate_loaded_extractor(extractor, *, model_paths, source_referents, strict)` becomes the sole
+conversion boundary. Both
 `elaborate_model_paths` and `elaborate_admitted_sources` load and validate their own source sets,
 then call this same function. Snapshot capture already reaches the admitted-source arm, so live
 generation, snapshot capture, and other admitted-source callers share the conversion.
+
+The sealed from-snapshot route decodes an `InstanceGraph` and never touches a raw expression. It is
+outside the raw-source consumer matrix, and the reachability gate proves it cannot import the site
+enumerator or reference inspector.
 
 `source_referents` is an immutable raw-source-path-to-`root-N/<relative-path>` mapping, not a
 resolver selection. The live arm constructs it from the caller's ordered model roots. The admitted
@@ -359,11 +520,147 @@ and the finished graph; it does not classify documents or choose semantic target
 
 Inside that one boundary:
 
-1. Extract calculation definitions.
-2. Run the internal exact graph builder.
-3. Validate the graph and executable-content gate.
-4. Catch `SemanticEvidenceError`, `ElaborationInvariantError`, and `GraphValidationError` once and
+1. Enumerate the closed set of production expression sites and build one private pre-graph
+   `ExpressionEvidenceInventory` by exact expression-site identity.
+2. Refuse every `IndexedReferenceUse` before calculation-definition extraction, `_ExactElaborator`,
+   or `InstanceGraph` allocation.
+3. Extract calculation definitions with the inventory. The calculation dependency compiler accepts
+   its exact inventory row and performs no raw reference/dependency walk; text and IR reconstruction
+   remain separate consumers of the shared traversal policy.
+4. Run the internal exact graph builder with the inventory and no raw-expression dependency walk.
+5. Validate the graph and executable-content gate.
+6. Catch `SemanticEvidenceError`, `ElaborationInvariantError`, and `GraphValidationError` once and
    convert them to the existing `ElaborationDiagnosticError`.
+
+The inventory covers every live expression-bearing consumer: calculation-definition dependency
+compilation, calculation and constraint bindings, aliases, computed attributes, and constraint
+predicates. Each row is keyed by the owning declaration ID plus a closed role, and contains only
+the `ReferenceUse` tuple returned by D5. Pending elaboration records carry those values instead of a
+raw expression for dependency resolution. `extract_expression_ir` remains a separate call for math
+reconstruction and uses the same depth policy; its output cannot create a dependency edge.
+
+The site enumerator is Codegen-owned contextual routing. It identifies only the closed consumer
+roles above; it does not inspect operands or resolve a target. Calculation extraction receives a
+private inventory lookup rather than a compatibility default. A missing or duplicate required site
+is an invariant failure, so the compiler cannot fall back to `extract_feature_refs` when the
+inventory is incomplete.
+
+The pre-graph scan is not the sole index defense. Every consumer branches exhaustively over the
+closed union, and the exact resolver accepts only `ExactReferenceUse`. An
+`IndexedReferenceUse` reaching a consumer raises `SI_INDEXED_SOURCE_UNSUPPORTED` again. The two
+layers keep the same public diagnostic, so tests distinguish them by control flow:
+
+- Each normal indexed natural-route test instruments the downstream compiler, elaborator, and
+  consumer entry and proves the inventory refuses before any of them runs.
+- A targeted internal test bypasses only the inventory gate, injects an `IndexedReferenceUse` into
+  each consumer adapter, and proves that consumer's exhaustive branch refuses it.
+
+Both proofs must stay green. An end-to-end refusal by itself cannot show which layer caught the
+index and cannot close an omitted preflight category.
+
+#### Binding and deep-path values are valid by construction
+
+The permissive `SourceReferenceEvidence` record is replaced on the exact route by a closed binding
+union:
+
+```python
+BindingSourceEvidence = (
+    ExactBindingSource | IndexedBindingSource | ExpressionBindingSource | LiteralBindingSource
+)
+```
+
+`ExactBindingSource` requires an `ExactReferenceUse`; `IndexedBindingSource` requires an
+`IndexedReferenceUse`; and expression/literal variants have no semantic path field. Common formal
+metadata is composed into each variant. A bare or qualified binding with
+`semantic_reference=None` cannot be constructed, and `_resolve_bindings` has no raw `RuntimeError`
+arm for that state.
+
+Deep literal overrides do not enter the expression union. One Codegen-owned
+`exact_path_from_relationship(redefined_feature)` factory materializes the complete
+`chaining_features` sequence. SysIDE types that selector as a sequence of `Feature`, not an
+expression sequence. The factory requires every materialized segment to be a mapped `Feature` and
+requires one typed target fact for each segment. It raises on the first absent or non-feature middle
+segment and names its ordinal, authored target, and location. A mapped `IndexExpression` receives
+`SI_INDEXED_SOURCE_UNSUPPORTED`; any other absent or non-feature segment receives
+`SI_EVIDENCE_INCOMPLETE`. The factory never filters missing elements and never returns a shortened
+path. This is the sole reviewed Codegen owner of that relationship selector.
+
+The deep-override proof has two parts. A kept real-model contract test shows that every parsed deep
+override segment is a `Feature` and that no `IndexExpression` can enter `chaining_features`. A
+defensive factory test forces a mapped `IndexExpression`, which is necessarily non-`Feature`, and
+requires `SI_INDEXED_SOURCE_UNSUPPORTED` before any target fact or shortened path is produced.
+Structural exclusion and explicit refusal are both recorded; “not an expression route” is not
+accepted as the whole index proof.
+
+The dead name/path reconstruction cluster on the live `SysMLDataExtractor`
+(`_extract_binding_source`, `_parse_expression_to_path`, `_extract_simple_reference`, and
+`_build_reference_path`) has no `C_prod` caller and is deleted. The three audited off-route
+modules (`usage_extractor.py`, `computed_attribute_extractor.py`, and `hierarchy_resolver.py`) are
+not silently included in a public-route claim: they remain separately inventoried and a static
+reachability test proves that neither raw-source arm imports or calls them.
+
+#### Checked consumer and ownership manifests
+
+Each repository keeps a local, source-controlled raw-selector manifest in its boundary test. A row
+is `(module, qualified function, selector, semantic owner, route state, closure proof)`. A live
+row's proof is its public failure test; an off-route row's proof is the reachability exclusion.
+Agentic owns operand materialization, mapped metatype/index recognition, exact expression targets,
+authored reference form, and the shared depth budget. Codegen owns only the reviewed contextual
+exceptions: redefinition endpoints, multiplicity contextualization, enumeration discrimination,
+and the total deep-relationship-path factory. Off-route rows are explicit and cannot satisfy a
+live-route row.
+
+Agentic also keeps a distinct typed-surface row for `FeatureReferenceFact.target`. That optional
+field remains available only to the existing math-oriented `ExpressionIR`; it is non-authoritative
+for semantic dependency evidence. The exact-route modules may neither import it nor accept it. This
+row is not a raw-selector exemption and cannot make the raw-selector equality test green.
+
+The boundary gates use the Python AST to discover direct attributes for `.operands`, `.referent`,
+`.target_feature`, and `.chaining_features`; literal `getattr` calls for those names; simple local
+or imported aliases of either form; and runtime metatype-name dispatch in the raw-SysIDE module
+set. Every non-literal `getattr` in that module set is rejected because its selector cannot be
+reviewed. Mutation tests introduce one direct read, one string-literal `getattr`, one local alias,
+one imported alias, and one dynamic `getattr`; every mutation must kill the gate. The discovered
+tuple set must equal the reviewed manifests exactly. A new selector, missing manifest row, stale
+row, unexercised exemption, or live import of an off-route module fails.
+
+Closure has three jointly load-bearing legs:
+
+1. **Acquisition.** The repository raw-selector inventory equals the reviewed manifest exactly.
+   Its public-root-reachable subset equals the manifest's live subset, with zero unowned reads.
+   Every live row names a green public failure proof, and every off-route row has a green
+   reachability exclusion. The AST evasion mutations above are green.
+2. **Representation.** Production exposes only the closed `ReferenceUse` and binding-source
+   variants. The deleted permissive helper/fact identifiers, their exports, compatibility aliases,
+   and `has_index_segment: bool` are absent. Scoped strict type checks and runtime constructor tests
+   prove that an index marker cannot be represented as an exact reference.
+3. **Routes.** The natural-route matrices cover every live, admitted, and capture consumer. They
+   prove both inventory-before-consumer refusal and the bypassed-inventory consumer backstop.
+
+No leg substitutes for another. Work stops only when all three are green. This is stronger than one
+exception converter or one manifest: it proves that the typed owner is the only legal evidence-
+acquisition route and that weaker evidence cannot be reconstructed downstream.
+
+#### Scoped strict type boundary
+
+Strict checking applies only to the small closed-variant boundary files introduced or rewritten by
+this revision. Agentic places the error/value types and inspector entry in `errors.py` and new
+`sysml/reference_use.py`. Codegen puts the closed binding union/factory in new
+`extraction/binding_source.py` and the evidence inventory,
+site identity, and exact-only resolver adapter in new `elaboration/expression_evidence.py`. The
+large existing `elaboration/elaborate.py` calls that adapter; it is not relabeled as a strict module.
+
+The scoped lane must return zero errors:
+
+```bash
+uv run mypy --strict src/agentic_mbse/errors.py src/agentic_mbse/sysml/reference_use.py
+uv run --extra dev mypy --strict src/sysml_codegen/extraction/binding_source.py \
+  src/sysml_codegen/elaboration/expression_evidence.py
+```
+
+Each command runs in its own repository. The existing repository-wide mypy command runs separately
+and must match or improve its recorded baseline. A green scoped lane cannot hide a new repo-wide
+error, and pre-existing repo-wide errors cannot waive the scoped zero-error gate.
 
 The current public `elaboration.elaborate()` call shape is replaced atomically by this loaded-
 extractor boundary and all repository callers migrate. The raw graph builder becomes private and
@@ -388,18 +685,20 @@ Evidence integrity is not a leniency choice. In `strict=True` and `strict=False`
 type, stable-ID, and graph-integrity failures raise the same public `ElaborationDiagnosticError` and
 produce no graph or snapshot. Lenient mode continues to collect only the already-supported
 reference/readiness diagnostics for which a complete graph remains meaningful. Tests pin both
-modes through live and admitted-source arms.
+modes through live and admitted-source arms. Snapshot capture adds an atomic-output assertion: on
+failure, no snapshot path is created or changed.
 
 ### D8. Diagnostic ownership
 
 | Condition | Public code | Owner |
 |---|---|---|
-| B1-B5/B8 incomplete parser evidence | `SI_EVIDENCE_INCOMPLETE` | agentic cause; codegen public rendering |
+| B1-B5/B8 incomplete parser evidence or depth exhaustion | `SI_EVIDENCE_INCOMPLETE` | agentic cause; codegen public rendering |
+| Incomplete deep relationship path | `SI_EVIDENCE_INCOMPLETE` | codegen total path factory; codegen public rendering |
 | Missing/multiple/unsupported exact typing | `SI_TYPE_INVALID` | codegen extraction/elaboration |
 | Missing/ambiguous contextual occurrence or producer | `SI_OCCURRENCE_MISSING` / `SI_OCCURRENCE_AMBIGUOUS` | codegen elaboration |
 | Invalid redefinition family | `SI_REDEFINITION_INVALID` | codegen slot index |
 | Unresolved/unsupported multiplicity | existing `SI_MULTIPLICITY_*` code | codegen occurrence construction |
-| Valid indexed element expression not implemented | `SI_INDEXED_SOURCE_UNSUPPORTED` | codegen pre-graph gate |
+| Valid indexed element expression not implemented | `SI_INDEXED_SOURCE_UNSUPPORTED` | agentic closed variant; codegen inventory/consumer refusal and rendering |
 | Unsupported generated root output | `EXIT_POINT_TYPE_UNSUPPORTED` | codegen generation preflight |
 
 Every public refusal includes exact reference identity when available and a root-relative
@@ -408,10 +707,21 @@ branch before production starts.
 
 ### D9. B9 fails before output mutation
 
-`cli._generate_package_from_graph` adds `_preflight_exit_point_types(graph)` beside the existing
-preflights and before link checks, constraint-plan rendering, output clearing, directory creation,
-or any write. It visits every module and every output. For `field_name == "root"`, only
-`float`, `int`, `str`, and `bool` are valid registry primitive types.
+The graph is the sole authority for registry wrapper types. The pure
+`required_exit_point_wrapper_types(graph)` operation visits every module and output, validates root
+outputs against the one `_EXIT_POINT_WRAPPERS` mapping, and returns the sorted unique wrapper tuple.
+No public or private registry-generation function accepts a caller-supplied type collection.
+
+`cli._generate_package_from_graph` calls this operation beside the existing preflights and before
+link checks, constraint-plan rendering, output clearing, directory creation, or any write.
+`generate_registry(graph, package_name, template_env, output_path)` calls the same operation again
+inside the exported generation seam and uses its returned tuple directly. Re-deriving from the same
+immutable graph is not a second authority; accepting another value is forbidden.
+
+The `generate_registry_from_graph` and `generate_registry_function` aliases either remain direct
+aliases of that four-argument function or are removed. They cannot wrap it with a fifth argument.
+For `field_name == "root"`, only `float`, `int`, `str`, and `bool` are valid registry primitive
+types.
 
 An unsupported type raises `CodeGenerationError` with one stable token and fields:
 
@@ -420,8 +730,11 @@ EXIT_POINT_TYPE_UNSUPPORTED: module='<module name>' output='<field name>/<channe
 python_type='<type>' source='root-N/<relative-path>:<line>'
 ```
 
-The warning branch in `generation/registry.py` is deleted. Registry generation may assume the
-preflight passed and treats a later miss as a programming invariant, not a second public behavior.
+At `C_base`, the collector already rejects an unsupported root type with an untyped `RuntimeError`;
+there is no warning-and-omit branch. The change replaces that exception with the named
+`CodeGenerationError` and moves graph-derived validation into every exported generation seam. A
+direct exported call on an unsupported graph raises the same error; it never relies on a caller
+having run CLI preflight first.
 
 The public proof calls `cmd_generate` with the exact pipeline-context builder replaced by a forced
 context whose graph contains the unsupported root output. This retains the real public command,
@@ -436,11 +749,18 @@ injecting only the otherwise unrepresentable invalid graph. It asserts:
 
 The proof lives in `tests/conformance/test_generation_exit_type_preflight.py`.
 
+A second API proof inspects every exported registry callable and shows the caller-supplied
+`exit_point_primitive_types` parameter is absent. Graph mutations covering no root outputs, one
+primitive, repeated primitives, and multiple primitive types produce exactly the graph-derived
+sorted set. The empty, incorrect, or duplicate caller accounts reproduced by the audit are
+unrepresentable because there is no input slot for them.
+
 ### D10. Retained probes and production gate
 
-The three licensed pre-production probes, B2, B8a, and B10, are committed and retained under
-`.project/active/stop-reinventing-the-parser/probes/` before production code changes. B8b is the
-separate post-D5 regression specified alongside them below.
+The three licensed pre-production probes, B2, B8a, and B10, were committed and run before the
+failed candidate's production changes. Their locked inputs and measured verdicts remain historical
+evidence for D1-D4 and B10; Revision 6 does not reinterpret them as evidence-edge closure. They are
+rerun only if a locked input changes. B8b remains the separate post-D5 regression specified below.
 
 #### B2 containment-address feasibility
 
@@ -485,11 +805,10 @@ arms. It must observe at least one unit-bearing feature from each file, prove ev
 direct `element.document.url`, and prove `_source_file` selects that exact URL without consulting
 `model_paths`.
 
-This design has one permitted measured verdict: `DELETE_UNREACHABLE`. The verdict file must contain
-that literal, the probe/fixture commit SHA, SysIDE version, counts, and per-file root-relative
-evidence. Only then is the sole-glob branch deleted and no replacement is added. If the measured
-result differs, production does not start and this design returns for revision. The probe has not
-yet run, so this is a production gate rather than a claim that B10 is already proved unreachable.
+The recorded verdict is `DELETE_UNREACHABLE`, with the probe/fixture commit SHA, SysIDE version,
+counts, and per-file root-relative evidence. The sole-glob branch therefore stays deleted and no
+replacement is added. If a locked input changes and a rerun differs, implementation stops and this
+design returns for revision.
 
 The canonical pre-change verdict files are `verification/probes/b2-verdict.json`,
 `b8-real-verdict.json`, and `b10-verdict.json`. Probe scripts and verdicts remain after
@@ -500,35 +819,47 @@ implementation. B8b remains as ordinary kept agentic and codegen regression test
 | Data or invariant | Single owner | Consumers |
 |---|---|---|
 | SysIDE metatype truth and `DocumentTier` | SysIDE through agentic adapter | agentic expression/fact extraction |
-| Complete semantic evidence and public evidence error | agentic-mbse | codegen boundary |
+| Operand materialization, exact expression targets, index classification, authored form, and expression depth | Agentic `inspect_reference_uses` and its shared traversal primitives | codegen evidence inventory; Agentic IR/reconstruction entries |
+| Closed `ReferenceUse` values and public evidence error | agentic-mbse | codegen boundary and exact resolver |
+| Pre-graph expression-site coverage | Codegen `ExpressionEvidenceInventory` | calc-definition compiler, bindings, aliases, computed attributes, predicates |
+| Closed binding-source variants | Codegen exact binding factory | pending-binding resolution and readiness screening |
+| Complete deep relationship paths | Codegen `exact_path_from_relationship` | deep literal override resolution |
 | General semantic-owner selection | codegen `elaboration/occurrence.py` | attachment, formals, occurrence builder, elaborator |
 | Closed owner-kind/identity validation for `ContainmentAddress` | `build_containment_address` only | multiplicity and producer/address resolution |
 | Feature slot and occurrence population | existing `FeatureSlotIndex` / `OccurrenceIndex` | address instantiation |
 | Calculation output producer records | codegen exact elaborator | leaf/reference resolution |
+| Raw-selector ownership and public-route membership | repository-local checked manifests | static boundary gates and final audit |
 | Public evidence-error rendering | `elaborate_loaded_extractor` | live and admitted-source routes |
-| Exit-point type refusal before writes | codegen generation preflight | CLI live/snapshot generation |
+| Registry wrapper set | `required_exit_point_wrapper_types(graph)` | CLI preflight and every exported registry seam |
 | TEAx behavior | generated package and Fusion tests | final product verification |
 | Cross-repository artifact/import provenance | `verification/dependencies.json` and execution manifest | isolated test runners and Fusion lock proof |
 
 Agentic does not choose codegen occurrences. Codegen does not infer parser metatypes, reference
-identity, or standard-library status. Fusion does not patch around either repository.
+identity, authored reference form, index presence, or standard-library status. Fusion does not
+patch around either repository.
 
 ## Cross-repository API and independent landing
 
 ### Agentic semantic contract
 
-Agentic makes a backward-compatible public API addition and behavior correction, then bumps its
+Agentic makes an intentional pre-1.0 breaking contraction and behavior correction, then bumps its
 package version from `0.1.2` to `0.1.3` in `pyproject.toml`, `agentic_mbse.__version__`, and
-`uv.lock`. It exports `SEMANTIC_EVIDENCE_API_VERSION = "semantic-evidence/v1"`,
-`SemanticEvidenceCode`, and `SemanticEvidenceError`. The standalone agentic test suite, type check,
-and lint must pass from its committed tree before codegen changes consume it.
+`uv.lock`. It exports `SEMANTIC_EVIDENCE_API_VERSION = "semantic-evidence/v2"`,
+`SemanticEvidenceCode`, `SemanticEvidenceError`, `ExactSemanticPath`, `ExactReferenceUse`,
+`IndexedReferenceUse`, and `inspect_reference_uses`. Version `0.1.3` is retained because the failed
+candidate was never the certified or shipped artifact; Revision 6 replaces that candidate before
+the first release of this API. `extract_feature_refs`, `feature_reference_facts`,
+`feature_chain_facts`, `ResolvedSemanticReferenceFact`, `ExpressionRef`, and
+`BindingInfo.references` are removed from the production surface and exports. The scoped strict
+lane, standalone tests, and lint must pass from the committed tree before Codegen consumes it. The
+repository-wide type check must match or improve its recorded baseline.
 
 ### Codegen pin and dependency contract
 
 Codegen changes `agentic-mbse>=0.1.2` to `agentic-mbse>=0.1.3,<0.2` in `pyproject.toml` and refreshes
 `uv.lock`. `_upstream_pins.py` adds
 `AGENTIC_MBSE_PACKAGE_VERSION = "0.1.3"` and
-`SEMANTIC_EVIDENCE_API_VERSION = "semantic-evidence/v1"` to `__all__`, and removes its obsolete
+`SEMANTIC_EVIDENCE_API_VERSION = "semantic-evidence/v2"` to `__all__`, and removes its obsolete
 claim that the dependency floor is not real. `test_upstream_pins.py` compares the installed
 `agentic_mbse.__version__` and semantic-evidence API constant to those exact pins. An editable
 sibling remains a developer convenience only and is never landing evidence.
@@ -661,16 +992,16 @@ occurrence rules:
 
 The artifact set is accepted only after these clean runs:
 
-1. agentic source archive: its full pytest suite, type check, and lint. From the fresh extracted
-   archive root, the runner uses the repository's `SYSIDE_LICENSE_KEY` environment pattern and the
-   documented empty marker override that replaces `pyproject.toml`'s `-m 'not slow'` default
-   (`../agentic-mbse/CLAUDE.md:52-65`; `../agentic-mbse/pyproject.toml:93-100`):
+1. agentic source archive: the fast suite, focused semantic-evidence tests, type check, and lint.
+   From the fresh extracted archive root, the runner uses the repository's `SYSIDE_LICENSE_KEY`
+   environment pattern:
 
    ```bash
    set -a
    source /home/reid/1cfe/agentic-mbse/.env
    set +a
-   uv run pytest tests/ -m ""
+   uv run pytest tests/ -m "not slow"
+   uv run mypy --strict src/agentic_mbse/errors.py src/agentic_mbse/sysml/reference_use.py
    uv run mypy src/
    uv run ruff check src/ tests/
    ```
@@ -678,13 +1009,16 @@ The artifact set is accepted only after these clean runs:
    The sourced file supplies the license secret only. It is not copied into an archive or report,
    and no Python import may resolve under that sibling checkout. `tests/conftest.py:1-8` retains its
    `load_dotenv()` behavior, while the exported value makes the isolated run independent of a
-   copied `.env`. A missing license key, any deselected slow test, or any license skip fails the
-   gate;
+   copied `.env`. A missing license key or an undeclared parser-test skip fails the gate.
+   **[OWNER-VERBATIM, 2026-08-17]** “do not rerun the PDF suite anymore.” The slow PDF/HTML corpus
+   suite is permanently outside parser-work validation and is not invoked or counted here. The 15
+   paid/network cases remain unrun external inputs, not passes or skips;
 2. 1costingfe source archive: its complete pytest suite and configured lint;
 3. TEAx source archive: the root-configured simkit and battery-demo suites;
-4. codegen source archive: default unit/conformance suite, licensed real-model suite, snapshot/live
-   parity, generated-package tests, and the complete `execution` marker lane using the manifest and
-   extracted TEAx source;
+4. codegen source archive: scoped strict checking of `extraction/binding_source.py` and
+   `elaboration/expression_evidence.py`, the recorded repository-wide mypy baseline, default
+   unit/conformance suite, licensed real-model suite, snapshot/live parity, generated-package
+   tests, and the complete `execution` marker lane using the manifest and extracted TEAx source;
 5. Fusion source archive: `uv lock --check`, full configured pytest suite, model validation, and the
    final generated Fusion/TEAx execution proofs using installed agentic/codegen/1costingfe wheels.
 
@@ -692,6 +1026,10 @@ The run records `pip freeze`, artifact/manifest digests, Python, SysIDE, TEAx/si
 agentic, codegen, and Fusion versions, resolved import files, test commands, statuses, and skips. An
 unexpected skip or any sibling working-tree import fails the gate. Model sources change only if the
 semantic tests find a real violation; the Fusion dependency/lock changes above are mandatory.
+
+For both Agentic and Codegen, the scoped strict command must return zero. The repository-wide mypy
+command is a separate baseline comparison and must introduce no new errors. Neither result is
+reported as the other.
 
 ## Baseline, fixture, and transition evidence
 
@@ -707,28 +1045,26 @@ semantic tests find a real violation; the Fusion dependency/lock changes above a
 | TEAx / teax-simkit | `744745f895677f3344b9884627369a6a47ed987f` | immutable execution source; workspace/package `0.1.0` |
 | 1costingfe | `02543850089be175ea7c28b92a8b2a4184e1637e` | immutable runtime/test source; package `0.1.0` |
 
-The codegen baseline is the production parent. No baseline is recaptured after production code
-changes and then called “before.”
+The codegen comparison baseline is the production parent. It remains the historical “before” tree;
+it is not the Revision-6 branch base, which is `C_base` above. No baseline is recaptured after
+production code changes and then called “before.”
 
 ### Probe/fixture commit lock
 
-The first implementation commit in codegen contains only retained probes, their real fixtures, the
-fixture inventory, and baseline-capture tooling. Its parent is the codegen production baseline
-above. After that commit exists, a second manifest-only commit writes the first commit's actual full
-SHA to `verification/probe-fixture-lock.json` as `probe_fixture_commit`, records the parent relationship,
-and changes no probe, fixture, capture tool, or production source. This avoids the impossible
-self-referential requirement that a commit contain its own SHA.
+The retained probe/fixture commit already exists at
+`20f9e60a19b30bc1ec9a27aacb08380f4bc45602`, with comparison-baseline parent
+`7b29d8b636e284364a4fdce9079f153c51c867ea`. Its manifest-only lock child is
+`43edf9bde4db44e7973458ada732d2cd75e764f6`. Both are ancestors of `C_base` and are preserved in
+place; Revision 6 does not recreate them or call a new commit the pre-change probe boundary.
 
-Before any probe runs, the runner requires `probe_fixture_commit` to be 40 lowercase hexadecimal
-characters, equal to the lock commit's parent, and a tree whose recorded probe/fixture hashes match.
-The lock commit SHA is recorded externally with the probe run and then in each verdict. The plan
-cannot advance on a dirty tree or a mismatch. This freezes the later probe/fixture commit without
-inventing a SHA before it exists.
+At Revision-6 gate 1, the committed runner requires `probe_fixture_commit` to equal that locked
+40-character SHA, requires its recorded parent relationship, and recomputes every probe/fixture
+hash. The recorded verdicts must name the same probe and lock commits. A dirty tree or mismatch
+stops the plan. The probes rerun only under D10's locked-input rule.
 
 The lock stores SHA-256 for every probe, every source fixture file in the 37 canonical roots, every
 added fixture file, the item fixture manifest, and the canonical batch manifest. Any changed byte
-invalidates the verdicts and requires a new probe/fixture commit, lock commit, and rerun before
-production.
+invalidates the verdicts and returns the item to design before any replacement lock or rerun.
 
 ### Closed fixture inventory
 
@@ -774,8 +1110,9 @@ refusal record for every inventory root. All evidence paths are repository-root-
 
 ### Baseline capture
 
-At the production baseline, capture the 37 canonical roots. At the probe/fixture commit, capture
-the six added roots while production source remains byte-identical to the baseline parent. Store:
+The retained baseline record captured the 37 canonical roots at the comparison baseline and the
+six added roots at the probe/fixture commit while production source was byte-identical to the
+baseline parent. Revision 6 preserves that record. It stores:
 
 - source commit, fixture path/hash, Python/SysIDE/agentic versions;
 - graph codec bytes and semantic node/edge identity rows;
@@ -795,12 +1132,13 @@ byte-identical.
 | A2 calculation output | nearest or globally sole calculation may answer | exact output-index record contextualized by usage owner and consumer domain | `test_occurrence_calc_domain_derivation.py`; public mutation test |
 | A3 lineage miss | one descendant may answer | lineage-local result or `SI_OCCURRENCE_MISSING` | expanded `test_definition_owned_reference_positions.py` |
 | A4 package/model root | model root may answer a consumer miss | direct one-step package-owned no-prefix result; nested no-prefix refusal | B2 probe and `test_occurrence_domain_derivation.py` |
-| A5 indexed expression | index is ignored | pre-graph `SI_INDEXED_SOURCE_UNSUPPORTED` | `test_expression_evidence_integrity.py` |
+| A5 indexed expression | one input route refuses while computed/alias/predicate routes may erase the index | every expression site returns `IndexedReferenceUse` and refuses pre-graph; consumer backstop also refuses | consumer matrix in `test_expression_evidence_integrity.py` |
 | A6 multiplicity writer | unrelated sole writer may answer | owner-address writer or `SI_MULTIPLICITY_UNRESOLVED` | `test_occurrence_multiplicity_authority.py`; public mutation test |
-| B1-B5 evidence | fallback, partial traversal, name recovery, or QN filter continues | exact evidence/DocumentTier or `SI_EVIDENCE_INCOMPLETE` | agentic adapter/expression tests; codegen boundary tests |
+| B1-B5 evidence | fallback, partial traversal, raw unit/depth walk, optional target, or QN filter continues | exact evidence/DocumentTier or `SI_EVIDENCE_INCOMPLETE`; no alternate raw route | agentic owner tests; codegen consumer/ownership matrix |
+| Deep relationship path | missing middle segment is filtered | total exact path or `SI_EVIDENCE_INCOMPLETE` at that segment | public deep-override regression |
 | B6/B7 metadata | weak type or skipped redefinition identity may pass | sole qualified type and one exact slot family, or named refusal | `test_feature_typing_integrity.py`; occurrence tests |
 | B8 leaf | resolved fact may be skipped | pre-change real corpus is total; post-D5 missing leaf raises the typed error | B8a retained real probe; B8b agentic/codegen regressions |
-| B9 exit type | warning plus incomplete registry | `EXIT_POINT_TYPE_UNSUPPORTED` before mutation | `test_generation_exit_type_preflight.py` |
+| B9 exit type | CLI preflight is correct but exported registry accepts a second caller account | graph-derived wrappers in every seam; `EXIT_POINT_TYPE_UNSUPPORTED` before mutation | `test_generation_exit_type_preflight.py`; exported-API proof |
 | B10 source origin | sole glob may supply a file | measured `DELETE_UNREACHABLE`, then fallback deletion | B10 retained probe and metadata test |
 
 A4 has its own row because package anchoring and consumer-root fallback are separate behavior from
@@ -850,10 +1188,10 @@ leg.
 
 - Agentic adapter tests force a live `.isinstance()` exception and inspect the preserved cause.
   Separate non-live test doubles prove the mock path.
-- Real operator, feature-reference, and feature-chain nodes prove mapped dispatch. A failing operand
-  iterator proves no partial results escape.
-- Real bare and chain references retain exact IDs. Forced missing referent/target and missing leaf
-  cases raise `SemanticEvidenceError` with reference and location.
+- Real operator, feature-reference, feature-chain, and `IndexExpression` nodes prove mapped
+  dispatch. A failing operand iterator and depth-exhausted tree prove no partial result escapes.
+- Real bare and chain references construct `ExactReferenceUse`. Forced missing referent, target,
+  leaf, and middle segment cases raise `SemanticEvidenceError` with reference and location.
 - Real StandardLibrary, Project, and External document tiers prove B5. A project document whose
   package is named `SI` remains. Missing, `None`, and foreign tier values fail.
 - Boolean/Integer/Real/String qualified typings succeed. User-defined `Real`, zero, multiple, and
@@ -863,8 +1201,42 @@ leg.
   snapshot, or generated output on evidence-integrity failure.
 - B2, B8a, and B10 pre-change probes include their anti-vacuity counts and kill verdicts. B8b's
   forced regression runs only after D5 exists.
-- B9 asserts token, module/output identity, type, file:line, status `1`, and byte-identical output
-  preservation as specified in D9.
+- B9 asserts token, module/output identity, type, file:line, status `1`, byte-identical output
+  preservation, graph-derived wrapper-set changes, and the absence of any caller type-set parameter
+  on every exported alias.
+
+The natural-route closure matrix is mandatory; calling an internal helper is not a substitute:
+
+| Consumer | Exact positive | Indexed refusal | Operand/depth failure | Missing exact target | Public arms |
+|---|---|---|---|---|---|
+| calculation-definition dependency compiler | required | required | required | required | live + admitted/capture |
+| calculation and constraint binding | required | required | required where structural | required | live + admitted/capture |
+| alias | required | required | required | required | live + admitted/capture |
+| computed attribute | required | required | required | required | live + admitted/capture |
+| constraint predicate | required | required | required | required | live + admitted/capture |
+| deep literal override | required | structural exclusion + forced mapped-index refusal | not an expression route | missing middle required | live + admitted/capture |
+
+Every failing cell asserts the exact public diagnostic, authored reference, root-relative
+`file:line`, preserved cause chain, and no returned graph. The capture arm additionally asserts no
+snapshot file creation or byte change. The matrix includes a unit wrapper and a nested index, and
+runs strict and lenient modes wherever the public API offers both.
+
+For every indexed expression row, the normal public route proves the inventory refuses before the
+compiler, elaborator, or consumer runs. Its paired internal test bypasses the inventory and proves
+the named consumer's closed-union backstop. The deep-override row instead pairs a real-model
+`Feature`-only shape proof with a forced mapped `IndexExpression` refusal at the total path factory.
+
+Deletion of the Agentic helpers has its own natural-consumer matrix:
+
+| Agentic consumer | Exact behavior | Indexed behavior | Closure proof |
+|---|---|---|---|
+| aggregation reference and chain sites | retain exact root, members, and leaf before term construction | refuse before `SingletonTerm` | both executable sites |
+| binding extraction | retain ordered uses and exact target document identity | retain closed variant; never project to a path | cross-file and same-file cases |
+| ADR002 validation | use exact owner/document metadata | count as dynamic but never flatten to exact or empty | ordinary and dynamic scan routes |
+| internal expression/IR entries | consume the shared traversal result | preserve closed variant or issue the named refusal required by that entry | all three internal call sites |
+
+Every row runs through its natural public or package entry. Symbol-absence tests then prove that no
+old helper, fact type, bool marker, alias, or barrel export remains.
 
 ### Static removal checks
 
@@ -877,22 +1249,33 @@ Tests fail if production code retains:
 - first-typing/simple-name/unknown-pass-through type mapping;
 - skipped redefinition endpoints;
 - the sole-glob source fallback;
-- the registry warning for unsupported root outputs.
+- the untyped registry collector failure for unsupported root outputs;
+- a registry parameter or context field carrying caller-supplied exit-point types;
+- the deleted Agentic helper/fact identifiers, `has_index_segment`, their aliases, or their exports;
+- a raw SysIDE selector not equal to one reviewed ownership-manifest row;
+- literal or dynamic `getattr` and local/import alias routes that evade raw-selector ownership;
+- a stale ownership-manifest row, an unexercised exemption, or a live edge to an off-route module;
+- the dead `SysMLDataExtractor` name/path reference-reconstruction helper cluster.
+
+The scoped strict gates are also required static checks. Symbol absence cannot substitute for
+closed-variant exhaustiveness, and a strict type result cannot substitute for route coverage.
 
 ## File-level implementation map
 
 | Repository / files | Change |
 |---|---|
-| agentic `src/agentic_mbse/errors.py`, `__init__.py` | Public semantic-evidence enum, error, and API version |
-| agentic `sysml/syside_adapter.py`, `sysml/__init__.py` | Live metatype propagation, mapped dispatch support, direct `document_tier`, obsolete export removal |
-| agentic `sysml/expression.py`, `constraint_extraction.py` | Total traversal, exact targets, resolved leaf failure, DocumentTier filtering |
-| agentic `pyproject.toml`, `uv.lock`, tests, `docs/patterns/plant-idiom.md` | 0.1.3 contract, proofs, and supported/refused modeling shapes |
+| agentic `src/agentic_mbse/errors.py`, `sysml/reference_use.py`, `data_models.py`, `__init__.py` | Public semantic-evidence enum, error, API version, provenance-complete closed reference-use values, and deletion/de-export of the permissive facts and bool marker |
+| agentic `sysml/syside_adapter.py`, `sysml/__init__.py` | Live metatype propagation, mapped index dispatch, direct `document_tier`, and obsolete export removal |
+| agentic `sysml/expression.py`, `aggregation.py`, `binding.py`, `validation/adr002.py`, `constraint_extraction.py` | One reference inspector, shared traversal budget, total operand materialization, exact targets, and migration of every production helper consumer to the closed union |
+| agentic `pyproject.toml`, `uv.lock`, tests, test ownership manifest, `docs/patterns/plant-idiom.md` | 0.1.3 package contract, semantic-evidence/v2 proofs, selector closure, and supported/refused modeling shapes |
 | codegen `elaboration/occurrence.py` | General owner selector; containment-local kind/identity validation; address resolver; exact multiplicity owner; strict redefinition identities |
-| codegen `elaboration/elaborate.py`, `elaboration/__init__.py` | Producer index, address-only reference resolution, raw private graph builder |
+| codegen `elaboration/elaborate.py`, `elaboration/expression_evidence.py`, `expression_compiler.py`, `elaboration/__init__.py` | Producer index, strict expression-evidence inventory/adapter, exact-reference-only resolution, total deep-relationship path factory, and raw private graph builder |
+| codegen `extraction/binding_source.py`, `elaboration/binding_evidence.py`, `source_evidence.py`, `unit_annotation.py` | Strict closed binding-source variants, removal of optional semantic paths, and typed-IR-only unit unwrapping |
 | codegen `orchestration/elaborated_pipeline.py` | Single evidence conversion boundary for live/admitted extraction and elaboration |
-| codegen `extraction/extractor.py`, `feature_metadata.py` | Exact typing; B10 fallback deletion after verdict |
-| codegen `cli/__init__.py`, `generation/registry.py` | B9 fail-before-mutate preflight and warning deletion |
+| codegen `extraction/extractor.py`, `feature_metadata.py` | Delete dead reference reconstruction helpers; exact typing; B10 fallback deletion after verdict |
+| codegen `cli/__init__.py`, `generation/registry.py` | Graph-derived exit-wrapper authority on every exported route and replacement of the untyped collector failure with fail-before-mutate `CodeGenerationError` |
 | codegen `_upstream_pins.py`, `pyproject.toml`, `uv.lock` | Exact agentic package/API pins, codegen 0.1.1, dependency minimum, lock |
+| codegen tests and local test ownership manifest | Dual-layer natural-route closure, deep-path index exclusion/refusal, exact selector-manifest equality with AST-evasion mutations, scoped strict gates, off-route reachability, and direct exported-registry rejection tests |
 | codegen `tests/execution/environment_pins.py`, `tests/helpers/teax_discovery.py`, execution tests | Manifest-pinned immutable source/wheel imports; explicit TEAx path; rejection tests |
 | codegen fixtures/tests/probes and `C_prod` verification files | Closed inputs, retained probes, A/B/public proofs, probe lock, expected transitions, and production tests |
 | codegen `C_evidence` verification files | Final dependency/wheelhouse record, execution and independent-green results, reconciliation ledger, and non-self-hashing evidence lock only |
@@ -906,15 +1289,20 @@ The same landing unit updates:
 
 - `docs/architecture/overview.md` and reference documents 00, 01, and 19 for the one owner walk,
   containment address, producer index, conversion boundary, and exact typing/evidence behavior.
-- `docs/architecture/reference/20-module-registry-generation.md` REQ-REG-09. Replace the warning
-  contract with refusal before output mutation, including `EXIT_POINT_TYPE_UNSUPPORTED`, identity,
-  location, status, and preservation proof.
+- `docs/architecture/reference/20-module-registry-generation.md` REQ-REG-09. Correct the stale
+  warning wording: the baseline collector raised an untyped `RuntimeError`. Document its replacement
+  by graph-derived `CodeGenerationError` refusal before output mutation, including
+  `EXIT_POINT_TYPE_UNSUPPORTED`, identity, location, status, and preservation proof.
 - `docs/architecture/verification-matrix.md` REQ-REG-09. Replace
   `test_hygiene_tail_registry.py` with
   `tests/conformance/test_generation_exit_type_preflight.py` and record PASS only after the complete
   public proof passes.
 - Diagnostic reference documentation for `SI_EVIDENCE_INCOMPLETE`, `SI_TYPE_INVALID`,
   `SI_INDEXED_SOURCE_UNSUPPORTED`, and `EXIT_POINT_TYPE_UNSUPPORTED`.
+- A checked-in semantic-selector ownership manifest in each production repository. Each row names
+  the raw selector, typed owner, route state, and public failure proof; the manifest and AST/alias/
+  `getattr` discovery must agree exactly. Agentic separately records the math-only optional IR target
+  as non-authoritative and forbidden at the exact-route boundary.
 - Agentic's single authoritative `docs/patterns/plant-idiom.md` with supported bare, qualified,
   feature-chain, package, definition-domain, plural, and refusal shapes. Indexed form is documented
   as valid but not implemented.
@@ -927,35 +1315,72 @@ The same landing unit updates:
 
 ## Sequencing and landing gates
 
-1. **Freeze inputs.** Record the production SHAs, create the probes/fixtures-only commit, create the
-   manifest-only `probe-fixture-lock.json` commit that records its actual SHA and all hashes,
-   capture before baselines, and validate the closed inventory.
-2. **Run pre-production kill gates.** Run B2, B8a real-corpus totality, and B10 against the frozen
-   pre-change commits. All anti-vacuity checks pass, B8a records `REAL_CORPUS_TOTAL`, and B10 records
-   exactly `DELETE_UNREACHABLE`, or the plan stops and returns to design.
-3. **Land agentic evidence and B8b.** Add the public error/API version, B1-B5 behavior, the
-   post-D5 forced `RESOLVED_LEAF_MISSING` regression, version/lock/docs, standalone tests, clean
-   commit, source archive, and wheel.
-4. **Adopt the codegen boundary.** Pin/install the agentic wheel, update dependency metadata, replace
-   the public elaboration call shape, and prove strict/lenient live/admitted conversion.
-5. **Replace occurrence resolution.** Add D1-D4, producer index, A1-A6 tests, and public mutation
-   proofs. Delete the selector and scan branches in the same change.
-6. **Finish evidence and generation integrity.** Land B6/B7, delete B10's proved-unreachable glob,
-   add B9 preflight, and run all B tests.
-7. **Reconcile outputs and docs.** Complete the production-tracked expected-transition file,
-   compare every baseline byte, update required docs/backlog rows, and prepare the historical
-   reconciliation rows for the later evidence-only record. Seal `C_prod` only after all production
-   code, tests, docs, fixtures, package metadata, pins, and locks are complete.
-8. **Prove and attest the acyclic landing.** Build and hash the codegen source archive and wheel
-   from `C_prod`. Make Fusion pin `C_prod`, land `F_final`, build and hash its source archive, and
-   verify Fusion. Run every required isolated suite from the declared source/wheel artifacts and
-   write the six final verification files. Land only those files as direct-child `C_evidence`, then
-   run the four audit boundary checks above. A failure changes the owning production repository and
-   repeats from a new `C_prod` or `F_final`; it is never patched in `C_evidence`.
+Revision 6 does not resume the current implementation checklist. It needs the review's targeted
+confirmation and a replacement plan. That plan uses these gates:
 
-No D1-D4 occurrence-identity production change starts before all three step-2 gates pass. No
-codegen or Fusion result cites an editable sibling checkout, and no execution result cites TEAx or
-1costingfe outside the recorded artifacts. No downstream repository pins `C_evidence`.
+1. **Branch from the audited production tree.** Create the implementation branch directly from the
+   old `C_prod`, `78a9beb956f9b5a517c08836b067f0cb0dc4ccc6`, and use Agentic input
+   `2171016d3e3e0805525aa4cf787c55c6293dd00c`. Do not branch from this documentation checkout or
+   from a parent of the failed candidate. Preserve D1-D4, the probes, and the verification harness.
+   Add failing natural-route tests and the initial local ownership manifests before production
+   edits.
+2. **Close Agentic's evidence surface.** Land semantic-evidence/v2 with one provenance-complete
+   reference inspector, mapped index retention, shared traversal budget, exact targets, and exact
+   manifest equality. Delete the permissive helpers/facts, bool marker, aliases, and exports. Migrate
+   aggregation, binding, ADR002, and internal expression consumers. Make the scoped boundary files
+   pass the scoped strict gate. Build a clean Agentic source archive and wheel and run its fast plus
+   focused evidence suites. The PDF suite is outside this contract.
+3. **Make Codegen consume only typed evidence.** Build the private evidence inventory before graph
+   construction. Convert every binding and dependency site to closed variants or
+   `ExactReferenceUse`. Add the total deep-relationship path factory, delete the raw AST unit helper
+   and dead reference reconstruction helpers, and make the Codegen ownership manifest exact. The
+   scoped boundary files pass the strict gate. D1-D4 source and behavior remain unchanged.
+4. **Make registry authority graph-derived.** Remove caller-supplied exit-point type sets from the
+   registry API and aliases. Derive the required wrappers inside the exported generator and prove
+   identical refusal before output mutation through CLI and direct-call routes.
+5. **Close the public route matrix.** Prove exact success and index, depth, operand, and missing-
+   target refusal for every live, admitted, and capture consumer in strict and lenient modes. For
+   each indexed expression consumer, prove both inventory-before-consumer refusal and the targeted
+   bypassed-inventory backstop. Prove the deep override's real `Feature`-only shape and forced
+   mapped-index refusal. Capture failures create or change no snapshot. Re-run the existing
+   occurrence mutation and output reconciliation proofs to show D1-D4 stayed intact.
+6. **Rebuild the immutable chain.** Seal a new `C_prod`, build its source archive and wheel, pin it in
+   Fusion, land and verify a new `F_final`, then create a direct-child evidence-only `C_evidence`.
+   Every final command runs through the committed runner. No result cites an editable sibling
+   checkout, and no downstream repository pins `C_evidence`.
+7. **Audit the closure invariant.** A fresh audit requires all three legs: exact selector ownership
+   with evasion coverage, closed representation with deleted weak surfaces and scoped strict gates,
+   and the full natural-route matrices with layer-distinguishing assertions. It also verifies
+   off-route reachability and artifact topology. Any missing leg refuses certification.
+
+Any failure in steps 2–5 changes the owning production repository and restarts the affected
+artifact chain. It is never patched in `C_evidence`.
+
+## Integration strategy
+
+This is an in-place contract replacement, not a parallel implementation. Agentic lands
+semantic-evidence/v2 first. Codegen then pins that artifact and removes every production import or
+raw read that can reconstruct weaker evidence. The Codegen public API remains the conversion
+boundary; its private pregraph inventory changes without adding a second public elaboration mode.
+Fusion changes only after the replacement Codegen artifact is sealed.
+
+Compatibility is deliberately narrow. Agentic's permissive fact/helper surface is deleted from
+production rather than manifested or wrapped; every in-repository consumer migrates atomically.
+Existing Codegen public elaboration arms keep their signatures and diagnostics. The other intended
+breaking contraction removes caller-supplied wrapper-type authority from the registry generator and
+every exported alias.
+
+## Potential risks
+
+| Risk | Control |
+|---|---|
+| The ownership manifest becomes a stale allowlist | AST and alias/`getattr` discovery must have exact set equality with the checked-in manifest; stale rows and every evasion mutation fail as hard as new unowned reads |
+| A new consumer bypasses the pregraph inventory | Production dependency edges accept only closed variants; the natural-route matrix proves both the inventory and each consumer backstop over every live/admitted/capture arm |
+| ExpressionIR grows into a second universal semantic tree | D5 keeps it neutral and existing-purpose; only the reference inspector owns dependency-reference evidence |
+| Index refusal is added only to another preflight | `IndexedReferenceUse` cannot enter exact resolution, and every consumer must prove the same public failure independently |
+| Scoped strict checking is weakened by a monolithic import surface | Closed variants and adapters live in four narrow boundary files; their zero-error strict lane is reported separately from each repository-wide baseline |
+| Off-route legacy modules hide a live selector | Reachability is tested from the public roots; a reachable module must enter the manifest or be removed before closure |
+| Cross-repository artifacts certify different code | The existing `A_final` → `C_prod` → `F_final` → `C_evidence` topology is rebuilt, and final commands run only through the committed runner |
 
 ## Closed predecessor reconciliation
 
@@ -987,7 +1412,7 @@ inventing future SHAs.
 | L-12 omitted exit wrapper | B9/D9 | Public fail-before-mutate refusal |
 | L-13 output alias first-wins | Backlog only | File separate agent-grade row before close |
 | L-14 source-file parameter groups | Out of scope | Preserve documented rendering policy |
-| U-1 sole-glob source file | B10/D10 | Probe must select `DELETE_UNREACHABLE`; delete before production continues |
+| U-1 sole-glob source file | B10/D10 | Retain measured `DELETE_UNREACHABLE` and the deleted branch; rerun only if a locked input changes |
 | U-2 resolved fact without leaf | B8/D5/D10 | B8a pre-change real totality kill gate; B8b post-D5 forced typed regression |
 
 `verification/reconciliation-ledger.md` copies this table, adds exact test IDs and implementation
@@ -996,22 +1421,48 @@ commits, and closes every row before audit. Its codegen production row names `C_
 
 ## Review-finding closure map
 
-| Finding | Revision-4 disposition |
+| Finding | Revision-6 disposition |
 |---|---|
-| F1 | Remains resolved. D6 consumes `DocumentTier`; the product-lens rerun records `CLEAR` / design-F1 `FIXED` |
+| F1 | Remains resolved. D6 consumes `DocumentTier`; no Revision-6 change touches that authority |
 | F2 | Remains resolved. D1/D2 retain the exact address and direct-one-step package rule |
 | F3 | Remains resolved. D3 retains the contextual output-producer index |
-| F4 | Remains resolved. D5/D7 retain one public evidence conversion boundary |
-| F5 | Resolved in design by the acyclic `C_prod` → `F_final` → `C_evidence` topology, the closed production/evidence file boundary, audit reconstruction checks, and the exact slow-inclusive agentic command `uv run pytest tests/ -m ""` |
-| F6 | Resolved in design by B8a pre-change real totality and B8b post-D5 typed regression; D1-D4 remain behind B2/B8a/B10 |
-| F7 | Remains resolved. D9 retains the B9 contract, docs, diagnostic, status, and byte-preservation proof |
+| F4 | Reopened by the fresh audit. D5/D7 now require all three closure legs: exact selector ownership, closed representation with the permissive surface deleted, and dual-layer natural-route proof; verification is pending |
+| F5 | Remains resolved in design by the acyclic `C_prod` → `F_final` → `C_evidence` topology and exact production/evidence boundary. The owner has removed the Agentic PDF suite from this evidence contract |
+| F6 | Remains resolved for its original premise gate. Revision 6 does not change D1-D4 or reinterpret the real-corpus totality result |
+| F7 | Reopened by direct-call evidence. D9 now removes caller-supplied wrapper types and derives them from the graph inside every exported generator; verification is pending |
 | F8 | Resolved in design by keeping `semantic_owner` general and applying the three-kind validation only in `build_containment_address` while preserving attachment/formal domains |
+
+The fresh-audit findings map to concrete design owners:
+
+| Fresh finding | Revision-6 owner | Required closure proof |
+|---|---|---|
+| `audit3-F1` / CI-1: discarded index marker | D5/D7 | Indexed computed attribute, alias, predicate, calculation dependency, and binding all refuse through live and capture arms before graph construction |
+| CI-2: raw operand and depth bypass | D5/D7 | One shared budget and total operand materialization fail through each natural consumer, including a unit wrapper |
+| CI-3: weaker bare-binding interpretation | D7 | Closed binding-source union and exact-reference-only resolver; no optional semantic path or raw pending-binding fallback |
+| CI-4: shortened deep relationship path | D7/D8 | Real `Feature`-only path proof plus forced mapped-`IndexExpression` refusal; the total factory also fails on the first missing middle target and preserves the authored path and location |
+| CI-5: caller-provided registry invariant | D9 | Caller type-set parameter is absent; no-root, one-type, repeated-type, and multiple-type graphs derive their own wrappers, while unsupported types refuse through direct and CLI routes |
+| CI-6: untrusted final-run construction | Sequencing gate 6 | Every final record is produced by the committed runner from pinned artifacts |
+
+The finalized Revision-5 review resolutions close in Revision 6 as follows:
+
+| Review item | Revision-6 change |
+|---|---|
+| M1 | Branch from old `C_prod` `78a9beb9`; preserve D1-D4, probes, and harness; reseal a fresh `C_prod` |
+| C1(a) | Make selector ownership, closed representation, and natural-route proof jointly required |
+| C1(b) | Delete the permissive Agentic API, bool marker, aliases, and exports; migrate every measured Agentic and Codegen consumer |
+| C1(c) | Cover direct selectors, literal/dynamic `getattr`, and local/import aliases with discovery and mutation kills |
+| C2 | Distinguish normal inventory refusal from a targeted bypassed-inventory consumer backstop; add the deep-path index proof |
+| M2 | Treat `elaborate_loaded_extractor` as existing and replace the actual untyped registry failure rather than a nonexistent warning branch |
+| M3 | Add zero-error strict checking only for four narrow boundary files, separate from repo-wide baselines |
+| m1–m3 | Record the math-only optional IR target, measured migration size, and The Point |
 
 ## Next-stage handoff
 
-With the final `my-design-review` approval, `my-plan` must turn the eight sequencing steps
-into persistent checklists. The product-lens record is already `CLEAR` and is not reopened by these
-engineering corrections. The plan must keep the probe/fixture lock, `C_prod`, `F_final`, and
-`C_evidence` boundaries explicit, make each ledger and public proof a checked deliverable, and
-retain the five-input independent-green artifact evidence. Implementation is followed by an
-independent `my-audit`; the implementing agent does not self-certify.
+Revision 6 is draft and needs targeted `my-design-review` confirmation that the finalized findings
+are incorporated without reopening D1-D4. The current product-lens gate stays `BLOCKED` until that
+confirmation accepts the indexed-consumer architecture and its three-leg closure proof. After
+approval, `my-plan` replaces the existing checklist; it does not append remediation tasks to the
+Revision-4 plan. The replacement plan must keep both local ownership manifests, the scoped strict
+gates, full natural-route matrices, probe/fixture lock, and `C_prod`, `F_final`, and `C_evidence`
+boundaries as checked deliverables. Implementation is followed by an independent `my-audit`; the
+implementing agent does not self-certify.
