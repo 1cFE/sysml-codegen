@@ -400,3 +400,325 @@ append tasks to the Revision-4 plan. Product-lens gate remains `BLOCKED (audit3-
 design until the named live-and-capture computed-attribute proof is green on a production commit —
 an implementation-time clearance, not a review-time one. Implementation is followed by an
 independent `/_my_audit`; the implementing agent does not self-certify.
+
+---
+---
+
+# Targeted review — Revision 7 amendment
+
+**Design:** `.project/active/stop-reinventing-the-parser/design.md`, Revision 7 (`f53ae94`)
+**Governing record:** `run-records/phase1-stop-report.md` revision 3, rulings 1-7 owner-ratified
+2026-08-17
+**Scope:** the amendment only. Everything the Revision-6 verdict above approved stays approved and
+was not re-litigated.
+**Fact-check base:** all cited commits are reachable from this checkout's object store, so every
+claim below was checked against Git directly rather than through the `C_base` worktree.
+**Date:** 2026-08-17
+
+## What was checked and found correct
+
+Recording this first, because the verdict below is Revise on two narrow points and the rest of the
+amendment holds up under direct verification.
+
+**Counts, hashes, and commits — all confirmed:**
+
+- `verification/probe-fixture-lock.json` at `C_base` contains exactly **118** path/sha256 rows.
+- Exactly **two** of those 118 paths differ between the lock commit and `C_base`:
+  `tests/fixtures/v6_recapture_batch/batch.json` and `verification/capture_baseline.py`. This
+  reproduces the stop report's Finding 1 independently. The five probe scripts and all 111 source
+  rows are byte-identical across that span.
+- Frozen batch at `P_seed` `52a03cd2`: `captured` = **15**, `fixtures` = 37, so 22 refusals.
+  `FROZEN_BATCH_SHA256 = bd7bf245…` (`capture_baseline.py:31`). Current batch at `C_base`:
+  `captured` = **14**, so 23 refusals; `CURRENT_BATCH_SHA256 = 7f926978…` (`capture_baseline.py:33`).
+  The frozen/current table at design.md:1177-1180 is exact in every cell.
+- `P_SEED = 52a03cd2d0a9fdd340b60b16cea79a5b72234b08` (`capture_baseline.py:29`) — matches
+  design.md:1139. Both `43edf9bd` and `52a03cd2` are ancestors of `C_base` — matches design.md:1107.
+- `validate_current_batch` is at `capture_baseline.py:166` — exact, and it does require a closed
+  record inventory (37 fixtures, `captured | refused == fixtures`, disjoint), as design.md:1142-1143
+  claims.
+
+**Behavior and mechanism claims — all confirmed:**
+
+- `deep_cross_scope_probe` moved `"status": "graph"` → `"status": "refused"` with
+  `codes: ["SI_OCCURRENCE_MISSING"]` and `error_type: ElaborationDiagnosticError`. Exactly as
+  design.md:1241-1269 states.
+- `plant_value_shapes` moved refusal-code only (`SI_SELF_BINDING` ×2 → `SI_TYPE_INVALID`), leaving
+  the graph/refusal totals unchanged. design.md:1183-1184 states this correctly, and the arithmetic
+  works only under that reading (15 − 1 = 14).
+- `validate_output_transitions` hard-codes
+  `moved_records != ["deep_cross_scope_probe", "plant_value_shapes"]` as a failure and validates the
+  captured/refused delta as "the exact A2 move." The design's A2-ownership claim is enforced in
+  committed code, not just asserted.
+- `_snapshot_semantics` deletes exactly `authority.agentic_mbse_version`,
+  `authority.sysml_codegen_version`, and `integrity.digest` — "two version fields plus
+  `integrity.digest`" (design.md:1145) is exact.
+- `build_manifest` reads the batch through `_frozen_batch()` → `_git_bytes(P_SEED, …)` and sets
+  `canonical_batch.sha256 = FROZEN_BATCH_SHA256`. "Names those frozen bytes by construction, never
+  the working-tree file" (design.md:1140-1141) is exactly right.
+- Both `expected-transitions.md` quotations at design.md:1149-1151 are verbatim, and the A5 ledger
+  row quoted at design.md:1302 ("an element index is ignored → pre-graph
+  `SI_INDEXED_SOURCE_UNSUPPORTED`") is verbatim from the committed ledger.
+- D11's quotation of D7 is verbatim: design.md:575 reads "Refuse every `IndexedReferenceUse` before
+  calculation-definition extraction, `_ExactElaborator`, or `InstanceGraph` allocation."
+
+**Faithfulness to rulings 1-7 — met:**
+
+Ruling 1 (design.md:121-123), ruling 2 and the never-re-derive clause (design.md:1133-1135, stated
+twice with the "returns to design, never authorizes a replacement lock" consequence explicit),
+ruling 3 (the two legs, design.md:1129-1154), rulings 4-5 (design.md:1241-1269 plus the
+`[DEEP-QUALIFIED-OUTPUT-WIRING]` backlog row and fixture-comment fix at design.md:1515-1526),
+ruling 6 (design.md:1305-1335, both cases kept tests with their recorded `C_base` diagnostics, and
+the explicit "neither case substitutes for the other" argument), ruling 7 (the amendment itself).
+The `deep_cross_scope` never-restore is stated as a stop condition in the ruling's own terms — "not
+a reconciliation to negotiate" — which is the right strength.
+
+**No mechanism change — confirmed.** The diff has no hunk anywhere in design.md:207-866 (D1-D10),
+the closed-variant sections, the artifact chain, the acyclic topology, or the consumer/ownership
+manifests. Every hunk lands in one of the five declared areas.
+
+**D11 adds no mechanism — confirmed.** It restates D7's ordering, adds the public-diagnostic
+consequence (always `SI_INDEXED_SOURCE_UNSUPPORTED`, never `SI_OCCURRENCE_*`) that already follows
+from that ordering plus D7:600's consumer backstop, and adds a test obligation and a ledger row.
+Nothing in it requires behavior D7 does not already require. The rejected-alternative note is a
+decision record, correctly phrased.
+
+**Anchor integrity — confirmed.** All 33 distinct `design.md#…` targets used in `plan.md` rev 2
+resolve against Revision 7's headings, including `#revision-6-implementation-base`, which the
+amendment edited under but did not rename. Four `plan.md` links have labels that look like stale
+anchors (`#commit-boundary-is-closed`, `#natural-route-closure-matrix`, `#diagnostic-ownership`,
+`#one-codegen-conversion-boundary`) — in every case that text is the link *label* and the target is
+valid. The amendment broke nothing.
+
+**Anti-vacuity vs the frozen/current table — consistent.** design.md:1234-1235 now requires 15/22
+frozen *and* 14/23 current; both sum to 37 and both match the measured states.
+
+---
+
+## Findings
+
+### Major 1 — the amendment names the wrong commit as "the lock commit," and it passes by accident
+
+**Location:** design.md:1131-1132, and consequently 1158, 1161-1162, 1541. Interacts with
+design.md:1104-1110.
+
+The new Lock leg says the 118 hashes "must recompute against the lock commit's own tree,
+`43edf9bde4db44e7973458ada732d2cd75e764f6`." But the lock file self-identifies differently:
+
+    "probe_fixture_commit": "20f9e60a19b30bc1ec9a27aacb08380f4bc45602",
+    "probe_fixture_parent": "7b29d8b636e284364a4fdce9079f153c51c867ea"
+
+`20f9e60a` is the commit whose tree the hashes were computed against. `43edf9bd` is its child,
+titled "chore: lock corrected parser probes and fixture corpus," and `git diff 20f9e60a 43edf9bd`
+is exactly one file changed: the lock file itself. The design's own earlier paragraph
+(design.md:1104-1107) gets this right — retained probe/fixture commit `20f9e60a`, manifest-only lock
+child `43edf9bd`.
+
+So the `[verified]` zero-mismatch claim is **true against either tree**, because the two trees are
+byte-identical for all 118 locked paths. It is true by accident, and the amendment never says why.
+
+Why this matters here specifically: design.md:1110 requires the runner to check
+"`probe_fixture_commit` to equal that locked 40-character SHA," and two paragraphs later the
+amendment introduces `43edf9bd` as "the lock commit." An implementer wiring the new Phase-1 kept
+test from §"What the lock is verified against" — the section written for exactly that purpose — can
+reasonably assert `lock["probe_fixture_commit"] == "43edf9bd…"`, which is **false against the actual
+file** and trips a stop for the same class of reason that produced the Phase-1 stop this amendment
+exists to fix.
+
+**What correct looks like:** state both SHAs and their roles in the Lock leg. For example: the lock
+records `probe_fixture_commit = 20f9e60a…` and `probe_fixture_parent = 7b29d8b6…`; hashes are
+computed against `20f9e60a`'s tree; the manifest-only child `43edf9bd…` reproduces those bytes
+exactly because it adds only the lock file, so either commit satisfies the recompute. Then name one
+of them as the commit the Phase-1 kept test reads from, and use that same SHA at design.md:1158,
+1161-1162, and 1541.
+
+### Major 2 — replacing the byte rule leaves two locked file classes with no current-state pin
+
+**Location:** design.md:1123-1154 (the two legs), with design.md:1114-1116 (D10 "locked input").
+
+The amendment's claim that the new rule "is not weaker: it checks strictly more" holds for most of
+the lock, and I verified the coverage file class by file class:
+
+| Locked class | Rows | Current-state pin under leg 2 |
+|---|---|---|
+| 111 source `.sysml`/`.kerml` rows | 111 | `validate_manifest` hashes the **working tree** against `fixture-manifest.json` (`capture_baseline.py:161-163`) — covered |
+| `verification/fixture-manifest.json` | 1 | pinned to its `P_seed` bytes (`capture_baseline.py:135-137`) — covered |
+| `tests/fixtures/v6_recapture_batch/batch.json` | 1 | `validate_current_batch` at `CURRENT_BATCH_SHA256` — covered |
+| `verification/capture_baseline.py` | 1 | **nothing** |
+| 5 probe scripts under `.project/…/probes/` | 5 | **nothing** |
+
+Leg 1 pins the last two rows only at their *historical* bytes. Leg 2 is scoped to `tests/fixtures`
+(`validate_output_transitions` passes `-- tests/fixtures` to `git diff`) and does not reach either.
+Revision 6's "any changed byte invalidates the verdicts" did cover them — over-broadly, which is why
+it was deleted, but the amendment's replacement is genuinely weaker for exactly these two classes.
+The irony is sharp: `capture_baseline.py` is one of the only two locked files that actually moved,
+and it is now the one file whose current bytes no leg pins.
+
+Compounding it, design.md:1114-1116 redefines D10's rerun trigger as "a change to the frozen
+historical bytes." Bytes at a past commit cannot change, so as literally written the probe-rerun
+trigger can never fire. Under Revision 6, editing a probe script during Phases 2-5 would have
+invalidated the verdicts; under Revision 7 nothing catches it.
+
+**What correct looks like:** add a short paragraph to §"What the lock is verified against" naming
+the residual class explicitly — `verification/capture_baseline.py` and the five probe scripts are
+historical-only rows; their current state is owned by the committed tests that exercise them
+(`tests/conformance/test_public_route_baselines.py`,
+`test_stop_parser_documentation_contract.py`) and by the recorded probe verdicts, not by a byte pin
+— and either add a current-state pin for the five probe scripts or state which artifact owns them.
+Then reword design.md:1114-1116 so the D10 trigger is fireable: "locked input" means a change to any
+locked probe or fixture source in the implementation tree, as distinct from a ledger-owned
+current-output transition.
+
+### Minor 1 — `source_evidence.py:173` is a blank line
+
+**Location:** design.md:105-106 (also design.md:88 in the Current-code-facts bullet).
+
+At `C_base`, `def screen_source_readiness` is at line **174** and `for binding in usage.bindings` —
+the claim being cited — is at line **195**. Line 173 is blank. The stop report carries the same
+off-by-one, so the amendment inherited it rather than introduced it, but a design that governs
+byte-level gates should not ship a citation that points at whitespace.
+
+**What correct looks like:** `extraction/source_evidence.py:195` for the iteration claim, or
+`:174-196` for the function.
+
+### Minor 2 — `capture_baseline.py:76` does not contain the functions named beside it
+
+**Location:** design.md:1138-1140.
+
+The bullet attributes the frozen reconstruction to "`build_manifest` / `validate_manifest`" and cites
+`capture_baseline.py:76`. Line 76 is `def _frozen_batch`, which performs the `FROZEN_BATCH_SHA256`
+check at line 78. `build_manifest` is at 86, `validate_manifest` at 134. The substance is right —
+`build_manifest` calls `_frozen_batch` — but the citation and the names do not line up.
+
+**What correct looks like:** "…reconstruct the frozen source inventory from Git at the named
+`P_seed` commit through `_frozen_batch` (`capture_baseline.py:76-79`) and check it against
+`FROZEN_BATCH_SHA256`."
+
+### Minor 3 — `design.sysml:75` is the comment, not the authored input
+
+**Location:** design.md:1247-1248.
+
+The sentence "the fixture's Pattern B authors an input aimed at the one concrete produced output
+(`tests/fixtures/deep_cross_scope_probe/design.sysml:75`)" cites the comment line. The authored
+input `in data_point = measurement_system::station::array::sensor::core::metric_value;` is at line
+**77**. The separate citation of `:75` for the stale comment at design.md:1519-1521 is correct.
+
+**What correct looks like:** `design.sysml:77` for the authored input; leave `:75` where it names
+the comment.
+
+### Minor 4 — the four-row behavior table flattens two provenance grades into one
+
+**Location:** design.md:104-113.
+
+The stop report grades its matrix row by row: rows 1 and 4 orchestrator-verified, rows 2 and 3 "the
+agent's retained probes." The amendment presents all four rows under one heading ("The measured
+behavior at `C_base`") with no per-row grade, and the `[verified]` bracket at design.md:97-98
+attaches to the mechanism, not the table. Capture-fidelity rule 1 requires the grade to survive
+every hop.
+
+This does not touch the red set: both red-set cases (design.md table rows 1 and 4) rest on
+orchestrator-verified rows. What it does affect is the exclusion argument — "Operator-wrapped forms
+are real expressions, enter the screen, and refuse correctly today" (design.md:111-113) rests on
+agent-probe row 2, and the amendment states it in bold as settled fact.
+
+**What correct looks like:** mark rows 2 and 3 as agent-probe evidence in the table, or add one
+sentence: rows 1 and 4 were reproduced by the orchestrator; rows 2 and 3 are the Phase-1 agent's
+retained probes.
+
+### Minor 5 — "every post-`P_seed` output byte" overstates `validate_output_transitions`
+
+**Location:** design.md:1144.
+
+The function diffs `P_SEED..FOUR_A` restricted to `-- tests/fixtures`, then checks current bytes
+against the 4A bytes for the 23 maintained snapshots and the golden file. It does not reach outputs
+outside `tests/fixtures` (`verification/pre-change-baseline.json`, the probe verdict JSONs). The
+claim as written is broader than the code.
+
+**What correct looks like:** "proves every post-`P_seed` output byte **under `tests/fixtures`** is
+either metadata-only … or owned by a named A/B row."
+
+### Minor 6 — the ruling markers upgrade agent-grade items past the vocabulary they were given
+
+**Location:** design.md:121, 1123, 1243, 1307.
+
+The stop report is explicit: "Origin of the rulings remains agent-grade (external review +
+orchestrator verification), ratified by owner; challenge them by re-deriving against the recorded
+evidence above." Capture-fidelity rule 1 gives that exact case a form: `[AGENT] (ratified by owner,
+date)`. The amendment writes `[OWNER-ratified 2026-08-17, ruling N]`, which is honest about the
+ratification but reads as owner-grade at a glance, and the design nowhere records the
+challenge-by-re-derivation affordance the stop report preserved.
+
+**What correct looks like:** `[AGENT] (ratified by owner, 2026-08-17) — ruling N`, with one sentence
+in the revision history noting these are challengeable by re-deriving against
+`run-records/phase1-stop-report.md`, not by asking the owner again.
+
+### Minor 7 — the handoff's Plan-Revision-3 list omits the `deep_cross_scope` obligations
+
+**Location:** design.md:1683-1687.
+
+The handoff enumerates three things Plan Revision 3 "must carry": the two-leg lock rule plus the new
+committed check, both indexed red cases, and the A5a/A5b rows. It reads as a complete list, and it
+omits ruling 4-5's operational half — the never-restore stop condition, and the fixture-comment plus
+`[DEEP-QUALIFIED-OUTPUT-WIRING]` backlog obligations. The design body binds implementation either
+way, but the plan is where a reconciliation gate gets written, and "restore the old graph to get the
+counts back to 15/22" is precisely the wrong move the stop condition exists to forbid.
+
+**What correct looks like:** add a fourth item — Phase 4's reconciliation gate treats
+`deep_cross_scope_probe` returning to a captured graph as a stop, and the landing unit carries the
+fixture-comment fix and the `[DEEP-QUALIFIED-OUTPUT-WIRING]` row.
+
+### Minor 8 — D11 is numbered like D1-D10 but does not live with them
+
+**Location:** design.md:1336, under `## Test design` → `### The indexed red set`.
+
+D1-D10 are `###` subsections of `## Detailed decisions`. D11 is a `####` under a Test-design
+subsection, and `## Detailed decisions` never mentions it. The handoff then asks for confirmation
+"without reopening D1-D10," which reads as if D11 were outside the decision set. A reader scanning
+the decisions section will miss a numbered decision.
+
+**What correct looks like:** move D11 to `## Detailed decisions` as `### D11.` and cross-reference it
+from the red-set section, or leave it in place and add a one-line pointer under D7. Either way, make
+the handoff say D1-D11.
+
+### Minor 9 — corrections re-quote the deleted text rather than deleting it
+
+**Location:** design.md:97-99, 1123-1127, 1173-1175.
+
+Each correction restates Revision 6's wrong claim inline before deleting it ("Revision 6's earlier
+account — 'the computed attribute route reads a fact that retains `has_index_segment`, ignores that
+field' — named the wrong trigger and is deleted"). Capture-fidelity rule 3 asks corrections to
+shrink or amend, with the rejected content recorded once in its designated home rather than
+repeated in the live text. Three inline restatements of a deleted claim anchor future agents on it.
+
+**What correct looks like:** delete the quotations from the body and record each correction as one
+line in the Revision history section, which the amendment already added for this purpose. This is a
+judgment call and the smallest of the findings — the amendment's motive (an auditable trail of what
+changed and why) is legitimate.
+
+---
+
+## Verdict
+
+**Revise.**
+
+The amendment is substantively right. Every ruling is implemented, no mechanism moved, no anchor
+broke, and every count, hash, commit, and quotation I could reach independently checks out —
+including the two that carry the most weight, the 118-row lock and the 15/22 → 14/23 transition.
+The reason for Revise rather than Approve is narrow: the one section the amendment exists to rewrite
+is the one that governs the gate that already stopped this run once, and it still contains an
+ambiguity (Major 1) and a coverage hole (Major 2) that would be executed by a Phase-1 implementer.
+
+**Minimal must-fix set:**
+
+1. **Major 1** — reconcile `probe_fixture_commit` (`20f9e60a`) with "the lock commit" (`43edf9bd`)
+   in the Lock leg, say why either tree satisfies the recompute, and use one SHA consistently at
+   design.md:1131-1132, 1158, 1161-1162, and 1541.
+2. **Major 2** — name `verification/capture_baseline.py` and the five probe scripts as
+   historical-only rows with their current-state owner stated, and reword design.md:1114-1116 so the
+   D10 rerun trigger is fireable.
+3. **Minors 1-3** — correct the three citations (`source_evidence.py:195`,
+   `capture_baseline.py:76-79` with `_frozen_batch` named, `design.sysml:77`).
+
+Minors 4-9 are recommended but do not block. Minor 7 is worth taking with the must-fix set, since it
+costs one line and closes a plausible Phase-4 failure.
+
+Nothing here reopens Revision 6. The Approve above stands.
