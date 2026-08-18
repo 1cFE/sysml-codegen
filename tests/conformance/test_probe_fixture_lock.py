@@ -16,6 +16,11 @@ Three legs verify the lock, and every locked byte is covered by exactly one of t
    *current* bytes, and any difference from lock-time bytes must be owned by a named row in
    `verification/expected-transitions.md`.
 
+The historical three-leg lock is unchanged. A separate current-source guard calls
+`capture_baseline.validate_current_fixture_sources`: it compares all 110 SysML/KerML files in the
+43 frozen roots with their P_seed hashes and requires an exact transition row for every difference.
+That is the guard a comment-only fixture edit must trip even when outputs do not move.
+
 A mismatch in leg 1 means evidence tampering or a history rewrite.  It returns the item to
 design; it never authorizes a replacement lock.  Nothing here writes the lock file.
 
