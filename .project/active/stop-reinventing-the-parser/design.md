@@ -1,6 +1,7 @@
 # Technical Design: Stop Reinventing the Parser
 
-**Status:** Draft — Revision 7; targeted amendment of the approved Revision 6, targeted confirmation required
+**Status:** Revision 7 — targeted amendment of the approved Revision 6; amendment review closed
+(`Revise` verdict's must-fix set applied and verified 2026-08-17)
 **Revision:** 7
 **Date:** 2026-08-17
 **Branch:** `stop-reinventing-the-parser`

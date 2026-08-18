@@ -1,8 +1,17 @@
 # Current Work
 
-**Last Updated**: 2026-08-17 (**stop-reinventing-the-parser now has canonical implementation-plan
-Revision 2 from the approved Revision-6 design; implementation has not started**).
-Prior status: 2026-08-17 (**fresh independent audit: Needs Work; the replacement chain is
+**Last Updated**: 2026-08-17 (**stop-reinventing-the-parser: Phase 1 complete and audited — plan
+Revision 3 executing design Revision 7; three-leg lock verification green (118/118 against the
+tree the lock names); 25-node red set across live/admitted/capture × strict on implementation
+branches `stop-parser-impl-r2` `d257ef1` / `stop-parser-evidence-r2` `8d27fb3`; D1-D4 plus
+retained harness 162 passed; dedicated audit verdict Pass with findings, all four Majors closed on
+execution-backed confirmation (`.project/active/stop-reinventing-the-parser/run-records/phase1-audit.md`).
+Orchestrated run paused before Phase 2 by owner directive; Phases 2-5 handoff written to
+`/tmp/handoff-20260817-221050.md` (temp-dir per handoff convention — copy before reboot).**).
+Prior status: 2026-08-17 (**canonical implementation-plan Revision 2 from the approved Revision-6
+design; a Phase-1 stop-rule trip then returned the item to design — rulings 1-7 owner-ratified,
+design amended to Revision 7, plan to Revision 3**). Earlier same day: (**fresh independent audit:
+Needs Work; the replacement chain is
 mechanically sound but semantic and execution-evidence blockers remain**). Earlier: 2026-08-16
 (**self-binding-replacement closed and archived** — all ten
 functional criteria were independently verified. `[OWNER 2026-08-16]` The dangling-symlink
