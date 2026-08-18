@@ -13,8 +13,6 @@ import tempfile
 from pathlib import Path
 from typing import Any, cast
 
-import syside
-
 from sysml_codegen.cli import GenerationConfig, run_codegen
 from sysml_codegen.elaboration import project
 from sysml_codegen.orchestration.elaborated_pipeline import elaborate_model_paths
@@ -24,7 +22,6 @@ from sysml_codegen.snapshot.instance_graph import encode_instance_graph
 from verification.artifact_sources import codegen_history_root
 
 ROOT = Path(__file__).resolve().parent.parent
-HISTORY_ROOT = codegen_history_root(ROOT)
 BATCH_PATH = Path("tests/fixtures/v6_recapture_batch/batch.json")
 P_SEED = "52a03cd2d0a9fdd340b60b16cea79a5b72234b08"
 FOUR_A = "09fdae1986c81c2a5738e1401bdc78e0ea5fa607"
@@ -41,6 +38,11 @@ ADDED_ROOTS = (
     "occurrence_calc_domain_derivation",
     "occurrence_domain_derivation",
 )
+
+
+def _history_root() -> Path:
+    """Resolve the declared history only for checks that consume historical bytes."""
+    return codegen_history_root(ROOT)
 
 
 def _canonical(value: Any) -> bytes:
@@ -60,7 +62,7 @@ def _historical_source_rows(root: Path, commit: str) -> list[dict[str, str]]:
         [
             "git",
             "-C",
-            str(HISTORY_ROOT),
+            str(_history_root()),
             "ls-tree",
             "-r",
             "--name-only",
@@ -91,7 +93,7 @@ def _historical_source_rows(root: Path, commit: str) -> list[dict[str, str]]:
 def _git_bytes(commit: str, path: Path) -> bytes:
     try:
         return subprocess.run(
-            ["git", "-C", str(HISTORY_ROOT), "show", f"{commit}:{path}"],
+            ["git", "-C", str(_history_root()), "show", f"{commit}:{path}"],
             check=True,
             capture_output=True,
         ).stdout
@@ -191,6 +193,72 @@ def validate_manifest(manifest: dict[str, Any]) -> None:
             if path.is_absolute() or ".." in path.parts or source["path"] in listed:
                 raise ValueError(f"duplicate or non-portable source: {path}")
             listed.add(source["path"])
+    validate_current_fixture_sources(manifest)
+
+
+def _ledger_rows_for_path(path: str, transitions_path: Path) -> list[tuple[str, ...]]:
+    matches: list[tuple[str, ...]] = []
+    for line in transitions_path.read_text(encoding="utf-8").splitlines():
+        if not line.startswith("|"):
+            continue
+        cells = tuple(cell.strip().strip("`") for cell in line.strip().strip("|").split("|"))
+        if cells and cells[0] == path:
+            matches.append(cells)
+    return matches
+
+
+def validate_current_fixture_sources(
+    manifest: dict[str, Any],
+    *,
+    repository_root: Path = ROOT,
+    transitions_path: Path = TRANSITIONS_PATH,
+) -> dict[str, object]:
+    """Pin every current fixture source or require one exact transition row.
+
+    The manifest remains the immutable P_seed inventory. This independent leg compares the bytes
+    kept tests read today with that inventory; an intentional difference must name the file and both
+    hashes in the transition ledger. Reconstructing the manifest from P_seed cannot satisfy this
+    check because current bytes are always read from ``repository_root``.
+    """
+    ledger_path = (
+        transitions_path
+        if transitions_path.is_absolute()
+        else repository_root / transitions_path
+    )
+    checked = 0
+    added_roots = 0
+    added_sources = 0
+    transitioned: list[str] = []
+    for root in manifest["roots"]:
+        if root["kind"] == "added":
+            added_roots += 1
+        for source in root["sources"]:
+            checked += 1
+            if root["kind"] == "added":
+                added_sources += 1
+            source_path = str(source["path"])
+            frozen_hash = str(source["sha256"])
+            current_hash = _sha(repository_root / source_path)
+            if current_hash == frozen_hash:
+                continue
+            rows = _ledger_rows_for_path(source_path, ledger_path)
+            if len(rows) != 1:
+                raise ValueError(
+                    f"unowned current fixture source transition: {source_path}; "
+                    f"expected one ledger row, found {len(rows)}"
+                )
+            [row] = rows
+            if frozen_hash not in row or current_hash not in row:
+                raise ValueError(
+                    f"fixture source transition row omits the frozen or current hash: {source_path}"
+                )
+            transitioned.append(source_path)
+    return {
+        "checked_source_files": checked,
+        "added_roots": added_roots,
+        "added_source_files": added_sources,
+        "transitioned_sources": tuple(sorted(transitioned)),
+    }
 
 
 def validate_current_batch() -> dict[str, Any]:
@@ -274,7 +342,7 @@ def validate_output_transitions() -> dict[str, Any]:
         [
             "git",
             "-C",
-            str(HISTORY_ROOT),
+            str(_history_root()),
             "diff",
             "--name-only",
             P_SEED,
@@ -528,6 +596,7 @@ def capture(
     teax_root: Path,
 ) -> dict[str, object]:
     import simkit
+    import syside
 
     if not Path(simkit.__file__).resolve().is_relative_to(teax_root.resolve()):
         raise RuntimeError("simkit did not import from the explicit frozen TEAx root")

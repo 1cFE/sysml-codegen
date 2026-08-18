@@ -156,7 +156,8 @@ def test_every_current_fixture_source_is_pinned_or_ledger_owned(manifest: dict) 
 
     assert report == {
         "checked_source_files": 110,
-        "added_source_files": 6,
+        "added_roots": 6,
+        "added_source_files": 7,
         "transitioned_sources": ("tests/fixtures/deep_cross_scope_probe/design.sysml",),
     }
 

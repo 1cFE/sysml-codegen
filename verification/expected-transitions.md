@@ -99,6 +99,17 @@ The earlier Item 8 pre/final inventory JSON remains immutable historical evidenc
 capture. `tests/conformance/test_v6_snapshot_inventory.py` requires that its one path not tracked at
 current HEAD is exactly this A2 deletion and that the current batch carries the named refusal.
 
+The frozen source inventory is also compared with the **current** bytes of all 110 SysML/KerML
+sources across all 43 roots. An intentional difference must have exactly one row below naming both
+hashes. This current-byte leg covers the six `ADDED_ROOTS` directly; it does not rely on the canonical
+batch's output hashes.
+
+## Fixture-source transitions
+
+| File | Frozen P_seed SHA-256 | Current SHA-256 | Owning commit | Reason |
+|---|---|---|---|---|
+| `tests/fixtures/deep_cross_scope_probe/design.sysml` | `02e39cdd033b1bf062fbdd1d69a61d22a59ea357aefe79e6a4ca05d655542e78` | `45c94431900aa58a50629067dbfed2d3c6c096ede3666dc5648d496d900756ec` | `1ce8638ff62aae4f991890e652fd7ad28a683c28` | Comment-only correction: remove the obsolete wiring claim and name the retained `SI_OCCURRENCE_MISSING` refusal plus `[DEEP-QUALIFIED-OUTPUT-WIRING]`. The authored reference and behavior are unchanged. |
+
 Maintained-output result: byte-identical after excluding the exact rows above. No unexplained
 snapshot, golden-output, or batch-record byte remains.
 
