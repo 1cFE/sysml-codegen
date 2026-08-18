@@ -370,3 +370,184 @@ Two items should travel with the phase boundary rather than wait:
 
 Neither blocks starting Phase 3. Neither is the substitution defect this item exists to remove —
 that one is closed, structurally, and I could not find a route around it.
+
+---
+
+# Addendum — targeted confirmation of the fix round
+
+**Confirmed:** 2026-08-18
+**Target:** `stop-parser-evidence-r2` `144ae02` → **`68bca37`** ("fix: close the Phase 2 audit
+findings"), record updated at docs commit `719dce1`.
+**Scope:** confirmation of the closures by execution only. Not a re-audit of Phase 2.
+**Method:** fresh `git archive` of `68bca37` → `/tmp/stop-parser-rev2/p2fix-agentic-mbse`, own
+`uv sync`, license loaded. Mutations in a separate extraction with its own environment.
+
+**Result: every finding in scope is confirmed closed.** M1, m2, m3, m4, m5, m6, m7, and i10 all
+verified by execution. No regression. Phase 2 is fit for Phase 3 with no carried findings except
+i11, which is a close-out obligation by design.
+
+---
+
+## A harness correction that matters for reading this addendum
+
+My first de-wiring attempt copied the previous extraction *including its `.venv`*, and that venv's
+package finder still resolved to the **original** tree. Under pytest the mutated file was never
+imported:
+
+```
+LOADED FILE: /tmp/stop-parser-rev2/p2fix-agentic-mbse/src/.../constraint_extraction.py   # not the mutant
+GUARD LINE IN LOADED SOURCE: ['if ctx.depth >= MAX_EXPRESSION_DEPTH:']                    # unmutated
+```
+
+So the intermediate "tests still pass on the de-wired build" observation was an artifact of my
+harness, not a property of the tests. Every mutation reported below was redone in
+`/tmp/stop-parser-rev2/p2mut2-agentic-mbse` — a fresh `git archive` with its own `uv sync` — and
+the loaded path was asserted before each run.
+
+---
+
+## Per-finding confirmation
+
+### M1 (Major) — **Confirmed closed.**
+
+My original self-nesting reproduction, rerun verbatim at `68bca37`:
+
+```
+extract_expression_ir  -> SemanticEvidenceCode.EXPRESSION_DEPTH_EXHAUSTED
+reconstruct_expression -> SemanticEvidenceCode.EXPRESSION_DEPTH_EXHAUSTED
+```
+
+Both previously raised `RecursionError`.
+
+**One shared, non-caller-selectable budget.** `MAX_EXPRESSION_DEPTH = 100` is defined once
+(`reference_use.py:54`) and *imported*, never redefined, by `expression.py:12` and
+`constraint_extraction.py:55`. Grep over `src/` finds exactly one assignment and three consuming
+guards (`reference_use.py:285`, `expression.py:56` and `:310`, `constraint_extraction.py:699`).
+Public signatures carry no depth knob: `extract_expression_ir(expression, *, diagnostics)`;
+`reconstruct_expression`'s `_depth` and `traverse_expression`'s `_current_depth` are
+underscore-prefixed recursion counters, the convention already in the tree.
+
+**The four kept tests discriminate a de-wiring.** Two mutations, each in an isolated extraction
+with the loaded path asserted:
+
+| Mutation | Result |
+|---|---|
+| `constraint_extraction.py:699` guard → `if False:` | `test_the_shared_budget_covers_expression_ir_extraction` **FAILED** and `test_no_recursive_production_entry_reports_a_bare_recursion_error` **FAILED**, both on `RecursionError: maximum recursion depth exceeded` — the exact defect M1 named. 2 failed, 3 passed. |
+| `expression.py:310` guard → `if False:` (IR guard restored) | `test_the_shared_budget_covers_expression_reconstruction` **FAILED** and the set test **FAILED**. 2 failed, 3 passed. |
+
+Each wiring is caught by its own test *and* by the set test, which is the right shape given M1's
+defect was two entries never wired at all.
+
+### m3 — **Confirmed closed, and the double is adequate.**
+
+The unit operand is no longer emitted at the boundary. Live, against the same model I used to
+raise the finding:
+
+```
+inspect_reference_uses: []      # was [('SI::metre', 'SI::metre', 'StandardLibrary')]
+design_reference_uses:  []
+```
+
+**Shape validation survives.** `_unit_annotation_value` (`reference_use.py:316`) recognises a
+structural `[` annotation, refuses a wrong arity and a non-feature-reference unit operand with
+`EXPRESSION_KIND_UNSUPPORTED`, refuses an unresolved unit referent with `RESOLVED_TARGET_MISSING`,
+and then walks only the value operand. `test_a_malformed_unit_annotation_is_refused_by_name`
+covers it, and a new live probe attribute (`local_scale [SI::metre]`) proves the value operand is
+still visited rather than the whole annotation being muted.
+
+**On the implementer's flag.** I probed the reachability claim independently at SysIDE 0.8.4 with
+two spellings the implementer did not list — a project `attribute def` used as a unit, and a
+project `attribute` typed by a standard unit type. Both are refused by the parser
+(`Referent must be a feature but is AttributeDefinition`; `Invalid quantity expression, expected a
+measurement unit as the second argument`). That corroborates the flag: the authored form
+`3.0 [MyUnits::widget]` is not reachable through a real model today.
+
+**Is the closure adequate?** Yes. The double varies exactly one field from a case that *is* proved
+live. `test_a_unit_annotation_never_emits_its_unit_operand` pins the structure against a real
+model with a real `SI::metre`; `test_a_project_scoped_unit_is_not_emitted_either` reuses the same
+`MockOperatorExpression(operator="[")` shape and changes only the document tier — then asserts the
+tier really is `Project`, so the test would be meaningless if the double were mis-built, and
+additionally asserts the value operand is still emitted. The double is not standing in for the
+mechanism; it is isolating the one variable the live model cannot supply. The test records the
+measurement and why the double is the only route. Nothing further is needed.
+
+### m2 — **Confirmed closed on the mechanism; the residual I named is unchanged and still
+unexploited.**
+
+`_reaches_the_parser` now reads the adapter import off parsed `Import`/`ImportFrom` nodes
+(`test_semantic_selector_ownership.py:75-98`) instead of a substring match.
+`test_the_import_scope_is_structural_not_a_substring_match` covers both directions — a docstring
+naming the adapter yields no import, and both `import X` and `from X import Y` do. The two
+original anti-vacuity guards are untouched and still in the file.
+
+The other half of my finding — a module that receives a live SysIDE node as a *parameter* and
+reads a raw selector without importing anything — is inherent to an import-keyed scope and is not
+closed. I re-ran the unscoped selector sweep at `68bca37`: `sysml/executable_profile.py` on
+`operands` remains the only out-of-scope reader, and it is still the neutral `ExpressionIR` field.
+Nothing to act on; recording it so the scope premise stays visible.
+
+### m4 — **Confirmed closed.** `pytest.skip` and `except Exception` are both **absent** from
+`tests/test_sysml/test_reference_use.py` (grep returns only the explanatory comment at line 185).
+`_require_a_clean_load` (line 182) asserts the model produced no error diagnostics, so a parse
+error in probe source now fails rather than silently hollowing out the licensed assertions.
+
+### m5 — **Confirmed closed, both corrections reproduced.**
+
+- Ownership count: record now says **14** (plan.md:1219, with a note that it first read 12). I
+  measure `test_semantic_selector_ownership.py` at **20 passed** now (14 + the 6 nodes this fix
+  round added), and `test_reference_use.py` at **32 passed**. Both match the record.
+- The unreproducible "221 passed" is replaced by a **named** set. Reproduced exactly:
+  `pytest tests/test_sysml/ tests/test_validation/ tests/test_errors.py` → **834 passed,
+  1 skipped**. The single skip is the pre-existing `test_adr002.py:289` external-model skip.
+
+### m6 — **Confirmed closed.** `_has_defined_value` is gone from `src/` entirely (grep over the
+whole tree returns only the two lines in `test_level2_integration.py`), and the former `hasattr`
+assertion is inverted at line 114 to `assert not hasattr(level2_structure, "_has_defined_value")`
+with a comment saying why. Absence is pinned, not merely achieved.
+
+### m7 — **Confirmed closed.** `test_the_scanner_finds_a_dynamic_getattr_read` is parametrized over
+all four reviewed selectors in the `getattr(node, "<selector>", None)` form, and
+`test_the_scanner_ignores_an_unrelated_getattr` covers the negative. The `getattr` detection branch
+is now exercised in both directions.
+
+### i10 — **Confirmed closed.** `reference_use.py:263` is
+`return str(SysideAdapter.document_tier(element).name)`. The `or ""` fallback is gone, so a
+tier-less target propagates the named adapter failure its docstring already promised.
+
+### i8 — left as-is, as the audit allowed. i11 — carried to close, by design.
+
+---
+
+## Regression check at `68bca37`
+
+| Gate | Result |
+|---|---|
+| `test_reference_use.py` | **32 passed** |
+| `test_semantic_selector_ownership.py` | **20 passed** |
+| Named artifact set (`test_sysml/`, `test_validation/`, `test_errors.py`) | **834 passed, 1 skipped** |
+| `mypy --strict errors.py reference_use.py` | **Success, no issues** (exit 0) |
+| `mypy src/` baseline | **101 errors in 21 files** — unchanged from `A_base` |
+| `ruff check src/ tests/` baseline | **119 errors** — unchanged from `A_base` |
+| Fast suite (`-m "not slow"`, licensed) | **18 failed, 1893 passed, 1 skipped** |
+| Fast-suite failure set | `diff` against my recorded `A_base` list: **identical, 18 nodes** |
+| Codegen worktree | `d257ef109065832f629ea5c90c8faa11b7c47fa7`, 0 dirty |
+| `/home/reid/1cfe/agentic-mbse` | `fcee56d6…`, 0 dirty |
+| `/home/reid/1cfe/sysml-codegen` | branch `stop-reinventing-the-parser`, 0 dirty |
+
+The pass count rises 1883 → 1893 by exactly the ten nodes this fix round added. The 18 failures are
+still the same optional-dependency baseline, node for node. The PDF/HTML corpus and the paid/network
+cases were never invoked.
+
+---
+
+## Fit for Phase 3?
+
+**Yes, without carried findings.** M1 and m3 — the two I said should travel with the phase boundary
+— are closed at the boundary rather than downstream, and both closures are proved by execution:
+M1 by rerunning the original reproduction and then killing each wiring to show the kept tests
+discriminate, m3 by a live model plus a double that isolates the one variable SysIDE 0.8.4 will not
+parse. i11 (the ownership manifest's document form) remains a close-out obligation and is not a
+Phase-3 blocker.
+
+**Not checked in this pass:** anything outside the eight findings and the regression table. This is
+a confirmation pass, not a re-audit; the Phase 2 verdict above stands on its own evidence.
