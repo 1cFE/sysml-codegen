@@ -2221,6 +2221,45 @@ required them before close, so they were filed as `[AGENT]` rows and the premise
 surfaced. There was no product-semantic deviation. The owner-retired PDF/HTML suite was not run.
 Rollback point: `1451615609e29b1f511c6b8e69fe425d8afe355e`.
 
+#### Phase 4 audit (2026-08-18) — **Needs Work, bounded**
+
+The independent Phase 4 audit is recorded at
+[run-records/phase4-audit.md](run-records/phase4-audit.md). Product-lens gate for the run:
+**DISPOSED (audit-phase4-F1, audit-phase4-F2)** — no owner or `[HARD]` contradiction in Phase 4.
+The audit independently reproduced the extraction identity (all 2,581 tracked files byte-identical
+to `e5f73e6`), the default suite (2,492 / 34 / 94), the reconciliation gate, the mypy and Ruff
+baselines, and the six-node TEAx mutation suite. All 34 skips are golden-fixture skips; no licensed
+route skipped. The registry closure, the five-arm natural-route matrix, A5a/A5b, the deep-probe
+refusal, static closure, backlog filing, and the documentation sweep all verify.
+
+Two obligations are not met, neither touching shipped behavior:
+
+- **audit-phase4-F1 — the fixture-byte lock was narrowed and the ledger row does not say so.**
+  `8919232` deleted the only current-vs-locked byte comparison
+  (`verification/capture_baseline.py::validate_manifest`). Leg 1 recomputes history at `20f9e60`;
+  leg 2 pins outputs for the 37 canonical roots; the manifest rebuild now compares a P_seed rebuild
+  against P_seed bytes. The six `ADDED_ROOTS` — including `indexed_expression_source`, which the
+  phase's own indexed-BINDING cell reads with a hard-coded line number — have no byte pin on any leg.
+  The owning row at `verification/expected-transitions.md:116` presents the change as satisfying the
+  three-leg lock and does not name the dropped coverage. Restore or replace the current-bytes leg, or
+  state the loss and name what covers the six added roots. Because this is verification code, fixing
+  it after certification would restart these gates under the phase's own rollback rule; it belongs to
+  Phase 4.
+- **The validation bullet claims universality the rows do not have.** Six public refusal rows assert
+  fewer than the six required elements (listed in the audit record). Either raise them to the bar or
+  amend the bullet to name the exemptions and the reason. **audit-phase4-F2** belongs here: the
+  consumer closure table asserts `public_arms == ("live", "admitted/capture")` for the
+  deep-literal-override row, but that row's indexed cell is a hand-built-IR unit test and its
+  operand/depth cell is the prose string `"not an expression route"`. The cause is the product
+  working correctly — SysIDE refuses `:>> rig.cells#(2).mass = 7.0;` at parse, so there is no
+  authorable public route — but nothing records that, and the assertion should be per-cell.
+
+No Phase 4 checkbox was unchecked: the implementation claims above are accurate as written, and the
+two gaps are recorded here rather than by retracting completed work. Separately, product-lens
+`audit-phase3-F4` is **FIXED** by this independent re-audit (discharging the remediation block's
+`PENDING INDEPENDENT RE-AUDIT` gate), `audit-phase3-F1` and `-F3` are FIXED, and `audit-phase3-F2`
+remains disposed-but-undelivered and is scheduled nowhere — it needs an owner before close.
+
 ### Phase 5 completion
 
 **Completed:**

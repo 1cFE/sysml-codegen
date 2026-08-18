@@ -954,3 +954,139 @@ The falsifier named by F4 is pinned directly by:
 
 Gate: **PENDING INDEPENDENT RE-AUDIT**. The implementation evidence satisfies F4's recorded
 falsifier, but only the independent audit may change the historical **BLOCKED** verdict.
+
+---
+
+## audit-phase4 — 2026-08-18 — rev C_prod `e5f73e6` (stop-parser-impl-r2) / plan artifacts `a5ff0a2`
+
+Epic: ELABORATE-FIRST (`.project/backlog/epic_elaborate_first_architecture.md`)
+
+Point (re-derived): The product is three steps and nothing else — parse the models with a SysMLv2
+parser, walk the parser's resolved tree to reconstruct the math, write that math into TEAx Python.
+Every decision on the way reads the parser's own resolved evidence, and an authored form the
+toolchain cannot honor has exactly two honest outcomes: resolve it through the parser, or refuse by
+name before anything is built. No second account of a fact the graph already owns.
+[source: `.project/product/P-004-product-identity-parse-walk-emit.md` and
+`.project/product/P-003-no-workarounds-for-bad-models.md`, grade: **owner**
+(`[OWNER-VERBATIM, 2026-08-16]`); exact-occurrence companion
+`.project/product/P-002-exact-owner-anchoring.md`, grade: agent/ratified]
+
+Falsifier: a generation decision is taken from a caller-supplied account rather than the sealed
+graph, or an internal invariant reaches a user as an untyped traceback instead of a named refusal;
+or a claimed proof of a refusal route does not exist on the public route it claims; or the evidence
+machinery that attributes a behavior transition can no longer detect a change to the inputs the
+transition was measured on.
+
+Findings:
+
+- audit-phase4-F1 [DON'T] The fixture-inventory validator lost its only current-bytes check, inside
+  the phase whose own edit tripped it. `1ce8638` (a documentation sweep) rewrote a comment in the
+  locked fixture `tests/fixtures/deep_cross_scope_probe/design.sysml`; the next commit, `8919232`,
+  deleted the `_sha(ROOT / path) != source["sha256"]` comparison from
+  `verification/capture_baseline.py::validate_manifest` and rebased `_historical_source_rows` onto
+  the P_seed git tree. After the change no committed check compares any fixture's **current** bytes
+  to its locked bytes: leg 1 (`tests/conformance/test_probe_fixture_lock.py:102`) recomputes the 118
+  locked hashes against history at `20f9e60` only; leg 2 (`validate_current_batch`) pins outputs for
+  the 37 canonical roots; and the manifest rebuild is now a tautology — it compares a rebuild from
+  P_seed against the frozen P_seed manifest bytes. The six `ADDED_ROOTS`, including
+  `indexed_expression_source` (a fixture Phase 4's own indexed-BINDING matrix cell depends on, with a
+  hard-coded line number), are in neither the batch nor any current-bytes check, so they now have no
+  byte pin on any leg. The disclosure row at `verification/expected-transitions.md:116` states the
+  change was made "as the three-leg lock requires" and does not name the coverage that was dropped.
+  Falsifier: restore a current-vs-locked byte comparison over all 43 roots, with any deliberate
+  difference owned by a named ledger row the way leg 3 already owns `capture_baseline.py`; or state
+  the loss plainly in the ledger and name what covers the six added roots instead. —
+  `.project/active/stop-reinventing-the-parser/spec.md` "Immutable baseline and entry gate"
+  (`[INHERITED]`) and the design's three-leg lock (agent) — disposition: DISPOSE — record the
+  coverage loss in the transition ledger and restore or replace the current-bytes leg before close.
+
+- audit-phase4-F2 [DO] The consumer closure table asserts public-arm coverage it does not have for
+  the deep-literal-override row. `test_the_consumer_closure_table_covers_every_reviewed_consumer`
+  asserts `public_arms == ("live", "admitted/capture")` for **every** row, but that row's
+  `indexed_refusal` cell names a hand-built-IR unit test with monkeypatched facts
+  (`tests/unit/test_expression_evidence_boundary.py:543`), and its `operand_or_depth_failure` cell is
+  still the prose string `"not an expression route"` — which `test_every_consumer_cell_names_a_proof`
+  accepts because it only tests for a non-empty string. The reason is legitimate and is the
+  product's point working correctly: the authored form `:>> rig.cells#(2).mass = 7.0;` is refused by
+  SysIDE at parse (`parsing-error: Unexpected 'DECIMAL_VALUE'`), while the same override without the
+  index parses and elaborates. So there is no authorable public route for that cell — but nothing in
+  the table or the run record says so, and a reader takes the row as equal in force to the other five.
+  Falsifier: mark the two deep-override cells with their measured unauthorability and the probe that
+  established it, and make the `public_arms` assertion per-cell rather than per-row, so a future
+  empty-in-substance cell cannot pass as covered. — `audit-phase3-F1`'s own recorded falsifier
+  ("assert which layer refused … so an omitted preflight row cannot yield an identical passing test")
+  applied by agent inference (`[AGENT]`/`[INFERRED]`) — disposition: DISPOSE — record the boundary in
+  the table; no behavior change required.
+
+Verified positive (no finding): the registry closure does what the point asks.
+`required_exit_point_wrapper_types(graph)` (`src/sysml_codegen/generation/registry.py:48`) is the
+single owner of the root-output wrapper set and of its refusal; the caller-supplied
+`exit_point_primitive_types` argument and the CLI's `_collect_exit_point_primitive_types` collector
+are gone (`src/sysml_codegen/cli/__init__.py:319-323,716-727`), and the untyped `RuntimeError` that
+fired when the caller's list disagreed with the graph is replaced by the typed
+`EXIT_POINT_TYPE_UNSUPPORTED` carrying module, output, python_type, and `file:line`
+(`src/sysml_codegen/generation/errors.py:58-74`). No second wrapper map survives anywhere in `src/`.
+The phase's suites ran independently under license in the recorded extraction: 166 passed
+(`test_expression_evidence_integrity.py` + `test_expression_evidence_boundary.py`), 46 passed
+(registry, exit-type preflight, module-kind, documentation contract, hygiene tail), 21 passed
+(probe-fixture lock + v6 snapshot inventory). Zero skips, so the licensed arms really ran.
+
+Smells:
+
+- **Smell 1 — two representations manually kept synchronized: one instance removed, one created.**
+  Removed: the registry's caller-supplied type set beside the graph's own root outputs, whose only
+  synchronization check was an internal `RuntimeError`. Created: the frozen fixture inventory and the
+  on-disk fixtures, whose content synchronization is now unchecked by any committed test (F1). Fires,
+  and escalates into the audit's judgment as F1.
+- **Smells 3, 4, 5: clear.** No new category exempts a case, no decision reads a Python class name
+  (`type(...).__name__` is absent from every decision path touched here), and the two recorded
+  nonzero baselines (30 mypy errors, 608 broad ruff) are declared non-green rather than preserving
+  contradicting behavior.
+- **Smell 6 — a test passes by selecting one route: does not fire for the matrix, fires weakly for
+  the lock.** The new indexed-refusal matrix runs 5 roles × 5 arms (live/admitted strict and lenient,
+  capture) on real parsed models, asserts the exact authored reference, root-relative `file:line`, the
+  `SemanticEvidenceCode` cause, that the consumer's real adapter was never called, and that no
+  snapshot byte moved. That is the opposite of route selection. The manifest check, by contrast, now
+  passes by comparing a P_seed rebuild against P_seed bytes (F1).
+
+Gate: **DISPOSED (audit-phase4-F1, audit-phase4-F2)** — no owner/`[HARD]` contradiction found in
+Phase 4.
+
+Resolves:
+
+- audit-phase3-F4: **FIXED** — authority: owner-grade source unchanged (`P-003`/`P-004`); resolved
+  against the recorded falsifier by independent code reading and a licensed run, not by the
+  remediation record. Basis: (a) the role is decided once, on the unit-unwrapped expression, inside
+  the inventory (`elaboration/expression_evidence.py:327,342-347`), stored per declaration, and each
+  consumer retrieves it via `_site_for_expression` -> `inventory.site_for(declaration_id)`
+  (`elaboration/elaborate.py:2079-2090`, used at 893, 926, 2053, 2151) — the duplicate predicate
+  applied to a different node is gone; (b) `ExpressionInventoryError` is caught at the D7 boundary
+  and converted to `SI_EVIDENCE_INCOMPLETE` carrying the authored reference and root-relative
+  `file:line` (`orchestration/elaborated_pipeline.py:178-198`), so the class can no longer reach a
+  user as a bare traceback; (c) the public-route pin
+  `test_unit_annotated_alias_survives_the_public_conversion_boundary` now runs over **all five**
+  public arms rather than two strict modes, on a real model carrying both `= base_len [m]` and
+  `= inner.w [m]`, and passed in an independent licensed run alongside
+  `test_inventory_invariant_is_contained_with_authored_provenance`.
+  This discharges the `PENDING INDEPENDENT RE-AUDIT` gate left by the `audit-phase3-remediation`
+  block, consistent with the Phase 3 re-audit verdict in `run-records/phase3-audit.md`.
+- audit-phase3-F1: **FIXED, with a named residue.** All 24 cells of the consumer closure table are
+  filled and `test_every_consumer_cell_names_a_proof` is green rather than committed red. Twenty-two
+  cells are public-route conformance proofs over five arms; the layer discrimination F1 demanded is
+  present as `acquired[-1].role is case.role` plus `not downstream.called` against a spy on the real
+  consumer adapter, so an omitted preflight row cannot produce an identical passing test. The residue
+  is the two deep-override cells, carried forward as audit-phase4-F2.
+- audit-phase3-F3: **FIXED** — `_enumerate_sites` now enumerates `ConstraintDefinition.result_expression`
+  as well as `ConstraintUsage`'s (`elaboration/expression_evidence.py:309-323`), and Phase 4's
+  `INDEXED_PREDICATE_SOURCE` case authors exactly the shape F3 named — a `constraint def` body
+  carrying `h.cells#(2).mass` — and asserts one `SI_INDEXED_SOURCE_UNSUPPORTED` at the authored
+  reference and line across all five arms. F3's falsifier is directly pinned.
+- audit-phase3-F2: **NOT RESOLVED — still standing as DISPOSED-but-undelivered.** F2's disposition
+  was "add the public-route pin; correct the plan's evidence claim." At C_prod the qualified-predicate
+  rendering seam is still evidenced only by `tests/unit/test_predicate_compiler.py` (hand-built
+  `FeatureReferenceFact`/`IdentityFact`); no test generates Python from
+  `tests/fixtures/usage_owned_reference_consumers` and asserts the emitted predicate source and arg
+  names. `audit-phase3-F2` appears nowhere in `plan.md` or the Phase 4 brief, so the disposition was
+  never scheduled. Basis for carrying it: grep of `tests/` for `predicate_reference_name` and for
+  that fixture at `e5f73e6`. Authority: agent/ratified (`P-002`); it does not block, but it must not
+  be read as closed by the Phase 4 gate.

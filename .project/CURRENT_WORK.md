@@ -1,7 +1,14 @@
 # Current Work
 
-**Last Updated**: 2026-08-18 (**stop-reinventing-the-parser: Phase 4 implementation complete;
-independent audit pending. Codegen production candidate `stop-parser-impl-r2` is `e5f73e6`; Agentic
+**Last Updated**: 2026-08-18 (**stop-reinventing-the-parser: Phase 4 audited — NEEDS WORK,
+bounded. Two evidence-record fixes owed before Phase 5; no shipped-behavior defect. Record:
+`.project/active/stop-reinventing-the-parser/run-records/phase4-audit.md`. Product-lens gate
+DISPOSED (audit-phase4-F1, audit-phase4-F2); `audit-phase3-F4` is now FIXED by independent
+re-audit. Owed: (1) restore or replace the current-bytes fixture leg deleted in `8919232` and
+say so in the transition ledger — the six `ADDED_ROOTS` currently have no byte pin on any leg;
+(2) fix the plan's universality claim for six under-asserting refusal rows and make the
+consumer-closure `public_arms` assertion per-cell. Phase 4 implementation itself is complete
+and reproduces exactly. Codegen production candidate `stop-parser-impl-r2` is `e5f73e6`; Agentic
 remains read-only at `3f8bd58` (0.1.3 / `semantic-evidence/v2`). Registry wrapper authority is now
 graph-derived on every exported route, the natural expression-consumer matrix and dual-layer
 backstops are closed, and A5a/A5b are ledger-owned. Fresh-extraction validation: **2,492 passed, 34
