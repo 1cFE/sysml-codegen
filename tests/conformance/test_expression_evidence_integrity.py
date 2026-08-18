@@ -400,7 +400,19 @@ def test_valid_indexed_source_refuses_before_graph_with_exact_capability_diagnos
 SINGULAR_SLOT_FIXTURE = "indexed_bare_chain_singular"
 PLURAL_SLOT_FIXTURE = "indexed_bare_chain_plural"
 OPERATOR_WRAPPED_FIXTURE = "indexed_bare_chain_operator"
+
+#: The authored text the refusal must name back to the modeller, verbatim.
+AUTHORED_INDEXED_REFERENCE = "cells#(2).mass"
 AUTHORED_INDEXED_LINE = 15
+
+#: The root-relative referent every public arm reports.  Measured, not assumed: the live
+#: arm derives it from the caller's model root, and the admitted and capture arms map their
+#: private staged copy back through ``staged_to_referent``.  All three produce this exact
+#: value, so one constant is correct for all three rather than a per-arm table.
+ROOT_RELATIVE_REFERENT = "root-0/model.sysml"
+
+#: The three public arms the design requires for every consumer row.
+PUBLIC_ARMS = ("live", "admitted", "capture")
 
 
 class _CallSpy:
@@ -444,70 +456,120 @@ def _spy_on_occurrence_resolution(monkeypatch: pytest.MonkeyPatch) -> _CallSpy:
     return spy
 
 
-def _indexed_capability_detail(fixture_name: str) -> str:
-    return (
-        f"tests/fixtures/{fixture_name}/model.sysml:{AUTHORED_INDEXED_LINE}: "
-        "indexed source '#(...)' is recognized but not implemented"
-    )
+def _elaborate_through_arm(arm: str, fixture: Path, *, strict: bool, output: Path) -> object:
+    """Run one fixture through one public arm and return whatever that arm returns.
+
+    The capture arm ignores ``strict``: it seals through the admitted route, which the
+    design fixes at strict.  ``output`` is only written by the capture arm.
+    """
+    from sysml_codegen.extraction.source_manifest import admit_sources
+
+    if arm == "live":
+        return elaborated_pipeline.elaborate_model_paths([fixture], strict=strict)
+    if arm == "admitted":
+        with admit_sources([fixture]) as admission:
+            return elaborated_pipeline.elaborate_admitted_sources(admission, strict=strict)
+    if arm == "capture":
+        return capture_instance_graph_snapshot([fixture], output)
+    raise AssertionError(f"unknown public arm: {arm}")
+
+
+def _assert_named_indexed_refusal(error: ElaborationDiagnosticError) -> None:
+    """The full green contract: one named refusal carrying the authored reference and place.
+
+    Every field is compared for exact equality, never by suffix or substring.  That is the
+    point of this helper.  The SI_INDEXED_SOURCE_UNSUPPORTED diagnostic `C_base` already
+    produces carries ``reference=None`` and ``source_file=None`` and hides an absolute
+    staged path inside ``detail`` — and an ``endswith`` on a relative tail matches that
+    absolute path too.  An implementation that routes the bare chain into that existing
+    shape must stay red here, in every arm.
+    """
+    assert [item.code for item in error.diagnostics] == [
+        ElaborationCode.SI_INDEXED_SOURCE_UNSUPPORTED
+    ]
+    [diagnostic] = error.diagnostics
+    assert diagnostic.reference == AUTHORED_INDEXED_REFERENCE
+    assert diagnostic.source_file == ROOT_RELATIVE_REFERENT
+    assert diagnostic.source_line == AUTHORED_INDEXED_LINE
+    rendered = str(error)
+    assert rendered.count("SI_INDEXED_SOURCE_UNSUPPORTED") == 1
+    # The place must be root-relative in the rendered message too, never absolute and never
+    # the private staged copy the admitted and capture arms parse from.
+    assert "/tmp/" not in rendered
+    assert not diagnostic.detail.startswith("/")
 
 
 @requires_license
+@pytest.mark.parametrize("arm", PUBLIC_ARMS)
 @pytest.mark.parametrize("strict", [True, False])
 def test_indexed_bare_chain_singular_slot_refuses_before_consumers(
+    arm: str,
     strict: bool,
     monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
 ) -> None:
     """Case 1: an out-of-range index on a singular slot must refuse, not collapse.
 
-    Recorded red at C_base: no exception is raised at all.  The route returns an
-    InstanceGraph whose ``diagnostics`` is empty and whose attribute inventory holds
-    ``IndexedBareChainSingular__array__cells[0]__mass`` — occurrence zero, minted for
-    an authored ``#(2)`` that the model's ``Cell[1]`` slot cannot honor.
+    Recorded red at `C_base`, identically in all three arms: no exception is raised at all.
+    The live and admitted arms return an InstanceGraph whose ``diagnostics`` is empty and
+    whose attribute inventory holds ``IndexedBareChainSingular__array__cells[0]__mass`` —
+    occurrence zero, minted for an authored ``#(2)`` that the model's ``Cell[1]`` slot
+    cannot honor.  The capture arm seals that collapsed graph into a snapshot.
     """
     fixture = FIXTURES_DIR / SINGULAR_SLOT_FIXTURE
+    output = tmp_path / "instance_graph_snapshot.json"
     consumers = _spy_on_expression_consumers(monkeypatch)
 
     with pytest.raises(ElaborationDiagnosticError) as caught:
-        elaborated_pipeline.elaborate_model_paths([fixture], strict=strict)
+        _elaborate_through_arm(arm, fixture, strict=strict, output=output)
 
-    assert [item.code for item in caught.value.diagnostics] == [
-        ElaborationCode.SI_INDEXED_SOURCE_UNSUPPORTED
-    ]
-    [diagnostic] = caught.value.diagnostics
-    assert diagnostic.detail.endswith(_indexed_capability_detail(SINGULAR_SLOT_FIXTURE))
-    assert str(caught.value).count("SI_INDEXED_SOURCE_UNSUPPORTED") == 1
+    _assert_named_indexed_refusal(caught.value)
     assert not consumers.called
+    assert not output.exists()
 
 
 @requires_license
-def test_indexed_bare_chain_singular_slot_writes_no_snapshot(tmp_path: Path) -> None:
-    """Case 1, capture arm: the escape must not reach a sealed snapshot."""
-    fixture = FIXTURES_DIR / SINGULAR_SLOT_FIXTURE
+@pytest.mark.parametrize("arm", PUBLIC_ARMS)
+@pytest.mark.parametrize("strict", [True, False])
+def test_indexed_bare_chain_plural_slot_refuses_before_occurrence_resolution(
+    arm: str,
+    strict: bool,
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    """Case 2: the index defect must be named, and named before occurrence resolution.
+
+    Recorded red at `C_base`.  In the strict live, admitted and capture arms the route
+    refuses with two diagnostics — first ``SI_OCCURRENCE_AMBIGUOUS`` ("exact containment
+    step ... has 3 concrete occurrences") then ``SI_OCCURRENCE_MISSING`` on the typed alias
+    ``IndexedBareChainPlural__array__picked``.  Both are occurrence-selection names raised
+    for an unsupported authored index, and ``OccurrenceIndex.resolve_address`` has already
+    run by the time either is built.  Under lenient the live and admitted arms do not refuse
+    at all; they return a graph carrying those same two diagnostics.
+    """
+    fixture = FIXTURES_DIR / PLURAL_SLOT_FIXTURE
     output = tmp_path / "instance_graph_snapshot.json"
+    occurrence_resolution = _spy_on_occurrence_resolution(monkeypatch)
 
-    with pytest.raises(ElaborationDiagnosticError):
-        capture_instance_graph_snapshot([fixture], output)
+    with pytest.raises(ElaborationDiagnosticError) as caught:
+        _elaborate_through_arm(arm, fixture, strict=strict, output=output)
 
+    _assert_named_indexed_refusal(caught.value)
+    assert not occurrence_resolution.called
     assert not output.exists()
 
 
 @requires_license
 @pytest.mark.parametrize("strict", [True, False])
-def test_indexed_bare_chain_plural_slot_refuses_before_occurrence_resolution(
-    strict: bool,
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    """Case 2: the index defect must be named, and named before occurrence resolution.
+def test_operator_wrapped_indexed_source_still_refuses_correctly(strict: bool) -> None:
+    """Positive regression, not a red-set member: this shape already refuses correctly.
 
-    Recorded red at C_base: the route refuses with two diagnostics, the first
-    ``SI_OCCURRENCE_AMBIGUOUS`` ("exact containment step ... has 3 concrete
-    occurrences") and the second ``SI_OCCURRENCE_MISSING`` ("typed alias
-    'IndexedBareChainPlural__array__picked' has no resolved target").  Both are
-    occurrence-selection names raised for an unsupported authored index, and
-    ``OccurrenceIndex.resolve_address`` has already run by the time either is built.
+    It pins today's live-arm behavior exactly, including the fields the refusal does *not*
+    yet carry.  Phase 3 tightens this diagnostic to the same named contract the red set
+    demands, and this test is updated in that landing unit rather than being written now
+    against a contract no arm delivers.
     """
-    fixture = FIXTURES_DIR / PLURAL_SLOT_FIXTURE
-    occurrence_resolution = _spy_on_occurrence_resolution(monkeypatch)
+    fixture = FIXTURES_DIR / OPERATOR_WRAPPED_FIXTURE
 
     with pytest.raises(ElaborationDiagnosticError) as caught:
         elaborated_pipeline.elaborate_model_paths([fixture], strict=strict)
@@ -516,23 +578,20 @@ def test_indexed_bare_chain_plural_slot_refuses_before_occurrence_resolution(
         ElaborationCode.SI_INDEXED_SOURCE_UNSUPPORTED
     ]
     [diagnostic] = caught.value.diagnostics
-    assert diagnostic.detail.endswith(_indexed_capability_detail(PLURAL_SLOT_FIXTURE))
-    assert not occurrence_resolution.called
-
-
-@requires_license
-@pytest.mark.parametrize("strict", [True, False])
-def test_operator_wrapped_indexed_source_still_refuses_correctly(strict: bool) -> None:
-    """Positive regression, not a red-set member: this shape already refuses correctly."""
-    fixture = FIXTURES_DIR / OPERATOR_WRAPPED_FIXTURE
-
-    with pytest.raises(ElaborationDiagnosticError) as caught:
-        elaborated_pipeline.elaborate_model_paths([fixture], strict=strict)
-
-    [diagnostic] = caught.value.diagnostics
-    assert diagnostic.code is ElaborationCode.SI_INDEXED_SOURCE_UNSUPPORTED
-    assert diagnostic.detail.endswith(_indexed_capability_detail(OPERATOR_WRAPPED_FIXTURE))
     assert str(caught.value).count("SI_INDEXED_SOURCE_UNSUPPORTED") == 1
+
+    # Today's shape, pinned exactly so Phase 3 cannot tighten it silently. The refusal
+    # carries none of the three structured fields, and its detail holds the caller's own
+    # absolute path rather than the root-relative referent the red set demands. The
+    # `//` prefix is the `file:` URL remnant this diagnostic never strips.
+    assert diagnostic.reference is None
+    assert diagnostic.source_file is None
+    assert diagnostic.source_line is None
+    assert diagnostic.detail == (
+        f"//{FIXTURES_DIR / OPERATOR_WRAPPED_FIXTURE}/model.sysml:{AUTHORED_INDEXED_LINE}: "
+        "indexed source '#(...)' is recognized but not implemented"
+    )
+
 
 
 # --- Natural-route consumer closure table (Phase 1 seed) ---------------------

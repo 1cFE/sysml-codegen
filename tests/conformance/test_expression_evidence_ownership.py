@@ -35,6 +35,39 @@ REVIEWED_SELECTORS = frozenset(
     {"operands", "referent", "target_feature", "chaining_features"}
 )
 
+#: How Codegen reaches SysIDE.  No production module imports `syside` directly — that is
+#: deliberate and stated at `extraction/extractor.py:14` — so importing this adapter is what
+#: identifies a module that handles raw parser nodes in this repository.
+RAW_SYSIDE_ADAPTER = "agentic_mbse.sysml.syside_adapter"
+
+#: The measured raw-SysIDE module set: a module qualifies if it imports the adapter above or
+#: reads one of the reviewed selectors.  Recorded here so the rule's effect is reviewable
+#: rather than implicit, and pinned by `test_the_raw_syside_module_set_is_the_recorded_one`
+#: so a module cannot drift in or out unnoticed.
+RAW_SYSIDE_MODULES = (
+    "elaboration/elaborate.py",
+    "elaboration/graph.py",
+    "elaboration/identity.py",
+    "elaboration/occurrence.py",
+    "elaboration/project.py",
+    "extraction/binding_evidence.py",
+    "extraction/calc_compat_renderer.py",
+    "extraction/computed_attribute_extractor.py",
+    "extraction/expression_compiler.py",
+    "extraction/expression_utils.py",
+    "extraction/extractor.py",
+    "extraction/feature_metadata.py",
+    "extraction/hierarchy_resolver.py",
+    "extraction/modeled_defaults.py",
+    "extraction/source_evidence.py",
+    "extraction/source_manifest.py",
+    "extraction/unit_annotation.py",
+    "extraction/usage_extractor.py",
+    "generation/constraint_name_safety.py",
+    "generation/predicate_compiler.py",
+    "orchestration/elaborated_pipeline.py",
+)
+
 
 @dataclass(frozen=True, order=True)
 class SelectorRead:
@@ -212,16 +245,70 @@ def scan_module(source: str, module: str) -> set[SelectorRead]:
     return scanner.reads
 
 
+def is_raw_syside_module(source: str) -> bool:
+    """Does this module handle raw SysIDE nodes?
+
+    Two clauses, either sufficient: it imports the SysIDE adapter, or it reads one of the
+    reviewed selectors.  This is the scope the design's ownership manifest means by "the
+    raw-SysIDE module set", and it is what bounds the dynamic-`getattr` rejection below.
+    """
+    tree = ast.parse(source)
+    for node in ast.walk(tree):
+        if isinstance(node, ast.ImportFrom) and node.module:
+            if node.module == RAW_SYSIDE_ADAPTER or node.module.startswith(
+                f"{RAW_SYSIDE_ADAPTER}."
+            ):
+                return True
+        elif isinstance(node, ast.Import):
+            if any(
+                alias.name == RAW_SYSIDE_ADAPTER
+                or alias.name.startswith(f"{RAW_SYSIDE_ADAPTER}.")
+                for alias in node.names
+            ):
+                return True
+        elif isinstance(node, ast.Attribute) and node.attr in REVIEWED_SELECTORS:
+            return True
+        elif (
+            isinstance(node, ast.Call)
+            and isinstance(node.func, ast.Name)
+            and node.func.id == "getattr"
+            and len(node.args) >= 2
+            and isinstance(node.args[1], ast.Constant)
+            and node.args[1].value in REVIEWED_SELECTORS
+        ):
+            return True
+    return False
+
+
 def _production_modules() -> list[Path]:
     return sorted(PACKAGE_ROOT.rglob("*.py"))
 
 
+def raw_syside_modules() -> tuple[str, ...]:
+    """Every production module that handles raw SysIDE nodes, by the rule above."""
+    return tuple(
+        path.relative_to(PACKAGE_ROOT).as_posix()
+        for path in _production_modules()
+        if is_raw_syside_module(path.read_text())
+    )
+
+
 def discovered_reads() -> set[SelectorRead]:
-    """The full raw-selector inventory of the production package."""
+    """The raw-selector inventory of the production package.
+
+    Selector reads are collected everywhere — a read of `.operands` is a selector read
+    wherever it sits.  The unreviewable dynamic-`getattr` form is collected only inside the
+    raw-SysIDE module set, because that is the scope in which a hidden selector is the
+    hazard.  Outside it, a `getattr` over a module's own field names is ordinary Python.
+    """
     found: set[SelectorRead] = set()
     for path in _production_modules():
         module = path.relative_to(PACKAGE_ROOT).as_posix()
-        found |= scan_module(path.read_text(), module)
+        source = path.read_text()
+        reads = scan_module(source, module)
+        if not is_raw_syside_module(source):
+            reads = {read for read in reads if read.form != "dynamic-getattr"}
+        found |= reads
     return found
 
 
@@ -265,8 +352,40 @@ def test_every_reviewed_row_names_a_closure_proof() -> None:
     assert {row.route_state for row in REVIEWED_ROWS} <= {"live", "off-route"}
 
 
-def test_no_dynamic_getattr_survives_in_production() -> None:
-    """A non-literal `getattr` selector cannot be reviewed, so it cannot be owned."""
+def test_the_raw_syside_module_set_is_the_recorded_one() -> None:
+    """Pin the rule's measured effect, so the gate's scope cannot drift unreviewed."""
+    assert raw_syside_modules() == RAW_SYSIDE_MODULES
+
+
+def test_no_production_module_imports_syside_directly() -> None:
+    """The premise behind keying the rule on the adapter rather than on `syside` itself.
+
+    Codegen reaches SysIDE only through `agentic_mbse.sysml.syside_adapter`; a direct
+    `import syside` would make the adapter-import clause miss that module.
+    """
+    offenders = [
+        path.relative_to(PACKAGE_ROOT).as_posix()
+        for path in _production_modules()
+        for node in ast.walk(ast.parse(path.read_text()))
+        if (
+            isinstance(node, ast.Import)
+            and any(a.name == "syside" or a.name.startswith("syside.") for a in node.names)
+        )
+        or (
+            isinstance(node, ast.ImportFrom)
+            and node.module is not None
+            and (node.module == "syside" or node.module.startswith("syside."))
+        )
+    ]
+    assert not offenders, f"direct syside imports bypass the adapter boundary: {offenders}"
+
+
+def test_no_dynamic_getattr_survives_in_the_raw_syside_module_set() -> None:
+    """A non-literal `getattr` inside a raw-SysIDE module hides an unreviewable selector.
+
+    Scoped to that module set on purpose. Outside it, a `getattr` over a module's own
+    declared field names reads no parser node and is ordinary, reviewable Python.
+    """
     dynamic = sorted(read for read in discovered_reads() if read.form == "dynamic-getattr")
     assert not dynamic, f"unreviewable dynamic getattr selectors: {dynamic}"
 
@@ -274,6 +393,11 @@ def test_no_dynamic_getattr_survives_in_production() -> None:
 # ---------------------------------------------------------------------------
 # The five AST evasion mutations — every one must kill the gate
 # ---------------------------------------------------------------------------
+
+#: Every mutant imports the SysIDE adapter, so each one is a raw-SysIDE module by the rule
+#: above.  That matters for the dynamic-`getattr` mutation in particular: scoping the gate
+#: would be worthless if the mutation that scoping could hide were tested outside the scope.
+_ADAPTER_IMPORT = f"from {RAW_SYSIDE_ADAPTER} import SysideAdapter\n\n\n"
 
 _EVASIONS = {
     "direct-read": "def consume(node):\n    return node.operands\n",
@@ -293,8 +417,11 @@ _EVASIONS = {
 
 @pytest.mark.parametrize("evasion", sorted(_EVASIONS))
 def test_every_ast_evasion_mutation_is_discovered(evasion: str) -> None:
-    """Introduce one evasion form and require the scanner to surface it."""
-    found = scan_module(textwrap.dedent(_EVASIONS[evasion]), "mutant.py")
+    """Introduce one evasion form into a raw-SysIDE module and require the gate to kill it."""
+    source = _ADAPTER_IMPORT + textwrap.dedent(_EVASIONS[evasion])
+
+    assert is_raw_syside_module(source), "mutant fell outside the scoped gate"
+    found = scan_module(source, "mutant.py")
     assert found, f"evasion form went undiscovered: {evasion}"
     assert all(read.function == "consume" for read in found), found
 
@@ -302,6 +429,11 @@ def test_every_ast_evasion_mutation_is_discovered(evasion: str) -> None:
 def test_a_clean_module_produces_no_selector_reads() -> None:
     """Anti-vacuity: the scanner is not simply flagging everything."""
     assert scan_module("def consume(node):\n    return node.name\n", "clean.py") == set()
+
+
+def test_a_clean_module_is_not_in_the_raw_syside_set() -> None:
+    """Anti-vacuity for the scope rule: it does not admit everything."""
+    assert not is_raw_syside_module("def consume(node):\n    return getattr(node, node.name)\n")
 
 
 # ---------------------------------------------------------------------------
