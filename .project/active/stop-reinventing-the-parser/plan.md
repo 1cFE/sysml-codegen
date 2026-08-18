@@ -2295,6 +2295,22 @@ mypy remains 30 errors in 8 files; changed-file Ruff and `git diff --check` are 
 No shipped source or Agentic byte changed. Phase 5 did not start. This response does not self-certify
 the audit; the next action is an independent Phase 4 re-audit against `571ed39`.
 
+#### Phase 4 F1 re-audit (2026-08-18) — **audit-phase4-F1 FIXED**
+
+Targeted independent re-audit of finding 1 at candidate `571ed39` (repairs `9da3d84`, `f951663`,
+`571ed39`), recorded in [run-records/phase4-audit.md](run-records/phase4-audit.md) under "Targeted
+re-audit of audit-phase4-F1". The current-bytes leg is restored as an independent check over all 110
+sources in all 43 roots, gated on exact ledger ownership, running before the batch and output legs;
+the leg-3 ledger row now names the dropped coverage and its restoration in plain words. Six
+adversarial mutations were run — comment-only edits to a canonical root and to the `ADDED_ROOT`
+`indexed_expression_source`, an extra edit to the ledger-owned deep-probe file, a duplicate row, a
+wrong-hash row, and a newly added file — and every one refuses; the unmutated tree passes with the
+identical report and reconciliation numbers. Manifest regeneration cannot absorb a mutation, since
+the manifest is itself a leg-1 row recomputed against `20f9e60`.
+
+Finding 2 (the universality claim for six under-asserting refusal rows, and `audit-phase4-F2`) was
+**not** re-audited in this pass and remains open on the record.
+
 ### Phase 5 completion
 
 **Completed:**

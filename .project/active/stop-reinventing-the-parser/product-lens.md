@@ -1115,3 +1115,39 @@ Responses:
 The implementation also drives unsupported exit types through `--from-snapshot`, makes the old
 registry template tests graph-discriminating, and corrects reference 08. Full evidence and setup-only
 deviations are in [run-records/phase4-remediation.md](run-records/phase4-remediation.md).
+
+---
+
+## audit-phase4-F1 re-audit — 2026-08-18 — rev C_prod `571ed39` (stop-parser-impl-r2)
+
+Targeted independent re-audit of one finding. Scope: `audit-phase4-F1` only.
+
+Resolves:
+
+- audit-phase4-F1: **FIXED** — resolved against its own recorded falsifier, by code reading plus
+  adversarial mutation, not by the remediation record. Basis: (a) coverage restored —
+  `validate_current_fixture_sources` (`verification/capture_baseline.py:210`) hashes every one of the
+  110 sources across all 43 roots from the working tree, so a P_seed rebuild cannot satisfy it, and it
+  runs unconditionally from `validate_manifest:196` via `main:710`, before the batch and output legs;
+  (b) ledger ownership is exact — a difference needs exactly one row naming both hashes, and zero,
+  two, or hash-mismatched rows all refuse; (c) the six `ADDED_ROOTS` are covered directly, which was
+  the specific hole; (d) the disclosure half is answered — the leg-3 row for `capture_baseline.py`
+  now states that `8919232` "also dropped the comparison with current fixture bytes" and that
+  `f951663` restores it, replacing the previous wording that presented the change as satisfying the
+  lock. Measured: comment-only edits to a canonical fixture and to `indexed_expression_source` both
+  refuse through the real `--check` gate; an extra edit to the ledger-owned deep-probe file, a
+  duplicate row, and a wrong-hash row all refuse; an added file refuses at the file-set leg; the
+  unmutated tree passes with the identical report and reconciliation numbers. Regenerating the
+  manifest cannot absorb a mutation — `verification/fixture-manifest.json` is one of the 118 rows
+  recomputed against history at `20f9e60` by leg 1.
+
+Smells:
+
+- **Smell 1 — two representations manually kept synchronized: no longer fires for the fixture
+  inventory.** The frozen inventory and the on-disk fixtures are now compared by a kept, anti-vacuous
+  check (`test_every_current_fixture_source_is_pinned_or_ledger_owned` pins the exact 110 / 6 / 7
+  report and the single owned transition; `test_an_unowned_current_fixture_edit_fails_the_lock` is a
+  real negative).
+
+Gate: unchanged for the phase — this entry resolves `audit-phase4-F1` only. `audit-phase4-F2` and the
+under-asserting refusal rows were not re-audited and stand as recorded.

@@ -1,6 +1,8 @@
 # Phase 4 audit: close public routes and registry authority
 
-**Verdict:** Needs Work — bounded. Every Phase-4 behavior obligation verifies and reproduces; two
+**Verdict:** Needs Work — bounded. **`audit-phase4-F1` re-audited and FIXED at `571ed39`**
+(see "Targeted re-audit of audit-phase4-F1" at the end of this record). The second finding —
+the universality claim, including `audit-phase4-F2` — was not re-audited in that pass. Every Phase-4 behavior obligation verifies and reproduces; two
 evidence-record obligations do not.
 **Audited:** 2026-08-18
 **Scope:** Phase 4 only. Item-level spec conformance and Phase 5 were not assessed.
@@ -249,3 +251,118 @@ checkbox was marked. No fix, merge, push, close, or pre-PR action was performed.
 - **The claim that no check anywhere else pins current fixture bytes** rests on reading
   `capture_baseline.py`, `test_probe_fixture_lock.py`, and a grep for the two manifest paths; it was
   not established by mutating a fixture and observing the suite stay green.
+
+
+---
+
+## Targeted re-audit of `audit-phase4-F1` (2026-08-18)
+
+**Scope:** finding 1 only — the verification-code regression. The universality finding and
+`audit-phase4-F2` were **not** re-audited here; the user asked for finding 1.
+
+**Re-audited candidate:** codegen `571ed39b8059860206be57e3509cecc85bfbfac5` on
+`stop-parser-impl-r2` (repairs `9da3d84` tests, `f951663` fix, `571ed39` ledger); project records
+`3d7a362`; auditor artifacts preserved at `fef3284`.
+
+**Result: FIXED.** Both halves of the finding are answered — the coverage is restored by an
+independent mechanism, and the ledger now states plainly what was lost and what restored it.
+
+### The mechanism, read rather than trusted
+
+`validate_current_fixture_sources` (`verification/capture_baseline.py:210`) walks the frozen P_seed
+inventory and, for every source, hashes the file **under `repository_root`**. A P_seed rebuild
+cannot satisfy it, because the compared byte always comes from the working tree. A difference is
+allowed only when `verification/expected-transitions.md` carries **exactly one** row for that path
+naming **both** the frozen and the current hash; zero rows, two rows, or a row missing either hash
+all raise. It is called unconditionally from `validate_manifest:196`, which `main:710` runs on every
+invocation, before the batch and output-transition legs.
+
+Counts: 43 roots (37 canonical + 6 `ADDED_ROOTS`), 110 sources — confirmed against
+`verification/fixture-manifest.json` itself, not against the claim.
+
+### Adversarial probes (all run; the falsification my first pass listed as not checked)
+
+Against a scratch copy of the real fixture tree and the real frozen manifest:
+
+| Probe | Result |
+|---|---|
+| Unmutated baseline | PASSED — 110 checked, 6 added roots, 7 added sources, one transitioned source |
+| Comment-only edit, canonical root (`plant_value_shapes/design.sysml`) | REFUSED — unowned transition, 0 ledger rows |
+| Comment-only edit, `ADDED_ROOT` `indexed_expression_source/model.sysml` | REFUSED — the exact hole F1 named |
+| Extra edit to the ledger-owned deep-probe file | REFUSED — row omits the current hash |
+| Duplicate ledger row for the owned path | REFUSED — expected one row, found 2 |
+| Ledger row present with a wrong current hash | REFUSED — row omits the frozen or current hash |
+| Restore | PASSED — identical report to baseline |
+
+End-to-end through the real gate, in a disposable full copy of the `571ed39` extraction:
+
+- Comment-only edit to `indexed_expression_source/model.sysml` → `sysml-codegen`'s
+  `capture_baseline.py --check` **refuses inside `validate_manifest`**, before the batch and output
+  legs: `unowned current fixture source transition`.
+- New `.sysml` file added to a locked root → refused by the file-set leg
+  (`capture_baseline.py:190`, `unlisted or missing source`). Byte changes and set changes are both
+  covered; the byte leg alone does not see an added file, and does not need to.
+- Restored copy, full `--check --check-current-batch --check-output-transitions` → the same
+  reconciliation numbers as before the repair (14 captured / 23 refused, batch `7f9269…` vs frozen
+  `bd7bf2…`, 22 maintained / 23 metadata-only, exactly `deep_cross_scope_probe` and
+  `plant_value_shapes`).
+
+**Evasion route closed:** regenerating the manifest to absorb a mutation does not work. The rebuild
+reads P_seed, and `verification/fixture-manifest.json` is itself one of the 118 rows recomputed
+against history at `20f9e60` by leg 1, so altered manifest bytes fail that leg.
+
+### Anti-vacuity and honesty
+
+- `test_every_current_fixture_source_is_pinned_or_ledger_owned`
+  (`tests/conformance/test_probe_fixture_lock.py`) pins the exact report — 110 / 6 / 7 and exactly
+  one transitioned path — so a check that silently stopped covering roots fails.
+- `test_an_unowned_current_fixture_edit_fails_the_lock` is a real negative: it mutates bytes and
+  requires the `ValueError`.
+- The deep-probe row's two hashes match the frozen manifest entry and the file on disk exactly.
+- The `capture_baseline.py` leg-3 row now records current hash `442dbf9…`, which matches the file,
+  and its reason names the regression in plain words: `8919232` "also dropped the comparison with
+  current fixture bytes", and `f951663` "restores that coverage as a separate ledger-gated check over
+  all 110 current sources in all 43 roots, including the six `ADDED_ROOTS`". That is the disclosure
+  F1 asked for.
+
+### Reproduction
+
+- Extraction identity: all 2,581 tracked files in `/tmp/stop-parser-rev2/phase4-fix-extraction.jyhBwP`
+  byte-identical to the worktree at `571ed39`; archive SHA-256 `c5e96f00…` matches its manifest.
+- `test_probe_fixture_lock.py` + `test_stop_parser_documentation_contract.py` +
+  `test_v6_snapshot_inventory.py` → **32 passed**, matching the remediation record.
+
+**Not checked in this pass:** the second finding (six under-asserting refusal rows) and
+`audit-phase4-F2`; the `--from-snapshot` refusal coverage, graph-input registry rendering tests, and
+documentation correction claimed in the same remediation; the full default suite at `571ed39`
+(claimed 2,496 / 34 / 94); mypy, Ruff, and the TEAx lane at `571ed39`; and `audit-phase3-F2`'s
+scheduling. Those remain on the remediation record's word, not this auditor's.
+
+---
+
+## Orchestrator verification — finding 2 and remediation residuals (2026-08-18)
+
+The F1 re-audit above confirmed finding 1 by adversarial execution but explicitly did not
+re-verify finding 2 or the non-blocking repairs. Those are record-accuracy and test-existence
+claims — objectively checkable — so they were verified by the orchestrator by execution, per the
+run's record-the-verification rule for minor, objectively verifiable fixes:
+
+- **Focused Phase 4 selection: 206 passed**, recomputed verbatim from the implementation
+  record's recorded 7-file command (the remediation's figure is that selection plus its four
+  added nodes; traceability is via the cross-reference, one hop).
+- **Finding 2 substance:** the plan's validation bullet now scopes the six-part assertion claim
+  to the parameterized public matrix and enumerates each narrower row group's actual assertion
+  set (plan.md:1127-1139). The consumer-closure table records public arms per cell, requires a
+  reason for exactly the empty-arm cells, and requires every named proof to resolve
+  (test_expression_evidence_integrity.py:1363-1404). The two deep-override exception cells now
+  carry real proofs, run individually: the licensed parser probe (authors
+  `:>> deep_rig.cells#(2).mass = 7.0;`, asserts SysIDE parse rejection), the Feature-only
+  structural probe, and the path-factory refusal — 3 passed.
+- **Non-blocking repairs:** `--from-snapshot` is a real parametrized source arm of the
+  unsupported-exit-type refusal (preflight suite 17 passed); `test_registry_generation.py` now
+  drives `generate_registry(graph, …)`; `audit-phase3-F2` is an explicit unchecked Phase 5
+  obligation gating `C_prod` (plan.md:1231).
+- Full default suite from the retained `571ed39` extraction rerun for the 2,496 figure
+  (result recorded in the Phase 4 closure note in plan.md).
+
+Escalation was not needed; nothing contradicted the remediation record.

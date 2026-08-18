@@ -1,8 +1,12 @@
 # Current Work
 
 **Last Updated**: 2026-08-18 (**stop-reinventing-the-parser: Phase 4 audit remediation implemented;
-independent re-audit pending. The audit's bounded Needs Work verdict remains the certification
-record until that re-audit. Codegen candidate `stop-parser-impl-r2` is now `571ed39`; Agentic remains
+`audit-phase4-F1` independently re-audited and **FIXED** at `571ed39` (targeted pass; record appended
+to `run-records/phase4-audit.md`). Six adversarial mutations — canonical-root and `ADDED_ROOT`
+comment edits, an over-edited owned file, a duplicate row, a wrong-hash row, and an added file — all
+refuse through the real `--check` gate, and the unmutated tree passes with identical reconciliation
+numbers. Finding 2 (the six under-asserting refusal rows and `audit-phase4-F2`) was **not**
+re-audited; the audit's bounded Needs Work verdict remains the certification record until it is. Codegen candidate `stop-parser-impl-r2` is now `571ed39`; Agentic remains
 read-only at `3f8bd58` (0.1.3 / `semantic-evidence/v2`). `audit-phase4-F1` is answered by an
 independent current-byte guard over all 110 fixture sources in all 43 roots, with the one intentional
 comment difference ledger-owned. `audit-phase4-F2` is answered by per-cell route strength and named
