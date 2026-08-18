@@ -105,6 +105,8 @@ The audit's weakenings were applied to a disposable extraction, not to the imple
   the source manifest and history root recorded above. Exact invocation:
 
   ```bash
+  # with the SysIDE license loaded (set -a; source /home/reid/1cfe/agentic-mbse/.env; set +a);
+  # without it the two licensed nodes skip and the figure reads 81 passed, 2 skipped
   STOP_PARSER_ARTIFACT_SOURCE_INPUTS=/tmp/stop-parser-rev2/phase3-remediation-extraction-r3/artifact-source-inputs.json \
   PYTHONPATH=/tmp/stop-parser-rev2/phase3-remediation-extraction-r3/extracted/codegen/sysml-codegen/src \
   /tmp/stop-parser-rev2/worktrees/sysml-codegen/.venv/bin/python -m pytest \

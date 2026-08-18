@@ -2128,6 +2128,35 @@ The two audit weak variants that succeeded — skipped inventory and missing dia
 now have direct kept regression coverage. Their closing-gate boxes remain unchecked until the
 independent auditor attacks the remediated tree.
 
+#### Phase 3 re-audit and closure (2026-08-18) — **Pass with findings; phase CLOSED**
+
+The independent re-audit ([run-records/phase3-audit.md](run-records/phase3-audit.md), "Re-audit
+of the remediation") moved the verdict from Needs Work to **Pass with findings**, fit for
+Phase 4. All four Majors confirmed closed by execution from independent extractions: M1 across
+four crash shapes (including one the original audit did not have) with a no-annotation control
+proving the alias is honored; M2's deletion experiment now kills one real per-adapter proof per
+deletion; M4 defeated at both gates by three on-disk escape attempts. 21 of 22 remaining
+dispositions confirmed; the vacuity sweep found no test that cannot fail.
+
+Two surviving Minors were closed in a final round and **orchestrator-verified by execution**
+(2026-08-18, this session):
+
+- **N1** — route (b): `_resolve_bindings`' redundant unknown-value guard removed in `1451615`;
+  `require_exact_binding_use` (`binding_source.py`) is the sole refusal owner. Verified: the
+  weakening mutation (final arm returns instead of raising, mutant import-path asserted) kills
+  `test_require_exact_binding_use_switch_is_exhaustive` with `DID NOT RAISE`; the clean tree
+  passes 29/5; scoped strict zero.
+- **N2** — both suite figures now recomputable from recorded commands. Verified verbatim: the
+  13-file battery gives exactly **290 passed, 1 deselected**; the four-module topology subset
+  gives exactly **83 passed** with the SysIDE license loaded (81 passed, 2 skipped without it —
+  noted in the record).
+
+Docs commits `cd9f3b9`, `34cc0ff`; closure note in
+[run-records/phase3-remediation.md](run-records/phase3-remediation.md). Final Phase 3
+implementation identity: `stop-parser-impl-r2` at **`1451615`**. `occurrence.py` byte-identical
+to `C_base`; `deep_cross_scope_probe` still refused; all checkouts clean. **Phase 3 is closed;
+Phase 4 may start.**
+
 ### Phase 4 completion
 
 **Completed:**
