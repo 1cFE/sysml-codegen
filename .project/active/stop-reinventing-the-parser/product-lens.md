@@ -1090,3 +1090,28 @@ Resolves:
   never scheduled. Basis for carrying it: grep of `tests/` for `predicate_reference_name` and for
   that fixture at `e5f73e6`. Authority: agent/ratified (`P-002`); it does not block, but it must not
   be read as closed by the Phase 4 gate.
+
+---
+
+## phase4-remediation — 2026-08-18 — rev `571ed39` / plan response after `fef3284`
+
+This is an implementation response to the independent audit, not an independent product-lens run.
+The Phase 4 gate remains **DISPOSED**, and the audit verdict remains Needs Work until re-audited.
+
+Responses:
+
+- audit-phase4-F1: **REMEDIATED; independent verification pending.** The frozen P_seed reconstruction
+  remains historical. A separate current-source guard now reads all 110 SysML/KerML files in all 43
+  roots, counts the six `ADDED_ROOTS` directly, and requires exactly one path-and-both-hashes ledger
+  row for each difference. The sole difference is the owner commit's comment-only deep-probe edit.
+  A kept mutation test proves a new current-byte edit fails as unowned.
+- audit-phase4-F2: **REMEDIATED; independent verification pending.** Route force is now per cell.
+  The indexed deep-override cell names a licensed real-parser rejection probe; the operand/depth cell
+  names the real-model Feature-only structural proof. Both carry empty public-arm sets and explicit
+  reasons. No prose placeholder can satisfy the table.
+- audit-phase3-F2: **SCHEDULED, not resolved.** Phase 5 now owns its licensed public-route generated
+  predicate and real-model collision proofs before naming `C_prod`.
+
+The implementation also drives unsupported exit types through `--from-snapshot`, makes the old
+registry template tests graph-discriminating, and corrects reference 08. Full evidence and setup-only
+deviations are in [run-records/phase4-remediation.md](run-records/phase4-remediation.md).

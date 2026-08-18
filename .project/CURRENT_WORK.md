@@ -1,23 +1,21 @@
 # Current Work
 
-**Last Updated**: 2026-08-18 (**stop-reinventing-the-parser: Phase 4 audited — NEEDS WORK,
-bounded. Two evidence-record fixes owed before Phase 5; no shipped-behavior defect. Record:
-`.project/active/stop-reinventing-the-parser/run-records/phase4-audit.md`. Product-lens gate
-DISPOSED (audit-phase4-F1, audit-phase4-F2); `audit-phase3-F4` is now FIXED by independent
-re-audit. Owed: (1) restore or replace the current-bytes fixture leg deleted in `8919232` and
-say so in the transition ledger — the six `ADDED_ROOTS` currently have no byte pin on any leg;
-(2) fix the plan's universality claim for six under-asserting refusal rows and make the
-consumer-closure `public_arms` assertion per-cell. Phase 4 implementation itself is complete
-and reproduces exactly. Codegen production candidate `stop-parser-impl-r2` is `e5f73e6`; Agentic
-remains read-only at `3f8bd58` (0.1.3 / `semantic-evidence/v2`). Registry wrapper authority is now
-graph-derived on every exported route, the natural expression-consumer matrix and dual-layer
-backstops are closed, and A5a/A5b are ledger-owned. Fresh-extraction validation: **2,492 passed, 34
-skipped, 94 deselected**; focused Phase 4 routes **204 passed**; D1–D4 **163 passed**; TEAx mutation
-proof **6 passed**; Agentic ownership/reference-use **58 passed**; Codegen static closure **68
-passed**. `deep_cross_scope_probe` remains `SI_OCCURRENCE_MISSING` with no snapshot, and
-`occurrence.py` is byte-identical to `C_base`. Phase 5 has not started. Do not close, do not run
-pre-PR, and `elaborator-downstream` stays blocked until this item is independently audited and
-closed. Record: `.project/active/stop-reinventing-the-parser/run-records/phase4-implementation.md`.**).
+**Last Updated**: 2026-08-18 (**stop-reinventing-the-parser: Phase 4 audit remediation implemented;
+independent re-audit pending. The audit's bounded Needs Work verdict remains the certification
+record until that re-audit. Codegen candidate `stop-parser-impl-r2` is now `571ed39`; Agentic remains
+read-only at `3f8bd58` (0.1.3 / `semantic-evidence/v2`). `audit-phase4-F1` is answered by an
+independent current-byte guard over all 110 fixture sources in all 43 roots, with the one intentional
+comment difference ledger-owned. `audit-phase4-F2` is answered by per-cell route strength and named
+licensed parser/structure proofs for the two unauthorable deep-override cells. The six narrower
+refusal rows' actual assertions are recorded in the plan. Snapshot refusal, graph-driven registry
+rendering, and stale reference 08 are fixed; `audit-phase3-F2` is scheduled before Phase 5 names
+`C_prod`. Fresh-extraction validation at `571ed39`: **2,496 passed, 34 skipped, 94 deselected**;
+focused Phase 4 **206 passed**; lock/reconciliation contracts **32 passed**; TEAx mutation **6
+passed**; scoped strict mypy green; broad mypy unchanged at 30 errors / 8 files; changed-file Ruff
+clean. `occurrence.py` remains byte-identical to `C_base`. Phase 5 has not started. Do not close or
+run pre-PR; `elaborator-downstream` stays blocked. Records:
+`.project/active/stop-reinventing-the-parser/run-records/phase4-audit.md` and
+`.project/active/stop-reinventing-the-parser/run-records/phase4-remediation.md`.**).
 Prior status: 2026-08-17 (**Phase 1 complete and audited — plan
 Revision 3 executing design Revision 7; three-leg lock verification green (118/118 against the
 tree the lock names); 25-node red set across live/admitted/capture × strict on implementation
@@ -107,6 +105,20 @@ rather than invented; vehicle `[CONSTRAINT-GATES-UNTAGGED]` in `BACKLOG.md`.
 ---
 
 ## Active Work
+
+### 2026-08-18: stop-reinventing-the-parser — PHASE 4 REMEDIATED; RE-AUDIT PENDING
+
+[AGENT] The bounded Phase 4 audit response is implemented on `stop-parser-impl-r2` at `571ed39`.
+No shipped source changed. The current fixture guard now reads all 110 live source files separately
+from P_seed reconstruction and requires an exact transition row for every difference. Consumer
+closure now states route force per cell; the deep indexed override has a real parser rejection probe,
+and the non-expression cell has a real Feature-only structural proof.
+
+The cheap audit notes are also closed in implementation: snapshot refusal is driven publicly,
+registry render tests consume graph input, reference 08 is current, and `audit-phase3-F2` is scheduled
+in Phase 5 before `C_prod`. The exact validation and setup-only deviations are in
+`active/stop-reinventing-the-parser/run-records/phase4-remediation.md`. Phase 5 remains unstarted and
+an independent Phase 4 re-audit is next.
 
 ### 2026-08-18: stop-reinventing-the-parser — PHASE 4 IMPLEMENTED; AUDIT PENDING
 

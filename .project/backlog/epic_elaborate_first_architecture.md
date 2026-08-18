@@ -546,22 +546,20 @@ implemented, audited, and closed before Item 8 downstream design or implementati
 performs none of either predecessor's remediation. Source: the active item's `spec-review.md` L4-1
 and the owner's direction to apply the review fixes.
 
-**Bounded predecessor active — Phase 4 audited Needs Work (bounded) 2026-08-18:**
+**Bounded predecessor active — Phase 4 remediation implemented, re-audit pending 2026-08-18:**
 `.project/active/stop-reinventing-the-parser/` owns exact occurrence derivation and evidence
 integrity. It closes before `.project/active/elaborator-downstream/` starts so downstream
 regeneration and certification measure the final semantic-authority rules.
 
-The Phase 3 audit findings and follow-ups are closed. Phase 4 now closes the indexed-expression
-natural-route matrix and graph-derived registry authority in behavior on Codegen candidate
-`e5f73e6`, while preserving the `deep_cross_scope_probe` refusal and D1–D4 occurrence core. Its
-fresh-extraction default suite is green at 2,492 passed / 34 skipped / 94 deselected. This is an
-implementation result, not certification. The dedicated Phase 4 audit
-(`.project/active/stop-reinventing-the-parser/run-records/phase4-audit.md`) reproduced every
-behavior claim and returned **Needs Work, bounded**: the fixture lock lost its current-bytes leg
-(`audit-phase4-F1`) and the plan's universality claim for public refusal rows overstates six of
-them (`audit-phase4-F2` included). Phase 5 has not built or sealed the production artifact chain,
-and the product-lens gate remains blocked until that work names the green production commit. The predecessor remains active; no epic
-completion checkbox is marked, and downstream design and implementation remain blocked.
+The dedicated Phase 4 audit reproduced the behavioral result and returned **Needs Work, bounded**.
+Its two evidence findings are now remediated in Codegen candidate `571ed39`: all 110 current fixture
+sources are byte-checked with ledger-owned differences, and consumer proof strength is stated per
+cell with measured deep-override limitations. The validation-claim correction and cheap audit notes
+are also handled; `audit-phase3-F2` is scheduled before Phase 5 names `C_prod`. Fresh-extraction
+validation is green at 2,496 passed / 34 skipped / 94 deselected, with 206 focused Phase 4 and six
+TEAx mutation tests. This is an implementation response, not certification; independent Phase 4
+re-audit remains. Phase 5 has not built or sealed the production artifact chain. The predecessor
+remains active; no epic completion checkbox is marked, and downstream work remains blocked.
 
 **Bounded child closed 2026-08-16:** exact occurrence-owner anchoring for usage-owned one-segment
 references is certified and archived at

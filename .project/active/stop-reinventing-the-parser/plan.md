@@ -1124,9 +1124,19 @@ and [design.md#documentation-and-backlog-obligations](design.md#documentation-an
 
 **Automated:**
 
-- [x] Run the complete focused natural-route and registry suites with the SysIDE license; every row
-  must assert code, authored reference, root-relative `file:line`, cause chain, one rendered code
-  token, and no graph/snapshot/output mutation.
+- [x] Run the complete focused natural-route and registry suites with the SysIDE license. The
+  parameterized public-route matrix rows assert code, authored reference, root-relative `file:line`,
+  cause chain, one rendered code token, and preservation of any pre-existing snapshot bytes. The
+  narrower targeted/backstop rows assert only the contract they name:
+  - the constraint-definition inventory probe asserts code, authored reference, and `file:line`;
+  - the indexed-binding and operator-wrapped probes add one rendered token and absolute-path hygiene,
+    while the operator probe also checks the cause through the shared helper;
+  - the source-arm bridge probe asserts code, one rendered token, and that admitted verification did
+    not run;
+  - A5a/A5b add cause, downstream non-entry, and absence of a newly created snapshot, but do not
+    pre-seed an output to prove preservation;
+  - the deep cross-scope occurrence probe asserts code, authored reference, `file:line`, exact detail,
+    and one rendered token, but not a cause chain or output preservation.
 - [x] Run the full Codegen default suite, scoped strict gate, repository-wide mypy comparison, and
   Ruff. No required licensed test or route may skip.
 - [x] Run the existing occurrence matrix and public every-and-only TEAx mutation suite through live
@@ -1218,6 +1228,12 @@ def test_certified_topology(c_prod, f_final, c_evidence, records):
 - [ ] **Implementation-time product gate:** append the production result to the product-lens ledger
   only after the licensed live-and-capture indexed computed-attribute proof is green at `C_prod`.
   Record `audit3-F1` as fixed from that exact identity; do not clear it from a worktree-only run.
+- [ ] **Carried positive-capability proof (`audit-phase3-F2`):** add the licensed public-route
+  generation test its product-lens disposition requires. Generate from
+  `tests/fixtures/usage_owned_reference_consumers`, assert the emitted qualified-predicate source and
+  argument names, and include a real-model local-name collision refusal. Correct the older plan
+  evidence claim from that result. This is `[INHERITED: product-lens.md#audit-phase3-F2]`; it must be
+  delivered before Phase 5 names `C_prod`.
 
 ### Validation
 
@@ -2259,6 +2275,25 @@ two gaps are recorded here rather than by retracting completed work. Separately,
 `audit-phase3-F4` is **FIXED** by this independent re-audit (discharging the remediation block's
 `PENDING INDEPENDENT RE-AUDIT` gate), `audit-phase3-F1` and `-F3` are FIXED, and `audit-phase3-F2`
 remains disposed-but-undelivered and is scheduled nowhere — it needs an owner before close.
+
+#### Phase 4 audit remediation (2026-08-18) — implemented; re-audit pending
+
+The bounded response is recorded in
+[run-records/phase4-remediation.md](run-records/phase4-remediation.md). Codegen commits
+`9da3d84` → `f951663` → **`571ed39`** restore current-byte checking for all 110 fixture sources,
+ledger-own the sole intentional difference, make consumer-route force per-cell, and replace the two
+deep-override placeholders with measured parser/structure proofs. The validation universality claim
+above now states the narrower rows' actual assertion sets.
+
+The cheap audit notes are also handled: snapshot refusal reaches the public preflight, registry tests
+derive wrappers from graph input, reference 08 names `create_registry`, and `audit-phase3-F2` is now
+an unchecked Phase 5 obligation before `C_prod` is named. Fresh-extraction validation at `571ed39`:
+**2,496 passed / 34 skipped / 94 deselected** default, **206 passed** focused Phase 4, **32 passed**
+lock/reconciliation contracts, and **6 passed** TEAx mutation. Scoped strict mypy is green; broad
+mypy remains 30 errors in 8 files; changed-file Ruff and `git diff --check` are clean.
+
+No shipped source or Agentic byte changed. Phase 5 did not start. This response does not self-certify
+the audit; the next action is an independent Phase 4 re-audit against `571ed39`.
 
 ### Phase 5 completion
 
