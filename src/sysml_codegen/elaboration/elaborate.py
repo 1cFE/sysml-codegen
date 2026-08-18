@@ -2568,8 +2568,6 @@ class _ExactElaborator:
                     f"{evidence.formal.qualified_name!r} reached wiring; readiness "
                     "screening should have refused it",
                 )
-            if not isinstance(evidence, ExactBindingSource):
-                raise TypeError(f"value is not BindingSourceEvidence: {type(evidence).__name__}")
             use = require_exact_binding_use(evidence)
             try:
                 edges = self._resolve_semantic_reference(

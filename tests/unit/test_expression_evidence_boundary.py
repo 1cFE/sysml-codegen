@@ -378,7 +378,11 @@ def test_elaborator_readiness_switch_names_each_binding_variant() -> None:
     assert _ExactElaborator._unsupported_code(literal) is None
 
 
-def test_binding_wiring_switch_refuses_expression_and_unknown_variants() -> None:
+def test_binding_wiring_switch_refuses_expression_and_delegates_unknown_variants(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    import sysml_codegen.elaboration.elaborate as elaborate_module
+
     consumer = object.__new__(_ExactElaborator)
     consumer._pending_bindings = [
         SimpleNamespace(
@@ -391,15 +395,26 @@ def test_binding_wiring_switch_refuses_expression_and_unknown_variants() -> None
     with pytest.raises(ElaborationInvariantError, match="readiness screening"):
         consumer._resolve_bindings()
 
+    unknown_evidence = object()
+
+    def exact_use_owner(evidence: object) -> ExactReferenceUse:
+        assert evidence is unknown_evidence
+        raise RuntimeError("require_exact_binding_use owns unknown refusal")
+
+    monkeypatch.setattr(
+        elaborate_module,
+        "require_exact_binding_use",
+        exact_use_owner,
+    )
     consumer._pending_bindings = [
         SimpleNamespace(
-            evidence=object(),
+            evidence=unknown_evidence,
             consumer=object(),
             port=object(),
             location=None,
         )
     ]
-    with pytest.raises(TypeError, match="BindingSourceEvidence"):
+    with pytest.raises(RuntimeError, match="require_exact_binding_use owns unknown refusal"):
         consumer._resolve_bindings()
 
 
