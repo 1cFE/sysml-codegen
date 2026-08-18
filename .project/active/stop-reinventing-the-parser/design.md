@@ -1,9 +1,8 @@
 # Technical Design: Stop Reinventing the Parser
 
-**Status:** Revision 7 — targeted amendment of the approved Revision 6; amendment review closed
-(`Revise` verdict's must-fix set applied and verified 2026-08-17)
-**Revision:** 7
-**Date:** 2026-08-17
+**Status:** Revision 8 — targeted amendment of Revision 7, after the Phase 3 stop-rule halt
+**Revision:** 8
+**Date:** 2026-08-18
 **Branch:** `stop-reinventing-the-parser`
 **Contract:** `spec.md`, approved revision 4
 **Prior review:** `design-review.md`, Revision 6 `Approve`; Revision-7 targeted amendment review
@@ -12,10 +11,35 @@
 **Product lens:** `BLOCKED` at `audit3-F1` until the indexed-consumer proof passes
 **Revision input:**
 `.project/research/20260817-164828_expression-evidence-boundary-convergence-assessment.md`;
-`run-records/phase1-stop-report.md` (revision 3, rulings 1-7 owner-ratified 2026-08-17)
+`run-records/phase1-stop-report.md` (revision 3, rulings 1-7 owner-ratified 2026-08-17);
+`run-records/phase3-stop-report.md` (rulings 1-4 owner-ruled 2026-08-18)
 
 ## Revision history
 
+- **Revision 8 (2026-08-18) — targeted amendment.** Cause: `run-records/phase3-stop-report.md`.
+  Phase 3 halted under the stop rule because a Revision-7 premise is false — the unit operand of a
+  `[` annotation is **not** a feature reference for any compound unit (`[kg/m^3]` is an
+  `OperatorExpression`), so `inspect_reference_uses` refused every compound-unit model on the real
+  corpus. The owner ruled on the falsified premise and on three items surfaced beside it. This
+  amendment encodes those four rulings and changes exactly four areas:
+  1. **[One total inspection operation](#one-total-inspection-operation)** — the unit-annotation
+     bullet is replaced: the unit operand is **opaque**, not shape-validated (ruling 1).
+  2. **[Public agentic evidence contract](#d5-public-agentic-evidence-contract)** and the
+     [Agentic semantic contract](#agentic-semantic-contract) export list — one shared structural
+     primitive `unit_annotation_value`, called by both `inspect_reference_uses` and Codegen; the
+     Codegen value-site rule becomes policy over that primitive (ruling 2).
+  3. **[Checked consumer and ownership manifests](#checked-consumer-and-ownership-manifests)** —
+     the Codegen raw-selector gate keeps repository-wide discovery and gains collision-aware
+     reviewed rows; adapter-import scoping is rejected for Codegen (ruling 3).
+  4. **[Current code facts](#current-code-facts)** behavior matrix and the
+     [`Cell[3]` red-set case](#the-indexed-red-set--both-cases-are-required-kept-tests) — the
+     measured **lenient** arm of the plural bare chain is stated (ruling 4).
+
+  Where a ruling contradicts Revision-7 text, the ruling wins: ruling 1 **deletes** the
+  "validates its shape" requirement on the unit operand, and ruling 3 **rejects** extending Phase
+  2's adapter-import gate scope to Codegen. **No other mechanism changes.** D1-D10, the
+  closed-variant architecture, the artifact chain, the acyclic topology, the three-leg closure
+  condition, and the probe/fixture lock are untouched, and no closure requirement is weakened.
 - **Revision 7 (2026-08-17) — targeted amendment.** Evidence source:
   `run-records/phase1-stop-report.md`, whose `[verified]` claims were reproduced by the orchestrator
   in a clean worktree at `C_base`, and whose seven rulings the owner ratified on 2026-08-17. The
@@ -48,6 +72,11 @@ producer of final run evidence; the failed candidate's externally staged report 
 Revision 7 changes nothing in that mechanism. It corrects factual claims about the base tree and the
 escape's trigger, splits the indexed red set into the two cases that actually go red for the right
 reason, and records the ratified `deep_cross_scope_probe` ruling. See the revision history above.
+
+Revision 8 changes nothing in that mechanism either. It removes a falsified premise about unit
+annotations, gives the annotation's parser-shape reading one owner, corrects the Codegen
+raw-selector gate's scope ruling, and states the lenient arm the behavior matrix omitted. See the
+revision history above.
 
 Shaping and the spec are not rerun. The fresh research found that A5 and B3/B4/B9 still state the
 right required behavior; the defect is that the approved mechanisms did not make alternate weaker
@@ -115,17 +144,29 @@ These facts describe the audited failed candidate, not this documentation checko
 
   The measured behavior at `C_base` follows directly from that mechanism:
 
-  | Authored shape | Result at `C_base` | Provenance |
-  |---|---|---|
-  | `picked = cells#(2).mass`, `cells : Cell[3]` (Revision-6 plan stencil) | REFUSED — `SI_OCCURRENCE_AMBIGUOUS`; wrong name, incidental to the plural slot | [verified] orchestrator |
-  | `picked = cells#(2).mass * 1.0` (any operator wrapper) | REFUSED — `SI_INDEXED_SOURCE_UNSUPPORTED`; correct code | [AGENT] retained probe |
-  | `picked = cells#(1).mass`, `Cell[1]` | zero-diagnostic graph, silently `cells[0].mass` | [AGENT] retained probe |
-  | `picked = cells#(2).mass`, `Cell[1]` — index out of range | zero-diagnostic graph, silently `cells[0].mass` | [verified] orchestrator |
+  | Authored shape | Arm | Result at `C_base` | Provenance |
+  |---|---|---|---|
+  | `picked = cells#(2).mass`, `cells : Cell[3]` (Revision-6 plan stencil) | `strict=True` | REFUSED — `SI_OCCURRENCE_AMBIGUOUS`; wrong name, incidental to the plural slot | [verified] orchestrator |
+  | `picked = cells#(2).mass`, `cells : Cell[3]` | `strict=False` | **Graph returned**, carrying `SI_OCCURRENCE_AMBIGUOUS` + `SI_OCCURRENCE_MISSING`; all three `cells[i]__mass` attributes present, `picked` unresolved | [OWNER 2026-08-18] ruling 4; measured in Phase 1 |
+  | `picked = cells#(2).mass * 1.0` (any operator wrapper) | both | REFUSED — `SI_INDEXED_SOURCE_UNSUPPORTED`; correct code | [AGENT] retained probe |
+  | `picked = cells#(1).mass`, `Cell[1]` | both | zero-diagnostic graph, silently `cells[0].mass` | [AGENT] retained probe |
+  | `picked = cells#(2).mass`, `Cell[1]` — index out of range | both | zero-diagnostic graph, silently `cells[0].mass` | [verified] orchestrator |
 
   A **singular** slot silently binds occurrence zero for any authored index, in range or not. A
   **plural** slot refuses incidentally as ambiguous, on a name that describes occurrence selection
   rather than the unsupported index. **Operator-wrapped forms are real expressions, enter the screen,
   and refuse correctly today** — they are not part of the escape. The escape is the bare chain.
+
+  **The plural slot's two arms** (**[OWNER 2026-08-18]** — ruling 4, closing the gap surfaced at
+  plan.md Phase 1 "Issues / deviations" item 3 and Phase 1 audit Minor 9). The plural row's refusal
+  is the **strict** arm. Under `strict=False` the same fixture returns a graph carrying the same two
+  diagnostics instead of refusing. The diagnostic identity does not change between arms, so this is
+  the documented strict/lenient delivery contract, not a contradiction: lenient mode collects
+  reference/readiness diagnostics for which a complete graph remains meaningful. After this item,
+  **both arms refuse pre-graph with `SI_INDEXED_SOURCE_UNSUPPORTED`**, because the inventory runs
+  before any occurrence resolution and evidence refusals are not a leniency choice
+  ([D7](#d7-one-codegen-conversion-boundary)). Case 2's kept test already parameterizes both arms
+  and both are red at `C_base`; this row states what they pin.
 - Agentic owns typed operand materialization, exact reference facts, and the general ExpressionIR.
   Codegen nevertheless retains a raw-AST unit unwrapping helper, a recursive dependency walk with
   its own depth behavior, and a bare-binding constructor whose semantic path may be `None`.
@@ -463,9 +504,26 @@ resolver entry. Its optional state can describe undecoded math; it cannot create
 - One non-caller-selectable depth limit is shared by `inspect_reference_uses`,
   `extract_expression_ir`, expression reconstruction reached by extraction, and every other
   recursive production expression entry. Exhaustion raises `EXPRESSION_DEPTH_EXHAUSTED`.
-- A structural unit annotation visits its value operand and validates its shape but never emits the
-  unit operand as a data reference. Codegen's raw-AST `annotated_ast_value` entry is deleted and
-  de-exported; IR consumers keep `annotated_ir_value`.
+- A structural unit annotation is read through the shared `unit_annotation_value` primitive below.
+  **[OWNER-VERBATIM 2026-08-18]** — ruling 1:
+
+  > For a parser-accepted `[` annotation with exactly two operands, reference inspection visits the
+  > value operand and treats the unit operand as opaque. It neither traverses nor emits the unit
+  > operand. SysIDE owns the validity of the unit expression.
+
+  **[OWNER 2026-08-18]** The feature-reference and exact-referent requirements on the unit operand
+  are **dropped**. This boundary does not validate unit grammar at all — which is not the same as
+  saying any unit shape passes validation; a shape SysIDE rejects never reaches here. Codegen's
+  raw-AST `annotated_ast_value` entry is still deleted and de-exported; IR consumers keep
+  `annotated_ir_value`.
+
+  This replaces Revision 7's "visits its value operand and validates its shape" text, whose premise
+  is false: Phase 2 read "its shape" as "the unit operand is a feature reference", which holds for
+  `[m]` and fails for every compound unit — `[kg/m^3]` is an `OperatorExpression`, and the resulting
+  `EXPRESSION_KIND_UNSUPPORTED` refused every compound-unit model on the real corpus
+  (`run-records/phase3-stop-report.md`). Required coverage, per the owner: `[m]`; representative
+  compound forms such as `[kg/m^3]` and `[W/(m·K)]`; wrong arity through a synthetic node; and
+  confirmation that references in the **value** operand are still visited.
 - A supported `sum` invocation marks its contained reference uses plural. Other existing supported
   scalar contexts remain scalar. The operation preserves the current aggregation semantics without
   choosing concrete occurrences.
@@ -476,6 +534,28 @@ resolver entry. Its optional state can describe undecoded math; it cannot create
   does not reread the CST to decide no-prefix semantics.
 - An index at any supported depth returns `IndexedReferenceUse`, regardless of whether the enclosing
   site is a binding, alias, computed attribute, predicate, or calculation-definition expression.
+
+**One owner for the annotation's parser shape.** **[OWNER 2026-08-18]** — ruling 2. Codegen
+legitimately owns the *policy* decision that `0.2 [m]` is a literal value site rather than a computed
+expression. The *parser-shape reading* underneath it must have one owner, so Agentic's boundary adds
+one shared primitive:
+
+> `unit_annotation_value(expression) -> Any | None` — it should recognize `[`, enforce exactly two
+> operands, return the value operand, and leave the unit operand opaque. Both
+> `inspect_reference_uses` and Codegen should call it.
+
+`None` means "not a unit annotation". Recognition is by mapped metatype and operator, never a runtime
+class name. Consequences:
+
+- `inspect_reference_uses` traverses only what the primitive returns, so the unit operand is never
+  reached and never emitted.
+- Codegen's `expression_evidence.unit_annotated_value` keeps the **value-site policy** and delegates
+  **all** structural interpretation — metatype, operator, and operand shape — to the primitive. It
+  performs no operand indexing, no arity check, and no metatype test of its own. The value-site
+  rule's home is Codegen policy over a shared Agentic primitive, not a second reading of the AST.
+- The design's `annotated_ast_value` deletion stands. Phase 3 recorded a Codegen-owned AST unit walk
+  as a surfaced residual (`run-records/phase3-stop-report.md`, premise conflict 2); this primitive is
+  its resolution, and no Codegen-owned unit walk survives.
 
 #### Delete the permissive production surface
 
@@ -689,9 +769,45 @@ The boundary gates use the Python AST to discover direct attributes for `.operan
 or imported aliases of either form; and runtime metatype-name dispatch in the raw-SysIDE module
 set. Every non-literal `getattr` in that module set is rejected because its selector cannot be
 reviewed. Mutation tests introduce one direct read, one string-literal `getattr`, one local alias,
-one imported alias, and one dynamic `getattr`; every mutation must kill the gate. The discovered
+one imported alias, and one dynamic `getattr`; every mutation must kill the gate. Codegen adds one
+**adapter-free evasion mutant** — a module importing nothing, receiving the node as an argument, such
+as `def consume(node): return node.referent` — which must still be discovered
+([ruling 3](#the-codegen-gate-keeps-repository-wide-scope)). The discovered
 tuple set must equal the reviewed manifests exactly. A new selector, missing manifest row, stale
 row, unexercised exemption, or live import of an off-route module fails.
+
+#### The Codegen gate keeps repository-wide scope
+
+**[OWNER 2026-08-18]** — ruling 3, rejecting the adapter-import scoping proposed for the Codegen
+gate. Phase 2 scoped Agentic's gate to adapter-importing modules (audited deviation 2), and the
+Phase 2 audit recorded the hole that leaves open: a helper can receive a live SysIDE node as an
+argument and read a raw selector off it without importing the adapter at all
+(`run-records/phase2-audit.md`, m2, still open in the fix-round addendum). Making adapter-import
+scope load-bearing on the Codegen side would turn that known residual into a legal escape. This
+ruling governs the **Codegen** gate only; it does not reopen the audited Agentic gate.
+
+The Codegen requirements, verbatim:
+
+> - Keep repository-wide selector discovery.
+> - Add explicit reviewed rows for neutral `ExpressionIR.operands` and `SourceFile.referent` reads.
+> - Give each row a field owner or receiver contract and a real closure proof.
+> - Add an adapter-free evasion mutant such as `def consume(node): return node.referent`; it must
+>   still be discovered.
+> - Leave the genuine raw reads in `usage_extractor` and any unresolved off-route modules red until
+>   migrated or mechanically excluded.
+
+So a collision-aware row is the mechanism, not a narrowed scan. `.operands` on a neutral
+`ExpressionIR` dataclass and `.referent` on Codegen's own `SourceFile` dataclass are name collisions
+with SysIDE selectors, not raw parser reads: `SourceFile.referent` is a **serialized snapshot key**,
+so renaming it changes sealed bytes. Each such row names the declaring type as the field owner, or
+the receiver contract that establishes the argument is never a live SysIDE element, plus its closure
+proof — the same proof obligation every other row carries. A row asserting an owner it cannot prove
+fails like any stale row.
+
+**[OWNER 2026-08-18]** The current manifest failure contains 20 rows, so neutral-IR plus `referent`
+is **not** the whole closure. The remaining rows are closed by migration or by mechanical exclusion,
+and `usage_extractor`'s genuine raw reads stay red until one of those lands. A red count that shrinks
+because the scan narrowed is not progress.
 
 Closure has three jointly load-bearing legs:
 
@@ -889,6 +1005,8 @@ implementation. B8b remains as ordinary kept agentic and codegen regression test
 |---|---|---|
 | SysIDE metatype truth and `DocumentTier` | SysIDE through agentic adapter | agentic expression/fact extraction |
 | Operand materialization, exact expression targets, index classification, authored form, and expression depth | Agentic `inspect_reference_uses` and its shared traversal primitives | codegen evidence inventory; Agentic IR/reconstruction entries |
+| Unit-annotation parser shape (`[` recognition, arity, which operand is the value) | Agentic `unit_annotation_value` | `inspect_reference_uses`; codegen `expression_evidence.unit_annotated_value` |
+| Whether an annotated value is a literal value site or computed math | Codegen `expression_evidence.unit_annotated_value` policy | codegen elaboration |
 | Closed `ReferenceUse` values and public evidence error | agentic-mbse | codegen boundary and exact resolver |
 | Pre-graph expression-site coverage | Codegen `ExpressionEvidenceInventory` | calc-definition compiler, bindings, aliases, computed attributes, predicates |
 | Closed binding-source variants | Codegen exact binding factory | pending-binding resolution and readiness screening |
@@ -915,7 +1033,8 @@ Agentic makes an intentional pre-1.0 breaking contraction and behavior correctio
 package version from `0.1.2` to `0.1.3` in `pyproject.toml`, `agentic_mbse.__version__`, and
 `uv.lock`. It exports `SEMANTIC_EVIDENCE_API_VERSION = "semantic-evidence/v2"`,
 `SemanticEvidenceCode`, `SemanticEvidenceError`, `ExactSemanticPath`, `ExactReferenceUse`,
-`IndexedReferenceUse`, and `inspect_reference_uses`. Version `0.1.3` is retained because the failed
+`IndexedReferenceUse`, `inspect_reference_uses`, and `unit_annotation_value`
+([ruling 2](#one-total-inspection-operation)). Version `0.1.3` is retained because the failed
 candidate was never the certified or shipped artifact; Revision 6 replaces that candidate before
 the first release of this API. `extract_feature_refs`, `feature_reference_facts`,
 `feature_chain_facts`, `ResolvedSemanticReferenceFact`, `ExpressionRef`, and
@@ -1343,7 +1462,7 @@ Two consequences bind implementation:
 | A4 package/model root | model root may answer a consumer miss | direct one-step package-owned no-prefix result; nested no-prefix refusal | B2 probe and `test_occurrence_domain_derivation.py` |
 | A5 indexed expression | one input route refuses while computed/alias/predicate routes may erase the index | every expression site returns `IndexedReferenceUse` and refuses pre-graph; consumer backstop also refuses | consumer matrix in `test_expression_evidence_integrity.py` |
 | A5a indexed bare chain, singular slot | zero-diagnostic graph; authored index silently rewritten to occurrence zero, in range or not | pre-graph `SI_INDEXED_SOURCE_UNSUPPORTED` naming the authored reference | `test_expression_evidence_integrity.py`, `Cell[1]` out-of-range case |
-| A5b indexed bare chain, plural slot | incidental `SI_OCCURRENCE_AMBIGUOUS` — a name about occurrence selection, for an index defect | `SI_OCCURRENCE_AMBIGUOUS` → `SI_INDEXED_SOURCE_UNSUPPORTED`; the inventory refuses before occurrence resolution runs | `test_expression_evidence_integrity.py`, `Cell[3]` case |
+| A5b indexed bare chain, plural slot | strict: incidental `SI_OCCURRENCE_AMBIGUOUS` — a name about occurrence selection, for an index defect; lenient: a graph carrying `SI_OCCURRENCE_AMBIGUOUS` + `SI_OCCURRENCE_MISSING` | both arms refuse pre-graph with `SI_INDEXED_SOURCE_UNSUPPORTED`; the inventory refuses before occurrence resolution runs, so the lenient graph disappears too | `test_expression_evidence_integrity.py`, `Cell[3]` case |
 | A6 multiplicity writer | unrelated sole writer may answer | owner-address writer or `SI_MULTIPLICITY_UNRESOLVED` | `test_occurrence_multiplicity_authority.py`; public mutation test |
 | B1-B5 evidence | fallback, partial traversal, raw unit/depth walk, optional target, or QN filter continues | exact evidence/DocumentTier or `SI_EVIDENCE_INCOMPLETE`; no alternate raw route | agentic owner tests; codegen consumer/ownership matrix |
 | Deep relationship path | missing middle segment is filtered | total exact path or `SI_EVIDENCE_INCOMPLETE` at that segment | public deep-override regression |
@@ -1385,10 +1504,12 @@ reference and root-relative `file:line`, through the live, admitted, and capture
 and no snapshot byte written.
 
 **Case 2 — `Cell[3]` bare chain.** `picked = cells#(2).mass` against a plural `cells : Cell[3]`. At
-`C_base` this refuses as `SI_OCCURRENCE_AMBIGUOUS`. The test pins that starting diagnostic explicitly
-and requires it to become `SI_INDEXED_SOURCE_UNSUPPORTED`. Its job is to prove the **ordering**, not
-merely that something refuses: an end-to-end "it refused" assertion passes at `C_base` and proves
-nothing.
+`C_base` this refuses as `SI_OCCURRENCE_AMBIGUOUS` in the **strict** arm and returns a graph carrying
+`SI_OCCURRENCE_AMBIGUOUS` + `SI_OCCURRENCE_MISSING` in the **lenient** arm — both recorded in the
+[behavior matrix](#current-code-facts) under ruling 4. The test parameterizes both arms, pins those
+starting states explicitly, and requires each to become a pre-graph
+`SI_INDEXED_SOURCE_UNSUPPORTED`. Its job is to prove the **ordering**, not merely that something
+refuses: an end-to-end "it refused" assertion passes at `C_base` and proves nothing.
 
 Neither case substitutes for the other. Case 1 alone cannot show that the inventory runs before
 occurrence resolution, because nothing refuses on that path today. Case 2 alone cannot show the silent
@@ -1448,6 +1569,11 @@ leg.
   dispatch. A failing operand iterator and depth-exhausted tree prove no partial result escapes.
 - Real bare and chain references construct `ExactReferenceUse`. Forced missing referent, target,
   leaf, and middle segment cases raise `SemanticEvidenceError` with reference and location.
+- Unit annotations are covered at the required shapes ([ruling 1](#one-total-inspection-operation)):
+  a simple `[m]`; representative compound forms such as `[kg/m^3]` and `[W/(m·K)]`, which must
+  elaborate rather than refuse; a wrong-arity annotation through a synthetic node; and a value
+  operand carrying a reference, proving the value side is still visited while the unit side is
+  never emitted.
 - Real StandardLibrary, Project, and External document tiers prove B5. A project document whose
   package is named `SI` remains. Missing, `None`, and foreign tier values fail.
 - Boolean/Integer/Real/String qualified typings succeed. User-defined `Real`, zero, multiple, and
@@ -1520,18 +1646,18 @@ closed-variant exhaustiveness, and a strict type result cannot substitute for ro
 
 | Repository / files | Change |
 |---|---|
-| agentic `src/agentic_mbse/errors.py`, `sysml/reference_use.py`, `data_models.py`, `__init__.py` | Public semantic-evidence enum, error, API version, provenance-complete closed reference-use values, and deletion/de-export of the permissive facts and bool marker |
+| agentic `src/agentic_mbse/errors.py`, `sysml/reference_use.py`, `data_models.py`, `__init__.py` | Public semantic-evidence enum, error, API version, provenance-complete closed reference-use values, the shared `unit_annotation_value` primitive with an opaque unit operand, and deletion/de-export of the permissive facts and bool marker |
 | agentic `sysml/syside_adapter.py`, `sysml/__init__.py` | Live metatype propagation, mapped index dispatch, direct `document_tier`, and obsolete export removal |
 | agentic `sysml/expression.py`, `aggregation.py`, `binding.py`, `validation/adr002.py`, `constraint_extraction.py` | One reference inspector, shared traversal budget, total operand materialization, exact targets, and migration of every production helper consumer to the closed union |
 | agentic `pyproject.toml`, `uv.lock`, tests, test ownership manifest, `docs/patterns/plant-idiom.md` | 0.1.3 package contract, semantic-evidence/v2 proofs, selector closure, and supported/refused modeling shapes |
 | codegen `elaboration/occurrence.py` | General owner selector; containment-local kind/identity validation; address resolver; exact multiplicity owner; strict redefinition identities |
 | codegen `elaboration/elaborate.py`, `elaboration/expression_evidence.py`, `expression_compiler.py`, `elaboration/__init__.py` | Producer index, strict expression-evidence inventory/adapter, exact-reference-only resolution, total deep-relationship path factory, and raw private graph builder |
-| codegen `extraction/binding_source.py`, `elaboration/binding_evidence.py`, `source_evidence.py`, `unit_annotation.py` | Strict closed binding-source variants, removal of optional semantic paths, and typed-IR-only unit unwrapping |
+| codegen `extraction/binding_source.py`, `elaboration/binding_evidence.py`, `source_evidence.py`, `unit_annotation.py` | Strict closed binding-source variants, removal of optional semantic paths, and the value-site rule kept as Codegen policy over Agentic's `unit_annotation_value` primitive |
 | codegen `orchestration/elaborated_pipeline.py` | Single evidence conversion boundary for live/admitted extraction and elaboration |
 | codegen `extraction/extractor.py`, `feature_metadata.py` | Delete dead reference reconstruction helpers; exact typing; B10 fallback deletion after verdict |
 | codegen `cli/__init__.py`, `generation/registry.py` | Graph-derived exit-wrapper authority on every exported route and replacement of the untyped collector failure with fail-before-mutate `CodeGenerationError` |
 | codegen `_upstream_pins.py`, `pyproject.toml`, `uv.lock` | Exact agentic package/API pins, codegen 0.1.1, dependency minimum, lock |
-| codegen tests and local test ownership manifest | Dual-layer natural-route closure, deep-path index exclusion/refusal, exact selector-manifest equality with AST-evasion mutations, scoped strict gates, off-route reachability, and direct exported-registry rejection tests |
+| codegen tests and local test ownership manifest | Dual-layer natural-route closure, deep-path index exclusion/refusal, repository-wide selector discovery with collision-aware reviewed rows and the adapter-free evasion mutant, scoped strict gates, off-route reachability, and direct exported-registry rejection tests |
 | codegen `tests/execution/environment_pins.py`, `tests/helpers/teax_discovery.py`, execution tests | Manifest-pinned immutable source/wheel imports; explicit TEAx path; rejection tests |
 | codegen fixtures/tests/probes and `C_prod` verification files | Closed inputs, retained probes, A/B/public proofs, probe lock, expected transitions, and production tests |
 | codegen `C_evidence` verification files | Final dependency/wheelhouse record, execution and independent-green results, reconciliation ledger, and non-self-hashing evidence lock only |
@@ -1728,6 +1854,21 @@ The finalized Revision-5 review resolutions close in Revision 6 as follows:
 | m1–m3 | Record the math-only optional IR target, measured migration size, and The Point |
 
 ## Next-stage handoff
+
+Revision 8's four rulings are settled owner material, not open questions. The plan revision that
+resumes Phase 3 must carry:
+
+- the opaque unit operand and its required coverage — `[m]`, compound forms, wrong arity, and the
+  value operand's references still visited (ruling 1);
+- the shared `unit_annotation_value` primitive landing in Agentic, with Codegen's
+  `expression_evidence.unit_annotated_value` reduced to value-site policy over it (ruling 2). Phase
+  3 treated the Agentic tree as read-only; this correction lands in Agentic, so the phase boundary
+  has to allow it under the same `0.1.3` / `semantic-evidence/v2` contract;
+- the Codegen selector gate's repository-wide scope, its collision-aware rows for neutral
+  `ExpressionIR.operands` and `SourceFile.referent`, the adapter-free evasion mutant, and the
+  remaining rows staying red until migrated or mechanically excluded (ruling 3);
+- both arms of the plural `Cell[3]` case in the behavior matrix and in Phase 4's reconciliation
+  expectations (ruling 4).
 
 Revision 7 needs targeted `my-design-review` confirmation that the five amended areas are corrected
 without reopening D1-D10 or the closed-variant architecture. Everything Revision 6's review already
