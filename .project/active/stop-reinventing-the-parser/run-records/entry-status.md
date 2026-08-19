@@ -72,3 +72,18 @@ checkouts. Fusion work landed only in `/tmp/stop-parser-rev2/worktrees/fusion-te
 1costingfe were read from dedicated `/tmp/stop-parser-rev2/` sources. The exact equality box stays
 open because the missing before-state digests are an evidence gap, not because a final tree was
 observed to change.
+
+## Entry-digest residual — Fusion/TEAx/1costingfe (accepted by owner, 2026-08-18)
+
+The table above recorded entry digests only for the two checkouts this run implemented in
+(Codegen, Agentic). Phase 5 later consumed three more repositories — `fusion-tea`, `teax`,
+`1costingfe` — whose before-state digests were never captured and cannot be reconstructed.
+Phase 5's "original checkouts retain their entry digests" validation box is therefore
+unsatisfiable for those three, permanently.
+
+**[OWNER] ruling (2026-08-18): accepted as a recorded residual.** Integrity for those three
+checkouts rests on run discipline (no stage command wrote to any user checkout; all Phase 5
+inputs were `git archive` extractions of the pinned commits `824a876e` / `744745f8` /
+`02543850`) and on the committed runner's provenance records, which tie every isolated run to
+git objects rather than working trees. `fusion-tea`'s dirty working tree belongs to the owner's
+unrelated in-flight item (`item8-fusion-embedded-catalog`) and is outside this run's scope.
