@@ -1,6 +1,25 @@
 # Current Work
 
-**Last Updated**: 2026-08-18 (**stop-reinventing-the-parser: Phase 5 implementation complete;
+**Last Updated**: 2026-08-18 (**stop-reinventing-the-parser: INDEPENDENT AUDIT COMPLETE — verdict
+`Needs Work`.** `.project/active/stop-reinventing-the-parser/audit.md`. The occurrence lane (A1-A6),
+the every-and-only mutation proof, and the whole immutable evidence chain verify independently:
+topology, all ten artifact hashes, all six evidence hashes, and the four-group mechanical auditor
+reproduce, and the auditor refuses mutated inputs. Four blocking gaps: (1) a non-`sum` invocation
+refuses **post-graph** as `SI_SNAPSHOT_INVALID` with no reference and no `file:line`, where `C_base`
+refused pre-graph with both, and aggregation plurality now reads `function.name == "sum"` instead of
+the declaration identity; (2) refusal provenance is not a boundary property — five public shapes drop
+it, and `tests/fixtures/anonymous_return` and `zero_output_calc` exit the CLI with a bare Python
+traceback; (3) B6's own site still maps types through the unqualified table; (4) the shipped
+reconciliation ledger has no A/B or disposition column and three wrong proof citations. Product-lens
+ledger gate is **BLOCKED (`audit-final-F1`)**. The "skipped inventory" weak variant was attacked and
+held (155 models, zero misses). Six further findings are DISPOSE-grade follow-ups. Do not close, run
+pre-PR, or unblock `elaborator-downstream`. Immutable identities are unchanged: Agentic `A_final`
+`3f8bd587af40f05b929dd56645901dada7daea37`, Codegen `C_prod`
+`707346d616e508e55103c9246b63d172ed6a862b`, Fusion `F_final`
+`2243b7ce116c0a12fb0c09a81262c5c2ec879f69`, direct-child `C_evidence`
+`a184133b99f7f71451c0b4af5a33b709f988eca2`. Any production fix invalidates `F_final` and
+`C_evidence` and needs a new dependent identity chain.**).
+Prior status: 2026-08-18 (**stop-reinventing-the-parser: Phase 5 implementation complete;
 independent audit pending. Immutable identities: Agentic `A_final`
 `3f8bd587af40f05b929dd56645901dada7daea37`, Codegen `C_prod`
 `707346d616e508e55103c9246b63d172ed6a862b`, Fusion `F_final`
@@ -103,6 +122,56 @@ rather than invented; vehicle `[CONSTRAINT-GATES-UNTAGGED]` in `BACKLOG.md`.
 ---
 
 ## Active Work
+
+### 2026-08-18: stop-reinventing-the-parser — INDEPENDENTLY AUDITED; NEEDS WORK
+
+[AGENT] Independent `$my-audit` against `A_final` `3f8bd587…`, `C_prod` `707346d6…`, `F_final`
+`2243b7ce…`, `C_evidence` `a184133b…` and artifacts `/tmp/stop-parser-rev2/artifacts-final-v3`.
+**Verdict: Needs Work.** Full record in `active/stop-reinventing-the-parser/audit.md`; the audit's
+product-lens run is appended to that item's `product-lens.md` as `audit-final`, gate **BLOCKED
+(`audit-final-F1`)**.
+
+What verified independently, by recomputation rather than by reading the record: the evidence topology
+(`C_evidence^ == C_prod`, exactly six evidence paths, `F_final` pinning `C_prod`), all ten artifact
+SHA-256 values, all six evidence-file hashes, the four-group mechanical auditor, and the auditor's
+anti-vacuity — it refuses a wrong `C_evidence`, a wrong `F_final`, and a byte-mutated wheel. A
+licensed run of the seven Lane A/B conformance suites at `C_prod` passed 188/188 with zero skips, and
+the same file without the key gives 7 failed / 112 skipped, so the licensed arms really ran. Lane A is
+met on all six rows with real-model positives and refusals, and the every-and-only mutation criterion
+is carried by real TEAx execution on both the fixture matrix and the actual Fusion model tree.
+
+The four gaps that block certification:
+
+1. A non-`sum` invocation (`max(cell.capital_cost, 1.0)`) refuses **after** graph construction as
+   `SI_SNAPSHOT_INVALID: unsupported invocation survived on …`, with no authored reference, no
+   root-relative `file:line`, and a code that blames the model. At `C_base` the identical model
+   produced a pre-graph `SI_EXPRESSION_SOURCE_UNSUPPORTED` carrying both — a regression introduced by
+   this range. Behind it, plurality now reads `function.name == "sum"` where `C_base` compared the
+   declaration UUID of `NumericalFunctions::sum`.
+2. Refusal provenance is not a boundary property. Four further public shapes drop it, including
+   `tests/fixtures/anonymous_return` and `zero_output_calc`, which exit `sysml-codegen generate` with
+   a bare eight-frame Python traceback because `extractor.py:252,263` raise a plain `ValueError` that
+   nothing at the boundary contains.
+3. B6 is partial: `extraction/extractor.py:363` still resolves types through the unqualified
+   `SYSML_TO_PYTHON` table while the elaborator uses the qualified-only view.
+4. `verification/reconciliation-ledger.md` carries no A/B-row or disposition column, names test files
+   rather than node ids, and mis-cites L-05, L-13 and L-14. Two adjacent citations in
+   `expected-transitions.md` name a file that has never existed.
+
+The plan's other open weak variant, "skipped inventory", was attacked and **held**: the enumerator and
+every consumer select from one predicate, 155 models produced zero inventory misses, and a
+site-deletion mutation produced the correct `SI_EVIDENCE_INCOMPLETE` containment. That box is now
+checked.
+
+Six further findings are DISPOSE-grade: two surviving `type(...).__name__` decisions on the public
+route (one failing open), a segment-count carve-out added to keep an off-route classifier's baseline
+green, a closure matrix whose cell assertion still passes on any non-empty string, `adr002`'s
+URL-substring plus class-name plus `return True` classifier, four self-comparisons in the evidence
+machinery, and two retained probes that no longer run against the API they certify.
+
+Next: a remediation round owning gaps 1-4, then a targeted re-audit of those four. Any production fix
+invalidates `F_final` and `C_evidence` and needs a new dependent identity chain — never repair
+production behavior in `C_evidence`. Do not close, run pre-PR, or unblock `elaborator-downstream`.
 
 ### 2026-08-18: stop-reinventing-the-parser — PHASE 5 IMPLEMENTED; INDEPENDENT AUDIT NEXT
 

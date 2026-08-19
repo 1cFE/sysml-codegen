@@ -1,8 +1,8 @@
 # Spec: Exact occurrence derivation and evidence integrity
 
-**Status:** Implementation complete — rev 4; Phases 1–5 implemented; independent Phase 5 audit
-pending; product-lens implementation gate `CLEAR`; spec review `Approve`; one omitted external
-checkout entry digest remains an explicit evidence limitation
+**Status:** Needs work — rev 4; Phases 1–5 implemented; **independent audit 2026-08-18 returned
+`Needs Work`** ([audit.md](audit.md)); product-lens ledger gate **BLOCKED (`audit-final-F1`)**; spec
+review `Approve`; one omitted external checkout entry digest remains an explicit evidence limitation
 **Owner:** Reid W
 **Created:** 2026-08-16 20:42
 **Updated:** 2026-08-18
@@ -130,23 +130,28 @@ generator cannot honor its index and must say so rather than compute a different
 - [x] Every A1–A6 row produces the modeled occurrence result or a named refusal, proved by the real
       SysIDE model cases listed in its row. No result depends on proximity, arrival order, or global
       uniqueness.
-- [x] Every B1–B10 row retains exact evidence, returns the correct positive result, or fails by name,
+- [ ] Every B1–B10 row retains exact evidence, returns the correct positive result, or fails by name,
       proved by the evidence type listed in its row. No row is certified only by a corpus that never
-      exercises its failure branch.
+      exercises its failure branch. **Audit 2026-08-18: nine of ten met; B6 partial — the extractor
+      still resolves types through the unqualified table (`audit.md` Finding 3).**
 - [x] P-002 still holds: one modeled source occurrence becomes exactly one runtime source, including
       usage-owned qualified references and nested modeled containment paths.
 - [x] Every positive A1-A4/A6 occurrence shape has an off-default public mutation proof: changing
       one modeled source changes every and only the generated runtime consumers bound to that
       source. Internal occurrence or graph assertions alone do not certify the result.
-- [x] A checked reconciliation ledger maps every historical census row L-01–L-14 and U-1–U-2 to an
+- [ ] A checked reconciliation ledger maps every historical census row L-01–L-14 and U-1–U-2 to an
       A/B row, an explicit disposition above, or a separately filed follow-up. Nothing disappears by
-      omission.
+      omission. **Audit 2026-08-18: all sixteen rows present, but the shipped ledger carries no A/B or
+      disposition column and three rows cite the wrong or an unrelated proof (`audit.md` Finding 8).**
 - [x] The implementation captures a pre-change output baseline from the named implementation SHAs.
       Every maintained model outside an explicit expected-transition ledger remains byte-identical.
       Each transition row names its old behavior, required new result, and proving test.
-- [x] Ill-formed models receive diagnostics naming the reference, source file and line, and missing
+- [ ] Ill-formed models receive diagnostics naming the reference, source file and line, and missing
       modeled authority. Valid but unimplemented forms receive a distinct unsupported-capability
-      diagnostic that does not blame the model.
+      diagnostic that does not blame the model. **Audit 2026-08-18: not met. Holds on the indexed and
+      occurrence routes; five other public refusals drop provenance, two committed fixtures emit a
+      bare traceback, and a non-`sum` invocation refuses post-graph as `SI_SNAPSHOT_INVALID`
+      (`audit.md` Findings 1 and 2).**
 - [x] The indexed-expression capability and output-alias silence each have a separately owned
       backlog row before this item closes.
 - [x] Agentic-mbse guidance states the supported reference shapes, the context each requires, and

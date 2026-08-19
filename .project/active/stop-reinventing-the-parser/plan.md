@@ -24,7 +24,7 @@
 - **Phase 1 stop report:**
   [run-records/phase1-stop-report.md](run-records/phase1-stop-report.md) — rulings 1-7
   owner-ratified 2026-08-17; the cause of Revision 3
-- **Audit:** [audit.md](audit.md) — failed-candidate verdict `Needs Work`
+- **Failed-candidate audit:** [run-records/audit-failed-candidate.md](run-records/audit-failed-candidate.md) — verdict `Needs Work` (moved from `audit.md`, which now holds the final item audit)
 - **Product lens:** [product-lens.md](product-lens.md) — `audit3-F1` remains blocked until the
   production indexed-consumer proof is green
 - **Revision research:**
@@ -989,7 +989,7 @@ item whose evidence is not reproducible at that commit is unfinished.
 self-certify. The audit's obligations, stated as the weak variants it must **try** and fail to make
 work:
 
-- [ ] **Skipped inventory** — reach a consumer without the pre-graph inventory having run.
+- [x] **Skipped inventory** — reach a consumer without the pre-graph inventory having run. Attacked by the independent audit 2026-08-18 and **refused**: the enumerator and every consumer select from one predicate, the other lookups refuse a QN-less element, 155 models produced zero inventory misses, and a site-deletion mutation produced the correct `SI_EVIDENCE_INCOMPLETE` containment ([audit.md](audit.md) Finding 2).
 - [x] **Indexed-to-exact conversion** — get an `IndexedReferenceUse` accepted anywhere an
   `ExactReferenceUse` is required.
 - [x] **Shortened deep paths** — get a relationship path with a missing middle segment to resolve.
@@ -998,7 +998,10 @@ work:
 - [x] **Malformed unit arity** — get a wrong-arity `[` annotation to return `None` and be walked as
   general math rather than raising.
 - [ ] **Missing diagnostic provenance** — produce a public refusal lacking the authored reference,
-  root-relative `file:line`, cause chain, or one-code-token rendering.
+  root-relative `file:line`, cause chain, or one-code-token rendering. **EXPLOITED** by the
+  independent audit 2026-08-18, five ways, including a bare Python traceback out of two committed
+  fixtures ([audit.md](audit.md) Findings 1 and 2). The phase's own rule applies: this returns to the
+  owning phase.
 
 Each variant must be refused by name. **The audit does not substitute for a missing kept test** — a
 weak variant the audit fails to exploit is not evidence that the corresponding checklist test exists.

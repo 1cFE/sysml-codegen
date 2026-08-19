@@ -1191,3 +1191,206 @@ and wheel hashes; no editable sibling supplies the result.
 
 Gate: **CLEAR for Phase 5 implementation (`audit3-F1`, `audit-phase3-F2`)**. Independent `$my-audit`
 is still required before item certification or close.
+
+---
+
+## audit-final — 2026-08-18 — rev C_prod `707346d616e508e55103c9246b63d172ed6a862b` (read from clean worktree `a184133`; Agentic `3f8bd587af40f05b929dd56645901dada7daea37`)
+
+Epic: ELABORATE-FIRST (`.project/backlog/epic_elaborate_first_architecture.md`)
+
+This is the independent item audit's product-lens run. `audit-final-F1` was re-verified by the
+auditor on the public route with a real model before the gate was set; see
+[audit.md](audit.md) Finding 1 for the reproduction.
+
+Point (re-derived): The product is three steps and nothing else — parse the models with a SysML v2
+parser, walk the parser's resolved tree to reconstruct the math, write that math into TEAx Python.
+Every decision on the way is taken from the parser's own resolved *identity*, never from a spelling,
+a Python class name, a count, or a position. An authored form the toolchain cannot honor has exactly
+two honest outcomes: resolve it through the parser, or refuse **by name, before anything is built**,
+naming what the modeller wrote and where. One modeled source occurrence becomes exactly one runtime
+source. [source: `.project/product/P-004-product-identity-parse-walk-emit.md` and
+`.project/product/P-003-no-workarounds-for-bad-models.md`, grade: **owner**
+(`[OWNER-VERBATIM, 2026-08-16]`); exact-occurrence companion
+`.project/product/P-002-exact-owner-anchoring.md`, grade: agent/ratified; evidence-discipline
+companion: the epic's `[AGENT]` product-behavior gate, "every item's completion gate is an
+observable public behavior — never artifact-to-artifact fidelity"]
+
+Falsifier: a real model through `sysml-codegen generate` where a reference's or an invocation's
+meaning is decided from a name, a class name, or a segment count rather than the parser's resolved
+declaration identity; or an unhonorable authored form that reaches the graph, snapshot, or output
+with no pre-graph refusal naming the authored text and its root-relative `file:line`.
+
+Findings:
+
+- audit-final-F1 [DON'T] **Aggregation plurality is now decided by the function's *name*, and the
+  pre-graph refusal for every other invocation was deleted.** `_is_plural_invocation` returns
+  `function.name == "sum"` (`agentic-mbse@3f8bd58:src/agentic_mbse/sysml/reference_use.py:355-364`),
+  and that boolean is what makes a reference fan out to every modeled occurrence
+  (`elaborate.py:2478-2482`, `project.py:666-667`). This range **deleted** the exact check it
+  replaced: `_SUM_FUNCTION_ID` (the reload-stable UUIDv5 of `NumericalFunctions::sum`) and the
+  `_UnsupportedExpressionError("unsupported invocation function …")` arm are gone from
+  `elaborate.py::_expression_references`, and no UUID or qualified-identity test survives anywhere in
+  `src/`. **Measured by the auditor on the public route** at `C_prod`, license loaded: a real model
+  with `part cell : Cell[1]` and `:>> capital_cost = max(cell.capital_cost, 1.0);` fails
+  `sysml-codegen generate` with `SI_SNAPSHOT_INVALID: unsupported invocation survived on
+  'NonSumSingularProbe__the_bank__capital_cost'` — after graph construction, with no authored
+  reference, no root-relative `file:line`, and no cause chain, under a code that blames the model. At
+  `C_base` (`78a9beb`) the identical shape produced a pre-graph readiness diagnostic
+  `SI_EXPRESSION_SOURCE_UNSUPPORTED` carrying reference and location
+  (`78a9beb:elaborate.py:2452-2462`), so this is a regression introduced by this range. It also
+  violates the spec's own criterion that a valid-but-unimplemented form receives a distinct
+  unsupported-capability diagnostic that does not blame the model. (The user-defined-`sum` fan-out arm
+  is unproven in practice: SysIDE 0.8.4 rejected every authored shape the auditor tried; the
+  identity-to-spelling regression itself is not in doubt.) Falsifier: two licensed public-route models
+  — one with a user-defined function named `sum` (its references must not fan out), one with any
+  non-`sum` invocation in a computed attribute (one pre-graph unsupported-capability diagnostic
+  carrying the authored text and root-relative `file:line`, never `SI_SNAPSHOT_INVALID`). —
+  `.project/product/P-004-product-identity-parse-walk-emit.md` and
+  `.project/product/P-003-no-workarounds-for-bad-models.md` (**OWNER**) — disposition: **BLOCK**
+
+- audit-final-F2 [DO] **The class-name-free decision surface the item asserts is not complete on the
+  public route.** `extraction/extractor.py:246` gates the anonymous-`return` refusal on
+  `type(owning_membership).__name__ != "ReturnParameterMembership"` — it fails **open**, so if
+  SysIDE's class name or subtype changes, the refusal silently stops firing and a garbage-named output
+  channel ships; and `elaboration/elaborate.py:730` grades a constraint owner by
+  `type(owner).__name__` against a closed map, so a valid model whose constraint owner is a *subtype*
+  of a mapped kind refuses (fails closed, but wrongly). Neither is named in the B1–B10 ledger or in
+  any transition row. Falsifier: a real-model test for a `ReturnParameterMembership` subtype and for a
+  `PartUsage`-subtype constraint owner, both driven through `sysml-codegen generate`. —
+  `.project/product/P-004` (**OWNER**), applied outside the item's named B-row scope
+  (`[AGENT]/[INFERRED]`) — disposition: DISPOSE — file the two residual sites as a named follow-up row
+  before close; they are pre-existing and were never claimed fixed.
+
+- audit-final-F3 [DON'T] **A new numeric special case was added to preserve an off-route classifier's
+  old answers.** Making `attribute_refs` exact (`computed_attribute_extractor.py:114-123`) changed
+  what the retained name-based classifier sees, so the item added
+  `len(reference_chain) >= 3 → UNRESOLVABLE` (`:180-190`) to keep the golden baseline green. The
+  module is imported by **nothing in `src/`** — only by tests — so this is a compatibility carve-out
+  written into dead code rather than deleting it. The same exemption-by-category appears in the gate
+  itself: `route_state="off-route"` (`tests/conformance/test_expression_evidence_ownership.py:339-378`)
+  excuses `usage_extractor._parse_chain_expression` / `_parse_reference_expression` — the hand-rolled
+  expression parser this item is named after — by category, leaving ~2,077 lines of it in `src/`.
+  Falsifier: delete `extract_computed_attributes` and the two `_parse_*_expression` walkers (with
+  their golden tests) and show the public route unchanged; or, if they must stay, prove the `>= 3`
+  branch from modeled evidence rather than a segment count. — `.project/product/P-004` (**OWNER**);
+  scope-limited by the spec's own explicit disposition of the three off-route modules (`[INFERRED]`) —
+  disposition: DISPOSE — record the added carve-out in the transition ledger and keep the deletion
+  owned; it cannot reach public generation today.
+
+- audit-final-F4 [DO] **Parts of the immutable-evidence chain certify themselves.** At audit time the
+  run-count check compares `counts` against `expected_counts` written by the same producer and never
+  recomputes from the retained JUnit (`verification/audit_evidence.py:519-523`; the real constant
+  comparison in `verification/run_independent_green.py:150-156` runs only at capture time).
+  `tests/conformance/test_evidence_artifact_topology.py:1016-1039` asserts `REQUIRED_RUN_IDS` against
+  a verbatim copy of itself. `tests/conformance/test_probe_fixture_lock.py:238-240` re-reads the same
+  file it was parsed from and cannot fail. And the external source pin was redefined onto a
+  *different artifact*: `verification/build_artifacts.py:496-508` now re-runs `git archive` with an
+  empty prefix and compares that, so the shipped archive bytes are no longer bound to
+  `expected_archive_sha256`, and the audit side only checks the value is well-formed hex
+  (`audit_evidence.py:186-190`). Separately, the codegen lanes import the extracted **source tree**,
+  not the wheel (`run_independent_green.py:1136-1139`), and `validate_run_record:199-204` accepts
+  either root, so a source-to-wheel flip would pass; and `:364` dropped `-I` from the import probe.
+  Falsifier: recompute counts from the retained JUnit at audit time; derive one of the two
+  `REQUIRED_RUN_IDS` copies from the other; restore the pin against the shipped archive; assert the
+  codegen lane's import root exactly. — epic Success Criteria, product-behavior gate "never
+  artifact-to-artifact fidelity" (`[AGENT]`) and the spec's "No row is certified only by a corpus that
+  never exercises its failure branch" (`[INHERITED]`) — disposition: DISPOSE — record the four
+  self-comparisons and the pin redefinition in the ledger and repair them before close.
+
+- audit-final-F5 [DO] **The closure matrix presents more real-model force than it has, and the deleted
+  suite took real-model coverage with it.** Ten of twenty consumer-matrix cells are proved by
+  injecting a hand-built expression through a monkeypatched `_acquire`
+  (`tests/conformance/test_expression_evidence_integrity.py:93-107,957-973,1030-1042`); the closure
+  proof cited for the one live `chaining_features` raw read is fully monkeypatched
+  (`tests/unit/test_expression_evidence_boundary.py:544-560`); registry and exit-type coverage is
+  entirely hand-built `ComputationGraph`, and its "every exported seam" parametrization runs the same
+  function object three times (`registry.py:399-400`). `test_every_consumer_cell_names_a_proof` still
+  passes on any non-empty string (`test_expression_evidence_integrity.py:1396-1404`, exemption reasons
+  at `:1382`). The 460-line `test_source_identity_extraction.py` deletion lost real-model coverage
+  with no replacement for qualified-vs-bare written form, definition-vs-usage referent context,
+  **cross-owner consumers sharing one exact referent**, and **aggregation terms retaining exact
+  targets** — the last two are P-002's own subject. Falsifier: restore a licensed real-model test for
+  cross-owner shared referents and for aggregation-term exact targets; make `_named_proof_exists`
+  require a callable licensed test node; make the matrix's public-arm assertion structural rather than
+  string-truthiness. — `.project/product/P-002-exact-owner-anchoring.md` (agent/ratified) and the
+  spec's per-row proof criterion (`[INHERITED]`) — disposition: DISPOSE — restore the two lost
+  real-model proofs before close; the matrix hardening is a follow-up row.
+
+Smells:
+
+- **Smell 1 — two representations manually kept synchronized: fires, several places.** `REVIEWED_ROWS`
+  and `NEUTRAL_RECEIVER_CONTRACTS` mirror production module/function/**local-variable** names and are
+  asserted equal to each other (`test_expression_evidence_ownership.py:117-379,384-477,898`);
+  `RAW_SYSIDE_MODULES` is a 19-entry hand list; `EXPECTED_RUNS` is 21 lanes x 8 hand-maintained counts
+  (`run_independent_green.py:541-704`); `tests/helpers/raw_elaboration.py:55-72` duplicates the public
+  boundary's diagnostic mapping and its comment says so. Escalates into F4 and F5.
+- **Smell 3 — a special category exempts a case whose user-visible meaning is unchanged: fires.**
+  `route_state="off-route"` and the new `len(reference_chain) >= 3` carve-out. Escalates as F3.
+- **Smell 4 — correctness depends on downstream knowledge of an internal representation: fires.**
+  `type(...).__name__` decisions at `extractor.py:246` and `elaborate.py:730` (F2);
+  `test_expression_evidence_boundary.py:462-465` decides a contract by a function's `__code__.co_names`;
+  `raw_elaboration.py:60` branches on an enum member's name string. Also
+  `agentic-mbse@3f8bd58:src/agentic_mbse/validation/adr002.py:386-389`, where this range replaced a
+  mapped `SysideAdapter.is_instance` call with `leaf.owner_kind == "CalculationDefinition"` — a Python
+  class name crossing a package boundary as a string, deciding an ADR-002 V2 outcome, beside a URL
+  substring test and a `return True` fallback (audit.md Finding 7).
+- **Smell 5 — a baseline preserves behavior that contradicts the point: fires weakly.** The
+  computed-attribute golden baseline is what the `>= 3` carve-out exists to keep green (F3). The
+  declared non-green baselines (mypy, broad ruff) are honestly disclosed and do not fire.
+- **Smell 6 — a test passes by selecting one route: fires.** Ten matrix cells, the deep-override
+  closure proof, and the whole registry/exit-type lane select the hand-built route (F5); the three
+  "exported seams" are one object.
+
+**Verified positive, and it is the substance of the item.** The pre-graph inventory is real and
+load-bearing: one enumeration before extraction, before the elaborator, before any graph
+(`orchestration/elaborated_pipeline.py:158-165`); the alias/computed role is decided **once**, on the
+unit-unwrapped expression, and stored per declaration (`elaboration/expression_evidence.py:327-347`),
+with every consumer retrieving it (`elaborate.py:2073-2086`); `IndexedReferenceUse` carries no path at
+all, so an index cannot be dropped by reading a field; `IndexExpression` dispatches by mapped
+metatype, not a class name; the deep-override path factory is total and never shortens a chain
+(`extraction/binding_source.py:15-20,245`); the four binding-source variants make "supported reference
+with no path" unrepresentable; the registry derives its wrapper set from the graph alone and refuses
+with the typed `EXIT_POINT_TYPE_UNSUPPORTED` (`generation/registry.py:48-69`,
+`cli/__init__.py:319-323`); `SourceForm`/`SourceReferenceEvidence` and the extractor's hand-rolled
+`_parse_expression_to_path` / `_build_reference_path` ladder are **deleted**, not wrapped; and the
+docs (`overview.md`, `00-pipeline-overview.md`, `08`, `20`) were corrected to match.
+
+Gate: **BLOCKED (audit-final-F1)** — audit-final-F2, F3, F4, F5 are DISPOSED.
+
+Resolves:
+
+- audit3-F1: **FIXED** — authority: owner-grade source unchanged (`P-003`/`P-004`) — basis: resolved
+  against its own recorded falsifier by independent code reading, not by the implementation record.
+  The refusal is no longer scoped to input-directed feature chains: one shared inventory enumerates
+  all five site roles including `COMPUTED_ATTRIBUTE` and `ConstraintDefinition.result_expression`
+  (`elaboration/expression_evidence.py:280-324`) and refuses every `IndexedReferenceUse` at
+  acquisition (`:274-277`), before extraction and before any graph exists
+  (`elaborated_pipeline.py:158-165`). `type(...).__name__` no longer identifies `IndexExpression`
+  anywhere. The licensed matrix runs 5 roles x 5 public arms on real parsed models, asserting the exact
+  authored reference, root-relative `file:line`, one diagnostic, and that the role's real adapter was
+  never called (`tests/conformance/test_expression_evidence_integrity.py:643-675,913`), with the two
+  red-set escapes closed at `:1105` and `:1134`.
+- audit-phase3-F4: **FIXED (confirmed)** — authority: owner-grade source unchanged — basis:
+  independently re-verified at `C_prod`. The role is decided once inside the inventory on the
+  unit-unwrapped expression (`expression_evidence.py:342-347`) and stored by declaration; the
+  duplicate predicate applied to a different node is gone, and a role disagreement is now an explicit
+  named invariant rather than a `KeyError` (`elaborate.py:920-926`, `2054-2062`).
+  `ExpressionInventoryError` is contained at the D7 boundary as `SI_EVIDENCE_INCOMPLETE` carrying the
+  authored reference and root-relative `file:line` (`elaborated_pipeline.py:178-198`).
+- audit-phase3-F2: **FIXED** — authority: agent/ratified (`P-002`) — basis: public generation is now
+  proved, not inferred. `tests/conformance/test_usage_owned_reference_anchoring.py:110` drives
+  `run_codegen` over `tests/fixtures/usage_owned_reference_consumers` and asserts the emitted
+  predicate's argument and body; `:132` authors two distinct parser targets with local name `length`
+  and proves public generation refuses `SI_RENDERING_COLLISION` with no output tree and no traceback.
+- audit-phase4-F1: **FIXED (remains fixed)** — authority: agent/ratified — basis: re-read at `C_prod`.
+  `validate_current_fixture_sources` (`verification/capture_baseline.py:210`) hashes all 110 current
+  sources across all 43 roots and runs unconditionally before the other legs, and the leg-3 ledger row
+  now states plainly that `8919232` dropped the current-bytes comparison and `f951663` restores it.
+- audit-phase4-F2: **PARTIALLY FIXED — the remainder is carried as audit-final-F5.** Route force is
+  now per cell and the two deep-override cells carry empty public-arm tuples with measured reasons
+  (`test_expression_evidence_integrity.py:1336-1352`), which is the half F2 asked for. The other half
+  is not delivered: `test_every_consumer_cell_names_a_proof` still accepts any non-empty string
+  (`:1396-1404`), the exemption reasons are checked only for truthiness (`:1382`), and the
+  deep-override closure proof it points at is fully monkeypatched
+  (`test_expression_evidence_boundary.py:544-560`). An empty-in-substance cell can still pass as
+  covered.
