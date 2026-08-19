@@ -52,3 +52,23 @@ own repositories (handoff open question 4, previously unverified):
 | Fusion parent | `824a876e` | `/home/reid/1cfe/fusion-tea` | exists; reachable from `self-binding-replacement` and `stop-parser-verification`; the checkout currently sits on `item8-fusion-embedded-catalog` (a different item) — Phase 5 must build from the pinned commit in a dedicated worktree, never this checkout |
 | TEAx | `744745f8` | `/home/reid/1cfe/teax` | exists |
 | 1costingfe | `02543850` | `/home/reid/1cfe/1costingfe` | exists |
+
+## Phase 5 checkout-integrity checkpoint (2026-08-18)
+
+The Phase 5 brief asks for before/after status-digest equality across all five source checkouts, but
+the original table above recorded entry digests only for Codegen and Agentic. That omission cannot
+be repaired retrospectively by treating a final measurement as an entry measurement.
+
+| Checkout | Final branch / HEAD | Final `status --porcelain=v1` SHA-256 | Comparison authority |
+|---|---|---|---|
+| Codegen docs checkout | `stop-reinventing-the-parser` / docs HEAD before the final Phase 5 record | `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855` | matches recorded empty entry digest before authorized `.project/` edits |
+| Agentic user checkout | `self-binding-replacement` / `fcee56d6cee3828b6f3b7f29a9e684aa03b03bbb` | `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855` | matches recorded entry digest |
+| Fusion user checkout | `item8-fusion-embedded-catalog` / `be1ee7c0c40a092ebe6750f262902501e377bbd0` | `d8a9922b4300ee7bf04f87b8d01fa02846f2253b7ad290ca535b83f3db9bf08a` | no entry digest was recorded; current dirty paths preserved, equality not claimed |
+| TEAx user checkout | `main` / `744745f895677f3344b9884627369a6a47ed987f` | `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855` | no entry digest was recorded; final tree clean at frozen pin |
+| 1costingfe user checkout | `master` / `02543850089be175ea7c28b92a8b2a4184e1637e` | `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855` | no entry digest was recorded; final tree clean at frozen pin |
+
+No Phase 5 command wrote, staged, stashed, switched, or reset any of the three external user
+checkouts. Fusion work landed only in `/tmp/stop-parser-rev2/worktrees/fusion-tea`; TEAx and
+1costingfe were read from dedicated `/tmp/stop-parser-rev2/` sources. The exact equality box stays
+open because the missing before-state digests are an evidence gap, not because a final tree was
+observed to change.

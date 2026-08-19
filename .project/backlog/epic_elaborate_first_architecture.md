@@ -546,20 +546,21 @@ implemented, audited, and closed before Item 8 downstream design or implementati
 performs none of either predecessor's remediation. Source: the active item's `spec-review.md` L4-1
 and the owner's direction to apply the review fixes.
 
-**Bounded predecessor active — Phase 4 remediation implemented, re-audit pending 2026-08-18:**
+**Bounded predecessor active — Phase 5 implemented, independent audit pending 2026-08-18:**
 `.project/active/stop-reinventing-the-parser/` owns exact occurrence derivation and evidence
 integrity. It closes before `.project/active/elaborator-downstream/` starts so downstream
 regeneration and certification measure the final semantic-authority rules.
 
-The dedicated Phase 4 audit reproduced the behavioral result and returned **Needs Work, bounded**.
-Its two evidence findings are now remediated in Codegen candidate `571ed39`: all 110 current fixture
-sources are byte-checked with ledger-owned differences, and consumer proof strength is stated per
-cell with measured deep-override limitations. The validation-claim correction and cheap audit notes
-are also handled; `audit-phase3-F2` is scheduled before Phase 5 names `C_prod`. Fresh-extraction
-validation is green at 2,496 passed / 34 skipped / 94 deselected, with 206 focused Phase 4 and six
-TEAx mutation tests. This is an implementation response, not certification; independent Phase 4
-re-audit remains. Phase 5 has not built or sealed the production artifact chain. The predecessor
-remains active; no epic completion checkbox is marked, and downstream work remains blocked.
+The immutable chain is now `A_final` `3f8bd587af40f05b929dd56645901dada7daea37`, `C_prod`
+`707346d616e508e55103c9246b63d172ed6a862b`, `F_final`
+`2243b7ce116c0a12fb0c09a81262c5c2ec879f69`, and direct-child `C_evidence`
+`a184133b99f7f71451c0b4af5a33b709f988eca2`. The committed runner executed 21 isolated lanes from
+recorded archives and wheels; the Codegen default lane passed 2,511 with 34 exact policy skips and
+94 deselections, and generated execution passed 94/94. The Phase 5 product gate is clear at exact
+`C_prod`; `audit3-F1` and `audit-phase3-F2` have production-artifact proofs. The mechanical auditor
+passes all four reconstruction groups. This is implementation evidence, not certification. An
+independent `$my-audit` remains required, one omitted external-checkout entry digest is disclosed in
+the plan, no epic completion checkbox is marked, and downstream work remains blocked.
 
 **Bounded child closed 2026-08-16:** exact occurrence-owner anchoring for usage-owned one-segment
 references is certified and archived at

@@ -1,7 +1,8 @@
 # Spec: Exact occurrence derivation and evidence integrity
 
-**Status:** Implementation in progress — rev 4; Phases 1–3 closed; Phase 4 implemented, audit
-pending; Phase 5 not started; product lens `CLEAR`; spec review `Approve`
+**Status:** Implementation complete — rev 4; Phases 1–5 implemented; independent Phase 5 audit
+pending; product-lens implementation gate `CLEAR`; spec review `Approve`; one omitted external
+checkout entry digest remains an explicit evidence limitation
 **Owner:** Reid W
 **Created:** 2026-08-16 20:42
 **Updated:** 2026-08-18
@@ -126,24 +127,24 @@ generator cannot honor its index and must say so rather than compute a different
 
 ## Success Criteria
 
-- [ ] Every A1–A6 row produces the modeled occurrence result or a named refusal, proved by the real
+- [x] Every A1–A6 row produces the modeled occurrence result or a named refusal, proved by the real
       SysIDE model cases listed in its row. No result depends on proximity, arrival order, or global
       uniqueness.
-- [ ] Every B1–B10 row retains exact evidence, returns the correct positive result, or fails by name,
+- [x] Every B1–B10 row retains exact evidence, returns the correct positive result, or fails by name,
       proved by the evidence type listed in its row. No row is certified only by a corpus that never
       exercises its failure branch.
-- [ ] P-002 still holds: one modeled source occurrence becomes exactly one runtime source, including
+- [x] P-002 still holds: one modeled source occurrence becomes exactly one runtime source, including
       usage-owned qualified references and nested modeled containment paths.
 - [x] Every positive A1-A4/A6 occurrence shape has an off-default public mutation proof: changing
       one modeled source changes every and only the generated runtime consumers bound to that
       source. Internal occurrence or graph assertions alone do not certify the result.
-- [ ] A checked reconciliation ledger maps every historical census row L-01–L-14 and U-1–U-2 to an
+- [x] A checked reconciliation ledger maps every historical census row L-01–L-14 and U-1–U-2 to an
       A/B row, an explicit disposition above, or a separately filed follow-up. Nothing disappears by
       omission.
 - [x] The implementation captures a pre-change output baseline from the named implementation SHAs.
       Every maintained model outside an explicit expected-transition ledger remains byte-identical.
       Each transition row names its old behavior, required new result, and proving test.
-- [ ] Ill-formed models receive diagnostics naming the reference, source file and line, and missing
+- [x] Ill-formed models receive diagnostics naming the reference, source file and line, and missing
       modeled authority. Valid but unimplemented forms receive a distinct unsupported-capability
       diagnostic that does not blame the model.
 - [x] The indexed-expression capability and output-alias silence each have a separately owned
@@ -223,5 +224,8 @@ generator cannot honor its index and must say so rather than compute a different
 
 ---
 
-**Next Steps:** Land and record the closed predecessor commits, rerun `my-spec-review` on rev 4, then
-proceed to `my-design` only after the review approves the contract.
+**Next Steps:** Run an independent `$my-audit` against `C_prod`
+`707346d616e508e55103c9246b63d172ed6a862b`, `F_final`
+`2243b7ce116c0a12fb0c09a81262c5c2ec879f69`, and direct-child `C_evidence`
+`a184133b99f7f71451c0b4af5a33b709f988eca2`. Do not close the item or unblock
+`elaborator-downstream` until that audit and the owner-controlled close stage finish.

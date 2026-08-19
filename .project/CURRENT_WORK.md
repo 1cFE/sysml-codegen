@@ -1,25 +1,19 @@
 # Current Work
 
-**Last Updated**: 2026-08-18 (**stop-reinventing-the-parser: Phase 4 audit remediation implemented;
-`audit-phase4-F1` independently re-audited and **FIXED** at `571ed39` (targeted pass; record appended
-to `run-records/phase4-audit.md`). Six adversarial mutations — canonical-root and `ADDED_ROOT`
-comment edits, an over-edited owned file, a duplicate row, a wrong-hash row, and an added file — all
-refuse through the real `--check` gate, and the unmutated tree passes with identical reconciliation
-numbers. Finding 2 (the six under-asserting refusal rows and `audit-phase4-F2`) was **not**
-re-audited; the audit's bounded Needs Work verdict remains the certification record until it is. Codegen candidate `stop-parser-impl-r2` is now `571ed39`; Agentic remains
-read-only at `3f8bd58` (0.1.3 / `semantic-evidence/v2`). `audit-phase4-F1` is answered by an
-independent current-byte guard over all 110 fixture sources in all 43 roots, with the one intentional
-comment difference ledger-owned. `audit-phase4-F2` is answered by per-cell route strength and named
-licensed parser/structure proofs for the two unauthorable deep-override cells. The six narrower
-refusal rows' actual assertions are recorded in the plan. Snapshot refusal, graph-driven registry
-rendering, and stale reference 08 are fixed; `audit-phase3-F2` is scheduled before Phase 5 names
-`C_prod`. Fresh-extraction validation at `571ed39`: **2,496 passed, 34 skipped, 94 deselected**;
-focused Phase 4 **206 passed**; lock/reconciliation contracts **32 passed**; TEAx mutation **6
-passed**; scoped strict mypy green; broad mypy unchanged at 30 errors / 8 files; changed-file Ruff
-clean. `occurrence.py` remains byte-identical to `C_base`. Phase 5 has not started. Do not close or
-run pre-PR; `elaborator-downstream` stays blocked. Records:
-`.project/active/stop-reinventing-the-parser/run-records/phase4-audit.md` and
-`.project/active/stop-reinventing-the-parser/run-records/phase4-remediation.md`.**).
+**Last Updated**: 2026-08-18 (**stop-reinventing-the-parser: Phase 5 implementation complete;
+independent audit pending. Immutable identities: Agentic `A_final`
+`3f8bd587af40f05b929dd56645901dada7daea37`, Codegen `C_prod`
+`707346d616e508e55103c9246b63d172ed6a862b`, Fusion `F_final`
+`2243b7ce116c0a12fb0c09a81262c5c2ec879f69`, and direct-child `C_evidence`
+`a184133b99f7f71451c0b4af5a33b709f988eca2`. The committed 21-lane runner and four-group
+mechanical auditor are green against `/tmp/stop-parser-rev2/artifacts-final-v3`; expected nonzero
+static and Fusion baselines remain named nonzero baselines. The licensed production product gate
+clears `audit3-F1` and `audit-phase3-F2`. `deep_cross_scope_probe` remains the named
+`SI_OCCURRENCE_MISSING` refusal. One evidence limitation remains explicit: `entry-status.md`
+recorded only two of the five requested checkout entry digests, so equality for the omitted three
+cannot be reconstructed. Do not close, run pre-PR, or unblock `elaborator-downstream`; run an
+independent `$my-audit` next. Full counts, hashes, reconstruction command, and rollback rule are in
+`.project/active/stop-reinventing-the-parser/plan.md` under "Phase 5 completion".**).
 Prior status: 2026-08-17 (**Phase 1 complete and audited — plan
 Revision 3 executing design Revision 7; three-leg lock verification green (118/118 against the
 tree the lock names); 25-node red set across live/admitted/capture × strict on implementation
@@ -109,6 +103,26 @@ rather than invented; vehicle `[CONSTRAINT-GATES-UNTAGGED]` in `BACKLOG.md`.
 ---
 
 ## Active Work
+
+### 2026-08-18: stop-reinventing-the-parser — PHASE 5 IMPLEMENTED; INDEPENDENT AUDIT NEXT
+
+[AGENT] The production chain is sealed locally at `A_final` `3f8bd587…`, `C_prod` `707346d6…`,
+`F_final` `2243b7ce…`, and direct-child `C_evidence` `a184133b…`. The evidence commit changes exactly
+the six permitted `verification/` paths. The final artifact root is
+`/tmp/stop-parser-rev2/artifacts-final-v3`; the Codegen wheel hash is `22dc3f3b…fec602`.
+
+The committed runner executed 21 isolated lanes. Codegen default passed 2,511 with 34 exact policy
+skips and 94 deselections; Codegen execution passed 94/94; TEAx passed 406/406; generated Fusion
+execution passed 23/23. Expected status-1 mypy/Ruff/Fusion baselines matched exact retained output
+hashes and remain named nonzero baselines. No unexpected skip or xfail occurred. The mechanical
+auditor passed parent/path topology, Codegen reconstruction, Fusion pinning, and artifact/lock
+verification. The licensed product gate is clear at exact `C_prod`, and `deep_cross_scope_probe`
+still refuses by name.
+
+Implementation is not certification. The plan records the one checkout-integrity evidence gap:
+the entry record omitted baseline digests for Fusion, TEAx, and 1costingfe. All source checkouts were
+left untouched, but omitted before-state hashes cannot be reconstructed after the fact. Run an
+independent `$my-audit`; do not close or start downstream work.
 
 ### 2026-08-18: stop-reinventing-the-parser — PHASE 4 REMEDIATED; RE-AUDIT PENDING
 

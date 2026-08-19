@@ -1200,35 +1200,35 @@ def test_certified_topology(c_prod, f_final, c_evidence, records):
 [design.md#fusion-dependency-and-lock-changes](design.md#fusion-dependency-and-lock-changes), and
 [design.md#commit-boundary-is-closed](design.md#acyclic-production-and-evidence-topology).
 
-- [ ] **Tests first — provenance and topology:** extend
+- [x] **Tests first — provenance and topology:** extend
   `tests/conformance/test_evidence_artifact_topology.py:1`,
   `tests/unit/test_environment_pins.py:1`, `tests/unit/test_teax_discovery.py:1`, and verification
   tool tests to reject external run staging, wrong roots/hashes, missing explicit TEAx paths,
   unexpected skips, dirty sources, wrong parents, extra evidence paths, and self-reference.
-- [ ] **Committed runner:** finish `verification/build_artifacts.py`,
+- [x] **Committed runner:** finish `verification/build_artifacts.py`,
   `verification/run_independent_green.py`, and `verification/audit_evidence.py` so the runner executes
   commands, retains/authenticates output and import probes, and writes the evidence records itself.
   No external script may supply a passing status or output hash.
-- [ ] **Production identities:** name the independently green Agentic commit `A_final`; land every
+- [x] **Production identities:** name the independently green Agentic commit `A_final`; land every
   Codegen production source, test, fixture, doc, version, pin, lock, probe verdict, transition file,
   and runner change in `C_prod`. Build deterministic source archives and wheels from clean
   extractions and record their hashes outside the repositories while downstream verification runs.
-- [ ] **Execution pins:** update `tests/execution/environment_pins.py` and
+- [x] **Execution pins:** update `tests/execution/environment_pins.py` and
   `tests/helpers/teax_discovery.py` to consume the closed execution-provenance manifest and explicit
   TEAx root. Reject the old sibling-shape assumption while preserving wrong-tree refusal.
-- [ ] **Fusion landing:** from the frozen Fusion parent, pin Agentic `0.1.3`, Codegen `0.1.1`,
+- [x] **Fusion landing:** from the frozen Fusion parent, pin Agentic `0.1.3`, Codegen `0.1.1`,
   1costingfe `0.1.0`, exact immutable Git revisions, and the Codegen `C_prod` identity in
   `pyproject.toml` and `uv.lock`. Run the maintained model roots unchanged unless a real semantic
   violation is measured. Land the verified result as `F_final`.
-- [ ] **Evidence child:** create `C_evidence` directly on `C_prod` with exactly
+- [x] **Evidence child:** create `C_evidence` directly on `C_prod` with exactly
   `verification/dependencies.json`, `wheelhouse-requirements.txt`,
   `execution-provenance.json`, `independent-green.json`, `reconciliation-ledger.md`, and
   `evidence-lock.json`. No other path changes; no evidence file names or hashes `C_evidence`, and
   the lock does not hash itself.
-- [ ] **Implementation-time product gate:** append the production result to the product-lens ledger
+- [x] **Implementation-time product gate:** append the production result to the product-lens ledger
   only after the licensed live-and-capture indexed computed-attribute proof is green at `C_prod`.
   Record `audit3-F1` as fixed from that exact identity; do not clear it from a worktree-only run.
-- [ ] **Carried positive-capability proof (`audit-phase3-F2`):** add the licensed public-route
+- [x] **Carried positive-capability proof (`audit-phase3-F2`):** add the licensed public-route
   generation test its product-lens disposition requires. Generate from
   `tests/fixtures/usage_owned_reference_consumers`, assert the emitted qualified-predicate source and
   argument names, and include a real-model local-name collision refusal. Correct the older plan
@@ -1239,38 +1239,41 @@ def test_certified_topology(c_prod, f_final, c_evidence, records):
 
 **Automated artifact runs:**
 
-- [ ] From the Agentic source archive, run focused semantic-evidence tests, the fast suite, scoped
+- [x] From the Agentic source archive, run focused semantic-evidence tests, the fast suite, scoped
   strict checking, repository-wide mypy baseline comparison, and Ruff. Do not run the retired PDF
   or paid/network cases.
-- [ ] From frozen 1costingfe source, run its complete pytest suite and configured Ruff.
-- [ ] From frozen TEAx source, run the simkit and battery-demo suites named in the design.
-- [ ] From the Codegen source archive, run the scoped strict gate, repository-wide mypy comparison,
+- [x] From frozen 1costingfe source, run its complete pytest suite and configured Ruff.
+- [x] From frozen TEAx source, run the simkit and battery-demo suites named in the design.
+- [x] From the Codegen source archive, run the scoped strict gate, repository-wide mypy comparison,
   default and licensed suites, live/snapshot parity, generated-package tests, and complete execution
   lane with manifest-pinned imports.
-- [ ] From the Fusion source archive, run `uv lock --check`, its configured suite, complete model
+- [x] From the Fusion source archive, run `uv lock --check`, its configured suite, complete model
   validation, and final generated Fusion/TEAx execution and mutation proofs using only the recorded
   wheels and extracted sources.
-- [ ] Enforce the no-unexpected-skip rule and record selected, passed, failed, error, skipped,
+- [x] Enforce the no-unexpected-skip rule and record selected, passed, failed, error, skipped,
   xfailed, and deselected counts for each pytest invocation.
 
 **Automated topology and reconstruction:**
 
-- [ ] Rebuild the Codegen archive and wheel from `C_prod`; require exact filename and SHA-256 matches
+- [x] Rebuild the Codegen archive and wheel from `C_prod`; require exact filename and SHA-256 matches
   with `dependencies.json`.
-- [ ] Prove Fusion pins `C_prod` and never `C_evidence`, an editable source, or a sibling path.
-- [ ] Prove `C_evidence^ == C_prod` and its changed-path set is exactly the six evidence-only files.
-- [ ] Recompute every dependency, artifact, run-output, evidence-file, and lock digest.
-- [ ] Run the committed mechanical auditor with explicit `C_prod`, `F_final`, and `C_evidence`
+- [x] Prove Fusion pins `C_prod` and never `C_evidence`, an editable source, or a sibling path.
+- [x] Prove `C_evidence^ == C_prod` and its changed-path set is exactly the six evidence-only files.
+- [x] Recompute every dependency, artifact, run-output, evidence-file, and lock digest.
+- [x] Run the committed mechanical auditor with explicit `C_prod`, `F_final`, and `C_evidence`
   inputs; require every group green.
-- [ ] Confirm original user checkouts retain their entry status digests.
+- [ ] Confirm original user checkouts retain their entry status digests. The two digests actually
+  recorded in `run-records/entry-status.md` match. That record omitted entry digests for Fusion,
+  TEAx, and 1costingfe, so exact before/after equality for those three cannot be reconstructed; see
+  the Phase 5 completion deviation.
 
 **Manual:**
 
-- [ ] Review `independent-green.json` against retained command output and import probes. Confirm the
+- [x] Review `independent-green.json` against retained command output and import probes. Confirm the
   committed runner, rather than external staging, produced every asserted status and hash.
-- [ ] Review the final reconciliation ledger and ensure L-01-L-14/U-1-U-2 each names a final test
+- [x] Review the final reconciliation ledger and ensure L-01-L-14/U-1-U-2 each names a final test
   and production identity without overstating a baseline or unrun case.
-- [ ] Prepare the exact identity and artifact-hash handoff for an independent `$my-audit`. Do not
+- [x] Prepare the exact identity and artifact-hash handoff for an independent `$my-audit`. Do not
   self-certify or close the item in this phase.
 
 **What we know works after this phase:** the semantic closure is green on immutable production
@@ -2077,10 +2080,12 @@ machine row landed one commit later in `3a85831`. History was not rewritten.
    authored `comp_a::length` in neutral IR. Python must bind the exact target's local name
    `length`. `predicate_reference_name` now derives that rendering name from the exact target fact;
    qualified identity remains on `ConstraintFormalIdentity` for collision/correspondence checks.
-   A public-route generation test over `usage_owned_reference_consumers` and two focused unit tests
-   pin the result. The generation proof checks that emitted Python binds `length` and contains no
-   executable `comp_a::length` spelling. This does not
-   create occurrence authority or a second resolution mode.
+   **Correction:** at Phase 3, two focused unit tests pinned only the compiler seam. The original
+   completion text incorrectly claimed a public-route generation test also existed. Phase 5 later
+   supplied that missing proof at exact `C_prod` `707346d6`: generation over
+   `usage_owned_reference_consumers` binds `length`, emits no executable `comp_a::length`, and the
+   companion real-model collision refuses `SI_RENDERING_COLLISION`. This does not create occurrence
+   authority or a second resolution mode.
 3. **[AGENT] The retained off-route computed-attribute taxonomy gained exact leaf facts upstream.**
    A three-segment part-rooted leaf is still not proof of an executable occurrence in that
    classifier, which has no occurrence graph. It now stays `UNRESOLVABLE`; the shipped elaborator
@@ -2336,13 +2341,146 @@ Phase 4 gates.
 
 ### Phase 5 completion
 
-**Completed:**
+**Implementation completed:** 2026-08-18. The production chain, isolated battery, evidence child,
+implementation-time product gate, and mechanical reconstruction audit are complete. Independent
+`$my-audit` remains required. This implementation record does not certify or close the item. One
+checkout-integrity evidence limitation remains visible below: the entry record omitted three of the
+five requested baseline digests.
 
 **Commits / identities:**
 
-**Actual changes and test results:**
+| Role | Full identity | Relationship |
+|---|---|---|
+| `A_final` | `3f8bd587af40f05b929dd56645901dada7daea37` | independently exercised Agentic 0.1.3 source |
+| `C_prod` | `707346d616e508e55103c9246b63d172ed6a862b` | Phase 5 production descendant of audited candidate `571ed39` |
+| `F_final` | `2243b7ce116c0a12fb0c09a81262c5c2ec879f69` | dedicated `stop-parser-fusion-r2` descendant of frozen parent `824a876e281a3b9aef58b1873bfbd0b20c4ab77b` |
+| TEAx | `744745f895677f3344b9884627369a6a47ed987f` | frozen read-only source |
+| 1costingfe | `02543850089be175ea7c28b92a8b2a4184e1637e` | frozen read-only source |
+| `C_evidence` | `a184133b99f7f71451c0b4af5a33b709f988eca2` | direct child of `C_prod`; exactly six evidence-only paths |
+
+`C_prod` is the end of the reviewable Codegen sequence `d8097c2..707346d` on
+`stop-parser-impl-r2`. `F_final` pins that exact commit and its exact wheel hash. Both dedicated
+worktrees are clean. Nothing was pushed.
+
+**Immutable artifacts:** `/tmp/stop-parser-rev2/artifacts-final-v3`
+
+| Artifact | SHA-256 |
+|---|---|
+| Agentic source archive | `e9ae6ae5e797c2ff12a6c8bc16b6524022e359fdba96cc0bd7ead4c33231190b` |
+| Agentic 0.1.3 wheel | `9754e9eb9dd788b4276a7cb3cb1a26638d52fd193a38abae2c688fba7d16fce3` |
+| Codegen source archive | `c0a777ab47583f7d94c08b3b9825a76d22d9f6b0b5db5ee7fb6a23d4a2961598` |
+| Codegen 0.1.1 wheel | `22dc3f3bf090407c3418c123e90eac253398dab0282dc1406ea07ab450fec602` |
+| Codegen history bundle | `68b36ce46a825e43448a71d7cc360a0644da1f1543865f35258c692706327fc2` |
+| Fusion source archive | `b651c6769e300f43e84a95c95133769011ae8ffdee0bdea8e235d516cfb2895f` |
+| TEAx source archive | `9786fec4178975eeefbedb4d8810215e2abb5df4b162ac8290684e3aaf95d884` |
+| 1costingfe source archive | `0a03d387df18bb75b8336a5b471a7203473ba0f2f7255f65846813064b0bc7fa` |
+| 1costingfe 0.1.0 wheel | `970ed533d8fae042de25256933ec99d3385092903e4d407ab2b96baa7a2fcfd6` |
+| `artifact-build.json` | `181d3ed7066b1a64f1023c53087c5089edc4b815c23fcb4a3fa47524931c0961` |
+
+The offline wheelhouse contains 173 hash-pinned wheels. Installation used `--no-index`,
+`--find-links`, and `--require-hashes`. The runner retained raw stdout, stderr, JUnit, and import
+probes. For historically nonzero pytest baselines it compares a canonical JUnit outcome inventory
+while retaining the raw records; addresses, temporary roots, order, and timings cannot manufacture
+a changed baseline.
+
+**Actual isolated-run results:** counts are
+`collected/selected/passed/failed/errors/skipped/xfailed/deselected`. Status 1 rows below are frozen,
+expected nonzero baselines, not green commands represented as zero.
+
+| Runner lane | Status | Counts | Disposition / output SHA-256 |
+|---|---:|---|---|
+| `agentic-focused` | 0 | `841/841/840/0/0/1/0/0` | exact allowed skip; `b6464f8492a2339850a78d37d85d173ddadeb89bfd7564892c78bf2ae5737a67` |
+| `agentic-fast` | 0 | `1923/1918/1917/0/0/1/0/5` | exact allowed skip/deselection; `744858d89b985a09c149834bb7d2fea2c6624d69edeaee784cefd783bacadca0` |
+| `agentic-strict` | 0 | n/a | zero errors; `bd1f00a1dcc181240dc145cafd5d6dc20ec3603a73eeda938640c66122dd4239` |
+| `agentic-mypy-baseline` | 1 | n/a | exact baseline; `5c658780845b0fa9f9e396e5708e52c81627bf6ba188aa229c62514ec4cf6283` |
+| `agentic-ruff-baseline` | 1 | n/a | exact baseline; `362af52b20403692636a0314fe6b6597aa3d795e379a25c3fd67a5cf6c3fca72` |
+| `costingfe-pytest` | 0 | `660/660/602/0/0/58/0/0` | all 58 skips matched policy; `855bf4a36ddd364f83a554b9ac3b92c108ebc81a3a265fb43c6c4ece878c300a` |
+| `costingfe-ruff` | 0 | n/a | clean; `98733c3446b52dc3e6b6943142b19a142025d9727521f6abc3783a20e4b6d3c6` |
+| `teax-pytest` | 0 | `406/406/406/0/0/0/0/0` | green; `c9d172777d5be374d569248e3560cab8abe2203a0164e696d8ba2bc1c015ab1e` |
+| `codegen-strict` | 0 | n/a | zero errors; `bd1f00a1dcc181240dc145cafd5d6dc20ec3603a73eeda938640c66122dd4239` |
+| `codegen-mypy-baseline` | 1 | n/a | exact baseline; `451f08fee774f2522f16bb58ea1b6b8131fcd5a01cfd8782e6f81c73cfb1ea8f` |
+| `codegen-default` | 0 | `2639/2545/2511/0/0/34/0/94` | all skips/deselections exact; `2222fc100a994503df277b659ce5327a046b946b176b047825fb0c1cc188c931` |
+| `codegen-live-snapshot` | 0 | `4/4/4/0/0/0/0/0` | green; `99c315cde5cebb08d96a25e44ddb2208e462e6c702b975e813d2de9af85c4155` |
+| `codegen-generated-package` | 0 | `25/25/25/0/0/0/0/0` | green; `0f0cfa03adeecaa21b13f41b4ab359d9ef31191f31409c2b03df6eeea916394a` |
+| `codegen-execution` | 0 | `94/94/94/0/0/0/0/0` | manifest-pinned imports; `521401059f0529e1361ebfe28a264bb5ddb16d9392ceea52a8c3d7158c569a81` |
+| `fusion-lock-check` | 0 | n/a | lock exact; `7640007240d33469f07f3805ccd6f3b57132d4261db3b45a0d2aced2a858a0ce` |
+| `fusion-pytest` | 1 | `517/517/401/58/0/58/0/0` | exact historical baseline; `ce0adbd6163a337937f4bae933bc34e59129ced4044f3d5ef5b0950775cf962d` |
+| `fusion-models-primary` | 1 | n/a | exact historical model-validation baseline; `2cd4666e7dec0a979050bf199726a78d6505b63ea18c8a0897daf0a084c33ef9` |
+| `fusion-models-exploration` | 1 | n/a | exact historical model-validation baseline; `4b5c9ddba1d057ebcc92a0a4bc2d4ac686abd6201e5df5811e72d7c426d123c0` |
+| `fusion-generated-execution` | 0 | `23/23/23/0/0/0/0/0` | execution and mutation proofs green; `3db3d8cbef06f09b50c834c87d853caecf62910e3ec4a26451fc73a146971d0f` |
+| `fusion-ruff` | 0 | n/a | clean; `98733c3446b52dc3e6b6943142b19a142025d9727521f6abc3783a20e4b6d3c6` |
+| `fusion-mypy` | 0 | n/a | zero errors; `bd1f00a1dcc181240dc145cafd5d6dc20ec3603a73eeda938640c66122dd4239` |
+
+No unexpected skip or xfail was recorded. The owner-excluded Agentic PDF/HTML corpus and 15
+paid/network cases did not run. Fusion model sources were unchanged because no new semantic
+violation was measured.
+
+**Product and global-stop gates:** the kept licensed public-generation proof at `C_prod` emitted
+the exact Python predicate argument `length` and `_cmp('>', length, 0.0)`. Its real-parser collision
+arm refused two distinct qualified `length` targets with `SI_RENDERING_COLLISION`, no output, and no
+traceback. A fresh extracted-artifact rerun passed 2/2. The live-and-capture indexed
+computed-attribute contract is included in the green default lane. The separate exact-route
+live/snapshot package lane passed 4/4. The `deep_cross_scope_probe` canonical record remains
+`SI_OCCURRENCE_MISSING`; a focused immutable artifact rerun passed its three never-restore
+assertions.
+
+**Evidence child and reconstruction:** the six direct-child files have these hashes:
+
+| Evidence path | SHA-256 |
+|---|---|
+| `verification/dependencies.json` | `ce0de3ad7a9c2556fdfc610d33fbc225755871d875da314ba4ed409bb4443f50` |
+| `verification/evidence-lock.json` | `4112e827106eb49a2b1fc02da23f7121ca91f27feed6222fc4256630bdda8cba` |
+| `verification/execution-provenance.json` | `ea2ed40fe09776a5758dd8af0fda3f5371a14c112655bab65f0ecd6f6df6e298` |
+| `verification/independent-green.json` | `cc003a747091b3a5fdf81ed35499273827636293c47681e625006b9ce7695184` |
+| `verification/reconciliation-ledger.md` | `f3c6589d5b59170f7316b03f8d21414a7619580066326fdba2b2f62aa0960e6f` |
+| `verification/wheelhouse-requirements.txt` | `578f369db3e0796313609aa1e60c5acf4f106b458aceb6e936036b8619b65c92` |
+
+The committed auditor was run as:
+
+```text
+.venv/bin/python -m verification.audit_evidence \
+  --repository /tmp/stop-parser-rev2/worktrees/sysml-codegen \
+  --c-prod 707346d616e508e55103c9246b63d172ed6a862b \
+  --f-final 2243b7ce116c0a12fb0c09a81262c5c2ec879f69 \
+  --c-evidence a184133b99f7f71451c0b4af5a33b709f988eca2 \
+  --artifact-root /tmp/stop-parser-rev2/artifacts-final-v3
+```
+
+It returned `PASS` for `parent_and_paths`, `codegen_reconstruction`, `fusion_pin`, and
+`artifacts_and_lock`. Re-run the 21 commands through the committed runner with:
+
+```text
+set -a; source /home/reid/1cfe/agentic-mbse/.env; set +a
+python -m verification.run_independent_green \
+  --artifact-root /tmp/stop-parser-rev2/artifacts-final-v3 \
+  --evidence-output /tmp/stop-parser-rev2/evidence-audit-rerun
+```
+
+Each exact executed command, working directory, expected status, counts, raw-output hash, JUnit
+hash, import-probe hash, and skip policy is in `verification/independent-green.json` at
+`C_evidence`. Artifact reconstruction inputs and hashes are in `verification/dependencies.json` and
+the artifact root's `artifact-source-inputs.json`.
 
 **Issues / deviations / rollback point:**
+
+- The entry record contains Codegen and Agentic status digests only. Both still equal the recorded
+  empty digest `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`.
+  TEAx and 1costingfe are clean at their frozen commits. The original Fusion checkout was never
+  written, staged, stashed, or switched; it remains on `item8-fusion-embedded-catalog` at
+  `be1ee7c0c40a092ebe6750f262902501e377bbd0`, with current dirty status-path digest
+  `d8a9922b4300ee7bf04f87b8d01fa02846f2253b7ad290ca535b83f3db9bf08a`. Because
+  `run-records/entry-status.md` omitted baseline digests for these three external checkouts, exact
+  before/after digest equality is not independently reconstructable. The corresponding validation
+  box stays open; no equality is invented.
+- One focused stop-condition launch omitted the required
+  `STOP_PARSER_ARTIFACT_SOURCE_INPUTS` declaration and failed during collection. Re-running the same
+  three nodes with the recorded manifest passed 3/3. This was a setup-only non-verdict and did not
+  alter an artifact or evidence file.
+- No production stop rule tripped. The rollback identity before Phase 5 is audited candidate
+  `571ed39`; the Fusion rollback identity is frozen parent
+  `824a876e281a3b9aef58b1873bfbd0b20c4ab77b`. Any production change after `C_prod` invalidates
+  `F_final` and `C_evidence` and must create a new dependent identity chain. Never repair production
+  behavior in `C_evidence`.
 
 ---
 

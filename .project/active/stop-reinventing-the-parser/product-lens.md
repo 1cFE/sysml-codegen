@@ -1151,3 +1151,43 @@ Smells:
 
 Gate: unchanged for the phase — this entry resolves `audit-phase4-F1` only. `audit-phase4-F2` and the
 under-asserting refusal rows were not re-audited and stand as recorded.
+
+---
+
+## phase5-production — 2026-08-18 — exact `C_prod` `707346d616e508e55103c9246b63d172ed6a862b`
+
+This is the delegated implementation-time product gate. It records production-artifact results;
+it is not the independent item audit and does not certify or close the item. The source was the
+clean `C_prod` archive at
+`/tmp/stop-parser-rev2/artifacts-final-v3/extracted/codegen/sysml-codegen-0.1.1`, with Agentic
+`3f8bd587af40f05b929dd56645901dada7daea37`, SysIDE 0.8.4, and the license supplied only through
+the environment.
+
+Resolves:
+
+- audit3-F1: **FIXED at exact production identity.** The kept licensed
+  `test_public_indexed_expression_consumer_refuses_before_its_adapter` matrix covers all five
+  expression consumers, including the indexed computed attribute, through live strict, live
+  lenient, admitted strict, admitted lenient, and capture arms. Every cell reports one
+  `SI_INDEXED_SOURCE_UNSUPPORTED` with the authored reference and location before the real consumer
+  adapter runs; capture preserves an existing output. Those 25 cells are in the retained green
+  `codegen-default` JUnit record at `C_prod`; the committed runner reports 2,511 passed, 34 exact
+  policy skips, and 94 deselections for that lane. This satisfies audit3-F1's recorded falsifier
+  without a worktree-only inference.
+- audit-phase3-F2: **FIXED at exact production identity.** The new kept licensed public-generation
+  test uses `tests/fixtures/usage_owned_reference_consumers` and asserts the emitted predicate has
+  argument `length` and body `_cmp('>', length, 0.0)`. Its real-parser collision companion authors
+  two distinct qualified targets with local name `length` and proves public generation refuses
+  `SI_RENDERING_COLLISION` without output or traceback. A focused rerun from the extracted `C_prod`
+  artifact passed 2/2. The older evidence claim is corrected: the unit compiler seam alone did not
+  prove public generation; these two production tests do.
+
+Smell search: Smells 3 and 4 no longer fire for the indexed computed-attribute route because the
+exact parser evidence survives into one shared inventory and every natural public arm refuses
+before consumer-specific lowering. Smell 1 does not fire for predicate rendering: public generation
+consumes the graph's qualified target, while a collision is a named refusal rather than a second
+local-name mapping. The runner retains the raw output, JUnit inventory, import probes, source archive,
+and wheel hashes; no editable sibling supplies the result.
+
+Gate: **CLEAR for Phase 5 implementation (`audit3-F1`, `audit-phase3-F2`)**. Independent `$my-audit`
+is still required before item certification or close.
