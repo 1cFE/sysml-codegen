@@ -2311,6 +2311,29 @@ the manifest is itself a leg-1 row recomputed against `20f9e60`.
 Finding 2 (the universality claim for six under-asserting refusal rows, and `audit-phase4-F2`) was
 **not** re-audited in this pass and remains open on the record.
 
+#### Phase 4 closure (2026-08-18) — **phase CLOSED**
+
+Finding 2 and the remediation residuals were verified by the orchestrator by execution
+(record-the-verification rule for minor, objectively verifiable fixes; evidence in
+[run-records/phase4-audit.md](run-records/phase4-audit.md), "Orchestrator verification" section):
+the focused Phase 4 selection recomputes at **206 passed** from its recorded command; the
+corrected validation bullet's narrower assertion sets match the test bodies; the consumer-closure
+table structurally requires resolvable proofs, complete per-cell arm keys, and reasons for
+exactly the empty-arm cells; the two deep-override exception cells carry three real passing
+proofs (licensed parse-rejection probe, Feature-only structural probe, path-factory refusal);
+`--from-snapshot` drives the unsupported-exit-type refusal as a parametrized source arm;
+registry rendering tests consume the graph; `audit-phase3-F2` is an explicit unchecked Phase 5
+obligation gating `C_prod`. The full default suite was rerun from the retained `571ed39`
+extraction with the declared artifact-source manifest and license: **2,496 passed, 34 skipped,
+94 deselected, zero failures** — the remediation's exact figure.
+
+With `audit-phase4-F1` independently re-audited FIXED and finding 2 verified closed, the Needs
+Work verdict is discharged. Production candidate: `stop-parser-impl-r2` at **`571ed39`**.
+**Phase 4 is closed; Phase 5 may start** once its pre-work lands (external-pin existence checks;
+`audit-phase3-F2` positive-capability proof before `C_prod` is named). Per the phase's rollback
+rule, any production change after this point invalidates the candidate and restarts the affected
+Phase 4 gates.
+
 ### Phase 5 completion
 
 **Completed:**
