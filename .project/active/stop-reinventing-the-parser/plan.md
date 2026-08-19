@@ -2606,6 +2606,129 @@ It returned PASS for `parent_and_paths`, `codegen_reconstruction`, `fusion_pin`,
 independent `$my-audit` must re-attack the four blocking findings and the DISPOSE-grade follow-ups
 before close or pre-PR.
 
+#### Phase 5 fix round 2 completion — the r3 chain
+
+**Implemented:** 2026-08-19. The rev-2 re-audit (`audit.md`, committed `3b2866c`) confirmed eight of
+ten rev-1 findings fixed and blocked on one defect class: the public catch-all fabricated
+provenance. Its findings required production changes, so the r2 chain is superseded and preserved at
+Codegen ref `evidence-chain-r2`: `C_prod-r2` `22348458baa5aec314850cc6fcc8d1e90355ce58`, `F_final-r2`
+`8460d0cdf76e04fd4f4be146d52f2e0fef009a98`, `C_evidence-r2` `4ea1e8cdd98257d11ca8ef37a595b64392929bd9`.
+`evidence-chain-r1` still preserves the first chain. Both historical audit verdicts and both earlier
+completion records are unchanged. Agentic was closed for this round and its identity is unchanged.
+
+**The rule this round establishes, and holds every change to:** a diagnostic field is either
+measured or absent, never defaulted. Totality means a formed diagnostic always crosses the public
+boundary — not that all four elements are always non-empty. Recorded in
+[`run-records/phase5-fix-round-2.md`](run-records/phase5-fix-round-2.md) and as a dated correction
+note under design D8.
+
+**Replacement identities:**
+
+| Role | Full identity | Relationship |
+|---|---|---|
+| `A_final-r2` | `443388823f0db46c14df1728d3843d0a74ee7590` | unchanged; Agentic closed for this round |
+| `C_prod-r3` | `14130a89a3b9423a235eaa6c88f356a41a6767fd` | provenance repair plus committed runner-count calibration |
+| `F_final-r3` | `83551fbb81fc8cdd34fe0b12c64703ab5eab7ed9` | dedicated Fusion worktree; pins `C_prod-r3` and its wheel bytes |
+| TEAx | `744745f895677f3344b9884627369a6a47ed987f` | frozen read-only source |
+| 1costingfe | `02543850089be175ea7c28b92a8b2a4184e1637e` | frozen read-only source |
+| `C_evidence-r3` | `875ba01a8fd10b49928cb3e69b7245850128a844` | direct child of `C_prod-r3`; exactly six runner-written evidence paths |
+
+Nothing was pushed. `C_evidence-r3^` is `C_prod-r3`, and their changed-path set is exactly the six
+permitted `verification/` files.
+
+**Immutable artifacts:** `/tmp/stop-parser-rev2/artifacts-final-r5`
+
+| Artifact | SHA-256 |
+|---|---|
+| Agentic source archive | `595d3430378b71f867ba26e912fb947cd3c6972b94f466b6da2dd77d784a493d` |
+| Agentic 0.1.3 wheel | `7505028f2fc720ae06a244c5dd95019b8ae52a796ddbfec3b3492e2ad56954f7` |
+| Codegen source archive | `af9e4fa68fe442f8047bfa2ced27d3aa0771bc3c94c9e4fc2a9abcbada3ffd07` |
+| Codegen 0.1.1 wheel | `4d68db8473754498ece341b6c901a5f94c5deebd80d91f37c7ae052f98b1aeb0` |
+| Codegen history bundle | `50152b0ed3eee4bc5ce9563956dbcb01a55a2e3748092f4538dec893e51fa236` |
+| Fusion source archive | `4da393a1510bda93fb1986bc0d24ef69456ba45dcb76f564821ed72780e07b11` |
+| TEAx source archive | `9786fec4178975eeefbedb4d8810215e2abb5df4b162ac8290684e3aaf95d884` |
+| 1costingfe source archive | `0a03d387df18bb75b8336a5b471a7203473ba0f2f7255f65846813064b0bc7fa` |
+| 1costingfe 0.1.0 wheel | `970ed533d8fae042de25256933ec99d3385092903e4d407ab2b96baa7a2fcfd6` |
+| `artifact-build.json` | `b2fef5329c7e42e7ff1fdf857f771bb3bccd18b2edd8489f7e9dce4da2e22205` |
+
+The wheelhouse contains the same 173 hash-pinned wheels. The committed runner wrote every evidence
+record; no hand-run status or output hash was imported.
+
+**Gates rerun before the remint.** From the sealed extraction at `C_prod-r3`'s parent content
+(`/tmp/stop-parser-rev2/artifacts-r3-provisional/extracted/codegen/sysml-codegen-0.1.1`, license
+loaded, `STOP_PARSER_ARTIFACT_SOURCE_INPUTS` naming that build's manifest): **2,542 passed, 9
+skipped, 94 deselected, zero failures**. The count rises from 2,524 by exactly the 18 nodes this
+round added — 9 in the totality suite and 9 in the new raise-site provenance suite. `ruff check
+src/` is clean and `mypy src/` holds its 30-error baseline in the same 8 files.
+
+**Replacement 21-lane results:** counts are
+`collected/selected/passed/failed/errors/skipped/xfailed/deselected`. Status 1 rows are the exact
+declared nonzero baselines.
+
+| Runner lane | Status | Counts | Output SHA-256 |
+|---|---:|---|---|
+| `agentic-focused` | 0 | `846/846/845/0/0/1/0/0` | `2efed04e2f137e2c6abe809c1b0800e3e0668138a5669bf110f67ae96cc0a672` |
+| `agentic-fast` | 0 | `1928/1923/1922/0/0/1/0/5` | `02e9e0fe546ad9efed8377e0aa991f675e728989e8c4f94856dadc550a6e4a71` |
+| `agentic-strict` | 0 | n/a | `bd1f00a1dcc181240dc145cafd5d6dc20ec3603a73eeda938640c66122dd4239` |
+| `agentic-mypy-baseline` | 1 | n/a | `5c658780845b0fa9f9e396e5708e52c81627bf6ba188aa229c62514ec4cf6283` |
+| `agentic-ruff-baseline` | 1 | n/a | `362af52b20403692636a0314fe6b6597aa3d795e379a25c3fd67a5cf6c3fca72` |
+| `costingfe-pytest` | 0 | `660/660/602/0/0/58/0/0` | `855bf4a36ddd364f83a554b9ac3b92c108ebc81a3a265fb43c6c4ece878c300a` |
+| `costingfe-ruff` | 0 | n/a | `98733c3446b52dc3e6b6943142b19a142025d9727521f6abc3783a20e4b6d3c6` |
+| `teax-pytest` | 0 | `406/406/406/0/0/0/0/0` | `c9d172777d5be374d569248e3560cab8abe2203a0164e696d8ba2bc1c015ab1e` |
+| `codegen-strict` | 0 | n/a | `bd1f00a1dcc181240dc145cafd5d6dc20ec3603a73eeda938640c66122dd4239` |
+| `codegen-mypy-baseline` | 1 | n/a | `76ea65714858850c985a4ded9788f518c196d5ee4456e35258558ae2b49c90c6` |
+| `codegen-default` | 0 | `2645/2551/2542/0/0/9/0/94` | `84e8bbdeaa7f36b4eeb42b0cb9f9a3d383ed75b7a8c7a7aca651d31ee01b1b5a` |
+| `codegen-live-snapshot` | 0 | `4/4/4/0/0/0/0/0` | `99c315cde5cebb08d96a25e44ddb2208e462e6c702b975e813d2de9af85c4155` |
+| `codegen-generated-package` | 0 | `25/25/25/0/0/0/0/0` | `0f0cfa03adeecaa21b13f41b4ab359d9ef31191f31409c2b03df6eeea916394a` |
+| `codegen-execution` | 0 | `94/94/94/0/0/0/0/0` | `521401059f0529e1361ebfe28a264bb5ddb16d9392ceea52a8c3d7158c569a81` |
+| `fusion-lock-check` | 0 | n/a | `395d3a8721c718e32db01b4b7a1bda2f84a93e6fa47c6743ecf63af56c635a46` |
+| `fusion-pytest` | 1 | `517/517/401/58/0/58/0/0` | `ce0adbd6163a337937f4bae933bc34e59129ced4044f3d5ef5b0950775cf962d` |
+| `fusion-models-primary` | 1 | n/a | `2cd4666e7dec0a979050bf199726a78d6505b63ea18c8a0897daf0a084c33ef9` |
+| `fusion-models-exploration` | 1 | n/a | `4b5c9ddba1d057ebcc92a0a4bc2d4ac686abd6201e5df5811e72d7c426d123c0` |
+| `fusion-generated-execution` | 0 | `23/23/23/0/0/0/0/0` | `3db3d8cbef06f09b50c834c87d853caecf62910e3ec4a26451fc73a146971d0f` |
+| `fusion-ruff` | 0 | n/a | `98733c3446b52dc3e6b6943142b19a142025d9727521f6abc3783a20e4b6d3c6` |
+| `fusion-mypy` | 0 | n/a | `bd1f00a1dcc181240dc145cafd5d6dc20ec3603a73eeda938640c66122dd4239` |
+
+Only two lane expectations moved, both explained above and both recalibrated in the committed
+runner: `codegen-default`'s counts, and the `codegen-mypy-baseline` declared hash. `fusion-lock-check`
+and `codegen-default` output hashes move with the new pins and the new nodes. No unexpected skip or
+xfail occurred; the owner-excluded PDF/HTML corpus and the paid/network cases did not run.
+
+**Evidence child hashes:**
+
+| Evidence path | SHA-256 |
+|---|---|
+| `verification/dependencies.json` | `39841e7e0dfe7676af9e05ab4e79728ff9d0a6b99300f6428f850a809f169dee` |
+| `verification/evidence-lock.json` | `a20f14de07ad56197e62ccf586fc6df0b8d8745cb129b687a34093a73c0eba4b` |
+| `verification/execution-provenance.json` | `5e9db0c6efd4ab04456ec4a3561d306e491122065f64779b38f58e1f300d24ec` |
+| `verification/independent-green.json` | `fa3e7344ae995f9af5d4ad2198b689b1afd0b27d22dfdb2fef84560e6133d64f` |
+| `verification/reconciliation-ledger.md` | `27c9f391f64c215ffa8ce063e2a2bc57ba8331e5dab7f7288580f8d270ec6e3a` |
+| `verification/wheelhouse-requirements.txt` | `4f70c5f0494e3ebb8b55db3c748a390bcb96c0a1f2307e139f1f055aae31d167` |
+
+The final runner command was:
+
+```text
+set -a; source /home/reid/1cfe/agentic-mbse/.env; set +a
+python -m verification.run_independent_green \
+  --artifact-root /tmp/stop-parser-rev2/artifacts-final-r5 \
+  --evidence-output /tmp/stop-parser-rev2/evidence-final-r5
+```
+
+The mechanical auditor was run with explicit identities:
+
+```text
+.venv/bin/python -m verification.audit_evidence \
+  --repository /tmp/stop-parser-rev2/worktrees/sysml-codegen \
+  --c-prod 14130a89a3b9423a235eaa6c88f356a41a6767fd \
+  --f-final 83551fbb81fc8cdd34fe0b12c64703ab5eab7ed9 \
+  --c-evidence 875ba01a8fd10b49928cb3e69b7245850128a844 \
+  --artifact-root /tmp/stop-parser-rev2/artifacts-final-r5
+```
+
+It returned PASS for `parent_and_paths`, `codegen_reconstruction`, `fusion_pin`, and
+`artifacts_and_lock`. This is an implementation handoff, not self-certification: the independent
+auditor re-attacks R1 and R2 against this chain, and R3-R6 remain carried DISPOSE-grade rows.
+
 ---
 
 **Status progression:** Draft → In Progress → Complete

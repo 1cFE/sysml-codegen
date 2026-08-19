@@ -1545,3 +1545,43 @@ Resolves:
 - audit-final-F1: **FIXED at exact production identity.** Basis: measured on the public route, and
   the identity check read directly in `agentic reference_use.py:379-392`. Both halves of the
   finding — post-graph refusal without provenance, and plurality by spelling — are closed.
+
+---
+
+## fix-round-2-implementation — 2026-08-19 — rev `C_prod-r3` `14130a89a3b9423a235eaa6c88f356a41a6767fd` (Agentic `443388823f0db46c14df1728d3843d0a74ee7590`)
+
+This is the implementation response to `audit-final-r2`. The historical verdict above is unchanged;
+a new independent audit must judge this chain.
+
+Point: an authored form the toolchain cannot honor is refused by name, before a graph, naming what
+the modeller wrote and where. That obligation now carries an explicit second half: **a diagnostic
+field is either measured or absent, never defaulted.** A refusal that invents a plausible file and
+line is not a refusal by name — it is the same forbidden move the item exists to remove, applied to
+diagnostics instead of to resolution.
+
+Falsifier: any public refusal reports a reference or a `file:line` nobody read off the failure; a
+user's own syntax error is reported as an internal failure; a failure caused by one file is cited
+against another; or a raise site for a guarded code drops the authored context it holds.
+
+Result at the replacement identities:
+
+- `audit-final-r2-F1` is fixed. The catch-all reports the cause chain and nothing else — no
+  reference, no location — under `SI_INTERNAL_DEFECT`, which says the defect is the generator's
+  rather than the model's. `orchestration/diagnostic_context.py` and the two sibling context
+  helpers, whose only job was to invent those fields, are deleted. `SysMLParsingError` rejoins the
+  passthrough tuple, so a syntax error reports as a parse failure at its own measured line, and a
+  formed `CodeGenerationError` from generation is no longer relabelled.
+- `audit-final-r2-F2` is fixed. `SI_REDEFINITION_INVALID`, the `item def` arm of
+  `SI_CONSTRAINT_UNATTACHED`, `SI_RENDERING_COLLISION`, and `SI_CONTAINMENT_RECURSIVE` attach the
+  authored names and the exact site they were read from; the generation preflight family carries
+  stable code tokens and cites a module's source when the graph measured one; and parse-time
+  refusals on the capture arm name the manifest referent instead of a private staging directory.
+- The totality proofs enforce the rule in both directions, and an AST guard enumerates the four
+  guarded codes rather than a list of scenarios. All 32 nodes in the two proof files fail against
+  the unfixed parent.
+- A fresh declared extraction passed 2,542 tests with 9 policy skips and 94 deselections. The
+  committed runner completed all 21 lanes, the direct evidence child is
+  `875ba01a8fd10b49928cb3e69b7245850128a844`, and all four mechanical-auditor groups passed.
+
+Gate: **CLEAR for replacement-chain independent audit.** This is not certification and does not
+close the item.

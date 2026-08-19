@@ -950,10 +950,20 @@ failure, no snapshot path is created or changed.
 | Unresolved/unsupported multiplicity | existing `SI_MULTIPLICITY_*` code | codegen occurrence construction |
 | Valid indexed element expression not implemented | `SI_INDEXED_SOURCE_UNSUPPORTED` | agentic closed variant; codegen inventory/consumer refusal and rendering |
 | Unsupported generated root output | `EXIT_POINT_TYPE_UNSUPPORTED` | codegen generation preflight |
+| Unclassified failure at the public seam | `SI_INTERNAL_DEFECT` | codegen public conversion boundary |
 
 Every public refusal includes exact reference identity when available and a root-relative
 `file:line`. No B10 source-origin code is carried into production; D10 selects the single deletion
 branch before production starts.
+
+**Correction note (2026-08-19): [AGENT] (ratified by owner via the fix-round-2 brief, 2026-08-19).**
+"When available" is a rule, and it runs both ways: **a diagnostic field is either measured or
+absent, never defaulted.** Totality means a formed diagnostic always crosses the boundary, not that
+all four elements are always non-empty. The re-audit (rev 2, R1) measured what the other reading
+costs: a catch-all that filled reference and location with the first `.sysml` file found and line
+`1` cited an innocent file for another file's failure, and the totality test passed because all four
+fields were non-empty. A failure nobody classified is also not a statement about the model, so it
+carries `SI_INTERNAL_DEFECT` rather than the model-facing `SI_EVIDENCE_INCOMPLETE`.
 
 ### D9. B9 fails before output mutation
 
