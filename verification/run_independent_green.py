@@ -721,10 +721,19 @@ def _prepare_environment(
     agentic_wheel = _input_artifact(artifact_root, inputs, "agentic", "wheel")
     codegen_wheel = _input_artifact(artifact_root, inputs, "codegen", "wheel")
     costingfe_wheel = _input_artifact(artifact_root, inputs, "costingfe", "wheel")
+    agentic_uri = (
+        f"{agentic_wheel.as_uri()}#sha256={inputs['agentic']['wheel']['sha256']}"
+    )
+    codegen_uri = (
+        f"{codegen_wheel.as_uri()}#sha256={inputs['codegen']['wheel']['sha256']}"
+    )
+    costingfe_uri = (
+        f"{costingfe_wheel.as_uri()}#sha256={inputs['costingfe']['wheel']['sha256']}"
+    )
     local_wheels = [
-        f"agentic-mbse[extract-full,web] @ {agentic_wheel.as_uri()}",
-        codegen_wheel.as_uri(),
-        costingfe_wheel.as_uri(),
+        f"agentic-mbse[extract-full,web] @ {agentic_uri}",
+        codegen_uri,
+        costingfe_uri,
     ]
     fusion = _input_root(artifact_root, inputs, "fusion")
     exported = private / "fusion-locked-requirements.txt"
