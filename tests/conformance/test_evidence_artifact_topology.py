@@ -597,6 +597,13 @@ def test_builder_cli_creates_five_closed_source_artifacts(
         name: identities["codegen"]
         for name in build_artifacts.CODEGEN_HISTORY_INPUT_NAMES
     }
+    raw_teax = tmp_path / "raw-teax.tar"
+    build_artifacts._git_archive(
+        Path(rows["teax"]["path"]), identities["teax"], "", raw_teax
+    )
+    rows["teax"]["expected_archive_sha256"] = hashlib.sha256(
+        raw_teax.read_bytes()
+    ).hexdigest()
     source_manifest.write_text(
         json.dumps(
             {
@@ -632,6 +639,12 @@ def test_builder_cli_creates_five_closed_source_artifacts(
         name: row["commit"] for name, row in manifest["inputs"].items()
     } == identities
     assert len(list((output / "sources").glob("*.tar"))) == 5
+    assert manifest["inputs"]["teax"]["archive"][
+        "unprefixed_git_archive_sha256"
+    ] == rows["teax"]["expected_archive_sha256"]
+    assert manifest["inputs"]["teax"]["archive"]["sha256"] != rows["teax"][
+        "expected_archive_sha256"
+    ]
     history = manifest["inputs"]["codegen"]["history"]
     assert history["commit"] == identities["codegen"]
     assert history["required_commits"] == {

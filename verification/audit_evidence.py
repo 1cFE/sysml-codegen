@@ -183,6 +183,11 @@ def _verify_dependencies(
         )
         if _sha256(archive_path) != archive.get("sha256"):
             raise EvidenceAuditError(f"{name} source archive hash mismatch")
+        unprefixed_hash = archive.get("unprefixed_git_archive_sha256")
+        if unprefixed_hash is not None and re.fullmatch(
+            r"[0-9a-f]{64}", str(unprefixed_hash)
+        ) is None:
+            raise EvidenceAuditError(f"{name} unprefixed source hash is malformed")
         excluded_links = build_artifacts._excluded_unsafe_links(
             archive_path, str(archive.get("prefix"))
         )

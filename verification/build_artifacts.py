@@ -161,16 +161,17 @@ def _archive_prefix(name: str, row: dict[str, Any]) -> str:
 
 
 def _git_archive(repository: Path, commit: str, prefix: str, output: Path) -> None:
-    _run(
+    command = [
         "git",
         "-C",
         str(repository),
         "archive",
         "--format=tar",
-        f"--prefix={prefix}/",
-        f"--output={output}",
-        commit,
-    )
+    ]
+    if prefix:
+        command.append(f"--prefix={prefix}/")
+    command.extend((f"--output={output}", commit))
+    _run(*command)
 
 
 def _git_history_bundle(
@@ -493,11 +494,18 @@ def build_artifacts(
                 raise ArtifactContractError(f"source archive is not deterministic for {name}")
         archive_hash = _sha256(archive)
         pinned_archive_hash = row.get("expected_archive_sha256")
-        if pinned_archive_hash is not None and archive_hash != pinned_archive_hash:
-            raise ArtifactContractError(
-                f"source archive hash mismatch for {name}: "
-                f"expected {pinned_archive_hash}, found {archive_hash}"
-            )
+        if pinned_archive_hash is not None:
+            with tempfile.TemporaryDirectory(
+                prefix=f"stop-parser-{name}-source-pin-"
+            ) as temporary:
+                unprefixed = Path(temporary) / archive_name
+                _git_archive(repository, commit, "", unprefixed)
+                actual_source_hash = _sha256(unprefixed)
+            if actual_source_hash != pinned_archive_hash:
+                raise ArtifactContractError(
+                    f"unprefixed source archive hash mismatch for {name}: "
+                    f"expected {pinned_archive_hash}, found {actual_source_hash}"
+                )
         extracted_parent = extracts / name
         excluded_unsafe_links = _excluded_unsafe_links(archive, prefix)
         extracted = _extract_archive(
@@ -547,6 +555,7 @@ def build_artifacts(
                 "prefix": prefix,
                 "sha256": archive_hash,
                 "excluded_unsafe_links": excluded_unsafe_links,
+                "unprefixed_git_archive_sha256": pinned_archive_hash,
             },
             "extracted_root": f"extracted/{name}/{prefix}",
             "wheel": wheel_record,
