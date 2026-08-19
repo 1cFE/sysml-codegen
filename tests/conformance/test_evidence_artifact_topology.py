@@ -543,6 +543,86 @@ def test_a_retained_run_output_mutation_is_rejected(tmp_path: Path) -> None:
         audit_evidence.verify_retained_run_artifacts(tmp_path, record)
 
 
+def test_pytest_output_hash_is_stable_across_order_and_process_noise(tmp_path: Path) -> None:
+    roots = [tmp_path / "first", tmp_path / "second"]
+    hashes: list[str] = []
+    cases = [
+        ("tests.test_example.TestExample", "test_failure", "0xabc123"),
+        ("tests.test_example.TestExample", "test_pass", ""),
+    ]
+    for index, root in enumerate(roots):
+        root.mkdir()
+        suite = ET.Element("testsuite")
+        for classname, name, address in cases[:: 1 if index == 0 else -1]:
+            case = ET.SubElement(suite, "testcase", classname=classname, name=name)
+            if address:
+                ET.SubElement(
+                    case,
+                    "failure",
+                    message=(
+                        f"object at {address} in /tmp/pytest-of-user/pytest-{index}/case"
+                    ),
+                )
+        junit = root / "result.xml"
+        ET.ElementTree(suite).write(junit)
+        hashes.append(
+            run_independent_green._output_hash(
+                artifact_root=root,
+                stdout=f"rootdir: {root}\nfinished in {index + 1}.23s\n",
+                stderr="",
+                junit=junit,
+            )
+        )
+
+    assert hashes[0] == hashes[1]
+
+
+def test_a_retained_junit_mutation_is_rejected(tmp_path: Path) -> None:
+    reports = tmp_path / "run-reports"
+    reports.mkdir()
+    stdout = reports / "example.stdout"
+    stderr = reports / "example.stderr"
+    probe = reports / "example.imports.json"
+    junit = reports / "example.xml"
+    stdout.write_text("failed\n")
+    stderr.write_text("")
+    probe.write_text("[]\n")
+    junit.write_text(
+        '<testsuite><testcase classname="tests.test_x" name="test_x">'
+        '<failure message="expected 1" /></testcase></testsuite>'
+    )
+    record = {
+        "id": "example",
+        "output_sha256": run_independent_green._output_hash(
+            artifact_root=tmp_path,
+            stdout=stdout.read_text(),
+            stderr=stderr.read_text(),
+            junit=junit,
+        ),
+        "stdout": {
+            "path": "run-reports/example.stdout",
+            "sha256": hashlib.sha256(stdout.read_bytes()).hexdigest(),
+        },
+        "stderr": {
+            "path": "run-reports/example.stderr",
+            "sha256": hashlib.sha256(stderr.read_bytes()).hexdigest(),
+        },
+        "import_probe": {
+            "path": "run-reports/example.imports.json",
+            "sha256": hashlib.sha256(probe.read_bytes()).hexdigest(),
+        },
+        "junit": {
+            "path": "run-reports/example.xml",
+            "sha256": hashlib.sha256(junit.read_bytes()).hexdigest(),
+        },
+    }
+
+    audit_evidence.verify_retained_run_artifacts(tmp_path, record)
+    junit.write_text("<testsuite />")
+    with pytest.raises(audit_evidence.EvidenceAuditError, match="JUnit hash mismatch"):
+        audit_evidence.verify_retained_run_artifacts(tmp_path, record)
+
+
 def test_run_record_counts_pytest_errors_separately_from_failures(tmp_path: Path) -> None:
     root = tmp_path / "artifact"
     root.mkdir()

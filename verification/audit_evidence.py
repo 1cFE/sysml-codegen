@@ -430,12 +430,25 @@ def verify_retained_run_artifacts(artifact_root: Path, record: dict[str, Any]) -
         if _sha256(path) != retained.get("sha256"):
             raise EvidenceAuditError(f"{run_id}: retained {field} hash mismatch")
         retained_paths[field] = path
-    normalized = (
-        retained_paths["stdout"].read_text()
-        + "\n"
-        + retained_paths["stderr"].read_text()
-    ).replace(str(artifact_root.resolve()), "<ARTIFACT_ROOT>")
-    if hashlib.sha256(normalized.encode()).hexdigest() != record.get("output_sha256"):
+    junit_record = record.get("junit")
+    junit: Path | None = None
+    if junit_record is not None:
+        if not isinstance(junit_record, dict):
+            raise EvidenceAuditError(f"{run_id}: retained JUnit record is malformed")
+        junit = _artifact_path(
+            artifact_root,
+            junit_record.get("path"),
+            label=f"{run_id} retained JUnit",
+        )
+        if _sha256(junit) != junit_record.get("sha256"):
+            raise EvidenceAuditError(f"{run_id}: JUnit hash mismatch")
+    output_hash = run_independent_green._output_hash(
+        artifact_root=artifact_root,
+        stdout=retained_paths["stdout"].read_text(),
+        stderr=retained_paths["stderr"].read_text(),
+        junit=junit,
+    )
+    if output_hash != record.get("output_sha256"):
         raise EvidenceAuditError(f"{run_id}: normalized output hash mismatch")
 
 

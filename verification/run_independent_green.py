@@ -291,6 +291,59 @@ def _junit_counts(path: Path, output: str) -> tuple[dict[str, int], list[dict[st
     )
 
 
+def _stable_output_text(value: str, artifact_root: Path) -> str:
+    normalized = value.replace(str(artifact_root.resolve()), "<ARTIFACT_ROOT>")
+    normalized = re.sub(r"0x[0-9a-fA-F]+", "0x<ADDRESS>", normalized)
+    return re.sub(
+        r"/tmp/pytest-of-[^/\s]+/pytest-\d+",
+        "<PYTEST_TMP>",
+        normalized,
+    )
+
+
+def _outcome_sort_key(row: dict[str, str]) -> tuple[str, str, str]:
+    return row["node_id"], row["outcome"], row["message"]
+
+
+def _output_hash(
+    *,
+    artifact_root: Path,
+    stdout: str,
+    stderr: str,
+    junit: Path | None,
+) -> str:
+    if junit is None:
+        payload = _stable_output_text(stdout + "\n" + stderr, artifact_root)
+    else:
+        root = _junit_root(junit)
+        outcomes: list[dict[str, str]] = []
+        for case in _testcases(root):
+            outcome = "passed"
+            message = ""
+            for candidate in ("failure", "error", "skipped"):
+                element = case.find(candidate)
+                if element is not None:
+                    outcome = candidate
+                    message = element.attrib.get("message") or (element.text or "").strip()
+                    break
+            outcomes.append(
+                {
+                    "node_id": _node_id(case),
+                    "outcome": outcome,
+                    "message": _stable_output_text(message, artifact_root),
+                }
+            )
+        sorted_outcomes: list[dict[str, str]] = sorted(outcomes, key=_outcome_sort_key)
+        canonical_outcomes: dict[str, object] = {
+            "pytest_outcomes": sorted_outcomes,
+            "stderr": _stable_output_text(stderr, artifact_root),
+        }
+        payload = _canonical_json(
+            canonical_outcomes
+        )
+    return hashlib.sha256(payload.encode()).hexdigest()
+
+
 def _import_files(run: dict[str, Any], environment: dict[str, str]) -> list[str]:
     modules = run.get("import_modules", [])
     if not isinstance(modules, list) or not all(isinstance(item, str) for item in modules):
@@ -391,10 +444,6 @@ def _run_one(
     )
     (report_root / f"{run_id}.stdout").write_text(result.stdout)
     (report_root / f"{run_id}.stderr").write_text(result.stderr)
-    normalized_output = (result.stdout + "\n" + result.stderr).replace(
-        str(artifact_root.resolve()), "<ARTIFACT_ROOT>"
-    )
-    output_hash = hashlib.sha256(normalized_output.encode()).hexdigest()
     if is_pytest:
         counts, observed = _junit_counts(junit, result.stdout + "\n" + result.stderr)
     else:
@@ -409,6 +458,12 @@ def _run_one(
             "deselected": 0,
         }
         observed = []
+    output_hash = _output_hash(
+        artifact_root=artifact_root,
+        stdout=result.stdout,
+        stderr=result.stderr,
+        junit=junit if is_pytest else None,
+    )
     policies = run.get("skip_policies", [])
     allowed = [item for item in observed if _skip_matches(item, policies)]
     unexpected = [item for item in observed if item not in allowed]
@@ -445,7 +500,14 @@ def _run_one(
         "unexpected_skips": unexpected,
         "import_roots": [str(Path(value).resolve()) for value in run.get("import_roots", [])],
         "import_files": imports,
-        "junit": str(junit) if is_pytest else None,
+        "junit": (
+            {
+                "path": str(junit.relative_to(artifact_root)),
+                "sha256": _sha256(junit),
+            }
+            if is_pytest
+            else None
+        ),
     }
     return record
 
@@ -612,7 +674,7 @@ EXPECTED_RUNS: dict[str, dict[str, Any]] = {
             "xfailed": 0,
             "deselected": 0,
         },
-        "output_sha256": "a18837d921500c3885cd4f04ee1051e8fbc0b2d305f438a7f67473602a71a94d",
+        "output_sha256": "ce0adbd6163a337937f4bae933bc34e59129ced4044f3d5ef5b0950775cf962d",
     },
     "fusion-models-primary": {
         "status": 1,
