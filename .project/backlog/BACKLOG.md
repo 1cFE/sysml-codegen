@@ -33,6 +33,12 @@ Prioritized list of epics and features.
   exact indexed-element semantics are implemented. Preserve the authored reference and the current
   fail-before-mutate contract while adding the capability. Source:
   `.project/active/stop-reinventing-the-parser/design.md` D5/D7/D8 and transition rows A5/A5a/A5b.
+- **[SCALAR-FUNCTION-VOCABULARY] Add scalar invocation functions as a separately owned capability —
+  P2 `[OWNER, 2026-08-18]`.** Supporting `min`, `max`, or other scalar functions is not part of the
+  stop-parser remediation; no existing fixture or Fusion model needs them. Today every invocation
+  except the exact standard-library `NumericalFunctions::sum` declaration refuses before graph
+  construction with `SI_EXPRESSION_SOURCE_UNSUPPORTED`, naming the authored expression and its
+  source location. A future capability must define and test each admitted function explicitly.
 - **[OUTPUT-ALIAS-DUPLICATE-SOURCE-SILENCE] Refuse or implement a second output alias — P1
   `[AGENT]`.** A second authored alias for one source survives in `graph.output_aliases` but emits no
   exit-point line, writes no `<name>.json`, and produces no diagnostic. Decide the supported

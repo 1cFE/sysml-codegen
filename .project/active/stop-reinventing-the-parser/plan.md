@@ -2485,6 +2485,127 @@ the artifact root's `artifact-source-inputs.json`.
   `F_final` and `C_evidence` and must create a new dependent identity chain. Never repair production
   behavior in `C_evidence`.
 
+#### Phase 5 audit-fix completion — replacement chain
+
+**Implemented:** 2026-08-19. The independent audit at `e861acd` invalidated the first immutable
+chain because its findings required production changes. The invalid chain remains preserved at
+Codegen ref `evidence-chain-r1`: `A_final` `3f8bd587af40f05b929dd56645901dada7daea37`,
+`C_prod` `707346d616e508e55103c9246b63d172ed6a862b`, `F_final`
+`2243b7ce116c0a12fb0c09a81262c5c2ec879f69`, and `C_evidence`
+`a184133b99f7f71451c0b4af5a33b709f988eca2`. The historical audit verdict and first completion
+record above are unchanged.
+
+The focused fix checkpoint is `e758ea5d5f96c1047756d032bd8e7e5e4e304025`; its record is
+[`run-records/phase5-fix-round.md`](run-records/phase5-fix-round.md). Before re-minting, a fresh
+declared extraction passed 2,524 tests with 9 skips and 94 deselections, and a complete collection
+sweep resolved all 189 unique non-null ledger proof citations. The full-suite skip count changes
+from 34 to 9 because retiring the dead computed-attribute golden test removes exactly its 25
+parametrized “no computed attributes” skips; the nine retained skips are the calc-compat golden
+cases.
+
+**Replacement identities:**
+
+| Role | Full identity | Relationship |
+|---|---|---|
+| `A_final-r2` | `443388823f0db46c14df1728d3843d0a74ee7590` | reopened Phase 2 landing; Agentic 0.1.3 / `semantic-evidence/v2` |
+| `C_prod-r2` | `22348458baa5aec314850cc6fcc8d1e90355ce58` | audit-fix production plus committed runner-count calibration |
+| `F_final-r2` | `8460d0cdf76e04fd4f4be146d52f2e0fef009a98` | dedicated Fusion worktree; pins `A_final-r2`, `C_prod-r2`, and final wheel bytes |
+| TEAx | `744745f895677f3344b9884627369a6a47ed987f` | frozen read-only source |
+| 1costingfe | `02543850089be175ea7c28b92a8b2a4184e1637e` | frozen read-only source |
+| `C_evidence-r2` | `4ea1e8cdd98257d11ca8ef37a595b64392929bd9` | direct child of `C_prod-r2`; exactly six runner-written evidence paths |
+
+Nothing was pushed. The three dedicated production worktrees are clean. `C_evidence-r2^` is
+`C_prod-r2`, and their changed-path set is exactly the six permitted `verification/` files.
+
+**Immutable artifacts:** `/tmp/stop-parser-rev2/artifacts-final-r3`
+
+| Artifact | SHA-256 |
+|---|---|
+| Agentic source archive | `595d3430378b71f867ba26e912fb947cd3c6972b94f466b6da2dd77d784a493d` |
+| Agentic 0.1.3 wheel | `7505028f2fc720ae06a244c5dd95019b8ae52a796ddbfec3b3492e2ad56954f7` |
+| Codegen source archive | `4fc851ca1b83ff8749804e582510832adb5de14cef4688ce05e1c81e3319bac8` |
+| Codegen 0.1.1 wheel | `8dc82e809bc5a6e9534ac41d6030e3479285143b4241542f2e69a363be576325` |
+| Codegen history bundle | `107b3c5ee7bc9df53c1fb8f8511136bc07fcf9971815883e54cf62630ffee946` |
+| Fusion source archive | `f0e5f223a71ae6126ca3d7221926fc9f58ad072605910ff686975a53506c620f` |
+| TEAx source archive | `9786fec4178975eeefbedb4d8810215e2abb5df4b162ac8290684e3aaf95d884` |
+| 1costingfe source archive | `0a03d387df18bb75b8336a5b471a7203473ba0f2f7255f65846813064b0bc7fa` |
+| 1costingfe 0.1.0 wheel | `970ed533d8fae042de25256933ec99d3385092903e4d407ab2b96baa7a2fcfd6` |
+| `artifact-build.json` | `5713cb93c45630f79d37b48977d056e69a072bb3cb272cedf2d543687cd4d193` |
+
+The wheelhouse contains 173 hash-pinned wheels. The committed runner wrote every evidence record;
+no hand-run status or output hash was imported.
+
+**Replacement 21-lane results:** counts are
+`collected/selected/passed/failed/errors/skipped/xfailed/deselected`. Status 1 rows are the exact
+declared nonzero baselines.
+
+| Runner lane | Status | Counts | Output SHA-256 |
+|---|---:|---|---|
+| `agentic-focused` | 0 | `846/846/845/0/0/1/0/0` | `2efed04e2f137e2c6abe809c1b0800e3e0668138a5669bf110f67ae96cc0a672` |
+| `agentic-fast` | 0 | `1928/1923/1922/0/0/1/0/5` | `02e9e0fe546ad9efed8377e0aa991f675e728989e8c4f94856dadc550a6e4a71` |
+| `agentic-strict` | 0 | n/a | `bd1f00a1dcc181240dc145cafd5d6dc20ec3603a73eeda938640c66122dd4239` |
+| `agentic-mypy-baseline` | 1 | n/a | `5c658780845b0fa9f9e396e5708e52c81627bf6ba188aa229c62514ec4cf6283` |
+| `agentic-ruff-baseline` | 1 | n/a | `362af52b20403692636a0314fe6b6597aa3d795e379a25c3fd67a5cf6c3fca72` |
+| `costingfe-pytest` | 0 | `660/660/602/0/0/58/0/0` | `855bf4a36ddd364f83a554b9ac3b92c108ebc81a3a265fb43c6c4ece878c300a` |
+| `costingfe-ruff` | 0 | n/a | `98733c3446b52dc3e6b6943142b19a142025d9727521f6abc3783a20e4b6d3c6` |
+| `teax-pytest` | 0 | `406/406/406/0/0/0/0/0` | `c9d172777d5be374d569248e3560cab8abe2203a0164e696d8ba2bc1c015ab1e` |
+| `codegen-strict` | 0 | n/a | `bd1f00a1dcc181240dc145cafd5d6dc20ec3603a73eeda938640c66122dd4239` |
+| `codegen-mypy-baseline` | 1 | n/a | `451f08fee774f2522f16bb58ea1b6b8131fcd5a01cfd8782e6f81c73cfb1ea8f` |
+| `codegen-default` | 0 | `2627/2533/2524/0/0/9/0/94` | `5f0a0d5d000a537e77add7f1423b62cf8e7be316de31c7307358fca8281f1d9f` |
+| `codegen-live-snapshot` | 0 | `4/4/4/0/0/0/0/0` | `99c315cde5cebb08d96a25e44ddb2208e462e6c702b975e813d2de9af85c4155` |
+| `codegen-generated-package` | 0 | `25/25/25/0/0/0/0/0` | `0f0cfa03adeecaa21b13f41b4ab359d9ef31191f31409c2b03df6eeea916394a` |
+| `codegen-execution` | 0 | `94/94/94/0/0/0/0/0` | `521401059f0529e1361ebfe28a264bb5ddb16d9392ceea52a8c3d7158c569a81` |
+| `fusion-lock-check` | 0 | n/a | `58f940685fc8cdcf336062c4905cdd8a6823ddb6fa514b446debc060b14e0fa1` |
+| `fusion-pytest` | 1 | `517/517/401/58/0/58/0/0` | `ce0adbd6163a337937f4bae933bc34e59129ced4044f3d5ef5b0950775cf962d` |
+| `fusion-models-primary` | 1 | n/a | `2cd4666e7dec0a979050bf199726a78d6505b63ea18c8a0897daf0a084c33ef9` |
+| `fusion-models-exploration` | 1 | n/a | `4b5c9ddba1d057ebcc92a0a4bc2d4ac686abd6201e5df5811e72d7c426d123c0` |
+| `fusion-generated-execution` | 0 | `23/23/23/0/0/0/0/0` | `3db3d8cbef06f09b50c834c87d853caecf62910e3ec4a26451fc73a146971d0f` |
+| `fusion-ruff` | 0 | n/a | `98733c3446b52dc3e6b6943142b19a142025d9727521f6abc3783a20e4b6d3c6` |
+| `fusion-mypy` | 0 | n/a | `bd1f00a1dcc181240dc145cafd5d6dc20ec3603a73eeda938640c66122dd4239` |
+
+No unexpected skip or xfail occurred. The owner-excluded PDF/HTML corpus and 15 paid/network cases
+did not run. The first provisional runner pass correctly rejected Fusion's old immutable wheel
+hashes; the dedicated Fusion landing updated those pins before the final runner. One direct
+extraction attempt omitted the writable `UV_CACHE_DIR` and failed only the deterministic-wheel test;
+the node passed with the declared cache and the complete extraction was rerun green. Neither setup
+attempt supplied evidence to the final chain.
+
+**Evidence child hashes:**
+
+| Evidence path | SHA-256 |
+|---|---|
+| `verification/dependencies.json` | `100b9c5c7b69ed8cfc1fcbb8c6cad79050fb722d43fcc814dba1002cac7fba00` |
+| `verification/evidence-lock.json` | `3376bcf0ec871783e5c5e945b8979c8162ce8f0d9298ba3b27092f2237cbc565` |
+| `verification/execution-provenance.json` | `a865019186b102a05ed545e5c216f4a22afd61269e4a99442ded7859d4757b3b` |
+| `verification/independent-green.json` | `5a43714adef0031c1e41058224496cd40089fd53f6aea891879254888c59692b` |
+| `verification/reconciliation-ledger.md` | `adfc2c54692e6707d8ef12d53a000a2bd3934d1497a7e0d778457a5e50ebb92f` |
+| `verification/wheelhouse-requirements.txt` | `6cdf54a970f2f1addb17d809810fca483980a42707729900296ef6a37d989438` |
+
+The final runner command was:
+
+```text
+set -a; source /home/reid/1cfe/agentic-mbse/.env; set +a
+python -m verification.run_independent_green \
+  --artifact-root /tmp/stop-parser-rev2/artifacts-final-r3 \
+  --evidence-output /tmp/stop-parser-rev2/evidence-final-r2
+```
+
+The mechanical auditor was run with explicit identities:
+
+```text
+.venv/bin/python -m verification.audit_evidence \
+  --repository /tmp/stop-parser-rev2/worktrees/sysml-codegen \
+  --c-prod 22348458baa5aec314850cc6fcc8d1e90355ce58 \
+  --f-final 8460d0cdf76e04fd4f4be146d52f2e0fef009a98 \
+  --c-evidence 4ea1e8cdd98257d11ca8ef37a595b64392929bd9 \
+  --artifact-root /tmp/stop-parser-rev2/artifacts-final-r3
+```
+
+It returned PASS for `parent_and_paths`, `codegen_reconstruction`, `fusion_pin`, and
+`artifacts_and_lock`. This is the replacement implementation handoff, not self-certification. A new
+independent `$my-audit` must re-attack the four blocking findings and the DISPOSE-grade follow-ups
+before close or pre-PR.
+
 ---
 
 **Status progression:** Draft → In Progress → Complete

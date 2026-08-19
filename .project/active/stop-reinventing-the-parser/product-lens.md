@@ -1394,3 +1394,47 @@ Resolves:
   deep-override closure proof it points at is fully monkeypatched
   (`test_expression_evidence_boundary.py:544-560`). An empty-in-substance cell can still pass as
   covered.
+
+---
+
+## audit-fix-implementation — 2026-08-19 — rev C_prod `22348458baa5aec314850cc6fcc8d1e90355ce58` (Agentic `443388823f0db46c14df1728d3843d0a74ee7590`)
+
+This is the implementation response to `audit-final`. The historical independent verdict above is
+unchanged; a new independent audit must judge this replacement chain.
+
+Point: the product still parses, walks resolved parser identity, and emits. An invocation that is not
+the exact standard-library `NumericalFunctions::sum` declaration has no supported meaning on this
+route and must refuse before graph construction with the authored text and location. Every public
+failure crosses one diagnostic seam; parser evidence is never reconstructed from a name, Python
+class name, segment count, or fallback search. Authority remains P-003/P-004
+`[OWNER-VERBATIM, 2026-08-16]`, with exact-owner companion P-002 `[AGENT]` ratified by owner.
+
+Falsifier: a non-`sum` invocation reaches a graph or loses its authored reference or root-relative
+`file:line`; a user-defined declaration named `sum` gains plural semantics; an already formed public
+refusal is rewrapped; a colliding primitive type resolves through an unqualified spelling; or any
+DISPOSE-grade audit follow-up remains load-bearing on a class name, segment count, truthy proof
+string, self-comparison, or stale probe API.
+
+Result at the replacement identities:
+
+- `audit-final-F1` is fixed in implementation. Every unsupported invocation now refuses pre-graph as
+  `SI_EXPRESSION_SOURCE_UNSUPPORTED`, carrying the authored expression, root-relative file and line,
+  rendered provenance, and the upstream semantic-evidence cause. Plurality uses the exact resolved
+  declaration identity; a same-named user function is not the standard `sum`.
+- The D7 seam is total across live, admitted, capture, `--models`, and `--from-snapshot` routes. A
+  planted internal failure becomes one formed diagnostic. An existing `CodeGenerationError`,
+  including the established empty-model refusal, crosses unchanged.
+- B6 uses the qualified primitive route only. The collision fixture resolves the exact qualified
+  type, and the unqualified table is no longer read there.
+- The reconciliation ledger carries A/B mappings, dispositions, and exact node citations. Its full
+  sweep collected all 189 unique proof citations. The six DISPOSE-grade follow-ups were landed:
+  mapped metatypes replace the two class-name decisions; the dead computed-attribute classifier and
+  golden are gone; the closure matrix has structural proof checks and real-model owners; ADR-002
+  fails closed on mapped evidence; evidence checks are independent; and B8/B10 probes run against the
+  current APIs.
+- A fresh declared extraction passed 2,524 tests with 9 policy skips and 94 deselections. The final
+  committed runner completed all 21 lanes, the direct evidence child is
+  `4ea1e8cdd98257d11ca8ef37a595b64392929bd9`, and all four mechanical-auditor groups passed.
+
+Gate: **CLEAR for replacement-chain independent audit.** This is not certification and does not
+close the item.

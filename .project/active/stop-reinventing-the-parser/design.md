@@ -561,6 +561,9 @@ resolver entry. Its optional state can describe undecoded math; it cannot create
 - A supported `sum` invocation marks its contained reference uses plural. Other existing supported
   scalar contexts remain scalar. The operation preserves the current aggregation semantics without
   choosing concrete occurrences.
+  **Correction note (2026-08-18): [AGENT] (ratified by owner, 2026-08-18).** “Supported `sum`”
+  means an invocation whose exact resolved declaration is the standard-library
+  `NumericalFunctions::sum`; the string name `sum` is never plurality authority.
 - A feature reference uses only its exact `referent`. A feature chain uses only its exact root,
   every `target_feature.chaining_features` segment, and leaf. The first missing fact raises
   `RESOLVED_TARGET_MISSING` or `RESOLVED_LEAF_MISSING`; partial paths never return.

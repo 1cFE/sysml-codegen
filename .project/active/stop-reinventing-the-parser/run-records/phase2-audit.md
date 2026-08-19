@@ -749,3 +749,28 @@ pin both" needs a correction note (item 5a). i11 from the Phase-2 audit remains 
 **Not checked in this pass:** anything outside the five brief items and the regression table. The
 Phase 2 verdict and its addendum stand on their own evidence; this pass neither revisits nor
 extends them.
+
+---
+
+## Audit-fix landing addendum — 2026-08-19
+
+The Phase 5 audit reopened Agentic only to repair exact `sum` declaration identity and the ADR-002
+follow-up. The replacement landing is `A_final-r2`
+`443388823f0db46c14df1728d3843d0a74ee7590`. It keeps version `0.1.3` and
+`semantic-evidence/v2`.
+
+The landing battery reproduced the Phase 2 obligations: focused tests passed 845 with the one
+declared external-model skip; the licensed fast suite collected 1,928, deselected 5, and recorded
+1,904 passed, 18 known baseline failures, and 1 skip; scoped strict checking passed; repository-wide
+mypy remained 101 errors in 21 files; repository-wide Ruff remained 119 findings; touched files
+were clean; and the wheel installed as Agentic `0.1.3` with the v2 evidence API.
+
+The later committed 21-lane runner exercised the same `A_final-r2` archive and wheel in its closed
+wheelhouse. Its retained JUnit records contain 845 passed and 1 skip for `agentic-focused`, and
+1,922 passed, 1 skip, and 5 deselections for `agentic-fast`; the strict lane passed and the declared
+mypy/Ruff baseline output hashes matched exactly. The two environments' fast-suite outcomes remain
+separate recorded measurements; no test was removed from the runner selection. The PDF/HTML corpus
+and the 15 paid/network cases were not run.
+
+This addendum records the reopened landing. It does not change the historical Phase 2 audit verdict
+or certify the final item chain.

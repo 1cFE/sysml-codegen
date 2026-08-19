@@ -1,24 +1,29 @@
 # Current Work
 
-**Last Updated**: 2026-08-18 (**stop-reinventing-the-parser: INDEPENDENT AUDIT COMPLETE — verdict
+**Last Updated**: 2026-08-19 (**stop-reinventing-the-parser: AUDIT FIXES IMPLEMENTED; REPLACEMENT
+CHAIN READY FOR INDEPENDENT AUDIT.** The four blocking findings and all six DISPOSE-grade follow-ups
+are implemented. The five stale tests now pin the pre-graph public refusal at full strength; formed
+public refusals, including the established empty-model error, cross the catch-all seam unchanged;
+the ledger's 189 unique proof citations all collect; and a fresh declared extraction passed 2,524
+with 9 policy skips and 94 deselections. Replacement identities: Agentic `A_final-r2`
+`443388823f0db46c14df1728d3843d0a74ee7590`, Codegen `C_prod-r2`
+`22348458baa5aec314850cc6fcc8d1e90355ce58`, Fusion `F_final-r2`
+`8460d0cdf76e04fd4f4be146d52f2e0fef009a98`, and direct-child `C_evidence-r2`
+`4ea1e8cdd98257d11ca8ef37a595b64392929bd9`. The committed runner completed all 21 allowed lanes;
+the four-group mechanical auditor passed; no PDF/HTML or paid/network case ran. The old invalid chain
+is preserved at `evidence-chain-r1`, and its historical `Needs Work` audit remains unchanged. Do not
+close, run pre-PR, or unblock `elaborator-downstream`; run an independent `$my-audit` against the
+replacement chain. Full hashes, counts, commands, and deviations are in the plan's “Phase 5
+audit-fix completion” section.**).
+Prior status: 2026-08-18 (**stop-reinventing-the-parser: INDEPENDENT AUDIT COMPLETE — verdict
 `Needs Work`.** `.project/active/stop-reinventing-the-parser/audit.md`. The occurrence lane (A1-A6),
 the every-and-only mutation proof, and the whole immutable evidence chain verify independently:
 topology, all ten artifact hashes, all six evidence hashes, and the four-group mechanical auditor
-reproduce, and the auditor refuses mutated inputs. Four blocking gaps: (1) a non-`sum` invocation
-refuses **post-graph** as `SI_SNAPSHOT_INVALID` with no reference and no `file:line`, where `C_base`
-refused pre-graph with both, and aggregation plurality now reads `function.name == "sum"` instead of
-the declaration identity; (2) refusal provenance is not a boundary property — five public shapes drop
-it, and `tests/fixtures/anonymous_return` and `zero_output_calc` exit the CLI with a bare Python
-traceback; (3) B6's own site still maps types through the unqualified table; (4) the shipped
-reconciliation ledger has no A/B or disposition column and three wrong proof citations. Product-lens
-ledger gate is **BLOCKED (`audit-final-F1`)**. The "skipped inventory" weak variant was attacked and
-held (155 models, zero misses). Six further findings are DISPOSE-grade follow-ups. Do not close, run
-pre-PR, or unblock `elaborator-downstream`. Immutable identities are unchanged: Agentic `A_final`
-`3f8bd587af40f05b929dd56645901dada7daea37`, Codegen `C_prod`
-`707346d616e508e55103c9246b63d172ed6a862b`, Fusion `F_final`
-`2243b7ce116c0a12fb0c09a81262c5c2ec879f69`, direct-child `C_evidence`
-`a184133b99f7f71451c0b4af5a33b709f988eca2`. Any production fix invalidates `F_final` and
-`C_evidence` and needs a new dependent identity chain.**).
+reproduce, and the auditor refuses mutated inputs. Four blocking gaps: unsupported invocation and
+`sum` identity, non-total refusal provenance, partial B6 type qualification, and an incomplete
+reconciliation ledger. Product-lens gate **BLOCKED (`audit-final-F1`)**. The old identities were
+Agentic `3f8bd587…`, Codegen `707346d6…`, Fusion `2243b7ce…`, and evidence `a184133b…`; any
+production fix required a new dependent chain.**).
 Prior status: 2026-08-18 (**stop-reinventing-the-parser: Phase 5 implementation complete;
 independent audit pending. Immutable identities: Agentic `A_final`
 `3f8bd587af40f05b929dd56645901dada7daea37`, Codegen `C_prod`
@@ -122,6 +127,23 @@ rather than invented; vehicle `[CONSTRAINT-GATES-UNTAGGED]` in `BACKLOG.md`.
 ---
 
 ## Active Work
+
+### 2026-08-19: stop-reinventing-the-parser — AUDIT FIXES IMPLEMENTED; RE-AUDIT NEXT
+
+[AGENT] The focused remediation is complete. The replacement chain is Agentic `44338882…`, Codegen
+production `22348458…`, dedicated Fusion `8460d0cd…`, and direct evidence child `4ea1e8cd…`.
+`C_evidence-r2^ == C_prod-r2`, and the child changes exactly the six runner-written evidence files.
+The old invalid chain is preserved at Codegen ref `evidence-chain-r1`.
+
+The requested checkpoint gate held before re-minting: all 189 unique ledger proof citations
+collected, and the fresh extraction passed 2,524 with 9 skips and 94 deselections. The committed
+runner then completed all 21 lanes. Codegen execution passed 94/94; Fusion generated execution
+passed 23/23; TEAx passed 406/406; the retained static and Fusion nonzero baselines matched their
+exact output hashes. The mechanical auditor passed all four groups. No PDF/HTML or paid/network
+case ran.
+
+The audit's historical `Needs Work` verdict is unchanged. Next: independent `$my-audit` against the
+replacement identities and `/tmp/stop-parser-rev2/artifacts-final-r3`. Do not close or run pre-PR.
 
 ### 2026-08-18: stop-reinventing-the-parser — INDEPENDENTLY AUDITED; NEEDS WORK
 
