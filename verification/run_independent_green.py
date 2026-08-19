@@ -12,6 +12,8 @@ import re
 import shutil
 import subprocess
 import sys
+import tomllib
+import urllib.parse
 import xml.etree.ElementTree as ET
 import zipfile
 from pathlib import Path
@@ -181,6 +183,13 @@ def validate_run_record(record: dict[str, Any]) -> None:
             raise IndependentRunError(f"{run_id}: skip policy is malformed")
         if not all(isinstance(value, str) for value in policy.values()):
             raise IndependentRunError(f"{run_id}: skip policy patterns must be strings")
+    if run_id in EXPECTED_RUNS:
+        committed_policies = _skip_policies(str(run_id))
+        if policies != committed_policies:
+            raise IndependentRunError(f"{run_id}: skip policies differ from the committed contract")
+        classified = [item for item in observed if _skip_matches(item, committed_policies)]
+        if allowed != classified:
+            raise IndependentRunError(f"{run_id}: allowed skips do not match committed policies")
     roots_raw = record.get("import_roots")
     imports_raw = record.get("import_files")
     if not isinstance(roots_raw, list) or not roots_raw:
@@ -340,6 +349,9 @@ def _run_one(
         raise IndependentRunError(f"{run_id}: cwd is outside or absent from the artifact root")
     environment = os.environ.copy()
     environment["PYTHONPATH"] = ""
+    environment["PATH"] = os.pathsep.join(
+        (str(Path(str(run.get("python") or command[0])).resolve().parent), os.defpath)
+    )
     environment["UV_OFFLINE"] = "1"
     environment["UV_NO_SYNC"] = "1"
     additions = run.get("environment", {})
@@ -684,6 +696,43 @@ def _wheel_identity(path: Path) -> tuple[str, str]:
     return name, version
 
 
+def _teax_pyarrow_requirement(teax: Path) -> str:
+    lock_path = teax / "uv.lock"
+    try:
+        with lock_path.open("rb") as stream:
+            lock = tomllib.load(stream)
+    except (OSError, tomllib.TOMLDecodeError) as error:
+        raise IndependentRunError(f"cannot read frozen TEAx lock {lock_path}: {error}") from error
+    packages = lock.get("package")
+    if not isinstance(packages, list):
+        raise IndependentRunError("frozen TEAx lock omits its package inventory")
+    rows = [row for row in packages if isinstance(row, dict) and row.get("name") == "pyarrow"]
+    if len(rows) != 1:
+        raise IndependentRunError(f"frozen TEAx lock has {len(rows)} pyarrow rows")
+    wheels = rows[0].get("wheels")
+    if not isinstance(wheels, list):
+        raise IndependentRunError("frozen TEAx pyarrow row omits wheels")
+    suffix = "cp312-cp312-manylinux_2_28_x86_64.whl"
+    candidates = [
+        wheel
+        for wheel in wheels
+        if isinstance(wheel, dict)
+        and str(wheel.get("url", "")).endswith(suffix)
+        and re.fullmatch(r"sha256:[0-9a-f]{64}", str(wheel.get("hash", "")))
+    ]
+    if len(candidates) != 1:
+        raise IndependentRunError(
+            f"frozen TEAx lock has {len(candidates)} CPython 3.12 Linux pyarrow wheels"
+        )
+    wheel = candidates[0]
+    url = str(wheel["url"])
+    digest = str(wheel["hash"]).removeprefix("sha256:")
+    filename = Path(urllib.parse.urlparse(url).path).name
+    if not filename.endswith(suffix):
+        raise IndependentRunError("frozen TEAx pyarrow URL has an invalid filename")
+    return f"pyarrow @ {url}#sha256={digest}"
+
+
 def _write_wheelhouse_requirements(wheelhouse: Path, destination: Path) -> dict[str, str]:
     rows: list[tuple[str, str, str, str]] = []
     inventory: dict[str, str] = {}
@@ -734,10 +783,12 @@ def _prepare_environment(
     costingfe_uri = (
         f"{costingfe_wheel.as_uri()}#sha256={inputs['costingfe']['wheel']['sha256']}"
     )
+    teax = _input_root(artifact_root, inputs, "teax")
     local_wheels = [
         f"agentic-mbse[extract-full,web] @ {agentic_uri}",
         codegen_uri,
         costingfe_uri,
+        _teax_pyarrow_requirement(teax),
     ]
     fusion = _input_root(artifact_root, inputs, "fusion")
     exported = private / "fusion-locked-requirements.txt"
@@ -1066,7 +1117,7 @@ def _committed_runs(
         ),
         _base_run(
             "costingfe-pytest",
-            [str(python), "-m", "pytest", "tests", "-m", ""],
+            [str(python), "-m", "pytest", "tests"],
             costingfe,
             environment=costingfe_env,
             import_roots=[costingfe / "src"],

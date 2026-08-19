@@ -207,6 +207,37 @@ def test_wheelhouse_uses_own_metadata_when_wheel_vendors_a_distribution(
     assert run_independent_green._wheel_identity(wheel) == ("example", "1.0.0")
 
 
+def test_teax_runtime_wheel_comes_from_its_frozen_lock(tmp_path: Path) -> None:
+    teax = tmp_path / "teax"
+    teax.mkdir()
+    digest = "a" * 64
+    url = (
+        "https://files.example.invalid/pyarrow-22.0.0-"
+        "cp312-cp312-manylinux_2_28_x86_64.whl"
+    )
+    (teax / "uv.lock").write_text(
+        'version = 1\n[[package]]\nname = "pyarrow"\nversion = "22.0.0"\n'
+        f'wheels = [{{ url = "{url}", hash = "sha256:{digest}" }}]\n'
+    )
+
+    assert run_independent_green._teax_pyarrow_requirement(teax) == (
+        f"pyarrow @ {url}#sha256={digest}"
+    )
+
+
+def test_teax_runtime_wheel_refuses_an_unhashed_candidate(tmp_path: Path) -> None:
+    teax = tmp_path / "teax"
+    teax.mkdir()
+    (teax / "uv.lock").write_text(
+        'version = 1\n[[package]]\nname = "pyarrow"\nversion = "22.0.0"\n'
+        'wheels = [{ url = "https://example.invalid/pyarrow-22.0.0-'
+        'cp312-cp312-manylinux_2_28_x86_64.whl", hash = "sha256:wrong" }]\n'
+    )
+
+    with pytest.raises(run_independent_green.IndependentRunError, match="0 CPython"):
+        run_independent_green._teax_pyarrow_requirement(teax)
+
+
 def test_deterministic_wheel_creates_its_missing_output_directory(tmp_path: Path) -> None:
     source = tmp_path / "source"
     package = source / "src/audit_wheel_probe"
@@ -252,7 +283,7 @@ def test_run_record_refuses_sibling_import(tmp_path: Path) -> None:
     sibling.parent.mkdir(parents=True)
     sibling.write_text("")
     record = {
-        "id": "codegen-default",
+        "id": "fixture-run",
         "command": [sys.executable, "-m", "pytest", "tests"],
         "executed_command": [sys.executable, "-m", "pytest", "tests", "-ra"],
         "status": 0,
@@ -340,7 +371,7 @@ def test_run_record_accepts_closed_counts_and_imports(tmp_path: Path) -> None:
     imported.parent.mkdir(parents=True)
     imported.write_text("")
     record = {
-        "id": "codegen-default",
+        "id": "fixture-run",
         "command": [sys.executable, "-m", "pytest", "tests"],
         "executed_command": [sys.executable, "-m", "pytest", "tests", "-ra"],
         "status": 0,
@@ -379,6 +410,73 @@ def test_run_record_accepts_closed_counts_and_imports(tmp_path: Path) -> None:
     }
 
     run_independent_green.validate_run_record(record)
+
+
+def test_required_run_refuses_relaxed_skip_policy(tmp_path: Path) -> None:
+    root = tmp_path / "artifact"
+    root.mkdir()
+    counts = {
+        "collected": 1,
+        "selected": 1,
+        "passed": 1,
+        "failed": 0,
+        "errors": 0,
+        "skipped": 0,
+        "xfailed": 0,
+        "deselected": 0,
+    }
+    record = {
+        "id": "agentic-focused",
+        "command": [sys.executable, "-m", "pytest", "tests"],
+        "executed_command": [sys.executable, "-m", "pytest", "tests", "-ra"],
+        "status": 0,
+        "expected_status": 0,
+        "counts": counts,
+        "expected_counts": counts,
+        "output_sha256": "0" * 64,
+        "expected_output_sha256": None,
+        "skip_policies": [],
+        "allowed_skips": [],
+        "observed_skips": [],
+        "unexpected_skips": [],
+        "import_roots": [str(root)],
+        "import_files": [],
+    }
+
+    with pytest.raises(run_independent_green.IndependentRunError, match="committed contract"):
+        run_independent_green.validate_run_record(record)
+
+
+def test_run_one_puts_its_isolated_python_on_subprocess_path(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    reports = tmp_path / "reports"
+    reports.mkdir()
+    monkeypatch.setenv("PATH", "")
+    counts = {field: 0 for field in run_independent_green.COUNT_FIELDS}
+    record = run_independent_green._run_one(
+        {
+            "id": "subprocess-python",
+            "command": [
+                sys.executable,
+                "-c",
+                "import subprocess; subprocess.run(['python', '-V'], check=True)",
+            ],
+            "cwd": ".",
+            "python": sys.executable,
+            "environment": {},
+            "expected_status": 0,
+            "expected_counts": counts,
+            "expected_output_sha256": None,
+            "skip_policies": [],
+            "import_roots": [str(tmp_path)],
+            "import_files": [],
+        },
+        artifact_root=tmp_path,
+        report_root=reports,
+    )
+
+    assert record["status"] == 0
 
 
 def test_nonzero_baseline_requires_its_exact_output_hash(tmp_path: Path) -> None:
