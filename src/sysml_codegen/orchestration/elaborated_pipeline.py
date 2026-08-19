@@ -288,6 +288,7 @@ def elaborate_loaded_extractor(
             inventory=inventory,
             validation_diagnostics=extractor.diagnostics.validation,
             strict=strict,
+            source_referents=source_referents,
         )
         require_executable_content(graph, calc_definitions)
     except SemanticEvidenceError as error:

@@ -303,7 +303,7 @@ def test_admitted_api_contains_an_unexpected_model_load_failure(
     monkeypatch.setattr(
         elaborated_pipeline,
         "SysMLDataExtractor",
-        lambda _paths: (_ for _ in ()).throw(planted),
+        lambda _paths, **_kwargs: (_ for _ in ()).throw(planted),
     )
 
     with pytest.raises(ElaborationDiagnosticError) as caught:

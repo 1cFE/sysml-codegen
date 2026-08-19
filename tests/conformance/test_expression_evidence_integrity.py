@@ -59,7 +59,12 @@ class _EmptyModel:
 
 
 class _EvidenceFailingExtractor:
-    def __init__(self, _model_paths: list[Path] | None = None) -> None:
+    def __init__(
+        self,
+        _model_paths: list[Path] | None = None,
+        *,
+        source_referents: dict[str, str] | None = None,
+    ) -> None:
         self.model = _EmptyModel()
         self.diagnostics = SimpleNamespace(validation=())
 
@@ -80,7 +85,12 @@ class _EvidenceFailingExtractor:
 
 
 class _BoundaryExtractor:
-    def __init__(self, _model_paths: list[Path] | None = None) -> None:
+    def __init__(
+        self,
+        _model_paths: list[Path] | None = None,
+        *,
+        source_referents: dict[str, str] | None = None,
+    ) -> None:
         self.model = _EmptyModel()
         self.diagnostics = SimpleNamespace(validation=())
 

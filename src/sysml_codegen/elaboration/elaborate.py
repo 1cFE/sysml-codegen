@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, cast
@@ -364,6 +364,7 @@ def _build_instance_graph(
     inventory: ExpressionEvidenceInventory,
     validation_diagnostics: Sequence[Any],
     strict: bool = True,
+    source_referents: Mapping[str, str] | None = None,
 ) -> InstanceGraph:
     """Resolve a live model into one typed instance graph without public conversion.
 
@@ -382,6 +383,7 @@ def _build_instance_graph(
         calc_defs,
         inventory=inventory,
         strict=strict,
+        source_referents=source_referents,
     ).run()
 
 
@@ -524,10 +526,14 @@ class _ExactElaborator:
         *,
         inventory: ExpressionEvidenceInventory,
         strict: bool,
+        source_referents: Mapping[str, str] | None = None,
     ) -> None:
         self._model = model
         self._inventory = inventory
         self._strict = strict
+        # Diagnostics only: the portable name each parsed file is known by, so a
+        # message never shows a private staging path. Nothing resolves through it.
+        self._source_referents = dict(source_referents or {})
         self._calc_defs = self._index_calculation_payloads(calc_defs)
         self._compilation_results = self._compile_calculation_payloads()
         # The one read of the identified constraint facts. Screening the extraction
@@ -535,7 +541,7 @@ class _ExactElaborator:
         # halt ahead of lowering and serialization on both the live and the capture
         # route (REQ-DIAG-02/03; docs/architecture/reference/30-diagnostic-severity.md).
         identified = extract_identified_constraint_facts(model)
-        screen_extraction_diagnostics(identified.facts)
+        screen_extraction_diagnostics(identified.facts, source_referents=self._source_referents)
         self._constraint_associations = self._index_constraint_associations(model, identified)
         self._slots = build_feature_slot_index(model)
         self._formal_selector = _EffectiveInputFormalSelector(model, self._slots)
