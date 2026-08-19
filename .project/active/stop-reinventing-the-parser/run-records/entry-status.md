@@ -41,3 +41,14 @@ Prior-attempt worktrees under `/tmp/stop-parser.QVJIIP/` are historical evidence
 candidate. This run never modifies, reuses, or imports from them.
 
 Stage logs: `/tmp/stop-parser-rev2/logs/`.
+
+## Phase 5 pre-work — external pin existence check (2026-08-18, orchestrator)
+
+All three Global Execution Contract external pins verified to exist as commit objects in their
+own repositories (handoff open question 4, previously unverified):
+
+| Pin | Commit | Repo | Note |
+|---|---|---|---|
+| Fusion parent | `824a876e` | `/home/reid/1cfe/fusion-tea` | exists; reachable from `self-binding-replacement` and `stop-parser-verification`; the checkout currently sits on `item8-fusion-embedded-catalog` (a different item) — Phase 5 must build from the pinned commit in a dedicated worktree, never this checkout |
+| TEAx | `744745f8` | `/home/reid/1cfe/teax` | exists |
+| 1costingfe | `02543850` | `/home/reid/1cfe/1costingfe` | exists |
