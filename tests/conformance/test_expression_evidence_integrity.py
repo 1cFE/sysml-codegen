@@ -712,6 +712,58 @@ def _assert_capture_output_preserved(
         assert not output.exists()
 
 
+@requires_license
+@pytest.mark.parametrize(("arm", "strict"), PUBLIC_ROUTE_CASES)
+def test_unsupported_invocation_refuses_pregraph_with_authored_provenance(
+    arm: str,
+    strict: bool,
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    """``max(...)`` is valid SysML and an unsupported executable capability."""
+    source = tmp_path / "model.sysml"
+    source.write_text(
+        """package UnsupportedInvocation {
+    private import ScalarValues::*;
+    private import NumericalFunctions::*;
+
+    calc def Identity {
+        in attribute x : Real;
+        out attribute y : Real = x;
+    }
+    part def Cell { attribute capital_cost : Real = 1.0; }
+    part def Bank {
+        part cell : Cell[1];
+        attribute capital_cost : Real = max(cell.capital_cost, 1.0);
+    }
+    part the_bank : Bank;
+}
+""",
+        encoding="utf-8",
+    )
+    output = tmp_path / "instance_graph_snapshot.json"
+    original_output = _preserved_capture_output(arm, output)
+    downstream = _spy_on_expression_consumers(monkeypatch)
+
+    with pytest.raises(ElaborationDiagnosticError) as caught:
+        _elaborate_through_arm(arm, source, strict=strict, output=output)
+
+    [diagnostic] = caught.value.diagnostics
+    assert diagnostic.code.value == "SI_EXPRESSION_SOURCE_UNSUPPORTED"
+    assert diagnostic.reference == "max(cell.capital_cost, 1.0)"
+    assert diagnostic.source_file == ROOT_RELATIVE_REFERENT
+    assert diagnostic.source_line == 12
+    rendered = str(caught.value)
+    assert rendered.count("SI_EXPRESSION_SOURCE_UNSUPPORTED") == 1
+    assert "root-0/model.sysml:12" in rendered
+    assert "/tmp/" not in rendered
+    semantic_error = caught.value.__cause__
+    assert isinstance(semantic_error, SemanticEvidenceError)
+    assert semantic_error.code is SemanticEvidenceCode.EXPRESSION_KIND_UNSUPPORTED
+    assert not downstream.called
+    _assert_capture_output_preserved(arm, output, original_output)
+
+
 def _spy_on_adapter(
     monkeypatch: pytest.MonkeyPatch,
     method_name: str,
@@ -1394,11 +1446,20 @@ def test_every_named_proof_in_the_consumer_table_resolves() -> None:
 
 
 def test_every_consumer_cell_names_a_proof() -> None:
-    """Every consumer and failure shape names its durable proof."""
-    uncovered = [
-        f"{row.consumer}/{name}"
-        for row in CONSUMER_CLOSURE_TABLE
-        for name in _CELL_NAMES
-        if not getattr(row, name)
-    ]
-    assert not uncovered, f"consumer closure cells with no proof: {uncovered}"
+    """Every cell resolves to a real test and states its executable route force."""
+    defects: list[str] = []
+    for row in CONSUMER_CLOSURE_TABLE:
+        arms = dict(row.cell_public_arms)
+        reasons = dict(row.unavailable_reasons)
+        for name in _CELL_NAMES:
+            proof = getattr(row, name)
+            if proof.count("::") != 1 or not proof.split("::", 1)[1].startswith("test_"):
+                defects.append(f"{row.consumer}/{name}: malformed proof {proof!r}")
+            elif not _named_proof_exists(proof):
+                defects.append(f"{row.consumer}/{name}: missing proof {proof!r}")
+            if arms[name]:
+                if arms[name] != ("live", "admitted/capture"):
+                    defects.append(f"{row.consumer}/{name}: incomplete public arms {arms[name]!r}")
+            elif not reasons.get(name, "").strip():
+                defects.append(f"{row.consumer}/{name}: empty unavailability reason")
+    assert not defects, f"consumer closure defects: {defects}"

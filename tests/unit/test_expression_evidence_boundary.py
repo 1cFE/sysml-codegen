@@ -709,6 +709,58 @@ def test_frozen_usage_owner_matches_the_exact_live_part_usage() -> None:
 
 
 @requires_license
+def test_cross_owner_consumers_share_one_exact_live_referent() -> None:
+    """The five real consumer shapes keep the same ``comp_a::length`` identity."""
+    fixture = FIXTURES_DIR / "usage_owned_reference_consumers"
+    extractor = SysMLDataExtractor([fixture])
+    assert extractor.load_models()
+    inventory = expression_evidence.build_expression_evidence_inventory(extractor.model)
+    target_qn = "UsageOwnedReferenceConsumers::Plant::comp_a::length"
+    target = _live_feature(extractor.model, target_qn)
+    matching = [
+        (site.role, use)
+        for site in inventory.sites()
+        for use in inventory.require_exact(site)
+        if use.path.leaf.qualified_name == target_qn
+    ]
+
+    assert len(matching) >= 5
+    assert {use.path.leaf.element_id for _, use in matching} == {
+        binding_source.SysideAdapter.element_id(target)
+    }
+    assert {role for role, _ in matching} >= {
+        expression_evidence.ExpressionSiteRole.BINDING,
+        expression_evidence.ExpressionSiteRole.ALIAS,
+        expression_evidence.ExpressionSiteRole.COMPUTED_ATTRIBUTE,
+        expression_evidence.ExpressionSiteRole.CONSTRAINT_PREDICATE,
+    }
+
+
+@requires_license
+def test_real_sum_term_retains_its_exact_live_target() -> None:
+    """The real aggregation use keeps the resolved ``cell_cost`` declaration identity."""
+    fixture = FIXTURES_DIR / "source_identity_mixed_consumers"
+    extractor = SysMLDataExtractor([fixture])
+    assert extractor.load_models()
+    member = _live_feature(
+        extractor.model,
+        "source_identity_mixed_consumers::Bank::bank_total",
+    )
+    target = _live_feature(
+        extractor.model,
+        "source_identity_mixed_consumers::'Bank Cell'::cell_cost",
+    )
+    inventory = expression_evidence.build_expression_evidence_inventory(extractor.model)
+    [use] = inventory.require_exact(
+        inventory.site_for(binding_source.SysideAdapter.element_id(member))
+    )
+
+    assert use.plural is True
+    assert use.path.leaf.element_id == binding_source.SysideAdapter.element_id(target)
+    assert use.path.leaf.qualified_name == str(getattr(target, "qualified_name"))
+
+
+@requires_license
 def test_bound_formal_keeps_its_exact_declaration_and_redefinition_identity() -> None:
     fixture = FIXTURES_DIR / "source_identity_mixed_consumers"
     extractor = SysMLDataExtractor([fixture])

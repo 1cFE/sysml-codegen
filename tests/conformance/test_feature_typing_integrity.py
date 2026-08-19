@@ -208,3 +208,40 @@ def test_exact_elaborator_does_not_own_a_second_scalar_mapping() -> None:
     source = inspect.getsource(elaborate_module._ExactElaborator._feature_python_type)
     assert "QUALIFIED_SYSML_TO_PYTHON" in source
     assert "ScalarValues::Real" not in source
+
+
+def test_root_namespace_scalar_lookalike_is_not_a_primitive(tmp_path: Path) -> None:
+    """B6: even the exact bare spelling ``Real`` is user-owned outside ScalarValues."""
+    source = tmp_path / "model.sysml"
+    source.write_text(
+        """attribute def Real;
+
+package RootTypeLookalike {
+    calc def Probe {
+        in attribute value : Real;
+        out attribute result : ScalarValues::Real = 0.0;
+    }
+}
+""",
+        encoding="utf-8",
+    )
+    extractor = _loaded_extractor(source)
+    attribute = _attribute(extractor, "RootTypeLookalike::Probe::value")
+
+    with pytest.raises(ExactTypeError) as caught:
+        extractor._extract_attribute(attribute)
+
+    assert caught.value.reference == "RootTypeLookalike::Probe::value"
+    assert "typing target 'Real' is unsupported" in caught.value.detail
+
+
+def test_extractor_reads_only_the_qualified_scalar_view() -> None:
+    source = inspect.getsource(SysMLDataExtractor._extract_attribute)
+    assert "QUALIFIED_SYSML_TO_PYTHON" in source
+    assert "SYSML_TO_PYTHON.get" not in source
+
+
+def test_public_extractor_kind_decisions_use_mapped_metatypes() -> None:
+    source = inspect.getsource(SysMLDataExtractor._extract_calculation_definition)
+    assert 'is_instance(owning_membership, "ReturnParameterMembership")' in source
+    assert "type(owning_membership).__name__" not in source
