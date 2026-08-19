@@ -163,7 +163,8 @@ def compile_shared_predicates(catalog: ConstraintCatalog) -> dict[str, tuple[str
             continue
         if entry.predicate_ir is None:  # guarded by assert_same_ir; keep invariant under -O
             raise RuntimeError(
-                f"eligible catalog constraint {entry.constraint_id!r} has no predicate_ir"
+                "CONSTRAINT_PREDICATE_MISSING: eligible catalog constraint "
+                f"{entry.constraint_id!r} has no predicate_ir"
             )
         fn_name = constraint_predicate_function_name(key)
         ir = parse_expression(entry.predicate_ir)
@@ -173,7 +174,8 @@ def compile_shared_predicates(catalog: ConstraintCatalog) -> dict[str, tuple[str
             from sysml_codegen.generation import CodeGenerationError
 
             raise CodeGenerationError(
-                str(error), name_safety_violation=error.name_safety_violation
+                f"PREDICATE_COMPILE_FAILED: {error}",
+                name_safety_violation=error.name_safety_violation,
             ) from error
         compiled[key] = (fn_name, src, args)
     return compiled

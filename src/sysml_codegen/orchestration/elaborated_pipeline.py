@@ -62,6 +62,73 @@ __all__ = [
 ]
 
 
+#: A parser message can carry a whole grammar dump. The refusal keeps the head of
+#: it, marked, rather than either dropping the parser's own words or pasting a
+#: page of token names into one log line.
+_PARSE_MESSAGE_LIMIT = 240
+_PARSE_DIAGNOSTIC_LIMIT = 5
+
+
+def _portable_source(
+    raw: str | None,
+    *,
+    referents: Mapping[str, str],
+    model_roots: Sequence[Path],
+) -> str | None:
+    """Name a parser-reported file the way the rest of the boundary names it."""
+    if not raw:
+        return None
+    mapped = referents.get(raw) or referents.get(str(Path(raw).resolve()))
+    if mapped is not None:
+        return mapped
+    source = Path(raw)
+    for ordinal, root in enumerate(model_roots):
+        base = root if root.is_dir() else root.parent
+        try:
+            relative = source.resolve().relative_to(base.resolve())
+        except (OSError, ValueError):
+            continue
+        return f"root-{ordinal}/{relative.as_posix()}"
+    return source.name
+
+
+def _render_parse_diagnostics(
+    diagnostics: Any,
+    *,
+    referents: Mapping[str, str],
+    model_roots: Sequence[Path],
+) -> str:
+    """Render the parser's own error diagnostics, at their own measured sites.
+
+    The parser knows exactly which file and line refused; before this, the
+    refusal named only the roots the caller passed and the real site reached the
+    user as a bare ``print``. Nothing here is defaulted: a diagnostic without a
+    file or line contributes neither.
+    """
+    errors = list(getattr(diagnostics, "errors", ()) or ())
+    rendered: list[str] = []
+    for diagnostic in errors[:_PARSE_DIAGNOSTIC_LIMIT]:
+        source = _portable_source(
+            getattr(diagnostic, "filename", None),
+            referents=referents,
+            model_roots=model_roots,
+        )
+        line = getattr(diagnostic, "line", None)
+        column = getattr(diagnostic, "col", None)
+        where = source if source is not None else ""
+        if source is not None and isinstance(line, int):
+            where = f"{source}:{line}" + (f":{column}" if isinstance(column, int) else "")
+        message = str(getattr(diagnostic, "message", diagnostic))
+        if len(message) > _PARSE_MESSAGE_LIMIT:
+            message = message[:_PARSE_MESSAGE_LIMIT] + "…"
+        code = getattr(diagnostic, "code", None)
+        label = f"({code}) " if code else ""
+        rendered.append(f"{where}: {label}{message}" if where else f"{label}{message}")
+    if len(errors) > _PARSE_DIAGNOSTIC_LIMIT:
+        rendered.append(f"(+{len(errors) - _PARSE_DIAGNOSTIC_LIMIT} more)")
+    return "; ".join(rendered)
+
+
 def build_elaborated_pipeline(model_paths: list[Path]) -> ComputationGraph:
     """Load, elaborate, and project one model through only the exact-ID route."""
     return project(elaborate_model_paths(model_paths))
@@ -85,13 +152,7 @@ def elaborate_model_paths(model_paths: list[Path], *, strict: bool = True) -> In
     ):
         raise
     except Exception as error:
-        reference, source_file, source_line = _caller_model_context(model_paths)
-        raise unexpected_public_failure(
-            error,
-            reference=reference,
-            source_file=source_file,
-            source_line=source_line,
-        ) from error
+        raise unexpected_public_failure(error) from error
 
 
 def _elaborate_model_paths(model_paths: list[Path], *, strict: bool) -> InstanceGraph:
@@ -100,7 +161,12 @@ def _elaborate_model_paths(model_paths: list[Path], *, strict: bool) -> Instance
     try:
         if not extractor.load_models():
             raise SysMLParsingError(
-                f"Failed to load SysML models from: {[str(path) for path in model_paths]}"
+                "Failed to load SysML models: "
+                + _render_parse_diagnostics(
+                    extractor.diagnostics,
+                    referents={},
+                    model_roots=model_paths,
+                )
             )
     except ValueError as error:
         raise SysMLParsingError(f"Failed to load SysML models: {error}") from error
@@ -113,19 +179,6 @@ def _elaborate_model_paths(model_paths: list[Path], *, strict: bool) -> Instance
         source_referents=_live_source_referents(extractor.model, tuple(model_paths)),
         strict=strict,
     )
-
-
-def _caller_model_context(model_paths: Sequence[Path]) -> tuple[str, str | None, int | None]:
-    """Return the first root-relative source named by the public caller."""
-    for ordinal, root in enumerate(model_paths):
-        candidates = [root] if root.is_file() else sorted(root.rglob("*.sysml"))
-        if not candidates:
-            continue
-        source = candidates[0]
-        relative = source.name if root.is_file() else source.relative_to(root).as_posix()
-        referent = f"root-{ordinal}/{relative}"
-        return referent, referent, 1
-    return "<model>", None, None
 
 
 def require_executable_content(graph: InstanceGraph, calc_definitions: Sequence[object]) -> None:
@@ -170,15 +223,7 @@ def elaborate_admitted_sources(
     ):
         raise
     except Exception as error:
-        reference, source_file, source_line = _nearest_model_context(
-            admission.staged_to_referent
-        )
-        raise unexpected_public_failure(
-            error,
-            reference=reference,
-            source_file=source_file,
-            source_line=source_line,
-        ) from error
+        raise unexpected_public_failure(error) from error
 
 
 def _elaborate_admitted_sources(
@@ -187,12 +232,21 @@ def _elaborate_admitted_sources(
     strict: bool,
 ) -> InstanceGraph:
     """Implementation under the total admitted/capture API boundary."""
-    extractor = SysMLDataExtractor(list(admission.staged_files))
+    extractor = SysMLDataExtractor(
+        list(admission.staged_files),
+        source_referents=admission.staged_to_referent,
+    )
     try:
         if not extractor.load_models():
+            # The staged copies are a private implementation detail: a refusal
+            # names the file the modeller wrote, by its manifest referent.
             raise SysMLParsingError(
                 "Failed to load admitted SysML sources: "
-                f"{[item.referent for item in admission.files]}"
+                + _render_parse_diagnostics(
+                    extractor.diagnostics,
+                    referents=admission.staged_to_referent,
+                    model_roots=(),
+                )
             )
     except ValueError as error:
         raise SysMLParsingError(f"Failed to load admitted SysML sources: {error}") from error
@@ -309,13 +363,7 @@ def elaborate_loaded_extractor(
         # empty-model error). Preserve its code, type, message, and caller routing.
         raise
     except Exception as error:
-        reference, source_file, source_line = _nearest_model_context(source_referents)
-        raise unexpected_public_failure(
-            error,
-            reference=reference,
-            source_file=source_file,
-            source_line=source_line,
-        ) from error
+        raise unexpected_public_failure(error) from error
 
     _rewrite_sources_as_referents(graph, source_referents)
     _rewrite_exclusion_locations(graph)
@@ -370,15 +418,6 @@ def _readiness_with_referent(
         source_file=source_file,
         source_line=finding.source_line,
     )
-
-
-def _nearest_model_context(
-    source_referents: Mapping[str, str],
-) -> tuple[str, str | None, int | None]:
-    referents = sorted(set(source_referents.values()))
-    if not referents:
-        return "<model>", None, None
-    return "<model>", referents[0], 1
 
 
 def _semantic_evidence_diagnostic(

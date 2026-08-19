@@ -83,6 +83,7 @@ from sysml_codegen.elaboration.occurrence import (
     ContainmentAddress,
     FeatureSlotIndex,
     OccurrenceResolutionError,
+    authored_site,
     build_containment_address,
     build_feature_slot_index,
     build_occurrence_index,
@@ -154,25 +155,38 @@ class ElaborationDiagnosticError(Exception):
         )
 
 
-def unexpected_public_failure(
-    error: Exception,
-    *,
-    reference: str,
-    source_file: str | None,
-    source_line: int | None,
-) -> ElaborationDiagnosticError:
-    """Form the one public refusal for an otherwise unnamed internal failure."""
+def _cause_chain(error: BaseException) -> str:
+    """Render the failure and every cause under it, which is what is known here."""
+    rendered: list[str] = []
+    seen: set[int] = set()
+    current: BaseException | None = error
+    while current is not None and id(current) not in seen:
+        seen.add(id(current))
+        rendered.append(f"{type(current).__name__}: {current}")
+        current = current.__cause__ or current.__context__
+    return " <- caused by ".join(rendered)
+
+
+def unexpected_public_failure(error: Exception) -> ElaborationDiagnosticError:
+    """Form the one public refusal for an otherwise unnamed internal failure.
+
+    Nothing on this path measured a reference or a source location: the failure
+    was not classified, so no authored site was read off it. It therefore names
+    neither, and carries the code that says the defect is the generator's rather
+    than the model's. A fabricated citation is worse than an absent one, because
+    it is indistinguishable in form from a real one.
+    """
     return ElaborationDiagnosticError(
         (
             Diagnostic(
-                code=ElaborationCode.SI_EVIDENCE_INCOMPLETE,
+                code=ElaborationCode.SI_INTERNAL_DEFECT,
                 consumer=None,
-                consumer_display=reference,
+                consumer_display="<internal defect>",
                 param_name=None,
-                detail=f"unexpected internal failure: {type(error).__name__}: {error}",
-                reference=reference,
-                source_file=source_file,
-                source_line=source_line,
+                detail=f"unexpected internal failure: {_cause_chain(error)}",
+                reference=None,
+                source_file=None,
+                source_line=None,
             ),
         )
     )
@@ -189,6 +203,27 @@ def _render_public_diagnostic(diagnostic: Diagnostic) -> str:
     return (
         f"{diagnostic.code.value}: {diagnostic.consumer_display}{reference}: "
         f"{diagnostic.detail}{location}"
+    )
+
+
+def _group_site(elements: Sequence[Any]) -> tuple[str | None, tuple[str, int] | None]:
+    """Anchor a group refusal on the group's lowest declaration identity.
+
+    Deterministic by construction rather than by search: the anchor is the same
+    element on every run, and the detail names the whole group beside it, so
+    nothing about which member came first can decide what the user is told.
+    """
+    ordered = sorted(elements, key=lambda item: declaration_id_for(item).to_wire())
+    return authored_site(ordered[0]) if ordered else (None, None)
+
+
+def _group_names(elements: Sequence[Any]) -> str:
+    """Name every member of a group the way the modeller wrote it."""
+    return ", ".join(
+        sorted(
+            authored_site(element)[0] or declaration_id_for(element).to_wire()
+            for element in elements
+        )
     )
 
 
@@ -457,9 +492,13 @@ class _EffectiveInputFormalSelector:
                 continue
             existing = native.get(candidate_id)
             if existing is not None and existing is not candidate:
+                reference, location = authored_site(candidate)
                 raise ElaborationInvariantError(
                     ElaborationCode.SI_REDEFINITION_INVALID,
-                    f"native input view repeats declaration {candidate_id.to_wire()}",
+                    "native input view repeats declaration "
+                    f"{reference or candidate_id.to_wire()}",
+                    reference=reference,
+                    location=location,
                 )
             native[candidate_id] = candidate
 
@@ -766,10 +805,13 @@ class _ExactElaborator:
         ):
             if SysideAdapter.is_instance(owner, mapped_kind):
                 return rendered
+        reference, location = authored_site(owner)
         raise ElaborationInvariantError(
             ElaborationCode.SI_CONSTRAINT_UNATTACHED,
-            "constraint owner does not match a supported mapped metatype "
-            f"({getattr(owner, 'qualified_name', None)!r})",
+            "constraint owner does not match a supported mapped metatype: "
+            f"{reference or '<unnamed owner>'}",
+            reference=reference,
+            location=location,
         )
 
     def _display_path(self, scope: ScopeId, name: str) -> str:
@@ -824,9 +866,13 @@ class _ExactElaborator:
                 if declaration_id_for(attribute) == slot.root_declaration
             ]
             if len(roots) != 1:
+                reference, location = _group_site(attributes)
                 raise ElaborationInvariantError(
                     ElaborationCode.SI_REDEFINITION_INVALID,
-                    f"attribute slot {slot!r} has {len(roots)} exact root declarations",
+                    f"attribute slot {slot!r} has {len(roots)} exact root declarations "
+                    f"among {_group_names(attributes)}",
+                    reference=reference,
+                    location=location,
                 )
             base = roots[0]
             scopes = {
@@ -891,10 +937,13 @@ class _ExactElaborator:
     @staticmethod
     def _require_one_writer(candidates: list[Any], scope: ScopeId) -> Any:
         if len(candidates) != 1:
-            ids = sorted(declaration_id_for(candidate).to_wire() for candidate in candidates)
+            reference, location = _group_site(candidates)
             raise ElaborationInvariantError(
                 ElaborationCode.SI_REDEFINITION_INVALID,
-                f"exact scope {scope!r} has incomparable value writers {ids}",
+                f"exact scope {scope!r} has incomparable value writers "
+                f"{_group_names(candidates)}",
+                reference=reference,
+                location=location,
             )
         return candidates[0]
 
@@ -973,6 +1022,8 @@ class _ExactElaborator:
                 raise ElaborationInvariantError(
                     ElaborationCode.SI_REDEFINITION_INVALID,
                     f"computed value {display_path!r} has no representable expression IR",
+                    reference=display_path,
+                    location=SysideAdapter.get_source_location(expression),
                 )
             computed_node = CalcNode(
                 node_id=node_id,
@@ -1154,9 +1205,13 @@ class _ExactElaborator:
                 if declaration_id_for(usage) == slot.root_declaration
             ]
             if len(roots) != 1:
+                reference, location = _group_site(alternatives)
                 raise ElaborationInvariantError(
                     ElaborationCode.SI_REDEFINITION_INVALID,
-                    f"calculation slot {slot!r} has {len(roots)} exact root declarations",
+                    f"calculation slot {slot!r} has {len(roots)} exact root declarations "
+                    f"among {_group_names(alternatives)}",
+                    reference=reference,
+                    location=location,
                 )
             base = roots[0]
             scopes = {
@@ -1250,9 +1305,13 @@ class _ExactElaborator:
                         == full_key
                         for item in bucket
                     ):
+                        producer_reference, producer_location = authored_site(usage)
                         raise ElaborationInvariantError(
                             ElaborationCode.SI_REDEFINITION_INVALID,
-                            "duplicate exact calculation-output producer record",
+                            "duplicate exact calculation-output producer record on "
+                            f"{producer_reference or record.calculation_usage_id.to_wire()}",
+                            reference=producer_reference,
+                            location=producer_location,
                         )
                     bucket.append(record)
             self._collect_bound_members(usage, definition, node)
@@ -1720,6 +1779,8 @@ class _ExactElaborator:
                     raise ElaborationInvariantError(
                         ElaborationCode.SI_REDEFINITION_INVALID,
                         f"constraint {usage_qn!r} has no representable predicate IR",
+                        reference=usage_qn,
+                        location=SysideAdapter.get_source_location(predicate_expression),
                     )
                 predicate_ir = neutral_predicate
         owner = semantic_owner(usage)

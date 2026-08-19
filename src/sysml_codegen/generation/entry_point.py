@@ -144,7 +144,8 @@ def _refuse_colliding_field_names(group_label: str, fields: list[dict[str, Any]]
         prior = seen.get(name)
         if prior is not None and prior != alias:
             raise CodeGenerationError(
-                f"parameter group {group_label!r}: keys {prior!r} and {alias!r} both "
+                f"PARAM_FIELD_COLLISION: parameter group {group_label!r}: keys "
+                f"{prior!r} and {alias!r} both "
                 f"render as the schema field {name!r} — rename one in the model"
             )
         seen[name] = alias

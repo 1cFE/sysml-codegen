@@ -49,7 +49,8 @@ def residual_class_name_collision_error(
     from sysml_codegen.generation import CodeGenerationError
 
     return CodeGenerationError(
-        "Module class name collision survives aliasing (grandparent collision): "
+        "REGISTRY_CLASS_NAME_COLLISION: module class name collision survives aliasing "
+        "(grandparent collision): "
         + "; ".join(f"{name!r} <- {sorted(mts)}" for name, mts in sorted(residual.items()))
         + ". The parent-segment alias cannot disambiguate these; rename one scope."
     )

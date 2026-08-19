@@ -35,7 +35,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import NoReturn
 
-from sysml_codegen.core.errors import CodeGenerationError
+from sysml_codegen.core.errors import CodeGenerationError, SysMLParsingError
 from sysml_codegen.elaboration.elaborate import (
     ElaborationDiagnosticError,
     ElaborationError,
@@ -43,10 +43,6 @@ from sysml_codegen.elaboration.elaborate import (
 )
 from sysml_codegen.elaboration.graph import GraphValidationError, InstanceGraph
 from sysml_codegen.elaboration.project import PROJECTOR_SEMANTICS, ProjectionError, project
-from sysml_codegen.orchestration.diagnostic_context import (
-    model_source_context,
-    snapshot_source_context,
-)
 from sysml_codegen.resolution.models import ComputationGraph
 from sysml_codegen.snapshot.instance_graph import (
     InstanceGraphCodecError,
@@ -285,16 +281,18 @@ def build_exact_pipeline_context(
     canonical_targets = _canonical_targets(targets)
     try:
         return _seal(elaborate_model_paths(list(model_paths)), canonical_targets)
-    except (CodeGenerationError, ElaborationDiagnosticError, ElaborationError):
+    except (
+        CodeGenerationError,
+        ElaborationDiagnosticError,
+        ElaborationError,
+        SysMLParsingError,
+    ):
+        # Every formed public refusal passes through as itself. A parse failure
+        # that lost its way here was reported as an internal defect at a made-up
+        # line; the sibling tuple in ``elaborated_pipeline`` always had it.
         raise
     except Exception as error:
-        reference, source_file, source_line = model_source_context(model_paths)
-        raise unexpected_public_failure(
-            error,
-            reference=reference,
-            source_file=source_file,
-            source_line=source_line,
-        ) from error
+        raise unexpected_public_failure(error) from error
 
 def build_exact_pipeline_context_from_snapshot(
     snapshot_path: Path,
@@ -322,13 +320,8 @@ def build_exact_pipeline_context_from_snapshot(
         ElaborationDiagnosticError,
         ElaborationError,
         InstanceGraphSnapshotError,
+        SysMLParsingError,
     ):
         raise
     except Exception as error:
-        reference, source_file, source_line = snapshot_source_context(snapshot_path)
-        raise unexpected_public_failure(
-            error,
-            reference=reference,
-            source_file=source_file,
-            source_line=source_line,
-        ) from error
+        raise unexpected_public_failure(error) from error

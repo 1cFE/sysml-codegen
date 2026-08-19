@@ -77,12 +77,40 @@ class MultiplicityExpansionError(ElaborationInvariantError):
 class RecursiveContainmentError(ElaborationInvariantError):
     """Containment re-enters an active effective definition."""
 
-    def __init__(self, detail: str) -> None:
-        super().__init__(ElaborationCode.SI_CONTAINMENT_RECURSIVE, detail)
+    def __init__(
+        self,
+        detail: str,
+        *,
+        reference: str | None = None,
+        location: tuple[str, int] | None = None,
+    ) -> None:
+        super().__init__(
+            ElaborationCode.SI_CONTAINMENT_RECURSIVE,
+            detail,
+            reference=reference,
+            location=location,
+        )
 
 
 class OccurrenceResolutionError(ElaborationInvariantError):
     """A modeled containment address has no one permitted concrete answer."""
+
+
+def authored_site(element: Any) -> tuple[str | None, tuple[str, int] | None]:
+    """The authored name and exact source site of one parser element.
+
+    Both halves are measured off the element or omitted. An element the parser
+    gave no qualified name or no location contributes nothing rather than a
+    stand-in, so a refusal never cites a place nobody read.
+    """
+    if element is None:
+        return None, None
+    qualified = getattr(element, "qualified_name", None)
+    # The authored spelling, as the rest of the boundary reports references —
+    # ``str`` and not ``repr``, which is what leaked a parser object into a
+    # user-facing message.
+    reference = str(qualified) if qualified is not None else None
+    return reference, SysideAdapter.get_source_location(element)
 
 
 def semantic_owner(element: Any) -> Any:
@@ -161,9 +189,12 @@ def build_containment_address(
                 error.detail,
             ) from error
         if current_id in visited:
+            reference, location = authored_site(current)
             raise OccurrenceResolutionError(
                 ElaborationCode.SI_CONTAINMENT_RECURSIVE,
-                f"containment ownership repeats {current_id.to_wire()}",
+                f"containment ownership repeats {reference or current_id.to_wire()}",
+                reference=reference,
+                location=location,
             )
         visited.add(current_id)
         if SysideAdapter.is_instance(current, "PartUsage"):
@@ -195,10 +226,20 @@ class FeatureSlotIndex:
         self,
         declarations: set[DeclarationId],
         parents: dict[DeclarationId, frozenset[DeclarationId]],
+        sites: dict[DeclarationId, tuple[str | None, tuple[str, int] | None]] | None = None,
     ) -> None:
         self._declarations = declarations
         self._parents = parents
         self._roots: dict[DeclarationId, DeclarationId] = {}
+        #: Read from the parser once at build time, so a family failure names the
+        #: declaration the modeller wrote rather than an internal identifier.
+        self._sites = dict(sites or {})
+
+    def site_of(
+        self, declaration: DeclarationId
+    ) -> tuple[str | None, tuple[str, int] | None]:
+        """The authored name and location recorded for one declaration, if any."""
+        return self._sites.get(declaration, (None, None))
 
     def slot_of(self, declaration: DeclarationId) -> FeatureSlotId:
         if declaration not in self._declarations:
@@ -210,12 +251,20 @@ class FeatureSlotIndex:
     ) -> DeclarationId:
         """Return the sole declaration that redefines every other candidate."""
         if not candidates:
+            # Nothing was passed in, so there is no declaration to name: the two
+            # provenance fields stay absent rather than being filled with a guess.
             raise InvalidRedefinitionFamilyError(
-                "effective declaration selection has no candidates"
+                "effective declaration selection has no candidates",
+                reference=None,
+                location=None,
             )
+        anchor_reference, anchor_location = self.site_of(min(candidates))
         if len({self.slot_of(candidate) for candidate in candidates}) != 1:
             raise InvalidRedefinitionFamilyError(
-                "effective declaration candidates belong to different slots"
+                "effective declaration candidates belong to different slots: "
+                + self._named(candidates),
+                reference=anchor_reference,
+                location=anchor_location,
             )
         winners = {
             candidate
@@ -227,10 +276,22 @@ class FeatureSlotIndex:
         }
         if len(winners) != 1:
             raise InvalidRedefinitionFamilyError(
-                "native usage view has no unique effective declaration for one slot"
+                "native usage view has no unique effective declaration for one slot: "
+                + self._named(candidates),
+                reference=anchor_reference,
+                location=anchor_location,
             )
         (winner,) = winners
         return winner
+
+    def _named(self, declarations: set[DeclarationId]) -> str:
+        """Name a set of declarations the way the modeller wrote them."""
+        return ", ".join(
+            sorted(
+                self.site_of(declaration)[0] or declaration.to_wire()
+                for declaration in declarations
+            )
+        )
 
     def _redefines(
         self,
@@ -239,7 +300,12 @@ class FeatureSlotIndex:
         active: tuple[DeclarationId, ...],
     ) -> bool:
         if declaration in active:
-            raise InvalidRedefinitionFamilyError("redefinition family contains a cycle")
+            reference, location = self.site_of(declaration)
+            raise InvalidRedefinitionFamilyError(
+                f"redefinition family contains a cycle at {reference or declaration.to_wire()}",
+                reference=reference,
+                location=location,
+            )
         parents = self._parents.get(declaration, frozenset())
         return ancestor in parents or any(
             self._redefines(parent, ancestor, active + (declaration,))
@@ -253,14 +319,26 @@ class FeatureSlotIndex:
         if cached is not None:
             return cached
         if declaration in active:
-            raise InvalidRedefinitionFamilyError("redefinition family contains a cycle")
+            reference, location = self.site_of(declaration)
+            raise InvalidRedefinitionFamilyError(
+                f"redefinition family contains a cycle at {reference or declaration.to_wire()}",
+                reference=reference,
+                location=location,
+            )
         parents = self._parents.get(declaration, frozenset())
         if not parents:
             root = declaration
         else:
             roots = {self._root_of(parent, active + (declaration,)) for parent in parents}
             if len(roots) != 1:
-                raise InvalidRedefinitionFamilyError("redefinition declaration has unrelated roots")
+                reference, location = self.site_of(declaration)
+                raise InvalidRedefinitionFamilyError(
+                    "redefinition declaration "
+                    f"{reference or declaration.to_wire()} has unrelated roots: "
+                    + self._named(roots),
+                    reference=reference,
+                    location=location,
+                )
             root = min(roots)
         self._roots[declaration] = root
         return root
@@ -269,6 +347,7 @@ class FeatureSlotIndex:
 def _most_specific_definition(
     candidates: set[DeclarationId],
     closures: dict[DeclarationId, frozenset[DeclarationId]],
+    sites: dict[DeclarationId, tuple[str | None, tuple[str, int] | None]] | None = None,
 ) -> DeclarationId:
     winners = {
         candidate
@@ -276,8 +355,18 @@ def _most_specific_definition(
         if all(other == candidate or other in closures[candidate] for other in candidates)
     }
     if len(winners) != 1:
+        recorded = sites or {}
+        named = ", ".join(
+            sorted(
+                recorded.get(candidate, (None, None))[0] or candidate.to_wire()
+                for candidate in candidates
+            )
+        )
+        reference, location = recorded.get(min(candidates), (None, None))
         raise InvalidRedefinitionFamilyError(
-            "applicable definition writers have no unique most-specific owner"
+            f"applicable definition writers have no unique most-specific owner: {named}",
+            reference=reference,
+            location=location,
         )
     return min(winners)
 
@@ -285,10 +374,12 @@ def _most_specific_definition(
 def build_feature_slot_index(model: Any) -> FeatureSlotIndex:
     declarations: set[DeclarationId] = set()
     parent_sets: dict[DeclarationId, set[DeclarationId]] = defaultdict(set)
+    sites: dict[DeclarationId, tuple[str | None, tuple[str, int] | None]] = {}
     features = list(SysideAdapter.elements_of_type(model, "Feature", include_subtypes=True))
     for feature in features:
         if getattr(feature, "qualified_name", None) is not None:
             declarations.add(declaration_id_for(feature))
+            sites[declaration_id_for(feature)] = authored_site(feature)
     for feature in features:
         # Operator-expression formals are parser-local UUIDv4 objects, not authored
         # or implied model declarations. They never enter the stable slot domain.
@@ -298,27 +389,42 @@ def build_feature_slot_index(model: Any) -> FeatureSlotIndex:
             redefined = getattr(relationship, "redefined_feature", None)
             redefining = getattr(relationship, "redefining_feature", None)
             if redefined is None or redefining is None:
+                reference, location = authored_site(feature)
                 raise InvalidRedefinitionFamilyError(
-                    "redefinition relationship has a missing semantic endpoint"
+                    "redefinition relationship on "
+                    f"{reference or "<anonymous feature>"} has a missing semantic endpoint",
+                    reference=reference,
+                    location=location,
                 )
             redefined_chain = list(getattr(redefined, "chaining_features", ()) or ())
             redefined_endpoint = redefined_chain[-1] if redefined_chain else redefined
             if getattr(redefined_endpoint, "qualified_name", None) is None:
+                reference, location = authored_site(feature)
                 raise InvalidRedefinitionFamilyError(
-                    "redefined endpoint has no stable declaration identity"
+                    f"redefined endpoint of {reference or "<anonymous feature>"} has no "
+                    "stable declaration identity",
+                    reference=reference,
+                    location=location,
                 )
             redefined_id = declaration_id_for(redefined_endpoint)
             declarations.add(redefined_id)
+            sites.setdefault(redefined_id, authored_site(redefined_endpoint))
             if getattr(redefining, "qualified_name", None) is None:
+                reference, location = authored_site(feature)
                 raise InvalidRedefinitionFamilyError(
-                    "redefining endpoint has no stable declaration identity"
+                    f"redefining endpoint of {reference or "<anonymous feature>"} has no "
+                    "stable declaration identity",
+                    reference=reference,
+                    location=location,
                 )
             redefining_id = declaration_id_for(redefining)
             declarations.add(redefining_id)
+            sites.setdefault(redefining_id, authored_site(redefining))
             parent_sets[redefining_id].add(redefined_id)
     index = FeatureSlotIndex(
         declarations,
         {key: frozenset(value) for key, value in parent_sets.items()},
+        sites,
     )
     for declaration in declarations:
         index.slot_of(declaration)
@@ -345,10 +451,14 @@ class OccurrenceIndex:
         occurrences: dict[OccurrenceId, ExactOccurrence],
         slots: FeatureSlotIndex,
         definition_closures: dict[DeclarationId, frozenset[DeclarationId]],
+        definition_sites: dict[
+            DeclarationId, tuple[str | None, tuple[str, int] | None]
+        ] | None = None,
     ) -> None:
         self._occurrences = occurrences
         self._slots = slots
         self._definition_closures = definition_closures
+        self._definition_sites = dict(definition_sites or {})
         self._children_by_parent_and_slot: dict[
             tuple[OccurrenceId, FeatureSlotId], tuple[ExactOccurrence, ...]
         ] = {}
@@ -517,7 +627,9 @@ class OccurrenceIndex:
 
     def most_specific_definition(self, candidates: set[DeclarationId]) -> DeclarationId:
         """Return the sole candidate that specializes every other candidate."""
-        return _most_specific_definition(candidates, self._definition_closures)
+        return _most_specific_definition(
+            candidates, self._definition_closures, self._definition_sites
+        )
 
 
 def _definition_supertypes(
@@ -537,7 +649,13 @@ def _definition_supertypes(
         definition_id: DeclarationId, active: tuple[DeclarationId, ...]
     ) -> frozenset[DeclarationId]:
         if definition_id in active:
-            raise RecursiveContainmentError("part-definition specialization cycle")
+            reference, location = authored_site(definitions.get(definition_id))
+            raise RecursiveContainmentError(
+                "part-definition specialization cycle at "
+                f"{reference or definition_id.to_wire()}",
+                reference=reference,
+                location=location,
+            )
         result = {definition_id}
         for parent in direct.get(definition_id, set()):
             result.update(closure(parent, active + (definition_id,)))
@@ -563,8 +681,12 @@ def _effective_type(
         if not any(candidate != other and candidate in closures[other] for other in candidates)
     }
     if len(most_specific) > 1:
+        reference, location = authored_site(usage)
         raise InvalidRedefinitionFamilyError(
-            "part usage has incomparable exact user-definition typings"
+            f"part usage {reference or "<anonymous>"} has incomparable exact "
+            "user-definition typings",
+            reference=reference,
+            location=location,
         )
     return min(most_specific, default=None)
 
@@ -616,6 +738,12 @@ def _modeled_integer_bound(
                         for candidate in definition_writers
                     },
                     closures,
+                    {
+                        declaration_id_for(semantic_owner(candidate)): authored_site(
+                            semantic_owner(candidate)
+                        )
+                        for candidate in definition_writers
+                    },
                 )
             except InvalidRedefinitionFamilyError as error:
                 reference, location = _multiplicity_diagnostic_context(
@@ -814,8 +942,12 @@ def build_occurrence_index(model: Any, slots: FeatureSlotIndex) -> OccurrenceInd
                 continue
             existing = native_children.get(candidate_id)
             if existing is not None and existing is not candidate:
+                reference, location = authored_site(candidate)
                 raise InvalidRedefinitionFamilyError(
-                    f"native usage view repeats declaration {candidate_id.to_wire()}"
+                    "native usage view repeats declaration "
+                    f"{reference or candidate_id.to_wire()}",
+                    reference=reference,
+                    location=location,
                 )
             native_children[candidate_id] = candidate
 
@@ -838,7 +970,15 @@ def build_occurrence_index(model: Any, slots: FeatureSlotIndex) -> OccurrenceInd
         usage_id = declaration_id_for(usage)
         type_id = _effective_type(usage, definitions, closures)
         if type_id is not None and type_id in active_types:
-            raise RecursiveContainmentError(f"containment re-enters definition {type_id.to_wire()}")
+            definition_reference, definition_location = authored_site(definitions.get(type_id))
+            usage_reference, usage_location = authored_site(usage)
+            raise RecursiveContainmentError(
+                "containment re-enters definition "
+                f"{definition_reference or type_id.to_wire()} at "
+                f"{usage_reference or usage_id.to_wire()}",
+                reference=usage_reference or definition_reference,
+                location=usage_location or definition_location,
+            )
         type_closure = closures[type_id] if type_id is not None else frozenset()
         child_declarations = native_child_declarations(usage)
         child_declaration_ids = tuple(
@@ -891,7 +1031,12 @@ def build_occurrence_index(model: Any, slots: FeatureSlotIndex) -> OccurrenceInd
             )
             existing = occurrences.get(occurrence_id)
             if existing is not None and existing != occurrence:
-                raise InvalidRedefinitionFamilyError("duplicate exact occurrence identity")
+                reference, location = authored_site(usage)
+                raise InvalidRedefinitionFamilyError(
+                    f"duplicate exact occurrence identity for {rendered}",
+                    reference=reference,
+                    location=location,
+                )
             occurrences[occurrence_id] = occurrence
             next_active = active_types + ((type_id,) if type_id is not None else ())
             for child in child_declarations:
@@ -900,4 +1045,9 @@ def build_occurrence_index(model: Any, slots: FeatureSlotIndex) -> OccurrenceInd
     for root in sorted(roots, key=lambda item: declaration_id_for(item).to_wire()):
         add_usage(root, None, ())
 
-    return OccurrenceIndex(occurrences, slots, closures)
+    return OccurrenceIndex(
+        occurrences,
+        slots,
+        closures,
+        {key: authored_site(value) for key, value in definitions.items()},
+    )

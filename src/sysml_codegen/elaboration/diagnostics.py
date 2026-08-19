@@ -31,6 +31,9 @@ class ElaborationCode(StrEnum):
     SI_RENDERING_COLLISION = "SI_RENDERING_COLLISION"
     SI_SNAPSHOT_INVALID = "SI_SNAPSHOT_INVALID"
     EXTRACTION_DIAGNOSTIC_BLOCKING = "EXTRACTION_DIAGNOSTIC_BLOCKING"
+    #: Not a statement about the model. This one names a defect in the
+    #: generator itself, so a user can tell "your model" from "our bug".
+    SI_INTERNAL_DEFECT = "SI_INTERNAL_DEFECT"
 
 
 class ElaborationInvariantError(ValueError):

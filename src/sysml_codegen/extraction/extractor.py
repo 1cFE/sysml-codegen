@@ -6,7 +6,7 @@ Uses SysideAdapter for all syside interactions (centralizes syside dependency).
 
 import hashlib
 import logging
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 from pathlib import Path
 from typing import Any
 from uuid import UUID
@@ -44,9 +44,21 @@ class SysMLDataExtractor:
     Uses SysideAdapter for all syside interactions (centralizes syside dependency).
     """
 
-    def __init__(self, model_paths: list[Path]):
-        """Initialize with SysML model file paths."""
+    def __init__(
+        self,
+        model_paths: list[Path],
+        *,
+        source_referents: Mapping[str, str] | None = None,
+    ):
+        """Initialize with SysML model file paths.
+
+        ``source_referents`` maps a parsed file's absolute path to the portable
+        name the modeller knows it by. The capture route parses private staged
+        copies, so without it a reported diagnostic would name a staging
+        directory that no longer exists when the user reads the message.
+        """
         self.model_paths = model_paths
+        self._source_referents = dict(source_referents or {})
         self.adapter = SysideAdapter()
         self.model: Any | None = None
         self.diagnostics: Any | None = None
@@ -511,10 +523,28 @@ class SysMLDataExtractor:
 
         return "\n".join(docs) if docs else ""
 
+    def _portable_source(self, filename: str | None) -> str | None:
+        """The manifest referent for a parsed file, matched however it is spelled."""
+        if not filename:
+            return None
+        direct = self._source_referents.get(filename)
+        if direct is not None:
+            return direct
+        return self._source_referents.get(str(Path(filename).resolve()))
+
     def _report_diagnostics(self, diagnostics: Iterable[Any]) -> None:
-        """Report diagnostics to console."""
+        """Report diagnostics to console, naming files the way the modeller does."""
         for diag in diagnostics:
-            print(f"[ERROR] {diag}")
+            filename = getattr(diag, "filename", None)
+            portable = self._portable_source(filename)
+            if portable is None:
+                print(f"[ERROR] {diag}")
+                continue
+            line = getattr(diag, "line", None)
+            column = getattr(diag, "col", None)
+            code = getattr(diag, "code", None)
+            where = f"{portable}:{line}:{column}" if line is not None else portable
+            print(f"[ERROR] {where}: ({code}) {getattr(diag, 'message', diag)}")
 
     def _compute_file_hash(self, file_path: Path) -> str:
         """Compute SHA256 hash of file contents."""

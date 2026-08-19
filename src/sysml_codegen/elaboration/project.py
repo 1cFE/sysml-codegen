@@ -98,6 +98,23 @@ class ProjectionError(ValueError):
         super().__init__("; ".join(f"{item.code.value}: {item.detail}" for item in diagnostics))
 
 
+def authored_site(node: object) -> tuple[str | None, tuple[str, int] | None]:
+    """The authored path and exact source site a graph node was built from.
+
+    A node whose source was never measured carries the ``"unknown"``/``0``
+    placeholders the graph dataclass defaults to. Those are not a location, so
+    this returns ``None`` rather than passing the placeholder on as a citation.
+    """
+    if node is None:
+        return None, None
+    reference = getattr(node, "display_path", None)
+    source_file = getattr(node, "source_file", None)
+    source_line = getattr(node, "source_line", 0)
+    if not source_file or source_file == "unknown" or not isinstance(source_line, int):
+        return reference, None
+    return reference, ((source_file, source_line) if source_line > 0 else None)
+
+
 def _diagnostic(
     code: ElaborationCode,
     detail: str,
@@ -105,8 +122,19 @@ def _diagnostic(
     consumer: NodeId | None = None,
     consumer_display: str = "<projection>",
     param_name: str | None = None,
+    reference: str | None = None,
+    location: tuple[str, int] | None = None,
 ) -> Diagnostic:
-    return Diagnostic(code, consumer, consumer_display, param_name, detail)
+    return Diagnostic(
+        code,
+        consumer,
+        consumer_display,
+        param_name,
+        detail,
+        reference=reference,
+        source_file=location[0] if location is not None else None,
+        source_line=location[1] if location is not None else None,
+    )
 
 
 def _fail(
@@ -116,6 +144,8 @@ def _fail(
     consumer: NodeId | None = None,
     consumer_display: str = "<projection>",
     param_name: str | None = None,
+    reference: str | None = None,
+    location: tuple[str, int] | None = None,
 ) -> NoReturn:
     raise ProjectionError(
         [
@@ -125,6 +155,8 @@ def _fail(
                 consumer=consumer,
                 consumer_display=consumer_display,
                 param_name=param_name,
+                reference=reference,
+                location=location,
             )
         ]
     )
@@ -157,7 +189,12 @@ def _predicate_source_key(node: ConstraintNode) -> str:
     return f"definition:{node.definition_qualified_name}"
 
 
-def _float_default(value: object) -> float | None:
+def _float_default(
+    value: object,
+    *,
+    reference: str | None = None,
+    location: tuple[str, int] | None = None,
+) -> float | None:
     if value is None:
         return None
     if isinstance(value, bool):
@@ -167,6 +204,8 @@ def _float_default(value: object) -> float | None:
     _fail(
         ElaborationCode.SI_RENDERING_COLLISION,
         f"the public EntryPoint seam cannot carry non-numeric default {value!r}",
+        reference=reference,
+        location=location,
     )
 
 
@@ -209,6 +248,9 @@ class _Projection:
         self.modules_by_semantic: dict[NodeId | str, PipelineModule] = {}
         self.entry_points: dict[str, EntryPoint] = {}
         self.entry_sources: dict[str, tuple[str, str, Path]] = {}
+        #: Where each entry point's owner was authored, read once at mint time so
+        #: a later group collision cites a measured site instead of none.
+        self.entry_owner_sites: dict[str, tuple[str | None, tuple[str, int] | None]] = {}
         self.entry_semantics: dict[str, object] = {}
         self.output_channels: dict[OutputPortId, str] = {}
         self.public_module_names: dict[str, NodeId | str] = {}
@@ -273,12 +315,48 @@ class _Projection:
             constraint_catalog=self._build_constraint_catalog(),
         )
 
+    def _node_of(self, semantic: object) -> AttrNode | CalcNode | ConstraintNode | None:
+        """The graph node one semantic identity was projected from, if it is one."""
+        if isinstance(semantic, OutputPortId):
+            semantic = semantic.calculation
+        if not isinstance(semantic, NodeId):
+            return None
+        return (
+            self.graph.calcs.get(semantic)
+            or self.graph.constraints.get(semantic)
+            or self.graph.attrs.get(semantic)
+        )
+
+    def _collision_context(
+        self, holder: object, arriving: object
+    ) -> tuple[str | None, tuple[str, int] | None, str]:
+        """Name both authored sides of a collision, anchored on the name's holder.
+
+        The anchor is not a search: it is whichever side already held the public
+        name, so ``reference`` and the cited location always describe one and the
+        same node. Both authored names go in the detail, so anchoring loses
+        nothing.
+        """
+        held_reference, held_location = authored_site(self._node_of(holder))
+        arriving_reference, arriving_location = authored_site(self._node_of(arriving))
+        if held_reference is None:
+            reference, location = arriving_reference, arriving_location
+        else:
+            reference, location = held_reference, held_location
+        authored = [item for item in (held_reference, arriving_reference) if item is not None]
+        return reference, location, " and ".join(repr(item) for item in authored)
+
     def _claim_module(self, name: str, semantic: NodeId | str) -> None:
         prior = self.public_module_names.get(name)
         if prior is not None and prior != semantic:
+            reference, location, named = self._collision_context(prior, semantic)
             _fail(
                 ElaborationCode.SI_RENDERING_COLLISION,
-                f"distinct semantic modules render as public name {name!r}",
+                f"distinct semantic modules {named} render as public name {name!r}"
+                if named
+                else f"distinct semantic modules render as public name {name!r}",
+                reference=reference,
+                location=location,
             )
         self.public_module_names[name] = semantic
 
@@ -294,9 +372,14 @@ class _Projection:
     def _claim_channel(self, channel: str, semantic: OutputPortId | str) -> None:
         prior = self.public_channels.get(channel)
         if prior is not None and prior != semantic:
+            reference, location, named = self._collision_context(prior, semantic)
             _fail(
                 ElaborationCode.SI_RENDERING_COLLISION,
-                f"distinct semantic outputs render as public channel {channel!r}",
+                f"distinct semantic outputs {named} render as public channel {channel!r}"
+                if named
+                else f"distinct semantic outputs render as public channel {channel!r}",
+                reference=reference,
+                location=location,
             )
         self.public_channels[channel] = semantic
 
@@ -348,16 +431,22 @@ class _Projection:
         rather than being given a guessed group.
         """
         if not isinstance(owner.scope, OccurrenceId):
+            reference, location = authored_site(owner)
             _fail(
                 ElaborationCode.SI_RENDERING_COLLISION,
                 f"package-scoped {owner.display_path!r} in a model.sysml has no root occurrence "
                 "to take a parameter-group identity from",
+                reference=reference,
+                location=location,
             )
         root = self.graph.occurrences[OccurrenceId(steps=owner.scope.steps[:1])]
         if not root.package_display:
+            reference, location = authored_site(owner)
             _fail(
                 ElaborationCode.SI_RENDERING_COLLISION,
                 f"root occurrence of {owner.display_path!r} declares no package",
+                reference=reference,
+                location=location,
             )
         return root.package_display
 
@@ -374,18 +463,25 @@ class _Projection:
         semantic: object,
     ) -> InputSource:
         group_name, class_name, group_path = _group_identity(self._group_base(owner))
+        owner_reference, owner_location = authored_site(owner)
         prior = self.entry_semantics.get(qualified_name)
         if prior is not None and prior != semantic:
             _fail(
                 ElaborationCode.SI_RENDERING_COLLISION,
                 f"distinct semantic sources render as entry point {qualified_name!r}",
+                reference=owner_reference,
+                location=owner_location,
             )
         existing = self.entry_points.get(qualified_name)
         candidate = EntryPoint(
             qualified_name=qualified_name,
             simple_name=simple_name,
             entry_type=entry_type,
-            default_value=_float_default(default_value),
+            default_value=_float_default(
+                default_value,
+                reference=owner_reference,
+                location=owner_location,
+            ),
             source_calc_usage=source_calc_usage,
             param_group=group_name,
             python_type=metadata.python_type,
@@ -396,6 +492,8 @@ class _Projection:
             _fail(
                 ElaborationCode.SI_RENDERING_COLLISION,
                 f"entry point {qualified_name!r} has conflicting projected metadata",
+                reference=owner_reference,
+                location=owner_location,
             )
         self.entry_semantics[qualified_name] = semantic
         self.entry_points[qualified_name] = candidate
@@ -405,8 +503,11 @@ class _Projection:
             _fail(
                 ElaborationCode.SI_RENDERING_COLLISION,
                 f"entry point {qualified_name!r} renders into two parameter groups",
+                reference=owner_reference,
+                location=owner_location,
             )
         self.entry_sources[qualified_name] = group
+        self.entry_owner_sites[qualified_name] = (owner_reference, owner_location)
         return InputSource(
             source_type="entry_point",
             param_group=group_name,
@@ -564,11 +665,14 @@ class _Projection:
     def _require_unique_params(node: CalcNode | ConstraintNode, inputs: list[ModuleInput]) -> None:
         names = [item.param_name for item in inputs]
         if len(names) != len(set(names)):
+            reference, location = authored_site(node)
             _fail(
                 ElaborationCode.SI_RENDERING_COLLISION,
                 f"distinct inputs on {node.display_path!r} render to one parameter name",
                 consumer=node.node_id,
                 consumer_display=node.display_path,
+                reference=reference,
+                location=location,
             )
 
     def _computed_inputs(
@@ -606,6 +710,7 @@ class _Projection:
                 param_name = f"{base}_{port.edge_ordinal}" if plural else base
                 prior = source_by_name.get(param_name)
                 if prior is not None and prior != edge:
+                    reference, location = authored_site(node)
                     _fail(
                         ElaborationCode.SI_RENDERING_COLLISION,
                         f"distinct expression sources on {node.display_path!r} render as "
@@ -613,6 +718,8 @@ class _Projection:
                         consumer=node.node_id,
                         consumer_display=node.display_path,
                         param_name=param_name,
+                        reference=reference,
+                        location=location,
                     )
                 param_by_port[port] = param_name
                 if prior is not None:
@@ -962,9 +1069,12 @@ class _Projection:
             key = (instance_path, node.display_name)
             prior = rendered.get(key)
             if prior is not None and prior != node.alias_target.target:
+                reference, location = authored_site(node)
                 _fail(
                     ElaborationCode.SI_RENDERING_COLLISION,
                     f"distinct aliases render as {instance_path!r}/{node.display_name!r}",
+                    reference=reference,
+                    location=location,
                 )
             rendered[key] = node.alias_target.target
             aliases.append(
@@ -986,9 +1096,12 @@ class _Projection:
             name, class_name, source_file = self.entry_sources[qualified_name]
             prior = by_group.get(name)
             if prior is not None and prior[:2] != (class_name, source_file):
+                reference, location = self.entry_owner_sites.get(qualified_name, (None, None))
                 _fail(
                     ElaborationCode.SI_RENDERING_COLLISION,
                     f"distinct group identities render as parameter group {name!r}",
+                    reference=reference,
+                    location=location,
                 )
             if prior is None:
                 by_group[name] = (class_name, source_file, [entry])

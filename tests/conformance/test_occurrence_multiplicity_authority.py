@@ -128,8 +128,13 @@ def test_incomparable_definition_writers_refuse_without_electing_one() -> None:
         _occurrences("occurrence_multiplicity_incomparable")
 
     assert caught.value.code is ElaborationCode.SI_REDEFINITION_INVALID
+    # The refusal names every writer it could not order, so the modeller is told
+    # which declarations to compare rather than only that a comparison failed.
     assert caught.value.detail == (
-        "applicable definition writers have no unique most-specific owner"
+        "applicable definition writers have no unique most-specific owner: "
+        "OccurrenceMultiplicityIncomparable::Left, "
+        "OccurrenceMultiplicityIncomparable::Right, "
+        "OccurrenceMultiplicityIncomparable::Root"
     )
 
     with pytest.raises(ElaborationDiagnosticError) as public:

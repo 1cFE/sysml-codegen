@@ -322,16 +322,6 @@ REVIEWED_ROWS: tuple[ReviewedRow, ...] = (
         COLLISION_PROOF,
         "item",
     ),
-    ReviewedRow(
-        "orchestration/elaborated_pipeline.py",
-        "_elaborate_admitted_sources",
-        "referent",
-        "direct",
-        "codegen SourceFile.referent serialized key",
-        "live",
-        COLLISION_PROOF,
-        "item",
-    ),
     # The remaining four discovered rows are mechanically excluded from both public raw
     # source roots.  They stay visible in repository-wide discovery and cannot satisfy a
     # live row.
@@ -939,9 +929,6 @@ def test_collision_rows_have_provable_receiver_contracts() -> None:
         source_module, "SourceAdmission.staged_to_referent", "item"
     ) == {"self.files"}
     assert _receiver_iterables(source_module, "_admitted_membership", "item") == {"files"}
-    assert _receiver_iterables(
-        "orchestration/elaborated_pipeline.py", "_elaborate_admitted_sources", "item"
-    ) == {"admission.files"}
 
 
 def test_the_raw_syside_module_set_is_the_recorded_one() -> None:
