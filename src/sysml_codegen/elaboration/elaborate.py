@@ -116,7 +116,11 @@ from sysml_codegen.extraction.source_evidence import (
     ReadinessFinding,
 )
 
-__all__ = ["ElaborationDiagnosticError", "ElaborationError"]
+__all__ = [
+    "ElaborationDiagnosticError",
+    "ElaborationError",
+    "unexpected_public_failure",
+]
 
 
 class ElaborationError(Exception):
@@ -124,12 +128,20 @@ class ElaborationError(Exception):
 
     def __init__(self, findings: Sequence[ReadinessFinding]) -> None:
         self.findings = tuple(findings)
-        super().__init__(
-            "; ".join(
-                f"{finding.code.value}: {finding.usage_qualified_name}.{finding.param_name}"
-                for finding in self.findings
-            )
-        )
+        super().__init__("; ".join(_render_readiness_finding(finding) for finding in self.findings))
+
+
+def _render_readiness_finding(finding: ReadinessFinding) -> str:
+    reference = f": reference={finding.reference!r}" if finding.reference is not None else ""
+    location = (
+        f" [{finding.source_file}:{finding.source_line}]"
+        if finding.source_file is not None and finding.source_line is not None
+        else ""
+    )
+    return (
+        f"{finding.code.value}: {finding.usage_qualified_name}.{finding.param_name}"
+        f"{reference}: {finding.detail}{location}"
+    )
 
 
 class ElaborationDiagnosticError(Exception):
@@ -140,6 +152,30 @@ class ElaborationDiagnosticError(Exception):
         super().__init__(
             "; ".join(_render_public_diagnostic(diagnostic) for diagnostic in diagnostics)
         )
+
+
+def unexpected_public_failure(
+    error: Exception,
+    *,
+    reference: str,
+    source_file: str | None,
+    source_line: int | None,
+) -> ElaborationDiagnosticError:
+    """Form the one public refusal for an otherwise unnamed internal failure."""
+    return ElaborationDiagnosticError(
+        (
+            Diagnostic(
+                code=ElaborationCode.SI_EVIDENCE_INCOMPLETE,
+                consumer=None,
+                consumer_display=reference,
+                param_name=None,
+                detail=f"unexpected internal failure: {type(error).__name__}: {error}",
+                reference=reference,
+                source_file=source_file,
+                source_line=source_line,
+            ),
+        )
+    )
 
 
 def _render_public_diagnostic(diagnostic: Diagnostic) -> str:
@@ -714,27 +750,27 @@ class _ExactElaborator:
     def _owner_kind(owner: Any) -> str:
         """The graded kind of a constraint usage's semantic owner, from a closed map.
 
-        The map used to end in a ``.get(..., type(owner).__name__.lower())`` fallback,
-        which let an owner kind nobody had considered be graded by accident — and the
+        The map used to fall back to the concrete Python class name, which let an owner
+        kind nobody had considered be graded by accident — and the
         disposition severity now keys on this value, so an accidental grade would decide
         whether a model halts. An unmapped kind fails by name instead.
         """
-        kinds = {
-            "NoneType": "absent",
-            "PartDefinition": "part_def",
-            "PartUsage": "part_usage",
-            "CalculationDefinition": "calc_def",
-            "Package": "package",
-            "RequirementDefinition": "requirement_def",
-        }
-        kind = kinds.get(type(owner).__name__)
-        if kind is None:
-            raise ElaborationInvariantError(
-                ElaborationCode.SI_CONSTRAINT_UNATTACHED,
-                f"constraint owner kind {type(owner).__name__!r} "
-                f"({getattr(owner, 'qualified_name', None)!r}) is not in the closed owner-kind map",
-            )
-        return kind
+        if owner is None:
+            return "absent"
+        for mapped_kind, rendered in (
+            ("PartDefinition", "part_def"),
+            ("PartUsage", "part_usage"),
+            ("CalculationDefinition", "calc_def"),
+            ("Package", "package"),
+            ("RequirementDefinition", "requirement_def"),
+        ):
+            if SysideAdapter.is_instance(owner, mapped_kind):
+                return rendered
+        raise ElaborationInvariantError(
+            ElaborationCode.SI_CONSTRAINT_UNATTACHED,
+            "constraint owner does not match a supported mapped metatype "
+            f"({getattr(owner, 'qualified_name', None)!r})",
+        )
 
     def _display_path(self, scope: ScopeId, name: str) -> str:
         return f"{self._scope_display[scope]}__{display_name(name)}"
@@ -1508,9 +1544,6 @@ class _ExactElaborator:
         for record in self._graph.constraint_usages.values():
             if record.disposition.severity != "error":
                 continue
-            where = (
-                f"{record.declaration_id.to_wire()}) at {record.source_file}:{record.source_line}"
-            )
             if record.disposition.reason == "classification_incomplete":
                 self._diagnose(
                     ElaborationCode.SI_CONSTRAINT_INCOMPLETE,
@@ -1518,7 +1551,10 @@ class _ExactElaborator:
                     record.usage_qualified_name,
                     None,
                     f"constraint usage domain incomplete: {record.usage_qualified_name} "
-                    f"({where} cannot be classified: {record.disposition.detail}",
+                    f"({record.declaration_id.to_wire()}) cannot be classified: "
+                    f"{record.disposition.detail}",
+                    reference=record.usage_qualified_name,
+                    location=(record.source_file, record.source_line),
                 )
                 continue
             self._diagnose(
@@ -1527,10 +1563,12 @@ class _ExactElaborator:
                 record.usage_qualified_name,
                 None,
                 f"constraint {record.usage_qualified_name} "
-                f"({where} is asserted "
+                f"({record.declaration_id.to_wire()}) is asserted "
                 f"({record.source_form}) but its owner "
                 f"{record.owner_qualified_name or '<none>'} ({record.owner_kind}) provides no "
                 f"attachment: {record.disposition.reason}",
+                reference=record.usage_qualified_name,
+                location=(record.source_file, record.source_line),
             )
 
     @staticmethod
@@ -2124,6 +2162,25 @@ class _ExactElaborator:
                     f"unsupported exact source form {binding_source_kind(evidence)} "
                     f"({evidence.written_text or ''!r})"
                 ),
+                reference=evidence.written_text or evidence.formal.qualified_name,
+                source_file=(
+                    evidence.use.location[0]
+                    if isinstance(evidence, (ExactBindingSource, IndexedBindingSource))
+                    and evidence.use.location is not None
+                    else evidence.location[0]
+                    if isinstance(evidence, ExpressionBindingSource)
+                    and evidence.location is not None
+                    else None
+                ),
+                source_line=(
+                    evidence.use.location[1]
+                    if isinstance(evidence, (ExactBindingSource, IndexedBindingSource))
+                    and evidence.use.location is not None
+                    else evidence.location[1]
+                    if isinstance(evidence, ExpressionBindingSource)
+                    and evidence.location is not None
+                    else None
+                ),
             )
         )
         if not self._strict:
@@ -2134,6 +2191,9 @@ class _ExactElaborator:
                     consumer_display=usage_display,
                     param_name=param_name,
                     detail=self._readiness[-1].detail,
+                    reference=self._readiness[-1].reference,
+                    source_file=self._readiness[-1].source_file,
+                    source_line=self._readiness[-1].source_line,
                 )
             )
 

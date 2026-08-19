@@ -215,10 +215,9 @@ Deleted by the Item 7 retirement and no longer in the tree:
 **Read this index with the retirement in mind.** C05, C06, C08–C19, C27, and X02 name
 components of the string-resolution stack that the Item 7 retirement deleted
 (`core/output_registry.py`, `analysis/`, `orchestration/pipeline_builder.py`,
-`resolution/graph_builder.py` and its resolver). Two of them survived and are simply off the
-shipped route: `extraction/computed_attribute_extractor.py` and
-`extraction/hierarchy_resolver.py`. Their documents are accurate about that code and are not
-descriptions of the product.
+`resolution/graph_builder.py` and its resolver). The off-route computed-attribute classifier
+was deleted in the Phase 5 audit fix round; `extraction/hierarchy_resolver.py` remains off the
+shipped route. Historical component rows are not descriptions of the product.
 C02, C03, C04, C07, C20–C26, C28, C29, and X01 are live on the exact route; C01's models are
 mixed and doc 09 says which are which.
 
@@ -228,7 +227,7 @@ mixed and doc 09 says which are which.
 | C02 | Naming Conventions | [15](reference/15-naming-conventions.md) | `core/qualified_names.py`, `core/identifier_types.py` |
 | C03 | SysMLDataExtractor | [01](reference/01-extraction.md) | `extraction/extractor.py`, `extraction/usage_extractor.py` |
 | C04 | Expression Compiler | [14](reference/14-expression-compiler.md) | `extraction/expression_compiler.py` |
-| C05 | Computed Attribute Extractor | [16](reference/16-computed-attributes.md) | `extraction/computed_attribute_extractor.py` |
+| C05 | Computed attributes (exact elaborator) | [16](reference/16-computed-attributes.md) | `elaboration/elaborate.py` |
 | C06 | Hierarchy Resolver | [25](reference/25-hierarchy-resolver.md) | `extraction/hierarchy_resolver.py` |
 | C07 | AST Dispatch Invariant | [19](reference/19-ast-dispatch-invariant.md) | Cross-cutting (C04, C05, C06) |
 | C08 | Output Registry (Typed) | [10](reference/10-output-registry.md) | `core/output_registry.py` |

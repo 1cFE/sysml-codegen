@@ -183,11 +183,11 @@ def _verify_dependencies(
         )
         if _sha256(archive_path) != archive.get("sha256"):
             raise EvidenceAuditError(f"{name} source archive hash mismatch")
-        unprefixed_hash = archive.get("unprefixed_git_archive_sha256")
-        if unprefixed_hash is not None and re.fullmatch(
-            r"[0-9a-f]{64}", str(unprefixed_hash)
-        ) is None:
-            raise EvidenceAuditError(f"{name} unprefixed source hash is malformed")
+        external_hash = archive.get("external_archive_sha256")
+        if external_hash is not None and external_hash != archive.get("sha256"):
+            raise EvidenceAuditError(
+                f"{name} external archive pin does not bind the shipped archive"
+            )
         excluded_links = build_artifacts._excluded_unsafe_links(
             archive_path, str(archive.get("prefix"))
         )
@@ -200,10 +200,7 @@ def _verify_dependencies(
             if history.get("commit") != commit:
                 raise EvidenceAuditError("codegen history does not name C_prod")
             required_commits = history.get("required_commits")
-            if (
-                not isinstance(required_commits, dict)
-                or required_commits.get("c_prod") != commit
-            ):
+            if not isinstance(required_commits, dict) or required_commits.get("c_prod") != commit:
                 raise EvidenceAuditError("codegen history omits its closed commit inventory")
             bundle = _artifact_path(
                 artifact_root,
@@ -268,8 +265,7 @@ def _verify_dependencies(
     expected_roots = {
         "agentic source": artifact_root / str(inputs["agentic"].get("extracted_root")),
         "codegen source": artifact_root / str(inputs["codegen"].get("extracted_root")),
-        "codegen history": artifact_root
-        / str(inputs["codegen"]["history"].get("extracted_root")),
+        "codegen history": artifact_root / str(inputs["codegen"]["history"].get("extracted_root")),
     }
     actual_roots = {
         "agentic source": source_inputs.agentic_source,
@@ -338,9 +334,7 @@ def _rebuild_codegen(
         wheel = codegen.get("wheel")
         if wheel is None:
             raise EvidenceAuditError("C_prod dependency row has no certified wheel")
-        timestamp = _run(
-            "git", "-C", str(repository), "show", "-s", "--format=%ct", c_prod
-        )
+        timestamp = _run("git", "-C", str(repository), "show", "-s", "--format=%ct", c_prod)
         try:
             rebuilt = build_artifacts._deterministic_wheel(
                 extracted,
@@ -450,11 +444,23 @@ def verify_retained_run_artifacts(artifact_root: Path, record: dict[str, Any]) -
     )
     if output_hash != record.get("output_sha256"):
         raise EvidenceAuditError(f"{run_id}: normalized output hash mismatch")
+    if junit is not None:
+        output = retained_paths["stdout"].read_text() + "\n" + retained_paths["stderr"].read_text()
+        try:
+            measured_counts, measured_skips = run_independent_green._junit_counts(junit, output)
+        except run_independent_green.IndependentRunError as error:
+            raise EvidenceAuditError(f"{run_id}: cannot recompute JUnit counts: {error}") from error
+        if measured_counts != record.get("counts"):
+            raise EvidenceAuditError(
+                f"{run_id}: retained JUnit counts {measured_counts} differ from the record"
+            )
+        if measured_skips != record.get("observed_skips"):
+            raise EvidenceAuditError(
+                f"{run_id}: retained JUnit skip records differ from the record"
+            )
 
 
-def _verify_wheelhouse(
-    repository: Path, artifact_root: Path, dependencies: dict[str, Any]
-) -> None:
+def _verify_wheelhouse(repository: Path, artifact_root: Path, dependencies: dict[str, Any]) -> None:
     wheelhouse = dependencies.get("wheelhouse")
     if not isinstance(wheelhouse, dict):
         raise EvidenceAuditError("dependencies.json omits the wheelhouse")
@@ -473,9 +479,7 @@ def _verify_wheelhouse(
         name = filename.partition("-")[0].replace("_", "-")
         text = requirements.read_text()
         if name not in text or f"--hash=sha256:{digest}" not in text:
-            raise EvidenceAuditError(
-                f"wheelhouse requirements omit {filename} and its exact hash"
-            )
+            raise EvidenceAuditError(f"wheelhouse requirements omit {filename} and its exact hash")
 
 
 def _verify_lock_and_runs(repository: Path, artifact_root: Path) -> None:
@@ -501,16 +505,12 @@ def _verify_lock_and_runs(repository: Path, artifact_root: Path) -> None:
         raise EvidenceAuditError("independent-green.json has the wrong schema")
     if set(report.get("input_repositories", [])) != set(build_artifacts.REPOSITORY_NAMES):
         raise EvidenceAuditError("independent-green.json does not cover five inputs")
-    if report.get("artifact_build_sha256") != _sha256(
-        artifact_root / "artifact-build.json"
-    ):
+    if report.get("artifact_build_sha256") != _sha256(artifact_root / "artifact-build.json"):
         raise EvidenceAuditError("independent-green artifact-build hash mismatch")
     runner = report.get("committed_runner")
     if not isinstance(runner, dict):
         raise EvidenceAuditError("independent-green omits its committed runner")
-    runner_path = _artifact_path(
-        artifact_root, runner.get("path"), label="committed runner"
-    )
+    runner_path = _artifact_path(artifact_root, runner.get("path"), label="committed runner")
     if _sha256(runner_path) != runner.get("sha256"):
         raise EvidenceAuditError("committed runner hash mismatch")
     runs = report.get("runs")
@@ -529,6 +529,36 @@ def _verify_lock_and_runs(repository: Path, artifact_root: Path) -> None:
     missing = sorted(row for row in required if row not in ledger)
     if missing:
         raise EvidenceAuditError(f"reconciliation ledger omits rows: {missing}")
+    source_roots = {
+        dependencies["inputs"]["codegen"]["commit"]: repository,
+        dependencies["inputs"]["agentic"]["commit"]: run_independent_green._input_root(
+            artifact_root, dependencies["inputs"], "agentic"
+        ),
+    }
+    ledger_rows = [
+        [cell.strip().strip("`") for cell in line.strip().strip("|").split("|")]
+        for line in ledger.splitlines()
+        if line.startswith("| L-") or line.startswith("| U-")
+    ]
+    if len(ledger_rows) != len(required):
+        raise EvidenceAuditError("reconciliation ledger row set is not exact")
+    for row, _mapping, _disposition, proof, identity in ledger_rows:
+        if proof == "—":
+            continue
+        root = source_roots.get(identity)
+        if root is None:
+            raise EvidenceAuditError(f"{row}: proof identity is not Codegen or Agentic")
+        for citation in proof.split("; "):
+            path_text, separator, node_id = citation.partition("::")
+            relative = Path(path_text)
+            if not separator or relative.is_absolute() or ".." in relative.parts:
+                raise EvidenceAuditError(f"{row}: malformed exact test citation {citation!r}")
+            path = root / relative
+            if not path.is_file():
+                raise EvidenceAuditError(f"{row}: cited test path does not exist: {path_text}")
+            test_name = node_id.rsplit("::", 1)[-1].split("[", 1)[0]
+            if test_name not in path.read_text():
+                raise EvidenceAuditError(f"{row}: cited test node does not exist: {citation}")
 
 
 def audit(
@@ -546,9 +576,7 @@ def audit(
     actual = _run("git", "-C", str(root), "rev-parse", "HEAD")
     if actual != evidence:
         raise EvidenceAuditError(f"audit repository HEAD is {actual}, not C_evidence {evidence}")
-    status = _run(
-        "git", "-C", str(root), "status", "--porcelain=v1", "--untracked-files=all"
-    )
+    status = _run("git", "-C", str(root), "status", "--porcelain=v1", "--untracked-files=all")
     if status:
         raise EvidenceAuditError(f"audit repository is dirty:\n{status}")
 

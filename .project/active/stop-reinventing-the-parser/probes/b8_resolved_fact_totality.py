@@ -8,7 +8,11 @@ from pathlib import Path
 from typing import Any
 
 import syside
-from agentic_mbse.sysml.expression import feature_chain_facts, resolved_target_fact
+from agentic_mbse.sysml.reference_use import (
+    ExactReferenceUse,
+    inspect_reference_uses,
+    resolved_target_fact,
+)
 from agentic_mbse.sysml.syside_adapter import SysideAdapter
 from probe_support import load_json, load_model, sha256_file, validate_lock, write_canonical_json
 
@@ -40,10 +44,13 @@ def run_probe(repository: Path, agentic_commit: str) -> dict[str, object]:
             expression = getattr(feature, "feature_value_expression", None)
             for node in _nodes(expression):
                 if SysideAdapter.is_instance(node, "FeatureChainExpression"):
-                    fact = feature_chain_facts(node)
-                    if fact.root is not None or fact.segments:
+                    uses = inspect_reference_uses(node)
+                    if any(isinstance(use, ExactReferenceUse) for use in uses):
                         root_chains += 1
-                        if fact.leaf is None:
+                        if any(
+                            isinstance(use, ExactReferenceUse) and use.path.leaf is None
+                            for use in uses
+                        ):
                             root_missing += 1
                 elif SysideAdapter.is_instance(node, "FeatureReferenceExpression"):
                     if resolved_target_fact(getattr(node, "referent", None)) is not None:

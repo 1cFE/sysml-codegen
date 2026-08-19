@@ -21,6 +21,7 @@ from sysml_codegen.elaboration import (
     ValueSite,
 )
 from sysml_codegen.elaboration.expression_evidence import (
+    ExpressionEvidenceInventory,
     ExpressionInventoryError,
     ExpressionSite,
     ExpressionSiteRole,
@@ -155,8 +156,15 @@ def _assert_forced_expression_diagnostic(
 
 
 @pytest.mark.parametrize("strict", [True, False])
-def test_loaded_extractor_converts_semantic_evidence_once(strict: bool) -> None:
+def test_loaded_extractor_converts_semantic_evidence_once(
+    monkeypatch: pytest.MonkeyPatch, strict: bool
+) -> None:
     extractor = _EvidenceFailingExtractor()
+    monkeypatch.setattr(
+        elaborated_pipeline,
+        "build_expression_evidence_inventory",
+        lambda _model: ExpressionEvidenceInventory({}),
+    )
 
     with pytest.raises(ElaborationDiagnosticError) as caught:
         elaborated_pipeline.elaborate_loaded_extractor(
@@ -171,9 +179,7 @@ def test_loaded_extractor_converts_semantic_evidence_once(strict: bool) -> None:
     diagnostic = public_error.diagnostics[0]
     assert diagnostic.code is ElaborationCode.SI_EVIDENCE_INCOMPLETE
     assert diagnostic.consumer_display == "plant::source"
-    assert diagnostic.detail == (
-        "is_instance: the installed parser rejected the metatype query"
-    )
+    assert diagnostic.detail == ("is_instance: the installed parser rejected the metatype query")
     assert diagnostic.reference == "plant::source"
     assert diagnostic.source_file == "root-0/model.sysml"
     assert diagnostic.source_line == 7
@@ -1019,9 +1025,7 @@ def _forced_site_expression(
         expression = MockFeatureReferenceExpression()
     expression.qualified_name = site.reference
     expression.document = SimpleNamespace(url=f"file:{Path(source_file).resolve()}")
-    expression.cst_node = SimpleNamespace(
-        start_point=SimpleNamespace(line=source_line - 1)
-    )
+    expression.cst_node = SimpleNamespace(start_point=SimpleNamespace(line=source_line - 1))
     return expression
 
 
@@ -1248,9 +1252,7 @@ _CELL_NAMES = (
     "operand_or_depth_failure",
     "missing_exact_target",
 )
-_ALL_PUBLIC_CELL_ARMS = tuple(
-    (cell, ("live", "admitted/capture")) for cell in _CELL_NAMES
-)
+_ALL_PUBLIC_CELL_ARMS = tuple((cell, ("live", "admitted/capture")) for cell in _CELL_NAMES)
 
 
 @dataclass(frozen=True)

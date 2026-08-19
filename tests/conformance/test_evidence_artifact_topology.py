@@ -8,6 +8,7 @@ Git identity, wheel metadata, import roots, and skip accounting without reading 
 from __future__ import annotations
 
 import hashlib
+import inspect
 import json
 import subprocess
 import sys
@@ -588,9 +589,20 @@ def test_a_retained_junit_mutation_is_rejected(tmp_path: Path) -> None:
     stderr.write_text("")
     probe.write_text("[]\n")
     junit.write_text(
-        '<testsuite><testcase classname="tests.test_x" name="test_x">'
+        '<testsuite tests="1" failures="1" errors="0"><testcase '
+        'classname="tests.test_x" name="test_x">'
         '<failure message="expected 1" /></testcase></testsuite>'
     )
+    counts = {
+        "collected": 1,
+        "selected": 1,
+        "passed": 0,
+        "failed": 1,
+        "errors": 0,
+        "skipped": 0,
+        "xfailed": 0,
+        "deselected": 0,
+    }
     record = {
         "id": "example",
         "output_sha256": run_independent_green._output_hash(
@@ -615,9 +627,15 @@ def test_a_retained_junit_mutation_is_rejected(tmp_path: Path) -> None:
             "path": "run-reports/example.xml",
             "sha256": hashlib.sha256(junit.read_bytes()).hexdigest(),
         },
+        "counts": counts,
+        "observed_skips": [],
     }
 
     audit_evidence.verify_retained_run_artifacts(tmp_path, record)
+    record["counts"] = counts | {"passed": 1, "failed": 0}
+    with pytest.raises(audit_evidence.EvidenceAuditError, match="retained JUnit counts"):
+        audit_evidence.verify_retained_run_artifacts(tmp_path, record)
+    record["counts"] = counts
     junit.write_text("<testsuite />")
     with pytest.raises(audit_evidence.EvidenceAuditError, match="JUnit hash mismatch"):
         audit_evidence.verify_retained_run_artifacts(tmp_path, record)
@@ -812,9 +830,12 @@ def test_builder_cli_creates_five_closed_source_artifacts(
         name: identities["codegen"]
         for name in build_artifacts.CODEGEN_HISTORY_INPUT_NAMES
     }
-    raw_teax = tmp_path / "raw-teax.tar"
+    raw_teax = tmp_path / "shipped-teax.tar"
     build_artifacts._git_archive(
-        Path(rows["teax"]["path"]), identities["teax"], "", raw_teax
+        Path(rows["teax"]["path"]),
+        identities["teax"],
+        build_artifacts._archive_prefix("teax", rows["teax"]),
+        raw_teax,
     )
     rows["teax"]["expected_archive_sha256"] = hashlib.sha256(
         raw_teax.read_bytes()
@@ -855,9 +876,9 @@ def test_builder_cli_creates_five_closed_source_artifacts(
     } == identities
     assert len(list((output / "sources").glob("*.tar"))) == 5
     assert manifest["inputs"]["teax"]["archive"][
-        "unprefixed_git_archive_sha256"
+        "external_archive_sha256"
     ] == rows["teax"]["expected_archive_sha256"]
-    assert manifest["inputs"]["teax"]["archive"]["sha256"] != rows["teax"][
+    assert manifest["inputs"]["teax"]["archive"]["sha256"] == rows["teax"][
         "expected_archive_sha256"
     ]
     history = manifest["inputs"]["codegen"]["history"]
@@ -1014,26 +1035,12 @@ def test_committed_runner_stages_exactly_six_evidence_files(
 
 
 def test_committed_runner_inventory_covers_every_required_lane() -> None:
-    assert set(run_independent_green.REQUIRED_RUN_IDS) == {
-        "agentic-focused",
-        "agentic-fast",
-        "agentic-strict",
-        "agentic-mypy-baseline",
-        "agentic-ruff-baseline",
-        "costingfe-pytest",
-        "costingfe-ruff",
-        "teax-pytest",
-        "codegen-strict",
-        "codegen-mypy-baseline",
-        "codegen-default",
-        "codegen-live-snapshot",
-        "codegen-generated-package",
-        "codegen-execution",
-        "fusion-lock-check",
-        "fusion-pytest",
-        "fusion-models-primary",
-        "fusion-models-exploration",
-        "fusion-generated-execution",
-        "fusion-ruff",
-        "fusion-mypy",
-    }
+    assert run_independent_green.REQUIRED_RUN_IDS == tuple(
+        run_independent_green.EXPECTED_RUNS
+    )
+    assert len(run_independent_green.REQUIRED_RUN_IDS) == 21
+
+
+def test_import_probe_runs_isolated_from_user_site_packages() -> None:
+    source = inspect.getsource(run_independent_green._import_files)
+    assert '[executable, "-I", "-c"' in source

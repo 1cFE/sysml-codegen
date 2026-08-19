@@ -24,8 +24,8 @@ frozen P_seed byte inventory.
 | A5b | `19e41d38589f77a554de9ab5002ef08a39bf5bd8fa001b5e9a20f928d129d9e9` | `640155d9f5df4bb6157cd4e5d336040473b310d8971d99c2dbfe620d9b19fe3d` | strict: SI_OCCURRENCE_AMBIGUOUS; lenient: graph with SI_OCCURRENCE_AMBIGUOUS + SI_OCCURRENCE_MISSING -> strict and lenient: pre-graph SI_INDEXED_SOURCE_UNSUPPORTED; lenient graph absent | `tests/conformance/test_expression_evidence_integrity.py::test_indexed_bare_chain_plural_slot_refuses_before_occurrence_resolution` | `3b97c0dd3fc6de31158df275190b7259b5dbff53` |
 | A6 | `3813f4f1698bfaf477bf0ca5e069a6310428870b20fe12d13371411a54801c60` | `6d612e7923bacb85e8bb83d0808dbdafbf76ed1e5f69e64f7bcb2ebd09c1d0ab` | an unrelated sole multiplicity writer may answer -> exact owner-domain writer or SI_MULTIPLICITY_UNRESOLVED | `tests/conformance/test_occurrence_multiplicity_authority.py` | `3b97c0dd3fc6de31158df275190b7259b5dbff53` |
 | B1-B5 | `707e6f80fd08903f50467e0cb86616a261b3046de5edf0c8e7c1a46b1cd80195` | `c92f93c36358ec57562e81f84e015d9123e56c23be0ed5d8bd513815eed475be` | fallback, partial traversal, name recovery, or qualified-name library filtering continues -> exact semantic evidence and DocumentTier or SI_EVIDENCE_INCOMPLETE | `tests/conformance/test_expression_evidence_integrity.py` | `09fdae1986c81c2a5738e1401bdc78e0ea5fa607` |
-| B6/B7 | `ef03ebcac409a65f6b53fb62542183183bda037312cf3c0a24a50c164d6dac10` | `9fc41708887a88a929bd94a1b110d9463e25c1cf5b41c3630bb6355890cd8174` | weak type or skipped redefinition identity may pass -> sole qualified primitive type and exact endpoint family or SI_TYPE_INVALID | `tests/conformance/test_feature_typing_integrity.py` | `38045fda5f1fb4298db12b9ad5dac6f532b331e3` |
-| B8 | `8ad985020fdfc257fe284d66ccca901910e9840fede1af8a48974f19c1ec2607` | `2162f7650795ab805458c110304992bf3bec233327f6298a8220dd0cbbe31b03` | a resolved fact without a leaf may be skipped -> real corpus totality retained; a forced missing leaf raises typed evidence error | `tests/conformance/test_semantic_evidence_boundary.py` | `09fdae1986c81c2a5738e1401bdc78e0ea5fa607` |
+| B6/B7 | `ef03ebcac409a65f6b53fb62542183183bda037312cf3c0a24a50c164d6dac10` | `9fc41708887a88a929bd94a1b110d9463e25c1cf5b41c3630bb6355890cd8174` | weak type or skipped redefinition identity may pass -> sole qualified primitive type and exact endpoint family or SI_TYPE_INVALID | `tests/conformance/test_feature_typing_integrity.py::test_root_namespace_scalar_lookalike_is_not_a_primitive; tests/unit/test_elaboration_occurrence.py::test_redefinition_requires_wrapper_and_both_semantic_endpoints` | `38045fda5f1fb4298db12b9ad5dac6f532b331e3` |
+| B8 | `8ad985020fdfc257fe284d66ccca901910e9840fede1af8a48974f19c1ec2607` | `2162f7650795ab805458c110304992bf3bec233327f6298a8220dd0cbbe31b03` | a resolved fact without a leaf may be skipped -> real corpus totality retained; a forced missing leaf raises typed evidence error | `agentic-mbse/tests/test_sysml/test_reference_use.py::test_a_resolved_fact_without_its_exact_leaf_can_never_be_skipped` | `09fdae1986c81c2a5738e1401bdc78e0ea5fa607` |
 | B9 | `8383f37fd208a1e0dd8aff18e739eba6ffbf8b9a7baeb99783d62ca31e37f3a9` | `57ae40b9b189644e1cc99e160263c6034854fd45cca9b0e452e37f2946a4cf3b` | unsupported root output warns after mutation may begin -> EXIT_POINT_TYPE_UNSUPPORTED before output mutation with status 1 | `tests/conformance/test_generation_exit_type_preflight.py` | `38045fda5f1fb4298db12b9ad5dac6f532b331e3` |
 | B10 | `a6d19bfd194416f14a4ae2170434ac504756740f58a949bffd9244f16a9087d3` | `4e67c23824ba0ff8d4a3bab2f77dc4df4515766962b586a29ed8b1f00664918c` | a sole glob may supply feature source origin -> exact parser source origin only; unreachable glob deleted | `tests/conformance/test_feature_typing_integrity.py` | `38045fda5f1fb4298db12b9ad5dac6f532b331e3` |
 
@@ -64,14 +64,15 @@ those three fields produces byte-identical JSON structures. Their current bytes 
 | `tests/fixtures/unresolvable_attr_probe/instance_graph_snapshot.json` | `17494c69284e80aa0bd7a675c2dcd8d0f92774aee059bacf3b7d937d49069a4e` | `c77fdabf326825349f92f76ff3fc93542c791eaa4fd8bb8008bd66c6cad72082` | `c77fdabf326825349f92f76ff3fc93542c791eaa4fd8bb8008bd66c6cad72082` |
 | `tests/fixtures/wi014_toy/instance_graph_snapshot.json` | `5caf02bca8169c693c364aab817683448dcfb4596e9cd86c11263d3062d82301` | `767bcb5ba7e2109c04e40fdcee0d96eca1ddeecc792df3eb307488123559cf77` | `767bcb5ba7e2109c04e40fdcee0d96eca1ddeecc792df3eb307488123559cf77` |
 
-The remaining 4A output change is
+The historical 4A output change was
 `tests/fixtures/golden/computed_attribute_golden.json`: P_seed
-`f203c988928cc642cab24fa110dc85c3ed971917f78f5d9548e6b788a0928e18`, current
+`f203c988928cc642cab24fa110dc85c3ed971917f78f5d9548e6b788a0928e18`, 4A
 `08e61f7b5a35241376f2b44498718e322e8f5ee98e49f4fa7ed6b9a4715fa28e`. Its two changed
 classifications are owned by A2/B1-B5: `deep_cross_scope_probe.station_output` and
 `ife_plant.magnet_volume_total` both changed from `expose_chain_tentative` to `unresolvable` when
-the non-exact chain route was removed. No other golden row changed. The proving test is
-`tests/conformance/test_computed_attribute_golden.py`. The agentic evidence implementation behind
+the non-exact chain route was removed. No other golden row changed. In the Phase 5 audit fix
+round, the off-route classifier and its golden were retired because production had no caller;
+the exact elaborator tests now own computed-attribute behavior. The agentic evidence implementation behind
 the 4A boundary is A_final `1804827cb2cc877b3c0bc74309bd3470fb2ee90b`.
 
 ## Batch-manifest transition
@@ -83,6 +84,12 @@ the 4A boundary is A_final `1804827cb2cc877b3c0bc74309bd3470fb2ee90b`.
 | P_seed | `bd7bf245e3ca3923b9b5d41db97861c9fcdf64435e768d48a2d7027eb52d9288` | 15/22 | Frozen Phase 1 output expectation; retained in Git history |
 | 4A | `79a0ea9f712652a4665deb8304fbb7d4c4529d76d72dbb1097e712aafaddc1b4` | 15/22 | Agentic 0.1.3/API metadata recapture at `09fdae1986c81c2a5738e1401bdc78e0ea5fa607` |
 | current | `7f9269781a8938308715229c5be00855490e82b7e54f9cb90939195e3aeefa40` | 14/23 | 4A metadata plus the exact A2 and B6/B7 outcomes below |
+
+The retained probes consume the current batch under this exact transition:
+
+| File | Lock-time SHA-256 | Current SHA-256 | Owner |
+|---|---|---|---|
+| `tests/fixtures/v6_recapture_batch/batch.json` | `bd7bf245e3ca3923b9b5d41db97861c9fcdf64435e768d48a2d7027eb52d9288` | `7f9269781a8938308715229c5be00855490e82b7e54f9cb90939195e3aeefa40` | A2 and B6/B7 recapture rows below |
 
 The current batch differs semantically from 4A at exactly two records. Each record hash is the
 SHA-256 of canonical JSON (`sort_keys=True`, compact separators):
@@ -124,7 +131,10 @@ probe-rerun triggers.
 
 | File | Lock-time SHA-256 | Current SHA-256 | Owning commits | Reason |
 |---|---|---|---|---|
-| `verification/capture_baseline.py` | `6aef97af31d0d3c644c7a5edbf27540b1aca037a7b146090ea430846f29b6cc3` | `442dbf96484149a74576eab372cd3e8caa627e951417706b9a8844330828e6bc` | `da4aa78` ("docs: reconcile parser evidence contract"), `46694e2` ("fix verification artifact source inputs"), `891923230653b874822148e49ccb5a93e55459d7` ("fix: verify fixture inventory from history"), `f95166370afb3cddbc3d65fe18ed197ef3064bb6` ("fix: restore current fixture source lock") | The validator evolved with the contract it checks. `8919232` correctly moved frozen-inventory reconstruction to the named P_seed tree, but also dropped the comparison with current fixture bytes. `f951663` restores that coverage as a separate ledger-gated check over all 110 current sources in all 43 roots, including the six `ADDED_ROOTS`; the historical lock remains unchanged, and the one intentional current difference is owned above. |
+| `verification/capture_baseline.py` | `6aef97af31d0d3c644c7a5edbf27540b1aca037a7b146090ea430846f29b6cc3` | `862c9527c5c21a3db6c9c2b4dd9bd54bd85dcd27e0b15f8c79e488efd24a0a0b` | Phase 5 audit fix round | The current-output validator now requires the dead classifier golden to be absent and ledger-owned; the historical P_seed-to-4A measurement remains intact. |
+| `.project/active/stop-reinventing-the-parser/probes/b8_resolved_fact_totality.py` | `068a35b17aaaee9871c2519e4fb78426c76d65f96558dd3df2065cf7a338e72b` | `5f9694559c783af98601bafe45e61d151dd300420f400485935cccd6ae765f22` | Phase 5 audit fix round | Port the retained B8 measurement from deleted `feature_chain_facts` to the current total `inspect_reference_uses` value and its exact leaf invariant. |
+| `.project/active/stop-reinventing-the-parser/probes/b10_document_origin.py` | `b9b60a78111770918cb393d42540a0562335bc71bb4380b0cd320556463463e3` | `476246d4f415bd3c510fb82dd9955cb0bcf9e819f711e34cdf7f845d71c36d44` | Phase 5 audit fix round | Port the retained B10 measurement to the current document-owned `_source_file(feature)` and `extract_feature_unit(feature)` APIs. |
+| `.project/active/stop-reinventing-the-parser/probes/probe_support.py` | `4546953a21373847ecec032dfaef004bb2a8e03d2a96577a8f1acb700f881f71` | `5188e8116a52eaf1f443003188c8a87cb0c916b9377ba4ef5e899f9b08a582d7` | Phase 5 audit fix round | Admit current bytes only when one transition-ledger row binds both the historical lock hash and current hash, so retained probes remain runnable after an owned port. |
+| `.project/active/stop-reinventing-the-parser/probes/test_probe_contracts.py` | `354356aebf60c8984b96f525f8786ddc5268768956662aea72a865b086882ea4` | `b0b2d62abb92077bc7fb978919e92002b422e5ffc99db417ebe26b0d9d32165d` | Phase 5 audit fix round | Pin both retained probes to the current APIs and require an exact transition row for a changed probe byte. |
 
-The five probe scripts under `.project/active/stop-reinventing-the-parser/probes/` are unchanged
-from their lock-time bytes and are pinned there; they have no row because they have no difference.
+The one unchanged probe script remains pinned at its lock-time bytes and needs no transition row.

@@ -155,9 +155,7 @@ def build_manifest() -> dict[str, object]:
             "canonical_refusal_records": len(batch["refused"]),
             "added_roots": len(ADDED_ROOTS),
             "added_source_files": sum(
-                len(cast(list[object], row["sources"]))
-                for row in roots
-                if row["kind"] == "added"
+                len(cast(list[object], row["sources"])) for row in roots if row["kind"] == "added"
             ),
             "total_roots": len(roots),
         },
@@ -221,9 +219,7 @@ def validate_current_fixture_sources(
     check because current bytes are always read from ``repository_root``.
     """
     ledger_path = (
-        transitions_path
-        if transitions_path.is_absolute()
-        else repository_root / transitions_path
+        transitions_path if transitions_path.is_absolute() else repository_root / transitions_path
     )
     checked = 0
     added_roots = 0
@@ -355,9 +351,7 @@ def validate_output_transitions() -> dict[str, Any]:
         text=True,
     )
     changed = {Path(line) for line in result.stdout.splitlines() if line}
-    snapshot_paths = {
-        path for path in changed if path.name == "instance_graph_snapshot.json"
-    }
+    snapshot_paths = {path for path in changed if path.name == "instance_graph_snapshot.json"}
     expected_non_snapshots = {
         BATCH_PATH,
         Path("tests/fixtures/golden/computed_attribute_golden.json"),
@@ -386,7 +380,8 @@ def validate_output_transitions() -> dict[str, Any]:
 
     golden_path = Path("tests/fixtures/golden/computed_attribute_golden.json")
     before_golden = json.loads(_git_bytes(P_SEED, golden_path))
-    after_golden = json.loads(_git_bytes(FOUR_A, golden_path))
+    after_golden_bytes = _git_bytes(FOUR_A, golden_path)
+    after_golden = json.loads(after_golden_bytes)
     differences = _json_leaf_differences(before_golden, after_golden)
     deep_classification = (
         "deep_cross_scope_probe::DeepCrossScopeProducer::'Monitoring Station'::"
@@ -404,10 +399,10 @@ def validate_output_transitions() -> dict[str, Any]:
     }
     if differences != expected_golden:
         raise ValueError(f"unowned golden-output differences: {differences}")
-    current_golden = (ROOT / golden_path).read_bytes()
-    after_golden_bytes = _git_bytes(FOUR_A, golden_path)
-    if current_golden != after_golden_bytes:
-        raise ValueError("computed-attribute golden output moved after 4A")
+    if (ROOT / golden_path).exists():
+        raise ValueError("retired computed-attribute golden output remains in the tree")
+    if "classifier and its golden were retired" not in ledger:
+        raise ValueError("transition ledger omits the computed-attribute golden retirement")
     for digest in (
         hashlib.sha256(_git_bytes(P_SEED, golden_path)).hexdigest(),
         hashlib.sha256(after_golden_bytes).hexdigest(),
@@ -580,9 +575,7 @@ def _refusal(error: Exception) -> dict[str, object]:
 
 def _identity_rows(graph: Any) -> dict[str, list[str]]:
     return {
-        "occurrences": sorted(
-            item.occurrence_id.to_wire() for item in graph.occurrences.values()
-        ),
+        "occurrences": sorted(item.occurrence_id.to_wire() for item in graph.occurrences.values()),
         "attributes": sorted(item.node_id.to_wire() for item in graph.attrs.values()),
         "calculations": sorted(item.node_id.to_wire() for item in graph.calcs.values()),
         "constraints": sorted(item.node_id.to_wire() for item in graph.constraints.values()),
@@ -712,22 +705,16 @@ def main() -> int:
     output_transitions = validate_output_transitions()
     if args.capture:
         if not args.codegen_commit or not args.agentic_commit or args.teax_root is None:
-            parser.error(
-                "--capture requires --codegen-commit, --agentic-commit, and --teax-root"
-            )
+            parser.error("--capture requires --codegen-commit, --agentic-commit, and --teax-root")
         args.output.write_bytes(
-            _canonical(
-                capture(manifest, args.codegen_commit, args.agentic_commit, args.teax_root)
-            )
+            _canonical(capture(manifest, args.codegen_commit, args.agentic_commit, args.teax_root))
             + b"\n"
         )
     if args.check:
         baseline = json.loads(args.output.read_text())
         if baseline.get("schema_version") != "stop-parser-before-state/v1":
             raise ValueError("baseline schema is not the frozen before-state schema")
-        if baseline["manifest_sha256"] != _sha(manifest_path) or len(
-            baseline["records"]
-        ) != 43:
+        if baseline["manifest_sha256"] != _sha(manifest_path) or len(baseline["records"]) != 43:
             raise ValueError("baseline does not match the closed inventory")
         outcome_counts = {"graph": 0, "refused": 0}
         for inventory, record in zip(manifest["roots"], baseline["records"], strict=True):

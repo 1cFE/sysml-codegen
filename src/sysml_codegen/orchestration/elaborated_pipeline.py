@@ -28,11 +28,15 @@ from sysml_codegen.elaboration import (
     Diagnostic,
     ElaborationCode,
     ElaborationDiagnosticError,
+    ElaborationError,
     GraphValidationError,
     project,
 )
 from sysml_codegen.elaboration.diagnostics import ElaborationInvariantError
-from sysml_codegen.elaboration.elaborate import _build_instance_graph
+from sysml_codegen.elaboration.elaborate import (
+    _build_instance_graph,
+    unexpected_public_failure,
+)
 from sysml_codegen.elaboration.expression_evidence import (
     ExpressionInventoryError,
     build_expression_evidence_inventory,
@@ -71,6 +75,27 @@ def elaborate_model_paths(model_paths: list[Path], *, strict: bool = True) -> In
     graph itself, and a caller that only wants the public surface takes
     ``build_elaborated_pipeline``. Both reach the elaborator by this one path.
     """
+    try:
+        return _elaborate_model_paths(model_paths, strict=strict)
+    except (
+        CodeGenerationError,
+        ElaborationDiagnosticError,
+        ElaborationError,
+        SysMLParsingError,
+    ):
+        raise
+    except Exception as error:
+        reference, source_file, source_line = _caller_model_context(model_paths)
+        raise unexpected_public_failure(
+            error,
+            reference=reference,
+            source_file=source_file,
+            source_line=source_line,
+        ) from error
+
+
+def _elaborate_model_paths(model_paths: list[Path], *, strict: bool) -> InstanceGraph:
+    """Implementation under the total live API boundary."""
     extractor = SysMLDataExtractor(model_paths)
     try:
         if not extractor.load_models():
@@ -88,6 +113,19 @@ def elaborate_model_paths(model_paths: list[Path], *, strict: bool = True) -> In
         source_referents=_live_source_referents(extractor.model, tuple(model_paths)),
         strict=strict,
     )
+
+
+def _caller_model_context(model_paths: Sequence[Path]) -> tuple[str, str | None, int | None]:
+    """Return the first root-relative source named by the public caller."""
+    for ordinal, root in enumerate(model_paths):
+        candidates = [root] if root.is_file() else sorted(root.rglob("*.sysml"))
+        if not candidates:
+            continue
+        source = candidates[0]
+        relative = source.name if root.is_file() else source.relative_to(root).as_posix()
+        referent = f"root-{ordinal}/{relative}"
+        return referent, referent, 1
+    return "<model>", None, None
 
 
 def require_executable_content(graph: InstanceGraph, calc_definitions: Sequence[object]) -> None:
@@ -122,6 +160,33 @@ def elaborate_admitted_sources(
     every node's ``source_file`` is rewritten from its staged absolute path to
     the portable referent the manifest names it by.
     """
+    try:
+        return _elaborate_admitted_sources(admission, strict=strict)
+    except (
+        CodeGenerationError,
+        ElaborationDiagnosticError,
+        ElaborationError,
+        SysMLParsingError,
+    ):
+        raise
+    except Exception as error:
+        reference, source_file, source_line = _nearest_model_context(
+            admission.staged_to_referent
+        )
+        raise unexpected_public_failure(
+            error,
+            reference=reference,
+            source_file=source_file,
+            source_line=source_line,
+        ) from error
+
+
+def _elaborate_admitted_sources(
+    admission: SourceAdmission,
+    *,
+    strict: bool,
+) -> InstanceGraph:
+    """Implementation under the total admitted/capture API boundary."""
     extractor = SysMLDataExtractor(list(admission.staged_files))
     try:
         if not extractor.load_models():
@@ -175,6 +240,10 @@ def elaborate_loaded_extractor(
         raise ElaborationDiagnosticError(
             (_semantic_evidence_diagnostic(error, source_referents),)
         ) from error
+    except ElaborationError as error:
+        raise ElaborationError(
+            tuple(_readiness_with_referent(item, source_referents) for item in error.findings)
+        ) from error
     except ExpressionInventoryError as error:
         raise ElaborationDiagnosticError(
             (
@@ -186,12 +255,8 @@ def elaborate_loaded_extractor(
                         param_name=None,
                         detail=f"expression_evidence: {error.detail}",
                         reference=error.reference,
-                        source_file=(
-                            error.location[0] if error.location is not None else None
-                        ),
-                        source_line=(
-                            error.location[1] if error.location is not None else None
-                        ),
+                        source_file=(error.location[0] if error.location is not None else None),
+                        source_line=(error.location[1] if error.location is not None else None),
                     ),
                     source_referents,
                 ),
@@ -239,6 +304,14 @@ def elaborate_loaded_extractor(
             for diagnostic in error.diagnostics
         )
         raise ElaborationDiagnosticError(graph_diagnostics) from error
+    except Exception as error:
+        reference, source_file, source_line = _nearest_model_context(source_referents)
+        raise unexpected_public_failure(
+            error,
+            reference=reference,
+            source_file=source_file,
+            source_line=source_line,
+        ) from error
 
     _rewrite_sources_as_referents(graph, source_referents)
     _rewrite_exclusion_locations(graph)
@@ -269,7 +342,39 @@ _EVIDENCE_CODES = {
     SemanticEvidenceCode.INDEXED_REFERENCE_UNSUPPORTED: (
         ElaborationCode.SI_INDEXED_SOURCE_UNSUPPORTED
     ),
+    SemanticEvidenceCode.EXPRESSION_KIND_UNSUPPORTED: (
+        ElaborationCode.SI_EXPRESSION_SOURCE_UNSUPPORTED
+    ),
 }
+
+
+def _readiness_with_referent(
+    finding: Any,
+    source_referents: Mapping[str, str],
+) -> Any:
+    from sysml_codegen.extraction.source_evidence import ReadinessFinding
+
+    source_file = finding.source_file
+    if source_file is not None:
+        source_file = _lookup_referent(source_file, source_referents)
+    return ReadinessFinding(
+        code=finding.code,
+        usage_qualified_name=finding.usage_qualified_name,
+        param_name=finding.param_name,
+        detail=finding.detail,
+        reference=finding.reference,
+        source_file=source_file,
+        source_line=finding.source_line,
+    )
+
+
+def _nearest_model_context(
+    source_referents: Mapping[str, str],
+) -> tuple[str, str | None, int | None]:
+    referents = sorted(set(source_referents.values()))
+    if not referents:
+        return "<model>", None, None
+    return "<model>", referents[0], 1
 
 
 def _semantic_evidence_diagnostic(
@@ -324,8 +429,7 @@ def _rewrite_sources_as_referents(
     for record in graph.constraint_usages.values():
         record.source_file = _referent_for(record, source_referents)
     graph.diagnostics = [
-        _diagnostic_with_referent(diagnostic, source_referents)
-        for diagnostic in graph.diagnostics
+        _diagnostic_with_referent(diagnostic, source_referents) for diagnostic in graph.diagnostics
     ]
 
 

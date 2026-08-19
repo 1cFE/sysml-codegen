@@ -987,4 +987,3 @@ def _get_parent_part_path(elem: Any) -> str:
 
     return ".".join(parts)
 
-

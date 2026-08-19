@@ -393,9 +393,7 @@ def _preflight_constraint_totality(graph: ComputationGraph) -> None:
                 "constraint usage domain incomplete: catalog row joins no domain member for "
                 f"{occurrence.usage_qualified_name} ({occurrence.declaration_id})"
             )
-        occurrences[occurrence.declaration_id] = (
-            occurrences.get(occurrence.declaration_id, 0) + 1
-        )
+        occurrences[occurrence.declaration_id] = occurrences.get(occurrence.declaration_id, 0) + 1
 
     for declaration_id, row in rows_by_id.items():
         counted = occurrences.get(declaration_id, 0)
@@ -906,8 +904,10 @@ def cmd_snapshot(args: argparse.Namespace) -> int:
     from sysml_codegen.elaboration.elaborate import (
         ElaborationDiagnosticError,
         ElaborationError,
+        unexpected_public_failure,
     )
     from sysml_codegen.generation import SysMLParsingError
+    from sysml_codegen.orchestration.exact_pipeline_context import _model_source_context
     from sysml_codegen.snapshot.capture import capture_instance_graph_snapshot
     from sysml_codegen.snapshot.envelope import (
         InstanceGraphSnapshotError,
@@ -932,8 +932,7 @@ def cmd_snapshot(args: argparse.Namespace) -> int:
     except InstanceGraphSnapshotError as error:
         if isinstance(error, SnapshotCertifiabilityError):
             detail = "; ".join(
-                f"{diagnostic.code.value}: {diagnostic.detail}"
-                for diagnostic in error.diagnostics
+                f"{diagnostic.code.value}: {diagnostic.detail}" for diagnostic in error.diagnostics
             )
             logger.error(f"Snapshot refused: {detail}")
         else:
@@ -941,6 +940,16 @@ def cmd_snapshot(args: argparse.Namespace) -> int:
         return 1
     except OSError as error:
         logger.error(f"Snapshot could not be written: {error}")
+        return 1
+    except Exception as error:
+        reference, source_file, source_line = _model_source_context((models_path,))
+        diagnostic = unexpected_public_failure(
+            error,
+            reference=reference,
+            source_file=source_file,
+            source_line=source_line,
+        )
+        logger.error(f"Snapshot failed exact-route validation: {diagnostic}")
         return 1
     logger.info(f"Wrote snapshot to {out}")
     return 0
@@ -1171,9 +1180,12 @@ def run_codegen(config: GenerationConfig) -> bool:
     from sysml_codegen.elaboration.elaborate import (
         ElaborationDiagnosticError,
         ElaborationError,
+        unexpected_public_failure,
     )
     from sysml_codegen.generation import CodeGenerationError, SysMLParsingError
     from sysml_codegen.orchestration.exact_pipeline_context import (
+        _model_source_context,
+        _snapshot_source_context,
         build_exact_pipeline_context,
         build_exact_pipeline_context_from_snapshot,
     )
@@ -1216,9 +1228,38 @@ def run_codegen(config: GenerationConfig) -> bool:
             extra={"constraint_name_safety": error.name_safety_violation},
         )
         return False
+    except Exception as error:
+        if config.from_snapshot is not None:
+            reference, source_file, source_line = _snapshot_source_context(config.from_snapshot)
+        else:
+            assert config.models_path is not None
+            reference, source_file, source_line = _model_source_context((config.models_path,))
+        diagnostic = unexpected_public_failure(
+            error,
+            reference=reference,
+            source_file=source_file,
+            source_line=source_line,
+        )
+        logger.error(f"Model failed exact-route validation: {diagnostic}")
+        return False
 
     logger.info(f"Built computation graph with {len(graph.modules)} modules")
-    return _generate_package_from_graph(graph, config)
+    try:
+        return _generate_package_from_graph(graph, config)
+    except Exception as error:
+        if config.from_snapshot is not None:
+            reference, source_file, source_line = _snapshot_source_context(config.from_snapshot)
+        else:
+            assert config.models_path is not None
+            reference, source_file, source_line = _model_source_context((config.models_path,))
+        diagnostic = unexpected_public_failure(
+            error,
+            reference=reference,
+            source_file=source_file,
+            source_line=source_line,
+        )
+        logger.error(f"Code generation failed: {diagnostic}")
+        return False
 
 
 def _generate_package_from_graph(graph: ComputationGraph, config: GenerationConfig) -> bool:
@@ -1274,9 +1315,7 @@ def _generate_package_from_graph(graph: ComputationGraph, config: GenerationConf
 
         # Build every constraint body and wrapper while the target tree is still untouched.
         template_env = _get_template_env()
-        constraint_plan = build_constraint_generation_plan(
-            graph, template_env, config.package_name
-        )
+        constraint_plan = build_constraint_generation_plan(graph, template_env, config.package_name)
 
         # Step 1.9: the coverage account the package is about to bake agrees with the catalog
         # it claims to summarize, and the aggregator's existence agrees with the same
@@ -1347,10 +1386,9 @@ def _generate_package_from_graph(graph: ComputationGraph, config: GenerationConf
     except OSError as e:
         # The only unnamed failure this half can operationally hit is the
         # filesystem: the output tree is created and written from step 2 onward.
-        # Everything else reaching here — a template defect, a graph field the
-        # renderer did not expect — is a programming defect, and it now propagates
-        # to the CLI boundary with its traceback instead of becoming a bare
-        # "generation failed" and exit 1.
+        # Everything else reaching here is converted by ``run_codegen`` into the
+        # same caused, located public diagnostic as construction failures. The
+        # private writer keeps the original exception intact for that boundary.
         #
         # Measured, and deliberately not changed here: any failure after step 2
         # leaves the partially written output tree on disk. That is true of the

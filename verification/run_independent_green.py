@@ -32,29 +32,6 @@ COUNT_FIELDS = (
     "xfailed",
     "deselected",
 )
-REQUIRED_RUN_IDS = (
-    "agentic-focused",
-    "agentic-fast",
-    "agentic-strict",
-    "agentic-mypy-baseline",
-    "agentic-ruff-baseline",
-    "costingfe-pytest",
-    "costingfe-ruff",
-    "teax-pytest",
-    "codegen-strict",
-    "codegen-mypy-baseline",
-    "codegen-default",
-    "codegen-live-snapshot",
-    "codegen-generated-package",
-    "codegen-execution",
-    "fusion-lock-check",
-    "fusion-pytest",
-    "fusion-models-primary",
-    "fusion-models-exploration",
-    "fusion-generated-execution",
-    "fusion-ruff",
-    "fusion-mypy",
-)
 EVIDENCE_SIBLINGS = (
     "dependencies.json",
     "wheelhouse-requirements.txt",
@@ -115,13 +92,17 @@ def validate_run_record(record: dict[str, Any]) -> None:
     """Require one result to carry total counts, declared skips, and closed imports."""
     run_id = record.get("id", "<unnamed>")
     command = record.get("command")
-    if not isinstance(command, list) or not command or not all(
-        isinstance(item, str) and item for item in command
+    if (
+        not isinstance(command, list)
+        or not command
+        or not all(isinstance(item, str) and item for item in command)
     ):
         raise IndependentRunError(f"{run_id}: command must be a non-empty string list")
     executed = record.get("executed_command")
-    if not isinstance(executed, list) or not executed or not all(
-        isinstance(item, str) and item for item in executed
+    if (
+        not isinstance(executed, list)
+        or not executed
+        or not all(isinstance(item, str) and item for item in executed)
     ):
         raise IndependentRunError(f"{run_id}: executed command must be a non-empty string list")
     expected_status = record.get("expected_status")
@@ -338,9 +319,7 @@ def _output_hash(
             "pytest_outcomes": sorted_outcomes,
             "stderr": _stable_output_text(stderr, artifact_root),
         }
-        payload = _canonical_json(
-            canonical_outcomes
-        )
+        payload = _canonical_json(canonical_outcomes)
     return hashlib.sha256(payload.encode()).hexdigest()
 
 
@@ -355,13 +334,15 @@ def _import_files(run: dict[str, Any], environment: dict[str, str]) -> list[str]
         return supplied
     command = run["command"]
     executable = str(run.get("python") or command[0])
+    roots = run.get("import_roots", [])
     probe = (
         "import importlib,json,sys; "
-        "names=json.loads(sys.argv[1]); "
+        "sys.path[:0]=json.loads(sys.argv[1]); "
+        "names=json.loads(sys.argv[2]); "
         "print(json.dumps([str(importlib.import_module(n).__file__) for n in names]))"
     )
     result = subprocess.run(
-        [executable, "-c", probe, json.dumps(modules)],
+        [executable, "-I", "-c", probe, json.dumps(roots), json.dumps(modules)],
         env=environment,
         check=False,
         capture_output=True,
@@ -702,6 +683,7 @@ EXPECTED_RUNS: dict[str, dict[str, Any]] = {
     "fusion-ruff": {"status": 0, "counts": ZERO_COUNTS},
     "fusion-mypy": {"status": 0, "counts": ZERO_COUNTS},
 }
+REQUIRED_RUN_IDS = tuple(EXPECTED_RUNS)
 
 
 def _run_checked(command: list[str], *, cwd: Path | None = None) -> str:
@@ -718,8 +700,7 @@ def _run_checked(command: list[str], *, cwd: Path | None = None) -> str:
     if result.returncode != 0:
         detail = (result.stderr or result.stdout).strip()
         raise IndependentRunError(
-            f"preparation command failed ({' '.join(command)}): "
-            f"{detail or result.returncode}"
+            f"preparation command failed ({' '.join(command)}): {detail or result.returncode}"
         )
     return result.stdout.strip()
 
@@ -733,18 +714,14 @@ def _input_root(artifact_root: Path, inputs: dict[str, Any], name: str) -> Path:
     )
 
 
-def _input_artifact(
-    artifact_root: Path, inputs: dict[str, Any], name: str, kind: str
-) -> Path:
+def _input_artifact(artifact_root: Path, inputs: dict[str, Any], name: str, kind: str) -> Path:
     record = inputs[name].get(kind)
     if not isinstance(record, dict):
         raise IndependentRunError(f"{name} omits its {kind} record")
     relative = record.get("filename")
     if kind == "wheel":
         relative = f"wheels/{relative}"
-    return _artifact_member(
-        artifact_root, relative, label=f"{name} {kind}"
-    )
+    return _artifact_member(artifact_root, relative, label=f"{name} {kind}")
 
 
 def _wheel_identity(path: Path) -> tuple[str, str]:
@@ -847,15 +824,9 @@ def _prepare_environment(
     agentic_wheel = _input_artifact(artifact_root, inputs, "agentic", "wheel")
     codegen_wheel = _input_artifact(artifact_root, inputs, "codegen", "wheel")
     costingfe_wheel = _input_artifact(artifact_root, inputs, "costingfe", "wheel")
-    agentic_uri = (
-        f"{agentic_wheel.as_uri()}#sha256={inputs['agentic']['wheel']['sha256']}"
-    )
-    codegen_uri = (
-        f"{codegen_wheel.as_uri()}#sha256={inputs['codegen']['wheel']['sha256']}"
-    )
-    costingfe_uri = (
-        f"{costingfe_wheel.as_uri()}#sha256={inputs['costingfe']['wheel']['sha256']}"
-    )
+    agentic_uri = f"{agentic_wheel.as_uri()}#sha256={inputs['agentic']['wheel']['sha256']}"
+    codegen_uri = f"{codegen_wheel.as_uri()}#sha256={inputs['codegen']['wheel']['sha256']}"
+    costingfe_uri = f"{costingfe_wheel.as_uri()}#sha256={inputs['costingfe']['wheel']['sha256']}"
     teax = _input_root(artifact_root, inputs, "teax")
     local_wheels = [
         f"agentic-mbse[extract-full,web] @ {agentic_uri}",
@@ -1043,7 +1014,10 @@ def _skip_policies(run_id: str) -> list[dict[str, str]]:
         ],
         "costingfe-pytest": [
             {
-                "node_id": r"tests/.*",
+                "node_id": (
+                    r"tests/(?:test_mirror|test_model|test_multifuel_0d|"
+                    r"test_n_mod_sizing|test_tokamak|test_tokamak_sizing)\.py::.*"
+                ),
                 "reason": r"size_from_power / optimize_lcoe / use_0d_model gated off for release",
             }
         ],
@@ -1052,10 +1026,6 @@ def _skip_policies(run_id: str) -> list[dict[str, str]]:
                 "node_id": r"tests/conformance/test_calc_compat_parity\.py::.*",
                 "reason": r".*: no calc output expressions in the golden",
             },
-            {
-                "node_id": r"tests/conformance/test_computed_attribute_golden\.py::.*",
-                "reason": r".*: no computed attributes in the golden",
-            }
         ],
         "fusion-pytest": [
             {
@@ -1408,33 +1378,131 @@ def _reconciliation_ledger(inputs: dict[str, Any]) -> str:
     c_prod = inputs["codegen"]["commit"]
     a_final = inputs["agentic"]["commit"]
     rows = {
-        "L-01": "tests/conformance/test_definition_owned_reference_positions.py",
-        "L-02": "tests/conformance/test_occurrence_calc_domain_derivation.py",
-        "L-03": "tests/conformance/test_expression_evidence_integrity.py",
-        "L-04": "tests/conformance/test_occurrence_multiplicity_authority.py",
-        "L-05": "tests/conformance/test_feature_typing_integrity.py",
-        "L-06": "tests/conformance/test_expression_evidence_integrity.py",
-        "L-07": "tests/conformance/test_ast_dispatch_invariant.py",
-        "L-08": "tests/unit/test_expression_evidence_boundary.py",
-        "L-09": "tests/conformance/test_expression_evidence_integrity.py",
-        "L-10": "tests/conformance/test_expression_evidence_integrity.py",
-        "L-11": "tests/conformance/test_feature_typing_integrity.py",
-        "L-12": "tests/conformance/test_generation_exit_type_preflight.py",
-        "L-13": "tests/conformance/test_stop_parser_documentation_contract.py",
-        "L-14": "tests/conformance/test_output_schema_contract.py",
-        "U-1": "tests/conformance/test_feature_typing_integrity.py",
-        "U-2": "tests/unit/test_expression_evidence_boundary.py",
+        "L-01": (
+            "A3/D4",
+            "Deleted descendant search; exact lineage-local result or named refusal",
+            "tests/conformance/test_definition_owned_reference_positions.py"
+            "::test_definition_owned_lineage_miss_refuses_without_descendant_search",
+            c_prod,
+        ),
+        "L-02": (
+            "A1/A2/A4, D1-D3",
+            "Exact containment address and contextual producer index",
+            "tests/conformance/test_occurrence_calc_domain_derivation.py"
+            "::test_explicit_sibling_consumer_uses_first_producer_in_its_own_repeat",
+            c_prod,
+        ),
+        "L-03": (
+            "A5/D4/D8",
+            "Pre-graph SI_INDEXED_SOURCE_UNSUPPORTED; capability separately filed",
+            "tests/conformance/test_expression_evidence_integrity.py"
+            "::test_indexed_bare_chain_singular_slot_refuses_before_consumers",
+            c_prod,
+        ),
+        "L-04": (
+            "A6/D4",
+            "Exact owner-domain multiplicity writer or named refusal",
+            "tests/conformance/test_occurrence_multiplicity_authority.py"
+            "::test_unrelated_unresolved_and_unsupported_shapes_refuse_publicly",
+            c_prod,
+        ),
+        "L-05": (
+            "B7/D4",
+            "Strict wrapper and both semantic endpoint identities",
+            "tests/unit/test_elaboration_occurrence.py"
+            "::test_redefinition_requires_wrapper_and_both_semantic_endpoints",
+            c_prod,
+        ),
+        "L-06": (
+            "B1/D5",
+            "Mapped metatype failure crosses the public evidence boundary with cause",
+            "tests/conformance/test_expression_evidence_integrity.py"
+            "::test_loaded_extractor_converts_semantic_evidence_once",
+            c_prod,
+        ),
+        "L-07": (
+            "B2/D5",
+            "Mapped expression dispatch; real subtype and ordering proof",
+            "tests/conformance/test_ast_dispatch_invariant.py"
+            "::TestReqAst01FceBeforeOe::test_fce_before_oe_all_dual_check_sites",
+            c_prod,
+        ),
+        "L-08": (
+            "B3/D5",
+            "Total operand materialization or typed evidence error",
+            "tests/conformance/test_expression_evidence_integrity.py"
+            "::test_public_exact_expression_failures_return_no_graph",
+            c_prod,
+        ),
+        "L-09": (
+            "B4/D5",
+            "Exact referent and target evidence only",
+            "tests/unit/test_expression_evidence_boundary.py"
+            "::test_cross_owner_consumers_share_one_exact_live_referent",
+            c_prod,
+        ),
+        "L-10": (
+            "B5/D6",
+            "Exact DocumentTier classification; no origin or name classifier",
+            "tests/test_sysml/test_expression.py"
+            "::test_real_standard_library_reference_is_filtered_by_document_tier",
+            a_final,
+        ),
+        "L-11": (
+            "B6/D8",
+            "Sole qualified primitive type or SI_TYPE_INVALID",
+            "tests/conformance/test_feature_typing_integrity.py"
+            "::test_root_namespace_scalar_lookalike_is_not_a_primitive",
+            c_prod,
+        ),
+        "L-12": (
+            "B9/D9",
+            "Public fail-before-mutate exit-wrapper refusal",
+            "tests/conformance/test_generation_exit_type_preflight.py"
+            "::test_public_exit_type_refusal_is_status_one_and_byte_preserving",
+            c_prod,
+        ),
+        "L-13": (
+            "Backlog only",
+            "Backlog row filed; no production behavior claimed",
+            "tests/conformance/test_stop_parser_documentation_contract.py"
+            "::test_backlog_and_product_records_preserve_force_and_current_status",
+            c_prod,
+        ),
+        "L-14": (
+            "Out of scope",
+            "Documented rendering policy preserved; no proof claimed by this item",
+            "—",
+            c_prod,
+        ),
+        "U-1": (
+            "B10/D10",
+            "Exact parser document origin; glob fallback deleted",
+            "tests/conformance/test_feature_typing_integrity.py"
+            "::test_document_origin_has_no_glob_or_model_path_fallback",
+            c_prod,
+        ),
+        "U-2": (
+            "B8/D5/D10",
+            "Real-corpus totality plus forced missing-leaf typed refusal",
+            "tests/test_sysml/test_reference_use.py"
+            "::test_a_resolved_fact_without_its_exact_leaf_can_never_be_skipped",
+            a_final,
+        ),
     }
     lines = [
         "# Stop-reinventing-the-parser reconciliation ledger",
         "",
         f"Final production identity: Codegen `{c_prod}`; Agentic `{a_final}`.",
-        "The rows below name retained final tests. They do not certify unrun cases.",
+        "The rows below name retained exact test IDs. They do not certify unrun cases.",
         "",
-        "| Row | Final proof | Production identity |",
-        "|---|---|---|",
+        "| Row | A/B mapping | Disposition | Final proof | Production identity |",
+        "|---|---|---|---|---|",
     ]
-    lines.extend(f"| {row} | `{proof}` | `{c_prod}` |" for row, proof in rows.items())
+    lines.extend(
+        f"| {row} | {mapping} | {disposition} | `{proof}` | `{identity}` |"
+        for row, (mapping, disposition, proof, identity) in rows.items()
+    )
     return "\n".join(lines) + "\n"
 
 
@@ -1458,9 +1526,7 @@ def run_battery(artifact_root: Path, evidence_output: Path) -> dict[str, object]
     provenance = _execution_provenance(artifact_root, inputs, prepared)
     provenance_path = evidence_output / "execution-provenance.json"
     provenance_path.write_text(_canonical_json(provenance))
-    runs = _committed_runs(
-        artifact_root, inputs, prepared, provenance_path
-    )
+    runs = _committed_runs(artifact_root, inputs, prepared, provenance_path)
     reports = artifact_root / "run-reports"
     reports.mkdir(exist_ok=False)
     records = [_run_one(run, artifact_root=artifact_root, report_root=reports) for run in runs]
@@ -1493,9 +1559,7 @@ def run_battery(artifact_root: Path, evidence_output: Path) -> dict[str, object]
         },
     }
     (evidence_output / "dependencies.json").write_text(_canonical_json(dependencies))
-    (evidence_output / "reconciliation-ledger.md").write_text(
-        _reconciliation_ledger(inputs)
-    )
+    (evidence_output / "reconciliation-ledger.md").write_text(_reconciliation_ledger(inputs))
     lock = build_evidence_lock(codegen_root, evidence_output)
     (evidence_output / "evidence-lock.json").write_text(_canonical_json(lock))
 

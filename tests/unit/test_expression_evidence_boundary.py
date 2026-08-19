@@ -211,14 +211,13 @@ def test_binding_consumer_backstop_refuses_an_inventory_bypassed_index() -> None
 
 def test_require_exact_binding_use_switch_is_exhaustive() -> None:
     exact_use = _exact_use()
-    assert binding_source.require_exact_binding_use(
-        ExactBindingSource(_formal(), exact_use)
-    ) is exact_use
+    assert (
+        binding_source.require_exact_binding_use(ExactBindingSource(_formal(), exact_use))
+        is exact_use
+    )
 
     with pytest.raises(SemanticEvidenceError) as caught:
-        binding_source.require_exact_binding_use(
-            IndexedBindingSource(_formal(), _indexed_use())
-        )
+        binding_source.require_exact_binding_use(IndexedBindingSource(_formal(), _indexed_use()))
     assert caught.value.code is SemanticEvidenceCode.INDEXED_REFERENCE_UNSUPPORTED
 
     for evidence in (
@@ -271,9 +270,7 @@ def test_expression_adapter_refuses_an_inventory_bypassed_index(
 ) -> None:
     site = ExpressionSite(UUID(int=34 + list(ExpressionSiteRole).index(role)), role)
     consumer = _consumer_with_inventory(site, _indexed_use())
-    consumer._pending_expressions = [
-        SimpleNamespace(site=site, consumer=object(), location=None)
-    ]
+    consumer._pending_expressions = [SimpleNamespace(site=site, consumer=object(), location=None)]
 
     with pytest.raises(SemanticEvidenceError) as caught:
         consumer._resolve_computed_expressions()
@@ -351,9 +348,7 @@ def test_elaborator_binding_classifier_switch_is_exhaustive(
 
     indexed_consumer = _consumer_with_inventory(site, indexed)
     indexed_consumer._is_reference_expression = lambda _expression: True
-    assert isinstance(
-        indexed_consumer._binding_evidence(member, object()), IndexedBindingSource
-    )
+    assert isinstance(indexed_consumer._binding_evidence(member, object()), IndexedBindingSource)
 
     unknown_consumer = _consumer_with_inventory(site, object())
     unknown_consumer._is_reference_expression = lambda _expression: True
@@ -369,8 +364,7 @@ def test_elaborator_readiness_switch_names_each_binding_variant() -> None:
 
     assert _ExactElaborator._unsupported_code(exact) is None
     assert (
-        _ExactElaborator._unsupported_code(indexed)
-        is ReadinessCode.SI_INDEXED_SOURCE_UNSUPPORTED
+        _ExactElaborator._unsupported_code(indexed) is ReadinessCode.SI_INDEXED_SOURCE_UNSUPPORTED
     )
     assert (
         _ExactElaborator._unsupported_code(expression)
@@ -815,6 +809,7 @@ def test_closed_site_enumerator_assigns_every_role_once(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """The site set and its contextual role partition are direct kept contracts."""
+
     def expression(kind: str) -> object:
         return SimpleNamespace(kind=kind)
 

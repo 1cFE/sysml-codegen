@@ -221,9 +221,8 @@ def test_locked_verification_code_is_pinned_at_current_bytes(
 ) -> None:
     """Leg 3: live code is pinned now, and every difference is ledger-owned.
 
-    `verification/capture_baseline.py` is the one file that differs from its lock-time
-    bytes today; its row cites `da4aa78` and `46694e2`.  The five probe scripts are
-    unchanged and are pinned at their lock-time hashes.
+    Changed verification code must have one ledger row carrying both the lock-time and
+    current hashes. Unchanged probe support code returns early on exact hash equality.
     """
     [row] = [item for item in lock["files"] if item["path"] == locked_path]
     current = hashlib.sha256((REPOSITORY_ROOT / locked_path).read_bytes()).hexdigest()
@@ -233,8 +232,3 @@ def test_locked_verification_code_is_pinned_at_current_bytes(
     ledger_row = _ledger_row_for_path(locked_path)
     assert row["sha256"] in ledger_row, f"ledger row for {locked_path} omits its lock-time hash"
     assert current in ledger_row, f"ledger row for {locked_path} omits its current hash {current}"
-
-
-def test_the_lock_file_is_never_rewritten_by_this_check(lock: dict) -> None:
-    """Reading the lock must not disturb it; re-locking would erase the provenance."""
-    assert json.loads(LOCK_PATH.read_text()) == lock

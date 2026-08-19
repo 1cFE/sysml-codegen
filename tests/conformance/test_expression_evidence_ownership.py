@@ -52,7 +52,6 @@ RAW_SYSIDE_MODULES = (
     "elaboration/project.py",
     "extraction/binding_source.py",
     "extraction/calc_compat_renderer.py",
-    "extraction/computed_attribute_extractor.py",
     "extraction/expression_utils.py",
     "extraction/extractor.py",
     "extraction/feature_metadata.py",
@@ -325,7 +324,7 @@ REVIEWED_ROWS: tuple[ReviewedRow, ...] = (
     ),
     ReviewedRow(
         "orchestration/elaborated_pipeline.py",
-        "elaborate_admitted_sources",
+        "_elaborate_admitted_sources",
         "referent",
         "direct",
         "codegen SourceFile.referent serialized key",
@@ -487,7 +486,6 @@ SOURCE_FILE_COLLISION_READS = {
 #: can never satisfy a live manifest row.
 OFF_ROUTE_MODULES = (
     "extraction/usage_extractor.py",
-    "extraction/computed_attribute_extractor.py",
     "extraction/hierarchy_resolver.py",
 )
 
@@ -942,7 +940,7 @@ def test_collision_rows_have_provable_receiver_contracts() -> None:
     ) == {"self.files"}
     assert _receiver_iterables(source_module, "_admitted_membership", "item") == {"files"}
     assert _receiver_iterables(
-        "orchestration/elaborated_pipeline.py", "elaborate_admitted_sources", "item"
+        "orchestration/elaborated_pipeline.py", "_elaborate_admitted_sources", "item"
     ) == {"admission.files"}
 
 

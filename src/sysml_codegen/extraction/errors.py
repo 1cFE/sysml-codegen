@@ -24,4 +24,23 @@ class ExactTypeError(ElaborationInvariantError):
         self.location = location
 
 
-__all__ = ["ExactTypeError"]
+class ExactExtractionError(ElaborationInvariantError):
+    """An authored declaration cannot form complete extraction evidence."""
+
+    def __init__(
+        self,
+        detail: str,
+        *,
+        reference: str,
+        location: tuple[str, int] | None,
+    ) -> None:
+        super().__init__(
+            ElaborationCode.SI_EVIDENCE_INCOMPLETE,
+            detail,
+            reference=reference,
+            location=location,
+        )
+        self.operation = "extract_calculation_definition"
+
+
+__all__ = ["ExactExtractionError", "ExactTypeError"]

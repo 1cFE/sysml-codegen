@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import ast
 import inspect
+import textwrap
 from pathlib import Path
 from types import SimpleNamespace
 from typing import Any
@@ -237,8 +238,13 @@ package RootTypeLookalike {
 
 def test_extractor_reads_only_the_qualified_scalar_view() -> None:
     source = inspect.getsource(SysMLDataExtractor._extract_attribute)
-    assert "QUALIFIED_SYSML_TO_PYTHON" in source
-    assert "SYSML_TO_PYTHON.get" not in source
+    names = {
+        node.id
+        for node in ast.walk(ast.parse(textwrap.dedent(source)))
+        if isinstance(node, ast.Name)
+    }
+    assert "QUALIFIED_SYSML_TO_PYTHON" in names
+    assert "SYSML_TO_PYTHON" not in names
 
 
 def test_public_extractor_kind_decisions_use_mapped_metatypes() -> None:

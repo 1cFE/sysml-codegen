@@ -11,11 +11,6 @@ from pathlib import Path
 
 import jinja2
 
-from sysml_codegen.extraction.data_models import (
-    ComputedAttributeClassification,
-    ComputedAttributeData,
-)
-from sysml_codegen.extraction.expression_compiler import Compilability
 from sysml_codegen.generation.pipeline import _module_to_context
 from sysml_codegen.generation.registry import generate_registry
 from sysml_codegen.generation.stencils import generate_backlog_report
@@ -29,30 +24,6 @@ from sysml_codegen.resolution.models import (
 # ---------------------------------------------------------------------------
 # Test helpers
 # ---------------------------------------------------------------------------
-
-
-def _make_computed_attr(
-    name: str,
-    owning_part_name: str,
-    owning_part_qn: str,
-    classification: ComputedAttributeClassification = ComputedAttributeClassification.FORMULA,
-    compilability: Compilability = Compilability.FULLY_COMPILABLE,
-    compiled_expression: str | None = None,
-) -> ComputedAttributeData:
-    if compiled_expression is None and classification == ComputedAttributeClassification.FORMULA:
-        compiled_expression = f"(inputs.{name}_input)"
-    return ComputedAttributeData(
-        name=name,
-        python_name=name,
-        owning_part_name=owning_part_name,
-        owning_part_qualified_name=owning_part_qn,
-        expression_ast=None,
-        expression_text=f"{name} expression",
-        references=[],
-        classification=classification,
-        compilability=compilability,
-        compiled_expression=compiled_expression,
-    )
 
 
 def _make_pipeline_module(

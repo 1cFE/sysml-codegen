@@ -43,6 +43,8 @@ def test_closed_fixture_inventory() -> None:
 def test_b8_probe_has_no_post_gate_evidence_dependency() -> None:
     source = (PROBES / "b8_resolved_fact_totality.py").read_text()
     assert "SemanticEvidence" not in source
+    assert "feature_chain_facts(" not in source
+    assert "inspect_reference_uses" in source
     assert "missing_leaf_count" in source
     assert '"REAL_CORPUS_TOTAL"' in source
 
@@ -67,3 +69,23 @@ def test_b10_normalizes_real_source_admission_string_referents() -> None:
     assert referents == ["root-0/design.sysml", "root-0/library.sysml"]
     assert all(type(referent) is str for referent in referents)
     assert [b10._root_relative_referent(referent) for referent in referents] == referents
+
+
+def test_b10_uses_the_current_document_origin_api() -> None:
+    source = (PROBES / "b10_document_origin.py").read_text()
+    assert "model_paths=" not in source
+    assert "_source_file(feature)" in source
+
+
+def test_changed_probe_bytes_require_an_exact_transition_row(tmp_path: Path) -> None:
+    support = _load("probe_support")
+    ledger = tmp_path / "expected-transitions.md"
+    locked = "a" * 64
+    current = "b" * 64
+    relative = ".project/probe.py"
+    ledger.write_text(
+        f"| `{relative}` | `{locked}` | `{current}` | fix round | port |\n"
+    )
+
+    assert support._ledger_owns_transition(ledger, relative, locked, current)
+    assert not support._ledger_owns_transition(ledger, relative, locked, "c" * 64)

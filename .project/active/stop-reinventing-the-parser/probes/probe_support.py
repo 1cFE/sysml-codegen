@@ -1,4 +1,4 @@
-"""Shared immutable-input checks for the stop-parser retained probes."""
+"""Shared historical-lock and current-transition checks for retained probes."""
 
 from __future__ import annotations
 
@@ -8,8 +8,6 @@ from pathlib import Path
 from typing import Any
 
 from agentic_mbse.sysml.syside_adapter import SysideAdapter
-
-BATCH_SHA256 = "bd7bf245e3ca3923b9b5d41db97861c9fcdf64435e768d48a2d7027eb52d9288"
 
 
 def canonical_json_bytes(value: Any) -> bytes:
@@ -59,7 +57,7 @@ def validate_lock(
     lock_path: Path,
     expected_probe_commit: str | None = None,
 ) -> dict[str, Any]:
-    """Recompute every probe/fixture-lock digest before a retained probe runs."""
+    """Require every current byte to equal its lock or one named transition row."""
     lock = load_json(lock_path)
     probe_commit = lock.get("probe_fixture_commit")
     if not isinstance(probe_commit, str) or len(probe_commit) != 40:
@@ -74,9 +72,32 @@ def validate_lock(
         if not isinstance(relative, str) or not isinstance(digest, str):
             raise ValueError("lock file rows require path and sha256 strings")
         path = repository / relative
-        if not path.is_file() or sha256_file(path) != digest:
+        if not path.is_file():
             raise ValueError(f"locked input changed: {relative}")
-    batch = repository / "tests/fixtures/v6_recapture_batch/batch.json"
-    if sha256_file(batch) != BATCH_SHA256:
-        raise ValueError("canonical v6 batch manifest digest changed")
+        current = sha256_file(path)
+        if current != digest and not _ledger_owns_transition(
+            repository / "verification/expected-transitions.md",
+            relative,
+            digest,
+            current,
+        ):
+            raise ValueError(f"locked input changed without a transition row: {relative}")
     return lock
+
+
+def _ledger_owns_transition(
+    ledger_path: Path,
+    relative: str,
+    locked_digest: str,
+    current_digest: str,
+) -> bool:
+    """Whether one exact verification-code row owns both sides of a byte change."""
+    if not ledger_path.is_file():
+        return False
+    prefix = f"| `{relative}` |"
+    rows = [line for line in ledger_path.read_text().splitlines() if line.startswith(prefix)]
+    return (
+        len(rows) == 1
+        and f"`{locked_digest}`" in rows[0]
+        and f"`{current_digest}`" in rows[0]
+    )

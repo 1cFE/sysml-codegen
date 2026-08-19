@@ -107,9 +107,7 @@ def load_source_manifest(path: Path) -> dict[str, dict[str, Any]]:
     except (OSError, json.JSONDecodeError) as error:
         raise ArtifactContractError(f"cannot read source manifest {path}: {error}") from error
     if payload.get("schema_version") != SOURCE_SCHEMA_VERSION:
-        raise ArtifactContractError(
-            f"source manifest schema must be {SOURCE_SCHEMA_VERSION!r}"
-        )
+        raise ArtifactContractError(f"source manifest schema must be {SOURCE_SCHEMA_VERSION!r}")
     rows = payload.get("repositories")
     if not isinstance(rows, dict) or set(rows) != set(REPOSITORY_NAMES):
         raise ArtifactContractError(
@@ -174,9 +172,7 @@ def _git_archive(repository: Path, commit: str, prefix: str, output: Path) -> No
     _run(*command)
 
 
-def _git_history_bundle(
-    repository: Path, commits: dict[str, str], output: Path
-) -> None:
+def _git_history_bundle(repository: Path, commits: dict[str, str], output: Path) -> None:
     """Write a deterministic v2 bundle for the closed retained commit inventory."""
     header_rows = ["# v2 git bundle"]
     for name, commit in sorted(commits.items()):
@@ -207,9 +203,7 @@ def _git_history_bundle(
         raise ArtifactContractError(f"cannot write codegen history bundle: {error}") from error
     if result.returncode != 0:
         detail = result.stderr.decode(errors="replace").strip()
-        raise ArtifactContractError(
-            f"codegen history pack failed: {detail or result.returncode}"
-        )
+        raise ArtifactContractError(f"codegen history pack failed: {detail or result.returncode}")
 
 
 def _deterministic_history_bundle(
@@ -229,9 +223,7 @@ def _deterministic_history_bundle(
     }
 
 
-def _extract_history_bundle(
-    bundle: Path, destination: Path, commits: dict[str, str]
-) -> Path:
+def _extract_history_bundle(bundle: Path, destination: Path, commits: dict[str, str]) -> Path:
     """Create a no-checkout history root that cannot expose workspace link targets."""
     _run("git", "init", "--quiet", str(destination))
     _run("git", "-C", str(destination), "bundle", "unbundle", str(bundle))
@@ -258,9 +250,7 @@ def _extract_history_bundle(
             "git", "-C", str(destination), "rev-parse", f"{retained_commit}^{{commit}}"
         )
         if actual_retained != retained_commit:
-            raise ArtifactContractError(
-                f"history bundle omitted {name}={retained_commit}"
-            )
+            raise ArtifactContractError(f"history bundle omitted {name}={retained_commit}")
     return destination
 
 
@@ -324,9 +314,7 @@ def _extract_archive(
     with tarfile.open(archive, "r:") as bundle:
         names = bundle.getnames()
         if not names or any(
-            Path(name).is_absolute()
-            or ".." in Path(name).parts
-            or Path(name).parts[0] != prefix
+            Path(name).is_absolute() or ".." in Path(name).parts or Path(name).parts[0] != prefix
             for name in names
         ):
             raise ArtifactContractError(f"source archive has an unsafe or wrong prefix: {archive}")
@@ -494,18 +482,11 @@ def build_artifacts(
                 raise ArtifactContractError(f"source archive is not deterministic for {name}")
         archive_hash = _sha256(archive)
         pinned_archive_hash = row.get("expected_archive_sha256")
-        if pinned_archive_hash is not None:
-            with tempfile.TemporaryDirectory(
-                prefix=f"stop-parser-{name}-source-pin-"
-            ) as temporary:
-                unprefixed = Path(temporary) / archive_name
-                _git_archive(repository, commit, "", unprefixed)
-                actual_source_hash = _sha256(unprefixed)
-            if actual_source_hash != pinned_archive_hash:
-                raise ArtifactContractError(
-                    f"unprefixed source archive hash mismatch for {name}: "
-                    f"expected {pinned_archive_hash}, found {actual_source_hash}"
-                )
+        if pinned_archive_hash is not None and archive_hash != pinned_archive_hash:
+            raise ArtifactContractError(
+                f"shipped source archive hash mismatch for {name}: "
+                f"expected {pinned_archive_hash}, found {archive_hash}"
+            )
         extracted_parent = extracts / name
         excluded_unsafe_links = _excluded_unsafe_links(archive, prefix)
         extracted = _extract_archive(
@@ -555,7 +536,7 @@ def build_artifacts(
                 "prefix": prefix,
                 "sha256": archive_hash,
                 "excluded_unsafe_links": excluded_unsafe_links,
-                "unprefixed_git_archive_sha256": pinned_archive_hash,
+                "external_archive_sha256": pinned_archive_hash,
             },
             "extracted_root": f"extracted/{name}/{prefix}",
             "wheel": wheel_record,

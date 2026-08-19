@@ -56,3 +56,6 @@ class ReadinessFinding:
     usage_qualified_name: str
     param_name: str
     detail: str
+    reference: str | None = None
+    source_file: str | None = None
+    source_line: int | None = None

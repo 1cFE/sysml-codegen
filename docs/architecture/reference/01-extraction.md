@@ -106,16 +106,8 @@ Part definitions model the structural hierarchy. Literal attribute values like
 `voltage = 48.0` become design attributes -- user-configurable inputs in the
 generated pipeline. See [17-parameter-group-deriver](17-parameter-group-deriver.md).
 
-**Note**: [ComputedAttributeData](16-computed-attributes.md) is also produced
-during extraction (from PartDef attribute expressions). See doc 16 for details.
-
-> **Known limitation**: PartDefinitionData does not currently include
-> **supertype chain information** (ancestor PartDef QNs). This data is needed
-> by the downstream computed attribute classifier to correctly classify
-> inherited attribute references as sibling refs instead of external calc refs.
-> SysIDE provides supertype information via `part_element.types`, but it is not
-> extracted or stored. See [16-computed-attributes](16-computed-attributes.md)
-> Known Issues §Inherited Attribute Misclassification.
+Computed attributes are not classified in this extraction layer. The exact elaborator walks
+their expressions directly; see [computed attributes](16-computed-attributes.md).
 
 ### 4. Hierarchy Data ([HierarchyExtractionResult](09-data-models.md#extraction-models))
 

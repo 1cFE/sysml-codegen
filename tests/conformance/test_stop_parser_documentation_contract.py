@@ -105,6 +105,29 @@ def test_transition_record_is_total_and_hashed() -> None:
     assert "pre-change-baseline.json" in transitions
 
 
+def test_every_transition_test_citation_resolves_to_a_retained_file() -> None:
+    from verification.artifact_sources import agentic_source_root
+
+    transitions = _read("verification/expected-transitions.md")
+    citations = re.findall(
+        r"^\| (?:A5[ab]|A[1-6]|B1-B5|B6/B7|B8|B9|B10) .*?\| `([^`]+)` \| `[0-9a-f]{40}` \|$",
+        transitions,
+        re.MULTILINE,
+    )
+    assert len(citations) == len(TRANSITIONS)
+    agentic_root: Path | None = None
+    for cell in citations:
+        for citation in cell.split("; "):
+            file_name = citation.split("::", 1)[0]
+            if file_name.startswith("agentic-mbse/"):
+                if agentic_root is None:
+                    agentic_root = agentic_source_root(ROOT)
+                path = agentic_root / file_name.removeprefix("agentic-mbse/")
+            else:
+                path = ROOT / file_name
+            assert path.is_file(), citation
+
+
 def test_probe_inventory_and_transitioned_batch_are_separate_contracts() -> None:
     manifest = json.loads(_read("verification/fixture-manifest.json"))
 

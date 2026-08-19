@@ -47,8 +47,8 @@ def _witnesses(model: Any, expected: dict[Path, str]) -> list[dict[str, str]]:
         referent = expected.get(document_path)
         if referent is None:
             continue
-        exact = _source_file(feature, model_paths=[Path("deliberately/not/a/source.sysml")])
-        unit = extract_feature_unit(feature, model_paths=[document_path])
+        exact = _source_file(feature)
+        unit = extract_feature_unit(feature)
         if unit is not None:
             if exact is None or exact.resolve() != document_path:
                 raise RuntimeError("source lookup did not preserve the parser document")
