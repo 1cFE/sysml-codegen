@@ -156,6 +156,19 @@ def test_post_change_output_diff_has_only_named_metadata_and_a_b_rows() -> None:
     }
 
 
+def test_dead_computed_attribute_classifier_and_its_golden_are_absent() -> None:
+    retired = (
+        "src/sysml_codegen/extraction/computed_attribute_extractor.py",
+        "tests/conformance/test_computed_attribute_golden.py",
+        "tests/conformance/test_silent_failure_d316.py",
+        "tests/fixtures/golden/computed_attribute_golden.json",
+    )
+    assert all(not (ROOT / relative).exists() for relative in retired)
+    assert "classifier and its golden were retired" in _read(
+        "verification/expected-transitions.md"
+    )
+
+
 def test_backlog_and_product_records_preserve_force_and_current_status() -> None:
     backlog = _read(".project/backlog/BACKLOG.md")
     product = _read(".project/product/P-003-no-workarounds-for-bad-models.md")

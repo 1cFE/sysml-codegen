@@ -4,11 +4,20 @@ from __future__ import annotations
 
 import hashlib
 import json
+from pathlib import Path
 
 import pytest
+from agentic_mbse import SemanticEvidenceCode, SemanticEvidenceError
 
-from sysml_codegen.elaboration import NodeRef, ProjectionError, project
+from sysml_codegen.elaboration import (
+    ElaborationCode,
+    ElaborationDiagnosticError,
+    NodeRef,
+    ProjectionError,
+    project,
+)
 from sysml_codegen.extraction.extractor import SysMLDataExtractor
+from sysml_codegen.orchestration.elaborated_pipeline import elaborate_model_paths
 from sysml_codegen.snapshot.instance_graph import (
     InstanceGraphCodecError,
     decode_instance_graph,
@@ -58,8 +67,37 @@ def test_graph_codec_rejects_foreign_schema_and_tampered_fingerprint() -> None:
         decode_instance_graph(payload.replace(b'"fingerprint":"', b'"fingerprint":"0'))
 
 
-def test_graph_codec_preserves_blocking_diagnostics() -> None:
-    extractor = SysMLDataExtractor([FIXTURES_DIR / "elab_fail_closed_probe"])
+def test_unsupported_invocation_refuses_before_graph_codec() -> None:
+    with pytest.raises(ElaborationDiagnosticError) as raised:
+        elaborate_model_paths([FIXTURES_DIR / "elab_fail_closed_probe"], strict=False)
+
+    [diagnostic] = raised.value.diagnostics
+    assert diagnostic.code is ElaborationCode.SI_EXPRESSION_SOURCE_UNSUPPORTED
+    assert diagnostic.reference == "Doubler(value = source)"
+    assert diagnostic.source_file == "root-0/model.sysml"
+    assert diagnostic.source_line == 21
+    rendered = str(raised.value)
+    assert rendered.count("SI_EXPRESSION_SOURCE_UNSUPPORTED") == 1
+    assert "root-0/model.sysml:21" in rendered
+    assert "/tmp/" not in rendered
+    cause = raised.value.__cause__
+    assert isinstance(cause, SemanticEvidenceError)
+    assert cause.code is SemanticEvidenceCode.EXPRESSION_KIND_UNSUPPORTED
+
+
+def test_graph_codec_preserves_alias_cycle_diagnostics(tmp_path: Path) -> None:
+    (tmp_path / "model.sysml").write_text(
+        """package AliasCycleCodecProbe {
+    private import ScalarValues::*;
+    part def Probe {
+        attribute alias_a : Real = alias_b;
+        attribute alias_b : Real = alias_a;
+    }
+    part probe : Probe;
+}
+"""
+    )
+    extractor = SysMLDataExtractor([tmp_path])
     assert extractor.load_models()
     live = elaborate(
         extractor.model,

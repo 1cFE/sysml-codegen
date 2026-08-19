@@ -43,6 +43,10 @@ from sysml_codegen.elaboration.elaborate import (
 )
 from sysml_codegen.elaboration.graph import GraphValidationError, InstanceGraph
 from sysml_codegen.elaboration.project import PROJECTOR_SEMANTICS, ProjectionError, project
+from sysml_codegen.orchestration.diagnostic_context import (
+    model_source_context,
+    snapshot_source_context,
+)
 from sysml_codegen.resolution.models import ComputationGraph
 from sysml_codegen.snapshot.instance_graph import (
     InstanceGraphCodecError,
@@ -284,14 +288,13 @@ def build_exact_pipeline_context(
     except (CodeGenerationError, ElaborationDiagnosticError, ElaborationError):
         raise
     except Exception as error:
-        reference, source_file, source_line = _model_source_context(model_paths)
+        reference, source_file, source_line = model_source_context(model_paths)
         raise unexpected_public_failure(
             error,
             reference=reference,
             source_file=source_file,
             source_line=source_line,
         ) from error
-
 
 def build_exact_pipeline_context_from_snapshot(
     snapshot_path: Path,
@@ -322,42 +325,10 @@ def build_exact_pipeline_context_from_snapshot(
     ):
         raise
     except Exception as error:
-        reference, source_file, source_line = _snapshot_source_context(snapshot_path)
+        reference, source_file, source_line = snapshot_source_context(snapshot_path)
         raise unexpected_public_failure(
             error,
             reference=reference,
             source_file=source_file,
             source_line=source_line,
         ) from error
-
-
-def _model_source_context(
-    model_paths: Sequence[Path],
-) -> tuple[str, str | None, int | None]:
-    """Return the first portable authored source named by caller model roots."""
-    for ordinal, root in enumerate(model_paths):
-        candidates = [root] if root.is_file() else sorted(root.rglob("*.sysml"))
-        if not candidates:
-            continue
-        source = candidates[0]
-        relative = source.name if root.is_file() else source.relative_to(root).as_posix()
-        referent = f"root-{ordinal}/{relative}"
-        return referent, referent, 1
-    return "<model>", None, None
-
-
-def _snapshot_source_context(snapshot_path: Path) -> tuple[str, str | None, int | None]:
-    """Read only the first sealed source referent for an unexpected snapshot failure."""
-    try:
-        document = json.loads(snapshot_path.read_text())
-        files = document["sources"]["files"]
-        referents = sorted(
-            item["referent"]
-            for item in files
-            if isinstance(item, dict) and isinstance(item.get("referent"), str)
-        )
-    except (KeyError, TypeError, json.JSONDecodeError, OSError, UnicodeError):
-        referents = []
-    if not referents:
-        return "<snapshot>", None, None
-    return referents[0], referents[0], 1

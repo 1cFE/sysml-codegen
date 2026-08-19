@@ -108,12 +108,13 @@ def test_attachment_reports_no_cause_when_scopes_exist():
     assert cause is None
 
 
-def test_unmapped_owner_kind_refuses_by_name():
+def test_unmapped_owner_kind_refuses_without_a_python_class_name():
     with pytest.raises(ElaborationInvariantError) as raised:
         _ExactElaborator._owner_kind(_UnmappedOwner())
     assert raised.value.code is ElaborationCode.SI_CONSTRAINT_UNATTACHED
-    assert "_UnmappedOwner" in raised.value.detail
-    assert "closed owner-kind map" in raised.value.detail
+    assert "supported mapped metatype" in raised.value.detail
+    assert "Somewhere::exotic" in raised.value.detail
+    assert "_UnmappedOwner" not in raised.value.detail
 
 
 def test_mapped_owner_kinds_keep_their_graded_spellings():

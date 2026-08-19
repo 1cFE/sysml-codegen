@@ -304,6 +304,10 @@ def elaborate_loaded_extractor(
             for diagnostic in error.diagnostics
         )
         raise ElaborationDiagnosticError(graph_diagnostics) from error
+    except CodeGenerationError:
+        # This is already a formed public refusal (for example the established
+        # empty-model error). Preserve its code, type, message, and caller routing.
+        raise
     except Exception as error:
         reference, source_file, source_line = _nearest_model_context(source_referents)
         raise unexpected_public_failure(

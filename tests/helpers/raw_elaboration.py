@@ -58,7 +58,7 @@ def elaborate(
         code = (
             ElaborationCode.SI_INDEXED_SOURCE_UNSUPPORTED
             if error.code.name == "INDEXED_REFERENCE_UNSUPPORTED"
-            else ElaborationCode.SI_EVIDENCE_INCOMPLETE
+            else ElaborationCode.SI_EXPRESSION_SOURCE_UNSUPPORTED
         )
         diagnostic = Diagnostic(
             code=code,

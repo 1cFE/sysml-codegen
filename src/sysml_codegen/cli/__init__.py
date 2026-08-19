@@ -907,7 +907,7 @@ def cmd_snapshot(args: argparse.Namespace) -> int:
         unexpected_public_failure,
     )
     from sysml_codegen.generation import SysMLParsingError
-    from sysml_codegen.orchestration.exact_pipeline_context import _model_source_context
+    from sysml_codegen.orchestration.diagnostic_context import model_source_context
     from sysml_codegen.snapshot.capture import capture_instance_graph_snapshot
     from sysml_codegen.snapshot.envelope import (
         InstanceGraphSnapshotError,
@@ -942,7 +942,7 @@ def cmd_snapshot(args: argparse.Namespace) -> int:
         logger.error(f"Snapshot could not be written: {error}")
         return 1
     except Exception as error:
-        reference, source_file, source_line = _model_source_context((models_path,))
+        reference, source_file, source_line = model_source_context((models_path,))
         diagnostic = unexpected_public_failure(
             error,
             reference=reference,
@@ -1183,9 +1183,11 @@ def run_codegen(config: GenerationConfig) -> bool:
         unexpected_public_failure,
     )
     from sysml_codegen.generation import CodeGenerationError, SysMLParsingError
+    from sysml_codegen.orchestration.diagnostic_context import (
+        model_source_context,
+        snapshot_source_context,
+    )
     from sysml_codegen.orchestration.exact_pipeline_context import (
-        _model_source_context,
-        _snapshot_source_context,
         build_exact_pipeline_context,
         build_exact_pipeline_context_from_snapshot,
     )
@@ -1230,10 +1232,10 @@ def run_codegen(config: GenerationConfig) -> bool:
         return False
     except Exception as error:
         if config.from_snapshot is not None:
-            reference, source_file, source_line = _snapshot_source_context(config.from_snapshot)
+            reference, source_file, source_line = snapshot_source_context(config.from_snapshot)
         else:
             assert config.models_path is not None
-            reference, source_file, source_line = _model_source_context((config.models_path,))
+            reference, source_file, source_line = model_source_context((config.models_path,))
         diagnostic = unexpected_public_failure(
             error,
             reference=reference,
@@ -1248,10 +1250,10 @@ def run_codegen(config: GenerationConfig) -> bool:
         return _generate_package_from_graph(graph, config)
     except Exception as error:
         if config.from_snapshot is not None:
-            reference, source_file, source_line = _snapshot_source_context(config.from_snapshot)
+            reference, source_file, source_line = snapshot_source_context(config.from_snapshot)
         else:
             assert config.models_path is not None
-            reference, source_file, source_line = _model_source_context((config.models_path,))
+            reference, source_file, source_line = model_source_context((config.models_path,))
         diagnostic = unexpected_public_failure(
             error,
             reference=reference,
