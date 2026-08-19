@@ -523,9 +523,9 @@ EXPECTED_RUNS: dict[str, dict[str, Any]] = {
     "agentic-focused": {
         "status": 0,
         "counts": {
-            "collected": 841,
-            "selected": 841,
-            "passed": 840,
+            "collected": 846,
+            "selected": 846,
+            "passed": 845,
             "failed": 0,
             "errors": 0,
             "skipped": 1,
@@ -536,9 +536,9 @@ EXPECTED_RUNS: dict[str, dict[str, Any]] = {
     "agentic-fast": {
         "status": 0,
         "counts": {
-            "collected": 1923,
-            "selected": 1918,
-            "passed": 1917,
+            "collected": 1928,
+            "selected": 1923,
+            "passed": 1922,
             "failed": 0,
             "errors": 0,
             "skipped": 1,
@@ -593,12 +593,12 @@ EXPECTED_RUNS: dict[str, dict[str, Any]] = {
     "codegen-default": {
         "status": 0,
         "counts": {
-            "collected": 2639,
-            "selected": 2545,
-            "passed": 2511,
+            "collected": 2627,
+            "selected": 2533,
+            "passed": 2524,
             "failed": 0,
             "errors": 0,
-            "skipped": 34,
+            "skipped": 9,
             "xfailed": 0,
             "deselected": 94,
         },
