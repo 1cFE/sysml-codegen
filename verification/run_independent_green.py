@@ -240,6 +240,16 @@ def _node_id(case: ET.Element) -> str:
             common += 1
         owner = class_parts[common:]
         return "::".join([file_name, *owner, name])
+    if class_name:
+        parts = class_name.split(".")
+        owner_start = next(
+            (index for index, part in enumerate(parts) if part[:1].isupper()),
+            len(parts),
+        )
+        module_path = parts[:owner_start]
+        owner = parts[owner_start:]
+        if module_path:
+            return "::".join(["/".join(module_path) + ".py", *owner, name])
     return "::".join(part for part in (class_name, name) if part)
 
 
@@ -349,9 +359,11 @@ def _run_one(
         raise IndependentRunError(f"{run_id}: cwd is outside or absent from the artifact root")
     environment = os.environ.copy()
     environment["PYTHONPATH"] = ""
-    environment["PATH"] = os.pathsep.join(
-        (str(Path(str(run.get("python") or command[0])).resolve().parent), os.defpath)
-    )
+    tool_paths = [str(Path(str(run.get("python") or command[0])).parent)]
+    uv = shutil.which("uv")
+    if uv is not None:
+        tool_paths.append(str(Path(uv).parent))
+    environment["PATH"] = os.pathsep.join((*tool_paths, os.defpath))
     environment["UV_OFFLINE"] = "1"
     environment["UV_NO_SYNC"] = "1"
     additions = run.get("environment", {})
@@ -952,13 +964,19 @@ def _skip_policies(run_id: str) -> list[dict[str, str]]:
     policies = {
         "agentic-focused": [
             {
-                "node_id": r"tests/test_sysml/test_adr002\.py::test_real_fusion_model.*",
+                "node_id": (
+                    r"tests/test_sysml/test_adr002\.py::"
+                    r"test_real_model_expose_patterns_exempt"
+                ),
                 "reason": r"Requires fusion_modeling CATF models not in this repo",
             }
         ],
         "agentic-fast": [
             {
-                "node_id": r"tests/test_sysml/test_adr002\.py::test_real_fusion_model.*",
+                "node_id": (
+                    r"tests/test_sysml/test_adr002\.py::"
+                    r"test_real_model_expose_patterns_exempt"
+                ),
                 "reason": r"Requires fusion_modeling CATF models not in this repo",
             }
         ],
@@ -970,6 +988,10 @@ def _skip_policies(run_id: str) -> list[dict[str, str]]:
         ],
         "codegen-default": [
             {
+                "node_id": r"tests/conformance/test_calc_compat_parity\.py::.*",
+                "reason": r".*: no calc output expressions in the golden",
+            },
+            {
                 "node_id": r"tests/conformance/test_computed_attribute_golden\.py::.*",
                 "reason": r".*: no computed attributes in the golden",
             }
@@ -978,6 +1000,17 @@ def _skip_policies(run_id: str) -> list[dict[str, str]]:
             {
                 "node_id": r"tests/scoring_v2/test_spec_conformance\.py::.*",
                 "reason": r"KNOWN_DRIFTS carve-out: .*",
+            },
+            {
+                "node_id": r"tests/models/test_foundation\.py::.*",
+                "reason": r"(?:types|units|materials)\.sysml not found",
+            },
+            {
+                "node_id": (
+                    r"tests/models/test_power_balance\.py::TestPowerBalanceParsing::"
+                    r"test_power_balance_parses_without_errors"
+                ),
+                "reason": r"No power balance files found",
             },
             {
                 "node_id": (

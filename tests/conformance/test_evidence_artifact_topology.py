@@ -11,6 +11,7 @@ import hashlib
 import json
 import subprocess
 import sys
+import xml.etree.ElementTree as ET
 import zipfile
 from pathlib import Path
 
@@ -452,18 +453,25 @@ def test_run_one_puts_its_isolated_python_on_subprocess_path(
 ) -> None:
     reports = tmp_path / "reports"
     reports.mkdir()
+    isolated_python = tmp_path / "isolated/bin/python"
+    isolated_python.parent.mkdir(parents=True)
+    isolated_python.symlink_to(sys.executable)
     monkeypatch.setenv("PATH", "")
     counts = {field: 0 for field in run_independent_green.COUNT_FIELDS}
     record = run_independent_green._run_one(
         {
             "id": "subprocess-python",
             "command": [
-                sys.executable,
+                str(isolated_python),
                 "-c",
-                "import subprocess; subprocess.run(['python', '-V'], check=True)",
+                (
+                    "import shutil,sys; "
+                    "assert shutil.which('python') == sys.argv[1], shutil.which('python')"
+                ),
+                str(isolated_python),
             ],
             "cwd": ".",
-            "python": sys.executable,
+            "python": str(isolated_python),
             "environment": {},
             "expected_status": 0,
             "expected_counts": counts,
@@ -569,6 +577,18 @@ def test_run_record_counts_pytest_errors_separately_from_failures(tmp_path: Path
     record["counts"] = counts | {"errors": 0, "failed": 1}
     with pytest.raises(run_independent_green.IndependentRunError, match="measured counts"):
         run_independent_green.validate_run_record(record)
+
+
+def test_junit_dotted_classname_becomes_a_stable_pytest_node_id() -> None:
+    case = ET.Element(
+        "testcase",
+        classname="tests.test_mirror.TestModelIntegration",
+        name="test_forward",
+    )
+
+    assert run_independent_green._node_id(case) == (
+        "tests/test_mirror.py::TestModelIntegration::test_forward"
+    )
 
 
 def test_lock_covers_five_siblings_and_two_production_files(tmp_path: Path) -> None:
