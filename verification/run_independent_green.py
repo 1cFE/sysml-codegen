@@ -721,29 +721,30 @@ def _prepare_environment(
     agentic_wheel = _input_artifact(artifact_root, inputs, "agentic", "wheel")
     codegen_wheel = _input_artifact(artifact_root, inputs, "codegen", "wheel")
     costingfe_wheel = _input_artifact(artifact_root, inputs, "costingfe", "wheel")
-    seeds = [
+    local_wheels = [
         f"agentic-mbse[extract-full,web] @ {agentic_wheel.as_uri()}",
         codegen_wheel.as_uri(),
         costingfe_wheel.as_uri(),
-        "pytest==8.4.2",
-        "mypy==1.19.1",
-        "ruff==0.12.0",
-        "types-PyYAML",
-        "fastapi>=0.128.0",
-        "uvicorn[standard]>=0.40.0",
-        "httpx>=0.28.1",
-        "matplotlib>=3.10.8",
-        "numpy>=2.4.0",
-        "pyzotero>=1.10.0",
-        "python-dotenv>=1.2.1",
-        "graphviz>=0.21",
-        "jinja2>=3.1.6",
-        "pydantic>=2",
-        "pyyaml>=6.0.3",
-        "markdown>=3.10.2",
-        "pandas>=1.5",
-        "pyarrow>=12",
     ]
+    fusion = _input_root(artifact_root, inputs, "fusion")
+    exported = private / "fusion-locked-requirements.txt"
+    _run_checked(
+        [
+            uv,
+            "export",
+            "--frozen",
+            "--no-emit-project",
+            "--no-emit-package",
+            "agentic-mbse",
+            "--no-emit-package",
+            "sysml-codegen",
+            "--no-emit-package",
+            "1costingfe",
+            "--output-file",
+            str(exported),
+        ],
+        cwd=fusion,
+    )
     _run_checked(
         [
             uv,
@@ -760,7 +761,9 @@ def _prepare_environment(
             "--only-binary=:all:",
             "--extra-index-url",
             "https://gitlab.com/api/v4/projects/69960816/packages/pypi/simple",
-            *seeds,
+            "--requirement",
+            str(exported),
+            *local_wheels,
         ]
     )
     inventory = _write_wheelhouse_requirements(wheelhouse, requirements)
