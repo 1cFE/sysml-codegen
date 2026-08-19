@@ -43,6 +43,7 @@ def _identity_root(
     roots: dict[str, Any],
     name: str,
     *,
+    artifact_root: Path,
     hash_field: str,
     package: str | None = None,
 ) -> tuple[Path, str, str]:
@@ -53,6 +54,21 @@ def _identity_root(
         raise ExecutionProvenanceError(f"roots.{name}.commit must be a full commit SHA")
     if not isinstance(digest, str) or _SHA256.fullmatch(digest) is None:
         raise ExecutionProvenanceError(f"roots.{name}.{hash_field} must be a SHA-256")
+    raw_artifact = row.get("artifact_path")
+    if not isinstance(raw_artifact, str) or not raw_artifact:
+        raise ExecutionProvenanceError(
+            f"roots.{name}.artifact_path must be a non-empty path"
+        )
+    artifact = Path(raw_artifact).expanduser().resolve()
+    if not artifact.is_relative_to(artifact_root) or not artifact.is_file():
+        raise ExecutionProvenanceError(
+            f"roots.{name}.artifact_path is outside the artifact root: {artifact}"
+        )
+    actual_digest = hashlib.sha256(artifact.read_bytes()).hexdigest()
+    if actual_digest != digest:
+        raise ExecutionProvenanceError(
+            f"roots.{name} artifact hash mismatch: expected {digest}, found {actual_digest}"
+        )
     raw_path = row.get("path")
     if not isinstance(raw_path, str) or not raw_path:
         raise ExecutionProvenanceError(f"roots.{name}.path must be a non-empty path")
@@ -86,6 +102,14 @@ def load_execution_provenance(
         raise ExecutionProvenanceError(
             f"execution provenance schema must be {SCHEMA_VERSION}"
         )
+    raw_artifact_root = record.get("artifact_root")
+    if not isinstance(raw_artifact_root, str) or not raw_artifact_root:
+        raise ExecutionProvenanceError("artifact_root must be a non-empty path")
+    artifact_root = Path(raw_artifact_root).expanduser().resolve()
+    if not artifact_root.is_dir():
+        raise ExecutionProvenanceError(
+            f"artifact_root is not a directory: {artifact_root}"
+        )
     python = _object(record.get("python"), label="python")
     executable = python.get("executable")
     version = python.get("version")
@@ -103,16 +127,31 @@ def load_execution_provenance(
     }:
         raise ExecutionProvenanceError("roots must contain the four closed artifact roots")
     codegen, _codegen_commit, _codegen_hash = _identity_root(
-        roots, "codegen_source", hash_field="archive_sha256", package="sysml_codegen"
+        roots,
+        "codegen_source",
+        artifact_root=artifact_root,
+        hash_field="archive_sha256",
+        package="sysml_codegen",
     )
     agentic, _agentic_commit, _agentic_hash = _identity_root(
-        roots, "agentic_install", hash_field="wheel_sha256", package="agentic_mbse"
+        roots,
+        "agentic_install",
+        artifact_root=artifact_root,
+        hash_field="wheel_sha256",
+        package="agentic_mbse",
     )
     teax, teax_commit, teax_hash = _identity_root(
-        roots, "teax_source", hash_field="archive_sha256"
+        roots,
+        "teax_source",
+        artifact_root=artifact_root,
+        hash_field="archive_sha256",
     )
     simkit, simkit_commit, simkit_hash = _identity_root(
-        roots, "teax_simkit", hash_field="archive_sha256", package="simkit"
+        roots,
+        "teax_simkit",
+        artifact_root=artifact_root,
+        hash_field="archive_sha256",
+        package="simkit",
     )
     if not simkit.is_relative_to(teax):
         raise ExecutionProvenanceError("the simkit root is outside the recorded TEAx source")

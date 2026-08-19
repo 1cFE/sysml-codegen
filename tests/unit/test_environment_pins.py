@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 from pathlib import Path
 
@@ -34,11 +35,24 @@ def _manifest(tmp_path: Path) -> tuple[Path, dict[str, str]]:
         "agentic_mbse": str(_package(agentic, "agentic_mbse")),
         "simkit": str(_package(simkit, "simkit")),
     }
+    artifacts = {
+        "codegen": tmp_path / "artifacts/codegen.tar",
+        "agentic": tmp_path / "artifacts/agentic.whl",
+        "teax": tmp_path / "artifacts/teax.tar",
+    }
+    for name, path in artifacts.items():
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(name.encode())
+    digests = {
+        name: hashlib.sha256(path.read_bytes()).hexdigest()
+        for name, path in artifacts.items()
+    }
     manifest = tmp_path / "execution-provenance.json"
     manifest.write_text(
         json.dumps(
             {
                 "schema_version": "stop-parser-execution-provenance/v1",
+                "artifact_root": str((tmp_path / "artifacts").resolve()),
                 "python": {
                     "executable": resolved["python"],
                     "version": "3.12.3",
@@ -47,22 +61,26 @@ def _manifest(tmp_path: Path) -> tuple[Path, dict[str, str]]:
                     "codegen_source": {
                         "path": str(codegen),
                         "commit": "a" * 40,
-                        "archive_sha256": "1" * 64,
+                        "artifact_path": str(artifacts["codegen"]),
+                        "archive_sha256": digests["codegen"],
                     },
                     "agentic_install": {
                         "path": str(agentic),
                         "commit": "b" * 40,
-                        "wheel_sha256": "2" * 64,
+                        "artifact_path": str(artifacts["agentic"]),
+                        "wheel_sha256": digests["agentic"],
                     },
                     "teax_source": {
                         "path": str(teax),
                         "commit": "c" * 40,
-                        "archive_sha256": "3" * 64,
+                        "artifact_path": str(artifacts["teax"]),
+                        "archive_sha256": digests["teax"],
                     },
                     "teax_simkit": {
                         "path": str(simkit),
                         "commit": "c" * 40,
-                        "archive_sha256": "3" * 64,
+                        "artifact_path": str(artifacts["teax"]),
+                        "archive_sha256": digests["teax"],
                     },
                 },
             },
@@ -146,4 +164,26 @@ def test_manifest_rejects_non_hash_artifact_identity(tmp_path: Path) -> None:
     manifest.write_text(json.dumps(payload))
 
     with pytest.raises(ExecutionProvenanceError, match="archive_sha256"):
+        load_execution_provenance({CODEGEN_EXECUTION_PROVENANCE: str(manifest)})
+
+
+def test_manifest_rejects_a_well_formed_but_wrong_artifact_hash(tmp_path: Path) -> None:
+    manifest, _resolved = _manifest(tmp_path)
+    payload = json.loads(manifest.read_text())
+    payload["roots"]["agentic_install"]["wheel_sha256"] = "f" * 64
+    manifest.write_text(json.dumps(payload))
+
+    with pytest.raises(ExecutionProvenanceError, match="artifact hash mismatch"):
+        load_execution_provenance({CODEGEN_EXECUTION_PROVENANCE: str(manifest)})
+
+
+def test_manifest_rejects_an_artifact_outside_the_manifest_directory(tmp_path: Path) -> None:
+    manifest, _resolved = _manifest(tmp_path)
+    payload = json.loads(manifest.read_text())
+    outside = tmp_path.parent / "unowned-codegen.tar"
+    outside.write_bytes(b"codegen")
+    payload["roots"]["codegen_source"]["artifact_path"] = str(outside)
+    manifest.write_text(json.dumps(payload))
+
+    with pytest.raises(ExecutionProvenanceError, match="artifact root"):
         load_execution_provenance({CODEGEN_EXECUTION_PROVENANCE: str(manifest)})

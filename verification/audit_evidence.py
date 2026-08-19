@@ -409,7 +409,58 @@ def _verify_fusion_pins(
         raise EvidenceAuditError("Fusion run used a different codegen wheel hash")
 
 
-def _verify_lock_and_runs(repository: Path) -> None:
+def verify_retained_run_artifacts(artifact_root: Path, record: dict[str, Any]) -> None:
+    """Recompute the three retained subprocess/probe files for one run."""
+    run_id = record.get("id", "<unnamed>")
+    retained_paths: dict[str, Path] = {}
+    for field in ("stdout", "stderr", "import_probe"):
+        retained = record.get(field)
+        if not isinstance(retained, dict):
+            raise EvidenceAuditError(f"{run_id}: retained {field} record is missing")
+        path = _artifact_path(
+            artifact_root,
+            retained.get("path"),
+            label=f"{run_id} retained {field}",
+        )
+        if _sha256(path) != retained.get("sha256"):
+            raise EvidenceAuditError(f"{run_id}: retained {field} hash mismatch")
+        retained_paths[field] = path
+    normalized = (
+        retained_paths["stdout"].read_text()
+        + "\n"
+        + retained_paths["stderr"].read_text()
+    ).replace(str(artifact_root.resolve()), "<ARTIFACT_ROOT>")
+    if hashlib.sha256(normalized.encode()).hexdigest() != record.get("output_sha256"):
+        raise EvidenceAuditError(f"{run_id}: normalized output hash mismatch")
+
+
+def _verify_wheelhouse(
+    repository: Path, artifact_root: Path, dependencies: dict[str, Any]
+) -> None:
+    wheelhouse = dependencies.get("wheelhouse")
+    if not isinstance(wheelhouse, dict):
+        raise EvidenceAuditError("dependencies.json omits the wheelhouse")
+    relative = Path(str(wheelhouse.get("directory", "")))
+    if relative.is_absolute() or ".." in relative.parts:
+        raise EvidenceAuditError("wheelhouse directory must be artifact-root-relative")
+    root = artifact_root / relative
+    files = wheelhouse.get("files")
+    if not isinstance(files, dict) or not files:
+        raise EvidenceAuditError("wheelhouse inventory is empty")
+    actual = {path.name: _sha256(path) for path in root.glob("*.whl")}
+    if actual != files:
+        raise EvidenceAuditError("wheelhouse file inventory/hash mismatch")
+    requirements = repository / "verification/wheelhouse-requirements.txt"
+    for filename, digest in files.items():
+        name = filename.partition("-")[0].replace("_", "-")
+        text = requirements.read_text()
+        if name not in text or f"--hash=sha256:{digest}" not in text:
+            raise EvidenceAuditError(
+                f"wheelhouse requirements omit {filename} and its exact hash"
+            )
+
+
+def _verify_lock_and_runs(repository: Path, artifact_root: Path) -> None:
     lock = _load_json(repository / "verification/evidence-lock.json")
     if lock.get("schema_version") != "stop-parser-evidence-lock/v1":
         raise EvidenceAuditError("evidence-lock.json has the wrong schema")
@@ -432,6 +483,18 @@ def _verify_lock_and_runs(repository: Path) -> None:
         raise EvidenceAuditError("independent-green.json has the wrong schema")
     if set(report.get("input_repositories", [])) != set(build_artifacts.REPOSITORY_NAMES):
         raise EvidenceAuditError("independent-green.json does not cover five inputs")
+    if report.get("artifact_build_sha256") != _sha256(
+        artifact_root / "artifact-build.json"
+    ):
+        raise EvidenceAuditError("independent-green artifact-build hash mismatch")
+    runner = report.get("committed_runner")
+    if not isinstance(runner, dict):
+        raise EvidenceAuditError("independent-green omits its committed runner")
+    runner_path = _artifact_path(
+        artifact_root, runner.get("path"), label="committed runner"
+    )
+    if _sha256(runner_path) != runner.get("sha256"):
+        raise EvidenceAuditError("committed runner hash mismatch")
     runs = report.get("runs")
     if not isinstance(runs, list) or not runs:
         raise EvidenceAuditError("independent-green.json contains no runs")
@@ -440,6 +503,9 @@ def _verify_lock_and_runs(repository: Path) -> None:
             run_independent_green.validate_run_record(record)
         except run_independent_green.IndependentRunError as error:
             raise EvidenceAuditError(str(error)) from error
+        verify_retained_run_artifacts(artifact_root, record)
+    dependencies = _load_json(repository / "verification/dependencies.json")
+    _verify_wheelhouse(repository, artifact_root, dependencies)
     ledger = (repository / "verification/reconciliation-ledger.md").read_text()
     required = {*(f"L-{number:02d}" for number in range(1, 15)), "U-1", "U-2"}
     missing = sorted(row for row in required if row not in ledger)
@@ -479,7 +545,7 @@ def audit(
     _verify_fusion_pins(root, artifact_root, inputs, production, evidence)
     fusion_pin = "PASS"
 
-    _verify_lock_and_runs(root)
+    _verify_lock_and_runs(root, artifact_root)
     artifacts_and_lock = "PASS"
     return {
         "parent_and_paths": boundary,

@@ -245,6 +245,7 @@ def test_run_record_refuses_sibling_import(tmp_path: Path) -> None:
             "selected": 1,
             "passed": 1,
             "failed": 0,
+            "errors": 0,
             "skipped": 0,
             "xfailed": 0,
             "deselected": 0,
@@ -254,6 +255,7 @@ def test_run_record_refuses_sibling_import(tmp_path: Path) -> None:
             "selected": 1,
             "passed": 1,
             "failed": 0,
+            "errors": 0,
             "skipped": 0,
             "xfailed": 0,
             "deselected": 0,
@@ -287,6 +289,7 @@ def test_run_record_refuses_unexpected_skip(tmp_path: Path) -> None:
             "selected": 2,
             "passed": 1,
             "failed": 0,
+            "errors": 0,
             "skipped": 1,
             "xfailed": 0,
             "deselected": 0,
@@ -296,6 +299,7 @@ def test_run_record_refuses_unexpected_skip(tmp_path: Path) -> None:
             "selected": 2,
             "passed": 1,
             "failed": 0,
+            "errors": 0,
             "skipped": 1,
             "xfailed": 0,
             "deselected": 0,
@@ -329,6 +333,7 @@ def test_run_record_accepts_closed_counts_and_imports(tmp_path: Path) -> None:
             "selected": 2,
             "passed": 1,
             "failed": 0,
+            "errors": 0,
             "skipped": 1,
             "xfailed": 0,
             "deselected": 0,
@@ -338,6 +343,7 @@ def test_run_record_accepts_closed_counts_and_imports(tmp_path: Path) -> None:
             "selected": 2,
             "passed": 1,
             "failed": 0,
+            "errors": 0,
             "skipped": 1,
             "xfailed": 0,
             "deselected": 0,
@@ -380,6 +386,73 @@ def test_nonzero_baseline_requires_its_exact_output_hash(tmp_path: Path) -> None
     }
 
     with pytest.raises(run_independent_green.IndependentRunError, match="baseline output"):
+        run_independent_green.validate_run_record(record)
+
+
+def test_a_retained_run_output_mutation_is_rejected(tmp_path: Path) -> None:
+    stdout = tmp_path / "run-reports/example.stdout"
+    stderr = tmp_path / "run-reports/example.stderr"
+    probe = tmp_path / "run-reports/example.imports.json"
+    stdout.parent.mkdir()
+    stdout.write_text("green\n")
+    stderr.write_text("")
+    probe.write_text("[]\n")
+    record = {
+        "id": "example",
+        "output_sha256": hashlib.sha256(b"green\n\n").hexdigest(),
+        "stdout": {
+            "path": str(stdout.relative_to(tmp_path)),
+            "sha256": hashlib.sha256(stdout.read_bytes()).hexdigest(),
+        },
+        "stderr": {
+            "path": str(stderr.relative_to(tmp_path)),
+            "sha256": hashlib.sha256(stderr.read_bytes()).hexdigest(),
+        },
+        "import_probe": {
+            "path": str(probe.relative_to(tmp_path)),
+            "sha256": hashlib.sha256(probe.read_bytes()).hexdigest(),
+        },
+    }
+
+    audit_evidence.verify_retained_run_artifacts(tmp_path, record)
+    stdout.write_text("mutated\n")
+    with pytest.raises(audit_evidence.EvidenceAuditError, match="stdout hash mismatch"):
+        audit_evidence.verify_retained_run_artifacts(tmp_path, record)
+
+
+def test_run_record_counts_pytest_errors_separately_from_failures(tmp_path: Path) -> None:
+    root = tmp_path / "artifact"
+    root.mkdir()
+    counts = {
+        "collected": 1,
+        "selected": 1,
+        "passed": 0,
+        "failed": 0,
+        "errors": 1,
+        "skipped": 0,
+        "xfailed": 0,
+        "deselected": 0,
+    }
+    record = {
+        "id": "collection-error",
+        "command": [sys.executable, "-m", "pytest", "tests"],
+        "executed_command": [sys.executable, "-m", "pytest", "tests", "-ra"],
+        "status": 1,
+        "expected_status": 1,
+        "counts": counts,
+        "expected_counts": counts,
+        "output_sha256": "0" * 64,
+        "expected_output_sha256": "0" * 64,
+        "allowed_skips": [],
+        "observed_skips": [],
+        "unexpected_skips": [],
+        "import_roots": [str(root)],
+        "import_files": [],
+    }
+
+    run_independent_green.validate_run_record(record)
+    record["counts"] = counts | {"errors": 0, "failed": 1}
+    with pytest.raises(run_independent_green.IndependentRunError, match="measured counts"):
         run_independent_green.validate_run_record(record)
 
 
@@ -598,22 +671,39 @@ def test_builder_cli_creates_five_closed_source_artifacts(
     assert extracted_internal_link.read_text() == "agentic\n"
 
 
-def test_independent_green_cli_stages_exact_six_files(tmp_path: Path) -> None:
+def test_independent_green_refuses_external_run_staging(tmp_path: Path) -> None:
     artifact_root = tmp_path / "artifacts"
-    codegen_root = artifact_root / "codegen-source"
-    verification = codegen_root / "verification"
-    verification.mkdir(parents=True)
+    artifact_root.mkdir()
+    (artifact_root / "run-contract.json").write_text(
+        json.dumps({"runs": [{"status": 0, "output_sha256": "0" * 64}]})
+    )
+    evidence = tmp_path / "evidence"
+
+    with pytest.raises(run_independent_green.IndependentRunError, match="external run staging"):
+        run_independent_green.run_battery(artifact_root, evidence)
+
+
+def test_committed_runner_stages_exactly_six_evidence_files(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    artifact_root = tmp_path / "artifacts"
+    artifact_root.mkdir()
+    inputs: dict[str, dict[str, object]] = {}
+    for index, name in enumerate(build_artifacts.REPOSITORY_NAMES, start=1):
+        root = artifact_root / f"extracted/{name}/tree"
+        root.mkdir(parents=True)
+        inputs[name] = {
+            "commit": str(index) * 40,
+            "extracted_root": str(root.relative_to(artifact_root)),
+            "archive": {"sha256": str(index) * 64},
+            "wheel": {"sha256": str(index) * 64},
+        }
+    codegen = artifact_root / str(inputs["codegen"]["extracted_root"])
+    verification = codegen / "verification"
+    verification.mkdir()
     (verification / "probe-fixture-lock.json").write_text("{}\n")
     (verification / "expected-transitions.md").write_text("# transitions\n")
-    (codegen_root / "test_green.py").write_text("def test_green():\n    assert True\n")
-    (artifact_root / "requirements.txt").write_text(
-        "example==1.0 --hash=sha256:" + "0" * 64 + "\n"
-    )
-    (artifact_root / "ledger.md").write_text("# staged reconciliation\n")
-    inputs = {
-        name: {"commit": str(index) * 40}
-        for index, name in enumerate(build_artifacts.REPOSITORY_NAMES, start=1)
-    }
+    (verification / "run_independent_green.py").write_text("# committed runner\n")
     (artifact_root / "artifact-build.json").write_text(
         json.dumps(
             {
@@ -622,70 +712,100 @@ def test_independent_green_cli_stages_exact_six_files(tmp_path: Path) -> None:
             }
         )
     )
-    (artifact_root / "run-contract.json").write_text(
-        json.dumps(
-            {
-                "schema_version": run_independent_green.CONTRACT_SCHEMA_VERSION,
-                "runs": [
-                    {
-                        "id": "green",
-                        "command": [sys.executable, "-m", "pytest", "test_green.py"],
-                        "cwd": "codegen-source",
-                        "environment": {},
-                        "expected_status": 0,
-                        "expected_counts": {
-                            "collected": 1,
-                            "selected": 1,
-                            "passed": 1,
-                            "failed": 0,
-                            "skipped": 0,
-                            "xfailed": 0,
-                            "deselected": 0,
-                        },
-                        "allowed_skips": [],
-                        "import_roots": [str(codegen_root.resolve())],
-                        "import_files": [],
-                    }
-                ],
-                "python": {"version": sys.version.split()[0]},
-                "syside": {"version": "test"},
-                "wheelhouse": {"status": "fixture"},
-                "wheelhouse_requirements": "requirements.txt",
-                "execution_provenance": {"installed_artifacts": {}},
-                "reconciliation_ledger": "ledger.md",
-                "codegen_source_root": "codegen-source",
-            }
-        )
-    )
     evidence = tmp_path / "evidence"
+    wheelhouse = artifact_root / "fixture-wheelhouse"
+    wheelhouse.mkdir()
 
-    assert (
-        run_independent_green.main(
-            ["--artifact-root", str(artifact_root), "--evidence-output", str(evidence)]
+    def prepare(_root: Path, output: Path, _inputs):
+        (output / "wheelhouse-requirements.txt").write_text(
+            "example==1.0 --hash=sha256:" + "0" * 64 + "\n"
         )
-        == 0
+        return {
+            "python": Path(sys.executable),
+            "versions": {"python": "3.12", "syside": "0.8.4"},
+            "wheelhouse": wheelhouse,
+            "wheelhouse_inventory": {"example.whl": "0" * 64},
+            "freeze": ["example==1.0"],
+        }
+
+    monkeypatch.setattr(run_independent_green, "_prepare_environment", prepare)
+    monkeypatch.setattr(
+        run_independent_green,
+        "_execution_provenance",
+        lambda *_args: {"schema_version": "stop-parser-execution-provenance/v1"},
     )
-    assert {path.name for path in evidence.iterdir()} == {
-        *run_independent_green.EVIDENCE_SIBLINGS,
-        "evidence-lock.json",
-    }
-    report = json.loads((evidence / "independent-green.json").read_text())
-    assert report["runs"][0]["command"] == [
-        sys.executable,
-        "-m",
-        "pytest",
-        "test_green.py",
-    ]
-    assert "-ra" in report["runs"][0]["executed_command"]
-    assert any(
-        item.startswith("--junitxml=") for item in report["runs"][0]["executed_command"]
+    monkeypatch.setattr(
+        run_independent_green,
+        "_committed_runs",
+        lambda *_args: [{"id": "green"}],
     )
-    assert report["runs"][0]["counts"] == {
+    counts = {
         "collected": 1,
         "selected": 1,
         "passed": 1,
         "failed": 0,
+        "errors": 0,
         "skipped": 0,
         "xfailed": 0,
         "deselected": 0,
+    }
+    monkeypatch.setattr(
+        run_independent_green,
+        "_run_one",
+        lambda *_args, **_kwargs: {
+            "id": "green",
+            "command": [sys.executable, "-m", "pytest", "test_green.py"],
+            "executed_command": [
+                sys.executable,
+                "-m",
+                "pytest",
+                "test_green.py",
+                "-ra",
+            ],
+            "status": 0,
+            "expected_status": 0,
+            "counts": counts,
+            "expected_counts": counts,
+            "output_sha256": "0" * 64,
+            "expected_output_sha256": None,
+            "skip_policies": [],
+            "allowed_skips": [],
+            "observed_skips": [],
+            "unexpected_skips": [],
+            "import_roots": [str(codegen)],
+            "import_files": [],
+        },
+    )
+
+    run_independent_green.run_battery(artifact_root, evidence)
+
+    assert {path.name for path in evidence.iterdir()} == {
+        *run_independent_green.EVIDENCE_SIBLINGS,
+        "evidence-lock.json",
+    }
+
+
+def test_committed_runner_inventory_covers_every_required_lane() -> None:
+    assert set(run_independent_green.REQUIRED_RUN_IDS) == {
+        "agentic-focused",
+        "agentic-fast",
+        "agentic-strict",
+        "agentic-mypy-baseline",
+        "agentic-ruff-baseline",
+        "costingfe-pytest",
+        "costingfe-ruff",
+        "teax-pytest",
+        "codegen-strict",
+        "codegen-mypy-baseline",
+        "codegen-default",
+        "codegen-live-snapshot",
+        "codegen-generated-package",
+        "codegen-execution",
+        "fusion-lock-check",
+        "fusion-pytest",
+        "fusion-models-primary",
+        "fusion-models-exploration",
+        "fusion-generated-execution",
+        "fusion-ruff",
+        "fusion-mypy",
     }
