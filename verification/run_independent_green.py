@@ -588,14 +588,14 @@ EXPECTED_RUNS: dict[str, dict[str, Any]] = {
     "codegen-mypy-baseline": {
         "status": 1,
         "counts": ZERO_COUNTS,
-        "output_sha256": "451f08fee774f2522f16bb58ea1b6b8131fcd5a01cfd8782e6f81c73cfb1ea8f",
+        "output_sha256": "76ea65714858850c985a4ded9788f518c196d5ee4456e35258558ae2b49c90c6",
     },
     "codegen-default": {
         "status": 0,
         "counts": {
-            "collected": 2627,
-            "selected": 2533,
-            "passed": 2524,
+            "collected": 2645,
+            "selected": 2551,
+            "passed": 2542,
             "failed": 0,
             "errors": 0,
             "skipped": 9,
