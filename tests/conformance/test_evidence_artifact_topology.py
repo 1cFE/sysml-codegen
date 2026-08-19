@@ -190,6 +190,23 @@ def test_wheel_identity_refuses_wrong_version_or_hash(
         )
 
 
+def test_wheelhouse_uses_own_metadata_when_wheel_vendors_a_distribution(
+    tmp_path: Path,
+) -> None:
+    wheel = tmp_path / "example-1.0.0-py3-none-any.whl"
+    with zipfile.ZipFile(wheel, "w") as archive:
+        archive.writestr(
+            "example-1.0.0.dist-info/METADATA",
+            "Metadata-Version: 2.3\nName: example\nVersion: 1.0.0\n",
+        )
+        archive.writestr(
+            "example/_vendor/vendored-2.0.0.dist-info/METADATA",
+            "Metadata-Version: 2.3\nName: vendored\nVersion: 2.0.0\n",
+        )
+
+    assert run_independent_green._wheel_identity(wheel) == ("example", "1.0.0")
+
+
 def test_deterministic_wheel_creates_its_missing_output_directory(tmp_path: Path) -> None:
     source = tmp_path / "source"
     package = source / "src/audit_wheel_probe"

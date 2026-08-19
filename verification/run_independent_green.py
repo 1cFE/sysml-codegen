@@ -665,10 +665,14 @@ def _input_artifact(
 def _wheel_identity(path: Path) -> tuple[str, str]:
     try:
         with zipfile.ZipFile(path) as archive:
-            names = [name for name in archive.namelist() if name.endswith(".dist-info/METADATA")]
+            names = [
+                name
+                for name in archive.namelist()
+                if name.endswith(".dist-info/METADATA") and name.count("/") == 1
+            ]
             if len(names) != 1:
                 raise IndependentRunError(
-                    f"wheel has {len(names)} METADATA files: {path}"
+                    f"wheel has {len(names)} top-level METADATA files: {path}"
                 )
             message = email.message_from_bytes(archive.read(names[0]))
     except (OSError, zipfile.BadZipFile) as error:
