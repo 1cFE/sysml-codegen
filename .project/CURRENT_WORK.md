@@ -1,6 +1,29 @@
 # Current Work
 
-**Last Updated**: 2026-08-19 (**stop-reinventing-the-parser: AUDIT FIXES IMPLEMENTED; REPLACEMENT
+**Last Updated**: 2026-08-19 (**stop-reinventing-the-parser: AUDIT-FIX CHAIN RE-AUDITED — verdict
+`Needs Work` (rev 2).** `.project/active/stop-reinventing-the-parser/audit.md`. Eight of ten rev-1
+findings are fixed and the replacement chain verifies end to end: topology, every artifact and
+evidence hash, the four-group auditor (still refuses a byte-mutated wheel), counts recomputed from
+the retained JUnit for all ten pytest lanes, 210 licensed tests passing with zero skips at
+`C_prod-r2`, and both retained probes re-executed. The invocation regression is genuinely closed —
+pre-graph refusal with code, authored text and exact line, plurality by the reload-stable `sum`
+declaration UUID. B6, the reconciliation ledger, the evidence self-comparisons, the probes, and the
+dead computed-attribute classifier are all fixed. **What still blocks:** the catch-all that made
+refusals total stamps every unclassified failure with the model-facing `SI_EVIDENCE_INCOMPLETE` and
+a fabricated location (first `.sysml` found, line 1). Measured: a plain syntax error at line 17
+reports as `unexpected internal failure: SysMLParsingError … [root-0/model.sysml:1]` because
+`SysMLParsingError` is missing from the passthrough tuple at `exact_pipeline_context.py:288` while
+the sibling tuple one frame down has it; and a failure caused by one file is cited against a
+different, valid file. Three rev-1 provenance shapes were never repaired
+(`SI_REDEFINITION_INVALID`, the `item def` arm of `SI_CONSTRAINT_UNATTACHED`, the capture-arm
+staging path), and three more codes share the gap. Fix is narrow: one exception tuple, one
+internal-defect code, no fabricated locations, provenance on the named raise sites. Do not close,
+run pre-PR, or unblock `elaborator-downstream`. Replacement identities: Agentic `A_final-r2`
+`443388823f0db46c14df1728d3843d0a74ee7590`, Codegen `C_prod-r2`
+`22348458baa5aec314850cc6fcc8d1e90355ce58`, Fusion `F_final-r2`
+`8460d0cdf76e04fd4f4be146d52f2e0fef009a98`, `C_evidence-r2`
+`4ea1e8cdd98257d11ca8ef37a595b64392929bd9`; prior chain preserved at `evidence-chain-r1`.**).
+Prior status: 2026-08-19 (**stop-reinventing-the-parser: AUDIT FIXES IMPLEMENTED; REPLACEMENT
 CHAIN READY FOR INDEPENDENT AUDIT.** The four blocking findings and all six DISPOSE-grade follow-ups
 are implemented. The five stale tests now pin the pre-graph public refusal at full strength; formed
 public refusals, including the established empty-model error, cross the catch-all seam unchanged;

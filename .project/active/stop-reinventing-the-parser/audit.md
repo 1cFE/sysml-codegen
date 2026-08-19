@@ -1,5 +1,179 @@
 # Audit: Exact occurrence derivation and evidence integrity
 
+**Verdict:** Needs Work (re-audit, rev 2)
+**Re-audited:** 2026-08-19
+**Re-audited chain:** `A_final-r2` `443388823f0db46c14df1728d3843d0a74ee7590`; `C_prod-r2`
+`22348458baa5aec314850cc6fcc8d1e90355ce58`; `F_final-r2` `8460d0cdf76e04fd4f4be146d52f2e0fef009a98`;
+`C_evidence-r2` `4ea1e8cdd98257d11ca8ef37a595b64392929bd9`; artifacts
+`/tmp/stop-parser-rev2/artifacts-final-r3`. Prior chain preserved at `evidence-chain-r1`.
+
+---
+
+## Re-audit summary (2026-08-19)
+
+**Eight of the ten rev-1 findings are fixed, including three of the four blockers, and the
+replacement evidence chain verifies end to end.** The invocation regression is genuinely gone: an
+unsupported invocation now refuses pre-graph with its code, the authored text, and an exact
+root-relative line, and plurality is decided by the reload-stable declaration UUID of
+`NumericalFunctions::sum` rather than the function's name. B6 reads the qualified-only view. The
+reconciliation ledger is machine-generated with A/B and disposition columns and node-level
+citations that all resolve. The dead computed-attribute classifier is deleted rather than
+carve-out-patched.
+
+**The one blocker that remains is the same one, moved.** Making refusals total was done with a
+catch-all that stamps every unclassified failure with `SI_EVIDENCE_INCOMPLETE` — a model-facing
+code — plus a *fabricated* location: the first `.sysml` file found under the first model root, line
+`1`. All four provenance elements are then syntactically present, which is why the new totality test
+passes, and all four can be wrong. Two measured consequences, both new in this range:
+
+- A plain SysML **syntax error** is now reported as `unexpected internal failure: SysMLParsingError`
+  at line 1, because `SysMLParsingError` is missing from one passthrough tuple
+  (`orchestration/exact_pipeline_context.py:288`) while its sibling one frame down has it
+  (`orchestration/elaborated_pipeline.py:82-85`). At `21e09af`, one commit before the repair, the
+  same model said `SysML parsing failed`. The CLI's own `except SysMLParsingError` handler is dead
+  on this route.
+- A failure caused by one file is **cited against a different, innocent file**. Measured: a
+  valid `aaa_fine.sysml` beside an unreadable `zzz_broken.sysml` produces
+  `SI_EVIDENCE_INCOMPLETE: root-0/aaa_fine.sysml … [root-0/aaa_fine.sysml:1]`, with the real
+  offender visible only inside a raw Python exception string carrying an absolute private path.
+
+Alongside that, three rev-1 provenance shapes were never repaired (`SI_REDEFINITION_INVALID`, the
+`item def` arm of `SI_CONSTRAINT_UNATTACHED`, the capture arm's staging-path leak), and the
+adversarial pass found three more codes with the same gap. The fix made the common paths honest and
+the uncommon ones plausible-looking, which is harder to catch than the original silence.
+
+## Re-audit dispositions — rev-1 findings
+
+| Rev-1 finding | Disposition |
+|---|---|
+| 1 — invocation refuses post-graph; plurality by name | **FIXED.** Verified on the public route: `SI_EXPRESSION_SOURCE_UNSUPPORTED: max(cell.capital_cost, 1.0): reference='max(cell.capital_cost, 1.0)': inspect_reference_uses: invocation of 'NumericalFunctions::max' is valid SysML but is not supported by this executable subset … [root-0/model.sysml:24]`. Plurality is `SysideAdapter.element_id(function) == _STANDARD_SUM_FUNCTION_ID` (agentic `reference_use.py:379-392`), the same UUID the retired `C_base` guard used. Refusal is raised inside the inventory, which runs before extraction and before graph construction (`orchestration/elaborated_pipeline.py:229-231`). |
+| 2 — provenance not a boundary property | **PARTIALLY FIXED; still blocking.** The two committed-fixture tracebacks and the readiness lane are fixed with all four elements. `SI_REDEFINITION_INVALID` (`elaboration/occurrence.py:279`) still names nothing; the `item def` arm of `SI_CONSTRAINT_UNATTACHED` (`elaboration/elaborate.py:769-773`) still prints a raw `syside.core.QualifiedName([...])` with no location; the capture arm still leaks `/tmp/sysml-codegen-sources-…` on parse-time refusals. See Re-audit findings R1–R3. |
+| 3 — B6 permissive type table | **FIXED.** `extraction/extractor.py:367` reads `QUALIFIED_SYSML_TO_PYTHON`; a real-model root-namespace `Real` lookalike refuses (`tests/conformance/test_feature_typing_integrity.py:214`), with an AST guard beside it. |
+| 4 — two `type(...).__name__` decisions | **FIXED.** The fail-open one at `extraction/extractor.py:246` now uses the mapped metatype; the constraint-owner one is routed through `SysideAdapter.is_instance`. Its test is a source-substring assertion, so the guard is weaker than the fix. |
+| 5 — segment-count carve-out in a dead classifier | **FIXED by deletion.** `extraction/computed_attribute_extractor.py` and its golden are gone; nothing under `src/` imported it, and its absence is pinned. Residual: `ComputedAttributeClassification` / `ComputedAttributeData` survive in `extraction/data_models.py:195,233` with no producer or consumer. |
+| 6 — closure matrix asserts unearned force | **NOT ADDRESSED.** Carried. |
+| 7 — `adr002` URL substring + class name + `return True` | **NOT ADDRESSED.** Carried. |
+| 8 — reconciliation ledger | **FIXED.** Now six columns, machine-generated by the committed runner (`verification/run_independent_green.py:1377`), all 16 rows carrying node-level citations that collect, dispositions matching the design census row for row, and L-05/L-13/L-14 corrected on their own terms. `expected-transitions.md`'s two bad citations are fixed too. |
+| 9 — evidence self-comparisons | **FIXED, one residual.** Counts are recomputed from the retained JUnit at audit time; the probe-lock self-read is deleted; the archive pin compares the shipped bytes; `-I` is restored; the `costingfe` skip policy names six files. Residual: `REQUIRED_RUN_IDS == tuple(EXPECTED_RUNS)` is a tautology by construction. |
+| 10 — retained probes cannot run | **FIXED.** Both execute against the final API and reproduce their committed verdicts byte for byte. Residual R6 below. |
+
+## Re-audit findings
+
+**R1 — The catch-all fabricates provenance and mislabels the party at fault. (blocking)**
+
+`elaboration/elaborate.py:157-178` (`unexpected_public_failure`) stamps every unclassified failure
+with `SI_EVIDENCE_INCOMPLETE` and a location from `orchestration/diagnostic_context.py:10-22`, which
+returns the first `.sysml` file found and the literal line `1`. Nothing about the actual failure
+feeds either. Two measured cases:
+
+```text
+ERROR: Model failed exact-route validation: SI_EVIDENCE_INCOMPLETE: root-0/aaa_fine.sysml:
+reference='root-0/aaa_fine.sysml': unexpected internal failure: PermissionError: [Errno 13]
+Permission denied: '…/zzz_broken.sysml' [root-0/aaa_fine.sysml:1]
+```
+
+```text
+ERROR: Model failed exact-route validation: SI_EVIDENCE_INCOMPLETE: root-0/model.sysml:
+reference='root-0/model.sysml': unexpected internal failure: SysMLParsingError: Failed to load
+SysML models from: […] [root-0/model.sysml:1]
+```
+
+The second is a user's syntax error at line 17. Cause: `SysMLParsingError` is a bare `Exception`
+(`core/errors.py:21`) and is absent from the passthrough tuple at
+`orchestration/exact_pipeline_context.py:288`, though present in the sibling tuple at
+`orchestration/elaborated_pipeline.py:82-85`; the CLI's dedicated handler at `cli/__init__.py:1224`
+is dead on this route. Verified new against `21e09af`, which said `SysML parsing failed`.
+
+A fabricated citation is worse than an absent one: it is indistinguishable in form from a real one,
+and the new totality test accepts it because all four fields are non-empty. What should change: add
+`SysMLParsingError` to that tuple; give an internal defect its own code rather than the model-facing
+`SI_EVIDENCE_INCOMPLETE`; and emit no location at all when there is no real one.
+
+**R2 — Three rev-1 provenance shapes were never repaired, and three more codes share the gap.
+(blocking, same family as R1)**
+
+- `SI_REDEFINITION_INVALID` — `elaboration/occurrence.py:279` raises without `reference=` or
+  `location=`, though the class accepts both (`occurrence.py:45-61`). Output names neither the
+  attribute nor the two definitions. Seven further `ElaborationInvariantError` sites in
+  `elaboration/elaborate.py` (461, 828, 896, 974, 1158, 1254, 1721) have the same omission.
+- `SI_CONSTRAINT_UNATTACHED` — fixed for a mapped owner; the `item def` arm still reaches
+  `elaboration/elaborate.py:769-773` and prints `syside.core.QualifiedName(['…','Payload'])` with no
+  location. The totality test's `"syside.core.QualifiedName" not in detail` assertion covers only
+  the fixed fixture.
+- Capture arm — a parse-time refusal still prints `/tmp/sysml-codegen-sources-…/root-0/model.sysml:17`,
+  a staging path that no longer exists when the user reads it.
+- New: `SI_RENDERING_COLLISION` names the rendered channel but neither authored name and no
+  location; `SI_CONTAINMENT_RECURSIVE` reports a bare UUID; and the whole preflight/generation
+  family (`cli/__init__.py:229,243,291,356-401,443-461`, `generation/entry_point.py:146`,
+  `generation/modules.py:175`) raises bare-message `CodeGenerationError`s with no code token and no
+  location. The messages are actionable, so this last group is the least severe.
+
+What should change: make the four elements a property enforced at the boundary for every reachable
+code, and have the totality test enumerate the codes rather than list eight scenarios by hand.
+
+**R3 — The new totality test cannot fail closed. (DISPOSE, but it is what let R1/R2 through)**
+
+`tests/conformance/test_public_diagnostic_totality.py` asserts all four elements for the cases it
+covers and would fail if they were stripped — but it enumerates nothing, so a new code or a new
+raise site is covered by nothing, and both R1 cases pass it cleanly. Nine of its fourteen tests need
+no license and run on `SimpleNamespace` fakes; six plant a `RuntimeError` and none plants the
+`AttributeError`/`KeyError` shapes the claim is about.
+`test_constraint_owner_classification_uses_mapped_metatypes` (`:187`) asserts on
+`inspect.getsource` text, so a correct rewrite under a different helper name fails it and a broken
+one containing the right substring passes.
+
+**R4 — The stack is destroyed at the CLI seam, and a test now requires that. (DISPOSE)**
+
+`cli/__init__.py:944,1233,1251` catch bare `Exception`, format the diagnostic into a log line, and
+return; `__cause__` is not set there and there is no `exc_info` or debug flag. The pre-fix comment
+said the opposite was deliberate ("a programming defect … now propagates to the CLI boundary with
+its traceback"). `assert "Traceback" not in caplog.text` at `test_public_diagnostic_totality.py:63,
+280,305` now pins the loss.
+
+**R5 — The `sum` UUID's reload stability is asserted, not established. (DISPOSE)**
+
+`reference_use.py:58` calls it "reload-stable" while `SysideAdapter.element_id`'s own docstring
+disclaims reload stability. No test pins `6d745ea3-…` against a live standard-library reload. If
+SysIDE re-mints stdlib ids, `sum` silently stops aggregating. Also `elaboration/project.py:689`
+still compares `function_qn != ["NumericalFunctions", "sum"]` — a spelling test, harmless because it
+sits downstream of the identity gate, but the same pattern the item removes.
+
+**R6 — Evidence residuals. (DISPOSE)**
+
+The `b8` probe's missing-leaf gate is dead code: `ExactSemanticPath.leaf` is non-optional, so
+`missing_leaf_count: 0` is structurally guaranteed and the totality verdict carries no information.
+Both re-run probe verdicts silently dropped six provenance keys (`codegen_commit`,
+`probe_lock_sha256`, `repeat_output_sha256`, …) that a sibling verdict still carries, without a
+schema bump. The auditor's new ledger-citation check is a substring test
+(`verification/audit_evidence.py:555-559`), strictly weaker than the collecting checker. And the
+"189 citations collect" claim is about the Gate-4A retirement ledger, not the reconciliation ledger
+— zero of the 16 reconciliation rows are in that set, and the record places the two side by side.
+
+## Re-audit certification
+
+Verified independently by recomputation, not read from the record: the new topology
+(`C_evidence^ == C_prod`, exactly six evidence paths, `F_final` pinning `C_prod` and never
+`C_evidence`, prior chain preserved at `evidence-chain-r1`); every artifact, evidence-file, and
+lane-output hash; the four-group mechanical auditor, which still refuses a byte-mutated wheel with a
+named mismatch and exit 2; a licensed run of the seven lane suites plus the new totality suite at
+`C_prod` — **210 passed, zero skips**, with the same file at 9 passed / 5 skipped without the
+license key, proving the real-model arms ran; the counts recomputed from the retained JUnit for all
+ten pytest lanes; and both retained probes re-executed against the final API.
+
+**Not checked this pass:** the 21-lane battery was not re-executed; rev-1 findings 6 and 7 were not
+re-examined; the Fusion 58-failure baseline is still asserted rather than measured at the frozen
+parent; `C_prod` and `A_final` remain on no remote, so the chain is locally reproducible only; and
+the preflight family in R2 rests on two live confirmations plus source inspection of seven further
+raise sites.
+
+**Next step:** a narrow round owning R1 and R2 — one exception tuple, one new internal-defect code,
+no fabricated locations, and provenance on the named raise sites — then re-run the chain. R3–R6 are
+DISPOSE-grade and can be carried as follow-up rows.
+
+---
+
+# First pass — 2026-08-18
+
 **Verdict:** Needs Work
 **Audited:** 2026-08-18
 **Branch:** codegen `stop-parser-impl-r2`; agentic `stop-parser-evidence-r2`; fusion `stop-parser-fusion-r2`

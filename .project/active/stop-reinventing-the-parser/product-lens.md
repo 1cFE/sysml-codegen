@@ -1438,3 +1438,110 @@ Result at the replacement identities:
 
 Gate: **CLEAR for replacement-chain independent audit.** This is not certification and does not
 close the item.
+
+---
+
+## audit-final-r2 — 2026-08-19 — rev `C_prod-r2` `22348458baa5aec314850cc6fcc8d1e90355ce58` (read from clean worktree `4ea1e8c`; Agentic `443388823f0db46c14df1728d3843d0a74ee7590`)
+
+Epic: ELABORATE-FIRST (`.project/backlog/epic_elaborate_first_architecture.md`)
+
+Focused re-audit of the audit-fix chain. The Point and Falsifier are unchanged from `audit-final`;
+every finding below was measured by the auditor on the public route with a real model, license
+loaded, or read directly from the code.
+
+Findings:
+
+- audit-final-r2-F1 [DON'T] **The boundary that made refusals total fabricates their provenance and
+  mislabels who is at fault.** `unexpected_public_failure` (`elaboration/elaborate.py:157-178`)
+  stamps every unclassified failure with `SI_EVIDENCE_INCOMPLETE` — a model-facing code — and a
+  location from `orchestration/diagnostic_context.py:10-22`, which returns the first `.sysml` file
+  under the first model root and the literal line `1`. Measured: a plain SysML syntax error at line
+  17 is reported as `SI_EVIDENCE_INCOMPLETE … unexpected internal failure: SysMLParsingError …
+  [root-0/model.sysml:1]`, because `SysMLParsingError` is absent from the passthrough tuple at
+  `orchestration/exact_pipeline_context.py:288` while its sibling one frame down has it
+  (`elaborated_pipeline.py:82-85`); at `21e09af`, one commit before the repair, the same model said
+  `SysML parsing failed`. Measured: a failure caused by an unreadable `zzz_broken.sysml` is cited
+  against a valid `aaa_fine.sysml` at line 1, with the real offender visible only inside a raw
+  Python exception string carrying an absolute private path. All four provenance elements are
+  syntactically present in both, which is exactly why
+  `tests/conformance/test_public_diagnostic_totality.py` passes; all four can be wrong. A fabricated
+  citation is worse than an absent one — it is indistinguishable in form from a real one. Falsifier:
+  a licensed public-route test where a syntax error is reported as a parse failure at its authored
+  line, and where a failure caused by one file never cites another; plus a distinct
+  internal-defect code, and no location emitted when there is no real one. —
+  `.project/product/P-003-no-workarounds-for-bad-models.md` and
+  `.project/product/P-004-product-identity-parse-walk-emit.md` (**OWNER**) — disposition: **BLOCK**
+
+- audit-final-r2-F2 [DON'T] **Three refusal shapes from the previous audit were never repaired, and
+  three more codes share the gap.** `SI_REDEFINITION_INVALID` (`elaboration/occurrence.py:279`)
+  raises without `reference=` or `location=` though the class accepts both, and names neither the
+  attribute nor the conflicting definitions; seven further `ElaborationInvariantError` sites in
+  `elaborate.py` (461, 828, 896, 974, 1158, 1254, 1721) have the same omission. The `item def` arm of
+  `SI_CONSTRAINT_UNATTACHED` (`elaborate.py:769-773`) still prints a raw
+  `syside.core.QualifiedName([...])` with no location — the mapped-owner arm was fixed and the
+  totality test's repr assertion covers only that one. The capture arm still leaks
+  `/tmp/sysml-codegen-sources-…` on parse-time refusals. New: `SI_RENDERING_COLLISION` names the
+  rendered channel but neither authored name and no location; `SI_CONTAINMENT_RECURSIVE` reports a
+  bare UUID; and the preflight/generation family (`cli/__init__.py:229,243,291,356-401,443-461`,
+  `generation/entry_point.py:146`, `generation/modules.py:175`) raises bare-message
+  `CodeGenerationError`s with no code token and no location. Falsifier: enforce the four elements at
+  the boundary for every reachable code, and make the totality test enumerate the codes rather than
+  list eight scenarios by hand. — same owner sources — disposition: **BLOCK** (same family as F1)
+
+- audit-final-r2-F3 [DO] **The new totality test cannot fail closed.** It asserts all four elements
+  for the cases it covers and would fail if they were stripped, but it enumerates nothing — a new
+  code or raise site is covered by nothing, and both F1 cases pass it. Nine of its fourteen tests
+  need no license and run on `SimpleNamespace` fakes; six plant a `RuntimeError` and none plants the
+  `AttributeError`/`KeyError` shapes the claim is about;
+  `test_constraint_owner_classification_uses_mapped_metatypes` (`:187`) asserts on
+  `inspect.getsource` text. — the spec's per-row proof criterion (`[INHERITED]`) — disposition:
+  DISPOSE — enumerate the codes; drop the source-text test.
+
+- audit-final-r2-F4 [DO] **The stack is destroyed at the CLI seam and a test now requires that.**
+  `cli/__init__.py:944,1233,1251` catch bare `Exception`, format the diagnostic into a log line and
+  return; no `exc_info`, no debug flag, `__cause__` unset there. The pre-fix comment said the
+  opposite was deliberate. `assert "Traceback" not in caplog.text`
+  (`test_public_diagnostic_totality.py:63,280,305`) pins the loss. — agent-grade — disposition:
+  DISPOSE — restore a recoverable stack under `--verbose`.
+
+- audit-final-r2-F5 [DO] **The `sum` UUID's reload stability is asserted, not established.**
+  `agentic reference_use.py:58` calls it reload-stable while `SysideAdapter.element_id`'s own
+  docstring disclaims that, and no test pins the literal against a live standard-library reload. If
+  SysIDE re-mints stdlib ids, `sum` silently stops aggregating. `elaboration/project.py:689` also
+  still compares `function_qn != ["NumericalFunctions", "sum"]` — a spelling test, harmless
+  downstream of the identity gate but the same pattern. — `P-004` applied by agent inference —
+  disposition: DISPOSE — pin the UUID or soften the comment.
+
+Smells:
+
+- **Smell 3 — a special category exempts a case whose user-visible meaning is unchanged: no longer
+  fires.** The `>= 3` segment-count carve-out and its dead classifier are deleted.
+- **Smell 4 — correctness depends on downstream knowledge of an internal representation: largely
+  cleared.** The fail-open `type(...).__name__` gate and the constraint-owner one now use mapped
+  metatypes. Residual: `project.py:689`'s qualified-name comparison (F5), and the tests that assert
+  on source text rather than behavior (F3).
+- **Smell 1 — two representations manually kept synchronized: much reduced.** The reconciliation
+  ledger is generated by the runner, the run-id list has one source, and the fixture inventory check
+  stands. Residual: `REQUIRED_RUN_IDS == tuple(EXPECTED_RUNS)` is a tautology by construction.
+- **New: a provenance field that is sometimes measured and sometimes constant — fires, as F1.** This
+  is the structural cause of the remaining block.
+
+**Verified positive.** An unsupported invocation refuses inside the pre-graph inventory
+(`orchestration/elaborated_pipeline.py:229-231`) with code, authored text, and an exact
+root-relative line; plurality is the reload-stable declaration UUID of `NumericalFunctions::sum`
+(`agentic reference_use.py:379-392`), matching the retired `C_base` guard byte for byte, with the
+old class-name companion check gone. `sum(...)` aggregation still completes end to end on live and
+snapshot arms. The extractor reads the qualified-only scalar view and refuses a real root-namespace
+`Real` lookalike. The reconciliation ledger is machine-generated with A/B and disposition columns
+and node-level citations that all collect. Both retained probes execute and reproduce their
+committed verdicts. The evidence chain verifies: topology, every artifact and evidence hash, the
+four-group auditor (which still refuses a byte-mutated wheel), counts recomputed from the retained
+JUnit for all ten pytest lanes, and 210 licensed tests passing with zero skips at `C_prod-r2`.
+
+Gate: **BLOCKED (audit-final-r2-F1, audit-final-r2-F2)** — F3, F4, F5 are DISPOSED.
+
+Resolves:
+
+- audit-final-F1: **FIXED at exact production identity.** Basis: measured on the public route, and
+  the identity check read directly in `agentic reference_use.py:379-392`. Both halves of the
+  finding — post-graph refusal without provenance, and plurality by spelling — are closed.

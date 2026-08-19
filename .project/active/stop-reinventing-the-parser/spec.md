@@ -1,8 +1,11 @@
 # Spec: Exact occurrence derivation and evidence integrity
 
-**Status:** Needs work — rev 4; Phases 1–5 implemented; **independent audit 2026-08-18 returned
-`Needs Work`** ([audit.md](audit.md)); product-lens ledger gate **BLOCKED (`audit-final-F1`)**; spec
-review `Approve`; one omitted external checkout entry digest remains an explicit evidence limitation
+**Status:** Needs work — rev 4; audit-fix chain re-audited 2026-08-19, verdict `Needs Work` (rev 2,
+[audit.md](audit.md)). Eight of ten rev-1 findings fixed, including the invocation regression, B6,
+and the reconciliation ledger; the provenance blocker remains, now as a catch-all that fabricates a
+`file:line` and reports a syntax error as an internal failure. Product-lens ledger gate **BLOCKED
+(`audit-final-r2-F1`, `audit-final-r2-F2`)**; spec review `Approve`; one omitted external checkout
+entry digest remains an explicit evidence limitation
 **Owner:** Reid W
 **Created:** 2026-08-16 20:42
 **Updated:** 2026-08-18
