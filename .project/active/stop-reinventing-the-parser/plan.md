@@ -2729,6 +2729,31 @@ It returned PASS for `parent_and_paths`, `codegen_reconstruction`, `fusion_pin`,
 `artifacts_and_lock`. This is an implementation handoff, not self-certification: the independent
 auditor re-attacks R1 and R2 against this chain, and R3-R6 remain carried DISPOSE-grade rows.
 
+#### Owner scope ruling after the rev-3 audit (2026-08-19) — diagnostic quality split out
+
+The rev-3 re-audit (`audit.md` rev-3 section, committed) verified the r3 evidence chain and
+blocked certification on four new findings, all in the same family as rev 1 and rev 2:
+failure-diagnostic provenance failing at previously unexamined sites. Three consecutive
+same-family verdicts triggered the structural diagnosis: the provenance property is a per-site
+discipline with no enforcement point, so fix rounds cannot terminate it.
+
+**[OWNER, 2026-08-19] ruling:** no further fix rounds inside this item. The item's certification
+scope is its Point — authored-model-caused refusals on the natural routes must refuse by name,
+pre-mutation, with true provenance (this is delivered and audit-confirmed). The quality of
+**internal-defect** failure reporting (the `SI_INTERNAL_DEFECT` class and the totality guard
+mechanism) is out of this item's scope and transfers, with the four rev-3 findings as seeds, to
+the backlog item `[DIAGNOSTIC-PROVENANCE-BY-CONSTRUCTION]` (filed 2026-08-19), whose fix
+direction is the structural one: a closed diagnostic value type making provenance
+measured-or-absent by construction. The per-site provenance repairs landed in fix rounds 1-2 are
+kept behavior that the follow-up item migrates; nothing is reverted. The r3 chain stands (no
+production change).
+
+**Boundary consequence for the verdict:** each rev-3 finding must be sorted against the ruled
+scope by the independent auditor — a finding involving a *model-caused* refusal (e.g. rendering
+collisions, if measured as model-caused) remains in scope and blocking; findings about
+internal-defect reporting transfer. The re-scoped verdict pass is the next stage; the item does
+not close on this ruling alone.
+
 ---
 
 **Status progression:** Draft → In Progress → Complete
