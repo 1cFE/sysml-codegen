@@ -181,13 +181,22 @@ def test_backlog_and_product_records_preserve_force_and_current_status() -> None
 
     assert "[INDEXED-ELEMENT-EXPRESSION-SUPPORT]" in backlog
     assert "[OUTPUT-ALIAS-DUPLICATE-SOURCE-SILENCE]" in backlog
+    lines = backlog.splitlines()
     for tag in (
         "[INDEXED-ELEMENT-EXPRESSION-SUPPORT]",
         "[OUTPUT-ALIAS-DUPLICATE-SOURCE-SILENCE]",
     ):
-        heading = next(line for line in backlog.splitlines() if tag in line)
-        assert "AGENT" in heading
-        assert "settled" not in heading.lower()
+        # The close rewrapped the bold headings, so the provenance grade sits on a
+        # continuation line; grade and settledness are judged on the whole entry block.
+        start = next(index for index, line in enumerate(lines) if tag in line)
+        block_lines = [lines[start]]
+        for line in lines[start + 1 :]:
+            if not line.strip() or line.startswith("- **["):
+                break
+            block_lines.append(line)
+        block = "\n".join(block_lines)
+        assert "AGENT" in block
+        assert "settled" not in block.lower()
     assert owner_quote in product
     assert "every definition-owned lineage miss" in product
     assert "P-003-no-workarounds-for-bad-models.md" in index
@@ -197,15 +206,20 @@ def test_backlog_and_product_records_preserve_force_and_current_status() -> None
     assert "P-004-product-identity-parse-walk-emit.md" in index
 
 
-def test_status_keeps_downstream_blocked_until_fresh_audit() -> None:
+def test_status_records_owner_close_and_satisfied_downstream_dependency() -> None:
     current = _read(".project/CURRENT_WORK.md")
     epic = _read(".project/backlog/epic_elaborate_first_architecture.md")
+    assert "stop-reinventing-the-parser CLOSED by owner direction" in current
+    assert ".project/completed/20260819_stop-reinventing-the-parser/" in current
+    assert "Bounded predecessor closed 2026-08-19 by owner direction" in epic
+    assert "predecessor dependency is satisfied" in epic
+    assert "8a758e9240707b58fe32a509c3b509941ca4fa01" in epic
+    assert "924eadfd12f39401a6ea8e578b405d4ba8833b51" in epic
     for text in (current, epic):
-        assert "elaborator-downstream" in text
-        assert "fresh audit" in text.lower()
-        assert "c22c269a57fbd1d3a20d6e7fcd7604a659232da3" in text
-        assert "1804827cb2cc877b3c0bc74309bd3470fb2ee90b" in text
-    assert "stop-reinventing-the-parser` implemented, audited, and closed" not in epic
+        # The record keeps the audit history honest: rev-3 said Needs Work, and the
+        # diagnostic follow-up was transferred, not shipped here.
+        assert "Needs Work" in text
+        assert "[DIAGNOSTIC-PROVENANCE-BY-CONSTRUCTION]" in text
 
 
 def test_final_ledger_path_stays_reserved_for_the_evidence_commit() -> None:
