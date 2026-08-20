@@ -1371,3 +1371,18 @@ reconciliation pass, not by a backlog entry.
   nothing fails if it regresses. Deliberate at the time (the lane needs the TEAx checkout on
   `constraint-semantics-item3`, which is unmerged). Fix direction: mark the lane as intentionally
   manual in a named place, or file it as a licensed/marked test once the TEAx branch lands.
+
+- **[DIAGNOSTIC-PROVENANCE-BY-CONSTRUCTION] Make diagnostic provenance unrepresentable-when-wrong,
+  the same way the item made evidence so — P2 `[OWNER]`-filed (2026-08-19), unowned.**
+  Three consecutive stop-parser audit revisions found the same property failing at new sites:
+  a failure's reported cause/location is a per-site discipline with no enforcement point, so
+  sites drop it, guess it, or hard-code its guard. Owner ruled (2026-08-19) this is a separate
+  item, not a fourth fix round. Seed findings: audit.md rev-3's four (collision provenance
+  discarded before both CLI outputs; `generate_registry` fabricating `unknown:0`; wrong
+  attribution with overlapping model roots; totality guard hard-coded to three files), plus the
+  carried R3-R6 DISPOSE rows where related. Fix direction (from the run's own diagnosis): one
+  closed diagnostic value type whose constructor makes provenance measured-or-absent by
+  construction; a single public formatter; an AST gate that no public raise bypasses the
+  constructor; mechanical migration of the existing (correct) per-site patches onto the type.
+  The stop-parser item's per-site repairs are kept behavior, not reverted — this item subsumes
+  them.
