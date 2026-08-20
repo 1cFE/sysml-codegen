@@ -593,9 +593,9 @@ EXPECTED_RUNS: dict[str, dict[str, Any]] = {
     "codegen-default": {
         "status": 0,
         "counts": {
-            "collected": 2645,
-            "selected": 2551,
-            "passed": 2542,
+            "collected": 2647,
+            "selected": 2553,
+            "passed": 2544,
             "failed": 0,
             "errors": 0,
             "skipped": 9,
