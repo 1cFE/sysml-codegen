@@ -1439,8 +1439,6 @@ Result at the replacement identities:
 Gate: **CLEAR for replacement-chain independent audit.** This is not certification and does not
 close the item.
 
----
-
 ## audit-final-r2 — 2026-08-19 — rev `C_prod-r2` `22348458baa5aec314850cc6fcc8d1e90355ce58` (read from clean worktree `4ea1e8c`; Agentic `443388823f0db46c14df1728d3843d0a74ee7590`)
 
 Epic: ELABORATE-FIRST (`.project/backlog/epic_elaborate_first_architecture.md`)
@@ -1585,3 +1583,64 @@ Result at the replacement identities:
 
 Gate: **CLEAR for replacement-chain independent audit.** This is not certification and does not
 close the item.
+
+---
+
+## audit-final-r3 — 2026-08-19 — rev `C_prod-r3` `14130a89a3b9423a235eaa6c88f356a41a6767fd` (read from clean `C_evidence-r3` `875ba01a8fd10b49928cb3e69b7245850128a844`)
+
+Point (re-derived): Production must use the SysML v2 parser’s resolved AST to reconstruct and emit
+the modeled math. Unsupported meaning must stop honestly; downstream seams must not discard
+measured identity or substitute invented provenance.
+[source: `.project/product/P-004-product-identity-parse-walk-emit.md` and
+`.project/product/P-003-no-workarounds-for-bad-models.md`, grade: **owner**; “refuses by name”
+companion P-002, grade: **agent/ratified**]
+
+Falsifier: a public route reconstructs meaning outside the parser, strips an authored
+reference/location already measured by the semantic walk, or emits a plausible source value that
+no producer measured.
+
+Findings:
+
+- `audit-final-r3-F1` [DO] Both public CLI arms discard measured collision provenance.
+  `ProjectionError` retains the diagnostic but renders only code and detail (`project.py:93-99`);
+  `_project_or_fail` converts that lossy string into `CodeGenerationError`
+  (`exact_pipeline_context.py:136-140`). Real `generate --models` and snapshot generation therefore
+  lose `reference='UnitLaneConstraintDisagreement__disagreement__shared_length'` and
+  `root-0/model.sysml:15`. — source: P-002’s named-refusal rule (**agent/ratified**); exact
+  preservation through the public seam is `[INFERRED]` — disposition: **DISPOSE — carried by
+  unresolved `audit-final-r2-F2`; preserve the typed diagnostic or render all measured fields, with
+  customer-shaped tests on both arms**
+- `audit-final-r3-F2` [DON’T] Exported `generate_registry` fabricates `source='unknown:0'` when an
+  unsupported module carries no source fields (`generation/errors.py:59-74`). This is a manual
+  provenance fallback, not an absent field. — source: P-003/P-004 applied to diagnostic honesty
+  (**AGENT/INFERRED**) — disposition: **DISPOSE — carried by unresolved `audit-final-r2-F2`; omit
+  the source clause when no source was measured and pin the exported seam**
+- `audit-final-r3-F3` [DO] The claimed enumerating guard scans a manually maintained three-file
+  tuple (`test_diagnostic_provenance_sites.py:58-62`). A same-code constructor added anywhere else
+  is invisible, so the guard cannot establish totality. — source: P-004 applied to proof closure
+  (**AGENT/INFERRED**) — disposition: **DISPOSE — carried by unresolved `audit-final-r2-F2`;
+  discover applicable constructors repository-wide or route them through one guarded constructor**
+
+Smells:
+
+- **Smell 4** fires at F1: the public boundary assumes the exception’s string representation
+  preserves a typed diagnostic.
+- **Smell 1** fires at F3: the guard’s file inventory must be manually synchronized with production
+  refusal sites.
+- **Smell 6** fires at F3: the proof passes because it selects three modules, not because every
+  route is covered.
+
+Resolves:
+
+- `audit-final-r2-F1`: **FIXED** — authority: owner-grade source unchanged (P-003/P-004) — basis:
+  its specific catch-all defect remains repaired: unclassified failures use `SI_INTERNAL_DEFECT`
+  without invented reference/location, while parser failures pass through with their measured
+  site. The registry defect in F2 is a formed generation refusal and belongs to the still-open F2
+  family.
+
+Earlier BLOCK scan: `design-F1`, `audit3-F1`, `audit-phase3-F4`, and `audit-final-F1` retain valid
+later FIXED citations. `audit-final-r2-F1` is resolved above. **`audit-final-r2-F2` still stands**:
+all three new falsifiers directly disprove its claimed totality and its guard.
+
+Gate: **BLOCKED (`audit-final-r2-F2`)** — `audit-final-r3-F1`, `audit-final-r3-F2`, and
+`audit-final-r3-F3` are DISPOSED but reinforce the standing block.

@@ -1,24 +1,17 @@
 # Current Work
 
-**Last Updated**: 2026-08-19 (**stop-reinventing-the-parser: FIX ROUND 2 COMPLETE; r3 CHAIN READY
-FOR INDEPENDENT AUDIT.** The rev-2 blocker is closed at its root. The rule the round establishes and
-holds every change to: **a diagnostic field is either measured or absent, never defaulted.** The
-public catch-all now reports the cause chain under `SI_INTERNAL_DEFECT` — a generator defect, not a
-statement about the model — and names no reference and no location; `diagnostic_context.py` and the
-two sibling helpers that invented them are deleted. `SysMLParsingError` rejoined the passthrough
-tuple, so a syntax error reports as a parse failure at its own measured line, and an unreadable file
-is never cited against a valid one beside it. `SI_REDEFINITION_INVALID`, the `item def` arm of
-`SI_CONSTRAINT_UNATTACHED`, `SI_RENDERING_COLLISION`, and `SI_CONTAINMENT_RECURSIVE` attach their
-authored context at the raise site; the generation preflight family carries stable code tokens; and
-capture-time refusals name manifest referents, never a private staging path. An AST guard enumerates
-the four guarded codes. A fresh declared extraction passed 2,542 with 9 policy skips and 94
-deselections; all 21 runner lanes matched; the four-group auditor returned PASS. New identities:
-Agentic unchanged `443388823f0db46c14df1728d3843d0a74ee7590`, `C_prod-r3`
-`14130a89a3b9423a235eaa6c88f356a41a6767fd`, `F_final-r3`
-`83551fbb81fc8cdd34fe0b12c64703ab5eab7ed9`, `C_evidence-r3`
-`875ba01a8fd10b49928cb3e69b7245850128a844`; the r2 chain is preserved at `evidence-chain-r2`. Do not
-close, run pre-PR, or unblock `elaborator-downstream`; run an independent `$my-audit` against the r3
-chain. R3-R6 remain carried DISPOSE-grade rows.**).
+**Last Updated**: 2026-08-19 (**stop-reinventing-the-parser: R3 INDEPENDENT AUDIT COMPLETE —
+`Needs Work`.** The r3 evidence chain verifies, including all hashes, retained JUnit counts, the
+four-group auditor and its mutated-wheel refusal, a fresh 2,542/9/94 extraction, both retained
+probes, and the `deep_cross_scope_probe` stop. Rev-2 R1 is fixed: syntax and unreadable-file failures
+now keep honest categories and measured-or-absent fields. Rev-2 R2 remains blocked. Measured public
+failures: both CLI arms discard the reference/location already attached to
+`SI_RENDERING_COLLISION`; exported `generate_registry` invents `unknown:0`; overlapping model roots
+give parse diagnostics the first containing root instead of the canonical most-specific root; and
+the AST totality guard scans only three hand-listed files. R3 therefore became load-bearing and is
+not safely DISPOSE-grade. Audit and product-lens rev-3 records are appended. Do not close, run
+pre-PR, or unblock `elaborator-downstream`; repair the four bounded seams and re-audit a newly minted
+dependent chain.**).
 Prior status: 2026-08-19 (**stop-reinventing-the-parser: AUDIT-FIX CHAIN RE-AUDITED — verdict
 `Needs Work` (rev 2).** `.project/active/stop-reinventing-the-parser/audit.md`. Eight of ten rev-1
 findings are fixed and the replacement chain verifies end to end: topology, every artifact and

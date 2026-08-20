@@ -637,3 +637,294 @@ The scope is bounded and none of it touches the artifact chain: one refusal path
 with an unsupported-capability code, one plurality decision moved back to declaration identity, one
 boundary that guarantees four provenance elements on every public refusal, one type-table lookup, and
 two evidence documents corrected.
+
+---
+
+# Third re-audit — 2026-08-19
+
+**Verdict:** Needs Work (re-audit, rev 3)
+
+**Audited chain:** `A_final-r2` `443388823f0db46c14df1728d3843d0a74ee7590`;
+`C_prod-r3` `14130a89a3b9423a235eaa6c88f356a41a6767fd`; `F_final-r3`
+`83551fbb81fc8cdd34fe0b12c64703ab5eab7ed9`; `C_evidence-r3`
+`875ba01a8fd10b49928cb3e69b7245850128a844`; artifacts
+`/tmp/stop-parser-rev2/artifacts-final-r5`.
+
+## Rev-3 summary
+
+**The re-minted evidence chain is coherent, and the specific fabricated catch-all from rev 2 is
+fixed. The item is still not certifiable.** The public boundary does not uphold the round's own
+measured-or-absent rule end to end:
+
+- all twelve `SI_RENDERING_COLLISION` constructors attach the measured authored reference and
+  location, but the real live and snapshot CLI paths flatten the typed diagnostic to a string that
+  drops both fields;
+- exported `generate_registry` turns a missing source into the plausible citation `unknown:0`;
+- syntax diagnostics under overlapping model roots use the first containing root rather than the
+  canonical exact/most-specific root; and
+- the claimed enumerating AST guard scans three hand-listed files. A constructor for the same
+  guarded code in any other production module is invisible.
+
+These are not hypothetical proof-quality complaints. The first three reproduce through public CLI
+or API surfaces. The fourth mutation explains why the new proof files pass while those public
+failures remain. Product-lens rev 3 therefore keeps `audit-final-r2-F2` blocked. Rev-2 R1, the
+fabricating catch-all itself, is fixed.
+
+## Findings, ranked
+
+### R3-1 — Projection discards provenance that every collision site measured (Major, blocking)
+
+The real `generate --models` route over
+`tests/fixtures/unit_lane_constraint_disagreement` reports:
+
+```text
+ERROR: Code generation failed: exact graph projection failed: SI_RENDERING_COLLISION: entry point
+'UnitLaneConstraintDisagreement__disagreement__shared_length' has conflicting projected metadata
+```
+
+The snapshot-generation CLI loses the same fields. Immediately below that seam, the one
+`ProjectionError` diagnostic contains:
+
+```text
+reference = UnitLaneConstraintDisagreement__disagreement__shared_length
+source    = root-0/model.sysml:15
+```
+
+The loss is structural. `ProjectionError` stores the typed diagnostics but initializes its public
+message with code and detail only (`src/sysml_codegen/elaboration/project.py:93-98`).
+`_project_or_fail` then wraps that lossy string in `CodeGenerationError`
+(`src/sysml_codegen/orchestration/exact_pipeline_context.py:136-140`). The raise sites obey
+measured-or-absent; the public boundary does not. This fails obligation 2 and leaves
+`audit-final-r2-F2` open.
+
+### R3-2 — An exported generation API fabricates `unknown:0` (Major, blocking)
+
+Calling exported `generate_registry` with an unsupported exit-point type and a graph module whose
+`source_file` and `source_line` are both absent reports:
+
+```text
+EXIT_POINT_TYPE_UNSUPPORTED ... source='unknown:0'
+```
+
+No producer measured that source. The fallback is explicit at
+`src/sysml_codegen/generation/errors.py:59-74`: missing fields become `"unknown"` and `0` before
+the message is formed. The rule requires omission, not a plausible placeholder. This is a public
+API falsifier for the same standing block.
+
+### R3-3 — Overlapping roots misattribute parser diagnostics (Major, blocking)
+
+With a broad root `/overlap`, a nested root `/overlap/nested`, and the broken model beneath the
+nested root, `elaborate_model_paths([broad, narrow])` reports the syntax error as
+`root-0/nested/model.sysml`. The project's canonical rule returns `root-1/model.sysml` for the same
+file. That rule is directly pinned by `tests/unit/test_source_referent.py:27-36`.
+
+The parse renderer returns on the first containing root
+(`src/sysml_codegen/orchestration/elaborated_pipeline.py:72-92`). The canonical mapper first
+prefers an exact file and otherwise the most-specific directory
+(`src/sysml_codegen/analysis/source_referent.py:43-70`). These are two source-ownership policies on
+the same public route. The reported file exists, but its root identity is wrong.
+
+### R3-4 — The totality guard is not repository-total (Major proof gap; blocking certification)
+
+`GUARDED_FILES` is a fixed tuple of `occurrence.py`, `elaborate.py`, and `project.py`
+(`tests/conformance/test_diagnostic_provenance_sites.py:58-62`). The mutation results are:
+
+- a fabricated, non-empty field is rejected by `assert_no_location_is_invented`;
+- a fifth unguarded constructor inside one of the three listed files is detected;
+- the same guarded-code constructor in a fourth production module is ignored. The guard reports no
+  missing sites while an independent repository AST scan finds 17 in that copied unlisted module.
+
+The unfixed-parent calibration is honest: the two proof files produce exactly **25 failed / 7
+passed** against `C_prod-r2`. Current-tree execution is **32 passed / 0 skipped**. Those facts show
+that the listed tests changed and fail on the parent. They do not prove that the file inventory is
+closed. Rev-2 R3 silently became load-bearing when fix round 2 cited this guard as proof that R2 was
+fixed, so R3 cannot remain a harmless DISPOSE row in this chain.
+
+### R3-5 — The carried-row ownership claim is not recorded (Minor bookkeeping gap)
+
+No named accountable owner for R3-R6 appears in the active item or backlog. R3-R5 are repeated in
+the product-lens ledger with inherited or agent authority; R6 appears only in the audit. If
+“owner” means decision provenance rather than assignment, R4 is agent-grade, R5 is P-004 applied by
+agent inference, and R6 has no owner-grade source. I therefore cannot confirm the brief's claim that
+all four are recorded with an owner.
+
+This is not an additional implementation blocker. The load-bearing part is R3, already ranked
+above. R4 (recoverable verbose stack), R5 (`sum` UUID reload proof), and R6 (probe/evidence
+residuals) remain follow-up-grade and were not used to clear the product gate.
+
+## Results by obligation
+
+### 1. Fabrication fix and public seams — partially passes
+
+The two rev-2 reproductions now behave honestly:
+
+- A real syntax error at line 17 reports `SysML parsing failed` at
+  `root-0/model.sysml:17:28`; it is not relabelled `SI_INTERNAL_DEFECT` and is not moved to line 1.
+- A valid `aaa_fine.sysml` beside unreadable `zzz_broken.sysml` reports
+  `SI_INTERNAL_DEFECT` with the `PermissionError` cause naming `zzz_broken.sysml`. It never names
+  `aaa_fine.sysml`, and no reference/location bracket is emitted. The direct API diagnostic tuple
+  is `(None, None, None, PermissionError)`.
+- Snapshot capture of the syntax-error model reports `root-0/model.sysml:17` and no private staging
+  directory.
+
+I found no raw traceback on the exercised CLI routes. `SI_INTERNAL_DEFECT` is reserved for the
+planted/unclassified internal failures I exercised; parser and formed generation refusals retain
+their own categories. `diagnostic_context.py`, `_caller_model_context`, and
+`_nearest_model_context` are absent, and a source sweep found no equivalent “first `.sysml`, line
+1” implementation. The four central passthrough tuples are symmetric for
+`CodeGenerationError`, `ElaborationDiagnosticError`, `ElaborationError`, and
+`SysMLParsingError`; the snapshot seam additionally preserves `InstanceGraphSnapshotError`.
+
+The obligation still fails on R3-1 through R3-3: one public seam discards measured fields, one API
+invents a source, and the multi-root parser seam assigns the wrong root identity.
+
+### 2. Raise-site provenance shapes — partially passes
+
+| Shape | Independent result |
+|---|---|
+| `SI_REDEFINITION_INVALID` | Current constructor sites carry reference and authored location; proof passes. |
+| item-def `SI_CONSTRAINT_UNATTACHED` | Carries the item definition's authored name and site; proof passes. |
+| capture staging | Real syntax-error capture names `root-0/model.sysml:17`; no `/tmp/…sources…` text. |
+| twelve `SI_RENDERING_COLLISION` sites | All twelve attach true context, but both public CLI arms discard it. **Fails end to end.** |
+| `SI_CONTAINMENT_RECURSIVE` | Carries the recursive containment reference and authored site; proof passes. |
+| extraction screen | Seven focused nodes pass with the license loaded and zero skips; measured location is preserved on the covered spelling. |
+
+The constructor census is useful local evidence. R3-1 prevents it from certifying the public
+behavior.
+
+### 3. Guard mutations — fails closed locally, not repository-wide
+
+The non-empty-field mutation and an in-scope fifth-site mutation fail as claimed. An out-of-list
+production module is invisible, so the enumeration is not fail-closed. The parent run reproduces
+**25 failed / 7 passed** exactly, and the current proof selection is **32 passed / 0 skipped**.
+
+### 4. Mypy calibration — passes
+
+Running the current mypy lane output through the runner's own `_output_hash` produces
+`76ea65714858850c985a4ded9788f518c196d5ee4456e35258558ae2b49c90c6`, exactly the amended
+declaration. Direct comparison with `C_prod-r2` shows the same **30 errors in 8 files**, these two
+line shifts only:
+
+- `generation/entry_point.py`: 153 → 154;
+- `generation/modules.py`: 395 → 397.
+
+The checked-file count moves 76 → 75 because `diagnostic_context.py` was deleted. A search of the
+final six evidence files, artifact manifests, and final verification tree finds no provisional
+artifact root or provisional runner record. The direct-child topology also permits no imported
+evidence path beyond the six final files. The two provisional runs supplied nothing to the final
+chain.
+
+### 5. Chain and execution evidence — passes
+
+Topology verifies independently:
+
+- `C_evidence-r3^ == C_prod-r3`;
+- `C_prod-r3..C_evidence-r3` adds exactly the six permitted verification files;
+- Fusion pins `C_prod-r3` in both `pyproject.toml` and its test pin and contains no
+  `C_evidence-r3` reference;
+- `evidence-chain-r1` and `evidence-chain-r2` still resolve;
+- Agentic remains `443388823f0db46c14df1728d3843d0a74ee7590`; TEAx and 1costingfe remain at their
+  frozen pins.
+
+All ten artifact hashes recompute:
+
+```text
+595d3430378b71f867ba26e912fb947cd3c6972b94f466b6da2dd77d784a493d
+7505028f2fc720ae06a244c5dd95019b8ae52a796ddbfec3b3492e2ad56954f7
+af9e4fa68fe442f8047bfa2ced27d3aa0771bc3c94c9e4fc2a9abcbada3ffd07
+4d68db8473754498ece341b6c901a5f94c5deebd80d91f37c7ae052f98b1aeb0
+50152b0ed3eee4bc5ce9563956dbcb01a55a2e3748092f4538dec893e51fa236
+4da393a1510bda93fb1986bc0d24ef69456ba45dcb76f564821ed72780e07b11
+9786fec4178975eeefbedb4d8810215e2abb5df4b162ac8290684e3aaf95d884
+0a03d387df18bb75b8336a5b471a7203473ba0f2f7255f65846813064b0bc7fa
+970ed533d8fae042de25256933ec99d3385092903e4d407ab2b96baa7a2fcfd6
+b2fef5329c7e42e7ff1fdf857f771bb3bccd18b2edd8489f7e9dce4da2e22205
+```
+
+All six evidence hashes recompute:
+
+```text
+39841e7e0dfe7676af9e05ab4e79728ff9d0a6b99300f6428f850a809f169dee
+a20f14de07ad56197e62ccf586fc6df0b8d8745cb129b687a34093a73c0eba4b
+5e9db0c6efd4ab04456ec4a3561d306e491122065f64779b38f58e1f300d24ec
+fa3e7344ae995f9af5d4ad2198b689b1afd0b27d22dfdb2fef84560e6133d64f
+27c9f391f64c215ffa8ce063e2a2bc57ba8331e5dab7f7288580f8d270ec6e3a
+4f70c5f0494e3ebb8b55db3c748a390bcb96c0a1f2307e139f1f055aae31d167
+```
+
+The wheelhouse has 173 hash-pinned wheels. The mechanical auditor passes
+`parent_and_paths`, `codegen_reconstruction`, `fusion_pin`, and `artifacts_and_lock` when run with
+a writable audit cache. It rejects a one-byte-short Codegen wheel with the expected/found digest
+mismatch.
+
+All 21 retained runner records have the declared status and authenticated raw-output record. I
+recomputed the retained JUnit counts for every pytest lane:
+
+| Lane | Recomputed `collected/selected/passed/failed/errors/skipped/xfailed/deselected` |
+|---|---|
+| agentic-focused | `846/846/845/0/0/1/0/0` |
+| agentic-fast | `1928/1923/1922/0/0/1/0/5` |
+| costingfe-pytest | `660/660/602/0/0/58/0/0` |
+| teax-pytest | `406/406/406/0/0/0/0/0` |
+| codegen-default | `2645/2551/2542/0/0/9/0/94` |
+| codegen-live-snapshot | `4/4/4/0/0/0/0/0` |
+| codegen-generated-package | `25/25/25/0/0/0/0/0` |
+| codegen-execution | `94/94/94/0/0/0/0/0` |
+| fusion-pytest | `517/517/401/58/0/58/0/0` |
+| fusion-generated-execution | `23/23/23/0/0/0/0/0` |
+
+A fresh declared extraction built for this audit at `/tmp/stop-parser-rev2/audit-full-r3` passes
+**2,542 / 9 / 94** in 183.96 seconds. The +18 delta is exactly the 9 expanded totality nodes plus
+the 9 provenance-site nodes. The two proof files plus the extraction-screen file pass **39 tests,
+zero skips** with the license loaded.
+
+Both retained probes execute and reproduce their committed JSON byte for byte: B8 reports
+`REAL_CORPUS_TOTAL`; B10 reports `DELETE_UNREACHABLE`. Three focused immutable-extraction assertions
+confirm `deep_cross_scope_probe` remains an `SI_OCCURRENCE_MISSING` refusal, its historical snapshot
+remains absent, and the public diagnostic retains the authored reference and `root-0/design.sysml:77`.
+
+The three implementation worktrees are clean. Before this audit's authorized document edits, the
+Codegen docs checkout was clean; the Agentic user checkout still matches its empty entry digest.
+Fusion remains on the owner's unrelated branch with the recorded dirty digest
+`d8a9922b4300ee7bf04f87b8d01fa02846f2253b7ad290ca535b83f3db9bf08a`; TEAx and 1costingfe are
+clean at their frozen pins. The missing historical entry digests for those three external
+checkouts remain the owner-accepted residual recorded in `run-records/entry-status.md`; equality is
+not retroactively claimed.
+
+### 6. Carried rows — fails for R3; R4-R6 remain follow-up-grade
+
+R3 has become load-bearing and its falsifier succeeds, as R3-4 shows. R4-R6 did not silently become
+certification inputs. The recorded-owner claim does not verify, as R3-5 explains.
+
+## Product-lens and certification disposition
+
+The fresh product-lens pass resolves `audit-final-r2-F1` as **FIXED** and keeps
+`audit-final-r2-F2` **BLOCKED**. Its three rev-3 findings are recorded in
+`product-lens.md#audit-final-r3`. Earlier blocks with later fixed citations remain fixed; none is
+silently reopened.
+
+No spec success criterion, plan phase, or epic checkbox is newly certified. The immutable chain is
+valid evidence for the candidate it contains; it cannot make that candidate pass an end-to-end
+behavioral rule it violates. `elaborator-downstream` remains blocked. Do not close or run pre-PR.
+
+## Not checked
+
+- I did not re-execute all 21 runner commands. I authenticated their retained outputs, recomputed
+  every retained JUnit count, ran the mechanical reconstruction auditor, ran a fresh full Codegen
+  suite, and reran the targeted licensed and mutation proofs.
+- I did not rebuild the 173-wheel wheelhouse or rerun the complete Fusion, TEAx, Agentic, and
+  1costingfe batteries from scratch.
+- I did not run the owner-excluded PDF/HTML corpus or paid/network cases.
+- I did not establish R5's `sum` UUID stability across a new SysIDE version. That remains the
+  recorded DISPOSE-grade follow-up.
+- I tested capture staging-path privacy through the real parse-failure route and the retained
+  extraction-screen cases. I did not manufacture every alternate URI/path spelling a future SysIDE
+  version could emit.
+
+## Required remediation
+
+Preserve the typed projection diagnostic through both public CLI arms (or render every measured
+field), omit the source clause when generation measured no source, use the canonical live-source
+mapper for parse diagnostics, and make guarded-site discovery repository-wide or centralize the
+guarded constructors. Add public live/snapshot/API tests for the exact three reproductions above,
+then rerun the targeted proofs and independent audit against a newly minted dependent chain.
