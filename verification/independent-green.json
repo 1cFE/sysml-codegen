@@ -1,0 +1,2505 @@
+{
+  "artifact_build_sha256": "bc4d31ddea2c5e78e04faf2d5e02b80fe43fb6e940c347a22ec7255dced30934",
+  "committed_runner": {
+    "path": "extracted/codegen/sysml-codegen-0.1.1/verification/run_independent_green.py",
+    "sha256": "6237803ae3ae57fc816e462dabe2d4c5bcbb3e699bd83a94f5a2cecc36378a94"
+  },
+  "input_repositories": [
+    "agentic",
+    "codegen",
+    "teax",
+    "costingfe",
+    "fusion"
+  ],
+  "runs": [
+    {
+      "allowed_skips": [
+        {
+          "node_id": "tests/test_sysml/test_adr002.py::test_real_model_expose_patterns_exempt",
+          "reason": "Requires fusion_modeling CATF models not in this repo"
+        }
+      ],
+      "command": [
+        "/tmp/stop-parser-rev2/artifacts-closeout-sealed/runner-private/isolated-venv/bin/python",
+        "-m",
+        "pytest",
+        "tests/test_sysml",
+        "tests/test_validation",
+        "tests/test_errors.py"
+      ],
+      "counts": {
+        "collected": 846,
+        "deselected": 0,
+        "errors": 0,
+        "failed": 0,
+        "passed": 845,
+        "selected": 846,
+        "skipped": 1,
+        "xfailed": 0
+      },
+      "cwd": "/tmp/stop-parser-rev2/artifacts-closeout-sealed/extracted/agentic/agentic-mbse-0.1.3",
+      "executed_command": [
+        "/tmp/stop-parser-rev2/artifacts-closeout-sealed/runner-private/isolated-venv/bin/python",
+        "-m",
+        "pytest",
+        "tests/test_sysml",
+        "tests/test_validation",
+        "tests/test_errors.py",
+        "-ra",
+        "--junitxml=/tmp/stop-parser-rev2/artifacts-closeout-sealed/run-reports/agentic-focused.xml"
+      ],
+      "expected_counts": {
+        "collected": 846,
+        "deselected": 0,
+        "errors": 0,
+        "failed": 0,
+        "passed": 845,
+        "selected": 846,
+        "skipped": 1,
+        "xfailed": 0
+      },
+      "expected_output_sha256": null,
+      "expected_status": 0,
+      "id": "agentic-focused",
+      "import_files": [
+        "/tmp/stop-parser-rev2/artifacts-closeout-sealed/extracted/agentic/agentic-mbse-0.1.3/src/agentic_mbse/__init__.py"
+      ],
+      "import_probe": {
+        "path": "run-reports/agentic-focused.imports.json",
+        "sha256": "dfb0cb5f8cb99c13963a315037c99993db3cc01c4242564d9996e3242161eda4"
+      },
+      "import_roots": [
+        "/tmp/stop-parser-rev2/artifacts-closeout-sealed/extracted/agentic/agentic-mbse-0.1.3/src"
+      ],
+      "junit": {
+        "path": "run-reports/agentic-focused.xml",
+        "sha256": "887cbc0772095fca955921cd0eb86075334807053a5c64f6a9fb07295185f558"
+      },
+      "observed_skips": [
+        {
+          "node_id": "tests/test_sysml/test_adr002.py::test_real_model_expose_patterns_exempt",
+          "reason": "Requires fusion_modeling CATF models not in this repo"
+        }
+      ],
+      "output_sha256": "2efed04e2f137e2c6abe809c1b0800e3e0668138a5669bf110f67ae96cc0a672",
+      "skip_policies": [
+        {
+          "node_id": "tests/test_sysml/test_adr002\\.py::test_real_model_expose_patterns_exempt",
+          "reason": "Requires fusion_modeling CATF models not in this repo"
+        }
+      ],
+      "status": 0,
+      "stderr": {
+        "path": "run-reports/agentic-focused.stderr",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "stdout": {
+        "path": "run-reports/agentic-focused.stdout",
+        "sha256": "873321b8be90fb419b7571ad129ae2ce775050b064952b0b6fe7eff48265eb47"
+      },
+      "unexpected_skips": []
+    },
+    {
+      "allowed_skips": [
+        {
+          "node_id": "tests/test_sysml/test_adr002.py::test_real_model_expose_patterns_exempt",
+          "reason": "Requires fusion_modeling CATF models not in this repo"
+        }
+      ],
+      "command": [
+        "/tmp/stop-parser-rev2/artifacts-closeout-sealed/runner-private/isolated-venv/bin/python",
+        "-m",
+        "pytest",
+        "tests",
+        "-m",
+        "not slow"
+      ],
+      "counts": {
+        "collected": 1928,
+        "deselected": 5,
+        "errors": 0,
+        "failed": 0,
+        "passed": 1922,
+        "selected": 1923,
+        "skipped": 1,
+        "xfailed": 0
+      },
+      "cwd": "/tmp/stop-parser-rev2/artifacts-closeout-sealed/extracted/agentic/agentic-mbse-0.1.3",
+      "executed_command": [
+        "/tmp/stop-parser-rev2/artifacts-closeout-sealed/runner-private/isolated-venv/bin/python",
+        "-m",
+        "pytest",
+        "tests",
+        "-m",
+        "not slow",
+        "-ra",
+        "--junitxml=/tmp/stop-parser-rev2/artifacts-closeout-sealed/run-reports/agentic-fast.xml"
+      ],
+      "expected_counts": {
+        "collected": 1928,
+        "deselected": 5,
+        "errors": 0,
+        "failed": 0,
+        "passed": 1922,
+        "selected": 1923,
+        "skipped": 1,
+        "xfailed": 0
+      },
+      "expected_output_sha256": null,
+      "expected_status": 0,
+      "id": "agentic-fast",
+      "import_files": [
+        "/tmp/stop-parser-rev2/artifacts-closeout-sealed/extracted/agentic/agentic-mbse-0.1.3/src/agentic_mbse/__init__.py"
+      ],
+      "import_probe": {
+        "path": "run-reports/agentic-fast.imports.json",
+        "sha256": "dfb0cb5f8cb99c13963a315037c99993db3cc01c4242564d9996e3242161eda4"
+      },
+      "import_roots": [
+        "/tmp/stop-parser-rev2/artifacts-closeout-sealed/extracted/agentic/agentic-mbse-0.1.3/src"
+      ],
+      "junit": {
+        "path": "run-reports/agentic-fast.xml",
+        "sha256": "e042b3e481bc51a9b43b22d6b3e559a53259089deca5f42e6df210a98006a477"
+      },
+      "observed_skips": [
+        {
+          "node_id": "tests/test_sysml/test_adr002.py::test_real_model_expose_patterns_exempt",
+          "reason": "Requires fusion_modeling CATF models not in this repo"
+        }
+      ],
+      "output_sha256": "02e9e0fe546ad9efed8377e0aa991f675e728989e8c4f94856dadc550a6e4a71",
+      "skip_policies": [
+        {
+          "node_id": "tests/test_sysml/test_adr002\\.py::test_real_model_expose_patterns_exempt",
+          "reason": "Requires fusion_modeling CATF models not in this repo"
+        }
+      ],
+      "status": 0,
+      "stderr": {
+        "path": "run-reports/agentic-fast.stderr",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "stdout": {
+        "path": "run-reports/agentic-fast.stdout",
+        "sha256": "a864f9257c20a922b5c555606de4115ce8e144d7cb59c69f176ea93f85016b29"
+      },
+      "unexpected_skips": []
+    },
+    {
+      "allowed_skips": [],
+      "command": [
+        "/tmp/stop-parser-rev2/artifacts-closeout-sealed/runner-private/isolated-venv/bin/mypy",
+        "--strict",
+        "src/agentic_mbse/errors.py",
+        "src/agentic_mbse/sysml/reference_use.py"
+      ],
+      "counts": {
+        "collected": 0,
+        "deselected": 0,
+        "errors": 0,
+        "failed": 0,
+        "passed": 0,
+        "selected": 0,
+        "skipped": 0,
+        "xfailed": 0
+      },
+      "cwd": "/tmp/stop-parser-rev2/artifacts-closeout-sealed/extracted/agentic/agentic-mbse-0.1.3",
+      "executed_command": [
+        "/tmp/stop-parser-rev2/artifacts-closeout-sealed/runner-private/isolated-venv/bin/mypy",
+        "--strict",
+        "src/agentic_mbse/errors.py",
+        "src/agentic_mbse/sysml/reference_use.py"
+      ],
+      "expected_counts": {
+        "collected": 0,
+        "deselected": 0,
+        "errors": 0,
+        "failed": 0,
+        "passed": 0,
+        "selected": 0,
+        "skipped": 0,
+        "xfailed": 0
+      },
+      "expected_output_sha256": null,
+      "expected_status": 0,
+      "id": "agentic-strict",
+      "import_files": [
+        "/tmp/stop-parser-rev2/artifacts-closeout-sealed/extracted/agentic/agentic-mbse-0.1.3/src/agentic_mbse/__init__.py"
+      ],
+      "import_probe": {
+        "path": "run-reports/agentic-strict.imports.json",
+        "sha256": "dfb0cb5f8cb99c13963a315037c99993db3cc01c4242564d9996e3242161eda4"
+      },
+      "import_roots": [
+        "/tmp/stop-parser-rev2/artifacts-closeout-sealed/extracted/agentic/agentic-mbse-0.1.3/src"
+      ],
+      "junit": null,
+      "observed_skips": [],
+      "output_sha256": "bd1f00a1dcc181240dc145cafd5d6dc20ec3603a73eeda938640c66122dd4239",
+      "skip_policies": [],
+      "status": 0,
+      "stderr": {
+        "path": "run-reports/agentic-strict.stderr",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "stdout": {
+        "path": "run-reports/agentic-strict.stdout",
+        "sha256": "f9b031e5c45aa702cd4fef028d465551cb20a2c4698e0913c7b00766b20ac4d8"
+      },
+      "unexpected_skips": []
+    },
+    {
+      "allowed_skips": [],
+      "command": [
+        "/tmp/stop-parser-rev2/artifacts-closeout-sealed/runner-private/isolated-venv/bin/mypy",
+        "src"
+      ],
+      "counts": {
+        "collected": 0,
+        "deselected": 0,
+        "errors": 0,
+        "failed": 0,
+        "passed": 0,
+        "selected": 0,
+        "skipped": 0,
+        "xfailed": 0
+      },
+      "cwd": "/tmp/stop-parser-rev2/artifacts-closeout-sealed/extracted/agentic/agentic-mbse-0.1.3",
+      "executed_command": [
+        "/tmp/stop-parser-rev2/artifacts-closeout-sealed/runner-private/isolated-venv/bin/mypy",
+        "src"
+      ],
+      "expected_counts": {
+        "collected": 0,
+        "deselected": 0,
+        "errors": 0,
+        "failed": 0,
+        "passed": 0,
+        "selected": 0,
+        "skipped": 0,
+        "xfailed": 0
+      },
+      "expected_output_sha256": "5c658780845b0fa9f9e396e5708e52c81627bf6ba188aa229c62514ec4cf6283",
+      "expected_status": 1,
+      "id": "agentic-mypy-baseline",
+      "import_files": [
+        "/tmp/stop-parser-rev2/artifacts-closeout-sealed/extracted/agentic/agentic-mbse-0.1.3/src/agentic_mbse/__init__.py"
+      ],
+      "import_probe": {
+        "path": "run-reports/agentic-mypy-baseline.imports.json",
+        "sha256": "dfb0cb5f8cb99c13963a315037c99993db3cc01c4242564d9996e3242161eda4"
+      },
+      "import_roots": [
+        "/tmp/stop-parser-rev2/artifacts-closeout-sealed/extracted/agentic/agentic-mbse-0.1.3/src"
+      ],
+      "junit": null,
+      "observed_skips": [],
+      "output_sha256": "5c658780845b0fa9f9e396e5708e52c81627bf6ba188aa229c62514ec4cf6283",
+      "skip_policies": [],
+      "status": 1,
+      "stderr": {
+        "path": "run-reports/agentic-mypy-baseline.stderr",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "stdout": {
+        "path": "run-reports/agentic-mypy-baseline.stdout",
+        "sha256": "6cdb42daeb5deaf76462bcdca45572db5f6ed2f58b0a0904c1fba50e1c1c5592"
+      },
+      "unexpected_skips": []
+    },
+    {
+      "allowed_skips": [],
+      "command": [
+        "/tmp/stop-parser-rev2/artifacts-closeout-sealed/runner-private/isolated-venv/bin/ruff",
+        "check",
+        "src",
+        "tests"
+      ],
+      "counts": {
+        "collected": 0,
+        "deselected": 0,
+        "errors": 0,
+        "failed": 0,
+        "passed": 0,
+        "selected": 0,
+        "skipped": 0,
+        "xfailed": 0
+      },
+      "cwd": "/tmp/stop-parser-rev2/artifacts-closeout-sealed/extracted/agentic/agentic-mbse-0.1.3",
+      "executed_command": [
+        "/tmp/stop-parser-rev2/artifacts-closeout-sealed/runner-private/isolated-venv/bin/ruff",
+        "check",
+        "src",
+        "tests"
+      ],
+      "expected_counts": {
+        "collected": 0,
+        "deselected": 0,
+        "errors": 0,
+        "failed": 0,
+        "passed": 0,
+        "selected": 0,
+        "skipped": 0,
+        "xfailed": 0
+      },
+      "expected_output_sha256": "362af52b20403692636a0314fe6b6597aa3d795e379a25c3fd67a5cf6c3fca72",
+      "expected_status": 1,
+      "id": "agentic-ruff-baseline",
+      "import_files": [
+        "/tmp/stop-parser-rev2/artifacts-closeout-sealed/extracted/agentic/agentic-mbse-0.1.3/src/agentic_mbse/__init__.py"
+      ],
+      "import_probe": {
+        "path": "run-reports/agentic-ruff-baseline.imports.json",
+        "sha256": "dfb0cb5f8cb99c13963a315037c99993db3cc01c4242564d9996e3242161eda4"
+      },
+      "import_roots": [
+        "/tmp/stop-parser-rev2/artifacts-closeout-sealed/extracted/agentic/agentic-mbse-0.1.3/src"
+      ],
+      "junit": null,
+      "observed_skips": [],
+      "output_sha256": "362af52b20403692636a0314fe6b6597aa3d795e379a25c3fd67a5cf6c3fca72",
+      "skip_policies": [],
+      "status": 1,
+      "stderr": {
+        "path": "run-reports/agentic-ruff-baseline.stderr",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "stdout": {
+        "path": "run-reports/agentic-ruff-baseline.stdout",
+        "sha256": "23b1c10cbfe06faeb1d281989181865ead4d4417f09f957cde945138f936aafb"
+      },
+      "unexpected_skips": []
+    },
+    {
+      "allowed_skips": [
+        {
+          "node_id": "tests/test_mirror.py::TestModelIntegration::test_0d_mirror_produces_finite_lcoe",
+          "reason": "size_from_power / optimize_lcoe / use_0d_model gated off for release"
+        },
+        {
+          "node_id": "tests/test_mirror.py::TestModelIntegration::test_0d_mirror_plasma_state_attached",
+          "reason": "size_from_power / optimize_lcoe / use_0d_model gated off for release"
+        },
+        {
+          "node_id": "tests/test_mirror.py::TestModelIntegration::test_0d_mirror_no_disruption_penalty",
+          "reason": "size_from_power / optimize_lcoe / use_0d_model gated off for release"
+        },
+        {
+          "node_id": "tests/test_mirror.py::TestModelIntegration::test_0d_mirror_dhe3_uses_f_rad_fus_proxy",
+          "reason": "size_from_power / optimize_lcoe / use_0d_model gated off for release"
+        },
+        {
+          "node_id": "tests/test_mirror.py::TestModelIntegration::test_0d_mirror_dhe3_explicit_pin",
+          "reason": "size_from_power / optimize_lcoe / use_0d_model gated off for release"
+        },
+        {
+          "node_id": "tests/test_mirror.py::TestMirrorSizing::test_sized_lcoe_reflects_coil_account",
+          "reason": "size_from_power / optimize_lcoe / use_0d_model gated off for release"
+        },
+        {
+          "node_id": "tests/test_mirror.py::TestMirrorSizing::test_pinning_chamber_length_in_sizing_mode_raises",
+          "reason": "size_from_power / optimize_lcoe / use_0d_model gated off for release"
+        },
+        {
+          "node_id": "tests/test_mirror.py::TestMirrorSizing::test_optimize_mode_returns_f_beta_in_bounds",
+          "reason": "size_from_power / optimize_lcoe / use_0d_model gated off for release"
+        },
+        {
+          "node_id": "tests/test_mirror.py::TestMirrorSizing::test_high_f_beta_sizes_feasibly",
+          "reason": "size_from_power / optimize_lcoe / use_0d_model gated off for release"
+        },
+        {
+          "node_id": "tests/test_mirror.py::TestMirrorSizing::test_sized_state_beta_within_f_beta_cap",
+          "reason": "size_from_power / optimize_lcoe / use_0d_model gated off for release"
+        },
+        {
+          "node_id": "tests/test_mirror.py::TestWallConstraint::test_optimizer_survives_tight_cap_returns_finite_lcoe",
+          "reason": "size_from_power / optimize_lcoe / use_0d_model gated off for release"
+        },
+        {
+          "node_id": "tests/test_mirror.py::TestEnergyBalanceClosure::test_p_transport_identity_in_sizing",
+          "reason": "size_from_power / optimize_lcoe / use_0d_model gated off for release"
+        },
+        {
+          "node_id": "tests/test_mirror.py::TestEnergyBalanceClosure::test_sized_dt_optimum_is_realistic_temperature",
+          "reason": "size_from_power / optimize_lcoe / use_0d_model gated off for release"
+        },
+        {
+          "node_id": "tests/test_mirror.py::TestEnergyBalanceClosure::test_tau_E_physical_p_end_below_p_fus",
+          "reason": "size_from_power / optimize_lcoe / use_0d_model gated off for release"
+        },
+        {
+          "node_id": "tests/test_mirror.py::TestAlphaHeating::test_dt_optimum_is_driven",
+          "reason": "size_from_power / optimize_lcoe / use_0d_model gated off for release"
+        },
+        {
+          "node_id": "tests/test_mirror.py::TestAlphaHeating::test_alpha_loss_routed_to_end_channel",
+          "reason": "size_from_power / optimize_lcoe / use_0d_model gated off for release"
+        },
+        {
+          "node_id": "tests/test_mirror.py::TestPlugDecoupling::test_dt_unchanged_within_tolerance",
+          "reason": "size_from_power / optimize_lcoe / use_0d_model gated off for release"
+        },
+        {
+          "node_id": "tests/test_model.py::test_forward_accepts_dhe3_dd_frac_pin_override",
+          "reason": "size_from_power / optimize_lcoe / use_0d_model gated off for release"
+        },
+        {
+          "node_id": "tests/test_model.py::test_sensitivity_0d_tokamak_does_not_crash",
+          "reason": "size_from_power / optimize_lcoe / use_0d_model gated off for release"
+        },
+        {
+          "node_id": "tests/test_model.py::test_sensitivity_0d_matches_forward_finite_diff",
+          "reason": "size_from_power / optimize_lcoe / use_0d_model gated off for release"
+        },
+        {
+          "node_id": "tests/test_multifuel_0d.py::TestMultiFuelModel::test_dhe3_sizes_larger_machine_than_dt_at_equal_power",
+          "reason": "size_from_power / optimize_lcoe / use_0d_model gated off for release"
+        },
+        {
+          "node_id": "tests/test_multifuel_0d.py::TestMultiFuelModel::test_explicit_dhe3_dd_frac_override_pins_partition",
+          "reason": "size_from_power / optimize_lcoe / use_0d_model gated off for release"
+        },
+        {
+          "node_id": "tests/test_multifuel_0d.py::TestMultiFuelModel::test_dhe3_derives_fraction_without_override",
+          "reason": "size_from_power / optimize_lcoe / use_0d_model gated off for release"
+        },
+        {
+          "node_id": "tests/test_multifuel_0d.py::TestMultiFuelModel::test_fuel_mix_moves_fuel_cost_with_partition",
+          "reason": "size_from_power / optimize_lcoe / use_0d_model gated off for release"
+        },
+        {
+          "node_id": "tests/test_multifuel_0d.py::TestMultiFuelModel::test_dt_results_unchanged_by_multifuel_knobs",
+          "reason": "size_from_power / optimize_lcoe / use_0d_model gated off for release"
+        },
+        {
+          "node_id": "tests/test_multifuel_0d.py::TestMultiFuelModel::test_pb11_sizing_fails_loudly_not_silently",
+          "reason": "size_from_power / optimize_lcoe / use_0d_model gated off for release"
+        },
+        {
+          "node_id": "tests/test_multifuel_0d.py::TestFeasibilityGate::test_infeasible_implied_point_raises",
+          "reason": "size_from_power / optimize_lcoe / use_0d_model gated off for release"
+        },
+        {
+          "node_id": "tests/test_multifuel_0d.py::TestFeasibilityGate::test_escape_hatch_returns_without_nan",
+          "reason": "size_from_power / optimize_lcoe / use_0d_model gated off for release"
+        },
+        {
+          "node_id": "tests/test_multifuel_0d.py::TestFeasibilityGate::test_dt_at_sane_point_unaffected",
+          "reason": "size_from_power / optimize_lcoe / use_0d_model gated off for release"
+        },
+        {
+          "node_id": "tests/test_n_mod_sizing.py::TestNModSizing::test_solved_n_mod_exact",
+          "reason": "size_from_power / optimize_lcoe / use_0d_model gated off for release"
+        },
+        {
+          "node_id": "tests/test_n_mod_sizing.py::TestNModSizing::test_integer_ceil_and_overshoot",
+          "reason": "size_from_power / optimize_lcoe / use_0d_model gated off for release"
+        },
+        {
+          "node_id": "tests/test_n_mod_sizing.py::TestNModSizing::test_per_module_at_design_power",
+          "reason": "size_from_power / optimize_lcoe / use_0d_model gated off for release"
+        },
+        {
+          "node_id": "tests/test_n_mod_sizing.py::TestNModSizing::test_sizing_equivalent_to_manual_n_mod",
+          "reason": "size_from_power / optimize_lcoe / use_0d_model gated off for release"
+        },
+        {
+          "node_id": "tests/test_n_mod_sizing.py::TestNModSizing::test_cost_scales_with_solved_n_mod",
+          "reason": "size_from_power / optimize_lcoe / use_0d_model gated off for release"
+        },
+        {
+          "node_id": "tests/test_n_mod_sizing.py::TestNModSizing::test_forbidden_pin_n_mod",
+          "reason": "size_from_power / optimize_lcoe / use_0d_model gated off for release"
+        },
+        {
+          "node_id": "tests/test_n_mod_sizing.py::TestNModSizing::test_optimize_lcoe_rejected",
+          "reason": "size_from_power / optimize_lcoe / use_0d_model gated off for release"
+        },
+        {
+          "node_id": "tests/test_n_mod_sizing.py::TestNModSizing::test_all_n_mod_concepts_size[ConfinementConcept.ORBITRON-Fuel.PB11-0.005]",
+          "reason": "size_from_power / optimize_lcoe / use_0d_model gated off for release"
+        },
+        {
+          "node_id": "tests/test_n_mod_sizing.py::TestNModSizing::test_all_n_mod_concepts_size[ConfinementConcept.DENSE_PLASMA_FOCUS-Fuel.PB11-5.0]",
+          "reason": "size_from_power / optimize_lcoe / use_0d_model gated off for release"
+        },
+        {
+          "node_id": "tests/test_n_mod_sizing.py::TestNModSizing::test_all_n_mod_concepts_size[ConfinementConcept.STAGED_ZPINCH-Fuel.DT-50.0]",
+          "reason": "size_from_power / optimize_lcoe / use_0d_model gated off for release"
+        },
+        {
+          "node_id": "tests/test_n_mod_sizing.py::TestNModSizing::test_all_n_mod_concepts_size[ConfinementConcept.STEADY_FRC-Fuel.PB11-50.0]",
+          "reason": "size_from_power / optimize_lcoe / use_0d_model gated off for release"
+        },
+        {
+          "node_id": "tests/test_n_mod_sizing.py::TestNModSizing::test_volume_concept_still_sizes_by_geometry",
+          "reason": "size_from_power / optimize_lcoe / use_0d_model gated off for release"
+        },
+        {
+          "node_id": "tests/test_n_mod_sizing.py::TestNModSizing::test_unsupported_concept_still_raises[ConfinementConcept.POLYWELL-Fuel.PB11]",
+          "reason": "size_from_power / optimize_lcoe / use_0d_model gated off for release"
+        },
+        {
+          "node_id": "tests/test_n_mod_sizing.py::TestNModSizing::test_unsupported_concept_still_raises[ConfinementConcept.PULSED_FRC-Fuel.DHE3]",
+          "reason": "size_from_power / optimize_lcoe / use_0d_model gated off for release"
+        },
+        {
+          "node_id": "tests/test_tokamak.py::TestEndToEnd::test_forward_with_0d_produces_lcoe",
+          "reason": "size_from_power / optimize_lcoe / use_0d_model gated off for release"
+        },
+        {
+          "node_id": "tests/test_tokamak.py::TestEndToEnd::test_forward_0d_forward_mode",
+          "reason": "size_from_power / optimize_lcoe / use_0d_model gated off for release"
+        },
+        {
+          "node_id": "tests/test_tokamak.py::TestDisruptionPenalty::test_end_to_end_disruption_increases_lcoe",
+          "reason": "size_from_power / optimize_lcoe / use_0d_model gated off for release"
+        },
+        {
+          "node_id": "tests/test_tokamak_sizing.py::test_missing_disruption_key_errors_not_silent",
+          "reason": "size_from_power / optimize_lcoe / use_0d_model gated off for release"
+        },
+        {
+          "node_id": "tests/test_tokamak_sizing.py::test_sizing_overrides_accepted",
+          "reason": "size_from_power / optimize_lcoe / use_0d_model gated off for release"
+        },
+        {
+          "node_id": "tests/test_tokamak_sizing.py::test_sizing_runs_end_to_end_and_sets_geometry",
+          "reason": "size_from_power / optimize_lcoe / use_0d_model gated off for release"
+        },
+        {
+          "node_id": "tests/test_tokamak_sizing.py::test_pinning_R0_in_sizing_mode_raises",
+          "reason": "size_from_power / optimize_lcoe / use_0d_model gated off for release"
+        },
+        {
+          "node_id": "tests/test_tokamak_sizing.py::test_coil_cost_scales_with_power",
+          "reason": "size_from_power / optimize_lcoe / use_0d_model gated off for release"
+        },
+        {
+          "node_id": "tests/test_tokamak_sizing.py::test_optimize_returns_valid_fgw_and_lcoe",
+          "reason": "size_from_power / optimize_lcoe / use_0d_model gated off for release"
+        },
+        {
+          "node_id": "tests/test_tokamak_sizing.py::test_optimize_implies_size_from_power",
+          "reason": "size_from_power / optimize_lcoe / use_0d_model gated off for release"
+        },
+        {
+          "node_id": "tests/test_tokamak_sizing.py::test_optimize_lcoe_no_worse_than_default_fgw",
+          "reason": "size_from_power / optimize_lcoe / use_0d_model gated off for release"
+        },
+        {
+          "node_id": "tests/test_tokamak_sizing.py::test_arc_validation_reproduces_size",
+          "reason": "size_from_power / optimize_lcoe / use_0d_model gated off for release"
+        },
+        {
+          "node_id": "tests/test_tokamak_sizing.py::test_magnet_differentiation_rebco_smaller_than_nb3sn",
+          "reason": "size_from_power / optimize_lcoe / use_0d_model gated off for release"
+        },
+        {
+          "node_id": "tests/test_tokamak_sizing.py::test_scale_mode_grows_R0_with_power",
+          "reason": "size_from_power / optimize_lcoe / use_0d_model gated off for release"
+        },
+        {
+          "node_id": "tests/test_tokamak_sizing.py::test_H_factor_affects_lcoe_end_to_end",
+          "reason": "size_from_power / optimize_lcoe / use_0d_model gated off for release"
+        }
+      ],
+      "command": [
+        "/tmp/stop-parser-rev2/artifacts-closeout-sealed/runner-private/isolated-venv/bin/python",
+        "-m",
+        "pytest",
+        "tests"
+      ],
+      "counts": {
+        "collected": 660,
+        "deselected": 0,
+        "errors": 0,
+        "failed": 0,
+        "passed": 602,
+        "selected": 660,
+        "skipped": 58,
+        "xfailed": 0
+      },
+      "cwd": "/tmp/stop-parser-rev2/artifacts-closeout-sealed/extracted/costingfe/1costingfe-0.1.0",
+      "executed_command": [
+        "/tmp/stop-parser-rev2/artifacts-closeout-sealed/runner-private/isolated-venv/bin/python",
+        "-m",
+        "pytest",
+        "tests",
+        "-ra",
+        "--junitxml=/tmp/stop-parser-rev2/artifacts-closeout-sealed/run-reports/costingfe-pytest.xml"
+      ],
+      "expected_counts": {
+        "collected": 660,
+        "deselected": 0,
+        "errors": 0,
+        "failed": 0,
+        "passed": 602,
+        "selected": 660,
+        "skipped": 58,
+        "xfailed": 0
+      },
+      "expected_output_sha256": null,
+      "expected_status": 0,
+      "id": "costingfe-pytest",
+      "import_files": [
+        "/tmp/stop-parser-rev2/artifacts-closeout-sealed/extracted/costingfe/1costingfe-0.1.0/src/costingfe/__init__.py"
+      ],
+      "import_probe": {
+        "path": "run-reports/costingfe-pytest.imports.json",
+        "sha256": "72352d0a39d1fcf32ac92328cd4a682f071b9865283fc0655fb8609bf1e7b922"
+      },
+      "import_roots": [
+        "/tmp/stop-parser-rev2/artifacts-closeout-sealed/extracted/costingfe/1costingfe-0.1.0/src"
+      ],
+      "junit": {
+        "path": "run-reports/costingfe-pytest.xml",
+        "sha256": "7702c5b76635fc6558996bb61e2f939af813269e0cc3a7ea1085ca1150bd3bd6"
+      },
+      "observed_skips": [
+        {
+          "node_id": "tests/test_mirror.py::TestModelIntegration::test_0d_mirror_produces_finite_lcoe",
+          "reason": "size_from_power / optimize_lcoe / use_0d_model gated off for release"
+        },
+        {
+          "node_id": "tests/test_mirror.py::TestModelIntegration::test_0d_mirror_plasma_state_attached",
+          "reason": "size_from_power / optimize_lcoe / use_0d_model gated off for release"
+        },
+        {
+          "node_id": "tests/test_mirror.py::TestModelIntegration::test_0d_mirror_no_disruption_penalty",
+          "reason": "size_from_power / optimize_lcoe / use_0d_model gated off for release"
+        },
+        {
+          "node_id": "tests/test_mirror.py::TestModelIntegration::test_0d_mirror_dhe3_uses_f_rad_fus_proxy",
+          "reason": "size_from_power / optimize_lcoe / use_0d_model gated off for release"
+        },
+        {
+          "node_id": "tests/test_mirror.py::TestModelIntegration::test_0d_mirror_dhe3_explicit_pin",
+          "reason": "size_from_power / optimize_lcoe / use_0d_model gated off for release"
+        },
+        {
+          "node_id": "tests/test_mirror.py::TestMirrorSizing::test_sized_lcoe_reflects_coil_account",
+          "reason": "size_from_power / optimize_lcoe / use_0d_model gated off for release"
+        },
+        {
+          "node_id": "tests/test_mirror.py::TestMirrorSizing::test_pinning_chamber_length_in_sizing_mode_raises",
+          "reason": "size_from_power / optimize_lcoe / use_0d_model gated off for release"
+        },
+        {
+          "node_id": "tests/test_mirror.py::TestMirrorSizing::test_optimize_mode_returns_f_beta_in_bounds",
+          "reason": "size_from_power / optimize_lcoe / use_0d_model gated off for release"
+        },
+        {
+          "node_id": "tests/test_mirror.py::TestMirrorSizing::test_high_f_beta_sizes_feasibly",
+          "reason": "size_from_power / optimize_lcoe / use_0d_model gated off for release"
+        },
+        {
+          "node_id": "tests/test_mirror.py::TestMirrorSizing::test_sized_state_beta_within_f_beta_cap",
+          "reason": "size_from_power / optimize_lcoe / use_0d_model gated off for release"
+        },
+        {
+          "node_id": "tests/test_mirror.py::TestWallConstraint::test_optimizer_survives_tight_cap_returns_finite_lcoe",
+          "reason": "size_from_power / optimize_lcoe / use_0d_model gated off for release"
+        },
+        {
+          "node_id": "tests/test_mirror.py::TestEnergyBalanceClosure::test_p_transport_identity_in_sizing",
+          "reason": "size_from_power / optimize_lcoe / use_0d_model gated off for release"
+        },
+        {
+          "node_id": "tests/test_mirror.py::TestEnergyBalanceClosure::test_sized_dt_optimum_is_realistic_temperature",
+          "reason": "size_from_power / optimize_lcoe / use_0d_model gated off for release"
+        },
+        {
+          "node_id": "tests/test_mirror.py::TestEnergyBalanceClosure::test_tau_E_physical_p_end_below_p_fus",
+          "reason": "size_from_power / optimize_lcoe / use_0d_model gated off for release"
+        },
+        {
+          "node_id": "tests/test_mirror.py::TestAlphaHeating::test_dt_optimum_is_driven",
+          "reason": "size_from_power / optimize_lcoe / use_0d_model gated off for release"
+        },
+        {
+          "node_id": "tests/test_mirror.py::TestAlphaHeating::test_alpha_loss_routed_to_end_channel",
+          "reason": "size_from_power / optimize_lcoe / use_0d_model gated off for release"
+        },
+        {
+          "node_id": "tests/test_mirror.py::TestPlugDecoupling::test_dt_unchanged_within_tolerance",
+          "reason": "size_from_power / optimize_lcoe / use_0d_model gated off for release"
+        },
+        {
+          "node_id": "tests/test_model.py::test_forward_accepts_dhe3_dd_frac_pin_override",
+          "reason": "size_from_power / optimize_lcoe / use_0d_model gated off for release"
+        },
+        {
+          "node_id": "tests/test_model.py::test_sensitivity_0d_tokamak_does_not_crash",
+          "reason": "size_from_power / optimize_lcoe / use_0d_model gated off for release"
+        },
+        {
+          "node_id": "tests/test_model.py::test_sensitivity_0d_matches_forward_finite_diff",
+          "reason": "size_from_power / optimize_lcoe / use_0d_model gated off for release"
+        },
+        {
+          "node_id": "tests/test_multifuel_0d.py::TestMultiFuelModel::test_dhe3_sizes_larger_machine_than_dt_at_equal_power",
+          "reason": "size_from_power / optimize_lcoe / use_0d_model gated off for release"
+        },
+        {
+          "node_id": "tests/test_multifuel_0d.py::TestMultiFuelModel::test_explicit_dhe3_dd_frac_override_pins_partition",
+          "reason": "size_from_power / optimize_lcoe / use_0d_model gated off for release"
+        },
+        {
+          "node_id": "tests/test_multifuel_0d.py::TestMultiFuelModel::test_dhe3_derives_fraction_without_override",
+          "reason": "size_from_power / optimize_lcoe / use_0d_model gated off for release"
+        },
+        {
+          "node_id": "tests/test_multifuel_0d.py::TestMultiFuelModel::test_fuel_mix_moves_fuel_cost_with_partition",
+          "reason": "size_from_power / optimize_lcoe / use_0d_model gated off for release"
+        },
+        {
+          "node_id": "tests/test_multifuel_0d.py::TestMultiFuelModel::test_dt_results_unchanged_by_multifuel_knobs",
+          "reason": "size_from_power / optimize_lcoe / use_0d_model gated off for release"
+        },
+        {
+          "node_id": "tests/test_multifuel_0d.py::TestMultiFuelModel::test_pb11_sizing_fails_loudly_not_silently",
+          "reason": "size_from_power / optimize_lcoe / use_0d_model gated off for release"
+        },
+        {
+          "node_id": "tests/test_multifuel_0d.py::TestFeasibilityGate::test_infeasible_implied_point_raises",
+          "reason": "size_from_power / optimize_lcoe / use_0d_model gated off for release"
+        },
+        {
+          "node_id": "tests/test_multifuel_0d.py::TestFeasibilityGate::test_escape_hatch_returns_without_nan",
+          "reason": "size_from_power / optimize_lcoe / use_0d_model gated off for release"
+        },
+        {
+          "node_id": "tests/test_multifuel_0d.py::TestFeasibilityGate::test_dt_at_sane_point_unaffected",
+          "reason": "size_from_power / optimize_lcoe / use_0d_model gated off for release"
+        },
+        {
+          "node_id": "tests/test_n_mod_sizing.py::TestNModSizing::test_solved_n_mod_exact",
+          "reason": "size_from_power / optimize_lcoe / use_0d_model gated off for release"
+        },
+        {
+          "node_id": "tests/test_n_mod_sizing.py::TestNModSizing::test_integer_ceil_and_overshoot",
+          "reason": "size_from_power / optimize_lcoe / use_0d_model gated off for release"
+        },
+        {
+          "node_id": "tests/test_n_mod_sizing.py::TestNModSizing::test_per_module_at_design_power",
+          "reason": "size_from_power / optimize_lcoe / use_0d_model gated off for release"
+        },
+        {
+          "node_id": "tests/test_n_mod_sizing.py::TestNModSizing::test_sizing_equivalent_to_manual_n_mod",
+          "reason": "size_from_power / optimize_lcoe / use_0d_model gated off for release"
+        },
+        {
+          "node_id": "tests/test_n_mod_sizing.py::TestNModSizing::test_cost_scales_with_solved_n_mod",
+          "reason": "size_from_power / optimize_lcoe / use_0d_model gated off for release"
+        },
+        {
+          "node_id": "tests/test_n_mod_sizing.py::TestNModSizing::test_forbidden_pin_n_mod",
+          "reason": "size_from_power / optimize_lcoe / use_0d_model gated off for release"
+        },
+        {
+          "node_id": "tests/test_n_mod_sizing.py::TestNModSizing::test_optimize_lcoe_rejected",
+          "reason": "size_from_power / optimize_lcoe / use_0d_model gated off for release"
+        },
+        {
+          "node_id": "tests/test_n_mod_sizing.py::TestNModSizing::test_all_n_mod_concepts_size[ConfinementConcept.ORBITRON-Fuel.PB11-0.005]",
+          "reason": "size_from_power / optimize_lcoe / use_0d_model gated off for release"
+        },
+        {
+          "node_id": "tests/test_n_mod_sizing.py::TestNModSizing::test_all_n_mod_concepts_size[ConfinementConcept.DENSE_PLASMA_FOCUS-Fuel.PB11-5.0]",
+          "reason": "size_from_power / optimize_lcoe / use_0d_model gated off for release"
+        },
+        {
+          "node_id": "tests/test_n_mod_sizing.py::TestNModSizing::test_all_n_mod_concepts_size[ConfinementConcept.STAGED_ZPINCH-Fuel.DT-50.0]",
+          "reason": "size_from_power / optimize_lcoe / use_0d_model gated off for release"
+        },
+        {
+          "node_id": "tests/test_n_mod_sizing.py::TestNModSizing::test_all_n_mod_concepts_size[ConfinementConcept.STEADY_FRC-Fuel.PB11-50.0]",
+          "reason": "size_from_power / optimize_lcoe / use_0d_model gated off for release"
+        },
+        {
+          "node_id": "tests/test_n_mod_sizing.py::TestNModSizing::test_volume_concept_still_sizes_by_geometry",
+          "reason": "size_from_power / optimize_lcoe / use_0d_model gated off for release"
+        },
+        {
+          "node_id": "tests/test_n_mod_sizing.py::TestNModSizing::test_unsupported_concept_still_raises[ConfinementConcept.POLYWELL-Fuel.PB11]",
+          "reason": "size_from_power / optimize_lcoe / use_0d_model gated off for release"
+        },
+        {
+          "node_id": "tests/test_n_mod_sizing.py::TestNModSizing::test_unsupported_concept_still_raises[ConfinementConcept.PULSED_FRC-Fuel.DHE3]",
+          "reason": "size_from_power / optimize_lcoe / use_0d_model gated off for release"
+        },
+        {
+          "node_id": "tests/test_tokamak.py::TestEndToEnd::test_forward_with_0d_produces_lcoe",
+          "reason": "size_from_power / optimize_lcoe / use_0d_model gated off for release"
+        },
+        {
+          "node_id": "tests/test_tokamak.py::TestEndToEnd::test_forward_0d_forward_mode",
+          "reason": "size_from_power / optimize_lcoe / use_0d_model gated off for release"
+        },
+        {
+          "node_id": "tests/test_tokamak.py::TestDisruptionPenalty::test_end_to_end_disruption_increases_lcoe",
+          "reason": "size_from_power / optimize_lcoe / use_0d_model gated off for release"
+        },
+        {
+          "node_id": "tests/test_tokamak_sizing.py::test_missing_disruption_key_errors_not_silent",
+          "reason": "size_from_power / optimize_lcoe / use_0d_model gated off for release"
+        },
+        {
+          "node_id": "tests/test_tokamak_sizing.py::test_sizing_overrides_accepted",
+          "reason": "size_from_power / optimize_lcoe / use_0d_model gated off for release"
+        },
+        {
+          "node_id": "tests/test_tokamak_sizing.py::test_sizing_runs_end_to_end_and_sets_geometry",
+          "reason": "size_from_power / optimize_lcoe / use_0d_model gated off for release"
+        },
+        {
+          "node_id": "tests/test_tokamak_sizing.py::test_pinning_R0_in_sizing_mode_raises",
+          "reason": "size_from_power / optimize_lcoe / use_0d_model gated off for release"
+        },
+        {
+          "node_id": "tests/test_tokamak_sizing.py::test_coil_cost_scales_with_power",
+          "reason": "size_from_power / optimize_lcoe / use_0d_model gated off for release"
+        },
+        {
+          "node_id": "tests/test_tokamak_sizing.py::test_optimize_returns_valid_fgw_and_lcoe",
+          "reason": "size_from_power / optimize_lcoe / use_0d_model gated off for release"
+        },
+        {
+          "node_id": "tests/test_tokamak_sizing.py::test_optimize_implies_size_from_power",
+          "reason": "size_from_power / optimize_lcoe / use_0d_model gated off for release"
+        },
+        {
+          "node_id": "tests/test_tokamak_sizing.py::test_optimize_lcoe_no_worse_than_default_fgw",
+          "reason": "size_from_power / optimize_lcoe / use_0d_model gated off for release"
+        },
+        {
+          "node_id": "tests/test_tokamak_sizing.py::test_arc_validation_reproduces_size",
+          "reason": "size_from_power / optimize_lcoe / use_0d_model gated off for release"
+        },
+        {
+          "node_id": "tests/test_tokamak_sizing.py::test_magnet_differentiation_rebco_smaller_than_nb3sn",
+          "reason": "size_from_power / optimize_lcoe / use_0d_model gated off for release"
+        },
+        {
+          "node_id": "tests/test_tokamak_sizing.py::test_scale_mode_grows_R0_with_power",
+          "reason": "size_from_power / optimize_lcoe / use_0d_model gated off for release"
+        },
+        {
+          "node_id": "tests/test_tokamak_sizing.py::test_H_factor_affects_lcoe_end_to_end",
+          "reason": "size_from_power / optimize_lcoe / use_0d_model gated off for release"
+        }
+      ],
+      "output_sha256": "855bf4a36ddd364f83a554b9ac3b92c108ebc81a3a265fb43c6c4ece878c300a",
+      "skip_policies": [
+        {
+          "node_id": "tests/(?:test_mirror|test_model|test_multifuel_0d|test_n_mod_sizing|test_tokamak|test_tokamak_sizing)\\.py::.*",
+          "reason": "size_from_power / optimize_lcoe / use_0d_model gated off for release"
+        }
+      ],
+      "status": 0,
+      "stderr": {
+        "path": "run-reports/costingfe-pytest.stderr",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "stdout": {
+        "path": "run-reports/costingfe-pytest.stdout",
+        "sha256": "e4addb8aa365685b1ac73648e8f379e83713ca4d0aeab50270603d602732db37"
+      },
+      "unexpected_skips": []
+    },
+    {
+      "allowed_skips": [],
+      "command": [
+        "/tmp/stop-parser-rev2/artifacts-closeout-sealed/runner-private/isolated-venv/bin/ruff",
+        "check",
+        "src",
+        "tests"
+      ],
+      "counts": {
+        "collected": 0,
+        "deselected": 0,
+        "errors": 0,
+        "failed": 0,
+        "passed": 0,
+        "selected": 0,
+        "skipped": 0,
+        "xfailed": 0
+      },
+      "cwd": "/tmp/stop-parser-rev2/artifacts-closeout-sealed/extracted/costingfe/1costingfe-0.1.0",
+      "executed_command": [
+        "/tmp/stop-parser-rev2/artifacts-closeout-sealed/runner-private/isolated-venv/bin/ruff",
+        "check",
+        "src",
+        "tests"
+      ],
+      "expected_counts": {
+        "collected": 0,
+        "deselected": 0,
+        "errors": 0,
+        "failed": 0,
+        "passed": 0,
+        "selected": 0,
+        "skipped": 0,
+        "xfailed": 0
+      },
+      "expected_output_sha256": null,
+      "expected_status": 0,
+      "id": "costingfe-ruff",
+      "import_files": [
+        "/tmp/stop-parser-rev2/artifacts-closeout-sealed/extracted/costingfe/1costingfe-0.1.0/src/costingfe/__init__.py"
+      ],
+      "import_probe": {
+        "path": "run-reports/costingfe-ruff.imports.json",
+        "sha256": "72352d0a39d1fcf32ac92328cd4a682f071b9865283fc0655fb8609bf1e7b922"
+      },
+      "import_roots": [
+        "/tmp/stop-parser-rev2/artifacts-closeout-sealed/extracted/costingfe/1costingfe-0.1.0/src"
+      ],
+      "junit": null,
+      "observed_skips": [],
+      "output_sha256": "98733c3446b52dc3e6b6943142b19a142025d9727521f6abc3783a20e4b6d3c6",
+      "skip_policies": [],
+      "status": 0,
+      "stderr": {
+        "path": "run-reports/costingfe-ruff.stderr",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "stdout": {
+        "path": "run-reports/costingfe-ruff.stdout",
+        "sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18"
+      },
+      "unexpected_skips": []
+    },
+    {
+      "allowed_skips": [],
+      "command": [
+        "/tmp/stop-parser-rev2/artifacts-closeout-sealed/runner-private/isolated-venv/bin/python",
+        "-m",
+        "pytest",
+        "packages/teax-simkit/simkit/tests",
+        "packages/battery-tea-demo/battery_tea/tests",
+        "-q"
+      ],
+      "counts": {
+        "collected": 406,
+        "deselected": 0,
+        "errors": 0,
+        "failed": 0,
+        "passed": 406,
+        "selected": 406,
+        "skipped": 0,
+        "xfailed": 0
+      },
+      "cwd": "/tmp/stop-parser-rev2/artifacts-closeout-sealed/extracted/teax/teax-0.1.0",
+      "executed_command": [
+        "/tmp/stop-parser-rev2/artifacts-closeout-sealed/runner-private/isolated-venv/bin/python",
+        "-m",
+        "pytest",
+        "packages/teax-simkit/simkit/tests",
+        "packages/battery-tea-demo/battery_tea/tests",
+        "-q",
+        "-ra",
+        "--junitxml=/tmp/stop-parser-rev2/artifacts-closeout-sealed/run-reports/teax-pytest.xml"
+      ],
+      "expected_counts": {
+        "collected": 406,
+        "deselected": 0,
+        "errors": 0,
+        "failed": 0,
+        "passed": 406,
+        "selected": 406,
+        "skipped": 0,
+        "xfailed": 0
+      },
+      "expected_output_sha256": null,
+      "expected_status": 0,
+      "id": "teax-pytest",
+      "import_files": [
+        "/tmp/stop-parser-rev2/artifacts-closeout-sealed/extracted/teax/teax-0.1.0/packages/teax-simkit/simkit/__init__.py",
+        "/tmp/stop-parser-rev2/artifacts-closeout-sealed/extracted/teax/teax-0.1.0/packages/battery-tea-demo/battery_tea/__init__.py"
+      ],
+      "import_probe": {
+        "path": "run-reports/teax-pytest.imports.json",
+        "sha256": "5282096dffee093dc9e6d5398f492a277a270fbdab737936ed15a010cf88d751"
+      },
+      "import_roots": [
+        "/tmp/stop-parser-rev2/artifacts-closeout-sealed/extracted/teax/teax-0.1.0/packages/teax-simkit",
+        "/tmp/stop-parser-rev2/artifacts-closeout-sealed/extracted/teax/teax-0.1.0/packages/battery-tea-demo"
+      ],
+      "junit": {
+        "path": "run-reports/teax-pytest.xml",
+        "sha256": "55d8bf86d188ed169a26b2a86f97b15cd06f75259a02c400ac7ce3c3770aa2fc"
+      },
+      "observed_skips": [],
+      "output_sha256": "c9d172777d5be374d569248e3560cab8abe2203a0164e696d8ba2bc1c015ab1e",
+      "skip_policies": [],
+      "status": 0,
+      "stderr": {
+        "path": "run-reports/teax-pytest.stderr",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "stdout": {
+        "path": "run-reports/teax-pytest.stdout",
+        "sha256": "0ea41aa3c341506e5dc4d8bf13943e749e152f81bfb20046deda83c39922e908"
+      },
+      "unexpected_skips": []
+    },
+    {
+      "allowed_skips": [],
+      "command": [
+        "/tmp/stop-parser-rev2/artifacts-closeout-sealed/runner-private/isolated-venv/bin/mypy",
+        "--strict",
+        "src/sysml_codegen/extraction/binding_source.py",
+        "src/sysml_codegen/elaboration/expression_evidence.py"
+      ],
+      "counts": {
+        "collected": 0,
+        "deselected": 0,
+        "errors": 0,
+        "failed": 0,
+        "passed": 0,
+        "selected": 0,
+        "skipped": 0,
+        "xfailed": 0
+      },
+      "cwd": "/tmp/stop-parser-rev2/artifacts-closeout-sealed/extracted/codegen/sysml-codegen-0.1.1",
+      "executed_command": [
+        "/tmp/stop-parser-rev2/artifacts-closeout-sealed/runner-private/isolated-venv/bin/mypy",
+        "--strict",
+        "src/sysml_codegen/extraction/binding_source.py",
+        "src/sysml_codegen/elaboration/expression_evidence.py"
+      ],
+      "expected_counts": {
+        "collected": 0,
+        "deselected": 0,
+        "errors": 0,
+        "failed": 0,
+        "passed": 0,
+        "selected": 0,
+        "skipped": 0,
+        "xfailed": 0
+      },
+      "expected_output_sha256": null,
+      "expected_status": 0,
+      "id": "codegen-strict",
+      "import_files": [
+        "/tmp/stop-parser-rev2/artifacts-closeout-sealed/extracted/codegen/sysml-codegen-0.1.1/src/sysml_codegen/__init__.py",
+        "/tmp/stop-parser-rev2/artifacts-closeout-sealed/runner-private/isolated-venv/lib/python3.12/site-packages/agentic_mbse/__init__.py"
+      ],
+      "import_probe": {
+        "path": "run-reports/codegen-strict.imports.json",
+        "sha256": "5074011c00122f6578effbe7a1fa9d5b7e222fbf027a4f232dac9eccb6e0713b"
+      },
+      "import_roots": [
+        "/tmp/stop-parser-rev2/artifacts-closeout-sealed/extracted/codegen/sysml-codegen-0.1.1/src",
+        "/tmp/stop-parser-rev2/artifacts-closeout-sealed/runner-private/isolated-venv/lib/python3.12/site-packages"
+      ],
+      "junit": null,
+      "observed_skips": [],
+      "output_sha256": "bd1f00a1dcc181240dc145cafd5d6dc20ec3603a73eeda938640c66122dd4239",
+      "skip_policies": [],
+      "status": 0,
+      "stderr": {
+        "path": "run-reports/codegen-strict.stderr",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "stdout": {
+        "path": "run-reports/codegen-strict.stdout",
+        "sha256": "f9b031e5c45aa702cd4fef028d465551cb20a2c4698e0913c7b00766b20ac4d8"
+      },
+      "unexpected_skips": []
+    },
+    {
+      "allowed_skips": [],
+      "command": [
+        "/tmp/stop-parser-rev2/artifacts-closeout-sealed/runner-private/isolated-venv/bin/mypy",
+        "src"
+      ],
+      "counts": {
+        "collected": 0,
+        "deselected": 0,
+        "errors": 0,
+        "failed": 0,
+        "passed": 0,
+        "selected": 0,
+        "skipped": 0,
+        "xfailed": 0
+      },
+      "cwd": "/tmp/stop-parser-rev2/artifacts-closeout-sealed/extracted/codegen/sysml-codegen-0.1.1",
+      "executed_command": [
+        "/tmp/stop-parser-rev2/artifacts-closeout-sealed/runner-private/isolated-venv/bin/mypy",
+        "src"
+      ],
+      "expected_counts": {
+        "collected": 0,
+        "deselected": 0,
+        "errors": 0,
+        "failed": 0,
+        "passed": 0,
+        "selected": 0,
+        "skipped": 0,
+        "xfailed": 0
+      },
+      "expected_output_sha256": "76ea65714858850c985a4ded9788f518c196d5ee4456e35258558ae2b49c90c6",
+      "expected_status": 1,
+      "id": "codegen-mypy-baseline",
+      "import_files": [
+        "/tmp/stop-parser-rev2/artifacts-closeout-sealed/extracted/codegen/sysml-codegen-0.1.1/src/sysml_codegen/__init__.py",
+        "/tmp/stop-parser-rev2/artifacts-closeout-sealed/runner-private/isolated-venv/lib/python3.12/site-packages/agentic_mbse/__init__.py"
+      ],
+      "import_probe": {
+        "path": "run-reports/codegen-mypy-baseline.imports.json",
+        "sha256": "5074011c00122f6578effbe7a1fa9d5b7e222fbf027a4f232dac9eccb6e0713b"
+      },
+      "import_roots": [
+        "/tmp/stop-parser-rev2/artifacts-closeout-sealed/extracted/codegen/sysml-codegen-0.1.1/src",
+        "/tmp/stop-parser-rev2/artifacts-closeout-sealed/runner-private/isolated-venv/lib/python3.12/site-packages"
+      ],
+      "junit": null,
+      "observed_skips": [],
+      "output_sha256": "76ea65714858850c985a4ded9788f518c196d5ee4456e35258558ae2b49c90c6",
+      "skip_policies": [],
+      "status": 1,
+      "stderr": {
+        "path": "run-reports/codegen-mypy-baseline.stderr",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "stdout": {
+        "path": "run-reports/codegen-mypy-baseline.stdout",
+        "sha256": "ae27217ea9950d4305a23836904e35967903dd47c9d7c909ec275e80d765bdef"
+      },
+      "unexpected_skips": []
+    },
+    {
+      "allowed_skips": [
+        {
+          "node_id": "tests/conformance/test_calc_compat_parity.py::test_calc_compat_parity[agg_literal_probe]",
+          "reason": "agg_literal_probe: no calc output expressions in the golden"
+        },
+        {
+          "node_id": "tests/conformance/test_calc_compat_parity.py::test_calc_compat_parity[agg_localterm_probe]",
+          "reason": "agg_localterm_probe: no calc output expressions in the golden"
+        },
+        {
+          "node_id": "tests/conformance/test_calc_compat_parity.py::test_calc_compat_parity[constraint_non_numerical]",
+          "reason": "constraint_non_numerical: no calc output expressions in the golden"
+        },
+        {
+          "node_id": "tests/conformance/test_calc_compat_parity.py::test_calc_compat_parity[crosspart_rollup_twolevel]",
+          "reason": "crosspart_rollup_twolevel: no calc output expressions in the golden"
+        },
+        {
+          "node_id": "tests/conformance/test_calc_compat_parity.py::test_calc_compat_parity[gate_a]",
+          "reason": "gate_a: no calc output expressions in the golden"
+        },
+        {
+          "node_id": "tests/conformance/test_calc_compat_parity.py::test_calc_compat_parity[gate_a_package_owner]",
+          "reason": "gate_a_package_owner: no calc output expressions in the golden"
+        },
+        {
+          "node_id": "tests/conformance/test_calc_compat_parity.py::test_calc_compat_parity[modeled_default_fidelity]",
+          "reason": "modeled_default_fidelity: no calc output expressions in the golden"
+        },
+        {
+          "node_id": "tests/conformance/test_calc_compat_parity.py::test_calc_compat_parity[shadowed_reference]",
+          "reason": "shadowed_reference: no calc output expressions in the golden"
+        },
+        {
+          "node_id": "tests/conformance/test_calc_compat_parity.py::test_calc_compat_parity[shared_producer]",
+          "reason": "shared_producer: no calc output expressions in the golden"
+        }
+      ],
+      "command": [
+        "/tmp/stop-parser-rev2/artifacts-closeout-sealed/runner-private/isolated-venv/bin/python",
+        "-m",
+        "pytest",
+        "tests"
+      ],
+      "counts": {
+        "collected": 2647,
+        "deselected": 94,
+        "errors": 0,
+        "failed": 0,
+        "passed": 2544,
+        "selected": 2553,
+        "skipped": 9,
+        "xfailed": 0
+      },
+      "cwd": "/tmp/stop-parser-rev2/artifacts-closeout-sealed/extracted/codegen/sysml-codegen-0.1.1",
+      "executed_command": [
+        "/tmp/stop-parser-rev2/artifacts-closeout-sealed/runner-private/isolated-venv/bin/python",
+        "-m",
+        "pytest",
+        "tests",
+        "-ra",
+        "--junitxml=/tmp/stop-parser-rev2/artifacts-closeout-sealed/run-reports/codegen-default.xml"
+      ],
+      "expected_counts": {
+        "collected": 2647,
+        "deselected": 94,
+        "errors": 0,
+        "failed": 0,
+        "passed": 2544,
+        "selected": 2553,
+        "skipped": 9,
+        "xfailed": 0
+      },
+      "expected_output_sha256": null,
+      "expected_status": 0,
+      "id": "codegen-default",
+      "import_files": [
+        "/tmp/stop-parser-rev2/artifacts-closeout-sealed/extracted/codegen/sysml-codegen-0.1.1/src/sysml_codegen/__init__.py",
+        "/tmp/stop-parser-rev2/artifacts-closeout-sealed/runner-private/isolated-venv/lib/python3.12/site-packages/agentic_mbse/__init__.py"
+      ],
+      "import_probe": {
+        "path": "run-reports/codegen-default.imports.json",
+        "sha256": "5074011c00122f6578effbe7a1fa9d5b7e222fbf027a4f232dac9eccb6e0713b"
+      },
+      "import_roots": [
+        "/tmp/stop-parser-rev2/artifacts-closeout-sealed/extracted/codegen/sysml-codegen-0.1.1/src",
+        "/tmp/stop-parser-rev2/artifacts-closeout-sealed/runner-private/isolated-venv/lib/python3.12/site-packages"
+      ],
+      "junit": {
+        "path": "run-reports/codegen-default.xml",
+        "sha256": "7f91b60aa814b2e1ec41c9df19817e86409c1cf77e5fdf8d487a06cab23c2f81"
+      },
+      "observed_skips": [
+        {
+          "node_id": "tests/conformance/test_calc_compat_parity.py::test_calc_compat_parity[agg_literal_probe]",
+          "reason": "agg_literal_probe: no calc output expressions in the golden"
+        },
+        {
+          "node_id": "tests/conformance/test_calc_compat_parity.py::test_calc_compat_parity[agg_localterm_probe]",
+          "reason": "agg_localterm_probe: no calc output expressions in the golden"
+        },
+        {
+          "node_id": "tests/conformance/test_calc_compat_parity.py::test_calc_compat_parity[constraint_non_numerical]",
+          "reason": "constraint_non_numerical: no calc output expressions in the golden"
+        },
+        {
+          "node_id": "tests/conformance/test_calc_compat_parity.py::test_calc_compat_parity[crosspart_rollup_twolevel]",
+          "reason": "crosspart_rollup_twolevel: no calc output expressions in the golden"
+        },
+        {
+          "node_id": "tests/conformance/test_calc_compat_parity.py::test_calc_compat_parity[gate_a]",
+          "reason": "gate_a: no calc output expressions in the golden"
+        },
+        {
+          "node_id": "tests/conformance/test_calc_compat_parity.py::test_calc_compat_parity[gate_a_package_owner]",
+          "reason": "gate_a_package_owner: no calc output expressions in the golden"
+        },
+        {
+          "node_id": "tests/conformance/test_calc_compat_parity.py::test_calc_compat_parity[modeled_default_fidelity]",
+          "reason": "modeled_default_fidelity: no calc output expressions in the golden"
+        },
+        {
+          "node_id": "tests/conformance/test_calc_compat_parity.py::test_calc_compat_parity[shadowed_reference]",
+          "reason": "shadowed_reference: no calc output expressions in the golden"
+        },
+        {
+          "node_id": "tests/conformance/test_calc_compat_parity.py::test_calc_compat_parity[shared_producer]",
+          "reason": "shared_producer: no calc output expressions in the golden"
+        }
+      ],
+      "output_sha256": "21b2b2e84707876f4a7b8d68d3f8e7e2db2ebc899186c5e30ce68298419fff02",
+      "skip_policies": [
+        {
+          "node_id": "tests/conformance/test_calc_compat_parity\\.py::.*",
+          "reason": ".*: no calc output expressions in the golden"
+        }
+      ],
+      "status": 0,
+      "stderr": {
+        "path": "run-reports/codegen-default.stderr",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "stdout": {
+        "path": "run-reports/codegen-default.stdout",
+        "sha256": "2e3353242d5099451bd77aebe80438ed14db1edb4b59a8eec1f2e33da2912027"
+      },
+      "unexpected_skips": []
+    },
+    {
+      "allowed_skips": [],
+      "command": [
+        "/tmp/stop-parser-rev2/artifacts-closeout-sealed/runner-private/isolated-venv/bin/python",
+        "-m",
+        "pytest",
+        "tests/conformance/test_exact_route_generated_package.py"
+      ],
+      "counts": {
+        "collected": 4,
+        "deselected": 0,
+        "errors": 0,
+        "failed": 0,
+        "passed": 4,
+        "selected": 4,
+        "skipped": 0,
+        "xfailed": 0
+      },
+      "cwd": "/tmp/stop-parser-rev2/artifacts-closeout-sealed/extracted/codegen/sysml-codegen-0.1.1",
+      "executed_command": [
+        "/tmp/stop-parser-rev2/artifacts-closeout-sealed/runner-private/isolated-venv/bin/python",
+        "-m",
+        "pytest",
+        "tests/conformance/test_exact_route_generated_package.py",
+        "-ra",
+        "--junitxml=/tmp/stop-parser-rev2/artifacts-closeout-sealed/run-reports/codegen-live-snapshot.xml"
+      ],
+      "expected_counts": {
+        "collected": 4,
+        "deselected": 0,
+        "errors": 0,
+        "failed": 0,
+        "passed": 4,
+        "selected": 4,
+        "skipped": 0,
+        "xfailed": 0
+      },
+      "expected_output_sha256": null,
+      "expected_status": 0,
+      "id": "codegen-live-snapshot",
+      "import_files": [
+        "/tmp/stop-parser-rev2/artifacts-closeout-sealed/extracted/codegen/sysml-codegen-0.1.1/src/sysml_codegen/__init__.py",
+        "/tmp/stop-parser-rev2/artifacts-closeout-sealed/runner-private/isolated-venv/lib/python3.12/site-packages/agentic_mbse/__init__.py"
+      ],
+      "import_probe": {
+        "path": "run-reports/codegen-live-snapshot.imports.json",
+        "sha256": "5074011c00122f6578effbe7a1fa9d5b7e222fbf027a4f232dac9eccb6e0713b"
+      },
+      "import_roots": [
+        "/tmp/stop-parser-rev2/artifacts-closeout-sealed/extracted/codegen/sysml-codegen-0.1.1/src",
+        "/tmp/stop-parser-rev2/artifacts-closeout-sealed/runner-private/isolated-venv/lib/python3.12/site-packages"
+      ],
+      "junit": {
+        "path": "run-reports/codegen-live-snapshot.xml",
+        "sha256": "4412009d75dbb64e36462b16f75f85376f26f47754b004a6d58e5b6752a4d70c"
+      },
+      "observed_skips": [],
+      "output_sha256": "99c315cde5cebb08d96a25e44ddb2208e462e6c702b975e813d2de9af85c4155",
+      "skip_policies": [],
+      "status": 0,
+      "stderr": {
+        "path": "run-reports/codegen-live-snapshot.stderr",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "stdout": {
+        "path": "run-reports/codegen-live-snapshot.stdout",
+        "sha256": "6a63265e7bc1222cebacb92d64e8d8f5dd692a44e905e2034eed3b22d1e4c702"
+      },
+      "unexpected_skips": []
+    },
+    {
+      "allowed_skips": [],
+      "command": [
+        "/tmp/stop-parser-rev2/artifacts-closeout-sealed/runner-private/isolated-venv/bin/python",
+        "-m",
+        "pytest",
+        "tests/conformance/test_generated_schema_importable.py",
+        "tests/conformance/test_output_schema_contract.py"
+      ],
+      "counts": {
+        "collected": 25,
+        "deselected": 0,
+        "errors": 0,
+        "failed": 0,
+        "passed": 25,
+        "selected": 25,
+        "skipped": 0,
+        "xfailed": 0
+      },
+      "cwd": "/tmp/stop-parser-rev2/artifacts-closeout-sealed/extracted/codegen/sysml-codegen-0.1.1",
+      "executed_command": [
+        "/tmp/stop-parser-rev2/artifacts-closeout-sealed/runner-private/isolated-venv/bin/python",
+        "-m",
+        "pytest",
+        "tests/conformance/test_generated_schema_importable.py",
+        "tests/conformance/test_output_schema_contract.py",
+        "-ra",
+        "--junitxml=/tmp/stop-parser-rev2/artifacts-closeout-sealed/run-reports/codegen-generated-package.xml"
+      ],
+      "expected_counts": {
+        "collected": 25,
+        "deselected": 0,
+        "errors": 0,
+        "failed": 0,
+        "passed": 25,
+        "selected": 25,
+        "skipped": 0,
+        "xfailed": 0
+      },
+      "expected_output_sha256": null,
+      "expected_status": 0,
+      "id": "codegen-generated-package",
+      "import_files": [
+        "/tmp/stop-parser-rev2/artifacts-closeout-sealed/extracted/codegen/sysml-codegen-0.1.1/src/sysml_codegen/__init__.py",
+        "/tmp/stop-parser-rev2/artifacts-closeout-sealed/runner-private/isolated-venv/lib/python3.12/site-packages/agentic_mbse/__init__.py"
+      ],
+      "import_probe": {
+        "path": "run-reports/codegen-generated-package.imports.json",
+        "sha256": "5074011c00122f6578effbe7a1fa9d5b7e222fbf027a4f232dac9eccb6e0713b"
+      },
+      "import_roots": [
+        "/tmp/stop-parser-rev2/artifacts-closeout-sealed/extracted/codegen/sysml-codegen-0.1.1/src",
+        "/tmp/stop-parser-rev2/artifacts-closeout-sealed/runner-private/isolated-venv/lib/python3.12/site-packages"
+      ],
+      "junit": {
+        "path": "run-reports/codegen-generated-package.xml",
+        "sha256": "b587ab478a11021c10cf25053f907d7220f22f53635cf9d67ac5674b5f172834"
+      },
+      "observed_skips": [],
+      "output_sha256": "0f0cfa03adeecaa21b13f41b4ab359d9ef31191f31409c2b03df6eeea916394a",
+      "skip_policies": [],
+      "status": 0,
+      "stderr": {
+        "path": "run-reports/codegen-generated-package.stderr",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "stdout": {
+        "path": "run-reports/codegen-generated-package.stdout",
+        "sha256": "4982b970b534951b237d5a6dc03ab33d9a50d4340ebbb0ddf50154eb0c142e1b"
+      },
+      "unexpected_skips": []
+    },
+    {
+      "allowed_skips": [],
+      "command": [
+        "/tmp/stop-parser-rev2/artifacts-closeout-sealed/runner-private/isolated-venv/bin/python",
+        "-m",
+        "pytest",
+        "tests/execution",
+        "-m",
+        "execution",
+        "-q"
+      ],
+      "counts": {
+        "collected": 94,
+        "deselected": 0,
+        "errors": 0,
+        "failed": 0,
+        "passed": 94,
+        "selected": 94,
+        "skipped": 0,
+        "xfailed": 0
+      },
+      "cwd": "/tmp/stop-parser-rev2/artifacts-closeout-sealed/extracted/codegen/sysml-codegen-0.1.1",
+      "executed_command": [
+        "/tmp/stop-parser-rev2/artifacts-closeout-sealed/runner-private/isolated-venv/bin/python",
+        "-m",
+        "pytest",
+        "tests/execution",
+        "-m",
+        "execution",
+        "-q",
+        "-ra",
+        "--junitxml=/tmp/stop-parser-rev2/artifacts-closeout-sealed/run-reports/codegen-execution.xml"
+      ],
+      "expected_counts": {
+        "collected": 94,
+        "deselected": 0,
+        "errors": 0,
+        "failed": 0,
+        "passed": 94,
+        "selected": 94,
+        "skipped": 0,
+        "xfailed": 0
+      },
+      "expected_output_sha256": null,
+      "expected_status": 0,
+      "id": "codegen-execution",
+      "import_files": [
+        "/tmp/stop-parser-rev2/artifacts-closeout-sealed/extracted/codegen/sysml-codegen-0.1.1/src/sysml_codegen/__init__.py",
+        "/tmp/stop-parser-rev2/artifacts-closeout-sealed/runner-private/isolated-venv/lib/python3.12/site-packages/agentic_mbse/__init__.py",
+        "/tmp/stop-parser-rev2/artifacts-closeout-sealed/extracted/teax/teax-0.1.0/packages/teax-simkit/simkit/__init__.py"
+      ],
+      "import_probe": {
+        "path": "run-reports/codegen-execution.imports.json",
+        "sha256": "3c3cb07fb1ff00df658a07928be5d1c4c8f060e7ffb85dc1053884fdc1ceda4d"
+      },
+      "import_roots": [
+        "/tmp/stop-parser-rev2/artifacts-closeout-sealed/extracted/codegen/sysml-codegen-0.1.1/src",
+        "/tmp/stop-parser-rev2/artifacts-closeout-sealed/runner-private/isolated-venv/lib/python3.12/site-packages",
+        "/tmp/stop-parser-rev2/artifacts-closeout-sealed/extracted/teax/teax-0.1.0/packages/teax-simkit"
+      ],
+      "junit": {
+        "path": "run-reports/codegen-execution.xml",
+        "sha256": "ceaedb185234226ea948fc747289f0102042fbbd613695ede6e6d7d7ee9179e8"
+      },
+      "observed_skips": [],
+      "output_sha256": "521401059f0529e1361ebfe28a264bb5ddb16d9392ceea52a8c3d7158c569a81",
+      "skip_policies": [],
+      "status": 0,
+      "stderr": {
+        "path": "run-reports/codegen-execution.stderr",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "stdout": {
+        "path": "run-reports/codegen-execution.stdout",
+        "sha256": "c2b1300e4f254b935ea3e911e079bfd4f6bd9cd432993bd1698094ef662eb6fb"
+      },
+      "unexpected_skips": []
+    },
+    {
+      "allowed_skips": [],
+      "command": [
+        "/home/reid/.local/bin/uv",
+        "lock",
+        "--check",
+        "--offline"
+      ],
+      "counts": {
+        "collected": 0,
+        "deselected": 0,
+        "errors": 0,
+        "failed": 0,
+        "passed": 0,
+        "selected": 0,
+        "skipped": 0,
+        "xfailed": 0
+      },
+      "cwd": "/tmp/stop-parser-rev2/artifacts-closeout-sealed/extracted/fusion/fusion-tea-0.1.0",
+      "executed_command": [
+        "/home/reid/.local/bin/uv",
+        "lock",
+        "--check",
+        "--offline"
+      ],
+      "expected_counts": {
+        "collected": 0,
+        "deselected": 0,
+        "errors": 0,
+        "failed": 0,
+        "passed": 0,
+        "selected": 0,
+        "skipped": 0,
+        "xfailed": 0
+      },
+      "expected_output_sha256": null,
+      "expected_status": 0,
+      "id": "fusion-lock-check",
+      "import_files": [
+        "/tmp/stop-parser-rev2/artifacts-closeout-sealed/runner-private/isolated-venv/lib/python3.12/site-packages/agentic_mbse/__init__.py",
+        "/tmp/stop-parser-rev2/artifacts-closeout-sealed/runner-private/isolated-venv/lib/python3.12/site-packages/sysml_codegen/__init__.py",
+        "/tmp/stop-parser-rev2/artifacts-closeout-sealed/runner-private/isolated-venv/lib/python3.12/site-packages/costingfe/__init__.py",
+        "/tmp/stop-parser-rev2/artifacts-closeout-sealed/extracted/teax/teax-0.1.0/packages/teax-simkit/simkit/__init__.py"
+      ],
+      "import_probe": {
+        "path": "run-reports/fusion-lock-check.imports.json",
+        "sha256": "834e9e5571a11fe7c8e7ca2c4bcd9c41b03ee5c0f02328e6d8c24647231248f7"
+      },
+      "import_roots": [
+        "/tmp/stop-parser-rev2/artifacts-closeout-sealed/runner-private/isolated-venv/lib/python3.12/site-packages",
+        "/tmp/stop-parser-rev2/artifacts-closeout-sealed/extracted/teax/teax-0.1.0/packages/teax-simkit"
+      ],
+      "junit": null,
+      "observed_skips": [],
+      "output_sha256": "1df6f9d3a59aeebfd6aa79941dd266b9ce900391d8ebb09fcebc65f2af90153f",
+      "skip_policies": [],
+      "status": 0,
+      "stderr": {
+        "path": "run-reports/fusion-lock-check.stderr",
+        "sha256": "a40ed8f34a0fa9b2b2889c2cc5df8fae3494b4e6c8095d6564b45178a162dcbd"
+      },
+      "stdout": {
+        "path": "run-reports/fusion-lock-check.stdout",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "unexpected_skips": []
+    },
+    {
+      "allowed_skips": [
+        {
+          "node_id": "tests/models/test_example.py::TestModelStructure::test_example_definition_exists",
+          "reason": "Customize this test with your actual definition names"
+        },
+        {
+          "node_id": "tests/models/test_foundation.py::TestFoundationParsing::test_foundation_types_parse_without_errors",
+          "reason": "types.sysml not found"
+        },
+        {
+          "node_id": "tests/models/test_foundation.py::TestFoundationParsing::test_foundation_units_parse_without_errors",
+          "reason": "units.sysml not found"
+        },
+        {
+          "node_id": "tests/models/test_foundation.py::TestFoundationParsing::test_foundation_materials_parse_without_errors",
+          "reason": "materials.sysml not found"
+        },
+        {
+          "node_id": "tests/models/test_foundation.py::TestEnumDefinitions::test_enum_definitions_count",
+          "reason": "types.sysml not found"
+        },
+        {
+          "node_id": "tests/models/test_foundation.py::TestEnumDefinitions::test_reactor_type_variants",
+          "reason": "types.sysml not found"
+        },
+        {
+          "node_id": "tests/models/test_foundation.py::TestEnumDefinitions::test_confinement_type_variants_count",
+          "reason": "types.sysml not found"
+        },
+        {
+          "node_id": "tests/models/test_foundation.py::TestEnumDefinitions::test_all_expected_enums_exist",
+          "reason": "types.sysml not found"
+        },
+        {
+          "node_id": "tests/models/test_foundation.py::TestCustomUnits::test_custom_units_defined",
+          "reason": "units.sysml not found"
+        },
+        {
+          "node_id": "tests/models/test_foundation.py::TestCustomUnits::test_custom_units_count",
+          "reason": "units.sysml not found"
+        },
+        {
+          "node_id": "tests/models/test_foundation.py::TestMaterialDefinitions::test_materials_exist",
+          "reason": "materials.sysml not found"
+        },
+        {
+          "node_id": "tests/models/test_foundation.py::TestMaterialDefinitions::test_material_has_required_attributes",
+          "reason": "materials.sysml not found"
+        },
+        {
+          "node_id": "tests/models/test_foundation.py::TestMaterialDefinitions::test_all_materials_have_required_attributes",
+          "reason": "materials.sysml not found"
+        },
+        {
+          "node_id": "tests/models/test_power_balance.py::TestPowerBalanceParsing::test_power_balance_parses_without_errors",
+          "reason": "No power balance files found"
+        },
+        {
+          "node_id": "tests/scoring_v2/test_spec_conformance.py::TestSpecPredictedScoresLand::test_predicted_score_matches[technical_feasibility-39-spherical-tokamak-cs-free-p-b11-1.0]",
+          "reason": "KNOWN_DRIFTS carve-out: technical_feasibility.39-spherical-tokamak-cs-free-p-b11"
+        },
+        {
+          "node_id": "tests/scoring_v2/test_spec_conformance.py::TestSpecPredictedScoresLand::test_predicted_score_matches[upper_cf-27-polywell-3.0]",
+          "reason": "KNOWN_DRIFTS carve-out: upper_cf.27-polywell"
+        },
+        {
+          "node_id": "tests/scoring_v2/test_spec_conformance.py::TestSpecPredictedScoresLand::test_predicted_score_matches[upper_cf-33-state-backed-tokamak-best-3.0]",
+          "reason": "KNOWN_DRIFTS carve-out: upper_cf.33-state-backed-tokamak-best"
+        },
+        {
+          "node_id": "tests/scoring_v2/test_spec_conformance.py::TestSpecPredictedScoresLand::test_predicted_score_matches[supply_chain-01-hts-compact-tokamak-2.0]",
+          "reason": "KNOWN_DRIFTS carve-out: supply_chain.01-hts-compact-tokamak"
+        },
+        {
+          "node_id": "tests/scoring_v2/test_spec_conformance.py::TestSpecPredictedScoresLand::test_predicted_score_matches[supply_chain-05-planar-coil-stellarator-3.0]",
+          "reason": "KNOWN_DRIFTS carve-out: supply_chain.05-planar-coil-stellarator"
+        },
+        {
+          "node_id": "tests/scoring_v2/test_spec_conformance.py::TestSpecPredictedScoresLand::test_predicted_score_matches[supply_chain-07-maglif-3.0]",
+          "reason": "KNOWN_DRIFTS carve-out: supply_chain.07-maglif"
+        },
+        {
+          "node_id": "tests/scoring_v2/test_spec_conformance.py::TestSpecPredictedScoresLand::test_predicted_score_matches[supply_chain-09-qi-stellarator-hts-3.0]",
+          "reason": "KNOWN_DRIFTS carve-out: supply_chain.09-qi-stellarator-hts"
+        },
+        {
+          "node_id": "tests/scoring_v2/test_spec_conformance.py::TestSpecPredictedScoresLand::test_predicted_score_matches[supply_chain-10-large-scale-stellarator-3.0]",
+          "reason": "KNOWN_DRIFTS carve-out: supply_chain.10-large-scale-stellarator"
+        },
+        {
+          "node_id": "tests/scoring_v2/test_spec_conformance.py::TestSpecPredictedScoresLand::test_predicted_score_matches[supply_chain-11-magnetic-mirror-3.0]",
+          "reason": "KNOWN_DRIFTS carve-out: supply_chain.11-magnetic-mirror"
+        },
+        {
+          "node_id": "tests/scoring_v2/test_spec_conformance.py::TestSpecPredictedScoresLand::test_predicted_score_matches[supply_chain-12-levitated-dipole-2.5]",
+          "reason": "KNOWN_DRIFTS carve-out: supply_chain.12-levitated-dipole"
+        },
+        {
+          "node_id": "tests/scoring_v2/test_spec_conformance.py::TestSpecPredictedScoresLand::test_predicted_score_matches[supply_chain-13-electrostatic-hybrid-3.0]",
+          "reason": "KNOWN_DRIFTS carve-out: supply_chain.13-electrostatic-hybrid"
+        },
+        {
+          "node_id": "tests/scoring_v2/test_spec_conformance.py::TestSpecPredictedScoresLand::test_predicted_score_matches[supply_chain-14-magnetized-target-fusion-pneumatic-compression-3.0]",
+          "reason": "KNOWN_DRIFTS carve-out: supply_chain.14-magnetized-target-fusion-pneumatic-compression"
+        },
+        {
+          "node_id": "tests/scoring_v2/test_spec_conformance.py::TestSpecPredictedScoresLand::test_predicted_score_matches[supply_chain-15-sheared-flow-stabilized-z-pinch-3.0]",
+          "reason": "KNOWN_DRIFTS carve-out: supply_chain.15-sheared-flow-stabilized-z-pinch"
+        },
+        {
+          "node_id": "tests/scoring_v2/test_spec_conformance.py::TestSpecPredictedScoresLand::test_predicted_score_matches[supply_chain-16-muon-catalyzed-fusion-3.0]",
+          "reason": "KNOWN_DRIFTS carve-out: supply_chain.16-muon-catalyzed-fusion"
+        },
+        {
+          "node_id": "tests/scoring_v2/test_spec_conformance.py::TestSpecPredictedScoresLand::test_predicted_score_matches[supply_chain-17b-laser-icf-fast-ignition-2.0]",
+          "reason": "KNOWN_DRIFTS carve-out: supply_chain.17b-laser-icf-fast-ignition"
+        },
+        {
+          "node_id": "tests/scoring_v2/test_spec_conformance.py::TestSpecPredictedScoresLand::test_predicted_score_matches[supply_chain-20a-type-one-stellarator-2.5]",
+          "reason": "KNOWN_DRIFTS carve-out: supply_chain.20a-type-one-stellarator"
+        },
+        {
+          "node_id": "tests/scoring_v2/test_spec_conformance.py::TestSpecPredictedScoresLand::test_predicted_score_matches[supply_chain-20b-renaissance-stellarator-2.5]",
+          "reason": "KNOWN_DRIFTS carve-out: supply_chain.20b-renaissance-stellarator"
+        },
+        {
+          "node_id": "tests/scoring_v2/test_spec_conformance.py::TestSpecPredictedScoresLand::test_predicted_score_matches[supply_chain-21-spherical-tokamak-hts-3.0]",
+          "reason": "KNOWN_DRIFTS carve-out: supply_chain.21-spherical-tokamak-hts"
+        },
+        {
+          "node_id": "tests/scoring_v2/test_spec_conformance.py::TestSpecPredictedScoresLand::test_predicted_score_matches[supply_chain-22-projectile-icf-3.0]",
+          "reason": "KNOWN_DRIFTS carve-out: supply_chain.22-projectile-icf"
+        },
+        {
+          "node_id": "tests/scoring_v2/test_spec_conformance.py::TestSpecPredictedScoresLand::test_predicted_score_matches[supply_chain-24-dense-plasma-focus-5.0]",
+          "reason": "KNOWN_DRIFTS carve-out: supply_chain.24-dense-plasma-focus"
+        },
+        {
+          "node_id": "tests/scoring_v2/test_spec_conformance.py::TestSpecPredictedScoresLand::test_predicted_score_matches[supply_chain-25-heavy-ion-beam-icf-3.0]",
+          "reason": "KNOWN_DRIFTS carve-out: supply_chain.25-heavy-ion-beam-icf"
+        },
+        {
+          "node_id": "tests/scoring_v2/test_spec_conformance.py::TestSpecPredictedScoresLand::test_predicted_score_matches[supply_chain-26-laser-icf-indirect-drive-2.0]",
+          "reason": "KNOWN_DRIFTS carve-out: supply_chain.26-laser-icf-indirect-drive"
+        },
+        {
+          "node_id": "tests/scoring_v2/test_spec_conformance.py::TestSpecPredictedScoresLand::test_predicted_score_matches[supply_chain-27-polywell-3.0]",
+          "reason": "KNOWN_DRIFTS carve-out: supply_chain.27-polywell"
+        },
+        {
+          "node_id": "tests/scoring_v2/test_spec_conformance.py::TestSpecPredictedScoresLand::test_predicted_score_matches[supply_chain-28-hts-tokamak-full-hts-3.0]",
+          "reason": "KNOWN_DRIFTS carve-out: supply_chain.28-hts-tokamak-full-hts"
+        },
+        {
+          "node_id": "tests/scoring_v2/test_spec_conformance.py::TestSpecPredictedScoresLand::test_predicted_score_matches[supply_chain-29-negative-triangularity-tokamak-3.0]",
+          "reason": "KNOWN_DRIFTS carve-out: supply_chain.29-negative-triangularity-tokamak"
+        },
+        {
+          "node_id": "tests/scoring_v2/test_spec_conformance.py::TestSpecPredictedScoresLand::test_predicted_score_matches[supply_chain-30-laser-icf-nif-commercialization-2.0]",
+          "reason": "KNOWN_DRIFTS carve-out: supply_chain.30-laser-icf-nif-commercialization"
+        },
+        {
+          "node_id": "tests/scoring_v2/test_spec_conformance.py::TestSpecPredictedScoresLand::test_predicted_score_matches[supply_chain-33-state-backed-tokamak-best-3.0]",
+          "reason": "KNOWN_DRIFTS carve-out: supply_chain.33-state-backed-tokamak-best"
+        },
+        {
+          "node_id": "tests/scoring_v2/test_spec_conformance.py::TestSpecPredictedScoresLand::test_predicted_score_matches[supply_chain-35-polomac-magnetic-confinement-5.0]",
+          "reason": "KNOWN_DRIFTS carve-out: supply_chain.35-polomac-magnetic-confinement"
+        },
+        {
+          "node_id": "tests/scoring_v2/test_spec_conformance.py::TestSpecPredictedScoresLand::test_predicted_score_matches[supply_chain-36-helical-coil-stellarator-3.0]",
+          "reason": "KNOWN_DRIFTS carve-out: supply_chain.36-helical-coil-stellarator"
+        },
+        {
+          "node_id": "tests/scoring_v2/test_spec_conformance.py::TestSpecPredictedScoresLand::test_predicted_score_matches[supply_chain-37-magnetized-target-inertial-fusion-mtif-5.0]",
+          "reason": "KNOWN_DRIFTS carve-out: supply_chain.37-magnetized-target-inertial-fusion-mtif"
+        },
+        {
+          "node_id": "tests/scoring_v2/test_spec_conformance.py::TestSpecPredictedScoresLand::test_predicted_score_matches[supply_chain-38-particle-accelerator-driven-fusion-4.0]",
+          "reason": "KNOWN_DRIFTS carve-out: supply_chain.38-particle-accelerator-driven-fusion"
+        },
+        {
+          "node_id": "tests/scoring_v2/test_spec_conformance.py::TestSpecPredictedScoresLand::test_predicted_score_matches[supply_chain-39-spherical-tokamak-cs-free-p-b11-5.0]",
+          "reason": "KNOWN_DRIFTS carve-out: supply_chain.39-spherical-tokamak-cs-free-p-b11"
+        },
+        {
+          "node_id": "tests/scoring_v2/test_spec_conformance.py::TestSpecPredictedScoresLand::test_predicted_score_matches[customization-04-laser-icf-5.0]",
+          "reason": "KNOWN_DRIFTS carve-out: customization.04-laser-icf"
+        },
+        {
+          "node_id": "tests/scoring_v2/test_spec_conformance.py::TestSpecPredictedScoresLand::test_predicted_score_matches[customization-11-magnetic-mirror-1.67]",
+          "reason": "KNOWN_DRIFTS carve-out: customization.11-magnetic-mirror"
+        },
+        {
+          "node_id": "tests/scoring_v2/test_spec_conformance.py::TestSpecPredictedScoresLand::test_predicted_score_matches[customization-18-p-b11-frc-5.0]",
+          "reason": "KNOWN_DRIFTS carve-out: customization.18-p-b11-frc"
+        },
+        {
+          "node_id": "tests/scoring_v2/test_spec_conformance.py::TestSpecPredictedScoresLand::test_predicted_score_matches[customization-23-laser-icf-nanostructured-target-5.0]",
+          "reason": "KNOWN_DRIFTS carve-out: customization.23-laser-icf-nanostructured-target"
+        },
+        {
+          "node_id": "tests/scoring_v2/test_spec_conformance.py::TestSpecPredictedScoresLand::test_predicted_score_matches[customization-27-polywell-3.0]",
+          "reason": "KNOWN_DRIFTS carve-out: customization.27-polywell"
+        },
+        {
+          "node_id": "tests/scoring_v2/test_spec_conformance.py::TestSpecPredictedScoresLand::test_predicted_score_matches[customization-31-laser-icf-oec-architecture-1.67]",
+          "reason": "KNOWN_DRIFTS carve-out: customization.31-laser-icf-oec-architecture"
+        },
+        {
+          "node_id": "tests/scoring_v2/test_spec_conformance.py::TestSpecPredictedScoresLand::test_predicted_score_matches[plant_complexity-06-magnetic-mirror-3.5]",
+          "reason": "KNOWN_DRIFTS carve-out: plant_complexity.06-magnetic-mirror"
+        },
+        {
+          "node_id": "tests/scoring_v2/test_spec_conformance.py::TestSpecPredictedScoresLand::test_predicted_score_matches[plant_complexity-07-maglif-2.0]",
+          "reason": "KNOWN_DRIFTS carve-out: plant_complexity.07-maglif"
+        },
+        {
+          "node_id": "tests/scoring_v2/test_spec_conformance.py::TestSpecPredictedScoresLand::test_predicted_score_matches[plant_complexity-17a-laser-icf-hybrid-drive-1.0]",
+          "reason": "KNOWN_DRIFTS carve-out: plant_complexity.17a-laser-icf-hybrid-drive"
+        },
+        {
+          "node_id": "tests/scoring_v2/test_spec_conformance.py::TestSpecPredictedScoresLand::test_predicted_score_matches[modularity-05-planar-coil-stellarator-2.05]",
+          "reason": "KNOWN_DRIFTS carve-out: modularity.05-planar-coil-stellarator"
+        },
+        {
+          "node_id": "tests/scoring_v2/test_spec_conformance.py::TestSpecPredictedScoresLand::test_predicted_score_matches[modularity-28-hts-tokamak-full-hts-2.22]",
+          "reason": "KNOWN_DRIFTS carve-out: modularity.28-hts-tokamak-full-hts"
+        },
+        {
+          "node_id": "tests/scoring_v2/test_spec_conformance.py::TestSpecPredictedScoresLand::test_predicted_score_matches[modularity-29-negative-triangularity-tokamak-2.36]",
+          "reason": "KNOWN_DRIFTS carve-out: modularity.29-negative-triangularity-tokamak"
+        }
+      ],
+      "command": [
+        "/tmp/stop-parser-rev2/artifacts-closeout-sealed/runner-private/isolated-venv/bin/python",
+        "-m",
+        "pytest",
+        "tests"
+      ],
+      "counts": {
+        "collected": 517,
+        "deselected": 0,
+        "errors": 0,
+        "failed": 58,
+        "passed": 401,
+        "selected": 517,
+        "skipped": 58,
+        "xfailed": 0
+      },
+      "cwd": "/tmp/stop-parser-rev2/artifacts-closeout-sealed/extracted/fusion/fusion-tea-0.1.0",
+      "executed_command": [
+        "/tmp/stop-parser-rev2/artifacts-closeout-sealed/runner-private/isolated-venv/bin/python",
+        "-m",
+        "pytest",
+        "tests",
+        "-ra",
+        "--junitxml=/tmp/stop-parser-rev2/artifacts-closeout-sealed/run-reports/fusion-pytest.xml"
+      ],
+      "expected_counts": {
+        "collected": 517,
+        "deselected": 0,
+        "errors": 0,
+        "failed": 58,
+        "passed": 401,
+        "selected": 517,
+        "skipped": 58,
+        "xfailed": 0
+      },
+      "expected_output_sha256": "ce0adbd6163a337937f4bae933bc34e59129ced4044f3d5ef5b0950775cf962d",
+      "expected_status": 1,
+      "id": "fusion-pytest",
+      "import_files": [
+        "/tmp/stop-parser-rev2/artifacts-closeout-sealed/runner-private/isolated-venv/lib/python3.12/site-packages/agentic_mbse/__init__.py",
+        "/tmp/stop-parser-rev2/artifacts-closeout-sealed/runner-private/isolated-venv/lib/python3.12/site-packages/sysml_codegen/__init__.py",
+        "/tmp/stop-parser-rev2/artifacts-closeout-sealed/runner-private/isolated-venv/lib/python3.12/site-packages/costingfe/__init__.py",
+        "/tmp/stop-parser-rev2/artifacts-closeout-sealed/extracted/teax/teax-0.1.0/packages/teax-simkit/simkit/__init__.py"
+      ],
+      "import_probe": {
+        "path": "run-reports/fusion-pytest.imports.json",
+        "sha256": "834e9e5571a11fe7c8e7ca2c4bcd9c41b03ee5c0f02328e6d8c24647231248f7"
+      },
+      "import_roots": [
+        "/tmp/stop-parser-rev2/artifacts-closeout-sealed/runner-private/isolated-venv/lib/python3.12/site-packages",
+        "/tmp/stop-parser-rev2/artifacts-closeout-sealed/extracted/teax/teax-0.1.0/packages/teax-simkit"
+      ],
+      "junit": {
+        "path": "run-reports/fusion-pytest.xml",
+        "sha256": "d2ee003ba349de7d857461c9f41821a9a95b0eaee4db190ff236f96d14b801fb"
+      },
+      "observed_skips": [
+        {
+          "node_id": "tests/models/test_example.py::TestModelStructure::test_example_definition_exists",
+          "reason": "Customize this test with your actual definition names"
+        },
+        {
+          "node_id": "tests/models/test_foundation.py::TestFoundationParsing::test_foundation_types_parse_without_errors",
+          "reason": "types.sysml not found"
+        },
+        {
+          "node_id": "tests/models/test_foundation.py::TestFoundationParsing::test_foundation_units_parse_without_errors",
+          "reason": "units.sysml not found"
+        },
+        {
+          "node_id": "tests/models/test_foundation.py::TestFoundationParsing::test_foundation_materials_parse_without_errors",
+          "reason": "materials.sysml not found"
+        },
+        {
+          "node_id": "tests/models/test_foundation.py::TestEnumDefinitions::test_enum_definitions_count",
+          "reason": "types.sysml not found"
+        },
+        {
+          "node_id": "tests/models/test_foundation.py::TestEnumDefinitions::test_reactor_type_variants",
+          "reason": "types.sysml not found"
+        },
+        {
+          "node_id": "tests/models/test_foundation.py::TestEnumDefinitions::test_confinement_type_variants_count",
+          "reason": "types.sysml not found"
+        },
+        {
+          "node_id": "tests/models/test_foundation.py::TestEnumDefinitions::test_all_expected_enums_exist",
+          "reason": "types.sysml not found"
+        },
+        {
+          "node_id": "tests/models/test_foundation.py::TestCustomUnits::test_custom_units_defined",
+          "reason": "units.sysml not found"
+        },
+        {
+          "node_id": "tests/models/test_foundation.py::TestCustomUnits::test_custom_units_count",
+          "reason": "units.sysml not found"
+        },
+        {
+          "node_id": "tests/models/test_foundation.py::TestMaterialDefinitions::test_materials_exist",
+          "reason": "materials.sysml not found"
+        },
+        {
+          "node_id": "tests/models/test_foundation.py::TestMaterialDefinitions::test_material_has_required_attributes",
+          "reason": "materials.sysml not found"
+        },
+        {
+          "node_id": "tests/models/test_foundation.py::TestMaterialDefinitions::test_all_materials_have_required_attributes",
+          "reason": "materials.sysml not found"
+        },
+        {
+          "node_id": "tests/models/test_power_balance.py::TestPowerBalanceParsing::test_power_balance_parses_without_errors",
+          "reason": "No power balance files found"
+        },
+        {
+          "node_id": "tests/scoring_v2/test_spec_conformance.py::TestSpecPredictedScoresLand::test_predicted_score_matches[technical_feasibility-39-spherical-tokamak-cs-free-p-b11-1.0]",
+          "reason": "KNOWN_DRIFTS carve-out: technical_feasibility.39-spherical-tokamak-cs-free-p-b11"
+        },
+        {
+          "node_id": "tests/scoring_v2/test_spec_conformance.py::TestSpecPredictedScoresLand::test_predicted_score_matches[upper_cf-27-polywell-3.0]",
+          "reason": "KNOWN_DRIFTS carve-out: upper_cf.27-polywell"
+        },
+        {
+          "node_id": "tests/scoring_v2/test_spec_conformance.py::TestSpecPredictedScoresLand::test_predicted_score_matches[upper_cf-33-state-backed-tokamak-best-3.0]",
+          "reason": "KNOWN_DRIFTS carve-out: upper_cf.33-state-backed-tokamak-best"
+        },
+        {
+          "node_id": "tests/scoring_v2/test_spec_conformance.py::TestSpecPredictedScoresLand::test_predicted_score_matches[supply_chain-01-hts-compact-tokamak-2.0]",
+          "reason": "KNOWN_DRIFTS carve-out: supply_chain.01-hts-compact-tokamak"
+        },
+        {
+          "node_id": "tests/scoring_v2/test_spec_conformance.py::TestSpecPredictedScoresLand::test_predicted_score_matches[supply_chain-05-planar-coil-stellarator-3.0]",
+          "reason": "KNOWN_DRIFTS carve-out: supply_chain.05-planar-coil-stellarator"
+        },
+        {
+          "node_id": "tests/scoring_v2/test_spec_conformance.py::TestSpecPredictedScoresLand::test_predicted_score_matches[supply_chain-07-maglif-3.0]",
+          "reason": "KNOWN_DRIFTS carve-out: supply_chain.07-maglif"
+        },
+        {
+          "node_id": "tests/scoring_v2/test_spec_conformance.py::TestSpecPredictedScoresLand::test_predicted_score_matches[supply_chain-09-qi-stellarator-hts-3.0]",
+          "reason": "KNOWN_DRIFTS carve-out: supply_chain.09-qi-stellarator-hts"
+        },
+        {
+          "node_id": "tests/scoring_v2/test_spec_conformance.py::TestSpecPredictedScoresLand::test_predicted_score_matches[supply_chain-10-large-scale-stellarator-3.0]",
+          "reason": "KNOWN_DRIFTS carve-out: supply_chain.10-large-scale-stellarator"
+        },
+        {
+          "node_id": "tests/scoring_v2/test_spec_conformance.py::TestSpecPredictedScoresLand::test_predicted_score_matches[supply_chain-11-magnetic-mirror-3.0]",
+          "reason": "KNOWN_DRIFTS carve-out: supply_chain.11-magnetic-mirror"
+        },
+        {
+          "node_id": "tests/scoring_v2/test_spec_conformance.py::TestSpecPredictedScoresLand::test_predicted_score_matches[supply_chain-12-levitated-dipole-2.5]",
+          "reason": "KNOWN_DRIFTS carve-out: supply_chain.12-levitated-dipole"
+        },
+        {
+          "node_id": "tests/scoring_v2/test_spec_conformance.py::TestSpecPredictedScoresLand::test_predicted_score_matches[supply_chain-13-electrostatic-hybrid-3.0]",
+          "reason": "KNOWN_DRIFTS carve-out: supply_chain.13-electrostatic-hybrid"
+        },
+        {
+          "node_id": "tests/scoring_v2/test_spec_conformance.py::TestSpecPredictedScoresLand::test_predicted_score_matches[supply_chain-14-magnetized-target-fusion-pneumatic-compression-3.0]",
+          "reason": "KNOWN_DRIFTS carve-out: supply_chain.14-magnetized-target-fusion-pneumatic-compression"
+        },
+        {
+          "node_id": "tests/scoring_v2/test_spec_conformance.py::TestSpecPredictedScoresLand::test_predicted_score_matches[supply_chain-15-sheared-flow-stabilized-z-pinch-3.0]",
+          "reason": "KNOWN_DRIFTS carve-out: supply_chain.15-sheared-flow-stabilized-z-pinch"
+        },
+        {
+          "node_id": "tests/scoring_v2/test_spec_conformance.py::TestSpecPredictedScoresLand::test_predicted_score_matches[supply_chain-16-muon-catalyzed-fusion-3.0]",
+          "reason": "KNOWN_DRIFTS carve-out: supply_chain.16-muon-catalyzed-fusion"
+        },
+        {
+          "node_id": "tests/scoring_v2/test_spec_conformance.py::TestSpecPredictedScoresLand::test_predicted_score_matches[supply_chain-17b-laser-icf-fast-ignition-2.0]",
+          "reason": "KNOWN_DRIFTS carve-out: supply_chain.17b-laser-icf-fast-ignition"
+        },
+        {
+          "node_id": "tests/scoring_v2/test_spec_conformance.py::TestSpecPredictedScoresLand::test_predicted_score_matches[supply_chain-20a-type-one-stellarator-2.5]",
+          "reason": "KNOWN_DRIFTS carve-out: supply_chain.20a-type-one-stellarator"
+        },
+        {
+          "node_id": "tests/scoring_v2/test_spec_conformance.py::TestSpecPredictedScoresLand::test_predicted_score_matches[supply_chain-20b-renaissance-stellarator-2.5]",
+          "reason": "KNOWN_DRIFTS carve-out: supply_chain.20b-renaissance-stellarator"
+        },
+        {
+          "node_id": "tests/scoring_v2/test_spec_conformance.py::TestSpecPredictedScoresLand::test_predicted_score_matches[supply_chain-21-spherical-tokamak-hts-3.0]",
+          "reason": "KNOWN_DRIFTS carve-out: supply_chain.21-spherical-tokamak-hts"
+        },
+        {
+          "node_id": "tests/scoring_v2/test_spec_conformance.py::TestSpecPredictedScoresLand::test_predicted_score_matches[supply_chain-22-projectile-icf-3.0]",
+          "reason": "KNOWN_DRIFTS carve-out: supply_chain.22-projectile-icf"
+        },
+        {
+          "node_id": "tests/scoring_v2/test_spec_conformance.py::TestSpecPredictedScoresLand::test_predicted_score_matches[supply_chain-24-dense-plasma-focus-5.0]",
+          "reason": "KNOWN_DRIFTS carve-out: supply_chain.24-dense-plasma-focus"
+        },
+        {
+          "node_id": "tests/scoring_v2/test_spec_conformance.py::TestSpecPredictedScoresLand::test_predicted_score_matches[supply_chain-25-heavy-ion-beam-icf-3.0]",
+          "reason": "KNOWN_DRIFTS carve-out: supply_chain.25-heavy-ion-beam-icf"
+        },
+        {
+          "node_id": "tests/scoring_v2/test_spec_conformance.py::TestSpecPredictedScoresLand::test_predicted_score_matches[supply_chain-26-laser-icf-indirect-drive-2.0]",
+          "reason": "KNOWN_DRIFTS carve-out: supply_chain.26-laser-icf-indirect-drive"
+        },
+        {
+          "node_id": "tests/scoring_v2/test_spec_conformance.py::TestSpecPredictedScoresLand::test_predicted_score_matches[supply_chain-27-polywell-3.0]",
+          "reason": "KNOWN_DRIFTS carve-out: supply_chain.27-polywell"
+        },
+        {
+          "node_id": "tests/scoring_v2/test_spec_conformance.py::TestSpecPredictedScoresLand::test_predicted_score_matches[supply_chain-28-hts-tokamak-full-hts-3.0]",
+          "reason": "KNOWN_DRIFTS carve-out: supply_chain.28-hts-tokamak-full-hts"
+        },
+        {
+          "node_id": "tests/scoring_v2/test_spec_conformance.py::TestSpecPredictedScoresLand::test_predicted_score_matches[supply_chain-29-negative-triangularity-tokamak-3.0]",
+          "reason": "KNOWN_DRIFTS carve-out: supply_chain.29-negative-triangularity-tokamak"
+        },
+        {
+          "node_id": "tests/scoring_v2/test_spec_conformance.py::TestSpecPredictedScoresLand::test_predicted_score_matches[supply_chain-30-laser-icf-nif-commercialization-2.0]",
+          "reason": "KNOWN_DRIFTS carve-out: supply_chain.30-laser-icf-nif-commercialization"
+        },
+        {
+          "node_id": "tests/scoring_v2/test_spec_conformance.py::TestSpecPredictedScoresLand::test_predicted_score_matches[supply_chain-33-state-backed-tokamak-best-3.0]",
+          "reason": "KNOWN_DRIFTS carve-out: supply_chain.33-state-backed-tokamak-best"
+        },
+        {
+          "node_id": "tests/scoring_v2/test_spec_conformance.py::TestSpecPredictedScoresLand::test_predicted_score_matches[supply_chain-35-polomac-magnetic-confinement-5.0]",
+          "reason": "KNOWN_DRIFTS carve-out: supply_chain.35-polomac-magnetic-confinement"
+        },
+        {
+          "node_id": "tests/scoring_v2/test_spec_conformance.py::TestSpecPredictedScoresLand::test_predicted_score_matches[supply_chain-36-helical-coil-stellarator-3.0]",
+          "reason": "KNOWN_DRIFTS carve-out: supply_chain.36-helical-coil-stellarator"
+        },
+        {
+          "node_id": "tests/scoring_v2/test_spec_conformance.py::TestSpecPredictedScoresLand::test_predicted_score_matches[supply_chain-37-magnetized-target-inertial-fusion-mtif-5.0]",
+          "reason": "KNOWN_DRIFTS carve-out: supply_chain.37-magnetized-target-inertial-fusion-mtif"
+        },
+        {
+          "node_id": "tests/scoring_v2/test_spec_conformance.py::TestSpecPredictedScoresLand::test_predicted_score_matches[supply_chain-38-particle-accelerator-driven-fusion-4.0]",
+          "reason": "KNOWN_DRIFTS carve-out: supply_chain.38-particle-accelerator-driven-fusion"
+        },
+        {
+          "node_id": "tests/scoring_v2/test_spec_conformance.py::TestSpecPredictedScoresLand::test_predicted_score_matches[supply_chain-39-spherical-tokamak-cs-free-p-b11-5.0]",
+          "reason": "KNOWN_DRIFTS carve-out: supply_chain.39-spherical-tokamak-cs-free-p-b11"
+        },
+        {
+          "node_id": "tests/scoring_v2/test_spec_conformance.py::TestSpecPredictedScoresLand::test_predicted_score_matches[customization-04-laser-icf-5.0]",
+          "reason": "KNOWN_DRIFTS carve-out: customization.04-laser-icf"
+        },
+        {
+          "node_id": "tests/scoring_v2/test_spec_conformance.py::TestSpecPredictedScoresLand::test_predicted_score_matches[customization-11-magnetic-mirror-1.67]",
+          "reason": "KNOWN_DRIFTS carve-out: customization.11-magnetic-mirror"
+        },
+        {
+          "node_id": "tests/scoring_v2/test_spec_conformance.py::TestSpecPredictedScoresLand::test_predicted_score_matches[customization-18-p-b11-frc-5.0]",
+          "reason": "KNOWN_DRIFTS carve-out: customization.18-p-b11-frc"
+        },
+        {
+          "node_id": "tests/scoring_v2/test_spec_conformance.py::TestSpecPredictedScoresLand::test_predicted_score_matches[customization-23-laser-icf-nanostructured-target-5.0]",
+          "reason": "KNOWN_DRIFTS carve-out: customization.23-laser-icf-nanostructured-target"
+        },
+        {
+          "node_id": "tests/scoring_v2/test_spec_conformance.py::TestSpecPredictedScoresLand::test_predicted_score_matches[customization-27-polywell-3.0]",
+          "reason": "KNOWN_DRIFTS carve-out: customization.27-polywell"
+        },
+        {
+          "node_id": "tests/scoring_v2/test_spec_conformance.py::TestSpecPredictedScoresLand::test_predicted_score_matches[customization-31-laser-icf-oec-architecture-1.67]",
+          "reason": "KNOWN_DRIFTS carve-out: customization.31-laser-icf-oec-architecture"
+        },
+        {
+          "node_id": "tests/scoring_v2/test_spec_conformance.py::TestSpecPredictedScoresLand::test_predicted_score_matches[plant_complexity-06-magnetic-mirror-3.5]",
+          "reason": "KNOWN_DRIFTS carve-out: plant_complexity.06-magnetic-mirror"
+        },
+        {
+          "node_id": "tests/scoring_v2/test_spec_conformance.py::TestSpecPredictedScoresLand::test_predicted_score_matches[plant_complexity-07-maglif-2.0]",
+          "reason": "KNOWN_DRIFTS carve-out: plant_complexity.07-maglif"
+        },
+        {
+          "node_id": "tests/scoring_v2/test_spec_conformance.py::TestSpecPredictedScoresLand::test_predicted_score_matches[plant_complexity-17a-laser-icf-hybrid-drive-1.0]",
+          "reason": "KNOWN_DRIFTS carve-out: plant_complexity.17a-laser-icf-hybrid-drive"
+        },
+        {
+          "node_id": "tests/scoring_v2/test_spec_conformance.py::TestSpecPredictedScoresLand::test_predicted_score_matches[modularity-05-planar-coil-stellarator-2.05]",
+          "reason": "KNOWN_DRIFTS carve-out: modularity.05-planar-coil-stellarator"
+        },
+        {
+          "node_id": "tests/scoring_v2/test_spec_conformance.py::TestSpecPredictedScoresLand::test_predicted_score_matches[modularity-28-hts-tokamak-full-hts-2.22]",
+          "reason": "KNOWN_DRIFTS carve-out: modularity.28-hts-tokamak-full-hts"
+        },
+        {
+          "node_id": "tests/scoring_v2/test_spec_conformance.py::TestSpecPredictedScoresLand::test_predicted_score_matches[modularity-29-negative-triangularity-tokamak-2.36]",
+          "reason": "KNOWN_DRIFTS carve-out: modularity.29-negative-triangularity-tokamak"
+        }
+      ],
+      "output_sha256": "ce0adbd6163a337937f4bae933bc34e59129ced4044f3d5ef5b0950775cf962d",
+      "skip_policies": [
+        {
+          "node_id": "tests/scoring_v2/test_spec_conformance\\.py::.*",
+          "reason": "KNOWN_DRIFTS carve-out: .*"
+        },
+        {
+          "node_id": "tests/models/test_foundation\\.py::.*",
+          "reason": "(?:types|units|materials)\\.sysml not found"
+        },
+        {
+          "node_id": "tests/models/test_power_balance\\.py::TestPowerBalanceParsing::test_power_balance_parses_without_errors",
+          "reason": "No power balance files found"
+        },
+        {
+          "node_id": "tests/models/test_example\\.py::TestModelStructure::test_example_definition_exists",
+          "reason": "Customize this test with your actual definition names"
+        }
+      ],
+      "status": 1,
+      "stderr": {
+        "path": "run-reports/fusion-pytest.stderr",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "stdout": {
+        "path": "run-reports/fusion-pytest.stdout",
+        "sha256": "a624a5ffcc18cce80bf179ee962c0fda6aed93b6eda7d0ded452021ac24f4064"
+      },
+      "unexpected_skips": []
+    },
+    {
+      "allowed_skips": [],
+      "command": [
+        "/tmp/stop-parser-rev2/artifacts-closeout-sealed/runner-private/isolated-venv/bin/agentic-mbse",
+        "validate",
+        "--complete",
+        "models"
+      ],
+      "counts": {
+        "collected": 0,
+        "deselected": 0,
+        "errors": 0,
+        "failed": 0,
+        "passed": 0,
+        "selected": 0,
+        "skipped": 0,
+        "xfailed": 0
+      },
+      "cwd": "/tmp/stop-parser-rev2/artifacts-closeout-sealed/extracted/fusion/fusion-tea-0.1.0",
+      "executed_command": [
+        "/tmp/stop-parser-rev2/artifacts-closeout-sealed/runner-private/isolated-venv/bin/agentic-mbse",
+        "validate",
+        "--complete",
+        "models"
+      ],
+      "expected_counts": {
+        "collected": 0,
+        "deselected": 0,
+        "errors": 0,
+        "failed": 0,
+        "passed": 0,
+        "selected": 0,
+        "skipped": 0,
+        "xfailed": 0
+      },
+      "expected_output_sha256": "2cd4666e7dec0a979050bf199726a78d6505b63ea18c8a0897daf0a084c33ef9",
+      "expected_status": 1,
+      "id": "fusion-models-primary",
+      "import_files": [
+        "/tmp/stop-parser-rev2/artifacts-closeout-sealed/runner-private/isolated-venv/lib/python3.12/site-packages/agentic_mbse/__init__.py"
+      ],
+      "import_probe": {
+        "path": "run-reports/fusion-models-primary.imports.json",
+        "sha256": "c9e77a4cd3f32fac4de894e3ca33f5e5d4dab3d83e4ee7dc6bf05b1bde60002b"
+      },
+      "import_roots": [
+        "/tmp/stop-parser-rev2/artifacts-closeout-sealed/runner-private/isolated-venv/lib/python3.12/site-packages"
+      ],
+      "junit": null,
+      "observed_skips": [],
+      "output_sha256": "2cd4666e7dec0a979050bf199726a78d6505b63ea18c8a0897daf0a084c33ef9",
+      "skip_policies": [],
+      "status": 1,
+      "stderr": {
+        "path": "run-reports/fusion-models-primary.stderr",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "stdout": {
+        "path": "run-reports/fusion-models-primary.stdout",
+        "sha256": "aaf2161b2a1f4dc15ba6d02187924289b3f1fb51ab02b15297a78ad02376ceeb"
+      },
+      "unexpected_skips": []
+    },
+    {
+      "allowed_skips": [],
+      "command": [
+        "/tmp/stop-parser-rev2/artifacts-closeout-sealed/runner-private/isolated-venv/bin/agentic-mbse",
+        "validate",
+        "--complete",
+        "exploration/ife_e2e/models"
+      ],
+      "counts": {
+        "collected": 0,
+        "deselected": 0,
+        "errors": 0,
+        "failed": 0,
+        "passed": 0,
+        "selected": 0,
+        "skipped": 0,
+        "xfailed": 0
+      },
+      "cwd": "/tmp/stop-parser-rev2/artifacts-closeout-sealed/extracted/fusion/fusion-tea-0.1.0",
+      "executed_command": [
+        "/tmp/stop-parser-rev2/artifacts-closeout-sealed/runner-private/isolated-venv/bin/agentic-mbse",
+        "validate",
+        "--complete",
+        "exploration/ife_e2e/models"
+      ],
+      "expected_counts": {
+        "collected": 0,
+        "deselected": 0,
+        "errors": 0,
+        "failed": 0,
+        "passed": 0,
+        "selected": 0,
+        "skipped": 0,
+        "xfailed": 0
+      },
+      "expected_output_sha256": "4b5c9ddba1d057ebcc92a0a4bc2d4ac686abd6201e5df5811e72d7c426d123c0",
+      "expected_status": 1,
+      "id": "fusion-models-exploration",
+      "import_files": [
+        "/tmp/stop-parser-rev2/artifacts-closeout-sealed/runner-private/isolated-venv/lib/python3.12/site-packages/agentic_mbse/__init__.py"
+      ],
+      "import_probe": {
+        "path": "run-reports/fusion-models-exploration.imports.json",
+        "sha256": "c9e77a4cd3f32fac4de894e3ca33f5e5d4dab3d83e4ee7dc6bf05b1bde60002b"
+      },
+      "import_roots": [
+        "/tmp/stop-parser-rev2/artifacts-closeout-sealed/runner-private/isolated-venv/lib/python3.12/site-packages"
+      ],
+      "junit": null,
+      "observed_skips": [],
+      "output_sha256": "4b5c9ddba1d057ebcc92a0a4bc2d4ac686abd6201e5df5811e72d7c426d123c0",
+      "skip_policies": [],
+      "status": 1,
+      "stderr": {
+        "path": "run-reports/fusion-models-exploration.stderr",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "stdout": {
+        "path": "run-reports/fusion-models-exploration.stdout",
+        "sha256": "cb0b7a33dc568e0c4729a5421d26a4a154d5615781d8240e00053cbf3af732a2"
+      },
+      "unexpected_skips": []
+    },
+    {
+      "allowed_skips": [],
+      "command": [
+        "/tmp/stop-parser-rev2/artifacts-closeout-sealed/runner-private/isolated-venv/bin/python",
+        "-m",
+        "pytest",
+        "tests/test_codegen_teax_acceptance.py",
+        "tests/test_occurrence_mutation_teax.py",
+        "tests/test_dependency_provenance.py"
+      ],
+      "counts": {
+        "collected": 23,
+        "deselected": 0,
+        "errors": 0,
+        "failed": 0,
+        "passed": 23,
+        "selected": 23,
+        "skipped": 0,
+        "xfailed": 0
+      },
+      "cwd": "/tmp/stop-parser-rev2/artifacts-closeout-sealed/extracted/fusion/fusion-tea-0.1.0",
+      "executed_command": [
+        "/tmp/stop-parser-rev2/artifacts-closeout-sealed/runner-private/isolated-venv/bin/python",
+        "-m",
+        "pytest",
+        "tests/test_codegen_teax_acceptance.py",
+        "tests/test_occurrence_mutation_teax.py",
+        "tests/test_dependency_provenance.py",
+        "-ra",
+        "--junitxml=/tmp/stop-parser-rev2/artifacts-closeout-sealed/run-reports/fusion-generated-execution.xml"
+      ],
+      "expected_counts": {
+        "collected": 23,
+        "deselected": 0,
+        "errors": 0,
+        "failed": 0,
+        "passed": 23,
+        "selected": 23,
+        "skipped": 0,
+        "xfailed": 0
+      },
+      "expected_output_sha256": null,
+      "expected_status": 0,
+      "id": "fusion-generated-execution",
+      "import_files": [
+        "/tmp/stop-parser-rev2/artifacts-closeout-sealed/runner-private/isolated-venv/lib/python3.12/site-packages/agentic_mbse/__init__.py",
+        "/tmp/stop-parser-rev2/artifacts-closeout-sealed/runner-private/isolated-venv/lib/python3.12/site-packages/sysml_codegen/__init__.py",
+        "/tmp/stop-parser-rev2/artifacts-closeout-sealed/runner-private/isolated-venv/lib/python3.12/site-packages/costingfe/__init__.py",
+        "/tmp/stop-parser-rev2/artifacts-closeout-sealed/extracted/teax/teax-0.1.0/packages/teax-simkit/simkit/__init__.py"
+      ],
+      "import_probe": {
+        "path": "run-reports/fusion-generated-execution.imports.json",
+        "sha256": "834e9e5571a11fe7c8e7ca2c4bcd9c41b03ee5c0f02328e6d8c24647231248f7"
+      },
+      "import_roots": [
+        "/tmp/stop-parser-rev2/artifacts-closeout-sealed/runner-private/isolated-venv/lib/python3.12/site-packages",
+        "/tmp/stop-parser-rev2/artifacts-closeout-sealed/extracted/teax/teax-0.1.0/packages/teax-simkit"
+      ],
+      "junit": {
+        "path": "run-reports/fusion-generated-execution.xml",
+        "sha256": "59a4344b4951b211366e91cbd5489afbee5a469541c47782e469b1db6c3dfaee"
+      },
+      "observed_skips": [],
+      "output_sha256": "3db3d8cbef06f09b50c834c87d853caecf62910e3ec4a26451fc73a146971d0f",
+      "skip_policies": [],
+      "status": 0,
+      "stderr": {
+        "path": "run-reports/fusion-generated-execution.stderr",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "stdout": {
+        "path": "run-reports/fusion-generated-execution.stdout",
+        "sha256": "9dd0d85e0cddefc33ff49d585bf8b55ff49f28d22f7f45884bdc64f2cf576462"
+      },
+      "unexpected_skips": []
+    },
+    {
+      "allowed_skips": [],
+      "command": [
+        "/tmp/stop-parser-rev2/artifacts-closeout-sealed/runner-private/isolated-venv/bin/ruff",
+        "check",
+        "tests/test_codegen_teax_acceptance.py",
+        "tests/test_occurrence_mutation_teax.py",
+        "tests/test_dependency_provenance.py"
+      ],
+      "counts": {
+        "collected": 0,
+        "deselected": 0,
+        "errors": 0,
+        "failed": 0,
+        "passed": 0,
+        "selected": 0,
+        "skipped": 0,
+        "xfailed": 0
+      },
+      "cwd": "/tmp/stop-parser-rev2/artifacts-closeout-sealed/extracted/fusion/fusion-tea-0.1.0",
+      "executed_command": [
+        "/tmp/stop-parser-rev2/artifacts-closeout-sealed/runner-private/isolated-venv/bin/ruff",
+        "check",
+        "tests/test_codegen_teax_acceptance.py",
+        "tests/test_occurrence_mutation_teax.py",
+        "tests/test_dependency_provenance.py"
+      ],
+      "expected_counts": {
+        "collected": 0,
+        "deselected": 0,
+        "errors": 0,
+        "failed": 0,
+        "passed": 0,
+        "selected": 0,
+        "skipped": 0,
+        "xfailed": 0
+      },
+      "expected_output_sha256": null,
+      "expected_status": 0,
+      "id": "fusion-ruff",
+      "import_files": [
+        "/tmp/stop-parser-rev2/artifacts-closeout-sealed/runner-private/isolated-venv/lib/python3.12/site-packages/agentic_mbse/__init__.py",
+        "/tmp/stop-parser-rev2/artifacts-closeout-sealed/runner-private/isolated-venv/lib/python3.12/site-packages/sysml_codegen/__init__.py",
+        "/tmp/stop-parser-rev2/artifacts-closeout-sealed/runner-private/isolated-venv/lib/python3.12/site-packages/costingfe/__init__.py",
+        "/tmp/stop-parser-rev2/artifacts-closeout-sealed/extracted/teax/teax-0.1.0/packages/teax-simkit/simkit/__init__.py"
+      ],
+      "import_probe": {
+        "path": "run-reports/fusion-ruff.imports.json",
+        "sha256": "834e9e5571a11fe7c8e7ca2c4bcd9c41b03ee5c0f02328e6d8c24647231248f7"
+      },
+      "import_roots": [
+        "/tmp/stop-parser-rev2/artifacts-closeout-sealed/runner-private/isolated-venv/lib/python3.12/site-packages",
+        "/tmp/stop-parser-rev2/artifacts-closeout-sealed/extracted/teax/teax-0.1.0/packages/teax-simkit"
+      ],
+      "junit": null,
+      "observed_skips": [],
+      "output_sha256": "98733c3446b52dc3e6b6943142b19a142025d9727521f6abc3783a20e4b6d3c6",
+      "skip_policies": [],
+      "status": 0,
+      "stderr": {
+        "path": "run-reports/fusion-ruff.stderr",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "stdout": {
+        "path": "run-reports/fusion-ruff.stdout",
+        "sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18"
+      },
+      "unexpected_skips": []
+    },
+    {
+      "allowed_skips": [],
+      "command": [
+        "/tmp/stop-parser-rev2/artifacts-closeout-sealed/runner-private/isolated-venv/bin/mypy",
+        "tests/test_codegen_teax_acceptance.py",
+        "tests/test_occurrence_mutation_teax.py"
+      ],
+      "counts": {
+        "collected": 0,
+        "deselected": 0,
+        "errors": 0,
+        "failed": 0,
+        "passed": 0,
+        "selected": 0,
+        "skipped": 0,
+        "xfailed": 0
+      },
+      "cwd": "/tmp/stop-parser-rev2/artifacts-closeout-sealed/extracted/fusion/fusion-tea-0.1.0",
+      "executed_command": [
+        "/tmp/stop-parser-rev2/artifacts-closeout-sealed/runner-private/isolated-venv/bin/mypy",
+        "tests/test_codegen_teax_acceptance.py",
+        "tests/test_occurrence_mutation_teax.py"
+      ],
+      "expected_counts": {
+        "collected": 0,
+        "deselected": 0,
+        "errors": 0,
+        "failed": 0,
+        "passed": 0,
+        "selected": 0,
+        "skipped": 0,
+        "xfailed": 0
+      },
+      "expected_output_sha256": null,
+      "expected_status": 0,
+      "id": "fusion-mypy",
+      "import_files": [
+        "/tmp/stop-parser-rev2/artifacts-closeout-sealed/runner-private/isolated-venv/lib/python3.12/site-packages/agentic_mbse/__init__.py",
+        "/tmp/stop-parser-rev2/artifacts-closeout-sealed/runner-private/isolated-venv/lib/python3.12/site-packages/sysml_codegen/__init__.py",
+        "/tmp/stop-parser-rev2/artifacts-closeout-sealed/runner-private/isolated-venv/lib/python3.12/site-packages/costingfe/__init__.py",
+        "/tmp/stop-parser-rev2/artifacts-closeout-sealed/extracted/teax/teax-0.1.0/packages/teax-simkit/simkit/__init__.py"
+      ],
+      "import_probe": {
+        "path": "run-reports/fusion-mypy.imports.json",
+        "sha256": "834e9e5571a11fe7c8e7ca2c4bcd9c41b03ee5c0f02328e6d8c24647231248f7"
+      },
+      "import_roots": [
+        "/tmp/stop-parser-rev2/artifacts-closeout-sealed/runner-private/isolated-venv/lib/python3.12/site-packages",
+        "/tmp/stop-parser-rev2/artifacts-closeout-sealed/extracted/teax/teax-0.1.0/packages/teax-simkit"
+      ],
+      "junit": null,
+      "observed_skips": [],
+      "output_sha256": "bd1f00a1dcc181240dc145cafd5d6dc20ec3603a73eeda938640c66122dd4239",
+      "skip_policies": [],
+      "status": 0,
+      "stderr": {
+        "path": "run-reports/fusion-mypy.stderr",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "stdout": {
+        "path": "run-reports/fusion-mypy.stdout",
+        "sha256": "f9b031e5c45aa702cd4fef028d465551cb20a2c4698e0913c7b00766b20ac4d8"
+      },
+      "unexpected_skips": []
+    }
+  ],
+  "schema_version": "stop-parser-independent-green/v1"
+}

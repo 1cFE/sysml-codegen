@@ -1,0 +1,12 @@
+{
+  "files": {
+    "verification/dependencies.json": "addb1fa7048229a496e348b266ff4dffcfe49d74799064c16ffc5dd68d2176ee",
+    "verification/execution-provenance.json": "b0c234e67c4cb9cdbdd93ad858da09b86cf60b739d77c75d717a13ff2648c56f",
+    "verification/expected-transitions.md": "aa03436f1294165c3aa5b2e7f62ec1fa2b4618aa9ec27bdcf2a64e8a3d259def",
+    "verification/independent-green.json": "11970edc8e1edd64962b15e1e439f2db9b88ac8209085659edad6dc18e757908",
+    "verification/probe-fixture-lock.json": "39e42e3568ae2ef922e07d9d58a6029efb31ea01e2fea3ff864bfe05dd43aa3d",
+    "verification/reconciliation-ledger.md": "fe9fff83dc469fdea005861e41fadfabe3c1e911601369b201f60046c76a4abf",
+    "verification/wheelhouse-requirements.txt": "6d7ee92e160334728362c26e382c9c9980b54889d1854e2f1899b46bb384a0cb"
+  },
+  "schema_version": "stop-parser-evidence-lock/v1"
+}
