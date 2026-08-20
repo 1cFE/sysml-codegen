@@ -26,11 +26,11 @@ and give a stop condition that makes another remediation pass demonstrably finit
 
 The Agentic PDF suite is outside this research and outside parser-work validation by settled owner
 direction. It was not run. The durable disposition is recorded in
-`.project/active/stop-reinventing-the-parser/plan.md:156-169` and
-`.project/active/stop-reinventing-the-parser/audit.md:38-49`.
+`.project/completed/20260819_stop-reinventing-the-parser/plan.md:156-169` and
+`.project/completed/20260819_stop-reinventing-the-parser/audit.md:38-49`.
 
 For brevity below, `spec.md`, `design.md`, `design-review.md`, and `audit.md` refer to files in
-`.project/active/stop-reinventing-the-parser/`. `A_final:` and `C_prod:` refer to the immutable
+`.project/completed/20260819_stop-reinventing-the-parser/`. `A_final:` and `C_prod:` refer to the immutable
 baselines named in the frontmatter and expanded under Code References.
 
 ## Summary
@@ -38,7 +38,7 @@ baselines named in the frontmatter and expanded under Code References.
 - **[AGENT] The current patching method is not demonstrably converging.** The last remediation
   repaired named helpers and tests, while semantically equivalent public consumers remained legal.
   The latest audit therefore found the same failure class on different routes
-  (`.project/active/stop-reinventing-the-parser/audit.md:223-234`). Another site-by-site patch pass
+  (`.project/completed/20260819_stop-reinventing-the-parser/audit.md:223-234`). Another site-by-site patch pass
   would be whack-a-mole.
 - **[AGENT] The findings themselves are converging strongly.** The occurrence core is holding. The
   repeated defect is at the semantic-evidence edges that feed it: a typed owner exists, but another
@@ -123,7 +123,7 @@ The reachable consumers are enumerable:
 
 Three older extraction modules are explicitly off the public route in the active spec:
 `usage_extractor.py`, `computed_attribute_extractor.py`, and `hierarchy_resolver.py`
-(`.project/active/stop-reinventing-the-parser/spec.md:118-119`). They must be deleted, de-exported,
+(`.project/completed/20260819_stop-reinventing-the-parser/spec.md:118-119`). They must be deleted, de-exported,
 or inventoried separately before anyone makes a repository-wide “no raw reads” claim. They do not
 make the live route census unbounded.
 
@@ -143,7 +143,7 @@ The alarming sentence describes one precise failure:
    segments, and leaf into ordinary reference resolution
    (`C_prod:src/sysml_codegen/elaboration/elaborate.py:2142-2162,2548-2577`).
 4. The licensed audit probe therefore observed `cells#(2).mass` resolve as `cells[0].mass` with no
-   diagnostic (`.project/active/stop-reinventing-the-parser/product-lens.md:643-653`).
+   diagnostic (`.project/completed/20260819_stop-reinventing-the-parser/product-lens.md:643-653`).
 
 This is silent wrong meaning, so it blocks certification. Its scope matters:
 
@@ -289,7 +289,7 @@ No new framework is needed:
   and exported aliases.
 - `C_prod:tests/conformance/test_expression_evidence_integrity.py:57-85,252-379` — current forced
   helper coverage and indexed route coverage.
-- `.project/active/stop-reinventing-the-parser/audit.md:135-221` — reproduced CI-1 through CI-6.
+- `.project/completed/20260819_stop-reinventing-the-parser/audit.md:135-221` — reproduced CI-1 through CI-6.
 
 ## Architecture Insights
 

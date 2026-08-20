@@ -4,6 +4,38 @@ Historical record of completed work.
 
 ---
 
+## [2026-08-19] - [ELABORATE-FIRST bounded predecessor] Exact Occurrence Derivation and Evidence Integrity
+
+**Type**: Item
+**Duration**: 2026-08-16 → 2026-08-19 (3 days)
+**Archived to**: `.project/completed/20260819_stop-reinventing-the-parser/`
+**Branches**: codegen `stop-parser-closeout-r3`; agentic-mbse `stop-parser-evidence-r2`;
+fusion-tea `stop-parser-fusion-r2`
+
+### Summary
+Occurrence resolution now derives concrete targets from SysIDE's exact semantic evidence and the
+modeled consumer domain, or refuses by name before graph mutation. Extraction and public generation
+preserve the evidence needed by that decision, the Fusion Tea corpus regenerates and executes, and
+the final two model-caused provenance defects preserve collision context and map overlapping roots
+to the canonical source referent.
+
+### Deliverables
+- Codegen production `8a758e9240707b58fe32a509c3b509941ca4fa01`, Agentic
+  `443388823f0db46c14df1728d3843d0a74ee7590`, Fusion
+  `8cb0b838c78c661f0553cdd3d0063610a2826301`, and direct evidence child
+  `924eadfd12f39401a6ea8e578b405d4ba8833b51`.
+- A 21-lane independent runner record: Codegen 2,544 passed / 9 policy skips / 94 deselected;
+  Codegen generated execution 94/94; TEAx 406/406; Fusion generated execution 23/23.
+- Four-group mechanical verification of evidence topology, Codegen reconstruction, Fusion pinning,
+  and artifact/lock integrity.
+- Archived spec, reviews, design, plan, audit, Product-Lens ledger, and failed-candidate record.
+- `[OWNER, 2026-08-19]` Closure after the two model-caused fixes and one rebuilt chain, without a
+  fourth audit loop. Internal-defect diagnostic totality remains in
+  `[DIAGNOSTIC-PROVENANCE-BY-CONSTRUCTION]`; the historical rev-3 `Needs Work` audit is preserved.
+
+### Lessons Learned
+[TODO: Add lessons learned]
+
 ## [2026-08-16] - [ELABORATE-FIRST bounded child] Self-Binding Replacement
 
 **Type**: Item (bounded child of ELABORATE-FIRST Item 8)

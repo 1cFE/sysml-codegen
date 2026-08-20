@@ -32,7 +32,7 @@ Prioritized list of epics and features.
   every expression consumer before graph construction with `SI_INDEXED_SOURCE_UNSUPPORTED` until
   exact indexed-element semantics are implemented. Preserve the authored reference and the current
   fail-before-mutate contract while adding the capability. Source:
-  `.project/active/stop-reinventing-the-parser/design.md` D5/D7/D8 and transition rows A5/A5a/A5b.
+  `.project/completed/20260819_stop-reinventing-the-parser/design.md` D5/D7/D8 and transition rows A5/A5a/A5b.
 - **[SCALAR-FUNCTION-VOCABULARY] Add scalar invocation functions as a separately owned capability —
   P2 `[OWNER, 2026-08-18]`.** Supporting `min`, `max`, or other scalar functions is not part of the
   stop-parser remediation; no existing fixture or Fusion model needs them. Today every invocation
@@ -43,7 +43,7 @@ Prioritized list of epics and features.
   `[AGENT]`.** A second authored alias for one source survives in `graph.output_aliases` but emits no
   exit-point line, writes no `<name>.json`, and produces no diagnostic. Decide the supported
   behavior and make it explicit before generation; first-wins silence is not evidence. Source:
-  `.project/active/stop-reinventing-the-parser/product-lens.md` L-13 and the generation site it
+  `.project/completed/20260819_stop-reinventing-the-parser/product-lens.md` L-13 and the generation site it
   records.
 - **[DEEP-QUALIFIED-OUTPUT-WIRING] Wire a deep qualified reference to its concrete calculation
   output — P2 `[AGENT]`.** The authored shape is

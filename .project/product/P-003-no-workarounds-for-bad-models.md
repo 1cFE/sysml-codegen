@@ -43,6 +43,7 @@ search is a workaround this promise forbids. Removal is owned by `[DEF-OWNED-SID
 (`.project/backlog/BACKLOG.md`). After transition A3, **every** definition-owned lineage miss is
 final and refuses with `SI_OCCURRENCE_MISSING`; the resolver never searches descendants or siblings
 for a substitute. Exact usage-owner anchoring, local definition-owned lineage mapping, bare
-references, and explicit occurrence paths remain unchanged. This agent-written application status
-describes the Phase 4 production candidate; independent audit is still pending. The
-owner-verbatim promise above is unchanged.
+references, and explicit occurrence paths remain unchanged. **[AGENT, updated 2026-08-19]** The
+application is retained at Codegen production identity
+`8a758e9240707b58fe32a509c3b509941ca4fa01`; the owner authorized close after the final two
+model-caused provenance fixes and one rebuilt chain. The owner-verbatim promise above is unchanged.

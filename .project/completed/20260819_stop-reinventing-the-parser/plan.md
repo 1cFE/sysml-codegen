@@ -2851,3 +2851,33 @@ and the unreproducible "221 passed" figure is replaced.
 **Rollback point for this pass:** reset `stop-parser-evidence-r2` to `144ae02`. The Codegen
 worktree is still untouched at `d257ef1` and both user checkouts report an empty
 `status --porcelain`.
+
+### Owner-authorized closeout (2026-08-19)
+
+**[OWNER, 2026-08-19]** Implement only the two model-caused rev-3 defects, run focused checks,
+rebuild the dependent chain once, and close without another audit loop.
+
+Completed:
+
+- Collision refusals retain the typed diagnostic's measured reference and location through both
+  CLI arms.
+- Overlapping roots map parser diagnostics through the canonical most-specific source referent.
+- Focused licensed regressions: **43 passed**. Relevant Codegen validation before the final chain:
+  **63 passed**; focused Ruff passed.
+- Final immutable identities: Agentic `443388823f0db46c14df1728d3843d0a74ee7590`, Codegen
+  production `8a758e9240707b58fe32a509c3b509941ca4fa01`, Fusion
+  `8cb0b838c78c661f0553cdd3d0063610a2826301`, and direct evidence child
+  `924eadfd12f39401a6ea8e578b405d4ba8833b51`.
+- The committed independent runner matched all **21** declared lanes. Codegen default collected
+  2,647: **2,544 passed, 9 policy skips, 94 deselected**. Codegen generated execution passed 94/94;
+  TEAx passed 406/406; Fusion generated execution passed 23/23. Fusion's declared baseline matched
+  exactly at 401 passed, 58 known failures, and 58 skips.
+- The mechanical verifier passed `parent_and_paths`, `codegen_reconstruction`, `fusion_pin`, and
+  `artifacts_and_lock`. The final Codegen wheel SHA-256 is
+  `cca661ce1ad5b7c7326cf48f8167e9358c22982343185bb82a8e059089cddbc5`.
+- Internal-defect diagnostic totality and the hard-coded guard remain in
+  `[DIAGNOSTIC-PROVENANCE-BY-CONSTRUCTION]`. No production cleanup beyond the two authorized fixes
+  was included.
+
+The historical rev-3 `Needs Work` audit remains part of the archive. Closure authority is the
+owner's later scope ruling and explicit close instruction, recorded in the final Product-Lens block.

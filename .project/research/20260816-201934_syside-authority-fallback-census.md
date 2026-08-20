@@ -17,7 +17,7 @@ ground truth.
 
 The corrected analysis is
 `.project/research/20260816-205035_premise-audit-fallback-census.md`. The active contract is
-`.project/active/stop-reinventing-the-parser/spec.md`.
+`.project/completed/20260819_stop-reinventing-the-parser/spec.md`.
 
 ## Surviving site-location map
 

@@ -129,7 +129,7 @@ evidence needed to establish it.
 - **[INFERRED]** (agent recommendation ratified by owner, 2026-08-16) Design and implementation wait
   for `stop-reinventing-the-parser` to close. Downstream evidence must certify the final
   occurrence-derivation and extraction-integrity rules, not the behavior this predecessor is
-  replacing. Source: `.project/active/stop-reinventing-the-parser/spec-review.md` L4-1 and the
+  replacing. Source: `.project/completed/20260819_stop-reinventing-the-parser/spec-review.md` L4-1 and the
   owner's direction to apply the resulting spec fixes; the dependency remains agent-grade.
 - **[NEED]** Fusion Tea implementation uses a new `elaborator-downstream` branch created from the
   certified head of its `self-binding-replacement` branch. The current candidate is `7703ba1e`; if
@@ -242,7 +242,7 @@ evidence needed to establish it.
 - **Scope stocktake:** `.project/research/20260815-103905_item8-bounded-stocktake.md`
 - **Spec review:** `.project/active/elaborator-downstream/spec-review.md`
 - **Predecessors:** `.project/completed/20260816_self-binding-replacement/` and
-  `.project/active/stop-reinventing-the-parser/spec.md`
+  `.project/completed/20260819_stop-reinventing-the-parser/spec.md`
 - **Absorbed ancestor:** `.project/completed/20260810_epic_semantic_source_identity.md`, downstream
   remediation and certification items
 - **Item-3 authority:** `.project/concepts/constraint-execution-authoritative-lifecycle-contract.md`

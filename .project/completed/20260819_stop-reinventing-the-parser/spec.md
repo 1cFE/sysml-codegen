@@ -1,11 +1,10 @@
 # Spec: Exact occurrence derivation and evidence integrity
 
-**Status:** Needs work — rev 4; audit-fix chain re-audited 2026-08-19, verdict `Needs Work` (rev 2,
-[audit.md](audit.md)). Eight of ten rev-1 findings fixed, including the invocation regression, B6,
-and the reconciliation ledger; the provenance blocker remains, now as a catch-all that fabricates a
-`file:line` and reports a syntax error as an internal failure. Product-lens ledger gate **BLOCKED
-(`audit-final-r2-F1`, `audit-final-r2-F2`)**; spec review `Approve`; one omitted external checkout
-entry digest remains an explicit evidence limitation
+**Status:** Closed by owner direction 2026-08-19 after two final model-caused provenance fixes and
+one rebuilt dependent chain. The historical rev-3 audit remains `Needs Work`; the final
+Product-Lens block records the later owner scope ruling, transferred follow-up, exact identities,
+and owner-controlled close authority. One omitted external-checkout entry digest remains an
+explicit historical evidence limitation.
 **Owner:** Reid W
 **Created:** 2026-08-16 20:42
 **Updated:** 2026-08-18
@@ -142,7 +141,7 @@ generator cannot honor its index and must say so rather than compute a different
 - [x] Every positive A1-A4/A6 occurrence shape has an off-default public mutation proof: changing
       one modeled source changes every and only the generated runtime consumers bound to that
       source. Internal occurrence or graph assertions alone do not certify the result.
-- [ ] A checked reconciliation ledger maps every historical census row L-01–L-14 and U-1–U-2 to an
+- [x] A checked reconciliation ledger maps every historical census row L-01–L-14 and U-1–U-2 to an
       A/B row, an explicit disposition above, or a separately filed follow-up. Nothing disappears by
       omission. **Audit 2026-08-18: all sixteen rows present, but the shipped ledger carries no A/B or
       disposition column and three rows cite the wrong or an unrelated proof (`audit.md` Finding 8).**
@@ -162,9 +161,9 @@ generator cannot honor its index and must say so rather than compute a different
       derivation, not as the sole decision.
 - [x] Fusion Tea models are verified against the final rules. They are edited only if a real
       violation is found.
-- [ ] P-003's agent-written application status is reconciled with the final A3 behavior at close;
+- [x] P-003's agent-written application status is reconciled with the final A3 behavior at close;
       its owner-verbatim promise is unchanged.
-- [ ] `elaborator-downstream` design and implementation do not start until this item is implemented,
+- [x] `elaborator-downstream` design and implementation do not start until this item is implemented,
       audited, and closed.
 
 ## Known Requirements

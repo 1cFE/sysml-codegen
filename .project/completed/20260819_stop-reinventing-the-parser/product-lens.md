@@ -1644,3 +1644,33 @@ all three new falsifiers directly disprove its claimed totality and its guard.
 
 Gate: **BLOCKED (`audit-final-r2-F2`)** — `audit-final-r3-F1`, `audit-final-r3-F2`, and
 `audit-final-r3-F3` are DISPOSED but reinforce the standing block.
+
+---
+
+## owner-controlled close — 2026-08-19 — `C_prod` `8a758e9240707b58fe32a509c3b509941ca4fa01`
+
+**[OWNER, 2026-08-19]** The owner ruled that this item closes after the two model-caused rev-3
+defects are repaired, focused checks pass, and the dependent evidence chain is rebuilt once. The
+owner explicitly ruled out a fourth audit/fix loop. Internal-defect diagnostic quality and the
+repository-total guard remain owned by `[DIAGNOSTIC-PROVENANCE-BY-CONSTRUCTION]`.
+
+Close evidence:
+
+- `audit-final-r3-F1` is fixed. Both public CLI arms now render the typed collision diagnostic's
+  measured reference and location. The live generation regression proves the exact authored
+  reference and `root-0/model.sysml:15` reach the public refusal.
+- Audit R3-3 is fixed. Overlapping model roots now use the canonical most-specific source mapper;
+  the public parse diagnostic reports `root-1/model.sysml`, not the first containing root.
+- `audit-final-r3-F2` and `audit-final-r3-F3` transfer unchanged to the named follow-up under the
+  owner's scope ruling. This close makes no new totality claim for internal-defect diagnostics.
+- The committed 21-lane runner matched every declared count and output baseline. The direct
+  evidence child is `924eadfd12f39401a6ea8e578b405d4ba8833b51`; the four-group mechanical
+  verifier passed.
+
+Resolves for this item's close:
+
+- `audit-final-r2-F2`: **DISPOSED by owner scope ruling.** Its model-caused public subset is fixed;
+  its internal-defect and proof-mechanism remainder has a separately owned follow-up. The historical
+  rev-3 audit verdict remains unchanged.
+
+Gate: **CLEAR FOR OWNER-CONTROLLED CLOSE.**

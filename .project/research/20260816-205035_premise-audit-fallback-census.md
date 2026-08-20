@@ -226,7 +226,7 @@ does not prove that all exact usage-owned contextualization is wrong.
 
 1. Do not use the fallback census or its addendum as an approved implementation plan without major
    revision.
-2. Do not approve `.project/active/stop-reinventing-the-parser/spec.md` as written. Its central
+2. Do not approve `.project/completed/20260819_stop-reinventing-the-parser/spec.md` as written. Its central
    claim that the maintained CATF `plasma_region::inner_radius` resolves to a `Plasma` definition is
    contradicted by the retained parser/edge evidence.
 3. Keep the InstanceGraph and exact-ID occurrence walker. Removing them would discard the concrete

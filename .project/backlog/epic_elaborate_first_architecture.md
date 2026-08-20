@@ -546,21 +546,20 @@ implemented, audited, and closed before Item 8 downstream design or implementati
 performs none of either predecessor's remediation. Source: the active item's `spec-review.md` L4-1
 and the owner's direction to apply the review fixes.
 
-**Bounded predecessor active — Phase 5 implemented, independent audit pending 2026-08-18:**
-`.project/active/stop-reinventing-the-parser/` owns exact occurrence derivation and evidence
-integrity. It closes before `.project/active/elaborator-downstream/` starts so downstream
-regeneration and certification measure the final semantic-authority rules.
+**Bounded predecessor closed 2026-08-19 by owner direction:**
+`.project/completed/20260819_stop-reinventing-the-parser/` owns exact occurrence derivation and
+evidence integrity. The historical rev-3 audit remains `Needs Work`; the owner later narrowed the
+close scope, authorized the two model-caused repairs and one dependent-chain rebuild, and ruled out
+a fourth audit loop. Internal-defect diagnostic totality remains separately owned by
+`[DIAGNOSTIC-PROVENANCE-BY-CONSTRUCTION]`.
 
-The immutable chain is now `A_final` `3f8bd587af40f05b929dd56645901dada7daea37`, `C_prod`
-`707346d616e508e55103c9246b63d172ed6a862b`, `F_final`
-`2243b7ce116c0a12fb0c09a81262c5c2ec879f69`, and direct-child `C_evidence`
-`a184133b99f7f71451c0b4af5a33b709f988eca2`. The committed runner executed 21 isolated lanes from
-recorded archives and wheels; the Codegen default lane passed 2,511 with 34 exact policy skips and
-94 deselections, and generated execution passed 94/94. The Phase 5 product gate is clear at exact
-`C_prod`; `audit3-F1` and `audit-phase3-F2` have production-artifact proofs. The mechanical auditor
-passes all four reconstruction groups. This is implementation evidence, not certification. An
-independent `$my-audit` remains required, one omitted external-checkout entry digest is disclosed in
-the plan, no epic completion checkbox is marked, and downstream work remains blocked.
+Final immutable identities are Agentic `443388823f0db46c14df1728d3843d0a74ee7590`, Codegen
+production `8a758e9240707b58fe32a509c3b509941ca4fa01`, Fusion
+`8cb0b838c78c661f0553cdd3d0063610a2826301`, and direct evidence child
+`924eadfd12f39401a6ea8e578b405d4ba8833b51`. The committed runner matched all 21 declared lanes;
+Codegen passed 2,544 with 9 policy skips and 94 deselections, generated execution passed 94/94,
+and Fusion generated execution passed 23/23. The four-group mechanical verifier passed. The
+predecessor dependency is satisfied; this close does not mark either Item 8 success criterion.
 
 **Bounded child closed 2026-08-16:** exact occurrence-owner anchoring for usage-owned one-segment
 references is certified and archived at
