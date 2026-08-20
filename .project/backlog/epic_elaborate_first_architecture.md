@@ -544,17 +544,22 @@ functional criteria independently verified and its testing/developer-tooling edg
 by the owner. **[AGENT] (ratified by owner, 2026-08-16):** `stop-reinventing-the-parser` is
 implemented, audited, and closed before Item 8 downstream design or implementation; downstream
 performs none of either predecessor's remediation. Source: the active item's `spec-review.md` L4-1
-and the owner's direction to apply the review fixes. The implementation is active: agentic descendant
-`1804827cb2cc877b3c0bc74309bd3470fb2ee90b` and the completed Phase-5 codegen descendant
-`c22c269a57fbd1d3a20d6e7fcd7604a659232da3` are its current production inputs. It still requires
-the final immutable codegen/Fusion evidence chain and a fresh audit. Item 8 downstream design and
-implementation perform none of either predecessor's remediation.
+and the owner's direction to apply the review fixes.
 
-**Bounded predecessor active 2026-08-16:**
-`.project/active/stop-reinventing-the-parser/` owns exact occurrence derivation and evidence
-integrity. `elaborator-downstream` remains blocked until this predecessor lands its final evidence
-commit, passes a fresh audit, and closes, so downstream regeneration and certification measure the
-final semantic-authority rules.
+**Bounded predecessor closed 2026-08-19 by owner direction:**
+`.project/completed/20260819_stop-reinventing-the-parser/` owns exact occurrence derivation and
+evidence integrity. The historical rev-3 audit remains `Needs Work`; the owner later narrowed the
+close scope, authorized the two model-caused repairs and one dependent-chain rebuild, and ruled out
+a fourth audit loop. Internal-defect diagnostic totality remains separately owned by
+`[DIAGNOSTIC-PROVENANCE-BY-CONSTRUCTION]`.
+
+Final immutable identities are Agentic `443388823f0db46c14df1728d3843d0a74ee7590`, Codegen
+production `8a758e9240707b58fe32a509c3b509941ca4fa01`, Fusion
+`8cb0b838c78c661f0553cdd3d0063610a2826301`, and direct evidence child
+`924eadfd12f39401a6ea8e578b405d4ba8833b51`. The committed runner matched all 21 declared lanes;
+Codegen passed 2,544 with 9 policy skips and 94 deselections, generated execution passed 94/94,
+and Fusion generated execution passed 23/23. The four-group mechanical verifier passed. The
+predecessor dependency is satisfied; this close does not mark either Item 8 success criterion.
 
 **Bounded child closed 2026-08-16:** exact occurrence-owner anchoring for usage-owned one-segment
 references is certified and archived at

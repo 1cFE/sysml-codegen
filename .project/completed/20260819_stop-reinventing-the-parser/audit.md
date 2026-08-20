@@ -1,0 +1,930 @@
+# Audit: Exact occurrence derivation and evidence integrity
+
+**Verdict:** Needs Work (re-audit, rev 2)
+**Re-audited:** 2026-08-19
+**Re-audited chain:** `A_final-r2` `443388823f0db46c14df1728d3843d0a74ee7590`; `C_prod-r2`
+`22348458baa5aec314850cc6fcc8d1e90355ce58`; `F_final-r2` `8460d0cdf76e04fd4f4be146d52f2e0fef009a98`;
+`C_evidence-r2` `4ea1e8cdd98257d11ca8ef37a595b64392929bd9`; artifacts
+`/tmp/stop-parser-rev2/artifacts-final-r3`. Prior chain preserved at `evidence-chain-r1`.
+
+---
+
+## Re-audit summary (2026-08-19)
+
+**Eight of the ten rev-1 findings are fixed, including three of the four blockers, and the
+replacement evidence chain verifies end to end.** The invocation regression is genuinely gone: an
+unsupported invocation now refuses pre-graph with its code, the authored text, and an exact
+root-relative line, and plurality is decided by the reload-stable declaration UUID of
+`NumericalFunctions::sum` rather than the function's name. B6 reads the qualified-only view. The
+reconciliation ledger is machine-generated with A/B and disposition columns and node-level
+citations that all resolve. The dead computed-attribute classifier is deleted rather than
+carve-out-patched.
+
+**The one blocker that remains is the same one, moved.** Making refusals total was done with a
+catch-all that stamps every unclassified failure with `SI_EVIDENCE_INCOMPLETE` — a model-facing
+code — plus a *fabricated* location: the first `.sysml` file found under the first model root, line
+`1`. All four provenance elements are then syntactically present, which is why the new totality test
+passes, and all four can be wrong. Two measured consequences, both new in this range:
+
+- A plain SysML **syntax error** is now reported as `unexpected internal failure: SysMLParsingError`
+  at line 1, because `SysMLParsingError` is missing from one passthrough tuple
+  (`orchestration/exact_pipeline_context.py:288`) while its sibling one frame down has it
+  (`orchestration/elaborated_pipeline.py:82-85`). At `21e09af`, one commit before the repair, the
+  same model said `SysML parsing failed`. The CLI's own `except SysMLParsingError` handler is dead
+  on this route.
+- A failure caused by one file is **cited against a different, innocent file**. Measured: a
+  valid `aaa_fine.sysml` beside an unreadable `zzz_broken.sysml` produces
+  `SI_EVIDENCE_INCOMPLETE: root-0/aaa_fine.sysml … [root-0/aaa_fine.sysml:1]`, with the real
+  offender visible only inside a raw Python exception string carrying an absolute private path.
+
+Alongside that, three rev-1 provenance shapes were never repaired (`SI_REDEFINITION_INVALID`, the
+`item def` arm of `SI_CONSTRAINT_UNATTACHED`, the capture arm's staging-path leak), and the
+adversarial pass found three more codes with the same gap. The fix made the common paths honest and
+the uncommon ones plausible-looking, which is harder to catch than the original silence.
+
+## Re-audit dispositions — rev-1 findings
+
+| Rev-1 finding | Disposition |
+|---|---|
+| 1 — invocation refuses post-graph; plurality by name | **FIXED.** Verified on the public route: `SI_EXPRESSION_SOURCE_UNSUPPORTED: max(cell.capital_cost, 1.0): reference='max(cell.capital_cost, 1.0)': inspect_reference_uses: invocation of 'NumericalFunctions::max' is valid SysML but is not supported by this executable subset … [root-0/model.sysml:24]`. Plurality is `SysideAdapter.element_id(function) == _STANDARD_SUM_FUNCTION_ID` (agentic `reference_use.py:379-392`), the same UUID the retired `C_base` guard used. Refusal is raised inside the inventory, which runs before extraction and before graph construction (`orchestration/elaborated_pipeline.py:229-231`). |
+| 2 — provenance not a boundary property | **PARTIALLY FIXED; still blocking.** The two committed-fixture tracebacks and the readiness lane are fixed with all four elements. `SI_REDEFINITION_INVALID` (`elaboration/occurrence.py:279`) still names nothing; the `item def` arm of `SI_CONSTRAINT_UNATTACHED` (`elaboration/elaborate.py:769-773`) still prints a raw `syside.core.QualifiedName([...])` with no location; the capture arm still leaks `/tmp/sysml-codegen-sources-…` on parse-time refusals. See Re-audit findings R1–R3. |
+| 3 — B6 permissive type table | **FIXED.** `extraction/extractor.py:367` reads `QUALIFIED_SYSML_TO_PYTHON`; a real-model root-namespace `Real` lookalike refuses (`tests/conformance/test_feature_typing_integrity.py:214`), with an AST guard beside it. |
+| 4 — two `type(...).__name__` decisions | **FIXED.** The fail-open one at `extraction/extractor.py:246` now uses the mapped metatype; the constraint-owner one is routed through `SysideAdapter.is_instance`. Its test is a source-substring assertion, so the guard is weaker than the fix. |
+| 5 — segment-count carve-out in a dead classifier | **FIXED by deletion.** `extraction/computed_attribute_extractor.py` and its golden are gone; nothing under `src/` imported it, and its absence is pinned. Residual: `ComputedAttributeClassification` / `ComputedAttributeData` survive in `extraction/data_models.py:195,233` with no producer or consumer. |
+| 6 — closure matrix asserts unearned force | **NOT ADDRESSED.** Carried. |
+| 7 — `adr002` URL substring + class name + `return True` | **NOT ADDRESSED.** Carried. |
+| 8 — reconciliation ledger | **FIXED.** Now six columns, machine-generated by the committed runner (`verification/run_independent_green.py:1377`), all 16 rows carrying node-level citations that collect, dispositions matching the design census row for row, and L-05/L-13/L-14 corrected on their own terms. `expected-transitions.md`'s two bad citations are fixed too. |
+| 9 — evidence self-comparisons | **FIXED, one residual.** Counts are recomputed from the retained JUnit at audit time; the probe-lock self-read is deleted; the archive pin compares the shipped bytes; `-I` is restored; the `costingfe` skip policy names six files. Residual: `REQUIRED_RUN_IDS == tuple(EXPECTED_RUNS)` is a tautology by construction. |
+| 10 — retained probes cannot run | **FIXED.** Both execute against the final API and reproduce their committed verdicts byte for byte. Residual R6 below. |
+
+## Re-audit findings
+
+**R1 — The catch-all fabricates provenance and mislabels the party at fault. (blocking)**
+
+`elaboration/elaborate.py:157-178` (`unexpected_public_failure`) stamps every unclassified failure
+with `SI_EVIDENCE_INCOMPLETE` and a location from `orchestration/diagnostic_context.py:10-22`, which
+returns the first `.sysml` file found and the literal line `1`. Nothing about the actual failure
+feeds either. Two measured cases:
+
+```text
+ERROR: Model failed exact-route validation: SI_EVIDENCE_INCOMPLETE: root-0/aaa_fine.sysml:
+reference='root-0/aaa_fine.sysml': unexpected internal failure: PermissionError: [Errno 13]
+Permission denied: '…/zzz_broken.sysml' [root-0/aaa_fine.sysml:1]
+```
+
+```text
+ERROR: Model failed exact-route validation: SI_EVIDENCE_INCOMPLETE: root-0/model.sysml:
+reference='root-0/model.sysml': unexpected internal failure: SysMLParsingError: Failed to load
+SysML models from: […] [root-0/model.sysml:1]
+```
+
+The second is a user's syntax error at line 17. Cause: `SysMLParsingError` is a bare `Exception`
+(`core/errors.py:21`) and is absent from the passthrough tuple at
+`orchestration/exact_pipeline_context.py:288`, though present in the sibling tuple at
+`orchestration/elaborated_pipeline.py:82-85`; the CLI's dedicated handler at `cli/__init__.py:1224`
+is dead on this route. Verified new against `21e09af`, which said `SysML parsing failed`.
+
+A fabricated citation is worse than an absent one: it is indistinguishable in form from a real one,
+and the new totality test accepts it because all four fields are non-empty. What should change: add
+`SysMLParsingError` to that tuple; give an internal defect its own code rather than the model-facing
+`SI_EVIDENCE_INCOMPLETE`; and emit no location at all when there is no real one.
+
+**R2 — Three rev-1 provenance shapes were never repaired, and three more codes share the gap.
+(blocking, same family as R1)**
+
+- `SI_REDEFINITION_INVALID` — `elaboration/occurrence.py:279` raises without `reference=` or
+  `location=`, though the class accepts both (`occurrence.py:45-61`). Output names neither the
+  attribute nor the two definitions. Seven further `ElaborationInvariantError` sites in
+  `elaboration/elaborate.py` (461, 828, 896, 974, 1158, 1254, 1721) have the same omission.
+- `SI_CONSTRAINT_UNATTACHED` — fixed for a mapped owner; the `item def` arm still reaches
+  `elaboration/elaborate.py:769-773` and prints `syside.core.QualifiedName(['…','Payload'])` with no
+  location. The totality test's `"syside.core.QualifiedName" not in detail` assertion covers only
+  the fixed fixture.
+- Capture arm — a parse-time refusal still prints `/tmp/sysml-codegen-sources-…/root-0/model.sysml:17`,
+  a staging path that no longer exists when the user reads it.
+- New: `SI_RENDERING_COLLISION` names the rendered channel but neither authored name and no
+  location; `SI_CONTAINMENT_RECURSIVE` reports a bare UUID; and the whole preflight/generation
+  family (`cli/__init__.py:229,243,291,356-401,443-461`, `generation/entry_point.py:146`,
+  `generation/modules.py:175`) raises bare-message `CodeGenerationError`s with no code token and no
+  location. The messages are actionable, so this last group is the least severe.
+
+What should change: make the four elements a property enforced at the boundary for every reachable
+code, and have the totality test enumerate the codes rather than list eight scenarios by hand.
+
+**R3 — The new totality test cannot fail closed. (DISPOSE, but it is what let R1/R2 through)**
+
+`tests/conformance/test_public_diagnostic_totality.py` asserts all four elements for the cases it
+covers and would fail if they were stripped — but it enumerates nothing, so a new code or a new
+raise site is covered by nothing, and both R1 cases pass it cleanly. Nine of its fourteen tests need
+no license and run on `SimpleNamespace` fakes; six plant a `RuntimeError` and none plants the
+`AttributeError`/`KeyError` shapes the claim is about.
+`test_constraint_owner_classification_uses_mapped_metatypes` (`:187`) asserts on
+`inspect.getsource` text, so a correct rewrite under a different helper name fails it and a broken
+one containing the right substring passes.
+
+**R4 — The stack is destroyed at the CLI seam, and a test now requires that. (DISPOSE)**
+
+`cli/__init__.py:944,1233,1251` catch bare `Exception`, format the diagnostic into a log line, and
+return; `__cause__` is not set there and there is no `exc_info` or debug flag. The pre-fix comment
+said the opposite was deliberate ("a programming defect … now propagates to the CLI boundary with
+its traceback"). `assert "Traceback" not in caplog.text` at `test_public_diagnostic_totality.py:63,
+280,305` now pins the loss.
+
+**R5 — The `sum` UUID's reload stability is asserted, not established. (DISPOSE)**
+
+`reference_use.py:58` calls it "reload-stable" while `SysideAdapter.element_id`'s own docstring
+disclaims reload stability. No test pins `6d745ea3-…` against a live standard-library reload. If
+SysIDE re-mints stdlib ids, `sum` silently stops aggregating. Also `elaboration/project.py:689`
+still compares `function_qn != ["NumericalFunctions", "sum"]` — a spelling test, harmless because it
+sits downstream of the identity gate, but the same pattern the item removes.
+
+**R6 — Evidence residuals. (DISPOSE)**
+
+The `b8` probe's missing-leaf gate is dead code: `ExactSemanticPath.leaf` is non-optional, so
+`missing_leaf_count: 0` is structurally guaranteed and the totality verdict carries no information.
+Both re-run probe verdicts silently dropped six provenance keys (`codegen_commit`,
+`probe_lock_sha256`, `repeat_output_sha256`, …) that a sibling verdict still carries, without a
+schema bump. The auditor's new ledger-citation check is a substring test
+(`verification/audit_evidence.py:555-559`), strictly weaker than the collecting checker. And the
+"189 citations collect" claim is about the Gate-4A retirement ledger, not the reconciliation ledger
+— zero of the 16 reconciliation rows are in that set, and the record places the two side by side.
+
+## Re-audit certification
+
+Verified independently by recomputation, not read from the record: the new topology
+(`C_evidence^ == C_prod`, exactly six evidence paths, `F_final` pinning `C_prod` and never
+`C_evidence`, prior chain preserved at `evidence-chain-r1`); every artifact, evidence-file, and
+lane-output hash; the four-group mechanical auditor, which still refuses a byte-mutated wheel with a
+named mismatch and exit 2; a licensed run of the seven lane suites plus the new totality suite at
+`C_prod` — **210 passed, zero skips**, with the same file at 9 passed / 5 skipped without the
+license key, proving the real-model arms ran; the counts recomputed from the retained JUnit for all
+ten pytest lanes; and both retained probes re-executed against the final API.
+
+**Not checked this pass:** the 21-lane battery was not re-executed; rev-1 findings 6 and 7 were not
+re-examined; the Fusion 58-failure baseline is still asserted rather than measured at the frozen
+parent; `C_prod` and `A_final` remain on no remote, so the chain is locally reproducible only; and
+the preflight family in R2 rests on two live confirmations plus source inspection of seven further
+raise sites.
+
+**Next step:** a narrow round owning R1 and R2 — one exception tuple, one new internal-defect code,
+no fabricated locations, and provenance on the named raise sites — then re-run the chain. R3–R6 are
+DISPOSE-grade and can be carried as follow-up rows.
+
+---
+
+# First pass — 2026-08-18
+
+**Verdict:** Needs Work
+**Audited:** 2026-08-18
+**Branch:** codegen `stop-parser-impl-r2`; agentic `stop-parser-evidence-r2`; fusion `stop-parser-fusion-r2`
+**Audited chain:** `A_final` `3f8bd587af40f05b929dd56645901dada7daea37`; `C_prod`
+`707346d616e508e55103c9246b63d172ed6a862b`; `F_final` `2243b7ce116c0a12fb0c09a81262c5c2ec879f69`;
+`C_evidence` `a184133b99f7f71451c0b4af5a33b709f988eca2`; artifacts
+`/tmp/stop-parser-rev2/artifacts-final-v3`
+
+---
+
+## The Point
+
+The product is three steps and nothing else: parse the model with a SysML v2 parser, walk the
+parser's resolved semantic tree to reconstruct the authored math, and emit that math as executable
+TEAx Python. Every decision on the way is taken from the parser's own resolved identity — never from
+a spelling, a Python class name, a count, a position, or a caller-supplied substitute. One modeled
+source occurrence becomes exactly one runtime source.
+
+An authored form the toolchain cannot honor has exactly two honest outcomes: resolve it through the
+parser, or refuse **by name, before a graph, snapshot, package, or output mutation escapes**, naming
+what the modeller wrote and where they wrote it. A form the language defines but the generator has
+not implemented gets a distinct unsupported-capability diagnostic that does not blame the model.
+
+That obligation is the whole item. Sources: `.project/product/P-003-no-workarounds-for-bad-models.md`
+and `P-004-product-identity-parse-walk-emit.md` (owner-verbatim), with
+`P-002-exact-owner-anchoring.md` as the exact-occurrence companion.
+
+## Summary
+
+The occurrence-derivation lane (A1–A6) is delivered and genuinely proved: every fallback election is
+gone, each row has real-model positive and refusal cases, and the every-and-only mutation criterion is
+carried by real TEAx execution on both the fixture matrix and the actual Fusion model tree. The
+evidence chain is real too — I reproduced the topology, all sixteen artifact and evidence hashes, and
+the mechanical auditor independently, and confirmed the auditor refuses mutated inputs rather than
+rubber-stamping them. Nine of the ten Lane B rows are met, several with better proof than the row asked
+for.
+
+It fails on refusal quality — the half of the product's promise that says an unhonorable form is
+refused **by name**, naming what the modeller wrote and where. A non-`sum` invocation such as
+`max(cell.capital_cost, 1.0)` now refuses *after* the graph is built, with no authored reference and
+no `file:line`, under a code that blames the model; at `C_base` the same model produced a pre-graph
+diagnostic carrying both. Alongside it, the decision that makes a reference fan out across occurrences
+moved from an exact declaration identity to the function's **name**. And that invocation case is one
+of five: the readiness lane renders code-and-name only, two refusal codes name nothing locatable, and
+two **committed fixtures** exit the public CLI with a bare eight-frame Python traceback. Two smaller
+gaps sit behind those: B6's own site still resolves types through the permissive unqualified table,
+and the shipped reconciliation ledger carries neither the disposition mapping the spec's criterion
+names nor correct proof citations for three of its sixteen rows.
+
+The item's other open weak variant, "skipped inventory", was attacked and **held** — the route is
+structurally closed, and 155 models produced zero inventory misses.
+
+None of this is unfixable, and none of it touches the artifact machinery. It is a bounded remediation
+round on the elaboration boundary plus two evidence-document corrections.
+
+## Product Judgment
+
+**Is this the right piece of work? Yes — and it is mostly done right.** The item removed the whole
+class of "choose an occurrence by proximity, order, or uniqueness" defects and replaced it with
+derivation from parser identity, with real-model proof on both the positive and the refusal side. The
+pre-graph evidence inventory is load-bearing rather than decorative, an indexed reference cannot lose
+its index because `IndexedReferenceUse` carries no path at all, and the registry derives its wrapper
+set from the graph with a typed refusal. That is the product's point working.
+
+**Product-lens ledger gate: BLOCKED (`audit-final-F1`).** The run I appended to
+[product-lens.md](product-lens.md) is `audit-final`; it re-derived the Point independently and
+returned a `BLOCK` on the invocation route, with `audit-final-F2` through `F5` disposed. I verified
+`F1` myself on the public route rather than accepting it, and the reproduction is in Finding 1 below.
+The finding is graded against owner-verbatim `P-003`/`P-004` and contradicts two of the spec's own
+success criteria, so it forbids Certify. Finding 2 is the same contradiction on four further shapes,
+found by attacking the plan's own open weak variant; it is owner-grade for the same reason and blocks
+on its own.
+
+Every earlier block in the ledger is resolved by citation and I re-checked each: `design-F1` (design
+rev 2), `audit3-F1` (fixed at exact production identity, independently confirmed), `audit-phase3-F4`
+(fixed, confirmed by code reading at `C_prod`), `audit-phase4-F1` (fixed, confirmed).
+`audit-phase4-F2` is partially fixed — route force is now per cell, but the cell-naming assertion still
+passes on any non-empty string — and is carried forward here as Finding 6.
+
+**Structural smells that fired and are not resolved by this judgment:**
+
+- *A special category exempts a case whose user-visible meaning is unchanged.* The `>= 3` segment-count
+  carve-out added to the off-route computed-attribute classifier keeps a golden baseline green in a
+  module no production code imports (Finding 5).
+- *Correctness depends on downstream knowledge of an internal representation.* Two `type(...).__name__`
+  decisions survive on the public route (Finding 4), and `owner_kind` — a Python class name — crosses
+  the package boundary as a string and decides an ADR-002 validation outcome (Finding 7).
+- *A test passes by selecting one route.* Ten consumer-matrix cells and the registry/exit-type lane are
+  proved on hand-built input rather than a parsed model (Finding 6).
+
+Escalating these into this judgment is what the rubric requires; it does not resolve them. Findings 4,
+5, 6 and 7 are DISPOSE-grade — they are real and located, but none is an owner-grade contradiction on
+its own.
+
+## Findings
+
+### Plan completion
+
+Phases 1, 2, 2b, 3, 4 and 5 are recorded complete, each with an independent audit or re-audit, and I
+spot-verified the identities and the closing evidence rather than the narrative. Three boxes remain
+unchecked, and all three are honest:
+
+- **Phase 3 closing gate, weak variant "Missing diagnostic provenance"** (`plan.md:1000`) — left open
+  for this independent audit to attack. **It is now EXPLOITED**; see Finding 1. The plan's own rule
+  applies: a weak variant the audit succeeds in exploiting returns to the owning phase.
+- **Phase 3 closing gate, weak variant "Skipped inventory"** (`plan.md:992`) — attacked and
+  **REFUSED**; the route is structurally closed and 155 models produced zero inventory misses. Details
+  under Finding 2. This box is closable; I have checked it.
+- **Phase 5 checkout-integrity equality** (`plan.md:1265`) — cannot be closed because
+  `run-records/entry-status.md` never recorded entry digests for Fusion, TEAx and 1costingfe. The
+  record says so plainly and invents no equality. I independently confirmed all five checkouts match
+  the recorded *final* state (TEAx, 1costingfe and Agentic clean at their pins; Fusion still on
+  `item8-fusion-embedded-catalog` at `be1ee7c0` with the recorded dirty digest
+  `d8a9922b…`). The limitation stands; the disclosure is correct.
+
+The Phase 5 record's own numbers hold up. Every one of the ten artifact SHA-256 values and all six
+evidence-file hashes recompute exactly, and the 21 runner lanes in `verification/independent-green.json`
+match the plan table one-for-one.
+
+### Spec conformance
+
+**Lane A — occurrence derivation: all six rows MET.**
+
+| Row | Evidence |
+|---|---|
+| A1 | `_select_occurrences` gone (absence pinned at `tests/unit/test_elaboration_import_boundaries.py:216`); derivation at `elaboration/elaborate.py:2170-2237` + `occurrence.py:449-514`; five required cases at `tests/conformance/test_occurrence_domain_derivation.py:56-165` on a real fixture, refusals asserting code, authored reference and `root-0/model.sysml:52` |
+| A2 | `elaborate.py:2286-2369`; positives and both refusals at `tests/conformance/test_occurrence_calc_domain_derivation.py:46-203`; producers filtered to the consumer domain first, so no sole-candidate arm survives |
+| A3 | `_resolve_leaf` gone, no descendant search anywhere in `src/`; the four required shapes at `tests/conformance/test_definition_owned_reference_positions.py:49-102` |
+| A4 | `elaborate.py:2252-2264`, `occurrence.py:421-447`; package-scope positive and consumer-scope refusal both present (`test_occurrence_domain_derivation.py:70`, `tests/unit/test_elaboration_containment_address.py:144`) |
+| A5 | `expression_evidence.py:186-215,252-278`; `SI_INDEXED_SOURCE_UNSUPPORTED` with `consumer is None`, authored reference and root-relative location, proved pre-graph by spies across five public arms (`test_expression_evidence_integrity.py:521,1100-1180`) |
+| A6 | owner-qualified writer filter at `occurrence.py:572-648`, refusal at `:726`; unrelated sole candidate correctly excluded (`tests/fixtures/multiplicity_writer_authority/model.sysml:22-26`) |
+
+**The every-and-only mutation criterion is met**, and by real execution rather than graph assertions:
+`tests/execution/test_occurrence_derivation_mutation_teax.py:43-211` runs four occurrence shapes
+through TEAx on live and snapshot routes, and `fusion-tea/tests/test_occurrence_mutation_teax.py`
+does the same on the actual Fusion model tree with exact consumer-port and moved-output set equality.
+One narrow hole: no mutation passes through an occurrence derived from a *root-usage* modeled bound
+(`tests/fixtures/occurrence_execution_matrix/runtime.sysml:60-61` has no consumer), and the whole
+mutation lane is excluded from the default test command by `pyproject.toml:46`.
+
+**Lane B — nine of ten rows MET; B6 PARTIAL.** B1, B2, B3, B4, B5, B7, B8, B9 and B10 are met, each
+with proof of the type its row demands — forced adapter failure, real `FeatureChainExpression`
+subtypes, a forced failing iterator proved at every consumer on both public arms, a real user package
+named `SI`, forced missing-identity redefinition cases, and both retained licensed probes with their
+verdicts committed (`verification/probes/b8-real-verdict.json`, `b10-verdict.json`). B6 is the
+exception; see Finding 3.
+
+**Other criteria.** P-002 holds. The criterion "Ill-formed models receive diagnostics naming the
+reference, source file and line … valid but unimplemented forms receive a distinct
+unsupported-capability diagnostic that does not blame the model" is **not met** (Findings 1 and 2);
+it holds on the indexed and occurrence routes, which are the ones the item's tests cover, and fails on
+five others. Both required backlog rows
+plus `[DEEP-QUALIFIED-OUTPUT-WIRING]` are filed in `.project/backlog/BACKLOG.md:30,36,42`. The
+agentic guidance (`docs/patterns/plant-idiom.md` at `A_final`) states the supported shapes, the
+context each needs, the refusal-versus-limitation distinction, and — verbatim — "The semantic owner
+class is one input to this derivation. It does not determine the result by itself." Fusion models were
+verified and left unedited; `F_final` changes only `pyproject.toml`, `uv.lock` and three test files,
+and pins `C_prod` exactly. The reconciliation-ledger criterion is only partly met (Finding 8).
+
+**Non-goals respected.** No strategy objects, registries, compatibility layers or second resolution
+architecture were added; P-002 was not weakened; `::` references were not blanket-refused; indexed
+evaluation was not implemented.
+
+### Design conformance
+
+The implementation follows the design's one-architecture diagram: one evidence-acquisition route per
+semantic fact, a private immutable `ContainmentAddress`, a private producer index, `ReferenceUse` as a
+closed union beside `ExpressionIR`, and a separate total factory for deep redefinition paths
+(`extraction/binding_source.py:15-20,245`). No flag or fallback selects the retired behavior.
+
+The design's documentation obligations are discharged: reference documents 00, 01, 08, 19, 20 and
+`overview.md` updated, REQ-REG-09 re-pointed at `test_generation_exit_type_preflight.py` with PASS,
+diagnostic documentation for all four new codes, the stale `deep_cross_scope_probe/design.sysml:75`
+comment corrected, and the selector-ownership manifest checked in as executable data
+(`tests/conformance/test_expression_evidence_ownership.py`) in both repositories.
+
+One deviation the design did not sanction: the design's own census ledger records L-13 as
+"Backlog only" and L-14 as "Out of scope", and requires
+`verification/reconciliation-ledger.md` to copy that table with exact test IDs. The shipped ledger
+drops the mapping and presents both rows as proved (Finding 8).
+
+### Code integrity
+
+Findings 1 through 7 below are the code-integrity and product-drift results, ordered by severity.
+Lower-value observations recorded without a finding: a stale code citation in
+`tests/conformance/test_predicate_unit_annotation.py:6-7` pointing at the deleted
+`_expression_references`; back-compat aliases `generate_registry_from_graph` /
+`generate_registry_function` (`generation/registry.py:399-400`) whose only callers are the re-export
+list and one test; and `_copy_required` in `verification/run_independent_green.py:534` losing its last
+call site in this range.
+
+---
+
+**Finding 1 — A supported authored form now refuses after the graph, with no provenance, under a code
+that blames the model. (owner-grade; BLOCKS certification)**
+
+`src/sysml_codegen/elaboration/project.py:688-692`, and the deletion at
+`src/sysml_codegen/elaboration/elaborate.py` of `C_base`'s `_SUM_FUNCTION_ID` guard
+(`78a9beb:elaborate.py:163,2588`).
+
+Measured at `C_prod`, license loaded, real model through `sysml-codegen generate`. Model: `Bank` with
+`part cell : Cell[1]` and `:>> capital_cost = max(cell.capital_cost, 1.0);`.
+
+```text
+ERROR: Code generation failed: exact graph projection failed:
+SI_SNAPSHOT_INVALID: unsupported invocation survived on 'NonSumSingularProbe__the_bank__capital_cost'
+```
+
+The refusal carries no authored reference (`max(cell.capital_cost, 1.0)`), no root-relative
+`file:line`, and no cause chain; it fires at projection, after the graph is built; and
+`SI_SNAPSHOT_INVALID` tells a modeller their model is invalid when the truth is that the generator has
+not implemented that invocation. At `C_base` the identical shape raised `_UnsupportedExpressionError`
+inside `_expression_references` and surfaced as a **pre-graph** readiness diagnostic
+`SI_EXPRESSION_SOURCE_UNSUPPORTED` carrying reference and location (`78a9beb:elaborate.py:2452-2462`).
+This is a regression introduced by this range, on the exact property the item exists to guarantee, and
+it exploits the plan's open weak variant "Missing diagnostic provenance" (`plan.md:1000`).
+
+Behind it, the plurality decision moved from identity to spelling:
+`agentic-mbse@3f8bd58:src/agentic_mbse/sysml/reference_use.py:355-364` returns
+`function.name == "sum"`, where `C_base` compared the reload-stable declaration UUID of
+`NumericalFunctions::sum`. Whether a reference fans out to every modeled occurrence is now decided by
+what the function is called. I could not author a user-defined function literally named `sum` that
+SysIDE 0.8.4 accepts in this position, so the fan-out harm is unproven in practice; the
+identity-to-spelling regression itself is not in doubt, and projection's later
+`function_qn != ["NumericalFunctions", "sum"]` check is the only thing standing behind it.
+
+What should change: restore a pre-graph refusal for an unsupported invocation, carrying the authored
+reference and root-relative location under an unsupported-capability code rather than
+`SI_SNAPSHOT_INVALID`; and decide plurality from the resolved function declaration's identity, not its
+name. Kept tests: a licensed public-route model with a non-`sum` invocation asserting that diagnostic
+on every public arm.
+
+**Finding 2 — Named-refusal provenance is not a property of the public boundary. Five shapes drop it,
+and two committed fixtures produce a bare Python traceback. (owner-grade; BLOCKS certification)**
+
+Finding 1 is one instance of a family. Attacking the plan's open "Missing diagnostic provenance" weak
+variant on real models through the public CLI at `C_prod` produced four more, each reproduced with the
+license loaded:
+
+- **A bare traceback, no code token at all.** `sysml-codegen generate --models
+  tests/fixtures/anonymous_return` exits 1 with an eight-frame Python stack trace ending in
+  `ValueError: Calc def 'AnonReturn' has an anonymous 'return' …`. `tests/fixtures/zero_output_calc`
+  does the same. The cause is narrow: `extraction/extractor.py:252` and `:263` raise a plain
+  `ValueError`, which is not among the five exception classes `elaborate_loaded_extractor` contains
+  and which `run_codegen` does not catch either. Both are **committed fixtures**, so this is not an
+  exotic shape. I reproduced this one myself.
+- **The readiness lane renders code and name only.** `ElaborationError.__str__`
+  (`elaborate.py:127-132`) formats `code: usage_qn.param`, and `ReadinessFinding`
+  (`extraction/source_evidence.py:52-58`) has no location field at all, so its `detail` — which holds
+  the authored text — is dropped. All three `ReadinessCode` values are affected; e.g.
+  `SI_EXPRESSION_SOURCE_UNSUPPORTED: ExprSrcLib__Asm__c1.a`.
+- **`SI_REDEFINITION_INVALID` names nothing** (`elaboration/occurrence.py:279`): "applicable
+  definition writers have no unique most-specific owner", with no reference, no location, and not even
+  the attribute or the two conflicting definitions.
+- **`SI_CONSTRAINT_UNATTACHED` leaks a parser repr** (`elaborate.py:731-735`): the owner prints as
+  `syside.core.QualifiedName(['ItemConstraintLib', 'Payload'])` rather than
+  `ItemConstraintLib::Payload`, with no location.
+
+The capture arm is no better on the invocation shape — `snapshot --models` fails at the same
+`project.py:688-692` site, so `--from-snapshot` is unreachable — and it is worse on paths: a
+parse-time refusal there prints the private staging path
+(`/tmp/sysml-codegen-sources-…/root-0/model.sysml:17:13`), which no longer exists when the user reads
+the message.
+
+What should change: make provenance a boundary property rather than a per-code habit — every public
+refusal carries a code token, the authored reference, a root-relative `file:line`, and its cause, with
+one kept test per public arm asserting the four elements are present for every reachable code. The two
+committed-fixture tracebacks are the first repair.
+
+**Weak variant "Skipped inventory": REFUSED BY NAME — could not be exploited.** The route is
+structurally closed, not merely guarded: the enumerator selects sites from the same
+`Feature`/`include_subtypes`/`qualified_name is not None` predicate the writer selection uses
+(`expression_evidence.py:289-292` against `elaborate.py:748-758`), the other three lookups key on
+`declaration_id_for`, which itself refuses a QN-less element (`identity.py:72-76`), and `inventory` is
+keyword-only with no default on the single private graph builder. Empirically, 155 models — all 145
+committed fixture roots plus ten hand-authored shapes — were driven through `elaborate_model_paths`
+with the lookup instrumented: **zero inventory misses**. Deleting one site from a mutated copy
+produced the correct containment, `SI_EVIDENCE_INCOMPLETE` naming the authored expression and
+`root-0/model.sysml:117`. The `plan.md:992` box is legitimately closable.
+
+**Finding 3 — B6's own site still maps types through the permissive unqualified table. (spec gap)**
+
+`src/sysml_codegen/extraction/extractor.py:363` looks the typing target's qualified name up in
+`SYSML_TO_PYTHON` (`src/sysml_codegen/core/type_mapping.py:12-21`), which still carries bare keys
+`"Real"`, `"Integer"`, `"String"`, `"Boolean"`. A user type declared at the root namespace and named
+`Real` has `qualified_name == "Real"` and is accepted as `float` — the simple-name defect B6 names,
+in a narrower form. The refusal message two lines below promises the opposite ("expected one of
+`ScalarValues::Boolean`, …"). This is a knowing carve-out, not an oversight: `cafd4cb` introduced the
+derived qualified-only view `QUALIFIED_SYSML_TO_PYTHON`, pointed the elaborator at it
+(`elaborate.py:1975`), and left the extractor on the permissive table. Blast radius is limited because
+the elaborator refuses such a type downstream, but the B6 site itself does not meet "uses exact
+qualified typing". What should change: read the qualified-only view here too, and add a root-namespace
+lookalike to the B6 fixture.
+
+**Finding 4 — Two `type(...).__name__` decisions survive on the public route, one failing open.**
+
+`src/sysml_codegen/extraction/extractor.py:246` gates the anonymous-`return` refusal on
+`type(owning_membership).__name__ != "ReturnParameterMembership"`. It fails **open**: if SysIDE renames
+the class or the model uses a subtype, the refusal stops firing and a garbage-named output channel
+ships. `src/sysml_codegen/elaboration/elaborate.py:730` grades a constraint owner by
+`type(owner).__name__` against a closed map; it fails closed, but a valid model whose constraint owner
+is a subtype of a mapped kind is refused wrongly. Neither site is named in the B-row ledger or any
+transition row, and both are pre-existing rather than introduced here — but they are the pattern the
+item removed everywhere else, and `elaborate.py:730` is the site behind the known Gate-A
+owner-classification issue. What should change: file them as a named follow-up row before close, or
+route both through the mapped-metatype adapter.
+
+**Finding 5 — A segment-count carve-out was added to keep an off-route classifier's baseline green.**
+
+`src/sysml_codegen/extraction/computed_attribute_extractor.py:179-190` adds
+`len(reference_chain) >= 3 → UNRESOLVABLE`. `extract_computed_attributes` has no caller under `src/` —
+only tests — so this is new production logic written into dead code so that a golden baseline keeps its
+old answers after `attribute_refs` became exact. It also makes the `EXPOSE_CHAIN_TENTATIVE` gate at
+`:239` unreachable for the exact three-segment case its own comment cites. A two-segment chain with the
+identical authored meaning still takes the old path, so the new category exempts a case whose
+user-visible meaning is unchanged. What should change: delete the module and its tests, or give the
+branch a modeled-evidence justification and record the carve-out in the transition ledger.
+
+**Finding 6 — The closure matrix asserts more real-model force than it has.**
+
+`tests/conformance/test_expression_evidence_integrity.py:1396-1404`
+(`test_every_consumer_cell_names_a_proof`) still passes on any non-empty string, and `:1382` checks
+exemption reasons for truthiness only, so an empty-in-substance cell can pass as covered — the
+undelivered half of `audit-phase4-F2`. Ten of twenty consumer-matrix cells are proved by injecting a
+hand-built expression through a monkeypatched `_acquire` (`:93-107,957-973,1030-1042`); the
+`chaining_features` closure proof is fully monkeypatched
+(`tests/unit/test_expression_evidence_boundary.py:544-560`); and the registry and exit-type lanes run
+entirely on hand-built `ComputationGraph`s, with the "every exported seam" parametrization exercising
+the same function object three times. Separately, the 460-line `test_source_identity_extraction.py`
+deletion removed real-model coverage of cross-owner consumers sharing one exact referent and of
+aggregation terms retaining exact targets — both P-002's own subject — with no replacement. What
+should change: make the cell assertion structural, and restore those two real-model proofs.
+
+**Finding 7 — An ADR-002 validation outcome is decided by a URL substring, a Python class name, and a
+`return True` fallback.**
+
+`agentic-mbse@3f8bd58:src/agentic_mbse/validation/adr002.py:342-393`. Method 1 classifies by
+`"library/" in leaf.document_url` / `"designs/" in leaf.document_url`, which
+`reference_use.py:256-264` explicitly forbids in words ("a URL, path, package name, or qualified name
+has no classification role"). Method 3 now reads `leaf.owner_kind == "CalculationDefinition"`, where
+`owner_kind` is `type(owner).__name__` (`reference_use.py:232`) — this range **replaced** a mapped
+`SysideAdapter.is_instance` call with the class-name string. The final `return True` asserts the
+reference *is* a calc output when every signal is absent, exempting it from the V2 check. To be exact:
+the URL branch and the `return True` fallback are pre-existing and were carried forward; the
+metatype-to-class-name substitution is this item's. It is validation, not the generation route, so it
+is DISPOSE-grade — but it is the item's own anti-pattern reintroduced. What should change: classify
+from the resolved owner's mapped metatype, delete the URL branch, and make total absence of evidence a
+refusal.
+
+**Finding 8 — The shipped reconciliation ledger neither carries the required mapping nor cites three of
+its rows correctly. (spec gap)**
+
+`verification/reconciliation-ledger.md`. The spec's criterion is that every census row maps "to an A/B
+row, an explicit disposition above, or a separately filed follow-up", and the design
+(`design.md:1878`) requires the ledger to copy that table with exact test IDs. The shipped ledger has
+three columns — Row, Final proof, Production identity — with no A/B-row column, no disposition column,
+and test *files* rather than node ids. The mapping exists only in `design.md:1859-1877`, which is not
+the artifact an independent auditor is handed. Three rows are wrong or overstated:
+
+- **L-14** (parameter groups named after source files) is recorded in the design as out of scope, kept
+  rendering policy. The ledger gives it a "Final proof",
+  `tests/conformance/test_output_schema_contract.py`, which covers multi-output schema shape and was
+  not touched by this item.
+- **L-13** (output-alias first-wins) is recorded in the design as backlog-only. The ledger names a
+  documentation-contract test whose relevant node proves only that the backlog row was *filed*.
+- **L-05** (skipped redefinition endpoint) names `tests/conformance/test_feature_typing_integrity.py`,
+  which contains zero redefinition, slot-index or feature-slot coverage. The real B7 proofs are in
+  `tests/unit/test_elaboration_occurrence.py:260,291,328`.
+
+Two adjacent citation errors sit in `verification/expected-transitions.md`: the B8 row at `:28` names
+`tests/conformance/test_semantic_evidence_boundary.py`, a file that has never existed in this
+repository's history, and the B6/B7 row at `:32` names a file with no B7 coverage. Nothing validates
+these citations — the probe-fixture lock hashes the ledger's bytes but does not resolve its test names.
+What should change: add the disposition and A/B-row columns, correct the five citations to real test
+node ids, and add a check that every cited path exists.
+
+**Finding 9 — Four self-comparisons and one redefined pin weaken the evidence chain's independence.
+(DISPOSE)**
+
+At audit time the run-count check compares `counts` to `expected_counts` written by the same producer
+and never recomputes from the retained JUnit (`verification/audit_evidence.py:519-523`); the real
+constant comparison runs only at capture time (`run_independent_green.py:150-156`).
+`tests/conformance/test_evidence_artifact_topology.py:1016-1039` asserts `REQUIRED_RUN_IDS` against a
+verbatim copy of itself. `tests/conformance/test_probe_fixture_lock.py:238-240` re-reads the file it
+was parsed from. And `verification/build_artifacts.py:496-508` re-runs `git archive` with an empty
+prefix and compares *that*, then writes the pinned value rather than the measurement into the manifest,
+while the auditor only checks it is well-formed hex (`audit_evidence.py:186-190`) — so the shipped
+archive bytes are no longer bound to the external pin. Also `run_independent_green.py:364` dropped `-I`
+from the import probe, so a module could resolve out of user site-packages and be recorded as artifact
+provenance, and the `costingfe-pytest` skip policy pairs a fixed reason with the repo-wide node pattern
+`tests/.*` (`:1044-1049`). What should change: recompute counts from the retained JUnit at audit time,
+derive one `REQUIRED_RUN_IDS` copy from the other, restore the pin against the shipped archive, restore
+`-I`, and narrow the skip pattern. None of this invalidates the current run — I reproduced every
+artifact and evidence hash and the auditor refuses mutated inputs — but each is a leg that would not
+catch a future divergence.
+
+**Finding 10 — The two retained probes can no longer be executed against the code they certify.
+(DISPOSE)**
+
+`.project/active/stop-reinventing-the-parser/probes/b8_resolved_fact_totality.py:11` imports
+`feature_chain_facts`, a symbol this item deleted and now pins absent; `probes/b10_document_origin.py:52`
+calls `_source_file(..., model_paths=[...])`, a parameter this item removed and now forbids by AST
+gate. The spec asks for retained probes and the files and their hash lock are retained, so the rows are
+satisfied as measurement records — but neither can be re-run to re-measure its verdict, which is
+exactly what a future challenger would want. What should change: state that plainly beside the
+verdicts, or port the probes to the final API.
+
+---
+
+## Certification
+
+**Checked and verified independently, not read from the record:**
+
+- Topology: `C_evidence^ == C_prod`; the changed-path set is exactly the six evidence files; `F_final`
+  pins `C_prod` and never `C_evidence`; `a184133` appears nowhere in the Fusion tree.
+- Hashes: all ten artifact SHA-256 values and all six evidence-file hashes recomputed and matched.
+- The committed auditor returned PASS on all four groups from a clean invocation, and **refused**
+  three adversarial inputs — a wrong `C_evidence`, a wrong `F_final`, and a byte-mutated wheel (exit 2
+  with a named hash mismatch) — so it is not vacuous.
+- A licensed run of the seven Lane A/B conformance suites at `C_prod`: **188 passed, zero skips**. The
+  same file without the license key gives 7 failed / 112 skipped, which proves the licensed arms
+  genuinely ran.
+- Both weak-variant attacks the plan left open, on real models through the public CLI: "skipped
+  inventory" refused (155 models instrumented, zero misses, plus a site-deletion mutation proving the
+  containment), "missing diagnostic provenance" exploited five ways.
+- The five external checkouts against their recorded final state.
+- A full suite run from this worktree: 2362 passed, 13 failed, 34 skipped, 2 errors, with five modules
+  unable to collect. Every failure and error is a documentation or evidence-contract test conditioned
+  on the missing `STOP_PARSER_ARTIFACT_SOURCE_INPUTS` manifest — **no product-code test failed**, and
+  the isolated-artifact run in the record is the authoritative one. Worth noting only because the
+  suite is not runnable from a plain worktree without that environment.
+
+**Marked:** nothing. No spec success criterion checkbox was changed, no plan phase box was checked, and
+the epic was not touched. The item's own success-criteria list was already marked complete by the
+implementation run; I have not unmarked it, but this audit's findings mean two of those criteria
+(diagnostic provenance for valid-but-unimplemented forms; the reconciliation ledger) are not met as
+written. `CURRENT_WORK.md` is updated to "needs work".
+
+**Not checked:**
+
+- The 21-command isolated battery was not re-executed. I verified the record's internal consistency,
+  the runner's identity, and the retained output hashes; I did not rebuild the wheelhouse or re-run
+  Fusion, TEAx or 1costingfe.
+- The Fusion 58-failure baseline is asserted as historical but no retained artifact measures it at the
+  frozen parent `824a876e`, so "exact historical baseline" rests on the failure text, not on a
+  pre-change measurement. I did not reconstruct it.
+- `C_prod` and `A_final` are on no remote, so `F_final`'s git pins cannot resolve for anyone but this
+  machine. That is the owner's reserved push, not a defect, but the chain is locally reproducible only.
+- Generated-package runtime behavior beyond the mutation lanes, the snapshot-format internals, and the
+  three off-route extraction modules the spec explicitly excluded.
+- Agentic's PDF/HTML corpus and the 15 paid/network cases, both owner-excluded.
+- I did not review the ~2,077 lines of `usage_extractor`'s hand-rolled expression walkers that the
+  ownership manifest exempts by `route_state="off-route"`; the exemption is the spec's, but its size is
+  worth an owner's attention.
+
+**Next step:** a remediation round owning Findings 1, 2, 3 and 8, then a targeted re-audit of those
+four before close. Findings 4, 5, 6, 7, 9 and 10 are DISPOSE-grade and can be carried as named
+follow-up rows if the owner prefers. `elaborator-downstream` stays blocked until the item closes.
+
+The scope is bounded and none of it touches the artifact chain: one refusal path restored to pre-graph
+with an unsupported-capability code, one plurality decision moved back to declaration identity, one
+boundary that guarantees four provenance elements on every public refusal, one type-table lookup, and
+two evidence documents corrected.
+
+---
+
+# Third re-audit — 2026-08-19
+
+**Verdict:** Needs Work (re-audit, rev 3)
+
+**Audited chain:** `A_final-r2` `443388823f0db46c14df1728d3843d0a74ee7590`;
+`C_prod-r3` `14130a89a3b9423a235eaa6c88f356a41a6767fd`; `F_final-r3`
+`83551fbb81fc8cdd34fe0b12c64703ab5eab7ed9`; `C_evidence-r3`
+`875ba01a8fd10b49928cb3e69b7245850128a844`; artifacts
+`/tmp/stop-parser-rev2/artifacts-final-r5`.
+
+## Rev-3 summary
+
+**The re-minted evidence chain is coherent, and the specific fabricated catch-all from rev 2 is
+fixed. The item is still not certifiable.** The public boundary does not uphold the round's own
+measured-or-absent rule end to end:
+
+- all twelve `SI_RENDERING_COLLISION` constructors attach the measured authored reference and
+  location, but the real live and snapshot CLI paths flatten the typed diagnostic to a string that
+  drops both fields;
+- exported `generate_registry` turns a missing source into the plausible citation `unknown:0`;
+- syntax diagnostics under overlapping model roots use the first containing root rather than the
+  canonical exact/most-specific root; and
+- the claimed enumerating AST guard scans three hand-listed files. A constructor for the same
+  guarded code in any other production module is invisible.
+
+These are not hypothetical proof-quality complaints. The first three reproduce through public CLI
+or API surfaces. The fourth mutation explains why the new proof files pass while those public
+failures remain. Product-lens rev 3 therefore keeps `audit-final-r2-F2` blocked. Rev-2 R1, the
+fabricating catch-all itself, is fixed.
+
+## Findings, ranked
+
+### R3-1 — Projection discards provenance that every collision site measured (Major, blocking)
+
+The real `generate --models` route over
+`tests/fixtures/unit_lane_constraint_disagreement` reports:
+
+```text
+ERROR: Code generation failed: exact graph projection failed: SI_RENDERING_COLLISION: entry point
+'UnitLaneConstraintDisagreement__disagreement__shared_length' has conflicting projected metadata
+```
+
+The snapshot-generation CLI loses the same fields. Immediately below that seam, the one
+`ProjectionError` diagnostic contains:
+
+```text
+reference = UnitLaneConstraintDisagreement__disagreement__shared_length
+source    = root-0/model.sysml:15
+```
+
+The loss is structural. `ProjectionError` stores the typed diagnostics but initializes its public
+message with code and detail only (`src/sysml_codegen/elaboration/project.py:93-98`).
+`_project_or_fail` then wraps that lossy string in `CodeGenerationError`
+(`src/sysml_codegen/orchestration/exact_pipeline_context.py:136-140`). The raise sites obey
+measured-or-absent; the public boundary does not. This fails obligation 2 and leaves
+`audit-final-r2-F2` open.
+
+### R3-2 — An exported generation API fabricates `unknown:0` (Major, blocking)
+
+Calling exported `generate_registry` with an unsupported exit-point type and a graph module whose
+`source_file` and `source_line` are both absent reports:
+
+```text
+EXIT_POINT_TYPE_UNSUPPORTED ... source='unknown:0'
+```
+
+No producer measured that source. The fallback is explicit at
+`src/sysml_codegen/generation/errors.py:59-74`: missing fields become `"unknown"` and `0` before
+the message is formed. The rule requires omission, not a plausible placeholder. This is a public
+API falsifier for the same standing block.
+
+### R3-3 — Overlapping roots misattribute parser diagnostics (Major, blocking)
+
+With a broad root `/overlap`, a nested root `/overlap/nested`, and the broken model beneath the
+nested root, `elaborate_model_paths([broad, narrow])` reports the syntax error as
+`root-0/nested/model.sysml`. The project's canonical rule returns `root-1/model.sysml` for the same
+file. That rule is directly pinned by `tests/unit/test_source_referent.py:27-36`.
+
+The parse renderer returns on the first containing root
+(`src/sysml_codegen/orchestration/elaborated_pipeline.py:72-92`). The canonical mapper first
+prefers an exact file and otherwise the most-specific directory
+(`src/sysml_codegen/analysis/source_referent.py:43-70`). These are two source-ownership policies on
+the same public route. The reported file exists, but its root identity is wrong.
+
+### R3-4 — The totality guard is not repository-total (Major proof gap; blocking certification)
+
+`GUARDED_FILES` is a fixed tuple of `occurrence.py`, `elaborate.py`, and `project.py`
+(`tests/conformance/test_diagnostic_provenance_sites.py:58-62`). The mutation results are:
+
+- a fabricated, non-empty field is rejected by `assert_no_location_is_invented`;
+- a fifth unguarded constructor inside one of the three listed files is detected;
+- the same guarded-code constructor in a fourth production module is ignored. The guard reports no
+  missing sites while an independent repository AST scan finds 17 in that copied unlisted module.
+
+The unfixed-parent calibration is honest: the two proof files produce exactly **25 failed / 7
+passed** against `C_prod-r2`. Current-tree execution is **32 passed / 0 skipped**. Those facts show
+that the listed tests changed and fail on the parent. They do not prove that the file inventory is
+closed. Rev-2 R3 silently became load-bearing when fix round 2 cited this guard as proof that R2 was
+fixed, so R3 cannot remain a harmless DISPOSE row in this chain.
+
+### R3-5 — The carried-row ownership claim is not recorded (Minor bookkeeping gap)
+
+No named accountable owner for R3-R6 appears in the active item or backlog. R3-R5 are repeated in
+the product-lens ledger with inherited or agent authority; R6 appears only in the audit. If
+“owner” means decision provenance rather than assignment, R4 is agent-grade, R5 is P-004 applied by
+agent inference, and R6 has no owner-grade source. I therefore cannot confirm the brief's claim that
+all four are recorded with an owner.
+
+This is not an additional implementation blocker. The load-bearing part is R3, already ranked
+above. R4 (recoverable verbose stack), R5 (`sum` UUID reload proof), and R6 (probe/evidence
+residuals) remain follow-up-grade and were not used to clear the product gate.
+
+## Results by obligation
+
+### 1. Fabrication fix and public seams — partially passes
+
+The two rev-2 reproductions now behave honestly:
+
+- A real syntax error at line 17 reports `SysML parsing failed` at
+  `root-0/model.sysml:17:28`; it is not relabelled `SI_INTERNAL_DEFECT` and is not moved to line 1.
+- A valid `aaa_fine.sysml` beside unreadable `zzz_broken.sysml` reports
+  `SI_INTERNAL_DEFECT` with the `PermissionError` cause naming `zzz_broken.sysml`. It never names
+  `aaa_fine.sysml`, and no reference/location bracket is emitted. The direct API diagnostic tuple
+  is `(None, None, None, PermissionError)`.
+- Snapshot capture of the syntax-error model reports `root-0/model.sysml:17` and no private staging
+  directory.
+
+I found no raw traceback on the exercised CLI routes. `SI_INTERNAL_DEFECT` is reserved for the
+planted/unclassified internal failures I exercised; parser and formed generation refusals retain
+their own categories. `diagnostic_context.py`, `_caller_model_context`, and
+`_nearest_model_context` are absent, and a source sweep found no equivalent “first `.sysml`, line
+1” implementation. The four central passthrough tuples are symmetric for
+`CodeGenerationError`, `ElaborationDiagnosticError`, `ElaborationError`, and
+`SysMLParsingError`; the snapshot seam additionally preserves `InstanceGraphSnapshotError`.
+
+The obligation still fails on R3-1 through R3-3: one public seam discards measured fields, one API
+invents a source, and the multi-root parser seam assigns the wrong root identity.
+
+### 2. Raise-site provenance shapes — partially passes
+
+| Shape | Independent result |
+|---|---|
+| `SI_REDEFINITION_INVALID` | Current constructor sites carry reference and authored location; proof passes. |
+| item-def `SI_CONSTRAINT_UNATTACHED` | Carries the item definition's authored name and site; proof passes. |
+| capture staging | Real syntax-error capture names `root-0/model.sysml:17`; no `/tmp/…sources…` text. |
+| twelve `SI_RENDERING_COLLISION` sites | All twelve attach true context, but both public CLI arms discard it. **Fails end to end.** |
+| `SI_CONTAINMENT_RECURSIVE` | Carries the recursive containment reference and authored site; proof passes. |
+| extraction screen | Seven focused nodes pass with the license loaded and zero skips; measured location is preserved on the covered spelling. |
+
+The constructor census is useful local evidence. R3-1 prevents it from certifying the public
+behavior.
+
+### 3. Guard mutations — fails closed locally, not repository-wide
+
+The non-empty-field mutation and an in-scope fifth-site mutation fail as claimed. An out-of-list
+production module is invisible, so the enumeration is not fail-closed. The parent run reproduces
+**25 failed / 7 passed** exactly, and the current proof selection is **32 passed / 0 skipped**.
+
+### 4. Mypy calibration — passes
+
+Running the current mypy lane output through the runner's own `_output_hash` produces
+`76ea65714858850c985a4ded9788f518c196d5ee4456e35258558ae2b49c90c6`, exactly the amended
+declaration. Direct comparison with `C_prod-r2` shows the same **30 errors in 8 files**, these two
+line shifts only:
+
+- `generation/entry_point.py`: 153 → 154;
+- `generation/modules.py`: 395 → 397.
+
+The checked-file count moves 76 → 75 because `diagnostic_context.py` was deleted. A search of the
+final six evidence files, artifact manifests, and final verification tree finds no provisional
+artifact root or provisional runner record. The direct-child topology also permits no imported
+evidence path beyond the six final files. The two provisional runs supplied nothing to the final
+chain.
+
+### 5. Chain and execution evidence — passes
+
+Topology verifies independently:
+
+- `C_evidence-r3^ == C_prod-r3`;
+- `C_prod-r3..C_evidence-r3` adds exactly the six permitted verification files;
+- Fusion pins `C_prod-r3` in both `pyproject.toml` and its test pin and contains no
+  `C_evidence-r3` reference;
+- `evidence-chain-r1` and `evidence-chain-r2` still resolve;
+- Agentic remains `443388823f0db46c14df1728d3843d0a74ee7590`; TEAx and 1costingfe remain at their
+  frozen pins.
+
+All ten artifact hashes recompute:
+
+```text
+595d3430378b71f867ba26e912fb947cd3c6972b94f466b6da2dd77d784a493d
+7505028f2fc720ae06a244c5dd95019b8ae52a796ddbfec3b3492e2ad56954f7
+af9e4fa68fe442f8047bfa2ced27d3aa0771bc3c94c9e4fc2a9abcbada3ffd07
+4d68db8473754498ece341b6c901a5f94c5deebd80d91f37c7ae052f98b1aeb0
+50152b0ed3eee4bc5ce9563956dbcb01a55a2e3748092f4538dec893e51fa236
+4da393a1510bda93fb1986bc0d24ef69456ba45dcb76f564821ed72780e07b11
+9786fec4178975eeefbedb4d8810215e2abb5df4b162ac8290684e3aaf95d884
+0a03d387df18bb75b8336a5b471a7203473ba0f2f7255f65846813064b0bc7fa
+970ed533d8fae042de25256933ec99d3385092903e4d407ab2b96baa7a2fcfd6
+b2fef5329c7e42e7ff1fdf857f771bb3bccd18b2edd8489f7e9dce4da2e22205
+```
+
+All six evidence hashes recompute:
+
+```text
+39841e7e0dfe7676af9e05ab4e79728ff9d0a6b99300f6428f850a809f169dee
+a20f14de07ad56197e62ccf586fc6df0b8d8745cb129b687a34093a73c0eba4b
+5e9db0c6efd4ab04456ec4a3561d306e491122065f64779b38f58e1f300d24ec
+fa3e7344ae995f9af5d4ad2198b689b1afd0b27d22dfdb2fef84560e6133d64f
+27c9f391f64c215ffa8ce063e2a2bc57ba8331e5dab7f7288580f8d270ec6e3a
+4f70c5f0494e3ebb8b55db3c748a390bcb96c0a1f2307e139f1f055aae31d167
+```
+
+The wheelhouse has 173 hash-pinned wheels. The mechanical auditor passes
+`parent_and_paths`, `codegen_reconstruction`, `fusion_pin`, and `artifacts_and_lock` when run with
+a writable audit cache. It rejects a one-byte-short Codegen wheel with the expected/found digest
+mismatch.
+
+All 21 retained runner records have the declared status and authenticated raw-output record. I
+recomputed the retained JUnit counts for every pytest lane:
+
+| Lane | Recomputed `collected/selected/passed/failed/errors/skipped/xfailed/deselected` |
+|---|---|
+| agentic-focused | `846/846/845/0/0/1/0/0` |
+| agentic-fast | `1928/1923/1922/0/0/1/0/5` |
+| costingfe-pytest | `660/660/602/0/0/58/0/0` |
+| teax-pytest | `406/406/406/0/0/0/0/0` |
+| codegen-default | `2645/2551/2542/0/0/9/0/94` |
+| codegen-live-snapshot | `4/4/4/0/0/0/0/0` |
+| codegen-generated-package | `25/25/25/0/0/0/0/0` |
+| codegen-execution | `94/94/94/0/0/0/0/0` |
+| fusion-pytest | `517/517/401/58/0/58/0/0` |
+| fusion-generated-execution | `23/23/23/0/0/0/0/0` |
+
+A fresh declared extraction built for this audit at `/tmp/stop-parser-rev2/audit-full-r3` passes
+**2,542 / 9 / 94** in 183.96 seconds. The +18 delta is exactly the 9 expanded totality nodes plus
+the 9 provenance-site nodes. The two proof files plus the extraction-screen file pass **39 tests,
+zero skips** with the license loaded.
+
+Both retained probes execute and reproduce their committed JSON byte for byte: B8 reports
+`REAL_CORPUS_TOTAL`; B10 reports `DELETE_UNREACHABLE`. Three focused immutable-extraction assertions
+confirm `deep_cross_scope_probe` remains an `SI_OCCURRENCE_MISSING` refusal, its historical snapshot
+remains absent, and the public diagnostic retains the authored reference and `root-0/design.sysml:77`.
+
+The three implementation worktrees are clean. Before this audit's authorized document edits, the
+Codegen docs checkout was clean; the Agentic user checkout still matches its empty entry digest.
+Fusion remains on the owner's unrelated branch with the recorded dirty digest
+`d8a9922b4300ee7bf04f87b8d01fa02846f2253b7ad290ca535b83f3db9bf08a`; TEAx and 1costingfe are
+clean at their frozen pins. The missing historical entry digests for those three external
+checkouts remain the owner-accepted residual recorded in `run-records/entry-status.md`; equality is
+not retroactively claimed.
+
+### 6. Carried rows — fails for R3; R4-R6 remain follow-up-grade
+
+R3 has become load-bearing and its falsifier succeeds, as R3-4 shows. R4-R6 did not silently become
+certification inputs. The recorded-owner claim does not verify, as R3-5 explains.
+
+## Product-lens and certification disposition
+
+The fresh product-lens pass resolves `audit-final-r2-F1` as **FIXED** and keeps
+`audit-final-r2-F2` **BLOCKED**. Its three rev-3 findings are recorded in
+`product-lens.md#audit-final-r3`. Earlier blocks with later fixed citations remain fixed; none is
+silently reopened.
+
+No spec success criterion, plan phase, or epic checkbox is newly certified. The immutable chain is
+valid evidence for the candidate it contains; it cannot make that candidate pass an end-to-end
+behavioral rule it violates. `elaborator-downstream` remains blocked. Do not close or run pre-PR.
+
+## Not checked
+
+- I did not re-execute all 21 runner commands. I authenticated their retained outputs, recomputed
+  every retained JUnit count, ran the mechanical reconstruction auditor, ran a fresh full Codegen
+  suite, and reran the targeted licensed and mutation proofs.
+- I did not rebuild the 173-wheel wheelhouse or rerun the complete Fusion, TEAx, Agentic, and
+  1costingfe batteries from scratch.
+- I did not run the owner-excluded PDF/HTML corpus or paid/network cases.
+- I did not establish R5's `sum` UUID stability across a new SysIDE version. That remains the
+  recorded DISPOSE-grade follow-up.
+- I tested capture staging-path privacy through the real parse-failure route and the retained
+  extraction-screen cases. I did not manufacture every alternate URI/path spelling a future SysIDE
+  version could emit.
+
+## Required remediation
+
+Preserve the typed projection diagnostic through both public CLI arms (or render every measured
+field), omit the source clause when generation measured no source, use the canonical live-source
+mapper for parse diagnostics, and make guarded-site discovery repository-wide or centralize the
+guarded constructors. Add public live/snapshot/API tests for the exact three reproductions above,
+then rerun the targeted proofs and independent audit against a newly minted dependent chain.

@@ -2,7 +2,7 @@
 
 Prioritized list of epics and features.
 
-**Last Updated**: 2026-08-13
+**Last Updated**: 2026-08-18
 
 ---
 
@@ -22,6 +22,36 @@ Prioritized list of epics and features.
 | generation-boundary | P1 | In Progress (BUILD phase) | 2026-02-20 | Step 7.6 — enforcing generation/ only consumes ComputationGraph. Phases 1-2-4 done. **FLAG (Item 8, 2026-07-06):** Item 8 deletes generation-layer symbols on a rebase-sensitive surface — `map_sysml_type_to_rootmodel_wrapper` (`generation/type_mapping.py`), `generate_derived_group_json` + its `generation/__init__.py` re-exports (`generation/entry_point.py`), and two dead Jinja templates in `src/sysml_codegen/templates/` (a sibling of `generation/`). Do not resurrect these exports on rebase. |
 | hierarchical-output | P2 | Draft (spec only) | 2026-02-22 | Convert flat JSON output to hierarchical structure reflecting SysML part hierarchy. |
 | new-pipeline-explainer | P2 | Draft (active) | 2026-02-22 | Interactive HTML explainer for refactored 7-step pipeline architecture. |
+
+---
+
+## Exact-evidence follow-ups (filed by stop-reinventing-the-parser Phase 4)
+
+- **[INDEXED-ELEMENT-EXPRESSION-SUPPORT] Implement valid indexed element expressions — P1
+  `[AGENT]`, under P-001.** SysIDE preserves an authored index, but Codegen intentionally refuses
+  every expression consumer before graph construction with `SI_INDEXED_SOURCE_UNSUPPORTED` until
+  exact indexed-element semantics are implemented. Preserve the authored reference and the current
+  fail-before-mutate contract while adding the capability. Source:
+  `.project/completed/20260819_stop-reinventing-the-parser/design.md` D5/D7/D8 and transition rows A5/A5a/A5b.
+- **[SCALAR-FUNCTION-VOCABULARY] Add scalar invocation functions as a separately owned capability —
+  P2 `[OWNER, 2026-08-18]`.** Supporting `min`, `max`, or other scalar functions is not part of the
+  stop-parser remediation; no existing fixture or Fusion model needs them. Today every invocation
+  except the exact standard-library `NumericalFunctions::sum` declaration refuses before graph
+  construction with `SI_EXPRESSION_SOURCE_UNSUPPORTED`, naming the authored expression and its
+  source location. A future capability must define and test each admitted function explicitly.
+- **[OUTPUT-ALIAS-DUPLICATE-SOURCE-SILENCE] Refuse or implement a second output alias — P1
+  `[AGENT]`.** A second authored alias for one source survives in `graph.output_aliases` but emits no
+  exit-point line, writes no `<name>.json`, and produces no diagnostic. Decide the supported
+  behavior and make it explicit before generation; first-wins silence is not evidence. Source:
+  `.project/completed/20260819_stop-reinventing-the-parser/product-lens.md` L-13 and the generation site it
+  records.
+- **[DEEP-QUALIFIED-OUTPUT-WIRING] Wire a deep qualified reference to its concrete calculation
+  output — P2 `[AGENT]`.** The authored shape is
+  `measurement_system::station::array::sensor::core::metric_value` in
+  `tests/fixtures/deep_cross_scope_probe/design.sysml`. The current contract is
+  `SI_OCCURRENCE_MISSING` because no producer exists in the consumer domain, with no captured
+  snapshot. Transition A2 owns that refusal. Implement exact producer wiring as a separate
+  capability; do not restore the removed globally-sole substitution.
 
 ---
 
@@ -1362,3 +1392,18 @@ reconciliation pass, not by a backlog entry.
   nothing fails if it regresses. Deliberate at the time (the lane needs the TEAx checkout on
   `constraint-semantics-item3`, which is unmerged). Fix direction: mark the lane as intentionally
   manual in a named place, or file it as a licensed/marked test once the TEAx branch lands.
+
+- **[DIAGNOSTIC-PROVENANCE-BY-CONSTRUCTION] Make diagnostic provenance unrepresentable-when-wrong,
+  the same way the item made evidence so — P2 `[OWNER]`-filed (2026-08-19), unowned.**
+  Three consecutive stop-parser audit revisions found the same property failing at new sites:
+  a failure's reported cause/location is a per-site discipline with no enforcement point, so
+  sites drop it, guess it, or hard-code its guard. Owner ruled (2026-08-19) this is a separate
+  item, not a fourth fix round. Seed findings: audit.md rev-3's four (collision provenance
+  discarded before both CLI outputs; `generate_registry` fabricating `unknown:0`; wrong
+  attribution with overlapping model roots; totality guard hard-coded to three files), plus the
+  carried R3-R6 DISPOSE rows where related. Fix direction (from the run's own diagnosis): one
+  closed diagnostic value type whose constructor makes provenance measured-or-absent by
+  construction; a single public formatter; an AST gate that no public raise bypasses the
+  constructor; mechanical migration of the existing (correct) per-site patches onto the type.
+  The stop-parser item's per-site repairs are kept behavior, not reverted — this item subsumes
+  them.

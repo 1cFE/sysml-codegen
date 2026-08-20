@@ -45,4 +45,7 @@ implementation now covers the whole route: every definition-owned lineage miss r
 Definition-owned references that map through the consumer's own occurrence lineage remain the
 positive form. Exact usage-owner anchoring and explicit occurrence paths remain unchanged. The
 complete current proof is `tests/conformance/test_definition_owned_reference_positions.py` plus
-`tests/conformance/test_occurrence_domain_derivation.py`.
+`tests/conformance/test_occurrence_domain_derivation.py`. **[AGENT, updated 2026-08-19]** The
+application is retained at Codegen production identity
+`8a758e9240707b58fe32a509c3b509941ca4fa01`; the owner authorized close after the final two
+model-caused provenance fixes and one rebuilt chain. The owner-verbatim promise above is unchanged.
