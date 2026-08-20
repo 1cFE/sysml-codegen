@@ -161,6 +161,28 @@ def test_a_syntax_error_reports_as_a_parse_failure_at_its_own_line(
 
 
 @requires_license
+def test_a_parse_failure_uses_the_canonical_owner_under_overlapping_roots(
+    tmp_path: Path,
+) -> None:
+    broad = tmp_path / "models"
+    narrow = broad / "nested"
+    narrow.mkdir(parents=True)
+    (narrow / "model.sysml").write_text(
+        "package SyntaxProbe;\n"
+        + "".join(f"// filler line {index}\n" for index in range(2, 17))
+        + "part def Broken { attribute\n"
+    )
+
+    from sysml_codegen.generation import SysMLParsingError
+
+    with pytest.raises(SysMLParsingError) as caught:
+        elaborated_pipeline.elaborate_model_paths([broad, narrow])
+
+    assert "root-1/model.sysml:17" in str(caught.value)
+    assert "root-0/nested/model.sysml" not in str(caught.value)
+
+
+@requires_license
 @pytest.mark.skipif(os.geteuid() == 0, reason="root reads an unreadable file anyway")
 def test_an_unreadable_source_is_never_cited_against_an_innocent_file(
     tmp_path: Path,

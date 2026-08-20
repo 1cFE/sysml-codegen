@@ -945,9 +945,22 @@ def cmd_snapshot(args: argparse.Namespace) -> int:
         return 1
     except InstanceGraphSnapshotError as error:
         if isinstance(error, SnapshotCertifiabilityError):
-            detail = "; ".join(
-                f"{diagnostic.code.value}: {diagnostic.detail}" for diagnostic in error.diagnostics
-            )
+            rendered: list[str] = []
+            for diagnostic in error.diagnostics:
+                reference = (
+                    f": reference={diagnostic.reference!r}"
+                    if diagnostic.reference is not None
+                    else ""
+                )
+                location = (
+                    f" [{diagnostic.source_file}:{diagnostic.source_line}]"
+                    if diagnostic.source_file is not None and diagnostic.source_line is not None
+                    else ""
+                )
+                rendered.append(
+                    f"{diagnostic.code.value}: {diagnostic.detail}{reference}{location}"
+                )
+            detail = "; ".join(rendered)
             logger.error(f"Snapshot refused: {detail}")
         else:
             logger.error(f"Snapshot refused: {error}")

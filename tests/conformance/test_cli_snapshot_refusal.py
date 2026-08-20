@@ -61,4 +61,6 @@ def test_unit_collision_exits_one_with_exact_diagnostic_and_preserves_destinatio
     assert "SI_RENDERING_COLLISION" in joined
     assert "UnitLaneConstraintDisagreement__disagreement__shared_length" in joined
     assert "conflicting projected metadata" in joined
+    assert "reference='UnitLaneConstraintDisagreement__disagreement__shared_length'" in joined
+    assert "[root-0/model.sysml:15]" in joined
     assert "Traceback" not in joined

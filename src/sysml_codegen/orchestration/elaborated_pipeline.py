@@ -81,15 +81,10 @@ def _portable_source(
     mapped = referents.get(raw) or referents.get(str(Path(raw).resolve()))
     if mapped is not None:
         return mapped
-    source = Path(raw)
-    for ordinal, root in enumerate(model_roots):
-        base = root if root.is_dir() else root.parent
-        try:
-            relative = source.resolve().relative_to(base.resolve())
-        except (OSError, ValueError):
-            continue
-        return f"root-{ordinal}/{relative.as_posix()}"
-    return source.name
+    try:
+        return map_live_source_referent(raw, list(model_roots))
+    except ValueError:
+        return Path(raw).name
 
 
 def _render_parse_diagnostics(

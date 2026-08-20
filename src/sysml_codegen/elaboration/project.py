@@ -95,7 +95,16 @@ class ProjectionError(ValueError):
 
     def __init__(self, diagnostics: list[Diagnostic] | tuple[Diagnostic, ...]) -> None:
         self.diagnostics = tuple(diagnostics)
-        super().__init__("; ".join(f"{item.code.value}: {item.detail}" for item in diagnostics))
+        rendered: list[str] = []
+        for item in diagnostics:
+            reference = f": reference={item.reference!r}" if item.reference is not None else ""
+            location = (
+                f" [{item.source_file}:{item.source_line}]"
+                if item.source_file is not None and item.source_line is not None
+                else ""
+            )
+            rendered.append(f"{item.code.value}: {item.detail}{reference}{location}")
+        super().__init__("; ".join(rendered))
 
 
 def authored_site(node: object) -> tuple[str | None, tuple[str, int] | None]:

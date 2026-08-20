@@ -8,6 +8,7 @@ from pathlib import Path
 
 import pytest
 
+from sysml_codegen.cli import GenerationConfig, run_codegen
 from sysml_codegen.elaboration import ElaborationCode, InstanceGraph, ProjectionError, project
 from sysml_codegen.elaboration.identity import (
     DeclarationId,
@@ -369,6 +370,27 @@ def test_capture_unit_collision_does_not_create_destination(tmp_path: Path) -> N
     assert not destination.exists()
     assert not list(tmp_path.glob(".missing.json.*.tmp"))
     _assert_collision_from_snapshot(excinfo.value, CONSTRAINT_DISAGREEMENT_KEY)
+
+
+def test_live_generation_unit_collision_reports_its_authored_site(
+    tmp_path: Path,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    destination = tmp_path / "generated"
+
+    with caplog.at_level("ERROR"):
+        result = run_codegen(
+            GenerationConfig(
+                models_path=CONSTRAINT_DISAGREEMENT,
+                output_path=destination,
+                package_name="unit_collision_probe",
+            )
+        )
+
+    assert result is False
+    assert not destination.exists()
+    assert f"reference='{CONSTRAINT_DISAGREEMENT_KEY}'" in caplog.text
+    assert "[root-0/model.sysml:15]" in caplog.text
 
 
 def _assert_collision_from_snapshot(
