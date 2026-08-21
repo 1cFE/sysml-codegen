@@ -164,23 +164,25 @@ Item 8 still lands after Item 3.
 **Type**: Code/Integration
 **Effort**: 1 day (spec 1h, design 1h, plan 1h, execute 5h)
 **Dependencies**: None
-**Implementation Status**: Phase 2 complete 2026-08-21. The migration shape was proven in an
-isolated scratch register, and the owner accepted the recorded missing-manifest limitation before
-authorizing Phase 2. Both engines and their register documentation are installed in standalone
-commit `59ed5b9`; pack tests passed 32/32 and 46/46. The runnable licensed suite passed 2,371 with 9
-policy skips; the exact full-suite gate remains unavailable because this checkout has no current
-five-repository artifact manifest. Awaiting owner authorization for Phase 3 ledger migration.
+**Implementation Status**: Phase 3 complete 2026-08-21. The four promises are script-managed
+`0001`…`0004` entries with history-derived frontmatter, a generated idempotent index, and live
+citations repointed in both directions. `[AGENT] (ratified by owner, 2026-08-21)` permits only the
+five hidden Markdown destinations required by the rename to differ inside the existing bodies;
+visible prose and owner payload are unchanged. The safe documentation contract passed 10/10 and the
+runnable licensed suite passed 2,371 with 9 policy skips. The exact full-suite gate remains
+unavailable because this checkout has no current five-repository artifact manifest. Awaiting owner
+authorization for Phase 4 criterion filing and ADR triage.
 
 **Objective**: Bring `.project/` scaffolding up to the current `agentic-project-init` pack,
 install both decision registers with their engines, and record the subject-split criterion so
 the boundary between them is settled once rather than re-derived per entry.
 
 **Current State**:
-- ✅ `.project/product/` exists with four entries, two of them `[OWNER-VERBATIM]`
+- ✅ `.project/product/` has four `000N` entries, generated index reachability, and truthful provenance
 - ✅ `.project/scripts/` contains the installed `adr.sh` and `product.sh` engines
 - ✅ `.project/adr/` exists with its register contract; the criterion entry is scheduled for Phase 4
-- ⚠️ `CLAUDE.md` and `.project/product/INDEX.md` both assert a single ADR home, which the
-      owner's ruling has now superseded
+- ⚠️ `CLAUDE.md` still asserts a single ADR home; the generated product index no longer carries the
+      old convention, and Phase 4 adds the replacement to the durable README
 - ❓ Whether any of the nine existing ADRs are builder-facing rather than author-facing
 
 **Scope**:
@@ -337,8 +339,8 @@ and promise worth keeping, so the owner can rule each in or out before anything 
 - ✅ Nine ADRs exist in `docs/architecture/modeling-assumptions.md`, triaged by Item 1
 - ✅ The ruled register from Item 2 names what to write
 - ❌ The owner's named decisions have no durable home — "use the parser, do not create custom
-      patches" exists today only as archive prose and as the negative space around `P-003` and
-      `P-004`
+      patches" exists today only as archive prose and as the negative space around `0003` and
+      `0004`
 - ⚠️ Elaborate-first's insights are recorded across `CLAUDE.md`'s retirement paragraph, an
       epic file, and 175k lines of cutover-recovery archive — accurate but not citable
 
@@ -351,8 +353,8 @@ and promise worth keeping, so the owner can rule each in or out before anything 
    Truth and Headline Semantics is builder-facing by the criterion Item 1 files — it governs report
    token spellings, generation templates, TEAx's `CANONICAL_HEADLINE`, and a normalization seam
    (`docs/architecture/modeling-assumptions.md:704-742`). File it as a `.project/adr/` entry, reduce
-   §9 to a pointer, and **repoint `P-001:114` and the `INDEX.md` back-registered ADR row in the same
-   change** — `P-001` is `[OWNER-VERBATIM, 2026-08-13]` and its Authority must not dangle. Item 1's
+   §9 to a pointer, and **repoint `0001:128` and the `INDEX.md` back-registered ADR row in the same
+   change** — `0001` is `[OWNER-VERBATIM, 2026-08-13]` and its Authority must not dangle. Item 1's
    `adr-triage.md` carries the recorded outcome.
 3. **Write a real `Why` in each.** This is the section that decides whether the entry works.
    An entry whose `Why` is "it was decided" has failed and must be reworked or dropped.
@@ -382,7 +384,7 @@ and promise worth keeping, so the owner can rule each in or out before anything 
 - [ ] Provenance grades match what the source actually supports; no `[AGENT]` item is marked
       settled
 - [ ] `adr.sh index` regenerates `INDEX.md` cleanly; ids are script-allocated throughout
-- [ ] ADR-009 is re-homed, `modeling-assumptions.md` §9 is a pointer, and `P-001:114` plus the
+- [ ] ADR-009 is re-homed, `modeling-assumptions.md` §9 is a pointer, and `0001:114` plus the
       `INDEX.md` ADR row resolve to the new entry
 
 **Location**: `.project/active/decision-records/`
@@ -413,13 +415,13 @@ and promise worth keeping, so the owner can rule each in or out before anything 
 is the orientation surface a cold agent and the product-lens can both resolve against.
 
 **Current State**:
-- ✅ Four entries exist: `P-001` (design search, owner-stated), `P-002` (exact owner
-      anchoring), `P-003` (no workarounds for bad models, `[OWNER-VERBATIM]`), `P-004` (product
+- ✅ Four entries exist: `0001` (design search, owner-stated), `0002` (exact owner
+      anchoring), `0003` (no workarounds for bad models, `[OWNER-VERBATIM]`), `0004` (product
       identity: parse, walk, emit, `[OWNER-VERBATIM]`)
 - ⚠️ `INDEX.md` carries one back-registered ADR row whose home changes under the new criterion
 - ❌ Promises settled since — snapshot/license decoupling, refusal contracts, the sealed-graph
       guarantee — have no entries
-- ⚠️ `checked` stamps are hand-maintained
+- ⚠️ Existing `checked` stamps remain `null`; Item 1 Phase 5 owns the first script-managed stamp
 
 **Scope**:
 1. **Author the ruled-in promises** via `product.sh new`, one entry per promise, titled as the
@@ -430,22 +432,22 @@ is the orientation surface a cold agent and the product-lens can both resolve ag
 3. **Re-home the back-registered ADR row** in `INDEX.md` per the Item 1 criterion, and adjust
    the "ADR convention (this repo)" paragraph to the two-register form.
 4. **Stamp `checked`** on new and existing entries via `product.sh check`, with the git ref.
-5. **Preserve the four existing entries' bodies unchanged** — they are append-only, and two are
-   `[OWNER-VERBATIM]`. Any material change is a supersession filed as a new entry.
+5. **Preserve the four existing entries' visible prose and owner payload unchanged** — they are
+   append-only, and two are `[OWNER-VERBATIM]`. The five hidden Markdown destinations ratified for
+   Item 1's rename are the sole existing body-byte exception. Any material change is a supersession
+   filed as a new entry.
 
 **Out of Scope**:
 - Decisions (Item 3) — cite them, do not restate them
 - Re-verifying promises hold in code beyond what a `check` stamp honestly asserts
-- Any change to `P-001`…`P-004` bodies
+- Any further change to `0001`…`0004` bodies
 
 **Success Criteria**:
 - [ ] Every ruled-in promise has an entry whose title states the promise, not a surface
 - [ ] Every entry's Authority section cites at least one durable source or carries a dated
       `[OWNER-VERBATIM]` first capture; no entry rests on evidence alone
-- [ ] `P-001` through `P-004` prose is byte-identical to its pre-item state **below the
-      frontmatter block Item 1 prepends** (amended per spec-F1 on Item 1 — no entry had
-      frontmatter, so harmonization is rename-plus-prepend and a bare byte-identity check
-      would fail on the added header)
+- [ ] `0001` through `0004` visible prose and owner payload match Item 1's migrated state; the five
+      already-ratified Markdown destination changes are not widened
 - [ ] `INDEX.md` describes the two-register convention correctly and is script-generated
 - [ ] Every active entry carries a `checked` stamp with a git ref
 - [ ] A product-lens run can resolve the ledger index-first without following a dead path
@@ -455,7 +457,7 @@ is the orientation surface a cold agent and the product-lens can both resolve ag
 **Required Reading**:
 - `.project/product/README.md` — density bar, entry format, the promises-vs-decisions boundary,
   first-capture rule, cross-seam placement
-- `.project/product/P-001`…`P-004` — what already exists and must not change
+- `.project/product/0001`…`0004` — what already exists and must not change
 - `.project/active/decision-harvest/candidate-register.md` — the ruled rows
 - `claude-pack/scripts/product-lens.md` — how the ledger gets consumed, so entries are written
   to be resolvable
@@ -499,9 +501,9 @@ registers, without losing a single ruled-in decision or promise.
 5. **Repair the citations**: fix or remove the 25 broken `.project` paths cited from `src/`,
    `tests/`, and `docs/`, using Item 2's triage.
 6. **Protect the registers' own authority** (product-lens `epic_plan-F1`). The ledger says a
-   promise not reachable from the index "has no home", and `P-001` cites
+   promise not reachable from the index "has no home", and `0001` cites
    `.project/completed/20260814_*`, `.project/concepts/*`, and `.project/backlog/BACKLOG.md:439`
-   — while `P-002` cites the `20260816_qualified-reference-occurrence-anchoring` spike findings
+   — while `0002` cites the `20260816_qualified-reference-occurrence-anchoring` spike findings
    and that item's verification ledgers. Item 5 deletes and re-homes exactly that material.
    Before any deletion: resolve every path cited by `.project/product/*` and `.project/adr/*`,
    re-point or preserve each, and convert line-number citations to anchor text. The
@@ -579,7 +581,7 @@ signal rather than a test count. Report only; this item deletes nothing.
    **Run it with `SYSIDE_LICENSE_KEY` loaded and the execution lane enabled** (product-lens
    `epic_plan-F3`). A default run touches about two-thirds of the suite, so a kill rate measured
    on it would score the live-parser and execution tests near zero and hand Item 7 a
-   defensible-looking case for deleting exactly the tests that defend `P-004`'s parse step.
+   defensible-looking case for deleting exactly the tests that defend `0004`'s parse step.
    Report gated-lane kill rate separately from default-lane.
    **A low kill rate is evidence for investigation, never sufficient authority to delete.**
    **Kill criterion**: if the tooling cannot run against this codebase within the phase budget,
@@ -590,11 +592,11 @@ signal rather than a test count. Report only; this item deletes nothing.
    output, entry-point key rules), the end-to-end flows (live extraction → generation, snapshot
    → generation, generated package → real simkit execution), and the load-bearing functions the
    research identified. Map each to the tests that defend it.
-   **`P-001` through `P-004` are rows in this inventory, not context** (product-lens
+   **`0001` through `0004` are rows in this inventory, not context** (product-lens
    `epic_plan-F2`). Each promise maps to the tests that defend it, and the tests the ledger
-   already names as its proof are marked as such: `P-002` names
+   already names as its proof are marked as such: `0002` names
    `tests/conformance/test_usage_owned_reference_anchoring.py` and
-   `test_elaboration_public_mutation.py`; `P-003` names
+   `test_elaboration_public_mutation.py`; `0003` names
    `test_definition_owned_reference_positions.py` and `test_occurrence_domain_derivation.py` as
    "the complete current proof". A ledger-cited test carries a deletion lock into Items 7 and 8.
 3. **Phase 3 — grade each mapping.** Real defense, weak defense (asserts shape not behavior),
@@ -630,7 +632,7 @@ signal rather than a test count. Report only; this item deletes nothing.
 - [ ] Effective default-run coverage is reported separately from license-loaded coverage
 - [ ] Every manifest-entangled test is classified product or process, and each product one carries a
       recorded path to running from an ordinary checkout
-- [ ] `P-001` through `P-004` each appear as inventory rows with their defending tests graded,
+- [ ] `0001` through `0004` each appear as inventory rows with their defending tests graded,
       and every ledger-cited test is flagged with a deletion lock
 - [ ] Every gap exits the item as either a closed gap or a filed `BACKLOG.md` item **with an
       id**, cited from the coverage inventory (product-lens `epic_plan-F4`) — the emit step is
@@ -697,7 +699,7 @@ recorded in the citing entry. Item 6's inventory flags these; this item honours 
 **Entanglement is not deadness** `[OWNER, 2026-08-21]`. Four product tests fail on a clean checkout
 because they raise on a missing release-evidence manifest, not because they defend nothing. They are
 disentangled, never deleted, and `tests/conformance/test_stop_parser_documentation_contract.py` is
-mixed — it also carries the only mechanical guard on the owner-verbatim `P-003`/`P-004` quotes.
+mixed — it also carries the only mechanical guard on the owner-verbatim `0003`/`0004` quotes.
 
 **Out of Scope**:
 - Writing new tests for the gaps (filed by Item 6 to the backlog)
@@ -823,7 +825,7 @@ ruling: durable, relocated, or retired with its item.
   the measurement this epic rests on: bucketed line counts for PR #13 and ELABORATE-FIRST,
   repo composition over time, `src/` dead-code inventory with verified file:line references,
   test-suite composition, `.project` category table and per-item process-cost ratios
-- `.project/product/INDEX.md` + `P-001`…`P-004` (product ledger) — the four promises already
+- `.project/product/INDEX.md` + `0001`…`0004` (product ledger) — the four promises already
   recorded, including two `[OWNER-VERBATIM]` entries that must survive any purge
 - `CLAUDE.md` (project instructions) — the retirement record, the ADR convention, and the
   five-preflight claim this epic corrects
@@ -844,16 +846,16 @@ note that F1 and F2 become BLOCK-shaped if Item 5 or Item 7 proceeds without the
 
 ```
 ## epic_plan — 2026-08-20 — rev da15f14 (.project/backlog/epic_repo_cleanup.md)
-Point (re-derived): The product is three steps — parse the models with a SysML v2 parser, walk the AST to reconstruct the math, write it into TEAx Python — and any manual fallback or workaround for an unresolved reference is a massive, disgusting smell; ill-formed models are refused with a diagnostic, never accommodated.   [source: .project/product/P-004-product-identity-parse-walk-emit.md (owner quote, 2026-08-16) and P-003-no-workarounds-for-bad-models.md (owner quote, 2026-08-16), grade: owner/HARD]
-Secondary point: one modeled source occurrence becomes exactly one runtime source, or elaboration refuses by name; its named durable authority is a specific set of conformance tests.   [source: .project/product/P-002-exact-owner-anchoring.md, grade: agent/ratified]
-Falsifier: after the epic runs, delete or weaken any artifact named as Authority/Evidence by P-001–P-004 (a cited conformance test, a cited archive path) without an owner ruling, or leave the parse/walk/emit steps with no test that would fail if a workaround or a wrong-owner binding returned — observable as a green suite over a reintroduced fallback, or as a P-00N entry whose citations no longer resolve.
+Point (re-derived): The product is three steps — parse the models with a SysML v2 parser, walk the AST to reconstruct the math, write it into TEAx Python — and any manual fallback or workaround for an unresolved reference is a massive, disgusting smell; ill-formed models are refused with a diagnostic, never accommodated.   [source: .project/product/0004-product-identity-parse-walk-emit.md (owner quote, 2026-08-16) and 0003-no-workarounds-for-bad-models.md (owner quote, 2026-08-16), grade: owner/HARD]
+Secondary point: one modeled source occurrence becomes exactly one runtime source, or elaboration refuses by name; its named durable authority is a specific set of conformance tests.   [source: .project/product/0002-exact-owner-anchoring.md, grade: agent/ratified]
+Falsifier: after the epic runs, delete or weaken any artifact named as Authority/Evidence by 0001–0004 (a cited conformance test, a cited archive path) without an owner ruling, or leave the parse/walk/emit steps with no test that would fail if a workaround or a wrong-owner binding returned — observable as a green suite over a reintroduced fallback, or as a P-00N entry whose citations no longer resolve.
 Findings:
-- epic_plan-F1 [DO] No item protects the product ledger's own citations from the purge: the "zero broken citations" success criterion scopes only `src/`, `tests/`, `docs/`, while P-001 cites `.project/concepts/*`, `.project/completed/20260814_*`, and `.project/backlog/BACKLOG.md:439` (already drifted — `[ACAUSAL-RELATIONS-CAPABILITY]` is now at `:552`), and P-002 cites `.project/completed/20260816_qualified-reference-occurrence-anchoring/spike/.../findings.md` and that item's `verification/` ledgers. Item 5 deletes and re-homes exactly that material. — .project/product/INDEX.md ("if a promise is not reachable from here, it has no home") + P-001/P-002 Authority blocks (owner/HARD core in P-001; agent/ratified in P-002) — disposition: add a success criterion and an Item 5 step — every path cited by `.project/product/*` and by any new `.project/adr/` entry resolves after the purge, and line-number citations are re-anchored or converted to anchor text. Not owner-cleared; needs owner sign-off if any cited path is to be deleted rather than re-pointed.
-- epic_plan-F2 [DO] Items 6 and 7 have no promise-indexed obligation: the coverage inventory maps "meaningful functions, invariants, and end-to-end flows" but is never required to map P-001–P-004 to the tests that defend them, and no deletion gate checks a candidate test against the ledger. P-002 names `tests/conformance/test_usage_owned_reference_anchoring.py` and `test_elaboration_public_mutation.py`; P-003 names `test_definition_owned_reference_positions.py` and `test_occurrence_domain_derivation.py` as "the complete current proof". Item 8 additionally deletes "the test families pinning" dead src. — P-002 Evidence, P-003 "First application" (agent/ratified and owner/HARD respectively) — disposition: make the Item 6 inventory promise-indexed, and add a hard rule to Items 7/8 that a ledger-cited test is never deleted or thinned without an owner ruling recorded in the entry.
-- epic_plan-F3 [DON'T] Item 6's stated first phase — a mutation-testing spike "for an objective kill-rate signal" — systematically undercounts exactly the tests that defend the parse step. 544 of 1,700 test functions (32%) are license-gated and `pyproject.toml:46` excludes the `execution` lane, so a default run touches about two-thirds of the suite; a kill-rate measured on that run scores the live-parser and execution tests near zero and hands Item 7 a defensible-looking case to delete them. — P-004 step 1 ("use a SysML v2 parser to interpret the models"), owner/HARD; measurement from .project/research/20260820-201945_line-count-anatomy-and-salvageability.md:349 — disposition: bind Item 6 to run mutation analysis with `SYSIDE_LICENSE_KEY` loaded and the execution lane enabled, and to report gated-lane kill-rate separately; record that a low kill-rate is evidence for investigation, never sufficient authority to delete.
-- epic_plan-F4 [DO] The epic requires Item 6 to name gaps but nothing obliges a gap to get an owner or a backlog id. The measured state already shows the emit step effectively unguarded — `tests/fixtures/baseline_outputs/` (13,923 lines) has one reader whose four assertions pass on hand-written stubs, and `tests/conformance/test_zero_entry_package_golden.py:11` says outright that none of them proves the bytes are the right bytes. As written, the epic can close with that corpus deleted, the gap named in a report, and no owned item. — P-004 step 3 ("write the math into python using TEAx"), owner/HARD — disposition: add a success criterion that every gap named by Item 6 exits as either a closed gap or a filed backlog item with an id, cited from the coverage inventory.
+- epic_plan-F1 [DO] No item protects the product ledger's own citations from the purge: the "zero broken citations" success criterion scopes only `src/`, `tests/`, `docs/`, while 0001 cites `.project/concepts/*`, `.project/completed/20260814_*`, and `.project/backlog/BACKLOG.md:439` (already drifted — `[ACAUSAL-RELATIONS-CAPABILITY]` is now at `:552`), and 0002 cites `.project/completed/20260816_qualified-reference-occurrence-anchoring/spike/.../findings.md` and that item's `verification/` ledgers. Item 5 deletes and re-homes exactly that material. — .project/product/INDEX.md ("if a promise is not reachable from here, it has no home") + 0001/0002 Authority blocks (owner/HARD core in 0001; agent/ratified in 0002) — disposition: add a success criterion and an Item 5 step — every path cited by `.project/product/*` and by any new `.project/adr/` entry resolves after the purge, and line-number citations are re-anchored or converted to anchor text. Not owner-cleared; needs owner sign-off if any cited path is to be deleted rather than re-pointed.
+- epic_plan-F2 [DO] Items 6 and 7 have no promise-indexed obligation: the coverage inventory maps "meaningful functions, invariants, and end-to-end flows" but is never required to map 0001–0004 to the tests that defend them, and no deletion gate checks a candidate test against the ledger. 0002 names `tests/conformance/test_usage_owned_reference_anchoring.py` and `test_elaboration_public_mutation.py`; 0003 names `test_definition_owned_reference_positions.py` and `test_occurrence_domain_derivation.py` as "the complete current proof". Item 8 additionally deletes "the test families pinning" dead src. — 0002 Evidence, 0003 "First application" (agent/ratified and owner/HARD respectively) — disposition: make the Item 6 inventory promise-indexed, and add a hard rule to Items 7/8 that a ledger-cited test is never deleted or thinned without an owner ruling recorded in the entry.
+- epic_plan-F3 [DON'T] Item 6's stated first phase — a mutation-testing spike "for an objective kill-rate signal" — systematically undercounts exactly the tests that defend the parse step. 544 of 1,700 test functions (32%) are license-gated and `pyproject.toml:46` excludes the `execution` lane, so a default run touches about two-thirds of the suite; a kill-rate measured on that run scores the live-parser and execution tests near zero and hands Item 7 a defensible-looking case to delete them. — 0004 step 1 ("use a SysML v2 parser to interpret the models"), owner/HARD; measurement from .project/research/20260820-201945_line-count-anatomy-and-salvageability.md:349 — disposition: bind Item 6 to run mutation analysis with `SYSIDE_LICENSE_KEY` loaded and the execution lane enabled, and to report gated-lane kill-rate separately; record that a low kill-rate is evidence for investigation, never sufficient authority to delete.
+- epic_plan-F4 [DO] The epic requires Item 6 to name gaps but nothing obliges a gap to get an owner or a backlog id. The measured state already shows the emit step effectively unguarded — `tests/fixtures/baseline_outputs/` (13,923 lines) has one reader whose four assertions pass on hand-written stubs, and `tests/conformance/test_zero_entry_package_golden.py:11` says outright that none of them proves the bytes are the right bytes. As written, the epic can close with that corpus deleted, the gap named in a report, and no owned item. — 0004 step 3 ("write the math into python using TEAx"), owner/HARD — disposition: add a success criterion that every gap named by Item 6 exits as either a closed gap or a filed backlog item with an id, cited from the coverage inventory.
 - epic_plan-F5 [DO] The owner's sequential order runs the purge (Item 5) before the test and code tracks (6–8), but Item 2's harvest is scoped to "decisions and promises" only. Items 7 and 8 must answer "what was this test believed to defend, and why was that belief wrong" and "why was this dead code left standing" — and that rationale lives in the `.project/active/` and `completed/` material Item 5 removes first. The archive is destroyed one item before it is needed. — Epic CSF, "Every settled decision that a future agent would otherwise re-derive wrongly survives … *before* anything is deleted" (agent-authored epic text, grade AGENT) reinforced by owner-verbatim sequence ("ONCE that is done, then we can go through and DELETE") — disposition: extend Item 2's harvest to capture test-and-code rationale (what each vestigial family was built to defend, and the retirement records behind the dead src), or gate Item 5's deletion of `active/`+`completed/` behind Items 7 and 8. Owner order is preserved either way.
-- epic_plan-F6 [DON'T] A live correctness defect in the sealing layer is scheduled last: `canonical_json` at `src/sysml_codegen/contracts/serialize.py:28` omits `allow_nan=False`, so a NaN or Infinity serializes as bare `NaN` into the fingerprint payload and a contract seals over invalid JSON with a confident digest. It sits as the final sub-bullet of the largest item, behind ~5 days of deletion work. A seal that certifies a non-number is the "confident wrong number" failure mode P-002 exists to prevent. — P-002 ("a confident wrong number is the failure mode P-001 cannot tolerate"), agent/ratified — disposition: lift the `allow_nan=False` fix and the `CLAUDE.md:65` correction out of Item 8 into Item 1, where they cost minutes and cannot be stranded by an epic that stalls.
+- epic_plan-F6 [DON'T] A live correctness defect in the sealing layer is scheduled last: `canonical_json` at `src/sysml_codegen/contracts/serialize.py:28` omits `allow_nan=False`, so a NaN or Infinity serializes as bare `NaN` into the fingerprint payload and a contract seals over invalid JSON with a confident digest. It sits as the final sub-bullet of the largest item, behind ~5 days of deletion work. A seal that certifies a non-number is the "confident wrong number" failure mode 0002 exists to prevent. — 0002 ("a confident wrong number is the failure mode 0001 cannot tolerate"), agent/ratified — disposition: lift the `allow_nan=False` fix and the `CLAUDE.md:65` correction out of Item 8 into Item 1, where they cost minutes and cannot be stranded by an epic that stalls.
 Smells fired: none of the seven, as scoped.
 Gate: DISPOSED (epic_plan-F1, epic_plan-F2, epic_plan-F3, epic_plan-F4, epic_plan-F5, epic_plan-F6)
 ```

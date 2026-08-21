@@ -47,7 +47,7 @@ release machinery, not process tests**:
 | 219 | `tests/conformance/test_exact_route_fingerprint_stability.py` | product |
 | 1046 | `tests/conformance/test_evidence_artifact_topology.py` | process (Item 7 candidate) |
 | 234 | `tests/conformance/test_probe_fixture_lock.py` | process |
-| 226 | `tests/conformance/test_stop_parser_documentation_contract.py` | mixed — also guards the owner-verbatim P-003/P-004 quotes |
+| 226 | `tests/conformance/test_stop_parser_documentation_contract.py` | mixed — also guards the owner-verbatim 0003/0004 quotes |
 | 128 | `tests/unit/test_artifact_sources.py` | process |
 | 23 | `tests/helpers/artifact_sources.py` | shim |
 
@@ -93,7 +93,7 @@ Three live documents still say it does:
   V11 under "the pipeline enforces these rules" with its full error text and a V11 note
 
 A model author is promised a diagnostic the toolchain will never issue, which is the inverse of
-`P-003`. Scope is the docs only — deleting the dead V11 *code* stays in REPO-CLEANUP Item 8, where
+`0003`. Scope is the docs only — deleting the dead V11 *code* stays in REPO-CLEANUP Item 8, where
 it retires with its pinning test. Reference documents 07/11/17/24 carry retiring banners and are out
 of scope. Source: Item 1 spec-lens `spec-F4`.
 
@@ -112,7 +112,7 @@ of scope. Source: Item 1 spec-lens `spec-F4`.
 ## Exact-evidence follow-ups (filed by stop-reinventing-the-parser Phase 4)
 
 - **[INDEXED-ELEMENT-EXPRESSION-SUPPORT] Implement valid indexed element expressions — P1
-  `[AGENT]`, under P-001.** SysIDE preserves an authored index, but Codegen intentionally refuses
+  `[AGENT]`, under 0001.** SysIDE preserves an authored index, but Codegen intentionally refuses
   every expression consumer before graph construction with `SI_INDEXED_SOURCE_UNSUPPORTED` until
   exact indexed-element semantics are implemented. Preserve the authored reference and the current
   fail-before-mutate contract while adding the capability. Source:
@@ -277,10 +277,11 @@ findings closed in the decomposition, not deferred):
   register the criterion assigns, each with a `Why` a future challenge re-derives against. No
   entry may rest on a path Item 5 will delete.
 - [ ] **Item 4 — Author the product promises** (0.75d, needs 2; parallel to 3). Extend
-  `.project/product/` past P-004; `P-001`…`P-004` bodies stay byte-identical.
+  `.project/product/` past 0004; `0001`…`0004` visible prose and owner payload stay unchanged, and
+  Item 1's five ratified destination-only edits are not widened.
 - [ ] **Item 5 — `.project` purge** (1d, needs 3+4). Under 100k lines, zero committed logs, zero
   byte-exact duplicates >2KB, zero stale `active/` dirs. Per F1, every path cited by
-  `.project/product/*` and `.project/adr/*` must resolve after the purge — `P-001`'s
+  `.project/product/*` and `.project/adr/*` must resolve after the purge — `0001`'s
   `BACKLOG.md:439` citation has **already drifted** (target now `:552`).
 - [ ] **Item 6 — Coverage audit** (2d, no deps; owner order places it after 5). Report only.
   Phase 1 is a mutation-testing spike with a kill criterion; per F3 it runs **licensed with the
@@ -631,7 +632,7 @@ diagnostic names neither the candidate occurrences nor the index syntax that wou
 **Scope the diagnostic message first** — that may be the whole fix. Reversing D4 would reopen a
 ratified design decision and its review, and risks the cardinality drift that item's risk register
 was written to prevent. Bound recorded at
-[P-002](../product/P-002-exact-owner-anchoring.md).
+[0002](../product/0002-exact-owner-anchoring.md).
 
 ### [CATF-DIVERTOR-GATE] Divertor addition + HeatLoadBalance gating, CATF derivative — P3, unowned (filed at owner direction, 2026-08-13)
 
@@ -653,7 +654,7 @@ one backlog note the ruling requires.
 
 ### [INDEXED-ELEMENT-EXPRESSION-SUPPORT] Execute valid indexed element references — P3, unowned `[AGENT, 2026-08-17]`
 
-**Serves:** P-001's requirement that a modeled study vary and assess the values the author named.
+**Serves:** 0001's requirement that a modeled study vary and assess the values the author named.
 
 Agentic-mbse and SysIDE can identify a valid indexed element expression and preserve its index.
 Codegen does not yet have index execution semantics. The shipped route therefore refuses before
@@ -665,7 +666,7 @@ Evidence: `tests/fixtures/indexed_expression_source/model.sysml` and
 
 ### [OUTPUT-ALIAS-DUPLICATE-SOURCE-SILENCE] Diagnose a second alias authored for one source — P3, unowned `[AGENT, 2026-08-17]`
 
-**Serves:** P-001's need for trustworthy study outputs.
+**Serves:** 0001's need for trustworthy study outputs.
 
 When a model authors a second output alias for a source that already has one, current extraction
 produces neither a second output file nor a diagnostic for that second alias. The first alias remains

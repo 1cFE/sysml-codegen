@@ -2,7 +2,7 @@
 
 **Status:** In Progress
 **Created:** 2026-08-21
-**Last Updated:** 2026-08-21 (Phase 1 limitation accepted; Phase 2 authorized)
+**Last Updated:** 2026-08-21 (Phase 3 complete; awaiting Phase 4 authorization)
 
 ## Source Documents
 
@@ -17,7 +17,7 @@
 The product is three steps: parse the models with a SysML v2 parser, walk the AST to reconstruct the
 math, write it into TEAx Python — and any manual fallback for an unresolved reference is a smell,
 because ill-formed models are refused with a diagnostic rather than accommodated.
-`[OWNER-VERBATIM, 2026-08-16]`, `.project/product/P-004` and `P-003`.
+`[OWNER-VERBATIM, 2026-08-16]`, `.project/product/0004` and `0003`.
 
 This work does not touch that product. It serves it one hop back. Those two promises are written
 down precisely so a future agent cannot quietly undo them, and the ledger's own contract is *"if a
@@ -222,38 +222,46 @@ D3 and `design.md#required-invariants` (I1); the per-entry data flow → `design
 
 #### 1. Conformance tests (NEW assertions — write first)
 **File:** `tests/conformance/test_stop_parser_documentation_contract.py`
-- [ ] Add the I1 and I5 tests above
-- [ ] Leave the owner-quote assertions at `:172-206` **unchanged** — only the two read paths move
-- [ ] Re-express `assert "P-003-….md" in index` as an id-plus-resolution check (I1's form), never delete it
+- [x] Add the I1 and I5 tests above
+- [x] Leave the owner-quote assertions at `:208-245` **unchanged** — only the two read paths move
+- [x] Re-express `assert "P-003-….md" in index` as an id-plus-resolution check (I1's form), never delete it
 
 #### 2. The four entries
-- [ ] `git mv` each `P-00N-<slug>.md` → `000N-<slug>.md`, preserving slugs (D2)
-- [ ] Prepend frontmatter; backfill `date` and `owner` from each file's git history, not today
-- [ ] Map provenance: `P-003`/`P-004` → `[OWNER]` with the verbatim quote staying in Authority
-      (the pack's documented first-capture shape); `P-002` → `[AGENT] (ratified by owner, 2026-08-16)`;
-      `P-001` grades the **summary**, not what it cites
-- [ ] Verify I2 per file: prose below the block diffs clean against the pre-move blob
+- [x] `git mv` each `P-00N-<slug>.md` → `000N-<slug>.md`, preserving slugs (D2)
+- [x] Prepend frontmatter; backfill `date` and `owner` from each file's git history, not today
+- [x] Map provenance: `0003`/`0004` → `[OWNER]` with the verbatim quote staying in Authority
+      (the pack's documented first-capture shape); `0002` → `[AGENT] (ratified by owner, 2026-08-16)`;
+      `0001` grades the **summary**, not what it cites
+- [x] Verify I2 per file: below the block, the diff contains only the five approved Markdown
+      destination repoints and no visible-text or owner-payload change
 
 #### 3. Index and citations
-- [ ] `product.sh index`; commit the generated `INDEX.md`
-- [ ] Re-derive the live citation set with `grep -rl 'P-00[0-9]'` — **do not use the 2026-08-20 list**
-- [ ] Repoint the live sites. Hand-check `CLAUDE.md` and `.project/backlog/BACKLOG.md`; both are read
+- [x] `product.sh index`; commit the generated `INDEX.md`
+- [x] Re-derive the live citation set with `grep -rl 'P-00[0-9]'` — **do not use the 2026-08-20 list**
+- [x] Repoint the live sites. Hand-check `CLAUDE.md` and `.project/backlog/BACKLOG.md`; both are read
       by tooling and by every session, so a sloppy sweep there is more damaging than a renamed file
-- [ ] Confirm I4's other direction: every path cited *by* an entry still resolves
+- [x] Confirm I4's other direction: every path cited *by* an entry still resolves
 
 ### Validation
 
 **Automated:**
-- [ ] I1, I5 tests pass; owner-quote assertions still pass unchanged
-- [ ] Full suite green with `SYSIDE_LICENSE_KEY` loaded
-- [ ] `grep -rn 'P-00[0-9]'` returns no live site expecting the old form
+- [x] I1, I5 tests pass; owner-quote assertions still pass unchanged
+- [x] Licensed runnable suite green under the accepted missing-manifest disposition; the exact full
+      suite remains unavailable rather than green
+- [x] `grep -rn 'P-00[0-9]'` returns no live site expecting the old form
 
 **Manual:**
-- [ ] Read the generated `INDEX.md` end to end — can a cold agent get from it to each promise?
-- [ ] Spot-check `P-001`'s Authority citations resolve
+- [x] Read the generated `INDEX.md` end to end — can a cold agent get from it to each promise?
+- [x] Spot-check `0001`'s Authority citations resolve
 
 **What We Know Works After This Phase:** the ledger is script-managed, reachable, and no citation
 dangles.
+
+**Implementation ruling:** literal body byte identity conflicted with outbound citation integrity:
+five relative links inside the renamed entries named files that no longer existed. The agent
+recommended repointing only those hidden destinations while preserving all visible prose and owner
+payload; the owner ratified that recommendation on 2026-08-21. I2 and the spec are amended to state
+the exact exception rather than silently choosing one invariant over the other.
 
 ---
 
@@ -424,6 +432,44 @@ rather than fail, so a green run with no key is not a full run. Load it with
 ### Phase 2 Completion
 
 ### Phase 3 Completion
+
+**Completed:** 2026-08-21 08:35 PDT
+**Phase status:** Complete; awaiting owner authorization for Phase 4
+
+**Changes Made:**
+- Added real I1 and I5 conformance tests. They failed before migration because the manual index ids
+  resolved to no `000N-*` files and differed from a fresh `product.sh index`, then passed after it.
+- Renamed the four entries to `0001`…`0004`, preserving every slug. Added full script-managed
+  frontmatter, including the lifecycle link fields omitted by the plan's shorthand schema.
+- Backfilled `date` and `owner` from each file's first Git commit: 2026-08-14 / `rwestwood89` for
+  `0001`; 2026-08-16 / Reid W for `0002` and `0003`; 2026-08-17 / Reid W for `0004`.
+- Regenerated `INDEX.md` twice through the installed engine. Both runs produced SHA-256
+  `cb0dabb4443c6459680b97621df4bc29500da97ac68d4be6a5ef560ba28016e8`.
+- Re-derived the live inbound citation set from the checkout, repointed it to the `000N` names,
+  and hand-checked `CLAUDE.md` and `BACKLOG.md`. All outbound authority/evidence paths resolve.
+
+**Issues Encountered:**
+- Five relative links inside the immutable promise bodies named the files being renamed. Literal
+  body byte identity and outbound citation integrity could not both hold. The agent recommended a
+  five-destination-only exception; the owner ratified it on 2026-08-21. The spec, design, and plan
+  now state the narrowed invariant. Visible prose and owner payload did not change.
+
+**Deviations from Plan:**
+- Added `amended_by`, `superseded_by`, and `supersedes` to every frontmatter block. The installed
+  lifecycle commands require those fields and fail loudly without them.
+- The full-suite result is recorded under the owner's accepted current-manifest limitation rather
+  than mislabeled green.
+
+**Validation:**
+- I2 mechanical comparison passed for all four entries. `0001` matched its original body hash
+  `77f63d0c…`; `0002`–`0004` matched originals normalized by exactly the five ratified destination
+  substitutions, with no other difference.
+- I1, I5, and the unchanged owner-payload assertions passed in the focused three-test gate. The
+  safe documentation-contract subset passed 10/10 with 3 manifest-bound tests deselected.
+- The edited conformance test passes Ruff. All internal links and every named outbound citation
+  resolve; no live external path expects a `P-00N-*.md` filename.
+- Licensed runnable suite: 2,371 passed, 9 policy skips, 94 manifest-bound deselections. The exact
+  full-suite gate remains unavailable under the accepted Phase 1 environment limitation.
 
 ### Phase 4 Completion
 

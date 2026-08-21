@@ -1,3 +1,17 @@
+---
+id: 0003
+title: No workarounds to accept bad models
+date: 2026-08-16
+owner: Reid W
+status: active
+amended_by: []
+superseded_by: null
+supersedes: null
+provenance: "[OWNER]"
+surfaces: [extraction, elaboration, generation]
+checked: null
+---
+
 # P-003 — No workarounds to accept bad models
 
 **Status:** Standing product rule
@@ -32,7 +46,7 @@ generate. A refused model is the correct outcome for an ill-formed model.
 
 This is the product-level generalization of rules the codebase already enforces piecewise: D-4
 (a self-binding is never reinterpreted as an outer reference), the exact-owner anchoring of
-[P-002](P-002-exact-owner-anchoring.md), and the `SI_*` readiness refusals.
+[P-002](0002-exact-owner-anchoring.md), and the `SI_*` readiness refusals.
 
 ## First application
 

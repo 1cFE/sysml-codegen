@@ -116,7 +116,7 @@ Two staleness discoveries: the recorded blocker for pinning the CATF acceptance 
 
 ## Part (b) — basic design-search demo
 
-Target (P-001): vary parameters freely, get viability + outcomes (LCOE) per point. Minimal credible demo: 1–2 parameters × N points → LCOE + feasibility verdict per point, table/plot, one command.
+Target (0001): vary parameters freely, get viability + outcomes (LCOE) per point. Minimal credible demo: 1–2 parameters × N points → LCOE + feasibility verdict per point, table/plot, one command.
 
 | Building block | Status | Evidence |
 |---|---|---|
@@ -133,7 +133,7 @@ Target (P-001): vary parameters freely, get viability + outcomes (LCOE) per poin
 
 ## Architecture Insights
 
-- The three-layer split (model owns meaning / generated package owns evaluation / study layer owns exploration) is fully built and demonstrated; P-001's second bullet (no predetermined free variables) remains directional — the causal-toolchain reconciliation and `[ACAUSAL-RELATIONS-CAPABILITY]` P3 record the gap honestly.
+- The three-layer split (model owns meaning / generated package owns evaluation / study layer owns exploration) is fully built and demonstrated; 0001's second bullet (no predetermined free variables) remains directional — the causal-toolchain reconciliation and `[ACAUSAL-RELATIONS-CAPABILITY]` P3 record the gap honestly.
 - The dominant recent cost was converting one-shot claims into pinned proofs and making the route refuse what it used to silently glue (self-bindings, seals, coverage). That is why things "keep breaking": the old demos ran on rescues the new route correctly rejects.
 - Chronic evidence hazards to keep in view: license-skip makes green runs lie; the execution lane is off by default; the 17 ordering-dependent full-suite failures at clean HEAD are still unowned (`CURRENT_WORK.md:345-351`).
 

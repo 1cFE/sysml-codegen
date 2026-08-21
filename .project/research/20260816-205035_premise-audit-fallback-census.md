@@ -206,8 +206,8 @@ exact referent Feature
   -> exact concrete occurrence, or named refusal
 ```
 
-This is elaboration, not parser reinvention. P-002 records the same promise and the reason for it
-(`.project/product/P-002-exact-owner-anchoring.md:9-29`).
+This is elaboration, not parser reinvention. 0002 records the same promise and the reason for it
+(`.project/product/0002-exact-owner-anchoring.md:23-43`).
 
 The current generic selector is still too permissive. If two concrete copies exist, “take the
 nearest” is not a valid rule. The resolver must derive the target occurrence from the target usage's

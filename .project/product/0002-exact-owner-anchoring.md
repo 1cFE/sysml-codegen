@@ -1,8 +1,22 @@
+---
+id: 0002
+title: One modeled source occurrence becomes exactly one runtime source
+date: 2026-08-16
+owner: Reid W
+status: active
+amended_by: []
+superseded_by: null
+supersedes: null
+provenance: "[AGENT] (ratified by owner, 2026-08-16)"
+surfaces: [elaboration, generation]
+checked: null
+---
+
 # P-002 — One modeled source occurrence becomes exactly one runtime source
 
 **Grade:** `[AGENT] (ratified by owner, 2026-08-16)` — an agent-originated promise the owner
 approved. Challenge it by re-deriving against the reasoning recorded here, not by asking the owner.
-**Serves:** [P-001](P-001-design-search-free-variation.md).
+**Serves:** [P-001](0001-design-search-free-variation.md).
 **Landed:** repair `98970c9`, evidence remediation `c2fa657`, item
 `qualified-reference-occurrence-anchoring`.
 

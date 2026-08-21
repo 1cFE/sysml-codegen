@@ -1,3 +1,17 @@
+---
+id: 0004
+title: What this product is: parse the models, walk the AST, reconstruct the math, write it into TEAx Python
+date: 2026-08-17
+owner: Reid W
+status: active
+amended_by: []
+superseded_by: null
+supersedes: null
+provenance: "[OWNER]"
+surfaces: [extraction, elaboration, generation]
+checked: null
+---
+
 # P-004 — What this product is: parse the models, walk the AST, reconstruct the math, write it into TEAx Python
 
 **Status:** Standing product definition
@@ -31,7 +45,7 @@ reconstructs the math from it; the emission writes that math into TEAx Python. A
 in for one of those steps — a rebuilt proxy of the tree, a positional guess, a harness-injected
 value, a per-consumer input stub left behind by a reference that didn't resolve — is not a lesser
 variant of the product; it is the smell the owner names. An unresolved reference has two honest
-outcomes: resolve it through the parser, or refuse with a diagnostic ([P-003](P-003-no-workarounds-for-bad-models.md)).
+outcomes: resolve it through the parser, or refuse with a diagnostic ([P-003](0003-no-workarounds-for-bad-models.md)).
 
 Canonical instance of the smell, for the record: the July stellarator package, where dropped
 bindings left the same physical quantity as 4–5 separate unwired input keys and the runner
@@ -39,7 +53,7 @@ hand-injected three values the generator couldn't wire.
 
 ## Related
 
-- [P-003 — No workarounds to accept bad models](P-003-no-workarounds-for-bad-models.md) — the
+- [P-003 — No workarounds to accept bad models](0003-no-workarounds-for-bad-models.md) — the
   refusal side of the same rule, from the same owner stance.
-- [P-002 — exact owner anchoring](P-002-exact-owner-anchoring.md) — one modeled occurrence, one
+- [P-002 — exact owner anchoring](0002-exact-owner-anchoring.md) — one modeled occurrence, one
   runtime source: the walk step done right.

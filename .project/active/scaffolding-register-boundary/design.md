@@ -1,9 +1,9 @@
 # Design: Scaffolding Reinstall and Register Boundary
 
-**Status:** Draft
+**Status:** Implementation In Progress
 **Owner:** Reid W
 **Created:** 2026-08-21
-**Branch:** main
+**Branch:** repo-cleanup
 **Spec:** `.project/active/scaffolding-register-boundary/spec.md`
 
 ---
@@ -21,7 +21,7 @@ the naming the engine actually reads.
 - **Product-lens:** `.project/active/scaffolding-register-boundary/product-lens.md` (spec run, DISPOSED)
 - **Research:** `.project/research/20260820-201945_line-count-anatomy-and-salvageability.md`
 - **Required Reading:** the pack's `adr/README.md`, `product/README.md`, `scripts/adr.sh`,
-  `scripts/product.sh`; `.project/product/INDEX.md` and `P-001`…`P-004`;
+  `scripts/product.sh`; `.project/product/INDEX.md` and `0001`…`0004`;
   `docs/architecture/modeling-assumptions.md`; `claude-pack/rules/capture-fidelity.md`
 - **Decision records:** `.project/adr/INDEX.md` does not exist yet — this item creates it. No prior
   entries to check against.
@@ -31,7 +31,7 @@ the naming the engine actually reads.
 The product is three steps: parse the models with a SysML v2 parser, walk the AST to reconstruct
 the math, write it into TEAx Python — and any manual fallback for an unresolved reference is a
 smell, because ill-formed models are refused with a diagnostic rather than accommodated.
-`[OWNER-VERBATIM, 2026-08-16]`, `.project/product/P-004` and `P-003`.
+`[OWNER-VERBATIM, 2026-08-16]`, `.project/product/0004` and `0003`.
 
 This item does not touch that product. It serves it one hop back: those two promises are written
 down precisely so a future agent cannot quietly undo them, and the ledger's own contract is *"if a
@@ -76,8 +76,8 @@ author (library/design separation, aggregation via redefinition, template instan
 Coverage Truth and Headline Semantics (`:704-742`), governs report token spellings, generation
 templates, TEAx's `CANONICAL_HEADLINE`, and a normalization seam. No model author obeys it.
 
-**The guard on the owner's words is one test.** `tests/conformance/test_stop_parser_documentation_contract.py:172-206`
-reads `P-003` and `P-004` by path, asserts the owner quote and the three product-identity step lines,
+**The guard on the owner's words is one test.** `tests/conformance/test_stop_parser_documentation_contract.py:208-245`
+reads `0003` and `0004` by path, asserts the owner quote and the three product-identity step lines,
 and asserts both filenames appear in `INDEX.md`.
 
 ## Core Concept
@@ -117,7 +117,7 @@ the one test's index assertions as real reachability checks.
   *If false → a rename silently breaks a citation path we did not sweep, and an entry's Authority or
   a doc's pointer dangles.*
 - **B3.** Prepending frontmatter is a metadata addition, not a body mutation, so it does not trip
-  the registers' append-only rule and does not require superseding `P-003` or `P-004`.
+  the registers' append-only rule and does not require superseding `0003` or `0004`.
   *If false → the migration is a material change to owner-verbatim payload and must instead be done
   as four supersessions, roughly tripling the item and leaving two dead entries in the index.*
 - **B4.** One routing question, stated abstractly, is enough for a cold agent to file correctly
@@ -156,8 +156,8 @@ the one test's index assertions as real reachability checks.
   same correction that pulled the `allow_nan` fix out of it. *Rejected: moving it here (bolts an
   unrelated re-home plus an owner-verbatim citation repoint onto a scaffolding item). Rejected:
   grandfathering it (the register would carry a known exception on the day its rule is written).*
-  **Consequence for Item 3:** the move must repoint `P-001:114` and the `INDEX.md` back-registered
-  ADR row in the same change, or `P-001`'s Authority dangles.
+  **Consequence for Item 3:** the move must repoint `0001:128` and the `INDEX.md` back-registered
+  ADR row in the same change, or `0001`'s Authority dangles.
 
 ## Architecture
 
@@ -171,14 +171,14 @@ pack (source of truth for scaffolding)
 .project/product/        (migrated) 000N-<slug>.md       +  INDEX.md   [product.sh]
 docs/architecture/modeling-assumptions.md  (unchanged except D6)
 
-seam: P-001's Authority cites modeling-assumptions.md ADR-009,
+seam: 0001's Authority cites modeling-assumptions.md ADR-009,
       and INDEX.md carries a back-registered row for it.
       D6 decides whether that seam moves.
 ```
 
-Data flow for the migration, per entry: read the entry's existing prose → derive
-`id/title/date/owner/status/provenance/surfaces/checked` → `git mv` to the new name → prepend the
-block → assert bytes below the block unchanged → `product.sh index`.
+Data flow for the migration, per entry: read the entry's existing prose → derive the script-managed
+frontmatter → `git mv` to the new name → prepend the block → repoint only the five internal
+Markdown destinations → assert no other body bytes changed → `product.sh index`.
 
 `date` and `owner` are backfilled from each file's git history rather than stamped today, so the
 frontmatter tells the truth about when the promise was filed. `checked` is stamped via
@@ -188,8 +188,11 @@ frontmatter tells the truth about when the promise was filed. `checked` is stamp
 
 - **I1.** For every id listed in `.project/product/INDEX.md`, exactly one `.project/product/<id>-*.md`
   exists. This is the reachability contract in its enforceable form.
-- **I2.** Below its frontmatter block, each of the four entry files is byte-identical to its
-  pre-migration content.
+- **I2.** Below its frontmatter block, every visible word and owner payload is identical to its
+  pre-migration content. The only permitted byte changes are the five relative Markdown
+  destinations repointed from `P-00N-*.md` to `000N-*.md`; every other byte is identical.
+  `[AGENT] (ratified by owner, 2026-08-21)` after implementation surfaced the conflict between
+  literal byte identity and I4's outbound-link requirement.
 - **I3.** Every entry's `provenance` field agrees with the grade its own prose states.
 - **I4.** Every path cited *by* a promise entry resolves, and every reference *to* a promise entry
   resolves — both directions.
@@ -237,7 +240,7 @@ frontmatter tells the truth about when the promise was filed. `checked` is stamp
   differs; the dry run is the review step that confirms the four expected updates and nothing else.
 - **`product.sh check` needs the entries to already validate** — stamp after I1/I2/I3 pass, not
   during the migration.
-- **Provenance mapping is not mechanical.** `P-001` is mixed-grade (owner-verbatim core, inherited
+- **Provenance mapping is not mechanical.** `0001` is mixed-grade (owner-verbatim core, inherited
   and agent parts); its frontmatter grade describes the *summary*, per the pack's rule that an
   entry's summary carries only its own grade and never inherits from what it cites.
 - **The repoint sweep must be re-derived, not remembered.** `grep -rl 'P-00[0-9]'` at
@@ -286,7 +289,7 @@ citation form (D4), and I1–I6.
 **Open:** nothing blocking. D6 is settled as a deferral, so this item records a triage outcome for
 ADR-009 and does not move it. The plan can start.
 
-**Carried to Item 3:** the ADR-009 re-home, with its `P-001:114` and `INDEX.md` repoints bound to
+**Carried to Item 3:** the ADR-009 re-home, with its `0001:128` and `INDEX.md` repoints bound to
 the same change.
 
 **De-risk first:** B3. Before any rename, prepend frontmatter to a throwaway copy of `P-003` and run

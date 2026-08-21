@@ -5,7 +5,7 @@
 **Created:** 2026-08-20 21:47
 **Complexity:** MEDIUM
 **Branch:** repo-cleanup
-**Implementation Progress:** Phase 2 of 5 complete; scaffolding installed in `59ed5b9`
+**Implementation Progress:** Phase 3 of 5 complete; ledger migrated to generated `000N` index
 
 ---
 
@@ -54,9 +54,10 @@ the generator carries them.
 - [ ] The regenerated `INDEX.md` still resolves to each entry file and still exposes each entry's
       provenance grade — the ledger's "reachable from here" contract survives the handover to the
       generator
-- [ ] The four product promises survive with their prose byte-identical below the added
-      frontmatter block, and citations resolve **in both directions**: every reference pointing at
-      a promise entry, and every path a promise entry cites
+- [ ] The four product promises survive with every visible word and owner payload unchanged below
+      the added frontmatter block. The only permitted body-byte changes are the five mechanical
+      Markdown destination repoints required by the filename migration; citations resolve **in both
+      directions**: every reference pointing at a promise entry, and every path a promise entry cites
 - [ ] `CLAUDE.md` and `.project/product/INDEX.md` no longer claim a single ADR home
 - [ ] The owner-verbatim quote assertions in
       `tests/conformance/test_stop_parser_documentation_contract.py` still run unweakened, and its
@@ -73,22 +74,26 @@ the generator carries them.
   this repo's subjects. Owner-stated 2026-08-20.
 - **[OWNER]** The product ledger harmonizes to the pack's naming standard rather than the pack's
   script being modified to fit this repo. Owner-stated 2026-08-20.
-- **[HARD]** `.project/product/P-001`…`P-004` bodies are immutable. The registers are append-only
-  by their own contract, and `P-003` and `P-004` are `[OWNER-VERBATIM]` quotes. A material change
-  is a supersession, never a rewrite.
+- **[HARD]** `.project/product/0001`…`0004` bodies are append-only. Every visible word and owner
+  payload is immutable; the exact five destination-only citation repoints recorded below are the
+  sole migration exception. Entries `0003` and `0004` carry `[OWNER-VERBATIM]` quotes. A material
+  change is a supersession, never a rewrite.
   Source: `agentic-project-init/project-pack/product/README.md`, "Lifecycle".
-- **[HARD]** Harmonization is **rename plus prepend**, and nothing else. No entry has frontmatter
-  today, and `product.sh` reads every index field from it (`product.sh:29-35, 77-88`), so the four
-  entries each gain an `id/title/date/owner/status/provenance/surfaces/checked` block above their
-  existing first line. Every byte below that block stays identical to its pre-item state, verified
-  mechanically. The owner's harmonize ruling authorizes the direction; this bounds its reach so an
-  implementer does not improvise on owner-verbatim payload.
+- **[HARD]** Harmonization is **rename plus prepend plus five mechanical Markdown destination
+  repoints**, and nothing else. No entry has frontmatter today, and `product.sh` reads every index
+  field from it (`product.sh:29-35, 77-88`), so the four entries each gain the script-managed block
+  above their existing first line. The five existing relative links among the four entries change
+  only their hidden destination from `P-00N-*.md` to `000N-*.md`; their labels, every visible word,
+  and all owner-verbatim payload remain unchanged. Every other byte below the block stays identical
+  to its pre-item state, verified mechanically. `[AGENT] (ratified by owner, 2026-08-21)` after the
+  implementation surfaced that literal byte identity and outbound-link resolution could not both
+  hold after the rename.
 - **[HARD]** The post-harmonization index must resolve to entry files and expose each entry's
   provenance grade. `regen_index` emits `- <id> · <title> · surfaces · checked` — no link, no
   filename, no grade — so this needs either a `provenance` field surfaced in the generated line or
   a documented `<id>-*.md` resolution rule stated in `.project/product/README.md`.
   Source: `.project/product/INDEX.md` preamble; product-lens SOURCES protocol.
-- **[HARD]** `tests/conformance/test_stop_parser_documentation_contract.py:174-206` reads two
+- **[HARD]** `tests/conformance/test_stop_parser_documentation_contract.py:208-245` reads two
   promise files by exact filename and asserts those filenames appear in `INDEX.md`. Renaming the
   entries breaks this test, so the test moves with them in the same change.
 - **[HARD]** `product.sh` allocates ids and flips statuses; `INDEX.md` is generated and hand edits
@@ -96,7 +101,7 @@ the generator carries them.
   frontmatter, or live somewhere that is not the index.
   Source: `agentic-project-init/project-pack/product/README.md`, "Lifecycle".
 - **[HARD]** The quote-text assertions in
-  `tests/conformance/test_stop_parser_documentation_contract.py:174-206` survive unweakened — only
+  `tests/conformance/test_stop_parser_documentation_contract.py:208-245` survive unweakened — only
   paths change. Its two `assert "P-00N-….md" in index` assertions cannot pass under any rename,
   because a generated index contains no filenames; they are **re-expressed** against what the
   harmonized index does guarantee (id and title), never dropped. This test is the only mechanical
@@ -108,9 +113,9 @@ the generator carries them.
   and — the two the first draft missed — the per-promise summary lines that carry each entry's
   provenance grade, and index→entry reachability itself.
 - **[OWNER]** `ADR-009` is triaged here and re-homed by Item 3, not by this item
-  `[OWNER, 2026-08-21]`. When Item 3 moves it, `P-001`'s Authority citation of
+  `[OWNER, 2026-08-21]`. When Item 3 moves it, `0001`'s Authority citation of
   `docs/architecture/modeling-assumptions.md:588` and the back-registered `INDEX.md` row are
-  repointed in the same change — `P-001` is `[OWNER-VERBATIM, 2026-08-13]` and its Authority must
+  repointed in the same change — `0001` is `[OWNER-VERBATIM, 2026-08-13]` and its Authority must
   not dangle.
 - **[INFERRED]** Sections 1-8 of `modeling-assumptions.md` are author-facing and stay there. This
   item records all nine triage outcomes and moves none of them.
@@ -162,7 +167,7 @@ the generator carries them.
   - `agentic-project-init/project-pack/adr/README.md`
   - `agentic-project-init/project-pack/product/README.md`
   - `agentic-project-init/project-pack/scripts/adr.sh`, `scripts/product.sh`
-  - `.project/product/INDEX.md` and `P-001`…`P-004`
+  - `.project/product/INDEX.md` and `0001`…`0004`
   - `docs/architecture/modeling-assumptions.md`
   - `claude-pack/rules/capture-fidelity.md`
 - **Research:** `.project/research/20260820-201945_line-count-anatomy-and-salvageability.md`

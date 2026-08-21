@@ -1,3 +1,17 @@
+---
+id: 0001
+title: A design search where parameters vary freely and viability is assessed
+date: 2026-08-14
+owner: rwestwood89
+status: active
+amended_by: []
+superseded_by: null
+supersedes: null
+provenance: "[OWNER]"
+surfaces: [studies, constraints]
+checked: null
+---
+
 # P-001 — A design search where parameters vary freely and viability is assessed
 
 **Status:** Directional intent — partly built, partly filed as a capability bet

@@ -5,11 +5,14 @@ from __future__ import annotations
 import hashlib
 import json
 import re
+import shutil
+import subprocess
 from pathlib import Path
 
 from verification import capture_baseline
 
 ROOT = Path(__file__).resolve().parents[2]
+PRODUCT = ROOT / ".project/product"
 TRANSITIONS = {
     "A1",
     "A2",
@@ -35,6 +38,39 @@ DIAGNOSTICS = {
 
 def _read(relative: str) -> str:
     return (ROOT / relative).read_text()
+
+
+def _product_ids_in(index: str) -> tuple[str, ...]:
+    ids: list[str] = []
+    for line in index.splitlines():
+        match = re.match(r"^- \[?(?:P-)?(?P<id>[0-9]{3,4})(?:\s|·)", line)
+        if match is not None:
+            ids.append(match.group("id").zfill(4))
+    assert ids, "product index contains no promise rows"
+    assert len(ids) == len(set(ids)), "product index contains duplicate promise ids"
+    return tuple(ids)
+
+
+def _regenerate_product_index(tmp_path: Path) -> str:
+    product = tmp_path / ".project/product"
+    shutil.copytree(PRODUCT, product)
+    subprocess.run(
+        [str(ROOT / ".project/scripts/product.sh"), "index"],
+        cwd=tmp_path,
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    return (product / "INDEX.md").read_text()
+
+
+def test_every_indexed_promise_resolves_to_exactly_one_entry() -> None:
+    for entry_id in _product_ids_in(_read(".project/product/INDEX.md")):
+        assert len(list(PRODUCT.glob(f"{entry_id}-*.md"))) == 1
+
+
+def test_product_index_is_a_faithful_regeneration(tmp_path: Path) -> None:
+    assert _read(".project/product/INDEX.md") == _regenerate_product_index(tmp_path)
 
 
 def test_architecture_docs_name_one_owner_walk_and_exact_evidence_boundary() -> None:
@@ -171,8 +207,8 @@ def test_dead_computed_attribute_classifier_and_its_golden_are_absent() -> None:
 
 def test_backlog_and_product_records_preserve_force_and_current_status() -> None:
     backlog = _read(".project/backlog/BACKLOG.md")
-    product = _read(".project/product/P-003-no-workarounds-for-bad-models.md")
-    product_identity = _read(".project/product/P-004-product-identity-parse-walk-emit.md")
+    product = _read(".project/product/0003-no-workarounds-for-bad-models.md")
+    product_identity = _read(".project/product/0004-product-identity-parse-walk-emit.md")
     index = _read(".project/product/INDEX.md")
     owner_quote = (
         "> we do NOT create workarounds to accept bad models -- we follow what KerML, SysMLv2 and "
@@ -199,11 +235,13 @@ def test_backlog_and_product_records_preserve_force_and_current_status() -> None
         assert "settled" not in block.lower()
     assert owner_quote in product
     assert "every definition-owned lineage miss" in product
-    assert "P-003-no-workarounds-for-bad-models.md" in index
+    assert "- 0003 · No workarounds to accept bad models" in index
+    assert len(list(PRODUCT.glob("0003-*.md"))) == 1
     assert "Use a SysMLv2 parser to interpret the models" in product_identity
     assert "Walk the AST to reconstruct the math" in product_identity
     assert "Write the math into python using TEAx" in product_identity
-    assert "P-004-product-identity-parse-walk-emit.md" in index
+    assert "- 0004 · What this product is: parse the models" in index
+    assert len(list(PRODUCT.glob("0004-*.md"))) == 1
 
 
 def test_status_records_owner_close_and_satisfied_downstream_dependency() -> None:

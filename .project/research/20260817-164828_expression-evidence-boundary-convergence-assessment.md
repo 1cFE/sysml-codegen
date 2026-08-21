@@ -208,7 +208,7 @@ approved API assigns authority for graph-derived data to a caller that can disag
 | Computed indexed reference | Preflight omitted this consumer; dependency resolution ignored retained index evidence. | A5's intended refusal is correct, but D5/D7 did not make index classification and refusal common to every expression consumer. The proof matrix covered one consumer shape. |
 | B3 unit and depth | Codegen retained a raw operand read and an unbounded recursive walker. | D5 required total operations but did not prohibit alternate raw reads or require one depth policy across production expression walks. |
 | B4 binding | Binding extraction bypassed the total Agentic operation. | `SourceReferenceEvidence` permits “supported reference with no semantic reference,” so the invalid state is part of the data model. |
-| Deep path | The constructor filters missing segments. | The constructor was absent from the design route inventory despite P-002 already warning that deep-override coverage was empirical (`.project/product/P-002-exact-owner-anchoring.md:31-48`). |
+| Deep path | The constructor filters missing segments. | The constructor was absent from the design route inventory despite 0002 already warning that deep-override coverage was empirical (`.project/product/0002-exact-owner-anchoring.md:45-62`). |
 | B9 registry | The exported function trusts its list. | D9 explicitly authorizes the unsafe preflight assumption across that seam. |
 | Final run record | An external staging script assembled the record instead of the committed runner. | The approved runner design is adequate; this is an execution/evidence-production deviation (`audit.md:201-221`). |
 

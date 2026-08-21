@@ -326,4 +326,4 @@ first two verified against source before acceptance:
 - Item spec: `.project/active/self-binding-replacement/spec.md`
 - Epic: `.project/backlog/epic_elaborate_first_architecture.md` — the `[OWNER]` critical success
   factor this defect contradicts (*an unsupported authored form fails loudly before generation*)
-- Product promise negated by the defect: `.project/product/P-001`
+- Product promise negated by the defect: `.project/product/0001`

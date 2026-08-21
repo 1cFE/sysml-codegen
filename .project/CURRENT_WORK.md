@@ -1,14 +1,15 @@
 # Current Work
 
-**Last Updated**: 2026-08-21 (**scaffolding-register-boundary Phase 2 complete; awaiting Phase 3
-authorization.** `[OWNER, 2026-08-21]` The owner accepted the Phase 1 missing-artifact-manifest
-limitation and authorized Phase 2. The current pack's ADR and product engines, register contracts,
-and four refreshed scaffolding files are installed in standalone commit `59ed5b9`. Pack tests passed
-32/32 and 46/46. The runnable licensed suite passed 2,371 with 9 policy skips, and the focused
-product-document contract passed 1/1. Ninety-four tests in nine process-evidence modules were
-deselected because the accepted current-manifest limitation still applies; the exact full-suite
-gate is unavailable, not green. The four promise entries, their index, all four protected project
-records, and `.claude/` were unchanged by the installation.)
+**Last Updated**: 2026-08-21 (**scaffolding-register-boundary Phase 3 complete; awaiting Phase 4
+authorization.** The four promises are now script-managed `0001`…`0004` entries with
+history-derived frontmatter and a generated, idempotent index. The live citation set was re-derived
+and repointed in both directions. `[AGENT] (ratified by owner, 2026-08-21)` permits only the five
+hidden Markdown destinations required by the rename to differ inside the existing bodies; all
+visible prose and owner payload remain unchanged. The safe documentation-contract subset passed
+10/10, and the licensed runnable suite passed 2,371 with 9 policy skips. Ninety-four tests in nine
+process-evidence modules remain deselected under the accepted missing-manifest limitation; the exact
+full-suite gate is unavailable, not green. No `checked` stamp was added; Phase 5 owns verification
+stamps.)
 Prior status: 2026-08-20 (**stop-reinventing-the-parser SHIPPED — all three repositories
 merged to GitHub `main`.** Merge-commit PRs in dependency order: Agentic agentic-mbse#13
 (`88e2489`), Codegen sysml-codegen#13 (`82244a0`), Fusion fusion-tea#102 (`5338db5f`). The
@@ -151,7 +152,7 @@ recorded and **55** reproduced from it independently. **A-1** and **A-2** stand 
 below.
 
 What landed: the item3-F2 and design-F2 contract amendments, the first `.project/product/` ledger
-with P-001 carrying the owner's promise verbatim, the cross-repo `@inapplicable:` /
+with 0001 carrying the owner's promise verbatim, the cross-repo `@inapplicable:` /
 disposition-vocabulary / six-states teaching, the `modeling-assumptions.md` §8 unit-on-binding
 rewrite, the B1–B5 marker rule stated with both its conditions, and the epic-level
 verification-matrix reconciliation. SC1/SC3/SC4/SC6 ticked; SC2/SC5 unticked, each naming its
@@ -181,15 +182,17 @@ rather than invented; vehicle `[CONSTRAINT-GATES-UNTAGGED]` in `BACKLOG.md`.
 
 ## Active Work
 
-### 2026-08-21: scaffolding-register-boundary — PHASE 2 COMPLETE, awaiting Phase 3 authorization (REPO-CLEANUP Item 1)
+### 2026-08-21: scaffolding-register-boundary — PHASE 3 COMPLETE, awaiting Phase 4 authorization (REPO-CLEANUP Item 1)
 
 Spec, design and plan are in implementation (`.project/active/scaffolding-register-boundary/`).
 Phase 1 proved the migration shape, and `[OWNER, 2026-08-21]` the owner accepted its recorded
-missing-manifest environment limitation. Phase 2 installed the current pack's two register engines,
-two register contracts, and four refreshed scaffolding files without touching protected project
-records, the existing promise ledger, or `.claude/`. The isolated installation is commit `59ed5b9`.
-Pack tests passed 32/32 and 46/46; the runnable licensed suite passed 2,371 with 9 policy skips.
-Phase 3 is the next owner-gated phase. First item of the new
+missing-manifest environment limitation. Phase 2 installed the register engines and contracts in
+commit `59ed5b9`. Phase 3 migrated the four promises to `0001`…`0004`, added history-derived
+frontmatter, regenerated the index, and repointed the live citation set. Five internal Markdown
+destinations were the only body-byte changes, an agent recommendation ratified by the owner on
+2026-08-21; visible prose and owner payload are unchanged. The safe documentation gate passed 10/10
+and the licensed runnable suite passed 2,371 with 9 policy skips. Phase 4 is the next owner-gated
+phase. First item of the new
 `[REPO-CLEANUP]` epic (`.project/backlog/epic_repo_cleanup.md`). Installs the pack's two decision
 registers and their engines (`adr.sh`, `product.sh`), files the register-boundary criterion as the
 first `.project/adr/` entry, triages the nine existing ADRs, and corrects the single-ADR-home claims
@@ -529,7 +532,7 @@ The epic is done. Nothing in it is live work any more. Where things stand:
   assigned 2026-08-14 to cutover step 4 so the matrix is touched once); and the **parked D-2 vs
   D-4/SRC-01 premise conflict** at umbrella `spec.md:325`, which no item resolved in either
   direction and which archived still open.
-- **Surfaced at close, unresolved:** `.project/product/INDEX.md` and `P-001` name the epic file as
+- **Surfaced at close, unresolved:** `.project/product/INDEX.md` and `0001` name the epic file as
   the durable one-hop lens trail node, on the recorded reasoning that it does not archive. The close
   falsifies that. The **paths** were repointed so the trail resolves; **no promise text or authority
   grade was touched**. Whether a trail node in `completed/` is good enough, or whether it belongs
@@ -1036,7 +1039,7 @@ surfaces as matrix-row candidates.
   BLOCK. Focused licensed suite: **116 passed**.
 - Evidence: 20 changed outcomes adjudicated, 139 identity blocks unchanged, 0 structural problems;
   bounded census 154 roots / 770 observed calls / 0 observed absent leaves / 15 residual roots.
-  Archived to `.project/completed/20260816_qualified-reference-occurrence-anchoring/`; P-002 keeps
+  Archived to `.project/completed/20260816_qualified-reference-occurrence-anchoring/`; 0002 keeps
   the product promise and evidence bounds live.
 
 ### 2026-08-14: CONSTRAINT-SEMANTICS EPIC — Constraint Semantics and Design-Search Feasibility (all nine items closed; epic closed + archived)
@@ -1069,7 +1072,7 @@ surfaces as matrix-row candidates.
 
 ### 2026-08-14: CONSTRAINT-SEMANTICS Item 7 — ADR, Product Promise, and Agent-Facing Documentation Sync (audited Certify-with-residuals + closed)
 - **The owner's promise finally has a durable home, and the trail to it survives archiving.**
-  `.project/product/INDEX.md` → `P-001-design-search-free-variation.md` carries the
+  `.project/product/INDEX.md` → `0001-design-search-free-variation.md` carries the
   `[OWNER-VERBATIM, 2026-08-13]` design-search promise byte-for-byte (payload diff empty), with the
   epic's `[OWNER]` Critical Success Factor beside it, ADR-009 back-registered as a row under this
   repo's ADR convention, and the promise-vs-basis tension surfaced rather than resolved

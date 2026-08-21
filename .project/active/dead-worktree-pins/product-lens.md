@@ -16,14 +16,14 @@ and holds the reverted patch — so the item is traceable, not orphaned. No epic
 Point (re-derived): A gate's headline must distinguish "checked and passed" from "not checked";
 a headline that cannot is not evidence, and disclosure of a gap is not the same as reporting it.
 [source: `docs/architecture/modeling-assumptions.md:704-740` (ADR-009), back-registered at
-`.project/product/INDEX.md:24` as the enforcement record behind P-001; grade: **agent/ratified**
+`.project/product/INDEX.md:24` as the enforcement record behind 0001; grade: **agent/ratified**
 (`[AGENT] (ratified by owner, 2026-08-12)`, live). The same class is stated in the ledger's own
 reason for existing — *"the gate accepted absence as proof of retirement"*
 (`.project/ledger/ledger-4a.md`, "What this ledger is, and what it fixes"), orchestrator-approved
 2026-08-11.]
-Secondary point: nothing in this item may change what the product claims — P-001's promise and its
-Critical Success Factor are untouched by a pin repair (`.project/product/P-001-design-search-free-variation.md:11-33`, grade **owner-verbatim**). The spec honors this
-explicitly (Non-Goals 3). No commission finding against P-001.
+Secondary point: nothing in this item may change what the product claims — 0001's promise and its
+Critical Success Factor are untouched by a pin repair (`.project/product/0001-design-search-free-variation.md:25-47`, grade **owner-verbatim**). The spec honors this
+explicitly (Non-Goals 3). No commission finding against 0001.
 Falsifier: after the repair, put the checker in a state where a row is not actually verified and
 watch it still print a line a reader reads as "all 304 verified" — i.e. run
 `check_ledger_4a.py paths` and observe `304 rows checked, 0 problems` while
@@ -134,9 +134,9 @@ back-registered `.project/product/INDEX.md:24`; grade: **agent/ratified** (`[AGE
 owner, 2026-08-12)`, live). Same class stated in `.project/ledger/ledger-4a.md`, "What this ledger is,
 and what it fixes" — *"the gate accepted absence as proof of retirement"*, orchestrator-approved
 2026-08-11.]
-Secondary point: unchanged — nothing here touches what P-001 claims
-(`.project/product/P-001-design-search-free-variation.md:11-33`, **owner-verbatim**). Non-Goals 3
-still honors it. No commission finding against P-001.
+Secondary point: unchanged — nothing here touches what 0001 claims
+(`.project/product/0001-design-search-free-variation.md:25-47`, **owner-verbatim**). Non-Goals 3
+still honors it. No commission finding against 0001.
 Falsifier: point a configured repo root at a nonexistent directory and watch `check_ledger_4a.py
 paths` still print `304 rows checked, 0 problems`; or change only the resolution target of the
 `environment` fixture and see the assertion still pass.
@@ -159,9 +159,9 @@ Findings:
   rows while `check_removed_symbols` inspects 12 — becomes reachable only by knowing which archived
   item to open. The repo's own pattern for a deferred-but-live idea is a backlog id
   (`[ACAUSAL-RELATIONS-CAPABILITY]`, `.project/backlog/BACKLOG.md:439`, cited from
-  `P-001-design-search-free-variation.md:99-103`). Obligation: give the deferral a backlog id, or say
+  `0001-design-search-free-variation.md:113-117`). Obligation: give the deferral a backlog id, or say
   in one line that it is deliberately allowed to lapse.
-  — ADR-009 + `.project/product/P-001-design-search-free-variation.md:99-103` (**agent/ratified**,
+  — ADR-009 + `.project/product/0001-design-search-free-variation.md:113-117` (**agent/ratified**,
   narrowed by owner) — disposition: DISPOSE — one backlog entry at plan or close; not a change to this
   item's scope, and explicitly not a re-raise of spec-F1's obligation.
 
