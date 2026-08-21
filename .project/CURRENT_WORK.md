@@ -1,6 +1,18 @@
 # Current Work
 
-**Last Updated**: 2026-08-19 (**stop-reinventing-the-parser CLOSED by owner direction.** The two
+**Last Updated**: 2026-08-20 (**stop-reinventing-the-parser SHIPPED — all three repositories
+merged to GitHub `main`.** Merge-commit PRs in dependency order: Agentic agentic-mbse#13
+(`88e2489`), Codegen sysml-codegen#13 (`82244a0`), Fusion fusion-tea#102 (`5338db5f`). The
+Codegen PR merged a `stop-parser-integration` branch combining `C_prod` `8a758e92…` with the
+docs/close line; shipped bytes proven unchanged (wheel byte-identical to a same-procedure
+`C_prod` build, contents file-for-file equal to the sealed wheel) and the suite
+outcome-identical to `C_prod`. `C_prod` is publicly reachable; Fusion's provenance suite
+passes 3/3 at merged main against the sealed wheels — no repin, no evidence regeneration.
+Final identities are published as annotated tags `stop-parser/{agentic,prod,evidence,fusion}-final`;
+the evidence child `924eadfd…` stays out of `main` history by design. `elaborator-downstream`'s
+predecessor dependency is now satisfied in remote history. Shipment record:
+`.project/completed/20260820_stop-parser-pr-shipment/plan.md`.**).
+Prior status: 2026-08-19 (**stop-reinventing-the-parser CLOSED by owner direction.** The two
 authorized model-caused defects are fixed: public collision refusals retain measured reference and
 location, and overlapping roots use the canonical most-specific source referent. Final identities:
 Agentic `44338882…`, Codegen production `8a758e92…`, Fusion `8cb0b838…`, direct evidence child
