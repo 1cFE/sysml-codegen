@@ -197,3 +197,22 @@ def test_the_pipeline_reads_the_field_name_the_schema_declares(
             referenced += 1
             assert field in fields[group], f"pipeline reads {group}.{field}, which is not a field"
     assert referenced, "no pipeline input read a params group — the check proved nothing"
+
+
+def test_indexed_params_accept_the_field_name_teax_indexes(
+    packages: dict[str, Path],
+) -> None:
+    """TEAx's bridge indexes ``model_fields`` and passes that exact field name."""
+    package = packages["d38_caret"]
+    schema_path = next((package / "schemas").glob("*_params.py"))
+    module = _load_schema_module(schema_path, "d38_candidate_bridge_fields")
+    model = next(
+        value
+        for name, value in vars(module).items()
+        if isinstance(value, type) and name.endswith("Params")
+    )
+    indexed_field = next(name for name in model.model_fields if "_0__" in name)
+
+    loaded = model(**{indexed_field: 123.0})
+
+    assert getattr(loaded, indexed_field) == 123.0

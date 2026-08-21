@@ -2575,7 +2575,8 @@
    "unreachability": null,
    "replacement_proof_node": [
     "tests/conformance/test_exact_route_constraint_portability.py::test_the_catalog_admits_the_numerical_constraint_and_excludes_the_string_one",
-    "tests/conformance/test_elaboration_fail_closed.py::test_alias_cycle_and_unsupported_formula_are_blocking_diagnostics"
+    "tests/conformance/test_elaboration_fail_closed.py::test_unsupported_invocation_preempts_alias_cycle_before_graph",
+    "tests/conformance/test_elaboration_fail_closed.py::test_alias_cycle_is_a_blocking_diagnostic"
    ],
    "blocked_by": [],
    "reason": "End-to-end numerical-profile v3 warning, exclusion, and halt families. Imports legacy owners (pipeline_builder, snapshot_context) directly, so 4B's deletion breaks it. Retain now; before the owning 4B group lands, this row needs either a public-behaviour rewrite or a recorded responsibility retirement.",
@@ -2874,7 +2875,8 @@
    "authority": "plan rule 6 \u2014 keep the Item 6 tests until after product proof; every removed or rewritten test needs a responsibility-level disposition first",
    "unreachability": null,
    "replacement_proof_node": [
-    "tests/conformance/test_elaboration_fail_closed.py::test_alias_cycle_and_unsupported_formula_are_blocking_diagnostics",
+    "tests/conformance/test_elaboration_fail_closed.py::test_unsupported_invocation_preempts_alias_cycle_before_graph",
+    "tests/conformance/test_elaboration_fail_closed.py::test_alias_cycle_is_a_blocking_diagnostic",
     "tests/conformance/test_elaboration_fail_closed.py::test_strict_mode_rejects_blocking_occurrence_diagnostics",
     "tests/conformance/test_elaboration_fail_closed.py::test_customer_fixture_lenient_diagnostics_are_accounted_for"
    ],
@@ -3893,7 +3895,8 @@
    "unreachability": null,
    "replacement_proof_node": [
     "tests/conformance/test_elaboration_identity_collisions.py",
-    "tests/conformance/test_elaboration_fail_closed.py::test_alias_cycle_and_unsupported_formula_are_blocking_diagnostics",
+    "tests/conformance/test_elaboration_fail_closed.py::test_unsupported_invocation_preempts_alias_cycle_before_graph",
+    "tests/conformance/test_elaboration_fail_closed.py::test_alias_cycle_is_a_blocking_diagnostic",
     "tests/conformance/test_elaboration_aggregations.py::test_crosspart_rollup_keeps_per_child_channels_distinct"
    ],
    "blocked_by": [],
@@ -4166,7 +4169,8 @@
    "authority": "plan rule 6 \u2014 keep the Item 6 tests until after product proof; every removed or rewritten test needs a responsibility-level disposition first",
    "unreachability": null,
    "replacement_proof_node": [
-    "tests/conformance/test_elaboration_fail_closed.py::test_alias_cycle_and_unsupported_formula_are_blocking_diagnostics",
+    "tests/conformance/test_elaboration_fail_closed.py::test_unsupported_invocation_preempts_alias_cycle_before_graph",
+    "tests/conformance/test_elaboration_fail_closed.py::test_alias_cycle_is_a_blocking_diagnostic",
     "tests/conformance/test_elaboration_fail_closed.py::test_customer_fixture_lenient_diagnostics_are_accounted_for"
    ],
    "blocked_by": [],
@@ -4291,22 +4295,56 @@
    "path": "tests/conformance/test_source_identity_extraction.py",
    "repo": "sysml-codegen",
    "class": "test",
-   "disposition": "retain",
+   "disposition": "delete",
    "origin": "forensic-diff",
    "group": "4C-blast-radius",
-   "authority": "plan rule 6 \u2014 keep the Item 6 tests until after product proof; every removed or rewritten test needs a responsibility-level disposition first",
+   "authority": "stop-reinventing-the-parser plan revision 4 Phase 3 owner ruling \u2014 deletion allowed only with a 14-row responsibility disposition",
    "unreachability": null,
-   "replacement_proof_node": null,
+   "replacement_proof_node": [
+    "tests/unit/test_expression_evidence_boundary.py::test_closed_bindings_preserve_source_spelling_and_formal_identity",
+    "tests/unit/test_expression_evidence_boundary.py::test_complete_deep_path_retains_every_segment",
+    "tests/unit/test_expression_evidence_boundary.py::test_chain_evidence_names_the_redefining_usage_feature",
+    "tests/conformance/test_definition_owned_reference_positions.py::test_inside_the_definition_each_occurrence_reads_its_own_value",
+    "tests/unit/test_expression_evidence_boundary.py::test_frozen_usage_owner_matches_the_exact_live_part_usage",
+    "tests/conformance/test_usage_owned_reference_anchoring.py::test_combined_named_source_reaches_every_and_only_its_consumers",
+    "tests/unit/test_expression_evidence_boundary.py::test_bound_formal_keeps_its_exact_declaration_and_redefinition_identity",
+    "tests/conformance/test_elaboration_aggregations.py::test_expression_redefinition_becomes_a_computed_node",
+    "tests/conformance/test_elaboration_aggregations.py::test_sum_expands_to_one_edge_per_instance",
+    "tests/conformance/test_elaboration_aggregations.py::test_qualified_aggregation_term_reaches_the_contained_occurrence",
+    "tests/conformance/test_elaboration_aggregations.py::test_local_term_and_per_instance_producers_mix",
+    "tests/unit/test_expression_evidence_boundary.py::test_occurrence_override_node_keeps_the_exact_writer_identity",
+    "tests/unit/test_expression_evidence_boundary.py::test_binding_variant_switch_is_exhaustive",
+    "tests/conformance/test_expression_evidence_integrity.py::test_valid_indexed_source_refuses_before_graph_with_exact_capability_diagnostic",
+    "tests/conformance/test_elaboration_contract_matrix.py::test_cell_executes_its_required_public_or_diagnostic_evidence[SRC-01]",
+    "tests/conformance/test_elaboration_shadowing.py::test_qualified_reference_never_selects_the_scope_shadow",
+    "tests/conformance/test_elaboration_fail_closed.py::test_invocation_rhs_refuses_before_a_lenient_graph_can_escape"
+   ],
    "blocked_by": [],
-   "reason": "Live extraction-evidence conformance (SOURCE-IDENTITY Item 4, Phase 1). Imports legacy owners (parameter_groups, pipeline_builder) directly, so 4B's deletion breaks it. Retain now; before the owning 4B group lands, this row needs either a public-behaviour rewrite or a recorded responsibility retirement.",
-   "disposition_4c": "repoint",
-   "node_count": 16,
+   "reason": "The legacy extraction-evidence record imports deleted owners and cannot collect. Phase 3 replaced its live responsibilities with Agentic closed reference uses, Codegen's closed evidence boundary, and exact-route public proofs; the plan's Phase 3 completion section records one disposition for each of its 14 surviving tests.",
+   "disposition_4c": "retire-with-owner",
+   "node_count": 14,
    "responsibility": "Live extraction-evidence conformance (SOURCE-IDENTITY Item 4, Phase 1).",
    "breaks_on": "sysml_codegen.analysis.parameter_groups (L-003, 4B-v5-family); sysml_codegen.orchestration.pipeline_builder (L-029, 4B-v5-family); agentic_mbse.sysml.constraint_extraction:extract_constraint_facts (L-036, 4B-v5-family)",
    "breaks_a_free_group": false,
-   "disposition_4c_note": "Gate 4C part 7 chunk 19 (2026-08-11), superseding the part-5 defer. Sixteen live nodes proving the SOURCE-IDENTITY Item 4 first proof point: a deep calc chain, a constraint leaf, an aggregation term and a redefinition each retain the exact SysIDE-resolved target as immutable evidence, captured before flattening or virtual-binding rewrite. That is the foundation the exact route stands on, not something retiring with the legacy one. Four nodes reached legacy owners - extract_constraint_facts, extract_design_attributes, and two calls to _rewrite_virtual_bindings - and all three imports moved out of module scope into those bodies (method note 1). Twelve nodes are untouched by any step. The four that are touched are the ones whose subject IS the legacy rewrite ('the stamp cannot mutate reference evidence'), and they retire per-node with it: a guarantee about a rewrite that no longer happens has no subject.",
+   "disposition_4c_note": "Stop-reinventing-the-parser Phase 3 (2026-08-18), superseding the earlier repoint. The legacy SourceReferenceEvidence and SourceForm surfaces no longer exist. Twelve responsibilities now have exact closed-boundary or public-route owners. Authored-form acquisition and legacy readiness-screen ownership retire because Agentic's closed ExactReferenceUse/IndexedReferenceUse boundary owns those facts and Codegen has no second acquisition mode.",
+   "deleted_test_nodes": [
+    "tests/conformance/test_source_identity_extraction.py::test_chain_target_is_the_redefining_feature",
+    "tests/conformance/test_source_identity_extraction.py::test_deep_chain_retains_exact_leaf_target",
+    "tests/conformance/test_source_identity_extraction.py::test_def_and_usage_context_referent_classes",
+    "tests/conformance/test_source_identity_extraction.py::test_written_form_separates_qualified_from_bare",
+    "tests/conformance/test_source_identity_extraction.py::test_usage_owned_fact_owner_matches_live_part_usage",
+    "tests/conformance/test_source_identity_extraction.py::test_cross_owner_consumers_share_one_exact_referent",
+    "tests/conformance/test_source_identity_extraction.py::test_bound_formal_identity_is_exact",
+    "tests/conformance/test_source_identity_extraction.py::test_aggregation_terms_retain_exact_targets",
+    "tests/conformance/test_source_identity_extraction.py::test_occurrence_override_value_sites_carry_exact_identity",
+    "tests/conformance/test_source_identity_extraction.py::test_authored_literal_is_a_distinct_evidence_class",
+    "tests/conformance/test_source_identity_extraction.py::test_indexed_source_is_evidence_not_flattened",
+    "tests/conformance/test_source_identity_extraction.py::test_self_binding_detected_despite_same_named_outer",
+    "tests/conformance/test_source_identity_extraction.py::test_shadowed_reference_is_not_a_self_binding",
+    "tests/conformance/test_source_identity_extraction.py::test_expression_source_disposition"
+   ],
    "state": "executed",
-   "executed_commit": "82c79512b314d912b49f536061787b0ec91c6afa"
+   "executed_commit": "b316e3a187a48096702d6430811c004c1388c43d"
   },
   {
    "id": "L-182",
@@ -5126,7 +5164,8 @@
    "unreachability": null,
    "replacement_proof_node": [
     "tests/conformance/test_elaboration_identity_collisions.py",
-    "tests/conformance/test_elaboration_fail_closed.py::test_alias_cycle_and_unsupported_formula_are_blocking_diagnostics",
+    "tests/conformance/test_elaboration_fail_closed.py::test_unsupported_invocation_preempts_alias_cycle_before_graph",
+    "tests/conformance/test_elaboration_fail_closed.py::test_alias_cycle_is_a_blocking_diagnostic",
     "tests/conformance/test_elaboration_aggregations.py::test_crosspart_rollup_keeps_per_child_channels_distinct"
    ],
    "blocked_by": [],
@@ -5193,7 +5232,8 @@
    "replacement_proof_node": [
     "tests/conformance/test_elaboration_expose_shapes.py::test_catf_multi_hop_expose_reaches_the_producer_cross_package",
     "tests/conformance/test_elaboration_expose_shapes.py::test_sibling_calc_chain_becomes_a_producer_edge",
-    "tests/conformance/test_elaboration_fail_closed.py::test_alias_cycle_and_unsupported_formula_are_blocking_diagnostics"
+    "tests/conformance/test_elaboration_fail_closed.py::test_unsupported_invocation_preempts_alias_cycle_before_graph",
+    "tests/conformance/test_elaboration_fail_closed.py::test_alias_cycle_is_a_blocking_diagnostic"
    ],
    "blocked_by": [],
    "reason": "Unit tests for DependencyBacktracker CHAIN resolution (Item 2, multi-hop). Imports legacy owners (dependency_backtracker, output_registry, producer_resolution) directly, so 4B's deletion breaks it. Retain now; before the owning 4B group lands, this row needs either a public-behaviour rewrite or a recorded responsibility retirement.",
@@ -5338,7 +5378,8 @@
     "tests/conformance/test_elaboration_computed_attrs.py::test_formula_to_formula_chain",
     "tests/conformance/test_elaboration_computed_attrs.py::test_pure_expose_stays_an_alias_not_a_computed_node",
     "tests/conformance/test_elaboration_projection.py::test_projection_is_topological_and_every_input_is_covered",
-    "tests/conformance/test_elaboration_fail_closed.py::test_alias_cycle_and_unsupported_formula_are_blocking_diagnostics"
+    "tests/conformance/test_elaboration_fail_closed.py::test_unsupported_invocation_preempts_alias_cycle_before_graph",
+    "tests/conformance/test_elaboration_fail_closed.py::test_alias_cycle_is_a_blocking_diagnostic"
    ],
    "blocked_by": [],
    "reason": "Unit tests for graph builder computed attribute support (Phase 3). Imports legacy owners (dependency_backtracker, graph_builder, output_registry, parameter_groups, phantom_detector) directly, so 4B's deletion breaks it. Retain now; before the owning 4B group lands, this row needs either a public-behaviour rewrite or a recorded responsibility retirement.",
@@ -5466,7 +5507,8 @@
    "replacement_proof_node": [
     "tests/conformance/test_elaboration_identity_collisions.py",
     "tests/conformance/test_elaboration_projection.py::test_projection_is_topological_and_every_input_is_covered",
-    "tests/conformance/test_elaboration_fail_closed.py::test_alias_cycle_and_unsupported_formula_are_blocking_diagnostics"
+    "tests/conformance/test_elaboration_fail_closed.py::test_unsupported_invocation_preempts_alias_cycle_before_graph",
+    "tests/conformance/test_elaboration_fail_closed.py::test_alias_cycle_is_a_blocking_diagnostic"
    ],
    "blocked_by": [],
    "reason": "Origin-aware logical demand: one deterministic operation per normalized target. Imports legacy owners (parameter_groups, supplied_values) directly, so 4B's deletion breaks it. Retain now; before the owning 4B group lands, this row needs either a public-behaviour rewrite or a recorded responsibility retirement.",
@@ -5700,7 +5742,8 @@
    "replacement_proof_node": [
     "tests/conformance/test_elaboration_identity_collisions.py",
     "tests/conformance/test_elaboration_aggregations.py::test_crosspart_rollup_keeps_per_child_channels_distinct",
-    "tests/conformance/test_elaboration_fail_closed.py::test_alias_cycle_and_unsupported_formula_are_blocking_diagnostics"
+    "tests/conformance/test_elaboration_fail_closed.py::test_unsupported_invocation_preempts_alias_cycle_before_graph",
+    "tests/conformance/test_elaboration_fail_closed.py::test_alias_cycle_is_a_blocking_diagnostic"
    ],
    "blocked_by": [],
    "reason": "Unit tests for the producer-completeness check and its capture sink (Item 10). Imports legacy owners (output_registry, producer_completeness, producer_resolution) directly, so 4B's deletion breaks it. Retain now; before the owning 4B group lands, this row needs either a public-behaviour rewrite or a recorded responsibility retirement.",
@@ -5750,7 +5793,8 @@
    "unreachability": null,
    "replacement_proof_node": [
     "tests/conformance/test_elaboration_identity_collisions.py",
-    "tests/conformance/test_elaboration_fail_closed.py::test_alias_cycle_and_unsupported_formula_are_blocking_diagnostics",
+    "tests/conformance/test_elaboration_fail_closed.py::test_unsupported_invocation_preempts_alias_cycle_before_graph",
+    "tests/conformance/test_elaboration_fail_closed.py::test_alias_cycle_is_a_blocking_diagnostic",
     "tests/conformance/test_elaboration_aggregations.py::test_crosspart_rollup_keeps_per_child_channels_distinct"
    ],
    "blocked_by": [],
@@ -5820,7 +5864,7 @@
    "authority": "plan rule 6 \u2014 keep the Item 6 tests until after product proof; every removed or rewritten test needs a responsibility-level disposition first",
    "unreachability": null,
    "replacement_proof_node": [
-    "tests/conformance/test_elaboration_fail_closed.py::test_invocation_rhs_is_diagnostic_not_an_unbound_candidate",
+    "tests/conformance/test_elaboration_fail_closed.py::test_invocation_rhs_refuses_before_a_lenient_graph_can_escape",
     "tests/conformance/test_elaboration_fail_closed.py::test_customer_fixture_lenient_diagnostics_are_accounted_for"
    ],
    "blocked_by": [],
@@ -5845,7 +5889,7 @@
    "authority": "plan rule 6 \u2014 keep the Item 6 tests until after product proof; every removed or rewritten test needs a responsibility-level disposition first",
    "unreachability": null,
    "replacement_proof_node": [
-    "tests/conformance/test_elaboration_fail_closed.py::test_non_unique_definition_reference_has_named_ambiguity",
+    "tests/conformance/test_elaboration_fail_closed.py::test_ambiguous_exact_owner_is_lenient_diagnostic_and_strict_refusal",
     "tests/conformance/test_elaboration_fail_closed.py::test_strict_mode_rejects_blocking_occurrence_diagnostics"
    ],
    "blocked_by": [],
@@ -6635,7 +6679,7 @@
    "unreachability": null,
    "replacement_proof_node": [
     "tests/conformance/test_exact_compiler_core.py::test_an_exact_dependency_cycle_is_total_and_manual",
-    "tests/conformance/test_exact_compiler_core.py::test_a_reference_with_no_resolved_declaration_is_refused_not_degraded",
+    "tests/conformance/test_exact_compiler_core.py::test_a_member_without_an_evidence_row_is_refused_not_degraded",
     "tests/conformance/test_exact_compiler_core.py::test_an_undeclared_intermediate_is_assigned_before_the_output_that_uses_it",
     "tests/conformance/test_exact_compiler_core.py::test_returned_values_line_up_with_the_projected_output_schema"
    ],
@@ -6745,17 +6789,17 @@
    "group": null,
    "authority": "Gate 4C part 5 second-axis measurement (check_ledger_4a.py surface, data axis); orchestrator rulings 2026-08-11",
    "unreachability": null,
-   "replacement_proof_node": null,
+   "replacement_proof_node": "tests/conformance/test_stop_parser_documentation_contract.py::test_dead_computed_attribute_classifier_and_its_golden_are_absent",
    "blocked_by": [],
    "responsibility": "Golden pins for computed-attribute extraction across the corpus.",
    "node_count": 6,
    "breaks_on": "",
    "breaks_a_free_group": false,
-   "reason": "Same coupling as L-287 and the same fix: it imported the corpus enumeration from the v5 capture script (L-275) and now reads it from tests/helpers/corpus.py. Import repoint only; no assertion moved.",
-   "disposition_4c": "repoint",
-   "disposition_4c_note": "Gate 4C part 5: see reason.",
+   "reason": "The Phase 5 audit established that the computed-attribute classifier has no production caller. Its classifier-only golden test retires with that dead route.",
+   "disposition_4c": "retire-with-owner",
+   "disposition_4c_note": "Phase 5 audit fix round, Finding 5.",
    "state": "executed",
-   "executed_commit": "82c79512b314d912b49f536061787b0ec91c6afa"
+   "executed_commit": "1332b01fa4eb57d1832dfd000daeca94780a9cc0"
   },
   {
    "id": "L-289",
@@ -6816,17 +6860,17 @@
    "group": null,
    "authority": "Gate 4C part 5 second-axis measurement (check_ledger_4a.py surface, data axis); orchestrator rulings 2026-08-11",
    "unreachability": null,
-   "replacement_proof_node": null,
+   "replacement_proof_node": "tests/conformance/test_stop_parser_documentation_contract.py::test_dead_computed_attribute_classifier_and_its_golden_are_absent",
    "blocked_by": [],
    "responsibility": "D3-16 silent-failure pin on the d316_crosspart_expose fixture.",
    "node_count": 4,
    "breaks_on": "",
    "breaks_a_free_group": false,
-   "reason": "Uses snapshot_fixture() only to reach the fixture DIRECTORY \u2014 d316_crosspart_expose has no extraction_snapshot.json, so this is a path-helper dependence and not a v5 data dependence. It repoints with the helper (L-289) and keeps every assertion.",
-   "disposition_4c": "repoint",
-   "disposition_4c_note": "Gate 4C part 5: see reason.",
+   "reason": "The Phase 5 audit established that this test exercises only the dead computed-attribute classifier. It retires with that route.",
+   "disposition_4c": "retire-with-owner",
+   "disposition_4c_note": "Phase 5 audit fix round, Finding 5.",
    "state": "executed",
-   "executed_commit": "82c79512b314d912b49f536061787b0ec91c6afa"
+   "executed_commit": "1332b01fa4eb57d1832dfd000daeca94780a9cc0"
   },
   {
    "id": "L-292",

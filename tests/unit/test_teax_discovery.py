@@ -12,80 +12,50 @@ def _simkit_root(path: Path) -> Path:
     return path
 
 
-def test_explicit_teax_path_takes_precedence(tmp_path: Path) -> None:
-    explicit = _simkit_root(tmp_path / "explicit")
-    repository = tmp_path / "checkout" / "sysml-codegen"
-    _simkit_root(repository.parent / "teax" / "packages" / "teax-simkit")
+def test_explicit_teax_path_must_equal_the_manifest_root(tmp_path: Path) -> None:
+    expected = _simkit_root(tmp_path / "expected")
 
     assert (
-        discover_teax_simkit({"TEAX_SIMKIT_PATH": str(explicit)}, repository_root=repository)
-        == explicit.resolve()
+        discover_teax_simkit(
+            {"TEAX_SIMKIT_PATH": str(expected)}, expected_root=expected
+        )
+        == expected.resolve()
     )
 
 
-def test_checkout_relative_teax_path_is_used_without_environment(tmp_path: Path) -> None:
-    repository = tmp_path / "checkout" / "sysml-codegen"
-    sibling = _simkit_root(repository.parent / "teax" / "packages" / "teax-simkit")
+def test_missing_explicit_path_is_refused(tmp_path: Path) -> None:
+    expected = _simkit_root(tmp_path / "expected")
 
-    assert discover_teax_simkit({}, repository_root=repository) == sibling.resolve()
+    with pytest.raises(RuntimeError, match="TEAX_SIMKIT_PATH.*required"):
+        discover_teax_simkit({}, expected_root=expected)
 
 
-def test_invalid_teax_candidates_fail_with_actionable_routes(tmp_path: Path) -> None:
-    repository = tmp_path / "checkout" / "sysml-codegen"
+def test_different_valid_path_is_refused(tmp_path: Path) -> None:
+    expected = _simkit_root(tmp_path / "expected")
+    different = _simkit_root(tmp_path / "different")
 
-    with pytest.raises(RuntimeError, match="TEAX_SIMKIT_PATH.*checkout-relative sibling"):
+    with pytest.raises(RuntimeError, match="does not equal the provenance root"):
         discover_teax_simkit(
-            {"TEAX_SIMKIT_PATH": str(tmp_path / "invalid")}, repository_root=repository
+            {"TEAX_SIMKIT_PATH": str(different)}, expected_root=expected
         )
 
 
-def test_explicit_invalid_path_fails_instead_of_discovering_the_sibling(tmp_path: Path) -> None:
-    # An explicitly-set TEAX_SIMKIT_PATH is authoritative: a valid checkout-relative
-    # sibling must not rescue a bad explicit path, because silently discovering the
-    # sibling would hide the operator's misconfiguration.
-    repository = tmp_path / "checkout" / "sysml-codegen"
-    _simkit_root(repository.parent / "teax" / "packages" / "teax-simkit")
+def test_invalid_explicit_path_is_refused(tmp_path: Path) -> None:
+    expected = _simkit_root(tmp_path / "expected")
 
-    with pytest.raises(RuntimeError, match="TEAX_SIMKIT_PATH"):
+    with pytest.raises(RuntimeError, match="simkit/__init__.py"):
         discover_teax_simkit(
-            {"TEAX_SIMKIT_PATH": str(tmp_path / "invalid")}, repository_root=repository
+            {"TEAX_SIMKIT_PATH": str(tmp_path / "invalid")},
+            expected_root=expected,
         )
 
 
-def test_symlink_loop_is_reported_as_an_invalid_candidate(tmp_path: Path) -> None:
-    repository = tmp_path / "checkout" / "sysml-codegen"
+def test_symlink_loop_is_reported(tmp_path: Path) -> None:
+    expected = _simkit_root(tmp_path / "expected")
     loop = tmp_path / "loop"
     loop.symlink_to(loop)
 
-    with pytest.raises(RuntimeError) as error:
-        discover_teax_simkit({"TEAX_SIMKIT_PATH": str(loop)}, repository_root=repository)
-
-    message = str(error.value)
-    assert "TEAX_SIMKIT_PATH" in message
-    assert "checkout-relative sibling" in message
-    assert "symlink" in message.lower()
-
-
-def test_expanduser_failure_is_reported_as_an_invalid_explicit_candidate(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    repository = tmp_path / "checkout" / "sysml-codegen"
-    original_expanduser = Path.expanduser
-
-    def raise_for_explicit_candidate(candidate: Path) -> Path:
-        if str(candidate) == "injected-expansion-failure":
-            raise RuntimeError("injected expanduser failure")
-        return original_expanduser(candidate)
-
-    monkeypatch.setattr(Path, "expanduser", raise_for_explicit_candidate)
-
-    with pytest.raises(RuntimeError) as error:
+    with pytest.raises(RuntimeError, match="TEAX_SIMKIT_PATH"):
         discover_teax_simkit(
-            {"TEAX_SIMKIT_PATH": "injected-expansion-failure"},
-            repository_root=repository,
+            {"TEAX_SIMKIT_PATH": str(loop)}, expected_root=expected
         )
-
-    message = str(error.value)
-    assert "TEAX_SIMKIT_PATH" in message
-    assert "checkout-relative sibling" in message
-    assert "injected expanduser failure" in message

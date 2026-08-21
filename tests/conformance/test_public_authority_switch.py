@@ -486,7 +486,7 @@ def test_a_registry_class_name_collision_refuses_before_the_writer_runs(
     )
     with caplog.at_level(logging.ERROR):
         assert run_codegen(config) is False
-    assert "Code generation failed: Module class name collision survives aliasing" in caplog.text
+    assert "Code generation failed: REGISTRY_CLASS_NAME_COLLISION" in caplog.text
     assert "Unexpected error" not in caplog.text
     assert _tree(populated_output) == before
 

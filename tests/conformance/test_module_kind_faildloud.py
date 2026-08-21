@@ -264,6 +264,16 @@ def test_registry_seam_renders_constraint(template_env):
     assert "ConstraintEvaluation" in code and "ConstraintReport" in code
 
 
+def test_registry_direct_call_derives_preflight_exit_types(template_env):
+    code = generate_registry(
+        graph=_graph_with_constraint(),
+        package_name="pkg",
+        template_env=template_env,
+        output_path=Path("/tmp/derived_exit_types.py"),
+    )
+    assert "ConstraintEvaluation" in code
+
+
 @pytest.mark.parametrize("renderer", ["pipeline", "registry", "model_contract"])
 def test_graph_renderers_reject_constraint_module_without_catalog(renderer, template_env):
     graph = _graph_with_constraint().model_copy(update={"constraint_catalog": None})

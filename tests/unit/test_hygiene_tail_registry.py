@@ -1,23 +1,21 @@
 """D3 Hygiene Tail Site 3 — `type_map` "Any" exit-point skip
 (TRUTH-DEBT Item 6).
 
-`_collect_exit_point_primitive_types` silently skips a single-output
-("root") exit point whose `python_type` is outside `{float,int,str,bool}`
-(notably "Any") — no wrapper registered, no diagnostic. Phase 0's
-reachability scan found 0 non-primitive exit points on the covered corpus
-(latent-only today); `"Any"` is minted independently on the live extractor
-path (`extractor.py:492`), so the diagnostic is pinned with a constructed
-fixture rather than a real one. Expectations are anchored to the
-constructed `python_type`, never computed by the code under test (R1).
+The public generation boundary and direct registry seam derive from the same graph
+and refuse an unsupported root output before mutation.
 """
 
 from __future__ import annotations
 
 import logging
 
-from sysml_codegen.generation.registry import _collect_exit_point_primitive_types
+import pytest
+
+from sysml_codegen.generation import CodeGenerationError
+from sysml_codegen.generation.registry import required_exit_point_wrapper_types
 from sysml_codegen.resolution.models import (
     Compilability,
+    ComputationGraph,
     ModuleKind,
     ModuleOutput,
     PipelineModule,
@@ -46,17 +44,24 @@ def _module_with_root_output(python_type: str) -> PipelineModule:
     )
 
 
-def test_any_exit_point_warns(caplog):
-    mods = [_module_with_root_output(python_type="Any")]
+def _graph_with_root_output(python_type: str) -> ComputationGraph:
+    module = _module_with_root_output(python_type)
+    return ComputationGraph(
+        modules=[module],
+        entry_point_groups=[],
+        execution_order=[module.name],
+    )
+
+
+def test_any_exit_point_cannot_be_omitted_by_a_direct_registry_caller(caplog):
     with caplog.at_level(logging.WARNING):
-        result = _collect_exit_point_primitive_types(mods)
-    assert result == []
-    assert any("Any" in w for w in _warns(caplog))
+        with pytest.raises(CodeGenerationError, match="EXIT_POINT_TYPE_UNSUPPORTED"):
+            required_exit_point_wrapper_types(_graph_with_root_output("Any"))
+    assert _warns(caplog) == []
 
 
 def test_float_exit_point_no_warn(caplog):
-    mods = [_module_with_root_output(python_type="float")]
     with caplog.at_level(logging.WARNING):
-        result = _collect_exit_point_primitive_types(mods)
-    assert result == ["Float"]
+        result = required_exit_point_wrapper_types(_graph_with_root_output("float"))
+    assert result == ("Float",)
     assert _warns(caplog) == []

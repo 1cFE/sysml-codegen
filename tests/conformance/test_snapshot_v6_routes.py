@@ -23,7 +23,7 @@ import json
 import shutil
 from pathlib import Path
 
-from sysml_codegen.elaboration import NodeRef, elaborate, project
+from sysml_codegen.elaboration import NodeRef, project
 from sysml_codegen.extraction.extractor import SysMLDataExtractor
 from sysml_codegen.extraction.source_manifest import admit_sources
 from sysml_codegen.orchestration.elaborated_pipeline import (
@@ -36,6 +36,7 @@ from sysml_codegen.snapshot.envelope import load_instance_graph_snapshot
 from sysml_codegen.snapshot.instance_graph import encode_instance_graph
 from tests.conftest import FIXTURES_DIR, requires_license
 from tests.helpers.elaboration_graph import every_alias_target, every_typed_edge
+from tests.helpers.raw_elaboration import elaborate
 
 pytestmark = requires_license
 

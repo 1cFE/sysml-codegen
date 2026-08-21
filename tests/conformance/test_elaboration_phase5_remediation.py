@@ -4,11 +4,12 @@ from __future__ import annotations
 
 from collections import Counter
 
-from sysml_codegen.elaboration import NodeRef, ProducerRef, elaborate, project
+from sysml_codegen.elaboration import NodeRef, project
 from sysml_codegen.extraction.extractor import SysMLDataExtractor
 from sysml_codegen.extraction.source_evidence import ReadinessCode
 from sysml_codegen.resolution.models import EntryPointType, ModuleKind
 from tests.conftest import FIXTURES_DIR, requires_license
+from tests.helpers.raw_elaboration import elaborate
 
 pytestmark = requires_license
 
@@ -103,8 +104,8 @@ def test_redefined_calculation_instantiates_only_the_most_specific_writer() -> N
     assert len({module.name for module in shared}) == 2
 
 
-def test_valid_deep_cross_scope_redefinitions_resolve_every_reference() -> None:
-    graph = _internal("deep_cross_scope_probe")
+def test_deep_qualified_output_without_occurrence_evidence_refuses() -> None:
+    graph = _internal("deep_cross_scope_probe", strict=False)
     chain = graph.calc_by_display_path(
         "DeepCrossScopeDesign__measurement_system__analyzer__chain_analysis"
     )
@@ -124,12 +125,13 @@ def test_valid_deep_cross_scope_redefinitions_resolve_every_reference() -> None:
         assert isinstance(edge, NodeRef)
         assert graph.attrs[edge.target].display_path == expected
 
-    deep_path = ref.input_by_name("data_point")
-    assert isinstance(deep_path, ProducerRef)
-    assert (
-        graph.calcs[deep_path.target.calculation].display_path
-        == "DeepCrossScopeDesign__measurement_system__station__array__sensor__core"
-    )
+    assert "data_point" not in {
+        name for port, name in ref.input_names.items() if port in ref.inputs
+    }
+    [diagnostic] = graph.diagnostics
+    assert diagnostic.code.value == "SI_OCCURRENCE_MISSING"
+    assert diagnostic.consumer == ref.node_id
+    assert "no producer in the consumer domain" in diagnostic.detail
     [reading] = [
         node
         for node in graph.attrs.values()
@@ -137,14 +139,6 @@ def test_valid_deep_cross_scope_redefinitions_resolve_every_reference() -> None:
     ]
     assert reading.value == 10.0
 
-    public = project(graph)
-    ref_module = next(module for module in public.modules if module.name.endswith("__ref_analysis"))
-    data_point = next(input_ for input_ in ref_module.inputs if input_.param_name == "data_point")
-    assert data_point.source.source_type == "module_output"
-    assert (
-        data_point.source.producer_channel
-        == "DeepCrossScopeDesign__measurement_system__station__array__sensor__core__metric_value"
-    )
 
 
 def test_public_compatibility_keeps_names_but_uses_occurrence_sources() -> None:

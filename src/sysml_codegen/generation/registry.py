@@ -7,7 +7,9 @@ TEAx introspection handles both single-output (RootModel[T]) and multi-output
 Usage:
     from sysml_codegen.generation.registry import generate_registry
 
-    code = generate_registry(graph, "package_name", template_env, output_path)
+    code = generate_registry(
+        graph, "package_name", template_env, output_path
+    )
 """
 
 from __future__ import annotations
@@ -30,11 +32,23 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
+_EXIT_POINT_WRAPPERS = {
+    "float": "Float",
+    "int": "Int",
+    "str": "String",
+    "bool": "Bool",
+}
 
-def _collect_exit_point_primitive_types(
-    modules: list,
-) -> list[str]:
-    """Collect unique primitive wrapper type names needed for exit points.
+
+def exit_point_wrapper_type(python_type: str) -> str | None:
+    """Return the supported root-output wrapper, or ``None`` for a refusal."""
+    return _EXIT_POINT_WRAPPERS.get(python_type)
+
+
+def required_exit_point_wrapper_types(
+    graph: ComputationGraph,
+) -> tuple[str, ...]:
+    """Derive and validate the root-output wrappers required by one graph.
 
     For single-output modules (field_name="root"), returns the wrapper type
     name from primitives.py (e.g., "Float" for python_type="float").
@@ -42,29 +56,17 @@ def _collect_exit_point_primitive_types(
     Multi-output modules use BaseModel schemas which are already registered
     via entry_point_groups or schema generation.
     """
-    type_map = {
-        "float": "Float",
-        "int": "Int",
-        "str": "String",
-        "bool": "Bool",
-    }
-    types = set()
-    for module in modules:
+    from sysml_codegen.generation.errors import unsupported_exit_point_type_error
+
+    types: set[str] = set()
+    for module in graph.modules:
         for out in module.outputs:
             if out.field_name == "root":
-                wrapper = type_map.get(out.python_type)
-                if wrapper:
-                    types.add(wrapper)
-                else:
-                    logger.warning(
-                        "Module '%s' exit point has unmapped python_type %r — no "
-                        "primitive wrapper registered for it; the exit point's "
-                        "type is not one of %s.",
-                        module.name,
-                        out.python_type,
-                        sorted(type_map),
-                    )
-    return sorted(types)
+                wrapper = exit_point_wrapper_type(out.python_type)
+                if wrapper is None:
+                    raise unsupported_exit_point_type_error(module, out)
+                types.add(wrapper)
+    return tuple(sorted(types))
 
 
 def _resolve_class_name_collisions(
@@ -235,11 +237,10 @@ def _generate_schema_imports_from_entry_points(
 
 
 def generate_registry(
-    graph,
+    graph: ComputationGraph,
     package_name: str,
     template_env: jinja2.Environment,
     output_path: Path,
-    exit_point_primitive_types: list[str] | None = None,
 ) -> str:
     """Generate registry from ComputationGraph.
 
@@ -252,8 +253,6 @@ def generate_registry(
         package_name: Package name
         template_env: Jinja2 environment
         output_path: Where to write __init__.py
-        exit_point_primitive_types: Primitive types for exit point registration.
-
     Returns:
         Generated Python code
     """
@@ -262,6 +261,7 @@ def generate_registry(
         validate_constraint_graph_or_raise,
     )
 
+    exit_point_types = required_exit_point_wrapper_types(graph)
     validate_constraint_graph_or_raise(graph)
 
     schema_imports = _generate_schema_imports_from_entry_points(
@@ -294,6 +294,8 @@ def generate_registry(
     seen_names: set[str] = set()
     calcusage_imports: list[str] = []
     for module in calcusage_modules:
+        assert module.calc_def_name is not None
+        assert module.calc_def_qualified_name is not None
         if module.calc_def_name not in seen_names:
             class_name = f"{module.calc_def_name}Module"
             sqn = SysMLQualifiedName(module.calc_def_qualified_name)
@@ -381,7 +383,7 @@ def generate_registry(
         "schema_imports": schema_imports,
         "parameter_groups": group_names,
         "package_name": package_name,
-        "exit_point_types": exit_point_primitive_types or [],
+        "exit_point_types": exit_point_types,
     }
 
     template = template_env.get_template("registry_function.py.jinja2")
@@ -393,14 +395,15 @@ def generate_registry(
     return code
 
 
-# Keep old names as aliases for backward compatibility during transition
+# Every exported name is the same four-argument graph-derived seam.
 generate_registry_from_graph = generate_registry
 generate_registry_function = generate_registry
 
 
 __all__ = [
-    "_collect_exit_point_primitive_types",
+    "exit_point_wrapper_type",
     "generate_registry",
+    "required_exit_point_wrapper_types",
     "residual_class_name_collisions",
     "generate_registry_from_graph",
     "generate_registry_function",

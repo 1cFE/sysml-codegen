@@ -3,12 +3,13 @@
 from __future__ import annotations
 
 from typing import Any
-from uuid import UUID
+from uuid import NAMESPACE_URL, UUID, uuid5
 
 import pytest
 from agentic_mbse.sysml.syside_adapter import SysideAdapter
 
-from sysml_codegen.elaboration import ElaborationCode, ElaborationDiagnosticError, elaborate
+from sysml_codegen.elaboration import ElaborationCode, ElaborationDiagnosticError
+from sysml_codegen.elaboration.diagnostics import ElaborationInvariantError
 from sysml_codegen.elaboration.identity import DeclarationId, OccurrenceId
 from sysml_codegen.elaboration.occurrence import (
     FeatureSlotIndex,
@@ -19,6 +20,7 @@ from sysml_codegen.elaboration.occurrence import (
 )
 from sysml_codegen.extraction.extractor import SysMLDataExtractor
 from tests.conftest import FIXTURES_DIR, requires_license
+from tests.helpers.raw_elaboration import elaborate
 
 pytestmark = requires_license
 
@@ -245,3 +247,110 @@ def test_occurrence_expansion_failures_use_structured_diagnostics(
         )
 
     assert [diagnostic.code for diagnostic in excinfo.value.diagnostics] == [expected_code]
+
+
+def test_multiplicity_cannot_borrow_an_unrelated_package_writer() -> None:
+    model = _load("multiplicity_writer_authority")
+    with pytest.raises(ElaborationInvariantError) as excinfo:
+        build_occurrence_index(model, build_feature_slot_index(model))
+    assert excinfo.value.code is ElaborationCode.SI_MULTIPLICITY_UNRESOLVED
+    assert "not a known finite integer" in excinfo.value.detail
+
+
+def test_stable_redefinition_never_skips_an_unstable_endpoint(monkeypatch) -> None:
+    class Feature:
+        def __init__(self, name: str, *, stable: bool) -> None:
+            self.qualified_name = name if stable else None
+            self.element_id = (
+                uuid5(NAMESPACE_URL, f"https://sysml-codegen.test/{name}")
+                if stable
+                else UUID(int=1, version=4)
+            )
+            self.owned_redefinitions = ()
+
+    class Redefinition:
+        def __init__(self, redefined, redefining) -> None:
+            self.redefined_feature = redefined
+            self.redefining_feature = redefining
+
+    base = Feature("Model::base", stable=True)
+    derived = Feature("Model::derived", stable=True)
+    unstable = Feature("wrapper", stable=False)
+    derived.owned_redefinitions = (Redefinition(base, unstable),)
+    monkeypatch.setattr(
+        SysideAdapter,
+        "elements_of_type",
+        lambda _model, _kind, **_kwargs: iter((base, derived, unstable)),
+    )
+
+    with pytest.raises(InvalidRedefinitionFamilyError, match="stable declaration identity"):
+        build_feature_slot_index(object())
+
+
+@pytest.mark.parametrize("missing", ["wrapper", "redefined", "redefining"])
+def test_redefinition_requires_wrapper_and_both_semantic_endpoints(
+    monkeypatch: pytest.MonkeyPatch, missing: str
+) -> None:
+    class Feature:
+        def __init__(self, name: str) -> None:
+            self.qualified_name = name
+            self.element_id = uuid5(NAMESPACE_URL, f"https://sysml-codegen.test/{name}")
+            self.owned_redefinitions = ()
+
+    class Redefinition:
+        def __init__(self, redefined: Any, redefining: Any) -> None:
+            self.redefined_feature = redefined
+            self.redefining_feature = redefining
+
+    base = Feature("Model::base")
+    derived = Feature("Model::derived")
+    relationship: Any = Redefinition(base, derived)
+    if missing == "wrapper":
+        relationship = None
+    elif missing == "redefined":
+        relationship.redefined_feature = None
+    else:
+        relationship.redefining_feature = None
+    derived.owned_redefinitions = (relationship,)
+    monkeypatch.setattr(
+        SysideAdapter,
+        "elements_of_type",
+        lambda _model, _kind, **_kwargs: iter((base, derived)),
+    )
+
+    with pytest.raises(InvalidRedefinitionFamilyError) as caught:
+        build_feature_slot_index(object())
+
+    assert caught.value.code is ElaborationCode.SI_REDEFINITION_INVALID
+    assert "missing semantic endpoint" in caught.value.detail
+
+
+def test_redefined_chain_wrapper_uses_its_stable_terminal_endpoint(monkeypatch) -> None:
+    class Feature:
+        def __init__(self, name: str, *, qualified: bool = True) -> None:
+            self.qualified_name = name if qualified else None
+            self.element_id = uuid5(NAMESPACE_URL, f"https://sysml-codegen.test/{name}")
+            self.owned_redefinitions = ()
+            self.chaining_features = ()
+
+    class Redefinition:
+        def __init__(self, redefined: Any, redefining: Any) -> None:
+            self.redefined_feature = redefined
+            self.redefining_feature = redefining
+
+    base = Feature("Model::base")
+    wrapper = Feature("wrapper", qualified=False)
+    wrapper.chaining_features = (base,)
+    derived = Feature("Model::derived")
+    derived.owned_redefinitions = (Redefinition(wrapper, derived),)
+    monkeypatch.setattr(
+        SysideAdapter,
+        "elements_of_type",
+        lambda _model, _kind, **_kwargs: iter((base, wrapper, derived)),
+    )
+
+    slots = build_feature_slot_index(object())
+
+    assert slots.slot_of(DeclarationId(base.element_id)) == slots.slot_of(
+        DeclarationId(derived.element_id)
+    )

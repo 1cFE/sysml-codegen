@@ -1,10 +1,95 @@
 # Current Work
 
-**Last Updated**: 2026-08-16 (**self-binding-replacement closed and archived** — all ten
+**Last Updated**: 2026-08-19 (**stop-reinventing-the-parser CLOSED by owner direction.** The two
+authorized model-caused defects are fixed: public collision refusals retain measured reference and
+location, and overlapping roots use the canonical most-specific source referent. Final identities:
+Agentic `44338882…`, Codegen production `8a758e92…`, Fusion `8cb0b838…`, direct evidence child
+`924eadfd…`. The 21-lane runner matched all declared baselines and the four-group mechanical
+verifier passed. The historical rev-3 audit remains `Needs Work`; the final Product-Lens block
+records the later owner scope ruling and explicit close authority. Internal-defect diagnostic
+totality remains in `[DIAGNOSTIC-PROVENANCE-BY-CONSTRUCTION]`. Archived to
+`.project/completed/20260819_stop-reinventing-the-parser/`. Pre-PR was not run.**).
+Prior status: 2026-08-19 (**stop-reinventing-the-parser: AUDIT-FIX CHAIN RE-AUDITED — verdict
+`Needs Work` (rev 2).** `.project/completed/20260819_stop-reinventing-the-parser/audit.md`. Eight of ten rev-1
+findings are fixed and the replacement chain verifies end to end: topology, every artifact and
+evidence hash, the four-group auditor (still refuses a byte-mutated wheel), counts recomputed from
+the retained JUnit for all ten pytest lanes, 210 licensed tests passing with zero skips at
+`C_prod-r2`, and both retained probes re-executed. The invocation regression is genuinely closed —
+pre-graph refusal with code, authored text and exact line, plurality by the reload-stable `sum`
+declaration UUID. B6, the reconciliation ledger, the evidence self-comparisons, the probes, and the
+dead computed-attribute classifier are all fixed. **What still blocks:** the catch-all that made
+refusals total stamps every unclassified failure with the model-facing `SI_EVIDENCE_INCOMPLETE` and
+a fabricated location (first `.sysml` found, line 1). Measured: a plain syntax error at line 17
+reports as `unexpected internal failure: SysMLParsingError … [root-0/model.sysml:1]` because
+`SysMLParsingError` is missing from the passthrough tuple at `exact_pipeline_context.py:288` while
+the sibling tuple one frame down has it; and a failure caused by one file is cited against a
+different, valid file. Three rev-1 provenance shapes were never repaired
+(`SI_REDEFINITION_INVALID`, the `item def` arm of `SI_CONSTRAINT_UNATTACHED`, the capture-arm
+staging path), and three more codes share the gap. Fix is narrow: one exception tuple, one
+internal-defect code, no fabricated locations, provenance on the named raise sites. Do not close,
+run pre-PR, or unblock `elaborator-downstream`. Replacement identities: Agentic `A_final-r2`
+`443388823f0db46c14df1728d3843d0a74ee7590`, Codegen `C_prod-r2`
+`22348458baa5aec314850cc6fcc8d1e90355ce58`, Fusion `F_final-r2`
+`8460d0cdf76e04fd4f4be146d52f2e0fef009a98`, `C_evidence-r2`
+`4ea1e8cdd98257d11ca8ef37a595b64392929bd9`; prior chain preserved at `evidence-chain-r1`.**).
+Prior status: 2026-08-19 (**stop-reinventing-the-parser: AUDIT FIXES IMPLEMENTED; REPLACEMENT
+CHAIN READY FOR INDEPENDENT AUDIT.** The four blocking findings and all six DISPOSE-grade follow-ups
+are implemented. The five stale tests now pin the pre-graph public refusal at full strength; formed
+public refusals, including the established empty-model error, cross the catch-all seam unchanged;
+the ledger's 189 unique proof citations all collect; and a fresh declared extraction passed 2,524
+with 9 policy skips and 94 deselections. Replacement identities: Agentic `A_final-r2`
+`443388823f0db46c14df1728d3843d0a74ee7590`, Codegen `C_prod-r2`
+`22348458baa5aec314850cc6fcc8d1e90355ce58`, Fusion `F_final-r2`
+`8460d0cdf76e04fd4f4be146d52f2e0fef009a98`, and direct-child `C_evidence-r2`
+`4ea1e8cdd98257d11ca8ef37a595b64392929bd9`. The committed runner completed all 21 allowed lanes;
+the four-group mechanical auditor passed; no PDF/HTML or paid/network case ran. The old invalid chain
+is preserved at `evidence-chain-r1`, and its historical `Needs Work` audit remains unchanged. Do not
+close, run pre-PR, or unblock `elaborator-downstream`; run an independent `$my-audit` against the
+replacement chain. Full hashes, counts, commands, and deviations are in the plan's “Phase 5
+audit-fix completion” section.**).
+Prior status: 2026-08-18 (**stop-reinventing-the-parser: INDEPENDENT AUDIT COMPLETE — verdict
+`Needs Work`.** `.project/completed/20260819_stop-reinventing-the-parser/audit.md`. The occurrence lane (A1-A6),
+the every-and-only mutation proof, and the whole immutable evidence chain verify independently:
+topology, all ten artifact hashes, all six evidence hashes, and the four-group mechanical auditor
+reproduce, and the auditor refuses mutated inputs. Four blocking gaps: unsupported invocation and
+`sum` identity, non-total refusal provenance, partial B6 type qualification, and an incomplete
+reconciliation ledger. Product-lens gate **BLOCKED (`audit-final-F1`)**. The old identities were
+Agentic `3f8bd587…`, Codegen `707346d6…`, Fusion `2243b7ce…`, and evidence `a184133b…`; any
+production fix required a new dependent chain.**).
+Prior status: 2026-08-18 (**stop-reinventing-the-parser: Phase 5 implementation complete;
+independent audit pending. Immutable identities: Agentic `A_final`
+`3f8bd587af40f05b929dd56645901dada7daea37`, Codegen `C_prod`
+`707346d616e508e55103c9246b63d172ed6a862b`, Fusion `F_final`
+`2243b7ce116c0a12fb0c09a81262c5c2ec879f69`, and direct-child `C_evidence`
+`a184133b99f7f71451c0b4af5a33b709f988eca2`. The committed 21-lane runner and four-group
+mechanical auditor are green against `/tmp/stop-parser-rev2/artifacts-final-v3`; expected nonzero
+static and Fusion baselines remain named nonzero baselines. The licensed production product gate
+clears `audit3-F1` and `audit-phase3-F2`. `deep_cross_scope_probe` remains the named
+`SI_OCCURRENCE_MISSING` refusal. One evidence limitation remains explicit: `entry-status.md`
+recorded only two of the five requested checkout entry digests, so equality for the omitted three
+cannot be reconstructed. Do not close, run pre-PR, or unblock `elaborator-downstream`; run an
+independent `$my-audit` next. Full counts, hashes, reconstruction command, and rollback rule are in
+`.project/completed/20260819_stop-reinventing-the-parser/plan.md` under "Phase 5 completion".**).
+Prior status: 2026-08-17 (**Phase 1 complete and audited — plan
+Revision 3 executing design Revision 7; three-leg lock verification green (118/118 against the
+tree the lock names); 25-node red set across live/admitted/capture × strict on implementation
+branches `stop-parser-impl-r2` `d257ef1` / `stop-parser-evidence-r2` `8d27fb3`; D1-D4 plus
+retained harness 162 passed; dedicated audit verdict Pass with findings, all four Majors closed on
+execution-backed confirmation (`.project/completed/20260819_stop-reinventing-the-parser/run-records/phase1-audit.md`).
+Orchestrated run paused before Phase 2 by owner directive; Phases 2-5 handoff written to
+`/tmp/handoff-20260817-221050.md` (temp-dir per handoff convention — copy before reboot).**).
+Prior status: 2026-08-17 (**canonical implementation-plan Revision 2 from the approved Revision-6
+design; a Phase-1 stop-rule trip then returned the item to design — rulings 1-7 owner-ratified,
+design amended to Revision 7, plan to Revision 3**). Earlier same day: (**fresh independent audit:
+Needs Work; the replacement chain is
+mechanically sound but semantic and execution-evidence blockers remain**). Earlier: 2026-08-16
+(**self-binding-replacement closed and archived** — all ten
 functional criteria were independently verified. `[OWNER 2026-08-16]` The dangling-symlink
 behavior in the migration/fixture helper is a testing/developer-tooling edge case and accepted
 risk; closure was directed without another remediation cycle. Record:
-`completed/20260816_self-binding-replacement/audit.md`. Prior context: **PHASE D FULLY CLOSED; Item 8 sequencing
+`completed/20260816_self-binding-replacement/audit.md`. Prior item:
+**qualified-reference-occurrence-anchoring certified and archived**. Prior context:
+**PHASE D FULLY CLOSED; Item 8 sequencing
 decided.** The
 three-repo merge wave landed and is smoked — squash merges in the pin-enforced order:
 agentic-mbse#12 → `main` `1decd95`; codegen#10 → `main` `385e163` (the Item-7 cutover + the whole
@@ -74,6 +159,21 @@ rather than invented; vehicle `[CONSTRAINT-GATES-UNTAGGED]` in `BACKLOG.md`.
 ---
 
 ## Active Work
+
+### 2026-08-16: elaborator-downstream — SPEC REVISED AFTER REVIEW (Item 8 remainder)
+
+Draft: `.project/active/elaborator-downstream/spec.md`. Scope is the post-self-binding Fusion Tea
+package/contract regeneration, stock-API TEAx execution and new lineage, July IFE impact audit,
+an independently anchored `REQ-SI` family, README/reference-doc repair, and one closing composed
+proof. The codegen fixture now converges on the customer's measured post-R-2 shape; document 25 is
+retained and bounded as test-only/off-route. **[AGENT] (ratified by owner, 2026-08-16):** Stellarator
+migration stays in `[STELLARATOR-D5-MIGRATION]`, and the July impact claim uses named repository and
+project roots plus owner attestation. The self-binding sibling is closed at
+`completed/20260816_self-binding-replacement/`: all functional criteria are independently verified,
+and the owner accepted the remaining testing/developer-tooling edge risk. This item performs none
+of that sibling's remediation. The adversarial review's resolutions are incorporated; the revised
+product-lens rerun is `CLEAR` and explicitly resolves prior `spec-F1`. Its contract is ready, but
+design and implementation wait for `stop-reinventing-the-parser` to close.
 
 ### 2026-08-15: dead-worktree-pins — CERTIFIED, awaiting close confirmation
 
@@ -866,6 +966,17 @@ surfaces as matrix-row candidates.
 ---
 
 ## Recently Completed
+
+### 2026-08-19: stop-reinventing-the-parser — CLOSED BY OWNER DIRECTION
+
+- Exact parser/AST authority now drives occurrence derivation and evidence handoff. The final two
+  model-caused refusal defects preserve collision provenance and map overlapping roots canonically.
+- Final chain: Agentic `44338882…`, Codegen production `8a758e92…`, Fusion `8cb0b838…`, evidence
+  child `924eadfd…`. All 21 declared runner lanes and all four mechanical verification groups match.
+- The historical rev-3 `Needs Work` audit is preserved. `[OWNER, 2026-08-19]` Close after these two
+  fixes and one chain rebuild; no fourth audit loop. Remaining internal-diagnostic work is filed in
+  `[DIAGNOSTIC-PROVENANCE-BY-CONSTRUCTION]`. Archived to
+  `.project/completed/20260819_stop-reinventing-the-parser/`.
 
 ### 2026-08-16: self-binding-replacement — CLOSED WITH OWNER-ACCEPTED RISK
 

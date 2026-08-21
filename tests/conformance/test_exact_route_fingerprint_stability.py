@@ -30,14 +30,18 @@ import subprocess
 import sys
 from pathlib import Path
 
+import agentic_mbse
 import pytest
 
 from sysml_codegen.cli import GenerationConfig, run_codegen
 from tests.conftest import FIXTURES_DIR, requires_license
+from tests.helpers.artifact_sources import codegen_history_root
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
+HISTORY_ROOT = codegen_history_root(REPO_ROOT)
 V6_SNAPSHOT = FIXTURES_DIR / "fusion_tea" / "instance_graph_snapshot.json"
 PACKAGE = "fusion_tea"
+AGENTIC_SOURCE_ROOT = Path(agentic_mbse.__file__).resolve().parents[1]
 
 # The revision supplying the previous verifier policy. Carried unchanged from
 # tests/conformance/test_fingerprint_stability.py: the policy last changed at
@@ -104,13 +108,15 @@ def _generate_with_source_tree(source_root: Path, output: Path) -> None:
         {
             "PYTHONNOUSERSITE": "1",
             "PYTHONDONTWRITEBYTECODE": "1",
-            "PYTHONPATH": os.pathsep.join([str(source_root / "src"), str(REPO_ROOT)]),
+            "PYTHONPATH": os.pathsep.join(
+                [str(source_root / "src"), str(AGENTIC_SOURCE_ROOT), str(REPO_ROOT)]
+            ),
         }
     )
     subprocess.run(
         [sys.executable, "-c", script, str(output), str(V6_SNAPSHOT)],
         check=True,
-        cwd=REPO_ROOT,
+        cwd=HISTORY_ROOT,
         env=environment,
     )
 
@@ -122,7 +128,7 @@ def test_a_verifier_policy_change_moves_only_its_hash_and_the_derived_fingerprin
     reviewed_verify = subprocess.run(
         ["git", "show", f"{REVIEWED_REVISION}:src/sysml_codegen/contracts/verify.py"],
         check=True,
-        cwd=REPO_ROOT,
+        cwd=HISTORY_ROOT,
         capture_output=True,
     ).stdout
     canonical = (REPO_ROOT / "src/sysml_codegen/contracts/verify.py").read_bytes()

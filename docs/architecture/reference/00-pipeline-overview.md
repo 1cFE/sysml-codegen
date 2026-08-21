@@ -65,6 +65,26 @@ Projection only renders names, classifies what elaboration already resolved, and
 result (`elaboration/project.py:1-6`). That split is why a wiring question has exactly one place
 to be answered.
 
+The resolution mechanism is one semantic-owner walk followed by exact indexes. For occurrence
+sources, `ContainmentAddress` records the closed owner and containment steps and `OccurrenceIndex`
+instantiates that address only inside the consumer domain. For calculation results, the
+calculation-output producer index records the usage declaration, exact scope, calculation node,
+and result port. Neither path retries a nearest, descendant, root, or globally sole candidate.
+`tests/conformance/test_occurrence_domain_derivation.py` and
+`tests/conformance/test_occurrence_calc_domain_derivation.py` are the real-model matrices.
+
+Live models and admitted sources also share one public evidence conversion boundary:
+`elaborate_loaded_extractor` turns an upstream `SemanticEvidenceError` into the exact
+`SI_EVIDENCE_INCOMPLETE` diagnostic. Exact primitive typing and unsupported indexed-source refusal
+finish before an `InstanceGraph` is admitted. See
+`tests/conformance/test_expression_evidence_integrity.py` and
+`tests/conformance/test_feature_typing_integrity.py`.
+
+Generation keeps the sealed graph authoritative too. The registry's exported seams accept the graph,
+derive the complete root-output wrapper set themselves, and reject an unsupported token as
+`EXIT_POINT_TYPE_UNSUPPORTED` before output mutation. No caller-supplied wrapper set exists. See
+[20-module-registry-generation](20-module-registry-generation.md).
+
 **Two sources, one authority.** `--models` and `--from-snapshot` are two ways to obtain the
 instance graph, not two implementations of the pipeline. Both seal into an
 `ExactPipelineContext` whose receipt binds the sealed graph to what it projects to, and

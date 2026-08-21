@@ -37,21 +37,23 @@ from __future__ import annotations
 
 import functools
 from collections import Counter
+from pathlib import Path
 
 import pytest
 
+from sysml_codegen.cli import GenerationConfig, run_codegen
 from sysml_codegen.elaboration import (
     CalcNode,
     ConstraintNode,
     ElaborationCode,
     InstanceGraph,
     NodeRef,
-    elaborate,
 )
 from sysml_codegen.elaboration.identity import NodeId, NodeKind
 from sysml_codegen.extraction.extractor import SysMLDataExtractor
 from tests.conftest import FIXTURES_DIR, requires_license
 from tests.helpers.elaboration_graph import attr, calc, constraint
+from tests.helpers.raw_elaboration import elaborate
 
 pytestmark = requires_license
 
@@ -103,6 +105,77 @@ def consumers_of(graph: InstanceGraph, source: NodeRef) -> Counter[object]:
         for edge in node.inputs.values()
         if edge == source
     )
+
+
+def test_public_generation_renders_qualified_predicate_by_exact_local_name(
+    tmp_path: Path,
+) -> None:
+    """The real model's ``comp_a::length`` predicate becomes executable Python."""
+    output = tmp_path / "out"
+    assert run_codegen(
+        GenerationConfig(
+            models_path=FIXTURES_DIR / COMBINED,
+            output_path=output,
+            package_name="qualified_predicate",
+            pipeline_name="pipeline",
+        )
+    )
+
+    predicate_source = (output / "modules/constraints/predicates.py").read_text()
+    assert (
+        "def constraint_pred_inline_usageownedreferenceconsumers__plant__comp_b__inline_check"
+        "(length):"
+    ) in predicate_source
+    assert "value = _cmp('>', length, 0.0)" in predicate_source
+    assert "comp_a::length" not in predicate_source
+
+
+def test_public_generation_refuses_distinct_qualified_targets_with_one_local_name(
+    tmp_path: Path,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Two real parser targets named ``length`` never collapse into one Python argument."""
+    source = tmp_path / "model.sysml"
+    source.write_text(
+        """package QualifiedPredicateCollision {
+    private import ScalarValues::*;
+
+    part def Component {
+        attribute length : Real default 1.0;
+    }
+
+    part def Plant {
+        part comp_a : Component { :>> length = 3.0; }
+        part comp_b : Component { :>> length = 7.0; }
+
+        assert constraint compare_lengths {
+            comp_a::length < comp_b::length
+        }
+    }
+
+    part plant : Plant;
+}
+""",
+        encoding="utf-8",
+    )
+    output = tmp_path / "out"
+
+    with caplog.at_level("ERROR"):
+        generated = run_codegen(
+            GenerationConfig(
+                models_path=source,
+                output_path=output,
+                package_name="qualified_predicate_collision",
+                pipeline_name="pipeline",
+            )
+        )
+
+    assert generated is False
+    assert not output.exists()
+    messages = "\n".join(record.getMessage() for record in caplog.records)
+    assert "SI_RENDERING_COLLISION" in messages
+    assert "length" in messages
+    assert "Traceback" not in messages
 
 
 # ---------------------------------------------------------------------------

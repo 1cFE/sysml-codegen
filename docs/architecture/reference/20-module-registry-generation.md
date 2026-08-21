@@ -43,6 +43,14 @@ no committed model hits the grandparent case, so the re-check is a hard error,
 not a warning. The AST-based import rewrite (substring, first-match) remains a
 filed follow-up.
 
+**Graph-derived schema authority**: The immutable `ComputationGraph` is the only account of root
+outputs. `required_exit_point_wrapper_types()` walks that graph, validates every root token, and
+returns the stable, de-duplicated wrapper set. `generate_registry()` and every exported alias take
+the same four arguments; none accepts a caller-supplied type set. The baseline registry collector
+could raise an untyped `RuntimeError` while consuming a fifth caller argument. The replacement raises
+the typed `CodeGenerationError` code `EXIT_POINT_TYPE_UNSUPPORTED`, naming the token, module, output,
+and source location before the public command changes the output tree.
+
 ---
 
 ## Requirements
@@ -54,10 +62,15 @@ filed follow-up.
 | REQ-REG-03 | Class names in `module_type_override` dict SHALL be globally unique | Dict key uniqueness | `len(dict.keys()) == len(all_modules)` |
 | REQ-REG-04 | When class names collide, registry SHALL use aliased imports (`import X as Assembly_X`) | Dict key uniqueness | No two modules share the same unaliased class name in registry |
 | REQ-REG-05 | CalcUsage, computed attribute, and aggregation modules SHALL all derive paths from design-scoped qualified names | Path consistency | Same `SysMLQualifiedName` derivation for all three module types |
-| REQ-REG-06 | `CUSTOM_SCHEMA_TYPES` SHALL include all exit point primitive types used by any module | TEAx integration | Schema type registration covers all output types |
+| REQ-REG-06 | `CUSTOM_SCHEMA_TYPES` SHALL include the stable, de-duplicated wrapper set derived inside the exported registry seam from every root output in the graph | TEAx integration | `tests/unit/test_registry_generation.py` covers no-root, one, repeated, and multiple root types and proves every alias has the same four-argument surface |
 | REQ-REG-07 | Registry generation SHALL detect and report name collisions before rendering | Fail-fast diagnostics | Warning emitted when two modules produce same class name |
 | REQ-REG-08 | After parent-segment aliasing, registry SHALL re-check class-name uniqueness and fail fast on any residual collision | Fail-fast diagnostics | `_resolve_class_name_collisions()` raises when two modules alias identically (same class + parent, different grandparents); conformance: `test_sc11_recheck` |
-| REQ-REG-09 | `_collect_exit_point_primitive_types` SHALL warn (not silently skip) when a single-output (`field_name="root"`) exit point carries a `python_type` outside `{float,int,str,bool}` — notably `"Any"` | Fail-fast diagnostics | An unmapped `python_type` registers no wrapper and previously logged nothing; now warns naming the module and the unmapped type. Latent on the current corpus (Phase-0 reachability scan: 0 non-`float` exit points), `"Any"` reachable live via `extractor.py:492`; TRUTH-DEBT Item 6, Site 3; conformance: `test_hygiene_tail_registry.py` |
+| REQ-REG-09 | A root exit whose type token is outside `{float,int,str,bool}` SHALL refuse before output mutation as the graph-derived `CodeGenerationError` code `EXIT_POINT_TYPE_UNSUPPORTED`, naming the token, module identity, output identity, file:line, and public status 1 | Fail-before-mutate diagnostic | `tests/conformance/test_generation_exit_type_preflight.py` proves the complete sentinel tree stays byte-identical, direct generation refuses by the same typed error, and no exported alias accepts a caller type-set parameter |
+
+`_preflight_exit_point_types` and every direct registry entry call the same graph operation,
+`required_exit_point_wrapper_types`. The CLI call happens before the output directory is cleared;
+the registry call happens before rendering. The operation owns both the supported token map and the
+typed refusal, so there is no caller-owned set, second policy table, or late warn/omit branch.
 
 ---
 

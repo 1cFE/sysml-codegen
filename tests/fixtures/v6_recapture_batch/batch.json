@@ -6,7 +6,6 @@
   "constraint_multi_instance",
   "constraint_non_numerical",
   "d38_caret",
-  "deep_cross_scope_probe",
   "fusion_tea",
   "modeled_default_fidelity",
   "quoted_owner_formula",
@@ -61,7 +60,7 @@
    "constraints": 0,
    "entry_points": 3,
    "modules": 1,
-   "sha256": "3e4981e072b011179fdabdece93a0ba842917074fdb69fa0e74469b2c58f47c0",
+   "sha256": "5f008b27c85a5292096baf1e37e088db5565077e516dff2cead4c06a3972d921",
    "snapshot": "tests/fixtures/agg_literal_probe/instance_graph_snapshot.json",
    "status": "graph"
   },
@@ -86,7 +85,7 @@
    "constraints": 0,
    "entry_points": 16,
    "modules": 17,
-   "sha256": "293e32caced690d0fb8121dfd6b6de2d23a0123caafc029985c6d519c98aa77e",
+   "sha256": "f428aa26291a67356ff9f728322d98cb5b8eb6640a42ef3c1c17027ce51b35ac",
    "snapshot": "tests/fixtures/attr_expr_probe/instance_graph_snapshot.json",
    "status": "graph"
   },
@@ -122,7 +121,7 @@
    "constraints": 1,
    "entry_points": 1,
    "modules": 2,
-   "sha256": "09a2c2d23ebf6c1265e645ad7f9a3b73ff967c89d2682c8537dab45954767acc",
+   "sha256": "cfdff823f19d8b65301ec6009a53ec8329ce94c91b8110beaff6ff14a8244e4b",
    "snapshot": "tests/fixtures/constraint_inline/instance_graph_snapshot.json",
    "status": "graph"
   },
@@ -131,7 +130,7 @@
    "constraints": 3,
    "entry_points": 3,
    "modules": 7,
-   "sha256": "dd51d3d6c55bc72bf278ea54cbd0c8288476bceaec77e8171365f30b9da3abe4",
+   "sha256": "751cef1526fbaf92d17c06f8880b605b0af58c5f2ee9136cc43d7591d32ca2ff",
    "snapshot": "tests/fixtures/constraint_multi_instance/instance_graph_snapshot.json",
    "status": "graph"
   },
@@ -140,7 +139,7 @@
    "constraints": 1,
    "entry_points": 1,
    "modules": 2,
-   "sha256": "0b77f709f29a661e7d2796d881fbfd9c2720cddc300824dc8dd6f34b5c9261be",
+   "sha256": "07e00e9c11ece9f1d0d26bc97efb672913836155c8082d68520c0b0303c77128",
    "snapshot": "tests/fixtures/constraint_non_numerical/instance_graph_snapshot.json",
    "status": "graph"
   },
@@ -157,18 +156,17 @@
    "constraints": 0,
    "entry_points": 6,
    "modules": 2,
-   "sha256": "8df3672d1826b2cb6a883b6514853963b98bc06e1fef90cefc33505e447ba927",
+   "sha256": "769e4fb54e4cbbff9ab065e5b9a740ad04d8853c78f9058436dd406fe2795bf1",
    "snapshot": "tests/fixtures/d38_caret/instance_graph_snapshot.json",
    "status": "graph"
   },
   "deep_cross_scope_probe": {
-   "aliases": 1,
-   "constraints": 0,
-   "entry_points": 4,
-   "modules": 5,
-   "sha256": "1e8274c175349c2415329f057dcabbf683dc476624241ca9bb30b45da278f923",
-   "snapshot": "tests/fixtures/deep_cross_scope_probe/instance_graph_snapshot.json",
-   "status": "graph"
+   "codes": [
+    "SI_OCCURRENCE_MISSING"
+   ],
+   "error_type": "ElaborationDiagnosticError",
+   "message": "SI_OCCURRENCE_MISSING: DeepCrossScopeDesign__measurement_system__analyzer__ref_analysis: exact output 0b877fee-e8c8-5472-a0b2-24aebac57e50 has no producer in the consumer domain",
+   "status": "refused"
   },
   "expression_binding_probe": {
    "codes": [
@@ -191,7 +189,7 @@
    "constraints": 1,
    "entry_points": 27,
    "modules": 9,
-   "sha256": "c91a8bf55720cb18cb70ffd16c1442ef4f6aba3a027eeacf300d76abdc2cacd2",
+   "sha256": "7d30e7e6499814f9496818e38e12ba46d3d176da627415cd9a50fd239d0b8bed",
    "snapshot": "tests/fixtures/fusion_tea/instance_graph_snapshot.json",
    "status": "graph"
   },
@@ -262,17 +260,16 @@
    "constraints": 3,
    "entry_points": 6,
    "modules": 5,
-   "sha256": "2359d062b6a1c13c3400b837ffe94fb63597f46ba411ceffd4f91b20fd0bb1c7",
+   "sha256": "c096c9352084b86012ab0b8282caadc91da600b5a352e7b07b2145c02016c39d",
    "snapshot": "tests/fixtures/modeled_default_fidelity/instance_graph_snapshot.json",
    "status": "graph"
   },
   "plant_value_shapes": {
    "codes": [
-    "SI_SELF_BINDING",
-    "SI_SELF_BINDING"
+    "SI_TYPE_INVALID"
    ],
-   "error_type": "ElaborationError",
-   "message": "SI_SELF_BINDING: PlantValueShapesLib__Chamber_Unit__select.footprint; SI_SELF_BINDING: PlantValueShapesLib__Chamber_Unit__select.wall",
+   "error_type": "ElaborationDiagnosticError",
+   "message": "SI_TYPE_INVALID: PlantValueShapesLib::ChamberSelectCalc::wall: extract_type: typing target \"PlantValueShapesLib::'Wall Kind'\" is unsupported; expected one of ScalarValues::Boolean, ScalarValues::Integer, ScalarValues::Real, or ScalarValues::String [root-0/library.sysml:92]",
    "status": "refused"
   },
   "plant_values": {
@@ -288,7 +285,7 @@
    "constraints": 0,
    "entry_points": 2,
    "modules": 2,
-   "sha256": "4b92b9183a2e320cbf03ad098727a8eddeadc80358367d31273a25ca60c98971",
+   "sha256": "c4a7c2d965390aa1e20dfb66e7f35c86a09e8e1dbd3da3aa1471b048104f7a39",
    "snapshot": "tests/fixtures/quoted_owner_formula/instance_graph_snapshot.json",
    "status": "graph"
   },
@@ -307,7 +304,7 @@
    "constraints": 0,
    "entry_points": 6,
    "modules": 6,
-   "sha256": "2d90df17a5b9a71afeb66d7114775826c26219ef33bb5bc9b698cc90cd1ceefb",
+   "sha256": "d14f7e2dc1ea10783eb3b2d9ce6eee36390b850e736e79ab1f838922fd6d7d2a",
    "snapshot": "tests/fixtures/retype_model/instance_graph_snapshot.json",
    "status": "graph"
   },
@@ -316,7 +313,7 @@
    "constraints": 0,
    "entry_points": 0,
    "modules": 0,
-   "sha256": "f168bbffa8c252a84ed7a7ebea117ccc7247e61be68f65f579cd4135495523b5",
+   "sha256": "08320b152b6596f4b9e882e8d9704d6839c5fbb8458841325856c18f07567092",
    "snapshot": "tests/fixtures/sample_model/instance_graph_snapshot.json",
    "status": "graph"
   },
@@ -341,7 +338,7 @@
    "constraints": 0,
    "entry_points": 1,
    "modules": 1,
-   "sha256": "1d4da393100ef1b68fc80902a8b50a2a32a9e07e94758ab7709f58940b27393c",
+   "sha256": "6e96561b26a9a430155e39a2f4b4b6fd90160d6b450313c1d028b0768951afc7",
    "snapshot": "tests/fixtures/shadowed_reference/instance_graph_snapshot.json",
    "status": "graph"
   },
@@ -414,7 +411,7 @@
    "constraints": 0,
    "entry_points": 9,
    "modules": 10,
-   "sha256": "17494c69284e80aa0bd7a675c2dcd8d0f92774aee059bacf3b7d937d49069a4e",
+   "sha256": "c77fdabf326825349f92f76ff3fc93542c791eaa4fd8bb8008bd66c6cad72082",
    "snapshot": "tests/fixtures/unresolvable_attr_probe/instance_graph_snapshot.json",
    "status": "graph"
   },
@@ -423,7 +420,7 @@
    "constraints": 1,
    "entry_points": 4,
    "modules": 4,
-   "sha256": "5caf02bca8169c693c364aab817683448dcfb4596e9cd86c11263d3062d82301",
+   "sha256": "767bcb5ba7e2109c04e40fdcee0d96eca1ddeecc792df3eb307488123559cf77",
    "snapshot": "tests/fixtures/wi014_toy/instance_graph_snapshot.json",
    "status": "graph"
   }
@@ -435,6 +432,7 @@
   "chain_override_probe",
   "chain_spike_model",
   "crosspart_rollup_twolevel",
+  "deep_cross_scope_probe",
   "expression_binding_probe",
   "gate_a",
   "gate_a_package_owner",
@@ -452,5 +450,5 @@
   "spec_chain_channel",
   "spec_chain_twolevel"
  ],
- "status": "ACCEPTED \u2014 owner ruling 2026-08-11 (REVISE disposition, step 1)"
+ "status": "TRANSITIONED \u2014 stop-reinventing-the-parser A/B contract, 2026-08-17"
 }

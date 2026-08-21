@@ -1,16 +1,13 @@
 """A one-segment leaf the element index does not hold is refused, not routed.
 
-`_resolve_direct_reference` classifies a one-segment reference by its exact leaf's live
+The one semantic resolver classifies a one-segment reference by its exact leaf's live
 owner, and it reads that leaf from `_ExactElaborator._elements`. The index holds every
 declaration carrying a reload-stable qualified name, which is every declaration an author
 can name, so a leaf missing from it means the resolved fact and the index disagree about
 what the model contains.
 
-Before this test's branch existed, that disagreement fell through to `_resolve_leaf` —
-the route reserved for a leaf whose owner is a definition or package. That route answers
-from the *consumer's* own occurrence lineage, which is exactly the positional guess this
-item removed; taking it because owner classification was impossible would have re-created
-the defect in the one case nobody could see.
+The state must refuse before any address is built. It cannot fall through to a positional
+leaf route because that compatibility route no longer exists.
 
 **Observed corpus boundary.** The retained census
 (`.project/completed/20260816_qualified-reference-occurrence-anchoring/verification/absent_leaf_census.py`
@@ -26,9 +23,14 @@ from pathlib import Path
 from uuid import NAMESPACE_URL, uuid5
 
 import pytest
+from agentic_mbse.sysml.data_models import ResolvedTargetFact
+from agentic_mbse.sysml.reference_use import ExactSemanticPath
 
 from sysml_codegen.elaboration.diagnostics import ElaborationCode
 from sysml_codegen.elaboration.elaborate import _ExactElaborator, _ReferenceResolutionError
+from sysml_codegen.elaboration.expression_evidence import (
+    build_expression_evidence_inventory,
+)
 from sysml_codegen.elaboration.identity import DeclarationId
 from sysml_codegen.extraction.extractor import SysMLDataExtractor
 from tests.conftest import FIXTURES_DIR, requires_license
@@ -46,17 +48,34 @@ def test_direct_reference_refuses_a_leaf_absent_from_the_element_index() -> None
     extractor = SysMLDataExtractor([Path(FIXTURES_DIR / FIXTURE)])
     assert extractor.load_models(), f"fixture {FIXTURE} failed to load"
     elaborator = _ExactElaborator(
-        extractor.model, extractor.extract_calculation_definitions(), strict=False
+        extractor.model,
+        extractor.extract_calculation_definitions(),
+        inventory=build_expression_evidence_inventory(extractor.model),
+        strict=False,
     )
     graph = elaborator.run()
     scope = next(iter(graph.occurrences))
     assert UNKNOWN_LEAF not in elaborator._elements
 
     with pytest.raises(_ReferenceResolutionError) as excinfo:
-        elaborator._resolve_direct_reference(
-            UNKNOWN_LEAF,
+        target = ResolvedTargetFact(
+            element_id=UNKNOWN_LEAF.value,
+            owner_element_id=None,
+            redefined_element_ids=(),
+            qualified_name="Absent::leaf",
+            element_kind="AttributeUsage",
+            element_name="leaf",
+        )
+        elaborator._resolve_semantic_reference(
+            ExactSemanticPath(
+                root=target,
+                segments=(target,),
+                leaf=target,
+                resolved_member_names=(),
+            ),
             scope,
-            definition_owner_requires_lineage=True,
+            plural=False,
+            no_prefix=True,
         )
 
     assert excinfo.value.code == ElaborationCode.SI_OCCURRENCE_MISSING

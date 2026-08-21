@@ -541,13 +541,25 @@ L2-1.
 
 **Dependencies**: Item 7 complete; `self-binding-replacement` closed on 2026-08-16 with all
 functional criteria independently verified and its testing/developer-tooling edge accepted as risk
-by the owner; `stop-reinventing-the-parser` implemented, audited, and closed. Item 8 downstream
-design and implementation perform none of either predecessor's remediation.
+by the owner. **[AGENT] (ratified by owner, 2026-08-16):** `stop-reinventing-the-parser` is
+implemented, audited, and closed before Item 8 downstream design or implementation; downstream
+performs none of either predecessor's remediation. Source: the active item's `spec-review.md` L4-1
+and the owner's direction to apply the review fixes.
 
-**Bounded predecessor active 2026-08-16:**
-`.project/active/stop-reinventing-the-parser/` owns exact occurrence derivation and evidence
-integrity. It closes before `.project/active/elaborator-downstream/` starts so downstream
-regeneration and certification measure the final semantic-authority rules.
+**Bounded predecessor closed 2026-08-19 by owner direction:**
+`.project/completed/20260819_stop-reinventing-the-parser/` owns exact occurrence derivation and
+evidence integrity. The historical rev-3 audit remains `Needs Work`; the owner later narrowed the
+close scope, authorized the two model-caused repairs and one dependent-chain rebuild, and ruled out
+a fourth audit loop. Internal-defect diagnostic totality remains separately owned by
+`[DIAGNOSTIC-PROVENANCE-BY-CONSTRUCTION]`.
+
+Final immutable identities are Agentic `443388823f0db46c14df1728d3843d0a74ee7590`, Codegen
+production `8a758e9240707b58fe32a509c3b509941ca4fa01`, Fusion
+`8cb0b838c78c661f0553cdd3d0063610a2826301`, and direct evidence child
+`924eadfd12f39401a6ea8e578b405d4ba8833b51`. The committed runner matched all 21 declared lanes;
+Codegen passed 2,544 with 9 policy skips and 94 deselections, generated execution passed 94/94,
+and Fusion generated execution passed 23/23. The four-group mechanical verifier passed. The
+predecessor dependency is satisfied; this close does not mark either Item 8 success criterion.
 
 **Bounded child closed 2026-08-16:** exact occurrence-owner anchoring for usage-owned one-segment
 references is certified and archived at

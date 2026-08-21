@@ -25,6 +25,20 @@ aggregation inputs to be misclassified as LocalTerms instead of SingletonTerms,
 breaking aggregation wiring in the
 [hierarchy resolver](13-aggregation-scoping.md).
 
+## Current evidence rule
+
+The ordering rule remains for the live dual-check sites, but production expression extraction does
+not recover semantics from Python class names. Agentic-mbse supplies a mapped metatype plus exact
+operand, referent/target, origin, and type evidence. Missing mapped metatype or traversal evidence
+raises `SemanticEvidenceError`; codegen's one public boundary renders it as
+`SI_EVIDENCE_INCOMPLETE`. There is no class-name dispatch fallback in the production route.
+
+An indexed element expression is a mapped, valid expression shape whose execution support is not
+yet implemented. Codegen refuses it before graph construction as
+`SI_INDEXED_SOURCE_UNSUPPORTED`; it never drops the index and treats the base reference as the
+source. `tests/conformance/test_expression_evidence_integrity.py` pins mapped metatype totality and
+that exact pre-graph refusal.
+
 ---
 
 ## Requirements

@@ -7,7 +7,11 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from sysml_codegen.core.errors import CodeGenerationError
     from sysml_codegen.generation.constraint_name_safety import ConstraintNameViolation
-    from sysml_codegen.resolution.models import ComputationGraph, PipelineModule
+    from sysml_codegen.resolution.models import (
+        ComputationGraph,
+        ModuleOutput,
+        PipelineModule,
+    )
 
 
 def constraint_name_safety_error(
@@ -45,9 +49,28 @@ def residual_class_name_collision_error(
     from sysml_codegen.generation import CodeGenerationError
 
     return CodeGenerationError(
-        "Module class name collision survives aliasing (grandparent collision): "
+        "REGISTRY_CLASS_NAME_COLLISION: module class name collision survives aliasing "
+        "(grandparent collision): "
         + "; ".join(f"{name!r} <- {sorted(mts)}" for name, mts in sorted(residual.items()))
         + ". The parent-segment alias cannot disambiguate these; rename one scope."
+    )
+
+
+def unsupported_exit_point_type_error(
+    module: PipelineModule,
+    output: ModuleOutput,
+) -> CodeGenerationError:
+    """Build the public refusal for a root output with no TEAx wrapper."""
+    from sysml_codegen.generation import CodeGenerationError
+
+    source_file = module.source_file or "unknown"
+    source_line = module.source_line if module.source_line is not None else 0
+    return CodeGenerationError(
+        "EXIT_POINT_TYPE_UNSUPPORTED: "
+        f"module={module.name!r} "
+        f"output={f'{output.field_name}/{output.channel_name}'!r} "
+        f"python_type={output.python_type!r} "
+        f"source={f'{source_file}:{source_line}'!r}"
     )
 
 

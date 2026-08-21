@@ -314,10 +314,6 @@ def test_req_dm_03_fields_binding_info():
         # only field that can tell an owner-relative reference from a scope-qualified
         # one. Row 16 keys on that distinction.
         "stored_source_written_qualifier",
-        # Immutable semantic evidence (SOURCE-IDENTITY Item 4): exact resolved
-        # referent + bound formal + authored form, snapshot_exclude until the
-        # v6 cut owns serialization.
-        "reference_evidence",
     }
     actual = _dataclass_field_names(BindingInfo)
     assert actual == expected
@@ -917,10 +913,10 @@ class TestDelegatedModelsImportable:
 
         assert ComputedAttributeData is not None
 
-    def test_expression_ref(self):
-        from agentic_mbse.sysml.types import ExpressionRef
+    def test_expression_ref_is_retired(self):
+        import agentic_mbse.sysml.types as delegated_types
 
-        assert ExpressionRef is not None
+        assert not hasattr(delegated_types, "ExpressionRef")
 
 # ---------------------------------------------------------------------------
 # REQ-DM-07: Containment hierarchy conformance

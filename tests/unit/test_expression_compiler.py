@@ -478,12 +478,9 @@ def mock_syside_adapter(monkeypatch):
 # ---------------------------------------------------------------------------
 
 
-def test_exact_compiler_keeps_colliding_reference_ids_distinct(
-    mock_syside_adapter, monkeypatch
-):
+def test_exact_compiler_keeps_colliding_reference_ids_distinct(mock_syside_adapter):
     """Rendered-name collisions cannot collapse exact compiler dependencies."""
     from pathlib import Path
-    from types import SimpleNamespace
 
     from sysml_codegen.extraction.data_models import AttributeInfo, CalculationDefinitionData
     from sysml_codegen.extraction.expression_compiler import compile_calc_def_exact
@@ -498,22 +495,6 @@ def test_exact_compiler_keeps_colliding_reference_ids_distinct(
             MockFeatureReferenceExpression("same_name"),
             MockFeatureReferenceExpression("same_name"),
         ],
-    )
-    references = [
-        SimpleNamespace(
-            name="same_name",
-            qualified_name="A::same_name",
-            element=SimpleNamespace(element_id=first_id),
-        ),
-        SimpleNamespace(
-            name="same_name",
-            qualified_name="B::same_name",
-            element=SimpleNamespace(element_id=second_id),
-        ),
-    ]
-    monkeypatch.setattr(
-        "sysml_codegen.extraction.expression_compiler.extract_feature_refs",
-        lambda _expression, ignore_std_lib=True: references,
     )
     calc_def = CalculationDefinitionData(
         name="Collision",
@@ -537,7 +518,7 @@ def test_exact_compiler_keeps_colliding_reference_ids_distinct(
         },
     )
 
-    result = compile_calc_def_exact(calc_def)
+    result = compile_calc_def_exact(calc_def, {output_id: (first_id, second_id)})
 
     output = result.output_results[0]
     assert output.output_id == output_id

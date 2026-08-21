@@ -21,6 +21,7 @@ from typing import TYPE_CHECKING
 import jinja2
 
 if TYPE_CHECKING:
+    from sysml_codegen.core.identifier_types import PythonModulePath
     from sysml_codegen.generation.constraint_plan import ConstraintGenerationPlan
     from sysml_codegen.resolution.models import (
         ComputationGraph,
@@ -154,7 +155,7 @@ def _get_template_env() -> jinja2.Environment:
     )
 
 
-def _get_python_path(module):
+def _get_python_path(module: PipelineModule) -> PythonModulePath:
     """Get PythonModulePath from PipelineModule (all module types)."""
     from sysml_codegen.core.identifier_types import PythonModulePath, SysMLQualifiedName
     from sysml_codegen.generation.errors import unrenderable_module_kind_error
@@ -171,6 +172,7 @@ def _get_python_path(module):
     elif module.module_kind == ModuleKind.AGGREGATION:
         sysml_qn = module.name.replace("__", "::")
     elif module.module_kind == ModuleKind.CALCULATION:
+        assert module.calc_def_qualified_name is not None
         sysml_qn = module.calc_def_qualified_name
     else:
         raise unrenderable_module_kind_error(module, "python-path")
@@ -196,6 +198,17 @@ def _raw_source_name(module: PipelineModule) -> str:
     if module.module_kind in (ModuleKind.CONSTRAINT, ModuleKind.REPORT_AGGREGATOR):
         return module.name
     raise unrenderable_module_kind_error(module, "raw-source-name")
+
+
+def _module_source(module: PipelineModule) -> str:
+    """Cite the module's authored source, or say plainly that none was recorded.
+
+    The graph carries ``source_file``/``source_line`` only when elaboration read
+    them off the model; this never substitutes a stand-in for the ones it did not.
+    """
+    if module.source_file is None or module.source_line is None:
+        return ""
+    return f" source='{module.source_file}:{module.source_line}'"
 
 
 def _check_duplicate_output_paths(modules: list[PipelineModule]) -> None:
@@ -225,8 +238,9 @@ def _check_duplicate_output_paths(modules: list[PipelineModule]) -> None:
         prior = module_paths.get(path)
         if prior is not None and prior != raw:
             raise CodeGenerationError(
-                f"Duplicate output path: SysML names {prior!r} and {raw!r} both "
-                f"derive modules/{path}. Rename one, or this would silently overwrite."
+                f"DUPLICATE_OUTPUT_PATH: SysML names {prior!r} and {raw!r} both "
+                f"derive modules/{path}. Rename one, or this would silently "
+                f"overwrite.{_module_source(module)}"
             )
         module_paths[path] = raw
 
@@ -239,9 +253,9 @@ def _check_duplicate_output_paths(modules: list[PipelineModule]) -> None:
         prior = schema_sources.get(schema_file)
         if prior is not None and prior != raw:
             raise CodeGenerationError(
-                f"Duplicate output path: SysML names {prior!r} and {raw!r} both "
+                f"DUPLICATE_OUTPUT_PATH: SysML names {prior!r} and {raw!r} both "
                 f"derive schemas/{schema_file}. Rename one, or this would silently "
-                f"overwrite."
+                f"overwrite.{_module_source(module)}"
             )
         schema_sources[schema_file] = raw
 
@@ -282,13 +296,15 @@ def _reconcile_params_coverage(graph: ComputationGraph) -> None:
 
     uncovered = collect_uncovered_params(graph)
     if uncovered:
+        sources = {module.name: _module_source(module) for module in graph.modules}
         details = "; ".join(
-            f"module '{u.module}' input '{u.input}' -> params key '{u.missing_key}'"
+            f"module '{u.module}' input '{u.input}' -> params key "
+            f"'{u.missing_key}'{sources.get(u.module, '')}"
             for u in uncovered
         )
         raise CodeGenerationError(
-            f"V11: {len(uncovered)} module input(s) reference a params key that no "
-            f"parameter group provides — the JSON never mints the key, so the "
+            f"PARAMS_KEY_UNCOVERED: V11: {len(uncovered)} module input(s) reference a "
+            f"params key that no parameter group provides — the JSON never mints the key, so the "
             f"pipeline will KeyError at load. Cause: an unresolved cross-part "
             f"reference not yet wired (Items 9-11) or a resolution bug. "
             f"Offenders: {details}"
@@ -312,6 +328,13 @@ def _preflight_registry_class_names(graph: ComputationGraph) -> None:
     residual = residual_class_name_collisions(graph)
     if residual:
         raise residual_class_name_collision_error(residual)
+
+
+def _preflight_exit_point_types(graph: ComputationGraph) -> None:
+    """Refuse an unsupported root-output wrapper before touching the output tree."""
+    from sysml_codegen.generation.registry import required_exit_point_wrapper_types
+
+    required_exit_point_wrapper_types(graph)
 
 
 def _preflight_constraint_totality(graph: ComputationGraph) -> None:
@@ -345,14 +368,14 @@ def _preflight_constraint_totality(graph: ComputationGraph) -> None:
     if catalog is None:
         if any(module.module_kind is ModuleKind.CONSTRAINT for module in graph.modules):
             raise CodeGenerationError(
-                "constraint usage domain incomplete: the graph generates constraint modules "
+                "CONSTRAINT_DOMAIN_INCOMPLETE: the graph generates constraint modules "
                 "but carries no catalog"
             )
         return
 
     if catalog.recomputed_fingerprint() != catalog.fingerprint:
         raise CodeGenerationError(
-            "constraint usage domain incomplete: the catalog's "
+            "CONSTRAINT_DOMAIN_INCOMPLETE: the catalog's "
             f"{len(catalog.usage_records)} usage rows no longer match the fingerprint "
             "sealed at projection, so a row was added, removed, or altered after the "
             "domain was rendered"
@@ -362,13 +385,13 @@ def _preflight_constraint_totality(graph: ComputationGraph) -> None:
     for row in catalog.usage_records:
         if row.declaration_id in rows_by_id:
             raise CodeGenerationError(
-                "constraint usage domain incomplete: duplicate usage record for "
+                "CONSTRAINT_DOMAIN_INCOMPLETE: duplicate usage record for "
                 f"{row.usage_qualified_name} ({row.declaration_id})"
             )
         reasons = DISPOSITION_REASONS.get(row.disposition_kind)
         if reasons is None or row.disposition_reason not in reasons:
             raise CodeGenerationError(
-                "constraint usage domain incomplete: no disposition for "
+                "CONSTRAINT_DOMAIN_INCOMPLETE: no disposition for "
                 f"{row.usage_qualified_name} ({row.declaration_id})"
             )
         rows_by_id[row.declaration_id] = row
@@ -381,18 +404,16 @@ def _preflight_constraint_totality(graph: ComputationGraph) -> None:
     for occurrence in occurrence_rows:
         if occurrence.declaration_id not in rows_by_id:
             raise CodeGenerationError(
-                "constraint usage domain incomplete: catalog row joins no domain member for "
+                "CONSTRAINT_DOMAIN_INCOMPLETE: catalog row joins no domain member for "
                 f"{occurrence.usage_qualified_name} ({occurrence.declaration_id})"
             )
-        occurrences[occurrence.declaration_id] = (
-            occurrences.get(occurrence.declaration_id, 0) + 1
-        )
+        occurrences[occurrence.declaration_id] = occurrences.get(occurrence.declaration_id, 0) + 1
 
     for declaration_id, row in rows_by_id.items():
         counted = occurrences.get(declaration_id, 0)
         if row.occurrence_count != counted:
             raise CodeGenerationError(
-                f"constraint usage domain incomplete: occurrence_count {row.occurrence_count} "
+                f"CONSTRAINT_DOMAIN_INCOMPLETE: occurrence_count {row.occurrence_count} "
                 f"disagrees with {counted} nodes for {row.usage_qualified_name} "
                 f"({declaration_id})"
             )
@@ -434,7 +455,7 @@ def _preflight_coverage_account(
     if catalog is None:
         if has_aggregator:
             raise CodeGenerationError(
-                "coverage account cannot be built: the graph carries a REPORT_AGGREGATOR "
+                "COVERAGE_ACCOUNT_INVALID: the graph carries a REPORT_AGGREGATOR "
                 "module but no constraint catalog, so the report it would ship could not "
                 "state its coverage"
             )
@@ -443,7 +464,8 @@ def _preflight_coverage_account(
     if has_aggregator != ships_constraint_machinery(graph):
         expected = "a REPORT_AGGREGATOR module" if not has_aggregator else "no aggregator"
         raise CodeGenerationError(
-            "coverage account disagrees with the report-required rule: the catalog has "
+            "COVERAGE_ACCOUNT_INVALID: the account disagrees with the report-required rule: "
+            "the catalog has "
             f"{len(catalog.usage_records)} usage row(s), which requires {expected}. "
             "A report is required iff the model authored at least one constraint usage; the "
             "aggregator mint and the generation seams must read that one population."
@@ -452,7 +474,7 @@ def _preflight_coverage_account(
     recomputed = coverage_account(catalog)
     if constraint_plan.coverage != recomputed:
         raise CodeGenerationError(
-            "coverage account disagrees with its catalog: the plan holds "
+            "COVERAGE_ACCOUNT_INVALID: the account disagrees with its catalog: the plan holds "
             f"{constraint_plan.coverage}, and the sealed catalog implies {recomputed}. The "
             "account is a summary of that catalog and nothing else, so it was altered after "
             "it was derived."
@@ -491,6 +513,7 @@ def _generate_schemas(
             continue
         if len(module.outputs) < 2:
             continue
+        assert module.calc_def_name is not None
         output_path = schemas_dir / f"{module.calc_def_name.lower()}_output.py"
         code = generate_multioutput_model(
             module,
@@ -706,18 +729,14 @@ def _generate_registry(
     """Generate registry function in __init__.py."""
     _preflight_constraint_names(graph)
     from sysml_codegen.generation import generate_registry
-    from sysml_codegen.generation.registry import _collect_exit_point_primitive_types
 
     output_path = config.output_path / "__init__.py"
-
-    exit_point_types = _collect_exit_point_primitive_types(graph.modules)
 
     code = generate_registry(
         graph=graph,
         package_name=config.package_name,
         template_env=template_env,
         output_path=output_path,
-        exit_point_primitive_types=exit_point_types,
     )
     if code:
         output_path.write_text(code)
@@ -900,6 +919,7 @@ def cmd_snapshot(args: argparse.Namespace) -> int:
     from sysml_codegen.elaboration.elaborate import (
         ElaborationDiagnosticError,
         ElaborationError,
+        unexpected_public_failure,
     )
     from sysml_codegen.generation import SysMLParsingError
     from sysml_codegen.snapshot.capture import capture_instance_graph_snapshot
@@ -925,16 +945,32 @@ def cmd_snapshot(args: argparse.Namespace) -> int:
         return 1
     except InstanceGraphSnapshotError as error:
         if isinstance(error, SnapshotCertifiabilityError):
-            detail = "; ".join(
-                f"{diagnostic.code.value}: {diagnostic.detail}"
-                for diagnostic in error.diagnostics
-            )
+            rendered: list[str] = []
+            for diagnostic in error.diagnostics:
+                reference = (
+                    f": reference={diagnostic.reference!r}"
+                    if diagnostic.reference is not None
+                    else ""
+                )
+                location = (
+                    f" [{diagnostic.source_file}:{diagnostic.source_line}]"
+                    if diagnostic.source_file is not None and diagnostic.source_line is not None
+                    else ""
+                )
+                rendered.append(
+                    f"{diagnostic.code.value}: {diagnostic.detail}{reference}{location}"
+                )
+            detail = "; ".join(rendered)
             logger.error(f"Snapshot refused: {detail}")
         else:
             logger.error(f"Snapshot refused: {error}")
         return 1
     except OSError as error:
         logger.error(f"Snapshot could not be written: {error}")
+        return 1
+    except Exception as error:
+        diagnostic = unexpected_public_failure(error)
+        logger.error(f"Snapshot failed exact-route validation: {diagnostic}")
         return 1
     logger.info(f"Wrote snapshot to {out}")
     return 0
@@ -1165,6 +1201,7 @@ def run_codegen(config: GenerationConfig) -> bool:
     from sysml_codegen.elaboration.elaborate import (
         ElaborationDiagnosticError,
         ElaborationError,
+        unexpected_public_failure,
     )
     from sysml_codegen.generation import CodeGenerationError, SysMLParsingError
     from sysml_codegen.orchestration.exact_pipeline_context import (
@@ -1210,9 +1247,26 @@ def run_codegen(config: GenerationConfig) -> bool:
             extra={"constraint_name_safety": error.name_safety_violation},
         )
         return False
+    except Exception as error:
+        diagnostic = unexpected_public_failure(error)
+        logger.error(f"Model failed exact-route validation: {diagnostic}")
+        return False
 
     logger.info(f"Built computation graph with {len(graph.modules)} modules")
-    return _generate_package_from_graph(graph, config)
+    try:
+        return _generate_package_from_graph(graph, config)
+    # A refusal generation already formed keeps its own code and vocabulary; only
+    # a failure nobody classified becomes an internal defect.
+    except CodeGenerationError as error:
+        logger.error(
+            f"Code generation failed: {error}",
+            extra={"constraint_name_safety": error.name_safety_violation},
+        )
+        return False
+    except Exception as error:
+        diagnostic = unexpected_public_failure(error)
+        logger.error(f"Code generation failed: {diagnostic}")
+        return False
 
 
 def _generate_package_from_graph(graph: ComputationGraph, config: GenerationConfig) -> bool:
@@ -1232,6 +1286,11 @@ def _generate_package_from_graph(graph: ComputationGraph, config: GenerationConf
     from sysml_codegen.generation.constraint_plan import build_constraint_generation_plan
 
     try:
+        # Unsupported root-output wrappers are a public model refusal, before
+        # link inspection, plan rendering, output clearing, directory creation,
+        # or any write. Registry collection shares the same total validator.
+        _preflight_exit_point_types(graph)
+
         # Validate both generated constraint scopes before overwrite clearing or output creation.
         _preflight_constraint_names(graph)
 
@@ -1263,9 +1322,7 @@ def _generate_package_from_graph(graph: ComputationGraph, config: GenerationConf
 
         # Build every constraint body and wrapper while the target tree is still untouched.
         template_env = _get_template_env()
-        constraint_plan = build_constraint_generation_plan(
-            graph, template_env, config.package_name
-        )
+        constraint_plan = build_constraint_generation_plan(graph, template_env, config.package_name)
 
         # Step 1.9: the coverage account the package is about to bake agrees with the catalog
         # it claims to summarize, and the aggregator's existence agrees with the same
@@ -1336,10 +1393,9 @@ def _generate_package_from_graph(graph: ComputationGraph, config: GenerationConf
     except OSError as e:
         # The only unnamed failure this half can operationally hit is the
         # filesystem: the output tree is created and written from step 2 onward.
-        # Everything else reaching here — a template defect, a graph field the
-        # renderer did not expect — is a programming defect, and it now propagates
-        # to the CLI boundary with its traceback instead of becoming a bare
-        # "generation failed" and exit 1.
+        # Everything else reaching here is converted by ``run_codegen`` into the
+        # same caused, located public diagnostic as construction failures. The
+        # private writer keeps the original exception intact for that boundary.
         #
         # Measured, and deliberately not changed here: any failure after step 2
         # leaves the partially written output tree on disk. That is true of the

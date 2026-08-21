@@ -85,7 +85,12 @@ from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
 
+from verification.artifact_sources import require_codegen_source
+
 REPO_ROOT = Path(__file__).resolve().parent.parent
+ARTIFACT_SOURCES = require_codegen_source(REPO_ROOT)
+CODEGEN_HISTORY_ROOT = ARTIFACT_SOURCES.codegen_history
+AGENTIC_SOURCE_ROOT = ARTIFACT_SOURCES.agentic_source
 LEDGER_JSON = REPO_ROOT / ".project/ledger/ledger-4a.json"
 
 #: Row origins that must appear in the Git-derived candidate set.
@@ -96,8 +101,8 @@ CARRIED_ORIGINS = frozenset(
 )
 
 REPO_ROOTS = {
-    "sysml-codegen": REPO_ROOT,
-    "agentic-mbse": REPO_ROOT.parent / "agentic-mbse",
+    "sysml-codegen": ARTIFACT_SOURCES.codegen_source,
+    "agentic-mbse": AGENTIC_SOURCE_ROOT,
 }
 
 
@@ -116,7 +121,7 @@ def missing_repo_roots(roots: dict[str, Path]) -> list[str]:
     ]
 
 
-def git(*args: str, repo: Path = REPO_ROOT) -> str:
+def git(*args: str, repo: Path = CODEGEN_HISTORY_ROOT) -> str:
     return subprocess.run(
         ["git", "-C", str(repo), *args], capture_output=True, text=True, check=True
     ).stdout
@@ -146,7 +151,7 @@ def git_candidate_set(base: str, candidate: str) -> set[str]:
     return paths
 
 
-def path_at_head(path: str, repo: Path = REPO_ROOT) -> bool:
+def path_at_head(path: str, repo: Path = CODEGEN_HISTORY_ROOT) -> bool:
     return (
         subprocess.run(
             ["git", "-C", str(repo), "cat-file", "-e", f"HEAD:{path}"],

@@ -20,11 +20,11 @@ import pytest
 
 from sysml_codegen.elaboration import (
     InstanceGraph,
-    elaborate,
 )
 from sysml_codegen.extraction.extractor import SysMLDataExtractor
 from tests.conftest import FIXTURES_DIR, requires_license
 from tests.helpers.elaboration_graph import attr, calc, node_ref, producer_ref
+from tests.helpers.raw_elaboration import elaborate
 
 pytestmark = requires_license
 

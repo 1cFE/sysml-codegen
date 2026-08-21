@@ -72,7 +72,7 @@ package DeepCrossScopeDesign {
             // Uses qualified name syntax (::) instead of feature chain (.)
             // Expected BindingType: REFERENCE
             // Expected source_path: "...::measurement_system::station::array::sensor::core::metric_value"
-            // Exact projection wires this input to the one concrete core output.
+            // SI_OCCURRENCE_MISSING: no producer in this consumer domain; see [DEEP-QUALIFIED-OUTPUT-WIRING].
             calc ref_analysis : 'Analysis Calc' {
                 in data_point = measurement_system::station::array::sensor::core::metric_value;
                 in baseline = baseline_value;

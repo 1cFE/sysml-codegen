@@ -1,14 +1,21 @@
 """Unit tests for registry generation — Gap 2 fixes."""
-import pytest
+from pathlib import Path
+
+import jinja2
 
 
-class TestCollectExitPointTypes:
-    """Tests for _collect_exit_point_primitive_types()."""
+class TestRequiredExitPointTypes:
+    """Tests for graph-derived exit-point wrapper authority."""
 
     def test_single_output_modules_produce_float(self):
         """Single-output modules with python_type='float' should produce 'Float'."""
-        from sysml_codegen.generation.registry import _collect_exit_point_primitive_types
-        from sysml_codegen.resolution.models import ModuleKind, ModuleOutput, PipelineModule
+        from sysml_codegen.generation.registry import required_exit_point_wrapper_types
+        from sysml_codegen.resolution.models import (
+            ComputationGraph,
+            ModuleKind,
+            ModuleOutput,
+            PipelineModule,
+        )
 
         modules = [
             PipelineModule(
@@ -16,20 +23,34 @@ class TestCollectExitPointTypes:
                 module_type="TestModule",
                 inputs=[],
                 outputs=[
-                    ModuleOutput(field_name="root", python_type="float", channel_name="test__result")
+                    ModuleOutput(
+                        field_name="root",
+                        python_type="float",
+                        channel_name="test__result",
+                    )
                 ],
                 execution_order=0,
                 module_kind=ModuleKind.CALCULATION,
             )
         ]
 
-        types = _collect_exit_point_primitive_types(modules)
+        graph = ComputationGraph(
+            modules=modules,
+            entry_point_groups=[],
+            execution_order=["test_module"],
+        )
+        types = required_exit_point_wrapper_types(graph)
         assert "Float" in types
 
     def test_multi_output_modules_excluded(self):
         """Multi-output modules (field_name != 'root') should not add primitive types."""
-        from sysml_codegen.generation.registry import _collect_exit_point_primitive_types
-        from sysml_codegen.resolution.models import ModuleKind, ModuleOutput, PipelineModule
+        from sysml_codegen.generation.registry import required_exit_point_wrapper_types
+        from sysml_codegen.resolution.models import (
+            ComputationGraph,
+            ModuleKind,
+            ModuleOutput,
+            PipelineModule,
+        )
 
         modules = [
             PipelineModule(
@@ -45,13 +66,23 @@ class TestCollectExitPointTypes:
             )
         ]
 
-        types = _collect_exit_point_primitive_types(modules)
+        graph = ComputationGraph(
+            modules=modules,
+            entry_point_groups=[],
+            execution_order=["test_module"],
+        )
+        types = required_exit_point_wrapper_types(graph)
         assert len(types) == 0
 
     def test_deduplication(self):
         """Multiple single-output float modules should produce only one 'Float'."""
-        from sysml_codegen.generation.registry import _collect_exit_point_primitive_types
-        from sysml_codegen.resolution.models import ModuleKind, ModuleOutput, PipelineModule
+        from sysml_codegen.generation.registry import required_exit_point_wrapper_types
+        from sysml_codegen.resolution.models import (
+            ComputationGraph,
+            ModuleKind,
+            ModuleOutput,
+            PipelineModule,
+        )
 
         modules = [
             PipelineModule(
@@ -59,7 +90,11 @@ class TestCollectExitPointTypes:
                 module_type=f"Mod{i}Module",
                 inputs=[],
                 outputs=[
-                    ModuleOutput(field_name="root", python_type="float", channel_name=f"mod{i}__out")
+                    ModuleOutput(
+                        field_name="root",
+                        python_type="float",
+                        channel_name=f"mod{i}__out",
+                    )
                 ],
                 execution_order=i,
                 module_kind=ModuleKind.CALCULATION,
@@ -67,69 +102,71 @@ class TestCollectExitPointTypes:
             for i in range(3)
         ]
 
-        types = _collect_exit_point_primitive_types(modules)
-        assert types == ["Float"]  # sorted, deduplicated
+        graph = ComputationGraph(
+            modules=modules,
+            entry_point_groups=[],
+            execution_order=[module.name for module in modules],
+        )
+        types = required_exit_point_wrapper_types(graph)
+        assert types == ("Float",)  # sorted, deduplicated
 
 
 class TestRegistryTemplateRendering:
-    """Tests for registry template rendering with exit point types."""
+    """Tests for graph-derived registry rendering with exit point types."""
 
-    def test_custom_schema_types_includes_exit_point_types(self):
-        """CUSTOM_SCHEMA_TYPES should include both entry point and exit point types.
+    @staticmethod
+    def _render(tmp_path: Path, *root_types: str) -> str:
+        from sysml_codegen.generation.registry import generate_registry
+        from sysml_codegen.resolution.models import (
+            ComputationGraph,
+            ModuleKind,
+            ModuleOutput,
+            PipelineModule,
+        )
 
-        FR-6: Template must render exit point types alongside entry point schemas.
-        AC-3: Generated __init__.py includes Float in CUSTOM_SCHEMA_TYPES.
-        """
-        import jinja2
-        from pathlib import Path
-
-        template_dir = Path(__file__).parent.parent.parent / "src" / "sysml_codegen" / "templates"
+        modules = [
+            PipelineModule(
+                name=f"module_{index}",
+                module_type=f"Module{index}",
+                inputs=[],
+                outputs=[
+                    ModuleOutput(
+                        field_name="root",
+                        python_type=python_type,
+                        channel_name=f"module_{index}__result",
+                    )
+                ],
+                execution_order=index,
+                module_kind=ModuleKind.CALCULATION,
+                calc_def_name=f"Calculation{index}",
+                calc_def_qualified_name=f"RegistryProbe::Calculation{index}",
+            )
+            for index, python_type in enumerate(root_types)
+        ]
+        graph = ComputationGraph(
+            modules=modules,
+            entry_point_groups=[],
+            execution_order=[module.name for module in modules],
+        )
+        template_dir = Path(__file__).parents[2] / "src" / "sysml_codegen" / "templates"
         env = jinja2.Environment(
             loader=jinja2.FileSystemLoader(str(template_dir)),
             trim_blocks=True,
             lstrip_blocks=True,
         )
+        return generate_registry(graph, "test_pkg", env, tmp_path / "__init__.py")
 
-        template = env.get_template("registry_function.py.jinja2")
-        rendered = template.render(
-            function_name="create_test_registry",
-            all_modules=[],
-            imports=["from simkit.core.registry_builder import create_registry",
-                     "from simkit.core.pipeline_registry import PipelineModuleRegistry"],
-            schema_imports=["from test_pkg.schemas.design_params import DesignParams as DesignParams"],
-            parameter_groups=["DesignParams"],
-            exit_point_types=["Float"],
-            package_name="test_pkg",
-        )
+    def test_custom_schema_types_are_derived_from_graph_root_outputs(self, tmp_path: Path):
+        """Changing graph output types must change the rendered wrapper account."""
+        rendered = self._render(tmp_path, "float", "str")
 
         assert "CUSTOM_SCHEMA_TYPES" in rendered
-        assert "DesignParams" in rendered
         assert "Float" in rendered
-        assert "from test_pkg.primitives import Float" in rendered
+        assert "String" in rendered
+        assert "from test_pkg.primitives import Float, String" in rendered
 
-    def test_no_exit_point_types_still_renders(self):
-        """Template should render correctly without exit point types."""
-        import jinja2
-        from pathlib import Path
-
-        template_dir = Path(__file__).parent.parent.parent / "src" / "sysml_codegen" / "templates"
-        env = jinja2.Environment(
-            loader=jinja2.FileSystemLoader(str(template_dir)),
-            trim_blocks=True,
-            lstrip_blocks=True,
-        )
-
-        template = env.get_template("registry_function.py.jinja2")
-        rendered = template.render(
-            function_name="create_test_registry",
-            all_modules=[],
-            imports=["from simkit.core.registry_builder import create_registry",
-                     "from simkit.core.pipeline_registry import PipelineModuleRegistry"],
-            schema_imports=[],
-            parameter_groups=[],
-            exit_point_types=[],
-            package_name="test_pkg",
-        )
+    def test_graph_without_root_outputs_renders_no_primitive_registry(self, tmp_path: Path):
+        rendered = self._render(tmp_path)
 
         assert "CUSTOM_SCHEMA_TYPES" not in rendered
         assert "primitives" not in rendered

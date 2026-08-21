@@ -5,7 +5,6 @@ from __future__ import annotations
 import json
 import re
 import shutil
-from collections import Counter
 from collections.abc import Callable
 from dataclasses import dataclass
 from functools import cache
@@ -14,11 +13,12 @@ from pathlib import Path
 import jinja2
 import pytest
 import yaml
+from agentic_mbse import SemanticEvidenceCode, SemanticEvidenceError
 
 from sysml_codegen.elaboration import (
     ElaborationCode,
+    ElaborationDiagnosticError,
     ElaborationError,
-    elaborate,
     project,
 )
 from sysml_codegen.elaboration.graph import LiteralInput, NodeRef, ProducerRef
@@ -26,12 +26,14 @@ from sysml_codegen.extraction.extractor import SysMLDataExtractor
 from sysml_codegen.extraction.source_evidence import ReadinessCode
 from sysml_codegen.generation.entry_point import generate_all_derived_jsons
 from sysml_codegen.generation.pipeline import generate_pipeline_yaml
+from sysml_codegen.orchestration.elaborated_pipeline import elaborate_model_paths
 from sysml_codegen.resolution.models import ModuleKind
 from sysml_codegen.snapshot.instance_graph import (
     decode_instance_graph,
     encode_instance_graph,
 )
 from tests.conftest import FIXTURES_DIR, requires_license
+from tests.helpers.raw_elaboration import elaborate
 
 pytestmark = requires_license
 
@@ -785,11 +787,11 @@ def _src_01(_tmp_path: Path) -> None:
 
 
 def _src_02(_tmp_path: Path) -> None:
-    with pytest.raises(ElaborationError) as excinfo:
+    with pytest.raises(ElaborationDiagnosticError) as excinfo:
         _load_internal(FIXTURES_DIR / "source_identity_indexed_source")
-    assert Counter(finding.code for finding in excinfo.value.findings) == Counter(
-        {ReadinessCode.SI_INDEXED_SOURCE_UNSUPPORTED: 2}
-    )
+    assert [diagnostic.code for diagnostic in excinfo.value.diagnostics] == [
+        ElaborationCode.SI_INDEXED_SOURCE_UNSUPPORTED
+    ]
 
 
 def _assert_load_error(model_path: Path, detail: str) -> None:
@@ -811,11 +813,7 @@ def _src_03(_tmp_path: Path) -> None:
 
 def _ambiguity(cell: str) -> Callable[[Path], None]:
     consumer = "amb_qual_calc" if cell == "C9" else "amb_bare_calc"
-    expected = (
-        ElaborationCode.SI_OCCURRENCE_MISSING
-        if cell == "C9"
-        else ElaborationCode.SI_OCCURRENCE_AMBIGUOUS
-    )
+    expected = ElaborationCode.SI_OCCURRENCE_MISSING
 
     def assert_evidence(_tmp_path: Path) -> None:
         graph = _load_internal(FIXTURES_DIR / "source_identity_occurrence_ambiguity", strict=False)
@@ -831,10 +829,20 @@ def _c18(_tmp_path: Path) -> None:
 
 
 def _c22(_tmp_path: Path) -> None:
-    graph = _load_internal(FIXTURES_DIR / "invocation_binding_probe", strict=False)
-    [diagnostic] = graph.diagnostics
-    assert diagnostic.code is ReadinessCode.SI_EXPRESSION_SOURCE_UNSUPPORTED
-    assert diagnostic.param_name == "x"
+    with pytest.raises(ElaborationDiagnosticError) as raised:
+        elaborate_model_paths([FIXTURES_DIR / "invocation_binding_probe"], strict=False)
+    [diagnostic] = raised.value.diagnostics
+    assert diagnostic.code is ElaborationCode.SI_EXPRESSION_SOURCE_UNSUPPORTED
+    assert diagnostic.reference == "Doubler(v = a)"
+    assert diagnostic.source_file == "root-0/design.sysml"
+    assert diagnostic.source_line == 19
+    rendered = str(raised.value)
+    assert rendered.count("SI_EXPRESSION_SOURCE_UNSUPPORTED") == 1
+    assert "root-0/design.sysml:19" in rendered
+    assert "/tmp/" not in rendered
+    cause = raised.value.__cause__
+    assert isinstance(cause, SemanticEvidenceError)
+    assert cause.code is SemanticEvidenceCode.EXPRESSION_KIND_UNSUPPORTED
 
 
 def _runtime(cell_id: str) -> Callable[[Path], None]:

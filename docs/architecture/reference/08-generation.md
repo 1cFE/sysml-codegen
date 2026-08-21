@@ -19,7 +19,7 @@ System below).
 | REQ-GEN-04 | FULLY_COMPILABLE calc defs SHALL produce auto-implemented stencils; all others SHALL produce `NotImplementedError` stubs. | `generate_implementation()` (`stencils.py`) dispatches on `module.auto_impl_context`, which is populated only for FULLY_COMPILABLE modules |
 | REQ-GEN-05 | Each [ParameterGroup](09-data-models.md#resolution-models) SHALL produce one JSON template (`inputs/`) and one Pydantic schema (`schemas/`). | `generate_all_derived_jsons_from_graph()` and `generate_all_derived_schemas_from_graph()` iterate groups |
 | REQ-GEN-06 | SysML type mapping (`Real`->`float`, `Integer`->`int`, `Boolean`->`bool`, `String`->`str`) SHALL be consistent across all generators. | `generation/type_mapping.py` provides the shared `map_sysml_type_to_python()`. `entry_point.py` calls `map_sysml_type_to_python()` for raw SysML types; graph-consuming generators (pipeline.py, modules.py, schemas.py, stencils.py) use pre-resolved `python_type` from `PipelineModule`. Conformance tests in `tests/conformance/test_type_mapping_consolidation.py`. |
-| REQ-GEN-07 | Every generated module SHALL be registered in `__init__.py` for TEAx framework discovery. | `generate_registry_function()` produces `MODULE_REGISTRY` dict |
+| REQ-GEN-07 | Every generated module SHALL be registered in `__init__.py` for TEAx framework discovery. | `generate_registry(graph, ...)` emits the package's `create_registry` function from graph-derived module and schema accounts. |
 
 ---
 

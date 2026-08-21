@@ -20,6 +20,12 @@ DATA_ROOT = ROOT / "tests" / "unit" / "data"
 PRE_INVENTORY = DATA_ROOT / "item8-snapshot-inventory-pre.json"
 FINAL_INVENTORY = DATA_ROOT / "item8-snapshot-inventory-final.json"
 RECAPTURE_RECEIPT = DATA_ROOT / "item8-v3-recapture.json"
+TRANSITIONED_SNAPSHOT_REMOVALS = {
+    "tests/fixtures/deep_cross_scope_probe/instance_graph_snapshot.json"
+}
+DEEP_CROSS_HISTORICAL_SHA256 = (
+    "1e8274c175349c2415329f057dcabbf683dc476624241ca9bb30b45da278f923"
+)
 
 
 def _load(path: Path) -> dict[str, object]:
@@ -71,34 +77,47 @@ def test_inventory_records_required_digests_and_unit_maps() -> None:
                 assert projection["generated_entry_point_inapplicable"]
 
 
-def test_pre_inventory_rows_equal_exact_tracked_snapshot_set() -> None:
+def _require_historical_inventory_plus_named_transition(
+    document: dict[str, object], tracked: list[str]
+) -> None:
+    rows = document["rows"]
+    assert isinstance(rows, list)
+    historical_paths = sorted([*tracked, *TRANSITIONED_SNAPSHOT_REMOVALS])
+    row_paths = [row["path"] for row in rows]
+    inventory.require_exact_row_set(historical_paths, row_paths)
+    assert document["tracked_paths"] == historical_paths
+    assert document["tracked_count"] == len(historical_paths) == 23
+    assert document["row_count"] == len(rows) == 23
+    assert not TRANSITIONED_SNAPSHOT_REMOVALS & set(tracked)
+    deep_row = next(row for row in rows if row["path"] in TRANSITIONED_SNAPSHOT_REMOVALS)
+    assert deep_row["committed"]["envelope_sha256"] == DEEP_CROSS_HISTORICAL_SHA256
+    assert document["missing_paths"] == []
+    assert document["extra_paths"] == []
+    assert document["duplicate_paths"] == []
+
+
+def test_historical_inventory_deletion_is_one_named_current_refusal() -> None:
+    current_batch = _load(ROOT / "tests/fixtures/v6_recapture_batch/batch.json")
+    record = current_batch["records"]["deep_cross_scope_probe"]
+    assert record["status"] == "refused"
+    assert record["codes"] == ["SI_OCCURRENCE_MISSING"]
+    transitions = (ROOT / "verification/expected-transitions.md").read_text()
+    assert next(iter(TRANSITIONED_SNAPSHOT_REMOVALS)) in transitions
+    assert DEEP_CROSS_HISTORICAL_SHA256 in transitions
+    assert "e8927d0ebb9b28aafcd7410bbc5122354edc4213468f0b2cb2dfc99aedecc46c" in transitions
+    assert "A2 refusal" in transitions
+
+
+def test_pre_inventory_preserves_historical_rows_plus_named_transition() -> None:
     document = _load(PRE_INVENTORY)
     tracked = inventory.tracked_snapshot_paths(ROOT)
-    rows = document["rows"]
-    assert isinstance(rows, list)
-    row_paths = [row["path"] for row in rows]
-    inventory.require_exact_row_set(tracked, row_paths)
-    assert document["tracked_paths"] == tracked
-    assert document["tracked_count"] == len(tracked) == 23
-    assert document["row_count"] == len(rows) == 23
-    assert document["missing_paths"] == []
-    assert document["extra_paths"] == []
-    assert document["duplicate_paths"] == []
+    _require_historical_inventory_plus_named_transition(document, tracked)
 
 
-def test_final_inventory_rows_equal_exact_tracked_snapshot_set() -> None:
+def test_final_inventory_preserves_historical_rows_plus_named_transition() -> None:
     document = _load(FINAL_INVENTORY)
     tracked = inventory.tracked_snapshot_paths(ROOT)
-    rows = document["rows"]
-    assert isinstance(rows, list)
-    row_paths = [row["path"] for row in rows]
-    inventory.require_exact_row_set(tracked, row_paths)
-    assert document["tracked_paths"] == tracked
-    assert document["tracked_count"] == len(tracked)
-    assert document["row_count"] == len(rows)
-    assert document["missing_paths"] == []
-    assert document["extra_paths"] == []
-    assert document["duplicate_paths"] == []
+    _require_historical_inventory_plus_named_transition(document, tracked)
 
 
 def test_final_inventory_records_every_path_addition_and_removal() -> None:
@@ -151,9 +170,7 @@ def test_final_inventory_classifies_every_digest_and_unit_movement() -> None:
 def test_final_inventory_and_recap_receipt_obey_zero_or_one_law() -> None:
     final = _load(FINAL_INVENTORY)
     tracked = inventory.tracked_snapshot_paths(ROOT)
-    rows = final["rows"]
-    assert isinstance(rows, list)
-    inventory.require_exact_row_set(tracked, [row["path"] for row in rows])
+    _require_historical_inventory_plus_named_transition(final, tracked)
     stale_paths = final["stale_paths"]
     if not stale_paths:
         assert not RECAPTURE_RECEIPT.exists()

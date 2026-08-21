@@ -21,14 +21,13 @@ All tests require a live SysIDE license.
 from __future__ import annotations
 
 import pytest
-from agentic_mbse.sysml.expression import feature_chain_facts
+from agentic_mbse.sysml.reference_use import ExactReferenceUse, inspect_reference_uses
 from agentic_mbse.sysml.syside_adapter import SysideAdapter
 
 from sysml_codegen.elaboration import (
     ElaborationError,
     InstanceGraph,
     ValueSite,
-    elaborate,
 )
 from sysml_codegen.extraction.extractor import SysMLDataExtractor
 from sysml_codegen.extraction.source_evidence import ReadinessCode
@@ -45,6 +44,7 @@ from tests.helpers.elaboration_graph import (
     node_ref,
     producer_ref,
 )
+from tests.helpers.raw_elaboration import elaborate
 
 pytestmark = requires_license
 
@@ -99,11 +99,26 @@ def _declarations(extractor: SysMLDataExtractor):
     return usages
 
 
-def _binding_evidence(usages, qn: str, param: str):
-    (usage,) = [u for u in usages if u.qualified_name == qn]
-    (binding,) = [b for b in usage.bindings if b.param_name == param]
-    assert binding.reference_evidence is not None
-    return binding.reference_evidence
+def _binding_path(model, usage_qn: str, param: str):
+    """The exact semantic path of one binding, read from the live declaration.
+
+    The permissive per-binding evidence record these pins used to read is gone. The same
+    facts — root, leaf, resolved member names, owner kind — now travel on the exact
+    reference use, so the pins ask the one inspection operation for them directly.
+    """
+    (formal,) = [
+        member
+        for usage in SysideAdapter.elements_of_type(
+            model, "CalculationUsage", include_subtypes=True
+        )
+        if str(getattr(usage, "qualified_name", "")).replace("::", "__").replace("'", "")
+        == usage_qn
+        for member in usage.owned_members
+        if getattr(member, "name", None) == param
+    ]
+    (use,) = inspect_reference_uses(formal.feature_value_expression)
+    assert isinstance(use, ExactReferenceUse)
+    return use.path
 
 
 # ---------------------------------------------------------------------------
@@ -114,16 +129,13 @@ def _binding_evidence(usages, qn: str, param: str):
 def test_fact_sibling_calc_chain_root_is_a_calculation_usage(loaded_cache) -> None:
     """wi014: ``in area = area_calc.area`` roots at the sibling CalculationUsage
     itself (owner = the part def) — not at any part occurrence."""
-    evidence = _binding_evidence(
-        _declarations(loaded_cache("wi014_toy")),
-        "toy_plant__Toy_Plant__cost_calc",
-        "area",
+    path = _binding_path(
+        loaded_cache("wi014_toy").model, "toy_plant__Toy Plant__cost_calc", "area"
     )
-    assert evidence.chain_root is not None
-    assert evidence.chain_root.element_kind == "CalculationUsage"
-    assert evidence.chain_root.qualified_name == "toy_plant::'Toy Plant'::area_calc"
-    assert evidence.chain_root.owner_is_definition
-    assert evidence.resolved_member_names == ("area",)
+    assert path.root.element_kind == "CalculationUsage"
+    assert path.root.qualified_name == "toy_plant::'Toy Plant'::area_calc"
+    assert path.root.owner_is_definition
+    assert path.resolved_member_names == ("area",)
 
 
 def test_fact_cross_package_chain_root_is_a_package_level_part_usage(
@@ -131,17 +143,16 @@ def test_fact_cross_package_chain_root_is_a_package_level_part_usage(
 ) -> None:
     """catf: ``in p_pumps = catf_blanket.pump_power`` roots at a PartUsage in a
     DIFFERENT package — never on the consumer's ancestor chain, with no owner QN."""
-    evidence = _binding_evidence(
-        _declarations(loaded_cache("catf_mfe_model")),
+    path = _binding_path(
+        loaded_cache("catf_mfe_model").model,
         "CATFMFEPhysics__catf_physics__net_electric",
         "p_pumps",
     )
-    assert evidence.chain_root is not None
-    assert evidence.chain_root.element_kind == "PartUsage"
-    assert evidence.chain_root.qualified_name == "CATFMFEBlanket::catf_blanket"
-    assert not evidence.chain_root.owner_is_definition
-    assert evidence.chain_root.owner_qualified_name == ""
-    assert evidence.resolved_member_names == ("pump_power",)
+    assert path.root.element_kind == "PartUsage"
+    assert path.root.qualified_name == "CATFMFEBlanket::catf_blanket"
+    assert not path.root.owner_is_definition
+    assert path.root.owner_qualified_name == ""
+    assert path.resolved_member_names == ("pump_power",)
 
 
 def test_fact_untyped_part_usages_are_invisible_to_the_typed_index(
@@ -169,15 +180,10 @@ def test_fact_untyped_part_usages_are_invisible_to_the_typed_index(
 def test_fact_package_level_attribute_referent_has_no_owner_qn(loaded_cache) -> None:
     """d316: ``in seed = seed_src`` resolves to the package-owned attribute with an
     empty owner QN — a third referent-owner kind beside def and part usage."""
-    evidence = _binding_evidence(
-        _declarations(loaded_cache("d316_crosspart_expose")),
-        "D316Design__gen",
-        "seed",
-    )
-    assert evidence.referent is not None
-    assert evidence.referent.qualified_name == "D316Design::seed_src"
-    assert not evidence.referent.owner_is_definition
-    assert evidence.referent.owner_qualified_name == ""
+    path = _binding_path(loaded_cache("d316_crosspart_expose").model, "D316Design__gen", "seed")
+    assert path.leaf.qualified_name == "D316Design::seed_src"
+    assert not path.leaf.owner_is_definition
+    assert path.leaf.owner_qualified_name == ""
 
 
 def test_fact_expose_attribute_carries_complete_chain_facts(loaded_cache) -> None:
@@ -197,12 +203,11 @@ def test_fact_expose_attribute_carries_complete_chain_facts(loaded_cache) -> Non
     ]
     expr = pump_power.feature_value_expression
     assert SysideAdapter.is_instance(expr, "FeatureChainExpression")
-    facts = feature_chain_facts(expr)
-    assert facts.root is not None
-    assert facts.root.element_kind == "CalculationUsage"
-    assert facts.root.qualified_name == "CATFMFEBlanket::catf_blanket::pump_load"
-    assert facts.resolved_member_names == ("pump_power",)
-    assert not facts.has_index_segment
+    (use,) = inspect_reference_uses(expr)
+    assert isinstance(use, ExactReferenceUse)
+    assert use.path.root.element_kind == "CalculationUsage"
+    assert use.path.root.qualified_name == "CATFMFEBlanket::catf_blanket::pump_load"
+    assert use.path.resolved_member_names == ("pump_power",)
 
 
 # ---------------------------------------------------------------------------

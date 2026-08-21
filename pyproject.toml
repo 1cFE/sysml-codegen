@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "sysml-codegen"
-version = "0.1.0"
+version = "0.1.1"
 description = "SysML v2 to Python code generation framework"
 readme = "README.md"
 requires-python = ">=3.12"
@@ -21,7 +21,7 @@ classifiers = [
     "Topic :: Software Development :: Code Generators",
 ]
 dependencies = [
-    "agentic-mbse>=0.1.2",
+    "agentic-mbse>=0.1.3,<0.2",
     "jinja2>=3.0",
     "pydantic>=2.0",
     "pyyaml>=6.0",

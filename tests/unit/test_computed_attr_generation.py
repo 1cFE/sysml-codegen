@@ -10,54 +10,20 @@ from __future__ import annotations
 from pathlib import Path
 
 import jinja2
-import pytest
 
-from sysml_codegen.extraction.data_models import (
-    ComputedAttributeClassification,
-    ComputedAttributeData,
-)
-from sysml_codegen.extraction.expression_compiler import Compilability
 from sysml_codegen.generation.pipeline import _module_to_context
 from sysml_codegen.generation.registry import generate_registry
 from sysml_codegen.generation.stencils import generate_backlog_report
 from sysml_codegen.resolution.models import (
     ComputationGraph,
-    InputSource,
-    ModuleInput,
     ModuleKind,
     ModuleOutput,
-    ParameterGroup,
     PipelineModule,
 )
-
 
 # ---------------------------------------------------------------------------
 # Test helpers
 # ---------------------------------------------------------------------------
-
-
-def _make_computed_attr(
-    name: str,
-    owning_part_name: str,
-    owning_part_qn: str,
-    classification: ComputedAttributeClassification = ComputedAttributeClassification.FORMULA,
-    compilability: Compilability = Compilability.FULLY_COMPILABLE,
-    compiled_expression: str | None = None,
-) -> ComputedAttributeData:
-    if compiled_expression is None and classification == ComputedAttributeClassification.FORMULA:
-        compiled_expression = f"(inputs.{name}_input)"
-    return ComputedAttributeData(
-        name=name,
-        python_name=name,
-        owning_part_name=owning_part_name,
-        owning_part_qualified_name=owning_part_qn,
-        expression_ast=None,
-        expression_text=f"{name} expression",
-        references=[],
-        classification=classification,
-        compilability=compilability,
-        compiled_expression=compiled_expression,
-    )
 
 
 def _make_pipeline_module(
@@ -69,10 +35,13 @@ def _make_pipeline_module(
         name=name,
         module_type=module_type,
         inputs=[],
-        outputs=[ModuleOutput(
-            field_name="root", python_type="float",
-            channel_name=f"{name}__out",
-        )],
+        outputs=[
+            ModuleOutput(
+                field_name="root",
+                python_type="float",
+                channel_name=f"{name}__out",
+            )
+        ],
         execution_order=0,
         module_kind=module_kind,
     )
@@ -99,7 +68,21 @@ def _make_formula_module(
         module_kind=ModuleKind.FORMULA,
         calc_def_name=attr_name,
         calc_def_qualified_name=owning_part_qn.replace("::", "__"),
-        auto_impl_context={"execution_steps": [], "output_expressions": [{"name": attr_name, "expression": f"(inputs.{attr_name}_input)"}], "output_count": 1, "single_output_expression": f"(inputs.{attr_name}_input)"} if auto_impl else None,
+        auto_impl_context=(
+            {
+                "execution_steps": [],
+                "output_expressions": [
+                    {
+                        "name": attr_name,
+                        "expression": f"(inputs.{attr_name}_input)",
+                    }
+                ],
+                "output_count": 1,
+                "single_output_expression": f"(inputs.{attr_name}_input)",
+            }
+            if auto_impl
+            else None
+        ),
     )
 
 
@@ -339,7 +322,10 @@ class TestComputedAttrAutoImpl:
             "package_name": "test_pkg",
             "sysml_source": "unknown:0",
             "sysml_expressions": ["area = length * width"],
-            "docstring": "Execute area computed attribute.\n\nSysML Expression: area = length * width",
+            "docstring": (
+                "Execute area computed attribute.\n\n"
+                "SysML Expression: area = length * width"
+            ),
         }
 
         rendered = template.render(**context)

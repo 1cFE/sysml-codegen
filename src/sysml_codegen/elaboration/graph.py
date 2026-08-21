@@ -77,6 +77,9 @@ class Diagnostic:
     consumer_display: str
     param_name: str | None
     detail: str
+    reference: str | None = None
+    source_file: str | None = None
+    source_line: int | None = None
 
 
 class GraphValidationError(ValueError):

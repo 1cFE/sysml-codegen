@@ -249,7 +249,7 @@ def _refused(
     with caplog.at_level(logging.ERROR):
         assert _generate_package_from_graph(graph, _config(tmp_path)) is False
 
-    assert "constraint usage domain incomplete" in caplog.text
+    assert "CONSTRAINT_DOMAIN_INCOMPLETE" in caplog.text
     assert not output.exists() or not any(output.iterdir())
     return caplog.text
 

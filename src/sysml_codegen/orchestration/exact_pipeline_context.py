@@ -35,7 +35,12 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import NoReturn
 
-from sysml_codegen.core.errors import CodeGenerationError
+from sysml_codegen.core.errors import CodeGenerationError, SysMLParsingError
+from sysml_codegen.elaboration.elaborate import (
+    ElaborationDiagnosticError,
+    ElaborationError,
+    unexpected_public_failure,
+)
 from sysml_codegen.elaboration.graph import GraphValidationError, InstanceGraph
 from sysml_codegen.elaboration.project import PROJECTOR_SEMANTICS, ProjectionError, project
 from sysml_codegen.resolution.models import ComputationGraph
@@ -206,9 +211,7 @@ class ExactPipelineContext:
         return projected
 
 
-def _verify_constraint_usage_population(
-    graph: InstanceGraph, projected: ComputationGraph
-) -> None:
+def _verify_constraint_usage_population(graph: InstanceGraph, projected: ComputationGraph) -> None:
     """Design invariant 4: exactly one catalog usage row per domain member, by identity.
 
     This is the one place both sides are in scope. Everything downstream sees only the
@@ -229,9 +232,7 @@ def _verify_constraint_usage_population(
 
     missing = sorted(minted.keys() - rendered)
     if missing:
-        named = ", ".join(
-            f"{minted[item].usage_qualified_name} ({item})" for item in missing[:5]
-        )
+        named = ", ".join(f"{minted[item].usage_qualified_name} ({item})" for item in missing[:5])
         _receipt_failure(
             f"the catalog is missing {len(missing)} of {len(minted)} constraint usage "
             f"domain members: {named}"
@@ -277,8 +278,21 @@ def build_exact_pipeline_context(
     """Load and elaborate live models, then seal the projection into a context."""
     from sysml_codegen.orchestration.elaborated_pipeline import elaborate_model_paths
 
-    return _seal(elaborate_model_paths(list(model_paths)), _canonical_targets(targets))
-
+    canonical_targets = _canonical_targets(targets)
+    try:
+        return _seal(elaborate_model_paths(list(model_paths)), canonical_targets)
+    except (
+        CodeGenerationError,
+        ElaborationDiagnosticError,
+        ElaborationError,
+        SysMLParsingError,
+    ):
+        # Every formed public refusal passes through as itself. A parse failure
+        # that lost its way here was reported as an internal defect at a made-up
+        # line; the sibling tuple in ``elaborated_pipeline`` always had it.
+        raise
+    except Exception as error:
+        raise unexpected_public_failure(error) from error
 
 def build_exact_pipeline_context_from_snapshot(
     snapshot_path: Path,
@@ -292,7 +306,22 @@ def build_exact_pipeline_context_from_snapshot(
     what turns a structural load into a provenance-checked one; without it a
     snapshot proves its own shape and nothing about the files it names.
     """
-    from sysml_codegen.snapshot.envelope import load_instance_graph_snapshot
+    from sysml_codegen.snapshot.envelope import (
+        InstanceGraphSnapshotError,
+        load_instance_graph_snapshot,
+    )
 
-    graph = load_instance_graph_snapshot(snapshot_path, source_roots=source_roots)
-    return _seal(graph, _canonical_targets(targets))
+    canonical_targets = _canonical_targets(targets)
+    try:
+        graph = load_instance_graph_snapshot(snapshot_path, source_roots=source_roots)
+        return _seal(graph, canonical_targets)
+    except (
+        CodeGenerationError,
+        ElaborationDiagnosticError,
+        ElaborationError,
+        InstanceGraphSnapshotError,
+        SysMLParsingError,
+    ):
+        raise
+    except Exception as error:
+        raise unexpected_public_failure(error) from error

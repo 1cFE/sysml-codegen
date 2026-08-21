@@ -6,7 +6,7 @@ Uses SysideAdapter for all syside interactions (centralizes syside dependency).
 
 import hashlib
 import logging
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 from pathlib import Path
 from typing import Any
 from uuid import UUID
@@ -15,12 +15,14 @@ from uuid import UUID
 from agentic_mbse.sysml.syside_adapter import SysideAdapter
 
 from sysml_codegen.core.qualified_names import sanitize_name
+from sysml_codegen.core.type_mapping import QUALIFIED_SYSML_TO_PYTHON
 from sysml_codegen.extraction.data_models import (
     AttributeInfo,
     CalculationDefinitionData,
     ConstraintInfo,
     PartDefinitionData,
 )
+from sysml_codegen.extraction.errors import ExactExtractionError, ExactTypeError
 from sysml_codegen.extraction.expression_utils import reconstruct_expression
 from sysml_codegen.extraction.feature_metadata import extract_feature_unit
 
@@ -42,12 +44,24 @@ class SysMLDataExtractor:
     Uses SysideAdapter for all syside interactions (centralizes syside dependency).
     """
 
-    def __init__(self, model_paths: list[Path]):
-        """Initialize with SysML model file paths."""
+    def __init__(
+        self,
+        model_paths: list[Path],
+        *,
+        source_referents: Mapping[str, str] | None = None,
+    ):
+        """Initialize with SysML model file paths.
+
+        ``source_referents`` maps a parsed file's absolute path to the portable
+        name the modeller knows it by. The capture route parses private staged
+        copies, so without it a reported diagnostic would name a staging
+        directory that no longer exists when the user reads the message.
+        """
         self.model_paths = model_paths
+        self._source_referents = dict(source_referents or {})
         self.adapter = SysideAdapter()
-        self.model = None
-        self.diagnostics = None
+        self.model: Any | None = None
+        self.diagnostics: Any | None = None
 
     def load_models(self) -> bool:
         """Load SysML models using SysIDE via adapter.
@@ -56,6 +70,8 @@ class SysMLDataExtractor:
             bool: True if loaded successfully (even with warnings)
         """
         self.model, self.diagnostics = self.adapter.load_model(self.model_paths)
+        if self.diagnostics is None:
+            raise RuntimeError("SysIDE returned no diagnostic collection")
 
         # Check for errors (warnings OK)
         if self.diagnostics.contains_errors():
@@ -90,7 +106,7 @@ class SysMLDataExtractor:
 
         return calc_defs
 
-    def _extract_part_definition(self, elem) -> PartDefinitionData | None:
+    def _extract_part_definition(self, elem: Any) -> PartDefinitionData | None:
         """Extract data from single part definition element."""
         name = sanitize_name(elem.name)
         if not name:
@@ -105,7 +121,7 @@ class SysMLDataExtractor:
                     attributes.append(attr_info)
 
         # Extract constraints (stub for now)
-        constraints = []
+        constraints: list[ConstraintInfo] = []
 
         # Get documentation
         doc_comment = self._extract_documentation(elem)
@@ -127,9 +143,7 @@ class SysMLDataExtractor:
             source_hash=source_hash,
         )
 
-    def _extract_calculation_definition(
-        self, elem
-    ) -> CalculationDefinitionData | None:
+    def _extract_calculation_definition(self, elem: Any) -> CalculationDefinitionData | None:
         """Extract data from calculation definition element."""
         name = sanitize_name(elem.name)
         if not name:
@@ -192,7 +206,9 @@ class SysMLDataExtractor:
                 elif expr_text and expr_text.startswith("<"):
                     logger.debug(
                         "Filtered repr-like expression for %s.%s: %s",
-                        name, member_name, expr_text[:80],
+                        name,
+                        member_name,
+                        expr_text[:80],
                     )
 
         # Second pass: capture member_expressions for non-input/non-output members
@@ -225,7 +241,7 @@ class SysMLDataExtractor:
             source_line = 0
 
         source_hash = self._compute_file_hash(source_file) if source_file.exists() else ""
-        qualified_name = str(getattr(elem, 'qualified_name', None) or name)
+        qualified_name = str(getattr(elem, "qualified_name", None) or name)
         references: list[str] = []
 
         # REQ-EXT-11 (V8): an anonymous `return` (a result parameter the modeler
@@ -239,16 +255,18 @@ class SysMLDataExtractor:
         # (I3; detection key probe-confirmed in Phase 0).
         for member in elem.owned_members:
             owning_membership = getattr(member, "owning_membership", None)
-            if type(owning_membership).__name__ != "ReturnParameterMembership":
+            if not self.adapter.is_instance(owning_membership, "ReturnParameterMembership"):
                 continue
             # Detect anonymity on the RAW declared_name — sanitize_name no longer
             # returns "" for empty input (SC-4 A2 always yields a legal identifier),
             # so emptiness must be checked before sanitizing.
             if not (getattr(member, "declared_name", None) or "").strip():
-                raise ValueError(
+                raise ExactExtractionError(
                     f"Calc def '{name}' has an anonymous `return` (a result with "
                     "no name), so no output channel can be built. Give the result "
-                    "a name, e.g. `return result : Real = <expr>`."
+                    "a name, e.g. `return result : Real = <expr>`.",
+                    reference=qualified_name,
+                    location=(str(source_file), source_line),
                 )
 
         # REQ-EXT-08 (V7): fail fast on a calc def with no output channel. Zero
@@ -256,12 +274,14 @@ class SysMLDataExtractor:
         # template (teax_module.py.jinja2 indexes output_attributes[0]); raise
         # here with an actionable message instead.
         if not output_attributes:
-            raise ValueError(
+            raise ExactExtractionError(
                 f"Calc def '{name}' extracted with zero output attributes. "
                 "A pipeline module needs at least one output channel. Likely cause: "
                 "the calc def declares no result — add one, e.g. "
                 "'out attribute y : Real = <expr>' or 'return y : Real = <expr>'. "
-                "(An anonymous 'return' is reported separately.)"
+                "(An anonymous 'return' is reported separately.)",
+                reference=qualified_name,
+                location=(str(source_file), source_line),
             )
 
         return CalculationDefinitionData(
@@ -300,7 +320,7 @@ class SysMLDataExtractor:
             return is_input or is_output
         return False
 
-    def _get_direction(self, member) -> tuple[bool, bool]:
+    def _get_direction(self, member: Any) -> tuple[bool, bool]:
         """Get input/output direction from member."""
         is_input = False
         is_output = False
@@ -312,7 +332,7 @@ class SysMLDataExtractor:
                 is_output = True
         return is_input, is_output
 
-    def _get_source_location(self, elem) -> tuple[Path | None, int]:
+    def _get_source_location(self, elem: Any) -> tuple[Path | None, int]:
         """Get source file path and line number from element."""
         result = self.adapter.get_source_location(elem)
         if result:
@@ -320,94 +340,17 @@ class SysMLDataExtractor:
             return Path(file_path), line
         return None, 0
 
-    def _get_calc_def_name(self, elem) -> str | None:
+    def _get_calc_def_name(self, elem: Any) -> str | None:
         """Get calculation definition name from a calculation usage element."""
-        if not hasattr(elem, 'heritage'):
+        if not hasattr(elem, "heritage"):
             return None
 
         for relationship, target in elem.heritage:
             if self.adapter.is_instance(relationship, "FeatureTyping"):
-                if hasattr(target, 'name') and target.name:
+                if hasattr(target, "name") and target.name:
                     return sanitize_name(target.name)
 
         return None
-
-    def _extract_binding_source(self, param_elem) -> str | None:
-        """Extract binding source from a parameter element."""
-        if not hasattr(param_elem, 'feature_value_expression'):
-            return None
-
-        expr = param_elem.feature_value_expression
-        if not expr:
-            return None
-
-        return self._parse_expression_to_path(expr)
-
-    def _parse_expression_to_path(self, expr) -> str | None:
-        """Parse SysML expression to extract binding path."""
-        if self.adapter.is_instance(expr, "FeatureChainExpression"):
-            path_parts = []
-            operands = list(expr.operands)
-            if operands:
-                operand_expr = operands[0]
-                instance_name = self._extract_simple_reference(operand_expr)
-                if instance_name:
-                    path_parts.append(instance_name)
-
-            if hasattr(expr, 'target_feature') and expr.target_feature:
-                target = expr.target_feature
-                if hasattr(target, 'name') and target.name:
-                    path_parts.append(target.name)
-
-            if len(path_parts) >= 2:
-                return ".".join(path_parts)
-            elif len(path_parts) == 1:
-                return path_parts[0]
-
-        elif self.adapter.is_instance(expr, "FeatureReferenceExpression"):
-            return self._extract_simple_reference(expr)
-
-        return None
-
-    def _extract_simple_reference(self, expr) -> str | None:
-        """Extract simple reference from FeatureReferenceExpression."""
-        if not self.adapter.is_instance(expr, "FeatureReferenceExpression"):
-            return None
-
-        for membership in expr.memberships:
-            if type(membership).__name__ == "Membership":
-                if hasattr(membership, "member_element"):
-                    elem = membership.member_element
-                    if elem and hasattr(elem, "name") and elem.name:
-                        path = self._build_reference_path(elem)
-                        return path
-
-        return None
-
-    def _build_reference_path(self, elem) -> str:
-        """Build full reference path for an element."""
-        parts = []
-
-        if hasattr(elem, 'name') and elem.name:
-            parts.append(elem.name)
-
-        current = elem
-        while hasattr(current, 'owner') and current.owner:
-            owner = current.owner
-            if self.adapter.is_instance(owner, "OwningMembership"):
-                if hasattr(owner, 'owning_related_element'):
-                    owning_elem = owner.owning_related_element
-                    if owning_elem and hasattr(owning_elem, 'name') and owning_elem.name:
-                        if (self.adapter.is_instance(owning_elem, "PartUsage") or
-                            self.adapter.is_instance(owning_elem, "CalculationUsage") or
-                            self.adapter.is_instance(owning_elem, "AttributeUsage")):
-                            parts.insert(0, owning_elem.name)
-                            current = owning_elem
-                            continue
-                break
-            current = owner
-
-        return ".".join(parts) if parts else elem.name if hasattr(elem, 'name') else ""
 
     def _extract_attribute(
         self, attr_elem: Any, *, capture_element_id: bool = False
@@ -417,27 +360,42 @@ class SysMLDataExtractor:
         if not name:
             return None
 
-        sysml_type = "Any"
-        python_type = "Any"
-
-        if attr_elem.heritage:
-            for relationship, target in attr_elem.heritage:
-                if self.adapter.is_instance(relationship, "FeatureTyping"):
-                    type_name = target.name if hasattr(target, "name") else None
-                    if type_name:
-                        sysml_type = type_name
-                        python_type = self._map_sysml_to_python_type(type_name)
-                        break
+        typing_targets = [
+            target
+            for relationship, target in (getattr(attr_elem, "heritage", None) or ())
+            if self.adapter.is_instance(relationship, "FeatureTyping") and target is not None
+        ]
+        reference = str(getattr(attr_elem, "qualified_name", None) or attr_elem.name)
+        location = self.adapter.get_source_location(attr_elem)
+        if len(typing_targets) != 1:
+            raise ExactTypeError(
+                f"feature has {len(typing_targets)} typings; expected exactly one qualified typing",
+                reference=reference,
+                location=location,
+            )
+        (typing_target,) = typing_targets
+        qualified_type = getattr(typing_target, "qualified_name", None)
+        python_type = (
+            QUALIFIED_SYSML_TO_PYTHON.get(str(qualified_type))
+            if qualified_type is not None
+            else None
+        )
+        if python_type is None:
+            rendered_type = str(qualified_type or "<unqualified>")
+            raise ExactTypeError(
+                f"typing target {rendered_type!r} is unsupported; expected one of "
+                "ScalarValues::Boolean, ScalarValues::Integer, ScalarValues::Real, "
+                "or ScalarValues::String",
+                reference=reference,
+                location=location,
+            )
+        sysml_type = str(getattr(typing_target, "name", None) or qualified_type)
 
         description = self._extract_attribute_documentation(attr_elem)
         default_value = self._extract_default_value(attr_elem)
         is_optional = default_value is not None
         unit = self._extract_unit(attr_elem, sysml_type, description)
-        element_id = (
-            self._stable_declaration_id(attr_elem)
-            if capture_element_id
-            else None
-        )
+        element_id = self._stable_declaration_id(attr_elem) if capture_element_id else None
 
         return AttributeInfo(
             name=name,
@@ -461,21 +419,21 @@ class SysMLDataExtractor:
             return None
         return element_id
 
-    def _extract_default_value(self, feature) -> str | None:
+    def _extract_default_value(self, feature: Any) -> str | None:
         """Extract default value from AttributeUsage if present."""
-        if hasattr(feature, 'feature_value_expression') and feature.feature_value_expression:
+        if hasattr(feature, "feature_value_expression") and feature.feature_value_expression:
             expr = feature.feature_value_expression
             value = self._extract_literal_value(expr)
             if value is not None:
                 return str(value)
 
-        if not hasattr(feature, 'owned_memberships'):
+        if not hasattr(feature, "owned_memberships"):
             return None
 
         for membership in feature.owned_memberships:
-            if not hasattr(membership, 'is_default') or not membership.is_default:
+            if not hasattr(membership, "is_default") or not membership.is_default:
                 continue
-            if not hasattr(membership, 'value'):
+            if not hasattr(membership, "value"):
                 continue
             value_expr = membership.value
             value = self._extract_literal_value(value_expr)
@@ -484,7 +442,7 @@ class SysMLDataExtractor:
 
         return None
 
-    def _extract_literal_value(self, expr) -> Any | None:
+    def _extract_literal_value(self, expr: Any) -> Any | None:
         """Extract Python value from a literal expression."""
         if expr is None:
             return None
@@ -500,42 +458,42 @@ class SysMLDataExtractor:
         else:
             return None
 
-    def _extract_calc_documentation(self, calc_def) -> str:
+    def _extract_calc_documentation(self, calc_def: Any) -> str:
         """Extract calculation-level documentation from Comment elements."""
-        if hasattr(calc_def, 'documentation'):
+        if hasattr(calc_def, "documentation"):
             docs = list(calc_def.documentation)
             if docs:
                 doc_texts = []
                 for doc in docs:
-                    if hasattr(doc, 'body') and doc.body:
+                    if hasattr(doc, "body") and doc.body:
                         doc_texts.append(doc.body.strip())
                 if doc_texts:
                     return "\n\n".join(doc_texts)
 
-        if hasattr(calc_def, 'owner') and calc_def.owner:
+        if hasattr(calc_def, "owner") and calc_def.owner:
             owner = calc_def.owner
-            if hasattr(owner, 'owned_members'):
+            if hasattr(owner, "owned_members"):
                 members = list(owner.owned_members)
                 for i, member in enumerate(members):
                     if member == calc_def and i > 0:
                         prev_member = members[i - 1]
                         if self.adapter.is_instance(prev_member, "Comment"):
-                            if hasattr(prev_member, 'body') and prev_member.body:
+                            if hasattr(prev_member, "body") and prev_member.body:
                                 body = prev_member.body.strip()
                                 lines = []
-                                for line in body.split('\n'):
+                                for line in body.split("\n"):
                                     line = line.strip()
-                                    if line.startswith('*'):
+                                    if line.startswith("*"):
                                         line = line[1:].strip()
                                     lines.append(line)
-                                return '\n'.join(lines)
+                                return "\n".join(lines)
                         break
 
         return ""
 
-    def _extract_attribute_documentation(self, attr) -> str:
+    def _extract_attribute_documentation(self, attr: Any) -> str:
         """Extract attribute-level documentation from Comment elements."""
-        if not hasattr(attr, 'documentation'):
+        if not hasattr(attr, "documentation"):
             return ""
 
         docs = attr.documentation
@@ -543,26 +501,16 @@ class SysMLDataExtractor:
             return ""
 
         for doc in docs:
-            if hasattr(doc, 'body') and doc.body:
-                return doc.body.strip()
+            if hasattr(doc, "body") and doc.body:
+                return str(doc.body).strip()
 
         return ""
 
-    def _extract_unit(self, attr_elem, sysml_type: str, description: str) -> str | None:
+    def _extract_unit(self, attr_elem: Any, sysml_type: str, description: str) -> str | None:
         """Delegate exact unit extraction to the declaration-owned helper."""
-        return extract_feature_unit(attr_elem, model_paths=self.model_paths)
+        return extract_feature_unit(attr_elem)
 
-    def _map_sysml_to_python_type(self, sysml_type: str) -> str:
-        """Map SysML type to Python type."""
-        type_map = {
-            "Real": "float",
-            "Integer": "int",
-            "String": "str",
-            "Boolean": "bool",
-        }
-        return type_map.get(sysml_type, sysml_type)
-
-    def _extract_documentation(self, elem) -> str:
+    def _extract_documentation(self, elem: Any) -> str:
         """Extract documentation string from element."""
         docs = []
         if hasattr(elem, "owned_members"):
@@ -575,10 +523,28 @@ class SysMLDataExtractor:
 
         return "\n".join(docs) if docs else ""
 
-    def _report_diagnostics(self, diagnostics: Iterable) -> None:
-        """Report diagnostics to console."""
+    def _portable_source(self, filename: str | None) -> str | None:
+        """The manifest referent for a parsed file, matched however it is spelled."""
+        if not filename:
+            return None
+        direct = self._source_referents.get(filename)
+        if direct is not None:
+            return direct
+        return self._source_referents.get(str(Path(filename).resolve()))
+
+    def _report_diagnostics(self, diagnostics: Iterable[Any]) -> None:
+        """Report diagnostics to console, naming files the way the modeller does."""
         for diag in diagnostics:
-            print(f"[ERROR] {diag}")
+            filename = getattr(diag, "filename", None)
+            portable = self._portable_source(filename)
+            if portable is None:
+                print(f"[ERROR] {diag}")
+                continue
+            line = getattr(diag, "line", None)
+            column = getattr(diag, "col", None)
+            code = getattr(diag, "code", None)
+            where = f"{portable}:{line}:{column}" if line is not None else portable
+            print(f"[ERROR] {where}: ({code}) {getattr(diag, 'message', diag)}")
 
     def _compute_file_hash(self, file_path: Path) -> str:
         """Compute SHA256 hash of file contents."""

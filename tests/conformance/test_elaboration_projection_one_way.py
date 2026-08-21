@@ -9,12 +9,12 @@ import pytest
 from sysml_codegen.elaboration import (
     GraphValidationError,
     ValueSite,
-    elaborate,
     project,
 )
 from sysml_codegen.extraction.extractor import SysMLDataExtractor
 from sysml_codegen.resolution.models import EntryPointType, ModuleKind
 from tests.conftest import FIXTURES_DIR, requires_license
+from tests.helpers.raw_elaboration import elaborate
 
 pytestmark = requires_license
 
@@ -60,7 +60,7 @@ def test_constraint_owner_and_alias_scope_ignore_node_display_paths() -> None:
         expected_catalog.concrete_entries[0].owner_instance_path
     )
 
-    alias_graph = _graph("deep_cross_scope_probe")
+    alias_graph = _graph("usage_owned_reference_consumers")
     expected_aliases = project(alias_graph).output_aliases
     changed_alias_graph = deepcopy(alias_graph)
     [alias] = [node for node in changed_alias_graph.attrs.values() if node.is_alias]

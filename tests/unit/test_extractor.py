@@ -13,6 +13,9 @@ from pathlib import Path
 from types import SimpleNamespace
 from uuid import UUID
 
+import pytest
+from agentic_mbse import SemanticEvidenceCode, SemanticEvidenceError
+
 
 def test_extractor_imports_from_agentic_mbse():
     """Verify SysMLDataExtractor uses agentic-mbse types."""
@@ -133,6 +136,8 @@ def test_shared_extractor_leaves_unstable_live_identity_sidecar_empty():
     from sysml_codegen.extraction.extractor import SysMLDataExtractor
 
     extractor = SysMLDataExtractor([])
+    feature_typing = type("FeatureTyping", (), {})()
+    scalar_real = SimpleNamespace(name="Real", qualified_name="ScalarValues::Real")
     cases = (
         (None, UUID("00000000-0000-4000-8000-000000000001")),
         ("Pkg::Calc::unstable", UUID("00000000-0000-4000-8000-000000000002")),
@@ -142,7 +147,7 @@ def test_shared_extractor_leaves_unstable_live_identity_sidecar_empty():
             name="unstable_member",
             qualified_name=qualified_name,
             element_id=element_id,
-            heritage=(),
+            heritage=((feature_typing, scalar_real),),
             documentation=(),
             feature_value_expression=None,
             owned_memberships=(),
@@ -217,13 +222,9 @@ def test_operator_expression_classified_as_expression():
     assert result.param_name == "test_param"
 
 
-def test_deep_chain_emits_full_path_chain_not_reject():
-    """D1 (Item 2): a 3+-segment FeatureChainExpression extracts as a full-path CHAIN,
-    not a hard-rejected UNBOUND. source_path carries every segment untruncated, and
-    the deep-chain arm sets ONLY source_path (N-1: element refs stay unset)."""
+def test_deep_chain_without_exact_target_refuses_semantic_evidence():
+    """A written deep chain cannot substitute for its missing resolved target."""
     from unittest.mock import MagicMock, patch
-
-    from agentic_mbse.sysml.types import BindingType
 
     from sysml_codegen.extraction.usage_extractor import _extract_single_binding
 
@@ -240,26 +241,16 @@ def test_deep_chain_emits_full_path_chain_not_reject():
     def mock_is_instance(obj, type_name):
         return obj is mock_expr and type_name == "FeatureChainExpression"
 
-    warnings: list[str] = []
     with (
         patch(
             "sysml_codegen.extraction.usage_extractor.SysideAdapter.is_instance",
             side_effect=mock_is_instance,
         ),
-        patch(
-            "sysml_codegen.extraction.usage_extractor.extract_feature_chain_segments",
-            return_value=["station", "array", "derived_calc", "derived_value"],
-        ),
     ):
-        result = _extract_single_binding(usage_elem, param_elem, "data_point", warnings)
+        with pytest.raises(SemanticEvidenceError) as caught:
+            _extract_single_binding(usage_elem, param_elem, "data_point", [])
 
-    assert result.binding_type == BindingType.CHAIN
-    assert result.source_path == "station.array.derived_calc.derived_value"  # full
-    # N-1: element refs intentionally unset on the deep-chain arm
-    assert result.source_instance_elem is None
-    assert result.source_attribute_elem is None
-    # No extraction-time warning: the loud diagnostic moved to the backtracker (D3)
-    assert warnings == []
+    assert caught.value.code is SemanticEvidenceCode.RESOLVED_TARGET_MISSING
 
 
 def test_operator_expression_stores_ast():

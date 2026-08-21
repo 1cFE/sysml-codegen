@@ -198,6 +198,18 @@ vocabulary."
 
 ## Requirements traced here
 
+### Exact-route readiness and generation refusals
+
+These refusals are local codegen diagnostics rather than serialized extraction-severity facts.
+Each row names its owner and the stage at which it stops the route.
+
+| Diagnostic | Owner | Refusal stage | Public evidence |
+|---|---|---|---|
+| `SI_EVIDENCE_INCOMPLETE` | Owner: the public evidence conversion in `elaborate_loaded_extractor` | Stage: extraction/elaboration boundary, before a graph is returned | `tests/conformance/test_expression_evidence_integrity.py` |
+| `SI_TYPE_INVALID` | Owner: exact feature typing in `extraction/feature_metadata.py` | Stage: extraction before graph construction | `tests/conformance/test_feature_typing_integrity.py` |
+| `SI_INDEXED_SOURCE_UNSUPPORTED` | Owner: the exact elaborator's source-reference gate | Stage: pre-graph reference materialization | `tests/conformance/test_expression_evidence_integrity.py` |
+| `EXIT_POINT_TYPE_UNSUPPORTED` | Owner: graph-derived wrapper validation in `generation/registry.py` | Stage: every registry entry, including public generation before output mutation, status 1 | `tests/conformance/test_generation_exit_type_preflight.py` |
+
 | Req | Statement | Evidence |
 |---|---|---|
 | REQ-DIAG-01 | A diagnostic's severity is fixed at construction from the writer table and never recomputed by a reader-side `kind → severity` lookup (I1). | `severity_for_kind` is the only mapping; `__post_init__` derives at construction (`agentic-mbse constraint_facts.py:78-95,230-233`). Provable by `rg` — no reader-side table exists. |

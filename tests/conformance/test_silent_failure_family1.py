@@ -12,8 +12,6 @@ fixture source, never computed by the code under test (R1).
 
 from __future__ import annotations
 
-import logging
-
 import pytest
 
 from sysml_codegen.extraction.extractor import SysMLDataExtractor
@@ -76,54 +74,6 @@ def test_d38_caret_aggregation_compiles_to_power_not_xor():
         assert " ** " in a.transformed_expression, a.transformed_expression
         assert " ^ " not in a.transformed_expression, a.transformed_expression
         assert not a.has_unsupported_nodes, a.transformed_expression
-
-
-# --- D3-9: empty-refs tripwire (RECLASSIFIED to guard) --------------------------
-
-
-def test_d39_nonliteral_root_empty_refs_warns(caplog):
-    """A genuine literal has a literal AST root. A *non*-literal root with zero
-    extracted refs is suspicious (extract_feature_refs under-reported) — the
-    classifier keeps returning LITERAL but must warn (tripwire), so a real
-    computed attribute is not silently dropped as a constant. A plain sentinel is
-    a legitimate non-literal input (its is_instance checks are all False)."""
-    from sysml_codegen.extraction.computed_attribute_extractor import (
-        _classify_attribute_expression,
-    )
-    from sysml_codegen.extraction.data_models import ComputedAttributeClassification
-
-    non_literal_root = object()  # not a SysIDE literal node
-    with caplog.at_level(logging.WARNING):
-        result = _classify_attribute_expression(
-            refs=[],
-            owning_part_qualified_name="Pkg::Part",
-            calc_usage_names=set(),
-            sibling_attr_names=set(),
-            expression_ast=non_literal_root,
-            reference_chain=None,
-        )
-    assert result == ComputedAttributeClassification.LITERAL
-    assert any("D3-9 tripwire" in r.message for r in caplog.records), caplog.records
-
-
-def test_d39_no_ast_root_stays_silent(caplog):
-    """The documented `not refs → LITERAL` branch stays silent when there is no
-    AST root to judge (a genuine literal) — the tripwire fires only on a
-    non-literal root."""
-    from sysml_codegen.extraction.computed_attribute_extractor import (
-        _classify_attribute_expression,
-    )
-
-    with caplog.at_level(logging.WARNING):
-        _classify_attribute_expression(
-            refs=[],
-            owning_part_qualified_name="Pkg::Part",
-            calc_usage_names=set(),
-            sibling_attr_names=set(),
-            expression_ast=None,
-            reference_chain=None,
-        )
-    assert not any("D3-9 tripwire" in r.message for r in caplog.records)
 
 
 # --- silent-on-clean (INV-6): Family-1 diagnostics silent on the clean corpus ---

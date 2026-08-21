@@ -96,6 +96,20 @@ def select_name_safety_violation(
     return ordered[0] if ordered else None
 
 
+def predicate_reference_name(node: FeatureReferenceNode) -> str | None:
+    """Return the Python binding name for one exact predicate reference.
+
+    ``source_name`` preserves what the author wrote and may therefore be qualified SysML
+    such as ``comp_a::length``.  Python scope uses the resolved declaration's local name.
+    The qualified target identity remains on :class:`ConstraintFormalIdentity` for the
+    correspondence and collision checks below.
+    """
+    target = node.reference.target
+    if target is not None and target.name:
+        return target.name
+    return node.reference.source_name
+
+
 def format_name_safety_violation(violation: ConstraintNameViolation) -> str:
     identities = ", ".join(
         f"raw_name={identity.raw_name!r}, qualified_name={identity.qualified_name!r}"
@@ -127,7 +141,7 @@ def predicate_bindings(ir: ExpressionIR) -> list[ConstraintBinding]:
 
     def visit(node: ExpressionIR) -> None:
         if isinstance(node, FeatureReferenceNode):
-            name = node.reference.source_name
+            name = predicate_reference_name(node)
             if name is None:
                 return
             target = node.reference.target

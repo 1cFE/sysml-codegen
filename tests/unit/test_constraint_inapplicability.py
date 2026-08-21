@@ -13,13 +13,13 @@ from pathlib import Path
 
 import pytest
 
-from sysml_codegen.elaboration import elaborate
 from sysml_codegen.elaboration.diagnostics import ElaborationCode
 from sysml_codegen.elaboration.elaborate import ElaborationDiagnosticError
 from sysml_codegen.extraction.extractor import SysMLDataExtractor
 from sysml_codegen.orchestration.elaborated_pipeline import elaborate_model_paths
 from sysml_codegen.snapshot.instance_graph import encode_instance_graph
 from tests.conftest import FIXTURES_DIR, requires_license
+from tests.helpers.raw_elaboration import elaborate
 
 pytestmark = requires_license
 

@@ -57,6 +57,17 @@ def _live_calc_defs(model_name: str):
 @requires_license
 @pytest.mark.parametrize("fixture", CALC_CORPUS_FIXTURES)
 def test_calc_compat_parity(fixture):
+    if fixture == "plant_value_shapes":
+        from sysml_codegen.elaboration import ElaborationCode
+        from sysml_codegen.extraction.errors import ExactTypeError
+
+        with pytest.raises(ExactTypeError) as caught:
+            _live_calc_defs(fixture)
+        assert caught.value.code is ElaborationCode.SI_TYPE_INVALID
+        assert caught.value.reference == "PlantValueShapesLib::ChamberSelectCalc::wall"
+        assert "PlantValueShapesLib::'Wall Kind'" in caught.value.detail
+        return
+
     golden = _golden()
     fixture_golden = golden.get(fixture)
     if fixture_golden is None:

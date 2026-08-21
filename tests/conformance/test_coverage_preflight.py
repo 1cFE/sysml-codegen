@@ -89,7 +89,7 @@ def _perturbed(plan):
 def test_a_perturbed_plan_account_refuses_and_names_both_sides():
     graph, plan = _graph_and_plan()
     with pytest.raises(
-        CodeGenerationError, match="coverage account disagrees with its catalog"
+        CodeGenerationError, match="COVERAGE_ACCOUNT_INVALID"
     ) as raised:
         _preflight_coverage_account(graph, _perturbed(plan))
     assert "authored_usage_total=99" in str(raised.value)
@@ -108,7 +108,7 @@ def test_a_perturbed_account_refuses_before_any_write(tmp_path, monkeypatch, cap
     )
     config = _config(tmp_path)
     message = _refused(project(elaborate_model_paths([FIXTURE])), config, caplog)
-    assert "coverage account disagrees with its catalog" in message
+    assert "COVERAGE_ACCOUNT_INVALID: the account disagrees with its catalog" in message
     assert _nothing_was_written(config)
 
 

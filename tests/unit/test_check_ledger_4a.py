@@ -801,13 +801,10 @@ def test_the_paths_check_now_fails_on_either_axis(ledger: dict) -> None:
     )
 
 
-def test_the_companion_root_is_the_main_agentic_mbse_checkout() -> None:
-    """The rebuild worktree is gone; the retirement content lives on the companion's main.
-
-    Pinned so the next relocation shows up here instead of silently blinding the two
-    ``repo: agentic-mbse`` rows again (the 2026-08-15 defect).
-    """
-    assert checker.REPO_ROOTS["agentic-mbse"] == checker.REPO_ROOT.parent / "agentic-mbse"
+def test_the_companion_root_is_the_declared_agentic_artifact() -> None:
+    """The two cross-repository rows use the hash-identified source extraction."""
+    assert checker.REPO_ROOTS["agentic-mbse"] == checker.ARTIFACT_SOURCES.agentic_source
+    assert checker.REPO_ROOTS["sysml-codegen"] == checker.ARTIFACT_SOURCES.codegen_source
 
 
 def test_every_configured_checkout_exists_on_this_machine() -> None:

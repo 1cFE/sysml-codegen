@@ -172,7 +172,7 @@ def test_the_domain_is_identical_with_the_advisory_suppressed(monkeypatch) -> No
     monkeypatch.setattr(
         sys.modules["sysml_codegen.elaboration.elaborate"],
         "screen_extraction_diagnostics",
-        lambda facts: None,
+        lambda facts, source_referents=None: None,
     )
     without_advisory = elaborate_model_paths([VACUOUS_FIXTURE]).constraint_usages
 

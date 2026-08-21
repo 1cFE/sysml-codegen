@@ -62,6 +62,12 @@ Reference documents 03, 04, 05, 07, 10, 11, 12, 13, 17, and 24 describe that del
 
 The `ComputationGraph` (a Pydantic model in `resolution/models.py`) is the sole data structure that code generation consumes. It contains all pipeline modules, their inputs wired to upstream outputs or entry points, execution order, parameter group schemas, and surfaced output aliases (`output_aliases`, serialized with the graph). Generation templates receive only `ComputationGraph` fields -- no back-references to extraction models (REQ-PIPE-07). Generation is also gated by a params-coverage check (V11): `collect_uncovered_params` (`resolution/uncovered_params.py`) runs at the generation boundary and aborts if a wired module input references a params key that no JSON input file will carry. See [09-data-models](reference/09-data-models.md).
 
+The module registry follows the same authority rule. Every exported registry generator derives its
+required exit-point wrappers from the graph; callers cannot supply a second type set. An unsupported
+root output raises `EXIT_POINT_TYPE_UNSUPPORTED` as a typed `CodeGenerationError` before the public
+generator mutates its output tree. See
+[20-module-registry-generation](reference/20-module-registry-generation.md).
+
 ### Identity, Not Strings
 
 The elaborator resolves every reference against typed node identity — occurrence enumeration and declared members — and never by reconstructing or matching a qualified-name string. An `InstanceGraph` consumer holds a typed reference to the node that supplies it, so "which thing produces this value?" is answered once, where the model says it, rather than by a lookup table asked with a key built from the consumer's scope.
@@ -72,6 +78,29 @@ Two consequences a reader should carry into the reference documents:
 - **An unresolvable reference is a typed refusal.** `ElaborationError` (readiness findings) and `ElaborationDiagnosticError` (validation diagnostics) stay distinct all the way to the CLI log, and projection refuses on a rendering collision rather than letting two distinct things render as one name.
 
 The four-typed-registry design and the one-authority `resolve_producer()` ladder that this section used to describe were deleted with the legacy stack. They are documented, accurately, in [10-output-registry](reference/10-output-registry.md), [04-producer-resolution](reference/04-producer-resolution.md), [03-resolution-overview](reference/03-resolution-overview.md), and [24-dual-resolution-architecture](reference/24-dual-resolution-architecture.md), each of which now opens with a banner.
+
+### One semantic-owner walk, then exact indexes
+
+The live elaborator asks SysIDE for a feature's semantic owner once. Formal parameters and
+attachments keep their valid owner domains. Occurrence lookup is stricter: the owner and authored
+containment steps become an immutable `ContainmentAddress`, and `OccurrenceIndex` instantiates only
+that address in the consumer domain. A direct package member is one explicit package step. A nested
+package-owned member without its prefix refuses. There is no nearest ancestor, descendant, model
+root, or sole-candidate retry. The real topology matrix is
+`tests/conformance/test_occurrence_domain_derivation.py`.
+
+Calculation outputs use a separate calculation-output producer index. Its key includes the output
+declaration, usage declaration, exact owner scope, calculation node, and output port. A consumer
+can therefore select the producer in its own repeated or package domain without a model-wide
+"sole producer" guess. See `tests/conformance/test_occurrence_calc_domain_derivation.py`.
+
+Expression and type evidence cross one public boundary in
+`orchestration/elaborated_pipeline.py`: `elaborate_loaded_extractor` converts the upstream
+`SemanticEvidenceError` once to `SI_EVIDENCE_INCOMPLETE` for both live and admitted/snapshot
+capture. The graph builder remains private and never converts that public error. Exact typing
+requires one qualified supported primitive, and valid indexed references currently refuse before
+graph construction as `SI_INDEXED_SOURCE_UNSUPPORTED`. The kept evidence proof is
+`tests/conformance/test_expression_evidence_integrity.py`.
 
 ### Test-First with Real SysML Data
 
@@ -186,10 +215,9 @@ Deleted by the Item 7 retirement and no longer in the tree:
 **Read this index with the retirement in mind.** C05, C06, C08–C19, C27, and X02 name
 components of the string-resolution stack that the Item 7 retirement deleted
 (`core/output_registry.py`, `analysis/`, `orchestration/pipeline_builder.py`,
-`resolution/graph_builder.py` and its resolver). Two of them survived and are simply off the
-shipped route: `extraction/computed_attribute_extractor.py` and
-`extraction/hierarchy_resolver.py`. Their documents are accurate about that code and are not
-descriptions of the product.
+`resolution/graph_builder.py` and its resolver). The off-route computed-attribute classifier
+was deleted in the Phase 5 audit fix round; `extraction/hierarchy_resolver.py` remains off the
+shipped route. Historical component rows are not descriptions of the product.
 C02, C03, C04, C07, C20–C26, C28, C29, and X01 are live on the exact route; C01's models are
 mixed and doc 09 says which are which.
 
@@ -199,7 +227,7 @@ mixed and doc 09 says which are which.
 | C02 | Naming Conventions | [15](reference/15-naming-conventions.md) | `core/qualified_names.py`, `core/identifier_types.py` |
 | C03 | SysMLDataExtractor | [01](reference/01-extraction.md) | `extraction/extractor.py`, `extraction/usage_extractor.py` |
 | C04 | Expression Compiler | [14](reference/14-expression-compiler.md) | `extraction/expression_compiler.py` |
-| C05 | Computed Attribute Extractor | [16](reference/16-computed-attributes.md) | `extraction/computed_attribute_extractor.py` |
+| C05 | Computed attributes (exact elaborator) | [16](reference/16-computed-attributes.md) | `elaboration/elaborate.py` |
 | C06 | Hierarchy Resolver | [25](reference/25-hierarchy-resolver.md) | `extraction/hierarchy_resolver.py` |
 | C07 | AST Dispatch Invariant | [19](reference/19-ast-dispatch-invariant.md) | Cross-cutting (C04, C05, C06) |
 | C08 | Output Registry (Typed) | [10](reference/10-output-registry.md) | `core/output_registry.py` |

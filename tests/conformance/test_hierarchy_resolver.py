@@ -22,6 +22,7 @@ from sysml_codegen.extraction.data_models import (
     HierarchyExtractionResult,
     RedefinitionType,
 )
+from tests.helpers.artifact_sources import agentic_source_root
 from tests.helpers.static_analysis import find_is_instance_calls_in_function
 
 # ---------------------------------------------------------------------------
@@ -30,9 +31,10 @@ from tests.helpers.static_analysis import find_is_instance_calls_in_function
 
 SRC_DIR = Path(__file__).parent.parent.parent / "src" / "sysml_codegen" / "extraction"
 HIERARCHY_RESOLVER_PATH = SRC_DIR / "hierarchy_resolver.py"
+CODEGEN_ROOT = SRC_DIR.parents[2]
+AGENTIC_ROOT = agentic_source_root(CODEGEN_ROOT)
 AGENTIC_AGGREGATION_PATH = (
-    Path(__file__).parent.parent.parent.parent
-    / "agentic-mbse"
+    AGENTIC_ROOT
     / "src"
     / "agentic_mbse"
     / "sysml"

@@ -32,7 +32,7 @@ from agentic_mbse.sysml.data_models import (
     SingletonTerm,
     SumTerm,
 )
-from agentic_mbse.sysml.types import BindingType, ExpressionRef
+from agentic_mbse.sysml.types import BindingType
 
 from .expression_compiler import Compilability
 
@@ -43,6 +43,7 @@ __all__ = [
     "BindingType",  # Re-export from agentic-mbse
     "CalculationDefinitionData",
     "ComputedAttributeClassification",
+    "AttributeRef",
     "ComputedAttributeData",
     "ConstraintInfo",
     "HierarchyExtractionResult",
@@ -215,6 +216,19 @@ class ComputedAttributeClassification(str, Enum):
     UNRESOLVABLE = "unresolvable"
 
 
+@dataclass(frozen=True)
+class AttributeRef:
+    """One reference in a computed-attribute expression, as this classifier reads it.
+
+    The classifier works in names: it asks whether a reference names a sibling attribute,
+    a calculation usage on the same part, or something in another namespace.  Those are
+    the only two fields it needs, so it takes those two rather than the whole exact use.
+    """
+
+    name: str
+    qualified_name: str
+
+
 @dataclass
 class ComputedAttributeData:
     """Extracted data for a computed attribute on a PartDef/PartUsage.
@@ -230,7 +244,7 @@ class ComputedAttributeData:
         owning_part_qualified_name: SysML :: format
         expression_ast: Raw syside AST node (source of truth for compilation)
         expression_text: Display-only text from reconstruct_expression()
-        references: Refs from extract_feature_refs (structurally paired name+qn)
+        references: The expression's exact references, named for classification
         classification: Computed attribute classification
         compilability: Reuse from expression_compiler
         compiled_expression: Python expr string (FORMULA only, None otherwise)
@@ -249,7 +263,7 @@ class ComputedAttributeData:
     owning_part_qualified_name: str
     expression_ast: Any
     expression_text: str
-    references: list[ExpressionRef]
+    references: list[AttributeRef]
     classification: ComputedAttributeClassification
     compilability: Compilability
     compiled_expression: str | None = None

@@ -7,8 +7,8 @@ first misclassifies FCE nodes. This was the root cause of Bug A (commit 20b720e)
 
 Testing strategy:
 - Static analysis tests parse source files with Python ast module -- no mocks.
-- Behavioral tests use SysIDE adapter name-based fallback with dual-match mock
-  classes (acceptable per Ground Rule 1).
+- Behavioral tests use the adapter's exact-MRO test-double contract with a
+  dual-match mock class (acceptable per Ground Rule 1).
 - Model-fact tests read live extraction (``tests/helpers/live_extraction.py``), not the
   retiring v5 extraction snapshots; they are license-gated by the fixture.
 
@@ -19,9 +19,12 @@ from __future__ import annotations
 
 from pathlib import Path
 from types import SimpleNamespace
+from uuid import NAMESPACE_URL, uuid5
 
 import pytest
+from agentic_mbse.sysml.syside_adapter import SysideAdapter
 
+from tests.helpers.artifact_sources import agentic_source_root
 from tests.helpers.static_analysis import (
     find_all_dispatch_functions,
     find_comment_near_line,
@@ -34,6 +37,8 @@ from tests.helpers.static_analysis import (
 # ---------------------------------------------------------------------------
 
 SRC_ROOT = Path(__file__).parent.parent.parent / "src" / "sysml_codegen"
+CODEGEN_ROOT = SRC_ROOT.parent.parent
+AGENTIC_ROOT = agentic_source_root(CODEGEN_ROOT)
 EXTRACTION_DIR = SRC_ROOT / "extraction"
 
 HIERARCHY_RESOLVER_PATH = EXTRACTION_DIR / "hierarchy_resolver.py"
@@ -41,16 +46,14 @@ USAGE_EXTRACTOR_PATH = EXTRACTION_DIR / "usage_extractor.py"
 EXTRACTOR_PATH = EXTRACTION_DIR / "extractor.py"
 ELABORATOR_PATH = SRC_ROOT / "elaboration" / "elaborate.py"
 AGENTIC_HIERARCHY_PATH = (
-    Path(__file__).parent.parent.parent.parent
-    / "agentic-mbse"
+    AGENTIC_ROOT
     / "src"
     / "agentic_mbse"
     / "sysml"
     / "hierarchy.py"
 )
 AGENTIC_AGGREGATION_PATH = (
-    Path(__file__).parent.parent.parent.parent
-    / "agentic-mbse"
+    AGENTIC_ROOT
     / "src"
     / "agentic_mbse"
     / "sysml"
@@ -79,13 +82,11 @@ EXPRESSION_TYPE_NAMES = frozenset(
 DUAL_CHECK_SITES = [
     (AGENTIC_AGGREGATION_PATH, "_decompose_node"),
     (USAGE_EXTRACTOR_PATH, "_extract_single_binding"),
-    (ELABORATOR_PATH, "_expression_references"),
 ]
 
 DUAL_CHECK_IDS = [
     "agentic_aggregation._decompose_node",
     "_extract_single_binding",
-    "elaboration._expression_references",
 ]
 
 # Sites that use if/if/if chains (not elif) and must follow full canonical ordering
@@ -116,21 +117,46 @@ class MockFeatureReferenceExpression:
     """Mock syside FeatureReferenceExpression node."""
 
     def __init__(self, name: str):
-        self.referent = SimpleNamespace(name=name)
+        self.referent = _semantic_feature(name)
 
 
-class MockFeatureChainExpressionOperatorExpression:
+class MockFeatureChainExpression:
+    """Exact-MRO adapter test double for a feature-chain expression."""
+
+
+class MockOperatorExpression:
+    """Exact-MRO adapter test double for an operator expression."""
+
+
+class MockFeatureChainExpressionOperatorExpression(
+    MockFeatureChainExpression,
+    MockOperatorExpression,
+):
     """Mock that dual-matches both FeatureChainExpression and OperatorExpression.
 
-    Class name contains both type names, triggering SysideAdapter.is_instance()'s
-    name-based fallback for both type checks. Used to verify that FCE handler fires
-    first when both would match.
+    Its MRO carries both exact mapped test-double names. Used to verify that the
+    FCE handler fires first when both metatype checks match.
     """
 
     def __init__(self, operands: list | None = None, target_feature=None):
         self.operator = "."
         self.operands = operands or []
         self.target_feature = target_feature
+
+
+def _semantic_feature(name: str) -> SimpleNamespace:
+    """An exact semantic target accepted by Agentic's reference-use boundary."""
+    return SimpleNamespace(
+        name=name,
+        qualified_name=f"Mock::{name}",
+        element_id=uuid5(NAMESPACE_URL, f"https://sysml-codegen.test/mock/{name}"),
+        owned_redefinitions=(),
+        owning_type=None,
+        document=SimpleNamespace(
+            url="file:///mock.sysml",
+            document_tier=SysideAdapter.document_tier_type().Project,
+        ),
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -263,11 +289,7 @@ class TestReqAst04DispatchSiteGuardrail:
     """Guard against new unaudited dispatch sites appearing in the codebase."""
 
     def test_total_dual_check_site_count(self):
-        """Exactly 3 audited functions have both FCE and OE is_instance() checks.
-
-        The exact-ID reference collector checks OperatorExpression only to keep
-        operator syntax out of the explicit-invocation branch. It still belongs
-        in this critical FCE-before-OE inventory.
+        """Exactly 2 audited functions have both FCE and OE is_instance() checks.
 
         The fourth site was ``analysis/parameter_groups.py:_extract_default_value``; it
         retired with the v5 family (retirement step 2)."""
@@ -291,16 +313,13 @@ class TestReqAst04DispatchSiteGuardrail:
             for key, types in all_dispatch.items()
             if "FeatureChainExpression" in types and "OperatorExpression" in types
         }
-        assert len(dual_check) == 3, (
-            f"Expected 3 dual-check sites (FCE+OE), found {len(dual_check)}: "
+        assert len(dual_check) == 2, (
+            f"Expected 2 dual-check sites (FCE+OE), found {len(dual_check)}: "
             f"{sorted(dual_check.keys())}"
         )
 
     def test_total_dispatch_function_count(self):
-        """Exactly 7 audited functions dispatch on 2+ expression types.
-
-        The exact-ID elaborator contributes three FCE/FRE-only functions:
-        classification, binding evidence, and reference collection."""
+        """Exactly 5 audited functions dispatch on 2+ expression types."""
         all_dispatch = find_all_dispatch_functions(SRC_ROOT, EXPRESSION_TYPE_NAMES)
         shared_classifier_calls = find_is_instance_calls_in_function(
             AGENTIC_HIERARCHY_PATH,
@@ -331,8 +350,8 @@ class TestReqAst04DispatchSiteGuardrail:
                 shared_aggregation_types
             )
         multi_type = {key: types for key, types in all_dispatch.items() if len(types) >= 2}
-        assert len(multi_type) == 7, (
-            f"Expected 7 audited multi-type dispatch functions, found {len(multi_type)}: "
+        assert len(multi_type) == 5, (
+            f"Expected 5 audited multi-type dispatch functions, found {len(multi_type)}: "
             f"{sorted(multi_type.keys())}"
         )
 
@@ -370,7 +389,7 @@ class TestReqAst05SingletonTermClassification:
     def test_walk_aggregation_ast_fce_produces_singleton_behavioral(self):
         """Behavioral: dual-match FCE+OE mock node -> SingletonTerm in _AggregationContext.
 
-        Uses SysideAdapter name-based fallback (no monkeypatch needed).
+        Uses the SysideAdapter exact-MRO test-double contract.
         """
         from sysml_codegen.extraction.hierarchy_resolver import (
             _AggregationContext,
@@ -379,7 +398,7 @@ class TestReqAst05SingletonTermClassification:
 
         node = MockFeatureChainExpressionOperatorExpression(
             operands=[MockFeatureReferenceExpression("child")],
-            target_feature=SimpleNamespace(name="attr"),
+            target_feature=_semantic_feature("attr"),
         )
 
         ctx = _AggregationContext()
@@ -423,7 +442,7 @@ class TestReqAst07ReconstructExpressionFormat:
 
         node = MockFeatureChainExpressionOperatorExpression(
             operands=[MockFeatureReferenceExpression("instance")],
-            target_feature=SimpleNamespace(name="attr"),
+            target_feature=_semantic_feature("attr"),
         )
         result = reconstruct_expression(node)
         assert result == "instance.attr", f"Expected 'instance.attr', got {result!r}"
@@ -434,7 +453,7 @@ class TestReqAst07ReconstructExpressionFormat:
 
         node = MockFeatureChainExpressionOperatorExpression(
             operands=[MockFeatureReferenceExpression("instance")],
-            target_feature=SimpleNamespace(name="attr"),
+            target_feature=_semantic_feature("attr"),
         )
         result = reconstruct_expression(node)
         assert ".(" not in result, f"Bug A regression: result contains '.(' pattern: {result!r}"
@@ -471,7 +490,7 @@ class TestRegressionOrderReversal:
 
         node = MockFeatureChainExpressionOperatorExpression(
             operands=[MockFeatureReferenceExpression("pv_module")],
-            target_feature=SimpleNamespace(name="capital_cost"),
+            target_feature=_semantic_feature("capital_cost"),
         )
 
         ctx = _AggregationContext()

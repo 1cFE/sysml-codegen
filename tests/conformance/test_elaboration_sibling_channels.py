@@ -23,12 +23,12 @@ import pytest
 from sysml_codegen.elaboration import (
     ElaborationError,
     InstanceGraph,
-    elaborate,
 )
 from sysml_codegen.extraction.extractor import SysMLDataExtractor
 from sysml_codegen.extraction.source_evidence import ReadinessCode
 from tests.conftest import FIXTURES_DIR, requires_license
 from tests.helpers.elaboration_graph import attr, calc, producer_ref
+from tests.helpers.raw_elaboration import elaborate
 
 pytestmark = requires_license
 

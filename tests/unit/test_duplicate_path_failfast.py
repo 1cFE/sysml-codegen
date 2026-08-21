@@ -38,7 +38,7 @@ def test_module_path_collision_fails_fast():
         _calc_usage_module("AliasAggProbeLibrary::'Margin Calc'", "Margin_Calc"),
         _calc_usage_module("AliasAggProbeLibrary::'margin calc'", "margin_calc"),
     ]
-    with pytest.raises(CodeGenerationError, match="Duplicate output path") as exc:
+    with pytest.raises(CodeGenerationError, match="DUPLICATE_OUTPUT_PATH") as exc:
         _check_duplicate_output_paths(modules)
     msg = str(exc.value)
     assert "AliasAggProbeLibrary::'Margin Calc'" in msg
@@ -57,7 +57,7 @@ def test_schema_key_collision_fails_fast():
         _calc_usage_module("LibA::'Margin Calc'", "Margin_Calc", n_outputs=2),
         _calc_usage_module("LibB::'margin calc'", "margin_calc", n_outputs=2),
     ]
-    with pytest.raises(CodeGenerationError, match="Duplicate output path") as exc:
+    with pytest.raises(CodeGenerationError, match="DUPLICATE_OUTPUT_PATH") as exc:
         _check_duplicate_output_paths(modules)
     msg = str(exc.value)
     assert "LibA::'Margin Calc'" in msg

@@ -3,22 +3,23 @@
 from __future__ import annotations
 
 from collections import Counter
+from pathlib import Path
 
 import pytest
+from agentic_mbse import SemanticEvidenceCode, SemanticEvidenceError
 from agentic_mbse.sysml.syside_adapter import SysideAdapter
 
 from sysml_codegen.elaboration import (
     ElaborationCode,
     ElaborationDiagnosticError,
-    ElaborationError,
     InstanceGraph,
-    elaborate,
 )
 from sysml_codegen.elaboration.identity import declaration_id_for
 from sysml_codegen.extraction.extractor import SysMLDataExtractor
-from sysml_codegen.extraction.source_evidence import ReadinessCode
+from sysml_codegen.orchestration.elaborated_pipeline import elaborate_model_paths
 from tests.conftest import FIXTURES_DIR, requires_license
 from tests.helpers.elaboration_graph import calc, every_alias_target, every_typed_edge
+from tests.helpers.raw_elaboration import elaborate
 
 pytestmark = requires_license
 
@@ -48,44 +49,65 @@ def _elaborate_strict(name: str) -> InstanceGraph:
     )
 
 
-def test_invocation_rhs_is_diagnostic_not_an_unbound_candidate() -> None:
-    graph = _elaborate_lenient("invocation_binding_probe")
-    consumer = calc(graph, "InvocationBindingDesign__probe__c")
+def _assert_unsupported_invocation_refuses_pregraph(
+    fixture: str,
+    *,
+    reference: str,
+    source_file: str,
+    source_line: int,
+    strict: bool,
+) -> None:
+    with pytest.raises(ElaborationDiagnosticError) as raised:
+        elaborate_model_paths([FIXTURES_DIR / fixture], strict=strict)
 
-    assert Counter(diagnostic.code for diagnostic in graph.diagnostics) == Counter(
-        {ReadinessCode.SI_EXPRESSION_SOURCE_UNSUPPORTED: 1}
+    [diagnostic] = raised.value.diagnostics
+    assert diagnostic.code is ElaborationCode.SI_EXPRESSION_SOURCE_UNSUPPORTED
+    assert diagnostic.reference == reference
+    assert diagnostic.source_file == source_file
+    assert diagnostic.source_line == source_line
+    rendered = str(raised.value)
+    assert rendered.count("SI_EXPRESSION_SOURCE_UNSUPPORTED") == 1
+    assert f"{source_file}:{source_line}" in rendered
+    assert "/tmp/" not in rendered
+    cause = raised.value.__cause__
+    assert isinstance(cause, SemanticEvidenceError)
+    assert cause.code is SemanticEvidenceCode.EXPRESSION_KIND_UNSUPPORTED
+
+
+def test_invocation_rhs_refuses_before_a_lenient_graph_can_escape() -> None:
+    _assert_unsupported_invocation_refuses_pregraph(
+        "invocation_binding_probe",
+        reference="Doubler(v = a)",
+        source_file="root-0/design.sysml",
+        source_line=19,
+        strict=False,
     )
-    assert "x" in consumer.input_names.values()
-    assert all(
-        not (consumer.input_names[port] == "x" and port in consumer.inputs)
-        for port in consumer.input_names
-    )
-    assert consumer.unbound_formals == ()
 
 
-def test_indexed_source_has_its_distinct_readiness_diagnostic() -> None:
+def test_indexed_source_refuses_before_graph_construction_in_both_modes() -> None:
     extractor = _load("source_identity_indexed_source")
 
-    with pytest.raises(ElaborationError) as excinfo:
-        elaborate(
-            extractor.model,
-            extractor.extract_calculation_definitions(),
-            validation_diagnostics=extractor.diagnostics.validation,
-        )
+    for strict in (True, False):
+        with pytest.raises(ElaborationDiagnosticError) as excinfo:
+            elaborate(
+                extractor.model,
+                extractor.extract_calculation_definitions(),
+                validation_diagnostics=extractor.diagnostics.validation,
+                strict=strict,
+            )
 
-    assert Counter(finding.code for finding in excinfo.value.findings) == Counter(
-        {ReadinessCode.SI_INDEXED_SOURCE_UNSUPPORTED: 2}
-    )
+        assert [diagnostic.code for diagnostic in excinfo.value.diagnostics] == [
+            ElaborationCode.SI_INDEXED_SOURCE_UNSUPPORTED
+        ]
+        assert excinfo.value.diagnostics[0].consumer is None
+        assert "#(" in excinfo.value.diagnostics[0].reference
 
 
 def test_definition_reference_refusals_keep_their_distinct_codes() -> None:
     graph = _elaborate_lenient("source_identity_occurrence_ambiguity")
 
     assert Counter(diagnostic.code for diagnostic in graph.diagnostics) == Counter(
-        {
-            ElaborationCode.SI_OCCURRENCE_MISSING: 1,
-            ElaborationCode.SI_OCCURRENCE_AMBIGUOUS: 1,
-        }
+        {ElaborationCode.SI_OCCURRENCE_MISSING: 2}
     )
     assert {diagnostic.param_name for diagnostic in graph.diagnostics} == {"value_in"}
     assert all("amb_" in diagnostic.consumer_display for diagnostic in graph.diagnostics)
@@ -102,10 +124,7 @@ def test_strict_mode_rejects_blocking_occurrence_diagnostics() -> None:
         )
 
     assert Counter(diagnostic.code for diagnostic in excinfo.value.diagnostics) == Counter(
-        {
-            ElaborationCode.SI_OCCURRENCE_MISSING: 1,
-            ElaborationCode.SI_OCCURRENCE_AMBIGUOUS: 1,
-        }
+        {ElaborationCode.SI_OCCURRENCE_MISSING: 2}
     )
 
 
@@ -160,16 +179,40 @@ def test_customer_fixture_lenient_diagnostics_are_accounted_for() -> None:
     }
 
 
-def test_alias_cycle_and_unsupported_formula_are_blocking_diagnostics() -> None:
-    graph = _elaborate_lenient("elab_fail_closed_probe")
+def test_unsupported_invocation_preempts_alias_cycle_before_graph() -> None:
+    _assert_unsupported_invocation_refuses_pregraph(
+        "elab_fail_closed_probe",
+        reference="Doubler(value = source)",
+        source_file="root-0/model.sysml",
+        source_line=21,
+        strict=False,
+    )
+
+
+def test_alias_cycle_is_a_blocking_diagnostic(tmp_path: Path) -> None:
+    model = tmp_path / "model.sysml"
+    model.write_text(
+        """package AliasCycleProbe {
+    private import ScalarValues::*;
+    part def Probe {
+        attribute alias_a : Real = alias_b;
+        attribute alias_b : Real = alias_a;
+    }
+    part probe : Probe;
+}
+"""
+    )
+    extractor = SysMLDataExtractor([tmp_path])
+    assert extractor.load_models()
+    graph = elaborate(
+        extractor.model,
+        extractor.extract_calculation_definitions(),
+        validation_diagnostics=extractor.diagnostics.validation,
+        strict=False,
+    )
 
     codes = Counter(diagnostic.code for diagnostic in graph.diagnostics)
-    assert codes == Counter(
-        {
-            ElaborationCode.SI_ALIAS_CYCLE: 2,
-            ReadinessCode.SI_EXPRESSION_SOURCE_UNSUPPORTED: 1,
-        }
-    )
+    assert codes == Counter({ElaborationCode.SI_ALIAS_CYCLE: 2})
     assert not graph.is_projectable
     assert all(node.alias_target is None for node in graph.attrs.values() if node.is_alias)
 
@@ -228,7 +271,7 @@ def test_ambiguous_exact_owner_is_lenient_diagnostic_and_strict_refusal() -> Non
     assert diagnostic.code == ElaborationCode.SI_OCCURRENCE_AMBIGUOUS
     assert diagnostic.consumer == consumer.node_id
     assert diagnostic.param_name is None
-    assert diagnostic.detail == "consumer context contains 2 candidate occurrences"
+    assert "has 2 concrete occurrences" in diagnostic.detail
     assert consumer.inputs == {}
 
     with pytest.raises(ElaborationDiagnosticError) as excinfo:
@@ -265,7 +308,6 @@ def test_selected_owner_without_a_leaf_target_refuses_by_name() -> None:
         strict=False,
     )
     consumer = calc(graph, "CalcUsageLeafOwner__plant__comp_b__doubled")
-    owner = _declaration_wire(extractor.model, "PartUsage", "CalcUsageLeafOwner::Plant::comp_a")
     leaf = _declaration_wire(
         extractor.model, "CalculationUsage", "CalcUsageLeafOwner::Plant::comp_a::twice"
     )
@@ -274,29 +316,23 @@ def test_selected_owner_without_a_leaf_target_refuses_by_name() -> None:
     assert diagnostic.code == ElaborationCode.SI_OCCURRENCE_MISSING
     assert diagnostic.consumer == consumer.node_id
     assert diagnostic.param_name is None
-    assert diagnostic.detail == (
-        f"exact owner {owner} has no target for leaf {leaf} at its selected occurrence"
-    )
+    assert diagnostic.detail == f"exact owner address has no target for leaf {leaf}"
     assert consumer.inputs == {}
 
 
-def test_strict_readiness_halt_precedes_graph_diagnostic_rejection() -> None:
-    """The two strict exits are distinct, and readiness is the earlier one.
+def test_indexed_and_invocation_pregraph_refusals_are_distinct() -> None:
+    """Both unsupported source forms refuse before graph validation under their own code."""
 
-    ``_finish_readiness`` raises ``ElaborationError`` before ``graph.validate()`` ever
-    runs, so a readiness fixture never reaches the ``ElaborationDiagnosticError`` path
-    the owner-resolution controls above use. The two error types are unrelated classes,
-    which is what makes this distinguishable rather than a matter of message text.
-    """
-    assert not issubclass(ElaborationDiagnosticError, ElaborationError)
-
-    with pytest.raises(ElaborationError) as excinfo:
+    with pytest.raises(ElaborationDiagnosticError) as excinfo:
         _elaborate_strict("source_identity_indexed_source")
+    assert [diagnostic.code for diagnostic in excinfo.value.diagnostics] == [
+        ElaborationCode.SI_INDEXED_SOURCE_UNSUPPORTED
+    ]
 
-    assert Counter(finding.code for finding in excinfo.value.findings) == Counter(
-        {ReadinessCode.SI_INDEXED_SOURCE_UNSUPPORTED: 2}
-    )
-    lenient = _elaborate_lenient("source_identity_indexed_source")
-    assert Counter(diagnostic.code for diagnostic in lenient.diagnostics) == Counter(
-        {ReadinessCode.SI_INDEXED_SOURCE_UNSUPPORTED: 2}
+    _assert_unsupported_invocation_refuses_pregraph(
+        "invocation_binding_probe",
+        reference="Doubler(v = a)",
+        source_file="root-0/design.sysml",
+        source_line=19,
+        strict=True,
     )

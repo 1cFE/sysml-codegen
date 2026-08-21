@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import re
-from collections.abc import Sequence
 from pathlib import Path
 from typing import Any
 
@@ -56,13 +55,11 @@ _SI_UNITS = {
 
 def extract_feature_unit(
     feature: Any,
-    *,
-    model_paths: Sequence[Path] = (),
 ) -> str | None:
     """Return one feature's exact authored unit without inference or conversion."""
     return (
         _unit_from_type(feature)
-        or _unit_from_source(feature, model_paths=model_paths)
+        or _unit_from_source(feature)
         or _unit_from_description(_description(feature))
     )
 
@@ -81,12 +78,12 @@ def _unit_from_type(feature: Any) -> str | None:
     return None
 
 
-def _unit_from_source(feature: Any, *, model_paths: Sequence[Path]) -> str | None:
+def _unit_from_source(feature: Any) -> str | None:
     cst_node = getattr(feature, "cst_node", None)
     start_byte = getattr(cst_node, "start_byte", None)
     if start_byte is None:
         return None
-    source_file = _source_file(feature, model_paths=model_paths)
+    source_file = _source_file(feature)
     if source_file is None or not source_file.exists():
         return None
     try:
@@ -123,7 +120,7 @@ def _unit_from_source(feature: Any, *, model_paths: Sequence[Path]) -> str | Non
     return unit
 
 
-def _source_file(feature: Any, *, model_paths: Sequence[Path]) -> Path | None:
+def _source_file(feature: Any) -> Path | None:
     current = feature
     while current is not None:
         document = getattr(current, "document", None)
@@ -143,13 +140,7 @@ def _source_file(feature: Any, *, model_paths: Sequence[Path]) -> Path | None:
             return Path(uri)
         current = getattr(current, "owner", None)
 
-    files: list[Path] = []
-    for path in model_paths:
-        if path.is_file():
-            files.append(path)
-        elif path.is_dir():
-            files.extend(path.glob("**/*.sysml"))
-    return files[0] if len(files) == 1 else None
+    return None
 
 
 def _description(feature: Any) -> str:
