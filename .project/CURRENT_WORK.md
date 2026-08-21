@@ -5,8 +5,8 @@
 registers are installed and script-managed: `.project/adr/0001` is the owner-grade audience question,
 `0002`/`0003` the index-resolution and citation conventions; the product ledger is `0001`…`0004` with a
 generated index. ADR-007 and ADR-009 are triaged builder-facing and carried to Item 3. Five audit
-follow-ups are recorded in the archived `audit.md`; the README pack-divergence note is done, the rest
-are open. Next: REPO-CLEANUP Item 2, Decision Harvest Inventory.)
+follow-ups are recorded in the archived `audit.md`; all are resolved `[OWNER, 2026-08-21]` except
+the ADR-009 re-home itself, which Item 3 owns. Next: REPO-CLEANUP Item 2, Decision Harvest Inventory.)
 Prior status: 2026-08-20 (**stop-reinventing-the-parser SHIPPED — all three repositories
 merged to GitHub `main`.** Merge-commit PRs in dependency order: Agentic agentic-mbse#13
 (`88e2489`), Codegen sysml-codegen#13 (`82244a0`), Fusion fusion-tea#102 (`5338db5f`). The
@@ -995,9 +995,10 @@ surfaces as matrix-row candidates.
   owner-verbatim bodies byte-identical below the block except five ratified link repoints; I1–I6 are
   conformance tests.
 - Audit Certify at `3566fdd`; licensed runnable suite 2,371 passed under the accepted missing-manifest
-  limitation. Open follow-ups in the archived `audit.md`: dead negative strings and an old-form compat
-  branch in the contract tests, `promoted_to: null` on `.project/adr/0001`, and `0001:128`'s stale
-  `:588` cite for ADR-009 (Item 3). Archived to `.project/completed/20260821_scaffolding-register-boundary/`.
+  limitation. Audit follow-ups closed `[OWNER, 2026-08-21]`: the contract test now matches only the
+  generated index row and pins one historical single-home phrase; `.project/adr/0001` declares its
+  `promoted_to` paths; `0001:128` cites ADR-009 at `:704`. Archived to
+  `.project/completed/20260821_scaffolding-register-boundary/`.
 
 ### 2026-08-19: stop-reinventing-the-parser — CLOSED BY OWNER DIRECTION
 

@@ -50,9 +50,9 @@ def _frontmatter_value(text: str, field: str) -> str:
 def _product_ids_in(index: str) -> tuple[str, ...]:
     ids: list[str] = []
     for line in index.splitlines():
-        match = re.match(r"^- \[?(?:P-)?(?P<id>[0-9]{3,4})(?:\s|·)", line)
+        match = re.match(r"^- (?P<id>[0-9]{4}) · ", line)
         if match is not None:
-            ids.append(match.group("id").zfill(4))
+            ids.append(match.group("id"))
     assert ids, "product index contains no promise rows"
     assert len(ids) == len(set(ids)), "product index contains duplicate promise ids"
     return tuple(ids)
@@ -91,11 +91,10 @@ def test_no_document_claims_a_single_adr_home() -> None:
         assert ".project/adr/" in text
         assert "two decision registers" in text.lower()
 
+    # Pins the one single-home sentence that existed before the two-register ruling;
+    # the positive assertions above are the guard on the convention itself.
     for relative in (*convention_docs, ".project/product/INDEX.md"):
-        text = _read(relative).lower()
-        assert "there is no `docs/adr/` directory" not in text
-        assert "only adr home" not in text
-        assert "single adr home" not in text
+        assert "there is no `docs/adr/` directory" not in _read(relative).lower()
 
 
 def test_decision_register_boundary_is_discoverable() -> None:

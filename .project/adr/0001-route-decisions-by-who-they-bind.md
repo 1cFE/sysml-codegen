@@ -9,7 +9,7 @@ superseded_by: null
 provenance: "[OWNER]"
 seams: [project-workflow, documentation]
 supersedes: null
-promoted_to: null
+promoted_to: CLAUDE.md, .project/product/README.md
 ---
 
 ## Decision
