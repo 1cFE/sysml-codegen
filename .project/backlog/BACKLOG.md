@@ -21,6 +21,44 @@ Filed 2026-08-20 `[OWNER]`. Both were briefly attached to REPO-CLEANUP Item 1 be
 product-lens wanted them off Item 8's tail; neither has anything to do with scaffolding or cleanup,
 so they ride on their own. Each is a `/_my_quick_edit`, not a pipeline item.
 
+### [POSITIONAL-FORMAL-REDEFINITION] A calc usage that skips a leading defaulted formal is refused, and the legacy route mis-wired it — P1, unowned (filed 2026-08-21 from fusion-tea stellarator-model-migration)
+
+On the exact route a calc usage that binds later formals by name and leaves an *earlier* defaulted
+formal at its default lands each binding one slot early and refuses as `SI_RENDERING_COLLISION`
+"distinct inputs render to one parameter name" (`elaboration/project.py:674-685`). Four sites in
+the stellarator model at fusion-tea `7ee0c22a`: `generic_mfe/mfe_plant.sysml:116` (`geom`, skips
+`pi`), `:141` (`rb`, skips `pi`), `:530` (`supplementary`, skips four rate formals);
+`stellarator_09/stellarator_plant.sysml:855` (`wall_load_calc`, skips `ash_frac`); the defs are
+`mfe_plasma_scaling.sysml:30,71,231` and `mfe_account_costs.sysml:559-590`. Two findings:
+(a) the refusal is correct but the message does not say *which* skipped formal shifted the slots
+or that reordering the declaration fixes it; (b) premise-grade: the legacy route matched by name,
+so the old package was numerically right -- on the exact route these four would be mis-wired
+without the collision check. The customer-side fix (declare defaulted formals last) is applied and
+ledgered in fusion-tea (`models/stellarator_migration_ledger.md`, Class A rows 1-4); the diagnostic
+should name the formal and the fix.
+
+### [UNIT-SCRAPE-BYTE-OFFSET] `extract_feature_unit` reads the wrong source line and projects comment prose as a unit — P1, unowned (filed 2026-08-21 from fusion-tea stellarator-model-migration)
+
+`extraction/feature_metadata.py::_unit_from_source` locates a declaration's line by
+`cst_node.start_byte` but walks the file by `len(line)` in *characters*, so every multi-byte
+character earlier in the file (an em dash in a doc comment is enough) shifts the scanned line
+forward -- 42-62 bytes on the stellarator model -- onto an unrelated comment, whose first word
+after `//` is then projected as that feature's unit (`unit='Manual'`, `unit='n'` were observed).
+Consumers of one entry point then disagree and the projection refuses with
+`SI_RENDERING_COLLISION` "conflicting projected metadata" (`elaboration/project.py:503`),
+naming the entry point but not the scraped unit or the line it came from. Second heuristic in the
+same function: on a correctly located line the first word after `//` is projected as the unit
+regardless of content (`unit='module'`, `unit='operating'`), so any trailing comment on a
+declaration is a latent collision. Third, `_unit_from_description` reads any short parenthetical in
+a doc body as a unit. Fix: seek by character offset (decode the byte offset against the file's
+encoding, or use the CST node's line number), and restrict comment-derived units to an explicit
+`[unit]` bracket form or drop the comment channel. Reproducer: fusion-tea `models/library/analyses/`
+at `7ee0c22a` (before the customer-side workaround); the workaround -- ASCII punctuation in comment
+text plus no trailing comments on declaration lines -- is ledgered as Class B
+(`models/stellarator_migration_ledger.md` F3) with a fusion-tea revert row. Fails loud, never
+silent: the collision check stops generation; no wrong unit reaches a sealed contract (the contract
+carries no unit field today).
+
 ### [ARTIFACT-MANIFEST-TESTS-HARD-FAIL] Release-evidence tests break an ordinary checkout — P0
 
 Filed 2026-08-21 `[OWNER]`, hit during REPO-CLEANUP Item 1 Phase 1.
@@ -123,6 +161,14 @@ of scope. Source: Item 1 spec-lens `spec-F4`.
   except the exact standard-library `NumericalFunctions::sum` declaration refuses before graph
   construction with `SI_EXPRESSION_SOURCE_UNSUPPORTED`, naming the authored expression and its
   source location. A future capability must define and test each admitted function explicitly.
+  **Motivating case (filed 2026-08-21, fusion-tea stellarator-model-migration):** the stellarator
+  model authored six invocations -- `RealFunctions::sqrt` in `'DT Fusion Power'`
+  (`mfe_plasma_scaling.sysml`, the Bosch-Hale peak reactivity) and `RealFunctions::max` ×3,
+  `min`, `floor` in `'Levelized Replacement Cost'` (`mfe_account_costs.sysml`, jnp.clip and ceil
+  written as identities). Both calcs were made opaque manual interfaces so the pinned route
+  generates (fusion-tea `models/stellarator_migration_ledger.md`, Class B rows, Appendix A/B hold
+  the verbatim bodies); fusion-tea carries a revert row to restore them when this capability lands.
+  The wanted vocabulary for that model is exactly `sqrt`, `max`, `min`, `floor`.
 - **[OUTPUT-ALIAS-DUPLICATE-SOURCE-SILENCE] Refuse or implement a second output alias — P1
   `[AGENT]`.** A second authored alias for one source survives in `graph.output_aliases` but emits no
   exit-point line, writes no `<name>.json`, and produces no diagnostic. Decide the supported
@@ -485,7 +531,17 @@ definition-owned lineage mapping, bare references, and explicit occurrence paths
 Implementation is complete and independently verified. Sibling item
 `[ANCHORING-ARRAYED-DIAGNOSTIC]` remains limited to the separate arrayed-owner diagnostic.
 
-### [STELLARATOR-D5-MIGRATION] Migrate the stellarator demo's 114 self-named bindings — P2, unowned (filed from self-binding-replacement Phase 5 triage, 2026-08-16)
+### [STELLARATOR-D5-MIGRATION] Migrate the stellarator demo's 114 self-named bindings — DONE 2026-08-21 (fusion-tea stellarator-model-migration)
+
+**Done.** The July hold was released by the owner (fusion-tea research Q3, 2026-08-21) and the
+migration ran in fusion-tea `.project/active/stellarator-model-migration/`: `make_d5_variant.py
+--root` customer mode at this repo's `8a758e92` (the fusion-tea pin) over the self-contained MFE
+tree -- 66 formals, 99 binding sites, 95 declaring formals, preconditions clear, strip check 0
+problems -- plus the three further refusal classes found behind it (the positional-formal row, the
+scalar-function row, the unit-scrape row above). The regenerated package seals at runtime contract
+2.0.0 and reproduces the pre-migration 948-point grid byte for byte; ledger at fusion-tea
+`models/stellarator_migration_ledger.md`. Original triage text below, kept as filed.
+
 
 The one-run triage (self-binding-replacement `stellarator-triage.md`) confirms the exact route
 refuses `/home/reid/1cfe/fusion-tea-stellarator-mbse-demo/models` with exit 1 and exactly **114
