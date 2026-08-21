@@ -1,0 +1,434 @@
+# Implementation Plan: Scaffolding Reinstall and Register Boundary
+
+**Status:** In Progress
+**Created:** 2026-08-21
+**Last Updated:** 2026-08-21 (Phase 1 limitation accepted; Phase 2 authorized)
+
+## Source Documents
+
+- **Spec:** `.project/active/scaffolding-register-boundary/spec.md`
+- **Design:** `.project/active/scaffolding-register-boundary/design.md` ← component detail,
+  architecture, bets, decisions, invariants, gotchas all live there
+- **Epic:** `.project/backlog/epic_repo_cleanup.md` — Item 1
+- **Product-lens:** `.project/active/scaffolding-register-boundary/product-lens.md` (spec run, DISPOSED)
+
+## The Point
+
+The product is three steps: parse the models with a SysML v2 parser, walk the AST to reconstruct the
+math, write it into TEAx Python — and any manual fallback for an unresolved reference is a smell,
+because ill-formed models are refused with a diagnostic rather than accommodated.
+`[OWNER-VERBATIM, 2026-08-16]`, `.project/product/P-004` and `P-003`.
+
+This work does not touch that product. It serves it one hop back. Those two promises are written
+down precisely so a future agent cannot quietly undo them, and the ledger's own contract is *"if a
+promise is not reachable from here, it has no home."* Today that ledger is maintained by hand
+against a specification saying a script owns it, and the repo has two places to file a decision with
+no rule for which. A promise-keeping mechanism that has already started to drift is the problem.
+
+**The obligation every phase is checked against: the four promises come out reachable, unaltered,
+and correctly graded.** Two of them are the owner's verbatim words. If a phase would trade any of
+those three properties for convenience, stop and surface it.
+
+## Implementation Strategy
+
+**Phasing Rationale.** The only step that could re-scope this item is whether a prepended
+frontmatter block is legal and readable on an append-only entry, so that goes first on a throwaway
+copy where being wrong is free. Everything after it is ordered by hard dependency: the engine must
+exist before the ledger can be migrated onto it, and the register must exist before decisions can be
+filed into it. The design's own decisions are filed last because `adr.sh` — the thing that allocates
+their ids — is installed by this same item.
+
+**Critical Path.** Prove the frontmatter shape → install the engines → migrate the ledger →
+file the criterion and triage → write back and validate.
+
+**First Proof Point.** End of Phase 1: a scratch copy of `P-003` carrying a prepended frontmatter
+block, where `product.sh index` emits its row and the prose below the block diffs clean against the
+original. If that works, nothing else in this item is architecturally uncertain.
+
+**Overall Validation Approach.** Invariants I1–I6 (`design.md#required-invariants`) are the
+acceptance surface. I1, I2 and I5 become real tests in the conformance suite rather than one-time
+manual checks, and they are written before the migration they guard. Every phase ends with the full
+suite green.
+
+**Risk lowered since the design.** B3 is close to settled by the pack's own code: `supersede`,
+`amend` and `check` all call `set_field` to rewrite frontmatter in place on already-filed entries
+(`product.sh:211-213, 230-236, 249`). Frontmatter is the designed-mutable surface; "the body is
+immutable" governs the prose. Phase 1 is therefore a mechanical confirmation, not a genuine kill
+gate — but it still runs, because the line-1 parsing gotcha fails silently.
+
+---
+
+## Phase 1: Prove the Migration Shape on a Throwaway Copy
+
+### Goal
+
+Confirm that a prepended YAML frontmatter block is readable by `product.sh` and leaves the entry's
+prose byte-identical. No register or scaffolding target under `.project/` is touched; only the
+required phase record and progress tracking change.
+
+### Assumption Under Test
+
+**B3** (`design.md#key-bets`) — prepending frontmatter is a metadata addition, not a body mutation,
+so the migration is four renames rather than four supersessions. Plus the line-1 gotcha from
+`design.md#implementation-notes`: `field()` requires `---` at `NR==1`, and a leading blank line makes
+every field read empty **without erroring**.
+
+**Kill criterion:** if the prose cannot survive the prepend byte-identical, or if `field()` cannot
+read a prepended block, stop and re-scope the item as four supersessions. Report before proceeding.
+
+### Test Stencil (Write This First)
+
+```bash
+# scratch: $T=$(mktemp -d)/product ; cp P-003 -> $T/0003-no-workarounds-for-bad-models.md
+# 1. prepend the block, then:
+PRODUCT_DIR=$T product.sh index
+grep -q '^- 0003 · ' $T/INDEX.md                      # entry is discoverable
+# 2. prose survived:
+diff <(sed '1{/^---$/!q1}; 1,/^---$/d; 1,/^---$/!d' new) original   # empty
+# 3. the gotcha is loud, not silent:
+#    insert a leading blank line -> field() returns empty -> row vanishes from INDEX.md
+```
+
+### Changes Required
+
+**See `design.md` for:** the frontmatter schema and field semantics →
+`design.md#research-findings`; the gotcha → `design.md#implementation-notes`.
+
+- [x] Create a scratch product register outside the repo; copy `P-003` in under its target name
+- [x] Derive and prepend the frontmatter block from what the entry already states
+- [x] Run `product.sh index` against the scratch register; confirm the row appears
+- [x] Diff the prose below the block against the original — empty
+- [x] Reproduce the leading-blank-line failure and record what it looks like
+- [x] Record the outcome in `.project/active/scaffolding-register-boundary/phase1-findings.md`
+
+### Validation
+
+**Automated:**
+- [x] Scratch `INDEX.md` contains the `0003` row with its title
+- [x] Prose diff is empty
+
+**Manual:**
+- [x] Blank-line variant reproduces the silent-empty-field mode and it is written down
+
+**What We Know Works After This Phase:** the migration mechanism, and the shape of its worst
+failure mode. No product-register or scaffolding target in the repo has changed.
+
+**Owner disposition:** `[OWNER, 2026-08-21]` The owner accepted the recorded missing-manifest
+environment limitation and authorized Phase 2. The exact full-suite gate remains unavailable, not
+green.
+
+---
+
+## Phase 2: Install the Scaffolding
+
+### Goal
+
+`adr.sh`, `product.sh`, `adr/README.md` and `product/README.md` present; the four stale pack files
+refreshed; nothing else disturbed.
+
+### Assumption Under Test
+
+`init-project.sh --force` merges without collateral damage — it updates exactly the four differing
+template files and adds exactly the four missing ones, and does not touch `CURRENT_WORK.md`,
+`BACKLOG.md`, `CHANGELOG.md`, or `memories/index.json`.
+
+### Test Stencil (Write This First)
+
+```bash
+# The dry run IS the first test. Capture and inspect it before the real run.
+/home/reid/agentic-project-init/scripts/init-project.sh \
+  --source /home/reid/agentic-project-init --force --dry-run > /tmp/dry.txt
+grep -c 'Would add'    /tmp/dry.txt   # 4: adr.sh, product.sh, adr/README.md, product/README.md
+grep -c 'Would update' /tmp/dry.txt   # 10: --force reports 4 differences and 6 identical files alike
+grep 'Protected'       /tmp/dry.txt   # the four user-data files, untouched
+# Classify reported updates with cmp before installation: expect 4 different and 6 identical.
+```
+
+### Changes Required
+
+**See `design.md` for:** the install decision and why not hand-copying → `design.md#key-decisions`
+(D1); the measured diff → `design.md#research-findings`.
+
+- [x] Run the dry run from the repo root and review it against the expected counts above
+- [x] **Do not pass `--include-claude`** — `.claude/` here is a real directory, not a pack vendor point
+- [x] Run for real; commit the scaffolding as its own commit so the migration diff stays readable
+- [x] Run the pack's `test_adr.sh` and `test_product.sh` against this checkout
+
+### Validation
+
+**Automated:**
+- [x] Byte-level dry-run census matches; no protected file appears as updated
+- [x] `test_adr.sh` and `test_product.sh` pass
+- [x] The installation delta contains only the expected eight files
+
+**Manual:**
+- [x] `.project/EPIC_GUIDE.md` now contains the Slicing Principles section
+- [x] `adr.sh new --help`-equivalent path works from the repo root
+
+**What We Know Works After This Phase:** both engines run here, and the installer did not eat
+anything.
+
+### Phase 2 Completion — 2026-08-21
+
+- The installer was run from its actual pack location,
+  `/home/reid/agentic-project-init/scripts/init-project.sh`, without `--include-claude`.
+- With `--force`, its dry run reported all ten existing non-protected pack files as updates. A
+  pre-install byte census separated four real differences from six identical no-ops. It also found
+  the planned four additions and all four protected files.
+- The protected files, the existing product index, and all four promise entries retained their
+  pre-install SHA-256 hashes. `.claude/` was untouched.
+- The eight-file scaffolding change is commit `59ed5b9` (`chore(project): install decision register
+  scaffolding`) on the existing `repo-cleanup` branch. The spec's stale `main` branch label was
+  corrected to match the checkout.
+- Pack validation passed: `test_adr.sh` 32/32 and `test_product.sh` 46/46. The installed scripts are
+  byte-identical to the tested pack scripts. The Slicing Principles and repo-root usage checks also
+  passed.
+- Licensed working-checkout validation passed every runnable test: 2,371 passed and 9 policy skips,
+  with 94 tests deselected by excluding the nine modules that require the unavailable external
+  artifact manifest. The focused product-document contract passed 1/1. Per the owner's Phase 1
+  disposition, the exact full-suite gate remains unavailable rather than green.
+
+---
+
+## Phase 3: Migrate the Ledger
+
+### Goal
+
+The four promises are named `000N-<slug>.md`, carry accurate frontmatter, are reachable from a
+generated `INDEX.md`, and every citation resolves in both directions.
+
+### Assumption Under Test
+
+**B2** (`design.md#key-bets`) — nothing outside the four files and the one conformance test depends
+on the `P-00N` filename form in a way a mechanical repoint cannot fix.
+
+### Test Stencil (Write This First)
+
+Write these as conformance tests **before** moving anything. I1 and I5 fail today; that is correct.
+
+```python
+def test_every_indexed_promise_resolves_to_exactly_one_entry() -> None:      # I1
+    for entry_id in _ids_in(_read(".project/product/INDEX.md")):
+        assert len(list(PRODUCT.glob(f"{entry_id}-*.md"))) == 1
+
+def test_product_index_is_a_faithful_regeneration() -> None:                 # I5
+    assert _read(".project/product/INDEX.md") == _regenerate_index()
+```
+
+### Changes Required
+
+**See `design.md` for:** the id map → `design.md#key-decisions` (D2); reachability-by-naming-rule →
+D3 and `design.md#required-invariants` (I1); the per-entry data flow → `design.md#architecture`.
+
+#### 1. Conformance tests (NEW assertions — write first)
+**File:** `tests/conformance/test_stop_parser_documentation_contract.py`
+- [ ] Add the I1 and I5 tests above
+- [ ] Leave the owner-quote assertions at `:172-206` **unchanged** — only the two read paths move
+- [ ] Re-express `assert "P-003-….md" in index` as an id-plus-resolution check (I1's form), never delete it
+
+#### 2. The four entries
+- [ ] `git mv` each `P-00N-<slug>.md` → `000N-<slug>.md`, preserving slugs (D2)
+- [ ] Prepend frontmatter; backfill `date` and `owner` from each file's git history, not today
+- [ ] Map provenance: `P-003`/`P-004` → `[OWNER]` with the verbatim quote staying in Authority
+      (the pack's documented first-capture shape); `P-002` → `[AGENT] (ratified by owner, 2026-08-16)`;
+      `P-001` grades the **summary**, not what it cites
+- [ ] Verify I2 per file: prose below the block diffs clean against the pre-move blob
+
+#### 3. Index and citations
+- [ ] `product.sh index`; commit the generated `INDEX.md`
+- [ ] Re-derive the live citation set with `grep -rl 'P-00[0-9]'` — **do not use the 2026-08-20 list**
+- [ ] Repoint the live sites. Hand-check `CLAUDE.md` and `.project/backlog/BACKLOG.md`; both are read
+      by tooling and by every session, so a sloppy sweep there is more damaging than a renamed file
+- [ ] Confirm I4's other direction: every path cited *by* an entry still resolves
+
+### Validation
+
+**Automated:**
+- [ ] I1, I5 tests pass; owner-quote assertions still pass unchanged
+- [ ] Full suite green with `SYSIDE_LICENSE_KEY` loaded
+- [ ] `grep -rn 'P-00[0-9]'` returns no live site expecting the old form
+
+**Manual:**
+- [ ] Read the generated `INDEX.md` end to end — can a cold agent get from it to each promise?
+- [ ] Spot-check `P-001`'s Authority citations resolve
+
+**What We Know Works After This Phase:** the ledger is script-managed, reachable, and no citation
+dangles.
+
+---
+
+## Phase 4: File the Criterion, Triage the Nine, Fix the Docs
+
+### Goal
+
+`.project/adr/0001` carries the routing rule; all nine existing ADRs have a recorded triage outcome;
+no document claims a single ADR home.
+
+### Assumption Under Test
+
+**B4** (`design.md#key-bets`) — one abstract routing question is enough to file correctly without a
+per-subject list. Applying it to nine real entries is the test: if any of the nine cannot be routed
+without appealing to its subject matter, the criterion is under-specified and needs rewording before
+it is filed.
+
+### Test Stencil (Write This First)
+
+```python
+def test_no_document_claims_a_single_adr_home() -> None:                     # I6
+    for path in ("CLAUDE.md", ".project/product/README.md", ".project/product/INDEX.md"):
+        text = _read(path)
+        assert "no separate" not in text.lower() or "two register" in text.lower()
+        # and: .project/adr/ is named as a register wherever the convention is described
+```
+
+### Changes Required
+
+**See `design.md` for:** the criterion's shape and why it must generalize →
+`design.md#core-concept`; the citation form → D4; where displaced index prose lands → D5.
+
+- [ ] `.project/scripts/adr.sh new <criterion-slug>` — never hand-mint the id
+- [ ] Write the rule as **one question** answerable without a subject list, so the claude-commands
+      work can cite it rather than re-derive it. Set `provenance: "[OWNER]"`; it is settled
+- [ ] Triage all nine against it into
+      `.project/active/scaffolding-register-boundary/adr-triage.md`. **Move nothing**
+      `[OWNER, 2026-08-21]` — record §§1-8 as author-facing, and ADR-009 as builder-facing with its
+      re-home carried to Item 3 (epic step 2a)
+- [ ] Rewrite the ADR-convention paragraph in `CLAUDE.md` and add D4's citation form
+- [ ] Add the repo-local section to `.project/product/README.md`: the id rule, the `<id>-*.md`
+      resolution rule, and the two-register convention (D5)
+- [ ] `adr.sh index`
+
+### Validation
+
+**Automated:**
+- [ ] I6 test passes; full suite green
+- [ ] `adr.sh index` output equals the committed `.project/adr/INDEX.md`
+
+**Manual:**
+- [ ] I3: read each entry's `provenance` against its own prose; record agreement in the triage doc
+- [ ] Hand the criterion to a fresh reader with no context and ask them to route three of the nine
+
+**What We Know Works After This Phase:** a cold agent can route a new decision, and the register the
+epic's later items file into exists.
+
+---
+
+## Phase 5: Write Back the Design's Decisions and Close
+
+### Goal
+
+The decisions this design settled are filed in the register it built, and every invariant is green.
+
+### Assumption Under Test
+
+None new. This phase closes the loop the design flagged: it could not file its own decisions because
+`adr.sh` did not exist yet.
+
+### Test Stencil (Write This First)
+
+```bash
+# The full invariant sweep is the test. All six, in one run.
+uv run --extra dev pytest tests/ -k "product_ledger or adr_home or documentation_contract"
+.project/scripts/product.sh index && git diff --exit-code .project/product/INDEX.md   # I5
+.project/scripts/adr.sh index     && git diff --exit-code .project/adr/INDEX.md
+```
+
+### Changes Required
+
+**See `design.md#key-decisions`** for D1–D6 and their rejected alternatives — the bodies are already
+written there and need only be carried into entries, cited not restated.
+
+- [ ] File the decisions that pass the density bar in `.project/adr/README.md`. Expect **few**:
+      D3 (reachability by naming rule, not an index fork) and D4 (cite by register path) are the
+      load-bearing ones a future agent could plausibly re-derive wrongly. D1, D2 and D5 are
+      mechanism detail the design already records — cite, do not re-file
+- [ ] D6 is a deferral, not a decision this design settled; it is recorded in the epic's Item 3 and
+      the triage doc, and gets no entry
+- [ ] `product.sh check <id> <ref>` on all four promises — stamp only now that I1–I3 pass
+- [ ] Update `.project/CURRENT_WORK.md` from "spec in progress" to the completed state
+
+### Validation
+
+**Automated:**
+- [ ] I1–I6 all green
+- [ ] Full suite green with `SYSIDE_LICENSE_KEY` loaded (`set -a; source ../agentic-mbse/.env; set +a`)
+- [ ] `uv run --extra dev ruff check src/` and `mypy src/` clean
+
+**Manual:**
+- [ ] Re-read `design.md#the-point`: are the four promises reachable, unaltered, and correctly
+      graded? That is the item's acceptance, not the checklist above
+
+**What We Know Works After This Phase:** the item is done and Item 2 can start.
+
+---
+
+## Environment Setup
+
+**See CLAUDE.md.** The license matters here: without `SYSIDE_LICENSE_KEY` the gated tests skip
+rather than fail, so a green run with no key is not a full run. Load it with
+`set -a; source ../agentic-mbse/.env; set +a`.
+
+## Risk Management
+
+**See `design.md#potential-risks`.**
+
+**Phase-Specific Mitigations:**
+- **Phase 1** — being wrong is free; nothing in the repo is touched until the mechanism is proven
+- **Phase 2** — dry run reviewed before the real run; scaffolding committed separately so the
+  migration diff stays readable
+- **Phase 3** — the citation sweep is re-derived with `grep`, never from a remembered list;
+  `CLAUDE.md` and `BACKLOG.md` are hand-checked rather than swept
+- **Phase 4** — if any of the nine cannot be routed without appealing to its subject, the criterion
+  is reworded before filing, not after
+- **Phase 5** — `check` stamps come last, so no promise is marked verified before it is
+
+## Implementation Notes
+
+[TO BE FILLED DURING IMPLEMENTATION]
+
+### Phase 1 Completion
+**Proof completed:** 2026-08-21 07:54 PDT
+**Phase status:** Implementation complete; exact full-suite disposition required before Phase 2
+
+**Actual Changes:**
+- Added `phase1-findings.md` with the isolated proof record.
+- Built a scratch product register under `/tmp/scaffolding-register-boundary-phase1.bDGvKX`.
+- Confirmed the generated `0003` row and byte-identical promise body. Both body hashes were
+  `ffdbdf03991965c252005da39d4cc28149f4c4ab1d4b0cd2b7ff62dd48ec5f32`.
+- Reproduced the line-1 parser failure. No product-register file in this repository changed.
+
+**Issues:**
+- The source `product.sh` ignores a `PRODUCT_DIR` environment override. The test ran the
+  unmodified script from an isolated temporary project root instead.
+- A leading blank line does not remove the entry from generated output completely. It removes the
+  identifiable row and leaves an empty `-  ·  · ` ghost row while exiting successfully.
+
+**Deviations:**
+- Replaced the non-functional environment override in the test stencil with an equivalent
+  scratch-project-root isolation. The phase goal and production script were unchanged.
+- Corrected the phase wording that said nothing under `.project/` would change. The required
+  findings and progress records changed; no register or scaffolding target did.
+
+**Validation:**
+- Scratch index row, body byte comparison, blank-line failure, and `git diff --check` passed.
+- The direct documentation-contract run passed 8 tests, including the owner-verbatim product
+  assertions. Its remaining 3 tests refused the absent hash-identified artifact manifest.
+- The licensed working-checkout suite, excluding the six modules that cannot collect without that
+  manifest, finished **2,387 passed / 9 skipped / 10 failed / 2 errors**. Every failure and error
+  was the same `STOP_PARSER_ARTIFACT_SOURCE_INPUTS` refusal in three additional process-evidence
+  modules; no product assertion failed.
+- No manifest for current commit `da15f14138249ac507e1ad74e01da8ad50f9fb04` exists locally.
+  Building one requires the separate five-repository artifact pipeline. The plan's exact full-suite
+  gate is therefore pending owner disposition, not marked green.
+
+### Phase 2 Completion
+
+### Phase 3 Completion
+
+### Phase 4 Completion
+
+### Phase 5 Completion
+
+---
+
+**Status**: Draft → In Progress → Complete

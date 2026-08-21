@@ -2,7 +2,7 @@
 
 Prioritized list of epics and features.
 
-**Last Updated**: 2026-08-18
+**Last Updated**: 2026-08-20
 
 ---
 
@@ -12,6 +12,90 @@ Prioritized list of epics and features.
 - **P1**: High - Important, do soon
 - **P2**: Medium - Valuable, do when possible
 - **P3**: Low - Nice to have, do eventually
+
+---
+
+## Standalone fixes — small, unblocked, not owned by any epic
+
+Filed 2026-08-20 `[OWNER]`. Both were briefly attached to REPO-CLEANUP Item 1 because the epic's
+product-lens wanted them off Item 8's tail; neither has anything to do with scaffolding or cleanup,
+so they ride on their own. Each is a `/_my_quick_edit`, not a pipeline item.
+
+### [ARTIFACT-MANIFEST-TESTS-HARD-FAIL] Release-evidence tests break an ordinary checkout — P0
+
+Filed 2026-08-21 `[OWNER]`, hit during REPO-CLEANUP Item 1 Phase 1.
+
+`verification/artifact_sources.py` raises `ArtifactSourceInputError(RuntimeError)` when
+`STOP_PARSER_ARTIFACT_SOURCE_INPUTS` is unset or names a manifest for a different commit. Tests that
+import it therefore **fail** in a normal working tree instead of skipping — 10 failures and 2 errors
+on a clean checkout, before any behavior is exercised. The suite already has the right pattern one
+directory over: `tests/conftest.py:37-40` skips when `SYSIDE_LICENSE_KEY` is absent.
+
+**The immediate fix is the gate, not the tests:** make an absent or non-matching manifest a
+`pytest.skip` with a message naming what it needs, matching the license-gate precedent. A developer
+on a clean tree then sees skips and a green run, and the sealed-checkout run still enforces
+everything it does today.
+
+Affected — 3,409 lines across nine files, of which the first four are **product tests entangled with
+release machinery, not process tests**:
+
+| lines | file | kind |
+|---|---|---|
+| 761 | `tests/conformance/test_hierarchy_resolver.py` | product |
+| 512 | `tests/conformance/test_ast_dispatch_invariant.py` | product |
+| 260 | `tests/conformance/test_self_binding_guidance_contract.py` | product |
+| 219 | `tests/conformance/test_exact_route_fingerprint_stability.py` | product |
+| 1046 | `tests/conformance/test_evidence_artifact_topology.py` | process (Item 7 candidate) |
+| 234 | `tests/conformance/test_probe_fixture_lock.py` | process |
+| 226 | `tests/conformance/test_stop_parser_documentation_contract.py` | mixed — also guards the owner-verbatim P-003/P-004 quotes |
+| 128 | `tests/unit/test_artifact_sources.py` | process |
+| 23 | `tests/helpers/artifact_sources.py` | shim |
+
+Scope here is the **gate only** — flip raise to skip so development is unblocked. Disentangling the
+four product tests from the manifest is REPO-CLEANUP Item 6/7 work; disposition of `verification/`
+itself is Item 8. Do not delete any product test to make the failure go away.
+
+### [SERIALIZE-NAN-SEAL] The contract seal writes invalid JSON on a NaN — P1
+
+`contracts/serialize.py` has two encoders and its own docstring calls them "the same decision seen
+twice". **Both** omit `allow_nan=False`, where the other three canonical encoders in the tree set it
+(`snapshot/instance_graph.py:87`, `snapshot/envelope.py:180`, `extraction/source_manifest.py:342`):
+
+- `canonical_json` (`:28`) — the `ModelContract` fingerprint payload that gets hashed
+- `write_contract_json` (`:34`) — the contract file that `PackageContract` hashes **and ships**
+
+`ContractParameter.default_value` is typed `float | None` (`contracts/models.py:33`), so a NaN
+default writes a bare `NaN` into the shipped contract — invalid JSON — and the seal computes a
+digest over it and reports success. A signed contract containing JSON most parsers reject, with
+nothing to tell you.
+
+**Latent, not live** — whether any real model produces a NaN default is unverified. Fixing only
+`:28` fixes the half that hashes and leaves the half that ships, so both go together.
+
+Falsifier / acceptance: build a `ModelContract` whose `ContractParameter.default_value` is
+`float("nan")`, run the package seal, and assert the written contract file parses under
+`json.loads(..., parse_constant=raise)`. Today it writes `NaN` and seals. Source: REPO-CLEANUP
+product-lens `epic_plan-F6` and Item 1 spec-lens `spec-F3`.
+
+### [V11-DEAD-GATE-DOCS] Three live docs advertise a refusal that cannot happen — P1
+
+`ComputationGraph.fallback_entry_points` is constructed as `set()` at both of its only construction
+sites (`elaboration/project.py:287,322`) and pinned as permanently empty by
+`tests/unit/test_warning_reconciliation_exact_route.py:167`. So `collect_uncovered_params` always
+returns nothing and the `PARAMS_KEY_UNCOVERED: V11` branch at `cli/__init__.py:298` can never fire.
+
+Three live documents still say it does:
+
+- `CLAUDE.md:65` — lists "params coverage (V11)" among the five preflights that run before output
+- `docs/architecture/overview.md:63` — says generation "is also gated by a params-coverage check
+  (V11) … and aborts"; `:141` names the collector
+- `docs/architecture/modeling-assumptions.md:750-785` — the **model author's own register**, listing
+  V11 under "the pipeline enforces these rules" with its full error text and a V11 note
+
+A model author is promised a diagnostic the toolchain will never issue, which is the inverse of
+`P-003`. Scope is the docs only — deleting the dead V11 *code* stays in REPO-CLEANUP Item 8, where
+it retires with its pinning test. Reference documents 07/11/17/24 carry retiring banners and are out
+of scope. Source: Item 1 spec-lens `spec-F4`.
 
 ---
 
@@ -170,8 +254,47 @@ GAP-CLOSE items:
 
 | Epic | Status | Notes |
 |------|--------|-------|
+| [REPO-CLEANUP] Repo Cleanup — Keep the Decisions, Delete the Exhaust | Draft (decomposed 2026-08-20; owner-approved scope + 8 items; product-lens DISPOSED) | The repo is 880k lines and the product is 15k. `.project/` is 78% of the tree, 109,720 lines of it byte-exact duplicates (`ruff_all.log` committed 10× for 120,736 lines), and exactly one `.project` file is read by any tool. Extract the durable decisions and promises into `.project/adr/` and `.project/product/`, then purge the archive, then ask of the tests and the code what they actually defend. Owner ruling `[OWNER, 2026-08-20]`: **split the registers by subject** — `docs/architecture/modeling-assumptions.md` keeps decisions binding the *model author*, `.project/adr/` takes decisions binding the *toolchain builder*; the criterion is written to generalize because the same boundary problem exists in the claude commands. Eight items, ~11 days sequential (~6-7 parallel). Extraction always precedes deletion. See `epic_repo_cleanup.md` and the measurement it rests on, `.project/research/20260820-201945_line-count-anatomy-and-salvageability.md`. |
 | ~~[CONSTRAINT-EXEC] Constraint Execution and Design-Space Studies~~ ✅ | Complete (2026-07-13). Archived to: `.project/completed/20260713_epic_constraint_execution.md` (independent findings audit alongside) | Modeled assertions execute as graph modules + exact-schema report aggregator; graph-owned catalog, sealed contracts, crash-safe study layer (lists/grids). De-risked by spikes S1–S6 (all passed, verified re-runs; results + carry-forwards inline in the concept). Acceptance: IFE sweep's hand-coded viability rule replaced by the generated assertion, grid classifications match. All 15 items certified; IFE acceptance ratified [OWNER] (2294/2301 + 7 model-favoring boundary rows); CE-F1/F2 follow-ons registered below, CE-F3 fixed. |
 | ~~[PUSH-DOWN] agentic-mbse Push-Down~~ ✅ | Complete (2026-07-10). Archived to: `.project/completed/20260720_epic_push_down.md` (+ audit, independent audit, pre-PR reports alongside) | All 4 items certified; independently audited Certify after 2026-07-10 remediation; merged as sysml-codegen PR #8 + agentic-mbse PR #10. Expression reconstruction, qualified-name split, hierarchy primitives/models, aggregation decomposition pushed down; design overrides, usage-type indexing, Python rewriting, aliases, scoping, module construction stayed in sysml-codegen. |
+
+REPO-CLEANUP items (decomposition owner-approved 2026-08-20; product-lens gate DISPOSED with six
+findings closed in the decomposition, not deferred):
+
+- [ ] **Item 1 — Scaffolding reinstall and register boundary** (1d, no deps). Install `.project/adr/`,
+  `adr.sh`, `product.sh`, refreshed pack docs; file the subject-split criterion as the first entry;
+  triage the nine existing ADRs; correct the single-ADR-home claims in `CLAUDE.md` and
+  `.project/product/INDEX.md`. Also lands the two stranded fixes lifted out of Item 8 per
+  product-lens F6: `allow_nan=False` at `contracts/serialize.py:28` (the `ModelContract`
+  fingerprint currently seals over invalid JSON on a NaN default) and the `CLAUDE.md:65` claim
+  that the V11 preflight is live when it cannot fire.
+- [ ] **Item 2 — Decision harvest inventory** (1.5d, needs 1). One candidate register over 124
+  completed items, 63 research docs, 55 concepts. Acceptance test: the sweep must independently
+  surface the owner's three named seeds ("use the parser, do not create custom patches"; the
+  elaborate-first insights). Per F5 it also harvests test-and-code rationale, so Items 7-8 survive
+  Item 5 deleting the archive first.
+- [ ] **Item 3 — Author the decision records** (1.5d, needs 2). Ruled-in decisions filed to the
+  register the criterion assigns, each with a `Why` a future challenge re-derives against. No
+  entry may rest on a path Item 5 will delete.
+- [ ] **Item 4 — Author the product promises** (0.75d, needs 2; parallel to 3). Extend
+  `.project/product/` past P-004; `P-001`…`P-004` bodies stay byte-identical.
+- [ ] **Item 5 — `.project` purge** (1d, needs 3+4). Under 100k lines, zero committed logs, zero
+  byte-exact duplicates >2KB, zero stale `active/` dirs. Per F1, every path cited by
+  `.project/product/*` and `.project/adr/*` must resolve after the purge — `P-001`'s
+  `BACKLOG.md:439` citation has **already drifted** (target now `:552`).
+- [ ] **Item 6 — Coverage audit** (2d, no deps; owner order places it after 5). Report only.
+  Phase 1 is a mutation-testing spike with a kill criterion; per F3 it runs **licensed with the
+  execution lane enabled**, reports gated-lane rate separately, and a low kill rate is explicitly
+  never deletion authority. Per F2 the inventory is promise-indexed; per F4 every gap exits as a
+  filed backlog item with an id.
+- [ ] **Item 7 — Test remediation** (1.5d, needs 6). Delete what defends nothing, each removal
+  naming the false belief. ~73k lines of vestigial committed data. **Deletion lock**: no
+  ledger-cited test is removed without an owner ruling recorded in the citing entry.
+- [ ] **Item 8 — Code cleanup** (1.75d, needs 7; and Item 3 if parallelized). ~2,370 dead lines
+  retired *with* their pinning tests; `scripts/archive/` (8,274 lines that cannot execute) and the
+  twelve retired reference docs (3,633) deleted; recorded dispositions for `verification/`, the
+  legacy extraction lane, and the snapshot codec. Gates on byte-identical generated output.
+
 
 CONSTRAINT-EXEC items:
 - [x] Item 0 — End-to-end integration spike (S6 lifecycle × S5 evaluator × S4 sealed package)

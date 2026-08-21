@@ -1,6 +1,15 @@
 # Current Work
 
-**Last Updated**: 2026-08-20 (**stop-reinventing-the-parser SHIPPED — all three repositories
+**Last Updated**: 2026-08-21 (**scaffolding-register-boundary Phase 2 complete; awaiting Phase 3
+authorization.** `[OWNER, 2026-08-21]` The owner accepted the Phase 1 missing-artifact-manifest
+limitation and authorized Phase 2. The current pack's ADR and product engines, register contracts,
+and four refreshed scaffolding files are installed in standalone commit `59ed5b9`. Pack tests passed
+32/32 and 46/46. The runnable licensed suite passed 2,371 with 9 policy skips, and the focused
+product-document contract passed 1/1. Ninety-four tests in nine process-evidence modules were
+deselected because the accepted current-manifest limitation still applies; the exact full-suite
+gate is unavailable, not green. The four promise entries, their index, all four protected project
+records, and `.claude/` were unchanged by the installation.)
+Prior status: 2026-08-20 (**stop-reinventing-the-parser SHIPPED — all three repositories
 merged to GitHub `main`.** Merge-commit PRs in dependency order: Agentic agentic-mbse#13
 (`88e2489`), Codegen sysml-codegen#13 (`82244a0`), Fusion fusion-tea#102 (`5338db5f`). The
 Codegen PR merged a `stop-parser-integration` branch combining `C_prod` `8a758e92…` with the
@@ -171,6 +180,26 @@ rather than invented; vehicle `[CONSTRAINT-GATES-UNTAGGED]` in `BACKLOG.md`.
 ---
 
 ## Active Work
+
+### 2026-08-21: scaffolding-register-boundary — PHASE 2 COMPLETE, awaiting Phase 3 authorization (REPO-CLEANUP Item 1)
+
+Spec, design and plan are in implementation (`.project/active/scaffolding-register-boundary/`).
+Phase 1 proved the migration shape, and `[OWNER, 2026-08-21]` the owner accepted its recorded
+missing-manifest environment limitation. Phase 2 installed the current pack's two register engines,
+two register contracts, and four refreshed scaffolding files without touching protected project
+records, the existing promise ledger, or `.claude/`. The isolated installation is commit `59ed5b9`.
+Pack tests passed 32/32 and 46/46; the runnable licensed suite passed 2,371 with 9 policy skips.
+Phase 3 is the next owner-gated phase. First item of the new
+`[REPO-CLEANUP]` epic (`.project/backlog/epic_repo_cleanup.md`). Installs the pack's two decision
+registers and their engines (`adr.sh`, `product.sh`), files the register-boundary criterion as the
+first `.project/adr/` entry, triages the nine existing ADRs, and corrects the single-ADR-home claims
+in `CLAUDE.md` and `.project/product/INDEX.md`. **[OWNER, 2026-08-20]:** the registers split by
+subject — model-author decisions stay in `docs/architecture/modeling-assumptions.md`,
+toolchain-builder decisions go to `.project/adr/`; the criterion is written to generalize because
+the same problem exists across the claude commands. **[OWNER, 2026-08-20]:** the product ledger
+harmonizes to the pack's `NNNN-slug.md` standard rather than the script being modified — our
+`P-NNN` scheme was hand-rolled on 2026-08-14 (`385e163`) two days after `product.sh` shipped
+upstream, and `product.sh index` would blank `INDEX.md` today.
 
 ### 2026-08-16: elaborator-downstream — SPEC REVISED AFTER REVIEW (Item 8 remainder)
 
