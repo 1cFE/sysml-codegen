@@ -4,6 +4,39 @@ Historical record of completed work.
 
 ---
 
+## [2026-08-21] - [REPO-CLEANUP Item 1] Scaffolding Reinstall and Register Boundary
+
+**Type**: Item
+**Duration**: 2026-08-20 → 2026-08-21 (1 day)
+**Archived to**: `.project/completed/20260821_scaffolding-register-boundary/`
+**Branch**: `repo-cleanup`
+
+### Summary
+The repo had two places to record a settled decision and no rule for which, and a product ledger
+maintained by hand against a pack that says a script owns it. This item installed both register
+engines from `agentic-project-init`, filed the owner-grade routing rule (ask who the decision
+binds: model author → `docs/architecture/modeling-assumptions.md`, code-generator builder →
+`.project/adr/`), triaged the nine existing ADRs against it, and migrated the four product promises
+onto script-managed `000N` ids with a generated index — every visible word and owner payload
+unchanged, reachability enforced by a naming rule and conformance tests.
+
+### Deliverables
+- `.project/scripts/adr.sh`, `product.sh`; `.project/adr/README.md`, `product/README.md` (with a
+  repo-local section and a pack-divergence note); refreshed `EPIC_GUIDE.md` and `epic_template.md`.
+- `.project/adr/0001` (routing criterion, `[OWNER]`), `0002` (index ids resolve by sibling filename),
+  `0003` (cite by register path); generated `.project/adr/INDEX.md`.
+- `.project/product/0001`…`0004` with frontmatter and `checked: 2026-08-21 @ 02733b4`; generated
+  `INDEX.md`; `CLAUDE.md` two-register convention.
+- Six new conformance tests in `tests/conformance/test_stop_parser_documentation_contract.py`
+  (I1, I5, I6, criterion discoverability, filed conventions, check stamps).
+- Archived spec, design, plan, audit (Certify at `3566fdd`), product-lens ledger, `adr-triage.md`
+  (nine outcomes; ADR-007 and ADR-009 carried to Item 3), `phase1-findings.md`.
+- Licensed runnable suite 2,371 passed / 9 skipped / 94 deselected under the owner-accepted
+  missing-manifest limitation; the exact full-suite gate remains unavailable, not green.
+
+### Lessons Learned
+[TODO: Add lessons learned]
+
 ## [2026-08-19] - [ELABORATE-FIRST bounded predecessor] Exact Occurrence Derivation and Evidence Integrity
 
 **Type**: Item

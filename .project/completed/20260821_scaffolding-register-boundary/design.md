@@ -4,7 +4,7 @@
 **Owner:** Reid W
 **Created:** 2026-08-21
 **Branch:** repo-cleanup
-**Spec:** `.project/active/scaffolding-register-boundary/spec.md`
+**Spec:** `.project/completed/20260821_scaffolding-register-boundary/spec.md`
 
 ---
 
@@ -16,9 +16,9 @@ the naming the engine actually reads.
 
 ## Related Artifacts
 
-- **Spec:** `.project/active/scaffolding-register-boundary/spec.md`
+- **Spec:** `.project/completed/20260821_scaffolding-register-boundary/spec.md`
 - **Epic:** `.project/backlog/epic_repo_cleanup.md` — Item 1
-- **Product-lens:** `.project/active/scaffolding-register-boundary/product-lens.md` (spec run, DISPOSED)
+- **Product-lens:** `.project/completed/20260821_scaffolding-register-boundary/product-lens.md` (spec run, DISPOSED)
 - **Research:** `.project/research/20260820-201945_line-count-anatomy-and-salvageability.md`
 - **Required Reading:** the pack's `adr/README.md`, `product/README.md`, `scripts/adr.sh`,
   `scripts/product.sh`; `.project/product/INDEX.md` and `0001`…`0004`;
@@ -219,7 +219,7 @@ frontmatter tells the truth about when the promise was filed. `checked` is stamp
   citation form.
 - **`tests/conformance/test_stop_parser_documentation_contract.py`** — quote assertions unchanged;
   the two `"P-00N-….md" in index` assertions re-expressed as I1 checks against the new ids.
-- **`.project/active/scaffolding-register-boundary/adr-triage.md`** — the nine outcomes, including
+- **`.project/completed/20260821_scaffolding-register-boundary/adr-triage.md`** — the nine outcomes, including
   ADR-007 and ADR-009 recorded as builder-facing with their moves carried to Item 3.
 
 ## Non-Goals

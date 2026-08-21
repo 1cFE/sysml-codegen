@@ -1,7 +1,7 @@
 # Phase 1 Findings: Product-Ledger Migration Shape
 
 **Completed:** 2026-08-21 07:54 PDT
-**Plan:** `.project/active/scaffolding-register-boundary/plan.md`, Phase 1
+**Plan:** `.project/completed/20260821_scaffolding-register-boundary/plan.md`, Phase 1
 **Scratch root:** `/tmp/scaffolding-register-boundary-phase1.bDGvKX`
 
 ## Question

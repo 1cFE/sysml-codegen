@@ -173,8 +173,8 @@ the generator carries them.
   - `docs/architecture/modeling-assumptions.md`
   - `claude-pack/rules/capture-fidelity.md`
 - **Research:** `.project/research/20260820-201945_line-count-anatomy-and-salvageability.md`
-- **Product-lens:** `.project/active/scaffolding-register-boundary/product-lens.md`
-- **Design:** `.project/active/scaffolding-register-boundary/design.md`
+- **Product-lens:** `.project/completed/20260821_scaffolding-register-boundary/product-lens.md`
+- **Design:** `.project/completed/20260821_scaffolding-register-boundary/design.md`
 
 ---
 

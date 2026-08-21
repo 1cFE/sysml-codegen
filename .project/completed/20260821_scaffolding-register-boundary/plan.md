@@ -6,11 +6,11 @@
 
 ## Source Documents
 
-- **Spec:** `.project/active/scaffolding-register-boundary/spec.md`
-- **Design:** `.project/active/scaffolding-register-boundary/design.md` ← component detail,
+- **Spec:** `.project/completed/20260821_scaffolding-register-boundary/spec.md`
+- **Design:** `.project/completed/20260821_scaffolding-register-boundary/design.md` ← component detail,
   architecture, bets, decisions, invariants, gotchas all live there
 - **Epic:** `.project/backlog/epic_repo_cleanup.md` — Item 1
-- **Product-lens:** `.project/active/scaffolding-register-boundary/product-lens.md` (spec run, DISPOSED)
+- **Product-lens:** `.project/completed/20260821_scaffolding-register-boundary/product-lens.md` (spec run, DISPOSED)
 
 ## The Point
 
@@ -99,7 +99,7 @@ diff <(sed '1{/^---$/!q1}; 1,/^---$/d; 1,/^---$/!d' new) original   # empty
 - [x] Run `product.sh index` against the scratch register; confirm the row appears
 - [x] Diff the prose below the block against the original — empty
 - [x] Reproduce the leading-blank-line failure and record what it looks like
-- [x] Record the outcome in `.project/active/scaffolding-register-boundary/phase1-findings.md`
+- [x] Record the outcome in `.project/completed/20260821_scaffolding-register-boundary/phase1-findings.md`
 
 ### Validation
 
@@ -299,7 +299,7 @@ def test_no_document_claims_a_single_adr_home() -> None:                     # I
 - [x] Write the rule as **one question** answerable without a subject list, so the claude-commands
       work can cite it rather than re-derive it. Set `provenance: "[OWNER]"`; it is settled
 - [x] Triage all nine against it into
-      `.project/active/scaffolding-register-boundary/adr-triage.md`. **Move nothing**
+      `.project/completed/20260821_scaffolding-register-boundary/adr-triage.md`. **Move nothing**
       `[OWNER, 2026-08-21]` — record §§1–6 and 8 as author-facing, and ADR-007 plus ADR-009 as
       builder-facing with their re-homes carried to Item 3 (epic step 2a)
 - [x] Rewrite the ADR-convention paragraph in `CLAUDE.md` and add D4's citation form

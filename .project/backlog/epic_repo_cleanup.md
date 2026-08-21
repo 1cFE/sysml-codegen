@@ -165,7 +165,7 @@ Item 8 still lands after Item 3.
 **Effort**: 1 day (spec 1h, design 1h, plan 1h, execute 5h)
 **Dependencies**: None
 **Implementation Status**: Certified 2026-08-21 (audit at `3566fdd`, verdict Certify; follow-ups in
-`.project/active/scaffolding-register-boundary/audit.md`). The
+`.project/completed/20260821_scaffolding-register-boundary/audit.md`). The
 audience-based criterion is `.project/adr/0001`, all nine existing decisions are triaged, and the
 two-register convention is documented. Sections 1–6 and 8 are author-facing; ADR-007 and ADR-009
 are builder-facing and carried to Item 3 for re-homing. D3 and D4 are filed as `.project/adr/0002`
@@ -229,7 +229,7 @@ the boundary between them is settled once rather than re-derived per entry.
 - [x] Licensed runnable suite green with the license loaded under the accepted missing-manifest
       limitation; exact full-suite validation remains unavailable rather than green
 
-**Location**: `.project/active/scaffolding-register-boundary/`
+**Location**: `.project/completed/20260821_scaffolding-register-boundary/` (closed 2026-08-21)
 
 **Required Reading**:
 - `agentic-project-init/project-pack/adr/README.md` and `product/README.md` — the two registers'
@@ -240,10 +240,10 @@ the boundary between them is settled once rather than re-derived per entry.
 - `claude-pack/rules/capture-fidelity.md` — provenance grades and the settled rule
 
 **Deliverables**:
-- `.project/active/scaffolding-register-boundary/{spec,design,plan}.md`
+- `.project/completed/20260821_scaffolding-register-boundary/{spec,design,plan}.md`
 - `.project/adr/` with the criterion, D3 and D4 entries, plus a generated `INDEX.md`
 - `.project/scripts/{adr.sh,product.sh}`
-- `.project/active/scaffolding-register-boundary/adr-triage.md` — the nine, with outcomes
+- `.project/completed/20260821_scaffolding-register-boundary/adr-triage.md` — the nine, with outcomes
 
 ---
 
@@ -963,5 +963,5 @@ Owner's stated order runs 1-5 then 6-8 sequentially; parallel is available and h
 ---
 
 **Last Updated**: 2026-08-21
-**Next Action**: Independently audit Item 1 with `$my-audit` against
-`.project/active/scaffolding-register-boundary/`
+**Next Action**: Item 1 is certified and closed (`.project/completed/20260821_scaffolding-register-boundary/`).
+Start Item 2, Decision Harvest Inventory, with `/_my_spec`.

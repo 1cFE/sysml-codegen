@@ -1,17 +1,12 @@
 # Current Work
 
-**Last Updated**: 2026-08-21 (**scaffolding-register-boundary CERTIFIED — audit verdict Certify at
-`3566fdd`, five follow-up findings in `audit.md`, none a spec gap; `/_my_close` is next.** `.project/adr/0001` carries the owner-grade audience question; `0002` records
-generated-index reachability by sibling filename; `0003` records path-qualified decision
-citations. All nine existing decisions have recorded outcomes. Sections 1–6 and 8 are
-author-facing; ADR-007 and ADR-009 are builder-facing and carried to REPO-CLEANUP Item 3 for
-re-homing. All four product entries are checked at verified Phase 4 ref `02733b4`. The safe
-documentation contract passed 14/14. The licensed runnable suite passed 2,371 with 9 policy skips;
-nine manifest-dependent files were omitted before collection, while pytest separately deselected
-94 `execution`-marker tests by project default. The exact full-suite gate remains unavailable under
-the accepted missing-manifest limitation. Ruff is clean. `mypy src/` matches the established
-30-error/eight-file baseline with no source changes; `[AGENT] (ratified by owner, 2026-08-21)` the
-zero-new baseline is the Phase 5 gate.)
+**Last Updated**: 2026-08-21 (**scaffolding-register-boundary CLOSED** — REPO-CLEANUP Item 1 certified at
+`3566fdd` and archived to `.project/completed/20260821_scaffolding-register-boundary/`. Both decision
+registers are installed and script-managed: `.project/adr/0001` is the owner-grade audience question,
+`0002`/`0003` the index-resolution and citation conventions; the product ledger is `0001`…`0004` with a
+generated index. ADR-007 and ADR-009 are triaged builder-facing and carried to Item 3. Five audit
+follow-ups are recorded in the archived `audit.md`; the README pack-divergence note is done, the rest
+are open. Next: REPO-CLEANUP Item 2, Decision Harvest Inventory.)
 Prior status: 2026-08-20 (**stop-reinventing-the-parser SHIPPED — all three repositories
 merged to GitHub `main`.** Merge-commit PRs in dependency order: Agentic agentic-mbse#13
 (`88e2489`), Codegen sysml-codegen#13 (`82244a0`), Fusion fusion-tea#102 (`5338db5f`). The
@@ -183,28 +178,6 @@ rather than invented; vehicle `[CONSTRAINT-GATES-UNTAGGED]` in `BACKLOG.md`.
 ---
 
 ## Active Work
-
-### 2026-08-21: scaffolding-register-boundary — CERTIFIED (REPO-CLEANUP Item 1)
-
-Spec, design and plan are implementation-complete at
-`.project/active/scaffolding-register-boundary/`. Phases 1–4 installed the scaffolding, migrated the
-ledger, filed the routing criterion, and triaged the nine existing decisions. Phase 5 filed the two
-load-bearing implementation conventions as `.project/adr/0002` and `0003`, then checked all four
-product entries at verified Phase 4 ref `02733b4`. D1, D2 and D5 remain design mechanism detail;
-D6 and the ADR-007/ADR-009 re-homes remain Item 3 work. The safe documentation contract passed
-14/14 and both generated indexes are idempotent. The licensed runnable suite passed 2,371 with 9
-policy skips and 94 default execution-marker deselections after the nine manifest-dependent files
-were omitted under the accepted environment limitation. Ruff is clean. The unchanged
-`mypy src/` result is the established 30-error/eight-file baseline; the owner accepted the
-recommended zero-new gate for this source-free phase.
-
-**Audit 2026-08-21 at `3566fdd`: Certify.** I1–I6 re-derived mechanically; all nine spec success
-criteria met; product-lens run 2 DISPOSED (smells 1 and 6 fired and are resolved in the audit's
-Product Judgment). Follow-ups recorded in `audit.md`, none blocking: three lines of pack prose in
-`.project/product/README.md` edited in place without a design note; two dead negative strings and
-an old-form compat branch in the new contract tests; `promoted_to: null` on `.project/adr/0001`;
-`0001:128`'s pre-existing `:588` line cite for ADR-009 (heading now at `:704`), owned by Item 3.
-Run `/_my_close` next.
 
 ### 2026-08-16: elaborator-downstream — SPEC REVISED AFTER REVIEW (Item 8 remainder)
 
@@ -1012,6 +985,19 @@ surfaces as matrix-row candidates.
 ---
 
 ## Recently Completed
+
+### 2026-08-21: scaffolding-register-boundary — CERTIFIED AND CLOSED (REPO-CLEANUP Item 1)
+
+- Installed `adr.sh`/`product.sh` and both register READMEs from the pack, byte-identical; filed the
+  routing criterion `.project/adr/0001` `[OWNER]` and the D3/D4 conventions as `0002`/`0003`; triaged
+  all nine `modeling-assumptions.md` decisions (ADR-007, ADR-009 builder-facing → Item 3).
+- Migrated the product ledger to `0001`…`0004` with script-managed frontmatter and a generated index;
+  owner-verbatim bodies byte-identical below the block except five ratified link repoints; I1–I6 are
+  conformance tests.
+- Audit Certify at `3566fdd`; licensed runnable suite 2,371 passed under the accepted missing-manifest
+  limitation. Open follow-ups in the archived `audit.md`: dead negative strings and an old-form compat
+  branch in the contract tests, `promoted_to: null` on `.project/adr/0001`, and `0001:128`'s stale
+  `:588` cite for ADR-009 (Item 3). Archived to `.project/completed/20260821_scaffolding-register-boundary/`.
 
 ### 2026-08-19: stop-reinventing-the-parser — CLOSED BY OWNER DIRECTION
 
