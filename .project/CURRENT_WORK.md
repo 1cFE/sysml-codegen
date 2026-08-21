@@ -1,7 +1,7 @@
 # Current Work
 
-**Last Updated**: 2026-08-21 (**scaffolding-register-boundary implementation complete; independent
-audit is next.** `.project/adr/0001` carries the owner-grade audience question; `0002` records
+**Last Updated**: 2026-08-21 (**scaffolding-register-boundary CERTIFIED — audit verdict Certify at
+`3566fdd`, five follow-up findings in `audit.md`, none a spec gap; `/_my_close` is next.** `.project/adr/0001` carries the owner-grade audience question; `0002` records
 generated-index reachability by sibling filename; `0003` records path-qualified decision
 citations. All nine existing decisions have recorded outcomes. Sections 1–6 and 8 are
 author-facing; ADR-007 and ADR-009 are builder-facing and carried to REPO-CLEANUP Item 3 for
@@ -184,7 +184,7 @@ rather than invented; vehicle `[CONSTRAINT-GATES-UNTAGGED]` in `BACKLOG.md`.
 
 ## Active Work
 
-### 2026-08-21: scaffolding-register-boundary — IMPLEMENTATION COMPLETE, audit pending (REPO-CLEANUP Item 1)
+### 2026-08-21: scaffolding-register-boundary — CERTIFIED (REPO-CLEANUP Item 1)
 
 Spec, design and plan are implementation-complete at
 `.project/active/scaffolding-register-boundary/`. Phases 1–4 installed the scaffolding, migrated the
@@ -196,7 +196,15 @@ D6 and the ADR-007/ADR-009 re-homes remain Item 3 work. The safe documentation c
 policy skips and 94 default execution-marker deselections after the nine manifest-dependent files
 were omitted under the accepted environment limitation. Ruff is clean. The unchanged
 `mypy src/` result is the established 30-error/eight-file baseline; the owner accepted the
-recommended zero-new gate for this source-free phase. Run an independent `$my-audit` next.
+recommended zero-new gate for this source-free phase.
+
+**Audit 2026-08-21 at `3566fdd`: Certify.** I1–I6 re-derived mechanically; all nine spec success
+criteria met; product-lens run 2 DISPOSED (smells 1 and 6 fired and are resolved in the audit's
+Product Judgment). Follow-ups recorded in `audit.md`, none blocking: three lines of pack prose in
+`.project/product/README.md` edited in place without a design note; two dead negative strings and
+an old-form compat branch in the new contract tests; `promoted_to: null` on `.project/adr/0001`;
+`0001:128`'s pre-existing `:588` line cite for ADR-009 (heading now at `:704`), owned by Item 3.
+Run `/_my_close` next.
 
 ### 2026-08-16: elaborator-downstream — SPEC REVISED AFTER REVIEW (Item 8 remainder)
 

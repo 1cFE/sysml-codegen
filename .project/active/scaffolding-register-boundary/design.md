@@ -1,6 +1,6 @@
 # Design: Scaffolding Reinstall and Register Boundary
 
-**Status:** Implementation Complete — Audit Pending
+**Status:** Certified — audit 2026-08-21 at `3566fdd` (`audit.md`)
 **Owner:** Reid W
 **Created:** 2026-08-21
 **Branch:** repo-cleanup

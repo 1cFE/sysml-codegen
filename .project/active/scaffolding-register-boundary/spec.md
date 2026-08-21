@@ -1,11 +1,11 @@
 # Spec: Scaffolding Reinstall and Register Boundary
 
-**Status:** Implementation Complete — Audit Pending
+**Status:** Certified — audit 2026-08-21 at `3566fdd` (`audit.md`)
 **Owner:** Reid W
 **Created:** 2026-08-20 21:47
 **Complexity:** MEDIUM
 **Branch:** repo-cleanup
-**Implementation Progress:** Phase 5 of 5 complete; ready for independent audit
+**Implementation Progress:** Phase 5 of 5 complete; certified 2026-08-21 (`audit.md`)
 
 ---
 

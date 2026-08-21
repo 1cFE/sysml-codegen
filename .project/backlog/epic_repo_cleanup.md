@@ -159,12 +159,13 @@ Item 8 still lands after Item 3.
 
 ## Backlog Items
 
-### Item 1: Scaffolding Reinstall and Register Boundary
+### Item 1: Scaffolding Reinstall and Register Boundary ✅
 
 **Type**: Code/Integration
 **Effort**: 1 day (spec 1h, design 1h, plan 1h, execute 5h)
 **Dependencies**: None
-**Implementation Status**: Implementation complete 2026-08-21; independent audit pending. The
+**Implementation Status**: Certified 2026-08-21 (audit at `3566fdd`, verdict Certify; follow-ups in
+`.project/active/scaffolding-register-boundary/audit.md`). The
 audience-based criterion is `.project/adr/0001`, all nine existing decisions are triaged, and the
 two-register convention is documented. Sections 1–6 and 8 are author-facing; ADR-007 and ADR-009
 are builder-facing and carried to Item 3 for re-homing. D3 and D4 are filed as `.project/adr/0002`

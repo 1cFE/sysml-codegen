@@ -65,3 +65,45 @@ Gate: DISPOSED (spec-F1, spec-F2, spec-F3, spec-F4, spec-F5, spec-F6)
 ledger's "reachable from here" contract moves from hand-maintained prose to a generator whose
 format cannot currently express it, and this item owns leaving reachability and grade demonstrable
 afterwards.
+
+---
+
+## Run 2 — audit stage, 2026-08-21
+
+Gate: **DISPOSED** (audit-F1 … audit-F5). Smells 1 and 6 fired; both are resolved in
+`audit.md` "Product Judgment". Run 1's findings were all disposed at spec time and remain disposed;
+the epic's live gate (`.project/backlog/epic_repo_cleanup.md` Product-Lens) is DISPOSED with no
+BLOCK. Nothing in either ledger forbids certification.
+
+The auditor verified each finding before disposition:
+
+- `audit-F1` confirmed and narrowed — `diff` against the pack README shows the section heading at
+  `:36` and the clause "it lives in `.project/adr/`" at `:40-43` edited in place, plus an appended
+  repo-local section. The in-place edit was forced: the pack sentence asserts a single decision
+  home, which I6 forbids. The installer does not protect the file, but
+  `test_no_document_claims_a_single_adr_home` asserts `two decision registers` in it, so a clobber
+  fails the suite rather than passing silently.
+- `audit-F2` confirmed — the two strings `only adr home` / `single adr home` never existed in the
+  tree. The positive arm (both register paths plus "two decision registers" present) is the guard.
+- `audit-F3` confirmed as stated; mitigated by ordering — the epic's Item 3 scope step 2a is the
+  carrier, and Item 3 precedes the Item 5 purge.
+- `audit-F4` confirmed — `.project/adr/0001` has `promoted_to: null` while `CLAUDE.md` and
+  `.project/product/README.md` restate its rule. `adr.sh` has no `promote` subcommand.
+- `audit-F5` already owner-ratified (`[AGENT] (ratified by owner, 2026-08-21)`, spec `[HARD]`).
+  Auditor's count is five repointed lines (0002:1, 0003:1, 0004:3), matching the spec; the lens's
+  "four" is a miscount.
+
+```
+## audit — 2026-08-21 — rev 3566fdd (.project/active/scaffolding-register-boundary/)
+Point (re-derived): The two registers exist so a cold agent months later gets truth without re-derivation — routing settled once by audience, ids/status/index script-owned, entry bodies append-only, and every durable claim reachable from a durable surface.   [source: .project/adr/0001-route-decisions-by-who-they-bind.md (owner); .project/backlog/epic_repo_cleanup.md:63-93 [OWNER, 2026-08-20] (owner); agentic-project-init/project-pack/{adr,product}/README.md (INHERITED)]
+Falsifier: A durable statement about the registers that a cold agent would read as true but that no mechanism keeps true — a hand-forked pack file, a filed body silently rewritten, an index id resolving to zero or two entries, or a triage outcome whose only record sits in a directory the pack README declares non-durable.
+Findings:
+- audit-F1 [DON'T] `.project/product/README.md` is a hand-fork of the upstream pack README — local text rewritten into the pack's own "Register boundary" section — while `adr/README.md`, `adr.sh`, and `product.sh` are byte-identical to the pack; the next pack refresh must hand-merge or clobber it, and nothing detects the divergence. — project-pack/product/README.md (INHERITED) + .project/adr/0002's own Why, which rejected a local fork (agent/ratified) — Smell 1 — falsifier: `diff project-pack/product/README.md .project/product/README.md` returns 25 lines while the other three installed pack files return none — disposition: DISPOSE (record the local delta as an explicit repo-local appendix below the pack text, or file it as a pack change upstream)
+- audit-F2 [DON'T] `test_no_document_claims_a_single_adr_home` enforces its negative arm with three literal lowercase strings; only one ever existed in this repo, and "only adr home" / "single adr home" have never appeared anywhere in the tree — the negative arm passes by matching one deleted phrasing, not by checking the invariant. — item Success Criterion "no remaining claim of a single home", from epic_repo_cleanup.md:88-90 (owner) — Smell 6 — falsifier: add "ADRs live only in modeling-assumptions.md; `.project/adr/` is not a decision home" to CLAUDE.md — all 14 safe-contract tests still pass — disposition: DISPOSE (assert the positive convention only, or drop the two dead strings and say plainly that the negative arm pins one historical phrasing)
+- audit-F3 [DO] The triage outcome for ADR-007 and ADR-009 — recorded as misfiled, builder-facing — has no durable home: modeling-assumptions.md §7 and §9 carry no marker, and the sole record is .project/active/scaffolding-register-boundary/adr-triage.md, a path the pack ADR README calls working state and that epic Item 5 will clear. — epic_repo_cleanup.md:190-194 "record the outcomes — move nothing" [OWNER, 2026-08-21] (owner obligation; durability gap is AGENT inference) — falsifier: archive .project/active/ and read §7 cold — nothing says it is recorded as belonging in the other register — disposition: DISPOSE (Item 3 carries the re-home; until then the outcome needs a durable pointer)
+- audit-F4 [DO] .project/adr/0001 — the [OWNER] entry whose routing rule is restated in full in both CLAUDE.md and .project/product/README.md — carries `promoted_to: null`, while 0002 and 0003 declare theirs. 0001's own invariant reads "File one ruling in one register. Other documents cite it rather than duplicate it." — .project/adr/0001 (owner) + pack ADR README frontmatter table (INHERITED) — Smell 1 (second instance) — falsifier: `grep promoted_to .project/adr/*.md` — disposition: DISPOSE, not BLOCK: the owner required the CLAUDE.md paragraph be corrected (epic:88-90), so the duplication is sanctioned; only the bookkeeping is missing
+- audit-F5 [DON'T] The P-00N → 000N migration edited three already-filed entry bodies (link lines in 0002/0003/0004), against "a body is immutable after filing." — project-pack/product/README.md Lifecycle (INHERITED) — falsifier: body-byte diff vs da15f14 is non-empty for three of four entries — disposition: DISPOSE. Verified minimal and forced: the diffs are only intra-ledger link retargeting made necessary by the rename; 0001 is byte-identical and no promise text, quote, grade, or bound changed.
+Verified clean: owner-verbatim payload in all four entries survives byte-identical; product.sh index and adr.sh index regenerate the committed INDEX.md byte-for-byte; every indexed id resolves to exactly one sibling entry; both engines are byte-identical to the pack. The 3 failing tests in the contract file are the pre-existing missing-artifact-manifest limitation.
+Smells fired: 1 (F1, F4), 6 (F2) — escalated into the audit's leading judgment.
+Gate: DISPOSED (audit-F1, audit-F2, audit-F3, audit-F4, audit-F5)
+```

@@ -1,6 +1,6 @@
 # Implementation Plan: Scaffolding Reinstall and Register Boundary
 
-**Status:** Implementation Complete — Audit Pending
+**Status:** Certified — audit 2026-08-21 at `3566fdd` (`audit.md`)
 **Created:** 2026-08-21
 **Last Updated:** 2026-08-21 (Phase 5 complete; ready for independent audit)
 
