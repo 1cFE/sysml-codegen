@@ -22,7 +22,7 @@ This folder contains project planning, tracking, and documentation.
 ### 2. Prioritization
 
 1. **User prioritizes** using their own methods
-2. **Update BACKLOG.md** via `/project-manage` command - reorganize, set priorities
+2. **Update BACKLOG.md** via `/_my_status` command - reorganize, set priorities
 3. **Epic decomposition** (before or after prioritization, e.g., to estimate effort):
    - Organize into **parts** if needed (logical groupings)
    - Break down into **items** with numbering (e.g., `4.2` = Part 4, Item 2)
@@ -31,16 +31,11 @@ This folder contains project planning, tracking, and documentation.
 
 ### 3. Epic Execution
 
-Iterate through items in the epic:
+Iterate through items in the epic. Each item runs the standard pipeline of `/_my_*` stages.
 
-| Step | Action | Output |
-|------|--------|--------|
-| **1. Start** | Create item folder under `active/` | `active/{item_name}/` |
-| **2. Spec** | Define what needs to be done | `spec.md` |
-| **3. Design** | Research codebase, identify all code changes | `design.md` |
-| **4. Plan** | Plan implementation in Phases, include tests | `plan.md` |
-| **5. Implement** | Execute plan, one phase at a time | Code changes |
-| **6. Review** | Review work (can happen at any stage) | Feedback/approval |
+**For the canonical, current flow and when/how to use each stage, run `/_my_pipeline`** (installed
+with claude-pack). This README does not carry its own copy of the sequence — `/_my_pipeline` is the
+single source, so it can't go stale here.
 
 **As the epic progresses**: Add or insert new items as you learn more. Follow the same process for each.
 
@@ -49,8 +44,8 @@ Iterate through items in the epic:
 ### 4. Epic Cleanup
 
 1. **Check** for all completed active items
-2. **Move items** to `completed/`, prefixed with date stamp (e.g., `20251223_item_name/`)
-3. **Move epic** to `completed/` with date stamp (e.g., `20251223_epic_name.md`)
+2. **Move items** to `completed/` using `git mv`, prefixed with date stamp (e.g., `git mv .project/active/item_name .project/completed/20251223_item_name`)
+3. **Move epic** to `completed/` using `git mv` with date stamp (e.g., `git mv .project/backlog/epic_name.md .project/completed/20251223_epic_name.md`)
 4. **Update docs**: `CURRENT_WORK.md`, `BACKLOG.md`, and `completed/CHANGELOG.md`
 
 ---
@@ -60,6 +55,8 @@ Iterate through items in the epic:
 | File | Purpose |
 |------|---------|
 | `CURRENT_WORK.md` | What's active RIGHT NOW - single source of truth |
+| `product/INDEX.md` | Generated index of implemented product promises — what the product is for (convention: `product/README.md`) |
+| `adr/INDEX.md` | Generated index of load-bearing decisions (convention: `adr/README.md`) |
 | `backlog/BACKLOG.md` | Prioritized list of epics |
 | `backlog/epic_*.md` | Individual epic definitions |
 
@@ -81,6 +78,9 @@ Iterate through items in the epic:
 ├── completed/
 │   ├── {date}_{item_name}/   # Archived items
 │   └── epic_*.md             # Archived epics
+├── adr/                      # Decision records (append-only, script-managed)
+├── product/                  # Product promise ledger (append-only, script-managed)
+├── scripts/                  # Utility scripts (adr.sh, product.sh, get-metadata.sh)
 ├── research/                 # Deep investigations
 └── reports/                  # Status reports
 ```
@@ -98,14 +98,10 @@ Items within an epic use hierarchical numbering:
 
 ## Commands
 
-| Command | When to Use |
-|---------|-------------|
-| `/project-manage` | Status review, update BACKLOG, reorganize priorities |
-| `/project-find` | Quick lookup of project context |
-| `/spec` | Create specification for current item |
-| `/design` | Research codebase, create design doc |
-| `/implement` | Execute implementation plan |
-| `/review` | Review work at any stage |
+This README does not carry a command catalog — a copy here would drift. Two live sources:
+
+- **`/_my_pipeline`** — the canonical stage map and when to use each stage.
+- **The toolkit README's Command Reference** (in the agentic-project-init repo) — one line per command, including shortcuts, modes, and project-management helpers.
 
 ---
 
