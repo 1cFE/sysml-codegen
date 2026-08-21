@@ -1,8 +1,8 @@
 # Implementation Plan: Scaffolding Reinstall and Register Boundary
 
-**Status:** In Progress
+**Status:** Implementation Complete — Audit Pending
 **Created:** 2026-08-21
-**Last Updated:** 2026-08-21 (Phase 4 complete; awaiting Phase 5 authorization)
+**Last Updated:** 2026-08-21 (Phase 5 complete; ready for independent audit)
 
 ## Source Documents
 
@@ -393,24 +393,26 @@ uv run --extra dev pytest tests/ -k "product_ledger or adr_home or documentation
 **See `design.md#key-decisions`** for D1–D6 and their rejected alternatives — the bodies are already
 written there and need only be carried into entries, cited not restated.
 
-- [ ] File the decisions that pass the density bar in `.project/adr/README.md`. Expect **few**:
+- [x] File the decisions that pass the density bar in `.project/adr/README.md`. Expect **few**:
       D3 (reachability by naming rule, not an index fork) and D4 (cite by register path) are the
       load-bearing ones a future agent could plausibly re-derive wrongly. D1, D2 and D5 are
       mechanism detail the design already records — cite, do not re-file
-- [ ] D6 is a deferral, not a decision this design settled; it is recorded in the epic's Item 3 and
+- [x] D6 is a deferral, not a decision this design settled; it is recorded in the epic's Item 3 and
       the triage doc, and gets no entry
-- [ ] `product.sh check <id> <ref>` on all four promises — stamp only now that I1–I3 pass
-- [ ] Update `.project/CURRENT_WORK.md` from "spec in progress" to the completed state
+- [x] `product.sh check <id> <ref>` on all four promises — stamp only now that I1–I3 pass
+- [x] Update `.project/CURRENT_WORK.md` from "spec in progress" to the completed state
 
 ### Validation
 
 **Automated:**
-- [ ] I1–I6 all green
-- [ ] Full suite green with `SYSIDE_LICENSE_KEY` loaded (`set -a; source ../agentic-mbse/.env; set +a`)
-- [ ] `uv run --extra dev ruff check src/` and `mypy src/` clean
+- [x] I1–I6 all green
+- [x] Licensed runnable suite green with `SYSIDE_LICENSE_KEY` loaded under the accepted
+      missing-manifest limitation
+- [x] Ruff clean; mypy holds the established zero-new gate at 30 errors in 8 files
+      `[AGENT] (ratified by owner, 2026-08-21)`
 
 **Manual:**
-- [ ] Re-read `design.md#the-point`: are the four promises reachable, unaltered, and correctly
+- [x] Re-read `design.md#the-point`: are the four promises reachable, unaltered, and correctly
       graded? That is the item's acceptance, not the checklist above
 
 **What We Know Works After This Phase:** the item is done and Item 2 can start.
@@ -438,8 +440,6 @@ rather than fail, so a green run with no key is not a full run. Load it with
 - **Phase 5** — `check` stamps come last, so no promise is marked verified before it is
 
 ## Implementation Notes
-
-[TO BE FILLED DURING IMPLEMENTATION]
 
 ### Phase 1 Completion
 **Proof completed:** 2026-08-21 07:54 PDT
@@ -520,6 +520,39 @@ rather than fail, so a green run with no key is not a full run. Load it with
   full-suite gate remains unavailable under the accepted Phase 1 environment limitation.
 
 ### Phase 5 Completion
+
+**Completed:** 2026-08-21 09:32 PDT
+**Phase status:** Implementation complete; independent audit is next
+
+**Changes Made:**
+- Added red-first closing tests for the two load-bearing convention decisions and all four
+  script-managed product checks.
+- Filed D3 as `.project/adr/0002-resolve-generated-index-ids-by-sibling-filename.md` and D4 as
+  `.project/adr/0003-cite-decisions-by-register-path.md`, both `[AGENT] (ratified by owner,
+  2026-08-21)`. D1, D2, and D5 remain design mechanism detail; D6 remains an Item 3 deferral.
+- Ran `product.sh check` for `0001`…`0004` at verified Phase 4 ref `02733b4`. Only the mutable
+  `checked` frontmatter lines changed in the four promise entries.
+- Regenerated both indexes and synchronized the plan, spec, design, epic, and current-work status.
+
+**Issue and Approved Deviation:**
+- The plan expected `mypy src/` to be clean, but the repository's established baseline is 30 errors
+  in 8 files. Phase 5 changes no production source, and the current result exactly matches the
+  recorded baseline. The agent recommended the maintained zero-new gate; the owner selected that
+  option on 2026-08-21. No unrelated source refactor was added to this scaffolding item.
+
+**Validation:**
+- The two closing tests failed before the entries and stamps existed, then passed. The safe
+  documentation contract passed 14/14 with its three manifest-dependent tests deselected; the
+  edited test and all production source pass Ruff.
+- I1–I6 pass. The four product bodies are byte-unchanged from `02733b4`; their diffs contain only
+  `checked: 2026-08-21 @ 02733b4`.
+- Repeated regeneration produced stable hashes: product index
+  `7590b8267e9e312e2cf00610a78f59df0cb8e1dfb8175b78b7107c82f514c1d4`; ADR index
+  `c2003ee5ac2ee2d69874f4abad7a60e5d1ea297ee036d5f3e124103d75975299`.
+- Licensed runnable suite: 2,371 passed, 9 policy skips, and 94 default `execution`-marker
+  deselections after omitting the nine manifest-dependent files recorded in Phase 4. The exact
+  full-suite gate remains unavailable under the owner's accepted Phase 1 limitation.
+- `mypy src/` reports the unchanged 30-error/eight-file baseline; `git diff -- src` is empty.
 
 ---
 

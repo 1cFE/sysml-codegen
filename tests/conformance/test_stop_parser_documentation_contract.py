@@ -41,6 +41,12 @@ def _read(relative: str) -> str:
     return (ROOT / relative).read_text()
 
 
+def _frontmatter_value(text: str, field: str) -> str:
+    match = re.search(rf"^{re.escape(field)}: (?P<value>.+)$", text, re.MULTILINE)
+    assert match is not None, f"missing frontmatter field: {field}"
+    return match.group("value")
+
+
 def _product_ids_in(index: str) -> tuple[str, ...]:
     ids: list[str] = []
     for line in index.splitlines():
@@ -104,6 +110,31 @@ def test_decision_register_boundary_is_discoverable() -> None:
     assert "- 0001 · Route decisions by who they bind" in _read(
         ".project/adr/INDEX.md"
     )
+
+
+def test_load_bearing_register_conventions_are_filed() -> None:
+    entries = {
+        _frontmatter_value(path.read_text(), "title"): path.read_text()
+        for path in ADR.glob("[0-9][0-9][0-9][0-9]-*.md")
+    }
+
+    resolution = entries["Resolve generated index ids by sibling filename"]
+    assert "exactly one" in resolution
+    assert "<id>-*.md" in resolution
+    assert "generated index" in resolution
+
+    citations = entries["Cite decisions by register path"]
+    assert "bare number" in citations
+    assert "docs/architecture/modeling-assumptions.md ADR-009" in citations
+    assert ".project/adr/" in citations
+
+
+def test_every_product_promise_has_a_script_managed_check_stamp() -> None:
+    for entry_id in _product_ids_in(_read(".project/product/INDEX.md")):
+        entries = list(PRODUCT.glob(f"{entry_id}-*.md"))
+        assert len(entries) == 1
+        checked = _frontmatter_value(entries[0].read_text(), "checked")
+        assert re.fullmatch(r"[0-9]{4}-[0-9]{2}-[0-9]{2} @ [0-9a-f]{7,40}", checked)
 
 
 def test_architecture_docs_name_one_owner_walk_and_exact_evidence_boundary() -> None:

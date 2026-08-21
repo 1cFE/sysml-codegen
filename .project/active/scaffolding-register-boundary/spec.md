@@ -1,11 +1,11 @@
 # Spec: Scaffolding Reinstall and Register Boundary
 
-**Status:** Implementation In Progress
+**Status:** Implementation Complete — Audit Pending
 **Owner:** Reid W
 **Created:** 2026-08-20 21:47
 **Complexity:** MEDIUM
 **Branch:** repo-cleanup
-**Implementation Progress:** Phase 4 of 5 complete; decision boundary filed and nine entries triaged
+**Implementation Progress:** Phase 5 of 5 complete; ready for independent audit
 
 ---
 
@@ -129,7 +129,8 @@ the generator carries them.
 
 ## Non-Goals
 
-- Authoring any decision or promise content beyond the criterion entry. That is Items 3 and 4.
+- Authoring harvested domain decisions or new product promises. Those are Items 3 and 4; Phase 5
+  files only this design's D3 and D4 writebacks.
 - Deleting anything from `.project/`. That is Item 5.
 - Changing `agentic-project-init` itself, or applying the criterion to the claude commands.
 - Re-verifying that the four existing promises still hold in code. A `checked` stamp asserts
@@ -173,7 +174,7 @@ the generator carries them.
   - `claude-pack/rules/capture-fidelity.md`
 - **Research:** `.project/research/20260820-201945_line-count-anatomy-and-salvageability.md`
 - **Product-lens:** `.project/active/scaffolding-register-boundary/product-lens.md`
-- **Design:** `.project/active/scaffolding-register-boundary/design.md` (to be created)
+- **Design:** `.project/active/scaffolding-register-boundary/design.md`
 
 ---
 

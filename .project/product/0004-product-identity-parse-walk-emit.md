@@ -9,7 +9,7 @@ superseded_by: null
 supersedes: null
 provenance: "[OWNER]"
 surfaces: [extraction, elaboration, generation]
-checked: null
+checked: 2026-08-21 @ 02733b4
 ---
 
 # P-004 — What this product is: parse the models, walk the AST, reconstruct the math, write it into TEAx Python

@@ -1,6 +1,6 @@
 # Design: Scaffolding Reinstall and Register Boundary
 
-**Status:** Implementation In Progress
+**Status:** Implementation Complete — Audit Pending
 **Owner:** Reid W
 **Created:** 2026-08-21
 **Branch:** repo-cleanup
@@ -23,8 +23,8 @@ the naming the engine actually reads.
 - **Required Reading:** the pack's `adr/README.md`, `product/README.md`, `scripts/adr.sh`,
   `scripts/product.sh`; `.project/product/INDEX.md` and `0001`…`0004`;
   `docs/architecture/modeling-assumptions.md`; `claude-pack/rules/capture-fidelity.md`
-- **Decision records:** `.project/adr/INDEX.md` does not exist yet — this item creates it. No prior
-  entries to check against.
+- **Decision records:** `.project/adr/0001` carries the routing criterion; `.project/adr/0002` and
+  `0003` carry D3 and D4. The generated index is `.project/adr/INDEX.md`.
 
 ## The Point
 
@@ -220,12 +220,13 @@ frontmatter tells the truth about when the promise was filed. `checked` is stamp
 - **`tests/conformance/test_stop_parser_documentation_contract.py`** — quote assertions unchanged;
   the two `"P-00N-….md" in index` assertions re-expressed as I1 checks against the new ids.
 - **`.project/active/scaffolding-register-boundary/adr-triage.md`** — the nine outcomes, including
-  ADR-009 recorded as builder-facing with its move carried to Item 3.
+  ADR-007 and ADR-009 recorded as builder-facing with their moves carried to Item 3.
 
 ## Non-Goals
 
-- Authoring decisions or promises beyond the criterion entry. Items 3 and 4 own that.
-- Re-homing ADR-009. Triaged here, moved by Item 3 `[OWNER, 2026-08-21]`.
+- Authoring harvested domain decisions or new product promises. Items 3 and 4 own that; this item
+  files only its own D3 and D4 writebacks.
+- Re-homing ADR-007 or ADR-009. Triaged here, moved by Item 3 `[OWNER, 2026-08-21]`.
 - Deleting anything from `.project/`. Item 5.
 - Changing `agentic-project-init`, or applying the criterion to the claude commands.
 - Re-verifying the four promises hold in code. A `checked` stamp asserts "I looked."

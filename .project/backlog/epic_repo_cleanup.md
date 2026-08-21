@@ -164,12 +164,14 @@ Item 8 still lands after Item 3.
 **Type**: Code/Integration
 **Effort**: 1 day (spec 1h, design 1h, plan 1h, execute 5h)
 **Dependencies**: None
-**Implementation Status**: Phase 4 complete 2026-08-21; awaiting Phase 5. The audience-based
-criterion is `.project/adr/0001`, all nine existing decisions are triaged, and the two-register
-convention is documented. Sections 1–6 and 8 are author-facing; ADR-007 and ADR-009 are
-builder-facing and carried to Item 3 for re-homing. The safe documentation contract passed 12/12,
-and the runnable licensed suite passed 2,371 with 9 policy skips. The exact full-suite gate remains
-unavailable because this checkout has no current five-repository artifact manifest.
+**Implementation Status**: Implementation complete 2026-08-21; independent audit pending. The
+audience-based criterion is `.project/adr/0001`, all nine existing decisions are triaged, and the
+two-register convention is documented. Sections 1–6 and 8 are author-facing; ADR-007 and ADR-009
+are builder-facing and carried to Item 3 for re-homing. D3 and D4 are filed as `.project/adr/0002`
+and `0003`, and all four product entries have script-managed checks at `02733b4`. The safe
+documentation contract passed 14/14, and the runnable licensed suite passed 2,371 with 9 policy
+skips. The exact full-suite gate remains unavailable because this checkout has no current
+five-repository artifact manifest.
 
 **Objective**: Bring `.project/` scaffolding up to the current `agentic-project-init` pack,
 install both decision registers with their engines, and record the subject-split criterion so
@@ -181,7 +183,7 @@ the boundary between them is settled once rather than re-derived per entry.
 - ✅ `.project/adr/0001` carries the owner-grade routing criterion and its generated index is stable
 - ✅ `CLAUDE.md` and `.project/product/README.md` describe both registers and path-qualified citations
 - ✅ All nine existing decisions are triaged; ADR-007 and ADR-009 are carried to Item 3
-- ⏳ The four product entries still have `checked: null`; Phase 5 owns their verification stamps
+- ✅ The four product entries have script-managed `checked: 2026-08-21 @ 02733b4` stamps
 
 **Scope**:
 1. **Install the pack**: `project-pack/adr/`, `project-pack/product/README.md`,
@@ -203,7 +205,8 @@ the boundary between them is settled once rather than re-derived per entry.
 6. **Back-register** the existing four promises' `checked` stamps through `product.sh` so the
    ledger's frontmatter is script-managed from here on.
 **Out of Scope**:
-- Authoring any decision or promise content beyond the criterion entry (Items 3 and 4)
+- Authoring harvested domain decisions or new product promises (Items 3 and 4). This item's D3 and
+  D4 implementation-convention writebacks are filed in `.project/adr/0002` and `0003`
 - Deleting anything from `.project/` (Item 5)
 - Changing `agentic-project-init` itself, or applying the criterion to the claude commands
 - The `contracts/serialize.py` `allow_nan` defect and the false V11 preflight claims. Briefly
@@ -220,7 +223,7 @@ the boundary between them is settled once rather than re-derived per entry.
       item
 - [x] `CLAUDE.md` and `.project/product/README.md` describe the two-register convention and the
       citation forms, with no remaining claim of a single home
-- [ ] `.project/product/` frontmatter is script-managed; a `product.sh index` regeneration
+- [x] `.project/product/` frontmatter is script-managed; a `product.sh index` regeneration
       produces the committed `INDEX.md` byte-for-byte, and Phase 5 stamps all four checks
 - [x] Licensed runnable suite green with the license loaded under the accepted missing-manifest
       limitation; exact full-suite validation remains unavailable rather than green
@@ -237,7 +240,7 @@ the boundary between them is settled once rather than re-derived per entry.
 
 **Deliverables**:
 - `.project/active/scaffolding-register-boundary/{spec,design,plan}.md`
-- `.project/adr/` with the criterion entry and a generated `INDEX.md`
+- `.project/adr/` with the criterion, D3 and D4 entries, plus a generated `INDEX.md`
 - `.project/scripts/{adr.sh,product.sh}`
 - `.project/active/scaffolding-register-boundary/adr-triage.md` — the nine, with outcomes
 
@@ -424,7 +427,8 @@ is the orientation surface a cold agent and the product-lens can both resolve ag
       product rows only
 - ❌ Promises settled since — snapshot/license decoupling, refusal contracts, the sealed-graph
       guarantee — have no entries
-- ⚠️ Existing `checked` stamps remain `null`; Item 1 Phase 5 owns the first script-managed stamp
+- ✅ Existing `0001`…`0004` entries were checked at `02733b4` by Item 1 Phase 5; this item
+      stamps new entries and refreshes existing checks only when its verification warrants it
 
 **Scope**:
 1. **Author the ruled-in promises** via `product.sh new`, one entry per promise, titled as the
@@ -957,5 +961,6 @@ Owner's stated order runs 1-5 then 6-8 sequentially; parallel is available and h
 
 ---
 
-**Last Updated**: 2026-08-20
-**Next Action**: Start Item 1 — `/_my_spec` in `.project/active/scaffolding-register-boundary/`
+**Last Updated**: 2026-08-21
+**Next Action**: Independently audit Item 1 with `$my-audit` against
+`.project/active/scaffolding-register-boundary/`

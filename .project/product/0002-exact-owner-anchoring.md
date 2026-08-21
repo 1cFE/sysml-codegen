@@ -9,7 +9,7 @@ superseded_by: null
 supersedes: null
 provenance: "[AGENT] (ratified by owner, 2026-08-16)"
 surfaces: [elaboration, generation]
-checked: null
+checked: 2026-08-21 @ 02733b4
 ---
 
 # P-002 — One modeled source occurrence becomes exactly one runtime source

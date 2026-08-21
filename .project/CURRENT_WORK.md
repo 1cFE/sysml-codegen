@@ -1,15 +1,17 @@
 # Current Work
 
-**Last Updated**: 2026-08-21 (**scaffolding-register-boundary Phase 4 complete; awaiting Phase 5
-authorization.** `.project/adr/0001` now carries the owner-grade audience question, all nine
-existing decisions have recorded outcomes, and `CLAUDE.md` plus `.project/product/README.md`
-describe both registers and path-qualified citations. Sections 1–6 and 8 are author-facing;
-ADR-007 and ADR-009 are builder-facing and carried to REPO-CLEANUP Item 3 for re-homing. The safe
-documentation contract passed 12/12. The licensed runnable suite passed 2,371 with 9 policy skips;
+**Last Updated**: 2026-08-21 (**scaffolding-register-boundary implementation complete; independent
+audit is next.** `.project/adr/0001` carries the owner-grade audience question; `0002` records
+generated-index reachability by sibling filename; `0003` records path-qualified decision
+citations. All nine existing decisions have recorded outcomes. Sections 1–6 and 8 are
+author-facing; ADR-007 and ADR-009 are builder-facing and carried to REPO-CLEANUP Item 3 for
+re-homing. All four product entries are checked at verified Phase 4 ref `02733b4`. The safe
+documentation contract passed 14/14. The licensed runnable suite passed 2,371 with 9 policy skips;
 nine manifest-dependent files were omitted before collection, while pytest separately deselected
 94 `execution`-marker tests by project default. The exact full-suite gate remains unavailable under
-the accepted missing-manifest limitation. No `checked` stamp was added; Phase 5 owns verification
-stamps.)
+the accepted missing-manifest limitation. Ruff is clean. `mypy src/` matches the established
+30-error/eight-file baseline with no source changes; `[AGENT] (ratified by owner, 2026-08-21)` the
+zero-new baseline is the Phase 5 gate.)
 Prior status: 2026-08-20 (**stop-reinventing-the-parser SHIPPED — all three repositories
 merged to GitHub `main`.** Merge-commit PRs in dependency order: Agentic agentic-mbse#13
 (`88e2489`), Codegen sysml-codegen#13 (`82244a0`), Fusion fusion-tea#102 (`5338db5f`). The
@@ -182,20 +184,19 @@ rather than invented; vehicle `[CONSTRAINT-GATES-UNTAGGED]` in `BACKLOG.md`.
 
 ## Active Work
 
-### 2026-08-21: scaffolding-register-boundary — PHASE 4 COMPLETE, awaiting Phase 5 authorization (REPO-CLEANUP Item 1)
+### 2026-08-21: scaffolding-register-boundary — IMPLEMENTATION COMPLETE, audit pending (REPO-CLEANUP Item 1)
 
-Spec, design and plan are in implementation (`.project/active/scaffolding-register-boundary/`).
-Phases 1–3 proved and performed the scaffolding installation and product-ledger migration; commits
-`59ed5b9` and `84bb83b` carry those changes. Phase 4 allocated
-`.project/adr/0001-route-decisions-by-who-they-bind.md` through `adr.sh`, triaged all nine numbered
-decisions, recorded the four product provenance checks, and replaced the single-home convention.
-The owner classified ADR-007 as builder-facing from its rule that downstream code never re-derives
-identifiers. ADR-007 and ADR-009 are carried to Item 3; no decision moved in this phase. The two new
-contract tests are green, the safe documentation gate passed 12/12, and the licensed runnable suite
-passed 2,371 with 9 policy skips. Nine manifest-dependent files were omitted before collection;
-pytest's separate 94 deselections are the project's default `execution` marker, correcting the
-earlier record that conflated those categories. Phase 5 files the design decisions that cross the
-ADR density bar, stamps the four product checks, and closes the item.
+Spec, design and plan are implementation-complete at
+`.project/active/scaffolding-register-boundary/`. Phases 1–4 installed the scaffolding, migrated the
+ledger, filed the routing criterion, and triaged the nine existing decisions. Phase 5 filed the two
+load-bearing implementation conventions as `.project/adr/0002` and `0003`, then checked all four
+product entries at verified Phase 4 ref `02733b4`. D1, D2 and D5 remain design mechanism detail;
+D6 and the ADR-007/ADR-009 re-homes remain Item 3 work. The safe documentation contract passed
+14/14 and both generated indexes are idempotent. The licensed runnable suite passed 2,371 with 9
+policy skips and 94 default execution-marker deselections after the nine manifest-dependent files
+were omitted under the accepted environment limitation. Ruff is clean. The unchanged
+`mypy src/` result is the established 30-error/eight-file baseline; the owner accepted the
+recommended zero-new gate for this source-free phase. Run an independent `$my-audit` next.
 
 ### 2026-08-16: elaborator-downstream — SPEC REVISED AFTER REVIEW (Item 8 remainder)
 

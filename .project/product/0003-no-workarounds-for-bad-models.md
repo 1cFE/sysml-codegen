@@ -9,7 +9,7 @@ superseded_by: null
 supersedes: null
 provenance: "[OWNER]"
 surfaces: [extraction, elaboration, generation]
-checked: null
+checked: 2026-08-21 @ 02733b4
 ---
 
 # P-003 — No workarounds to accept bad models
