@@ -164,14 +164,12 @@ Item 8 still lands after Item 3.
 **Type**: Code/Integration
 **Effort**: 1 day (spec 1h, design 1h, plan 1h, execute 5h)
 **Dependencies**: None
-**Implementation Status**: Phase 3 complete 2026-08-21. The four promises are script-managed
-`0001`…`0004` entries with history-derived frontmatter, a generated idempotent index, and live
-citations repointed in both directions. `[AGENT] (ratified by owner, 2026-08-21)` permits only the
-five hidden Markdown destinations required by the rename to differ inside the existing bodies;
-visible prose and owner payload are unchanged. The safe documentation contract passed 10/10 and the
-runnable licensed suite passed 2,371 with 9 policy skips. The exact full-suite gate remains
-unavailable because this checkout has no current five-repository artifact manifest. Awaiting owner
-authorization for Phase 4 criterion filing and ADR triage.
+**Implementation Status**: Phase 4 complete 2026-08-21; awaiting Phase 5. The audience-based
+criterion is `.project/adr/0001`, all nine existing decisions are triaged, and the two-register
+convention is documented. Sections 1–6 and 8 are author-facing; ADR-007 and ADR-009 are
+builder-facing and carried to Item 3 for re-homing. The safe documentation contract passed 12/12,
+and the runnable licensed suite passed 2,371 with 9 policy skips. The exact full-suite gate remains
+unavailable because this checkout has no current five-repository artifact manifest.
 
 **Objective**: Bring `.project/` scaffolding up to the current `agentic-project-init` pack,
 install both decision registers with their engines, and record the subject-split criterion so
@@ -180,10 +178,10 @@ the boundary between them is settled once rather than re-derived per entry.
 **Current State**:
 - ✅ `.project/product/` has four `000N` entries, generated index reachability, and truthful provenance
 - ✅ `.project/scripts/` contains the installed `adr.sh` and `product.sh` engines
-- ✅ `.project/adr/` exists with its register contract; the criterion entry is scheduled for Phase 4
-- ⚠️ `CLAUDE.md` still asserts a single ADR home; the generated product index no longer carries the
-      old convention, and Phase 4 adds the replacement to the durable README
-- ❓ Whether any of the nine existing ADRs are builder-facing rather than author-facing
+- ✅ `.project/adr/0001` carries the owner-grade routing criterion and its generated index is stable
+- ✅ `CLAUDE.md` and `.project/product/README.md` describe both registers and path-qualified citations
+- ✅ All nine existing decisions are triaged; ADR-007 and ADR-009 are carried to Item 3
+- ⏳ The four product entries still have `checked: null`; Phase 5 owns their verification stamps
 
 **Scope**:
 1. **Install the pack**: `project-pack/adr/`, `project-pack/product/README.md`,
@@ -196,10 +194,12 @@ the boundary between them is settled once rather than re-derived per entry.
    modeling-assumptions register uses `ADR-0NN`. They do not collide mechanically but read
    confusably in prose. Fix the convention and apply it in the two docs below.
 4. **Triage the nine existing ADRs** against the criterion and **record the outcomes — move
-   nothing** `[OWNER, 2026-08-21]`. Sections 1-8 are author-facing and stay. `ADR-009` (Coverage
-   Truth and Headline Semantics) is builder-facing and is recorded as misfiled; **Item 3 performs
-   the re-home** (step 2a there), so this item keeps to scaffolding.
-5. **Correct the two convention paragraphs** in `CLAUDE.md` and `.project/product/INDEX.md`.
+   nothing** `[OWNER, 2026-08-21]`. Sections 1–6 and 8 are author-facing and stay. `ADR-007`
+   (Compute Once, Look Up Thereafter) and `ADR-009` (Coverage Truth and Headline Semantics) are
+   builder-facing and recorded as misfiled; **Item 3 performs both re-homes** (step 2a there), so
+   this item keeps to scaffolding.
+5. **Correct the convention in `CLAUDE.md` and relocate the generated index's durable guidance to
+   `.project/product/README.md`**.
 6. **Back-register** the existing four promises' `checked` stamps through `product.sh` so the
    ledger's frontmatter is script-managed from here on.
 **Out of Scope**:
@@ -211,17 +211,19 @@ the boundary between them is settled once rather than re-derived per entry.
   standalone backlog items `[SERIALIZE-NAN-SEAL]` and `[V11-DEAD-GATE-DOCS]` `[OWNER, 2026-08-20]`
 
 **Success Criteria**:
-- [ ] `.project/adr/` exists with a generated `INDEX.md`; `adr.sh` and `product.sh` are
+- [x] `.project/adr/` exists with a generated `INDEX.md`; `adr.sh` and `product.sh` are
       installed and their pack test suites pass against this checkout
-- [ ] The criterion entry is filed, `[OWNER]` graded, and states the boundary in one line that
+- [x] The criterion entry is filed, `[OWNER]` graded, and states the boundary in one line that
       does not name this repo's specific subjects
-- [ ] Each of the nine existing ADRs has a recorded triage outcome; ADR-009 is recorded as
-      builder-facing with its move carried to Item 3, and nothing is moved by this item
-- [ ] `CLAUDE.md` and `.project/product/INDEX.md` describe the two-register convention and the
+- [x] Each of the nine existing ADRs has a recorded triage outcome; ADR-007 and ADR-009 are
+      recorded as builder-facing with their moves carried to Item 3, and nothing is moved by this
+      item
+- [x] `CLAUDE.md` and `.project/product/README.md` describe the two-register convention and the
       citation forms, with no remaining claim of a single home
 - [ ] `.project/product/` frontmatter is script-managed; a `product.sh index` regeneration
-      produces the committed `INDEX.md` byte-for-byte
-- [ ] Full suite green with the license loaded
+      produces the committed `INDEX.md` byte-for-byte, and Phase 5 stamps all four checks
+- [x] Licensed runnable suite green with the license loaded under the accepted missing-manifest
+      limitation; exact full-suite validation remains unavailable rather than green
 
 **Location**: `.project/active/scaffolding-register-boundary/`
 
@@ -349,13 +351,13 @@ and promise worth keeping, so the owner can rule each in or out before anything 
    decision, filed at the register the criterion assigns.
 2. **Author the author-facing decisions** as new numbered sections of
    `docs/architecture/modeling-assumptions.md`, continuing from ADR-010.
-2a. **Re-home ADR-009** `[OWNER, 2026-08-21]`, deferred here from Item 1's design (D6). Coverage
-   Truth and Headline Semantics is builder-facing by the criterion Item 1 files — it governs report
-   token spellings, generation templates, TEAx's `CANONICAL_HEADLINE`, and a normalization seam
-   (`docs/architecture/modeling-assumptions.md:704-742`). File it as a `.project/adr/` entry, reduce
-   §9 to a pointer, and **repoint `0001:128` and the `INDEX.md` back-registered ADR row in the same
-   change** — `0001` is `[OWNER-VERBATIM, 2026-08-13]` and its Authority must not dangle. Item 1's
-   `adr-triage.md` carries the recorded outcome.
+2a. **Re-home ADR-007 and ADR-009** `[OWNER, 2026-08-21]`, deferred here from Item 1's design (D6).
+   Compute Once, Look Up Thereafter binds the builder implementing downstream identifier reuse.
+   Coverage Truth and Headline Semantics binds report token spellings, generation templates,
+   TEAx's `CANONICAL_HEADLINE`, and a normalization seam. File each as a `.project/adr/` entry,
+   reduce §§7 and 9 to pointers, and re-derive and repoint their citations in the same change.
+   ADR-009's move must include `0001`'s owner-verbatim Authority citation. Item 1's
+   `adr-triage.md` carries both recorded outcomes.
 3. **Write a real `Why` in each.** This is the section that decides whether the entry works.
    An entry whose `Why` is "it was decided" has failed and must be reworked or dropped.
 4. **Record rejected alternatives as decision records**, never as instructions to future
@@ -384,8 +386,8 @@ and promise worth keeping, so the owner can rule each in or out before anything 
 - [ ] Provenance grades match what the source actually supports; no `[AGENT]` item is marked
       settled
 - [ ] `adr.sh index` regenerates `INDEX.md` cleanly; ids are script-allocated throughout
-- [ ] ADR-009 is re-homed, `modeling-assumptions.md` §9 is a pointer, and `0001:114` plus the
-      `INDEX.md` ADR row resolve to the new entry
+- [ ] ADR-007 and ADR-009 are re-homed, `modeling-assumptions.md` §§7 and 9 are pointers, every
+      citation resolves, and `0001`'s ADR-009 Authority points to the new entry
 
 **Location**: `.project/active/decision-records/`
 
@@ -418,7 +420,8 @@ is the orientation surface a cold agent and the product-lens can both resolve ag
 - ✅ Four entries exist: `0001` (design search, owner-stated), `0002` (exact owner
       anchoring), `0003` (no workarounds for bad models, `[OWNER-VERBATIM]`), `0004` (product
       identity: parse, walk, emit, `[OWNER-VERBATIM]`)
-- ⚠️ `INDEX.md` carries one back-registered ADR row whose home changes under the new criterion
+- ✅ `.project/product/README.md` carries the two-register convention; generated `INDEX.md` contains
+      product rows only
 - ❌ Promises settled since — snapshot/license decoupling, refusal contracts, the sealed-graph
       guarantee — have no entries
 - ⚠️ Existing `checked` stamps remain `null`; Item 1 Phase 5 owns the first script-managed stamp
@@ -429,10 +432,8 @@ is the orientation surface a cold agent and the product-lens can both resolve ag
 2. **Write graded Authority citations** for each. Implementation evidence establishes that
    behavior exists; it never creates product authority. An entry resting only on test paths has
    failed and must find a durable source or become a first-capture owner quote.
-3. **Re-home the back-registered ADR row** in `INDEX.md` per the Item 1 criterion, and adjust
-   the "ADR convention (this repo)" paragraph to the two-register form.
-4. **Stamp `checked`** on new and existing entries via `product.sh check`, with the git ref.
-5. **Preserve the four existing entries' visible prose and owner payload unchanged** — they are
+3. **Stamp `checked`** on new and existing entries via `product.sh check`, with the git ref.
+4. **Preserve the four existing entries' visible prose and owner payload unchanged** — they are
    append-only, and two are `[OWNER-VERBATIM]`. The five hidden Markdown destinations ratified for
    Item 1's rename are the sole existing body-byte exception. Any material change is a supersession
    filed as a new entry.
@@ -448,7 +449,8 @@ is the orientation surface a cold agent and the product-lens can both resolve ag
       `[OWNER-VERBATIM]` first capture; no entry rests on evidence alone
 - [ ] `0001` through `0004` visible prose and owner payload match Item 1's migrated state; the five
       already-ratified Markdown destination changes are not widened
-- [ ] `INDEX.md` describes the two-register convention correctly and is script-generated
+- [ ] `.project/product/README.md` describes the two-register convention and `INDEX.md` remains
+      script-generated
 - [ ] Every active entry carries a `checked` stamp with a git ref
 - [ ] A product-lens run can resolve the ledger index-first without following a dead path
 

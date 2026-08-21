@@ -33,14 +33,31 @@ implementation behavior, and anything obvious from one code path stay in code an
 - **Good title:** "One modeled source produces one public input" (a contract; an agent
   merging source handling could silently break it)
 
-## Register boundary: promises here, decisions in `.project/adr/`
+## Register boundary: promises here, decisions in their audience's register
 
 A **promise** is what the product guarantees and why it matters — it lives here. A
 **decision** is the chosen mechanism, with the reasoning a future challenge re-derives
-against — it lives in `.project/adr/`. "The evaluator supports late-fill entry injection"
-is a promise; "we generate the package with inputs wired after graph construction" is a
-decision. When one change produces both, file both — each register, its own entry; cite,
-don't restate.
+against. "The evaluator supports late-fill entry injection" is a promise; "we generate
+the package with inputs wired after graph construction" is a decision. When one change
+produces both, file both — each register, its own entry; cite, don't restate.
+
+## Repo-local resolution and decision registers
+
+Product ids use four digits. Each id in `INDEX.md` resolves to exactly one sibling
+`<id>-*.md` file; the entry's frontmatter carries its provenance grade. The generated
+index is the discovery surface, and the matching entry is the authority surface.
+
+This repo has **two decision registers**, routed by
+`.project/adr/0001-route-decisions-by-who-they-bind.md`: ask who must obey the decision.
+
+- A decision that binds a model author stays in
+  `docs/architecture/modeling-assumptions.md` as a numbered `ADR-0NN` section.
+- A decision that binds a code-generator builder goes in `.project/adr/` as a
+  script-allocated `NNNN-*.md` entry.
+
+Cite the register path with the id, never a bare number. For example,
+`docs/architecture/modeling-assumptions.md ADR-008` names an input-authoring decision;
+`.project/adr/0001-route-decisions-by-who-they-bind.md` names a system decision.
 
 ## Entry format
 

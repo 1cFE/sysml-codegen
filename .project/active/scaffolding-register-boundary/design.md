@@ -71,10 +71,14 @@ updates the rest. Diffed against this repo: four files are missing outright (`sc
 local edits (`EPIC_GUIDE.md` 327→425, `epic_template.md` 130→160, `README.md`, `backlog/README.md`),
 and the rest match. `.claude/` here is a real directory, so `--include-claude` must not be passed.
 
-**ADR-009 is the one misfiled entry.** Sections 1–8 of `modeling-assumptions.md` bind a model
-author (library/design separation, aggregation via redefinition, template instantiation). Section 9,
+**ADR-007 and ADR-009 are the misfiled entries.** Sections 1–6 and 8 of
+`modeling-assumptions.md` bind a model author (library/design separation, aggregation via
+redefinition, template instantiation, executable constraint forms). Section 7 tells downstream
+code never to re-derive identifiers (`:430-446`), which binds a system builder. Section 9,
 Coverage Truth and Headline Semantics (`:704-742`), governs report token spellings, generation
-templates, TEAx's `CANONICAL_HEADLINE`, and a normalization seam. No model author obeys it.
+templates, TEAx's `CANONICAL_HEADLINE`, and a normalization seam. No model author can uphold either
+implementation rule. ADR-007's correction is `[OWNER, 2026-08-21]` after the conflict surfaced
+during implementation.
 
 **The guard on the owner's words is one test.** `tests/conformance/test_stop_parser_documentation_contract.py:208-245`
 reads `0003` and `0004` by path, asserts the owner quote and the three product-identity step lines,
@@ -144,20 +148,19 @@ the one test's index assertions as real reachability checks.
   filesystem would disagree; and renumbering the published `ADR-0NN` ids would break existing
   citations for a cosmetic gain).*
 - **D5.** The displaced `INDEX.md` prose lands in `.project/product/README.md` as a repo-local
-  section — the id rule, the naming/resolution rule, and the two-register convention. The
-  back-registered ADR-009 row and the "Cited from" trail resolve with D6. *Rejected: dropping it
-  (the resolution rule is what makes B1 true and must be written down somewhere a reader finds).*
-- **D6.** ADR-009's re-home is **deferred to Item 3** `[OWNER, 2026-08-21]`. By the criterion this
-  item files, ADR-009 (Coverage Truth and Headline Semantics) is builder-facing — it governs report
-  token spellings, generation templates, TEAx's `CANONICAL_HEADLINE`, and a normalization seam
-  (`docs/architecture/modeling-assumptions.md:704-742`). Sections 1–8 are author-facing and stay.
-  This item records the triage outcome; Item 3 performs the move, because it is already authoring
-  builder-facing ADRs with that context loaded, and because keeping this item to scaffolding is the
-  same correction that pulled the `allow_nan` fix out of it. *Rejected: moving it here (bolts an
-  unrelated re-home plus an owner-verbatim citation repoint onto a scaffolding item). Rejected:
-  grandfathering it (the register would carry a known exception on the day its rule is written).*
-  **Consequence for Item 3:** the move must repoint `0001:128` and the `INDEX.md` back-registered
-  ADR row in the same change, or `0001`'s Authority dangles.
+  section — the id rule, the naming/resolution rule, and the two-register convention. The generated
+  product index contains promise rows only; decision discovery belongs to the decision registers,
+  and inbound citations remain at their source sites. *Rejected: dropping the resolution rule (it
+  is what makes B1 true and must be written down somewhere a reader finds).*
+- **D6.** ADR-007's and ADR-009's re-homes are **deferred to Item 3** `[OWNER, 2026-08-21]`. By the
+  criterion this item files, ADR-007 (Compute Once, Look Up Thereafter) binds downstream code, and
+  ADR-009 (Coverage Truth and Headline Semantics) binds report generation and runtime
+  normalization. Sections 1–6 and 8 are author-facing and stay. This item records the triage
+  outcomes; Item 3 performs the moves because it is already authoring builder-facing ADRs with that
+  context loaded. *Rejected: moving them here (bolts unrelated re-homes and citation repoints onto
+  a scaffolding item). Rejected: grandfathering them (the register would carry known exceptions on
+  the day its rule is written).* **Consequence for Item 3:** re-derive and repoint every citation to
+  both sections; ADR-009's move must include `0001`'s Authority citation.
 
 ## Architecture
 
@@ -171,9 +174,8 @@ pack (source of truth for scaffolding)
 .project/product/        (migrated) 000N-<slug>.md       +  INDEX.md   [product.sh]
 docs/architecture/modeling-assumptions.md  (unchanged except D6)
 
-seam: 0001's Authority cites modeling-assumptions.md ADR-009,
-      and INDEX.md carries a back-registered row for it.
-      D6 decides whether that seam moves.
+seam: 0001's Authority cites modeling-assumptions.md ADR-009.
+      Item 3 moves that decision and repoints the Authority in one change.
 ```
 
 Data flow for the migration, per entry: read the entry's existing prose → derive the script-managed
@@ -212,7 +214,7 @@ frontmatter tells the truth about when the promise was filed. `checked` is stamp
   the `<id>-*.md` resolution rule, and the two-register convention (D5).
 - **`.project/product/INDEX.md`** — now generated. Hand edits are lost by design.
 - **`docs/architecture/modeling-assumptions.md`** — keeps the author-facing ADRs. Its ADR-010 slot
-  stays open. Touched only by D6.
+  stays open. ADR-007 and ADR-009 are triaged here and moved by Item 3.
 - **`CLAUDE.md`** — its ADR-convention paragraph rewritten to describe two registers and D4's
   citation form.
 - **`tests/conformance/test_stop_parser_documentation_contract.py`** — quote assertions unchanged;
@@ -255,7 +257,7 @@ frontmatter tells the truth about when the promise was filed. `checked` is stamp
 | A missed citation site leaves a dangling path (B2 false) | I4 checks both directions; sweep is mechanical and run at implementation time, not from this document |
 | `init-project.sh --force` overwrites something unexpected | Dry run reviewed before the real run; the four protected files cover the volatile ones |
 | Generated index is less orienting than the prose it replaces (B1 false) | D5 puts the resolution rule in README; if it still reads worse, the fallback is a hand-maintained sibling, not a script fork |
-| ADR-009's deferred move is forgotten, leaving the register permanently misfiled | Recorded in the triage document, in Item 3's epic scope, and in this design's handoff — three places, none of which Item 5 deletes |
+| ADR-007's or ADR-009's deferred move is forgotten, leaving the register permanently misfiled | Recorded in the triage document, in Item 3's epic scope, and in this design's handoff — three places, none of which Item 5 deletes |
 
 ## Integration Strategy
 
@@ -286,11 +288,11 @@ Item 5's purge is bound by I4 to leave every ledger citation resolving.
 **Fixed:** the install mechanism (D1), the id map (D2), reachability-by-naming-rule (D3), the
 citation form (D4), and I1–I6.
 
-**Open:** nothing blocking. D6 is settled as a deferral, so this item records a triage outcome for
-ADR-009 and does not move it. The plan can start.
+**Open:** nothing blocking. D6 is settled as a deferral, so this item records triage outcomes for
+ADR-007 and ADR-009 and does not move them. The plan can start.
 
-**Carried to Item 3:** the ADR-009 re-home, with its `0001:128` and `INDEX.md` repoints bound to
-the same change.
+**Carried to Item 3:** the ADR-007 and ADR-009 re-homes. Re-derive both citation sets during that
+item; bind ADR-009's `0001` Authority repoint to the same change.
 
 **De-risk first:** B3. Before any rename, prepend frontmatter to a throwaway copy of `P-003` and run
 the I2 byte-check and `product.sh index` against it. If the append-only reading turns out to forbid

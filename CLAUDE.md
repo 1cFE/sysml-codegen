@@ -140,9 +140,17 @@ A group is named after the file that **declares** the owner node, not the file t
 in sibling `NNNN-*.md` files. Read it before work that touches what the product claims to do.
 `0001` carries the design-search promise in the owner's own words.
 
-The ledger also back-registers this repo's ADRs as rows. **An ADR is a numbered section of
-`docs/architecture/modeling-assumptions.md`** titled `## N. Title (ADR-0NN)` — there is no
-`docs/adr/` directory. Next free id: ADR-010.
+This repo has **two decision registers**, routed by
+`.project/adr/0001-route-decisions-by-who-they-bind.md`: ask who must obey the decision.
+
+- Model-author decisions stay in `docs/architecture/modeling-assumptions.md` as numbered
+  `ADR-0NN` sections. The next free author-facing id is ADR-010.
+- Code-generator-builder decisions go in `.project/adr/` as script-allocated `NNNN-*.md`
+  entries. Use `.project/scripts/adr.sh new <slug>`; never mint an id by hand.
+
+Cite the register path with the id, never a bare number: for example,
+`docs/architecture/modeling-assumptions.md ADR-008` or
+`.project/adr/0001-route-decisions-by-who-they-bind.md`.
 
 ## Dependencies
 

@@ -1,14 +1,14 @@
 # Current Work
 
-**Last Updated**: 2026-08-21 (**scaffolding-register-boundary Phase 3 complete; awaiting Phase 4
-authorization.** The four promises are now script-managed `0001`…`0004` entries with
-history-derived frontmatter and a generated, idempotent index. The live citation set was re-derived
-and repointed in both directions. `[AGENT] (ratified by owner, 2026-08-21)` permits only the five
-hidden Markdown destinations required by the rename to differ inside the existing bodies; all
-visible prose and owner payload remain unchanged. The safe documentation-contract subset passed
-10/10, and the licensed runnable suite passed 2,371 with 9 policy skips. Ninety-four tests in nine
-process-evidence modules remain deselected under the accepted missing-manifest limitation; the exact
-full-suite gate is unavailable, not green. No `checked` stamp was added; Phase 5 owns verification
+**Last Updated**: 2026-08-21 (**scaffolding-register-boundary Phase 4 complete; awaiting Phase 5
+authorization.** `.project/adr/0001` now carries the owner-grade audience question, all nine
+existing decisions have recorded outcomes, and `CLAUDE.md` plus `.project/product/README.md`
+describe both registers and path-qualified citations. Sections 1–6 and 8 are author-facing;
+ADR-007 and ADR-009 are builder-facing and carried to REPO-CLEANUP Item 3 for re-homing. The safe
+documentation contract passed 12/12. The licensed runnable suite passed 2,371 with 9 policy skips;
+nine manifest-dependent files were omitted before collection, while pytest separately deselected
+94 `execution`-marker tests by project default. The exact full-suite gate remains unavailable under
+the accepted missing-manifest limitation. No `checked` stamp was added; Phase 5 owns verification
 stamps.)
 Prior status: 2026-08-20 (**stop-reinventing-the-parser SHIPPED — all three repositories
 merged to GitHub `main`.** Merge-commit PRs in dependency order: Agentic agentic-mbse#13
@@ -182,27 +182,20 @@ rather than invented; vehicle `[CONSTRAINT-GATES-UNTAGGED]` in `BACKLOG.md`.
 
 ## Active Work
 
-### 2026-08-21: scaffolding-register-boundary — PHASE 3 COMPLETE, awaiting Phase 4 authorization (REPO-CLEANUP Item 1)
+### 2026-08-21: scaffolding-register-boundary — PHASE 4 COMPLETE, awaiting Phase 5 authorization (REPO-CLEANUP Item 1)
 
 Spec, design and plan are in implementation (`.project/active/scaffolding-register-boundary/`).
-Phase 1 proved the migration shape, and `[OWNER, 2026-08-21]` the owner accepted its recorded
-missing-manifest environment limitation. Phase 2 installed the register engines and contracts in
-commit `59ed5b9`. Phase 3 migrated the four promises to `0001`…`0004`, added history-derived
-frontmatter, regenerated the index, and repointed the live citation set. Five internal Markdown
-destinations were the only body-byte changes, an agent recommendation ratified by the owner on
-2026-08-21; visible prose and owner payload are unchanged. The safe documentation gate passed 10/10
-and the licensed runnable suite passed 2,371 with 9 policy skips. Phase 4 is the next owner-gated
-phase. First item of the new
-`[REPO-CLEANUP]` epic (`.project/backlog/epic_repo_cleanup.md`). Installs the pack's two decision
-registers and their engines (`adr.sh`, `product.sh`), files the register-boundary criterion as the
-first `.project/adr/` entry, triages the nine existing ADRs, and corrects the single-ADR-home claims
-in `CLAUDE.md` and `.project/product/INDEX.md`. **[OWNER, 2026-08-20]:** the registers split by
-subject — model-author decisions stay in `docs/architecture/modeling-assumptions.md`,
-toolchain-builder decisions go to `.project/adr/`; the criterion is written to generalize because
-the same problem exists across the claude commands. **[OWNER, 2026-08-20]:** the product ledger
-harmonizes to the pack's `NNNN-slug.md` standard rather than the script being modified — our
-`P-NNN` scheme was hand-rolled on 2026-08-14 (`385e163`) two days after `product.sh` shipped
-upstream, and `product.sh index` would blank `INDEX.md` today.
+Phases 1–3 proved and performed the scaffolding installation and product-ledger migration; commits
+`59ed5b9` and `84bb83b` carry those changes. Phase 4 allocated
+`.project/adr/0001-route-decisions-by-who-they-bind.md` through `adr.sh`, triaged all nine numbered
+decisions, recorded the four product provenance checks, and replaced the single-home convention.
+The owner classified ADR-007 as builder-facing from its rule that downstream code never re-derives
+identifiers. ADR-007 and ADR-009 are carried to Item 3; no decision moved in this phase. The two new
+contract tests are green, the safe documentation gate passed 12/12, and the licensed runnable suite
+passed 2,371 with 9 policy skips. Nine manifest-dependent files were omitted before collection;
+pytest's separate 94 deselections are the project's default `execution` marker, correcting the
+earlier record that conflated those categories. Phase 5 files the design decisions that cross the
+ADR density bar, stamps the four product checks, and closes the item.
 
 ### 2026-08-16: elaborator-downstream — SPEC REVISED AFTER REVIEW (Item 8 remainder)
 

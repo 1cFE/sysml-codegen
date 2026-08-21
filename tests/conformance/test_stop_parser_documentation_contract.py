@@ -13,6 +13,7 @@ from verification import capture_baseline
 
 ROOT = Path(__file__).resolve().parents[2]
 PRODUCT = ROOT / ".project/product"
+ADR = ROOT / ".project/adr"
 TRANSITIONS = {
     "A1",
     "A2",
@@ -71,6 +72,38 @@ def test_every_indexed_promise_resolves_to_exactly_one_entry() -> None:
 
 def test_product_index_is_a_faithful_regeneration(tmp_path: Path) -> None:
     assert _read(".project/product/INDEX.md") == _regenerate_product_index(tmp_path)
+
+
+def test_no_document_claims_a_single_adr_home() -> None:
+    convention_docs = (
+        "CLAUDE.md",
+        ".project/product/README.md",
+    )
+    for relative in convention_docs:
+        text = _read(relative)
+        assert "docs/architecture/modeling-assumptions.md" in text
+        assert ".project/adr/" in text
+        assert "two decision registers" in text.lower()
+
+    for relative in (*convention_docs, ".project/product/INDEX.md"):
+        text = _read(relative).lower()
+        assert "there is no `docs/adr/` directory" not in text
+        assert "only adr home" not in text
+        assert "single adr home" not in text
+
+
+def test_decision_register_boundary_is_discoverable() -> None:
+    entries = list(ADR.glob("0001-*.md"))
+    assert len(entries) == 1
+    entry = entries[0].read_text()
+    normalized_entry = " ".join(entry.split())
+    assert 'provenance: "[OWNER]"' in entry
+    assert "Who is bound by this decision" in normalized_entry
+    assert "person writing the system's inputs" in normalized_entry
+    assert "person changing the system itself" in normalized_entry
+    assert "- 0001 · Route decisions by who they bind" in _read(
+        ".project/adr/INDEX.md"
+    )
 
 
 def test_architecture_docs_name_one_owner_walk_and_exact_evidence_boundary() -> None:

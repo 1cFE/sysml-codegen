@@ -5,7 +5,7 @@
 **Created:** 2026-08-20 21:47
 **Complexity:** MEDIUM
 **Branch:** repo-cleanup
-**Implementation Progress:** Phase 3 of 5 complete; ledger migrated to generated `000N` index
+**Implementation Progress:** Phase 4 of 5 complete; decision boundary filed and nine entries triaged
 
 ---
 
@@ -45,25 +45,26 @@ the generator carries them.
 
 ## Success Criteria
 
-- [ ] A cold agent reading the repo can tell which register a new decision belongs in, from one
+- [x] A cold agent reading the repo can tell which register a new decision belongs in, from one
       stated criterion, without asking
-- [ ] `.project/adr/` exists and holds that criterion as its first entry, graded `[OWNER]`
-- [ ] Each of the nine existing ADRs has a recorded triage outcome against the criterion
-- [ ] `product.sh` and `adr.sh` manage their registers for real: `product.sh index` regenerates
+- [x] `.project/adr/` exists and holds that criterion as its first entry, graded `[OWNER]`
+- [x] Each of the nine existing ADRs has a recorded triage outcome against the criterion
+- [x] `product.sh` and `adr.sh` manage their registers for real: `product.sh index` regenerates
       `INDEX.md` from the actual entries, and `adr.sh new` allocates the next id
-- [ ] The regenerated `INDEX.md` still resolves to each entry file and still exposes each entry's
+- [x] The regenerated `INDEX.md` still resolves to each entry file and still exposes each entry's
       provenance grade — the ledger's "reachable from here" contract survives the handover to the
       generator
-- [ ] The four product promises survive with every visible word and owner payload unchanged below
+- [x] The four product promises survive with every visible word and owner payload unchanged below
       the added frontmatter block. The only permitted body-byte changes are the five mechanical
       Markdown destination repoints required by the filename migration; citations resolve **in both
       directions**: every reference pointing at a promise entry, and every path a promise entry cites
-- [ ] `CLAUDE.md` and `.project/product/INDEX.md` no longer claim a single ADR home
-- [ ] The owner-verbatim quote assertions in
+- [x] `CLAUDE.md` and `.project/product/INDEX.md` no longer claim a single ADR home
+- [x] The owner-verbatim quote assertions in
       `tests/conformance/test_stop_parser_documentation_contract.py` still run unweakened, and its
       index-reachability assertions are re-expressed against the harmonized index rather than
       deleted
-- [ ] Full suite green with `SYSIDE_LICENSE_KEY` loaded
+- [x] Licensed runnable suite green with `SYSIDE_LICENSE_KEY` loaded under the owner's accepted
+      missing-manifest limitation; the exact full-suite gate remains unavailable rather than green
 
 ## Known Requirements
 
@@ -109,16 +110,16 @@ the generator carries them.
   ledger entry names it as Evidence.
 - **[INFERRED]** The prose currently in `INDEX.md` that the generated format cannot carry
   relocates to `.project/product/README.md` or to the criterion ADR rather than being dropped: the
-  id rule, the ADR-convention paragraph, the back-registered ADR-009 row, the "Cited from" trail,
-  and — the two the first draft missed — the per-promise summary lines that carry each entry's
-  provenance grade, and index→entry reachability itself.
-- **[OWNER]** `ADR-009` is triaged here and re-homed by Item 3, not by this item
-  `[OWNER, 2026-08-21]`. When Item 3 moves it, `0001`'s Authority citation of
-  `docs/architecture/modeling-assumptions.md:588` and the back-registered `INDEX.md` row are
-  repointed in the same change — `0001` is `[OWNER-VERBATIM, 2026-08-13]` and its Authority must
-  not dangle.
-- **[INFERRED]** Sections 1-8 of `modeling-assumptions.md` are author-facing and stay there. This
-  item records all nine triage outcomes and moves none of them.
+  id rule, the ADR-convention paragraph, the per-promise provenance grades, and index→entry
+  reachability itself. Grades live in entry frontmatter; reachability is the documented naming rule
+  plus its conformance test.
+- **[OWNER]** `ADR-007` and `ADR-009` are triaged here and re-homed by Item 3, not by this item
+  `[OWNER, 2026-08-21]`. The owner classified ADR-007 from its binding rule: “Downstream code never
+  re-derives identifiers” belongs in `.project/adr/`. When
+  Item 3 moves ADR-009, `0001`'s Authority citation is repointed in the same change — `0001` is
+  `[OWNER-VERBATIM, 2026-08-13]` and its Authority must not dangle.
+- **[INFERRED]** Sections 1–6 and 8 of `modeling-assumptions.md` are author-facing and stay there.
+  This item records all nine triage outcomes and moves none of them.
 - **[INHERITED]** The two registers' id forms must not be confusable in prose. `adr.sh` allocates
   four-digit ids; `modeling-assumptions.md` uses `ADR-0NN`.
   Source: `.project/backlog/epic_repo_cleanup.md`, Register Boundary section.
@@ -133,7 +134,7 @@ the generator carries them.
 - Changing `agentic-project-init` itself, or applying the criterion to the claude commands.
 - Re-verifying that the four existing promises still hold in code. A `checked` stamp asserts
   "I looked", not a certification.
-- Re-homing `ADR-009`. Triaged here, moved by Item 3 `[OWNER, 2026-08-21]`.
+- Re-homing `ADR-007` or `ADR-009`. Triaged here, moved by Item 3 `[OWNER, 2026-08-21]`.
 - The `allow_nan=False` defect in `contracts/serialize.py` and the false V11 preflight claims in
   `CLAUDE.md`, `docs/architecture/overview.md`, and
   `docs/architecture/modeling-assumptions.md`. Both were briefly attached to this item because the
