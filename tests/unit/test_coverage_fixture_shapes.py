@@ -7,7 +7,7 @@ over-built fixture read as a product defect for days.
 
 The expected dispositions come from each fixture's `.sysml` source read against D3's bucket
 table; the accounts they imply are in
-`.project/active/constraint-coverage-policy/expected-coverage.md`.
+`tests/unit/data/expected-coverage.md`.
 """
 
 from __future__ import annotations

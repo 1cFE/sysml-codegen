@@ -1,7 +1,7 @@
 # Provenance — `catf_mfe_d5`
 
 Authored 2026-08-11 for recovery plan **Gate 4C part 6**
-(`.project/active/cutover-recovery/plan.md`), as the migrated variant of `catf_mfe_model`.
+(`cutover-recovery/plan.md` (git history)), as the migrated variant of `catf_mfe_model`.
 
 **Not a corpus fixture.** It joins no ledger and no 37-path corpus run. `catf_mfe_model` is
 untouched: the ratified corpus row and every pin on its refused shape keep their subject.

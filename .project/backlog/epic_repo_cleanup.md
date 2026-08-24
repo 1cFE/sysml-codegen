@@ -209,6 +209,14 @@ their return; zero byte-exact duplicates over 2KB (hash sweep); every `.project`
 `src/`, `tests/`, `docs/`, and both registers resolves; `ledger-4a.json` still loads; licensed
 suite green.
 
+**Executed 2026-08-23** with one recorded qualification: dead-path strings inside frozen bytes
+(hash-guarded fixture `.sysml` doc-comments, lock-row data, item8 JSON values, one synthetic
+test value) stay as historical references rather than citations — enumerated in the Move B
+plan's "Accepted residue" section. Two runtime-read archive artifacts were relocated instead of
+deleted (`reference/elaborator-breadth-diff-ledger.md`,
+`tests/fixtures/source_identity_binding_forms/`), and the five stop-parser probe files stay in
+`active/` until Move C retires the `verification/` lock suite that pins them.
+
 ### Move C: Delete what defends nothing (Items 6 + 7 + 8)
 
 **Effort**: 1–1.5 days. **Dependencies**: Move A (the ADRs say why the dead code was written).

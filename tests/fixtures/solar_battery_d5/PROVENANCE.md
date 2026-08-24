@@ -1,7 +1,7 @@
 # Provenance — `solar_battery_d5`
 
 Authored 2026-08-11 for recovery plan **Gate 4C part 6**
-(`.project/active/cutover-recovery/plan.md`), as the migrated variant of
+(`cutover-recovery/plan.md` (git history)), as the migrated variant of
 `solar_battery_model` — corpus row 33, a ratified `expected-collapse` refused with
 24× `SI_SELF_BINDING`.
 

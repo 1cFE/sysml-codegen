@@ -1,8 +1,8 @@
 """The probe/fixture lock, verified against the historical tree it names.
 
 Until now this leg existed only as a hand-run, and that was the one real residual gap in
-the evidence contract.  See
-`.project/active/stop-reinventing-the-parser/design.md#the-missing-committed-check--phase-1-adds-it`.
+the evidence contract.  See the stop-reinventing-the-parser design,
+§the-missing-committed-check (git history).
 
 Three legs verify the lock, and every locked byte is covered by exactly one of them:
 

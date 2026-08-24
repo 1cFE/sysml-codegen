@@ -529,7 +529,7 @@ Two spellings work, and a third does not:
 **A unit on a constraint *binding* is carried into port metadata, and collides loudly when two
 consumers disagree.** (Rewritten 2026-08-14; the previous text — "carried, not checked" — described
 pre-Item-8 behavior and was false as written once Item 8 landed,
-`.project/completed/20260813_unit-lane-port-metadata/`.)
+the unit-lane-port-metadata close record, 2026-08-13; git history.)
 
 `in tol = 0.05 [m];` is admitted and contributes the number `0.05`. The authored unit text also
 reaches the port: since Item 8, a **constraint-formal** binding and an input to a **computed
@@ -613,7 +613,7 @@ modules, because that set is already filtered.
 for every authored constraint usage, and unless its rows still match the fingerprint projection
 sealed them with. Coverage is therefore not a report the generator writes about itself — it is a
 precondition of the generator producing output at all. Landed by CONSTRAINT-SEMANTICS Item 2;
-citable design at `.project/completed/20260813_constraint-catalog-totality/design.md`.
+citable design in the constraint-catalog-totality design record (2026-08-13; git history).
 
 **Severity is derived from cause *and* form together, never authored.** See
 [30-diagnostic-severity.md](reference/30-diagnostic-severity.md), "Severity by cause."

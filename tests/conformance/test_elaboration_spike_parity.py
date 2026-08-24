@@ -1,6 +1,6 @@
 """Spike-parity conformance for the production elaborator (ELABORATE-FIRST Item 5, Phase 1).
 
-Ports the Item-3 spike probes 1, 2, and 4 (``.project/active/elaborator-spike/``)
+Ports the Item-3 spike probes 1, 2, and 4 (the elaborator-spike item, git history)
 as kept tests against ``sysml_codegen.elaboration``. Spike parity is the Phase-1
 gate: the customer collapse (C25), twin distinctness (C8), the producer edge
 (C24), contextualization per referent class (C12/C13/C15), the stamp-route and
@@ -11,7 +11,7 @@ self-binding hard failure, Bank multiplicity nodes, and node-ID stability.
 Cell keys map to the ratified contract's Appendix C
 (``.project/concepts/constraint-execution-authoritative-lifecycle-contract.md``);
 expected values are the SysIDE oracle's answers pinned by the spike
-(``.project/active/elaborator-spike/findings.md``).
+(elaborator-spike findings, git history).
 
 All tests require a live SysIDE license.
 """

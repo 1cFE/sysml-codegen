@@ -426,6 +426,6 @@ def test_the_fixture_is_not_a_corpus_fixture() -> None:
     """It joins no ledger: the 37-path corpus run must not see it."""
     ledger = (
         Path(__file__).resolve().parents[2]
-        / ".project/completed/20260809_elaborator-breadth/diff-ledger.md"
+        / ".project/reference/elaborator-breadth-diff-ledger.md"
     )
     assert "costed_cart_d5" not in ledger.read_text()

@@ -24,7 +24,7 @@ Traceability matrix mapping every REQ-\* tag to its conformance test file and st
 > missing failing arms, and filed the 8-row REQ-CS family under the owner-authorized
 > `[CONSTRAINT-GATES-UNTAGGED]` minting. The one remaining PARTIAL is REQ-DIAG-01, a recorded
 > deliberate grade (its gap is upstream-shaped). Item 7's recount record:
-> `.project/completed/20260814_constraint-docs-agent-sync/verification.md`.
+> the constraint-docs-agent-sync verification record (2026-08-14; git history).
 
 **Status definitions:**
 - **PASS**: At least one test **that exists in the tree** proves this requirement and passes
@@ -41,7 +41,7 @@ Traceability matrix mapping every REQ-\* tag to its conformance test file and st
 >
 > - **The subject is live and the proof moved.** The row now cites the kept node(s) that prove
 >   it. Where the recovery's deletion ledger recorded where a deleted module's responsibility
->   went (`.project/active/cutover-recovery/ledger-4a.json`, `replacement_proof_node`), that
+>   went (`.project/ledger/ledger-4a.json`, `replacement_proof_node`), that
 >   recorded heir is what the row cites — the mapping carries the ledger's authority, not this
 >   pass's guess. Nine rows found no heir: their subject is live, nothing proves it, and they
 >   read UNTESTED with the gap named.
@@ -275,9 +275,8 @@ indirectly via the emitted verifier.
 Filed 2026-08-14 at ELABORATE-FIRST cutover step 4, under the owner-authorized
 `[CONSTRAINT-GATES-UNTAGGED]` ruling (BACKLOG; minting assigned to this step so the matrix is
 touched once). Requirement texts are `[INHERITED]` distillations of the items' archived Success
-Criteria — `.project/completed/20260813_constraint-coverage-policy/` (Item 3),
-`.project/completed/20260813_unit-lane-port-metadata/` (Item 8),
-`.project/completed/20260813_derivative-upgrade-held-intent/` (Item 9). Every cited test was run
+Criteria — the constraint-coverage-policy (Item 3), unit-lane-port-metadata (Item 8), and
+derivative-upgrade-held-intent (Item 9) close records of 2026-08-13 (git history). Every cited test was run
 before its row was filed (44 conformance/unit licensed with zero license-skip lines, 14 under the
 `execution` marker; the run is recorded in the recovery plan's step-4 completion record).
 
@@ -328,7 +327,7 @@ Two deliberate scope notes, so absence reads as decision rather than drift:
 Filed 2026-08-14 by CONSTRAINT-SEMANTICS Item 7 (`[MATRIX-EPIC-SURFACE-ROWS]`, BACKLOG:447). These
 four requirements were traced in doc 30 and had **no rows here** — the family existed in prose and
 not in the matrix. Every cited test was run before its row was written; the run is recorded in
-`.project/completed/20260814_constraint-docs-agent-sync/verification.md`.
+the constraint-docs-agent-sync verification record (2026-08-14; git history).
 
 | REQ ID | Requirement | Test File | Status |
 |--------|-------------|-----------|--------|

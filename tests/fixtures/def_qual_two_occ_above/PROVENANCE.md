@@ -1,7 +1,7 @@
 # Provenance — definition-owned qualified reference, above the def, two occurrences
 
 Promoted for self-binding-replacement Phase 2 from the spike fixture
-`.project/active/self-binding-replacement/spike/fixtures/s8_qual_outside_two/` (findings row 4d).
+`self-binding-replacement/spike/fixtures/s8_qual_outside_two/` (git history) (findings row 4d).
 Package renamed `S8QualOutsideTwo` → `def_qual_two_occ_above`; the shape is otherwise unchanged.
 
 ## Owner class

@@ -41,12 +41,20 @@ single source, so it can't go stale here.
 
 ---
 
-### 4. Epic Cleanup
+### 4. Item and Epic Close — the standing rule `[OWNER, 2026-08-23]`
 
-1. **Check** for all completed active items
-2. **Move items** to `completed/` using `git mv`, prefixed with date stamp (e.g., `git mv .project/active/item_name .project/completed/20251223_item_name`)
-3. **Move epic** to `completed/` using `git mv` with date stamp (e.g., `git mv .project/backlog/epic_name.md .project/completed/20251223_epic_name.md`)
-4. **Update docs**: `CURRENT_WORK.md`, `BACKLOG.md`, and `completed/CHANGELOG.md`
+**Close = record, then delete. Git history is the archive.** There is no `completed/` folder.
+
+1. **Record what is durable**: settled decisions go to the register `.project/adr/0001` routes
+   them to; implemented promises to `.project/product/`; investigation results worth keeping to
+   `research/`. An item whose knowledge is captured has nothing left to archive.
+2. **Delete the item folder** from `active/` in the closing commit. The commit message names the
+   item; `git log` finds it forever. Never leave a closed item in `active/`, and never copy it
+   anywhere first.
+3. **Update docs**: `CURRENT_WORK.md` and `BACKLOG.md`.
+
+This replaces the old archive-to-`completed/` flow, whose result was 551k lines of duplicate
+process history (REPO-CLEANUP, 2026-08-23).
 
 ---
 
@@ -75,14 +83,10 @@ single source, so it can't go stale here.
 │       ├── spec.md
 │       ├── design.md
 │       └── plan.md
-├── completed/
-│   ├── {date}_{item_name}/   # Archived items
-│   └── epic_*.md             # Archived epics
 ├── adr/                      # Decision records (append-only, script-managed)
 ├── product/                  # Product promise ledger (append-only, script-managed)
 ├── scripts/                  # Utility scripts (adr.sh, product.sh, get-metadata.sh)
-├── research/                 # Deep investigations
-└── reports/                  # Status reports
+└── research/                 # Deep investigations (git history is the archive of closed items)
 ```
 
 ---

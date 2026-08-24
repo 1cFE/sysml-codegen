@@ -795,7 +795,7 @@ shifts included), land as a reviewed R3-style diff. Related (single-fixture prec
 
 ### [DOCS-SCRUB-F1] Delete the two dead templates (+ dead-code candidates nearby)
 
-**Absorbed into PIPELINE-TRUTH Item 8** (`.project/active/cleanup-debt/`), 2026-07-06. Both dead
+**Absorbed into PIPELINE-TRUTH Item 8** (the cleanup-debt item; git history), 2026-07-06. Both dead
 templates deleted; `map_sysml_type_to_rootmodel_wrapper` (+ its now-orphaned
 `PYTHON_TO_ROOTMODEL_WRAPPER` dict) and `binding_to_entry_point` dual-write deleted in Phase 1;
 `get_default_value` / `generate_derived_group_json` resolved in Phase 2 (see close-out).
@@ -843,7 +843,7 @@ already narrowed its own reading. Decide the intended contract, then fix REQ tex
 ### [DOCS-SCRUB-F4] `resolve_input()` cutover divergence — RETIRED (PIPELINE-TRUTH Item 7)
 
 **Retired 2026-07-06 by Item 7.** The three F4 kill probes ran and fired no kill
-(`.project/active/matrix-truth/probes/`), so the reconciliation direction resolved to
+(the matrix-truth probes; git history), so the reconciliation direction resolved to
 **LAND-with-split**: Item 7 reframed the matrix rows + docs 03/04/05 to the true state
 (`resolve_input` is a parity-validated, not-yet-wired consolidation; the live path is
 `_resolve_aggregation_input_channel`), and the executable cutover is filed below as
@@ -872,7 +872,7 @@ parity-with-the-replaced-function. Add the `_resolve_aggregation_input_channel` 
 as this item's own gate before rewiring.
 
 **The EP-key reconciliation (design-review M4 — the load-bearing blocker).** See
-`.project/active/matrix-truth/probes/probe_iv_ep_key_divergence.md`. The live path builds
+the matrix-truth probe `probe_iv_ep_key_divergence.md` (git history). The live path builds
 the SumTerm entry-point QN as `{module_eqn}__{part_usage}_{attr}` (e.g.
 `…site_infra__raw_material_cost__permitting_raw_material_cost`); `resolve_input`'s leaf-only
 fallback builds `…site_infra__raw_material_cost__raw_material_cost` — which **already
@@ -896,7 +896,7 @@ EPs, SingletonTerm "Try 2" direct-channel construction) BEFORE rewiring.
    ("included in AGG_STRATEGIES for future extensibility") — the residual ghost Item 7 left
    noted, not fixed.
 
-**Safety-net evidence (probe pointers).** `.project/active/matrix-truth/probes/`:
+**Safety-net evidence (probe pointers).** the matrix-truth probes (git history):
 `probe_i_extended_parity.py` (+ run log, now committed as `TestResolveInputParityExtended`),
 `probe_ii_strategy_d_dedup.py` (+ run log — Strategy D delete justification),
 `probe_iii_module_drift.md` (byte-identical since COST-PATTERN birth),
@@ -1129,7 +1129,7 @@ Item 8. Superseded.
 
 
 
-**Source**: PIPELINE-TRUTH Item 8 (`.project/active/cleanup-debt/spec.md`, row B), filed
+**Source**: PIPELINE-TRUTH Item 8 (the cleanup-debt spec, row B; git history), filed
 2026-07-06. **FIRED (2026-07-06) — Item 8 confirmed `get_default_value` DEAD and deleted it**
 (zero production callers; the live default path resolves inline via `_parse_default_value` in
 `_derive_from_*`). Item 8 landed the doc-17 re-frame (rows `:26`/`:28`/`:143`) and the matrix
@@ -1274,8 +1274,7 @@ the new row and does not treat it as an orphan.
   **Filing:** a correct fix spans both sites (an EP-omission / cross-derivation membership check
   that only warns when a transitive default resolves in *neither* Phase 4 *nor* the parameter-group
   JSON path) — design-level work, not a single-choke mechanical hygiene fix. Out of Item 6's scope.
-  Evidence: `.project/active/hygiene-tail/probes/probe_site4_output_registry.py`,
-  `.project/active/hygiene-tail/probes/verdict.md`.
+  Evidence: the hygiene-tail probes `probe_site4_output_registry.py` and `verdict.md` (git history).
 
 ### [ITEM5-SWEEP-RESIDUE-OVERFLOW] D7 sweep completion — 21 rows read-spot-checked, not line-by-line deep-read — P3, test-coverage / matrix-honesty
 
@@ -1343,7 +1342,7 @@ post-CONSTRAINT-EXEC HEAD and rewrote `EXPLAINER_PROMPT.md` into a buildable v2 
 registered three follow-ons:
 
 - **[V2-HTML-BUILD] Build `pipeline_explainer_v2.html` from the refreshed brief — P2.** The
-  deliverable of docs-explainer-refresh was the *brief* (`.project/active/EXPLAINER_PROMPT.md`),
+  deliverable of docs-explainer-refresh was the *brief* (`EXPLAINER_PROMPT.md`; git history),
   re-anchored to `constraint-exec-epic` HEAD with the eight constraint-exec areas slotted and its
   buildability infrastructure refreshed (responsibility-map rows, reading-list data sources,
   corrected matrix counts 274/32, reuse-guidance delta). This item is the actual v2 HTML build a
@@ -1429,7 +1428,7 @@ constraint architecture.
 ## CONSTRAINT-EXEC remediation audit follow-on (registered 2026-07-17)
 
 Source: independent audits in
-`.project/active/constraint-exec-code-quality-remediation/audit.md`: the initial audit at
+the constraint-exec-code-quality-remediation audit (git history): the initial audit at
 sysml-codegen `c2967f0`, and the 2026-07-17 re-audit of the uncommitted remediation on `036ec39`
 against `agentic-mbse@82fef09`. These are `[AGENT]` findings. They are not owner-originated settled
 requirements. The re-audit verified formal-target coverage and occurrence ordering, so those

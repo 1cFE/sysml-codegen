@@ -1,7 +1,7 @@
 """Cross-package / multi-hop EXPOSE shapes through the elaborator (Item 5 Phase 2, leg 1).
 
 Learning-test leg for the first Phase-2 shape
-(``.project/active/elaborator-breadth/plan.md``): the EXPOSE idiom the plant models
+(elaborator-breadth plan, git history): the EXPOSE idiom the plant models
 author — derived attributes exposing calc outputs, consumers in other packages
 chaining to them, sibling-calc chaining, package-level calcs/attributes, and untyped
 part usages carrying all of it. Findings:

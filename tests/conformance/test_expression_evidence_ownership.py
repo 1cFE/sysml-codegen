@@ -1,7 +1,7 @@
 """Codegen's raw-selector ownership manifest and its evasion gate.
 
 This is Phase 1's seed of closure leg 1 (acquisition) from
-`.project/active/stop-reinventing-the-parser/design.md#checked-consumer-and-ownership-manifests`.
+the stop-reinventing-the-parser design, §checked-consumer-and-ownership-manifests (git history).
 
 The gate reads production source with the Python `ast` module.  It discovers four
 things and nothing else, exactly as the design specifies: a direct attribute read of

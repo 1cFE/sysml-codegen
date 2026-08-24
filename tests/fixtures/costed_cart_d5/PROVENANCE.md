@@ -1,6 +1,6 @@
 # Provenance — `costed_cart_d5`
 
-Authored 2026-08-11 for recovery plan **Gate 4C** (`.project/active/cutover-recovery/plan.md`),
+Authored 2026-08-11 for recovery plan **Gate 4C** (`cutover-recovery/plan.md` (git history)),
 as the exact-route replacement specimen for rows **L-199** (costed component end to end),
 **L-203** (hierarchy aggregation wrappers), and as a second source for **L-198**
 (computed attributes) and **L-201** (expression compilation).

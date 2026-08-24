@@ -225,6 +225,6 @@ Each row names its owner and the stage at which it stops the route.
 - **Constraint lowering**: [28-constraint-lowering-and-catalog](28-constraint-lowering-and-catalog.md)
   — what runs *after* the gate; a blocking diagnostic stops generation before
   lowering reaches it.
-- **Item 4 archived design**: `.project/completed/20260720_constraint-lifecycle-diagnostics-defaults/design.md`
+- **Item 4 archived design**: `20260720_constraint-lifecycle-diagnostics-defaults/design.md` (git history)
   — DD-B1 (severity-as-field vs a reader-side map), invariants I1–I2, and the
   writer-not-reader rationale.

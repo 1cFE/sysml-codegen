@@ -233,4 +233,4 @@ to add to the new-dispatch-site and new-lookup-site code-review checklist:
 disposition column are updated in-change. The remaining per-component reference-doc
 touches (01/10/12/13/14/16/17/23/27 and the matrix rows) are a scoped follow-on —
 the per-finding Implementation Notes in
-`.project/active/silent-failure-hardening/plan.md` are the authoritative record.
+`silent-failure-hardening/plan.md` (git history) are the authoritative record.

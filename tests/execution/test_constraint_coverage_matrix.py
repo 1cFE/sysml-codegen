@@ -10,7 +10,7 @@ the one the item exists to keep separable. Before this item a model with 65 unas
 and a model with no checks at all produced the same runtime label, `unconstrained`.
 
 Every expected account below is the fixture's entry in
-`.project/active/constraint-coverage-policy/expected-coverage.md`, hand-written from `.sysml`
+`tests/unit/data/expected-coverage.md`, hand-written from `.sysml`
 source before any of this code existed.
 """
 

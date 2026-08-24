@@ -55,7 +55,8 @@ of every tracked chained-redefinition root and found zero one-segment sites.
 
 That is empirical, not a proof. The evidence and its dated
 `deep override affected-shape coverage unproven` gap live in the item's
-`spike/deep-override-authorability/findings.md`, retained through archival.
+`spike/deep-override-authorability/findings.md` (git history; the archive left HEAD under the
+wholesale-purge ruling `[OWNER, 2026-08-23]`).
 
 **What this means in practice:** if a future change lets the deep-override lane produce a
 one-segment chain, this promise does not yet cover it and the gap must be reopened rather than
@@ -80,4 +81,4 @@ diagnostic message first.
 - `tests/conformance/test_elaboration_public_mutation.py` — asserts the consumers reached by a
   mutated source are **every** input port in the graph, so an unintended consumer fails wherever it
   binds.
-- The item's `verification/` ledgers — 139 roots compared with identity, 0 changed.
+- The item's `verification/` ledgers — 139 roots compared with identity, 0 changed (git history).

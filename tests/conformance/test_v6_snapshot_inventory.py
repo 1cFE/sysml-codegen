@@ -15,7 +15,7 @@ import assess_v6_snapshot_churn as inventory  # noqa: E402
 
 # Durable home per the F5 ruling [OWNER 2026-08-13]: suite collection must not
 # depend on `.project/` archive layout (the item folder moved to
-# `.project/completed/20260813_unit-lane-port-metadata/` at close).
+# the unit-lane-port-metadata close record, 2026-08-13; git history).
 DATA_ROOT = ROOT / "tests" / "unit" / "data"
 PRE_INVENTORY = DATA_ROOT / "item8-snapshot-inventory-pre.json"
 FINAL_INVENTORY = DATA_ROOT / "item8-snapshot-inventory-final.json"

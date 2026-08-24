@@ -17,7 +17,7 @@ checked: 2026-08-21 @ 02733b4
 **Status:** Directional intent — partly built, partly filed as a capability bet
 **Filed:** 2026-08-14, CONSTRAINT-SEMANTICS Item 7 (first capture)
 **Grade:** `[OWNER-VERBATIM, 2026-08-13]` core, with `[INHERITED]` supplement
-**Source:** `.project/completed/20260814_constraint-docs-agent-sync/owner-checkpoint-20260813.md:9-13`
+**Source:** owner checkpoint of 2026-08-13 (`owner-checkpoint-20260813.md`, constraint-docs-agent-sync; retained in git history — archive removed from HEAD per the wholesale-purge ruling `[OWNER, 2026-08-23]`)
 **Closes:** Item 3 `audit-F4` ("no home available")
 
 ---
@@ -30,7 +30,7 @@ checked: 2026-08-21 @ 02733b4
 > - we differentiate from 1costingFE in that we do not embed the engineering logic:
 >   predetermining the free variables and backing into all others
 
-Reproduced exactly from `owner-checkpoint-20260813.md:9-13`. This is the owner-originated core of
+Reproduced exactly from the owner checkpoint of 2026-08-13 (git history). This is the owner-originated core of
 this entry. It is payload under capture-fidelity law 2: it survives verbatim, at the owner's
 emphasis, and is never reworded, paraphrased, or "improved." Everything below supplements it and
 nothing below rewrites it.
@@ -40,7 +40,7 @@ nothing below rewrites it.
 ## The enforcement-side companion — cited beside, not merged
 
 **[OWNER]** Critical Success Factor, CONSTRAINT-SEMANTICS epic
-(`.project/completed/20260814_epic_constraint_semantics_contract.md:22-24`):
+(the CONSTRAINT-SEMANTICS epic close record, "Why This Epic" opening; git history):
 
 > A design search can trust the generated feasibility evidence to represent every applicable
 > asserted physics gate, while every other authored constraint remains visibly dispositioned.
@@ -55,14 +55,14 @@ and could not, build the first.
 
 ## What supplements it
 
-**[INHERITED: `.project/concepts/constraint-execution-and-design-space-studies.md:15`]**
+**[INHERITED: `.project/concepts/constraint-execution-and-design-space-studies.md`, "Purpose" opening]**
 Three responsibilities, kept separate. Calculations compute one candidate design state. Constraints
 judge that state. A study varies candidate inputs, records every outcome, and applies user-selected
 feasibility and search policy. The separation is what lets a violated physics limit stay visible
 without being confused with broken code, and it is what lets manual, agent-led, grid, uncertainty,
 and optimization workflows all run against the same model evidence.
 
-**[INHERITED: `.project/concepts/constraint-execution-and-design-space-studies.md:17`]** The layer
+**[INHERITED: `.project/concepts/constraint-execution-and-design-space-studies.md`, same section]** The layer
 split that follows from it: the modeling layer owns meaning, the generated model owns deterministic
 evaluation, and the study layer owns exploration and decisions. A parameter is "freely varied" only
 if varying it does not require re-authoring the engineering logic — which is why the logic lives in
@@ -94,7 +94,7 @@ make it owner-originated, and it is challengeable by re-deriving against its rec
 
 **This section resolves nothing. It states a known tension in daylight so that a later reader cannot
 mistake either side for a settled contradiction.** Carried from
-`owner-checkpoint-20260813.md:28-36`, not re-derived here. It is not open for re-resolution by this
+the owner checkpoint's tension note (git history), not re-derived here. It is not open for re-resolution by this
 entry or by the item that filed it.
 
 The promise's second bullet says the system does not embed engineering logic by predetermining the
@@ -112,7 +112,7 @@ The recorded reconciliation, as given:
   The choice of what is fixed is a modeling decision a reader can see and challenge.
 
 **The unbuilt half is filed, not forgotten.** `[ACAUSAL-RELATIONS-CAPABILITY]`
-(`.project/backlog/BACKLOG.md:439`, filed at owner direction 2026-08-13): relation-style parametrics
+(`.project/backlog/BACKLOG.md`, the `[ACAUSAL-RELATIONS-CAPABILITY]` entry, filed at owner direction 2026-08-13): relation-style parametrics
 whose solve direction is study-selectable. "Don't force independent vs dependent." That capability
 is what would close the gap between the promise's second bullet and the landed behavior. It is an
 unowned P3 capability bet, recorded so it does not quietly die.
@@ -124,8 +124,8 @@ causal toolchain with visible bases. The distance between the two has a name and
 
 ## Related
 
-- Owner checkpoint (payload source): `.project/completed/20260814_constraint-docs-agent-sync/owner-checkpoint-20260813.md`
-- Epic: `.project/completed/20260814_epic_constraint_semantics_contract.md` (CONSTRAINT-SEMANTICS; closed and archived 2026-08-14)
+- Owner checkpoint (payload source): `owner-checkpoint-20260813.md`, constraint-docs-agent-sync (git history; archive left HEAD `[OWNER, 2026-08-23]`)
+- Epic: CONSTRAINT-SEMANTICS close record, 2026-08-14 (git history)
 - ADR-009, coverage truth and headline semantics: `.project/adr/0010-coverage-truth-and-headline-semantics.md` (re-homed 2026-08-23; §9 there is a pointer)
-- Capability bet: `[ACAUSAL-RELATIONS-CAPABILITY]`, `.project/backlog/BACKLOG.md:439`
-- audit-F4, the filing this closes: `.project/completed/20260814_epic_constraint_semantics_contract.md:638-641`
+- Capability bet: `[ACAUSAL-RELATIONS-CAPABILITY]`, `.project/backlog/BACKLOG.md`
+- audit-F4, the filing this closes: CONSTRAINT-SEMANTICS epic audit, finding F4 (git history)

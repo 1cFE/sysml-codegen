@@ -105,3 +105,9 @@ Thumbs.db
 # Ruff
 .ruff_cache/
 .orchestrate-logs/
+
+# REPO-CLEANUP Move B: never commit console exhaust again
+.project/**/*.log
+.project/**/*.console
+.project/**/*.err
+.project/**/*full-suite.txt
