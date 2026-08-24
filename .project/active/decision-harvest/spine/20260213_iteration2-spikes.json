@@ -1,0 +1,17 @@
+{
+  "dir": "20260213_iteration2-spikes",
+  "date_start": "2026-02-13",
+  "date_end": "2026-02-13",
+  "epic": "unknown",
+  "item_number": "Item 4",
+  "title": "Three empirical spikes resolving OutputRegistry design-comment gaps in CHAIN redefinitions, REFERENCE bindings, and design-attribute defaults",
+  "subject": "OutputRegistry design spikes",
+  "summary": "Iteration 1 of the OutputRegistry design left 3 of 6 iteration-2 review comments unresolved because they depended on empirical data not yet gathered: whether :>> CHAIN redefinition RHS is a bare name or resolvable path, whether REFERENCE bindings ever resolve to MODULE_OUTPUT (making SYSML_QN normalization live or dead code), and what format DesignAttributeData.default_value takes for reference-typed attributes. Three read-only diagnostic scripts (Spikes 5-7) ran against solar_battery, e2e_attr_expr, chain_spike, and catf_mfe models and produced a findings document. Results: build_pipeline_context() succeeded on all 4 models (no crash risk), CHAIN redefinition source_path is always populated as DOTTED or BARE (no AST fallback needed), and design-attribute default_value is 126/128 literal but 2/128 are transitive paths requiring Phase 4 handling. All three review-comment issues (9, 11, 12) got data-backed resolutions.",
+  "key_decisions": [
+    "REFERENCE binding resolution and CHAIN redefinition format were resolved with concrete data rather than assumptions, closing design-comment Issues 9, 11, 12",
+    "DesignAttributeData.default_value is mostly literal (126/128) but Phase 4 transitive-alias handling is still needed for the 2 path-like cases"
+  ],
+  "supersedes": [],
+  "status": "shipped",
+  "id": "H-021"
+}

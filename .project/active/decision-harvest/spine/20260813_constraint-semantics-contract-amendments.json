@@ -1,0 +1,24 @@
+{
+  "dir": "20260813_constraint-semantics-contract-amendments",
+  "date_start": "2026-08-12",
+  "date_end": "2026-08-13",
+  "epic": "CONSTRAINT-SEMANTICS",
+  "item_number": "Item 1",
+  "title": "Constraint-semantics contract and authoring policy documentation amendments",
+  "subject": "constraint documentation, ADR-009",
+  "summary": "The constraint-semantics contract had been settled but nothing a modeler or implementing agent read reflected it: the lifecycle contract, its requirements companion, and seven documentation statements across both repositories still taught the old headline and disposition behavior, no ADR recorded the coverage-vocabulary change, and the blessed authoring pattern was unpublished. This item is the documentation half of the owner's required sequence (settle semantics, fix docs, then test) so later items build against agreeing text. It published ADR-009, amended multiple invariants and lifecycle-contract entries across both repositories, defined the applicable-asserted-gate test and the four-class equality-intent taxonomy, and corrected D1-D7. No executable code changed beyond one docstring and two citation comments. Audited Certify-with-residuals after curing H-1/M-1/M-2, with M-3 ratified as-is at close.",
+  "key_decisions": [
+    "M-3 ratified at close: 52 companion sweep hits in docs/sysmlv2 and docs/syside stay aggregated by term/corpus as vendored upstream reference material, not expanded to 52 rows.",
+    "D5-a: kept 'require constraint' inside the requirement-def example against the design's instruction to swap the form, judged sounder because it preserves the visible requirement-side SysML v2 idiom; a settled-semantics sentence was added instead.",
+    "Invariant 61 and LC-E13 were minted by the implementer and stamped ratified-by-owner on the day, though the owner saw only the umbrella Q3 warning tier they derive from; a challenger should re-derive against Q3's reasoning.",
+    "Both deliberate hand-offs from prior items (Item 3's token migration, Item 2's REQ-EXT-09 totality proof) are discharged and recorded closed here.",
+    "Residuals homed under 'Item 1's authoring guidance' by other closes are re-homed to epic Item 7, not reabsorbed."
+  ],
+  "supersedes": [
+    "The old constraint-execution-lifecycle-contract headline and disposition behavior text.",
+    "Seven prior documentation statements teaching that a bare 'constraint' or 'require constraint' is an enforced gate.",
+    "A retired test previously cited as living totality evidence."
+  ],
+  "status": "shipped",
+  "id": "H-114"
+}

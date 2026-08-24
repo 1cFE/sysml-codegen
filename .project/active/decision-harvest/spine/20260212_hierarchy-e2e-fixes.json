@@ -1,0 +1,21 @@
+{
+  "dir": "20260212_hierarchy-e2e-fixes",
+  "date_start": "2026-02-12",
+  "date_end": "2026-02-12",
+  "epic": "COST-PATTERN",
+  "item_number": "Item 5",
+  "title": "Five probe-validated AST dispatch fixes to make hierarchy E2E tests pass against the real SysIDE model",
+  "subject": "hierarchy extraction AST dispatch",
+  "summary": "COST-PATTERN Items 1-4 built the hierarchy-aware pipeline against synthetic mock data (69 unit tests), but running the new E2E suite (test_hierarchy_e2e.py) against the real solar_battery SysIDE model failed 4 of 10 tests. Root cause: FeatureReferenceExpression and FeatureChainExpression AST nodes both carry a function.name attribute, so any code using hasattr(node, 'function') as a proxy for InvocationExpression produced false positives, breaking all 20 aggregation expressions in the model. The spec defined five surgical, probe-validated fixes: reorder type checks in reconstruct_expression() and _walk_aggregation_ast() to check specific SysML types before the generic function.name check; add explicit is_instance() type guards to _unwrap_invocation() instead of relying on the fragile _KNOWN_WRAPPER_FUNCTIONS name-set (which collides on 'Evaluation'); add a part_usage_names field to HierarchyExtractionResult so all-singleton assemblies scope correctly; and add a new _enrich_aliases_from_bindings() function to populate aggregation aliases from CalcUsage binding parameter names before scoping and backtracking run. This superseded parts of an earlier hierarchy-bugfix spec (BF-1, BF-6, BF-7), whose fixes worked against mocks but not the real AST.",
+  "key_decisions": [
+    "Fix ordering follows a dependency chain: FR-2 (reconstruct_expression reorder) before FR-1 (_unwrap_invocation guards) before FR-3 (_walk_aggregation_ast reorder), because extract_feature_chain_name() depends on the reordered reconstruct_expression()",
+    "Rejected using the _KNOWN_WRAPPER_FUNCTIONS name-set for _unwrap_invocation() guards because 'Evaluation' collides with FeatureReferenceExpression's function.name, and used explicit is_instance() type guards instead",
+    "Alias enrichment (RC5) is scoped to the generation layer (initialization.py), not the extraction layer, because it needs CalcUsage binding data that hierarchy_resolver.py does not have access to",
+    "part_usage_names widens Strategy 2 scoping to all child PartUsages (not just multiplicity children) rather than adding a new Strategy 3"
+  ],
+  "supersedes": [
+    "Portions of the earlier hierarchy-bugfix spec's BF-1, BF-6, and BF-7 fixes, which were valid against mock data but did not work against the real SysIDE AST"
+  ],
+  "status": "unknown",
+  "id": "H-020"
+}

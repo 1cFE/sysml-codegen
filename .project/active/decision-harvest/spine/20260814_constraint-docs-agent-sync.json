@@ -1,0 +1,22 @@
+{
+  "dir": "20260814_constraint-docs-agent-sync",
+  "date_start": "2026-08-13",
+  "date_end": "2026-08-14",
+  "epic": "CONSTRAINT-SEMANTICS",
+  "item_number": "Item 7",
+  "title": "Sync ADR, product-promise ledger, and agent-facing documentation to the constraint-semantics behavior shipped in Items 1-6, 8, 9",
+  "subject": "docs, ADR, product ledger, agent prompts",
+  "summary": "Constraint-semantics behavior changed across Items 1-6, 8, and 9, but almost none of the teaching documentation (skills, pattern docs, expert-agent prompts) changed with it, so an authoring session would copy a superseded shape and generate a model with no gate at all. This item closed that gap across three repositories (sysml-codegen, agentic-mbse, TEAx), creating the repo's first product ledger (.project/product/INDEX.md and P-001, carrying the owner's verbatim design-search promise), back-registering ADR-009 into modeling-assumptions.md, updating cross-repo teaching for @inapplicable authoring, disposition vocabulary, the totality gate, coverage/policy defaults, and the sysml-conventions skill and expert-agent definitions. It changed no behavior, only documentation and ledger scaffolding. Independently audited CERTIFY-WITH-RESIDUALS with two residuals, both owner calls (a symlink pointing at a superseded branch, and untagged REQ gates on Items 3/5/8/9).",
+  "key_decisions": [
+    "D-1: the promise/ADR home is a new .project/product/ ledger plus back-registering ADRs as numbered rows in the existing modeling-assumptions.md convention rather than creating a docs/adr/ tree; the durable citation lives in the epic file and INDEX.md so it survives archiving.",
+    "P-001 carries the owner's design-search promise byte-for-byte [OWNER-VERBATIM, 2026-08-13], with the promise-vs-basis tension surfaced (not resolved) and [ACAUSAL-RELATIONS-CAPABILITY] named for the unbuilt half.",
+    "The B1-B5 marker rule: a marker on a bindings-form constraint reaches the domain, but on an inline-predicate constraint SysIDE drops it silently, so PROVENANCE carries the disposition until [INLINE-PREDICATE-MARKER-DROP] closes.",
+    "Verification-matrix reconciliation done in one pass epic-wide: recount 280/136/3/131/10/0 across 33 families, both count blocks corrected, REQ-DIAG family filed.",
+    "A-3 auditor finding fixed in place rather than argued: the shipped generator refused the doc's own @inapplicable authoring example; resolved by moving the marked gate onto a part def the variant never instantiates."
+  ],
+  "supersedes": [
+    "Stale documentation across sysml-codegen, agentic-mbse, and TEAx describing pre-Item-1-6/8/9 constraint-semantics behavior (superseded @inapplicable authoring examples, disposition vocabulary, coverage/policy text)."
+  ],
+  "status": "shipped",
+  "id": "H-121"
+}

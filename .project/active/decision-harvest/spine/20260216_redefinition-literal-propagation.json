@@ -1,0 +1,20 @@
+{
+  "dir": "20260216_redefinition-literal-propagation",
+  "date_start": "2026-02-16",
+  "date_end": "2026-02-16",
+  "epic": "COST-PATTERN",
+  "item_number": null,
+  "title": "Propagate :>> redefinition literal values through the backtracker and aggregation builder into JSON input templates",
+  "subject": "entry point literal propagation",
+  "summary": "The solar_battery pipeline's hierarchy-aware codegen correctly extracted :>> redefinition literals (e.g. wattage :>> 400.0) but dropped the values before they reached generated JSON templates, forcing users to manually populate 13+ fields. A first fix (design.md) added 2 lines to the backtracker's LITERAL binding case so BindingInfo.literal_value flows into entry_point_sources, which Strategy 3 of _classify_entry_points() already consumed, fixing 13 design parameter literals. A second fix (design2.md) handled 4 remaining unwired aggregation inputs through a different code path: 3 permitting sub-costs needed a new _find_literal_redefinition() helper (mirroring the existing CHAIN-matching pattern) in the aggregation SingletonTerm/SumTerm fallbacks, and misc_hardware_cost needed a new EXPOSE_PURE alias map built from computed_attributes and consulted in the LocalTerm fallback so it wires to a MODULE_OUTPUT channel instead of becoming an entry point. Both fixes together eliminated all manual JSON workarounds for the solar_battery pipeline; 667 tests passed (3 new).",
+  "key_decisions": [
+    "Literal values propagate via the existing entry_point_sources dict rather than adding a new data path (Strategy 3 already reads it)",
+    "BindingResolution.source_path stays None for LITERAL bindings; it is semantically a binding path, not a value",
+    "compilability stays MANUAL_REQUIRED for aggregation entry points even when a literal default is found (conservative judgment call, not FULLY_COMPILABLE)",
+    "Fix A required adding usage_type_map to HierarchyExtractionResult because usage names (e.g. 'permitting') don't match PartDef names, breaking simple name-matching",
+    "Fix B required QN normalization between ComputedAttributeData's '::' raw-name format and AggregationExpressionData's '__' sanitized-name format"
+  ],
+  "supersedes": [],
+  "status": "shipped",
+  "id": "H-033"
+}

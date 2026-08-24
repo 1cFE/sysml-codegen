@@ -1,0 +1,22 @@
+{
+  "dir": "20260810_elaborator-identity-completion",
+  "date_start": "2026-08-09",
+  "date_end": "2026-08-10",
+  "epic": "ELABORATE-FIRST",
+  "item_number": "Item 6",
+  "title": "Closed remaining exact-identity gaps in the elaborate-then-project route ahead of the Item 7 authority switch",
+  "subject": "exact-identity elaboration/projection",
+  "summary": "This item made calculation definitions, formals, outputs, compilation results, port metadata, and constraint profile decisions attach by exact SysIDE declaration UUID instead of by rendered name, so display renames, normalized-name collisions, duplicate qualified names, and enumeration reorders can no longer move executable payload silently. Missing, duplicate, or mismatched identity now fails loud with named SI_* diagnostics rather than silently defaulting to UNKNOWN/float/null metadata/ADMIT. It introduced structured occurrence records, a typed ExpressionIR, declaration-bound formal provenance, and a fingerprinted internal instance-graph/v2, and made projection strictly one-way from that graph. Nine audit findings across three rounds (audit.md, audit_v2.md, audit_v3.md) were remediated and independently verified, with full certification reached on the v3 re-audit of findings F7 through F9. The shipped legacy route, snapshot v5 bytes, and generated baselines stayed frozen throughout the item.",
+  "key_decisions": [
+    "Payload and constraint attachment moved to exact SysIDE declaration UUID keys, closing rename/collision/reorder identity gaps",
+    "SysIDE's native Usage.usages view became the sole effective-child-declaration authority instead of a codegen-side name-matching pass",
+    "Constraint profile BLOCK now halts generation with a new SI_CONSTRAINT_BLOCKED diagnostic (D10) instead of silently emitting an executable module",
+    "The public constraint source key is rendered from model metadata rather than a parser-internal UUID (audit finding F1)",
+    "The boundary guard (F30/F9) is deny-by-default across all six boundary files with five named, mechanically exercised exemptions"
+  ],
+  "supersedes": [
+    "Four Item-6 transitional dual mechanisms are named in Item 7's deletion ledger as slated for removal at cutover"
+  ],
+  "status": "shipped",
+  "id": "H-109"
+}

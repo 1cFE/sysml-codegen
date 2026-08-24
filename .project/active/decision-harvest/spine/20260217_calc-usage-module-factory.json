@@ -1,0 +1,18 @@
+{
+  "dir": "20260217_calc-usage-module-factory",
+  "date_start": "2026-02-17",
+  "date_end": "2026-02-17",
+  "epic": "unknown",
+  "item_number": null,
+  "title": "Conformance tests for the CalcUsage module factory (component C14), covering REQ-MF-01, REQ-MF-02, REQ-MF-05, REQ-MF-08",
+  "subject": "calc usage module factory",
+  "summary": "C14 added conformance tests for _build_pipeline_module(), the pure data-transformer function in graph_builder.py that turns a CalcUsageData plus pre-computed binding_resolutions into a PipelineModule, with no resolution logic of its own. Tests verified it never mutates its inputs, fails fast with an ADR-003-violation error on missing bindings, wires every input to exactly one source (module output or entry point), and names outputs correctly for both single- and multi-output calc defs. No fixture model had a natural multi-output calc def, so that path was tested with constructed data built from real qualified names, following the same pattern used earlier for C09. It produced a reusable build_factory_inputs_from_snapshot() helper meant for reuse by the FORMULA and aggregation factory components. 48 tests were written and all passed; full suite was 1397 passed, 5 xfailed, lint clean.",
+  "key_decisions": [
+    "C14 is conformance-only; the current tuple-mismatch between the checklist's documented interface and the implementation's read-by-reference behavior is accepted as correct per the design intent, with unification deferred to a later phase",
+    "No fixture model has a multi-output calc def, so that requirement is tested with data constructed from real qualified names rather than a natural fixture",
+    "build_factory_inputs_from_snapshot() is established as the shared test helper for the remaining module-factory components (FORMULA, aggregation, entry-point classification)"
+  ],
+  "supersedes": [],
+  "status": "shipped",
+  "id": "H-039"
+}

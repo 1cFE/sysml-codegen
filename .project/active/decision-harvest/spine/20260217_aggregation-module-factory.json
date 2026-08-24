@@ -1,0 +1,18 @@
+{
+  "dir": "20260217_aggregation-module-factory",
+  "date_start": "2026-02-17",
+  "date_end": "2026-02-17",
+  "epic": "unknown",
+  "item_number": null,
+  "title": "Conformance tests for the aggregation module factory (component C16), covering SumTerm/SingletonTerm/LocalTerm resolution and literal-value propagation",
+  "subject": "aggregation module factory",
+  "summary": "C16 tested _build_aggregation_module() in resolution/graph_builder.py, which turns a ScopedAggregationData plus hierarchy redefinitions into a PipelineModule across three term types with different resolution strategies. No production code changed. 32 tests were added to tests/conformance/test_factory_aggregation.py against real solar_battery and issue22 fixture data, all passing, full suite at 1461 passed / 2 skipped / 5 xfailed / 0 failures. The plan's assumption that permitting soft costs were SumTerms was wrong -- they are SingletonTerms -- so several tests were rewired to constructed data instead of natural fixture cases. It documented two REQ-MF-01 gaps ('pure data transformer' contract) as known production behavior rather than fixing them: the factory mutates a shared entry_points dict in place instead of returning entry points, deferred to a later phase.",
+  "key_decisions": [
+    "Test current mutation-based entry_points behavior as-is; the REQ-MF-01 'pure data transformer' gap is documented for Phase 7 refactoring, not fixed now",
+    "Confirmed via C12 that resolve_input()/AGG_STRATEGIES is equivalent to the legacy _resolve_aggregation_input_channel() (51/51 refs match); the call-site swap itself stays a deferred follow-up, not a C16 requirement",
+    "Where no natural fixture case existed (SumTerm literal fallback, LocalTerm entry-point fallback, MANUAL_REQUIRED compilability), tests used constructed data built from real QNs via dataclasses.replace()"
+  ],
+  "supersedes": [],
+  "status": "shipped",
+  "id": "H-034"
+}

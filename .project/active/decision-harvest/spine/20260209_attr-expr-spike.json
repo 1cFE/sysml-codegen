@@ -1,0 +1,17 @@
+{
+  "dir": "20260209_attr-expr-spike",
+  "date_start": "2026-02-08",
+  "date_end": "2026-02-09",
+  "epic": "ATTR-EXPR",
+  "item_number": "Item 1",
+  "title": "Spike: confirm SysIDE exposes expression ASTs on PartDef attributes, as the hard go/no-go gate before building automatic computed-attribute codegen",
+  "subject": "attribute expression AST discovery",
+  "summary": "Phase 2 (ATTR-EXPR) aimed to let a modeler write a computed attribute directly on a PartDef instead of authoring a full CalcDef/CalcUsage pair, but that only works if SysIDE actually surfaces expression ASTs on ordinary attributes. A first pass against real models found only one FORMULA-pattern attribute among 540, so a purpose-built fixture (tests/fixtures/attr_expr_probe/) with 35 attributes across FORMULA, EXPOSE, LITERAL, and cross-reference patterns was authored to get a real read. All 35 attributes had feature_value_expression populated, reference resolution and qualified names worked, and the existing Phase-1 compiler successfully compiled 31 of 35 expressions directly (the 4 EXPOSE-pattern failures were expected, since EXPOSE requires cross-module chain handling the Phase-1 compiler doesn't yet do). The spike concluded GO: AST availability is confirmed and the compiler is reusable, clearing the way to Item 2.",
+  "key_decisions": [
+    "GO decision: SysIDE reliably populates feature_value_expression on PartDef/PartUsage attributes, so Phase 2 (automatic computed-attribute codegen) is viable",
+    "The existing Phase-1 expression compiler can be reused as-is for attribute FORMULA expressions without modification; EXPOSE-pattern attributes need separate handling for cross-module feature-chain references"
+  ],
+  "supersedes": [],
+  "status": "shipped",
+  "id": "H-010"
+}

@@ -1,0 +1,22 @@
+{
+  "dir": "20260720_constraint-lifecycle-package-trust",
+  "date_start": "2026-07-20",
+  "date_end": "2026-07-20",
+  "epic": "CONSTRAINT-LIFECYCLE-REMEDIATION",
+  "item_number": "Item 7",
+  "title": "Close two trust holes in sealed-package verification and re-seal provenance",
+  "subject": "package seal/verify trust chain",
+  "summary": "A generated package's seal could be defeated two ways: the TEAx loader trusted a verifier shipped inside the package itself with no authentication before executing it, and re-sealing hashed any foreign file on disk into artifact_hashes as if codegen produced it. The fix added a TEAx-side authenticated-verifier gate (hash-check then exec the exact hashed bytes, closing a TOCTOU seam) and a codegen-side generation manifest that classifies every file as codegen-produced, preserved-handwritten, or runtime, with re-seal hard-failing on any file it cannot classify. A single-image version-compatibility set replaced a duplicated bare version literal, failing closed in both skew directions. Both attacks were reproduced RED against pre-fix code and GREEN after; the item spans sysml-codegen and TEAx.",
+  "key_decisions": [
+    "Trust relocated to the consumer: TEAx authenticates package-local verify.py bytes by hash before executing them, rather than trusting the package's self-certification (preserves the no-sysml-codegen-import constraint on TEAx).",
+    "Producer-side re-seal provenance is explicitly defense-in-depth, not proof against a same-privilege adversary; seal signing stays out of scope.",
+    "Verifier/runtime-contract version story uses a single accepted-versions set on the loader rather than cross-repo import, since TEAx cannot depend on sysml-codegen being installed.",
+    "Seal walker and verify walker remain intentionally separate implementations (not merged), preserving an existing do-not-collapse boundary."
+  ],
+  "supersedes": [
+    "The bare duplicated RUNTIME_CONTRACT_VERSION literal and its symmetric-equality version check.",
+    "Unauthenticated exec_module-based loading of the package-local verifier."
+  ],
+  "status": "shipped",
+  "id": "H-102"
+}

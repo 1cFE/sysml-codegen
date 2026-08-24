@@ -1,0 +1,23 @@
+{
+  "dir": "20260720_constraint-lifecycle-multi-entry",
+  "date_start": "2026-07-20",
+  "date_end": "2026-07-20",
+  "epic": "CONSTRAINT-LIFECYCLE-REMEDIATION",
+  "item_number": "Item 9",
+  "title": "Make TEAx's study candidate bridge build complete typed mappings for zero, one, or many entry channels, and delete the stale fusion consumer wrapper that patched around the single-channel limit",
+  "subject": "TEAx study candidate bridge",
+  "summary": "TEAx's stock CandidateBridge could only build a one-channel mapping, but a real package (the IFE fusion study) declares three typed entry channels from a single EntryPoint module. The gap had been patched by a hand-rolled fusion-side wrapper, MultiChannelEvaluator, that loaded non-swept channels out-of-band from committed JSON templates; codegen's Item 8 regeneration had already collapsed the entry decomposition from four groups to three, leaving the wrapper's hardcoded four-group shape broken with an AttributeError. This item rebuilt the stock bridge to construct a complete typed baseline-plus-override mapping for zero, one, or many channels directly from the embedded catalog's parameter/param_group data, moved bridge construction inside the runner's failure-classification try/except so a malformed candidate fails as a classified ENTRY_VALIDATION rather than an uncaught pydantic.ValidationError, fixed a related codegen zero-entry-channel template gap at its root (a two-file, byte-identity-preserving change), and deleted both fusion consumer wrappers (MultiChannelEvaluator and its bench_prepare_once.py sibling) with no shim. The real IFE viability study then ran green end to end through only public TEAx APIs (2301/2301 cases). The audit certified the item, confirming all three design-review majors held and finding only minor discrepancies: a stale commit hash in the evidence record, slightly favorable suite-count deltas, a weaker-than-ideal assertion in the zero-channel test, and one harmless leftover docstring mentioning the deleted wrapper.",
+  "key_decisions": [
+    "The one-EntryPoint-module gate stays; 'multi-entry' means multiple typed channels from one module, not multiple entry modules \u2014 the evaluate seam itself (Mapping[str, BaseModel]) was already channel-agnostic and did not need to change",
+    "The channel partition and per-field baseline defaults are read from the embedded catalog's parameters[*].param_group/default_value (the Item 8 seam), replacing the wrapper's out-of-band read of committed JSON template files",
+    "'Zero entry channels' and 'constraint-free report' are kept as separate axes (Item 11's firewall); the zero-channel fixture used here is deliberately constraint-bearing, not constraint-free",
+    "Bridge construction (bridge.build) is relocated inside the runner's try/except EvaluationFailed switch so malformed candidates classify as a StudyBridgeDefect instead of escaping uncaught",
+    "The fusion wrappers (MultiChannelEvaluator, its bench_prepare_once.py consumer, and the config's two scalar entry-channel keys) are deleted outright once the stock bridge proves green, not kept behind a compatibility shim, per the owner's no-LOC-metrics/qualitative-simplicity stance"
+  ],
+  "supersedes": [
+    "Fusion-tea's MultiChannelEvaluator/ThreeChannelEvaluator wrapper and its bench_prepare_once.py usage",
+    "TEAx StudyConfig/StudyDefinition's single scalar entry_channel/entry_model fields"
+  ],
+  "status": "shipped",
+  "id": "H-101"
+}

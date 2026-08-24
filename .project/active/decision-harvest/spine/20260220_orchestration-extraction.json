@@ -1,0 +1,20 @@
+{
+  "dir": "20260220_orchestration-extraction",
+  "date_start": "2026-02-20",
+  "date_end": "2026-02-20",
+  "epic": "unknown",
+  "item_number": "Phase 7.1",
+  "title": "Pure structural refactor: move pipeline orchestration functions out of generation/initialization.py into a new orchestration/ package",
+  "subject": "orchestration package extraction",
+  "summary": "generation/initialization.py had grown to 888 lines mixing generation code with coordination logic (build_pipeline_context, build_output_registry, and their helpers). This item moved all coordination functions into a new orchestration/ package (pipeline_builder.py, output_registry_builder.py), leaving initialization.py with only PipelineContext and the two exception classes (109 lines). It updated 40+ import sites across production code, tests, and scripts. A circular import was discovered mid-build: generation/__init__.py re-exporting build_pipeline_context from orchestration while orchestration imported PipelineContext back from generation.initialization created a cycle; the fix was to drop build_pipeline_context from generation's public re-exports and have cli/__init__.py import it directly from orchestration.pipeline_builder, which is a small public-API change. No behavior changed; the full 1783-test suite passed with zero output-baseline differences.",
+  "key_decisions": [
+    "PipelineContext stays in generation/initialization.py rather than moving to orchestration/, to avoid an import cycle and match the plan's acceptance criteria",
+    "build_pipeline_context is no longer re-exported from generation/__init__.py (removed to break a circular import); callers must import it directly from sysml_codegen.orchestration.pipeline_builder",
+    "_classify_entry_points, which the implementation plan mistakenly listed as needing a move, was confirmed already correctly placed in resolution/graph_builder.py and left untouched"
+  ],
+  "supersedes": [
+    "generation/initialization.py's role as home for build_pipeline_context() and build_output_registry(); those now live in orchestration/pipeline_builder.py and orchestration/output_registry_builder.py"
+  ],
+  "status": "shipped",
+  "id": "H-070"
+}

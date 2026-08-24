@@ -1,0 +1,19 @@
+{
+  "dir": "20260216_aggregation-wiring-fix",
+  "date_start": "2026-02-15",
+  "date_end": "2026-02-16",
+  "epic": "COST-PATTERN",
+  "item_number": null,
+  "title": "Fix aggregation module input wiring so resolvable inputs resolve via the OutputRegistry instead of falling through to ENTRY_POINT",
+  "subject": "aggregation graph-builder wiring",
+  "summary": "Aggregation modules roll child component costs up into assembly-level totals, but the graph builder's aggregation input resolution bypassed the OutputRegistry, using a fragile parallel CHAIN-search path that failed on PartDef-to-PartUsage name mismatches and unscoped keys. A prior spike on the solar_battery model found only 8 of 12 resolvable inputs succeeded (via CHAIN), 4 failed with CHAIN_PART_MISMATCH, and zero succeeded via the registry because every registry lookup was unscoped. This item fixed three bugs: added a scoped registry lookup (strip the design prefix, join the remaining path) tried between the existing CHAIN search and the unscoped Key_D fallback; added a new Key_E_stripped registration key in Phase 1b for sub-assembly-to-sub-assembly (agg-to-agg) references; and reordered SingletonTerm resolution to try the registry first before the CalcUsage-shaped direct-construction fallback, since aggregation outputs use a different double-attribute channel format. The fix was scoped to blocking COST-PATTERN's Item 5 E2E validation and targeted 12/12 resolvable solar_battery inputs reaching MODULE_OUTPUT with zero regressions across 454 existing tests.",
+  "key_decisions": [
+    "Resolution order for aggregation inputs becomes CHAIN search, then scoped registry lookup, then unscoped Key_D fallback -- CHAIN is preserved rather than replaced because it still handles cases the registry doesn't",
+    "SingletonTerm resolution goes registry-first, then direct CalcUsage-style construction, then entry-point fallback, reversing the prior order",
+    "OutputRegistry.resolve() stays exact-match only; no normalization added to fix these bugs",
+    "Removing the CHAIN redefinition search path entirely, improving sanitize_name() for PartDef/PartUsage matching, and updating 08_algorithm_revised.md were explicitly deferred as future cleanup, not done here"
+  ],
+  "supersedes": [],
+  "status": "shipped",
+  "id": "H-029"
+}

@@ -1,0 +1,25 @@
+{
+  "dir": "20260217_typed-registry-refactor",
+  "date_start": "2026-02-17",
+  "date_end": "2026-02-17",
+  "epic": "unknown",
+  "item_number": null,
+  "title": "Design-intent spec replacing the flat string-keyed OutputRegistry with typed identifier wrappers and separate typed registries",
+  "subject": "typed registry design",
+  "summary": "The OutputRegistry was a single dict[str, str] holding ~12 ambiguous key formats (Key_A, Key_D, Key_E, Key_F, bare names) resolved by a cascade of dict.get() calls, so a lookup succeeding gave no guarantee it hit the right key rather than an accidental collision; a spike proved Key_A had zero correct hits across all 6 models and that implementing REQ-BT-08 as literally written would break 12 correct resolutions. This item was scoped as design-intent documents only (explicitly not a source code change): it updated design docs 10, 11, 15, 24, 03 and authored a new doc 27 specifying typed identifier wrappers (SysMLQN, EQN, PQN, CanonicalChannel, ScopedKey) with validating constructors, separate typed registries in place of the flat dict, elimination of the 5 ambiguous key formats, and binding-type-directed dispatch (CHAIN vs REFERENCE) replacing the try-everything cascade. The plan step verified all 9 doc-27 acceptance criteria by document inspection and cross-consistency against the 7 amended downstream docs; actual code implementation was deferred to a later item.",
+  "key_decisions": [
+    "This item's deliverable is design-intent documents only; production source code is explicitly out of scope, to be implemented against the updated design later",
+    "Key_A, Key_D, Key_E, Key_F, and bare keys are eliminated as ambiguous key formats, backed by a spike showing zero correct hits for Key_A across 6 models",
+    "Resolution dispatches on BindingType (CHAIN vs REFERENCE) to select the correct typed registry rather than trying every registry in a cascade",
+    "If an eliminated key format is ever load-bearing for an untested model, it must be made unique rather than reintroduced in ambiguous form (FR-6, no exceptions)"
+  ],
+  "supersedes": [
+    "REQ-OR-02, REQ-OR-05, REQ-OR-08 in 10-output-registry.md",
+    "REQ-BT-08 in 11-analysis-backtracker.md",
+    "REQ-NC-07 in 15-naming-conventions.md",
+    "REQ-DRA-03 in 24-dual-resolution-architecture.md",
+    "REQ-RES-07 in 03-resolution-overview.md"
+  ],
+  "status": "shipped",
+  "id": "H-056"
+}

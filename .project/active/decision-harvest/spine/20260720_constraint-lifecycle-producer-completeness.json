@@ -1,0 +1,22 @@
+{
+  "dir": "20260720_constraint-lifecycle-producer-completeness",
+  "date_start": "2026-07-20",
+  "date_end": "2026-07-20",
+  "epic": "CONSTRAINT-LIFECYCLE-REMEDIATION",
+  "item_number": "Item 10",
+  "title": "Prove producer completeness independent of V11 and retire the private stellarator generation bridge in favor of a general resolver fix",
+  "subject": "producer resolution completeness",
+  "summary": "Two gaps stood between the constraint-execution machinery and its end-to-end claim: V11 passing didn't prove every consumed value found its intended producer (an ambiguous or defaulted binding could satisfy V11 while feeding the wrong value), and the stellarator demo could only generate through a private bridge plus a two-pass harness that the ratified boundary forbids. This item added a capture sink centralized inside resolve_producer covering all five call sites, a producer-completeness check reading that sink, and a three-part resolver fix (per-child :>> redefinition capture, dual-scope row-13 follow, transitive fixpoint) that lets cross-part aggregation resolve as a real graph producer, letting the bridge, glue, and two-pass harness be deleted. Audit certified with independently reproduced anchors (six bit-exact, oracle reldev 0.00e+00) and a 2956-test green corpus, but surfaced one unresolved gap: the completeness check only guards the design-attribute tier and is blind to a qualifier-dropping collapse through the channel-tier leaf-name rows (rows 14-15), which no current fixture trips but is not structurally guaranteed against.",
+  "key_decisions": [
+    "Producer-resolution capture is centralized inside resolve_producer itself rather than threaded through each of the five call sites, closing the bypass risk by construction",
+    "Cross-part aggregation is now a real ModuleKind.AGGREGATION graph producer, not a Python-side rollup, retiring bridge_v11_generate.py and the run_stellaris.py two-pass glue",
+    "The reverted global _leaf_unique refusal was left reverted and documented in place, since the row-13 resolver fix resolves the cross-part case first and makes the refusal unneeded for the stellarator"
+  ],
+  "supersedes": [
+    "bridge_v11_generate.py (the private LOCAL BRIDGE for stellarator generation), deleted",
+    "run_stellaris.py's glue-2 two-pass harness and handshake_1costingfe.py rollup glue, deleted",
+    "WI-027's D7 bridge/placeholder disposition, superseded by this item's D-2 resolution and amended in WI-027's design.md"
+  ],
+  "status": "shipped",
+  "id": "H-104"
+}

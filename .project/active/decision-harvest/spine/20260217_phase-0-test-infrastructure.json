@@ -1,0 +1,18 @@
+{
+  "dir": "20260217_phase-0-test-infrastructure",
+  "date_start": "2026-02-17",
+  "date_end": "2026-02-17",
+  "epic": "unknown",
+  "item_number": "Phase 0",
+  "title": "Build the license-free conformance test harness: extraction snapshots, pipeline JSON/YAML baselines, and shared fixtures",
+  "subject": "test infrastructure, snapshots",
+  "summary": "The planned component-by-component refactor of the resolution/generation pipeline needed a way to write and run conformance tests without a live SysIDE/JVM license. This foundational item designed the serialization boundary for extraction dataclasses (nullifying non-serializable AST/Java-object fields while preserving computed properties), built capture and load helpers, generated extraction_snapshot.json fixtures for 6 models, captured ComputationGraph JSON and generated __init__.py baselines for 4 models for diff-based regression detection, and wired session-scoped snapshot fixtures plus req/baseline pytest markers into the conformance conftest. All three sub-phases completed with the full suite passing (874 tests) and the req marker collecting 205+ conformance tests with no JVM dependency.",
+  "key_decisions": [
+    "Non-serializable SysIDE AST/Java-object fields (expression ASTs, raw elements) are nulled out in snapshots rather than lossily serialized; tests needing real ASTs (e.g. the expression compiler) use live extraction instead",
+    "Snapshot serialization stores fixture-relative paths, not absolute paths, so diffs are machine-independent",
+    "Baseline drift is treated as intentional-and-documented via re-running the capture script, not silently accepted"
+  ],
+  "supersedes": [],
+  "status": "shipped",
+  "id": "H-054"
+}

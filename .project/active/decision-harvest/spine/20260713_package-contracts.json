@@ -1,0 +1,22 @@
+{
+  "dir": "20260713_package-contracts",
+  "date_start": "2026-07-13",
+  "date_end": "2026-07-13",
+  "epic": "CONSTRAINT-EXEC",
+  "item_number": "Item 9",
+  "title": "Build production ModelContract/PackageContract sealing so a generated package's identity and integrity can be verified on load",
+  "subject": "package sealing, contracts, fingerprints",
+  "summary": "A generated package was a loose directory with no way to verify it was untampered or to bind a study run to a stable identity. This item made the S4 spike's throwaway test-only seal into production code: a graph-only ModelContract (semantic fingerprint over parameters, outputs, constraint catalog) and a PackageContract (executable fingerprint via content hashes over generated and preserved artifacts), verified on load via a stdlib-only verify.py shipped inside the package. It closed the two gaps the spike left open: detecting a coverage-set file missing from disk (not just extra files) and an environment-compatibility check with a named diagnostic. Certified after live probes ran the full suite green (2282 passed), a mutation probe proved the extra-file detection has teeth, and a follow-up cure added a drift guard so the seal-producer and verify-consumer glob matchers can never silently diverge.",
+  "key_decisions": [
+    "ModelContract derives solely from ComputationGraph fields (graph-only, no filesystem/YAML access); 'provided capabilities' (backends, persistence modes) are runtime facts kept out of it and belong to PackageContract instead.",
+    "Sealing runs as CLI generation Step 9, with a separate `seal` subcommand for re-sealing after handwritten stencils are filled in (recomputes PackageContract only; refuses a directory with no prior ModelContract).",
+    "Environment-compatibility check compares only the runtime_version axis; GENERATOR_MISMATCH is reserved-but-unreachable, deferred as a documented seam to Item 10/14 integration work.",
+    "verify.py is stdlib-only and emitted verbatim into every package (no in-repo import), with a byte-identity drift test against the in-repo source; a body-equality test was added post-audit to guard against the seal producer's and verify consumer's glob-matcher functions silently diverging.",
+    "Integrity failures (tamper, extra, missing) are always fatal; environment mismatches are advisory by default, fatal only under strict mode."
+  ],
+  "supersedes": [
+    "S4 spike's test-only ModelContract/seal/verify_seal code (s4_lib.py), which never declared its coverage set explicitly, never detected missing coverage-set files, and never checked environment compatibility."
+  ],
+  "status": "shipped",
+  "id": "H-089"
+}

@@ -1,0 +1,20 @@
+{
+  "dir": "20260217_backtracker-conformance",
+  "date_start": "2026-02-17",
+  "date_end": "2026-02-17",
+  "epic": "unknown",
+  "item_number": "C11a",
+  "title": "Conformance-test DependencyBacktracker's current resolution outcomes before the typed-dispatch migration (C11b)",
+  "subject": "backtracker resolution outcomes",
+  "summary": "DependencyBacktracker resolves calc-usage bindings to MODULE_OUTPUT or ENTRY_POINT via the deprecated OutputRegistry.resolve() cascade, and had no requirement-mapped conformance tests, only indirect integration coverage. This item wrote 43 conformance tests verifying resolution outcomes (which channel a binding resolves to, cycle detection, topological order, self-reference guard, key formats) across 6 fixture models, deliberately testing outcomes rather than the resolve() mechanism so the same tests would still hold after the later C11b typed-dispatch rewrite. A spike found 13 of 41 real MODULE_OUTPUT resolutions (12 catf_mfe cross-scope CHAIN + 1 solar_battery REFERENCE secondary) only resolve through the deprecated _compat dict, flagging them as the concrete migration risk for C11b, and discovered that EXPRESSION bindings do not crash the backtracker as previously documented -- they are silently skipped since they lack a source_path -- so a downstream (not backtracker) crash location was corrected in the test suite.",
+  "key_decisions": [
+    "Tests verify resolution outcomes (which channel resolves), not the internal resolve() mechanism, so the same test suite remains valid evidence after C11b's typed-dispatch rewrite",
+    "13 compat-only MODULE_OUTPUT resolutions (12 catf_mfe cross-scope CHAIN, 1 solar_battery REFERENCE secondary) are documented as the concrete risk set for C11b rather than fixed in this item",
+    "The EXPRESSION-binding crash documented in an earlier audit action was found not to occur in the backtracker itself; EXPRESSION bindings are silently skipped there (no source_path), and the actual crash happens downstream"
+  ],
+  "supersedes": [
+    "The prior belief that expression_binding_probe crashes inside the backtracker; corrected to document silent EXPRESSION-binding skip instead"
+  ],
+  "status": "shipped",
+  "id": "H-037"
+}

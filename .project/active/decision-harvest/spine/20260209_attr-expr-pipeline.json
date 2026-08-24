@@ -1,0 +1,19 @@
+{
+  "dir": "20260209_attr-expr-pipeline",
+  "date_start": "2026-02-08",
+  "date_end": "2026-02-09",
+  "epic": "ATTR-EXPR",
+  "item_number": "Item 3",
+  "title": "Wire computed-attribute extraction into the codegen pipeline so FORMULA attributes generate executable modules",
+  "subject": "computed attribute modules",
+  "summary": "Item 2 built extraction and classification for computed attributes, but that data was never consumed: no modules, YAML entries, or code came from it. This item added a new pipeline step to extract computed attributes, remove FORMULA attributes from design_attributes so they aren't misclassified as entry points, teach the dependency backtracker to resolve CalcUsage bindings that target FORMULA attributes as module outputs, and extend the graph builder to synthesize PipelineModule objects for FORMULA attributes with correct input wiring (including EXPOSE_PURE alias resolution) and a unified topological sort across computed-attribute and CalcUsage modules. Code generation (module wrappers, auto-implementations, pipeline YAML, registry, backlog report) was extended in parallel to cover the new synthetic modules. All acceptance criteria were checked off and 264 tests passed after hardening.",
+  "key_decisions": [
+    "Backtracker checks computed-attribute resolution before calling the normal binding resolver (Option A), rather than adding a strategy inside it, to avoid needing a fake CalcUsageData sentinel",
+    "Computed-attribute outputs are added to the output catalog before CalcUsage modules are built, so downstream bindings can validate against them",
+    "Ordering uses one unified topological sort across all modules (CalcUsage + computed attribute) rather than relying on the backtracker's CalcUsage-only pre-sort",
+    "EXPOSE_PURE CalcUsage bindings already resolve correctly via the existing backtracker transitive-resolution strategy; no code change needed there, only for FORMULA module input wiring"
+  ],
+  "supersedes": [],
+  "status": "shipped",
+  "id": "H-009"
+}

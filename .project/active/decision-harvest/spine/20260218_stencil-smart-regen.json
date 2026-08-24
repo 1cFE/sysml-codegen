@@ -1,0 +1,17 @@
+{
+  "dir": "20260218_stencil-smart-regen",
+  "date_start": "2026-02-18",
+  "date_end": "2026-02-18",
+  "epic": "unknown",
+  "item_number": null,
+  "title": "Conformance tests for the Stencil Generator + Smart Regen (C23): auto-impl vs stub generation and handwritten-code preservation",
+  "subject": "stencil generation / smart regen",
+  "summary": "C23 added real-data conformance tests covering stencil generation (REQ-GEN-04: FULLY_COMPILABLE calc defs get auto-implemented code, others get NotImplementedError stubs) and smart regen preservation (REQ-SR-01 through 07: two-level signature matching, the 4-case regenerate decision tree, 3-condition stub-to-auto-impl upgrade, pre-regen backups, and the aggregation/FORMULA bypass of smart regen entirely). Because extraction snapshots null out compilation_results, tests constructed real CalcDefCompilationResult objects from real calc_def metadata to exercise the auto-impl path, and used tmp_path for real filesystem interaction on the preservation logic. Conformance-only, no production code changed. Ended DONE with 30 passing tests and the full suite green; also caught a stale function name in the plan (_generate_implementation_stencils renamed to _generate_stencils).",
+  "key_decisions": [
+    "Construct real CalcDefCompilationResult objects from real calc_def output_attributes (not mocks) to work around extraction snapshots nulling compilation_results",
+    "Test the --preserve-handwritten flag and the aggregation/FORMULA smart-regen bypass via static source analysis rather than runtime behavior, since the gating logic lives inline in cli/__init__.py"
+  ],
+  "supersedes": [],
+  "status": "shipped",
+  "id": "H-063"
+}

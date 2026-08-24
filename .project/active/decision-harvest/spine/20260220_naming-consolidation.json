@@ -1,0 +1,22 @@
+{
+  "dir": "20260220_naming-consolidation",
+  "date_start": "2026-02-20",
+  "date_end": "2026-02-20",
+  "epic": "unknown",
+  "item_number": null,
+  "title": "Delete the naming/identifier-types backward-compat shim modules and point all importers at core/ (Step 7.3)",
+  "subject": "naming and identifier-type utilities",
+  "summary": "analysis/qualified_names.py and resolution/identifier_types.py were backward-compatibility re-export shims left over from an earlier move of the real implementations into core/qualified_names.py and core/identifier_types.py. Migrated the 9 remaining importers (5 production files, 1 internal, 3 test files) to import from core/ directly, stripped the now-dead re-export blocks from analysis/__init__.py and resolution/__init__.py, and deleted both shim files. Also investigated two deferred issues from earlier research: the 'two BindingInfo classes' turned out to be legitimately different classes in different packages (local dataclass with AST refs vs. upstream Pydantic type-only reference) and was ruled out-of-scope as a cross-package concern; the 'three expression reconstruction implementations' turned out to already be a single implementation, so no action was needed there. Purely mechanical, zero behavior change, full-suite green (1783 passed).",
+  "key_decisions": [
+    "Delete the shim files outright rather than keep them as compatibility layers, since analysis/qualified_names.py had zero importers and resolution/identifier_types.py's 9 importers were all migrated in the same change",
+    "Two BindingInfo classes (local dataclass in extraction/usage_extractor.py vs. upstream Pydantic model in agentic_mbse) ruled out-of-scope for this refactor \u2014 different base types, different fields, cross-package unification would be a separate future item",
+    "Three expression-reconstruction implementations claim was found to be stale \u2014 only one impl (extraction/expression_utils.py) exists \u2014 marked resolved with no code change"
+  ],
+  "supersedes": [
+    "analysis/qualified_names.py (re-export shim)",
+    "resolution/identifier_types.py (re-export shim)",
+    "re-export blocks in analysis/__init__.py and resolution/__init__.py for naming/identifier symbols"
+  ],
+  "status": "shipped",
+  "id": "H-069"
+}

@@ -1,0 +1,25 @@
+{
+  "dir": "20260819_stop-reinventing-the-parser",
+  "date_start": "2026-08-16",
+  "date_end": "2026-08-19",
+  "epic": "ELABORATE-FIRST",
+  "item_number": null,
+  "title": "Replace proximity-based occurrence guessing and silent evidence-dropping in extraction/elaboration with exact SysIDE-derived derivation or named refusal",
+  "subject": "occurrence resolution, evidence extraction",
+  "summary": "The pipeline had two integrity gaps: occurrence resolution sometimes picked a target by nearest ancestor, descendant search, sole candidate, or first match instead of deriving it from SysIDE's exact declaration evidence and the modeled consumer domain (Lane A), and extraction could silently drop or misclassify SysIDE evidence via broad exception handling, class-name substring tests, or staged name fallbacks before it reached the graph (Lane B). The item required every one of ten Lane-A/B sites to either produce the modeled result or a named refusal, proved against real SysIDE models, with no result depending on proximity or arrival order. Implementation ran through five phases plus a failed candidate plan, three design-review revisions, and three audit passes; the rev-3 audit still returned Needs Work over provenance-fabrication findings (a catch-all error code with a fabricated file/line, and misattributed parser diagnostics). The owner closed the item anyway on 2026-08-19 after two further model-caused provenance fixes and one rebuilt dependent chain, explicitly without a fourth audit loop, and filed the remaining diagnostic-totality gap forward to a separate DIAGNOSTIC-PROVENANCE-BY-CONSTRUCTION item. It unblocks the downstream elaborator-downstream / epic Item 8 work that was gated on this item's closure.",
+  "key_decisions": [
+    "[OWNER] Item closes 2026-08-19 after the two model-caused provenance fixes and one rebuilt chain, without running a fourth audit loop; the rev-3 'Needs Work' audit verdict is preserved as historical record rather than superseded.",
+    "Owner class (usage-owned vs definition-owned referent) is one required input to occurrence derivation, not the whole answer; both cases still refuse when modeled context cannot derive the occurrence.",
+    "Indexed-element expression support (cells#(2).mass) is explicitly out of scope; the item only makes the current inability to honor it an honest named refusal instead of a silent wrong answer.",
+    "Remaining diagnostic-totality/provenance-fabrication gap (rev-3 audit findings) is transferred to a separately owned follow-up item (DIAGNOSTIC-PROVENANCE-BY-CONSTRUCTION) rather than blocking this closure.",
+    "elaborator-downstream design/implementation must not start until this item is implemented, audited, and closed."
+  ],
+  "supersedes": [
+    "Proximity/arrival-order-based occurrence selection rules (nearest ancestor, descendant search, sole-candidate election, first match) in _select_occurrences, _select_calc_nodes, and _resolve_leaf",
+    "Class-name-substring and qualified-name-prefix based type/origin decisions in syside_adapter.is_instance, expression.py's operator and standard-library checks, and extractor.py's type mapping",
+    "extraction/computed_attribute_extractor.py, deleted as a dead classifier (no producer or consumer under src/)",
+    "Warn-and-continue / silent evidence-dropping behavior on unmapped exit-point types in generation/registry.py"
+  ],
+  "status": "shipped",
+  "id": "H-124"
+}

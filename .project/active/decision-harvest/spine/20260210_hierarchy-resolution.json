@@ -1,0 +1,19 @@
+{
+  "dir": "20260210_hierarchy-resolution",
+  "date_start": "2026-02-10",
+  "date_end": "2026-02-10",
+  "epic": "COST-PATTERN",
+  "item_number": "Item 3",
+  "title": "Extract redefinition, multiplicity, and aggregation-expression data to bridge virtual CalcUsages to the pipeline",
+  "subject": "redefinition and aggregation extraction",
+  "summary": "Item 2 produced virtual CalcUsages with unresolved bindings and no way to feed sum() aggregation expressions into the pipeline; the expression compiler had no handler for InvocationExpression so sum() calls were classified UNRESOLVABLE. This item built extraction for `:>>` ReferenceUsage redefinitions (classified as LITERAL, CHAIN, or EXPRESSION), resolved deep-path overrides via chaining_features, detected PartUsage multiplicity via cached_lower_bound (explicitly not cached_upper_bound, which is off-by-one under syside's exclusive convention), transformed sum(array.attr) into a parametric multiply (count * attr), and introduced a new AggregationExpressionData model capturing sum/singleton/local terms plus input channels and entry points. All output is pure data with no pipeline, backtracker, or generation wiring \u2014 that is Item 4's job. Implementation matched the design exactly across all four phases with zero regressions against a 313-test baseline.",
+  "key_decisions": [
+    "Item 3 produces data structures only; no pipeline, backtracker, or generation-layer changes, deferring integration to Item 4.",
+    "Multiplicity count must come from cached_lower_bound, never cached_upper_bound, because syside's exclusive convention makes the latter off by one (N+1).",
+    "extract_design_overrides() takes an Iterable of PartUsage elements rather than the raw model, for testability without mocking SysideAdapter.elements_of_type() \u2014 the orchestrator supplies the real call.",
+    "The transformed aggregation expression carries one extra layer of parentheses versus the design's expected text, accepted as mathematically equivalent since Item 4 consumes structured term data, not the string."
+  ],
+  "supersedes": [],
+  "status": "shipped",
+  "id": "H-015"
+}

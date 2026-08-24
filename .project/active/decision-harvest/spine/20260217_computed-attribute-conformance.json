@@ -1,0 +1,17 @@
+{
+  "dir": "20260217_computed-attribute-conformance",
+  "date_start": "2026-02-17",
+  "date_end": "2026-02-17",
+  "epic": "unknown",
+  "item_number": null,
+  "title": "Conformance tests for computed attribute classification (component C05) against REQ-CA-01 through REQ-CA-07",
+  "subject": "computed attribute classifier",
+  "summary": "C05 tested extraction/computed_attribute_extractor.py, which classifies PartDef/PartUsage attribute expressions into FORMULA, EXPOSE_PURE, EXPOSE_COMPUTED, LITERAL, or UNRESOLVABLE and compiles FORMULA patterns to Python. No production code changed. 37 tests were added to tests/conformance/test_computed_attributes.py (the file was already written, untracked, from a prior planning session) and all passed immediately; full suite at 991 passed with 2 pre-existing spike failures unrelated to C05. As with C03, one requirement clause (REQ-CA-05, UNRESOLVABLE classification) has zero coverage across all 6 fixture models, so the test suite instead proves its absence and exercises the code path only via existing mock-based unit tests.",
+  "key_decisions": [
+    "Document UNRESOLVABLE's zero real-model coverage rather than block on it, following the same precedent set by C03's EXPRESSION binding-type gap",
+    "Building a lightweight OutputRegistry from snapshot data was sufficient to test _build_attribute_resolution_map(), avoiding the need for full pipeline infrastructure"
+  ],
+  "supersedes": [],
+  "status": "shipped",
+  "id": "H-040"
+}

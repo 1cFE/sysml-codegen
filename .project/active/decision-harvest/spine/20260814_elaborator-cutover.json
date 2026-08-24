@@ -1,0 +1,24 @@
+{
+  "dir": "20260814_elaborator-cutover",
+  "date_start": "2026-08-10",
+  "date_end": "2026-08-14",
+  "epic": "ELABORATE-FIRST",
+  "item_number": "Item 7",
+  "title": "Atomic cutover from the legacy string-resolution front end to the exact instance-graph elaborator as the sole generation authority",
+  "subject": "elaborator authority, v6 snapshot",
+  "summary": "Codegen ran on two parallel authorities: the certified exact-ID instance-graph elaborator from Item 6, and the legacy string-resolution stack (pipeline builder, backtracker, producer resolution, v5 snapshot route) that the product still shipped. This item deleted the legacy stack outright, made the elaborate-then-project route the only path for both live (--models) and snapshot (--from-snapshot v6) generation, and migrated the public API, deletion ledger, and Fusion Tea fixture accordingly. A first cutover attempt was refused by the owner for landing as an uncommitted candidate with 222 unexplained deletions; the work was redone as a forensically tracked recovery from the certified Item-6 baseline with a per-row deletion ledger and machine-checked replacement proof. The redone candidate passed three consecutive identical gate batteries, an independent audit (CERTIFY-WITH-RESIDUALS, zero blocking findings), and owner acceptance.",
+  "key_decisions": [
+    "An atomic cutover must be accepted or refused as a whole committed candidate, not judged as an incremental diff \u2014 the first attempt's refusal established this.",
+    "v5 snapshots receive no migration or compatibility adapter; only v6 (instance-graph) snapshots are accepted going forward.",
+    "Every deleted legacy behavioral test responsibility requires an independent one-to-one replacement test, tracked in a closed deletion ledger (ledger-4a).",
+    "TEAx stays evidence-only for this item; no TEAx production or test changes are in scope unless the spec is explicitly amended.",
+    "Self-binding remains a modeling error, never reinterpreted as an outer reference (owner ruling carried through from the epic)."
+  ],
+  "supersedes": [
+    "The legacy string-resolution stack: pipeline builder, snapshot context, dependency backtracker, producer resolution/completeness, output registry, v5 snapshot loader/serializer/graph-rebuild, elaboration diff, and their v5 capture scripts and wrong-oracle tests.",
+    "The parallel v5 extraction-snapshot capture/load route, replaced entirely by the v6 instance-graph envelope.",
+    "The dual-run diff/runner and parallel exact entry point used during the Item 6/7 transition."
+  ],
+  "status": "shipped",
+  "id": "H-111"
+}

@@ -1,0 +1,18 @@
+{
+  "dir": "20260217_dual-resolution-consistency",
+  "date_start": "2026-02-17",
+  "date_end": "2026-02-17",
+  "epic": "unknown",
+  "item_number": null,
+  "title": "Prove the three resolution paths (backtracker DFS, FORMULA attribute map, resolve_input strategy chain) agree on wiring decisions (X02)",
+  "subject": "dual/triple resolution consistency",
+  "summary": "Conformance-only work item, no production code changes: verified the architectural invariant that separate resolution code paths (backtracker DFS for CalcUsage, the FORMULA attribute resolution map, and resolve_input()'s strategy chain for aggregation) never disagree when resolving the same reference. Extended an existing single-model, single-binding-type test from C12 into a dedicated cross-cutting suite covering all 4 fixture models and both CHAIN and REFERENCE binding types, plus new FORMULA-vs-registry and structural BindingResolution-to-InputSource mapping tests. Found one real asymmetry \u2014 the backtracker's REFERENCE Step 2 (leaf + parent-scope lookup) isn't replicated by resolve_input's Strategy B \u2014 but classified it as a known capability gap rather than a consistency violation, since it never occurs on aggregation-scope references in practice. Shipped with 20 new conformance tests, full-suite green (1349 passed).",
+  "key_decisions": [
+    "Treat the backtracker's REFERENCE Step 2 (leaf+parent-scope lookup, not replicated by Strategy B) as a documented capability gap rather than a cross-path consistency failure, since it never triggers on aggregation-scope references in real fixtures",
+    "No natural three-way overlap exists in fixture data (a reference belongs to exactly one of CalcUsage/FORMULA/Aggregation context), so REQ-DRA-04 is tested as two pairwise comparisons instead of one three-way identity check",
+    "FORMULA consistency is verified structurally, not empirically discovered: EXPOSE_PURE and FORMULA channels are checked against the same typed OutputRegistry the backtracker itself uses"
+  ],
+  "supersedes": [],
+  "status": "shipped",
+  "id": "H-042"
+}

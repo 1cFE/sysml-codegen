@@ -1,0 +1,23 @@
+{
+  "dir": "20260220_dead-code-removal",
+  "date_start": "2026-02-20",
+  "date_end": "2026-02-20",
+  "epic": "unknown",
+  "item_number": null,
+  "title": "Remove confirmed-dead code paths (step 7.4) plus fix one deferred bug (endswith false positive)",
+  "subject": "dead code cleanup",
+  "summary": "Step 7.4 triaged twelve candidate dead-code items collected from earlier research and conformance work, found seven already removed and one already absent, and acted on the remaining four: deleted the normalized SysML-QN fallback in input_resolver.py's Strategy B (kept the live direct-lookup path), deleted the mirrored Step 1b normalization in dependency_backtracker.py, replaced a bare-name fallback in initialization.py's virtual binding rewrite with a loud ValueError, and deleted the unreferenced teax_module_stub.py.jinja2 template. It also fixed a previously deferred bug, an endswith() false positive in hierarchy_resolver.py's alias detection, bundling it in as a one-line fix. Six new conformance tests lock in the removals; ten existing tests needed updates because they used since-proven-unrealistic bare-name test data. Full suite went from 1780 to 1783 tests, all passing, no baseline output changes.",
+  "key_decisions": [
+    "Only the normalized-fallback sub-path of Strategy B is dead; the direct SysML QN lookup is live (exercised by attr_expr_probe) and was kept",
+    "Bare-name source_paths are proven never to occur in real models, so the VBR fallback was replaced with a hard ValueError rather than silently removed",
+    "The endswith() false-positive fix (Deferred Issue #11) was folded into this cleanup step rather than deferred further, since it was a one-line, risk-free change"
+  ],
+  "supersedes": [
+    "Strategy B's normalized SysML-QN fallback in input_resolver.py",
+    "dependency_backtracker.py's Step 1b QN normalization block",
+    "the bare-name fallback branch in initialization.py's _rewrite_virtual_bindings",
+    "templates/teax_module_stub.py.jinja2"
+  ],
+  "status": "shipped",
+  "id": "H-067"
+}

@@ -1,0 +1,21 @@
+{
+  "dir": "20260724_docs-lifecycle-sync",
+  "date_start": "2026-07-20",
+  "date_end": "2026-07-24",
+  "epic": "unknown",
+  "item_number": null,
+  "title": "Reconcile docs/architecture/ with merged main after the CONSTRAINT-LIFECYCLE epic's late changes",
+  "subject": "architecture documentation reconciliation",
+  "summary": "The CONSTRAINT-LIFECYCLE epic (referred to in this item's own text as post-CONSTRAINT-LIFECYCLE work, not named as this item's parent epic) left documentation stale and owed two gap writeups: a diagnostics severity system with no doc coverage, and a missing portability verification-matrix row. This item swept docs/architecture/ against merged main across five phases, wrote a new severity doc (30-diagnostic-severity.md) with citations verified into both sysml-codegen and agentic-mbse, added two matrix rows (REQ-SNAP-21/22) with a reconciled 276-row recount, re-anchored EXPLAINER_PROMPT.md's stale claims, added override-capture-honesty notes, and rewrote the resolver-architecture docs to reflect Item 2's dual-ladder-to-single-registry unification (deleting input_resolver.py from the documented architecture). The audit found the work accurate everywhere reachable; one section citing agentic-mbse code was initially unverifiable from the audit sandbox, closed same-day by an orchestrator session with agentic-mbse access confirming all seven citations exact.",
+  "key_decisions": [
+    "Corrections shrink or amend stale doc claims in place with a code citation, never accrete a 'used to say X' history outside a marked Dated-history block.",
+    "No release-readiness claims are added anywhere in the docs; the composed-proof archive stays the closed record for that.",
+    "Doc 04 (input-resolver) is replaced with a producer-resolution reference doc rather than patched, since the underlying module was deleted, not merely renamed.",
+    "Only claims about override-capture correctness get the nested-occurrence-override honesty note, not every mention of design_override/:>> capture."
+  ],
+  "supersedes": [
+    "04-input-resolver.md's description of the now-deleted resolution/input_resolver.py module and its dual-resolver-ladder narrative in 24-dual-resolution-architecture.md."
+  ],
+  "status": "shipped",
+  "id": "H-105"
+}

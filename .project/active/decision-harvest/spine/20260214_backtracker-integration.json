@@ -1,0 +1,19 @@
+{
+  "dir": "20260214_backtracker-integration",
+  "date_start": "2026-02-14",
+  "date_end": "2026-02-14",
+  "epic": "OUTPUT-REGISTRY-BACKTRACKER-REDESIGN",
+  "item_number": "Item 3",
+  "title": "Wire the OutputRegistry into the pipeline as a shadow resolution path validated against the existing backtracker cascade",
+  "subject": "OutputRegistry backtracker wiring",
+  "summary": "Items 1-2b built an OutputRegistry class, ChannelAlias data model, and alias producers, but none of it was wired into the pipeline, which still resolved bindings through the backtracker's 5 ad-hoc indexes and 7-strategy cascade. This item added build_output_registry() (a new Step 5.5) implementing a 4-phase registration protocol (CalcUsage outputs, CHAIN aliases, EXPOSE_PURE aliases, transitive design-attribute aliases), and gave the backtracker an optional parallel resolution path that runs the new single-lookup registry alongside the old cascade on every binding, logging any divergence while keeping the old cascade authoritative. It also fixed Bug 2 (EXPOSE_PURE two-hop resolution failure) via the new path and produced a migration audit of the 39 tests that access internal backtracker indexes, to guide Item 4's cut-over. The epic doc referenced is `.project/backlog/epic_output_registry_backtracker_redesign.md`, but that name is not confirmed against the folder's own text as a named epic elsewhere, so epic is left unknown per the no-inference rule despite the spec's own header naming it.",
+  "key_decisions": [
+    "The new registry path runs in shadow/parallel mode only in this item; the old cascade stays authoritative for actual binding resolution until Item 4's cut-over",
+    "is_transitive is expected to always be False for registry-resolved bindings and is excluded from divergence comparison, since no downstream logic consumes it",
+    "Registry key formats are built to exactly match the old indexes' key patterns (Key_A through Key_F) so parallel validation compares like-for-like",
+    "Unresolved bindings in the new registry path must log a warning rather than silently falling through to an entry point"
+  ],
+  "supersedes": [],
+  "status": "unknown",
+  "id": "H-026"
+}

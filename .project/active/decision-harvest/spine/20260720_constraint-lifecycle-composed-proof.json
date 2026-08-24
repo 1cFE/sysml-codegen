@@ -1,0 +1,21 @@
+{
+  "dir": "20260720_constraint-lifecycle-composed-proof",
+  "date_start": "2026-07-20",
+  "date_end": "2026-07-20",
+  "epic": "CONSTRAINT-EXEC",
+  "item_number": "Item 13",
+  "title": "Composed public proof for the CONSTRAINT-EXEC lifecycle register: all 41 Appendix C cells pass at a pinned five-repo revision set",
+  "subject": "constraint execution lifecycle release proof",
+  "summary": "This item composed the final release-readiness evidence for the CONSTRAINT-EXEC epic's lifecycle contract (register row 17), certifying that all 41 Appendix C matrix cells pass across five pinned repos (sysml-codegen, agentic-mbse, teax, fusion-tea, stellarator): 22 reruns, 19 composed proofs, 0 inherited, all PASS, plus 16 negative mutations failing at their intended boundary and 6/6 full-tree byte-identity checks. The codegen src tree was proven byte-identical to the certified pin 7526665 with the branch tip only adding docs and Item-13 fixtures. It established the required merge order (agentic-mbse PR #11 must land before sysml-codegen PR #9 because codegen's pinned upstream schema/profile version strings are asserted against the installed agentic-mbse), pushed all three epic-authorized branches as fast-forwards, and left fusion-tea and stellarator branches local by explicit human delivery decision. Merge itself was left to a human, not performed by this item.",
+  "key_decisions": [
+    "Case 18 (definition-owned assert through redefining usage) was closed as a fixture-shape error in the Stage-2 contract row, not a resolver bug -- Item 2's resolver was correct all along",
+    "A general nested-occurrence-override gap (definition-relative capture vs occurrence-relative demand) was isolated from the Case-18 investigation and filed to the Item-10 occurrence-materialization family rather than fixed here",
+    "Required merge order is agentic-mbse PR #11 first, then sysml-codegen PR #9, because test_upstream_pins would fail on codegen main if the downstream pin landed before the upstream version strings it points to",
+    "agentic-mbse commit 4c18d61 is pushed to PR #11 carrying an unrelated 'modeling workflow orchestrator' commit (4ed2a07) in its ancestry, by prior owner direction, flagged for the reviewer rather than excluded",
+    "fusion-tea and stellarator branches stay local; their delivery path was not epic-authorized for push",
+    "Pre-existing baselines (two -O suite failures, ruff format's 22 files, mypy's 72 errors, deep_cross_scope/plant_values stale baselines) are recorded as inherited from the pin and explicitly not treated as certification blockers"
+  ],
+  "supersedes": [],
+  "status": "shipped",
+  "id": "H-097"
+}

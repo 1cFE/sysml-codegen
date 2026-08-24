@@ -1,0 +1,18 @@
+{
+  "dir": "20260216_aggregation-wiring-bugfix",
+  "date_start": "2026-02-16",
+  "date_end": "2026-02-16",
+  "epic": "COST-PATTERN",
+  "item_number": null,
+  "title": "Fix two aggregation-wiring bugs misclassifying 58 of 70 solar_battery aggregation inputs as entry points",
+  "subject": "aggregation expression wiring",
+  "summary": "COST-PATTERN's E2E validation item was blocked because most aggregation inputs in the solar_battery model wired to entry points instead of upstream module outputs. Bug A was a FeatureChainExpression/OperatorExpression check-ordering error present at three sites (hierarchy_resolver, expression_compiler, expression_utils) since FCE is a SysIDE subtype of OE and order-dependent is_instance checks routed FCE nodes to the wrong handler; Bug B was that LocalTerm handling in graph_builder unconditionally created entry points without checking for a sibling aggregation module output. Four prior spikes had confirmed both root causes and the fix approach before this item ran. The fix reordered the FCE check before OE at all three sites and added sibling-output resolution for LocalTerms, bringing wiring to 57 of 70 (13 correctly remaining as entry points), with a post-completion hardening pass adding tests after an audit found two integration tests were vacuous or exercising the wrong code path.",
+  "key_decisions": [
+    "Fix all three FCE/OE ordering sites together even though only one (hierarchy_resolver) caused the blocking bug, since a codebase audit found the same latent defect in the other two.",
+    "Do not touch OutputRegistry, its key registration, or _resolve_aggregation_input_channel() \u2014 spikes confirmed those already work correctly once given properly classified terms.",
+    "Architecture doc updates (08_algorithm_revised.md, ADR-007, ADR-008) deferred to a follow-up rather than done in this item."
+  ],
+  "supersedes": [],
+  "status": "shipped",
+  "id": "H-030"
+}

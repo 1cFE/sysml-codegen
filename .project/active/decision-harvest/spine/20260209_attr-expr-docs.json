@@ -1,0 +1,18 @@
+{
+  "dir": "20260209_attr-expr-docs",
+  "date_start": "2026-02-09",
+  "date_end": "2026-02-09",
+  "epic": "ATTR-EXPR",
+  "item_number": "Item 5a",
+  "title": "Write ADR-001 through ADR-005 for attribute-expression architecture and close the ATTR-EXPR epic",
+  "subject": "ADR documentation, epic closure",
+  "summary": "The ATTR-EXPR epic had shipped 7 architectural decisions (FORMULA/EXPOSE classification, pipeline step 4.5, backtracker/graph-builder extensions) with no formal ADRs, and the repo's referenced ADR-001/002/003 existed only in the pre-split monorepo, not locally. This item created docs/architecture/ in sysml-codegen, migrated ADR-001/002/003 from the monorepo byte-identical, wrote new self-standing ADR-004 (computed attribute pipeline integration) and ADR-005 (computed attribute classification), amended ADR-001's entry-point table and ADR-002's Rule 3 for the FORMULA exemption, and closed out the epic (lessons learned, status, BACKLOG.md, concept-doc status) with all five attr-expr-* active folders archived. All phases and validations were checked complete; full suite (285 tests) passed with no regressions.",
+  "key_decisions": [
+    "ADR-005 (classification) is written before ADR-004 (pipeline integration) since ADR-004 forward-references it",
+    "ADR-001's computed-attribute clarification and ADR-002's FORMULA amendment are appended/edited in place, not rewrites, preserving original monorepo-era text and its historical references",
+    "EXPOSE_COMPUTED classification is documented as a known deferred UX gap with a CalcDef workaround, not implemented in this item"
+  ],
+  "supersedes": [],
+  "status": "shipped",
+  "id": "H-011"
+}

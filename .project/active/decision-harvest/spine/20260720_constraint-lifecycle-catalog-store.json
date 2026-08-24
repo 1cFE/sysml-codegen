@@ -1,0 +1,23 @@
+{
+  "dir": "20260720_constraint-lifecycle-catalog-store",
+  "date_start": "2026-07-19",
+  "date_end": "2026-07-20",
+  "epic": "CONSTRAINT-LIFECYCLE-REMEDIATION",
+  "item_number": "Item 8",
+  "title": "Make codegen's embedded constraint catalog the sole schema authority; delete TEAx's parallel reconstructed catalog and its byte-hash fingerprint stand-in",
+  "subject": "constraint catalog identity",
+  "summary": "Codegen already assembled a real constraint catalog inside the model contract, but TEAx ignored it and instead consumed a separately-shaped constraint_catalog.json built by a hand-authored fixture and a fusion-side materializer, reconstructing owner QN, definition QN, and source form by string-splitting and predicate-text search, and binding store compatibility to a byte-hash of that alternate file rather than codegen's real semantic_fingerprint. Per owner decision D-3 ('100% Option A, purge this mess'), this item added the missing fields (source_form, owner_qualified_name, definition_qualified_name, usage identity, an admitted-usage tier) to codegen's embedded ConstraintCatalogEntry, rewired TEAx to consume that catalog and the real semantic_fingerprint directly as on-disk JSON, deleted the alternate schema, the standalone fixture, and the fusion materializer across all three repos (codegen, teax, fusion-tea), and made catalog/schema skew fail closed with a named error in both directions. The audit certified the item with two moderate but non-blocking findings: the FK-gating regression test never exercised the named-inline case (code was correct, guard was vacuous), and the INV-6 source-scan test the spec explicitly required was never written, though the reconstruction anti-patterns were independently grep-verified absent across all three repos.",
+  "key_decisions": [
+    "Owner decision D-3 settled: purge the alternate catalog system entirely rather than shim it; codegen's embedded catalog becomes the sole schema authority (Option A over a rejected Option B standalone canonical export)",
+    "TEAx continues to consume codegen identity as on-disk JSON, never by importing sysml_codegen, preserving the deliberate cross-repo dependency boundary",
+    "The fusion deletion target was corrected from the brief's named repo (fusion-tea-stellarator-mbse-demo, which had no such code) to the actual location at fusion-tea/exploration/ife_e2e/study/, surfaced and resolved before the deletion inventory was finalized",
+    "CatalogView/_Catalog names in TEAx were rewired/repurposed to read the embedded catalog rather than literally deleted, a design-level reframe of the spec's 'no surviving symbol' criterion that the audit flagged as under-reconciled",
+    "Store compatibility transition relies on the existing eight-field _check_compatibility gate to fail closed on the new fingerprint value, rather than building a new migration mechanism"
+  ],
+  "supersedes": [
+    "TEAx's alternate constraint_catalog.json schema, its CatalogView/_Catalog reconstruction logic, the hand-authored fixture, and the byte-hash fingerprint stand-in in study/config.py",
+    "The fusion-tea catalog materializer (materialize_constraint_catalog.py) and its committed generated/contracts/constraint_catalog.json artifact"
+  ],
+  "status": "shipped",
+  "id": "H-092"
+}

@@ -1,0 +1,14 @@
+{
+  "dir": "20260216_aggregation-wiring-spikes",
+  "date_start": "2026-02-16",
+  "date_end": "2026-02-16",
+  "epic": "COST-PATTERN",
+  "item_number": null,
+  "title": "Four diagnostic spikes to empirically verify or falsify root-cause hypotheses for 58 misclassified aggregation inputs",
+  "subject": "aggregation input wiring",
+  "summary": "COST-PATTERN's Item 5 (E2E validation) was blocked because 58 of 70 aggregation inputs in the solar_battery model were misclassified as entry points instead of wiring to upstream module outputs. Three prior research reports proposed root causes across extraction, resolution, and graph-builder layers, but an earlier fix attempt scoped to the wrong layer and only fixed 4 of 58 inputs. This spec commissioned four spikes against the real solar_battery model to test four hypotheses before committing to a fix: H1 whether FeatureChainExpression is a dual-match subtype of OperatorExpression in SysIDE's type system (Spike A); H2 whether reordering the AST walk check produces the expected ~37 term reclassifications with zero regression on the 12 working SumTerms (Spike B); H3 whether sibling aggregation outputs are present in the OutputRegistry when LocalTerms are processed (Spike C); H4 whether plant-level SingletonTerms actually resolve through the real 3-step resolution code path, with an expected nuanced outcome that only the unscoped Key_D fallback succeeds and Key_E_stripped is needed for robustness (Spike D). No production code was modified; results were meant to inform a subsequent fix design.",
+  "key_decisions": [],
+  "supersedes": [],
+  "status": "unknown",
+  "id": "H-031"
+}

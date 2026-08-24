@@ -1,0 +1,21 @@
+{
+  "dir": "20260708_classifier-fix",
+  "date_start": "2026-07-06",
+  "date_end": "2026-07-07",
+  "epic": "TRUTH-DEBT",
+  "item_number": "Item 4",
+  "title": "Fix the computed-attribute classifier so inherited PartDef attributes classify FORMULA instead of silently-dropped EXPOSE_COMPUTED",
+  "subject": "computed-attribute classifier",
+  "summary": "The classifier's Step-2b sibling check used a QN-prefix test against the owning part's own namespace, so a reference to an inherited attribute (whose QN resolves into the supertype's namespace) fell through as a cross-namespace calc_ref and got misclassified EXPOSE_COMPUTED, which the graph builder silently drops with no module and no diagnostic. The fix widened Step-2b to accept a transitive ancestor-PartDef QN prefix, re-captured the affected extraction snapshot, flipped five xfailed tests into real positive assertions, added a D5 warn-and-skip diagnostic for the remaining not-fully-compilable case, and corrected doc/matrix text that had inverted the failure mode (called it a loud rejection when it was actually a silent no-op). Audited PASS: mutation-tested live, byte-identity scoped to one snapshot file, full suite green (2086 passed, 0 xfailed).",
+  "key_decisions": [
+    "Step-2b now accepts any transitive ancestor-PartDef QN prefix, not just the owning part's own namespace, closing the inherited-attribute misclassification without over-broadening to genuine cross-part calc references",
+    "Doc/matrix text corrected from 'loud (EXPOSE_COMPUTED rejection)' to 'silent no-op', matching the actual graph-builder behavior",
+    "Added a D5 diagnostic (WARN + skip) for FORMULA-classified attributes that are not fully compilable, rather than leaving them silently dropped"
+  ],
+  "supersedes": [
+    "The five xfailed test cases documenting the classifier bug (INHERITED_ATTR_PATTERNS), replaced with positive-assertion passes",
+    "The prior 'loud rejection' framing in verification-matrix.md and the epic Item-4 text, corrected to 'silent no-op'"
+  ],
+  "status": "shipped",
+  "id": "H-072"
+}

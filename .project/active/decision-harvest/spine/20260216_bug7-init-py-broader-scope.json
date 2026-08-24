@@ -1,0 +1,18 @@
+{
+  "dir": "20260216_bug7-init-py-broader-scope",
+  "date_start": "2026-02-16",
+  "date_end": "2026-02-16",
+  "epic": "unknown",
+  "item_number": null,
+  "title": "Add missing __init__.py stubs to the 6 top-level generated output subdirectories",
+  "subject": "codegen output directory setup",
+  "summary": "E2E validation runs (e2e_attr_expr_v3 and solar_battery_v3) flagged that generated packages were missing __init__.py in schemas/, modules/, handwritten/, pipelines/, inputs/, and tests/, causing import failures and manual fixups for consumers. This was the last open Bug 7 finding blocking a validation gate decision. The fix added guarded __init__.py stub creation to _setup_output_directories() in cli/__init__.py, excluding output_path/ itself (which _generate_registry() populates separately) and using a not-exists guard so --smart-regen does not clobber existing content. Scope was deliberately narrow: only that one function and its tests, no changes to the top-level registry init or to _ensure_package_init_files().",
+  "key_decisions": [
+    "Fix lives only in _setup_output_directories() so it applies uniformly across fresh, --overwrite, and --smart-regen runs",
+    "output_path/ itself is excluded from stub creation because _generate_registry() writes its real registry content there",
+    "Guard stub creation with a not-exists check so re-runs (smart-regen) never overwrite custom content"
+  ],
+  "supersedes": [],
+  "status": "shipped",
+  "id": "H-032"
+}

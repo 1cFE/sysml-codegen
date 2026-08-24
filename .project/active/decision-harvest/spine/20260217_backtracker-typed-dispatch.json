@@ -1,0 +1,21 @@
+{
+  "dir": "20260217_backtracker-typed-dispatch",
+  "date_start": "2026-02-17",
+  "date_end": "2026-02-17",
+  "epic": "unknown",
+  "item_number": "C11b",
+  "title": "Migrate DependencyBacktracker resolution from the deprecated resolve()/_compat cascade to type-directed registry dispatch",
+  "subject": "output registry resolution",
+  "summary": "DependencyBacktracker and build_output_registry() relied on a deprecated resolve() cascade backed by a _compat dict with ad hoc key formats (Key_A/D/F/bare). This item replaced every resolve() call site across the backtracker, output registry, initialization, and graph_builder with typed scoped/alias/sysml_qn lookups, added a local instance_attr_to_channel helper for Key_A-format canonical names, and deleted _compat, resolve(), register(), and derive_key_c() from OutputRegistry entirely. A spike first verified all 14 previously compat-only resolutions (12 catf_mfe cross-scope CHAIN + 2 solar_battery REFERENCE secondary) still resolve correctly under the typed lookups before the migration was built.",
+  "key_decisions": [
+    "Phase 2 CHAIN aliases resolve via scoped_lookup directly (canonical_name is already ScopedKey format); Phase 3/4 EXPOSE_PURE and transitive aliases require the local instance_attr_to_channel helper dict (canonical_name is Key_A format)",
+    "REFERENCE secondary resolution keeps the existing parent_part.leaf key construction and only swaps resolve() for a scoped_lookup-then-alias_lookup cascade, rejecting the originally planned full-path normalization which spike testing showed produced a wrong key for one of two solar_battery cases",
+    "FORMULA computed-attribute outputs (Key_F) are additionally registered as ScopedKeys during Phase 1c so the REFERENCE secondary path can find them without _compat"
+  ],
+  "supersedes": [
+    "OutputRegistry.resolve() and OutputRegistry.register() convenience methods and the _compat dict entirely removed",
+    "derive_key_c() static method removed"
+  ],
+  "status": "shipped",
+  "id": "H-038"
+}

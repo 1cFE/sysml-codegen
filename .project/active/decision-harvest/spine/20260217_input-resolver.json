@@ -1,0 +1,19 @@
+{
+  "dir": "20260217_input-resolver",
+  "date_start": "2026-02-17",
+  "date_end": "2026-02-17",
+  "epic": "unknown",
+  "item_number": "C12",
+  "title": "Extract aggregation input resolution into a standalone resolve_input() strategy-chain function",
+  "subject": "aggregation input resolver",
+  "summary": "Aggregation SumTerm/SingletonTerm input resolution logic was scattered inline through _resolve_aggregation_input_channel() and _build_aggregation_module() in graph_builder.py. This item factored it into a new resolution/input_resolver.py module: a frozen ResolutionContext dataclass, four ordered strategy callables (ScopedRegistryLookup, ChainRedefinitionFollow, SysMLQNLookup, DesignAttributeLookup), and a resolve_input() function that tries them in order with a self-reference guard and an entry-point fallback that never raises. A spike over 51 real aggregation refs across 3 models confirmed the design doc's A-before-C strategy ordering is strictly correct (zero conflicts, A resolves 94% of refs) and that Strategy B (SysML QN) and Strategy D (design-attribute dedup) are currently zero-exercise but implemented for completeness. Wiring resolve_input() into graph_builder.py's actual call sites was explicitly deferred to a later component (C16); this item only proved the new function produces identical results to the existing inline logic via a regression test.",
+  "key_decisions": [
+    "Strategy order is [ScopedRegistryLookup, ChainRedefinitionFollow, SysMLQNLookup, DesignAttributeLookup] (A before C), confirmed empirically safe and strictly more efficient than the current C-first code",
+    "resolve_input() requires an explicit strategies argument with no default STANDARD_STRATEGIES, since no non-aggregation caller was identified",
+    "Strategy D (design-attribute lookup) is implemented as a no-op returning None; it cannot return a CanonicalChannel and its real entry-point-deduplication value requires factory-level changes out of this item's scope",
+    "Actually wiring resolve_input() into graph_builder.py's _build_aggregation_module() call sites is deferred to C16 (Aggregation Module Factory) to avoid premature coupling; C12 only proves behavioral equivalence"
+  ],
+  "supersedes": [],
+  "status": "shipped",
+  "id": "H-049"
+}

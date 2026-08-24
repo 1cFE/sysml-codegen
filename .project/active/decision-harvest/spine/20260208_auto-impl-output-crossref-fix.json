@@ -1,0 +1,17 @@
+{
+  "dir": "20260208_auto-impl-output-crossref-fix",
+  "date_start": "2026-02-08",
+  "date_end": "2026-02-08",
+  "epic": "EXPR-CODEGEN",
+  "item_number": "Item 4.1 follow-on",
+  "title": "Fix NameError in generated multi-output CalcDef auto-implementations when a later output references an earlier declared output",
+  "subject": "auto-impl output generation",
+  "summary": "E2E validation of the EXPR-CODEGEN epic found that multi-output CalcDefs where a later output references an earlier declared output (e.g. f_recirculating = 1.0 / q_eng) generated a return tuple that inlined each output's expression independently, so q_eng was never assigned as a local variable and referencing it produced a runtime NameError. Two ground-truth E2E tests (EngineeringQFactor in CATF, AnnualizedFinancialCalc in solar_battery) were marked xfail because of this. The fix changed _build_auto_impl_context() in generation/stencils.py so that when any declared output is cross-referenced by another, all declared outputs for that CalcDef are emitted as local variable assignments before the return statement (matching how undeclared intermediates were already handled), with the return tuple referencing them by name; single-output CalcDefs remain unaffected. Both xfail markers were removed and all 167 tests (144 pre-existing plus new coverage) passed with 0 xfail, 0 failures, closing EXPR-CODEGEN Epic 1 cleanly before Epic 2 began.",
+  "key_decisions": [
+    "When any declared output has a cross-reference to another declared output, ALL declared outputs for that CalcDef are promoted to local variable assignments (not just the referenced ones) as the simplest correct approach for partial-cascade cases",
+    "Single-output CalcDefs are left untouched, continuing to inline in the return statement"
+  ],
+  "supersedes": [],
+  "status": "shipped",
+  "id": "H-006"
+}

@@ -1,0 +1,20 @@
+{
+  "dir": "20260213_output-registry-foundation",
+  "date_start": "2026-02-13",
+  "date_end": "2026-02-13",
+  "epic": "OUTPUT-REGISTRY",
+  "item_number": "Item 1",
+  "title": "Add the ChannelAlias model and OutputRegistry class as a single exact-match lookup, replacing five ad-hoc backtracker indexes",
+  "subject": "backtracker output indexing",
+  "summary": "The backtracker built five separate indexes with incompatible key formats bridged by a 7-strategy fallback cascade, which was the root cause of Bug 2 (EXPOSE_PURE two-hop resolution failure) and a class of key-format-mismatch bugs. This item added a purely additive ChannelAlias Pydantic model and an OutputRegistry class supporting a 4-phase registration protocol (CalcUsage/aggregation/FORMULA outputs, then CHAIN, EXPOSE_PURE, and transitive-default aliases) with exact-match resolution, no normalization, and explicit collision refusal. It shipped with comprehensive unit tests grounded in prior spike data, a smoke test against real solar_battery model data, and an xfail regression test capturing Bug 2 for later removal once the registry was wired in. Nothing existing was modified; the registry was not yet wired into the pipeline.",
+  "key_decisions": [
+    "resolve() does exact-match dict lookup only -- no SYSML_QN normalization and no bare-name fallback, per prior spike evidence that normalization is broken and bare names don't occur",
+    "Collision policy is first-registration-wins with a logged warning, never silent overwrite",
+    "Key_C derivation (dotted hierarchy path stripping the design prefix) implemented as a static method on OutputRegistry since it's registry-specific, not a general qualified-name utility",
+    "is_transitive_default() named without a leading underscore (deviating from the spec's _is_transitive_default) because Item 3 needed to import it",
+    "register_alias() uses logger.warning()+skip instead of assert on phase-ordering violations, judged more actionable in a production pipeline"
+  ],
+  "supersedes": [],
+  "status": "shipped",
+  "id": "H-022"
+}

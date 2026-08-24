@@ -1,0 +1,18 @@
+{
+  "dir": "20260217_entry-point-classifier",
+  "date_start": "2026-02-17",
+  "date_end": "2026-02-17",
+  "epic": "unknown",
+  "item_number": null,
+  "title": "Conformance tests for the entry point classifier (component C17), covering REQ-EPC-01 through REQ-EPC-08",
+  "subject": "entry point classification",
+  "summary": "C17 added conformance tests for _classify_entry_points() and the surrounding entry-point assembly steps in graph_builder.py, with no production code changes. The work verified the three-way classification (DESIGN_ATTRIBUTE, LIBRARY_DEFAULT, USAGE_LITERAL), float conversion, param_group assignment, orphan handling, purity, and that factory-created entry points are never re-classified. It found that solar_battery_model produces zero DESIGN_ATTRIBUTE entry points from the classifier itself (only via factory construction) and switched to catf_mfe_model for those tests, and that param_group can be None at the classifier level but is guaranteed non-None only after full graph assembly. 32 tests were written and all passed; full suite was 1495 passed, 5 xfailed, lint clean.",
+  "key_decisions": [
+    "REQ-EPC-04 (every EP has a param_group) is a graph-level invariant, not a classifier-level one; the classifier can return param_group=None and orphan handling at graph assembly fixes it",
+    "catf_mfe_model, not solar_battery_model, is the model that exercises all three classifier-level entry point types",
+    "REQ-EPC-08 (factory entry points never re-classified) is guaranteed by call ordering in build_computation_graph, verified via static analysis rather than a runtime guard"
+  ],
+  "supersedes": [],
+  "status": "shipped",
+  "id": "H-043"
+}

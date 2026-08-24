@@ -1,0 +1,18 @@
+{
+  "dir": "20260813_catf-constraint-policy-acceptance",
+  "date_start": "2026-08-13",
+  "date_end": "2026-08-13",
+  "epic": "CONSTRAINT-SEMANTICS",
+  "item_number": "Item 5",
+  "title": "CATF derivative and end-to-end acceptance of the constraint-semantics contract",
+  "subject": "constraint diagnostics, unit annotations",
+  "summary": "The constraint-semantics contract built across Items 1-4 had only been verified against purpose-built fixtures, not an end-to-end acceptance case. Running it against a real derivative surfaced two defects: a unit annotation's second operand leaking into the reference-collection walk, and a blocked-feature-chain diagnostic that was a tautology with no reference or location. Both were cured under the product's existing rule that a unit annotation contributes its value and never a reference, plus a de-duplicated, ordered chain-block message. The admitted annotation set expanded by exactly the two named shapes; chains still block and equalities still go untoleranced. Audited Needs work for two blocking findings, both cured same day, re-verdict Certify-with-residuals.",
+  "key_decisions": [
+    "Cured a fourth lane (annotated chain in a binding) in-scope under the orchestrator's pre-recorded same-rule policy.",
+    "Two further limits (unit on a constraint binding is dimensionally inert; blocked-chain location is the usage's line, not the term's) surfaced and parked for epic Item 5.",
+    "Coverage ledger's durable home moved to tests/unit/data/ per owner ruling (F5)."
+  ],
+  "supersedes": [],
+  "status": "shipped",
+  "id": "H-117"
+}

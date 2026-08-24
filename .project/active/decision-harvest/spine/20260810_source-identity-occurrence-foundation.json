@@ -1,0 +1,20 @@
+{
+  "dir": "20260810_source-identity-occurrence-foundation",
+  "date_start": "2026-08-03",
+  "date_end": "2026-08-10",
+  "epic": "SOURCE-IDENTITY",
+  "item_number": "Item 4",
+  "title": "Shadow-layer identity manifest running beside the legacy string resolver, stopped after Phases 1-2 and archived as superseded",
+  "subject": "occurrence identity manifest",
+  "summary": "Item 4 attempted a production identity manifest that ran alongside the existing legacy string resolver while the resolver kept ignoring it by design. The implementation stopped after Phases 1-2: the audit verdict was Needs Work and the product-lens review was blocked on finding C24. A recovery assessment concluded the architecture itself was flawed (artifact-to-artifact gates could pass while no observable runtime behavior changed), leading the owner to ratify a different approach on 2026-08-07: elaborate-first replacement of the string-resolution stack rather than a parallel shadow layer. No code shipped from this item; the epic and this item were archived with superseded markers on 2026-08-10.",
+  "key_decisions": [
+    "Owner ratified the elaborate-first replacement (2026-08-07) over continuing the shadow-layer approach, because gates could pass without changing runtime behavior",
+    "Item 4's stopped Phase 1-2 implementation was preserved only forensically on branch item4-phases12-forensic, not merged",
+    "Salvageable evidence types/queries/fixtures from the stopped work were carried forward into the ELABORATE-FIRST epic's Item 2 rather than discarded outright"
+  ],
+  "supersedes": [
+    "Item 4's own shadow-layer identity-manifest design (superseded by the ELABORATE-FIRST epic's elaborate-then-project architecture)"
+  ],
+  "status": "superseded",
+  "id": "H-107"
+}

@@ -1,0 +1,19 @@
+{
+  "dir": "20260720_qualified-name-utility-split",
+  "date_start": "2026-07-08",
+  "date_end": "2026-07-10",
+  "epic": "PUSH-DOWN",
+  "item_number": "Item 2",
+  "title": "Split qualified-name utilities so SysML-general helpers move to agentic-mbse",
+  "subject": "qualified-name utilities module boundary",
+  "summary": "sysml_codegen.core.qualified_names mixed general SysML name operations with codegen-specific identifier builders, blocking reuse of the general helpers in agentic-mbse validation. Six SysML-general helpers (sanitize_name, build_element_qualified_name, sysml_to_python_qualified_name, sanitize_qualified_name, python_to_sysml_qualified_name, extract_simple_name) moved to a new agentic_mbse.sysml.qualified_names module; sysml-codegen kept a permanent compatibility re-export shim and retained the four codegen-owned builders (build_parameter_qualified_name, get_module_name, get_channel_name, owning_part_leaf) locally. The move was behavior-preserving with byte-identical fixture baselines and full suites green in both repos, certified with two remediation additions (an intentional-divergence marker and a docstring note) folded in after an independent epic audit.",
+  "key_decisions": [
+    "sysml-codegen's import paths for the moved helpers are a permanent compatibility surface, kept as re-exports rather than removed.",
+    "Codegen-specific identifier builders (parameter/module/channel names, owning_part_leaf) stay in sysml-codegen because they encode ADR-003 policy, not general SysML semantics.",
+    "The existing agentic-mbse backlog row ITEM-SYNC-C8 (two names one identifier) was updated in place with the new shared sanitizer's rule, fixture shape, and severity rather than filing a duplicate row.",
+    "sanitize_qualified_name keeps its non-reentrant, apply-once-at-the-::-to-__-boundary contract; the split must not run it over an already __-joined name."
+  ],
+  "supersedes": [],
+  "status": "shipped",
+  "id": "H-081"
+}

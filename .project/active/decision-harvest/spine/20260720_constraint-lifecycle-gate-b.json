@@ -1,0 +1,21 @@
+{
+  "dir": "20260720_constraint-lifecycle-gate-b",
+  "date_start": "2026-07-19",
+  "date_end": "2026-07-19",
+  "epic": "unknown",
+  "item_number": "Item 3",
+  "title": "Prove extension-time V11 coverage checking is vacuous, then delete it",
+  "subject": "constraint extension V11 coverage",
+  "summary": "Investigated whether append-only constraint extension (extend_graph_with_constraints) could introduce a new V11 coverage violation that its whole-extended-graph check needed to catch separately from the final generation gate. A closed enumeration and corpus sweep across 35 fixture models showed every path an appended module input could take is either not entry-point-sourced, structurally unreachable (fallback keys vs design-attribute QNs occupy disjoint namespaces), or blocked at extraction. The extension-time check was deleted (3 lines in constraint_lowering.py) rather than replaced with a differential; the final generation gate still owns whole-graph V11 coverage. An independent audit passed the deletion with notes on citation accuracy in the decision record (stale/uncited mechanism references, off-by-one corpus counts, an overstated 'filed' status on the upstream fusion-tea filing) but did not change the verdict. A pre-existing stale in-model comment in the shared_producer fixture, found during the sweep, was corrected and reconciled against Item 2's evidence without contradiction.",
+  "key_decisions": [
+    "Extension-time V11 coverage checking is deleted; the final generation gate is the sole owner of whole-graph coverage enforcement (contract row LC-E02, superseding old lowering INV-6)",
+    "No differential/scoped-check wrapper was built despite both upstream Gate B reports recommending one, because the introduced-offender set is provably always empty",
+    "Re-open trigger recorded: if any future change lets a design-attribute QN enter fallback_entry_points, vacuity breaks and this deletion must be revisited",
+    "The bridge workaround in the fusion-tea demo remains a private consumer workaround, not a sanctioned upstream late-fill seam (LC-E04A)"
+  ],
+  "supersedes": [
+    "Old lowering INV-6's requirement that the extended graph have zero V11 uncovered params"
+  ],
+  "status": "shipped",
+  "id": "H-094"
+}

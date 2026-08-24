@@ -1,0 +1,23 @@
+{
+  "dir": "20260713_module-kind-refactor",
+  "date_start": "2026-07-12",
+  "date_end": "2026-07-13",
+  "epic": "CONSTRAINT-EXEC",
+  "item_number": "Item 6",
+  "title": "Replace the is_computed_attribute/is_aggregation boolean flags on PipelineModule with a single module_kind enum, dispatched at all generation seams",
+  "subject": "PipelineModule kind dispatch",
+  "summary": "Generation code decided a module's kind by reading two accreted boolean flags on PipelineModule, with 'calculation' as the implicit else branch; a prior spike showed this could not represent an upcoming constraint kind without mis-rendering it as a calculation. This item introduced a five-member module_kind enum (calculation, formula, aggregation, constraint, report_aggregator), migrated all three construction sites and six generation-seam dispatch sites plus 22 test files and 9 baseline fixtures off the two flags, and made every seam fail loud (raise, never skip or mis-render) when it receives a constraint or report_aggregator module it isn't yet wired to handle. It was a pure refactor: byte-identity of the existing generated package corpus was the whole acceptance gate, and no constraint/report-aggregator emission was built. Audit verified the refactor by code trace and static grep in a sandbox that blocked test execution, then the orchestrator ran the four blocked dynamic gates (full suite, baseline round-trip, mypy/ruff, and a guard-deletion mutation test) live; one real mypy regression from the new error helper was found and fixed to restore the exact pre-item baseline, upgrading the verdict from certify-with-notes to certify.",
+  "key_decisions": [
+    "module_kind is a required field with no default and no fourth ambiguous value, because no construction site ever sets both legacy flags, so the two-flag space's inconsistent fourth cell is provably unconstructible and safe to collapse away",
+    "Every generation seam that cannot yet render constraint/report_aggregator kinds must raise an explicit, identity-bearing error rather than skip or silently fall through to the calc path, per the epic's 'silence is never an outcome' principle",
+    "The test suite and 9 committed baseline fixtures are in scope for this item, not deferred as follow-on, because leaving them on the old flags would make the repo-wide zero-hit grep gate fail",
+    "The aggregation-vs-computed-attribute priority test was deleted rather than migrated, because the state it tested (both flags true) is unconstructible under the single-value enum",
+    "The refactor is decoupled from Item 8's snapshot-format version bump because module_kind is a ComputationGraph/graph field, not an extraction-snapshot field",
+    "mypy's 'clean' success criterion is reframed to 'no new errors versus the pre-item baseline' given standing project-wide mypy debt; the orchestrator later found and fixed a one-error regression to make even that reframed bar exactly hold"
+  ],
+  "supersedes": [
+    "The is_computed_attribute and is_aggregation boolean flags on PipelineModule, removed repo-wide (src and tests) and replaced by the module_kind enum"
+  ],
+  "status": "shipped",
+  "id": "H-084"
+}

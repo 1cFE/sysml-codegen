@@ -1,0 +1,18 @@
+{
+  "dir": "20260217_parameter-group-deriver",
+  "date_start": "2026-02-17",
+  "date_end": "2026-02-17",
+  "epic": "unknown",
+  "item_number": null,
+  "title": "Conformance tests for ParameterGroupDeriver (C13), which groups pipeline entry points into JSON input file groups by source file",
+  "subject": "parameter group deriver",
+  "summary": "C13 added real-data conformance tests for analysis/parameter_groups.py, covering the 4-index precedence system (attr, binding, unbound, literal), REQ-PGD-01 through 07: unique parameter assignment, file-based grouping, entry-point filtering, classify() lookup, default-value resolution, and _params/PascalCase naming conventions. Conformance-only, no production code changed. Ended DONE with 30 passing tests against solar_battery, chain_spike, and catf_mfe fixtures, and the full suite green.",
+  "key_decisions": [
+    "Treat classify() returning None for synthetic FORMULA/aggregation-generated qnames as by-design, not a gap \u2014 the deriver only guarantees uniqueness among its own indexes, and graph_builder's orphan-to-system_design fallback handles the rest",
+    "Correct plan assumption that chain_spike has 2 source files; it has only 1 (design.sysml), so the group-count test target was adjusted",
+    "Rename planned test class names from TestREQ_PGD_* to TestReqPgd* to satisfy ruff N801 PascalCase rule"
+  ],
+  "supersedes": [],
+  "status": "shipped",
+  "id": "H-053"
+}

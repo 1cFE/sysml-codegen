@@ -1,0 +1,20 @@
+{
+  "dir": "20260713_part-instance-index",
+  "date_start": "2026-07-12",
+  "date_end": "2026-07-13",
+  "epic": "CONSTRAINT-EXEC",
+  "item_number": "Item 4",
+  "title": "Build a part-structure-only instance index (subtype closure + fixed-cardinality expansion) so constraint-only part definitions get discovered",
+  "subject": "part instance discovery index",
+  "summary": "Instance discovery was calc-driven: it derived instance paths only from virtual calculation-usage qualified names, so a part definition owning only constraints and no calculations produced zero discovered instances, and a plain subtype inheriting a base definition's assertion was invisible to exact-type lookup. This item built a new, additive production index (occurrences_of) derived purely from PartUsage structure and PartDefinition heritage: it projects a source owner over its full subtype closure and expands only fixed, finite, literal multiplicities to concrete occurrences, blocking with a named diagnostic (owner + feature) on any parameterized, variable, ordered, or unbounded cardinality rather than silently dropping or under-counting. It consumes only existing extraction facts, adds no new SysIDE facts, and does not touch or retrofit calc-driven discovery, so the existing generated corpus stays byte-identical. Audit found the specified occurrences_of entry point correct and fully tested, but caught a real defect in the bulk convenience methods (all_occurrences/all_source_owners), which silently swallowed the blocking exception per-definition -- a third, undocumented disposition that violated the item's own no-silent-omission invariant. That was cured (the bulk methods now return the occurrences plus an explicit blocked-owner mapping) and verified by live test execution, upgrading the verdict from certify-with-notes to certify.",
+  "key_decisions": [
+    "The index is derived purely from part structure (PartUsage/PartDefinition heritage) and does not consume constraint fact schemas, letting it land before the constraint-fact items",
+    "A fixed multiplicity is defined strictly by node-type dispatch on the upper-bound expression, not by 'count is None', because a parameterized multiplicity still carries a non-None cached count and must still block",
+    "Fixed-multiplicity siblings are indexed as distinct entries keyed by owning definition plus feature (never bare leaf name), because leaf-name keying provably collides across different owning definitions",
+    "The index is strictly additive -- it does not retrofit subtype-closure projection onto existing calc-driven discovery, preserving byte-identity of the generated corpus",
+    "Bulk convenience methods must surface blocked definitions explicitly rather than silently skip them, since a completeness-named public method that silently drops entries is exactly the 'silence is never an outcome' failure the item exists to prevent"
+  ],
+  "supersedes": [],
+  "status": "shipped",
+  "id": "H-085"
+}

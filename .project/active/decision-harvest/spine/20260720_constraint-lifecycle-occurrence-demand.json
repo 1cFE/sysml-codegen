@@ -1,0 +1,24 @@
+{
+  "dir": "20260720_constraint-lifecycle-occurrence-demand",
+  "date_start": "2026-07-19",
+  "date_end": "2026-07-20",
+  "epic": "CONSTRAINT-LIFECYCLE-REMEDIATION",
+  "item_number": "Item 1",
+  "title": "Rebuild the occurrence/demand lifecycle thread as one identity-preserving path through public live generation",
+  "subject": "occurrence expansion, demand materialization",
+  "summary": "The constraint path had correct finite-occurrence and supplied-value pieces but they did not compose: demand discovery could alias anonymous usages, the part-instance walk silently treated a revisited definition as an empty subtree (masking recursion), and calculation/constraint actuals could be appended as duplicate records that overwrote earlier grouping provenance. Item 1 rebuilt these into one complete identity-bearing thread (verified association, an all-or-nothing prepared batch, explicit owner dispatch, structural cycle failure, one logical demand per normalized target) and deleted the superseded nullable and duplicate paths rather than wrapping them. An initial audit pass returned Needs work on two blockers (a resolved-value regression and an undisclosed byte-identity gap); both were closed and re-verification certified the candidate with recorded deviations.",
+  "key_decisions": [
+    "Owner kind controls occurrence expansion and source form controls predicate selection, kept as independent axes (OD-R01, inherited from lifecycle LC-D01).",
+    "Every finite concrete occurrence gets its own execution identity, catalog entry, module, and result channel; sharing must be recorded in per-occurrence bindings (OD-R02).",
+    "Recursive, non-finite, malformed, or unsupported occurrence expansion must block loudly rather than return a partial result as complete (OD-R03).",
+    "Superseded production paths are removed outright, not wrapped, flagged, or kept as dead fallback (OD-R40).",
+    "Item scope is bounded: Item 2 owns the shared producer/exact-QN resolver, Item 5 owns relocated whole-tree portability, Item 13 owns the final sealed load/evaluate/persist proof (OD-R05)."
+  ],
+  "supersedes": [
+    "The nullable qualified-name-set membership approach to demand discovery, which allowed anonymous admitted/excluded usages to alias.",
+    "The part-instance walk's silent empty-subtree treatment of a revisited definition, which could mask recursion.",
+    "The appended-record model for calculation bindings and constraint actuals, which allowed duplicate overwrite of grouping provenance."
+  ],
+  "status": "shipped",
+  "id": "H-095"
+}

@@ -1,0 +1,19 @@
+{
+  "dir": "20260204_expr-spike-compile",
+  "date_start": "2026-02-03",
+  "date_end": "2026-02-04",
+  "epic": "EXPR-CODEGEN",
+  "item_number": "Item 2",
+  "title": "Spike proving syside expression ASTs compile to correct Python and that a compilability classifier partitions CalcDefs with zero false positives",
+  "subject": "expression compilation spike",
+  "summary": "Following Item 1's proof that ASTs are extractable and references resolvable, this spike answered whether the AST-to-Python transformation is semantically correct and whether a FULLY_COMPILABLE/PARTIALLY_COMPILABLE/MANUAL_REQUIRED classifier is trustworthy. Two scripts compiled 102 outputs across four model suites (chain_spike, sample_model, solar_battery, CATF) and classified all 44 CalcDefs; compiled expressions matched handwritten ground truth exactly (0.00e+00 relative error) for the 5 CalcDefs with runnable handwritten impls, and the classifier produced zero false positives. It found 3 CATF CalcDefs referencing undeclared same-CalcDef intermediates, and proved extended resolution against all owned_members discovers and compiles them correctly end-to-end. The verdict was GO to proceed to Item 3 (the real expression compiler module), with the caveat that 37 of 42 FULLY_COMPILABLE verdicts were syntax-validated only, and Pattern B (multi-step intermediates, the case most sensitive to topological-sort errors) had zero numerical ground truth since all its handwritten impls were stubs.",
+  "key_decisions": [
+    "GO decision to proceed to Item 3 (expression compiler module) -- all five go/no-go conditions met",
+    "Undeclared intermediates handled by expanding INTERMEDIATE_REF to include same-CalcDef owned_members rather than adding a new AST node type; the real work is code emission (extract, compile, and emit them as local variables before dependent outputs), not just reference resolution",
+    "Compiler uses defensive over-parenthesization for every binary expression rather than precedence-aware minimal parenthesization, judged correct and readable enough to defer optimization to Item 3",
+    "Unary negation and the ^ operator alias get defensive handling even though neither was observed in any model, on the recommendation that the implementation is trivial"
+  ],
+  "supersedes": [],
+  "status": "shipped",
+  "id": "H-003"
+}

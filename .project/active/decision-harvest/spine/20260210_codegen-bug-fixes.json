@@ -1,0 +1,19 @@
+{
+  "dir": "20260210_codegen-bug-fixes",
+  "date_start": "2026-02-10",
+  "date_end": "2026-02-10",
+  "epic": "unknown",
+  "item_number": null,
+  "title": "Fix seven codegen bugs found during fusion-tea E2E validation, as a blocking prerequisite for the COST-PATTERN epic",
+  "subject": "codegen bug fixes",
+  "summary": "E2E validation of the EXPR-CODEGEN and ATTR-EXPR phases in the fusion-tea project needed 7 manual workarounds to produce a correct, executable pipeline from the e2e_attr_expr and solar_battery models. This item fixed all 7: FORMULA module inputs missing from the DesignParams schema; CalcUsage bindings to FORMULA/EXPOSE_PURE attributes wrongly resolving as ENTRY_POINT instead of MODULE_OUTPUT; FORMULA module inputs typed as Float (RootModel) instead of plain float; missing a primitive write handler for multi-output CalcUsage float channels in the generated ExitPoint serialization; --smart-regen not upgrading NotImplementedError stubs to available auto-implementations; sanitize_name() not handling special characters like &, $, @ in SysML names (plus a duplicate _sanitize_name() in extractor.py to eliminate); and missing __init__.py in intermediate generated-package directories across all 4 namespace-creating functions. The spec required design-phase validation of each proposed fix against the real codebase, since the root-cause analyses were written by an AI researcher and could have line-number drift. Was declared blocking for the COST-PATTERN epic (P0 priority) and the acceptance bar was zero manual workarounds on both validation models plus all existing tests (285+ baseline) still green.",
+  "key_decisions": [
+    "Bug 4's ExitPoint fix follows prior art from fusion_modeling (2024-12-24): multi-output channels carry bare primitives, so the fix is a primitive write handler, not a schema change",
+    "Bug 5 distinguishes stubs (raise NotImplementedError) from hand-written impls and from AUTO_IMPLEMENTED = True files; only stubs get upgraded by --smart-regen",
+    "Bug 6 sanitization must not collapse the ADR-003 '__' hierarchy separator -- it applies per name segment, not to full qualified names",
+    "Bug 7 fix applied to all 4 namespace-creating functions, not just the one that surfaced in validation, to head off latent bugs expected to manifest during COST-PATTERN"
+  ],
+  "supersedes": [],
+  "status": "shipped",
+  "id": "H-013"
+}

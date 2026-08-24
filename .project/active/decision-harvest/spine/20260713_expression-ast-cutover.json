@@ -1,0 +1,21 @@
+{
+  "dir": "20260713_expression-ast-cutover",
+  "date_start": "2026-07-13",
+  "date_end": "2026-07-13",
+  "epic": "CONSTRAINT-EXEC",
+  "item_number": "Item 13",
+  "title": "Retire the legacy ExpressionAST calc-side tree, moving all calc consumers onto ExpressionIR plus a byte-identical compat renderer",
+  "subject": "expression tree retirement",
+  "summary": "sysml-codegen carried two semantic expression trees: the neutral, serializable ExpressionIR that constraint predicates already compiled from, and the older calc-only ExpressionAST, which had to be kept in lock-step by hand. A prior spike proved a small codegen-side compat renderer over ExpressionIR reproduces ExpressionAST's compiled output byte-identically. This item migrated the two real calc consumers (compile_calc_def's seam and computed_attribute_extractor) onto the IR plus renderer path, each gated by a per-function byte-identity parity test against the exact function it replaced, then deleted ExpressionAST, build_expression_ast, and compile_expression, backed by a grep gate. The spec's own scope trace found that epic Item 13's listed aggregation-walking consumer never actually used ExpressionAST (it runs on agentic-mbse's separate shared_aggregation tree), so that consumer was correctly dropped from scope with the correction recorded rather than silently absorbed. The audit's initial verdict was Certify-with-notes because the sandboxed session could not run pytest/mypy/ruff itself; the orchestrator then executed the four requested live probes (full suite 2317 passed/23 skipped, mypy at the 76-error baseline, ruff clean, package/snapshot byte-identity, and independent golden-provenance reproduction), upgrading the verdict to unconditional Certify.",
+  "key_decisions": [
+    "Scope correction: aggregation walking is dropped from Item 13 (it runs on agentic-mbse's shared_aggregation tree, never on ExpressionAST); converging shared_aggregation onto ExpressionIR is recorded as a separate future cross-repo item, not done here",
+    "Each staged consumer's parity gate compares against the exact function it replaces, captured before the flip, never a downstream proxy artifact (the comparand-discipline lesson from a prior item)",
+    "CompilationResult/CalcDefCompilationResult data model shape does not change; this is representation migration on the producing side only",
+    "Byte-identity baseline is the post-Item-8 (Snapshot v3) corpus, and Item 13 sequences after Item 8 certifies"
+  ],
+  "supersedes": [
+    "ExpressionAST, build_expression_ast, and compile_expression, deleted and grep-gated out of src/"
+  ],
+  "status": "shipped",
+  "id": "H-088"
+}

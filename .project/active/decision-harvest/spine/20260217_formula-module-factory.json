@@ -1,0 +1,18 @@
+{
+  "dir": "20260217_formula-module-factory",
+  "date_start": "2026-02-17",
+  "date_end": "2026-02-17",
+  "epic": "unknown",
+  "item_number": null,
+  "title": "Conformance tests for the FORMULA Module Factory (C15), which builds a PipelineModule from a FORMULA computed attribute",
+  "subject": "FORMULA module factory",
+  "summary": "C15 verified that _build_computed_attr_module() in graph_builder.py correctly wires FORMULA computed-attribute inputs to upstream module outputs or new entry points, and stamps is_computed_attribute/compilability flags. This was a conformance-only pass: no production code changed, only a new real-data test suite against attr_expr_probe and solar_battery_model fixtures. Work confirmed two known deviations from the design doc (entry_points dict is mutated rather than returned, and compiled_expression is not copied onto PipelineModule) and left them as documented gaps for a later Phase 7 interface change. Ended DONE with 34 passing / 2 skipped tests and the full suite green.",
+  "key_decisions": [
+    "Accept entry_points mutation as a known deviation from REQ-MF-01's 'pure data transformer' claim rather than fixing it now; same pattern already accepted in C14, deferred to the Phase 7 return-tuple interface",
+    "Document PipelineModule.compiled_expression staying None as a gap rather than a bug; downstream stencil generation can read compiled_expression from ComputedAttributeData directly",
+    "Exclude catf_mfe_model from FORMULA parametrization because both its FORMULA attrs are MANUAL_REQUIRED, not FULLY_COMPILABLE"
+  ],
+  "supersedes": [],
+  "status": "shipped",
+  "id": "H-046"
+}

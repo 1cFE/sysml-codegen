@@ -1,0 +1,18 @@
+{
+  "dir": "20260218_module-wrapper-generator",
+  "date_start": "2026-02-18",
+  "date_end": "2026-02-18",
+  "epic": "unknown",
+  "item_number": null,
+  "title": "Conformance tests for the TEAx module wrapper generator (component C21), covering REQ-GEN-02",
+  "subject": "module wrapper generation",
+  "summary": "C21 added conformance tests for generate_teax_module() in generation/modules.py, the function that renders TEAx module wrapper Python files for CalcUsage modules (FORMULA and aggregation wrappers are generated elsewhere in cli/__init__.py and were out of scope). No production code changed. Tests verified generated code parses as valid Python, class names match PipelineModule.module_type, input/output wiring matches the calc def, and type mapping is consistent with the graph builder's own type mapping. It confirmed teax_module_stub.py.jinja2 is dead code (unreferenced anywhere) and found no divergence between the generator's _map_input_type() and the graph builder's type mapping, despite that being flagged as a known duplication risk (REQ-GEN-06). 19 tests were written and all passed; full suite was 1633 passed, lint clean.",
+  "key_decisions": [
+    "C21 scope is limited to generate_teax_module() (the CalcUsage path); FORMULA and aggregation wrapper generation in cli/__init__.py is left to a later consolidation",
+    "teax_module_stub.py.jinja2 confirmed dead (no source references) and flagged safe to delete in a later cleanup pass",
+    "No type-mapping divergence found between modules.py's _map_input_type() and the graph builder's python_type, so the REQ-GEN-06 consistency concern did not need a fix here"
+  ],
+  "supersedes": [],
+  "status": "shipped",
+  "id": "H-060"
+}
