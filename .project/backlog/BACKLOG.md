@@ -90,7 +90,7 @@ release machinery, not process tests**:
 | 23 | `tests/helpers/artifact_sources.py` | shim |
 
 Scope here is the **gate only** — flip raise to skip so development is unblocked. Disentangling the
-four product tests from the manifest is REPO-CLEANUP Item 6/7 work; disposition of `verification/`
+four product tests from the manifest is REPO-CLEANUP Move C work; disposition of `verification/`
 itself is Item 8. Do not delete any product test to make the failure go away.
 
 ### [SERIALIZE-NAN-SEAL] The contract seal writes invalid JSON on a NaN — P1
@@ -131,7 +131,7 @@ Three live documents still say it does:
   V11 under "the pipeline enforces these rules" with its full error text and a V11 note
 
 A model author is promised a diagnostic the toolchain will never issue, which is the inverse of
-`0003`. Scope is the docs only — deleting the dead V11 *code* stays in REPO-CLEANUP Item 8, where
+`0003`. Scope is the docs only — deleting the dead V11 *code* stays in REPO-CLEANUP Move C, where
 it retires with its pinning test. Reference documents 07/11/17/24 carry retiring banners and are out
 of scope. Source: Item 1 spec-lens `spec-F4`.
 
@@ -300,48 +300,30 @@ GAP-CLOSE items:
 
 | Epic | Status | Notes |
 |------|--------|-------|
-| [REPO-CLEANUP] Repo Cleanup — Keep the Decisions, Delete the Exhaust | Draft (decomposed 2026-08-20; owner-approved scope + 8 items; product-lens DISPOSED) | The repo is 880k lines and the product is 15k. `.project/` is 78% of the tree, 109,720 lines of it byte-exact duplicates (`ruff_all.log` committed 10× for 120,736 lines), and exactly one `.project` file is read by any tool. Extract the durable decisions and promises into `.project/adr/` and `.project/product/`, then purge the archive, then ask of the tests and the code what they actually defend. Owner ruling `[OWNER, 2026-08-20]`: **split the registers by subject** — `docs/architecture/modeling-assumptions.md` keeps decisions binding the *model author*, `.project/adr/` takes decisions binding the *toolchain builder*; the criterion is written to generalize because the same boundary problem exists in the claude commands. Eight items, ~11 days sequential (~6-7 parallel). Extraction always precedes deletion. See `epic_repo_cleanup.md` and the measurement it rests on, `.project/research/20260820-201945_line-count-anatomy-and-salvageability.md`. |
+| [REPO-CLEANUP] Repo Cleanup — Keep the Decisions, Delete the Exhaust | In Progress (Items 1–2 done; revised 2026-08-23 to three moves, ~3 days remaining) | The repo is 880k lines and the product is 15k. `.project/` is 78% of the tree, 109,720 lines of it byte-exact duplicates (`ruff_all.log` committed 10× for 120,736 lines), and exactly one `.project` file is read by any tool. Extract the durable decisions and promises into `.project/adr/` and `.project/product/`, then purge the archive, then ask of the tests and the code what they actually defend. Owner ruling `[OWNER, 2026-08-20]`: **split the registers by subject** — `docs/architecture/modeling-assumptions.md` keeps decisions binding the *model author*, `.project/adr/` takes decisions binding the *toolchain builder*; the criterion is written to generalize because the same boundary problem exists in the claude commands. Eight items, ~11 days sequential (~6-7 parallel). Extraction always precedes deletion. See `epic_repo_cleanup.md` and the measurement it rests on, `.project/research/20260820-201945_line-count-anatomy-and-salvageability.md`. |
 | ~~[CONSTRAINT-EXEC] Constraint Execution and Design-Space Studies~~ ✅ | Complete (2026-07-13). Archived to: `.project/completed/20260713_epic_constraint_execution.md` (independent findings audit alongside) | Modeled assertions execute as graph modules + exact-schema report aggregator; graph-owned catalog, sealed contracts, crash-safe study layer (lists/grids). De-risked by spikes S1–S6 (all passed, verified re-runs; results + carry-forwards inline in the concept). Acceptance: IFE sweep's hand-coded viability rule replaced by the generated assertion, grid classifications match. All 15 items certified; IFE acceptance ratified [OWNER] (2294/2301 + 7 model-favoring boundary rows); CE-F1/F2 follow-ons registered below, CE-F3 fixed. |
 | ~~[PUSH-DOWN] agentic-mbse Push-Down~~ ✅ | Complete (2026-07-10). Archived to: `.project/completed/20260720_epic_push_down.md` (+ audit, independent audit, pre-PR reports alongside) | All 4 items certified; independently audited Certify after 2026-07-10 remediation; merged as sysml-codegen PR #8 + agentic-mbse PR #10. Expression reconstruction, qualified-name split, hierarchy primitives/models, aggregation decomposition pushed down; design overrides, usage-type indexing, Python rewriting, aliases, scoping, module construction stayed in sysml-codegen. |
 
-REPO-CLEANUP items (decomposition owner-approved 2026-08-20; product-lens gate DISPOSED with six
-findings closed in the decomposition, not deferred):
+REPO-CLEANUP items (revised 2026-08-23: eight pipeline items collapsed to three moves, no per-item
+spec/design/plan/audit; see `epic_repo_cleanup.md` *Revision*):
 
-- [ ] **Item 1 — Scaffolding reinstall and register boundary** (1d, no deps). Install `.project/adr/`,
-  `adr.sh`, `product.sh`, refreshed pack docs; file the subject-split criterion as the first entry;
-  triage the nine existing ADRs; correct the single-ADR-home claims in `CLAUDE.md` and
-  `.project/product/INDEX.md`. Also lands the two stranded fixes lifted out of Item 8 per
-  product-lens F6: `allow_nan=False` at `contracts/serialize.py:28` (the `ModelContract`
-  fingerprint currently seals over invalid JSON on a NaN default) and the `CLAUDE.md:65` claim
-  that the V11 preflight is live when it cannot fire.
-- [ ] **Item 2 — Decision harvest inventory** (1.5d, needs 1). One candidate register over 124
-  completed items, 63 research docs, 55 concepts. Acceptance test: the sweep must independently
-  surface the owner's three named seeds ("use the parser, do not create custom patches"; the
-  elaborate-first insights). Per F5 it also harvests test-and-code rationale, so Items 7-8 survive
-  Item 5 deleting the archive first.
-- [ ] **Item 3 — Author the decision records** (1.5d, needs 2). Ruled-in decisions filed to the
-  register the criterion assigns, each with a `Why` a future challenge re-derives against. No
-  entry may rest on a path Item 5 will delete.
-- [ ] **Item 4 — Author the product promises** (0.75d, needs 2; parallel to 3). Extend
-  `.project/product/` past 0004; `0001`…`0004` visible prose and owner payload stay unchanged, and
-  Item 1's five ratified destination-only edits are not widened.
-- [ ] **Item 5 — `.project` purge** (1d, needs 3+4). Under 100k lines, zero committed logs, zero
-  byte-exact duplicates >2KB, zero stale `active/` dirs. Per F1, every path cited by
-  `.project/product/*` and `.project/adr/*` must resolve after the purge — `0001`'s
-  `BACKLOG.md:439` citation has **already drifted** (target now `:552`).
-- [ ] **Item 6 — Coverage audit** (2d, no deps; owner order places it after 5). Report only.
-  Phase 1 is a mutation-testing spike with a kill criterion; per F3 it runs **licensed with the
-  execution lane enabled**, reports gated-lane rate separately, and a low kill rate is explicitly
-  never deletion authority. Per F2 the inventory is promise-indexed; per F4 every gap exits as a
-  filed backlog item with an id.
-- [ ] **Item 7 — Test remediation** (1.5d, needs 6). Delete what defends nothing, each removal
-  naming the false belief. ~73k lines of vestigial committed data. **Deletion lock**: no
-  ledger-cited test is removed without an owner ruling recorded in the citing entry.
-- [ ] **Item 8 — Code cleanup** (1.75d, needs 7; and Item 3 if parallelized). ~2,370 dead lines
-  retired *with* their pinning tests; `scripts/archive/` (8,274 lines that cannot execute) and the
-  twelve retired reference docs (3,633) deleted; recorded dispositions for `verification/`, the
-  legacy extraction lane, and the snapshot codec. Gates on byte-identical generated output.
-
+- [x] **Item 1 — Scaffolding reinstall and register boundary** — certified 2026-08-21 at `3566fdd`,
+  archived to `.project/completed/20260821_scaffolding-register-boundary/`.
+- [x] **Item 2 — Decision harvest** — closed 2026-08-23. The harvest is
+  `.project/active/decision-harvest/execution-history.md` (126 folders, 21 rows binned to ~5 ADRs,
+  ~2 promises, 11 notes; all three owner seeds surfaced). Three review fixes recorded in the epic:
+  `concepts/` preserved instead of swept; the 27 broken citations are a sed job; the
+  test-and-code rationale register is dropped because research `§5`–`§7` already is it.
+- [ ] **Move A — Write the entries** (0.5d). ~5 ADRs + re-home ADR-007/009 + ~2 promises, each
+  with a real `Why`; no entry cites a path Move B deletes.
+- [ ] **Move B — Purge `.project`** (0.5d, needs A). `completed/` and closed `active/` leave HEAD
+  (pre-purge SHA in the commit); logs gitignored; 27 citations fixed; register citations resolve
+  (F1). Preserve registers, `research/`, `concepts/`, `ledger/`, `backlog/`, `scripts/`.
+- [ ] **Move C — Delete what defends nothing** (1–1.5d, needs A). Dead `src/` lanes with their
+  pinning tests, zero-reader fixtures, `unit_map` dumps, `scripts/archive/`, retired reference
+  docs. Deletion lock (F2), entanglement-is-not-deadness, byte identity licensed. Gaps get ids (F4).
+- Owner rulings recorded `[OWNER, 2026-08-23]`: `completed/` off HEAD wholesale; `verification/`
+  retired; the legacy extraction lane deleted. All three moves are unblocked.
 
 CONSTRAINT-EXEC items:
 - [x] Item 0 — End-to-end integration spike (S6 lifecycle × S5 evaluator × S4 sealed package)
