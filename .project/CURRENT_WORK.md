@@ -6,7 +6,7 @@ registers are installed and script-managed: `.project/adr/0001` is the owner-gra
 `0002`/`0003` the index-resolution and citation conventions; the product ledger is `0001`…`0004` with a
 generated index. ADR-007 and ADR-009 are triaged builder-facing and carried to Item 3. Five audit
 follow-ups are recorded in the archived `audit.md`; all are resolved `[OWNER, 2026-08-21]` except
-the ADR-009 re-home itself, which Item 3 owns. Next: REPO-CLEANUP Item 2, Decision Harvest Inventory.)
+the ADR-009 re-home itself, which Item 3 owns. REPO-CLEANUP Move A complete 2026-08-23: `.project/adr/0004`–`0010` filed (use-the-parser, elaborate-first, lifecycle rulings, repo boundary, merge commits, plus ADR-007/009 re-homed with §§7/9 reduced to pointers), product `0005`–`0006` filed and checked; suite at Item 1's accepted-limitation gate. Next: REPO-CLEANUP Move B, purge `.project` — all three owner rulings recorded in the epic.)
 Prior status: 2026-08-20 (**stop-reinventing-the-parser SHIPPED — all three repositories
 merged to GitHub `main`.** Merge-commit PRs in dependency order: Agentic agentic-mbse#13
 (`88e2489`), Codegen sysml-codegen#13 (`82244a0`), Fusion fusion-tea#102 (`5338db5f`). The

@@ -83,7 +83,8 @@ invariant 1 as amended 2026-08-14]** Every authored constraint has a visible dis
 modeler wrote is silently absent from the record. This is the mechanical form of "visibly
 dispositioned" in the Critical Success Factor above.
 
-**[INHERITED: `docs/architecture/modeling-assumptions.md` §9, ADR-009]** The decision record behind
+**[INHERITED: `.project/adr/0010-coverage-truth-and-headline-semantics.md` (re-homed 2026-08-23
+from `docs/architecture/modeling-assumptions.md` §9, ADR-009)]** The decision record behind
 the coverage-truth headline. Grade `[AGENT] (ratified by owner, 2026-08-12)` — ratification does not
 make it owner-originated, and it is challengeable by re-deriving against its recorded reasoning.
 
@@ -125,6 +126,6 @@ causal toolchain with visible bases. The distance between the two has a name and
 
 - Owner checkpoint (payload source): `.project/completed/20260814_constraint-docs-agent-sync/owner-checkpoint-20260813.md`
 - Epic: `.project/completed/20260814_epic_constraint_semantics_contract.md` (CONSTRAINT-SEMANTICS; closed and archived 2026-08-14)
-- ADR-009, coverage truth and headline semantics: `docs/architecture/modeling-assumptions.md:704`
+- ADR-009, coverage truth and headline semantics: `.project/adr/0010-coverage-truth-and-headline-semantics.md` (re-homed 2026-08-23; §9 there is a pointer)
 - Capability bet: `[ACAUSAL-RELATIONS-CAPABILITY]`, `.project/backlog/BACKLOG.md:439`
 - audit-F4, the filing this closes: `.project/completed/20260814_epic_constraint_semantics_contract.md:638-641`

@@ -6,3 +6,5 @@
 - 0002 · One modeled source occurrence becomes exactly one runtime source · surfaces: elaboration, generation · checked: 2026-08-21 @ 02733b4
 - 0003 · No workarounds to accept bad models · surfaces: extraction, elaboration, generation · checked: 2026-08-21 @ 02733b4
 - 0004 · What this product is: parse the models, walk the AST, reconstruct the math, write it into TEAx Python · surfaces: extraction, elaboration, generation · checked: 2026-08-21 @ 02733b4
+- 0005 · A package never reports full satisfaction while authored gates went unassessed · surfaces: generation, reporting, teax · checked: 2026-08-23 @ f0a7b0a
+- 0006 · A generated package's identity and integrity are verifiable on load · surfaces: contracts, generation, teax · checked: 2026-08-23 @ f0a7b0a

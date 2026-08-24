@@ -429,19 +429,10 @@ The deleted legacy route rewrote `sum(child.attribute)` to `count * child.attrib
 
 ## 7. Compute Once, Look Up Thereafter
 
-> **Identifiers are computed ONCE at extraction time and LOOKED UP thereafter. Downstream code never re-derives or reconstructs identifiers.**
-
-This principle applies throughout the pipeline:
-- Element qualified names (EQN) are computed by AST traversal during extraction
-- All downstream phases (backtracking, graph building, generation) look up identifiers rather than reconstructing them
-- Binding resolutions are stored in a single authoritative mapping, not re-derived
-
-The naming convention uses `__` (double underscore) as the hierarchy separator throughout:
-- Element names: `Package__Part__Element`
-- Parameter names: `Package__Part__Element__param`
-- Module names: Element name, lowercased
-
-For the full identifier taxonomy and naming rules, see [15-naming-conventions.md](reference/15-naming-conventions.md).
+**Re-homed.** This decision binds the code-generator builder, not the model author, and was
+re-homed on 2026-08-23 to `.project/adr/0009-compute-once-look-up-thereafter.md` (triage
+recorded 2026-08-21). Cite it as `.project/adr/0009-compute-once-look-up-thereafter.md`; the
+legacy form `docs/architecture/modeling-assumptions.md ADR-007` resolves to this pointer.
 
 ---
 
@@ -703,44 +694,14 @@ construct off that line. See "What a block tells you" in §8 for the shape.
 
 ## 9. Coverage Truth and Headline Semantics (ADR-009)
 
-**Decision record.** Filed 2026-08-12 under CONSTRAINT-SEMANTICS Item 1.
-**Provenance:** `[AGENT] (ratified by owner, 2026-08-12)` — agent-proposed, owner-ratified.
-Ratification does not make it owner-originated, and it is challengeable by re-deriving against the
-reasoning below.
-
-**Context.** A constraint report headline is what a study reads to decide whether a design point is
-feasible. Two rules made that headline unreliable: a plain `constraint` was cataloged but never
-executed, and the headline claimed satisfaction whenever *any* assessed result passed. A model could
-therefore read fully satisfied while every gate a modeler wrote went unassessed.
-
-**What the contract said.** Lifecycle contract invariant 33: "Headline precedence is violation, then
-indeterminate, then all satisfied, then not assessed." Frozen companion LC-E11: "Report headline
-precedence is: any violation → `violation`; else any indeterminate → `indeterminate`; else any
-assessed result → `all_satisfied`; else `not_assessed`."
-
-**What it says now.** Precedence is violation → indeterminate → full satisfaction → partial coverage
-→ not assessed. Full satisfaction is a coverage claim: every applicable asserted gate was assessed
-and passed. A new partial-coverage state carries the case where an applicable asserted gate exists
-and went unassessed. The definitions live in the lifecycle contract's "Headline states and coverage
-truth" subsection
-(`.project/concepts/constraint-execution-authoritative-lifecycle-contract.md`), which is the one
-authority for both repositories' vocabularies.
-
-**Why.** A headline that cannot distinguish "checked and passed" from "not checked" is not evidence.
-The change makes the claim honest at the cost of one additional state, and the study layer keeps a
-design point at the boundary rather than accepting it on a coverage gap.
-
-**Scope.** This record governs the headline vocabulary's meaning. The concrete report and runtime
-token spellings, the report schema, and the normalization-seam code are CONSTRAINT-SEMANTICS Item
-3's, and they landed 2026-08-13. The five report tokens are `violation`, `indeterminate`,
-`full_satisfaction`, `partial_coverage`, `not_assessed` (`templates/constraint_types.py.jinja2`),
-each mapping to exactly one runtime token in TEAx's `CANONICAL_HEADLINE`. `all_satisfied` was
-renamed rather than redefined, so a stale reader refuses by name instead of misreading the
-strengthened claim; the coverage account beside the headline is derived by
-`generation/coverage.py::coverage_account`.
-
-**Consequences filed:** lifecycle contract invariants 1, 9, 28, 32, 33, 46/46a, 48, new 61, and
-Appendix B/C cells; companion LC-E05/E06/E10/E11/E12 and LC-G07.
+**Re-homed.** This decision binds the code-generator builder — report token spellings,
+generation templates, TEAx's `CANONICAL_HEADLINE`, and the normalization seam — not the model
+author, and was re-homed on 2026-08-23 to
+`.project/adr/0010-coverage-truth-and-headline-semantics.md` (triage recorded 2026-08-21). Cite
+it as `.project/adr/0010-coverage-truth-and-headline-semantics.md`; the legacy form
+`docs/architecture/modeling-assumptions.md ADR-009` resolves to this pointer. The vocabulary
+definitions remain in the lifecycle contract's "Headline states and coverage truth" subsection
+(`.project/concepts/constraint-execution-authoritative-lifecycle-contract.md`).
 
 ---
 
