@@ -51,7 +51,7 @@ An entry point's group is chosen at mint time from the file that **declares** it
 the attribute node for a design attribute, the consuming calc node for a library default or a
 usage literal (`_group_base`). The deleted deriver named the group after the *using* file, so
 a parameter declared in a library and used from a design landed in the design's group. See
-[17-parameter-group-deriver](17-parameter-group-deriver.md) for the rule and its one fallback.
+17-parameter-group-deriver (retired doc; git history) for the rule and its one fallback.
 
 ### Rendering collisions are refused, not merged
 
@@ -80,17 +80,17 @@ them.
 | REQ-EPC-01 | Every entry point SHALL be classified as exactly one [EntryPointType](09-data-models.md#resolution-models): {`DESIGN_ATTRIBUTE`, `LIBRARY_DEFAULT`, `USAGE_LITERAL`}. | `all(ep.entry_type in EntryPointType for ep in entry_points.values())` |
 | REQ-EPC-02 | Classification SHALL follow strict precedence: `DESIGN_ATTRIBUTE` > `LIBRARY_DEFAULT` > `USAGE_LITERAL`. | Decision tree in `_classify_entry_points()`: design_attr_by_qname checked first, then unbound_lookup, then fallback |
 | REQ-EPC-03 | `default_value` SHALL be converted to `float` at classification time; if conversion fails, `default_value` SHALL be `None`. | `float()` with try/except in all 3 branches of `_classify_entry_points()` |
-| REQ-EPC-04 | Every classified entry point SHALL be assigned a `param_group` via [ParameterGroupDeriver](17-parameter-group-deriver.md). `classify()` may return `None` for deeply-nested QNs that don't match any group pattern; the graph-level orphan handling (REQ-EPC-05) ensures every EP belongs to a group after full assembly. | `param_group = group_deriver.classify(qname)` in `_classify_entry_points()` |
+| REQ-EPC-04 | Every classified entry point SHALL be assigned a `param_group` via ParameterGroupDeriver (retired doc; git history). `classify()` may return `None` for deeply-nested QNs that don't match any group pattern; the graph-level orphan handling (REQ-EPC-05) ensures every EP belongs to a group after full assembly. | `param_group = group_deriver.classify(qname)` in `_classify_entry_points()` |
 | REQ-EPC-05 | Every entry point SHALL belong to exactly one [ParameterGroup](09-data-models.md#resolution-models). Orphans SHALL land in a `"system_design"` fallback group. | Step 6.8: orphan detection + `ParameterGroup(name="system_design", ...)` |
-| REQ-EPC-06 | After [FORMULA](16-computed-attributes.md) and [aggregation](13-aggregation-scoping.md) module construction, parameter groups SHALL be rebuilt from the complete entry point set. | Step 6.6: `group_deriver.derive_groups()` re-invoked on full `entry_points` dict |
+| REQ-EPC-06 | After [FORMULA](16-computed-attributes.md) and aggregation (retired doc; git history) module construction, parameter groups SHALL be rebuilt from the complete entry point set. | Step 6.6: `group_deriver.derive_groups()` re-invoked on full `entry_points` dict |
 | REQ-EPC-07 | `_classify_entry_points()` SHALL be a pure function: input data in, `dict[str, EntryPoint]` out, no side effects. | Function signature returns `dict[str, EntryPoint]`; no mutation of arguments |
-| REQ-EPC-08 | Entry points created by [FORMULA](16-computed-attributes.md) and [aggregation](13-aggregation-scoping.md) factories SHALL have `entry_type=DESIGN_ATTRIBUTE`. They bypass the 3-strategy classification. See [Two Creation Paths](#two-entry-point-creation-paths). | All factory EP creation sites set `entry_type=EntryPointType.DESIGN_ATTRIBUTE` |
+| REQ-EPC-08 | Entry points created by [FORMULA](16-computed-attributes.md) and aggregation (retired doc; git history) factories SHALL have `entry_type=DESIGN_ATTRIBUTE`. They bypass the 3-strategy classification. See [Two Creation Paths](#two-entry-point-creation-paths). | All factory EP creation sites set `entry_type=EntryPointType.DESIGN_ATTRIBUTE` |
 
 ---
 
 ## Step 1: Collection
 
-The [backtracker](11-analysis-backtracker.md) identifies entry points during
+The backtracker (retired doc; git history) identifies entry points during
 binding resolution. `_classify_entry_points()` in `graph_builder.py` receives:
 
 ```
@@ -99,7 +99,7 @@ BacktrackingResult.entry_point_sources -> dict[str, str]  (qname -> binding sour
 ```
 
 Concrete scenario: a model with 10 modules and 25 total inputs might resolve
-17 to upstream outputs (via the [OutputRegistry](10-output-registry.md)) and
+17 to upstream outputs (via the OutputRegistry (retired doc; git history)) and
 leave 8 as entry points.
 
 ---
@@ -174,7 +174,7 @@ The indexes built at the top of `_classify_entry_points()`:
   design attributes by `attr.qualified_name` for O(1) lookup.
 - **unbound_lookup**: `dict[str, tuple[CalcUsageData, str]]` -- for every
   usage's `unbound_params`, maps `"{usage_qn}__{param_name}" -> (usage, param_name)`.
-- **entry_point_sources**: From the [backtracker](11-analysis-backtracker.md);
+- **entry_point_sources**: From the backtracker (retired doc; git history);
   maps `qualified_name -> literal_value_string` for LITERAL bindings.
 
 Each classified entry point becomes an [`EntryPoint`](09-data-models.md#resolution-models):
@@ -198,7 +198,7 @@ EntryPoint(
 Entry points are organized into [`ParameterGroup`](09-data-models.md#resolution-models) objects. Each group maps to one JSON input file and one Pydantic schema class.
 
 `_group_entry_points_via_deriver()` delegates to
-[ParameterGroupDeriver](17-parameter-group-deriver.md):
+ParameterGroupDeriver (retired doc; git history):
 
 1. `group_deriver.derive_groups_filtered(backtracking_result, calc_defs)`
    produces `DerivedParameterGroup` objects filtered to true entry points.
@@ -229,7 +229,7 @@ add them before pipeline execution.
 ### Orphan Entry Points (REQ-EPC-05)
 
 After all modules are built (including [FORMULA](16-computed-attributes.md)
-and [aggregation](13-aggregation-scoping.md) modules, which add new entry
+and aggregation (retired doc; git history) modules, which add new entry
 points via [Path 2](#path-2-factory-fallback--hardcoded-design_attribute-steps-65-67)),
 Step 6.8 checks for orphans not covered by any group. Orphans land in a
 fallback `ParameterGroup(name="system_design")`. Their `python_type` is
@@ -239,7 +239,7 @@ resolved by scanning module inputs that reference them.
 
 Initial grouping happens at Step 5 of `build_computation_graph()`.
 Steps 6.5 ([FORMULA modules](16-computed-attributes.md)) and 6.7
-([aggregation modules](13-aggregation-scoping.md)) can create new entry
+(aggregation modules (retired doc; git history)) can create new entry
 points. Step 6.6 rebuilds parameter groups from the complete entry point set:
 
 1. Get fresh groups via `group_deriver.derive_groups()` (unfiltered).
@@ -256,8 +256,8 @@ Entry points are created at two different points in the pipeline, with
 
 ### Path 1: Backtracker → `_classify_entry_points()` (Step 4)
 
-The [backtracker](11-analysis-backtracker.md) discovers entry points during DFS
-(see [24-dual-resolution](24-dual-resolution-architecture.md)). Then
+The backtracker (retired doc; git history) discovers entry points during DFS
+(see 24-dual-resolution (retired doc; git history)). Then
 `_classify_entry_points()` applies the **3-strategy classification** above:
 
 ```
@@ -279,7 +279,7 @@ DESIGN_ATTRIBUTE, LIBRARY_DEFAULT, or USAGE_LITERAL.
 
 ### Path 2: Factory fallback → hardcoded DESIGN_ATTRIBUTE (Steps 6.5, 6.7)
 
-When [FORMULA](16-computed-attributes.md) or [aggregation](13-aggregation-scoping.md)
+When [FORMULA](16-computed-attributes.md) or aggregation (retired doc; git history)
 modules encounter an unresolvable input, the factory creates a new `EntryPoint`
 directly with `entry_type=DESIGN_ATTRIBUTE`:
 
@@ -306,8 +306,8 @@ time is final.
 
 ## Related Documents
 
-- **Upstream**: [05-module-factory](05-module-factory.md) -- builds modules that may add entry points; [04-producer-resolution](04-producer-resolution.md) -- identifies `source_type == "entry_point"` inputs
-- **Downstream**: [07-graph-assembly](07-graph-assembly.md) -- packs entry point groups into [ComputationGraph](09-data-models.md#resolution-models); [08-generation](08-generation.md) -- renders JSON templates and schemas from groups
-- **Sub-processes**: [17-parameter-group-deriver](17-parameter-group-deriver.md) -- grouping logic; [11-analysis-backtracker](11-analysis-backtracker.md) -- provides entry point set
+- **Upstream**: 05-module-factory (retired doc; git history) -- builds modules that may add entry points; 04-producer-resolution (retired doc; git history) -- identifies `source_type == "entry_point"` inputs
+- **Downstream**: 07-graph-assembly (retired doc; git history) -- packs entry point groups into [ComputationGraph](09-data-models.md#resolution-models); [08-generation](08-generation.md) -- renders JSON templates and schemas from groups
+- **Sub-processes**: 17-parameter-group-deriver (retired doc; git history) -- grouping logic; 11-analysis-backtracker (retired doc; git history) -- provides entry point set
 - **Data models**: [09-data-models](09-data-models.md) -- `EntryPoint`, `EntryPointType`, `ParameterGroup` field definitions
 - **Related classifiers**: [18-literal-value-propagation](18-literal-value-propagation.md) -- carries `:>>` literal defaults into entry points

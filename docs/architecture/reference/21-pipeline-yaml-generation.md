@@ -21,7 +21,7 @@ applies the prefix from
 `InputSource.param_group`, which must be non-None for every entry point.
 Entry points created during orphan classification (graph_builder.py step 6.8)
 or aggregation module building get their `param_group` from the
-[parameter group deriver](17-parameter-group-deriver.md).
+parameter group deriver (retired doc; git history).
 
 **All numeric types must be `float`**: TEAx expects all numeric pipeline
 values as `float`. This includes multiplicity entry points
@@ -98,7 +98,7 @@ source = f"{inp.source.param_group}.{inp.source.qualified_name}"
 **Format**: `{param_group}.{qualified_name}` -- ALWAYS includes param group.
 Per REQ-PY-02, `param_group` must never be None. Group names derive from the
 source model file stem (`{stem}_params`, see
-[17-parameter-group-deriver](17-parameter-group-deriver.md)); only
+17-parameter-group-deriver (retired doc; git history)); only
 `system_design` is a fixed name. In the reference corpus the groups are:
 - `design_params` -- [DESIGN_ATTRIBUTE](06-entry-point-classifier.md) entry points
 - `library_params` -- [LIBRARY_DEFAULT](06-entry-point-classifier.md) entry points
@@ -138,7 +138,7 @@ must extract `.root` from the `RootModel[float]` wrapper.
 
 ## Type Mapping Rules (REQ-PY-03)
 
-Input types are set during module construction in [graph_builder.py](07-graph-assembly.md),
+Input types are set during module construction in graph_builder.py (retired doc; git history),
 not during YAML generation. The YAML passes through `ModuleInput.python_type`.
 
 | Context | Type | Source (all in `graph_builder.py`) | REQ-PY-03 |
@@ -257,8 +257,8 @@ Comment lines above each pipeline module indicate origin type:
 
 ## Related Documents
 
-- **Upstream**: [07-graph-assembly](07-graph-assembly.md) -- builds ComputationGraph consumed here
-- **Upstream**: [04-producer-resolution](04-producer-resolution.md) -- resolves InputSource for each ModuleInput
+- **Upstream**: 07-graph-assembly (retired doc; git history) -- builds ComputationGraph consumed here
+- **Upstream**: 04-producer-resolution (retired doc; git history) -- resolves InputSource for each ModuleInput
 - **Upstream**: [06-entry-point-classifier](06-entry-point-classifier.md) -- assigns param_group (REQ-PY-02)
 - **Related**: [20-module-registry-generation](20-module-registry-generation.md) -- registry must use matching module_type strings
 - **Related**: [22-output-schema-rules](22-output-schema-rules.md) -- output schema rules for MultiOutput vs RootModel

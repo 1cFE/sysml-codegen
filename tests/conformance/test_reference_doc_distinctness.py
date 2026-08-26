@@ -34,7 +34,9 @@ def test_the_tree_actually_has_numbered_documents_to_compare() -> None:
     asserted rather than assumed.
     """
     documents = checker.numbered_reference_docs(checker.REFERENCE_DIR)
-    assert len(documents) >= 30
+    # 19 numbered documents survive REPO-CLEANUP Move C (2026-08-25); the floor only
+    # guards against the glob finding nothing, so it sits below the census, not at it.
+    assert len(documents) >= 15
     assert documents[0].name.startswith("00-")
 
 

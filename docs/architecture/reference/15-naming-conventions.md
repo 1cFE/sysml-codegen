@@ -13,7 +13,7 @@ Authoritative sources: `core/qualified_names.py`, `core/identifier_types.py`.
 | REQ-NC-04 | Module type SHALL use `{namespace}.{ElementName}Module` format | `derive_module_type()` lowercases package, preserves element case, appends `Module` |
 | REQ-NC-05 | Channel names SHALL be PQNs — no separate channel concept exists | `get_channel_name()` returns `f"{eqn}__{output_attr}"` which is a PQN |
 | REQ-NC-06 | `sanitize_name()` SHALL apply 6 transforms in order: strip quotes, spaces→`_`, non-alnum→`_`, collapse `_` runs, strip edge `_`, reserved-word suffix | Unit test on each transform rule |
-| REQ-NC-07 | Registry keys SHALL use typed wrappers: scoped and alias registries use `ScopedKey` (dotted format); SysML QN registry uses `SysMLQN` (`::` format) in its own typed registry | Typed registry API enforces key types; see [10-output-registry](10-output-registry.md) |
+| REQ-NC-07 | Registry keys SHALL use typed wrappers: scoped and alias registries use `ScopedKey` (dotted format); SysML QN registry uses `SysMLQN` (`::` format) in its own typed registry | Typed registry API enforces key types; see 10-output-registry (retired doc; git history) |
 | REQ-NC-08 | Identifier derivation SHALL sanitize each qualified-name segment before it becomes a class name, module file path, or FORMULA module_eqn/channel | `ModuleType.from_sysml` / `PythonModulePath.from_sysml` sanitize per segment; FORMULA module_eqn sites use `sanitize_qualified_name()`; conformance: `test_alias_agg_probe_generation`, `test_formula_quoted_owner` |
 | REQ-NC-09 | Generation SHALL fail fast when two distinct SysML names sanitize to one output path, naming both source names and the shared path, across module, stencil, and schema outputs (two key spaces — modules and stencils share the derived python path) | `_check_duplicate_output_paths()` runs before `_clear_output_directory`; conformance: `test_duplicate_path_failfast` |
 
@@ -24,7 +24,7 @@ Authoritative sources: `core/qualified_names.py`, `core/identifier_types.py`.
 **Example**: `SolarBatteryLibrary::BatteryPackCostCalc`
 
 Used at [extraction](01-extraction.md) boundaries and in the SysML QN typed registry
-([10-output-registry](10-output-registry.md)). Converted to internal
+(10-output-registry (retired doc; git history)). Converted to internal
 formats for scoped lookups downstream.
 **Type wrapper**: `SysMLQN` ([09-data-models](09-data-models.md#name-type-wrappers))
 
@@ -50,7 +50,7 @@ strip leading/trailing `_`). Segments are joined with `__`.
 Key insight: when a calc input binds to a design attribute at a *different* scope,
 the PQN is the design attribute's EQN, not `{usage_eqn}__{param_name}`. The
 `binding_resolutions` mapping is the single source of truth.
-See [input resolver](04-producer-resolution.md) for how bindings determine PQN selection.
+See input resolver (retired doc; git history) for how bindings determine PQN selection.
 **Type wrapper**: `PQN` ([09-data-models](09-data-models.md#name-type-wrappers))
 
 ## 4. Module Name
@@ -92,9 +92,9 @@ Channels ARE PQNs. There is no separate "channel name" concept (REQ-NC-05).
 
 ## 7. Output Registry Key Formats
 
-The [`OutputRegistry`](10-output-registry.md) (`core/output_registry.py`) maps typed lookup keys
+The `OutputRegistry` (retired doc; git history) (`core/output_registry.py`) maps typed lookup keys
 to canonical channel names (REQ-NC-07). Keys are registered in a strict 4-phase protocol
-using four typed registries ([10-output-registry](10-output-registry.md)):
+using four typed registries (10-output-registry (retired doc; git history)):
 scoped (`ScopedKey` → `CanonicalChannel`), SysML QN (`SysMLQN` → `CanonicalChannel`),
 alias (`ScopedKey` → `CanonicalChannel`), and the structured scoped-alias registry
 (`ScopedAliasKey`, a `(scope, leaf)` tuple in `core/identifier_types.py`, →
@@ -114,7 +114,7 @@ alias (`ScopedKey` → `CanonicalChannel`), and the structured scoped-alias regi
 Key_C derivation (`make_scoped_key()`): split EQN on `__`, drop
 `segments[0]` (design PartDef prefix), join with `.`, append `.{output_attr}`.
 Key_C is critical: ALL Phase 2 CHAIN aliases resolve exclusively via Key_C.
-See [The Scope Problem](03-resolution-overview.md) for why Key_C is the primary resolution path.
+See The Scope Problem (retired doc; git history) for why Key_C is the primary resolution path.
 
 **Aggregation outputs** register in the scoped registry:
 
@@ -132,7 +132,7 @@ See [The Scope Problem](03-resolution-overview.md) for why Key_C is the primary 
 
 | Phase | Source | Alias Type | Alias Format | Resolves Against |
 |-------|--------|-----------|-------------|-----------------|
-| 2 | `:>>` CHAIN [redefinitions](12-virtual-binding-rewrite.md) | `ScopedKey` | `{instance_path}.{attr}` | Phase 1 scoped (via Key_C) |
+| 2 | `:>>` CHAIN redefinitions (retired doc; git history) | `ScopedKey` | `{instance_path}.{attr}` | Phase 1 scoped (via Key_C) |
 | 3 | [EXPOSE_PURE](16-computed-attributes.md) attributes | `ScopedKey` | `{owning_part_short}.{attr}` | Phase 1+2 |
 | 4 | Transitive design attrs | `ScopedKey` | `{parent_part}.{attr}` | Phase 1-3 |
 
@@ -235,13 +235,13 @@ Key_C to the canonical channel
 
 - **Pipeline context**: [00-pipeline-overview](00-pipeline-overview.md) — where naming applies across all 7 steps
 - **Extraction (origin)**: [01-extraction](01-extraction.md) — SysML QN is produced here
-- **Resolution (consumer)**: [03-resolution-overview](03-resolution-overview.md) — The Scope Problem relies on Key_C
-- **Input resolver**: [04-producer-resolution](04-producer-resolution.md) — strategies use typed registry lookups (ScopedKey, SysMLQN)
-- **Module factory**: [05-module-factory](05-module-factory.md) — EQN → module name/type derivation
+- **Resolution (consumer)**: 03-resolution-overview (retired doc; git history) — The Scope Problem relies on Key_C
+- **Input resolver**: 04-producer-resolution (retired doc; git history) — strategies use typed registry lookups (ScopedKey, SysMLQN)
+- **Module factory**: 05-module-factory (retired doc; git history) — EQN → module name/type derivation
 - **Entry points**: [06-entry-point-classifier](06-entry-point-classifier.md) — PQN used for entry point QN
-- **Registry**: [10-output-registry](10-output-registry.md) — Key format details, 4-phase protocol
-- **Backtracker**: [11-analysis-backtracker](11-analysis-backtracker.md) — Key_C scoped resolution (Step 0)
-- **Virtual bindings**: [12-virtual-binding-rewrite](12-virtual-binding-rewrite.md) — Phase 2 CHAIN aliases
+- **Registry**: 10-output-registry (retired doc; git history) — Key format details, 4-phase protocol
+- **Backtracker**: 11-analysis-backtracker (retired doc; git history) — Key_C scoped resolution (Step 0)
+- **Virtual bindings**: 12-virtual-binding-rewrite (retired doc; git history) — Phase 2 CHAIN aliases
 - **Computed attributes**: [16-computed-attributes](16-computed-attributes.md) — Phase 3 EXPOSE_PURE aliases
 - **Registry generation**: [20-module-registry-generation](20-module-registry-generation.md) — import paths from module type
 - **Pipeline YAML**: [21-pipeline-yaml-generation](21-pipeline-yaml-generation.md) — channel format in YAML

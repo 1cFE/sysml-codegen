@@ -219,7 +219,7 @@ system. It simply skips generation for any existing `handwritten/*.py` file.
 | C: Stub, compilable | matches()=True, has NotImplementedError, `auto_impl_context` present | Backup + upgrade |
 | D: Interface changed | matches()=False (name/type-annotation change, or a body reference outside the declared input set) | Backup + regenerate |
 
-Smart-regen applies uniformly: [aggregation](13-aggregation-scoping.md),
+Smart-regen applies uniformly: aggregation (retired doc; git history),
 formula, and [computed attribute](16-computed-attributes.md) modules render
 auto-implemented bodies through the same unified `_generate_stencils()` loop
 and are preserved under the same signature test as CalcUsage modules
@@ -242,5 +242,5 @@ and are preserved under the same signature test as CalcUsage modules
 - **Upstream**: [14-expression-compiler](14-expression-compiler.md) — `Compilability` enum, determines if auto-impl is available
 - **Extraction**: [01-extraction](01-extraction.md) — produces `CalculationDefinitionData` used for expected signatures
 - **Schema**: [22-output-schema-rules](22-output-schema-rules.md) — output schema generation that smart-regen protects
-- **Module types**: [05-module-factory](05-module-factory.md) — CalcUsage vs synthetic module distinction
+- **Module types**: 05-module-factory (retired doc; git history) — CalcUsage vs synthetic module distinction
 - **Data models**: [09-data-models](09-data-models.md) — `CalculationDefinitionData`, `AttributeInfo` definitions

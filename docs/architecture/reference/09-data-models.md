@@ -1,33 +1,15 @@
 # 09 -- Data Models Reference
 
-> **Status: mixed — read the model, then check which half it is in.** The exact route is the
-> only authority, and this document's model set straddles the line.
+> **Status: live models only.** The exact route is the only authority. Everything documented
+> here exists in the tree and is reachable from `run_codegen`, with one flagged exception:
+> the hierarchy/aggregation extraction structures (`HierarchyExtractionResult` and friends),
+> whose owner `extraction/hierarchy_resolver.py` is off the exact route's construction
+> closure and is being retired by REPO-CLEANUP Move C.
 >
-> **Live, on the shipped route:** `ComputationGraph`, `PipelineModule`, `ModuleInput`,
-> `ModuleOutput`, `InputSource`, `EntryPoint`, `EntryPointType`, `ParameterGroup`,
-> `ModuleKind`, `OutputAlias`, and the constraint-catalog models — all in
-> `resolution/models.py`, which projection produces and generation consumes. The extraction
-> models `CalculationDefinitionData` and its enums are live too: the exact route loads and
-> extracts through `extraction/extractor.py`. `BindingResolution` and `ChannelAlias` are in
-> `core/models.py` and are read by generation.
->
-> **Deleted with their owners** by the Item 7 retirement (2026-08-12, `19072ad` / `82c7951` /
-> `882fc8d` / `3071fba`): `BacktrackingResult`, `DesignAttributeData`,
-> `DerivedParameterGroup`, `ParameterSource`, and the `OutputRegistry` types. Their owners
-> (`analysis/dependency_backtracker.py`, `analysis/parameter_groups.py`,
-> `resolution/graph_builder.py`, `core/output_registry.py`) are not in the tree, and neither
-> are the models. **The rows for them below describe types that no longer exist.**
->
-> The hierarchy/aggregation extraction structures are the one survivor:
-> `extraction/hierarchy_resolver.py` is still in the tree with its own conformance coverage,
-> and is not on the exact route's construction closure.
->
-> **The rows are kept, not removed.** The test that used to pin them,
-> `tests/conformance/test_data_models.py`, was repointed by the retirement itself (ledger row
-> **L-120**, executed at `82c7951`), so nothing now couples these rows to a test. They stay
-> because the historical documents link into them — a reader following
-> [11-analysis-backtracker](11-analysis-backtracker.md) to `BacktrackingResult` needs the
-> field list to make sense of what it reads. This banner is what tells them the type is gone.
+> The rows for the types the 2026-08-12 retirement deleted (`BacktrackingResult`,
+> `DesignAttributeData`, `DerivedParameterGroup`, `ParameterSource`, the `OutputRegistry`
+> types, `PipelineContext`) were removed with the retired reference documents that linked
+> into them; git history keeps both.
 
 ## Why This Document Exists
 14 documents in this set link here as the canonical field reference. When a doc
@@ -54,22 +36,17 @@ with wrong values, caught in Phase A validation).
 SysML Files
   |
   v
-[Extraction]  → CalculationDefinitionData, CalcUsageData, PartDefinitionData,
-                 RedefinitionData, AggregationExpressionData, ComputedAttributeData,
-                 HierarchyExtractionResult
+[Extraction]   → CalculationDefinitionData (extraction/extractor.py; the only licensed step)
   |
   v
-[Analysis]    → BacktrackingResult (binding_resolutions, entry_points)
-                 DesignAttributeData, DerivedParameterGroup, PhantomDetectionReport
+[Elaboration]  → InstanceGraph (AttrNode, CalcNode, ConstraintNode; elaboration/graph.py)
   |
   v
-[Core]        → OutputRegistry, BindingResolution, ChannelAlias
+[Projection]   → ComputationGraph (PipelineModule, ParameterGroup, EntryPoint, OutputAlias;
+                  elaboration/project.py → resolution/models.py)
   |
   v
-[Resolution]  → ComputationGraph (PipelineModule, ParameterGroup, EntryPoint, OutputAlias)
-  |
-  v
-[Generation]  → PipelineContext → Python files, YAML, JSON templates
+[Generation]   → Python modules, YAML, JSON templates, sealed contracts
 ```
 
 ## Enums
@@ -84,11 +61,10 @@ Every value listed (REQ-DM-02). These are the most common source of doc bugs.
 | `BindingResolutionType` | `ENTRY_POINT`, `MODULE_OUTPUT` | `core/models.py` |
 | `EntryPointType` | `LIBRARY_DEFAULT`, `DESIGN_ATTRIBUTE`, `USAGE_LITERAL` | `resolution/models.py` |
 
-> ¹ `EXPOSE_CHAIN_TENTATIVE` is a transient value (Item 10): tagged at extraction
-> for a well-formed multi-hop feature chain, then finalized by the Phase-3b confirm
-> pass (`build_output_registry`, `orchestration/output_registry_builder.py`) to
-> `EXPOSE_PURE` or reverted to `FORMULA`. No downstream reader ever observes it
-> (INV-F raises). `UNRESOLVABLE` is likely unreachable for well-formed SysML (SysIDE
+> ¹ `EXPOSE_CHAIN_TENTATIVE` is a transient value (Item 10), tagged at extraction for a
+> well-formed multi-hop feature chain; its Phase-3b confirm pass retired with
+> `orchestration/output_registry_builder.py` (2026-08-12).
+> `UNRESOLVABLE` is likely unreachable for well-formed SysML (SysIDE
 > always resolves attribute QNs). It exists as a defensive fallback. An attribute
 > referencing only inherited and/or local attributes classifies `FORMULA` (Step-2b now
 > prefix-matches the owning part QN OR any ancestor PartDef QN — the inherited-attr fix,
@@ -129,7 +105,7 @@ Constructor: `make_canonical_channel(usage_eqn, attr_name)` — wraps `get_chann
 (e.g., `solar_battery_plant.lcoe.lcoe_per_mwh`). Constructor: `make_scoped_key(usage_eqn, attr_name)`
 — replaces `OutputRegistry.derive_key_c()`. Rejects strings containing `::`.
 
-See [10-output-registry](10-output-registry.md) for the full type system and [15-naming-conventions](15-naming-conventions.md) for identifier format definitions.
+See 10-output-registry (retired doc; git history) for the full type system and [15-naming-conventions](15-naming-conventions.md) for identifier format definitions.
 
 **Conversion boundary**: Raw SysML names (`SysMLQN`) are converted to `EQN` at extraction
 time. All downstream indexes, lookups, and registrations use typed names only.
@@ -217,36 +193,19 @@ Added: `python_type: str`, `description: str`, `unit: str | None`, `source_line:
 `transformed_expression`, `sum_terms: list[SumTerm]`, `singleton_terms: list[SingletonTerm]`,
 `local_terms: list[LocalTerm]`, `input_channels: list[str]`, `entry_points: list[str]`,
 `aliases: list[str]`, `compilability`, `has_unsupported_nodes: bool`, `source_file`, `source_line`.
-See [13](13-aggregation-scoping.md), [25](25-hierarchy-resolver.md) for semantics.
+See 13 (retired doc; git history), 25 (retired doc; git history) for semantics.
 
 *Delegated: ComputedAttributeData → [16](16-computed-attributes.md). Expression compiler → [14](14-expression-compiler.md).*
 
 ## Analysis Models
 
-**BacktrackingResult** (BaseModel, `analysis/dependency_backtracker.py`)
-`required_usages: list[CalcUsageData]`, `dependency_graph: dict[str, list[str]]`,
-`entry_points: set[str]`, `entry_point_sources: dict[str, str]`,
-`binding_resolutions: dict[str, BindingResolution]`, `phantom_report: PhantomDetectionReport`,
-`trace_log: list[str]`,
-`fallback_entry_points: set[str]` (Item 7 / D4 — Step-4 fall-through entry-point QNs;
-carried onto the ComputationGraph for the V11 `collect_uncovered_params` collector).
-Key format: `"{usage_qualified_name}|{param_name}"`.
-
-**DesignAttributeData** (dataclass, `analysis/parameter_groups.py`)
-`name: str`, `sysml_type: str`, `default_value: str | None`, `unit: str | None`,
-`source_file: Path`, `source_line: int`, `parent_part: str`, `qualified_name: str`.
-
-**DerivedParameterGroup** (dataclass, `analysis/parameter_groups.py`)
-`name: str`, `class_name: str`, `source_type: Literal["design", "library"]`,
-`source_identifier: str`, `parameters: list[ParameterSource]`.
-
 **ScopedAggregationData** (dataclass, `extraction/data_models.py`)
 `expression: AggregationExpressionData`, `instance_path: str`.
 Property: `module_eqn` = `"{instance_path}__{attribute_name}"`.
 Bridge from extraction to pipeline — wraps an aggregation with a concrete design
-instance path. See [13](13-aggregation-scoping.md).
+instance path. See 13 (retired doc; git history).
 
-*Delegated: PhantomDetectionReport → `analysis/phantom_detector.py`. FunctionSignature → [23](23-smart-regen-preservation.md).*
+*Delegated: FunctionSignature → [23](23-smart-regen-preservation.md).*
 
 ## Core Models
 
@@ -257,25 +216,6 @@ instance path. See [13](13-aggregation-scoping.md).
 **ChannelAlias** (BaseModel, `core/models.py`)
 `alias_name: str`, `canonical_name: str`, `owning_part_qn: str`,
 `source: Literal["redefinition", "expose_pure", "design_override"]`.
-
-**OutputRegistry** (class, `core/output_registry.py`)
-Internal: 4 typed registries — `_scoped: dict[ScopedKey, CanonicalChannel]`,
-`_sysml_qn: dict[SysMLQN, CanonicalChannel]`, `_alias: dict[ScopedKey, CanonicalChannel]`,
-`_scoped_alias: dict[ScopedAliasKey, CanonicalChannel]` (Item 10 — structured
-`(scope, leaf)` namespace for part-def EXPOSE and consumer-scoped aliases,
-kept distinct from the flat `_alias` so tuple keys can never collide with string keys).
-Membership set: `_canonical: set[CanonicalChannel]` (for phase-ordering enforcement).
-API: `register_scoped(ScopedKey, CanonicalChannel)`,
-`register_sysml_qn(SysMLQN, CanonicalChannel)`,
-`register_alias(ScopedKey, CanonicalChannel)`,
-`register_scoped_alias(ScopedAliasKey, CanonicalChannel)`,
-`scoped_lookup(ScopedKey) → CanonicalChannel | None`,
-`sysml_qn_lookup(SysMLQN) → CanonicalChannel | None`,
-`alias_lookup(ScopedKey) → CanonicalChannel | None`,
-`scoped_alias_lookup(ScopedAliasKey) → CanonicalChannel | None`,
-`scoped_alias_items() → list[tuple[ScopedAliasKey, CanonicalChannel]]`,
-`canonical_channels → frozenset[CanonicalChannel]`.
-See [10-output-registry](10-output-registry.md) for the 4-phase protocol and type system.
 
 *Delegated: Identifier types (SysMLQualifiedName, ModuleType, PythonModulePath, ElementQualifiedName) → [15](15-naming-conventions.md), [20](20-module-registry-generation.md).*
 
@@ -302,7 +242,7 @@ concrete constraints (eligible entries) and constraint facts (source records), f
 (sha256 of canonical JSON over the two lists), and set on the graph before generation — every
 seam that needs catalog data reads it from the graph, never from the context (CONSTRAINT-EXEC
 Item 7 / D6, "generation reads only the graph"). See
-[28-constraint-lowering-and-catalog](28-constraint-lowering-and-catalog.md).
+28-constraint-lowering-and-catalog (retired doc; git history).
 
 **OutputAlias** (BaseModel, `resolution/models.py`)
 `alias_name: str`, `canonical_channel: str`, `instance_path: str`,
@@ -356,11 +296,11 @@ Properties: `json_filename`, `schema_filename`.
 
 ## Orchestration Model
 
-**PipelineContext** (dataclass, `orchestration/pipeline_context.py`)
-`extractor`, `calc_defs`, `calc_usages`, `design_attributes`, `group_deriver`,
-`backtracker`, `backtracking_result`, `computation_graph`, `compilation_results`,
-`computed_attributes`, `hierarchy_data`, `aggregation_expressions: list[ScopedAggregationData]`,
-`channel_aliases: list[ChannelAlias]`, `output_registry: OutputRegistry | None`.
+**ExactPipelineContext** (`orchestration/exact_pipeline_context.py`)
+The sealed instance-graph bytes plus a `ProjectionReceipt`: immutable, and every read
+re-decodes, re-projects, and refuses a graph the receipt disagrees with. (The former
+`PipelineContext` dataclass retired 2026-08-12; `orchestration/pipeline_context.py`
+survives only as the `SysMLParsingError` / `CodeGenerationError` re-export point.)
 
 ## Concrete Example
 
@@ -409,9 +349,6 @@ ComputationGraph ── modules: [PipelineModule] ── inputs: [ModuleInput] �
                  ├─ entry_point_groups: [ParameterGroup] ── parameters: [EntryPoint]
                  ├─ output_aliases: [OutputAlias]
                  └─ execution_order: [str]
-BacktrackingResult ── required_usages: [CalcUsageData] ── bindings: [BindingInfo]
-                   ├─ binding_resolutions: dict[str, BindingResolution]
-                   └─ phantom_report: PhantomDetectionReport
 HierarchyExtractionResult ── redefinitions/design_overrides: [RedefinitionData]
                           ├─ multiplicities: [MultiplicityData]
                           └─ aggregation_expressions: [AggregationExpressionData]
@@ -419,6 +356,6 @@ HierarchyExtractionResult ── redefinitions/design_overrides: [RedefinitionDa
 
 ## Related Documents
 
-- **Upstream**: [00](00-pipeline-overview.md), [01](01-extraction.md), [02](02-orchestration.md), [03](03-resolution-overview.md)
-- **Delegated**: [13](13-aggregation-scoping.md), [14](14-expression-compiler.md), [15](15-naming-conventions.md), [16](16-computed-attributes.md), [17](17-parameter-group-deriver.md), [23](23-smart-regen-preservation.md), [25](25-hierarchy-resolver.md)
-- **Consumers**: [10](10-output-registry.md) (typed registries, identifier types), [11](11-analysis-backtracker.md), [07](07-graph-assembly.md), [08](08-generation.md)
+- **Upstream**: [00](00-pipeline-overview.md), [01](01-extraction.md), [02](02-orchestration.md)
+- **Delegated**: [14](14-expression-compiler.md), [15](15-naming-conventions.md), [16](16-computed-attributes.md), [23](23-smart-regen-preservation.md)
+- **Consumers**: [08](08-generation.md)

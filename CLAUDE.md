@@ -93,13 +93,12 @@ not exist, and the CLI names none of them. `orchestration/pipeline_context.py` s
 the `SysMLParsingError` / `CodeGenerationError` re-export point and carries no
 `PipelineContext`.
 
-Reference documents 03, 04, 05, 07, 10, 11, 12, 13, 17, 24, 25, and 28 describe that stack
-and open with a retiring banner; document 09 is mixed and says which models are which.
-Document 28's subject (`analysis/constraint_lowering.py`) was deleted by the same
-retirement, and its account of the constraint catalog is separately superseded by
-CONSTRAINT-SEMANTICS Item 2 — its banner says which parts and where the live text is. Their
-rewrite is a separate authorship pass that has not run. **Do not read them as descriptions
-of what the product does.**
+The twelve reference documents that described that stack (03, 04, 05, 07, 10, 11, 12, 13,
+17, 24, 25, 28) were deleted by REPO-CLEANUP Move C (2026-08-25); git history keeps them.
+Document 09 now carries only the live model set. For the constraint catalog there is no
+retired-document account left: the elaborator decides every constraint usage while building
+the instance graph, projection renders what it decided, and the catalog models live in
+`resolution/models.py` (CONSTRAINT-SEMANTICS Item 2 semantics).
 
 ### Key Data Models
 

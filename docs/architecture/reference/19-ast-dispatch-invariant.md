@@ -23,7 +23,7 @@ Type Hierarchy (SysIDE):
 **Consequence of violation**: Dispatch sites that check OE before FCE cause
 aggregation inputs to be misclassified as LocalTerms instead of SingletonTerms,
 breaking aggregation wiring in the
-[hierarchy resolver](13-aggregation-scoping.md).
+hierarchy resolver (retired doc; git history).
 
 ## Current evidence rule
 
@@ -174,7 +174,7 @@ Node: FCE "pv_module.capital_cost"
   Result: SingletonTerm(source_path="pv_module.capital_cost")  ← CORRECT
 ```
 
-The SingletonTerm feeds into [output registry](10-output-registry.md) lookup
+The SingletonTerm feeds into output registry (retired doc; git history) lookup
 (Key_C scoped chain), which wires the aggregation input to the upstream
 module's output channel. The LocalTerm classification would attempt sibling
 attribute lookup, which fails or produces wrong wiring.
@@ -196,10 +196,10 @@ attribute lookup, which fails or produces wrong wiring.
 
 ## Related Documents
 
-- **Upstream**: [13-aggregation-scoping](13-aggregation-scoping.md) -- where SingletonTerm/LocalTerm classification feeds aggregation wiring
+- **Upstream**: 13-aggregation-scoping (retired doc; git history) -- where SingletonTerm/LocalTerm classification feeds aggregation wiring
 - **Upstream**: [14-expression-compiler](14-expression-compiler.md) -- expression AST compilation uses same dispatch
-- **Downstream**: [10-output-registry](10-output-registry.md) -- SingletonTerm source_path drives Key_C lookup
-- **Downstream**: [05-module-factory](05-module-factory.md) -- term types determine module input construction
+- **Downstream**: 10-output-registry (retired doc; git history) -- SingletonTerm source_path drives Key_C lookup
+- **Downstream**: 05-module-factory (retired doc; git history) -- term types determine module input construction
 - **Pipeline context**: [00-pipeline-overview](00-pipeline-overview.md) -- where dispatch sits in the overall pipeline
 - **Data models**: [09-data-models](09-data-models.md) -- SingletonTerm, LocalTerm, SumTerm field definitions
 

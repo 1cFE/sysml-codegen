@@ -112,7 +112,7 @@ Parameters are grouped by the file that **declares** them, into JSON input files
 | `magnets.sysml` | `magnets_params.json` |
 | `physics.sysml` | `physics_params.json` |
 
-**Declaration site, not use site.** A parameter declared in a library file and consumed from a design lands in the *library's* group, named after the library file. The one exception is a `model.sysml`, which carries no identity of its own: its group takes the name of the package that declares the owning root occurrence. See [17-parameter-group-deriver](reference/17-parameter-group-deriver.md).
+**Declaration site, not use site.** A parameter declared in a library file and consumed from a design lands in the *library's* group, named after the library file. The one exception is a `model.sysml`, which carries no identity of its own: its group takes the name of the package that declares the owning root occurrence. See 17-parameter-group-deriver (retired doc; git history).
 
 **A design attribute's key names the attribute, not the consumer.** Two calculations reading the same modelled attribute share one JSON key and one entry. A library default and a usage literal still key by the consuming calc usage and its formal, because there is no supplying attribute to name. See [06-entry-point-classifier](reference/06-entry-point-classifier.md).
 
@@ -380,7 +380,7 @@ A plant calc may read a subsystem value it does not own, cross-part or in-part. 
 supplied-value materializer carries the model literal into the consumer's entry point,
 so the reference resolves to a filled `DESIGN_ATTRIBUTE` parameter instead of a valueless
 one. Four value-provision shapes are supported (see
-[25-hierarchy-resolver §Supplied-Value Materializer](reference/25-hierarchy-resolver.md#supplied-value-materializer-req-svm-01-04)):
+25-hierarchy-resolver §Supplied-Value Materializer (retired doc; git history)):
 
 - **(a)** a subtype-def literal reached through a usage-level retype (`:>> driver : 'Hif Driver'` with `Hif_Driver.efficiency = 0.35`);
 - **(b)** a bare no-retype override block (`part :>> target_factory { :>> cost_per_target = 10.0; }`);
@@ -446,7 +446,7 @@ SysML lets a modeler attach `constraint` usages to calc defs, part defs, and par
 example a physical-consistency check like `outer_radius == inner_radius + thickness`, or a
 plausibility bound like `eta * gain >= threshold`. Through Item 4, sysml-codegen had no execution path
 for any of them and dropped every one, loudly. Items 5-9 built the real path (see
-[28-constraint-lowering-and-catalog.md](reference/28-constraint-lowering-and-catalog.md) for the
+28-constraint-lowering-and-catalog.md (retired doc; git history) for the
 mechanism); this section teaches what a modeler should now expect.
 
 **The four outcomes.** `agentic-mbse`'s executable profile (`evaluate_profile`) classifies every
