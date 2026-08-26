@@ -1,6 +1,29 @@
 # Current Work
 
-**Last Updated**: 2026-08-21 (**scaffolding-register-boundary CLOSED** — REPO-CLEANUP Item 1 certified at
+**Last Updated**: 2026-08-25 (**REPO-CLEANUP Move C complete — the epic is done.** Delete-what-defends-nothing
+executed as eleven commits on `repo-cleanup`, licensed suite green after every batch (final: 2140 passed /
+9 skipped / 94 deselected, zero failures, no omit list — the accepted-limitation caveat carried since Item 1
+is gone; the five previously uncollectable files collect license-free). Byte identity held at every `src/`
+deletion: all 19 generatable fixture snapshots produce identical bytes (850 file hashes), 3 refusal fixtures
+refuse identically. Gone: `scripts/archive/`, the twelve retired reference docs (doc 09 rewritten to the live
+model set), `verification/` with its lock suite [OWNER 2026-08-23], the legacy extraction lane
+(`hierarchy_resolver.py`/`usage_extractor.py`) with all pinning tests [OWNER 2026-08-23] including conformance
+`test_hierarchy_resolver.py` under the ratified 2026-08-25 ruling, the V11 dead gate (+ its doc corrections,
+closing `[V11-DEAD-GATE-DOCS]`), deriver-era generators, the `ConcreteConstraint` family (unit fixtures now
+build a plain `FixtureConstraint`), dead extractor/model classes, the superseded `compile_predicate` pair
+(suites converted to `compile_predicate_body`), `baseline_outputs/` with its stub-passing reader (gap filed
+`[EMIT-STEP-REGRESSION-GATE]`), the item8 `unit_map` dumps (digested, 48k→4k lines), the `catf_mfe_d5` .sysml
+fork (snapshot-only fixture now; sources regenerable via `make_d5_variant.py`), and the closed-item process
+tooling. `tests/` is 73k lines (was 149k; committed data −67k), test functions −20% vs lines −51%, zero
+orphan fixtures, vulture at min-confidence 80 reports zero unused symbols in `src/`. Ledger 4a: five stale
+retain rows re-dispositioned `retire-with-owner` with live replacement nodes; `check_ledger_4a.py paths` = 0
+problems — the checker and its test STAY, against the research grading, because they caught exactly this
+drift mid-move. `[ARTIFACT-MANIFEST-TESTS-HARD-FAIL]` closed by C2's disentanglement
+(`tests/helpers/source_roots.py`). Known quirk: `tests/unit/` in isolation shows ~16 failures because the
+simkit stub is installed by `tests/runtime/` — full-suite runs are the gate. The three move folders are
+deleted per the standing close rule; this epic's record is the epic file, the registers, and `git log`.
+Next: owner review of the `repo-cleanup` branch, then PR.)
+Prior status: 2026-08-21 (**scaffolding-register-boundary CLOSED** — REPO-CLEANUP Item 1 certified at
 `3566fdd` and archived to `.project/completed/20260821_scaffolding-register-boundary/`. Both decision
 registers are installed and script-managed: `.project/adr/0001` is the owner-grade audience question,
 `0002`/`0003` the index-resolution and citation conventions; the product ledger is `0001`…`0004` with a

@@ -1,11 +1,11 @@
 # Epic: Repo Cleanup — Keep the Decisions, Delete the Exhaust
 
 **Epic ID**: REPO-CLEANUP
-**Status**: In Progress
+**Status**: Complete (2026-08-25)
 **Priority**: P1
 **Created**: 2026-08-20
 **Revised**: 2026-08-23 — collapsed from eight pipeline items to three moves (see *Revision*)
-**Estimated Effort**: ~3 days remaining
+**Estimated Effort**: ~3 days remaining (actual: Moves A+B one day, Move C one day)
 
 ---
 
@@ -333,7 +333,18 @@ All three ruled `[OWNER, 2026-08-23]`:
 
 ## Lessons Learned (Post-Completion)
 
-*Fill in after epic is complete.*
-
 - 2026-08-23: the original decomposition priced eight items at 8–11 days, most of it writing
   documents about commits. The revision prices the same outcome at ~3 days.
+- 2026-08-25 (Move C): the research inventory was accurate on deadness but consistently
+  under-scoped the *blast radius* — every lane deletion pulled in shared helpers
+  (`live_extraction.py`), fixture builders (`retired_catalog_assembly.py`), ledger rows, and
+  doc passages the inventory did not enumerate. The per-commit pattern that held: importer
+  grep before, byte-identity + licensed suite after, and the commit message names what each
+  deleted test was believed to defend.
+- The ledger checker the research graded retire-with-item caught five stale rows produced by
+  this very move — a false-defender grading can itself be false; execution-time evidence
+  outranks the inventory (recorded as the C6 deviation).
+- Two dispositions resolved by the owner's qualitative-simplicity ruling rather than the
+  checklist's letter: shim-producing merges (error constructors, `_collect_unbound_*`) were
+  judged no-change, and digest-sensitive consolidations filed
+  (`[SNAPSHOT-CODEC-AND-DUP-CONSOLIDATION]`) instead of executed.
