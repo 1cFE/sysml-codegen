@@ -35,41 +35,6 @@ class TestExtractionModelsImportable:
 
         assert CalculationDefinitionData is not None
 
-    def test_part_definition_data(self):
-        from sysml_codegen.extraction.data_models import PartDefinitionData
-
-        assert PartDefinitionData is not None
-
-    def test_redefinition_data(self):
-        from sysml_codegen.extraction.data_models import RedefinitionData
-
-        assert RedefinitionData is not None
-
-    def test_multiplicity_data(self):
-        from sysml_codegen.extraction.data_models import MultiplicityData
-
-        assert MultiplicityData is not None
-
-    def test_aggregation_expression_data(self):
-        from sysml_codegen.extraction.data_models import AggregationExpressionData
-
-        assert AggregationExpressionData is not None
-
-    def test_scoped_aggregation_data(self):
-        from sysml_codegen.extraction.data_models import ScopedAggregationData
-
-        assert ScopedAggregationData is not None
-
-    def test_computed_attribute_data(self):
-        from sysml_codegen.extraction.data_models import ComputedAttributeData
-
-        assert ComputedAttributeData is not None
-
-    def test_hierarchy_extraction_result(self):
-        from sysml_codegen.extraction.data_models import HierarchyExtractionResult
-
-        assert HierarchyExtractionResult is not None
-
     def test_attribute_info(self):
         from sysml_codegen.extraction.data_models import AttributeInfo
 
@@ -79,21 +44,6 @@ class TestExtractionModelsImportable:
 @pytest.mark.req("REQ-DM-01")
 class TestCoreModelsImportable:
     """Every core-layer model is importable from its documented module."""
-
-    def test_binding_resolution(self):
-        from sysml_codegen.core.models import BindingResolution
-
-        assert BindingResolution is not None
-
-    def test_binding_resolution_type(self):
-        from sysml_codegen.core.models import BindingResolutionType
-
-        assert BindingResolutionType is not None
-
-    def test_channel_alias(self):
-        from sysml_codegen.core.models import ChannelAlias
-
-        assert ChannelAlias is not None
 
 @pytest.mark.req("REQ-DM-01")
 class TestResolutionModelsImportable:
@@ -152,38 +102,13 @@ ENUM_SPECS = [
         {"CHAIN", "REFERENCE", "LITERAL", "EXPRESSION", "UNBOUND"},
         id="BindingType",
     ),
-    pytest.param(
-        "sysml_codegen.extraction.data_models",
-        "RedefinitionType",
-        {"LITERAL", "CHAIN", "EXPRESSION"},
-        id="RedefinitionType",
-    ),
-    pytest.param(
-        "sysml_codegen.extraction.data_models",
-        "ComputedAttributeClassification",
-        {
-            "FORMULA",
-            "EXPOSE_PURE",
-            "EXPOSE_COMPUTED",
-            "EXPOSE_CHAIN_TENTATIVE",
-            "LITERAL",
-            "UNRESOLVABLE",
-        },
-        id="ComputedAttributeClassification",
-    ),
-    pytest.param(
+            pytest.param(
         "sysml_codegen.extraction.expression_compiler",
         "Compilability",
         {"FULLY_COMPILABLE", "PARTIALLY_COMPILABLE", "MANUAL_REQUIRED", "UNKNOWN"},
         id="Compilability",
     ),
-    pytest.param(
-        "sysml_codegen.core.models",
-        "BindingResolutionType",
-        {"ENTRY_POINT", "MODULE_OUTPUT"},
-        id="BindingResolutionType",
-    ),
-    pytest.param(
+        pytest.param(
         "sysml_codegen.resolution.models",
         "EntryPointType",
         {"LIBRARY_DEFAULT", "DESIGN_ATTRIBUTE", "USAGE_LITERAL"},
@@ -244,206 +169,6 @@ def test_req_dm_03_fields_calculation_definition_data():
     }
     actual = _dataclass_field_names(CalculationDefinitionData)
     assert actual == expected
-
-
-@pytest.mark.req("REQ-DM-03")
-def test_req_dm_03_fields_part_definition_data():
-    from sysml_codegen.extraction.data_models import PartDefinitionData
-
-    expected = {
-        "name",
-        "qualified_name",
-        "doc_comment",
-        "attributes",
-        "constraints",
-        "source_file",
-        "source_line",
-        "source_hash",
-    }
-    actual = _dataclass_field_names(PartDefinitionData)
-    assert actual == expected
-    assert len(actual) == 8
-
-
-@pytest.mark.req("REQ-DM-03")
-def test_req_dm_03_fields_redefinition_data():
-    from sysml_codegen.extraction.data_models import RedefinitionData
-
-    expected = {
-        "owning_part_qn",
-        "attribute_name",
-        "redefinition_type",
-        "literal_value",
-        "source_path",
-        "expression_ast",
-        "expression_text",
-        "target_path",
-        "is_deep_path",
-        "source_file",
-        "source_line",
-        # Exact value-site identity (SOURCE-IDENTITY Item 4), snapshot_exclude.
-        "member_qualified_name",
-        "redefined_target_qns",
-    }
-    actual = _dataclass_field_names(RedefinitionData)
-    assert actual == expected
-    assert len(actual) == 13
-
-
-@pytest.mark.req("REQ-DM-03")
-def test_req_dm_03_fields_multiplicity_data():
-    from sysml_codegen.extraction.data_models import MultiplicityData
-
-    expected = {
-        "part_usage_name",
-        "owning_part_def_qn",
-        "count",
-        "count_attribute_name",
-        "default_value",
-    }
-    actual = _dataclass_field_names(MultiplicityData)
-    assert actual == expected
-    assert len(actual) == 5
-
-
-def test_hierarchy_models_are_shared_class_objects():
-    from agentic_mbse.sysml import hierarchy as shared
-
-    from sysml_codegen.extraction import data_models as codegen
-
-    assert codegen.RedefinitionType is shared.RedefinitionType
-    assert codegen.RedefinitionData is shared.RedefinitionData
-    assert codegen.MultiplicityData is shared.MultiplicityData
-
-
-def test_hierarchy_model_ordered_field_contracts():
-    from sysml_codegen.extraction.data_models import MultiplicityData, RedefinitionData
-
-    assert [field.name for field in dataclasses.fields(RedefinitionData)] == [
-        "owning_part_qn",
-        "attribute_name",
-        "redefinition_type",
-        "literal_value",
-        "source_path",
-        "expression_ast",
-        "expression_text",
-        "target_path",
-        "is_deep_path",
-        "source_file",
-        "source_line",
-        "member_qualified_name",
-        "redefined_target_qns",
-    ]
-    assert [field.name for field in dataclasses.fields(MultiplicityData)] == [
-        "part_usage_name",
-        "owning_part_def_qn",
-        "count",
-        "count_attribute_name",
-        "default_value",
-    ]
-
-
-def test_aggregation_term_models_are_shared_class_objects():
-    from agentic_mbse.sysml import aggregation as shared_aggregation
-    from agentic_mbse.sysml import data_models as shared_models
-
-    from sysml_codegen.extraction import data_models as codegen
-
-    assert codegen.SumTerm is shared_models.SumTerm is shared_aggregation.SumTerm
-    assert codegen.SingletonTerm is shared_models.SingletonTerm is shared_aggregation.SingletonTerm
-    assert codegen.LocalTerm is shared_models.LocalTerm is shared_aggregation.LocalTerm
-
-
-def test_aggregation_term_ordered_field_contracts():
-    from sysml_codegen.extraction.data_models import LocalTerm, SingletonTerm, SumTerm
-
-    assert [field.name for field in dataclasses.fields(SumTerm)] == [
-        "part_usage_name",
-        "attribute_name",
-        "multiplicity_attr",
-        "multiplicity_count",
-        # Exact resolved-target/chain evidence (ELABORATE-FIRST Item 2), snapshot_exclude.
-        "resolved_target",
-        "chain_root",
-        "resolved_member_names",
-    ]
-    assert [field.name for field in dataclasses.fields(SingletonTerm)] == [
-        "source_path",
-        "resolved_target",
-        "chain_root",
-        "resolved_member_names",
-    ]
-    assert [field.name for field in dataclasses.fields(LocalTerm)] == [
-        "attribute_name",
-        "resolved_target",
-        "chain_root",
-        "resolved_member_names",
-    ]
-
-
-@pytest.mark.req("REQ-DM-03")
-def test_req_dm_03_fields_aggregation_expression_data():
-    """AggregationExpressionData has exactly 15 fields."""
-    from sysml_codegen.extraction.data_models import AggregationExpressionData
-
-    expected = {
-        "owning_part_qn",
-        "owning_part_name",
-        "attribute_name",
-        "raw_expression_text",
-        "transformed_expression",
-        "sum_terms",
-        "singleton_terms",
-        "local_terms",
-        "input_channels",
-        "entry_points",
-        "compilability",
-        "has_unsupported_nodes",
-        "aliases",
-        "source_file",
-        "source_line",
-    }
-    actual = _dataclass_field_names(AggregationExpressionData)
-    assert actual == expected
-    assert len(actual) == 15
-
-
-@pytest.mark.req("REQ-DM-03")
-def test_req_dm_03_fields_hierarchy_extraction_result():
-    from sysml_codegen.extraction.data_models import HierarchyExtractionResult
-
-    expected = {
-        "redefinitions",
-        "design_overrides",
-        "multiplicities",
-        "aggregation_expressions",
-        "warnings",
-        "part_usage_names",
-        "usage_type_map",
-    }
-    actual = _dataclass_field_names(HierarchyExtractionResult)
-    assert actual == expected
-    assert len(actual) == 7
-
-
-@pytest.mark.req("REQ-DM-03")
-def test_req_dm_03_fields_binding_resolution():
-    from sysml_codegen.core.models import BindingResolution
-
-    expected = {"resolution_type", "qualified_name", "source_path", "is_transitive"}
-    actual = _pydantic_field_names(BindingResolution)
-    assert actual == expected
-    assert len(actual) == 4
-
-
-@pytest.mark.req("REQ-DM-03")
-def test_req_dm_03_fields_channel_alias():
-    from sysml_codegen.core.models import ChannelAlias
-
-    expected = {"alias_name", "canonical_name", "owning_part_qn", "source"}
-    actual = _pydantic_field_names(ChannelAlias)
-    assert actual == expected
-    assert len(actual) == 4
 
 
 @pytest.mark.req("REQ-DM-03")
@@ -594,23 +319,8 @@ _RM = "sysml_codegen.resolution.models"
 # (module_path, class_name, expected_file_suffix)
 SOURCE_FILE_SPECS = [
     (_DM, "CalculationDefinitionData", "extraction/data_models.py"),
-    (_DM, "PartDefinitionData", "extraction/data_models.py"),
-    (_DM, "RedefinitionData", "agentic_mbse/sysml/data_models.py"),
-    (_DM, "MultiplicityData", "agentic_mbse/sysml/data_models.py"),
-    (_DM, "SumTerm", "agentic_mbse/sysml/data_models.py"),
-    (_DM, "SingletonTerm", "agentic_mbse/sysml/data_models.py"),
-    (_DM, "LocalTerm", "agentic_mbse/sysml/data_models.py"),
-    (_DM, "AggregationExpressionData", "extraction/data_models.py"),
-    (_DM, "HierarchyExtractionResult", "extraction/data_models.py"),
-    (_DM, "ScopedAggregationData", "extraction/data_models.py"),
-    (_DM, "ComputedAttributeData", "extraction/data_models.py"),
     (_DM, "AttributeInfo", "extraction/data_models.py"),
-    (_DM, "ComputedAttributeClassification", "extraction/data_models.py"),
-    (_DM, "RedefinitionType", "agentic_mbse/sysml/data_models.py"),
     (_EC, "Compilability", "extraction/expression_compiler.py"),
-    (_CM, "BindingResolution", "core/models.py"),
-    (_CM, "BindingResolutionType", "core/models.py"),
-    (_CM, "ChannelAlias", "core/models.py"),
     (_RM, "ComputationGraph", "resolution/models.py"),
     (_RM, "PipelineModule", "resolution/models.py"),
     (_RM, "ModuleInput", "resolution/models.py"),
@@ -794,35 +504,6 @@ def test_req_dm_05_parameter_group_properties():
     assert pg.schema_filename == "design_params.py"
 
 
-@pytest.mark.req("REQ-DM-05")
-def test_req_dm_05_scoped_aggregation_data_module_eqn():
-    """ScopedAggregationData.module_eqn returns '{instance_path}__{attribute_name}'."""
-    from sysml_codegen.extraction.data_models import (
-        AggregationExpressionData,
-        ScopedAggregationData,
-    )
-    from sysml_codegen.extraction.expression_compiler import Compilability
-
-    agg = AggregationExpressionData(
-        owning_part_qn="Lib__Solar_Array",
-        owning_part_name="Solar_Array",
-        attribute_name="capital_cost",
-        raw_expression_text="sum(pv_module.capital_cost)",
-        transformed_expression="pv_module__capital_cost * module_count",
-        sum_terms=[],
-        singleton_terms=[],
-        local_terms=[],
-        input_channels=[],
-        entry_points=[],
-        compilability=Compilability.UNKNOWN,
-    )
-    scoped = ScopedAggregationData(
-        expression=agg,
-        instance_path="solar_battery_plant__solar_array",
-    )
-    assert scoped.module_eqn == "solar_battery_plant__solar_array__capital_cost"
-
-
 # ---------------------------------------------------------------------------
 # REQ-DM-06: Delegated models importable
 # ---------------------------------------------------------------------------
@@ -831,11 +512,6 @@ def test_req_dm_05_scoped_aggregation_data_module_eqn():
 @pytest.mark.req("REQ-DM-06")
 class TestDelegatedModelsImportable:
     """Models with dedicated docs are still importable from their source."""
-
-    def test_computed_attribute_data(self):
-        from sysml_codegen.extraction.data_models import ComputedAttributeData
-
-        assert ComputedAttributeData is not None
 
     def test_expression_ref_is_retired(self):
         import agentic_mbse.sysml.types as delegated_types

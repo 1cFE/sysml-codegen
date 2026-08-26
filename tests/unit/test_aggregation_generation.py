@@ -11,18 +11,11 @@ from pathlib import Path
 
 import jinja2
 
-from sysml_codegen.core.qualified_names import get_module_name
-from sysml_codegen.extraction.data_models import (
-    AggregationExpressionData,
-    ScopedAggregationData,
-)
 from sysml_codegen.generation.pipeline import _module_to_context
 from sysml_codegen.generation.registry import generate_registry
 from sysml_codegen.generation.stencils import generate_backlog_report
 from sysml_codegen.resolution.models import (
     ComputationGraph,
-    InputSource,
-    ModuleInput,
     ModuleKind,
     ModuleOutput,
     PipelineModule,
@@ -31,31 +24,6 @@ from sysml_codegen.resolution.models import (
 # ---------------------------------------------------------------------------
 # Test helpers
 # ---------------------------------------------------------------------------
-
-
-def _make_scoped_agg(
-    attribute_name: str = "capital_cost",
-    owning_part_qn: str = "Lib__Solar_Array",
-    owning_part_name: str = "Solar_Array",
-    instance_path: str = "Design__plant__solar_array",
-    raw_expression_text: str = "sum(child.capital_cost * child.count)",
-    transformed_expression: str = "sum(child_capital_cost * child_count)",
-    has_unsupported_nodes: bool = False,
-) -> ScopedAggregationData:
-    expr = AggregationExpressionData(
-        owning_part_qn=owning_part_qn,
-        owning_part_name=owning_part_name,
-        attribute_name=attribute_name,
-        raw_expression_text=raw_expression_text,
-        transformed_expression=transformed_expression,
-        sum_terms=[],
-        singleton_terms=[],
-        local_terms=[],
-        input_channels=[],
-        entry_points=[],
-        has_unsupported_nodes=has_unsupported_nodes,
-    )
-    return ScopedAggregationData(expression=expr, instance_path=instance_path)
 
 
 def _make_pipeline_module(
@@ -438,12 +406,6 @@ class TestAggregationAutoImpl:
         assert "AUTO_IMPLEMENTED = True" in rendered
         assert "def run_design__plant__solar_array__capital_cost(" in rendered
 
-    def test_unsupported_nodes_not_auto_implemented(self):
-        """has_unsupported_nodes=True should NOT produce auto-implementation."""
-        agg = _make_scoped_agg(has_unsupported_nodes=True)
-        assert agg.expression.has_unsupported_nodes is True
-
-
 # ---------------------------------------------------------------------------
 # Tests: Virtual CalcUsage Code Path (Issue #2)
 # ---------------------------------------------------------------------------
@@ -501,54 +463,6 @@ class TestVirtualCalcUsageAutoImpl:
 class TestAggregationModuleLookupCaseMatch:
     """BF-3: Aggregation module lookup normalizes case."""
 
-    def test_mixed_case_eqn_finds_lowered_module(self):
-        """agg.module_eqn with MixedCase finds module keyed by lowered name."""
-        agg = _make_scoped_agg(instance_path="Design__Plant__Solar_Array")
-        # module_eqn = "Design__Plant__Solar_Array__capital_cost" (mixed)
-        # m.name = "design__plant__solar_array__capital_cost" (lowered)
-        module = PipelineModule(
-            name=get_module_name(agg.module_eqn),
-            module_type="SolarArrayCapitalCost",
-            inputs=[ModuleInput(
-                field_name="pv_module_capital_cost",
-                python_type="float",
-                param_name="pv_module_capital_cost",
-                source=InputSource(source_type="entry_point", qualified_name="ep1"),
-            )],
-            outputs=[],
-            execution_order=0,
-            module_kind=ModuleKind.AGGREGATION,
-        )
-        agg_modules_by_name = {module.name: module}
-
-        # Lookup using normalized key (the fix)
-        found = agg_modules_by_name.get(get_module_name(agg.module_eqn))
-        assert found is not None
-        assert len(found.inputs) == 1
-
-    def test_raw_eqn_lookup_fails(self):
-        """Without normalization, mixed-case EQN fails to find lowered module."""
-        agg = _make_scoped_agg(instance_path="Design__Plant__Solar_Array")
-        module = PipelineModule(
-            name=get_module_name(agg.module_eqn),
-            module_type="SolarArrayCapitalCost",
-            inputs=[ModuleInput(
-                field_name="pv_module_capital_cost",
-                python_type="float",
-                param_name="pv_module_capital_cost",
-                source=InputSource(source_type="entry_point", qualified_name="ep1"),
-            )],
-            outputs=[],
-            execution_order=0,
-            module_kind=ModuleKind.AGGREGATION,
-        )
-        agg_modules_by_name = {module.name: module}
-
-        # Raw lookup without normalization fails (the bug)
-        raw_found = agg_modules_by_name.get(agg.module_eqn)
-        assert raw_found is None  # This is the bug BF-3 fixes
-
-
 # ---------------------------------------------------------------------------
 # BF-4 + BF-5: Module wrapper and stencil paths use instance-scoped EQN
 # ---------------------------------------------------------------------------
@@ -557,46 +471,3 @@ class TestAggregationModuleLookupCaseMatch:
 class TestAggregationPathsUseInstanceEQN:
     """BF-4 + BF-5: Module wrapper and stencil paths use instance-scoped EQN."""
 
-    def test_module_wrapper_sysml_qn_uses_instance_eqn(self):
-        """sysml_qn derived from module_eqn, not owning_part_qn::attribute."""
-        agg = _make_scoped_agg(
-            owning_part_qn="Lib__Solar_Array",
-            attribute_name="capital_cost",
-            instance_path="Design__Plant__Solar_Array",
-        )
-        # Old (wrong): "Lib__Solar_Array::capital_cost" → PartDef-scoped
-        old_sysml_qn = f"{agg.expression.owning_part_qn}::{agg.expression.attribute_name}"
-        assert old_sysml_qn.startswith("Lib")  # Wrong: PartDef-scoped
-
-        # New (correct): instance-scoped from module_eqn
-        new_sysml_qn = agg.module_eqn.replace("__", "::")
-        assert new_sysml_qn.startswith("Design")
-        assert "Solar_Array" in new_sysml_qn
-        assert "capital_cost" in new_sysml_qn
-
-    def test_stencil_path_matches_wrapper_path(self):
-        """Stencil path derivation uses same instance-scoped EQN as wrapper."""
-        agg = _make_scoped_agg(instance_path="Design__Plant__Solar_Array")
-        wrapper_qn = agg.module_eqn.replace("__", "::")
-        stencil_qn = agg.module_eqn.replace("__", "::")
-        assert wrapper_qn == stencil_qn
-
-    def test_different_instances_produce_different_paths(self):
-        """Two instances of same PartDef produce different paths (no collision)."""
-        agg1 = _make_scoped_agg(
-            owning_part_qn="Lib__Solar_Array",
-            instance_path="Design__Plant__Solar_Array",
-        )
-        agg2 = _make_scoped_agg(
-            owning_part_qn="Lib__Solar_Array",
-            instance_path="Design__Plant2__Solar_Array",
-        )
-        # Old: both would produce "Lib__Solar_Array::capital_cost" (collision!)
-        old_qn1 = f"{agg1.expression.owning_part_qn}::{agg1.expression.attribute_name}"
-        old_qn2 = f"{agg2.expression.owning_part_qn}::{agg2.expression.attribute_name}"
-        assert old_qn1 == old_qn2  # Collision!
-
-        # New: different instance paths produce different QNs
-        new_qn1 = agg1.module_eqn.replace("__", "::")
-        new_qn2 = agg2.module_eqn.replace("__", "::")
-        assert new_qn1 != new_qn2  # No collision

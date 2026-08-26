@@ -6,8 +6,6 @@ retired with the v5 family (retirement step 2).
 """
 
 from sysml_codegen.resolution.models import (
-    BindingResolution,
-    BindingResolutionType,
     ComputationGraph,
     EntryPoint,
     EntryPointType,
@@ -20,8 +18,6 @@ from sysml_codegen.resolution.models import (
 
 __all__ = [
     # models
-    "BindingResolution",
-    "BindingResolutionType",
     "ComputationGraph",
     "EntryPoint",
     "EntryPointType",

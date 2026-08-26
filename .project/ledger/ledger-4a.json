@@ -3589,11 +3589,14 @@
    "group": "4C-retained",
    "authority": "plan rule 6",
    "unreachability": null,
-   "replacement_proof_node": null,
+   "replacement_proof_node": [
+    "tests/conformance/test_occurrence_domain_derivation.py",
+    "tests/conformance/test_elaboration_aggregations.py"
+   ],
    "blocked_by": [],
-   "reason": "C06: Hierarchy Resolver conformance tests. Passes at rebuild HEAD and imports no legacy owner, so no Phase 4 action reaches it. The forensic candidate's deletion had only a family-level census row.",
+   "reason": "C06: Hierarchy Resolver conformance tests. Passes at rebuild HEAD and imports no legacy owner, so no Phase 4 action reaches it. The forensic candidate's deletion had only a family-level census row. Superseded by REPO-CLEANUP Move C (2026-08-25): the subject was deleted with its owner - the legacy extraction lane (L-153/L-174/L-185), the ConcreteConstraint family (L-212), or the V11 collector (L-249) - per the owner rulings recorded in .project/backlog/epic_repo_cleanup.md; the deletion commits carry the evidence.",
    "revise_step3": "REVISE step 3 EXECUTED (2026-08-11). All 44 of the 46 nodes that broke at retirement step 1 are repointed onto live extraction (tests/helpers/live_extraction.py via the conformance conftest's live_extraction_facts / solar_battery_facts / issue22_facts / alias_agg_probe_facts fixtures). Assertions unchanged. One node needed a decision: test_channel_alias_from_chain_redef read the v5 pipeline's rendered channel_aliases list (_build_chain_aliases in orchestration/pipeline_builder.py, a deletion row); it is repointed in place as test_aggregation_carries_its_chain_alias onto the extraction fact the alias was minted from \u2014 the sibling-alias pass in extraction/hierarchy_resolver.py records aliases=['reported_cost'] on the aggregation \u2014 with the generated-package half named on the exact route (test_exact_route_alias_aggregation.py::test_the_aggregation_and_its_chain_alias_both_reach_a_consumer). No node retired; node count unchanged at 46. Nodes gain a license gate, stated in the module docstring.",
-   "disposition_4c": "repoint",
+   "disposition_4c": "retire-with-owner",
    "disposition_4c_note": "Added at REVISE step 3 (2026-08-11). The row had carried no disposition at all while 44 of its 46 nodes broke at retirement step 1 \u2014 the fifth entry's item 4. See revise_step3.",
    "state": "executed",
    "executed_commit": "19072adf41dcfe3bf1385e843a52c414fac02969"
@@ -4123,8 +4126,8 @@
     "tests/conformance/test_elaboration_aggregations.py::test_the_caret_reaches_python_as_power_never_as_xor"
    ],
    "blocked_by": [],
-   "reason": "Family 1 \u2014 Blind-dispatch fall-throughs made total and loud (PIPELINE-TRUTH Item 5). Imports legacy owners (pipeline_builder) directly, so 4B's deletion breaks it. Retain now; before the owning 4B group lands, this row needs either a public-behaviour rewrite or a recorded responsibility retirement.",
-   "disposition_4c": "repoint",
+   "reason": "Family 1 \u2014 Blind-dispatch fall-throughs made total and loud (PIPELINE-TRUTH Item 5). Imports legacy owners (pipeline_builder) directly, so 4B's deletion breaks it. Retain now; before the owning 4B group lands, this row needs either a public-behaviour rewrite or a recorded responsibility retirement. Superseded by REPO-CLEANUP Move C (2026-08-25): the subject was deleted with its owner - the legacy extraction lane (L-153/L-174/L-185), the ConcreteConstraint family (L-212), or the V11 collector (L-249) - per the owner rulings recorded in .project/backlog/epic_repo_cleanup.md; the deletion commits carry the evidence.",
+   "disposition_4c": "retire-with-owner",
    "node_count": 5,
    "responsibility": "INV-1 totality: every terminal dispatch arm on a load-bearing extraction path routes an unhandled input to a distinct, warned disposition rather than silently reusing a valid category.",
    "breaks_on": "sysml_codegen.orchestration.pipeline_builder (L-029, 4B-v5-family)",
@@ -4433,10 +4436,12 @@
    "group": "4C-retained",
    "authority": "plan rule 6",
    "unreachability": null,
-   "replacement_proof_node": null,
+   "replacement_proof_node": [
+    "tests/conformance/test_elaboration_specialization_retypes.py"
+   ],
    "blocked_by": [],
-   "reason": "Conformance tests for part-usage type indexing (SC-3, Item 4). Passes at rebuild HEAD and imports no legacy owner, so no Phase 4 action reaches it. The forensic candidate's deletion had only a family-level census row.",
-   "disposition_4c": "repoint",
+   "reason": "Conformance tests for part-usage type indexing (SC-3, Item 4). Passes at rebuild HEAD and imports no legacy owner, so no Phase 4 action reaches it. The forensic candidate's deletion had only a family-level census row. Superseded by REPO-CLEANUP Move C (2026-08-25): the subject was deleted with its owner - the legacy extraction lane (L-153/L-174/L-185), the ConcreteConstraint family (L-212), or the V11 collector (L-249) - per the owner rulings recorded in .project/backlog/epic_repo_cleanup.md; the deletion commits carry the evidence.",
+   "disposition_4c": "retire-with-owner",
    "node_count": 7,
    "responsibility": "Conformance tests for part-usage type indexing (SC-3, Item 4).",
    "breaks_on": "sysml_codegen.snapshot:load_extraction_snapshot (L-028, 4B-G2)",
@@ -5112,12 +5117,11 @@
    "authority": "plan rule 6 \u2014 keep the Item 6 tests until after product proof; every removed or rewritten test needs a responsibility-level disposition first",
    "unreachability": null,
    "replacement_proof_node": [
-    "tests/unit/test_concrete_constraint_model.py",
     "tests/conformance/test_elaboration_identity_collisions.py::test_semantic_graph_keeps_same_rendered_names_distinct"
    ],
    "blocked_by": [],
-   "reason": "Phase 1: ConcreteConstraint data contract + constraint_id minting (offline, no model). Imports legacy owners (constraint_lowering) directly, so 4B's deletion breaks it. Retain now; before the owning 4B group lands, this row needs either a public-behaviour rewrite or a recorded responsibility retirement.",
-   "disposition_4c": "repoint",
+   "reason": "Phase 1: ConcreteConstraint data contract + constraint_id minting (offline, no model). Imports legacy owners (constraint_lowering) directly, so 4B's deletion breaks it. Retain now; before the owning 4B group lands, this row needs either a public-behaviour rewrite or a recorded responsibility retirement. Superseded by REPO-CLEANUP Move C (2026-08-25): the subject was deleted with its owner - the legacy extraction lane (L-153/L-174/L-185), the ConcreteConstraint family (L-212), or the V11 collector (L-249) - per the owner rulings recorded in .project/backlog/epic_repo_cleanup.md; the deletion commits carry the evidence.",
+   "disposition_4c": "retire-with-owner",
    "node_count": 26,
    "responsibility": "The ConcreteConstraint data contract and constraint_id minting: catalog/exclusion model shape, transactional mutation rejection, per-arm input validation, and id determinism.",
    "breaks_on": "sysml_codegen.analysis.constraint_lowering (L-001, 4B-v5-family)",
@@ -6044,15 +6048,14 @@
    "unreachability": null,
    "replacement_proof_node": [
     "tests/unit/test_warning_reconciliation_exact_route.py::test_the_projection_hard_codes_an_empty_fall_through_set",
-    "tests/unit/test_warning_reconciliation_exact_route.py::test_the_exact_route_projects_no_fall_through_entry_points",
-    "tests/unit/test_uncovered_params.py"
+    "tests/unit/test_warning_reconciliation_exact_route.py::test_the_exact_route_projects_no_fall_through_entry_points"
    ],
    "required_suite": null,
    "blocked_by": [],
    "responsibility_nodes": 1,
    "behaviour_responsibility": "V11 seeded strict-generation abort",
-   "reason": "1 nodes repointed at the legacy route in Slice 3E because their specimen is what the cutover retires. Blocks 4B: no legacy owner it drives may be deleted until this row names an exact-route node that collects and passes. Legacy owners it drives: graph_builder. Gate 4C (S2 ruling, 2026-08-11): CLOSED BY PROOF, per the 3E fail-before-mutate alternative. The V11 abort is structurally unreachable on the exact route: elaboration/project.py builds every ComputationGraph with fallback_entry_points=set() in both run() and select(), and collect_uncovered_params filters on membership in that set, so cli._reconcile_params_coverage runs on every generation and cannot fire. No fixture can seed the gap through the public surface, so no behavioural specimen exists to author. V11 coverage owner: tests/unit/test_uncovered_params.py's nine route-neutral graph-level nodes, named in this row's proof node list and run by the checker. The first two nodes are the rot pins \u2014 one asserts the projection literal, one asserts an empty collector result on every accepted fixture \u2014 so the proof fails the day the exact route starts producing fall-through entry points. Flagged to the Phase 5 owner packet: V11's guard is now structural, not behavioural.",
-   "disposition_4c": "repoint",
+   "reason": "1 nodes repointed at the legacy route in Slice 3E because their specimen is what the cutover retires. Blocks 4B: no legacy owner it drives may be deleted until this row names an exact-route node that collects and passes. Legacy owners it drives: graph_builder. Gate 4C (S2 ruling, 2026-08-11): CLOSED BY PROOF, per the 3E fail-before-mutate alternative. The V11 abort is structurally unreachable on the exact route: elaboration/project.py builds every ComputationGraph with fallback_entry_points=set() in both run() and select(), and collect_uncovered_params filters on membership in that set, so cli._reconcile_params_coverage runs on every generation and cannot fire. No fixture can seed the gap through the public surface, so no behavioural specimen exists to author. V11 coverage owner: tests/unit/test_uncovered_params.py's nine route-neutral graph-level nodes, named in this row's proof node list and run by the checker. The first two nodes are the rot pins \u2014 one asserts the projection literal, one asserts an empty collector result on every accepted fixture \u2014 so the proof fails the day the exact route starts producing fall-through entry points. Flagged to the Phase 5 owner packet: V11's guard is now structural, not behavioural. Superseded by REPO-CLEANUP Move C (2026-08-25): the subject was deleted with its owner - the legacy extraction lane (L-153/L-174/L-185), the ConcreteConstraint family (L-212), or the V11 collector (L-249) - per the owner rulings recorded in .project/backlog/epic_repo_cleanup.md; the deletion commits carry the evidence.",
+   "disposition_4c": "retire-with-owner",
    "node_count": 10,
    "responsibility": "Params-coverage collector + V11 strict boundary (Item 7 / REQ-GA-08, D4).",
    "breaks_on": "sysml_codegen.resolution.graph_builder (L-011, 4B-v5-family); sysml_codegen.snapshot:build_full_graph_from_snapshot (L-028, 4B-G2); tests.helpers.legacy_route (L-276, 4B-G4)",

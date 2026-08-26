@@ -19,11 +19,7 @@ from typing import Literal
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 # Import shared types from core for re-export (backward compatibility)
-from sysml_codegen.core.models import (
-    AutoImplContext,
-    BindingResolution,
-    BindingResolutionType,
-)
+from sysml_codegen.core.models import AutoImplContext
 from sysml_codegen.extraction.expression_compiler import Compilability
 
 
@@ -252,7 +248,7 @@ class OutputAlias(BaseModel):
     - ``part_def`` (shape A): from the ``_scoped_alias`` registry (a part-def
       derived attribute, e.g. ``total_cost = cost_calc.cost``, expanded per
       instance).
-    - ``part_usage`` (shape B): from an ``expose_pure`` ``ChannelAlias`` (a
+    - ``part_usage`` (shape B): from an ``expose_pure`` channel alias (a
       derived attribute on a part usage).
 
     Attributes:
@@ -514,8 +510,6 @@ class ComputationGraph(BaseModel):
 
 
 __all__ = [
-    "BindingResolution",
-    "BindingResolutionType",
     "ComputationGraph",
     "ConstraintCatalog",
     "ConstraintCatalogEntry",

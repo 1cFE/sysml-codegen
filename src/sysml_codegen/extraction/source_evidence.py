@@ -19,20 +19,8 @@ from enum import Enum
 __all__ = [
     "ReadinessCode",
     "ReadinessFinding",
-    "ValueSiteKind",
 ]
 
-
-class ValueSiteKind(str, Enum):
-    """The three modeled value-site kinds (design D2).
-
-    A modeled value site is a model location that supplies a value before
-    producer resolution. Computed producer outputs are not value sites.
-    """
-
-    DEFINITION_DEFAULT = "definition_default"
-    OCCURRENCE_OVERRIDE = "occurrence_override"
-    USAGE_LITERAL = "usage_literal"
 
 
 class ReadinessCode(str, Enum):

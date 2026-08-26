@@ -1,10 +1,7 @@
 # 09 -- Data Models Reference
 
 > **Status: live models only.** The exact route is the only authority. Everything documented
-> here exists in the tree and is reachable from `run_codegen`, with one flagged exception:
-> the hierarchy/aggregation extraction structures (`HierarchyExtractionResult` and friends)
-> in `extraction/data_models.py`, whose legacy owner was deleted by REPO-CLEANUP Move C —
-> the classes themselves retire with the dead-model sweep later in the same move.
+> here exists in the tree and is reachable from `run_codegen`.
 >
 > The rows for the types the 2026-08-12 retirement deleted (`BacktrackingResult`,
 > `DesignAttributeData`, `DerivedParameterGroup`, `ParameterSource`, the `OutputRegistry`
@@ -54,24 +51,11 @@ Every value listed (REQ-DM-02). These are the most common source of doc bugs.
 | Enum | Values | Source |
 |------|--------|--------|
 | `BindingType` | `CHAIN`, `REFERENCE`, `LITERAL`, `EXPRESSION`, `UNBOUND` | `agentic_mbse` |
-| `RedefinitionType` | `LITERAL`, `CHAIN`, `EXPRESSION` | `extraction/data_models.py` |
-| `ComputedAttributeClassification` ¹ | `FORMULA`, `EXPOSE_PURE`, `EXPOSE_COMPUTED`, `EXPOSE_CHAIN_TENTATIVE`, `LITERAL`, `UNRESOLVABLE` | `extraction/data_models.py` |
 | `Compilability` | `FULLY_COMPILABLE`, `PARTIALLY_COMPILABLE`, `MANUAL_REQUIRED`, `UNKNOWN` | `extraction/expression_compiler.py` |
-| `ModuleKind` ² | `CALCULATION`, `FORMULA`, `AGGREGATION`, `CONSTRAINT`, `REPORT_AGGREGATOR` | `resolution/models.py` |
-| `BindingResolutionType` | `ENTRY_POINT`, `MODULE_OUTPUT` | `core/models.py` |
+| `ModuleKind` ¹ | `CALCULATION`, `FORMULA`, `AGGREGATION`, `CONSTRAINT`, `REPORT_AGGREGATOR` | `resolution/models.py` |
 | `EntryPointType` | `LIBRARY_DEFAULT`, `DESIGN_ATTRIBUTE`, `USAGE_LITERAL` | `resolution/models.py` |
 
-> ¹ `EXPOSE_CHAIN_TENTATIVE` is a transient value (Item 10), tagged at extraction for a
-> well-formed multi-hop feature chain; its Phase-3b confirm pass retired with
-> `orchestration/output_registry_builder.py` (2026-08-12).
-> `UNRESOLVABLE` is likely unreachable for well-formed SysML (SysIDE
-> always resolves attribute QNs). It exists as a defensive fallback. An attribute
-> referencing only inherited and/or local attributes classifies `FORMULA` (Step-2b now
-> prefix-matches the owning part QN OR any ancestor PartDef QN — the inherited-attr fix,
-> TRUTH-DEBT Item 4) — see [16-computed-attributes](16-computed-attributes.md) Known
-> Issues §Inherited Attribute Classification.
->
-> ² `ModuleKind` is set once at `PipelineModule` construction and dispatched on at every
+> ¹ `ModuleKind` is set once at `PipelineModule` construction and dispatched on at every
 > generation seam (`resolution/models.py`, CONSTRAINT-EXEC Item 6). It replaced the two
 > accreted Boolean flags `is_computed_attribute` / `is_aggregation` the module carried
 > before. (The retired `ExpressionNodeType` enum — `BINARY_OP` / `UNARY_OP` / … — went
@@ -117,28 +101,15 @@ fields listed are still annotated `str` in their dataclass/BaseModel definitions
 (a deliberate deferral, filed `[DM08-MODEL-FIELD-TYPING]`; REQ-DM-08 now pins the
 enforced surface — `test_dm08_enforced_surface.py` — and its text names exactly that
 surface, per the matrix). Fields with
-no format constraint at all: `BindingInfo.param_name` (simple name),
-`PipelineModule.name` (module name = lowered EQN, could be typed later).
+no format constraint at all: `PipelineModule.name` (module name = lowered EQN,
+could be typed later).
 
 | Model | Field | Format |
 |-------|-------|------|
 | `CalculationDefinitionData` | `qualified_name` | `SysMLQN` |
-| `CalcUsageData` | `qualified_name` | `EQN` |
-| `CalcUsageData` | `calc_def_qualified_name` | `SysMLQN` |
-| `PartDefinitionData` | `qualified_name` | `SysMLQN` |
-| `RedefinitionData` | `owning_part_qn` | `EQN` |
-| `DesignAttributeData` | `qualified_name` | `EQN` |
-| `BindingResolution` | `qualified_name` | `PQN` (module_output channel); EQN or PQN for entry_point |
 | `ModuleOutput` | `channel_name` | `CanonicalChannel` |
 | `EntryPoint` | `qualified_name` | `PQN` |
 | `InputSource` | `producer_channel` | `CanonicalChannel \| None` |
-| `OutputRegistry` | scoped registry keys | `ScopedKey` |
-| `OutputRegistry` | SysML QN registry keys | `SysMLQN` |
-| `OutputRegistry` | alias registry keys | `ScopedKey` |
-| `OutputRegistry` | scoped-alias registry keys | `ScopedAliasKey` |
-| `OutputRegistry` | all registry values | `CanonicalChannel` |
-| `ChannelAlias` | `alias_name` | `ScopedKey` (CHAIN redefs); bare name for `expose_pure` — scoped at registration |
-| `ChannelAlias` | `canonical_name` | dotted `ScopedKey`-format target, resolved to a `CanonicalChannel` at registration |
 
 ## Extraction Models
 
@@ -149,59 +120,14 @@ no format constraint at all: `BindingInfo.param_name` (simple name),
 `output_expression_asts: dict[str, Any]`, `all_member_names: set[str]`,
 `member_expressions: dict[str, Any]`.
 
-**PartDefinitionData** (dataclass, `extraction/data_models.py`)
-`name: str`, `qualified_name: str`, `doc_comment: str`, `attributes: list[AttributeInfo]`,
-`constraints: list[ConstraintInfo]`, `source_file: Path`, `source_line: int`, `source_hash: str`.
-
-**RedefinitionData** (dataclass, `extraction/data_models.py`)
-`owning_part_qn: str`, `attribute_name: str`, `redefinition_type: RedefinitionType`,
-`literal_value: float | int | str | bool | None`, `source_path: str | None`,
-`expression_ast: Any`, `expression_text: str`, `target_path: list[str]`,
-`is_deep_path: bool`, `source_file: Path`, `source_line: int`.
-
-**MultiplicityData** (dataclass, `extraction/data_models.py`)
-`part_usage_name: str`, `owning_part_def_qn: str`, `count: int | None`,
-`count_attribute_name: str | None`, `default_value: int | None`.
-
-**HierarchyExtractionResult** (dataclass, `extraction/data_models.py`)
-`redefinitions: list[RedefinitionData]`, `design_overrides: list[RedefinitionData]`,
-`multiplicities: list[MultiplicityData]`, `aggregation_expressions: list[AggregationExpressionData]`,
-`warnings: list[str]`, `part_usage_names: dict[str, set[str]]`,
-`usage_type_map: dict[tuple[str, str], str]`.
-
 **AttributeInfo** (dataclass, `extraction/data_models.py`, extends `BaseAttributeInfo`)
 Inherited: `name`, `sysml_type`, `default_value`, `binding_type`, `is_input`, `is_output`.
 Added: `python_type: str`, `description: str`, `unit: str | None`, `source_line: int`,
 `is_optional: bool`.
 
-**AggregationExpressionData** (dataclass, `extraction/data_models.py`)
-`owning_part_qn`, `owning_part_name`, `attribute_name`, `raw_expression_text`,
-`transformed_expression`, `sum_terms: list[SumTerm]`, `singleton_terms: list[SingletonTerm]`,
-`local_terms: list[LocalTerm]`, `input_channels: list[str]`, `entry_points: list[str]`,
-`aliases: list[str]`, `compilability`, `has_unsupported_nodes: bool`, `source_file`, `source_line`.
-See 13 (retired doc; git history), 25 (retired doc; git history) for semantics.
-
-*Delegated: ComputedAttributeData → [16](16-computed-attributes.md). Expression compiler → [14](14-expression-compiler.md).*
-
-## Analysis Models
-
-**ScopedAggregationData** (dataclass, `extraction/data_models.py`)
-`expression: AggregationExpressionData`, `instance_path: str`.
-Property: `module_eqn` = `"{instance_path}__{attribute_name}"`.
-Bridge from extraction to pipeline — wraps an aggregation with a concrete design
-instance path. See 13 (retired doc; git history).
-
-*Delegated: FunctionSignature → [23](23-smart-regen-preservation.md).*
+*Delegated: expression compiler → [14](14-expression-compiler.md).*
 
 ## Core Models
-
-**BindingResolution** (BaseModel, `core/models.py`)
-`resolution_type: BindingResolutionType`, `qualified_name: str`,
-`source_path: str | None`, `is_transitive: bool`.
-
-**ChannelAlias** (BaseModel, `core/models.py`)
-`alias_name: str`, `canonical_name: str`, `owning_part_qn: str`,
-`source: Literal["redefinition", "expose_pure", "design_override"]`.
 
 *Delegated: Identifier types (SysMLQualifiedName, ModuleType, PythonModulePath, ElementQualifiedName) → [15](15-naming-conventions.md), [20](20-module-registry-generation.md).*
 
@@ -236,7 +162,7 @@ Item 7 / D6, "generation reads only the graph"). See
 `{instance_path}__{alias_name}.json`. One EXPOSE_PURE modeler name surfaced onto the
 canonical channel the value already flows on (Item 11 / SC-7 / REQ-DM-09). `shape`
 tags provenance: `part_def` from the `_scoped_alias` registry (shape A), `part_usage`
-from an `expose_pure` `ChannelAlias` (shape B). `canonical_channel` is read from the
+from an `expose_pure` channel alias (shape B). `canonical_channel` is read from the
 registry, never re-derived (INV-2), and is validated to be a declared graph output
 channel (INV-3). See [16-computed-attributes](16-computed-attributes.md) and
 [21-pipeline-yaml-generation](21-pipeline-yaml-generation.md).
@@ -246,7 +172,7 @@ channel (INV-3). See [16-computed-attributes](16-computed-attributes.md) and
 `execution_order: int`, `compilability: Compilability`, `compiled_expression: str | None`,
 `module_kind: ModuleKind` (**required**), `output_schema_type: str | None`,
 `auto_impl_context: dict | None`.
-Metadata carried from CalcDef / ComputedAttributeData / AggregationExpressionData:
+Metadata carried from the calc def:
 `calc_def_name: str | None`, `calc_def_qualified_name: str | None`, `doc_comment: str | None`,
 `calc_expressions: list[str] | None`, `source_file: str | None`, `source_line: int | None`.
 
@@ -335,9 +261,6 @@ ComputationGraph ── modules: [PipelineModule] ── inputs: [ModuleInput] �
                  ├─ entry_point_groups: [ParameterGroup] ── parameters: [EntryPoint]
                  ├─ output_aliases: [OutputAlias]
                  └─ execution_order: [str]
-HierarchyExtractionResult ── redefinitions/design_overrides: [RedefinitionData]
-                          ├─ multiplicities: [MultiplicityData]
-                          └─ aggregation_expressions: [AggregationExpressionData]
 ```
 
 ## Related Documents
