@@ -2,9 +2,9 @@
 
 > **Status: live models only.** The exact route is the only authority. Everything documented
 > here exists in the tree and is reachable from `run_codegen`, with one flagged exception:
-> the hierarchy/aggregation extraction structures (`HierarchyExtractionResult` and friends),
-> whose owner `extraction/hierarchy_resolver.py` is off the exact route's construction
-> closure and is being retired by REPO-CLEANUP Move C.
+> the hierarchy/aggregation extraction structures (`HierarchyExtractionResult` and friends)
+> in `extraction/data_models.py`, whose legacy owner was deleted by REPO-CLEANUP Move C —
+> the classes themselves retire with the dead-model sweep later in the same move.
 >
 > The rows for the types the 2026-08-12 retirement deleted (`BacktrackingResult`,
 > `DesignAttributeData`, `DerivedParameterGroup`, `ParameterSource`, the `OutputRegistry`
@@ -148,20 +148,6 @@ no format constraint at all: `BindingInfo.param_name` (simple name),
 `references: list[str]`, `source_file: Path`, `source_line: int`, `source_hash: str`,
 `output_expression_asts: dict[str, Any]`, `all_member_names: set[str]`,
 `member_expressions: dict[str, Any]`.
-
-**CalcUsageData** (dataclass, `extraction/usage_extractor.py`)
-`instance_name: str`, `calc_def_name: str`, `calc_def_qualified_name: str`,
-`module_type: str`, `bindings: list[BindingInfo]`, `unbound_params: list[str]`,
-`source_file: Path`, `source_line: int`, `parent_part_path: str`,
-`qualified_name: str`, `is_template: bool`, `owning_part_def_qn: str | None`,
-`raw_element: object | None`.
-Properties: `parameter_bindings`, `has_cross_file_bindings`.
-
-**BindingInfo** (dataclass, `extraction/usage_extractor.py`)
-`param_name: str`, `source_path: str | None`, `binding_type: BindingType`,
-`is_cross_file: bool`, `raw_expression: str`, `source_instance_elem: object | None`,
-`source_attribute_elem: object | None`, `literal_value: float | int | str | bool | None`,
-`expression_ast: Any`. Properties: `source_instance_name`, `source_attribute_name`.
 
 **PartDefinitionData** (dataclass, `extraction/data_models.py`)
 `name: str`, `qualified_name: str`, `doc_comment: str`, `attributes: list[AttributeInfo]`,

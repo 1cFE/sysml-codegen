@@ -34,24 +34,24 @@ extraction lane is deleted. Both recorded in the epic.
 
 ### C1 — Trivially dead trees
 
-- [ ] `scripts/archive/` (8,274 lines; imports modules the cutover deleted, cannot execute)
-- [ ] The twelve retired reference docs (3,633 lines): `docs/architecture/reference/`
+- [x] `scripts/archive/` (8,274 lines; imports modules the cutover deleted, cannot execute)
+- [x] The twelve retired reference docs (3,633 lines): `docs/architecture/reference/`
       03, 04, 05, 07, 10, 11, 12, 13, 17, 24, 25, 28. Doc 09 is mixed — cut its retired half,
       keep the live half. Update `CLAUDE.md`'s "Retired" section to match what remains.
 
 ### C2 — `verification/` retirement (owner-ruled)
 
-- [ ] Delete `verification/` (~3,858 lines) and its dedicated test files (~4,900 lines):
+- [x] Delete `verification/` (~3,858 lines) and its dedicated test files (~4,900 lines):
       `test_probe_fixture_lock.py`, `test_evidence_artifact_topology.py`,
       `test_artifact_sources.py`, `tests/helpers/artifact_sources.py`, and the
       manifest-bound portions of others found by
       `grep -rlE "from verification|import verification|helpers(\.| import )artifact_sources" tests/`
       (the string-level grep over-matches docstring mentions, including a deletion-locked test)
-- [ ] **Split, don't delete, `test_stop_parser_documentation_contract.py`** — it is mixed: its
+- [x] **Split, don't delete, `test_stop_parser_documentation_contract.py`** — it is mixed: its
       manifest-bound legs retire with `verification/`, but it carries the only mechanical guard
       on the owner-verbatim `0003`/`0004` quotes and the register conventions (48 tests passed
       license-free at Move A). Keep those in a renamed register-contract test file.
-- [ ] Disentangle the four manifest-raising **product** tests so they run from an ordinary
+- [x] Disentangle the four manifest-raising **product** tests so they run from an ordinary
       checkout — cut the `helpers.artifact_sources` import seam in all four:
       `test_self_binding_guidance_contract.py` (agentic root from the installed
       `agentic_mbse` package), `test_exact_route_fingerprint_stability.py` (history root =
@@ -60,9 +60,9 @@ extraction lane is deleted. Both recorded in the epic.
       subject-driven work is C3's: the hierarchy file was classified 2026-08-25 as
       legacy-subject throughout (all 43 tests) and retires whole in C3 under the ratified
       ruling (epic, Owner Rulings); the dispatch file is mixed and is split in C3.
-- [ ] Delete the five kept probe files at `.project/active/stop-reinventing-the-parser/probes/`
+- [x] Delete the five kept probe files at `.project/active/stop-reinventing-the-parser/probes/`
       (they existed only for the lock suite's leg 3) and the now-empty item folder
-- [ ] `test_v6_snapshot_inventory.py` / `test_check_ledger_4a.py` / `test_check_proof_integrity.py`
+- [x] `test_v6_snapshot_inventory.py` / `test_check_ledger_4a.py` / `test_check_proof_integrity.py`
       import repo scripts that import `verification` — re-point or retire those scripts'
       manifest dependency (`assess_v6_snapshot_churn.py`, `check_ledger_4a.py` must keep
       loading `ledger-4a.json` without a manifest); the accepted-limitation omit list should be

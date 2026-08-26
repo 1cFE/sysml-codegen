@@ -31,11 +31,6 @@ from sysml_codegen.elaboration import (
 )
 from sysml_codegen.extraction.extractor import SysMLDataExtractor
 from sysml_codegen.extraction.source_evidence import ReadinessCode
-from sysml_codegen.extraction.usage_extractor import (
-    extract_calculation_usages,
-    owned_feature_typing_targets,
-    user_partdef_lookup,
-)
 from tests.conftest import FIXTURES_DIR, requires_license
 from tests.helpers.elaboration_graph import (
     attr,
@@ -90,13 +85,32 @@ def graph_cache(loaded_cache):
     return get
 
 
-def _declarations(extractor: SysMLDataExtractor):
-    usages, _report = extract_calculation_usages(
-        extractor.model,
-        calc_defs=extractor.extract_calculation_definitions(),
-        expand_templates=False,
-    )
-    return usages
+def owned_feature_typing_targets(usage) -> list:
+    """Targets of a usage's *owned* FeatureTyping relationships, in heritage order.
+
+    Inlined from the retired ``extraction/usage_extractor.py`` (REPO-CLEANUP Move C):
+    the fact it reads — heritage yields owned typings only — is a SysIDE model fact the
+    elaborator builds on, not a legacy-lane behavior.
+    """
+    targets: list = []
+    if not hasattr(usage, "heritage"):
+        return targets
+    for relationship, target in usage.heritage:
+        if SysideAdapter.is_instance(relationship, "FeatureTyping") and target is not None:
+            targets.append(target)
+    return targets
+
+
+def user_partdef_lookup(model) -> dict:
+    """``{__-form QN: PartDefElement}`` for all user-model PartDefs (library excluded)."""
+    from sysml_codegen.core.qualified_names import build_element_qualified_name
+
+    lookup: dict = {}
+    for part_def in SysideAdapter.elements_of_type(model, "PartDefinition"):
+        qn = build_element_qualified_name(part_def)
+        if qn:
+            lookup[qn] = part_def
+    return lookup
 
 
 def _binding_path(model, usage_qn: str, param: str):

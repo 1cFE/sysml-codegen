@@ -35,22 +35,6 @@ class TestExtractionModelsImportable:
 
         assert CalculationDefinitionData is not None
 
-    def test_calc_usage_data(self):
-        from sysml_codegen.extraction.usage_extractor import CalcUsageData
-
-        assert CalcUsageData is not None
-
-    def test_calc_usage_data_reexport(self):
-        """CalcUsageData should also be accessible via extraction.data_models re-export."""
-        from sysml_codegen.extraction.usage_extractor import CalcUsageData
-
-        assert CalcUsageData is not None
-
-    def test_binding_info(self):
-        from sysml_codegen.extraction.usage_extractor import BindingInfo
-
-        assert BindingInfo is not None
-
     def test_part_definition_data(self):
         from sysml_codegen.extraction.data_models import PartDefinitionData
 
@@ -259,63 +243,6 @@ def test_req_dm_03_fields_calculation_definition_data():
         "member_names_by_id",
     }
     actual = _dataclass_field_names(CalculationDefinitionData)
-    assert actual == expected
-
-
-@pytest.mark.req("REQ-DM-03")
-def test_req_dm_03_fields_calc_usage_data():
-    """CalcUsageData has all 13 fields (including raw_element from source)."""
-    from sysml_codegen.extraction.usage_extractor import CalcUsageData
-
-    expected = {
-        "instance_name",
-        "calc_def_name",
-        "calc_def_qualified_name",
-        "module_type",
-        "bindings",
-        "unbound_params",
-        "source_file",
-        "source_line",
-        "parent_part_path",
-        "qualified_name",
-        "is_template",
-        "owning_part_def_qn",
-        "raw_element",
-    }
-    actual = _dataclass_field_names(CalcUsageData)
-    assert actual == expected
-    assert len(actual) == 13
-
-
-@pytest.mark.req("REQ-DM-03")
-def test_req_dm_03_fields_binding_info():
-    from sysml_codegen.extraction.usage_extractor import BindingInfo
-
-    # The two `stored_*` fields carry the reference as written when it comes
-    # from a snapshot rather than the AST, which is what makes the occurrence-
-    # materialized key form reachable from the calculation consumer (DD-R27).
-    # They are marked `snapshot_exclude`, so the serialized wire form is
-    # unchanged and all 34 committed snapshots stay byte-identical.
-    expected = {
-        "param_name",
-        "source_path",
-        "binding_type",
-        "is_cross_file",
-        "raw_expression",
-        "source_instance_elem",
-        "source_attribute_elem",
-        "literal_value",
-        "expression_ast",
-        "stored_source_attribute_name",
-        "stored_source_instance_name",
-        # The scope qualifier as WRITTEN, captured at extraction from the CST
-        # (audit F2). Resolution destroys it -- `source_path` holds the resolved QN,
-        # which is `::`-qualified for a bare self-named leaf too -- so this is the
-        # only field that can tell an owner-relative reference from a scope-qualified
-        # one. Row 16 keys on that distinction.
-        "stored_source_written_qualifier",
-    }
-    actual = _dataclass_field_names(BindingInfo)
     assert actual == expected
 
 
@@ -660,7 +587,6 @@ def test_req_dm_03_fields_parameter_group():
 
 # Module path shorthands for readability
 _DM = "sysml_codegen.extraction.data_models"
-_UE = "sysml_codegen.extraction.usage_extractor"
 _EC = "sysml_codegen.extraction.expression_compiler"
 _CM = "sysml_codegen.core.models"
 _RM = "sysml_codegen.resolution.models"
@@ -681,8 +607,6 @@ SOURCE_FILE_SPECS = [
     (_DM, "AttributeInfo", "extraction/data_models.py"),
     (_DM, "ComputedAttributeClassification", "extraction/data_models.py"),
     (_DM, "RedefinitionType", "agentic_mbse/sysml/data_models.py"),
-    (_UE, "CalcUsageData", "extraction/usage_extractor.py"),
-    (_UE, "BindingInfo", "extraction/usage_extractor.py"),
     (_EC, "Compilability", "extraction/expression_compiler.py"),
     (_CM, "BindingResolution", "core/models.py"),
     (_CM, "BindingResolutionType", "core/models.py"),

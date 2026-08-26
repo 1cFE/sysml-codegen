@@ -23,9 +23,10 @@ def pytest_configure(config):
 # ---------------------------------------------------------------------------
 # Live extraction facts
 #
-# The four conformance files whose subject is extraction itself read these. They run the
-# three extractors live; see ``tests/helpers/live_extraction.py`` for why the v6
-# instance-graph snapshot is not a substitute.
+# The two conformance files whose subject is extraction itself (test_extractor.py,
+# test_expression_compiler.py) read these. Only the live calc-def extractor runs here:
+# the calc-usage and hierarchy facts retired with the legacy extraction lane
+# (REPO-CLEANUP Move C). See ``tests/helpers/live_extraction.py``.
 # ---------------------------------------------------------------------------
 
 # The models the extraction-fact sweeps range over.
@@ -70,33 +71,3 @@ def live_extraction_facts():
     if not _license_available():
         pytest.skip("no live syside license")
     return {name: live_facts(name) for name in EXTRACTION_FACT_MODELS}
-
-
-@pytest.fixture
-def solar_battery_facts(live_extraction_facts):
-    """Live extraction facts for solar_battery_model."""
-    return live_extraction_facts["solar_battery_model"]
-
-
-@pytest.fixture
-def catf_mfe_facts(live_extraction_facts):
-    """Live extraction facts for catf_mfe_model."""
-    return live_extraction_facts["catf_mfe_model"]
-
-
-@pytest.fixture
-def issue22_facts(live_extraction_facts):
-    """Live extraction facts for issue22_model."""
-    return live_extraction_facts["issue22_model"]
-
-
-@pytest.fixture
-def expression_binding_facts(live_extraction_facts):
-    """Live extraction facts for expression_binding_probe."""
-    return live_extraction_facts["expression_binding_probe"]
-
-
-@pytest.fixture
-def alias_agg_probe_facts(live_extraction_facts):
-    """Live extraction facts for alias_agg_probe."""
-    return live_extraction_facts["alias_agg_probe"]

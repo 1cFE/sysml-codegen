@@ -55,10 +55,8 @@ RAW_SYSIDE_MODULES = (
     "extraction/expression_utils.py",
     "extraction/extractor.py",
     "extraction/feature_metadata.py",
-    "extraction/hierarchy_resolver.py",
     "extraction/modeled_defaults.py",
     "extraction/source_manifest.py",
-    "extraction/usage_extractor.py",
     "generation/constraint_name_safety.py",
     "generation/predicate_compiler.py",
     "orchestration/elaborated_pipeline.py",
@@ -322,49 +320,9 @@ REVIEWED_ROWS: tuple[ReviewedRow, ...] = (
         COLLISION_PROOF,
         "item",
     ),
-    # The remaining four discovered rows are mechanically excluded from both public raw
-    # source roots.  They stay visible in repository-wide discovery and cannot satisfy a
-    # live row.
-    ReviewedRow(
-        "extraction/hierarchy_resolver.py",
-        "_render_neutral_aggregation_node",
-        "operands",
-        "direct",
-        "agentic-mbse neutral aggregation IR",
-        "off-route",
-        OFF_ROUTE_PROOF,
-        "node",
-    ),
-    ReviewedRow(
-        "extraction/usage_extractor.py",
-        "_parse_chain_expression",
-        "operands",
-        "direct",
-        "off-route legacy raw SysIDE reader",
-        "off-route",
-        OFF_ROUTE_PROOF,
-        "expr",
-    ),
-    ReviewedRow(
-        "extraction/usage_extractor.py",
-        "_parse_chain_expression",
-        "target_feature",
-        "direct",
-        "off-route legacy raw SysIDE reader",
-        "off-route",
-        OFF_ROUTE_PROOF,
-        "expr",
-    ),
-    ReviewedRow(
-        "extraction/usage_extractor.py",
-        "_parse_reference_expression",
-        "referent",
-        "direct",
-        "off-route legacy raw SysIDE reader",
-        "off-route",
-        OFF_ROUTE_PROOF,
-        "expr",
-    ),
+    # The four off-route rows this manifest used to carry (hierarchy_resolver /
+    # usage_extractor raw reads) retired with the legacy extraction lane
+    # (REPO-CLEANUP Move C): the modules are deleted, so discovery no longer sees them.
 )
 
 
@@ -473,11 +431,9 @@ SOURCE_FILE_COLLISION_READS = {
 
 #: Modules audited as off the public raw-source route.  A live import of one of these
 #: fails `test_public_raw_source_arms_do_not_reach_off_route_modules`; their raw reads
-#: can never satisfy a live manifest row.
-OFF_ROUTE_MODULES = (
-    "extraction/usage_extractor.py",
-    "extraction/hierarchy_resolver.py",
-)
+#: can never satisfy a live manifest row. Empty since the legacy extraction lane was
+#: deleted (REPO-CLEANUP Move C); a future off-route module gets listed here, not ignored.
+OFF_ROUTE_MODULES = ()
 
 #: The installed command surface is the mechanically checked root.  Both the live
 #: elaboration arm and snapshot-capture arm are reachable from this module; a companion

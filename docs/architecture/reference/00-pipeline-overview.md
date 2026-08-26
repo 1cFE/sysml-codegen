@@ -105,9 +105,9 @@ and the v5 snapshot loader/serializer/rebuild — was deleted by the Item 7 reti
 **absence**: `test_public_authority_switch.py` checks that the construction closure reaches no
 legacy authority and that the modules do not exist, and
 `tests/unit/test_elaboration_import_boundaries.py` checks that the CLI names none of them.
-Documents 03, 04, 05, 07, 10, 11, 12, 13, 17, and 24 describe that deleted stack and open with
-a historical banner; 25 describes `extraction/hierarchy_resolver.py`, which survived the
-retirement but is off the shipped route.
+The documents that described that deleted stack (03, 04, 05, 07, 10, 11, 12, 13, 17, 24, 25)
+retired with it (git history); the legacy extraction lane document 25 covered was deleted by
+REPO-CLEANUP Move C.
 
 ## Running example: battery_pack cost_model
 
@@ -287,8 +287,6 @@ See [02-orchestration.md](02-orchestration.md) for the public surface and its pi
 | [30-diagnostic-severity](30-diagnostic-severity.md) | Extraction-diagnostic severity: writer-set field, blocking vs advisory, fail-closed skew |
 
 **Reading the index after the retirement.** Documents 03, 04, 05, 07, 10, 11, 12, 13, 17, and
-24 describe the string-resolution stack that was deleted, and open with a historical banner
-saying so. They are accurate about the code that was removed; they are not descriptions of what
-the product does. Document 09 is mixed and carries a scoped banner naming which model rows are
-live and which are history. Document 25's subject, `extraction/hierarchy_resolver.py`, is still
-in the tree but is not on the shipped route.
+24 described the string-resolution stack that was deleted; they retired with it and live in
+git history, as does document 25, whose subject (the legacy extraction lane) was deleted by
+REPO-CLEANUP Move C. Document 09 carries only the live model set.

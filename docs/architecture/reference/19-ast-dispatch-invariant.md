@@ -1,5 +1,15 @@
 # 19 -- AST Dispatch Invariant: FCE Before OE
 
+> **Status: the audited legacy sites are gone; the invariant and the guardrail remain.**
+> The parametrized dispatch sites this document catalogues below —
+> `usage_extractor._extract_single_binding`, `hierarchy_resolver._walk_aggregation_ast`,
+> and agentic-mbse's `_decompose_node` / `classify_redefinition` — belonged to the legacy
+> extraction lane, deleted by REPO-CLEANUP Move C (2026-08-25). Read their rows as history.
+> What stays live is the design constraint itself (FCE is a subtype of OE, so FCE must be
+> checked first) and the guardrail in `tests/conformance/test_ast_dispatch_invariant.py`:
+> no unaudited multi-type dispatch site may appear in `src/`, and the
+> `reconstruct_expression` output-format pins still run against the live extractor path.
+
 ## Design Constraint
 
 SysIDE's type hierarchy has a subtype relationship: `FeatureChainExpression`

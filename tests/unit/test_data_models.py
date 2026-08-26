@@ -43,16 +43,6 @@ def test_attribute_info_extends_base():
     assert hasattr(attr, "source_line")
 
 
-def test_binding_type_from_agentic_mbse():
-    """Verify BindingType is imported from agentic-mbse."""
-    from agentic_mbse.sysml.types import BindingType as AgenticBindingType
-
-    from sysml_codegen.extraction.usage_extractor import BindingType
-
-    # Should be the same enum (imported, not redefined)
-    assert BindingType is AgenticBindingType
-
-
 def test_calculation_definition_data_uses_attribute_info():
     """Verify CalculationDefinitionData uses shared AttributeInfo."""
     from sysml_codegen.extraction.data_models import AttributeInfo, CalculationDefinitionData
@@ -98,17 +88,6 @@ def test_attribute_info_fields():
     assert attr.unit == "MW"
 
 
-def test_binding_type_enum_values():
-    """Verify BindingType has expected enum values."""
-    from sysml_codegen.extraction.usage_extractor import BindingType
-
-    # Check expected enum members exist
-    assert hasattr(BindingType, "CHAIN")
-    assert hasattr(BindingType, "REFERENCE")
-    assert hasattr(BindingType, "LITERAL")
-    assert hasattr(BindingType, "UNBOUND")
-
-
 def test_calculation_definition_data_fields():
     """Verify CalculationDefinitionData has all expected fields."""
     from sysml_codegen.extraction.data_models import CalculationDefinitionData
@@ -151,16 +130,6 @@ def test_calculation_definition_data_has_exact_expression_identity_fields():
     assert cd.all_member_ids == set()
     assert cd.member_expressions_by_id == {}
     assert cd.member_names_by_id == {}
-
-
-def test_binding_info_has_expression_ast_field():
-    """BindingInfo.expression_ast defaults to None (backward compat)."""
-    from agentic_mbse.sysml.types import BindingType
-
-    from sysml_codegen.extraction.usage_extractor import BindingInfo
-
-    bi = BindingInfo(param_name="x", source_path=None, binding_type=BindingType.UNBOUND)
-    assert bi.expression_ast is None
 
 
 def test_pipeline_module_has_compilability_field():

@@ -52,7 +52,7 @@ The license-free path is the **v6 instance-graph snapshot**. `sysml-codegen snap
 
 The string-resolution stack — `orchestration/pipeline_builder.py`, `analysis/`'s backtracker and parameter groups, `resolution/graph_builder.py`, `resolution/producer_resolution.py`, `core/output_registry.py`, and the v5 snapshot loader/serializer/rebuild — was **deleted** by the Item 7 retirement (2026-08-12, `19072ad` / `82c7951` / `882fc8d` / `3071fba`). None of it is in the tree, and `snapshot/__init__.py` re-exports nothing. Two checks pin the absence: `test_public_authority_switch.py` (the construction closure reaches no legacy authority, and the modules do not exist) and `tests/unit/test_elaboration_import_boundaries.py` (the CLI names none of them).
 
-Reference documents 03, 04, 05, 07, 10, 11, 12, 13, 17, and 24 describe that deleted stack and open with a historical banner. They remain accurate about the code that was removed. Document 25's subject, `extraction/hierarchy_resolver.py`, survived the retirement and is off the shipped route.
+The reference documents that described that deleted stack (03, 04, 05, 07, 10, 11, 12, 13, 17, 24, 25) retired with it and live in git history. The legacy extraction lane document 25 described (`extraction/hierarchy_resolver.py`, `extraction/usage_extractor.py`) was deleted by REPO-CLEANUP Move C (2026-08-25) as unreachable from `run_codegen`.
 
 ---
 
@@ -214,8 +214,9 @@ Deleted by the Item 7 retirement and no longer in the tree:
 components of the string-resolution stack that the Item 7 retirement deleted
 (`core/output_registry.py`, `analysis/`, `orchestration/pipeline_builder.py`,
 `resolution/graph_builder.py` and its resolver). The off-route computed-attribute classifier
-was deleted in the Phase 5 audit fix round; `extraction/hierarchy_resolver.py` remains off the
-shipped route. Historical component rows are not descriptions of the product.
+was deleted in the Phase 5 audit fix round, and the legacy extraction lane (C06's
+`hierarchy_resolver.py`, plus `usage_extractor.py`) by REPO-CLEANUP Move C. Historical
+component rows are not descriptions of the product.
 C02, C03, C04, C07, C20–C26, C28, C29, and X01 are live on the exact route; C01's models are
 mixed and doc 09 says which are which.
 
@@ -223,10 +224,10 @@ mixed and doc 09 says which are which.
 |----|-----------|-----|---------|
 | C01 | Data Models | [09](reference/09-data-models.md) | `extraction/data_models.py`, `core/models.py`, `resolution/models.py` |
 | C02 | Naming Conventions | [15](reference/15-naming-conventions.md) | `core/qualified_names.py`, `core/identifier_types.py` |
-| C03 | SysMLDataExtractor | [01](reference/01-extraction.md) | `extraction/extractor.py`, `extraction/usage_extractor.py` |
+| C03 | SysMLDataExtractor | [01](reference/01-extraction.md) | `extraction/extractor.py` |
 | C04 | Expression Compiler | [14](reference/14-expression-compiler.md) | `extraction/expression_compiler.py` |
 | C05 | Computed attributes (exact elaborator) | [16](reference/16-computed-attributes.md) | `elaboration/elaborate.py` |
-| C06 | Hierarchy Resolver | 25 (retired doc; git history) | `extraction/hierarchy_resolver.py` |
+| C06 | Hierarchy Resolver (deleted, Move C) | 25 (retired doc; git history) | git history |
 | C07 | AST Dispatch Invariant | [19](reference/19-ast-dispatch-invariant.md) | Cross-cutting (C04, C05, C06) |
 | C08 | Output Registry (Typed) | 10 (retired doc; git history) | `core/output_registry.py` |
 | C09 | Virtual Binding Rewrite | 12 (retired doc; git history) | `orchestration/pipeline_builder.py` |
