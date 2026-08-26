@@ -70,27 +70,27 @@ extraction lane is deleted. Both recorded in the epic.
 
 ### C3 — Legacy extraction lane (owner-ruled)
 
-- [ ] Delete `hierarchy_resolver.py` + `usage_extractor.py` (941 lines, unreachable from the
+- [x] Delete `hierarchy_resolver.py` + `usage_extractor.py` (941 lines, unreachable from the
       CLI) with their pinning tests (`tests/unit/test_hierarchy_resolver.py`,
       `tests/unit/test_type_indexing_helpers.py`, others by importer grep) in one commit
-- [ ] The commit message records the semantic difference: legacy `most_specific` **warns**
+- [x] The commit message records the semantic difference: legacy `most_specific` **warns**
       on an ambiguous definition match where the live `_most_specific_definition` **raises** —
       the old leniency the cutover removed, not a lost capability
-- [ ] Delete `tests/conformance/test_hierarchy_resolver.py` in the lane-deletion commit,
+- [x] Delete `tests/conformance/test_hierarchy_resolver.py` in the lane-deletion commit,
       citing the ratified ruling (epic, Owner Rulings, 2026-08-25)
-- [ ] Split `tests/conformance/test_ast_dispatch_invariant.py`: retire the legs whose sites
+- [x] Split `tests/conformance/test_ast_dispatch_invariant.py`: retire the legs whose sites
       are `usage_extractor._extract_single_binding`,
       `hierarchy_resolver._walk_aggregation_ast`, and agentic-mbse's
       `_decompose_node`/`classify_redefinition` (no live importer); keep the live-subject
       legs — the src-wide dispatch guardrail (REQ-AST-04, totals recounted post-deletion)
       and the `expression_utils.reconstruct_expression` legs if that module is
       live-reachable, else those retire with the lane too
-- [ ] Surgery on `tests/helpers/live_extraction.py` (shared by four other conformance
+- [x] Surgery on `tests/helpers/live_extraction.py` (shared by four other conformance
       files): keep `calc_defs` (live `SysMLDataExtractor`), drop `hierarchy_data` and
       `calc_usages`; sweep `conftest.py`, `test_extractor.py`,
       `test_expression_compiler.py`, `test_elaboration_payload_identity.py` for legs
       reading the dropped keys — legacy-subject legs retire, live legs stay
-- [ ] Delete `.project/active/type-indexing/probe/` (kept through Move B only for these tests)
+- [x] Delete `.project/active/type-indexing/probe/` (kept through Move B only for these tests)
 
 ### C4 — Dead `src/` lanes (research §5, each lane + pinning tests per commit)
 

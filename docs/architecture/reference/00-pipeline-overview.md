@@ -180,11 +180,11 @@ The [ComputationGraph](09-data-models.md#resolution-models) feeds Jinja2 templat
 to produce: `modules/*.py`, `handwritten/*_impl.py`, `pipelines/*.yaml`,
 `inputs/*.json`, and `schemas/*.py`.
 
-Rendering is gated by four checks that all run **before** any output is written or cleared
-(`cli/__init__.py:1042-1060`): constraint name safety, duplicate output paths, params coverage
-(V11 — `collect_uncovered_params`, `resolution/uncovered_params.py`, aborts if a wired module
-input references a params key no JSON input file will carry), and registry class-name
-collisions. Fail-before-mutate is the point: a refusal leaves the target tree exactly as it was.
+Rendering is gated by checks that all run **before** any output is written or cleared
+(`cli/__init__.py`): constraint name safety, duplicate output paths, registry class-name
+collisions, and constraint totality. (The V11 params-coverage collector was dead by
+construction on the exact route — projection always builds `fallback_entry_points` empty —
+and was deleted by REPO-CLEANUP Move C.) Fail-before-mutate is the point: a refusal leaves the target tree exactly as it was.
 Surfaced modeler names travel as `output_aliases` on the ComputationGraph and override
 exit-point output filenames in the pipeline YAML (`generation/pipeline.py`).
 
@@ -222,7 +222,6 @@ sysml_codegen/
 
   resolution/
     models.py                 ComputationGraph, PipelineModule, EntryPoint
-    uncovered_params.py       the V11 params-coverage collector
 
   generation/       [4] Render Python, YAML, JSON from the graph
     pipeline.py / modules.py / schemas.py / stencils.py / entry_point.py / registry.py

@@ -654,12 +654,12 @@ class ComputationGraph(BaseModel):
         modules: All pipeline modules in execution order
         entry_point_groups: Entry points grouped by source file
         execution_order: Module names in topological order
-        fallback_entry_points: QNs of Step-4 fall-through entry points — bound
-            bindings that matched no resolution strategy and no design attribute
-            (Item 7 / D4). Carried onto the graph so ``collect_uncovered_params``
-            is pure over the graph alone. In-memory analysis artifact consumed at
-            the generation boundary; ``exclude=True`` keeps it out of the
-            serialized graph so committed baselines do not churn.
+        fallback_entry_points: QNs of Step-4 fall-through entry points. The exact
+            route constructs it empty at both projection sites; it stays a schema
+            field because the sealed projection digest serializes it
+            (REPO-CLEANUP Move C deleted its V11 collector as dead by construction).
+            ``exclude=True`` keeps it out of the serialized graph so committed
+            baselines do not churn.
         output_aliases: EXPOSE_PURE modeler names surfaced onto their canonical
             output channels (Item 11 / SC-7), stable-sorted by
             ``(instance_path, alias_name)``. A genuine schema field describing

@@ -390,7 +390,8 @@ one. Four value-provision shapes are supported (see
 Precedence is **usage override > specialized-def `:>>` > base def**. Entry points key by
 the **source attribute's QN**, so two differently-named consumers of one source collapse
 onto one parameter. Only LITERAL values apply; a non-literal supplied value falls through
-to the uncovered-parameter diagnostic (V11) with a WARN, never silently.
+to an ordinary user-fill entry point. (The V11 uncovered-parameter diagnostic once
+documented here was dead by construction and was deleted — REPO-CLEANUP Move C.)
 
 **Limitation — nested-occurrence overrides are not captured correctly
 (`[NESTED-OCCURRENCE-OVERRIDE]`, BACKLOG P2).** A `:>>` override on a usage nested inside an
@@ -708,7 +709,9 @@ definitions remain in the lifecycle contract's "Headline states and coverage tru
 ## Validation Rules
 
 The pipeline enforces these rules to catch modeling violations early. V1–V10 fire at
-extraction time; V11 fires at the generation boundary (see the V11 note below):
+extraction time. (V11, a generation-boundary params-coverage abort, was dead by
+construction on the exact route — projection never populates the set it keyed on — and
+was deleted by REPO-CLEANUP Move C, 2026-08-25.)
 
 | Rule | Condition | Error |
 |------|-----------|-------|
@@ -722,19 +725,7 @@ extraction time; V11 fires at the generation boundary (see the V11 note below):
 | V8 | Calc def has an anonymous `return` (a result with no name) | "Calc def '{name}' has an anonymous `return` (a result with no name), so no output channel can be built. Give the result a name, e.g. `return result : Real = <expr>`." |
 | V9 | Two template calcs from different owners (a retyped usage's super- and subtype) resolve to the same virtual QN | "Template collision on '{virtual_qn}': owners '{owner_a}' and '{owner_b}' both define calc '{calc_name}'; kept most-specific owner '{winner}'." |
 | V10 | A usage has multiple incomparable owned types (neither specializes the other) | "Usage '{owning_qn}.{name}' has multiple incomparable owned types {sorted_qns}; resolved defaults against '{winner}' (first in stable order)." |
-| V11 | A module input references a params key no parameter group provides — its entry point fell through resolution (Step-4), carries no value, and is still wired (Item 7 / SC-8) | "V11: {n} module input(s) reference a params key that no parameter group provides — the JSON never mints the key, so the pipeline will KeyError at load. Cause: an unresolved cross-part reference not yet wired (Items 9-11) or a resolution bug. Offenders: module '{name}' input '{param}' -> params key '{group}.{qn}'" |
 | `SI_SELF_BINDING` | A calc-usage binding whose right-hand side resolves to its own formal (`in x = x`) — compared by referent identity, never by name, and never reinterpreted as an outer reference (D-4). Screened at extraction (`extraction/source_evidence.py`) and refused as a readiness finding before generation, so an affected model produces no output. | "SI_SELF_BINDING: {usage_qn}.{param}" — exit 1, empty output directory. The authoritative authoring rule and replacement forms are agentic-mbse `docs/patterns/plant-idiom.md`, "Binding a modelled value into a calculation". |
-
-**V11 note (SC-8).** Unlike V1–V10 (extraction-time), V11 fires at the
-**generation boundary** (`run_codegen`), where the computation graph and derived
-parameter groups both exist. It is the wired half of the fell-through-valueless
-partition (M1): the **unwired** half is a WARNING reconciliation summary
-(`Unresolved after assembly: …`), not a hard error. A null-default entry point
-that did *not* fall through is the legitimate user-fill signature and never trips
-V11. Behavioral note: Item 7 also fixed two resolution matcher bugs (the FORMULA
-`::`-QN per-segment sanitize and def-owned dotted leaf-unique match), which
-reclassify some entry points `USAGE_LITERAL` → `DESIGN_ATTRIBUTE` and switch their
-default-value source; see the Item 7 release notes.
 
 **No V12/V13 (Item 10 note).** The Item-10 design tentatively proposed V12 (multi-hop
 EXPOSE coverage) and V13 (specialization-chain channel coverage) as new diagnostic codes.
@@ -743,7 +734,8 @@ channels that previously fell through), not new abort diagnostics, so a V12/V13 
 emit nothing. The coverage is instead tracked as requirements — REQ-CA-10 (multi-hop
 EXPOSE), REQ-LVP-09 + REQ-VBR-11 (specialization chain), REQ-BT-11 (scoped-alias sibling
 disambiguation) — in the [verification matrix](verification-matrix.md). A model that still
-fails to wire a cross-part input surfaces through the existing **V11** boundary.
+fails to wire a cross-part input surfaces as an unfilled user-fill entry point in the
+generated inputs (V11, the boundary abort once named here, retired — REPO-CLEANUP Move C).
 
 ---
 

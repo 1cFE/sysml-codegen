@@ -115,25 +115,14 @@ Falsifier / acceptance: build a `ModelContract` whose `ContractParameter.default
 `json.loads(..., parse_constant=raise)`. Today it writes `NaN` and seals. Source: REPO-CLEANUP
 product-lens `epic_plan-F6` and Item 1 spec-lens `spec-F3`.
 
-### [V11-DEAD-GATE-DOCS] Three live docs advertise a refusal that cannot happen — P1
+### ~~[V11-DEAD-GATE-DOCS] Three live docs advertise a refusal that cannot happen~~ ✅
 
-`ComputationGraph.fallback_entry_points` is constructed as `set()` at both of its only construction
-sites (`elaboration/project.py:287,322`) and pinned as permanently empty by
-`tests/unit/test_warning_reconciliation_exact_route.py:167`. So `collect_uncovered_params` always
-returns nothing and the `PARAMS_KEY_UNCOVERED: V11` branch at `cli/__init__.py:298` can never fire.
-
-Three live documents still say it does:
-
-- `CLAUDE.md:65` — lists "params coverage (V11)" among the five preflights that run before output
-- `docs/architecture/overview.md:63` — says generation "is also gated by a params-coverage check
-  (V11) … and aborts"; `:141` names the collector
-- `docs/architecture/modeling-assumptions.md:750-785` — the **model author's own register**, listing
-  V11 under "the pipeline enforces these rules" with its full error text and a V11 note
-
-A model author is promised a diagnostic the toolchain will never issue, which is the inverse of
-`0003`. Scope is the docs only — deleting the dead V11 *code* stays in REPO-CLEANUP Move C, where
-it retires with its pinning test. Reference documents 07/11/17/24 carry retiring banners and are out
-of scope. Source: Item 1 spec-lens `spec-F4`.
+Closed 2026-08-25 by REPO-CLEANUP Move C: the dead V11 code (collector, CLI branch) was
+deleted, and the four documents that advertised the refusal were corrected in the same
+commit — `CLAUDE.md` (preflight list), `docs/architecture/overview.md`,
+`docs/architecture/reference/00-pipeline-overview.md`, and
+`docs/architecture/modeling-assumptions.md` (Validation Rules; V1–V10 remain).
+The empty-set premise stays pinned by `tests/unit/test_warning_reconciliation_exact_route.py`.
 
 ---
 

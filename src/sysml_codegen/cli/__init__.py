@@ -260,57 +260,6 @@ def _check_duplicate_output_paths(modules: list[PipelineModule]) -> None:
         schema_sources[schema_file] = raw
 
 
-def _reconcile_params_coverage(graph: ComputationGraph) -> None:
-    """Reconcile the fell-through-valueless entry points (Item 7 / D4, M1).
-
-    Runs at the generation boundary, BEFORE output is cleared, beside
-    ``_check_duplicate_output_paths``. Partitions the fell-through, valueless
-    entry points by whether pipeline wiring references them:
-
-    - **unwired** remainder → one WARNING reconciliation summary (tracked
-      residue; no runtime ``KeyError``). Logged FIRST so the digest reaches the
-      operator even when generation aborts.
-    - **wired** half → V11 hard error, generation aborts. The JSON never mints
-      the key but the pipeline references it → guaranteed runtime ``KeyError``.
-
-    Always strict (no escape-hatch flag). Raises ``CodeGenerationError`` on any
-    wired violation, matching the ``_check_duplicate_output_paths`` fail-fast
-    idiom (caught by ``run_codegen``, aborts the run).
-    """
-    from sysml_codegen.generation import CodeGenerationError
-    from sysml_codegen.resolution.uncovered_params import (
-        collect_uncovered_params,
-        collect_unwired_fallthrough,
-    )
-
-    # Reconciliation summary first (unwired remainder), so the operator sees the
-    # digest even if the V11 raise below aborts the run.
-    unwired = collect_unwired_fallthrough(graph)
-    if unwired:
-        logger.warning(
-            "Unresolved after assembly: %d entry point(s) fell through and still "
-            "lack a value (unwired): %s",
-            len(unwired),
-            unwired,
-        )
-
-    uncovered = collect_uncovered_params(graph)
-    if uncovered:
-        sources = {module.name: _module_source(module) for module in graph.modules}
-        details = "; ".join(
-            f"module '{u.module}' input '{u.input}' -> params key "
-            f"'{u.missing_key}'{sources.get(u.module, '')}"
-            for u in uncovered
-        )
-        raise CodeGenerationError(
-            f"PARAMS_KEY_UNCOVERED: V11: {len(uncovered)} module input(s) reference a "
-            f"params key that no parameter group provides — the JSON never mints the key, so the "
-            f"pipeline will KeyError at load. Cause: an unresolved cross-part "
-            f"reference not yet wired (Items 9-11) or a resolution bug. "
-            f"Offenders: {details}"
-        )
-
-
 def _preflight_registry_class_names(graph: ComputationGraph) -> None:
     """Refuse a graph whose registry class names collide beyond aliasing (REQ-REG-08).
 
@@ -318,7 +267,7 @@ def _preflight_registry_class_names(graph: ComputationGraph) -> None:
     ``_clear_output_directory``: a model that trips it left a half-written
     package behind and reported "Unexpected error", because the raise was an
     untyped ``ValueError``. Running the same pure detector here — beside
-    ``_check_duplicate_output_paths`` and ``_reconcile_params_coverage``, before
+    ``_check_duplicate_output_paths``, before
     anything is written — is what makes it fail-before-mutate, and the error is
     the package's own so the operator reads a refusal rather than a traceback.
     """
@@ -1301,7 +1250,6 @@ def _generate_package_from_graph(graph: ComputationGraph, config: GenerationConf
         # Step 1.6: Params-coverage reconciliation (Item 7 / D4, M1). Always
         # strict — logs the unwired-remainder summary, then raises V11 on any
         # wired fell-through-valueless input. Before output clear, like 1.5.
-        _reconcile_params_coverage(graph)
 
         # Step 1.7: registry class-name collisions the aliasing cannot resolve.
         # The check itself lives at the registry pass, which runs after the tree

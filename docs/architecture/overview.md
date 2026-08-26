@@ -60,7 +60,7 @@ The reference documents that described that deleted stack (03, 04, 05, 07, 10, 1
 
 ### ComputationGraph as Single Source of Truth
 
-The `ComputationGraph` (a Pydantic model in `resolution/models.py`) is the sole data structure that code generation consumes. It contains all pipeline modules, their inputs wired to upstream outputs or entry points, execution order, parameter group schemas, and surfaced output aliases (`output_aliases`, serialized with the graph). Generation templates receive only `ComputationGraph` fields -- no back-references to extraction models (REQ-PIPE-07). Generation is also gated by a params-coverage check (V11): `collect_uncovered_params` (`resolution/uncovered_params.py`) runs at the generation boundary and aborts if a wired module input references a params key that no JSON input file will carry. See [09-data-models](reference/09-data-models.md).
+The `ComputationGraph` (a Pydantic model in `resolution/models.py`) is the sole data structure that code generation consumes. It contains all pipeline modules, their inputs wired to upstream outputs or entry points, execution order, parameter group schemas, and surfaced output aliases (`output_aliases`, serialized with the graph). Generation templates receive only `ComputationGraph` fields -- no back-references to extraction models (REQ-PIPE-07). See [09-data-models](reference/09-data-models.md). (The V11 params-coverage collector was dead by construction on the exact route and was deleted by REPO-CLEANUP Move C.)
 
 The module registry follows the same authority rule. Every exported registry generator derives its
 required exit-point wrappers from the graph; callers cannot supply a second type set. An unsupported
@@ -138,7 +138,6 @@ sysml_codegen/
 
   resolution/
     models.py                    ComputationGraph, PipelineModule, EntryPoint
-    uncovered_params.py          the V11 params-coverage collector
 
   core/                Shared types and utilities
     identifier_types.py          NewType wrappers and module-type derivation

@@ -61,10 +61,10 @@ two implementations.
    - Parameter group schemas and JSON templates (`schemas/`, `inputs/`)
    - Module registry (`__init__.py`)
 
-   Five preflight checks run before any output is written or cleared: constraint name safety,
-   duplicate output paths, params coverage (V11), registry class-name collisions, and
-   constraint totality (the catalog accounts for every authored constraint usage, and its
-   rows still match the fingerprint projection sealed them with).
+   Four preflight checks run before any output is written or cleared: constraint name safety,
+   duplicate output paths, registry class-name collisions, and constraint totality (the
+   catalog accounts for every authored constraint usage, and its rows still match the
+   fingerprint projection sealed them with).
 
 5. **Sealing** (`contracts/`) - A semantic `ModelContract` over the graph and a physical `PackageContract` over the final on-disk bytes, on the live and from-snapshot paths alike.
 
