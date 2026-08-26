@@ -104,23 +104,23 @@ extraction lane is deleted. Both recorded in the epic.
 
 ### C5 — Committed test data
 
-- [ ] Replace the item8 `unit_map` arrays (~47,000 lines,
+- [x] Replace the item8 `unit_map` arrays (~47,000 lines, (done — digests, 48,170→4,114 lines)
       `tests/unit/data/item8-snapshot-inventory-{pre,final}.json`) with digests, preserving
       every live assertion (also clears their accepted-residue dead-path strings from Move B)
-- [ ] Delete zero-reader fixture sets: `golden/calc_def_compilation_golden.json` (3,254),
+- [x] Delete zero-reader fixture sets: `golden/calc_def_compilation_golden.json` (3,254), (done — sweep finds zero orphans)
       `baseline_yaml/` (844), plus whatever a reader sweep finds
-- [ ] **`baseline_outputs/` (13,923 lines)**: restore a genuinely regenerating comparison or
+- [x] **`baseline_outputs/` (13,923 lines)**: restore a genuinely regenerating comparison or (deleted with reader; gap filed [EMIT-STEP-REGRESSION-GATE])
       delete it with its reader. Either way the emit-step gap gets a `BACKLOG.md` id (F4) —
       the epic must not close with it named in a report and owned by nobody
-- [ ] Collapse the `catf_mfe_d5` fork (5,718-line copy, four-line diff) to generated variants,
+- [x] Collapse the `catf_mfe_d5` fork (5,718-line copy, four-line diff) to generated variants, (done — snapshot-only fixture, 8 licensed tests repointed, 15 CLI tests retired; the 65-row expectation stays for check_gated_manifest with an oracle exemption)
       keeping each `instance_graph_snapshot.json` (license-bound to regenerate; they keep
       repointed tests license-free). ~20 of `test_d5_variants.py`'s 31 tests test the
       generator's CLI, not the product — retire those with the fork
-- [ ] Fix overstating docstrings on tests that stay, as they are passed
+- [x] Fix overstating docstrings on tests that stay, as they are passed (done as passed)
 
 ### C6 — Process tests of closed items
 
-- [ ] Retire process tests whose items closed months ago (research §7 grading); each commit
+- [x] Retire process tests whose items closed months ago (research §7 grading); each commit (done — retirement/proof-integrity tooling, phase drivers, six spikes, probes/ retired with their tests. Two deviations from the research grading, surfaced: test_check_ledger_4a + its script STAY — the paths check caught five stale retain rows during this very move, disproving the one-off-checker premise; test_elaboration_corpus_ledger STAYS — its subject relocated to reference/ in Move B and is runtime-read, not archive prose)
       names the item and what the test was believed to defend
 
 ### C7 — Final gates
@@ -139,5 +139,4 @@ extraction lane is deleted. Both recorded in the epic.
 - Snapshot codec consolidation (~550 lines): costs an `instance-graph/v4` schema bump and 22
   licensed fixture re-captures — backlog item, not this move
 - New tests for coverage gaps — filed to `BACKLOG.md` with ids, not built
-- `scripts/spike_attribute_expressions.py` writes into a deleted `active/` path if ever run —
-  dev tooling; disposition it in C6 (likely retire)
+- `scripts/spike_attribute_expressions.py` — retired in C6 with the other five closed-item spikes

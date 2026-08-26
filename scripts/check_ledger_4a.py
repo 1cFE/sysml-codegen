@@ -60,8 +60,9 @@ defects: read a green run as "these five classes are unchecked", never as "the l
 5. **Dynamic imports and pytest fixture requests are invisible on every axis.** A file that
    ``importlib.import_module``-s a delete-row module, or requests a conftest fixture that a
    deletion removes, hits neither the AST walk nor the textual scans. The class is handled by
-   the runbook's ``PULLED_FORWARD`` table (scripts/retirement_worklist.py), whose entries were
-   found by scratch-worktree execution — the only detector this class has.
+   the runbook's ``PULLED_FORWARD`` table (scripts/retirement_worklist.py, retired with the
+   completed recovery — git history), whose entries were found by scratch-worktree
+   execution — the only detector this class had.
 6. **``replacements`` silently skips ``repo: agentic-mbse`` rows** (L-036/L-037): their nodes
    live in the companion checkout, so a full-ledger run proves 302 of 304 rows — verify those
    two directly in the companion when they matter.
