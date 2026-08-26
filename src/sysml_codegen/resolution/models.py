@@ -281,58 +281,6 @@ class OutputAlias(BaseModel):
         return f"{self.instance_path}__{self.alias_name}.json"
 
 
-class ConstraintInputResolution(str, Enum):
-    """How one concrete constraint's formal was resolved (Item 5 / D1 terminal switch)."""
-
-    MODULE_OUTPUT = "module_output"
-    DESIGN_ATTRIBUTE = "design_attribute"
-    MODELED_DEFAULT = "modeled_default"
-
-
-class ConcreteConstraintInput(BaseModel):
-    """One resolved formal on a :class:`ConcreteConstraint` (Item 5 / D4).
-
-    Only the resolution-tagged field matching ``resolution`` is populated
-    (enforced by a model validator):
-    - ``module_output``: ``bound_channel`` carries the producer channel the
-      strict resolver actually bound — the occurrence-scoped key when it hit,
-      else the shared de-indexed channel (B1-settled; recorded, never hidden,
-      per INV-3). Required.
-    - ``design_attribute``: ``design_attribute_qn`` carries the minted entry
-      point's real qualified name (F4-safe, QN-deduped per INV-5). Required.
-    - ``modeled_default``: ``default_ir`` carries the formal's own default,
-      serialized the same way as ``predicate_ir`` (D5-IR). May be ``None``
-      when the formal has no recorded default — graph extension then mints a
-      defaultless ``LIBRARY_DEFAULT`` entry point the user must supply
-      (pinned by ``test_phase4_bugfix_regressions``).
-    """
-
-    formal_name: str
-    resolution: ConstraintInputResolution
-    bound_channel: str | None = None
-    design_attribute_qn: str | None = None
-    default_ir: str | None = None
-    formal_identity: ConstraintFormalIdentity | None = Field(default=None, exclude=True)
-
-    @model_validator(mode="after")
-    def _resolution_field_matches_tag(self) -> "ConcreteConstraintInput":
-        required_by_tag: dict[ConstraintInputResolution, str | None] = {
-            ConstraintInputResolution.MODULE_OUTPUT: "bound_channel",
-            ConstraintInputResolution.DESIGN_ATTRIBUTE: "design_attribute_qn",
-            ConstraintInputResolution.MODELED_DEFAULT: None,  # default_ir may be absent
-        }
-        tag_field = required_by_tag[self.resolution]
-        allowed = tag_field if tag_field is not None else "default_ir"
-        for field in ("bound_channel", "design_attribute_qn", "default_ir"):
-            if field != allowed and getattr(self, field) is not None:
-                raise ValueError(
-                    f"resolution={self.resolution.value!r} must not populate {field!r}"
-                )
-        if tag_field is not None and getattr(self, tag_field) is None:
-            raise ValueError(f"resolution={self.resolution.value!r} requires {tag_field!r}")
-        return self
-
-
 class ConstraintExclusion(BaseModel):
     """Why one concrete source usage is intentionally not executable."""
 
@@ -341,123 +289,6 @@ class ConstraintExclusion(BaseModel):
     kind: Literal["non_numerical", "unassessed_form", "unsupported_owner"]
     reasons: list[str] = Field(default_factory=list)
     location: str
-
-
-class ConcreteConstraint(_TransactionalAssignmentModel):
-    """One concrete, expanded assertion (Item 5 / D4, D5-IR, D7).
-
-    Attributes:
-        constraint_id: Deterministic execution identity (D3/N1); catalog
-            ordering is by this field (INV-4).
-        usage_qualified_name: The source ``ConstraintUsageFact``'s qualified
-            name (identity, not per-occurrence).
-        source_local_identity: The usage's simple name when named, else its
-            ``LocationFact`` rendering — the anonymous-assertion identity
-            (spec `[HARD]`).
-        source_form: ``ConstraintSource.form`` (``inline`` / ``definition_typed``
-            / other out-of-profile forms).
-        owner_kind: ``OwningDefinitionFact.kind`` (``part_def`` / ``calc_def`` /
-            ``package`` / ``requirement_def``).
-        owner_qualified_name: The resolved owning definition's qualified name.
-        owner_instance_path: This concrete instance's own identity — an
-            :class:`~sysml_codegen.analysis.part_instance_index.InstanceOccurrence`
-            path for ``part_def`` owners, the calc-usage/package-usage
-            qualified name otherwise.
-        membership_kind: ``assert`` (nullable-guarded upstream, INV-8).
-        is_negated: Polarity (nullable-guarded upstream, INV-8).
-        expected_value: Derived from ``is_negated`` (``not is_negated``).
-        predicate_ir: The *effective* predicate (selected per source-form),
-            serialized via ``serialize_expression`` (D5-IR) — a plain string,
-            no ``arbitrary_types_allowed``. ``None`` for an unassessed record.
-        inputs: Resolved formals, ordered as extracted.
-        evaluation_channel: This instance's own output channel (INV-3).
-            ``None`` for an unassessed record (D7) — no executable node.
-        eligible: ``False`` for a defensively cataloged unassessed record
-            (``requirement_def`` / out-of-profile source form, D7); ``True``
-            for a normally lowered, executable assertion.
-    """
-
-    model_config = ConfigDict(validate_assignment=True)
-
-    constraint_id: str
-    usage_qualified_name: str
-    source_local_identity: str
-    source_form: str
-    owner_kind: str
-    owner_qualified_name: str
-    owner_instance_path: str
-    membership_kind: str | None
-    predicate_source_key: str
-    is_negated: bool | None
-    expected_value: bool | None
-    predicate_ir: str | None = None
-    inputs: list[ConcreteConstraintInput] = Field(default_factory=list)
-    evaluation_channel: str | None = None
-    eligible: bool = True
-    exclusion: ConstraintExclusion | None = None
-    #: The referenced ``constraint def``'s qualified name — non-None **iff**
-    #: ``source_form == "definition_typed"`` (Item 8 / F1). ``None`` for every other
-    #: form, including *named inline*, whose effective predicate source is the usage's
-    #: own QN, not a ``facts.definitions`` entry. Recorded at lowering so the catalog
-    #: entry→definition join is a real FK, never a predicate-text reconstruction.
-    definition_qualified_name: str | None = None
-
-    @model_validator(mode="after")
-    def _eligibility_matches_executable_payload(self) -> "ConcreteConstraint":
-        if self.eligible:
-            if self.exclusion is not None:
-                raise ValueError(
-                    f"eligible constraint {self.constraint_id!r} must not carry exclusion"
-                )
-            if self.is_negated is None:
-                raise ValueError(
-                    f"eligible constraint {self.constraint_id!r} has no known polarity"
-                )
-            if self.predicate_source_key is None:
-                raise ValueError(
-                    f"eligible constraint {self.constraint_id!r} has no predicate_source_key"
-                )
-            if self.predicate_ir is None:
-                raise ValueError(
-                    f"eligible constraint {self.constraint_id!r} has no predicate_ir "
-                    "(profile ADMIT guarantees an effective predicate)"
-                )
-            if self.evaluation_channel is None:
-                raise ValueError(
-                    f"eligible constraint {self.constraint_id!r} has no evaluation_channel"
-                )
-        else:
-            payload_fields = []
-            if self.predicate_ir is not None:
-                payload_fields.append("predicate_ir")
-            if self.inputs:
-                payload_fields.append("inputs")
-            if self.evaluation_channel is not None:
-                payload_fields.append("evaluation_channel")
-            if self.expected_value is not None:
-                payload_fields.append("expected_value")
-            if payload_fields:
-                raise ValueError(
-                    f"unassessed constraint {self.constraint_id!r} has executable payload: "
-                    + ", ".join(payload_fields)
-                )
-            if self.exclusion is None:
-                raise ValueError(f"ineligible constraint {self.constraint_id!r} requires exclusion")
-        return self
-
-    @model_validator(mode="after")
-    def _expected_value_derives_from_polarity(self) -> "ConcreteConstraint":
-        if not self.eligible:
-            return self
-        if self.is_negated is None:  # guarded by the eligibility validator
-            raise ValueError(f"eligible constraint {self.constraint_id!r} has no known polarity")
-        derived = not self.is_negated
-        if self.expected_value != derived:
-            raise ValueError(
-                f"constraint {self.constraint_id!r}: expected_value={self.expected_value!r} "
-                f"does not derive from is_negated={self.is_negated!r}"
-            )
-        return self
 
 
 class ConstraintCatalogSourceRecord(BaseModel):
@@ -524,7 +355,7 @@ class ConstraintCatalogUsageRecord(BaseModel):
 class ConstraintCatalogEntry(_TransactionalAssignmentModel):
     """One concrete, eligible assertion's catalog record (Item 7 / D6, Item 8 fields).
 
-    A thin, catalog-shaped projection of :class:`ConcreteConstraint` — every field a
+    A thin, catalog-shaped constraint record — every field a
     generation seam or a same-IR guard reads, plus the five TEAx-consumed identity fields
     (Item 8): ``source_form``, ``source_local_identity`` (usage short name),
     ``owner_qualified_name``, and ``definition_qualified_name`` (with the existing
@@ -686,15 +517,12 @@ __all__ = [
     "BindingResolution",
     "BindingResolutionType",
     "ComputationGraph",
-    "ConcreteConstraint",
-    "ConcreteConstraintInput",
     "ConstraintCatalog",
     "ConstraintCatalogEntry",
     "ConstraintCatalogExcludedRecord",
     "ConstraintCatalogSourceRecord",
     "ConstraintCatalogUsageRecord",
     "ConstraintExclusion",
-    "ConstraintInputResolution",
     "EntryPoint",
     "EntryPointType",
     "InputSource",

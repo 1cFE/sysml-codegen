@@ -30,7 +30,6 @@ from sysml_codegen.generation.modules import (
     render_constraint_module,
 )
 from sysml_codegen.resolution.models import (
-    ConcreteConstraint,
     ConstraintFormalIdentity,
     InputSource,
     ModuleInput,
@@ -38,7 +37,10 @@ from sysml_codegen.resolution.models import (
     ModuleOutput,
     PipelineModule,
 )
-from tests.helpers.retired_catalog_assembly import assemble_constraint_catalog
+from tests.helpers.retired_catalog_assembly import (
+    FixtureConstraint,
+    assemble_constraint_catalog,
+)
 
 TEMPLATE_DIR = Path(__file__).parent.parent.parent / "src" / "sysml_codegen" / "templates"
 
@@ -77,8 +79,8 @@ def _concrete(
     predicate_source_key: str | None = None,
     predicate_ir: str | None = None,
     is_negated: bool = False,
-) -> ConcreteConstraint:
-    return ConcreteConstraint(
+) -> FixtureConstraint:
+    return FixtureConstraint(
         constraint_id=constraint_id,
         usage_qualified_name=usage_qualified_name,
         source_local_identity="nonneg",
@@ -329,12 +331,6 @@ def test_mutated_catalog_polarity_fails_before_compilation():
     compile_shared_predicates(catalog)
 
 
-def test_catalog_filter_revalidates_model_copy_before_fingerprinting():
-    invalid = _concrete("C1", "Pkg__Cell_1").model_copy(update={"eligible": False})
-    with pytest.raises(ValueError, match="unassessed.*executable payload"):
-        assemble_constraint_catalog([invalid], _empty_facts())
-
-
 # ---------------------------------------------------------------------------
 # D11: catalog assembled even with zero eligible entries
 # ---------------------------------------------------------------------------
@@ -342,7 +338,7 @@ def test_catalog_filter_revalidates_model_copy_before_fingerprinting():
 
 @pytest.mark.req("REQ-CL-03")
 def test_catalog_assembled_with_zero_eligible_entries():
-    unassessed = ConcreteConstraint(
+    unassessed = FixtureConstraint(
         constraint_id="U1",
         usage_qualified_name="Pkg::Req::r1",
         source_local_identity="r1",
@@ -372,8 +368,8 @@ def test_catalog_assembled_with_zero_eligible_entries():
 
 
 def test_catalog_projects_excluded_records_in_id_order():
-    def excluded(constraint_id: str, kind: str, reasons: list[str]) -> ConcreteConstraint:
-        return ConcreteConstraint(
+    def excluded(constraint_id: str, kind: str, reasons: list[str]) -> FixtureConstraint:
+        return FixtureConstraint(
             constraint_id=constraint_id,
             usage_qualified_name=f"Pkg::{constraint_id}",
             source_local_identity=constraint_id,

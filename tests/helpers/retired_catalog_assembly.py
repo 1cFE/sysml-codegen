@@ -26,6 +26,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
 
 from sysml_codegen.resolution.models import (
@@ -34,14 +35,42 @@ from sysml_codegen.resolution.models import (
     ConstraintCatalogExcludedRecord,
     ConstraintCatalogSourceRecord,
     ConstraintCatalogUsageRecord,
+    ConstraintExclusion,
 )
 
 if TYPE_CHECKING:
     from agentic_mbse.sysml.constraint_facts import ConstraintFacts
 
-    from sysml_codegen.resolution.models import ConcreteConstraint
+__all__ = ["FixtureConstraint", "assemble_constraint_catalog"]
 
-__all__ = ["assemble_constraint_catalog"]
+
+@dataclass
+class FixtureConstraint:
+    """Hand-built stand-in for the deleted ``ConcreteConstraint`` model.
+
+    ``ConcreteConstraint`` was never constructed in ``src/`` and retired with REPO-CLEANUP
+    Move C; the three unit modules that build catalogs through this assembler now carry
+    their fixture data in this plain dataclass. Field meanings match the catalog entry
+    fields the assembler projects onto (``resolution/models.py``).
+    """
+
+    constraint_id: str
+    usage_qualified_name: str
+    source_local_identity: str
+    source_form: str
+    owner_kind: str
+    owner_qualified_name: str
+    owner_instance_path: str
+    membership_kind: str | None
+    predicate_source_key: str
+    is_negated: bool | None
+    expected_value: bool | None
+    predicate_ir: str | None = None
+    inputs: list = field(default_factory=list)
+    evaluation_channel: str | None = None
+    eligible: bool = True
+    exclusion: ConstraintExclusion | None = None
+    definition_qualified_name: str | None = None
 
 
 def _canonical_json(obj: Any) -> str:
@@ -49,7 +78,7 @@ def _canonical_json(obj: Any) -> str:
 
 
 def assemble_constraint_catalog(
-    concrete: list[ConcreteConstraint], facts: ConstraintFacts
+    concrete: list[FixtureConstraint], facts: ConstraintFacts
 ) -> ConstraintCatalog:
     """Build the catalog from eligible concrete entries + source definitions.
 
@@ -73,9 +102,7 @@ def assemble_constraint_catalog(
     INV-4), so the fingerprint is deterministic across repeated live loads with identical
     input (INV-8).
     """
-    validated_concrete = [
-        type(item).model_validate(item.model_dump(mode="python")) for item in concrete
-    ]
+    validated_concrete = list(concrete)
     eligible = [c for c in validated_concrete if c.eligible]
     source_records = [
         ConstraintCatalogSourceRecord(
@@ -153,7 +180,7 @@ def assemble_constraint_catalog(
 
 
 def _assemble_usage_records(
-    eligible: list[ConcreteConstraint],
+    eligible: list[FixtureConstraint],
 ) -> list[ConstraintCatalogUsageRecord]:
     """One admitted-usage row per distinct ``(usage_qualified_name, source_local_identity)``.
 

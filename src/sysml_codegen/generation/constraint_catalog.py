@@ -21,7 +21,7 @@ from agentic_mbse.sysml.expression_ir import parse_expression, serialize_express
 
 if TYPE_CHECKING:
     from sysml_codegen.core.errors import CodeGenerationError
-    from sysml_codegen.resolution.models import ConcreteConstraint, ConstraintCatalogEntry
+    from sysml_codegen.resolution.models import ConstraintCatalogEntry
 
 __all__ = [
     "assert_same_ir",
@@ -35,7 +35,7 @@ def _generation_error(message: str) -> CodeGenerationError:
     return CodeGenerationError(message)
 
 
-def predicate_definition_key(entry: ConcreteConstraint | ConstraintCatalogEntry) -> str:
+def predicate_definition_key(entry: ConstraintCatalogEntry) -> str:
     """Return the true positive-predicate source identity used for compile-once grouping."""
     if entry.predicate_source_key is None:
         raise _generation_error(f"constraint {entry.constraint_id!r} has no predicate_source_key")

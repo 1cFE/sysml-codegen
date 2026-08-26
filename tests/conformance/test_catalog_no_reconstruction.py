@@ -2,7 +2,7 @@
 re-derives them from strings (spec SC-2, design.md:308).
 
 Codegen holds `source_form`, the owner/definition QNs, and the def->usage join as *recorded*
-fields on `ConcreteConstraint` and projects them onto the catalog entry. The alternate system
+fields the elaborator records and projects them onto the catalog entry. The alternate system
 that Item 8 deleted reconstructed those semantics from strings — splitting a serialized key to
 recover a QN, substring-searching predicate text to recover the definition link, or hardcoding a
 `source_form` literal. This scan fails loudly if any of those idioms reappears in the catalog
@@ -25,7 +25,7 @@ SRC_DIR = Path(__file__).resolve().parents[2] / "src" / "sysml_codegen"
 # The modules that assemble the catalog and record its identity fields. A reconstruction
 # workaround would live here — this is where the recorded fields are read and projected.
 # The lowering module that used to hold the minting half retired with the v5 family
-# (retirement step 2); the exact route mints its ``ConcreteConstraint``s *and* projects the
+# (retirement step 2); the exact route records constraint fields on ``ConstraintNode`` and projects the
 # catalog entries in ``elaboration/project.py``, off the ``ConstraintNode`` fields
 # ``elaboration/graph.py`` records. ``generation/constraint_catalog.py`` left the scan set in
 # Revise step 6d when its assembler moved to ``tests/helpers/retired_catalog_assembly.py``:
@@ -85,5 +85,5 @@ def test_scan_actually_covers_the_catalog_producer():
         "scan set no longer covers catalog entry projection"
     )
     assert "source_form=node.source_form" in projection, (
-        "scan set no longer covers the exact route's ConcreteConstraint minting"
+        "scan set no longer covers the exact route's constraint-field projection"
     )
