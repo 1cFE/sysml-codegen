@@ -74,6 +74,12 @@ Measured 2026-08-20 in `.project/research/20260820-201945_line-count-anatomy-and
 - `[OWNER, 2026-08-20]` `allow_nan=False` and the V11 doc corrections left the epic as
   `[SERIALIZE-NAN-SEAL]` and `[V11-DEAD-GATE-DOCS]` in `BACKLOG.md`.
 - `[OWNER, 2026-08-23]` Process ceremony is cut (see *Revision*).
+- `[AGENT] (ratified by owner, 2026-08-25)` **Conformance `test_hierarchy_resolver.py` retires
+  with the legacy lane.** The 2026-08-21 ruling protects the four manifest-raising tests from
+  deletion-for-entanglement; it does not preserve a test whose subject is deleted. Classified
+  2026-08-25: all 43 tests are legacy-subject — the `*_facts` fixtures run
+  `extract_hierarchy_data` / `extract_calculation_usages` live, and the two REQ-HR-05 static
+  checks target agentic-mbse's `aggregation.py`, which no live code imports.
 
 ## Standing rules (from the product-lens, 2026-08-20, gate DISPOSED)
 
