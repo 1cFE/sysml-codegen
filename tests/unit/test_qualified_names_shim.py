@@ -19,12 +19,10 @@ def test_codegen_builders_remain_local_to_sysml_codegen() -> None:
     assert shim.build_parameter_qualified_name("A__b", "x") == "A__b__x"
     assert shim.get_module_name("A__B") == "a__b"
     assert shim.get_channel_name("A__b", "out") == "A__b__out"
-    assert shim.owning_part_leaf("A::B__c") == "B__c"
 
     assert not hasattr(shared, "build_parameter_qualified_name")
     assert not hasattr(shared, "get_module_name")
     assert not hasattr(shared, "get_channel_name")
-    assert not hasattr(shared, "owning_part_leaf")
 
 
 def test_core_package_exports_existing_qualified_name_surface() -> None:

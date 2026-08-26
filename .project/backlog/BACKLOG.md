@@ -59,39 +59,14 @@ text plus no trailing comments on declaration lines -- is ledgered as Class B
 silent: the collision check stops generation; no wrong unit reaches a sealed contract (the contract
 carries no unit field today).
 
-### [ARTIFACT-MANIFEST-TESTS-HARD-FAIL] Release-evidence tests break an ordinary checkout — P0
+### ~~[ARTIFACT-MANIFEST-TESTS-HARD-FAIL] Release-evidence tests break an ordinary checkout~~ ✅
 
-Filed 2026-08-21 `[OWNER]`, hit during REPO-CLEANUP Item 1 Phase 1.
-
-`verification/artifact_sources.py` raises `ArtifactSourceInputError(RuntimeError)` when
-`STOP_PARSER_ARTIFACT_SOURCE_INPUTS` is unset or names a manifest for a different commit. Tests that
-import it therefore **fail** in a normal working tree instead of skipping — 10 failures and 2 errors
-on a clean checkout, before any behavior is exercised. The suite already has the right pattern one
-directory over: `tests/conftest.py:37-40` skips when `SYSIDE_LICENSE_KEY` is absent.
-
-**The immediate fix is the gate, not the tests:** make an absent or non-matching manifest a
-`pytest.skip` with a message naming what it needs, matching the license-gate precedent. A developer
-on a clean tree then sees skips and a green run, and the sealed-checkout run still enforces
-everything it does today.
-
-Affected — 3,409 lines across nine files, of which the first four are **product tests entangled with
-release machinery, not process tests**:
-
-| lines | file | kind |
-|---|---|---|
-| 761 | `tests/conformance/test_hierarchy_resolver.py` | product |
-| 512 | `tests/conformance/test_ast_dispatch_invariant.py` | product |
-| 260 | `tests/conformance/test_self_binding_guidance_contract.py` | product |
-| 219 | `tests/conformance/test_exact_route_fingerprint_stability.py` | product |
-| 1046 | `tests/conformance/test_evidence_artifact_topology.py` | process (Item 7 candidate) |
-| 234 | `tests/conformance/test_probe_fixture_lock.py` | process |
-| 226 | `tests/conformance/test_stop_parser_documentation_contract.py` | mixed — also guards the owner-verbatim 0003/0004 quotes |
-| 128 | `tests/unit/test_artifact_sources.py` | process |
-| 23 | `tests/helpers/artifact_sources.py` | shim |
-
-Scope here is the **gate only** — flip raise to skip so development is unblocked. Disentangling the
-four product tests from the manifest is REPO-CLEANUP Move C work; disposition of `verification/`
-itself is Item 8. Do not delete any product test to make the failure go away.
+Closed 2026-08-25 by REPO-CLEANUP Move C, by retirement rather than the raise→skip flip:
+`verification/` and its manifest gate were deleted [OWNER, 2026-08-23], the four entangled
+product tests were disentangled onto `tests/helpers/source_roots.py` (ordinary-checkout
+roots), and the register-contract legs of the mixed doc-contract file moved to
+`test_register_contract.py`. A clean checkout now collects and passes the full suite with
+no omit list.
 
 ### [SERIALIZE-NAN-SEAL] The contract seal writes invalid JSON on a NaN — P1
 
@@ -114,6 +89,28 @@ Falsifier / acceptance: build a `ModelContract` whose `ContractParameter.default
 `float("nan")`, run the package seal, and assert the written contract file parses under
 `json.loads(..., parse_constant=raise)`. Today it writes `NaN` and seals. Source: REPO-CLEANUP
 product-lens `epic_plan-F6` and Item 1 spec-lens `spec-F3`.
+
+### [SNAPSHOT-CODEC-AND-DUP-CONSOLIDATION] Digest-sensitive consolidations deferred from REPO-CLEANUP Move C — P3, unowned (filed 2026-08-25)
+
+Move C deleted the dead lanes; three *duplication* findings from the same inventory
+(`.project/research/20260820-201945_line-count-anatomy-and-salvageability.md` §5) are
+consolidations whose cost is a digest or byte change, so they were filed rather than done:
+
+- The hand-written snapshot codec (`snapshot/instance_graph.py`, ~550 collapsible lines of
+  field-copying) — needs dataclass→Pydantic, discriminators on three untagged unions, an
+  `instance-graph/v4` schema bump, and 22 licensed fixture re-captures.
+- The two ExpressionIR→Python numeric compilers (`calc_compat_renderer.py`,
+  `predicate_compiler.py`) differ mainly in spacing — consolidating changes emitted bytes,
+  so it rides with a deliberate baseline re-capture, not a cleanup pass.
+- The canonical-JSON encoder copies (three byte-identical of six) sit on sealed-digest
+  paths (contracts, snapshot, catalog); consolidate only with the byte-identity gate run
+  per encoder.
+
+Judged no-change, recorded here so it is not re-proposed: the error-subclass constructors
+(`extraction/errors.py`, `elaboration/occurrence.py` and friends) and the
+`_collect_unbound_{constraint,calculation}_formals` pair look like boilerplate but carry
+different payloads per site; collapsing them means a dispatch shim, and the owner ruling is
+qualitative simplicity — deletion over shims.
 
 ### ~~[V11-DEAD-GATE-DOCS] Three live docs advertise a refusal that cannot happen~~ ✅
 
