@@ -88,8 +88,15 @@ def test_the_ledger_covers_every_shape_the_matrix_needs():
 def test_derived_account_equals_the_hand_written_account(
     fixture: str, expected: dict, _headline: str, _entries: int
 ):
-    catalog = project(
-        elaborate_model_paths([Path(FIXTURES_DIR / fixture)])
-    ).constraint_catalog
+    root = Path(FIXTURES_DIR / fixture)
+    snapshot = root / "instance_graph_snapshot.json"
+    if snapshot.is_file() and not any(root.glob("**/*.sysml")):
+        # catf_mfe_d5 keeps only its sealed snapshot (REPO-CLEANUP Move C).
+        from sysml_codegen.snapshot.envelope import load_instance_graph_snapshot
+
+        instance_graph = load_instance_graph_snapshot(snapshot)
+    else:
+        instance_graph = elaborate_model_paths([root])
+    catalog = project(instance_graph).constraint_catalog
     assert catalog is not None, f"{fixture} projects no catalog"
     assert coverage_account(catalog).as_mapping() == expected

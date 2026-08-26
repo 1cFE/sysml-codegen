@@ -17,7 +17,6 @@ import pytest
 
 def pytest_configure(config):
     config.addinivalue_line("markers", "req(id): map test to requirement ID")
-    config.addinivalue_line("markers", "baseline: pipeline baseline comparison test")
 
 
 # ---------------------------------------------------------------------------

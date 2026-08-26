@@ -239,7 +239,7 @@ def test_collision_rejected_before_predicate_compilation(monkeypatch):
     calls = []
     monkeypatch.setattr(
         predicate_compiler,
-        "compile_predicate",
+        "compile_predicate_body",
         lambda *args, **kwargs: calls.append((args, kwargs)),
     )
     catalog = assemble_constraint_catalog(

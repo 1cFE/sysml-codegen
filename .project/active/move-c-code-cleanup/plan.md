@@ -94,13 +94,13 @@ extraction lane is deleted. Both recorded in the epic.
 
 ### C4 — Dead `src/` lanes (research §5, each lane + pinning tests per commit)
 
-- [ ] V11 preflight code (85 lines; doc corrections are `[V11-DEAD-GATE-DOCS]`, not here)
-- [ ] Deriver-era generators (123)
-- [ ] `ConcreteConstraint` (105)
-- [ ] Dead extractor and model classes (126)
-- [ ] `compile_predicate` / `load_predicate` pair (54)
-- [ ] Error-subclass boilerplate (~50)
-- [ ] Mechanical duplicates (~390)
+- [x] V11 preflight code (85 lines; doc corrections are `[V11-DEAD-GATE-DOCS]`, not here) (done — collector+CLI branch deleted; field stays, digest-serialized)
+- [x] Deriver-era generators (123) (done)
+- [x] `ConcreteConstraint` (105) (done — FixtureConstraint dataclass carries the three unit modules)
+- [x] Dead extractor and model classes (126) (done — plus the whole hierarchy family C3 freed; ledger rows L-153/174/185/212/249 re-dispositioned)
+- [x] `compile_predicate` / `load_predicate` pair (54) (done — suites converted to compile_predicate_body)
+- [x] Error-subclass boilerplate (~50) (judged no-change: per-site payloads, collapse = shim; recorded in BACKLOG)
+- [x] Mechanical duplicates (~390) (owning_part_leaf deleted; digest-sensitive consolidations filed [SNAPSHOT-CODEC-AND-DUP-CONSOLIDATION]; _collect_unbound merge judged no-change)
 
 ### C5 — Committed test data
 

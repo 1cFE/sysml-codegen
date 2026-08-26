@@ -90,6 +90,22 @@ Falsifier / acceptance: build a `ModelContract` whose `ContractParameter.default
 `json.loads(..., parse_constant=raise)`. Today it writes `NaN` and seals. Source: REPO-CLEANUP
 product-lens `epic_plan-F6` and Item 1 spec-lens `spec-F3`.
 
+### [EMIT-STEP-REGRESSION-GATE] The emit step has no output-regression comparison — P2, unowned (filed 2026-08-25, REPO-CLEANUP Move C, F4)
+
+`tests/fixtures/baseline_outputs/` (13,923 lines) and its reader `test_baselines.py` were
+deleted: nothing regenerated anything to compare against them, and all four of the
+reader's assertions passed on hand-written stubs — a false defender, not a gate (research
+§7.2; the suite itself admitted this at `test_zero_entry_package_golden.py`).
+
+The gap that remains owned by nobody until this item runs: apart from the single
+`zero_entry_package` golden (a genuine byte comparison) and the seal contracts, no test
+regenerates a full package per fixture and compares emitted bytes against a committed
+baseline, so an emit-step regression that keeps the graph identical but changes rendered
+output is caught only by the golden's one shape. Acceptance: a licensed gate that
+generates from each fixture snapshot and byte-compares against committed expected output
+(or digests), with the `captured_at` churn rule applied. The Move C byte-identity harness
+(session scratch, `byteid/run.sh`) is a working prototype of exactly this.
+
 ### [SNAPSHOT-CODEC-AND-DUP-CONSOLIDATION] Digest-sensitive consolidations deferred from REPO-CLEANUP Move C — P3, unowned (filed 2026-08-25)
 
 Move C deleted the dead lanes; three *duplication* findings from the same inventory

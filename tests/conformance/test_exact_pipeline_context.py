@@ -240,7 +240,9 @@ def test_a_catalog_missing_a_non_reaching_member_is_refused_by_name(monkeypatch)
         object.__setattr__(catalog, "fingerprint", catalog.recomputed_fingerprint())
 
     _with_projection(monkeypatch, drop_a_non_reaching_row)
-    context = build_exact_pipeline_context([FIXTURES_DIR / "catf_mfe_d5"])
+    context = build_exact_pipeline_context_from_snapshot(
+        FIXTURES_DIR / "catf_mfe_d5" / "instance_graph_snapshot.json"
+    )
 
     with pytest.raises(CodeGenerationError) as raised:
         _ = context.computation_graph
@@ -272,5 +274,7 @@ def test_a_catalog_row_that_joins_no_domain_member_is_refused(monkeypatch) -> No
 
 def test_an_intact_catalog_passes_the_population_check() -> None:
     """The guard is not vacuous: the unmutated public route still reads clean."""
-    graph = build_exact_pipeline_context([FIXTURES_DIR / "catf_mfe_d5"]).computation_graph
+    graph = build_exact_pipeline_context_from_snapshot(
+        FIXTURES_DIR / "catf_mfe_d5" / "instance_graph_snapshot.json"
+    ).computation_graph
     assert len(graph.constraint_catalog.usage_records) == 65

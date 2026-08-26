@@ -33,6 +33,22 @@ def _load(path: Path) -> dict[str, object]:
     assert isinstance(value, dict)
     return value
 
+def _is_unit_map_digest(value: object) -> bool:
+    """The committed inventories carry unit-map digests, not the 47k-line arrays.
+
+    REPO-CLEANUP Move C replaced each frozen ``unit_map`` array with
+    ``{"sha256": <hex>, "entries": <count>}`` (canonical-JSON sha256 over the original
+    array). Equality of digests is equality of arrays, so the precomputed
+    ``movement.unit_map_changed`` booleans keep their meaning.
+    """
+    return (
+        isinstance(value, dict)
+        and set(value) == {"sha256", "entries"}
+        and isinstance(value["sha256"], str)
+        and len(value["sha256"]) == 64
+        and isinstance(value["entries"], int)
+    )
+
 
 def test_inventory_rejects_missing_extra_and_duplicate_rows() -> None:
     tracked = ["a/instance_graph_snapshot.json", "b/instance_graph_snapshot.json"]
@@ -60,11 +76,11 @@ def test_inventory_records_required_digests_and_unit_maps() -> None:
         assert committed["instance_graph_fingerprint"]
         assert committed["source_manifest_fingerprint"]
         assert committed["instance_graph_payload_digest"]
-        assert isinstance(committed["unit_map"], list)
+        assert _is_unit_map_digest(committed["unit_map"])
         assert live["instance_graph_fingerprint"]
         assert live["source_manifest_fingerprint"]
         assert live["instance_graph_payload_digest"]
-        assert isinstance(live["unit_map"], list)
+        assert _is_unit_map_digest(live["unit_map"])
         for arm in (committed, live):
             projection = arm["projection"]
             assert isinstance(projection, dict)

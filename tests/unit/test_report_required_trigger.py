@@ -22,6 +22,21 @@ from sysml_codegen.resolution.models import (
 from tests.conftest import FIXTURES_DIR, exact_graph_from_fixture, requires_license
 
 
+def _instance_graph(fixture: str):
+    """Elaborate live, or decode the sealed snapshot for a source-free fixture.
+
+    catf_mfe_d5 keeps only its snapshot (REPO-CLEANUP Move C); the decoded graph is the
+    same elaboration its sources produced.
+    """
+    root = Path(FIXTURES_DIR / fixture)
+    snapshot = root / "instance_graph_snapshot.json"
+    if snapshot.is_file() and not any(root.glob("**/*.sysml")):
+        from sysml_codegen.snapshot.envelope import load_instance_graph_snapshot
+
+        return load_instance_graph_snapshot(snapshot)
+    return elaborate_model_paths([root])
+
+
 def _aggregators(graph: ComputationGraph):
     return [m for m in graph.modules if m.module_kind is ModuleKind.REPORT_AGGREGATOR]
 
@@ -61,7 +76,7 @@ def test_a_descriptive_only_model_ships_a_zero_input_aggregator():
 @requires_license
 def test_both_zero_input_branches_ship_an_aggregator(fixture: str):
     """Asserted-with-zero-eligible and non-asserted-only. Different headlines, same trigger."""
-    graph = project(elaborate_model_paths([Path(FIXTURES_DIR / fixture)]))
+    graph = project(_instance_graph(fixture))
     (aggregator,) = _aggregators(graph)
     assert not aggregator.inputs
     assert aggregator.outputs[0].channel_name in _exit_channels(graph)
@@ -94,7 +109,7 @@ def test_the_rule_is_read_the_same_way_on_both_sides_of_projection():
     drift Item 2's A4 cure exists to stop; the coverage preflight refuses a disagreement, and
     this states the property that refusal protects."""
     for fixture in ("catf_mfe_d5", "constraint_coverage_zero_eligible", "fusion_tea"):
-        instance_graph = elaborate_model_paths([Path(FIXTURES_DIR / fixture)])
+        instance_graph = _instance_graph(fixture)
         graph = project(instance_graph)
         assert bool(instance_graph.constraint_usages) == ships_constraint_machinery(graph)
         assert bool(_aggregators(graph)) == ships_constraint_machinery(graph)
