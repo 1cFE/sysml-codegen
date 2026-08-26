@@ -97,15 +97,12 @@ def _require_historical_inventory_plus_named_transition(
 
 
 def test_historical_inventory_deletion_is_one_named_current_refusal() -> None:
+    # The expected-transitions narrative that cross-recorded this refusal retired with
+    # verification/ (REPO-CLEANUP Move C); the live record is the recapture batch itself.
     current_batch = _load(ROOT / "tests/fixtures/v6_recapture_batch/batch.json")
     record = current_batch["records"]["deep_cross_scope_probe"]
     assert record["status"] == "refused"
     assert record["codes"] == ["SI_OCCURRENCE_MISSING"]
-    transitions = (ROOT / "verification/expected-transitions.md").read_text()
-    assert next(iter(TRANSITIONED_SNAPSHOT_REMOVALS)) in transitions
-    assert DEEP_CROSS_HISTORICAL_SHA256 in transitions
-    assert "e8927d0ebb9b28aafcd7410bbc5122354edc4213468f0b2cb2dfc99aedecc46c" in transitions
-    assert "A2 refusal" in transitions
 
 
 def test_pre_inventory_preserves_historical_rows_plus_named_transition() -> None:
