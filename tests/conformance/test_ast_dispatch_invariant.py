@@ -24,7 +24,7 @@ from uuid import NAMESPACE_URL, uuid5
 import pytest
 from agentic_mbse.sysml.syside_adapter import SysideAdapter
 
-from tests.helpers.artifact_sources import agentic_source_root
+from tests.helpers.source_roots import agentic_source_root
 from tests.helpers.static_analysis import (
     find_all_dispatch_functions,
     find_comment_near_line,
@@ -38,7 +38,7 @@ from tests.helpers.static_analysis import (
 
 SRC_ROOT = Path(__file__).parent.parent.parent / "src" / "sysml_codegen"
 CODEGEN_ROOT = SRC_ROOT.parent.parent
-AGENTIC_ROOT = agentic_source_root(CODEGEN_ROOT)
+AGENTIC_ROOT = agentic_source_root()
 EXTRACTION_DIR = SRC_ROOT / "extraction"
 
 HIERARCHY_RESOLVER_PATH = EXTRACTION_DIR / "hierarchy_resolver.py"

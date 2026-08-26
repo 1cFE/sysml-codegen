@@ -801,10 +801,18 @@ def test_the_paths_check_now_fails_on_either_axis(ledger: dict) -> None:
     )
 
 
-def test_the_companion_root_is_the_declared_agentic_artifact() -> None:
-    """The two cross-repository rows use the hash-identified source extraction."""
-    assert checker.REPO_ROOTS["agentic-mbse"] == checker.ARTIFACT_SOURCES.agentic_source
-    assert checker.REPO_ROOTS["sysml-codegen"] == checker.ARTIFACT_SOURCES.codegen_source
+def test_the_companion_root_is_the_installed_agentic_checkout() -> None:
+    """The cross-repository rows resolve against this repo and the editable agentic checkout.
+
+    The hash-identified manifest seam retired with verification/ (REPO-CLEANUP Move C);
+    the roots now come from the checkout itself and the installed agentic_mbse package.
+    """
+    import agentic_mbse
+
+    assert checker.REPO_ROOTS["sysml-codegen"] == checker.REPO_ROOT
+    expected = Path(agentic_mbse.__file__).resolve().parents[2]
+    assert checker.REPO_ROOTS["agentic-mbse"] == expected
+    assert (expected / "src" / "agentic_mbse").is_dir()
 
 
 def test_every_configured_checkout_exists_on_this_machine() -> None:

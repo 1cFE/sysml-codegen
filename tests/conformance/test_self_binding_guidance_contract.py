@@ -37,7 +37,7 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
-from tests.helpers.artifact_sources import agentic_source_root
+from tests.helpers.source_roots import agentic_source_root
 
 CODEGEN_ROOT = Path(__file__).resolve().parents[2]
 
@@ -87,7 +87,7 @@ POINTER_SURFACES = (
 
 def agentic_root() -> Path:
     """Return the explicit hash-identified agentic source tree."""
-    root = agentic_source_root(CODEGEN_ROOT)
+    root = agentic_source_root()
     missing = [tree for tree in INSTRUCTION_TREES if not (root / tree).is_dir()]
     assert not missing, f"agentic tree at {root} lacks {missing}"
     return root

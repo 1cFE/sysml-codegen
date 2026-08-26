@@ -85,12 +85,20 @@ from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
 
-from verification.artifact_sources import require_codegen_source
-
 REPO_ROOT = Path(__file__).resolve().parent.parent
-ARTIFACT_SOURCES = require_codegen_source(REPO_ROOT)
-CODEGEN_HISTORY_ROOT = ARTIFACT_SOURCES.codegen_history
-AGENTIC_SOURCE_ROOT = ARTIFACT_SOURCES.agentic_source
+# The manifest-gated verification.artifact_sources seam retired with verification/
+# (REPO-CLEANUP Move C): the history root is this repository, and the agentic root is
+# the checkout the installed editable agentic_mbse package came from.
+CODEGEN_HISTORY_ROOT = REPO_ROOT
+
+
+def _agentic_source_root() -> Path:
+    import agentic_mbse
+
+    return Path(agentic_mbse.__file__).resolve().parents[2]
+
+
+AGENTIC_SOURCE_ROOT = _agentic_source_root()
 LEDGER_JSON = REPO_ROOT / ".project/ledger/ledger-4a.json"
 
 #: Row origins that must appear in the Git-derived candidate set.
@@ -101,7 +109,7 @@ CARRIED_ORIGINS = frozenset(
 )
 
 REPO_ROOTS = {
-    "sysml-codegen": ARTIFACT_SOURCES.codegen_source,
+    "sysml-codegen": REPO_ROOT,
     "agentic-mbse": AGENTIC_SOURCE_ROOT,
 }
 

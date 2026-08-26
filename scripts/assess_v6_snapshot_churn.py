@@ -34,10 +34,10 @@ from sysml_codegen.snapshot.envelope import (
     load_instance_graph_snapshot,
 )
 from sysml_codegen.snapshot.instance_graph import decode_instance_graph, encode_instance_graph
-from verification.artifact_sources import codegen_history_root
-
 ROOT = Path(__file__).resolve().parent.parent
-HISTORY_ROOT = codegen_history_root(ROOT)
+# The manifest-gated history root retired with verification/ (REPO-CLEANUP Move C);
+# the history this assessment reads is this repository's own.
+HISTORY_ROOT = ROOT
 TRACKED_PATHSPEC = "tests/fixtures/**/instance_graph_snapshot.json"
 
 
