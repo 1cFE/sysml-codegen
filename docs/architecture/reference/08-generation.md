@@ -259,7 +259,7 @@ write to disk.
 The auto-impl template additionally receives the keys of
 `module.auto_impl_context`.
 
-**`parameter_group_schema.py.jinja2`** (via `generate_derived_group_schema` in
+**`parameter_group_schema.py.jinja2`** (via `generate_all_derived_schemas` in
 `entry_point.py`):
 `class_name`, `description`, `fields[]` (name, type, description, default).
 

@@ -17,8 +17,6 @@ from sysml_codegen.generation.entry_point import (
     generate_all_derived_jsons_from_graph,
     generate_all_derived_schemas,
     generate_all_derived_schemas_from_graph,
-    generate_derived_group_schema,
-    generate_inputs_readme,
 )
 from sysml_codegen.generation.initialization import (
     CodeGenerationError,
@@ -61,8 +59,6 @@ __all__ = [
     "generate_all_derived_jsons_from_graph",
     "generate_all_derived_schemas",
     "generate_all_derived_schemas_from_graph",
-    "generate_derived_group_schema",
-    "generate_inputs_readme",
     # initialization
     "CodeGenerationError",
     "SysMLParsingError",
