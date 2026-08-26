@@ -16,9 +16,8 @@ excludes a unit-mismatched comparison before this module ever sees the IR.
 from __future__ import annotations
 
 import keyword
-import math
 from dataclasses import replace
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from sysml_codegen.generation.constraint_name_safety import ConstraintNameViolation
@@ -40,10 +39,8 @@ __all__ = [
     "KLEENE_RUNTIME_SOURCE",
     "PredicateCompileError",
     "compile_predicate_body",
-    "compile_predicate",
     "finalize_assertion",
     "function_source_only",
-    "load_predicate",
     "margin_expression",
 ]
 
@@ -339,89 +336,16 @@ def {fn_name}({", ".join(args)}):
     return src, args
 
 
-def compile_predicate(
-    ir: ExpressionIR, fn_name: str, negated: bool = False
-) -> tuple[str, list[str]]:
-    """Generate Python source for one predicate.
-
-    Returns ``(source, arg_names)``. The emitted function returns a ``_PredicateResult``
-    namedtuple: ``actual_value`` (``True``/``False``/``None``), ``status``
-    (``satisfied``/``violated``/``indeterminate``, polarity applied), and ``margin`` (signed
-    float or ``None``) — the field names match :class:`ConstraintEvaluation` directly.
-    """
-    if not fn_name.isidentifier() or keyword.iskeyword(fn_name):
-        raise PredicateCompileError(f"function name {fn_name!r} is not a Python identifier")
-    from sysml_codegen.generation.constraint_name_safety import (
-        ConstraintScopePolicy,
-        format_name_safety_violation,
-        predicate_bindings,
-        select_name_safety_violation,
-        validate_scope_bindings,
-        verify_emitted_scope,
-    )
-
-    legacy_policy = ConstraintScopePolicy(
-        scope="predicate",
-        generated_parameters=frozenset(),
-        generated_locals=frozenset({"value", "status"}),
-    )
-    bindings = predicate_bindings(ir)
-    violation = select_name_safety_violation(validate_scope_bindings(bindings, legacy_policy))
-    if violation is not None:
-        violation = replace(violation, predicate_function_name=fn_name)
-        raise PredicateCompileError(
-            format_name_safety_violation(violation), name_safety_violation=violation
-        )
-    args: list[str] = []
-    _leaf_ref_names(ir, args)
-    for arg in args:
-        if not arg.isidentifier() or keyword.iskeyword(arg):
-            raise PredicateCompileError(f"leaf reference {arg!r} is not a safe Python identifier")
-    body = _compile_boolean(ir)
-    margin = margin_expression(ir, negated) or "None"
-    expected = "False" if negated else "True"
-    src = f"""{_KLEENE_RUNTIME}
-
-def {fn_name}({", ".join(args)}):
-    value = {body}
-    if value is None:
-        status = "indeterminate"
-    elif value == {expected}:
-        status = "satisfied"
-    else:
-        status = "violated"
-    return _PredicateResult(actual_value=value, status=status, margin={margin})
-"""
-    verify_emitted_scope(
-        src,
-        legacy_policy,
-        set(args),
-        function_name=fn_name,
-    )
-    return src, args
-
-
 def function_source_only(full_source: str) -> str:
-    """Strip the leading ``_KLEENE_RUNTIME`` prelude from one `compile_predicate` output.
+    """Strip the leading ``_KLEENE_RUNTIME`` prelude from one `compile_predicate_body` output.
 
     D3: the shared predicates module emits the runtime block once, then each definition's
     function body — never one runtime block per function. ``full_source`` must be a string
-    `compile_predicate` produced (it always starts with the runtime prelude).
+    `compile_predicate_body` produced (it always starts with the runtime prelude).
     """
     if not full_source.startswith(_KLEENE_RUNTIME):
         raise PredicateCompileError(
-            "function_source_only expects a compile_predicate() output (runtime-prelude "
+            "function_source_only expects a compile_predicate_body() output (runtime-prelude "
             "prefixed source)"
         )
     return full_source[len(_KLEENE_RUNTIME) :]
-
-
-def load_predicate(src: str, fn_name: str) -> Any:
-    """Exec emitted source in a fresh namespace and return the compiled function.
-
-    Test/debug convenience — production generation embeds ``src`` directly into the shared
-    predicates module template (D3); it never execs at generation time.
-    """
-    ns: dict[str, Any] = {"math": math}
-    exec(src, ns)  # noqa: S102 — controlled codegen-emitted source, not external input
-    return ns[fn_name]

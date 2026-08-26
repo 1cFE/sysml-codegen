@@ -136,7 +136,7 @@ def compile_shared_predicates(catalog: ConstraintCatalog) -> dict[str, tuple[str
     ``predicate_definition_key`` — every concrete entry sharing that key (a part_def owner's
     N occurrences) imports the same emitted function rather than duplicating it. Returns
     ``{definition_key: (fn_name, full_source, arg_names)}``; ``full_source`` is a standalone
-    ``compile_predicate`` output (runtime prelude included).
+    ``compile_predicate_body`` output (runtime prelude included).
     """
     from agentic_mbse.sysml.expression_ir import parse_expression
 
