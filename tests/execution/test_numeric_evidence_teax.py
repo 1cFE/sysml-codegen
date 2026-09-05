@@ -21,7 +21,10 @@ SOURCE = "NumericEvidence__plant__source"
 TWICE = "NumericEvidence__plant__split__twice"
 SHIFTED = "NumericEvidence__plant__split__shifted"
 TOTAL = "NumericEvidence__plant__combine__total"
-EXPECTED = ({TWICE: 6.0, SHIFTED: 10.0, TOTAL: 16.0}, {TWICE: 10.0, SHIFTED: 12.0, TOTAL: 22.0})
+EXPECTED = {
+    3.0: {TWICE: 6.0, SHIFTED: 10.0, TOTAL: 16.0},
+    5.0: {TWICE: 10.0, SHIFTED: 12.0, TOTAL: 22.0},
+}
 
 
 @pytest.mark.parametrize("route", ["live", "snapshot"])
@@ -50,10 +53,10 @@ def test_generated_mixed_outputs_survive_evaluation_and_reopened_study(tmp_path,
     )
     bridge = CandidateBridge(evaluator.entry_models)
     proposals = [{SOURCE: 3.0}, {SOURCE: 5.0}]
-    for proposal, expected in zip(proposals, EXPECTED, strict=True):
+    for proposal in proposals:
         evidence = evaluator.evaluate(bridge.build(proposal))
         # Literal membership and values catch equal-but-incomplete projections.
-        assert evidence.outputs == expected
+        assert evidence.outputs == EXPECTED[proposal[SOURCE]]
         assert evidence.provenance.evidence_schema_version == "v3"
 
     contract = json.loads((package / "contracts" / "model_contract.json").read_text())
@@ -82,9 +85,10 @@ def test_generated_mixed_outputs_survive_evaluation_and_reopened_study(tmp_path,
     try:
         cases = StudyQuery(reopened, package).cases()
         assert len(cases) == 2
-        for case, expected in zip(cases, EXPECTED, strict=True):
+        assert {case.inputs[SOURCE] for case in cases} == set(EXPECTED)
+        for case in cases:
             assert case.state == "completed"
-            assert case.outputs == expected
+            assert case.outputs == EXPECTED[case.inputs[SOURCE]]
             assert case.executable_fingerprint == evaluator.fingerprint
             assert case.evidence_digest
     finally:
