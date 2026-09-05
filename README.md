@@ -41,6 +41,10 @@ uv run mypy src/
 uv run ruff check src/
 ```
 
+The real-TEAx execution lane (`pytest tests/execution/ -m execution`) requires TEAx commit `ca5d490` or a successor carrying its evidence schema v3 numeric-publication fix. Numeric ExitPoint values must reach study evidence under their existing exit keys, whether a generated calculation returns a single numeric wrapper or multiple scalar fields. Boolean and structured constraint outputs are excluded from numeric evidence. The mixed-output acceptance test checks distinct calculated values before and after an input change, including a dependent single-output calculation and a reopened study store.
+
+Bind execution dependencies with `CODEGEN_EXECUTION_PROVENANCE` and `TEAX_SIMKIT_PATH` as required by [the execution provenance fixture](tests/execution/conftest.py). Live generation also needs `SYSIDE_LICENSE_KEY`. Evidence schema v3 starts a new study lineage; old stores remain historical and cannot recover omitted values by querying them again. This runtime fix requires no generated-package representation change.
+
 ## Usage
 
 ```bash
