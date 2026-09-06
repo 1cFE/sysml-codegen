@@ -1,5 +1,7 @@
 # Current Work
 
+2026-09-05: Numeric evidence acceptance implemented on `fix/numeric-study-evidence`. Generated multi-output channels now have explicit real-TEAx evaluation and reopened study-store acceptance, including input perturbation and dependent single-output arithmetic. The runtime repair belongs to TEAx and changes evidence schema to v3; codegen production bytes are unchanged. Scope and validation: [.project/numeric-evidence-acceptance.md](numeric-evidence-acceptance.md).
+
 **Last Updated**: 2026-08-25 (**REPO-CLEANUP Move C complete — the epic is done.** Delete-what-defends-nothing
 executed as eleven commits on `repo-cleanup`, licensed suite green after every batch (final: 2140 passed /
 9 skipped / 94 deselected, zero failures, no omit list — the accepted-limitation caveat carried since Item 1

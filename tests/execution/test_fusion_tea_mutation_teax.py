@@ -25,13 +25,13 @@ in code, not in policy.
 **Every-and-only, in two legs.** A mutation must move exactly its consumers and
 nothing else, and "nothing else" has to be enumerated rather than asserted:
 
-- *Runtime* — the evaluation seam projects scalar module outputs and the
+- *Runtime* — the evaluation seam projects all numeric module outputs and the
   constraint verdicts (``simkit/evaluation/projection.py``); the full set is
   compared before and after, so an unexpected mover fails.
 - *Structural* — every ``(module, formal)`` input port in the whole graph is
   partitioned into the ports fed by the mutated entry point and the rest. That
-  covers the two multi-output driver-cost modules, whose fields the evaluation
-  seam does not project.
+  independently checks the runtime comparison, including both multi-output
+  driver-cost modules.
 """
 
 from __future__ import annotations
@@ -180,6 +180,14 @@ def test_the_typed_entry_route_reproduces_the_hand_computed_baseline(sealed) -> 
     baseline must land on the same LCOE the file-backed route does.
     """
     evidence = _evaluate(sealed, {})
+
+    expected_channels = {
+        output.channel_name
+        for module in sealed["graph"].modules
+        for output in module.outputs
+        if output.python_type in {"float", "int"}
+    }
+    assert set(evidence.outputs) == expected_channels
 
     assert evidence.outputs[LCOE_CHANNEL] == pytest.approx(hand.RUN_C_LCOE, rel=1e-6)
     assert evidence.outputs[LCOE_CHANNEL] == pytest.approx(hand.lcoe(), rel=REL)
