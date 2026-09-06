@@ -1,5 +1,7 @@
 # Current Work
 
+2026-09-05: Numeric evidence acceptance implemented on `fix/numeric-study-evidence`. Generated multi-output channels now have explicit real-TEAx evaluation and reopened study-store acceptance, including input perturbation and dependent single-output arithmetic. The runtime repair belongs to TEAx and changes evidence schema to v3; codegen production bytes are unchanged. Scope and validation: [.project/numeric-evidence-acceptance.md](numeric-evidence-acceptance.md).
+
 **Last Updated**: 2026-08-20 (**stop-reinventing-the-parser SHIPPED — all three repositories
 merged to GitHub `main`.** Merge-commit PRs in dependency order: Agentic agentic-mbse#13
 (`88e2489`), Codegen sysml-codegen#13 (`82244a0`), Fusion fusion-tea#102 (`5338db5f`). The
