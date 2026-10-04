@@ -47,7 +47,7 @@ produces both, file both — each register, its own entry; cite, don't restate.
 > local changes: the "Register boundary" heading and its `.project/adr/`-only clause above were
 > rewritten because this repo has two decision registers, and this section was added. A pack
 > refresh (`init-project.sh --force`) overwrites this file; hand-merge both changes back.
-> `tests/conformance/test_stop_parser_documentation_contract.py::test_no_document_claims_a_single_adr_home`
+> `tests/conformance/test_register_contract.py::test_no_document_claims_a_single_adr_home`
 > fails until they are restored. Record: the scaffolding-register-boundary audit, 2026-08-21 (git history).
 
 Product ids use four digits. Each id in `INDEX.md` resolves to exactly one sibling
