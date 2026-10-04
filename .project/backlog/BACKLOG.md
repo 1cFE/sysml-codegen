@@ -302,30 +302,19 @@ GAP-CLOSE items:
 
 | Epic | Status | Notes |
 |------|--------|-------|
-| [REPO-CLEANUP] Repo Cleanup — Keep the Decisions, Delete the Exhaust | In Progress (Items 1–2 done; revised 2026-08-23 to three moves, ~3 days remaining) | The repo is 880k lines and the product is 15k. `.project/` is 78% of the tree, 109,720 lines of it byte-exact duplicates (`ruff_all.log` committed 10× for 120,736 lines), and exactly one `.project` file is read by any tool. Extract the durable decisions and promises into `.project/adr/` and `.project/product/`, then purge the archive, then ask of the tests and the code what they actually defend. Owner ruling `[OWNER, 2026-08-20]`: **split the registers by subject** — `docs/architecture/modeling-assumptions.md` keeps decisions binding the *model author*, `.project/adr/` takes decisions binding the *toolchain builder*; the criterion is written to generalize because the same boundary problem exists in the claude commands. Eight items, ~11 days sequential (~6-7 parallel). Extraction always precedes deletion. See `epic_repo_cleanup.md` and the measurement it rests on, `.project/research/20260820-201945_line-count-anatomy-and-salvageability.md`. |
+| [REPO-CLEANUP] Repo Cleanup — Keep the Decisions, Delete the Exhaust | Complete (2026-08-25); PR preparation in progress | Moves A–C are complete. Durable decisions and promises are in the registers; archives, dead code, and obsolete tests are removed. Completion and validation: `epic_repo_cleanup.md`, close commit `1df2faa`. |
 | ~~[CONSTRAINT-EXEC] Constraint Execution and Design-Space Studies~~ ✅ | Complete (2026-07-13). Archived to: `.project/completed/20260713_epic_constraint_execution.md` (independent findings audit alongside) | Modeled assertions execute as graph modules + exact-schema report aggregator; graph-owned catalog, sealed contracts, crash-safe study layer (lists/grids). De-risked by spikes S1–S6 (all passed, verified re-runs; results + carry-forwards inline in the concept). Acceptance: IFE sweep's hand-coded viability rule replaced by the generated assertion, grid classifications match. All 15 items certified; IFE acceptance ratified [OWNER] (2294/2301 + 7 model-favoring boundary rows); CE-F1/F2 follow-ons registered below, CE-F3 fixed. |
 | ~~[PUSH-DOWN] agentic-mbse Push-Down~~ ✅ | Complete (2026-07-10). Archived to: `.project/completed/20260720_epic_push_down.md` (+ audit, independent audit, pre-PR reports alongside) | All 4 items certified; independently audited Certify after 2026-07-10 remediation; merged as sysml-codegen PR #8 + agentic-mbse PR #10. Expression reconstruction, qualified-name split, hierarchy primitives/models, aggregation decomposition pushed down; design overrides, usage-type indexing, Python rewriting, aliases, scoping, module construction stayed in sysml-codegen. |
 
-REPO-CLEANUP items (revised 2026-08-23: eight pipeline items collapsed to three moves, no per-item
-spec/design/plan/audit; see `epic_repo_cleanup.md` *Revision*):
+REPO-CLEANUP completion record (2026-08-25):
 
-- [x] **Item 1 — Scaffolding reinstall and register boundary** — certified 2026-08-21 at `3566fdd`,
-  archived to `.project/completed/20260821_scaffolding-register-boundary/`.
-- [x] **Item 2 — Decision harvest** — closed 2026-08-23. The harvest is
-  `.project/active/decision-harvest/execution-history.md` (126 folders, 21 rows binned to ~5 ADRs,
-  ~2 promises, 11 notes; all three owner seeds surfaced). Three review fixes recorded in the epic:
-  `concepts/` preserved instead of swept; the 27 broken citations are a sed job; the
-  test-and-code rationale register is dropped because research `§5`–`§7` already is it.
-- [ ] **Move A — Write the entries** (0.5d). ~5 ADRs + re-home ADR-007/009 + ~2 promises, each
-  with a real `Why`; no entry cites a path Move B deletes.
-- [ ] **Move B — Purge `.project`** (0.5d, needs A). `completed/` and closed `active/` leave HEAD
-  (pre-purge SHA in the commit); logs gitignored; 27 citations fixed; register citations resolve
-  (F1). Preserve registers, `research/`, `concepts/`, `ledger/`, `backlog/`, `scripts/`.
-- [ ] **Move C — Delete what defends nothing** (1–1.5d, needs A). Dead `src/` lanes with their
-  pinning tests, zero-reader fixtures, `unit_map` dumps, `scripts/archive/`, retired reference
-  docs. Deletion lock (F2), entanglement-is-not-deadness, byte identity licensed. Gaps get ids (F4).
-- Owner rulings recorded `[OWNER, 2026-08-23]`: `completed/` off HEAD wholesale; `verification/`
-  retired; the legacy extraction lane deleted. All three moves are unblocked.
+- [x] **Item 1 — Scaffolding and register boundary** — certified at `3566fdd`; history retains its archived record.
+- [x] **Item 2 — Decision harvest** — completed 2026-08-23; retained at `.project/research/decision-harvest/execution-history.md`.
+- [x] **Move A — Write the entries** — builder decisions and product promises filed, including ADR-007/009 re-homing; commit `6831751`.
+- [x] **Move B — Purge `.project`** — historical exhaust removed from HEAD, citations repaired, registers and research preserved; commit `507e838`.
+- [x] **Move C — Delete what defends nothing** — dead production lanes, obsolete tests, unused fixtures, and closed-item tooling retired; final gates recorded in `1df2faa`, ledger follow-up in `3edbe81`.
+
+[INHERITED: `epic_repo_cleanup.md`, Owner Rulings] The three move folders were deleted at close under the standing record-then-delete rule. The epic, registers, and git history retain the decisions and evidence.
 
 CONSTRAINT-EXEC items:
 - [x] Item 0 — End-to-end integration spike (S6 lifecycle × S5 evaluator × S4 sealed package)

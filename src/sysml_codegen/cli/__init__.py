@@ -1247,10 +1247,6 @@ def _generate_package_from_graph(graph: ComputationGraph, config: GenerationConf
         # duplicate path never wipes or silently overwrites existing files.
         _check_duplicate_output_paths(graph.modules)
 
-        # Step 1.6: Params-coverage reconciliation (Item 7 / D4, M1). Always
-        # strict — logs the unwired-remainder summary, then raises V11 on any
-        # wired fell-through-valueless input. Before output clear, like 1.5.
-
         # Step 1.7: registry class-name collisions the aliasing cannot resolve.
         # The check itself lives at the registry pass, which runs after the tree
         # is cleared; running it here is what makes the refusal fail-before-mutate.
@@ -1258,7 +1254,7 @@ def _generate_package_from_graph(graph: ComputationGraph, config: GenerationConf
 
         # Step 1.8: the constraint catalog accounts for every authored usage, and
         # every occurrence row joins one of them by identity. Before output clear,
-        # like 1.5-1.7: a package that shipped a catalog missing a carrier would
+        # like the preceding checks: a package that shipped a catalog missing a carrier would
         # claim coverage it does not have.
         _preflight_constraint_totality(graph)
 

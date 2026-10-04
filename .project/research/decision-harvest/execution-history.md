@@ -203,7 +203,7 @@ around (H-123/H-124).
 ## By Epic
 
 
-### unknown  
+### unknown
 *49 item(s), 2026-02-01 → 2026-08-20*
 
 
@@ -750,7 +750,7 @@ The stop-reinventing-the-parser item was finished and owner-closed, but existed 
   - Owner explicitly authorized fast-forward pushing the local mains directly (40 and 5 commits) rather than routing them through baseline PRs, to avoid re-diverging local and GitHub main
   - Wheel-identity and test-suite-parity gates were re-derived to checkable equivalent forms (byte-identity-to-a-fresh-C_prod-build, and differential-outcome-parity) since the sealed baseline counts are not reproducible from an ordinary checkout
 
-### EXPR-CODEGEN  
+### EXPR-CODEGEN
 *6 item(s), 2026-02-03 → 2026-02-08*
 
 
@@ -820,7 +820,7 @@ Items 1-4 of EXPR-CODEGEN built and unit-tested the expression compiler, but onl
   - The multi-output declared-output-cross-reference codegen bug is scoped to the auto-impl Jinja2 template (declared outputs referencing other declared outputs need local-variable assignment before the return statement); fix deferred to a separate follow-up item rather than fixed in this pass
   - CATF fixture ended up with 28 SysML files rather than the 21 originally scoped, adding a library/components/ directory for import-resolution safety
 
-### ATTR-EXPR  
+### ATTR-EXPR
 *5 item(s), 2026-02-08 → 2026-02-09*
 
 
@@ -876,7 +876,7 @@ Items 1-3 of the ATTR-EXPR epic built computed-attribute extraction, classificat
   - Numerical assertions use pytest.approx with relative tolerance to handle floating-point arithmetic
   - Production bugs found during validation are fixed but tracked separately from this validation item
 
-### COST-PATTERN  
+### COST-PATTERN
 *11 item(s), 2026-02-10 → 2026-02-16*
 
 
@@ -1004,7 +1004,7 @@ The solar_battery pipeline's hierarchy-aware codegen correctly extracted :>> red
   - Fix A required adding usage_type_map to HierarchyExtractionResult because usage names (e.g. 'permitting') don't match PartDef names, breaking simple name-matching
   - Fix B required QN normalization between ComputedAttributeData's '::' raw-name format and AggregationExpressionData's '__' sanitized-name format
 
-### OUTPUT-REGISTRY  
+### OUTPUT-REGISTRY
 *1 item(s), 2026-02-13 → 2026-02-13*
 
 
@@ -1020,7 +1020,7 @@ The backtracker built five separate indexes with incompatible key formats bridge
   - is_transitive_default() named without a leading underscore (deviating from the spec's _is_transitive_default) because Item 3 needed to import it
   - register_alias() uses logger.warning()+skip instead of assert on phase-ordering violations, judged more actionable in a production pipeline
 
-### OUTPUT-REGISTRY-BACKTRACKER-REDESIGN  
+### OUTPUT-REGISTRY-BACKTRACKER-REDESIGN
 *3 item(s), 2026-02-13 → 2026-02-15*
 
 
@@ -1064,7 +1064,7 @@ Items 1-3 had built and parallel-validated OutputRegistry as a drop-in replaceme
   - graph_builder.py's _build_output_catalog, _extend_output_catalog_with_computed_attrs, and _extend_output_catalog_with_aggregation functions
   - The Bug 2 xfail marker on test_bug2_regression.py
 
-### TRUTH-DEBT  
+### TRUTH-DEBT
 *6 item(s), 2026-07-06 → 2026-07-08*
 
 
@@ -1150,7 +1150,7 @@ Three verification-matrix rows were marked UNTESTED with an argument standing in
   - REQ-RES-05's test pins the inner build_computation_graph call order, explicitly not duplicating the existing outer build_pipeline_context pin (REQ-ORCH-01)
   - [DM08-MODEL-FIELD-TYPING] filed as a named backlog entry rather than silently dropped, per the epic's R1/INV-B honesty discipline
 
-### PUSH-DOWN  
+### PUSH-DOWN
 *4 item(s), 2026-07-08 → 2026-07-10*
 
 
@@ -1203,7 +1203,7 @@ sysml_codegen.core.qualified_names mixed general SysML name operations with code
   - The existing agentic-mbse backlog row ITEM-SYNC-C8 (two names one identifier) was updated in place with the new shared sanitizer's rule, fixture shape, and severity rather than filing a duplicate row.
   - sanitize_qualified_name keeps its non-reentrant, apply-once-at-the-::-to-__-boundary contract; the split must not run it over an already __-joined name.
 
-### CONSTRAINT-EXEC  
+### CONSTRAINT-EXEC
 *9 item(s), 2026-07-12 → 2026-07-20*
 
 
@@ -1330,7 +1330,7 @@ This item composed the final release-readiness evidence for the CONSTRAINT-EXEC 
   - fusion-tea and stellarator branches stay local; their delivery path was not epic-authorized for push
   - Pre-existing baselines (two -O suite failures, ruff format's 22 files, mypy's 72 errors, deep_cross_scope/plant_values stale baselines) are recorded as inherited from the pin and explicitly not treated as certification blockers
 
-### CONSTRAINT-LIFECYCLE-REMEDIATION  
+### CONSTRAINT-LIFECYCLE-REMEDIATION
 *13 item(s), 2026-07-19 → 2026-07-20*
 
 
@@ -1547,7 +1547,7 @@ Two gaps stood between the constraint-execution machinery and its end-to-end cla
   - run_stellaris.py's glue-2 two-pass harness and handshake_1costingfe.py rollup glue, deleted
   - WI-027's D7 bridge/placeholder disposition, superseded by this item's D-2 resolution and amended in WI-027's design.md
 
-### SOURCE-IDENTITY  
+### SOURCE-IDENTITY
 *1 item(s), 2026-08-03 → 2026-08-10*
 
 
@@ -1564,7 +1564,7 @@ Item 4 attempted a production identity manifest that ran alongside the existing 
 **Supersedes / retires**
   - Item 4's own shadow-layer identity-manifest design (superseded by the ELABORATE-FIRST epic's elaborate-then-project architecture)
 
-### ELABORATE-FIRST  
+### ELABORATE-FIRST
 *7 item(s), 2026-08-08 → 2026-08-19*
 
 
@@ -1674,7 +1674,7 @@ The pipeline had two integrity gaps: occurrence resolution sometimes picked a ta
   - extraction/computed_attribute_extractor.py, deleted as a dead classifier (no producer or consumer under src/)
   - Warn-and-continue / silent evidence-dropping behavior on unmapped exit-point types in generation/registry.py
 
-### CONSTRAINT-SEMANTICS  
+### CONSTRAINT-SEMANTICS
 *10 item(s), 2026-08-12 → 2026-08-14*
 
 
@@ -1831,7 +1831,7 @@ Constraint-semantics behavior changed across Items 1-6, 8, and 9, but almost non
 **Supersedes / retires**
   - Stale documentation across sysml-codegen, agentic-mbse, and TEAx describing pre-Item-1-6/8/9 constraint-semantics behavior (superseded @inapplicable authoring examples, disposition vocabulary, coverage/policy text).
 
-### REPO-CLEANUP  
+### REPO-CLEANUP
 *1 item(s), 2026-08-20 → 2026-08-21*
 
 

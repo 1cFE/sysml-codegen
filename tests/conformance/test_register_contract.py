@@ -234,4 +234,3 @@ def test_status_records_owner_close_and_satisfied_downstream_dependency() -> Non
         # diagnostic follow-up was transferred, not shipped here.
         assert "Needs Work" in text
         assert "[DIAGNOSTIC-PROVENANCE-BY-CONSTRUCTION]" in text
-

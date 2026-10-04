@@ -179,4 +179,3 @@ def test_extractor_imports_reconstruct_expression():
     )
     content = source.read_text()
     assert "from sysml_codegen.extraction.expression_utils import reconstruct_expression" in content
-

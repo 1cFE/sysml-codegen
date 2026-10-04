@@ -470,4 +470,3 @@ class TestAggregationModuleLookupCaseMatch:
 
 class TestAggregationPathsUseInstanceEQN:
     """BF-4 + BF-5: Module wrapper and stencil paths use instance-scoped EQN."""
-

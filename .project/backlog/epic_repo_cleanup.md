@@ -5,7 +5,7 @@
 **Priority**: P1
 **Created**: 2026-08-20
 **Revised**: 2026-08-23 — collapsed from eight pipeline items to three moves (see *Revision*)
-**Estimated Effort**: ~3 days remaining (actual: Moves A+B one day, Move C one day)
+**Actual Effort**: Moves A+B one day; Move C one day
 
 ---
 

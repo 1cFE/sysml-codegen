@@ -42,7 +42,6 @@ __all__ = [
     "SysMLQualifiedName",
     "derive_module_type",
     "derive_python_path",
-    # models
     # qualified_names
     "build_element_qualified_name",
     "build_parameter_qualified_name",
