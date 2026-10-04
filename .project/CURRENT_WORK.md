@@ -1,6 +1,12 @@
 # Current Work
 
-2026-09-05: Numeric evidence acceptance implemented on `fix/numeric-study-evidence`. Generated multi-output channels now have explicit real-TEAx evaluation and reopened study-store acceptance, including input perturbation and dependent single-output arithmetic. The runtime repair belongs to TEAx and changes evidence schema to v3; codegen production bytes are unchanged. Scope and validation: [.project/numeric-evidence-acceptance.md](numeric-evidence-acceptance.md).
+2026-10-04: REPO-CLEANUP is complete and submitted as [PR #15](https://github.com/1cFE/sysml-codegen/pull/15) from `repo-cleanup` to `main`. [OWNER] Shipment authorization: “finish out any remaining work on repo-cleanup and then PR.” Final follow-through corrected stale backlog progress, the renamed register-test citation, V11 comments, and whitespace. The mental-model drafts remain uncommitted in the checkout and are excluded from the PR.
+
+Fresh branch validation: full licensed default suite 2,140 passed / 9 skipped / 96 deselected against unmodified Agentic main `88e2489`; artifact-pinned real-TEAx lane 96 passed; generation against codegen main `40a724c` matches 850 output file hashes across 19 successful snapshots and all three refusal outcomes. Ruff, whitespace, index regeneration, and ledger paths/surface checks pass. Mypy has 27 existing errors versus main's 30, with no new diagnostics. Logs and hashed provenance are retained under `/tmp/repo-cleanup-artifacts/` and `/tmp/repo-cleanup-*.log` for this session.
+
+The locally installed Agentic checkout is on unmerged `harness-right-size`, whose modeling template introduces one guidance-contract failure. Companion main already has the correct warning spelling; no companion changes are required for this PR. Next: review and merge PR #15. `elaborator-downstream` remains the open spec-stage item.
+
+2026-09-06: Numeric evidence acceptance merged to `main` in PR #14 and incorporated into `repo-cleanup`. Generated multi-output channels now have explicit real-TEAx evaluation and reopened study-store acceptance, including input perturbation and dependent single-output arithmetic. The runtime repair belongs to TEAx and changes evidence schema to v3; codegen production bytes are unchanged. Scope and validation: [.project/numeric-evidence-acceptance.md](numeric-evidence-acceptance.md).
 
 **Last Updated**: 2026-08-25 (**REPO-CLEANUP Move C complete — the epic is done.** Delete-what-defends-nothing
 executed as eleven commits on `repo-cleanup`, licensed suite green after every batch (final: 2140 passed /
