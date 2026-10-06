@@ -1,0 +1,18 @@
+{
+  "dir": "20260203_expr-spike-ast",
+  "date_start": "2026-02-03",
+  "date_end": "2026-02-03",
+  "epic": "EXPR-CODEGEN",
+  "item_number": "Item 1",
+  "title": "Spike: validate that SysIDE exposes CalcDef output expression ASTs and that feature references resolve",
+  "subject": "expression AST extraction",
+  "summary": "The expression-aware codegen effort (aiming to auto-generate real computation code instead of NotImplementedError stubs) rested on two unvalidated assumptions: that CalcDef output attributes expose their expression ASTs via feature_value_expression, and that every feature reference inside those expressions resolves to a declared input or sibling output. This spike wrote two diagnostic scripts run against chain_spike, sample_model, solar_battery, and catf_mfe, finding 95.8% AST coverage (100% on the three fixture suites, 86.7% on catf_mfe, with the gaps being physics stubs that would need manual implementation anyway) and 98.6% feature-reference resolution (100% on fixtures; 3 unresolvable refs in catf_mfe traced to same-CalcDef members with no direction annotation, i.e. undeclared intermediates). It inventoried 3 AST node types and 5 operators (including native `**`) and found zero cross-check mismatches in extract_feature_refs. The spike issued a GO recommendation for building the expression compiler.",
+  "key_decisions": [
+    "GO decision to proceed with expression-compiler design: AST coverage and reference-resolution rates both cleared the spec's go threshold (>=80% and effectively 100% respectively)",
+    "Undeclared intermediate references (3 in catf_mfe) are flagged as a pattern the compiler must handle by checking all CalcDef members, not just declared input/output lists, and left for the next item (Item 2) to decide the approach",
+    "Output attributes within a CalcDef must be compiled in topological dependency order since many outputs (e.g. material_cost) are reused as intermediates by sibling outputs"
+  ],
+  "supersedes": [],
+  "status": "shipped",
+  "id": "H-002"
+}

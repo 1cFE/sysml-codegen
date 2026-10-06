@@ -1,0 +1,19 @@
+{
+  "dir": "20260214_alias-producers-step-consolidation",
+  "date_start": "2026-02-13",
+  "date_end": "2026-02-14",
+  "epic": "OUTPUT-REGISTRY-BACKTRACKER-REDESIGN",
+  "item_number": "Items 2a + 2b",
+  "title": "Produce first-class ChannelAlias objects from EXPOSE_PURE and CHAIN redefinitions for the OutputRegistry",
+  "subject": "channel alias production pipeline",
+  "summary": "The OutputRegistry (Item 1) needed authoritative alias data to populate, but EXPOSE_PURE computed attributes were incorrectly entering the module index (root cause of a wiring bug) and alias discovery relied on a brittle heuristic (Step 3.6) that inferred aliases from parameter-name divergence. This item made extract_computed_attributes() return EXPOSE_PURE attributes as ChannelAlias objects (filtering PartDef-level ones via a new is_on_part_definition field), produced scoped ChannelAlias objects from `:>>` CHAIN redefinitions in the hierarchy resolver, extended virtual binding rewrite to handle CHAIN overrides with SYSML_QN/DOTTED leaf extraction, and moved aggregation scoping (Step 4.7) into Step 3.5. The item completed with one deliberate deviation: the diagnostic test showed Step 3.6 was not fully subsumed by CHAIN-derived aliases (it also captures param_name aliases from binding divergence), so Step 3.6 was retained rather than removed, deferred to Item 3/4 when the backtracker moves to OutputRegistry.",
+  "key_decisions": [
+    "Step 3.6 (_enrich_aliases_from_bindings) removal was gated on a diagnostic test proving its output is a subset of CHAIN-derived aliases; the diagnostic failed that premise (param_name aliases aren't covered), so removal was deferred rather than forced.",
+    "EXPOSE_PURE ChannelAlias.canonical_name is built from the references field, not expression_text, because SysIDE's expression_text for these nodes is unparseable.",
+    "EXPOSE_PURE alias_name stays unscoped (bare python_name) at production time; scoping with the owning part's short name happens later at Item 3's OutputRegistry registration, not here.",
+    "extract_design_overrides() and the aggregation orchestrator accept an Iterable of elements rather than the raw model, a deviation from the design chosen for testability without mocking SysideAdapter.elements_of_type()."
+  ],
+  "supersedes": [],
+  "status": "shipped",
+  "id": "H-025"
+}

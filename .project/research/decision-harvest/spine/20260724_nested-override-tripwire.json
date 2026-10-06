@@ -1,0 +1,18 @@
+{
+  "dir": "20260724_nested-override-tripwire",
+  "date_start": "2026-07-24",
+  "date_end": "2026-07-24",
+  "epic": "unknown",
+  "item_number": null,
+  "title": "Add a warning for silent value loss on the nested-occurrence-override calc path",
+  "subject": "supplied-values resolution, warnings",
+  "summary": "The [NESTED-OCCURRENCE-OVERRIDE] shape lets a modeled override value drop silently when a dotted part_usage.attr demand falls through to a manual-required entry point. This item made that loss loud instead of fixing it: a corpus false-fire scan against 19 snapshot fixtures showed a naive name-only predicate misfired 4 times on legitimate reference-form aggregation, so the shipped predicate adds a dotted-shape gate and a part-usage gate, reaching zero false fires on the clean corpus before any production code was written. Implementation added _unmatched_override_scopes and a single collect-then-drain logger.warning per target in supplied_values.py. No resolution outcome or generated output changed; full licensed suite (3118 passed, 47 skipped), ruff clean, mypy at the pre-existing baseline. The underlying occurrence-to-definition bridge fix remains filed in the backlog as separate work.",
+  "key_decisions": [
+    "Ship a diagnostic tripwire only, not a resolver fix \u2014 the real fix (occurrence-to-definition bridge) stays filed in BACKLOG.md as [NESTED-OCCURRENCE-OVERRIDE]",
+    "Gate the warning on both a dotted-form shape and a part-usage match, because a name-only predicate false-fires on legitimate reference-form aggregation rollups",
+    "Use the corpus false-fire scan as the acceptance gate for the predicate before writing any production code"
+  ],
+  "supersedes": [],
+  "status": "shipped",
+  "id": "H-106"
+}

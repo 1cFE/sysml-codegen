@@ -8,9 +8,10 @@ in an existing table.
 *two runs of the same route* — `test_exact_route_generated_package.py`,
 `test_public_route_baselines.py`, `test_exact_route_whole_tree_portability.py`,
 `test_v6_recapture_batch.py`. Those prove determinism: that the generator agrees with itself.
-None of them proves the bytes are the *right* bytes. `tests/fixtures/baseline_outputs/` has one
-reader that never regenerates anything, and `tests/fixtures/baseline_yaml/` has no reader at
-all. So this is the tree's first committed-bytes gate.
+None of them proves the bytes are the *right* bytes. (The false defenders this displaced —
+`baseline_outputs/` with its never-regenerating reader, and reader-less `baseline_yaml/` —
+were deleted by REPO-CLEANUP Move C; the emit-step gap they pretended to cover is filed as
+`[EMIT-STEP-REGRESSION-GATE]`.) This is the tree's committed-bytes gate.
 
 **Why this fixture.** `constraint_domain_satisfy_calc_def` genuinely has the shape R3 names:
 non-empty `usage_records`, empty `concrete_entries` — constraints declared, none reaching. Its
@@ -24,7 +25,8 @@ constraint-declaring package now **does** ship the schema, the registry imports,
 aggregator carrying an empty denominator. That inversion is the thing worth pinning.
 
 **Scoped to two files deliberately.** A whole-tree golden churns on every unrelated generator
-change and gets abandoned within an item — which is exactly how `baseline_yaml/` was orphaned.
+change and gets abandoned within an item — which is exactly how the retired `baseline_yaml/`
+was orphaned.
 Two files is the smallest set that pins "what a zero-entry package ships".
 
 The goldens are **generator-owned bytes and stay format-exempt**: never run a formatter over

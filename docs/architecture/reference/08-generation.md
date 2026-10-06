@@ -139,7 +139,7 @@ three are the classic calculation families; `CONSTRAINT` (a lowered modeled asse
 `REPORT_AGGREGATOR` (the run-report roll-up) are the two constraint-execution families added in
 CONSTRAINT-EXEC (Item 6/7). This section is the seam-level view; the lowering, catalog
 assembly, and Kleene predicate compiler that produce these modules are documented in
-[28-constraint-lowering-and-catalog](28-constraint-lowering-and-catalog.md).
+28-constraint-lowering-and-catalog (retired doc; git history).
 
 | Seam | `CALCULATION` / `FORMULA` / `AGGREGATION` | `CONSTRAINT` | `REPORT_AGGREGATOR` |
 |------|------|------|------|
@@ -259,13 +259,13 @@ write to disk.
 The auto-impl template additionally receives the keys of
 `module.auto_impl_context`.
 
-**`parameter_group_schema.py.jinja2`** (via `generate_derived_group_schema` in
+**`parameter_group_schema.py.jinja2`** (via `generate_all_derived_schemas` in
 `entry_point.py`):
 `class_name`, `description`, `fields[]` (name, type, description, default).
 
 ## Related Documents
 
-- **Upstream**: [07-graph-assembly](07-graph-assembly.md) -- produces `ComputationGraph`; [14-expression-compiler](14-expression-compiler.md) -- provides compilability verdicts for stencils
+- **Upstream**: 07-graph-assembly (retired doc; git history) -- produces `ComputationGraph`; [14-expression-compiler](14-expression-compiler.md) -- provides compilability verdicts for stencils
 - **Sub-processes**: [20-module-registry-generation](20-module-registry-generation.md), [21-pipeline-yaml-generation](21-pipeline-yaml-generation.md), [22-output-schema-rules](22-output-schema-rules.md), [23-smart-regen-preservation](23-smart-regen-preservation.md) -- detailed generation rules
 - **Dispatch invariant**: [19-ast-dispatch-invariant](19-ast-dispatch-invariant.md) -- FCE/OE ordering in expression compilation
 - **Data models**: [09-data-models](09-data-models.md) -- `ComputationGraph`, `PipelineModule`, `EntryPoint`, `ParameterGroup`

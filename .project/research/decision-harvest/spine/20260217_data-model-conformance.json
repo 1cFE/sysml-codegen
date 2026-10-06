@@ -1,0 +1,17 @@
+{
+  "dir": "20260217_data-model-conformance",
+  "date_start": "2026-02-17",
+  "date_end": "2026-02-17",
+  "epic": "unknown",
+  "item_number": null,
+  "title": "Conformance tests for the data model layer (component C01) against design doc 09-data-models.md",
+  "subject": "data models",
+  "summary": "C01 verified every data model, enum, and field referenced in doc 09-data-models.md actually exists in source, is importable from its documented location, has correct fields/types, and constructs with real data. No production code changed. 91 conformance tests were written in tests/conformance/test_data_models.py (well above the ~35 estimate, due to parametrization), all passing, with the full suite at 758 tests and 0 failures. Two doc drift issues were found: CalcUsageData has an undocumented raw_element field, and ScopedAggregationData is miscategorized in the doc as an Analysis Model when it actually lives in extraction/data_models.py. The plan document's own Status field stays at VALIDATE and its commit checklist is unchecked, so completion of the commit/close step isn't confirmed by the text itself even though validation and test results are fully green.",
+  "key_decisions": [
+    "Source code is authoritative over doc 09 for field lists (per REQ-DM-03); doc drift gets flagged for update rather than treated as a test failure",
+    "Kept the marker registration scoped to tests/conformance/conftest.py only, to keep conformance concerns isolated from the rest of the suite"
+  ],
+  "supersedes": [],
+  "status": "unknown",
+  "id": "H-041"
+}

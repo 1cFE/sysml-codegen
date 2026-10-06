@@ -1,7 +1,7 @@
 # Provenance — definition-owned qualified reference, inside the def, two occurrences
 
 Promoted for self-binding-replacement Phase 2 from the spike fixture
-`.project/active/self-binding-replacement/spike/fixtures/s4b_qual_two_occ/` (findings row 4b).
+`self-binding-replacement/spike/fixtures/s4b_qual_two_occ/` (git history) (findings row 4b).
 Package renamed `S4BQualTwoOcc` → `def_qual_two_occ_inside`; the shape is otherwise unchanged.
 
 ## Owner class

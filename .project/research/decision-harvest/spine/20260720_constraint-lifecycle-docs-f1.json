@@ -1,0 +1,21 @@
+{
+  "dir": "20260720_constraint-lifecycle-docs-f1",
+  "date_start": "2026-07-20",
+  "date_end": "2026-07-20",
+  "epic": "CONSTRAINT-LIFECYCLE-REMEDIATION",
+  "item_number": "Item 6",
+  "title": "Reconcile public docs and F1 evidence with landed constraint-execution-lifecycle code",
+  "subject": "docs and snapshot version claims",
+  "summary": "Public documentation and audit evidence had drifted from landed code across several prior items: docs cited stale snapshot format versions, a stale executable-profile version, a stale agentic-mbse dependency floor, and duplicate hardcoded version-literal error strings, while the TEAx F1 normalization audit cited the wrong commit. Three independent inventory sweeps (version literals; snapshot/V11-gate/catalog; equality-ordering/subtype/diagnostics) classified every claim as STALE, ACCURATE, GAP, or AMBIGUOUS, and this item corrected the eight STALE claims (S1-S8) with code citations, single-sourced the two duplicate version-literal error strings from PROFILE_SEMANTIC_VERSION, fixed the F1 audit's commit reference from 927a9e1 to d545701, and added a RED-first fix so an explicitly invalid TEAX_SIMKIT_PATH fails instead of silently falling back to sibling discovery. Two real documentation gaps (undocumented diagnostic severity field; missing verification-matrix row for the Item 5 portability gate) were surfaced but explicitly left unfixed as other items' territory. Independently audited and certified with no blocking findings.",
+  "key_decisions": [
+    "Only claims with a code citation proving them stale are 'corrected'; undocumented-but-real behavior (diagnostic severity, Item 5 portability) is recorded as a GAP, not silently fixed here, per the correction law",
+    "TEAX_SIMKIT_PATH: an explicitly set path is authoritative and must fail loudly if invalid, rather than silently falling back to sibling discovery",
+    "Duplicate hardcoded 'executable-profile/v3' error strings in predicate_compiler.py are single-sourced from PROFILE_SEMANTIC_VERSION so they cannot re-drift"
+  ],
+  "supersedes": [
+    "Doc claims of snapshot format 'current: 3' (actual: 5), executable-profile v3 (actual: v4), and agentic-mbse floor >=0.1.1 (actual: >=0.1.2) are all corrected",
+    "F1 audit's cited commit 927a9e1 replaced with the correct d545701"
+  ],
+  "status": "shipped",
+  "id": "H-098"
+}

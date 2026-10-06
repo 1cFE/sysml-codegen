@@ -1,0 +1,18 @@
+{
+  "dir": "20260217_virtual-binding-rewrite",
+  "date_start": "2026-02-17",
+  "date_end": "2026-02-17",
+  "epic": "unknown",
+  "item_number": "C09",
+  "title": "Conformance-test the existing virtual-binding rewrite function that applies :>> design overrides to virtual CalcUsage bindings",
+  "subject": "virtual binding override rewrite",
+  "summary": "_rewrite_virtual_bindings() patches virtual CalcUsage bindings in-place using :>> design overrides (LITERAL value flips, CHAIN source_path replacement) so downstream resolution sees design-intent values instead of template references, but had no dedicated conformance tests. Since extraction snapshots are captured post-rewrite, a spike proved a reliable strategy: reconstruct pre-rewrite REFERENCE bindings from the snapshot's design_overrides by reversing the QN format, then re-apply the rewrite and verify the mutation. All 13 solar_battery overrides (all LITERAL, all deep-path) were reconstructed and verified correctly; CHAIN, flat-override, template-skip, and EXPRESSION-skip paths had no natural fixture coverage across any of the 6 models and were tested with constructed data using real names. All 38 tests passed against the existing implementation with zero production code changes required.",
+  "key_decisions": [
+    "No production code changes were needed; this item is pure conformance-test coverage that locks the existing implementation down ahead of a later structural extraction to orchestration/",
+    "Zero CHAIN, flat, or EXPRESSION-type design overrides exist in any of the 6 fixture models, so those code paths are tested only with constructed data, not real models -- documented as a fixture coverage gap",
+    "EXPRESSION-type overrides are confirmed to silently no-op (the rewrite function only handles LITERAL and CHAIN), matching the design intent doc but previously undocumented"
+  ],
+  "supersedes": [],
+  "status": "shipped",
+  "id": "H-057"
+}

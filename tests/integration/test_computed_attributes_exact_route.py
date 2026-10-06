@@ -59,7 +59,7 @@ EXPOSE_PURE_ATTRS = ["scale_result", "half_vol", "quarter_vol"]
 
 # A computation *over* a calc output (``= scale_calc.result * 2.0``). The legacy
 # route dropped it; the exact route mints it, which is the ratified expected-fix
-# on corpus row 4 (.project/completed/20260809_elaborator-breadth/diff-ledger.md).
+# on corpus row 4 (.project/reference/elaborator-breadth-diff-ledger.md).
 EXPOSE_COMPUTED_ATTR = "scaled_area"
 
 

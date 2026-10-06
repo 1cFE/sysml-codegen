@@ -1,0 +1,23 @@
+{
+  "dir": "20260720_aggregation-decomposition",
+  "date_start": "2026-07-08",
+  "date_end": "2026-07-10",
+  "epic": "PUSH-DOWN",
+  "item_number": "Item 4",
+  "title": "Split aggregation-expression handling so agentic-mbse owns neutral SysML decomposition facts and sysml-codegen keeps Python rendering and pipeline assembly",
+  "subject": "aggregation decomposition boundary",
+  "summary": "The aggregation path in hierarchy_resolver.py mixed reusable SysML AST-walking (unwrapping invocations, classifying sum/singleton/local terms) with codegen-specific behavior (Python expression text, channel names, entry points, AggregationExpressionData). This item moved the reusable decomposition into agentic-mbse as a neutral fact-returning API, while sysml-codegen kept Python rewriting, aliasing, and pipeline assembly, rebuilding its existing AggregationExpressionData exactly from the shared facts. The SumTerm/SingletonTerm/LocalTerm dataclasses moved to agentic-mbse with sysml-codegen re-exporting the same runtime classes; a TYPE_MAP adapter-string inventory and an aggregation checking-profile disposition table were both required outputs. The item landed with a Certify audit verdict, zero sysml-codegen fixture churn, and a follow-up addendum that accepted an unpinned unary-minus rendering change as an improvement and added ** to the shared supported-operator set.",
+  "key_decisions": [
+    "agentic-mbse owns only neutral aggregation facts (typed terms, literal/operator facts, wrapper disposition, unsupported diagnostics); sysml-codegen keeps all Python source generation, codegen identifiers, and AggregationExpressionData/HierarchyExtractionResult/ScopedAggregationData containers",
+    "Current permissive wrapper-unwrapping behavior (e.g. sum(filter(module.cost)) unwraps rather than warns) must not change in this item; any stricter wrapper warning is filed as separate profile work",
+    "Literal-before-invocation and feature-chain-before-operator AST dispatch order must be preserved and pinned by tests after the move",
+    "Aggregation-profile shapes (sum, singleton, local, wrapper, literal, unsupported node, operator) are each dispositioned as EXISTING, NEW RULE, FILED, or NO-OP with an exact rule/fixture/severity/rationale/backlog-ID row, rather than left unaddressed",
+    "No item-level PR closeout is performed here; PR preparation waits for the full PUSH-DOWN epic",
+    "Addendum: the pre-move vs post-move unary-minus render difference (-(x) vs -x) is accepted as a Python-semantically-identical improvement rather than reverted; ** was added to the shared SUPPORTED_OPERATORS set to avoid a future false-positive profile warning"
+  ],
+  "supersedes": [
+    "The prior hierarchy_resolver.py aggregation AST walker that mixed neutral SysML decomposition with Python rendering in a single sysml-codegen-local implementation"
+  ],
+  "status": "shipped",
+  "id": "H-078"
+}

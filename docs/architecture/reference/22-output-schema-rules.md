@@ -17,12 +17,12 @@ to decide whether a schema file is needed.
 
 | ID | Requirement | Verified by |
 |----|-------------|-------------|
-| REQ-OSR-01 | Single-output modules SHALL use `RootModel[float]` with `field_name="root"` | [graph_builder.py](07-graph-assembly.md): `field_name = "root"` when `len(output_attributes) == 1` |
+| REQ-OSR-01 | Single-output modules SHALL use `RootModel[float]` with `field_name="root"` | graph_builder.py (retired doc; git history): `field_name = "root"` when `len(output_attributes) == 1` |
 | REQ-OSR-02 | Multi-output modules (2+ outputs) SHALL generate a named `MultiOutput` subclass | `generate_multioutput_model()` returns `None` when `len < 2` |
-| REQ-OSR-03 | Output field names SHALL match SysML `output_attributes` names exactly | Template: `{{ field.name }}` from `ModuleOutput.field_name`, set from the output attribute name in [graph_builder](07-graph-assembly.md) |
+| REQ-OSR-03 | Output field names SHALL match SysML `output_attributes` names exactly | Template: `{{ field.name }}` from `ModuleOutput.field_name`, set from the output attribute name in graph_builder (retired doc; git history) |
 | REQ-OSR-04 | SysML types SHALL map to Python types per the [type mapping table](#type-mapping) | `map_sysml_type_to_python()` in `generation/type_mapping.py` |
 | REQ-OSR-05 | Output fields on `MultiOutput` MUST NOT have `default=...` values | TEAx `create_registry()` treats defaulted fields as optional, not outputs |
-| REQ-OSR-06 | Aggregation and computed-attribute modules SHALL always be single-output (`"root"`) | Both hardcode `field_name="root"`, `outputs=[output]` in [graph_builder](07-graph-assembly.md) |
+| REQ-OSR-06 | Aggregation and computed-attribute modules SHALL always be single-output (`"root"`) | Both hardcode `field_name="root"`, `outputs=[output]` in graph_builder (retired doc; git history) |
 | REQ-OSR-07 | Output channels SHALL use PQN format via [`get_channel_name()`](15-naming-conventions.md) | All three module types call `get_channel_name(usage_qn, attr_name)` |
 
 ---
@@ -165,7 +165,7 @@ use `RootModel[float]`. No MultiOutput schema generated. No default value risk.
 
 Output channels use PQN format: `get_channel_name(usage_qn, attr_name)` ->
 `"{usage_qn}__{attr_name}"`. See [naming conventions](15-naming-conventions.md) for
-full PQN format. These channels are registered in the [output registry](10-output-registry.md).
+full PQN format. These channels are registered in the output registry (retired doc; git history).
 
 ---
 
@@ -184,7 +184,7 @@ full PQN format. These channels are registered in the [output registry](10-outpu
 
 - **Upstream**: [08-generation](08-generation.md) — generation overview, template inventory
 - **Upstream**: [01-extraction](01-extraction.md) — produces `output_attributes` with types and defaults
-- **Resolution**: [07-graph-assembly](07-graph-assembly.md) — builds `ModuleOutput` with `field_name` and `channel_name`
-- **Registry**: [10-output-registry](10-output-registry.md) — registers output channels for downstream wiring
+- **Resolution**: 07-graph-assembly (retired doc; git history) — builds `ModuleOutput` with `field_name` and `channel_name`
+- **Registry**: 10-output-registry (retired doc; git history) — registers output channels for downstream wiring
 - **Naming**: [15-naming-conventions](15-naming-conventions.md) — PQN channel format
 - **Data models**: [09-data-models](09-data-models.md) — `ModuleOutput`, `PipelineModule` definitions

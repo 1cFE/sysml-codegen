@@ -563,7 +563,7 @@ predecessor dependency is satisfied; this close does not mark either Item 8 succ
 
 **Bounded child closed 2026-08-16:** exact occurrence-owner anchoring for usage-owned one-segment
 references is certified and archived at
-`.project/completed/20260816_qualified-reference-occurrence-anchoring/`. P-002 carries the shipped
+`.project/completed/20260816_qualified-reference-occurrence-anchoring/`. 0002 carries the shipped
 promise, the deep-override evidence bound, and the owner-disposed arrayed diagnostic follow-up.
 This closes that repair only; Item 8's two broader success criteria remain open.
 

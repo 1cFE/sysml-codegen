@@ -61,10 +61,10 @@ two implementations.
    - Parameter group schemas and JSON templates (`schemas/`, `inputs/`)
    - Module registry (`__init__.py`)
 
-   Five preflight checks run before any output is written or cleared: constraint name safety,
-   duplicate output paths, params coverage (V11), registry class-name collisions, and
-   constraint totality (the catalog accounts for every authored constraint usage, and its
-   rows still match the fingerprint projection sealed them with).
+   Four preflight checks run before any output is written or cleared: constraint name safety,
+   duplicate output paths, registry class-name collisions, and constraint totality (the
+   catalog accounts for every authored constraint usage, and its rows still match the
+   fingerprint projection sealed them with).
 
 5. **Sealing** (`contracts/`) - A semantic `ModelContract` over the graph and a physical `PackageContract` over the final on-disk bytes, on the live and from-snapshot paths alike.
 
@@ -93,13 +93,12 @@ not exist, and the CLI names none of them. `orchestration/pipeline_context.py` s
 the `SysMLParsingError` / `CodeGenerationError` re-export point and carries no
 `PipelineContext`.
 
-Reference documents 03, 04, 05, 07, 10, 11, 12, 13, 17, 24, 25, and 28 describe that stack
-and open with a retiring banner; document 09 is mixed and says which models are which.
-Document 28's subject (`analysis/constraint_lowering.py`) was deleted by the same
-retirement, and its account of the constraint catalog is separately superseded by
-CONSTRAINT-SEMANTICS Item 2 — its banner says which parts and where the live text is. Their
-rewrite is a separate authorship pass that has not run. **Do not read them as descriptions
-of what the product does.**
+The twelve reference documents that described that stack (03, 04, 05, 07, 10, 11, 12, 13,
+17, 24, 25, 28) were deleted by REPO-CLEANUP Move C (2026-08-25); git history keeps them.
+Document 09 now carries only the live model set. For the constraint catalog there is no
+retired-document account left: the elaborator decides every constraint usage while building
+the instance graph, projection renders what it decided, and the catalog models live in
+`resolution/models.py` (CONSTRAINT-SEMANTICS Item 2 semantics).
 
 ### Key Data Models
 
@@ -137,12 +136,20 @@ A group is named after the file that **declares** the owner node, not the file t
 ## Product Promises
 
 `.project/product/INDEX.md` is the product ledger — one line per implemented promise, entry bodies
-in sibling `P-NNN-*.md` files. Read it before work that touches what the product claims to do.
-`P-001` carries the design-search promise in the owner's own words.
+in sibling `NNNN-*.md` files. Read it before work that touches what the product claims to do.
+`0001` carries the design-search promise in the owner's own words.
 
-The ledger also back-registers this repo's ADRs as rows. **An ADR is a numbered section of
-`docs/architecture/modeling-assumptions.md`** titled `## N. Title (ADR-0NN)` — there is no
-`docs/adr/` directory. Next free id: ADR-010.
+This repo has **two decision registers**, routed by
+`.project/adr/0001-route-decisions-by-who-they-bind.md`: ask who must obey the decision.
+
+- Model-author decisions stay in `docs/architecture/modeling-assumptions.md` as numbered
+  `ADR-0NN` sections. The next free author-facing id is ADR-010.
+- Code-generator-builder decisions go in `.project/adr/` as script-allocated `NNNN-*.md`
+  entries. Use `.project/scripts/adr.sh new <slug>`; never mint an id by hand.
+
+Cite the register path with the id, never a bare number: for example,
+`docs/architecture/modeling-assumptions.md ADR-008` or
+`.project/adr/0001-route-decisions-by-who-they-bind.md`.
 
 ## Dependencies
 

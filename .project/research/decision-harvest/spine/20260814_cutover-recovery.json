@@ -1,0 +1,24 @@
+{
+  "dir": "20260814_cutover-recovery",
+  "date_start": "2026-08-10",
+  "date_end": "2026-08-14",
+  "epic": "ELABORATE-FIRST",
+  "item_number": "Item 7",
+  "title": "Atomic cutover of the codegen front end to the exact instance-graph route, recovered after the first attempt was refused at owner disposition",
+  "subject": "generation authority / legacy retirement",
+  "summary": "Item 7 switches sysml-codegen's public generation authority (run_codegen) to the exact elaborate-then-project route on both the live and v6-snapshot sources, and deletes the legacy string-resolution stack (pipeline builder, backtracker, producer resolution, v5 snapshot route) rather than wrapping it. The first cutover execution was refused by the owner because it landed as an uncommitted candidate with 222 unexplained deletions. This folder documents the recovery: rebuilding from the certified Item-6 baseline with a per-row deletion ledger (ledger-4a) and forensic preservation, running the owner's REVISE path (narrow corrections to compiler convergence, replacement/matrix coverage, ruff baseline, portable provenance, retirement execution, doc integrity), and re-auditing. The initial top-level audit.md recorded 'Needs Work'; after the REVISE steps the final independent audit (evidence/audit-9-final.md) returned CERTIFY-WITH-RESIDUALS with zero blocking findings, and the candidate passed three consecutive identical gate batteries (51/51 fields) before owner acceptance and close.",
+  "key_decisions": [
+    "An atomic cutover is accepted or refused as a whole candidate, not as a diff \u2014 motivated the recovery's certified-baseline-plus-ledger shape rather than resuming the original uncommitted tree",
+    "Legacy string-resolution code is deleted outright, not kept behind a flag or wrapper, once the exact route covers its behavior",
+    "Every deletion must be accounted for in a per-row ledger (ledger-4a) with machine-checked replacement proof before it is executed",
+    "Repeated gate batteries (three consecutive identical runs) are required evidence before owner acceptance; a partial or single run is discarded",
+    "Spec requirement R12 amended to a zero-new-ruff-baseline rule (owner disposition, narrow-correction step 6)",
+    "Invariant 35 amended to semantic equality plus generated-byte equality after defined normalization, to make provenance portable (narrow-correction step 5)"
+  ],
+  "supersedes": [
+    "The legacy string-resolution stack: pipeline_builder.py, snapshot_context.py, the analysis/ backtracker, parameter groups and constraint lowering, resolution/graph_builder.py, producer_resolution.py, producer_completeness.py, core/output_registry.py, the v5 snapshot loader/serializer/graph_rebuild, elaboration/diff.py, both v5 capture scripts, and every committed extraction_snapshot.json fixture",
+    "The first (refused) cutover execution attempt, which left an uncommitted candidate with 222 unexplained deletions"
+  ],
+  "status": "shipped",
+  "id": "H-110"
+}

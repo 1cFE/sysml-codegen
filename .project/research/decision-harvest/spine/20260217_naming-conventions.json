@@ -1,0 +1,18 @@
+{
+  "dir": "20260217_naming-conventions",
+  "date_start": "2026-02-17",
+  "date_end": "2026-02-17",
+  "epic": "unknown",
+  "item_number": "C02",
+  "title": "Conformance-test the identifier/naming utility functions (EQN, PQN, module name/type, channel name, Key_C, sanitize_name)",
+  "subject": "identifier naming utilities",
+  "summary": "The pipeline's identifier formats (SysML QN to EQN conversion, PQN construction, module name/type derivation, channel naming, Key_C derivation, and the sanitize_name() Python-safety transform) had only 13 test cases covering sanitize_name() alone, despite being the foundation every other component depends on for naming. This item wrote 46 conformance tests across all 7 documented requirements using real qualified names harvested from fixture models, with SysIDE adapter boundary stubs (FakeElement/FakeOwnership) standing in for AST ownership-chain traversal where build_element_qualified_name() needs live SysIDE elements. No source code changes were needed; all functions were already correct. The item surfaced two minor gaps for later attention: sanitize_name() only reserves 6 of Python's 35 keywords, and one existing test elsewhere in the suite calls derive_module_type() with malformed mixed __/:: separators.",
+  "key_decisions": [
+    "No production code changes; this item is pure conformance-test coverage locking down already-correct naming functions",
+    "sanitize_name()'s reserved-word list covering only 6 of 35 Python keywords is flagged as a documented gap, not fixed, since no fixture model currently uses the missing keywords as element names",
+    "derive_key_c() is tested here (C02) rather than deferred entirely to the output registry component, since the design doc defines Key_C derivation as a naming convention"
+  ],
+  "supersedes": [],
+  "status": "shipped",
+  "id": "H-050"
+}

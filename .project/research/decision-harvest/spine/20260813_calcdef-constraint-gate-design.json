@@ -1,0 +1,19 @@
+{
+  "dir": "20260813_calcdef-constraint-gate-design",
+  "date_start": "2026-08-13",
+  "date_end": "2026-08-13",
+  "epic": "CONSTRAINT-SEMANTICS",
+  "item_number": "Item 6",
+  "title": "Designed (but did not build) the capability to attach a calc-definition-owned constraint to concrete calculation occurrences",
+  "subject": "calc-def constraint gate",
+  "summary": "A constraint asserted by a calculation definition could never attach to any concrete calculation occurrence; it always ended as non_reaching/owner_kind_unattachable/error even when the graph held concrete calculations of its owning definition, leaving the owner-ratified one-check-per-occurrence rule visible in the contract but permanently unexecutable. This item designed the fix rather than implementing it: a throwaway probe attached such a constraint across zero, one, and two occurrences by matching the constraint owner's DeclarationId to CalcNode.calculation_definition_id, recovering resolved attributes, literals, and modeled defaults with no rendered-name lookup. The probe surfaced that two sibling uses of one definition collide on the current constraint key, so concrete constraint identity must carry the calculation node and attachment must precede serialization; that gap was resolved inside the v4 wire grammar. The delivery was a spec, revised design, three-round independent design review (all findings closed), and a filed follow-on implementation item; the design was independently audited and certified, with no production code touched.",
+  "key_decisions": [
+    "Production implementation is not authorized in this epic (owner ruling at close); the 7-9 day follow-on (graph v4, catalog 4.0.0, codegen + TEAx changes) is filed as unowned backlog entry CALCDEF-GATE-IMPLEMENTATION, competing for the next work slot",
+    "The production-acceptance checkboxes in spec.md are left deliberately open, belonging to the future implementation rather than to this design-only item",
+    "Concrete constraint identity for a calc-def-owned constraint must carry the calculation node (not just the definition), because two sibling uses of one calc definition otherwise collide on the constraint key; resolved inside the v4 wire grammar with no second authority or occurrence inventory",
+    "The Item 8 implementation start gate is satisfied as of Item 8's unit-lane characterizations landing; the only remaining block on starting the follow-on implementation is owner authorization"
+  ],
+  "supersedes": [],
+  "status": "shipped",
+  "id": "H-116"
+}

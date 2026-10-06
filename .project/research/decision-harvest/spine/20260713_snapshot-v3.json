@@ -1,0 +1,20 @@
+{
+  "dir": "20260713_snapshot-v3",
+  "date_start": "2026-07-12",
+  "date_end": "2026-07-13",
+  "epic": "CONSTRAINT-EXEC",
+  "item_number": "Item 8",
+  "title": "Make constraint facts a load-bearing snapshot section and flip the from-snapshot default to lower constraints, closing live/snapshot divergence",
+  "subject": "snapshot constraint parity",
+  "summary": "Before this item, constraint lowering ran only on the live pipeline; the from-snapshot rebuild path (build_full_graph_from_snapshot) never lowered constraints at all, so snapshots could not carry modeled assertions and the lowering feature defaulted off (22 measured live-vs-snapshot conformance divergences). This item made the neutral ConstraintFacts a versioned, load-bearing snapshot section, wired lowering into the from-snapshot rebuild so it re-derives the same extended graph offline (not by carrying a pre-computed catalog forward), made a current-version snapshot missing the constraint-facts section fail loudly with a re-capture instruction instead of silently generating an assertion-free package, and flipped the default on under a proven parity gate. The audit verdict was Certify. It explicitly does not emit constraint code itself, and full artifact-level parity depended on Item 7's generation work landing.",
+  "key_decisions": [
+    "A current-version snapshot missing the constraint-facts section is treated as corruption and rejected loudly, never silently loaded as an empty catalog",
+    "Offline lowering must re-derive constraint IDs through the real lowering path from carried facts, not reload a frozen pre-computed catalog, to make the parity proof meaningful",
+    "The from-snapshot default for lowering constraints was flipped on once parity was proven, turning the prior 22 divergences into a parity test's baseline expectation to eliminate"
+  ],
+  "supersedes": [
+    "The prior from-snapshot rebuild path's silent lack of a constraint phase, and the lowering feature's default-off posture from Item 5"
+  ],
+  "status": "shipped",
+  "id": "H-086"
+}

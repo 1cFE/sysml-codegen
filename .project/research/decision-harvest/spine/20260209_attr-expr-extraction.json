@@ -1,0 +1,20 @@
+{
+  "dir": "20260209_attr-expr-extraction",
+  "date_start": "2026-02-08",
+  "date_end": "2026-02-09",
+  "epic": "ATTR-EXPR",
+  "item_number": "Item 2",
+  "title": "Build data models and extraction logic to classify and compile PartDef/PartUsage attribute expressions",
+  "subject": "computed attribute extraction",
+  "summary": "The ATTR-EXPR epic aims to eliminate the CalcDef+CalcUsage ceremony for simple attribute-level formulas like 'attribute volume = length * width * height'. This item, following a spike that proved SysIDE exposes feature_value_expression on PartDef attributes, added a ComputedAttributeClassification enum (FORMULA, EXPOSE_PURE, EXPOSE_COMPUTED, LITERAL, UNRESOLVABLE) and a ComputedAttributeData dataclass, plus a new extract_computed_attributes() function that classifies attribute expressions using qualified-name resolution and compiles FORMULA patterns through the existing Phase 1 expression compiler unchanged. The design specifically fixes a qualified-name collision bug the spike found (19 CATF misclassifications) by using ref.qualified_name namespace matching instead of simple name matching, and handles FeatureChainExpression's two-ref decomposition. Deliberately standalone with zero impact on existing code paths; pipeline integration is left to Item 3.",
+  "key_decisions": [
+    "Classification uses ref.qualified_name namespace matching (not ref.name) to avoid misclassifying sibling-named CalcDef outputs as sibling attribute refs",
+    "CalcUsage-instance refs produced by FeatureChainExpression traversal are filtered by positive identification against calc_usage_names, not by 'not a sibling therefore calc ref' inference",
+    "No chain-awareness in extraction: a FORMULA referencing another computed attribute compiles identically to referencing a literal one; chain ordering is deferred to Item 3",
+    "FORMULA compilation failures degrade gracefully to MANUAL_REQUIRED rather than raising",
+    "Zero changes to the Phase 1 expression compiler; extraction-layer models use @dataclass per project convention"
+  ],
+  "supersedes": [],
+  "status": "unknown",
+  "id": "H-008"
+}

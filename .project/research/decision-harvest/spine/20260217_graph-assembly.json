@@ -1,0 +1,18 @@
+{
+  "dir": "20260217_graph-assembly",
+  "date_start": "2026-02-17",
+  "date_end": "2026-02-17",
+  "epic": "unknown",
+  "item_number": null,
+  "title": "Conformance tests for Graph Assembly (C18): topological sort, channel validation, and final ComputationGraph packing",
+  "subject": "graph assembly / toposort",
+  "summary": "C18 verified the final pipeline-construction step: _unified_topological_sort() (Kahn's algorithm) orders PipelineModules, _validate_channel_references() checks every wire points to a real output channel, and the result packs into a 3-field ComputationGraph. Tests covered all 7 requirements (REQ-GA-01 through 07), used constructed synthetic modules for cycle-detection and self-dependency paths since no fixture model naturally contains them, and added baseline-JSON comparison against Phase 0 snapshots for solar_battery, chain_spike, and attr_expr_probe. Conformance-only, no production code changed. Ended DONE with 34 passing tests and the full suite green; baseline comparison needed two documented normalizations for known live-vs-snapshot differences.",
+  "key_decisions": [
+    "Build synthetic PipelineModules (not mocks) to exercise cycle detection and self-dependency guards, since no real fixture model has a circular or self-referencing dependency",
+    "Normalize two known live-vs-snapshot divergences (CalcUsage compilability field, entry_point_groups parameter ordering) when comparing against baseline JSON rather than treating them as regressions",
+    "Use plain json.load() + dict comparison for baseline checking instead of the originally planned model_validate_json(), to allow targeted normalization"
+  ],
+  "supersedes": [],
+  "status": "shipped",
+  "id": "H-047"
+}

@@ -1,0 +1,17 @@
+{
+  "dir": "20260220_pipeline-module-migration",
+  "date_start": "2026-02-19",
+  "date_end": "2026-02-20",
+  "epic": "unknown",
+  "item_number": "C26",
+  "title": "Expand PipelineModule/ModuleInput/ModuleOutput with metadata fields so generators can run from the ComputationGraph alone",
+  "subject": "pipeline module data model",
+  "summary": "Component C26 of a larger refactor (doc 26, checklist-tracked) added metadata fields (description, default_value, unit, source_file, source_line, calc_def_name, calc_def_qualified_name, doc_comment, calc_expressions, is_computed_attribute, is_aggregation) to the three pipeline data models and built parallel _from_graph() generator variants intended to produce byte-identical output to the existing generators, removing the need for back-references to CalculationDefinitionData. Debug analysis found 13 failing tests traced to three root causes: single-output modules losing their real attribute name behind a placeholder field_name of 'root' (an existing helper, _output_attr_name(), existed but was never wired in); FORMULA/aggregation import ordering diverging between snapshot order (old path) and topological order (new path) in the registry generator; and conformance/baseline tests asserting stale field sets and pre-expansion JSON baselines. The debug doc recorded root causes and a fix sequence as analysis only, without applying fixes itself. It also flagged two known gaps deferred to a later phase (7.6): the _from_graph() stencil variant always produces stubs rather than dispatching into auto-implementation, and FORMULA/aggregation modules aren't covered by the old-vs-new identity tests.",
+  "key_decisions": [
+    "Field expansion done as Phase 1-2 of the doc-26 migration strategy: add fields, populate during graph building, add parallel _from_graph() generators before switching call sites (deferred to phase 7.6)",
+    "Design doc undercounted required fields by 3 (source_file, source_line, unit on ModuleOutput); these were added after generator-consumption analysis to satisfy REQ-PMM-04 byte-identical output"
+  ],
+  "supersedes": [],
+  "status": "unknown",
+  "id": "H-066"
+}

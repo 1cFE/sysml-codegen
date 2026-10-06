@@ -19,7 +19,7 @@ product does today, measured rather than chosen:
 The control is what makes the refusal a statement about the *name*: the strip check below
 proves the rename is the sole difference between the two models.
 
-Recorded for `.project/active/cutover-recovery/owner-disposition-20260811.md` step 4 (R10).
+Recorded for the cutover-recovery owner disposition of 2026-08-11 (git history) step 4 (R10).
 """
 
 from __future__ import annotations

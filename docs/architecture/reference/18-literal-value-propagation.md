@@ -106,7 +106,7 @@ split. The PartDef says so. The JSON template should reflect that:
 | REQ-LVP-03 | SingletonTerm fallback SHALL call `_find_literal_redefinition()` when channel resolution fails | SingletonTerm `if s_source is None` branch in `_build_aggregation_module()` |
 | REQ-LVP-04 | LocalTerms SHALL NOT use literal redefinition lookup (different resolution path) | No `_find_literal_redefinition` call in LocalTerm handling within `_build_aggregation_module()` |
 | REQ-LVP-05 | Entry point default backfill SHALL replace `None` defaults with literal values discovered by later terms | `elif literal_default is not None` backfill blocks in both SumTerm and SingletonTerm handling |
-| REQ-LVP-06 | `usage_type_map` SHALL be threaded from [`HierarchyExtractionResult`](09-data-models.md) through [`build_computation_graph()`](07-graph-assembly.md) to `_build_aggregation_module()` | `pipeline_builder.py` passes `hierarchy_data.usage_type_map` to `build_computation_graph()`, which forwards it to `_build_aggregation_module()` |
+| REQ-LVP-06 | `usage_type_map` SHALL be threaded from [`HierarchyExtractionResult`](09-data-models.md) through `build_computation_graph()` (retired doc; git history) to `_build_aggregation_module()` | `pipeline_builder.py` passes `hierarchy_data.usage_type_map` to `build_computation_graph()`, which forwards it to `_build_aggregation_module()` |
 | REQ-LVP-07 | Literal default found SHALL keep module `FULLY_COMPILABLE`; no default SHALL set `MANUAL_REQUIRED` | Compilability conditional in `_build_aggregation_module()` |
 | REQ-LVP-08 | `usage_type_map` SHALL resolve each `(owning_qn, usage_name)` to the most-specific owned FeatureTyping target (not `next(iter(member.types))`); incomparable multi-typings resolve sorted-first with a V10 warning | `most_specific()` selection in `extract_hierarchy_data()` (`extraction/hierarchy_resolver.py`) |
 | REQ-LVP-09 | `_index_usage_level_retypes` SHALL index usage-level retypes of inherited part usages (`part hif_plant : Base { part :>> driver : Subtype }`) into `usage_type_map`, keyed by the CONTAINER usage's instance QN, limited to GENUINE retypes (a `:>>` whose most-specific owned type differs from the base def's declared type for that member) so value-only `:>>` overrides are excluded | `_index_usage_level_retypes()` in `extraction/hierarchy_resolver.py` |
@@ -294,10 +294,10 @@ Site Infrastructure aggregates: `:>> raw_material_cost = sum(permitting.raw_mate
 ## Related Documents
 
 - **Pipeline**: [00-pipeline-overview](00-pipeline-overview.md) — Step 5 module building invokes aggregation construction
-- **Aggregation scoping**: [13-aggregation-scoping](13-aggregation-scoping.md) — discovers SumTerm/SingletonTerm that need literal fallback
-- **Virtual bindings**: [12-virtual-binding-rewrite](12-virtual-binding-rewrite.md) — `:>>` CHAIN redefinitions that carry literal values
-- **Module factory**: [05-module-factory](05-module-factory.md) — term resolution strategies (SumTerm, SingletonTerm, LocalTerm)
+- **Aggregation scoping**: 13-aggregation-scoping (retired doc; git history) — discovers SumTerm/SingletonTerm that need literal fallback
+- **Virtual bindings**: 12-virtual-binding-rewrite (retired doc; git history) — `:>>` CHAIN redefinitions that carry literal values
+- **Module factory**: 05-module-factory (retired doc; git history) — term resolution strategies (SumTerm, SingletonTerm, LocalTerm)
 - **Entry points**: [06-entry-point-classifier](06-entry-point-classifier.md) — factory-created EPs receive literal defaults
-- **Parameter groups**: [17-parameter-group-deriver](17-parameter-group-deriver.md) — groups EPs with backfilled defaults into JSON files
+- **Parameter groups**: 17-parameter-group-deriver (retired doc; git history) — groups EPs with backfilled defaults into JSON files
 - **Naming**: [15-naming-conventions](15-naming-conventions.md) — EQN format used by `usage_type_map` keys
 - **Data models**: [09-data-models](09-data-models.md) — `RedefinitionData`, `EntryPoint`, `HierarchyExtractionResult` definitions

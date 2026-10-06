@@ -1,0 +1,24 @@
+{
+  "dir": "20260720_constraint-lifecycle-legacy-identity",
+  "date_start": "2026-07-20",
+  "date_end": "2026-07-20",
+  "epic": "CONSTRAINT-LIFECYCLE-REMEDIATION",
+  "item_number": "Item 12",
+  "title": "Fail closed on grandfathered (unlowered) snapshots before sealing, and delete the dead tracking_key correlation field",
+  "subject": "grandfathered snapshot gating",
+  "summary": "Two loose ends let a generated package look certified while resting on nothing: generate --from-snapshot on a grandfathered_off snapshot (lowering disabled at capture) only warned and silently dropped constraint assertions before sealing a package, and ConcreteConstraint.tracking_key was documented as a cross-version correlation key but had zero writers, zero readers, and never reached a serialized snapshot. The fix added a fail-closed gate at the generate command (not in seal_package, which is pure over the directory, and not in the shared inspection helper, which legitimately loads grandfathered probes) that raises before preflight, output, or seal; deleted the capture-time lower_constraints_enabled opt-out so a lowerable model can no longer be captured grandfathered; kept the grandfathered_off mode itself as the honest label for the 7 extraction-only probe snapshots that cannot be lowered at all; fixed a latent bug where every from-snapshot context misreported its mode as the dataclass default grandfathered_off regardless of the real snapshot; and deleted tracking_key entirely. An independent audit reproduced the pre-gate silent drop directly (1 usage to 0 catalog entries) and certified all six criteria with the full licensed suite green (3115 passed, 0 failed) and no format bump.",
+  "key_decisions": [
+    "The fail-closed gate lives at the generate command boundary, not in seal_package (pure over directory, no context access) or the shared from-snapshot read-path helper (used by legitimate inspection tests on grandfathered probes)",
+    "grandfathered_off is retained as an honest inspection-only state for extraction-only models that cannot be lowered, rather than deleted outright",
+    "The capture-time lower_constraints_enabled opt-out for full-pipeline (lowerable) models is deleted; only extraction-only capture can still produce grandfathered_off",
+    "tracking_key is deleted rather than fully implemented, since no consumer correlates across versions today",
+    "The live build_pipeline_context(lower_constraints_enabled=...) test flag is kept since it serves 4 conformance tests and never reaches the sealed/certifying path"
+  ],
+  "supersedes": [
+    "capture_snapshot's lower_constraints_enabled parameter and the GRANDFATHERED set plumbing in scripts/capture_extraction_snapshots.py",
+    "ConcreteConstraint.tracking_key field, its docstring, and its round-trip test",
+    "the epic contract's cross-version correlation non-goal claims that leaned on tracking_key"
+  ],
+  "status": "shipped",
+  "id": "H-100"
+}

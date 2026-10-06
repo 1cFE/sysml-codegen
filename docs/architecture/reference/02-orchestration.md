@@ -117,8 +117,8 @@ REQ-ORCH-01..07 below are the retired orchestrator's, and no shipped code answer
 |----|-------------|-------------|
 | REQ-ORCH-01 | `build_pipeline_context()` SHALL execute steps in strict dependency order: 3.5 before 4, 4.5 before 5, 5.5 before 6, all before 7. | Step ordering in `build_pipeline_context()` matches DAG; reorder causes `AttributeError` or silent wiring bugs |
 | REQ-ORCH-02 | Step 3.5 SHALL [rewrite virtual bindings](#virtual-binding-rewriting) in-place before any downstream step reads `calc_usages`. | `_rewrite_virtual_bindings()` called before Steps 4-7; binding_type mutations visible to backtracker |
-| REQ-ORCH-03 | Step 4.5 SHALL remove FORMULA-classified [computed attributes](16-computed-attributes.md) from `design_attrs` before [ParameterGroupDeriver](17-parameter-group-deriver.md) construction. | After Step 4.5: `all(ca.name not in design_attrs for ca in computed_attrs if ca.classification == FORMULA)` |
-| REQ-ORCH-04 | [OutputRegistry](10-output-registry.md) SHALL register outputs in strict phase order: 1a/1b/1c (canonical) then 2/3/4 (aliases). | Phase 2-4 `register_alias()` calls reject unknown canonical channels |
+| REQ-ORCH-03 | Step 4.5 SHALL remove FORMULA-classified [computed attributes](16-computed-attributes.md) from `design_attrs` before ParameterGroupDeriver (retired doc; git history) construction. | After Step 4.5: `all(ca.name not in design_attrs for ca in computed_attrs if ca.classification == FORMULA)` |
+| REQ-ORCH-04 | OutputRegistry (retired doc; git history) SHALL register outputs in strict phase order: 1a/1b/1c (canonical) then 2/3/4 (aliases). | Phase 2-4 `register_alias()` calls reject unknown canonical channels |
 | REQ-ORCH-05 | Each [aggregation expression](01-extraction.md#aggregation-data-sumterm-singletonterm-localterm) SHALL be scoped to its concrete design instance path(s) via virtual CalcUsage matching. | `len(scoped_agg_data) >= len(hierarchy_data.aggregation_expressions)` (one per instance) |
 | REQ-ORCH-06 | `build_pipeline_context()` SHALL return a [PipelineContext](#pipelinecontext) where `computation_graph` is the single source of truth -- [generation](08-generation.md) SHALL NOT access extraction models directly. | All [templates](08-generation.md) receive only `ComputationGraph` fields |
 | REQ-ORCH-07 | CHAIN alias canonical names SHALL resolve to Phase 1 channels. Unresolvable aliases produce a warning, not an error. | Phase 2 logs warning for unresolved; does not raise |
@@ -133,21 +133,21 @@ context carries all intermediate data for debugging and future generation modes.
 |------|-------------|----------|--------|
 | 1 | Load SysML models via `SysMLDataExtractor` | `extractor` | [01-extraction](01-extraction.md) |
 | 2 | Extract calc definitions from the model | `calc_defs` | [01-extraction](01-extraction.md) |
-| 2.6 | Extract neutral constraint facts (`ConstraintFacts`) — always populated, may carry empty `usages` | `constraint_facts` | [28-constraint-lowering-and-catalog](28-constraint-lowering-and-catalog.md), REQ-EXT-09 |
+| 2.6 | Extract neutral constraint facts (`ConstraintFacts`) — always populated, may carry empty `usages` | `constraint_facts` | 28-constraint-lowering-and-catalog (retired doc; git history), REQ-EXT-09 |
 | 3 | Extract calc usages with binding info | `calc_usages` | [01-extraction](01-extraction.md) |
-| 3.5 | Hierarchy extraction + [binding rewrite](#virtual-binding-rewriting) + [aggregation scoping](#aggregation-scoping) + CHAIN aliases | `hierarchy_data`, `scoped_agg_data`, `chain_aliases` | [12](12-virtual-binding-rewrite.md), [13](13-aggregation-scoping.md) |
-| 4 | Extract design attributes (literal values from PartDefs) | `design_attrs` | [17](17-parameter-group-deriver.md) |
+| 3.5 | Hierarchy extraction + [binding rewrite](#virtual-binding-rewriting) + [aggregation scoping](#aggregation-scoping) + CHAIN aliases | `hierarchy_data`, `scoped_agg_data`, `chain_aliases` | 12 (retired doc; git history), 13 (retired doc; git history) |
+| 4 | Extract design attributes (literal values from PartDefs) | `design_attrs` | 17 (retired doc; git history) |
 | 4.5 | Extract [computed attributes](16-computed-attributes.md), remove FORMULAs from design attrs | `computed_attrs`, `expose_aliases` | [16](16-computed-attributes.md) |
-| 5.5 | Build [OutputRegistry](10-output-registry.md) (4-phase lookup table, incl. the [Phase 3b](#phase-3b-confirm-multi-hop-expose-tentatives) confirm pass) | `output_registry` | [10](10-output-registry.md) |
-| 5.55 | Expand part-def EXPOSE aliases per design instance into the registry's structured `_scoped_alias` namespace | registry mutation | [10](10-output-registry.md), [16](16-computed-attributes.md) |
-| 5.56 | Rescue self-named bindings (`in x = x`) to their resolvable outer EXPOSE channel; the trap case is left as-is | `calc_usages` mutation | [12](12-virtual-binding-rewrite.md) |
+| 5.5 | Build OutputRegistry (retired doc; git history) (4-phase lookup table, incl. the [Phase 3b](#phase-3b-confirm-multi-hop-expose-tentatives) confirm pass) | `output_registry` | 10 (retired doc; git history) |
+| 5.55 | Expand part-def EXPOSE aliases per design instance into the registry's structured `_scoped_alias` namespace | registry mutation | 10 (retired doc; git history), [16](16-computed-attributes.md) |
+| 5.56 | Rescue self-named bindings (`in x = x`) to their resolvable outer EXPOSE channel; the trap case is left as-is | `calc_usages` mutation | 12 (retired doc; git history) |
 | 5.6 | Re-run FORMULA removal: a Phase-3b tentative that reverted to FORMULA is removed from `design_attrs` (INV-G) | `design_attrs` mutation | [16](16-computed-attributes.md) |
-| 5.65 | Materialize supplied subsystem-attr values (`graph_design_attrs`), widened to a constraint actual's bare-name demand with no calc-usage binding of its own | `graph_design_attrs` | [28-constraint-lowering-and-catalog](28-constraint-lowering-and-catalog.md) |
-| 5.7 | Create [ParameterGroupDeriver](17-parameter-group-deriver.md), now that `design_attrs` reflects final classifications | `group_deriver` | [17](17-parameter-group-deriver.md) |
-| [P1 RESOLVE] | Lower every admitted constraint usage to concrete graph structure (profile preflight halts loudly on BLOCK) | `concrete_constraints`, `part_occurrences` | [28-constraint-lowering-and-catalog](28-constraint-lowering-and-catalog.md) |
-| 6 | Run [DependencyBacktracker](11-analysis-backtracker.md) | `backtracking_result` | [11](11-analysis-backtracker.md) |
+| 5.65 | Materialize supplied subsystem-attr values (`graph_design_attrs`), widened to a constraint actual's bare-name demand with no calc-usage binding of its own | `graph_design_attrs` | 28-constraint-lowering-and-catalog (retired doc; git history) |
+| 5.7 | Create ParameterGroupDeriver (retired doc; git history), now that `design_attrs` reflects final classifications | `group_deriver` | 17 (retired doc; git history) |
+| [P1 RESOLVE] | Lower every admitted constraint usage to concrete graph structure (profile preflight halts loudly on BLOCK) | `concrete_constraints`, `part_occurrences` | 28-constraint-lowering-and-catalog (retired doc; git history) |
+| 6 | Run DependencyBacktracker (retired doc; git history) | `backtracking_result` | 11 (retired doc; git history) |
 | 6.5 | Compile SysML expressions to Python strings | `compilation_results` | [14](14-expression-compiler.md) |
-| 7 | Build [ComputationGraph](09-data-models.md#resolution-models); [P4 CATALOG] assembles `constraint_catalog` from eligible entries | `computation_graph` | [07](07-graph-assembly.md), [28-constraint-lowering-and-catalog](28-constraint-lowering-and-catalog.md) |
+| 7 | Build [ComputationGraph](09-data-models.md#resolution-models); [P4 CATALOG] assembles `constraint_catalog` from eligible entries | `computation_graph` | 07 (retired doc; git history), 28-constraint-lowering-and-catalog (retired doc; git history) |
 
 Key ordering constraints (REQ-ORCH-01):
 
@@ -155,18 +155,18 @@ Key ordering constraints (REQ-ORCH-01):
   later steps must see rewritten bindings.
 - **Step 4.5 before the group deriver (Step 5.7)**: removes FORMULA attributes from
   `design_attrs` (REQ-ORCH-03), preventing false entry points in the
-  [parameter group deriver](17-parameter-group-deriver.md). The removal re-runs at
+  parameter group deriver (retired doc; git history). The removal re-runs at
   Step 5.6 because the registry's Phase 3b confirm pass can revert a tentative EXPOSE
   back to FORMULA after the Step-4.5 pass already ran (INV-G) -- the deriver must see
   final classifications.
 - **Steps 5.55/5.56 after 5.5, before 6**: the scoped aliases and rescued bindings must
   exist before the backtracker reads them.
-- **Step 5.5 before Step 6**: the [backtracker](11-analysis-backtracker.md) uses the
-  [OutputRegistry](10-output-registry.md) as its sole resolution path.
+- **Step 5.5 before Step 6**: the backtracker (retired doc; git history) uses the
+  OutputRegistry (retired doc; git history) as its sole resolution path.
 
 ## build_output_registry() -- the 4-phase lookup table
 
-The [OutputRegistry](10-output-registry.md) uses four [typed registries](10-output-registry.md)
+The OutputRegistry (retired doc; git history) uses four typed registries (retired doc; git history)
 mapping binding references to canonical channel names (`CanonicalChannel`): scoped keys,
 SysML QNs, flat aliases, and the structured `_scoped_alias` namespace (keyed by
 `ScopedAliasKey`, a `(scope, leaf)` tuple) for part-def EXPOSE aliases.
@@ -174,14 +174,14 @@ SysML QNs, flat aliases, and the structured `_scoped_alias` namespace (keyed by
 formats depending on AST node type -- a `FeatureChainExpression` produces a scope-relative
 dotted path (queried via `ScopedKey`), while a `REFERENCE` binding uses a SysML QN
 (queried via `SysMLQN`). Type-directed dispatch selects the correct registry. See
-[The Scope Problem](03-resolution-overview.md#the-scope-problem) for why `ScopedKey`
+The Scope Problem (retired doc; git history) for why `ScopedKey`
 (the hierarchy-scoped key) is the critical one. Phase ordering is enforced (REQ-ORCH-04).
 
 ### Phase 1: Canonical channels
 
 Registers the actual outputs that pipeline modules produce.
 
-**Phase 1a -- CalcUsage outputs.** Two typed keys per output ([15-naming-conventions](15-naming-conventions.md), [10-output-registry](10-output-registry.md)):
+**Phase 1a -- CalcUsage outputs.** Two typed keys per output ([15-naming-conventions](15-naming-conventions.md), 10-output-registry (retired doc; git history)):
 
 ```
 Calc usage: SolarBatteryDesign__solar_battery_plant__solar_array__cost_model
@@ -191,7 +191,7 @@ Canonical (CanonicalChannel): solar_battery_plant__solar_array__cost_model__tota
 Scoped    (ScopedKey):        solar_battery_plant.solar_array.cost_model.total_cost
 ```
 
-**ScopedKey is the critical key** -- the [resolver](04-producer-resolution.md#c-scopedregistrylookup)
+**ScopedKey is the critical key** -- the resolver (retired doc; git history)
 constructs `ScopedKey` lookups by prepending the consumer's scope to the bare `source_path`.
 
 **Phase 1b -- Aggregation outputs.** Registered with `ScopedKey` (stripped
@@ -247,15 +247,15 @@ registry.alias_lookup(ScopedKey("solar_battery_plant.solar_array.total_capex"))
 ```
 
 Both lookups resolve to the same canonical channel via type-directed dispatch.
-See [10-output-registry](10-output-registry.md) for the full type system.
+See 10-output-registry (retired doc; git history) for the full type system.
 
 ## Virtual binding rewriting
 
-A calc usage is "virtual" when it was instantiated by [template expansion](12-virtual-binding-rewrite.md).
+A calc usage is "virtual" when it was instantiated by template expansion (retired doc; git history).
 A PartDef acts as the template; each PartUsage creates a virtual copy.
 The problem: virtual copies carry the template's generic bindings, which
 reference template-level attributes. These must be rewritten for the
-design instance. See [12-virtual-binding-rewrite](12-virtual-binding-rewrite.md) for full detail.
+design instance. See 12-virtual-binding-rewrite (retired doc; git history) for full detail.
 
 `_rewrite_virtual_bindings()` builds an override index from
 `hierarchy_data.design_overrides`, keyed by `(parent_path, leaf_attribute)`.
@@ -278,7 +278,7 @@ A `part_usage.attr` CHAIN binding with no direct override can also be rewritten
 through a retyped part usage's specialized-def `:>>` chain
 (`_rewrite_specialized_chain` in `pipeline_builder.py`, REQ-VBR-10). Precedence:
 usage override > specialized-def `:>>` > base def. See
-[12-virtual-binding-rewrite](12-virtual-binding-rewrite.md).
+12-virtual-binding-rewrite (retired doc; git history).
 
 This mutation happens in place (REQ-ORCH-02), which is why Step 3.5
 must run before any downstream step that reads bindings.
@@ -311,7 +311,7 @@ CHAIN alias construction (`_build_chain_aliases()`) uses the same
 instance-discovery mechanism: for each `:>>` CHAIN [redefinition](01-extraction.md#redefinitions-redefinitiondata)
 on a PartDef, it finds the instance paths and produces scoped `ChannelAlias`
 objects that Phase 2 of the [registry builder](#build_output_registry----the-4-phase-lookup-table) consumes.
-See [13-aggregation-scoping](13-aggregation-scoping.md) for full detail.
+See 13-aggregation-scoping (retired doc; git history) for full detail.
 
 ## PipelineContext
 
@@ -359,7 +359,7 @@ the pipeline builder.
 
 - **Upstream**: [00-pipeline-overview](00-pipeline-overview.md) -- the route, [01-extraction](01-extraction.md) -- provides calc defs, usages, hierarchy data
 - **Public route**: [27-snapshot-generation](27-snapshot-generation.md) -- the v6 snapshot source and what it can prove, [29-contracts-and-sealing](29-contracts-and-sealing.md) -- what generation seals
-- **Downstream**: [03-resolution-overview](03-resolution-overview.md) (consumed `PipelineContext`; historical), [08-generation](08-generation.md) (consumes ComputationGraph)
-- **Registry**: [10-output-registry](10-output-registry.md) -- 4-phase protocol detail, [15-naming-conventions](15-naming-conventions.md) -- key formats
-- **Sub-processes**: [12-virtual-binding-rewrite](12-virtual-binding-rewrite.md), [13-aggregation-scoping](13-aggregation-scoping.md), [16-computed-attributes](16-computed-attributes.md), [17-parameter-group-deriver](17-parameter-group-deriver.md)
+- **Downstream**: 03-resolution-overview (retired doc; git history) (consumed `PipelineContext`; historical), [08-generation](08-generation.md) (consumes ComputationGraph)
+- **Registry**: 10-output-registry (retired doc; git history) -- 4-phase protocol detail, [15-naming-conventions](15-naming-conventions.md) -- key formats
+- **Sub-processes**: 12-virtual-binding-rewrite (retired doc; git history), 13-aggregation-scoping (retired doc; git history), [16-computed-attributes](16-computed-attributes.md), 17-parameter-group-deriver (retired doc; git history)
 - **Data models**: [09-data-models](09-data-models.md) -- PipelineContext, ComputationGraph, all extraction types

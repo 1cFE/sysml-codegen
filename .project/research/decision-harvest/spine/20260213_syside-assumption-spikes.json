@@ -1,0 +1,14 @@
+{
+  "dir": "20260213_syside-assumption-spikes",
+  "date_start": "2026-02-13",
+  "date_end": "2026-02-13",
+  "epic": "unknown",
+  "item_number": null,
+  "title": "Four diagnostic spikes to empirically verify SysIDE AST assumptions behind the planned OutputRegistry design",
+  "subject": "SysIDE AST key formats",
+  "summary": "The revised algorithm design (08_algorithm_revised.md) planned an OutputRegistry to replace 5 ad-hoc backtracker indexes, but design review flagged 4 empirical uncertainties about SysIDE parser behavior that could not be resolved by inference alone. This spec commissioned four standalone, read-only diagnostic scripts against real models (solar_battery, e2e_attr_expr, chain_spike, catf_mfe): Spike 1 traces the exact source_path format SysIDE produces for template CalcUsage bindings; Spike 2 checks whether downstream bindings to virtual (template-expanded) CalcUsages use short or qualified instance_name keys; Spike 3 traces the full Bug 2 (EXPOSE_PURE two-hop) resolution chain with actual data to find where key-format mismatch breaks it; Spike 4 quantifies how often CalcUsage output names collide across a model, to decide whether bare-name registration is viable. No pipeline code was modified. The spec's own status line marks it Implementation Complete; the folder here holds only the spec, so the concrete answers/values are not captured in this record.",
+  "key_decisions": [],
+  "supersedes": [],
+  "status": "shipped",
+  "id": "H-024"
+}

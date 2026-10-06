@@ -1,0 +1,14 @@
+{
+  "dir": "20260213_output-registry-spike",
+  "date_start": "2026-02-13",
+  "date_end": "2026-02-13",
+  "epic": "unknown",
+  "item_number": null,
+  "title": "Spike 8 -- validate OutputRegistry key-format compatibility end to end before implementing it",
+  "subject": "output registry key formats",
+  "summary": "The planned OutputRegistry design was to replace 5 ad-hoc backtracker indexes with a single 4-phase registration/resolution protocol, but design review flagged that Phase 1 registration key formats might not match the dotted/double-underscore key formats used by Phase 2-4 alias resolution and backtracker resolve() calls -- the same key-format-mismatch root cause behind the existing bug stream. This spike wrote a diagnostic, read-only script (scripts/spikes/spike_output_registry_e2e.py) that builds a prototype dict-based registry from real extraction of the solar_battery and e2e_attr_expr models, and validates every Phase 1-4 registration and resolution path (CalcUsage outputs, aggregation outputs, FORMULA computed attributes, CHAIN aliases, EXPOSE_PURE aliases, transitive defaults, REFERENCE secondary resolution) against backtracker ground truth. No production code was touched. The folder contains only spec and plan; no findings document was archived alongside them, so the spike's concrete verdict is not recorded here.",
+  "key_decisions": [],
+  "supersedes": [],
+  "status": "unknown",
+  "id": "H-023"
+}

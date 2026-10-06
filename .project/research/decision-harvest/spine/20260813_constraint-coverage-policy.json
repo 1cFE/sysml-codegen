@@ -1,0 +1,24 @@
+{
+  "dir": "20260813_constraint-coverage-policy",
+  "date_start": "2026-08-12",
+  "date_end": "2026-08-13",
+  "epic": "CONSTRAINT-SEMANTICS",
+  "item_number": "Item 3",
+  "title": "Coverage report and TEAx policy so a generated package can no longer claim full satisfaction when most authored feasibility checks were never assessed",
+  "subject": "constraint coverage reporting",
+  "summary": "A generated package could report all_satisfied while most authored feasibility checks went unassessed, and TEAx could label that the same as a genuinely constraint-free model, so a design search could not tell 'passed' from 'nobody checked.' The item added a coverage account (authored total, assessed/excluded/non-reaching counts, unassessed-reason histogram, coverage state) computed one-directionally from Item 2's sealed catalog, added a partial_coverage headline token, made full_satisfaction impossible unless everything eligible was assessed, and made a constraint-bearing model with nothing eligible emit a zero-input aggregator instead of silence. On TEAx, vocabularies were split, unknown tokens fail closed by name, and all five committed fixture packages were regenerated. It closed via orchestrated run, audited Certify-with-residuals with all six residuals cured; the TEAx branch landed but remains unmerged, with codegen-first publication order required.",
+  "key_decisions": [
+    "Coverage is a second axis on the report, not a slot in the single precedence-ordered headline token",
+    "full_satisfaction now requires unassessed_gate_count == 0 and assessed_gate_count > 0",
+    "excluded_only maps to partial_coverage, not not_assessed, per an owner-ratified amendment (an excluded asserted gate stays in the denominator)",
+    "ships_constraint_report became the single consumer authority; the spec-derived default was deleted rather than kept in sync",
+    "Publication order is codegen first, then TEAx, since TEAx would otherwise accept a runtime contract no generator produces"
+  ],
+  "supersedes": [
+    "The old headline logic (violation -> indeterminate -> all_satisfied on any non-empty result list -> not_assessed) that never consulted exclusions",
+    "has_executable_content, deleted",
+    "Silent no-report generation for excluded-only models (now emits a zero-input aggregator)"
+  ],
+  "status": "shipped",
+  "id": "H-113"
+}

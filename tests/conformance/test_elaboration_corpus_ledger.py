@@ -17,7 +17,7 @@ from pathlib import Path
 from tests.helpers.corpus import corpus_fixture_names
 
 ROOT = Path(__file__).parents[2]
-LEDGER = ROOT / ".project/completed/20260809_elaborator-breadth/diff-ledger.md"
+LEDGER = ROOT / ".project/reference/elaborator-breadth-diff-ledger.md"
 
 
 def test_dual_run_ledger_classifies_all_snapshot_fixtures() -> None:

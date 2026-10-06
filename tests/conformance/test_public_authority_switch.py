@@ -440,18 +440,18 @@ def test_a_refusal_after_the_context_but_before_the_writer_also_leaves_the_tree(
 ) -> None:
     """The second guarded window: context built, refusal raised, nothing written.
 
-    ``_check_duplicate_output_paths`` and ``_reconcile_params_coverage`` run
-    after construction and before ``_clear_output_directory``. Injecting the
-    refusal at that boundary is what proves the *ordering* rather than the
-    fixture — the tree is only safe because no writer runs before those checks.
+    ``_check_duplicate_output_paths`` runs after construction and before
+    ``_clear_output_directory``. Injecting the refusal at that boundary is what
+    proves the *ordering* rather than the fixture — the tree is only safe
+    because no writer runs before that check.
     """
     import sysml_codegen.cli as cli
     from sysml_codegen.generation import CodeGenerationError
 
     def refuse(_graph: object) -> None:
-        raise CodeGenerationError("V11: injected params-coverage refusal")
+        raise CodeGenerationError("injected duplicate-output-path refusal")
 
-    monkeypatch.setattr(cli, "_reconcile_params_coverage", refuse)
+    monkeypatch.setattr(cli, "_check_duplicate_output_paths", refuse)
 
     before = _tree(populated_output)
     config = GenerationConfig(

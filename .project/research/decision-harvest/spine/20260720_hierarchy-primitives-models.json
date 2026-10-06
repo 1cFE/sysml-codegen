@@ -1,0 +1,19 @@
+{
+  "dir": "20260720_hierarchy-primitives-models",
+  "date_start": "2026-07-08",
+  "date_end": "2026-07-10",
+  "epic": "PUSH-DOWN",
+  "item_number": "Item 3",
+  "title": "Move the reusable SysML hierarchy primitive layer (redefinition and multiplicity extraction) from sysml-codegen into agentic-mbse",
+  "subject": "hierarchy extraction, redefinition/multiplicity models",
+  "summary": "sysml-codegen owned reusable primitive SysML facts (:>> redefinition classification, multiplicity extraction, and the RedefinitionType/RedefinitionData/MultiplicityData dataclasses) mixed together with codegen-only hierarchy policy in hierarchy_resolver.py. This item moved only the neutral primitive layer into agentic-mbse as standard-library dataclasses, with sysml-codegen re-exporting the identical class objects and delegating extractor calls, while design-override filtering, usage-type indexing, aggregation decomposition, orchestration, and module construction stayed in sysml-codegen. Hierarchy-profile validation impact (redefinition precedence, multiplicity shapes, missing instantiations, ambiguous inherited attributes) was closed per-idiom in agentic-mbse or filed to its backlog with exact rule/fixture/severity. Certified after an independent epic audit remediation that removed an unpinned TYPE_CHECKING mirror-dataclass drift surface and strengthened a type-map inventory test.",
+  "key_decisions": [
+    "Only the neutral primitive classifier/extractor and its three dataclasses move; design-level PartUsage scanning, override precedence, and aggregation stay in sysml-codegen.",
+    "Moved data models remain standard-library dataclasses (not Pydantic), with sysml-codegen re-exporting the exact shared class objects for identity.",
+    "Hierarchy-profile idioms needing usage-type indexing (missing instantiations, ambiguous inherited attributes) are closed by existing rules or filed to agentic-mbse backlog rather than moving indexing surfaces.",
+    "Remediation (2026-07-10): deleted sysml-codegen's TYPE_CHECKING mirror dataclasses in favor of a py.typed marker in agentic-mbse, and made the type-map inventory test assert against the real SysideAdapter map instead of a self-built fake."
+  ],
+  "supersedes": [],
+  "status": "shipped",
+  "id": "H-080"
+}

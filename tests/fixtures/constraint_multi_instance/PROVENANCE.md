@@ -1,7 +1,7 @@
 # Provenance
 
 New fixture for CONSTRAINT-EXEC Item 5 (design.md D6, Appendix B). Adapted from the
-orchestrator's B1 probe skeleton (`.project/active/constraint-lowering/probe_b1_channels.py`,
+orchestrator's B1 probe skeleton (`constraint-lowering/probe_b1_channels.py` (git history),
 which itself proved the shared-producer-channel finding, `b1-probe-evidence.md`).
 
 **Deviation from the design's Appendix B prose, surfaced here (capture-fidelity law 4):**

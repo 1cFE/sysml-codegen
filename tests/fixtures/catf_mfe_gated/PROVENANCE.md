@@ -1,7 +1,7 @@
 # Provenance — `catf_mfe_gated`
 
 Forked from `tests/fixtures/catf_mfe_d5` on 2026-08-13 for **CONSTRAINT-SEMANTICS Item 5**
-(`.project/completed/20260813_catf-constraint-policy-acceptance/`). This fixture is the **worked example of
+(`20260813_catf-constraint-policy-acceptance/` (git history)). This fixture is the **worked example of
 the ruled constraint policy**: nothing in it is invented, and every difference from `catf_mfe_d5`
 traces to a row in `owner-disposition.md` (RULED 2026-08-13).
 
@@ -313,7 +313,7 @@ that exclusion lapses with its cause. This is a record, not a re-disposition: SC
 A2, and Item 5's closed SC-5 evidence is not reopened.
 
 **The archived ruling is byte-frozen.**
-`.project/completed/20260813_catf-constraint-policy-acceptance/owner-disposition.md` is untouched.
+`20260813_catf-constraint-policy-acceptance/owner-disposition.md` (git history) is untouched.
 Its A5/A6/A9 rows carry their own conditional dating — *"retained as a visible plain usage until
 the unit-lane fix lands"*, *"then deleted per ruled intent"* — so with Item 9 executed the archive
 reads as a correctly dated record of the ruling rather than a stale claim about the present. The
@@ -509,7 +509,7 @@ here because the archived table is where they were ruled and this is where a lat
 
 ## Authority
 
-- **Ruled disposition table:** `.project/completed/20260813_catf-constraint-policy-acceptance/owner-disposition.md`
+- **Ruled disposition table:** `20260813_catf-constraint-policy-acceptance/owner-disposition.md` (git history)
   (RULED 2026-08-13) — sole source of intent classes, tolerance values, deletion authority, and bases.
 - **Spec / design / plan:** the same item home. SC-3's identity is `65 = 56 + 9`.
 - **Integrity check:** `scripts/check_gated_manifest.py --check`, license-free.

@@ -1,0 +1,25 @@
+{
+  "dir": "20260813_constraint-catalog-totality",
+  "date_start": "2026-08-12",
+  "date_end": "2026-08-13",
+  "epic": "CONSTRAINT-SEMANTICS",
+  "item_number": "Item 2",
+  "title": "Constraint usage domain made total: every authored constraint usage now gets exactly one recorded disposition before occurrence expansion",
+  "subject": "constraint catalog domain",
+  "summary": "The lifecycle contract promised every authored constraint usage stays visible with exactly one disposition, but the exact route only began recording constraints after owner-to-scope expansion; on the richest corpus model, 65 authored usages produced only 9 carriers and the other 56 were simply absent from any record. A totality gate built on that data would have been circular, and existing requirement rows read PASS only because specimen fixtures happened to have a carrier. This item mints one ConstraintUsageRecord per authored usage before occurrence expansion, each with exactly one disposition (eligible / excluded-with-reason / non-reaching-with-reason), severity by cause, and a generation-time completeness gate that fails on any removed, duplicated, or misjoined disposition. The domain travels through a bumped instance-graph/v3 codec that fails closed on v2 and stripped-tier shapes, verified across live, in-place-snapshot, and relocated-snapshot routes. The item deleted collect_constraint_manifest, its two classifiers, extraction/constraint_report.py, and all seven test call sites rather than keeping a second inventory in sync, and replaced them with a licence-free source-scanning totality oracle sharing no code with the elaborator. Audited Needs-work, cured, then re-audited Certify-with-residuals.",
+  "key_decisions": [
+    "Constraint usage records are minted per authored usage before occurrence expansion, not after owner-to-scope expansion, to make the domain total.",
+    "Severity is assigned by cause, not convenience.",
+    "The totality oracle is an independent licence-free source scanner sharing no code, adapter, or parse path with the elaborator, to avoid circularity.",
+    "instance-graph/v2 codec bumped to v3, failing closed on v2 or stripped-tier input; all 21 snapshot-bearing fixtures recaptured once at the final schema.",
+    "collect_constraint_manifest, its classifiers, extraction/constraint_report.py, and their tests were deleted outright rather than kept as a second, sync-maintained inventory.",
+    "No new .project/adr/ or .project/product/ ledger entry was hand-minted for the coverage-truth promise; the gap from Item 2's earlier close remains, since manufacturing an entry without an owner-originated statement would itself be a provenance failure. Decisions live in design.md D1-D9 and ADR-009."
+  ],
+  "supersedes": [
+    "collect_constraint_manifest, its two classifiers, and extraction/constraint_report.py, all removed from src/ and tests/.",
+    "instance-graph/v2 codec, replaced by instance-graph/v3.",
+    "The prior (circular) totality-checking approach for REQ-EXT-09 and REQ-CL-04, which are re-graded and re-anchored to the new oracle."
+  ],
+  "status": "shipped",
+  "id": "H-112"
+}

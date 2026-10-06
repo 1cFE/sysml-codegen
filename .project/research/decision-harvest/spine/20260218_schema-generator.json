@@ -1,0 +1,18 @@
+{
+  "dir": "20260218_schema-generator",
+  "date_start": "2026-02-18",
+  "date_end": "2026-02-18",
+  "epic": "unknown",
+  "item_number": null,
+  "title": "Conformance tests for the Schema Generator (C22), which produces Pydantic MultiOutput classes for multi-output calc defs",
+  "subject": "output schema generator",
+  "summary": "C22 added real-data conformance tests for generation/schemas.py against REQ-OSR-01 through 07: single-output modules use field_name 'root', 2+ output calc defs get a generated MultiOutput class, field names and types match the source calc def and the ComputationGraph, and aggregation/FORMULA modules are always single-output. Conformance-only, no production code changed. Testing confirmed a real bug (Bug 11): the Permitting_Interconnect fixture's generated schema has default=0.0 on 4 output fields, violating REQ-OSR-05 which forbids defaults on output fields; this was recorded as an xfail rather than fixed, since Phase 6 was conformance-only. Ended DONE with 20 passing + 1 xfailed test and the full suite green.",
+  "key_decisions": [
+    "Confirm and document Bug 11 (output fields carrying default=0.0, violating REQ-OSR-05) as an xfail rather than fix it, because this phase is scoped to conformance testing only, not production code changes",
+    "Verify REQ-OSR-01/06/07 (root field, aggregation/FORMULA single-output invariant, PQN channel format) at the ComputationGraph level rather than the schema-generator level, since the schema generator itself never sees aggregation/FORMULA modules",
+    "Note _map_output_type() as one of four duplicate type-mapping implementations (REQ-GEN-06 violation), to be resolved later by the X01 type-mapping consolidation"
+  ],
+  "supersedes": [],
+  "status": "shipped",
+  "id": "H-062"
+}

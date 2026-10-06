@@ -1,0 +1,21 @@
+{
+  "dir": "20260218_pipeline-yaml-generator",
+  "date_start": "2026-02-18",
+  "date_end": "2026-02-18",
+  "epic": "unknown",
+  "item_number": null,
+  "title": "Fix two upstream graph_builder bugs (Bug 9: missing param_group prefix, Bug 10: int instead of float) surfaced by the Pipeline YAML generator (C20)",
+  "subject": "pipeline YAML generator",
+  "summary": "generation/pipeline.py (the 'gold standard' generator \u2014 consumes only ComputationGraph, no raw extraction data) was itself correct, but two upstream bugs in resolution/graph_builder.py corrupted its output. Bug 9: orphan entry points created during Step 6.8 never had their param_group written back onto the module input's InputSource, so the YAML generator fell back to an unprefixed qualified name. Bug 10: aggregation multiplicity inputs were hardcoded to python_type=\"int\", the only int usage in a TEAx pipeline that requires float everywhere. Fixed both with a small Step 6.9 (propagate param_group after orphan handling) and a one-line type change, then regenerated the solar_battery YAML and ComputationGraph JSON baselines (the only ones affected \u2014 28 entry point sources gained the system_design. prefix, ~12 multiplicity lines changed int to float). Shipped with 27 new conformance tests and full-suite green (1614 passed).",
+  "key_decisions": [
+    "Fix both upstream bugs in graph_builder.py rather than working around them in the YAML template, since the ComputationGraph itself was carrying wrong data (param_group=None, python_type=\"int\") consumed by other readers too",
+    "Only solar_battery's baselines needed regeneration \u2014 the other fixture models have no aggregation with named multiplicity attributes, so they were structurally immune to both bugs",
+    "sample_model YAML baseline (tested via the live-extraction path in test_e2e_output_registry.py) was left unregenerated since it has no aggregation and the fix can't affect it"
+  ],
+  "supersedes": [
+    "graph_builder.py's unprefixed entry-point param_group fallback for orphan entry points (Bug 9)",
+    "graph_builder.py's hardcoded python_type=\"int\" for aggregation multiplicity inputs (Bug 10)"
+  ],
+  "status": "shipped",
+  "id": "H-061"
+}

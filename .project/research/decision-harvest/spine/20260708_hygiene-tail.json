@@ -1,0 +1,20 @@
+{
+  "dir": "20260708_hygiene-tail",
+  "date_start": "2026-07-07",
+  "date_end": "2026-07-08",
+  "epic": "TRUTH-DEBT",
+  "item_number": "Item 6",
+  "title": "Harden four benign-leaning silent-fallback sites (D3 hygiene tail) so each fires a diagnostic on its silent shape or is formally reclassified",
+  "subject": "silent-failure hardening, diagnostics",
+  "summary": "PIPELINE-TRUTH's earlier silent-failure hunt found four low-blast-radius sites that fall back quietly instead of surfacing a gap: the snapshot loader's .get() defaults on load-bearing fields (python_type, qualified_name, binding_type, scoping fields), a naive substring .replace() in aggregation compilation that can corrupt expressions when one attribute name is a substring of another (e.g. cost/cost_total), a registry type-map skip that silently drops unmapped exit-point types like 'Any', and a Phase-4 alias-rewrite branch with no else where sibling phases already warn. Three sites (loader, replace-to-regex, registry skip) were hardened with new diagnostics, each paired with an independently-anchored fires-on-shape test and a silent-on-clean sibling test, following the project's R1/R4 verify-then-fix discipline. The fourth site (transitive alias resolution) reproduced on 5 of 15 real corpus fixtures but its safe fix needed cross-module design work out of scope for a hygiene item, so it was deferred and filed to BACKLOG rather than shipped as a mechanical patch that would have broken the zero-WARNING invariant on clean corpora.",
+  "key_decisions": [
+    "Harden at one choke point per site (loader's ~40 .get calls share one choke; no cross-site abstraction), since the four sites live in four unrelated modules.",
+    "Site 1's load-bearing subset (python_type, qualified_name, binding_type, parent_part_path, owning_part_def_qn) gets diagnostics; qualified_name (a keying field) raises, the rest warn; purely benign metadata fields (description, unit, source_line) are untouched.",
+    "Site 2 fixed via word-boundary regex substitution (re.sub with \\b) instead of a placeholder pass, closing the prefix-collision corruption.",
+    "Site 3 gets its own diagnostic independent of Site 1, because 'Any' python_type is also minted on the live extraction path, not only from a malformed snapshot.",
+    "Site 4 is deferred (not mechanically fixed) because it reproduces on 5/15 real fixtures but the safe fix requires a cross-module derivation check beyond this item's scope; audit flagged the BACKLOG label 'RECLASSIFIED' as imprecise (R4 defines that term for non-reproducing findings) and recommended a one-line wording fix, non-blocking."
+  ],
+  "supersedes": [],
+  "status": "shipped",
+  "id": "H-075"
+}

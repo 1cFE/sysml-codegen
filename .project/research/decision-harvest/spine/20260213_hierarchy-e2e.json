@@ -1,0 +1,19 @@
+{
+  "dir": "20260213_hierarchy-e2e",
+  "date_start": "2026-02-10",
+  "date_end": "2026-02-13",
+  "epic": "COST-PATTERN",
+  "item_number": "Item 5",
+  "title": "End-to-end validation of the Costed Component pipeline on the solar_battery model, plus three ADRs",
+  "subject": "costed component hierarchy pipeline",
+  "summary": "Items 1-4 of the COST-PATTERN epic built extraction, analysis, resolution, and generation for hierarchical costed components, but only against synthetic/mocked data. This item ran the pipeline on the real solar_battery fixture end to end: leaf-part cost modules, an allocation module, assembly-level aggregation modules, and system-level calcs, checking auto-implementation counts, numerical ground truth, pipeline YAML ordering, and a zero-item implementation backlog. It also added regression guards for the chain_spike and CATF MFE models and drafted ADR-006 (part hierarchy and template instantiation) and ADR-007 (parametric multiplicity and aggregation), plus an amendment to ADR-002 relaxing rules 1, 3, and 4 for uniform-array hierarchy patterns. No production code changes were planned unless the E2E run surfaced bugs. This closed out the COST-PATTERN epic.",
+  "key_decisions": [
+    "Templates are detected by owning_type being a PartDefinition vs a concrete PartUsage; virtual CalcUsages are generated per (template, instance) pair (ADR-006)",
+    "Array aggregation uses parametric multiply (count * single-instance output) instead of flat per-instance expansion, valid only under a uniform-array assumption (ADR-007)",
+    "ADR-002 Rules 1, 3, and 4 are relaxed for CalcDefs embedded in library PartDefs, aggregation via `:>>` redefinition, and multiplicity as a structural property, but only under stated conditions; non-uniform arrays still require full Approach E",
+    "Aggregation module count and impl parameter names were left to be discovered empirically on the first real E2E run rather than guessed in advance"
+  ],
+  "supersedes": [],
+  "status": "unknown",
+  "id": "H-018"
+}

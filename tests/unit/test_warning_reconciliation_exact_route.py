@@ -1,31 +1,15 @@
-"""Gate 4C, rows L-251 and L-249: the params-coverage boundary on the exact route.
+"""Clean-model warning hygiene on the exact route (Gate 4C rows L-251 / L-249).
 
-Two rows meet here, because they are two halves of one mechanism —
-``cli._reconcile_params_coverage``, which partitions the fell-through, valueless
-entry points into an unwired remainder (one WARNING summary) and a wired half
-(the V11 hard error).
-
-**L-251, warning reconciliation.** The kept half of the responsibility is that a
-clean model generates with no WARNING at all. That is asserted below across
-every accepted-fixture shape the exact route has: plain formulas, aggregation,
+A clean model generates with no WARNING at all — asserted across every
+accepted-fixture shape the exact route has: plain formulas, aggregation,
 constraints, quoted names, a costed hierarchy, and a v6 snapshot replay.
 
-The row's other half — the ``OutputRegistry`` alias-collision count-summary —
-**has no exact-route counterpart.** That summary is emitted by
-``orchestration/output_registry_builder.py:385``, and the exact route never
-builds an ``OutputRegistry``: nothing in ``run_codegen``'s closure imports that
-module. The behaviour did not move, it retired with the mechanism that had it.
-Recorded as a Gate 4C surfacing rather than replaced with a lookalike.
-
-**L-249, the V11 seeded abort.** It cannot be reached through public generation
-on the exact route, and the test below proves why rather than asserting it.
-``elaboration/project.py`` constructs every ``ComputationGraph`` with
-``fallback_entry_points=set()`` — both in ``run`` and in ``select`` — and both
-collectors filter on membership in that set. So the guard still runs on every
-generation and can never fire. That is a finding about the guard, not a gap in
-this module's coverage: the collectors themselves stay pinned by the nine
-graph-level nodes in ``tests/unit/test_uncovered_params.py``, which build their
-graphs directly and are route-neutral.
+History: these rows once covered ``cli._reconcile_params_coverage`` (the V11
+params-coverage boundary). ``elaboration/project.py`` constructs every graph
+with ``fallback_entry_points=set()``, so that guard could never fire; it was
+deleted as dead by construction (REPO-CLEANUP Move C, 2026-08-25). The
+projection pins below are what keep that premise true: the field stays a
+serialized part of the projection digest, and it stays empty.
 """
 
 from __future__ import annotations
@@ -129,34 +113,27 @@ def test_no_reconciliation_summary_is_emitted(fixture: str, tmp_path: Path, capl
 def test_the_exact_route_projects_no_fall_through_entry_points(fixture: str) -> None:
     """Why no summary is emitted, and why L-249 cannot be reached from here.
 
-    The reconciliation summary and the V11 abort both key on
+    The retired reconciliation summary and V11 abort both keyed on
     ``graph.fallback_entry_points``. The exact route's projection constructs
-    every graph with that set empty, so both collectors are structurally empty
-    on the shipped route. Asserting the cause, not just the effect, is what
-    makes the L-249 surfacing checkable.
+    every graph with that set empty — the premise on which the collector was
+    deleted as dead (REPO-CLEANUP Move C), asserted here on every clean fixture.
     """
     from sysml_codegen.orchestration.exact_pipeline_context import (
         build_exact_pipeline_context,
     )
-    from sysml_codegen.resolution.uncovered_params import (
-        collect_uncovered_params,
-        collect_unwired_fallthrough,
-    )
 
     graph = build_exact_pipeline_context([FIXTURES_DIR / fixture]).computation_graph
     assert graph.fallback_entry_points == set()
-    assert collect_uncovered_params(graph) == []
-    assert collect_unwired_fallthrough(graph) == []
 
 
 def test_the_projection_hard_codes_an_empty_fall_through_set() -> None:
     """The surfacing, pinned at its source so it cannot be closed silently.
 
     ``elaboration/project.py`` builds a ``ComputationGraph`` in two places, and
-    both pass ``fallback_entry_points=set()`` as a literal. While that is true,
-    ``cli._reconcile_params_coverage`` is dead code on the shipped route. If the
-    projection starts populating the set, this test fails and row L-249 becomes
-    authorable — which is the point.
+    both pass ``fallback_entry_points=set()`` as a literal. That premise is what
+    justified deleting the V11 collector (REPO-CLEANUP Move C). If the
+    projection starts populating the set, this test fails and the coverage
+    question reopens — which is the point.
     """
     import importlib
 

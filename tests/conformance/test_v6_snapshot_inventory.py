@@ -15,7 +15,7 @@ import assess_v6_snapshot_churn as inventory  # noqa: E402
 
 # Durable home per the F5 ruling [OWNER 2026-08-13]: suite collection must not
 # depend on `.project/` archive layout (the item folder moved to
-# `.project/completed/20260813_unit-lane-port-metadata/` at close).
+# the unit-lane-port-metadata close record, 2026-08-13; git history).
 DATA_ROOT = ROOT / "tests" / "unit" / "data"
 PRE_INVENTORY = DATA_ROOT / "item8-snapshot-inventory-pre.json"
 FINAL_INVENTORY = DATA_ROOT / "item8-snapshot-inventory-final.json"
@@ -32,6 +32,22 @@ def _load(path: Path) -> dict[str, object]:
     value = json.loads(path.read_text())
     assert isinstance(value, dict)
     return value
+
+def _is_unit_map_digest(value: object) -> bool:
+    """The committed inventories carry unit-map digests, not the 47k-line arrays.
+
+    REPO-CLEANUP Move C replaced each frozen ``unit_map`` array with
+    ``{"sha256": <hex>, "entries": <count>}`` (canonical-JSON sha256 over the original
+    array). Equality of digests is equality of arrays, so the precomputed
+    ``movement.unit_map_changed`` booleans keep their meaning.
+    """
+    return (
+        isinstance(value, dict)
+        and set(value) == {"sha256", "entries"}
+        and isinstance(value["sha256"], str)
+        and len(value["sha256"]) == 64
+        and isinstance(value["entries"], int)
+    )
 
 
 def test_inventory_rejects_missing_extra_and_duplicate_rows() -> None:
@@ -60,11 +76,11 @@ def test_inventory_records_required_digests_and_unit_maps() -> None:
         assert committed["instance_graph_fingerprint"]
         assert committed["source_manifest_fingerprint"]
         assert committed["instance_graph_payload_digest"]
-        assert isinstance(committed["unit_map"], list)
+        assert _is_unit_map_digest(committed["unit_map"])
         assert live["instance_graph_fingerprint"]
         assert live["source_manifest_fingerprint"]
         assert live["instance_graph_payload_digest"]
-        assert isinstance(live["unit_map"], list)
+        assert _is_unit_map_digest(live["unit_map"])
         for arm in (committed, live):
             projection = arm["projection"]
             assert isinstance(projection, dict)
@@ -97,15 +113,12 @@ def _require_historical_inventory_plus_named_transition(
 
 
 def test_historical_inventory_deletion_is_one_named_current_refusal() -> None:
+    # The expected-transitions narrative that cross-recorded this refusal retired with
+    # verification/ (REPO-CLEANUP Move C); the live record is the recapture batch itself.
     current_batch = _load(ROOT / "tests/fixtures/v6_recapture_batch/batch.json")
     record = current_batch["records"]["deep_cross_scope_probe"]
     assert record["status"] == "refused"
     assert record["codes"] == ["SI_OCCURRENCE_MISSING"]
-    transitions = (ROOT / "verification/expected-transitions.md").read_text()
-    assert next(iter(TRANSITIONED_SNAPSHOT_REMOVALS)) in transitions
-    assert DEEP_CROSS_HISTORICAL_SHA256 in transitions
-    assert "e8927d0ebb9b28aafcd7410bbc5122354edc4213468f0b2cb2dfc99aedecc46c" in transitions
-    assert "A2 refusal" in transitions
 
 
 def test_pre_inventory_preserves_historical_rows_plus_named_transition() -> None:

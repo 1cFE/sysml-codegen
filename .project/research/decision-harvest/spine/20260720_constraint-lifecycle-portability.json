@@ -1,0 +1,25 @@
+{
+  "dir": "20260720_constraint-lifecycle-portability",
+  "date_start": "2026-07-20",
+  "date_end": "2026-07-20",
+  "epic": "CONSTRAINT-LIFECYCLE-REMEDIATION",
+  "item_number": "Item 5",
+  "title": "Make the whole generated output tree checkout-root portable by collapsing three path-normalization schemes into one certified referent",
+  "subject": "snapshot path portability",
+  "summary": "Generating the same model from two different checkout roots produced non-byte-identical output because generated docstrings embedded the machine-absolute source path; measurement on catf_mfe_model showed 40 of 81 generated files differed between roots. The root cause was that the snapshot stored source_file paths portably (relative to the snapshot directory) but the loader re-absolutized them on load, destroying portability before docstring renderers used them. The fix generalized the already-certified root-N/<relpath> referent (previously used only for constraint-exclusion catalog entries) to every source_file field, bumped the snapshot format to v5 with a load-time shape gate that rejects absolute or field-less paths loudly, deleted the loader's re-absolutization and two other ad hoc normalization branches (a contingent snapshot-dir-relative scheme and a fragile 'models/' substring strip), and re-captured all 36 committed snapshots. An independent audit reproduced the two-root proof on two fixtures never used in development (solar_battery, fusion_tea) with zero diffs and zero absolute-path leaks, confirmed Item 1's deferred relocated-anonymous-constraint leg now passes licensed, and certified with three non-blocking notes on test coverage and comment precision.",
+  "key_decisions": [
+    "Chose the heavier v5 format-bump-and-recapture design (D1) over a lighter alternative that would avoid the bump but inherit contingent portability from the deleted Branch B scheme",
+    "Deleted all three prior path-normalization schemes rather than adding a fourth; the certified root-N/ referent is now the single authority",
+    "Freshness checking becomes live-capture-only and skips on snapshot loads rather than reintroducing an absolute path to serve it",
+    "D3 (folding the param-group basename docstring onto the same referent) was deferred as a disambiguation nicety, not a portability fix, since the two-root scan found zero leaks there"
+  ],
+  "supersedes": [
+    "loader.py's _reabsolutize_source_files / _reabsolutize_source_file",
+    "the snapshot-dir-relative Branch B forward-relativization for source_file fields",
+    "the 'models/' substring-strip Branch C in stencils.py and test_gen.py",
+    "capture_pipeline_baselines.py's post-processing .replace() hack",
+    "snapshot format v4 (bumped to v5)"
+  ],
+  "status": "shipped",
+  "id": "H-103"
+}

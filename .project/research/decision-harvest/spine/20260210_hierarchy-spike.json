@@ -1,0 +1,20 @@
+{
+  "dir": "20260210_hierarchy-spike",
+  "date_start": "2026-02-10",
+  "date_end": "2026-02-10",
+  "epic": "COST-PATTERN",
+  "item_number": "Item 1",
+  "title": "Research spike probing how SysIDE's AST represents hierarchy, redefinition, multiplicity, and aggregation patterns needed for the Costed Component pattern",
+  "subject": "SysIDE AST, hierarchy/redefinition probing",
+  "summary": "Native support for the Costed Component pattern (PartDefinitions with embedded CalcUsages, :>> redefinition chains, parameterized multiplicity, sum() aggregation) needed empirical answers about SysIDE's AST representation before implementation could begin. A probe script ran 10 questions against the solar_battery model fixture, covering template-vs-concrete CalcUsage ownership, :>> redefinition structure (ReferenceUsage, not AttributeUsage), part redefines vs plain part, deep-path :>> resolution, multiplicity representation, sum() InvocationExpression structure, specialization chain traversal, new-vs-redefined attribute distinction, default := representation, and binding to inherited/redefined attributes. All 10 questions passed, including two audit follow-up corrections (deep-path chaining lives on the redefined_feature, not the redefining element; cached_upper_bound is systematically N+1 due to an exclusive-bound convention). The spike concluded GO and fed directly into Item 2's design phase.",
+  "key_decisions": [
+    "GO decision to proceed with COST-PATTERN Items 2-5 implementation; SysIDE's AST has sufficient structure.",
+    ":>> redefinitions always produce ReferenceUsage (never AttributeUsage); all downstream code must check for ReferenceUsage.",
+    "Deep-path :>> resolution must use owned_redefinitions[0].redefined_feature.chaining_features, not heuristic value matching.",
+    "Multiplicity count must use cached_lower_bound or resolve upper_bound's referenced default, never cached_upper_bound (which is N+1).",
+    "Hierarchy traversal helper (traverse_hierarchy) and RedefinitionInfo/HierarchyNode models should live in sysml-codegen, not agentic-mbse, per the reuse assessment."
+  ],
+  "supersedes": [],
+  "status": "shipped",
+  "id": "H-016"
+}

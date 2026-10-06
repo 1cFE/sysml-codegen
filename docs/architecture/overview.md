@@ -44,7 +44,7 @@ Generated package
 
 `run_codegen` (`cli/__init__.py`) is the single public entry point and constructs one way. `--models` and `--from-snapshot` are two *sources* for the same authority, not two implementations: both seal into an `ExactPipelineContext` whose receipt binds the sealed instance graph to what it projects to. No flag, environment variable, or config field selects an implementation. See [02-orchestration](reference/02-orchestration.md).
 
-Eligible modelled assertions become `CONSTRAINT` modules during projection, together with the `ConstraintCatalog` embedded on the graph. A `REPORT_AGGREGATOR` module is emitted only when there is at least one constraint output; a constraint-free model produces neither family. See [28-constraint-lowering-and-catalog](reference/28-constraint-lowering-and-catalog.md), whose lowering half describes `analysis/constraint_lowering.py` — deleted by the Item 7 retirement, so read that half as history, not as the product.
+Eligible modelled assertions become `CONSTRAINT` modules during projection, together with the `ConstraintCatalog` embedded on the graph. A `REPORT_AGGREGATOR` module is emitted only when there is at least one constraint output; a constraint-free model produces neither family. See 28-constraint-lowering-and-catalog (retired doc; git history), whose lowering half describes `analysis/constraint_lowering.py` — deleted by the Item 7 retirement, so read that half as history, not as the product.
 
 The license-free path is the **v6 instance-graph snapshot**. `sysml-codegen snapshot` admits the sources, elaborates them once, and seals the resulting graph into an envelope (`capture_instance_graph_snapshot` in `snapshot/capture.py` — this capture step needs the live syside license). `generate --from-snapshot` loads that envelope with no license at runtime. A v5 extraction snapshot is refused at load, by name. See [27-snapshot-generation](reference/27-snapshot-generation.md).
 
@@ -52,7 +52,7 @@ The license-free path is the **v6 instance-graph snapshot**. `sysml-codegen snap
 
 The string-resolution stack — `orchestration/pipeline_builder.py`, `analysis/`'s backtracker and parameter groups, `resolution/graph_builder.py`, `resolution/producer_resolution.py`, `core/output_registry.py`, and the v5 snapshot loader/serializer/rebuild — was **deleted** by the Item 7 retirement (2026-08-12, `19072ad` / `82c7951` / `882fc8d` / `3071fba`). None of it is in the tree, and `snapshot/__init__.py` re-exports nothing. Two checks pin the absence: `test_public_authority_switch.py` (the construction closure reaches no legacy authority, and the modules do not exist) and `tests/unit/test_elaboration_import_boundaries.py` (the CLI names none of them).
 
-Reference documents 03, 04, 05, 07, 10, 11, 12, 13, 17, and 24 describe that deleted stack and open with a historical banner. They remain accurate about the code that was removed. Document 25's subject, `extraction/hierarchy_resolver.py`, survived the retirement and is off the shipped route.
+The reference documents that described that deleted stack (03, 04, 05, 07, 10, 11, 12, 13, 17, 24, 25) retired with it and live in git history. The legacy extraction lane document 25 described (`extraction/hierarchy_resolver.py`, `extraction/usage_extractor.py`) was deleted by REPO-CLEANUP Move C (2026-08-25) as unreachable from `run_codegen`.
 
 ---
 
@@ -60,7 +60,7 @@ Reference documents 03, 04, 05, 07, 10, 11, 12, 13, 17, and 24 describe that del
 
 ### ComputationGraph as Single Source of Truth
 
-The `ComputationGraph` (a Pydantic model in `resolution/models.py`) is the sole data structure that code generation consumes. It contains all pipeline modules, their inputs wired to upstream outputs or entry points, execution order, parameter group schemas, and surfaced output aliases (`output_aliases`, serialized with the graph). Generation templates receive only `ComputationGraph` fields -- no back-references to extraction models (REQ-PIPE-07). Generation is also gated by a params-coverage check (V11): `collect_uncovered_params` (`resolution/uncovered_params.py`) runs at the generation boundary and aborts if a wired module input references a params key that no JSON input file will carry. See [09-data-models](reference/09-data-models.md).
+The `ComputationGraph` (a Pydantic model in `resolution/models.py`) is the sole data structure that code generation consumes. It contains all pipeline modules, their inputs wired to upstream outputs or entry points, execution order, parameter group schemas, and surfaced output aliases (`output_aliases`, serialized with the graph). Generation templates receive only `ComputationGraph` fields -- no back-references to extraction models (REQ-PIPE-07). See [09-data-models](reference/09-data-models.md). (The V11 params-coverage collector was dead by construction on the exact route and was deleted by REPO-CLEANUP Move C.)
 
 The module registry follows the same authority rule. Every exported registry generator derives its
 required exit-point wrappers from the graph; callers cannot supply a second type set. An unsupported
@@ -77,7 +77,7 @@ Two consequences a reader should carry into the reference documents:
 - **An arrayed child is enumerated, not multiplied.** Three occurrences produce three attribute nodes, three entry points, and three terms in an aggregation over them.
 - **An unresolvable reference is a typed refusal.** `ElaborationError` (readiness findings) and `ElaborationDiagnosticError` (validation diagnostics) stay distinct all the way to the CLI log, and projection refuses on a rendering collision rather than letting two distinct things render as one name.
 
-The four-typed-registry design and the one-authority `resolve_producer()` ladder that this section used to describe were deleted with the legacy stack. They are documented, accurately, in [10-output-registry](reference/10-output-registry.md), [04-producer-resolution](reference/04-producer-resolution.md), [03-resolution-overview](reference/03-resolution-overview.md), and [24-dual-resolution-architecture](reference/24-dual-resolution-architecture.md), each of which now opens with a banner.
+The four-typed-registry design and the one-authority `resolve_producer()` ladder that this section used to describe were deleted with the legacy stack; the reference documents that described them (03, 04, 10, 24) retired with it and live in git history.
 
 ### One semantic-owner walk, then exact indexes
 
@@ -138,7 +138,6 @@ sysml_codegen/
 
   resolution/
     models.py                    ComputationGraph, PipelineModule, EntryPoint
-    uncovered_params.py          the V11 params-coverage collector
 
   core/                Shared types and utilities
     identifier_types.py          NewType wrappers and module-type derivation
@@ -186,27 +185,25 @@ Deleted by the Item 7 retirement and no longer in the tree:
    - [08-generation](reference/08-generation.md) -- Jinja2 rendering to Python, YAML, JSON
    - [29-contracts-and-sealing](reference/29-contracts-and-sealing.md) -- what a sealed package promises
 
-   For the deleted string-resolution stack, read [03](reference/03-resolution-overview.md),
-   [11](reference/11-analysis-backtracker.md), [05](reference/05-module-factory.md), and
-   [07](reference/07-graph-assembly.md) — accurate about the code that was removed, not
-   about the product.
+   The deleted string-resolution stack's documents (03, 05, 07, 11) retired with it
+   and live in git history.
 4. **Data models** -- [09-data-models](reference/09-data-models.md) as a reference companion to any of the above
 
 ### Deep dives by topic
 
 | Topic | Documents |
 |-------|-----------|
-| Output registry and naming | [10](reference/10-output-registry.md), [15](reference/15-naming-conventions.md) |
-| Resolution internals | [04](reference/04-producer-resolution.md), [24](reference/24-dual-resolution-architecture.md) |
-| Template instantiation | [12](reference/12-virtual-binding-rewrite.md), [13](reference/13-aggregation-scoping.md) |
+| Output registry and naming | 10 (retired doc; git history), [15](reference/15-naming-conventions.md) |
+| Resolution internals | 04 (retired doc; git history), 24 (retired doc; git history) |
+| Template instantiation | 12 (retired doc; git history), 13 (retired doc; git history) |
 | Computed attributes | [16](reference/16-computed-attributes.md), [14](reference/14-expression-compiler.md) |
 | Literal value propagation | [18](reference/18-literal-value-propagation.md) |
 | AST dispatch invariant | [19](reference/19-ast-dispatch-invariant.md) |
 | Generation details | [20](reference/20-module-registry-generation.md), [21](reference/21-pipeline-yaml-generation.md), [22](reference/22-output-schema-rules.md), [23](reference/23-smart-regen-preservation.md) |
-| Hierarchy resolution | [25](reference/25-hierarchy-resolver.md) |
+| Hierarchy resolution | 25 (retired doc; git history) |
 | PipelineModule migration | [26](reference/26-pipeline-module-migration.md) |
 | Snapshot-driven generation | [27](reference/27-snapshot-generation.md) |
-| Constraint execution & contracts | [28](reference/28-constraint-lowering-and-catalog.md), [29](reference/29-contracts-and-sealing.md) |
+| Constraint execution & contracts | 28 (retired doc; git history), [29](reference/29-contracts-and-sealing.md) |
 
 ---
 
@@ -216,8 +213,9 @@ Deleted by the Item 7 retirement and no longer in the tree:
 components of the string-resolution stack that the Item 7 retirement deleted
 (`core/output_registry.py`, `analysis/`, `orchestration/pipeline_builder.py`,
 `resolution/graph_builder.py` and its resolver). The off-route computed-attribute classifier
-was deleted in the Phase 5 audit fix round; `extraction/hierarchy_resolver.py` remains off the
-shipped route. Historical component rows are not descriptions of the product.
+was deleted in the Phase 5 audit fix round, and the legacy extraction lane (C06's
+`hierarchy_resolver.py`, plus `usage_extractor.py`) by REPO-CLEANUP Move C. Historical
+component rows are not descriptions of the product.
 C02, C03, C04, C07, C20–C26, C28, C29, and X01 are live on the exact route; C01's models are
 mixed and doc 09 says which are which.
 
@@ -225,22 +223,22 @@ mixed and doc 09 says which are which.
 |----|-----------|-----|---------|
 | C01 | Data Models | [09](reference/09-data-models.md) | `extraction/data_models.py`, `core/models.py`, `resolution/models.py` |
 | C02 | Naming Conventions | [15](reference/15-naming-conventions.md) | `core/qualified_names.py`, `core/identifier_types.py` |
-| C03 | SysMLDataExtractor | [01](reference/01-extraction.md) | `extraction/extractor.py`, `extraction/usage_extractor.py` |
+| C03 | SysMLDataExtractor | [01](reference/01-extraction.md) | `extraction/extractor.py` |
 | C04 | Expression Compiler | [14](reference/14-expression-compiler.md) | `extraction/expression_compiler.py` |
 | C05 | Computed attributes (exact elaborator) | [16](reference/16-computed-attributes.md) | `elaboration/elaborate.py` |
-| C06 | Hierarchy Resolver | [25](reference/25-hierarchy-resolver.md) | `extraction/hierarchy_resolver.py` |
+| C06 | Hierarchy Resolver (deleted, Move C) | 25 (retired doc; git history) | git history |
 | C07 | AST Dispatch Invariant | [19](reference/19-ast-dispatch-invariant.md) | Cross-cutting (C04, C05, C06) |
-| C08 | Output Registry (Typed) | [10](reference/10-output-registry.md) | `core/output_registry.py` |
-| C09 | Virtual Binding Rewrite | [12](reference/12-virtual-binding-rewrite.md) | `orchestration/pipeline_builder.py` |
-| C10 | Aggregation Scoping | [13](reference/13-aggregation-scoping.md) | `orchestration/pipeline_builder.py` |
-| C11 | DependencyBacktracker | [11](reference/11-analysis-backtracker.md) | `analysis/dependency_backtracker.py` |
-| C12 | Producer Resolution | [04](reference/04-producer-resolution.md) | `resolution/producer_resolution.py` |
-| C13 | ParameterGroupDeriver | [17](reference/17-parameter-group-deriver.md) | `analysis/parameter_groups.py` |
-| C14 | Module Factory: CalcUsage | [05](reference/05-module-factory.md) | `resolution/graph_builder.py` |
-| C15 | Module Factory: FORMULA | [05](reference/05-module-factory.md) | `resolution/graph_builder.py` |
-| C16 | Module Factory: Aggregation | [05](reference/05-module-factory.md) | `resolution/graph_builder.py` |
+| C08 | Output Registry (Typed) | 10 (retired doc; git history) | `core/output_registry.py` |
+| C09 | Virtual Binding Rewrite | 12 (retired doc; git history) | `orchestration/pipeline_builder.py` |
+| C10 | Aggregation Scoping | 13 (retired doc; git history) | `orchestration/pipeline_builder.py` |
+| C11 | DependencyBacktracker | 11 (retired doc; git history) | `analysis/dependency_backtracker.py` |
+| C12 | Producer Resolution | 04 (retired doc; git history) | `resolution/producer_resolution.py` |
+| C13 | ParameterGroupDeriver | 17 (retired doc; git history) | `analysis/parameter_groups.py` |
+| C14 | Module Factory: CalcUsage | 05 (retired doc; git history) | `resolution/graph_builder.py` |
+| C15 | Module Factory: FORMULA | 05 (retired doc; git history) | `resolution/graph_builder.py` |
+| C16 | Module Factory: Aggregation | 05 (retired doc; git history) | `resolution/graph_builder.py` |
 | C17 | Entry Point Classification | [06](reference/06-entry-point-classifier.md) | `resolution/graph_builder.py` |
-| C18 | Graph Assembly | [07](reference/07-graph-assembly.md) | `resolution/graph_builder.py` |
+| C18 | Graph Assembly | 07 (retired doc; git history) | `resolution/graph_builder.py` |
 | C19 | Pipeline Builder | [02](reference/02-orchestration.md) | `orchestration/pipeline_builder.py` |
 | C20 | Pipeline YAML Generator | [21](reference/21-pipeline-yaml-generation.md) | `generation/pipeline.py` |
 | C21 | Module Wrapper Generator | [08](reference/08-generation.md) | `generation/modules.py` |
@@ -249,11 +247,11 @@ mixed and doc 09 says which are which.
 | C24 | Module Registry Generator | [20](reference/20-module-registry-generation.md) | `generation/registry.py` |
 | C25 | JSON Template + Schema Generator | [08](reference/08-generation.md) | `generation/entry_point.py` |
 | C26 | PipelineModule Migration | [26](reference/26-pipeline-module-migration.md) | Cross-cutting (resolution + generation) |
-| C27 | Typed Registry Design Intent | [10](reference/10-output-registry.md) | Cross-cutting (core + analysis + resolution) |
-| C28 | Constraint Lowering & Catalog | [28](reference/28-constraint-lowering-and-catalog.md) | `analysis/constraint_lowering.py`, `generation/constraint_catalog.py`, `generation/predicate_compiler.py` |
+| C27 | Typed Registry Design Intent | 10 (retired doc; git history) | Cross-cutting (core + analysis + resolution) |
+| C28 | Constraint Lowering & Catalog | 28 (retired doc; git history) | `analysis/constraint_lowering.py`, `generation/constraint_catalog.py`, `generation/predicate_compiler.py` |
 | C29 | Contracts & Sealing | [29](reference/29-contracts-and-sealing.md) | `contracts/model_contract.py`, `contracts/seal.py`, `contracts/verify.py` |
 | X01 | Type Mapping Consistency | [08](reference/08-generation.md) | `generation/type_mapping.py` |
-| X02 | Resolution Consistency | [24](reference/24-dual-resolution-architecture.md) | Cross-cutting (C11, C12, C14-C16) |
+| X02 | Resolution Consistency | 24 (retired doc; git history) | Cross-cutting (C11, C12, C14-C16) |
 
 ---
 

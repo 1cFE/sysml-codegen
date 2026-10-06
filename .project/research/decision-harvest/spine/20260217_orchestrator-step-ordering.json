@@ -1,0 +1,18 @@
+{
+  "dir": "20260217_orchestrator-step-ordering",
+  "date_start": "2026-02-17",
+  "date_end": "2026-02-17",
+  "epic": "unknown",
+  "item_number": null,
+  "title": "Conformance tests for orchestrator step ordering (component C19), covering build_pipeline_context() composition and pipeline-level invariants",
+  "subject": "pipeline orchestrator",
+  "summary": "C19 verified that generation/initialization.py's build_pipeline_context() calls extraction, analysis, resolution, and assembly steps in the right dependency order and that the resulting ComputationGraph satisfies pipeline-level invariants (every input wired, every producer channel declared, valid topological sort, entry points classified). No production code changed. Because the real orchestrator needs a live SysIDE JVM, tests combined static-analysis checks of call ordering with snapshot-driven reconstruction of the full pipeline. 39 tests were added to tests/conformance/test_orchestrator.py, all passing, full suite at 1571 passed / 2 skipped / 5 xfailed / 0 failures, committed at 29f1af8. It documented (but did not fix) a known violation of REQ-PIPE-07: generation modules still import from extraction, deferred to a later phase (7.6).",
+  "key_decisions": [
+    "REQ-PIPE-07's generation-side fix (removing extraction imports from generation modules) is out of scope for C19; C19 only records the current violation count as a baseline for Phase 7.6",
+    "FORMULA-removal safety-net tests use constructed overlap data because real fixture models have zero overlap between FORMULA and design-attribute qualified names",
+    "CHAIN alias unresolvable-warning path is tested with constructed data since no fixture model naturally produces an unresolvable alias"
+  ],
+  "supersedes": [],
+  "status": "shipped",
+  "id": "H-051"
+}

@@ -1,0 +1,18 @@
+{
+  "dir": "20260713_constraint-generation",
+  "date_start": "2026-07-12",
+  "date_end": "2026-07-13",
+  "epic": "CONSTRAINT-EXEC",
+  "item_number": "Item 7",
+  "title": "Generate the constraint module, Kleene predicate compiler, aggregator, and embedded catalog so a modeled assertion can actually execute",
+  "subject": "constraint code generation",
+  "summary": "Before this item, every layer upstream of code generation (constraint fact extraction, predicate compilation to a neutral IR, eligibility gating, lowering to ConcreteConstraint records, and module-kind plumbing) was in place, but nothing emitted the predicate code, constraint-module class, aggregator, runtime ConstraintEvaluation/ConstraintReport types, or embedded catalog, so a modeled assertion still could not run. Item 7 productionized the shapes proven by an earlier test-only spike (S4), filling the five generation seams that had been failing loud with a 'wired in Item 7' message. The audit verdict was Certify-with-notes: the Kleene three-valued logic, exit-pin guarantee, same-IR/leaf-name guards, and three Phase-4 bug fixes were verified correct by static review, but three named success criteria (indeterminate/negated-inline execution cases, modeled-default override changing the verdict, and a Break-the-YAML kept test) were deferred rather than delivered, and two of those had no test coverage at any level. Live/snapshot byte-identity for constraint-bearing fixtures was explicitly handed off as Item 8's job, not this item's exit gate.",
+  "key_decisions": [
+    "Item 7's obligation was scoped to deterministic constraint_ids and catalog ordering across live loads, deferring artifact-level live/snapshot parity to Item 8",
+    "Three Phase-4 bug fixes were accepted as real structural corrections but shipped without a regression test in any CI-run lane, so a revert of any fix would stay green",
+    "Three named spec success criteria (SC-2 indeterminate/negated-inline execution, SC-3 default-override verdict change, Break-the-YAML) were explicitly deferred rather than delivered, and this deferral was surfaced honestly in the plan rather than silently dropped"
+  ],
+  "supersedes": [],
+  "status": "shipped",
+  "id": "H-082"
+}

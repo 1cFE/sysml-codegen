@@ -10,7 +10,7 @@ The state must refuse before any address is built. It cannot fall through to a p
 leaf route because that compatibility route no longer exists.
 
 **Observed corpus boundary.** The retained census
-(`.project/completed/20260816_qualified-reference-occurrence-anchoring/verification/absent_leaf_census.py`
+(git history: `20260816_qualified-reference-occurrence-anchoring/verification/absent_leaf_census.py`
 and its JSON result) finds zero absent leaves among 770 observed resolver calls. Fifteen
 roots retain unmeasured population, so that result does not establish authored reachability
 for the whole corpus. This test therefore reaches the state directly at the resolver

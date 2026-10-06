@@ -27,7 +27,7 @@ from sysml_codegen.generation.constraint_name_safety import (
     validate_scope_bindings,
     verify_emitted_scope,
 )
-from sysml_codegen.generation.predicate_compiler import compile_predicate
+from sysml_codegen.generation.predicate_compiler import compile_predicate_body
 from sysml_codegen.resolution.models import (
     ComputationGraph,
     ConstraintCatalog,
@@ -310,5 +310,5 @@ def test_safe_predicate_argument_order_remains_first_occurrence_order():
         operands=[_ref("second"), _ref("first")],
         operand_type=None,
     )
-    _source, arguments = compile_predicate(ir, "ordered_predicate")
+    _source, arguments = compile_predicate_body(ir, "ordered_predicate")
     assert arguments == ["second", "first"]

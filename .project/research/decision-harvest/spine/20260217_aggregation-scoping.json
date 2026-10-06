@@ -1,0 +1,17 @@
+{
+  "dir": "20260217_aggregation-scoping",
+  "date_start": "2026-02-17",
+  "date_end": "2026-02-17",
+  "epic": "unknown",
+  "item_number": "C10",
+  "title": "Conformance-test aggregation scoping (PartDef-to-instance expansion, CHAIN aliasing, module_eqn derivation) and add the missing zero-instance warning",
+  "subject": "aggregation instance scoping",
+  "summary": "Three existing functions bridge PartDef-level aggregation expressions to concrete design instances: find_instance_paths_for_partdef() (two resolution strategies), _scope_aggregation_expressions() (one-to-many expansion), and _build_chain_aliases() (CHAIN redefinition aliasing). None had dedicated conformance tests. A spike confirmed real solar_battery data gives full natural coverage (41 qualifying CHAIN redefinitions, both instance-path resolution strategies exercised, scoped output matching the snapshot exactly), so no constructed test data was needed. The only production change was adding a logger.warning() (previously silent/info-only) when an aggregation expression's owning PartDef produces zero design instances, per REQ-AS-08.",
+  "key_decisions": [
+    "All aggregation-scoping test coverage uses real solar_battery/issue22 fixture data rather than constructed data, since the spike found natural coverage for every requirement including both instance-path strategies and CHAIN alias filters",
+    "Zero-instance aggregation expressions now log a WARNING (previously only an aggregate INFO count) naming the PartDef and attribute, so a design gap is visible instead of silently vanishing"
+  ],
+  "supersedes": [],
+  "status": "shipped",
+  "id": "H-035"
+}

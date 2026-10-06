@@ -1,0 +1,19 @@
+{
+  "dir": "20260816_self-binding-replacement",
+  "date_start": "2026-08-15",
+  "date_end": "2026-08-16",
+  "epic": "ELABORATE-FIRST",
+  "item_number": "Item 8 (bounded child)",
+  "title": "Self-named calculation bindings are refused before generation instead of silently reading their own inputs",
+  "subject": "self-binding detection, exact route",
+  "summary": "The exact route previously let a calculation binding name itself as its own source, silently reading its own input instead of failing. This item adds exact-route SI_SELF_BINDING detection with named cycle failures, replacing positional descendant search with owner-directed refusal of definition-owned qualified lineage misses. It publishes one authoritative agentic-mbse guidance surface with a validator and packaged-wheel drift checks, migrates both Fusion Tea model trees mechanically (D-5) without changing model physics, and proves via public off-default mutations that intended source values reach every and only their bound consumers. Independent verification passed all ten functional success criteria; the owner accepted a dangling-symlink edge case in the migration/fixture helper as a testing/developer-tooling risk rather than requiring another remediation cycle.",
+  "key_decisions": [
+    "[OWNER 2026-08-16] Dangling-symlink behavior in the migration/fixture helper is accepted as a testing/developer-tooling edge case; closure proceeded without another remediation or audit cycle.",
+    "Self-binding detection replaces positional descendant search with owner-directed refusal of definition-owned qualified lineage misses (SI_SELF_BINDING named cycle failures)."
+  ],
+  "supersedes": [
+    "Prior behavior where self-named calculation bindings silently read their own inputs instead of being refused."
+  ],
+  "status": "shipped",
+  "id": "H-123"
+}

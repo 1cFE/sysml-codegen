@@ -1,7 +1,7 @@
 # Provenance — definition-owned qualified reference, sideways reach (F-4)
 
 Promoted for self-binding-replacement Phase 2 from the spike fixture
-`.project/active/self-binding-replacement/spike/fixtures/s6_qual_sibling_scope/` (findings row 6
+`self-binding-replacement/spike/fixtures/s6_qual_sibling_scope/` (git history) (findings row 6
 and F-4, reproduced at `0f89673`). Package renamed `S6QualSiblingScope` →
 `def_qual_sibling_scope`; the shape is otherwise unchanged.
 

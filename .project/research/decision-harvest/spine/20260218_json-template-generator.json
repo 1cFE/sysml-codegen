@@ -1,0 +1,17 @@
+{
+  "dir": "20260218_json-template-generator",
+  "date_start": "2026-02-18",
+  "date_end": "2026-02-18",
+  "epic": "unknown",
+  "item_number": null,
+  "title": "Conformance tests for the JSON template and parameter schema generator (component C25), covering REQ-GEN-05 and REQ-PY-07",
+  "subject": "JSON template and schema generation",
+  "summary": "C25 added conformance tests for the graph-only JSON template and Pydantic schema generation functions in generation/entry_point.py (generate_all_derived_jsons_from_graph and generate_all_derived_schemas_from_graph), which render one JSON template and one schema file per ParameterGroup. No production code changed. Tests verified file counts, filenames, that JSON values match entry point defaults, that entries with a None default are correctly excluded from JSON but still present in the schema, and that generated schema files parse as valid Python with matching class names and fields. It confirmed that python_type is always float across all real fixture data, so the type-mapping fallback path is defensive but never exercised. 28 test items (15 cases across 2 models) were written and all passed; full suite was 1733 passed, 6 xfailed, lint clean.",
+  "key_decisions": [
+    "C25's scope is the JSON/schema file generation itself (REQ-GEN-05); REQ-PY-07's YAML-reference aspect is left to C20 and only cross-checked here by file count",
+    "Entry points with default_value=None are correctly omitted from JSON templates but still declared (with default=None) in the Pydantic schema; this is confirmed intentional behavior, not a bug"
+  ],
+  "supersedes": [],
+  "status": "shipped",
+  "id": "H-058"
+}

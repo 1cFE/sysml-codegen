@@ -1,5 +1,15 @@
 # 19 -- AST Dispatch Invariant: FCE Before OE
 
+> **Status: the audited legacy sites are gone; the invariant and the guardrail remain.**
+> The parametrized dispatch sites this document catalogues below —
+> `usage_extractor._extract_single_binding`, `hierarchy_resolver._walk_aggregation_ast`,
+> and agentic-mbse's `_decompose_node` / `classify_redefinition` — belonged to the legacy
+> extraction lane, deleted by REPO-CLEANUP Move C (2026-08-25). Read their rows as history.
+> What stays live is the design constraint itself (FCE is a subtype of OE, so FCE must be
+> checked first) and the guardrail in `tests/conformance/test_ast_dispatch_invariant.py`:
+> no unaudited multi-type dispatch site may appear in `src/`, and the
+> `reconstruct_expression` output-format pins still run against the live extractor path.
+
 ## Design Constraint
 
 SysIDE's type hierarchy has a subtype relationship: `FeatureChainExpression`
@@ -23,7 +33,7 @@ Type Hierarchy (SysIDE):
 **Consequence of violation**: Dispatch sites that check OE before FCE cause
 aggregation inputs to be misclassified as LocalTerms instead of SingletonTerms,
 breaking aggregation wiring in the
-[hierarchy resolver](13-aggregation-scoping.md).
+hierarchy resolver (retired doc; git history).
 
 ## Current evidence rule
 
@@ -174,7 +184,7 @@ Node: FCE "pv_module.capital_cost"
   Result: SingletonTerm(source_path="pv_module.capital_cost")  ← CORRECT
 ```
 
-The SingletonTerm feeds into [output registry](10-output-registry.md) lookup
+The SingletonTerm feeds into output registry (retired doc; git history) lookup
 (Key_C scoped chain), which wires the aggregation input to the upstream
 module's output channel. The LocalTerm classification would attempt sibling
 attribute lookup, which fails or produces wrong wiring.
@@ -196,10 +206,10 @@ attribute lookup, which fails or produces wrong wiring.
 
 ## Related Documents
 
-- **Upstream**: [13-aggregation-scoping](13-aggregation-scoping.md) -- where SingletonTerm/LocalTerm classification feeds aggregation wiring
+- **Upstream**: 13-aggregation-scoping (retired doc; git history) -- where SingletonTerm/LocalTerm classification feeds aggregation wiring
 - **Upstream**: [14-expression-compiler](14-expression-compiler.md) -- expression AST compilation uses same dispatch
-- **Downstream**: [10-output-registry](10-output-registry.md) -- SingletonTerm source_path drives Key_C lookup
-- **Downstream**: [05-module-factory](05-module-factory.md) -- term types determine module input construction
+- **Downstream**: 10-output-registry (retired doc; git history) -- SingletonTerm source_path drives Key_C lookup
+- **Downstream**: 05-module-factory (retired doc; git history) -- term types determine module input construction
 - **Pipeline context**: [00-pipeline-overview](00-pipeline-overview.md) -- where dispatch sits in the overall pipeline
 - **Data models**: [09-data-models](09-data-models.md) -- SingletonTerm, LocalTerm, SumTerm field definitions
 
@@ -233,4 +243,4 @@ to add to the new-dispatch-site and new-lookup-site code-review checklist:
 disposition column are updated in-change. The remaining per-component reference-doc
 touches (01/10/12/13/14/16/17/23/27 and the matrix rows) are a scoped follow-on —
 the per-finding Implementation Notes in
-`.project/active/silent-failure-hardening/plan.md` are the authoritative record.
+`silent-failure-hardening/plan.md` (git history) are the authoritative record.

@@ -1,10 +1,10 @@
 # Provenance: native effective declarations and plural scope
 
-- **[REFERENT]** `.project/active/elaborator-design/design.md`, D3 and “Exact contextualization
+- **[REFERENT]** `elaborator-design/design.md` (git history), D3 and “Exact contextualization
   rules,” are the behavior bar: SysIDE's `Usage.usages` chooses effective child declarations;
   codegen adds only finite concrete parent/index contexts; plural references stay inside the
   consumer's permitted occurrence scope.
-- **[REFERENT]** `.project/active/spike-syside-occurrence-authority/findings.md` is the observed
+- **[REFERENT]** `spike-syside-occurrence-authority/findings.md` (git history) is the observed
   SysIDE 0.8.4 boundary this fixture must continue to match.
 - **[EXAMPLE]** `spec_chain_twolevel` supplies the usage-level part retype shape, and
   `elab_finite_expression_multiplicity` supplies the modeled finite multiplicity shape. They

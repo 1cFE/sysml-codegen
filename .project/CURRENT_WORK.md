@@ -1,8 +1,44 @@
 # Current Work
 
-2026-09-05: Numeric evidence acceptance implemented on `fix/numeric-study-evidence`. Generated multi-output channels now have explicit real-TEAx evaluation and reopened study-store acceptance, including input perturbation and dependent single-output arithmetic. The runtime repair belongs to TEAx and changes evidence schema to v3; codegen production bytes are unchanged. Scope and validation: [.project/numeric-evidence-acceptance.md](numeric-evidence-acceptance.md).
+2026-10-04: REPO-CLEANUP is complete and submitted as [PR #15](https://github.com/1cFE/sysml-codegen/pull/15) from `repo-cleanup` to `main`. [OWNER] Shipment authorization: “finish out any remaining work on repo-cleanup and then PR.” Final follow-through corrected stale backlog progress, the renamed register-test citation, V11 comments, and whitespace. The mental-model drafts remain uncommitted in the checkout and are excluded from the PR.
 
-**Last Updated**: 2026-08-20 (**stop-reinventing-the-parser SHIPPED — all three repositories
+Fresh branch validation: full licensed default suite 2,140 passed / 9 skipped / 96 deselected against unmodified Agentic main `88e2489`; artifact-pinned real-TEAx lane 96 passed; generation against codegen main `40a724c` matches 850 output file hashes across 19 successful snapshots and all three refusal outcomes. Ruff, whitespace, index regeneration, and ledger paths/surface checks pass. Mypy has 27 existing errors versus main's 30, with no new diagnostics. Logs and hashed provenance are retained under `/tmp/repo-cleanup-artifacts/` and `/tmp/repo-cleanup-*.log` for this session.
+
+The locally installed Agentic checkout is on unmerged `harness-right-size`, whose modeling template introduces one guidance-contract failure. Companion main already has the correct warning spelling; no companion changes are required for this PR. Next: review and merge PR #15. `elaborator-downstream` remains the open spec-stage item.
+
+2026-09-06: Numeric evidence acceptance merged to `main` in PR #14 and incorporated into `repo-cleanup`. Generated multi-output channels now have explicit real-TEAx evaluation and reopened study-store acceptance, including input perturbation and dependent single-output arithmetic. The runtime repair belongs to TEAx and changes evidence schema to v3; codegen production bytes are unchanged. Scope and validation: [.project/numeric-evidence-acceptance.md](numeric-evidence-acceptance.md).
+
+**Last Updated**: 2026-08-25 (**REPO-CLEANUP Move C complete — the epic is done.** Delete-what-defends-nothing
+executed as eleven commits on `repo-cleanup`, licensed suite green after every batch (final: 2140 passed /
+9 skipped / 94 deselected, zero failures, no omit list — the accepted-limitation caveat carried since Item 1
+is gone; the five previously uncollectable files collect license-free). Byte identity held at every `src/`
+deletion: all 19 generatable fixture snapshots produce identical bytes (850 file hashes), 3 refusal fixtures
+refuse identically. Gone: `scripts/archive/`, the twelve retired reference docs (doc 09 rewritten to the live
+model set), `verification/` with its lock suite [OWNER 2026-08-23], the legacy extraction lane
+(`hierarchy_resolver.py`/`usage_extractor.py`) with all pinning tests [OWNER 2026-08-23] including conformance
+`test_hierarchy_resolver.py` under the ratified 2026-08-25 ruling, the V11 dead gate (+ its doc corrections,
+closing `[V11-DEAD-GATE-DOCS]`), deriver-era generators, the `ConcreteConstraint` family (unit fixtures now
+build a plain `FixtureConstraint`), dead extractor/model classes, the superseded `compile_predicate` pair
+(suites converted to `compile_predicate_body`), `baseline_outputs/` with its stub-passing reader (gap filed
+`[EMIT-STEP-REGRESSION-GATE]`), the item8 `unit_map` dumps (digested, 48k→4k lines), the `catf_mfe_d5` .sysml
+fork (snapshot-only fixture now; sources regenerable via `make_d5_variant.py`), and the closed-item process
+tooling. `tests/` is 73k lines (was 149k; committed data −67k), test functions −20% vs lines −51%, zero
+orphan fixtures, vulture at min-confidence 80 reports zero unused symbols in `src/`. Ledger 4a: five stale
+retain rows re-dispositioned `retire-with-owner` with live replacement nodes; `check_ledger_4a.py paths` = 0
+problems — the checker and its test STAY, against the research grading, because they caught exactly this
+drift mid-move. `[ARTIFACT-MANIFEST-TESTS-HARD-FAIL]` closed by C2's disentanglement
+(`tests/helpers/source_roots.py`). Known quirk: `tests/unit/` in isolation shows ~16 failures because the
+simkit stub is installed by `tests/runtime/` — full-suite runs are the gate. The three move folders are
+deleted per the standing close rule; this epic's record is the epic file, the registers, and `git log`.
+Next: owner review of the `repo-cleanup` branch, then PR.)
+Prior status: 2026-08-21 (**scaffolding-register-boundary CLOSED** — REPO-CLEANUP Item 1 certified at
+`3566fdd` and archived to `.project/completed/20260821_scaffolding-register-boundary/`. Both decision
+registers are installed and script-managed: `.project/adr/0001` is the owner-grade audience question,
+`0002`/`0003` the index-resolution and citation conventions; the product ledger is `0001`…`0004` with a
+generated index. ADR-007 and ADR-009 are triaged builder-facing and carried to Item 3. Five audit
+follow-ups are recorded in the archived `audit.md`; all are resolved `[OWNER, 2026-08-21]` except
+the ADR-009 re-home itself, which Item 3 owns. REPO-CLEANUP Move A complete 2026-08-23: `.project/adr/0004`–`0010` filed (use-the-parser, elaborate-first, lifecycle rulings, repo boundary, merge commits, plus ADR-007/009 re-homed with §§7/9 reduced to pointers), product `0005`–`0006` filed and checked; suite at Item 1's accepted-limitation gate. REPO-CLEANUP Move B complete 2026-08-23: `.project/` is 62k tracked lines (was 676k) — `completed/` left HEAD wholesale per owner ruling (recoverable at the purge commit's parent), closed `active/` items, reports/diagrams/specs/logs, and PR-body strays deleted, log family gitignored, all register/src/tests/docs citations resolve (accepted residue enumerated in the archived Move B plan), close=record-then-delete is the standing rule in `.project/README.md`. Suite at the same accepted-limitation gate as Move A. Next: REPO-CLEANUP Move C, delete what defends nothing.)
+Prior status: 2026-08-20 (**stop-reinventing-the-parser SHIPPED — all three repositories
 merged to GitHub `main`.** Merge-commit PRs in dependency order: Agentic agentic-mbse#13
 (`88e2489`), Codegen sysml-codegen#13 (`82244a0`), Fusion fusion-tea#102 (`5338db5f`). The
 Codegen PR merged a `stop-parser-integration` branch combining `C_prod` `8a758e92…` with the
@@ -144,7 +180,7 @@ recorded and **55** reproduced from it independently. **A-1** and **A-2** stand 
 below.
 
 What landed: the item3-F2 and design-F2 contract amendments, the first `.project/product/` ledger
-with P-001 carrying the owner's promise verbatim, the cross-repo `@inapplicable:` /
+with 0001 carrying the owner's promise verbatim, the cross-repo `@inapplicable:` /
 disposition-vocabulary / six-states teaching, the `modeling-assumptions.md` §8 unit-on-binding
 rewrite, the B1–B5 marker rule stated with both its conditions, and the epic-level
 verification-matrix reconciliation. SC1/SC3/SC4/SC6 ticked; SC2/SC5 unticked, each naming its
@@ -502,7 +538,7 @@ The epic is done. Nothing in it is live work any more. Where things stand:
   assigned 2026-08-14 to cutover step 4 so the matrix is touched once); and the **parked D-2 vs
   D-4/SRC-01 premise conflict** at umbrella `spec.md:325`, which no item resolved in either
   direction and which archived still open.
-- **Surfaced at close, unresolved:** `.project/product/INDEX.md` and `P-001` name the epic file as
+- **Surfaced at close, unresolved:** `.project/product/INDEX.md` and `0001` name the epic file as
   the durable one-hop lens trail node, on the recorded reasoning that it does not archive. The close
   falsifies that. The **paths** were repointed so the trail resolves; **no promise text or authority
   grade was touched**. Whether a trail node in `completed/` is good enough, or whether it belongs
@@ -981,6 +1017,20 @@ surfaces as matrix-row candidates.
 
 ## Recently Completed
 
+### 2026-08-21: scaffolding-register-boundary — CERTIFIED AND CLOSED (REPO-CLEANUP Item 1)
+
+- Installed `adr.sh`/`product.sh` and both register READMEs from the pack, byte-identical; filed the
+  routing criterion `.project/adr/0001` `[OWNER]` and the D3/D4 conventions as `0002`/`0003`; triaged
+  all nine `modeling-assumptions.md` decisions (ADR-007, ADR-009 builder-facing → Item 3).
+- Migrated the product ledger to `0001`…`0004` with script-managed frontmatter and a generated index;
+  owner-verbatim bodies byte-identical below the block except five ratified link repoints; I1–I6 are
+  conformance tests.
+- Audit Certify at `3566fdd`; licensed runnable suite 2,371 passed under the accepted missing-manifest
+  limitation. Audit follow-ups closed `[OWNER, 2026-08-21]`: the contract test now matches only the
+  generated index row and pins one historical single-home phrase; `.project/adr/0001` declares its
+  `promoted_to` paths; `0001:128` cites ADR-009 at `:704`. Archived to
+  `.project/completed/20260821_scaffolding-register-boundary/`.
+
 ### 2026-08-19: stop-reinventing-the-parser — CLOSED BY OWNER DIRECTION
 
 - Exact parser/AST authority now drives occurrence derivation and evidence handoff. The final two
@@ -1009,7 +1059,7 @@ surfaces as matrix-row candidates.
   BLOCK. Focused licensed suite: **116 passed**.
 - Evidence: 20 changed outcomes adjudicated, 139 identity blocks unchanged, 0 structural problems;
   bounded census 154 roots / 770 observed calls / 0 observed absent leaves / 15 residual roots.
-  Archived to `.project/completed/20260816_qualified-reference-occurrence-anchoring/`; P-002 keeps
+  Archived to `.project/completed/20260816_qualified-reference-occurrence-anchoring/`; 0002 keeps
   the product promise and evidence bounds live.
 
 ### 2026-08-14: CONSTRAINT-SEMANTICS EPIC — Constraint Semantics and Design-Search Feasibility (all nine items closed; epic closed + archived)
@@ -1042,7 +1092,7 @@ surfaces as matrix-row candidates.
 
 ### 2026-08-14: CONSTRAINT-SEMANTICS Item 7 — ADR, Product Promise, and Agent-Facing Documentation Sync (audited Certify-with-residuals + closed)
 - **The owner's promise finally has a durable home, and the trail to it survives archiving.**
-  `.project/product/INDEX.md` → `P-001-design-search-free-variation.md` carries the
+  `.project/product/INDEX.md` → `0001-design-search-free-variation.md` carries the
   `[OWNER-VERBATIM, 2026-08-13]` design-search promise byte-for-byte (payload diff empty), with the
   epic's `[OWNER]` Critical Success Factor beside it, ADR-009 back-registered as a row under this
   repo's ADR convention, and the promise-vs-basis tension surfaced rather than resolved

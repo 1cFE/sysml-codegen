@@ -1,0 +1,19 @@
+{
+  "dir": "20260820_stop-parser-pr-shipment",
+  "date_start": "2026-08-20",
+  "date_end": "2026-08-20",
+  "epic": "unknown",
+  "item_number": null,
+  "title": "Ship the already-closed stop-reinventing-the-parser work to GitHub main across agentic-mbse, sysml-codegen, and fusion-tea, preserving Fusion's exact commit pin",
+  "subject": "cross-repo PR shipment",
+  "summary": "The stop-reinventing-the-parser item was finished and owner-closed, but existed only on local branches in three repositories, and Fusion Tea pins the exact Codegen commit SHA and wheel hash it depends on -- a squash or rebase merge would make that pinned commit unreachable and force a repin plus regenerated provenance evidence. This item published all three repositories' work to GitHub main in dependency order (Agentic, then a Codegen integration branch merging the docs-closure line into the production line without letting a separate evidence-only child commit leak in, then Fusion), using explicit merge commits throughout, verifying wheel byte-identity and differential test-suite parity at each gate, and fixing two stale contract tests that asserted pre-close state. All merges landed via owner-admin click (branch protection blocked the agent's own merge), and all four identity tags were published at the end.",
+  "key_decisions": [
+    "Every merge uses an explicit merge commit, never squash or rebase, to keep the Fusion-pinned Codegen commit SHA reachable from main",
+    "A separate 6-file evidence-only child commit (924eadf) is deliberately never merged into main -- it is preserved only via a pushed tag, verified absent by an ancestry check gate",
+    "Owner explicitly authorized fast-forward pushing the local mains directly (40 and 5 commits) rather than routing them through baseline PRs, to avoid re-diverging local and GitHub main",
+    "Wheel-identity and test-suite-parity gates were re-derived to checkable equivalent forms (byte-identity-to-a-fresh-C_prod-build, and differential-outcome-parity) since the sealed baseline counts are not reproducible from an ordinary checkout"
+  ],
+  "supersedes": [],
+  "status": "shipped",
+  "id": "H-125"
+}

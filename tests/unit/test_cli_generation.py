@@ -30,7 +30,6 @@ from sysml_codegen.cli import (
 from sysml_codegen.generation import CodeGenerationError
 from sysml_codegen.resolution.models import (
     ComputationGraph,
-    ConcreteConstraint,
     ConstraintCatalog,
     ConstraintCatalogEntry,
     ConstraintFormalIdentity,
@@ -40,7 +39,10 @@ from sysml_codegen.resolution.models import (
     ModuleOutput,
     PipelineModule,
 )
-from tests.helpers.retired_catalog_assembly import assemble_constraint_catalog
+from tests.helpers.retired_catalog_assembly import (
+    FixtureConstraint,
+    assemble_constraint_catalog,
+)
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 D38_MODEL = REPO_ROOT / "tests/fixtures/d38_caret"
@@ -132,7 +134,7 @@ class TestSetupOutputDirectories:
 
 
 def _colliding_context():
-    def concrete(constraint_id: str, raw_key: str, operator: str) -> ConcreteConstraint:
+    def concrete(constraint_id: str, raw_key: str, operator: str) -> FixtureConstraint:
         def ref(name: str) -> FeatureReferenceNode:
             return FeatureReferenceNode(
                 reference=FeatureReferenceFact(
@@ -144,7 +146,7 @@ def _colliding_context():
         predicate = OperatorNode(
             operator=operator, operands=[ref("a"), ref("b")], operand_type=None
         )
-        return ConcreteConstraint(
+        return FixtureConstraint(
             constraint_id=constraint_id,
             usage_qualified_name=raw_key,
             source_local_identity=raw_key.rsplit("::", 1)[-1],

@@ -6,7 +6,7 @@ emitted alongside them, so a consumer can confirm it is loading exactly the pack
 sysml-codegen generated, and know what it may vary and observe without parsing YAML.
 
 This is a package-integrity concern, orthogonal to constraint lowering
-([28-constraint-lowering-and-catalog](28-constraint-lowering-and-catalog.md)); the two
+(28-constraint-lowering-and-catalog (retired doc; git history)); the two
 couple only where `ModelContract` embeds the constraint catalog by value.
 
 ## Requirements
@@ -126,7 +126,7 @@ an existing `ModelContract` (a package already sealed once by `generate`).
 
 - **Data models**: [09-data-models](09-data-models.md) — `ConstraintCatalog` (embedded
   by value on `ModelContract`)
-- **Constraint machinery**: [28-constraint-lowering-and-catalog](28-constraint-lowering-and-catalog.md)
+- **Constraint machinery**: 28-constraint-lowering-and-catalog (retired doc; git history)
   — the catalog `ModelContract` embeds
 - **Generation**: [08-generation](08-generation.md) — the generation seams Step 9 seals
 - **Snapshot**: [27-snapshot-generation](27-snapshot-generation.md) — the seal runs the

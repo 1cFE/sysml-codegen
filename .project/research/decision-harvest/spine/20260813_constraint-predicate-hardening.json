@@ -1,0 +1,19 @@
+{
+  "dir": "20260813_constraint-predicate-hardening",
+  "date_start": "2026-08-13",
+  "date_end": "2026-08-13",
+  "epic": "CONSTRAINT-SEMANTICS",
+  "item_number": "Item 4",
+  "title": "Cure two reproduced defects at the unit-annotation boundary of asserted physics-gate predicates",
+  "subject": "constraint predicate unit annotations",
+  "summary": "Two defects sat exactly where a modeler crosses into writing an asserted physics gate: a unit-annotated literal such as 8.55 [m] in an asserted predicate wrongly raised SI_OCCURRENCE_MISSING because the reference walk recursed into the unit annotation's second operand, and the blocked-feature-chain diagnostic gave only a tautological message with no reference or location. Both were cured under the product's existing rule that a unit annotation contributes its value and never a reference: one unwrap at the head of the reference-walk function, one at the binding read for a fourth affected lane found during spec, and a companion message= at both chain-block sites with de-duplication and stable ordering. The admitted set grew only by the two named annotation shapes; chains stay blocked and equalities stay untoleranced. The orchestrated run audited to Certify-with-residuals and all findings were cured the same day, with one item (F5, the coverage ledger's durable home) resolved by owner ruling at close.",
+  "key_decisions": [
+    "A unit annotation contributes its value and never a reference; applied as one unwrap at the head of _expression_references and at the binding read for the fourth (in tol = 0.05 [m]) lane.",
+    "Chain-block diagnostics get a message= at both block sites, de-duplicated and ordered on one normalized key, so the error names the exact construct to fix.",
+    "The coverage ledger's durable home moved to tests/unit/data/ (owner ruling, F5).",
+    "Two newly surfaced limits (a unit on a constraint binding being dimensionally inert to the profile; a blocked chain's diagnostic location being the usage's line rather than the term's) were parked for epic Item 5 rather than fixed in-scope."
+  ],
+  "supersedes": [],
+  "status": "shipped",
+  "id": "H-118"
+}

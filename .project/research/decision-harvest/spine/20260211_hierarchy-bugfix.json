@@ -1,0 +1,20 @@
+{
+  "dir": "20260211_hierarchy-bugfix",
+  "date_start": "2026-02-11",
+  "date_end": "2026-02-11",
+  "epic": "COST-PATTERN",
+  "item_number": "Item 5",
+  "title": "Eight production bug fixes at hierarchy-aware aggregation pipeline subsystem boundaries, found during E2E validation",
+  "subject": "hierarchy aggregation pipeline",
+  "summary": "Running the COST-PATTERN pipeline on the real solar_battery model (Item 5 E2E work) surfaced broken aggregation output: garbage expression text, zero aggregation auto-implementations, mismatched module wrapper paths, a missing assembly (Site Infrastructure), and total_capex falling through to an ENTRY_POINT instead of the aggregation output chain. Two independent root-cause analyses converged on 8 unique bugs, each an integration gap between subsystems that worked correctly in isolation. This item fixed all 8: unwrapping SysIDE's InvocationExpression wrapper around sum() operands, adding a missing expression-compilation step, fixing a case-mismatch dict lookup, switching module/stencil paths from PartDef-scoped to instance-scoped EQNs, replacing exact-name-match scoping with a structural child-walk to find Site Infrastructure, registering `:>>` EXPOSE_PURE aliases in the aggregation output index, and surfacing orphan multiplicity entry points into a synthetic parameter group. All fixes were scoped to the aggregation pipeline with no public API changes and no effect on the existing CalcDef pipeline.",
+  "key_decisions": [
+    "Unwrap logic handles any InvocationExpression wrapper (not just Evaluation), since SysIDE may use collect/select/other wrapper functions",
+    "Expression compilation (symbolic ref to inputs.X form) is built inline during ModuleInput construction rather than as a separate post-pass, to avoid duplicated/divergent param_name derivation",
+    "Site Infrastructure scoping fix uses a structural parent-child walk over MultiplicityData rather than a name-similarity heuristic, since PartDef name and PartUsage QN segment can differ",
+    "EXPOSE_PURE aliases for aggregation outputs are resolved at extraction time and stored on AggregationExpressionData, rather than threading redefinition data into the backtracker",
+    "Orphan entry points (not covered by any derived parameter group) are collected generically into a synthetic 'system_design' group, catching any future entry-point type the deriver doesn't know about, not just multiplicity"
+  ],
+  "supersedes": [],
+  "status": "unknown",
+  "id": "H-019"
+}

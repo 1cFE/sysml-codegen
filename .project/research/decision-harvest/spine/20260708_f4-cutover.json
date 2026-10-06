@@ -1,0 +1,24 @@
+{
+  "dir": "20260708_f4-cutover",
+  "date_start": "2026-07-06",
+  "date_end": "2026-07-08",
+  "epic": "TRUTH-DEBT",
+  "item_number": "Item 1",
+  "title": "Wire the consolidated resolve_input aggregation resolver into the live pipeline path, deleting the old channel-only function and its inline entry-point fallbacks",
+  "subject": "aggregation input resolution",
+  "summary": "resolve_input(AGG_STRATEGIES) had been built and parity-validated during PIPELINE-TRUTH but never wired into the live aggregation path, leaving the old _resolve_aggregation_input_channel function and three inline entry-point fallbacks as the authoritative code. This item reconciled resolve_input's fallback to reproduce the live path's richer entry-point construction (part-usage-prefixed keys, literal-default backfill, param-group classification, and the MANUAL_REQUIRED compilability signal), added a parity gate over the full InputSource before cutover, then deleted the old function, its three inline fallbacks, and the dead Strategy D stub. It also untangled a double-bound param_groups variable in graph_builder.py, clearing two mypy type-ignore comments. The aggregation baseline stayed byte-identical across the entire change (zero fixture churn), and the audit verdict was upgraded from PASS-WITH-NOTES to full PASS after the orchestrator reran the gate counts and mutation spot-check live.",
+  "key_decisions": [
+    "Fallback ownership moved into resolve_input rather than keeping inline else-blocks at the three call sites, because resolve_input's fallback had to reproduce the live EP key format, literal-default backfill, and MANUAL_REQUIRED signal to avoid colliding an input entry point with an output channel",
+    "The parity gate compares the full InputSource the call-site block produces (channel plus entry-point fallback), not just the channel, because a channel-only gate is structurally blind to the entry-point-key divergence",
+    "Strategy D (DesignAttributeLookup) was deleted rather than implemented, since probing found zero live surface and it was a return-None stub",
+    "The aggregation baseline bar for this item is strict byte-identity, not byte-identical-or-reviewed-diff, since the reconciliation was designed to reproduce the live EP construction exactly",
+    "LocalTerm-EXPOSE was excluded from the fallback reconciliation because its undotted-ref key already matches resolve_input's leaf-only key"
+  ],
+  "supersedes": [
+    "_resolve_aggregation_input_channel (graph_builder.py) and its three inline entry-point fallback blocks (SumTerm, SingletonTerm, LocalTerm)",
+    "Strategy D (DesignAttributeLookup) stub in input_resolver.py",
+    "The double-bound param_groups variable and its two mypy type: ignore comments in graph_builder.py"
+  ],
+  "status": "shipped",
+  "id": "H-073"
+}

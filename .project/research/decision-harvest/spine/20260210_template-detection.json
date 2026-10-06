@@ -1,0 +1,19 @@
+{
+  "dir": "20260210_template-detection",
+  "date_start": "2026-02-10",
+  "date_end": "2026-02-10",
+  "epic": "COST-PATTERN",
+  "item_number": "Item 2",
+  "title": "Detect template CalcUsages owned by PartDefinitions and expand them into per-instance virtual CalcUsages",
+  "subject": "calc usage template expansion",
+  "summary": "Codegen was extracting a CalcUsage owned by a PartDefinition (a template, e.g. a cost calc inside a reusable 'PV Module' part def) only once, instead of once per PartUsage that instantiates that part def. This under-produced pipeline modules for the solar_battery model's LCOE pipeline. The spec added is_template/owning_part_def_qn/raw_element fields to CalcUsageData, a template-detection check on owning_type, a PartUsage index and recursive instantiation-path resolver to compute design-relative qualified names, and a virtual CalcUsage generator that replaces each template with one concrete CalcUsageData per instantiation, with bindings copied as-is for later backtracker resolution. extract_calculation_usages() gained an expand_templates flag defaulting to True so the pipeline picks this up transparently.",
+  "key_decisions": [
+    "Use owning_type / SysideAdapter.is_instance() for template detection rather than type().__name__, matching the codebase's existing adapter-abstraction convention",
+    "Virtual CalcUsage instance_name is set to the full qualified_name (not a short name) because the backtracker indexes CalcUsages by instance_name and needs uniqueness across virtual instances",
+    "Specialization-chain matching for the PartUsage finder (FR-10) is deferred to Item 3; the index matches by direct type only",
+    "Deduplication by qualified_name handles the case where both a library PartUsage and a design 'part redefines' resolve to the same instantiation path"
+  ],
+  "supersedes": [],
+  "status": "unknown",
+  "id": "H-017"
+}

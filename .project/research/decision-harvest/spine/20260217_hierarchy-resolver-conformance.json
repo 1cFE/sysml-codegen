@@ -1,0 +1,18 @@
+{
+  "dir": "20260217_hierarchy-resolver-conformance",
+  "date_start": "2026-02-17",
+  "date_end": "2026-02-17",
+  "epic": "unknown",
+  "item_number": null,
+  "title": "Conformance tests for the Hierarchy Resolver (C06), which extracts SysML redefinition, multiplicity, and aggregation-expression structure",
+  "subject": "hierarchy resolver extraction",
+  "summary": "C06 added real-data conformance tests for extraction/hierarchy_resolver.py against REQ-HR-01 through REQ-HR-07, covering redefinition classification (LITERAL/CHAIN/EXPRESSION), deep-path design overrides, multiplicity extraction, FCE-before-OE dispatch ordering, and sum-term/alias detection. Conformance-only: no production code changed. Since AST fields are nulled out in extraction snapshots, tests verified output properties of already-extracted data plus static AST analysis of the source, rather than re-running extraction. Ended DONE with 36 passing tests and the full suite green; also flagged stale COMPONENT_CHECKLIST doc references for correction.",
+  "key_decisions": [
+    "Use design doc 25-hierarchy-resolver.md (not the checklist's 01-extraction.md) as the authoritative REQ-HR source, and flag the checklist reference as wrong",
+    "Interpret the checklist's ambiguous 'template detection (is_template)' AC as verifying part_usage_names mapping instead, since is_template doesn't exist in this module",
+    "Document REQ-HR-07 alias detection as an untestable positive case (zero fixture coverage) rather than block on it, since all fixture aggregation expressions have empty aliases"
+  ],
+  "supersedes": [],
+  "status": "shipped",
+  "id": "H-048"
+}

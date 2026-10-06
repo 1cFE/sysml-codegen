@@ -1,0 +1,21 @@
+{
+  "dir": "20260222_docs-consolidation",
+  "date_start": "2026-02-20",
+  "date_end": "2026-02-22",
+  "epic": "unknown",
+  "item_number": null,
+  "title": "Consolidate scattered post-refactor design notes and stale ADRs into a single docs/architecture/ authority",
+  "subject": "architecture documentation",
+  "summary": "After the February 2026 refactor, the implemented design lived across 40+ files in .project/concepts/refactor-design-intent/ (session logs, spike notes, validation matrices) while docs/architecture/ held only 8 ADR files, 3 with stale paths, and no consolidated overview. This item migrated all 27 design docs to docs/architecture/reference/ with session noise stripped, wrote a new architecture overview with a reading guide and data-flow diagram, extracted a modeling-assumptions document from ADR-001/002/006/007, built a verification-matrix.md mapping all 204 REQ-* tags to test files (192 PASS, 12 UNTESTED), removed all 8 ADR files (their unique content subsumed into modeling-assumptions.md), and archived the old concept folder with an ARCHIVED.md pointer. No code changed; 1812 tests passed with no regressions at close.",
+  "key_decisions": [
+    "ADR-003/004/005/008 content was implementation-decision detail already covered by the reference docs, not SysML modeling prerequisites, so no unique content needed extraction into modeling-assumptions.md",
+    "All 8 ADR files were deleted from docs/architecture/ once their content was subsumed elsewhere",
+    "The old concept folder is preserved but marked ARCHIVED with a pointer to the new canonical docs/architecture/ location, not deleted"
+  ],
+  "supersedes": [
+    "The 8 ADR-001 through ADR-008 files previously in docs/architecture/, replaced by docs/architecture/modeling-assumptions.md and the reference/ doc set",
+    ".project/concepts/refactor-design-intent/ as the working documentation source, now archived and historical-only"
+  ],
+  "status": "shipped",
+  "id": "H-071"
+}

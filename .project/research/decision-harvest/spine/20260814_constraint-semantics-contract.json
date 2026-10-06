@@ -1,0 +1,27 @@
+{
+  "dir": "20260814_constraint-semantics-contract",
+  "date_start": "2026-08-12",
+  "date_end": "2026-08-14",
+  "epic": "CONSTRAINT-SEMANTICS",
+  "item_number": null,
+  "title": "Umbrella spec settling constraint semantics and design-search feasibility across sysml-codegen, agentic-mbse, and teax",
+  "subject": "constraint semantics contract",
+  "summary": "Against the richest model (catf_mfe_d5, 65 authored constraint usages), the product executed zero of them: 51 calc-def-owned constraints were structurally unreachable, 56 of 65 had no catalog record at all, docs contradicted both code and the SysML standard, and the report could claim full coverage while most gates went unassessed. This umbrella spec captures eight owner-ratified rulings from a 2026-08-12 Q&A session (assert-only gating, staged calc-def-owned execution, severity-by-cause errors, bindings-only predicates for now, two-tier coverage accounting, boundary-plus-opt-in study policy, non-executable requirement forms, and a new CATF derivative fixture for migration) as the behavioral authority for a 9-item epic. Spec review found the review-critical L1-L3 issues (vocabulary mismatch between generated tokens and TEAx runtime tokens, unresolved coverage-population ambiguity, oversized single-item scope) and the product-lens pass raised 8 findings (F1-F8), all disposed without contradicting any owner/HARD statement. The epic that grew from this spec closed 2026-08-14 with all 9 items shipped, but pre_pr was deliberately not run and nothing was pushed to main in any of the three repos.",
+  "key_decisions": [
+    "Only assert constraints (not plain constraints) are enforced gates (Q1)",
+    "Calc-def-owned constraints get ruled semantics now but staged delivery as their own item; interim state treats asserted-unattachable as a loud error (Q2)",
+    "Error severity is graded by cause: asserted+structurally-unattachable errors, asserted+vacuous warns, plain/out-of-scope forms never error (Q3)",
+    "Gate predicates stay bindings-only for now; in-predicate feature chains are filed as a future capability; equalities become two-inequality tolerance bands (Q4)",
+    "Coverage headline uses two-tier accounting: usages for coverage, occurrences for results, with vacuous kept as a separate bucket (Q5)",
+    "Study-policy default keeps partial coverage at the boundary with explicit auditable per-study opt-in to feed-strategy (Q6)",
+    "Requirements-side forms (require/assume/satisfy) stay non-executable and visible; requirement evaluation is a declared out-of-scope capability (Q7)",
+    "CATF constraint migration happens via a new derivative fixture forked from catf_mfe_d5, with twins frozen and a per-constraint disposition table (Q8)",
+    "ADR-009 filed to record the all_satisfied headline vocabulary change as an intentional product-contract change"
+  ],
+  "supersedes": [
+    "The prior modeling-assumptions.md claim that a bare constraint gives an enforced gate",
+    "The prior ConstraintReport aggregator behavior where partial assessment could read as all_satisfied"
+  ],
+  "status": "shipped",
+  "id": "H-115"
+}

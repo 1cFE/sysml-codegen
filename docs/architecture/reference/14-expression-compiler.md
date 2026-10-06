@@ -216,7 +216,7 @@ output.
 
 This system has TWO separate expression-to-Python paths:
 
-| Aspect | Expression Compiler (this doc) | Aggregation Walker ([13](13-aggregation-scoping.md), [25](25-hierarchy-resolver.md)) |
+| Aspect | Expression Compiler (this doc) | Aggregation Walker (13 (retired doc; git history), 25 (retired doc; git history)) |
 |--------|------|------|
 | **Scope** | CalcDef outputs, FORMULA attributes | Aggregation expressions (sum/count) |
 | **Input** | SysIDE AST nodes | SysIDE AST nodes |
@@ -235,5 +235,5 @@ typed terms (SumTerm, SingletonTerm, LocalTerm) for module wiring.
 - **Upstream**: [01-extraction](01-extraction.md) — provides `CalculationDefinitionData` with AST nodes and member expressions
 - **Invariant**: [19-ast-dispatch-invariant](19-ast-dispatch-invariant.md) — FCE-before-OE subtype ordering rule (REQ-EC-01)
 - **Downstream**: [08-generation](08-generation.md) — uses `CalcDefCompilationResult` to decide auto-fill vs TODO stubs, [23-smart-regen-preservation](23-smart-regen-preservation.md) — preserves handwritten code when compilability is MANUAL_REQUIRED
-- **Cross-cutting**: [16-computed-attributes](16-computed-attributes.md) — FORMULA modules also use compilability verdicts, [05-module-factory](05-module-factory.md) — reads `compilability` from `AggregationExpressionData`
+- **Cross-cutting**: [16-computed-attributes](16-computed-attributes.md) — FORMULA modules also use compilability verdicts, 05-module-factory (retired doc; git history) — reads `compilability` from `AggregationExpressionData`
 - **Data models**: [09-data-models](09-data-models.md) — `CalcDefCompilationResult`, `Compilability`; `ExpressionIR` is agentic-mbse-owned (`agentic_mbse.sysml.expression_ir`)

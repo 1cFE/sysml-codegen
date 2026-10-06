@@ -1,0 +1,21 @@
+{
+  "dir": "20260219_type-mapping-consolidation",
+  "date_start": "2026-02-18",
+  "date_end": "2026-02-19",
+  "epic": "unknown",
+  "item_number": null,
+  "title": "Consolidate SysML-to-Python type mapping (X01), which had 6 independently drifted copies, into one shared module",
+  "subject": "SysML-to-Python type mapping",
+  "summary": "The Real/Integer/Boolean/String to float/int/bool/str mapping existed as 6 separate copies across the generators (modules.py, entry_point.py, schemas.py x2, stencils.py, registry.py), each with subtly different signatures, ScalarValues:: prefix handling, and unknown-type fallback behavior. Created a single generation/type_mapping.py with map_sysml_type_to_python() and a derived map_sysml_type_to_rootmodel_wrapper() (registry.py needed wrapper type names like Float/Int, not primitives), then deleted all 6 duplicate definitions and repointed call sites. Chose pass-through for unknown types (not silent default-to-float) so mismatches stay visible; confirmed via existing fixture data that no real model exercises the unknown-type path, so the behavior change is inert in practice. Left extraction/extractor.py's separate type mapping untouched since it's a different layer. Shipped with 20 new conformance tests and full-suite green (1753 passed), no baseline changes.",
+  "key_decisions": [
+    "Two public functions: map_sysml_type_to_python (canonical primitive mapping) and map_sysml_type_to_rootmodel_wrapper (derives from the primitive mapping) \u2014 registry.py's wrapper-type mapping is a distinct semantic function, not folded into the primitive one",
+    "Canonical unknown-type behavior is pass-through with a warning log, not silent default-to-float, even though this changes entry_point.py and schemas.py behavior \u2014 justified because no real fixture data hits that path",
+    "extraction/extractor.py's type mapping is left separate \u2014 it's a different layer (produces sysml_type values) from the generation-layer mapping (consumes them)",
+    "modules.py's call site changes from passing an AttributeInfo object to passing attr.sysml_type string, matching the other 5 copies' signature"
+  ],
+  "supersedes": [
+    "6 independently-defined _map_input_type/_map_output_type/_map_sysml_to_python_type copies across modules.py, entry_point.py, schemas.py (x2), stencils.py, registry.py"
+  ],
+  "status": "shipped",
+  "id": "H-064"
+}

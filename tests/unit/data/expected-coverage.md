@@ -123,7 +123,7 @@ emits no report at all.
 ### `catf_mfe_gated` — the CATF derivative, three executing gates
 
 **Derived from the ruled disposition table, not from a run** (CONSTRAINT-SEMANTICS Item 5;
-`.project/completed/20260813_catf-constraint-policy-acceptance/owner-disposition.md`, RULED 2026-08-13).
+`20260813_catf-constraint-policy-acceptance/owner-disposition.md` (git history), RULED 2026-08-13).
 Committed before the fixture that produces it existed — that commit order is SC-6's evidence.
 Restated by Item 9, which executed the held intent for A5, A6 and A9 once Item 8 (`62a07e5`)
 cured the unit-lane defect that had parked them. Every number below is re-derived from the same
@@ -184,7 +184,7 @@ by the correction — only the headline moves, because coverage is about the den
 headline is about the outcome.
 
 **The basis is a source-derived computation, not an observed run.**
-`.project/completed/20260813_catf-constraint-policy-acceptance/cryo_derivation.py` re-derives
+`20260813_catf-constraint-policy-acceptance/cryo_derivation.py` (git history) re-derives
 `MagnetCryogenicLoad.cooling_power` from the model's own constants and formulas
 (`library/analyses/thermal_loads.sysml:55-66`, `designs/catf_mfe/magnets.sysml:86-94`):
 

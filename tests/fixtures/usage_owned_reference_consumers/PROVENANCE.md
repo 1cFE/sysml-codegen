@@ -1,7 +1,7 @@
 # Provenance: the usage-owned reference anchoring fixture family
 
 These thirteen fixture roots are the durable conformance authority for exact owner anchoring
-of one-segment references (`.project/completed/20260816_qualified-reference-occurrence-anchoring/`). They
+of one-segment references (`20260816_qualified-reference-occurrence-anchoring/` (git history)). They
 are read by `tests/conformance/test_usage_owned_reference_anchoring.py`.
 
 The research paths they came from are archived once that item closes (design decision D6), so
@@ -21,7 +21,7 @@ Every lane names `comp_a::length`, so every lane must reach `comp_a`'s node. Bef
 resolver repair all seven edges reach `comp_b.length` instead — one fixture, seven wrong edges,
 no diagnostic.
 
-## Promoted from `.project/active/self-binding-replacement/spike/fixtures/`
+## Promoted from `self-binding-replacement/spike/fixtures/` (git history)
 
 Qualified (`::`) one-segment references. Their authored model shapes are retained; the u2, u3,
 and u3b teaching comments were updated after the F-4 owner ruling changed their expected outcome.
@@ -39,7 +39,7 @@ and u3b teaching comments were updated after the F-4 owner ruling changed their 
 
 ## Copied from the Phase-1 bare-discriminator learning test (bytes preserved)
 
-Source: `.project/completed/20260816_qualified-reference-occurrence-anchoring/spike/bare-discriminator-authorability/`,
+Source: `20260816_qualified-reference-occurrence-anchoring/spike/bare-discriminator-authorability/` (git history),
 2026-08-15. The written reference in each is one bare segment; an `alias` or a subsetting
 declaration is what makes SysIDE resolve it to the sibling's leaf.
 

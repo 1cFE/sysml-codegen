@@ -24,7 +24,7 @@ Traceability matrix mapping every REQ-\* tag to its conformance test file and st
 > missing failing arms, and filed the 8-row REQ-CS family under the owner-authorized
 > `[CONSTRAINT-GATES-UNTAGGED]` minting. The one remaining PARTIAL is REQ-DIAG-01, a recorded
 > deliberate grade (its gap is upstream-shaped). Item 7's recount record:
-> `.project/completed/20260814_constraint-docs-agent-sync/verification.md`.
+> the constraint-docs-agent-sync verification record (2026-08-14; git history).
 
 **Status definitions:**
 - **PASS**: At least one test **that exists in the tree** proves this requirement and passes
@@ -41,7 +41,7 @@ Traceability matrix mapping every REQ-\* tag to its conformance test file and st
 >
 > - **The subject is live and the proof moved.** The row now cites the kept node(s) that prove
 >   it. Where the recovery's deletion ledger recorded where a deleted module's responsibility
->   went (`.project/active/cutover-recovery/ledger-4a.json`, `replacement_proof_node`), that
+>   went (`.project/ledger/ledger-4a.json`, `replacement_proof_node`), that
 >   recorded heir is what the row cites — the mapping carries the ledger's authority, not this
 >   pass's guess. Nine rows found no heir: their subject is live, nothing proves it, and they
 >   read UNTESTED with the gap named.
@@ -114,7 +114,7 @@ Traceability matrix mapping every REQ-\* tag to its conformance test file and st
 
 ### AS
 
-**Aggregation Scoping** — Component C10 — [reference/13-aggregation-scoping.md](reference/13-aggregation-scoping.md)
+**Aggregation Scoping** — Component C10 — reference/13-aggregation-scoping.md (retired doc; git history)
 
 > **Retired family — every row below is the record of deleted code.** The Item 7 retirement removed this component; the per-row cells name the deletion-ledger rows. Nothing here describes what the product does. The behaviour that survived is proved by `test_elaboration_aggregations.py`.
 
@@ -161,7 +161,7 @@ Traceability matrix mapping every REQ-\* tag to its conformance test file and st
 
 ### BT
 
-**Backtracker** — Component C11 — [reference/11-analysis-backtracker.md](reference/11-analysis-backtracker.md)
+**Backtracker** — Component C11 — reference/11-analysis-backtracker.md (retired doc; git history)
 
 > **Retired family — every row below is the record of deleted code.** The Item 7 retirement removed this component; the per-row cells name the deletion-ledger rows. Nothing here describes what the product does. The behaviour that survived is proved by `test_elaboration_expose_shapes.py`, `test_elaboration_aggregations.py`, `test_elaboration_projection.py`.
 
@@ -213,7 +213,7 @@ classification pipeline are historical and retired.
 
 ### CL
 
-**Constraint Lowering & Catalog** — Items 5-9, Item 14 — [reference/28-constraint-lowering-and-catalog.md](reference/28-constraint-lowering-and-catalog.md)
+**Constraint Lowering & Catalog** — Items 5-9, Item 14 — reference/28-constraint-lowering-and-catalog.md (retired doc; git history)
 
 Partial register (Item 14 docs pass): these five rows cover the mechanisms Item 14
 directly touched or verified test-first; the full Items 5-9 surface (module wiring
@@ -275,9 +275,8 @@ indirectly via the emitted verifier.
 Filed 2026-08-14 at ELABORATE-FIRST cutover step 4, under the owner-authorized
 `[CONSTRAINT-GATES-UNTAGGED]` ruling (BACKLOG; minting assigned to this step so the matrix is
 touched once). Requirement texts are `[INHERITED]` distillations of the items' archived Success
-Criteria — `.project/completed/20260813_constraint-coverage-policy/` (Item 3),
-`.project/completed/20260813_unit-lane-port-metadata/` (Item 8),
-`.project/completed/20260813_derivative-upgrade-held-intent/` (Item 9). Every cited test was run
+Criteria — the constraint-coverage-policy (Item 3), unit-lane-port-metadata (Item 8), and
+derivative-upgrade-held-intent (Item 9) close records of 2026-08-13 (git history). Every cited test was run
 before its row was filed (44 conformance/unit licensed with zero license-skip lines, 14 under the
 `execution` marker; the run is recorded in the recovery plan's step-4 completion record).
 
@@ -328,7 +327,7 @@ Two deliberate scope notes, so absence reads as decision rather than drift:
 Filed 2026-08-14 by CONSTRAINT-SEMANTICS Item 7 (`[MATRIX-EPIC-SURFACE-ROWS]`, BACKLOG:447). These
 four requirements were traced in doc 30 and had **no rows here** — the family existed in prose and
 not in the matrix. Every cited test was run before its row was written; the run is recorded in
-`.project/completed/20260814_constraint-docs-agent-sync/verification.md`.
+the constraint-docs-agent-sync verification record (2026-08-14; git history).
 
 | REQ ID | Requirement | Test File | Status |
 |--------|-------------|-----------|--------|
@@ -339,7 +338,7 @@ not in the matrix. Every cited test was run before its row was written; the run 
 
 ### DRA
 
-**Dual Resolution Architecture** — Component X02 — [reference/24-dual-resolution-architecture.md](reference/24-dual-resolution-architecture.md)
+**Dual Resolution Architecture** — Component X02 — reference/24-dual-resolution-architecture.md (retired doc; git history)
 
 **Status (historical).** This family described the two-path resolution architecture and the shared `resolve_producer()` table both paths called. `resolution/producer_resolution.py`, the backtracker, and the aggregation factory are all deleted, so the architecture the rows contrast no longer has two sides. On the shipped route references resolve once, against occurrence identity, in the elaborator. The `REQ-PR-*` family the lifecycle item filed for the shared table was never written and now has no subject.
 
@@ -405,7 +404,7 @@ not in the matrix. Every cited test was run before its row was written; the run 
 
 ### GA
 
-**Graph Assembly** — Component C18 — [reference/07-graph-assembly.md](reference/07-graph-assembly.md)
+**Graph Assembly** — Component C18 — reference/07-graph-assembly.md (retired doc; git history)
 
 | REQ ID | Requirement | Test File | Status |
 |--------|-------------|-----------|--------|
@@ -416,7 +415,7 @@ not in the matrix. Every cited test was run before its row was written; the run 
 | REQ-GA-05 | The returned `ComputationGraph` SHALL contain exactly the reviewed field set: `modules`, `entry_point_groups`, `execution_order`, serialized `output_aliases` (REQ-DM-09), and the two `exclude=True` in-memory artifacts `fallback_entry_points` (REQ-GA-08) and `constraint_catalog`; any field-set change is a deliberate reviewed rev (the exact-set test flips red). *Field list refreshed at step 4 — the old row predated `constraint_catalog`; the serialized/in-memory split is now pinned explicitly because committed baselines depend on it.* | `test_data_models.py::test_computation_graph_field_set_is_the_reviewed_boundary` | PASS |
 | REQ-GA-06 | `execution_order` list SHALL equal `[m.name for m in modules]` (names match module orderi... | `test_exact_target_selection.py::test_selection_renumbers_execution_order_without_gaps` | PASS |
 | REQ-GA-07 | Static: `_unified_topological_sort` source uses `deque`, `popleft()`, and Kahn-pattern identifiers (`in_degree`, `successors`); O(V + E) complexity is asserted structurally, not measured | — *(subject deleted — ledger L-152)* | RETIRED |
-| REQ-GA-08 | A two-layer params-coverage check SHALL exist: a pure collector `collect_uncovered_params(graph)` returning the wired fell-through-valueless violations (sibling to REQ-GA-03), and an always-strict generation boundary raising V11 on any violation. `ComputationGraph.fallback_entry_points` (in-memory, `exclude=True`) feeds it | `test_uncovered_params.py`, `test_data_models.py` | PASS |
+| REQ-GA-08 | RETIRED (REPO-CLEANUP Move C, 2026-08-25): the V11 params-coverage collector was dead by construction — projection builds `fallback_entry_points` empty at both sites — and was deleted. The empty-set premise stays pinned by `test_warning_reconciliation_exact_route.py` | `test_warning_reconciliation_exact_route.py` | RETIRED |
 
 ### GEN
 
@@ -434,7 +433,7 @@ not in the matrix. Every cited test was run before its row was written; the run 
 
 ### HR
 
-**Hierarchy Resolver** — Component C06 — [reference/25-hierarchy-resolver.md](reference/25-hierarchy-resolver.md)
+**Hierarchy Resolver** — Component C06 — reference/25-hierarchy-resolver.md (retired doc; git history)
 
 **Where this family stands after the retirement.** The component these rows describe,
 `extraction/hierarchy_resolver.py`, is in the tree but **off the shipped route** — nothing in
@@ -458,7 +457,7 @@ read as shipped coverage with no disclosure, unlike its CA sibling.)
 
 ### IR
 
-**Input Resolver** — Component C12 — [reference/04-producer-resolution.md](reference/04-producer-resolution.md)
+**Input Resolver** — Component C12 — reference/04-producer-resolution.md (retired doc; git history)
 
 **Status (historical).** The lifecycle item re-projected this family onto the shared `resolve_producer()` table the standalone input resolver had become. That table is now deleted too (`resolution/producer_resolution.py`), so the rows below describe a resolution mechanism the product no longer has. The shipped route resolves a reference once, at elaboration, against occurrence identity — there is no key-form table, no tier order, and no lenient mint. The `REQ-PR-*` family filed for the shared table was never written and has no subject.
 
@@ -508,7 +507,7 @@ read as shipped coverage with no disclosure, unlike its CA sibling.)
 
 ### MF
 
-**Module Factory** — Component C14 — [reference/05-module-factory.md](reference/05-module-factory.md)
+**Module Factory** — Component C14 — reference/05-module-factory.md (retired doc; git history)
 
 > **Retired family — every row below is the record of deleted code.** The Item 7 retirement removed this component; the per-row cells name the deletion-ledger rows. Nothing here describes what the product does. The behaviour that survived is proved by `test_elaboration_projection.py`, `test_exact_route_generated_package.py`.
 
@@ -542,7 +541,7 @@ read as shipped coverage with no disclosure, unlike its CA sibling.)
 
 ### OR
 
-**Output Registry** — Component C08 — [reference/10-output-registry.md](reference/10-output-registry.md)
+**Output Registry** — Component C08 — reference/10-output-registry.md (retired doc; git history)
 
 > **Retired family — every row below is the record of deleted code.** The Item 7 retirement removed this component; the per-row cells name the deletion-ledger rows. Nothing here describes what the product does. The behaviour that survived is proved by `test_elaboration_identity_collisions.py`, `test_exact_route_registry.py`.
 
@@ -590,7 +589,7 @@ read as shipped coverage with no disclosure, unlike its CA sibling.)
 
 ### PGD
 
-**Parameter Group Deriver** — Component C13 — [reference/17-parameter-group-deriver.md](reference/17-parameter-group-deriver.md)
+**Parameter Group Deriver** — Component C13 — reference/17-parameter-group-deriver.md (retired doc; git history)
 
 > **Retired family — every row below is the record of deleted code.** The Item 7 retirement removed this component; the per-row cells name the deletion-ledger rows. Nothing here describes what the product does. The behaviour that survived is proved by `test_exact_group_identity.py`.
 
@@ -670,7 +669,7 @@ read as shipped coverage with no disclosure, unlike its CA sibling.)
 
 ### RES
 
-**Resolution Overview** — Component — — [reference/03-resolution-overview.md](reference/03-resolution-overview.md)
+**Resolution Overview** — Component — — reference/03-resolution-overview.md (retired doc; git history)
 
 | REQ ID | Requirement | Test File | Status |
 |--------|-------------|-----------|--------|
@@ -739,7 +738,7 @@ read as shipped coverage with no disclosure, unlike its CA sibling.)
 
 ### SVM
 
-**Supplied-Value Materializer** (PIPELINE-TRUTH Item 2) — `resolution/supplied_values.py` — [reference/25-hierarchy-resolver.md](reference/25-hierarchy-resolver.md#supplied-value-materializer-req-svm-0104). Reuses doc 18's shared `_find_literal_redefinition` helper (Strategy 1); sibling of doc 12's per-consumer VBR-03 (this mechanism keys by source QN and collapses across consumers).
+**Supplied-Value Materializer** (PIPELINE-TRUTH Item 2) — `resolution/supplied_values.py` — reference/25-hierarchy-resolver.md (retired doc; git history). Reuses doc 18's shared `_find_literal_redefinition` helper (Strategy 1); sibling of doc 12's per-consumer VBR-03 (this mechanism keys by source QN and collapses across consumers).
 
 > **Retired family — every row below is the record of deleted code.** The Item 7 retirement removed this component; the per-row cells name the deletion-ledger rows. Nothing here describes what the product does. The behaviour that survived is proved by `test_zero_default_exact_route.py`, `test_elaboration_identity_collisions.py`.
 
@@ -769,7 +768,7 @@ read as shipped coverage with no disclosure, unlike its CA sibling.)
 
 ### VBR
 
-**Virtual Binding Rewrite** — Component C09 — [reference/12-virtual-binding-rewrite.md](reference/12-virtual-binding-rewrite.md)
+**Virtual Binding Rewrite** — Component C09 — reference/12-virtual-binding-rewrite.md (retired doc; git history)
 
 > **Retired family — every row below is the record of deleted code.** The Item 7 retirement removed this component; the per-row cells name the deletion-ledger rows. Nothing here describes what the product does. The behaviour that survived is proved by `test_elaboration_shadowing.py`, `test_elaboration_specialization_retypes.py`.
 

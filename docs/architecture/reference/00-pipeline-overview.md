@@ -19,7 +19,7 @@ These requirements span the entire pipeline. Each is verifiable.
 | REQ-PIPE-03 | Every `module_output` reference SHALL resolve to a declared output channel. | Projection claims each channel name exactly once (`_claim_channel`) and refuses a producer reference with no output (`SI_EDGE_DANGLING`, `elaboration/project.py:418-427`) |
 | REQ-PIPE-04 | `execution_order` SHALL be a valid topological sort -- no module reads from a module that executes later. | `for m in modules: for i in m.inputs: if i.source.source_type == "module_output": assert producer.execution_order < m.execution_order` |
 | REQ-PIPE-05 | Every [EntryPoint](06-entry-point-classifier.md) SHALL be classified as exactly one of {`LIBRARY_DEFAULT`, `DESIGN_ATTRIBUTE`, `USAGE_LITERAL`}. | `all(ep.entry_type in EntryPointType for g in graph.entry_point_groups for ep in g.parameters)`. The type is decided where the entry point is minted (`elaboration/project.py`, `_source_for_edge` / `_unbound_source`), not by a later classification pass |
-| REQ-PIPE-06 | The graph SHALL tag each module with its `module_kind`; a calc-bearing model includes `CALCULATION`, `FORMULA`, and `AGGREGATION` modules. | `PipelineModule.module_kind` (`resolution/models.py`), checked per family. The two constraint-execution families `CONSTRAINT` / `REPORT_AGGREGATOR` appear when constraints are lowered (see [28](28-constraint-lowering-and-catalog.md)) |
+| REQ-PIPE-06 | The graph SHALL tag each module with its `module_kind`; a calc-bearing model includes `CALCULATION`, `FORMULA`, and `AGGREGATION` modules. | `PipelineModule.module_kind` (`resolution/models.py`), checked per family. The two constraint-execution families `CONSTRAINT` / `REPORT_AGGREGATOR` appear when constraints are lowered (see 28 (retired doc; git history)) |
 | REQ-PIPE-07 | Generation SHALL produce output exclusively from `ComputationGraph` -- no back-references to extraction models. Requires PipelineModule expansion (see [26](26-pipeline-module-migration.md)). | All templates receive only `ComputationGraph` fields |
 
 ## The route
@@ -105,9 +105,9 @@ and the v5 snapshot loader/serializer/rebuild — was deleted by the Item 7 reti
 **absence**: `test_public_authority_switch.py` checks that the construction closure reaches no
 legacy authority and that the modules do not exist, and
 `tests/unit/test_elaboration_import_boundaries.py` checks that the CLI names none of them.
-Documents 03, 04, 05, 07, 10, 11, 12, 13, 17, and 24 describe that deleted stack and open with
-a historical banner; 25 describes `extraction/hierarchy_resolver.py`, which survived the
-retirement but is off the shipped route.
+The documents that described that deleted stack (03, 04, 05, 07, 10, 11, 12, 13, 17, 24, 25)
+retired with it (git history); the legacy extraction lane document 25 covered was deleted by
+REPO-CLEANUP Move C.
 
 ## Running example: battery_pack cost_model
 
@@ -143,7 +143,7 @@ reader coming from the legacy description:
   classes stay distinct all the way to the CLI log — collapsing them would lose which gate
   refused.
 
-### [3] Project ([entry points](06-entry-point-classifier.md) | [assembly order](07-graph-assembly.md))
+### [3] Project ([entry points](06-entry-point-classifier.md) | assembly order (retired doc; git history))
 
 `project()` (`elaboration/project.py`) renders the resolved graph onto the
 [ComputationGraph](09-data-models.md#resolution-models) seam. For `cost_model`:
@@ -170,7 +170,7 @@ refuses on a rendering collision rather than letting two distinct things render 
 there is at least one constraint output** (`elaboration/project.py:887`); the legacy route
 emitted one whenever the constraint pathway ran at all, including for a model that asserts
 nothing. A constraint-free model produces neither family. See
-[28-constraint-lowering-and-catalog](28-constraint-lowering-and-catalog.md) for the catalog's
+28-constraint-lowering-and-catalog (retired doc; git history) for the catalog's
 shape, and read its lowering half as a description of `analysis/constraint_lowering.py`, which
 is not the public route.
 
@@ -180,11 +180,11 @@ The [ComputationGraph](09-data-models.md#resolution-models) feeds Jinja2 templat
 to produce: `modules/*.py`, `handwritten/*_impl.py`, `pipelines/*.yaml`,
 `inputs/*.json`, and `schemas/*.py`.
 
-Rendering is gated by four checks that all run **before** any output is written or cleared
-(`cli/__init__.py:1042-1060`): constraint name safety, duplicate output paths, params coverage
-(V11 — `collect_uncovered_params`, `resolution/uncovered_params.py`, aborts if a wired module
-input references a params key no JSON input file will carry), and registry class-name
-collisions. Fail-before-mutate is the point: a refusal leaves the target tree exactly as it was.
+Rendering is gated by checks that all run **before** any output is written or cleared
+(`cli/__init__.py`): constraint name safety, duplicate output paths, registry class-name
+collisions, and constraint totality. (The V11 params-coverage collector was dead by
+construction on the exact route — projection always builds `fallback_entry_points` empty —
+and was deleted by REPO-CLEANUP Move C.) Fail-before-mutate is the point: a refusal leaves the target tree exactly as it was.
 Surfaced modeler names travel as `output_aliases` on the ComputationGraph and override
 exit-point output filenames in the pipeline YAML (`generation/pipeline.py`).
 
@@ -222,7 +222,6 @@ sysml_codegen/
 
   resolution/
     models.py                 ComputationGraph, PipelineModule, EntryPoint
-    uncovered_params.py       the V11 params-coverage collector
 
   generation/       [4] Render Python, YAML, JSON from the graph
     pipeline.py / modules.py / schemas.py / stencils.py / entry_point.py / registry.py
@@ -252,11 +251,11 @@ See [02-orchestration.md](02-orchestration.md) for the public surface and its pi
 |-----|-------|-----------------|
 | [01-extraction](01-extraction.md) | SysML model parsing: calc defs, usages, bindings, redefinitions | `CalculationDefinitionData`, `CalcUsageData`, `BindingInfo` |
 | [02-orchestration](02-orchestration.md) | The public surface: one entry point, two sources, one receipt | `ExactPipelineContext`, `ProjectionReceipt` |
-| [03-resolution-overview](03-resolution-overview.md) | Why input resolution is hard (270 combinations) | `BindingResolution` |
-| [04-producer-resolution](04-producer-resolution.md) | Unified 5-strategy resolver | `InputSource`, `ResolutionContext` |
-| [05-module-factory](05-module-factory.md) | The three calc module kinds as pure data transformers (constraint kinds: [28](28-constraint-lowering-and-catalog.md)) | `PipelineModule`, `ModuleKind` |
+| 03-resolution-overview (retired doc; git history) | Why input resolution is hard (270 combinations) | `BindingResolution` |
+| 04-producer-resolution (retired doc; git history) | Unified 5-strategy resolver | `InputSource`, `ResolutionContext` |
+| 05-module-factory (retired doc; git history) | The three calc module kinds as pure data transformers (constraint kinds: 28 (retired doc; git history)) | `PipelineModule`, `ModuleKind` |
 | [06-entry-point-classifier](06-entry-point-classifier.md) | Entry point classification: LIBRARY_DEFAULT, DESIGN_ATTRIBUTE, USAGE_LITERAL | `EntryPoint`, `EntryPointType` |
-| [07-graph-assembly](07-graph-assembly.md) | Topological sort, validation, ComputationGraph assembly | `ComputationGraph` |
+| 07-graph-assembly (retired doc; git history) | Topological sort, validation, ComputationGraph assembly | `ComputationGraph` |
 | [08-generation](08-generation.md) | Jinja2 rendering: Python, YAML, JSON | Templates |
 | [09-data-models](09-data-models.md) | All data models and containment hierarchy | All |
 
@@ -264,14 +263,14 @@ See [02-orchestration.md](02-orchestration.md) for the public surface and its pi
 
 | Doc | Topic |
 |-----|-------|
-| [10-output-registry](10-output-registry.md) | 4-phase registration: canonical channels, aliases, O(1) lookup |
-| [11-analysis-backtracker](11-analysis-backtracker.md) | Dependency backtracking: tracing bindings to upstream sources |
-| [12-virtual-binding-rewrite](12-virtual-binding-rewrite.md) | Template calc usage expansion and virtual binding construction |
-| [13-aggregation-scoping](13-aggregation-scoping.md) | How `sum()` expressions are scoped to design instance paths |
+| 10-output-registry (retired doc; git history) | 4-phase registration: canonical channels, aliases, O(1) lookup |
+| 11-analysis-backtracker (retired doc; git history) | Dependency backtracking: tracing bindings to upstream sources |
+| 12-virtual-binding-rewrite (retired doc; git history) | Template calc usage expansion and virtual binding construction |
+| 13-aggregation-scoping (retired doc; git history) | How `sum()` expressions are scoped to design instance paths |
 | [14-expression-compiler](14-expression-compiler.md) | AST-to-Python compilation for calc def outputs |
 | [15-naming-conventions](15-naming-conventions.md) | EQN, PQN, channel names, registry key formats |
 | [16-computed-attributes](16-computed-attributes.md) | FORMULA and EXPOSE_PURE computed attribute classification |
-| [17-parameter-group-deriver](17-parameter-group-deriver.md) | Grouping entry points into JSON input files |
+| 17-parameter-group-deriver (retired doc; git history) | Grouping entry points into JSON input files |
 | [18-literal-value-propagation](18-literal-value-propagation.md) | Carrying `:>>` literal values into JSON templates |
 | [26-pipeline-module-migration](26-pipeline-module-migration.md) | REQ-PIPE-07 migration: PipelineModule field expansion |
 | [19-ast-dispatch-invariant](19-ast-dispatch-invariant.md) | FCE-before-OE AST dispatch ordering, and the totality generalization |
@@ -279,16 +278,14 @@ See [02-orchestration.md](02-orchestration.md) for the public surface and its pi
 | [21-pipeline-yaml-generation](21-pipeline-yaml-generation.md) | Channel formats, type rules, and the exit-point filename override |
 | [22-output-schema-rules](22-output-schema-rules.md) | `MultiOutput` versus `RootModel`, field names, type mapping |
 | [23-smart-regen-preservation](23-smart-regen-preservation.md) | Signature comparison and the six-case regeneration decision tree |
-| [24-dual-resolution-architecture](24-dual-resolution-architecture.md) | One resolution authority, called at two pipeline stages |
-| [25-hierarchy-resolver](25-hierarchy-resolver.md) | `:>>`, multiplicity, and `sum()` extraction into typed structures |
+| 24-dual-resolution-architecture (retired doc; git history) | One resolution authority, called at two pipeline stages |
+| 25-hierarchy-resolver (retired doc; git history) | `:>>`, multiplicity, and `sum()` extraction into typed structures |
 | [27-snapshot-generation](27-snapshot-generation.md) | The v6 instance-graph snapshot: what it seals, what it can prove |
-| [28-constraint-lowering-and-catalog](28-constraint-lowering-and-catalog.md) | Lowering eligible modeled assertions to constraint modules and assembling the catalog |
+| 28-constraint-lowering-and-catalog (retired doc; git history) | Lowering eligible modeled assertions to constraint modules and assembling the catalog |
 | [29-contracts-and-sealing](29-contracts-and-sealing.md) | Package integrity: semantic `ModelContract`, physical seal, emitted verifier |
 | [30-diagnostic-severity](30-diagnostic-severity.md) | Extraction-diagnostic severity: writer-set field, blocking vs advisory, fail-closed skew |
 
 **Reading the index after the retirement.** Documents 03, 04, 05, 07, 10, 11, 12, 13, 17, and
-24 describe the string-resolution stack that was deleted, and open with a historical banner
-saying so. They are accurate about the code that was removed; they are not descriptions of what
-the product does. Document 09 is mixed and carries a scoped banner naming which model rows are
-live and which are history. Document 25's subject, `extraction/hierarchy_resolver.py`, is still
-in the tree but is not on the shipped route.
+24 described the string-resolution stack that was deleted; they retired with it and live in
+git history, as does document 25, whose subject (the legacy extraction lane) was deleted by
+REPO-CLEANUP Move C. Document 09 carries only the live model set.

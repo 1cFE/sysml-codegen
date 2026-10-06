@@ -1,0 +1,17 @@
+{
+  "dir": "20260217_extractor-conformance",
+  "date_start": "2026-02-17",
+  "date_end": "2026-02-17",
+  "epic": "unknown",
+  "item_number": null,
+  "title": "Conformance tests for the SysMLDataExtractor (component C03) against REQ-EXT-01 through REQ-EXT-07",
+  "subject": "extraction layer",
+  "summary": "C03 wrote conformance tests proving the extraction layer's dataclasses (CalculationDefinitionData, CalcUsageData, PartDefinitionData, HierarchyExtractionResult) conform to the 7 extraction requirements in design doc 01-extraction.md. No production code changed; this was pure test-writing against existing behavior. 44 tests were added in tests/conformance/test_extractor.py, all passing on first run, with the full suite at 918 tests and 0 failures. Two coverage gaps were found and documented rather than fixed: the EXPRESSION binding type and AST-node preservation are both absent from real fixture data, so those requirement clauses stay untested by real models.",
+  "key_decisions": [
+    "Treat missing EXPRESSION binding-type coverage and nullified AST fields as documented fixture gaps, not blockers for closing C03",
+    "output_expression_asts is expected to be None in snapshots (SysIDE Java objects don't serialize), overriding the checklist's literal wording"
+  ],
+  "supersedes": [],
+  "status": "shipped",
+  "id": "H-045"
+}

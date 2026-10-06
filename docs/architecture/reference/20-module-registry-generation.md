@@ -206,8 +206,8 @@ alias (e.g., `SolarArray_Capital_CostModule`), not the original class name.
 
 ## Related Documents
 
-- **Upstream**: [07-graph-assembly](07-graph-assembly.md) -- ComputationGraph feeds registry generation
-- **Upstream**: [13-aggregation-scoping](13-aggregation-scoping.md) -- produces ScopedAggregationData with module_eqn
+- **Upstream**: 07-graph-assembly (retired doc; git history) -- ComputationGraph feeds registry generation
+- **Upstream**: 13-aggregation-scoping (retired doc; git history) -- produces ScopedAggregationData with module_eqn
 - **Downstream**: [08-generation](08-generation.md) -- registry is one of 6 generated artifacts
 - **Related**: [21-pipeline-yaml-generation](21-pipeline-yaml-generation.md) -- pipeline YAML must use matching module types
 - **Naming**: [15-naming-conventions](15-naming-conventions.md) -- EQN derivation rules

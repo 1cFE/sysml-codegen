@@ -35,10 +35,10 @@ import pytest
 
 from sysml_codegen.cli import GenerationConfig, run_codegen
 from tests.conftest import FIXTURES_DIR, requires_license
-from tests.helpers.artifact_sources import codegen_history_root
+from tests.helpers.source_roots import codegen_history_root
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-HISTORY_ROOT = codegen_history_root(REPO_ROOT)
+HISTORY_ROOT = codegen_history_root()
 V6_SNAPSHOT = FIXTURES_DIR / "fusion_tea" / "instance_graph_snapshot.json"
 PACKAGE = "fusion_tea"
 AGENTIC_SOURCE_ROOT = Path(agentic_mbse.__file__).resolve().parents[1]

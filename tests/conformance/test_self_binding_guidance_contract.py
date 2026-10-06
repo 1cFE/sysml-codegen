@@ -15,11 +15,10 @@ published teaching falsifiable instead of trusted (D3):
   sites recorded as rewritten to D-5 (owner ruling D11) and the three deliberate
   negatives still present.
 
-The agentic tree comes from the explicit artifact-source manifest. The manifest
-hashes the source archive and pairs it with the exact codegen extraction, so this
-test never consults an editable sibling checkout. A separate agentic-mbse test
-proves a built wheel carries the authoritative document byte for byte. License-free:
-text only.
+The agentic tree comes from the installed editable agentic-mbse package through
+``tests/helpers/source_roots.py``. This contract checks the companion checkout's
+published guidance. A separate agentic-mbse test proves a built wheel carries the
+authoritative document byte for byte. License-free: text only.
 
 Marker grammar (parsed here, authored in the doc)::
 
@@ -37,7 +36,7 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
-from tests.helpers.artifact_sources import agentic_source_root
+from tests.helpers.source_roots import agentic_source_root
 
 CODEGEN_ROOT = Path(__file__).resolve().parents[2]
 
@@ -86,8 +85,8 @@ POINTER_SURFACES = (
 
 
 def agentic_root() -> Path:
-    """Return the explicit hash-identified agentic source tree."""
-    root = agentic_source_root(CODEGEN_ROOT)
+    """Return the source tree of the installed editable agentic package."""
+    root = agentic_source_root()
     missing = [tree for tree in INSTRUCTION_TREES if not (root / tree).is_dir()]
     assert not missing, f"agentic tree at {root} lacks {missing}"
     return root

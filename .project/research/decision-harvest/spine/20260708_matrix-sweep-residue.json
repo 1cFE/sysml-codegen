@@ -1,0 +1,19 @@
+{
+  "dir": "20260708_matrix-sweep-residue",
+  "date_start": "2026-07-07",
+  "date_end": "2026-07-08",
+  "epic": "TRUTH-DEBT",
+  "item_number": "Item 5",
+  "title": "Retire the verification-matrix sweep residue: 17 strengthens, 11 reframes, 5 citation fixes, and the unswept ~46-row tail",
+  "subject": "verification matrix integrity",
+  "summary": "PIPELINE-TRUTH Item 7 had run a leashed ~175-row deep-read of the verification matrix and found rows where the cited test passes but pins less than the requirement text claims (INV-B violations), filing 17 rows needing a strengthened assertion, 11 needing the text reframed down to what the test actually checks, 5 needing only a citation fix, and leaving ~46 qualifying rows unread. This item discharged that residue: strengthened the 17 (adding mutation-proven assertions, notably REQ-EC-04's internal parse-and-raise gate and REQ-AS-06's resolve-before-register gate), landed the 11 reframes as a byte-safe text-only batch, fixed the 5 citations, and completed the D7-qualifier read of the remaining rows rather than re-filing them wholesale, re-filing only the sub-budget overflow (32 rows named individually, 2 of which were deep-read) as `[ITEM5-SWEEP-RESIDUE-OVERFLOW]`. The audit found the item did what it claimed: mutation records for EC-04/AS-06 were concrete, the PGD-03 reclassification was a real over-claim retirement (not a laundered defect), and the matrix recount (259 rows, 258 PASS + 1 UNTESTED) reconciled exactly. Two strengthened tests (REQ-REG-06, REQ-OR-02) were flagged as advisory over-claims of their own coverage, non-blocking. Verdict: PASS-with-findings.",
+  "key_decisions": [
+    "Complete the D7-qualifier read of the unswept rows at implement time rather than re-filing the whole ~46-row residue a third time; only genuinely budget-exceeding strengthens get re-filed, with a named count",
+    "REQ-PGD-03 was reclassified (text narrowed to a `>=` floor) rather than force-fixed to `== `, because the chain_spike fixture genuinely produces 1 group from 2 files and an exact-equality assertion would have been false",
+    "REQ-CA-01's INV-F over-claim (transient enum value never reaching a reader) is dropped from the row text because no cited test pins it and a sibling test treats the transient value as a valid classification member",
+    "DM-09 counted as one row with two defects (under-pinning text and a docstring-only marker), fixed together in a single strengthen row rather than double-counted"
+  ],
+  "supersedes": [],
+  "status": "shipped",
+  "id": "H-076"
+}

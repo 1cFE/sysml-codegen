@@ -246,7 +246,7 @@ def test_the_constraint_report_carries_the_modeled_verdict(
     # and only constraint usage (`fusion_cycle.sysml:29` is a `constraint def`, and
     # `hif_plant.sysml:223` is a comment saying the constraint is inherited, not a second
     # declaration). Asserted, unmarked, owner instantiated -> D3 row 3. The derivation and
-    # its evidence are in `.project/active/constraint-coverage-policy/expected-coverage.md`.
+    # its evidence are in `tests/unit/data/expected-coverage.md`.
     assert dump == {
         "headline": "full_satisfaction",
         "assessed_entry_count": 1,

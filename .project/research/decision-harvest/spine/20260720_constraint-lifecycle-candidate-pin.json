@@ -1,0 +1,18 @@
+{
+  "dir": "20260720_constraint-lifecycle-candidate-pin",
+  "date_start": "2026-07-19",
+  "date_end": "2026-07-19",
+  "epic": "CONSTRAINT-LIFECYCLE-REMEDIATION",
+  "item_number": "Item 0",
+  "title": "Pin one compatible agentic-mbse/sysml-codegen/TEAx/fusion-tea/stellarator revision set as the epic's starting baseline",
+  "subject": "cross-repo version pinning",
+  "summary": "Before constraint-lifecycle remediation work could start, the epic needed one committed, installable revision set across five repositories with stable hashes and a production-code line-count baseline for later items to compare against. This item reconciled the local and remote agentic-mbse PR #11 lines with a non-destructive merge, selected matching sysml-codegen and TEAx revisions, and ran narrow install/import/profile-v4 smoke checks rather than full certification. It recorded exact commits, lockfile digests, and a per-repository production LOC table in evidence.md, and explicitly scoped itself as non-certifying integration bookkeeping \u2014 later items (4, 7, 8, 12, 13) still own schema, runtime, catalog, legacy, and composed-lifecycle proof obligations. No push or PR update was performed.",
+  "key_decisions": [
+    "Treat this item as non-certifying bookkeeping only \u2014 it establishes a compatible pin, not lifecycle correctness, leaving certification to Item 13",
+    "Reconcile agentic-mbse's local and remote PR #11 tips with an ordinary merge rather than branch surgery or patch replay, per owner direction to keep the committed modeling-orchestrator commit intact",
+    "Record a reproducible production LOC baseline (tracked .py/.jinja2/.sysml, excluding tests/fixtures/generated/docs) so later items can measure their touched-file footprint against it"
+  ],
+  "supersedes": [],
+  "status": "shipped",
+  "id": "H-091"
+}

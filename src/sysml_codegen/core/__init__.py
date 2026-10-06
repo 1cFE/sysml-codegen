@@ -23,11 +23,6 @@ from sysml_codegen.core.identifier_types import (
     derive_module_type,
     derive_python_path,
 )
-from sysml_codegen.core.models import (
-    BindingResolution,
-    BindingResolutionType,
-    ChannelAlias,
-)
 from sysml_codegen.core.qualified_names import (
     build_element_qualified_name,
     build_parameter_qualified_name,
@@ -47,10 +42,6 @@ __all__ = [
     "SysMLQualifiedName",
     "derive_module_type",
     "derive_python_path",
-    # models
-    "BindingResolution",
-    "BindingResolutionType",
-    "ChannelAlias",
     # qualified_names
     "build_element_qualified_name",
     "build_parameter_qualified_name",

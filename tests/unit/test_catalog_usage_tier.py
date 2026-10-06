@@ -1,6 +1,6 @@
 """Item 8: the additive catalog surface — five projected entry fields + the admitted-usage tier.
 
-License-free: builds ``ConcreteConstraint`` objects directly and exercises
+License-free: builds fixture constraint rows directly and exercises
 ``assemble_constraint_catalog``. The definition→usage FK *gating* (non-None iff
 ``source_form == "definition_typed"``) lives in lowering and is covered against a real fixture
 in ``tests/conformance/test_catalog_definition_join.py``; here we assert the projection carries
@@ -17,8 +17,10 @@ from agentic_mbse.sysml.expression_ir import (
     serialize_expression,
 )
 
-from sysml_codegen.resolution.models import ConcreteConstraint
-from tests.helpers.retired_catalog_assembly import assemble_constraint_catalog
+from tests.helpers.retired_catalog_assembly import (
+    FixtureConstraint,
+    assemble_constraint_catalog,
+)
 
 
 def _empty_facts() -> ConstraintFacts:
@@ -52,8 +54,8 @@ def _concrete(
     owner_qualified_name: str = "Pkg::Cell",
     definition_qualified_name: str | None = None,
     predicate_source_key: str | None = None,
-) -> ConcreteConstraint:
-    return ConcreteConstraint(
+) -> FixtureConstraint:
+    return FixtureConstraint(
         constraint_id=constraint_id,
         usage_qualified_name=usage_qualified_name,
         source_local_identity=source_local_identity,

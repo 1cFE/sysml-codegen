@@ -1,0 +1,20 @@
+{
+  "dir": "20260713_constraint-lowering",
+  "date_start": "2026-07-12",
+  "date_end": "2026-07-13",
+  "epic": "CONSTRAINT-EXEC",
+  "item_number": "Item 5",
+  "title": "Productionized concrete constraint lowering: strict-resolution expansion of modeled assertions into graph structure with execution identity",
+  "subject": "constraint lowering phase",
+  "summary": "Modeled assertions were extracted and classified but died at a drop-report warning, never reaching generated code. This item added the sysml-codegen phase that expands each assertion into its concrete design instances, resolves every actual through a strict resolver (real producer channel, real design attribute, or a named generation error, never synthesis), and mints a stable execution identity (constraint_id) per concrete assertion. It productionized the proven S4 vertical-slice spike shape, threading into build_pipeline_context at three points (resolve after group_deriver, inject roots before pruning, extend the graph after build_computation_graph), and stopped at graph structure only, leaving module/aggregator emission to Item 7. Audit found all six success criteria met with committed asserting tests, certified after an orchestrator-run addendum executed the live suite (2202 passed), a mutation probe, and two cures (documenting the as-built five-rung resolution ladder and adding a wired-path halt test).",
+  "key_decisions": [
+    "Unresolved constraint actuals are always a generation error, never entry-point synthesis; the strict and lenient (calc) resolution modes share one code path with an explicit switch so they cannot silently diverge (the F4-cutover fallback-collapse lesson)",
+    "Expansion dispatches on the owner-kind axis (part_def, calc_def, package, requirement_def) and predicate selection dispatches independently on the source-form axis (inline vs definition_typed); the two axes are kept orthogonal",
+    "Registry-scope-before-design-attribute is the deliberate resolution order, reversing S4's incidental order, so an in-profile owner-scope reference to a sibling calc output is not mis-routed to a design attribute",
+    "Source-local constraint identity reuses the already-certified LocationFact (file/line/column) rather than inventing a new ordinal scheme",
+    "The strict resolution ladder was widened beyond the original three-rung design (adding scoped_alias_lookup and an occurrence-scoped design-attribute form), pre-authorized by design.md B4/R5, with the design doc left stale and flagged for later amendment"
+  ],
+  "supersedes": [],
+  "status": "shipped",
+  "id": "H-083"
+}

@@ -1,0 +1,21 @@
+{
+  "dir": "20260816_qualified-reference-occurrence-anchoring",
+  "date_start": "2026-08-15",
+  "date_end": "2026-08-16",
+  "epic": "ELABORATE-FIRST",
+  "item_number": "Item 8 (bounded child)",
+  "title": "Anchor one-segment references to the exact owner's occurrence before falling back to the shared feature slot",
+  "subject": "reference resolution, occurrence anchoring",
+  "summary": "When a one-segment reference's exact leaf is owned by a PartUsage, the elaborator was reducing it to a shared redefinition slot and searching from the consumer's position, which could silently select the wrong occurrence (a consumer under comp_b naming comp_a::length could read comp_b.length) or wrongly refuse or report a named occurrence missing. The fix makes the resolver select the exact owner's occurrence first, before falling back to the shared slot, and refuse by name in unsupported or unclassifiable exact-owner states rather than falling back to consumer position. It kept coverage across calculation, alias, computed, constraint, aggregation, public-mutation, strict/lenient, codec, and snapshot routes, with before/after evidence of 20 adjudicated outcomes and 139 unchanged identity blocks. It closed as a bounded child item of ELABORATE-FIRST Item 8, independently audited, with a residual unmeasured population (15 of 154 roots) and a follow-up left for arrayed diagnostics.",
+  "key_decisions": [
+    "Exact-owner resolution added at the shared one-segment resolver seam with no widening of occurrence, slot, graph, projection, codec, or schema surfaces",
+    "Unsupported or unclassifiable exact-owner states refuse by name instead of falling back to consumer position",
+    "Bounded census methodology adopted: count at the resolver boundary so a root that later refuses still reports the leaves it saw, with every root marked complete/partial/unmeasured rather than claiming whole-corpus coverage",
+    "Dangling-symlink behavior in the migration/fixture helper accepted as a testing/developer-tooling risk without another remediation cycle [OWNER 2026-08-16]"
+  ],
+  "supersedes": [
+    "The prior one-segment resolution path that reduced an exact owned feature to its shared redefinition slot before searching from consumer position"
+  ],
+  "status": "shipped",
+  "id": "H-122"
+}

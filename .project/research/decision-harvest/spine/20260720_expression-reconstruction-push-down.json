@@ -1,0 +1,19 @@
+{
+  "dir": "20260720_expression-reconstruction-push-down",
+  "date_start": "2026-07-08",
+  "date_end": "2026-07-10",
+  "epic": "PUSH-DOWN",
+  "item_number": "Item 1",
+  "title": "Move reusable SysML expression reconstruction and literal-node helpers from sysml-codegen into agentic-mbse's shared SysML layer",
+  "subject": "expression reconstruction helpers",
+  "summary": "Reconstruction, feature-chain, chain-segment, and literal-node helpers lived only in sysml-codegen, so agentic-mbse could not reuse or validate against the same SysML facts codegen relies on without duplicating logic or creating a reverse dependency. This item moved the helpers into agentic_mbse.sysml.expression, introduced is_literal_node as a distinct name from the existing true-static-expression predicate, folded a duplicate literal-value helper in agentic-mbse's binding module into the shared one, and kept sysml_codegen.extraction.expression_utils as a permanent compatibility shim. The initial audit certified the move as behavior-preserving, but an independent epic audit on 2026-07-10 found two undocumented deviations from the original bodies (a widened membership-fallback gate and chain-segment fallback branches that only matched a test mock, not real syside nodes). Both were reverted to the pre-move originals and the test mock was corrected to match the real syside shape; both suites passed green afterward with byte-identical fixtures.",
+  "key_decisions": [
+    "Dependency direction stays one-way: sysml-codegen depends on agentic-mbse.sysml, never the reverse",
+    "is_literal_node is introduced as the literal-node predicate name, kept distinct from agentic-mbse's existing is_literal_expression (which means true-static-expression), avoiding name overload",
+    "sysml_codegen.extraction.expression_utils is a permanent compatibility shim, not a temporary migration file, so old import paths keep working indefinitely",
+    "A move must be provably mechanical: the independent audit's finding of two undocumented behavioral deviations was treated as a correctness failure and both were reverted rather than kept as improvements"
+  ],
+  "supersedes": [],
+  "status": "shipped",
+  "id": "H-079"
+}

@@ -11,7 +11,7 @@ nothing that exists is what makes the refusal safe to land.
 
 Both run license-free off `catf_mfe_d5`'s committed v6 snapshot. The corpus-wide sweep behind
 them (57 fixtures, 105 usage records, zero D9 hits) is recorded in
-`.project/active/constraint-coverage-policy/expected-coverage.md`.
+`tests/unit/data/expected-coverage.md`.
 """
 
 from __future__ import annotations

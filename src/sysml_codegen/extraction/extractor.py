@@ -19,8 +19,6 @@ from sysml_codegen.core.type_mapping import QUALIFIED_SYSML_TO_PYTHON
 from sysml_codegen.extraction.data_models import (
     AttributeInfo,
     CalculationDefinitionData,
-    ConstraintInfo,
-    PartDefinitionData,
 )
 from sysml_codegen.extraction.errors import ExactExtractionError, ExactTypeError
 from sysml_codegen.extraction.expression_utils import reconstruct_expression
@@ -32,8 +30,6 @@ logger = logging.getLogger(__name__)
 __all__ = [
     "SysMLDataExtractor",
     "AttributeInfo",
-    "ConstraintInfo",
-    "PartDefinitionData",
     "CalculationDefinitionData",
 ]
 
@@ -79,20 +75,6 @@ class SysMLDataExtractor:
             return False
 
         return True
-
-    def extract_part_definitions(self) -> list[PartDefinitionData]:
-        """Extract all part definitions from loaded model."""
-        if not self.model:
-            return []
-
-        part_defs = []
-        for elem in self.adapter.elements_of_type(self.model, "PartDefinition"):
-            part_data = self._extract_part_definition(elem)
-            if part_data:
-                part_defs.append(part_data)
-
-        return part_defs
-
     def extract_calculation_definitions(self) -> list[CalculationDefinitionData]:
         """Extract all calculation definitions from loaded model."""
         if not self.model:
@@ -105,43 +87,6 @@ class SysMLDataExtractor:
                 calc_defs.append(calc_data)
 
         return calc_defs
-
-    def _extract_part_definition(self, elem: Any) -> PartDefinitionData | None:
-        """Extract data from single part definition element."""
-        name = sanitize_name(elem.name)
-        if not name:
-            return None
-
-        # Extract attributes
-        attributes = []
-        for member in elem.owned_members:
-            if self.adapter.is_instance(member, "AttributeUsage"):
-                attr_info = self._extract_attribute(member)
-                if attr_info:
-                    attributes.append(attr_info)
-
-        # Extract constraints (stub for now)
-        constraints: list[ConstraintInfo] = []
-
-        # Get documentation
-        doc_comment = self._extract_documentation(elem)
-
-        # Get source location
-        source_file = self.model_paths[0] if self.model_paths else Path("unknown")
-        source_hash = self._compute_file_hash(source_file) if source_file != Path("unknown") else ""
-        source_line = 0
-        qualified_name = name
-
-        return PartDefinitionData(
-            name=name,
-            qualified_name=qualified_name,
-            doc_comment=doc_comment,
-            attributes=attributes,
-            constraints=constraints,
-            source_file=source_file,
-            source_line=source_line,
-            source_hash=source_hash,
-        )
 
     def _extract_calculation_definition(self, elem: Any) -> CalculationDefinitionData | None:
         """Extract data from calculation definition element."""

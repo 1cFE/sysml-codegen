@@ -1,0 +1,17 @@
+{
+  "dir": "20260217_pipeline-e2e-validation",
+  "date_start": "2026-02-17",
+  "date_end": "2026-02-17",
+  "epic": "unknown",
+  "item_number": null,
+  "title": "Checkpoint 5 end-to-end pipeline validation (step 5.2 / C19 companion) proving the refactored pipeline matches Phase 0 baselines",
+  "subject": "pipeline end-to-end output",
+  "summary": "Step 5.2 was the Checkpoint 5 gate: run the full refactored pipeline (snapshots to registry to backtracker to classifier to module factories to graph assembly) end-to-end on multiple fixture models and check the resulting ComputationGraphs against Phase 0 baselines. No production code changed. It added a missing catf_mfe baseline and wrote 16 tests in tests/conformance/test_pipeline_e2e.py covering REQ-PIPE-01 through REQ-PIPE-07, all passing on first run, with the full suite at 1587 passed / 2 skipped / 5 xfailed / 0 failures. This closed the last gap versus the existing C18 (baseline comparisons) and C19 (orchestrator invariant) conformance tests, which together already covered most of the same ground.",
+  "key_decisions": [
+    "Reused/duplicated C18's baseline-comparison helper as a module-level function rather than extracting a shared helper, since only two consumers existed",
+    "Scoped REQ-PIPE-06 (all three module types present) to solar_battery only, since catf_mfe legitimately has CalcUsage modules alone"
+  ],
+  "supersedes": [],
+  "status": "shipped",
+  "id": "H-055"
+}

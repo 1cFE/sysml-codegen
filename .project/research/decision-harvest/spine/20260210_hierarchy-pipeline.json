@@ -1,0 +1,20 @@
+{
+  "dir": "20260210_hierarchy-pipeline",
+  "date_start": "2026-02-10",
+  "date_end": "2026-02-10",
+  "epic": "COST-PATTERN",
+  "item_number": "Item 4",
+  "title": "Pipeline-integrate hierarchy extraction so virtual CalcUsages and aggregation rollups generate real modules",
+  "subject": "hierarchy-aware module generation",
+  "summary": "Items 2 and 3 built template CalcUsage detection, virtual instantiation, redefinition resolution, and sum() aggregation transformation, but none of that data reached the pipeline: virtual CalcUsages had unresolvable bare-name bindings and aggregation expressions were produced but never consumed, so codegen on the solar_battery model only emitted the 5 system-level modules. This item added pipeline steps to extract hierarchy data and rewrite virtual CalcUsage bindings (resolving literal, chain, and deep-path :>> redefinitions), extended the graph builder with an aggregation-module builder that resolves symbolic child-output references to real pipeline channels, and taught the backtracker and output catalog to expose aggregation outputs to downstream system-level calculations. Generation code (module wrappers, auto-implementations, YAML with a `# source: aggregation` comment, registry, backlog) was extended to cover the new module classes. The spec document itself has all acceptance-criteria checkboxes left unchecked, unlike the sibling attr-expr-pipeline item, though its header marks Status: Complete.",
+  "key_decisions": [
+    "Virtual CalcUsage binding rewriting handles three :>> redefinition patterns: LITERAL (direct value), CHAIN (retarget source_path to another calc's output), and design deep-path (trace target_path to a leaf attribute)",
+    "Multiplicity counts become DESIGN_ATTRIBUTE entry points typed as Integer; :>> literal redefinitions also become DESIGN_ATTRIBUTE entry points; CalcDef defaults stay LIBRARY_DEFAULT",
+    "Aggregation module naming is disambiguated by owning-part qualified name per ADR-003 to avoid collisions when multiple PartDefs share an attribute name",
+    "Aggregation expressions with has_unsupported_nodes=True still generate a module, but with MANUAL_REQUIRED compilability (stub) instead of an auto-implementation",
+    "Non-uniform array instances are explicitly out of scope; the solar_battery model's arrays are all uniform"
+  ],
+  "supersedes": [],
+  "status": "unknown",
+  "id": "H-014"
+}

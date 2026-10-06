@@ -1,0 +1,20 @@
+{
+  "dir": "20260821_scaffolding-register-boundary",
+  "date_start": "2026-08-20",
+  "date_end": "2026-08-21",
+  "epic": "REPO-CLEANUP",
+  "item_number": "Item 1",
+  "title": "Install script-managed ADR and product-promise registers with an owner-grade routing rule for which register a decision belongs in",
+  "subject": "decision register scaffolding",
+  "summary": "The repo had two places to record a settled decision (a hand-maintained product ledger and an ad hoc ADR set) with no rule for which one a given decision belonged in, and the product ledger was maintained by hand despite the process pack saying a script should own it. This item installed both register engines (adr.sh, product.sh) from agentic-project-init, filed an owner-grade routing criterion keyed on who the decision binds (model authors go to docs/architecture/modeling-assumptions.md, code-generator-builder decisions go to .project/adr/), triaged the nine existing ADRs against that rule, and migrated the four product promises onto script-managed 000N ids with a generated index, keeping every visible word and owner payload unchanged. Six new conformance tests pin discoverability and citation conventions. Certified via audit; the licensed suite ran 2,371 passed / 9 skipped / 94 deselected under an owner-accepted missing-manifest limitation, so the exact full-suite gate remains not-yet-green by design, not a defect.",
+  "key_decisions": [
+    "Decisions are routed by who they must bind: model-author decisions stay in docs/architecture/modeling-assumptions.md as numbered ADR-0NN sections; code-generator-builder decisions go to .project/adr/ as script-allocated NNNN ids",
+    "Register ids resolve by sibling filename, and citations must always name the register path plus id, never a bare number",
+    "Nine pre-existing ADRs were triaged against the new routing rule; ADR-007 and ADR-009 were carried forward to Item 3 rather than resolved here"
+  ],
+  "supersedes": [
+    "The hand-maintained product/README.md ledger process, replaced by product.sh-generated 000N ids and INDEX.md"
+  ],
+  "status": "shipped",
+  "id": "H-126"
+}

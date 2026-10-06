@@ -58,7 +58,7 @@ FIXTURES = ROOT / "tests" / "fixtures"
 BATCH = FIXTURES / "v6_recapture_batch"
 MANIFEST = BATCH / "batch.json"
 SNAPSHOT_NAME = "instance_graph_snapshot.json"
-CORPUS_LEDGER = ROOT / ".project/completed/20260809_elaborator-breadth/diff-ledger.md"
+CORPUS_LEDGER = ROOT / ".project/reference/elaborator-breadth-diff-ledger.md"
 EXPECTED_LEDGER_TRANSITIONS = {
     "deep_cross_scope_probe: ledger says 'graph 5/4/0/1', capture says "
     "'error: SI_OCCURRENCE_MISSING'",

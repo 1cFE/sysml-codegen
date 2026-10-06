@@ -1,0 +1,20 @@
+{
+  "dir": "20260220_factory-purity-refactor",
+  "date_start": "2026-02-20",
+  "date_end": "2026-02-20",
+  "epic": "unknown",
+  "item_number": null,
+  "title": "Make the three module factory functions pure (return entry points instead of mutating a shared dict)",
+  "subject": "module factory functions",
+  "summary": "The FORMULA and aggregation module factories in resolution/graph_builder.py mutated a shared entry_points dict in place (7 mutation sites total); the CalcUsage factory was already pure but had a mismatched return type. Refactored all three to return (PipelineModule, dict[str, EntryPoint]), with the caller (build_computation_graph) merging returned entry points into the shared dict inside each loop so later calls in the same pass still see earlier ones. This was a purely mechanical, behavior-preserving refactor: ComputationGraph output was verified byte-identical before and after. Shipped with 10 new conformance tests and full-suite green (1791 passed, up from 1783).",
+  "key_decisions": [
+    "All three factories return (PipelineModule, dict[str, EntryPoint]) for interface uniformity, even the CalcUsage factory which never creates entry points (returns empty dict)",
+    "Caller merges returned entry-point dicts into the shared dict inside the loop, not after all calls, so later factory calls in the same step see entry points created by earlier ones",
+    "EP backfill (updating an existing entry point's default) reads the shared dict read-only and writes an updated copy to the local new_entry_points dict, letting the caller's merge overwrite"
+  ],
+  "supersedes": [
+    "Mutation of the shared entry_points dict from inside _build_computed_attr_module() and _build_aggregation_module()"
+  ],
+  "status": "shipped",
+  "id": "H-068"
+}

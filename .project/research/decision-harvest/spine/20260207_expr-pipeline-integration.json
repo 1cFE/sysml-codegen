@@ -1,0 +1,21 @@
+{
+  "dir": "20260207_expr-pipeline-integration",
+  "date_start": "2026-02-07",
+  "date_end": "2026-02-07",
+  "epic": "EXPR-CODEGEN",
+  "item_number": "Item 4",
+  "title": "Wire the expression compiler into the codegen pipeline so compilable CalcDefs get auto-generated implementations instead of NotImplementedError stubs",
+  "subject": "expression compiler pipeline wiring",
+  "summary": "Items 1-3 built an expression compiler that could turn SysML expression ASTs into executable Python, but nothing in the pipeline called it, so every generated _impl.py still had a manual-authoring stub. This item added a Step 6.5 compilation phase between backtracking and graph building, captured raw ASTs during extraction, fixed a bug where OperatorExpression bindings were dropped to UNBOUND, added a compilability field to PipelineModule, and added a new auto_implementation.py.jinja2 template that emits real computation code with an AUTO_IMPLEMENTED sentinel while non-compilable CalcDefs still get stubs. Verified end to end on the chain_spike model producing real code for all three CalcDefs, with existing signature-based preservation confirmed to handle the auto-impl lifecycle unchanged. All 116 tests passed with zero regressions and no new mypy/ruff errors.",
+  "key_decisions": [
+    "Compiled expression strings stay on CalcDefCompilationResult in PipelineContext rather than being added to PipelineModule, keeping resolution-layer data separate from compiled code",
+    "PARTIALLY_COMPILABLE CalcDefs fall through to full stub generation rather than partially auto-implementing some outputs",
+    "Auto-implemented files use the same function signature as stub templates so preservation's signature-match logic needs no changes"
+  ],
+  "supersedes": [
+    "The unconditional NotImplementedError stub generation for CalcDefs whose math is fully expressed in SysML",
+    "The legacy text-only _extract_expression_text() function, replaced by calls into expression_utils.py"
+  ],
+  "status": "shipped",
+  "id": "H-005"
+}

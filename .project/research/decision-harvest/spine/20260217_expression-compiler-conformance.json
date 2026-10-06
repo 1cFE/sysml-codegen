@@ -1,0 +1,20 @@
+{
+  "dir": "20260217_expression-compiler-conformance",
+  "date_start": "2026-02-17",
+  "date_end": "2026-02-17",
+  "epic": "unknown",
+  "item_number": "C04",
+  "title": "Add requirement-traceable conformance tests for the expression compiler (SysIDE AST -> ExpressionAST IR -> Python string, plus compilability verdicts)",
+  "subject": "expression compiler conformance",
+  "summary": "The expression compiler (extraction/expression_compiler.py), which converts CalcDef output expression ASTs into Python code and assigns per-output compilability verdicts, already had extensive unit and E2E test coverage but no requirement-tagged conformance test file. This item added 31 conformance tests covering all 7 REQ-EC requirements plus REQ-AST-01 (FCE-before-OE dispatch ordering), using a two-layer strategy: pure IR functions tested with real data (no stubs), and SysIDE-dependent functions tested with a mock adapter at the boundary since extraction snapshots null out AST fields and cannot carry real SysIDE nodes. It also corrected a mis-assignment in the implementation plan: the `.()` invalid-Python-syntax defect attributed to this component actually originates in the aggregation walker's reconstruct_expression(), which the expression compiler does not call, and was reassigned to the hierarchy-resolver/AST-dispatch-invariant components.",
+  "key_decisions": [
+    "AST fields are permanently null in extraction snapshots, so 'real calc defs' testing means real calc-def metadata (attribute name sets) fed through mock AST nodes, not real AST content -- real AST coverage is left to the existing E2E integration tests",
+    "The `.()` invalid Python syntax defect previously attributed to this component was found not to originate here (expression compiler never calls reconstruct_expression()) and was reassigned to the hierarchy resolver / AST dispatch invariant components",
+    "No production code changes; this item is pure conformance-test coverage against an already-correct compiler"
+  ],
+  "supersedes": [
+    "The implementation plan's assignment of the aggregation '.()' syntax defect to this component; reassigned to the hierarchy resolver / AST dispatch invariant work"
+  ],
+  "status": "shipped",
+  "id": "H-044"
+}

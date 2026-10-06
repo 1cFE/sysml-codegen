@@ -12,7 +12,7 @@ strengthened, because they are the two shapes that motivated the item:
    constraint-free model gets. It now ships a `not_assessed` report.
 
 Expected accounts for both fixtures are hand-written from source in
-`.project/active/constraint-coverage-policy/expected-coverage.md`.
+`tests/unit/data/expected-coverage.md`.
 """
 
 from __future__ import annotations

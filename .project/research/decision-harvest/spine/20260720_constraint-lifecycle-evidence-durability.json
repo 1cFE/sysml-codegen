@@ -1,0 +1,23 @@
+{
+  "dir": "20260720_constraint-lifecycle-evidence-durability",
+  "date_start": "2026-07-20",
+  "date_end": "2026-07-20",
+  "epic": "CONSTRAINT-LIFECYCLE-REMEDIATION",
+  "item_number": "Item 11",
+  "title": "Make TEAx constraint evidence durable: tolerate missing reports, freeze evidence against mutation, pin failure phases, and settle OUTPUT_WRITE",
+  "subject": "TEAx constraint evidence",
+  "summary": "TEAx turns a generated package's constraint outputs into durable study evidence, but three parts of that path were unsound: both evaluator routes crashed with a KeyError on a constraint-free package because they read the constraint_report channel unconditionally; the authoritative ModelEvidence was only shallow-frozen, so downstream policy code could mutate nested status, margin, or results on the live unfrozen report objects codegen generates, protected only by an incidental serialize-before-policy ordering accident; and EvaluationPhase.OUTPUT_WRITE was defined but never emitted, with failure phase agreement resting on the two evaluators simply matching rather than a pinned fixture expectation. This item fixed all three: one report-absence-tolerant read path replaces the two unconditional reads, evidence is sealed into a deep-frozen mappingproxy/tuple tree that defeats nested mutation, OUTPUT_WRITE is emitted off a positive in-output-write signal (never inferred from exception type or a null key), and fixture-pinned expected phases replace evaluator-agreement. It also proved excluded-only (zero-eligible, not_assessed) and constraint-free (zero-usage, empty evidence) are distinct evidence surfaces. The audit certified the item, reproducing the immutability, phase-signal, and catalog-authority mechanisms independently; findings were all minor (a catalog-to-corruption production path proven only in two separate halves, an overstated 'golden byte' framing, and a latent hardcoded fallback path for a future multi-group case).",
+  "key_decisions": [
+    "Immutability lives on the TEAx side at the projection boundary, deep-freezing into a TEAx-owned mappingproxy/tuple tree, because codegen's generated report models are plain unfrozen pydantic and TEAx cannot force codegen to freeze them",
+    "OUTPUT_WRITE is emitted (not collapsed) off a positive in-output-write context flag set immediately before write and cleared only on success, so a mid-write exception is stamped OUTPUT_WRITE and every other failure stays MODULE_EXECUTION",
+    "The corruption path for an absent report on a constraint-bearing catalog raises a dedicated CorruptConstraintEvidence error deliberately outside EvaluationFailed, so it crashes past the runner's except clause rather than being swallowed as a normal evaluation failure",
+    "The incidental encode-before-policy ordering in the runner is removed as no longer load-bearing once deep-freeze owns immutability; encode_evidence is called inline at each commit site instead",
+    "The spec's opening premise that Item 9 already reproduced the constraint-free KeyError was corrected as unsupported by Item 9's own record; reproducing that RED became this item's own first implementation step rather than an inherited fact"
+  ],
+  "supersedes": [
+    "The two duplicated unconditional constraint_report reads in evaluator.py",
+    "The incidental encode-before-policy ordering in runner.py that had been the only protection for persisted evidence"
+  ],
+  "status": "shipped",
+  "id": "H-099"
+}

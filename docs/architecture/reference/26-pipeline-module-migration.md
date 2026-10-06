@@ -101,7 +101,7 @@ module in the graph.
 
 ## Related Documents
 
-- **Upstream**: [09-data-models](09-data-models.md) (PipelineModule definition), [05-module-factory](05-module-factory.md) (populates modules)
+- **Upstream**: [09-data-models](09-data-models.md) (PipelineModule definition), 05-module-factory (retired doc; git history) (populates modules)
 - **Downstream**: [08-generation](08-generation.md) (consumes modules for rendering)
-- **Architecture**: [00-pipeline-overview](00-pipeline-overview.md) (REQ-PIPE-07), [07-graph-assembly](07-graph-assembly.md) (ComputationGraph assembly)
+- **Architecture**: [00-pipeline-overview](00-pipeline-overview.md) (REQ-PIPE-07), 07-graph-assembly (retired doc; git history) (ComputationGraph assembly)
 - **Extraction**: [01-extraction](01-extraction.md) (CalculationDefinitionData source)

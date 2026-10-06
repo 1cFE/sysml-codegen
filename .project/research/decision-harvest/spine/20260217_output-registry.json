@@ -1,0 +1,18 @@
+{
+  "dir": "20260217_output-registry",
+  "date_start": "2026-02-17",
+  "date_end": "2026-02-17",
+  "epic": "unknown",
+  "item_number": "C08",
+  "title": "Refactor OutputRegistry from a single flat dict[str,str] resolve() into three typed registries (scoped, SysML QN, alias)",
+  "subject": "output registry typed lookups",
+  "summary": "OutputRegistry used one flat _index dict with a single resolve(str) method serving several deprecated ad hoc key formats. This item added five NewType identifier wrappers (ScopedKey, CanonicalChannel, SysMLQN, EQN, PQN), split the registry into three typed dicts with their own typed lookup methods, and refactored build_output_registry() to register through the typed methods. A spike found that fully eliminating the deprecated key formats broke the backtracker's resolution, since some resolution paths (Phase 3/4 aliases, backtracker Step 1) are load-bearing on the old Key_A/Key_F key formats; the resolution was to move those dead keys into a separate _compat dict, kept alive only for the deprecated resolve() pass-through, while the new typed registries stay clean. Updating the backtracker and graph_builder to stop calling resolve() and drop _compat entirely was explicitly deferred to later components (C11, C12).",
+  "key_decisions": [
+    "resolve() is kept as a deprecated pass-through (scoped -> sysml_qn -> alias -> compat) rather than removed, because 8 production call sites and 150+ tests still depend on it; full removal is deferred to C11/C12",
+    "Dead legacy key formats (Key_A, Key_D, Key_E full, Key_F, bare) are moved into a separate _compat dict, invisible to the new typed lookup methods but still reachable via resolve()",
+    "build_output_registry() itself is refactored to register through the new typed methods and stop registering dead keys directly"
+  ],
+  "supersedes": [],
+  "status": "shipped",
+  "id": "H-052"
+}

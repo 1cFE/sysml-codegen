@@ -1,0 +1,21 @@
+{
+  "dir": "20260202_codegen-runtime-gap-fixes",
+  "date_start": "2026-02-01",
+  "date_end": "2026-02-02",
+  "epic": "unknown",
+  "item_number": null,
+  "title": "Fix three codegen output gaps that blocked generated packages from executing directly under TEAx's execute_pipeline()",
+  "subject": "generated output, TEAx runtime execution",
+  "summary": "A chain-spike codegen run (Item 2 of an end-to-end pipeline derisking epic tracked in the fusion-tea repo) found three gaps requiring manual hand-editing before generated output could run under TEAx: design_params.json generated empty because the design-attribute extractor's path filter defaulted to 'models/designs' and excluded the test model; RootModel[float] exit points had no CUSTOM_SCHEMA_TYPES registration so TEAx's output router had no write handler; and a static, domain-specific FusionParams schema template was unconditionally copied into every generated package regardless of model. The fix broadened the default design-attribute path filter to accept all files (with a crash guard for OperatorExpressions that can't be statically evaluated), wired exit-point primitive types (e.g. Float) into the generated registry's CUSTOM_SCHEMA_TYPES, and deleted the static schemas_ref.py template plus its copy step. A chain-spike SysML model fixture was copied into sysml-codegen's own tests/fixtures/ so the new tests are self-contained.",
+  "key_decisions": [
+    "extract_design_attributes()'s design_path_filter default changes from 'models/designs' to '' (accept all files); broadening is backward compatible since it is strictly more permissive.",
+    "_extract_default_value() catches ValueError/TypeError from evaluate_true_static_expression() on OperatorExpressions with feature references and returns None instead of crashing.",
+    "Exit point primitive types are collected from ComputationGraph.modules and rendered into CUSTOM_SCHEMA_TYPES alongside entry-point parameter-group schemas, importing the Float/Int/etc. aliases from the generated primitives.py.",
+    "templates/schemas_ref.py (the static FusionParams template) is deleted outright; no generated package should carry domain-specific schema content it doesn't own."
+  ],
+  "supersedes": [
+    "The unconditional copy of templates/schemas_ref.py (hardcoded FusionParams schema) into every generated package's {package}_schemas.py."
+  ],
+  "status": "unknown",
+  "id": "H-001"
+}

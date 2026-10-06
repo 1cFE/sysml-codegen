@@ -1,0 +1,22 @@
+{
+  "dir": "20260720_constraint-lifecycle-shared-resolution",
+  "date_start": "2026-07-19",
+  "date_end": "2026-07-20",
+  "epic": "CONSTRAINT-LIFECYCLE-REMEDIATION",
+  "item_number": "Item 2",
+  "title": "Replace three drifted producer-resolution ladders with one shared resolver and make Gate A resolve literal design-attribute constraint actuals",
+  "subject": "producer resolution, constraint Gate A",
+  "summary": "Three independently ordered resolvers (calculation ladder, constraint ladder, aggregation ladder) answered the same producer-resolution question but had already drifted apart in ordering, candidate identification, and miss handling; the aggregation ladder in particular resolved leaf-name collisions by silently picking the first candidate, and Gate A could not resolve a literal design attribute owned by a concrete PartUsage even though owner decision D-2 requires it to be a valid constraint actual. This item deleted the three consumer-specific ladders and replaced them with one production resolver serving all consumer types, so a direct literal design attribute now resolves under its real qualified name with no passthrough-calculation workaround, and no verdict is produced from a guessed or defaulted binding while V11 reports clean. Independently audited Pass with notes: the code and behavior are sound and reproduced under full suite, -O, real-simkit, byte-identity, and EP-key manifest gates, but the evidentiary record (D2 falsification table, one forced-difference corpus count) diverged from what the shipped code actually does in six correctable, non-production-affecting places.",
+  "key_decisions": [
+    "One production resolver serves calculation, aggregation, and constraint consumers; the three consumer-specific ladders (dependency_backtracker.py, constraint_lowering.py, input_resolver.py-driven aggregation) no longer exist, per owner-ratified contract invariant 20.",
+    "Owner retired every numeric LOC gate epic-wide on 2026-07-19 (epic commit a1435e1); this item's simplification is judged structurally per SR-R40, with no LOC target/budget/gate, superseding the epic text's stale '300-500 line reduction' scope point.",
+    "SR-A02/SR-R23 were not delivered in this item and were referred to Item 4 (design PC-4); every other requirement was met.",
+    "A direct literal design attribute owned by a concrete PartUsage, referenced by a self-named actual, must resolve under its real qualified name with no passthrough calculation (owner D-2, 2026-07-19)."
+  ],
+  "supersedes": [
+    "The calculation-ladder resolver (analysis/dependency_backtracker.py), the constraint-ladder resolver (analysis/constraint_lowering.py), and the aggregation-ladder resolver path in resolution/input_resolver.py and graph_builder.py, all deleted in favor of one shared resolver.",
+    "The stellarator consumer's passthrough-calculation workaround for design-attribute constraint actuals, superseded by direct Gate A resolution."
+  ],
+  "status": "shipped",
+  "id": "H-096"
+}

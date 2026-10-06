@@ -110,10 +110,18 @@ def test_every_constraint_bearing_fixture_has_an_expectation_file():
     assert not missing, f"no expectation file: {missing}"
 
 
+#: Expectation files whose fixture keeps only its sealed snapshot: catf_mfe_d5's .sysml
+#: fork collapsed in REPO-CLEANUP Move C (regenerable via scripts/make_d5_variant.py), but
+#: scripts/check_gated_manifest.py still reads its 65-row population as the gated baseline.
+SNAPSHOT_ONLY_EXPECTATIONS = {"catf_mfe_d5"}
+
+
 def test_no_expectation_file_is_stranded():
     """The other direction: a file for a fixture that no longer declares constraints."""
     named = {path.stem for path in EXPECTATIONS.glob("*.json")}
-    stranded = sorted(named - {path.name for path in CONSTRAINT_BEARING})
+    stranded = sorted(
+        named - {path.name for path in CONSTRAINT_BEARING} - SNAPSHOT_ONLY_EXPECTATIONS
+    )
     assert not stranded, f"expectation file with no constraint-bearing fixture: {stranded}"
 
 

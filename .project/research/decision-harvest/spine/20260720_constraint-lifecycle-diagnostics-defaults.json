@@ -1,0 +1,30 @@
+{
+  "dir": "20260720_constraint-lifecycle-diagnostics-defaults",
+  "date_start": "2026-07-19",
+  "date_end": "2026-07-20",
+  "epic": "CONSTRAINT-LIFECYCLE-REMEDIATION",
+  "item_number": "Item 4",
+  "title": "Diagnostic severity/closed codes, warning-vs-BLOCK ordering, modeled-default fidelity, and the written-reference carry closing SR-A02",
+  "subject": "constraint diagnostics and modeled defaults",
+  "summary": "Extraction diagnostics carried no severity and had zero consumers, warning rendering could silently swallow the actionable BLOCK halt, signed/unit-annotated modeled defaults were dropped without any diagnostic, and default parsing was duplicated across six lanes. The item added a writer-fixed DiagnosticSeverity field with closed kind/reason vocabularies (bumping the fact schema to v2 and the snapshot envelope to v4, requiring a re-capture of all 34 fixtures), made the warning pre-pass degrade to a fallback location instead of raising so it can never preempt the BLOCK halt, replaced the default parser with a structural IR resolver that unwraps units and folds signs, and landed the written-reference carry so a shared attribute converges to one entry point across calc and constraint consumers. Went through three audit rounds: round 1 found the snapshot-route sink ran after lowering and the reference carry silently re-anchored a qualified reference onto a wrong local shadow (masked by a value coincidence); round 2 found the fix for that regressed a different binding; round 3 closed all findings by keying the carry off the CST-captured scope qualifier rather than resolved-QN indexing. Certified Pass with notes, coordinated across sysml-codegen and agentic-mbse (PR #11 before PR #9).",
+  "key_decisions": [
+    "Severity is fixed at construction on the writer side and travels with the data (a field), not a reader-side kind-to-severity lookup table, because the snapshot route lets reader and writer be different commits and a table could silently reclassify already-captured diagnostics.",
+    "Diagnostic classes stay separate (EligibilityDiagnostic.force is not merged into the shared severity enum); only the severity type and closed-code discipline are shared.",
+    "Two production sinks (codegen pre-lowering halt, agentic-mbse L6 authoring) rather than a routing/registry layer.",
+    "Unsupported modeled-default IR is disposed as explicitly-unresolved (null in generated JSON, diagnosed) rather than fail-generation, since the IR shape can be a legitimate model.",
+    "The written-reference carry rides existing serialized fields (source_attribute_name/source_instance_name) behind stored fallbacks rather than adding a new extraction field, so it works on unmodified v3 snapshots and needs no agentic-mbse change.",
+    "Row 16 of the shared resolver gets two dedicated request fields (written_reference, occurrence_owner_path) read at exactly one site, so no other resolver row's input changes for any consumer.",
+    "The carry lands before the schema/severity work so each forced baseline diff has one cause.",
+    "Bracketed (occurrence-indexed part_def) owners are deliberately left as a resolver miss rather than attempting convergence; unbracketed PartUsage-owned shapes converge.",
+    "Amended mid-implementation: written_reference must be the full written form (instance.attribute for chain bindings), not the leaf name alone, after a leaf-only carry was found to silently re-anchor to a wrong same-named attribute."
+  ],
+  "supersedes": [
+    "The leaf-only written_reference carry design (B2/D4 as originally stated), replaced after a measured wrong-anchor regression",
+    "The premise in tests/fixtures/shared_producer/PROVENANCE.md that the written reference is structurally unreachable from the calculation consumer",
+    "Item 2's referral note that convergence needed a snapshot format bump",
+    "Silent omission of an unresolvable modeled default's JSON key (generation/entry_point.py)",
+    "The bare _literal_float default parser and several duplicate string-based default-parsing lanes"
+  ],
+  "status": "shipped",
+  "id": "H-093"
+}

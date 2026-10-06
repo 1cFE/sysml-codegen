@@ -1,7 +1,7 @@
 # Provenance — sibling-formal collision producer cycle (spike `s5_sibling_formal`)
 
 Promoted for self-binding-replacement Phase 1 from the spike fixture
-`.project/active/self-binding-replacement/spike/fixtures/s5_sibling_formal/` (findings F-3).
+`self-binding-replacement/spike/fixtures/s5_sibling_formal/` (git history) (findings F-3).
 Package renamed `S5SiblingFormal` → `sibling_formal_cycle` and the part def unquoted; the
 shape is otherwise unchanged.
 
@@ -15,7 +15,7 @@ dependency cycle.
 - **Pre-repair (`0f89673`):** a raw `GraphValidationError: SI_EDGE_DANGLING: typed producer
   dependency cycle` traceback escaped `elaborate()` through `run_codegen` — loud, but naming
   no file, no binding, and no participant
-  (`.project/active/self-binding-replacement/verification/post-repair-spike-recheck.md`, F-3).
+  (`self-binding-replacement/verification/post-repair-spike-recheck.md` (git history), F-3).
 - **Post-repair:** final graph validation surfaces as `ElaborationDiagnosticError`; the cycle
   diagnostic names its participants in stable order, and `generate` exits 1 with the typed
   message and no traceback.

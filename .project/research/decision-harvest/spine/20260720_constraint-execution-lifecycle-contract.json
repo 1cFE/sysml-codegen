@@ -1,0 +1,28 @@
+{
+  "dir": "20260720_constraint-execution-lifecycle-contract",
+  "date_start": "2026-07-19",
+  "date_end": "2026-07-20",
+  "epic": "CONSTRAINT-LIFECYCLE-REMEDIATION",
+  "item_number": null,
+  "title": "Ratify one authoritative end-to-end contract for constraint execution across agentic-mbse, sysml-codegen, and TEAx",
+  "subject": "constraint execution lifecycle",
+  "summary": "Constraint execution had accumulated correct individual pieces (extraction, profile validation, lowering, catalog, TEAx evaluation) with no single authoritative description of how they compose, and several certified components failed when combined in a real whole-plant route; recent defects had repeatedly crossed seams that local tests treated independently. This spec is a large ratified target-architecture document (owner-verbatim: 'Ratified.') spanning responsibility/authority, neutral fact extraction, the executable numerical profile, concrete lowering and actual resolution, graph extension and catalog generation, snapshot/contract/package integrity, runtime evidence and study execution, supported integration seams, and proof obligations, with three explicit owner decisions (no public late-fill graph mutation; direct literal design attributes are valid constraint actuals without a passthrough calculation; the embedded codegen catalog is TEAx's sole schema authority). It explicitly records that proof was NOT established at ratification time (the codegen/agentic-mbse/TEAx trees were not a mutually installable committed candidate set) and defines an 18-row dependency-ordered open implementation register (rows 0-17) to be executed by a companion epic, with certification following register order and the composed public proof running last.",
+  "key_decisions": [
+    "The lifecycle contract becomes the single normative architecture description after ratification; where original concepts, completed specs, public docs, or PR bodies disagree, this contract's correction register governs",
+    "Owner Decision 1: no public late-fill or post-build graph/default mutation is supported; the lifecycle requires a fully representable graph plus ordinary declared external inputs",
+    "Owner Decision 2: direct literal-valued design attributes are valid constraint actuals via direct shared producer/exact-QN resolution, not model-authored passthrough calculations; this supersedes the same-day owner-ratified WI-027 D7 passthrough design",
+    "Owner Decision 3: codegen's embedded model-contract catalog is the sole schema authority TEAx consumes directly; the alternate TEAx schema, fusion materializer, and identity stand-in are deleted",
+    "Proof is explicitly NOT established at ratification; certification is deferred to a companion epic's 18-row dependency-ordered register, executed in order with the composed public proof (row 17) running last",
+    "Ratification of the target architecture proceeds independently of and does not wait on the commit-pinned installable candidate set"
+  ],
+  "supersedes": [
+    "the old equality matrix",
+    "the old whole-graph extension-time V11 invariant",
+    "stale profile-version claims",
+    "the 'profile is codegen-only' description",
+    "owner-ratified WI-027 D7 passthrough-calculation design (superseded by Owner Decision 2)",
+    "the alternate TEAx-side catalog schema, fusion catalog materializer, and identity stand-in (superseded by Owner Decision 3)"
+  ],
+  "status": "unknown",
+  "id": "H-090"
+}

@@ -1,6 +1,6 @@
 # Provenance — `alias_agg_d5`
 
-Authored 2026-08-11 for recovery plan **Gate 4C** (`.project/active/cutover-recovery/plan.md`),
+Authored 2026-08-11 for recovery plan **Gate 4C** (`cutover-recovery/plan.md` (git history)),
 as the exact-route replacement specimen for row **L-099** (alias-aggregation probe generation).
 
 **Not a corpus fixture.** It joins no ledger and no 37-path corpus run.

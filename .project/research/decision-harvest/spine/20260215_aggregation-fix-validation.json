@@ -1,0 +1,18 @@
+{
+  "dir": "20260215_aggregation-fix-validation",
+  "date_start": "2026-02-15",
+  "date_end": "2026-02-15",
+  "epic": "unknown",
+  "item_number": null,
+  "title": "Runtime spikes validating the root-cause analysis of an aggregation-wiring gap before committing a fix",
+  "subject": "aggregation registry wiring",
+  "summary": "A static root-cause analysis had identified 3 bugs explaining why aggregation module inputs failed to resolve as MODULE_OUTPUT (unscoped registry lookup keys, wrong SingletonTerm channel construction, missing scoped registration keys), but the analysis was code-reading only and the proposed fix risked breaking working pipelines if wrong. Three read-only spikes ran against the solar_battery model, dumping the registry, tracing each aggregation input's resolution path, and spot-checking proposed scoped keys against the real registry. Bug 1 (unscoped lookup) was fully confirmed: 0/12 current hits, 12/12 with scoped keys. Bug 2 (SingletonTerm) was not testable since the model has none. Bug 3 was only partially confirmed since top-level aggregations use bare LocalTerms rather than dotted refs. The spike also discovered a new failure mode, CHAIN_PART_MISMATCH (PartDef name vs PartUsage name mismatch, e.g. String_Inverter vs inverter), affecting 4 of 12 inputs, which the proposed scoped-key fix resolves as a side effect. Verdict: GO, proceed to implement the 3-part fix.",
+  "key_decisions": [
+    "Go decision: proceed to implement the 3-part registry fix (scope the lookup key, add the missing registration key, fix SingletonTerm to use registry-first resolution)",
+    "Original ~70-input estimate was wrong; only 12 inputs are actually resolvable (the rest are LocalTerms, always entry points)",
+    "The newly discovered CHAIN_PART_MISMATCH bug does not need a separate fix since the scoped-registry change resolves it as a side effect"
+  ],
+  "supersedes": [],
+  "status": "shipped",
+  "id": "H-028"
+}

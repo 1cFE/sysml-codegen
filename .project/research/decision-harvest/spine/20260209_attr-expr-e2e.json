@@ -1,0 +1,18 @@
+{
+  "dir": "20260209_attr-expr-e2e",
+  "date_start": "2026-02-09",
+  "date_end": "2026-02-09",
+  "epic": "ATTR-EXPR",
+  "item_number": "Item 4",
+  "title": "End-to-end numerical validation of computed attribute expression pipeline on real models",
+  "subject": "computed attribute e2e validation",
+  "summary": "Items 1-3 of the ATTR-EXPR epic built computed-attribute extraction, classification, compilation, and pipeline wiring, but nothing had executed the generated code and checked numerical correctness. This item added 21 new E2E tests executing FORMULA auto-implementations against hand-computed ground truth on the attr_expr_probe fixture (9 attributes, including chains and fan-in) and on solar_battery's p_net_kw synthetic module, and verified EXPOSE_PURE/EXPOSE_COMPUTED classify with no spurious modules or errors. All 285 tests passed (0 failures, 0 xfail) with zero regressions to the 264 pre-existing tests. The item closed as the validation gate before Item 5 (ADRs/documentation) and epic closure.",
+  "key_decisions": [
+    "EXPOSE_COMPUTED execution validation deferred out of scope, documented as a known gap",
+    "Numerical assertions use pytest.approx with relative tolerance to handle floating-point arithmetic",
+    "Production bugs found during validation are fixed but tracked separately from this validation item"
+  ],
+  "supersedes": [],
+  "status": "shipped",
+  "id": "H-012"
+}

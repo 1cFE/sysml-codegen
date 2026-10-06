@@ -1,6 +1,6 @@
 # Provenance — `constraint_occurrence_demand_overrides_d5`
 
-Authored 2026-08-11 for recovery plan **Gate 4C part 7** (`.project/active/cutover-recovery/plan.md`),
+Authored 2026-08-11 for recovery plan **Gate 4C part 7** (`cutover-recovery/plan.md` (git history)),
 as the exact-route execution specimen for row **L-193**
 (`tests/execution/test_constraint_occurrence_demand_execution.py`), and behind it **L-113** /
 **L-114**.

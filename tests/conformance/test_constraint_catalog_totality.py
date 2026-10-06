@@ -50,9 +50,20 @@ def test_the_catalog_carries_every_domain_member():
         key.to_wire() for key in graph.constraint_usages
     }
 
+def _catf_mfe_d5_graph():
+    """Project catf_mfe_d5's sealed snapshot (its .sysml fork collapsed, Move C)."""
+    from sysml_codegen.elaboration import project
+    from sysml_codegen.snapshot.envelope import load_instance_graph_snapshot
+
+    return project(
+        load_instance_graph_snapshot(
+            FIXTURES_DIR / "catf_mfe_d5" / "instance_graph_snapshot.json"
+        )
+    )
+
 
 def test_catf_mfe_d5_ships_all_sixty_five_rows():
-    catalog = build_elaborated_pipeline([FIXTURES_DIR / "catf_mfe_d5"]).constraint_catalog
+    catalog = _catf_mfe_d5_graph().constraint_catalog
     assert len(catalog.usage_records) == 65
     assert sum(1 for row in catalog.usage_records if row.disposition_kind == "eligible") == 0
     assert sum(1 for row in catalog.usage_records if row.occurrence_count > 0) == 9
@@ -242,7 +253,15 @@ def _refused(
     that is its contract with the CLI, so the assertion is on the return value and the
     message, not on an escaping exception.
     """
-    graph = build_elaborated_pipeline([fixture])
+    snapshot = fixture / "instance_graph_snapshot.json"
+    if snapshot.is_file() and not any(fixture.glob("**/*.sysml")):
+        # catf_mfe_d5 keeps only its sealed snapshot (REPO-CLEANUP Move C).
+        from sysml_codegen.elaboration import project
+        from sysml_codegen.snapshot.envelope import load_instance_graph_snapshot
+
+        graph = project(load_instance_graph_snapshot(snapshot))
+    else:
+        graph = build_elaborated_pipeline([fixture])
     mutate(graph.constraint_catalog)
     output = tmp_path / "generated"
 

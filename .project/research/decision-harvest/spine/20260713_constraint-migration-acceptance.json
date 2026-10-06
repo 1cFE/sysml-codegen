@@ -1,0 +1,25 @@
+{
+  "dir": "20260713_constraint-migration-acceptance",
+  "date_start": "2026-07-13",
+  "date_end": "2026-07-13",
+  "epic": "CONSTRAINT-EXEC",
+  "item_number": "Item 14",
+  "title": "Retire the drop-manifest era, flip authoring docs to the executable profile, and pass IFE-sweep acceptance against the generated viability assertion",
+  "subject": "constraint catalog migration, docs, IFE acceptance",
+  "summary": "This was CONSTRAINT-EXEC's epic-closing item. It fixed a prerequisite extraction gap (materialize_supplied_values did not synthesize a design attribute for a top-level instance self-redefinition, blocking fusion_tea's viability assertion from lowering), retired the old drop-manifest reporting surface behind a proven per-usage 1:1 manifest-to-catalog mapping test, flipped authoring and architecture docs from 'constraints are not executable' to teaching the executable profile, and replaced the fusion-tea IFE sweep's hand-coded viability rule with the generated assertion consumed through the study layer. Acceptance matched 2294/2301 grid rows exactly; the 7 divergent rows were boundary cases where the old hand rule's strict '>' was less faithful to the model's '>=' than the generated assertion, so audit treated the divergence as the epic's thesis proving itself, not a failure. Audit verdict was certify-with-notes: it flagged that acceptance should be recorded as ~99.7% plus a correcting divergence rather than a bare '100%', and identified three integration gaps (no standalone constraint_catalog.json artifact, a single-entry-channel-only CandidateBridge, a hardcoded ToyPlantParams in PreparedEvaluator) that narrow the claim surfaces of Items 9, 12, and 10 respectively and should become follow-on items rather than permanent adapters.",
+  "key_decisions": [
+    "The gain extraction gap is fixed with a demand-scoped, literal-only tier in materialize_supplied_values/resolve_actual rather than a broader synthesis mechanism, keeping the fix's blast radius to exactly two fixtures (fusion_tea, plant_values)",
+    "The manifest-to-catalog migration is verified by a kept per-usage mapping test (not a count match) before any retirement code is deleted",
+    "collect_constraint_manifest and its kind vocabulary are kept (deviating from the design's stated deletion target) because the kept mapping test still calls the sweep directly",
+    "The generation-halt diagnostic for out-of-profile constraints is explicitly kept; only the blanket drop-manifest warnings are retired",
+    "The 7-row acceptance divergence is treated as a correcting divergence (model's inclusive >= is more faithful than the old hand rule's strict >), not an acceptance failure, and should be recorded as such rather than claimed as literal 100% match",
+    "Three consumer-side integration gaps surfaced during acceptance are recorded as narrowings of certified Items 9, 10, and 12 and must become tracked follow-on items rather than permanent shims"
+  ],
+  "supersedes": [
+    "The drop-manifest reporting era (extraction/constraint_report.py, its two blanket 'not executable' warnings, and the snapshot dropped_constraints section), retired in favor of the constraint catalog as the single source of truth",
+    "The fusion-tea IFE sweep's hand-coded Python viability rule, replaced by the generated assertion consumed via the teax study layer",
+    "Authoring guidance in docs/architecture/modeling-assumptions.md section 8 that taught constraints are dropped/not executable"
+  ],
+  "status": "shipped",
+  "id": "H-087"
+}

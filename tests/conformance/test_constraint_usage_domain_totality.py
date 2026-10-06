@@ -13,7 +13,6 @@ from __future__ import annotations
 
 import pytest
 
-from sysml_codegen.orchestration.elaborated_pipeline import elaborate_model_paths
 from tests.conftest import FIXTURES_DIR, requires_license
 
 pytestmark = requires_license
@@ -21,7 +20,13 @@ pytestmark = requires_license
 
 @pytest.fixture(scope="module")
 def catf_mfe_d5_graph():
-    return elaborate_model_paths([FIXTURES_DIR / "catf_mfe_d5"])
+    # The fixture's .sysml fork collapsed to its sealed snapshot (REPO-CLEANUP Move C);
+    # the decoded instance graph is the same elaboration the sources produced.
+    from sysml_codegen.snapshot.envelope import load_instance_graph_snapshot
+
+    return load_instance_graph_snapshot(
+        FIXTURES_DIR / "catf_mfe_d5" / "instance_graph_snapshot.json"
+    )
 
 
 def test_catf_mfe_d5_authored_population_is_total(catf_mfe_d5_graph):

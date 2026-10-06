@@ -77,7 +77,7 @@ grade corrected by the owner's subsequent instruction to apply the capture-fidel
 - [ ] The verification matrix gains an independently anchored `REQ-SI` requirements family derived
       from the durable `LC-SI-*` authority and Item-3 acceptance matrix. Its evidence includes the
       public every-and-only mutation behavior and the composed customer proof.
-- [ ] The repaired assurance record preserves P-002's deep-override evidence bound and the separate
+- [ ] The repaired assurance record preserves 0002's deep-override evidence bound and the separate
       `[ANCHORING-ARRAYED-DIAGNOSTIC]` follow-up rather than broadening either into a certified
       guarantee. Contradictory or overbroad claims are amended at their existing homes.
 - [ ] A reconciliation record accounts for every certification and guidance obligation inherited
@@ -186,9 +186,9 @@ evidence needed to establish it.
   guidance obligations,” and
   `.project/concepts/constraint-execution-lifecycle-requirements.md`, `LC-SI-15` through
   `LC-SI-23`.
-- **[INHERITED]** P-002 does not evidence the deep-literal-override lane, and its arrayed-owner
+- **[INHERITED]** 0002 does not evidence the deep-literal-override lane, and its arrayed-owner
   spelling inconsistency remains under `[ANCHORING-ARRAYED-DIAGNOSTIC]`. This item preserves both
-  bounds. Source: `.project/product/P-002-exact-owner-anchoring.md`, “The bound” and “Known
+  bounds. Source: `.project/product/0002-exact-owner-anchoring.md`, “The bound” and “Known
   inconsistency, dispositioned.”
 - **[INFERRED]** The source-identity matrix family and every-and-only proof must be anchored
   independently of the implementation they certify. Implementation discovery or expected output
@@ -250,8 +250,8 @@ evidence needed to establish it.
 - **Forensics:** `.project/research/20260803-203011_entry-surface-fanout-forensics.md` and
   `.project/research/20260803-202453_backtracking-fanout-forensics.md`
 - **Prior composed proof:** `.project/completed/20260814_cutover-recovery/plan.md`, Slice 3D
-- **Product promises:** `.project/product/P-001-design-search-free-variation.md` and
-  `.project/product/P-002-exact-owner-anchoring.md`
+- **Product promises:** `.project/product/0001-design-search-free-variation.md` and
+  `.project/product/0002-exact-owner-anchoring.md`
 - **Product lens:** `.project/active/elaborator-downstream/product-lens.md`
 - **Design:** `.project/active/elaborator-downstream/design.md` (to be created)
 

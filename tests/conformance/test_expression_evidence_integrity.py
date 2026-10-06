@@ -1249,7 +1249,7 @@ def test_operator_wrapped_indexed_source_still_refuses_correctly(strict: bool) -
 #
 # Leg 3 of closure — routes.  Every consumer that reads an expression must prove four
 # things through its natural public route, not through a directly called helper.  See
-# `.project/active/stop-reinventing-the-parser/design.md#evidence-and-public-boundary-matrix`.
+# the stop-reinventing-the-parser design, §evidence-and-public-boundary-matrix (git history).
 #
 # A cell holds the `module::function` of the test that proves it. Public arms are recorded
 # per cell: the deep-override grammar makes two failure shapes unavailable before public

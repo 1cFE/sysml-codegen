@@ -10,7 +10,7 @@ the one the item exists to keep separable. Before this item a model with 65 unas
 and a model with no checks at all produced the same runtime label, `unconstrained`.
 
 Every expected account below is the fixture's entry in
-`.project/active/constraint-coverage-policy/expected-coverage.md`, hand-written from `.sysml`
+`tests/unit/data/expected-coverage.md`, hand-written from `.sysml`
 source before any of this code existed.
 """
 
@@ -21,7 +21,11 @@ from pathlib import Path
 
 import pytest
 
-from tests.execution.real_teax import generate_package_from_models, load_sealed_package
+from tests.execution.real_teax import (
+    generate_package_from_models,
+    generate_package_from_snapshot,
+    load_sealed_package,
+)
 
 pytestmark = pytest.mark.execution
 
@@ -46,7 +50,12 @@ SIX_STATES = [
 def _execute(fixture: str, name: str, root: Path):
     from simkit.core.pipeline import execute_pipeline
 
-    package = generate_package_from_models(FIXTURES / fixture, root / name, name)
+    snapshot = FIXTURES / fixture / "instance_graph_snapshot.json"
+    if snapshot.is_file() and not any((FIXTURES / fixture).glob("**/*.sysml")):
+        # catf_mfe_d5 keeps only its sealed snapshot (REPO-CLEANUP Move C).
+        package = generate_package_from_snapshot(snapshot, root / name, name)
+    else:
+        package = generate_package_from_models(FIXTURES / fixture, root / name, name)
     module, _fingerprint = load_sealed_package(package, name, root / "link")
     result = execute_pipeline(
         package / "pipelines" / "pipeline.yaml",
@@ -173,8 +182,8 @@ def test_the_two_report_authorities_agree_on_a_zero_input_package(tmp_path):
     """
     from simkit.study.model_contract import load_model_contract, ships_constraint_report
 
-    package = generate_package_from_models(
-        FIXTURES / "catf_mfe_d5", tmp_path / "d5auth", "d5auth"
+    package = generate_package_from_snapshot(
+        FIXTURES / "catf_mfe_d5" / "instance_graph_snapshot.json", tmp_path / "d5auth", "d5auth"
     )
     assert ships_constraint_report(load_model_contract(package))
     assert REPORT_CH in (package / "pipelines" / "pipeline.yaml").read_text()

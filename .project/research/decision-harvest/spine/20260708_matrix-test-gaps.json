@@ -1,0 +1,21 @@
+{
+  "dir": "20260708_matrix-test-gaps",
+  "date_start": "2026-07-07",
+  "date_end": "2026-07-08",
+  "epic": "TRUTH-DEBT",
+  "item_number": "Item 3",
+  "title": "Author independently-anchored tests for three UNTESTED verification-matrix rows (REQ-DM-08, REQ-RES-05, REQ-RES-08), flipping them to PASS with honest text reframes",
+  "subject": "verification matrix test-gap closure",
+  "summary": "Three verification-matrix rows were marked UNTESTED with an argument standing in for a test. This item authored one independently-anchored pinning test per row and flipped all three to PASS in one change. REQ-DM-08 could not be flipped as originally framed -- re-verification found the documented model fields are still bare str, not the NewType wrappers the row's text claimed -- so the item ruled Route A: pin the actually-enforced surface (NewType wrappers plus the OutputRegistry's registry-dict and constructor annotations, using an AST scan since PEP-526 init-body annotations never populate __annotations__), reframe the row's text to match, and file the still-open model-field typing as its own backlog entry rather than fix it. REQ-RES-05 pinned build_computation_graph's real internal five-step call order, distinct from the existing outer-orchestrator pin. REQ-RES-08 required a similar text reframe (the row falsely claimed a universal ResolutionContext.consumer_scope mechanism, which FORMULA doesn't use) and ended up asserting four independently hand-derived legs across real fixtures: base consumer scope, the landed ancestor-scope climb, aggregation, and FORMULA's owning-part-keyed scoping. The audit (PASS verdict) independently traced every hand-authored expectation against real fixture and source content and found zero src/ changes, exact matrix recount, and consistent reframes across the matrix and both reference docs, but could not re-execute the suite or the three mutation red-green spot-checks because the audit sandbox blocked all process execution.",
+  "key_decisions": [
+    "Route A ruling for REQ-DM-08: pin the enforced surface (wrappers + registry dict/constructor annotations) and reframe the row's text to that claim, rather than Route C (annotate the model fields, ruled out as production code churn outside a test-authoring item) or Route B (test the full table as a documented xfail, which would abandon the flip)",
+    "DM-08's enforced surface deliberately excludes register_alias's method params (ScopedKey | str / CanonicalChannel | str by design) -- the canonical surface is keys/values plus constructors, not method params",
+    "DM-08 test mechanism must be an AST/source scan, not typing.get_type_hints, because PEP-526 self.x: T assignments inside __init__ never populate a class __annotations__ and get_type_hints would stay green under the intended mutation",
+    "REQ-RES-08's row text is reframed to drop the false universal 'via ResolutionContext.consumer_scope' clause and instead state three per-path mechanisms, since FORMULA scopes via owning-part QN rather than that field",
+    "REQ-RES-05's test pins the inner build_computation_graph call order, explicitly not duplicating the existing outer build_pipeline_context pin (REQ-ORCH-01)",
+    "[DM08-MODEL-FIELD-TYPING] filed as a named backlog entry rather than silently dropped, per the epic's R1/INV-B honesty discipline"
+  ],
+  "supersedes": [],
+  "status": "shipped",
+  "id": "H-077"
+}

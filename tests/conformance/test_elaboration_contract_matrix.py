@@ -804,9 +804,7 @@ def _assert_load_error(model_path: Path, detail: str) -> None:
 
 def _src_03(_tmp_path: Path) -> None:
     _assert_load_error(
-        ROOT
-        / ".project/active/source-identity-binding-semantics-spike/probes/models"
-        / "form_bracket_sq.sysml",
+        FIXTURES_DIR / "source_identity_binding_forms" / "form_bracket_sq.sysml",
         "error",
     )
 

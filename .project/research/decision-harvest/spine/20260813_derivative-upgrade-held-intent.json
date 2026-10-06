@@ -1,0 +1,26 @@
+{
+  "dir": "20260813_derivative-upgrade-held-intent",
+  "date_start": "2026-08-13",
+  "date_end": "2026-08-13",
+  "epic": "CONSTRAINT-SEMANTICS",
+  "item_number": "Item 9",
+  "title": "Execute held ruled intent on the catf_mfe_gated fixture: derive A5/A6 radii, upgrade A9 to a relative-band assert, and retire stale blocked-by-defect PROVENANCE records",
+  "subject": "catf_mfe_gated fixture derivations",
+  "summary": "Item 8's unit-lane port fix removed the defect that had forced three rows of tests/fixtures/catf_mfe_gated (A5 LayerContinuity, A6 RadiusThicknessConsistency, A9 PumpingSpeedConsistency) to stay as visible plain usages marked blocked-by-defect instead of the shape the owner had already ruled. This item executed that already-ruled intent: deleted A5/A6 and replaced them with 27 derived radius attributes (13 inner_radius, 14 outer_radius) over a free-parameter basis of the axis root radius plus 14 layer thicknesses; upgraded A9 to an asserted ProductWithinBand constraint at 1% relative tolerance; retired the blocked-by-defect markings on the live fixture surface while leaving the archived owner-disposition record byte-frozen; and restated the manifest identity as 65 = 56 carriers + 9 named deletions, extending the manifest prover to anchor derivations per-occurrence instead of by non-unique initializer text. Independent audit certified with residuals: all eight spec success criteria verified by re-measurement, two structural smells found and disposed, and only minor recorded-number/conditional-criterion residuals left open (none blocking).",
+  "key_decisions": [
+    "No re-disposition: A5/A6 basis, A9 tolerance/form, and the blocked-by-defect retirement were already ruled by the owner on 2026-08-13; this item only executes and restates the arithmetic that follows.",
+    "The archived owner-disposition.md stays byte-untouched; the blocked-by-defect retirement lands only on the live fixture PROVENANCE, since the epic's criterion is satisfied by the live projection.",
+    "A9 asserts ProductWithinBand at rel_tol = 0.01 (relative, not absolute) so the band scales under design-search resizing.",
+    "The manifest prover (scripts/check_gated_manifest.py) is extended to match each derivation per-occurrence (owning declaration block) rather than by initializer text uniqueness, since A6's 14 derivations are byte-identical lines.",
+    "The epic's third Item 9 success criterion (author five @inapplicable: markers) is ruled a not-fired conditional because [INLINE-PREDICATE-MARKER-DROP] stays open and unowned; recorded as a decision on both the item's records and BACKLOG.md rather than fired here.",
+    "spec_review was skipped for this item as proportionate, with the orchestrator independently re-verifying the restated-identity arithmetic and design_review still run fresh."
+  ],
+  "supersedes": [
+    "The blocked-by-defect visible-plain-usage forms of A5, A6, and A9 in tests/fixtures/catf_mfe_gated",
+    "The prior manifest identity accounting of 65 = 58 carriers + 7 deletions",
+    "The exact == comparison in the prior PumpingSpeedConsistency constraint",
+    "Stale citations in the manifest expectation and prover docstring pointing at the pre-archive .project/active/ path"
+  ],
+  "status": "shipped",
+  "id": "H-119"
+}

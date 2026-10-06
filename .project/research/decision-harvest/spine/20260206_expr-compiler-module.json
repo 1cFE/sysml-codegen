@@ -1,0 +1,20 @@
+{
+  "dir": "20260206_expr-compiler-module",
+  "date_start": "2026-02-03",
+  "date_end": "2026-02-06",
+  "epic": "EXPR-CODEGEN",
+  "item_number": "Item 3",
+  "title": "Build a standalone expression compiler module that converts SysML expression ASTs into executable Python",
+  "subject": "expression compiler",
+  "summary": "Items 1-2 spiked and validated that SysIDE expression ASTs could be extracted and compiled to correct Python; this item turned that spike logic into a production-quality module. It added expression_compiler.py (Compilability/ExpressionNodeType enums, ExpressionAST IR, CompilationResult/CalcDefCompilationResult, and compiler functions for AST building, Python emission, compilability classification, and undeclared-intermediate discovery with topological ordering) plus a new expression_utils.py holding AST-to-text logic extracted out of constraint_extractor.py. The module was designed to be fully unit-testable without the syside dependency, using mocked syside nodes and monkeypatched adapters. Pipeline wiring was explicitly out of scope, deferred to Item 4.",
+  "key_decisions": [
+    "N-ary OperatorExpression nodes are left-folded into binary ExpressionAST nodes at construction time, not at code-emission time",
+    "Undeclared CalcDef members referenced in output expressions are discovered, compiled, and emitted as local variables via topological ordering rather than left unsupported",
+    "The compiler uses defensive over-parenthesization and its own PYTHON_OPERATOR_MAP distinct from constraint_extractor's OPERATOR_MAP",
+    "Shared AST-to-text reconstruction logic is extracted into expression_utils.py so constraint_extractor.py and the new compiler do not duplicate it",
+    "SelectExpression/conditional expressions, InvocationExpression/function calls, and named-constant substitution (e.g. math.pi) are explicitly out of scope"
+  ],
+  "supersedes": [],
+  "status": "unknown",
+  "id": "H-004"
+}

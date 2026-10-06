@@ -1,0 +1,20 @@
+{
+  "dir": "20260220_bug11",
+  "date_start": "2026-02-18",
+  "date_end": "2026-02-20",
+  "epic": "unknown",
+  "item_number": "Bug 11",
+  "title": "Fix generated MultiOutput Pydantic schemas rendering spurious defaults on output fields, breaking TEAx output-channel detection",
+  "subject": "generated output schema defaults",
+  "summary": "Generated MultiOutput schemas rendered Field(default=0.0, ...) on output fields whenever the SysML model had a fixed bound value (e.g. `out attribute material_cost : Real = 0.0`), because the extractor conflated a permanent fixed binding (isDefault=false) with an actual overridable SysML default (isDefault=true) and passed the value through unfiltered to schema generation. Since TEAx's create_registry() treats a Pydantic field with a default as optional and skips registering it as a pipeline output, this caused generated output channels to silently disappear from pipeline wiring with no error. The fix was a one-line change in generation/schemas.py forcing output-field defaults to always render as None (the generation layer's job to enforce REQ-OSR-05), leaving the misclassified extraction-layer default_value data intact and unrepurposed for a future upstream fix. The affected xfail test was hardened into a real assertion and extended from one model to all four.",
+  "key_decisions": [
+    "Fix applied at the generation layer (schemas.py), not extraction or resolution, so the misclassified extraction data is preserved for a later upstream fix rather than discarded; only 1 line changes and zero baseline JSONs are affected",
+    "The underlying extraction bug (conflating fixed bound values with SysML defaults) is explicitly deferred as future work, not fixed in this item",
+    "The affected test moved from a soft pytest.xfail to a hard assertion and was extended from solar_battery only to all four fixture models"
+  ],
+  "supersedes": [
+    "The prior xfail-marked test acknowledging Bug 11 as known-broken; it now asserts the correct behavior as a hard requirement"
+  ],
+  "status": "shipped",
+  "id": "H-065"
+}

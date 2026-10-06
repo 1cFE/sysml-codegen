@@ -1,0 +1,19 @@
+{
+  "dir": "20260218_module-registry-generator",
+  "date_start": "2026-02-18",
+  "date_end": "2026-02-18",
+  "epic": "unknown",
+  "item_number": null,
+  "title": "Fix the module registry generator (C24) so aggregation import paths and class names stop colliding",
+  "subject": "module registry generator",
+  "summary": "The generator that writes the pipeline's __init__.py (imports, create_registry() call, CUSTOM_SCHEMA_TYPES) had two bugs: aggregation import paths used a library-scoped qualified name that produced malformed directory paths, and 20 aggregation modules across 4 assemblies collapsed onto 5 shared class names with silent dict overwrite. Fixed the QN derivation to use the design-scoped module EQN, and added collision detection plus aliased imports keyed off the parent assembly segment. Left a known mismatch in graph_builder's aggregation module_type derivation (still library-scoped) as a documented cross-component gap for a later phase. Shipped with 22 new conformance tests and full-suite green (1675 passed).",
+  "key_decisions": [
+    "Use agg.module_eqn.replace('__','::') instead of agg.expression.owning_part_qn for aggregation import paths (design-scoped, matches filesystem layout)",
+    "Add collision detection + PascalCase-parent-segment aliasing before rendering, rather than allowing module_type_override dict keys to silently overwrite",
+    "Defer the matching fix in graph_builder.py (module_type still library-scoped for aggregation) to a later phase rather than widen this component's scope",
+    "Interpret 'design-scoped' requirement as: all module types use the same QN-to-path derivation pipeline, not that every type's QN itself must be design-scoped (CalcUsage legitimately stays library-scoped)"
+  ],
+  "supersedes": [],
+  "status": "shipped",
+  "id": "H-059"
+}

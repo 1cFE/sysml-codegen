@@ -1,0 +1,22 @@
+{
+  "dir": "20260813_unit-lane-port-metadata",
+  "date_start": "2026-08-13",
+  "date_end": "2026-08-13",
+  "epic": "CONSTRAINT-SEMANTICS",
+  "item_number": "Item 8",
+  "title": "Fix unit-lane port metadata defect blocking constraint-formal and computed-attribute entry-point dedup",
+  "subject": "elaborator unit selection, projection dedup",
+  "summary": "One modeled design attribute feeding more than one consumer only collapses to a single public DESIGN_ATTRIBUTE entry point when the consumers' metadata agrees, but the elaborator made agreement impossible: constraint-formal bindings and computed-attribute inputs both carried unit=None while calc-usage bindings carried a real unit, so valid models hit projection's fail-closed comparison and were refused with SI_RENDERING_COLLISION. This affected CATF's A9 assert-band and 26 of 27 radial-build radius derivations, forcing Item 5 to hold A5/A6/A9 as blocked-by-defect. The fix made declaration identity own unit selection on all three lanes (constraint ports via the selected effective constraint formal, computed ports via the exact referenced declaration, one shared exact-text extractor with no inference/conversion), and made v6 envelope build/load certify projectability before capture can write. Shipped standalone as an implementation/defect-fix item, independently audited Certify; both customer characterizations flipped red-to-green with exact authored units.",
+  "key_decisions": [
+    "Declaration identity (not slot-root fallback) owns unit selection on all three metadata lanes; projection's equal-metadata-dedupes / unequal-refuses rule is unchanged.",
+    "Item 8 shipped standalone; the Item 6 design's R5 joint-delivery option stayed declined.",
+    "v6 envelope build and load now certify projectability before capture can write, so a non-projectable graph cannot reach a destination.",
+    "The complete tracked-path set (23 paths) and the older 15-path subset are recorded as dated evidence only; a future graph-v4 record must re-derive and prove equality against its own then-current set rather than reuse these numbers.",
+    "Zero v3 recapture fired (23 tracked / 23 assessed / 0 stale/missing/extra/duplicate), so no snapshot or manifest byte moved during this item."
+  ],
+  "supersedes": [
+    "Prior elaborator behavior where constraint-formal bindings and computed-design-attribute inputs carried a manufactured unit=None instead of the authored unit."
+  ],
+  "status": "shipped",
+  "id": "H-120"
+}

@@ -1,0 +1,22 @@
+{
+  "dir": "20260708_multihop-chain",
+  "date_start": "2026-07-06",
+  "date_end": "2026-07-08",
+  "epic": "TRUTH-DEBT",
+  "item_number": "Item 2",
+  "title": "Resolve 3+-segment (multi-hop) calc-usage chain bindings to their upstream channel instead of hard-rejecting",
+  "subject": "backtracker chain resolution",
+  "summary": "A calc-usage parameter bound through three or more segments (e.g. station.array.derived_calc.derived_value) previously hard-rejected to an unbound entry point because the chain parser could not represent it. This item made extraction emit a full-path CHAIN binding for the deep chain, and gave the dependency backtracker an ancestor-scope climb (scoped_lookup only) that resolves it to the exact producing channel, refusing loudly (not silently truncating) when two ancestor scopes disagree. The prior epic's loud-reject contract for genuinely unresolvable chains was preserved, relocated to the backtracker's Step-4 WARNING. Audit verdict was PASS-WITH-NOTES, upgraded to PASS after gates were re-run live, a mutation spot-check confirmed the ambiguity guard was load-bearing, and a mis-attributed BACKLOG staleness note (ife_plant) was corrected to blame a pre-existing prior-epic drift rather than this item.",
+  "key_decisions": [
+    "Deep-chain resolution added only to the calc-usage param-binding path (extraction + backtracker climb); the attribute value-binding path was already handled and left untouched (non-goal)",
+    "Climb uses scoped_lookup only, ordered after the 1-dot alias_lookup, to avoid colliding with existing alias resolution",
+    "On two ancestor scopes reaching distinct channels for the same chain, the resolver refuses (loud WARNING + entry point) rather than picking one, preserving the never-silently-truncate contract from the prior epic's Item 5",
+    "Re-capture scoped to only the deep_cross_scope_probe fixture; no other baseline was touched",
+    "No agentic-mbse code change needed; the deep chain shape was already valid SysML the adapter parsed"
+  ],
+  "supersedes": [
+    "The prior epic's loud hard-reject of 3+-segment calc-usage chains at extraction time (usage_extractor.py), which is replaced by resolution via the backtracker's ancestor climb; the loud diagnostic itself is preserved but relocated"
+  ],
+  "status": "shipped",
+  "id": "H-074"
+}

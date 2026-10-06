@@ -1,0 +1,18 @@
+{
+  "dir": "20260217_ast-dispatch-invariant",
+  "date_start": "2026-02-17",
+  "date_end": "2026-02-17",
+  "epic": "unknown",
+  "item_number": "C07",
+  "title": "Codebase-wide audit enforcing that FeatureChainExpression is always dispatch-checked before OperatorExpression at every dual-check site",
+  "subject": "AST dispatch ordering invariant",
+  "summary": "FeatureChainExpression (FCE) is a subtype of OperatorExpression (OE) in SysIDE's type system, so any dispatch site checking OE before FCE misclassifies FCE nodes -- the root cause of a prior production bug that broke 37 aggregation inputs. This cross-cutting item audited every is_instance() dispatch site across 5 source files, confirmed all 5 dual-check sites already check FCE before OE (the critical invariant held), but found 2 of the 5 sites lacked the required invariant comment and used non-canonical (though still safe, elif-chain) ordering; it added the missing comments and wrote 26 conformance tests including a total-dispatch-site-count guardrail so a future unaudited dispatch site would fail the count test. No behavioral changes were made.",
+  "key_decisions": [
+    "Elif-chain sites (2 of 5) are accepted with non-canonical FRE/Literal placement as long as the critical FCE-before-OE invariant holds; full reordering was judged higher risk than value and is documented as an accepted deviation, not a defect",
+    "A total-dispatch-function-count test (8 functions checking 2+ expression types) acts as a guardrail so any future unaudited dispatch site fails the test and forces review",
+    "Only 2 one-line comment additions were needed; no dispatch logic was reordered or changed"
+  ],
+  "supersedes": [],
+  "status": "shipped",
+  "id": "H-036"
+}
