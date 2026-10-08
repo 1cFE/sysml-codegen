@@ -151,6 +151,6 @@
     "tested_commit": "0046fa1535ec0f3581b08ab8436fd47825965b51"
   },
   "ruff": "pass",
-  "source_equivalence": "finalsource/templates/fixtures/scripts byte-identical to fullyexecuted0046/802 ancestors; conftest EOF repair preservesidenticalAST; later changes ledger/evidence only",
+  "source_equivalence": "Production source/templates/fixtures byte-identical to runtime802 and fullyexecuted0046; scripts and non-conftest tests match0046; conftest EOF repair preservesidenticalAST; later changes ledger/evidence only",
   "whitespace": "pass"
 }
