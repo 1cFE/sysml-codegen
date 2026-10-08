@@ -1,0 +1,1833 @@
+{
+  "baseline_commit": "6872977541eae935d4be2789f48f723ffea7101b",
+  "captured_at_field": "inapplicable: v6 rejects captured_at and is deterministic",
+  "duplicate_paths": [],
+  "extra_paths": [],
+  "git_status": [
+    "## pr-readiness-cleanup",
+    " M .project/CURRENT_WORK.md",
+    " M .project/backlog/BACKLOG.md",
+    "?? .project/active/pr-readiness-cleanup/",
+    "?? .project/reports/",
+    "?? .project/research/20261005-205701_pr-readiness-cleanup-remainder.md",
+    "?? tests/conformance/test_public_package_oracle.py",
+    "?? tests/expectations/public_package_oracle/",
+    "?? tests/helpers/public_package_oracle.py"
+  ],
+  "missing_paths": [],
+  "non_trigger_evidence": [
+    "envelope bytes/digest",
+    "source-manifest fingerprint",
+    "projected counts/refusal",
+    "computation digest",
+    "generated entry-point digest"
+  ],
+  "row_count": 22,
+  "rows": [
+    {
+      "committed": {
+        "envelope_certification_refusal": null,
+        "envelope_sha256": "5f008b27c85a5292096baf1e37e088db5565077e516dff2cead4c06a3972d921",
+        "instance_graph_fingerprint": "75d2d5822b0ff1be3320488fc9bf8611251464e315106a11f50ceb3fa3100875",
+        "instance_graph_payload_digest": "c753826078c11dea750d97d6759fb6d1ab3cd75d841bbab626f2b0a2bde84f16",
+        "instance_graph_schema": "instance-graph/v3",
+        "outer_digest": "30400f1ced379804f305c1ea0264578740e59e7776fbeb84df057d5269791933",
+        "projection": {
+          "codes": [],
+          "computation_digest": "451fce1552f15420e52ec7cdc6f31c59df532ea0d9e3e938728b4ed2f1b5c648",
+          "counts": {
+            "aliases": 0,
+            "constraints": 0,
+            "entry_point_groups": 1,
+            "entry_points": 3,
+            "modules": 1
+          },
+          "diagnostics": [],
+          "error_type": null,
+          "generated_entry_point_digest": "a093b428e374ceb21b0c25234e3554daa56710b3015db052a99a91a89d86f2d9",
+          "generated_entry_point_inapplicable": null,
+          "generated_entry_point_paths": [
+            "inputs/library_params.json",
+            "schemas/library_params.py"
+          ],
+          "message": null,
+          "status": "projectable"
+        },
+        "source_manifest_fingerprint": "ae812f0768ac3b42c6536842235a637a0df056e6b2c237be394a5fa3abc12a50",
+        "unit_map_sha256": "b903210e6b42a4f83716b2d7718fbdce580777e5a2aab278d21c6e2e4f1cdbfe"
+      },
+      "fixture_root": "tests/fixtures/agg_literal_probe",
+      "live": {
+        "envelope_certification_refusal": null,
+        "envelope_sha256": "5f008b27c85a5292096baf1e37e088db5565077e516dff2cead4c06a3972d921",
+        "instance_graph_fingerprint": "75d2d5822b0ff1be3320488fc9bf8611251464e315106a11f50ceb3fa3100875",
+        "instance_graph_payload_digest": "c753826078c11dea750d97d6759fb6d1ab3cd75d841bbab626f2b0a2bde84f16",
+        "instance_graph_schema": "instance-graph/v3",
+        "outer_digest": "30400f1ced379804f305c1ea0264578740e59e7776fbeb84df057d5269791933",
+        "projection": {
+          "codes": [],
+          "computation_digest": "451fce1552f15420e52ec7cdc6f31c59df532ea0d9e3e938728b4ed2f1b5c648",
+          "counts": {
+            "aliases": 0,
+            "constraints": 0,
+            "entry_point_groups": 1,
+            "entry_points": 3,
+            "modules": 1
+          },
+          "diagnostics": [],
+          "error_type": null,
+          "generated_entry_point_digest": "a093b428e374ceb21b0c25234e3554daa56710b3015db052a99a91a89d86f2d9",
+          "generated_entry_point_inapplicable": null,
+          "generated_entry_point_paths": [
+            "inputs/library_params.json",
+            "schemas/library_params.py"
+          ],
+          "message": null,
+          "status": "projectable"
+        },
+        "source_manifest_fingerprint": "ae812f0768ac3b42c6536842235a637a0df056e6b2c237be394a5fa3abc12a50",
+        "unit_map_sha256": "b903210e6b42a4f83716b2d7718fbdce580777e5a2aab278d21c6e2e4f1cdbfe"
+      },
+      "movement": {
+        "computation_digest_changed": false,
+        "envelope_sha_changed": false,
+        "generated_entry_point_digest_changed": false,
+        "instance_graph_payload_changed": false,
+        "projected_counts_changed": false,
+        "source_manifest_changed": false,
+        "unit_map_changed": false
+      },
+      "path": "tests/fixtures/agg_literal_probe/instance_graph_snapshot.json",
+      "stale": false,
+      "stale_reason": []
+    },
+    {
+      "committed": {
+        "envelope_certification_refusal": null,
+        "envelope_sha256": "f428aa26291a67356ff9f728322d98cb5b8eb6640a42ef3c1c17027ce51b35ac",
+        "instance_graph_fingerprint": "e1c5f182fe5fc3bbba74216ffced3211d33f24b6bc4c7dc9d6e14c1fb3c35239",
+        "instance_graph_payload_digest": "c9c7a0e1ee0cbf850574c4dc2f81990b1b3c84b9d95e637a923d021aa37a57ef",
+        "instance_graph_schema": "instance-graph/v3",
+        "outer_digest": "2a5a7efe54ff89d8ad7c8c80e262d0b4993e0930684ad5cd2cfd8a3defb080d5",
+        "projection": {
+          "codes": [],
+          "computation_digest": "774390959fc4f19603bc300bb850069b7a20a017eec9cc8ce4988319cfae69a5",
+          "counts": {
+            "aliases": 3,
+            "constraints": 0,
+            "entry_point_groups": 1,
+            "entry_points": 16,
+            "modules": 17
+          },
+          "diagnostics": [],
+          "error_type": null,
+          "generated_entry_point_digest": "5573491a1704a4c7500df0c5ba461ecb70cc336b3a724fc5dd08f16064471472",
+          "generated_entry_point_inapplicable": null,
+          "generated_entry_point_paths": [
+            "inputs/design_params.json",
+            "schemas/design_params.py"
+          ],
+          "message": null,
+          "status": "projectable"
+        },
+        "source_manifest_fingerprint": "b22d5423714ab97b6585374988db0340933952a68f215484bfa2b24f1e2f875f",
+        "unit_map_sha256": "7a347174cf2789f83230302403cf4d99e6bcf00e7c4562a03102295117a079f6"
+      },
+      "fixture_root": "tests/fixtures/attr_expr_probe",
+      "live": {
+        "envelope_certification_refusal": null,
+        "envelope_sha256": "f428aa26291a67356ff9f728322d98cb5b8eb6640a42ef3c1c17027ce51b35ac",
+        "instance_graph_fingerprint": "e1c5f182fe5fc3bbba74216ffced3211d33f24b6bc4c7dc9d6e14c1fb3c35239",
+        "instance_graph_payload_digest": "c9c7a0e1ee0cbf850574c4dc2f81990b1b3c84b9d95e637a923d021aa37a57ef",
+        "instance_graph_schema": "instance-graph/v3",
+        "outer_digest": "2a5a7efe54ff89d8ad7c8c80e262d0b4993e0930684ad5cd2cfd8a3defb080d5",
+        "projection": {
+          "codes": [],
+          "computation_digest": "774390959fc4f19603bc300bb850069b7a20a017eec9cc8ce4988319cfae69a5",
+          "counts": {
+            "aliases": 3,
+            "constraints": 0,
+            "entry_point_groups": 1,
+            "entry_points": 16,
+            "modules": 17
+          },
+          "diagnostics": [],
+          "error_type": null,
+          "generated_entry_point_digest": "5573491a1704a4c7500df0c5ba461ecb70cc336b3a724fc5dd08f16064471472",
+          "generated_entry_point_inapplicable": null,
+          "generated_entry_point_paths": [
+            "inputs/design_params.json",
+            "schemas/design_params.py"
+          ],
+          "message": null,
+          "status": "projectable"
+        },
+        "source_manifest_fingerprint": "b22d5423714ab97b6585374988db0340933952a68f215484bfa2b24f1e2f875f",
+        "unit_map_sha256": "7a347174cf2789f83230302403cf4d99e6bcf00e7c4562a03102295117a079f6"
+      },
+      "movement": {
+        "computation_digest_changed": false,
+        "envelope_sha_changed": false,
+        "generated_entry_point_digest_changed": false,
+        "instance_graph_payload_changed": false,
+        "projected_counts_changed": false,
+        "source_manifest_changed": false,
+        "unit_map_changed": false
+      },
+      "path": "tests/fixtures/attr_expr_probe/instance_graph_snapshot.json",
+      "stale": false,
+      "stale_reason": []
+    },
+    {
+      "committed": {
+        "envelope_certification_refusal": null,
+        "envelope_sha256": "f7b8a577e87b3afb714d02b7d2afd884f6c86200ca440f3732e522a722bb1c73",
+        "instance_graph_fingerprint": "bb68fea9c655162cffc293145a880e24c887f0a95f5c12a6f07e58bd567e64fa",
+        "instance_graph_payload_digest": "106fd0e8c1b61a3dac56d34ff24d5cf4184d162aafbf5296aa473c698874b9ae",
+        "instance_graph_schema": "instance-graph/v3",
+        "outer_digest": "6579f588b46f791310ab035f04c6bc319268a0fe13ab822493293042e30eb1ee",
+        "projection": {
+          "codes": [],
+          "computation_digest": "52ab1029a9b91e4c1c5bfd954b9faff2f502ce0be6001a70c1758647191f54c0",
+          "counts": {
+            "aliases": 46,
+            "constraints": 0,
+            "entry_point_groups": 8,
+            "entry_points": 60,
+            "modules": 43
+          },
+          "diagnostics": [],
+          "error_type": null,
+          "generated_entry_point_digest": "f09968455d8e781f5c299e8fd7e0cbc98c1226c7ffaddaf4e5fe3a8603e64ef1",
+          "generated_entry_point_inapplicable": null,
+          "generated_entry_point_paths": [
+            "inputs/geometry_params.json",
+            "inputs/heating_params.json",
+            "inputs/magnets_params.json",
+            "inputs/physics_params.json",
+            "inputs/radial_build_params.json",
+            "inputs/thermal_loads_params.json",
+            "inputs/tritium_params.json",
+            "inputs/vacuum_params.json",
+            "schemas/geometry_params.py",
+            "schemas/heating_params.py",
+            "schemas/magnets_params.py",
+            "schemas/physics_params.py",
+            "schemas/radial_build_params.py",
+            "schemas/thermal_loads_params.py",
+            "schemas/tritium_params.py",
+            "schemas/vacuum_params.py"
+          ],
+          "message": null,
+          "status": "projectable"
+        },
+        "source_manifest_fingerprint": "5b2464e14d40c3f5ac4e9f12e60213db7ae33c7532f40239b9e38568fd9716fc",
+        "unit_map_sha256": "c453d5c48e956469601707c341bae4c47d88edee3d092c7d382110f1a4d68005"
+      },
+      "fixture_root": "tests/fixtures/catf_mfe_d5",
+      "live": {
+        "envelope_certification_refusal": null,
+        "envelope_sha256": "f7b8a577e87b3afb714d02b7d2afd884f6c86200ca440f3732e522a722bb1c73",
+        "instance_graph_fingerprint": "bb68fea9c655162cffc293145a880e24c887f0a95f5c12a6f07e58bd567e64fa",
+        "instance_graph_payload_digest": "106fd0e8c1b61a3dac56d34ff24d5cf4184d162aafbf5296aa473c698874b9ae",
+        "instance_graph_schema": "instance-graph/v3",
+        "outer_digest": "6579f588b46f791310ab035f04c6bc319268a0fe13ab822493293042e30eb1ee",
+        "projection": {
+          "codes": [],
+          "computation_digest": "52ab1029a9b91e4c1c5bfd954b9faff2f502ce0be6001a70c1758647191f54c0",
+          "counts": {
+            "aliases": 46,
+            "constraints": 0,
+            "entry_point_groups": 8,
+            "entry_points": 60,
+            "modules": 43
+          },
+          "diagnostics": [],
+          "error_type": null,
+          "generated_entry_point_digest": "f09968455d8e781f5c299e8fd7e0cbc98c1226c7ffaddaf4e5fe3a8603e64ef1",
+          "generated_entry_point_inapplicable": null,
+          "generated_entry_point_paths": [
+            "inputs/geometry_params.json",
+            "inputs/heating_params.json",
+            "inputs/magnets_params.json",
+            "inputs/physics_params.json",
+            "inputs/radial_build_params.json",
+            "inputs/thermal_loads_params.json",
+            "inputs/tritium_params.json",
+            "inputs/vacuum_params.json",
+            "schemas/geometry_params.py",
+            "schemas/heating_params.py",
+            "schemas/magnets_params.py",
+            "schemas/physics_params.py",
+            "schemas/radial_build_params.py",
+            "schemas/thermal_loads_params.py",
+            "schemas/tritium_params.py",
+            "schemas/vacuum_params.py"
+          ],
+          "message": null,
+          "status": "projectable"
+        },
+        "source_manifest_fingerprint": "5b2464e14d40c3f5ac4e9f12e60213db7ae33c7532f40239b9e38568fd9716fc",
+        "unit_map_sha256": "c453d5c48e956469601707c341bae4c47d88edee3d092c7d382110f1a4d68005"
+      },
+      "movement": {
+        "computation_digest_changed": false,
+        "envelope_sha_changed": false,
+        "generated_entry_point_digest_changed": false,
+        "instance_graph_payload_changed": false,
+        "projected_counts_changed": false,
+        "source_manifest_changed": false,
+        "unit_map_changed": false
+      },
+      "path": "tests/fixtures/catf_mfe_d5/instance_graph_snapshot.json",
+      "stale": false,
+      "stale_reason": []
+    },
+    {
+      "committed": {
+        "envelope_certification_refusal": null,
+        "envelope_sha256": "a1ac0b8ef3e9ecc4b20589a0f1096b2623942b269002135bbfd47c2b079770b8",
+        "instance_graph_fingerprint": "c85a7519a26dd606c1208b0058dc1535502ae62c7d3b0cbea7dce8307283add2",
+        "instance_graph_payload_digest": "5efc09e6a19033d3707d345e76b3bd048f22c59b3eb3bbf9a11b7af897f36b2f",
+        "instance_graph_schema": "instance-graph/v3",
+        "outer_digest": "27c749de5bb20eb4c165a462f511b8e359f93897fbbf793417c0b73886268627",
+        "projection": {
+          "codes": [],
+          "computation_digest": "4866e3b234582fc6e3463b9bebcf1fb28388c78b7a571259d40acb3150baf82b",
+          "counts": {
+            "aliases": 59,
+            "constraints": 3,
+            "entry_point_groups": 9,
+            "entry_points": 55,
+            "modules": 62
+          },
+          "diagnostics": [],
+          "error_type": null,
+          "generated_entry_point_digest": "605c23e9aab4d6a0f03f242b8b981bf9d399fbbf399d99db5476a8944482f910",
+          "generated_entry_point_inapplicable": null,
+          "generated_entry_point_paths": [
+            "inputs/geometry_params.json",
+            "inputs/heating_params.json",
+            "inputs/magnets_params.json",
+            "inputs/physics_params.json",
+            "inputs/radial_build_params.json",
+            "inputs/shield_params.json",
+            "inputs/thermal_loads_params.json",
+            "inputs/tritium_params.json",
+            "inputs/vacuum_params.json",
+            "schemas/geometry_params.py",
+            "schemas/heating_params.py",
+            "schemas/magnets_params.py",
+            "schemas/physics_params.py",
+            "schemas/radial_build_params.py",
+            "schemas/shield_params.py",
+            "schemas/thermal_loads_params.py",
+            "schemas/tritium_params.py",
+            "schemas/vacuum_params.py"
+          ],
+          "message": null,
+          "status": "projectable"
+        },
+        "source_manifest_fingerprint": "d1ff2e85cdfdfc9cf5feeaf1df41ad2531e78697bc257eaa925c7b169f0b30a6",
+        "unit_map_sha256": "34db63fa1186f4c0b1cbbadc880e71f432bd086d5520286510128c276f48a40e"
+      },
+      "fixture_root": "tests/fixtures/catf_mfe_gated",
+      "live": {
+        "envelope_certification_refusal": null,
+        "envelope_sha256": "a1ac0b8ef3e9ecc4b20589a0f1096b2623942b269002135bbfd47c2b079770b8",
+        "instance_graph_fingerprint": "c85a7519a26dd606c1208b0058dc1535502ae62c7d3b0cbea7dce8307283add2",
+        "instance_graph_payload_digest": "5efc09e6a19033d3707d345e76b3bd048f22c59b3eb3bbf9a11b7af897f36b2f",
+        "instance_graph_schema": "instance-graph/v3",
+        "outer_digest": "27c749de5bb20eb4c165a462f511b8e359f93897fbbf793417c0b73886268627",
+        "projection": {
+          "codes": [],
+          "computation_digest": "4866e3b234582fc6e3463b9bebcf1fb28388c78b7a571259d40acb3150baf82b",
+          "counts": {
+            "aliases": 59,
+            "constraints": 3,
+            "entry_point_groups": 9,
+            "entry_points": 55,
+            "modules": 62
+          },
+          "diagnostics": [],
+          "error_type": null,
+          "generated_entry_point_digest": "605c23e9aab4d6a0f03f242b8b981bf9d399fbbf399d99db5476a8944482f910",
+          "generated_entry_point_inapplicable": null,
+          "generated_entry_point_paths": [
+            "inputs/geometry_params.json",
+            "inputs/heating_params.json",
+            "inputs/magnets_params.json",
+            "inputs/physics_params.json",
+            "inputs/radial_build_params.json",
+            "inputs/shield_params.json",
+            "inputs/thermal_loads_params.json",
+            "inputs/tritium_params.json",
+            "inputs/vacuum_params.json",
+            "schemas/geometry_params.py",
+            "schemas/heating_params.py",
+            "schemas/magnets_params.py",
+            "schemas/physics_params.py",
+            "schemas/radial_build_params.py",
+            "schemas/shield_params.py",
+            "schemas/thermal_loads_params.py",
+            "schemas/tritium_params.py",
+            "schemas/vacuum_params.py"
+          ],
+          "message": null,
+          "status": "projectable"
+        },
+        "source_manifest_fingerprint": "d1ff2e85cdfdfc9cf5feeaf1df41ad2531e78697bc257eaa925c7b169f0b30a6",
+        "unit_map_sha256": "34db63fa1186f4c0b1cbbadc880e71f432bd086d5520286510128c276f48a40e"
+      },
+      "movement": {
+        "computation_digest_changed": false,
+        "envelope_sha_changed": false,
+        "generated_entry_point_digest_changed": false,
+        "instance_graph_payload_changed": false,
+        "projected_counts_changed": false,
+        "source_manifest_changed": false,
+        "unit_map_changed": false
+      },
+      "path": "tests/fixtures/catf_mfe_gated/instance_graph_snapshot.json",
+      "stale": false,
+      "stale_reason": []
+    },
+    {
+      "committed": {
+        "envelope_certification_refusal": null,
+        "envelope_sha256": "64d59bde03ead6793559243ef74cdd9f29db9b808beb41b7c8f92f0ad5f494b8",
+        "instance_graph_fingerprint": "9a3d4822efdb5e1ffbb8403e2770359c1139139fba481581072bd3827cbfe1b8",
+        "instance_graph_payload_digest": "59f5db3b6e4a94c1af399ab08c24f4bf928e1fb460667203fb871b02396a6ab8",
+        "instance_graph_schema": "instance-graph/v3",
+        "outer_digest": "2b9b7d135b0eadad99d488587e2f32a9bf140f52c3f482568a5c969140ef7cb5",
+        "projection": {
+          "codes": [],
+          "computation_digest": "9140cb642d5b66141bdb7a6d0bd60ac31238b96f2252fa91706c4c1dd60c1e22",
+          "counts": {
+            "aliases": 0,
+            "constraints": 0,
+            "entry_point_groups": 1,
+            "entry_points": 3,
+            "modules": 3
+          },
+          "diagnostics": [],
+          "error_type": null,
+          "generated_entry_point_digest": "79eab2a7027850b6167fb9d86136d54c6a408327e96d163504468fc46abdf311",
+          "generated_entry_point_inapplicable": null,
+          "generated_entry_point_paths": [
+            "inputs/design_params.json",
+            "schemas/design_params.py"
+          ],
+          "message": null,
+          "status": "projectable"
+        },
+        "source_manifest_fingerprint": "3efcc6839bc8cd43604216aec217149f9e02b285c93326af4f09d43267c36d6b",
+        "unit_map_sha256": "a4bcd1c79c288f998e1f41d4df25b6a7d070912452fa7555f1e4ed7db3f0de8a"
+      },
+      "fixture_root": "tests/fixtures/chain_spike_d5",
+      "live": {
+        "envelope_certification_refusal": null,
+        "envelope_sha256": "64d59bde03ead6793559243ef74cdd9f29db9b808beb41b7c8f92f0ad5f494b8",
+        "instance_graph_fingerprint": "9a3d4822efdb5e1ffbb8403e2770359c1139139fba481581072bd3827cbfe1b8",
+        "instance_graph_payload_digest": "59f5db3b6e4a94c1af399ab08c24f4bf928e1fb460667203fb871b02396a6ab8",
+        "instance_graph_schema": "instance-graph/v3",
+        "outer_digest": "2b9b7d135b0eadad99d488587e2f32a9bf140f52c3f482568a5c969140ef7cb5",
+        "projection": {
+          "codes": [],
+          "computation_digest": "9140cb642d5b66141bdb7a6d0bd60ac31238b96f2252fa91706c4c1dd60c1e22",
+          "counts": {
+            "aliases": 0,
+            "constraints": 0,
+            "entry_point_groups": 1,
+            "entry_points": 3,
+            "modules": 3
+          },
+          "diagnostics": [],
+          "error_type": null,
+          "generated_entry_point_digest": "79eab2a7027850b6167fb9d86136d54c6a408327e96d163504468fc46abdf311",
+          "generated_entry_point_inapplicable": null,
+          "generated_entry_point_paths": [
+            "inputs/design_params.json",
+            "schemas/design_params.py"
+          ],
+          "message": null,
+          "status": "projectable"
+        },
+        "source_manifest_fingerprint": "3efcc6839bc8cd43604216aec217149f9e02b285c93326af4f09d43267c36d6b",
+        "unit_map_sha256": "a4bcd1c79c288f998e1f41d4df25b6a7d070912452fa7555f1e4ed7db3f0de8a"
+      },
+      "movement": {
+        "computation_digest_changed": false,
+        "envelope_sha_changed": false,
+        "generated_entry_point_digest_changed": false,
+        "instance_graph_payload_changed": false,
+        "projected_counts_changed": false,
+        "source_manifest_changed": false,
+        "unit_map_changed": false
+      },
+      "path": "tests/fixtures/chain_spike_d5/instance_graph_snapshot.json",
+      "stale": false,
+      "stale_reason": []
+    },
+    {
+      "committed": {
+        "envelope_certification_refusal": null,
+        "envelope_sha256": "ec1c8f81f8d860b2beb80e2092442debef6b127fa29f90cade0d1fcb39282b22",
+        "instance_graph_fingerprint": "1d4593863be6c4ce0773cf5cf04e983786255f514cb29757ed69fd636bc5af35",
+        "instance_graph_payload_digest": "37eacd1d31a0189b7eb37d3e32ada3b26e2cdd904ca269b7e44355c689dadb47",
+        "instance_graph_schema": "instance-graph/v3",
+        "outer_digest": "4539f74ab57c5fc06b76b04d274fe1f685122773bd6b742630446f745e2b23ba",
+        "projection": {
+          "codes": [],
+          "computation_digest": "ef3ef76c19eaaa6c9a7e85946b4d2e80e035c5413cc40dcfcb372f69f78c6496",
+          "counts": {
+            "aliases": 0,
+            "constraints": 0,
+            "entry_point_groups": 1,
+            "entry_points": 1,
+            "modules": 2
+          },
+          "diagnostics": [],
+          "error_type": null,
+          "generated_entry_point_digest": "3adb9ba311e2b9409738675086ea923102800b004fcdd567969b5375fb5d9188",
+          "generated_entry_point_inapplicable": null,
+          "generated_entry_point_paths": [
+            "inputs/constraint_domain_satisfy_calc_def_params.json",
+            "schemas/constraint_domain_satisfy_calc_def_params.py"
+          ],
+          "message": null,
+          "status": "projectable"
+        },
+        "source_manifest_fingerprint": "5270c264c4533c8fb71c8e4485c45e6cc013b7bdc8cfb23ece911302f7fab812",
+        "unit_map_sha256": "d3b25736463eb93d5bfbdabac14e43103652564fbacd88e1e3fcf784284aee71"
+      },
+      "fixture_root": "tests/fixtures/constraint_domain_satisfy_calc_def",
+      "live": {
+        "envelope_certification_refusal": null,
+        "envelope_sha256": "ec1c8f81f8d860b2beb80e2092442debef6b127fa29f90cade0d1fcb39282b22",
+        "instance_graph_fingerprint": "1d4593863be6c4ce0773cf5cf04e983786255f514cb29757ed69fd636bc5af35",
+        "instance_graph_payload_digest": "37eacd1d31a0189b7eb37d3e32ada3b26e2cdd904ca269b7e44355c689dadb47",
+        "instance_graph_schema": "instance-graph/v3",
+        "outer_digest": "4539f74ab57c5fc06b76b04d274fe1f685122773bd6b742630446f745e2b23ba",
+        "projection": {
+          "codes": [],
+          "computation_digest": "ef3ef76c19eaaa6c9a7e85946b4d2e80e035c5413cc40dcfcb372f69f78c6496",
+          "counts": {
+            "aliases": 0,
+            "constraints": 0,
+            "entry_point_groups": 1,
+            "entry_points": 1,
+            "modules": 2
+          },
+          "diagnostics": [],
+          "error_type": null,
+          "generated_entry_point_digest": "3adb9ba311e2b9409738675086ea923102800b004fcdd567969b5375fb5d9188",
+          "generated_entry_point_inapplicable": null,
+          "generated_entry_point_paths": [
+            "inputs/constraint_domain_satisfy_calc_def_params.json",
+            "schemas/constraint_domain_satisfy_calc_def_params.py"
+          ],
+          "message": null,
+          "status": "projectable"
+        },
+        "source_manifest_fingerprint": "5270c264c4533c8fb71c8e4485c45e6cc013b7bdc8cfb23ece911302f7fab812",
+        "unit_map_sha256": "d3b25736463eb93d5bfbdabac14e43103652564fbacd88e1e3fcf784284aee71"
+      },
+      "movement": {
+        "computation_digest_changed": false,
+        "envelope_sha_changed": false,
+        "generated_entry_point_digest_changed": false,
+        "instance_graph_payload_changed": false,
+        "projected_counts_changed": false,
+        "source_manifest_changed": false,
+        "unit_map_changed": false
+      },
+      "path": "tests/fixtures/constraint_domain_satisfy_calc_def/instance_graph_snapshot.json",
+      "stale": false,
+      "stale_reason": []
+    },
+    {
+      "committed": {
+        "envelope_certification_refusal": null,
+        "envelope_sha256": "cfdff823f19d8b65301ec6009a53ec8329ce94c91b8110beaff6ff14a8244e4b",
+        "instance_graph_fingerprint": "ad95a7435356b437f56ec1d78633b26a2ae137f3ce58b92590b4ff8529a17500",
+        "instance_graph_payload_digest": "8e0607c5b8a611ef51a6e6d685b2ae95f989c97fd245d90c8f3eb5032e6384e9",
+        "instance_graph_schema": "instance-graph/v3",
+        "outer_digest": "6cfa11c4559b511b332f146d2c32a571451a1cfdaa99dc6cb2825d62e5469973",
+        "projection": {
+          "codes": [],
+          "computation_digest": "6ee6127ba2f32e0fbd90d43e9b7edcfadf9535b8e35788ad6a3d1c63a2d845d0",
+          "counts": {
+            "aliases": 0,
+            "constraints": 1,
+            "entry_point_groups": 1,
+            "entry_points": 1,
+            "modules": 2
+          },
+          "diagnostics": [],
+          "error_type": null,
+          "generated_entry_point_digest": "a08d3a09e800302500e4efabe57f0cb8ad4ae8da944b1f6aa9b16df3b786b1b0",
+          "generated_entry_point_inapplicable": null,
+          "generated_entry_point_paths": [
+            "inputs/constraint_inline_params.json",
+            "schemas/constraint_inline_params.py"
+          ],
+          "message": null,
+          "status": "projectable"
+        },
+        "source_manifest_fingerprint": "bfe9a4a9fc86e06a1831de3b2664ab52768fb3319627e0d13cd88e027ad9a946",
+        "unit_map_sha256": "859131144f3f28d246f25a8c61d727644ae81a2cb48c103effc4d8e1a76b607a"
+      },
+      "fixture_root": "tests/fixtures/constraint_inline",
+      "live": {
+        "envelope_certification_refusal": null,
+        "envelope_sha256": "cfdff823f19d8b65301ec6009a53ec8329ce94c91b8110beaff6ff14a8244e4b",
+        "instance_graph_fingerprint": "ad95a7435356b437f56ec1d78633b26a2ae137f3ce58b92590b4ff8529a17500",
+        "instance_graph_payload_digest": "8e0607c5b8a611ef51a6e6d685b2ae95f989c97fd245d90c8f3eb5032e6384e9",
+        "instance_graph_schema": "instance-graph/v3",
+        "outer_digest": "6cfa11c4559b511b332f146d2c32a571451a1cfdaa99dc6cb2825d62e5469973",
+        "projection": {
+          "codes": [],
+          "computation_digest": "6ee6127ba2f32e0fbd90d43e9b7edcfadf9535b8e35788ad6a3d1c63a2d845d0",
+          "counts": {
+            "aliases": 0,
+            "constraints": 1,
+            "entry_point_groups": 1,
+            "entry_points": 1,
+            "modules": 2
+          },
+          "diagnostics": [],
+          "error_type": null,
+          "generated_entry_point_digest": "a08d3a09e800302500e4efabe57f0cb8ad4ae8da944b1f6aa9b16df3b786b1b0",
+          "generated_entry_point_inapplicable": null,
+          "generated_entry_point_paths": [
+            "inputs/constraint_inline_params.json",
+            "schemas/constraint_inline_params.py"
+          ],
+          "message": null,
+          "status": "projectable"
+        },
+        "source_manifest_fingerprint": "bfe9a4a9fc86e06a1831de3b2664ab52768fb3319627e0d13cd88e027ad9a946",
+        "unit_map_sha256": "859131144f3f28d246f25a8c61d727644ae81a2cb48c103effc4d8e1a76b607a"
+      },
+      "movement": {
+        "computation_digest_changed": false,
+        "envelope_sha_changed": false,
+        "generated_entry_point_digest_changed": false,
+        "instance_graph_payload_changed": false,
+        "projected_counts_changed": false,
+        "source_manifest_changed": false,
+        "unit_map_changed": false
+      },
+      "path": "tests/fixtures/constraint_inline/instance_graph_snapshot.json",
+      "stale": false,
+      "stale_reason": []
+    },
+    {
+      "committed": {
+        "envelope_certification_refusal": null,
+        "envelope_sha256": "751cef1526fbaf92d17c06f8880b605b0af58c5f2ee9136cc43d7591d32ca2ff",
+        "instance_graph_fingerprint": "f4fe17acad7123e97fa88fd17f435954155a446c205a4f7e180e7d71d8a216c2",
+        "instance_graph_payload_digest": "1a091b7d7d9b5541c9fdfab2a454acd3f57d39aaa84ce02868cc519fee5c18f9",
+        "instance_graph_schema": "instance-graph/v3",
+        "outer_digest": "e72414a106e45da8961bcbf9fd4bcc3428598860e63349427923e0ab1637cf49",
+        "projection": {
+          "codes": [],
+          "computation_digest": "a414e65ab0717a472433a80ca2c35841ced3925624371ea8a4d48b000f8bd1a2",
+          "counts": {
+            "aliases": 0,
+            "constraints": 3,
+            "entry_point_groups": 1,
+            "entry_points": 3,
+            "modules": 7
+          },
+          "diagnostics": [],
+          "error_type": null,
+          "generated_entry_point_digest": "5488b52770cd32d6c6e9166b1b45bf0eee7eb6a77743b4dcf98b351581cbc70d",
+          "generated_entry_point_inapplicable": null,
+          "generated_entry_point_paths": [
+            "inputs/constraint_multi_instance_params.json",
+            "schemas/constraint_multi_instance_params.py"
+          ],
+          "message": null,
+          "status": "projectable"
+        },
+        "source_manifest_fingerprint": "2b5878c22a1d3132cb46741ba68113c1cc697e05d1073098e080da6dee523ede",
+        "unit_map_sha256": "00f2d556f31952d9c9e95488d9616e738799365fe4d5d917bfd1ffa789a95c1d"
+      },
+      "fixture_root": "tests/fixtures/constraint_multi_instance",
+      "live": {
+        "envelope_certification_refusal": null,
+        "envelope_sha256": "751cef1526fbaf92d17c06f8880b605b0af58c5f2ee9136cc43d7591d32ca2ff",
+        "instance_graph_fingerprint": "f4fe17acad7123e97fa88fd17f435954155a446c205a4f7e180e7d71d8a216c2",
+        "instance_graph_payload_digest": "1a091b7d7d9b5541c9fdfab2a454acd3f57d39aaa84ce02868cc519fee5c18f9",
+        "instance_graph_schema": "instance-graph/v3",
+        "outer_digest": "e72414a106e45da8961bcbf9fd4bcc3428598860e63349427923e0ab1637cf49",
+        "projection": {
+          "codes": [],
+          "computation_digest": "a414e65ab0717a472433a80ca2c35841ced3925624371ea8a4d48b000f8bd1a2",
+          "counts": {
+            "aliases": 0,
+            "constraints": 3,
+            "entry_point_groups": 1,
+            "entry_points": 3,
+            "modules": 7
+          },
+          "diagnostics": [],
+          "error_type": null,
+          "generated_entry_point_digest": "5488b52770cd32d6c6e9166b1b45bf0eee7eb6a77743b4dcf98b351581cbc70d",
+          "generated_entry_point_inapplicable": null,
+          "generated_entry_point_paths": [
+            "inputs/constraint_multi_instance_params.json",
+            "schemas/constraint_multi_instance_params.py"
+          ],
+          "message": null,
+          "status": "projectable"
+        },
+        "source_manifest_fingerprint": "2b5878c22a1d3132cb46741ba68113c1cc697e05d1073098e080da6dee523ede",
+        "unit_map_sha256": "00f2d556f31952d9c9e95488d9616e738799365fe4d5d917bfd1ffa789a95c1d"
+      },
+      "movement": {
+        "computation_digest_changed": false,
+        "envelope_sha_changed": false,
+        "generated_entry_point_digest_changed": false,
+        "instance_graph_payload_changed": false,
+        "projected_counts_changed": false,
+        "source_manifest_changed": false,
+        "unit_map_changed": false
+      },
+      "path": "tests/fixtures/constraint_multi_instance/instance_graph_snapshot.json",
+      "stale": false,
+      "stale_reason": []
+    },
+    {
+      "committed": {
+        "envelope_certification_refusal": null,
+        "envelope_sha256": "07e00e9c11ece9f1d0d26bc97efb672913836155c8082d68520c0b0303c77128",
+        "instance_graph_fingerprint": "08cc2d5e05517cede5e9e6a97588eb09cb6455bbb29e73145e197ed691282da1",
+        "instance_graph_payload_digest": "c9c73cacebbeb9d907f03a43d0ff51dcbddc1f78135049575da52c540f137143",
+        "instance_graph_schema": "instance-graph/v3",
+        "outer_digest": "cbe33bdfea157271538d512e7aba973f4a24a07100f292667c9a6dae6ef9617a",
+        "projection": {
+          "codes": [],
+          "computation_digest": "ec9109790a4d5563624e894210cfc86d8458052cab34a302436a846e227a5803",
+          "counts": {
+            "aliases": 0,
+            "constraints": 1,
+            "entry_point_groups": 1,
+            "entry_points": 1,
+            "modules": 2
+          },
+          "diagnostics": [],
+          "error_type": null,
+          "generated_entry_point_digest": "6dd16ea0f0bfa4cd467107e051fb88756f9dd1e3f850ceecae6740f373a6530f",
+          "generated_entry_point_inapplicable": null,
+          "generated_entry_point_paths": [
+            "inputs/constraint_non_numerical_params.json",
+            "schemas/constraint_non_numerical_params.py"
+          ],
+          "message": null,
+          "status": "projectable"
+        },
+        "source_manifest_fingerprint": "38954e9f230e859b14c98adee043bb6680ccbab0e53c0361f7e6686c2a991b72",
+        "unit_map_sha256": "1baeeac70ed9dca9c50675b7189ef506a94ba664fbdcc60933a630acd9fcb728"
+      },
+      "fixture_root": "tests/fixtures/constraint_non_numerical",
+      "live": {
+        "envelope_certification_refusal": null,
+        "envelope_sha256": "07e00e9c11ece9f1d0d26bc97efb672913836155c8082d68520c0b0303c77128",
+        "instance_graph_fingerprint": "08cc2d5e05517cede5e9e6a97588eb09cb6455bbb29e73145e197ed691282da1",
+        "instance_graph_payload_digest": "c9c73cacebbeb9d907f03a43d0ff51dcbddc1f78135049575da52c540f137143",
+        "instance_graph_schema": "instance-graph/v3",
+        "outer_digest": "cbe33bdfea157271538d512e7aba973f4a24a07100f292667c9a6dae6ef9617a",
+        "projection": {
+          "codes": [],
+          "computation_digest": "ec9109790a4d5563624e894210cfc86d8458052cab34a302436a846e227a5803",
+          "counts": {
+            "aliases": 0,
+            "constraints": 1,
+            "entry_point_groups": 1,
+            "entry_points": 1,
+            "modules": 2
+          },
+          "diagnostics": [],
+          "error_type": null,
+          "generated_entry_point_digest": "6dd16ea0f0bfa4cd467107e051fb88756f9dd1e3f850ceecae6740f373a6530f",
+          "generated_entry_point_inapplicable": null,
+          "generated_entry_point_paths": [
+            "inputs/constraint_non_numerical_params.json",
+            "schemas/constraint_non_numerical_params.py"
+          ],
+          "message": null,
+          "status": "projectable"
+        },
+        "source_manifest_fingerprint": "38954e9f230e859b14c98adee043bb6680ccbab0e53c0361f7e6686c2a991b72",
+        "unit_map_sha256": "1baeeac70ed9dca9c50675b7189ef506a94ba664fbdcc60933a630acd9fcb728"
+      },
+      "movement": {
+        "computation_digest_changed": false,
+        "envelope_sha_changed": false,
+        "generated_entry_point_digest_changed": false,
+        "instance_graph_payload_changed": false,
+        "projected_counts_changed": false,
+        "source_manifest_changed": false,
+        "unit_map_changed": false
+      },
+      "path": "tests/fixtures/constraint_non_numerical/instance_graph_snapshot.json",
+      "stale": false,
+      "stale_reason": []
+    },
+    {
+      "committed": {
+        "envelope_certification_refusal": null,
+        "envelope_sha256": "49ca2fc9818b50d57a35f47293282e636f054f2610c82deaf1010fada4930bbe",
+        "instance_graph_fingerprint": "0804a3ebd4591d620d57c5176276983b90d77971b2b714c4cdcf57d528fd1d82",
+        "instance_graph_payload_digest": "ad94803bba95f1340658a489028fdf6553b0ea25e9aff2df3218e4b9b9fbf92f",
+        "instance_graph_schema": "instance-graph/v3",
+        "outer_digest": "fc8234e5f07fb327e77ca6f8ee858d610d57f25ce948132fcf8710951f1dc5b9",
+        "projection": {
+          "codes": [],
+          "computation_digest": "df4228c662545b9d497205f98f53a1d3a536c845e3648a8d6000421bbb2dc725",
+          "counts": {
+            "aliases": 0,
+            "constraints": 2,
+            "entry_point_groups": 1,
+            "entry_points": 3,
+            "modules": 4
+          },
+          "diagnostics": [],
+          "error_type": null,
+          "generated_entry_point_digest": "9fb8913f350bb9e3eb9b1767750df8dfea3ae205002b5b380694b5433cea8a5a",
+          "generated_entry_point_inapplicable": null,
+          "generated_entry_point_paths": [
+            "inputs/occurrence_overrides_params.json",
+            "schemas/occurrence_overrides_params.py"
+          ],
+          "message": null,
+          "status": "projectable"
+        },
+        "source_manifest_fingerprint": "c795ea5a95d101e7a618adc0714457b17b41d6cfdf841967a1ce51828c6678dd",
+        "unit_map_sha256": "fd71406cd0a337a06208a23029437c398673adbcf9203314ffda64e60db5b91c"
+      },
+      "fixture_root": "tests/fixtures/constraint_occurrence_demand_overrides_d5",
+      "live": {
+        "envelope_certification_refusal": null,
+        "envelope_sha256": "49ca2fc9818b50d57a35f47293282e636f054f2610c82deaf1010fada4930bbe",
+        "instance_graph_fingerprint": "0804a3ebd4591d620d57c5176276983b90d77971b2b714c4cdcf57d528fd1d82",
+        "instance_graph_payload_digest": "ad94803bba95f1340658a489028fdf6553b0ea25e9aff2df3218e4b9b9fbf92f",
+        "instance_graph_schema": "instance-graph/v3",
+        "outer_digest": "fc8234e5f07fb327e77ca6f8ee858d610d57f25ce948132fcf8710951f1dc5b9",
+        "projection": {
+          "codes": [],
+          "computation_digest": "df4228c662545b9d497205f98f53a1d3a536c845e3648a8d6000421bbb2dc725",
+          "counts": {
+            "aliases": 0,
+            "constraints": 2,
+            "entry_point_groups": 1,
+            "entry_points": 3,
+            "modules": 4
+          },
+          "diagnostics": [],
+          "error_type": null,
+          "generated_entry_point_digest": "9fb8913f350bb9e3eb9b1767750df8dfea3ae205002b5b380694b5433cea8a5a",
+          "generated_entry_point_inapplicable": null,
+          "generated_entry_point_paths": [
+            "inputs/occurrence_overrides_params.json",
+            "schemas/occurrence_overrides_params.py"
+          ],
+          "message": null,
+          "status": "projectable"
+        },
+        "source_manifest_fingerprint": "c795ea5a95d101e7a618adc0714457b17b41d6cfdf841967a1ce51828c6678dd",
+        "unit_map_sha256": "fd71406cd0a337a06208a23029437c398673adbcf9203314ffda64e60db5b91c"
+      },
+      "movement": {
+        "computation_digest_changed": false,
+        "envelope_sha_changed": false,
+        "generated_entry_point_digest_changed": false,
+        "instance_graph_payload_changed": false,
+        "projected_counts_changed": false,
+        "source_manifest_changed": false,
+        "unit_map_changed": false
+      },
+      "path": "tests/fixtures/constraint_occurrence_demand_overrides_d5/instance_graph_snapshot.json",
+      "stale": false,
+      "stale_reason": []
+    },
+    {
+      "committed": {
+        "envelope_certification_refusal": null,
+        "envelope_sha256": "769e4fb54e4cbbff9ab065e5b9a740ad04d8853c78f9058436dd406fe2795bf1",
+        "instance_graph_fingerprint": "38f84931b17190c85c801acda38a09f8cfeae65d901205f19adb7bd9bb2b9830",
+        "instance_graph_payload_digest": "b10a34d4a05f6c057be27de86651d15982f8757e872b286fdb4207023fa0c062",
+        "instance_graph_schema": "instance-graph/v3",
+        "outer_digest": "d2e30109b71f5ba66077b47b644eb2af73d39feb70f0e5224a8a1e89101d3a12",
+        "projection": {
+          "codes": [],
+          "computation_digest": "cd9f3075a1f2a99237d353fa23e4270e467c57ebfc6ac5e5b861792e2601a09f",
+          "counts": {
+            "aliases": 0,
+            "constraints": 0,
+            "entry_point_groups": 1,
+            "entry_points": 6,
+            "modules": 2
+          },
+          "diagnostics": [],
+          "error_type": null,
+          "generated_entry_point_digest": "5dc47b50c7be59c2938d5c822a7e9b4657fe72b3546b7224954e020f2c7dc311",
+          "generated_entry_point_inapplicable": null,
+          "generated_entry_point_paths": [
+            "inputs/library_params.json",
+            "schemas/library_params.py"
+          ],
+          "message": null,
+          "status": "projectable"
+        },
+        "source_manifest_fingerprint": "d9da015a5fee13fbe8a1615e3fd588cbb6da9e405657b144cb07fb12f40be0c4",
+        "unit_map_sha256": "130c5eed93cf3dab224b7384044b842f66e7f6ba9ed02846331825d5dad151a2"
+      },
+      "fixture_root": "tests/fixtures/d38_caret",
+      "live": {
+        "envelope_certification_refusal": null,
+        "envelope_sha256": "769e4fb54e4cbbff9ab065e5b9a740ad04d8853c78f9058436dd406fe2795bf1",
+        "instance_graph_fingerprint": "38f84931b17190c85c801acda38a09f8cfeae65d901205f19adb7bd9bb2b9830",
+        "instance_graph_payload_digest": "b10a34d4a05f6c057be27de86651d15982f8757e872b286fdb4207023fa0c062",
+        "instance_graph_schema": "instance-graph/v3",
+        "outer_digest": "d2e30109b71f5ba66077b47b644eb2af73d39feb70f0e5224a8a1e89101d3a12",
+        "projection": {
+          "codes": [],
+          "computation_digest": "cd9f3075a1f2a99237d353fa23e4270e467c57ebfc6ac5e5b861792e2601a09f",
+          "counts": {
+            "aliases": 0,
+            "constraints": 0,
+            "entry_point_groups": 1,
+            "entry_points": 6,
+            "modules": 2
+          },
+          "diagnostics": [],
+          "error_type": null,
+          "generated_entry_point_digest": "5dc47b50c7be59c2938d5c822a7e9b4657fe72b3546b7224954e020f2c7dc311",
+          "generated_entry_point_inapplicable": null,
+          "generated_entry_point_paths": [
+            "inputs/library_params.json",
+            "schemas/library_params.py"
+          ],
+          "message": null,
+          "status": "projectable"
+        },
+        "source_manifest_fingerprint": "d9da015a5fee13fbe8a1615e3fd588cbb6da9e405657b144cb07fb12f40be0c4",
+        "unit_map_sha256": "130c5eed93cf3dab224b7384044b842f66e7f6ba9ed02846331825d5dad151a2"
+      },
+      "movement": {
+        "computation_digest_changed": false,
+        "envelope_sha_changed": false,
+        "generated_entry_point_digest_changed": false,
+        "instance_graph_payload_changed": false,
+        "projected_counts_changed": false,
+        "source_manifest_changed": false,
+        "unit_map_changed": false
+      },
+      "path": "tests/fixtures/d38_caret/instance_graph_snapshot.json",
+      "stale": false,
+      "stale_reason": []
+    },
+    {
+      "committed": {
+        "envelope_certification_refusal": null,
+        "envelope_sha256": "7d30e7e6499814f9496818e38e12ba46d3d176da627415cd9a50fd239d0b8bed",
+        "instance_graph_fingerprint": "f2f448a954b5f7c1f399a4e258ca059fe2ee894335d71edf19f2284246414a5e",
+        "instance_graph_payload_digest": "a07ccddf2bbe173508c8c67ca5b8f74ab9d001a9f5be1bdf35d08da4a712d595",
+        "instance_graph_schema": "instance-graph/v3",
+        "outer_digest": "751c19a5899de1ae5aa6607409ac1d9245ec7864c2eff866c0ac1ce2064d52b6",
+        "projection": {
+          "codes": [],
+          "computation_digest": "cd3fa624c46692f85dc0a26d51f521f6362151075d85aea84cbcc8dcdba4a65f",
+          "counts": {
+            "aliases": 7,
+            "constraints": 1,
+            "entry_point_groups": 5,
+            "entry_points": 27,
+            "modules": 9
+          },
+          "diagnostics": [],
+          "error_type": null,
+          "generated_entry_point_digest": "35f2bc1830e9f5e7af624092078c3ac9096c6c453f75522d88b26a28172ee6b3",
+          "generated_entry_point_inapplicable": null,
+          "generated_entry_point_paths": [
+            "inputs/hif_driver_params.json",
+            "inputs/hif_economics_params.json",
+            "inputs/hif_plant_params.json",
+            "inputs/ife_lcoe_params.json",
+            "inputs/ife_plant_params.json",
+            "schemas/hif_driver_params.py",
+            "schemas/hif_economics_params.py",
+            "schemas/hif_plant_params.py",
+            "schemas/ife_lcoe_params.py",
+            "schemas/ife_plant_params.py"
+          ],
+          "message": null,
+          "status": "projectable"
+        },
+        "source_manifest_fingerprint": "a024f0cc67cf2d110cdb1c17ca5d7de1ced35b8b374f26e8014da3c3c4cb60b2",
+        "unit_map_sha256": "3dc2f852a7f825e28c7c7cf207996e4706fe2ea7f00eaf14406bb3c14c6c904d"
+      },
+      "fixture_root": "tests/fixtures/fusion_tea",
+      "live": {
+        "envelope_certification_refusal": null,
+        "envelope_sha256": "7d30e7e6499814f9496818e38e12ba46d3d176da627415cd9a50fd239d0b8bed",
+        "instance_graph_fingerprint": "f2f448a954b5f7c1f399a4e258ca059fe2ee894335d71edf19f2284246414a5e",
+        "instance_graph_payload_digest": "a07ccddf2bbe173508c8c67ca5b8f74ab9d001a9f5be1bdf35d08da4a712d595",
+        "instance_graph_schema": "instance-graph/v3",
+        "outer_digest": "751c19a5899de1ae5aa6607409ac1d9245ec7864c2eff866c0ac1ce2064d52b6",
+        "projection": {
+          "codes": [],
+          "computation_digest": "cd3fa624c46692f85dc0a26d51f521f6362151075d85aea84cbcc8dcdba4a65f",
+          "counts": {
+            "aliases": 7,
+            "constraints": 1,
+            "entry_point_groups": 5,
+            "entry_points": 27,
+            "modules": 9
+          },
+          "diagnostics": [],
+          "error_type": null,
+          "generated_entry_point_digest": "35f2bc1830e9f5e7af624092078c3ac9096c6c453f75522d88b26a28172ee6b3",
+          "generated_entry_point_inapplicable": null,
+          "generated_entry_point_paths": [
+            "inputs/hif_driver_params.json",
+            "inputs/hif_economics_params.json",
+            "inputs/hif_plant_params.json",
+            "inputs/ife_lcoe_params.json",
+            "inputs/ife_plant_params.json",
+            "schemas/hif_driver_params.py",
+            "schemas/hif_economics_params.py",
+            "schemas/hif_plant_params.py",
+            "schemas/ife_lcoe_params.py",
+            "schemas/ife_plant_params.py"
+          ],
+          "message": null,
+          "status": "projectable"
+        },
+        "source_manifest_fingerprint": "a024f0cc67cf2d110cdb1c17ca5d7de1ced35b8b374f26e8014da3c3c4cb60b2",
+        "unit_map_sha256": "3dc2f852a7f825e28c7c7cf207996e4706fe2ea7f00eaf14406bb3c14c6c904d"
+      },
+      "movement": {
+        "computation_digest_changed": false,
+        "envelope_sha_changed": false,
+        "generated_entry_point_digest_changed": false,
+        "instance_graph_payload_changed": false,
+        "projected_counts_changed": false,
+        "source_manifest_changed": false,
+        "unit_map_changed": false
+      },
+      "path": "tests/fixtures/fusion_tea/instance_graph_snapshot.json",
+      "stale": false,
+      "stale_reason": []
+    },
+    {
+      "committed": {
+        "envelope_certification_refusal": null,
+        "envelope_sha256": "58efd1061efd165a61f0724cf063af5b3998f773027c167168b73724ef47b678",
+        "instance_graph_fingerprint": "a631fffff8fe521951a121ff67bdd79c43102d73cdc69c912a9de3afb218038d",
+        "instance_graph_payload_digest": "57983dba3f754a90557552e72db6e859cd9ff5033dc694e43f5562d8f4c5bc69",
+        "instance_graph_schema": "instance-graph/v3",
+        "outer_digest": "e24c240eb879629c31684d275b51762c076656345a3c4ec8773c4866ea75d6b5",
+        "projection": {
+          "codes": [],
+          "computation_digest": "51156527dd4ad1a408523cd9617022b492a6a3fe5bb97936a401bb560bb5c0f9",
+          "counts": {
+            "aliases": 0,
+            "constraints": 1,
+            "entry_point_groups": 1,
+            "entry_points": 3,
+            "modules": 3
+          },
+          "diagnostics": [],
+          "error_type": null,
+          "generated_entry_point_digest": "cee72787c1553e7bcfe63fed24c167ced074c660489308df9374acf9e920d825",
+          "generated_entry_point_inapplicable": null,
+          "generated_entry_point_paths": [
+            "inputs/gate_a_params.json",
+            "schemas/gate_a_params.py"
+          ],
+          "message": null,
+          "status": "projectable"
+        },
+        "source_manifest_fingerprint": "18252172a6d438f0eaf38cb8063944cc36f4613b85c513b03035b8bcb2ef88df",
+        "unit_map_sha256": "59ef3fb9e75816ab8b61a02f00651f0e7b02b3880aff2ef0eed6e2824173f5cf"
+      },
+      "fixture_root": "tests/fixtures/gate_a_d5",
+      "live": {
+        "envelope_certification_refusal": null,
+        "envelope_sha256": "58efd1061efd165a61f0724cf063af5b3998f773027c167168b73724ef47b678",
+        "instance_graph_fingerprint": "a631fffff8fe521951a121ff67bdd79c43102d73cdc69c912a9de3afb218038d",
+        "instance_graph_payload_digest": "57983dba3f754a90557552e72db6e859cd9ff5033dc694e43f5562d8f4c5bc69",
+        "instance_graph_schema": "instance-graph/v3",
+        "outer_digest": "e24c240eb879629c31684d275b51762c076656345a3c4ec8773c4866ea75d6b5",
+        "projection": {
+          "codes": [],
+          "computation_digest": "51156527dd4ad1a408523cd9617022b492a6a3fe5bb97936a401bb560bb5c0f9",
+          "counts": {
+            "aliases": 0,
+            "constraints": 1,
+            "entry_point_groups": 1,
+            "entry_points": 3,
+            "modules": 3
+          },
+          "diagnostics": [],
+          "error_type": null,
+          "generated_entry_point_digest": "cee72787c1553e7bcfe63fed24c167ced074c660489308df9374acf9e920d825",
+          "generated_entry_point_inapplicable": null,
+          "generated_entry_point_paths": [
+            "inputs/gate_a_params.json",
+            "schemas/gate_a_params.py"
+          ],
+          "message": null,
+          "status": "projectable"
+        },
+        "source_manifest_fingerprint": "18252172a6d438f0eaf38cb8063944cc36f4613b85c513b03035b8bcb2ef88df",
+        "unit_map_sha256": "59ef3fb9e75816ab8b61a02f00651f0e7b02b3880aff2ef0eed6e2824173f5cf"
+      },
+      "movement": {
+        "computation_digest_changed": false,
+        "envelope_sha_changed": false,
+        "generated_entry_point_digest_changed": false,
+        "instance_graph_payload_changed": false,
+        "projected_counts_changed": false,
+        "source_manifest_changed": false,
+        "unit_map_changed": false
+      },
+      "path": "tests/fixtures/gate_a_d5/instance_graph_snapshot.json",
+      "stale": false,
+      "stale_reason": []
+    },
+    {
+      "committed": {
+        "envelope_certification_refusal": null,
+        "envelope_sha256": "c096c9352084b86012ab0b8282caadc91da600b5a352e7b07b2145c02016c39d",
+        "instance_graph_fingerprint": "fe79e1f88d84a3424c6286f3bf604e3b04d87af7897127db044808ca26d82ae5",
+        "instance_graph_payload_digest": "a605203c562f85c70741817ef0fea011fca1983e903b331373d5cee716611e20",
+        "instance_graph_schema": "instance-graph/v3",
+        "outer_digest": "5c37625755fae4d5b8918c8c0648ba7e2af333784a164762381b2b9bbd496011",
+        "projection": {
+          "codes": [],
+          "computation_digest": "c1d542c94b7303150f81ff82c9cd8792882af83e8fb1635f994d4fb38b408d41",
+          "counts": {
+            "aliases": 0,
+            "constraints": 3,
+            "entry_point_groups": 1,
+            "entry_points": 6,
+            "modules": 5
+          },
+          "diagnostics": [],
+          "error_type": null,
+          "generated_entry_point_digest": "d9e1ddf411ab95151cba6d20d4c7d0aa442807bcb9941a5389c32c00b201cc35",
+          "generated_entry_point_inapplicable": null,
+          "generated_entry_point_paths": [
+            "inputs/modeled_default_fidelity_params.json",
+            "schemas/modeled_default_fidelity_params.py"
+          ],
+          "message": null,
+          "status": "projectable"
+        },
+        "source_manifest_fingerprint": "13ae214b3d8fbdf7811fae853d5337bb8d532aaf4ed1f5bb327c0baf952007a7",
+        "unit_map_sha256": "59e0b298c9fa4ca21a760b1e817edbac9c8d23092acbd191b35e4e6e2040f13b"
+      },
+      "fixture_root": "tests/fixtures/modeled_default_fidelity",
+      "live": {
+        "envelope_certification_refusal": null,
+        "envelope_sha256": "c096c9352084b86012ab0b8282caadc91da600b5a352e7b07b2145c02016c39d",
+        "instance_graph_fingerprint": "fe79e1f88d84a3424c6286f3bf604e3b04d87af7897127db044808ca26d82ae5",
+        "instance_graph_payload_digest": "a605203c562f85c70741817ef0fea011fca1983e903b331373d5cee716611e20",
+        "instance_graph_schema": "instance-graph/v3",
+        "outer_digest": "5c37625755fae4d5b8918c8c0648ba7e2af333784a164762381b2b9bbd496011",
+        "projection": {
+          "codes": [],
+          "computation_digest": "c1d542c94b7303150f81ff82c9cd8792882af83e8fb1635f994d4fb38b408d41",
+          "counts": {
+            "aliases": 0,
+            "constraints": 3,
+            "entry_point_groups": 1,
+            "entry_points": 6,
+            "modules": 5
+          },
+          "diagnostics": [],
+          "error_type": null,
+          "generated_entry_point_digest": "d9e1ddf411ab95151cba6d20d4c7d0aa442807bcb9941a5389c32c00b201cc35",
+          "generated_entry_point_inapplicable": null,
+          "generated_entry_point_paths": [
+            "inputs/modeled_default_fidelity_params.json",
+            "schemas/modeled_default_fidelity_params.py"
+          ],
+          "message": null,
+          "status": "projectable"
+        },
+        "source_manifest_fingerprint": "13ae214b3d8fbdf7811fae853d5337bb8d532aaf4ed1f5bb327c0baf952007a7",
+        "unit_map_sha256": "59e0b298c9fa4ca21a760b1e817edbac9c8d23092acbd191b35e4e6e2040f13b"
+      },
+      "movement": {
+        "computation_digest_changed": false,
+        "envelope_sha_changed": false,
+        "generated_entry_point_digest_changed": false,
+        "instance_graph_payload_changed": false,
+        "projected_counts_changed": false,
+        "source_manifest_changed": false,
+        "unit_map_changed": false
+      },
+      "path": "tests/fixtures/modeled_default_fidelity/instance_graph_snapshot.json",
+      "stale": false,
+      "stale_reason": []
+    },
+    {
+      "committed": {
+        "envelope_certification_refusal": null,
+        "envelope_sha256": "d7ac88545d5937e326bb25f2b4c71891ed872f345dffa09248a7d91a0cfd2d16",
+        "instance_graph_fingerprint": "dbf2b24b1c89593ff72417b3b2eeb88ec5e805bc5ede1c70e978568c9a7b13eb",
+        "instance_graph_payload_digest": "7b59382bb68f9aecb1243e4bec1563f24c1dec2e6e9212540d5ff680413403e9",
+        "instance_graph_schema": "instance-graph/v3",
+        "outer_digest": "827df6714595c0313967f262a6842cabff3652ce012522fd42f7960d7c25549e",
+        "projection": {
+          "codes": [],
+          "computation_digest": "a620958cd4baa78698266a294add6e86833adb8aea419d35d28a267cc61395fa",
+          "counts": {
+            "aliases": 0,
+            "constraints": 1,
+            "entry_point_groups": 1,
+            "entry_points": 1,
+            "modules": 3
+          },
+          "diagnostics": [],
+          "error_type": null,
+          "generated_entry_point_digest": "2af10bbcff3aeb955c1e88e21781d4003e83f6e26f68e0753f72e210ce2403ad",
+          "generated_entry_point_inapplicable": null,
+          "generated_entry_point_paths": [
+            "inputs/nested_occurrence_override_probe_params.json",
+            "schemas/nested_occurrence_override_probe_params.py"
+          ],
+          "message": null,
+          "status": "projectable"
+        },
+        "source_manifest_fingerprint": "8e6fb6ef5cc16599975a7f809aaa662ca15ee844f488259ac264f8db95889cdd",
+        "unit_map_sha256": "06c9c8904f3cf35b8d868515925bde02649be362f6286055339b6f612a1a5e5e"
+      },
+      "fixture_root": "tests/fixtures/nested_occurrence_override_probe",
+      "live": {
+        "envelope_certification_refusal": null,
+        "envelope_sha256": "d7ac88545d5937e326bb25f2b4c71891ed872f345dffa09248a7d91a0cfd2d16",
+        "instance_graph_fingerprint": "dbf2b24b1c89593ff72417b3b2eeb88ec5e805bc5ede1c70e978568c9a7b13eb",
+        "instance_graph_payload_digest": "7b59382bb68f9aecb1243e4bec1563f24c1dec2e6e9212540d5ff680413403e9",
+        "instance_graph_schema": "instance-graph/v3",
+        "outer_digest": "827df6714595c0313967f262a6842cabff3652ce012522fd42f7960d7c25549e",
+        "projection": {
+          "codes": [],
+          "computation_digest": "a620958cd4baa78698266a294add6e86833adb8aea419d35d28a267cc61395fa",
+          "counts": {
+            "aliases": 0,
+            "constraints": 1,
+            "entry_point_groups": 1,
+            "entry_points": 1,
+            "modules": 3
+          },
+          "diagnostics": [],
+          "error_type": null,
+          "generated_entry_point_digest": "2af10bbcff3aeb955c1e88e21781d4003e83f6e26f68e0753f72e210ce2403ad",
+          "generated_entry_point_inapplicable": null,
+          "generated_entry_point_paths": [
+            "inputs/nested_occurrence_override_probe_params.json",
+            "schemas/nested_occurrence_override_probe_params.py"
+          ],
+          "message": null,
+          "status": "projectable"
+        },
+        "source_manifest_fingerprint": "8e6fb6ef5cc16599975a7f809aaa662ca15ee844f488259ac264f8db95889cdd",
+        "unit_map_sha256": "06c9c8904f3cf35b8d868515925bde02649be362f6286055339b6f612a1a5e5e"
+      },
+      "movement": {
+        "computation_digest_changed": false,
+        "envelope_sha_changed": false,
+        "generated_entry_point_digest_changed": false,
+        "instance_graph_payload_changed": false,
+        "projected_counts_changed": false,
+        "source_manifest_changed": false,
+        "unit_map_changed": false
+      },
+      "path": "tests/fixtures/nested_occurrence_override_probe/instance_graph_snapshot.json",
+      "stale": false,
+      "stale_reason": []
+    },
+    {
+      "committed": {
+        "envelope_certification_refusal": null,
+        "envelope_sha256": "c4a7c2d965390aa1e20dfb66e7f35c86a09e8e1dbd3da3aa1471b048104f7a39",
+        "instance_graph_fingerprint": "138c04218a746de3aa5047bbd6a5d6fc374113955e59273d514f17b948f7fcd5",
+        "instance_graph_payload_digest": "63158543056b3f5640dabdda088105416e2fec88b7c1db02f4fcf8019a7ef7e4",
+        "instance_graph_schema": "instance-graph/v3",
+        "outer_digest": "8972e6965fdbba0174b7726dfc5fb521494d3fd643229d4e090bebfd0a2cf3a1",
+        "projection": {
+          "codes": [],
+          "computation_digest": "71e884520d666ec7ed01414fec9ebcd91e54a181818ca3c985ae997f3a0036d6",
+          "counts": {
+            "aliases": 0,
+            "constraints": 0,
+            "entry_point_groups": 1,
+            "entry_points": 2,
+            "modules": 2
+          },
+          "diagnostics": [],
+          "error_type": null,
+          "generated_entry_point_digest": "0678c26a5c087521a8feec54712803cb98863b7a1308bfe41a31ab3dc510178c",
+          "generated_entry_point_inapplicable": null,
+          "generated_entry_point_paths": [
+            "inputs/design_params.json",
+            "schemas/design_params.py"
+          ],
+          "message": null,
+          "status": "projectable"
+        },
+        "source_manifest_fingerprint": "b3e469d5fa1d4a74378dad432770c2d1f79bdd46b164eb299c06b3b79cf429aa",
+        "unit_map_sha256": "d6e82bd8a03a1df3b43c5d648585b2aff9b76bfecafd2a4128f74ed76fcfba63"
+      },
+      "fixture_root": "tests/fixtures/quoted_owner_formula",
+      "live": {
+        "envelope_certification_refusal": null,
+        "envelope_sha256": "3483a81b0a913bc6e7a3bc2558236ccc39e853bdc8909bf2c6dfa115076fec3b",
+        "instance_graph_fingerprint": "da74dd29a6787c9a61f49fad13b6b5a03ca8d85ef050b1608e4bb91842b29650",
+        "instance_graph_payload_digest": "25a9107add1f23e1b4b4fe688e0642dd73334a4ae9fc4631242b38deb11711a6",
+        "instance_graph_schema": "instance-graph/v3",
+        "outer_digest": "e4ee5a58cd53dbbfee712d2080101a7614e8315622b32020d39cd8576fa4aa2d",
+        "projection": {
+          "codes": [],
+          "computation_digest": "71e884520d666ec7ed01414fec9ebcd91e54a181818ca3c985ae997f3a0036d6",
+          "counts": {
+            "aliases": 0,
+            "constraints": 0,
+            "entry_point_groups": 1,
+            "entry_points": 2,
+            "modules": 2
+          },
+          "diagnostics": [],
+          "error_type": null,
+          "generated_entry_point_digest": "0678c26a5c087521a8feec54712803cb98863b7a1308bfe41a31ab3dc510178c",
+          "generated_entry_point_inapplicable": null,
+          "generated_entry_point_paths": [
+            "inputs/design_params.json",
+            "schemas/design_params.py"
+          ],
+          "message": null,
+          "status": "projectable"
+        },
+        "source_manifest_fingerprint": "b3e469d5fa1d4a74378dad432770c2d1f79bdd46b164eb299c06b3b79cf429aa",
+        "unit_map_sha256": "d6e82bd8a03a1df3b43c5d648585b2aff9b76bfecafd2a4128f74ed76fcfba63"
+      },
+      "movement": {
+        "computation_digest_changed": false,
+        "envelope_sha_changed": true,
+        "generated_entry_point_digest_changed": false,
+        "instance_graph_payload_changed": true,
+        "projected_counts_changed": false,
+        "source_manifest_changed": false,
+        "unit_map_changed": false
+      },
+      "path": "tests/fixtures/quoted_owner_formula/instance_graph_snapshot.json",
+      "stale": true,
+      "stale_reason": [
+        "instance_graph_payload_changed"
+      ]
+    },
+    {
+      "committed": {
+        "envelope_certification_refusal": null,
+        "envelope_sha256": "d14f7e2dc1ea10783eb3b2d9ce6eee36390b850e736e79ab1f838922fd6d7d2a",
+        "instance_graph_fingerprint": "7eb23feb8b0ef9d2ad33a16564411eea2df7e42e38a393391eac7b6cb2ec110b",
+        "instance_graph_payload_digest": "ff589fbc02c82f31af98b1287e24e3a7f7a5d14c35dbc1050ea33b3fd048c2b8",
+        "instance_graph_schema": "instance-graph/v3",
+        "outer_digest": "fcf497b4bae2c4c83d4b76fef4be2abd12c07b5495f0ab6734858c81b2fb59b0",
+        "projection": {
+          "codes": [],
+          "computation_digest": "bb124ebb89638068c8eec78683f1b6164c8d0ca5cc0436759dcac4f28e06d464",
+          "counts": {
+            "aliases": 0,
+            "constraints": 0,
+            "entry_point_groups": 1,
+            "entry_points": 6,
+            "modules": 6
+          },
+          "diagnostics": [],
+          "error_type": null,
+          "generated_entry_point_digest": "dc26555bb59e9d59b844927f57f61cf3b6e5edad74e61c935c07fcbcca3581ef",
+          "generated_entry_point_inapplicable": null,
+          "generated_entry_point_paths": [
+            "inputs/library_params.json",
+            "schemas/library_params.py"
+          ],
+          "message": null,
+          "status": "projectable"
+        },
+        "source_manifest_fingerprint": "97860e4c8e54648dd7b7a8d62017409c78f9bc6be3377979af89292d93b67c1b",
+        "unit_map_sha256": "48ba8aa97268403a0746dbe16dfaca2ad9cceff3f2ab79e1ff825138438d8970"
+      },
+      "fixture_root": "tests/fixtures/retype_model",
+      "live": {
+        "envelope_certification_refusal": null,
+        "envelope_sha256": "d14f7e2dc1ea10783eb3b2d9ce6eee36390b850e736e79ab1f838922fd6d7d2a",
+        "instance_graph_fingerprint": "7eb23feb8b0ef9d2ad33a16564411eea2df7e42e38a393391eac7b6cb2ec110b",
+        "instance_graph_payload_digest": "ff589fbc02c82f31af98b1287e24e3a7f7a5d14c35dbc1050ea33b3fd048c2b8",
+        "instance_graph_schema": "instance-graph/v3",
+        "outer_digest": "fcf497b4bae2c4c83d4b76fef4be2abd12c07b5495f0ab6734858c81b2fb59b0",
+        "projection": {
+          "codes": [],
+          "computation_digest": "bb124ebb89638068c8eec78683f1b6164c8d0ca5cc0436759dcac4f28e06d464",
+          "counts": {
+            "aliases": 0,
+            "constraints": 0,
+            "entry_point_groups": 1,
+            "entry_points": 6,
+            "modules": 6
+          },
+          "diagnostics": [],
+          "error_type": null,
+          "generated_entry_point_digest": "dc26555bb59e9d59b844927f57f61cf3b6e5edad74e61c935c07fcbcca3581ef",
+          "generated_entry_point_inapplicable": null,
+          "generated_entry_point_paths": [
+            "inputs/library_params.json",
+            "schemas/library_params.py"
+          ],
+          "message": null,
+          "status": "projectable"
+        },
+        "source_manifest_fingerprint": "97860e4c8e54648dd7b7a8d62017409c78f9bc6be3377979af89292d93b67c1b",
+        "unit_map_sha256": "48ba8aa97268403a0746dbe16dfaca2ad9cceff3f2ab79e1ff825138438d8970"
+      },
+      "movement": {
+        "computation_digest_changed": false,
+        "envelope_sha_changed": false,
+        "generated_entry_point_digest_changed": false,
+        "instance_graph_payload_changed": false,
+        "projected_counts_changed": false,
+        "source_manifest_changed": false,
+        "unit_map_changed": false
+      },
+      "path": "tests/fixtures/retype_model/instance_graph_snapshot.json",
+      "stale": false,
+      "stale_reason": []
+    },
+    {
+      "committed": {
+        "envelope_certification_refusal": null,
+        "envelope_sha256": "08320b152b6596f4b9e882e8d9704d6839c5fbb8458841325856c18f07567092",
+        "instance_graph_fingerprint": "e87d5c7af7db93ed2182dd17d0778d7abcef631296b380c1b08b9990c784c894",
+        "instance_graph_payload_digest": "318d9f716430482b573bfc9da8d8bcd8b801cbb45e5b12c15ed7d0d2c4d8aee4",
+        "instance_graph_schema": "instance-graph/v3",
+        "outer_digest": "96475fa71f484aeae3aeeaf18d8199008357faab57a1f861df22f6bccb4b5495",
+        "projection": {
+          "codes": [],
+          "computation_digest": "e76aa4ebdaf9d38d01c244fedfdf0f5d484949549abfc59b676956819f52e1e1",
+          "counts": {
+            "aliases": 0,
+            "constraints": 0,
+            "entry_point_groups": 0,
+            "entry_points": 0,
+            "modules": 0
+          },
+          "diagnostics": [],
+          "error_type": null,
+          "generated_entry_point_digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "generated_entry_point_inapplicable": null,
+          "generated_entry_point_paths": [],
+          "message": null,
+          "status": "projectable"
+        },
+        "source_manifest_fingerprint": "904ff4a2d7689034e618af1272b6aa03ec4e84944f7299701697ecb8dc51d9ed",
+        "unit_map_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "fixture_root": "tests/fixtures/sample_model",
+      "live": {
+        "envelope_certification_refusal": null,
+        "envelope_sha256": "08320b152b6596f4b9e882e8d9704d6839c5fbb8458841325856c18f07567092",
+        "instance_graph_fingerprint": "e87d5c7af7db93ed2182dd17d0778d7abcef631296b380c1b08b9990c784c894",
+        "instance_graph_payload_digest": "318d9f716430482b573bfc9da8d8bcd8b801cbb45e5b12c15ed7d0d2c4d8aee4",
+        "instance_graph_schema": "instance-graph/v3",
+        "outer_digest": "96475fa71f484aeae3aeeaf18d8199008357faab57a1f861df22f6bccb4b5495",
+        "projection": {
+          "codes": [],
+          "computation_digest": "e76aa4ebdaf9d38d01c244fedfdf0f5d484949549abfc59b676956819f52e1e1",
+          "counts": {
+            "aliases": 0,
+            "constraints": 0,
+            "entry_point_groups": 0,
+            "entry_points": 0,
+            "modules": 0
+          },
+          "diagnostics": [],
+          "error_type": null,
+          "generated_entry_point_digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "generated_entry_point_inapplicable": null,
+          "generated_entry_point_paths": [],
+          "message": null,
+          "status": "projectable"
+        },
+        "source_manifest_fingerprint": "904ff4a2d7689034e618af1272b6aa03ec4e84944f7299701697ecb8dc51d9ed",
+        "unit_map_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "movement": {
+        "computation_digest_changed": false,
+        "envelope_sha_changed": false,
+        "generated_entry_point_digest_changed": false,
+        "instance_graph_payload_changed": false,
+        "projected_counts_changed": false,
+        "source_manifest_changed": false,
+        "unit_map_changed": false
+      },
+      "path": "tests/fixtures/sample_model/instance_graph_snapshot.json",
+      "stale": false,
+      "stale_reason": []
+    },
+    {
+      "committed": {
+        "envelope_certification_refusal": null,
+        "envelope_sha256": "6e96561b26a9a430155e39a2f4b4b6fd90160d6b450313c1d028b0768951afc7",
+        "instance_graph_fingerprint": "5f421469dbd58a59ccc7311d89dbaec1f1203539799c4fb875e17b3c6481baae",
+        "instance_graph_payload_digest": "47ae83647889423b770eb585d2efb3cde557fe7f31db682479a5c99d11ca4821",
+        "instance_graph_schema": "instance-graph/v3",
+        "outer_digest": "2763dade460aed3d1a0186384396f221c7a3301d326c2f281a088a1c154ddffd",
+        "projection": {
+          "codes": [],
+          "computation_digest": "a4d6de344b3042f1f133d547ff3d11def44428c7fa56414ad04d96564ba96dcc",
+          "counts": {
+            "aliases": 0,
+            "constraints": 0,
+            "entry_point_groups": 1,
+            "entry_points": 1,
+            "modules": 1
+          },
+          "diagnostics": [],
+          "error_type": null,
+          "generated_entry_point_digest": "c10d7373b21d58b86a0e963f406223f215f809671bf975e3a184f4f137abc7ea",
+          "generated_entry_point_inapplicable": null,
+          "generated_entry_point_paths": [
+            "inputs/shadowed_reference_params.json",
+            "schemas/shadowed_reference_params.py"
+          ],
+          "message": null,
+          "status": "projectable"
+        },
+        "source_manifest_fingerprint": "2707cd1f5807d34a2ad2df8295b5354e56a9089fe7e4c3823044995e7f45cc97",
+        "unit_map_sha256": "14c46f4f48ba07c3b6bfdda5f926c9b5bf59a4bffbe6202708ce6aca6ae3b9ec"
+      },
+      "fixture_root": "tests/fixtures/shadowed_reference",
+      "live": {
+        "envelope_certification_refusal": null,
+        "envelope_sha256": "6e96561b26a9a430155e39a2f4b4b6fd90160d6b450313c1d028b0768951afc7",
+        "instance_graph_fingerprint": "5f421469dbd58a59ccc7311d89dbaec1f1203539799c4fb875e17b3c6481baae",
+        "instance_graph_payload_digest": "47ae83647889423b770eb585d2efb3cde557fe7f31db682479a5c99d11ca4821",
+        "instance_graph_schema": "instance-graph/v3",
+        "outer_digest": "2763dade460aed3d1a0186384396f221c7a3301d326c2f281a088a1c154ddffd",
+        "projection": {
+          "codes": [],
+          "computation_digest": "a4d6de344b3042f1f133d547ff3d11def44428c7fa56414ad04d96564ba96dcc",
+          "counts": {
+            "aliases": 0,
+            "constraints": 0,
+            "entry_point_groups": 1,
+            "entry_points": 1,
+            "modules": 1
+          },
+          "diagnostics": [],
+          "error_type": null,
+          "generated_entry_point_digest": "c10d7373b21d58b86a0e963f406223f215f809671bf975e3a184f4f137abc7ea",
+          "generated_entry_point_inapplicable": null,
+          "generated_entry_point_paths": [
+            "inputs/shadowed_reference_params.json",
+            "schemas/shadowed_reference_params.py"
+          ],
+          "message": null,
+          "status": "projectable"
+        },
+        "source_manifest_fingerprint": "2707cd1f5807d34a2ad2df8295b5354e56a9089fe7e4c3823044995e7f45cc97",
+        "unit_map_sha256": "14c46f4f48ba07c3b6bfdda5f926c9b5bf59a4bffbe6202708ce6aca6ae3b9ec"
+      },
+      "movement": {
+        "computation_digest_changed": false,
+        "envelope_sha_changed": false,
+        "generated_entry_point_digest_changed": false,
+        "instance_graph_payload_changed": false,
+        "projected_counts_changed": false,
+        "source_manifest_changed": false,
+        "unit_map_changed": false
+      },
+      "path": "tests/fixtures/shadowed_reference/instance_graph_snapshot.json",
+      "stale": false,
+      "stale_reason": []
+    },
+    {
+      "committed": {
+        "envelope_certification_refusal": null,
+        "envelope_sha256": "ef9acba733d587e3f17b6073dab9a5e61dd2b2b7aff43ae0356c1ed8bdfcde95",
+        "instance_graph_fingerprint": "0944544f83ca540071d3dc749e4a1a174f733721f440a3fa02cec00954a80ac5",
+        "instance_graph_payload_digest": "3f39ba1de89909671cf3792922061cd91937f7ecbbbf6f3668bb628eed4ec7a3",
+        "instance_graph_schema": "instance-graph/v3",
+        "outer_digest": "51ab0b02656e9f72bef9a7ed76eb5cbf8f2b4faf23e54d2ba2f5d4b07d57aa5e",
+        "projection": {
+          "codes": [],
+          "computation_digest": "b4355a49867ac1cbe226a2a9ba2ecd6fe0648f3ecac7948dcd1a944491c4f8d3",
+          "counts": {
+            "aliases": 221,
+            "constraints": 0,
+            "entry_point_groups": 2,
+            "entry_points": 199,
+            "modules": 77
+          },
+          "diagnostics": [],
+          "error_type": null,
+          "generated_entry_point_digest": "84bd990fd5e144d005a5549bac61fd7b76c999ef4162afaed78362c6bde632e4",
+          "generated_entry_point_inapplicable": null,
+          "generated_entry_point_paths": [
+            "inputs/design_params.json",
+            "inputs/library_params.json",
+            "schemas/design_params.py",
+            "schemas/library_params.py"
+          ],
+          "message": null,
+          "status": "projectable"
+        },
+        "source_manifest_fingerprint": "a33b740de5cdd619d33d519adad918fcfd3d8c0bbbc0c7c3f3581e8a0b733094",
+        "unit_map_sha256": "00b846e249e8bbba4189227cf2013207738cc439d1db4a49ba2e53807365ce73"
+      },
+      "fixture_root": "tests/fixtures/solar_battery_d5",
+      "live": {
+        "envelope_certification_refusal": null,
+        "envelope_sha256": "6c8c144aecb41738bacc7d9ed0506ac7186bd22edf8ee8c770049e2547ad3334",
+        "instance_graph_fingerprint": "ff9134462e1662c752a0be66e7d36ca243a0b2fd3c95fa6514f8c4ec69ca3da4",
+        "instance_graph_payload_digest": "af9a92fd86e468e69df5e4c5723fd6b0dc2eecb34e7eb7113e39e846713fa9db",
+        "instance_graph_schema": "instance-graph/v3",
+        "outer_digest": "d51bfd18652515b27e465c5a0bc57e04664e86e64bf978fbb31834542255417b",
+        "projection": {
+          "codes": [],
+          "computation_digest": "f6b363e6378677e72d9df49f2e2d9da7f75a3c73728ea66bebe00173b0c6cf98",
+          "counts": {
+            "aliases": 221,
+            "constraints": 0,
+            "entry_point_groups": 2,
+            "entry_points": 199,
+            "modules": 77
+          },
+          "diagnostics": [],
+          "error_type": null,
+          "generated_entry_point_digest": "84bd990fd5e144d005a5549bac61fd7b76c999ef4162afaed78362c6bde632e4",
+          "generated_entry_point_inapplicable": null,
+          "generated_entry_point_paths": [
+            "inputs/design_params.json",
+            "inputs/library_params.json",
+            "schemas/design_params.py",
+            "schemas/library_params.py"
+          ],
+          "message": null,
+          "status": "projectable"
+        },
+        "source_manifest_fingerprint": "a33b740de5cdd619d33d519adad918fcfd3d8c0bbbc0c7c3f3581e8a0b733094",
+        "unit_map_sha256": "b7536686d78ba85b3860578252c8fd9e575d28c83436240d12f79f7980a28026"
+      },
+      "movement": {
+        "computation_digest_changed": true,
+        "envelope_sha_changed": true,
+        "generated_entry_point_digest_changed": false,
+        "instance_graph_payload_changed": true,
+        "projected_counts_changed": false,
+        "source_manifest_changed": false,
+        "unit_map_changed": true
+      },
+      "path": "tests/fixtures/solar_battery_d5/instance_graph_snapshot.json",
+      "stale": true,
+      "stale_reason": [
+        "instance_graph_payload_changed",
+        "unit_map_changed"
+      ]
+    },
+    {
+      "committed": {
+        "envelope_certification_refusal": null,
+        "envelope_sha256": "c77fdabf326825349f92f76ff3fc93542c791eaa4fd8bb8008bd66c6cad72082",
+        "instance_graph_fingerprint": "1108b18382223c46a02f212473531c07391e0cb9877f4d6829961d856c14963a",
+        "instance_graph_payload_digest": "8cac285b84d3faf79ed0944f84d444e37944a7b76605cd65d66c8762ac45dc02",
+        "instance_graph_schema": "instance-graph/v3",
+        "outer_digest": "0f6b4096fb191dd60e885db03cb8351120b3528318a4047167736ff14a720199",
+        "projection": {
+          "codes": [],
+          "computation_digest": "f02de453a050ad2d81823a816517eb2e0f3dd318d56c53d983804a10e5fd0646",
+          "counts": {
+            "aliases": 0,
+            "constraints": 0,
+            "entry_point_groups": 1,
+            "entry_points": 9,
+            "modules": 10
+          },
+          "diagnostics": [],
+          "error_type": null,
+          "generated_entry_point_digest": "cd42dd906c3e2445f6506a3d48c211a4f9cd6437ba8e66eb31df99ee176eabe4",
+          "generated_entry_point_inapplicable": null,
+          "generated_entry_point_paths": [
+            "inputs/design_params.json",
+            "schemas/design_params.py"
+          ],
+          "message": null,
+          "status": "projectable"
+        },
+        "source_manifest_fingerprint": "edca1ee8d3473d7f31e48ac054638fb5fc46a17cbb40a477d2d1147fdd0e3395",
+        "unit_map_sha256": "1f7f3d01c3ce5f82c5c02cd8ebb9ed62caf70085765599d684f0a25dacd56872"
+      },
+      "fixture_root": "tests/fixtures/unresolvable_attr_probe",
+      "live": {
+        "envelope_certification_refusal": null,
+        "envelope_sha256": "c77fdabf326825349f92f76ff3fc93542c791eaa4fd8bb8008bd66c6cad72082",
+        "instance_graph_fingerprint": "1108b18382223c46a02f212473531c07391e0cb9877f4d6829961d856c14963a",
+        "instance_graph_payload_digest": "8cac285b84d3faf79ed0944f84d444e37944a7b76605cd65d66c8762ac45dc02",
+        "instance_graph_schema": "instance-graph/v3",
+        "outer_digest": "0f6b4096fb191dd60e885db03cb8351120b3528318a4047167736ff14a720199",
+        "projection": {
+          "codes": [],
+          "computation_digest": "f02de453a050ad2d81823a816517eb2e0f3dd318d56c53d983804a10e5fd0646",
+          "counts": {
+            "aliases": 0,
+            "constraints": 0,
+            "entry_point_groups": 1,
+            "entry_points": 9,
+            "modules": 10
+          },
+          "diagnostics": [],
+          "error_type": null,
+          "generated_entry_point_digest": "cd42dd906c3e2445f6506a3d48c211a4f9cd6437ba8e66eb31df99ee176eabe4",
+          "generated_entry_point_inapplicable": null,
+          "generated_entry_point_paths": [
+            "inputs/design_params.json",
+            "schemas/design_params.py"
+          ],
+          "message": null,
+          "status": "projectable"
+        },
+        "source_manifest_fingerprint": "edca1ee8d3473d7f31e48ac054638fb5fc46a17cbb40a477d2d1147fdd0e3395",
+        "unit_map_sha256": "1f7f3d01c3ce5f82c5c02cd8ebb9ed62caf70085765599d684f0a25dacd56872"
+      },
+      "movement": {
+        "computation_digest_changed": false,
+        "envelope_sha_changed": false,
+        "generated_entry_point_digest_changed": false,
+        "instance_graph_payload_changed": false,
+        "projected_counts_changed": false,
+        "source_manifest_changed": false,
+        "unit_map_changed": false
+      },
+      "path": "tests/fixtures/unresolvable_attr_probe/instance_graph_snapshot.json",
+      "stale": false,
+      "stale_reason": []
+    },
+    {
+      "committed": {
+        "envelope_certification_refusal": null,
+        "envelope_sha256": "767bcb5ba7e2109c04e40fdcee0d96eca1ddeecc792df3eb307488123559cf77",
+        "instance_graph_fingerprint": "0a00bcfd7061c4a4e753c85acb5be83e3ffe63d5b2e8aafdb24d1fe8ee4bf8b9",
+        "instance_graph_payload_digest": "c6d4359f290df6ace5b0d5e6e9c753925ed54691ae1a6f5eb51f713afdd71f0f",
+        "instance_graph_schema": "instance-graph/v3",
+        "outer_digest": "33bc2b3787eb466537a91d9e034d1577451ce9361be47d743f4abbbd734e4ca4",
+        "projection": {
+          "codes": [],
+          "computation_digest": "4ad1b28db5c4600ef0b35aed4d3cec1700071608d9188cfc5e3dd6586de6f5c4",
+          "counts": {
+            "aliases": 1,
+            "constraints": 1,
+            "entry_point_groups": 1,
+            "entry_points": 4,
+            "modules": 4
+          },
+          "diagnostics": [],
+          "error_type": null,
+          "generated_entry_point_digest": "0a252f5890865d914417acd02590faafe67e2cfac78ab96cbc462ad2b4416f76",
+          "generated_entry_point_inapplicable": null,
+          "generated_entry_point_paths": [
+            "inputs/toy_plant_params.json",
+            "schemas/toy_plant_params.py"
+          ],
+          "message": null,
+          "status": "projectable"
+        },
+        "source_manifest_fingerprint": "3b58169c4c4f56b04206af8096036e51d49599a61ecf9aed28329941779d13fa",
+        "unit_map_sha256": "40c4e5065ba0f88e785233a88ff16d41137d311ab1abed4ab702ca7a8dc79180"
+      },
+      "fixture_root": "tests/fixtures/wi014_toy",
+      "live": {
+        "envelope_certification_refusal": null,
+        "envelope_sha256": "767bcb5ba7e2109c04e40fdcee0d96eca1ddeecc792df3eb307488123559cf77",
+        "instance_graph_fingerprint": "0a00bcfd7061c4a4e753c85acb5be83e3ffe63d5b2e8aafdb24d1fe8ee4bf8b9",
+        "instance_graph_payload_digest": "c6d4359f290df6ace5b0d5e6e9c753925ed54691ae1a6f5eb51f713afdd71f0f",
+        "instance_graph_schema": "instance-graph/v3",
+        "outer_digest": "33bc2b3787eb466537a91d9e034d1577451ce9361be47d743f4abbbd734e4ca4",
+        "projection": {
+          "codes": [],
+          "computation_digest": "4ad1b28db5c4600ef0b35aed4d3cec1700071608d9188cfc5e3dd6586de6f5c4",
+          "counts": {
+            "aliases": 1,
+            "constraints": 1,
+            "entry_point_groups": 1,
+            "entry_points": 4,
+            "modules": 4
+          },
+          "diagnostics": [],
+          "error_type": null,
+          "generated_entry_point_digest": "0a252f5890865d914417acd02590faafe67e2cfac78ab96cbc462ad2b4416f76",
+          "generated_entry_point_inapplicable": null,
+          "generated_entry_point_paths": [
+            "inputs/toy_plant_params.json",
+            "schemas/toy_plant_params.py"
+          ],
+          "message": null,
+          "status": "projectable"
+        },
+        "source_manifest_fingerprint": "3b58169c4c4f56b04206af8096036e51d49599a61ecf9aed28329941779d13fa",
+        "unit_map_sha256": "40c4e5065ba0f88e785233a88ff16d41137d311ab1abed4ab702ca7a8dc79180"
+      },
+      "movement": {
+        "computation_digest_changed": false,
+        "envelope_sha_changed": false,
+        "generated_entry_point_digest_changed": false,
+        "instance_graph_payload_changed": false,
+        "projected_counts_changed": false,
+        "source_manifest_changed": false,
+        "unit_map_changed": false
+      },
+      "path": "tests/fixtures/wi014_toy/instance_graph_snapshot.json",
+      "stale": false,
+      "stale_reason": []
+    }
+  ],
+  "schema": "unit-lane-v6-snapshot-inventory/v1",
+  "stale_paths": [
+    "tests/fixtures/quoted_owner_formula/instance_graph_snapshot.json",
+    "tests/fixtures/solar_battery_d5/instance_graph_snapshot.json"
+  ],
+  "stale_trigger": "exact instance-graph payload or relevant PortMetadata.unit movement",
+  "tracked_count": 22,
+  "tracked_paths": [
+    "tests/fixtures/agg_literal_probe/instance_graph_snapshot.json",
+    "tests/fixtures/attr_expr_probe/instance_graph_snapshot.json",
+    "tests/fixtures/catf_mfe_d5/instance_graph_snapshot.json",
+    "tests/fixtures/catf_mfe_gated/instance_graph_snapshot.json",
+    "tests/fixtures/chain_spike_d5/instance_graph_snapshot.json",
+    "tests/fixtures/constraint_domain_satisfy_calc_def/instance_graph_snapshot.json",
+    "tests/fixtures/constraint_inline/instance_graph_snapshot.json",
+    "tests/fixtures/constraint_multi_instance/instance_graph_snapshot.json",
+    "tests/fixtures/constraint_non_numerical/instance_graph_snapshot.json",
+    "tests/fixtures/constraint_occurrence_demand_overrides_d5/instance_graph_snapshot.json",
+    "tests/fixtures/d38_caret/instance_graph_snapshot.json",
+    "tests/fixtures/fusion_tea/instance_graph_snapshot.json",
+    "tests/fixtures/gate_a_d5/instance_graph_snapshot.json",
+    "tests/fixtures/modeled_default_fidelity/instance_graph_snapshot.json",
+    "tests/fixtures/nested_occurrence_override_probe/instance_graph_snapshot.json",
+    "tests/fixtures/quoted_owner_formula/instance_graph_snapshot.json",
+    "tests/fixtures/retype_model/instance_graph_snapshot.json",
+    "tests/fixtures/sample_model/instance_graph_snapshot.json",
+    "tests/fixtures/shadowed_reference/instance_graph_snapshot.json",
+    "tests/fixtures/solar_battery_d5/instance_graph_snapshot.json",
+    "tests/fixtures/unresolvable_attr_probe/instance_graph_snapshot.json",
+    "tests/fixtures/wi014_toy/instance_graph_snapshot.json"
+  ],
+  "tracked_pathspec": "tests/fixtures/**/instance_graph_snapshot.json"
+}
