@@ -38,3 +38,50 @@ def test_public_package_matches_independent_baseline(relative: str, tmp_path: Pa
         before = tree_sha256(output)
         assert public_result(ROOT / relative, output) == expected
         assert tree_sha256(output) == before
+
+
+@pytest.mark.parametrize(('fixture', 'template'), [
+    ('attr_expr_probe', 'teax_module.py.jinja2'),
+    ('attr_expr_probe', 'multioutput_model.py.jinja2'),
+    ('agg_literal_probe', 'pipeline_yaml.jinja2'),
+    ('constraint_multi_instance', 'constraint_module.py.jinja2'),
+    ('constraint_multi_instance', 'report_aggregator.py.jinja2'),
+])
+def test_oracle_rejects_template_mutation(fixture, template, tmp_path, monkeypatch):
+    """Change emitted bytes in each package shape while leaving fixed expectations intact."""
+    import jinja2
+    import sysml_codegen.cli as cli
+
+    original = cli._get_template_env
+
+    def changed_environment():
+        env = original()
+        text, _, _ = env.loader.get_source(env, template)
+        env.loader = jinja2.ChoiceLoader([
+            jinja2.DictLoader({template: text + '\n# deliberate oracle mutation\n'}),
+            env.loader,
+        ])
+        return env
+
+    monkeypatch.setattr(cli, '_get_template_env', changed_environment)
+    relative = f'tests/fixtures/{fixture}/instance_graph_snapshot.json'
+    actual = public_result(ROOT / relative, tmp_path / 'package')
+    assert actual['success']
+    with pytest.raises(AssertionError):
+        assert actual == BASELINE['snapshots'][relative]['result']
+
+
+def test_oracle_rejects_rendering_code_mutation(tmp_path, monkeypatch):
+    import sysml_codegen.generation as generation
+
+    original = generation.generate_teax_module
+
+    def changed_rendering(*args, **kwargs):
+        return original(*args, **kwargs) + '\n# deliberate rendering mutation\n'
+
+    monkeypatch.setattr(generation, 'generate_teax_module', changed_rendering)
+    relative = 'tests/fixtures/attr_expr_probe/instance_graph_snapshot.json'
+    actual = public_result(ROOT / relative, tmp_path / 'package')
+    assert actual['success']
+    with pytest.raises(AssertionError):
+        assert actual == BASELINE['snapshots'][relative]['result']

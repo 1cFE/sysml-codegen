@@ -1,0 +1,161 @@
+{
+  "tests/fixtures/catf_mfe_d5/instance_graph_snapshot.json": {
+    "contracts/package_contract.json": {
+      "new_sha256": "f9a6f9001f0cc74112eb74d52a7cf5742ce6015d30f9580303b0f5bf1c9c3e91",
+      "old_sha256": "91a6708f9b7c9d64099a8cf047f1b88cec900bf1e19516c7ad453b93cb729dd5",
+      "reason": "C3: removed guessed unit labels from documentation/descriptions and physical seal; arithmetic/wiring and semantic contract unchanged"
+    },
+    "modules/fusionphysics_performancemetrics/engineeringqfactor.py": {
+      "new_sha256": "35d7e5eba3538f0c347ed5c7d7beea71b924e4fa5240588dca83d7f4a5a11a92",
+      "old_sha256": "77e449a4b6df4e0f2370bd4e67b91d4d403bb9e3ae4b235f03518da9d552a571",
+      "reason": "C3: removed guessed unit labels from documentation/descriptions and physical seal; arithmetic/wiring and semantic contract unchanged"
+    },
+    "modules/fusionphysics_performancemetrics/plantefficiency.py": {
+      "new_sha256": "c82c512d2f9dc9c1bd57156704f55e8a5916e057276dcf06fda07d0ae4c5549f",
+      "old_sha256": "524d77e640ea52ba8d6c0329a57ce427df7eca10eff9ed2f8453d90a965ad53d",
+      "reason": "C3: removed guessed unit labels from documentation/descriptions and physical seal; arithmetic/wiring and semantic contract unchanged"
+    },
+    "modules/fusionphysics_performancemetrics/scientificqfactor.py": {
+      "new_sha256": "8c21ad3984cb823257fac3bd44c594435bda54ed712bfa9435861ef23019e94d",
+      "old_sha256": "ec8c1f1d486e168b8a94515e4ed0667a298bcf2cdf54620c3f3b8089c37f2c22",
+      "reason": "C3: removed guessed unit labels from documentation/descriptions and physical seal; arithmetic/wiring and semantic contract unchanged"
+    },
+    "modules/fusionphysics_powerbalance/alphaneutronsplit.py": {
+      "new_sha256": "92c73d1d79137fafa71a1038ded6c6500d1537636d2d02f804b16625724e0c2c",
+      "old_sha256": "07216ece1d7b681841ed33dbad7936c90749ff2c4d5306136f47db7fa57b8eb8",
+      "reason": "C3: removed guessed unit labels from documentation/descriptions and physical seal; arithmetic/wiring and semantic contract unchanged"
+    },
+    "modules/fusionphysics_powerbalance/grosselectricpower.py": {
+      "new_sha256": "882c5230284fb3b8e75f17ff2cdb1397a36efbb875ff90fd9de6f3377bc69776",
+      "old_sha256": "ccc2e7cf722964682cdd42ef95b1fe6dfbcf7db64732b671e61e81d53e5d3c97",
+      "reason": "C3: removed guessed unit labels from documentation/descriptions and physical seal; arithmetic/wiring and semantic contract unchanged"
+    },
+    "modules/fusionphysics_powerbalance/netelectricpower.py": {
+      "new_sha256": "bc12fce2f44f2de92e2e5801b992138696e8f5c0421d0410b619244913eb09ec",
+      "old_sha256": "938e1de1deeed000d2dd719e8ea4a056e08881366889f71d4b986effb036ff73",
+      "reason": "C3: removed guessed unit labels from documentation/descriptions and physical seal; arithmetic/wiring and semantic contract unchanged"
+    },
+    "modules/fusionphysicsgeometry/torusminorradius.py": {
+      "new_sha256": "322335eec2a34e997395a03b8a296b36eef3e33f3c32adcc820e3084ab3e5dd1",
+      "old_sha256": "b53eada3250f58185f52f0acffc29fbbc5a9dc336077404b296ae244bb98e1ec",
+      "reason": "C3: removed guessed unit labels from documentation/descriptions and physical seal; arithmetic/wiring and semantic contract unchanged"
+    },
+    "schemas/alphaneutronsplit_output.py": {
+      "new_sha256": "1f0748c656c94ee974f70722d835664c09d52db53a3a5735462500661b361188",
+      "old_sha256": "7b15c009d6eb0f1a77f1891505a287eff66df15def96387476574133368cc03a",
+      "reason": "C3: removed guessed unit labels from documentation/descriptions and physical seal; arithmetic/wiring and semantic contract unchanged"
+    },
+    "schemas/engineeringqfactor_output.py": {
+      "new_sha256": "bd092816f6bc6bb6b9df13ba256f4df7114d7dc6b43e63041d6cb2a6c56f6d5c",
+      "old_sha256": "2bc93297f5adabf32169146ad3739a4793ac93a5b4d6ffbae4fe92d0828bc60c",
+      "reason": "C3: removed guessed unit labels from documentation/descriptions and physical seal; arithmetic/wiring and semantic contract unchanged"
+    },
+    "schemas/netelectricpower_output.py": {
+      "new_sha256": "ebe044b36e2b1be5f24694c811eeb12418e3e238201fb82728fdaf58cf2b8621",
+      "old_sha256": "5c515373002a5e95b42b73217943328f3a1a9a5b22f68414c15c5f9e0b4ccfe8",
+      "reason": "C3: removed guessed unit labels from documentation/descriptions and physical seal; arithmetic/wiring and semantic contract unchanged"
+    }
+  },
+  "tests/fixtures/catf_mfe_gated/instance_graph_snapshot.json": {
+    "contracts/package_contract.json": {
+      "new_sha256": "c72b6717e143c5197d9114dff68fb3ec4364e1c60d60a7a8ffd6c4756c8a64f9",
+      "old_sha256": "c9596f6d95b03e5536b765cb3d96a4486b32d1e8a0ffffb3a44a3c3808c4983c",
+      "reason": "C3: removed guessed unit labels from documentation/descriptions and physical seal; arithmetic/wiring and semantic contract unchanged"
+    },
+    "modules/fusionphysics_performancemetrics/engineeringqfactor.py": {
+      "new_sha256": "35d7e5eba3538f0c347ed5c7d7beea71b924e4fa5240588dca83d7f4a5a11a92",
+      "old_sha256": "77e449a4b6df4e0f2370bd4e67b91d4d403bb9e3ae4b235f03518da9d552a571",
+      "reason": "C3: removed guessed unit labels from documentation/descriptions and physical seal; arithmetic/wiring and semantic contract unchanged"
+    },
+    "modules/fusionphysics_performancemetrics/plantefficiency.py": {
+      "new_sha256": "c82c512d2f9dc9c1bd57156704f55e8a5916e057276dcf06fda07d0ae4c5549f",
+      "old_sha256": "524d77e640ea52ba8d6c0329a57ce427df7eca10eff9ed2f8453d90a965ad53d",
+      "reason": "C3: removed guessed unit labels from documentation/descriptions and physical seal; arithmetic/wiring and semantic contract unchanged"
+    },
+    "modules/fusionphysics_performancemetrics/scientificqfactor.py": {
+      "new_sha256": "8c21ad3984cb823257fac3bd44c594435bda54ed712bfa9435861ef23019e94d",
+      "old_sha256": "ec8c1f1d486e168b8a94515e4ed0667a298bcf2cdf54620c3f3b8089c37f2c22",
+      "reason": "C3: removed guessed unit labels from documentation/descriptions and physical seal; arithmetic/wiring and semantic contract unchanged"
+    },
+    "modules/fusionphysics_powerbalance/alphaneutronsplit.py": {
+      "new_sha256": "42908e85cd717a979f54360f8df94e8649f7814b87168487bb3b5b9230605c1b",
+      "old_sha256": "f0d1aaab8a5616d16714f48882454c4f7f3f5ff569e666f49f5a85309ee9b509",
+      "reason": "C3: removed guessed unit labels from documentation/descriptions and physical seal; arithmetic/wiring and semantic contract unchanged"
+    },
+    "modules/fusionphysics_powerbalance/grosselectricpower.py": {
+      "new_sha256": "89a7cefac9655acd927b7811c510161e9744d26e1f22fffb4cffba3dfb5fcb90",
+      "old_sha256": "6d1401a1511831deb7a1271c77320a20fe62fbe1fd78e0c3f6c81cbd8897e3f6",
+      "reason": "C3: removed guessed unit labels from documentation/descriptions and physical seal; arithmetic/wiring and semantic contract unchanged"
+    },
+    "modules/fusionphysics_powerbalance/netelectricpower.py": {
+      "new_sha256": "47b863afcf6df050b6f7b584ffc3cb454f4876d41e54abfc349bd765dc700e67",
+      "old_sha256": "7f0effd2b24b6f1066d77f57ec4d2f456a23a7d191ca5f21eb248030a3ac31c2",
+      "reason": "C3: removed guessed unit labels from documentation/descriptions and physical seal; arithmetic/wiring and semantic contract unchanged"
+    },
+    "modules/fusionphysicsgeometry/torusminorradius.py": {
+      "new_sha256": "322335eec2a34e997395a03b8a296b36eef3e33f3c32adcc820e3084ab3e5dd1",
+      "old_sha256": "b53eada3250f58185f52f0acffc29fbbc5a9dc336077404b296ae244bb98e1ec",
+      "reason": "C3: removed guessed unit labels from documentation/descriptions and physical seal; arithmetic/wiring and semantic contract unchanged"
+    },
+    "schemas/alphaneutronsplit_output.py": {
+      "new_sha256": "1f0748c656c94ee974f70722d835664c09d52db53a3a5735462500661b361188",
+      "old_sha256": "7b15c009d6eb0f1a77f1891505a287eff66df15def96387476574133368cc03a",
+      "reason": "C3: removed guessed unit labels from documentation/descriptions and physical seal; arithmetic/wiring and semantic contract unchanged"
+    },
+    "schemas/engineeringqfactor_output.py": {
+      "new_sha256": "bd092816f6bc6bb6b9df13ba256f4df7114d7dc6b43e63041d6cb2a6c56f6d5c",
+      "old_sha256": "2bc93297f5adabf32169146ad3739a4793ac93a5b4d6ffbae4fe92d0828bc60c",
+      "reason": "C3: removed guessed unit labels from documentation/descriptions and physical seal; arithmetic/wiring and semantic contract unchanged"
+    },
+    "schemas/netelectricpower_output.py": {
+      "new_sha256": "a5ec5e05c733df04bf05a063217d59e316ccb4a718a6c5671cb00a701db67ef7",
+      "old_sha256": "faf350d1d47458d9bdd243cdb78de44983ceff78e6ff83fed84c35cc1efe23c2",
+      "reason": "C3: removed guessed unit labels from documentation/descriptions and physical seal; arithmetic/wiring and semantic contract unchanged"
+    }
+  },
+  "tests/fixtures/fusion_tea/instance_graph_snapshot.json": {
+    "contracts/model_contract.json": {
+      "new_sha256": "cc79f12b0152c7eb8084b2ce5d8da31ef16e0fe0c897fe74a49dbaca7cb5814c",
+      "old_sha256": "2432198c85ecf6753bdd6d4dff812eabde4b9bac42bb1c60c32b66d47d4acbd0",
+      "reason": "C4: remove standalone inert driver; six reviewed files only"
+    },
+    "contracts/package_contract.json": {
+      "new_sha256": "b61a1f15b58a8d04fcec2f2aca520ea51d1246ca8476a3be8ace733463040467",
+      "old_sha256": "7edc3a44486604708201a01756c044c83fdfe18dcca9741af6e6e582ff103e7b",
+      "reason": "C4: remove standalone inert driver; six reviewed files only"
+    },
+    "inputs/hif_driver_params.json": {
+      "new_sha256": "0414ea9f6b9a9b74a396c6e6e8b15bec290ce474148c41076e03fa7ff9887cc4",
+      "old_sha256": "819bba07672402e3b56afa66e193403d39cbbca8dc4f10147498626fe3bb0bc3",
+      "reason": "C4: remove standalone inert driver; six reviewed files only"
+    },
+    "pipelines/pipeline.yaml": {
+      "new_sha256": "cc5d24613e3122fd1da803c2cf2de3a927151fcd460d0834b6da5f04fe4865b0",
+      "old_sha256": "cca37c59784d645094e19f34fb33f6d53b60004ab896e7021ede23d80cee4357",
+      "reason": "C4: remove standalone inert driver; six reviewed files only"
+    },
+    "schemas/hif_driver_params.py": {
+      "new_sha256": "25514836a2f8c90f1384acf228c2b70a44c227eb7b77988427630391bdf5fbaf",
+      "old_sha256": "f3408ae3cf5ba135ce40196afe9300350be4b6572b460f1e24f7b5848d5e27a8",
+      "reason": "C4: remove standalone inert driver; six reviewed files only"
+    },
+    "tests/test_implementations_runnable.py": {
+      "new_sha256": "b26bedc83a5daf09d2b7b1e56cbfef8c1c6ddbeaa1725253548b44fc119bbba1",
+      "old_sha256": "fc23889339cd270aa796e1f761078d715ace2af234edde28ba30e2a3cbe2e8e0",
+      "reason": "C4: remove standalone inert driver; six reviewed files only"
+    }
+  },
+  "tests/fixtures/quoted_owner_formula/instance_graph_snapshot.json": {},
+  "tests/fixtures/solar_battery_d5/instance_graph_snapshot.json": {
+    "contracts/package_contract.json": {
+      "new_sha256": "7b2232ac938830738d4897e0fc9d88ff6e0281b7ca40cb933bb4eadeae4e4196",
+      "old_sha256": "b6d3ed7eda8071b59ec4a1e8585b02be54a5f5c6b052d5fa55233817467b02a8",
+      "reason": "preexisting plural-port ordering recapture; same producer/channel multisets and expressions, different summand order and physical seal"
+    },
+    "pipelines/pipeline.yaml": {
+      "new_sha256": "96c550989ac5c757d58d0b88bb18628264cb1b9191b54b68e04c933dc0133a5c",
+      "old_sha256": "c292da623782e29119f53d94e4831acd023fd5d6cb604f19731d9e3602732dad",
+      "reason": "preexisting plural-port ordering recapture; same producer/channel multisets and expressions, different summand order and physical seal"
+    }
+  }
+}
